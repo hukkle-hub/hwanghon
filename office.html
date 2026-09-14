@@ -2,7 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
 <title>황혼 — 인력사무실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -85,7 +89,7 @@
     <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
     <div>
       <h1 class="topbar__title">인력사무실</h1>
-      <div class="topbar__sub">마태오의 인력사무소</div>
+      <div class="topbar__sub" id="of-owner">마태오의 인력사무소</div>
     </div>
     <div class="topbar__spacer"></div>
     <div class="topbar__right">
@@ -107,56 +111,7 @@
           <button class="iconbtn" style="margin-left:auto"><svg class="ico ico--sm"><use href="#i-chevr"/></svg></button>
         </div>
         <div class="panel__body panel__body--flush scroll" data-pick>
-          <div class="row is-on">
-            <div class="row__main">
-              <div class="row__name">메마른 갈대밭 정찰</div>
-              <div class="row__sub">외곽지대 &gt; 갈대습지</div>
-              <div class="row__sub" style="margin-top:5px">의뢰 보수
-                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
-                <span class="num t-dim">18,000</span></div>
-            </div>
-            <div class="row__right"><span class="risk">위험도 <b class="badge badge--s">S</b></span></div>
-          </div>
-          <div class="row">
-            <div class="row__main">
-              <div class="row__name">지하 오염수 처리</div>
-              <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
-              <div class="row__sub" style="margin-top:5px">의뢰 보수
-                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
-                <span class="num t-dim">12,500</span></div>
-            </div>
-            <div class="row__right"><span class="risk">위험도 <b class="badge badge--a">A</b></span></div>
-          </div>
-          <div class="row">
-            <div class="row__main">
-              <div class="row__name">파괴된 수송로 확보</div>
-              <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
-              <div class="row__sub" style="margin-top:5px">의뢰 보수
-                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
-                <span class="num t-dim">10,800</span></div>
-            </div>
-            <div class="row__right"><span class="risk">위험도 <b class="badge badge--a">A</b></span></div>
-          </div>
-          <div class="row">
-            <div class="row__main">
-              <div class="row__name">변이체 토벌: 식인초</div>
-              <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
-              <div class="row__sub" style="margin-top:5px">의뢰 보수
-                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
-                <span class="num t-dim">8,300</span></div>
-            </div>
-            <div class="row__right"><span class="risk">위험도 <b class="badge badge--b">B</b></span></div>
-          </div>
-          <div class="row">
-            <div class="row__main">
-              <div class="row__name">자원 회수: 의료품</div>
-              <div class="row__sub">도심지 &gt; 폐병원</div>
-              <div class="row__sub" style="margin-top:5px">의뢰 보수
-                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
-                <span class="num t-dim">7,200</span></div>
-            </div>
-            <div class="row__right"><span class="risk">위험도 <b class="badge badge--b">B</b></span></div>
-          </div>
+          <div id="q-rows"></div>
           <div style="padding:12px 11px">
             <button class="btn btn--sm btn--block btn--ghost">
               <svg class="ico ico--sm"><use href="#i-refresh"/></svg>의뢰 새로고침</button>
@@ -172,11 +127,11 @@
             <div class="fill">
               <div class="flex ac jb">
                 <span class="rank__k">인력 사무소 등급</span>
-                <span class="rank__v f-serif">LV.4</span>
+                <span class="rank__v f-serif" id="of-lv">LV.4</span>
               </div>
-              <div class="bar bar--gold mt2" data-fill="57"></div>
+              <div class="bar bar--gold mt2" data-fill="57" id="of-bar1"></div>
             </div>
-            <span class="rank__num">2,850 / 5,000</span>
+            <span class="rank__num" id="of-exp">2,850 / 5,000</span>
           </div>
           <div class="hr"></div>
           <div class="rank__row">
@@ -184,11 +139,11 @@
             <div class="fill">
               <div class="flex ac jb">
                 <span class="rank__k">사무소 평판</span>
-                <span class="rank__v">신뢰</span>
+                <span class="rank__v" id="of-rep">신뢰</span>
               </div>
-              <div class="bar bar--gold mt2" data-fill="62"></div>
+              <div class="bar bar--gold mt2" data-fill="62" id="of-bar2"></div>
             </div>
-            <span class="rank__num">6,250 / 10,000</span>
+            <span class="rank__num" id="of-repexp">6,250 / 10,000</span>
           </div>
         </div>
       </section>
@@ -202,56 +157,7 @@
 
       <div class="party">
         <div class="label-ko" style="padding-left:2px">파티 정보</div>
-        <div class="party__cards" data-pick>
-          <div class="pcard is-on">
-            <div class="pcard__top">
-              <div class="pcard__face art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
-              <div class="fill">
-                <div class="pcard__nm">아인</div>
-                <div class="pcard__lv">LV.26</div>
-                <div class="pcard__cp">전투력 24,650</div>
-              </div>
-              <svg class="ico pcard__role"><use href="#i-scythe"/></svg>
-            </div>
-            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-          </div>
-          <div class="pcard">
-            <div class="pcard__top">
-              <div class="pcard__face art art--avatar"><img src="art/face-kain.webp" alt="kain"></div>
-              <div class="fill">
-                <div class="pcard__nm">카인</div>
-                <div class="pcard__lv">LV.32</div>
-                <div class="pcard__cp">전투력 32,180</div>
-              </div>
-              <svg class="ico pcard__role"><use href="#i-sword"/></svg>
-            </div>
-            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-          </div>
-          <div class="pcard">
-            <div class="pcard__top">
-              <div class="pcard__face art art--avatar"><img src="art/face-ryu.webp" alt="ryu"></div>
-              <div class="fill">
-                <div class="pcard__nm">류</div>
-                <div class="pcard__lv">LV.25</div>
-                <div class="pcard__cp">전투력 21,430</div>
-              </div>
-              <svg class="ico pcard__role"><use href="#i-crosshair"/></svg>
-            </div>
-            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-          </div>
-          <div class="pcard">
-            <div class="pcard__top">
-              <div class="pcard__face art art--avatar"><img src="art/face-sera.webp" alt="sera"></div>
-              <div class="fill">
-                <div class="pcard__nm">세라</div>
-                <div class="pcard__lv">LV.24</div>
-                <div class="pcard__cp">전투력 19,870</div>
-              </div>
-              <svg class="ico pcard__role"><use href="#i-seal"/></svg>
-            </div>
-            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-          </div>
-        </div>
+        <div class="party__cards" data-pick id="p-cards"></div>
       </div>
     </div>
 
@@ -260,47 +166,9 @@
       <section class="panel panel--framed">
         <div class="panel__head">
           <span class="panel__title">의뢰 정보</span>
-          <span class="risk" style="margin-left:auto">위험도 <b class="badge badge--s">S</b></span>
+          <span class="risk" style="margin-left:auto" id="q-risk">위험도 <b class="badge badge--s">S</b></span>
         </div>
-        <div class="panel__body scroll">
-          <h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">메마른 갈대밭 정찰</h2>
-          <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
-
-          <div class="qart art art--beast mt3">
-            <img src="art/boss-marsh.webp" alt="대형 변이체">
-          </div>
-
-          <div class="hr"></div>
-          <div class="label-ko">의뢰 목표</div>
-          <div class="sm t-dim">변이체 무리 정찰 및 위협 요소 제거</div>
-
-          <div class="hr"></div>
-          <div class="label-ko">주요 적</div>
-          <div class="enemies">
-            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-          </div>
-
-          <div class="hr"></div>
-          <div class="flex ac jb">
-            <span class="label-ko" style="margin:0">의뢰 보수</span>
-            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">18,000</span></span>
-          </div>
-
-          <div class="rewards mt3">
-            <div class="rw"><svg class="ico"><use href="#i-exp"/></svg><b>4,200</b></div>
-            <div class="rw"><svg class="ico"><use href="#i-ingot"/></svg><b>2,100</b></div>
-            <div class="rw" data-r="hero"><svg class="ico"><use href="#i-gem"/></svg><b>1~2</b></div>
-            <div class="rw" data-r="hero"><svg class="ico"><use href="#i-bolt"/></svg><b>1~3</b></div>
-          </div>
-
-          <div class="field mt3">
-            <input placeholder="출현 변이체 정보">
-            <svg class="ico ico--sm t-faint"><use href="#i-search"/></svg>
-          </div>
-        </div>
+        <div class="panel__body scroll" id="q-info"></div>
       </section>
 
       <section class="panel panel--framed">
@@ -308,7 +176,7 @@
           <svg class="prep__ico"><use href="#i-target"/></svg>
           <div class="fill">
             <div class="sm t-hi">전투 준비</div>
-            <div class="xs t-faint mt1">훈련용 허수아비</div>
+            <div class="xs t-faint mt1" id="of-prep">훈련용 허수아비</div>
           </div>
           <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
         </div>
@@ -330,6 +198,45 @@
   </nav>
 </div>
 
+<script src="js/items.js"></script>
+<script src="js/world.js"></script>
+<script>
+/* 인력사무실 — 의뢰 목록·의뢰 정보·파티 카드를 world.js 에서 렌더 */
+(function(){
+  var W=window.TW_WORLD, T=window.TW_ITEMS, $=function(s){return document.querySelector(s);}, cur=W.QUESTS[0].id;
+  var coin='<svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>';
+  function rows(){
+    $('#q-rows').innerHTML = W.QUESTS.map(function(q){
+      return '<div class="row'+(q.id===cur?' is-on':'')+'" data-q="'+q.id+'"><div class="row__main"><div class="row__name">'+q.name+'</div>'+
+        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="row__sub" style="margin-top:5px">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div></div>'+
+        '<div class="row__right"><span class="risk">위험도 '+W.riskBadge(q.risk)+'</span></div></div>'; }).join('');
+  }
+  function info(){
+    var q=W.quest(cur); $('#q-risk').innerHTML='위험도 '+W.riskBadge(q.risk);
+    var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); var ic=it?it.icon:'exp'; var rar=it&&(it.rarity==='hero'||it.rarity==='legend')?' data-r="'+it.rarity+'"':'';
+      return '<div class="rw"'+rar+'><svg class="ico"><use href="#i-'+ic+'"/></svg><b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
+    var en=''; for(var i=0;i<q.enemies;i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
+    $('#q-info').innerHTML='<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
+      '<div class="qart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">의뢰 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
+      '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div>'+
+      '<div class="flex ac jb"><span class="label-ko" style="margin:0">의뢰 보수</span><span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">'+W.fmt(q.reward)+'</span></span></div>'+
+      '<div class="rewards mt3">'+rw+'</div><div class="field mt3"><input placeholder="출현 변이체 정보"><svg class="ico ico--sm t-faint"><use href="#i-search"/></svg></div>';
+  }
+  function cards(){
+    $('#p-cards').innerHTML = W.PARTY_ORDER.map(function(id,i){ var c=W.CHARS[id];
+      return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">LV.'+c.lv+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
+        '<svg class="ico pcard__role"><use href="#i-'+c.icon+'"/></svg></div><div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div></div>'; }).join('');
+  }
+  $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); info(); });
+  var o=W.PARTY.office;
+  $('#of-lv').textContent='LV.'+o.lv; $('#of-exp').textContent=W.fmt(o.exp[0])+' / '+W.fmt(o.exp[1]);
+  $('#of-rep').textContent=o.rep; $('#of-repexp').textContent=W.fmt(o.repExp[0])+' / '+W.fmt(o.repExp[1]);
+  $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
+  $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
+  rows(); info(); cards();
+})();
+</script>
 <script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
 </html>

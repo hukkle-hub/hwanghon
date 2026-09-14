@@ -2,7 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
 <title>황혼 — 파티 모집 / 인력사무실</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -115,69 +119,7 @@
         </div>
       </div>
       <div class="panel__body panel__body--flush scroll fill" data-pick>
-        <div class="row is-on">
-          <div class="row__thumb art"><img src="art/boss-marsh.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">메마른 갈대밭 정찰</div>
-            <div class="row__sub">외곽지대 &gt; 갈대습지</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 20</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/story-city.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">지하 오염수 처리</div>
-            <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 22</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/lobby-city.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">파괴된 수송로 확보</div>
-            <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 23</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/boss-marsh.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">변이체 토벌: 식인초</div>
-            <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 21</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/story-city.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">자원 회수 : 의료품</div>
-            <div class="row__sub">도심지 &gt; 폐병원</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 20</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/boss-marsh.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">보급선 방어</div>
-            <div class="row__sub">외곽지대 &gt; 동부 검문소</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 24</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
-        <div class="row">
-          <div class="row__thumb art"><img src="art/lobby-city.webp" alt=""></div>
-          <div class="row__main">
-            <div class="row__name">추적 : 붉은 그림자</div>
-            <div class="row__sub">도심지 &gt; 침수 지하로</div>
-            <div class="mlist-sub"><span class="xs t-faint">Lv. 25</span>
-              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
-          </div>
-        </div>
+        <div id="m-rows"></div>
         <div style="padding:11px">
           <button class="btn btn--sm btn--block btn--ghost">
             <svg class="ico ico--sm"><use href="#i-refresh"/></svg>임무 목록 갱신</button>
@@ -201,91 +143,17 @@
         <span class="panel__title">파티 정보</span>
         <span class="pbar__k"><svg class="ico ico--sm"><use href="#i-lock"/></svg>비공개 파티</span>
         <span class="pbar__k" style="margin-left:auto">파티 코드</span>
-        <span class="sm t-dim num">TW-0417</span>
+        <span class="sm t-dim num" id="p-code">TW-0417</span>
         <button class="iconbtn"><svg class="ico ico--sm"><use href="#i-copy"/></svg></button>
         <span class="pbar__k">평균 전투력</span>
-        <span class="sm t-hi num">76,840</span>
+        <span class="sm t-hi num" id="p-avg">76,840</span>
       </div>
 
-      <div class="members" data-pick>
-        <!-- 1P -->
-        <div class="mcard is-on">
-          <span class="mcard__tag"><b>1P</b> 파티장</span>
-          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg></span>
-          <div class="mcard__art art art--top"><img src="art/portrait-ain.webp" alt="">
-            <div class="mcard__id"><b>Ain</b><span>Lv.26</span>
-              <div class="mcard__cp">전투력 24,650</div></div>
-          </div>
-          <div class="mcard__grades">
-            <div class="grow"><span>카운터</span><b class="g-s">S</b></div>
-            <div class="grow"><span>부위파괴</span><b class="g-s">S</b></div>
-            <div class="grow"><span>정 제</span><b class="g-a">A</b></div>
-            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
-            <div class="grow"><span>제 작</span><b class="g-a">A</b></div>
-          </div>
-          <div class="mcard__btn mcard__btn--ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-        </div>
-        <!-- 2P -->
-        <div class="mcard">
-          <span class="mcard__tag"><b>2P</b></span>
-          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</span>
-          <div class="mcard__art art art--top"><img src="art/portrait-ryu.webp" alt="">
-            <div class="mcard__id"><b>SteelRain</b><span>Lv.24</span>
-              <div class="mcard__cp">전투력 21,430</div></div>
-          </div>
-          <div class="mcard__grades">
-            <div class="grow"><span>카운터</span><b class="g-a">A</b></div>
-            <div class="grow"><span>부위파괴</span><b class="g-a">A</b></div>
-            <div class="grow"><span>정 제</span><b class="g-b">B</b></div>
-            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
-            <div class="grow"><span>제 작</span><b class="g-b">B</b></div>
-          </div>
-          <div class="mcard__btn mcard__btn--ok"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-        </div>
-        <!-- 3P -->
-        <div class="mcard">
-          <span class="mcard__tag"><b>3P</b></span>
-          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</span>
-          <div class="mcard__art art art--top"><img src="art/portrait-sera.webp" alt="">
-            <div class="mcard__id"><b>WhiteDawn</b><span>Lv.25</span>
-              <div class="mcard__cp">전투력 19,870</div></div>
-          </div>
-          <div class="mcard__grades">
-            <div class="grow"><span>카운터</span><b class="g-b">B</b></div>
-            <div class="grow"><span>부위파괴</span><b class="g-a">A</b></div>
-            <div class="grow"><span>정 제</span><b class="g-a">A</b></div>
-            <div class="grow"><span>드 랩</span><b class="g-b">B</b></div>
-            <div class="grow"><span>제 작</span><b class="g-a">A</b></div>
-          </div>
-          <div class="mcard__btn mcard__btn--ok"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
-        </div>
-        <!-- 4P -->
-        <div class="mcard">
-          <span class="mcard__tag"><b>4P</b></span>
-          <span class="mcard__st mcard__st--wait"><svg class="ico ico--xs"><use href="#i-clock"/></svg>준비 중…</span>
-          <div class="mcard__art art art--top"><img src="art/portrait-kain.webp" alt="">
-            <div class="mcard__id"><b>IronWall</b><span>Lv.26</span>
-              <div class="mcard__cp">전투력 26,890</div></div>
-          </div>
-          <div class="mcard__grades">
-            <div class="grow"><span>카운터</span><b class="g-s">S</b></div>
-            <div class="grow"><span>부위파괴</span><b class="g-s">S</b></div>
-            <div class="grow"><span>정 제</span><b class="g-b">B</b></div>
-            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
-            <div class="grow"><span>제 작</span><b class="g-b">B</b></div>
-          </div>
-          <div class="mcard__btn mcard__btn--cancel"><svg class="ico ico--xs"><use href="#i-clock"/></svg>준비 취소</div>
-        </div>
-      </div>
+      <div class="members" data-pick id="members"></div>
 
       <div class="chatzone">
         <div>
-          <div class="chatlog">
-            <div class="sys">[Ain] 파티를 생성했습니다.</div>
-            <div class="sys">[SteelRain] 입장했습니다.</div>
-            <div class="sys">[WhiteDawn] 입장했습니다.</div>
-            <div class="hi">IronWall 님이 입장했습니다.</div>
-          </div>
+          <div class="chatlog" id="chatlog"></div>
           <div class="chatin">
             <input placeholder="Enter로 채팅 입력">
             <svg class="ico ico--sm t-faint"><use href="#i-chat"/></svg>
@@ -304,52 +172,9 @@
     <section class="panel panel--framed">
       <div class="panel__head">
         <span class="panel__title">임무 상세</span>
-        <span class="risk" style="margin-left:auto">위험도 <b class="badge badge--s">S</b></span>
+        <span class="risk" style="margin-left:auto" id="m-risk">위험도 <b class="badge badge--s">S</b></span>
       </div>
-      <div class="panel__body scroll">
-        <h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">메마른 갈대밭 정찰</h2>
-        <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
-        <div class="mart art art--beast mt3"><img src="art/boss-marsh.webp" alt="임무 대상"></div>
-
-        <div class="hr"></div>
-        <div class="label-ko">임무 목표</div>
-        <div class="sm t-dim">변이체 무리 정찰 및 위협 요소 제거</div>
-
-        <div class="hr"></div>
-        <div class="label-ko">주요 적</div>
-        <div class="enemies">
-          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
-        </div>
-
-        <div class="hr"></div>
-        <div class="flex ac jb">
-          <span class="label-ko" style="margin:0">권장 전투력</span>
-          <span class="sm t-hi num">60,000</span>
-        </div>
-
-        <div class="hr"></div>
-        <div class="label-ko">보상 정보</div>
-        <div class="rw4">
-          <div class="rw"><svg class="ico"><use href="#i-exp"/></svg><b>4,200</b></div>
-          <div class="rw"><svg class="ico"><use href="#i-ingot"/></svg><b>2,100</b></div>
-          <div class="rw"><svg class="ico"><use href="#i-gem"/></svg><b>1~2</b></div>
-          <div class="rw"><svg class="ico"><use href="#i-bolt"/></svg><b>1~3</b></div>
-        </div>
-
-        <div class="hr"></div>
-        <div class="label-ko">파티 모집 설정</div>
-        <div class="setrow"><span>모집 대상</span>
-          <select class="sel"><option>전체</option><option>길드원</option></select></div>
-        <div class="setrow"><span>모집 방식</span>
-          <select class="sel"><option>자동 승인</option><option>수동 승인</option></select></div>
-        <div class="setrow"><span>최소 전투력</span>
-          <select class="sel"><option>60,000 이상</option><option>제한 없음</option></select></div>
-        <div class="setrow"><span>음성 채팅</span>
-          <span class="flex ac g2"><select class="sel" style="width:100px"><option>허용</option><option>비허용</option></select>
-          <svg class="ico ico--sm t-faint"><use href="#i-headset"/></svg></span></div>
-      </div>
+      <div class="panel__body scroll" id="m-detail"></div>
     </section>
   </main>
 
@@ -358,6 +183,46 @@
     <a class="hot"><svg class="ico ico--sm"><use href="#i-users"/></svg>파티 관리</a>
   </div>
 </div>
+<script src="js/items.js"></script>
+<script src="js/world.js"></script>
+<script>
+/* 파티 모집 — 임무 목록 · 파티 멤버 · 채팅 · 임무 상세를 world.js 에서 렌더 */
+(function(){
+  var W=window.TW_WORLD, T=window.TW_ITEMS, P=W.PARTY, $=function(s){return document.querySelector(s);};
+  var cur = P.quest;
+  function mrow(m,i){
+    var q = m.q ? W.quest(m.q) : null, name = q?q.name:m.name, area=(q?q.area+' &gt; '+q.sub:m.area+' &gt; '+m.sub), art=q?q.art:m.art, key=m.q||('x'+i);
+    return '<div class="row'+(key===cur?' is-on':'')+'" data-q="'+key+'">'+W.artDiv(art,'row__thumb')+'<div class="row__main"><div class="row__name">'+name+'</div><div class="row__sub">'+area+'</div>'+
+      '<div class="mlist-sub"><span class="xs t-faint">Lv. '+m.lv+'</span><span class="xs t-red" style="margin-left:auto">'+m.status+'</span></div></div></div>';
+  }
+  function rows(){ $('#m-rows').innerHTML = W.MISSIONS.map(mrow).join(''); }
+  function members(){
+    var ST={ready:['mcard__btn--ready','check','준비 완료',''],ok:['mcard__btn--ok','check','준비 완료','<svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료'],wait:['mcard__btn--cancel','clock','준비 취소','<svg class="ico ico--xs"><use href="#i-clock"/></svg>준비 중…']};
+    $('#members').innerHTML = P.members.map(function(m,i){ var st=ST[m.state];
+      return '<div class="mcard'+(i===0?' is-on':'')+'"><span class="mcard__tag"><b>'+m.slot+'</b>'+(m.leader?' 파티장':'')+'</span>'+
+        '<span class="mcard__st'+(m.state==='wait'?' mcard__st--wait':'')+'">'+(m.state==='ready'?'<svg class="ico ico--xs"><use href="#i-check"/></svg>':st[3])+'</span>'+
+        '<div class="mcard__art art art--top"><img src="art/portrait-'+m.char+'.webp" alt=""><div class="mcard__id"><b>'+m.name+'</b><span>Lv.'+m.lv+'</span><div class="mcard__cp">전투력 '+W.fmt(m.cp)+'</div></div></div>'+
+        '<div class="mcard__grades">'+m.grades.map(function(g,j){ return '<div class="grow"><span>'+P.gradeKeys[j]+'</span><b class="g-'+g.toLowerCase()+'">'+g+'</b></div>'; }).join('')+'</div>'+
+        '<div class="mcard__btn '+st[0]+'"><svg class="ico ico--xs"><use href="#i-'+st[1]+'"/></svg>'+st[2]+'</div></div>'; }).join('');
+  }
+  function detail(){
+    var q = W.quest(cur) || W.quest(P.quest);
+    $('#m-risk').innerHTML = '위험도 '+W.riskBadge(q.risk);
+    var en=''; for(var i=0;i<Math.min(q.enemies,3);i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
+    var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); return '<div class="rw"><svg class="ico"><use href="#i-'+(it?it.icon:'exp')+'"/></svg><b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
+    $('#m-detail').innerHTML = '<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
+      '<div class="mart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">임무 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
+      '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div><div class="flex ac jb"><span class="label-ko" style="margin:0">권장 전투력</span><span class="sm t-hi num">'+W.fmt(P.recCp)+'</span></div>'+
+      '<div class="hr"></div><div class="label-ko">보상 정보</div><div class="rw4">'+rw+'</div><div class="hr"></div><div class="label-ko">파티 모집 설정</div>'+
+      P.settings.map(function(st){ return '<div class="setrow"><span>'+st[0]+'</span>'+(st[0]==='음성 채팅'?'<span class="flex ac g2">':'')+'<select class="sel"'+(st[0]==='음성 채팅'?' style="width:100px"':'')+'>'+st[1].map(function(o){return '<option>'+o+'</option>';}).join('')+'</select>'+(st[0]==='음성 채팅'?'<svg class="ico ico--sm t-faint"><use href="#i-headset"/></svg></span>':'')+'</div>'; }).join('');
+  }
+  $('#p-code').textContent=P.code; $('#p-avg').textContent=W.fmt(P.avgCp);
+  $('#chatlog').innerHTML=P.chat.map(function(c){ return '<div class="'+c[0]+'">'+c[1]+'</div>'; }).join('');
+  $('#m-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); detail(); });
+  rows(); members(); detail();
+})();
+</script>
 <script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
 </html>

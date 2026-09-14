@@ -20,6 +20,8 @@
     ['compare.html',   '시트 대조']
   ];
 
+  var TOUCH = !!(window.matchMedia && (matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches));
+  if (TOUCH) document.documentElement.classList.add('touch');
   var $  = function(s,r){ return (r||document).querySelector(s); };
   var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
 
@@ -32,20 +34,52 @@
       return '<a href="'+s[0]+'"'+(s[0]===here?' class="is-on"':'')+'>'+s[1]+'</a>';
     }).join('') + '<button class="navdock__hide" title="숨기기 (H)">&times;</button>';
     document.body.appendChild(d);
-    d.querySelector('.navdock__hide').onclick = function(){ d.style.display='none'; };
+    d.querySelector('.navdock__hide').onclick = function(){ d.classList.remove('is-open'); d.style.display = TOUCH ? '' : 'none'; };
+    /* 터치 기기: 독은 접어두고 우하단 버튼으로 연다 (하단 내비를 가리지 않도록) */
+    if (TOUCH){
+      var t = document.createElement('button');
+      t.className = 'navdock__toggle'; t.type = 'button'; t.setAttribute('aria-label','화면 전환');
+      t.innerHTML = '<svg class="ico ico--lg"><use href="#i-map"/></svg>';
+      t.onclick = function(){ d.classList.toggle('is-open'); };
+      document.body.appendChild(t);
+    }
     document.addEventListener('keydown', function(e){
       if (e.key === 'h' || e.key === 'H') d.style.display = d.style.display==='none' ? '' : 'none';
     });
   }
 
-  /* ---------- 스테이지 피팅 (1672px 기준 축소) ---------- */
+  /* ---------- 스테이지 피팅 (1672×952 기준) ----------
+     · 데스크톱: 폭 기준 축소 (세로 스크롤 허용)
+     · 터치 기기(안드로이드 등): 폭·높이 모두 맞춰(contain) 한 화면에 들어오게, 가로 중앙 정렬
+     · 세로로 든 휴대폰: 가로 회전 안내를 띄우고 폭 기준으로만 축소 */
+
+  function viewport(){
+    var vv = window.visualViewport;
+    return { w: vv ? vv.width : window.innerWidth, h: vv ? vv.height : window.innerHeight };
+  }
   function fitStage(){
     var st = $('.stage'); if(!st) return;
-    var base = st.offsetWidth || 1672;
-    var k = Math.min(1, (window.innerWidth - 8) / base);
-    st.style.transform = k < 1 ? 'scale('+k+')' : '';
-    document.body.style.height = k < 1 ? (st.offsetHeight * k + 16) + 'px' : '';
+    var v = viewport(), base = 1672, baseH = st.offsetHeight || 952;
+    var portrait = v.h > v.w;
+    var k = Math.min(1, (v.w - (TOUCH ? 0 : 8)) / base);
+    if (TOUCH && !portrait) k = Math.min(k, v.h / baseH);
+    k = Math.max(k, 0.18);
+    st.style.transform = 'scale(' + k + ')';
+    st.style.transformOrigin = 'top left';
+    var left = Math.max(0, (v.w - base * k) / 2);
+    st.style.marginLeft = left + 'px';
+    document.body.style.height = (baseH * k + (TOUCH ? 0 : 16)) + 'px';
     document.body.style.overflowX = 'hidden';
+    document.documentElement.classList.toggle('portrait', TOUCH && portrait);
+  }
+  /* 세로 화면 안내 (터치 기기) */
+  function rotateHint(){
+    if (!TOUCH || document.body.hasAttribute('data-nonav')) return;
+    var h = document.createElement('div');
+    h.className = 'rotate-hint';
+    h.innerHTML = '<svg class="ico ico--xl"><use href="#i-refresh"/></svg><b>가로로 돌려 주세요</b><span>황혼은 가로 화면 기준으로 설계되었습니다.</span><button type="button">이대로 보기</button>';
+    h.querySelector('button').onclick = function(){ document.documentElement.classList.add('portrait-ok'); };
+    document.body.appendChild(h);
   }
 
   /* ---------- 탭 ---------- */
@@ -168,8 +202,13 @@
     tabs(); pickers(); checks(); gauges(); slots(); countdowns(); bars(); segbars();
     var embedded = (window.self !== window.top);
     if (!embedded && !document.body.hasAttribute('data-nonav')) navDock();
+    if (!embedded) rotateHint();
     fitStage();
     window.addEventListener('resize', fitStage);
+    window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitStage);
+    /* 터치 기기: 더블탭 확대 방지 (touch-action 은 CSS 에서) · 마지막 화면 기억 */
+    try { localStorage.setItem('tw:last', location.pathname.split('/').pop()); } catch(e){}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

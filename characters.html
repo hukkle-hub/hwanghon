@@ -2,7 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
 <title>황혼 — 캐릭터 설정 시트</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,26 +88,6 @@
     <section class="panel panel--framed">
       <div class="panel__head"><span class="panel__title">소속 요원</span><span class="panel__meta">4 / 4</span></div>
       <div class="panel__body panel__body--flush fill scroll" id="list" data-pick>
-        <div class="crow is-on" data-char="ain">
-          <div class="crow__face art art--avatar"><img src="art/face-ain.webp" alt=""></div>
-          <div><div class="crow__nm">아인</div><div class="crow__role">암살자 · 딜러/DPS</div></div>
-          <svg class="ico crow__ic"><use href="#i-scythe"/></svg>
-        </div>
-        <div class="crow" data-char="kain">
-          <div class="crow__face art art--avatar"><img src="art/face-kain.webp" alt=""></div>
-          <div><div class="crow__nm">카인</div><div class="crow__role">블레이드 마스터 · 탱커</div></div>
-          <svg class="ico crow__ic"><use href="#i-sword"/></svg>
-        </div>
-        <div class="crow" data-char="ryu">
-          <div class="crow__face art art--avatar"><img src="art/face-ryu.webp" alt=""></div>
-          <div><div class="crow__nm">류</div><div class="crow__role">레인저 · 브레이커</div></div>
-          <svg class="ico crow__ic"><use href="#i-crosshair"/></svg>
-        </div>
-        <div class="crow" data-char="sera">
-          <div class="crow__face art art--avatar"><img src="art/face-sera.webp" alt=""></div>
-          <div><div class="crow__nm">세라</div><div class="crow__role">위치 메이커 · 서포터</div></div>
-          <svg class="ico crow__ic"><use href="#i-seal"/></svg>
-        </div>
       </div>
       <div style="padding:10px">
         <a class="btn btn--sm btn--block btn--ghost" href="inventory.html">
@@ -185,34 +169,19 @@
   </div>
 </div>
 
+<script src="js/world.js"></script>
 <script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>
-var CH = {
-  ain:  { nm:'아인', tt:'새벽을 걷는 그림자 · Ain#0927', lv:'LV.26', tags:[['암살자','red'],['낫(대형)','']],
-          role:'딜러 / DPS', sub:'브레이커', wp:'낫 (대형)', cp:'24,650', g:['S','S','A','A','A'],
-          sw:['#0B0C0F','#2A2426','#7A6A55','#A51C1C'],
-          look:'짧은 흑발, 붉은 눈. 너덜거리는 검은 천을 겹친 경갑. 왼팔 전체를 감싼 금속 건틀릿과 허벅지 스트랩.',
-          traits:[['scythe','카운터 특화','정확한 타이밍의 카운터로 순간 피해를 극대화'],['drop','출혈 부여','일반 공격 시 확률로 출혈'],['bolt','기동력','회피·이동 능력 보유']],
-          quote:'“완벽한 타이밍, 날카로운 한 칼.<br>그 사이에 승리가 있다.”' },
-  kain: { nm:'카인', tt:'대장간 운영 · Kain#0032', lv:'LV.32', tags:[['블레이드 마스터','red'],['대검','']],
-          role:'탱커 / 브루저', sub:'제작·고정 보조', wp:'대검', cp:'32,180', g:['A','A','B','A','S'],
-          sw:['#0B0C0F','#3A2E22','#8C6A3F','#A51C1C'],
-          look:'짧은 흑발과 수염. 소매 없는 후드 상의에 청동빛 견갑·건틀릿·정강이 갑주. 교차 가죽 벨트.',
-          traits:[['shield','강인함','격추 저항 및 높은 생존력'],['hammer','제작 숙련','강화·제작 재료 추가 획득'],['sword','파괴 특화','부위 파괴 속도 증가']],
-          quote:'“무기는 살아있어. 손이 기억해야,<br>녀석도 네게 응답하지.”' },
-  ryu:  { nm:'류', tt:'붉은 그림자 · Ryu#0025', lv:'LV.25', tags:[['레인저','red'],['단검·투척','']],
-          role:'딜러 / 레인저', sub:'브레이커', wp:'쌍단검', cp:'21,430', g:['A','A','B','A','B'],
-          sw:['#0B0C0F','#1E1B1D','#6E5A3A','#7A1F1F'],
-          look:'언더컷 흑발, 충혈된 눈. 긴 검은 스카프와 찢어진 천을 두른 경장. 팔에 감은 끈과 청동 무릎 보호대.',
-          traits:[['crosshair','연속 처치','적 처치 시 드랍 확률 증가'],['bolt','기동력','회피·이동 능력 보유'],['eye','정찰','정찰 경로 노트 자동 갱신']],
-          quote:'“먼저 보는 쪽이 이긴다.<br>나는 언제나 먼저 본다.”' },
-  sera: { nm:'세라', tt:'정제사 · Sera#0024', lv:'LV.24', tags:[['위치 메이커','red'],['정제 도구','']],
-          role:'서포터 / 힐러', sub:'정제', wp:'정제 도구 · 시약', cp:'19,870', g:['B','A','A','B','A'],
-          sw:['#0B0C0F','#C9C9CF','#4A4046','#7A1F1F'],
-          look:'허리까지 내려오는 은백색 장발. 하이넥 검은 코트 위에 시약병을 꽂은 벨트. 긴 장갑과 찢어진 망토.',
-          traits:[['potion','정제 숙련','정제 성공률·재료 획득 증가'],['heart','파티 회복','파티 회복량 증가'],['seal','출혈 저항','출혈 상태 이상 대비']],
-          quote:'“상처는 닦아낼 수 있어.<br>기억은… 조금 더 걸리겠지.”' }
-};
+var W = window.TW_WORLD, CH = {};
+/* 캐릭터 설정은 world.js CHARS 가 원본 — 이 화면의 표시 형태로 변환 */
+Object.keys(W.CHARS).forEach(function(k){ var c=W.CHARS[k], g=c.grades;
+  CH[k] = { nm:c.nm, tt:c.tt, lv:'LV.'+c.lv, tags:[[c.cls,'red'],[c.wp,'']], role:c.role, sub:c.sub, wp:c.wp, cp:W.fmt(c.cp),
+            g:[g.counter,g.break,g.refine,g.drop,g.craft], sw:c.sw, look:c.look, traits:c.traits, quote:c.quote, icon:c.icon };
+});
+document.getElementById('list').innerHTML = Object.keys(CH).map(function(k,i){ var c=CH[k];
+  return '<div class="crow'+(i===0?' is-on':'')+'" data-char="'+k+'"><div class="crow__face art art--avatar"><img src="art/face-'+k+'.webp" alt=""></div>'+
+    '<div><div class="crow__nm">'+c.nm+'</div><div class="crow__role">'+c.tags[0][0]+' · '+c.role.replace(/ \/ /,'/')+'</div></div><svg class="ico crow__ic"><use href="#i-'+c.icon+'"/></svg></div>'; }).join('');
 var KEYS = Object.keys(CH), cur = 'ain';
 function show(k){
   var c = CH[k]; cur = k;

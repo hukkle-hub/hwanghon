@@ -2,7 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
 <title>황혼 — 플레이어 프로필 / 기술 등급</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -99,24 +103,7 @@
       <div class="pfart art art--top">
         <img src="art/char-profile.webp" alt="아인">
       </div>
-      <div class="seasonbar">
-        <div class="sb__rank">
-          <svg class="ico ico--xl"><use href="#i-sigil"/></svg>
-          <div>
-            <div class="sb__num num">152</div>
-            <div class="sb__k mt1">시즌 랭킹 · 상위 3.2%</div>
-          </div>
-        </div>
-        <div>
-          <div class="sb__k">총 플레이 시간</div>
-          <div class="sb__v">128시간 26분</div>
-        </div>
-        <div>
-          <div class="sb__k">마지막 접속</div>
-          <div class="sb__v">2시간 전</div>
-        </div>
-        <button class="btn btn--sm btn--ghost" style="justify-self:end">상세 시즌 기록</button>
-      </div>
+      <div class="seasonbar" id="season"></div>
     </div>
 
     <!-- 우측 정보 -->
@@ -126,18 +113,7 @@
         <section class="panel panel--framed">
           <div class="idcard">
             <div class="idcard__face art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
-            <div class="fill">
-              <div class="idcard__tt">새벽을 걷는 그림자</div>
-              <div class="idcard__nm">Ain<span class="t-faint" style="font-size:15px">#0927</span></div>
-              <div class="lvline">
-                <b>Lv. 36</b>
-                <div class="bar bar--exp fill" data-fill="54"></div>
-              </div>
-              <div class="flex ac jb mt2">
-                <span class="xs t-faint">전투력 <span class="num">41,860 / 78,000</span></span>
-                <span class="chip chip--red">카운터 숙련 &nbsp;<b style="color:#E08A86">4등급</b></span>
-              </div>
-            </div>
+            <div class="fill" id="idcard"></div>
           </div>
         </section>
 
@@ -147,7 +123,7 @@
               <svg class="ico"><use href="#i-sigil"/></svg>
               <div class="fill">
                 <div class="xs t-faint">종합 전투력</div>
-                <div class="cpbox__v num mt1">76,420</div>
+                <div class="cpbox__v num mt1" id="pf-cp">76,420</div>
               </div>
             </div>
           </section>
@@ -155,11 +131,11 @@
             <div class="panel__body panel__body--tight">
               <div class="flex ac jb">
                 <span class="xs t-faint">길드</span>
-                <span class="sm t-hi">황혼의 인력사무소</span>
+                <span class="sm t-hi" id="pf-guild">황혼의 인력사무소</span>
               </div>
               <div class="flex ac jb mt2">
                 <span class="xs t-faint">직책</span>
-                <span class="xs t-dim">정예 요원</span>
+                <span class="xs t-dim" id="pf-pos">정예 요원</span>
               </div>
             </div>
           </section>
@@ -174,32 +150,7 @@
             <span class="panel__meta">시즌 01 기준</span>
           </div>
           <div class="panel__body">
-            <div class="gauges">
-              <div class="gwrap">
-                <span class="gwrap__t">카운터 등급</span>
-                <div class="gauge" data-gauge="87" data-color="#D94A45">
-                  <span class="gauge__ring"></span>
-                  <span class="gauge__mark g-s">S</span>
-                </div>
-                <span class="gwrap__p">숙련도 87%</span>
-              </div>
-              <div class="gwrap">
-                <span class="gwrap__t">파괴 등급</span>
-                <div class="gauge" data-gauge="72" data-color="#7B9BD6">
-                  <span class="gauge__ring"></span>
-                  <span class="gauge__mark g-a">A</span>
-                </div>
-                <span class="gwrap__p">숙련도 72%</span>
-              </div>
-              <div class="gwrap">
-                <span class="gwrap__t">생존 등급</span>
-                <div class="gauge" data-gauge="68" data-color="#5FAE9B">
-                  <span class="gauge__ring"></span>
-                  <span class="gauge__mark g-b">B+</span>
-                </div>
-                <span class="gwrap__p">숙련도 68%</span>
-              </div>
-            </div>
+            <div class="gauges" id="gauges"></div>
           </div>
         </section>
 
@@ -208,23 +159,7 @@
             <span class="panel__title">최근 보스 기록</span>
             <span class="panel__meta">시즌 01</span>
           </div>
-          <div class="panel__body panel__body--tight scroll">
-            <div class="brow"><span class="brow__th art"><img src="art/boss-marsh.webp" alt=""></span>
-              <span class="brow__n">그을린 요새의 군주</span><span class="brow__t">02:31</span>
-              <span class="brow__g g-s">S</span></div>
-            <div class="brow"><span class="brow__th art"><img src="art/boss-anatomy.webp" alt=""></span>
-              <span class="brow__n">황혼의 포식자</span><span class="brow__t">03:12</span>
-              <span class="brow__g g-a">A</span></div>
-            <div class="brow"><span class="brow__th art"><img src="art/story-city.webp" alt=""></span>
-              <span class="brow__n">심연의 감시자</span><span class="brow__t">05:08</span>
-              <span class="brow__g g-a">A</span></div>
-            <div class="brow"><span class="brow__th art art--top"><img src="art/portrait-sera.webp" alt=""></span>
-              <span class="brow__n">핏빛 교단장</span><span class="brow__t">02:45</span>
-              <span class="brow__g g-s">S</span></div>
-            <div class="brow"><span class="brow__th art"><img src="art/boss-marsh.webp" alt=""></span>
-              <span class="brow__n">기계의 심장</span><span class="brow__t">04:22</span>
-              <span class="brow__g g-b">B</span></div>
-          </div>
+          <div class="panel__body panel__body--tight scroll" id="recent"></div>
         </section>
       </div>
 
@@ -235,80 +170,22 @@
             <span class="panel__title">클리어 이력</span>
             <span class="panel__meta">시즌 01</span>
           </div>
-          <div class="panel__body panel__body--tight scroll">
-            <div class="stat"><span class="stat__k">총 탐사 횟수</span><span class="stat__v num">128회</span></div>
-            <div class="stat"><span class="stat__k">완료한 탐사</span><span class="stat__v num">116회</span></div>
-            <div class="stat"><span class="stat__k">완료율</span><span class="stat__v num">90.6%</span></div>
-            <div class="hr"></div>
-            <div class="label-ko">난이도별 클리어</div>
-            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--s">S</b></span>
-              <span class="stat__v num">48회</span></div>
-            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--a">A</b></span>
-              <span class="stat__v num">52회</span></div>
-            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--b">B</b></span>
-              <span class="stat__v num">14회</span></div>
-            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--c">C</b></span>
-              <span class="stat__v num">2회</span></div>
-          </div>
+          <div class="panel__body panel__body--tight scroll" id="history"></div>
         </section>
 
         <section class="panel panel--framed">
           <div class="panel__head"><span class="panel__title">선호 역할</span></div>
-          <div class="panel__body panel__body--tight scroll">
-            <div class="rolebox">
-              <span class="rolebox__ic"><svg class="ico ico--sm"><use href="#i-scythe"/></svg></span>
-              <div>
-                <div class="sm t-hi">딜러/DPS</div>
-                <div class="xs t-faint mt1" style="line-height:1.7">
-                  빠른 카운터와 높은 순간<br>피해로 전장을 재압합니다.</div>
-              </div>
-            </div>
-            <div class="hr"></div>
-            <div class="label-ko">보조 역할</div>
-            <div class="rolebox">
-              <span class="rolebox__ic"><svg class="ico ico--sm"><use href="#i-hammer"/></svg></span>
-              <div>
-                <div class="sm t-hi">브레이커</div>
-                <div class="xs t-faint mt1" style="line-height:1.7">
-                  부위 파괴와 상태 이상으로<br>아군을 지원합니다.</div>
-              </div>
-            </div>
-          </div>
+          <div class="panel__body panel__body--tight scroll" id="roles"></div>
         </section>
 
         <div class="flex col g2" style="min-height:0">
           <section class="panel panel--framed fill">
             <div class="panel__head"><span class="panel__title">자기소개</span></div>
-            <div class="panel__body panel__body--tight">
-              <p class="quote" style="margin:0">
-                “완벽한 타이밍, 날카로운 한 칼.<br>
-                그 사이에 승리가 있다.”</p>
-              <p class="xs t-faint" style="line-height:1.9;margin:10px 0 0">
-                여전히 배우는 중입니다.<br>
-                함께 강해지고 싶습니다.</p>
-            </div>
+            <div class="panel__body panel__body--tight" id="intro"></div>
           </section>
           <section class="panel panel--framed">
             <div class="panel__head"><span class="panel__title">장비 요약</span></div>
-            <div class="panel__body panel__body--tight">
-              <div class="eqsum">
-                <span class="eqsum__main"><svg class="ico"><use href="#i-scythe"/></svg></span>
-                <div class="fill">
-                  <div class="flex ac jb">
-                    <span class="sm" style="color:#D9A94E">메마른 갈대밭 정찰</span>
-                    <span class="xs t-faint">강화 +5</span>
-                  </div>
-                  <div class="xs t-faint mt1">전투력 <span class="num t-dim">3,180</span></div>
-                </div>
-              </div>
-              <div class="slotgrid mt3" style="--cols:5;gap:5px;max-width:212px">
-                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-chest"/></svg></div>
-                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-pants"/></svg></div>
-                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-glove"/></svg></div>
-                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-boot"/></svg></div>
-                <div class="slot" data-r="hero"><svg class="ico"><use href="#i-ring"/></svg></div>
-              </div>
-            </div>
+            <div class="panel__body panel__body--tight" id="eqsum"></div>
           </section>
         </div>
       </div>
@@ -322,6 +199,32 @@
     </div>
   </main>
 </div>
+<script src="js/items.js"></script>
+<script src="js/world.js"></script>
+<script>
+/* 플레이어 프로필 — world.js PROFILE 에서 렌더 (게이지는 ui.js 부팅 시 그려지므로 그 전에 마크업 생성) */
+(function(){
+  var W=window.TW_WORLD, T=window.TW_ITEMS, P=W.PROFILE, $=function(s){return document.querySelector(s);};
+  $('#idcard').innerHTML='<div class="idcard__tt">'+P.title+'</div><div class="idcard__nm">'+P.handle+'<span class="t-faint" style="font-size:15px">'+P.tag+'</span></div>'+
+    '<div class="lvline"><b>Lv. '+P.lv+'</b><div class="bar bar--exp fill" data-fill="'+Math.round(P.exp[0]/P.exp[1]*100)+'"></div></div>'+
+    '<div class="flex ac jb mt2"><span class="xs t-faint">전투력 <span class="num">'+W.fmt(P.exp[0])+' / '+W.fmt(P.exp[1])+'</span></span><span class="chip chip--red">카운터 숙련 &nbsp;<b style="color:#E08A86">'+P.counterTier+'</b></span></div>';
+  $('#pf-cp').textContent=W.fmt(P.cp); $('#pf-guild').textContent=P.guild; $('#pf-pos').textContent=P.position;
+  $('#gauges').innerHTML=P.mastery.map(function(m){ return '<div class="gwrap"><span class="gwrap__t">'+m[0]+'</span><div class="gauge" data-gauge="'+m[2]+'" data-color="'+m[3]+'"><span class="gauge__ring"></span><span class="gauge__mark" style="color:'+m[3]+'">'+m[1]+'</span></div><span class="gwrap__p">숙련도 '+m[2]+'%</span></div>'; }).join('');
+  $('#recent').innerHTML=P.recent.map(function(r){ return '<div class="brow"><span class="brow__th art'+(/portrait/.test(r[3])?' art--top':'')+'"><img src="art/'+r[3]+'.webp" alt=""></span><span class="brow__n">'+r[0]+'</span><span class="brow__t">'+r[1]+'</span><span class="brow__g g-'+r[2].toLowerCase()+'">'+r[2]+'</span></div>'; }).join('');
+  var h=P.history;
+  $('#history').innerHTML='<div class="stat"><span class="stat__k">총 탐사 횟수</span><span class="stat__v num">'+h.total+'회</span></div><div class="stat"><span class="stat__k">완료한 탐사</span><span class="stat__v num">'+h.done+'회</span></div><div class="stat"><span class="stat__k">완료율</span><span class="stat__v num">'+h.rate+'</span></div><div class="hr"></div><div class="label-ko">난이도별 클리어</div>'+
+    h.byRisk.map(function(r){ return '<div class="stat"><span class="stat__k flex ac g1">위험도 '+W.riskBadge(r[0])+'</span><span class="stat__v num">'+r[1]+'회</span></div>'; }).join('');
+  $('#roles').innerHTML=P.roles.map(function(r,i){ return (i?'<div class="hr"></div><div class="label-ko">보조 역할</div>':'')+'<div class="rolebox"><span class="rolebox__ic"><svg class="ico ico--sm"><use href="#i-'+r[0]+'"/></svg></span><div><div class="sm t-hi">'+r[1]+'</div><div class="xs t-faint mt1" style="line-height:1.7">'+r[2]+'</div></div></div>'; }).join('');
+  $('#intro').innerHTML='<p class="quote" style="margin:0">'+P.intro[0]+'</p><p class="xs t-faint" style="line-height:1.9;margin:10px 0 0">'+P.intro[1]+'</p>';
+  var m=T.get(P.equip.main);
+  $('#eqsum').innerHTML='<div class="eqsum"><span class="eqsum__main"><svg class="ico"><use href="#i-'+m.icon+'"/></svg></span><div class="fill"><div class="flex ac jb"><span class="sm" style="color:'+T.RARITY[m.rarity].color+'">'+m.name+'</span><span class="xs t-faint">강화 '+P.equip.enh+'</span></div><div class="xs t-faint mt1">전투력 <span class="num t-dim">'+W.fmt(P.equip.cp)+'</span></div></div></div>'+
+    '<div class="slotgrid mt3" style="--cols:5;gap:5px;max-width:212px">'+P.equip.slots.map(function(id){ return T.slotHTML(id,{noTag:true}); }).join('')+'</div>';
+  var sn=P.season;
+  $('#season').innerHTML='<div class="sb__rank"><svg class="ico ico--xl"><use href="#i-sigil"/></svg><div><div class="sb__num num">'+sn.rank+'</div><div class="sb__k mt1">시즌 랭킹 · 상위 '+sn.top+'</div></div></div>'+
+    '<div><div class="sb__k">총 플레이 시간</div><div class="sb__v">'+sn.playtime+'</div></div><div><div class="sb__k">마지막 접속</div><div class="sb__v">'+sn.last+'</div></div><button class="btn btn--sm btn--ghost" style="justify-self:end">상세 시즌 기록</button>';
+})();
+</script>
 <script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
 </html>

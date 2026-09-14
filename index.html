@@ -2,7 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
 <title>황혼 — GAME UI CONCEPT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,6 +42,7 @@
 .prev{position:relative;height:148px;overflow:hidden;background:#08090C}
 .prev iframe{position:absolute;left:0;top:0;width:1672px;height:1000px;border:0;
   transform-origin:top left;pointer-events:none}
+.prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
 .scard__d{padding:7px 11px 9px;font-size:10px;color:var(--tx-faint);line-height:1.65}
 
 /* 하단 2단 */
@@ -225,6 +230,7 @@
 </div>
 
 <script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>
 /* 카드 미리보기: 1672px 화면을 카드 폭에 맞춰 축소 */
 function fitPreviews(){
@@ -234,9 +240,18 @@ function fitPreviews(){
     f.style.transform = 'scale(' + k + ')';
   });
 }
-/* 웹폰트를 공유 캐시로 재사용하도록 순차 로드 (동시 로드 시 지연) */
+/* 터치 기기: iframe 10개는 무거우므로 정적 썸네일로 대체 */
+var TOUCH = matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches;
 function loadPreviews(){
   var frames = [].slice.call(document.querySelectorAll('.prev iframe'));
+  if (TOUCH){
+    frames.forEach(function(f){
+      var name = (f.getAttribute('data-src')||'').replace('.html','');
+      var img = document.createElement('img'); img.src = 'art/thumbs/'+name+'.webp'; img.alt = name; img.loading = 'lazy';
+      f.parentNode.replaceChild(img, f);
+    });
+    return;
+  }
   (function next(i){
     if (i >= frames.length) return;
     var f = frames[i];
