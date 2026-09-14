@@ -21,8 +21,6 @@
 .chip-char:hover{border-color:var(--line-hard)}
 .chip-char.is-on{border-color:var(--line-red);box-shadow:inset 0 0 16px rgba(165,28,28,.16)}
 .chip-char__art{height:64px;position:relative}
-/* 아인 초상은 인물이 우측으로 치우쳐 있어 별도 보정 */
-.chars .chip-char:first-child .chip-char__art>img{object-position:62% 14%}
 .chip-char__nm{padding:4px 6px 5px;font-size:11.5px;color:var(--tx-hi);font-family:var(--f-serif)}
 .chip-char__nm span{display:block;font-family:var(--f-sans);font-size:10px;color:var(--tx-faint);margin-top:1px}
 .chip-char__ic{position:absolute;right:4px;top:4px;color:rgba(255,255,255,.35)}
@@ -38,6 +36,10 @@
 .eq .slot .ico{width:34px;height:34px}
 .slot__name{text-align:left;padding-left:1px}
 .dollart{position:relative;max-width:430px;width:100%;margin:0 auto;border:1px solid var(--line-soft)}
+.art--doll>img{object-fit:contain;object-position:center bottom;padding:18px 0 6px}
+.art--doll::after{background:radial-gradient(60% 18% at 50% 96%,rgba(0,0,0,.6),transparent 70%)}
+/* 캐릭터 칩은 가로 박스 → 얼굴 크롭의 눈 높이에 맞춤 */
+.chip-char__art.art--avatar>img{object-position:center 38%}
 .dollstats{margin-top:auto;padding-top:10px;border-top:1px solid var(--line-soft)}
 .dollstats .stat{padding:2.5px 0;font-size:11.5px}
 
@@ -96,23 +98,23 @@
     <div class="inv__l">
       <div class="label-ko">캐릭터 선택</div>
       <div class="chars" data-pick>
-        <div class="chip-char is-on" data-pickitem>
-          <div class="chip-char__art art art--face"><img src="art/portrait-ain.webp" alt=""></div>
+        <div class="chip-char is-on" data-pickitem data-char="ain">
+          <div class="chip-char__art art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
           <div class="chip-char__nm">아인<span>LV.26</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-scythe"/></svg>
         </div>
-        <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--face"><img src="art/portrait-kain.webp" alt=""></div>
+        <div class="chip-char" data-pickitem data-char="kain">
+          <div class="chip-char__art art art--avatar"><img src="art/face-kain.webp" alt="kain"></div>
           <div class="chip-char__nm">카인<span>LV.32</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-sword"/></svg>
         </div>
-        <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--face"><img src="art/portrait-ryu.webp" alt=""></div>
+        <div class="chip-char" data-pickitem data-char="ryu">
+          <div class="chip-char__art art art--avatar"><img src="art/face-ryu.webp" alt="ryu"></div>
           <div class="chip-char__nm">류<span>LV.25</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-crosshair"/></svg>
         </div>
-        <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--face"><img src="art/portrait-sera.webp" alt=""></div>
+        <div class="chip-char" data-pickitem data-char="sera">
+          <div class="chip-char__art art art--avatar"><img src="art/face-sera.webp" alt="sera"></div>
           <div class="chip-char__nm">세라<span>LV.24</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-seal"/></svg>
         </div>
@@ -150,8 +152,8 @@
           <div class="slot slot--lock"><svg class="ico"><use href="#i-seal"/></svg></div></div>
       </div>
 
-      <div class="dollart art art--top">
-        <img src="art/char-inventory.webp" alt="아인">
+      <div class="dollart art art--doll">
+        <img id="doll" src="art/full-ain.webp" alt="아인">
       </div>
 
       <div class="eqcol eqcol--r">
@@ -343,5 +345,15 @@
   </div>
 </div>
 <script src="js/ui.js"></script>
+<script>
+/* 캐릭터 선택 → 페이퍼돌 전환 (캐릭터 설정 시트 정면 뷰) */
+document.querySelector('.chars').addEventListener('click', function(e){
+  var c = e.target.closest('[data-char]'); if(!c) return;
+  var d = document.getElementById('doll');
+  d.style.opacity = 0;
+  setTimeout(function(){ d.src = 'art/full-' + c.dataset.char + '.webp'; d.onload = function(){ d.style.opacity = 1; }; }, 120);
+});
+document.getElementById('doll').style.transition = 'opacity .18s';
+</script>
 </body>
 </html>

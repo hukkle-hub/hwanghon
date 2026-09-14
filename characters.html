@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 캐릭터 설정 시트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.stage{height:952px}
+.ch{display:grid;grid-template-columns:236px 1fr 336px;grid-template-rows:minmax(0,1fr);gap:13px;padding:12px 20px;flex:1;min-height:0}
+
+/* 좌: 캐릭터 목록 */
+.crow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid transparent;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:.15s}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.crow__face{width:46px;height:46px;border:1px solid var(--line);flex:none}
+.crow__nm{font-family:var(--f-serif);font-size:14px;color:var(--tx-hi)}
+.crow__role{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.crow__ic{margin-left:auto;color:var(--tx-ghost)}
+
+/* 중: 턴어라운드 */
+.turn{position:relative;display:flex;flex-direction:column;min-height:0;height:100%;border:1px solid var(--line);overflow:hidden}
+.turn__bg{position:absolute;inset:0;background:
+  radial-gradient(60% 50% at 50% 100%,rgba(165,28,28,.10),transparent 70%),
+  linear-gradient(180deg,#121317,#0B0C0F);}
+.turn__grid{position:absolute;inset:0;opacity:.35;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:40px 40px}
+.turn__views{position:relative;flex:1;min-height:0;display:grid;grid-template-columns:1.15fr .8fr 1.05fr;
+  grid-template-rows:minmax(0,1fr);align-items:end;padding:44px 26px 34px;gap:10px}
+.view{position:relative;height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.view img{height:100%;max-width:100%;width:auto;object-fit:contain;object-position:center bottom;
+  filter:drop-shadow(0 18px 24px rgba(0,0,0,.65));transition:opacity .18s}
+.view__lb{position:absolute;top:-30px;font-size:10px;letter-spacing:.3em;color:var(--tx-ghost)}
+.view--main{cursor:pointer}
+.turn__floor{position:absolute;left:8%;right:8%;bottom:30px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent)}
+.turn__head{position:absolute;left:18px;top:14px;z-index:3}
+.turn__head b{display:block;font-family:var(--f-serif);font-size:24px;color:var(--tx-hi);letter-spacing:.06em}
+.turn__head span{display:block;font-size:11px;color:var(--tx-faint);margin-top:2px;letter-spacing:.04em}
+.turn__tag{position:absolute;right:18px;top:16px;z-index:3;display:flex;gap:6px}
+.turn__tools{display:flex;align-items:center;gap:10px;padding:8px 14px;border-top:1px solid var(--line-soft);flex:none}
+.turn__tools .tabs--pill .tab{height:25px;font-size:11px;padding:0 11px}
+
+/* 우: 설정 */
+.sheetstat .stat{padding:4px 0}
+.trait{display:flex;gap:9px;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.trait:last-child{border:0}
+.trait__ic{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.3);color:#9AA0AC;flex:none}
+.quote{font-size:11.5px;color:var(--tx-dim);line-height:1.9;font-style:italic;margin:0}
+.swatch{display:flex;gap:5px}
+.swatch i{width:22px;height:22px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">캐릭터 설정 시트</h1>
+      <div class="topbar__sub">인력사무소 소속 요원의 외형 설정과 역할, 기본 능력치를 확인합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="ch">
+    <!-- 좌: 목록 -->
+    <section class="panel panel--framed">
+      <div class="panel__head"><span class="panel__title">소속 요원</span><span class="panel__meta">4 / 4</span></div>
+      <div class="panel__body panel__body--flush fill scroll" id="list" data-pick>
+        <div class="crow is-on" data-char="ain">
+          <div class="crow__face art art--avatar"><img src="art/face-ain.webp" alt=""></div>
+          <div><div class="crow__nm">아인</div><div class="crow__role">암살자 · 딜러/DPS</div></div>
+          <svg class="ico crow__ic"><use href="#i-scythe"/></svg>
+        </div>
+        <div class="crow" data-char="kain">
+          <div class="crow__face art art--avatar"><img src="art/face-kain.webp" alt=""></div>
+          <div><div class="crow__nm">카인</div><div class="crow__role">블레이드 마스터 · 탱커</div></div>
+          <svg class="ico crow__ic"><use href="#i-sword"/></svg>
+        </div>
+        <div class="crow" data-char="ryu">
+          <div class="crow__face art art--avatar"><img src="art/face-ryu.webp" alt=""></div>
+          <div><div class="crow__nm">류</div><div class="crow__role">레인저 · 브레이커</div></div>
+          <svg class="ico crow__ic"><use href="#i-crosshair"/></svg>
+        </div>
+        <div class="crow" data-char="sera">
+          <div class="crow__face art art--avatar"><img src="art/face-sera.webp" alt=""></div>
+          <div><div class="crow__nm">세라</div><div class="crow__role">위치 메이커 · 서포터</div></div>
+          <svg class="ico crow__ic"><use href="#i-seal"/></svg>
+        </div>
+      </div>
+      <div style="padding:10px">
+        <a class="btn btn--sm btn--block btn--ghost" href="inventory.html">
+          <svg class="ico ico--sm"><use href="#i-bag"/></svg>장비 / 인벤토리로</a>
+      </div>
+    </section>
+
+    <!-- 중: 턴어라운드 -->
+    <div class="turn">
+      <div class="turn__bg"></div><div class="turn__grid"></div>
+      <div class="turn__head"><b id="nm">아인</b><span id="tt">새벽을 걷는 그림자 · Ain#0927</span></div>
+      <div class="turn__tag" id="tags"><span class="chip chip--red">암살자</span><span class="chip">낫(대형)</span></div>
+      <div class="turn__views">
+        <div class="view view--main" title="클릭: 정면 확대">
+          <span class="view__lb">F R O N T</span><img id="v-full" src="art/full-ain.webp" alt="정면"></div>
+        <div class="view"><span class="view__lb">S I D E</span><img id="v-side" src="art/side-ain.webp" alt="측면"></div>
+        <div class="view"><span class="view__lb">B A C K</span><img id="v-back" src="art/back-ain.webp" alt="후면"></div>
+      </div>
+      <div class="turn__floor"></div>
+      <div class="turn__tools">
+        <span class="xs t-faint">뷰</span>
+        <div class="tabs tabs--pill" data-tabs="" id="viewmode">
+          <button class="tab is-on" data-tab="all">전체</button>
+          <button class="tab" data-tab="front">정면</button>
+          <button class="tab" data-tab="side">측면</button>
+          <button class="tab" data-tab="back">후면</button>
+        </div>
+        <span class="hotbar__spacer"></span>
+        <span class="xs t-faint">시트 원본</span>
+        <a class="btn btn--sm btn--ghost" id="sheetlink" href="design-sheets/characters/ain.webp" target="_blank">
+          <svg class="ico ico--sm"><use href="#i-eye"/></svg>열기</a>
+      </div>
+    </div>
+
+    <!-- 우: 설정 -->
+    <div class="flex col g3" style="min-height:0">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">기본 정보</span><span class="panel__meta" id="lv">LV.26</span></div>
+        <div class="panel__body panel__body--tight sheetstat">
+          <div class="stat"><span class="stat__k">역할</span><span class="stat__v" id="s-role">딜러 / DPS</span></div>
+          <div class="stat"><span class="stat__k">보조 역할</span><span class="stat__v" id="s-sub">브레이커</span></div>
+          <div class="stat"><span class="stat__k">주 무기</span><span class="stat__v" id="s-wp">낫 (대형)</span></div>
+          <div class="stat"><span class="stat__k">전투력</span><span class="stat__v t-hi num" id="s-cp">24,650</span></div>
+          <div class="hr"></div>
+          <div class="stat"><span class="stat__k">카운터</span><span class="stat__v grade-letter" id="g1">S</span></div>
+          <div class="stat"><span class="stat__k">부위파괴</span><span class="stat__v grade-letter" id="g2">S</span></div>
+          <div class="stat"><span class="stat__k">정제</span><span class="stat__v grade-letter" id="g3">A</span></div>
+          <div class="stat"><span class="stat__k">드랍</span><span class="stat__v grade-letter" id="g4">A</span></div>
+          <div class="stat"><span class="stat__k">제작</span><span class="stat__v grade-letter" id="g5">A</span></div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">외형 설정</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="label-ko">키 컬러</div>
+          <div class="swatch" id="sw"></div>
+          <div class="hr"></div>
+          <div class="xs t-faint" id="look" style="line-height:1.8"></div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed fill">
+        <div class="panel__head"><span class="panel__title">특성</span></div>
+        <div class="panel__body panel__body--tight scroll" id="traits"></div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__body panel__body--tight"><p class="quote" id="quote"></p></div>
+      </section>
+    </div>
+  </main>
+
+  <div class="hotbar">
+    <a class="hot" href="office.html"><span class="key">ESC</span>뒤로</a>
+    <span class="hot"><span class="key">←</span><span class="key">→</span>요원 전환</span>
+    <span class="hotbar__spacer"></span>
+    <span class="hot xs t-ghost">캐릭터 시트: design-sheets/characters/</span>
+  </div>
+</div>
+
+<script src="js/ui.js"></script>
+<script>
+var CH = {
+  ain:  { nm:'아인', tt:'새벽을 걷는 그림자 · Ain#0927', lv:'LV.26', tags:[['암살자','red'],['낫(대형)','']],
+          role:'딜러 / DPS', sub:'브레이커', wp:'낫 (대형)', cp:'24,650', g:['S','S','A','A','A'],
+          sw:['#0B0C0F','#2A2426','#7A6A55','#A51C1C'],
+          look:'짧은 흑발, 붉은 눈. 너덜거리는 검은 천을 겹친 경갑. 왼팔 전체를 감싼 금속 건틀릿과 허벅지 스트랩.',
+          traits:[['scythe','카운터 특화','정확한 타이밍의 카운터로 순간 피해를 극대화'],['drop','출혈 부여','일반 공격 시 확률로 출혈'],['bolt','기동력','회피·이동 능력 보유']],
+          quote:'“완벽한 타이밍, 날카로운 한 칼.<br>그 사이에 승리가 있다.”' },
+  kain: { nm:'카인', tt:'대장간 운영 · Kain#0032', lv:'LV.32', tags:[['블레이드 마스터','red'],['대검','']],
+          role:'탱커 / 브루저', sub:'제작·고정 보조', wp:'대검', cp:'32,180', g:['A','A','B','A','S'],
+          sw:['#0B0C0F','#3A2E22','#8C6A3F','#A51C1C'],
+          look:'짧은 흑발과 수염. 소매 없는 후드 상의에 청동빛 견갑·건틀릿·정강이 갑주. 교차 가죽 벨트.',
+          traits:[['shield','강인함','격추 저항 및 높은 생존력'],['hammer','제작 숙련','강화·제작 재료 추가 획득'],['sword','파괴 특화','부위 파괴 속도 증가']],
+          quote:'“무기는 살아있어. 손이 기억해야,<br>녀석도 네게 응답하지.”' },
+  ryu:  { nm:'류', tt:'붉은 그림자 · Ryu#0025', lv:'LV.25', tags:[['레인저','red'],['단검·투척','']],
+          role:'딜러 / 레인저', sub:'브레이커', wp:'쌍단검', cp:'21,430', g:['A','A','B','A','B'],
+          sw:['#0B0C0F','#1E1B1D','#6E5A3A','#7A1F1F'],
+          look:'언더컷 흑발, 충혈된 눈. 긴 검은 스카프와 찢어진 천을 두른 경장. 팔에 감은 끈과 청동 무릎 보호대.',
+          traits:[['crosshair','연속 처치','적 처치 시 드랍 확률 증가'],['bolt','기동력','회피·이동 능력 보유'],['eye','정찰','정찰 경로 노트 자동 갱신']],
+          quote:'“먼저 보는 쪽이 이긴다.<br>나는 언제나 먼저 본다.”' },
+  sera: { nm:'세라', tt:'정제사 · Sera#0024', lv:'LV.24', tags:[['위치 메이커','red'],['정제 도구','']],
+          role:'서포터 / 힐러', sub:'정제', wp:'정제 도구 · 시약', cp:'19,870', g:['B','A','A','B','A'],
+          sw:['#0B0C0F','#C9C9CF','#4A4046','#7A1F1F'],
+          look:'허리까지 내려오는 은백색 장발. 하이넥 검은 코트 위에 시약병을 꽂은 벨트. 긴 장갑과 찢어진 망토.',
+          traits:[['potion','정제 숙련','정제 성공률·재료 획득 증가'],['heart','파티 회복','파티 회복량 증가'],['seal','출혈 저항','출혈 상태 이상 대비']],
+          quote:'“상처는 닦아낼 수 있어.<br>기억은… 조금 더 걸리겠지.”' }
+};
+var KEYS = Object.keys(CH), cur = 'ain';
+function show(k){
+  var c = CH[k]; cur = k;
+  ['full','side','back'].forEach(function(v){
+    var im = document.getElementById('v-'+v); im.style.opacity = 0;
+    setTimeout(function(){ im.src = 'art/'+v+'-'+k+'.webp'; im.onload = function(){ im.style.opacity = 1; }; }, 110);
+  });
+  document.getElementById('nm').textContent = c.nm;
+  document.getElementById('tt').textContent = c.tt;
+  document.getElementById('lv').textContent = c.lv;
+  document.getElementById('tags').innerHTML = c.tags.map(function(t){ return '<span class="chip'+(t[1]?' chip--'+t[1]:'')+'">'+t[0]+'</span>'; }).join('');
+  document.getElementById('s-role').textContent = c.role;
+  document.getElementById('s-sub').textContent = c.sub;
+  document.getElementById('s-wp').textContent = c.wp;
+  document.getElementById('s-cp').textContent = c.cp;
+  c.g.forEach(function(g,i){ var el = document.getElementById('g'+(i+1)); el.textContent = g; el.className = 'stat__v grade-letter g-'+g.toLowerCase(); });
+  document.getElementById('sw').innerHTML = c.sw.map(function(h){ return '<i style="background:'+h+'" title="'+h+'"></i>'; }).join('');
+  document.getElementById('look').textContent = c.look;
+  document.getElementById('traits').innerHTML = c.traits.map(function(t){
+    return '<div class="trait"><span class="trait__ic"><svg class="ico ico--sm"><use href="#i-'+t[0]+'"/></svg></span>'+
+           '<div><div class="sm t-hi">'+t[1]+'</div><div class="xs t-faint mt1">'+t[2]+'</div></div></div>'; }).join('');
+  document.getElementById('quote').innerHTML = c.quote;
+  document.getElementById('sheetlink').href = 'design-sheets/characters/'+k+'.webp';
+  [].forEach.call(document.querySelectorAll('#list .crow'), function(r){ r.classList.toggle('is-on', r.dataset.char===k); });
+}
+document.getElementById('list').addEventListener('click', function(e){
+  var r = e.target.closest('[data-char]'); if(r) show(r.dataset.char);
+});
+document.addEventListener('keydown', function(e){
+  var i = KEYS.indexOf(cur);
+  if (e.key==='ArrowRight') show(KEYS[(i+1)%KEYS.length]);
+  if (e.key==='ArrowLeft')  show(KEYS[(i+KEYS.length-1)%KEYS.length]);
+});
+/* 뷰 모드: 전체 / 단일 */
+document.getElementById('viewmode').addEventListener('click', function(e){
+  var b = e.target.closest('[data-tab]'); if(!b) return;
+  var m = b.dataset.tab, views = document.querySelectorAll('.turn__views .view');
+  var map = {all:[1,1,1], front:[1,0,0], side:[0,1,0], back:[0,0,1]}[m];
+  views.forEach(function(v,i){ v.style.display = map[i] ? '' : 'none'; });
+  document.querySelector('.turn__views').style.gridTemplateColumns = m==='all' ? '1.15fr .8fr 1.05fr' : '1fr';
+});
+show('ain');
+</script>
+</body>
+</html>

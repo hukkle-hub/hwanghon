@@ -15,8 +15,9 @@ game-ui/
 ├── profile.html      7. 플레이어 프로필 / 기술 등급
 ├── result.html       8. 전투 결과 / 보상 정산
 ├── benchmark.html    9. UI 벤치마크 / 제안 압축 시트
+├── characters.html   캐릭터 설정 시트 (턴어라운드 뷰어)
 ├── compare.html      디자인 시트 ↔ 구현 대조 뷰어
-├── design-sheets/    원본 설계 시트 9장 (작업 기준 원본)
+├── design-sheets/    원본 설계 시트 9장 + characters/ 캐릭터 시트 4장
 ├── art/              시트에서 추출한 일러스트 에셋
 ├── css/tokens.css    디자인 토큰 (팔레트·타이포·등급 컬러·간격)
 ├── css/ui.css        공용 컴포넌트 (패널·배지·슬롯·게이지·버튼·탭 …)
@@ -67,6 +68,7 @@ npx http-server game-ui -p 8080
 | `07-profile.webp` | 플레이어 프로필 |
 | `08-result.webp` | 전투 결과 / 보상 정산 |
 | `09-benchmark.webp` | UI 벤치마크 압축 시트 |
+| `characters/ain·kain·ryu·sera.webp` | 캐릭터 턴어라운드 (정면/측면/후면) |
 
 `compare.html` 에서 시트와 구현을 겹쳐 놓고 분할 슬라이더로 대조할 수 있습니다.
 화면을 수정한 뒤에는 이 뷰어로 시트와 어긋난 곳을 확인하고 작업하십시오.
@@ -89,12 +91,18 @@ npx http-server game-ui -p 8080
 |---|---|
 | `office-brief` | 인력사무실 중앙 브리핑 |
 | `boss-marsh` / `boss-anatomy` | 보스 아트 · 부위 파괴 다이어그램 |
-| `portrait-ain/kain/ryu/sera` | 파티 카드 · 초상 · 소형 얼굴 |
+| `portrait-ain/kain/ryu/sera` | 파티 모집 카드 (상황 일러스트) |
+| `face-ain/kain/ryu/sera` | 모든 소형 아바타 슬롯 (캐릭터 시트 얼굴, 알파) |
+| `full-* / side-* / back-*` | 캐릭터 설정 시트 턴어라운드 · 인벤토리 페이퍼돌 (알파) |
 | `char-inventory` / `char-profile` / `char-result` | 전신 캐릭터 아트 |
 | `forge-kain` | 대장간 |
 | `lobby-city` / `story-city` | 폐허 도시 · 전장 배경 |
 
-보정 클래스: `.art--top`(상단 기준, 얼굴 노출) `.art--mid`(상단 32%)
+캐릭터 시트는 회색 배경을 알파로 제거해 추출했습니다 — 배경은 이미지 가장자리와 이어진
+무채색 영역으로 잡고(가장자리 플러드필 + 채도 판정), 피부처럼 배경 밝기에 가까운 색은
+윤곽 안쪽이면 전경으로 유지합니다. 새 캐릭터 시트가 오면 같은 절차로 뽑으면 됩니다.
+
+보정 클래스: `.art--top`(상단 기준, 얼굴 노출) `.art--mid`(상단 32%) `.art--avatar`(알파 얼굴) `.art--doll`(전신 contain)
 분위기 폴백: `.art--beast` `.art--portrait` `.art--city` `.art--forge` `.art--office`
 — 이미지를 비우면 절차적 플레이스홀더로 되돌아갑니다.
 

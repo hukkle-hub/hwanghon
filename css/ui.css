@@ -301,6 +301,10 @@ svg:not(.gauge svg){fill:none;stroke:currentColor;stroke-width:1.4;stroke-lineca
 .art--top>img{object-position:center top}
 .art--mid>img{object-position:center 32%}
 .art--face>img{object-position:center 16%}
+/* 캐릭터 시트 얼굴 크롭(알파) — 배경면 위에 그대로 */
+.art--avatar{background:radial-gradient(70% 70% at 50% 40%,#2A2B31,#141519)}
+.art--avatar>img{object-fit:cover;object-position:center top}
+.art--avatar::after{background:none}
 .art:has(img) .art__tag{display:none}
 /* 실제 아트가 있으면 절차적 실루엣/장식은 끈다 */
 .art:has(img)::before{content:none}

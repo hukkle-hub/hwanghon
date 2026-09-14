@@ -9,6 +9,7 @@
     ['office.html',    '인력사무실'],
     ['quest.html',     '의뢰 상세'],
     ['party.html',     '파티 모집'],
+    ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
     ['forge.html',     '강화'],
     ['profile.html',   '프로필'],
