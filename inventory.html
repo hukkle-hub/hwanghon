@@ -20,7 +20,9 @@
 .chip-char{display:flex;flex-direction:column;border:1px solid var(--line);cursor:pointer;position:relative;transition:.15s}
 .chip-char:hover{border-color:var(--line-hard)}
 .chip-char.is-on{border-color:var(--line-red);box-shadow:inset 0 0 16px rgba(165,28,28,.16)}
-.chip-char__art{height:52px;position:relative}
+.chip-char__art{height:64px;position:relative}
+/* 아인 초상은 인물이 우측으로 치우쳐 있어 별도 보정 */
+.chars .chip-char:first-child .chip-char__art>img{object-position:62% 14%}
 .chip-char__nm{padding:4px 6px 5px;font-size:11.5px;color:var(--tx-hi);font-family:var(--f-serif)}
 .chip-char__nm span{display:block;font-family:var(--f-sans);font-size:10px;color:var(--tx-faint);margin-top:1px}
 .chip-char__ic{position:absolute;right:4px;top:4px;color:rgba(255,255,255,.35)}
@@ -95,22 +97,22 @@
       <div class="label-ko">캐릭터 선택</div>
       <div class="chars" data-pick>
         <div class="chip-char is-on" data-pickitem>
-          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__art art art--face"><img src="art/portrait-ain.webp" alt=""></div>
           <div class="chip-char__nm">아인<span>LV.26</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-scythe"/></svg>
         </div>
         <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__art art art--face"><img src="art/portrait-kain.webp" alt=""></div>
           <div class="chip-char__nm">카인<span>LV.32</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-sword"/></svg>
         </div>
         <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__art art art--face"><img src="art/portrait-ryu.webp" alt=""></div>
           <div class="chip-char__nm">류<span>LV.25</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-crosshair"/></svg>
         </div>
         <div class="chip-char" data-pickitem>
-          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__art art art--face"><img src="art/portrait-sera.webp" alt=""></div>
           <div class="chip-char__nm">세라<span>LV.24</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-seal"/></svg>
         </div>
@@ -148,8 +150,8 @@
           <div class="slot slot--lock"><svg class="ico"><use href="#i-seal"/></svg></div></div>
       </div>
 
-      <div class="dollart art art--portrait">
-        <div class="art__tag">C H A R A C T E R</div>
+      <div class="dollart art art--top">
+        <img src="art/char-inventory.webp" alt="아인">
       </div>
 
       <div class="eqcol eqcol--r">

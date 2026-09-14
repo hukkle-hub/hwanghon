@@ -14,7 +14,8 @@
     ['profile.html',   '프로필'],
     ['battle.html',    '전투 HUD'],
     ['result.html',    '전투 결과'],
-    ['benchmark.html', '벤치마크']
+    ['benchmark.html', '벤치마크'],
+    ['compare.html',   '시트 대조']
   ];
 
   var $  = function(s,r){ return (r||document).querySelector(s); };
@@ -163,7 +164,8 @@
   /* ---------- 부팅 ---------- */
   function boot(){
     tabs(); pickers(); checks(); gauges(); slots(); countdowns(); bars(); segbars();
-    if (!document.body.hasAttribute('data-nonav')) navDock();
+    var embedded = (window.self !== window.top);
+    if (!embedded && !document.body.hasAttribute('data-nonav')) navDock();
     fitStage();
     window.addEventListener('resize', fitStage);
   }

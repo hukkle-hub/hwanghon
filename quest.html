@@ -20,21 +20,22 @@
 .bosshead__t{display:flex;align-items:center;gap:10px}
 .bosshead__t h2{font-size:18px;color:var(--tx-hi);letter-spacing:.05em}
 .bosshead__d{font-size:11px;color:var(--tx-dim);line-height:1.55;margin-top:6px}
-.bossart{height:100px;margin:9px 15px 12px;border:1px solid var(--line);position:relative}
+.bossart{height:110px;margin:9px 15px 12px;border:1px solid var(--line);position:relative}
+.bossart img{object-position:center 40%}
 
 /* 약점 다이어그램 */
-.weak{position:relative;height:130px}
-.weak__fig{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:152px;height:84px;
+.weak{position:relative;height:156px}
+.weak__fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:212px;height:116px;
   background:radial-gradient(60% 60% at 50% 55%,rgba(90,95,110,.22),transparent 70%)}
-.weak__fig svg{width:100%;height:100%;opacity:.5}
+.weak__fig img{width:100%;height:100%;object-fit:contain;opacity:.92}
 .callout{position:absolute;min-width:146px;border:1px solid var(--line-gold);background:rgba(20,18,12,.72);padding:6px 9px}
 .callout b{display:block;font-size:11.5px;color:#D6C68E;font-weight:500;letter-spacing:.03em}
 .callout span{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--tx-faint);margin-top:4px}
 .callout span i{color:var(--gold);font-style:normal}
-.callout--tl{left:8px;top:22px}
-.callout--tr{right:8px;top:14px}
-.callout--bl{left:22px;bottom:18px}
-.callout--br{right:22px;bottom:26px}
+.callout--tl{left:8px;top:10px}
+.callout--tr{right:8px;top:6px}
+.callout--bl{left:22px;bottom:10px}
+.callout--br{right:22px;bottom:14px}
 .weak__dot{position:absolute;width:6px;height:6px;border:1px solid var(--gold);border-radius:50%;
   background:rgba(201,162,39,.3)}
 .weak__line{position:absolute;inset:0;pointer-events:none}
@@ -108,7 +109,7 @@
         </div>
         <div class="panel__body panel__body--flush scroll fill" data-pick>
           <div class="row is-on">
-            <div class="row__thumb art art--beast"></div>
+            <div class="row__thumb art"><img src="art/boss-marsh.webp" alt=""></div>
             <div class="row__main">
               <div class="row__name">메마른 갈대밭 정찰</div>
               <div class="row__sub">외곽지대 &gt; 갈대습지</div>
@@ -116,7 +117,7 @@
             <div class="row__right"><span class="risk">위험도 <b class="badge badge--s">S</b></span></div>
           </div>
           <div class="row">
-            <div class="row__thumb art art--city"></div>
+            <div class="row__thumb art"><img src="art/lobby-city.webp" alt=""></div>
             <div class="row__main">
               <div class="row__name">파괴된 수송로 확보</div>
               <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
@@ -124,7 +125,7 @@
             <div class="row__right"><b class="badge badge--a">A</b></div>
           </div>
           <div class="row">
-            <div class="row__thumb art"></div>
+            <div class="row__thumb art"><img src="art/story-city.webp" alt=""></div>
             <div class="row__main">
               <div class="row__name">지하 오염수 처리</div>
               <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
@@ -132,7 +133,7 @@
             <div class="row__right"><b class="badge badge--a">A</b></div>
           </div>
           <div class="row">
-            <div class="row__thumb art art--beast"></div>
+            <div class="row__thumb art"><img src="art/boss-marsh.webp" alt=""></div>
             <div class="row__main">
               <div class="row__name">변이체 토벌: 식인초</div>
               <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
@@ -140,7 +141,7 @@
             <div class="row__right"><b class="badge badge--b">B</b></div>
           </div>
           <div class="row">
-            <div class="row__thumb art"></div>
+            <div class="row__thumb art"><img src="art/story-city.webp" alt=""></div>
             <div class="row__main">
               <div class="row__name">자원 회수: 의료품</div>
               <div class="row__sub">도심지 &gt; 폐병원</div>
@@ -161,10 +162,10 @@
         </div>
         <div class="panel__body">
           <div class="codex">
-            <div class="art art--beast"></div>
-            <div class="art art--portrait"></div>
-            <div class="art art--beast"></div>
-            <div class="art art--portrait"></div>
+            <div class="art"><img src="art/boss-marsh.webp" alt=""></div>
+            <div class="art"><img src="art/boss-anatomy.webp" alt=""></div>
+            <div class="art"><img src="art/story-city.webp" alt=""></div>
+            <div class="art"><img src="art/lobby-city.webp" alt=""></div>
           </div>
           <button class="btn btn--sm btn--block btn--ghost mt3">
             <svg class="ico ico--sm"><use href="#i-refresh"/></svg>도감 보기</button>
@@ -192,7 +193,7 @@
           </div>
         </div>
         <div class="bossart art art--beast">
-          <div class="art__tag">B O S S &nbsp; A R T</div>
+          <img src="art/boss-marsh.webp" alt="메마른 갈대밭 대형 변이체">
         </div>
       </section>
 
@@ -206,15 +207,7 @@
               <line x1="23%" y1="80%" x2="45%" y2="62%"/>
               <line x1="78%" y1="76%" x2="56%" y2="64%"/>
             </svg>
-            <div class="weak__fig">
-              <svg viewBox="0 0 230 126" fill="none">
-                <path d="M28 96c6-22 18-34 40-38 14-3 26-10 34-20 6-8 16-12 26-10 12 2 18 10 22 20 5 12 16 18 28 20 20 4 30 14 34 30"
-                      stroke="#7A808C" stroke-width="2"/>
-                <path d="M26 96l-6 22M56 92l-4 24M160 96l4 24M196 94l8 22" stroke="#7A808C" stroke-width="2"/>
-                <circle cx="152" cy="34" r="13" stroke="#7A808C" stroke-width="2"/>
-                <path d="M30 90C14 80 6 62 10 46" stroke="#7A808C" stroke-width="2"/>
-              </svg>
-            </div>
+            <div class="weak__fig"><img src="art/boss-anatomy.webp" alt="부위 구조"></div>
             <div class="callout callout--tl">
               <b>머리 (약점)</b><span><i>★</i>피해 증가</span>
             </div>
@@ -366,7 +359,7 @@
         <div class="panel__head"><span class="panel__title">정찰 경로 노트</span></div>
         <div class="panel__body panel__body--tight">
           <div class="note">
-            <div class="note__img art art--city"></div>
+            <div class="note__img art"><img src="art/lobby-city.webp" alt=""></div>
             <p class="t-faint" style="font-size:10.5px;line-height:1.6;margin:0">
               갈대 습지를 따라 북동쪽으로 이동.<br>
               무너진 망루를 지나면 넓은 분지에 도달한다.<br>
@@ -380,7 +373,7 @@
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">선택 캐릭터</span></div>
         <div class="charsel">
-          <div class="charsel__face art art--portrait"></div>
+          <div class="charsel__face art art--top"><img src="art/portrait-ain.webp" alt=""></div>
           <div class="fill">
             <div class="flex ac jb"><span class="sm t-hi f-serif">아인</span><span class="xs t-faint">LV.26</span></div>
             <div class="xs t-faint mt1">전투력 <span class="num t-dim">24,650</span></div>

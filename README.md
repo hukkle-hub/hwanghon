@@ -15,6 +15,9 @@ game-ui/
 ├── profile.html      7. 플레이어 프로필 / 기술 등급
 ├── result.html       8. 전투 결과 / 보상 정산
 ├── benchmark.html    9. UI 벤치마크 / 제안 압축 시트
+├── compare.html      디자인 시트 ↔ 구현 대조 뷰어
+├── design-sheets/    원본 설계 시트 9장 (작업 기준 원본)
+├── art/              시트에서 추출한 일러스트 에셋
 ├── css/tokens.css    디자인 토큰 (팔레트·타이포·등급 컬러·간격)
 ├── css/ui.css        공용 컴포넌트 (패널·배지·슬롯·게이지·버튼·탭 …)
 └── js/icons.js       SVG 아이콘 스프라이트 (60여 종, currentColor 상속)
@@ -48,11 +51,33 @@ npx http-server game-ui -p 8080
 등급 컬러(S/A/B/C)와 아이템 레어도(일반·희귀·영웅·전설·신화)는 벤치마크 시트의
 "컬러 시스템(권장)" 원칙에 맞춰 토큰화되어 있습니다.
 
-## 아트 슬롯
+## 디자인 시트 (작업 기준 원본)
 
-일러스트가 들어갈 자리는 전부 `.art` 클래스로 분리되어 있고, 지금은 분위기만 잡는
-절차적 플레이스홀더(그라디언트 + 폐허 스카이라인 실루엣 + 그레인)가 들어가 있습니다.
-실제 아트로 교체할 때는 이미지를 한 장 넣기만 하면 됩니다.
+`design-sheets/` 에 원본 설계 시트 9장이 들어 있습니다. 모든 화면은 이 시트를 기준으로
+작업하며, 시트와 구현은 **같은 1672px 좌표계**를 씁니다.
+
+| 파일 | 대응 화면 |
+|---|---|
+| `00-concept.webp` | 컨셉 시트 (팔레트·타이포·레퍼런스) |
+| `01-office.webp` | 인력사무실 |
+| `02-quest.webp` | 의뢰 상세 / 보스 도감 |
+| `03-party.webp` | 파티 모집 |
+| `05-inventory.webp` | 장비 / 인벤토리 |
+| `06-forge.webp` | 장비 관리 / 강화 |
+| `07-profile.webp` | 플레이어 프로필 |
+| `08-result.webp` | 전투 결과 / 보상 정산 |
+| `09-benchmark.webp` | UI 벤치마크 압축 시트 |
+
+`compare.html` 에서 시트와 구현을 겹쳐 놓고 분할 슬라이더로 대조할 수 있습니다.
+화면을 수정한 뒤에는 이 뷰어로 시트와 어긋난 곳을 확인하고 작업하십시오.
+
+> 시트 원본은 941px, 구현 스테이지는 952px이라 하단에서 약 11px 차이가 납니다.
+> 대조 시 이 오차를 감안하십시오.
+
+## 아트 에셋
+
+일러스트는 원본 시트에서 잘라내 `art/` 에 WebP로 관리합니다 (총 약 0.4MB).
+모든 아트 자리는 `.art` 컨테이너로 분리되어 있어 교체는 이미지 한 장이면 됩니다.
 
 ```html
 <div class="art art--beast">
@@ -60,7 +85,20 @@ npx http-server game-ui -p 8080
 </div>
 ```
 
-변형: `.art--beast`(보스) `.art--portrait`(인물) `.art--city`(폐허) `.art--forge`(대장간) `.art--office`(사무소)
+| 에셋 | 쓰이는 곳 |
+|---|---|
+| `office-brief` | 인력사무실 중앙 브리핑 |
+| `boss-marsh` / `boss-anatomy` | 보스 아트 · 부위 파괴 다이어그램 |
+| `portrait-ain/kain/ryu/sera` | 파티 카드 · 초상 · 소형 얼굴 |
+| `char-inventory` / `char-profile` / `char-result` | 전신 캐릭터 아트 |
+| `forge-kain` | 대장간 |
+| `lobby-city` / `story-city` | 폐허 도시 · 전장 배경 |
+
+보정 클래스: `.art--top`(상단 기준, 얼굴 노출) `.art--mid`(상단 32%)
+분위기 폴백: `.art--beast` `.art--portrait` `.art--city` `.art--forge` `.art--office`
+— 이미지를 비우면 절차적 플레이스홀더로 되돌아갑니다.
+
+새 크롭이 필요하면 원본 시트에서 좌표를 지정해 추출하십시오.
 
 ## 해상도
 

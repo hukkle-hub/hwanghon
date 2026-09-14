@@ -298,6 +298,12 @@ svg:not(.gauge svg){fill:none;stroke:currentColor;stroke-width:1.4;stroke-lineca
   border-left:1px solid rgba(255,255,255,.09);border-right:1px solid rgba(255,255,255,.09)
 }
 .art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.art--top>img{object-position:center top}
+.art--mid>img{object-position:center 32%}
+.art--face>img{object-position:center 16%}
+.art:has(img) .art__tag{display:none}
+/* 실제 아트가 있으면 절차적 실루엣/장식은 끈다 */
+.art:has(img)::before{content:none}
 .art--beast{background-image:
   radial-gradient(100% 80% at 50% 70%,rgba(90,40,35,.30),transparent 62%),
   radial-gradient(140% 90% at 50% 0%,rgba(120,130,150,.14),transparent 55%),
