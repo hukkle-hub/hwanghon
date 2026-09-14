@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 전투 화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+/* 전투 화면은 풀블리드 HUD — 중앙 시야 최소 방해 원칙 */
+.bt{position:relative;flex:1;min-height:0;overflow:hidden}
+.btscene{position:absolute;inset:0}
+.btscene .moon{right:16%;top:8%;width:70px;height:70px}
+
+/* 보스 HP (상단 고정) */
+.bosshp{position:absolute;left:50%;top:16px;transform:translateX(-50%);width:620px;z-index:5;text-align:center}
+.bosshp__nm{font-family:var(--f-serif);font-size:13px;color:#D8CFCF;letter-spacing:.1em;
+  text-shadow:0 2px 6px #000}
+.bosshp__bar{display:flex;align-items:center;gap:9px;margin-top:6px}
+.bosshp__bar .bar{flex:1;height:9px;border-color:rgba(255,255,255,.14)}
+.bosshp__bar .bar__fill{background:linear-gradient(90deg,#6E1512,#C7332C)}
+.stack{font-size:11.5px;color:#C9A45E;font-variant-numeric:tabular-nums;text-shadow:0 1px 3px #000}
+.bosshp__seg{display:flex;gap:4px;justify-content:center;margin-top:6px}
+.bosshp__seg i{width:8px;height:8px;transform:rotate(45deg);border:1px solid rgba(217,58,54,.6);
+  background:rgba(165,28,28,.35)}
+.bosshp__seg i.off{border-color:rgba(255,255,255,.14);background:transparent}
+
+/* 우상단 타이머 */
+.bttimer{position:absolute;right:20px;top:16px;z-index:5;display:flex;align-items:center;gap:12px}
+.bttimer__t{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--tx-hi);
+  font-variant-numeric:tabular-nums;text-shadow:0 1px 4px #000}
+
+/* 좌상단 파티 */
+.btparty{position:absolute;left:18px;top:70px;z-index:5;display:flex;flex-direction:column;gap:7px;width:196px}
+.pmem{display:flex;align-items:center;gap:8px}
+.pmem__face{width:32px;height:32px;border:1px solid rgba(255,255,255,.14);flex:none}
+.pmem__n{font-size:10.5px;color:var(--tx-hi);text-shadow:0 1px 3px #000}
+.pmem__lv{font-size:9.5px;color:var(--tx-faint)}
+.pmem .bar{height:4px;margin-top:3px}
+.pmem__st{display:flex;gap:3px;margin-top:3px}
+.pmem__st i{width:9px;height:9px;border:1px solid rgba(255,255,255,.18);display:block}
+.pmem__hp{font-size:9px;color:var(--tx-faint);font-variant-numeric:tabular-nums;margin-left:auto}
+
+/* 카운터 데미지 (중앙 상단) */
+.counter{position:absolute;left:50%;top:34%;transform:translateX(-50%);z-index:6;text-align:center;
+  pointer-events:none}
+.counter__lb{font-family:var(--f-serif);font-size:17px;color:#D9544E;letter-spacing:.34em;
+  text-shadow:0 2px 10px rgba(0,0,0,.9)}
+.counter__v{font-family:var(--f-serif);font-size:52px;color:#F0E4E4;line-height:1.1;letter-spacing:.02em;
+  text-shadow:0 0 24px rgba(217,58,54,.6),0 3px 12px #000;font-variant-numeric:tabular-nums}
+.counter__sub{font-size:11px;color:#C9A45E;letter-spacing:.1em;margin-top:3px;text-shadow:0 1px 4px #000}
+
+/* 우측 상태 이상 요약 */
+.status{position:absolute;right:20px;top:80px;z-index:5;width:150px;display:flex;flex-direction:column;gap:5px}
+.stline{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--tx-dim);
+  background:rgba(0,0,0,.42);border:1px solid var(--line-soft);padding:3px 7px}
+.stline b{margin-left:auto;font-weight:400;color:#C9A45E;font-variant-numeric:tabular-nums}
+
+/* 하단 HUD */
+.bthud{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:0 22px 16px;
+  background:linear-gradient(0deg,rgba(6,7,10,.86),transparent)}
+.bthud__row{display:flex;align-items:flex-end;gap:20px}
+/* 스틱 */
+.stick{width:112px;height:112px;border:1px solid rgba(255,255,255,.1);border-radius:50%;
+  position:relative;flex:none;background:rgba(0,0,0,.24)}
+.stick i{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:38px;height:38px;
+  border-radius:50%;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2)}
+/* 체력/스태미나 */
+.vitals{flex:1;max-width:520px}
+.vital{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.vital__ic{color:var(--tx-faint);flex:none}
+.vital .bar{flex:1;height:10px}
+.vital__v{font-size:10.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums;min-width:92px;text-align:right}
+.stamina .bar__fill{background:linear-gradient(90deg,#6B5A24,#C9A227)}
+/* 스킬 슬롯 */
+.skills{display:flex;gap:8px;margin-left:auto;align-items:flex-end}
+.sk{width:50px;height:50px;border:1px solid rgba(255,255,255,.13);background:rgba(10,11,14,.72);
+  display:grid;place-items:center;position:relative;color:#9AA0AC}
+.sk__k{position:absolute;left:3px;top:2px;font-size:9px;color:var(--tx-faint)}
+.sk__cd{position:absolute;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;
+  font-size:13px;color:#C9C9CF;font-variant-numeric:tabular-nums}
+.sk--ult{width:62px;height:62px;border-color:rgba(199,58,54,.6);
+  background:radial-gradient(60% 60% at 50% 60%,rgba(165,28,28,.42),rgba(10,11,14,.8));
+  color:#E6C0BE;box-shadow:0 0 18px rgba(165,28,28,.28)}
+.ammo{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--tx-faint);margin-top:7px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <div class="bt">
+    <div class="btscene art art--city">
+      <div class="moon"></div>
+      <div class="art__tag">B A T T L E &nbsp; S C E N E</div>
+    </div>
+
+    <!-- 보스 체력 (상단 고정) -->
+    <div class="bosshp">
+      <div class="bosshp__nm">타이탄 거인, 모르버스</div>
+      <div class="bosshp__bar">
+        <svg class="ico ico--sm" style="color:#C9534E"><use href="#i-skull"/></svg>
+        <div class="bar" data-fill="68"></div>
+        <span class="stack">×7</span>
+      </div>
+      <div class="bosshp__seg">
+        <i></i><i></i><i></i><i class="off"></i><i class="off"></i>
+      </div>
+    </div>
+
+    <!-- 타이머 -->
+    <div class="bttimer">
+      <span class="bttimer__t"><svg class="ico ico--sm"><use href="#i-clock"/></svg>02 : 41</span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-pause"/></svg></button>
+    </div>
+
+    <!-- 파티 정보 (좌측 세로, 상태 아이콘으로 압축) -->
+    <div class="btparty">
+      <div class="pmem">
+        <div class="pmem__face art art--portrait"></div>
+        <div class="fill">
+          <div class="flex ac g2"><span class="pmem__n">아인</span>
+            <span class="pmem__lv">LV.26</span>
+            <span class="pmem__hp num">24,450</span></div>
+          <div class="bar bar--hp" data-fill="86"></div>
+          <div class="pmem__st"><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="pmem">
+        <div class="pmem__face art art--portrait"></div>
+        <div class="fill">
+          <div class="flex ac g2"><span class="pmem__n">카인</span>
+            <span class="pmem__lv">LV.32</span>
+            <span class="pmem__hp num">31,120</span></div>
+          <div class="bar bar--hp" data-fill="72"></div>
+          <div class="pmem__st"><i></i></div>
+        </div>
+      </div>
+      <div class="pmem">
+        <div class="pmem__face art art--portrait"></div>
+        <div class="fill">
+          <div class="flex ac g2"><span class="pmem__n">류</span>
+            <span class="pmem__lv">LV.25</span>
+            <span class="pmem__hp num">18,640</span></div>
+          <div class="bar bar--hp" data-fill="54"></div>
+          <div class="pmem__st"><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div class="pmem">
+        <div class="pmem__face art art--portrait"></div>
+        <div class="fill">
+          <div class="flex ac g2"><span class="pmem__n">세라</span>
+            <span class="pmem__lv">LV.24</span>
+            <span class="pmem__hp num">16,980</span></div>
+          <div class="bar bar--hp" data-fill="91"></div>
+          <div class="pmem__st"><i></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 카운터 피드백 (중앙 상단, 짧고 강하게) -->
+    <div class="counter">
+      <div class="counter__lb">C O U N T E R</div>
+      <div class="counter__v">27,842</div>
+      <div class="counter__sub">약점 타격 +15%</div>
+    </div>
+
+    <!-- 상태 이상 요약 (중요도 기반) -->
+    <div class="status">
+      <div class="stline"><svg class="ico ico--xs" style="color:#C9534E"><use href="#i-drop"/></svg>
+        출혈<b>+10%</b></div>
+      <div class="stline"><svg class="ico ico--xs" style="color:#C9A45E"><use href="#i-crosshair"/></svg>
+        약점 노출<b>00:25</b></div>
+      <div class="stline"><svg class="ico ico--xs" style="color:#7B9BD6"><use href="#i-shield"/></svg>
+        공격력 상승<b>00:12</b></div>
+    </div>
+
+    <!-- 하단 HUD -->
+    <div class="bthud">
+      <div class="bthud__row">
+        <div class="stick"><i></i></div>
+
+        <div class="vitals">
+          <div class="vital">
+            <svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg>
+            <div class="bar bar--hp bar--tall" data-fill="82"></div>
+            <span class="vital__v">2,450 / 2,450</span>
+          </div>
+          <div class="vital stamina">
+            <svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg>
+            <div class="bar bar--tall" data-fill="64"></div>
+            <span class="vital__v">120 / 120</span>
+          </div>
+          <div class="ammo">
+            <svg class="ico ico--xs"><use href="#i-potion"/></svg>회복약 ×3
+            <svg class="ico ico--xs" style="margin-left:12px"><use href="#i-gem"/></svg>투척물 ×2
+          </div>
+        </div>
+
+        <div class="skills">
+          <div class="sk"><span class="sk__k">1</span><svg class="ico"><use href="#i-scythe"/></svg></div>
+          <div class="sk"><span class="sk__k">2</span><svg class="ico"><use href="#i-bolt"/></svg></div>
+          <div class="sk"><span class="sk__k">3</span><svg class="ico"><use href="#i-flame"/></svg>
+            <span class="sk__cd">4</span></div>
+          <div class="sk"><span class="sk__k">4</span><svg class="ico"><use href="#i-shield"/></svg></div>
+          <div class="sk sk--ult"><span class="sk__k">R</span><svg class="ico ico--lg"><use href="#i-scythe"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

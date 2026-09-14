@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 장비 / 인벤토리</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.invtabs{display:flex;align-items:center;gap:14px;padding:0 22px;border-bottom:1px solid var(--line-soft);flex:none}
+.inv{display:grid;grid-template-columns:150px 1fr 206px 206px 390px;grid-template-rows:1fr auto;
+  gap:12px;padding:10px 18px;flex:1;min-height:0}
+.inv__l{display:flex;flex-direction:column;min-height:0;grid-row:1/span 2}
+
+/* 캐릭터 선택 */
+.chars{display:flex;flex-direction:column;gap:6px}
+.chip-char{display:flex;flex-direction:column;border:1px solid var(--line);cursor:pointer;position:relative;transition:.15s}
+.chip-char:hover{border-color:var(--line-hard)}
+.chip-char.is-on{border-color:var(--line-red);box-shadow:inset 0 0 16px rgba(165,28,28,.16)}
+.chip-char__art{height:52px;position:relative}
+.chip-char__nm{padding:4px 6px 5px;font-size:11.5px;color:var(--tx-hi);font-family:var(--f-serif)}
+.chip-char__nm span{display:block;font-family:var(--f-sans);font-size:10px;color:var(--tx-faint);margin-top:1px}
+.chip-char__ic{position:absolute;right:4px;top:4px;color:rgba(255,255,255,.35)}
+.unlock{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0;color:var(--tx-ghost)}
+.unlock i{width:30px;height:30px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center}
+
+/* 페이퍼돌 */
+.doll{display:grid;grid-template-columns:78px 1fr 78px;gap:8px;min-height:0;position:relative;grid-row:1/span 2}
+.eqcol{display:flex;flex-direction:column;gap:17px;padding-top:17px}
+.eqcol--r{align-items:flex-end}
+.eq{position:relative;width:62px}
+.eq .slot{width:62px;height:62px;aspect-ratio:auto}
+.eq .slot .ico{width:34px;height:34px}
+.slot__name{text-align:left;padding-left:1px}
+.dollart{position:relative;max-width:430px;width:100%;margin:0 auto;border:1px solid var(--line-soft)}
+.dollstats{margin-top:auto;padding-top:10px;border-top:1px solid var(--line-soft)}
+.dollstats .stat{padding:2.5px 0;font-size:11.5px}
+
+/* 아이템 정보 */
+.iname{font-family:var(--f-serif);font-size:15px;letter-spacing:.03em;line-height:1.35}
+.iname--legend{color:#D9A94E}
+.iname--hero{color:#A97FE0}
+.bigcp{font-family:var(--f-serif);font-size:30px;line-height:1;letter-spacing:.02em}
+.iart{height:96px;position:relative;display:grid;place-items:center;color:#8C9098}
+.iart .ico{width:52px;height:52px;stroke-width:.9}
+.flavor{font-size:10.5px;color:var(--tx-faint);line-height:1.75;font-style:italic}
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;grid-column:3 / span 2;grid-row:2}
+.invpanel{grid-row:1/span 2}
+
+/* 인벤토리 */
+.invhead{display:flex;align-items:center;gap:7px;padding:7px 10px;border-bottom:1px solid var(--line-soft)}
+.ifilters{display:flex;align-items:center;gap:5px;padding:7px 10px;border-bottom:1px solid var(--line-soft)}
+.ifilter{width:25px;height:25px;display:grid;place-items:center;border:1px solid var(--line);
+  color:var(--tx-faint);background:rgba(0,0,0,.3);cursor:pointer}
+.ifilter:hover{color:var(--tx);border-color:var(--line-hard)}
+.ifilter.is-on{color:#D9A9A7;border-color:var(--line-red);background:rgba(165,28,28,.16)}
+.invgrid{--cols:5;gap:5px;padding:9px 10px}
+.matgrid{--cols:5;gap:5px;padding:9px 10px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar" style="padding-bottom:9px">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div><h1 class="topbar__title">장비 / 인벤토리</h1></div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg><i class="iconbtn__dot"></i></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <div class="invtabs">
+    <span class="key">Q</span>
+    <div class="tabs" data-tabs="" style="border:0">
+      <button class="tab is-on" data-tab="eq">장비</button>
+      <button class="tab" data-tab="inv">인벤토리</button>
+      <button class="tab" data-tab="use">소모품</button>
+      <button class="tab" data-tab="mat">재료</button>
+      <button class="tab" data-tab="quest">임무 아이템</button>
+    </div>
+    <span class="key">E</span>
+  </div>
+
+  <main class="inv">
+    <!-- ===== 캐릭터 선택 ===== -->
+    <div class="inv__l">
+      <div class="label-ko">캐릭터 선택</div>
+      <div class="chars" data-pick>
+        <div class="chip-char is-on" data-pickitem>
+          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__nm">아인<span>LV.26</span></div>
+          <svg class="ico ico--xs chip-char__ic"><use href="#i-scythe"/></svg>
+        </div>
+        <div class="chip-char" data-pickitem>
+          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__nm">카인<span>LV.32</span></div>
+          <svg class="ico ico--xs chip-char__ic"><use href="#i-sword"/></svg>
+        </div>
+        <div class="chip-char" data-pickitem>
+          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__nm">류<span>LV.25</span></div>
+          <svg class="ico ico--xs chip-char__ic"><use href="#i-crosshair"/></svg>
+        </div>
+        <div class="chip-char" data-pickitem>
+          <div class="chip-char__art art art--portrait"></div>
+          <div class="chip-char__nm">세라<span>LV.24</span></div>
+          <svg class="ico ico--xs chip-char__ic"><use href="#i-seal"/></svg>
+        </div>
+      </div>
+      <div class="unlock">
+        <i><svg class="ico ico--sm"><use href="#i-lock"/></svg></i>
+        <span class="xs">잠금 해제</span>
+      </div>
+      <div class="dollstats">
+          <div class="stat" style="border-bottom:1px solid var(--line-soft);padding-bottom:5px">
+            <span class="stat__k">전투력</span><span class="stat__v t-hi num">24,650</span></div>
+          <div class="stat"><span class="stat__k">HP</span><span class="stat__v num">24,450</span></div>
+          <div class="stat"><span class="stat__k">공격력</span><span class="stat__v num">2,980</span></div>
+          <div class="stat"><span class="stat__k">방어력</span><span class="stat__v num">1,780</span></div>
+          <div class="stat"><span class="stat__k">치명타 확률</span><span class="stat__v num">18.2%</span></div>
+          <div class="stat"><span class="stat__k">치명타 피해</span><span class="stat__v num">142.6%</span></div>
+          <div class="stat"><span class="stat__k">공격 속도</span><span class="stat__v num">112.5%</span></div>
+          <div class="stat"><span class="stat__k">이동 속도</span><span class="stat__v num">105.0%</span></div>
+      </div>
+    </div>
+
+    <!-- ===== 페이퍼돌 ===== -->
+    <div class="doll">
+      <div class="eqcol">
+        <div class="eq"><span class="slot__name">메인 무기</span>
+          <div class="slot is-on" data-r="legend"><svg class="ico"><use href="#i-scythe"/></svg>
+            <span class="slot__lv">+5</span></div></div>
+        <div class="eq"><span class="slot__name">보조 무기</span>
+          <div class="slot" data-r="hero"><svg class="ico"><use href="#i-sword"/></svg>
+            <span class="slot__lv">+3</span></div></div>
+        <div class="eq"><span class="slot__name">서브 무기</span>
+          <div class="slot" data-r="hero"><svg class="ico"><use href="#i-scythe"/></svg>
+            <span class="slot__lv">+2</span></div></div>
+        <div class="eq"><span class="slot__name">용병 장비</span>
+          <div class="slot slot--lock"><svg class="ico"><use href="#i-seal"/></svg></div></div>
+      </div>
+
+      <div class="dollart art art--portrait">
+        <div class="art__tag">C H A R A C T E R</div>
+      </div>
+
+      <div class="eqcol eqcol--r">
+        <div class="eq"><span class="slot__name">머리</span>
+          <div class="slot slot--empty"><svg class="ico"><use href="#i-helm"/></svg></div></div>
+        <div class="eq"><span class="slot__name">상의</span>
+          <div class="slot" data-r="rare"><svg class="ico"><use href="#i-chest"/></svg>
+            <span class="slot__lv">+4</span></div></div>
+        <div class="eq"><span class="slot__name">하의</span>
+          <div class="slot" data-r="rare"><svg class="ico"><use href="#i-pants"/></svg>
+            <span class="slot__lv">+4</span></div></div>
+        <div class="eq"><span class="slot__name">장갑</span>
+          <div class="slot" data-r="rare"><svg class="ico"><use href="#i-glove"/></svg>
+            <span class="slot__lv">+5</span></div></div>
+        <div class="eq"><span class="slot__name">신발</span>
+          <div class="slot" data-r="rare"><svg class="ico"><use href="#i-boot"/></svg>
+            <span class="slot__lv">+4</span></div></div>
+        <div class="eq"><span class="slot__name">악세서리</span>
+          <div class="slot" data-r="hero"><svg class="ico"><use href="#i-ring"/></svg>
+            <span class="slot__lv">+4</span></div></div>
+        <div class="eq"><div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div></div>
+      </div>
+    </div>
+
+    <!-- ===== 아이템 정보 ===== -->
+    <section class="panel panel--framed">
+      <div class="panel__head">
+        <span class="panel__title">아이템 정보</span>
+        <span class="chip chip--red" style="margin-left:auto">장착 중</span>
+      </div>
+      <div class="panel__body panel__body--tight scroll">
+        <div class="iname iname--legend">메마른 갈대밭 정찰</div>
+        <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
+        <div class="xs mt1" style="color:#B08A3E">낫(대형) / 전설 등급</div>
+
+        <div class="flex ac jb mt3">
+          <div>
+            <div class="xs t-faint">전투력</div>
+            <div class="bigcp t-red num mt1">2,980</div>
+          </div>
+          <div class="iart fill"><svg class="ico"><use href="#i-scythe"/></svg></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">기본 공격력</span><span class="stat__v num">1,870</span></div>
+        <div class="stat"><span class="stat__k">추가 공격력</span><span class="stat__v num">1,110</span></div>
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">치명타 확률</span><span class="stat__v num">6.5%</span></div>
+        <div class="stat"><span class="stat__k">치명타 피해</span><span class="stat__v num">18.6%</span></div>
+        <div class="stat"><span class="stat__k">스킬 피해 증가</span><span class="stat__v num">4.2%</span></div>
+        <div class="hr"></div>
+        <div class="xs t-dim" style="line-height:1.7">
+          일반 공격 시 7% 확률로 <span class="t-red">출혈</span> 부여(3초)</div>
+        <div class="hr"></div>
+        <p class="flavor" style="margin:0">
+          흑슨 갈대 위에 내려앉은 붉은 이슬처럼,<br>
+          그 피만이 살아 있음을 증명한다.</p>
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">요구 레벨</span><span class="stat__v">20</span></div>
+        <div class="stat"><span class="stat__k">귀속 상태</span><span class="stat__v xs">캐릭터 귀속</span></div>
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">내구도</span><span class="stat__v num">72 / 100</span></div>
+        <div class="stat"><span class="stat__k">판매가</span>
+          <span class="stat__v flex ac g1"><svg class="ico ico--xs t-gold"><use href="#i-coin"/></svg>18,000</span></div>
+      </div>
+    </section>
+
+    <!-- ===== 비교 대상 ===== -->
+    <section class="panel panel--framed">
+      <div class="panel__head"><span class="panel__title">비교 대상</span></div>
+      <div class="panel__body panel__body--tight scroll">
+        <div class="iname iname--hero">부식된 사형 집행자</div>
+        <div class="xs t-faint mt1">외곽지대 &gt; 매립지</div>
+        <div class="xs mt1" style="color:#8F72C4">낫(대형) / 영웅 등급</div>
+
+        <div class="flex ac jb mt3">
+          <div>
+            <div class="xs t-faint">전투력</div>
+            <div class="flex ac g1 mt1">
+              <span class="bigcp t-dim num">2,410</span>
+              <span class="delta delta--down">▼ 570</span>
+            </div>
+          </div>
+          <div class="iart fill"><svg class="ico"><use href="#i-sword"/></svg></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">기본 공격력</span>
+          <span class="stat__v num">1,520 <span class="delta delta--down">▼350</span></span></div>
+        <div class="stat"><span class="stat__k">추가 공격력</span>
+          <span class="stat__v num">890 <span class="delta delta--down">▼220</span></span></div>
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">치명타 확률</span>
+          <span class="stat__v num">4.8% <span class="delta delta--down">▼1.7%</span></span></div>
+        <div class="stat"><span class="stat__k">치명타 피해</span>
+          <span class="stat__v num">14.2% <span class="delta delta--down">▼4.4%</span></span></div>
+        <div class="stat"><span class="stat__k">스킬 피해 증가</span>
+          <span class="stat__v num">3.1% <span class="delta delta--down">▼1.1%</span></span></div>
+        <div class="hr"></div>
+        <div class="xs" style="color:#7C9AD6;line-height:1.7">출혈 지속 시간 1초 증가</div>
+        <div class="hr"></div>
+        <div class="stat"><span class="stat__k">강화 단계</span><span class="stat__v num">+3 / 10</span></div>
+
+        <div class="hr"></div>
+        <div class="label-ko">장착 시 능력치 변화</div>
+        <div class="stat"><span class="stat__k">전투력</span><span class="stat__v"><span class="down num">-570</span></span></div>
+        <div class="stat"><span class="stat__k">공격력</span><span class="stat__v"><span class="down num">-350</span></span></div>
+        <div class="stat"><span class="stat__k">치명타 확률</span><span class="stat__v"><span class="down num">-1.7%</span></span></div>
+        <div class="stat"><span class="stat__k">치명타 피해</span><span class="stat__v"><span class="down num">-4.4%</span></span></div>
+      </div>
+    </section>
+
+    <!-- ===== 인벤토리 ===== -->
+    <section class="panel panel--framed invpanel">
+      <div class="invhead">
+        <span class="panel__title">인벤토리</span>
+        <span class="panel__meta" style="margin-left:auto"><span class="num">82 / 120</span></span>
+        <button class="iconbtn" style="width:22px;height:22px"><svg class="ico ico--sm"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="ifilters">
+        <span class="ifilter is-on" style="width:auto;padding:0 8px;font-size:11px">전체</span>
+        <span class="ifilter"><svg class="ico ico--xs"><use href="#i-scythe"/></svg></span>
+        <span class="ifilter"><svg class="ico ico--xs"><use href="#i-sword"/></svg></span>
+        <span class="ifilter"><svg class="ico ico--xs"><use href="#i-chest"/></svg></span>
+        <span class="ifilter"><svg class="ico ico--xs"><use href="#i-ring"/></svg></span>
+        <select class="sel" style="margin-left:auto;width:96px"><option>정렬 : 등급</option><option>정렬 : 전투력</option></select>
+        <span class="ifilter"><svg class="ico ico--xs"><use href="#i-filter"/></svg></span>
+      </div>
+      <div class="slotgrid invgrid scroll fill" data-pick>
+        <div class="slot is-on" data-r="legend"><svg class="ico"><use href="#i-scythe"/></svg><span class="slot__lv">+5</span></div>
+        <div class="slot" data-r="legend"><svg class="ico"><use href="#i-hammer"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="hero"><svg class="ico"><use href="#i-sword"/></svg><span class="slot__lv">+3</span></div>
+        <div class="slot" data-r="hero"><svg class="ico"><use href="#i-crosshair"/></svg><span class="slot__lv">+3</span></div>
+        <div class="slot" data-r="hero"><svg class="ico"><use href="#i-scythe"/></svg><span class="slot__lv">+2</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-chest"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-pants"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-glove"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-chest"/></svg><span class="slot__lv">+5</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-boot"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="hero"><svg class="ico"><use href="#i-seal"/></svg><span class="slot__lv">+4</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-ring"/></svg><span class="slot__lv">+3</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-ring"/></svg><span class="slot__lv">+2</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-gem"/></svg><span class="slot__lv">+2</span></div>
+        <div class="slot" data-r="common"><svg class="ico"><use href="#i-ring"/></svg><span class="slot__lv">+1</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-book"/></svg><span class="slot__ct">12</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-ingot"/></svg><span class="slot__ct">36</span></div>
+        <div class="slot" data-r="hero"><svg class="ico"><use href="#i-gem"/></svg><span class="slot__ct">78</span></div>
+        <div class="slot" data-r="rare"><svg class="ico"><use href="#i-potion"/></svg><span class="slot__ct">24</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-drop"/></svg><span class="slot__ct">9</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-gem"/></svg><span class="slot__ct">2</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-ingot"/></svg><span class="slot__ct">5</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-bolt"/></svg><span class="slot__ct">18</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-potion"/></svg><span class="slot__ct">47</span></div>
+        <div class="slot"><svg class="ico"><use href="#i-drop"/></svg><span class="slot__ct">6</span></div>
+        <div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div>
+        <div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div>
+        <div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div>
+        <div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div>
+        <div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div>
+      </div>
+
+      <div class="invhead" style="border-top:1px solid var(--line-soft)">
+        <span class="panel__title">재료 보관함</span>
+        <span class="panel__meta" style="margin-left:auto"><span class="num">54 / 300</span></span>
+        <button class="iconbtn" style="width:22px;height:22px"><svg class="ico ico--sm"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="slotgrid matgrid" data-slots="15" data-count="1"
+           data-icon="chest,gem,gem,potion,drop,ingot,ingot,gem,bolt,potion,ingot,ingot,gem,gem,potion"></div>
+    </section>
+
+    <!-- ===== 액션 버튼 ===== -->
+    <div class="actions">
+      <button class="btn">강화</button>
+      <button class="btn">수리</button>
+      <button class="btn">분해</button>
+      <button class="btn btn--primary">해제</button>
+    </div>
+  </main>
+
+  <div class="hotbar">
+    <a class="hot" href="office.html"><span class="key">ESC</span>뒤로</a>
+    <a class="hot"><span class="key">F</span>프리셋 관리</a>
+    <a class="hot"><span class="key">R</span>아이템 비교</a>
+    <a class="hot"><span class="key">T</span>능력치 상세</a>
+    <span class="hotbar__spacer"></span>
+    <a class="hot"><span class="key">G</span>잠금 / 해제</a>
+    <a class="hot"><span class="key">X</span>버리기</a>
+    <button class="btn btn--primary btn--sm" style="width:132px">장착</button>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

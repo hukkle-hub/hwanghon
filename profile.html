@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 플레이어 프로필 / 기술 등급</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.pf{display:grid;grid-template-columns:54px 440px 1fr;gap:14px;padding:12px 20px;flex:1;min-height:0}
+.rail{display:flex;flex-direction:column;gap:10px}
+.railbtn{width:46px;height:46px;display:grid;place-items:center;border:1px solid var(--line);
+  color:var(--tx-faint);background:rgba(0,0,0,.28);cursor:pointer;transition:.15s}
+.railbtn:hover{color:var(--tx);border-color:var(--line-hard)}
+.railbtn.is-on{color:#D9A9A7;border-color:var(--line-red);background:rgba(165,28,28,.16)}
+
+/* 좌측 아트 */
+.pf__art{display:flex;flex-direction:column;gap:11px;min-height:0}
+.pfart{flex:1;min-height:0;position:relative;border:1px solid var(--line-soft)}
+.seasonbar{display:grid;grid-template-columns:auto auto auto 1fr;gap:18px;align-items:center;
+  padding:10px 13px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.sb__rank{display:flex;align-items:center;gap:10px}
+.sb__rank .ico{color:var(--gold-dim)}
+.sb__num{font-family:var(--f-serif);font-size:24px;color:var(--tx-hi);line-height:1}
+.sb__k{font-size:10.5px;color:var(--tx-faint);white-space:nowrap}
+.sb__v{font-size:12px;color:var(--tx-dim);margin-top:3px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* 우측 */
+.pf__r{display:grid;grid-template-rows:auto auto 1fr auto;gap:11px;min-height:0}
+.idrow{display:grid;grid-template-columns:1fr 296px;gap:11px}
+.idcard{display:flex;align-items:center;gap:14px;padding:13px 15px}
+.idcard__face{width:62px;height:62px;border:1px solid var(--line);flex:none}
+.idcard__tt{font-size:11.5px;color:var(--tx-faint);letter-spacing:.04em}
+.idcard__nm{font-family:var(--f-serif);font-size:22px;color:var(--tx-hi);letter-spacing:.03em;margin-top:2px}
+.lvline{display:flex;align-items:center;gap:10px;margin-top:8px}
+.lvline b{font-size:13px;color:var(--tx);font-weight:500}
+.cpbox{display:flex;align-items:center;gap:12px;padding:13px 15px}
+.cpbox .ico{width:30px;height:30px;color:var(--gold-dim)}
+.cpbox__v{font-family:var(--f-serif);font-size:24px;color:var(--red-lit);letter-spacing:.02em}
+
+/* 숙련도 */
+.midrow{display:grid;grid-template-columns:1fr 380px;gap:11px;min-height:0}
+.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;place-items:center;padding:6px 0}
+.gwrap{display:flex;flex-direction:column;align-items:center;gap:7px}
+.gwrap__t{font-size:12px;color:var(--tx-dim);letter-spacing:.04em}
+.gwrap__p{font-size:11px;color:var(--tx-faint)}
+.brow{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--line-soft)}
+.brow:last-child{border:0}
+.brow__th{width:34px;height:34px;border:1px solid var(--line);flex:none}
+.brow__n{font-size:12px;color:var(--tx);flex:1}
+.brow__t{font-size:11.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.brow__g{width:22px;text-align:center;font-family:var(--f-serif);font-size:14px;font-weight:700}
+
+/* 하단 */
+.botrow{display:grid;grid-template-columns:1fr 1fr 1.1fr;gap:11px;min-height:0}
+.rolebox{display:flex;gap:11px;padding:7px 0;align-items:flex-start}
+.rolebox__ic{width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.3);color:#9AA0AC;flex:none}
+.quote{font-size:11.5px;color:var(--tx-dim);line-height:1.9;font-style:italic}
+.eqsum{display:flex;align-items:center;gap:10px}
+.eqsum__main{width:44px;height:44px;border:1px solid rgba(201,138,43,.5);flex:none;display:grid;place-items:center;color:#C89A4A}
+.actrow{display:flex;justify-content:flex-end;gap:10px}
+.actrow .btn{width:196px;height:38px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">플레이어 프로필 / 기술 등급</h1>
+      <div class="topbar__sub">타 플레이어의 전투 이력과 기술 숙련도를 확인하고, 파티 초대를 진행할 수 있습니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="pf">
+    <!-- 아이콘 레일 -->
+    <div class="rail" data-pick>
+      <button class="railbtn is-on" data-pickitem><svg class="ico ico--lg"><use href="#i-skull"/></svg></button>
+      <button class="railbtn" data-pickitem><svg class="ico ico--lg"><use href="#i-user"/></svg></button>
+      <button class="railbtn" data-pickitem><svg class="ico ico--lg"><use href="#i-hammer"/></svg></button>
+      <button class="railbtn" data-pickitem><svg class="ico ico--lg"><use href="#i-medal"/></svg></button>
+    </div>
+
+    <!-- 캐릭터 아트 + 시즌 -->
+    <div class="pf__art">
+      <div class="pfart art art--portrait">
+        <div class="art__tag">C H A R A C T E R &nbsp; A R T</div>
+      </div>
+      <div class="seasonbar">
+        <div class="sb__rank">
+          <svg class="ico ico--xl"><use href="#i-sigil"/></svg>
+          <div>
+            <div class="sb__num num">152</div>
+            <div class="sb__k mt1">시즌 랭킹 · 상위 3.2%</div>
+          </div>
+        </div>
+        <div>
+          <div class="sb__k">총 플레이 시간</div>
+          <div class="sb__v">128시간 26분</div>
+        </div>
+        <div>
+          <div class="sb__k">마지막 접속</div>
+          <div class="sb__v">2시간 전</div>
+        </div>
+        <button class="btn btn--sm btn--ghost" style="justify-self:end">상세 시즌 기록</button>
+      </div>
+    </div>
+
+    <!-- 우측 정보 -->
+    <div class="pf__r">
+      <!-- 신원 -->
+      <div class="idrow">
+        <section class="panel panel--framed">
+          <div class="idcard">
+            <div class="idcard__face art art--portrait"></div>
+            <div class="fill">
+              <div class="idcard__tt">새벽을 걷는 그림자</div>
+              <div class="idcard__nm">Ain<span class="t-faint" style="font-size:15px">#0927</span></div>
+              <div class="lvline">
+                <b>Lv. 36</b>
+                <div class="bar bar--exp fill" data-fill="54"></div>
+              </div>
+              <div class="flex ac jb mt2">
+                <span class="xs t-faint">전투력 <span class="num">41,860 / 78,000</span></span>
+                <span class="chip chip--red">카운터 숙련 &nbsp;<b style="color:#E08A86">4등급</b></span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="flex col g2">
+          <section class="panel panel--framed fill">
+            <div class="cpbox">
+              <svg class="ico"><use href="#i-sigil"/></svg>
+              <div class="fill">
+                <div class="xs t-faint">종합 전투력</div>
+                <div class="cpbox__v num mt1">76,420</div>
+              </div>
+            </div>
+          </section>
+          <section class="panel panel--framed">
+            <div class="panel__body panel__body--tight">
+              <div class="flex ac jb">
+                <span class="xs t-faint">길드</span>
+                <span class="sm t-hi">황혼의 인력사무소</span>
+              </div>
+              <div class="flex ac jb mt2">
+                <span class="xs t-faint">직책</span>
+                <span class="xs t-dim">정예 요원</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 숙련도 / 보스 기록 -->
+      <div class="midrow">
+        <section class="panel panel--framed">
+          <div class="panel__head">
+            <span class="panel__title">전투 숙련도</span>
+            <span class="panel__meta">시즌 01 기준</span>
+          </div>
+          <div class="panel__body">
+            <div class="gauges">
+              <div class="gwrap">
+                <span class="gwrap__t">카운터 등급</span>
+                <div class="gauge" data-gauge="87" data-color="#D94A45">
+                  <span class="gauge__ring"></span>
+                  <span class="gauge__mark g-s">S</span>
+                </div>
+                <span class="gwrap__p">숙련도 87%</span>
+              </div>
+              <div class="gwrap">
+                <span class="gwrap__t">파괴 등급</span>
+                <div class="gauge" data-gauge="72" data-color="#7B9BD6">
+                  <span class="gauge__ring"></span>
+                  <span class="gauge__mark g-a">A</span>
+                </div>
+                <span class="gwrap__p">숙련도 72%</span>
+              </div>
+              <div class="gwrap">
+                <span class="gwrap__t">생존 등급</span>
+                <div class="gauge" data-gauge="68" data-color="#5FAE9B">
+                  <span class="gauge__ring"></span>
+                  <span class="gauge__mark g-b">B+</span>
+                </div>
+                <span class="gwrap__p">숙련도 68%</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head">
+            <span class="panel__title">최근 보스 기록</span>
+            <span class="panel__meta">시즌 01</span>
+          </div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="brow"><span class="brow__th art art--beast"></span>
+              <span class="brow__n">그을린 요새의 군주</span><span class="brow__t">02:31</span>
+              <span class="brow__g g-s">S</span></div>
+            <div class="brow"><span class="brow__th art art--beast"></span>
+              <span class="brow__n">황혼의 포식자</span><span class="brow__t">03:12</span>
+              <span class="brow__g g-a">A</span></div>
+            <div class="brow"><span class="brow__th art art--beast"></span>
+              <span class="brow__n">심연의 감시자</span><span class="brow__t">05:08</span>
+              <span class="brow__g g-a">A</span></div>
+            <div class="brow"><span class="brow__th art art--portrait"></span>
+              <span class="brow__n">핏빛 교단장</span><span class="brow__t">02:45</span>
+              <span class="brow__g g-s">S</span></div>
+            <div class="brow"><span class="brow__th art art--beast"></span>
+              <span class="brow__n">기계의 심장</span><span class="brow__t">04:22</span>
+              <span class="brow__g g-b">B</span></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 이력 / 역할 / 소개 -->
+      <div class="botrow">
+        <section class="panel panel--framed">
+          <div class="panel__head">
+            <span class="panel__title">클리어 이력</span>
+            <span class="panel__meta">시즌 01</span>
+          </div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="stat"><span class="stat__k">총 탐사 횟수</span><span class="stat__v num">128회</span></div>
+            <div class="stat"><span class="stat__k">완료한 탐사</span><span class="stat__v num">116회</span></div>
+            <div class="stat"><span class="stat__k">완료율</span><span class="stat__v num">90.6%</span></div>
+            <div class="hr"></div>
+            <div class="label-ko">난이도별 클리어</div>
+            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--s">S</b></span>
+              <span class="stat__v num">48회</span></div>
+            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--a">A</b></span>
+              <span class="stat__v num">52회</span></div>
+            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--b">B</b></span>
+              <span class="stat__v num">14회</span></div>
+            <div class="stat"><span class="stat__k flex ac g1">위험도 <b class="badge badge--c">C</b></span>
+              <span class="stat__v num">2회</span></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">선호 역할</span></div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="rolebox">
+              <span class="rolebox__ic"><svg class="ico ico--sm"><use href="#i-scythe"/></svg></span>
+              <div>
+                <div class="sm t-hi">딜러/DPS</div>
+                <div class="xs t-faint mt1" style="line-height:1.7">
+                  빠른 카운터와 높은 순간<br>피해로 전장을 재압합니다.</div>
+              </div>
+            </div>
+            <div class="hr"></div>
+            <div class="label-ko">보조 역할</div>
+            <div class="rolebox">
+              <span class="rolebox__ic"><svg class="ico ico--sm"><use href="#i-hammer"/></svg></span>
+              <div>
+                <div class="sm t-hi">브레이커</div>
+                <div class="xs t-faint mt1" style="line-height:1.7">
+                  부위 파괴와 상태 이상으로<br>아군을 지원합니다.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div class="flex col g2" style="min-height:0">
+          <section class="panel panel--framed fill">
+            <div class="panel__head"><span class="panel__title">자기소개</span></div>
+            <div class="panel__body panel__body--tight">
+              <p class="quote" style="margin:0">
+                “완벽한 타이밍, 날카로운 한 칼.<br>
+                그 사이에 승리가 있다.”</p>
+              <p class="xs t-faint" style="line-height:1.9;margin:10px 0 0">
+                여전히 배우는 중입니다.<br>
+                함께 강해지고 싶습니다.</p>
+            </div>
+          </section>
+          <section class="panel panel--framed">
+            <div class="panel__head"><span class="panel__title">장비 요약</span></div>
+            <div class="panel__body panel__body--tight">
+              <div class="eqsum">
+                <span class="eqsum__main"><svg class="ico"><use href="#i-scythe"/></svg></span>
+                <div class="fill">
+                  <div class="flex ac jb">
+                    <span class="sm" style="color:#D9A94E">메마른 갈대밭 정찰</span>
+                    <span class="xs t-faint">강화 +5</span>
+                  </div>
+                  <div class="xs t-faint mt1">전투력 <span class="num t-dim">3,180</span></div>
+                </div>
+              </div>
+              <div class="slotgrid mt3" style="--cols:5;gap:5px;max-width:212px">
+                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-chest"/></svg></div>
+                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-pants"/></svg></div>
+                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-glove"/></svg></div>
+                <div class="slot" data-r="rare"><svg class="ico"><use href="#i-boot"/></svg></div>
+                <div class="slot" data-r="hero"><svg class="ico"><use href="#i-ring"/></svg></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- 액션 -->
+      <div class="actrow">
+        <button class="btn">차단</button>
+        <button class="btn">귓속말</button>
+        <button class="btn btn--primary">파티 신청</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

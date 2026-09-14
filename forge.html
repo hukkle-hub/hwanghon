@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 장비 관리 / 강화</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.fgtabs{display:flex;align-items:center;gap:0;padding:0 22px;border-bottom:1px solid var(--line-soft);flex:none}
+.fgtabs .tab{padding:9px 30px}
+.fgtabs .sepbar{color:var(--tx-ghost);font-size:11px}
+.fg{display:grid;grid-template-columns:212px 1fr 288px 158px;gap:12px;padding:12px 18px;flex:1;min-height:0}
+
+/* 파티 선택 */
+.prow{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid transparent;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:.15s}
+.prow:hover{background:rgba(255,255,255,.03)}
+.prow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.prow__face{width:40px;height:40px;border:1px solid var(--line);flex:none}
+.prow__nm{font-family:var(--f-serif);font-size:13px;color:var(--tx-hi)}
+.prow__lv{font-size:10.5px;color:var(--tx-faint);margin-top:1px}
+.prow__cp{font-size:10.5px;color:var(--tx-dim);margin-top:2px}
+.prow__eq{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.prow__eq b{color:#C9534E;font-weight:400}
+.prow__role{margin-left:auto;color:var(--tx-ghost)}
+
+/* 중앙 */
+.fg__c{display:flex;flex-direction:column;gap:11px;min-height:0}
+.forgeart{flex:1;min-height:0;position:relative;border:1px solid var(--line)}
+.npc{position:absolute;left:14px;top:12px;z-index:3;max-width:180px}
+.npc b{display:block;font-family:var(--f-serif);font-size:13px;color:var(--tx-hi)}
+.npc span{display:block;font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.npc p{font-size:10.5px;color:var(--tx-faint);line-height:1.8;font-style:italic;margin:10px 0 0}
+.itemhead{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:3;text-align:center;width:280px}
+.itemhead b{font-family:var(--f-serif);font-size:16px;color:var(--tx-hi);letter-spacing:.03em}
+.itemhead span{display:block;font-size:10.5px;color:var(--tx-faint);margin-top:4px}
+.itemhead .cp{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:5px;font-size:12px}
+.itemhead .cp em{font-style:normal;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.itemhead .cp i{color:var(--up);font-style:normal;font-variant-numeric:tabular-nums}
+.itemglow{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:120px;height:220px;
+  background:radial-gradient(45% 50% at 50% 50%,rgba(210,140,60,.26),transparent 70%);z-index:2;
+  display:grid;place-items:center;color:rgba(220,190,150,.4)}
+.itemglow .ico{width:64px;height:64px;stroke-width:.8}
+.enhinfo{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:14px 18px 14px;
+  background:linear-gradient(0deg,rgba(6,7,10,.95),rgba(6,7,10,.72) 60%,transparent)}
+.enhstep{text-align:center;font-family:var(--f-serif);font-size:20px;color:var(--tx-hi);letter-spacing:.06em}
+.rate{text-align:center;margin-top:9px}
+.rate b{display:block;font-family:var(--f-serif);font-size:26px;color:var(--red-lit);letter-spacing:.02em}
+
+/* 강화 재료 */
+.mat{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.mat:last-child{border:0}
+.mat__ic{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.32);color:#9AA0AC;flex:none}
+.mat__n{font-size:11.5px;color:var(--tx)}
+.mat__c{margin-left:auto;font-size:11.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.mat__c b{color:var(--tx-hi);font-weight:400}
+
+/* 액션 레일 */
+.rail{display:flex;flex-direction:column;gap:9px;min-height:0}
+.ract{display:flex;flex-direction:column;gap:5px;padding:11px 12px;border:1px solid var(--line);
+  background:rgba(255,255,255,.015);cursor:pointer;transition:.15s;text-align:left}
+.ract:hover{border-color:var(--line-hard);background:rgba(255,255,255,.05)}
+.ract.is-on{color:#F0DADA;border-color:rgba(199,58,54,.6);
+  background:linear-gradient(180deg,rgba(165,28,28,.45),rgba(96,16,16,.5));
+  box-shadow:inset 0 0 22px rgba(217,58,54,.16)}
+.ract__t{display:flex;align-items:center;gap:8px;font-family:var(--f-serif);font-size:15px;color:var(--tx-hi);letter-spacing:.06em}
+.ract.is-on .ract__t{color:#FFF}
+.ract__d{font-size:10px;color:var(--tx-faint);line-height:1.5}
+.ract.is-on .ract__d{color:rgba(240,218,218,.66)}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar" style="padding-bottom:10px">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">장비 관리</h1>
+      <div class="topbar__sub">장비의 제작, 강화, 수리 및 분해를 진행합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <div class="fgtabs" data-tabs="">
+    <button class="tab" data-tab="eq">장비</button><span class="sepbar">|</span>
+    <button class="tab" data-tab="craft">제작</button><span class="sepbar">|</span>
+    <button class="tab is-on" data-tab="enh">강화</button>
+  </div>
+
+  <main class="fg">
+    <!-- ===== 파티 선택 ===== -->
+    <section class="panel panel--framed">
+      <div class="panel__head"><span class="panel__title">파티 선택</span></div>
+      <div class="panel__body panel__body--flush fill scroll" data-pick>
+        <div class="prow is-on">
+          <div class="prow__face art art--portrait"></div>
+          <div class="fill">
+            <div class="prow__nm">아인</div>
+            <div class="prow__lv">LV.26</div>
+            <div class="prow__cp">전투력 24,650</div>
+            <div class="prow__eq">착용 장비 <b>◆ 8</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-scythe"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--portrait"></div>
+          <div class="fill">
+            <div class="prow__nm">카인</div>
+            <div class="prow__lv">LV.32</div>
+            <div class="prow__cp">전투력 32,180</div>
+            <div class="prow__eq">착용 장비 <b>◆ 11</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-sword"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--portrait"></div>
+          <div class="fill">
+            <div class="prow__nm">류</div>
+            <div class="prow__lv">LV.25</div>
+            <div class="prow__cp">전투력 21,430</div>
+            <div class="prow__eq">착용 장비 <b>◆ 9</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-crosshair"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--portrait"></div>
+          <div class="fill">
+            <div class="prow__nm">세라</div>
+            <div class="prow__lv">LV.24</div>
+            <div class="prow__cp">전투력 19,870</div>
+            <div class="prow__eq">착용 장비 <b>◆ 8</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-seal"/></svg>
+        </div>
+      </div>
+      <div style="padding:10px">
+        <button class="btn btn--sm btn--block btn--ghost">
+          <svg class="ico ico--sm"><use href="#i-users"/></svg>파티 편성</button>
+      </div>
+    </section>
+
+    <!-- ===== 중앙: 대장간 ===== -->
+    <div class="fg__c">
+      <div class="forgeart art art--forge">
+        <div class="npc">
+          <b>카인</b><span>대장간 운영</span>
+          <p>“무기는 살아있어.<br>손이 기억해야,<br>녀석도 네게 응답하지.”</p>
+        </div>
+
+        <div class="itemhead">
+          <b>메마른 갈대밭 검창</b>
+          <span>외적등급 S / 근접 무기(검)</span>
+          <div class="cp">전투력 <em>2,980</em>
+            <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+            <i>3,180</i></div>
+        </div>
+
+        <div class="itemglow"><svg class="ico"><use href="#i-sword"/></svg></div>
+
+        <div class="enhinfo">
+          <div class="enhstep">+5 강화 단계</div>
+          <div class="rate">
+            <span class="xs t-faint">강화 성공 확률</span>
+            <b>65%</b>
+          </div>
+          <div class="flex ac jb mt3">
+            <span class="xs t-faint">장비 구조 안정성</span>
+            <span class="xs t-dim num">72 / 100</span>
+          </div>
+          <div class="segbar mt2" data-seg="72"></div>
+          <div class="xs mt2" style="color:#B4534E">구조 안정성이 0이 되면 장비가 파괴됩니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 강화 재료 / 옵션 ===== -->
+    <div class="flex col g3" style="min-height:0">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">강화 재료</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-ingot"/></svg></span>
+            <span class="mat__n">강화 합금</span><span class="mat__c"><b>124</b> / 36</span></div>
+          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-gem"/></svg></span>
+            <span class="mat__n">응축된 파편</span><span class="mat__c"><b>78</b> / 18</span></div>
+          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-bolt"/></svg></span>
+            <span class="mat__n">정제된 에너지 코어</span><span class="mat__c"><b>24</b> / 6</span></div>
+          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-potion"/></svg></span>
+            <span class="mat__n">고급 강화 보조제</span><span class="mat__c"><b>9</b> / 2</span></div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed fill">
+        <div class="panel__head"><span class="panel__title">옵션 정보</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="stat"><span class="stat__k">물리 공격력</span>
+            <span class="stat__v num">312 <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+              <span class="up">341</span></span></div>
+          <div class="stat"><span class="stat__k">치명타 확률</span>
+            <span class="stat__v num">6.5% <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+              <span class="up">7.1%</span></span></div>
+          <div class="stat"><span class="stat__k">스킬 피해 증가</span>
+            <span class="stat__v num">4.2% <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+              <span class="up">4.6%</span></span></div>
+          <div class="stat"><span class="stat__k">출혈 적중</span>
+            <span class="stat__v num">18 <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+              <span class="up">21</span></span></div>
+          <div class="hr"></div>
+          <div class="flex ac g2">
+            <svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg>
+            <span class="xs t-faint">옵션 잠금</span>
+            <span class="xs t-faint" style="margin-left:auto">+7 강화 시 해금</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed none">
+        <div class="panel__body panel__body--tight">
+          <div class="flex ac jb">
+            <span class="sm t-faint">강화 비용</span>
+            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">18,000</span></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== 액션 레일 ===== -->
+    <div class="rail" data-pick>
+      <button class="ract is-on" data-pickitem>
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-hammer"/></svg>강화</span>
+        <span class="ract__d">장비를 강화합니다.</span>
+      </button>
+      <button class="ract" data-pickitem>
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-seal"/></svg>봉인</span>
+        <span class="ract__d">장비의 잠재력을 봉인합니다.</span>
+      </button>
+      <button class="ract" data-pickitem>
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-anvil"/></svg>대수선</span>
+        <span class="ract__d">구조 안정성을 복구합니다.</span>
+      </button>
+      <button class="ract" data-pickitem>
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-recycle"/></svg>분해</span>
+        <span class="ract__d">장비를 분해하여 재료를 획득합니다.</span>
+      </button>
+      <div class="fill"></div>
+      <button class="btn btn--sm btn--ghost">
+        <svg class="ico ico--sm"><use href="#i-hammer"/></svg>자동 강화 설정</button>
+    </div>
+  </main>
+
+  <div class="hotbar">
+    <a class="hot" href="inventory.html"><svg class="ico"><use href="#i-arrowl"/></svg>뒤로</a>
+    <span class="hot">장비 프리셋</span>
+    <div class="tabs tabs--pill" data-tabs="">
+      <button class="tab is-on" data-tab="p1">1</button>
+      <button class="tab" data-tab="p2">2</button>
+      <button class="tab" data-tab="p3">3</button>
+    </div>
+    <span class="hot">정렬</span>
+    <select class="sel" style="width:104px"><option>등급 순</option><option>전투력 순</option></select>
+    <button class="iconbtn"><svg class="ico ico--sm"><use href="#i-refresh"/></svg></button>
+    <span class="hotbar__spacer"></span>
+    <label class="check is-on"><i></i>착용 장비만 보기</label>
+    <a class="hot"><svg class="ico ico--sm"><use href="#i-book"/></svg>도움말</a>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

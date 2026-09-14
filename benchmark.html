@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — UI 벤치마크 / 제안 압축 시트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.bmhead{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;
+  padding:14px 24px 13px;border-bottom:1px solid var(--line-soft)}
+.bmhead__face{width:58px;height:58px;border:1px solid var(--line)}
+.bmhead h1{font-family:var(--f-serif);font-size:29px;color:var(--tx-hi);letter-spacing:.06em}
+.bmhead p{margin:6px 0 0;font-size:11.5px;color:var(--tx-faint)}
+.principles{display:flex;flex-direction:column;gap:7px;min-width:430px}
+.principles__t{font-size:11px;color:#B03A36;letter-spacing:.12em;text-align:right}
+.prin{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.prin div{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
+.prin .ico{color:var(--gold-dim);width:19px;height:19px}
+.prin b{font-size:11px;color:var(--tx-hi);font-weight:500;letter-spacing:.02em}
+.prin span{font-size:9.5px;color:var(--tx-faint)}
+
+.bm{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:13px;
+  padding:13px 22px;flex:1;min-height:0}
+.bmp{display:flex;flex-direction:column;min-height:0}
+.bmp__h{display:flex;align-items:center;gap:11px;padding:9px 13px;border-bottom:1px solid var(--line-soft)}
+.bmp__n{width:22px;height:22px;display:grid;place-items:center;font-family:var(--f-serif);font-size:13px;
+  color:#D9A9A7;border:1px solid var(--line-red);background:rgba(165,28,28,.18);flex:none}
+.bmp__t{font-family:var(--f-serif);font-size:15px;color:var(--tx-hi);letter-spacing:.05em}
+.bmp__s{margin-left:auto;font-size:10.5px;color:var(--tx-faint)}
+.bmp__b{display:grid;grid-template-columns:210px 1fr;gap:13px;padding:11px 13px;flex:1;min-height:0}
+.bul{display:flex;flex-direction:column;gap:8px}
+.bul div{font-size:11px;color:var(--tx-hi);line-height:1.45}
+.bul div span{display:block;font-size:10px;color:var(--tx-faint);margin-top:2px;font-weight:400}
+.bul div::before{content:"• ";color:#B03A36}
+.tip{display:flex;align-items:center;gap:10px;padding:7px 13px;border-top:1px solid var(--line-soft);flex:none}
+.tip b{font-size:9.5px;color:#B03A36;letter-spacing:.14em;border:1px solid var(--line-red);padding:2px 7px;flex:none}
+.tip span{font-size:10.5px;color:var(--tx-faint)}
+
+/* 미니 목업 */
+.mock{border:1px solid var(--line);background:rgba(0,0,0,.3);position:relative;min-height:0;overflow:hidden;
+  display:flex;flex-direction:column;padding:9px 10px;gap:7px}
+.mock__lb{position:absolute;right:8px;bottom:5px;font-size:8.5px;color:var(--tx-ghost);letter-spacing:.14em}
+.mm-row{display:flex;align-items:center;gap:6px}
+.mm-face{width:22px;height:22px;border:1px solid var(--line);flex:none}
+.mm-txt{font-size:9.5px;color:var(--tx-faint)}
+.mm-num{font-size:9.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums;margin-left:auto}
+.mm-counter{text-align:center;font-family:var(--f-serif);color:#E8DADA;font-size:22px;line-height:1.1;
+  text-shadow:0 0 14px rgba(217,58,54,.5)}
+.mm-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.mm-card{border:1px solid var(--line);padding:5px 4px;text-align:center}
+.mm-card .mm-face{width:100%;height:26px;margin-bottom:4px}
+.mm-card b{display:block;font-size:9px;color:var(--tx-hi);font-weight:500}
+.mm-card span{display:block;font-size:8px;color:var(--tx-faint)}
+.mm-card i{display:block;font-size:8px;color:#8FBF8F;font-style:normal;margin-top:3px;
+  border:1px solid rgba(91,163,91,.3);padding:1px 0}
+.mm-tbl{width:100%;border-collapse:collapse;font-size:9px}
+.mm-tbl th{color:var(--tx-ghost);font-weight:400;text-align:right;padding:3px 4px;border-bottom:1px solid var(--line-soft)}
+.mm-tbl th:first-child{text-align:left}
+.mm-tbl td{color:var(--tx-dim);text-align:right;padding:3px 4px;border-bottom:1px solid var(--line-soft);
+  font-variant-numeric:tabular-nums}
+.mm-tbl td:first-child{text-align:left;color:var(--tx)}
+.mm-steps{display:flex;gap:3px;flex-wrap:wrap}
+.mm-steps i{width:22px;height:17px;display:grid;place-items:center;font-size:8.5px;font-style:normal;
+  border:1px solid var(--line);color:var(--tx-faint)}
+.mm-steps i.on{border-color:var(--line-red);color:#D9A9A7}
+
+/* 하단 요약 */
+.bmfoot{display:grid;grid-template-columns:1fr 250px 190px;gap:13px;padding:0 22px 14px;flex:none}
+.sum5{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;padding:10px 13px}
+.sum5 div{display:flex;flex-direction:column;gap:4px}
+.sum5 .ico{color:var(--gold-dim)}
+.sum5 b{font-size:11px;color:var(--tx-hi);font-weight:500}
+.sum5 span{font-size:9.5px;color:var(--tx-faint);line-height:1.5}
+.colorsys{display:flex;flex-direction:column;gap:5px;padding:10px 13px}
+.csrow{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--tx-faint)}
+.csrow i{width:14px;height:10px;flex:none;border:1px solid rgba(0,0,0,.5)}
+.typos{padding:10px 13px;font-size:10.5px;color:var(--tx-faint);line-height:2}
+.typos b{color:var(--tx-dim);font-weight:400}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="bmhead">
+    <div class="bmhead__face art art--portrait"></div>
+    <div>
+      <h1>트와일라잇 UI 벤치마크 / 제안 압축 시트</h1>
+      <p>목표: 가독성·피드백·구조 효율의 균형을 통해 몰입감과 운영 효율을 동시에 확보</p>
+    </div>
+    <div class="principles">
+      <div class="principles__t">트와일라잇 UI 핵심 원칙</div>
+      <div class="prin">
+        <div><svg class="ico"><use href="#i-target"/></svg><b>명료성</b><span>중앙 시야 최소 방해</span></div>
+        <div><svg class="ico"><use href="#i-bolt"/></svg><b>피드백 강화</b><span>즉각적 반응과 보상</span></div>
+        <div><svg class="ico"><use href="#i-users"/></svg><b>구조적 명확성</b><span>역할·상태·흐름 가시화</span></div>
+        <div><svg class="ico"><use href="#i-tree"/></svg><b>밀도와 효율</b><span>정보 밀도↑ 조작↓</span></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="bm">
+    <!-- 1 -->
+    <section class="panel panel--framed bmp">
+      <div class="bmp__h">
+        <span class="bmp__n">1</span><span class="bmp__t">전투 HUD 명료성</span>
+        <span class="bmp__s">제안: 최소한의 중심 방해 + 강력한 액션 피드백</span>
+      </div>
+      <div class="bmp__b">
+        <div class="bul">
+          <div>HP/자원은 화하단 고정<span>시선 이동 최소화</span></div>
+          <div>핵심 스킬만 하단 중앙<span>쿨다운/충전 직관화</span></div>
+          <div>보스 체력 &amp; 기믹 상단 고정<span>현재 상태·단계 표시</span></div>
+          <div>데미지/카운터는 중앙 상단<span>짧고 강한 피드백</span></div>
+          <div>파티 정보는 좌측 세로<span>상태 아이콘으로 압축</span></div>
+        </div>
+        <div class="mock">
+          <span class="mock__lb">BATTLE HUD</span>
+          <div class="mm-row"><span class="mm-txt">메마른 파쇄</span>
+            <div class="bar fill" data-fill="72" style="height:5px"></div><span class="mm-num">×5</span></div>
+          <div class="mm-counter">27,842</div>
+          <div class="mm-txt tc" style="color:#C9A45E">약점 타격 +15%</div>
+          <div class="fill"></div>
+          <div class="mm-row"><svg class="ico ico--xs t-faint"><use href="#i-heart"/></svg>
+            <div class="bar bar--hp fill" data-fill="80" style="height:5px"></div>
+            <span class="mm-num">24,650</span></div>
+          <div class="mm-row" style="justify-content:flex-end">
+            <span class="mm-steps"><i>1</i><i>2</i><i>3</i><i>4</i><i class="on">R</i></span></div>
+        </div>
+      </div>
+      <div class="tip"><b>TIP</b><span>중앙 시야는 행동과 판정에 집중하도록 최소한의 텍스트로만 표기합니다.</span></div>
+    </section>
+
+    <!-- 2 -->
+    <section class="panel panel--framed bmp">
+      <div class="bmp__h">
+        <span class="bmp__n">2</span><span class="bmp__t">파티 로비 / 멀티플레이 구조</span>
+        <span class="bmp__s">제안: 역할·준비 상태 가시화 + 빠른 매칭/파티 운영</span>
+      </div>
+      <div class="bmp__b">
+        <div class="bul">
+          <div>역할 태그 &amp; 밸런스 힌트<span>탱커/딜러/서포트 시각화</span></div>
+          <div>준비 상태 명확화<span>준비/미준비/점검/로딩 구분</span></div>
+          <div>파티 버프 &amp; 목표 요약<span>입장 전 전술 정보 공유</span></div>
+          <div>빠른 매칭 필터<span>난이도/역할/언어/플레이 스타일</span></div>
+          <div>음성/텍스트 커뮤니케이션<span>전투 전 간단한 협의 지원</span></div>
+        </div>
+        <div class="mock">
+          <span class="mock__lb">PARTY LOBBY</span>
+          <div class="mm-txt">4인 파티 · 권장 전투력 70,000</div>
+          <div class="mm-cards">
+            <div class="mm-card"><div class="mm-face art art--portrait"></div>
+              <b>아인</b><span>LV.26</span><i>준비</i></div>
+            <div class="mm-card"><div class="mm-face art art--portrait"></div>
+              <b>카인</b><span>LV.32</span><i>준비</i></div>
+            <div class="mm-card"><div class="mm-face art art--portrait"></div>
+              <b>류</b><span>LV.25</span><i>준비</i></div>
+            <div class="mm-card"><div class="mm-face art art--portrait"></div>
+              <b>세라</b><span>LV.24</span><i>준비</i></div>
+          </div>
+          <div class="mm-row"><span class="mm-txt">[파티] 카인: 첫 기믹은 제가 어그로 끌겠습니다.</span></div>
+          <div class="mm-row"><span class="mm-txt">[파티] 세라: 버프는 2페이즈부터 풀버프할게요.</span></div>
+        </div>
+      </div>
+      <div class="tip"><b>TIP</b><span>준비 상태와 역할이 한눈에 보이도록 카드형 레이아웃을 유지합니다.</span></div>
+    </section>
+
+    <!-- 3 -->
+    <section class="panel panel--framed bmp">
+      <div class="bmp__h">
+        <span class="bmp__n">3</span><span class="bmp__t">보상 정산 / 기여도</span>
+        <span class="bmp__s">제안: 기여도 기반 정산 + 보너스 정보의 즉시 인지</span>
+      </div>
+      <div class="bmp__b">
+        <div class="bul">
+          <div>클리어 시간 &amp; 등급<span>성과 지표 즉시 제공</span></div>
+          <div>기여도 시각화<span>데미지/행정/치유/유틸</span></div>
+          <div>개인 &amp; 파티 보상 분리<span>즉시 획득/우편/누적 보상 구분</span></div>
+          <div>보너스/연계 보상 강조<span>버프/이벤트/업적 반영</span></div>
+          <div>다음 행동 유도<span>재도전/다음 스테이지/로비</span></div>
+        </div>
+        <div class="mock">
+          <span class="mock__lb">RESULT</span>
+          <div class="mm-row"><span class="mm-txt" style="color:var(--tx-hi)">작전 성공</span>
+            <span class="mm-num" style="color:#D9A441">★★★</span>
+            <span class="mm-num grade-letter g-s">S</span></div>
+          <table class="mm-tbl">
+            <tr><th>플레이어</th><th>기여도</th><th>데미지</th><th>평가</th></tr>
+            <tr><td>아인</td><td>42%</td><td>7.82M</td><td style="color:#D9544E">MVP</td></tr>
+            <tr><td>카인</td><td>28%</td><td>2.34M</td><td>A</td></tr>
+            <tr><td>류</td><td>22%</td><td>3.91M</td><td>S</td></tr>
+            <tr><td>세라</td><td>8%</td><td>1.22M</td><td>A+</td></tr>
+          </table>
+          <div class="mm-row"><span class="mm-txt">보너스 · 첫 클리어 +20%</span>
+            <span class="mm-num" style="color:#D9A441">+35%</span></div>
+        </div>
+      </div>
+      <div class="tip"><b>TIP</b><span>기여도와 보너스를 명확히 구분해 공정성과 만족도를 높입니다.</span></div>
+    </section>
+
+    <!-- 4 -->
+    <section class="panel panel--framed bmp">
+      <div class="bmp__h">
+        <span class="bmp__n">4</span><span class="bmp__t">제작 / 강화 / 손상 관리</span>
+        <span class="bmp__s">제안: 단계별 흐름 분리 + 위험/비용/성공률의 명확한 커뮤니케이션</span>
+      </div>
+      <div class="bmp__b">
+        <div class="bul">
+          <div>탭 기반 작업 흐름<span>제작/강화/수리/분해 분리</span></div>
+          <div>핵심 정보 우선 배치<span>성공률·비용·결과 미리보기</span></div>
+          <div>재료 상태 요약<span>보유/필요/부족 즉시 확인</span></div>
+          <div>손상도 &amp; 수리 비용<span>성능 영향과 비용 명시</span></div>
+          <div>대량/자동 옵션<span>반복 작업 피로 최소화</span></div>
+        </div>
+        <div class="mock">
+          <span class="mock__lb">ENHANCE</span>
+          <div class="mm-row"><svg class="ico ico--xs t-faint"><use href="#i-sword"/></svg>
+            <span class="mm-txt" style="color:var(--tx-hi)">메마른 갈대밭 검창</span>
+            <span class="mm-num" style="color:#D9A9A7">+4 » +5</span></div>
+          <div class="mm-steps">
+            <i>+1</i><i>+2</i><i>+3</i><i>+4</i><i class="on">+5</i><i>+6</i><i>+7</i><i>+8</i></div>
+          <div class="tc" style="font-family:var(--f-serif);font-size:19px;color:var(--red-lit)">65%</div>
+          <div class="mm-txt tc" style="margin-top:-4px">강화 성공 확률</div>
+          <table class="mm-tbl">
+            <tr><td>물리 공격력</td><td>312 ▸ <span class="up">341</span></td></tr>
+            <tr><td>치명타 확률</td><td>6.5% ▸ <span class="up">7.1%</span></td></tr>
+          </table>
+          <div class="mm-row"><span class="mm-txt">손상도</span>
+            <div class="segbar fill" data-seg="72"></div></div>
+        </div>
+      </div>
+      <div class="tip"><b>TIP</b><span>성공/실패 결과와 비용을 명확히 안내해 블랙박스를 최소화합니다.</span></div>
+    </section>
+  </main>
+
+  <!-- 하단 요약 -->
+  <div class="bmfoot">
+    <section class="panel panel--framed">
+      <div class="sum5">
+        <div><svg class="ico"><use href="#i-eye"/></svg><b>시선 흐름 설계</b>
+          <span>좌상단→중앙→하단의 자연스러운 흐름</span></div>
+        <div><svg class="ico"><use href="#i-bolt"/></svg><b>즉각적 피드백</b>
+          <span>행동의 결과를 0.5초 내 인지 가능</span></div>
+        <div><svg class="ico"><use href="#i-target"/></svg><b>정보 우선순위</b>
+          <span>핵심 정보 먼저, 보조 정보 → 상세 정보</span></div>
+        <div><svg class="ico"><use href="#i-seal"/></svg><b>일관된 언어/아이콘</b>
+          <span>의미·색상 체계의 일관성 유지</span></div>
+        <div><svg class="ico"><use href="#i-users"/></svg><b>접근성 &amp; 확장성</b>
+          <span>가독성, 키보드/패드, 다양한 디바이스 대응</span></div>
+      </div>
+    </section>
+
+    <section class="panel panel--framed">
+      <div class="colorsys">
+        <div class="panel__title" style="font-size:12px;margin-bottom:3px">컬러 시스템 (권장)</div>
+        <div class="csrow"><i style="background:#A51C1C"></i>주요 액션 · 위험 · 경보</div>
+        <div class="csrow"><i style="background:#5BA35B"></i>강화 / 성공 / 긍정</div>
+        <div class="csrow"><i style="background:#C87A2B"></i>주의 / 경고 / 대기</div>
+        <div class="csrow"><i style="background:#8A8A8A"></i>정보 / 보조 / 비활성</div>
+      </div>
+    </section>
+
+    <section class="panel panel--framed">
+      <div class="typos">
+        <div class="panel__title" style="font-size:12px;margin-bottom:5px">타이포 우선순위</div>
+        헤드라인 &nbsp;<b>Bold (가독성)</b><br>
+        섹션/서브 &nbsp;<b>Medium</b><br>
+        본문 &nbsp;<b>Regular</b>
+      </div>
+    </section>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

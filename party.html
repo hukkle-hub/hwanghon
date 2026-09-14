@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 파티 모집 / 인력사무실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.pt{display:grid;grid-template-columns:272px 1fr 300px;gap:12px;padding:10px 18px;flex:1;min-height:0}
+.pt__c{display:flex;flex-direction:column;gap:10px;min-height:0}
+
+/* 상단 중앙 탭 */
+.toptabs{display:flex;justify-content:center;gap:34px;padding:9px 0 0}
+.toptabs .tab{font-size:14px;font-family:var(--f-serif);letter-spacing:.08em}
+
+/* 필터 줄 */
+.filters{display:flex;align-items:center;gap:9px}
+
+/* 파티 정보 바 */
+.pbar{display:flex;align-items:center;gap:14px;padding:8px 12px;border:1px solid var(--line);
+  background:rgba(0,0,0,.3)}
+.pbar__k{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--tx-faint)}
+
+/* 멤버 카드 */
+.members{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;flex:1;min-height:0}
+.mcard{display:flex;flex-direction:column;border:1px solid var(--line);background:rgba(14,15,19,.9);
+  position:relative;min-height:0;cursor:pointer;transition:.15s}
+.mcard:hover{border-color:var(--line-hard)}
+.mcard.is-on{border-color:var(--line-red);box-shadow:inset 0 0 24px rgba(165,28,28,.13)}
+.mcard__tag{position:absolute;left:7px;top:7px;z-index:3;display:flex;align-items:center;gap:5px;
+  font-size:10.5px;color:var(--tx-dim);background:rgba(0,0,0,.66);padding:2px 6px;border:1px solid var(--line)}
+.mcard__tag b{color:#D9A9A7;font-weight:500}
+.mcard__st{position:absolute;right:7px;top:7px;z-index:3;display:flex;align-items:center;gap:4px;
+  font-size:10.5px;color:var(--ok);background:rgba(0,0,0,.66);padding:2px 6px}
+.mcard__st--wait{color:var(--warn)}
+.mcard__art{flex:1;min-height:120px;position:relative}
+.mcard__id{position:absolute;left:10px;bottom:9px;z-index:3}
+.mcard__id b{display:block;font-family:var(--f-serif);font-size:17px;color:var(--tx-hi);letter-spacing:.04em}
+.mcard__id span{font-size:11px;color:var(--tx-dim)}
+.mcard__cp{font-size:11px;color:var(--tx-faint);margin-top:2px}
+.mcard__grades{padding:7px 10px 0}
+.grow{display:flex;align-items:center;justify-content:space-between;padding:2.5px 0;font-size:11px}
+.grow span{color:var(--tx-faint);letter-spacing:.06em}
+.grow b{font-family:var(--f-serif);font-size:12.5px}
+.mcard__btn{margin:8px 8px 8px;height:25px;display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:11.5px;border:1px solid var(--line)}
+.mcard__btn--ready{color:#D9A9A7;border-color:var(--line-red);background:rgba(165,28,28,.16)}
+.mcard__btn--ok{color:#8FBF8F;border-color:rgba(91,163,91,.4);background:rgba(91,163,91,.08)}
+.mcard__btn--cancel{color:#C9A45E;border-color:rgba(201,162,39,.35);background:rgba(201,162,39,.07)}
+
+/* 채팅 */
+.chatzone{display:grid;grid-template-columns:1fr 150px 210px;gap:10px;height:112px;flex:none}
+.chatlog{border:1px solid var(--line);background:rgba(0,0,0,.34);padding:8px 10px;overflow:auto;font-size:11.5px;line-height:1.85}
+.chatlog .sys{color:var(--tx-faint)}
+.chatlog .hi{color:#D9A9A7}
+.chatin{display:flex;align-items:center;gap:8px;height:28px;padding:0 9px;border:1px solid var(--line);
+  background:rgba(0,0,0,.42);margin-top:6px}
+.chatin input{flex:1;background:none;border:0;outline:none;font-size:11.5px;color:var(--tx)}
+.chatin input::placeholder{color:var(--tx-ghost)}
+
+/* 우측 보상 */
+.rw4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rw4 .rw{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 3px 5px;
+  border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.rw4 .rw .ico{width:19px;height:19px;color:#9AA0AC}
+.rw4 .rw b{font-size:11px;font-weight:500;color:var(--tx)}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
+.setrow>span{font-size:11.5px;color:var(--tx-faint)}
+.setrow .sel{width:126px}
+.mart{height:104px;border:1px solid var(--line);position:relative}
+.enemies{display:flex;gap:6px}
+.enemy{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.35);color:#8C9098}
+.mlist-sub{display:flex;align-items:center;gap:8px;margin-top:3px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">파티 모집 / 인력사무실</h1>
+      <div class="topbar__sub">필요한 인력을 모아 임무를 수행하십시오.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="toptabs" data-tabs="">
+      <button class="tab is-on" data-tab="find">파티 찾기</button>
+      <button class="tab" data-tab="mine">내 파티</button>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="pt">
+    <!-- ============ 좌: 임무 목록 ============ -->
+    <section class="panel panel--framed">
+      <div class="panel__head"><span class="panel__title">임무 목록</span></div>
+      <div class="panel__body panel__body--tight none">
+        <div class="tabs tabs--pill" data-tabs="">
+          <button class="tab" data-tab="all">전체</button>
+          <button class="tab" data-tab="story">스토리</button>
+          <button class="tab" data-tab="quest">의뢰</button>
+          <button class="tab is-on" data-tab="hunt">토벌</button>
+        </div>
+      </div>
+      <div class="panel__body panel__body--flush scroll fill" data-pick>
+        <div class="row is-on">
+          <div class="row__thumb art art--beast"></div>
+          <div class="row__main">
+            <div class="row__name">메마른 갈대밭 정찰</div>
+            <div class="row__sub">외곽지대 &gt; 갈대습지</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 20</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art"></div>
+          <div class="row__main">
+            <div class="row__name">지하 오염수 처리</div>
+            <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 22</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art art--city"></div>
+          <div class="row__main">
+            <div class="row__name">파괴된 수송로 확보</div>
+            <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 23</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art art--beast"></div>
+          <div class="row__main">
+            <div class="row__name">변이체 토벌: 식인초</div>
+            <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 21</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art"></div>
+          <div class="row__main">
+            <div class="row__name">자원 회수 : 의료품</div>
+            <div class="row__sub">도심지 &gt; 폐병원</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 20</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art art--beast"></div>
+          <div class="row__main">
+            <div class="row__name">보급선 방어</div>
+            <div class="row__sub">외곽지대 &gt; 동부 검문소</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 24</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="row__thumb art art--city"></div>
+          <div class="row__main">
+            <div class="row__name">추적 : 붉은 그림자</div>
+            <div class="row__sub">도심지 &gt; 침수 지하로</div>
+            <div class="mlist-sub"><span class="xs t-faint">Lv. 25</span>
+              <span class="xs t-red" style="margin-left:auto">모집 중</span></div>
+          </div>
+        </div>
+        <div style="padding:11px">
+          <button class="btn btn--sm btn--block btn--ghost">
+            <svg class="ico ico--sm"><use href="#i-refresh"/></svg>임무 목록 갱신</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 중앙 ============ -->
+    <div class="pt__c">
+      <div class="filters">
+        <select class="sel"><option>난이도 전체</option><option>S</option><option>A</option></select>
+        <select class="sel"><option>모든 역할</option><option>딜러</option><option>탱커</option></select>
+        <select class="sel"><option>레벨 제한 없음</option><option>Lv.20 이상</option></select>
+        <label class="check is-on"><i></i>모집 중만 보기</label>
+        <label class="check"><i></i>내 직업만 보기</label>
+        <button class="btn btn--sm btn--ghost" style="margin-left:auto">
+          <svg class="ico ico--sm"><use href="#i-refresh"/></svg>새로 고침</button>
+      </div>
+
+      <div class="pbar">
+        <span class="panel__title">파티 정보</span>
+        <span class="pbar__k"><svg class="ico ico--sm"><use href="#i-lock"/></svg>비공개 파티</span>
+        <span class="pbar__k" style="margin-left:auto">파티 코드</span>
+        <span class="sm t-dim num">TW-0417</span>
+        <button class="iconbtn"><svg class="ico ico--sm"><use href="#i-copy"/></svg></button>
+        <span class="pbar__k">평균 전투력</span>
+        <span class="sm t-hi num">76,840</span>
+      </div>
+
+      <div class="members" data-pick>
+        <!-- 1P -->
+        <div class="mcard is-on">
+          <span class="mcard__tag"><b>1P</b> 파티장</span>
+          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg></span>
+          <div class="mcard__art art art--portrait">
+            <div class="mcard__id"><b>Ain</b><span>Lv.26</span>
+              <div class="mcard__cp">전투력 24,650</div></div>
+          </div>
+          <div class="mcard__grades">
+            <div class="grow"><span>카운터</span><b class="g-s">S</b></div>
+            <div class="grow"><span>부위파괴</span><b class="g-s">S</b></div>
+            <div class="grow"><span>정 제</span><b class="g-a">A</b></div>
+            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
+            <div class="grow"><span>제 작</span><b class="g-a">A</b></div>
+          </div>
+          <div class="mcard__btn mcard__btn--ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+        </div>
+        <!-- 2P -->
+        <div class="mcard">
+          <span class="mcard__tag"><b>2P</b></span>
+          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</span>
+          <div class="mcard__art art art--portrait">
+            <div class="mcard__id"><b>SteelRain</b><span>Lv.24</span>
+              <div class="mcard__cp">전투력 21,430</div></div>
+          </div>
+          <div class="mcard__grades">
+            <div class="grow"><span>카운터</span><b class="g-a">A</b></div>
+            <div class="grow"><span>부위파괴</span><b class="g-a">A</b></div>
+            <div class="grow"><span>정 제</span><b class="g-b">B</b></div>
+            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
+            <div class="grow"><span>제 작</span><b class="g-b">B</b></div>
+          </div>
+          <div class="mcard__btn mcard__btn--ok"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+        </div>
+        <!-- 3P -->
+        <div class="mcard">
+          <span class="mcard__tag"><b>3P</b></span>
+          <span class="mcard__st"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</span>
+          <div class="mcard__art art art--portrait">
+            <div class="mcard__id"><b>WhiteDawn</b><span>Lv.25</span>
+              <div class="mcard__cp">전투력 19,870</div></div>
+          </div>
+          <div class="mcard__grades">
+            <div class="grow"><span>카운터</span><b class="g-b">B</b></div>
+            <div class="grow"><span>부위파괴</span><b class="g-a">A</b></div>
+            <div class="grow"><span>정 제</span><b class="g-a">A</b></div>
+            <div class="grow"><span>드 랩</span><b class="g-b">B</b></div>
+            <div class="grow"><span>제 작</span><b class="g-a">A</b></div>
+          </div>
+          <div class="mcard__btn mcard__btn--ok"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+        </div>
+        <!-- 4P -->
+        <div class="mcard">
+          <span class="mcard__tag"><b>4P</b></span>
+          <span class="mcard__st mcard__st--wait"><svg class="ico ico--xs"><use href="#i-clock"/></svg>준비 중…</span>
+          <div class="mcard__art art art--portrait">
+            <div class="mcard__id"><b>IronWall</b><span>Lv.26</span>
+              <div class="mcard__cp">전투력 26,890</div></div>
+          </div>
+          <div class="mcard__grades">
+            <div class="grow"><span>카운터</span><b class="g-s">S</b></div>
+            <div class="grow"><span>부위파괴</span><b class="g-s">S</b></div>
+            <div class="grow"><span>정 제</span><b class="g-b">B</b></div>
+            <div class="grow"><span>드 랩</span><b class="g-a">A</b></div>
+            <div class="grow"><span>제 작</span><b class="g-b">B</b></div>
+          </div>
+          <div class="mcard__btn mcard__btn--cancel"><svg class="ico ico--xs"><use href="#i-clock"/></svg>준비 취소</div>
+        </div>
+      </div>
+
+      <div class="chatzone">
+        <div>
+          <div class="chatlog">
+            <div class="sys">[Ain] 파티를 생성했습니다.</div>
+            <div class="sys">[SteelRain] 입장했습니다.</div>
+            <div class="sys">[WhiteDawn] 입장했습니다.</div>
+            <div class="hi">IronWall 님이 입장했습니다.</div>
+          </div>
+          <div class="chatin">
+            <input placeholder="Enter로 채팅 입력">
+            <svg class="ico ico--sm t-faint"><use href="#i-chat"/></svg>
+          </div>
+        </div>
+        <button class="btn btn--block" style="height:100%">
+          <span class="flex col ac g1">
+            <svg class="ico ico--lg"><use href="#i-gear"/></svg>모집 설정</span>
+        </button>
+        <button class="btn btn--primary btn--block" style="height:100%;font-family:var(--f-serif);font-size:19px;letter-spacing:.16em">
+          모집 시작</button>
+      </div>
+    </div>
+
+    <!-- ============ 우: 임무 상세 ============ -->
+    <section class="panel panel--framed">
+      <div class="panel__head">
+        <span class="panel__title">임무 상세</span>
+        <span class="risk" style="margin-left:auto">위험도 <b class="badge badge--s">S</b></span>
+      </div>
+      <div class="panel__body scroll">
+        <h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">메마른 갈대밭 정찰</h2>
+        <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
+        <div class="mart art art--beast mt3"><div class="art__tag">M I S S I O N</div></div>
+
+        <div class="hr"></div>
+        <div class="label-ko">임무 목표</div>
+        <div class="sm t-dim">변이체 무리 정찰 및 위협 요소 제거</div>
+
+        <div class="hr"></div>
+        <div class="label-ko">주요 적</div>
+        <div class="enemies">
+          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+          <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+        </div>
+
+        <div class="hr"></div>
+        <div class="flex ac jb">
+          <span class="label-ko" style="margin:0">권장 전투력</span>
+          <span class="sm t-hi num">60,000</span>
+        </div>
+
+        <div class="hr"></div>
+        <div class="label-ko">보상 정보</div>
+        <div class="rw4">
+          <div class="rw"><svg class="ico"><use href="#i-exp"/></svg><b>4,200</b></div>
+          <div class="rw"><svg class="ico"><use href="#i-ingot"/></svg><b>2,100</b></div>
+          <div class="rw"><svg class="ico"><use href="#i-gem"/></svg><b>1~2</b></div>
+          <div class="rw"><svg class="ico"><use href="#i-bolt"/></svg><b>1~3</b></div>
+        </div>
+
+        <div class="hr"></div>
+        <div class="label-ko">파티 모집 설정</div>
+        <div class="setrow"><span>모집 대상</span>
+          <select class="sel"><option>전체</option><option>길드원</option></select></div>
+        <div class="setrow"><span>모집 방식</span>
+          <select class="sel"><option>자동 승인</option><option>수동 승인</option></select></div>
+        <div class="setrow"><span>최소 전투력</span>
+          <select class="sel"><option>60,000 이상</option><option>제한 없음</option></select></div>
+        <div class="setrow"><span>음성 채팅</span>
+          <span class="flex ac g2"><select class="sel" style="width:100px"><option>허용</option><option>비허용</option></select>
+          <svg class="ico ico--sm t-faint"><use href="#i-headset"/></svg></span></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="hotbar">
+    <a class="hot" href="office.html"><span class="key">ESC</span>뒤로</a>
+    <a class="hot"><svg class="ico ico--sm"><use href="#i-users"/></svg>파티 관리</a>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

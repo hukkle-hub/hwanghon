@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 의뢰 상세 / 보스 도감</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.qs{display:grid;grid-template-columns:300px 1fr 302px;gap:11px;padding:10px 18px;flex:1;min-height:0}
+.qs__l{display:grid;grid-template-rows:1fr 186px;gap:10px;min-height:0}
+.qs__c{display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;min-height:0}
+.qs__r{display:grid;grid-template-rows:auto auto auto 1fr auto;gap:10px;min-height:0}
+
+/* 보스 헤더 */
+.bosshead{padding:11px 15px 0}
+.bosshead__t{display:flex;align-items:center;gap:10px}
+.bosshead__t h2{font-size:18px;color:var(--tx-hi);letter-spacing:.05em}
+.bosshead__d{font-size:11px;color:var(--tx-dim);line-height:1.55;margin-top:6px}
+.bossart{height:100px;margin:9px 15px 12px;border:1px solid var(--line);position:relative}
+
+/* 약점 다이어그램 */
+.weak{position:relative;height:130px}
+.weak__fig{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:152px;height:84px;
+  background:radial-gradient(60% 60% at 50% 55%,rgba(90,95,110,.22),transparent 70%)}
+.weak__fig svg{width:100%;height:100%;opacity:.5}
+.callout{position:absolute;min-width:146px;border:1px solid var(--line-gold);background:rgba(20,18,12,.72);padding:6px 9px}
+.callout b{display:block;font-size:11.5px;color:#D6C68E;font-weight:500;letter-spacing:.03em}
+.callout span{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--tx-faint);margin-top:4px}
+.callout span i{color:var(--gold);font-style:normal}
+.callout--tl{left:8px;top:22px}
+.callout--tr{right:8px;top:14px}
+.callout--bl{left:22px;bottom:18px}
+.callout--br{right:22px;bottom:26px}
+.weak__dot{position:absolute;width:6px;height:6px;border:1px solid var(--gold);border-radius:50%;
+  background:rgba(201,162,39,.3)}
+.weak__line{position:absolute;inset:0;pointer-events:none}
+.weak__line line{stroke:rgba(201,162,39,.34);stroke-width:1;stroke-dasharray:3 3}
+
+/* 3분할 하위 패널 */
+.trio{display:grid;grid-template-columns:1.5fr 1fr .82fr;gap:10px;min-height:0}
+.atk{display:flex;align-items:center;gap:9px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
+.atk:last-child{border:0}
+.atk__ic{width:22px;height:22px;display:grid;place-items:center;color:#B4726C;flex:none}
+.atk__nm{font-size:12px;color:var(--tx);white-space:nowrap}
+.atk__d{font-size:10px;color:var(--tx-faint);margin-left:auto;text-align:right;white-space:nowrap}
+.trait{display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--line-soft)}
+.trait:last-child{border:0}
+.trait__ic{width:24px;height:24px;display:grid;place-items:center;color:#9AA0AC;flex:none;
+  border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.mrow{display:flex;align-items:flex-start;gap:10px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
+.mrow:last-child{border:0}
+.mrow__g{width:20px;text-align:center;font-family:var(--f-serif);font-size:15px;font-weight:700;flex:none}
+
+/* 하단 3분할 */
+.qs__bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* 우측 */
+.dropline{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line-soft)}
+.dropline:last-child{border:0}
+.dropline__k{width:40px;flex:none;font-size:11px;color:var(--tx-faint)}
+.dropline .slotgrid{flex:1;--cols:6;gap:4px}
+.note{display:flex;gap:10px}
+.note__img{width:78px;height:56px;border:1px solid var(--line);flex:none}
+.charsel{display:flex;align-items:center;gap:10px;padding:8px 11px}
+.charsel__face{width:46px;height:46px;border:1px solid var(--line);flex:none}
+.codex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.codex .art{aspect-ratio:1/1;border:1px solid var(--line)}
+.codex .art:first-child{border-color:var(--line-red)}
+.backbar{display:flex;align-items:center;padding:9px 24px;flex:none}
+.pair{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:12px}
+.pair>div{flex:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">의뢰 상세 / 보스 도감</h1>
+      <div class="topbar__sub">의뢰 내용과 목표, 위험 요소를 확인하고 출격 준비를 진행합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="qs">
+    <!-- ============ 좌측 ============ -->
+    <div class="qs__l">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">의뢰 목록</span></div>
+        <div class="panel__body panel__body--tight none">
+          <div class="flex g2 ac">
+            <select class="sel fill"><option>전체</option><option>보스 의뢰</option><option>토벌</option></select>
+            <select class="sel fill"><option>추천 순</option><option>보수 순</option><option>위험도 순</option></select>
+            <button class="iconbtn"><svg class="ico ico--sm"><use href="#i-filter"/></svg></button>
+          </div>
+        </div>
+        <div class="panel__body panel__body--flush scroll fill" data-pick>
+          <div class="row is-on">
+            <div class="row__thumb art art--beast"></div>
+            <div class="row__main">
+              <div class="row__name">메마른 갈대밭 정찰</div>
+              <div class="row__sub">외곽지대 &gt; 갈대습지</div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--s">S</b></span></div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art art--city"></div>
+            <div class="row__main">
+              <div class="row__name">파괴된 수송로 확보</div>
+              <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
+            </div>
+            <div class="row__right"><b class="badge badge--a">A</b></div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art"></div>
+            <div class="row__main">
+              <div class="row__name">지하 오염수 처리</div>
+              <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
+            </div>
+            <div class="row__right"><b class="badge badge--a">A</b></div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art art--beast"></div>
+            <div class="row__main">
+              <div class="row__name">변이체 토벌: 식인초</div>
+              <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
+            </div>
+            <div class="row__right"><b class="badge badge--b">B</b></div>
+          </div>
+          <div class="row">
+            <div class="row__thumb art"></div>
+            <div class="row__main">
+              <div class="row__name">자원 회수: 의료품</div>
+              <div class="row__sub">도심지 &gt; 폐병원</div>
+            </div>
+            <div class="row__right"><b class="badge badge--b">B</b></div>
+          </div>
+          <div style="padding:11px">
+            <button class="btn btn--sm btn--block btn--ghost">
+              <svg class="ico ico--sm"><use href="#i-refresh"/></svg>의뢰 새로고침</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">보스 도감</span>
+          <span class="panel__meta">수집 현황 <span class="num t-dim">24 / 47</span></span>
+        </div>
+        <div class="panel__body">
+          <div class="codex">
+            <div class="art art--beast"></div>
+            <div class="art art--portrait"></div>
+            <div class="art art--beast"></div>
+            <div class="art art--portrait"></div>
+          </div>
+          <button class="btn btn--sm btn--block btn--ghost mt3">
+            <svg class="ico ico--sm"><use href="#i-refresh"/></svg>도감 보기</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ 중앙 ============ -->
+    <div class="qs__c">
+      <section class="panel panel--framed">
+        <div class="bosshead">
+          <div class="bosshead__t">
+            <h2>메마른 갈대밭 정찰</h2>
+            <span class="risk">위험도 <b class="badge badge--s">S</b></span>
+          </div>
+          <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
+          <p class="bosshead__d">
+            갈대밭 외곽에서 대형 변이체가 목격되었다.<br>
+            생존 정찰대의 신호가 끊긴 상태.<br>
+            적의 토벌과 핵심 정보 확보가 필요하다.
+          </p>
+          <div class="flex g2 mt3">
+            <span class="chip chip--red">보스 의뢰</span>
+            <span class="chip chip--red">변이체 토벌</span>
+          </div>
+        </div>
+        <div class="bossart art art--beast">
+          <div class="art__tag">B O S S &nbsp; A R T</div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">약점 및 파괴 부위</span></div>
+        <div class="panel__body panel__body--flush">
+          <div class="weak">
+            <svg class="weak__line">
+              <line x1="20%" y1="24%" x2="44%" y2="42%"/>
+              <line x1="80%" y1="18%" x2="56%" y2="40%"/>
+              <line x1="23%" y1="80%" x2="45%" y2="62%"/>
+              <line x1="78%" y1="76%" x2="56%" y2="64%"/>
+            </svg>
+            <div class="weak__fig">
+              <svg viewBox="0 0 230 126" fill="none">
+                <path d="M28 96c6-22 18-34 40-38 14-3 26-10 34-20 6-8 16-12 26-10 12 2 18 10 22 20 5 12 16 18 28 20 20 4 30 14 34 30"
+                      stroke="#7A808C" stroke-width="2"/>
+                <path d="M26 96l-6 22M56 92l-4 24M160 96l4 24M196 94l8 22" stroke="#7A808C" stroke-width="2"/>
+                <circle cx="152" cy="34" r="13" stroke="#7A808C" stroke-width="2"/>
+                <path d="M30 90C14 80 6 62 10 46" stroke="#7A808C" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="callout callout--tl">
+              <b>머리 (약점)</b><span><i>★</i>피해 증가</span>
+            </div>
+            <div class="callout callout--tr">
+              <b>등 견갑 (파괴 가능)</b><span><i>★</i>자세 파괴</span>
+            </div>
+            <div class="callout callout--bl">
+              <b>앞다리 (파괴 가능)</b><span><i>★</i>이동 둔화</span>
+            </div>
+            <div class="callout callout--br">
+              <b>꼬리 (파괴 가능)</b><span><i>★</i>공격 범위 감소</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="trio">
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">공격 패턴 요약</span></div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="atk"><span class="atk__ic"><svg class="ico ico--sm"><use href="#i-bolt"/></svg></span>
+              <span class="atk__nm">돌진 베기</span><b class="badge badge--s">S</b>
+              <span class="atk__d">전방으로 빠르게 돌진 후 연속 베기</span></div>
+            <div class="atk"><span class="atk__ic"><svg class="ico ico--sm"><use href="#i-flame"/></svg></span>
+              <span class="atk__nm">광폭 포효</span><b class="badge badge--a">A</b>
+              <span class="atk__d">넓은 범위의 충격파, 정신력 피해</span></div>
+            <div class="atk"><span class="atk__ic"><svg class="ico ico--sm"><use href="#i-hammer"/></svg></span>
+              <span class="atk__nm">대지 강타</span><b class="badge badge--s">S</b>
+              <span class="atk__d">전방 지면 강타 후 충격파 발생</span></div>
+            <div class="atk"><span class="atk__ic"><svg class="ico ico--sm"><use href="#i-scythe"/></svg></span>
+              <span class="atk__nm">꼬리 휘두르기</span><b class="badge badge--a">A</b>
+              <span class="atk__d">넓은 회전 공격, 뒤로도 판정 존재</span></div>
+            <div class="atk"><span class="atk__ic"><svg class="ico ico--sm"><use href="#i-drop"/></svg></span>
+              <span class="atk__nm">피의 광란</span><b class="badge badge--s">S</b>
+              <span class="atk__d">체력 30% 이하 시 사용, 연속 공격 강화</span></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">추천 파티 특성</span></div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="trait"><span class="trait__ic"><svg class="ico ico--sm"><use href="#i-shield"/></svg></span>
+              <div><div class="sm t-hi">강인함</div><div class="xs t-faint mt1">격추 저항 및 생존력 보유</div></div></div>
+            <div class="trait"><span class="trait__ic"><svg class="ico ico--sm"><use href="#i-bolt"/></svg></span>
+              <div><div class="sm t-hi">기동력</div><div class="xs t-faint mt1">회피/이동 능력 보유</div></div></div>
+            <div class="trait"><span class="trait__ic"><svg class="ico ico--sm"><use href="#i-drop"/></svg></span>
+              <div><div class="sm t-hi">출혈 저항</div><div class="xs t-faint mt1">출혈 상태 이상 대비</div></div></div>
+            <div class="trait"><span class="trait__ic"><svg class="ico ico--sm"><use href="#i-hammer"/></svg></span>
+              <div><div class="sm t-hi">파괴 특화</div><div class="xs t-faint mt1">부위 파괴 속도 증가</div></div></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">마스터리 등급</span></div>
+          <div class="panel__body panel__body--tight scroll">
+            <div class="mrow"><span class="mrow__g g-s">S</span>
+              <div class="xs t-faint">5분 이내 처치<br>모든 파괴 부위 파괴</div></div>
+            <div class="mrow"><span class="mrow__g g-a">A</span>
+              <div class="xs t-faint">10분 이내 처치<br>파괴 부위 2개 이상 파괴</div></div>
+            <div class="mrow"><span class="mrow__g g-b">B</span>
+              <div class="xs t-faint">15분 이내 처치<br>파괴 부위 1개 이상 파괴</div></div>
+            <div class="mrow"><span class="mrow__g g-c">C</span>
+              <div class="xs t-faint">15분 초과 처치<br>파괴 조건 미달성</div></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="qs__bottom">
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">의뢰 정보</span></div>
+          <div class="panel__body panel__body--tight">
+            <div class="pair">
+              <div><span class="stat__k">권장 레벨</span><span class="stat__v">26</span></div>
+              <div><span class="stat__k">권장 전투력</span><span class="stat__v num">22,000</span></div>
+            </div>
+            <div class="pair">
+              <div><span class="stat__k">의뢰 보수</span>
+                <span class="stat__v flex ac g1"><svg class="ico ico--xs t-gold"><use href="#i-coin"/></svg>18,000</span></div>
+              <div><span class="stat__v num t-dim">00:20:00</span></div>
+            </div>
+            <div class="pair"><div><span class="stat__k">출격 인원</span><span class="stat__v">1~4명</span></div></div>
+            <div class="pair"><div><span class="stat__k">실패 페널티</span>
+              <span class="stat__v xs">장비 내구도 10% 감소</span></div></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">클리어 조건</span></div>
+          <div class="panel__body panel__body--tight">
+            <div class="flex g2 ac"><span class="xs t-red">필수 목표</span>
+              <span class="sm t-dim">• 대형 변이체 토벌</span></div>
+            <div class="hr"></div>
+            <div class="xs t-faint mb2">선택 목표</div>
+            <div class="flex ac g2 mb2">
+              <svg class="ico ico--sm t-faint"><use href="#i-skull"/></svg>
+              <span class="sm t-dim fill">정찰대의 기록 회수</span><span class="xs t-faint num">(0/1)</span></div>
+            <div class="flex ac g2">
+              <svg class="ico ico--sm t-faint"><use href="#i-skull"/></svg>
+              <span class="sm t-dim fill">변이체의 핵심 파편 획득</span><span class="xs t-faint num">(0/1)</span></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">출격 준비 체크리스트</span></div>
+          <div class="panel__body panel__body--tight">
+            <label class="check is-on mb2" style="display:flex"><i></i>장비 내구도 100% 이상</label>
+            <label class="check is-on mb2" style="display:flex"><i></i>소모품 전부 보유</label>
+            <label class="check mb2" style="display:flex"><i></i>채집 도구 장착</label>
+            <label class="check" style="display:flex"><i></i>추천 특성 충족 (2개 이상)</label>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- ============ 우측 ============ -->
+    <div class="qs__r">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">획득 가능 보상</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="slotgrid" style="--cols:6" data-pick>
+            <div class="slot is-on" data-r="legend"><svg class="ico"><use href="#i-scythe"/></svg>
+              <span class="slot__lv">★★★</span></div>
+            <div class="slot" data-r="hero"><svg class="ico"><use href="#i-hammer"/></svg></div>
+            <div class="slot" data-r="hero"><svg class="ico"><use href="#i-glove"/></svg></div>
+            <div class="slot" data-r="rare"><svg class="ico"><use href="#i-gem"/></svg></div>
+            <div class="slot" data-r="rare"><svg class="ico"><use href="#i-bolt"/></svg></div>
+            <div class="slot"><svg class="ico"><use href="#i-potion"/></svg></div>
+          </div>
+          <div class="flex ac g2 mt3">
+            <span class="xs t-faint fill">최초 클리어 보상</span>
+            <div class="slot" data-r="legend" style="width:34px"><svg class="ico"><use href="#i-potion"/></svg></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">드롭 정보</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="dropline"><span class="dropline__k">일반</span>
+            <div class="slotgrid" data-slots="6" data-icon="potion,ingot,gem,drop,bolt,potion"></div></div>
+          <div class="dropline"><span class="dropline__k">희귀</span>
+            <div class="slotgrid" data-slots="6" data-icon="gem,gem,potion,bolt,gem,ingot"></div></div>
+          <div class="dropline"><span class="dropline__k">낮은 확률</span>
+            <div class="slotgrid" data-slots="6" data-icon="scythe,sword,ring,seal,gem,potion"></div></div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">정찰 경로 노트</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="note">
+            <div class="note__img art art--city"></div>
+            <p class="t-faint" style="font-size:10.5px;line-height:1.6;margin:0">
+              갈대 습지를 따라 북동쪽으로 이동.<br>
+              무너진 망루를 지나면 넓은 분지에 도달한다.<br>
+              바람의 흐름과 갈대의 흔들림을 이용해<br>
+              은폐하며 접근할 것.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">선택 캐릭터</span></div>
+        <div class="charsel">
+          <div class="charsel__face art art--portrait"></div>
+          <div class="fill">
+            <div class="flex ac jb"><span class="sm t-hi f-serif">아인</span><span class="xs t-faint">LV.26</span></div>
+            <div class="xs t-faint mt1">전투력 <span class="num t-dim">24,650</span></div>
+          </div>
+          <svg class="ico t-ghost"><use href="#i-scythe"/></svg>
+        </div>
+        <div style="padding:0 11px 11px">
+          <button class="btn btn--sm btn--block btn--ghost">캐릭터 변경</button>
+        </div>
+      </section>
+
+      <button class="btn btn--deploy">
+        <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
+      </button>
+    </div>
+  </main>
+
+  <div class="backbar">
+    <a class="hot" href="office.html"><svg class="ico"><use href="#i-arrowl"/></svg>뒤로</a>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>

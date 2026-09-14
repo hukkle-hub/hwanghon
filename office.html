@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 인력사무실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+.office{display:grid;grid-template-columns:344px 1fr 374px;gap:14px;padding:14px 20px 12px;flex:1;min-height:0}
+.office__l{display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0}
+.office__c{position:relative;display:flex;flex-direction:column;min-height:0}
+.office__r{display:grid;grid-template-rows:1fr auto auto;gap:12px;min-height:0}
+
+/* 중앙 아트 + 파티 정보 */
+.hero{position:absolute;inset:0}
+.hero .moon{right:14%;top:9%;width:54px;height:54px;opacity:.55}
+.office__c .party{margin-top:auto;position:relative;z-index:2}
+.party__cards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.pcard{
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(22,23,28,.94),rgba(12,13,17,.96));
+  border:1px solid var(--line);padding:9px 9px 8px;cursor:pointer;transition:.15s
+}
+.pcard:hover{border-color:var(--line-hard)}
+.pcard.is-on{border-color:var(--line-red);box-shadow:inset 0 0 18px rgba(165,28,28,.14)}
+.pcard__top{display:flex;gap:9px;align-items:flex-start}
+.pcard__face{width:44px;height:44px;flex:none;border:1px solid var(--line)}
+.pcard__nm{font-family:var(--f-serif);font-size:14px;color:var(--tx-hi);letter-spacing:.03em}
+.pcard__lv{font-size:11px;color:var(--tx-faint);margin-top:2px}
+.pcard__cp{font-size:11.5px;color:var(--tx-dim);margin-top:3px;font-variant-numeric:tabular-nums}
+.pcard__role{margin-left:auto;color:var(--tx-ghost)}
+.pcard__ready{
+  margin-top:8px;height:24px;display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:11.5px;color:#D9A9A7;border:1px solid var(--line-red);background:rgba(165,28,28,.16);
+  letter-spacing:.05em
+}
+
+/* 사무소 등급 */
+.rank__row{display:flex;align-items:center;gap:10px;padding:7px 0}
+.rank__ico{width:26px;height:26px;color:var(--gold-dim);flex:none}
+.rank__k{font-size:11.5px;color:var(--tx-faint)}
+.rank__v{font-size:12px;color:var(--tx);letter-spacing:.03em}
+.rank__num{font-size:11px;color:var(--tx-faint);font-variant-numeric:tabular-nums;margin-left:auto}
+
+/* 의뢰 정보 */
+.qart{height:118px;border:1px solid var(--line);position:relative}
+.rewards{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rw{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px 6px;
+  border:1px solid var(--line);background:rgba(0,0,0,.3)
+}
+.rw .ico{color:#9AA0AC;width:20px;height:20px}
+.rw b{font-size:11.5px;color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
+.rw[data-r="hero"]{border-color:rgba(139,91,214,.4)}
+.rw[data-r="legend"]{border-color:rgba(201,138,43,.4)}
+.enemies{display:flex;gap:6px}
+.enemy{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.35);color:#8C9098}
+
+/* 전투 준비 */
+.prep{display:flex;align-items:center;gap:11px;padding:10px 12px}
+.prep__thumb{width:58px;height:40px;border:1px solid var(--line);flex:none}
+.prep__ico{width:30px;height:30px;color:var(--gold-dim);flex:none}
+
+/* 하단 네비 */
+.gnb{display:flex;align-items:center;gap:34px;padding:11px 26px;
+  border-top:1px solid var(--line-soft);background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);flex:none}
+.gnb a{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx-faint);letter-spacing:.04em}
+.gnb a:hover{color:var(--tx)}
+.gnb a.is-on{color:#D8C08A}
+.gnb a.is-on .ico{color:var(--gold)}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+
+  <!-- ================= 상단 바 ================= -->
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">인력사무실</h1>
+      <div class="topbar__sub">마태오의 인력사무소</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ================= 본문 ================= -->
+  <main class="office">
+
+    <!-- ---------- 좌: 의뢰 목록 ---------- -->
+    <div class="office__l">
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">의뢰 목록</span>
+          <button class="iconbtn" style="margin-left:auto"><svg class="ico ico--sm"><use href="#i-chevr"/></svg></button>
+        </div>
+        <div class="panel__body panel__body--flush scroll" data-pick>
+          <div class="row is-on">
+            <div class="row__main">
+              <div class="row__name">메마른 갈대밭 정찰</div>
+              <div class="row__sub">외곽지대 &gt; 갈대습지</div>
+              <div class="row__sub" style="margin-top:5px">의뢰 보수
+                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
+                <span class="num t-dim">18,000</span></div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--s">S</b></span></div>
+          </div>
+          <div class="row">
+            <div class="row__main">
+              <div class="row__name">지하 오염수 처리</div>
+              <div class="row__sub">지하시설 &gt; 2경구 정화장</div>
+              <div class="row__sub" style="margin-top:5px">의뢰 보수
+                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
+                <span class="num t-dim">12,500</span></div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--a">A</b></span></div>
+          </div>
+          <div class="row">
+            <div class="row__main">
+              <div class="row__name">파괴된 수송로 확보</div>
+              <div class="row__sub">외곽지대 &gt; 끊어진 도로</div>
+              <div class="row__sub" style="margin-top:5px">의뢰 보수
+                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
+                <span class="num t-dim">10,800</span></div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--a">A</b></span></div>
+          </div>
+          <div class="row">
+            <div class="row__main">
+              <div class="row__name">변이체 토벌: 식인초</div>
+              <div class="row__sub">외곽지대 &gt; 버려진 식물원</div>
+              <div class="row__sub" style="margin-top:5px">의뢰 보수
+                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
+                <span class="num t-dim">8,300</span></div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--b">B</b></span></div>
+          </div>
+          <div class="row">
+            <div class="row__main">
+              <div class="row__name">자원 회수: 의료품</div>
+              <div class="row__sub">도심지 &gt; 폐병원</div>
+              <div class="row__sub" style="margin-top:5px">의뢰 보수
+                <svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>
+                <span class="num t-dim">7,200</span></div>
+            </div>
+            <div class="row__right"><span class="risk">위험도 <b class="badge badge--b">B</b></span></div>
+          </div>
+          <div style="padding:12px 11px">
+            <button class="btn btn--sm btn--block btn--ghost">
+              <svg class="ico ico--sm"><use href="#i-refresh"/></svg>의뢰 새로고침</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 사무소 등급 / 평판 -->
+      <section class="panel panel--framed">
+        <div class="panel__body">
+          <div class="rank__row">
+            <svg class="rank__ico"><use href="#i-sigil"/></svg>
+            <div class="fill">
+              <div class="flex ac jb">
+                <span class="rank__k">인력 사무소 등급</span>
+                <span class="rank__v f-serif">LV.4</span>
+              </div>
+              <div class="bar bar--gold mt2" data-fill="57"></div>
+            </div>
+            <span class="rank__num">2,850 / 5,000</span>
+          </div>
+          <div class="hr"></div>
+          <div class="rank__row">
+            <svg class="rank__ico"><use href="#i-seal"/></svg>
+            <div class="fill">
+              <div class="flex ac jb">
+                <span class="rank__k">사무소 평판</span>
+                <span class="rank__v">신뢰</span>
+              </div>
+              <div class="bar bar--gold mt2" data-fill="62"></div>
+            </div>
+            <span class="rank__num">6,250 / 10,000</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ---------- 중: 아트 + 파티 ---------- -->
+    <div class="office__c">
+      <div class="hero art art--office">
+        <div class="moon"></div>
+        <div class="art__tag">A R T &nbsp; —&nbsp; 인력사무소 브리핑</div>
+      </div>
+
+      <div class="party">
+        <div class="label-ko" style="padding-left:2px">파티 정보</div>
+        <div class="party__cards" data-pick>
+          <div class="pcard is-on">
+            <div class="pcard__top">
+              <div class="pcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="pcard__nm">아인</div>
+                <div class="pcard__lv">LV.26</div>
+                <div class="pcard__cp">전투력 24,650</div>
+              </div>
+              <svg class="ico pcard__role"><use href="#i-scythe"/></svg>
+            </div>
+            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+          </div>
+          <div class="pcard">
+            <div class="pcard__top">
+              <div class="pcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="pcard__nm">카인</div>
+                <div class="pcard__lv">LV.32</div>
+                <div class="pcard__cp">전투력 32,180</div>
+              </div>
+              <svg class="ico pcard__role"><use href="#i-sword"/></svg>
+            </div>
+            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+          </div>
+          <div class="pcard">
+            <div class="pcard__top">
+              <div class="pcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="pcard__nm">류</div>
+                <div class="pcard__lv">LV.25</div>
+                <div class="pcard__cp">전투력 21,430</div>
+              </div>
+              <svg class="ico pcard__role"><use href="#i-crosshair"/></svg>
+            </div>
+            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+          </div>
+          <div class="pcard">
+            <div class="pcard__top">
+              <div class="pcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="pcard__nm">세라</div>
+                <div class="pcard__lv">LV.24</div>
+                <div class="pcard__cp">전투력 19,870</div>
+              </div>
+              <svg class="ico pcard__role"><use href="#i-seal"/></svg>
+            </div>
+            <div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- 우: 의뢰 정보 ---------- -->
+    <div class="office__r">
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">의뢰 정보</span>
+          <span class="risk" style="margin-left:auto">위험도 <b class="badge badge--s">S</b></span>
+        </div>
+        <div class="panel__body scroll">
+          <h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">메마른 갈대밭 정찰</h2>
+          <div class="xs t-faint mt1">외곽지대 &gt; 갈대습지</div>
+
+          <div class="qart art art--beast mt3">
+            <div class="art__tag">B O S S &nbsp;—&nbsp; 대형 변이체</div>
+          </div>
+
+          <div class="hr"></div>
+          <div class="label-ko">의뢰 목표</div>
+          <div class="sm t-dim">변이체 무리 정찰 및 위협 요소 제거</div>
+
+          <div class="hr"></div>
+          <div class="label-ko">주요 적</div>
+          <div class="enemies">
+            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+            <span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+          </div>
+
+          <div class="hr"></div>
+          <div class="flex ac jb">
+            <span class="label-ko" style="margin:0">의뢰 보수</span>
+            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">18,000</span></span>
+          </div>
+
+          <div class="rewards mt3">
+            <div class="rw"><svg class="ico"><use href="#i-exp"/></svg><b>4,200</b></div>
+            <div class="rw"><svg class="ico"><use href="#i-ingot"/></svg><b>2,100</b></div>
+            <div class="rw" data-r="hero"><svg class="ico"><use href="#i-gem"/></svg><b>1~2</b></div>
+            <div class="rw" data-r="hero"><svg class="ico"><use href="#i-bolt"/></svg><b>1~3</b></div>
+          </div>
+
+          <div class="field mt3">
+            <input placeholder="출현 변이체 정보">
+            <svg class="ico ico--sm t-faint"><use href="#i-search"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="prep">
+          <svg class="prep__ico"><use href="#i-target"/></svg>
+          <div class="fill">
+            <div class="sm t-hi">전투 준비</div>
+            <div class="xs t-faint mt1">훈련용 허수아비</div>
+          </div>
+          <div class="prep__thumb art art--forge"></div>
+        </div>
+      </section>
+
+      <button class="btn btn--deploy">
+        <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- ================= 하단 네비 ================= -->
+  <nav class="gnb">
+    <a class="is-on"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a href="battle.html"><svg class="ico"><use href="#i-sword"/></svg>훈련장</a>
+    <a><svg class="ico"><use href="#i-shop"/></svg>상점</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+    <a href="profile.html"><svg class="ico"><use href="#i-book"/></svg>기록 보관소</a>
+  </nav>
+</div>
+
+<script src="js/ui.js"></script>
+</body>
+</html>

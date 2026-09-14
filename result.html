@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 — 전투 결과 / 보상 정산</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+/* 시트형 헤더 */
+.sheethead{display:grid;grid-template-columns:300px 1fr 300px;align-items:center;
+  padding:13px 22px 11px;border-bottom:1px solid var(--line-soft)}
+.sheethead__l{display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--f-serif);font-size:22px;color:var(--tx-hi);letter-spacing:.1em}
+.brand__s{font-size:11px;color:var(--tx-faint);letter-spacing:.06em;line-height:1.5}
+.brand__s b{display:block;font-weight:400;color:var(--tx-dim);font-size:11.5px}
+.sheethead__c{text-align:center}
+.sheethead__c h1{font-family:var(--f-serif);font-size:27px;color:#C93F3B;letter-spacing:.1em}
+.sheethead__c p{font-size:11.5px;color:var(--tx-faint);margin:5px 0 0}
+.sheethead__r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.metachip{border:1px solid var(--line);padding:4px 8px;font-size:9.5px;color:var(--tx-faint);
+  line-height:1.5;text-align:center;background:rgba(0,0,0,.3)}
+.metachip b{display:block;color:var(--tx-dim);font-weight:400;font-size:10px;margin-top:2px}
+
+.rs{display:grid;grid-template-columns:286px 1fr;gap:14px;padding:12px 22px;flex:1;min-height:0}
+.rs__r{display:grid;grid-template-rows:1fr auto auto;gap:12px;min-height:0}
+.trio{display:grid;grid-template-columns:1fr 1.05fr 1fr;gap:14px;min-height:0}
+
+/* 좌측 아트 */
+.rsart{position:relative;border:1px solid var(--line-soft);flex:1;min-height:0}
+.rsart__msg{position:absolute;left:14px;bottom:80px;z-index:3;font-size:11.5px;color:var(--tx-dim);line-height:1.9}
+.rsart__id{position:absolute;left:14px;right:14px;bottom:16px;z-index:3}
+.rsart__nm{font-family:var(--f-serif);font-size:26px;color:#C1504B;letter-spacing:.04em;font-style:italic}
+
+/* 작전 요약 */
+.srow{display:flex;align-items:center;gap:10px;padding:6px 0}
+.srow__ic{width:20px;color:var(--tx-ghost);flex:none;display:grid;place-items:center}
+.srow__k{font-size:11.5px;color:var(--tx-faint)}
+.srow__v{margin-left:auto;font-size:12.5px;color:var(--tx-hi);font-variant-numeric:tabular-nums}
+.rank-s{font-family:var(--f-serif);font-size:30px;color:#C93F3B;line-height:1}
+.praise{display:flex;gap:11px;padding:11px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3);margin-top:10px}
+.praise__ic{width:30px;height:30px;color:#8E3330;flex:none}
+.praise p{margin:0;font-size:10.5px;color:var(--tx-faint);line-height:1.8}
+
+/* 보상 */
+.rline{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--line);
+  background:rgba(0,0,0,.3)}
+.rline .ico{color:#9AA0AC}
+.rline b{margin-left:auto;font-size:13px;color:var(--tx-hi);font-weight:500;font-variant-numeric:tabular-nums}
+.itemrow{display:flex;gap:7px;flex-wrap:wrap}
+.iitem{width:54px;text-align:center}
+.iitem .slot{width:54px;height:54px;aspect-ratio:auto}
+.iitem span{display:block;font-size:10.5px;color:var(--tx-dim);margin-top:3px;font-variant-numeric:tabular-nums}
+.bonus2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bonusbox{border:1px solid rgba(201,162,39,.28);background:rgba(201,162,39,.05);padding:9px 10px;text-align:center}
+.bonusbox__k{font-size:10.5px;color:var(--tx-faint)}
+.bonusbox__v{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:5px;
+  font-size:14px;color:#D9A441;font-family:var(--f-serif)}
+
+/* 기여도 */
+.cbrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);
+  background:rgba(0,0,0,.26);margin-bottom:8px}
+.cbrow.is-top{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.05))}
+.cbrow__face{width:38px;height:38px;border:1px solid var(--line);flex:none}
+.cbrow__nm{font-family:var(--f-serif);font-size:13.5px;color:var(--tx-hi)}
+.cbrow.is-top .cbrow__nm{color:#E0908C}
+.cbrow__lv{font-size:10px;color:var(--tx-faint);margin-top:1px}
+.cbrow__t{font-size:11px;color:var(--tx-dim)}
+.cbrow__d{font-size:9.5px;color:var(--tx-faint);margin-top:2px;line-height:1.4}
+.cbrow__v{font-family:var(--f-serif);font-size:15px;color:#D9A441;margin-left:auto;flex:none}
+.cbrow.is-top .cbrow__v{color:#E0908C}
+
+/* 파티 성과 */
+.perf{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.pfcard{display:flex;gap:10px;padding:10px 11px;border:1px solid var(--line);background:rgba(0,0,0,.26);position:relative}
+.pfcard.is-mvp{border-color:var(--line-red);background:linear-gradient(180deg,rgba(165,28,28,.16),rgba(0,0,0,.3))}
+.pfcard__tag{position:absolute;left:9px;top:-1px;font-size:9.5px;color:var(--tx-faint)}
+.pfcard__face{width:52px;height:52px;border:1px solid var(--line);flex:none;margin-top:10px}
+.pfcard__nm{font-family:var(--f-serif);font-size:15px;color:var(--tx-hi)}
+.pfcard__meta{font-size:10px;color:var(--tx-faint);margin-top:1px}
+.pfstat{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;padding:1.5px 0}
+.pfstat span{color:var(--tx-faint)}
+.pfstat b{color:var(--tx-dim);font-weight:400;font-variant-numeric:tabular-nums}
+.pfcard.is-mvp{padding-bottom:26px}
+.mvp{position:absolute;left:0;right:0;bottom:6px;text-align:center;
+  font-family:var(--f-serif);font-size:13px;color:#D9544E;letter-spacing:.16em}
+
+.rsfoot{display:flex;align-items:center;padding:8px 22px 10px;flex:none}
+.rsbtns{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;max-width:800px;margin:0 auto;width:100%}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <!-- ===== 시트 헤더 ===== -->
+  <header class="sheethead">
+    <div class="sheethead__l">
+      <span class="brand">황혼</span>
+      <span class="brand__s"><b>UI 설계 시트 v1.0</b>SCREEN DESIGN BOARD</span>
+    </div>
+    <div class="sheethead__c">
+      <h1>전투 결과 / 보상 정산</h1>
+      <p>작전이 성공적으로 완료되었습니다.</p>
+    </div>
+    <div class="sheethead__r">
+      <span class="metachip">작전 모드<b>전투 대기화면</b></span>
+      <span class="metachip">난이도<b>인원사무실 로비의 난이도</b></span>
+      <span class="metachip">작전 시간<b>2024.05.17 22:48:31</b></span>
+      <svg class="topbar__sigil" style="width:30px;height:30px"><use href="#i-sigil"/></svg>
+    </div>
+  </header>
+
+  <main class="rs">
+    <!-- ===== 좌: 아트 ===== -->
+    <div class="flex col" style="min-height:0">
+      <div class="rsart art art--portrait">
+        <div class="art__tag">C H A R A C T E R</div>
+        <div class="rsart__msg">
+          황혼은 끝이 아니다.<br>
+          다음 날을 위해, 지금의 어둠은 필요해.
+        </div>
+        <div class="rsart__id">
+          <div class="rsart__nm">Ain</div>
+          <div class="flex ac jb mt2">
+            <span class="xs t-dim">Lv. 26</span>
+            <span class="xs t-faint num">38,240 / 64,560</span>
+          </div>
+          <div class="bar bar--hp mt1" data-fill="59"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 우 ===== -->
+    <div class="rs__r">
+      <div class="trio">
+        <!-- 작전 요약 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">작전 요약</div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-target"/></svg></span>
+              <span class="srow__k">작전 명</span><span class="srow__v">폐허 심장 격멸전</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>
+              <span class="srow__k">격파 보스</span><span class="srow__v">폐허의 심장 (1단계)</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-medal"/></svg></span>
+              <span class="srow__k">클리어 랭크</span><span class="srow__v rank-s">S</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-clock"/></svg></span>
+              <span class="srow__k">클리어 시간</span><span class="srow__v">08 : 47</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-crosshair"/></svg></span>
+              <span class="srow__k">카운터 성공률</span><span class="srow__v">78.6 %</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-bolt"/></svg></span>
+              <span class="srow__k">퍼펙트 카운터</span><span class="srow__v">12 회</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-drop"/></svg></span>
+              <span class="srow__k">받은 피해량</span><span class="srow__v">32,480</span></div>
+            <div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-x"/></svg></span>
+              <span class="srow__k">사망 횟수</span><span class="srow__v">0</span></div>
+
+            <div class="praise">
+              <svg class="ico praise__ic"><use href="#i-sigil"/></svg>
+              <p>전투 수행 능력이 탁월합니다.<br>
+                 팀워크와 기여도가 매우 높아<br>
+                 최고 등급의 평가를 받았습니다.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 보상 정산 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">보상 정산</div>
+
+            <div class="label-ko">기본 보상</div>
+            <div class="flex g2">
+              <div class="rline fill"><svg class="ico ico--sm"><use href="#i-exp"/></svg>
+                <span class="xs t-faint">EXP</span><b>72,180</b></div>
+              <div class="rline fill"><svg class="ico ico--sm"><use href="#i-coin"/></svg>
+                <b>60,000</b></div>
+            </div>
+
+            <div class="hr"></div>
+            <div class="label-ko">재료 보상</div>
+            <div class="itemrow">
+              <div class="iitem"><div class="slot" data-r="myth"><svg class="ico"><use href="#i-gem"/></svg></div><span>x 24</span></div>
+              <div class="iitem"><div class="slot" data-r="hero"><svg class="ico"><use href="#i-gem"/></svg></div><span>x 18</span></div>
+              <div class="iitem"><div class="slot" data-r="rare"><svg class="ico"><use href="#i-ingot"/></svg></div><span>x 12</span></div>
+              <div class="iitem"><div class="slot" data-r="rare"><svg class="ico"><use href="#i-drop"/></svg></div><span>x 6</span></div>
+              <div class="iitem"><div class="slot"><svg class="ico"><use href="#i-seal"/></svg></div><span>x 2</span></div>
+            </div>
+
+            <div class="hr"></div>
+            <div class="label-ko">제작 재료 보상</div>
+            <div class="itemrow">
+              <div class="iitem"><div class="slot" data-r="myth"><svg class="ico"><use href="#i-gem"/></svg></div><span>x 8</span></div>
+              <div class="iitem"><div class="slot" data-r="rare"><svg class="ico"><use href="#i-ring"/></svg></div><span>x 4</span></div>
+              <div class="iitem"><div class="slot"><svg class="ico"><use href="#i-potion"/></svg></div><span>x 3</span></div>
+              <div class="iitem"><div class="slot"><svg class="ico"><use href="#i-chest"/></svg></div><span>x 2</span></div>
+            </div>
+
+            <div class="hr"></div>
+            <div class="label-ko">보너스 보상 (파티 특성)</div>
+            <div class="bonus2">
+              <div class="bonusbox">
+                <div class="bonusbox__k">파티 특성 보상</div>
+                <div class="bonusbox__v">추가 보상 +35 %
+                  <svg class="ico ico--xs"><use href="#i-chevd"/></svg></div>
+              </div>
+              <div class="bonusbox">
+                <div class="bonusbox__k">드랍 확률 보너스</div>
+                <div class="bonusbox__v">추가 보상 +22 %
+                  <svg class="ico ico--xs"><use href="#i-chevd"/></svg></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 기여도 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">파티 기여도 보너스 상세</div>
+            <p class="xs t-faint tc" style="margin:-4px 0 12px">파티 내 각 플레이어의 특성에 따른 추가 보상이 지급됩니다.</p>
+
+            <div class="cbrow is-top">
+              <div class="cbrow__face art art--portrait"></div>
+              <div>
+                <div class="cbrow__nm">Ain</div>
+                <div class="cbrow__lv">Lv.26 · @Ain_25</div>
+              </div>
+              <div style="margin-left:14px">
+                <div class="cbrow__t">부분파괴 보너스</div>
+                <div class="cbrow__d">보스 부분 파괴 기여도에 따라<br>재료 추가 획득 확률 증가</div>
+              </div>
+              <div class="cbrow__v">+ 15 %</div>
+            </div>
+
+            <div class="cbrow">
+              <div class="cbrow__face art art--portrait"></div>
+              <div>
+                <div class="cbrow__nm">Kain</div>
+                <div class="cbrow__lv">Lv.26 · @Kain_32</div>
+              </div>
+              <div style="margin-left:14px">
+                <div class="cbrow__t">제작/고정보조 보너스</div>
+                <div class="cbrow__d">제작 및 고정 보조 장비 사용으로<br>제작 재료 추가 획득</div>
+              </div>
+              <div class="cbrow__v">+ 10 %</div>
+            </div>
+
+            <div class="cbrow">
+              <div class="cbrow__face art art--portrait"></div>
+              <div>
+                <div class="cbrow__nm">Ryu</div>
+                <div class="cbrow__lv">Lv.25 · @Ryu_25</div>
+              </div>
+              <div style="margin-left:14px">
+                <div class="cbrow__t">드랍 확률 보너스</div>
+                <div class="cbrow__d">적 처치 및 연속 카운터 성공으로<br>드랍 확률 증가</div>
+              </div>
+              <div class="cbrow__v">+ 12 %</div>
+            </div>
+
+            <div class="cbrow">
+              <div class="cbrow__face art art--portrait"></div>
+              <div>
+                <div class="cbrow__nm">Sera</div>
+                <div class="cbrow__lv">Lv.25 · @Sera_24</div>
+              </div>
+              <div style="margin-left:14px">
+                <div class="cbrow__t">정제 보너스</div>
+                <div class="cbrow__d">정제 성공 및 고급 정제 사용으로<br>정제 재료 추가 획득</div>
+              </div>
+              <div class="cbrow__v">+ 8 %</div>
+            </div>
+
+            <p class="xs t-faint" style="margin:10px 0 0">
+              ※ 보너스 수치는 파티 특성 레벨 및 전투 기여도에 따라 산정됩니다.</p>
+          </div>
+        </section>
+      </div>
+
+      <!-- 파티 성과 요약 -->
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">파티 성과 요약</span>
+          <span class="panel__meta">(멀티플레이 파티 데이터)</span>
+        </div>
+        <div class="panel__body panel__body--tight">
+          <div class="perf">
+            <div class="pfcard is-mvp">
+              <span class="pfcard__tag"><b class="t-red">1P</b></span>
+              <div class="pfcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="flex ac jb"><span class="pfcard__nm t-red">Ain</span>
+                  <span class="pfcard__meta">@Ain_25</span></div>
+                <div class="pfcard__meta">Lv.26 · 암살자</div>
+                <div class="mt1">
+                  <div class="pfstat"><span>총 피해량</span><b>1,284,560 (35.7%)</b></div>
+                  <div class="pfstat"><span>카운터 성공</span><b>18 회</b></div>
+                  <div class="pfstat"><span>부분 파괴 기여</span><b>4 회</b></div>
+                  <div class="pfstat"><span>받은 피해량</span><b>32,480</b></div>
+                </div>
+              </div>
+              <span class="mvp">MVP</span>
+            </div>
+
+            <div class="pfcard">
+              <span class="pfcard__tag">2P</span>
+              <div class="pfcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="flex ac jb"><span class="pfcard__nm">Kain</span>
+                  <span class="pfcard__meta">@Kain_32</span></div>
+                <div class="pfcard__meta">Lv.26 · 블레이드 마스터</div>
+                <div class="mt1">
+                  <div class="pfstat"><span>총 피해량</span><b>1,102,340 (30.6%)</b></div>
+                  <div class="pfstat"><span>카운터 성공</span><b>14 회</b></div>
+                  <div class="pfstat"><span>받은 피해량</span><b>48,210</b></div>
+                  <div class="pfstat"><span>제작/보조 기여</span><b class="t-red">최고</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pfcard">
+              <span class="pfcard__tag">3P</span>
+              <div class="pfcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="flex ac jb"><span class="pfcard__nm">Ryu</span>
+                  <span class="pfcard__meta">@Ryu_25</span></div>
+                <div class="pfcard__meta">Lv.25 · 레인저</div>
+                <div class="mt1">
+                  <div class="pfstat"><span>총 피해량</span><b>912,780 (25.4%)</b></div>
+                  <div class="pfstat"><span>카운터 성공</span><b>11 회</b></div>
+                  <div class="pfstat"><span>연속 처치 수</span><b>47 회</b></div>
+                  <div class="pfstat"><span>드랍 기여</span><b class="t-red">우수</b></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pfcard">
+              <span class="pfcard__tag">4P</span>
+              <div class="pfcard__face art art--portrait"></div>
+              <div class="fill">
+                <div class="flex ac jb"><span class="pfcard__nm">Sera</span>
+                  <span class="pfcard__meta">@Sera_24</span></div>
+                <div class="pfcard__meta">Lv.25 · 위치 메이커</div>
+                <div class="mt1">
+                  <div class="pfstat"><span>총 피해량</span><b>285,660 (8.3%)</b></div>
+                  <div class="pfstat"><span>카운터 성공</span><b>9 회</b></div>
+                  <div class="pfstat"><span>정제 성공</span><b>12 회</b></div>
+                  <div class="pfstat"><span>파티 회복량</span><b>84,320</b></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="rsbtns">
+        <button class="btn btn--lg" onclick="location.href='office.html'">인력사무실로</button>
+        <button class="btn btn--lg btn--primary">정산 완료</button>
+        <button class="btn btn--lg" onclick="location.href='battle.html'">다시 출격</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="rsfoot">
+    <span class="xs t-faint">※ 궤도 이탈 시 보상이 손실될 수 있습니다.</span>
+    <span class="hotbar__spacer"></span>
+    <span class="xs t-faint">자동 정산까지 <span class="t-dim num" data-countdown="55">00 : 55</span></span>
+    <svg class="ico ico--sm t-ghost" style="margin-left:8px"><use href="#i-clock"/></svg>
+  </div>
+</div>
+<script src="js/ui.js"></script>
+</body>
+</html>
