@@ -12,6 +12,7 @@
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
     ['forge.html',     '강화'],
+    ['craft.html',     '제작'],
     ['profile.html',   '프로필'],
     ['battle.html',    '전투 HUD'],
     ['result.html',    '전투 결과'],

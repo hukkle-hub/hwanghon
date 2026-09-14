@@ -95,10 +95,10 @@
     </div>
   </header>
 
-  <div class="fgtabs" data-tabs="">
-    <button class="tab" data-tab="eq">장비</button><span class="sepbar">|</span>
-    <button class="tab" data-tab="craft">제작</button><span class="sepbar">|</span>
-    <button class="tab is-on" data-tab="enh">강화</button>
+  <div class="fgtabs">
+    <a class="tab" href="inventory.html">장비</a><span class="sepbar">|</span>
+    <a class="tab" href="craft.html">제작</a><span class="sepbar">|</span>
+    <a class="tab is-on" href="forge.html">강화</a>
   </div>
 
   <main class="fg">
@@ -173,10 +173,10 @@
         <div class="itemglow"><svg class="ico"><use href="#i-sword"/></svg></div>
 
         <div class="enhinfo">
-          <div class="enhstep">+5 강화 단계</div>
+          <div class="enhstep" id="enh-step">+5 강화 단계</div>
           <div class="rate">
             <span class="xs t-faint">강화 성공 확률</span>
-            <b>65%</b>
+            <b id="enh-rate">65%</b>
           </div>
           <div class="flex ac jb mt3">
             <span class="xs t-faint">장비 구조 안정성</span>
@@ -192,16 +192,7 @@
     <div class="flex col g3" style="min-height:0">
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">강화 재료</span></div>
-        <div class="panel__body panel__body--tight">
-          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-ingot"/></svg></span>
-            <span class="mat__n">강화 합금</span><span class="mat__c"><b>124</b> / 36</span></div>
-          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-gem"/></svg></span>
-            <span class="mat__n">응축된 파편</span><span class="mat__c"><b>78</b> / 18</span></div>
-          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-bolt"/></svg></span>
-            <span class="mat__n">정제된 에너지 코어</span><span class="mat__c"><b>24</b> / 6</span></div>
-          <div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-potion"/></svg></span>
-            <span class="mat__n">고급 강화 보조제</span><span class="mat__c"><b>9</b> / 2</span></div>
-        </div>
+        <div class="panel__body panel__body--tight" id="enh-mats"></div>
       </section>
 
       <section class="panel panel--framed fill">
@@ -232,7 +223,7 @@
         <div class="panel__body panel__body--tight">
           <div class="flex ac jb">
             <span class="sm t-faint">강화 비용</span>
-            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">18,000</span></span>
+            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num" id="enh-cost">18,000</span></span>
           </div>
         </div>
       </section>
@@ -278,6 +269,21 @@
     <a class="hot"><svg class="ico ico--sm"><use href="#i-book"/></svg>도움말</a>
   </div>
 </div>
+<script src="js/items.js"></script>
 <script src="js/ui.js"></script>
+<script>
+/* 강화 재료·확률·비용을 items.js 강화 단계표에서 가져온다 (대상: 메마른 갈대밭 검창 +4 → +5) */
+(function(){
+  var T = window.TW_ITEMS, target = T.get('w_marsh_blade'), step = T.ENHANCE.filter(function(e){ return e.to === 5; })[0];
+  document.getElementById('enh-step').textContent = '+' + step.to + ' 강화 단계';
+  document.getElementById('enh-rate').textContent = step.rate + '%';
+  document.getElementById('enh-cost').textContent = T.fmt(step.cost);
+  document.getElementById('enh-mats').innerHTML = step.mats.map(function(m){
+    var it = T.get(m[0]), ok = (it.qty||0) >= m[1];
+    return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+it.icon+'"/></svg></span>'+
+      '<span class="mat__n">'+it.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(it.qty)+'</b> / '+m[1]+'</span></div>';
+  }).join('');
+})();
+</script>
 </body>
 </html>
