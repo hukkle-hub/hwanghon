@@ -11,7 +11,7 @@
   function clamp(v,a,b){ return v<a?a:v>b?b:v; }
 
   function createBattle(o){
-    var R = o.rules, C = o.char, D = o.dummy, S = o.skills || [], U = o.ult || null, rand = rng(o.seed || 7);
+    var R = o.rules, C = o.char, D = o.dummy, S = o.skills || [], U = o.ult || null, rand = rng(o.seed || 7), HK = o.hooks || {};
     var st = C.stats;
     var atkInterval = R.attack.base / (st.aspd/100);
     var counterWindow = D.counterWindow || R.counter.window;
@@ -65,7 +65,7 @@
       if (B.over) return;
       if (pid) target = pid;
       /* 예고 창 안이면 카운터 */
-      if (E.state === 'telegraph' && E.tele <= counterWindow && P.lockT <= 0){
+      if (E.state === 'telegraph' && E.tele <= counterWindow && P.lockT <= 0 && (!HK.canCounter || HK.canCounter())){
         var perfect = E.tele <= R.counter.perfect;
         M.counters++; if (perfect) M.perfect++;
         E.posture = clamp(E.posture + (E.pat.posture || R.counter.posture), 0, R.posture.max);
@@ -77,6 +77,7 @@
         P.combo = 0; P.atkCd = atkInterval * 0.5; return;
       }
       if (P.atkCd > 0 || P.guard || P.lockT > 0) return;
+      if (HK.canHit && !HK.canHit()){ P.atkCd = atkInterval; P.combo = 0; emit('whiff', {}); return; }
       if (E.state === 'telegraph' && E.tele > counterWindow){ P.lockT = E.tele + R.attack.lockAfterEarly; emit('early', {}); }
       if (P.comboT <= 0) P.combo = 0;
       var mult = R.combo.mults[P.combo] || 1;
@@ -93,6 +94,7 @@
       var k = S[i]; if (!k || B.over) return;
       if (P.cds[i] > 0 || P.st < k.st) { emit(P.cds[i] > 0 ? 'cd' : 'nost', { skill:i }); return; }
       if (P.atkCd > 0 || P.lockT > 0) return;
+      if (k.mult > 0 && HK.canHit && !HK.canHit()){ P.atkCd = atkInterval; emit('whiff', { skill:i }); return; }
       P.atkCd = atkInterval; P.st -= k.st; P.stDelay = R.stamina.delay; P.cds[i] = k.cd;
       if (k.dodge){ P.dodgeT = R.dodge.iframes * 1.5; M.dodges++; }
       if (k.critNext) P.critNext = true;
@@ -106,6 +108,7 @@
     function ult(){
       if (!U || B.over) return; if (P.ult < R.ult.max){ emit('cd', { ult:true }); return; }
       if (P.lockT > 0) return;
+      if (HK.canHit && !HK.canHit()){ emit('whiff', { ult:true }); return; }
       P.atkCd = atkInterval; P.ult = 0; M.ultUsed++;
       dealDamage(target, U.mult, { skill:U.id, noBleed:true }); if (U.bleed) addBleed(U.bleed);
       P.hitstop = Math.max(P.hitstop, R.hitstop.brk); emit('ult', { name:U.name });
@@ -120,13 +123,14 @@
 
     /* ---------- 허수아비 행동 ---------- */
     function startTelegraph(){
-      E.pat = D.patterns[E.patI % D.patterns.length]; E.patI++;
+      if (HK.canStart && !HK.canStart()){ E.patT = 0.2; return; }
+      E.pat = HK.pick ? HK.pick(D.patterns, E.patI) : D.patterns[E.patI % D.patterns.length]; E.patI++;
       E.state = 'telegraph'; E.teleDur = E.pat.tele + telePlus; E.tele = E.teleDur; M.telegraphs++;
       emit('telegraph', { pattern:E.pat.name, icon:E.pat.icon, dur:E.teleDur, window:counterWindow });
     }
     function landAttack(){
       var pat = E.pat; var dmg = pat.dmg;
-      if (P.dodgeT > 0){ emit('miss', { pattern:pat.name }); }
+      if (P.dodgeT > 0 || (HK.inZone && !HK.inZone(pat))){ emit('miss', { pattern:pat.name, out:!(P.dodgeT > 0) }); }
       else {
         if (P.guard && P.st > 0){ dmg = Math.round(dmg * (1 - R.guard.reduce)); P.st = Math.max(0, P.st - (pat.guardCost || 0)); M.guards++; E.posture = clamp(E.posture + R.posture.onGuard, 0, R.posture.max); }
         if (P.buffT > 0) dmg = Math.round(dmg * (1 - P.buffReduce));
