@@ -173,14 +173,15 @@
       </section>
 
       <section class="panel panel--framed">
-        <div class="prep">
+        <a class="prep" href="arena.html" id="of-arena" style="text-decoration:none;color:inherit">
           <svg class="prep__ico"><use href="#i-target"/></svg>
           <div class="fill">
-            <div class="sm t-hi">전투 준비</div>
+            <div class="sm t-hi">전투 준비 <span class="xs t-faint">· 뒷마당 훈련장 입장</span></div>
             <div class="xs t-faint mt1" id="of-prep">훈련용 허수아비</div>
+            <div class="xs mt1" id="of-record"></div>
           </div>
           <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
-        </div>
+        </a>
       </section>
 
       <button class="btn btn--deploy" data-primary>
@@ -234,6 +235,7 @@
   $('#of-rep').textContent=o.rep; $('#of-repexp').textContent=W.fmt(o.repExp[0])+' / '+W.fmt(o.repExp[1]);
   $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
   $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
+  try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
   rows(); info(); cards();
 })();
 </script>

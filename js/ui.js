@@ -14,6 +14,7 @@
     ['forge.html',     '강화'],
     ['craft.html',     '제작'],
     ['profile.html',   '프로필'],
+    ['arena.html',     '훈련장'],
     ['battle.html',    '전투 HUD'],
     ['result.html',    '전투 결과'],
     ['benchmark.html', '벤치마크'],
