@@ -5,6 +5,8 @@
 var BUILD = '__BUILD__';
 var VERSION = 'tw-' + (BUILD.indexOf('__') === 0 ? 'dev' : BUILD);
 var ASSETS = ["art/back-ain.webp", "art/back-kain.webp", "art/back-ryu.webp", "art/back-sera.webp", "art/boss-anatomy.webp", "art/boss-marsh.webp", "art/char-inventory.webp", "art/char-profile.webp", "art/char-result.webp", "art/face-ain.webp", "art/face-kain.webp", "art/face-ryu.webp", "art/face-sera.webp", "art/forge-kain.webp", "art/full-ain.webp", "art/full-kain.webp", "art/full-ryu.webp", "art/full-sera.webp", "art/lobby-city.webp", "art/office-brief.webp", "art/portrait-ain.webp", "art/portrait-kain.webp", "art/portrait-ryu.webp", "art/portrait-sera.webp", "art/side-ain.webp", "art/side-kain.webp", "art/side-ryu.webp", "art/side-sera.webp", "art/story-city.webp", "art/thumbs/battle.webp", "art/thumbs/characters.webp", "art/thumbs/craft.webp", "art/thumbs/forge.webp", "art/thumbs/inventory.webp", "art/thumbs/office.webp", "art/thumbs/party.webp", "art/thumbs/profile.webp", "art/thumbs/quest.webp", "art/thumbs/result.webp", "battle.html", "benchmark.html", "characters.html", "compare.html", "craft.html", "css/mobile.css", "css/tokens.css", "css/ui.css", "forge.html", "index.html", "inventory.html", "js/icons.js", "js/inventory.js", "js/items.js", "js/ui.js", "js/world.js", "manifest.json", "office.html", "party.html", "profile.html", "quest.html", "result.html"];
+/* 이 워커가 설치되는 시점에 이전 워커가 있었는가 → 있었다면 열린 화면들은 옛 버전이므로 활성화 직후 직접 다시 불러온다 */
+var HAD_PREVIOUS = !!(self.registration && self.registration.active);
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(VERSION).then(function(c){ return c.addAll(ASSETS.map(function(a){ return new Request(a, {cache:'reload'}); })).catch(function(){}); }).then(function(){ return self.skipWaiting(); }));
 });
@@ -12,7 +14,11 @@ self.addEventListener('activate', function(e){
   e.waitUntil(caches.keys().then(function(keys){ return Promise.all(keys.filter(function(k){ return k.indexOf('tw-')===0 && k!==VERSION; }).map(function(k){ return caches.delete(k); })); })
     .then(function(){ return self.clients.claim(); })
     .then(function(){ return self.clients.matchAll({type:'window'}); })
-    .then(function(cs){ cs.forEach(function(c){ try{ c.postMessage({type:'TW_UPDATED', version:VERSION}); }catch(e){} }); }));
+    .then(function(cs){ cs.forEach(function(c){
+      /* 옛 화면(이전 워커가 띄운 것)은 navigate 로 강제 재로드 — 옛 ui.js 에 수신 코드가 없어도 갱신된다. 실패하면 메시지로 대체 */
+      var msg = function(){ try{ c.postMessage({type:'TW_UPDATED', version:VERSION}); }catch(e){} };
+      if (HAD_PREVIOUS && c.navigate) c.navigate(c.url).catch(msg); else msg();
+    }); }));
 });
 self.addEventListener('message', function(e){ if (e.data && e.data.type === 'TW_VERSION' && e.source) e.source.postMessage({type:'TW_VERSION', version:VERSION}); });
 function isCode(url, req){ return req.mode === 'navigate' || /\.(html|css|js|json|webmanifest)$/.test(url.pathname) || url.pathname.slice(-1) === '/'; }

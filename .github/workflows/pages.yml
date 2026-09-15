@@ -25,7 +25,8 @@ jobs:
         run: |
           B="${GITHUB_SHA::7}"
           sed -i "s/__BUILD__/$B/g" sw.js js/ui.js
-          grep -q "$B" sw.js && grep -q "$B" js/ui.js
+          printf '{"build":"%s","at":"%s"}\n' "$B" "$(date -u +%FT%TZ)" > version.json
+          grep -q "$B" sw.js && grep -q "$B" js/ui.js && cat version.json
       - uses: actions/configure-pages@v5
         with:
           enablement: true

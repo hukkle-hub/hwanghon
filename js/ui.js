@@ -260,19 +260,33 @@
 
 
   /* ---------- 서버 업데이트 반영 ----------
-     · 새 서비스워커가 활성화되면(TW_UPDATED) 열려 있는 화면을 한 번 새로고침한다
-     · 앱을 다시 앞으로 가져올 때마다(visibilitychange) 서버의 sw.js 를 다시 확인한다 (설치형 PWA 대응) */
+     1) 새 서비스워커가 활성화되면 워커가 화면을 직접 다시 불러온다(sw.js). 메시지(TW_UPDATED)로 올 때는 빌드가 다를 때만 새로고침
+     2) 접속·앱 복귀 때마다 서버의 version.json 을 읽어 빌드가 다르면 워커 갱신 → 새 워커가 없으면 스스로 새로고침 (1회 보호) */
   var BUILD = '__BUILD__';
+  var MYBUILD = BUILD.indexOf('__') === 0 ? 'dev' : BUILD;
+  function reloadOnce(tag){
+    var key = 'tw:reloaded:' + tag; try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(err){}
+    location.reload();
+  }
   function swUpdates(){
-    if (!('serviceWorker' in navigator) || location.protocol.indexOf('http') !== 0) return;
-    navigator.serviceWorker.addEventListener('message', function(e){
+    if (location.protocol.indexOf('http') !== 0) return;
+    var hasSW = 'serviceWorker' in navigator;
+    if (hasSW) navigator.serviceWorker.addEventListener('message', function(e){
       if (!e.data || e.data.type !== 'TW_UPDATED') return;
-      var key = 'tw:reloaded:' + e.data.version; try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(err){}
-      location.reload();
+      if (e.data.version === 'tw-' + MYBUILD) return;
+      reloadOnce(e.data.version);
     });
-    function check(){ navigator.serviceWorker.getRegistration().then(function(r){ if (r) r.update().catch(function(){}); }); }
+    function check(){
+      fetch('version.json?t=' + Date.now(), {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).then(function(v){
+        if (!v || !v.build || v.build === MYBUILD || MYBUILD === 'dev') return;
+        if (hasSW) navigator.serviceWorker.getRegistration().then(function(r){
+          if (r) r.update().catch(function(){});
+          setTimeout(function(){ reloadOnce(v.build); }, 2500);   /* 워커가 먼저 재로드하면 이 타이머는 실행되지 않는다 */
+        }); else reloadOnce(v.build);
+      }).catch(function(){});
+    }
     document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') check(); });
-    setTimeout(check, 3000);
+    check();
   }
 
   /* ---------- 부팅 ---------- */
