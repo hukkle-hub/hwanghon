@@ -218,3 +218,37 @@ html.mobile.portrait .topbar__spacer{display:none}
 /* 전투 HUD: 독 토글을 상단 우측(타이머 왼쪽)으로 — 궁극기 버튼과 겹치지 않게 */
 html.mobile[data-landscape] .navdock__toggle{top:8px;bottom:auto;right:max(120px,calc(env(safe-area-inset-right) + 110px));width:40px;height:40px}
 html.mobile[data-landscape] .navdock{bottom:auto;top:56px}
+
+/* ============================================================
+   실기기(갤럭시, 브라우저 주소창 포함) 검수 반영
+   · 상단 바의 spacer 가 패널 탭과 폭을 나눠 가져 탭이 가로 스크롤되고,
+     탭을 누르면 포커스 스크롤로 첫 탭이 밀려 사라지던 문제 → spacer 제거, 탭은 항상 폭에 맞춤
+   · 가로 모드에서 세로 300px 안팎만 남는 상황 → 상단/하단 바·탭 높이 압축
+   · 독 토글이 본문 위에 떠서 내용을 가리던 문제 → 하단 바 줄 안으로
+   ============================================================ */
+html.mobile .topbar__spacer{display:none}
+html.mobile .mtabs{flex:1 1 auto;overflow:hidden}
+html.mobile .mtabs button{flex:1 1 0;min-width:0;padding:0 8px;overflow:hidden;text-overflow:ellipsis}
+html.mobile .invtabs .tab{padding:0 8px;font-size:13px}
+
+/* 하단 바 줄 안에 독 토글 자리 확보 */
+html.has-mbar .mbar{padding-right:calc(max(12px,env(safe-area-inset-right)) + 54px)}
+html.has-mbar .navdock__toggle{bottom:calc(9px + env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));width:46px;height:46px;z-index:160}
+html.has-mbar .navdock{bottom:calc(72px + env(safe-area-inset-bottom))}
+
+/* 가로 모드(세로 짧음): 압축 */
+html.mobile:not(.portrait) .topbar{min-height:46px;padding:4px 10px}
+html.mobile:not(.portrait) .iconbtn{width:40px;height:40px}
+html.mobile:not(.portrait) .mtabs button{height:40px;font-size:13px}
+html.mobile:not(.portrait) .invtabs{min-height:0}
+html.mobile:not(.portrait) .invtabs .tab{height:40px;line-height:40px}
+html.mobile:not(.portrait) main{padding:6px 10px}
+html.mobile:not(.portrait) .mbar{padding-top:5px;padding-bottom:max(5px,env(safe-area-inset-bottom))}
+html.mobile:not(.portrait) .mbar__back{height:40px}
+html.mobile:not(.portrait) .mbar .mbar__primary{height:42px!important;font-size:15px!important}
+html.has-mbar:not(.portrait) .navdock__toggle{width:40px;height:40px;bottom:calc(6px + env(safe-area-inset-bottom))}
+html.has-mbar:not(.portrait) main>.mpane.is-active{padding-bottom:60px}
+html.mobile:not(.portrait) .doll{height:clamp(220px,calc(100dvh - 180px),360px)}
+html.mobile:not(.portrait) .bigcp{font-size:26px;line-height:1.1}
+html.mobile:not(.portrait) #item-info .iart{width:56px;height:56px}
+html.mobile:not(.portrait) #item-info .stat{padding:5px 0}
