@@ -464,3 +464,6 @@ html.portrait:not(.portrait-ok) .rotate-hint{display:flex}
 html.portrait .navdock{position:fixed}
 /* 모션 최소화 설정 존중 */
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* 독 안의 배포 빌드 표시 */
+.navdock__build{font-size:10px;letter-spacing:.08em;color:var(--tx-faint);padding:0 8px;align-self:center;font-family:var(--f-mono,monospace)}

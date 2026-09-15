@@ -20,6 +20,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # 빌드 스탬프: sw.js / ui.js 의 __BUILD__ 를 커밋 해시로 치환 → 배포마다 새 SW 버전이 자동 설치된다
+      - name: Stamp build id
+        run: |
+          B="${GITHUB_SHA::7}"
+          sed -i "s/__BUILD__/$B/g" sw.js js/ui.js
+          grep -q "$B" sw.js && grep -q "$B" js/ui.js
       - uses: actions/configure-pages@v5
         with:
           enablement: true

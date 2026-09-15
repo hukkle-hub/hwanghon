@@ -35,7 +35,7 @@
     d.className = 'navdock';
     d.innerHTML = SCREENS.map(function(s){
       return '<a href="'+s[0]+'"'+(s[0]===here?' class="is-on"':'')+'>'+s[1]+'</a>';
-    }).join('') + '<button class="navdock__hide" title="숨기기 (H)">&times;</button>';
+    }).join('') + '<span class="navdock__build" title="배포 빌드">'+(BUILD.indexOf('__')===0?'dev':BUILD)+'</span><button class="navdock__hide" title="숨기기 (H)">&times;</button>';
     document.body.appendChild(d);
     d.querySelector('.navdock__hide').onclick = function(){ d.classList.remove('is-open'); d.style.display = TOUCH ? '' : 'none'; };
     /* 터치 기기: 독은 접어두고 우하단 버튼으로 연다 (하단 내비를 가리지 않도록) */
@@ -258,6 +258,23 @@
     });
   }
 
+
+  /* ---------- 서버 업데이트 반영 ----------
+     · 새 서비스워커가 활성화되면(TW_UPDATED) 열려 있는 화면을 한 번 새로고침한다
+     · 앱을 다시 앞으로 가져올 때마다(visibilitychange) 서버의 sw.js 를 다시 확인한다 (설치형 PWA 대응) */
+  var BUILD = '__BUILD__';
+  function swUpdates(){
+    if (!('serviceWorker' in navigator) || location.protocol.indexOf('http') !== 0) return;
+    navigator.serviceWorker.addEventListener('message', function(e){
+      if (!e.data || e.data.type !== 'TW_UPDATED') return;
+      var key = 'tw:reloaded:' + e.data.version; try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(err){}
+      location.reload();
+    });
+    function check(){ navigator.serviceWorker.getRegistration().then(function(r){ if (r) r.update().catch(function(){}); }); }
+    document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') check(); });
+    setTimeout(check, 3000);
+  }
+
   /* ---------- 부팅 ---------- */
   function boot(){
     tabs(); pickers(); checks(); gauges(); slots(); countdowns(); bars(); segbars();
@@ -265,6 +282,7 @@
     if (!embedded && !document.body.hasAttribute('data-nonav')) navDock();
     if (!embedded) rotateHint();
     if (!embedded) mobileLayout();
+    if (!embedded) swUpdates();
     fitStage();
     window.addEventListener('resize', fitStage);
     window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });
@@ -275,5 +293,5 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 
-  window.TW = { $:$, $$:$$, SCREENS:SCREENS };
+  window.TW = { $:$, $$:$$, SCREENS:SCREENS, BUILD:(BUILD.indexOf('__')===0?'dev':BUILD) };
 })();
