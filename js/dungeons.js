@@ -2,6 +2,7 @@
    window.TW_DUNGEONS = { RULES, ARENAS, SKILLS }
    · RULES  : 모든 던전이 공유하는 전투 공통 규칙 (docs/design/01-training-arena.md §3)
    · ARENAS : 훈련장 등 아레나. 허수아비는 world.js BOSSES 와 같은 형식(weakpoints/patterns/mastery/hud) 위에 엔진 필드를 얹는다
+   · 허수아비 원화: design-sheets/10-dummy.webp (사슬에 묶인 나무 구조체, 가슴에 붉은 핵). 3단계는 같은 개체의 잠듦→사슬→각성 상태
    · 수치 원본: 캐릭터 스탯은 world.js CHARS, 보상 아이템은 items.js. 그 외 상수는 기획서 v0.1 제안값 */
 (function(){
   var RULES = {
@@ -44,30 +45,31 @@
       art:'lobby-city',
       rewards:{ gold:1500, items:[['m_fiber',20],['m_ore',10],['c_potion',3],['c_antidote',2]], sBonus:[['m_oil',2]] },
       stages:[
-        dummy({ id:'straw', name:'짚 허수아비', lesson:'기본', timeLimit:30, hp:120000, kind:'straw',
-          line:'머리를 노려라. 낫은 거기서 제일 잘 든다.', hint:'우측을 탭해 공격 · 허수아비의 부위를 탭해 조준',
-          parts:[ { id:'head', name:'머리', hp:null, weak:true, pos:'tl', effect:'피해 증가' }, { id:'body', name:'몸통', hp:null, pos:'br' } ],
+        dummy({ id:'dormant', name:'잠든 허수아비', lesson:'기본', timeLimit:30, hp:120000, kind:'dormant',
+          line:'가슴의 핵을 노려라. 낫은 거기서 제일 잘 든다.', hint:'우측을 탭해 공격 · 허수아비의 부위를 탭해 조준',
+          parts:[ { id:'core', name:'핵', hp:null, weak:true, pos:'tl', effect:'피해 증가' }, { id:'body', name:'몸통', hp:null, pos:'br' } ],
           patterns:[],
           mastery:[ ['S','15초 이내'], ['A','22초 이내'], ['B','30초 이내'], ['C','30초 초과'] ] }),
-        dummy({ id:'iron', name:'철갑 허수아비', lesson:'부위 파괴', timeLimit:45, hp:260000, kind:'iron',
-          line:'갑주부터. 겉을 벗기면 안이 보인다.', hint:'좌측을 쓸어 회피 · 견갑 두 개를 부수면 격추',
-          parts:[ { id:'shl', name:'좌 견갑', hp:45000, breakable:true, pos:'tl', effect:'몸통 보호 해제' },
-                  { id:'shr', name:'우 견갑', hp:45000, breakable:true, pos:'tr', effect:'몸통 보호 해제' },
+        dummy({ id:'chained', name:'사슬 허수아비', lesson:'부위 파괴', timeLimit:45, hp:260000, kind:'chained',
+          line:'견갑부터. 겉을 벗기면 안이 보인다.', hint:'좌측을 쓸어 회피 · 견갑 두 개를 부수면 격추',
+          parts:[ { id:'shl', name:'왼 견갑', hp:45000, breakable:true, pos:'tl', effect:'몸통 보호 해제', rig:'padL' },
+                  { id:'shr', name:'오른 견갑', hp:45000, breakable:true, pos:'tr', effect:'몸통 보호 해제', rig:'padR' },
+                  { id:'core', name:'핵', hp:null, weak:true, pos:'bl', effect:'피해 증가', guardedBy:['shl','shr'], guardReduce:0.5 },
                   { id:'body', name:'몸통', hp:null, pos:'br', guardedBy:['shl','shr'], guardReduce:0.5 } ],
           allBrokenDown:true,
-          patterns:[ { icon:'hammer', name:'느린 휘두르기', rank:'B', tele:1.0, window:0.40, dmg:400, posture:30, guardCost:15, every:6, desc:'예고가 길다. 회피를 익힌다' } ],
+          patterns:[ { icon:'hammer', name:'느린 내려찍기', rank:'B', tele:1.0, window:0.40, dmg:400, posture:30, guardCost:15, every:6, desc:'예고가 길다. 회피를 익힌다' } ],
           mastery:[ ['S','25초 이내 · 견갑 2개 파괴'], ['A','34초 이내 · 견갑 1개 이상'], ['B','45초 이내'], ['C','45초 초과'] ] }),
-        dummy({ id:'clock', name:'태엽 허수아비', lesson:'카운터', timeLimit:60, hp:380000, kind:'clock',
-          line:'예고를 보고 치지 마라. 예고가 끝나는 순간에 쳐라.', hint:'붉은 고리가 닫히는 순간 탭 = 카운터',
-          parts:[ { id:'head', name:'머리', hp:null, weak:true, pos:'tl', effect:'피해 증가' },
-                  { id:'gear', name:'태엽 등판', hp:60000, breakable:true, pos:'tr', effect:'예고 +0.2초', onBreak:{ telePlus:0.2 } },
+        dummy({ id:'awake', name:'깨어난 허수아비', lesson:'카운터', timeLimit:60, hp:380000, kind:'awake',
+          line:'예고를 보고 치지 마라. 예고가 끝나는 순간에 쳐라.', hint:'붉은 고리가 흰색이 되는 순간 탭 = 카운터',
+          parts:[ { id:'core', name:'핵', hp:null, weak:true, pos:'tl', effect:'피해 증가' },
+                  { id:'chain', name:'가슴 사슬', hp:60000, breakable:true, pos:'tr', effect:'예고 +0.2초', onBreak:{ telePlus:0.2 } },
                   { id:'body', name:'몸통', hp:null, pos:'br' } ],
           firstCounterUlt:true, counterWindow:0.40,
           patterns:[ { icon:'bolt',   name:'찌르기',     rank:'A', tele:0.6, window:0.40, dmg:600,  posture:30, guardCost:15, desc:'짧은 예고' },
-                     { icon:'scythe', name:'회전 베기',  rank:'A', tele:0.9, window:0.40, dmg:900,  posture:30, guardCost:30, desc:'방어 시 스태미나 30' },
-                     { icon:'hammer', name:'내려찍기',   rank:'S', tele:1.2, window:0.40, dmg:1400, posture:60, guardCost:20, desc:'카운터 성공 시 즉시 격추' } ],
+                     { icon:'scythe', name:'회전 후려치기', rank:'A', tele:0.9, window:0.40, dmg:900,  posture:30, guardCost:30, desc:'방어 시 스태미나 30' },
+                     { icon:'hammer', name:'양손 내려찍기', rank:'S', tele:1.2, window:0.40, dmg:1400, posture:60, guardCost:20, desc:'카운터 성공 시 즉시 격추' } ],
           patternGap:1.4,
-          mastery:[ ['S','30초 이내 · 등판 파괴 · 카운터 70%'], ['A','45초 이내 · 카운터 50%'], ['B','60초 이내'], ['C','60초 초과'] ] })
+          mastery:[ ['S','30초 이내 · 사슬 파괴 · 카운터 70%'], ['A','45초 이내 · 카운터 50%'], ['B','60초 이내'], ['C','60초 초과'] ] })
       ]
     }
   };

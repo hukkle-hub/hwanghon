@@ -26,7 +26,7 @@
 .zone--l .zone__hint{left:34px}.zone--r .zone__hint{right:34px}
 html.touch .zone__hint{display:block}
 /* 허수아비 */
-.dummy{position:absolute;left:50%;top:50%;width:min(300px,42vh);height:min(420px,60vh);transform:translate(-50%,-52%);z-index:4;pointer-events:none}
+.dummy{position:absolute;left:50%;top:50%;width:min(340px,44vh);height:min(546px,70vh);transform:translate(-50%,-50%);z-index:4;pointer-events:none}
 .dummy svg{width:100%;height:100%;overflow:visible}
 .part{pointer-events:auto;cursor:pointer;transition:filter .15s}
 .part .fill{fill:#2A2528;stroke:rgba(255,255,255,.22);stroke-width:1.2}
@@ -37,12 +37,27 @@ html.touch .zone__hint{display:block}
 .part__lb{font-size:10px;fill:rgba(255,255,255,.55);letter-spacing:.06em;pointer-events:none;font-family:var(--f-sans)}
 .part.is-target .part__lb{fill:#C9A45E}
 .part__hp{fill:none;stroke:rgba(123,155,214,.8);stroke-width:2}
-.dummy.is-hit svg{animation:shake .12s}
-.dummy.is-down{filter:brightness(.7)}
-.dummy.is-down svg{transform:rotate(9deg);transition:transform .25s}
-.dummy.is-swing svg{animation:lunge .18s}
 @keyframes shake{25%{transform:translate(-3px,1px)}75%{transform:translate(3px,-1px)}}
 @keyframes lunge{40%{transform:translateY(14px) scale(1.04)}}
+/* 리그(허수아비) */
+.dummy svg{overflow:visible}
+.rig-part image{image-rendering:auto}
+.rig-hit{cursor:pointer}
+.rig-hit__ring{fill:none;stroke:rgba(255,255,255,.3);stroke-width:3;stroke-dasharray:8 6}
+.rig-hit.is-weak .rig-hit__ring{stroke:rgba(217,58,54,.85)}
+.rig-hit.is-break .rig-hit__ring{stroke:rgba(123,155,214,.85)}
+.rig-hit.is-target .rig-hit__ring{stroke:#C9A45E;stroke-width:4;stroke-dasharray:none;filter:drop-shadow(0 0 8px rgba(201,164,94,.9))}
+.rig-hit__lb{font-size:26px;fill:rgba(255,255,255,.6);letter-spacing:.06em;font-family:var(--f-sans);paint-order:stroke;stroke:#000;stroke-width:3px}
+.rig-hit.is-target .rig-hit__lb{fill:#C9A45E}
+.rig-hit__hp{stroke:rgba(123,155,214,.9);stroke-width:4}
+.rig-hit.is-broken{display:none!important}
+.rig-glow{transition:opacity .3s}
+.rig-fall{animation:fall .9s forwards;transform-box:fill-box;transform-origin:center}
+@keyframes fall{to{transform:translateY(260px) rotate(-40deg);opacity:0}}
+.dummy.k-dormant .rig-root{filter:saturate(.7) brightness(.8)}
+.dummy.k-chained .rig-root{filter:saturate(.85) brightness(.9) contrast(1.05)}
+.dummy.k-awake .rig-root{filter:saturate(1.05) contrast(1.08)}
+.dummy.is-hit .rig-root{animation:shake .12s}
 /* 예고 고리 */
 .tele{position:absolute;left:50%;top:50%;width:min(360px,52vh);height:min(360px,52vh);transform:translate(-50%,-52%);z-index:4;pointer-events:none;opacity:0;transition:opacity .1s}
 .tele.is-on{opacity:1}
@@ -99,7 +114,7 @@ html.touch .zone__hint{display:block}
 .ov__stats b.g-S{color:#D94A45}.ov__stats b.g-A{color:#C9A45E}.ov__stats b.g-B{color:#7B9BD6}.ov__stats b.g-C{color:#8A8A8A}
 .ov .btn{min-width:180px}
 .ov__ctrl{margin-top:14px;font-size:10.5px;color:var(--tx-faint);letter-spacing:.06em;line-height:1.8}
-html.mobile .dummy{width:min(240px,40vh);height:min(340px,58vh)}
+html.mobile .dummy{width:min(260px,42vh);height:min(420px,66vh)}
 html.mobile .tele{width:min(300px,50vh);height:min(300px,50vh)}
 html.mobile .guide{top:64px;font-size:12px;padding:4px 10px}
 html.mobile .zone__hint{bottom:120px}
@@ -144,6 +159,8 @@ html.mobile .ov__t{font-size:22px}
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
 <script src="js/combat.js"></script>
+<script src="js/dummy-rig.js"></script>
+<script src="js/rig.js"></script>
 <script>
 /* ===== 훈련장 화면 — 완전 수동 조작 ===== */
 (function(){
@@ -160,43 +177,37 @@ html.mobile .ov__t{font-size:22px}
   el.skills.innerHTML=SK.map(function(k,i){ return '<div class="sk" data-skill="'+i+'"><span class="sk__k">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg><span class="sk__cd" hidden></span><span class="sk__nm">'+k.name+'</span></div>'; }).join('')+
     '<div class="sk sk--ult" data-ult><span class="sk__k">'+ULT.key+'</span><svg class="ico ico--lg"><use href="#i-'+ULT.icon+'"/></svg><span class="sk__nm">'+ULT.name+'</span></div>';
 
-  /* ---------- 허수아비 SVG ---------- */
-  function partG(p, shape){ return '<g class="part'+(p.weak?' is-weak':'')+(p.breakable?' is-break':'')+'" data-part="'+p.id+'">'+shape+'</g>'; }
-  function label(x,y,t,anchor){ return '<text class="part__lb" x="'+x+'" y="'+y+'" text-anchor="'+(anchor||'middle')+'">'+t+'</text>'; }
-  function hpArc(x,y,r){ return '<circle class="part__hp" data-hp cx="'+x+'" cy="'+y+'" r="'+r+'" style="stroke-dasharray:'+(2*Math.PI*r)+'"/>'; }
+  /* ---------- 허수아비 리그 (design-sheets/10-dummy 정면 뷰 컷아웃) ---------- */
+  var RIGDEF=window.TW_DUMMY_RIG, rig=null, ENGINE2RIG={ shl:'padL', shr:'padR' }, HITMAP={ core:'core', body:'body', chain:'chain', shl:'shl', shr:'shr', head:'head' };
   function buildDummy(d){
-    var s='<svg viewBox="0 0 200 300">';
-    s+='<rect x="96" y="120" width="8" height="175" fill="#3A2E22" stroke="rgba(0,0,0,.5)"/><rect x="40" y="148" width="120" height="7" fill="#3A2E22"/>'; /* 기둥·가로대 */
-    s+='<ellipse cx="100" cy="292" rx="46" ry="6" fill="rgba(0,0,0,.45)"/>';
-    d.parts.forEach(function(p){
-      if (p.id==='head') s+=partG(p,'<circle class="fill" cx="100" cy="88" r="30"/>'+(d.kind==='clock'?'<circle cx="100" cy="88" r="21" fill="none" stroke="rgba(201,164,94,.5)" stroke-dasharray="4 4"/>':'<path d="M84 98q16 10 32 0" fill="none" stroke="rgba(255,255,255,.25)"/>')+label(100,50,'머리'));
-      if (p.id==='body') s+=partG(p,'<rect class="fill" x="66" y="122" width="68" height="112" rx="6"/>'+(d.kind==='iron'?'<path d="M66 160h68M66 198h68" stroke="rgba(255,255,255,.12)"/>':'<path d="M80 130l40 96M120 130l-40 96" stroke="rgba(255,255,255,.08)"/>')+label(100,252,'몸통'));
-      if (p.id==='shl') s+=partG(p,'<path class="fill" d="M30 132q8-20 40-14v40q-30 6-40-8z"/>'+label(50,110,'좌 견갑')+hpArc(50,148,24));
-      if (p.id==='shr') s+=partG(p,'<path class="fill" d="M170 132q-8-20-40-14v40q30 6 40-8z"/>'+label(150,110,'우 견갑')+hpArc(150,148,24));
-      if (p.id==='gear') s+=partG(p,'<circle class="fill" cx="146" cy="180" r="24"/><circle cx="146" cy="180" r="12" fill="none" stroke="rgba(201,164,94,.6)"/><path d="M146 150v8M146 202v8M116 180h8M168 180h8M125 159l6 6M161 195l6 6M167 159l-6 6M131 195l-6 6" stroke="rgba(255,255,255,.35)" stroke-width="3"/>'+label(146,222,'태엽 등판')+hpArc(146,180,28));
-    });
-    s+='</svg>'; el.dummy.innerHTML=s;
-    el.dummy.querySelectorAll('.part').forEach(function(g){ g.addEventListener('pointerdown', function(e){ e.stopPropagation(); if(!battle) return; battle.input('target', g.getAttribute('data-part')); guide('조준: <b>'+battle.part(g.getAttribute('data-part')).name+'</b>', 1.2); }); });
+    el.dummy.innerHTML='<svg></svg>'; el.dummy.className='dummy k-'+d.kind;
+    rig=window.TW_RIG.mount(el.dummy.querySelector('svg'), RIGDEF, {});
+    /* 이 단계의 엔진 부위만 히트 영역 표시 */
+    Object.keys(rig.hits).forEach(function(k){ rig.hits[k].style.display='none'; });
+    d.parts.forEach(function(p){ var h=rig.hit(HITMAP[p.id]); if(!h) return; h.style.display=''; h.classList.toggle('is-weak',!!p.weak); h.classList.toggle('is-break',!!p.breakable); if(p.hp) h._hp.style.display='';
+      h.addEventListener('pointerdown', function(e){ e.stopPropagation(); if(!battle) return; battle.input('target', p.id); guide('조준: <b>'+p.name+'</b>', 1.2); }); });
+    /* 단계별 발광: 잠듦(희미) → 사슬 → 각성(강함) */
+    var g={dormant:0.35, chained:0.6, awake:1}[d.kind]||1; rig.glow('core', g); rig.glow('eyeL', g); rig.glow('eyeR', g);
+    if (d.kind!=='chained'){ rig.part('padL').style.opacity=.85; rig.part('padR').style.opacity=.85; }
   }
-  function partCenter(id){ var g=el.dummy.querySelector('[data-part="'+id+'"] .fill'); if(!g) return {x:0,y:0}; var b=g.getBoundingClientRect(), a=el.arena.getBoundingClientRect(); return { x:b.left+b.width/2-a.left, y:b.top+b.height/2-a.top }; }
+  function partCenter(id){ var h=rig&&rig.hit(HITMAP[id]||id); var g=h?h.querySelector('.rig-hit__ring'):null; if(!g) return {x:el.arena.clientWidth/2,y:el.arena.clientHeight/2}; var b=g.getBoundingClientRect(), a=el.arena.getBoundingClientRect(); return { x:b.left+b.width/2-a.left, y:b.top+b.height/2-a.top }; }
 
   /* ---------- 피드백 ---------- */
   function num(x,y,text,cls){ var d=document.createElement('div'); d.className='dmgnum '+(cls||''); d.style.left=x+'px'; d.style.top=y+'px'; d.textContent=text; el.arena.appendChild(d); setTimeout(function(){ d.remove(); }, 950); }
   function guide(html, sec){ el.guide.innerHTML=html; el.guide.classList.add('is-on'); guideT=sec||3; }
   function banner(lb, v, sub, perfect){ el.cLb.textContent=lb; el.cV.textContent=W.fmt(v); el.cSub.textContent=sub||''; el.counter.classList.toggle('perfect',!!perfect); el.counter.classList.add('is-on'); counterT=1.3; }
   function flash(){ el.flash.classList.remove('is-on'); void el.flash.offsetWidth; el.flash.classList.add('is-on'); }
-  function shake(cls){ el.dummy.classList.remove(cls); void el.dummy.offsetWidth; el.dummy.classList.add(cls); }
   function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
   function handle(e){
     var s=battle.snapshot();
     switch(e.t){
-      case 'hit': var c=partCenter(e.part); num(c.x+(Math.random()*30-15), c.y-10, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); shake('is-hit'); if(e.counter){ flash(); vib(40); } break;
-      case 'counter': banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); break;
-      case 'break': var c2=partCenter(e.part); num(c2.x, c2.y-30, '부위 파괴 — '+e.name, 'crit'); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); break;
-      case 'downed': guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); break;
-      case 'up': guide('허수아비가 자세를 되찾았다', 1.5); break;
-      case 'telegraph': el.teleNm.innerHTML='<svg class="ico ico--xs"><use href="#i-'+e.icon+'"/></svg>'+e.pattern; if(stageI===2 && firstTele){ firstTele=false; guide('붉은 고리가 <b>흰색</b>이 되는 순간 탭 = 카운터', 3.5); } if(stageI===1 && firstTele){ firstTele=false; guide('예고가 보이면 <b>왼쪽을 쓸어</b> 회피', 3); } break;
-      case 'swing': shake('is-swing'); break;
+      case 'hit': var c=partCenter(e.part); num(c.x+(Math.random()*30-15), c.y-10, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); shake('is-hit'); rig.flash(); if(!e.counter && s.enemy.state!=='downed') rig.play('flinch'); if(e.counter){ flash(); vib(40); } break;
+      case 'counter': banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); Object.keys(RIGDEF.clips).forEach(function(k){ if(k.indexOf('tele_')===0) rig.stop(k); }); rig.play('stagger'); break;
+      case 'break': var c2=partCenter(e.part); num(c2.x, c2.y-30, '부위 파괴 — '+e.name, 'crit'); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); if(ENGINE2RIG[e.part]) rig.detach(ENGINE2RIG[e.part]); var hb=rig.hit(HITMAP[e.part]); if(hb) hb.classList.add('is-broken'); rig.play('stagger'); break;
+      case 'downed': guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); rig.stop('stagger'); rig.play('down'); break;
+      case 'up': guide('허수아비가 자세를 되찾았다', 1.5); rig.stop('down'); rig.play('up'); break;
+      case 'telegraph': rig.play('tele_'+e.icon, { dur:e.dur, hold:true }); el.teleNm.innerHTML='<svg class="ico ico--xs"><use href="#i-'+e.icon+'"/></svg>'+e.pattern; if(stageI===2 && firstTele){ firstTele=false; guide('붉은 고리가 <b>흰색</b>이 되는 순간 탭 = 카운터', 3.5); } if(stageI===1 && firstTele){ firstTele=false; guide('예고가 보이면 <b>왼쪽을 쓸어</b> 회피', 3); } break;
+      case 'swing': rig.stop('tele_'+s.enemy.patIcon); rig.play('hit_'+s.enemy.patIcon); break;
       case 'miss': num(el.arena.clientWidth*0.36, el.arena.clientHeight*0.45, '회피', 'miss'); break;
       case 'damaged': num(el.arena.clientWidth*0.36, el.arena.clientHeight*0.45, '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); vib(e.guarded?15:60); break;
       case 'early': guide('너무 빨랐다. 예고가 <b>끝나는 순간</b>에 쳐라', 1.6); break;
@@ -207,10 +218,11 @@ html.mobile .ov__t{font-size:22px}
       case 'guard': el.stick.classList.toggle('is-guard', e.on); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
       case 'dodge': el.stick.classList.add('is-dodge'); setTimeout(function(){ el.stick.classList.remove('is-dodge'); }, 300); break;
       case 'death': guide('마태오 — “다시.”', 2); break;
-      case 'clear': stageClear(); break;
+      case 'clear': Object.keys(RIGDEF.clips).forEach(function(k){ rig.stop(k); }); rig.play('collapse'); stageClear(); break;
     }
   }
   var lastHit=0, firstTele=true;
+  function shake(cls){ el.dummy.classList.remove(cls); void el.dummy.offsetWidth; el.dummy.classList.add(cls); }
 
   /* ---------- 렌더 ---------- */
   function fill(id, pct){ var b=$('#'+id), f=b&&b.querySelector('.bar__fill'); if(f){ f.style.transition='none'; f.style.width=Math.max(0,Math.min(100,pct))+'%'; } }
@@ -226,10 +238,11 @@ html.mobile .ov__t{font-size:22px}
     /* 예고 고리 */
     if (s.enemy.state==='telegraph'){ el.tele.classList.add('is-on'); var frac=s.enemy.tele/s.enemy.teleDur; el.arc.style.strokeDashoffset=ARC*(1-frac); el.tele.classList.toggle('is-win', s.enemy.tele<=s.enemy.window); }
     else el.tele.classList.remove('is-on');
-    el.dummy.classList.toggle('is-down', s.enemy.state==='downed');
     /* 부위 */
-    s.enemy.parts.forEach(function(p){ var g=el.dummy.querySelector('[data-part="'+p.id+'"]'); if(!g) return; g.classList.toggle('is-target', p.id===s.target); g.classList.toggle('is-broken', p.broken);
-      var hp=g.querySelector('[data-hp]'); if(hp && p.hpMax){ var r=+hp.getAttribute('r'), c=2*Math.PI*r; hp.style.strokeDashoffset=c*(1-p.hp/p.hpMax); } });
+    s.enemy.parts.forEach(function(p){ var h=rig.hit(HITMAP[p.id]); if(!h) return; h.classList.toggle('is-target', p.id===s.target);
+      if(p.hpMax){ var r=+h._hp.getAttribute('r'), c=2*Math.PI*r; h._hp.style.strokeDasharray=c; h._hp.style.strokeDashoffset=c*(1-p.hp/p.hpMax); } });
+    /* 격추 중 핵 발광 강화 */
+    if(s.enemy.state==='downed') rig.glow('core', 1.4);
     /* 기술 쿨다운 */
     var sks=el.skills.querySelectorAll('[data-skill]'); s.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s.player.st>=SK[i].st); } });
     el.skills.querySelector('[data-ult]').classList.toggle('is-ready', s.player.ult>=R.ult.max);
@@ -246,6 +259,7 @@ html.mobile .ov__t{font-size:22px}
     battle.drain().forEach(function(e){ if(e.t==='hit') lastHit=e.dmg; handle(e); });
     if(guideT>0){ guideT-=dt; if(guideT<=0) el.guide.classList.remove('is-on'); }
     if(counterT>0){ counterT-=dt; if(counterT<=0) el.counter.classList.remove('is-on'); }
+    if(rig) rig.tick(dt);
     if(battle) render();
   }
 
@@ -285,7 +299,7 @@ html.mobile .ov__t{font-size:22px}
         '<div class="ov__stats"><div>등급<b class="g-'+g+'">'+g+'</b></div><div>시간<b>'+CB.fmtTime(m.time)+'</b></div>'+(m.telegraphs?'<div>카운터<b>'+m.counters+'/'+m.telegraphs+'</b></div>':'')+(d.parts.some(function(p){return p.breakable;})?'<div>부위 파괴<b>'+m.breaks+'</b></div>':'')+'<div>받은 피해<b>'+W.fmt(Math.round(m.dmgTaken))+'</b></div></div>'+
         '<button class="btn btn--primary" data-go>'+(lastStage?'정산으로':'다음 허수아비')+'</button>',
         function(){ if(lastStage) finishArena(); else startStage(stageI+1); });
-    }, 700);
+    }, 1500);
   }
   function finishArena(){
     var sum=CB.summarize(R, A, stageResults), T=window.TW_ITEMS;
