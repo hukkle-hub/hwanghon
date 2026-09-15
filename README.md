@@ -211,7 +211,7 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 - 업데이트: 배포 워크플로가 `sw.js`·`js/ui.js` 의 `__BUILD__` 를 커밋 해시로 치환하므로 `main` 에 푸시하면 설치형 PWA 도 접속(또는 앱 복귀)하는 즉시 새 서비스워커를 받고, 워커가 열린 화면을 직접 다시 불러온다. 보조로 화면은 켜질 때 `version.json` 을 읽어 빌드가 다르면 스스로 갱신한다. 현재 빌드는 화면 전환 독 안에 표시된다.
 - 이력: `hukkle-hub/sns-agent-app` 의 `game-ui/` 폴더에서 `git subtree split` 으로 분리했다(커밋 이력 보존).
 
-## 던전 01 · 뒷마당 훈련장 (`dungeon.html`)
+## 던전 01 · 뒷마당 훈련장 (`game.html` — Phaser 4)
 
 기획: `docs/design/01-training-arena.md`. 완전 수동 조작, 아인 고정, 허수아비 3단계(짚 → 철갑 → 태엽).
 
@@ -220,7 +220,13 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 | `js/dungeons.js` | `TW_DUNGEONS` — 전투 공통 규칙 `RULES`, 아인 기술 `SKILLS`, 아레나 `ARENAS.tutorial`(허수아비는 `BOSSES` 형식 + 엔진 필드) |
 | `js/combat.js` | `TW_COMBAT` — DOM 없는 전투 엔진. 60틱 고정 스텝, 입력(공격·회피·방어·기술·궁극기·조준), 카운터/부위 파괴/출혈/자세/격추, 지표·등급·정산. Node 에서도 돌아가 봇 검증에 쓴다 |
 | `css/battle.css` | 전투 HUD 공통 스타일 (`battle.html` 과 공유) |
-| `dungeon.html` | **던전 화면.** 캔버스 바닥·담·문·소품·바닥 범위(존), DOM 엔티티(아인 스프라이트 4방향, 허수아비 리그), 가상 스틱 이동, 카메라 추적, 미니맵, 보스 방 입장 시 문 잠김 → 3 페이즈 보스전 → 정산 |
+| `game.html` + `js/game-dungeon.js` | **던전 화면(Phaser 4.2 WebGL).** 노멀맵 조명(횃불·플레이어·핵 광원, 환경광), 생성 아트(바닥·돌담·울타리·문·소품·보스 원), 아인 3면 컷아웃 걷기 리그, 허수아비 리그(Phaser 컨테이너), 히트 파티클·카메라 흔들림/줌·비네트, 바닥 범위(존), 가상 스틱, 미니맵, 보스 방 입장 시 문 잠김 → 3 페이즈 → 정산. HUD 는 DOM 오버레이 |
+| `vendor/phaser.min.js` | Phaser 4.2.1 (jsDelivr 에서 고정) |
+| `js/rig-phaser.js` | `dummy-rig.js` 리그 데이터를 Phaser 컨테이너 계층으로 올리는 렌더러/애니메이터 |
+| `js/ain-rig.js` + `art/ain/*.webp` | 아인 정면·후면·측면 컷아웃(몸통·팔·다리) 걷기 리그 |
+| `art/env/*.webp` | 생성 환경 아트: `ground`(+`_n` 노멀맵), `wall`(+`_n`), `fence`/`fpost`, `gate`, `ring`, `barrel` `crate` `post` `sign` `torch` `straw` |
+| `maps/d01.json` + `maps/yard-tiles.png` | 레벨을 Tiled 형식으로 내보낸 것(바닥/구조/소품 레이어). Tiled 에서 열어 편집 가능 |
+| `dungeon.html` | 같은 던전의 캔버스 2D 판(엔진 이전 전 버전) |
 | `js/dungeon.js` | 레벨 데이터: 격자 맵(ASCII), 소품, 보스 방, 페이즈별 AI(속도·거리·패턴 선택), 패턴별 바닥 존(원·직선), 안내 비트 |
 | `js/world-sim.js` | 월드 시뮬레이션: 맵 파싱, 원-격자 충돌(슬라이딩), 이동·구르기, 존 판정(깊이 0.55 비등방 거리), 보스 추적 AI, 카메라 |
 | `arena.html` | 정면 대치 연습 모드(던전 이전 버전). 같은 엔진·리그를 쓴다 |
