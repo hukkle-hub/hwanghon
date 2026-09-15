@@ -203,9 +203,9 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 | `data-slots="15"` | 아이템 슬롯 그리드 자동 생성 |
 | `data-countdown="55"` | 초 단위 카운트다운 |
 
-## 호스팅 / 서버와의 관계
+## 호스팅
 
-- `game-ui/` 는 완전한 정적 사이트다. 저장소 루트의 SNS 앱과 같은 GitHub Pages 에서 `/sns-agent-app/game-ui/` 경로로 그대로 서빙된다.
-- 루트 `server.js`(Render 백엔드) 는 `/api/*` 전용이며 정적 파일을 서빙하지 않는다. 게임 UI 는 서버 호출이 없고, 장비·제작·파티 상태는 브라우저 메모리에만 있다(새로고침 시 초기화).
-- 서비스워커 범위: 루트 `sw.js` 는 `/sns-agent-app/`, 게임 UI `sw.js` 는 `/sns-agent-app/game-ui/` 로 더 구체적인 쪽이 우선한다. 캐시 저장소는 출처 단위로 공유되므로 게임 UI 는 `tw-` 접두 캐시만 정리한다.
-- 나중에 서버 저장이 필요하면 `js/items.js` 의 `PLAYER` 와 `js/world.js` 의 `PARTY` 를 `/api/game/*` 응답으로 치환하는 것으로 충분하도록 데이터 모듈을 분리해 두었다.
+- 이 저장소는 완전한 정적 사이트다. GitHub Pages(Settings → Pages → Deploy from a branch → `main` / root) 로 그대로 서빙된다. `.nojekyll` 이 있어 언더스코어 경로도 빌드 없이 노출된다.
+- 서버 호출이 없으며 장비·제작·파티 상태는 브라우저 메모리에만 있다(새로고침 시 초기화). 나중에 저장이 필요하면 `js/items.js` 의 `PLAYER` 와 `js/world.js` 의 `PARTY` 를 API 응답으로 치환하면 되도록 데이터 모듈을 분리해 두었다.
+- 서비스워커(`sw.js`)는 이 저장소 경로 범위만 담당하며 `tw-` 접두 캐시만 관리한다.
+- 이력: `hukkle-hub/sns-agent-app` 의 `game-ui/` 폴더에서 `git subtree split` 으로 분리했다(커밋 이력 보존).
