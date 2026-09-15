@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .pf{display:grid;grid-template-columns:54px 440px 1fr;gap:14px;padding:12px 20px;flex:1;min-height:0}
 .rail{display:flex;flex-direction:column;gap:10px}
@@ -89,9 +90,9 @@
     </div>
   </header>
 
-  <main class="pf">
+  <main class="pf" data-mdefault="정보">
     <!-- 아이콘 레일 -->
-    <div class="rail" data-pick>
+    <div class="rail" data-pick data-mpane="캐릭터">
       <button class="railbtn is-on" data-pickitem><svg class="ico ico--lg"><use href="#i-skull"/></svg></button>
       <button class="railbtn" data-pickitem><svg class="ico ico--lg"><use href="#i-user"/></svg></button>
       <button class="railbtn" data-pickitem><svg class="ico ico--lg"><use href="#i-hammer"/></svg></button>
@@ -99,7 +100,7 @@
     </div>
 
     <!-- 캐릭터 아트 + 시즌 -->
-    <div class="pf__art">
+    <div class="pf__art" data-mpane="캐릭터">
       <div class="pfart art art--top">
         <img src="art/char-profile.webp" alt="아인">
       </div>
@@ -107,7 +108,7 @@
     </div>
 
     <!-- 우측 정보 -->
-    <div class="pf__r">
+    <div class="pf__r" data-mpane="정보">
       <!-- 신원 -->
       <div class="idrow">
         <section class="panel panel--framed">
@@ -194,7 +195,7 @@
       <div class="actrow">
         <button class="btn">차단</button>
         <button class="btn">귓속말</button>
-        <button class="btn btn--primary">파티 신청</button>
+        <button class="btn btn--primary" data-primary>파티 신청</button>
       </div>
     </div>
   </main>

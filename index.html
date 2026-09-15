@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .cs{display:grid;grid-template-columns:250px 1fr;gap:16px;padding:18px 22px;flex:1;min-height:0}
 
@@ -60,9 +61,9 @@
 <script src="js/icons.js"></script>
 
 <div class="stage">
-  <main class="cs">
+  <main class="cs" data-mdefault="화면">
     <!-- ===== 좌: 컨셉 스펙 ===== -->
-    <aside class="spec">
+    <aside class="spec" data-mpane="컨셉">
       <h1>황혼</h1>
       <div class="spec__sub">GAME UI CONCEPT</div>
       <p class="spec__d">
@@ -106,7 +107,7 @@
     </aside>
 
     <!-- ===== 우: 화면 보드 ===== -->
-    <div class="cs__r">
+    <div class="cs__r" data-mpane="화면">
       <div class="board">
         <a class="scard" href="office.html">
           <div class="scard__h"><span class="scard__n">01</span><span class="scard__t">인력사무실</span>

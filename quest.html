@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .qs{display:grid;grid-template-columns:300px 1fr 302px;gap:11px;padding:10px 18px;flex:1;min-height:0}
 .qs__l{display:grid;grid-template-rows:1fr 186px;gap:10px;min-height:0}
@@ -99,9 +100,9 @@
     </div>
   </header>
 
-  <main class="qs">
+  <main class="qs" data-mdefault="상세">
     <!-- ============ 좌측 ============ -->
-    <div class="qs__l">
+    <div class="qs__l" data-mpane="의뢰">
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">의뢰 목록</span></div>
         <div class="panel__body panel__body--tight none">
@@ -112,7 +113,7 @@
           </div>
         </div>
         <div class="panel__body panel__body--flush scroll fill" data-pick>
-          <div id="q-rows"></div>
+          <div id="q-rows" data-mgoto="상세"></div>
           <div style="padding:11px">
             <button class="btn btn--sm btn--block btn--ghost">
               <svg class="ico ico--sm"><use href="#i-refresh"/></svg>의뢰 새로고침</button>
@@ -134,7 +135,7 @@
     </div>
 
     <!-- ============ 중앙 ============ -->
-    <div class="qs__c">
+    <div class="qs__c" data-mpane="상세">
       <section class="panel panel--framed">
         <div class="bosshead" id="bosshead"></div>
         <div class="bossart art art--beast" id="bossart"></div>
@@ -183,7 +184,7 @@
     </div>
 
     <!-- ============ 우측 ============ -->
-    <div class="qs__r">
+    <div class="qs__r" data-mpane="보상">
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">획득 가능 보상</span></div>
         <div class="panel__body panel__body--tight" id="loot"></div>
@@ -214,7 +215,7 @@
         </div>
       </section>
 
-      <button class="btn btn--deploy">
+      <button class="btn btn--deploy" data-primary>
         <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
       </button>
     </div>

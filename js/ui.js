@@ -22,6 +22,9 @@
 
   var TOUCH = !!(window.matchMedia && (matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches));
   if (TOUCH) document.documentElement.classList.add('touch');
+  /* 휴대폰 판정: 터치 기기이면서 짧은 변이 640 CSS px 이하 (태블릿은 축소 스테이지 유지) */
+  var MOBILE = TOUCH && Math.min(window.innerWidth, window.innerHeight) <= 640 && !document.body.hasAttribute('data-nomobile');
+  if (MOBILE) document.documentElement.classList.add('mobile');
   var $  = function(s,r){ return (r||document).querySelector(s); };
   var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
 
@@ -59,6 +62,11 @@
   }
   function fitStage(){
     var st = $('.stage'); if(!st) return;
+    if (MOBILE){ /* 네이티브 레이아웃 — 축소하지 않는다 */
+      st.style.transform=''; st.style.marginLeft=''; document.body.style.height='';
+      document.documentElement.classList.toggle('portrait', window.innerHeight > window.innerWidth);
+      return;
+    }
     var v = viewport(), base = 1672, baseH = st.offsetHeight || 952;
     var portrait = v.h > v.w;
     var k = Math.min(1, (v.w - (TOUCH ? 0 : 8)) / base);
@@ -75,11 +83,64 @@
   /* 세로 화면 안내 (터치 기기) */
   function rotateHint(){
     if (!TOUCH || document.body.hasAttribute('data-nonav')) return;
+    if (MOBILE && !document.body.hasAttribute('data-landscape')) return;   /* 휴대폰은 세로도 지원 — HUD 화면만 안내 */
+    if (document.body.hasAttribute('data-landscape')) document.documentElement.setAttribute('data-landscape','');
     var h = document.createElement('div');
     h.className = 'rotate-hint';
     h.innerHTML = '<svg class="ico ico--xl"><use href="#i-refresh"/></svg><b>가로로 돌려 주세요</b><span>황혼은 가로 화면 기준으로 설계되었습니다.</span><button type="button">이대로 보기</button>';
     h.querySelector('button').onclick = function(){ document.documentElement.classList.add('portrait-ok'); };
     document.body.appendChild(h);
+  }
+
+  /* ---------- 휴대폰 레이아웃: 패널 탭 + 하단 행동 바 ----------
+     main 의 직계 자식이 패널이 된다. data-mpane="라벨" 로 이름을 붙이고, 같은 라벨이 이어지면 한 패널로 합친다.
+     main[data-mdefault] 가 처음 열릴 패널. [data-primary] 는 하단 바로 이동. [data-mgoto="라벨"] 안을 누르면 그 패널로 이동. */
+  function mobileLayout(){
+    if (!MOBILE) return;
+    var main = $('main'); if (!main) return;
+    var panes = [], last = null;
+    [].slice.call(main.children).forEach(function(el){
+      var lb = el.getAttribute('data-mpane');
+      if (!lb){ var t = el.querySelector('.panel__title, .bmp__t, .label-ko, h2, h3'); lb = t ? t.textContent.trim() : ('패널 '+(panes.length+1)); }
+      var found = null; panes.forEach(function(p){ if (p.label === lb) found = p; });
+      if (found){ found.wrap.appendChild(el); last = found; return; }   /* 같은 라벨은 떨어져 있어도 한 패널로 */
+      var wrap = document.createElement('div'); wrap.className = 'mpane'; wrap.setAttribute('data-label', lb);
+      main.appendChild(wrap); wrap.appendChild(el);
+      last = { label: lb, wrap: wrap }; panes.push(last);
+    });
+    if (!panes.length) return;
+    var tabs = document.createElement('div'); tabs.className = 'mtabs'; tabs.setAttribute('role','tablist');
+    tabs.innerHTML = panes.map(function(p){ return '<button type="button" role="tab" data-label="'+p.label+'">'+p.label+'</button>'; }).join('');
+    function activate(lb){
+      panes.forEach(function(p){ p.wrap.classList.toggle('is-active', p.label === lb); });
+      [].forEach.call(tabs.children, function(b){ b.classList.toggle('is-on', b.getAttribute('data-label') === lb); });
+      var on = tabs.querySelector('.is-on'); if (on && on.scrollIntoView) on.scrollIntoView({ block:'nearest', inline:'center' });
+      try { sessionStorage.setItem('tw:pane:'+location.pathname.split('/').pop(), lb); } catch(e){}
+    }
+    tabs.addEventListener('click', function(e){ var b = e.target.closest('[data-label]'); if (b) activate(b.getAttribute('data-label')); });
+    var tb = $('.topbar') || $('.sheethead') || $('.bmhead');
+    if (tb){ tb.classList.add('has-mtabs'); tb.insertBefore(tabs, tb.querySelector('.topbar__spacer, .sheethead__r, .principles')); }
+    else main.parentNode.insertBefore(tabs, main);
+    /* 캡처 단계: 화면 스크립트가 목록을 재렌더해 e.target 이 떨어져 나가기 전에 조상을 읽는다 */
+    document.addEventListener('click', function(e){
+      var g = e.target.closest ? e.target.closest('[data-mgoto]') : null; if (!g) return;
+      var lb = g.getAttribute('data-mgoto');
+      if (panes.some(function(p){ return p.label === lb; })) setTimeout(function(){ activate(lb); }, 80);
+    }, true);
+    var def = main.getAttribute('data-mdefault'); var saved = null;
+    try { saved = sessionStorage.getItem('tw:pane:'+location.pathname.split('/').pop()); } catch(e){}
+    var has = function(lb){ return lb && panes.some(function(p){ return p.label === lb; }); };
+    activate(has(saved) ? saved : has(def) ? def : panes[Math.min(1, panes.length-1)].label);
+
+    /* 하단 행동 바: 뒤로 + 주 행동 */
+    var prim = $('[data-primary]');
+    var back = $('.hotbar a[href], .backbar a[href], .gnb a[href]');
+    var bar = document.createElement('div'); bar.className = 'mbar';
+    var b = document.createElement('a'); b.className = 'mbar__back'; b.href = back ? back.getAttribute('href') : 'index.html';
+    b.innerHTML = '<svg class="ico"><use href="#i-arrowl"/></svg>뒤로'; bar.appendChild(b);
+    if (prim){ prim.classList.add('mbar__primary'); bar.appendChild(prim); }
+    document.body.appendChild(bar);
+    document.documentElement.classList.add('has-mbar');
   }
 
   /* ---------- 탭 ---------- */
@@ -203,6 +264,7 @@
     var embedded = (window.self !== window.top);
     if (!embedded && !document.body.hasAttribute('data-nonav')) navDock();
     if (!embedded) rotateHint();
+    if (!embedded) mobileLayout();
     fitStage();
     window.addEventListener('resize', fitStage);
     window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });

@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .invtabs{display:flex;align-items:center;gap:14px;padding:0 22px;border-bottom:1px solid var(--line-soft);flex:none}
 .inv{display:grid;grid-template-columns:150px 1fr 206px 206px 390px;grid-template-rows:1fr auto;
@@ -97,9 +98,9 @@
     <span class="key">E</span>
   </div>
 
-  <main class="inv">
+  <main class="inv" data-mdefault="장비">
     <!-- ===== 캐릭터 선택 ===== -->
-    <div class="inv__l">
+    <div class="inv__l" data-mpane="캐릭터">
       <div class="label-ko">캐릭터 선택</div>
       <div class="chars" data-pick>
         <div class="chip-char is-on" data-pickitem data-char="ain">
@@ -141,18 +142,18 @@
     </div>
 
     <!-- ===== 페이퍼돌 ===== -->
-    <div class="doll">
-      <div class="eqcol" id="eq-left"></div>
+    <div class="doll" data-mpane="장비">
+      <div class="eqcol" id="eq-left" data-mgoto="아이템"></div>
 
       <div class="dollart art art--doll">
         <img id="doll" src="art/full-ain.webp" alt="아인">
       </div>
 
-      <div class="eqcol eqcol--r" id="eq-right"></div>
+      <div class="eqcol eqcol--r" id="eq-right" data-mgoto="아이템"></div>
     </div>
 
     <!-- ===== 아이템 정보 ===== -->
-    <section class="panel panel--framed">
+    <section class="panel panel--framed" data-mpane="아이템">
       <div class="panel__head">
         <span class="panel__title">아이템 정보</span>
         <span class="chip chip--red" style="margin-left:auto" id="info-badge">장착 중</span>
@@ -161,13 +162,13 @@
     </section>
 
     <!-- ===== 비교 대상 ===== -->
-    <section class="panel panel--framed">
+    <section class="panel panel--framed" data-mpane="아이템">
       <div class="panel__head"><span class="panel__title">비교 대상</span></div>
       <div class="panel__body panel__body--tight scroll" id="item-cmp"></div>
     </section>
 
     <!-- ===== 인벤토리 ===== -->
-    <section class="panel panel--framed invpanel">
+    <section class="panel panel--framed invpanel" data-mpane="가방">
       <div class="invhead">
         <span class="panel__title">인벤토리</span>
         <span class="panel__meta" style="margin-left:auto"><span class="num" id="bag-count">82 / 120</span></span>
@@ -182,7 +183,7 @@
         <select class="sel" style="margin-left:auto;width:96px"><option>정렬 : 등급</option><option>정렬 : 전투력</option></select>
         <span class="ifilter"><svg class="ico ico--xs"><use href="#i-filter"/></svg></span>
       </div>
-      <div class="slotgrid invgrid scroll fill" id="bag"></div>
+      <div class="slotgrid invgrid scroll fill" id="bag" data-mgoto="아이템"></div>
 
       <div class="invhead" style="border-top:1px solid var(--line-soft)">
         <span class="panel__title">재료 보관함</span>
@@ -193,7 +194,7 @@
     </section>
 
     <!-- ===== 액션 버튼 ===== -->
-    <div class="actions">
+    <div class="actions" data-mpane="아이템">
       <button class="btn">강화</button>
       <button class="btn">수리</button>
       <button class="btn">분해</button>
@@ -209,7 +210,7 @@
     <span class="hotbar__spacer"></span>
     <a class="hot"><span class="key">G</span>잠금 / 해제</a>
     <a class="hot"><span class="key">X</span>버리기</a>
-    <button class="btn btn--primary btn--sm" style="width:132px" id="hot-equip">장착</button>
+    <button class="btn btn--primary btn--sm" style="width:132px" id="hot-equip" data-primary>장착</button>
   </div>
 </div>
 <script src="js/items.js"></script>

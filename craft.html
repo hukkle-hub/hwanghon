@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .fgtabs{display:flex;align-items:center;padding:0 22px;border-bottom:1px solid var(--line-soft);flex:none}
 .fgtabs .tab{padding:9px 30px}
@@ -96,9 +97,9 @@
     <a class="tab" href="forge.html">강화</a>
   </div>
 
-  <main class="cf">
+  <main class="cf" data-mdefault="제작">
     <!-- 레시피 목록 -->
-    <section class="panel panel--framed">
+    <section class="panel panel--framed" data-mpane="목록">
       <div class="panel__head"><span class="panel__title">제작 목록</span><span class="panel__meta" id="rcount"></span></div>
       <div class="panel__body panel__body--tight none">
         <div class="tabs tabs--pill" id="rcat">
@@ -110,11 +111,11 @@
           <button class="tab" data-cat="consumable">소모품</button>
         </div>
       </div>
-      <div class="panel__body panel__body--flush fill scroll" id="rlist"></div>
+      <div class="panel__body panel__body--flush fill scroll" id="rlist" data-mgoto="제작"></div>
     </section>
 
     <!-- 제작 상세 -->
-    <div class="cf__c">
+    <div class="cf__c" data-mpane="제작">
       <section class="panel panel--framed">
         <div class="result">
           <div class="result__art" id="r-art"></div>
@@ -149,13 +150,13 @@
           <div class="qty">
             <button id="q-minus">−</button><input id="q" value="1"><button id="q-plus">+</button>
           </div>
-          <button class="btn btn--primary btn--craft" id="do-craft">제작</button>
+          <button class="btn btn--primary btn--craft" id="do-craft" data-primary>제작</button>
         </div>
       </section>
     </div>
 
     <!-- 보유 재료 -->
-    <div class="flex col g3" style="min-height:0">
+    <div class="flex col g3" style="min-height:0" data-mpane="재료">
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">재료 보관함</span><span class="panel__meta" id="mcount"></span></div>
         <div class="panel__body panel__body--tight">

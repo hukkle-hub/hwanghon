@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
 <style>
 .stage{height:952px}
 .ch{display:grid;grid-template-columns:236px 1fr 336px;grid-template-rows:minmax(0,1fr);gap:13px;padding:12px 20px;flex:1;min-height:0}
@@ -83,11 +84,11 @@
     </div>
   </header>
 
-  <main class="ch">
+  <main class="ch" data-mdefault="시트">
     <!-- 좌: 목록 -->
-    <section class="panel panel--framed">
+    <section class="panel panel--framed" data-mpane="요원">
       <div class="panel__head"><span class="panel__title">소속 요원</span><span class="panel__meta">4 / 4</span></div>
-      <div class="panel__body panel__body--flush fill scroll" id="list" data-pick>
+      <div class="panel__body panel__body--flush fill scroll" id="list" data-pick data-mgoto="시트">
       </div>
       <div style="padding:10px">
         <a class="btn btn--sm btn--block btn--ghost" href="inventory.html">
@@ -96,7 +97,7 @@
     </section>
 
     <!-- 중: 턴어라운드 -->
-    <div class="turn">
+    <div class="turn" data-mpane="시트">
       <div class="turn__bg"></div><div class="turn__grid"></div>
       <div class="turn__head"><b id="nm">아인</b><span id="tt">새벽을 걷는 그림자 · Ain#0927</span></div>
       <div class="turn__tag" id="tags"><span class="chip chip--red">암살자</span><span class="chip">낫(대형)</span></div>
@@ -123,7 +124,7 @@
     </div>
 
     <!-- 우: 설정 -->
-    <div class="flex col g3" style="min-height:0">
+    <div class="flex col g3" style="min-height:0" data-mpane="설정">
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">기본 정보</span><span class="panel__meta" id="lv">LV.26</span></div>
         <div class="panel__body panel__body--tight sheetstat">
