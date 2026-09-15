@@ -163,7 +163,7 @@
   function pickers(){
     $$('[data-pick]').forEach(function(list){
       list.addEventListener('click', function(e){
-        var r = e.target.closest('.row, .pcard, .slot, [data-pickitem]');
+        var r = e.target.closest('.row, .pcard, .mcard, .slot, [data-pickitem]');
         if(!r || !list.contains(r) || r.classList.contains('slot--lock')) return;
         $$('.is-on', list).forEach(function(x){ x.classList.remove('is-on'); });
         r.classList.add('is-on');
