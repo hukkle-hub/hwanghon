@@ -236,4 +236,5 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 
 ## 기획 문서
 
+- `docs/design/02-engine-research.md` — 엔진·플러그인 조사와 추천안(Phaser 4 + Tiled + Spine/DragonBones), 마이그레이션 계획.
 - `docs/design/01-training-arena.md` — 던전 01 훈련장(튜토리얼 허수아비 아레나) 기획 v0.1. 전투 공통 규칙(카운터·부위 파괴·출혈·자세·궁극기)과 수치 표의 원본.
