@@ -117,7 +117,7 @@ $('#b-wire').onclick=e=>{ if(!charRoot) return; const on=!e.target.classList.con
 $('#r-grip').value=SOCK.grip; $('#n-rx').value=SOCK.rot[0]; $('#n-ry').value=SOCK.rot[1]; $('#n-rz').value=SOCK.rot[2]; $('#n-ox').value=SOCK.off[0]; $('#n-oy').value=SOCK.off[1]; $('#n-oz').value=SOCK.off[2];
 $('#tg').onclick=()=>$('#panel').classList.toggle('is-off');
 if(Math.min(innerWidth,innerHeight)<640) $('#panel').classList.add('is-off');
-const q=new URLSearchParams(location.search); if(q.get('glb')) loadChar(q.get('glb')); loadWeapon('art/3d/ain_scythe_v02.glb');
+const q=new URLSearchParams(location.search); loadChar(q.get('glb')||'art/3d/ain_hi3d_vcol_v1.glb'); loadWeapon('art/3d/ain_scythe_v02.glb');
 addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 (function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); ctrl.update(); renderer.render(scene,cam); })();
 window.TW_VIEWER={ get char(){ return charRoot; }, get weapon(){ return weaponRoot; }, bones:()=>bones, scene, attach, loadChar, SOCK };
