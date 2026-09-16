@@ -31,6 +31,16 @@ game-ui/
     js/inventory.js   인벤토리 화면 렌더러 (장착/해제 · 비교 · 필터)
 ```
 
+## Android APK (사이드로드)
+
+PWA 대신 앱으로 설치할 수 있습니다. `main` 에 푸시할 때마다 GitHub Actions 가 서명된 APK 를 빌드해 릴리스에 올립니다.
+
+- 최신 APK: https://github.com/hukkle-hub/hwanghon/releases/download/apk-latest/hwanghon.apk
+- 릴리스 페이지(빌드 sha 별 파일 포함): https://github.com/hukkle-hub/hwanghon/releases/tag/apk-latest
+- 설치: 폰에서 링크를 열어 다운로드 → "출처를 알 수 없는 앱 허용" → 설치. 같은 키로 서명되므로 새 APK 를 덮어 설치하면 업데이트됩니다.
+- 로컬 빌드: `npm ci && bash tools/build-www.sh && npx cap sync android && cd android && ./gradlew assembleRelease`
+  (Capacitor 6 · `android/keystore/hwanghon.jks` 는 사이드로드 배포 전용 키입니다. 스토어 배포 시 새 키로 교체하세요.)
+
 ## 실행
 
 ```bash
