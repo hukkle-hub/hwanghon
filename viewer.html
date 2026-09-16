@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<title>황혼 — 아인 뷰어 (3D 에셋 검증기)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<style>
+html,body{height:100%;margin:0;background:#0B0C0F;color:#EBD6D6;font-family:var(--f-sans);overflow:hidden}
+#c{position:fixed;inset:0}
+.panel3d{position:fixed;left:0;top:0;bottom:0;width:min(340px,92vw);background:rgba(11,12,15,.92);border-right:1px solid var(--line);padding:12px 14px;overflow:auto;z-index:5;font-size:12px;transition:transform .25s}
+.panel3d.is-off{transform:translateX(-100%)}
+.panel3d h1{font-family:var(--f-serif);font-size:15px;letter-spacing:.08em;margin:2px 0 10px;color:#F0E4E4}
+.panel3d h2{font-size:11px;letter-spacing:.2em;color:#C9A45E;margin:14px 0 6px;font-family:var(--f-serif)}
+.panel3d label{display:block;margin:6px 0 2px;color:var(--tx-dim)}
+.panel3d input[type=file]{width:100%;font-size:12px}
+.panel3d select,.panel3d input[type=range],.panel3d input[type=number]{width:100%;background:#1A1B1F;color:#EBD6D6;border:1px solid var(--line);padding:4px 6px;font-size:12px}
+.panel3d input[type=range]{padding:0;accent-color:#C9A45E}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+.kv b{font-weight:400;color:#F0E4E4}
+.ok{color:#5FAE9B}.bad{color:#D94A45}.warn{color:#C9A45E}
+.btnrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.btn3{border:1px solid var(--line);background:rgba(255,255,255,.04);color:#EBD6D6;padding:6px 10px;font-size:12px;cursor:pointer}
+.btn3.is-on{border-color:#C9A45E;color:#C9A45E}
+.toggle{position:fixed;left:10px;top:10px;z-index:6;border:1px solid var(--line);background:rgba(11,12,15,.8);color:#EBD6D6;padding:8px 12px;font-size:12px;cursor:pointer}
+.bones{max-height:160px;overflow:auto;font-family:monospace;font-size:10.5px;color:var(--tx-dim);line-height:1.5;border:1px solid var(--line);padding:6px;background:#111216}
+.hint{font-size:11px;color:var(--tx-faint);line-height:1.6;margin-top:6px}
+.hud3{position:fixed;right:12px;top:12px;z-index:5;font-size:11px;color:var(--tx-faint);text-align:right;letter-spacing:.06em;line-height:1.7}
+.hud3 b{color:#EBD6D6;font-weight:400}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button class="toggle" id="tg">패널</button>
+<div class="hud3" id="hud"></div>
+<div class="panel3d" id="panel">
+  <h1>아인 뷰어 — 3D 에셋 검증기</h1>
+  <div class="hint">GLB 를 넣으면 뼈·스케일·애니메이션을 판정하고, 낫을 손 뼈에 붙여 봅니다. 통과한 에셋만 게임에 들어갑니다.</div>
+  <h2>1. 캐릭터 GLB</h2>
+  <input type="file" id="f-char" accept=".glb,.gltf">
+  <div class="btnrow"><button class="btn3" id="b-fit">168cm 로 스케일 맞춤</button><button class="btn3" id="b-skel">뼈대 표시</button><button class="btn3" id="b-wire">와이어</button></div>
+  <div id="rep"></div>
+  <div class="bones" id="bones">뼈 목록 (없음)</div>
+  <h2>2. 무기 GLB</h2>
+  <div class="btnrow"><button class="btn3 is-on" id="b-scy">낫 (저장소)</button><label style="margin:0"><input type="file" id="f-wep" accept=".glb,.gltf" style="display:none"><span class="btn3">파일…</span></label></div>
+  <div id="wrep"></div>
+  <h2>3. 낫 붙이기 (소켓)</h2>
+  <label>손 뼈</label><select id="s-bone"><option value="">— 뼈 없음 —</option></select>
+  <label>그립 높이 (자루 기준 m)</label><input type="range" id="r-grip" min="0" max="2.2" step="0.01" value="1.0">
+  <div class="row3"><div><label>회전 X°</label><input type="number" id="n-rx" value="0" step="5"></div><div><label>회전 Y°</label><input type="number" id="n-ry" value="0" step="5"></div><div><label>회전 Z°</label><input type="number" id="n-rz" value="90" step="5"></div></div>
+  <div class="row3"><div><label>오프셋 X</label><input type="number" id="n-ox" value="0" step="0.01"></div><div><label>오프셋 Y</label><input type="number" id="n-oy" value="0" step="0.01"></div><div><label>오프셋 Z</label><input type="number" id="n-oz" value="0" step="0.01"></div></div>
+  <div class="btnrow"><button class="btn3" id="b-attach">손에 붙이기</button><button class="btn3" id="b-save">소켓 저장</button><button class="btn3" id="b-copy">JSON 복사</button></div>
+  <div class="hint" id="sock"></div>
+  <h2>4. 애니메이션</h2>
+  <div class="btnrow" id="clips">(없음)</div>
+  <h2>판정 기준</h2>
+  <div class="hint">· 뼈(skin) 있음 · 키 높이 1.5~1.9 m · 손 뼈 이름에 Hand 포함 · 클립: 대기·걷기·달리기·구르기·공격·피격·사망<br>· 뼈가 없으면 Mixamo(mixamo.com) 에 GLB→FBX 로 올려 자동 리깅 → 애니메이션 내려받기 → Blender 에서 GLB 로 합치기</div>
+</div>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+<script type="module">
+import * as THREE from './vendor/three/three.module.js';
+import { GLTFLoader } from './vendor/three/GLTFLoader.js';
+import { OrbitControls } from './vendor/three/OrbitControls.js';
+const $=s=>document.querySelector(s);
+const renderer=new THREE.WebGLRenderer({canvas:$('#c'),antialias:true}); renderer.setPixelRatio(Math.min(2,devicePixelRatio)); renderer.setSize(innerWidth,innerHeight); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.1; renderer.shadowMap.enabled=true;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.Fog(0x0B0C0F,8,30);
+const cam=new THREE.PerspectiveCamera(40,innerWidth/innerHeight,0.05,200); cam.position.set(2.6,1.6,3.2);
+const ctrl=new OrbitControls(cam,renderer.domElement); ctrl.target.set(0,0.9,0); ctrl.enableDamping=true;
+scene.add(new THREE.HemisphereLight(0x8a8a9a,0x2a2220,0.9)); const key=new THREE.DirectionalLight(0xffe0c0,2.2); key.position.set(3,6,4); key.castShadow=true; key.shadow.mapSize.set(2048,2048); scene.add(key); const rim=new THREE.PointLight(0xA51C1C,6,8); rim.position.set(-2,2,-2); scene.add(rim);
+const ground=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshStandardMaterial({color:0x1a1814,roughness:1})); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+const grid=new THREE.GridHelper(12,24,0x3a3a44,0x24262c); grid.position.y=0.001; scene.add(grid);
+/* 168cm 기준 막대 */
+const ref=new THREE.Mesh(new THREE.BoxGeometry(0.02,1.68,0.02),new THREE.MeshBasicMaterial({color:0xC9A45E})); ref.position.set(-1.2,0.84,0); scene.add(ref);
+const loader=new GLTFLoader(); let charRoot=null, charGltf=null, skelHelper=null, mixer=null, clock=new THREE.Clock(), weapon=null, weaponRoot=null, handBone=null, bones=[];
+const SOCK={ bone:'', grip:1.0, rot:[0,0,90], off:[0,0,0] };
+try{ Object.assign(SOCK, JSON.parse(localStorage.getItem('tw:socket:ain')||'{}')); }catch(e){}
+/* 손 뼈 우선순위: 정확한 이름 → 오른손 접미/접두 → 왼손 (손가락 뼈 제외) */
+function findHand(list){ const tests=[/^(mixamorig:?)?RightHand$/i, /^(right|r)[_\-.: ]?hand$/i, /^hand[_\-.: ]?(r|right)$/i, /right.?hand(?!.*(thumb|index|middle|ring|pinky))/i, /^(mixamorig:?)?LeftHand$/i, /hand(?!.*(thumb|index|middle|ring|pinky))/i]; for(const t of tests){ const f=list.find(n=>t.test(n)); if(f) return f; } return null; }
+function bbox(o){ const b=new THREE.Box3().setFromObject(o); return { min:b.min, max:b.max, h:b.max.y-b.min.y, w:b.max.x-b.min.x, d:b.max.z-b.min.z }; }
+function report(el, gltf, root){ const b=bbox(root); let skins=0, meshes=0, tris=0, mats=new Set(); root.traverse(o=>{ if(o.isSkinnedMesh) skins++; if(o.isMesh){ meshes++; tris+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3; if(o.material) mats.add(o.material.uuid); } });
+  const clips=gltf.animations||[]; const hand=findHand(bones);
+  const rows=[['높이', b.h.toFixed(3)+' m', b.h>=1.5&&b.h<=1.95?'ok':'warn'], ['폭 / 깊이', b.w.toFixed(2)+' / '+b.d.toFixed(2)+' m',''], ['원점→바닥', b.min.y.toFixed(3)+' m', Math.abs(b.min.y)<0.05?'ok':'warn'], ['메시 / 삼각형', meshes+' / '+Math.round(tris).toLocaleString(), tris<150000?'ok':'warn'], ['머티리얼', mats.size, ''], ['스킨 메시(뼈)', skins?skins+' (뼈 '+bones.length+')':'없음', skins?'ok':'bad'], ['손 뼈', hand||'못 찾음', hand?'ok':(bones.length?'warn':'bad')], ['애니메이션 클립', clips.length?clips.length+' : '+clips.map(c=>c.name).join(', '):'없음', clips.length?'ok':'bad']];
+  el.innerHTML=rows.map(r=>'<div class="kv"><span>'+r[0]+'</span><b class="'+r[2]+'">'+r[1]+'</b></div>').join('');
+  $('#hud').innerHTML='높이 <b>'+b.h.toFixed(2)+' m</b><br>뼈 <b>'+bones.length+'</b> · 클립 <b>'+clips.length+'</b>'+(hand?'<br>손 뼈 <b>'+hand+'</b>':'');
+  return hand; }
+function loadChar(url, name){ loader.load(url, gltf=>{ if(charRoot) scene.remove(charRoot); charGltf=gltf; charRoot=gltf.scene; scene.add(charRoot); bones=[]; charRoot.traverse(o=>{ if(o.isBone) bones.push(o.name); o.castShadow=true; o.receiveShadow=true; });
+    const b=bbox(charRoot); charRoot.position.y-=b.min.y; /* 바닥에 세움 */
+    const hand=report($('#rep'), gltf, charRoot); $('#bones').textContent=bones.length?bones.join('\n'):'뼈 목록 (없음) — 정적 메시입니다. Mixamo 자동 리깅이 필요합니다.';
+    const sel=$('#s-bone'); sel.innerHTML='<option value="">— 선택 —</option>'+bones.map(n=>'<option'+(n===(SOCK.bone||hand)?' selected':'')+'>'+n+'</option>').join(''); if(hand&&!SOCK.bone) sel.value=hand;
+    mixer=new THREE.AnimationMixer(charRoot); const cl=$('#clips'); cl.innerHTML=(gltf.animations||[]).map((c,i)=>'<button class="btn3" data-clip="'+i+'">'+c.name+' ('+c.duration.toFixed(1)+'s)</button>').join('')||'(없음)';
+    cl.onclick=e=>{ const b=e.target.closest('[data-clip]'); if(!b) return; mixer.stopAllAction(); mixer.clipAction(gltf.animations[+b.dataset.clip]).reset().play(); cl.querySelectorAll('.btn3').forEach(x=>x.classList.toggle('is-on',x===b)); };
+    ctrl.target.set(0,b.h*0.55,0); if(weaponRoot && sel.value) attach();
+  }, undefined, err=>{ $('#rep').innerHTML='<div class="kv"><span class="bad">로드 실패</span><b>'+(err.message||err)+'</b></div>'; }); }
+function loadWeapon(url){ loader.load(url, gltf=>{ if(weaponRoot){ weaponRoot.parent&&weaponRoot.parent.remove(weaponRoot); } weapon=gltf.scene; weapon.traverse(o=>{ o.castShadow=true; }); weaponRoot=new THREE.Group(); weaponRoot.add(weapon); const b=bbox(weapon);
+    $('#wrep').innerHTML=[['길이(Y)', b.h.toFixed(2)+' m'],['원점', '자루 끝 (min y '+b.min.y.toFixed(2)+')'],['메시', gltf.scene.children.length]].map(r=>'<div class="kv"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
+    if(!charRoot){ weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } else if($('#s-bone').value) attach(); else { weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } }); }
+function attach(){ if(!charRoot||!weaponRoot) return; const name=$('#s-bone').value; let bone=null; charRoot.traverse(o=>{ if(o.isBone&&o.name===name) bone=o; }); if(!bone){ $('#sock').textContent='손 뼈를 고르세요'; return; }
+  SOCK.bone=name; SOCK.grip=+$('#r-grip').value; SOCK.rot=[+$('#n-rx').value,+$('#n-ry').value,+$('#n-rz').value]; SOCK.off=[+$('#n-ox').value,+$('#n-oy').value,+$('#n-oz').value];
+  weaponRoot.parent&&weaponRoot.parent.remove(weaponRoot); bone.add(weaponRoot); handBone=bone;
+  /* 그립: 자루의 grip 높이가 손 원점에 오도록 무기를 아래로 내린다 */
+  weapon.position.set(0,-SOCK.grip,0); weaponRoot.position.set(...SOCK.off); weaponRoot.rotation.set(THREE.MathUtils.degToRad(SOCK.rot[0]),THREE.MathUtils.degToRad(SOCK.rot[1]),THREE.MathUtils.degToRad(SOCK.rot[2]));
+  /* 부모 스케일 보정: 뼈에 스케일이 있으면 무기 실척 유지 */ const ws=new THREE.Vector3(); bone.getWorldScale(ws); weaponRoot.scale.set(1/ws.x,1/ws.y,1/ws.z);
+  $('#sock').innerHTML='붙임: <b>'+name+'</b> · 그립 '+SOCK.grip+' m · 회전 '+SOCK.rot.join('/')+' · 오프셋 '+SOCK.off.join('/'); }
+$('#f-char').onchange=e=>{ const f=e.target.files[0]; if(f) loadChar(URL.createObjectURL(f), f.name); };
+$('#f-wep').onchange=e=>{ const f=e.target.files[0]; if(f) loadWeapon(URL.createObjectURL(f)); };
+$('#b-scy').onclick=()=>loadWeapon('art/3d/ain_scythe_v02.glb');
+$('#b-attach').onclick=attach; $('#b-save').onclick=()=>{ attach(); localStorage.setItem('tw:socket:ain', JSON.stringify(SOCK)); $('#sock').innerHTML+=' · <span class="ok">저장됨</span>'; };
+$('#b-copy').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(JSON.stringify(SOCK)); $('#sock').innerHTML+=' · 복사됨'; };
+$('#b-fit').onclick=()=>{ if(!charRoot) return; const b=bbox(charRoot); const s=1.68/b.h; charRoot.scale.multiplyScalar(s); const b2=bbox(charRoot); charRoot.position.y-=b2.min.y; report($('#rep'), charGltf, charRoot); };
+$('#b-skel').onclick=e=>{ if(!charRoot) return; if(skelHelper){ scene.remove(skelHelper); skelHelper=null; e.target.classList.remove('is-on'); return; } skelHelper=new THREE.SkeletonHelper(charRoot); scene.add(skelHelper); e.target.classList.add('is-on'); };
+$('#b-wire').onclick=e=>{ if(!charRoot) return; const on=!e.target.classList.contains('is-on'); e.target.classList.toggle('is-on',on); charRoot.traverse(o=>{ if(o.isMesh&&o.material) o.material.wireframe=on; }); };
+['r-grip','n-rx','n-ry','n-rz','n-ox','n-oy','n-oz'].forEach(id=>{ $('#'+id).addEventListener('input', ()=>{ if(handBone) attach(); }); });
+$('#r-grip').value=SOCK.grip; $('#n-rx').value=SOCK.rot[0]; $('#n-ry').value=SOCK.rot[1]; $('#n-rz').value=SOCK.rot[2]; $('#n-ox').value=SOCK.off[0]; $('#n-oy').value=SOCK.off[1]; $('#n-oz').value=SOCK.off[2];
+$('#tg').onclick=()=>$('#panel').classList.toggle('is-off');
+if(Math.min(innerWidth,innerHeight)<640) $('#panel').classList.add('is-off');
+const q=new URLSearchParams(location.search); if(q.get('glb')) loadChar(q.get('glb')); loadWeapon('art/3d/ain_scythe_v02.glb');
+addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+(function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); ctrl.update(); renderer.render(scene,cam); })();
+window.TW_VIEWER={ get char(){ return charRoot; }, get weapon(){ return weaponRoot; }, bones:()=>bones, scene, attach, loadChar, SOCK };
+</script>
+</body>
+</html>

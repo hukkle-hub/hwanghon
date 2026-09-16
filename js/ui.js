@@ -15,6 +15,7 @@
     ['craft.html',     '제작'],
     ['profile.html',   '프로필'],
     ['game.html',      '던전 01'],
+    ['viewer.html',    '3D 뷰어'],
     ['dungeon.html',   '던전 (캔버스판)'],
     ['arena.html',     '훈련 연습'],
     ['battle.html',    '전투 HUD'],

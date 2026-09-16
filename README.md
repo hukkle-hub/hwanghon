@@ -251,8 +251,13 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 - **사망**: 체력 0 이면 진짜 사망 → “쓰러졌다” → 문 앞에서 재도전(`sessionStorage['tw:retry']`), 얻은 것은 유지
 - **HUD**: 보스 격추 게이지 바, N HIT 콤보 카운터, XP 바·골드, 전투 중 카메라는 플레이어·보스 중간점
 
+## 3D 에셋 검증기 (`viewer.html`)
+
+GLB 를 넣으면 높이·뼈·손 뼈·클립을 판정하고, 낫(`art/3d/ain_scythe_v02.glb`)을 손 뼈에 붙여 그립·회전을 맞춘 뒤 소켓 JSON 으로 저장한다. Three.js r170 은 `vendor/three/` 에 고정. 파이프라인 규약은 `docs/design/04-3d-pipeline.md`.
+
 ## 기획 문서
 
+- `docs/design/04-3d-pipeline.md` — 3D 전환 파이프라인: 진단, 최소 경로(Hi3D → 뷰어 → Mixamo → GLB), 규약, 던전 계획.
 - `docs/design/03-action-rpg-benchmark.md` — 검은사막·붉은사막·마영전·아이온 1 에서 뽑은 완성도 기준표와 적용 순서.
 - `docs/design/02-engine-research.md` — 엔진·플러그인 조사와 추천안(Phaser 4 + Tiled + Spine/DragonBones), 마이그레이션 계획.
 - `docs/design/01-training-arena.md` — 던전 01 훈련장(튜토리얼 허수아비 아레나) 기획 v0.1. 전투 공통 규칙(카운터·부위 파괴·출혈·자세·궁극기)과 수치 표의 원본.
