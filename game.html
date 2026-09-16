@@ -74,6 +74,29 @@ html.mobile .ov__t{font-size:22px}
 .setrow{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 14px;font-size:12px;color:var(--tx-dim)}
 .setrow input[type=range]{width:180px;accent-color:#C9A45E}
 .setrow label{letter-spacing:.08em}
+
+.quest{position:absolute;left:18px;top:130px;z-index:5;font-size:11px;color:var(--tx-dim);letter-spacing:.04em;background:rgba(6,7,10,.55);border-left:2px solid #C9A45E;padding:6px 10px;min-width:150px}
+.quest__t{font-family:var(--f-serif);font-size:11px;color:#C9A45E;letter-spacing:.14em;margin-bottom:4px}
+.quest div.q{display:flex;justify-content:space-between;gap:10px;padding:1px 0}.quest div.q.done{color:var(--tx-faint);text-decoration:line-through}.quest div.q.cur{color:#F0E4E4}
+.combo{position:absolute;right:200px;top:118px;z-index:6;text-align:right;opacity:0;transition:opacity .2s;pointer-events:none}.combo.is-on{opacity:1}
+.combo b{font-family:var(--f-serif);font-size:38px;color:#F0E4E4;text-shadow:0 2px 6px #000;line-height:1}.combo span{display:block;font-size:10px;letter-spacing:.3em;color:#C9A45E}
+.combo.big b{color:#D94A45;font-size:46px}
+.toasts{position:absolute;left:18px;top:232px;z-index:7;display:flex;flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none}
+.toast{font-size:12px;color:#EBD6D6;background:rgba(6,7,10,.7);border:1px solid rgba(201,164,94,.4);padding:4px 12px;letter-spacing:.06em;animation:toast 1.8s forwards}
+.toast b{color:#C9A45E;font-weight:400}
+@keyframes toast{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.stagger{display:flex;align-items:center;gap:8px;margin:6px auto 0;width:60%}.stagger__lb{font-size:9px;letter-spacing:.2em;color:var(--tx-faint)}.stagger .bar{flex:1;height:5px}.stagger .bar__fill{background:linear-gradient(90deg,#5A3F14,#C9A45E)}
+.stagger.is-down .bar__fill{background:#F0E4E4}
+.xpg{display:flex;align-items:center;gap:8px;margin-top:6px}.xpg .bar{flex:1;height:5px}.xpg .bar__fill{background:linear-gradient(90deg,#2B3C31,#5FAE9B)}
+.dlg{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);width:min(640px,88%);z-index:25;background:rgba(6,7,10,.92);border:1px solid var(--line);border-left:3px solid #C9A45E;padding:12px 18px;display:none;cursor:pointer}
+.dlg.is-on{display:block}.dlg__who{font-family:var(--f-serif);font-size:12px;color:#C9A45E;letter-spacing:.2em;margin-bottom:6px}.dlg__txt{font-size:14px;color:#EBD6D6;line-height:1.6}.dlg__hint{font-size:10px;color:var(--tx-faint);text-align:right;margin-top:6px;letter-spacing:.1em}
+.abtn--guard{grid-column:2/3;grid-row:2/3;border-color:rgba(123,155,214,.5)}
+.abtn--dodge{grid-column:1/2;grid-row:2/3;width:auto}
+.abtn.is-hold{filter:brightness(1.5);box-shadow:inset 0 0 14px rgba(255,255,255,.25)}
+html.mobile .quest{left:max(10px,env(safe-area-inset-left));top:118px;font-size:10.5px;min-width:130px}
+html.mobile .combo{top:100px;right:170px}
+html.mobile .toasts{left:max(10px,env(safe-area-inset-left));top:210px}
+.deathov .ov__t{color:#D94A45}
 .loading{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:#0B0C0F;color:var(--tx-faint);font-family:var(--f-serif);letter-spacing:.3em;font-size:13px;transition:opacity .5s}
 .loading.is-off{opacity:0;pointer-events:none}
 </style>
@@ -87,11 +110,15 @@ html.mobile .ov__t{font-size:22px}
     <div class="bosshp is-off" id="bosshp">
       <div class="bosshp__nm" id="b-name">—</div>
       <div class="bosshp__bar"><svg class="ico ico--sm" style="color:#C9534E"><use href="#i-skull"/></svg><div class="bar" data-fill="100" id="b-hp"></div><span class="stack" id="b-stack"></span></div>
-      <div class="bosshp__seg" id="b-seg"><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i><i class="off"></i></div>
+      <div class="stagger"><span class="stagger__lb">격추</span><div class="bar" data-fill="0" id="b-stag"></div></div>
       <div class="ph" id="b-ph"></div>
     </div>
     <div class="bttimer is-off" id="bttimer"><span class="bttimer__t"><svg class="ico ico--sm"><use href="#i-clock"/></svg><span id="b-timer">00 : 00</span></span><button class="iconbtn" id="btn-pause" aria-label="일시정지"><svg class="ico ico--lg"><use href="#i-pause"/></svg></button></div>
     <div class="btparty" id="btparty"></div>
+    <div class="quest" id="quest"></div>
+    <div class="combo" id="combo"><b id="combo-n">0</b><span>HIT</span></div>
+    <div class="toasts" id="toasts"></div>
+    <div class="dlg" id="dlg"><div class="dlg__who" id="dlg-who"></div><div class="dlg__txt" id="dlg-txt"></div><div class="dlg__hint">탭하여 계속</div></div>
     <div class="mini"><canvas id="mini" width="300" height="90"></canvas><div class="mini__lb">뒷마당 훈련장</div></div>
     <div class="counter" id="counter"><div class="counter__lb" id="c-lb">C O U N T E R</div><div class="counter__v" id="c-v">0</div><div class="counter__sub" id="c-sub"></div></div>
     <div class="status" id="status"></div>
@@ -101,6 +128,7 @@ html.mobile .ov__t{font-size:22px}
       <div class="vitals" id="vitals">
         <div class="vital"><svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg><div class="bar bar--hp bar--tall" data-fill="100" id="v-hp"></div><span class="vital__v" id="v-hpv"></span></div>
         <div class="vital stamina"><svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg><div class="bar bar--tall" data-fill="100" id="v-st"></div><span class="vital__v" id="v-stv"></span></div>
+        <div class="xpg"><span class="xs t-faint" style="letter-spacing:.14em" id="xp-lv">LV.1</span><div class="bar" data-fill="0" id="v-xp"></div><span class="ultg__v" id="v-gold">0</span></div>
         <div class="ultg"><span class="xs t-faint" style="letter-spacing:.14em">ULT</span><div class="bar" data-fill="0" id="v-ult"></div><span class="ultg__v" id="v-ultv">0%</span></div>
       </div>
       <div class="actions" id="actions"></div>
@@ -119,6 +147,8 @@ html.mobile .ov__t{font-size:22px}
 <script src="js/rig-phaser.js"></script>
 <script src="js/world-sim.js"></script>
 <script src="js/dungeon.js"></script>
+<script src="js/save.js"></script>
+<script src="js/skirmish.js"></script>
 <script src="js/sfx.js"></script>
 <script src="js/game-dungeon.js"></script>
 <script src="js/ui.js"></script>

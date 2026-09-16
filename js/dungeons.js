@@ -12,7 +12,7 @@
     dodge:   { iframes:0.30, cooldown:0.45 },
     guard:   { reduce:0.70, holdMs:220 },
     counter: { window:0.25, perfect:0.10, mult:2.5, perfectMult:3.0, posture:30, ult:18 },
-    combo:   { gap:0.45, mults:[1.0,1.0,1.4] },
+    combo:   { gap:0.55, mults:[1.0,1.0,1.1,1.2], smash:[1.6,2.0,2.6,3.4], smashPosture:[12,18,28,45], smashSt:[10,12,14,18], smashHold:0.2 },   /* 마영전식: 일반 4연타 + 스매시(타수별 배율) */
     weak:    { weak:1.5, broken:1.25, normal:1.0 },
     bleed:   { chance:0.07, dur:3, tickRate:0.20, maxStacks:3 },
     posture: { max:100, onBreak:40, onGuard:10, downDur:5, downMult:1.5 },

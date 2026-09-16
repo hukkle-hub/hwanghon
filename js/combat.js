@@ -19,8 +19,9 @@
     var ev = [];
     function emit(t, d){ d = d || {}; d.t = t; d.time = B.time; ev.push(d); }
 
-    var P = { hp:st.hp, hpMax:st.hp, st:R.stamina.max, stMax:R.stamina.max, ult:0, guard:false, dodgeT:0, dodgeCd:0, stDelay:0,
-              atkCd:0, lockT:0, combo:0, comboT:0, critNext:false, buffT:0, buffReduce:0, cds:S.map(function(){ return 0; }), hitstop:0 };
+    var init = o.player || {};
+    var P = { hp:init.hp!=null?init.hp:st.hp, hpMax:st.hp, st:init.st!=null?init.st:R.stamina.max, stMax:R.stamina.max, ult:init.ult||0, guard:false, dodgeT:0, dodgeCd:0, stDelay:0,
+              atkCd:0, lockT:0, riposteT:0, combo:0, comboT:0, critNext:false, buffT:0, buffReduce:0, cds:S.map(function(){ return 0; }), hitstop:0 };
     var parts = D.parts.map(function(p){ return { id:p.id, name:p.name, hp:p.hp, hpMax:p.hp, weak:!!p.weak, breakable:!!p.breakable, broken:false,
                                                    guardedBy:p.guardedBy||null, guardReduce:p.guardReduce||0, onBreak:p.onBreak||null, pos:p.pos }; });
     var E = { hp:D.hp, hpMax:D.hp, posture:0, state:'idle', patI:0, patT:D.patterns.length ? (D.patterns[0].every || D.patternGap || 1.4) : Infinity,
@@ -80,10 +81,26 @@
       if (HK.canHit && !HK.canHit()){ P.atkCd = atkInterval; P.combo = 0; emit('whiff', {}); return; }
       if (E.state === 'telegraph' && E.tele > counterWindow){ P.lockT = E.tele + R.attack.lockAfterEarly; emit('early', {}); }
       if (P.comboT <= 0) P.combo = 0;
-      var mult = R.combo.mults[P.combo] || 1;
+      var mult = R.combo.mults[Math.min(P.combo, R.combo.mults.length-1)] || 1;
       dealDamage(target, mult, {});
-      P.combo = (P.combo + 1) % R.combo.mults.length; P.comboT = R.combo.gap; P.atkCd = atkInterval;
-      emit('attack', { combo:P.combo });
+      P.combo = P.combo + 1; P.comboT = R.combo.gap; P.atkCd = atkInterval * (P.combo >= R.combo.mults.length ? 1.6 : 1);
+      emit('attack', { combo:P.combo }); if (P.combo >= R.combo.mults.length){ P.combo = 0; P.comboT = R.combo.gap; }
+    }
+    function smash(pid){
+      if (B.over) return; if (pid) target = pid;
+      if (P.atkCd > 0 || P.guard || P.lockT > 0) return;
+      if (HK.canHit && !HK.canHit()){ P.atkCd = atkInterval; P.combo = 0; emit('whiff', { smash:true }); return; }
+      var n = P.comboT > 0 ? Math.max(0, P.combo - 1) : -1;           /* 직전 일반 공격 타수 (0~3), 콤보 없으면 -1 */
+      var tier = n < 0 ? 0 : n;
+      var stc = R.combo.smashSt[tier]; if (P.st < stc){ emit('nost', {}); return; }
+      P.st -= stc; P.stDelay = R.stamina.delay;
+      if (E.state === 'telegraph' && E.tele > counterWindow){ P.lockT = E.tele + R.attack.lockAfterEarly; emit('early', {}); }
+      var rip = P.riposteT > 0; var dmg = dealDamage(target, R.combo.smash[tier] * (rip ? 1.5 : 1), { smash:true, tier:tier, riposte:rip }); if (rip){ P.riposteT = 0; E.posture = clamp(E.posture + 25, 0, R.posture.max); emit('riposte', {}); }
+      E.posture = clamp(E.posture + R.combo.smashPosture[tier], 0, R.posture.max);
+      P.hitstop = Math.max(P.hitstop, R.hitstop.hit * (1.5 + tier));
+      emit('smash', { tier:tier, dmg:dmg });
+      if (!E.dead && E.posture >= R.posture.max) down();
+      P.combo = 0; P.comboT = 0; P.atkCd = atkInterval * (1.2 + tier * 0.25);
     }
     function dodge(){
       if (B.over || P.dodgeCd > 0 || P.lockT > 0 || P.st < R.stamina.dodge) { if (P.st < R.stamina.dodge) emit('nost', {}); return; }
@@ -116,7 +133,7 @@
 
     B.input = function(type, arg){
       switch(type){
-        case 'attack': attack(arg); break; case 'dodge': dodge(); break; case 'guard': guard(!!arg); break;
+        case 'attack': attack(arg); break; case 'smash': smash(arg); break; case 'dodge': dodge(); break; case 'guard': guard(!!arg); break;
         case 'skill': skill(arg|0); break; case 'ult': ult(); break; case 'target': if (B.part(arg)) target = arg; break;
       }
     };
@@ -132,11 +149,11 @@
       var pat = E.pat; var dmg = pat.dmg;
       if (P.dodgeT > 0 || (HK.inZone && !HK.inZone(pat))){ emit('miss', { pattern:pat.name, out:!(P.dodgeT > 0) }); }
       else {
-        if (P.guard && P.st > 0){ dmg = Math.round(dmg * (1 - R.guard.reduce)); P.st = Math.max(0, P.st - (pat.guardCost || 0)); M.guards++; E.posture = clamp(E.posture + R.posture.onGuard, 0, R.posture.max); }
+        if (P.guard && P.st > 0){ dmg = Math.round(dmg * (1 - R.guard.reduce)); P.st = Math.max(0, P.st - (pat.guardCost || 0)); M.guards++; E.posture = clamp(E.posture + R.posture.onGuard, 0, R.posture.max); P.riposteT = 0.8; emit('guardhit', {}); }
         if (P.buffT > 0) dmg = Math.round(dmg * (1 - P.buffReduce));
         P.hp = Math.max(0, P.hp - dmg); M.dmgTaken += dmg; P.ult = clamp(P.ult + R.ult.onHit, 0, R.ult.max);
         emit('damaged', { dmg:dmg, guarded:P.guard, pattern:pat.name });
-        if (P.hp === 0){ M.deaths++; P.hp = P.hpMax; emit('death', {}); }   /* 훈련장: 사망 없음 — 체력 복구 후 계속 */
+        if (P.hp === 0){ M.deaths++; if (o.mortal === false){ P.hp = P.hpMax; emit('death', {}); } else { B.over = true; B.dead = true; emit('death', { fatal:true }); } }
       }
       E.state = 'idle'; E.patT = pat.every || D.patternGap || 1.4;
     }
@@ -150,7 +167,7 @@
       /* 플레이어 자원 */
       if (P.stDelay > 0) P.stDelay -= dt; else if (P.guard){ P.st = Math.max(0, P.st - R.stamina.guardPerSec*dt); if (P.st === 0){ P.guard = false; emit('guard', { on:false, broke:true }); } }
       else P.st = Math.min(P.stMax, P.st + R.stamina.regen*dt);
-      if (P.dodgeT > 0) P.dodgeT -= dt; if (P.dodgeCd > 0) P.dodgeCd -= dt; if (P.atkCd > 0) P.atkCd -= dt; if (P.lockT > 0) P.lockT -= dt; if (P.comboT > 0) P.comboT -= dt; if (P.buffT > 0) P.buffT -= dt;
+      if (P.dodgeT > 0) P.dodgeT -= dt; if (P.dodgeCd > 0) P.dodgeCd -= dt; if (P.atkCd > 0) P.atkCd -= dt; if (P.lockT > 0) P.lockT -= dt; if (P.riposteT > 0) P.riposteT -= dt; if (P.comboT > 0) P.comboT -= dt; if (P.buffT > 0) P.buffT -= dt;
       for (var i=0;i<P.cds.length;i++) if (P.cds[i] > 0) P.cds[i] = Math.max(0, P.cds[i]-dt);
       /* 출혈 */
       if (E.bleed.length){
@@ -167,9 +184,10 @@
       }
     };
     B.drain = function(){ var out = ev; ev = []; return out; };
+    B.exportPlayer = function(){ return { hp:P.hp, st:P.st, ult:P.ult }; };
     B.snapshot = function(){
       return { time:B.time, over:B.over, target:target,
-        player:{ hp:P.hp, hpMax:P.hpMax, st:P.st, stMax:P.stMax, ult:P.ult, guard:P.guard, dodging:P.dodgeT>0, locked:P.lockT>0, combo:P.combo, cds:P.cds.slice(), buffT:P.buffT, critNext:P.critNext },
+        player:{ hp:P.hp, hpMax:P.hpMax, st:P.st, stMax:P.stMax, ult:P.ult, guard:P.guard, dodging:P.dodgeT>0, locked:P.lockT>0, riposte:P.riposteT>0, comboT:P.comboT, combo:P.combo, cds:P.cds.slice(), buffT:P.buffT, critNext:P.critNext },
         enemy:{ hp:E.hp, hpMax:E.hpMax, posture:E.posture, state:E.state, tele:E.tele, teleDur:E.teleDur, window:counterWindow, pattern:E.pat ? E.pat.name : null, patIcon:E.pat ? E.pat.icon : null, downT:E.downT, bleed:E.bleed.length,
                 parts:parts.map(function(p){ return { id:p.id, name:p.name, hp:p.hp, hpMax:p.hpMax, weak:p.weak, breakable:p.breakable, broken:p.broken, pos:p.pos }; }) } };
     };

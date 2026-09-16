@@ -1,5 +1,7 @@
 /* 황혼 — 장비/인벤토리 화면을 items.js 데이터로 렌더링 */
 (function(){
+  /* 던전 드랍(저장)을 가방 수량에 합산 */
+  try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); if(sv&&window.TW_ITEMS){ Object.keys(sv.bag).forEach(function(id){ var it=window.TW_ITEMS.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); if(window.TW_ITEMS.PLAYER) window.TW_ITEMS.PLAYER.gold+=sv.gold; } }catch(e){}
   'use strict';
   var T = window.TW_ITEMS, P = T.PLAYER, $ = function(s){ return document.querySelector(s); };
   var filter = 'all', selected = null;      // selected: {id, where:'bag'|'equipped', slot}
