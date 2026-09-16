@@ -2,7 +2,7 @@
 import bpy, numpy as np, sys, math, os
 from mathutils import Vector, Matrix, Quaternion
 OUT=sys.argv[-1]; SD=os.environ.get('KAYKIT_DIR','.')
-AIN=os.environ.get('AIN_GLB','art/3d/ain_tex_lo.glb'); SCYTHE='art/3d/ain_scythe_tex.glb'; KAY=SD+'/Rogue.glb'
+AIN=os.environ.get('AIN_GLB','/home/user/hwanghon/art/3d/ain_hi3d_vcol_v1.glb'); SCYTHE='/home/user/hwanghon/art/3d/ain_scythe_tex.glb'; KAY=SD+'/Rogue.glb'
 GRIP=0.95        # 낫 자루에서 오른손 그립 위치 (자루 끝 기준 m)
 LEFT_OFF=0.36    # 왼손이 잡는 지점: 오른손에서 날 쪽으로 (m)
 CLIPS=[('idle','2H_Melee_Idle'),('walk','Walking_A'),('run','Running_A'),('roll','Dodge_Forward'),('dodgeB','Dodge_Backward'),('dodgeL','Dodge_Left'),('dodgeR','Dodge_Right'),
@@ -172,6 +172,50 @@ def carry_weight(i,n,frac=0.22):
     if i>n-1-m: return ease(1-(n-1-i)/m)
     return 0.0
 
+# ---------- 낫 전용 공격 궤적: 캐릭터 기준 (right, up, fwd) 키프레임. t 는 0..1 (클립 진행) ----------
+IDLE_K=dict(rh=(0.27,0.10,0.24), shaft=(-0.18,0.94,-0.28), blade=(0,0.25,1), left=-0.36)
+PATHS={
+  # 베기: 오른쪽 뒤로 당겼다가 가슴 높이에서 왼쪽으로 크게 쓸어 벤다 (날이 앞장)
+  'attack1':[(0.0,IDLE_K),
+             (0.20,dict(rh=(0.48,0.32,-0.18), shaft=(0.55,0.45,-0.70), blade=(-0.7,0.1,0.7), left=-0.40)),
+             (0.34,dict(rh=(0.18,0.28,0.42), shaft=(-0.15,0.12,0.98), blade=(-1,0,0), left=-0.40)),
+             (0.46,dict(rh=(-0.30,0.26,0.22), shaft=(-0.95,0.12,0.28), blade=(-0.3,0,-0.95), left=-0.40)),
+             (0.62,dict(rh=(-0.28,0.20,0.18), shaft=(-0.85,0.35,0.35), blade=(0,0.3,0.95), left=-0.38)),
+             (1.0,IDLE_K)],
+  # 내려찍기: 머리 위 뒤로 들어 올렸다가 앞으로 내리꽂는다 (날끝이 땅을 찍는다)
+  'attack2':[(0.0,IDLE_K),
+             (0.22,dict(rh=(0.32,0.58,-0.12), shaft=(0.12,0.72,-0.68), blade=(0,0.6,0.8), left=-0.40)),
+             (0.36,dict(rh=(0.18,0.55,0.25), shaft=(0.05,0.30,0.95), blade=(0,-0.5,0.85), left=-0.40)),
+             (0.44,dict(rh=(0.15,0.12,0.58), shaft=(0,-0.40,0.92), blade=(0,-0.92,0.35), left=-0.42)),
+             (0.62,dict(rh=(0.15,0.05,0.52), shaft=(0,-0.48,0.88), blade=(0,-0.92,0.35), left=-0.42)),
+             (0.82,dict(rh=(0.22,0.18,0.30), shaft=(-0.2,0.62,0.76), blade=(0,0.2,1), left=-0.38)),
+             (1.0,IDLE_K)],
+  # 찌르기(갈고리 당기기): 자루를 수평으로 눕혀 앞으로 찌른 뒤 날로 걸어 당긴다
+  'attack3':[(0.0,IDLE_K),
+             (0.18,dict(rh=(0.36,0.22,-0.22), shaft=(0.05,0.05,1), blade=(0,-1,0), left=-0.42)),
+             (0.34,dict(rh=(0.10,0.26,0.68), shaft=(0,0.02,1), blade=(0,-1,0), left=-0.42)),
+             (0.48,dict(rh=(0.28,0.24,0.12), shaft=(0.08,0.18,0.98), blade=(0,-1,0.1), left=-0.42)),
+             (0.70,dict(rh=(0.27,0.15,0.20), shaft=(-0.2,0.80,0.55), blade=(0,0.2,1), left=-0.38)),
+             (1.0,IDLE_K)],
+  # 회전: 자루를 수평으로 뻗은 채 몸과 함께 돈 뒤 마무리 찍기
+  'smash':  [(0.0,IDLE_K),
+             (0.15,dict(rh=(0.42,0.30,-0.10), shaft=(0.6,0.15,-0.78), blade=(-0.75,0.1,0.6), left=-0.40)),
+             (0.30,dict(rh=(0.22,0.32,0.42), shaft=(-0.3,0.05,0.95), blade=(-1,0,0), left=-0.42)),
+             (0.55,dict(rh=(0.22,0.32,0.42), shaft=(-0.3,0.05,0.95), blade=(-1,0,0), left=-0.42)),
+             (0.68,dict(rh=(0.25,0.55,0.05), shaft=(0.05,0.55,-0.83), blade=(0,0.6,0.8), left=-0.40)),
+             (0.78,dict(rh=(0.15,0.10,0.58), shaft=(0,-0.42,0.90), blade=(0,-0.92,0.35), left=-0.42)),
+             (0.90,dict(rh=(0.18,0.08,0.52), shaft=(0,-0.45,0.89), blade=(0,-0.92,0.35), left=-0.42)),
+             (1.0,IDLE_K)],
+}
+def _lerp3(a,b,k): return tuple(a[i]+(b[i]-a[i])*k for i in range(3))
+def path_spec(keys, t):
+    for i in range(len(keys)-1):
+        t0,a=keys[i]; t1,b=keys[i+1]
+        if t<=t1:
+            k=0 if t1<=t0 else (t-t0)/(t1-t0); k=k*k*(3-2*k)
+            return dict(rh=_lerp3(a['rh'],b['rh'],k), shaft=_lerp3(a['shaft'],b['shaft'],k), blade=_lerp3(a['blade'],b['blade'],k), left=a['left']+(b['left']-a['left'])*k)
+    return dict(keys[-1][1])
+
 def retarget(action, clip):
     f0,f1=int(action.frame_range[0]),int(action.frame_range[1]); src.animation_data.action=action
     new=bpy.data.actions.new(clip); arm.animation_data.action=new; errs=[]
@@ -189,6 +233,7 @@ def retarget(action, clip):
             else:
                 world[n]=pw@(RESTL[p].inverted()@RESTL[n]) if p else RESTL[n].copy()
         if clip in CARRY: errs.append(carry(world,CARRY[clip]))
+        elif clip in PATHS: errs.append(carry(world, path_spec(PATHS[clip], (f-f0)/max(1,(f1-f0)))))
         elif clip in TWO_HAND: errs.append(blend_carry(world,CARRY['idle'],carry_weight(f-f0,f1-f0+1)))
         for n in order:
             p=parent[n]; pw=world[p] if p else Matrix.Identity(4); pb=arm.pose.bones[n]
