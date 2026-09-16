@@ -20,10 +20,11 @@
 | 뷰어 판정 | **완료** — 뼈 없음, 손 뼈 없음, 클립 없음(정적 메시). 컬러 텍스처 없음(노멀맵·거칠기맵만) | `viewer.html` 기본 로드 |
 | 정규화 | **완료** — Y-up, 높이 1.68 m, 발이 원점, 정면 +Z (원본 노드 회전 +90°X 유지) | `art/3d/ain_hi3d_v1.glb` (텍스처 보존) |
 | 임시 컬러 | **완료** — 4방향 원화(정면·좌·후·우)를 법선 가중 투영해 정점 색으로 구움. 얼룩짐, 배포용 아님 | `art/3d/ain_hi3d_vcol_v1.glb` |
-| Mixamo 업로드용 | **준비됨** — 같은 프레임의 OBJ | `art/3d/mixamo/ain_mixamo_upload.zip` (사이트에서 내려받기: `/art/3d/mixamo/ain_mixamo_upload.zip`) |
-| Mixamo 리깅 | **디렉터 작업** — 브라우저에서만 됨(Adobe 로그인) | FBX with skin + 클립 |
-| Blender 합치기 → GLB | 대기 | `art/3d/ain_rigged.glb` |
-| 낫 소켓 | 대기 — 뷰어에서 `mixamorig:RightHand` 자동 감지 후 슬라이더로 맞춤 | 소켓 JSON |
+| Mixamo 업로드용 | 불필요해짐 — 리깅을 스크립트로 해결 | — |
+| 리깅 | **완료** — Mixamo 대신 bpy 스크립트로 직접 (`tools/3d/retarget_ain.py`), 뼈 23개 `mixamorig:*` | `art/3d/ain_anim.glb` |
+| 애니메이션 | **완료 v1** — KayKit(CC0) 21클립 리타게팅 + 낫 주도 자세(idle/walk/run/guard) + 왼손 자루 IK | 같은 GLB |
+| 낫 소켓 | **완료** — `mixamorig:RightHandSlot` 뼈, 그립 0.95 m, 런타임 부착 | `viewer.html` 기본값 |
+| 3D 던전 | 다음 — Three.js 씬 + 기존 combat.js/world-sim.js 연결 | `game3d.html` |
 
 정식 컬러는 Hi3D 에서 **PBR 텍스처 생성**(크레딧 사용)을 한 번 더 돌린 뒤 그 GLB 로 교체한다. 정점 색 버전은 그때까지의 자리표시자다.
 

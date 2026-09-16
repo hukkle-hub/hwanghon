@@ -76,10 +76,11 @@ const grid=new THREE.GridHelper(12,24,0x3a3a44,0x24262c); grid.position.y=0.001;
 /* 168cm 기준 막대 */
 const ref=new THREE.Mesh(new THREE.BoxGeometry(0.02,1.68,0.02),new THREE.MeshBasicMaterial({color:0xC9A45E})); ref.position.set(-1.2,0.84,0); scene.add(ref);
 const loader=new GLTFLoader(); let charRoot=null, charGltf=null, skelHelper=null, mixer=null, clock=new THREE.Clock(), weapon=null, weaponRoot=null, handBone=null, bones=[];
-const SOCK={ bone:'', grip:1.0, rot:[0,0,90], off:[0,0,0] };
+const SOCK={ bone:'', grip:0.95, rot:[0,0,0], off:[0,0,0] };
+window.THREE=THREE;
 try{ Object.assign(SOCK, JSON.parse(localStorage.getItem('tw:socket:ain')||'{}')); }catch(e){}
 /* 손 뼈 우선순위: 정확한 이름 → 오른손 접미/접두 → 왼손 (손가락 뼈 제외) */
-function findHand(list){ const tests=[/^(mixamorig:?)?RightHand$/i, /^(right|r)[_\-.: ]?hand$/i, /^hand[_\-.: ]?(r|right)$/i, /right.?hand(?!.*(thumb|index|middle|ring|pinky))/i, /^(mixamorig:?)?LeftHand$/i, /hand(?!.*(thumb|index|middle|ring|pinky))/i]; for(const t of tests){ const f=list.find(n=>t.test(n)); if(f) return f; } return null; }
+function findHand(list){ const tests=[/^(mixamorig:?)?RightHandSlot$/i, /weapon|handslot|slot[_\-.]?r/i, /^(mixamorig:?)?RightHand$/i, /^(right|r)[_\-.: ]?hand$/i, /^hand[_\-.: ]?(r|right)$/i, /right.?hand(?!.*(thumb|index|middle|ring|pinky))/i, /^(mixamorig:?)?LeftHand$/i, /hand(?!.*(thumb|index|middle|ring|pinky))/i]; for(const t of tests){ const f=list.find(n=>t.test(n)); if(f) return f; } return null; }
 function bbox(o){ const b=new THREE.Box3().setFromObject(o); return { min:b.min, max:b.max, h:b.max.y-b.min.y, w:b.max.x-b.min.x, d:b.max.z-b.min.z }; }
 function report(el, gltf, root){ const b=bbox(root); let skins=0, meshes=0, tris=0, mats=new Set(); root.traverse(o=>{ if(o.isSkinnedMesh) skins++; if(o.isMesh){ meshes++; tris+=(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3; if(o.material) mats.add(o.material.uuid); } });
   const clips=gltf.animations||[]; const hand=findHand(bones);
@@ -93,12 +94,15 @@ function loadChar(url, name){ loader.load(url, gltf=>{ if(charRoot) scene.remove
     const sel=$('#s-bone'); sel.innerHTML='<option value="">— 선택 —</option>'+bones.map(n=>'<option'+(n===(SOCK.bone||hand)?' selected':'')+'>'+n+'</option>').join(''); if(hand&&!SOCK.bone) sel.value=hand;
     mixer=new THREE.AnimationMixer(charRoot); const cl=$('#clips'); cl.innerHTML=(gltf.animations||[]).map((c,i)=>'<button class="btn3" data-clip="'+i+'">'+c.name+' ('+c.duration.toFixed(1)+'s)</button>').join('')||'(없음)';
     cl.onclick=e=>{ const b=e.target.closest('[data-clip]'); if(!b) return; mixer.stopAllAction(); mixer.clipAction(gltf.animations[+b.dataset.clip]).reset().play(); cl.querySelectorAll('.btn3').forEach(x=>x.classList.toggle('is-on',x===b)); };
-    ctrl.target.set(0,b.h*0.55,0); if(weaponRoot && sel.value) attach();
+    { const idle=(gltf.animations||[]).findIndex(c=>c.name==='idle'); if(idle>=0){ mixer.clipAction(gltf.animations[idle]).reset().play(); const b=cl.querySelector('[data-clip="'+idle+'"]'); b&&b.classList.add('is-on'); } }
+    let hasW=false; charRoot.traverse(o=>{ if(/scythe/i.test(o.name)) hasW=true; }); builtInWeapon=hasW; if(hasW){ $('#sock').textContent='낫이 GLB 안에 내장돼 있음 (RightHandSlot 뼈)'; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot); }
+    ctrl.target.set(0,b.h*0.55,0); if(weaponRoot && sel.value && !hasW) attach();
   }, undefined, err=>{ $('#rep').innerHTML='<div class="kv"><span class="bad">로드 실패</span><b>'+(err.message||err)+'</b></div>'; }); }
 function loadWeapon(url){ loader.load(url, gltf=>{ if(weaponRoot){ weaponRoot.parent&&weaponRoot.parent.remove(weaponRoot); } weapon=gltf.scene; weapon.traverse(o=>{ o.castShadow=true; }); weaponRoot=new THREE.Group(); weaponRoot.add(weapon); const b=bbox(weapon);
     $('#wrep').innerHTML=[['길이(Y)', b.h.toFixed(2)+' m'],['원점', '자루 끝 (min y '+b.min.y.toFixed(2)+')'],['메시', gltf.scene.children.length]].map(r=>'<div class="kv"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('');
-    if(!charRoot){ weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } else if($('#s-bone').value) attach(); else { weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } }); }
-function attach(){ if(!charRoot||!weaponRoot) return; const name=$('#s-bone').value; let bone=null; charRoot.traverse(o=>{ if(o.isBone&&o.name===name) bone=o; }); if(!bone){ $('#sock').textContent='손 뼈를 고르세요'; return; }
+    if(builtInWeapon){ /* 내장 낫 사용 */ } else if(!charRoot){ weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } else if($('#s-bone').value) attach(); else { weaponRoot.position.set(0.9,0,0); scene.add(weaponRoot); } }); }
+let builtInWeapon=false;
+function attach(){ if(!charRoot||!weaponRoot||builtInWeapon) return; const name=$('#s-bone').value; let bone=null; charRoot.traverse(o=>{ if(o.isBone&&o.name===name) bone=o; }); if(!bone){ $('#sock').textContent='손 뼈를 고르세요'; return; }
   SOCK.bone=name; SOCK.grip=+$('#r-grip').value; SOCK.rot=[+$('#n-rx').value,+$('#n-ry').value,+$('#n-rz').value]; SOCK.off=[+$('#n-ox').value,+$('#n-oy').value,+$('#n-oz').value];
   weaponRoot.parent&&weaponRoot.parent.remove(weaponRoot); bone.add(weaponRoot); handBone=bone;
   /* 그립: 자루의 grip 높이가 손 원점에 오도록 무기를 아래로 내린다 */
@@ -117,10 +121,10 @@ $('#b-wire').onclick=e=>{ if(!charRoot) return; const on=!e.target.classList.con
 $('#r-grip').value=SOCK.grip; $('#n-rx').value=SOCK.rot[0]; $('#n-ry').value=SOCK.rot[1]; $('#n-rz').value=SOCK.rot[2]; $('#n-ox').value=SOCK.off[0]; $('#n-oy').value=SOCK.off[1]; $('#n-oz').value=SOCK.off[2];
 $('#tg').onclick=()=>$('#panel').classList.toggle('is-off');
 if(Math.min(innerWidth,innerHeight)<640) $('#panel').classList.add('is-off');
-const q=new URLSearchParams(location.search); loadChar(q.get('glb')||'art/3d/ain_hi3d_vcol_v1.glb'); loadWeapon('art/3d/ain_scythe_v02.glb');
+const q=new URLSearchParams(location.search); loadChar(q.get('glb')||'art/3d/ain_anim.glb'); loadWeapon('art/3d/ain_scythe_v02.glb');
 addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 (function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); ctrl.update(); renderer.render(scene,cam); })();
-window.TW_VIEWER={ get char(){ return charRoot; }, get weapon(){ return weaponRoot; }, bones:()=>bones, scene, attach, loadChar, SOCK };
+window.TW_VIEWER={ get char(){ return charRoot; }, get weapon(){ return weaponRoot; }, get mixer(){ return mixer; }, get gltf(){ return charGltf; }, renderer, camera:cam, ctrl, bones:()=>bones, scene, attach, loadChar, SOCK };
 </script>
 </body>
 </html>
