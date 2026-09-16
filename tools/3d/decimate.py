@@ -28,5 +28,9 @@ else:
     m.scale=(s,s,s); m.location=(-(mn.x+mx.x)/2*s, -(mn.y+mx.y)/2*s, -mn.z*s)
 bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 print('bounds', [round(v,3) for v in (min(v.x for v in vs)*s, max(v.x for v in vs)*s)], 'depth', round((mx.y-mn.y)*s,3), 'height', round(h*s,3))
+TEX=int(os.environ.get('TEX','0'))
+if TEX:
+    for img in bpy.data.images:
+        if img.size[0]>TEX: img.scale(TEX, int(img.size[1]*TEX/img.size[0])); print('tex scaled', img.name, img.size[:])
 bpy.ops.export_scene.gltf(filepath=dst, export_format='GLB', export_apply=True, export_animations=False, export_yup=True, export_image_format='AUTO', export_jpeg_quality=85)
 print('exported', dst)
