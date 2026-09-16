@@ -65,7 +65,7 @@
     <!-- ===== 좌: 컨셉 스펙 ===== -->
     <aside class="spec" data-mpane="컨셉">
       <h1>황혼</h1>
-      <div class="spec__sub">GAME UI CONCEPT</div>
+      <div class="spec__sub">GAME UI CONCEPT <span id="build-tag" style="letter-spacing:0;opacity:.7"></span></div>
       <p class="spec__d">
         세계는 이미 무너졌다. 남은 것은… 룩킥톤.<br>
         아인의 여정을 따라, 황혼의 진실을 마주하라.
@@ -275,6 +275,11 @@ function loadPreviews(){
     setTimeout(function(){ if (!f.dataset.done){ f.dataset.done=1; next(i+1); } }, 4000);
   })(0);
 }
+/* 빌드 표시: version.json 은 배포마다 갱신 → 폰에서 어떤 빌드를 보고 있는지 확인용 */
+fetch('version.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(v){
+  var t='build '+v.build; var el=document.getElementById('build-tag'); if(el) el.textContent='· '+t;
+  var hb=document.querySelector('.topbar--m .topbar__title'); if(hb){ var s=document.createElement('span'); s.style.cssText='font-size:11px;color:#6A6A6A;margin-left:8px;letter-spacing:0;font-family:monospace'; s.textContent=t; hb.appendChild(s); }
+}).catch(function(){});
 window.addEventListener('resize', fitPreviews);
 fitPreviews();
 loadPreviews();

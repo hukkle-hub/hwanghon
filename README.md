@@ -33,7 +33,7 @@ game-ui/
 
 ## Android APK (사이드로드)
 
-PWA 대신 앱으로 설치할 수 있습니다. `main` 에 푸시할 때마다 GitHub Actions 가 서명된 APK 를 빌드해 릴리스에 올립니다.
+PWA 대신 앱으로 설치할 수 있습니다. 앱은 GitHub Pages 의 최신 배포(https://hukkle-hub.github.io/hwanghon/)를 그대로 띄우는 셸이라, `main` 에 푸시하면 앱을 다시 설치하지 않아도 다음 실행에서 자동 갱신됩니다(한 번 불러온 뒤에는 서비스워커 캐시로 오프라인 실행). `main` 푸시마다 GitHub Actions 가 서명된 APK 도 새로 빌드해 릴리스에 올립니다.
 
 - 최신 APK: https://github.com/hukkle-hub/hwanghon/releases/download/apk-latest/hwanghon.apk
 - 릴리스 페이지(빌드 sha 별 파일 포함): https://github.com/hukkle-hub/hwanghon/releases/tag/apk-latest
