@@ -38,7 +38,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 
   /* ---------- 렌더러 · 씬 ---------- */
   var renderer=new THREE.WebGLRenderer({ canvas:el.canvas, antialias:!MOBILE, powerPreference:'high-performance' });
-  renderer.setPixelRatio(Math.min(MOBILE?1.5:2, devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45*SET.bright;
+  renderer.setPixelRatio(Math.min(MOBILE?1.25:2, devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45*SET.bright;
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.032);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
@@ -121,8 +121,15 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     return { root:root, body:body, hits:hits, anim:anim, PART:PART, bones:{}, model:null, mixer:null, clips:{}, act:null, base:'idle', oneshot:null, coreGlow:coreGlow, eyeGlow:eyeGlow, mats:[], raycastable:[] };
   })();
   var bossSpot=new THREE.SpotLight(0xffe0c0, 60, 14, 0.55, 0.6, 1.2); bossSpot.position.set(X(Bs.x), CEIL-0.2, Z(Bs.y)); bossSpot.target=boss.root; scene.add(bossSpot); scene.add(bossSpot.target);
+  var debris=[];
+  function bossAttachParts(){ var iron=new THREE.MeshStandardMaterial({ color:0x55555c, roughness:0.5, metalness:0.8 }), chainMat=new THREE.MeshStandardMaterial({ color:0x9a9298, roughness:0.4, metalness:0.9 }), straw=new THREE.MeshStandardMaterial({ map:strawTex, roughness:1, color:0xc8b890 });
+    function mk(bone, build, key){ var b=boss.bones[bone]; if(!b) return; var g=new THREE.Group(); build(g); g.traverse(function(o){ if(o.isMesh) o.castShadow=true; }); b.add(g); boss.pieces[key]=g; }
+    boss.pieces={};
+    mk('Spine1', function(g){ [[0.55],[-0.55]].forEach(function(a){ var c=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.045,6,28), chainMat); c.position.set(0,0.25,0.05); c.rotation.z=a[0]; c.rotation.x=0.2; g.add(c); }); var h=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.04,6,24), chainMat); h.position.y=0.05; h.rotation.x=Math.PI/2; g.add(h); }, 'chain');
+    ['LeftArm','RightArm'].forEach(function(bn,i){ mk(bn, function(g){ var band=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.34,0.16,12,1,true), iron); band.position.y=0.05; g.add(band); var tuft=new THREE.Mesh(new THREE.SphereGeometry(0.32,10,8), straw); tuft.scale.set(1.2,0.6,1); tuft.position.y=0.18; g.add(tuft); }, i?'shr':'shl'); }); }
+  function tickDebris(dt){ for(var i=debris.length-1;i>=0;i--){ var d=debris[i]; d.t+=dt; d.vy-=9.8*dt; d.g.position.y+=d.vy*dt; d.g.position.x+=d.vx*dt; d.g.position.z+=d.vz*dt; d.g.rotation.x+=d.rx*dt; d.g.rotation.z+=d.rz*dt; if(d.g.position.y<0.05){ d.g.position.y=0.05; d.vy=-d.vy*0.3; d.vx*=0.6; d.vz*=0.6; d.rx*=0.5; d.rz*=0.5; } if(d.t>4){ scene.remove(d.g); debris.splice(i,1); } } }
   function bossLoad(done){ loader.load('art/3d/boss_anim.glb', function(g){ boss.model=g.scene; boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone){ var n=o.name.replace(/^mixamorig:?/,''); boss.bones[n]=o; } });
-      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); bossBase('idle'); done(); }, undefined, function(e){ console.warn('boss load fail', e); done(); }); }
+      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); bossAttachParts(); bossBase('idle'); done(); }, undefined, function(e){ console.warn('boss load fail', e); done(); }); }
   function bossAction(n){ var c=boss.clips[n]; if(!c||!boss.mixer) return null; return boss.mixer.clipAction(c); }
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
   function bossOnce(n, o){ o=o||{}; var a=bossAction(n); if(!a) return; if(boss.oneshot){ boss.oneshot.fadeOut(0.08); } a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.08); a.play(); if(boss.act) boss.act.fadeOut(0.08); boss.oneshot=a; boss.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.1); boss.oneshotT=0; boss.hold=!!o.hold; boss.oneshotName=n; }
@@ -131,6 +138,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     var k=d.kind; var tint={dormant:0xb8b0a8, chained:0xd8d0c8, awake:0xffffff}[k]||0xffffff; boss.mats.forEach(function(m){ m.color.setHex(tint); });
     Object.keys(boss.hits).forEach(function(kk){ boss.hits[kk].visible=false; });
     d.parts.forEach(function(p){ var h=boss.hits[HITMAP[p.id]]; if(h){ h.visible=true; h.material.color.setHex(p.weak?0xD94A45:p.breakable?0x7B9BD6:0xC9A45E); } });
+    if(boss.pieces){ var ids=d.parts.map(function(p){ return p.id; }); Object.keys(boss.pieces).forEach(function(pid){ var pc=boss.pieces[pid]; var want=ids.indexOf(pid)>=0; pc.visible=want; if(want && !pc.parent){ /* 재부착 */ var bn=boss.bones[boss.PART[pid].bone]; if(bn){ pc.position.set(0,0,0); pc.rotation.set(0,0,0); bn.add(pc); } } }); }
     boss.anim.glow={dormant:0.35, chained:0.6, awake:1}[k]||1; coreLight.intensity=1.5+boss.anim.glow*2.5;
   }
   var ATK={ hammer:{ clip:'atk_hammer', hitFrac:0.42 }, bolt:{ clip:'atk_bolt', hitFrac:0.45 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 } };
@@ -157,7 +165,8 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar(0.7+g*0.3);
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
     Object.keys(boss.hits).forEach(function(k){ var h=boss.hits[k]; if(!h.visible) return; h.position.copy(bossHitPos(k)); }); }
-  function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true; }
+  function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true;
+    var pc=boss.pieces&&boss.pieces[id]; if(pc && pc.parent){ var wp=new THREE.Vector3(), wq=new THREE.Quaternion(); pc.getWorldPosition(wp); pc.getWorldQuaternion(wq); pc.parent.remove(pc); pc.position.copy(wp); pc.quaternion.copy(wq); pc.scale.setScalar(1); scene.add(pc); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); } }
 
   var strawTex=tex('straw',[2,2]);
   /* ---------- Hi3D 소품 (art/3d/props) ---------- */
@@ -458,7 +467,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();
   }
   function render(dt){
-    ainTick(dt); bossTick(dt); renderMobs(dt); tickSparks(dt);
+    ainTick(dt); bossTick(dt); renderMobs(dt); tickSparks(dt); tickDebris(dt);
     flickT+=dt; lamps.forEach(function(t,i){ var f=t.red ? 0.6+Math.max(0,Math.sin(flickT*2.2+i))*0.6 : t.purple ? 0.85+Math.sin(flickT*4+i)*0.15 : (0.92+Math.sin(flickT*13+i*1.7)*0.03+(Math.random()<0.02?-0.35:0)); t.l.intensity=SET.lights?t.base*f:0; if(t.fx) t.fx.material.opacity=(t.red?0.5:0.45)*f; });
     emberT+=dt; if(emberT>0.5){ emberT=0; /* 천장에서 떨어지는 먼지 */ for(var di=0;di<3;di++){ var i=spI=(spI+1)%SPN; spPos[i*3]=ain.root.position.x+(Math.random()-0.5)*10; spPos[i*3+1]=CEIL-0.3; spPos[i*3+2]=ain.root.position.z+(Math.random()-0.5)*10; spVel[i].set(0, 9.8*2.2-0.4, 0); spLife[i]=2.2; spCol[i*3]=0.5; spCol[i*3+1]=0.48; spCol[i*3+2]=0.45; } }
     /* 존 */
