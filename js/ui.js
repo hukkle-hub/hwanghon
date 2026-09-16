@@ -125,7 +125,12 @@
     tabs.addEventListener('click', function(e){ var b = e.target.closest('[data-label]'); if (b) activate(b.getAttribute('data-label')); });
     var tb = $('.topbar') || $('.sheethead') || $('.bmhead');
     if (tb){ tb.classList.add('has-mtabs'); tb.insertBefore(tabs, tb.querySelector('.topbar__spacer, .sheethead__r, .principles')); }
-    else main.parentNode.insertBefore(tabs, main);
+    else { /* 상단 바가 없는 화면(컨셉 시트): 제목 + 패널 탭으로 된 압축 상단 바를 만든다 */
+      var hb = document.createElement('header'); hb.className = 'topbar topbar--m has-mtabs';
+      var h1 = document.querySelector('main h1'); var ttl = h1 ? h1.textContent.trim() : document.title.split('—')[0].trim();
+      hb.innerHTML = '<svg class="topbar__sigil"><use href="#i-sigil"/></svg><div><div class="topbar__title">'+ttl+'</div></div>';
+      hb.appendChild(tabs); main.parentNode.insertBefore(hb, main);
+    }
     /* 캡처 단계: 화면 스크립트가 목록을 재렌더해 e.target 이 떨어져 나가기 전에 조상을 읽는다 */
     document.addEventListener('click', function(e){
       var g = e.target.closest ? e.target.closest('[data-mgoto]') : null; if (!g) return;

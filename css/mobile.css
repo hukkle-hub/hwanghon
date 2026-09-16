@@ -49,7 +49,7 @@ html.mobile .fill{flex:none}
 /* ---------- 하단 행동 바 ---------- */
 .mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:150;gap:10px;align-items:center;
   padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
-  background:linear-gradient(0deg,rgba(6,7,10,.98),rgba(6,7,10,.9));border-top:1px solid var(--line)}
+  background:#07080B;border-top:1px solid var(--line)}
 html.has-mbar .mbar{display:flex}
 html.has-mbar main>.mpane.is-active{padding-bottom:72px}
 .mbar__back{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px;font-size:13.5px;color:var(--tx-dim);
@@ -252,3 +252,32 @@ html.mobile:not(.portrait) .doll{height:clamp(220px,calc(100dvh - 180px),360px)}
 html.mobile:not(.portrait) .bigcp{font-size:26px;line-height:1.1}
 html.mobile:not(.portrait) #item-info .iart{width:56px;height:56px}
 html.mobile:not(.portrait) #item-info .stat{padding:5px 0}
+
+/* ---------- 실기기 2차 검수 ----------
+   · 컨셉 시트(index): 상단 바가 없어 패널 탭이 스테이지 직계 자식으로 들어가며 flex:1 로 세로를 다 차지하던 문제 */
+html.mobile .stage>.mtabs{flex:none}
+html.mobile .topbar--m{min-height:46px}
+html.mobile .topbar--m .topbar__title{font-size:18px}
+/* · 장비 슬롯 이름표(-17px)가 위 슬롯과 겹치던 문제 */
+html.mobile .eqcol{gap:24px;padding-top:22px}
+html.mobile .slot__name{top:-18px}
+/* · 컨셉 시트 카드: 설명 줄이 하단 바 뒤에 숨지 않게 카드 높이 고정 */
+html.mobile .scard__d{font-size:11.5px}
+/* · 컨셉 시트: 상단 바에 제목이 있으므로 본문의 큰 제목은 중복 */
+html.mobile .spec h1,html.mobile .spec__sub{display:none}
+html.mobile .spec__d{margin-top:4px}
+/* · 컨셉 시트 하단 버튼 3개가 세로 화면 폭을 넘던 문제 */
+html.mobile .lower .flex.g2{flex-wrap:wrap}
+html.mobile .lower .flex.g2 .btn{flex:1 1 150px;min-width:0}
+/* · 의뢰 보상의 드롭 슬롯이 6등분으로 늘어나 거대해지던 문제 → 슬롯 크기 고정 */
+html.mobile .dropline .slotgrid{grid-template-columns:repeat(auto-fill,minmax(52px,64px));gap:6px}
+html.mobile .dropline__k{width:48px;font-size:12px}
+/* · 프로필/결과 캐릭터 아트: 가로 화면에서 머리카락만 보이던 크롭 → 얼굴 기준으로 */
+html.mobile:not(.portrait) .pfart{height:240px}
+html.mobile:not(.portrait) .pfart>img{object-position:center 4%}
+html.mobile:not(.portrait) .rsart{height:240px}
+html.mobile:not(.portrait) .rsart>img{object-position:center 30%}
+html.mobile.portrait .pfart{height:380px}
+html.mobile.portrait .rsart{height:420px}
+/* · 프로필 아이콘 레일은 세로 화면에서도 한 줄(4열) */
+html.mobile.portrait .pf .rail{grid-template-columns:repeat(4,1fr)}
