@@ -41,7 +41,7 @@
 
   var ARENAS = {
     tutorial: {
-      id:'tutorial', name:'뒷마당 훈련장', place:'마태오의 인력사무소 뒷마당', char:'ain', unlock:'q_marsh',
+      id:'tutorial', name:'지하 훈련장', place:'마태오의 인력사무소 지하 벙커', char:'ain', unlock:'q_marsh',
       art:'lobby-city',
       rewards:{ gold:1500, items:[['m_fiber',20],['m_ore',10],['c_potion',3],['c_antidote',2]], sBonus:[['m_oil',2]] },
       stages:[

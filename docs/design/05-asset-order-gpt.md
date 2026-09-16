@@ -34,8 +34,8 @@
 | 항목 | 값 |
 |---|---|
 | 크기 | 전체 높이 **2.8 m**(말뚝 포함), 몸통 폭 1.1 m |
-| 포즈 | 십자 말뚝에 팔 벌린 T 자. 정면 +Z |
-| 부위 분리 (노드 이름 고정) | `post`(말뚝) `core`(가슴 핵, 붉은 발광) `head` `arm_l` `arm_r` `hand_l` `hand_r` `chain_l` `chain_r`(사슬, 2·3단계) `plate_chest` `plate_shoulder_l` `plate_shoulder_r`(철갑, 2단계) `gear_back` `key`(태엽, 3단계) |
+| 포즈 | 디자인 시트 그대로 **서 있는 통나무 골렘**(말뚝 없음), 팔은 옆으로 늘어뜨린 A 포즈. 정면 +Z |
+| 부위 분리 (노드 이름 고정) | `core`(가슴 핵, 붉은 발광) `body`(몸통) `head` `leg_l` `leg_r` `arm_l` `arm_r` `hand_l` `hand_r` `shoulder_l` `shoulder_r`(짚 뭉치+철띠 견갑, 2단계 파괴 부위) `chain`(가슴 X자 사슬, 3단계 파괴 부위) `bands`(철띠 전체) |
 | 재질 | 짚: 마른 짚+삼베 / 철갑: 녹슨 철+가죽끈 / 태엽: 놋쇠 톱니+검은 기름때. core 는 emissive 붉은색 |
 | 이유 | 부위 파괴 시 노드 단위로 떼어내고, 약점(core)을 코드가 이름으로 찾는다 |
 
@@ -43,11 +43,11 @@
 
 - 높이 1.4 m, 삼각형 ≤ 8k, 십자 막대에 짚 뭉치, 삼베 자루 머리에 X 자 눈. 노드 `body` `head` `arm_l` `arm_r` 분리. 정면 +Z, A 포즈.
 
-## 4. 훈련장 환경 — 소품 GLB + 타일 텍스처
+## 4. 훈련장 환경 — 지하 벙커 (인력사무소 지하) 소품 GLB + 타일 텍스처
 
-소품(각각 ≤ 5k 삼각형, 1024² 텍스처, 원점은 바닥 중심): `barrel.glb`(0.9 m) `crate.glb`(0.8 m) `fence_post.glb`(1.6 m, 갈대 울타리 기둥) `fence_rail.glb`(2 m 가로대) `torch.glb`(2.2 m 횃불대, 불꽃 메시 없이 `flame` 이름의 빈 노드만) `gate.glb`(3 m×3.2 m 녹슨 철문, `door_l` `door_r` 분리) `sign.glb`(1.8 m 표지판) `stake_ring.glb`(허수아비 발치 돌 링 4 m).
+훈련장은 **마태오의 인력사무소 지하 벙커**다(사무실 설정화와 같은 톤: 콘크리트, 노출 배관, 매단 산업용 등, 벽의 메모와 포스터, 녹). 소품(각각 ≤ 5k 삼각형, 1024² 텍스처, 원점은 바닥 중심): `drum.glb`(0.9 m 녹슨 드럼통) `crate_steel.glb`(0.8 m 군용 상자) `fence_post.glb`(2 m 강철 기둥) `fence_mesh.glb`(2 m 철망 패널, 알파) `lamp_hanging.glb`(갓 + 전선 1.2 m, 전구 위치에 `bulb` 빈 노드) `lamp_wall_red.glb`(비상등 0.3 m, `bulb` 빈 노드) `blast_door.glb`(3 m×4.8 m 강철 격벽, 노란 사선 경고띠, `door_l` `door_r` 분리) `notice_board.glb`(1.5 m 게시판) `pillar.glb`(0.7 m×5.2 m 콘크리트 기둥) `pipe_set.glb`(벽 배관 6 m 세트) `floor_mark.glb`(허수아비 발치 페인트 원 4 m, 알파 데칼).
 
-타일 텍스처(2048², **상하좌우 이어짐**, PNG): `ground_yard`(밟힌 흙+짚 부스러기) `wall_reed`(갈대 울타리) `wall_stone`(젖은 검은 돌담) — 각각 baseColor · normal · roughness 3장.
+타일 텍스처(2048², **상하좌우 이어짐**, PNG): `floor_concrete`(젖은 콘크리트, 균열·기름 얼룩) `wall_concrete`(거푸집 자국 콘크리트, 녹물 줄기) `ceiling_concrete`(어두운 콘크리트+배선 트레이) `metal_rust`(녹슨 강철) — 각각 baseColor · normal · roughness 3장.
 
 ## 5. 낫 전용 공격 참고 (선택, 애니메이션 아님)
 

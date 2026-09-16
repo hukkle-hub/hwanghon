@@ -24,7 +24,7 @@
 | 리깅 | **완료** — Mixamo 대신 bpy 스크립트로 직접 (`tools/3d/retarget_ain.py`), 뼈 23개 `mixamorig:*` | `art/3d/ain_anim.glb` |
 | 애니메이션 | **완료 v1** — KayKit(CC0) 21클립 리타게팅 + 낫 주도 자세(idle/walk/run/guard) + 왼손 자루 IK | 같은 GLB |
 | 낫 소켓 | **완료** — `mixamorig:RightHandSlot` 뼈, 그립 0.95 m, 런타임 부착 | `viewer.html` 기본값 |
-| 3D 던전 | 다음 — Three.js 씬 + 기존 combat.js/world-sim.js 연결 | `game3d.html` |
+| 3D 던전 | **완료 v1** — Three.js 지하 벙커 훈련실, 통나무 골렘 자리표시자, 낫 전용 공격 궤적 4종(베기·내려찍기·찌르기·회전) | `game3d.html` |
 
 정식 컬러는 Hi3D 에서 **PBR 텍스처 생성**(크레딧 사용)을 한 번 더 돌린 뒤 그 GLB 로 교체한다. 정점 색 버전은 그때까지의 자리표시자다.
 
