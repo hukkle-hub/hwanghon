@@ -102,7 +102,19 @@
   </header>
 
   <!-- ================= 본문 ================= -->
-  <main class="office" data-mdefault="의뢰">
+  <main class="office" data-mdefault="의뢰" data-mback="index.html">
+
+    <!-- ---------- 휴대폰 전용: 메뉴 (데스크톱은 하단 내비 사용) ---------- -->
+    <nav class="mmenu monly" data-mpane="메뉴" aria-label="메뉴">
+      <a href="quest.html"><svg class="ico ico--lg"><use href="#i-book"/></svg><b>의뢰</b><span>보스 도감</span></a>
+      <a href="party.html"><svg class="ico ico--lg"><use href="#i-users"/></svg><b>파티</b><span>모집 · 편성</span></a>
+      <a href="inventory.html"><svg class="ico ico--lg"><use href="#i-bag"/></svg><b>장비</b><span>인벤토리</span></a>
+      <a href="forge.html"><svg class="ico ico--lg"><use href="#i-hammer"/></svg><b>강화</b><span>대장간</span></a>
+      <a href="craft.html"><svg class="ico ico--lg"><use href="#i-anvil"/></svg><b>제작</b><span>레시피</span></a>
+      <a href="profile.html"><svg class="ico ico--lg"><use href="#i-user"/></svg><b>프로필</b><span>기술 등급</span></a>
+      <a href="characters.html"><svg class="ico ico--lg"><use href="#i-eye"/></svg><b>요원</b><span>캐릭터 시트</span></a>
+      <a href="game3d.html" class="is-go"><svg class="ico ico--lg"><use href="#i-target"/></svg><b>던전 01</b><span>지하 훈련장</span></a>
+    </nav>
 
     <!-- ---------- 좌: 의뢰 목록 ---------- -->
     <div class="office__l" data-mpane="의뢰">

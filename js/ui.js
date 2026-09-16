@@ -5,7 +5,8 @@
 
   /* ---------- 화면 목록 ---------- */
   var SCREENS = [
-    ['index.html',     '컨셉 시트'],
+    ['index.html',     '타이틀'],
+    ['board.html',     '컨셉 시트 (개발)'],
     ['office.html',    '인력사무실'],
     ['quest.html',     '의뢰 상세'],
     ['party.html',     '파티 모집'],
@@ -44,7 +45,10 @@
     document.body.appendChild(d);
     d.querySelector('.navdock__hide').onclick = function(){ d.classList.remove('is-open'); d.style.display = TOUCH ? '' : 'none'; };
     /* 터치 기기: 독은 접어두고 우하단 버튼으로 연다 (하단 내비를 가리지 않도록) */
-    if (TOUCH){
+    /* 터치 기기: 화면 전환 독은 개발용 → 타이틀의 '개발 메뉴' 로 켠 경우(tw:dev)에만 토글을 띄운다 */
+    var DEV = false; try { DEV = localStorage.getItem('tw:dev') === '1' || /[?&]dev=1/.test(location.search); if (/[?&]dev=1/.test(location.search)) localStorage.setItem('tw:dev','1'); } catch(e){}
+    if (TOUCH && !DEV){ d.style.display = 'none'; }
+    if (TOUCH && DEV){
       var t = document.createElement('button');
       t.className = 'navdock__toggle'; t.type = 'button'; t.setAttribute('aria-label','화면 전환');
       t.innerHTML = '<svg class="ico ico--lg"><use href="#i-map"/></svg>';
@@ -146,7 +150,8 @@
     var prim = $('[data-primary]');
     var back = $('.hotbar a[href], .backbar a[href], .gnb a[href]');
     var bar = document.createElement('div'); bar.className = 'mbar';
-    var b = document.createElement('a'); b.className = 'mbar__back'; b.href = back ? back.getAttribute('href') : 'index.html';
+    var b = document.createElement('a'); b.className = 'mbar__back';
+    b.href = main.getAttribute('data-mback') || (back ? back.getAttribute('href') : 'office.html');
     b.innerHTML = '<svg class="ico"><use href="#i-arrowl"/></svg>뒤로'; bar.appendChild(b);
     if (prim){ prim.classList.add('mbar__primary'); bar.appendChild(prim); }
     document.body.appendChild(bar);

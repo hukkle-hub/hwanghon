@@ -281,3 +281,18 @@ html.mobile.portrait .pfart{height:380px}
 html.mobile.portrait .rsart{height:420px}
 /* · 프로필 아이콘 레일은 세로 화면에서도 한 줄(4열) */
 html.mobile.portrait .pf .rail{grid-template-columns:repeat(4,1fr)}
+
+/* ---------- 게임 흐름: 타이틀 → 인력사무실(허브) → 각 화면 ----------
+   .monly 은 휴대폰 레이아웃에서만 보이는 요소. 인력사무실의 '메뉴' 패널은 데스크톱 하단 내비의 대체 */
+.monly{display:none!important}
+html.mobile .monly{display:grid!important}
+html.mobile .mmenu{grid-template-columns:repeat(4,1fr);gap:8px;align-content:start}
+html.mobile .mmenu a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:82px;padding:8px 6px;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--tx-dim);text-decoration:none}
+html.mobile .mmenu a .ico{width:24px;height:24px;color:var(--gold-dim);margin-bottom:2px}
+html.mobile .mmenu a b{font-weight:500;font-size:14.5px;color:var(--tx-hi);letter-spacing:.04em}
+html.mobile .mmenu a span{font-size:11px;color:var(--tx-faint);letter-spacing:.02em}
+html.mobile .mmenu a.is-go{border-color:rgba(199,58,54,.6);background:linear-gradient(180deg,rgba(165,28,28,.35),rgba(96,16,16,.35))}
+html.mobile .mmenu a.is-go .ico{color:#E0625B}
+html.mobile .mmenu a:active{filter:brightness(1.3)}
+html.mobile.portrait .mmenu{grid-template-columns:repeat(2,1fr)}
