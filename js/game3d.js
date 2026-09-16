@@ -201,7 +201,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
       if(ch==='|'){ var fp=new THREE.Mesh(fenceGeo.post, fenceGeo.postMat); fp.position.set(cx, 1.0, cz-cellD/2); fp.castShadow=true; scene.add(fp); var r1=new THREE.Mesh(fenceGeo.rail, fenceGeo.postMat); r1.position.set(cx, 1.95, cz); scene.add(r1); var mp=new THREE.Mesh(new THREE.PlaneGeometry(cellD, 1.9), fenceGeo.meshMat); mp.rotation.y=Math.PI/2; mp.position.set(cx, 0.98, cz); scene.add(mp); }
       else if(ch==='b') spawn('barrel', cx, cz, { rot:Math.random()*6.28 });
       else if(ch==='c') spawn('crate', cx, cz, { rot:(Math.random()-0.5)*0.6 });
-      else if(ch==='p') spawn('pillar', cx, cz, {});
+      else if(ch==='p'){ var pl=spawn('pillar', cx, cz, {}); if(pl){ var ps=pl.userData.size; pl.children[0].scale.x*=1.0/Math.max(0.1,ps.w); pl.children[0].scale.z*=1.0/Math.max(0.1,ps.d); } }
     }
     /* 격벽: 문 모델을 셀 폭에 맞춤 */
     var door=spawn('blast_door', X(gate.x), Z(gate.y), {}); if(door){ var dz=door.userData.size; if(dz.w>=dz.d){ door.rotation.y=Math.PI/2; door.children[0].scale.x*=(cellD*1.02)/Math.max(0.1,dz.w); } else { door.children[0].scale.z*=(cellD*1.02)/Math.max(0.1,dz.d); } scene.remove(door); gateMesh.add(door); door.position.set(0,0,0); }
