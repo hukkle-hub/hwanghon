@@ -10,6 +10,12 @@
   var gate=world.marks('G')[0], sign=world.marks('s')[0];
   var state='explore', phase=0, battle=null, paused=false, stageResults=[], zone=null, fightT=0, acc=0, guideT=0, counterT=0, lastHit=0, seen={}, gateClosed=false, shakeT=0;
   var stick={sx:0,sy:0,id:null,ox:0,oy:0}, holdTimer=null, guarding=false, kd={};
+  var SFX=window.TW_SFX, timeScale=1, cine=false, litObjs=[], fpsSamples=[], autoLow=false;
+  var SET=(function(){ try{ return Object.assign({ bright:1, lights:true, vib:true, sound:true }, JSON.parse(localStorage.getItem('tw:settings')||'{}')); }catch(e){ return { bright:1, lights:true, vib:true, sound:true }; } })();
+  function saveSet(){ try{ localStorage.setItem('tw:settings', JSON.stringify(SET)); }catch(e){} }
+  function lit(o){ try{ o.setLighting(SET.lights); litObjs.push(o); }catch(e){} return o; }
+  function applySettings(){ SFX.enabled=SET.sound; if(!scene) return; var amb=Math.round(0x8f*SET.bright*0.85), a2=Math.min(255,Math.round(0xc4*SET.bright)); try{ scene.lights.setAmbientColor(Phaser.Display.Color.GetColor(Math.min(255,Math.round(0xcf*SET.bright)), Math.min(255,Math.round(0xc4*SET.bright)), Math.min(255,Math.round(0xc8*SET.bright)))); }catch(e){}
+    litObjs.forEach(function(o){ try{ o.setLighting(SET.lights); }catch(e){} }); scene.cameras.main.setAlpha(1); }
   var el={ dg:$('#dg'), flash:$('#flash'), bosshp:$('#bosshp'), name:$('#b-name'), stack:$('#b-stack'), seg:$('#b-seg'), ph:$('#b-ph'), timerBox:$('#bttimer'), timer:$('#b-timer'), counter:$('#counter'), cLb:$('#c-lb'), cV:$('#c-v'), cSub:$('#c-sub'), status:$('#status'), guide:$('#guide'), stickEl:$('#stick'), actions:$('#actions'), ov:$('#ov'), ovBox:$('#ov-box'), mini:$('#mini'), loading:$('#loading') };
   var mctx=el.mini.getContext('2d');
   var scene=null, rig=null, ain=null, zoneG=null, reachG=null, gateImg=null, lights={}, torchLights=[], coreLight=null, sparks=null, ENGINE2RIG={ shl:'padL', shr:'padR' }, HITMAP={ core:'core', body:'body', chain:'chain', shl:'shl', shr:'shr', head:'head' };
@@ -46,31 +52,31 @@
       /* 배경(도시 실루엣, 카메라 고정) */
       var bg=this.add.image(0,0,'bg').setOrigin(0,0).setScrollFactor(0.15,0.05).setAlpha(0.5).setDepth(-100); bg.setDisplaySize(pw*0.4+this.scale.width*1.4, ph*0.6+this.scale.height); bg.setTint(0x6a5a60); bg.setPosition(-200,-400);
       /* 바닥 */
-      var ground=this.add.tileSprite(0,0,pw,ph,'ground').setOrigin(0,0).setDepth(0); ground.tileScaleX=0.5; ground.tileScaleY=0.5*DEPTH; try{ ground.setLighting(true); }catch(e){}
+      var ground=this.add.tileSprite(0,0,pw,ph,'ground').setOrigin(0,0).setDepth(0); ground.tileScaleX=0.5; ground.tileScaleY=0.5*DEPTH; lit(ground);
       /* 보스 원 데칼 */
-      var bm=world.marks('B')[0]; var ring=this.add.image(bm.x, bm.y*DEPTH, 'ring').setDepth(0.5); ring.setDisplaySize(560, 560*DEPTH); try{ ring.setLighting(true); }catch(e){}
+      var bm=world.marks('B')[0]; var ring=this.add.image(bm.x, bm.y*DEPTH, 'ring').setDepth(0.5); ring.setDisplaySize(560, 560*DEPTH); lit(ring);
       /* 구조물·소품 (y 정렬) */
       var self=this; var PROP={ b:{k:'barrel',h:60}, c:{k:'crate',h:56}, p:{k:'post',h:130}, s:{k:'sign',h:110}, t:{k:'torch',h:120} };
       for(var y=0;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x], cx=(x+0.5)*c, by=(y+1)*c*DEPTH;
-        if(ch==='#'){ var wimg=this.add.image(cx, by, 'wall').setOrigin(0.5,1).setDepth(by); wimg.setDisplaySize(c+1, sh+72); try{ wimg.setLighting(true); }catch(e){} }
+        if(ch==='#'){ var wimg=this.add.image(cx, by, 'wall').setOrigin(0.5,1).setDepth(by); wimg.setDisplaySize(c+1, sh+72); lit(wimg); }
         else if(ch==='|'){ /* 세로 울타리: 셀마다 기둥 + 기둥 사이 가로대 두 줄 */
-          var fp=this.add.image(cx, by-sh*0.5, 'fpost').setOrigin(0.5,1).setDepth(by-sh*0.5); var ft=this.textures.get('fpost').getSourceImage(); fp.setDisplaySize(92*ft.width/ft.height, 92); try{ fp.setLighting(true); }catch(e){}
+          var fp=this.add.image(cx, by-sh*0.5, 'fpost').setOrigin(0.5,1).setDepth(by-sh*0.5); var ft=this.textures.get('fpost').getSourceImage(); fp.setDisplaySize(92*ft.width/ft.height, 92); lit(fp);
           if(y+1<map.h && map.rows[y+1][x]==='|'){ var rail=this.add.graphics().setDepth(by-sh*0.5-0.1); rail.lineStyle(5,0x3a2e22,1); rail.beginPath(); rail.moveTo(cx-2, by-sh*0.5-70); rail.lineTo(cx-2, by+sh*0.5-70); rail.moveTo(cx+2, by-sh*0.5-38); rail.lineTo(cx+2, by+sh*0.5-38); rail.strokePath(); rail.lineStyle(2,0x6a6a70,0.6); rail.beginPath(); rail.moveTo(cx, by-sh*0.5-54); rail.lineTo(cx, by+sh*0.5-54); rail.strokePath(); } }
-        else if(ch==='G'){ gateImg=this.add.image(cx, by, 'gate').setOrigin(0.5,1).setDepth(by).setVisible(false); gateImg.setDisplaySize(c+10, 110); try{ gateImg.setLighting(true); }catch(e){} }
-        else if(PROP[ch]){ var pr=PROP[ch], im=this.add.image(cx, by-sh*0.25, pr.k).setOrigin(0.5,1).setDepth(by-sh*0.25); var tex=this.textures.get(pr.k).getSourceImage(); im.setDisplaySize(pr.h*tex.width/tex.height, pr.h); try{ im.setLighting(true); }catch(e){}
+        else if(ch==='G'){ gateImg=this.add.image(cx, by, 'gate').setOrigin(0.5,1).setDepth(by).setVisible(false); gateImg.setDisplaySize(c+10, 110); lit(gateImg); }
+        else if(PROP[ch]){ var pr=PROP[ch], im=this.add.image(cx, by-sh*0.25, pr.k).setOrigin(0.5,1).setDepth(by-sh*0.25); var tex=this.textures.get(pr.k).getSourceImage(); im.setDisplaySize(pr.h*tex.width/tex.height, pr.h); lit(im);
           var shd=this.add.ellipse(cx, by-sh*0.25, pr.h*0.6, 12, 0x000000, 0.45).setDepth(by-sh*0.25-0.1);
           if(ch==='t'){ var lt=this.lights.addLight(cx, by-sh*0.25-100, 460, 0xF0A050, 2.2); torchLights.push({l:lt, base:2.2}); var fl=this.add.image(cx, by-sh*0.25-96, 'fx-glow').setBlendMode(Phaser.BlendModes.ADD).setTint(0xE8702E).setAlpha(0.6).setDepth(by+0.1); fl.setDisplaySize(140,140); torchLights[torchLights.length-1].fx=fl;
             this.add.particles(cx, by-sh*0.25-98, 'fx-spark', { speedY:{min:-40,max:-90}, speedX:{min:-12,max:12}, scale:{start:0.5,end:0}, alpha:{start:0.9,end:0}, lifespan:{min:500,max:900}, frequency:120, tint:[0xFFC070,0xE8502E], blendMode:'ADD' }).setDepth(by+0.2); } }
       }
       /* 조명 */
-      try{ this.lights.enable(); this.lights.setAmbientColor(0xcfc4c8); }catch(e){}
+      try{ this.lights.enable(); }catch(e){} applySettings();
       lights.player=this.lights.addLight(P.x, P.y*DEPTH-40, 360, 0xD8C8B0, 0.9);
       coreLight=this.lights.addLight(Bs.x, Bs.y*DEPTH-170, 340, 0xE04A3C, 0.8);
       /* 존·사거리 그래픽 */
       zoneG=this.add.graphics().setDepth(0.8); reachG=this.add.graphics().setDepth(0.7);
       /* 허수아비 리그 */
       rig=window.TW_RIG_PHASER.mount(this, RIGDEF, { x:Bs.x, y:Bs.y*DEPTH, scale:0.42 });
-      RIGDEF.parts.forEach(function(p){ try{ rig.part(p.id).list[0].setLighting(true); }catch(e){} });
+      RIGDEF.parts.forEach(function(p){ lit(rig.part(p.id).list[0]); });
       var bshadow=this.add.ellipse(Bs.x, Bs.y*DEPTH, 190, 26, 0x000000, 0.5).setDepth(Bs.y*DEPTH-0.5); rig.shadow=bshadow;
       /* 아인 리그 (정면/후면/측면) */
       ain=buildAin(this);
@@ -80,18 +86,18 @@
       var cam=this.cameras.main; cam.setBounds(0,0,pw,ph); cam.setZoom(ZOOM); cam.startFollow(ain.root, true, 0.09, 0.09); cam.setFollowOffset(0, 40); cam.setBackgroundColor('#0B0C0F');
       try{ cam.filters.internal.addVignette(0.5,0.5,0.92,0.45); }catch(e){ try{ cam.enableFilters().filters.internal.addVignette(0.5,0.5,0.92,0.45); }catch(e2){} }
       setupPhase(A.stages[0]); Object.keys(rig.hits).forEach(function(k){ rig.hits[k].setVisible(false); });
-      el.loading.classList.add('is-off');
+      el.loading.classList.add('is-off'); SFX.ambient(true);
       overlay('<div class="ov__k">던전 01</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+L.place+'</div><div class="ov__line">마태오 — “뒷마당에 허수아비를 묶어 뒀다. 살아 있는 것처럼 굴 테니, 살아 있는 것처럼 상대해라.”</div><div class="ov__hint">문을 지나면 전투가 시작된다. 붉은 범위 밖으로 구르고, 고리가 흰색일 때 붙어서 쳐라.</div><button class="btn btn--primary" data-go>입장</button>'+
         '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 오른쪽 큰 버튼 공격(길게 방어) · 회피 · 기술 1~4 · R<br>키보드: WASD 이동 · J 공격 · K 회피 · L 방어 · 1~4 · R · Q 조준 전환</div>', function(){});
     },
-    update:function(t, dms){ var dt=Math.min(0.1, dms/1000); if(paused||el.ov.classList.contains('is-on')) return; step(dt); render(dt); }
+    update:function(t, dms){ var dt=Math.min(0.1, dms/1000); if(paused||el.ov.classList.contains('is-on')) return; fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); } step(dt*timeScale); render(dt); }
   });
 
   /* ---------- 아인 리그 ---------- */
   function buildAin(sc){
     var root=sc.add.container(P.x, P.y*DEPTH); var views={}, SCALE=176/932;
     Object.keys(AIN).forEach(function(v){ var def=AIN[v], vc=sc.add.container(-def.w/2*SCALE, -def.h*SCALE); vc.setScale(SCALE); var cont={}, byId={}; def.parts.forEach(function(p){ byId[p.id]=p; });
-      def.parts.slice().sort(function(a,b){ return a.z-b.z; }).forEach(function(p){ var c=sc.add.container(p.px,p.py); var im=sc.add.image(p.x-p.px, p.y-p.py, 'ain-'+v+'-'+p.id).setOrigin(0,0); try{ im.setLighting(true); }catch(e){} c.add(im); cont[p.id]=c; c._p=p; });
+      def.parts.slice().sort(function(a,b){ return a.z-b.z; }).forEach(function(p){ var c=sc.add.container(p.px,p.py); var im=sc.add.image(p.x-p.px, p.y-p.py, 'ain-'+v+'-'+p.id).setOrigin(0,0); lit(im); c.add(im); cont[p.id]=c; c._p=p; });
       def.parts.slice().sort(function(a,b){ return a.z-b.z; }).forEach(function(p){ if(p.parent){ cont[p.id].setPosition(p.px-byId[p.parent].px, p.py-byId[p.parent].py); cont[p.parent].add(cont[p.id]); } else vc.add(cont[p.id]); });
       vc.setVisible(false); root.add(vc); views[v]={c:vc, parts:cont}; });
     var shadow=sc.add.ellipse(P.x, P.y*DEPTH, 60, 14, 0x000000, 0.5).setDepth(P.y*DEPTH-0.5);
@@ -108,9 +114,9 @@
     var ps=view.parts;
     if(v==='side'){ ps.legF.setAngle(s*22*amp); ps.legB.setAngle(-s*22*amp); ps.arm.setAngle(-s*16*amp); ps.torso.setAngle(moving?4:0); }
     else { ps.legL.setAngle(s*14*amp); ps.legR.setAngle(-s*14*amp); ps.armL.setAngle(-s*12*amp); ps.armR.setAngle(s*12*amp); ps.torso.setAngle(s*1.5*amp); }
-    var roll=P.rollT>0 ? (1-P.rollT/L.player.rollDur) : 0; var rollY = roll>0 ? -Math.sin(roll*Math.PI)*24 : 0;
+    var roll=P.rollT>0 ? (1-P.rollT/L.player.rollDur) : 0; var rollY = roll>0 ? -Math.sin(roll*Math.PI)*24 : 0; if(ain.lunge>0) ain.lunge=Math.max(0, ain.lunge-dt*6); var lx=ain.lunge?Math.sin(ain.lunge*Math.PI)*14*Math.cos(P.aim):0, ly=ain.lunge?Math.sin(ain.lunge*Math.PI)*14*Math.sin(P.aim)*DEPTH:0;
     view.c.setPosition(-AIN[v].w/2*(176/932), -AIN[v].h*(176/932)-bob+rollY); view.c.setAngle(roll>0 ? Math.sin(roll*Math.PI)*(P.face==='left'?12:-12) : 0);
-    ain.root.setPosition(P.x, P.y*DEPTH).setDepth(P.y*DEPTH); ain.shadow.setPosition(P.x, P.y*DEPTH).setDepth(P.y*DEPTH-0.5); ain.shadow.setScale(1-roll*0.3, 1);
+    ain.root.setPosition(P.x+lx, P.y*DEPTH+ly).setDepth(P.y*DEPTH); ain.shadow.setPosition(P.x, P.y*DEPTH).setDepth(P.y*DEPTH-0.5); ain.shadow.setScale(1-roll*0.3, 1);
     if(ain.hitT>0){ ain.hitT-=dt; Object.keys(ps).forEach(function(k){ ps[k].list[0].setTint(0xFF6A5A); }); } else Object.keys(ps).forEach(function(k){ ps[k].list[0].clearTint(); });
     lights.player.setPosition(P.x, P.y*DEPTH-50);
   }
@@ -135,43 +141,55 @@
   function guide(html, sec){ el.guide.innerHTML=html; el.guide.classList.add('is-on'); guideT=sec||3; }
   function banner(lb, v, sub, perfect){ el.cLb.textContent=lb; el.cV.textContent=W.fmt(v); el.cSub.textContent=sub||''; el.counter.classList.toggle('perfect',!!perfect); el.counter.classList.add('is-on'); counterT=1.3; }
   function flash(){ el.flash.classList.remove('is-on'); void el.flash.offsetWidth; el.flash.classList.add('is-on'); }
-  function vib(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
+  function vib(ms){ if(!SET.vib) return; try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
   function shake(i, d){ scene.cameras.main.shake(d||200, i||0.004); }
   function burst(x,y,n,tint){ sparks.setPosition(x,y); if(tint) sparks.setParticleTint(tint); sparks.explode(n||14); }
   function handle(e){
     var s=battle?battle.snapshot():null;
     switch(e.t){
-      case 'hit': var hp=rig.hitPos(HITMAP[e.part]||'body'); num(hp.x+(Math.random()*40-20), hp.y-10, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); rig.flash(); burst(hp.x, hp.y, e.counter?36:e.crit?22:12); if(!e.counter && s.enemy.state!=='downed') rig.play('flinch'); if(e.counter){ flash(); vib(40); shake(0.01,260); scene.cameras.main.zoomTo(ZOOM*1.06,120,'Quad.easeOut',true,function(c,p){ if(p===1) scene.cameras.main.zoomTo(ZOOM,260); }); } else shake(0.003,90); break;
-      case 'attack': swingFx(); break;
-      case 'whiff': swingFx(); num(P.x, P.y*DEPTH-150, e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
-      case 'counter': banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); rig.stopAll('tele_'); rig.play('stagger'); zone=null; break;
-      case 'break': var bp=rig.hitPos(HITMAP[e.part]); num(bp.x, bp.y-30, '부위 파괴 — '+e.name, 'crit'); burst(bp.x, bp.y, 40, 0x7B9BD6); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); if(ENGINE2RIG[e.part]) rig.detach(ENGINE2RIG[e.part]); var hb=rig.hits[HITMAP[e.part]]; if(hb) hb.setVisible(false); rig.play('stagger'); shake(0.008,300); break;
-      case 'downed': guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); rig.stop('stagger'); rig.play('down'); zone=null; shake(0.012,400); break;
+      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=rig.hitPos(HITMAP[e.part]||'body'); num(hp.x+(Math.random()*40-20), hp.y-10, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); rig.flash(); burst(hp.x, hp.y, e.counter?36:e.crit?22:12); if(!e.counter && s.enemy.state!=='downed') rig.play('flinch'); if(e.counter){ flash(); vib(40); shake(0.01,260); scene.cameras.main.zoomTo(ZOOM*1.06,120,'Quad.easeOut',true,function(c,p){ if(p===1) scene.cameras.main.zoomTo(ZOOM,260); }); } else shake(0.003,90); break;
+      case 'attack': swingFx(); ainAttack(); SFX.play('swing'); break;
+      case 'whiff': swingFx(); ainAttack(); SFX.play('swing'); num(P.x, P.y*DEPTH-150, e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
+      case 'counter': SFX.play('counter', e.perfect); slowmo(e.perfect?0.2:0.35, e.perfect?520:380); banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); rig.stopAll('tele_'); rig.play('stagger'); zone=null; break;
+      case 'break': SFX.play('brk'); var bp=rig.hitPos(HITMAP[e.part]); num(bp.x, bp.y-30, '부위 파괴 — '+e.name, 'crit'); burst(bp.x, bp.y, 40, 0x7B9BD6); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); if(ENGINE2RIG[e.part]) rig.detach(ENGINE2RIG[e.part]); var hb=rig.hits[HITMAP[e.part]]; if(hb) hb.setVisible(false); rig.play('stagger'); shake(0.008,300); break;
+      case 'downed': SFX.play('down'); guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); rig.stop('stagger'); rig.play('down'); zone=null; shake(0.012,400); break;
       case 'up': guide('허수아비가 자세를 되찾았다', 1.5); rig.stop('down'); rig.play('up'); break;
-      case 'telegraph': zone=world.makeZone({ zone:L.zones[e.pattern] }, Bs.x, Bs.y, P.x, P.y); zone.pattern=e.pattern; rig.play('tele_'+e.icon, { dur:e.dur, hold:true }); if(phase===2 && !seen.tele3){ seen.tele3=1; guide('붉은 범위 안에 있으면 맞는다 · 고리가 <b>흰색</b>일 때 붙어서 탭 = 카운터', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
+      case 'telegraph': SFX.play('tele'); zone=world.makeZone({ zone:L.zones[e.pattern] }, Bs.x, Bs.y, P.x, P.y); zone.pattern=e.pattern; rig.play('tele_'+e.icon, { dur:e.dur, hold:true }); if(phase===2 && !seen.tele3){ seen.tele3=1; guide('붉은 범위 안에 있으면 맞는다 · 고리가 <b>흰색</b>일 때 붙어서 탭 = 카운터', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': rig.stop('tele_'+s.enemy.patIcon); rig.play('hit_'+s.enemy.patIcon); shake(0.009,220); setTimeout(function(){ zone=null; }, 180); break;
       case 'miss': num(P.x, P.y*DEPTH-150, e.out?'범위 밖':'회피', 'miss'); break;
-      case 'damaged': num(P.x, P.y*DEPTH-150, '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; burst(P.x, P.y*DEPTH-80, 16, 0xD94A45); vib(e.guarded?15:60); shake(e.guarded?0.004:0.012, 300); break;
+      case 'damaged': SFX.play('hurt', e.guarded); num(P.x, P.y*DEPTH-150, '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; burst(P.x, P.y*DEPTH-80, 16, 0xD94A45); vib(e.guarded?15:60); shake(e.guarded?0.004:0.012, 300); break;
       case 'early': guide('너무 빨랐다. 예고가 <b>끝나는 순간</b>에 쳐라', 1.6); break;
       case 'ultready': if(e.first) guide('궁극기 준비 완료 — <b>R</b> 을 눌러라', 3.5); break;
-      case 'ult': banner('T W I L I G H T', lastHit, ULT.name+' · 출혈 3중첩', true); flash(); vib([50,30,80]); shake(0.02,500); burst(Bs.x, Bs.y*DEPTH-150, 60, 0xD94A45); break;
+      case 'ult': SFX.play('ult'); slowmo(0.3, 500); banner('T W I L I G H T', lastHit, ULT.name+' · 출혈 3중첩', true); flash(); vib([50,30,80]); shake(0.02,500); burst(Bs.x, Bs.y*DEPTH-150, 60, 0xD94A45); break;
       case 'skill': var k=SK[e.index]; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4); if(k.dodge) doRoll(); else if(k.mult>0) swingFx(); break;
       case 'nost': guide('스태미나 부족', 1); break;
-      case 'guard': if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
+      case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
       case 'dodge': doRoll(); break;
       case 'death': guide('마태오 — “다시.”', 2); break;
       case 'clear': phaseClear(); break;
     }
   }
-  function doRoll(){ world.roll(P, stick.sx, stick.sy, L.player.rollLen, L.player.rollDur); }
+  function doRoll(){ world.roll(P, stick.sx, stick.sy, L.player.rollLen, L.player.rollDur); SFX.play('roll'); }
+  function slowmo(scale, ms){ timeScale=scale; scene.tweens.addCounter({ from:scale, to:1, duration:ms, ease:'Quad.easeIn', onUpdate:function(tw){ timeScale=tw.getValue(); }, onComplete:function(){ timeScale=1; } }); }
+  function autoQuality(){ if(autoLow||!SET.lights||navigator.webdriver) return; var avg=fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length; if(avg<26){ autoLow=true; SET.lights=false; applySettings(); guide('프레임이 낮아 <b>조명을 껐습니다</b> (일시정지 메뉴에서 변경)', 3); } }
+  /* 아인 공격 모션: 팔 휘두름 + 상체 전진 */
+  function ainAttack(){ var v=ain.cur, ps=ain.views[v]&&ain.views[v].parts; if(!ps) return; var arm=v==='side'?ps.arm:ps.armR, torso=ps.torso; if(!arm) return;
+    scene.tweens.killTweensOf(arm); scene.tweens.killTweensOf(torso); arm.setAngle(v==='side'?-95:-70); scene.tweens.add({ targets:arm, angle:v==='side'?40:30, duration:110, ease:'Quad.easeIn', onComplete:function(){ scene.tweens.add({ targets:arm, angle:0, duration:160 }); } });
+    torso.setAngle(v==='side'?-6:0); scene.tweens.add({ targets:torso, angle:v==='side'?10:4, duration:110, yoyo:true, ease:'Quad.easeOut' }); ain.lunge=1; }
 
   /* ---------- 흐름 ---------- */
   function overlay(html, onBtn){ el.ovBox.innerHTML=html; el.ov.classList.add('is-on'); var b=el.ovBox.querySelector('[data-go]'); if(b) b.addEventListener('click', function(){ el.ov.classList.remove('is-on'); onBtn&&onBtn(); }); }
   function startFight(){ state='fight'; world.setSolid(gate.cx, gate.cy, true); gateClosed=true; P.x=Math.max(P.x, (gate.cx+1)*map.cell + P.r + 6); gateImg.setVisible(true); gateImg.setAlpha(0); scene.tweens.add({ targets:gateImg, alpha:1, duration:400 });
-    el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; guide(L.beats.gate, 3); rig.play('stagger'); vib([40,60,40]); shake(0.01,500); setTimeout(function(){ startPhase(0); }, 1800); }
+    SFX.play('gate'); vib([40,60,40]); shake(0.01,500); guide(L.beats.gate, 2.5);
+    /* 시네마틱: 카메라가 허수아비로 이동 → 이름 표시 → 복귀 */
+    cine=true; stick.sx=stick.sy=0; var cam=scene.cameras.main; cam.stopFollow();
+    setTimeout(function(){ cam.pan(Bs.x, Bs.y*DEPTH-140, 1100, 'Sine.easeInOut'); cam.zoomTo(ZOOM*1.35, 1100, 'Sine.easeInOut'); SFX.play('chains'); rig.play('stagger'); }, 500);
+    setTimeout(function(){ rig.glow('core', 1.2); rig.glow('eyeL', 1.2); rig.glow('eyeR', 1.2); banner('B O S S', 0, A.stages[0].name+' · '+L.place, false); el.cV.textContent='허수아비'; SFX.play('phase'); shake(0.012, 600); burst(Bs.x, Bs.y*DEPTH-170, 40, 0xD94A45); }, 1700);
+    setTimeout(function(){ cam.pan(P.x, P.y*DEPTH, 900, 'Sine.easeInOut'); cam.zoomTo(ZOOM, 900, 'Sine.easeInOut'); }, 3200);
+    setTimeout(function(){ cam.startFollow(ain.root, true, 0.09, 0.09); cam.setFollowOffset(0, 40); cine=false; el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; startPhase(0); }, 4200); }
   function phaseClear(){ var m=Object.assign({}, battle.metrics); stageResults.push(m); rig.stopAll(); zone=null;
-    if (phase < A.stages.length-1){ var next=phase+1; battle=null; rig.play('stagger'); flash(); vib([30,30,60]); burst(Bs.x, Bs.y*DEPTH-170, 50, next===1?0xC9A45E:0xD94A45); num(Bs.x, Bs.y*DEPTH-240, next===1?'사슬이 끊어진다':'핵이 타오른다', 'counter'); setTimeout(function(){ startPhase(next); }, 1400); }
-    else { battle=null; state='clear'; rig.play('collapse'); el.timerBox.classList.add('is-off'); var sum=CB.summarize(R, A, stageResults); scene.cameras.main.zoomTo(ZOOM*1.15, 1400);
+    if (phase < A.stages.length-1){ var next=phase+1; battle=null; SFX.play('phase'); rig.play('stagger'); flash(); vib([30,30,60]); burst(Bs.x, Bs.y*DEPTH-170, 50, next===1?0xC9A45E:0xD94A45); num(Bs.x, Bs.y*DEPTH-240, next===1?'사슬이 끊어진다':'핵이 타오른다', 'counter'); setTimeout(function(){ startPhase(next); }, 1400); }
+    else { battle=null; state='clear'; SFX.play('brk'); setTimeout(function(){ SFX.play('clear'); }, 900); rig.play('collapse'); el.timerBox.classList.add('is-off'); var sum=CB.summarize(R, A, stageResults); scene.cameras.main.zoomTo(ZOOM*1.15, 1400);
       setTimeout(function(){ overlay('<div class="ov__k">던전 클리어</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+A.stages[A.stages.length-1].name+' 격파</div>'+
         '<div class="ov__stats"><div>등급<b class="g-'+sum.rank+'">'+sum.rank+'</b></div><div>시간<b>'+sum.op.time+'</b></div><div>카운터<b>'+sum.op.counterRate+'</b></div><div>부위 파괴<b>'+sum.breaks+'/'+sum.breakable+'</b></div><div>받은 피해<b>'+sum.op.dmgTaken+'</b></div></div>'+
         '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 1800); } }
@@ -189,8 +207,8 @@
   el.stickEl.addEventListener('pointermove', stickMove);
   function stickUp(e){ if(stick.id!==e.pointerId) return; stick.id=null; stick.sx=stick.sy=0; el.stickEl.querySelector('i').style.transform='translate(-50%,-50%)'; }
   el.stickEl.addEventListener('pointerup', stickUp); el.stickEl.addEventListener('pointercancel', stickUp);
-  function attack(){ if(paused) return; if(battle){ if(Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('attack'); } else swingFx(); }
-  function dodge(){ if(paused) return; if(battle) battle.input('dodge'); else if(P.rollT<=0) doRoll(); }
+  function attack(){ if(paused||cine) return; if(battle){ if(Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('attack'); } else swingFx(); }
+  function dodge(){ if(paused||cine) return; if(battle) battle.input('dodge'); else if(P.rollT<=0) doRoll(); }
   el.actions.addEventListener('pointerdown', function(e){ e.preventDefault(); e.stopPropagation(); var t=e.target.closest('.abtn'); if(!t||paused) return;
     if(t.hasAttribute('data-atk')){ attack(); holdTimer=setTimeout(function(){ guarding=true; battle&&battle.input('guard', true); }, R.guard.holdMs); }
     else if(t.hasAttribute('data-dodge')) dodge(); else if(t.hasAttribute('data-ult')) battle&&battle.input('ult'); else if(t.hasAttribute('data-skill')) battle&&battle.input('skill', +t.getAttribute('data-skill')); });
@@ -202,11 +220,15 @@
     else if((e.code==='KeyQ'||e.code==='Tab')&&battle){ e.preventDefault(); var s=battle.snapshot(), ids=s.enemy.parts.map(function(p){return p.id;}), i=ids.indexOf(s.target); battle.input('target', ids[(i+1)%ids.length]); } });
   document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL'&&battle) battle.input('guard', false); });
   function keyStick(){ var x=(kd.KeyD||kd.ArrowRight?1:0)-(kd.KeyA||kd.ArrowLeft?1:0), y=(kd.KeyS||kd.ArrowDown?1:0)-(kd.KeyW||kd.ArrowUp?1:0); if(x||y){ var m=Math.hypot(x,y); return {sx:x/m, sy:y/m}; } return null; }
-  $('#btn-pause').addEventListener('click', function(){ paused=!paused; if(paused) overlay('<div class="ov__k">일시정지</div><div class="ov__t">'+L.name+'</div><div class="ov__hint" style="margin-top:12px">'+(battle?A.stages[phase].hint:L.beats.start)+'</div><button class="btn btn--primary" data-go>계속</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ paused=false; }); });
+  function settingsHTML(){ return '<div class="setrow"><label>밝기</label><input type="range" min="0.6" max="1.8" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
+    '<div class="setrow"><label>동적 조명</label><button class="btn btn--sm" data-tog="lights">'+(SET.lights?'켜짐':'꺼짐')+'</button><label>진동</label><button class="btn btn--sm" data-tog="vib">'+(SET.vib?'켜짐':'꺼짐')+'</button><label>소리</label><button class="btn btn--sm" data-tog="sound">'+(SET.sound?'켜짐':'꺼짐')+'</button></div>'; }
+  el.ovBox.addEventListener('input', function(e){ var k=e.target.getAttribute('data-set'); if(!k) return; SET[k]=+e.target.value; saveSet(); applySettings(); });
+  el.ovBox.addEventListener('click', function(e){ var b=e.target.closest('[data-tog]'); if(!b) return; var k=b.getAttribute('data-tog'); SET[k]=!SET[k]; b.textContent=SET[k]?'켜짐':'꺼짐'; saveSet(); applySettings(); if(k==='sound'&&SET.sound) SFX.ambient(true); SFX.play('ui'); });
+  $('#btn-pause').addEventListener('click', function(){ paused=!paused; SFX.play('ui'); if(paused) overlay('<div class="ov__k">일시정지</div><div class="ov__t">'+L.name+'</div><div class="ov__hint" style="margin-top:12px">'+(battle?A.stages[phase].hint:L.beats.start)+'</div><button class="btn btn--primary" data-go>계속</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ paused=false; }); });
 
   /* ---------- 스텝 · 렌더 ---------- */
   function step(dt){
-    var ks=keyStick(); var sx=ks?ks.sx:stick.sx, sy=ks?ks.sy:stick.sy;
+    var ks=keyStick(); var sx=ks?ks.sx:stick.sx, sy=ks?ks.sy:stick.sy; if(cine){ sx=sy=0; }
     var s=battle?battle.snapshot():null; P.lockT=(s&&(s.player.guard||s.player.locked))?1:0;
     world.movePlayer(P, sx, sy, dt, L.player.speed);
     if(state==='explore'){ if(!seen.start){ seen.start=1; guide(L.beats.start, 4); } if(!seen.sign && world.dist(P.x,P.y,sign.x,sign.y)<110){ seen.sign=1; guide(L.beats.sign, 4); } if(Math.floor(P.x/map.cell)>=L.bossRoom.minCx && P.x>gate.x+map.cell*0.6) startFight(); }
