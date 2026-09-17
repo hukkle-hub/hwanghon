@@ -96,7 +96,24 @@ html.mobile .quest{left:max(10px,env(safe-area-inset-left));top:118px;font-size:
 html.mobile .combo{top:100px;right:170px}
 html.mobile .toasts{left:max(10px,env(safe-area-inset-left));top:210px}
 .deathov .ov__t{color:#D94A45}
-.loading{position:absolute;inset:0;z-index:30;display:grid;place-items:center;background:#0B0C0F;color:var(--tx-faint);font-family:var(--f-serif);letter-spacing:.3em;font-size:13px;transition:opacity .5s}
+.loading{position:absolute;inset:0;z-index:30;background:#07080B;transition:opacity .6s;overflow:hidden}
+.loading__art{position:absolute;inset:0;background:#07080B url(art/title-ain.webp) no-repeat 68% 50%/cover;opacity:.85}
+.loading__art::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(7,8,11,.94) 0%,rgba(7,8,11,.6) 40%,rgba(7,8,11,.1) 70%),linear-gradient(0deg,rgba(7,8,11,.95) 0%,rgba(7,8,11,.2) 40%,rgba(7,8,11,.5) 100%)}
+.loading__box{position:absolute;left:max(26px,env(safe-area-inset-left));bottom:max(26px,env(safe-area-inset-bottom));width:min(440px,70vw)}
+.loading__k{font-size:11px;letter-spacing:.34em;color:#C9A45E;font-family:var(--f-serif)}
+.loading__t{font-family:var(--f-serif);font-size:34px;color:var(--tx-hi);margin-top:4px;letter-spacing:.08em}
+.loading__p{font-size:12px;color:var(--tx-faint);letter-spacing:.14em;margin-top:2px}
+.loading__bar{height:4px;background:rgba(255,255,255,.08);margin-top:18px;position:relative;overflow:hidden}
+.loading__bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,#6B1B1B,#D9544E);transition:width .25s;box-shadow:0 0 10px rgba(217,84,78,.6)}
+.loading__row{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--tx-faint);letter-spacing:.08em;font-variant-numeric:tabular-nums}
+.loading__tip{margin-top:14px;font-size:12.5px;line-height:1.6;color:#B9B2A7;min-height:2.6em;transition:opacity .3s}
+.loading__tip b{color:#E4C97F;font-weight:400}
+.loading__tip.is-fade{opacity:0}
+.loading__logo{position:absolute;right:max(26px,env(safe-area-inset-right));top:max(20px,env(safe-area-inset-top));font-family:var(--f-serif);font-size:15px;letter-spacing:.4em;color:var(--tx-faint)}
+.loading.is-err .loading__bar i{background:#8A8A8A}
+html.mobile .loading__t{font-size:26px}
+html.mobile .loading__box{width:min(400px,62vw);bottom:max(16px,env(safe-area-inset-bottom));left:max(18px,env(safe-area-inset-left))}
+html.mobile .loading__tip{font-size:12px}
 .loading.is-off{opacity:0;pointer-events:none}
 </style>
 </head>
@@ -133,7 +150,18 @@ html.mobile .toasts{left:max(10px,env(safe-area-inset-left));top:210px}
       <div class="actions" id="actions"></div>
     </div></div>
     <div class="ov" id="ov"><div class="ov__box" id="ov-box"></div></div>
-    <div class="loading" id="loading">황 혼 — 로딩</div>
+    <div class="loading" id="loading">
+      <div class="loading__art"></div>
+      <div class="loading__box">
+        <div class="loading__k">던전 01</div>
+        <div class="loading__t">지하 훈련장</div>
+        <div class="loading__p">마태오의 인력사무소 지하 벙커</div>
+        <div class="loading__bar"><i id="ld-fill"></i></div>
+        <div class="loading__row"><span id="ld-txt">벙커 자산 불러오는 중</span><span id="ld-pct">0%</span></div>
+        <div class="loading__tip" id="ld-tip"></div>
+      </div>
+      <div class="loading__logo">황 혼</div>
+    </div>
   </div>
 </div>
 <script src="js/world.js"></script>

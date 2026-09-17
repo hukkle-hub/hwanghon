@@ -17,7 +17,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   var SFX=window.TW_SFX, SAVE=window.TW_SAVE, SKM=window.TW_SKIRMISH, timeScale=1, cine=false, fpsSamples=[], autoLow=false;
   var skirm=null, mobsEnt={}, PS={ hp:CHAR.stats.hp, st:R.stamina.max, ult:0 }, quest={ mobs:0, gate:0, boss:0 }, pickups=[], gateOpen=false, comboT=0, lockedT=0;
   var RETRY=(function(){ try{ var v=sessionStorage.getItem('tw:retry'); sessionStorage.removeItem('tw:retry'); return v; }catch(e){ return null; } })();
-  var SET=(function(){ try{ return Object.assign({ bright:1, lights:true, vib:true, sound:true }, JSON.parse(localStorage.getItem('tw:settings')||'{}')); }catch(e){ return { bright:1, lights:true, vib:true, sound:true }; } })();
+  var SET=(function(){ try{ return Object.assign({ bright:1, lights:true, vib:true, sound:true, quality:'auto' }, JSON.parse(localStorage.getItem('tw:settings')||'{}')); }catch(e){ return { bright:1, lights:true, vib:true, sound:true, quality:'auto' }; } })();
   function saveSet(){ try{ localStorage.setItem('tw:settings', JSON.stringify(SET)); }catch(e){} }
   var el={ dg:$('#dg'), flash:$('#flash'), bosshp:$('#bosshp'), name:$('#b-name'), stack:$('#b-stack'), ph:$('#b-ph'), timerBox:$('#bttimer'), timer:$('#b-timer'), counter:$('#counter'), cLb:$('#c-lb'), cV:$('#c-v'), cSub:$('#c-sub'), status:$('#status'), guide:$('#guide'), stickEl:$('#stick'), actions:$('#actions'), ov:$('#ov'), ovBox:$('#ov-box'), mini:$('#mini'), loading:$('#loading'), quest:$('#quest'), combo:$('#combo'), comboN:$('#combo-n'), toasts:$('#toasts'), dlg:$('#dlg'), dlgWho:$('#dlg-who'), dlgTxt:$('#dlg-txt'), stag:$('#b-stag'), canvas:$('#game3d') };
   var mctx=el.mini.getContext('2d');
@@ -38,14 +38,22 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 
   /* ---------- 렌더러 · 씬 ---------- */
   var renderer=new THREE.WebGLRenderer({ canvas:el.canvas, antialias:!MOBILE, powerPreference:'high-performance' });
-  renderer.setPixelRatio(Math.min(MOBILE?1.25:2, devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45*SET.bright;
+  renderer.setPixelRatio(Math.min(SET.quality==='high'?2:SET.quality==='low'?0.9:(MOBILE?1.25:2), devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45*SET.bright;
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.032);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=MOBILE?6.2:7.0, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
-  var TL=new THREE.TextureLoader(); function tex(n, rep){ var t=TL.load('art/env/'+n+'.webp'); t.colorSpace=THREE.SRGBColorSpace; if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); } t.anisotropy=4; return t; }
+  /* ---------- 로딩 화면: 모든 텍스처·GLB 를 한 매니저로 세어 진행률 표시 ---------- */
+  var LM=new THREE.LoadingManager(), ldDone=false;
+  var TIPS=['<b>붉은 범위</b> 밖으로 구르면 피해를 받지 않는다.','고리가 <b>흰색</b>이 되는 순간 붙어서 치면 <b>카운터</b>.','<b>방어</b> 중에 맞으면 경직만 받고 체력은 지킨다.','4연타 뒤에 <b>길게</b> 누르면 스매시.','부위를 부수면 <b>파편</b>이 떨어진다. 줍자.','허수아비는 <b>3단계</b>로 깨어난다. 단계마다 패턴이 는다.','골드와 경험치는 죽어도 남는다. <b>격벽</b> 앞에서 다시.'];
+  function ldSet(f, txt){ if(ldDone) return; var fill=document.getElementById('ld-fill'), pct=document.getElementById('ld-pct'), tx=document.getElementById('ld-txt'); if(fill) fill.style.width=Math.round(f*100)+'%'; if(pct) pct.textContent=Math.round(f*100)+'%'; if(tx&&txt) tx.textContent=txt; }
+  function ldErr(msg){ var l=document.getElementById('loading'); if(l) l.classList.add('is-err'); ldSet(1, msg); }
+  (function tips(){ var el=document.getElementById('ld-tip'), i=Math.floor(Math.random()*TIPS.length); if(!el) return; el.innerHTML=TIPS[i]; setInterval(function(){ if(ldDone) return; el.classList.add('is-fade'); setTimeout(function(){ i=(i+1)%TIPS.length; el.innerHTML=TIPS[i]; el.classList.remove('is-fade'); }, 300); }, 3000); })();
+  LM.onProgress=function(url, n, total){ var f=0.08+0.9*(n/Math.max(total,1)); var what=/boss/.test(url)?'허수아비 깨우는 중':/ain_/.test(url)?'아인 준비 중':/props/.test(url)?'벙커 구조물 배치 중':'벙커 자산 불러오는 중'; ldSet(f, what+' · '+n+'/'+total); };
+  LM.onError=function(url){ console.warn('load fail', url); };
+  var TL=new THREE.TextureLoader(LM); function tex(n, rep){ var t=TL.load('art/env/'+n+'.webp'); t.colorSpace=THREE.SRGBColorSpace; if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); } t.anisotropy=4; return t; }
   function texLin(n, rep){ var t=TL.load('art/env/'+n+'.webp'); if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); } return t; }
   function canvasTex(draw, size){ var c=document.createElement('canvas'); c.width=c.height=size||128; draw(c.getContext('2d'), c.width); var t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
   var glowTex=canvasTex(function(g,s){ var r=g.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2); r.addColorStop(0,'rgba(255,255,255,1)'); r.addColorStop(0.35,'rgba(255,255,255,.55)'); r.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=r; g.fillRect(0,0,s,s); });
@@ -196,15 +204,15 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   /* ---------- 아인 (GLB + 애니메이션) ---------- */
   var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
-  var loader=new GLTFLoader(); var loadN=0;
-  function loaded(){ loadN++; el.loading.textContent='황 혼 — '+Math.round(loadN/4*100)+'%'; if(loadN>=4){ placeProps(); begin(); } }
+  var loader=new GLTFLoader(LM); var loadN=0;
+  function loaded(){ loadN++; if(loadN>=4){ ldSet(1, '입장'); ldDone=true; placeProps(); begin(); } }
   loadProps(loaded); bossLoad(loaded);
   loader.load('art/3d/ain_anim.glb', function(g){ ain.model=g.scene; ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot;
     loader.load('art/3d/ain_scythe_tex.glb', function(w){ var wr=new THREE.Group(); w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); w.scene.position.set(0,-0.95,0); wr.add(w.scene); if(slot){ slot.add(wr); var ws=new THREE.Vector3(); slot.getWorldScale(ws); wr.scale.set(1/ws.x,1/ws.y,1/ws.z); } ain.weapon=wr; loaded(); }, undefined, function(){ loaded(); });
-    setBase('idle'); loaded(); }, undefined, function(err){ el.loading.textContent='아인 모델 로드 실패: '+(err&&err.message||err); });
+    setBase('idle'); loaded(); }, undefined, function(err){ ldErr('아인 모델 로드 실패: '+(err&&err.message||err)); });
   function action(n){ var c=ain.clips[n]; if(!c||!ain.mixer) return null; return ain.mixer.clipAction(c); }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?1.15:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
   function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);
@@ -496,5 +504,5 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); fpsSamples.length=0; }
     step(dt*timeScale); render(dt*timeScale); renderer.render(scene, cam); }
 
-  window.TW_DUNGEON={ world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
+  window.TW_DUNGEON={ world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();
