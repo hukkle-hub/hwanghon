@@ -12,6 +12,7 @@
     ['party.html',     '파티 모집'],
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
+    ['shop.html',      '보급소'],
     ['forge.html',     '강화'],
     ['craft.html',     '제작'],
     ['profile.html',   '프로필'],

@@ -286,7 +286,7 @@ html.mobile.portrait .pf .rail{grid-template-columns:repeat(4,1fr)}
    .monly 은 휴대폰 레이아웃에서만 보이는 요소. 인력사무실의 '메뉴' 패널은 데스크톱 하단 내비의 대체 */
 .monly{display:none!important}
 html.mobile .monly{display:grid!important}
-html.mobile .mmenu{grid-template-columns:repeat(4,1fr);gap:8px;align-content:start}
+html.mobile .mmenu{grid-template-columns:repeat(3,1fr);gap:8px;align-content:start}
 html.mobile .mmenu a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:82px;padding:8px 6px;
   border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--tx-dim);text-decoration:none}
 html.mobile .mmenu a .ico{width:24px;height:24px;color:var(--gold-dim);margin-bottom:2px}
@@ -296,3 +296,10 @@ html.mobile .mmenu a.is-go{border-color:rgba(199,58,54,.6);background:linear-gra
 html.mobile .mmenu a.is-go .ico{color:#E0625B}
 html.mobile .mmenu a:active{filter:brightness(1.3)}
 html.mobile.portrait .mmenu{grid-template-columns:repeat(2,1fr)}
+/* 보급소 */
+html.mobile .shop__c{display:flex;flex-direction:column;gap:10px}
+html.mobile .deal{display:grid!important;grid-template-columns:1fr auto;gap:10px}
+html.mobile .deal .qty button,html.mobile .deal .qty input{height:44px}
+html.mobile .goods{display:grid;grid-template-columns:96px 1fr;gap:12px}
+html.mobile .goods__art{height:96px}
+html.mobile.portrait .goods{grid-template-columns:1fr}

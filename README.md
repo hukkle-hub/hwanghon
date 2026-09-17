@@ -12,6 +12,7 @@ game-ui/
 ├── party.html        3. 파티 모집 / 인력사무실
 ├── battle.html       4. 전투 화면 (HUD)
 ├── inventory.html    5. 장비 / 인벤토리
+├── shop.html         보급소 (소모품·재료 구매/판매, 단가는 items.js SHOP)
 ├── forge.html        6. 장비 관리 / 강화 (재료·확률·비용은 items.js)
 ├── craft.html        6-1. 장비 관리 / 제작 (레시피 · 재료 보유/필요 · 제작)
 ├── profile.html      7. 플레이어 프로필 / 기술 등급

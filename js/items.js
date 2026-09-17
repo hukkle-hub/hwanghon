@@ -100,6 +100,24 @@
     { id:'q_fragment',name:'변이체의 핵심 파편', type:'quest', rarity:'hero', icon:'gem',    qty:2,  src:'sheet', desc:'의뢰 선택 목표. 보스 도감 갱신에 사용.' }
   ];
 
+  /* ---------- 보급소(상점) 카탈로그: buy = 구매 단가(없으면 판매 전용), sell = 판매 단가 ---------- */
+  var SHOP = [
+    { id:'c_potion',   buy:120,  sell:40,  tag:'출격 필수' },
+    { id:'c_throw',    buy:450,  sell:160 },
+    { id:'c_antidote', buy:90,   sell:30 },
+    { id:'c_tool',     buy:300,  sell:100, tag:'체크리스트' },
+    { id:'m_fiber',    buy:15,   sell:5 },
+    { id:'m_ore',      buy:40,   sell:14 },
+    { id:'m_bone',     buy:30,   sell:10 },
+    { id:'m_dew',      buy:160,  sell:55 },
+    { id:'m_oil',      buy:220,  sell:75 },
+    { id:'m_alloy',    buy:350,  sell:120, tag:'강화' },
+    { id:'m_shard',    buy:null, sell:600 },
+    { id:'m_core',     buy:null, sell:1500 },
+    { id:'m_booster',  buy:null, sell:700 },
+    { id:'m_heart',    buy:null, sell:3000 }
+  ];
+
   /* ---------- 제작 레시피 (강화 재료 요구량은 06-forge 시트의 필요 수치와 동일) ---------- */
   var RECIPE = [
     { id:'r_marsh_blade', result:'w_marsh_blade', cat:'weapon', craftLv:20, time:'00:12:00', cost:18000, src:'sheet',
@@ -187,7 +205,7 @@
 
   window.TW_ITEMS = {
     RARITY:RARITY, TYPE:TYPE, SLOT:SLOT,
-    EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER,
+    EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP,
     get:get, rarityOf:rarityOf, fmt:fmt, slotIcon:slotIcon, canCraft:canCraft, craft:craft, slotHTML:slotHTML
   };
 })();

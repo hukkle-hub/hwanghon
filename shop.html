@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 보급소</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.shop{display:grid;grid-template-columns:300px 1fr 330px;gap:12px;padding:12px 18px;flex:1;min-height:0}
+.shop .tabs--pill{flex-wrap:wrap}
+/* 상품 목록 */
+.grow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid transparent;border-bottom:1px solid var(--line-soft);cursor:pointer;transition:.15s}
+.grow:hover{background:rgba(255,255,255,.03)}
+.grow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));box-shadow:inset 2px 0 0 var(--red-lit)}
+.grow .slot{width:40px;height:40px;aspect-ratio:auto;flex:none;cursor:inherit}
+.grow .slot .ico{width:22px;height:22px}
+.grow__nm{font-size:12.5px;color:var(--tx-hi)}
+.grow__sub{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.grow__pr{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;flex:none}
+.grow__pr b{display:block;font-size:13px;font-weight:500;color:#E8D9A8}
+.grow__pr span{font-size:10px;color:var(--tx-faint)}
+.grow__tag{font-size:9.5px;letter-spacing:.06em;padding:1px 5px;border:1px solid var(--line-gold);color:#C9A45E;margin-left:6px}
+/* 중앙 */
+.shop__c{display:grid;grid-template-rows:auto 1fr auto;gap:11px;min-height:0}
+.goods{display:grid;grid-template-columns:150px 1fr;gap:16px;padding:14px 16px}
+.goods__art{height:150px;position:relative;border:1px solid var(--line);display:grid;place-items:center;
+  background:radial-gradient(60% 60% at 50% 55%,rgba(201,138,43,.14),transparent 70%),rgba(0,0,0,.35);color:#B9A46E}
+.goods__art .ico{width:74px;height:74px;stroke-width:.8}
+.goods__nm{font-family:var(--f-serif);font-size:20px;letter-spacing:.03em}
+.goods__desc{font-size:12.5px;color:var(--tx-dim);line-height:1.75;margin-top:8px}
+.goods__meta{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:10px}
+.deal{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 14px}
+.deal__k{font-size:11px;color:var(--tx-faint)}
+.deal__v{font-size:14px;color:var(--tx-hi);font-variant-numeric:tabular-nums;margin-top:2px}
+.deal__v.no{color:#C9534E}
+.qty{display:flex;align-items:center;border:1px solid var(--line);background:rgba(0,0,0,.4)}
+.qty button{width:30px;height:32px;color:var(--tx-dim)}
+.qty button:hover{color:var(--tx-hi);background:rgba(255,255,255,.05)}
+.qty input{width:44px;height:32px;text-align:center;background:none;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);color:var(--tx-hi);outline:none;font-size:13px}
+.btn--deal{height:44px;padding:0 34px;font-family:var(--f-serif);font-size:17px;letter-spacing:.2em}
+.btn--deal.is-sell{border-color:rgba(123,155,214,.6);background:linear-gradient(180deg,rgba(60,80,130,.55),rgba(30,40,70,.55))}
+/* 우측 */
+.npc{position:relative;height:190px;border:1px solid var(--line);overflow:hidden}
+.npc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%}
+.npc::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,7,10,.95),rgba(6,7,10,.2) 60%)}
+.npc__t{position:absolute;left:14px;right:14px;bottom:12px;z-index:2}
+.npc__t b{display:block;font-family:var(--f-serif);font-size:16px;color:var(--tx-hi)}
+.npc__t span{font-size:11px;color:var(--tx-faint)}
+.npc__t p{margin:6px 0 0;font-size:12px;color:#D6CFC4;line-height:1.65;font-style:italic}
+.log{font-size:11px;color:var(--tx-faint);line-height:1.8;max-height:160px;overflow:auto}
+.log b{color:#D9C07A;font-weight:400}
+.log i{color:#9FB6E0;font-style:normal}
+.prop{display:flex;gap:9px;padding:6px 0;font-size:12px;color:var(--tx-dim);line-height:1.7}
+.prop i{color:#B03A36;font-style:normal;flex:none}
+.prop span{flex:1;min-width:0}
+#check .check{display:flex;width:100%;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px}
+#check .check:last-child{border:0}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:300;padding:9px 18px;
+  background:rgba(10,11,14,.94);border:1px solid var(--line-gold);color:#E8D9A8;font-size:12.5px;letter-spacing:.04em;
+  box-shadow:var(--sh-pop);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">보급소</h1>
+      <div class="topbar__sub">마태오의 인력사무소 · 소모품 · 재료 매입/매출</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num" id="gold">0</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="shop" data-mdefault="상품">
+    <!-- 상품 목록 -->
+    <section class="panel panel--framed" data-mpane="상품">
+      <div class="panel__head"><span class="panel__title">품목</span><span class="panel__meta" id="gcount"></span></div>
+      <div class="panel__body panel__body--tight none">
+        <div class="tabs tabs--pill" id="gcat">
+          <button class="tab is-on" data-cat="consumable">소모품</button>
+          <button class="tab" data-cat="material">재료</button>
+          <button class="tab" data-cat="sell">판매</button>
+        </div>
+      </div>
+      <div class="panel__body panel__body--flush fill scroll" id="glist" data-mgoto="거래"></div>
+    </section>
+
+    <!-- 거래 -->
+    <div class="shop__c" data-mpane="거래">
+      <section class="panel panel--framed">
+        <div class="goods">
+          <div class="goods__art" id="g-art"></div>
+          <div>
+            <div class="flex ac g2">
+              <span class="goods__nm" id="g-nm"></span>
+              <span class="chip" id="g-rar"></span>
+            </div>
+            <div class="goods__desc" id="g-desc"></div>
+            <div class="goods__meta">
+              <div class="stat"><span>보유</span><b class="num" id="g-own">0</b></div>
+              <div class="stat"><span id="g-pk">단가</span><b class="num" id="g-price">0</b></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">보급 안내</span></div>
+        <div class="panel__body scroll">
+          <div class="prop"><i>•</i><span>소모품과 기본 재료는 언제든 보급받을 수 있다. 고급 재료(파편·코어·심장 결정)는 <b class="t-dim">토벌</b>로만 얻는다.</span></div>
+          <div class="prop"><i>•</i><span>판매가는 매입가의 약 1/3. 던전에서 주운 <b class="t-dim">갈대 섬유·뼛조각</b>은 여기서 정리하면 된다.</span></div>
+          <div class="prop"><i>•</i><span>장비는 팔지 않는다. <a href="craft.html" style="color:#C9A45E">대장간 제작</a>과 <a href="forge.html" style="color:#C9A45E">강화</a>를 이용할 것.</span></div>
+          <div class="prop"><i>•</i><span>회복약은 전투 중 사용 가능(HP 35%). 출격 전 <b class="t-dim">3개 이상</b> 권장.</span></div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="deal">
+          <div class="flex g4">
+            <div><div class="deal__k" id="d-k">합계</div>
+              <div class="deal__v flex ac g1" id="d-total-w"><svg class="ico ico--sm t-gold"><use href="#i-coin"/></svg><span id="d-total">0</span></div></div>
+            <div><div class="deal__k">거래 후 잔액</div><div class="deal__v" id="d-after">0</div></div>
+          </div>
+          <div class="qty">
+            <button id="q-minus">−</button><input id="q" value="1" inputmode="numeric"><button id="q-plus">+</button>
+          </div>
+          <button class="btn btn--primary btn--deal" id="do-deal" data-primary>구매</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- 안내 -->
+    <div class="flex col g3" style="min-height:0" data-mpane="안내">
+      <section class="panel panel--framed">
+        <div class="npc">
+          <img src="art/office-brief.webp" alt="">
+          <div class="npc__t"><b>마태오</b><span>인력사무소 소장 · 보급 담당</span>
+            <p id="npc-line">“필요한 건 다 있어. 돈만 있으면.”</p></div>
+        </div>
+      </section>
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">출격 준비 점검</span></div>
+        <div class="panel__body panel__body--tight" id="check"></div>
+      </section>
+      <section class="panel panel--framed fill">
+        <div class="panel__head"><span class="panel__title">거래 기록</span></div>
+        <div class="panel__body panel__body--tight log" id="log">아직 거래 기록이 없습니다.</div>
+      </section>
+    </div>
+  </main>
+
+  <div class="hotbar">
+    <a class="hot" href="office.html"><span class="key">ESC</span>뒤로</a>
+    <a class="hot" href="inventory.html"><span class="key">I</span>인벤토리</a>
+    <span class="hotbar__spacer"></span>
+    <span class="hot xs t-ghost">단가: js/items.js SHOP (시트 기준 · 실자료 교체 예정)</span>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/sfx.js"></script>
+<script>
+/* 보급소 — items.js SHOP 카탈로그 + save.js 지갑/가방 */
+(function(){
+  var T=window.TW_ITEMS, SV=window.TW_SAVE, $=function(s){return document.querySelector(s);};
+  /* 인벤토리와 같은 병합: 시트 기준 보유량 + 저장 가방 */
+  try{ var sv=SV.get(); Object.keys(sv.bag).forEach(function(id){ var it=T.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); }catch(e){}
+  var cat='consumable', sel=null, lines=[];
+  var LINES={ buy:['“좋아. 쓸 만한 걸 골랐군.”','“다시 챙기러 올 필요 없게 넉넉히 사 둬.”','“회복약은 싸다. 목숨은 안 그렇고.”'], sell:['“정리 잘했어. 창고가 비어야 새 게 들어오지.”','“이 정도면 쳐 주지.”'], no:['“돈이 모자라. 지하에서 더 벌어 와.”','“없는 걸 팔 수는 없잖아.”'] };
+  function gold(){ return SV.wallet(); }
+  function fmt(n){ return T.fmt(n); }
+  function entry(id){ return T.SHOP.filter(function(x){ return x.id===id; })[0]; }
+  function list(){
+    var rows=T.SHOP.filter(function(e){ var it=T.get(e.id); if(!it) return false;
+      if(cat==='sell') return e.sell && it.qty>0; return e.buy && it.type===cat; });
+    $('#gcount').textContent=rows.length+' 종';
+    $('#glist').innerHTML=rows.map(function(e){ var it=T.get(e.id), sell=cat==='sell';
+      return '<div class="grow'+(sel===e.id?' is-on':'')+'" data-id="'+e.id+'">'+T.slotHTML(e.id,{noTag:true})+
+        '<div><div class="grow__nm">'+it.name+(e.tag&&!sell?'<span class="grow__tag">'+e.tag+'</span>':'')+'</div><div class="grow__sub">보유 '+fmt(it.qty)+' · '+T.RARITY[it.rarity].name+'</div></div>'+
+        '<div class="grow__pr"><b>'+fmt(sell?e.sell:e.buy)+'</b><span>'+(sell?'판매가':'단가')+'</span></div></div>'; }).join('')
+      || '<div class="xs t-faint" style="padding:14px 12px">'+(cat==='sell'?'팔 수 있는 물건이 없습니다.':'품목이 없습니다.')+'</div>';
+    if(!rows.some(function(e){ return e.id===sel; })) sel=rows.length?rows[0].id:null;
+    detail();
+  }
+  function qty(){ var v=parseInt($('#q').value,10); if(!(v>0)) v=1; if(v>999) v=999; $('#q').value=v; return v; }
+  function detail(){
+    var sell=cat==='sell', btn=$('#do-deal');
+    btn.textContent=sell?'판매':'구매'; btn.classList.toggle('is-sell',sell); $('#g-pk').textContent=sell?'판매 단가':'단가';
+    if(!sel){ $('#g-nm').textContent='—'; $('#g-desc').textContent=''; $('#g-art').innerHTML=''; $('#g-own').textContent='0'; $('#g-price').textContent='0'; $('#d-total').textContent='0'; $('#d-after').textContent=fmt(gold()); btn.disabled=true; return; }
+    var e=entry(sel), it=T.get(sel), n=qty(), unit=sell?e.sell:e.buy, total=unit*n, after=sell?gold()+total:gold()-total;
+    $('#g-art').innerHTML='<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
+    $('#g-nm').textContent=it.name; $('#g-rar').textContent=T.RARITY[it.rarity].name; $('#g-rar').style.color=T.RARITY[it.rarity].color; $('#g-rar').style.borderColor=T.RARITY[it.rarity].color;
+    $('#g-desc').textContent=it.desc||''; $('#g-own').textContent=fmt(it.qty); $('#g-price').textContent=fmt(unit);
+    $('#d-k').textContent=sell?'받을 금액':'합계'; $('#d-total').textContent=fmt(total); $('#d-after').textContent=fmt(after);
+    var bad=sell?(n>it.qty):(after<0); $('#d-after').classList.toggle('no',bad); btn.disabled=bad;
+  }
+  function refreshGold(){ $('#gold').textContent=fmt(gold()); }
+  function check(){ var need=[['c_potion',3,'회복약 3개'],['c_throw',1,'투척 폭약 1개'],['c_antidote',1,'지혈제 1개'],['c_tool',1,'채집 도구']];
+    $('#check').innerHTML=need.map(function(x){ var it=T.get(x[0]), ok=it.qty>=x[1]; return '<label class="check'+(ok?' is-on':'')+'"><i></i>'+x[2]+' <span class="xs t-faint" style="margin-left:auto">보유 '+fmt(it.qty)+'</span></label>'; }).join(''); }
+  function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('on'); },1600); }
+  function say(k){ var a=LINES[k]; $('#npc-line').textContent=a[Math.floor(Math.random()*a.length)]; }
+  function deal(){
+    if(!sel) return; var sell=cat==='sell', e=entry(sel), it=T.get(sel), n=qty(), unit=sell?e.sell:e.buy, total=unit*n;
+    if(sell){ if(n>it.qty){ say('no'); toast('보유량이 부족합니다'); return; } SV.addItem(sel,-n); SV.addGold(total); it.qty-=n; lines.unshift('<i>판매</i> '+it.name+' ×'+n+' → <b>+'+fmt(total)+'</b>'); say('sell'); toast(it.name+' ×'+n+' 판매 · +'+fmt(total)); }
+    else { if(gold()-total<0){ say('no'); toast('골드가 부족합니다'); return; } SV.addItem(sel,n); SV.addGold(-total); it.qty+=n; lines.unshift('<b>구매</b> '+it.name+' ×'+n+' · −'+fmt(total)); say('buy'); toast(it.name+' ×'+n+' 구매'); }
+    if(window.TW_SFX) TW_SFX.play('clear');
+    $('#log').innerHTML=lines.slice(0,12).join('<br>'); refreshGold(); list(); check();
+  }
+  $('#gcat').addEventListener('click', function(ev){ var b=ev.target.closest('[data-cat]'); if(!b) return; cat=b.getAttribute('data-cat'); [].forEach.call($('#gcat').children,function(x){ x.classList.toggle('is-on',x===b); }); $('#q').value=1; list(); });
+  $('#glist').addEventListener('click', function(ev){ var r=ev.target.closest('.grow'); if(!r) return; sel=r.getAttribute('data-id'); $('#q').value=1; list(); });
+  $('#q-minus').onclick=function(){ $('#q').value=Math.max(1,qty()-1); detail(); };
+  $('#q-plus').onclick=function(){ $('#q').value=Math.min(999,qty()+1); detail(); };
+  $('#q').addEventListener('input', detail);
+  $('#do-deal').addEventListener('click', deal);
+  document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') location.href='office.html'; if(ev.key==='i'||ev.key==='I') location.href='inventory.html'; });
+  refreshGold(); list(); check();
+})();
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>
