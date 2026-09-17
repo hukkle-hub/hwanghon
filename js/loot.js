@@ -21,7 +21,7 @@
     var base=(sum.mats||[]).map(function(m){ return [m[0], m[1]]; });               /* 아레나 기본 보상 (+S 보너스) */
     var gm=c.gradeGold[sum.rank]||1, gold=Math.round((sum.gold||0)*gm), bonus=[];
     if(gm!==1) bonus.push(['등급 보상 '+sum.rank, (gm>1?'+':'')+Math.round((gm-1)*100)+'% 골드']);
-    var rare=roll(c, luck); if(rare.length) bonus.push(['희귀 드랍', '행운 ×'+luck.toFixed(2)]);
+    var rare=roll(c, luck); bonus.push(['행운 ×'+luck.toFixed(2), '카운터 '+Math.round((sum.counterRate||0)*100)+'% · 부위 파괴 '+(sum.breaks||0)+'/'+(sum.breakable||0)+(rare.length?' → 희귀 드랍 '+rare.length+'종':'')]);
     var firstItems=[]; if(first){ gold+=c.first.gold; firstItems=c.first.items.slice(); bonus.push(['최초 클리어', '+'+T.fmt(c.first.gold)+' 골드 · 보조제 ×2 · 심장 결정']); }
     var all=base.concat(rare, firstItems), merged={}; all.forEach(function(m){ merged[m[0]]=(merged[m[0]]||0)+m[1]; });
     var list=Object.keys(merged).map(function(id){ return [id, merged[id]]; });

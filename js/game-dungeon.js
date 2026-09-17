@@ -256,7 +256,8 @@
       setTimeout(function(){ overlay('<div class="ov__k">던전 클리어</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+A.stages[A.stages.length-1].name+' 격파</div>'+
         '<div class="ov__stats"><div>등급<b class="g-'+sum.rank+'">'+sum.rank+'</b></div><div>시간<b>'+sum.op.time+'</b></div><div>카운터<b>'+sum.op.counterRate+'</b></div><div>부위 파괴<b>'+sum.breaks+'/'+sum.breakable+'</b></div><div>받은 피해<b>'+sum.op.dmgTaken+'</b></div></div>'+
         '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 1800); } }
-  function finish(sum){ var T=window.TW_ITEMS, LT=window.TW_LOOT; var prev0=null; try{ prev0=JSON.parse(localStorage.getItem('tw:arena:'+A.id)||'null'); }catch(e){}
+  function collectAll(){ pickups.forEach(function(p){ if(p.taken) return; p.taken=true; if(p.kind==='gold') SAVE.addGold(p.amt); else if(window.TW_LOOT&&TW_LOOT.isGear(p.id)&&window.TW_GEAR) TW_GEAR.addGear(p.id); else if(window.TW_GEAR) TW_GEAR.addItem(p.id, p.amt); else SAVE.addItem(p.id, p.amt); }); pickups=[]; }
+  function finish(sum){ var T=window.TW_ITEMS, LT=window.TW_LOOT; collectAll(); var prev0=null; try{ prev0=JSON.parse(localStorage.getItem('tw:arena:'+A.id)||'null'); }catch(e){}
     var rw=LT?LT.clearRewards(A.id, sum, !(prev0&&prev0.cleared)):{ gold:sum.gold, mats:sum.mats.map(function(m){ var it=T.get(m[0]); return [m[0], m[1], it?it.rarity:'common']; }), craft:[], bonus:[], all:sum.mats };
     if(LT){ LT.grant(rw.all); } else rw.all.forEach(function(m){ SAVE.addItem(m[0], m[1]); }); SAVE.addGold(rw.gold);
     var res={ arena:A.id, at:new Date().toISOString(), op:sum.op, mastery:sum.mastery, gold:rw.gold, mats:rw.mats, craft:rw.craft, bonus:rw.bonus, xp:runXp, rank:sum.rank, time:sum.time, counterRate:sum.counterRate, perfect:sum.perfect, dmgTaken:sum.dmgTaken, breaks:sum.breaks, breakable:sum.breakable,
