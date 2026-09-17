@@ -228,7 +228,7 @@
   function tickPickups(dt){ pickups=pickups.filter(function(p){ if(p.taken) return false; p.t+=dt; if(p.t>0.4 && world.dist(P.x,P.y,p.x,p.y)<170){ p.taken=true; scene.tweens.add({ targets:p.sp, x:P.x, y:P.y*DEPTH-60, alpha:0, duration:220, onComplete:function(){ p.sp.destroy(); } });
       if(p.kind==='gold'){ SAVE.addGold(p.amt); toast('<b>+'+p.amt+'</b> 골드'); } else { SAVE.addItem(p.id, p.amt); toast(p.name+' <b>×'+p.amt+'</b>'); } SFX.play('ui'); renderProg(); return false; } return true; }); }
   function gainXp(n, why){ var r=SAVE.addXp(n); toast('경험치 <b>+'+n+'</b>'+(why?' · '+why:'')); if(r.leveled){ toast('<b>LEVEL UP</b> — Lv.'+r.lv); SFX.play('clear'); flash(); burst(P.x, P.y*DEPTH-90, 50, 0x5FAE9B); } renderProg(); }
-  function renderProg(){ var sv=SAVE.get(); fill('v-xp', sv.xp/SAVE.need(sv.lv)*100); $('#xp-lv').textContent='LV.'+sv.lv; $('#v-gold').textContent=W.fmt(sv.gold)+' G'; }
+  function renderProg(){ var sv=SAVE.get(); fill('v-xp', sv.xp/SAVE.need(sv.lv)*100); $('#xp-lv').textContent='LV.'+sv.lv; $('#v-gold').textContent=W.fmt(SAVE.wallet?SAVE.wallet():sv.gold)+' G'; }
   function renderQuest(){ var q=L.beats.quest, prog=[quest.mobs, quest.gate, quest.boss], curI=-1; var html='<div class="quest__t">훈련장 수료</div>'; q.forEach(function(it,i){ var done=prog[i]>=it[1]; if(!done&&curI<0) curI=i; html+='<div class="q'+(done?' done':i===curI?' cur':'')+'"><span>'+it[0]+'</span><span>'+Math.min(prog[i],it[1])+' / '+it[1]+'</span></div>'; }); el.quest.innerHTML=html; }
   function comboShow(n, big){ if(n===0) return; el.comboN.textContent=n; el.combo.classList.toggle('big', !!big); el.combo.classList.add('is-on'); comboT=1.1; }
   var dlgLines=null, dlgI=0, dlgDone=null;

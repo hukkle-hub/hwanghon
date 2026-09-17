@@ -140,11 +140,31 @@
       mats:[['m_oil',1],['m_bone',4],['m_ore',2]] }
   ];
 
+  /* ---------- 제작 자유도: 장비 레시피는 주재료·보조 재료·촉매를 고른다. 재료가 수치·이름·외형(색·광택·발광·크기)을 바꾼다 ---------- */
+  var CRAFT_SLOTS = [
+    { key:'core', name:'주재료', n:8, opts:['m_ore','m_alloy','m_core','m_heart'], hint:'날·판의 재질. 공격·방어의 뼈대' },
+    { key:'grip', name:'보조 재료', n:6, opts:['m_fiber','m_bone','m_dew','m_oil'], hint:'자루·안감. 손맛과 부가 능력' },
+    { key:'cat',  name:'촉매', n:2, opts:[null,'m_shard','m_booster'], hint:'선택. 마무리 처리' }
+  ];
+  var CRAFT_FX = {
+    m_ore:    { mul:{atk:1.00,def:1.00,hp:1.00}, add:{}, name:'철',   look:{ tint:'#6f5b4a', metal:0.6, rough:0.75, glow:0 }, desc:'기본. 녹슨 철의 무게' },
+    m_alloy:  { mul:{atk:1.08,def:1.08,hp:1.04}, add:{}, name:'합금', look:{ tint:'#9aa3ad', metal:0.9, rough:0.35, glow:0 }, desc:'공격·방어 +8%, 강철 광택' },
+    m_core:   { mul:{atk:1.15,def:1.06,hp:1.06}, add:{skill:3}, name:'코어', look:{ tint:'#c8503c', metal:0.7, rough:0.45, glow:0.6, glowColor:'#ff4a2a' }, desc:'공격 +15%, 스킬 피해 +3%, 날이 붉게 달아오름', rarityUp:1 },
+    m_heart:  { mul:{atk:1.25,def:1.12,hp:1.10}, add:{crit:4}, name:'심장', look:{ tint:'#7a4bd6', metal:0.5, rough:0.30, glow:0.9, glowColor:'#b06cff', scale:1.08 }, desc:'공격 +25%, 치명타 +4%, 결정 광택·날이 커짐', rarityUp:1 },
+    m_fiber:  { mul:{}, add:{hp:300}, name:'섬유', look:{}, desc:'HP +300 (가벼운 감기)' },
+    m_bone:   { mul:{}, add:{crit:2,critDmg:5}, name:'골각', look:{ rough:0.1 }, desc:'치명타 +2%, 치명타 피해 +5%, 뼈 장식(거친 결)' },
+    m_dew:    { mul:{}, add:{crit:3}, name:'이슬', look:{ glow:0.3, glowColor:'#ff6a6a' }, desc:'치명타 +3%, 붉은 기운' },
+    m_oil:    { mul:{}, add:{bleed:12}, name:'정제', look:{ rough:-0.15 }, desc:'출혈 적중 +12, 기름 광택' },
+    m_shard:  { mul:{}, add:{skill:4}, name:'파편', look:{ glow:0.2 }, desc:'스킬 피해 +4%' },
+    m_booster:{ mul:{}, add:{}, name:'담금', look:{}, startEnh:1, desc:'완성과 동시에 +1 강화' }
+  };
+  function register(it){ byId[it.id]=it; return it; }
+
   /* ---------- 강화 단계표 (+5 → 65% / 18,000 은 06-forge 시트 수치) ---------- */
   var ENHANCE = [
-    { to:1, rate:100, cost:1200,  mats:[['m_alloy',4]] },
-    { to:2, rate:95,  cost:2400,  mats:[['m_alloy',8]] },
-    { to:3, rate:88,  cost:4800,  mats:[['m_alloy',12],['m_shard',2]] },
+    { to:1, rate:92,  cost:1200,  mats:[['m_alloy',4]] },
+    { to:2, rate:88,  cost:2400,  mats:[['m_alloy',8]] },
+    { to:3, rate:82,  cost:4800,  mats:[['m_alloy',12],['m_shard',2]] },
     { to:4, rate:78,  cost:9600,  mats:[['m_alloy',20],['m_shard',8]] },
     { to:5, rate:65,  cost:18000, mats:[['m_alloy',36],['m_shard',18],['m_core',6],['m_booster',2]] },
     { to:6, rate:52,  cost:26000, mats:[['m_alloy',48],['m_shard',24],['m_core',10],['m_booster',3]] },
@@ -205,7 +225,7 @@
 
   window.TW_ITEMS = {
     RARITY:RARITY, TYPE:TYPE, SLOT:SLOT,
-    EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP,
+    EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP, CRAFT_SLOTS:CRAFT_SLOTS, CRAFT_FX:CRAFT_FX, register:register,
     get:get, rarityOf:rarityOf, fmt:fmt, slotIcon:slotIcon, canCraft:canCraft, craft:craft, slotHTML:slotHTML
   };
 })();

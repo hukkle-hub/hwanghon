@@ -305,3 +305,6 @@ html.mobile .deal .qty button,html.mobile .deal .qty input{height:44px}
 html.mobile .goods{display:grid;grid-template-columns:96px 1fr;gap:12px}
 html.mobile .goods__art{height:96px}
 html.mobile.portrait .goods{grid-template-columns:1fr}
+/* 제작 재료 선택 (터치 목표 ≥ 40px) */
+html.mobile .pickrow{grid-template-columns:1fr}
+html.mobile .pickopt{height:40px;padding:0 12px;font-size:12.5px}

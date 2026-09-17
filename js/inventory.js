@@ -33,7 +33,7 @@
   function head(it){
     var r = T.RARITY[it.rarity];
     return '<div class="iname" style="color:'+r.color+'">'+it.name+'</div>'+
-      '<div class="xs t-faint mt1">'+(it.origin||'')+'</div>'+
+      '<div class="xs t-faint mt1">'+(it.origin||'')+(it.custom?' · <span style="color:#B9A46E">제작 자유도: 재료가 수치·외형을 결정</span>':'')+'</div>'+
       '<div class="xs mt1" style="color:'+r.color+'">'+(it.kind||T.TYPE[it.type])+' / '+r.name+' 등급</div>';
   }
 

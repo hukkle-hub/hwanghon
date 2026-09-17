@@ -220,13 +220,21 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
   var loader=new GLTFLoader(LM); var loadN=0;
+  /* 제작 자유도: 장착한 주무기가 제작품이면 재료에 따라 낫의 색·광택·발광·크기를 바꾼다 (gear.js lookOf) */
+  function applyWeaponLook(wr){ try{ var G=window.TW_GEAR; if(!G) return; var main=G.state().equipped.main; var look=main&&G.lookOf(main); if(!look) return;
+      wr.traverse(function(o){ if(!o.isMesh) return; var m=o.material=o.material.clone(); if(look.tint){ var t=new THREE.Color(look.tint); m.color=m.color?m.color.lerp(t,0.55):t; }
+        if(look.metal!=null) m.metalness=look.metal; if(look.rough) m.roughness=Math.max(0.05, Math.min(1, (m.roughness||0.5)+look.rough));
+        if(look.glow&&m.emissive){ m.emissive=new THREE.Color(look.glowColor||'#ff4a2a'); m.emissiveIntensity=look.glow*0.9; } m.needsUpdate=true; });
+      if(look.scale&&look.scale!==1) wr.scale.multiplyScalar(look.scale);
+      if(look.glow>0.5){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:new THREE.Color(look.glowColor||'#ff4a2a'), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.35*look.glow })); sp.scale.set(0.9,0.9,1); sp.position.set(-0.2, 0.75, 0); wr.add(sp); }
+    }catch(e){ console.warn('weapon look', e); } }
   function loaded(){ loadN++; if(loadN>=4){ ldSet(1, '입장'); ldDone=true; placeProps(); begin(); } }
   loadProps(loaded); bossLoad(loaded);
   loader.load('art/3d/ain_anim.glb', function(g){ ain.model=g.scene; capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot;
-    loader.load('art/3d/ain_scythe_tex.glb', function(w){ capTextures(w.scene); var wr=new THREE.Group(); w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); w.scene.position.set(0,-0.75,0); wr.add(w.scene); if(slot){ slot.add(wr); var ws=new THREE.Vector3(); slot.getWorldScale(ws); wr.scale.set(1/ws.x,1/ws.y,1/ws.z); } ain.weapon=wr; loaded(); }, undefined, function(){ loaded(); });
+    loader.load('art/3d/ain_scythe_tex.glb', function(w){ capTextures(w.scene); var wr=new THREE.Group(); w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); w.scene.position.set(0,-0.75,0); wr.add(w.scene); if(slot){ slot.add(wr); var ws=new THREE.Vector3(); slot.getWorldScale(ws); wr.scale.set(1/ws.x,1/ws.y,1/ws.z); } ain.weapon=wr; applyWeaponLook(wr); loaded(); }, undefined, function(){ loaded(); });
     setBase('idle'); loaded(); }, undefined, function(err){ ldErr('아인 모델 로드 실패: '+(err&&err.message||err)); });
   function action(n){ var c=ain.clips[n]; if(!c||!ain.mixer) return null; return ain.mixer.clipAction(c); }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?1.15:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
@@ -362,7 +370,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   function tickPickups(dt){ pickups=pickups.filter(function(p){ if(p.taken) return false; p.t+=dt; if(p.sp.position.y>0.3){ p.vy-=9*dt; p.sp.position.y=Math.max(0.3, p.sp.position.y+p.vy*dt); if(p.sp.position.y<=0.3&&p.vy<0) p.vy=-p.vy*0.4; } p.sp.position.y+=Math.sin(p.t*4)*0.002;
       if(p.t>0.4 && world.dist(P.x,P.y,p.x,p.y)<170){ p.taken=true; scene.remove(p.sp); if(p.kind==='gold'){ SAVE.addGold(p.amt); toast('<b>+'+p.amt+'</b> 골드'); } else { SAVE.addItem(p.id, p.amt); toast(p.name+' <b>×'+p.amt+'</b>'); } SFX.play('ui'); renderProg(); return false; } return true; }); }
   function gainXp(n, why){ var r=SAVE.addXp(n); toast('경험치 <b>+'+n+'</b>'+(why?' · '+why:'')); if(r.leveled){ toast('<b>LEVEL UP</b> — Lv.'+r.lv); SFX.play('clear'); flash(); burst(above(P.x,P.y,1.4), 50, 0x5FAE9B); } renderProg(); }
-  function renderProg(){ var sv=SAVE.get(); fill('v-xp', sv.xp/SAVE.need(sv.lv)*100); $('#xp-lv').textContent='LV.'+sv.lv; $('#v-gold').textContent=W.fmt(sv.gold)+' G'; }
+  function renderProg(){ var sv=SAVE.get(); fill('v-xp', sv.xp/SAVE.need(sv.lv)*100); $('#xp-lv').textContent='LV.'+sv.lv; $('#v-gold').textContent=W.fmt(SAVE.wallet?SAVE.wallet():sv.gold)+' G'; }
   function renderQuest(){ var q=L.beats.quest, prog=[quest.mobs, quest.gate, quest.boss], curI=-1; var html='<div class="quest__t">훈련장 수료</div>'; q.forEach(function(it,i){ var done=prog[i]>=it[1]; if(!done&&curI<0) curI=i; html+='<div class="q'+(done?' done':i===curI?' cur':'')+'"><span>'+it[0]+'</span><span>'+Math.min(prog[i],it[1])+' / '+it[1]+'</span></div>'; }); el.quest.innerHTML=html; }
   function comboShow(n, big){ if(n===0) return; el.comboN.textContent=n; el.combo.classList.toggle('big', !!big); el.combo.classList.add('is-on'); comboT=1.1; }
   var dlgLines=null, dlgI=0, dlgDone=null;

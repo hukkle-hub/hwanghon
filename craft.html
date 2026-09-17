@@ -53,6 +53,18 @@
 .matrow__n b{font-weight:500}
 .matrow__n.no b{color:#C9534E}
 .matrow__n.ok b{color:#8FBF8F}
+.pickrow{display:grid;grid-template-columns:76px 1fr;gap:8px;align-items:start;padding:7px 0;border-bottom:1px solid var(--line-soft)}
+.pickrow:last-child{border:0}
+.pickrow__k{font-size:11.5px;color:var(--tx-hi);padding-top:6px}
+.pickrow__k small{display:block;font-size:9.5px;color:var(--tx-faint);margin-top:2px;line-height:1.4}
+.pickopts{display:flex;flex-wrap:wrap;gap:5px}
+.pickopt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid var(--line);background:rgba(255,255,255,.02);font-size:11.5px;color:var(--tx-dim);cursor:pointer}
+.pickopt .ico{width:14px;height:14px}
+.pickopt.is-on{color:#EBD6D6;border-color:var(--line-red);background:rgba(165,28,28,.2)}
+.pickopt.no{opacity:.45}
+.pickopt i{font-style:normal;font-size:10px;color:var(--tx-faint)}
+.pickdesc{font-size:10.5px;color:#B9A46E;margin-top:4px;line-height:1.5}
+.result__art.look{box-shadow:inset 0 0 40px var(--lookglow,transparent)}
 .craftbar{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 14px}
 .craftbar__k{font-size:11px;color:var(--tx-faint)}
 .craftbar__v{font-size:14px;color:var(--tx-hi);font-variant-numeric:tabular-nums;margin-top:2px}
@@ -132,6 +144,10 @@
         </div>
       </section>
 
+      <section class="panel panel--framed" id="pick-panel" style="display:none">
+        <div class="panel__head"><span class="panel__title">재료 선택</span><span class="panel__meta">재료가 수치·이름·외형을 바꿉니다</span></div>
+        <div class="panel__body panel__body--tight" id="picks"></div>
+      </section>
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">필요 재료</span>
           <span class="panel__meta">보유 / 필요</span></div>
@@ -193,7 +209,11 @@
 <script>
 (function(){
   var T = window.TW_ITEMS, $ = function(s){ return document.querySelector(s); };
-  var cat = 'all', cur = null;
+  var cat = 'all', cur = null, G = window.TW_GEAR, picks = { core:'m_ore', grip:'m_fiber', cat:null };
+  function isGear(it){ return it && (it.type==='weapon'||it.type==='armor'||it.type==='acc'); }
+  function resultItem(){ var it=T.get(cur.result); return (isGear(it)&&G) ? (G.previewCustom(cur.result, picks)||it) : it; }
+  function allMats(){ var it=T.get(cur.result); return isGear(it)&&G ? G.mergeMats(cur.mats.concat(G.customMats(picks))) : cur.mats; }
+  function can(){ return G ? (G.canPay(allMats(), cur.cost) && T.PLAYER.craftLv>=cur.craftLv) : T.canCraft(cur); }
 
   function rarChip(it){ var r=T.RARITY[it.rarity]; return '<span class="chip" style="color:'+r.color+';border-color:'+r.color+'55">'+r.name+'</span>'; }
 
@@ -211,9 +231,10 @@
 
   function select(id){
     cur = T.RECIPE.filter(function(r){ return r.id===id; })[0]; if(!cur) return;
-    var it = T.get(cur.result), r = T.RARITY[it.rarity];
+    var it = resultItem(), r = T.RARITY[it.rarity], look = it.custom && it.custom.look;
     $('#r-art').innerHTML = '<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
-    $('#r-art').style.color = r.color;
+    $('#r-art').style.color = look&&look.tint ? look.tint : r.color; $('#r-art').classList.toggle('look', !!look); $('#r-art').style.setProperty('--lookglow', look&&look.glow ? (look.glowColor||'#ff6a6a') : 'transparent');
+    renderPicks(T.get(cur.result));
     $('#r-nm').textContent = it.name; $('#r-nm').style.color = r.color;
     $('#r-rar').outerHTML = rarChip(it).replace('class="chip"','class="chip" id="r-rar"');
     $('#r-src').textContent = cur.src==='sheet' ? '시트 수치' : '가안';
@@ -226,7 +247,7 @@
     if(it.desc) rows.push(['효과',it.desc]);
     $('#r-stats').innerHTML = rows.map(function(x){ return '<div class="stat"><span class="stat__k">'+x[0]+'</span><span class="stat__v num">'+x[1]+'</span></div>'; }).join('');
     $('#r-effect').innerHTML = it.effect || '';
-    $('#r-mats').innerHTML = cur.mats.map(function(m){
+    $('#r-mats').innerHTML = allMats().map(function(m){
       var mi = T.get(m[0]), have = mi.qty||0, ok = have>=m[1];
       return '<div class="matrow">'+T.slotHTML(m[0],{qty:have})+
         '<div><div class="matrow__nm">'+mi.name+'</div><div class="matrow__d">'+T.RARITY[mi.rarity].name+' 재료</div></div>'+
@@ -237,11 +258,20 @@
     $('#r-time').textContent = cur.time;
     $('#r-lv').textContent = cur.craftLv + ' / ' + T.PLAYER.craftLv;
     $('#r-yield').textContent = (cur.yield||1) + ' 개';
-    $('#do-craft').disabled = !T.canCraft(cur);
-    $('#do-craft').classList.toggle('btn--off', !T.canCraft(cur));
+    $('#do-craft').disabled = !can();
+    $('#do-craft').classList.toggle('btn--off', !can());
     [].forEach.call(document.querySelectorAll('#rlist .rrow'), function(x){ x.classList.toggle('is-on', x.dataset.id===id); });
   }
 
+  function renderPicks(base){
+    var box=$('#pick-panel'); if(!isGear(base)||!G){ box.style.display='none'; return; } box.style.display='';
+    $('#picks').innerHTML = T.CRAFT_SLOTS.map(function(sl){
+      return '<div class="pickrow"><div class="pickrow__k">'+sl.name+'<small>'+sl.hint+'</small></div><div><div class="pickopts">'+sl.opts.map(function(id){
+        var on = picks[sl.key]===id; if(!id) return '<button type="button" class="pickopt'+(on?' is-on':'')+'" data-slot="'+sl.key+'" data-mat="">없음</button>';
+        var m=T.get(id), fx=T.CRAFT_FX[id], have=m.qty||0, ok=have>=sl.n;
+        return '<button type="button" class="pickopt'+(on?' is-on':'')+(ok?'':' no')+'" data-slot="'+sl.key+'" data-mat="'+id+'"><svg class="ico"><use href="#i-'+m.icon+'"/></svg>'+m.name+'<i>'+T.fmt(have)+'/'+sl.n+'</i></button>'; }).join('')+
+        '</div><div class="pickdesc">'+(picks[sl.key]?T.CRAFT_FX[picks[sl.key]].desc:'촉매 없이 제작')+'</div></div></div>'; }).join('');
+  }
   function renderMats(){
     var ms = T.MATERIAL;
     $('#mcount').textContent = ms.length + ' / 300';
@@ -258,6 +288,7 @@
     renderList();
   });
   $('#rlist').addEventListener('click', function(e){ var r=e.target.closest('[data-id]'); if(r) select(r.dataset.id); });
+  $('#picks').addEventListener('click', function(e){ var b=e.target.closest('.pickopt'); if(!b) return; picks[b.dataset.slot]=b.dataset.mat||null; select(cur.id); });
   $('#mgrid').addEventListener('click', function(e){
     var s=e.target.closest('[data-id]'); if(!s) return;
     var m=T.get(s.dataset.id);
@@ -270,7 +301,9 @@
   $('#q-plus').onclick  = function(){ var q=$('#q'); q.value=Math.min(99,(+q.value||1)+1); };
   $('#do-craft').onclick = function(){
     if(!cur) return;
-    var n=Math.max(1,+$('#q').value||1), made=T.craft(cur,n), it=T.get(cur.result);
+    var n=Math.max(1,+$('#q').value||1), it=T.get(cur.result), made=0;
+    if(isGear(it)&&G){ for(var i=0;i<n;i++){ var res=G.craftCustom(cur, picks); if(res.err) break; made++; it=res.item; } }
+    else made=T.craft(cur,n);
     if(!made){ toast(window.TW_GEAR && TW_GEAR.wallet()<cur.cost ? '골드가 부족합니다' : '재료가 부족합니다'); return; }
     var log=$('#log'); if(/아직/.test(log.textContent)) log.textContent='';
     log.insertAdjacentHTML('afterbegin','<div><b>'+it.name+'</b> ×'+(made*(cur.yield||1))+' 제작 — '+T.fmt(cur.cost*made)+' G</div>');
