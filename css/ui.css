@@ -513,3 +513,22 @@ html.mobile .sheet{place-items:end center}
 html.mobile .sheet__box{width:100%;max-height:min(88vh,88dvh);border-bottom:0}
 html.mobile .sheet__body{padding-bottom:max(16px,env(safe-area-inset-bottom))}
 html.mobile .srow input[type=range]{width:120px}
+
+/* ---------- 이야기 대사 오버레이 (story.js) ---------- */
+.sdlg{position:fixed;inset:0;z-index:320;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(0deg,rgba(4,5,8,.88),rgba(4,5,8,.3) 55%,rgba(4,5,8,.1));animation:sheetin .18s ease-out;cursor:pointer}
+.sdlg__box{position:relative;width:min(720px,94vw);margin:36px 0 max(20px,env(safe-area-inset-bottom));display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border:1px solid var(--line);border-left:3px solid #C9A45E;background:rgba(6,7,10,.95)}
+.sdlg__face{width:76px;height:76px;flex:none;border:1px solid rgba(201,164,94,.5);object-fit:cover;background:#111}
+.sdlg__who{font-family:var(--f-serif);font-size:12px;color:#C9A45E;letter-spacing:.2em}
+.sdlg__txt{font-size:14.5px;color:#EBD6D6;line-height:1.65;margin-top:5px;min-height:46px;word-break:keep-all}
+.sdlg__txt.is-record{font-style:italic;color:#D9C07A}
+.sdlg__txt.is-narr{color:#B9B0A8;font-family:var(--f-serif)}
+.sdlg__hint{font-size:10px;color:var(--tx-faint);margin-top:6px;letter-spacing:.12em}
+.sdlg__skip{position:absolute;right:10px;top:-34px}
+html.mobile .sdlg__box{margin-bottom:8px;padding:10px 12px;gap:10px}
+html.mobile .sdlg__face{width:56px;height:56px}
+html.mobile .sdlg__txt{font-size:13px;min-height:38px}
+.qstate{display:inline-block;font-size:10px;letter-spacing:.08em;padding:2px 7px;border:1px solid var(--line);color:var(--tx-dim);margin-top:5px}
+.qstate--available{color:#8FBF8F;border-color:rgba(91,163,91,.45)}
+.qstate--cleared{color:#D9C07A;border-color:rgba(201,164,94,.5)}
+.qstate--claimed{color:var(--tx-faint)}
+.qstate--locked{color:var(--tx-ghost)}

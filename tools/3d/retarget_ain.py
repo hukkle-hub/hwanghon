@@ -5,7 +5,7 @@ OUT=sys.argv[-1]; SD=os.environ.get('KAYKIT_DIR','.')
 AIN=os.environ.get('AIN_GLB','/home/user/hwanghon/art/3d/ain_hi3d_vcol_v1.glb'); SCYTHE='/home/user/hwanghon/art/3d/ain_scythe_tex.glb'; KAY=SD+'/Rogue.glb'
 GRIP=0.75        # 낫 자루에서 오른손 그립 위치 (자루 끝 기준 m)
 LEFT_OFF=0.28    # 왼손이 잡는 지점: 오른손에서 날 쪽으로 (m)
-CLIPS=[('idle','2H_Melee_Idle'),('walk','Walking_A'),('run','Running_A'),('roll','Dodge_Forward'),('dodgeB','Dodge_Backward'),('dodgeL','Dodge_Left'),('dodgeR','Dodge_Right'),
+CLIPS=[('idle','Unarmed_Idle'),('walk','Walking_A'),('run','Running_A'),('roll','Dodge_Forward'),('dodgeB','Dodge_Backward'),('dodgeL','Dodge_Left'),('dodgeR','Dodge_Right'),
        ('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning'),
        ('hit','Hit_A'),('hit2','Hit_B'),('death','Death_A'),('guard','Blocking'),('guardHit','Block_Hit'),('guardUp','Block'),('cheer','Cheer'),('pickup','PickUp'),('idle2','Idle')]
 TWO_HAND={'idle','attack1','attack2','attack3','smash','ult','guard','guardHit','guardUp','walk','run'}
@@ -76,9 +76,13 @@ for o in new:
 src.animation_data_create()
 # 목표 참조 자세(T 포즈): 팔을 수평으로
 def rot_between(a,b): return a.normalized().rotation_difference(b.normalized())
+# 소스(KayKit) 휴식 자세의 위팔 방향에 맞춘다 (소스는 팔을 내린 A 포즈 → 수평 T 로 두면 자유로운 팔이 45° 이상 들린다)
+SDIR={}
+for sname,tname in (('upperarm.l','Left'),('upperarm.r','Right')):
+    sb=src.data.bones[sname]; SDIR[tname]=(src.matrix_world.to_3x3()@(sb.tail_local-sb.head_local)).normalized()
 for s,sg in (('Left',1),('Right',-1)):
     pb=arm.pose.bones['mixamorig:'+s+'Arm']; bn=arm.data.bones['mixamorig:'+s+'Arm']
-    d=(bn.tail_local-bn.head_local); q=rot_between(d,Vector((sg,0,0)))
+    d=(bn.tail_local-bn.head_local); q=rot_between(d,SDIR[s])
     # 월드 회전 q 를 뼈 로컬 basis 로: basis = inv(rest_rot) q rest_rot
     Rr=bn.matrix_local.to_3x3(); pb.rotation_quaternion=(Rr.inverted()@q.to_matrix()@Rr).to_quaternion()
 bpy.context.view_layer.update()
@@ -125,6 +129,13 @@ def ik_left(world, off=None):
     while (T-S).length>reach and off>0.10: off-=0.02; T=sp+sd*off*sg
     right,up,fwd=char_frame(world); pole=(-fwd*0.6-right*0.5-up*0.6).normalized()
     return solve_arm(world,'Left',T,pole)
+def relax_left(world, w, dirv=(0.20,-0.96,0.12)):
+    """자유로운 왼팔을 자연스럽게 내린다: 위팔·아래팔·손 방향을 캐릭터 기준 '아래·약간 바깥' 쪽으로 w 만큼 당김 (소스 클립의 팔 스윙은 1-w 만큼 남는다)"""
+    right,up,fwd=char_frame(world); T=(right*dirv[0]+up*dirv[1]+fwd*dirv[2]).normalized()
+    chain=['mixamorig:LeftArm','mixamorig:LeftForeArm','mixamorig:LeftHand']
+    for i,n in enumerate(chain):
+        p=parent[n]; pos=child_pos(world,p,n) if i>0 else world[n].to_translation()
+        cur=ydir(world[n]); tgt=cur.lerp(T,w).normalized(); R=rot_to(cur,tgt)@world[n].to_3x3(); setrot(world,n,R,pos)
 RREL=None
 def carry(world, spec):
     """무기 주도 자세: 오른손 위치·자루 방향·날 방향을 캐릭터 기준으로 지정 → 오른팔 IK, 슬롯 회전, 왼손 자루 IK"""
@@ -140,13 +151,15 @@ def carry(world, spec):
     Hn='mixamorig:RightHand'; hpos=world[Hn].to_translation(); Rh=Rs@RREL.inverted(); setrot(world,Hn,Rh,hpos)
     setrot(world,'mixamorig:RightHandSlot',Rs,child_pos(world,Hn,'mixamorig:RightHandSlot'))
     if spec.get('left') is not None: ik_left(world, spec['left'])
+    elif spec.get('relax'): relax_left(world, spec['relax'])
     return err
 # 캐릭터 기준 (right, up, fwd) 오프셋 — Hips 원점(≈0.98 m)
 CARRY={
   # 대기: 오른손은 오른쪽 허벅지 앞, 자루 위쪽은 왼쪽으로 기울어 왼손이 가슴 앞에서 자루를 잡는다 (왼손이 몸을 가로질러 오른손과 겹치던 문제 수정)
-  'idle': dict(rh=(0.14,0.05,0.28), shaft=(-0.30,0.90,-0.25), blade=(0,0.25,1), left=0.32),
-  'idle2':dict(rh=(0.14,0.05,0.28), shaft=(-0.30,0.90,-0.25), blade=(0,0.25,1), left=0.32),
-  'walk': dict(rh=(0.16,0.02,0.26), shaft=(-0.30,0.90,-0.25), blade=(0,0.25,1), left=0.32),
+  # 디렉터 시트: 낫을 오른쪽 옆에 곧게 세워 자루 끝을 땅에 대고, 오른손이 허벅지 높이에서 자루를 감싼다. 왼팔은 자연스럽게 내린다
+  'idle': dict(rh=(0.30,-0.18,0.06), shaft=(0.02,1.0,0.03), blade=(-0.3,0,1), left=None, relax=0.8),
+  'idle2':dict(rh=(0.30,-0.18,0.06), shaft=(0.02,1.0,0.03), blade=(-0.3,0,1), left=None, relax=0.8),
+  'walk': dict(rh=(0.30,-0.16,0.08), shaft=(0.03,0.99,-0.12), blade=(-0.3,0,1), left=None, relax=0.7),
   'run':  dict(rh=(0.30,-0.06,-0.08), shaft=(-0.12,0.42,-0.90), blade=(0,1,0.4), left=None),
   'guard':dict(rh=(0.22,0.28,0.36), shaft=(-0.97,0.25,0), blade=(0,0,1), left=0.40),
   'guardHit':dict(rh=(0.22,0.28,0.36), shaft=(-0.97,0.25,0), blade=(0,0,1), left=0.40),
@@ -164,6 +177,9 @@ def blend_carry(world, spec, w):
     for k in ARMS:
         qa=world[k].to_quaternion(); qb=W2[k].to_quaternion(); q=qa.slerp(qb,w)
         p=parent[k]; pos=child_pos(world,p,k); setrot(world,k,q.to_matrix(),pos)
+    if spec.get('left') is None:
+        if w>0.5: relax_left(world, spec.get('relax',0.6)*w); return 0.0
+        return ik_left(world, LEFT_OFF)   # 한 손 자세로 섞일 때는 왼손을 놓는다
     off=w*spec['left']+(1-w)*LEFT_OFF
     return ik_left(world, off if abs(off)>0.08 else (0.08 if off>=0 else -0.08))
 def ease(t): return t*t*(3-2*t)

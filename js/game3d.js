@@ -387,7 +387,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   function handle(e){
     var s=battle?battle.snapshot():null;
     switch(e.t){
-      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3; num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12; burst(hp, e.counter?36:e.crit?22:12); if(!e.counter && s.enemy.state!=='downed') bossPlay('flinch'); if(e.counter){ flash(); vib(40); shake(0.01,260); zoomKick(); } else shake(0.003,90); break;
+      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3; num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12; burst(hp, e.counter?36:e.crit?22:12); if(!e.counter && (!s || s.enemy.state!=='downed')) bossPlay('flinch'); if(e.counter){ flash(); vib(40); shake(0.01,260); zoomKick(); } else shake(0.003,90); break;
       case 'attack': ainAttack('light', e.combo); SFX.play('swing'); comboShow(e.combo, false); break;
       case 'whiff': ainAttack('light', 1); SFX.play('swing'); num(above(P.x,P.y,2.1), e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
       case 'counter': SFX.play('counter', e.perfect); slowmo(e.perfect?0.2:0.35, e.perfect?520:380); banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); bossStop(); bossPlay('stagger'); zone=null; hideZone(); break;
@@ -395,7 +395,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
       case 'downed': SFX.play('down'); guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); bossPlay('down'); zone=null; hideZone(); shake(0.012,400); break;
       case 'up': guide((A.hudName||'허수아비')+'가 자세를 되찾았다', 1.5); bossPlay('up'); break;
       case 'telegraph': SFX.play('tele'); zone=world.makeZone({ zone:scaledZone(L.zones[e.pattern]) }, Bs.x, Bs.y, P.x, P.y); zone.pattern=e.pattern; bossPlay('tele_'+e.icon, { dur:e.dur }); if(phase===2 && !seen.tele3){ seen.tele3=1; guide('붉은 범위 안에 있으면 맞는다 · 고리가 <b>흰색</b>일 때 붙어서 탭 = 카운터', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
-      case 'swing': bossPlay('hit_'+s.enemy.patIcon); shake(0.009,220); setTimeout(function(){ zone=null; hideZone(); }, 180); break;
+      case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); setTimeout(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; if(!e.guarded) playOnce('hit',{speed:1.4}); burst(above(P.x,P.y,1.2), 16, 0xD94A45); vib(e.guarded?15:60); shake(e.guarded?0.004:0.012, 300); break;
       case 'early': guide('너무 빨랐다. 예고가 <b>끝나는 순간</b>에 쳐라', 1.6); break;
@@ -436,7 +436,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
       case 'death': deathOverlay(); break;
     }
   }
-  function openGate(silent){ gateOpen=true; world.setSolid(gate.cx, gate.cy, false); gateMesh.visible=false; if(!silent){ guide(L.beats.mobsClear, 3); SFX.play('chains'); } }
+  function openGate(silent){ gateOpen=true; world.setSolid(gate.cx, gate.cy, false); gateMesh.visible=false; if(!silent && L.beats.mobsClear){ guide(L.beats.mobsClear, 3); SFX.play('chains'); } }
   /* ---------- 드랍·경험치·퀘스트·대화·콤보 ---------- */
   function toast(html){ var t=document.createElement('div'); t.className='toast'; t.innerHTML=html; el.toasts.appendChild(t); setTimeout(function(){ t.remove(); }, 1800); }
   var runXp=0, runLuck=1;
@@ -461,7 +461,12 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   function comboShow(n, big){ if(n===0) return; el.comboN.textContent=n; el.combo.classList.toggle('big', !!big); el.combo.classList.add('is-on'); comboT=1.1; }
   var dlgLines=null, dlgI=0, dlgDone=null;
   function dialogue(lines, done){ dlgLines=lines; dlgI=0; dlgDone=done; cine=true; showLine(); }
-  function showLine(){ var l=dlgLines[dlgI]; el.dlgWho.textContent=l[0]; el.dlgTxt.textContent=l[1]; el.dlg.classList.add('is-on'); SFX.play('ui'); }
+  function faceFor(nm){ var ST=window.TW_STORY; if(!ST) return null; var k=Object.keys(ST.NPC).filter(function(k){ return ST.NPC[k].nm===nm; })[0]; return k?ST.NPC[k].face:null; }
+  function showLine(){ var l=dlgLines[dlgI]; el.dlgWho.textContent=l[0]; el.dlgTxt.textContent=l[1]; var f=faceFor(l[0]), fi=document.getElementById('dlg-face'); if(fi){ if(f){ fi.src=f; fi.hidden=false; } else fi.hidden=true; } el.dlg.classList.add('is-on'); SFX.play('ui'); }
+  /* 입장 컷신: 보스가 있는 곳에서 플레이어 뒤로 카메라가 내려온다 (탭으로 건너뛰기) */
+  var flyDone=null, flyT=null;
+  function flyover(done){ var bp=v3(Bs.x,Bs.y,1.6); cine=true; camLook.copy(bp); cineCam={ from:bp.clone().add(new THREE.Vector3(-7,8,11)), to:null, look:null, t:0, dur:3.8, back:true }; flyDone=done; guide('<b>'+L.name+'</b> — '+L.place, 3.6); flyT=setTimeout(endFlyover, 3900); }
+  function endFlyover(){ if(!flyDone) return; clearTimeout(flyT); cineCam=null; cine=false; var d=flyDone; flyDone=null; d(); }
   el.dlg.addEventListener('pointerdown', function(e){ e.stopPropagation(); dlgI++; if(dlgI<dlgLines.length) showLine(); else { el.dlg.classList.remove('is-on'); cine=false; dlgDone&&dlgDone(); } });
   document.addEventListener('keydown', function(e){ if(el.dlg.classList.contains('is-on') && (e.code==='Space'||e.code==='Enter')){ e.preventDefault(); el.dlg.dispatchEvent(new PointerEvent('pointerdown')); } });
   function deathOverlay(){ if(state==='dead') return; state='dead'; battle=null; SFX.play('down'); flash(); shake(0.02,600); ain.hitT=9; ain.dead=true; playOnce('death',{ hold:true, speed:1.1 }); camZoom=1.25;
@@ -480,10 +485,11 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     setTimeout(function(){ cineCam=null; cine=false; el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; startPhase(0); }, 4200); }
   function phaseClear(){ var m=Object.assign({}, battle.metrics); stageResults.push(m); PS=battle.exportPlayer(); bossStop(); zone=null; hideZone(); gainXp(150+phase*100, '페이즈 돌파');
     if (phase < A.stages.length-1){ var next=phase+1; battle=null; SFX.play('phase'); bossPlay('stagger'); flash(); vib([30,30,60]); burst(bossHitPos('core'), 50, next===1?0xC9A45E:0xD94A45); var enTxt=(L.beats.enter||[])[next]||(next===1?'사슬이 끊어진다':'핵이 타오른다'); if(enTxt) num(bossHitPos('head'), enTxt, 'counter'); setTimeout(function(){ startPhase(next); }, 1400); }
-    else { battle=null; state='clear'; quest.boss=1; renderQuest(); gainXp(A.id==='tutorial'?400:900, A.stages[A.stages.length-1].name+' 격파'); SAVE.stat('runs'); SFX.play('brk'); setTimeout(function(){ SFX.play('clear'); }, 900); bossPlay('collapse'); playOnce('cheer',{hold:true}); el.timerBox.classList.add('is-off'); var sum=CB.summarize(R, A, stageResults); camZoom=1.15; runLuck=window.TW_LOOT?TW_LOOT.luckOf(sum):1;
+    else { battle=null; state='clear'; quest.boss=1; renderQuest(); gainXp(A.id==='tutorial'?600:1500, A.stages[A.stages.length-1].name+' 격파'); SAVE.stat('runs'); SFX.play('brk'); setTimeout(function(){ SFX.play('clear'); }, 900); bossPlay('collapse'); playOnce('cheer',{hold:true}); el.timerBox.classList.add('is-off'); var sum=CB.summarize(R, A, stageResults); camZoom=1.15; runLuck=window.TW_LOOT?TW_LOOT.luckOf(sum):1;
+      /* 격파 컷신: 무너지는 보스 앞으로 카메라 */ cine=true; var hb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:hb.clone().add(new THREE.Vector3(-3.2,1.4,4.2)), look:bossHitPos('body'), t:0, dur:1.5 };
       setTimeout(function(){ overlay('<div class="ov__k">던전 클리어</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+A.stages[A.stages.length-1].name+' 격파</div>'+
         '<div class="ov__stats"><div>등급<b class="g-'+sum.rank+'">'+sum.rank+'</b></div><div>시간<b>'+sum.op.time+'</b></div><div>카운터<b>'+sum.op.counterRate+'</b></div><div>부위 파괴<b>'+sum.breaks+'/'+sum.breakable+'</b></div><div>받은 피해<b>'+sum.op.dmgTaken+'</b></div></div>'+
-        '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 1800); } }
+        '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 2600); } }
   function collectAll(){ var got=0; pickups.forEach(function(p){ if(p.taken) return; p.taken=true; scene.remove(p.sp); got++; if(p.kind==='gold') SAVE.addGold(p.amt); else if(window.TW_LOOT&&TW_LOOT.isGear(p.id)&&window.TW_GEAR) TW_GEAR.addGear(p.id); else if(window.TW_GEAR) TW_GEAR.addItem(p.id, p.amt); else SAVE.addItem(p.id, p.amt); noteQuestItem(p.id); }); pickups=[]; return got; }   /* 정산 전 남은 전리품 자동 회수 (마영전식 종료 정산) */
   function finish(sum){ var T=window.TW_ITEMS, LT=window.TW_LOOT; collectAll(); var prev0=null; try{ prev0=JSON.parse(localStorage.getItem('tw:arena:'+A.id)||'null'); }catch(e){}
     var rw=LT?LT.clearRewards(A.id, sum, !(prev0&&prev0.cleared)):{ gold:sum.gold, mats:sum.mats.map(function(m){ var it=T.get(m[0]); return [m[0], m[1], it?it.rarity:'common']; }), craft:[], bonus:[], all:sum.mats };
@@ -539,17 +545,18 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   /* ---------- 시작 ---------- */
   function begin(){
     var mobs=[]; Object.keys(L.mobs||{ m:L.mob }).forEach(function(ch){ var def=L.mobs?L.mobs[ch]:L.mob; world.marks(ch).forEach(function(mk){ mobs.push({ id:'m'+mobs.length, x:mk.x, y:mk.y, def:def }); }); });
-    if(RETRY==='gate'){ mobs=[]; quest.mobs=L.beats.quest[0][1]; }
+    if(RETRY==='gate'){ mobs=[]; }
     skirm=SKM.create({ char:CHAR, rules:R, world:world, player:P, state:PS, mobs:mobs, reach:L.player.reach, cone:1.3 });
     mobs.forEach(function(m){ mobsEnt[m.id]=mkMob(m); });
-    world.setSolid(gate.cx, gate.cy, true); gateMesh.visible=true;
-    if(RETRY==='gate'){ openGate(true); P.x=(gate.cx+1)*map.cell+P.r+8; P.y=gate.y; }
+    /* 보스 전용 던전: 잡몹 없음 → 문은 처음부터 열려 있다 */
+    openGate(true);
+    if(RETRY==='gate'){ P.x=(gate.cx+1)*map.cell+P.r+8; P.y=gate.y; }
     setupPhase(A.stages[0]); Object.keys(boss.hits).forEach(function(k){ boss.hits[k].visible=false; });
     /* 선택 목표·채집: 정찰대의 기록(q) · 채집 지점(f) */
     if(RETRY!=='gate'){ world.marks('q').forEach(function(mk){ spawnPickup(mk.x, mk.y, 'item', 1, 'q_record', '정찰대의 기록'); }); world.marks('f').forEach(function(mk){ spawnPickup(mk.x, mk.y, 'item', 3, 'm_fiber', '갈대 섬유'); if(Math.random()<0.6) spawnPickup(mk.x+34, mk.y+10, 'item', 1, 'm_dew', '붉은 이슬'); }); }
     applySettings(); el.loading.classList.add('is-off'); SFX.ambient(true); renderQuest(); renderProg(); ain.ready=true; DIAG.started=performance.now(); if(SAFE) guide('<b>저사양 모드</b>로 실행 중 (일시정지 → 진단에서 해제)', 4);
     overlay('<div class="ov__k">'+(L.code||'던전 01')+'</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+L.place+'</div><div class="ov__line">'+(L.beats.intro||'')+'</div><div class="ov__hint">'+(L.beats.introHint||'')+'</div><button class="btn btn--primary" data-go>입장</button>'+
-      '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 화면 드래그로 시점 회전 · 큰 버튼 탭 공격(4연타) · 길게 스매시 · 회피 · 방어 · 기술 1~4 · R<br>키보드: WASD 이동 · Q/E 시점 · J 공격 · U 스매시 · K 회피 · L 방어 · 1~4 · R · Tab 조준 전환</div>', function(){ if(RETRY!=='gate') dialogue(L.beats.dialog, function(){ guide(L.beats.start, 4); }); else guide((L.beats.death&&L.beats.death.btn?L.beats.death.btn.replace(' 재도전',''):'격벽 앞')+'에서 다시. '+(A.hudName||'허수아비')+'가 기다린다', 3); });
+      '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 화면 드래그로 시점 회전 · 큰 버튼 탭 공격(4연타) · 길게 스매시 · 회피 · 방어 · 기술 1~4 · R<br>키보드: WASD 이동 · Q/E 시점 · J 공격 · U 스매시 · K 회피 · L 방어 · 1~4 · R · Tab 조준 전환</div>', function(){ if(RETRY!=='gate') flyover(function(){ dialogue(L.beats.dialog, function(){ guide(L.beats.start, 4); }); }); else guide((L.beats.death&&L.beats.death.btn?L.beats.death.btn.replace(' 재도전',''):'격벽 앞')+'에서 다시. '+(A.hudName||'허수아비')+'가 기다린다', 3); });
     last=performance.now(); requestAnimationFrame(frame);
   }
 
@@ -560,7 +567,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     if(ain.dead) P.moving=false; else world.movePlayer(P, sx, sy, dt, L.player.speed);
     if(state==='explore'){
       if(!seen.sign && world.dist(P.x,P.y,sign.x,sign.y)<110){ seen.sign=1; guide(L.beats.sign, 4); }
-      if(!gateOpen && lockedT<=0 && world.dist(P.x,P.y,gate.x,gate.y)<120){ lockedT=3; guide(L.beats.gateLocked, 2.5); SFX.play('guard'); }
+      if(!gateOpen && lockedT<=0 && L.beats.gateLocked && world.dist(P.x,P.y,gate.x,gate.y)<120){ lockedT=3; guide(L.beats.gateLocked, 2.5); SFX.play('guard'); }
       if(gateOpen && Math.floor(P.x/map.cell)>=L.bossRoom.minCx && P.x>gate.x+map.cell*0.6){ quest.gate=1; renderQuest(); startFight(); }
       if(skirm && !skirm.dead){ P.lockT=(skirm.snapshot().player.guard)?1:0; acc+=dt; var n2=0; while(acc>=R.tick && n2<6){ skirm.tick(R.tick); acc-=R.tick; n2++; } skirm.drain().forEach(handleSk); if(skirm.over && !gateOpen) openGate(false); }
     }
@@ -623,5 +630,5 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
   function blackWatch(){ if(!DIAG.started||navigator.webdriver&&!window.TW_BW_TEST) return; var t=performance.now(); if(t-DIAG.started>25000||t-bwLast<1000) return; bwLast=t; try{ var gl=renderer.getContext(), c=renderer.domElement; gl.readPixels((c.width>>1)-16, (c.height>>1)-16, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, bwPx); var mx=0, mn=255; for(var i=0;i<bwPx.length;i+=4){ var v=(bwPx[i]*3+bwPx[i+1]*6+bwPx[i+2])/10; if(v>mx) mx=v; if(v<mn) mn=v; } /* 화면 중앙 32×32 가 완전히 균일(배경색만)하면 아무것도 그려지지 않은 것 */ if(mx-mn<3){ bwHits++; DIAG.black++; if(bwHits>=3){ DIAG.errors.push('EMPTY FRAME x3 (lum '+Math.round(mn)+'~'+Math.round(mx)+')'); if(!SAFE) safeMode('black'); else fatal('화면이 그려지지 않습니다', '저사양 모드에서도 검게 나옵니다. 아래 진단 정보를 알려 주세요.'); } } else bwHits=0; }catch(e){ DIAG.errors.push('readPixels '+e.message); } }
 
-  window.TW_DUNGEON={ world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
+  window.TW_DUNGEON={ world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();

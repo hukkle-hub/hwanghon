@@ -131,7 +131,7 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
   </header>
 
   <nav class="lb__menu" aria-label="메인 메뉴">
-    <a href="characters.html"><svg class="ico"><use href="#i-book"/></svg><span><b>스토리</b><small>STORY</small></span></a>
+    <a href="story.html"><svg class="ico"><use href="#i-book"/></svg><span><b>스토리</b><small>STORY</small></span></a>
     <a href="quest.html"><svg class="ico"><use href="#i-target"/></svg><span><b>퀘스트</b><small>QUEST</small></span></a>
     <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg><span><b>인벤토리</b><small>INVENTORY</small></span></a>
     <a href="profile.html"><svg class="ico"><use href="#i-user"/></svg><span><b>캐릭터</b><small>CHARACTER</small></span></a>
@@ -157,11 +157,14 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script src="js/story.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/sfx.js"></script>
 <script>
 (function(){
   var W=window.TW_WORLD, SV=window.TW_SAVE, $=function(s){return document.querySelector(s);};
+  /* 첫 방문: 프롤로그 */
+  try{ var ST=window.TW_STORY; if(ST && !navigator.webdriver){ var pro=ST.ch('prologue'); ST.once(pro.flag, pro.lines); } else if(ST && new URLSearchParams(location.search).get('prologue')==='1'){ var pr2=ST.ch('prologue'); ST.once(pr2.flag, pr2.lines); } }catch(e){}
   var me=W&&W.CHARS&&W.CHARS.ain; var sv=SV.get();
   $('#lb-lv').textContent='LV.'+(me?me.lv:26)+(sv.lv>1?' · 훈련 Lv.'+sv.lv:'');
   $('#lb-gold').textContent=(window.TW_ITEMS?TW_ITEMS.fmt:String)(SV.wallet());

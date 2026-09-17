@@ -202,7 +202,7 @@
           <svg class="prep__ico"><use href="#i-skull"/></svg>
           <div class="fill">
             <div class="sm t-hi">던전 02 <span class="xs t-faint">· 갈대습지 · 의뢰 S</span></div>
-            <div class="xs t-faint mt1">대형 변이체 「모르버스」 토벌 · 갈대 잠복자 · 늪 껍질</div>
+            <div class="xs t-faint mt1">대형 변이체 「모르버스」 토벌 · 부위 5 · 광란 페이즈</div>
             <div class="xs mt1" id="of-record2"></div>
             <div class="xs t-faint mt1" id="of-drops2"></div>
           </div>
@@ -232,6 +232,7 @@
 <script src="js/gear.js"></script>
 <script src="js/loot.js"></script>
 <script src="js/world.js"></script>
+<script src="js/story.js"></script>
 <script>
 /* 인력사무실 — 의뢰 목록·의뢰 정보·파티 카드를 world.js 에서 렌더 */
 (function(){
@@ -240,7 +241,7 @@
   function rows(){
     $('#q-rows').innerHTML = W.QUESTS.map(function(q){
       return '<div class="row'+(q.id===cur?' is-on':'')+'" data-q="'+q.id+'"><div class="row__main"><div class="row__name">'+q.name+'</div>'+
-        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="row__sub" style="margin-top:5px">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div></div>'+
+        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="row__sub" style="margin-top:5px">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div>'+(window.TW_STORY?'<span class="qstate qstate--'+TW_STORY.questState(q.id)+'">'+TW_STORY.stateLabel(TW_STORY.questState(q.id))+'</span>':'')+'</div>'+
         '<div class="row__right"><span class="risk">위험도 '+W.riskBadge(q.risk)+'</span></div></div>'; }).join('');
   }
   function info(){
@@ -252,8 +253,16 @@
       '<div class="qart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">의뢰 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
       '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div>'+
       '<div class="flex ac jb"><span class="label-ko" style="margin:0">의뢰 보수</span><span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">'+W.fmt(q.reward)+'</span></span></div>'+
-      '<div class="rewards mt3">'+rw+'</div><div class="field mt3"><input placeholder="출현 변이체 정보"><svg class="ico ico--sm t-faint"><use href="#i-search"/></svg></div>';
+      '<div class="rewards mt3">'+rw+'</div>'+questAction(q)+'<div class="field mt3"><input placeholder="출현 변이체 정보"><svg class="ico ico--sm t-faint"><use href="#i-search"/></svg></div>';
+    var cb=$('#q-claim'); if(cb) cb.addEventListener('click', function(){ var got=TW_STORY.claim(q.id); if(!got) return; if(window.TW_SFX) TW_SFX.play('clear'); rows(); info();
+      var T2=window.TW_ITEMS; TW_STORY.play([['matteo','보수다. '+W.fmt(q.reward)+' 골드'+got.filter(function(g){ return g[0]!=='gold'; }).map(function(g){ return ' · '+(g[0]==='exp'?'경험치':T2.get(g[0]).name)+' ×'+W.fmt(g[1]); }).join('')+'. 다음 의뢰는 준비되면 열린다.']]); });
+    var gb=$('#q-go'); if(gb) gb.addEventListener('click', function(){ var chId=q.id==='q_marsh'?'ch2':null; var go=function(){ location.href='game3d.html?d=d02'; }; if(chId&&window.TW_STORY){ if(!TW_STORY.brief(chId, go)) go(); } else go(); });
   }
+  function questAction(q){ var ST=window.TW_STORY; if(!ST) return ''; var st=ST.questState(q.id);
+    if(st==='available') return '<button type="button" class="btn btn--primary mt3" id="q-go" style="width:100%">출격 — '+q.sub+'</button>';
+    if(st==='cleared') return '<button type="button" class="btn btn--primary mt3" id="q-claim" style="width:100%">의뢰 보수 수령 · '+W.fmt(q.reward)+' G</button>';
+    if(st==='claimed') return '<button type="button" class="btn mt3" id="q-go" style="width:100%">재출격 — '+q.sub+'</button>';
+    return '<div class="xs t-faint mt3">잠김 — 다음 장에서 열린다</div>'; }
   function cards(){
     $('#p-cards').innerHTML = W.PARTY_ORDER.map(function(id,i){ var c=W.CHARS[id];
       return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">LV.'+c.lv+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
@@ -266,11 +275,15 @@
   $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
   $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
   try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); var curEl=document.querySelector('.topbar .currency .num'); if(sv && curEl){ var base=(window.TW_ITEMS&&window.TW_ITEMS.PLAYER&&window.TW_ITEMS.PLAYER.gold)||75300; curEl.textContent=W.fmt(base+sv.gold); } }catch(e){}
-  try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='드랍: '+dd.mobs.slice(0,3).join('·')+' · 부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
-  try { if(window.TW_LOOT){ var d2=TW_LOOT.describe('marsh'); $('#of-drops2').innerHTML='드랍: '+d2.mobs.slice(0,4).join('·')+' · 클리어 희귀: '+d2.rare.slice(0,4).join('·'); } } catch(e){}
+  try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
+  try { if(window.TW_LOOT){ var d2=TW_LOOT.describe('marsh'); $('#of-drops2').innerHTML='부위 파괴: '+d2.parts.join('·')+' · 클리어 희귀: '+d2.rare.slice(0,4).join('·'); } } catch(e){}
   try { var rec2=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); $('#of-record2').innerHTML = rec2 && rec2.cleared ? '최고 기록 <b class="badge badge--'+rec2.rank.toLowerCase()+'">'+rec2.rank+'</b> <span class="t-faint">'+Math.round(rec2.time)+'초 · 카운터 '+Math.round(rec2.counterRate*100)+'%</span>' : '<span class="t-faint">미토벌 — 정찰대 신호 끊김</span>'; } catch(e){}
   try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
   rows(); info(); cards();
+  /* 던전 카드: 첫 출격 전 마태오 브리핑 · 클리어 후 후일담 */
+  function guard(sel, chId){ var a=$(sel); if(!a||!window.TW_STORY) return; a.addEventListener('click', function(e){ var href=a.getAttribute('href'); if(TW_STORY.brief(chId, function(){ location.href=href; })) e.preventDefault(); }); }
+  guard('#of-arena','ch1'); guard('#of-arena2','ch2');
+  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){ rows(); info(); }); }); } }catch(e){}
 })();
 </script>
 <script src="js/ui.js"></script>

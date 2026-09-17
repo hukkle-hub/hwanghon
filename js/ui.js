@@ -11,6 +11,7 @@
     ['office.html',    '인력사무실'],
     ['quest.html',     '의뢰 상세'],
     ['party.html',     '파티 모집'],
+    ['story.html',     '이야기'],
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
     ['shop.html',      '보급소'],
