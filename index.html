@@ -82,7 +82,7 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
     <h1 class="tt__logo">황혼<small>T W I L I G H T</small></h1>
     <p class="tt__line">세계는 이미 무너졌다. 남은 것은 룩킥톤. <br>아인의 여정을 따라, 황혼의 진실을 마주하라.</p>
     <nav class="tt__menu">
-      <a class="tt__btn tt__btn--go" href="office.html" id="tt-go">시작<i id="tt-go-sub">인력사무실로</i></a>
+      <a class="tt__btn tt__btn--go" href="lobby.html" id="tt-go">시작<i id="tt-go-sub">메인 로비로</i></a>
       <a class="tt__btn" href="game3d.html">던전 01<i>지하 훈련장</i></a>
       <a class="tt__btn" href="characters.html">요원<i>캐릭터 시트</i></a>
     </nav>
@@ -97,11 +97,11 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 <script>
 (function(){
   /* 저장이 있으면 "이어하기" 로 */
-  try{ var s=window.TW_SAVE&&TW_SAVE.get(); if(s&&(s.lv>1||s.gold>0||s.xp>0)){ document.getElementById('tt-go').firstChild.textContent='이어하기'; document.getElementById('tt-go-sub').textContent='Lv.'+s.lv+' · 인력사무실로'; } }catch(e){}
+  try{ var s=window.TW_SAVE&&TW_SAVE.get(); if(s&&(s.lv>1||s.gold>0||s.xp>0)){ document.getElementById('tt-go').firstChild.textContent='이어하기'; document.getElementById('tt-go-sub').textContent='Lv.'+s.lv+' · 메인 로비로'; } }catch(e){}
   /* 빌드 표시 (배포마다 갱신) */
   fetch('version.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(v){ document.getElementById('tt-build').textContent='황혼 · 프로토타입 · build '+v.build; }).catch(function(){});
   /* 아트/버튼 밖 아무 곳이나 터치해도 시작 */
-  document.querySelector('.tt__art').addEventListener('click', function(){ location.href='office.html'; });
+  document.querySelector('.tt__art').addEventListener('click', function(){ location.href='lobby.html'; });
   /* 개발 메뉴: 화면 전환 독을 켠다 */
   document.getElementById('tt-dev').addEventListener('click', function(){ try{ localStorage.setItem('tw:dev','1'); }catch(e){} });
   if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});
