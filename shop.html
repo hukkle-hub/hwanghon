@@ -233,7 +233,9 @@
   $('#q-plus').onclick=function(){ $('#q').value=Math.min(999,qty()+1); detail(); };
   $('#q').addEventListener('input', detail);
   $('#do-deal').addEventListener('click', deal);
-  document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') location.href='office.html'; if(ev.key==='i'||ev.key==='I') location.href='inventory.html'; });
+  document.addEventListener('keydown', function(ev){ if(document.querySelector('.sheet')) return; /* 시트(우편·기록·설정)가 열려 있으면 시트가 ESC 를 받는다 */ if(ev.key==='Escape') location.href='office.html'; if(ev.key==='i'||ev.key==='I') location.href='inventory.html'; });
+  /* 우편 수령 등으로 지갑·가방이 바뀌면 단가/잔액을 다시 계산 */
+  document.addEventListener('tw:wallet', function(ev){ try{ var it=ev.detail&&ev.detail.items; if(it) Object.keys(it).forEach(function(id){ var x=T.get(id); if(x&&x.qty!=null) x.qty+=it[id]; }); }catch(e){} refreshGold(); list(); check(); });
   refreshGold(); list(); check();
 })();
 </script>

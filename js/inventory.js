@@ -146,7 +146,7 @@
   });
   $('#act-equip').addEventListener('click', equipToggle);
   $('#hot-equip').addEventListener('click', equipToggle);
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') location.href='office.html'; });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !document.querySelector('.sheet')) location.href='office.html'; });
 
   selected = {id:P.equipped.main, where:'equipped', slot:'main'};
   renderAll();

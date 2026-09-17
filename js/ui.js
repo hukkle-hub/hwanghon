@@ -358,6 +358,8 @@
       giveReward(m); b.disabled = true; b.textContent = '수령 완료'; b.classList.remove('btn--primary'); b.classList.add('btn--ghost'); b.closest('.mail').classList.add('is-done');
       mailBadge(); if (window.TW_SFX) TW_SFX.play('clear');
       var g = $('.topbar .currency .num'); if (g && m.gold){ var cur = parseInt(g.textContent.replace(/[^\d]/g,''), 10) || 0; g.textContent = fmt(cur + m.gold); }
+      /* 화면 스크립트(보급소 등)가 지갑·가방 표시를 다시 계산하도록 알린다 — 위의 단순 가산 뒤에 보내야 이중 반영되지 않는다 */
+      try { document.dispatchEvent(new CustomEvent('tw:wallet', { detail:{ gold:m.gold||0, items:m.items||null } })); } catch(e){}
     });
   }
   function mailBadge(){
@@ -372,7 +374,8 @@
     var st = S.stats || {};
     var arenas = []; try { for (var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i); if (k.indexOf('tw:arena:') === 0) arenas.push({ id:k.slice(9), r:JSON.parse(localStorage.getItem(k)) }); } } catch(e){}
     function row(k, v){ return '<div class="srow"><span class="t-faint">'+k+'</span><b class="num">'+v+'</b></div>'; }
-    var html = '<div class="label-ko">아인 · 진행</div>' + row('레벨', 'Lv.'+(S.lv||1)) + row('경험치', fmt(S.xp||0)+' / '+fmt(need)) + row('골드', fmt(S.gold||0)) + row('가방', bagN+' 개') +
+    var wallet = window.TW_SAVE && TW_SAVE.wallet ? TW_SAVE.wallet() : 75300 + (S.gold||0);   /* 표시 지갑 = 시트 기준 자금 + 저장 골드 (save.js BASE 와 동일) */
+    var html = '<div class="label-ko">아인 · 진행</div>' + row('레벨', 'Lv.'+(S.lv||1)) + row('경험치', fmt(S.xp||0)+' / '+fmt(need)) + row('골드', fmt(wallet)) + row('가방', bagN+' 개') +
       '<div class="hr"></div><div class="label-ko">전투 기록</div>' + row('처치', fmt(st.kills||0)) + row('출격', fmt(st.runs||0)) +
       '<div class="hr"></div><div class="label-ko">던전 최고 기록</div>' +
       (arenas.length ? arenas.map(function(a){ var r = a.r || {}; var t = r.time != null ? (Math.floor(r.time/60)+':'+('0'+Math.floor(r.time%60)).slice(-2)) : '-';

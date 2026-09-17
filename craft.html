@@ -275,7 +275,7 @@
     toast(it.name+' 제작 완료');
     renderMats(); renderList(); select(cur.id);
   };
-  document.addEventListener('keydown', function(e){ if(e.key==='Escape') location.href='forge.html'; });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !document.querySelector('.sheet')) location.href='forge.html'; });
 
   renderMats(); renderList();
 })();
