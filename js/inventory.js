@@ -6,7 +6,7 @@
   var T = window.TW_ITEMS, P = T.PLAYER, G = window.TW_GEAR, $ = function(s){ return document.querySelector(s); };
   /* 저장된 장착·보유 상태로 시작 (gear.js) */
   if (G){ var gs=G.state(); P.equipped=gs.equipped; P.bag=gs.owned.map(function(id){ return {item:id}; }); }
-  function syncGear(){ if(!G) return; var gs=G.state(); gs.equipped=P.equipped; gs.owned=P.bag.map(function(b){ return b.item; }); window.TW_SAVE.save(); }
+  function syncGear(){ if(!G) return; var gs=G.state(); gs.equipped=P.equipped; gs.owned=P.bag.map(function(b){ return b.item; }); try{ document.dispatchEvent(new CustomEvent('tw:gear')); }catch(e){} window.TW_SAVE.save(); }
   var filter = 'all', selected = null;      // selected: {id, where:'bag'|'equipped', slot}
 
   var SLOT_ORDER_L = ['main','sub','off','merc'], SLOT_ORDER_R = ['head','chest','legs','gloves','boots','acc'];

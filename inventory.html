@@ -41,6 +41,8 @@
 .eq .slot .ico{width:34px;height:34px}
 .slot__name{text-align:left;padding-left:1px}
 .dollart{position:relative;max-width:430px;width:100%;margin:0 auto;border:1px solid var(--line-soft)}
+#doll3d{position:absolute;inset:0;width:100%;height:100%;border:0;background:#0b0c0f}
+.doll3d__tg{position:absolute;right:8px;top:8px;z-index:2}
 .art--doll>img{object-fit:contain;object-position:center bottom;padding:18px 0 6px}
 .art--doll::after{background:radial-gradient(60% 18% at 50% 96%,rgba(0,0,0,.6),transparent 70%)}
 /* 캐릭터 칩은 가로 박스 → 얼굴 크롭의 눈 높이에 맞춤 */
@@ -148,6 +150,8 @@
 
       <div class="dollart art art--doll">
         <img id="doll" src="art/full-ain.webp" alt="아인">
+        <iframe id="doll3d" title="장착 외형 3D" hidden loading="lazy"></iframe>
+        <button type="button" class="btn btn--sm doll3d__tg" id="doll3d-tg">3D 외형</button>
       </div>
 
       <div class="eqcol eqcol--r" id="eq-right" data-mgoto="아이템"></div>
@@ -219,6 +223,14 @@
 <script src="js/gear.js"></script>
 <script src="js/grade.js"></script>
 <script src="js/inventory.js"></script>
+<script>
+/* 3D 외형 미리보기: viewer.html 의 장착 모드. 장비를 바꾸면 다시 불러온다 */
+(function(){ var fr=document.getElementById('doll3d'), tg=document.getElementById('doll3d-tg'), doll=document.getElementById('doll'); if(!fr||!tg) return; var on=false;
+  function load(){ fr.src='viewer.html?equip=1&fit=1&t='+Date.now(); }
+  tg.addEventListener('click', function(){ on=!on; fr.hidden=!on; doll.style.visibility=on?'hidden':''; tg.textContent=on?'2D 원화':'3D 외형'; if(on) load(); else fr.src='about:blank'; try{ localStorage.setItem('tw:doll3d', on?'1':'0'); }catch(e){} });
+  document.addEventListener('tw:gear', function(){ if(on) load(); });
+  try{ if(localStorage.getItem('tw:doll3d')==='1') tg.click(); }catch(e){} })();
+</script>
 <script>try{ document.querySelectorAll('[data-grade]').forEach(function(e){ e.textContent='등급 '+TW_GRADE.agent().g; }); }catch(e){}</script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
