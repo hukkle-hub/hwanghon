@@ -50,7 +50,7 @@ html,body{height:100%;margin:0;background:#0B0C0F;color:#EBD6D6;font-family:var(
   <div id="wrep"></div>
   <h2>3. 낫 붙이기 (소켓)</h2>
   <label>손 뼈</label><select id="s-bone"><option value="">— 뼈 없음 —</option></select>
-  <label>그립 높이 (자루 기준 m)</label><input type="range" id="r-grip" min="0" max="2.2" step="0.01" value="1.0">
+  <label>그립 높이 (자루 기준 m)</label><input type="range" id="r-grip" min="0" max="2.2" step="0.01" value="0.75">
   <div class="row3"><div><label>회전 X°</label><input type="number" id="n-rx" value="0" step="5"></div><div><label>회전 Y°</label><input type="number" id="n-ry" value="0" step="5"></div><div><label>회전 Z°</label><input type="number" id="n-rz" value="90" step="5"></div></div>
   <div class="row3"><div><label>오프셋 X</label><input type="number" id="n-ox" value="0" step="0.01"></div><div><label>오프셋 Y</label><input type="number" id="n-oy" value="0" step="0.01"></div><div><label>오프셋 Z</label><input type="number" id="n-oz" value="0" step="0.01"></div></div>
   <div class="btnrow"><button class="btn3" id="b-attach">손에 붙이기</button><button class="btn3" id="b-save">소켓 저장</button><button class="btn3" id="b-copy">JSON 복사</button></div>
@@ -76,7 +76,7 @@ const grid=new THREE.GridHelper(12,24,0x3a3a44,0x24262c); grid.position.y=0.001;
 /* 168cm 기준 막대 */
 const ref=new THREE.Mesh(new THREE.BoxGeometry(0.02,1.68,0.02),new THREE.MeshBasicMaterial({color:0xC9A45E})); ref.position.set(-1.2,0.84,0); scene.add(ref);
 const loader=new GLTFLoader(); let charRoot=null, charGltf=null, skelHelper=null, mixer=null, clock=new THREE.Clock(), weapon=null, weaponRoot=null, handBone=null, bones=[];
-const SOCK={ bone:'', grip:0.95, rot:[0,0,0], off:[0,0,0] };
+const SOCK={ bone:'', grip:0.75, rot:[0,0,0], off:[0,0,0] };
 window.THREE=THREE;
 try{ Object.assign(SOCK, JSON.parse(localStorage.getItem('tw:socket:ain')||'{}')); }catch(e){}
 /* 손 뼈 우선순위: 정확한 이름 → 오른손 접미/접두 → 왼손 (손가락 뼈 제외) */

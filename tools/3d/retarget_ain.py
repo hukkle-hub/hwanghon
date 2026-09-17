@@ -3,8 +3,8 @@ import bpy, numpy as np, sys, math, os
 from mathutils import Vector, Matrix, Quaternion
 OUT=sys.argv[-1]; SD=os.environ.get('KAYKIT_DIR','.')
 AIN=os.environ.get('AIN_GLB','/home/user/hwanghon/art/3d/ain_hi3d_vcol_v1.glb'); SCYTHE='/home/user/hwanghon/art/3d/ain_scythe_tex.glb'; KAY=SD+'/Rogue.glb'
-GRIP=0.95        # 낫 자루에서 오른손 그립 위치 (자루 끝 기준 m)
-LEFT_OFF=0.36    # 왼손이 잡는 지점: 오른손에서 날 쪽으로 (m)
+GRIP=0.75        # 낫 자루에서 오른손 그립 위치 (자루 끝 기준 m)
+LEFT_OFF=0.28    # 왼손이 잡는 지점: 오른손에서 날 쪽으로 (m)
 CLIPS=[('idle','2H_Melee_Idle'),('walk','Walking_A'),('run','Running_A'),('roll','Dodge_Forward'),('dodgeB','Dodge_Backward'),('dodgeL','Dodge_Left'),('dodgeR','Dodge_Right'),
        ('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning'),
        ('hit','Hit_A'),('hit2','Hit_B'),('death','Death_A'),('guard','Blocking'),('guardHit','Block_Hit'),('guardUp','Block'),('cheer','Cheer'),('pickup','PickUp'),('idle2','Idle')]
