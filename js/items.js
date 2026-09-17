@@ -196,6 +196,17 @@
   function rarityOf(id){ var it=get(id); return it ? RARITY[it.rarity] : RARITY.common; }
   function fmt(n){ return (n==null) ? '—' : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function slotIcon(id){ var it=get(id); return it ? it.icon : 'lock'; }
+  /* 아이템 고유 이미지(art/items/<id>.svg). 제작품은 기본형 이미지 + 재료 색조·광채를 덧씌운다. 이미지가 없으면 스프라이트 아이콘으로 대체. */
+  var ART_DIR='art/items/';
+  function artOf(id){ var it=(id&&typeof id==='object')?id:get(id); if(!it) return null; return ART_DIR+(it.custom?it.custom.base:it.id)+'.svg'; }
+  function artHTML(id, cls){
+    var it=(id&&typeof id==='object')?id:get(id); if(!it) return '';
+    var src=artOf(it), look=it.custom&&it.custom.look, glow=look&&look.glow>0;
+    var h='<span class="itart'+(cls?' '+cls:'')+(glow?' itart--glow':'')+'"'+(glow?' style="--glow:'+(look.glowColor||'#ff6a6a')+'"':'')+'>'+
+      '<img src="'+src+'" alt="" draggable="false" onerror="this.parentNode.classList.add(\'noimg\')">';
+    if(look&&look.tint) h+='<i style="background:'+look.tint+';-webkit-mask-image:url('+src+');mask-image:url('+src+')"></i>';
+    return h+'<svg class="ico"><use href="#i-'+it.icon+'"/></svg></span>';
+  }
   function canCraft(r){
     return r.mats.every(function(m){ var it=get(m[0]); return it && (it.qty||0) >= m[1]; }) && PLAYER.gold >= r.cost && PLAYER.craftLv >= r.craftLv;
   }
@@ -220,12 +231,12 @@
       ? '<span class="slot__ct">'+fmt(opt.qty!=null?opt.qty:it.qty)+'</span>'
       : (it.enh ? '<span class="slot__lv">+'+it.enh+'</span>' : '');
     return '<div class="slot'+(opt.on?' is-on':'')+'" data-r="'+r+'" data-id="'+id+'" title="'+it.name+'">'+
-           '<svg class="ico"><use href="#i-'+it.icon+'"/></svg>'+tag+'</div>';
+           artHTML(id)+tag+'</div>';
   }
 
   window.TW_ITEMS = {
     RARITY:RARITY, TYPE:TYPE, SLOT:SLOT,
     EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP, CRAFT_SLOTS:CRAFT_SLOTS, CRAFT_FX:CRAFT_FX, register:register,
-    get:get, rarityOf:rarityOf, fmt:fmt, slotIcon:slotIcon, canCraft:canCraft, craft:craft, slotHTML:slotHTML
+    get:get, rarityOf:rarityOf, fmt:fmt, slotIcon:slotIcon, artOf:artOf, artHTML:artHTML, canCraft:canCraft, craft:craft, slotHTML:slotHTML
   };
 })();

@@ -343,6 +343,16 @@ svg:not(.gauge svg){fill:none;stroke:currentColor;stroke-width:1.4;stroke-lineca
 .slot--lock{background:rgba(0,0,0,.42);cursor:not-allowed}
 .slot--lock .ico{color:var(--tx-ghost)}
 .slot .ico{color:#9AA0AC;width:60%;height:60%;stroke-width:1}
+/* 아이템 고유 이미지 — <img> + 제작품 색조 마스크(<i>) + 대체 아이콘(svg, 이미지 실패 시만) */
+.itart{position:relative;display:inline-grid;place-items:center;width:78%;height:78%;pointer-events:none}
+.itart img{width:100%;height:100%;object-fit:contain;display:block}
+.itart i{position:absolute;inset:0;mask-size:contain;mask-repeat:no-repeat;mask-position:center;-webkit-mask-size:contain;-webkit-mask-repeat:no-repeat;-webkit-mask-position:center;mix-blend-mode:color;opacity:.8}
+.itart .ico{display:none}
+.itart.noimg img,.itart.noimg i{display:none}
+.itart.noimg .ico{display:block;width:100%;height:100%}
+.itart--glow img{filter:drop-shadow(0 0 5px var(--glow,transparent))}
+.slot .itart{width:78%;height:78%}
+.slot--lock .itart,.slot--empty .itart{display:none}
 .slot__lv{position:absolute;right:3px;bottom:2px;font-size:10.5px;color:#D9C07A;
   font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000;letter-spacing:0}
 .slot__ct{position:absolute;right:3px;bottom:2px;font-size:10.5px;color:var(--tx);

@@ -23,6 +23,7 @@
 .grow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));box-shadow:inset 2px 0 0 var(--red-lit)}
 .grow .slot{width:40px;height:40px;aspect-ratio:auto;flex:none;cursor:inherit}
 .grow .slot .ico{width:22px;height:22px}
+.grow .slot .itart{width:30px;height:30px}
 .grow__nm{font-size:12.5px;color:var(--tx-hi)}
 .grow__sub{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
 .grow__pr{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums;flex:none}
@@ -35,6 +36,7 @@
 .goods__art{height:150px;position:relative;border:1px solid var(--line);display:grid;place-items:center;
   background:radial-gradient(60% 60% at 50% 55%,rgba(201,138,43,.14),transparent 70%),rgba(0,0,0,.35);color:#B9A46E}
 .goods__art .ico{width:74px;height:74px;stroke-width:.8}
+.goods__art .itart{width:112px;height:112px}
 .goods__nm{font-family:var(--f-serif);font-size:20px;letter-spacing:.03em}
 .goods__desc{font-size:12.5px;color:var(--tx-dim);line-height:1.75;margin-top:8px}
 .goods__meta{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:10px}
@@ -210,7 +212,7 @@
     btn.textContent=sell?'판매':'구매'; btn.classList.toggle('is-sell',sell); $('#g-pk').textContent=sell?'판매 단가':'단가';
     if(!sel){ $('#g-nm').textContent='—'; $('#g-desc').textContent=''; $('#g-art').innerHTML=''; $('#g-own').textContent='0'; $('#g-price').textContent='0'; $('#d-total').textContent='0'; $('#d-after').textContent=fmt(gold()); btn.disabled=true; return; }
     var e=entry(sel), it=T.get(sel), n=qty(), unit=sell?e.sell:e.buy, total=unit*n, after=sell?gold()+total:gold()-total;
-    $('#g-art').innerHTML='<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
+    $('#g-art').innerHTML=T.artHTML(it.id);
     $('#g-nm').textContent=it.name; $('#g-rar').textContent=T.RARITY[it.rarity].name; $('#g-rar').style.color=T.RARITY[it.rarity].color; $('#g-rar').style.borderColor=T.RARITY[it.rarity].color;
     $('#g-desc').textContent=it.desc||''; $('#g-own').textContent=fmt(it.qty); $('#g-price').textContent=fmt(unit);
     $('#d-k').textContent=sell?'받을 금액':'합계'; $('#d-total').textContent=fmt(total); $('#d-after').textContent=fmt(after);

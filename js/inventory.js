@@ -55,7 +55,7 @@
     }
     box.innerHTML = head(it) +
       '<div class="flex ac jb mt3"><div><div class="xs t-faint">전투력</div><div class="bigcp t-red num mt1">'+T.fmt(it.cp)+'</div></div>'+
-      '<div class="iart fill"><svg class="ico"><use href="#i-'+it.icon+'"/></svg></div></div>'+
+      '<div class="iart fill">'+T.artHTML(it.id)+'</div></div>'+
       '<div class="hr"></div>' + statRows(it) +
       (it.effect ? '<div class="hr"></div><div class="xs t-dim" style="line-height:1.7">'+it.effect+'</div>' : '') +
       (it.flavor ? '<div class="hr"></div><p class="flavor" style="margin:0">'+it.flavor+'</p>' : '') +
@@ -71,7 +71,7 @@
       cmp.innerHTML = head(eq) +
         '<div class="flex ac jb mt3"><div><div class="xs t-faint">전투력</div><div class="flex ac g1 mt1"><span class="bigcp t-dim num">'+T.fmt(eq.cp)+'</span>'+
         '<span class="delta '+(up?'delta--down':'delta--up')+'">'+(up?'▼':'▲')+' '+T.fmt(Math.abs(diffCp))+'</span></div></div>'+
-        '<div class="iart fill"><svg class="ico"><use href="#i-'+eq.icon+'"/></svg></div></div>'+
+        '<div class="iart fill">'+T.artHTML(eq.id)+'</div></div>'+
         '<div class="hr"></div>' + statRows(eq, it) +
         (eq.effect ? '<div class="hr"></div><div class="xs t-dim" style="line-height:1.7">'+eq.effect+'</div>' : '') +
         '<div class="hr"></div><div class="stat"><span class="stat__k">강화 단계</span><span class="stat__v num">+'+eq.enh+' / '+eq.enhMax+'</span></div>'+

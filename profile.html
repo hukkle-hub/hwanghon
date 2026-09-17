@@ -66,6 +66,7 @@
   background:rgba(0,0,0,.3);color:#9AA0AC;flex:none}
 .quote{font-size:11.5px;color:var(--tx-dim);line-height:1.9;font-style:italic}
 .eqsum{display:flex;align-items:center;gap:10px}
+.eqsum__main .itart{width:34px;height:34px}
 .eqsum__main{width:44px;height:44px;border:1px solid rgba(201,138,43,.5);flex:none;display:grid;place-items:center;color:#C89A4A}
 .actrow{display:flex;justify-content:flex-end;gap:10px}
 .actrow .btn{width:196px;height:38px}
@@ -221,7 +222,7 @@
   $('#intro').innerHTML='<p class="quote" style="margin:0">'+P.intro[0]+'</p><p class="xs t-faint" style="line-height:1.9;margin:10px 0 0">'+P.intro[1]+'</p>';
   var G=window.TW_GEAR, gs=G&&G.state(); if(gs&&gs.equipped.main){ P.equip.main=gs.equipped.main; P.equip.enh='+'+G.enhOf(gs.equipped.main); P.equip.cp=G.itemCp(gs.equipped.main); P.equip.slots=['chest','legs','gloves','boots','acc'].map(function(k){ return gs.equipped[k]; }).filter(Boolean); }
   var m=T.get(P.equip.main);
-  $('#eqsum').innerHTML='<div class="eqsum"><span class="eqsum__main"><svg class="ico"><use href="#i-'+m.icon+'"/></svg></span><div class="fill"><div class="flex ac jb"><span class="sm" style="color:'+T.RARITY[m.rarity].color+'">'+m.name+'</span><span class="xs t-faint">강화 '+P.equip.enh+'</span></div><div class="xs t-faint mt1">전투력 <span class="num t-dim">'+W.fmt(P.equip.cp)+'</span></div></div></div>'+
+  $('#eqsum').innerHTML='<div class="eqsum"><span class="eqsum__main">'+T.artHTML(m.id)+'</span><div class="fill"><div class="flex ac jb"><span class="sm" style="color:'+T.RARITY[m.rarity].color+'">'+m.name+'</span><span class="xs t-faint">강화 '+P.equip.enh+'</span></div><div class="xs t-faint mt1">전투력 <span class="num t-dim">'+W.fmt(P.equip.cp)+'</span></div></div></div>'+
     '<div class="slotgrid mt3" style="--cols:5;gap:5px;max-width:212px">'+P.equip.slots.map(function(id){ return T.slotHTML(id,{noTag:true}); }).join('')+'</div>';
   var sn=P.season;
   $('#season').innerHTML='<div class="sb__rank"><svg class="ico ico--xl"><use href="#i-sigil"/></svg><div><div class="sb__num num">'+sn.rank+'</div><div class="sb__k mt1">시즌 랭킹 · 상위 '+sn.top+'</div></div></div>'+

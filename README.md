@@ -30,6 +30,7 @@ game-ui/
 └── js/icons.js       SVG 아이콘 스프라이트 (60여 종, currentColor 상속)
     js/ui.js          런타임 (탭·선택·게이지·슬롯·카운트다운·화면 전환·스테이지 피팅·상단 바 우편/기록/설정 시트)
     js/items.js       장비 · 재료 · 소모품 · 레시피 · 강화 단계표 · 제작 재료 효과표 (단일 원본)
+    art/items/*.svg   아이템 고유 이미지 31종 (tools/items/gen-item-art.mjs 로 생성 · items.js artHTML 이 슬롯·상세·드랍에 사용, 제작품은 재료 색조·광채 덧씌움)
     js/gear.js        장비 저장(장착·보유·강화·내구도·제작품) · 스탯 계산 · 강화/대수선/분해/제작 규칙
     js/world.js       캐릭터 · 의뢰 · 보스 · 파티 · 전투 결과 · 프로필 · 전투 HUD (단일 원본)
     js/inventory.js   인벤토리 화면 렌더러 (장착/해제 · 비교 · 필터)

@@ -28,6 +28,7 @@
 .rrow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));box-shadow:inset 2px 0 0 var(--red-lit)}
 .rrow .slot{width:40px;height:40px;aspect-ratio:auto;flex:none;cursor:inherit}
 .rrow .slot .ico{width:22px;height:22px}
+.rrow .slot .itart{width:30px;height:30px}
 .rrow__nm{font-size:12.5px;color:var(--tx-hi)}
 .rrow__sub{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
 .rrow__ok{margin-left:auto;font-size:10px;letter-spacing:.06em;padding:2px 6px;border:1px solid;flex:none}
@@ -40,6 +41,7 @@
 .result__art{height:150px;position:relative;border:1px solid var(--line);display:grid;place-items:center;
   background:radial-gradient(60% 60% at 50% 55%,rgba(201,138,43,.14),transparent 70%),rgba(0,0,0,.35);color:#B9A46E}
 .result__art .ico{width:74px;height:74px;stroke-width:.8}
+.result__art .itart{width:112px;height:112px}
 .result__nm{font-family:var(--f-serif);font-size:20px;letter-spacing:.03em}
 .result__meta{font-size:11.5px;color:var(--tx-faint);margin-top:3px}
 .result__stats{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;margin-top:10px}
@@ -60,6 +62,7 @@
 .pickopts{display:flex;flex-wrap:wrap;gap:5px}
 .pickopt{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid var(--line);background:rgba(255,255,255,.02);font-size:11.5px;color:var(--tx-dim);cursor:pointer}
 .pickopt .ico{width:14px;height:14px}
+.pickopt .itart{width:18px;height:18px}
 .pickopt.is-on{color:#EBD6D6;border-color:var(--line-red);background:rgba(165,28,28,.2)}
 .pickopt.no{opacity:.45}
 .pickopt i{font-style:normal;font-size:10px;color:var(--tx-faint)}
@@ -232,7 +235,7 @@
   function select(id){
     cur = T.RECIPE.filter(function(r){ return r.id===id; })[0]; if(!cur) return;
     var it = resultItem(), r = T.RARITY[it.rarity], look = it.custom && it.custom.look;
-    $('#r-art').innerHTML = '<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
+    $('#r-art').innerHTML = T.artHTML(it);
     $('#r-art').style.color = look&&look.tint ? look.tint : r.color; $('#r-art').classList.toggle('look', !!look); $('#r-art').style.setProperty('--lookglow', look&&look.glow ? (look.glowColor||'#ff6a6a') : 'transparent');
     renderPicks(T.get(cur.result));
     $('#r-nm').textContent = it.name; $('#r-nm').style.color = r.color;
@@ -269,7 +272,7 @@
       return '<div class="pickrow"><div class="pickrow__k">'+sl.name+'<small>'+sl.hint+'</small></div><div><div class="pickopts">'+sl.opts.map(function(id){
         var on = picks[sl.key]===id; if(!id) return '<button type="button" class="pickopt'+(on?' is-on':'')+'" data-slot="'+sl.key+'" data-mat="">없음</button>';
         var m=T.get(id), fx=T.CRAFT_FX[id], have=m.qty||0, ok=have>=sl.n;
-        return '<button type="button" class="pickopt'+(on?' is-on':'')+(ok?'':' no')+'" data-slot="'+sl.key+'" data-mat="'+id+'"><svg class="ico"><use href="#i-'+m.icon+'"/></svg>'+m.name+'<i>'+T.fmt(have)+'/'+sl.n+'</i></button>'; }).join('')+
+        return '<button type="button" class="pickopt'+(on?' is-on':'')+(ok?'':' no')+'" data-slot="'+sl.key+'" data-mat="'+id+'">'+T.artHTML(id)+m.name+'<i>'+T.fmt(have)+'/'+sl.n+'</i></button>'; }).join('')+
         '</div><div class="pickdesc">'+(picks[sl.key]?T.CRAFT_FX[picks[sl.key]].desc:'촉매 없이 제작')+'</div></div></div>'; }).join('');
   }
   function renderMats(){

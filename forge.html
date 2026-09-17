@@ -52,6 +52,10 @@
   background:radial-gradient(45% 50% at 50% 50%,rgba(210,140,60,.26),transparent 70%);z-index:2;
   display:grid;place-items:center;color:rgba(220,190,150,.4)}
 .itemglow .ico{width:64px;height:64px;stroke-width:.8}
+.itemglow .itart{width:96px;height:96px;filter:drop-shadow(0 0 10px rgba(210,140,60,.35))}
+html.mobile .itemglow{top:44%;height:150px}
+html.mobile .itemglow .itart{width:72px;height:72px;align-self:start;margin-top:4px}
+.mat__ic .itart{width:24px;height:24px}
 .enhinfo{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:14px 18px 14px;
   background:linear-gradient(0deg,rgba(6,7,10,.95),rgba(6,7,10,.72) 60%,transparent)}
 .enhstep{text-align:center;font-family:var(--f-serif);font-size:20px;color:var(--tx-hi);letter-spacing:.06em}
@@ -79,7 +83,7 @@
 .ract.is-on .ract__t{color:#FFF}
 .ract__d{font-size:10px;color:var(--tx-faint);line-height:1.5}
 .ract.is-on .ract__d{color:rgba(240,218,218,.66)}
-.itemglow.is-hit .ico{animation:enhhit .6s}
+.itemglow.is-hit .ico,.itemglow.is-hit .itart{animation:enhhit .6s}
 @keyframes enhhit{0%{filter:brightness(1)}30%{filter:brightness(3) drop-shadow(0 0 18px #E8D9A8)}100%{filter:brightness(1)}}
 .toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:300;padding:9px 18px;background:rgba(10,11,14,.94);border:1px solid var(--line-gold);color:#E8D9A8;font-size:12.5px;letter-spacing:.04em;box-shadow:var(--sh-pop);opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
@@ -179,7 +183,7 @@
             <i id="ih-cp2">0</i></div>
         </div>
 
-        <div class="itemglow" id="ih-glow"><svg class="ico"><use href="#i-scythe"/></svg></div>
+        <div class="itemglow" id="ih-glow"></div>
 
         <div class="enhinfo">
           <div class="enhstep" id="enh-step">+5 강화 단계</div>
@@ -294,7 +298,7 @@
     if(!it){ $('#ih-nm').textContent='장비 없음'; $('#ih-kind').textContent=''; $('#enh-mats').innerHTML=''; $('#enh-opts').innerHTML=''; btn.disabled=true; return; }
     var e=G.enhOf(cur), dur=G.durOf(cur), step=G.enhStep(cur), r=T.RARITY[it.rarity];
     $('#ih-nm').textContent=it.name+' +'+e; $('#ih-nm').style.color=r.color; $('#ih-kind').textContent=r.name+' / '+(it.kind||T.TYPE[it.type])+(G.isEquipped(cur)?' · 장착 중':'');
-    $('#ih-glow').innerHTML='<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
+    $('#ih-glow').innerHTML=T.artHTML(cur);
     $('#ih-cp').textContent=T.fmt(G.itemCp(cur)); $('#ih-cp2').textContent=T.fmt(step?G.itemCp(cur,step.to):G.itemCp(cur));
     $('#enh-dur').textContent=dur+' / 100'; seg(dur);
     var cur_s=G.itemStats(cur), nxt=step?G.itemStats(cur,step.to):cur_s;
@@ -306,7 +310,7 @@
       if(!step){ $('#enh-extra').style.display='none'; $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
       else { var useB=!step.safe && $('#enh-boost').classList.contains('is-on'); var mats=step.mats.slice(); if(useB) mats.push(['m_booster', step.boosterN]);
         $('#enh-step').textContent='+'+step.to+' 강화 단계'+(step.safe?' · 안전 구간':''); $('#enh-rate').textContent=step.rate+'%'+(step.fs?' (+'+step.fs+')':''); $('#enh-cost').textContent=T.fmt(step.cost);
-        $('#enh-mats').innerHTML=mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+mi.icon+'"/></svg></span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
+        $('#enh-mats').innerHTML=mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic">'+T.artHTML(m[0])+'</span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
         $('#enh-extra').style.display=step.safe?'none':''; $('#enh-boost-n').textContent='×'+step.boosterN+' (보유 '+T.fmt(T.get('m_booster').qty||0)+') · 실패 시 단계 유지'; $('#enh-fs').textContent=step.fs?'실패 보정 +'+step.fs+'%p':'실패 보정 없음';
         $('#enh-warn').textContent=!step.durOk?'구조 안정성 '+dur+' — 20 미만이면 강화할 수 없습니다. 대수선이 필요합니다.':step.safe?'안전 구간: 실패하지 않습니다.':('실패 시 '+(useB?'단계 유지':(step.drop+'단계 하락'))+' · 내구도 -'+step.durLoss+' · 0이 되면 파괴');
         btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!step.durOk||!G.canPay(mats, step.cost); }

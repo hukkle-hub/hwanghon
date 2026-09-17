@@ -72,6 +72,7 @@
 .rw4 .rw{display:flex;flex-direction:column;align-items:center;gap:4px;padding:7px 3px 5px;
   border:1px solid var(--line);background:rgba(0,0,0,.3)}
 .rw4 .rw .ico{width:19px;height:19px;color:#9AA0AC}
+.rw4 .rw .itart{width:24px;height:24px}
 .rw4 .rw b{font-size:11px;font-weight:500;color:var(--tx)}
 .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
 .setrow>span{font-size:11.5px;color:var(--tx-faint)}
@@ -212,7 +213,7 @@
     var q = W.quest(cur) || W.quest(P.quest);
     $('#m-risk').innerHTML = '위험도 '+W.riskBadge(q.risk);
     var en=''; for(var i=0;i<Math.min(q.enemies,3);i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
-    var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); return '<div class="rw"><svg class="ico"><use href="#i-'+(it?it.icon:'exp')+'"/></svg><b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
+    var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); return '<div class="rw">'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-exp"/></svg>')+'<b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
     $('#m-detail').innerHTML = '<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
       '<div class="mart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">임무 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
       '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div><div class="flex ac jb"><span class="label-ko" style="margin:0">권장 전투력</span><span class="sm t-hi num">'+W.fmt(P.recCp)+'</span></div>'+

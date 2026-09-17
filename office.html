@@ -59,6 +59,7 @@
   border:1px solid var(--line);background:rgba(0,0,0,.3)
 }
 .rw .ico{color:#9AA0AC;width:20px;height:20px}
+.rw .itart{width:26px;height:26px}
 .rw b{font-size:11.5px;color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
 .rw[data-r="hero"]{border-color:rgba(139,91,214,.4)}
 .rw[data-r="legend"]{border-color:rgba(201,138,43,.4)}
@@ -234,7 +235,7 @@
   function info(){
     var q=W.quest(cur); $('#q-risk').innerHTML='위험도 '+W.riskBadge(q.risk);
     var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); var ic=it?it.icon:'exp'; var rar=it&&(it.rarity==='hero'||it.rarity==='legend')?' data-r="'+it.rarity+'"':'';
-      return '<div class="rw"'+rar+'><svg class="ico"><use href="#i-'+ic+'"/></svg><b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
+      return '<div class="rw"'+rar+'>'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-'+ic+'"/></svg>')+'<b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
     var en=''; for(var i=0;i<q.enemies;i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
     $('#q-info').innerHTML='<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
       '<div class="qart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">의뢰 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
