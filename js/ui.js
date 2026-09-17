@@ -371,7 +371,7 @@
   function recordsSheet(){
     var S = window.TW_SAVE ? TW_SAVE.get() : lsGet('tw:save', { gold:0, xp:0, lv:1, bag:{}, stats:{} });
     var need = Math.round(120 * Math.pow(S.lv || 1, 1.45));
-    var bagN = Object.keys(S.bag || {}).reduce(function(a, k){ return a + (S.bag[k] || 0); }, 0);
+    var bagN = window.TW_ITEMS ? TW_ITEMS.MATERIAL.concat(TW_ITEMS.CONSUMABLE).reduce(function(a, it){ return a + Math.max(0, it.qty || 0); }, 0) : Object.keys(S.bag || {}).reduce(function(a, k){ return a + Math.max(0, S.bag[k] || 0); }, 0);
     var st = S.stats || {};
     var arenas = []; try { for (var i = 0; i < localStorage.length; i++){ var k = localStorage.key(i); if (k.indexOf('tw:arena:') === 0) arenas.push({ id:k.slice(9), r:JSON.parse(localStorage.getItem(k)) }); } } catch(e){}
     function row(k, v){ return '<div class="srow"><span class="t-faint">'+k+'</span><b class="num">'+v+'</b></div>'; }

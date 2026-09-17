@@ -178,6 +178,7 @@
 
 <script src="js/items.js"></script>
 <script src="js/save.js"></script>
+<script src="js/gear.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/sfx.js"></script>
 <script>
@@ -185,7 +186,7 @@
 (function(){
   var T=window.TW_ITEMS, SV=window.TW_SAVE, $=function(s){return document.querySelector(s);};
   /* 인벤토리와 같은 병합: 시트 기준 보유량 + 저장 가방 */
-  try{ var sv=SV.get(); Object.keys(sv.bag).forEach(function(id){ var it=T.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); }catch(e){}
+  try{ if(!T._bagMerged){ T._bagMerged=true; var sv=SV.get(); Object.keys(sv.bag).forEach(function(id){ var it=T.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); } }catch(e){}
   var cat='consumable', sel=null, lines=[];
   var LINES={ buy:['“좋아. 쓸 만한 걸 골랐군.”','“다시 챙기러 올 필요 없게 넉넉히 사 둬.”','“회복약은 싸다. 목숨은 안 그렇고.”'], sell:['“정리 잘했어. 창고가 비어야 새 게 들어오지.”','“이 정도면 쳐 주지.”'], no:['“돈이 모자라. 지하에서 더 벌어 와.”','“없는 걸 팔 수는 없잖아.”'] };
   function gold(){ return SV.wallet(); }

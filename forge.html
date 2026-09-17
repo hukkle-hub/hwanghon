@@ -79,6 +79,10 @@
 .ract.is-on .ract__t{color:#FFF}
 .ract__d{font-size:10px;color:var(--tx-faint);line-height:1.5}
 .ract.is-on .ract__d{color:rgba(240,218,218,.66)}
+.itemglow.is-hit .ico{animation:enhhit .6s}
+@keyframes enhhit{0%{filter:brightness(1)}30%{filter:brightness(3) drop-shadow(0 0 18px #E8D9A8)}100%{filter:brightness(1)}}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:300;padding:9px 18px;background:rgba(10,11,14,.94);border:1px solid var(--line-gold);color:#E8D9A8;font-size:12.5px;letter-spacing:.04em;box-shadow:var(--sh-pop);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
 </style>
 </head>
 <body>
@@ -93,7 +97,7 @@
     </div>
     <div class="topbar__spacer"></div>
     <div class="topbar__right">
-      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num" id="gold">75,300</span></span>
       <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
       <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
       <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
@@ -168,14 +172,14 @@
         </div>
 
         <div class="itemhead">
-          <b>메마른 갈대밭 검창</b>
-          <span>외적등급 S / 근접 무기(검)</span>
-          <div class="cp">전투력 <em>2,980</em>
+          <b id="ih-nm">—</b>
+          <span id="ih-kind"></span>
+          <div class="cp">전투력 <em id="ih-cp">0</em>
             <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
-            <i>3,180</i></div>
+            <i id="ih-cp2">0</i></div>
         </div>
 
-        <div class="itemglow"><svg class="ico"><use href="#i-sword"/></svg></div>
+        <div class="itemglow" id="ih-glow"><svg class="ico"><use href="#i-scythe"/></svg></div>
 
         <div class="enhinfo">
           <div class="enhstep" id="enh-step">+5 강화 단계</div>
@@ -185,10 +189,13 @@
           </div>
           <div class="flex ac jb mt3">
             <span class="xs t-faint">장비 구조 안정성</span>
-            <span class="xs t-dim num">72 / 100</span>
+            <span class="xs t-dim num" id="enh-dur">100 / 100</span>
           </div>
-          <div class="segbar mt2" data-seg="72"></div>
-          <div class="xs mt2" style="color:#B4534E">구조 안정성이 0이 되면 장비가 파괴됩니다.</div>
+          <div class="segbar mt2" data-seg="100" id="enh-seg"></div>
+          <div class="xs mt2" style="color:#B4534E" id="enh-warn">구조 안정성이 0이 되면 장비가 파괴됩니다.</div>
+          <div class="flex g2 mt3">
+            <button class="btn btn--primary btn--craft fill" id="do-enh" data-primary>강화</button>
+          </div>
         </div>
       </div>
     </div>
@@ -196,32 +203,17 @@
     <!-- ===== 강화 재료 / 옵션 ===== -->
     <div class="flex col g3" style="min-height:0" data-mpane="재료">
       <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">대상 장비</span><span class="panel__meta" id="tg-count"></span></div>
+        <div class="panel__body panel__body--tight"><div class="slotgrid" id="tg-grid" style="--cols:6;gap:5px"></div></div>
+      </section>
+      <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">강화 재료</span></div>
         <div class="panel__body panel__body--tight" id="enh-mats"></div>
       </section>
 
       <section class="panel panel--framed fill">
-        <div class="panel__head"><span class="panel__title">옵션 정보</span></div>
-        <div class="panel__body panel__body--tight">
-          <div class="stat"><span class="stat__k">물리 공격력</span>
-            <span class="stat__v num">312 <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
-              <span class="up">341</span></span></div>
-          <div class="stat"><span class="stat__k">치명타 확률</span>
-            <span class="stat__v num">6.5% <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
-              <span class="up">7.1%</span></span></div>
-          <div class="stat"><span class="stat__k">스킬 피해 증가</span>
-            <span class="stat__v num">4.2% <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
-              <span class="up">4.6%</span></span></div>
-          <div class="stat"><span class="stat__k">출혈 적중</span>
-            <span class="stat__v num">18 <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
-              <span class="up">21</span></span></div>
-          <div class="hr"></div>
-          <div class="flex ac g2">
-            <svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg>
-            <span class="xs t-faint">옵션 잠금</span>
-            <span class="xs t-faint" style="margin-left:auto">+7 강화 시 해금</span>
-          </div>
-        </div>
+        <div class="panel__head"><span class="panel__title">옵션 정보</span><span class="panel__meta" id="opt-meta"></span></div>
+        <div class="panel__body panel__body--tight" id="enh-opts"></div>
       </section>
 
       <section class="panel panel--framed none">
@@ -236,19 +228,19 @@
 
     <!-- ===== 액션 레일 ===== -->
     <div class="rail" data-pick data-mpane="작업">
-      <button class="ract is-on" data-pickitem>
+      <button class="ract is-on" data-pickitem data-mode="enh">
         <span class="ract__t"><svg class="ico ico--lg"><use href="#i-hammer"/></svg>강화</span>
         <span class="ract__d">장비를 강화합니다.</span>
       </button>
-      <button class="ract" data-pickitem>
+      <button class="ract" data-pickitem data-mode="seal">
         <span class="ract__t"><svg class="ico ico--lg"><use href="#i-seal"/></svg>봉인</span>
         <span class="ract__d">장비의 잠재력을 봉인합니다.</span>
       </button>
-      <button class="ract" data-pickitem>
+      <button class="ract" data-pickitem data-mode="repair">
         <span class="ract__t"><svg class="ico ico--lg"><use href="#i-anvil"/></svg>대수선</span>
         <span class="ract__d">구조 안정성을 복구합니다.</span>
       </button>
-      <button class="ract" data-pickitem>
+      <button class="ract" data-pickitem data-mode="salvage">
         <span class="ract__t"><svg class="ico ico--lg"><use href="#i-recycle"/></svg>분해</span>
         <span class="ract__d">장비를 분해하여 재료를 획득합니다.</span>
       </button>
@@ -258,6 +250,7 @@
     </div>
   </main>
 
+  <div class="toast" id="toast"></div>
   <div class="hotbar">
     <a class="hot" href="inventory.html"><svg class="ico"><use href="#i-arrowl"/></svg>뒤로</a>
     <span class="hot">장비 프리셋</span>
@@ -275,20 +268,62 @@
   </div>
 </div>
 <script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/sfx.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>
-/* 강화 재료·확률·비용을 items.js 강화 단계표에서 가져온다 (대상: 메마른 갈대밭 검창 +4 → +5) */
+/* 강화 — gear.js: 대상 장비 선택 → 단계표(items.js ENHANCE)로 재료·확률·비용 → 강화/대수선/분해 실행. 결과는 저장(tw:save.gear) */
 (function(){
-  var T = window.TW_ITEMS, target = T.get('w_marsh_blade'), step = T.ENHANCE.filter(function(e){ return e.to === 5; })[0];
-  document.getElementById('enh-step').textContent = '+' + step.to + ' 강화 단계';
-  document.getElementById('enh-rate').textContent = step.rate + '%';
-  document.getElementById('enh-cost').textContent = T.fmt(step.cost);
-  document.getElementById('enh-mats').innerHTML = step.mats.map(function(m){
-    var it = T.get(m[0]), ok = (it.qty||0) >= m[1];
-    return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+it.icon+'"/></svg></span>'+
-      '<span class="mat__n">'+it.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(it.qty)+'</b> / '+m[1]+'</span></div>';
-  }).join('');
+  var T=window.TW_ITEMS, G=window.TW_GEAR, $=function(s){ return document.querySelector(s); };
+  var mode='enh', cur=null;
+  var LBL={ atk:'기본 공격력', atkEx:'추가 공격력', def:'방어력', hp:'HP', crit:'치명타 확률', critDmg:'치명타 피해', skill:'스킬 피해 증가', bleed:'출혈 적중' };
+  var PCT={ crit:1, critDmg:1, skill:1 };
+  function toast(msg, warn){ var t=$('#toast'); t.textContent=msg; t.style.borderColor=warn?'rgba(199,58,54,.7)':''; t.style.color=warn?'#F0B4B0':''; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('on'); },1800); }
+  function seg(v){ var n=12, on=Math.round(v/100*n), h=''; for(var i=0;i<n;i++) h+='<i class="'+(i<on?(v<30?'warn':'on'):'')+'"></i>'; $('#enh-seg').innerHTML=h; }
+  function gold(){ $('#gold').textContent=T.fmt(G.wallet()); }
+  function grid(){ var ids=G.allGear(); $('#tg-count').textContent=ids.length+' 개'; if(!cur||ids.indexOf(cur)<0) cur=G.state().equipped.main||ids[0]||null;
+    $('#tg-grid').innerHTML=ids.map(function(id){ return T.slotHTML(id,{on:id===cur}); }).join(''); render(); }
+  function render(){
+    var it=cur&&T.get(cur); var btn=$('#do-enh');
+    if(!it){ $('#ih-nm').textContent='장비 없음'; $('#ih-kind').textContent=''; $('#enh-mats').innerHTML=''; $('#enh-opts').innerHTML=''; btn.disabled=true; return; }
+    var e=G.enhOf(cur), dur=G.durOf(cur), step=G.enhStep(cur), r=T.RARITY[it.rarity];
+    $('#ih-nm').textContent=it.name+' +'+e; $('#ih-nm').style.color=r.color; $('#ih-kind').textContent=r.name+' / '+(it.kind||T.TYPE[it.type])+(G.isEquipped(cur)?' · 장착 중':'');
+    $('#ih-glow').innerHTML='<svg class="ico"><use href="#i-'+it.icon+'"/></svg>';
+    $('#ih-cp').textContent=T.fmt(G.itemCp(cur)); $('#ih-cp2').textContent=T.fmt(step?G.itemCp(cur,step.to):G.itemCp(cur));
+    $('#enh-dur').textContent=dur+' / 100'; seg(dur);
+    var cur_s=G.itemStats(cur), nxt=step?G.itemStats(cur,step.to):cur_s;
+    $('#enh-opts').innerHTML=Object.keys(cur_s).map(function(k){ var u=PCT[k]?'%':''; var a=PCT[k]?cur_s[k]:T.fmt(cur_s[k]), b=PCT[k]?nxt[k]:T.fmt(nxt[k]);
+      return '<div class="stat"><span class="stat__k">'+(LBL[k]||k)+'</span><span class="stat__v num">'+a+u+(step?' <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg> <span class="up">'+b+u+'</span>':'')+'</span></div>'; }).join('')+
+      '<div class="hr"></div><div class="flex ac g2"><svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg><span class="xs t-faint">옵션 잠금</span><span class="xs t-faint" style="margin-left:auto">'+(e>=7?'해금됨':'+7 강화 시 해금')+'</span></div>';
+    $('#opt-meta').textContent=it.effect?'':'';
+    if(mode==='enh'){
+      if(!step){ $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
+      else { $('#enh-step').textContent='+'+step.to+' 강화 단계'; $('#enh-rate').textContent=step.rate+'%'; $('#enh-cost').textContent=T.fmt(step.cost);
+        $('#enh-mats').innerHTML=step.mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+mi.icon+'"/></svg></span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
+        var booster=step.mats.some(function(m){ return m[0]==='m_booster'; });
+        $('#enh-warn').textContent=(step.to>=4&&!booster?'실패 시 한 단계 하락 · ':'실패 시 단계 유지 · ')+'내구도 -'+(6+step.to*2)+' · 0이 되면 파괴';
+        btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!G.canPay(step.mats, step.cost); }
+    } else if(mode==='repair'){ var c=G.repairCost(cur); $('#enh-step').textContent='대수선'; $('#enh-rate').textContent=dur+'%'; $('#enh-mats').innerHTML='<div class="xs t-dim">구조 안정성을 100 으로 복구합니다.</div>'; $('#enh-cost').textContent=T.fmt(c); $('#enh-warn').textContent=c?'비용은 장비 가치와 손상도에 비례':'손상이 없습니다'; btn.textContent='대수선'; btn.disabled=!c||G.wallet()<c; }
+    else if(mode==='salvage'){ var eq=G.isEquipped(cur); $('#enh-step').textContent='분해'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-dim">장비를 재료로 되돌립니다. 등급이 높을수록 좋은 재료. 내구도가 높을수록 더 많이.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=eq?'장착 중인 장비는 분해할 수 없습니다. 인벤토리에서 해제하세요.':'되돌릴 수 없습니다.'; btn.textContent='분해'; btn.disabled=eq; }
+    else { $('#enh-step').textContent='봉인'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">잠재력 봉인은 준비 중입니다.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=''; btn.textContent='봉인'; btn.disabled=true; }
+    gold();
+  }
+  function act(){ if(!cur) return; var it=T.get(cur), r;
+    if(mode==='enh'){ r=G.enhance(cur); if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err) return;
+      if(r.ok){ toast(it.name+' +'+r.enh+' 강화 성공'); if(window.TW_SFX) TW_SFX.play('clear'); $('#ih-glow').classList.add('is-hit'); setTimeout(function(){ $('#ih-glow').classList.remove('is-hit'); },600); }
+      else if(r.broken){ toast(it.name+' 파괴됨 — 구조 안정성 0', true); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; }
+      else { toast('강화 실패'+(r.drop?' · +'+r.from+' → +'+r.enh:' · 단계 유지')+' · 내구도 '+r.dur, true); if(window.TW_SFX) TW_SFX.play('hurt'); }
+    } else if(mode==='repair'){ r=G.repair(cur); if(r.err==='pay'){ toast('골드가 부족합니다', true); return; } if(r.ok){ toast('대수선 완료 · -'+T.fmt(r.cost)+' G'); if(window.TW_SFX) TW_SFX.play('ui'); } }
+    else if(mode==='salvage'){ r=G.dismantle(cur); if(r.err==='equipped'){ toast('장착 중인 장비입니다', true); return; } if(r.ok){ toast(it.name+' 분해 → '+r.got.map(function(g){ return T.get(g[0]).name+' ×'+g[1]; }).join(', ')); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; } }
+    grid();
+  }
+  document.querySelector('.rail').addEventListener('click', function(e){ var b=e.target.closest('[data-mode]'); if(!b) return; mode=b.getAttribute('data-mode'); render(); });
+  $('#tg-grid').addEventListener('click', function(e){ var sl=e.target.closest('[data-id]'); if(!sl) return; cur=sl.getAttribute('data-id'); grid(); });
+  $('#do-enh').addEventListener('click', act);
+  document.addEventListener('tw:wallet', function(){ grid(); });
+  grid();
 })();
 </script>
 </body>

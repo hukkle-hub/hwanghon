@@ -5,7 +5,7 @@ import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=window.TW_LEVELS.d01, $=function(s){return document.querySelector(s);};
-  var A=DG.ARENAS[L.arena], R=DG.RULES, CHAR=W.CHARS[A.char], SK=DG.SKILLS[A.char], ULT=DG.SKILLS[A.char+'Ult'], DEPTH=SIM.DEPTH;
+  var A=DG.ARENAS[L.arena], R=DG.RULES, CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[A.char]), SK=DG.SKILLS[A.char], ULT=DG.SKILLS[A.char+'Ult'], DEPTH=SIM.DEPTH;
   var SCALE=50; /* px per m */
   var MOBILE=Math.min(window.innerWidth, window.innerHeight)<=640;
   var world=SIM.createWorld({rows:L.rows, cell:L.cell}), map=world.map;

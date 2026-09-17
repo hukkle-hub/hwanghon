@@ -1,15 +1,18 @@
 /* 황혼 — 장비/인벤토리 화면을 items.js 데이터로 렌더링 */
 (function(){
   /* 던전 드랍(저장)을 가방 수량에 합산 */
-  try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); if(sv&&window.TW_ITEMS){ Object.keys(sv.bag).forEach(function(id){ var it=window.TW_ITEMS.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); if(window.TW_ITEMS.PLAYER) window.TW_ITEMS.PLAYER.gold+=sv.gold; } }catch(e){}
+  try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); if(sv&&window.TW_ITEMS&&!window.TW_ITEMS._bagMerged){ window.TW_ITEMS._bagMerged=true; Object.keys(sv.bag).forEach(function(id){ var it=window.TW_ITEMS.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); } }catch(e){}
   'use strict';
-  var T = window.TW_ITEMS, P = T.PLAYER, $ = function(s){ return document.querySelector(s); };
+  var T = window.TW_ITEMS, P = T.PLAYER, G = window.TW_GEAR, $ = function(s){ return document.querySelector(s); };
+  /* 저장된 장착·보유 상태로 시작 (gear.js) */
+  if (G){ var gs=G.state(); P.equipped=gs.equipped; P.bag=gs.owned.map(function(id){ return {item:id}; }); }
+  function syncGear(){ if(!G) return; var gs=G.state(); gs.equipped=P.equipped; gs.owned=P.bag.map(function(b){ return b.item; }); window.TW_SAVE.save(); }
   var filter = 'all', selected = null;      // selected: {id, where:'bag'|'equipped', slot}
 
   var SLOT_ORDER_L = ['main','sub','off','merc'], SLOT_ORDER_R = ['head','chest','legs','gloves','boots','acc'];
 
   function statRows(it, cmp){
-    var s = it.stats||{}, c = cmp ? (cmp.stats||{}) : null, rows = [];
+    var s = G ? G.itemStats(it.id) : (it.stats||{}), c = cmp ? (G ? G.itemStats(cmp.id) : (cmp.stats||{})) : null, rows = [];
     function d(k, unit){
       if (s[k]==null) return;
       var v = s[k], html = '<span class="stat__v num">'+ (unit==='%' ? v+'%' : T.fmt(v));
@@ -59,7 +62,7 @@
       '<div class="hr"></div><div class="stat"><span class="stat__k">요구 레벨</span><span class="stat__v">'+it.reqLv+'</span></div>'+
       '<div class="stat"><span class="stat__k">귀속 상태</span><span class="stat__v xs">'+it.bind+'</span></div>'+
       '<div class="stat"><span class="stat__k">강화 단계</span><span class="stat__v num">+'+it.enh+' / '+it.enhMax+'</span></div>'+
-      '<div class="hr"></div><div class="stat"><span class="stat__k">내구도</span><span class="stat__v num">'+it.dur[0]+' / '+it.dur[1]+'</span></div>'+
+      '<div class="hr"></div><div class="stat"><span class="stat__k">내구도</span><span class="stat__v num">'+(G?G.durOf(it.id):it.dur[0])+' / '+it.dur[1]+'</span></div>'+
       '<div class="stat"><span class="stat__k">판매가</span><span class="stat__v flex ac g1"><svg class="ico ico--xs t-gold"><use href="#i-coin"/></svg>'+T.fmt(it.price)+'</span></div>';
 
     if (!eq){ cmp.innerHTML = '<div class="xs t-faint">'+(isEq?'장착 중인 장비입니다.':'같은 슬롯에 장착된 장비가 없습니다.')+'</div>'; }
@@ -97,7 +100,7 @@
     }
     $('#eq-left').innerHTML  = SLOT_ORDER_L.map(one).join('');
     $('#eq-right').innerHTML = SLOT_ORDER_R.map(one).join('') + '<div class="eq"><div class="slot slot--lock"><svg class="ico"><use href="#i-lock"/></svg></div></div>';
-    var cp = 0; Object.keys(P.equipped).forEach(function(k){ var it=T.get(P.equipped[k]); if(it) cp+=it.cp; });
+    var cp = 0; Object.keys(P.equipped).forEach(function(k){ var it=T.get(P.equipped[k]); if(it) cp+=(G?G.itemCp(it.id):it.cp); });
     $('#cp-total').textContent = T.fmt(cp + 16030);   // 캐릭터 기본 전투력 16,030 + 장비 합 = 시트 24,650
   }
   var ICON = { head:'helm', chest:'chest', legs:'pants', gloves:'glove', boots:'boot', acc:'ring', main:'scythe', sub:'sword', off:'scythe' };
@@ -121,12 +124,12 @@
     if (!selected) return;
     var it = T.get(selected.id); if (!it.slot) return;
     if (selected.where==='equipped'){
-      P.equipped[selected.slot] = null; P.bag.push({item:it.id}); selected = {id:it.id, where:'bag'};
+      P.equipped[selected.slot] = null; P.bag.push({item:it.id}); selected = {id:it.id, where:'bag'}; syncGear();
     } else {
       var prev = P.equipped[it.slot];
       P.bag = P.bag.filter(function(b){ return b.item!==it.id; });
       if (prev) P.bag.unshift({item:prev});
-      P.equipped[it.slot] = it.id; selected = {id:it.id, where:'equipped', slot:it.slot};
+      P.equipped[it.slot] = it.id; selected = {id:it.id, where:'equipped', slot:it.slot}; syncGear();
     }
     renderAll();
   }

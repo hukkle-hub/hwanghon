@@ -186,6 +186,8 @@
 </div>
 
 <script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>
@@ -244,7 +246,7 @@
     var ms = T.MATERIAL;
     $('#mcount').textContent = ms.length + ' / 300';
     $('#mgrid').innerHTML = ms.map(function(m){ return T.slotHTML(m.id); }).join('');
-    $('#gold').textContent = T.fmt(T.PLAYER.gold);
+    $('#gold').textContent = T.fmt(window.TW_GEAR ? TW_GEAR.wallet() : T.PLAYER.gold);
   }
 
   function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('on'); },1600); }
@@ -269,7 +271,7 @@
   $('#do-craft').onclick = function(){
     if(!cur) return;
     var n=Math.max(1,+$('#q').value||1), made=T.craft(cur,n), it=T.get(cur.result);
-    if(!made){ toast('재료가 부족합니다'); return; }
+    if(!made){ toast(window.TW_GEAR && TW_GEAR.wallet()<cur.cost ? '골드가 부족합니다' : '재료가 부족합니다'); return; }
     var log=$('#log'); if(/아직/.test(log.textContent)) log.textContent='';
     log.insertAdjacentHTML('afterbegin','<div><b>'+it.name+'</b> ×'+(made*(cur.yield||1))+' 제작 — '+T.fmt(cur.cost*made)+' G</div>');
     toast(it.name+' 제작 완료');

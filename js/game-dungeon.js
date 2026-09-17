@@ -2,7 +2,7 @@
    월드 규칙(world-sim.js)·전투 규칙(combat.js)·레벨(dungeon.js)·리그(dummy-rig.js)는 그대로. 이 파일은 렌더링·입력·연출·흐름만 담당 */
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=window.TW_LEVELS.d01, $=function(s){return document.querySelector(s);};
-  var A=DG.ARENAS[L.arena], R=DG.RULES, CHAR=W.CHARS[A.char], SK=DG.SKILLS[A.char], ULT=DG.SKILLS[A.char+'Ult'], DEPTH=SIM.DEPTH, RIGDEF=window.TW_DUMMY_RIG, AIN=window.TW_AIN_RIG;
+  var A=DG.ARENAS[L.arena], R=DG.RULES, CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[A.char]), SK=DG.SKILLS[A.char], ULT=DG.SKILLS[A.char+'Ult'], DEPTH=SIM.DEPTH, RIGDEF=window.TW_DUMMY_RIG, AIN=window.TW_AIN_RIG;
   var MOBILE=Math.min(window.innerWidth, window.innerHeight)<=640, ZOOM=MOBILE?0.62:0.78;
   var world=SIM.createWorld({rows:L.rows, cell:L.cell}), map=world.map;
   var P=world.add('p',{x:world.marks('S')[0].x, y:world.marks('S')[0].y, r:L.player.r, rollT:0, lockT:0, aim:0, face:'down'});

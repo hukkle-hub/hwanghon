@@ -17,6 +17,7 @@
     addItem:function(id,n){ S.bag[id]=(S.bag[id]||0)+(n||1); save(); return S.bag[id]; },
     flag:function(k,v){ if(v===undefined) return !!S.flags[k]; S.flags[k]=v; save(); },
     stat:function(k,n){ S.stats[k]=(S.stats[k]||0)+(n||1); save(); },
+    save:save,
     reset:function(){ S=JSON.parse(JSON.stringify(DEF)); save(); }
   };
   window.TW_SAVE=api;
