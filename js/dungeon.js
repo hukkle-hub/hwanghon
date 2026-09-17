@@ -52,6 +52,74 @@
     mob:{ id:'train_bot', name:'훈련 인형', hp:38000, speed:120, aggro:360, keep:95, range:110, tele:0.7, dmg:700, cooldown:1.6, r:28, zone:{ kind:'circle', r:100, fwd:60 }, xp:60, gold:80, drops:[['m_fiber',2]], armor:1 },
     props:{ b:{ w:44, h:52, name:'나무통' }, p:{ w:26, h:120, name:'말뚝' }, c:{ w:56, h:44, name:'상자' }, s:{ w:40, h:96, name:'표지판' }, t:{ w:20, h:110, name:'횃불' } }
   };
-  window.TW_LEVELS = { d01:LEVEL };
+
+  /* ---------- 던전 02 「갈대습지」 ----------
+     기호: # 갈대 벽·깊은 물(통행 불가)  ~ 얕은 물(장식)  r 갈대 군락  T 죽은 나무  w 무너진 망루  t 등불 말뚝  s 표지(정찰대 흔적)
+           m 갈대 잠복자  M 늪 껍질  q 정찰대의 기록(선택 목표)  f 채집 지점  G 망루 통로(입장 후 봉쇄)  S 시작  B 보스 */
+  var ROWS2 = [
+    '########################################',
+    '##......r..~~~..####..r.....#.........##',
+    '#..S....r.~~~~~..##....T....#.........##',
+    '#.......r..~~~...........r..#..T......##',
+    '#..t.........r....m......r..#....r.....#',
+    '#.....r.T...r..........r....#......B...#',
+    '#..........m...##....~~.....#..r.......#',
+    '#.......r.....###...~~~~....#..r.......#',
+    '#..f....r......#...~~~M~....G..........#',
+    '#....m.....r.......~~~~.....#..t...r...#',
+    '#....T.....r....m......m....#..........#',
+    '#..r.........r.......r..q...#....T.....#',
+    '#.....r..........f....w.....#.......r..#',
+    '#..t.....r..............s...#......r...#',
+    '##....r......r..T.....r.....#.........##',
+    '########################################'
+  ];
+  var LEVEL2 = {
+    id:'d02', code:'던전 02', name:'갈대습지', place:'외곽지대 · 갈대습지 북동 분지', rows:ROWS2, cell:64, arena:'marsh', env:'swamp', diff:'의뢰 S · 외곽지대', npc:'마태오',
+    bg:'boss-marsh',
+    player:{ speed:230, r:22, rollLen:170, rollDur:0.32, reach:150, reachCounter:230, cone:1.05 },
+    bossRoom:{ minCx:29 }, bossR:80, camDist:8.8,
+    ai:[
+      { speed:105, keep:200, start:360, pick:'auto' },
+      { speed:150, keep:180, start:380, pick:'auto' }
+    ],
+    zones:{
+      '돌진 베기':   { kind:'line', len:430, w:130 },
+      '광폭 포효':   { kind:'circle', r:290, fwd:0 },
+      '대지 강타':   { kind:'circle', r:200, fwd:160 },
+      '꼬리 휘두르기': { kind:'circle', r:250, fwd:-30 },
+      '피의 광란':   { kind:'circle', r:230, fwd:110 }
+    },
+    beats:{
+      questTitle:'메마른 갈대밭 정찰',
+      start:'갈대밭을 따라 북동쪽으로. 변이체 무리를 정리하면 망루 통로가 열린다',
+      gateLocked:'망루 통로가 잔해로 막혀 있다 — 근처의 변이체를 먼저 정리해라',
+      mobsClear:'잔해가 무너졌다. 망루를 지나 분지로',
+      sign:'정찰대의 흔적 — 갈대에 묶인 붉은 천. “신호 끊김. 분지 쪽에서 울음소리.” (정찰대 기록 일부)',
+      gate:'분지에 들어섰다. 갈대가 일제히 눕는다 — 모르버스',
+      intro:'마태오 — “정찰대 넷이 들어가서 하나도 안 나왔다. 대형 변이체다. 네 낫이 닿는 곳까지만 가라.”',
+      introHint:'변이체를 정리하고 망루를 지나면 분지에서 보스전이 시작된다. 붉은 범위 밖으로 구르고, 고리가 흰색일 때 붙어서 쳐라',
+      dialog:[ ['마태오','갈대습지 북동쪽. 정찰대 신호가 끊긴 자리다.'], ['마태오','잡것들부터. 갈대 속에 숨는 놈은 나오는 순간을 노려라. 껍질 놈은 네 번 베고 길게 눌러 뒤집어라.'], ['마태오','정찰대가 남긴 기록이 있으면 챙겨 와라. 그리고 — 살아서 와라.'] ],
+      quest:[ ['변이체 정리', 6, 'mobs'], ['망루 통과', 1, 'gate'], ['모르버스 토벌', 1, 'boss'], ['정찰대의 기록 회수', 1, 'record', true], ['핵심 파편 획득', 1, 'fragment', true] ],
+      phase:['머리가 약점이다. 등 견갑·앞다리·꼬리를 부수면 무너진다', '피의 광란 — 핵이 드러났다. 예고가 짧다. 붙어서 끝내라'],
+      enter:['', '피가 끓어오른다'],
+      death:{ k:'쓰러졌다', line:'마태오 — “거기까지다. 돌아와라.”', hint:'망루 앞에서 다시 시작한다. 잡은 것과 얻은 것은 남는다.', btn:'망루 앞에서 재도전' }
+    },
+    praise:{ S:'정찰대의 원수를 갚았다.<br>마태오가 말없이 술을 따른다.', A:'큰 놈을 잡았다. 아직 성급한 칼이 있었다.', B:'살아서 돌아왔다. 그걸로 됐다.', C:'간신히였다. 장비를 손보고 다시 가라.' },
+    /* 잡몹 2종: 갈대 잠복자(빠름·약함) · 늪 껍질(느림·단단·갑각) */
+    mobs:{
+      m:{ id:'reed_stalker', name:'갈대 잠복자', look:'stalker', hp:42000, speed:165, aggro:280, keep:90, range:105, tele:0.6, dmg:620, cooldown:1.8, r:26, zone:{ kind:'circle', r:95, fwd:55 }, xp:90, gold:110, armor:1 },
+      M:{ id:'marsh_husk', name:'늪 껍질', look:'husk', hp:96000, speed:70, aggro:260, keep:110, range:130, tele:1.0, dmg:1000, cooldown:2.4, r:34, zone:{ kind:'circle', r:130, fwd:70 }, xp:160, gold:180, armor:0.8 }
+    },
+    mob:null,
+    props3d:['rubble'],
+    props:{ r:{ name:'갈대' }, T:{ name:'죽은 나무' }, w:{ name:'망루' }, t:{ name:'등불' }, s:{ name:'흔적' }, f:{ name:'채집' }, q:{ name:'기록' } }
+  };
+  LEVEL.code='던전 01'; LEVEL.env='bunker'; LEVEL.diff='튜토리얼 · '+LEVEL.place; LEVEL.npc='마태오'; LEVEL.bossR=60; LEVEL.mobs={ m:LEVEL.mob }; LEVEL.props3d=['dummy_a','dummy_b','dummy_c','blast_door','fan','tank_glow','console','pillar','barrel','crate','rubble','wall_panel'];
+  LEVEL.beats.questTitle='훈련장 수료'; LEVEL.beats.quest=[ ['훈련 인형 정리', 3, 'mobs'], ['훈련장 입장', 1, 'gate'], ['허수아비 격파', 1, 'boss'] ]; LEVEL.beats.enter=['', '사슬이 끊어진다', '핵이 타오른다'];
+  LEVEL.beats.intro='마태오 — “사무소 지하에 허수아비를 묶어 뒀다. 살아 있는 것처럼 굴 테니, 살아 있는 것처럼 상대해라.”'; LEVEL.beats.introHint='격벽을 지나면 전투가 시작된다. 붉은 범위 밖으로 구르고, 고리가 흰색일 때 붙어서 쳐라';
+  LEVEL.beats.death={ k:'쓰러졌다', line:'마태오 — “다시.”', hint:'격벽 앞에서 다시 시작한다. 잡은 것과 얻은 것은 남는다.', btn:'격벽 앞에서 재도전' };
+  LEVEL.praise={ S:'완벽한 타이밍이었다.<br>마태오가 고개를 끄덕인다.<br>의뢰 목록이 열렸다.', A:'날카롭다. 아직 성급한 칼이 몇 번 있었다.<br>의뢰 목록이 열렸다.', B:'기본은 됐다. 예고를 더 오래 봐라.<br>의뢰 목록이 열렸다.', C:'살아남긴 했다. 다시 와라.<br>의뢰 목록이 열렸다.' };
+  window.TW_LEVELS = { d01:LEVEL, d02:LEVEL2 };
   if (typeof module !== 'undefined' && module.exports) module.exports = window.TW_LEVELS;
 })();

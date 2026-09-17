@@ -215,7 +215,7 @@
         </div>
       </section>
 
-      <button class="btn btn--deploy" data-primary>
+      <button class="btn btn--deploy" data-primary id="q-go">
         <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
       </button>
     </div>
@@ -263,11 +263,16 @@
     $('#loot').innerHTML='<div class="slotgrid" style="--cols:6" data-pick>'+q.loot.map(function(id,i){ return T.slotHTML(id,{noTag:true,on:i===0}); }).join('')+'</div>'+
       '<div class="flex ac g2 mt3"><span class="xs t-faint fill">최초 클리어 보상</span><div style="width:34px">'+T.slotHTML(q.firstClear,{noTag:true})+'</div></div>';
     $('#drops').innerHTML=[['일반','common'],['희귀','rare'],['낮은 확률','low']].map(function(k){ return '<div class="dropline"><span class="dropline__k">'+k[0]+'</span><div class="slotgrid">'+q.drops[k[1]].map(function(id){return T.slotHTML(id,{noTag:true});}).join('')+'</div></div>'; }).join('');
+    var go=$('#q-go'), ready=(function(){ try{ var r=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); return !!(r&&r.cleared); }catch(e){ return false; } })();
+    if(go){ var span=go.querySelector('span'); var rec=null; try{ rec=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); }catch(e){}
+      if(q.id==='q_marsh'){ go.disabled=false; span.innerHTML='<svg class="ico ico--lg"><use href="#i-sword"/></svg>'+(ready?'출격 — 던전 02 갈대습지'+(rec&&rec.cleared?' · 최고 '+rec.rank:''):'출격 (훈련장 미수료 · 바로 입장)'); go.dataset.go='game3d.html?d=d02'; }
+      else { go.disabled=true; span.innerHTML='<svg class="ico ico--lg"><use href="#i-lock"/></svg>준비 중 — 다음 업데이트'; delete go.dataset.go; } }
     $('#note').innerHTML='<div class="note">'+W.artDiv(q.art==='boss-marsh'?'lobby-city':q.art,'note__img')+'<p class="t-faint" style="font-size:10.5px;line-height:1.6;margin:0">'+(q.note||'정찰 기록 없음')+'</p></div>';
   }
   $('#codex-n').textContent=W.CODEX.collected+' / '+W.CODEX.total;
   $('#codex').innerHTML=W.CODEX.thumbs.map(function(a){ return W.artDiv(a,''); }).join('');
   $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); detail(); });
+  $('#q-go').addEventListener('click', function(){ var go=$('#q-go'); if(go.dataset.go) location.href=go.dataset.go; });
   rows(); detail();
 })();
 </script>

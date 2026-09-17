@@ -245,6 +245,7 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 | `maps/d01.json` + `maps/yard-tiles.png` | 레벨을 Tiled 형식으로 내보낸 것(바닥/구조/소품 레이어). Tiled 에서 열어 편집 가능 |
 | `dungeon.html` | 같은 던전의 캔버스 2D 판(엔진 이전 전 버전) |
 | `js/dungeon.js` | 레벨 데이터: 격자 맵(ASCII), 소품, 보스 방, 페이즈별 AI(속도·거리·패턴 선택), 패턴별 바닥 존(원·직선), 안내 비트 |
+| `js/dungeon.js` d02 · `js/dungeons.js` ARENAS.marsh | **던전 02 갈대습지** (`game3d.html?d=d02`) — 야외 습지(갈대 벽·얕은 물·망루·등불·안개·반딧불), 잡몹 2종(갈대 잠복자·늪 껍질), 대형 사족 보스 「모르버스」(부위 5 · 패턴 4 + 광란 페이즈). 아레나 설정이 3D 모델·부위→뼈·파괴 조각·클립을 지정하므로 엔진 수정 없이 던전을 늘린다. 보스 모델은 `tools/3d/build_marsh_boss.py`(bpy 절차 생성 + 사족 뼈대 + 클립 12) → `art/3d/boss_marsh.glb`. 검수: `docs/design/08-phase3-dungeon02-review.md` |
 | `js/world-sim.js` | 월드 시뮬레이션: 맵 파싱, 원-격자 충돌(슬라이딩), 이동·구르기, 존 판정(깊이 0.55 비등방 거리), 보스 추적 AI, 카메라 |
 | `arena.html` | 정면 대치 연습 모드(던전 이전 버전). 같은 엔진·리그를 쓴다 |
 | `design-sheets/10-dummy.webp` | 허수아비 설정화(정면·측면·후면). `art/dummy-front/side/back.webp` 로 배경을 딴 뷰, `art/dummy/*.webp` 는 정면 뷰를 관절 단위로 자른 15개 파츠 |

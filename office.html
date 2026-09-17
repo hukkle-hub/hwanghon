@@ -116,6 +116,7 @@
       <a href="profile.html"><svg class="ico ico--lg"><use href="#i-user"/></svg><b>프로필</b><span>기술 등급</span></a>
       <a href="characters.html"><svg class="ico ico--lg"><use href="#i-eye"/></svg><b>요원</b><span>캐릭터 시트</span></a>
       <a href="game3d.html" class="is-go"><svg class="ico ico--lg"><use href="#i-target"/></svg><b>던전 01</b><span>지하 훈련장</span></a>
+      <a href="game3d.html?d=d02" class="is-go"><svg class="ico ico--lg"><use href="#i-skull"/></svg><b>던전 02</b><span>갈대습지</span></a>
     </nav>
 
     <!-- ---------- 좌: 의뢰 목록 ---------- -->
@@ -197,6 +198,16 @@
           </div>
           <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
         </a>
+        <a class="prep" href="game3d.html?d=d02" id="of-arena2" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
+          <svg class="prep__ico"><use href="#i-skull"/></svg>
+          <div class="fill">
+            <div class="sm t-hi">던전 02 <span class="xs t-faint">· 갈대습지 · 의뢰 S</span></div>
+            <div class="xs t-faint mt1">대형 변이체 「모르버스」 토벌 · 갈대 잠복자 · 늪 껍질</div>
+            <div class="xs mt1" id="of-record2"></div>
+            <div class="xs t-faint mt1" id="of-drops2"></div>
+          </div>
+          <div class="prep__thumb art"><img src="art/boss-marsh.webp" alt="" style="object-fit:cover"></div>
+        </a>
       </section>
 
       <button class="btn btn--deploy" data-primary>
@@ -256,6 +267,8 @@
   $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
   try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); var curEl=document.querySelector('.topbar .currency .num'); if(sv && curEl){ var base=(window.TW_ITEMS&&window.TW_ITEMS.PLAYER&&window.TW_ITEMS.PLAYER.gold)||75300; curEl.textContent=W.fmt(base+sv.gold); } }catch(e){}
   try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='드랍: '+dd.mobs.slice(0,3).join('·')+' · 부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
+  try { if(window.TW_LOOT){ var d2=TW_LOOT.describe('marsh'); $('#of-drops2').innerHTML='드랍: '+d2.mobs.slice(0,4).join('·')+' · 클리어 희귀: '+d2.rare.slice(0,4).join('·'); } } catch(e){}
+  try { var rec2=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); $('#of-record2').innerHTML = rec2 && rec2.cleared ? '최고 기록 <b class="badge badge--'+rec2.rank.toLowerCase()+'">'+rec2.rank+'</b> <span class="t-faint">'+Math.round(rec2.time)+'초 · 카운터 '+Math.round(rec2.counterRate*100)+'%</span>' : '<span class="t-faint">미토벌 — 정찰대 신호 끊김</span>'; } catch(e){}
   try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
   rows(); info(); cards();
 })();
