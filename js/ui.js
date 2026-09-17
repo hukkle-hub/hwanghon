@@ -357,13 +357,13 @@
       var id = b.closest('.mail').getAttribute('data-id'), m = MAIL.filter(function(x){ return x.id === id; })[0];
       giveReward(m); b.disabled = true; b.textContent = '수령 완료'; b.classList.remove('btn--primary'); b.classList.add('btn--ghost'); b.closest('.mail').classList.add('is-done');
       mailBadge(); if (window.TW_SFX) TW_SFX.play('clear');
-      var g = $('.topbar .currency .num'); if (g && m.gold){ var cur = parseInt(g.textContent.replace(/[^\d]/g,''), 10) || 0; g.textContent = fmt(cur + m.gold); }
+      var g = $('.topbar .currency .num, .sheethead .currency .num'); if (g && m.gold){ var cur = parseInt(g.textContent.replace(/[^\d]/g,''), 10) || 0; g.textContent = fmt(cur + m.gold); }
       /* 화면 스크립트(보급소 등)가 지갑·가방 표시를 다시 계산하도록 알린다 — 위의 단순 가산 뒤에 보내야 이중 반영되지 않는다 */
       try { document.dispatchEvent(new CustomEvent('tw:wallet', { detail:{ gold:m.gold||0, items:m.items||null } })); } catch(e){}
     });
   }
   function mailBadge(){
-    var b = $('.topbar .iconbtn[title="우편"], .topbar .iconbtn[data-sheet="mail"]'); if (!b) return;
+    var b = $('.iconbtn[data-sheet="mail"]'); if (!b) return;
     var dot = b.querySelector('.iconbtn__dot'); var n = mailUnread();
     if (n && !dot){ dot = document.createElement('i'); dot.className = 'iconbtn__dot'; b.appendChild(dot); } else if (!n && dot) dot.remove();
   }
@@ -417,7 +417,7 @@
   }
   function bindTopbar(){
     var map = { 'i-mail':mailSheet, 'i-book':recordsSheet, 'i-gear':settingsSheet };
-    $$('.topbar .iconbtn').forEach(function(b){
+    $$('.topbar .iconbtn, .sheethead .iconbtn, .bmhead .iconbtn').forEach(function(b){
       var u = b.querySelector('use'); var k = u && (u.getAttribute('href') || '').slice(1); if (!map[k] || b.getAttribute('data-bound')) return;
       b.setAttribute('data-bound', '1'); b.setAttribute('data-sheet', k.slice(2)); if (!b.title) b.title = { 'i-mail':'우편', 'i-book':'기록', 'i-gear':'설정' }[k];
       b.addEventListener('click', function(){ map[k](); });

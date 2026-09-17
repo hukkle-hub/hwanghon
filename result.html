@@ -26,6 +26,7 @@
 .sheethead__c h1{font-family:var(--f-serif);font-size:27px;color:#C93F3B;letter-spacing:.1em}
 .sheethead__c p{font-size:11.5px;color:var(--tx-faint);margin:5px 0 0}
 .sheethead__r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.sheethead__icons{display:flex;align-items:center;gap:2px;margin-left:6px}
 .metachip{border:1px solid var(--line);padding:4px 8px;font-size:9.5px;color:var(--tx-faint);
   line-height:1.5;text-align:center;background:rgba(0,0,0,.3)}
 .metachip b{display:block;color:var(--tx-dim);font-weight:400;font-size:10px;margin-top:2px}
@@ -114,6 +115,11 @@
     </div>
     <div class="sheethead__r">
       <span id="meta" style="display:contents"></span>
+      <span class="sheethead__icons">
+        <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+        <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+        <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+      </span>
       <svg class="topbar__sigil" style="width:30px;height:30px"><use href="#i-sigil"/></svg>
     </div>
   </header>

@@ -164,7 +164,9 @@ html.mobile .turn__head b{font-size:20px}
 /* 전투 결과 — 시트형 헤더를 상단 바처럼 한 줄로 */
 html.mobile .sheethead{display:flex;align-items:center;gap:10px;padding:6px 10px;min-height:52px;flex:none}
 html.mobile .sheethead__l .brand{font-size:18px}
-html.mobile .sheethead__l .brand__s,html.mobile .sheethead__c p,html.mobile .sheethead__r{display:none}
+html.mobile .sheethead__l .brand__s,html.mobile .sheethead__c p,html.mobile .sheethead__r .metachip,html.mobile .sheethead__r .topbar__sigil{display:none}
+html.mobile .sheethead__r{display:flex;flex:none;gap:2px}
+html.mobile .sheethead__icons{margin-left:0}
 html.mobile .sheethead__c{flex:none;text-align:left}
 html.mobile .sheethead__c h1{font-size:16px;letter-spacing:.04em;white-space:nowrap}
 /* 벤치마크 헤더 */
