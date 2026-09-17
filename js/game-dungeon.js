@@ -222,12 +222,13 @@
   function openGate(silent){ gateOpen=true; world.setSolid(gate.cx, gate.cy, false); if(!silent){ guide(L.beats.mobsClear, 3); SFX.play('chains'); scene.tweens.add({ targets:gateImg, alpha:0, duration:600, onComplete:function(){ gateImg.setVisible(false); } }); } else { gateImg.setVisible(false); } }
   /* ---------- 드랍·경험치·퀘스트·대화·콤보 ---------- */
   function toast(html){ var t=document.createElement('div'); t.className='toast'; t.innerHTML=html; el.toasts.appendChild(t); setTimeout(function(){ t.remove(); }, 1800); }
-  function dropLoot(x,y,def){ var T=window.TW_ITEMS; for(var i=0;i<3;i++) spawnPickup(x+(Math.random()*80-40), y+(Math.random()*40-20), 'gold', Math.round(def.gold/3)); (def.drops||[]).forEach(function(dr){ var it=T.get(dr[0]); spawnPickup(x+(Math.random()*80-40), y+(Math.random()*40-20), 'item', dr[1], dr[0], it?it.name:dr[0]); }); }
+  var runXp=0;
+  function dropLoot(x,y,def){ var T=window.TW_ITEMS, LT=window.TW_LOOT; var d=LT?LT.mobDrops(def.id, 1):{ gold:def.gold, items:def.drops||[] }; for(var i=0;i<3;i++) spawnPickup(x+(Math.random()*80-40), y+(Math.random()*40-20), 'gold', Math.round(d.gold/3)); d.items.forEach(function(dr){ var it=T.get(dr[0]); spawnPickup(x+(Math.random()*80-40), y+(Math.random()*40-20), 'item', dr[1], dr[0], it?it.name:dr[0]); }); }
   function spawnPickup(x,y,kind,amt,id,name){ var sp=scene.add.image(x, y*DEPTH-40, kind==='gold'?'fx-glow':'straw'); if(kind==='gold'){ sp.setDisplaySize(28,28).setTint(0xF0C060).setBlendMode(Phaser.BlendModes.ADD); } else sp.setDisplaySize(30,26); sp.setDepth(y*DEPTH+1);
     scene.tweens.add({ targets:sp, y:y*DEPTH, duration:380, ease:'Bounce.easeOut' }); pickups.push({ sp:sp, x:x, y:y, kind:kind, amt:amt, id:id, name:name, t:0, taken:false }); }
   function tickPickups(dt){ pickups=pickups.filter(function(p){ if(p.taken) return false; p.t+=dt; if(p.t>0.4 && world.dist(P.x,P.y,p.x,p.y)<170){ p.taken=true; scene.tweens.add({ targets:p.sp, x:P.x, y:P.y*DEPTH-60, alpha:0, duration:220, onComplete:function(){ p.sp.destroy(); } });
       if(p.kind==='gold'){ SAVE.addGold(p.amt); toast('<b>+'+p.amt+'</b> 골드'); } else { SAVE.addItem(p.id, p.amt); toast(p.name+' <b>×'+p.amt+'</b>'); } SFX.play('ui'); renderProg(); return false; } return true; }); }
-  function gainXp(n, why){ var r=SAVE.addXp(n); toast('경험치 <b>+'+n+'</b>'+(why?' · '+why:'')); if(r.leveled){ toast('<b>LEVEL UP</b> — Lv.'+r.lv); SFX.play('clear'); flash(); burst(P.x, P.y*DEPTH-90, 50, 0x5FAE9B); } renderProg(); }
+  function gainXp(n, why){ runXp+=n; var r=SAVE.addXp(n); toast('경험치 <b>+'+n+'</b>'+(why?' · '+why:'')); if(r.leveled){ toast('<b>LEVEL UP</b> — Lv.'+r.lv); SFX.play('clear'); flash(); burst(P.x, P.y*DEPTH-90, 50, 0x5FAE9B); } renderProg(); }
   function renderProg(){ var sv=SAVE.get(); fill('v-xp', sv.xp/SAVE.need(sv.lv)*100); $('#xp-lv').textContent='LV.'+sv.lv; $('#v-gold').textContent=W.fmt(SAVE.wallet?SAVE.wallet():sv.gold)+' G'; }
   function renderQuest(){ var q=L.beats.quest, prog=[quest.mobs, quest.gate, quest.boss], curI=-1; var html='<div class="quest__t">훈련장 수료</div>'; q.forEach(function(it,i){ var done=prog[i]>=it[1]; if(!done&&curI<0) curI=i; html+='<div class="q'+(done?' done':i===curI?' cur':'')+'"><span>'+it[0]+'</span><span>'+Math.min(prog[i],it[1])+' / '+it[1]+'</span></div>'; }); el.quest.innerHTML=html; }
   function comboShow(n, big){ if(n===0) return; el.comboN.textContent=n; el.combo.classList.toggle('big', !!big); el.combo.classList.add('is-on'); comboT=1.1; }
@@ -255,8 +256,10 @@
       setTimeout(function(){ overlay('<div class="ov__k">던전 클리어</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+A.stages[A.stages.length-1].name+' 격파</div>'+
         '<div class="ov__stats"><div>등급<b class="g-'+sum.rank+'">'+sum.rank+'</b></div><div>시간<b>'+sum.op.time+'</b></div><div>카운터<b>'+sum.op.counterRate+'</b></div><div>부위 파괴<b>'+sum.breaks+'/'+sum.breakable+'</b></div><div>받은 피해<b>'+sum.op.dmgTaken+'</b></div></div>'+
         '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 1800); } }
-  function finish(sum){ var T=window.TW_ITEMS; sum.mats=sum.mats.map(function(m){ var it=T.get(m[0]); return [m[0], m[1], it?it.rarity:'common']; });
-    var res={ arena:A.id, at:new Date().toISOString(), op:sum.op, mastery:sum.mastery, gold:sum.gold, mats:sum.mats, rank:sum.rank, time:sum.time, counterRate:sum.counterRate, perfect:sum.perfect, dmgTaken:sum.dmgTaken, breaks:sum.breaks, breakable:sum.breakable,
+  function finish(sum){ var T=window.TW_ITEMS, LT=window.TW_LOOT; var prev0=null; try{ prev0=JSON.parse(localStorage.getItem('tw:arena:'+A.id)||'null'); }catch(e){}
+    var rw=LT?LT.clearRewards(A.id, sum, !(prev0&&prev0.cleared)):{ gold:sum.gold, mats:sum.mats.map(function(m){ var it=T.get(m[0]); return [m[0], m[1], it?it.rarity:'common']; }), craft:[], bonus:[], all:sum.mats };
+    if(LT){ LT.grant(rw.all); } else rw.all.forEach(function(m){ SAVE.addItem(m[0], m[1]); }); SAVE.addGold(rw.gold);
+    var res={ arena:A.id, at:new Date().toISOString(), op:sum.op, mastery:sum.mastery, gold:rw.gold, mats:rw.mats, craft:rw.craft, bonus:rw.bonus, xp:runXp, rank:sum.rank, time:sum.time, counterRate:sum.counterRate, perfect:sum.perfect, dmgTaken:sum.dmgTaken, breaks:sum.breaks, breakable:sum.breakable,
       meta:[ ['작전 모드','던전 01'], ['난이도','튜토리얼 · '+L.place], ['작전 시간', new Date().toLocaleString('ko-KR',{hour12:false})] ],
       praise:{S:'완벽한 타이밍이었다.<br>마태오가 고개를 끄덕인다.<br>의뢰 목록이 열렸다.',A:'날카롭다. 아직 성급한 칼이 몇 번 있었다.<br>의뢰 목록이 열렸다.',B:'기본은 됐다. 예고를 더 오래 봐라.<br>의뢰 목록이 열렸다.',C:'살아남긴 했다. 다시 와라.<br>의뢰 목록이 열렸다.'}[sum.rank] };
     try{ sessionStorage.setItem('tw:result', JSON.stringify(res)); var key='tw:arena:'+A.id, prev=JSON.parse(localStorage.getItem(key)||'null'), order='SABC';

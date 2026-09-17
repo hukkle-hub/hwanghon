@@ -192,6 +192,7 @@
             <div class="sm t-hi">던전 01 <span class="xs t-faint">· 뒷마당 훈련장 입장</span></div>
             <div class="xs t-faint mt1" id="of-prep">훈련용 허수아비</div>
             <div class="xs mt1" id="of-record"></div>
+            <div class="xs t-faint mt1" id="of-drops"></div>
           </div>
           <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
         </a>
@@ -217,6 +218,7 @@
 <script src="js/items.js"></script>
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
+<script src="js/loot.js"></script>
 <script src="js/world.js"></script>
 <script>
 /* 인력사무실 — 의뢰 목록·의뢰 정보·파티 카드를 world.js 에서 렌더 */
@@ -252,6 +254,7 @@
   $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
   $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
   try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); var curEl=document.querySelector('.topbar .currency .num'); if(sv && curEl){ var base=(window.TW_ITEMS&&window.TW_ITEMS.PLAYER&&window.TW_ITEMS.PLAYER.gold)||75300; curEl.textContent=W.fmt(base+sv.gold); } }catch(e){}
+  try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='드랍: '+dd.mobs.slice(0,3).join('·')+' · 부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
   try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
   rows(); info(); cards();
 })();

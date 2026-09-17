@@ -201,7 +201,7 @@
 (function(){
   var W=window.TW_WORLD, T=window.TW_ITEMS, R=W.RESULT, $=function(s){return document.querySelector(s);};
   /* 훈련장(arena.html) 에서 넘어온 실제 결과가 있으면 시트 예시 데이터 위에 덮어쓴다 */
-  try { var live=JSON.parse(sessionStorage.getItem('tw:result')||'null'); if(live){ R=Object.assign({}, R, { meta:live.meta, op:live.op, mastery:live.mastery, praise:live.praise, mats:live.mats, craft:[], gold:live.gold, bonus:[] }); sessionStorage.removeItem('tw:result'); document.documentElement.setAttribute('data-live','1'); } } catch(e){}
+  try { var live=JSON.parse(sessionStorage.getItem('tw:result')||'null'); if(live){ var sv=window.TW_SAVE&&TW_SAVE.get(); R=Object.assign({}, R, { meta:live.meta, op:live.op, mastery:live.mastery, praise:live.praise, mats:live.mats, craft:live.craft||[], gold:live.gold, bonus:live.bonus||[], expGain:live.xp!=null?live.xp:R.expGain, exp:sv?[sv.xp, TW_SAVE.need(sv.lv)]:R.exp }); sessionStorage.removeItem('tw:result'); document.documentElement.setAttribute('data-live','1'); } } catch(e){}
   $('#meta').innerHTML = R.meta.map(function(m){ return '<span class="metachip">'+m[0]+'<b>'+m[1]+'</b></span>'; }).join('');
   $('#rs-msg').innerHTML = '황혼은 끝이 아니다.<br>다음 날을 위해, 지금의 어둠은 필요해.';
   $('#rs-lv').textContent = 'Lv. '+W.CHARS.ain.lv; $('#rs-exp').textContent = W.fmt(R.exp[0])+' / '+W.fmt(R.exp[1]);
