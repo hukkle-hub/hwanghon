@@ -42,14 +42,26 @@
   function removeGear(id){ var g=state(); Object.keys(g.equipped).forEach(function(k){ if(g.equipped[k]===id) g.equipped[k]=null; }); g.owned=g.owned.filter(function(x){ return x!==id; }); save(); }
   function isEquipped(id){ var g=state(); return Object.keys(g.equipped).some(function(k){ return g.equipped[k]===id; }); }
   function allGear(){ var g=state(), ids=[]; Object.keys(g.equipped).forEach(function(k){ if(g.equipped[k]) ids.push(g.equipped[k]); }); return ids.concat(g.owned); }
-  /* 강화: 실패 시 내구도 손실, +4 이상은 보조제 없으면 단계 하락, 내구도 0 이면 파괴 */
-  function enhStep(id){ var it=T.get(id); if(!it) return null; var cur=enhOf(id); if(cur>=(it.enhMax||10)) return null; return T.ENHANCE.filter(function(e){ return e.to===cur+1; })[0]||null; }
-  function enhance(id){ var step=enhStep(id); if(!step) return { err:'max' }; if(!canPay(step.mats, step.cost)) return { err:'pay' };
-    var g=state(); spend(step.mats, step.cost); var ok=Math.random()*100<step.rate, booster=step.mats.some(function(m){ return m[0]==='m_booster'; });
-    var r={ ok:ok, to:step.to, from:enhOf(id), booster:booster, drop:false, broken:false };
-    if(ok){ g.enh[id]=step.to; g.dur[id]=Math.max(0, durOf(id)-2); }
-    else { g.dur[id]=Math.max(0, durOf(id)-(6+step.to*2)); if(step.to>=4 && !booster){ g.enh[id]=Math.max(0, r.from-1); r.drop=true; } if(g.dur[id]<=0){ r.broken=true; removeGear(id); } }
-    r.enh=g.enh[id]; r.dur=g.dur[id]; save(); return r; }
+  /* 강화 규칙 (마영전·검은사막 벤치마킹, docs/design/06-phase1-gear-review.md)
+     · +1~+3 안전 구간(실패 없음) · 성공률 상한 90% · 내구도 20 미만이면 강화 불가(대수선 먼저)
+     · 실패 스택: 실패마다 +3%p (최대 +30%p), 성공 시 소모 — 캐릭터 공용
+     · 실패: 내구도 손실(6+단계×2). +4~+6 은 한 단계 하락, +7 이상은 두 단계 하락. 내구도 0 이면 파괴
+     · 보조제(m_booster)는 선택 사용: 실패 시 단계 유지(내구도는 깎임). 단계표의 보조제는 요구 재료에서 제외 */
+  var SAFE_TO=3, CAP=90, FS_STEP=3, FS_MAX=30, DUR_MIN=20;
+  function fsOf(){ return state().fs||0; }
+  function enhStep(id){ var it=T.get(id); if(!it) return null; var cur=enhOf(id); if(cur>=(it.enhMax||10)) return null; var e=T.ENHANCE.filter(function(e){ return e.to===cur+1; })[0]; if(!e) return null;
+    var mats=e.mats.filter(function(m){ return m[0]!=='m_booster'; }); var boost=e.mats.filter(function(m){ return m[0]==='m_booster'; })[0];
+    var safe=e.to<=SAFE_TO; var rate=safe?100:Math.min(CAP, e.rate+fsOf());
+    return { to:e.to, cost:e.cost, mats:mats, rate:rate, baseRate:safe?100:e.rate, fs:safe?0:fsOf(), safe:safe, boosterN:boost?boost[1]:1, unlock:e.unlock,
+      drop:e.to<=SAFE_TO?0:(e.to<=6?1:2), durLoss:safe?0:(6+e.to*2), durOk:durOf(id)>=DUR_MIN }; }
+  function enhance(id, useBooster){ var step=enhStep(id); if(!step) return { err:'max' }; if(!step.durOk) return { err:'dur' };
+    var mats=step.mats.slice(); if(useBooster && !step.safe) mats.push(['m_booster', step.boosterN]);
+    if(!canPay(mats, step.cost)) return { err:'pay' };
+    var g=state(); spend(mats, step.cost); var ok=step.safe || Math.random()*100<step.rate;
+    var r={ ok:ok, to:step.to, from:enhOf(id), booster:!!useBooster&&!step.safe, drop:false, broken:false, rate:step.rate };
+    if(ok){ g.enh[id]=step.to; g.fs=0; if(!step.safe) g.dur[id]=Math.max(0, durOf(id)-2); }
+    else { g.fs=Math.min(FS_MAX, fsOf()+FS_STEP); g.dur[id]=Math.max(0, durOf(id)-step.durLoss); if(!r.booster && step.drop){ g.enh[id]=Math.max(0, r.from-step.drop); r.drop=true; } if(g.dur[id]<=0){ r.broken=true; removeGear(id); } }
+    r.enh=g.enh[id]; r.dur=g.dur[id]; r.fs=g.fs; save(); return r; }
   function repairCost(id){ var it=T.get(id); var miss=100-durOf(id); return miss<=0?0:Math.max(100, Math.round((it.price||1000)*0.15*miss/100)); }
   function repair(id){ var c=repairCost(id); if(c<=0) return { err:'full' }; if(wallet()<c) return { err:'pay' }; SV.addGold(-c); state().dur[id]=100; save(); return { ok:true, cost:c }; }
   var SALVAGE={ common:[['m_ore',2],['m_fiber',3]], rare:[['m_alloy',3],['m_ore',4]], hero:[['m_alloy',6],['m_shard',2]], legend:[['m_alloy',10],['m_shard',5],['m_core',1]], myth:[['m_alloy',16],['m_shard',8],['m_core',3],['m_heart',1]] };
@@ -60,5 +72,5 @@
   /* 시트 기본 강화 단계 표시(slotHTML 의 +N)를 저장 단계로 */
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
   window.TW_GEAR={ state:state, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
-    enhStep:enhStep, enhance:enhance, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
+    enhStep:enhStep, enhance:enhance, fsOf:fsOf, DUR_MIN:DUR_MIN, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
 })();

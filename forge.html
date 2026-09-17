@@ -193,6 +193,10 @@
           </div>
           <div class="segbar mt2" data-seg="100" id="enh-seg"></div>
           <div class="xs mt2" style="color:#B4534E" id="enh-warn">구조 안정성이 0이 되면 장비가 파괴됩니다.</div>
+          <div class="flex ac g3 mt2" id="enh-extra">
+            <label class="check" id="enh-boost"><i></i>보조제 사용 <span class="xs t-faint" id="enh-boost-n"></span></label>
+            <span class="xs t-faint" id="enh-fs" style="margin-left:auto"></span>
+          </div>
           <div class="flex g2 mt3">
             <button class="btn btn--primary btn--craft fill" id="do-enh" data-primary>강화</button>
           </div>
@@ -299,29 +303,33 @@
       '<div class="hr"></div><div class="flex ac g2"><svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg><span class="xs t-faint">옵션 잠금</span><span class="xs t-faint" style="margin-left:auto">'+(e>=7?'해금됨':'+7 강화 시 해금')+'</span></div>';
     $('#opt-meta').textContent=it.effect?'':'';
     if(mode==='enh'){
-      if(!step){ $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
-      else { $('#enh-step').textContent='+'+step.to+' 강화 단계'; $('#enh-rate').textContent=step.rate+'%'; $('#enh-cost').textContent=T.fmt(step.cost);
-        $('#enh-mats').innerHTML=step.mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+mi.icon+'"/></svg></span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
-        var booster=step.mats.some(function(m){ return m[0]==='m_booster'; });
-        $('#enh-warn').textContent=(step.to>=4&&!booster?'실패 시 한 단계 하락 · ':'실패 시 단계 유지 · ')+'내구도 -'+(6+step.to*2)+' · 0이 되면 파괴';
-        btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!G.canPay(step.mats, step.cost); }
-    } else if(mode==='repair'){ var c=G.repairCost(cur); $('#enh-step').textContent='대수선'; $('#enh-rate').textContent=dur+'%'; $('#enh-mats').innerHTML='<div class="xs t-dim">구조 안정성을 100 으로 복구합니다.</div>'; $('#enh-cost').textContent=T.fmt(c); $('#enh-warn').textContent=c?'비용은 장비 가치와 손상도에 비례':'손상이 없습니다'; btn.textContent='대수선'; btn.disabled=!c||G.wallet()<c; }
+      if(!step){ $('#enh-extra').style.display='none'; $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
+      else { var useB=!step.safe && $('#enh-boost').classList.contains('is-on'); var mats=step.mats.slice(); if(useB) mats.push(['m_booster', step.boosterN]);
+        $('#enh-step').textContent='+'+step.to+' 강화 단계'+(step.safe?' · 안전 구간':''); $('#enh-rate').textContent=step.rate+'%'+(step.fs?' (+'+step.fs+')':''); $('#enh-cost').textContent=T.fmt(step.cost);
+        $('#enh-mats').innerHTML=mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic"><svg class="ico ico--sm"><use href="#i-'+mi.icon+'"/></svg></span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
+        $('#enh-extra').style.display=step.safe?'none':''; $('#enh-boost-n').textContent='×'+step.boosterN+' (보유 '+T.fmt(T.get('m_booster').qty||0)+') · 실패 시 단계 유지'; $('#enh-fs').textContent=step.fs?'실패 보정 +'+step.fs+'%p':'실패 보정 없음';
+        $('#enh-warn').textContent=!step.durOk?'구조 안정성 '+dur+' — 20 미만이면 강화할 수 없습니다. 대수선이 필요합니다.':step.safe?'안전 구간: 실패하지 않습니다.':('실패 시 '+(useB?'단계 유지':(step.drop+'단계 하락'))+' · 내구도 -'+step.durLoss+' · 0이 되면 파괴');
+        btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!step.durOk||!G.canPay(mats, step.cost); }
+    } else { $('#enh-extra').style.display='none'; }
+    if(mode==='enh'){ /* 위에서 처리 */ } else if(mode==='repair'){ var c=G.repairCost(cur); $('#enh-step').textContent='대수선'; $('#enh-rate').textContent=dur+'%'; $('#enh-mats').innerHTML='<div class="xs t-dim">구조 안정성을 100 으로 복구합니다.</div>'; $('#enh-cost').textContent=T.fmt(c); $('#enh-warn').textContent=c?'비용은 장비 가치와 손상도에 비례':'손상이 없습니다'; btn.textContent='대수선'; btn.disabled=!c||G.wallet()<c; }
     else if(mode==='salvage'){ var eq=G.isEquipped(cur); $('#enh-step').textContent='분해'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-dim">장비를 재료로 되돌립니다. 등급이 높을수록 좋은 재료. 내구도가 높을수록 더 많이.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=eq?'장착 중인 장비는 분해할 수 없습니다. 인벤토리에서 해제하세요.':'되돌릴 수 없습니다.'; btn.textContent='분해'; btn.disabled=eq; }
     else { $('#enh-step').textContent='봉인'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">잠재력 봉인은 준비 중입니다.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=''; btn.textContent='봉인'; btn.disabled=true; }
     gold();
   }
   function act(){ if(!cur) return; var it=T.get(cur), r;
-    if(mode==='enh'){ r=G.enhance(cur); if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err) return;
+    if(mode==='enh'){ r=G.enhance(cur, $('#enh-boost').classList.contains('is-on')); if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err==='dur'){ toast('구조 안정성이 낮습니다. 대수선 후 강화하세요.', true); return; } if(r.err) return;
       if(r.ok){ toast(it.name+' +'+r.enh+' 강화 성공'); if(window.TW_SFX) TW_SFX.play('clear'); $('#ih-glow').classList.add('is-hit'); setTimeout(function(){ $('#ih-glow').classList.remove('is-hit'); },600); }
       else if(r.broken){ toast(it.name+' 파괴됨 — 구조 안정성 0', true); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; }
-      else { toast('강화 실패'+(r.drop?' · +'+r.from+' → +'+r.enh:' · 단계 유지')+' · 내구도 '+r.dur, true); if(window.TW_SFX) TW_SFX.play('hurt'); }
-    } else if(mode==='repair'){ r=G.repair(cur); if(r.err==='pay'){ toast('골드가 부족합니다', true); return; } if(r.ok){ toast('대수선 완료 · -'+T.fmt(r.cost)+' G'); if(window.TW_SFX) TW_SFX.play('ui'); } }
+      else { toast('강화 실패'+(r.drop?' · +'+r.from+' → +'+r.enh:' · 단계 유지')+' · 내구도 '+r.dur+' · 다음 성공률 +'+r.fs+'%p', true); if(window.TW_SFX) TW_SFX.play('hurt'); }
+    }
+    else if(mode==='repair'){ r=G.repair(cur); if(r.err==='pay'){ toast('골드가 부족합니다', true); return; } if(r.ok){ toast('대수선 완료 · -'+T.fmt(r.cost)+' G'); if(window.TW_SFX) TW_SFX.play('ui'); } }
     else if(mode==='salvage'){ r=G.dismantle(cur); if(r.err==='equipped'){ toast('장착 중인 장비입니다', true); return; } if(r.ok){ toast(it.name+' 분해 → '+r.got.map(function(g){ return T.get(g[0]).name+' ×'+g[1]; }).join(', ')); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; } }
     grid();
   }
   document.querySelector('.rail').addEventListener('click', function(e){ var b=e.target.closest('[data-mode]'); if(!b) return; mode=b.getAttribute('data-mode'); render(); });
   $('#tg-grid').addEventListener('click', function(e){ var sl=e.target.closest('[data-id]'); if(!sl) return; cur=sl.getAttribute('data-id'); grid(); });
   $('#do-enh').addEventListener('click', act);
+  $('#enh-boost').addEventListener('click', function(){ setTimeout(render, 0); });   /* is-on 토글은 ui.js checks() 가 한다 */
   document.addEventListener('tw:wallet', function(){ grid(); });
   grid();
 })();
