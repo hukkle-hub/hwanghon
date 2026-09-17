@@ -532,3 +532,10 @@ html.mobile .sdlg__txt{font-size:13px;min-height:38px}
 .qstate--cleared{color:#D9C07A;border-color:rgba(201,164,94,.5)}
 .qstate--claimed{color:var(--tx-faint)}
 .qstate--locked{color:var(--tx-ghost)}
+
+/* ---------- 등급 표기 ---------- */
+.g-ss{color:#F0C36A;text-shadow:0 0 8px rgba(240,195,106,.45)}.g-sp{color:#E8A0A0}.g-ap{color:#B9C8E8}
+.gline{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:11.5px}
+.gline:last-child{border:0}.gline__k{color:var(--tx-dim);width:64px;flex:none}.gline__g{font-family:var(--f-serif);font-size:15px;width:30px;text-align:center;flex:none}
+.gline .bar{flex:1;height:4px}.gline__v{font-size:10.5px;color:var(--tx-faint);width:84px;text-align:right;flex:none}
+.pfx{display:flex;flex-direction:column;gap:4px}.pfx__row{display:flex;justify-content:space-between;gap:8px;font-size:11px}.pfx__row b{font-weight:500;color:var(--tx)}.pfx__row .who{color:var(--tx-faint);font-size:10px}

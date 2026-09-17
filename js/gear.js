@@ -51,19 +51,19 @@
   function fsOf(){ return state().fs||0; }
   function enhStep(id){ var it=T.get(id); if(!it) return null; var cur=enhOf(id); if(cur>=(it.enhMax||10)) return null; var e=T.ENHANCE.filter(function(e){ return e.to===cur+1; })[0]; if(!e) return null;
     var mats=e.mats.filter(function(m){ return m[0]!=='m_booster'; }); var boost=e.mats.filter(function(m){ return m[0]==='m_booster'; })[0];
-    var safe=e.to<=SAFE_TO; var rate=safe?100:Math.min(CAP, e.rate+fsOf());
+    var safe=e.to<=SAFE_TO; var gb=window.TW_GRADE?TW_GRADE.buffs():null; var rate=safe?100:Math.min(CAP, e.rate+fsOf()+(gb?gb.enhRate:0));
     return { to:e.to, cost:e.cost, mats:mats, rate:rate, baseRate:safe?100:e.rate, fs:safe?0:fsOf(), safe:safe, boosterN:boost?boost[1]:1, unlock:e.unlock,
       drop:e.to<=6?1:2, durLoss:safe?0:(6+e.to*2), durOk:durOf(id)>=DUR_MIN }; }
   function enhance(id, useBooster){ var step=enhStep(id); if(!step) return { err:'max' }; if(!step.durOk) return { err:'dur' };
     var mats=step.mats.slice(); if(useBooster && !step.safe) mats.push(['m_booster', step.boosterN]);
     if(!canPay(mats, step.cost)) return { err:'pay' };
     var g=state(); spend(mats, step.cost); var ok=step.safe || Math.random()*100<step.rate;
-    var r={ ok:ok, to:step.to, from:enhOf(id), booster:!!useBooster&&!step.safe, drop:false, broken:false, rate:step.rate };
+    var r={ ok:ok, to:step.to, from:enhOf(id), booster:!!useBooster&&!step.safe, drop:false, broken:false, rate:step.rate }; if(ok&&SV.stat) SV.stat('enhOk');
     if(ok){ g.enh[id]=step.to; g.fs=0; if(!step.safe) g.dur[id]=Math.max(0, durOf(id)-2); }
     else { g.fs=Math.min(FS_MAX, fsOf()+FS_STEP); g.dur[id]=Math.max(0, durOf(id)-step.durLoss); if(!r.booster && step.drop && r.from>0){ g.enh[id]=Math.max(0, r.from-step.drop); r.drop=true; } if(g.dur[id]<=0){ r.broken=true; removeGear(id); } }
     r.enh=g.enh[id]; r.dur=g.dur[id]; r.fs=g.fs; save(); return r; }
-  function repairCost(id){ var it=T.get(id); var miss=100-durOf(id); return miss<=0?0:Math.max(100, Math.round((it.price||1000)*0.15*miss/100)); }
-  function repair(id){ var c=repairCost(id); if(c<=0) return { err:'full' }; if(wallet()<c) return { err:'pay' }; SV.addGold(-c); state().dur[id]=100; save(); return { ok:true, cost:c }; }
+  function repairCost(id){ var it=T.get(id); var miss=100-durOf(id); var gb=window.TW_GRADE?TW_GRADE.buffs():null; return miss<=0?0:Math.max(100, Math.round((1-(gb?gb.repair:0))*(it.price||1000)*0.15*miss/100)); }   /* 파티 제작 등급: 수리비 할인 */
+  function repair(id){ var c=repairCost(id); if(c<=0) return { err:'full' }; if(wallet()<c) return { err:'pay' }; if(SV.stat) SV.stat('repairs'); SV.addGold(-c); state().dur[id]=100; save(); return { ok:true, cost:c }; }
   var SALVAGE={ common:[['m_ore',2],['m_fiber',3]], rare:[['m_alloy',3],['m_ore',4]], hero:[['m_alloy',6],['m_shard',2]], legend:[['m_alloy',10],['m_shard',5],['m_core',1]], myth:[['m_alloy',16],['m_shard',8],['m_core',3],['m_heart',1]] };
   function dismantle(id){ var it=T.get(id); if(!it) return { err:'none' }; if(isEquipped(id)) return { err:'equipped' }; var got=(SALVAGE[it.rarity]||SALVAGE.common).map(function(m){ var n=Math.max(1, Math.round(m[1]*(0.6+0.4*durOf(id)/100))); addItem(m[0], n); return [m[0], n]; }); removeGear(id); return { ok:true, got:got }; }
 
@@ -85,13 +85,13 @@
   function mergeMats(list){ var o={}, out=[]; list.forEach(function(m){ if(o[m[0]]==null){ o[m[0]]=out.length; out.push([m[0], m[1]]); } else out[o[m[0]]][1]+=m[1]; }); return out; }
   function craftCustom(r, picks){ var mats=mergeMats(r.mats.concat(customMats(picks))); if(!canPay(mats, r.cost)||T.PLAYER.craftLv<r.craftLv) return { err:'pay' };
     var id='c_'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36); var it=buildCustom(r.result, picks, id); if(!it) return { err:'base' };
-    spend(mats, r.cost); var g=state(); g.custom[id]={ base:r.result, picks:picks }; T.register(it); addGear(id); if(it.custom.startEnh){ g.enh[id]=it.custom.startEnh; it.enh=g.enh[id]; save(); }
+    spend(mats, r.cost); if(SV.stat) SV.stat('crafted'); var g=state(); g.custom[id]={ base:r.result, picks:picks }; T.register(it); addGear(id); if(it.custom.startEnh){ g.enh[id]=it.custom.startEnh; it.enh=g.enh[id]; save(); }
     return { ok:true, item:it }; }
   function lookOf(id){ var it=T.get(id); return it&&it.custom ? it.custom.look : null; }
   loadCustom();
   /* 제작: items.js 의 canCraft/craft 를 저장 연동판으로 교체 */
   T.canCraft=function(r){ return canPay(r.mats, r.cost) && T.PLAYER.craftLv>=r.craftLv; };
-  T.craft=function(r,n){ n=n||1; var made=0; for(var i=0;i<n;i++){ if(!T.canCraft(r)) break; spend(r.mats, r.cost); var res=T.get(r.result); if(res.type==='material'||res.type==='consumable') addItem(r.result, r.yield||1); else addGear(r.result); made++; } return made; };
+  T.craft=function(r,n){ n=n||1; var made=0; for(var i=0;i<n;i++){ if(!T.canCraft(r)) break; spend(r.mats, r.cost); var res=T.get(r.result); if(res.type==='material'||res.type==='consumable'){ addItem(r.result, r.yield||1); if(SV.stat) SV.stat('craftedCons'); } else { addGear(r.result); if(SV.stat) SV.stat('crafted'); } made++; } return made; };
   /* 시트 기본 강화 단계 표시(slotHTML 의 +N)를 저장 단계로 */
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
   window.TW_GEAR={ state:state, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,

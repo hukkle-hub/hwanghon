@@ -106,22 +106,22 @@
       <div class="chars" data-pick>
         <div class="chip-char is-on" data-pickitem data-char="ain">
           <div class="chip-char__art art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
-          <div class="chip-char__nm">아인<span>LV.26</span></div>
+          <div class="chip-char__nm">아인<span data-grade="ain">등급 A</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-scythe"/></svg>
         </div>
         <div class="chip-char" data-pickitem data-char="kain">
           <div class="chip-char__art art art--avatar"><img src="art/face-kain.webp" alt="kain"></div>
-          <div class="chip-char__nm">카인<span>LV.32</span></div>
+          <div class="chip-char__nm">카인<span>등급 S</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-sword"/></svg>
         </div>
         <div class="chip-char" data-pickitem data-char="ryu">
           <div class="chip-char__art art art--avatar"><img src="art/face-ryu.webp" alt="ryu"></div>
-          <div class="chip-char__nm">류<span>LV.25</span></div>
+          <div class="chip-char__nm">류<span>등급 A</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-crosshair"/></svg>
         </div>
         <div class="chip-char" data-pickitem data-char="sera">
           <div class="chip-char__art art art--avatar"><img src="art/face-sera.webp" alt="sera"></div>
-          <div class="chip-char__nm">세라<span>LV.24</span></div>
+          <div class="chip-char__nm">세라<span>등급 A</span></div>
           <svg class="ico ico--xs chip-char__ic"><use href="#i-seal"/></svg>
         </div>
       </div>
@@ -217,7 +217,9 @@
 <script src="js/save.js"></script>
 <script src="js/items.js"></script>
 <script src="js/gear.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/inventory.js"></script>
+<script>try{ document.querySelectorAll('[data-grade]').forEach(function(e){ e.textContent='등급 '+TW_GRADE.agent().g; }); }catch(e){}</script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>

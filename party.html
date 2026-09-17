@@ -134,7 +134,7 @@
       <div class="filters">
         <select class="sel"><option>난이도 전체</option><option>S</option><option>A</option></select>
         <select class="sel"><option>모든 역할</option><option>딜러</option><option>탱커</option></select>
-        <select class="sel"><option>레벨 제한 없음</option><option>Lv.20 이상</option></select>
+        <select class="sel"><option>등급 제한 없음</option><option>요원 등급 A+ 이상</option></select>
         <label class="check is-on"><i></i>모집 중만 보기</label>
         <label class="check"><i></i>내 직업만 보기</label>
         <button class="btn btn--sm btn--ghost" style="margin-left:auto">
@@ -152,6 +152,7 @@
       </div>
 
       <div class="members" data-pick id="members"></div>
+      <div id="pfx" class="mt3"></div>
 
       <div class="chatzone">
         <div>
@@ -189,6 +190,7 @@
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script src="js/grade.js"></script>
 <script>
 /* 파티 모집 — 임무 목록 · 파티 멤버 · 채팅 · 임무 상세를 world.js 에서 렌더 */
 (function(){
@@ -197,7 +199,7 @@
   function mrow(m,i){
     var q = m.q ? W.quest(m.q) : null, name = q?q.name:m.name, area=(q?q.area+' &gt; '+q.sub:m.area+' &gt; '+m.sub), art=q?q.art:m.art, key=m.q||('x'+i);
     return '<div class="row'+(key===cur?' is-on':'')+'" data-q="'+key+'">'+W.artDiv(art,'row__thumb')+'<div class="row__main"><div class="row__name">'+name+'</div><div class="row__sub">'+area+'</div>'+
-      '<div class="mlist-sub"><span class="xs t-faint">Lv. '+m.lv+'</span><span class="xs t-red" style="margin-left:auto">'+m.status+'</span></div></div></div>';
+      '<div class="mlist-sub"><span class="xs t-faint">권장 등급 '+(window.TW_GRADE?TW_GRADE.lvGrade(m.lv+4):m.lv)+'</span><span class="xs t-red" style="margin-left:auto">'+m.status+'</span></div></div></div>';
   }
   function rows(){ $('#m-rows').innerHTML = W.MISSIONS.map(mrow).join(''); }
   function members(){
@@ -205,13 +207,14 @@
     $('#members').innerHTML = P.members.map(function(m,i){ var st=ST[m.state];
       return '<div class="mcard'+(i===0?' is-on':'')+'"><span class="mcard__tag"><b>'+m.slot+'</b>'+(m.leader?' 파티장':'')+'</span>'+
         '<span class="mcard__st'+(m.state==='wait'?' mcard__st--wait':'')+'">'+(m.state==='ready'?'<svg class="ico ico--xs"><use href="#i-check"/></svg>':st[3])+'</span>'+
-        '<div class="mcard__art art art--top"><img src="art/portrait-'+m.char+'.webp" alt=""><div class="mcard__id"><b>'+m.name+'</b><span>Lv.'+m.lv+'</span><div class="mcard__cp">전투력 '+W.fmt(m.cp)+'</div></div></div>'+
-        '<div class="mcard__grades">'+m.grades.map(function(g,j){ return '<div class="grow"><span>'+P.gradeKeys[j]+'</span><b class="g-'+g.toLowerCase()+'">'+g+'</b></div>'; }).join('')+'</div>'+
+        '<div class="mcard__art art art--top"><img src="art/portrait-'+m.char+'.webp" alt=""><div class="mcard__id"><b>'+m.name+'</b><span>등급 '+(m.char==='ain'&&window.TW_GRADE?TW_GRADE.agent().g:TW_GRADE.lvGrade(m.lv))+'</span><div class="mcard__cp">전투력 '+W.fmt(m.cp)+'</div></div></div>'+
+        '<div class="mcard__grades">'+(m.char==='ain'&&window.TW_GRADE?(function(){ var t=TW_GRADE.tech(); return [t.counter.g,t.break.g,t.refine.g,t.drop.g,t.craft.g]; })():m.grades).map(function(g,j){ return '<div class="grow"><span>'+P.gradeKeys[j]+'</span><b class="g-'+g.toLowerCase()+'">'+g+'</b></div>'; }).join('')+'</div>'+
         '<div class="mcard__btn '+st[0]+'"><svg class="ico ico--xs"><use href="#i-'+st[1]+'"/></svg>'+st[2]+'</div></div>'; }).join('');
   }
   function detail(){
     var q = W.quest(cur) || W.quest(P.quest);
     $('#m-risk').innerHTML = '위험도 '+W.riskBadge(q.risk);
+    var pfx=document.getElementById('pfx'); if(pfx&&window.TW_GRADE){ pfx.innerHTML='<div class="label-ko">파티 효과 · 기술 등급</div><div class="pfx">'+TW_GRADE.describe().map(function(r){ return '<div class="pfx__row"><span>'+r[0]+'</span><b>'+r[1]+'</b><span class="who">'+r[2]+'</span></div>'; }).join('')+'</div>'; }
     var en=''; for(var i=0;i<Math.min(q.enemies,3);i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
     var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); return '<div class="rw">'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-exp"/></svg>')+'<b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
     $('#m-detail').innerHTML = '<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+

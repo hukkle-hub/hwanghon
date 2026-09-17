@@ -48,7 +48,7 @@
 
 /* 숙련도 */
 .midrow{display:grid;grid-template-columns:1fr 380px;gap:11px;min-height:0}
-.gauges{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;place-items:center;padding:6px 0}
+.gauges{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;place-items:center;padding:6px 0}
 .gwrap{display:flex;flex-direction:column;align-items:center;gap:7px}
 .gwrap__t{font-size:12px;color:var(--tx-dim);letter-spacing:.04em}
 .gwrap__p{font-size:11px;color:var(--tx-faint)}
@@ -205,15 +205,18 @@
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script src="js/grade.js"></script>
 <script>
 /* 플레이어 프로필 — world.js PROFILE 에서 렌더 (게이지는 ui.js 부팅 시 그려지므로 그 전에 마크업 생성) */
 (function(){
   var W=window.TW_WORLD, T=window.TW_ITEMS, P=W.PROFILE, $=function(s){return document.querySelector(s);};
+  var GR=window.TW_GRADE, AG=GR?GR.agent():null, TG=GR?GR.tech():null;
   $('#idcard').innerHTML='<div class="idcard__tt">'+P.title+'</div><div class="idcard__nm">'+P.handle+'<span class="t-faint" style="font-size:15px">'+P.tag+'</span></div>'+
-    '<div class="lvline"><b>Lv. '+P.lv+'</b><div class="bar bar--exp fill" data-fill="'+Math.round(P.exp[0]/P.exp[1]*100)+'"></div></div>'+
-    '<div class="flex ac jb mt2"><span class="xs t-faint">전투력 <span class="num">'+W.fmt(P.exp[0])+' / '+W.fmt(P.exp[1])+'</span></span><span class="chip chip--red">카운터 숙련 &nbsp;<b style="color:#E08A86">'+P.counterTier+'</b></span></div>';
+    '<div class="lvline"><b>'+(AG?'요원 등급 <span class="'+GR.cls(AG.g)+'">'+AG.g+'</span>':'Lv. '+P.lv)+'</b><div class="bar bar--exp fill" data-fill="'+(AG?AG.pct:Math.round(P.exp[0]/P.exp[1]*100))+'"></div></div>'+
+    '<div class="flex ac jb mt2"><span class="xs t-faint">경험 <span class="num">'+(AG?W.fmt(AG.xp)+' / '+(AG.next?W.fmt(AG.next):'MAX'):W.fmt(P.exp[0])+' / '+W.fmt(P.exp[1]))+'</span></span><span class="chip chip--red">카운터 등급 &nbsp;<b style="color:#E08A86">'+(TG?TG.counter.g:P.counterTier)+'</b></span></div>';
   $('#pf-cp').textContent=W.fmt(P.cp); $('#pf-guild').textContent=P.guild; $('#pf-pos').textContent=P.position;
-  $('#gauges').innerHTML=P.mastery.map(function(m){ return '<div class="gwrap"><span class="gwrap__t">'+m[0]+'</span><div class="gauge" data-gauge="'+m[2]+'" data-color="'+m[3]+'"><span class="gauge__ring"></span><span class="gauge__mark" style="color:'+m[3]+'">'+m[1]+'</span></div><span class="gwrap__p">숙련도 '+m[2]+'%</span></div>'; }).join('');
+  var MAST=TG?[ ['카운터 등급',TG.counter.g,TG.counter.pct,'#D94A45'], ['파괴 등급',TG.break.g,TG.break.pct,'#7B9BD6'], ['정제 등급',TG.refine.g,TG.refine.pct,'#5FAE9B'], ['드랍 등급',TG.drop.g,TG.drop.pct,'#C9A45E'], ['제작 등급',TG.craft.g,TG.craft.pct,'#B08CD6'] ]:P.mastery;
+  $('#gauges').innerHTML=MAST.map(function(m){ return '<div class="gwrap"><span class="gwrap__t">'+m[0]+'</span><div class="gauge" data-gauge="'+m[2]+'" data-color="'+m[3]+'"><span class="gauge__ring"></span><span class="gauge__mark" style="color:'+m[3]+'">'+m[1]+'</span></div><span class="gwrap__p">숙련도 '+m[2]+'%</span></div>'; }).join('');
   $('#recent').innerHTML=P.recent.map(function(r){ return '<div class="brow"><span class="brow__th art'+(/portrait/.test(r[3])?' art--top':'')+'"><img src="art/'+r[3]+'.webp" alt=""></span><span class="brow__n">'+r[0]+'</span><span class="brow__t">'+r[1]+'</span><span class="brow__g g-'+r[2].toLowerCase()+'">'+r[2]+'</span></div>'; }).join('');
   var h=P.history;
   $('#history').innerHTML='<div class="stat"><span class="stat__k">총 탐사 횟수</span><span class="stat__v num">'+h.total+'회</span></div><div class="stat"><span class="stat__k">완료한 탐사</span><span class="stat__v num">'+h.done+'회</span></div><div class="stat"><span class="stat__k">완료율</span><span class="stat__v num">'+h.rate+'</span></div><div class="hr"></div><div class="label-ko">난이도별 클리어</div>'+

@@ -171,13 +171,15 @@
 </div>
 
 <script src="js/world.js"></script>
+<script src="js/save.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>
 var W = window.TW_WORLD, CH = {};
 /* 캐릭터 설정은 world.js CHARS 가 원본 — 이 화면의 표시 형태로 변환 */
 Object.keys(W.CHARS).forEach(function(k){ var c=W.CHARS[k], g=c.grades;
-  CH[k] = { nm:c.nm, tt:c.tt, lv:'LV.'+c.lv, tags:[[c.cls,'red'],[c.wp,'']], role:c.role, sub:c.sub, wp:c.wp, cp:W.fmt(c.cp),
+  CH[k] = { nm:c.nm, tt:c.tt, lv:'요원 등급 '+(window.TW_GRADE?(k==='ain'?TW_GRADE.agent().g:TW_GRADE.lvGrade(c.lv)):c.lv), tags:[[c.cls,'red'],[c.wp,'']], role:c.role, sub:c.sub, wp:c.wp, cp:W.fmt(c.cp),
             g:[g.counter,g.break,g.refine,g.drop,g.craft], sw:c.sw, look:c.look, traits:c.traits, quote:c.quote, icon:c.icon };
 });
 document.getElementById('list').innerHTML = Object.keys(CH).map(function(k,i){ var c=CH[k];

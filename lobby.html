@@ -157,6 +157,7 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/story.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/sfx.js"></script>
@@ -166,7 +167,7 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
   /* 첫 방문: 프롤로그 */
   try{ var ST=window.TW_STORY; if(ST && !navigator.webdriver){ var pro=ST.ch('prologue'); ST.once(pro.flag, pro.lines); } else if(ST && new URLSearchParams(location.search).get('prologue')==='1'){ var pr2=ST.ch('prologue'); ST.once(pr2.flag, pr2.lines); } }catch(e){}
   var me=W&&W.CHARS&&W.CHARS.ain; var sv=SV.get();
-  $('#lb-lv').textContent='LV.'+(me?me.lv:26)+(sv.lv>1?' · 훈련 Lv.'+sv.lv:'');
+  try{ var ag=TW_GRADE.agent(), tg=TW_GRADE.tech(); $('#lb-lv').innerHTML='요원 등급 <b class="'+TW_GRADE.cls(ag.g)+'">'+ag.g+'</b> <span class="t-faint" style="font-size:10px">· 카운터 '+tg.counter.g+' · 파괴 '+tg.break.g+'</span>'; }catch(e){ $('#lb-lv').textContent='요원 등급 A'; }
   $('#lb-gold').textContent=(window.TW_ITEMS?TW_ITEMS.fmt:String)(SV.wallet());
   document.addEventListener('tw:wallet', function(){ $('#lb-gold').textContent=TW_ITEMS.fmt(SV.wallet()); });
   var rec=$('[data-records]'); if(rec) rec.addEventListener('click', function(){ if(window.TW&&TW.records) TW.records(); });

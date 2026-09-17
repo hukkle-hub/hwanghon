@@ -205,7 +205,7 @@
         <div class="charsel">
           <div class="charsel__face art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
           <div class="fill">
-            <div class="flex ac jb"><span class="sm t-hi f-serif">아인</span><span class="xs t-faint">LV.26</span></div>
+            <div class="flex ac jb"><span class="sm t-hi f-serif">아인</span><span class="xs t-faint" id="q-mylv">등급 A</span></div>
             <div class="xs t-faint mt1">전투력 <span class="num t-dim">24,650</span></div>
           </div>
           <svg class="ico t-ghost"><use href="#i-scythe"/></svg>
@@ -229,6 +229,7 @@
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/story.js"></script>
 <script>
 /* 의뢰 상세 / 보스 도감 — world.js · items.js 에서 렌더 */
@@ -255,7 +256,7 @@
       $('#weak').innerHTML='<div class="xs t-faint tc" style="padding:40px 0">보스 의뢰가 아닙니다 — 부위 정보 없음</div>';
       $('#patterns').innerHTML=$('#traits').innerHTML=$('#mastery').innerHTML='<div class="xs t-faint">정보 없음</div>';
     }
-    $('#qinfo').innerHTML='<div class="pair"><div><span class="stat__k">권장 레벨</span><span class="stat__v">'+q.recLv+'</span></div><div><span class="stat__k">권장 전투력</span><span class="stat__v num">'+W.fmt(q.recCp)+'</span></div></div>'+
+    $('#qinfo').innerHTML='<div class="pair"><div><span class="stat__k">권장 등급</span><span class="stat__v">'+(window.TW_GRADE?TW_GRADE.lvGrade(q.recLv):q.recLv)+'</span></div><div><span class="stat__k">권장 전투력</span><span class="stat__v num">'+W.fmt(q.recCp)+'</span></div></div>'+
       '<div class="pair"><div><span class="stat__k">의뢰 보수</span><span class="stat__v flex ac g1"><svg class="ico ico--xs t-gold"><use href="#i-coin"/></svg>'+W.fmt(q.reward)+'</span></div><div><span class="stat__v num t-dim">'+q.time+'</span></div></div>'+
       '<div class="pair"><div><span class="stat__k">출격 인원</span><span class="stat__v">'+q.party+'</span></div></div><div class="pair"><div><span class="stat__k">실패 페널티</span><span class="stat__v xs">'+q.penalty+'</span></div></div>';
     $('#clear').innerHTML='<div class="flex g2 ac"><span class="xs t-red">필수 목표</span><span class="sm t-dim">• '+q.objectives.must.join(' · ')+'</span></div><div class="hr"></div><div class="xs t-faint mb2">선택 목표</div>'+
@@ -274,6 +275,7 @@
   $('#codex').innerHTML=W.CODEX.thumbs.map(function(a){ return W.artDiv(a,''); }).join('');
   $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); detail(); });
   $('#q-go').addEventListener('click', function(){ var go=$('#q-go'); if(!go.dataset.go) return; var to=function(){ location.href=go.dataset.go; }; if(window.TW_STORY && cur==='q_marsh'){ if(!TW_STORY.brief('ch2', to)) to(); } else to(); });
+  try{ var ag=TW_GRADE.agent(); $('#q-mylv').textContent='요원 등급 '+ag.g; }catch(e){}
   rows(); detail();
 })();
 </script>

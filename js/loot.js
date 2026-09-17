@@ -24,16 +24,16 @@
   function partDrops(luck, arenaId, partId){ var out=roll(LOOT.parts, luck); var t=LOOT.partItems[arenaId]&&LOOT.partItems[arenaId][partId]; if(t) out=out.concat(roll({ items:t }, 1)); return out; }
   function luckOf(sum){ var cr=sum.counterRate||0, pf=sum.breakable?sum.breaks/sum.breakable:0; return 1+0.35*cr+0.25*pf; }
   function withRarity(list){ return list.map(function(m){ var it=T.get(m[0]); return [m[0], m[1], it?it.rarity:'common']; }); }
-  function clearRewards(arenaId, sum, first){ var c=LOOT.clear[arenaId]||LOOT.clear.tutorial, luck=luckOf(sum);
-    var base=(sum.mats||[]).map(function(m){ return [m[0], m[1]]; });               /* 아레나 기본 보상 (+S 보너스) */
-    var gm=c.gradeGold[sum.rank]||1, gold=Math.round((sum.gold||0)*gm), bonus=[];
-    if(gm!==1) bonus.push(['등급 보상 '+sum.rank, (gm>1?'+':'')+Math.round((gm-1)*100)+'% 골드']);
-    var rare=roll(c, luck); bonus.push(['행운 ×'+luck.toFixed(2), '카운터 '+Math.round((sum.counterRate||0)*100)+'% · 부위 파괴 '+(sum.breaks||0)+'/'+(sum.breakable||0)+(rare.length?' → 희귀 드랍 '+rare.length+'종':'')]);
-    var firstItems=[]; if(first){ gold+=c.first.gold; firstItems=c.first.items.slice(); bonus.push(['최초 클리어', c.first.label||('+'+T.fmt(c.first.gold)+' 골드')]); }
+  function clearRewards(arenaId, sum, first, bonus){ bonus=bonus||{}; var c=LOOT.clear[arenaId]||LOOT.clear.tutorial, luck=luckOf(sum)+(bonus.luck||0);
+    var base=(sum.mats||[]).map(function(m){ return [m[0], bonus.mats?Math.max(m[1], Math.round(m[1]*(1+bonus.mats))):m[1]]; });   /* 파티 정제 등급: 재료 수량 */               /* 아레나 기본 보상 (+S 보너스) */
+    var gm=c.gradeGold[sum.rank]||1, gold=Math.round((sum.gold||0)*gm), bonus_=[];
+    if(gm!==1) bonus_.push(['등급 보상 '+sum.rank, (gm>1?'+':'')+Math.round((gm-1)*100)+'% 골드']);
+    var rare=roll(c, luck); bonus_.push(['행운 ×'+luck.toFixed(2), '카운터 '+Math.round((sum.counterRate||0)*100)+'% · 부위 파괴 '+(sum.breaks||0)+'/'+(sum.breakable||0)+(bonus.luck?' · 파티 드랍 등급 +'+bonus.luck.toFixed(2):'')+(rare.length?' → 희귀 드랍 '+rare.length+'종':'')]); if(bonus.mats) bonus_.push(['파티 정제 등급', '재료 +'+Math.round(bonus.mats*100)+'%']);
+    var firstItems=[]; if(first){ gold+=c.first.gold; firstItems=c.first.items.slice(); bonus_.push(['최초 클리어', c.first.label||('+'+T.fmt(c.first.gold)+' 골드')]); }
     var all=base.concat(rare, firstItems), merged={}; all.forEach(function(m){ merged[m[0]]=(merged[m[0]]||0)+m[1]; });
     var list=Object.keys(merged).map(function(id){ return [id, merged[id]]; });
-    return { gold:gold, luck:luck, mats:withRarity(list.filter(function(m){ return !isGear(m[0]); })), craft:withRarity(list.filter(function(m){ return isGear(m[0]); })), bonus:bonus, all:list }; }
-  function grant(list){ (list||[]).forEach(function(m){ if(isGear(m[0])){ for(var i=0;i<m[1];i++){ if(G) G.addGear(m[0]); } } else if(G) G.addItem(m[0], m[1]); else SV.addItem(m[0], m[1]); }); }
+    return { gold:gold, luck:luck, mats:withRarity(list.filter(function(m){ return !isGear(m[0]); })), craft:withRarity(list.filter(function(m){ return isGear(m[0]); })), bonus:bonus_, all:list }; }
+  function grant(list){ (list||[]).forEach(function(m){ var it=T.get(m[0]); if(it&&SV&&(it.rarity==='hero'||it.rarity==='legend'||it.rarity==='myth')) SV.stat('rare', m[1]); if(isGear(m[0])){ for(var i=0;i<m[1];i++){ if(G) G.addGear(m[0]); } } else if(G) G.addItem(m[0], m[1]); else SV.addItem(m[0], m[1]); }); }
   function describe(arenaId){ var m=[]; (LOOT.arenaMobs[arenaId]||['train_bot']).forEach(function(k){ LOOT.mobs[k].items.forEach(function(e){ var n=T.get(e[0]).name; if(m.indexOf(n)<0) m.push(n); }); }); var p=LOOT.parts.items.map(function(e){ return T.get(e[0]).name; }); var c=(LOOT.clear[arenaId]||LOOT.clear.tutorial).rare.map(function(e){ return T.get(e[0]).name; }); return { mobs:m, parts:p, rare:c }; }
   window.TW_LOOT={ LOOT:LOOT, roll:roll, mobDrops:mobDrops, partDrops:partDrops, clearRewards:clearRewards, grant:grant, luckOf:luckOf, describe:describe, isGear:isGear };
 })();

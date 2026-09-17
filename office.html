@@ -232,6 +232,7 @@
 <script src="js/gear.js"></script>
 <script src="js/loot.js"></script>
 <script src="js/world.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/story.js"></script>
 <script>
 /* 인력사무실 — 의뢰 목록·의뢰 정보·파티 카드를 world.js 에서 렌더 */
@@ -265,12 +266,12 @@
     return '<div class="xs t-faint mt3">잠김 — 다음 장에서 열린다</div>'; }
   function cards(){
     $('#p-cards').innerHTML = W.PARTY_ORDER.map(function(id,i){ var c=W.CHARS[id];
-      return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">LV.'+c.lv+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
+      return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">'+(id==='ain'&&window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'등급 '+(window.TW_GRADE?TW_GRADE.lvGrade(c.lv):c.lv))+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
         '<svg class="ico pcard__role"><use href="#i-'+c.icon+'"/></svg></div><div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div></div>'; }).join('');
   }
   $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); info(); });
   var o=W.PARTY.office;
-  $('#of-lv').textContent='LV.'+o.lv; $('#of-exp').textContent=W.fmt(o.exp[0])+' / '+W.fmt(o.exp[1]);
+  $('#of-lv').textContent='사무소 '+o.lv+'등급'; $('#of-exp').textContent=W.fmt(o.exp[0])+' / '+W.fmt(o.exp[1]);
   $('#of-rep').textContent=o.rep; $('#of-repexp').textContent=W.fmt(o.repExp[0])+' / '+W.fmt(o.repExp[1]);
   $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
   $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;

@@ -38,7 +38,7 @@
       opt = opt || {}; var p = B.part(pid) || parts[0];
       var crit = P.critNext || rand() < st.crit/100; if (P.critNext) P.critNext = false;
       var dmg = st.atk * mult * partMult(p) * (opt.counter ? (opt.perfect ? R.counter.perfectMult : R.counter.mult) : 1) * (crit ? st.critDmg/100 : 1) * (0.95 + rand()*0.10);
-      dmg *= guardMult(p); if (E.state === 'downed') dmg *= R.posture.downMult;
+      dmg *= guardMult(p); if (E.state === 'downed') dmg *= R.posture.downMult; if (o.partMult && o.partMult!==1 && p.hp != null && !p.broken) dmg *= o.partMult;   /* 파티 부위 파괴 등급 */
       dmg = Math.round(dmg);
       E.hp = Math.max(0, E.hp - dmg); M.dmg += dmg; M.hits++; if (crit) M.crits++;
       if (p.hp != null && !p.broken){ p.hp = Math.max(0, p.hp - Math.round(dmg * (opt.aoe ? 1 : 1))); if (p.hp === 0) breakPart(p); }
