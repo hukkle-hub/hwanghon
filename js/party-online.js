@@ -7,13 +7,23 @@ const $=id=>document.getElementById(id),levels=window.TW_LEVELS,arenas=window.TW
 const storage={get(k){try{return localStorage.getItem(k);}catch{return null;}},set(k,v){try{localStorage.setItem(k,v);}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 let socket,profile,room,sequence=0,connected=false,reconnectTimer,stopped=false,lastReceived=0,latestEvent=0,noticeUntil=0,view,assetPromise,assets,keys={},stick={x:0,y:0},pingTimer;
 let authRequest=null,guild=null,chatMessages=[];
-const tokenKey='tw:party-token:'+location.host,invite=new URLSearchParams(location.search).get('room');
+const params=new URLSearchParams(location.search),invite=params.get('room');
+/* 파티 서버 주소: 기본은 이 페이지를 서빙한 서버. 정적 호스팅(GitHub Pages)에서는 ?server=<주소> 로 지정하면 기억한다 */
+const serverParam=params.get('server');
+if(serverParam!==null){try{serverParam?localStorage.setItem('tw:party-server',serverParam):localStorage.removeItem('tw:party-server');}catch{}}
+function partyServer(){let v='';try{v=serverParam||localStorage.getItem('tw:party-server')||'';}catch{v=serverParam||'';}
+ if(!v)return{host:location.host,origin:location.origin,remote:false};
+ let u;try{u=new URL(/^(https?|wss?):\/\//.test(v)?v.replace(/^ws/,'http'):'https://'+v);}catch{return{host:location.host,origin:location.origin,remote:false};}
+ return{host:u.host,origin:u.origin,remote:u.host!==location.host};}
+const server=partyServer();
+const tokenKey='tw:party-token:'+server.host;
 $('nickname').value=storage.get('tw:party-name')||'아인';if(invite)$('room-code').value=invite;
 function notice(text){$('notice').textContent=text;$('market-notice').textContent=text;$('shop-notice').textContent=text;}
 function send(message){if(!connected||socket?.readyState!==WebSocket.OPEN)return;socket.send(JSON.stringify({...message,seq:++sequence}));}
 function connect(request=null){authRequest=request;if(socket&&[0,1].includes(socket.readyState))return;stopped=false;clearTimeout(reconnectTimer);$('connect').disabled=true;$('connection').textContent='접속 중';
  if(!/^https?:$/.test(location.protocol)){notice('파티 서버 주소에서 이 화면을 열어 주세요.');$('connect').disabled=false;return;}
- socket=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/party-socket');
+ const scheme=(server.remote?server.origin.startsWith('https'):location.protocol==='https:')?'wss:':'ws:';
+ socket=new WebSocket(scheme+'//'+server.host+'/party-socket');
  socket.addEventListener('open',()=>{sequence=0;socket.send(JSON.stringify(authRequest||{type:'hello',token:storage.get(tokenKey),name:$('nickname').value}));authRequest=null;$('password').value='';});
  socket.addEventListener('message',e=>{if(e.target!==socket)return;let msg;try{msg=JSON.parse(e.data);}catch{return;}
   if(msg.type==='welcome'){$('claim-password').value='';connected=true;profile=msg.profile;$('storage-note').hidden=!msg.ephemeral;if(!msg.room){room=null;renderRoom();}storage.set(tokenKey,msg.token);storage.set('tw:party-name',profile.name);$('login').hidden=true;$('online').hidden=false;$('connection').textContent='연결됨';$('disconnect').hidden=true;updateProfile();notice('접속했습니다. 이름을 정하고 쉘터와 인력사무소를 이용하세요.');renderSocial();if(invite&&!msg.room&&profile.characterCreated)send({type:'join',code:invite});clearInterval(pingTimer);pingTimer=setInterval(()=>send({type:'ping',time:performance.now()}),2000);return;}
@@ -33,6 +43,7 @@ function connect(request=null){authRequest=request;if(socket&&[0,1].includes(soc
   if(msg.type==='superseded'){stopped=true;connected=false;notice('다른 창에서 같은 프로필로 접속했습니다.');$('disconnect').textContent='다른 창에서 접속했습니다. 한 캐릭터는 한 창에서 조작합니다.';$('disconnect').hidden=false;return;}
   if(msg.type==='error'){notice(msg.message);announce(msg.message);if(!connected){$('login').hidden=false;$('online').hidden=true;$('fresh').hidden=false;stopped=true;socket.close();}}
  });
+ socket.addEventListener('error',()=>{if(!server.remote&&!connected)notice('이 주소에는 파티 서버가 없습니다. 아래 «파티 서버 주소» 에 서버 주소를 넣고 접속하세요.');});
  socket.addEventListener('close',e=>{if(e.target!==socket)return;connected=false;clearInterval(pingTimer);$('connect').disabled=false;$('connection').textContent='연결 끊김';$('social-link-state').textContent='연결을 복구하는 중입니다';clearControls(false);if(room?.raid)$('disconnect').hidden=false;if(!stopped&&profile){notice('연결을 복구하고 있습니다.');reconnectTimer=setTimeout(connect,1500);}else if(!profile&&!stopped)notice('파티 서버에 연결할 수 없습니다. 서버를 실행한 주소로 접속해 주세요.');});
  socket.addEventListener('error',()=>notice('파티 서버에 연결할 수 없습니다. 기존 정적 사이트에서는 서버 실행이 필요합니다.'));
 }
@@ -75,6 +86,11 @@ function updateHud(){const raid=room.raid,p=mine(),b=raid.boss;if(!p)return;
  document.querySelectorAll('[data-command="skill"]').forEach((el,i)=>{el.disabled=p.cds[i]>0||p.hp<=0;const names=['낫 베기','그림자','회전','결의'];el.textContent=(i+1)+' · '+(p.cds[i]>0?Math.ceil(p.cds[i])+'초':names[i]);});
  const ended=['clear','wiped'].includes(raid.state);if(ended&&$('outcome').hidden)clearControls();$('outcome').hidden=!ended;if(ended){$('outcome-kicker').textContent=raid.state==='clear'?'EXPEDITION COMPLETE':'PARTY DOWN';$('outcome-title').textContent=raid.state==='clear'?'함께 돌아왔다.':'다시 일어설 시간.';$('outcome-text').textContent=raid.state==='clear'?(raid.result.rewardStatus==='saved'?raid.result.gold.toLocaleString()+' G와 전리품을 파티원 각각에게 지급했습니다.':'보상 저장을 재시도하고 있습니다. 이 파티에서 기다려 주세요.'):'조사한 지점은 유지됩니다. 정비 지점에서 다시 도전하세요.';$('scoreboard').replaceChildren();for(const q of raid.result?.players||raid.players){const row=document.createElement('div');row.textContent=q.name+' · 피해 '+Math.round(q.damage).toLocaleString()+' · 카운터 '+q.counters+' · 파괴 '+q.breaks;$('scoreboard').append(row);}const lead=room.leader===profile.id;$('retry').hidden=raid.state!=='wiped';$('retry').disabled=!lead;$('return-lobby').disabled=!lead||raid.result?.rewardStatus==='pending';$('leader-hint').textContent=lead?'파티원이 함께 이동합니다.':'파티장이 다음 출격을 선택하고 있습니다.';}
 }
+(function(){const el=$('server-url');if(!el)return;let cur='';try{cur=localStorage.getItem('tw:party-server')||'';}catch{}
+ el.value=cur;const hint=$('server-hint');
+ const paint=()=>{if(hint)hint.textContent=server.remote?('원격 서버: '+server.host):'이 페이지를 연 서버에 접속합니다.';};paint();
+ el.addEventListener('change',()=>{const v=el.value.trim();try{v?localStorage.setItem('tw:party-server',v):localStorage.removeItem('tw:party-server');}catch{}
+  const u=new URL(location.href);v?u.searchParams.set('server',v):u.searchParams.delete('server');location.href=u.href;});})();
 $('connect').onclick=()=>connect();$('fresh').onclick=()=>{storage.remove(tokenKey);profile=null;socket?.close();setTimeout(()=>connect(),100);};
 $('create').onclick=()=>send({type:'create',level:$('dungeon').value,public:$('public-room').checked});$('join').onclick=()=>send({type:'join',code:$('room-code').value});$('ready').onclick=()=>send({type:'ready',ready:!room.members.find(m=>m.id===profile.id)?.ready});$('start').onclick=()=>send({type:'start'});$('leave').onclick=()=>send({type:'leave'});
 $('invite').onclick=async()=>{const url=new URL('party.html',location.href);url.searchParams.set('room',room.code);try{await navigator.clipboard.writeText(url.href);notice('초대 링크를 복사했습니다.');}catch{notice('초대 주소: '+url.href);}};

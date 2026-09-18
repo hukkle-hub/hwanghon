@@ -24,3 +24,6 @@ services:
         value: "100"
       - key: EPHEMERAL_STORAGE
         value: "1"
+      # GitHub Pages 사본(정적)에서 «파티 서버 주소» 로 접속할 때 허용할 출처
+      - key: ALLOWED_ORIGINS
+        value: https://hukkle-hub.github.io
