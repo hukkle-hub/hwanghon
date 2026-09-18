@@ -6,11 +6,10 @@ services:
     runtime: node
     plan: free
     region: singapore
-    numInstances: 1
     buildCommand: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
     startCommand: node server/index.cjs
     healthCheckPath: /healthz
-    autoDeployTrigger: off
+    autoDeployTrigger: "off"
     envVars:
       - key: NODE_VERSION
         value: "24"
