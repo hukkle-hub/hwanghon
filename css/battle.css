@@ -78,3 +78,5 @@
 
 /* 스킬 레벨 배지 (skills.js) */
 .sk__lv{position:absolute;top:2px;right:3px;font-size:9px;line-height:1;padding:2px 3px;background:rgba(165,28,28,.85);color:#fff;font-family:var(--f-mono,monospace);border-radius:2px;pointer-events:none}
+
+.dmgnum.skill{color:#E8B860;font-family:var(--f-serif);font-size:15px;letter-spacing:.08em;text-shadow:0 0 8px rgba(232,184,96,.6)}
