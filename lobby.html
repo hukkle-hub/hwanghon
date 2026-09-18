@@ -114,8 +114,8 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 
   <header class="lb__top topbar" style="padding:0;border:0;background:none">
     <div class="lb__me">
-      <div class="lb__face" style="background-image:url(art/face-ain.webp)"></div>
-      <div><div class="lb__lv" id="lb-lv">LV.26</div><div class="lb__nm">Ain</div></div>
+      <div class="lb__face" id="lb-face" style="background-image:url(art/face-ain.webp)"></div>
+      <div><div class="lb__lv" id="lb-lv">LV.26</div><div class="lb__nm" id="lb-nm">Ain</div></div>
     </div>
     <div class="lb__res">
       <span class="res res--stam"><svg class="ico"><use href="#i-bolt"/></svg><span id="lb-stam">125/120</span></span>
@@ -157,6 +157,7 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/world.js"></script>
+<script>(function(){ var c=(window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain', C=window.TW_WORLD&&TW_WORLD.CHARS[c]; if(!C) return; var f=document.getElementById('lb-face'), n=document.getElementById('lb-nm'); if(f) f.style.backgroundImage='url(art/face-'+c+'.webp)'; if(n) n.textContent=C.en; })();</script>
 <script src="js/grade.js"></script>
 <script src="js/story.js"></script>
 <script src="js/ui.js"></script>

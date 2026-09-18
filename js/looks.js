@@ -14,6 +14,11 @@
     w_ash_dirk:        { glb:'art/3d/gear/w_ash_dirk.glb', bone:'Hips', pos:[0.17,-0.04,0.05], rot:[Math.PI*0.95,0,0.35] },
     w_hook_scythe:     { glb:'art/3d/gear/w_hook_scythe.glb', bone:'Spine2', pos:[0.08,-0.02,-0.11], rot:[0.1,0,2.5], scale:0.75 }
   };
+  /* 캐릭터 고유 무기: 아인 외 캐릭터는 인벤토리 주무기(낫) 대신 자기 무기를 든다. off = 왼손 슬롯(쌍수) */
+  var CHARW={ kain:{ main:'w_kain_greatsword' }, ryu:{ main:'w_ryu_dagger', offhand:'w_ryu_dagger' }, sera:{ main:'w_sera_flask' } };
+  WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75 };
+  WEAPON.w_ryu_dagger={ glb:'art/3d/gear/w_ash_dirk.glb', grip:0.10 };
+  WEAPON.w_sera_flask={ glb:'art/3d/gear/w_sera_flask.glb', grip:0.05 };
   var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0] };
   /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질, 옵션] — 크기/위치 m, 회전 rad. 뼈 로컬: 몸통·머리 z=앞 / 팔·다리 y=뼈 방향(아래) z=뒤
      몸 치수(뷰어 측정): 머리 r≈0.12(머리카락 포함 ≈0.16) · 가슴 앞 z 0.16 · 정강이 r≈0.06 · 팔뚝 r≈0.04 · 발 길이 0.22
@@ -57,7 +62,8 @@
   function attach(T, loader, model, equipped, opts){ THREE=T; LOADER=loader; opts=opts||{}; var bones=bonesOf(model), out={ pieces:[], weapons:{} };
     var baseOf=opts.baseOf||function(id){ return id; };
     /* 이전 조각 제거 */ Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
-    var mainId=equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
+    var cw=opts.charId&&CHARW[opts.charId]; var mainId=cw?cw.main:equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
+    if(cw&&cw.offhand&&bones.LeftHandSlot){ var osp=WEAPON[cw.offhand]; loader.load(osp.glb, function(w){ var g2=new THREE.Group(); g2.userData.look='offhand'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); w.scene.position.set(0,-(osp.grip||0.1),0); g2.add(w.scene); bones.LeftHandSlot.add(g2); g2.scale.setScalar(fitScale(bones.LeftHandSlot)); out.weapons.offhand=g2; }); }
     if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); w.scene.position.set(0,-(spec.grip||0.75),0); wr.add(w.scene); slot.add(wr); wr.scale.setScalar(fitScale(slot)); out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
     else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var sp=WEAPON[baseOf(id)]; if(!sp||!sp.bone||!bones[sp.bone]) return; var bone=bones[sp.bone];

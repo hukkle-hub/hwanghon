@@ -5,7 +5,7 @@ import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
-  var A=DG.ARENAS[L.arena], R=DG.RULES, CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[A.char]), SK=DG.SKILLS[A.char], ULT=DG.SKILLS[A.char+'Ult'], DEPTH=SIM.DEPTH;
+  var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
   var GB=window.TW_GRADE?TW_GRADE.buffs():null;   /* 파티 기술 등급 효과 */
   var RB=GB&&GB.counterWin?Object.assign({}, R, { counter:Object.assign({}, R.counter, { window:R.counter.window+GB.counterWin }) }):R;
   var SCALE=50; /* px per m */
@@ -70,7 +70,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
   function ldSet(f, txt){ if(ldDone) return; var fill=document.getElementById('ld-fill'), pct=document.getElementById('ld-pct'), tx=document.getElementById('ld-txt'); if(fill) fill.style.width=Math.round(f*100)+'%'; if(pct) pct.textContent=Math.round(f*100)+'%'; if(tx&&txt) tx.textContent=txt; }
   function ldErr(msg){ var l=document.getElementById('loading'); if(l) l.classList.add('is-err'); ldSet(1, msg); }
   (function tips(){ var el=document.getElementById('ld-tip'), i=Math.floor(Math.random()*TIPS.length); if(!el) return; el.innerHTML=TIPS[i]; setInterval(function(){ if(ldDone) return; el.classList.add('is-fade'); setTimeout(function(){ i=(i+1)%TIPS.length; el.innerHTML=TIPS[i]; el.classList.remove('is-fade'); }, 300); }, 3000); })();
-  LM.onProgress=function(url, n, total){ var f=0.08+0.9*(n/Math.max(total,1)); var what=/boss/.test(url)?'허수아비 깨우는 중':/ain_/.test(url)?'아인 준비 중':/props/.test(url)?'벙커 구조물 배치 중':'벙커 자산 불러오는 중'; ldSet(f, what+' · '+n+'/'+total); };
+  LM.onProgress=function(url, n, total){ var f=0.08+0.9*(n/Math.max(total,1)); var what=/boss/.test(url)?'허수아비 깨우는 중':/_anim/.test(url)?CHAR.nm+' 준비 중':/props/.test(url)?'벙커 구조물 배치 중':'벙커 자산 불러오는 중'; ldSet(f, what+' · '+n+'/'+total); };
   LM.onError=function(url){ console.warn('load fail', url); };
   var TL=new THREE.TextureLoader(LM); function tex(n, rep){ var t=TL.load('art/env/'+n+'.webp'); t.colorSpace=THREE.SRGBColorSpace; if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); } t.anisotropy=4; return t; }
   function texLin(n, rep){ var t=TL.load('art/env/'+n+'.webp'); if(rep){ t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep[0],rep[1]); } return t; }
@@ -294,16 +294,16 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     }catch(e){ console.warn('weapon look', e); } }
   function loaded(){ loadN++; if(loadN>=4){ ldSet(1, '입장'); ldDone=true; placeProps(); begin(); } }
   loadProps(loaded); bossLoad(loaded);
-  loader.load('art/3d/ain_anim.glb', function(g){ ain.model=g.scene; capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
+  loader.load('art/3d/'+CID+'_anim.glb', function(g){ ain.model=g.scene; capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot;
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR, eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ var l=G&&G.lookOf(id); return l&&l.tint?l.tint:null; };
-        TW_LOOKS.attach(THREE, loader, ain.model, eq, { baseOf:baseOf, tintOf:tintOf, onMain:function(wr, w){ capTextures(w.scene); ain.weapon=wr; applyWeaponLook(wr); once(); }, onMainFail:once }); setTimeout(once, 20000); }
+        TW_LOOKS.attach(THREE, loader, ain.model, eq, { charId:CID, baseOf:baseOf, tintOf:tintOf, onMain:function(wr, w){ capTextures(w.scene); ain.weapon=wr; applyWeaponLook(wr); once(); }, onMainFail:once }); setTimeout(once, 20000); }
       else once(); })();
-    setBase('idle'); loaded(); }, undefined, function(err){ ldErr('아인 모델 로드 실패: '+(err&&err.message||err)); });
+    setBase('idle'); loaded(); }, undefined, function(err){ ldErr(CHAR.nm+' 모델 로드 실패: '+(err&&err.message||err)); });
   function action(n){ var c=ain.clips[n]; if(!c||!ain.mixer) return null; return ain.mixer.clipAction(c); }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?1.15:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
   function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);

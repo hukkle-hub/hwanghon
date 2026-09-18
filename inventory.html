@@ -243,6 +243,8 @@ document.querySelector('.chars').addEventListener('click', function(e){
   setTimeout(function(){ d.src = 'art/full-' + c.dataset.char + '.webp'; d.onload = function(){ d.style.opacity = 1; }; }, 120);
 });
 document.getElementById('doll').style.transition = 'opacity .18s';
+/* 출격 캐릭터를 기본 선택 */
+(function(){ var c=(window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'; var chip=document.querySelector('.chip-char[data-char="'+c+'"]'); if(chip&&!chip.classList.contains('is-on')){ document.querySelectorAll('.chip-char').forEach(function(x){ x.classList.remove('is-on'); }); chip.classList.add('is-on'); document.getElementById('doll').src='art/full-'+c+'.webp'; } })();
 </script>
 </body>
 </html>
