@@ -113,21 +113,23 @@
       if (P.atkCd > 0 || P.lockT > 0) return;
       if (k.mult > 0 && HK.canHit && !HK.canHit()){ P.atkCd = atkInterval; emit('whiff', { skill:i }); return; }
       P.atkCd = atkInterval; P.st -= k.st; P.stDelay = R.stamina.delay; P.cds[i] = k.cd;
-      if (k.dodge){ P.dodgeT = R.dodge.iframes * 1.5; M.dodges++; }
+      if (k.dodge){ P.dodgeT = R.dodge.iframes * (k.iframes || 1.5); M.dodges++; }
       if (k.critNext) P.critNext = true;
       if (k.buff){ P.buffT = k.buff.dur; P.buffReduce = k.buff.reduce; }
       if (k.mult > 0){
         if (k.aoe) parts.forEach(function(p){ dealDamage(p.id, k.mult, { skill:k.id, aoe:true }); });
         else dealDamage(target, k.mult, { skill:k.id });
+        if (k.bleed) addBleed(k.bleed);
+        if (k.posture && !E.dead){ E.posture = clamp(E.posture + k.posture, 0, R.posture.max); if (E.posture >= R.posture.max) down(); }
       }
-      emit('skill', { index:i, id:k.id, name:k.name });
+      emit('skill', { index:i, id:k.id, name:k.name, lv:k.lv||1 });
     }
     function ult(){
       if (!U || B.over) return; if (P.ult < R.ult.max){ emit('cd', { ult:true }); return; }
       if (P.lockT > 0) return;
       if (HK.canHit && !HK.canHit()){ emit('whiff', { ult:true }); return; }
       P.atkCd = atkInterval; P.ult = 0; M.ultUsed++;
-      dealDamage(target, U.mult, { skill:U.id, noBleed:true }); if (U.bleed) addBleed(U.bleed);
+      dealDamage(target, U.mult, { skill:U.id, noBleed:true }); if (U.bleed) addBleed(U.bleed); if (U.posture && !E.dead){ E.posture = clamp(E.posture + U.posture, 0, R.posture.max); if (E.posture >= R.posture.max) down(); }
       P.hitstop = Math.max(P.hitstop, R.hitstop.brk); emit('ult', { name:U.name });
     }
 

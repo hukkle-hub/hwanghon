@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 스킬 성장</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.sk{display:grid;grid-template-columns:230px 1fr 300px;gap:12px;min-height:0;height:100%}
+.sk__chars{display:flex;flex-direction:column;gap:8px}
+.crow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);background:rgba(0,0,0,.28);cursor:pointer}
+.crow.is-on{border-color:var(--gold,#C89A4A);background:rgba(201,138,43,.08)}
+.crow__face{width:38px;height:38px;flex:none}
+.crow__nm{font-family:var(--f-serif);font-size:15px}
+.crow__role{font-size:11px;color:var(--tx-dim)}
+.pts{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3);margin-top:6px}
+.pts b{font-family:var(--f-serif);font-size:22px;color:#C89A4A}
+.tree{display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0;padding-right:4px}
+.node{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);background:rgba(0,0,0,.28);cursor:pointer}
+.node.is-on{border-color:#A51C1C;background:rgba(165,28,28,.08)}
+.node.is-ult{border-color:rgba(201,138,43,.6)}
+.node__ic{width:52px;height:52px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#C89A4A;position:relative}
+.node__ic .ico{width:26px;height:26px}
+.node__key{position:absolute;left:3px;top:2px;font-size:10px;color:var(--tx-dim);font-family:var(--f-mono,monospace)}
+.node__nm{font-family:var(--f-serif);font-size:15px}
+.node__eff{font-size:11.5px;color:var(--tx-dim);margin-top:2px}
+.pips{display:flex;gap:4px;margin-top:6px}
+.pip{width:22px;height:6px;background:rgba(255,255,255,.12)}
+.pip.is-on{background:#A51C1C}
+.pip.is-br{background:#C89A4A}
+.node__lv{font-family:var(--f-mono,monospace);font-size:12px;color:var(--tx-dim);text-align:right}
+.node__lv b{display:block;font-family:var(--f-serif);font-size:20px;color:#fff}
+.detail{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.detail h3{font-family:var(--f-serif);font-size:18px;margin:0}
+.kv{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.kv .up{color:#7CD07C}
+.br{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.brc{padding:10px;border:1px solid var(--line);background:rgba(0,0,0,.3);cursor:pointer}
+.brc.is-on{border-color:#C89A4A;background:rgba(201,138,43,.1)}
+.brc b{display:block;font-family:var(--f-serif);font-size:14px}
+.brc span{font-size:11px;color:var(--tx-dim)}
+.brc.is-lock{opacity:.45;cursor:default}
+.actrow{display:flex;gap:8px}
+.actrow .btn{flex:1;height:38px}
+.toast{position:fixed;left:50%;bottom:64px;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.85);border:1px solid var(--line);font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.is-on{opacity:1}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">스킬 성장</h1>
+      <div class="topbar__sub">요원 등급과 보스 격파로 얻은 스킬 포인트로 기술을 강화하고, 3레벨부터 분기를 고릅니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <a class="btn btn--sm btn--ghost" href="lobby.html">로비로</a>
+    </div>
+  </header>
+  <main class="sk" data-mdefault="스킬">
+    <div class="sk__chars" data-mpane="캐릭터">
+      <div id="chars"></div>
+      <div class="pts"><span class="xs t-dim">남은 포인트</span><b id="pts">0</b></div>
+      <div class="xs t-faint" id="pts-src" style="line-height:1.7"></div>
+    </div>
+    <section class="tree" id="tree" data-mpane="스킬"></section>
+    <section class="detail panel panel--framed" id="detail" data-mpane="상세"></section>
+  </main>
+  <div class="toast" id="toast"></div>
+</div>
+<script src="js/save.js"></script>
+<script src="js/items.js"></script>
+<script src="js/world.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/dungeons.js"></script>
+<script src="js/skills.js"></script>
+<script>
+(function(){
+  var W=window.TW_WORLD, DG=window.TW_DUNGEONS, SK=window.TW_SKILLS, SV=window.TW_SAVE; if(!W||!DG||!SK) return;
+  var cur=(SV&&SV.char)?SV.char():'ain', sel=null;
+  function list(c){ return DG.SKILLS[c].concat([DG.SKILLS[c+'Ult']]); }
+  function toast(t){ var e=document.getElementById('toast'); e.textContent=t; e.classList.add('is-on'); clearTimeout(toast._t); toast._t=setTimeout(function(){ e.classList.remove('is-on'); },1400); }
+  function renderChars(){ document.getElementById('chars').innerHTML=W.PARTY_ORDER.map(function(k){ var c=W.CHARS[k], p=SK.points(k); return '<div class="crow'+(k===cur?' is-on':'')+'" data-char="'+k+'"><div class="crow__face art art--avatar"><img src="art/face-'+k+'.webp" alt=""></div><div><div class="crow__nm">'+c.nm+'</div><div class="crow__role">'+c.cls+' · 포인트 '+p.free+'/'+p.total+'</div></div></div>'; }).join('');
+    var p=SK.points(cur); document.getElementById('pts').textContent=p.free; var g=window.TW_GRADE?TW_GRADE.agent():null; document.getElementById('pts-src').innerHTML='총 '+p.total+' = 기본 4 + 요원 등급 '+(g?g.g:'A')+' ×3 + 보스 격파 '+((SV.get().stats||{}).runs||0)+'회<br>사용 '+p.spent; }
+  function renderTree(){ var ks=list(cur); if(!sel||!ks.some(function(k){ return k.id===sel; })) sel=ks[0].id;
+    document.getElementById('tree').innerHTML=ks.map(function(k){ var s=SK.get(cur,k.id), ult=k.key==='R'; var pips=''; for(var i=1;i<=SK.MAX;i++) pips+='<span class="pip'+(i<=s.lv?' is-on':'')+'"></span>'; pips+='<span class="pip'+(s.br?' is-br':'')+'" title="분기"></span>';
+      return '<div class="node'+(k.id===sel?' is-on':'')+(ult?' is-ult':'')+'" data-id="'+k.id+'"><div class="node__ic"><span class="node__key">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg></div><div><div class="node__nm">'+k.name+(ult?' <span class="xs t-gold">궁극기</span>':'')+'</div><div class="node__eff">'+SK.describe(cur,k)+'</div><div class="pips">'+pips+'</div></div><div class="node__lv"><b>Lv '+s.lv+'</b>'+(s.br?'분기 '+s.br:(s.lv>=SK.BR_LV?'분기 선택 가능':'분기 Lv'+SK.BR_LV))+'</div></div>'; }).join(''); }
+  function renderDetail(){ var k=list(cur).filter(function(x){ return x.id===sel; })[0]; if(!k) return; var s=SK.get(cur,k.id), p=SK.points(cur), now=SK.preview(cur,k), nx=s.lv<SK.MAX?SK.preview(cur,k,s.lv+1):null, B=SK.branches(k);
+    function row(lb,a,b,fmt){ fmt=fmt||function(v){ return v; }; if(a==null&&b==null) return ''; return '<div class="kv"><span>'+lb+'</span><span>'+fmt(a)+(b!=null&&b!==a?' <span class="up">→ '+fmt(b)+'</span>':'')+'</span></div>'; }
+    var html='<h3>'+k.name+' <span class="xs t-dim">Lv '+s.lv+' / '+SK.MAX+'</span></h3><div class="xs t-dim" style="line-height:1.7">'+k.desc+'</div><div class="hr"></div>';
+    html+=row('배율', now.mult>0?now.mult:null, nx&&nx.mult>0?nx.mult:null, function(v){ return '×'+v; });
+    if(k.key!=='R'){ html+=row('쿨타임', now.cd, nx?nx.cd:null, function(v){ return v+'초'; }); html+=row('스태미나', now.st, nx?nx.st:null); }
+    if(now.buff) html+=row('피해 감소', now.buff.reduce, nx?nx.buff.reduce:null, function(v){ return Math.round(v*100)+'%'; })+row('지속', now.buff.dur, nx?nx.buff.dur:null, function(v){ return v+'초'; });
+    if(now.bleed) html+=row('출혈', now.bleed, null); if(now.posture) html+=row('자세 피해', now.posture, null);
+    html+='<div class="hr"></div><div class="xs t-dim">분기 (Lv '+SK.BR_LV+' 이상, 1포인트)</div><div class="br">'+['A','B'].map(function(b){ var lock=s.lv<SK.BR_LV; return '<div class="brc'+(s.br===b?' is-on':'')+(lock?' is-lock':'')+'" data-br="'+b+'"><b>'+B[b].name+'</b><span>'+B[b].label+'</span></div>'; }).join('')+'</div>';
+    html+='<div class="hr"></div><div class="actrow"><button class="btn btn--primary" id="up" data-primary '+(s.lv>=SK.MAX||p.free<1?'disabled':'')+'>'+(s.lv>=SK.MAX?'최대 레벨':'레벨 업 (1포인트)')+'</button><button class="btn btn--ghost" id="reset">초기화</button></div>';
+    document.getElementById('detail').innerHTML=html; }
+  function renderAll(){ renderChars(); renderTree(); renderDetail(); }
+  document.addEventListener('click', function(e){
+    var c=e.target.closest('.crow[data-char]'); if(c){ cur=c.dataset.char; sel=null; renderAll(); return; }
+    var n=e.target.closest('.node[data-id]'); if(n){ sel=n.dataset.id; renderTree(); renderDetail(); return; }
+    var b=e.target.closest('.brc[data-br]'); if(b){ var r=SK.setBranch(cur, sel, b.dataset.br); if(r.err) toast(r.err==='lv'?'Lv '+SK.BR_LV+' 이상에서 고를 수 있습니다':'포인트가 부족합니다'); else toast('분기 '+b.dataset.br+' 선택'); renderAll(); return; }
+    if(e.target.closest('#up')){ var r2=SK.up(cur, sel); if(r2.err) toast(r2.err==='max'?'최대 레벨입니다':'포인트가 부족합니다'); else toast('Lv '+r2.lv); renderAll(); return; }
+    if(e.target.closest('#reset')){ SK.reset(cur); toast('초기화 — 포인트를 돌려받았습니다'); renderAll(); return; }
+  });
+  renderAll();
+})();
+</script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>
