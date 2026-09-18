@@ -14,40 +14,54 @@
     w_ash_dirk:        { glb:'art/3d/weapons/w_ash_dirk.glb', bone:'Hips', pos:[0.17,-0.04,0.05], rot:[Math.PI*0.95,0,0.35] },
     w_hook_scythe:     { glb:'art/3d/weapons/w_hook_scythe.glb', bone:'Spine2', pos:[0.08,-0.02,-0.11], rot:[0.1,0,2.5], scale:0.75 }
   };
-  var MAT={ leather:[0x4a3220,0.9,0], reed:[0x4f6630,0.9,0], black:[0x1a1b20,0.45,0.7], steel:[0x8a919c,0.35,0.9], cloth:[0x2e2e34,1.0,0], brass:[0x9c7a36,0.4,0.9], bone:[0x9a8e74,0.7,0], red:[0x7a1e1a,0.6,0.2], copper:[0xa05a30,0.4,0.9] };
-  /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질] — 크기/위치 m, 회전 rad */
+  var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0] };
+  /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질, 옵션] — 크기/위치 m, 회전 rad. 뼈 로컬: 몸통·머리 z=앞 / 팔·다리 y=뼈 방향(아래) z=뒤
+     몸 치수(뷰어 측정): 머리 r≈0.12(머리카락 포함 ≈0.16) · 가슴 앞 z 0.16 · 정강이 r≈0.06 · 팔뚝 r≈0.04 · 발 길이 0.22
+     shell = 구 껍질 [r, phiStart, phiLength, thetaLength] (phi: π/2 = 앞) / cylPart = [r위, r아래, 높이, thetaStart, thetaLength] (theta 0 = 앞) */
   var ARMOR={
-    a_hood:[ ['Head','hood',[0.118],[0,0.085,-0.02],[0.12,0,0],'cloth'], ['Head','cylOpen',[0.10,0.16,0.12],[0,-0.06,-0.02],[0,0,0],'cloth'] ],
-    a_reed_cuirass:[ ['Spine1','box',[0.22,0.17,0.05],[0,0.04,0.08],[0.08,0,0],'leather'], ['Spine1','box',[0.21,0.16,0.045],[0,0.04,-0.075],[-0.05,0,0],'leather'],
-                     ['Spine1','box',[0.035,0.19,0.012],[-0.06,0.04,0.108],[0,0,0.3],'reed'], ['Spine1','box',[0.035,0.19,0.012],[0.06,0.04,0.108],[0,0,-0.3],'reed'],
-                     ['Spine','box',[0.24,0.04,0.16],[0,0.03,0.0],[0,0,0],'reed'], ['Spine','box',[0.04,0.04,0.02],[0,0.03,0.085],[0,0,0],'brass'] ],
-    a_black_greaves:[ ['LeftLeg','box',[0.085,0.26,0.035],[0,0.2,-0.045],[0,0,0],'black'], ['RightLeg','box',[0.085,0.26,0.035],[0,0.2,-0.045],[0,0,0],'black'],
-                      ['LeftLeg','sphere',[0.045],[0,0.04,-0.04],[0,0,0],'black'], ['RightLeg','sphere',[0.045],[0,0.04,-0.04],[0,0,0],'black'],
-                      ['LeftLeg','box',[0.08,0.015,0.04],[0,0.13,-0.05],[0,0,0],'steel'], ['RightLeg','box',[0.08,0.015,0.04],[0,0.13,-0.05],[0,0,0],'steel'] ],
-    a_steel_gauntlet:[ ['RightForeArm','cylOpen',[0.036,0.048,0.19],[0,0.16,0],[0,0,0],'steel'], ['RightForeArm','box',[0.06,0.12,0.015],[0,0.15,-0.045],[0,0,0],'steel'], ['RightForeArm','box',[0.06,0.12,0.015],[0,0.15,0.045],[0,0,0],'black'],
-                       ['RightHand','box',[0.065,0.045,0.04],[0,0.03,0.0],[0,0,0],'steel'], ['RightHand','box',[0.07,0.015,0.045],[0,0.055,-0.01],[0,0,0],'brass'] ],
-    a_ranger_boots:[ ['LeftFoot','box',[0.075,0.13,0.06],[0,0.07,0.0],[0,0,0],'leather'], ['RightFoot','box',[0.075,0.13,0.06],[0,0.07,0.0],[0,0,0],'leather'],
-                     ['LeftLeg','cylOpen',[0.05,0.055,0.10],[0,0.33,0],[0,0,0],'leather'], ['RightLeg','cylOpen',[0.05,0.055,0.10],[0,0.33,0],[0,0,0],'leather'],
-                     ['LeftLeg','box',[0.095,0.018,0.09],[0,0.355,0],[0,0,0],'reed'], ['RightLeg','box',[0.095,0.018,0.09],[0,0.355,0],[0,0,0],'reed'] ],
-    acc_charm:[ ['Neck','torus',[0.065,0.005],[0,0.0,0.0],[Math.PI/2.4,0,0],'steel'], ['Neck','box',[0.028,0.04,0.01],[0,-0.045,0.065],[0,0,0],'leather'], ['Neck','sphere',[0.007],[0,-0.045,0.072],[0,0,0],'red'] ],
-    acc_blood_ring:[ ['LeftHand','torus',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'brass'], ['LeftHand','sphere',[0.006],[0.012,0.06,0.012],[0,0,0],'red'] ],
-    acc_band:[ ['LeftHand','torus',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'copper'] ]
+    a_hood:[ ['Head','shell',[0.155,Math.PI/2+1.0,Math.PI*2-2.0,Math.PI*0.6],[0,0.045,-0.015],[0.1,0,0],'cloth'],
+             ['Head','shell',[0.16,Math.PI/2+1.0,0.3,Math.PI*0.42],[0,0.045,-0.015],[0.1,0,0],'darkleather'], ['Head','shell',[0.16,Math.PI/2-1.3,0.3,Math.PI*0.42],[0,0.045,-0.015],[0.1,0,0],'darkleather'],
+             ['Neck','cylPart',[0.11,0.18,0.12,Math.PI-1.15,2.3],[0,-0.03,-0.03],[0.0,0,0],'cloth'] ],
+    a_reed_cuirass:[ ['Spine1','cylPart',[0.13,0.15,0.15,-0.7,1.4],[0,0.085,0.02],[0.05,0,0],'reed',{sx:1.15,sz:1.0}],
+                     ['Spine1','cylPart',[0.13,0.15,0.15,Math.PI-0.7,1.4],[0,0.085,0.0],[-0.03,0,0],'darkleather',{sx:1.1,sz:0.95}],
+                     ['Spine1','cylPart',[0.131,0.151,0.15,-0.18,0.36],[0,0.085,0.02],[0.05,0,0],'darkleather',{sx:1.15,sz:1.01}],
+                     ['Spine1','cylPart',[0.15,0.15,0.02,-0.8,1.6],[0,0.155,0.02],[0.05,0,0],'darkleather',{sx:1.15,sz:1.0}],
+                     ['LeftArm','shell',[0.08,0,Math.PI*2,Math.PI*0.5],[0,0.03,0],[0,0,Math.PI],'reed'], ['RightArm','shell',[0.08,0,Math.PI*2,Math.PI*0.5],[0,0.03,0],[0,0,Math.PI],'reed'],
+                     ['LeftArm','ring',[0.074,0.007],[0,0.07,0],[Math.PI/2,0,0],'darkleather'], ['RightArm','ring',[0.074,0.007],[0,0.07,0],[Math.PI/2,0,0],'darkleather'],
+                     ['Spine','cyl',[0.155,0.16,0.035],[0,0.03,0.0],[0,0,0],'darkleather',{sx:1.2,sz:0.95}], ['Spine','box',[0.035,0.03,0.015],[0,0.03,0.155],[0,0,0],'brass'] ],
+    a_black_greaves:[ ['LeftLeg','cylPart',[0.058,0.068,0.27,1.45,3.4],[0,0.2,0.0],[0,0,0],'black'], ['RightLeg','cylPart',[0.058,0.068,0.27,1.45,3.4],[0,0.2,0.0],[0,0,0],'black'],
+                      ['LeftLeg','shell',[0.052,0,Math.PI*2,Math.PI*0.55],[0,0.035,-0.025],[Math.PI/2,0,0],'black'], ['RightLeg','shell',[0.052,0,Math.PI*2,Math.PI*0.55],[0,0.035,-0.025],[Math.PI/2,0,0],'black'],
+                      ['LeftLeg','ring',[0.064,0.007],[0,0.12,0],[Math.PI/2,0,0],'steel'], ['RightLeg','ring',[0.064,0.007],[0,0.12,0],[Math.PI/2,0,0],'steel'],
+                      ['LeftLeg','ring',[0.068,0.007],[0,0.30,0],[Math.PI/2,0,0],'steel'], ['RightLeg','ring',[0.068,0.007],[0,0.30,0],[Math.PI/2,0,0],'steel'] ],
+    a_steel_gauntlet:[ ['RightForeArm','cyl',[0.041,0.052,0.20],[0,0.16,0],[0,0,0],'steel'], ['RightForeArm','ring',[0.05,0.006],[0,0.09,0],[Math.PI/2,0,0],'black'], ['RightForeArm','ring',[0.053,0.006],[0,0.17,0],[Math.PI/2,0,0],'black'], ['RightForeArm','ring',[0.055,0.006],[0,0.25,0],[Math.PI/2,0,0],'black'],
+                       ['RightHand','cylPart',[0.04,0.045,0.06,-1.6,3.2],[0,0.035,0.0],[0,0,0],'steel'], ['RightHand','box',[0.06,0.012,0.03],[0,0.062,-0.02],[0.3,0,0],'brass'] ],
+    a_ranger_boots:[ ['LeftFoot','capsule',[0.048,0.14],[0,0.075,0.0],[0,0,0],'leather'], ['RightFoot','capsule',[0.048,0.14],[0,0.075,0.0],[0,0,0],'leather'],
+                     ['LeftLeg','cyl',[0.058,0.066,0.11],[0,0.325,0],[0,0,0],'leather'], ['RightLeg','cyl',[0.058,0.066,0.11],[0,0.325,0],[0,0,0],'leather'],
+                     ['LeftLeg','ring',[0.066,0.009],[0,0.29,0],[Math.PI/2,0,0],'olive'], ['RightLeg','ring',[0.066,0.009],[0,0.29,0],[Math.PI/2,0,0],'olive'] ],
+    acc_charm:[ ['Neck','ring',[0.07,0.004],[0,0.0,0.0],[Math.PI/2.6,0,0],'steel'], ['Neck','box',[0.026,0.036,0.008],[0,-0.05,0.07],[0,0,0],'darkleather'], ['Neck','sphere',[0.007],[0,-0.05,0.076],[0,0,0],'red'] ],
+    acc_blood_ring:[ ['LeftHand','ring',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'brass'], ['LeftHand','sphere',[0.006],[0.012,0.06,0.012],[0,0,0],'red'] ],
+    acc_band:[ ['LeftHand','ring',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'copper'] ]
   };
-  function material(THREE, key, tint){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ color:m[0], roughness:m[1], metalness:m[2], side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), 0.5); return mt; }
-  function geometry(THREE, kind, s){
+  var texCache={};
+  function tex(THREE, name){ if(!name) return null; var k=name; if(texCache[k]) return texCache[k]; var t=new THREE.TextureLoader().load('art/3d/tex/'+name+'.png'); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(2,2); texCache[k]=t; return t; }
+  function material(THREE, key, tint){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ map:tex(THREE, m[0]), color:m[1], roughness:m[2], metalness:m[3], side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), 0.5); return mt; }
+  function geometry(THREE, kind, s, o){ o=o||{};
     switch(kind){
       case 'box': return new THREE.BoxGeometry(s[0],s[1],s[2]);
-      case 'sphere': return new THREE.SphereGeometry(s[0],14,10);
-      case 'torus': return new THREE.TorusGeometry(s[0],s[1],6,20);
-      case 'cylOpen': return new THREE.CylinderGeometry(s[0],s[1],s[2],14,1,true);
-      case 'hood': { var g=new THREE.SphereGeometry(s[0],18,12,Math.PI*0.62,Math.PI*1.76); g.rotateY(-Math.PI/2); return g; }
+      case 'sphere': return new THREE.SphereGeometry(s[0],16,12);
+      case 'shell': return new THREE.SphereGeometry(s[0],24,16,s[1],s[2],0,s[3]);
+      case 'ring': return new THREE.TorusGeometry(s[0],s[1],8,28);
+      case 'cyl': { var g=new THREE.CylinderGeometry(s[0],s[1],s[2],20,1,true); if(o.sx||o.sz) g.scale(o.sx||1,1,o.sz||1); return g; }
+      case 'cylPart': { var g2=new THREE.CylinderGeometry(s[0],s[1],s[2],20,1,true,s[3],s[4]); if(o.sx||o.sz) g2.scale(o.sx||1,1,o.sz||1); return g2; }
+      case 'capsule': return new THREE.CapsuleGeometry(s[0],s[1],4,12);
+      case 'lathe': { var pts=s.map(function(p){ return new THREE.Vector2(p[0],p[1]); }); var open=o.open||0; var g3=new THREE.LatheGeometry(pts, 28, open/2, Math.PI*2-open); g3.rotateY(-Math.PI/2); return g3; }
     }
     return new THREE.BoxGeometry(0.05,0.05,0.05);
   }
   function bonesOf(model){ var b={}; model.traverse(function(o){ if(o.isBone) b[o.name.replace(/^mixamorig:?/,'')]=o; }); return b; }
   function fitScale(bone){ var ws=new THREE.Vector3(); bone.getWorldScale(ws); return 1/(ws.x||1); }
   function buildArmor(THREE, id, bones, tint){ var spec=ARMOR[id]; if(!spec) return []; var made=[];
-    spec.forEach(function(p){ var bone=bones[p[0]]; if(!bone) return; var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2]), material(THREE,p[5],tint)); mesh.castShadow=true; var k=fitScale(bone); mesh.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.setScalar(k); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
+    spec.forEach(function(p){ var bone=bones[p[0]]; if(!bone) return; var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint)); mesh.castShadow=true; var k=fitScale(bone); mesh.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.setScalar(k); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
     return made; }
   var THREE=null;
   /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id) → hex|null, lookOf(id), baseOf(id) } */
