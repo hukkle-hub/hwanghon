@@ -8,7 +8,7 @@ import bpy, sys, os, argparse
 from mathutils import Vector, Matrix
 argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
 ap=argparse.ArgumentParser(); ap.add_argument('src'); ap.add_argument('id'); ap.add_argument('--keep'); ap.add_argument('--faces',type=int,default=20000); ap.add_argument('--tex',type=int,default=1024)
-ap.add_argument('--axis',default='y'); ap.add_argument('--len',type=float,default=1.0); ap.add_argument('--butt',type=float,default=0.0); ap.add_argument('--pair',action='store_true'); ap.add_argument('--armor',action='store_true'); ap.add_argument('--rotz',type=float,default=0)
+ap.add_argument('--axis',default='y'); ap.add_argument('--len',type=float,default=1.0); ap.add_argument('--butt',type=float,default=0.0); ap.add_argument('--pair',action='store_true'); ap.add_argument('--armor',action='store_true'); ap.add_argument('--rotz',type=float,default=0); ap.add_argument('--blade',default='')  # 'neg' 이면 날이 -X 로 뻗도록(낫 규약: ain_scythe_tex 날 = -X)
 a=ap.parse_args(argv)
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','art','3d','gear'); os.makedirs(OUT,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True); bpy.ops.import_scene.gltf(filepath=a.src)
@@ -45,6 +45,9 @@ else:
     xf(Matrix.Translation(Vector((-c.x,-c.y,-mn.z)))); xf(Matrix.Scale(s,4))
     if a.axis=='-y': xf(Matrix.Rotation(3.141592653589793,4,'X'))   # 뒤집기(칼끝이 이미지 아래였을 때)
     if a.rotz: xf(Matrix.Rotation(a.rotz,4,'Z'))
+    if a.blade=='neg':
+        mn,mx=bbox(o)
+        if mx.x>-mn.x: xf(Matrix.Rotation(3.141592653589793,4,'Z')); print('blade flipped to -X')
     mn,mx=bbox(o); xf(Matrix.Translation(Vector((0,0,a.butt-mn.z))))   # 자루 끝 → butt
 mn,mx=bbox(o); print('final bbox glTF x[%.2f,%.2f] y[%.2f,%.2f] z[%.2f,%.2f]'%(mn.x,mx.x,mn.z,mx.z,-mx.y,-mn.y))
 def export(ob,name):

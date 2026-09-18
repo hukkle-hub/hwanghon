@@ -6,13 +6,13 @@
 (function(){
   var WEAPON={
     w_marsh_scythe:    { glb:'art/3d/ain_scythe_tex.glb', grip:0.75 },
-    w_rust_executioner:{ glb:'art/3d/weapons/w_rust_executioner.glb', grip:0.75 },
-    w_marsh_blade:     { glb:'art/3d/weapons/w_marsh_blade.glb', grip:0.75 },
-    w_ruin_spear:      { glb:'art/3d/weapons/w_ruin_spear.glb', grip:0.75 },
+    w_rust_executioner:{ glb:'art/3d/gear/w_rust_executioner.glb', grip:0.75 },
+    w_marsh_blade:     { glb:'art/3d/gear/w_marsh_blade.glb', grip:0.75 },
+    w_ruin_spear:      { glb:'art/3d/gear/w_ruin_spear.glb', grip:0.75 },
     w_rust_sword:      { glb:'art/3d/gear/w_rust_sword.glb', grip:0.75 },
     /* 보조(왼 허리)·부무기(등) */
     w_ash_dirk:        { glb:'art/3d/gear/w_ash_dirk.glb', bone:'Hips', pos:[0.17,-0.04,0.05], rot:[Math.PI*0.95,0,0.35] },
-    w_hook_scythe:     { glb:'art/3d/weapons/w_hook_scythe.glb', bone:'Spine2', pos:[0.08,-0.02,-0.11], rot:[0.1,0,2.5], scale:0.75 }
+    w_hook_scythe:     { glb:'art/3d/gear/w_hook_scythe.glb', bone:'Spine2', pos:[0.08,-0.02,-0.11], rot:[0.1,0,2.5], scale:0.75 }
   };
   var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0] };
   /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질, 옵션] — 크기/위치 m, 회전 rad. 뼈 로컬: 몸통·머리 z=앞 / 팔·다리 y=뼈 방향(아래) z=뒤
@@ -21,14 +21,9 @@
   var ARMOR={
     a_hood:[ ['Head','glb','art/3d/gear/a_hood.glb',[0,-0.02,0.0],[0,0,0],1] ],
     a_reed_cuirass:[ ['Spine1','glb','art/3d/gear/a_reed_cuirass.glb',[0,0.02,0.02],[0,0,0],1] ],
-    a_black_greaves:[ ['LeftLeg','cylPart',[0.058,0.068,0.27,1.45,3.4],[0,0.2,0.0],[0,0,0],'black'], ['RightLeg','cylPart',[0.058,0.068,0.27,1.45,3.4],[0,0.2,0.0],[0,0,0],'black'],
-                      ['LeftLeg','shell',[0.052,0,Math.PI*2,Math.PI*0.55],[0,0.035,-0.025],[Math.PI/2,0,0],'black'], ['RightLeg','shell',[0.052,0,Math.PI*2,Math.PI*0.55],[0,0.035,-0.025],[Math.PI/2,0,0],'black'],
-                      ['LeftLeg','ring',[0.064,0.007],[0,0.12,0],[Math.PI/2,0,0],'steel'], ['RightLeg','ring',[0.064,0.007],[0,0.12,0],[Math.PI/2,0,0],'steel'],
-                      ['LeftLeg','ring',[0.068,0.007],[0,0.30,0],[Math.PI/2,0,0],'steel'], ['RightLeg','ring',[0.068,0.007],[0,0.30,0],[Math.PI/2,0,0],'steel'] ],
+    a_black_greaves:[ ['LeftLeg','glb','art/3d/gear/a_black_greaves_L.glb',[0,0.17,0],[Math.PI,0,0],1.02], ['RightLeg','glb','art/3d/gear/a_black_greaves_R.glb',[0,0.17,0],[Math.PI,0,0],1.02] ],
     a_steel_gauntlet:[ ['RightForeArm','glb','art/3d/gear/a_steel_gauntlet.glb',[0,0.2,0],[Math.PI,0,0],1] ],
-    a_ranger_boots:[ ['LeftFoot','capsule',[0.048,0.14],[0,0.075,0.0],[0,0,0],'leather'], ['RightFoot','capsule',[0.048,0.14],[0,0.075,0.0],[0,0,0],'leather'],
-                     ['LeftLeg','cyl',[0.058,0.066,0.11],[0,0.325,0],[0,0,0],'leather'], ['RightLeg','cyl',[0.058,0.066,0.11],[0,0.325,0],[0,0,0],'leather'],
-                     ['LeftLeg','ring',[0.066,0.009],[0,0.29,0],[Math.PI/2,0,0],'olive'], ['RightLeg','ring',[0.066,0.009],[0,0.29,0],[Math.PI/2,0,0],'olive'] ],
+    a_ranger_boots:[ ['LeftLeg','glb','art/3d/gear/a_ranger_boots_L.glb',[0,0.25,0],[Math.PI,0,0],0.97], ['RightLeg','glb','art/3d/gear/a_ranger_boots_R.glb',[0,0.25,0],[Math.PI,0,0],0.97] ],
     acc_charm:[ ['Neck','ring',[0.07,0.004],[0,0.0,0.0],[Math.PI/2.6,0,0],'steel'], ['Neck','box',[0.026,0.036,0.008],[0,-0.05,0.07],[0,0,0],'darkleather'], ['Neck','sphere',[0.007],[0,-0.05,0.076],[0,0,0],'red'] ],
     acc_blood_ring:[ ['LeftHand','ring',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'brass'], ['LeftHand','sphere',[0.006],[0.012,0.06,0.012],[0,0,0],'red'] ],
     acc_band:[ ['LeftHand','ring',[0.012,0.004],[0.012,0.06,0],[0,0,Math.PI/2],'copper'] ]
