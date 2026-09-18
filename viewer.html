@@ -125,11 +125,11 @@ $('#b-wire').onclick=e=>{ if(!charRoot) return; const on=!e.target.classList.con
 $('#r-grip').value=SOCK.grip; $('#n-rx').value=SOCK.rot[0]; $('#n-ry').value=SOCK.rot[1]; $('#n-rz').value=SOCK.rot[2]; $('#n-ox').value=SOCK.off[0]; $('#n-oy').value=SOCK.off[1]; $('#n-oz').value=SOCK.off[2];
 $('#tg').onclick=()=>$('#panel').classList.toggle('is-off');
 if(Math.min(innerWidth,innerHeight)<640) $('#panel').classList.add('is-off');
-const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', FIT=q.get('fit')==='1'; const CHARID=q.get('char')||((window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'); if(window.TW_GEAR&&TW_GEAR.setChar) TW_GEAR.setChar(CHARID); loadChar(q.get('glb')||('art/3d/'+(EQUIP?CHARID:'ain')+'_anim.glb')); if(!EQUIP) loadWeapon('art/3d/ain_scythe_tex.glb');
+const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', FIT=q.get('fit')==='1'; loadChar(q.get('glb')||'art/3d/ain_anim.glb'); if(!EQUIP) loadWeapon('art/3d/ain_scythe_tex.glb');
 /* 장착 장비 외형 모드: 저장된 장비를 그대로 입힌다 (인벤토리 미리보기·검수) */
 function applyEquip(){ if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) return; const eq=TW_GEAR.state().equipped; builtInWeapon=true; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot);
   const tintOf=id=>{ const l=TW_GEAR.lookOf(id); return l&&l.tint?l.tint:null; }, baseOf=id=>{ const it=TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; };
-  TW_LOOKS.attach(THREE, loader, charRoot, eq, { charId:CHARID, tintOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t) wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),0.55); } }); } });
+  TW_LOOKS.attach(THREE, loader, charRoot, eq, { tintOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t) wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),0.55); } }); } });
   $('#sock').textContent='장착 장비 외형: '+Object.keys(eq).filter(k=>eq[k]).map(k=>k+'='+eq[k]).join(' · '); }
 window.addEventListener('message', e=>{ if(e.data==='tw:equip'){ try{ location.reload(); }catch(x){} } });
 if(FIT){ $('#panel').classList.add('is-off'); $('#hud').style.display='none'; $('#tg').style.display='none'; ref.visible=false; }

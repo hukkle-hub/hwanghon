@@ -26,7 +26,7 @@
     bossRoom:{ minCx:13 },
     /* 페이지(phase) 별 AI — dungeons.js ARENAS.tutorial.stages[i] 와 1:1 */
     ai:[
-      { speed:0,   keep:0,   start:260, pick:'seq' },
+      { speed:90, keep:140, start:260, pick:'seq' },
       { speed:70,  keep:150, start:300, pick:'seq' },
       { speed:120, keep:140, start:320, pick:'range' }
     ],
@@ -44,9 +44,9 @@
       mobsClear:'',
       sign:'벽의 메모 — “훈련실은 격벽 너머. 허수아비를 깨우지 마라.” (마태오)',
       gate:'격벽이 닫혔다. 허수아비가 눈을 떴다',
-      dialog:[ ['마태오','사무소 지하에 허수아비를 묶어 뒀다. 살아 있는 것처럼 굴 테니, 살아 있는 것처럼 상대해라.'], ['마태오','네 번 베고, 길게 눌러 마무리해라. 예고가 끝나는 순간에 쳐야 카운터가 된다.'], ['마태오','죽으면 문 앞에서 다시 시작이다. 회피 한 번 분량의 스태미나는 항상 남겨라.'] ],
+      dialog:[ ['마태오','사무소 지하에 허수아비를 묶어 뒀다. 살아 있는 것처럼 굴 테니, 살아 있는 것처럼 상대해라.'], ['마태오','마구 베면 오래 걸린다. 정확히 튕기거나 피한 뒤 반격해라. 부위를 부수면 큰 빈틈이 열린다.'], ['마태오','죽으면 문 앞에서 다시 시작이다. 회피 한 번 분량의 스태미나는 항상 남겨라.'] ],
       quest:[ ['훈련 인형 정리', 3], ['훈련장 입장', 1], ['허수아비 격파', 1] ],
-      phase:['가슴의 핵을 노려라. 가까이 붙어야 낫이 닿는다', '사슬이 풀렸다. 견갑을 부수면 무너진다 · 붉은 범위 밖으로 구르면 피한다', '깨어났다. 예고가 끝나는 순간 붙어서 쳐라']
+      phase:['견제는 약하다. 공격을 읽고 튕기거나 피한 뒤 반격해라', '사슬이 풀렸다. 견갑을 부수면 무너진다 · 붉은 범위 밖으로 구르면 피한다', '백색선은 튕겨라. 주황 X 공격은 피하고 반격해라']
     },
     /* 잡몹: 훈련용 훈련 인형 (마당 3체). 문은 전부 처치해야 열린다 */
     mob:{ id:'train_bot', name:'훈련 인형', hp:38000, speed:120, aggro:360, keep:95, range:110, tele:0.7, dmg:700, cooldown:1.6, r:28, zone:{ kind:'circle', r:100, fwd:60 }, xp:60, gold:80, drops:[['m_fiber',2]], armor:1 },
@@ -121,5 +121,7 @@
   LEVEL.beats.death={ k:'쓰러졌다', line:'마태오 — “다시.”', hint:'격벽 앞에서 다시 시작한다. 잡은 것과 얻은 것은 남는다.', btn:'격벽 앞에서 재도전' };
   LEVEL.praise={ S:'완벽한 타이밍이었다.<br>마태오가 고개를 끄덕인다.<br>의뢰 목록이 열렸다.', A:'날카롭다. 아직 성급한 칼이 몇 번 있었다.<br>의뢰 목록이 열렸다.', B:'기본은 됐다. 예고를 더 오래 봐라.<br>의뢰 목록이 열렸다.', C:'살아남긴 했다. 다시 와라.<br>의뢰 목록이 열렸다.' };
   window.TW_LEVELS = { d01:LEVEL, d02:LEVEL2 };
+  // Both the 2D and 3D consumers require the same rectangular collision grid.
+  Object.keys(window.TW_LEVELS).forEach(function(k){var l=window.TW_LEVELS[k],w=Math.max.apply(null,l.rows.map(function(r){return r.length;}));l.rows=l.rows.map(function(r){return r.padEnd(w,'#');});});
   if (typeof module !== 'undefined' && module.exports) module.exports = window.TW_LEVELS;
 })();

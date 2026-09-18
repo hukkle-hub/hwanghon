@@ -116,6 +116,12 @@ html.mobile .loading__t{font-size:26px}
 html.mobile .loading__box{width:min(400px,62vw);bottom:max(16px,env(safe-area-inset-bottom));left:max(18px,env(safe-area-inset-left))}
 html.mobile .loading__tip{font-size:12px}
 .loading.is-off{opacity:0;pointer-events:none}
+
+.exp-interact{position:absolute;left:50%;bottom:155px;transform:translateX(-50%);z-index:15;background:#172729ee;color:#f3dfb8;border:1px solid #bba26d;border-radius:6px;padding:13px 22px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 4px 20px #0008;touch-action:manipulation}
+.exp-interact[hidden]{display:none}.exp-map{position:absolute;right:20px;top:118px;z-index:7;background:#172024dd;color:#d9d3c2;border:1px solid #697571;padding:8px 12px;cursor:pointer;touch-action:manipulation}.exp-fullmap{width:100%;max-height:48vh;object-fit:contain;background:#101a1c;border:1px solid #354740}.exp-map-key{font-size:12px;color:#b9c7bc;line-height:1.8;margin:8px 0 16px}
+.target-cycle{position:absolute;right:20px;top:165px;z-index:7;min-width:150px;max-width:220px;min-height:48px;padding:7px 12px;border:1px solid #987d4b;background:#151a21ed;color:#eed9ab;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation;text-align:left}.target-cycle small{display:block;color:#b6bcc4;font-size:10px;margin-top:3px}.target-cycle[hidden]{display:none}
+@media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}
+html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
 </style>
 </head>
 <body data-landscape data-nonav>
@@ -133,6 +139,9 @@ html.mobile .loading__tip{font-size:12px}
     <div class="bttimer is-off" id="bttimer"><span class="bttimer__t"><svg class="ico ico--sm"><use href="#i-clock"/></svg><span id="b-timer">00 : 00</span></span><button class="iconbtn" id="btn-pause" aria-label="일시정지"><svg class="ico ico--lg"><use href="#i-pause"/></svg></button></div>
     <div class="btparty" id="btparty"></div>
     <div class="quest" id="quest"></div>
+    <button class="exp-interact" id="exp-interact" type="button" hidden>F · 조사</button>
+    <button class="exp-map" id="exp-map" type="button" aria-label="임무 지도">M · 지도</button>
+    <button class="target-cycle" id="target-cycle" type="button" hidden aria-label="다음 부위 조준"><span id="target-name"></span><small id="target-health"></small></button>
     <div class="combo" id="combo"><b id="combo-n">0</b><span>HIT</span></div>
     <div class="toasts" id="toasts"></div>
     <div class="dlg" id="dlg"><img class="dlg__face" id="dlg-face" alt="" hidden><div class="dlg__who" id="dlg-who"></div><div class="dlg__txt" id="dlg-txt"></div><div class="dlg__hint">탭하여 계속</div></div>
@@ -168,16 +177,18 @@ html.mobile .loading__tip{font-size:12px}
 <script src="js/world.js"></script>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
-<script src="js/story.js"></script>
-<script src="js/grade.js"></script>
 <script src="js/looks.js"></script>
 <script src="js/combat.js"></script>
 <script src="js/world-sim.js"></script>
+<script src="js/boss-director.js"></script>
 <script src="js/dungeon.js"></script>
+<script src="js/dungeon-content.js"></script>
+<script src="js/dungeon-run.js"></script>
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
-<script src="js/skills.js"></script>
 <script src="js/loot.js"></script>
+<script src="js/story.js"></script>
+<script src="js/grade.js"></script>
 <script src="js/skirmish.js"></script>
 <script src="js/sfx.js"></script>
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>

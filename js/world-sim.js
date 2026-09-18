@@ -8,6 +8,7 @@
   function angDiff(a, b){ var d = a-b; while (d > Math.PI) d -= 2*Math.PI; while (d < -Math.PI) d += 2*Math.PI; return Math.abs(d); }
 
   function parseMap(rows, cell){
+    if(!rows.length||!rows[0].length||rows.some(function(r){return r.length!==rows[0].length;}))throw new Error('Map rows must have equal widths');
     var h = rows.length, w = rows[0].length, solid = [], marks = {};
     for (var y=0;y<h;y++){ solid.push([]); for (var x=0;x<w;x++){ var c = rows[y][x]; solid[y].push(c === '#' || c === '|');   /* G(문)는 열려 있다. 보스 방 입장 후 setSolid 로 잠근다 */ if (c !== '.' && c !== '#') (marks[c] = marks[c] || []).push({ x:(x+0.5)*cell, y:(y+0.5)*cell, cx:x, cy:y }); } }
     return { w:w, h:h, cell:cell, solid:solid, marks:marks, pw:w*cell, ph:h*cell, rows:rows };
@@ -17,7 +18,8 @@
   function moveCircle(map, e, dx, dy){
     var r = e.r;
     function free(x, y){ return !isSolid(map, x-r, y) && !isSolid(map, x+r, y) && !isSolid(map, x, y-r*DEPTH) && !isSolid(map, x, y+r*DEPTH) && !isSolid(map, x-r*0.7, y-r*DEPTH*0.7) && !isSolid(map, x+r*0.7, y-r*DEPTH*0.7) && !isSolid(map, x-r*0.7, y+r*DEPTH*0.7) && !isSolid(map, x+r*0.7, y+r*DEPTH*0.7); }
-    if (free(e.x+dx, e.y)) e.x += dx; if (free(e.x, e.y+dy)) e.y += dy;
+    var steps=Math.max(1,Math.ceil(Math.max(Math.abs(dx),Math.abs(dy)/DEPTH)/(map.cell/4)));
+    for(var i=0;i<steps;i++){if(free(e.x+dx/steps,e.y))e.x+=dx/steps;if(free(e.x,e.y+dy/steps))e.y+=dy/steps;}
   }
   function setSolid(map, cx, cy, v){ map.solid[cy][cx] = v; }
 
@@ -53,6 +55,7 @@
       p.aim = Math.atan2(sy, sx);
     };
     W.roll = function(p, sx, sy, len, dur){ var m = Math.hypot(sx, sy); if (m < 0.15){ var a = p.aim==null ? 0 : p.aim; sx = Math.cos(a); sy = Math.sin(a); m = 1; } sx/=m; sy/=m; p.rollT = dur; p.rollDx = sx*len/dur; p.rollDy = sy*len/dur*DEPTH; };
+    W.moveEntity = function(e,dx,dy){ moveCircle(map,e,dx,dy); };
     /* 플레이어가 상대를 향하도록 */
     W.faceTo = function(p, tx, ty){ var a = angle(p.x, p.y, tx, ty); p.aim = a; p.face = Math.abs(Math.cos(a)) > 0.6 ? (Math.cos(a) < 0 ? 'left' : 'right') : (Math.sin(a) < 0 ? 'up' : 'down'); };
     /* 보스 AI: 추적/거리 유지 */
@@ -64,6 +67,7 @@
       b.faceX = p.x < b.x ? -1 : 1;
     };
     W.dist = dist; W.angle = angle; W.angDiff = angDiff; W.inZone = inZone; W.makeZone = makeZone; W.isSolid = function(x,y){ return isSolid(map,x,y); }; W.setSolid = function(cx,cy,v){ setSolid(map,cx,cy,v); };
+    W.lineOfSight=function(ax,ay,bx,by){var n=Math.max(1,Math.ceil(dist(ax,ay,bx,by)/(map.cell/4)));for(var i=1;i<=n;i++){if(isSolid(map,ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;}return true;};
     W.marks = function(c){ return map.marks[c] || []; };
     /* 카메라 */
     W.camera = function(cam, tx, ty, vw, vh, dt){ var k = 1 - Math.pow(0.001, dt); cam.x += (tx - vw/2 - cam.x)*k; cam.y += (ty*DEPTH - vh*0.58 - cam.y)*k;

@@ -1,13 +1,18 @@
 {
   "name": "hwanghon",
   "version": "1.0.0",
-  "description": "제공된 UI 컨셉 시트 / 설계 보드 9장을 실제로 동작하는 화면으로 구현한 정적 프론트엔드입니다. 빌드 도구·프레임워크·번들러 없이 **브라우저에서 파일을 바로 열면** 동작합니다.",
+  "description": "황혼 액션 RPG: 아인, 정밀 반격, 부위 파괴, 의뢰와 던전 진행",
   "main": "sw.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/*.test.cjs tests/*.test.mjs",
+    "start": "node tools/serve.cjs",
+    "server": "node server/index.cjs",
+    "test:party": "node --test tests/party-*.test.cjs",
+    "test:social": "node --test tests/social-*.test.cjs",
+    "test:load": "node tools/party-load.cjs"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +20,7 @@
   "dependencies": {
     "@capacitor/android": "^6.2.2",
     "@capacitor/cli": "^6.2.2",
-    "@capacitor/core": "^6.2.2"
+    "@capacitor/core": "^6.2.2",
+    "ws": "8.21.3"
   }
 }

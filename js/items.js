@@ -46,15 +46,6 @@
     { id:'w_ruin_spear', name:'폐허의 장창', type:'weapon', slot:'main', kind:'장창', rarity:'rare', icon:'crosshair',
       origin:'외곽지대 > 끊어진 도로', cp:1610, enh:3, enhMax:10, reqLv:15, bind:'미귀속', dur:[40,100], price:3600, src:'fill',
       stats:{ atk:1010, atkEx:520, crit:3.2, critDmg:8.0, skill:1.2 }, effect:'', flavor:'' },
-    { id:'w_kain_greatsword', name:'모루의 대검', type:'weapon', slot:'main', kind:'대검', rarity:'hero', icon:'sword', cls:['kain'],
-      origin:'대장간 > 카인 제작', cp:2650, enh:4, enhMax:10, reqLv:20, bind:'캐릭터 귀속', dur:[90,100], price:12000, src:'fill',
-      stats:{ atk:1740, atkEx:980, crit:3.8, critDmg:12.0, skill:2.6 }, effect:'부위 파괴 피해 +12%', flavor:'모루 위에서 태어나, 모루처럼 버틴다.' },
-    { id:'w_ryu_dagger', name:'붉은 그림자 쌍단검', type:'weapon', slot:'main', kind:'쌍단검', rarity:'hero', icon:'crosshair', cls:['ryu'],
-      origin:'도심지 > 침수 지하로', cp:2380, enh:4, enhMax:10, reqLv:18, bind:'캐릭터 귀속', dur:[84,100], price:9800, src:'fill',
-      stats:{ atk:1420, atkEx:760, crit:9.6, critDmg:16.4, skill:3.4 }, effect:'배후 공격 시 치명타 확률 +6%', flavor:'먼저 보는 쪽이 이긴다.' },
-    { id:'w_sera_flask', name:'촉매 시약병', type:'weapon', slot:'main', kind:'시약', rarity:'hero', icon:'potion', cls:['sera'],
-      origin:'정제소 > 세라 조제', cp:2100, enh:3, enhMax:10, reqLv:18, bind:'캐릭터 귀속', dur:[100,100], price:8600, src:'fill',
-      stats:{ atk:980, atkEx:520, crit:4.0, critDmg:10.0, skill:6.2 }, effect:'스킬 피해 +8% · 파티 회복량 +5%', flavor:'상처는 닦아낼 수 있어.' },
     { id:'w_rust_sword', name:'녹슨 집행검', type:'weapon', slot:'main', kind:'검', rarity:'common', icon:'sword',
       origin:'도심지 > 폐병원', cp:640, enh:0, enhMax:10, reqLv:8, bind:'미귀속', dur:[22,100], price:600, src:'fill',
       stats:{ atk:420, atkEx:180, crit:1.5, critDmg:2.0, skill:0 }, effect:'', flavor:'' },
@@ -201,9 +192,6 @@
   MATERIAL.forEach(function(x){ x.type='material'; byId[x.id]=x; });
   CONSUMABLE.forEach(function(x){ byId[x.id]=x; });
 
-  /* 무기 사용 가능 캐릭터: cls 가 없으면 종류로 판단 */
-  var CLS_BY_KIND={ '낫(대형)':['ain'], '낫(소형)':['ain'], '검':['kain','ain'], '근접 무기(검)':['kain','ain'], '장창':['kain','ain'], '대검':['kain'], '단검':['ryu','ain'], '쌍단검':['ryu'], '시약':['sera'] };
-  function usableBy(id, cid){ var it=get(id); if(!it) return false; if(it.type!=='weapon') return true; var cls=it.cls||CLS_BY_KIND[it.kind]||['ain','kain','ryu','sera']; return cls.indexOf(cid)>=0; }
   function get(id){ return byId[id] || null; }
   function rarityOf(id){ var it=get(id); return it ? RARITY[it.rarity] : RARITY.common; }
   function fmt(n){ return (n==null) ? '—' : String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
@@ -248,7 +236,7 @@
 
   window.TW_ITEMS = {
     RARITY:RARITY, TYPE:TYPE, SLOT:SLOT,
-    usableBy:usableBy, EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP, CRAFT_SLOTS:CRAFT_SLOTS, CRAFT_FX:CRAFT_FX, register:register,
+    EQUIP:EQUIP, MATERIAL:MATERIAL, CONSUMABLE:CONSUMABLE, RECIPE:RECIPE, ENHANCE:ENHANCE, PLAYER:PLAYER, SHOP:SHOP, CRAFT_SLOTS:CRAFT_SLOTS, CRAFT_FX:CRAFT_FX, register:register,
     get:get, rarityOf:rarityOf, fmt:fmt, slotIcon:slotIcon, artOf:artOf, artHTML:artHTML, canCraft:canCraft, craft:craft, slotHTML:slotHTML
   };
 })();

@@ -5,10 +5,7 @@
   'use strict';
   var T = window.TW_ITEMS, P = T.PLAYER, G = window.TW_GEAR, $ = function(s){ return document.querySelector(s); };
   /* 저장된 장착·보유 상태로 시작 (gear.js) */
-  var CHAR=(G&&G.char)?G.char():'ain';
   if (G){ var gs=G.state(); P.equipped=gs.equipped; P.bag=gs.owned.map(function(id){ return {item:id}; }); }
-  /* 캐릭터 전환: 로드아웃을 바꿔 편집 (가방은 공용) */
-  function switchChar(c){ if(!G||c===CHAR) return; syncGear(); G.setChar(c); CHAR=c; P.equipped=G.state().equipped; selected={id:P.equipped.main, where:'equipped', slot:'main'}; if(!P.equipped.main) selected=null; renderAll(); try{ document.dispatchEvent(new CustomEvent('tw:gearchar',{detail:c})); }catch(e){} }
   function syncGear(){ if(!G) return; var gs=G.state(); gs.equipped=P.equipped; gs.owned=P.bag.map(function(b){ return b.item; }); try{ document.dispatchEvent(new CustomEvent('tw:gear')); }catch(e){} window.TW_SAVE.save(); }
   var filter = 'all', selected = null;      // selected: {id, where:'bag'|'equipped', slot}
 
@@ -80,9 +77,7 @@
         '<div class="hr"></div><div class="stat"><span class="stat__k">강화 단계</span><span class="stat__v num">+'+eq.enh+' / '+eq.enhMax+'</span></div>'+
         '<div class="hr"></div><div class="label-ko">장착 시 능력치 변화</div>' + changeRows(it, eq);
     }
-    var usable = !G || !G.canEquip || G.canEquip(it.id, CHAR);
-    $('#act-equip').textContent = isEq ? '해제' : (usable ? '장착' : '장착 불가');
-    $('#act-equip').disabled = !isEq && !usable;
+    $('#act-equip').textContent = isEq ? '해제' : '장착';
   }
   function changeRows(a, b){
     var out=[], keys=['cp','atk','def','hp','crit','critDmg'];
@@ -131,7 +126,6 @@
     if (selected.where==='equipped'){
       P.equipped[selected.slot] = null; P.bag.push({item:it.id}); selected = {id:it.id, where:'bag'}; syncGear();
     } else {
-      if (G && G.canEquip && !G.canEquip(it.id, CHAR)) return;
       var prev = P.equipped[it.slot];
       P.bag = P.bag.filter(function(b){ return b.item!==it.id; });
       if (prev) P.bag.unshift({item:prev});
@@ -154,7 +148,6 @@
     renderBag();
   });
   $('#act-equip').addEventListener('click', equipToggle);
-  document.addEventListener('click', function(e){ var c=e.target.closest('.chip-char[data-char]'); if(c) switchChar(c.dataset.char); });
   $('#hot-equip').addEventListener('click', equipToggle);
   document.addEventListener('keydown', function(e){ if(e.key==='Escape' && !document.querySelector('.sheet')) location.href='office.html'; });
 

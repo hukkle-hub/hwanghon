@@ -17,6 +17,7 @@
            marsh:{ rare:[ ['m_heart',[1,1],0.12], ['m_core',[1,2],0.60], ['m_booster',[1,1],0.40], ['m_dew',[2,4],0.50], ['a_steel_gauntlet',[1,1],0.10], ['w_ash_dirk',[1,1],0.06], ['acc_blood_ring',[1,1],0.05], ['w_marsh_scythe',[1,1],0.04] ],
                   gradeGold:{ S:1.5, A:1.25, B:1.0, C:0.75 }, first:{ gold:3000, items:[['m_heart',1],['m_core',2],['c_potion',5]], label:'+3,000 골드 · 심장 결정 · 코어 ×2 · 회복약 ×5' } } }
   };
+  LOOT.clear.sewage={rare:[['m_core',[1,2],.7],['m_oil',[1,2],.6],['m_heart',[1,1],.15]],gradeGold:{S:1.5,A:1.25,B:1,C:.75},first:{gold:2500,items:[['m_core',2],['m_booster',2]],label:'+2,500 골드 · 코어 ×2 · 보조제 ×2'}};
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
   function isGear(id){ var it=T.get(id); return !!(it&&(it.type==='weapon'||it.type==='armor'||it.type==='acc')); }
   function roll(table, luck){ luck=luck||1; var out=[]; (table.items||[]).forEach(function(e){ var p=Math.min(1, e[2]*luck); if(Math.random()<p) out.push([e[0], rnd(e[1][0], e[1][1])]); }); return out; }
@@ -28,7 +29,7 @@
     var base=(sum.mats||[]).map(function(m){ return [m[0], bonus.mats?Math.max(m[1], Math.round(m[1]*(1+bonus.mats))):m[1]]; });   /* 파티 정제 등급: 재료 수량 */               /* 아레나 기본 보상 (+S 보너스) */
     var gm=c.gradeGold[sum.rank]||1, gold=Math.round((sum.gold||0)*gm), bonus_=[];
     if(gm!==1) bonus_.push(['등급 보상 '+sum.rank, (gm>1?'+':'')+Math.round((gm-1)*100)+'% 골드']);
-    var rare=roll(c, luck); bonus_.push(['행운 ×'+luck.toFixed(2), '카운터 '+Math.round((sum.counterRate||0)*100)+'% · 부위 파괴 '+(sum.breaks||0)+'/'+(sum.breakable||0)+(bonus.luck?' · 파티 드랍 등급 +'+bonus.luck.toFixed(2):'')+(rare.length?' → 희귀 드랍 '+rare.length+'종':'')]); if(bonus.mats) bonus_.push(['파티 정제 등급', '재료 +'+Math.round(bonus.mats*100)+'%']);
+    var rare=roll({items:c.rare}, luck); bonus_.push(['행운 ×'+luck.toFixed(2), '카운터 '+Math.round((sum.counterRate||0)*100)+'% · 부위 파괴 '+(sum.breaks||0)+'/'+(sum.breakable||0)+(bonus.luck?' · 파티 드랍 등급 +'+bonus.luck.toFixed(2):'')+(rare.length?' → 희귀 드랍 '+rare.length+'종':'')]); if(bonus.mats) bonus_.push(['파티 정제 등급', '재료 +'+Math.round(bonus.mats*100)+'%']);
     var firstItems=[]; if(first){ gold+=c.first.gold; firstItems=c.first.items.slice(); bonus_.push(['최초 클리어', c.first.label||('+'+T.fmt(c.first.gold)+' 골드')]); }
     var all=base.concat(rare, firstItems), merged={}; all.forEach(function(m){ merged[m[0]]=(merged[m[0]]||0)+m[1]; });
     var list=Object.keys(merged).map(function(id){ return [id, merged[id]]; });

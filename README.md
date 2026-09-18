@@ -1,7 +1,48 @@
-# 황혼 (TWILIGHT) — GAME UI
+# 황혼 — 액션 RPG 개발 빌드
 
-제공된 UI 컨셉 시트 / 설계 보드 9장을 실제로 동작하는 화면으로 구현한 정적 프론트엔드입니다.
-빌드 도구·프레임워크·번들러 없이 **브라우저에서 파일을 바로 열면** 동작합니다.
+아인과 허수아비의 정밀 반격 전투, 갈대습지 토벌, 2경구 정화장 탐색을 연결한 브라우저 게임입니다.
+기존 캐릭터·장비 외형 및 제작·강화 구조를 사용합니다. 현재는 개발 빌드이며 상용 게임과 동급의 그래픽·모션·성능 검수를 통과한 상태는 아닙니다.
+
+## 쉘터 · 인력사무소 · 최대 4인 던전
+
+계정 로그인 후 캐릭터 이름을 정하고 월드·길드·파티 채팅을 사용합니다. 쉘터는 텍스트형 길드 쉼터이며, 인력사무소에서 파티를 모집하고 2–4명이 던전으로 출격합니다. 로비의 마을·이동 캐릭터는 구현하지 않습니다. 전체 접속 한도 기본값은 100명입니다.
+
+`START_PARTY_WINDOWS.bat` 또는 `sh START_PARTY_MAC_LINUX.sh`를 실행하세요. Node.js 24와 최초 의존성 설치가 필요합니다. PC·휴대폰에서 실행 창에 표시되는 같은 Wi-Fi 주소를 엽니다.
+
+```sh
+npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+npm run server
+```
+
+계정·이름·장비·재료·길드·보상을 SQLite에 저장합니다. 영구 볼륨이 있는 서버에서는 재시작 후에도 유지합니다. 기존 싱글 저장과는 분리됩니다. 공개 인터넷 주소는 아직 발급되지 않았습니다.
+
+- 자동 검증: `npm test` — 70개 통과
+- 부하 측정: `npm run test:load` — 로컬 100개 접속과 25개 4인 보스전 확인. 인터넷/장시간/실제 기기 검증은 별도입니다.
+- [실행 안내](PARTY_QUICKSTART.md) · [최신 구현·검증 범위](docs/design/15-shelter-social-server.md) · [측정 원본](docs/validation/party-load-100.json)
+
+## 싱글 플레이 실행
+
+Node.js 24가 설치된 PC에서 압축을 푼 뒤 `START_WINDOWS.bat`을 실행하거나, 터미널에서 `npm start`를 실행하세요.
+macOS/Linux는 `sh START_MAC_LINUX.sh`도 가능합니다. 별도의 npm 설치는 필요 없습니다.
+브라우저에서 http://127.0.0.1:8777 을 엽니다. 3D 자산은 HTTP로 불러오므로 HTML 파일을 직접 더블 클릭하지 마세요.
+
+타이틀 → 사무소 → 훈련장 수료 → 갈대습지 의뢰 → 2경구 정화장 의뢰 순으로 진행합니다.
+정화장은 세 밸브를 잠가야 보스실이 열립니다. 조사와 정비 지점은 F 또는 화면 버튼으로 사용합니다.
+
+| 동작 | 키보드 | 터치 |
+|---|---|---|
+| 이동 | WASD / 방향키 | 왼쪽 스틱 |
+| 공격·타이밍 카운터 | J / Space | 공격 |
+| 스매시 | U | 공격 길게 누름 |
+| 회피 / 방어 | K / L 유지 | 회피 / 방어 유지 |
+| 조준 부위 전환 | Q / Tab | 조준 버튼 또는 보스 부위 탭 |
+| 기술 / 궁극기 | 1~4 / R | 해당 버튼 |
+| 조사 / 지도 | F / M | 조사 / 지도 |
+
+개발 변경·검증 범위: [던전 구현 기록](docs/design/12-dungeon-expedition-review.md), [상용 액션 RPG 품질 기준](docs/design/13-commercial-quality-benchmark.md).
+정밀 전투와 기존 리깅 보정: [전투 구현 기록](docs/design/10-combat-mastery-review.md).
+
+## 프로젝트 구성
 
 ```
 game-ui/
@@ -10,7 +51,7 @@ game-ui/
 ├── board.html        컨셉 시트 + 화면 보드(개발용, 각 화면 실시간 미리보기)
 ├── office.html       1. 인력사무실 (로비)
 ├── quest.html        2. 의뢰 상세 / 보스 도감
-├── party.html        3. 파티 모집 / 인력사무실
+├── party.html        3. 실제 2–4인 협동 모집·던전·전투
 ├── battle.html       4. 전투 화면 (HUD)
 ├── inventory.html    5. 장비 / 인벤토리
 ├── shop.html         보급소 (소모품·재료 구매/판매, 단가는 items.js SHOP)
@@ -50,8 +91,8 @@ PWA 대신 앱으로 설치할 수 있습니다. 앱은 GitHub Pages 의 최신 
 ## 실행
 
 ```bash
-# 아무 정적 서버나 사용 (또는 index.html을 브라우저로 바로 열기)
-npx http-server game-ui -p 8080
+# 저장소 루트에서 실행
+npm start
 ```
 
 `index.html`(타이틀)이 시작점입니다. 시작 → `office.html`(인력사무실, 허브) → 각 화면. 개발용 화면 보드는 `board.html`. 데스크톱에서는 모든 화면 하단에 **화면 전환 독**이 떠 있고 `H` 키로 숨길 수 있으며, 휴대폰에서는 타이틀의 "개발 메뉴"(또는 `?dev=1`)로 켠 경우에만 표시됩니다.
@@ -221,8 +262,8 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 
 ## 호스팅
 
-- 이 저장소는 완전한 정적 사이트다. GitHub Pages(Settings → Pages → Deploy from a branch → `main` / root) 로 그대로 서빙된다. `.nojekyll` 이 있어 언더스코어 경로도 빌드 없이 노출된다.
-- 서버 호출이 없으며 장비·제작·파티 상태는 브라우저 메모리에만 있다(새로고침 시 초기화). 나중에 저장이 필요하면 `js/items.js` 의 `PLAYER` 와 `js/world.js` 의 `PARTY` 를 API 응답으로 치환하면 되도록 데이터 모듈을 분리해 두었다.
+- 싱글 플레이 화면은 GitHub Pages에 정적으로 배포할 수 있습니다. 협동 파티는 `server/index.cjs`를 실행하는 Node/WebSocket 호스트가 별도로 필요하며, 그 호스트가 게임 화면도 함께 제공합니다.
+- 협동 프로필과 보상은 서버 SQLite DB로 저장하고 방과 전투는 메모리에서 진행합니다. 싱글 장비·제작 저장과는 분리되어 있습니다. `js/world.js`의 기존 가상 파티 데이터는 온라인 파티 인원으로 사용하지 않습니다.
 - 서비스워커(`sw.js`)는 이 저장소 경로 범위만 담당하며 `tw-` 접두 캐시만 관리한다. HTML/CSS/JS 는 네트워크 우선이고 아트만 캐시 우선이다.
 - 업데이트: 배포 워크플로가 `sw.js`·`js/ui.js` 의 `__BUILD__` 를 커밋 해시로 치환하므로 `main` 에 푸시하면 설치형 PWA 도 접속(또는 앱 복귀)하는 즉시 새 서비스워커를 받고, 워커가 열린 화면을 직접 다시 불러온다. 보조로 화면은 켜질 때 `version.json` 을 읽어 빌드가 다르면 스스로 갱신한다. 현재 빌드는 화면 전환 독 안에 표시된다.
 - 이력: `hukkle-hub/sns-agent-app` 의 `game-ui/` 폴더에서 `git subtree split` 으로 분리했다(커밋 이력 보존).
@@ -248,9 +289,7 @@ HUD 는 고정 픽셀이 아닌 안전영역 인셋 기준. (조사 출처는 �
 | `js/dungeon.js` d02 · `js/dungeons.js` ARENAS.marsh | **던전 02 갈대습지** (`game3d.html?d=d02`) — 야외 습지(갈대 벽·얕은 물·망루·등불·안개·반딧불), 잡몹 2종(갈대 잠복자·늪 껍질), 대형 사족 보스 「모르버스」(부위 5 · 패턴 4 + 광란 페이즈). 아레나 설정이 3D 모델·부위→뼈·파괴 조각·클립을 지정하므로 엔진 수정 없이 던전을 늘린다. 보스 모델은 `tools/3d/build_marsh_boss.py`(bpy 절차 생성 + 사족 뼈대 + 클립 12) → `art/3d/boss_marsh.glb`. 검수: `docs/design/08-phase3-dungeon02-review.md` |
 | `js/story.js` · `story.html` | **4단계 이야기·의뢰 진행.** 장(프롤로그·1장 훈련장·2장 갈대습지·3장 예고)과 대사(초상화 오버레이), 의뢰 상태(수행 가능/완료·보수 미수령/보수 수령), 보수 수령, 출격 전 마태오 브리핑, 클리어 후 후일담(정찰대의 기록 유무 분기), 던전 입장 컷신(플라이오버)·격파 컷신. 상태는 `save.js` flags. 잡몹은 제거 — 보스 전용 던전 |
 | `js/grade.js` | **등급 시스템(레벨 대체).** 요원 등급 A→A+→S→S+→SS(누적 경험치), 기술 등급 5종 카운터·부위 파괴·정제·드랍·제작 C→SS(전투·대장간 기록 `save.stats`). 파티(플레이어+동행 NPC)의 기술 최고 등급이 카운터 판정·부위 피해·재료·행운·강화 성공률·수리비에 반영. 검수: `docs/design/10-grade-system-review.md` |
-| `js/looks.js` · `art/3d/gear/` | **장비 외형 반영.** 주무기 5종 모델 교체(`tools/3d/build_weapons.py` 절차 생성), 단도는 허리·갈고리 낫은 등, 방어구·장신구는 뼈에 붙는 조각. **v0.3: 컨셉 이미지→Hi3D 이미지-3D 로 뽑은 실제 모델(`art/3d/gear/`, `tools/3d/gear_post.py` 후처리)** — 무기 6종·방어구 5종 전부 적용. **v0.4: 장신구 3종 모델(`tools/3d/build_acc.py`), 캐릭터별 체격 스케일(`CHARFIT`), 캐릭터별 로드아웃(`gear.js chars`, 인벤토리 칩 전환)·무기 클래스 제한(`items.js usableBy`)·캐릭터 기본 무기 아이템 3종.** 던전 입장 시 저장 장비로 구성, `viewer.html?equip=1&fit=1` 장착 모드, 인벤토리 「3D 외형」 미리보기(교체 즉시 갱신). 검수: `docs/design/11-equipment-looks-review.md` |
-| `tools/3d/rig_char.py` · `art/3d/{kain,ryu,sera}_anim.glb` | **플레이어블 4인.** 설정 시트 3면 → Hi3D 멀티뷰 → 6만 면 저폴리 → 메시 랜드마크 자동 리깅 + KayKit 리타게팅(무기 프로필: 낫·대검 캐리, 쌍단검, 시약). 캐릭터 설정 시트 「출격 캐릭터로」(`TW_SAVE.char`) → 로비·인벤토리·뷰어·던전이 따라간다. 캐릭터별 기술 4+궁극기(`dungeons.js SKILLS`), 고유 무기(`looks.js CHARW`: 대검·쌍단검·시약). 검수: `docs/design/12-characters-review.md` |
-| `js/skills.js` · `skills.html` | **스킬 성장(5단계).** 스킬 포인트(기본 4 + 요원 등급×3 + 보스 격파) → 기술·궁극기 레벨 1~5(배율 +12%/쿨 −6%/스태미나 −4%/버프 강화) + 3레벨 분기(강화 / 효과: 출혈·자세·쿨타임·지속). 던전 HUD 레벨 배지, 전투(`combat.js`)가 스킬 출혈·자세 피해·무적 배수 반영. 검수: `docs/design/13-skill-system-review.md` |
+| `js/looks.js` · `art/3d/weapons/` | **장비 외형 반영.** 주무기 5종 모델 교체(`tools/3d/build_weapons.py` 절차 생성), 단도는 허리·갈고리 낫은 등, 방어구·장신구는 뼈에 붙는 조각(구 껍질 카울·부분 원통 흉갑·견갑, `art/3d/tex/` 텍스처). 던전 입장 시 저장 장비로 구성, `viewer.html?equip=1&fit=1` 장착 모드, 인벤토리 「3D 외형」 미리보기(교체 즉시 갱신). 검수: `docs/design/11-equipment-looks-review.md` |
 | `js/world-sim.js` | 월드 시뮬레이션: 맵 파싱, 원-격자 충돌(슬라이딩), 이동·구르기, 존 판정(깊이 0.55 비등방 거리), 보스 추적 AI, 카메라 |
 | `arena.html` | 정면 대치 연습 모드(던전 이전 버전). 같은 엔진·리그를 쓴다 |
 | `design-sheets/10-dummy.webp` | 허수아비 설정화(정면·측면·후면). `art/dummy-front/side/back.webp` 로 배경을 딴 뷰, `art/dummy/*.webp` 는 정면 뷰를 관절 단위로 자른 15개 파츠 |
@@ -283,3 +322,11 @@ GLB 를 넣으면 높이·뼈·손 뼈·클립을 판정하고, 낫(`art/3d/ain_
 - `docs/design/03-action-rpg-benchmark.md` — 검은사막·붉은사막·마영전·아이온 1 에서 뽑은 완성도 기준표와 적용 순서.
 - `docs/design/02-engine-research.md` — 엔진·플러그인 조사와 추천안(Phaser 4 + Tiled + Spine/DragonBones), 마이그레이션 계획.
 - `docs/design/01-training-arena.md` — 던전 01 훈련장(튜토리얼 허수아비 아레나) 기획 v0.1. 전투 공통 규칙(카운터·부위 파괴·출혈·자세·궁극기)과 수치 표의 원본.
+
+## 허수아비 숙련 전투 변경본
+
+타격 시점 동기화, 공격/방어/회피 전환, 기존 GLB의 파지 보정, 카운터·부분 파괴·회피 반격 중심의 튜토리얼: [구현 및 검증 기록](docs/design/10-combat-mastery-review.md).
+
+- 자동 검증: Node 24에서 `npm test`
+- 입력 정책 비교: `node tests/balance.cjs`
+- 플레이 대상: HTTP 서버로 실행한 `game3d.html` (현재 변경본은 시각 검수 전)

@@ -27,23 +27,26 @@
               ['matteo','지하 오염수 처리 — 2경구 정화장. 다음 의뢰다. 준비되면 말해라.'] ],
       afterNoRecord:[ ['matteo','모르버스를 잡았다고? …앉아라.'],
               ['matteo','정찰대의 기록은 못 찾았군. 습지에 다시 가면 갈대 사이를 살펴라. 그들이 본 것을 알아야 다음이 보인다.'] ] },
-    { id:'ch3', name:'3장', title:'지하 오염수 처리', art:'story-city', quest:'q_sewage', locked:true,
-      lines:[ ['narr','2경구 정화장 — 다음 장에서 계속.'] ] }
+    { id:'ch3', name:'3장', title:'지하 오염수 처리', art:'story-city', quest:'q_sewage', arena:'sewage', dungeon:'game3d.html?d=d03', flag:'ch_3',
+      brief:[['matteo','정화장 하부의 오염원을 세 곳 모두 차단해라. 북측, 중앙, 남측 처리실이다.'],['ain','주 펌프는요?'],['matteo','배관을 끊으면 수문기도 약해진다. 정화 장치가 남아 있으면 가져와라.']],
+      after:[['matteo','역류가 멎었다. 오늘은 하부 구역에도 깨끗한 물을 보낼 수 있겠군.'],['ain','수문기를 멈췄어요. 밸브도 전부 잠갔고요.'],['matteo','잘했다. 보수를 챙겨라. 다음 출격 전에 장비부터 손봐.']] }
+
   ];
   function ch(id){ return CHAPTERS.filter(function(c){ return c.id===id; })[0]; }
   function flag(k,v){ return SV ? SV.flag(k,v) : false; }
   function arenaRec(id){ try{ return JSON.parse(localStorage.getItem('tw:arena:'+id)||'null'); }catch(e){ return null; } }
   function cleared(id){ var r=arenaRec(id); return !!(r&&r.cleared); }
   /* ---------- 의뢰 상태 ---------- */
-  var QUEST_ARENA={ q_marsh:'marsh' };
-  function questState(qid){ var a=QUEST_ARENA[qid]; if(!a) return 'locked'; if(flag('claim_'+qid)) return 'claimed'; if(cleared(a)) return 'cleared'; return 'available'; }
+  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage'}, QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh'};
+  function routeForQuest(id){return CHAPTERS.find(function(c){return c.quest===id&&!c.locked;})||null;}
+  function questState(qid){ var a=QUEST_ARENA[qid]; if(!a) return 'locked'; if(flag('claim_'+qid)) return 'claimed'; if(cleared(a)) return 'cleared';if(QUEST_REQUIRED[qid]&&!cleared(QUEST_REQUIRED[qid]))return 'locked'; return 'available'; }
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
   function claim(qid){ if(questState(qid)!=='cleared') return null; var q=W.quest(qid); var got=[]; if(SV) SV.addGold(q.reward); got.push(['gold', q.reward]);
     (q.rewards||[]).forEach(function(r){ var n=r[1]; if(typeof n==='string'){ var m=n.match(/(\d+)~(\d+)/); n=m?rnd(+m[1],+m[2]):parseInt(n,10)||1; }
       if(r[0]==='exp'){ if(SV) SV.addXp(n); got.push(['exp', n]); return; }
       if(window.TW_LOOT) TW_LOOT.grant([[r[0], n]]); else if(SV) SV.addItem(r[0], n); got.push([r[0], n]); });
     flag('claim_'+qid, true); try{ document.dispatchEvent(new CustomEvent('tw:wallet', { detail:{ gold:q.reward } })); }catch(e){} return got; }
-  function chapterState(c){ if(c.locked) return 'locked'; if(flag(c.flag)) return 'done'; if(c.arena && cleared(c.arena)) return 'cleared'; return 'available'; }
+  function chapterState(c){ if(c.quest&&questState(c.quest)==='locked')return 'locked'; if(c.locked) return 'locked'; if(flag(c.flag)) return 'done'; if(c.arena && cleared(c.arena)) return 'cleared'; return 'available'; }
   /* ---------- 대사 오버레이 ---------- */
   var cur=null;
   function play(lines, done, opts){ opts=opts||{}; if(cur) close(); var box=document.createElement('div'); box.className='sdlg'; box.innerHTML='<div class="sdlg__box"><button type="button" class="btn btn--sm sdlg__skip">건너뛰기</button><img class="sdlg__face" alt=""><div class="fill"><div class="sdlg__who"></div><div class="sdlg__txt"></div><div class="sdlg__hint">탭하여 계속</div></div></div>';
@@ -61,5 +64,5 @@
   function afterClear(arenaId, done){ var c=CHAPTERS.filter(function(x){ return x.arena===arenaId; })[0]; if(!c||!cleared(arenaId)||flag(c.flag)){ done&&done(false); return false; }
     var hasRec=!!(SV&&SV.get().bag&&SV.get().bag.q_record); var lines=(c.afterNoRecord&&!hasRec)?c.afterNoRecord:c.after; play(lines, function(){ if(!(c.afterNoRecord&&!hasRec)) flag(c.flag, true); done&&done(true); }); return true; }
   function stateLabel(st){ return { locked:'잠김', available:'수행 가능', cleared:'완료 · 보수 미수령', claimed:'보수 수령 완료', done:'완료' }[st]||st; }
-  window.TW_STORY={ CHAPTERS:CHAPTERS, NPC:NPC, play:play, once:once, brief:brief, afterClear:afterClear, questState:questState, claim:claim, chapterState:chapterState, cleared:cleared, stateLabel:stateLabel, ch:ch };
+  window.TW_STORY={ CHAPTERS:CHAPTERS, routeForQuest:routeForQuest, NPC:NPC, play:play, once:once, brief:brief, afterClear:afterClear, questState:questState, claim:claim, chapterState:chapterState, cleared:cleared, stateLabel:stateLabel, ch:ch };
 })();

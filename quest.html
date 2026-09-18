@@ -234,7 +234,8 @@
 <script>
 /* 의뢰 상세 / 보스 도감 — world.js · items.js 에서 렌더 */
 (function(){
-  var W=window.TW_WORLD, T=window.TW_ITEMS, $=function(s){return document.querySelector(s);}, cur='q_marsh';
+  var W=window.TW_WORLD, T=window.TW_ITEMS, $=function(s){return document.querySelector(s);}, cur=new URLSearchParams(location.search).get('q')||'q_marsh';
+  if(!W.QUESTS.some(function(q){return q.id===cur;}))cur='q_marsh';
   var LINES={tl:'<line x1="20%" y1="24%" x2="44%" y2="42%"/>',tr:'<line x1="80%" y1="18%" x2="56%" y2="40%"/>',bl:'<line x1="23%" y1="80%" x2="45%" y2="62%"/>',br:'<line x1="78%" y1="76%" x2="56%" y2="64%"/>'};
   function slot(id,extra){ return T.slotHTML(id, extra||{noTag:true}); }
   function rows(){
@@ -267,14 +268,16 @@
     $('#drops').innerHTML=[['일반','common'],['희귀','rare'],['낮은 확률','low']].map(function(k){ return '<div class="dropline"><span class="dropline__k">'+k[0]+'</span><div class="slotgrid">'+q.drops[k[1]].map(function(id){return T.slotHTML(id,{noTag:true});}).join('')+'</div></div>'; }).join('');
     var go=$('#q-go'), ready=(function(){ try{ var r=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); return !!(r&&r.cleared); }catch(e){ return false; } })();
     if(go){ var span=go.querySelector('span'); var rec=null; try{ rec=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); }catch(e){}
-      if(q.id==='q_marsh'){ go.disabled=false; span.innerHTML='<svg class="ico ico--lg"><use href="#i-sword"/></svg>'+(rec&&rec.cleared?'재출격 — 던전 02 갈대습지 · 최고 '+rec.rank:'출격 — 던전 02 갈대습지')+(window.TW_STORY&&TW_STORY.questState('q_marsh')==='cleared'?' · 보수는 사무실에서':''); go.dataset.go='game3d.html?d=d02'; }
-      else { go.disabled=true; span.innerHTML='<svg class="ico ico--lg"><use href="#i-lock"/></svg>준비 중 — 다음 업데이트'; delete go.dataset.go; } }
+      var route=window.TW_STORY&&TW_STORY.routeForQuest(q.id),st=window.TW_STORY&&TW_STORY.questState(q.id);
+      if(route&&st!=='locked'){go.disabled=false;span.textContent=(st==='claimed'||st==='cleared'?'재출격 — ':'출격 — ')+route.title;go.dataset.go=route.dungeon;}
+      else{go.disabled=true;span.textContent=route?'이전 의뢰를 먼저 완료해 주세요':'준비 중 — 다음 업데이트';delete go.dataset.go;} }
+
     $('#note').innerHTML='<div class="note">'+W.artDiv(q.art==='boss-marsh'?'lobby-city':q.art,'note__img')+'<p class="t-faint" style="font-size:10.5px;line-height:1.6;margin:0">'+(q.note||'정찰 기록 없음')+'</p></div>';
   }
   $('#codex-n').textContent=W.CODEX.collected+' / '+W.CODEX.total;
   $('#codex').innerHTML=W.CODEX.thumbs.map(function(a){ return W.artDiv(a,''); }).join('');
   $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); detail(); });
-  $('#q-go').addEventListener('click', function(){ var go=$('#q-go'); if(!go.dataset.go) return; var to=function(){ location.href=go.dataset.go; }; if(window.TW_STORY && cur==='q_marsh'){ if(!TW_STORY.brief('ch2', to)) to(); } else to(); });
+  $('#q-go').addEventListener('click', function(){ var go=$('#q-go'); if(!go.dataset.go) return; var to=function(){ location.href=go.dataset.go; }; var route=window.TW_STORY&&TW_STORY.routeForQuest(cur);if(route){TW_STORY.brief(route.id,to);}else to(); });
   try{ var ag=TW_GRADE.agent(); $('#q-mylv').textContent='요원 등급 '+ag.g; }catch(e){}
   rows(); detail();
 })();

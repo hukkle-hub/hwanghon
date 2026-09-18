@@ -1,12 +1,16 @@
 /* 황혼 — 던전 데이터
-   window.TW_DUNGEONS = { RULES, ARENAS, SKILLS }
+  window.TW_DUNGEONS = { RULES, ARENAS, SKILLS }
    · RULES  : 모든 던전이 공유하는 전투 공통 규칙 (docs/design/01-training-arena.md §3)
    · ARENAS : 훈련장 등 아레나. 허수아비는 world.js BOSSES 와 같은 형식(weakpoints/patterns/mastery/hud) 위에 엔진 필드를 얹는다
    · 허수아비 원화: design-sheets/10-dummy.webp (사슬에 묶인 나무 구조체, 가슴에 붉은 핵). 3단계는 같은 개체의 잠듦→사슬→각성 상태
    · 수치 원본: 캐릭터 스탯은 world.js CHARS, 보상 아이템은 items.js. 그 외 상수는 기획서 v0.1 제안값 */
 (function(){
   var RULES = {
-    tick: 1/60,
+    tick: 0.01,
+    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.34,smash:0.78,ult:0.50}, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+      smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
+      counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
+      ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50} },
     hitstop: { hit:0.08, counter:0.16, brk:0.24 },
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
     dodge:   { iframes:0.30, cooldown:0.45 },
@@ -29,31 +33,7 @@
       { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'모든 부위에 피해', aoe:true },
       { key:'4', id:'resolve',icon:'shield', name:'결의',        mult:0,   cd:15, st:0,  desc:'2초간 받는 피해 50% 감소', buff:{dur:2, reduce:0.5} }
     ],
-    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩' },
-    /* 카인 — 블레이드 마스터(탱커/브루저): 대검. 파괴·버티기 */
-    kain: [
-      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 파괴 피해 증가' },
-      { key:'2', id:'brace',  icon:'shield', name:'철벽',          mult:0,   cd:12, st:0,  desc:'3초간 받는 피해 60% 감소', buff:{dur:3, reduce:0.6} },
-      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격' }
-    ],
-    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 대검 강타 + 출혈' },
-    /* 류 — 레인저(딜러): 쌍단검. 기동·연속 처치 */
-    ryu: [
-      { key:'1', id:'fan',    icon:'crosshair', name:'쌍날 난무',   mult:2.0, cd:5,  st:14, desc:'선택 부위에 빠른 연속 베기' },
-      { key:'2', id:'shadow', icon:'bolt',      name:'그림자 도약', mult:0,   cd:7,  st:18, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
-      { key:'3', id:'storm',  icon:'flame',     name:'칼날 폭풍',   mult:1.1, cd:11, st:24, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'mark',   icon:'eye',       name:'표식',        mult:0,   cd:14, st:0,  desc:'2초간 받는 피해 40% 감소', buff:{dur:2, reduce:0.4} }
-    ],
-    ryuUlt: { key:'R', id:'redshadow', icon:'crosshair', name:'붉은 그림자', mult:5.2, bleed:3, desc:'궁극기. 연속 찌르기 + 출혈 3중첩' },
-    /* 세라 — 위치 메이커(서포터): 시약 투척·정제 */
-    sera: [
-      { key:'1', id:'vial',   icon:'potion', name:'부식 시약',     mult:1.9, cd:6,  st:14, desc:'선택 부위에 시약 투척' },
-      { key:'2', id:'mist',   icon:'seal',   name:'정제 안개',     mult:0,   cd:9,  st:16, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
-      { key:'3', id:'burst',  icon:'flame',  name:'연쇄 폭발',     mult:1.3, cd:12, st:26, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'ward',   icon:'heart',  name:'회복 결계',     mult:0,   cd:15, st:0,  desc:'3초간 받는 피해 50% 감소', buff:{dur:3, reduce:0.5} }
-    ],
-    seraUlt: { key:'R', id:'catalyst', icon:'potion', name:'촉매 폭발', mult:5.0, bleed:2, desc:'궁극기. 대형 시약 폭발 + 출혈 2중첩' }
+    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩' }
   };
 
   function dummy(o){
@@ -133,6 +113,34 @@
       ]
     }
   };
+
+   /* 상세 게임 기획 v1 §0/§2/§3/각수-0 + 디렉터 지시: 실력 진입 시험.
+     배율은 이번 구현 조정값. 첫 단계부터 반격하며, 자동 궁극기 지급 없음. */
+  ARENAS.tutorial.stages.forEach(function(d,i){
+    d.discipline={normal:0.22,skill:0.55,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.75,evadeMult:2.2,evadeWindow:0.85};
+    d.counterWindow=[0.18,0.16,0.14][i]; d.perfectWindow=0.04; d.firstCounterUlt=false;
+    d.mastery=[['S','시간·카운터·파괴 종합'],['A','정확한 반격'],['B','생존 및 파괴'],['C','통과']];
+    d.hp=[90000,200000,280000][i]; d.timeLimit=[90,150,180][i]; d.patternGap=[1.6,1.3,1.0][i];
+    d.patterns.forEach(function(p){p.window=d.counterWindow;p.recovery=0.72;});
+  });
+  var training=ARENAS.tutorial.stages;
+  training[0].name='눈뜬 허수아비';
+  training[0].lesson='거리와 반격';
+  training[0].line='마구 베면 오래 걸린다. 공격을 읽고 되돌려라.';
+  training[0].hint='일반 공격은 견제 · 정확한 카운터와 회피 후 반격으로 빈틈을 노려라';
+  training[0].patterns=[
+    {icon:'hammer',name:'느린 내려찍기',tele:1.15,window:0.18,dmg:4200,posture:30,guardCost:24,recovery:0.8},
+    {icon:'scythe',name:'회전 후려치기',tele:1.45,window:0.18,dmg:4600,posture:30,guardCost:28,recovery:0.85},
+    {icon:'bolt',name:'찌르기',tele:0.85,window:0.18,dmg:3800,posture:30,guardCost:22,recovery:0.7}
+  ];
+  training[1].patterns[0].dmg=5500; training[1].patterns[0].every=2.2;
+  training[1].patterns.push({icon:'bolt',name:'찌르기',tele:0.9,window:0.16,dmg:4800,posture:30,guardCost:26,recovery:0.7});
+  training[1].parts.filter(function(p){return p.breakable;}).forEach(function(p){p.hp=32000;p.hpMax=p.hp;});
+  training[2].patterns.forEach(function(p,i){p.dmg=[5600,6500,8000][i];});
+  training[2].patterns[1].counterable=false; training[2].patterns[1].unblockable=true;
+  training[2].patterns[1].desc='튕겨낼 수 없는 회전 공격. 위치 회피 후 반격';
+  training[2].hint='백색선은 카운터 · 주황 X는 회피 · 파괴한 부위는 큰 빈틈';
+  training[2].parts[1].hp=45000; training[2].parts[1].hpMax=45000;
 
   window.TW_DUNGEONS = { RULES:RULES, ARENAS:ARENAS, SKILLS:SKILLS };
   if (typeof module !== 'undefined' && module.exports) module.exports = window.TW_DUNGEONS;

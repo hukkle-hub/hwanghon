@@ -74,7 +74,7 @@ html.mobile .chp__art{width:96px}
 <script>
 (function(){
   var ST=window.TW_STORY, $=function(s){return document.querySelector(s);}, cur=null;
-  var DESC={ prologue:'무너진 도시, 인력사무소, 그리고 낫을 든 요원.', ch1:'마태오의 지하 훈련장. 허수아비를 상대로 낫과 카운터를 몸에 익힌다.', ch2:'정찰대 넷이 사라진 갈대습지. 대형 변이체 「모르버스」를 토벌하고 정찰대의 기록을 되찾는다.', ch3:'2경구 정화장으로 이어지는 물길. 다음 장에서 계속.' };
+  var DESC={ prologue:'무너진 도시, 인력사무소, 그리고 낫을 든 요원.', ch1:'마태오의 지하 훈련장. 허수아비를 상대로 낫과 카운터를 몸에 익힌다.', ch2:'정찰대 넷이 사라진 갈대습지. 대형 변이체 「모르버스」를 토벌하고 정찰대의 기록을 되찾는다.', ch3:'세 오염원을 차단하고, 과압으로 움직이는 수문기를 정지한다.' };
   function linesOf(c){ return (c.lines||[]).concat(c.brief||[], c.after||[]); }
   function render(){ $('#chs').innerHTML=ST.CHAPTERS.map(function(c){ var st=ST.chapterState(c); return '<button type="button" class="chp'+(c.id===cur?' is-on':'')+(st==='locked'?' is-locked':'')+'" data-ch="'+c.id+'"><div class="chp__art"><img src="art/'+c.art+'.webp" alt=""></div><div class="chp__body"><div class="chp__k">'+c.name+'</div><div class="chp__t">'+c.title+'</div><div class="chp__d">'+(DESC[c.id]||'')+'</div><span class="qstate chp__st qstate--'+(st==='done'?'claimed':st==='cleared'?'cleared':st)+'">'+(st==='done'?'완료':st==='cleared'?'보스 격파 · 사무실에서 마무리':st==='locked'?'잠김':'진행 가능')+'</span></div></button>'; }).join(''); }
   function show(id){ cur=id; render(); var c=ST.ch(id); $('#log-t').textContent=c.name+' · '+c.title; var ls=linesOf(c);

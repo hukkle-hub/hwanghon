@@ -117,6 +117,7 @@
       <a href="characters.html"><svg class="ico ico--lg"><use href="#i-eye"/></svg><b>요원</b><span>캐릭터 시트</span></a>
       <a href="game3d.html" class="is-go"><svg class="ico ico--lg"><use href="#i-target"/></svg><b>던전 01</b><span>지하 훈련장</span></a>
       <a href="game3d.html?d=d02" class="is-go"><svg class="ico ico--lg"><use href="#i-skull"/></svg><b>던전 02</b><span>갈대습지</span></a>
+      <a href="quest.html?q=q_sewage" class="is-go"><svg class="ico ico--lg"><use href="#i-shield"/></svg><b>던전 03</b><span>2경구 정화장 · 의뢰 확인</span></a>
     </nav>
 
     <!-- ---------- 좌: 의뢰 목록 ---------- -->
@@ -208,6 +209,10 @@
           </div>
           <div class="prep__thumb art"><img src="art/boss-marsh.webp" alt="" style="object-fit:cover"></div>
         </a>
+        <a class="prep" href="quest.html?q=q_sewage" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
+          <svg class="prep__ico"><use href="#i-shield"/></svg>
+          <div class="fill"><div class="sm t-hi">던전 03 · 2경구 정화장</div><div class="xs t-faint mt1">오염원 3곳 차단 · 배관 파괴 · 과압 수문기 토벌</div></div>
+        </a>
       </section>
 
       <button class="btn btn--deploy" data-primary>
@@ -257,7 +262,7 @@
       '<div class="rewards mt3">'+rw+'</div>'+questAction(q)+'<div class="field mt3"><input placeholder="출현 변이체 정보"><svg class="ico ico--sm t-faint"><use href="#i-search"/></svg></div>';
     var cb=$('#q-claim'); if(cb) cb.addEventListener('click', function(){ var got=TW_STORY.claim(q.id); if(!got) return; if(window.TW_SFX) TW_SFX.play('clear'); rows(); info();
       var T2=window.TW_ITEMS; TW_STORY.play([['matteo','보수다. '+W.fmt(q.reward)+' 골드'+got.filter(function(g){ return g[0]!=='gold'; }).map(function(g){ return ' · '+(g[0]==='exp'?'경험치':T2.get(g[0]).name)+' ×'+W.fmt(g[1]); }).join('')+'. 다음 의뢰는 준비되면 열린다.']]); });
-    var gb=$('#q-go'); if(gb) gb.addEventListener('click', function(){ var chId=q.id==='q_marsh'?'ch2':null; var go=function(){ location.href='game3d.html?d=d02'; }; if(chId&&window.TW_STORY){ if(!TW_STORY.brief(chId, go)) go(); } else go(); });
+    var gb=$('#q-go'); if(gb) gb.addEventListener('click', function(){ var route=TW_STORY.routeForQuest(q.id);if(!route||TW_STORY.questState(q.id)==='locked')return;TW_STORY.brief(route.id,function(){location.href=route.dungeon;}); });
   }
   function questAction(q){ var ST=window.TW_STORY; if(!ST) return ''; var st=ST.questState(q.id);
     if(st==='available') return '<button type="button" class="btn btn--primary mt3" id="q-go" style="width:100%">출격 — '+q.sub+'</button>';
@@ -284,7 +289,7 @@
   /* 던전 카드: 첫 출격 전 마태오 브리핑 · 클리어 후 후일담 */
   function guard(sel, chId){ var a=$(sel); if(!a||!window.TW_STORY) return; a.addEventListener('click', function(e){ var href=a.getAttribute('href'); if(TW_STORY.brief(chId, function(){ location.href=href; })) e.preventDefault(); }); }
   guard('#of-arena','ch1'); guard('#of-arena2','ch2');
-  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){ rows(); info(); }); }); } }catch(e){}
+  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){TW_STORY.afterClear('sewage',function(){rows();info();});}); }); } }catch(e){}
 })();
 </script>
 <script src="js/ui.js"></script>
