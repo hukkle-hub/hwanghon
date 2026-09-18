@@ -1,8 +1,8 @@
 /* 황혼 — 절차 생성 효과음/환경음 (Web Audio, 파일 없음)
    TW_SFX.unlock() 은 첫 터치/키 입력에서 자동. TW_SFX.play(name) · TW_SFX.ambient(on) · TW_SFX.enabled */
 (function(){
-  var ctx=null, master=null, amb=null, enabled=true;
-  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=0.7; master.connect(ctx.destination); return ctx; }
+  var ctx=null, master=null, amb=null, enabled=true, volume=0.7;
+  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; master.connect(ctx.destination); return ctx; }
   function unlock(){ var c=ac(); if(!c) return; if(c.state==='suspended') c.resume(); }
   function env(g, t0, a, d, s, r, peak){ g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak||1, t0+a); g.gain.exponentialRampToValueAtTime(Math.max(0.0001,(peak||1)*s), t0+a+d); g.gain.exponentialRampToValueAtTime(0.0001, t0+a+d+r); }
   function noise(dur){ var c=ac(), b=c.createBuffer(1, Math.ceil(c.sampleRate*dur), c.sampleRate), d=b.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; var s=c.createBufferSource(); s.buffer=b; return s; }
@@ -32,7 +32,7 @@
     /* 불꽃 탁탁 */
     var crack=setInterval(function(){ if(!amb||!enabled) return; if(Math.random()<0.45) burst(0.03,0.12,{type:'bandpass',f:2500+Math.random()*3000,q:6}); }, 160);
     amb={ n:n, g:g, crack:crack }; }
-  var api={ unlock:unlock, ambient:ambient, get enabled(){ return enabled; }, set enabled(v){ enabled=!!v; if(master) master.gain.value=enabled?0.7:0; if(!enabled) ambient(false); },
+  var api={ get volume(){return volume;},set volume(v){volume=Math.max(0,Math.min(1,Number(v)||0));if(master)master.gain.value=enabled?volume:0;}, unlock:unlock, ambient:ambient, get enabled(){ return enabled; }, set enabled(v){ enabled=!!v; if(master) master.gain.value=enabled?volume:0; if(!enabled) ambient(false); },
     play:function(name, a){ if(!enabled||!ac()) return; try{ SFX[name] && SFX[name](a); }catch(e){} } };
   ['pointerdown','keydown','touchstart'].forEach(function(ev){ document.addEventListener(ev, unlock, { passive:true }); });
   window.TW_SFX=api;

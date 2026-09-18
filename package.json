@@ -12,7 +12,10 @@
     "server": "node server/index.cjs",
     "test:party": "node --test tests/party-*.test.cjs",
     "test:social": "node --test tests/social-*.test.cjs",
-    "test:load": "node tools/party-load.cjs"
+    "test:load": "node tools/party-load.cjs",
+    "test:rpg": "node --test tests/rpg-*.test.cjs",
+    "backup": "node tools/party-backup.cjs backup",
+    "backup:verify": "node tools/party-backup.cjs verify"
   },
   "keywords": [],
   "author": "",

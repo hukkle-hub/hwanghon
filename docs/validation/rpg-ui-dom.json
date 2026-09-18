@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "registration and one-time recovery code",
+    "character name",
+    "quest accept and claim",
+    "dungeon unlock",
+    "inventory filter and vault deposit",
+    "crafting ingredient debit",
+    "trait applied on server",
+    "volume setting persistence",
+    "social and account menus"
+  ],
+  "limitations": [
+    "DOM only; no CSS layout, WebGL or mobile visual verification"
+  ]
+}

@@ -19,6 +19,7 @@ test('real sockets create/join/ready/start; identical shared damage, private ide
 });
 test('room isolation, capacity, stale input, origin rejection and private file boundaries',async t=>{
  const {app,url,base}=await setup(t),people=[];for(let i=0;i<5;i++)people.push(await client(url,'P'+i));t.after(()=>people.forEach(p=>p.close()));const [a,b,c,d,e]=people;
+ for(const person of people){const p=app.store.get(person.hello.profile.id);p.quests={training:'claimed',marsh:'claimed'};app.store.put(p);}
  a.send({type:'create',level:'d03'});const {code}=await a.next(m=>m.type==='state');for(const p of [b,c,d]){p.send({type:'join',code});await p.next(m=>m.type==='state');}e.send({type:'join',code});assert.match((await e.next(m=>m.type==='error')).message,/가득/);e.send({type:'create',level:'d02'});const other=await e.next(m=>m.type==='state');assert.notEqual(code,other.code);assert.equal(other.members.length,1);
  for(const p of [a,b,c,d])p.send({type:'ready',ready:true});await a.next(m=>m.type==='state'&&m.members.length===4&&m.members.every(p=>p.ready));a.send({type:'start'});await a.next(m=>m.type==='state'&&m.raid);
  a.send({type:'move',seq:100,x:1,y:0});a.send({type:'move',seq:99,x:-1,y:0});await a.next(m=>m.type==='state'&&m.raid?.time>.07);assert.ok(app.rooms.get(code).raid.players.get(a.hello.profile.id).axes.x>=0);
@@ -31,7 +32,7 @@ test('clear rewards reach both clients once and durable profile survives server-
  const {app,url}=await setup(t,store);
  const ca=await client(url,'A',a.token),cb=await client(url,'B',b.token);t.after(()=>{ca.close();cb.close();});ca.send({type:'create'});const made=await ca.next(m=>m.type==='state');cb.send({type:'join',code:made.code});await cb.next(m=>m.type==='state');ca.send({type:'ready',ready:true});cb.send({type:'ready',ready:true});await ca.next(m=>m.type==='state'&&m.members.every(p=>p.ready));ca.send({type:'start'});await ca.next(m=>m.type==='state'&&m.raid);
  const raid=app.rooms.get(made.code).raid;raid.phase=raid.A.stages.length-1;raid.setupBoss();raid.startFight();for(const p of raid.players.values()){p.x=raid.boss.x-100;p.y=raid.boss.y;p.target='body';}raid.boss.hp=1;ca.send({type:'attack'});
- const pa=await ca.next(m=>m.type==='profile'),pb=await cb.next(m=>m.type==='profile');assert.equal(pa.profile.gold,raid.A.rewards.gold);assert.equal(pb.profile.gold,raid.A.rewards.gold);raid.onClear(raid);assert.equal(app.store.public(a.profile.id).gold,raid.A.rewards.gold);const restored=new Store(directory);assert.equal(restored.login(a.token,'A').profile.gold,raid.A.rewards.gold);assert.equal(restored.public(b.profile.id).clears.tutorial,1);
+ const pa=await ca.next(m=>m.type==='profile'),pb=await cb.next(m=>m.type==='profile');assert.equal(pa.profile.gold,raid.A.rewards.gold+1000);assert.equal(pb.profile.gold,raid.A.rewards.gold+1000);raid.onClear(raid);assert.equal(app.store.public(a.profile.id).gold,raid.A.rewards.gold+1000);const restored=new Store(directory);assert.equal(restored.login(a.token,'A').profile.gold,raid.A.rewards.gold+1000);assert.equal(restored.public(b.profile.id).clears.tutorial,1);restored.close();
 });
 test('failed disk write rolls back both profiles and run receipts before retry',()=>{
  const store=new Store(null),a=store.login(null,'A'),b=store.login(null,'B'),ids=[a.profile.id,b.profile.id],reward={gold:100,items:[['m_core',2]]};

@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts --no-audit --no-fund && npm cache clean --force
 COPY server ./server
+COPY tools/party-backup.cjs ./tools/party-backup.cjs
 COPY js ./js
 COPY css ./css
 COPY art ./art

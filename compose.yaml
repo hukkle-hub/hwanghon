@@ -9,6 +9,9 @@ services:
       DATA_DIR: /app/data
       MAX_PLAYERS: "100"
       MAX_ROOMS: "32"
+      ADMIN_IDS: "${ADMIN_IDS:-}"
+      BACKUP_DIR: /app/data/backups
+      BACKUP_INTERVAL_MS: "3600000"
     volumes:
       - party-data:/app/data
     restart: unless-stopped
