@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — GAME UI CONCEPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.cs{display:grid;grid-template-columns:250px 1fr;gap:16px;padding:18px 22px;flex:1;min-height:0}
+
+/* 좌측 스펙 컬럼 */
+.spec h1{font-family:var(--f-serif);font-size:40px;color:var(--tx-hi);letter-spacing:.08em;line-height:1}
+.spec__sub{font-size:11px;color:var(--tx-faint);letter-spacing:.22em;margin-top:9px}
+.spec__d{font-size:11px;color:var(--tx-dim);line-height:1.95;margin-top:16px}
+.spec__t{font-size:10.5px;color:#B03A36;letter-spacing:.16em;margin:24px 0 9px}
+.spec__l{font-size:11px;color:var(--tx-dim);line-height:1.95}
+.sw{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}
+.sw div{text-align:center}
+.sw i{display:block;height:38px;border:1px solid var(--line)}
+.sw span{display:block;font-size:8px;color:var(--tx-faint);margin-top:4px;letter-spacing:.02em}
+.typo{font-size:12px;color:var(--tx-dim);line-height:2.1}
+.typo b{font-weight:400}
+
+/* 화면 보드 */
+.cs__r{display:flex;flex-direction:column;min-height:0}
+.board{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:auto;gap:13px;align-content:start}
+.scard{border:1px solid var(--line);background:rgba(16,17,22,.7);position:relative;
+  display:flex;flex-direction:column;transition:.16s;overflow:hidden}
+.scard:hover{border-color:rgba(199,58,54,.5);box-shadow:0 0 20px rgba(165,28,28,.14)}
+.scard__h{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:1px solid var(--line-soft)}
+.scard__n{font-family:var(--f-serif);font-size:12px;color:#B03A36;flex:none}
+.scard__t{font-size:12px;color:var(--tx-hi);letter-spacing:.02em}
+.scard__e{font-size:9px;color:var(--tx-ghost);letter-spacing:.14em;margin-left:auto}
+.prev{position:relative;height:148px;overflow:hidden;background:#08090C}
+.prev iframe{position:absolute;left:0;top:0;width:1672px;height:1000px;border:0;
+  transform-origin:top left;pointer-events:none}
+.prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top}
+.scard__d{padding:7px 11px 9px;font-size:10px;color:var(--tx-faint);line-height:1.65}
+
+/* 하단 2단 */
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:13px;flex:1;min-height:0}
+.ref{display:flex;gap:11px;padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.ref:last-child{border:0}
+.ref__th{width:52px;height:52px;border:1px solid var(--line);flex:none}
+.ref__n{font-size:12px;color:var(--tx-hi)}
+.ref__d{font-size:10px;color:var(--tx-faint);line-height:1.6;margin-top:3px}
+.prop{display:flex;gap:9px;padding:6px 0;font-size:11.5px;color:var(--tx-dim);line-height:1.7}
+.prop i{color:#B03A36;font-style:normal;flex:none}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <main class="cs" data-mdefault="화면">
+    <!-- ===== 좌: 컨셉 스펙 ===== -->
+    <aside class="spec" data-mpane="컨셉">
+      <h1>황혼</h1>
+      <div class="spec__sub">GAME UI CONCEPT <span id="build-tag" style="letter-spacing:0;opacity:.7"></span></div>
+      <p class="spec__d">
+        세계는 이미 무너졌다. 남은 것은… 룩킥톤.<br>
+        아인의 여정을 따라, 황혼의 진실을 마주하라.
+      </p>
+
+      <div class="spec__t">CONCEPT KEYWORDS</div>
+      <div class="spec__l">
+        다크 판타지 / 몰입감 / 절망과 희망<br>
+        잔혹함 / 고딕<br>
+        차가운 색감 + 붉은 포인트 / 섬세한 디테일
+      </div>
+
+      <div class="spec__t">MAIN COLOR PALETTE</div>
+      <div class="sw">
+        <div><i style="background:#0B0C0F"></i><span>#0B0C0F</span></div>
+        <div><i style="background:#1A1B1F"></i><span>#1A1B1F</span></div>
+        <div><i style="background:#2B3C31"></i><span>#2B3C31</span></div>
+        <div><i style="background:#8A8A8A"></i><span>#8A8A8A</span></div>
+        <div><i style="background:#A51C1C"></i><span>#A51C1C</span></div>
+      </div>
+
+      <div class="spec__t">TYPOGRAPHY</div>
+      <div class="typo">
+        <b style="font-family:var(--f-serif)">Noto Serif KR</b> <span class="t-faint xs">(제목)</span><br>
+        <b style="font-family:var(--f-sans)">Noto Sans KR</b> <span class="t-faint xs">(본문)</span>
+      </div>
+
+      <div class="spec__t">GRADE / RARITY</div>
+      <div class="flex g2 wrap">
+        <span class="badge badge--s">S</span><span class="badge badge--a">A</span>
+        <span class="badge badge--b">B</span><span class="badge badge--c">C</span>
+      </div>
+      <div class="flex g2 wrap mt2">
+        <span class="chip" style="color:#6E7078">일반</span>
+        <span class="chip" style="color:#4C7FD1;border-color:rgba(76,127,209,.4)">희귀</span>
+        <span class="chip" style="color:#8B5BD6;border-color:rgba(139,91,214,.4)">영웅</span>
+        <span class="chip" style="color:#C98A2B;border-color:rgba(201,138,43,.4)">전설</span>
+      </div>
+    </aside>
+
+    <!-- ===== 우: 화면 보드 ===== -->
+    <div class="cs__r" data-mpane="화면">
+      <div class="board">
+        <a class="scard" href="office.html">
+          <div class="scard__h"><span class="scard__n">01</span><span class="scard__t">인력사무실</span>
+            <span class="scard__e">LOBBY</span></div>
+          <div class="prev"><iframe data-src="office.html" scrolling="no"></iframe></div>
+          <div class="scard__d">의뢰 목록 · 파티 편성 · 출격 준비를 하나의 시야에서 처리</div>
+        </a>
+
+        <a class="scard" href="quest.html">
+          <div class="scard__h"><span class="scard__n">02</span><span class="scard__t">의뢰 상세 / 보스 도감</span>
+            <span class="scard__e">QUEST</span></div>
+          <div class="prev"><iframe data-src="quest.html" scrolling="no"></iframe></div>
+          <div class="scard__d">약점·파괴 부위, 공격 패턴, 마스터리 등급까지 사전 정보 제공</div>
+        </a>
+
+        <a class="scard" href="party.html">
+          <div class="scard__h"><span class="scard__n">03</span><span class="scard__t">파티 모집</span>
+            <span class="scard__e">PARTY</span></div>
+          <div class="prev"><iframe data-src="party.html" scrolling="no"></iframe></div>
+          <div class="scard__d">역할·준비 상태 가시화 + 빠른 매칭 카드형 레이아웃</div>
+        </a>
+
+        <a class="scard" href="game3d.html">
+          <div class="scard__h"><span class="scard__n">04-3D</span><span class="scard__t">던전 01 · 뒷마당 훈련장 (3D)</span>
+            <span class="scard__e">ARENA</span></div>
+          <div class="prev"><iframe data-src="game3d.html" scrolling="no"></iframe></div>
+          <div class="scard__d">Three.js 3인칭 던전 — 리깅된 아인이 낫을 들고 싸운다. 드래그로 시점 회전, 보스 락온 카메라</div>
+        </a>
+
+        <a class="scard" href="game.html">
+          <div class="scard__h"><span class="scard__n">04-A</span><span class="scard__t">던전 01 · 뒷마당 훈련장 (2D판)</span>
+            <span class="scard__e">ARENA</span></div>
+          <div class="prev"><iframe data-src="game.html" scrolling="no"></iframe></div>
+          <div class="scard__d">뒷마당을 탐색해 보스 방에서 허수아비를 공략 — 이동 · 회피 · 카운터 · 부위 파괴</div>
+        </a>
+
+        <a class="scard" href="battle.html">
+          <div class="scard__h"><span class="scard__n">04</span><span class="scard__t">전투 화면</span>
+            <span class="scard__e">BATTLE</span></div>
+          <div class="prev"><iframe data-src="battle.html" scrolling="no"></iframe></div>
+          <div class="scard__d">중앙 시야 최소 방해 · 카운터 피드백을 강하고 짧게</div>
+        </a>
+
+        <a class="scard" href="inventory.html">
+          <div class="scard__h"><span class="scard__n">05</span><span class="scard__t">장비 / 인벤토리</span>
+            <span class="scard__e">INVENTORY</span></div>
+          <div class="prev"><iframe data-src="inventory.html" scrolling="no"></iframe></div>
+          <div class="scard__d">착용 장비 ↔ 비교 대상의 증감을 즉시 인지</div>
+        </a>
+
+        <a class="scard" href="forge.html">
+          <div class="scard__h"><span class="scard__n">06</span><span class="scard__t">장비 관리 / 강화</span>
+            <span class="scard__e">FORGE</span></div>
+          <div class="prev"><iframe data-src="forge.html" scrolling="no"></iframe></div>
+          <div class="scard__d">성공률·비용·결과 미리보기로 블랙박스 최소화</div>
+        </a>
+
+        <a class="scard" href="profile.html">
+          <div class="scard__h"><span class="scard__n">07</span><span class="scard__t">플레이어 프로필</span>
+            <span class="scard__e">PROFILE</span></div>
+          <div class="prev"><iframe data-src="profile.html" scrolling="no"></iframe></div>
+          <div class="scard__d">기술 숙련도를 등급·게이지로 환산해 신뢰도 전달</div>
+        </a>
+
+        <a class="scard" href="result.html">
+          <div class="scard__h"><span class="scard__n">08</span><span class="scard__t">전투 결과 / 보상 정산</span>
+            <span class="scard__e">RESULT</span></div>
+          <div class="prev"><iframe data-src="result.html" scrolling="no"></iframe></div>
+          <div class="scard__d">기여도 기반 정산 + 보너스 정보의 즉시 인지</div>
+        </a>
+
+        <a class="scard" href="craft.html">
+          <div class="scard__h"><span class="scard__n">10</span><span class="scard__t">제작</span>
+            <span class="scard__e">CRAFT</span></div>
+          <div class="prev"><iframe data-src="craft.html" scrolling="no"></iframe></div>
+          <div class="scard__d">레시피 · 재료 보유/필요 · 제작 비용/시간 — js/items.js 데이터 기반</div>
+        </a>
+
+        <a class="scard" href="characters.html">
+          <div class="scard__h"><span class="scard__n">09</span><span class="scard__t">캐릭터 설정 시트</span>
+            <span class="scard__e">CHARACTERS</span></div>
+          <div class="prev"><iframe data-src="characters.html" scrolling="no"></iframe></div>
+          <div class="scard__d">아인·카인·류·세라 정면/측면/후면 턴어라운드 + 역할·특성</div>
+        </a>
+      </div>
+
+      <!-- 하단: 레퍼런스 / 제안 -->
+      <div class="lower">
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">벤치마킹 &amp; 레퍼런스</span>
+            <a class="panel__meta" href="benchmark.html" style="color:#B03A36">압축 시트 보기 →</a></div>
+          <div class="panel__body panel__body--tight">
+            <div class="ref"><span class="ref__th art art--city"></span>
+              <div><div class="ref__n">Dark Souls / Elden Ring</div>
+                <div class="ref__d">· 어두운 세계관, 환경 연출<br>· 몰입감 있는 전투 템포</div></div></div>
+            <div class="ref"><span class="ref__th art art--portrait"></span>
+              <div><div class="ref__n">Bloodborne</div>
+                <div class="ref__d">· 고딕 분위기, 색감<br>· 잔혹하고 아름다운 디자인</div></div></div>
+            <div class="ref"><span class="ref__th art"></span>
+              <div><div class="ref__n">NieR:Automata</div>
+                <div class="ref__d">· 스토리텔링 방식<br>· UI의 미니멀 및 감성 연출</div></div></div>
+            <div class="ref"><span class="ref__th art art--beast"></span>
+              <div><div class="ref__n">Diablo IV</div>
+                <div class="ref__d">· 인벤토리, 아이템 UI<br>· 직관적 정보 전달</div></div></div>
+          </div>
+        </section>
+
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title">제안 (UI/UX 방향성)</span></div>
+          <div class="panel__body panel__body--tight">
+            <div class="prop"><i>•</i>몰입감 극대화를 위한 다크 톤 &amp; 최소한의 UI</div>
+            <div class="prop"><i>•</i>전투의 타격감 강화를 위한 이펙트 &amp; 카메라 연출</div>
+            <div class="prop"><i>•</i>스토리 몰입을 위한 컷신 연출 강화</div>
+            <div class="prop"><i>•</i>모바일 &amp; PC 크로스 플랫폼에 최적화된 UI 레이아웃</div>
+            <div class="hr"></div>
+            <div class="flex g2 mb3">
+              <a class="btn btn--sm btn--ghost fill" href="compare.html">
+                <svg class="ico ico--sm"><use href="#i-eye"/></svg>시트 ↔ 구현 대조</a>
+              <a class="btn btn--sm btn--ghost fill" href="characters.html">
+                <svg class="ico ico--sm"><use href="#i-users"/></svg>캐릭터 시트</a>
+              <a class="btn btn--sm btn--ghost fill" href="app/hwanghon.apk" download>
+                <svg class="ico ico--sm"><use href="#i-arrowr"/></svg>Android 앱 (APK)</a>
+              <a class="btn btn--sm btn--ghost fill" href="design-sheets/00-concept.webp">
+                <svg class="ico ico--sm"><use href="#i-book"/></svg>원본 시트 보기</a>
+            </div>
+            <div class="label-ko">구현 범위</div>
+            <div class="xs t-faint" style="line-height:1.9">
+              공용 토큰(tokens.css) · 컴포넌트(ui.css) · 아이콘 스프라이트(icons.js) ·
+              런타임(ui.js) · 아이템 데이터(items.js) 위에 10개 화면을 구성했습니다.
+              아트 슬롯은 <b class="t-dim">.art</b> 영역으로 분리되어 실제 일러스트로 교체 가능합니다.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+<script>
+/* 카드 미리보기: 1672px 화면을 카드 폭에 맞춰 축소 */
+function fitPreviews(){
+  document.querySelectorAll('.prev').forEach(function(box){
+    var f = box.querySelector('iframe');
+    var k = box.clientWidth / 1672;
+    f.style.transform = 'scale(' + k + ')';
+  });
+}
+/* 터치 기기: iframe 10개는 무거우므로 정적 썸네일로 대체 */
+var TOUCH = matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches;
+function loadPreviews(){
+  var frames = [].slice.call(document.querySelectorAll('.prev iframe'));
+  if (TOUCH){
+    frames.forEach(function(f){
+      var name = (f.getAttribute('data-src')||'').replace('.html','');
+      var img = document.createElement('img'); img.src = 'art/thumbs/'+name+'.webp'; img.alt = name; img.loading = 'lazy';
+      f.parentNode.replaceChild(img, f);
+    });
+    return;
+  }
+  (function next(i){
+    if (i >= frames.length) return;
+    var f = frames[i];
+    f.addEventListener('load', function(){ setTimeout(function(){ next(i+1); }, 60); }, { once:true });
+    f.src = f.getAttribute('data-src');
+    setTimeout(function(){ if (!f.dataset.done){ f.dataset.done=1; next(i+1); } }, 4000);
+  })(0);
+}
+/* 빌드 표시: version.json 은 배포마다 갱신 → 폰에서 어떤 빌드를 보고 있는지 확인용 */
+fetch('version.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(v){
+  var t='build '+v.build; var el=document.getElementById('build-tag'); if(el) el.textContent='· '+t;
+  var hb=document.querySelector('.topbar--m .topbar__title'); if(hb){ var s=document.createElement('span'); s.style.cssText='font-size:11px;color:#6A6A6A;margin-left:8px;letter-spacing:0;font-family:monospace'; s.textContent=t; hb.appendChild(s); }
+}).catch(function(){});
+window.addEventListener('resize', fitPreviews);
+fitPreviews();
+loadPreviews();
+</script>
+</body>
+</html>

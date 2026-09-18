@@ -1,0 +1,13 @@
+{
+  "appId": "com.hukklehub.hwanghon",
+  "appName": "황혼",
+  "webDir": "www",
+  "server": {
+    "url": "https://hukkle-hub.github.io/hwanghon/",
+    "errorPath": "offline.html"
+  },
+  "android": {
+    "backgroundColor": "#0B0C0F",
+    "allowMixedContent": false
+  }
+}

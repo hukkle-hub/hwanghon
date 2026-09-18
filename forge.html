@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 장비 관리 / 강화</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.fgtabs{display:flex;align-items:center;gap:0;padding:0 22px;border-bottom:1px solid var(--line-soft);flex:none}
+.fgtabs .tab{padding:9px 30px}
+.fgtabs .sepbar{color:var(--tx-ghost);font-size:11px}
+.fg{display:grid;grid-template-columns:212px 1fr 288px 158px;gap:12px;padding:12px 18px;flex:1;min-height:0}
+
+/* 파티 선택 */
+.prow{display:flex;align-items:center;gap:9px;padding:8px 9px;border:1px solid transparent;
+  border-bottom:1px solid var(--line-soft);cursor:pointer;transition:.15s}
+.prow:hover{background:rgba(255,255,255,.03)}
+.prow.is-on{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.04));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.prow__face{width:40px;height:40px;border:1px solid var(--line);flex:none}
+.prow__nm{font-family:var(--f-serif);font-size:13px;color:var(--tx-hi)}
+.prow__lv{font-size:10.5px;color:var(--tx-faint);margin-top:1px}
+.prow__cp{font-size:10.5px;color:var(--tx-dim);margin-top:2px}
+.prow__eq{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.prow__eq b{color:#C9534E;font-weight:400}
+.prow__role{margin-left:auto;color:var(--tx-ghost)}
+
+/* 중앙 */
+.fg__c{display:flex;flex-direction:column;gap:11px;min-height:0}
+.forgeart{flex:1;min-height:0;position:relative;border:1px solid var(--line)}
+.forgeart>img{object-position:center bottom}
+.npc{position:absolute;left:14px;top:12px;z-index:3;max-width:180px}
+.npc b{display:block;font-family:var(--f-serif);font-size:13px;color:var(--tx-hi)}
+.npc span{display:block;font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.npc p{font-size:10.5px;color:var(--tx-faint);line-height:1.8;font-style:italic;margin:10px 0 0}
+.itemhead{position:absolute;left:50%;top:12px;transform:translateX(-50%);z-index:3;text-align:center;width:280px}
+.itemhead b{font-family:var(--f-serif);font-size:16px;color:var(--tx-hi);letter-spacing:.03em}
+.itemhead span{display:block;font-size:10.5px;color:var(--tx-faint);margin-top:4px}
+.itemhead .cp{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:5px;font-size:12px}
+.itemhead .cp em{font-style:normal;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.itemhead .cp i{color:var(--up);font-style:normal;font-variant-numeric:tabular-nums}
+.itemglow{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:120px;height:220px;
+  background:radial-gradient(45% 50% at 50% 50%,rgba(210,140,60,.26),transparent 70%);z-index:2;
+  display:grid;place-items:center;color:rgba(220,190,150,.4)}
+.itemglow .ico{width:64px;height:64px;stroke-width:.8}
+.itemglow .itart{width:96px;height:96px;filter:drop-shadow(0 0 10px rgba(210,140,60,.35))}
+html.mobile .itemglow{top:44%;height:150px}
+html.mobile .itemglow .itart{width:72px;height:72px;align-self:start;margin-top:4px}
+.mat__ic .itart{width:24px;height:24px}
+.enhinfo{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:14px 18px 14px;
+  background:linear-gradient(0deg,rgba(6,7,10,.95),rgba(6,7,10,.72) 60%,transparent)}
+.enhstep{text-align:center;font-family:var(--f-serif);font-size:20px;color:var(--tx-hi);letter-spacing:.06em}
+.rate{text-align:center;margin-top:9px}
+.rate b{display:block;font-family:var(--f-serif);font-size:26px;color:var(--red-lit);letter-spacing:.02em}
+
+/* 강화 재료 */
+.mat{display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.mat:last-child{border:0}
+.mat__ic{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.32);color:#9AA0AC;flex:none}
+.mat__n{font-size:11.5px;color:var(--tx)}
+.mat__c{margin-left:auto;font-size:11.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.mat__c b{color:var(--tx-hi);font-weight:400}
+
+/* 액션 레일 */
+.rail{display:flex;flex-direction:column;gap:9px;min-height:0}
+.ract{display:flex;flex-direction:column;gap:5px;padding:11px 12px;border:1px solid var(--line);
+  background:rgba(255,255,255,.015);cursor:pointer;transition:.15s;text-align:left}
+.ract:hover{border-color:var(--line-hard);background:rgba(255,255,255,.05)}
+.ract.is-on{color:#F0DADA;border-color:rgba(199,58,54,.6);
+  background:linear-gradient(180deg,rgba(165,28,28,.45),rgba(96,16,16,.5));
+  box-shadow:inset 0 0 22px rgba(217,58,54,.16)}
+.ract__t{display:flex;align-items:center;gap:8px;font-family:var(--f-serif);font-size:15px;color:var(--tx-hi);letter-spacing:.06em}
+.ract.is-on .ract__t{color:#FFF}
+.ract__d{font-size:10px;color:var(--tx-faint);line-height:1.5}
+.ract.is-on .ract__d{color:rgba(240,218,218,.66)}
+.itemglow.is-hit .ico,.itemglow.is-hit .itart{animation:enhhit .6s}
+@keyframes enhhit{0%{filter:brightness(1)}30%{filter:brightness(3) drop-shadow(0 0 18px #E8D9A8)}100%{filter:brightness(1)}}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);z-index:300;padding:9px 18px;background:rgba(10,11,14,.94);border:1px solid var(--line-gold);color:#E8D9A8;font-size:12.5px;letter-spacing:.04em;box-shadow:var(--sh-pop);opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar" style="padding-bottom:10px">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">장비 관리</h1>
+      <div class="topbar__sub">장비의 제작, 강화, 수리 및 분해를 진행합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num" id="gold">75,300</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <div class="fgtabs">
+    <a class="tab" href="inventory.html">장비</a><span class="sepbar">|</span>
+    <a class="tab" href="craft.html">제작</a><span class="sepbar">|</span>
+    <a class="tab is-on" href="forge.html">강화</a>
+  </div>
+
+  <main class="fg" data-mdefault="강화">
+    <!-- ===== 파티 선택 ===== -->
+    <section class="panel panel--framed" data-mpane="파티">
+      <div class="panel__head"><span class="panel__title">파티 선택</span></div>
+      <div class="panel__body panel__body--flush fill scroll" data-pick>
+        <div class="prow is-on">
+          <div class="prow__face art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
+          <div class="fill">
+            <div class="prow__nm">아인</div>
+            <div class="prow__lv">LV.26</div>
+            <div class="prow__cp">전투력 24,650</div>
+            <div class="prow__eq">착용 장비 <b>◆ 8</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-scythe"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--avatar"><img src="art/face-kain.webp" alt="kain"></div>
+          <div class="fill">
+            <div class="prow__nm">카인</div>
+            <div class="prow__lv">LV.32</div>
+            <div class="prow__cp">전투력 32,180</div>
+            <div class="prow__eq">착용 장비 <b>◆ 11</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-sword"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--avatar"><img src="art/face-ryu.webp" alt="ryu"></div>
+          <div class="fill">
+            <div class="prow__nm">류</div>
+            <div class="prow__lv">LV.25</div>
+            <div class="prow__cp">전투력 21,430</div>
+            <div class="prow__eq">착용 장비 <b>◆ 9</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-crosshair"/></svg>
+        </div>
+        <div class="prow">
+          <div class="prow__face art art--avatar"><img src="art/face-sera.webp" alt="sera"></div>
+          <div class="fill">
+            <div class="prow__nm">세라</div>
+            <div class="prow__lv">LV.24</div>
+            <div class="prow__cp">전투력 19,870</div>
+            <div class="prow__eq">착용 장비 <b>◆ 8</b></div>
+          </div>
+          <svg class="ico prow__role"><use href="#i-seal"/></svg>
+        </div>
+      </div>
+      <div style="padding:10px">
+        <button class="btn btn--sm btn--block btn--ghost">
+          <svg class="ico ico--sm"><use href="#i-users"/></svg>파티 편성</button>
+      </div>
+    </section>
+
+    <!-- ===== 중앙: 대장간 ===== -->
+    <div class="fg__c" data-mpane="강화">
+      <div class="forgeart art art--forge">
+        <img src="art/forge-kain.webp" alt="대장간">
+        <div class="npc">
+          <b>카인</b><span>대장간 운영</span>
+          <p>“무기는 살아있어.<br>손이 기억해야,<br>녀석도 네게 응답하지.”</p>
+        </div>
+
+        <div class="itemhead">
+          <b id="ih-nm">—</b>
+          <span id="ih-kind"></span>
+          <div class="cp">전투력 <em id="ih-cp">0</em>
+            <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg>
+            <i id="ih-cp2">0</i></div>
+        </div>
+
+        <div class="itemglow" id="ih-glow"></div>
+
+        <div class="enhinfo">
+          <div class="enhstep" id="enh-step">+5 강화 단계</div>
+          <div class="rate">
+            <span class="xs t-faint">강화 성공 확률</span>
+            <b id="enh-rate">65%</b>
+          </div>
+          <div class="flex ac jb mt3">
+            <span class="xs t-faint">장비 구조 안정성</span>
+            <span class="xs t-dim num" id="enh-dur">100 / 100</span>
+          </div>
+          <div class="segbar mt2" data-seg="100" id="enh-seg"></div>
+          <div class="xs mt2" style="color:#B4534E" id="enh-warn">구조 안정성이 0이 되면 장비가 파괴됩니다.</div>
+          <div class="flex ac g3 mt2" id="enh-extra">
+            <label class="check" id="enh-boost"><i></i>보조제 사용 <span class="xs t-faint" id="enh-boost-n"></span></label>
+            <span class="xs t-faint" id="enh-fs" style="margin-left:auto"></span>
+          </div>
+          <div class="flex g2 mt3">
+            <button class="btn btn--primary btn--craft fill" id="do-enh" data-primary>강화</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 강화 재료 / 옵션 ===== -->
+    <div class="flex col g3" style="min-height:0" data-mpane="재료">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">대상 장비</span><span class="panel__meta" id="tg-count"></span></div>
+        <div class="panel__body panel__body--tight"><div class="slotgrid" id="tg-grid" style="--cols:6;gap:5px"></div></div>
+      </section>
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">강화 재료</span></div>
+        <div class="panel__body panel__body--tight" id="enh-mats"></div>
+      </section>
+
+      <section class="panel panel--framed fill">
+        <div class="panel__head"><span class="panel__title">옵션 정보</span><span class="panel__meta" id="opt-meta"></span></div>
+        <div class="panel__body panel__body--tight" id="enh-opts"></div>
+      </section>
+
+      <section class="panel panel--framed none">
+        <div class="panel__body panel__body--tight">
+          <div class="flex ac jb">
+            <span class="sm t-faint">강화 비용</span>
+            <span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num" id="enh-cost">18,000</span></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== 액션 레일 ===== -->
+    <div class="rail" data-pick data-mpane="작업">
+      <button class="ract is-on" data-pickitem data-mode="enh">
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-hammer"/></svg>강화</span>
+        <span class="ract__d">장비를 강화합니다.</span>
+      </button>
+      <button class="ract" data-pickitem data-mode="seal">
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-seal"/></svg>봉인</span>
+        <span class="ract__d">장비의 잠재력을 봉인합니다.</span>
+      </button>
+      <button class="ract" data-pickitem data-mode="repair">
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-anvil"/></svg>대수선</span>
+        <span class="ract__d">구조 안정성을 복구합니다.</span>
+      </button>
+      <button class="ract" data-pickitem data-mode="salvage">
+        <span class="ract__t"><svg class="ico ico--lg"><use href="#i-recycle"/></svg>분해</span>
+        <span class="ract__d">장비를 분해하여 재료를 획득합니다.</span>
+      </button>
+      <div class="fill"></div>
+      <button class="btn btn--sm btn--ghost">
+        <svg class="ico ico--sm"><use href="#i-hammer"/></svg>자동 강화 설정</button>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+  <div class="hotbar">
+    <a class="hot" href="inventory.html"><svg class="ico"><use href="#i-arrowl"/></svg>뒤로</a>
+    <span class="hot">장비 프리셋</span>
+    <div class="tabs tabs--pill" data-tabs="">
+      <button class="tab is-on" data-tab="p1">1</button>
+      <button class="tab" data-tab="p2">2</button>
+      <button class="tab" data-tab="p3">3</button>
+    </div>
+    <span class="hot">정렬</span>
+    <select class="sel" style="width:104px"><option>등급 순</option><option>전투력 순</option></select>
+    <button class="iconbtn"><svg class="ico ico--sm"><use href="#i-refresh"/></svg></button>
+    <span class="hotbar__spacer"></span>
+    <label class="check is-on"><i></i>착용 장비만 보기</label>
+    <a class="hot"><svg class="ico ico--sm"><use href="#i-book"/></svg>도움말</a>
+  </div>
+</div>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/sfx.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+<script>
+/* 강화 — gear.js: 대상 장비 선택 → 단계표(items.js ENHANCE)로 재료·확률·비용 → 강화/대수선/분해 실행. 결과는 저장(tw:save.gear) */
+(function(){
+  var T=window.TW_ITEMS, G=window.TW_GEAR, $=function(s){ return document.querySelector(s); };
+  var mode='enh', cur=null;
+  var LBL={ atk:'기본 공격력', atkEx:'추가 공격력', def:'방어력', hp:'HP', crit:'치명타 확률', critDmg:'치명타 피해', skill:'스킬 피해 증가', bleed:'출혈 적중' };
+  var PCT={ crit:1, critDmg:1, skill:1 };
+  function toast(msg, warn){ var t=$('#toast'); t.textContent=msg; t.style.borderColor=warn?'rgba(199,58,54,.7)':''; t.style.color=warn?'#F0B4B0':''; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(function(){ t.classList.remove('on'); },1800); }
+  function seg(v){ var n=12, on=Math.round(v/100*n), h=''; for(var i=0;i<n;i++) h+='<i class="'+(i<on?(v<30?'warn':'on'):'')+'"></i>'; $('#enh-seg').innerHTML=h; }
+  function gold(){ $('#gold').textContent=T.fmt(G.wallet()); }
+  function grid(){ var ids=G.allGear(); $('#tg-count').textContent=ids.length+' 개'; if(!cur||ids.indexOf(cur)<0) cur=G.state().equipped.main||ids[0]||null;
+    $('#tg-grid').innerHTML=ids.map(function(id){ return T.slotHTML(id,{on:id===cur}); }).join(''); render(); }
+  function render(){
+    var it=cur&&T.get(cur); var btn=$('#do-enh');
+    if(!it){ $('#ih-nm').textContent='장비 없음'; $('#ih-kind').textContent=''; $('#enh-mats').innerHTML=''; $('#enh-opts').innerHTML=''; btn.disabled=true; return; }
+    var e=G.enhOf(cur), dur=G.durOf(cur), step=G.enhStep(cur), r=T.RARITY[it.rarity];
+    $('#ih-nm').textContent=it.name+' +'+e; $('#ih-nm').style.color=r.color; $('#ih-kind').textContent=r.name+' / '+(it.kind||T.TYPE[it.type])+(G.isEquipped(cur)?' · 장착 중':'');
+    $('#ih-glow').innerHTML=T.artHTML(cur);
+    $('#ih-cp').textContent=T.fmt(G.itemCp(cur)); $('#ih-cp2').textContent=T.fmt(step?G.itemCp(cur,step.to):G.itemCp(cur));
+    $('#enh-dur').textContent=dur+' / 100'; seg(dur);
+    var cur_s=G.itemStats(cur), nxt=step?G.itemStats(cur,step.to):cur_s;
+    $('#enh-opts').innerHTML=Object.keys(cur_s).map(function(k){ var u=PCT[k]?'%':''; var a=PCT[k]?cur_s[k]:T.fmt(cur_s[k]), b=PCT[k]?nxt[k]:T.fmt(nxt[k]);
+      return '<div class="stat"><span class="stat__k">'+(LBL[k]||k)+'</span><span class="stat__v num">'+a+u+(step?' <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg> <span class="up">'+b+u+'</span>':'')+'</span></div>'; }).join('')+
+      '<div class="hr"></div><div class="flex ac g2"><svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg><span class="xs t-faint">옵션 잠금</span><span class="xs t-faint" style="margin-left:auto">'+(e>=7?'해금됨':'+7 강화 시 해금')+'</span></div>';
+    $('#opt-meta').textContent=it.effect?'':'';
+    if(mode==='enh'){
+      if(!step){ $('#enh-extra').style.display='none'; $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
+      else { var useB=!step.safe && $('#enh-boost').classList.contains('is-on'); var mats=step.mats.slice(); if(useB) mats.push(['m_booster', step.boosterN]);
+        $('#enh-step').textContent='+'+step.to+' 강화 단계'+(step.safe?' · 안전 구간':''); $('#enh-rate').textContent=step.rate+'%'+(step.fs?' (+'+step.fs+')':''); $('#enh-cost').textContent=T.fmt(step.cost);
+        $('#enh-mats').innerHTML=mats.map(function(m){ var mi=T.get(m[0]), ok=(mi.qty||0)>=m[1]; return '<div class="mat"><span class="mat__ic">'+T.artHTML(m[0])+'</span><span class="mat__n">'+mi.name+'</span><span class="mat__c"><b'+(ok?'':' style="color:#C9534E"')+'>'+T.fmt(mi.qty||0)+'</b> / '+m[1]+'</span></div>'; }).join('');
+        $('#enh-extra').style.display=step.safe?'none':''; $('#enh-boost-n').textContent='×'+step.boosterN+' (보유 '+T.fmt(T.get('m_booster').qty||0)+') · 실패 시 단계 유지'; $('#enh-fs').textContent=step.fs?'실패 보정 +'+step.fs+'%p':'실패 보정 없음';
+        $('#enh-warn').textContent=!step.durOk?'구조 안정성 '+dur+' — 20 미만이면 강화할 수 없습니다. 대수선이 필요합니다.':step.safe?'안전 구간: 실패하지 않습니다.':('실패 시 '+(useB?'단계 유지':(step.drop+'단계 하락'))+' · 내구도 -'+step.durLoss+' · 0이 되면 파괴');
+        btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!step.durOk||!G.canPay(mats, step.cost); }
+    } else { $('#enh-extra').style.display='none'; }
+    if(mode==='enh'){ /* 위에서 처리 */ } else if(mode==='repair'){ var c=G.repairCost(cur); $('#enh-step').textContent='대수선'; $('#enh-rate').textContent=dur+'%'; $('#enh-mats').innerHTML='<div class="xs t-dim">구조 안정성을 100 으로 복구합니다.</div>'; $('#enh-cost').textContent=T.fmt(c); $('#enh-warn').textContent=c?'비용은 장비 가치와 손상도에 비례':'손상이 없습니다'; btn.textContent='대수선'; btn.disabled=!c||G.wallet()<c; }
+    else if(mode==='salvage'){ var eq=G.isEquipped(cur); $('#enh-step').textContent='분해'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-dim">장비를 재료로 되돌립니다. 등급이 높을수록 좋은 재료. 내구도가 높을수록 더 많이.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=eq?'장착 중인 장비는 분해할 수 없습니다. 인벤토리에서 해제하세요.':'되돌릴 수 없습니다.'; btn.textContent='분해'; btn.disabled=eq; }
+    else { $('#enh-step').textContent='봉인'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">잠재력 봉인은 준비 중입니다.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=''; btn.textContent='봉인'; btn.disabled=true; }
+    gold();
+  }
+  function act(){ if(!cur) return; var it=T.get(cur), r;
+    if(mode==='enh'){ r=G.enhance(cur, $('#enh-boost').classList.contains('is-on')); if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err==='dur'){ toast('구조 안정성이 낮습니다. 대수선 후 강화하세요.', true); return; } if(r.err) return;
+      if(r.ok){ toast(it.name+' +'+r.enh+' 강화 성공'); if(window.TW_SFX) TW_SFX.play('clear'); $('#ih-glow').classList.add('is-hit'); setTimeout(function(){ $('#ih-glow').classList.remove('is-hit'); },600); }
+      else if(r.broken){ toast(it.name+' 파괴됨 — 구조 안정성 0', true); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; }
+      else { toast('강화 실패'+(r.drop?' · +'+r.from+' → +'+r.enh:' · 단계 유지')+' · 내구도 '+r.dur+' · 다음 성공률 +'+r.fs+'%p', true); if(window.TW_SFX) TW_SFX.play('hurt'); }
+    }
+    else if(mode==='repair'){ r=G.repair(cur); if(r.err==='pay'){ toast('골드가 부족합니다', true); return; } if(r.ok){ toast('대수선 완료 · -'+T.fmt(r.cost)+' G'); if(window.TW_SFX) TW_SFX.play('ui'); } }
+    else if(mode==='salvage'){ r=G.dismantle(cur); if(r.err==='equipped'){ toast('장착 중인 장비입니다', true); return; } if(r.ok){ toast(it.name+' 분해 → '+r.got.map(function(g){ return T.get(g[0]).name+' ×'+g[1]; }).join(', ')); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; } }
+    grid();
+  }
+  document.querySelector('.rail').addEventListener('click', function(e){ var b=e.target.closest('[data-mode]'); if(!b) return; mode=b.getAttribute('data-mode'); render(); });
+  $('#tg-grid').addEventListener('click', function(e){ var sl=e.target.closest('[data-id]'); if(!sl) return; cur=sl.getAttribute('data-id'); grid(); });
+  $('#do-enh').addEventListener('click', act);
+  $('#enh-boost').addEventListener('click', function(){ setTimeout(render, 0); });   /* is-on 토글은 ui.js checks() 가 한다 */
+  document.addEventListener('tw:wallet', function(){ grid(); });
+  grid();
+})();
+</script>
+</body>
+</html>

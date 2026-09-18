@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 전투 화면</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<link rel="stylesheet" href="css/battle.css">
+</head>
+<body data-landscape>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <div class="bt">
+    <div class="btscene art art--city">
+      <img src="art/story-city.webp" alt="전장">
+    </div>
+
+    <!-- 보스 체력 (상단 고정) -->
+    <div class="bosshp">
+      <div class="bosshp__nm" id="b-name">타이탄 거인, 모르버스</div>
+      <div class="bosshp__bar">
+        <svg class="ico ico--sm" style="color:#C9534E"><use href="#i-skull"/></svg>
+        <div class="bar" data-fill="68" id="b-hp"></div>
+        <span class="stack" id="b-stack">×7</span>
+      </div>
+      <div class="bosshp__seg" id="b-seg"></div>
+    </div>
+
+    <!-- 타이머 -->
+    <div class="bttimer">
+      <span class="bttimer__t"><svg class="ico ico--sm"><use href="#i-clock"/></svg><span id="b-timer">02 : 41</span></span>
+      <button class="iconbtn"><svg class="ico ico--lg"><use href="#i-pause"/></svg></button>
+    </div>
+
+    <!-- 파티 정보 (좌측 세로, 상태 아이콘으로 압축) -->
+    <div class="btparty" id="btparty"></div>
+
+    <!-- 카운터 피드백 (중앙 상단, 짧고 강하게) -->
+    <div class="counter" id="counter"></div>
+
+    <!-- 상태 이상 요약 (중요도 기반) -->
+    <div class="status" id="status"></div>
+
+    <!-- 하단 HUD -->
+    <div class="bthud">
+      <div class="bthud__row">
+        <div class="stick"><i></i></div>
+
+        <div class="vitals" id="vitals"></div>
+
+        <div class="skills" id="skills"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="js/world.js"></script>
+<script>
+/* 전투 HUD — world.js BATTLE 에서 렌더 (진행 바는 ui.js 부팅 시 채워짐) */
+(function(){
+  var W=window.TW_WORLD, B=W.BATTLE, $=function(s){return document.querySelector(s);};
+  $('#b-name').textContent=B.boss.name; $('#b-hp').setAttribute('data-fill',B.boss.hp); $('#b-stack').textContent='×'+B.boss.stacks;
+  $('#b-seg').innerHTML=B.boss.seg.map(function(o){ return '<i'+(o?'':' class="off"')+'></i>'; }).join(''); $('#b-timer').textContent=B.timer;
+  $('#btparty').innerHTML=B.party.map(function(m){ var c=W.CHARS[m[0]], st=''; for(var i=0;i<m[3];i++) st+='<i></i>';
+    return '<div class="pmem">'+W.face(m[0],'pmem__face')+'<div class="fill"><div class="flex ac g2"><span class="pmem__n">'+c.nm+'</span><span class="pmem__lv">LV.'+c.lv+'</span><span class="pmem__hp num">'+W.fmt(m[2])+'</span></div><div class="bar bar--hp" data-fill="'+m[1]+'"></div><div class="pmem__st">'+st+'</div></div></div>'; }).join('');
+  $('#counter').innerHTML='<div class="counter__lb">'+B.counter.label+'</div><div class="counter__v">'+B.counter.v+'</div><div class="counter__sub">'+B.counter.sub+'</div>';
+  $('#status').innerHTML=B.statuses.map(function(s){ return '<div class="stline"><svg class="ico ico--xs" style="color:'+s[1]+'"><use href="#i-'+s[0]+'"/></svg>'+s[2]+'<b>'+s[3]+'</b></div>'; }).join('');
+  var v=B.vitals;
+  $('#vitals').innerHTML='<div class="vital"><svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg><div class="bar bar--hp bar--tall" data-fill="'+v.hp[2]+'"></div><span class="vital__v">'+W.fmt(v.hp[0])+' / '+W.fmt(v.hp[1])+'</span></div>'+
+    '<div class="vital stamina"><svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg><div class="bar bar--tall" data-fill="'+v.st[2]+'"></div><span class="vital__v">'+v.st[0]+' / '+v.st[1]+'</span></div>'+
+    '<div class="ammo">'+B.pouch.map(function(p,i){ return '<svg class="ico ico--xs"'+(i?' style="margin-left:12px"':'')+'><use href="#i-'+p[0]+'"/></svg>'+p[1]; }).join('')+'</div>';
+  $('#skills').innerHTML=B.skills.map(function(k){ return '<div class="sk"><span class="sk__k">'+k[0]+'</span><svg class="ico"><use href="#i-'+k[1]+'"/></svg>'+(k[2]?'<span class="sk__cd">'+k[2]+'</span>':'')+'</div>'; }).join('')+
+    '<div class="sk sk--ult"><span class="sk__k">'+B.ult[0]+'</span><svg class="ico ico--lg"><use href="#i-'+B.ult[1]+'"/></svg></div>';
+})();
+</script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

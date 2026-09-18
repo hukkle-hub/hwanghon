@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 인력사무실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.office{display:grid;grid-template-columns:344px 1fr 374px;gap:14px;padding:14px 20px 12px;flex:1;min-height:0}
+.office__l{display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0}
+.office__c{position:relative;display:flex;flex-direction:column;min-height:0}
+.office__r{display:grid;grid-template-rows:1fr auto auto;gap:12px;min-height:0}
+
+/* 중앙 아트 + 파티 정보 */
+.hero{position:absolute;inset:0}
+.hero .moon{right:14%;top:9%;width:54px;height:54px;opacity:.55}
+.office__c .party{margin-top:auto;position:relative;z-index:2}
+.party__cards{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.pcard{
+  display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(22,23,28,.94),rgba(12,13,17,.96));
+  border:1px solid var(--line);padding:9px 9px 8px;cursor:pointer;transition:.15s
+}
+.pcard:hover{border-color:var(--line-hard)}
+.pcard.is-on{border-color:var(--line-red);box-shadow:inset 0 0 18px rgba(165,28,28,.14)}
+.pcard__top{display:flex;gap:9px;align-items:flex-start}
+.pcard__face{width:44px;height:44px;flex:none;border:1px solid var(--line)}
+.pcard__nm{font-family:var(--f-serif);font-size:14px;color:var(--tx-hi);letter-spacing:.03em}
+.pcard__lv{font-size:11px;color:var(--tx-faint);margin-top:2px}
+.pcard__cp{font-size:11.5px;color:var(--tx-dim);margin-top:3px;font-variant-numeric:tabular-nums}
+.pcard__role{margin-left:auto;color:var(--tx-ghost)}
+.pcard__ready{
+  margin-top:8px;height:24px;display:flex;align-items:center;justify-content:center;gap:5px;
+  font-size:11.5px;color:#D9A9A7;border:1px solid var(--line-red);background:rgba(165,28,28,.16);
+  letter-spacing:.05em
+}
+
+/* 사무소 등급 */
+.rank__row{display:flex;align-items:center;gap:10px;padding:7px 0}
+.rank__ico{width:26px;height:26px;color:var(--gold-dim);flex:none}
+.rank__k{font-size:11.5px;color:var(--tx-faint)}
+.rank__v{font-size:12px;color:var(--tx);letter-spacing:.03em}
+.rank__num{font-size:11px;color:var(--tx-faint);font-variant-numeric:tabular-nums;margin-left:auto}
+
+/* 의뢰 정보 */
+.qart{height:118px;border:1px solid var(--line);position:relative}
+.rewards{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.rw{
+  display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px 6px;
+  border:1px solid var(--line);background:rgba(0,0,0,.3)
+}
+.rw .ico{color:#9AA0AC;width:20px;height:20px}
+.rw .itart{width:26px;height:26px}
+.rw b{font-size:11.5px;color:var(--tx);font-weight:500;font-variant-numeric:tabular-nums}
+.rw[data-r="hero"]{border-color:rgba(139,91,214,.4)}
+.rw[data-r="legend"]{border-color:rgba(201,138,43,.4)}
+.enemies{display:flex;gap:6px}
+.enemy{width:30px;height:30px;display:grid;place-items:center;border:1px solid var(--line);
+  background:rgba(0,0,0,.35);color:#8C9098}
+
+/* 전투 준비 */
+.prep{display:flex;align-items:center;gap:11px;padding:10px 12px}
+.prep__thumb{width:58px;height:40px;border:1px solid var(--line);flex:none}
+.prep__ico{width:30px;height:30px;color:var(--gold-dim);flex:none}
+
+/* 하단 네비 */
+.gnb{display:flex;align-items:center;gap:34px;padding:11px 26px;
+  border-top:1px solid var(--line-soft);background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);flex:none}
+.gnb a{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx-faint);letter-spacing:.04em}
+.gnb a:hover{color:var(--tx)}
+.gnb a.is-on{color:#D8C08A}
+.gnb a.is-on .ico{color:var(--gold)}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+
+  <!-- ================= 상단 바 ================= -->
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">인력사무실</h1>
+      <div class="topbar__sub" id="of-owner">마태오의 인력사무소</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <!-- ================= 본문 ================= -->
+  <main class="office" data-mdefault="의뢰" data-mback="lobby.html">
+
+    <!-- ---------- 휴대폰 전용: 메뉴 (데스크톱은 하단 내비 사용) ---------- -->
+    <nav class="mmenu monly" data-mpane="메뉴" aria-label="메뉴">
+      <a href="quest.html"><svg class="ico ico--lg"><use href="#i-book"/></svg><b>의뢰</b><span>보스 도감</span></a>
+      <a href="party.html"><svg class="ico ico--lg"><use href="#i-users"/></svg><b>파티</b><span>모집 · 편성</span></a>
+      <a href="inventory.html"><svg class="ico ico--lg"><use href="#i-bag"/></svg><b>장비</b><span>인벤토리</span></a>
+      <a href="shop.html"><svg class="ico ico--lg"><use href="#i-shop"/></svg><b>보급소</b><span>소모품 · 재료</span></a>
+      <a href="forge.html"><svg class="ico ico--lg"><use href="#i-hammer"/></svg><b>강화</b><span>대장간</span></a>
+      <a href="craft.html"><svg class="ico ico--lg"><use href="#i-anvil"/></svg><b>제작</b><span>레시피</span></a>
+      <a href="profile.html"><svg class="ico ico--lg"><use href="#i-user"/></svg><b>프로필</b><span>기술 등급</span></a>
+      <a href="characters.html"><svg class="ico ico--lg"><use href="#i-eye"/></svg><b>요원</b><span>캐릭터 시트</span></a>
+      <a href="game3d.html" class="is-go"><svg class="ico ico--lg"><use href="#i-target"/></svg><b>던전 01</b><span>지하 훈련장</span></a>
+      <a href="game3d.html?d=d02" class="is-go"><svg class="ico ico--lg"><use href="#i-skull"/></svg><b>던전 02</b><span>갈대습지</span></a>
+      <a href="quest.html?q=q_sewage" class="is-go"><svg class="ico ico--lg"><use href="#i-shield"/></svg><b>던전 03</b><span>2경구 정화장 · 의뢰 확인</span></a>
+    </nav>
+
+    <!-- ---------- 좌: 의뢰 목록 ---------- -->
+    <div class="office__l" data-mpane="의뢰">
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">의뢰 목록</span>
+          <button class="iconbtn" style="margin-left:auto"><svg class="ico ico--sm"><use href="#i-chevr"/></svg></button>
+        </div>
+        <div class="panel__body panel__body--flush scroll" data-pick>
+          <div id="q-rows" data-mgoto="정보"></div>
+          <div style="padding:12px 11px">
+            <button class="btn btn--sm btn--block btn--ghost">
+              <svg class="ico ico--sm"><use href="#i-refresh"/></svg>의뢰 새로고침</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 사무소 등급 / 평판 -->
+      <section class="panel panel--framed">
+        <div class="panel__body">
+          <div class="rank__row">
+            <svg class="rank__ico"><use href="#i-sigil"/></svg>
+            <div class="fill">
+              <div class="flex ac jb">
+                <span class="rank__k">인력 사무소 등급</span>
+                <span class="rank__v f-serif" id="of-lv">LV.4</span>
+              </div>
+              <div class="bar bar--gold mt2" data-fill="57" id="of-bar1"></div>
+            </div>
+            <span class="rank__num" id="of-exp">2,850 / 5,000</span>
+          </div>
+          <div class="hr"></div>
+          <div class="rank__row">
+            <svg class="rank__ico"><use href="#i-seal"/></svg>
+            <div class="fill">
+              <div class="flex ac jb">
+                <span class="rank__k">사무소 평판</span>
+                <span class="rank__v" id="of-rep">신뢰</span>
+              </div>
+              <div class="bar bar--gold mt2" data-fill="62" id="of-bar2"></div>
+            </div>
+            <span class="rank__num" id="of-repexp">6,250 / 10,000</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ---------- 중: 아트 + 파티 ---------- -->
+    <div class="office__c" data-mpane="파티">
+      <div class="hero art art--office">
+        <img src="art/office-brief.webp" alt="인력사무소 브리핑">
+      </div>
+
+      <div class="party">
+        <div class="label-ko" style="padding-left:2px">파티 정보</div>
+        <div class="party__cards" data-pick id="p-cards"></div>
+      </div>
+    </div>
+
+    <!-- ---------- 우: 의뢰 정보 ---------- -->
+    <div class="office__r" data-mpane="정보">
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">의뢰 정보</span>
+          <span class="risk" style="margin-left:auto" id="q-risk">위험도 <b class="badge badge--s">S</b></span>
+        </div>
+        <div class="panel__body scroll" id="q-info"></div>
+      </section>
+
+      <section class="panel panel--framed">
+        <a class="prep" href="game3d.html" id="of-arena" style="text-decoration:none;color:inherit">
+          <svg class="prep__ico"><use href="#i-target"/></svg>
+          <div class="fill">
+            <div class="sm t-hi">던전 01 <span class="xs t-faint">· 뒷마당 훈련장 입장</span></div>
+            <div class="xs t-faint mt1" id="of-prep">훈련용 허수아비</div>
+            <div class="xs mt1" id="of-record"></div>
+            <div class="xs t-faint mt1" id="of-drops"></div>
+          </div>
+          <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
+        </a>
+        <a class="prep" href="game3d.html?d=d02" id="of-arena2" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
+          <svg class="prep__ico"><use href="#i-skull"/></svg>
+          <div class="fill">
+            <div class="sm t-hi">던전 02 <span class="xs t-faint">· 갈대습지 · 의뢰 S</span></div>
+            <div class="xs t-faint mt1">대형 변이체 「모르버스」 토벌 · 부위 5 · 광란 페이즈</div>
+            <div class="xs mt1" id="of-record2"></div>
+            <div class="xs t-faint mt1" id="of-drops2"></div>
+          </div>
+          <div class="prep__thumb art"><img src="art/boss-marsh.webp" alt="" style="object-fit:cover"></div>
+        </a>
+        <a class="prep" href="quest.html?q=q_sewage" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
+          <svg class="prep__ico"><use href="#i-shield"/></svg>
+          <div class="fill"><div class="sm t-hi">던전 03 · 2경구 정화장</div><div class="xs t-faint mt1">오염원 3곳 차단 · 배관 파괴 · 과압 수문기 토벌</div></div>
+        </a>
+      </section>
+
+      <button class="btn btn--deploy" data-primary>
+        <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
+      </button>
+    </div>
+  </main>
+
+  <!-- ================= 하단 네비 ================= -->
+  <nav class="gnb">
+    <a href="lobby.html"><svg class="ico"><use href="#i-map"/></svg>로비</a>
+    <a class="is-on"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a href="battle.html"><svg class="ico"><use href="#i-sword"/></svg>훈련장</a>
+    <a href="shop.html"><svg class="ico"><use href="#i-shop"/></svg>상점</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+    <a href="profile.html"><svg class="ico"><use href="#i-book"/></svg>기록 보관소</a>
+  </nav>
+</div>
+
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/loot.js"></script>
+<script src="js/world.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/story.js"></script>
+<script>
+/* 인력사무실 — 의뢰 목록·의뢰 정보·파티 카드를 world.js 에서 렌더 */
+(function(){
+  var W=window.TW_WORLD, T=window.TW_ITEMS, $=function(s){return document.querySelector(s);}, cur=W.QUESTS[0].id;
+  var coin='<svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>';
+  function rows(){
+    $('#q-rows').innerHTML = W.QUESTS.map(function(q){
+      return '<div class="row'+(q.id===cur?' is-on':'')+'" data-q="'+q.id+'"><div class="row__main"><div class="row__name">'+q.name+'</div>'+
+        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="row__sub" style="margin-top:5px">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div>'+(window.TW_STORY?'<span class="qstate qstate--'+TW_STORY.questState(q.id)+'">'+TW_STORY.stateLabel(TW_STORY.questState(q.id))+'</span>':'')+'</div>'+
+        '<div class="row__right"><span class="risk">위험도 '+W.riskBadge(q.risk)+'</span></div></div>'; }).join('');
+  }
+  function info(){
+    var q=W.quest(cur); $('#q-risk').innerHTML='위험도 '+W.riskBadge(q.risk);
+    var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); var ic=it?it.icon:'exp'; var rar=it&&(it.rarity==='hero'||it.rarity==='legend')?' data-r="'+it.rarity+'"':'';
+      return '<div class="rw"'+rar+'>'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-'+ic+'"/></svg>')+'<b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
+    var en=''; for(var i=0;i<q.enemies;i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
+    $('#q-info').innerHTML='<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
+      '<div class="qart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">의뢰 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
+      '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div>'+
+      '<div class="flex ac jb"><span class="label-ko" style="margin:0">의뢰 보수</span><span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg><span class="num">'+W.fmt(q.reward)+'</span></span></div>'+
+      '<div class="rewards mt3">'+rw+'</div>'+questAction(q)+'<div class="field mt3"><input placeholder="출현 변이체 정보"><svg class="ico ico--sm t-faint"><use href="#i-search"/></svg></div>';
+    var cb=$('#q-claim'); if(cb) cb.addEventListener('click', function(){ var got=TW_STORY.claim(q.id); if(!got) return; if(window.TW_SFX) TW_SFX.play('clear'); rows(); info();
+      var T2=window.TW_ITEMS; TW_STORY.play([['matteo','보수다. '+W.fmt(q.reward)+' 골드'+got.filter(function(g){ return g[0]!=='gold'; }).map(function(g){ return ' · '+(g[0]==='exp'?'경험치':T2.get(g[0]).name)+' ×'+W.fmt(g[1]); }).join('')+'. 다음 의뢰는 준비되면 열린다.']]); });
+    var gb=$('#q-go'); if(gb) gb.addEventListener('click', function(){ var route=TW_STORY.routeForQuest(q.id);if(!route||TW_STORY.questState(q.id)==='locked')return;TW_STORY.brief(route.id,function(){location.href=route.dungeon;}); });
+  }
+  function questAction(q){ var ST=window.TW_STORY; if(!ST) return ''; var st=ST.questState(q.id);
+    if(st==='available') return '<button type="button" class="btn btn--primary mt3" id="q-go" style="width:100%">출격 — '+q.sub+'</button>';
+    if(st==='cleared') return '<button type="button" class="btn btn--primary mt3" id="q-claim" style="width:100%">의뢰 보수 수령 · '+W.fmt(q.reward)+' G</button>';
+    if(st==='claimed') return '<button type="button" class="btn mt3" id="q-go" style="width:100%">재출격 — '+q.sub+'</button>';
+    return '<div class="xs t-faint mt3">잠김 — 다음 장에서 열린다</div>'; }
+  function cards(){
+    $('#p-cards').innerHTML = W.PARTY_ORDER.map(function(id,i){ var c=W.CHARS[id];
+      return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">'+(id==='ain'&&window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'등급 '+(window.TW_GRADE?TW_GRADE.lvGrade(c.lv):c.lv))+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
+        '<svg class="ico pcard__role"><use href="#i-'+c.icon+'"/></svg></div><div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div></div>'; }).join('');
+  }
+  $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); info(); });
+  var o=W.PARTY.office;
+  $('#of-lv').textContent='사무소 '+o.lv+'등급'; $('#of-exp').textContent=W.fmt(o.exp[0])+' / '+W.fmt(o.exp[1]);
+  $('#of-rep').textContent=o.rep; $('#of-repexp').textContent=W.fmt(o.repExp[0])+' / '+W.fmt(o.repExp[1]);
+  $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
+  $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
+  try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); var curEl=document.querySelector('.topbar .currency .num'); if(sv && curEl){ var base=(window.TW_ITEMS&&window.TW_ITEMS.PLAYER&&window.TW_ITEMS.PLAYER.gold)||75300; curEl.textContent=W.fmt(base+sv.gold); } }catch(e){}
+  try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
+  try { if(window.TW_LOOT){ var d2=TW_LOOT.describe('marsh'); $('#of-drops2').innerHTML='부위 파괴: '+d2.parts.join('·')+' · 클리어 희귀: '+d2.rare.slice(0,4).join('·'); } } catch(e){}
+  try { var rec2=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); $('#of-record2').innerHTML = rec2 && rec2.cleared ? '최고 기록 <b class="badge badge--'+rec2.rank.toLowerCase()+'">'+rec2.rank+'</b> <span class="t-faint">'+Math.round(rec2.time)+'초 · 카운터 '+Math.round(rec2.counterRate*100)+'%</span>' : '<span class="t-faint">미토벌 — 정찰대 신호 끊김</span>'; } catch(e){}
+  try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
+  rows(); info(); cards();
+  /* 던전 카드: 첫 출격 전 마태오 브리핑 · 클리어 후 후일담 */
+  function guard(sel, chId){ var a=$(sel); if(!a||!window.TW_STORY) return; a.addEventListener('click', function(e){ var href=a.getAttribute('href'); if(TW_STORY.brief(chId, function(){ location.href=href; })) e.preventDefault(); }); }
+  guard('#of-arena','ch1'); guard('#of-arena2','ch2');
+  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){TW_STORY.afterClear('sewage',function(){rows();info();});}); }); } }catch(e){}
+})();
+</script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

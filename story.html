@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 이야기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.stage{height:952px}
+.st{display:grid;grid-template-columns:1fr 380px;gap:13px;padding:12px 20px;flex:1;min-height:0}
+.chs{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.chp{display:flex;gap:14px;align-items:stretch;border:1px solid var(--line);background:rgba(0,0,0,.28);padding:0;cursor:pointer;text-align:left;color:inherit;font:inherit}
+.chp.is-on{border-color:var(--line-red);box-shadow:inset 3px 0 0 var(--red-lit)}
+.chp.is-locked{opacity:.5;cursor:default}
+.chp__art{width:150px;flex:none;position:relative;overflow:hidden;background:#111}
+.chp__art img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.8)}
+.chp__body{padding:12px 14px 12px 0;flex:1}
+.chp__k{font-size:10px;letter-spacing:.26em;color:#C9A45E;font-family:var(--f-serif)}
+.chp__t{font-family:var(--f-serif);font-size:18px;color:var(--tx-hi);margin-top:3px}
+.chp__d{font-size:11.5px;color:var(--tx-dim);margin-top:6px;line-height:1.7}
+.chp__st{margin-top:8px}
+.log{font-size:12.5px;line-height:1.85;color:var(--tx)}
+.log .who{color:#C9A45E;font-family:var(--f-serif);font-size:11px;letter-spacing:.16em;display:block;margin-top:9px}
+.log .narr{color:#B9B0A8;font-family:var(--f-serif);font-style:italic}
+.log .rec{color:#D9C07A;font-style:italic}
+html.mobile .st{display:block;overflow:auto;padding:8px 10px}
+html.mobile .chs{overflow:visible;margin-bottom:10px}
+html.mobile .st .panel{min-height:220px}
+html.mobile .chp__art{width:96px}
+</style>
+</head>
+<body data-mback="lobby.html">
+<script src="js/icons.js"></script>
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">이야기</h1>
+      <div class="topbar__sub">황혼의 도시 — 지금까지의 기록과 다음 장.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency"><svg class="ico"><use href="#i-coin"/></svg><span class="num">75,300</span></span>
+      <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+  <div class="st">
+    <div class="chs" id="chs" data-mpane="장" data-mgoto="대사"></div>
+    <section class="panel panel--framed" data-mpane="대사">
+      <div class="panel__head"><span class="panel__title" id="log-t">대사</span><button class="btn btn--sm" id="replay" style="margin-left:auto">다시 보기</button></div>
+      <div class="panel__body scroll log" id="log"></div>
+    </section>
+  </div>
+</div>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/world.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/story.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/sfx.js"></script>
+<script>
+(function(){
+  var ST=window.TW_STORY, $=function(s){return document.querySelector(s);}, cur=null;
+  var DESC={ prologue:'무너진 도시, 인력사무소, 그리고 낫을 든 요원.', ch1:'마태오의 지하 훈련장. 허수아비를 상대로 낫과 카운터를 몸에 익힌다.', ch2:'정찰대 넷이 사라진 갈대습지. 대형 변이체 「모르버스」를 토벌하고 정찰대의 기록을 되찾는다.', ch3:'세 오염원을 차단하고, 과압으로 움직이는 수문기를 정지한다.' };
+  function linesOf(c){ return (c.lines||[]).concat(c.brief||[], c.after||[]); }
+  function render(){ $('#chs').innerHTML=ST.CHAPTERS.map(function(c){ var st=ST.chapterState(c); return '<button type="button" class="chp'+(c.id===cur?' is-on':'')+(st==='locked'?' is-locked':'')+'" data-ch="'+c.id+'"><div class="chp__art"><img src="art/'+c.art+'.webp" alt=""></div><div class="chp__body"><div class="chp__k">'+c.name+'</div><div class="chp__t">'+c.title+'</div><div class="chp__d">'+(DESC[c.id]||'')+'</div><span class="qstate chp__st qstate--'+(st==='done'?'claimed':st==='cleared'?'cleared':st)+'">'+(st==='done'?'완료':st==='cleared'?'보스 격파 · 사무실에서 마무리':st==='locked'?'잠김':'진행 가능')+'</span></div></button>'; }).join(''); }
+  function show(id){ cur=id; render(); var c=ST.ch(id); $('#log-t').textContent=c.name+' · '+c.title; var ls=linesOf(c);
+    $('#log').innerHTML=ls.length?ls.map(function(l){ var n=ST.NPC[l[0]]||{nm:l[0]}; return (n.nm?'<span class="who">'+n.nm+'</span>':'<span class="who">—</span>')+'<span class="'+(l[0]==='narr'?'narr':l[0]==='record'?'rec':'')+'">'+l[1]+'</span>'; }).join('<br>'):'<div class="xs t-faint">아직 기록이 없다.</div>'; }
+  $('#chs').addEventListener('click', function(e){ var b=e.target.closest('[data-ch]'); if(!b) return; show(b.dataset.ch); });
+  $('#replay').addEventListener('click', function(){ if(!cur) return; var ls=linesOf(ST.ch(cur)); if(ls.length) ST.play(ls); });
+  var open=ST.CHAPTERS.filter(function(c){ var st=ST.chapterState(c); return st==='available'||st==='cleared'; })[0]; if(!open){ var dn=ST.CHAPTERS.filter(function(c){ return ST.chapterState(c)==='done'; }); open=dn[dn.length-1]||ST.CHAPTERS[0]; } show(open.id);
+})();
+</script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

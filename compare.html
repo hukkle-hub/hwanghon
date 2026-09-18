@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 디자인 시트 대조</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+body{background:var(--bg-0)}
+.cmpbar{display:flex;align-items:center;gap:14px;padding:11px 20px;border-bottom:1px solid var(--line-soft);
+  flex:none;flex-wrap:wrap}
+.cmpbar__t{font-family:var(--f-serif);font-size:16px;color:var(--tx-hi);letter-spacing:.06em}
+.rng{width:210px;accent-color:#A51C1C;background:transparent}
+.legend{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx-faint)}
+.legend i{width:9px;height:9px;display:block}
+
+/* 대조 스테이지 */
+.cmp{position:relative;width:1672px;height:941px;margin:14px auto;flex:none;
+  border:1px solid var(--line);background:#000;overflow:hidden}
+.cmp__sheet,.cmp__impl{position:absolute;inset:0}
+.cmp__sheet img{width:1672px;height:941px;display:block}
+.cmp__impl iframe{width:1672px;height:952px;border:0;display:block}
+.cmp__impl{clip-path:inset(0 0 0 var(--split,50%))}
+.cmp--side .cmp__impl{clip-path:none;position:static}
+.cmp__line{position:absolute;top:0;bottom:0;left:var(--split,50%);width:1px;background:rgba(217,58,54,.85);
+  box-shadow:0 0 10px rgba(217,58,54,.6);z-index:5;pointer-events:none}
+.cmp__line::before,.cmp__line::after{position:absolute;top:10px;font-size:10px;letter-spacing:.16em;
+  color:#E8D6D6;background:rgba(0,0,0,.7);padding:2px 7px;white-space:nowrap}
+.cmp__line::before{content:"SHEET";right:8px}
+.cmp__line::after{content:"BUILD";left:8px}
+
+/* 나란히 보기 */
+.side{display:none;gap:12px;padding:14px 20px}
+.side>div{flex:1;min-width:0}
+.side__cap{font-size:11px;color:var(--tx-faint);letter-spacing:.14em;margin-bottom:6px}
+.side .frame{border:1px solid var(--line);overflow:hidden;position:relative;aspect-ratio:1672/941}
+.side .frame img{width:100%;display:block}
+.side .frame iframe{width:1672px;height:952px;border:0;transform-origin:top left}
+body[data-mode="side"] .cmp{display:none}
+body[data-mode="side"] .side{display:flex}
+</style>
+</head>
+<body data-mode="wipe" data-nonav data-nomobile>
+<script src="js/icons.js"></script>
+
+<div class="stage" style="min-height:auto;width:auto;overflow:visible">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">디자인 시트 대조</h1>
+      <div class="topbar__sub">원본 설계 시트와 구현 화면을 같은 좌표계(1672px)에서 겹쳐 비교합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <a class="btn btn--sm btn--ghost" href="board.html">
+      <svg class="ico ico--sm"><use href="#i-arrowl"/></svg>컨셉 시트로</a>
+  </header>
+
+  <div class="cmpbar">
+    <span class="cmpbar__t" id="ttl">인력사무실</span>
+    <div class="tabs tabs--pill" id="picker"></div>
+    <span class="hotbar__spacer" style="flex:1"></span>
+    <div class="tabs tabs--pill" id="mode">
+      <button class="tab is-on" data-mode="wipe">겹쳐 보기</button>
+      <button class="tab" data-mode="side">나란히 보기</button>
+    </div>
+    <label class="legend">분할
+      <input class="rng" type="range" min="0" max="100" value="50" id="split"></label>
+    <span class="legend"><i style="background:#A51C1C"></i>좌 = 시트 · 우 = 구현</span>
+  </div>
+
+  <!-- 겹쳐 보기 -->
+  <div class="cmp" id="cmp">
+    <div class="cmp__sheet"><img id="sheet" src="design-sheets/01-office.webp" alt="설계 시트"></div>
+    <div class="cmp__impl"><iframe id="impl" src="office.html" scrolling="no"></iframe></div>
+    <div class="cmp__line"></div>
+  </div>
+
+  <!-- 나란히 보기 -->
+  <div class="side">
+    <div>
+      <div class="side__cap">DESIGN SHEET</div>
+      <div class="frame"><img id="sheet2" src="design-sheets/01-office.webp" alt="설계 시트"></div>
+    </div>
+    <div>
+      <div class="side__cap">IMPLEMENTATION</div>
+      <div class="frame"><iframe id="impl2" src="office.html" scrolling="no"></iframe></div>
+    </div>
+  </div>
+</div>
+
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+<script>
+var SET = [
+  ['인력사무실',   '01-office',    'office.html'],
+  ['의뢰 상세',    '02-quest',     'quest.html'],
+  ['파티 모집',    '03-party',     'party.html'],
+  ['장비/인벤토리','05-inventory', 'inventory.html'],
+  ['강화',         '06-forge',     'forge.html'],
+  ['프로필',       '07-profile',   'profile.html'],
+  ['전투 결과',    '08-result',    'result.html'],
+  ['벤치마크',     '09-benchmark', 'benchmark.html'],
+  ['컨셉 시트',    '00-concept',   'index.html']
+];
+var picker = document.getElementById('picker');
+picker.innerHTML = SET.map(function(s,i){
+  return '<button class="tab'+(i===0?' is-on':'')+'" data-i="'+i+'">'+s[0]+'</button>';
+}).join('');
+
+function show(i){
+  var s = SET[i];
+  document.getElementById('ttl').textContent = s[0];
+  document.getElementById('sheet').src  = 'design-sheets/'+s[1]+'.webp';
+  document.getElementById('sheet2').src = 'design-sheets/'+s[1]+'.webp';
+  document.getElementById('impl').src   = s[2];
+  document.getElementById('impl2').src  = s[2];
+  [].forEach.call(picker.children, function(b,j){ b.classList.toggle('is-on', j===i); });
+}
+picker.addEventListener('click', function(e){
+  var b = e.target.closest('[data-i]'); if(!b) return;
+  show(+b.getAttribute('data-i'));
+});
+
+document.getElementById('split').addEventListener('input', function(){
+  document.getElementById('cmp').style.setProperty('--split', this.value + '%');
+});
+
+document.getElementById('mode').addEventListener('click', function(e){
+  var b = e.target.closest('[data-mode]'); if(!b) return;
+  document.body.setAttribute('data-mode', b.getAttribute('data-mode'));
+  [].forEach.call(this.children, function(x){ x.classList.toggle('is-on', x===b); });
+  fitAll();
+});
+
+/* 1672px 기준 화면을 현재 폭에 맞춰 축소 */
+function fitAll(){
+  var cmp = document.getElementById('cmp');
+  var k = Math.min(1, (window.innerWidth - 40) / 1672);
+  cmp.style.transform = 'scale('+k+')';
+  cmp.style.transformOrigin = 'top center';
+  cmp.style.marginBottom = (14 - 941*(1-k)) + 'px';
+  document.querySelectorAll('.side .frame').forEach(function(fr){
+    var f = fr.querySelector('iframe'); if(!f) return;
+    f.style.transform = 'scale(' + (fr.clientWidth/1672) + ')';
+  });
+}
+window.addEventListener('resize', fitAll);
+window.addEventListener('load', fitAll);
+fitAll();
+</script>
+</body>
+</html>

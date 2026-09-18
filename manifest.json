@@ -1,0 +1,14 @@
+{
+  "name": "황혼 — TWILIGHT",
+  "short_name": "황혼",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#0B0C0F",
+  "theme_color": "#0B0C0F",
+  "lang": "ko",
+  "icons": [
+    { "src": "art/face-ain.webp", "sizes": "235x228", "type": "image/webp", "purpose": "any" }
+  ]
+}

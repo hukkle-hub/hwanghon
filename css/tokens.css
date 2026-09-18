@@ -1,0 +1,87 @@
+/* ============================================================
+   황혼 (TWILIGHT) — GAME UI / DESIGN TOKENS
+   출처: UI CONCEPT SHEET v1.0 (MAIN COLOR PALETTE / TYPOGRAPHY)
+   ============================================================ */
+:root{
+  /* --- 코어 팔레트 (컨셉시트 스와치) --- */
+  --c-void:      #0B0C0F;   /* 최심부 배경 */
+  --c-panel:     #1A1B1F;   /* 패널 기본 */
+  --c-steel:     #2B3C31;   /* 스틸/보조 면 */
+  --c-gray:      #8A8A8A;   /* 보조 텍스트 */
+  --c-red:       #A51C1C;   /* 주요 액션 */
+
+  /* --- 파생 배경 --- */
+  --bg-0:#08090C;
+  --bg-1:#0B0C0F;
+  --bg-2:#101116;
+  --bg-3:#15161B;
+  --bg-4:#1A1B21;
+  --bg-5:#202128;
+  --bg-inset:rgba(0,0,0,.38);
+
+  /* --- 라인 --- */
+  --line:      rgba(255,255,255,.085);
+  --line-soft: rgba(255,255,255,.045);
+  --line-hard: rgba(255,255,255,.16);
+  --line-gold: rgba(201,162,39,.34);
+  --line-red:  rgba(165,28,28,.55);
+
+  /* --- 텍스트 --- */
+  --tx-hi:   #E4E4E8;
+  --tx:      #C3C4CA;
+  --tx-dim:  #8A8A8A;
+  --tx-faint:#5C5E66;
+  --tx-ghost:#41434A;
+
+  /* --- 강조 --- */
+  --red:       #A51C1C;
+  --red-lit:   #D93A36;
+  --red-glow:  rgba(217,58,54,.45);
+  --gold:      #C9A227;
+  --gold-dim:  #8C7A3F;
+  --blue:      #5E82C4;
+  --teal:      #4FA394;
+  --violet:    #8A63C8;
+  --green:     #5BA35B;
+  --orange:    #C87A2B;
+
+  /* --- 위험도 / 등급 컬러 (공통 원칙: 컬러 시스템) --- */
+  --g-s:#D94A45;
+  --g-a:#7B9BD6;
+  --g-b:#5FAE9B;
+  --g-c:#8A8A8A;
+  --g-mvp:#D9A441;
+
+  /* --- 아이템 레어도 --- */
+  --r-common: #6E7078;
+  --r-rare:   #4C7FD1;
+  --r-hero:   #8B5BD6;
+  --r-legend: #C98A2B;
+  --r-myth:   #C0392B;
+
+  /* --- 상태 --- */
+  --ok:#5BA35B;
+  --warn:#C87A2B;
+  --bad:#C0392B;
+  --up:#63B36B;
+  --down:#C9534E;
+
+  /* --- 타이포 --- */
+  --f-serif:"Noto Serif KR",'Nanum Myeongjo',serif;
+  --f-sans:"Noto Sans KR",'Apple SD Gothic Neo',sans-serif;
+  --fw-head:700;   /* 헤드라인 Bold (가독성) */
+  --fw-sec:500;    /* 섹션/서브 Medium */
+  --fw-body:400;   /* 본문 Regular */
+
+  /* --- 리듬 --- */
+  --r-sm:2px; --r-md:3px; --r-lg:4px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px;
+
+  /* --- 그림자 --- */
+  --sh-panel:0 2px 18px rgba(0,0,0,.55);
+  --sh-pop:0 8px 34px rgba(0,0,0,.7);
+  --sh-red:0 0 18px rgba(165,28,28,.35);
+
+  /* --- 스테이지 --- */
+  --stage-w:1672px;
+}

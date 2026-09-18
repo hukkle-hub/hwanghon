@@ -1,0 +1,13 @@
+**/.git
+node_modules
+.party-data
+android
+app
+www
+tests
+tools
+docs
+*.zip
+*.patch
+*.log
+.env*

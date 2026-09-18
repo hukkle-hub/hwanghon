@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 전투 결과 / 보상 정산</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+/* 시트형 헤더 */
+.sheethead{display:grid;grid-template-columns:300px 1fr 300px;align-items:center;
+  padding:13px 22px 11px;border-bottom:1px solid var(--line-soft)}
+.sheethead__l{display:flex;align-items:center;gap:12px}
+.brand{font-family:var(--f-serif);font-size:22px;color:var(--tx-hi);letter-spacing:.1em}
+.brand__s{font-size:11px;color:var(--tx-faint);letter-spacing:.06em;line-height:1.5}
+.brand__s b{display:block;font-weight:400;color:var(--tx-dim);font-size:11.5px}
+.sheethead__c{text-align:center}
+.sheethead__c h1{font-family:var(--f-serif);font-size:27px;color:#C93F3B;letter-spacing:.1em}
+.sheethead__c p{font-size:11.5px;color:var(--tx-faint);margin:5px 0 0}
+.sheethead__r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.sheethead__icons{display:flex;align-items:center;gap:2px;margin-left:6px}
+.metachip{border:1px solid var(--line);padding:4px 8px;font-size:9.5px;color:var(--tx-faint);
+  line-height:1.5;text-align:center;background:rgba(0,0,0,.3)}
+.metachip b{display:block;color:var(--tx-dim);font-weight:400;font-size:10px;margin-top:2px}
+
+.rs{display:grid;grid-template-columns:286px 1fr;gap:14px;padding:12px 22px;flex:1;min-height:0}
+.rs__r{display:grid;grid-template-rows:1fr auto auto;gap:12px;min-height:0}
+.trio{display:grid;grid-template-columns:1fr 1.05fr 1fr;gap:14px;min-height:0}
+
+/* 좌측 아트 */
+.rsart{position:relative;border:1px solid var(--line-soft);flex:1;min-height:0}
+.rsart>img{object-position:center 18%}
+.rsart__msg{position:absolute;left:14px;bottom:80px;z-index:3;font-size:11.5px;color:var(--tx-dim);line-height:1.9}
+.rsart__id{position:absolute;left:14px;right:14px;bottom:16px;z-index:3}
+.rsart__nm{font-family:var(--f-serif);font-size:26px;color:#C1504B;letter-spacing:.04em;font-style:italic}
+
+/* 작전 요약 */
+.srow{display:flex;align-items:center;gap:10px;padding:6px 0}
+.srow__ic{width:20px;color:var(--tx-ghost);flex:none;display:grid;place-items:center}
+.srow__k{font-size:11.5px;color:var(--tx-faint)}
+.srow__v{margin-left:auto;font-size:12.5px;color:var(--tx-hi);font-variant-numeric:tabular-nums}
+.rank-s{font-family:var(--f-serif);font-size:30px;color:#C93F3B;line-height:1}
+.praise{display:flex;gap:11px;padding:11px 12px;border:1px solid var(--line);background:rgba(0,0,0,.3);margin-top:10px}
+.praise__ic{width:30px;height:30px;color:#8E3330;flex:none}
+.praise p{margin:0;font-size:10.5px;color:var(--tx-faint);line-height:1.8}
+
+/* 보상 */
+.rline{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--line);
+  background:rgba(0,0,0,.3)}
+.rline .ico{color:#9AA0AC}
+.rline b{margin-left:auto;font-size:13px;color:var(--tx-hi);font-weight:500;font-variant-numeric:tabular-nums}
+.itemrow{display:flex;gap:7px;flex-wrap:wrap}
+.iitem{width:54px;text-align:center}
+.iitem .slot{width:54px;height:54px;aspect-ratio:auto}
+.iitem span{display:block;font-size:10.5px;color:var(--tx-dim);margin-top:3px;font-variant-numeric:tabular-nums}
+.bonus2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.bonusbox{border:1px solid rgba(201,162,39,.28);background:rgba(201,162,39,.05);padding:9px 10px;text-align:center}
+.bonusbox__k{font-size:10.5px;color:var(--tx-faint)}
+.bonusbox__v{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:5px;
+  font-size:14px;color:#D9A441;font-family:var(--f-serif)}
+
+/* 기여도 */
+.cbrow{display:flex;align-items:center;gap:10px;padding:9px 10px;border:1px solid var(--line);
+  background:rgba(0,0,0,.26);margin-bottom:8px}
+.cbrow.is-top{border-color:var(--line-red);background:linear-gradient(90deg,rgba(165,28,28,.2),rgba(165,28,28,.05))}
+.cbrow__face{width:38px;height:38px;border:1px solid var(--line);flex:none}
+.cbrow__nm{font-family:var(--f-serif);font-size:13.5px;color:var(--tx-hi)}
+.cbrow.is-top .cbrow__nm{color:#E0908C}
+.cbrow__lv{font-size:10px;color:var(--tx-faint);margin-top:1px}
+.cbrow__t{font-size:11px;color:var(--tx-dim)}
+.cbrow__d{font-size:9.5px;color:var(--tx-faint);margin-top:2px;line-height:1.4}
+.cbrow__v{font-family:var(--f-serif);font-size:15px;color:#D9A441;margin-left:auto;flex:none}
+.cbrow.is-top .cbrow__v{color:#E0908C}
+
+/* 파티 성과 */
+.perf{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+.pfcard{display:flex;gap:10px;padding:10px 11px;border:1px solid var(--line);background:rgba(0,0,0,.26);position:relative}
+.pfcard.is-mvp{border-color:var(--line-red);background:linear-gradient(180deg,rgba(165,28,28,.16),rgba(0,0,0,.3))}
+.pfcard__tag{position:absolute;left:9px;top:-1px;font-size:9.5px;color:var(--tx-faint)}
+.pfcard__face{width:52px;height:52px;border:1px solid var(--line);flex:none;margin-top:10px}
+.pfcard__nm{font-family:var(--f-serif);font-size:15px;color:var(--tx-hi)}
+.pfcard__meta{font-size:10px;color:var(--tx-faint);margin-top:1px}
+.pfstat{display:flex;justify-content:space-between;gap:8px;font-size:10.5px;padding:1.5px 0}
+.pfstat span{color:var(--tx-faint)}
+.pfstat b{color:var(--tx-dim);font-weight:400;font-variant-numeric:tabular-nums}
+.pfcard.is-mvp{padding-bottom:26px}
+.mvp{position:absolute;left:0;right:0;bottom:6px;text-align:center;
+  font-family:var(--f-serif);font-size:13px;color:#D9544E;letter-spacing:.16em}
+
+.rsfoot{display:flex;align-items:center;padding:8px 22px 10px;flex:none}
+.rsbtns{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:14px;max-width:800px;margin:0 auto;width:100%}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <!-- ===== 시트 헤더 ===== -->
+  <header class="sheethead">
+    <div class="sheethead__l">
+      <span class="brand">황혼</span>
+      <span class="brand__s"><b>UI 설계 시트 v1.0</b>SCREEN DESIGN BOARD</span>
+    </div>
+    <div class="sheethead__c">
+      <h1>전투 결과 / 보상 정산</h1>
+      <p>작전이 성공적으로 완료되었습니다.</p>
+    </div>
+    <div class="sheethead__r">
+      <span id="meta" style="display:contents"></span>
+      <span class="sheethead__icons">
+        <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+        <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+        <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+      </span>
+      <svg class="topbar__sigil" style="width:30px;height:30px"><use href="#i-sigil"/></svg>
+    </div>
+  </header>
+
+  <main class="rs" data-mdefault="정산">
+    <!-- ===== 좌: 아트 ===== -->
+    <div class="flex col" style="min-height:0" data-mpane="캐릭터">
+      <div class="rsart art art--top">
+        <img src="art/char-result.webp" alt="아인">
+        <div class="rsart__msg" id="rs-msg"></div>
+        <div class="rsart__id">
+          <div class="rsart__nm">Ain</div>
+          <div class="flex ac jb mt2">
+            <span class="xs t-dim" id="rs-lv">Lv. 26</span>
+            <span class="xs t-faint num" id="rs-exp">38,240 / 64,560</span>
+          </div>
+          <div class="bar bar--hp mt1" data-fill="59" id="rs-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 우 ===== -->
+    <div class="rs__r" data-mpane="정산">
+      <div class="trio">
+        <!-- 작전 요약 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">작전 요약</div><div id="op"></div>
+          </div>
+        </section>
+
+        <!-- 보상 정산 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">보상 정산</div><div id="rewards"></div>
+          </div>
+        </section>
+
+        <!-- 기여도 -->
+        <section class="panel panel--framed">
+          <div class="panel__body scroll">
+            <div class="sec-title">파티 기여도 보너스 상세</div><div id="contrib"></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 파티 성과 요약 -->
+      <section class="panel panel--framed">
+        <div class="panel__head">
+          <span class="panel__title">파티 성과 요약</span>
+          <span class="panel__meta">(멀티플레이 파티 데이터)</span>
+        </div>
+        <div class="panel__body panel__body--tight">
+          <div class="perf" id="perf"></div>
+        </div>
+      </section>
+
+      <div class="rsbtns">
+        <button class="btn btn--lg" onclick="location.href='office.html'">인력사무실로</button>
+        <button class="btn btn--lg btn--primary" data-primary>정산 완료</button>
+        <button class="btn btn--lg" onclick="location.href='battle.html'">다시 출격</button>
+      </div>
+    </div>
+  </main>
+
+  <div class="rsfoot">
+    <span class="xs t-faint">※ 궤도 이탈 시 보상이 손실될 수 있습니다.</span>
+    <span class="hotbar__spacer"></span>
+    <span class="xs t-faint">자동 정산까지 <span class="t-dim num" data-countdown="55" id="rs-auto">00 : 55</span></span>
+    <svg class="ico ico--sm t-ghost" style="margin-left:8px"><use href="#i-clock"/></svg>
+  </div>
+</div>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/world.js"></script>
+<script src="js/grade.js"></script>
+<script src="js/story.js"></script>
+<script>
+/* 전투 결과 — world.js RESULT 에서 렌더 */
+(function(){
+  var W=window.TW_WORLD, T=window.TW_ITEMS, R=W.RESULT, $=function(s){return document.querySelector(s);};
+  /* 훈련장(arena.html) 에서 넘어온 실제 결과가 있으면 시트 예시 데이터 위에 덮어쓴다 */
+  try { var live=JSON.parse(sessionStorage.getItem('tw:result')||'null'); if(live){ var sv=window.TW_SAVE&&TW_SAVE.get(); R=Object.assign({}, R, { meta:live.meta, op:live.op, mastery:live.mastery, praise:live.praise, mats:live.mats, craft:live.craft||[], gold:live.gold, bonus:live.bonus||[], objectives:live.objectives||[], grades:live.grades||null, gradesBefore:live.gradesBefore||null, party:live.party||null, expGain:live.xp!=null?live.xp:R.expGain, exp:sv?[sv.xp, TW_SAVE.need(sv.lv)]:R.exp }); sessionStorage.removeItem('tw:result'); document.documentElement.setAttribute('data-live','1'); } } catch(e){}
+  $('#meta').innerHTML = R.meta.map(function(m){ return '<span class="metachip">'+m[0]+'<b>'+m[1]+'</b></span>'; }).join('');
+  $('#rs-msg').innerHTML = '황혼은 끝이 아니다.<br>다음 날을 위해, 지금의 어둠은 필요해.';
+  var AG=window.TW_GRADE?TW_GRADE.agent():null; $('#rs-lv').textContent = AG?'요원 등급 '+AG.g+(AG.next?' · 다음까지 '+W.fmt(AG.next-AG.xp):''):'Lv. '+W.CHARS.ain.lv; $('#rs-exp').textContent = AG?W.fmt(AG.xp)+' / '+(AG.next?W.fmt(AG.next):'MAX'):W.fmt(R.exp[0])+' / '+W.fmt(R.exp[1]);
+  $('#rs-bar').setAttribute('data-fill', AG?AG.pct:Math.round(R.exp[0]/R.exp[1]*100)); $('#rs-auto').setAttribute('data-countdown', R.autoSettle);
+  var ICO={name:'target',boss:'skull',rank:'medal',time:'clock',counterRate:'crosshair',perfect:'bolt',dmgTaken:'drop',deaths:'x'};
+  var LBL={name:'작전 명',boss:'격파 보스',rank:'클리어 랭크',time:'클리어 시간',counterRate:'카운터 성공률',perfect:'퍼펙트 카운터',dmgTaken:'받은 피해량',deaths:'사망 횟수'};
+  $('#op').innerHTML = Object.keys(LBL).map(function(k){ return '<div class="srow"><span class="srow__ic"><svg class="ico ico--sm"><use href="#i-'+ICO[k]+'"/></svg></span><span class="srow__k">'+LBL[k]+'</span><span class="srow__v'+(k==='rank'?' rank-s':'')+'">'+R.op[k]+'</span></div>'; }).join('')+
+    '<div class="praise"><svg class="ico praise__ic"><use href="#i-sigil"/></svg><p>'+R.praise+'</p></div>';
+  function items(list){ return '<div class="itemrow">'+list.map(function(m){ var it=T.get(m[0]); return '<div class="iitem"><div class="slot" data-r="'+m[2]+'">'+(it?T.artHTML(it.id):'')+'</div><span>x '+m[1]+'</span></div>'; }).join('')+'</div>'; }
+  $('#rewards').innerHTML = '<div class="label-ko">기본 보상</div><div class="flex g2"><div class="rline fill"><svg class="ico ico--sm"><use href="#i-exp"/></svg><span class="xs t-faint">EXP</span><b>'+W.fmt(R.expGain)+'</b></div><div class="rline fill"><svg class="ico ico--sm"><use href="#i-coin"/></svg><b>'+W.fmt(R.gold)+'</b></div></div>'+
+    '<div class="hr"></div><div class="label-ko">재료 보상</div>'+items(R.mats)+'<div class="hr"></div><div class="label-ko">제작 재료 보상</div>'+items(R.craft)+
+    '<div class="hr"></div><div class="label-ko">보너스 보상</div><div class="bonus2">'+R.bonus.map(function(b){ return '<div class="bonusbox"><div class="bonusbox__k">'+b[0]+'</div><div class="bonusbox__v">추가 보상 '+b[1]+'<svg class="ico ico--xs"><use href="#i-chevd"/></svg></div></div>'; }).join('')+'</div>'+
+    ((R.grades&&window.TW_GRADE)?'<div class="hr"></div><div class="label-ko">기술 등급</div>'+TW_GRADE.KEYS.map(function(k){ var g=R.grades[k[0]], b=R.gradesBefore&&R.gradesBefore[k[0]]; var up=b&&b.g!==g.g; return '<div class="gline"><span class="gline__k">'+k[1]+'</span><span class="gline__g '+TW_GRADE.cls(g.g)+'">'+g.g+'</span><div class="bar"><div class="bar__fill" style="width:'+g.pct+'%"></div></div><span class="gline__v">'+(up?'<b style="color:#8FBF8F">'+b.g+' → '+g.g+'</b>':(g.next?g.score+' / '+g.next:'MAX'))+'</span></div>'; }).join('')+(R.party?'<div class="xs t-faint mt2">파티 효과: '+R.party.map(function(r){ return r[0]+' '+r[1]; }).join(' · ')+'</div>':''):'')+
+    ((R.objectives&&R.objectives.length)?'<div class="hr"></div><div class="label-ko">선택 목표</div>'+R.objectives.map(function(o){ return '<div class="srow"><span class="srow__ic"><svg class="ico ico--sm" style="color:'+(o[1]?'#8FBF8F':'#666')+'"><use href="#i-'+(o[1]?'check':'x')+'"/></svg></span><span class="srow__k">'+o[0]+'</span><span class="srow__v" style="color:'+(o[1]?'#8FBF8F':'var(--tx-faint)')+'">'+(o[1]?'달성':'미달성')+'</span></div>'; }).join(''):'');
+  $('#contrib').innerHTML = '<p class="xs t-faint tc" style="margin:-4px 0 12px">파티 내 각 플레이어의 특성에 따른 추가 보상이 지급됩니다.</p>'+
+    R.contrib.map(function(c){ return '<div class="cbrow'+(c[6]?' is-top':'')+'">'+W.face(c[0],'cbrow__face')+'<div><div class="cbrow__nm">'+c[1]+'</div><div class="cbrow__lv">등급 '+(window.TW_GRADE?(c[0]==='ain'?TW_GRADE.agent().g:TW_GRADE.lvGrade(W.CHARS[c[0]].lv)):W.CHARS[c[0]].lv)+' · '+c[2]+'</div></div><div style="margin-left:14px"><div class="cbrow__t">'+c[3]+'</div><div class="cbrow__d">'+c[4]+'</div></div><div class="cbrow__v">'+c[5]+'</div></div>'; }).join('')+
+    '<p class="xs t-faint" style="margin:10px 0 0">※ 보너스 수치는 파티 특성 레벨 및 전투 기여도에 따라 산정됩니다.</p>';
+  $('#perf').innerHTML = R.perf.map(function(p){ return '<div class="pfcard'+(p.mvp?' is-mvp':'')+'"><span class="pfcard__tag">'+(p.mvp?'<b class="t-red">'+p.tag+'</b>':p.tag)+'</span>'+W.face(p.ch,'pfcard__face')+
+    '<div class="fill"><div class="flex ac jb"><span class="pfcard__nm'+(p.mvp?' t-red':'')+'">'+p.name+'</span><span class="pfcard__meta">'+p.handle+'</span></div><div class="pfcard__meta">Lv.'+p.lv+' · '+p.cls+'</div><div class="mt1">'+
+    p.rows.map(function(r){ return '<div class="pfstat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>'; }).join('')+'</div></div>'+(p.mvp?'<span class="mvp">MVP</span>':'')+'</div>'; }).join('');
+})();
+</script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

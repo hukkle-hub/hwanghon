@@ -1,0 +1,310 @@
+/* ============================================================
+   황혼 — 모바일(휴대폰) 전용 레이아웃
+   활성 조건: html.mobile (ui.js — 터치 기기 & 짧은 변 ≤ 640 CSS px)
+   원칙
+   · 1672px 스테이지를 축소하지 않고 100vw × 100dvh 에 네이티브로 재배치
+   · 데스크톱의 3~5 열 화면을 "패널 탭"(상단 바 안)으로 진행 공개 — 한 번에 한 패널
+   · 화면의 주 행동 하나를 하단 바에 고정 (엄지 영역), 뒤로가기 좌측
+   · 터치 목표 ≥ 44px, 본문 ≥ 13px, 안전영역(env) 반영
+   ============================================================ */
+html.mobile, html.mobile body{height:100%;overflow:hidden}
+html.mobile body{font-size:14px}
+html.mobile .stage{width:100%;min-width:0;height:100dvh;min-height:0;margin:0!important;transform:none!important;
+  display:flex;flex-direction:column;overflow:hidden;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+html.mobile .stage::after{display:none}
+
+/* ---------- 상단 바: 뒤로 · 제목 · 패널 탭 · 아이콘 ---------- */
+html.mobile .topbar{padding:6px 10px;gap:10px;flex:none;min-height:52px;border-bottom:1px solid var(--line)}
+html.mobile .topbar__sigil{width:26px;height:26px}
+html.mobile .topbar__title{font-size:16px;letter-spacing:.03em;white-space:nowrap}
+html.mobile .topbar__sub{display:none}
+html.mobile .topbar__right{gap:4px}
+html.mobile .topbar__right .currency{font-size:12px;margin-right:4px}
+html.mobile .iconbtn{width:44px;height:44px}
+html.mobile .toptabs{display:none}
+.mtabs{display:none;flex:1;min-width:0;gap:4px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+.mtabs::-webkit-scrollbar{display:none}
+html.mobile .mtabs{display:flex}
+.mtabs button{flex:none;height:40px;padding:0 14px;font-size:13.5px;letter-spacing:.04em;color:var(--tx-faint);
+  border:1px solid var(--line);background:rgba(255,255,255,.02);white-space:nowrap}
+.mtabs button.is-on{color:#EBD6D6;border-color:var(--line-red);background:rgba(165,28,28,.2)}
+.mtabs button:active{filter:brightness(1.3)}
+
+/* ---------- 본문: 활성 패널 하나만, 내부 스크롤 ---------- */
+html.mobile main{display:flex!important;flex-direction:column;flex:1;min-height:0;padding:8px 10px;gap:0;overflow:hidden}
+html.mobile main>.mpane{display:none}
+html.mobile main>.mpane.is-active{display:flex;flex-direction:column;gap:10px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;padding-bottom:12px}
+/* 원래 열(column) 컨테이너들은 세로 흐름으로 */
+html.mobile .mpane>*{display:flex;flex-direction:column;gap:10px;min-height:0;flex:none;position:static}
+html.mobile .mpane>.panel{display:flex}
+html.mobile .panel{flex:none;min-height:0}
+html.mobile .panel__body{overflow:visible;flex:none}
+html.mobile .panel__body.scroll,html.mobile .scroll{overflow:visible;max-height:none}
+html.mobile .panel__head{padding:11px 13px}
+html.mobile .panel__title{font-size:15px}
+html.mobile .fill{flex:none}
+
+/* ---------- 하단 행동 바 ---------- */
+.mbar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:150;gap:10px;align-items:center;
+  padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+  background:#07080B;border-top:1px solid var(--line)}
+html.has-mbar .mbar{display:flex}
+html.has-mbar main>.mpane.is-active{padding-bottom:72px}
+.mbar__back{display:inline-flex;align-items:center;gap:6px;height:44px;padding:0 14px;font-size:13.5px;color:var(--tx-dim);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);flex:none}
+.mbar__back:active{filter:brightness(1.3)}
+.mbar .mbar__primary{flex:1;height:48px!important;padding:0 18px!important;width:auto!important;
+  font-size:16px!important;letter-spacing:.14em!important;font-family:var(--f-serif)!important;flex-direction:row!important;gap:8px!important}
+.mbar .mbar__primary .sub{display:none}
+html.has-mbar .navdock__toggle{bottom:calc(66px + env(safe-area-inset-bottom))}
+html.has-mbar .navdock{bottom:calc(116px + env(safe-area-inset-bottom))}
+
+/* ---------- 데스크톱 전용 요소 숨김 ---------- */
+html.mobile .hotbar,html.mobile .gnb,html.mobile .backbar,html.mobile .key,html.mobile .rotate-hint,html.mobile .bmfoot,
+html.mobile .invtabs .key{display:none}
+html.mobile[data-landscape] .rotate-hint{display:none}
+html.mobile.portrait[data-landscape]:not(.portrait-ok) .rotate-hint{display:flex}
+
+/* ---------- 터치 크기 ---------- */
+html.mobile .btn{height:44px;padding:0 18px;font-size:14px}
+html.mobile .btn--sm{height:40px;padding:0 14px;font-size:13px}
+html.mobile .btn--lg{height:48px}
+html.mobile .btn--deploy{padding:14px 0;font-size:20px}
+html.mobile .tab{padding:11px 14px;font-size:14px}
+html.mobile .tabs--pill .tab{height:38px;font-size:13px;padding:0 14px}
+html.mobile .row{padding:12px 12px;gap:12px}
+html.mobile .row__name{font-size:14.5px}
+html.mobile .row__sub,html.mobile .xs{font-size:12.5px}
+html.mobile .sm{font-size:13.5px}
+html.mobile .stat{padding:6px 0;font-size:13.5px}
+html.mobile .pair{font-size:13.5px}
+html.mobile .sel{height:40px;font-size:13px}
+html.mobile .field{height:42px}
+html.mobile .field input{font-size:14px}
+html.mobile .check{font-size:13.5px;min-height:36px}
+html.mobile .check i{width:18px;height:18px}
+html.mobile .chip{height:26px;font-size:12px}
+html.mobile .badge{min-width:22px;height:22px;font-size:12px}
+html.mobile .label-ko{font-size:13px}
+html.mobile .slotgrid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+html.mobile .slot__lv,html.mobile .slot__ct{font-size:12px}
+html.mobile .slot__name{font-size:11.5px;top:-17px}
+html.mobile .iconbtn.ifilter,html.mobile .ifilter{width:40px;height:40px}
+html.mobile .turn__tools .tabs--pill .tab{height:40px;font-size:13px;padding:0 14px}
+html.mobile .qty button,html.mobile .qty input{height:44px}
+html.mobile .navdock__hide{min-width:40px}
+html.mobile .navdock a{padding:12px 14px;font-size:14px}
+
+/* ---------- 화면별 컨테이너 재배치 ---------- */
+/* 인력사무실 */
+html.mobile .hero{position:relative;height:170px;inset:auto;border:1px solid var(--line)}
+html.mobile .office__c .party{margin-top:0}
+html.mobile .party__cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+html.mobile .rewards{display:grid;grid-template-columns:repeat(4,1fr)}
+/* 의뢰 상세 */
+html.mobile .bossart{height:150px;margin:8px 12px 12px}
+html.mobile .weak{height:180px}
+html.mobile .trio,html.mobile .qs__bottom{display:grid;grid-template-columns:1fr;gap:10px}
+html.mobile .codex{display:grid;grid-template-columns:repeat(4,1fr)}
+html.mobile .dropline .slotgrid{grid-template-columns:repeat(6,1fr)}
+/* 파티 모집 */
+html.mobile .filters{flex-wrap:wrap}
+html.mobile .pbar{flex-wrap:wrap;gap:8px 14px}
+html.mobile .members{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+html.mobile .mcard__art{min-height:150px;flex:none}
+html.mobile .chatzone{display:grid;grid-template-columns:1fr;height:auto;gap:8px}
+html.mobile .chatzone>button{height:44px!important}
+html.mobile .rw4{display:grid;grid-template-columns:repeat(4,1fr)}
+html.mobile .setrow .sel{width:150px}
+/* 장비 / 인벤토리 */
+html.mobile .invtabs{padding:0 6px;overflow-x:auto;flex:none}
+html.mobile .invtabs .tabs{border:0}
+html.mobile .chars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+html.mobile .chip-char__art{height:72px}
+html.mobile .unlock{display:none}
+html.mobile .dollstats{margin-top:0;border-top:0}
+html.mobile .dollstats .stat{font-size:13px}
+html.mobile .doll{display:grid!important;grid-template-columns:82px 1fr 82px;gap:8px;height:360px;flex:none}
+html.mobile .eqcol{gap:14px;padding-top:18px}
+html.mobile .dollart{max-width:none;height:100%}
+html.mobile .actions{display:grid!important;grid-template-columns:repeat(4,1fr);gap:8px}
+html.mobile .invgrid,html.mobile .matgrid{grid-template-columns:repeat(auto-fill,minmax(60px,1fr))}
+/* 강화 */
+html.mobile .fgtabs{flex:none;padding:0 6px}
+html.mobile .forgeart{height:360px;flex:none}
+html.mobile .npc{max-width:150px}
+html.mobile .rail{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+html.mobile .ract{min-height:64px}
+html.mobile .rail>.fill{display:none}
+/* 제작 */
+html.mobile .result{display:grid!important;grid-template-columns:120px 1fr;gap:12px}
+html.mobile .result__art{height:120px}
+html.mobile .result__stats{grid-template-columns:1fr}
+html.mobile .matrow{grid-template-columns:44px 1fr 90px 90px;gap:8px}
+html.mobile .craftbar{display:grid!important;grid-template-columns:1fr auto;gap:10px}
+html.mobile .craftbar .flex.g4{flex-wrap:wrap;gap:8px 16px}
+html.mobile .qty button{width:40px;height:40px}
+html.mobile .qty input{height:40px}
+html.mobile #do-craft{height:48px}
+/* 프로필 */
+html.mobile .pf .rail{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px}
+html.mobile .railbtn{width:100%;height:46px}
+html.mobile .pfart{height:300px;flex:none}
+html.mobile .seasonbar{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+html.mobile .idrow,html.mobile .midrow,html.mobile .botrow{display:grid!important;grid-template-columns:1fr;gap:10px}
+html.mobile .gauges{display:grid;grid-template-columns:repeat(3,1fr)}
+html.mobile .actrow{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+html.mobile .actrow .btn{width:auto}
+/* 캐릭터 설정 */
+html.mobile .turn{height:380px;flex:none}
+html.mobile .turn__views{padding:40px 12px 28px}
+html.mobile .turn__head b{font-size:20px}
+/* 전투 결과 — 시트형 헤더를 상단 바처럼 한 줄로 */
+html.mobile .sheethead{display:flex;align-items:center;gap:10px;padding:6px 10px;min-height:52px;flex:none}
+html.mobile .sheethead__l .brand{font-size:18px}
+html.mobile .sheethead__l .brand__s,html.mobile .sheethead__c p,html.mobile .sheethead__r .metachip,html.mobile .sheethead__r .topbar__sigil{display:none}
+html.mobile .sheethead__r{display:flex;flex:none;gap:2px}
+html.mobile .sheethead__icons{margin-left:0}
+html.mobile .sheethead__c{flex:none;text-align:left}
+html.mobile .sheethead__c h1{font-size:16px;letter-spacing:.04em;white-space:nowrap}
+/* 벤치마크 헤더 */
+html.mobile .bmhead{display:flex;align-items:center;gap:10px;padding:6px 10px;min-height:52px}
+html.mobile .bmhead h1{font-size:15px;white-space:nowrap}
+html.mobile .bmhead p{display:none}
+html.mobile .rsart{height:240px;flex:none}
+html.mobile .rs__r .trio{display:grid!important;grid-template-columns:1fr;gap:10px}
+html.mobile .perf{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+html.mobile .rsbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:none}
+html.mobile .rsfoot{display:none}
+html.mobile .itemrow{gap:10px}
+/* 전투 HUD (풀블리드 — 패널 없음) */
+html.mobile .bt{flex:1;min-height:0}
+html.mobile .btparty{left:max(10px,env(safe-area-inset-left));top:60px;width:170px;gap:5px}
+html.mobile .bosshp{width:min(560px,60vw)}
+html.mobile .bttimer{right:max(12px,env(safe-area-inset-right))}
+html.mobile .status{right:max(12px,env(safe-area-inset-right));top:70px;width:140px}
+html.mobile .bthud{padding:0 max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+html.mobile .stick{width:96px;height:96px}
+html.mobile .vitals{max-width:360px}
+html.mobile .sk{width:54px;height:54px}
+html.mobile .sk--ult{width:66px;height:66px}
+html.mobile .counter{top:30%}
+html.mobile .counter__v{font-size:44px}
+/* 컨셉 시트 · 벤치마크 */
+html.mobile .spec h1{font-size:30px}
+html.mobile .board{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+html.mobile .prev{height:120px}
+html.mobile .lower{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+html.mobile .bmhead__face,html.mobile .principles{display:none}
+html.mobile .bmp__b{display:grid;grid-template-columns:1fr;gap:10px}
+html.mobile .mock{min-height:180px}
+
+/* ---------- 세로 화면 미세 조정 ---------- */
+html.mobile.portrait .doll{grid-template-columns:70px 1fr 70px;height:420px}
+html.mobile.portrait .party__cards,html.mobile.portrait .members,html.mobile.portrait .perf,html.mobile.portrait .rail,
+html.mobile.portrait .board,html.mobile.portrait .seasonbar,html.mobile.portrait .actrow{grid-template-columns:1fr}
+html.mobile.portrait .gauges{grid-template-columns:1fr 1fr 1fr}
+html.mobile.portrait .chars{grid-template-columns:repeat(2,1fr)}
+html.mobile.portrait .result{grid-template-columns:1fr}
+html.mobile.portrait .turn__views{grid-template-columns:1fr!important}
+html.mobile.portrait .turn{height:460px}
+html.mobile.portrait .mtabs button{padding:0 11px;font-size:13px}
+html.mobile.portrait .topbar__right .currency{display:none}
+
+/* 세로 화면: 패널 탭을 둘째 줄로 (제목·아이콘과 경쟁하지 않게) */
+html.mobile.portrait .topbar,html.mobile.portrait .sheethead,html.mobile.portrait .bmhead{flex-wrap:wrap;row-gap:6px}
+html.mobile.portrait .mtabs{order:10;flex-basis:100%;min-width:100%}
+html.mobile.portrait .topbar__spacer{display:none}
+/* 전투 HUD: 독 토글을 상단 우측(타이머 왼쪽)으로 — 궁극기 버튼과 겹치지 않게 */
+html.mobile[data-landscape] .navdock__toggle{top:8px;bottom:auto;right:max(120px,calc(env(safe-area-inset-right) + 110px));width:40px;height:40px}
+html.mobile[data-landscape] .navdock{bottom:auto;top:56px}
+
+/* ============================================================
+   실기기(갤럭시, 브라우저 주소창 포함) 검수 반영
+   · 상단 바의 spacer 가 패널 탭과 폭을 나눠 가져 탭이 가로 스크롤되고,
+     탭을 누르면 포커스 스크롤로 첫 탭이 밀려 사라지던 문제 → spacer 제거, 탭은 항상 폭에 맞춤
+   · 가로 모드에서 세로 300px 안팎만 남는 상황 → 상단/하단 바·탭 높이 압축
+   · 독 토글이 본문 위에 떠서 내용을 가리던 문제 → 하단 바 줄 안으로
+   ============================================================ */
+html.mobile .topbar__spacer{display:none}
+html.mobile .mtabs{flex:1 1 auto;overflow:hidden}
+html.mobile .mtabs button{flex:1 1 0;min-width:0;padding:0 8px;overflow:hidden;text-overflow:ellipsis}
+html.mobile .invtabs .tab{padding:0 8px;font-size:13px}
+
+/* 하단 바 줄 안에 독 토글 자리 확보 */
+html.has-mbar .mbar{padding-right:calc(max(12px,env(safe-area-inset-right)) + 54px)}
+html.has-mbar .navdock__toggle{bottom:calc(9px + env(safe-area-inset-bottom));right:max(12px,env(safe-area-inset-right));width:46px;height:46px;z-index:160}
+html.has-mbar .navdock{bottom:calc(72px + env(safe-area-inset-bottom))}
+
+/* 가로 모드(세로 짧음): 압축 */
+html.mobile:not(.portrait) .topbar{min-height:46px;padding:4px 10px}
+html.mobile:not(.portrait) .iconbtn{width:40px;height:40px}
+html.mobile:not(.portrait) .mtabs button{height:40px;font-size:13px}
+html.mobile:not(.portrait) .invtabs{min-height:0}
+html.mobile:not(.portrait) .invtabs .tab{height:40px;line-height:40px}
+html.mobile:not(.portrait) main{padding:6px 10px}
+html.mobile:not(.portrait) .mbar{padding-top:5px;padding-bottom:max(5px,env(safe-area-inset-bottom))}
+html.mobile:not(.portrait) .mbar__back{height:40px}
+html.mobile:not(.portrait) .mbar .mbar__primary{height:42px!important;font-size:15px!important}
+html.has-mbar:not(.portrait) .navdock__toggle{width:40px;height:40px;bottom:calc(6px + env(safe-area-inset-bottom))}
+html.has-mbar:not(.portrait) main>.mpane.is-active{padding-bottom:60px}
+html.mobile:not(.portrait) .doll{height:clamp(220px,calc(100dvh - 180px),360px)}
+html.mobile:not(.portrait) .bigcp{font-size:26px;line-height:1.1}
+html.mobile:not(.portrait) #item-info .iart{width:56px;height:56px}
+html.mobile:not(.portrait) #item-info .stat{padding:5px 0}
+
+/* ---------- 실기기 2차 검수 ----------
+   · 컨셉 시트(index): 상단 바가 없어 패널 탭이 스테이지 직계 자식으로 들어가며 flex:1 로 세로를 다 차지하던 문제 */
+html.mobile .stage>.mtabs{flex:none}
+html.mobile .topbar--m{min-height:46px}
+html.mobile .topbar--m .topbar__title{font-size:18px}
+/* · 장비 슬롯 이름표(-17px)가 위 슬롯과 겹치던 문제 */
+html.mobile .eqcol{gap:24px;padding-top:22px}
+html.mobile .slot__name{top:-18px}
+/* · 컨셉 시트 카드: 설명 줄이 하단 바 뒤에 숨지 않게 카드 높이 고정 */
+html.mobile .scard__d{font-size:11.5px}
+/* · 컨셉 시트: 상단 바에 제목이 있으므로 본문의 큰 제목은 중복 */
+html.mobile .spec h1,html.mobile .spec__sub{display:none}
+html.mobile .spec__d{margin-top:4px}
+/* · 컨셉 시트 하단 버튼 3개가 세로 화면 폭을 넘던 문제 */
+html.mobile .lower .flex.g2{flex-wrap:wrap}
+html.mobile .lower .flex.g2 .btn{flex:1 1 150px;min-width:0}
+/* · 의뢰 보상의 드롭 슬롯이 6등분으로 늘어나 거대해지던 문제 → 슬롯 크기 고정 */
+html.mobile .dropline .slotgrid{grid-template-columns:repeat(auto-fill,minmax(52px,64px));gap:6px}
+html.mobile .dropline__k{width:48px;font-size:12px}
+/* · 프로필/결과 캐릭터 아트: 가로 화면에서 머리카락만 보이던 크롭 → 얼굴 기준으로 */
+html.mobile:not(.portrait) .pfart{height:240px}
+html.mobile:not(.portrait) .pfart>img{object-position:center 4%}
+html.mobile:not(.portrait) .rsart{height:240px}
+html.mobile:not(.portrait) .rsart>img{object-position:center 30%}
+html.mobile.portrait .pfart{height:380px}
+html.mobile.portrait .rsart{height:420px}
+/* · 프로필 아이콘 레일은 세로 화면에서도 한 줄(4열) */
+html.mobile.portrait .pf .rail{grid-template-columns:repeat(4,1fr)}
+
+/* ---------- 게임 흐름: 타이틀 → 인력사무실(허브) → 각 화면 ----------
+   .monly 은 휴대폰 레이아웃에서만 보이는 요소. 인력사무실의 '메뉴' 패널은 데스크톱 하단 내비의 대체 */
+.monly{display:none!important}
+html.mobile .monly{display:grid!important}
+html.mobile .mmenu{grid-template-columns:repeat(3,1fr);gap:8px;align-content:start}
+html.mobile .mmenu a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:82px;padding:8px 6px;
+  border:1px solid var(--line);background:rgba(255,255,255,.025);color:var(--tx-dim);text-decoration:none}
+html.mobile .mmenu a .ico{width:24px;height:24px;color:var(--gold-dim);margin-bottom:2px}
+html.mobile .mmenu a b{font-weight:500;font-size:14.5px;color:var(--tx-hi);letter-spacing:.04em}
+html.mobile .mmenu a span{font-size:11px;color:var(--tx-faint);letter-spacing:.02em}
+html.mobile .mmenu a.is-go{border-color:rgba(199,58,54,.6);background:linear-gradient(180deg,rgba(165,28,28,.35),rgba(96,16,16,.35))}
+html.mobile .mmenu a.is-go .ico{color:#E0625B}
+html.mobile .mmenu a:active{filter:brightness(1.3)}
+html.mobile.portrait .mmenu{grid-template-columns:repeat(2,1fr)}
+/* 보급소 */
+html.mobile .shop__c{display:flex;flex-direction:column;gap:10px}
+html.mobile .deal{display:grid!important;grid-template-columns:1fr auto;gap:10px}
+html.mobile .deal .qty button,html.mobile .deal .qty input{height:44px}
+html.mobile .goods{display:grid;grid-template-columns:96px 1fr;gap:12px}
+html.mobile .goods__art{height:96px}
+html.mobile.portrait .goods{grid-template-columns:1fr}
+/* 제작 재료 선택 (터치 목표 ≥ 40px) */
+html.mobile .pickrow{grid-template-columns:1fr}
+html.mobile .pickopt{height:40px;padding:0 12px;font-size:12.5px}

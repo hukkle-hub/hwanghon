@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — TWILIGHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<style>
+/* 타이틀 화면 — 스테이지 피팅 없이 뷰포트를 그대로 채운다 */
+html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family:var(--f-sans);overflow:hidden;-webkit-user-select:none;user-select:none}
+.tt{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:space-between;
+  padding:max(18px,env(safe-area-inset-top)) max(22px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(22px,env(safe-area-inset-left))}
+.tt__art{position:absolute;inset:0;z-index:0;background:#07080B url(art/title-ain.webp) no-repeat 72% 50%/cover}
+.tt__art::before{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(7,8,11,.92) 0%,rgba(7,8,11,.55) 38%,rgba(7,8,11,.05) 62%,rgba(7,8,11,.3) 100%),
+             linear-gradient(0deg,rgba(7,8,11,.9) 0%,rgba(7,8,11,0) 32%,rgba(7,8,11,0) 75%,rgba(7,8,11,.6) 100%)}
+.tt__art::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+  background:radial-gradient(60% 80% at 62% 45%,rgba(150,60,55,.25),transparent 70%)}
+.tt>*{position:relative;z-index:1}
+.tt>.tt__art{position:absolute;z-index:0}
+.tt__top{display:flex;align-items:center;gap:10px;color:var(--tx-faint);font-size:11px;letter-spacing:.24em}
+.tt__top svg{width:26px;height:26px;color:var(--gold-dim)}
+.tt__mid{display:flex;flex-direction:column;justify-content:center;flex:1;max-width:520px}
+.tt__eyebrow{font-size:12px;letter-spacing:.42em;color:#B03A36;margin-bottom:6px}
+.tt__logo{font-family:var(--f-serif);font-size:clamp(64px,14vh,116px);line-height:1;letter-spacing:.16em;color:#EFE7DA;
+  text-shadow:0 0 28px rgba(165,28,28,.35),0 2px 0 rgba(0,0,0,.6)}
+.tt__logo small{display:block;font-family:var(--f-sans);font-size:clamp(11px,1.8vh,14px);letter-spacing:.62em;color:var(--tx-faint);margin-top:10px;font-weight:400}
+.tt__line{margin:22px 0 0;font-size:clamp(12px,2vh,14.5px);line-height:1.8;color:#A9A39A;max-width:380px}
+.tt__menu{display:flex;flex-direction:column;gap:9px;margin-top:26px;width:min(300px,60vw)}
+.tt__btn{display:flex;align-items:center;justify-content:space-between;height:50px;padding:0 18px;border:1px solid var(--line);
+  background:rgba(255,255,255,.03);color:#D9D2C6;font-family:var(--f-serif);font-size:17px;letter-spacing:.22em;text-decoration:none;transition:.15s}
+.tt__btn i{font-style:normal;font-family:var(--f-sans);font-size:11px;letter-spacing:.1em;color:var(--tx-faint)}
+.tt__btn--go{border-color:rgba(199,58,54,.7);background:linear-gradient(180deg,rgba(165,28,28,.55),rgba(96,16,16,.55));color:#F6E7E7;
+  box-shadow:0 0 24px rgba(165,28,28,.22)}
+.tt__btn:active,.tt__btn:hover{filter:brightness(1.25)}
+.tt__bot{display:flex;align-items:flex-end;justify-content:space-between;font-size:11px;color:var(--tx-faint);letter-spacing:.06em}
+.tt__bot a{color:var(--tx-faint);text-decoration:none}
+.tt__bot .dev{opacity:.55}
+.tt__bot .dev:hover{opacity:1}
+.tt__tap{font-size:12px;letter-spacing:.3em;color:#8A8A8A;animation:blink 2.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:.35}50%{opacity:1}}
+/* 가로 화면(세로 짧음): 로고를 줄이고 메뉴를 가로 한 줄로 — 오른쪽의 아인이 가려지지 않게 왼쪽 열에 압축 */
+@media (orientation:landscape) and (max-height:560px){
+  .tt{padding-top:max(10px,env(safe-area-inset-top));padding-bottom:max(10px,env(safe-area-inset-bottom))}
+  .tt__top{font-size:10px}
+  .tt__top svg{width:20px;height:20px}
+  .tt__eyebrow{display:none}
+  .tt__mid{max-width:600px}
+  .tt__logo{font-size:clamp(46px,15vh,72px)}
+  .tt__logo small{font-size:10.5px;margin-top:6px}
+  .tt__line{margin-top:10px;font-size:12px;line-height:1.6;max-width:none}
+  .tt__line br{display:none}
+  .tt__menu{flex-direction:row;width:auto;margin-top:14px;gap:8px}
+  .tt__btn{flex:1 1 0;min-width:0;height:46px;padding:0 12px;font-size:15px;letter-spacing:.14em;gap:6px}
+  .tt__btn i{font-size:10px;white-space:nowrap}
+  .tt__bot{font-size:10px}
+}
+/* 세로 화면: 아트를 위쪽으로, 메뉴를 아래로 */
+@media (orientation:portrait){
+  .tt__art{background-position:70% 20%;background-size:auto 72%}
+  .tt__art::before{background:linear-gradient(0deg,rgba(7,8,11,.96) 0%,rgba(7,8,11,.85) 38%,rgba(7,8,11,.15) 60%,rgba(7,8,11,.45) 100%)}
+  .tt__mid{justify-content:flex-end;max-width:none}
+  .tt__menu{width:100%}
+  .tt__logo{font-size:clamp(56px,16vw,92px)}
+}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+<div class="tt">
+  <div class="tt__art"></div>
+  <div class="tt__top"><svg><use href="#i-sigil"/></svg><span>HUKKLE HUB PRESENTS</span></div>
+  <div class="tt__mid">
+    <div class="tt__eyebrow">PROJECT</div>
+    <h1 class="tt__logo">황혼<small>T W I L I G H T</small></h1>
+    <p class="tt__line">세계는 이미 무너졌다. 남은 것은 룩킥톤. <br>아인의 여정을 따라, 황혼의 진실을 마주하라.</p>
+    <nav class="tt__menu">
+      <a class="tt__btn tt__btn--go" href="lobby.html" id="tt-go">시작<i id="tt-go-sub">메인 로비로</i></a>
+      <a class="tt__btn" href="game3d.html">던전 01<i>지하 훈련장</i></a>
+      <a class="tt__btn" href="characters.html">요원<i>캐릭터 시트</i></a>
+    </nav>
+  </div>
+  <div class="tt__bot">
+    <span id="tt-build">황혼 · 프로토타입</span>
+    <span class="tt__tap">TOUCH TO START</span>
+    <a class="dev" href="board.html" id="tt-dev">개발 메뉴</a>
+  </div>
+</div>
+<script src="js/save.js"></script>
+<script>
+(function(){
+  /* 저장이 있으면 "이어하기" 로 */
+  try{ var s=window.TW_SAVE&&TW_SAVE.get(); if(s&&(s.lv>1||s.gold>0||s.xp>0)){ document.getElementById('tt-go').firstChild.textContent='이어하기'; document.getElementById('tt-go-sub').textContent='Lv.'+s.lv+' · 메인 로비로'; } }catch(e){}
+  /* 빌드 표시 (배포마다 갱신) */
+  fetch('version.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(v){ document.getElementById('tt-build').textContent='황혼 · 프로토타입 · build '+v.build; }).catch(function(){});
+  /* 아트/버튼 밖 아무 곳이나 터치해도 시작 */
+  document.querySelector('.tt__art').addEventListener('click', function(){ location.href='lobby.html'; });
+  /* 개발 메뉴: 화면 전환 독을 켠다 */
+  document.getElementById('tt-dev').addEventListener('click', function(){ try{ localStorage.setItem('tw:dev','1'); }catch(e){} });
+  if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});
+})();
+</script>
+</body>
+</html>

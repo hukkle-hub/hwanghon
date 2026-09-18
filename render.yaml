@@ -1,0 +1,26 @@
+# Free playtest only: local profiles are reset on restart/redeploy/spin-down.
+# No service has been provisioned by creating this file.
+services:
+  - type: web
+    name: hwanghon-party
+    runtime: node
+    plan: free
+    region: singapore
+    numInstances: 1
+    buildCommand: npm ci --omit=dev --ignore-scripts --no-audit --no-fund
+    startCommand: node server/index.cjs
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATA_DIR
+        value: /tmp/hwanghon
+      - key: MAX_ROOMS
+        value: "32"
+      - key: MAX_PLAYERS
+        value: "100"
+      - key: EPHEMERAL_STORAGE
+        value: "1"
