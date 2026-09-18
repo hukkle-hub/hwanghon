@@ -299,7 +299,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot;
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
-    (function(){ var G=window.TW_GEAR, eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
+    (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ var l=G&&G.lookOf(id); return l&&l.tint?l.tint:null; };
         TW_LOOKS.attach(THREE, loader, ain.model, eq, { charId:CID, baseOf:baseOf, tintOf:tintOf, onMain:function(wr, w){ capTextures(w.scene); ain.weapon=wr; applyWeaponLook(wr); once(); }, onMainFail:once }); setTimeout(once, 20000); }
       else once(); })();
