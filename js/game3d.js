@@ -65,9 +65,9 @@ import { buildDungeonProps } from './dungeon-props.js';
   /* 폰 GPU 보호: 큰 텍스처는 올리기 전에 줄인다 (8192² 한 장이 268MB) */
   var TEX_MAX=SAFE?1024:(MOBILE?2048:4096);
   function capTextures(root){ var seen=new Set(); root.traverse(function(o){ if(!o.isMesh) return; [].concat(o.material).forEach(function(m){ ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(k){ var t=m[k]; if(!t||!t.image||seen.has(t)) return; seen.add(t); var im=t.image, w=im.width||im.videoWidth, h=im.height; if(!(w>TEX_MAX||h>TEX_MAX)) return; try{ var sc=TEX_MAX/Math.max(w,h), c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*sc)); c.height=Math.max(1,Math.round(h*sc)); c.getContext('2d').drawImage(im,0,0,c.width,c.height); t.image=c; t.needsUpdate=true; DIAG.errors.push('tex '+w+'x'+h+' → '+c.width+' ('+k+')'); }catch(e){ DIAG.errors.push('tex cap fail '+e.message); } }); }); }); }
-  renderer.setPixelRatio(Math.min(SAFE?0.75:SET.quality==='high'?2:SET.quality==='low'?0.9:(MOBILE?1.25:2), devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.45*SET.bright;
+  renderer.setPixelRatio(Math.min(SAFE?0.75:SET.quality==='high'?2:SET.quality==='low'?0.9:(MOBILE?1.25:2), devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=2.4*SET.bright;
   renderer.shadowMap.enabled=!SAFE && !(MOBILE && SET.quality==='low'); renderer.shadowMap.type=MOBILE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
-  var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.032);
+  var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0), dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
@@ -87,11 +87,11 @@ import { buildDungeonProps } from './dungeon-props.js';
   var ringTex=canvasTex(function(g,s){ g.strokeStyle='#fff'; g.lineWidth=s*0.08; g.beginPath(); g.arc(s/2,s/2,s*0.42,0,Math.PI*2); g.stroke(); }, 128);
 
   /* 조명 */
-  var hemi=new THREE.HemisphereLight(0x6a7080, 0x2a2622, 0.8); scene.add(hemi);
-  var moon=new THREE.DirectionalLight(0xa8b4d0, 1.1); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
+  var hemi=new THREE.HemisphereLight(0x6a7080, 0x2a2622, 2.6); scene.add(hemi);
+  var moon=new THREE.DirectionalLight(0xa8b4d0, 2.2); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
   var pLight=new THREE.PointLight(0xE0D0B8, 3.0, 10, 1.4); scene.add(pLight);
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
-    function applySettings(){ SFX.enabled=SET.sound; renderer.toneMappingExposure=1.45*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?0.8:1.5; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
+    function applySettings(){ SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
   function noiseTex(draw, size, srgb){ var c=document.createElement('canvas'); c.width=c.height=size||256; var g=c.getContext('2d'); draw(g, c.width); var t=new THREE.CanvasTexture(c); if(srgb!==false) t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; }
@@ -144,7 +144,7 @@ import { buildDungeonProps } from './dungeon-props.js';
   }
   /* ---------- 환경: 갈대습지 (야외 · 황혼 · 안개 · 갈대 벽 · 얕은 물 · 죽은 나무 · 무너진 망루 · 등불) ---------- */
   function buildSwamp(){
-    scene.background=new THREE.Color(0x10161a); scene.fog=new THREE.FogExp2(0x131a1c, SAFE?0.05:(MOBILE?0.040:0.034));
+    scene.background=new THREE.Color(0x10161a); scene.fog=new THREE.FogExp2(0x131a1c, SAFE?0.022:(MOBILE?0.018:0.015));
     hemi.color.setHex(0x7d8fa0); hemi.groundColor.setHex(0x2a2e22); hemi.intensity=0.95; moon.color.setHex(0xb8c6d8); moon.intensity=0.9;
     var skyTex=canvasTex(function(g,s){ var gr=g.createLinearGradient(0,0,0,s); gr.addColorStop(0,'#0b0f16'); gr.addColorStop(0.5,'#182028'); gr.addColorStop(0.72,'#3a2e28'); gr.addColorStop(0.8,'#241f1c'); gr.addColorStop(1,'#141312'); g.fillStyle=gr; g.fillRect(0,0,s,s); }, 256);
     var sky=new THREE.Mesh(new THREE.SphereGeometry(95, 24, 12), new THREE.MeshBasicMaterial({ map:skyTex, side:THREE.BackSide, fog:false, depthWrite:false })); sky.position.set(mapW/2, -6, mapD/2); scene.add(sky);
@@ -615,7 +615,7 @@ import { buildDungeonProps } from './dungeon-props.js';
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
   document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL') guardIn(false); });
   window.addEventListener('blur',function(){kd={};stick.sx=stick.sy=0;atkUp();});
-  function settingsHTML(){ return '<div class="setrow"><label>밝기</label><input type="range" min="0.6" max="1.8" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
+  function settingsHTML(){ return '<div class="setrow"><label>밝기</label><input type="range" min="0.5" max="1.5" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
     '<div class="setrow"><label>동적 조명</label><button class="btn btn--sm" data-tog="lights">'+(SET.lights?'켜짐':'꺼짐')+'</button><label>진동</label><button class="btn btn--sm" data-tog="vib">'+(SET.vib?'켜짐':'꺼짐')+'</button><label>소리</label><button class="btn btn--sm" data-tog="sound">'+(SET.sound?'켜짐':'꺼짐')+'</button></div>'; }
   el.ovBox.addEventListener('input', function(e){ var k=e.target.getAttribute('data-set'); if(!k) return; SET[k]=+e.target.value; saveSet(); applySettings(); });
   el.ovBox.addEventListener('click', function(e){ var b=e.target.closest('[data-tog]'); if(!b) return; var k=b.getAttribute('data-tog'); SET[k]=!SET[k]; b.textContent=SET[k]?'켜짐':'꺼짐'; saveSet(); applySettings(); if(k==='sound'&&SET.sound) SFX.ambient(true); SFX.play('ui'); });
@@ -670,6 +670,7 @@ import { buildDungeonProps } from './dungeon-props.js';
     if(dragT>0) dragT-=dt; else if(!cineCam){ var want=null; if(battle){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); } else if(P.moving && P.rollT<=0){ var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); }
       if(want!=null){ var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; camYaw+=dy*Math.min(1,dt*(battle?1.6:0.9)); } }
     var dist=camDist*camZoom; if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
+    dist=camClear(look, dist);
     var z=Math.pow(0.001, dt);
     var target=new THREE.Vector3(look.x+Math.sin(camYaw)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(camYaw)*Math.cos(camPitch)*dist);
     if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, cineCam.back?k:Math.min(1,k*1.5)); }
@@ -712,6 +713,16 @@ import { buildDungeonProps } from './dungeon-props.js';
     for(var y=0;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x]; if(ch==='#'||ch==='|'||(ch==='G'&&gateClosed)){ mctx.fillStyle=L.env==='swamp'?'#2f3d2a':'#3a3d45'; mctx.fillRect(x*sx,y*sy,sx,sy); } else if(ch==='~'){ mctx.fillStyle='#1b2a30'; mctx.fillRect(x*sx,y*sy,sx,sy); } else if(ch==='G'){ mctx.fillStyle='#C9A45E'; mctx.fillRect(x*sx,y*sy,sx,sy); } }
     expedition.nodes.forEach(function(n){if(!expedition.discovered(n.id))return;mctx.fillStyle=expedition.completed(n.id)?'#527b68':n.kind==='checkpoint'?'#7abbd6':'#e8c179';mctx.fillRect(n.cx*sx-2,n.cy*sy-2,5,5);});
     mctx.fillStyle='#D9544E'; mctx.beginPath(); mctx.arc(Bs.x/map.cell*sx, Bs.y/map.cell*sy, 4, 0, Math.PI*2); mctx.fill(); mctx.fillStyle='#F0E4E4'; mctx.beginPath(); mctx.arc(P.x/map.cell*sx, P.y/map.cell*sy, 3.5, 0, Math.PI*2); mctx.fill(); }
+  /* 카메라 차폐: 시선점→카메라 사이에 벽·격벽이 있으면 그 앞까지 당긴다 (3D→시뮬 좌표 역변환 후 격자 조회) */
+  function camClear(look, dist){
+    var sinY=Math.sin(camYaw)*Math.cos(camPitch), cosY=Math.cos(camYaw)*Math.cos(camPitch);
+    var step=0.25, margin=0.35;
+    for(var d=step; d<=dist; d+=step){
+      var wx=look.x+sinY*d, wz=look.z+cosY*d;
+      if(world.isSolid(wx*SCALE, wz*DEPTH*SCALE)) return Math.max(1.1, d-margin);
+    }
+    return dist;
+  }
   var simAcc=0, scheduled=[];
   function schedule(fn,ms){var t={fn:fn,left:ms/1000,cancelled:false};scheduled.push(t);return t;}
   function tickScheduled(dt){var ready=[];scheduled=scheduled.filter(function(t){if(t.cancelled)return false;t.left-=dt;if(t.left<=0){ready.push(t.fn);return false;}return true;});ready.forEach(function(fn){fn();});}
