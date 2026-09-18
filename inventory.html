@@ -226,7 +226,8 @@
 <script>
 /* 3D 외형 미리보기: viewer.html 의 장착 모드. 장비를 바꾸면 다시 불러온다 */
 (function(){ var fr=document.getElementById('doll3d'), tg=document.getElementById('doll3d-tg'), doll=document.getElementById('doll'); if(!fr||!tg) return; var on=false;
-  function load(){ fr.src='viewer.html?equip=1&fit=1&t='+Date.now(); }
+  function load(){ var c=(window.TW_GEAR&&TW_GEAR.char)?TW_GEAR.char():'ain'; fr.src='viewer.html?equip=1&fit=1&char='+c+'&t='+Date.now(); }
+  document.addEventListener('tw:gearchar', function(){ if(on) load(); });
   tg.addEventListener('click', function(){ on=!on; fr.hidden=!on; doll.style.visibility=on?'hidden':''; tg.textContent=on?'2D 원화':'3D 외형'; if(on) load(); else fr.src='about:blank'; try{ localStorage.setItem('tw:doll3d', on?'1':'0'); }catch(e){} });
   document.addEventListener('tw:gear', function(){ if(on) load(); });
   try{ if(localStorage.getItem('tw:doll3d')==='1') tg.click(); }catch(e){} })();
@@ -243,6 +244,8 @@ document.querySelector('.chars').addEventListener('click', function(e){
   setTimeout(function(){ d.src = 'art/full-' + c.dataset.char + '.webp'; d.onload = function(){ d.style.opacity = 1; }; }, 120);
 });
 document.getElementById('doll').style.transition = 'opacity .18s';
+/* 출격 캐릭터를 기본 선택 */
+(function(){ var c=(window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'; var chip=document.querySelector('.chip-char[data-char="'+c+'"]'); if(chip&&!chip.classList.contains('is-on')){ document.querySelectorAll('.chip-char').forEach(function(x){ x.classList.remove('is-on'); }); chip.classList.add('is-on'); document.getElementById('doll').src='art/full-'+c+'.webp'; } })();
 </script>
 </body>
 </html>

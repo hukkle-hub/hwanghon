@@ -33,7 +33,31 @@
       { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'모든 부위에 피해', aoe:true },
       { key:'4', id:'resolve',icon:'shield', name:'결의',        mult:0,   cd:15, st:0,  desc:'2초간 받는 피해 50% 감소', buff:{dur:2, reduce:0.5} }
     ],
-    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩' }
+    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩' },
+    /* 카인 — 블레이드 마스터(탱커/브루저): 대검. 파괴·버티기 */
+    kain: [
+      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 파괴 피해 증가' },
+      { key:'2', id:'brace',  icon:'shield', name:'철벽',          mult:0,   cd:12, st:0,  desc:'3초간 받는 피해 60% 감소', buff:{dur:3, reduce:0.6} },
+      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위에 피해', aoe:true },
+      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격' }
+    ],
+    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 대검 강타 + 출혈' },
+    /* 류 — 레인저(딜러): 쌍단검. 기동·연속 처치 */
+    ryu: [
+      { key:'1', id:'fan',    icon:'crosshair', name:'쌍날 난무',   mult:2.0, cd:5,  st:14, desc:'선택 부위에 빠른 연속 베기' },
+      { key:'2', id:'shadow', icon:'bolt',      name:'그림자 도약', mult:0,   cd:7,  st:18, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
+      { key:'3', id:'storm',  icon:'flame',     name:'칼날 폭풍',   mult:1.1, cd:11, st:24, desc:'모든 부위에 피해', aoe:true },
+      { key:'4', id:'mark',   icon:'eye',       name:'표식',        mult:0,   cd:14, st:0,  desc:'2초간 받는 피해 40% 감소', buff:{dur:2, reduce:0.4} }
+    ],
+    ryuUlt: { key:'R', id:'redshadow', icon:'crosshair', name:'붉은 그림자', mult:5.2, bleed:3, desc:'궁극기. 연속 찌르기 + 출혈 3중첩' },
+    /* 세라 — 위치 메이커(서포터): 시약 투척·정제 */
+    sera: [
+      { key:'1', id:'vial',   icon:'potion', name:'부식 시약',     mult:1.9, cd:6,  st:14, desc:'선택 부위에 시약 투척' },
+      { key:'2', id:'mist',   icon:'seal',   name:'정제 안개',     mult:0,   cd:9,  st:16, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
+      { key:'3', id:'burst',  icon:'flame',  name:'연쇄 폭발',     mult:1.3, cd:12, st:26, desc:'모든 부위에 피해', aoe:true },
+      { key:'4', id:'ward',   icon:'heart',  name:'회복 결계',     mult:0,   cd:15, st:0,  desc:'3초간 받는 피해 50% 감소', buff:{dur:3, reduce:0.5} }
+    ],
+    seraUlt: { key:'R', id:'catalyst', icon:'potion', name:'촉매 폭발', mult:5.0, bleed:2, desc:'궁극기. 대형 시약 폭발 + 출혈 2중첩' }
   };
 
   function dummy(o){

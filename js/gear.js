@@ -8,9 +8,23 @@
   var STEP=0.04, GROW=0.015;
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; });   /* 시트 강화 단계(수치 기준점) 보존 */
   if(!T._bagMerged){ T._bagMerged=true; try{ var sv=SV.get(); Object.keys(sv.bag||{}).forEach(function(id){ var it=T.get(id); if(it&&it.qty!=null) it.qty+=sv.bag[id]; }); }catch(e){} }
-  function state(){ var s=SV.get(); if(!s.gear){ var P=T.PLAYER; s.gear={ equipped:Object.assign({},P.equipped), owned:P.bag.map(function(b){ return b.item; }), enh:{}, dur:{} };
+  /* 캐릭터별 기본 로드아웃 (아인은 시트 PLAYER.equipped). 가방·강화·내구도는 공용 */
+  var EMPTY={ main:null, sub:null, off:null, merc:null, head:null, chest:null, legs:null, gloves:null, boots:null, acc:null };
+  var DEFAULTS={ ain:function(){ return Object.assign({},T.PLAYER.equipped); }, kain:function(){ return Object.assign({},EMPTY,{ main:'w_kain_greatsword' }); }, ryu:function(){ return Object.assign({},EMPTY,{ main:'w_ryu_dagger' }); }, sera:function(){ return Object.assign({},EMPTY,{ main:'w_sera_flask' }); } };
+  var CUR=null;   /* 편집·표시 중인 캐릭터 (기본 = 출격 캐릭터) */
+  function curChar(){ return CUR||(SV.char?SV.char():'ain'); }
+  function loadouts(g){ if(!g.chars) g.chars={}; return g.chars; }
+  function loadoutOf(g, cid){ var L=loadouts(g); if(!L[cid]) L[cid]=(DEFAULTS[cid]||DEFAULTS.ain)(); return L[cid]; }
+  function state(){ var s=SV.get(); if(!s.gear){ var P=T.PLAYER; s.gear={ chars:{ ain:Object.assign({},P.equipped) }, owned:P.bag.map(function(b){ return b.item; }), enh:{}, dur:{} };
       T.EQUIP.forEach(function(e){ s.gear.enh[e.id]=sheetEnh(e); s.gear.dur[e.id]=e.dur?e.dur[0]:100; }); SV.save(); }
-    return s.gear; }
+    var g=s.gear;
+    if(!Object.getOwnPropertyDescriptor(g,'equipped') || !Object.getOwnPropertyDescriptor(g,'equipped').get){   /* 옛 저장(equipped 데이터) → 아인 로드아웃으로 이전 + 접근자 */
+      var old=g.equipped; delete g.equipped; if(old && !loadouts(g).ain) loadouts(g).ain=old;
+      Object.defineProperty(g,'equipped',{ enumerable:false, configurable:true, get:function(){ return loadoutOf(g, curChar()); }, set:function(v){ loadouts(g)[curChar()]=v; } }); }
+    return g; }
+  function setChar(cid){ CUR=cid||null; return curChar(); }
+  function loadout(cid){ return loadoutOf(state(), cid||curChar()); }
+  function canEquip(id, cid){ return T.usableBy ? T.usableBy(id, cid||curChar()) : true; }
   function save(){ SV.save(); try{ document.dispatchEvent(new CustomEvent('tw:gear')); }catch(e){} }
   function enhOf(id){ var g=state(); return g.enh[id]!=null ? g.enh[id] : ((T.get(id)||{}).enh||0); }
   function durOf(id){ var g=state(); var it=T.get(id); return g.dur[id]!=null ? g.dur[id] : (it&&it.dur?it.dur[0]:100); }
@@ -24,9 +38,9 @@
     Object.keys(equipped).forEach(function(slot){ var id=equipped[slot]; var it=id&&T.get(id); if(!it||!it.stats) return; var m=mult(id, enhFn?enhFn(id):undefined); var sec=(slot==='sub'||slot==='off');
       Object.keys(it.stats).forEach(function(k){ var v=it.stats[k]*m; if(sec){ if(k==='atk'||k==='atkEx'||k==='def'||k==='hp') return; v*=SECONDARY; } if(k==='atkEx') o.atk+=v; else o[k]=(o[k]||0)+v; }); });
     return o; }
-  function base(ch){ var g=sum(T.PLAYER.equipped, function(id){ return sheetEnh(T.get(id)||{}); }), s=ch.stats;
+  function base(ch){ var g=sum((DEFAULTS[ch.id]||DEFAULTS.ain)(), function(id){ return sheetEnh(T.get(id)||{}); }), s=ch.stats;
     return { hp:Math.max(s.hp-g.hp, s.hp*0.5), atk:Math.max(s.atk-g.atk, 0), def:Math.max(s.def-g.def, 0), crit:Math.max(s.crit-g.crit, 1), critDmg:Math.max(s.critDmg-g.critDmg, 100), aspd:s.aspd, mspd:s.mspd }; }
-  function stats(ch){ var b=base(ch), g=sum(state().equipped), grow=1+GROW*((SV.get().lv||1)-1);
+  function stats(ch){ var b=base(ch), g=sum(loadout(ch.id)), grow=1+GROW*((SV.get().lv||1)-1);
     return { hp:Math.round((b.hp+g.hp)*grow), atk:Math.max(50, Math.round((b.atk+g.atk)*grow)), def:Math.round((b.def+g.def)*grow), crit:+(b.crit+g.crit).toFixed(1), critDmg:+(b.critDmg+g.critDmg).toFixed(1), aspd:b.aspd, mspd:b.mspd, skill:+(g.skill||0).toFixed(1), bleed:Math.round(g.bleed||0) }; }
   function cp(){ var g=state(), c=0; Object.keys(g.equipped).forEach(function(k){ var it=T.get(g.equipped[k]); if(it&&it.cp) c+=Math.round(it.cp*mult(it.id)); }); return c; }
   function itemCp(id, enh){ var it=T.get(id); return it&&it.cp ? Math.round(it.cp*mult(id,enh)) : 0; }
@@ -94,6 +108,6 @@
   T.craft=function(r,n){ n=n||1; var made=0; for(var i=0;i<n;i++){ if(!T.canCraft(r)) break; spend(r.mats, r.cost); var res=T.get(r.result); if(res.type==='material'||res.type==='consumable'){ addItem(r.result, r.yield||1); if(SV.stat) SV.stat('craftedCons'); } else { addGear(r.result); if(SV.stat) SV.stat('crafted'); } made++; } return made; };
   /* 시트 기본 강화 단계 표시(slotHTML 의 +N)를 저장 단계로 */
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
-  window.TW_GEAR={ state:state, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
+  window.TW_GEAR={ state:state, setChar:setChar, char:curChar, loadout:loadout, canEquip:canEquip, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
     enhStep:enhStep, enhance:enhance, fsOf:fsOf, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
 })();
