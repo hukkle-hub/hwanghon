@@ -213,12 +213,17 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   if(L.env==='swamp') buildSwamp(); else buildBunker();
   var gateMesh, fenceGeo;
   /* ---------- 허수아비 (Hi3D 생성 통나무 골렘 + 리깅·클립) ---------- */
+  /* 보스 크기 — 플레이어(CHAR_SCALE)를 키운 만큼 보스도 키운다. 보스는 «올려다보는 것» 이라
+     조금 더 준다. 아레나별로 bossScale 로 덮어쓸 수 있다(모르버스처럼 이미 큰 놈은 낮춘다).
+     충돌 반경·사거리는 레벨 데이터라 전투 규칙은 그대로다 — 보이는 크기만 바뀐다. */
+  var BOSS_SCALE=(A.bossScale||1.22)*(A.scale||1);
   var boss=(function(){
     var root=new THREE.Group(); root.position.set(X(Bs.x), 0, Z(Bs.y)); scene.add(root);
     var body=new THREE.Group(); root.add(body);
-    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.9 })); sp.scale.set(0.5,0.5,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
+    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.9 })); sp.scale.set(0.5*BOSS_SCALE,0.5*BOSS_SCALE,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
     /* 부위 → 뼈 + 오프셋(뼈 로컬 기준 대략: 앞쪽 = 모델 +Z) */
     var PART=JSON.parse(JSON.stringify(A.parts3d||{ body:{ bone:'Spine', off:[0,0.1,0.3], r:0.7 }, head:{ bone:'Head', off:[0,0.15,0.05], r:0.4 }, core:{ bone:'Spine2', off:[0,0.05,0.42], r:0.32 } }));
+    Object.keys(PART).forEach(function(k){ var q=PART[k]; q.off=q.off.map(function(v){ return v*BOSS_SCALE; }); q.r=(q.r||0.5)*BOSS_SCALE; });
     var coreGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFF6A3C, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.7 })); coreGlow.scale.set(0.9,0.9,1); scene.add(coreGlow);
     var eyeGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFF8A4C, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5 })); eyeGlow.scale.set(0.5,0.3,1); scene.add(eyeGlow);
     var anim={ lean:0, leanT:0, shake:0, down:0, collapse:0, glow:1, flash:0, tele:null, teleT:0, teleDur:1, swing:0, swingKind:null, walk:0 };
@@ -233,7 +238,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     ['LeftArm','RightArm'].forEach(function(bn,i){ mk(bn, function(g){ var band=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.34,0.16,12,1,true), iron); band.position.y=0.05; g.add(band); var tuft=new THREE.Mesh(new THREE.SphereGeometry(0.32,10,8), straw); tuft.scale.set(1.2,0.6,1); tuft.position.y=0.18; g.add(tuft); }, i?'shr':'shl'); }); }
   function tickDebris(dt){ for(var i=debris.length-1;i>=0;i--){ var d=debris[i]; d.t+=dt; d.vy-=9.8*dt; d.g.position.y+=d.vy*dt; d.g.position.x+=d.vx*dt; d.g.position.z+=d.vz*dt; d.g.rotation.x+=d.rx*dt; d.g.rotation.z+=d.rz*dt; if(d.g.position.y<0.05){ d.g.position.y=0.05; d.vy=-d.vy*0.3; d.vx*=0.6; d.vz*=0.6; d.rx*=0.5; d.rz*=0.5; } if(d.t>4){ scene.remove(d.g); debris.splice(i,1); } } }
   function bossCollectPieces(){ boss.pieces={}; boss.model.traverse(function(o){ if(/^piece_/.test(o.name)){ boss.pieces[o.name.slice(6)]=o; } }); }
-  function bossLoad(done){ function receive(g){ boss.model=g.scene; if(A.scale) boss.model.scale.setScalar(A.scale); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
+  function bossLoad(done){ function receive(g){ boss.model=g.scene; boss.model.scale.setScalar(BOSS_SCALE); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
       boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
   function bossAction(n){ var c=boss.clips[n]; if(!c||!boss.mixer) return null; return boss.mixer.clipAction(c); }
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
@@ -319,11 +324,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     coreLight.intensity=SET.lights?(1.5+g*2.5):0;
     boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&ATKST.indexOf(snap.enemy.state)>=0; var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
     bossSpot.position.set(boss.root.position.x+1.5, SPOT_H, boss.root.position.z+2); bossSpot.intensity=SET.lights?60:0;
-    var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar(0.7+g*0.3);
+    var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar((0.7+g*0.3)*BOSS_SCALE);
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
     Object.keys(boss.hits).forEach(function(k){ var h=boss.hits[k]; if(!h.visible) return; h.position.copy(bossHitPos(k)); }); }
   function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true;
-    var pc=boss.pieces&&boss.pieces[id]; if(pc && pc.parent){ var wp=new THREE.Vector3(), wq=new THREE.Quaternion(); pc.getWorldPosition(wp); pc.getWorldQuaternion(wq); pc.parent.remove(pc); pc.position.copy(wp); pc.quaternion.copy(wq); pc.scale.setScalar(1); scene.add(pc); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); } }
+    var pc=boss.pieces&&boss.pieces[id]; if(pc && pc.parent){ var wp=new THREE.Vector3(), wq=new THREE.Quaternion(); pc.getWorldPosition(wp); pc.getWorldQuaternion(wq); pc.parent.remove(pc); pc.position.copy(wp); pc.quaternion.copy(wq); pc.scale.setScalar(BOSS_SCALE); scene.add(pc); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); } }
 
   var strawTex=tex('straw',[2,2]);
   /* ---------- Hi3D 소품 (art/3d/props) ---------- */
@@ -929,7 +934,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     fill('v-st', s2.player.st/s2.player.stMax*100); $('#v-stv').textContent=Math.round(s2.player.st)+' / '+s2.player.stMax;
     fill('v-ult', s2.player.ult); $('#v-ultv').textContent=Math.round(s2.player.ult)+'%';
     fill('p-bar', s2.player.hp/s2.player.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(s2.player.hp));
-    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar(tg?0.7:0.45); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
+    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.7:0.45)*BOSS_SCALE); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
     var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
     el.actions.querySelector('[data-ult]').classList.toggle('is-ready', s2.player.ult>=R.ult.max); el.actions.querySelector('[data-atk]').classList.toggle('is-ready', Bs.dist<=L.player.reach);
     var lines=[]; if(s2.enemy.bleed) lines.push(['drop','#C9534E','출혈','×'+s2.enemy.bleed]); if(s2.enemy.state==='downed') lines.push(['x','#C9A45E','격추',Math.ceil(s2.enemy.downT)+'s']); if(s2.enemy.state==='telegraph'&&!s2.enemy.counterable) lines.push(['x','#FF9A45','튕기기 불가 · 회피','']); if(s2.player.riposte) lines.push(['bolt','#C9A45E','반격 기회',s2.player.riposteT.toFixed(1)+'s']); if(s2.player.guard) lines.push(['shield','#7B9BD6','방어 중','']); if(s2.player.buffT>0) lines.push(['shield','#5FAE9B','결의',Math.ceil(s2.player.buffT)+'s']); if(s2.player.critNext) lines.push(['bolt','#C9A45E','치명타 확정','']); if(s2.player.locked) lines.push(['x','#8A8A8A','경직','']);
