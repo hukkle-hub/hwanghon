@@ -32,7 +32,13 @@
       after:[['matteo','역류가 멎었다. 오늘은 하부 구역에도 깨끗한 물을 보낼 수 있겠군.'],['ain','수문기를 멈췄어요. 밸브도 전부 잠갔고요.'],['matteo','잘했다. 보수를 챙겨라. 다음 출격 전에 장비부터 손봐.']] },
     { id:'ch4', name:'4장', title:'배전 통제실 정지', art:'story-city', quest:'q_relay', arena:'relay', dungeon:'game3d.html?d=d04', flag:'ch_4',
       brief:[['matteo','3경구 변전소가 꺼지지 않는다. 계전기가 전력을 끌어모으고 있어.'],['ain','차단기를 내리면 되는 거 아니에요?'],['matteo','순서가 틀리면 역전류로 타 죽는다. 북쪽 축전기부터 채워라. 남쪽은 그 다음이다.'],['matteo','중앙 모선은 끝까지 살아 있다. 방전 간격을 세고 지나가.']],
-      after:[['matteo','3경구가 조용해졌다. 이제 밤에도 불이 안 켜지겠군.'],['ain','계전기는 멈췄어요. 접점은 둘 다 부졌고요.'],['matteo','예비 접점을 가져왔으면 공방으로 돌려라. 그걸로 다음 장비를 만든다.']] }
+      after:[['matteo','3경구가 조용해졌다. 이제 밤에도 불이 안 켜지겠군.'],['ain','계전기는 멈췄어요. 접점은 둘 다 부졌고요.'],['matteo','예비 접점을 가져왔으면 공방으로 돌려라. 그걸로 다음 장비를 만든다.']] },
+    { id:'ch5', name:'5장', title:'변이체 토벌: 식인초', art:'boss-anatomy', quest:'q_plant', arena:'grove', dungeon:'game3d.html?d=d05', flag:'ch_5',
+      brief:[['matteo','식물원이 통째로 둥지가 됐다. 군락이 다섯, 전부 태워라.'],['ain','순서가 있나요?'],['matteo','없다. 대신 안 태운 군락은 계속 포자를 뿜는다 — 길이 좁아진다는 뜻이야.'],['matteo','안쪽에 뿌리가 다 모이는 놈이 있다. 덩굴 두 갈래를 먼저 끊어라.']],
+      after:[['matteo','포자가 걷혔다고? 그럼 물도 다시 끌어올 수 있겠군.'],['ain','모근체는 태웠어요. 씨앗 표본도 몇 개 건졌고요.'],['matteo','씨앗은 세라한테 넘겨라. 약을 만들 수 있으면 다음 의뢰가 덜 아프다.'],['matteo','…그리고 보급이 또 끊겼다. 수송로다. 준비되면 말해라.']] },
+    { id:'ch6', name:'6장', title:'파괴된 수송로 확보', art:'lobby-city', quest:'q_road', arena:'road', dungeon:'game3d.html?d=d06', flag:'ch_6',
+      brief:[['matteo','보급이 끊긴 건 길이 끊겼기 때문이다. 잔해 세 무더기를 치워라.'],['ain','기중기는요?'],['matteo','한 대뿐이다. 구간마다 조작대로 돌아와서 다시 걸어야 해. 왕복이 길다.'],['matteo','머리 위 상판이 내려앉는다. 진동이 오면 멈춰 서라 — 뛰지 말고.']],
+      after:[['matteo','길이 뚫렸다. 오늘 밤엔 수레가 들어온다.'],['ain','기갑은 멈췄어요. 턱이랑 평형추, 둘 다 뜯어냈고요.'],['matteo','그 쇳덩이는 공방 몫이다. 카인이 좋아하겠군.'],['matteo','앉아라, 아인. 길이 열렸으니 이제 «밖» 얘기를 할 때가 됐다.']] }
 
   ];
   function ch(id){ return CHAPTERS.filter(function(c){ return c.id===id; })[0]; }
@@ -40,7 +46,8 @@
   function arenaRec(id){ try{ return JSON.parse(localStorage.getItem('tw:arena:'+id)||'null'); }catch(e){ return null; } }
   function cleared(id){ var r=arenaRec(id); return !!(r&&r.cleared); }
   /* ---------- 의뢰 상태 ---------- */
-  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage',q_relay:'relay'}, QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh',q_relay:'sewage'};
+  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage',q_relay:'relay',q_plant:'grove',q_road:'road'},
+      QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh',q_relay:'sewage',q_plant:'relay',q_road:'grove'};
   function routeForQuest(id){return CHAPTERS.find(function(c){return c.quest===id&&!c.locked;})||null;}
   function questState(qid){ var a=QUEST_ARENA[qid]; if(!a) return 'locked'; if(flag('claim_'+qid)) return 'claimed'; if(cleared(a)) return 'cleared';if(QUEST_REQUIRED[qid]&&!cleared(QUEST_REQUIRED[qid]))return 'locked'; return 'available'; }
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }

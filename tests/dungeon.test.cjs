@@ -46,6 +46,22 @@ test('progression opens in order and sewage quest reward can be claimed only onc
  storage.set('tw:arena:marsh',JSON.stringify({cleared:true}));assert.equal(s.questState('q_sewage'),'available');assert.equal(s.routeForQuest('q_sewage').dungeon,'game3d.html?d=d03');
  storage.set('tw:arena:sewage',JSON.stringify({cleared:true}));const before=save.wallet();assert.ok(s.claim('q_sewage'));assert.equal(save.wallet()-before,12500);assert.equal(s.claim('q_sewage'),null);assert.equal(s.questState('q_sewage'),'claimed');
 });
+test('grove and road continue the chain: relay -> grove -> road, each with a two-stage arena',()=>{
+ const storage=new Map(),c=env(storage),s=c.window.TW_STORY,A=c.window.TW_DUNGEONS.ARENAS,L=c.window.TW_LEVELS;
+ for(const [arena,level,quest,proc] of [['grove','d05','q_plant','root'],['road','d06','q_road','hauler']]){
+  assert.ok(A[arena],arena);assert.equal(A[arena].stages.length,2,arena+' 단계');
+  assert.equal(A[arena].procedural,proc);assert.ok(A[arena].stageFx[1].hazards.length>0,arena+' 광란 구역');
+  /* 통상 단계의 파괴 부위는 전부 3D 부위 노드와 이름이 맞아야 표식이 붙는다 */
+  for(const part of A[arena].stages[0].parts)assert.ok(A[arena].parts3d[part.id],arena+':'+part.id);
+  /* 패턴 이름마다 구역 정의가 있어야 한다 — 없으면 서버가 빈 구역을 만든다 */
+  for(const pat of A[arena].stages[0].patterns)assert.ok(L[level].zones[pat.name],level+':'+pat.name);
+  assert.equal(s.routeForQuest(quest).dungeon,'game3d.html?d='+level);
+ }
+ assert.equal(s.questState('q_plant'),'locked');assert.equal(s.questState('q_road'),'locked');
+ for(const a of ['tutorial','marsh','sewage','relay'])storage.set('tw:arena:'+a,JSON.stringify({cleared:true}));
+ assert.equal(s.questState('q_plant'),'available');assert.equal(s.questState('q_road'),'locked');
+ storage.set('tw:arena:grove',JSON.stringify({cleared:true}));assert.equal(s.questState('q_road'),'available');
+});
 test('zero counters are saved as zero',()=>{const c=env(),s=c.window.TW_SAVE;s.stat('counters',0);assert.equal(s.get().stats.counters,0);});
 test('sewage loot has distinct first-clear rewards and rare rolls work',()=>{
  const c=env();vm.runInContext(fs.readFileSync('js/loot.js','utf8'),c);vm.runInContext('Math.random=()=>0',c);
