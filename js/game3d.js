@@ -243,23 +243,27 @@ import { buildDungeonProps } from './dungeon-props.js';
     else if(n==='collapse'){ a.collapse=1; bossOnce('death',{hold:true, speed:0.9}); }
     else if(n.indexOf('tele_')===0){ var kind=n.slice(5), spec=ATK[kind]||ATK[Object.keys(ATK)[0]], c=boss.clips[spec.clip]; a.tele=kind; a.teleT=o.dur||1; a.teleDur=o.dur||1; if(c){ var ts=(spec.hitFrac*c.duration)/Math.max(0.15,a.teleDur); bossOnce(spec.clip,{speed:Math.max(0.35,Math.min(2.2,ts))}); } }
     else if(n.indexOf('hit_')===0){ a.tele=null; a.swing=0.4; a.swingKind=n.slice(4); if(boss.oneshot && boss.oneshot.timeScale<1){ boss.oneshot.timeScale=1.4; } } }
+  /* 예고·연계 사이·후딜은 «공격 중» 이다 — 이 동안은 대기 모션으로 돌아가지 않고 시선도 고정한다 */
+  var ATKST=['telegraph','link','recover'];
   var FLASHC=new THREE.Color(0x40160e);
   function bossStop(){ boss.anim.tele=null; }
   function bossTick(dt){ var a=boss.anim, t=performance.now()/1000; if(!boss.mixer) return;
     if(a.shake>0) a.shake-=dt; if(a.flash>0) a.flash-=dt; if(a.tele){ a.teleT-=dt; } if(a.swing>0) a.swing-=dt;
-    if(boss.oneshot){ boss.oneshotT+=dt*boss.oneshot.timeScale/boss.oneshot.timeScale; var dur=boss.oneshot.getClip().duration/boss.oneshot.timeScale; if(!boss.hold && !(battle&&['telegraph','recover'].indexOf(battle.snapshot().enemy.state)>=0) && boss.oneshot.time>=boss.oneshot.getClip().duration-0.05){ boss.oneshot.fadeOut(0.2); boss.oneshot=null; if(boss.act){ boss.act.reset(); boss.act.fadeIn(0.2); boss.act.play(); } } }
+    if(boss.oneshot){ boss.oneshotT+=dt*boss.oneshot.timeScale/boss.oneshot.timeScale; var dur=boss.oneshot.getClip().duration/boss.oneshot.timeScale; if(!boss.hold && !(battle&&ATKST.indexOf(battle.snapshot().enemy.state)>=0) && boss.oneshot.time>=boss.oneshot.getClip().duration-0.05){ boss.oneshot.fadeOut(0.2); boss.oneshot=null; if(boss.act){ boss.act.reset(); boss.act.fadeIn(0.2); boss.act.play(); } } }
     a.walk += ((Bs.moving?1:0) - a.walk)*Math.min(1,dt*6);
     if(!boss.oneshot){ bossBase(a.walk>0.5?'walk':'idle'); }
     var bs=battle&&battle.snapshot();
-    if(boss.oneshot && bs && (bs.enemy.state==='telegraph'||bs.enemy.state==='recover')){
+    if(boss.oneshot && bs && (bs.enemy.state==='telegraph'||bs.enemy.state==='recover')){  /* 'link' 는 스크럽하지 않고 흘려 보낸다 — 연계 사이의 여파 동작 */
       var spec=ATK[bs.enemy.patIcon]||ATK[Object.keys(ATK)[0]], dur=boss.oneshot.getClip().duration;
-      if(boss.oneshot.getClip().name===spec.clip){boss.oneshot.paused=true;boss.oneshot.time=bs.enemy.state==='telegraph'?dur*spec.hitFrac*(1-bs.enemy.tele/bs.enemy.teleDur):dur*(spec.hitFrac+(1-spec.hitFrac)*(1-Math.max(0,bs.enemy.recovery)/bs.enemy.recoveryDur));}
+      /* 예고 중 모션 위치는 combat.js 의 windup 곡선을 따른다. 선형이면 모션이 곧 초읽기가 되고,
+         hold 비트에서는 여기서 «들어올린 채 멈추는» 구간이 그대로 보인다. */
+      if(boss.oneshot.getClip().name===spec.clip){boss.oneshot.paused=true;boss.oneshot.time=bs.enemy.state==='telegraph'?dur*spec.hitFrac*(bs.enemy.windup!=null?bs.enemy.windup:1-bs.enemy.tele/bs.enemy.teleDur):dur*(spec.hitFrac+(1-spec.hitFrac)*(1-Math.max(0,bs.enemy.recovery)/bs.enemy.recoveryDur));}
     }
     boss.mixer.update(dt);
     var sh=a.shake>0 ? Math.sin(t*60)*0.05*a.shake : 0; boss.body.position.x=sh;
     var g=a.glow*(0.8+Math.sin(t*3)*0.2)+(a.flash>0?1.5:0); boss.mats.forEach(function(m){ if(m.emissive){ var be=m.userData.emis; if(be) m.emissive.copy(be); else m.emissive.setHex(0); if(a.flash>0) m.emissive.add(FLASHC); } });
     coreLight.intensity=SET.lights?(1.5+g*2.5):0;
-    boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&(snap.enemy.state==='telegraph'||snap.enemy.state==='recover'); var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
+    boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&ATKST.indexOf(snap.enemy.state)>=0; var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
     bossSpot.position.set(boss.root.position.x+1.5, SPOT_H, boss.root.position.z+2); bossSpot.intensity=SET.lights?60:0;
     var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar(0.7+g*0.3);
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
@@ -414,7 +418,12 @@ import { buildDungeonProps } from './dungeon-props.js';
     else if(kind==='aoe'){ fxArc(c, true); fxRing(ain.root.position, c, 3.2, 0.5); shake(0.006,200); if(k.posture) burst(bossHitPos('body'), 20, 0x9AB0E0); }
     else if(kind==='buff'){ fxAura(c, k.buff?k.buff.dur:2); SFX.play('guard'); }
     else if(kind==='dodge'){ fxAfter(c); } }
-  function burst(p, n, hex){ var c=new THREE.Color(hex||0xF0B070); for(var k=0;k<(n||14);k++){ var i=spI=(spI+1)%SPN; spPos[i*3]=p.x; spPos[i*3+1]=p.y; spPos[i*3+2]=p.z; spVel[i].set((Math.random()-0.5)*5, Math.random()*4+1, (Math.random()-0.5)*5); spLife[i]=0.3+Math.random()*0.35; spCol[i*3]=c.r; spCol[i*3+1]=c.g; spCol[i*3+2]=c.b; } }
+  /* dir=[dx,dz] 를 주면 파티클이 타격 벡터 방향으로 쏠린다 */
+  function burst(p, n, hex, dir){ var c=new THREE.Color(hex||0xF0B070), bx=0, bz=0;
+    if(dir){ var m=Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])||1; bx=dir[0]/m*4.2; bz=dir[1]/m*4.2; }
+    for(var k=0;k<(n||14);k++){ var i=spI=(spI+1)%SPN; spPos[i*3]=p.x; spPos[i*3+1]=p.y; spPos[i*3+2]=p.z;
+      spVel[i].set(bx+(Math.random()-0.5)*5, Math.random()*4+1, bz+(Math.random()-0.5)*5);
+      spLife[i]=0.3+Math.random()*0.35; spCol[i*3]=c.r; spCol[i*3+1]=c.g; spCol[i*3+2]=c.b; } }
   function tickSparks(dt){ for(var i=0;i<SPN;i++){ if(spLife[i]<=0) continue; spLife[i]-=dt; spVel[i].y-=9.8*dt; spPos[i*3]+=spVel[i].x*dt; spPos[i*3+1]+=spVel[i].y*dt; spPos[i*3+2]+=spVel[i].z*dt; if(spLife[i]<=0) spPos[i*3+1]=-99; } spGeo.attributes.position.needsUpdate=true; spGeo.attributes.color.needsUpdate=true; }
   /* 횃불 불똥 */
   var emberT=0;
@@ -431,7 +440,7 @@ import { buildDungeonProps } from './dungeon-props.js';
     canCounter:function(){return withinReach(L.player.reachCounter)&&!!zone&&world.inZone(zone,P.x,P.y);},
     canStart:function(){return world.dist(P.x,P.y,Bs.x,Bs.y)<=L.ai[phase].start&&world.lineOfSight(P.x,P.y,Bs.x,Bs.y);},
     pick:function(pats,i){return director.pick(pats,i);},
-    enemyStart:function(pat){var plan=director.start(pat,scaledZone(L.zones[pat.name]));zone=plan.zone;zone.pattern=pat.name;boss.lockYaw=Math.PI/2-plan.angle;boss.root.rotation.y=boss.lockYaw;},
+    enemyStart:function(pat){var zk=pat.zoneKey||pat.name;var plan=director.start(pat,scaledZone(L.zones[zk]));zone=plan.zone;zone.pattern=zk;boss.lockYaw=Math.PI/2-plan.angle;boss.root.rotation.y=boss.lockYaw;},
     enemyAdvance:function(pat,progress){director.advance(progress);},
     inZone:function(){return !!zone&&world.inZone(zone,P.x,P.y)&&world.lineOfSight(Bs.x,Bs.y,P.x,P.y);}
   };
@@ -444,7 +453,14 @@ import { buildDungeonProps } from './dungeon-props.js';
   function banner(lb, v, sub, perfect){ el.cLb.textContent=lb; el.cV.textContent=W.fmt(v); el.cSub.textContent=sub||''; el.counter.classList.toggle('perfect',!!perfect); el.counter.classList.add('is-on'); counterT=1.3; }
   function flash(){ el.flash.classList.remove('is-on'); void el.flash.offsetWidth; el.flash.classList.add('is-on'); }
   function vib(ms){ if(!SET.vib) return; try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
-  var shakeAmt=0, shakeT=0; function shake(i, d){ shakeAmt=Math.max(shakeAmt, (i||0.004)*40); shakeT=Math.max(shakeT,(d||200)/1000); }
+  /* 화면 흔들림: 타격 축 방향으로 주고 빠르게 가라앉힌다 (docs/design/18-boss-fight-design.md §1-2).
+     dx/dz 를 주지 않으면 예전처럼 무작위로 흔든다. */
+  var shakeAmt=0, shakeT=0, shakeD=0.2, shakeDX=0, shakeDZ=0;
+  function shake(i, d, dx, dz){ shakeAmt=Math.max(shakeAmt, (i||0.004)*40); shakeD=Math.max(shakeD,(d||200)/1000); shakeT=Math.max(shakeT,shakeD);
+    if(dx||dz){ var m=Math.sqrt(dx*dx+dz*dz)||1; shakeDX=dx/m; shakeDZ=dz/m; } }
+  /* 보스→플레이어 축 (맞는 방향), 플레이어→보스 축 (때리는 방향) */
+  function axisFromBoss(){ return [X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)]; }
+  function axisToBoss(){ return [X(Bs.x)-X(P.x), Z(Bs.y)-Z(P.y)]; }
   var zoomPulse=0; function zoomKick(){ zoomPulse=1; }
   function handle(e){
     var s=battle?battle.snapshot():null;
@@ -454,21 +470,37 @@ import { buildDungeonProps } from './dungeon-props.js';
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
       case 'evade': guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter'); break;
       case 'recoverend': zone=null;hideZone(); if(boss.oneshot){boss.oneshot.stop();boss.oneshot=null;} if(boss.act)boss.act.reset().fadeIn(0.12).play(); break;
-      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3; num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12; burst(hp, e.counter?36:e.crit?22:12); if(e.counter)el.cV.textContent=W.fmt(e.dmg); if(!e.counter && (!s || ['idle','stagger'].indexOf(s.enemy.state)>=0)) bossPlay('flinch'); if(e.counter){ flash(); vib(40); shake(0.01,260); zoomKick(); } else shake(0.003,90); break;
+      /* 타격감: 소리·흔들림·파티클·정지를 같은 프레임에, 세기에 비례해서 (docs/design/18-boss-fight-design.md §1-2) */
+      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3;
+        num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12;
+        var axH=axisToBoss(), cmbH=s?s.player.combo:0;
+        if(e.counter){ burst(hp, e.perfect?40:30, 0xF0E4E4, axisFromBoss()); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
+          shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
+        else { burst(hp, e.crit?22:(cmbH>=3?14:8), null, axH);
+          if(e.crit||cmbH>=3){ shake(0.003,120,axH[0],axH[1]); vib(10); }
+          if(!s || ['idle','stagger'].indexOf(s.enemy.state)>=0) bossPlay('flinch'); }
+        break;
       case 'attack': if(!e.timed) ainAttack('light', e.combo); SFX.play('swing'); comboShow(e.combo, false); break;
       case 'whiff': if(!e.timed) ainAttack('light', 1); SFX.play('swing'); num(above(P.x,P.y,2.1), e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
       case 'counter': SFX.play('counter', e.perfect); slowmo(e.perfect?0.2:0.35, e.perfect?520:380); banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect); el.cV.textContent='튕겨내기'; bossStop(); if(!s||s.enemy.state!=='downed')bossPlay('stagger'); zone=null; hideZone(); break;
-      case 'break': zone=null; hideZone(); bossStop(); if(e.dmg) num(bossHitPos(HITMAP[e.part]), '파괴 +'+W.fmt(e.dmg), 'counter'); SFX.play('brk'); var bp=bossHitPos(HITMAP[e.part]); num(bp, '부위 파괴 — '+e.name, 'crit'); burst(bp, 40, 0x7B9BD6); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); bossDetach(HITMAP[e.part]); dropPart(e.part); bossPlay('stagger'); shake(0.008,300); var pdef=A.stages[phase].parts.filter(function(p){ return p.id===e.part; })[0]; var removed=A.stages[phase].patterns.filter(function(p){return (p.disabledBy||[]).indexOf(e.part)>=0;});if(removed.length)guide('<b>'+e.name+'</b> 파괴 — '+removed.map(function(p){return p.name;}).join(' · ')+' 봉쇄',3); if(pdef&&pdef.onBreak){ if(pdef.onBreak.slow) bossSlow=Math.min(bossSlow, pdef.onBreak.slow); if(pdef.onBreak.zoneScale) zoneScale=Math.min(zoneScale, pdef.onBreak.zoneScale); } break;
+      case 'break': zone=null; hideZone(); bossStop(); if(e.dmg) num(bossHitPos(HITMAP[e.part]), '파괴 +'+W.fmt(e.dmg), 'counter'); SFX.play('brk'); var bp=bossHitPos(HITMAP[e.part]); num(bp, '부위 파괴 — '+e.name, 'crit'); var axB=[bp.x-boss.root.position.x, bp.z-boss.root.position.z]; burst(bp, 48, 0x7B9BD6, axB); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); bossDetach(HITMAP[e.part]); dropPart(e.part); bossPlay('stagger'); shake(0.014,400,axB[0],axB[1]); var pdef=A.stages[phase].parts.filter(function(p){ return p.id===e.part; })[0]; var removed=A.stages[phase].patterns.filter(function(p){return (p.disabledBy||[]).indexOf(e.part)>=0;});if(removed.length)guide('<b>'+e.name+'</b> 파괴 — '+removed.map(function(p){return p.name;}).join(' · ')+' 봉쇄',3); if(pdef&&pdef.onBreak){ if(pdef.onBreak.slow) bossSlow=Math.min(bossSlow, pdef.onBreak.slow); if(pdef.onBreak.zoneScale) zoneScale=Math.min(zoneScale, pdef.onBreak.zoneScale); } break;
       case 'downed': SFX.play('down'); guide('<b>격추!</b> 5초 동안 모든 피해 1.5배', 3); bossPlay('down'); zone=null; hideZone(); shake(0.012,400); break;
       case 'up': guide((A.hudName||'허수아비')+'가 자세를 되찾았다', 1.5); bossPlay('up'); break;
       case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; if(!e.guarded) playOnce('hit',{speed:1.4}); burst(above(P.x,P.y,1.2), 16, 0xD94A45); vib(e.guarded?15:60); shake(e.guarded?0.004:0.012, 300); break;
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; if(!e.guarded) playOnce('hit',{speed:1.4});
+        var axD=axisFromBoss(); burst(above(P.x,P.y,1.2), e.guarded?10:18, 0xD94A45, axD); vib(e.guarded?15:60);
+        shake(e.guarded?0.004:0.012, e.guarded?200:300, axD[0], axD[1]);
+        slowmo(0.06, Math.max(60,(e.stop||(e.guarded?0.05:0.09))*1000));   /* 맞은 순간의 정지 — 연출에서만, 규칙은 건드리지 않는다 */
+        break;
       case 'early': guide('선공은 후딜을 남긴다. <b>타격 직전</b>에 튕겨라', 1.6); break;
       case 'ultready': if(e.first) guide('궁극기 준비 완료 — <b>R</b> 을 눌러라', 3.5); break;
       case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1); try{ fxUlt(brColor(ULT)); }catch(x){ console.warn('fxUlt', x&&x.message); } break;
-      case 'impact': if(e.kind==='ult'){SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500);burst(bossHitPos('core'),60,0xD94A45);} else if(e.kind==='smash')shake(0.014,280); break;
+      case 'impact': var axI=axisToBoss();
+        if(e.kind==='ult'){SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);burst(bossHitPos('core'),60,0xD94A45,axI);}
+        else if(e.kind==='smash'){shake(0.008,240,axI[0],axI[1]);vib(25);burst(bossHitPos(HITMAP[s&&s.target]||'body'),26,null,axI);}
+        break;
       case 'skill': var k=SK[e.index]; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4); if(k.dodge) doRoll(); else if(k.mult>0&&!e.timed) ainAttack(k.aoe?'smash':'skill'); try{ fxSkill(k); }catch(x){ console.warn('fxSkill', x&&x.message); } break;
       case 'nost': guide('스태미나 부족', 1); break;
       case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
@@ -476,7 +508,7 @@ import { buildDungeonProps } from './dungeon-props.js';
       case 'death': if(e.fatal) deathOverlay(e.reason); else guide('마태오 — “다시.”', 2); break;
       case 'smash': if(!e.timed) ainAttack('smash'); comboShow('SMASH', true); break;
       case 'riposte': banner('R I P O S T E', e.dmg||lastHit, e.kind==='evade'?'회피 성공 후 반격':'방어 직후 반격', true); SFX.play('counter', true); break;
-      case 'guardhit': SFX.play('guard'); playOnce('guardHit',{speed:1.6}); break;
+      case 'guardhit': SFX.play('guard'); playOnce('guardHit',{speed:1.6}); var axG=axisFromBoss(); shake(0.004,200,axG[0],axG[1]); break;
       case 'clear': phaseClear(); break;
     }
   }
@@ -685,7 +717,12 @@ import { buildDungeonProps } from './dungeon-props.js';
     else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-Math.pow(0.0005,dt)); }
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
-    cam.position.copy(camPos); if(shakeT>0){ shakeT-=dt; cam.position.x+=(Math.random()-0.5)*shakeAmt*0.1; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.1; } else shakeAmt=0;
+    cam.position.copy(camPos);
+    if(shakeT>0){ shakeT-=dt; var sk=Math.max(0,shakeT/Math.max(1e-3,shakeD)), se=sk*sk;
+      if(shakeDX||shakeDZ){ var osc=Math.sin(shakeT*95)*shakeAmt*0.11*se;
+        cam.position.x+=shakeDX*osc; cam.position.z+=shakeDZ*osc; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.03*se; }
+      else { cam.position.x+=(Math.random()-0.5)*shakeAmt*0.1*se; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.1*se; } }
+    else { shakeAmt=0; shakeDX=shakeDZ=0; }
     cam.lookAt(camLook); if(zoomPulse>0){ zoomPulse-=dt*4; cam.fov=50-Math.max(0,zoomPulse)*4; cam.updateProjectionMatrix(); }
     /* 달빛 그림자 카메라를 플레이어 주변으로 */
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();

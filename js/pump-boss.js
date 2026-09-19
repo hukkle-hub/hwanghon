@@ -25,6 +25,8 @@ export function createPumpBoss(){
  clip('idle',2,[track('Spine','position[y]',[0,1,2],[.75,.8,.75])]);
  clip('walk',.8,[track('Hips','position[y]',[0,.2,.4,.6,.8],[1,1.07,1,1.07,1])]);
  clip('atk_hammer',1.5,[track('Intake','rotation[x]',[0,.4,.675,.9,1.5],[0,-1.8,.6,.4,0]),track('Spine','rotation[x]',[0,.4,.675,1.5],[0,-.18,.25,0])]);
+ /* 연계 2타: 들어올린 흡입관을 되돌리며 반대로 후려친다 */
+ clip('atk_hammer_back',1.1,[track('Intake','rotation[x]',[0,.3,.5,.75,1.1],[0,1.5,-.7,-.3,0]),track('Spine','rotation[z]',[0,.3,.5,1.1],[0,-.2,.16,0])]);
  clip('atk_bolt',1.4,[track('Exhaust','rotation[x]',[0,.35,.63,1.4],[0,-1.15,-1.5,0]),track('Spine','position[z]',[0,.35,.63,1.4],[0,-.12,.28,0])]);
  clip('atk_scythe',1.8,[track('Spine','rotation[y]',[0,.5,.9,1.3,1.8],[0,-.8,2.4,5.2,Math.PI*2])]);
  clip('atk_flame',2,[track('Spine','position[y]',[0,.8,1,1.3,2],[.75,1.1,.45,.62,.75]),track('Core','scale[x]',[0,.8,1,2],[1,1.4,1.6,1])]);

@@ -15,6 +15,7 @@
     var parts=D.parts.map(function(p){return Object.assign({},p,{hpMax:p.hp,broken:false});});
     target=(parts.filter(function(p){return p.weak;})[0]||parts[0]).id;
     var E={hp:D.hp,hpMax:D.hp,posture:0,state:'idle',patI:0,patT:D.patternGap||1.4,pat:null,
+      def:null,beats:[],beatI:0,linkT:0,
       tele:0,teleDur:0,recovery:0,recoveryDur:0,downT:0,stagT:0,bleed:[],dead:false};
     var M={time:0,dmg:0,dmgTaken:0,hits:0,crits:0,counters:0,perfect:0,telegraphs:0,counterOpportunities:0,dodges:0,guards:0,breaks:0,
       bleedDmg:0,ultUsed:0,downs:0,deaths:0,evades:0,ripostes:0,normalDmg:0,counterDmg:0,riposteDmg:0,breakDmg:0,whiffs:0};
@@ -35,6 +36,15 @@
       if((D.allBrokenDown&&breakables.length&&breakables.every(function(q){return q.broken;}))||E.posture>=R.posture.max)down();
       else if(E.state!=='downed'){E.state='stagger';E.stagT=0.8;E.tele=0;}
     }
+    /* 타격 종류별 정지 길이 — 약타와 스매시가 같은 무게로 느껴지지 않게 한다 */
+    function stopFor(opt){
+      var h=R.hitstop,f=h.hit||0.08;
+      if(opt.counter)return (opt.perfect?h.perfect:h.counter)||f;
+      if(opt.riposte)return h.smash||f;
+      if(opt.kind==='smash'||opt.kind==='ult')return h.smash||f;
+      if(opt.skill)return h.chain||f;
+      return ((opt.combo||P.combo)>=3?h.chain:h.light)||f;
+    }
     function damage(pid,mult,opt){
       if(E.dead)return 0;opt=opt||{};var p=B.part(pid)||parts[0];
       var weak=p.broken?(policy.exposed||R.weak.broken):p.weak?R.weak.weak:R.weak.normal;
@@ -53,7 +63,7 @@
       }
       if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&!opt.riposte?policy.normal:1))bleed(1);
       P.ult=clamp(P.ult+(opt.counter?R.counter.ult:R.ult.onAttack),0,R.ult.max);
-      P.hitstop=Math.max(P.hitstop,opt.counter?R.hitstop.counter:R.hitstop.hit);
+      P.hitstop=Math.max(P.hitstop,stopFor(opt));
       if(E.hp===0)finish();return amount;
     }
     function cancel(reason){if(!P.action)return;emit('actioncancel',{id:P.action.id,reason:reason});P.action=null;P.combo=0;P.comboT=0;}
@@ -123,6 +133,7 @@
       a.resolved=true;
       if(HK.canHit&&!HK.canHit(a.part,a)){M.whiffs++;fail('거리가 맞지 않았다. 낫이 닿는 위치에서 공격해라.');emit('whiff',{timed:true,action:a.id});return;}
       var amount=0;
+      a.opt.kind=a.kind;a.opt.combo=a.opt.tier!=null?a.opt.tier+1:P.combo;
       if(a.opt.aoe)parts.forEach(function(p){amount+=damage(p.id,a.mult/parts.length,a.opt);});
       else amount=damage(a.part,a.mult,a.opt);
       if(a.opt.riposte){M.ripostes++;E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
@@ -130,15 +141,62 @@
       if(a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
       emit('impact',{id:a.id,kind:a.kind,dmg:amount});
     }
+    /* ---------- 연계(chain) · 지연타(hold) ----------
+       패턴의 chain[] 은 첫 타격 뒤에 이어지는 «비트»다. 비트마다 patternId 를 올려
+       회피 판정이 타격 단위로 유지된다. 반격 창은 연계의 마지막 비트에서만 열리고,
+       마무리 후딜은 연계 길이에 비례해 길어진다 (docs/design/18-boss-fight-design.md §1-1). */
+    function disabled(b){return (b.disabledBy||[]).some(function(id){var part=B.part(id);return part&&part.broken;});}
+    function beatsOf(def){
+      var ch=def.chain||[],n=ch.length+1,out=[];
+      for(var i=0;i<n;i++){
+        var raw=i?ch[i-1]:{},o=Object.assign({},def,raw);
+        delete o.chain;o.beat=i;o.beats=n;
+        o._cSet=raw.counterable!==undefined;o._rSet=raw.recovery!==undefined;
+        /* 존·이동 설정은 이름으로 찾으므로, 비트 이름을 바꿔도 조회용 키는 따로 남긴다 */
+        o.zoneKey=raw.zone||def.zone||def.name;
+        if(n>1)o.name=(raw.name||def.name)+' '+(i+1)+'/'+n;
+        out.push(o);
+      }
+      return out;
+    }
+    /* 이 비트 다음으로 실제로 나올 비트 (부위 파괴로 빠진 비트는 건너뛴다). 없으면 -1 */
+    function nextBeat(i){for(;i<E.beats.length;i++)if(!disabled(E.beats[i]))return i;return -1;}
+    /* 예고 진행률 t(0→1) → 모션 진행률. 선형이면 모션이 곧 초읽기라 이징을 넣는다. */
+    function windupOf(pat,t,dur){
+      t=clamp(t,0,1);var h=pat&&pat.hold;
+      if(h){
+        var at=clamp(h.at||0.55,0.05,0.95),durF=clamp((h.dur||0.3)/Math.max(0.05,dur||1),0.05,0.8);
+        var p0=at*(1-durF),p1=p0+durF;
+        if(t<=p0)return p0>0?at*(t/p0):at;
+        if(t<p1)return at;                                  /* 들어올린 채 버틴다 */
+        return at+(1-at)*((t-p1)/Math.max(1e-6,1-p1));
+      }
+      if(pat&&pat.windup==='linear')return t;
+      return t*t;                                           /* 천천히 들었다 확 내려친다 */
+    }
+    function startBeat(i){
+      var last=nextBeat(i+1)<0,def=E.def;
+      E.beatI=i;E.pat=Object.assign({},E.beats[i]);patternId++;
+      if(E.beats.length>1){
+        if(!E.pat._cSet)E.pat.counterable=last&&def.counterable!==false;
+        if(last&&!E.pat._rSet)E.pat.recovery=+((def.recovery||0.65)*(1+0.35*(E.beats.length-1))).toFixed(2);
+      }
+      E.pat.final=last;
+      counterWindow=(D.counterWindow||E.pat.window||R.counter.window)+(R.counter.bonus||0);
+      E.state='telegraph';E.teleDur=E.pat.tele+telePlus;E.tele=E.teleDur;
+      M.telegraphs++;if(E.pat.counterable!==false)M.counterOpportunities++;
+      if(HK.enemyStart)HK.enemyStart(E.pat,E.teleDur);
+      emit('telegraph',{pattern:E.pat.name,icon:E.pat.icon,dur:E.teleDur,window:counterWindow,
+        counterable:E.pat.counterable!==false,beat:i+1,beats:E.beats.length,last:last,hold:!!E.pat.hold});
+    }
     function startTelegraph(){
       if(HK.canStart&&!HK.canStart()){E.patT=0.2;return;}
-      var available=D.patterns.filter(function(p){return !(p.disabledBy||[]).some(function(id){var part=B.part(id);return part&&part.broken;});});
+      var available=D.patterns.filter(function(p){return !disabled(p);});
       if(!available.length){E.patT=0.2;return;}
-      E.pat=HK.pick?HK.pick(available,E.patI):available[E.patI%available.length];E.patI++;patternId++;
-      counterWindow=(D.counterWindow||E.pat.window||R.counter.window)+(R.counter.bonus||0);
-      E.state='telegraph';E.teleDur=E.pat.tele+telePlus;E.tele=E.teleDur;M.telegraphs++;if(E.pat.counterable!==false)M.counterOpportunities++;
-      if(HK.enemyStart)HK.enemyStart(E.pat,E.teleDur);
-      emit('telegraph',{pattern:E.pat.name,icon:E.pat.icon,dur:E.teleDur,window:counterWindow,counterable:E.pat.counterable!==false});
+      E.def=HK.pick?HK.pick(available,E.patI):available[E.patI%available.length];E.patI++;
+      E.beats=beatsOf(E.def);
+      var i=nextBeat(0);if(i<0){E.patT=0.2;return;}
+      startBeat(i);
     }
     function landAttack(){
       var pat=E.pat,inside=!HK.inZone||HK.inZone(pat),evaded=P.dodgeThreat===patternId&&P.dodgeAgo<=R.dodge.iframes+0.18&&(P.dodgeT>0||!inside);
@@ -150,10 +208,12 @@
         if(guarded){dmg=Math.round(dmg*(1-R.guard.reduce));P.st=Math.max(0,P.st-(pat.guardCost||0));M.guards++;E.posture=clamp(E.posture+R.posture.onGuard,0,R.posture.max);P.riposteT=0.8;P.riposteKind='guard';emit('guardhit');}
         else {fail(pat.counterable===false?'튕길 수 없는 공격이다. 공격 범위 밖으로 피해라.':P.action?'공격 동작 중 맞았다. 빈틈을 확인하고 공격해라.':'타격 순간에 피하거나 튕겨내지 못했다.');cancel('hit');P.buffer=null;P.lockT=0.28;P.riposteT=0;P.riposteKind=null;}
         if(P.buffT>0)dmg=Math.round(dmg*(1-P.buffReduce));P.hp=Math.max(0,P.hp-dmg);M.dmgTaken+=dmg;P.ult=clamp(P.ult+R.ult.onHit,0,R.ult.max);
-        emit('damaged',{dmg:dmg,guarded:guarded,pattern:pat.name,reason:P.lastFailure});
+        emit('damaged',{dmg:dmg,guarded:guarded,pattern:pat.name,reason:P.lastFailure,stop:(guarded?R.hitstop.guard:R.hitstop.hurt)||0});
         if(P.hp===0){M.deaths++;if(o.mortal===false){P.hp=st.hp;emit('death');}else{B.over=true;B.dead=true;emit('death',{fatal:true,reason:P.lastFailure});}}
       }
-      E.state='recover';E.recoveryDur=pat.recovery||0.65;E.recovery=E.recoveryDur;
+      var nx=B.over?-1:nextBeat(E.beatI+1);
+      if(nx>=0){E.state='link';E.linkT=pat.gap!=null?pat.gap:0.28;}
+      else {E.state='recover';E.recoveryDur=pat.recovery||0.65;E.recovery=E.recoveryDur;}
       if(E.posture>=R.posture.max&&!B.over)down();
     }
     function step(dt){
@@ -168,7 +228,8 @@
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}
       switch(E.state){
         case 'idle':if(D.patterns.length){E.patT-=dt;if(E.patT<=1e-8)startTelegraph();}break;
-        case 'telegraph':E.tele=Math.max(0,E.tele-dt);if(HK.enemyAdvance)HK.enemyAdvance(E.pat,1-E.tele/E.teleDur);if(E.tele<=1e-8){emit('swing',{pattern:E.pat.name});landAttack();}break;
+        case 'telegraph':E.tele=Math.max(0,E.tele-dt);if(HK.enemyAdvance)HK.enemyAdvance(E.pat,windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur));if(E.tele<=1e-8){emit('swing',{pattern:E.pat.name,beat:E.beatI+1,last:!!E.pat.final});landAttack();}break;
+        case 'link':E.linkT-=dt;if(E.linkT<=0){var nb=nextBeat(E.beatI+1);if(nb<0){E.state='recover';E.recoveryDur=E.pat.recovery||0.65;E.recovery=E.recoveryDur;}else startBeat(nb);}break;
         case 'recover':E.recovery-=dt;if(E.recovery<=0){E.state='idle';E.patT=E.pat.every||D.patternGap||1.4;emit('recoverend');}break;
         case 'stagger':E.stagT-=dt;if(E.stagT<=0){E.state='idle';E.patT=D.patternGap||1.4;}break;
         case 'downed':E.downT-=dt;if(E.downT<=0){E.state='idle';E.patT=D.patternGap||1.4;emit('up');}break;
@@ -183,6 +244,8 @@
         hitstop:P.hitstop,action:P.action?Object.assign({},P.action):null,buffer:P.buffer?P.buffer.type:null,lastFailure:P.lastFailure},
       enemy:{hp:E.hp,hpMax:E.hpMax,posture:E.posture,state:E.state,tele:E.tele,teleDur:E.teleDur,window:counterWindow,
         counterable:!E.pat||E.pat.counterable!==false,pattern:E.pat?E.pat.name:null,patIcon:E.pat?E.pat.icon:null,
+        windup:E.state==='telegraph'&&E.teleDur?windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur):(E.state==='telegraph'?0:1),
+        hold:!!(E.pat&&E.pat.hold),beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
         recovery:E.recovery,recoveryDur:E.recoveryDur,downT:E.downT,bleed:E.bleed.length,
         parts:parts.map(function(p){return {id:p.id,name:p.name,hp:p.hp,hpMax:p.hpMax,weak:!!p.weak,breakable:!!p.breakable,broken:p.broken,pos:p.pos};})}};};
     return B;

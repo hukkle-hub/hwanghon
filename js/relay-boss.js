@@ -55,6 +55,10 @@ export function createRelayBoss(){
  clip('walk',.9,[track('Hips','position[y]',[0,.22,.45,.68,.9],[.9,.99,.9,.99,.9]),track('Spine','rotation[z]',[0,.45,.9],[0,.06,0])]);
  /* 내려찍기: 오른 접점을 들었다가 내리친다 */
  clip('atk_slam',1.5,[track('ContactR','rotation[x]',[0,.42,.7,.95,1.5],[0,-1.9,.7,.35,0]),track('Spine','rotation[x]',[0,.42,.7,1.5],[0,-.2,.28,0])]);
+ /* 연계 2타: 왼 접점을 반대쪽에서 되받아친다 (atk_slam 의 좌우 반전) */
+ clip('atk_slam_l',1.2,[track('ContactL','rotation[x]',[0,.34,.56,.8,1.2],[0,-1.8,.65,.3,0]),track('Spine','rotation[z]',[0,.34,.56,1.2],[0,.22,-.18,0])]);
+ /* 연계 3타: 두 접점을 한꺼번에 내리찍는다 */
+ clip('atk_slam_c',1.3,[track('ContactL','rotation[x]',[0,.38,.6,.85,1.3],[0,-1.5,.8,.35,0]),track('ContactR','rotation[x]',[0,.38,.6,.85,1.3],[0,-1.5,.8,.35,0]),track('Hips','position[y]',[0,.38,.6,1.3],[.9,1.05,.72,.9])]);
  /* 방전: 코일이 부풀었다가 터진다 */
  clip('atk_arc',1.4,[track('Core','scale[x]',[0,.5,.68,.8,1.4],[1,1.7,2.1,1,1]),track('Core','scale[z]',[0,.5,.68,.8,1.4],[1,1.7,2.1,1,1]),track('Spine','position[y]',[0,.5,.68,1.4],[.95,1.05,.88,.95])]);
  /* 회전 쓸기: 양 접점을 펼치고 돈다 */

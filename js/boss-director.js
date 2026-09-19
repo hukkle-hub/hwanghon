@@ -7,11 +7,16 @@
       var near=world.dist(boss.x,boss.y,player.x,player.y)<240;
       var candidates=patterns.filter(function(p){return !p.range||p.range==='any'||(near?p.range!=='far':p.range!=='near');});
       if(!candidates.length)candidates=patterns;
-      var varied=candidates.filter(function(p){return p.name!==last;});if(varied.length)candidates=varied;
-      var result=candidates[index%candidates.length];last=result.name;return result;
+      /* 후보 «전체»를 순환하면서 직전 패턴만 건너뛴다.
+         직전 패턴을 뺀 짧은 목록에 index 를 씌우면 두 패턴만 왕복하게 되어
+         세 번째 패턴이 영영 나오지 않는다 — 보스가 단조로웠던 원인. */
+      var n=candidates.length,result=null;
+      for(var k=0;k<n;k++){var c=candidates[(index+k)%n];if(n>1&&c.name===last)continue;result=c;break;}
+      if(!result)result=candidates[index%n];
+      last=result.name;return result;  /* 연계는 한 패턴 안에서 처리되므로 여기서는 루트 패턴만 고른다 */
     }
     function start(pattern,zoneSpec){
-      var motion=(level.attackMotion||{})[pattern.name]||{},angle=world.angle(boss.x,boss.y,player.x,player.y);
+      var motion=(level.attackMotion||{})[pattern.zoneKey||pattern.name]||{},angle=world.angle(boss.x,boss.y,player.x,player.y);
       var distance=Math.min(motion.distance||0,Math.max(0,world.dist(boss.x,boss.y,player.x,player.y)-(motion.stop||100)));
       var dest={x:boss.x,y:boss.y,r:boss.r};
       world.moveEntity(dest,Math.cos(angle)*distance,Math.sin(angle)*distance*.55);

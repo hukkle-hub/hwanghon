@@ -109,10 +109,16 @@
       {id:'contactr',name:'우 접점',hp:42000,breakable:true,onBreak:{slow:.62,telePlus:.12},pos:'tr'},
       {id:'core',name:'방전 코일',weak:true,hp:null,guardedBy:['contactl','contactr'],guardReduce:.6},
       {id:'body',name:'애자 기둥',hp:null}],
+    /* 연계·지연타: docs/design/18-boss-fight-design.md §2.
+       내려찍기는 접점을 부수면 그 타격이 통째로 빠진다 — 파괴가 연계를 짧게 만든다. */
     patterns:[
-      {name:'접점 내려찍기',icon:'hammer',tele:rage?.85:1.2,dmg:rage?6800:5400,posture:35,guardCost:28,recovery:.8,range:'near'},
-      {name:'모선 방전',icon:'bolt',tele:rage?.8:1.1,dmg:rage?6200:5000,posture:30,guardCost:32,recovery:.8,range:'far',disabledBy:rage?[]:['contactl']},
-      {name:'접점 쓸기',icon:'scythe',tele:rage?.95:1.3,dmg:rage?7000:5600,posture:32,guardCost:30,recovery:.9,range:'near',disabledBy:rage?[]:['contactr']},
+      {name:'접점 내려찍기',icon:'hammer',tele:rage?.85:1.2,dmg:rage?6800:5400,posture:35,guardCost:28,recovery:.8,range:'near',
+       chain:rage?[{tele:.5,dmg:5200,posture:28,gap:.2,icon:'hammerL',disabledBy:['contactl']},{tele:.5,dmg:5600,posture:30,gap:.2,icon:'hammerC',disabledBy:['contactr']}]
+                 :[{tele:.6,dmg:4200,posture:28,gap:.24,icon:'hammerL',disabledBy:['contactl']}]},
+      {name:'모선 방전',icon:'bolt',tele:rage?1.15:1.5,dmg:rage?6200:5000,posture:30,guardCost:32,recovery:.8,range:'far',disabledBy:rage?[]:['contactl'],
+       hold:{at:.5,dur:rage?.35:.45}},
+      {name:'접점 쓸기',icon:'scythe',tele:rage?.95:1.3,dmg:rage?7000:5600,posture:32,guardCost:30,recovery:.9,range:'near',disabledBy:rage?[]:['contactr'],
+       chain:[{tele:.55,dmg:rage?5600:4400,posture:26,gap:.2}]},
       {name:'과부하 방전',icon:'flame',tele:rage?1.3:1.65,dmg:rage?8600:6900,counterable:false,unblockable:true,recovery:1.15,range:'any'}],
     hint:'접점 파괴로 약화 · 주황 폭발은 회피 · 실패하면 정비 지점에서 재도전',
     line:rage?'전압이 한계를 넘는다.':'계전기가 깨어난다.',mastery:[]};}
@@ -122,7 +128,8 @@
     tint:{relay:0xc4d2e0,rage:0xffc0a8},glow:{relay:.7,rage:1.4},
     parts3d:{core:{bone:'Core',off:[0,0,.4],r:.45},head:{bone:'Head',off:[0,0,0],r:.4},body:{bone:'Spine',off:[0,0,.6],r:.9},
       contactl:{bone:'ContactL',off:[0,-.3,.2],r:.55},contactr:{bone:'ContactR',off:[0,-.3,.2],r:.55}},
-    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_surge',hitFrac:.52}},
+    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_surge',hitFrac:.52},
+      hammerL:{clip:'atk_slam_l',hitFrac:.45},hammerC:{clip:'atk_slam_c',hitFrac:.46}},   /* 연계 2·3타 전용 모션 */
     rewards:{gold:3600,items:[['m_alloy',16],['m_ore',18],['m_core',2]],sBonus:[['m_heart',1]]},
     stages:[stage4(false),stage4(true)]};
 
@@ -133,13 +140,18 @@
       {id:'exhaust',name:'배출관',hp:36000,breakable:true,onBreak:{zoneScale:.75},pos:'tr'},
       {id:'core',name:'압력 핵',weak:true,hp:null,guardedBy:['intake','exhaust'],guardReduce:.6},
       {id:'body',name:'주 펌프',hp:null}],
-    patterns:[{name:'압력 망치',icon:'hammer',tele:rage?.9:1.25,dmg:rage?6200:5000,posture:35,guardCost:28,recovery:.8,range:'near'},
-      {name:'고압 분사',icon:'bolt',tele:rage?.85:1.15,dmg:rage?5700:4600,posture:30,guardCost:30,recovery:.8,range:'far',disabledBy:rage?[]:['exhaust']},
-      {name:'배출관 쓸기',icon:'scythe',tele:rage?1:1.35,dmg:rage?6500:5300,posture:30,guardCost:30,recovery:.9,range:'near',disabledBy:rage?[]:['exhaust']},
+    /* 연계·지연타: docs/design/18-boss-fight-design.md §2. 흡입관을 부수면 망치의 되돌림이 빠진다 */
+    patterns:[{name:'압력 망치',icon:'hammer',tele:rage?.9:1.25,dmg:rage?6200:5000,posture:35,guardCost:28,recovery:.8,range:'near',
+       chain:[{tele:.6,dmg:rage?4800:3900,posture:26,gap:.24,icon:'hammerB',disabledBy:['intake']}]},
+      {name:'고압 분사',icon:'bolt',tele:rage?.85:1.15,dmg:rage?5700:4600,posture:30,guardCost:30,recovery:.8,range:'far',disabledBy:rage?[]:['exhaust'],
+       chain:[{tele:.45,dmg:rage?4600:3700,posture:24,gap:.16},{tele:.45,dmg:rage?4600:3700,posture:24,gap:.16}]},
+      {name:'배출관 쓸기',icon:'scythe',tele:rage?1.25:1.6,dmg:rage?6500:5300,posture:30,guardCost:30,recovery:.9,range:'near',disabledBy:rage?[]:['exhaust'],
+       hold:{at:.6,dur:.3}},
       {name:'과압 폭발',icon:'flame',tele:rage?1.35:1.7,dmg:rage?8000:6500,counterable:false,unblockable:true,recovery:1.1,range:'any'}],
     hint:'배관 파괴로 약화 · 주황 폭발은 회피 · 실패하면 정비 지점에서 재도전',line:'압력이 차오른다.',mastery:[]};}
   arenas.sewage={id:'sewage',name:'2경구 정화장',place:source.place,char:'ain',hudName:'오염 수문기',procedural:'pump',rigidRig:true,pieces:'nodes',tint:{pump:0xbed0c0,rage:0xffb0a0},glow:{pump:.6,rage:1.3},
     parts3d:{core:{bone:'Core',off:[0,0,.4],r:.45},head:{bone:'Head',off:[0,0,0],r:.4},body:{bone:'Spine',off:[0,0,.6],r:.9},intake:{bone:'Intake',off:[0,-.1,.2],r:.55},exhaust:{bone:'Exhaust',off:[0,-.1,.2],r:.55}},
-    atk:{hammer:{clip:'atk_hammer',hitFrac:.45},bolt:{clip:'atk_bolt',hitFrac:.45},scythe:{clip:'atk_scythe',hitFrac:.5},flame:{clip:'atk_flame',hitFrac:.5}},
+    atk:{hammer:{clip:'atk_hammer',hitFrac:.45},bolt:{clip:'atk_bolt',hitFrac:.45},scythe:{clip:'atk_scythe',hitFrac:.5},flame:{clip:'atk_flame',hitFrac:.5},
+      hammerB:{clip:'atk_hammer_back',hitFrac:.4}},   /* 연계 2타: 되돌림 망치 */
     rewards:{gold:2400,items:[['m_alloy',12],['m_ore',15],['m_oil',2]],sBonus:[['m_core',2]]},stages:[stage(false),stage(true)]};
 })();
