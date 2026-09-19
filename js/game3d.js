@@ -82,7 +82,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
-  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0), dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
+  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0))*0.9   /* 조금 당겨 캐릭터를 크게 */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
   /* ---------- 로딩 화면: 모든 텍스처·GLB 를 한 매니저로 세어 진행률 표시 ---------- */
@@ -353,6 +353,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   }
 
   /* ---------- 아인 (GLB + 애니메이션) ---------- */
+  /* 캐릭터 크기 — 모션이 잘 보이도록 조금 키운다 (원점이 발바닥이라 바닥에 그대로 붙는다).
+     충돌 반경·사거리는 레벨 데이터라 전투 규칙은 바뀌지 않는다. */
+  var CHAR_SCALE=1.14;
   var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
   var loader=new GLTFLoader(LM); var loadN=0;
@@ -366,7 +369,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     }catch(e){ console.warn('weapon look', e); } }
   function loaded(){ loadN++; if(loadN>=4){ ldSet(1, '입장'); ldDone=true; placeProps(); begin(); } }
   loadProps(loaded); bossLoad(loaded);
-  loader.load('art/3d/'+CID+'_anim.glb', function(g){ ain.model=g.scene; capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
+  loader.load('art/3d/'+CID+'_anim.glb', function(g){ ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot; ain.rig=makeRigAdapter(ain.model,ain.root,slot);
