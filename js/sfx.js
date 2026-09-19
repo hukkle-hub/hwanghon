@@ -1,4 +1,4 @@
-/* 황혼 — 절차 생성 효과음/환경음 (Web Audio, 파일 없음)
+/* 황혼 — organic audio sample pack v2 (legacy synthesis below is inactive)
    TW_SFX.unlock() 은 첫 터치/키 입력에서 자동. TW_SFX.play(name) · TW_SFX.ambient(on) · TW_SFX.enabled */
 (function(){
   var ctx=null, master=null, amb=null, enabled=true, volume=0.7;
@@ -35,17 +35,17 @@
   var api={ get volume(){return volume;},set volume(v){volume=Math.max(0,Math.min(1,Number(v)||0));if(master)master.gain.value=enabled?volume:0;}, unlock:unlock, ambient:ambient, get enabled(){ return enabled; }, set enabled(v){ enabled=!!v; if(master) master.gain.value=enabled?volume:0; if(!enabled) ambient(false); },
     play:function(name, a){ if(!enabled||!ac()) return; try{ SFX[name] && SFX[name](a); }catch(e){} } };
   ['pointerdown','keydown','touchstart'].forEach(function(ev){ document.addEventListener(ev, unlock, { passive:true }); });
-  /* Original sample sketch pack. Existing synth remains the loading/error fallback. */
+  /* Organic sample pack. Missing samples stay silent; rejected synth is never used. */
   var buffers={}, loading=null, bed=null, desired='off', active=[], lastSound={};
-  var originalPlay=api.play, originalUnlock=unlock;
+  var originalUnlock=unlock;
   var audioBase=new URL('../art/audio/',document.currentScript.src);
   function preload(){
     if(loading)return loading;
     var c=ac();if(!c)return Promise.resolve();
     loading=Promise.all(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){
-      return fetch(new URL(name+'.wav',audioBase)).then(function(r){if(!r.ok)throw Error(r.status);return r.arrayBuffer();})
+      return fetch(new URL(name+'.wav?v=organic2',audioBase)).then(function(r){if(!r.ok)throw Error(r.status);return r.arrayBuffer();})
         .then(function(data){return c.decodeAudioData(data);}).then(function(b){buffers[name]=b;})
-        .catch(function(){/* Keep the existing synth when a sample is unavailable. */});
+        .catch(function(){/* Missing samples remain silent: never restore rejected synth sounds. */});
     })).then(syncBed);return loading;
   }
   function stopBed(){if(!bed)return;var old=bed;bed=null;old.g.gain.cancelScheduledValues(ctx.currentTime);old.g.gain.setTargetAtTime(0,ctx.currentTime,.15);old.s.stop(ctx.currentTime+.8);}
@@ -65,10 +65,12 @@
   api.play=function(name,a){
     if(!enabled||document.hidden)return;
     var key=name==='hit'&&a?'hit_heavy':name==='counter'&&a?'counter_perfect':name;
-    if(!buffers[key]||!ctx||ctx.state!=='running'){originalPlay(name,a);return;}
+    var aliases={down:'brk',ult:'execute',hurt:a?'counter':'hit',guard:'counter',gate:'phase',chains:'brk',ui:'roll',clear:'counter_perfect'};
+    key=aliases[key]||key;
+    if(!buffers[key]||!ctx||ctx.state!=='running'){return;}
     var t=ctx.currentTime;if(t-(lastSound[key]||-10)<.045)return;lastSound[key]=t;
     if(active.length>=12){try{active.shift().stop();}catch(e){}}
-    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];g.gain.value=.48;
+    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];g.gain.value=name==='ui'?.08:name==='guard'?.24:.48;
     s.connect(g);g.connect(master);active.push(s);
     s.onended=function(){active=active.filter(function(x){return x!==s;});s.disconnect();g.disconnect();};s.start();
     if(bed){bed.g.gain.cancelScheduledValues(t);bed.g.gain.setTargetAtTime(.035,t,.02);bed.g.gain.setTargetAtTime(desired==='boss'?.15:.1,t+.3,.3);}
