@@ -3,7 +3,10 @@ import * as T from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {Animated} from './party-avatar.js';
 import {createPumpBoss} from './pump-boss.js';
+import {prepareTrainingMotion,sampleBossAttack} from './boss-motion.js';
+import {createTrainingParts} from './training-presentation.js';
 import {createRelayBoss} from './relay-boss.js';
+import {prepareMarshMotion,bossAttackSpec,bossPartPieces} from './marsh-motion.js';
 import {buildDungeonProps} from './dungeon-props.js';
 const $=id=>document.getElementById(id),levels=window.TW_LEVELS,arenas=window.TW_DUNGEONS.ARENAS,loader=new GLTFLoader();
 const storage={get(k){try{return localStorage.getItem(k);}catch{return null;}},set(k,v){try{localStorage.setItem(k,v);}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
@@ -67,7 +70,7 @@ function loadAssets(characters){const list=(characters||[]).filter(c=>CHAR_ASSET
  assetPromise=Promise.all([
   Promise.all(want.map(loadCharacter)),
   loader.loadAsync('art/3d/boss_anim.glb'),
-  loader.loadAsync('art/3d/boss_marsh.glb')
+  loader.loadAsync(arenas.marsh.model)
  ]).then(([chars,dummy,marsh])=>{const by={};want.forEach((c,i)=>by[c]=chars[i]);
   const first=by[want[0]];
   assets={chars:by,ain:first.model,weapon:first.weapon,dummy,marsh};$('asset-status').textContent='전투 자산 준비 완료';renderRoom();return assets;
@@ -196,16 +199,17 @@ class RaidView{
   const gateChar=L.rows.map((row,y)=>({x:row.indexOf('G'),y})).find(p=>p.x>=0);this.gate=new T.Mesh(new T.BoxGeometry(.3,2.8,cell/(DEPTH*SCALE)),new T.MeshStandardMaterial({color:0xa7744a,metalness:.5,roughness:.45}));this.gate.position.copy(pos((gateChar.x+.5)*cell,(gateChar.y+.5)*cell,1.4));this.scene.add(this.gate);
   this.adapter={nodes:(L.expedition.nodes||[]).map(n=>({...n,x:(n.cx+.5)*cell,y:(n.cy+.5)*cell})),hazards:(L.expedition.hazards||[]).map(n=>({...n,x:(n.cx+.5)*cell,y:(n.cy+.5)*cell})),completed:id=>!!room?.raid?.expedition.done[id],hazardPhase:h=>room?.raid?.hazards.find(q=>q.id===h.id)?.phase||'off'};this.props=buildDungeonProps(this.scene,this.adapter,SCALE,DEPTH);
  }
- makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='relay'?createRelayBoss():this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?assets.marsh:assets.dummy;this.boss=new Animated(asset,this.scene,false,this.A.procedural==='pump');if(this.A.scale)this.boss.model.scale.setScalar(this.A.scale);this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});this.phase=raid.phase;}
+ makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='relay'?createRelayBoss():this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?prepareMarshMotion(assets.marsh):prepareTrainingMotion(assets.dummy);this.boss=new Animated(asset,this.scene,false,this.A.procedural==='pump');if(this.A.scale)this.boss.model.scale.setScalar(this.A.scale);this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});if(this.A.pieces==='dummy'){this.boss.training=createTrainingParts(this.boss.model,{owned:this.boss.owned});this.boss.training.sync(raid.boss.parts);}this.phase=raid.phase;}
  flashBoss(){this.flash=.12*rpgUI.settings.effects;}
  update(raid,dt){this.resize();const age=Math.min(.05,(performance.now()-lastReceived)/1000);if(this.phase!==raid.phase)this.makeBoss(raid);
   for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){const ca=assets.chars[p.character]||Object.values(assets.chars)[0];a=new Animated(ca.model,this.scene,true,false,ca.weapon);a.root.position.copy(pos(p.x,p.y));const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
   const b=raid.boss,bb=this.boss;bb.root.position.lerp(pos(b.x,b.y),1-Math.exp(-dt*24));bb.root.rotation.y=Math.PI/2-b.aim;
-  if(['telegraph','recover'].includes(b.state)&&b.pattern){const spec=this.A.atk[b.pattern.icon],key=b.attackId;bb.play(spec.clip,key);bb.current.paused=true;const frac=b.state==='telegraph'?spec.hitFrac*windupAt(b.pattern,1-Math.max(0,b.tele-age)/b.teleDur,b.teleDur):spec.hitFrac+(1-spec.hitFrac)*(1-Math.max(0,b.recovery-age)/b.recoveryDur);bb.current.time=bb.current.getClip().duration*frac;}
-  else if(b.state==='link'&&b.pattern){const spec=this.A.atk[b.pattern.icon];bb.play(spec.clip,b.attackId);bb.current.paused=false;}  /* 연계 사이: 여파 동작을 그대로 흘린다 */
+  if(['telegraph','recover'].includes(b.state)&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1),key=b.attackId;bb.play(spec.clip,key);bb.current.paused=true;bb.current.time=sampleBossAttack(spec,bb.current.getClip().duration,{...b,windup:windupAt(b.pattern,1-Math.max(0,b.tele-age)/b.teleDur,b.teleDur),recovery:Math.max(0,b.recovery-age)});}
+  else if(b.state==='link'&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1);bb.play(spec.clip,b.attackId);bb.current.paused=false;}  /* 연계 사이: 여파 동작을 그대로 흘린다 */
   else {const clip=raid.state==='clear'?'death':b.state==='downed'?'down':b.state==='stagger'?'stagger':b.moving?'walk':'idle';bb.play(clip);bb.current.paused=raid.state==='clear';if(bb.current.paused)bb.current.time=Math.max(0,bb.current.getClip().duration-1e-5);}
   bb.mixer.update(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
-  for(const part of b.parts){if(this.A.pieces==='nodes'){const object=bb.model.getObjectByName('piece_'+part.id);if(object)object.visible=!part.broken;}}
+  bb.training?.sync(b.parts);
+  for(const part of b.parts){if(this.A.pieces==='nodes'){for(const object of bossPartPieces(bb.model,part.id))object.visible=!part.broken;}}
   this.zoneCircle.visible=this.zoneLine.visible=false;if(b.zone&&b.state==='telegraph'){const z=b.zone,teach=this.L.id==='d01',col=b.pattern.counterable?(teach&&b.tele<=b.window?0xf7efd8:0xd84c3b):0xfca044;  /* 흰색 점등은 훈련장 전용 — 그 밖에서는 색이 «종류»만 말한다 */if(z.kind==='circle'){this.zoneCircle.visible=true;this.zoneCircle.position.copy(pos(z.x,z.y,.04));this.zoneCircle.scale.setScalar(z.r/SCALE);this.zoneCircle.material.color.setHex(col);}else{this.zoneLine.visible=true;this.zoneLine.position.copy(pos(z.x+Math.cos(z.a)*z.len/2,z.y+Math.sin(z.a)*z.len/2*DEPTH,.04));this.zoneLine.scale.set(z.len/SCALE,z.w/SCALE,1);this.zoneLine.rotation.set(-Math.PI/2,0,-z.a);this.zoneLine.material.color.setHex(col);}}
   /* 아레나 위험 구역 (광란 페이즈) — 서버가 phase 까지 계산해서 보낸다 */
   const ah=raid.arena?.hazards||[];

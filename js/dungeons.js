@@ -78,7 +78,7 @@
       /* 3D: 모델·부위→뼈·파괴 조각·패턴 아이콘→클립 (game3d.js) */
       model:'art/3d/boss_anim.glb', pieces:'dummy', tint:{ dormant:0xb8b0a8, chained:0xd8d0c8, awake:0xffffff }, glow:{ dormant:0.35, chained:0.6, awake:1 },
       parts3d:{ core:{ bone:'Spine2', off:[0,0.05,0.42], r:0.32 }, body:{ bone:'Spine', off:[0,0.1,0.3], r:0.7 }, head:{ bone:'Head', off:[0,0.15,0.05], r:0.4 }, shl:{ bone:'LeftArm', off:[0.05,0.1,0], r:0.36 }, shr:{ bone:'RightArm', off:[-0.05,0.1,0], r:0.36 }, chain:{ bone:'Spine1', off:[0,0.05,0.4], r:0.45 } },
-      atk:{ hammer:{ clip:'atk_hammer', hitFrac:0.42 }, bolt:{ clip:'atk_bolt', hitFrac:0.45 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 } },
+      atk:{ hammer:{ clip:'atk_hammer', hitFrac:0.48 }, bolt:{ clip:'atk_bolt', hitFrac:0.35 }, scythe:{ clip:'atk_scythe', hitFrac:0.30 } },
       rewards:{ gold:1500, items:[['m_fiber',20],['m_ore',10],['c_potion',3],['c_antidote',2]], sBonus:[['m_oil',2]] },
       stages:[
         dummy({ id:'dormant', name:'잠든 허수아비', lesson:'기본', timeLimit:30, hp:120000, kind:'dormant',
@@ -112,9 +112,9 @@
     marsh: {
       id:'marsh', name:'갈대습지 분지', place:'외곽지대 · 갈대습지', char:'ain', unlock:null, quest:'q_marsh',
       art:'boss-marsh', hudName:'모르버스',
-      model:'art/3d/boss_marsh.glb', scale:0.85, pieces:'nodes', tint:{ marsh:0xffffff, rage:0xffb0a0 }, glow:{ marsh:0.8, rage:1.4 },
+      model:'art/3d/boss_marsh_v2.glb', scale:0.85, pieces:'nodes', tint:{ marsh:0xffffff, rage:0xffb0a0 }, glow:{ marsh:0.8, rage:1.4 },
       parts3d:{ head:{ bone:'Head', off:[0,0.15,0.55], r:0.6 }, back:{ bone:'Spine1', off:[0,0.85,0], r:0.8 }, legf:{ bone:'FR_Low', off:[0,0.35,0.1], r:0.6 }, tail:{ bone:'Tail2', off:[0,0.25,0], r:0.6 }, body:{ bone:'Spine', off:[0,0.1,0], r:1.0 }, core:{ bone:'Spine2', off:[0,-0.55,0.45], r:0.4 } },
-      atk:{ bolt:{ clip:'atk_bolt', hitFrac:0.5 }, flame:{ clip:'atk_flame', hitFrac:0.45 }, hammer:{ clip:'atk_hammer', hitFrac:0.5 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 }, drop:{ clip:'atk_drop', hitFrac:0.35 } },
+      atk:{ bolt:{ clip:'atk_bolt', hitFrac:0.5 }, flame:{ clip:'atk_flame', hitFrac:0.45 }, hammer:{ clip:'atk_hammer', hitFrac:0.5 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 }, drop:{ clip:'atk_drop', hitFrac:0.5 } },
       rewards:{ gold:18000, items:[['m_alloy',24],['m_shard',1],['m_core',1],['c_potion',2]], sBonus:[['m_core',1],['m_dew',3]] },
       stages:[
         dummy({ id:'morbus', name:'모르버스', lesson:'토벌', timeLimit:600, hp:1100000, kind:'marsh',

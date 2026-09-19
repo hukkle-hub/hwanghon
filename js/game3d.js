@@ -5,7 +5,11 @@ import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import { createPumpBoss } from './pump-boss.js';
+import { prepareTrainingMotion, sampleBossAttack } from './boss-motion.js';
+import { createTrainingParts } from './training-presentation.js';
+import { createFrameMetrics } from './frame-metrics.js';
 import { createRelayBoss } from './relay-boss.js';
+import { prepareMarshMotion, detachBossPiece, bossAttackSpec } from './marsh-motion.js';
 import { buildDungeonProps } from './dungeon-props.js';
 import { WeaponTrail, trailStyle } from './weapon-trail.js';
 (function(){
@@ -53,6 +57,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   /* ---------- 렌더러 · 씬 ---------- */
   /* 저사양(안전) 모드: 셰이더 실패·컨텍스트 끊김·검은 화면이 감지되면 sessionStorage tw:safe=1 로 다시 시작한다 */
   var SAFE=(function(){ try{ return sessionStorage.getItem('tw:safe')==='1'; }catch(e){ return false; } })();
+  var FRAME_METRICS=createFrameMetrics();
+  document.addEventListener('visibilitychange',function(){if(document.hidden)FRAME_METRICS.add(1,false);});
   var DIAG={ errors:[], gpu:'?', gl2:false, maxTex:0, maxFU:0, black:0, started:0 };
   var renderer=new THREE.WebGLRenderer({ canvas:el.canvas, antialias:!MOBILE && !SAFE, powerPreference:'high-performance' });
   try{ var _gl=renderer.getContext(), _dbg=_gl.getExtension('WEBGL_debug_renderer_info'); DIAG.gpu=_dbg?_gl.getParameter(_dbg.UNMASKED_RENDERER_WEBGL):'(unmasked 불가)'; DIAG.gl2=!!renderer.capabilities.isWebGL2; DIAG.maxTex=_gl.getParameter(_gl.MAX_TEXTURE_SIZE); DIAG.maxFU=_gl.getParameter(_gl.MAX_FRAGMENT_UNIFORM_VECTORS); }catch(e){ DIAG.errors.push('GL info: '+e.message); }
@@ -71,9 +77,16 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     }
     location.reload(); }
   function diagText(){ var avg=fpsSamples.length?Math.round(fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length):0, inf=renderer.info; var c=renderer.domElement;
-    return ['build '+(window.TW&&TW.BUILD||'?')+' · '+(SAFE?'저사양 모드':'일반 모드')+' · 화질 '+SET.quality+' · 조명 '+(SET.lights?'켬':'끔'), 'GPU: '+DIAG.gpu, 'WebGL'+(DIAG.gl2?'2':'1')+' · 최대 텍스처 '+DIAG.maxTex+' · 프래그먼트 유니폼 '+DIAG.maxFU, '캔버스 '+c.width+'×'+c.height+' (배율 '+renderer.getPixelRatio().toFixed(2)+', 화면 '+innerWidth+'×'+innerHeight+')', 'FPS '+avg+' · 드로우콜 '+inf.render.calls+' · 삼각형 '+inf.render.triangles+' · 텍스처 '+inf.memory.textures+' · 지오메트리 '+inf.memory.geometries+' · 프로그램 '+(inf.programs?inf.programs.length:0), '로드 '+loadN+'/4 · 검은 프레임 '+DIAG.black+' · 시작 후 '+(DIAG.started?Math.round((performance.now()-DIAG.started)/1000)+'s':'-'), 'UA: '+navigator.userAgent.slice(0,90)].concat(DIAG.errors.length?['오류 '+DIAG.errors.length+'건:'].concat(DIAG.errors.slice(-6)):['오류 없음']).join('\n'); }
+    return ['build '+(window.TW&&TW.BUILD||'?')+' · '+(SAFE?'저사양 모드':'일반 모드')+' · 화질 '+SET.quality+' · 조명 '+(SET.lights?'켬':'끔'), 'GPU: '+DIAG.gpu, 'WebGL'+(DIAG.gl2?'2':'1')+' · 최대 텍스처 '+DIAG.maxTex+' · 프래그먼트 유니폼 '+DIAG.maxFU, '캔버스 '+c.width+'×'+c.height+' (배율 '+renderer.getPixelRatio().toFixed(2)+', 화면 '+innerWidth+'×'+innerHeight+')', 'FPS '+avg+' · 드로우콜 '+inf.render.calls+' · 삼각형 '+inf.render.triangles+' · 텍스처 '+inf.memory.textures+' · 지오메트리 '+inf.memory.geometries+' · 프로그램 '+(inf.programs?inf.programs.length:0), '로드 '+loadN+'/4 · 검은 프레임 '+DIAG.black+' · 시작 후 '+(DIAG.started?Math.round((performance.now()-DIAG.started)/1000)+'s':'-'), '프레임 계측 (S25 실측 판정 아님): '+JSON.stringify(FRAME_METRICS.report()), 'UA: '+navigator.userAgent.slice(0,90)].concat(DIAG.errors.length?['오류 '+DIAG.errors.length+'건:'].concat(DIAG.errors.slice(-6)):['오류 없음']).join('\n'); }
   function fatal(t, sub){ overlay('<div class="ov__k">오류</div><div class="ov__t">'+t+'</div><div class="ov__hint">'+sub+'</div><div class="xs t-faint" style="text-align:left;line-height:1.7;margin:0 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>저사양 모드로 다시 시작</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ try{ sessionStorage.removeItem('tw:safe'); }catch(e){} safeMode('fatal'); }); }
-  function showDiag(){ overlay('<div class="ov__k">진단</div><div class="ov__t">'+L.name+'</div><div class="xs t-dim" style="text-align:left;line-height:1.75;margin:10px 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>계속</button> <button class="btn" data-safe style="margin-left:8px">'+(SAFE?'일반 모드로':'저사양 모드로')+' 다시 시작</button>', function(){ paused=false; }); var b=el.ovBox.querySelector('[data-safe]'); if(b) b.onclick=function(){ try{ if(SAFE){ sessionStorage.removeItem('tw:safe'); var st=JSON.parse(localStorage.getItem('tw:settings')||'{}'); st.lights=true; st.quality='auto'; localStorage.setItem('tw:settings', JSON.stringify(st)); location.reload(); } else safeMode('manual'); }catch(e){ location.reload(); } }; }
+  function downloadFrameReport(){
+    var report={capturedAt:new Date().toISOString(),build:window.TW&&TW.BUILD||'local',level:L.id,phase:phase,state:state,
+      userAgent:navigator.userAgent,gpu:DIAG.gpu,viewport:[innerWidth,innerHeight],canvas:[renderer.domElement.width,renderer.domElement.height],
+      settings:Object.assign({},SET),metrics:FRAME_METRICS.report(),errors:DIAG.errors.slice(-20),deviceValidation:'기기 모델·발열·터치 지연은 별도 확인 필요'};
+    var url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'})),link=document.createElement('a');
+    link.href=url;link.download='hwanghon-training-measurement.json';link.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+  function showDiag(){ overlay('<div class="ov__k">진단</div><div class="ov__t">'+L.name+'</div><div class="xs t-dim" style="text-align:left;line-height:1.75;margin:10px 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>계속</button> <button class="btn" data-report>측정 기록 저장</button> <button class="btn" data-safe style="margin-left:8px">'+(SAFE?'일반 모드로':'저사양 모드로')+' 다시 시작</button>', function(){ paused=false; }); var exportButton=el.ovBox.querySelector('[data-report]');if(exportButton)exportButton.onclick=downloadFrameReport; var b=el.ovBox.querySelector('[data-safe]'); if(b) b.onclick=function(){ try{ if(SAFE){ sessionStorage.removeItem('tw:safe'); var st=JSON.parse(localStorage.getItem('tw:settings')||'{}'); st.lights=true; st.quality='auto'; localStorage.setItem('tw:settings', JSON.stringify(st)); location.reload(); } else safeMode('manual'); }catch(e){ location.reload(); } }; }
   /* 폰 GPU 보호: 큰 텍스처는 올리기 전에 줄인다 (8192² 한 장이 268MB) */
   var TEX_MAX=SAFE?1024:(MOBILE?2048:4096);
   function capTextures(root){ var seen=new Set(); root.traverse(function(o){ if(!o.isMesh) return; [].concat(o.material).forEach(function(m){ ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(k){ var t=m[k]; if(!t||!t.image||seen.has(t)) return; seen.add(t); var im=t.image, w=im.width||im.videoWidth, h=im.height; if(!(w>TEX_MAX||h>TEX_MAX)) return; try{ var sc=TEX_MAX/Math.max(w,h), c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*sc)); c.height=Math.max(1,Math.round(h*sc)); c.getContext('2d').drawImage(im,0,0,c.width,c.height); t.image=c; t.needsUpdate=true; DIAG.errors.push('tex '+w+'x'+h+' → '+c.width+' ('+k+')'); }catch(e){ DIAG.errors.push('tex cap fail '+e.message); } }); }); }); }
@@ -226,14 +239,10 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   })();
   var bossSpot=new THREE.SpotLight(0xffe0c0, 60, 14, 0.55, 0.6, 1.2); bossSpot.position.set(X(Bs.x), SPOT_H, Z(Bs.y)); bossSpot.target=boss.root; scene.add(bossSpot); scene.add(bossSpot.target);
   var debris=[];
-  function bossAttachParts(){ var iron=new THREE.MeshStandardMaterial({ color:0x55555c, roughness:0.5, metalness:0.8 }), chainMat=new THREE.MeshStandardMaterial({ color:0x9a9298, roughness:0.4, metalness:0.9 }), straw=new THREE.MeshStandardMaterial({ map:strawTex, roughness:1, color:0xc8b890 });
-    function mk(bone, build, key){ var b=boss.bones[bone]; if(!b) return; var g=new THREE.Group(); build(g); g.traverse(function(o){ if(o.isMesh) o.castShadow=true; }); b.add(g); boss.pieces[key]=g; }
-    boss.pieces={};
-    mk('Spine1', function(g){ [[0.55],[-0.55]].forEach(function(a){ var c=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.045,6,28), chainMat); c.position.set(0,0.25,0.05); c.rotation.z=a[0]; c.rotation.x=0.2; g.add(c); }); var h=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.04,6,24), chainMat); h.position.y=0.05; h.rotation.x=Math.PI/2; g.add(h); }, 'chain');
-    ['LeftArm','RightArm'].forEach(function(bn,i){ mk(bn, function(g){ var band=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.34,0.16,12,1,true), iron); band.position.y=0.05; g.add(band); var tuft=new THREE.Mesh(new THREE.SphereGeometry(0.32,10,8), straw); tuft.scale.set(1.2,0.6,1); tuft.position.y=0.18; g.add(tuft); }, i?'shr':'shl'); }); }
+  function bossAttachParts(){ boss.training=createTrainingParts(boss.model,{strawMap:strawTex});boss.pieces=boss.training.parts; }
   function tickDebris(dt){ for(var i=debris.length-1;i>=0;i--){ var d=debris[i]; d.t+=dt; d.vy-=9.8*dt; d.g.position.y+=d.vy*dt; d.g.position.x+=d.vx*dt; d.g.position.z+=d.vz*dt; d.g.rotation.x+=d.rx*dt; d.g.rotation.z+=d.rz*dt; if(d.g.position.y<0.05){ d.g.position.y=0.05; d.vy=-d.vy*0.3; d.vx*=0.6; d.vz*=0.6; d.rx*=0.5; d.rz*=0.5; } if(d.t>4){ scene.remove(d.g); debris.splice(i,1); } } }
   function bossCollectPieces(){ boss.pieces={}; boss.model.traverse(function(o){ if(/^piece_/.test(o.name)){ boss.pieces[o.name.slice(6)]=o; } }); }
-  function bossLoad(done){ function receive(g){ boss.model=g.scene; if(A.scale) boss.model.scale.setScalar(A.scale); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
+  function bossLoad(done){ function receive(g){ if(A.id==='marsh')g=prepareMarshMotion(g); if(A.id==='tutorial')g=prepareTrainingMotion(g); boss.model=g.scene; if(A.scale) boss.model.scale.setScalar(A.scale); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
       boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
   function bossAction(n){ var c=boss.clips[n]; if(!c||!boss.mixer) return null; return boss.mixer.clipAction(c); }
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
@@ -285,7 +294,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var k=d.kind; var tint=new THREE.Color((A.tint||{})[k]||0xffffff); boss.mats.forEach(function(m){ m.color.copy(m.userData.base||new THREE.Color(1,1,1)).multiply(tint); });   /* 텍스처 없는 재질은 기본색 × 색조 */
     Object.keys(boss.hits).forEach(function(kk){ boss.hits[kk].visible=false; });
     d.parts.forEach(function(p){ var h=boss.hits[HITMAP[p.id]]; if(h){ h.visible=true; h.material.color.setHex(p.weak?0xD94A45:p.breakable?0x7B9BD6:0xC9A45E); } });
-    if(boss.pieces && A.pieces!=='nodes'){ var ids=d.parts.map(function(p){ return p.id; }); Object.keys(boss.pieces).forEach(function(pid){ var pc=boss.pieces[pid]; var want=ids.indexOf(pid)>=0; pc.visible=want; if(want && !pc.parent){ /* 재부착 */ var bn=boss.bones[boss.PART[pid].bone]; if(bn){ pc.position.set(0,0,0); pc.rotation.set(0,0,0); bn.add(pc); } } }); }
+    if(boss.training){ debris=debris.filter(function(d){if(Object.values(boss.pieces).indexOf(d.g)<0)return true;scene.remove(d.g);return false;});boss.training.sync(d.parts,{restore:true}); }
     boss.anim.glow=(A.glow||{})[k]||1; coreLight.intensity=1.5+boss.anim.glow*2.5;
   }
   var ATK=A.atk||{ hammer:{ clip:'atk_hammer', hitFrac:0.42 }, bolt:{ clip:'atk_bolt', hitFrac:0.45 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 } };
@@ -295,7 +304,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     else if(n==='down'){ a.down=1; bossOnce('down',{hold:true, speed:1.3}); a.tele=null; }
     else if(n==='up'){ a.down=0; bossOnce('up',{speed:1.2}); }
     else if(n==='collapse'){ a.collapse=1; bossOnce('death',{hold:true, speed:0.9}); }
-    else if(n.indexOf('tele_')===0){ var kind=n.slice(5), spec=ATK[kind]||ATK[Object.keys(ATK)[0]], c=boss.clips[spec.clip]; a.tele=kind; a.teleT=o.dur||1; a.teleDur=o.dur||1; if(c){ var ts=(spec.hitFrac*c.duration)/Math.max(0.15,a.teleDur); bossOnce(spec.clip,{speed:Math.max(0.35,Math.min(2.2,ts))}); } }
+    else if(n.indexOf('tele_')===0){ var kind=n.slice(5), spec=bossAttackSpec({id:A.id,atk:ATK},kind,battle&&battle.snapshot().enemy.beat), c=boss.clips[spec.clip]; a.tele=kind; a.teleT=o.dur||1; a.teleDur=o.dur||1; if(c){ var ts=(spec.hitFrac*c.duration)/Math.max(0.15,a.teleDur); bossOnce(spec.clip,{speed:Math.max(0.35,Math.min(2.2,ts))}); } }
     else if(n.indexOf('hit_')===0){ a.tele=null; a.swing=0.4; a.swingKind=n.slice(4); if(boss.oneshot && boss.oneshot.timeScale<1){ boss.oneshot.timeScale=1.4; } } }
   /* 예고·연계 사이·후딜은 «공격 중» 이다 — 이 동안은 대기 모션으로 돌아가지 않고 시선도 고정한다 */
   var ATKST=['telegraph','link','recover'];
@@ -307,11 +316,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     a.walk += ((Bs.moving?1:0) - a.walk)*Math.min(1,dt*6);
     if(!boss.oneshot){ bossBase(a.walk>0.5?'walk':'idle'); }
     var bs=battle&&battle.snapshot();
-    if(boss.oneshot && bs && (bs.enemy.state==='telegraph'||bs.enemy.state==='recover')){  /* 'link' 는 스크럽하지 않고 흘려 보낸다 — 연계 사이의 여파 동작 */
-      var spec=ATK[bs.enemy.patIcon]||ATK[Object.keys(ATK)[0]], dur=boss.oneshot.getClip().duration;
+    if(boss.oneshot && bs && (bs.enemy.state==='telegraph'||bs.enemy.state==='recover'||bs.enemy.state==='link')){  /* 'link' 는 스크럽하지 않고 흘려 보낸다 — 연계 사이의 여파 동작 */
+      var spec=bossAttackSpec({id:A.id,atk:ATK},bs.enemy.patIcon,bs.enemy.beat), dur=boss.oneshot.getClip().duration;
       /* 예고 중 모션 위치는 combat.js 의 windup 곡선을 따른다. 선형이면 모션이 곧 초읽기가 되고,
          hold 비트에서는 여기서 «들어올린 채 멈추는» 구간이 그대로 보인다. */
-      if(boss.oneshot.getClip().name===spec.clip){boss.oneshot.paused=true;boss.oneshot.time=bs.enemy.state==='telegraph'?dur*spec.hitFrac*(bs.enemy.windup!=null?bs.enemy.windup:1-bs.enemy.tele/bs.enemy.teleDur):dur*(spec.hitFrac+(1-spec.hitFrac)*(1-Math.max(0,bs.enemy.recovery)/bs.enemy.recoveryDur));}
+      if(boss.oneshot.getClip().name===spec.clip){var sampled=sampleBossAttack(spec,dur,bs.enemy);boss.oneshot.paused=sampled!==null;if(sampled!==null)boss.oneshot.time=sampled;}
     }
     boss.mixer.update(dt);
     var sh=a.shake>0 ? Math.sin(t*72)*0.085*a.shake : 0; boss.body.position.x=sh;   /* 피격 흔들림 폭 확대 */
@@ -323,7 +332,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
     Object.keys(boss.hits).forEach(function(k){ var h=boss.hits[k]; if(!h.visible) return; h.position.copy(bossHitPos(k)); }); }
   function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true;
-    var pc=boss.pieces&&boss.pieces[id]; if(pc && pc.parent){ var wp=new THREE.Vector3(), wq=new THREE.Quaternion(); pc.getWorldPosition(wp); pc.getWorldQuaternion(wq); pc.parent.remove(pc); pc.position.copy(wp); pc.quaternion.copy(wq); pc.scale.setScalar(1); scene.add(pc); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); } }
+    var pcs=Object.keys(boss.pieces||{}).filter(function(k){return k===id||k.indexOf(id+'_')===0;}).map(function(k){return boss.pieces[k];}); pcs.forEach(function(pc){if(pc && pc.parent){ detachBossPiece(pc,scene); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); }}); }
 
   var strawTex=tex('straw',[2,2]);
   /* ---------- Hi3D 소품 (art/3d/props) ---------- */
@@ -952,7 +961,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var simAcc=0, scheduled=[];
   function schedule(fn,ms){var t={fn:fn,left:ms/1000,cancelled:false};scheduled.push(t);return t;}
   function tickScheduled(dt){var ready=[];scheduled=scheduled.filter(function(t){if(t.cancelled)return false;t.left-=dt;if(t.left<=0){ready.push(t.fn);return false;}return true;});ready.forEach(function(fn){fn();});}
-  function frame(now){ requestAnimationFrame(frame); var dt=Math.min(0.1,(now-last)/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ renderer.render(scene, cam); return; }
+  function frame(now){ requestAnimationFrame(frame); var elapsed=now-last; FRAME_METRICS.add(elapsed,!document.hidden&&!paused&&!cine&&!el.dlg.classList.contains('is-on')&&!el.ov.classList.contains('is-on')&&(state==='fight'||state==='explore')); var dt=Math.min(0.1,elapsed/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ renderer.render(scene, cam); return; }
     fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); fpsSamples.length=0; }
     simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); renderer.render(scene, cam); blackWatch(); }
   /* 검은 화면 감시: 시작 후 25초 동안 1초마다 화면 중앙을 읽어 완전히 검으면 3회 연속 시 저사양 모드로 재시작 */
@@ -992,5 +1001,5 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, frameMetrics:FRAME_METRICS.report, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();

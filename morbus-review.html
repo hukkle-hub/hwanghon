@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 · 모르버스 모션 검수</title>
+<style>
+body{margin:0;background:#14191b;color:#eadfca;font:15px system-ui}canvas{display:block}
+aside{position:absolute;top:20px;left:20px;max-width:320px;padding:20px;background:#151a20e8;border:1px solid #645942;border-radius:12px}
+h1{font-size:24px;margin:4px 0 12px}p{line-height:1.6;color:#b4b6b6}select,button{font:inherit;padding:9px;margin:3px;background:#293338;color:#eee;border:1px solid #697577;border-radius:5px}
+#status{font-size:13px}input{width:100%}@media(max-width:650px){aside{top:auto;bottom:8px;left:8px;right:8px;padding:10px;max-width:none;max-height:180px;overflow:auto}h1{font-size:18px}p{font-size:12px}}
+</style>
+<aside><small>HWANGHON / MORBUS · LOCAL REVIEW</small><h1>갈대습지 · 모르버스</h1>
+<p>기존 리그를 유지한 갑각·모션 개선 검수본.<br>최종 외형 완성본은 아닙니다. 드래그로 회전.<br><a style="color:#d8b880" href="?model=old">기존 모델</a> · <a style="color:#d8b880" href="?model=v2">개선 모델</a></p>
+<select id="motion" aria-label="검수 모션"></select><button id="pause">일시정지</button>
+<input id="seek" type="range" min="0" max="1000" value="0" aria-label="모션 위치">
+<div id="parts"></div><button id="reset">부위 복원</button><p id="status">모델 로딩 중…</p></aside>
+<script type="module">
+import * as T from './vendor/three/three.module.js';
+import {GLTFLoader} from './vendor/three/GLTFLoader.js';
+import {OrbitControls} from './vendor/three/OrbitControls.js';
+import {prepareMarshMotion,detachBossPiece,bossPartPieces} from './js/marsh-motion.js';
+const scene=new T.Scene();scene.background=new T.Color('#14191b');
+const camera=new T.PerspectiveCamera(42,innerWidth/innerHeight,.1,100);camera.position.set(10,6,12);
+const renderer=new T.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;document.body.append(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.6,0);controls.update();
+scene.add(new T.HemisphereLight(0xd5e9ef,0x413328,2));
+for(const [color,power,pos] of [[0xffdbad,4,[5,8,6]],[0x83b7d5,3,[-6,5,-4]]]){const light=new T.DirectionalLight(color,power);light.position.set(...pos);scene.add(light);}
+scene.add(new T.GridHelper(20,20,0x5a615e,0x303937));
+const $=id=>document.getElementById(id), clock=new T.Clock();let mixer,action,paused=false,model;
+const pieces=[],debris=[];let asset;
+try{
+ const file=new URLSearchParams(location.search).get('model')==='old'?'boss_marsh.glb':'boss_marsh_v2.glb';
+ asset=prepareMarshMotion(await new GLTFLoader().loadAsync('./art/3d/'+file));
+ model=asset.scene;model.scale.setScalar(.85);scene.add(model);mixer=new T.AnimationMixer(model);
+ const labels={idle:'대기',walk:'보행',atk_bolt:'돌진 베기 · 이동 분리',atk_flame:'광폭 포효',atk_hammer:'대지 강타',atk_scythe:'꼬리 휘두르기',atk_drop:'광란 · 오른발',atk_drop_left:'광란 · 왼발',atk_drop_finish:'광란 · 마무리',hit:'피격',stagger:'경직',down:'다운',up:'기상',death:'사망'};
+ for(const clip of asset.animations){const option=document.createElement('option');option.value=clip.name;option.textContent=labels[clip.name]||clip.name;$('motion').append(option);}
+ function play(){mixer.stopAllAction();action=mixer.clipAction(asset.animations.find(c=>c.name===$('motion').value));action.reset().play();}
+ $('motion').value='idle';$('motion').onchange=play;play();
+ for(const [id,label] of [['back','등 갑각'],['legf','앞다리 갑각'],['tail','꼬리 가시']]){
+  const group=bossPartPieces(model,id);for(const piece of group)pieces.push({piece,parent:piece.parent,position:piece.position.clone(),quaternion:piece.quaternion.clone(),scale:piece.scale.clone()});
+  const button=document.createElement('button');button.textContent=label+' 파괴';$('parts').append(button);
+  button.onclick=()=>{for(const piece of group){if(piece.parent===scene)continue;detachBossPiece(piece,scene);debris.push(piece);}};
+ }
+ $('reset').onclick=()=>{debris.length=0;for(const p of pieces){p.parent.add(p.piece);p.piece.position.copy(p.position);p.piece.quaternion.copy(p.quaternion);p.piece.scale.copy(p.scale);}};
+ $('status').textContent='GLB 로드 완료 · '+asset.animations.length+'개 모션 · 파괴 부위 3개';
+}catch(error){$('status').textContent='실패: '+error.message;console.error(error);}
+$('pause').onclick=()=>{paused=!paused;$('pause').textContent=paused?'재생':'일시정지';};
+$('seek').oninput=()=>{if(action){paused=true;action.time=action.getClip().duration*Number($('seek').value)/1000;$('pause').textContent='재생';mixer.update(0);}};
+function frame(){requestAnimationFrame(frame);const dt=Math.min(clock.getDelta(),.05);if(mixer){mixer.update(paused?0:dt);if(action)$('seek').value=1000*action.time/action.getClip().duration;}
+ for(const p of debris){p.position.y=Math.max(.1,p.position.y-dt*2);if(p.position.y>.1)p.rotation.z+=dt;}
+ controls.update();renderer.render(scene,camera);}
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});frame();
+</script></html>
