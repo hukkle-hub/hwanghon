@@ -29,7 +29,10 @@
               ['matteo','정찰대의 기록은 못 찾았군. 습지에 다시 가면 갈대 사이를 살펴라. 그들이 본 것을 알아야 다음이 보인다.'] ] },
     { id:'ch3', name:'3장', title:'지하 오염수 처리', art:'story-city', quest:'q_sewage', arena:'sewage', dungeon:'game3d.html?d=d03', flag:'ch_3',
       brief:[['matteo','정화장 하부의 오염원을 세 곳 모두 차단해라. 북측, 중앙, 남측 처리실이다.'],['ain','주 펌프는요?'],['matteo','배관을 끊으면 수문기도 약해진다. 정화 장치가 남아 있으면 가져와라.']],
-      after:[['matteo','역류가 멎었다. 오늘은 하부 구역에도 깨끗한 물을 보낼 수 있겠군.'],['ain','수문기를 멈췄어요. 밸브도 전부 잠갔고요.'],['matteo','잘했다. 보수를 챙겨라. 다음 출격 전에 장비부터 손봐.']] }
+      after:[['matteo','역류가 멎었다. 오늘은 하부 구역에도 깨끗한 물을 보낼 수 있겠군.'],['ain','수문기를 멈췄어요. 밸브도 전부 잠갔고요.'],['matteo','잘했다. 보수를 챙겨라. 다음 출격 전에 장비부터 손봐.']] },
+    { id:'ch4', name:'4장', title:'배전 통제실 정지', art:'story-city', quest:'q_relay', arena:'relay', dungeon:'game3d.html?d=d04', flag:'ch_4',
+      brief:[['matteo','3경구 변전소가 꺼지지 않는다. 계전기가 전력을 끌어모으고 있어.'],['ain','차단기를 내리면 되는 거 아니에요?'],['matteo','순서가 틀리면 역전류로 타 죽는다. 북쪽 축전기부터 채워라. 남쪽은 그 다음이다.'],['matteo','중앙 모선은 끝까지 살아 있다. 방전 간격을 세고 지나가.']],
+      after:[['matteo','3경구가 조용해졌다. 이제 밤에도 불이 안 켜지겠군.'],['ain','계전기는 멈췄어요. 접점은 둘 다 부졌고요.'],['matteo','예비 접점을 가져왔으면 공방으로 돌려라. 그걸로 다음 장비를 만든다.']] }
 
   ];
   function ch(id){ return CHAPTERS.filter(function(c){ return c.id===id; })[0]; }
@@ -37,7 +40,7 @@
   function arenaRec(id){ try{ return JSON.parse(localStorage.getItem('tw:arena:'+id)||'null'); }catch(e){ return null; } }
   function cleared(id){ var r=arenaRec(id); return !!(r&&r.cleared); }
   /* ---------- 의뢰 상태 ---------- */
-  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage'}, QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh'};
+  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage',q_relay:'relay'}, QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh',q_relay:'sewage'};
   function routeForQuest(id){return CHAPTERS.find(function(c){return c.quest===id&&!c.locked;})||null;}
   function questState(qid){ var a=QUEST_ARENA[qid]; if(!a) return 'locked'; if(flag('claim_'+qid)) return 'claimed'; if(cleared(a)) return 'cleared';if(QUEST_REQUIRED[qid]&&!cleared(QUEST_REQUIRED[qid]))return 'locked'; return 'available'; }
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }

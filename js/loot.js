@@ -17,6 +17,7 @@
            marsh:{ rare:[ ['m_heart',[1,1],0.12], ['m_core',[1,2],0.60], ['m_booster',[1,1],0.40], ['m_dew',[2,4],0.50], ['a_steel_gauntlet',[1,1],0.10], ['w_ash_dirk',[1,1],0.06], ['acc_blood_ring',[1,1],0.05], ['w_marsh_scythe',[1,1],0.04] ],
                   gradeGold:{ S:1.5, A:1.25, B:1.0, C:0.75 }, first:{ gold:3000, items:[['m_heart',1],['m_core',2],['c_potion',5]], label:'+3,000 골드 · 심장 결정 · 코어 ×2 · 회복약 ×5' } } }
   };
+  LOOT.clear.relay={rare:[['m_core',[2,3],.7],['m_shard',[2,4],.6],['m_heart',[1,1],.22]],gradeGold:{S:1.5,A:1.25,B:1,C:.75},first:{gold:3600,items:[['m_heart',1],['m_core',3]],label:'+3,600 골드 · 심장 결정 ×1 · 코어 ×3'}};
   LOOT.clear.sewage={rare:[['m_core',[1,2],.7],['m_oil',[1,2],.6],['m_heart',[1,1],.15]],gradeGold:{S:1.5,A:1.25,B:1,C:.75},first:{gold:2500,items:[['m_core',2],['m_booster',2]],label:'+2,500 골드 · 코어 ×2 · 보조제 ×2'}};
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }
   function isGear(id){ var it=T.get(id); return !!(it&&(it.type==='weapon'||it.type==='armor'||it.type==='acc')); }

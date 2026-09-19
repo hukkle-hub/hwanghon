@@ -8,7 +8,8 @@ const traits = {
 const quests = [
  {id:'training',name:'첫 계약 · 허수아비 검증',level:'d01',arena:'tutorial',previous:null,gold:1000,xp:600,items:[['c_potion',3],['m_alloy',4]],brief:'일반 공격과 반격의 차이를 익히고 허수아비 3단계를 돌파하라.',after:'반격과 파괴를 익혔다. 갈대습지 정찰 의뢰를 수행할 자격을 얻었다.'},
  {id:'marsh',name:'갈대습지 토벌',level:'d02',arena:'marsh',previous:'training',gold:2500,xp:1200,items:[['m_heart',1],['m_shard',4]],brief:'모르버스를 토벌하라. 정찰 기록과 회수 지점을 살펴보면 추가 전리품을 얻는다.',after:'습지 오염의 흔적이 정화장으로 이어진다. 밸브 세 곳을 조사하라.'},
- {id:'pump',name:'정화장 · 오염원 차단',level:'d03',arena:'sewage',previous:'marsh',gold:4000,xp:1800,items:[['m_core',3],['m_booster',2]],brief:'세 밸브를 잠그고 정화장 보스를 격파하라.',after:'이번 구역의 계약을 완수했다. 반복 토벌로 재료를 모으고 새로운 장비를 준비하라.'}
+ {id:'pump',name:'정화장 · 오염원 차단',level:'d03',arena:'sewage',previous:'marsh',gold:4000,xp:1800,items:[['m_core',3],['m_booster',2]],brief:'세 밸브를 잠그고 정화장 보스를 격파하라.',after:'이번 구역의 계약을 완수했다. 반복 토벌로 재료를 모으고 새로운 장비를 준비하라.'},
+ {id:'relay',name:'배전 통제실 정지',level:'d04',arena:'relay',previous:'pump',gold:6000,xp:2600,items:[['m_heart',1],['m_core',4]],brief:'축전기 두 기를 순서대로 충전하고 주 차단기를 올린 뒤 계전기를 정지시켜라.',after:'3경구의 전력이 꺼졌다. 다음 구역의 계약을 기다리자.'}
 ];
 // Online progression starts at level 1; the original sheet's level-26 economy is retained separately.
 /* 캐릭터별 출격 캐릭터와 시작 무기 (js/gear.js DEFAULTS 와 같은 구성) */
