@@ -41,6 +41,10 @@ test('scaled, translated and yawed game avatar keeps both contacts; death remain
  const report=repairAinBind(g.scene),clips=repairAinClips(g.animations,report);let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});
  const rig=makeAinTwoHand(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene),c=clips.find(c=>c.name==='attack1'),a=mixer.clipAction(c);a.play();a.paused=true;
  for(let i=0;i<120;i++){rig.restore();a.time=c.duration*i/120;mixer.update(0);rig.apply({id:1,clip:'attack1',kind:'attack',elapsed:i/120,duration:1,hitAt:.42},true,false,1/120,'attack1');assert.ok(rig.diagnostics.gripError<.003);}
+ const lastCombat=rig.bones.LeftArm.quaternion.clone();
  rig.restore();mixer.stopAllAction();const death=mixer.clipAction(clips.find(c=>c.name==='death'));death.play();death.paused=true;death.time=.3;mixer.update(0);
- const before=rig.bones.LeftArm.quaternion.clone();rig.apply(null,false,false,.016,'death');assert.ok(before.angleTo(rig.bones.LeftArm.quaternion)<.001);
+ const before=rig.bones.LeftArm.quaternion.clone();
+ rig.apply(null,false,false,.001,'death');assert.ok(lastCombat.angleTo(rig.bones.LeftArm.quaternion)<.001,'release must begin at previous pose, not snap to death');
+ for(let i=0;i<10;i++){rig.restore();mixer.update(0);rig.apply(null,false,false,.016,'death');}
+ assert.ok(before.angleTo(rig.bones.LeftArm.quaternion)<.001,'authored death must resume after the release blend');
 });

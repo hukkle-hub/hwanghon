@@ -21,7 +21,7 @@ const chop=[[0,ready],[.25,[0,.12,.27,-.2,.95,-.22]],[.42,[0,-.1,.40,-.15,-.45,.
 const thrust=[[0,ready],[.24,[-.08,-.13,.22,-.3,.15,.94]],[.42,[0,-.08,.48,-.2,.1,.98]],[.62,[0,-.12,.28,-.3,.3,.9]],[1,ready]];
 function path(keys,t){
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
- const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smoothstep(t,t0,t1);
+ const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
  return a.map((v,j)=>T.MathUtils.lerp(v,b[j],u));
 }
 
@@ -37,6 +37,19 @@ export function makeAinTwoHand(model,root,slot){
  for(const side of ['Left','Right'])offsets[side]=bones[side+'HandSlot']?.position.clone()||V(0,.055,-.025);
  const diagnostics={gripError:0,rightGripError:0,footError:0};
  let gripAmount=1;
+ const transitionBones=['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand','RightHandSlot'].map(n=>bones[n]).filter(Boolean);
+ let previousPose=null,lastActive=null,transition=null;
+ function finishPose(active,dt){
+  if(!(dt>0)){previousPose=null;lastActive=null;transition=null;return;}
+  if(previousPose&&lastActive!==active)transition={from:previousPose,time:0};
+  if(transition){
+   transition.time+=Math.min(dt,.05);const w=T.MathUtils.smootherstep(transition.time,0,.12);
+   for(const b of transitionBones){keep(b);b.quaternion.copy(transition.from.get(b).clone().slerp(b.quaternion,w));}
+   if(w===1)transition=null;
+   model.updateWorldMatrix(true,true);
+  }
+  previousPose=new Map(transitionBones.map(b=>[b,b.quaternion.clone()]));lastActive=active;
+ }
  function keep(b){if(!saved.has(b))saved.set(b,{q:b.quaternion.clone(),p:b.position.clone()});}
  function restore(){for(const [b,s]of saved){b.quaternion.copy(s.q);b.position.copy(s.p);}saved.clear();for(const m of gripMeshes)m.morphTargetInfluences.fill(0);}
  function apply(a,moving,guard,dt,poseName='idle'){
@@ -45,7 +58,7 @@ export function makeAinTwoHand(model,root,slot){
   const active=!/death|hit|roll|dodge|pickup|cheer/.test(a?.clip||poseName);
   gripAmount=dt>0?T.MathUtils.lerp(gripAmount,active?1:0,1-Math.exp(-Math.min(dt,.05)*24)):(active?1:0);
   for(const m of gripMeshes)m.morphTargetInfluences.fill(gripAmount);
-  if(!active){diagnostics.gripError=0;return;}
+  if(!active){finishPose(false,dt);diagnostics.gripError=0;diagnostics.rightGripError=0;return;}
   const frame=torso.getWorldQuaternion(Q()).multiply(restTorso.clone().invert());
   const name=a?.clip||a?.id||'guard';
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
@@ -81,6 +94,7 @@ export function makeAinTwoHand(model,root,slot){
   const shaftLocal=V(...spec.slice(3)).normalize();
   const weaponQ=Q().setFromUnitVectors(V(0,1,0),shaftLocal);
   worldQ(slot,frame.clone().multiply(weaponQ));
+  finishPose(true,dt);
   model.updateWorldMatrix(true,true);
   const leftPalm=offsets.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld),rightPalm=offsets.Right.clone().applyMatrix4(bones.RightHand.matrixWorld);
   diagnostics.gripError=leftPalm.distanceTo(slot.getWorldPosition(V()).addScaledVector(axis,-.32*scale));

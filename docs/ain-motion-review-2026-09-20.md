@@ -2,6 +2,8 @@
 
 ## Revision 2 — implemented locally, not deployed
 
+Deployment preparation: merged upstream through f749e7c, preserving new mocap assets, cameras, ground shadows, boss/dungeon changes and online phase cuts. Revalidated the NEW Ain GLB. Added a 120 ms smooth transition between weapon control and authored release poses, plus quintic trajectory easing (continuous acceleration at keys). During deliberate release/regrip transitions, the palm socket is not claimed to remain locked. Added both runtime modules to offline precache. Scoped suite now passes 83 tests. Finger articulation limitations below remain.
+
 The rejected delta-smoothing prototype below is superseded by `ain-bind-repair.js` and `ain-two-hand.js`. Solo and online renderers now opt into this correction for **Ain only**. Other character models retain their existing adapters. No GLB, texture, source clip, server timing, damage value, or remote deployment was overwritten.
 
 Inspection of the bind mesh found the old wrist at y=0.8098 m while the hand mesh is around y=0.9–0.98 m. Only 21/29 vertices had >65% influence from their respective hand bones (some were not on the actual hand). The existing hand sockets therefore were not valid visual contact points.
