@@ -89,7 +89,10 @@ function updateHud(){const raid=room.raid,p=mine(),b=raid.boss;if(!p)return;
  const level=levels[raid.level],required=level.expedition.required||[],done=required.filter(id=>raid.expedition.done[id]).length;
  $('mission').textContent=raid.state==='explore'?(required.length?'오염원 차단 '+done+' / '+required.length:'정비 지점에서 회복하고 보스실로'):'회피·카운터·부위 파괴로 함께 공략';
  if(p.hp<=0&&!p.dead)$('mission').textContent='동료 소생 '+Math.floor(p.reviveProgress/3*100)+'%';
- document.querySelectorAll('[data-command="skill"]').forEach((el,i)=>{el.disabled=p.cds[i]>0||p.hp<=0;const names=['낫 베기','그림자','회전','결의'];el.textContent=(i+1)+' · '+(p.cds[i]>0?Math.ceil(p.cds[i])+'초':names[i]);});
+ document.querySelectorAll('[data-command="skill"]').forEach((el,i)=>{const k=p.kit?.[i];el.disabled=p.cds[i]>0||p.hp<=0||(k?p.st<k.st:false);
+  const label=k?k.name+(k.lv>1?' Lv'+k.lv+(k.br?'·'+k.br:''):''):'기술 '+(i+1);
+  el.textContent=(i+1)+' · '+(p.cds[i]>0?Math.ceil(p.cds[i])+'초':label);});
+ const ultBtn=document.querySelector('[data-command="ult"]');if(ultBtn&&p.ultName)ultBtn.textContent='R · '+p.ultName+(p.ultLv>1?' Lv'+p.ultLv:'')+' '+Math.floor(p.ult)+'%';
  const ended=['clear','wiped'].includes(raid.state);if(ended&&$('outcome').hidden)clearControls();$('outcome').hidden=!ended;if(ended){$('outcome-kicker').textContent=raid.state==='clear'?'EXPEDITION COMPLETE':'PARTY DOWN';$('outcome-title').textContent=raid.state==='clear'?'함께 돌아왔다.':'다시 일어설 시간.';$('outcome-text').textContent=raid.state==='clear'?(raid.result.rewardStatus==='saved'?raid.result.gold.toLocaleString()+' G와 전리품을 파티원 각각에게 지급했습니다.':'보상 저장을 재시도하고 있습니다. 이 파티에서 기다려 주세요.'):'조사한 지점은 유지됩니다. 정비 지점에서 다시 도전하세요.';$('scoreboard').replaceChildren();for(const q of raid.result?.players||raid.players){const row=document.createElement('div');row.textContent=q.name+' · 피해 '+Math.round(q.damage).toLocaleString()+' · 카운터 '+q.counters+' · 파괴 '+q.breaks;$('scoreboard').append(row);}const lead=room.leader===profile.id;$('retry').hidden=raid.state!=='wiped'&&!room.training;$('retry').disabled=!lead;$('return-lobby').disabled=!lead||raid.result?.rewardStatus==='pending';$('leader-hint').textContent=lead?'파티원이 함께 이동합니다.':'파티장이 다음 출격을 선택하고 있습니다.';}
 }
 (function(){const el=$('server-url');if(!el)return;let cur='';try{cur=localStorage.getItem('tw:party-server')||'';}catch{}

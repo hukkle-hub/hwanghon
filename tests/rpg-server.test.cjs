@@ -14,3 +14,50 @@ test('departed members lose rewards; disconnected participants receive their ear
 test('support supplies validate missing status and fighting distance without consuming',()=>{const r=new Raid('d01',[{id:'a',name:'아인',quickslots:['c_antidote','c_throw']}]);assert.throws(()=>r.validateConsumable('a','c_antidote'));assert.throws(()=>r.validateConsumable('a','c_throw'));const p=r.players.get('a');p.bleedT=4;r.validateConsumable('a','c_antidote');r.useConsumable('a','c_antidote');assert.equal(p.bleedT,0);assert.equal(p.uses.c_antidote,1);});
 test('configured operator can review reports, mute and lift restrictions through sockets',async t=>{const store=new Store(null),owner=await store.register('operator','operator-password'),target=await store.register('reported','reported-password');store.chooseName(owner.profile.id,'운영자');store.chooseName(target.profile.id,'신고대상');const previous=process.env.ADMIN_IDS;process.env.ADMIN_IDS=owner.profile.id;const app=createPartyServer({store});if(previous===undefined)delete process.env.ADMIN_IDS;else process.env.ADMIN_IDS=previous;const addr=await app.listen(0,'127.0.0.1');t.after(()=>app.close());const c=await connect(`ws://127.0.0.1:${addr.port}/party-socket`,{type:'hello',token:owner.token});t.after(()=>c.close());store.report(owner.profile.id,target.profile.id,'도배 확인','서버 증거');const state=await rpg(c,'adminState',{},m=>m.type==='adminState');assert.equal(state.reports.length,1);await rpg(c,'moderate',{operation:'mute',target:target.profile.id,minutes:60,reason:'도배 확인'},m=>m.type==='adminState');assert.ok(store.sanction(target.profile.id).mute_until>Date.now());await rpg(c,'moderate',{operation:'lift',target:target.profile.id,minutes:1,reason:'해제'},m=>m.type==='adminState');assert.equal(store.sanction(target.profile.id).mute_until,0);});
 test('account recovery protocol replaces an existing session and never reuses the old recovery code',async t=>{const {url}=await setup(t),a=await connect(url,{type:'account',mode:'register',username:'recover_socket',password:'original-password'});t.after(()=>a.close());const code=a.result.recoveryCode;assert.ok(code);const replaced=a.next(m=>m.type==='superseded'),b=await connect(url,{type:'account',mode:'recover',username:'recover_socket',code,password:'replacement-password'});t.after(()=>b.close());assert.equal(b.result.type,'welcome');await replaced;assert.notEqual(b.result.recoveryCode,code);const c=await connect(url,{type:'account',mode:'recover',username:'recover_socket',code,password:'replacement-password'});t.after(()=>c.close());assert.equal(c.result.type,'error');});
+
+test('기술 성장은 서버가 검증하고 레이드 피해에 실제로 반영된다',async t=>{
+ const {url,store}=await setup(t),a=await user(t,url,'skill');const id=a.profile.id;
+ // 포인트가 없으면 올릴 수 없다
+ const poor=await rpg(a,'skillUp',{skill:'slash'});
+ const before=store.get(id);before.xp=0;store.put(before);
+ assert.ok(poor.type==='rpgResult'||/포인트/.test(poor.message||''),'첫 포인트는 기본 지급');
+ // 레벨을 올려 포인트를 준 뒤 한계까지 강화
+ const p=store.get(id);p.xp=1200*12;store.put(p);
+ const view=()=>store.rpgState(id).skills;
+ const free0=view().points.free;assert.ok(free0>=4,'레벨에 따라 포인트가 늘어난다');
+ for(let i=0;i<2;i++)await rpg(a,'skillUp',{skill:'slash'});
+ assert.equal(view().skills.find(s=>s.id==='slash').lv,4,'강화가 누적된다');
+ // 분기는 3단계부터, 한 번 고르면 바꿀 수 없다
+ const branched=await rpg(a,'skillBranch',{skill:'slash',branch:'B'});
+ assert.equal(branched.type,'rpgResult');
+ assert.equal(view().skills.find(s=>s.id==='slash').br,'B');
+ const reBranch=await rpg(a,'skillBranch',{skill:'slash',branch:'A'});
+ assert.ok(/초기화/.test(String(reBranch.message||'')),'분기 변경은 초기화를 요구');
+ // 알 수 없는 기술은 거부
+ const bogus=await rpg(a,'skillUp',{skill:'없는기술'});
+ assert.equal(bogus.type,'error');
+ // 성장 수치가 레이드에 들어간다
+ const kit=store.skillsFor(id),base=require('../server/content.cjs').skills.ain[0];
+ const grown=kit.skills.find(k=>k.id==='slash');
+ assert.ok(grown.mult>base.mult,'배율이 올라간다');
+ assert.ok(grown.cd<base.cd,'쿨타임이 줄어든다');
+ assert.equal(grown.bleed,1,'분기 B 가 출혈을 준다');
+ const raid=new Raid('d01',[{id:id,name:'성장',stats:store.stats(id),skills:kit}]);
+ assert.equal(raid.players.get(id).skills[0].mult,grown.mult,'레이드가 성장 수치를 쓴다');
+ assert.equal(raid.players.get(id).ultSkill.mult,kit.ult.mult,'궁극기도 성장 수치를 쓴다');
+ // 초기화는 골드를 받고 되돌린다
+ const rich=store.get(id);rich.gold=5000;store.put(rich);
+ const reset=await rpg(a,'skillReset');
+ assert.equal(reset.type,'rpgResult');
+ assert.equal(view().skills.find(s=>s.id==='slash').lv,1,'초기화로 되돌아온다');
+ assert.equal(store.get(id).gold,5000-1500,'초기화 비용이 빠진다');
+});
+
+test('성장하지 않은 출격자는 기본 수치로 싸운다',()=>{
+ const C=require('../server/content.cjs');
+ const raid=new Raid('d01',[{id:'plain',name:'기본'}]);
+ const p=raid.players.get('plain');
+ assert.equal(p.skills[0].mult,C.skills.ain[0].mult);
+ assert.equal(p.ultSkill.mult,C.skills.ainUlt.mult);
+ assert.equal(p.ult,0,'궁극기 게이지는 정의와 섞이지 않는다');
+});

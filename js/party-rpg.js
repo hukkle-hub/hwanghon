@@ -56,7 +56,20 @@ export function createRpgUI(api){
  }
  function renderBuild(){const c=card('아인의 전투 특성','장비와 특성 변경은 다음 출정부터 반영됩니다. 준비 완료 상태가 해제됩니다.');for(const [id,t]of Object.entries(data.traits))c.append(button(t.name+' · '+t.description+(profile.trait===id?' (선택됨)':''),()=>send('trait',{trait:id}),profile.trait===id));
   const prep=card('소모품 준비','회복약: 체력 35% 회복 / 지혈제: 출혈 해제 / 폭약: 부위 피해. 종류별 출격당 최대 3회, 공통 20초 재사용 시간. 사용 즉시 가방에서 차감됩니다.');const opts=['c_potion','c_antidote','c_throw'].map(id=>[id,name(id)+' · '+(profile.items[id]||0)+'개']);const a=select('퀵슬롯 1',opts,profile.quickslots[0]),b=select('퀵슬롯 2',opts,profile.quickslots[1]);prep.append(a.wrap,b.wrap,button('퀵슬롯 저장',()=>send('quickslots',{slots:[a.input.value,b.input.value]})),button('보급소 열기',()=>{dialog.close();$('open-shop').click();}));
-  const skills=card('기술 설명','일반 공격으로 거리를 재고, 카운터·회피 반격·부분 파괴로 큰 피해를 주는 전투입니다.');for(const k of window.TW_DUNGEONS.SKILLS.ain)skills.append(el('p',(k.name||'기술')+' · 기력 '+k.st+' · 재사용 '+k.cd+'초'));skills.append(el('p','카운터: 공격 예고 끝에 공격 / 회피 반격: 실제 공격을 피한 후 0.85초 안에 공격 / 궁극기: 전투로 게이지를 채워 사용'));
+  const sk=data.skills;
+  const tree=card('기술 성장 · '+(sk?('포인트 '+sk.points.free+' / '+sk.points.total):'불러오는 중'),'강화는 서버가 기록하고 다음 출정부터 적용됩니다. 분기는 '+(sk?sk.branchLevel:3)+'단계부터 고를 수 있고, 바꾸려면 초기화해야 합니다.');
+  if(sk){for(const k of sk.skills){
+    const row=el('div',null,'rpg-card');
+    row.append(el('h3',(k.ult?'궁극기 · ':'')+k.name+' · Lv'+k.lv+(k.br?' · '+k.br:'')+(k.lv>=sk.max?' (최대)':'')));
+    row.append(el('p',k.desc||''));
+    row.append(el('p','현재 — '+(k.summary||'—')));
+    if(k.next)row.append(el('p','다음 — '+k.next));
+    row.append(button('강화 (1 포인트)',()=>send('skillUp',{skill:k.id}),k.lv>=sk.max||sk.points.free<1));
+    if(k.lv>=sk.branchLevel&&!k.br)for(const b of ['A','B'])row.append(button('분기 '+b+' · '+k.branches[b].name+' — '+k.branches[b].label,()=>send('skillBranch',{skill:k.id,branch:b}),sk.points.free<1));
+    tree.append(row);
+  }
+  tree.append(button('기술 초기화 · '+fmt(sk.resetCost)+' G',()=>send('skillReset'),sk.points.spent<1||profile.gold<sk.resetCost));}
+  const skills=card('전투 요령','일반 공격으로 거리를 재고, 카운터·회피 반격·부분 파괴로 큰 피해를 주는 전투입니다.');skills.append(el('p','카운터: 공격 예고 끝에 공격 / 회피 반격: 실제 공격을 피한 후 0.85초 안에 공격 / 궁극기: 전투로 게이지를 채워 사용'));
   const training=card('허수아비 패턴 훈련','선택한 공격을 반복합니다. 개인 훈련에는 보상과 의뢰 진행이 없습니다. 소모품은 실제 보유분을 사용합니다.');const patterns=[];window.TW_DUNGEONS.ARENAS.tutorial.stages.forEach((stage,i)=>stage.patterns.forEach((p,j)=>patterns.push([i+':'+j,stage.name+' · '+p.name])));const pick=select('훈련할 공격',patterns);training.append(pick.wrap,button('개인 훈련 시작',()=>{const [phase,pattern]=pick.input.value.split(':').map(Number);api.send({type:'training',phase,pattern});},!!api.getRoom()));
  }
  function renderSocial(){const f=card('친구·차단','캐릭터 이름으로 친구 요청을 보내고, 상대가 수락하면 친구가 됩니다.');const who=field('캐릭터 이름');who.input.maxLength=16;f.append(who.wrap,button('친구 요청',()=>send('request',{name:who.input.value})),button('차단',()=>send('block',{name:who.input.value})),button('파티 초대',()=>send('partyInvite',{name:who.input.value}),!api.getRoom()));
