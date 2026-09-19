@@ -7,12 +7,15 @@
 (function(){
   var RULES = {
     tick: 0.01,
-    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.34,smash:0.78,ult:0.50}, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.34,smash:0.78,ult:0.50,skill1:0.50,skill2:0.45,skill3:0.55,skill4:0.40,counter:0.48,exec:0.58}, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
       smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
-      ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50} },
+      ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},
+      skill:{hit:0.42,active:0.14,duration:1.00,cancel:0.82,clipHit:0.50},
+      exec:{hit:0.72,active:0.20,duration:1.60,cancel:1.45,clipHit:0.58} },   /* 처형은 길고 확실하게 — 크게 들었다 내리꽂는다 */
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
-    hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, hurt:0.09, guard:0.05, hit:0.08 },
+    hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
+    execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
     dodge:   { iframes:0.30, cooldown:0.45 },
     guard:   { reduce:0.70, holdMs:220 },

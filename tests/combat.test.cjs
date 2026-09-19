@@ -102,3 +102,37 @@ test('party counter bonus extends stage window while perfect remains strict',()=
 test('summary exports finite counts for persistent grade progression',()=>{
  const b=battle({patterns:[pat]});tele(b);b.input('attack');b.tick(.18);const s=summarize(RULES,ARENAS.tutorial,[b.metrics]);assert.equal(s.counters,1);assert.equal(s.telegraphs,1);assert.equal(s.counterOpportunities,1);
 });
+
+/* ---------- 연출용 전용 동작: 스킬 4종 · 카운터 · 처형 (docs/design/18-boss-fight-design.md) ---------- */
+test('each skill drives its own clip, and a no-damage skill still reports one',()=>{
+ const b=battle();const clips=[];
+ for(let i=0;i<4;i++){ b.input('skill',i); const ev=b.drain();
+   const st=ev.find(e=>e.t==='actionstart'), sk=ev.find(e=>e.t==='skill');
+   clips.push([sk&&sk.clip, st&&st.clip]); idle(b); b.tick(.5); }
+ assert.deepEqual(clips.map(c=>c[0]),['skill1','skill2','skill3','skill4']);
+ assert.equal(clips[0][1],'skill1');                       /* 피해 스킬은 동작까지 건다 */
+ assert.equal(clips[1][1],undefined);                      /* 회피 스킬은 동작 없이 클립 이름만 알려준다 */
+});
+test('counter plays the dedicated clash clip instead of a normal swing',()=>{
+ const b=battle({patterns:[pat]});tele(b,.1);b.input('attack');
+ const ev=b.drain();assert.equal(ev.find(e=>e.t==='counter')!=null,true);
+ assert.equal(ev.find(e=>e.t==='actionstart').clip,'counter');
+});
+test('execution only when posture is broken, once, and it hits far harder',()=>{
+ const b=battle({parts:[{id:'body',hp:null}]});
+ b.input('execute');assert.equal(b.drain().some(e=>e.t==='execute'),false);   /* 서 있는 보스는 처형할 수 없다 */
+ for(let i=0;i<40&&b.snapshot().enemy.state!=='downed';i++){b.input('smash');idle(b);b.tick(.2);}
+ assert.equal(b.snapshot().enemy.state,'downed');
+ assert.equal(b.snapshot().enemy.executable,true);
+ const before=b.metrics.dmg;b.drain();b.input('execute');
+ const ev=b.drain();assert.equal(ev.some(e=>e.t==='execute'),true);
+ assert.equal(ev.find(e=>e.t==='actionstart').clip,'exec');
+ idle(b);const execDmg=b.metrics.dmg-before;assert.ok(execDmg>0,'처형이 피해를 준다');
+ b.input('execute');assert.equal(b.drain().some(e=>e.t==='execute'),false);   /* 한 번뿐 */
+ assert.equal(b.snapshot().enemy.executable,false);
+});
+test('hit stop is layered by strength, not one flat value',()=>{
+ const h=RULES.hitstop;
+ assert.ok(h.smash>=h.chain*1.5&&h.chain>h.light,'약타 < 연타 < 스매시');
+ assert.ok(h.execute>h.brk&&h.brk>h.counter,'처형 > 부위파괴 > 카운터');
+});

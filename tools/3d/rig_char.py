@@ -9,17 +9,28 @@ KAY=SD+'/Rogue.glb'
 GRIP=float(os.environ.get('GRIP','0.75'))   # 자루에서 오른손 그립 위치 (자루 끝 기준 m)
 LEFT_OFF=0.28    # 왼손이 잡는 지점: 오른손에서 날 쪽으로 (m)
 COMMON=[('walk','Walking_A'),('run','Running_A'),('roll','Dodge_Forward'),('dodgeB','Dodge_Backward'),('dodgeL','Dodge_Left'),('dodgeR','Dodge_Right'),
-        ('hit','Hit_A'),('hit2','Hit_B'),('death','Death_A'),('guard','Blocking'),('guardHit','Block_Hit'),('guardUp','Block'),('cheer','Cheer'),('pickup','PickUp')]
+        ('hit','Hit_A'),('hit2','Hit_B'),('death','Death_A'),('guard','Blocking'),('guardHit','Block_Hit'),('guardUp','Block'),('cheer','Cheer'),('pickup','PickUp'),
+        ('counter','Block_Attack')]   # counter: 막아 세웠다가 밀어내는 한 동작 — 카운터 연출의 본체
 PROFILES={
-  'ain':  dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning')]+COMMON,
-              two_hand={'idle','attack1','attack2','attack3','smash','ult','guard','guardHit','guardUp','walk','run'}, carry='scythe'),
-  'kain': dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning')]+COMMON,
-              two_hand={'idle','attack1','attack2','attack3','smash','ult','guard','guardHit','guardUp','walk','run'}, carry='sword'),
-  'ryu':  dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','1H_Melee_Attack_Slice_Horizontal'),('attack2','1H_Melee_Attack_Chop'),('attack3','1H_Melee_Attack_Stab'),('smash','Dualwield_Melee_Attack_Slice'),('ult','Dualwield_Melee_Attack_Chop')]+COMMON,
+  'ain':  dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning'),
+                      ('skill1','1H_Melee_Attack_Slice_Diagonal'),('skill2','Jump_Full_Short'),('skill3','1H_Melee_Attack_Slice_Horizontal'),('skill4','Spellcast_Raise'),('exec','1H_Melee_Attack_Stab')]+COMMON,
+              two_hand={'idle','attack1','attack2','attack3','smash','ult','guard','guardHit','guardUp','walk','run','skill1','skill3','skill4','exec','counter'}, carry='scythe'),
+  'kain': dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','2H_Melee_Attack_Slice'),('attack2','2H_Melee_Attack_Chop'),('attack3','2H_Melee_Attack_Stab'),('smash','2H_Melee_Attack_Spin'),('ult','2H_Melee_Attack_Spinning'),
+                      ('skill1','1H_Melee_Attack_Chop'),('skill2','Jump_Full_Short'),('skill3','1H_Melee_Attack_Slice_Horizontal'),('skill4','Spellcast_Raise'),('exec','1H_Melee_Attack_Stab')]+COMMON,
+              two_hand={'idle','attack1','attack2','attack3','smash','ult','guard','guardHit','guardUp','walk','run','skill1','skill3','skill4','exec','counter'}, carry='sword'),
+  'ryu':  dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','1H_Melee_Attack_Slice_Horizontal'),('attack2','1H_Melee_Attack_Chop'),('attack3','1H_Melee_Attack_Stab'),('smash','Dualwield_Melee_Attack_Slice'),('ult','Dualwield_Melee_Attack_Chop'),
+                      ('skill1','Dualwield_Melee_Attack_Stab'),('skill2','Jump_Full_Short'),('skill3','1H_Melee_Attack_Slice_Diagonal'),('skill4','Spellcast_Raise'),('exec','1H_Melee_Attack_Stab')]+COMMON,
               two_hand=set(), carry=None),
-  'sera': dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','Throw'),('attack2','Spellcast_Shoot'),('attack3','Spellcast_Raise'),('smash','Spellcast_Long'),('ult','Spellcasting')]+COMMON,
+  'sera': dict(clips=[('idle','Unarmed_Idle'),('idle2','Idle'),('attack1','Throw'),('attack2','Spellcast_Shoot'),('attack3','Spellcast_Raise'),('smash','Spellcast_Long'),('ult','Spellcasting'),
+                      ('skill1','1H_Ranged_Shoot'),('skill2','Jump_Full_Short'),('skill3','1H_Ranged_Shooting'),('skill4','Use_Item'),('exec','1H_Melee_Attack_Stab')]+COMMON,
               two_hand=set(), carry=None),
 }
+# 모션 증폭: 상체 회전을 «각도» 기준으로 키운다. 크게 휘두르는 것이 눈에 보여야 한다.
+# 소스 포즈 단계에서 키우므로 양손 그립 IK 가 증폭된 자세를 기준으로 다시 풀린다 (왼손이 자루에서 떨어지지 않는다).
+AMP={'attack1':1.25,'attack2':1.25,'attack3':1.22,'smash':1.30,'ult':1.30,
+     'skill1':1.28,'skill2':1.20,'skill3':1.30,'skill4':1.22,'exec':1.32,'counter':1.26,
+     'hit':1.18,'hit2':1.18,'guardHit':1.20}
+AMP_BONES=('spine','chest','head','upperarm.l','lowerarm.l','upperarm.r','lowerarm.r')
 PROF=PROFILES[CHAR]; CLIPS=PROF['clips']; TWO_HAND=PROF['two_hand']
 MAP={'hips':'Hips','spine':'Spine','chest':'Spine2','head':'Head','upperarm.l':'LeftArm','lowerarm.l':'LeftForeArm','hand.l':'LeftHand','upperarm.r':'RightArm','lowerarm.r':'RightForeArm','hand.r':'RightHand',
      'upperleg.l':'LeftUpLeg','lowerleg.l':'LeftLeg','foot.l':'LeftFoot','toes.l':'LeftToeBase','upperleg.r':'RightUpLeg','lowerleg.r':'RightLeg','foot.r':'RightFoot','toes.r':'RightToeBase','handslot.r':'RightHandSlot','handslot.l':'LeftHandSlot'}
@@ -275,6 +286,42 @@ PATHS={
              (0.78,dict(rh=(0.15,0.10,0.58), shaft=(0,-0.42,0.90), blade=(0,-0.92,0.35), left=-0.42)),
              (0.90,dict(rh=(0.18,0.08,0.52), shaft=(0,-0.45,0.89), blade=(0,-0.92,0.35), left=-0.42)),
              (1.0,IDLE_K)],
+  # ---- 스킬·처형·카운터: 소스가 한손 클립이라 궤적을 직접 준다. 안 주면 낫이 손에서 떨어져 보인다 ----
+  # 스킬1 강한 일격: 오른쪽 위로 크게 들었다가 왼쪽 아래로 대각선으로 베어 내린다
+  'skill1':[(0.0,IDLE_K),
+            (0.24,dict(rh=(0.55,0.70,-0.20), shaft=(0.45,0.80,-0.40), blade=(-0.5,0.5,0.7), left=-0.42)),
+            (0.40,dict(rh=(0.25,0.45,0.55), shaft=(0.10,0.25,0.96), blade=(-0.9,-0.3,0.3), left=-0.42)),
+            (0.52,dict(rh=(-0.45,0.05,0.35), shaft=(-0.80,-0.45,0.40), blade=(-0.2,-0.85,-0.5), left=-0.44)),
+            (0.70,dict(rh=(-0.35,0.10,0.25), shaft=(-0.80,0.20,0.56), blade=(0,0.2,0.98), left=-0.40)),
+            (1.0,IDLE_K)],
+  # 스킬3 광역 회전: 자루를 넓게 뻗은 채 한 바퀴 다 돈다 (스매시보다 크게)
+  'skill3':[(0.0,IDLE_K),
+            (0.14,dict(rh=(0.50,0.28,-0.22), shaft=(0.72,0.10,-0.68), blade=(-0.7,0.1,0.7), left=-0.44)),
+            (0.28,dict(rh=(0.30,0.30,0.50), shaft=(-0.10,0.02,0.99), blade=(-1,0,0), left=-0.46)),
+            (0.44,dict(rh=(-0.45,0.30,0.20), shaft=(-0.99,0.02,0.10), blade=(-0.1,0,-0.99), left=-0.46)),
+            (0.60,dict(rh=(-0.25,0.30,-0.45), shaft=(-0.10,0.02,-0.99), blade=(1,0,0), left=-0.46)),
+            (0.76,dict(rh=(0.45,0.30,-0.15), shaft=(0.99,0.02,0.10), blade=(0.1,0,0.99), left=-0.46)),
+            (0.88,dict(rh=(0.28,0.28,0.42), shaft=(-0.15,0.10,0.98), blade=(-1,0,0), left=-0.44)),
+            (1.0,IDLE_K)],
+  # 스킬4 결의: 자루를 앞에 곧게 세워 박고 버틴다
+  'skill4':[(0.0,IDLE_K),
+            (0.25,dict(rh=(0.24,0.02,0.32), shaft=(0,1,0), blade=(0,0,1), left=-0.30)),
+            (0.65,dict(rh=(0.24,0.02,0.32), shaft=(0,1,0), blade=(0,0,1), left=-0.30)),
+            (1.0,IDLE_K)],
+  # 처형: 머리 위로 높이 들어 «버텼다가» 수직으로 내리꽂는다
+  'exec':[(0.0,IDLE_K),
+          (0.20,dict(rh=(0.15,0.80,-0.05), shaft=(0,0.98,-0.20), blade=(0,0.3,0.95), left=-0.36)),
+          (0.45,dict(rh=(0.12,0.85,0.02), shaft=(0,0.99,-0.12), blade=(0,0.3,0.95), left=-0.36)),
+          (0.58,dict(rh=(0.12,0.10,0.62), shaft=(0,-0.55,0.84), blade=(0,-0.95,0.30), left=-0.40)),
+          (0.78,dict(rh=(0.14,0.02,0.58), shaft=(0,-0.62,0.79), blade=(0,-0.95,0.30), left=-0.40)),
+          (1.0,IDLE_K)],
+  # 카운터: 자루를 가로로 들어 받아 내고 «맞댄 채 버티다» 밀어내며 그대로 벤다
+  'counter':[(0.0,IDLE_K),
+             (0.18,dict(rh=(0.26,0.42,0.34), shaft=(-0.96,0.28,0.02), blade=(0,0,1), left=-0.38)),
+             (0.36,dict(rh=(0.24,0.46,0.42), shaft=(-0.94,0.34,0.06), blade=(0,0,1), left=-0.38)),
+             (0.50,dict(rh=(0.30,0.40,0.52), shaft=(-0.90,0.20,0.38), blade=(0,0,1), left=-0.40)),
+             (0.66,dict(rh=(-0.38,0.22,0.24), shaft=(-0.86,0.10,0.50), blade=(-0.2,0,-0.97), left=-0.42)),
+             (1.0,IDLE_K)],
 }
 def _lerp3(a,b,k): return tuple(a[i]+(b[i]-a[i])*k for i in range(3))
 def path_spec(keys, t):
@@ -288,8 +335,17 @@ def path_spec(keys, t):
 def retarget(action, clip):
     f0,f1=int(action.frame_range[0]),int(action.frame_range[1]); src.animation_data.action=action
     new=bpy.data.actions.new(clip); arm.animation_data.action=new; errs=[]
+    amp=AMP.get(clip,1.0)
     for f in range(f0,f1+1):
         sc.frame_set(f)
+        if amp!=1.0:
+            for bn in AMP_BONES:
+                pb=src.pose.bones.get(bn)
+                if not pb: continue
+                if pb.rotation_mode!='QUATERNION': pb.rotation_mode='QUATERNION'
+                q=pb.rotation_quaternion.normalized(); ang=q.angle
+                if ang>1e-4: pb.rotation_quaternion=Quaternion(q.axis, max(-2.8,min(2.8,ang*amp)))
+            bpy.context.view_layer.update()
         SP={n:(src.matrix_world@src.pose.bones[n].matrix).copy() for n in MAP}
         world={}
         for n in order:

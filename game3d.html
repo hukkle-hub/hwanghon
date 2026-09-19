@@ -118,6 +118,8 @@ html.mobile .loading__tip{font-size:12px}
 .loading.is-off{opacity:0;pointer-events:none}
 
 .exp-interact{position:absolute;left:50%;bottom:155px;transform:translateX(-50%);z-index:15;background:#172729ee;color:#f3dfb8;border:1px solid #bba26d;border-radius:6px;padding:13px 22px;font-family:inherit;font-weight:600;font-size:14px;cursor:pointer;box-shadow:0 4px 20px #0008;touch-action:manipulation}
+.exp-interact.is-exec{background:#3a1512ee;color:#ffd9a8;border-color:#d9704a;font-size:17px;padding:15px 30px;box-shadow:0 0 26px #d9704a66;animation:execPulse .7s ease-in-out infinite alternate}
+@keyframes execPulse{from{box-shadow:0 0 16px #d9704a44;transform:translateX(-50%) scale(1)}to{box-shadow:0 0 34px #ff8a5aaa;transform:translateX(-50%) scale(1.06)}}
 .exp-interact[hidden]{display:none}.exp-map{position:absolute;right:20px;top:118px;z-index:7;background:#172024dd;color:#d9d3c2;border:1px solid #697571;padding:8px 12px;cursor:pointer;touch-action:manipulation}.exp-fullmap{width:100%;max-height:48vh;object-fit:contain;background:#101a1c;border:1px solid #354740}.exp-map-key{font-size:12px;color:#b9c7bc;line-height:1.8;margin:8px 0 16px}
 .target-cycle{position:absolute;right:20px;top:165px;z-index:7;min-width:150px;max-width:220px;min-height:48px;padding:7px 12px;border:1px solid #987d4b;background:#151a21ed;color:#eed9ab;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation;text-align:left}.target-cycle small{display:block;color:#b6bcc4;font-size:10px;margin-top:3px}.target-cycle[hidden]{display:none}
 @media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}

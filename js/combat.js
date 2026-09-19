@@ -23,7 +23,7 @@
     function emit(t,d){events.push(Object.assign({t:t,time:B.time},d||{}));}
     function fail(s){P.lastFailure=s;}
     function finish(){if(E.dead)return; E.dead=true; E.state='broken'; B.over=true; P.buffer=null; emit('clear');}
-    function down(){if(E.dead||E.state==='downed')return;E.state='downed';E.downT=R.posture.downDur;E.posture=0;E.tele=0;M.downs++;emit('downed');}
+    function down(){if(E.dead||E.state==='downed')return;E.state='downed';E.downT=R.posture.downDur;E.posture=0;E.tele=0;E.executed=false;M.downs++;emit('downed');}
     function bleed(n){for(var i=0;i<n;i++){if(E.bleed.length>=R.bleed.maxStacks)E.bleed.shift();E.bleed.push(R.bleed.dur);}emit('bleed',{stacks:E.bleed.length});}
     function breakPart(p){
       if(!p.breakable||p.broken)return;
@@ -39,6 +39,7 @@
     /* 타격 종류별 정지 길이 — 약타와 스매시가 같은 무게로 느껴지지 않게 한다 */
     function stopFor(opt){
       var h=R.hitstop,f=h.hit||0.08;
+      if(opt.execute)return h.execute||h.brk||f;
       if(opt.counter)return (opt.perfect?h.perfect:h.counter)||f;
       if(opt.riposte)return h.smash||f;
       if(opt.kind==='smash'||opt.kind==='ult')return h.smash||f;
@@ -82,10 +83,18 @@
       var perfect=E.tele<=perfectWindow+1e-8;M.counters++;if(perfect)M.perfect++;
       E.posture=clamp(E.posture+(E.pat.posture||R.counter.posture),0,R.posture.max);
       E.state='stagger';E.stagT=0.8;E.tele=0;
-      action('counter','attack3',1,{counter:true,perfect:perfect},R.motion.counter);
+      action('counter','counter',1,{counter:true,perfect:perfect},R.motion.counter);
       emit('counter',{perfect:perfect,pattern:E.pat.name});
       if(D.firstCounterUlt&&!firstCounterDone){firstCounterDone=true;P.ult=R.ult.max;emit('ultready',{first:true});}
       if(E.posture>=R.posture.max)down();return true;
+    }
+    /* 처형: 자세가 무너져 격추된 동안 근접에서 한 번만. 전용 동작 + 큰 피해 (§처형 연출) */
+    function execute(){
+      if(B.over||E.state!=='downed'||E.executed||P.action||P.lockT>0||P.dodgeT>0)return false;
+      if(HK.canExecute&&!HK.canExecute())return false;
+      E.executed=true;P.buffer=null;
+      action('exec','exec',(R.execute&&R.execute.mult)||4,{execute:true,noBleed:true},R.motion.exec||R.motion.ult);
+      emit('execute',{});return true;
     }
     function attack(pid){
       if(B.over)return;if(pid&&B.part(pid))target=pid;if(counter())return;
@@ -116,8 +125,9 @@
       P.st-=k.st;P.stDelay=R.stamina.delay;P.cds[i]=k.cd;
       if(k.dodge){P.dodgeT=R.dodge.iframes;P.dodgeAgo=0;P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.dodgeCd=R.dodge.cooldown;M.dodges++;}
       if(k.critNext)P.critNext=true;if(k.buff){P.buffT=k.buff.dur;P.buffReduce=k.buff.reduce;}
-      if(k.mult>0)action('skill',k.aoe?'smash':'attack2',k.mult,{skill:k.id,aoe:k.aoe},R.motion.smash);
-      emit('skill',{index:i,id:k.id,name:k.name,timed:k.mult>0});
+      var sclip=k.clip||('skill'+(i+1));
+      if(k.mult>0)action('skill',sclip,k.mult,{skill:k.id,aoe:k.aoe},R.motion.skill||R.motion.smash);
+      emit('skill',{index:i,id:k.id,name:k.name,clip:sclip,timed:k.mult>0});
     }
     function ult(){
       if(!U||B.over)return;if(P.action){queue('ult');return;}if(P.lockT>0||P.dodgeT>0||P.guard)return;
@@ -127,7 +137,7 @@
     B.input=function(type,arg){
       if(B.over)return;
       if(P.hitstop>0&&type!=='target'&&!(type==='guard'&&!arg)){P.buffer={type:type,arg:arg,ttl:R.motion.buffer};return;}
-      switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'target':if(B.part(arg))target=arg;break;}
+      switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
     };
     function impact(a){
       a.resolved=true;
@@ -235,6 +245,7 @@
         case 'downed':E.downT-=dt;if(E.downT<=0){E.state='idle';E.patT=D.patternGap||1.4;emit('up');}break;
       }
     }
+    B.execute=execute;
     B.tick=function(dt){accumulator+=dt==null?(R.tick||quantum):Math.max(0,dt);while(accumulator+1e-9>=quantum){step(quantum);accumulator-=quantum;}};
     B.drain=function(){var r=events;events=[];return r;};
     B.exportPlayer=function(){return {hp:P.hp,st:P.st,ult:P.ult};};
@@ -247,6 +258,7 @@
         windup:E.state==='telegraph'&&E.teleDur?windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur):(E.state==='telegraph'?0:1),
         hold:!!(E.pat&&E.pat.hold),beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
         recovery:E.recovery,recoveryDur:E.recoveryDur,downT:E.downT,bleed:E.bleed.length,
+        executable:E.state==='downed'&&!E.executed&&!B.over,
         parts:parts.map(function(p){return {id:p.id,name:p.name,hp:p.hp,hpMax:p.hpMax,weak:!!p.weak,breakable:!!p.breakable,broken:p.broken,pos:p.pos};})}};};
     return B;
   }
