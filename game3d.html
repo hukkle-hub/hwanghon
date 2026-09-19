@@ -122,6 +122,9 @@ html.mobile .loading__tip{font-size:12px}
 @keyframes execPulse{from{box-shadow:0 0 16px #d9704a44;transform:translateX(-50%) scale(1)}to{box-shadow:0 0 34px #ff8a5aaa;transform:translateX(-50%) scale(1.06)}}
 .exp-interact[hidden]{display:none}.exp-map{position:absolute;right:20px;top:118px;z-index:7;background:#172024dd;color:#d9d3c2;border:1px solid #697571;padding:8px 12px;cursor:pointer;touch-action:manipulation}.exp-fullmap{width:100%;max-height:48vh;object-fit:contain;background:#101a1c;border:1px solid #354740}.exp-map-key{font-size:12px;color:#b9c7bc;line-height:1.8;margin:8px 0 16px}
 .target-cycle{position:absolute;right:20px;top:165px;z-index:7;min-width:150px;max-width:220px;min-height:48px;padding:7px 12px;border:1px solid #987d4b;background:#151a21ed;color:#eed9ab;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation;text-align:left}.target-cycle small{display:block;color:#b6bcc4;font-size:10px;margin-top:3px}.target-cycle[hidden]{display:none}
+.lockon{position:absolute;right:20px;top:220px;z-index:7;padding:7px 12px;border:1px solid #987d4b;background:#151a21ed;color:#eed9ab;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation}
+.lockon.is-off{border-color:#5c6168;color:#8d939b}.lockon[hidden]{display:none}
+@media(max-height:640px){.lockon{top:158px;right:12px;font-size:11px;padding:6px 9px}}
 @media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}
 html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
 </style>
@@ -144,6 +147,7 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
     <button class="exp-interact" id="exp-interact" type="button" hidden>F · 조사</button>
     <button class="exp-map" id="exp-map" type="button" aria-label="임무 지도">M · 지도</button>
     <button class="target-cycle" id="target-cycle" type="button" hidden aria-label="다음 부위 조준"><span id="target-name"></span><small id="target-health"></small></button>
+    <button class="lockon" id="lockon" type="button" hidden aria-label="락온 전환">T · 락온 켜짐</button>
     <div class="combo" id="combo"><b id="combo-n">0</b><span>HIT</span></div>
     <div class="toasts" id="toasts"></div>
     <div class="dlg" id="dlg"><img class="dlg__face" id="dlg-face" alt="" hidden><div class="dlg__who" id="dlg-who"></div><div class="dlg__txt" id="dlg-txt"></div><div class="dlg__hint">탭하여 계속</div></div>

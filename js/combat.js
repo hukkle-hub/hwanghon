@@ -245,6 +245,16 @@
         case 'downed':E.downT-=dt;if(E.downT<=0){E.state='idle';E.patT=D.patternGap||1.4;emit('up');}break;
       }
     }
+    /* 아레나 위험 구역 — 보스 패턴이 아니라 «지형» 이 주는 피해. 최대 체력 비율로 들어온다. */
+    B.hazard=function(frac,reason){
+      if(B.over||P.dodgeT>0)return 0;
+      var dmg=Math.max(1,Math.round(st.hp*(frac||0.06)));
+      if(P.buffT>0)dmg=Math.round(dmg*(1-P.buffReduce));
+      P.hp=Math.max(0,P.hp-dmg);M.dmgTaken+=dmg;fail(reason||'아레나가 변했다. 위험 구역을 피해라.');
+      emit('damaged',{dmg:dmg,guarded:false,pattern:reason||'위험 구역',hazard:true,stop:R.hitstop.guard});
+      if(P.hp===0){M.deaths++;if(o.mortal===false){P.hp=st.hp;emit('death');}else{B.over=true;B.dead=true;emit('death',{fatal:true,reason:P.lastFailure});}}
+      return dmg;
+    };
     B.execute=execute;
     B.tick=function(dt){accumulator+=dt==null?(R.tick||quantum):Math.max(0,dt);while(accumulator+1e-9>=quantum){step(quantum);accumulator-=quantum;}};
     B.drain=function(){var r=events;events=[];return r;};
