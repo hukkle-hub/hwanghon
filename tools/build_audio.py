@@ -4,7 +4,7 @@ import json, wave
 import numpy as np
 
 RATE = 24000
-OUT = Path(__file__).resolve().parents[1] / 'art/audio'
+OUT = Path(__file__).resolve().parents[1] / 'legacy-audio-preview'
 OUT.mkdir(parents=True, exist_ok=True)
 rng = np.random.default_rng(190926)
 manifest = {}

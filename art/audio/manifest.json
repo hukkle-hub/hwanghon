@@ -1,62 +1,108 @@
 {
   "swing": {
-    "seconds": 0.32,
+    "taskId": "7cb087a4-323c-46a2-9565-6e301fec1977",
+    "prompt": "One isolated heavy steel scythe slash through air, close recorded physical foley: layered leather sleeve rustle, fast deep airy blade whoosh, faint steel resonance, immediate attack and short natural decay. Dry studio recording, no music, no voices, no beeps, no synthetic tones, no lasers. Single clean game-ready swing.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
+    "seconds": 0.5035833333333334,
+    "peak": 0.7999999523162842,
+    "sha256": "4e887e41965a7372dad197e7660eb5d4b894535b70753edae6646d12ef2ea023"
   },
   "hit": {
-    "seconds": 0.42,
+    "taskId": "b3796077-666b-48ac-8791-d35e94d09d08",
+    "prompt": "One isolated steel blade striking a leather-wrapped straw training dummy: sharp leather slap, compact woody thud, straw fibers tearing. Fast onset, dry close physical foley, short decay. No music, voices, electronic tones or cartoon sound.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.7531380753138075
-  },
-  "hit_heavy": {
-    "seconds": 0.65,
-    "loop": false,
-    "peak": 0.8
+    "seconds": 0.36816666666666664,
+    "peak": 0.7999999523162842,
+    "sha256": "6dbcb23d16e7f3ecdce843973b74b40c3f88ef3e8ecaadef9badeac22f4c4b07"
   },
   "counter": {
-    "seconds": 0.9,
+    "taskId": "ad563cdc-35b7-4c40-801f-7d33765b9598",
+    "prompt": "One hard steel scythe parry against a heavy iron blade. Sharp metallic clash followed by a brief irregular ringing decay and leather glove movement. Real recorded metal feel, decisive and crisp, not shrill. No music, voice, electronic ping or synthesizer.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
-  },
-  "counter_perfect": {
-    "seconds": 1.2,
-    "loop": false,
-    "peak": 0.8000000000000002
+    "seconds": 2.0,
+    "peak": 0.800000011920929,
+    "sha256": "a59db0e73d409003b3d531a5b3838e3a86deefe4da601810d910982bba68c576"
   },
   "execute": {
-    "seconds": 1.35,
+    "taskId": "ed6251d5-4662-4bc3-b449-c97b73a3b3e6",
+    "prompt": "One devastating heavy scythe impact on an armored wooden training dummy: broad air cut immediately into a deep timber crack, iron clatter and falling fragments. Dry close cinematic physical foley, no music, voices, synthetic bass drop or electronic sound.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
+    "seconds": 1.524125,
+    "peak": 0.800000011920929,
+    "sha256": "e04a8a0e46b6db17744fd9d13b53dfe58e87f8c1f210f41066755a13d208d85b"
   },
   "brk": {
-    "seconds": 0.95,
+    "taskId": "1d81e44e-8da9-4fb4-9822-7cc95665b1fa",
+    "prompt": "One rusted iron armor plate breaking off a wooden straw dummy: brittle metal snap, bolts and small fragments clattering to stone, short woody crack. Detailed close natural foley. Single impact, no music, voices or electronic sounds.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
+    "seconds": 0.7679166666666667,
+    "peak": 0.800000011920929,
+    "sha256": "bb4adf631d4ca079cc8338632e9f17fdc07b599c80b222fd0013d5719075f063"
   },
   "roll": {
-    "seconds": 0.3,
+    "taskId": "65c2b9fd-981e-42c4-86ed-e8e6700b3664",
+    "prompt": "One quick combat dodge roll on dusty stone: soft leather coat rush, boot scrape and compact cloth landing. Light agile physical foley. Close and dry, no music, voices, electronic whoosh or tones.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
+    "seconds": 0.7465416666666667,
+    "peak": 0.8000000715255737,
+    "sha256": "a3e5e57efe1bb2c7771de2f5283e630bec7be9cc73a6a0a8fbed73985fdee2fc"
   },
   "tele": {
-    "seconds": 0.65,
+    "taskId": "862baa4b-8530-4885-96b0-3dbdfd9d90ee",
+    "prompt": "A heavy enemy draws back a rusted weapon: tense leather strain, wooden creak and a short sharp scrape of steel against stone. One readable warning gesture with immediate onset. Natural physical sound, no alarm, beep, music, voices or synthetic tones.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.8
+    "seconds": 1.6029166666666668,
+    "peak": 0.800000011920929,
+    "sha256": "22341ccea450b7b6144964a6a140271a88bff4e548df5669d6dbf511aa93eda7"
   },
   "phase": {
-    "seconds": 1.7,
+    "taskId": "841dccb8-7521-4ddd-bf34-c5458ef38166",
+    "prompt": "Heavy stone slabs shift apart with a low rumble, rusted chains tighten and a large iron mechanism locks into place. One compact ominous physical transition sound for a dark fantasy boss arena. No music, no voices, no synthesized sweeps or electronics.",
+    "source": "AI-generated organic-style audio",
     "loop": false,
-    "peak": 0.7999999999999999
+    "seconds": 1.2007916666666667,
+    "peak": 0.800000011920929,
+    "sha256": "51793061b2cd5cb79872dc147dfb7f70102bd28fc01598fe41210578d52a638f"
   },
   "explore": {
-    "seconds": 16.0,
+    "taskId": "24796ac6-998f-4946-9501-6270a47622f3",
+    "prompt": "Dark fantasy dungeon exploration underscore, intimate acoustic chamber recording. Muted cellos and violas, sparse low piano notes, bowed double bass and very subtle hand percussion. Somber, lonely, mysterious, restrained dynamics, 68 BPM, D minor, no vocals, no choir, no synthesizers, no electronic drones, no EDM, no beeps. Quiet repeating motif with steady texture from beginning to end, designed as a background loop without a dramatic intro or final cadence. Leave space for footsteps and combat cues.",
+    "source": "AI-generated organic-style audio",
     "loop": true,
-    "peak": 0.55
+    "seconds": 28.831833333333332,
+    "peak": 0.65,
+    "sha256": "95e5e91fd7c49e07839c22b9b3016b7e489dccee40a6d82b78e8034c23e8994e"
   },
   "boss": {
-    "seconds": 16.0,
+    "taskId": "f0f23378-550c-40eb-9a7d-7bbd9c4e441a",
+    "prompt": "Dark fantasy boss combat instrumental, acoustic cinematic ensemble: driving low string ostinato, expressive violas and cellos, deep orchestral floor toms and frame drums, restrained French horn accents. Urgent and weighty but not bombastic, 108 BPM in D minor. No vocals, no choir, no synthesizer, no electronics, no chiptune, no distorted guitar. Continuous rhythmic tension throughout, no long intro, no fadeout or triumphant ending, suitable for looping under combat. Clear organic instruments and space for weapon impacts.",
+    "source": "AI-generated organic-style audio",
     "loop": true,
-    "peak": 0.55
+    "seconds": 29.77225,
+    "peak": 0.65,
+    "sha256": "4c3f4d445361aa5acf3b9cecf8b292c1f04479a26a0eefa7fee353a051d95976"
+  },
+  "hit_heavy": {
+    "derivedFrom": "hit",
+    "loop": false,
+    "processing": "pitch lowered 10 percent",
+    "seconds": 0.40908333333333335,
+    "peak": 0.8344423174858093,
+    "sha256": "9834e4d1fcec18053c8a7d2bc9eb5aba5a469e064a49daa00a9030fcccd93833"
+  },
+  "counter_perfect": {
+    "derivedFrom": "counter",
+    "loop": false,
+    "processing": "same natural clash, no electronic chime",
+    "seconds": 2.0,
+    "peak": 0.800000011920929,
+    "sha256": "a59db0e73d409003b3d531a5b3838e3a86deefe4da601810d910982bba68c576"
   }
 }
