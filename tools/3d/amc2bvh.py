@@ -137,6 +137,21 @@ def prune(root, names=PRUNE):
         for c in b.children: walk(c)
     walk(root)
 
+def heading(root, m):
+    """이 프레임에서 몸이 향한 방향(라디안). CMU 는 Y-up 이라 XZ 평면의 각도.
+       좌우 고관절 축을 루트 회전으로 돌려 재고, 그 축과 위를 외적해 정면을 얻는다.
+       (lhipjoint/rhipjoint 는 CMU 에서 dof 가 없어 루트 회전만 받는다 — 그래서 이 계산으로 충분하다)"""
+    M = local_rot_root(root, m.get('root', [0] * 6)[3:6])
+    kid = {c.name: c for c in root.children}
+    l, r = kid.get('lhipjoint'), kid.get('rhipjoint')
+    if not l or not r: return 0.0
+    d = [l.direction[k] * l.length - r.direction[k] * r.length for k in range(3)]
+    side = mv(M, d)
+    fwd = (-side[2], 0.0, side[0])          # side × up
+    if abs(fwd[0]) < 1e-9 and abs(fwd[2]) < 1e-9: return 0.0
+    return math.atan2(fwd[0], fwd[2])
+
+
 def write_bvh(root, frames, scale, out, fps=120, inplace=False, srcfps=120.0):
     order = []
     def walk(b):
@@ -182,7 +197,14 @@ def write_bvh(root, frames, scale, out, fps=120, inplace=False, srcfps=120.0):
     while int(round(t)) < len(frames):
         idx.append(int(round(t))); t += step
     rows = []
-    base = None
+    # 방향 정규화: CMU 배우가 캡처장에서 향하고 있던 방향이 루트 회전에 그대로 들어 있다.
+    # 이동만 지우고 두면 캐릭터가 «옆을 본 채» 로 굳는다 (실측: 대기 클립 -105°).
+    # 첫 프레임의 몸 방향을 재서 그만큼 되돌린다. 클립 안에서 도는 동작은 그대로 남는다.
+    yaw0 = heading(root, frames[idx[0]]) if (inplace and idx) else 0.0
+    UNSPIN = euler_xyz(0.0, -yaw0, 0.0) if abs(yaw0) > 1e-9 else None
+    net = math.degrees(heading(root, frames[idx[-1]]) - heading(root, frames[idx[0]])) if idx else 0.0
+    net = (net + 180) % 360 - 180
+
     for n, fi in enumerate(idx):
         m = frames[fi]
         pos = m.get('root', [0, 0, 0, 0, 0, 0])
@@ -194,6 +216,7 @@ def write_bvh(root, frames, scale, out, fps=120, inplace=False, srcfps=120.0):
         for b in order:
             if b.parent is None:
                 L = local_rot_root(b, pos[3:6])
+                if UNSPIN is not None: L = mm(UNSPIN, L)
             else:
                 L = local_rot(b, m.get(b.name, []))
             x, y, z = to_euler_zyx(L)
@@ -205,7 +228,7 @@ def write_bvh(root, frames, scale, out, fps=120, inplace=False, srcfps=120.0):
     lines.append('Frame Time: %.8f' % (1.0 / fps))
     lines += rows
     open(out, 'w', encoding='utf-8').write('\n'.join(lines) + '\n')
-    return len(rows)
+    return len(rows), net
 
 def local_rot_root(b, rxyz):
     e = [math.radians(v) for v in rxyz]
@@ -226,8 +249,12 @@ def main():
     frames = parse_amc(amc)
     end = len(frames) if end is None else int(end)
     frames = frames[start:end]
-    n = write_bvh(root, frames, scale, out, fps=fps, inplace=inplace)
-    print('%s  %d frames @ %gfps  (원본 %d, %.2fs)' % (os.path.basename(out), n, fps, end - start, n / fps))
+    n, net = write_bvh(root, frames, scale, out, fps=fps, inplace=inplace)
+    # 순회전(net): 클립 안에서 몸이 돌아간 각도. 게임은 캐릭터 방향을 시뮬레이션이 잡으므로
+    # 크게 돌고 끝나는 클립은 동작이 끝난 뒤 엉뚱한 쪽을 보게 된다 — 30° 넘으면 경고한다.
+    warn = '   ⚠ 순회전 %+.0f°' % net if abs(net) > 30 else ''
+    print('%s  %d frames @ %gfps  (원본 %d, %.2fs)  순회전 %+.0f°%s'
+          % (os.path.basename(out), n, fps, end - start, n / fps, net, warn))
 
 if __name__ == '__main__':
     main()

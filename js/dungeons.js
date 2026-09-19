@@ -7,7 +7,7 @@
 (function(){
   var RULES = {
     tick: 0.01,
-    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.33,smash:0.78,ult:0.50,skill1:0.50,skill2:0.42,skill3:0.55,skill4:0.42,counter:0.48,exec:0.58}   /* attack3·skill2·skill4 는 모캡 클립의 손목 최고속 지점 (tools/3d/mocap.py) */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.50,smash:0.78,ult:0.50,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.58}   /* attack3·skill2·skill4 는 모캡 클립의 손목 최고속 지점 (tools/3d/mocap.py) */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
       smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
       ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},

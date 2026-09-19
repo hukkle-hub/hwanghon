@@ -61,11 +61,11 @@ def build(J, parent, RESTL, CHAR, PROF, LEFT_OFF=0.28):
     def relax_both(world, clip):
         w=0.35 if clip in RELAX_ATTACK else 0.72
         relax_arm(world,'Left',w,(0.20,-0.96,0.12)); relax_arm(world,'Right',w,(-0.20,-0.96,0.12))
-    RREL=None
+    _RREL=[None]   # build() 의 닫힘 변수. 예전엔 모듈 전역이라 global 로 썼는데,
+                   # build() 안으로 들어오며 지역이 돼 global 선언과 어긋났다 (호출되면 NameError).
     def carry(world, spec):
         """무기 주도 자세: 오른손 위치·자루 방향·날 방향을 캐릭터 기준으로 지정 → 오른팔 IK, 슬롯 회전, 왼손 자루 IK"""
-        global RREL
-        if RREL is None: RREL=(RESTL['mixamorig:RightHand'].inverted()@RESTL['mixamorig:RightHandSlot']).to_3x3()
+        if _RREL[0] is None: _RREL[0]=(RESTL['mixamorig:RightHand'].inverted()@RESTL['mixamorig:RightHandSlot']).to_3x3()
         right,up,fwd=char_frame(world); hp=world['mixamorig:Hips'].to_translation()
         def v(t): return right*t[0]+up*t[1]+fwd*t[2]
         T=hp+v(spec['rh']); sd=v(spec['shaft']).normalized(); bd=v(spec['blade']); bd=(bd-sd*bd.dot(sd)).normalized()
@@ -73,7 +73,7 @@ def build(J, parent, RESTL, CHAR, PROF, LEFT_OFF=0.28):
         # 슬롯 월드 회전: Y=자루, X=-날, Z=X×Y
         X=-bd; Y=sd; Z=X.cross(Y).normalized(); Rs=Matrix((X,Y,Z)).transposed()
         # 오른손 회전은 슬롯에서 역산 (손목이 무기를 따라감)
-        Hn='mixamorig:RightHand'; hpos=world[Hn].to_translation(); Rh=Rs@RREL.inverted(); setrot(world,Hn,Rh,hpos)
+        Hn='mixamorig:RightHand'; hpos=world[Hn].to_translation(); Rh=Rs@_RREL[0].inverted(); setrot(world,Hn,Rh,hpos)
         setrot(world,'mixamorig:RightHandSlot',Rs,child_pos(world,Hn,'mixamorig:RightHandSlot'))
         if spec.get('left') is not None: ik_left(world, spec['left'])
         elif spec.get('relax'): relax_left(world, spec['relax'])

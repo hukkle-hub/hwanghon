@@ -35,7 +35,7 @@ MOCAP = {'idle': 'mo_idle', 'attack3': 'mo_strike',
 # 캐릭터별 제외: 모캡 몸통 위에서 무기 그립이 버티지 못하는 조합.
 #   kain 의 attack3 은 대검 양손 그립이 가라테 런지 자세에서 14.6cm 벌어진다
 #   (원본 0.001m → 모캡 0.146m, tools 측정). 나머지는 0.09m 이하라 유지한다.
-MOCAP_SKIP = {'kain': {'attack3'}}
+MOCAP_SKIP = {}
 PROFILES = {
     'ain':  dict(two_hand={'idle', 'attack1', 'attack2', 'attack3', 'smash', 'ult', 'guard', 'guardHit', 'guardUp', 'walk', 'run', 'skill1', 'skill3', 'skill4', 'exec', 'counter'}, carry='scythe'),
     'kain': dict(two_hand={'idle', 'attack1', 'attack2', 'attack3', 'smash', 'ult', 'guard', 'guardHit', 'guardUp', 'walk', 'run', 'skill1', 'skill3', 'skill4', 'exec', 'counter'}, carry='sword'),
@@ -186,10 +186,12 @@ def loop_blend(act, last):
 # 발 심기 기준: 휴식 자세에서 발가락이 바닥 위 어느 높이에 있는가
 REST_FOOT = min(RESTL['mixamorig:%sToeBase' % s_].to_translation().z for s_ in ('Left', 'Right'))
 
-def retarget(action, clip):
+def retarget(action, clip, actname=None):
+    """clip 은 «게임 클립 이름» 이라야 한다 — CARRY/PATHS/TWO_HAND 를 이 이름으로 찾는다.
+       예전엔 'idle_mo' 를 넘겨 조회가 전부 빗나갔고, 무기 자세가 통째로 적용되지 않았다."""
     f0, f1 = int(action.frame_range[0]), int(action.frame_range[1])
     src.animation_data.action = action
-    new = bpy.data.actions.new(clip); arm.animation_data.action = new; errs = []
+    new = bpy.data.actions.new(actname or clip); arm.animation_data.action = new; errs = []
     # BVH 의 휴식 자세는 루트가 «원점» 이다 (OFFSET 0). 그대로 SREST 와 빼면 골반이
     # 통째로 1m 떠오른다. 그래서 루트 이동은 «이 클립의 첫 프레임» 을 기준으로 잡고,
     # 남는 오차는 아래에서 발을 바닥에 심어 없앤다.
@@ -246,7 +248,7 @@ for clip, moname in MOCAP.items():
     a = bpy.data.actions.get(moname)
     if not a: print('모캡 액션 없음:', moname); continue
     if clip not in old_tracks: print('원본에 %s 클립이 없다 — 건너뜀' % clip); continue
-    swapped[clip] = retarget(a, clip + '_mo')
+    swapped[clip] = retarget(a, clip, clip + '_mo')
     print('교체 %s ← %s (%d프레임)' % (clip, moname, int(a.frame_range[1] - a.frame_range[0]) + 1))
 
 # ---------- 5. NLA 교체 + 내보내기 ----------
