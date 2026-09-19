@@ -207,6 +207,20 @@ class RaidView{
   bb.mixer.update(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
   for(const part of b.parts){if(this.A.pieces==='nodes'){const object=bb.model.getObjectByName('piece_'+part.id);if(object)object.visible=!part.broken;}}
   this.zoneCircle.visible=this.zoneLine.visible=false;if(b.zone&&b.state==='telegraph'){const z=b.zone,teach=this.L.id==='d01',col=b.pattern.counterable?(teach&&b.tele<=b.window?0xf7efd8:0xd84c3b):0xfca044;  /* 흰색 점등은 훈련장 전용 — 그 밖에서는 색이 «종류»만 말한다 */if(z.kind==='circle'){this.zoneCircle.visible=true;this.zoneCircle.position.copy(pos(z.x,z.y,.04));this.zoneCircle.scale.setScalar(z.r/SCALE);this.zoneCircle.material.color.setHex(col);}else{this.zoneLine.visible=true;this.zoneLine.position.copy(pos(z.x+Math.cos(z.a)*z.len/2,z.y+Math.sin(z.a)*z.len/2*DEPTH,.04));this.zoneLine.scale.set(z.len/SCALE,z.w/SCALE,1);this.zoneLine.rotation.set(-Math.PI/2,0,-z.a);this.zoneLine.material.color.setHex(col);}}
+  /* 아레나 위험 구역 (광란 페이즈) — 서버가 phase 까지 계산해서 보낸다 */
+  const ah=raid.arena?.hazards||[];
+  if(!this.arenaHz)this.arenaHz=[];
+  while(this.arenaHz.length<ah.length){
+   const g=new T.Group();
+   const fill=new T.Mesh(new T.CircleGeometry(1,36),new T.MeshBasicMaterial({transparent:true,opacity:.16,depthWrite:false,side:T.DoubleSide}));fill.rotation.x=-Math.PI/2;
+   const edge=new T.Mesh(new T.RingGeometry(.93,1,44),new T.MeshBasicMaterial({transparent:true,opacity:.7,depthWrite:false,side:T.DoubleSide}));edge.rotation.x=-Math.PI/2;edge.position.y=.012;
+   g.add(fill,edge);g.renderOrder=2;this.scene.add(g);this.arenaHz.push({g,fill,edge});
+  }
+  const acol=raid.arena?.fx?.color||0xE06030;
+  this.arenaHz.forEach((o,i)=>{const h=ah[i];if(!h){o.g.visible=false;return;}
+   o.g.visible=h.phase!=='off';o.g.position.copy(pos(h.x,h.y,.045));const rr=h.r/SCALE;o.g.scale.set(rr,1,rr);
+   o.fill.material.color.setHex(acol);o.edge.material.color.setHex(acol);
+   o.fill.material.opacity=h.phase==='active'?.40:.16;o.edge.material.opacity=h.phase==='active'?.95:.6;});
   this.gate.visible=raid.state!=='explore'||(this.L.expedition.required||[]).some(id=>!raid.expedition.done[id]);this.props.update(raid.time);
   const me=raid.players.find(p=>p.id===profile.id)||raid.players[0],target=pos(me.x,me.y,1);if(raid.state==='fight'&&target.distanceTo(bb.root.position)<20)target.lerp(bb.root.position.clone().add(new T.Vector3(0,1,0)),.2);if(this.first){this.look.copy(target);this.first=false;}else this.look.lerp(target,1-Math.exp(-dt*8*rpgUI.settings.camera));this.camera.position.copy(this.look).add(new T.Vector3(8,11,12).multiplyScalar(rpgUI.settings.zoom));this.shake=Math.max(0,(this.shake||0)-dt);if(rpgUI.settings.shake&&this.shake>0)this.camera.position.x+=Math.sin(performance.now()*.15)*this.shake;this.camera.lookAt(this.look);this.renderer.render(this.scene,this.camera);this.drawMap(raid);
  }

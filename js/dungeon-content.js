@@ -131,6 +131,13 @@
     atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_surge',hitFrac:.52},
       hammerL:{clip:'atk_slam_l',hitFrac:.45},hammerC:{clip:'atk_slam_c',hitFrac:.46}},   /* 연계 2·3타 전용 모션 */
     rewards:{gold:3600,items:[['m_alloy',16],['m_ore',18],['m_core',2]],sBonus:[['m_heart',1]]},
+    /* 광란 페이즈: 바닥 모선이 살아난다 — 네 구역이 번갈아 방전한다 */
+    stageFx:[null,{light:0.86,fog:1.28,sky:0x0d1014,color:0x7FC8FF,line:'바닥 모선에 전압이 걸렸다 — 방전 자리를 피해라',
+      reason:'바닥 모선에 감전됐다. 파란 원이 켜지기 전에 비켜라.',
+      hazards:[{dx:-210,dy:-120,r:135,period:3.6,warning:1.0,active:1.2,offset:0,damage:0.07},
+               {dx: 210,dy:-120,r:135,period:3.6,warning:1.0,active:1.2,offset:0.9,damage:0.07},
+               {dx:-210,dy: 130,r:135,period:3.6,warning:1.0,active:1.2,offset:1.8,damage:0.07},
+               {dx: 210,dy: 130,r:135,period:3.6,warning:1.0,active:1.2,offset:2.7,damage:0.07}]}],
     stages:[stage4(false),stage4(true)]};
 
   function stage(rage){return {id:rage?'overpressure':'pressure',kind:rage?'rage':'pump',name:rage?'과압 수문기':'오염 수문기',lesson:rage?'회피와 반격':'배관 파괴',hp:rage?210000:300000,timeLimit:rage?150:210,patternGap:rage?1:1.5,counterWindow:rage?.14:.18,perfectWindow:.04,
@@ -153,5 +160,12 @@
     parts3d:{core:{bone:'Core',off:[0,0,.4],r:.45},head:{bone:'Head',off:[0,0,0],r:.4},body:{bone:'Spine',off:[0,0,.6],r:.9},intake:{bone:'Intake',off:[0,-.1,.2],r:.55},exhaust:{bone:'Exhaust',off:[0,-.1,.2],r:.55}},
     atk:{hammer:{clip:'atk_hammer',hitFrac:.45},bolt:{clip:'atk_bolt',hitFrac:.45},scythe:{clip:'atk_scythe',hitFrac:.5},flame:{clip:'atk_flame',hitFrac:.5},
       hammerB:{clip:'atk_hammer_back',hitFrac:.4}},   /* 연계 2타: 되돌림 망치 */
-    rewards:{gold:2400,items:[['m_alloy',12],['m_ore',15],['m_oil',2]],sBonus:[['m_core',2]]},stages:[stage(false),stage(true)]};
+    rewards:{gold:2400,items:[['m_alloy',12],['m_ore',15],['m_oil',2]],sBonus:[['m_core',2]]},
+    /* 광란 페이즈: 배수구에서 오염수가 분출한다 */
+    stageFx:[null,{light:0.88,fog:1.30,sky:0x0f1512,color:0x8FD06A,line:'배수구가 터진다 — 분출 자리를 피해라',
+      reason:'오염수 분출에 맞았다. 초록 원이 켜지기 전에 비켜라.',
+      hazards:[{dx:-190,dy:-100,r:125,period:4.0,warning:1.1,active:1.3,offset:0,damage:0.07},
+               {dx: 200,dy: -60,r:125,period:4.0,warning:1.1,active:1.3,offset:1.3,damage:0.07},
+               {dx: -40,dy: 190,r:145,period:4.6,warning:1.2,active:1.4,offset:2.6,damage:0.08}]}],
+    stages:[stage(false),stage(true)]};
 })();

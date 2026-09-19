@@ -76,3 +76,19 @@ test('online execution mirrors solo: only while downed, once, with the dedicated
  assert.equal(r.snapshot().boss.executable,false);
  a.action=null;r.input('a',{type:'execute'});assert.equal(a.action,null);   /* 한 번뿐 */
 });
+
+test('rage phase changes the arena: hazards appear, cycle, and only hurt inside',()=>{
+ const r=new Raid('d03',members);r.startFight();
+ assert.equal(r.arenaHz.length,0,'통상 페이즈에는 위험 구역이 없다');
+ r.phase=1;r.setupBoss();
+ assert.ok(r.arenaHz.length>0,'광란 페이즈에 위험 구역이 생긴다');
+ const h=r.arenaHz[0],a=r.players.get('a');
+ const phases=new Set();for(let i=0;i<Math.ceil(h.period/.05);i++){r.arenaT=i*.05;phases.add(r.arenaPhase(h));}
+ assert.deepEqual([...phases].sort(),['active','off','warning'],'경고 → 발동 → 꺼짐 을 돈다');
+ /* 구역 밖은 안전, 안은 아프다 */
+ r.arenaT=h.offset+h.warning+.1;assert.equal(r.arenaPhase(h),'active');
+ a.x=h.x+h.r+200;a.y=h.y;a.hazardCd=0;const far=a.hp;r.tick(.01);assert.equal(a.hp,far);
+ a.x=h.x;a.y=h.y;a.hazardCd=0;a.dodgeT=0;r.arenaT=h.offset+h.warning+.1;r.tick(.01);
+ assert.ok(a.hp<far,'발동 중 구역 안에 있으면 피해를 받는다');
+ assert.equal(r.snapshot().arena.hazards.length,r.arenaHz.length);
+});

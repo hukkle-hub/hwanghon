@@ -147,6 +147,18 @@
 
    /* 상세 게임 기획 v1 §0/§2/§3/각수-0 + 디렉터 지시: 실력 진입 시험.
      배율은 이번 구현 조정값. 첫 단계부터 반격하며, 자동 궁극기 지급 없음. */
+  /* 페이즈별 아레나 변화 (docs/design/18-boss-fight-design.md §13).
+     dx/dy 는 보스 자리 기준 오프셋(레벨 단위), damage 는 최대 체력 비율. */
+  ARENAS.tutorial.stageFx=[ null,
+    { light:0.94, fog:1.12 },
+    /* 훈련장은 가르치는 곳 — 바닥 위험 구역 없이 «분위기»만 바꾼다 */
+    { light:0.84, fog:1.30, sky:0x140d0e, color:0xD94A45, line:'비상등이 들어왔다' } ];
+  ARENAS.marsh.stageFx=[ null,
+    { light:0.88, fog:1.35, sky:0x1a1210, color:0xB05A2A, line:'늪이 끓어오른다 — 거품 위에 서지 마라',
+      reason:'끓는 늪을 밟았다. 거품이 올라오는 자리를 피해라.',
+      hazards:[{ dx:-200, dy:-110, r:130, period:4.4, warning:1.2, active:1.4, offset:0,   damage:0.07 },
+               { dx: 210, dy: -80, r:130, period:4.4, warning:1.2, active:1.4, offset:1.5, damage:0.07 },
+               { dx:   0, dy: 200, r:150, period:5.0, warning:1.3, active:1.5, offset:3.0, damage:0.08 }] } ];
   ARENAS.tutorial.stages.forEach(function(d,i){
     d.discipline={normal:0.22,skill:0.55,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.75,evadeMult:2.2,evadeWindow:0.85};
     d.counterWindow=[0.18,0.16,0.14][i]; d.perfectWindow=0.04; d.firstCounterUlt=false;

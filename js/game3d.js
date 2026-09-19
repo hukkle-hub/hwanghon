@@ -71,6 +71,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   renderer.shadowMap.enabled=!SAFE && !(MOBILE && SET.quality==='low'); renderer.shadowMap.type=MOBILE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0), dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
@@ -228,6 +229,48 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
   function bossOnce(n, o){ o=o||{}; var a=bossAction(n); if(!a) return; if(boss.oneshot){ boss.oneshot.fadeOut(0.08); } a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.08); a.play(); if(boss.act) boss.act.fadeOut(0.08); boss.oneshot=a; boss.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.1); boss.oneshotT=0; boss.hold=!!o.hold; boss.oneshotName=n; }
   function bossHitPos(k){ var p=boss.PART[k]||boss.PART.body; var b=boss.bones[p.bone]; var v=new THREE.Vector3(); if(b){ b.getWorldPosition(v); var fwd=new THREE.Vector3(0,0,1).applyAxisAngle(new THREE.Vector3(0,1,0), boss.root.rotation.y); var right=new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), boss.root.rotation.y); v.add(right.multiplyScalar(p.off[0])).add(new THREE.Vector3(0,p.off[1],0)).add(fwd.multiplyScalar(p.off[2])); } else { v.copy(boss.root.position); v.y+=1.8; } return v; }
+  /* ---------- 아레나 변화 (페이즈) ----------
+     광란 페이즈에 들어가면 조명·안개가 바뀌고 바닥에 위험 구역이 생긴다.
+     구역은 «경고 → 발동 → 꺼짐» 을 반복하고, 발동 중에 서 있으면 지형이 피해를 준다
+     (보스 패턴이 아니므로 battle.hazard 로 들어간다). 서버(server/raid.cjs)도 같은 데이터를 쓴다. */
+  var bossHome={ x:Bs.x, y:Bs.y }, arenaFx=null, arenaHz=[], arenaT=0, hzCd=0, fog0=null, exp0=null, hemi0=null;
+  function applyStageFx(i){
+    arenaHz.forEach(function(h){ scene.remove(h.g); }); arenaHz=[];
+    var fx=(A.stageFx||[])[i]||null; arenaFx=fx;
+    if(fog0===null){ fog0=scene.fog?scene.fog.density:0; exp0=renderer.toneMappingExposure; hemi0=hemi.intensity; }
+    if(scene.fog) scene.fog.density=fog0*((fx&&fx.fog)||1);
+    renderer.toneMappingExposure=exp0*((fx&&fx.light)||1);
+    hemi.intensity=hemi0*((fx&&fx.light)||1);
+    if(fx&&fx.sky) scene.background=new THREE.Color(fx.sky);
+    if(!fx||!fx.hazards) return;
+    var col=fx.color||0xE06030;
+    fx.hazards.forEach(function(h){
+      var g=new THREE.Group();
+      var fill=new THREE.Mesh(new THREE.CircleGeometry(1,36), new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.16, depthWrite:false, side:THREE.DoubleSide }));
+      fill.rotation.x=-Math.PI/2;
+      var edge=new THREE.Mesh(new THREE.RingGeometry(0.93,1,44), new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.7, depthWrite:false, side:THREE.DoubleSide }));
+      edge.rotation.x=-Math.PI/2; edge.position.y=0.012;
+      g.add(fill, edge); g.renderOrder=2; g.visible=false;
+      var wx=bossHome.x+(h.dx||0), wy=bossHome.y+(h.dy||0), rr=M(h.r);
+      g.position.set(X(wx), 0.045, Z(wy)); g.scale.set(rr,1,rr); scene.add(g);
+      arenaHz.push({ g:g, fill:fill, edge:edge, x:wx, y:wy, r:h.r, period:h.period||4.4, warning:h.warning||1.2, active:h.active||1.4, offset:h.offset||0, damage:h.damage||0.07 });
+    });
+    if(fx.line) guide('<b>'+fx.line+'</b>', 3);
+  }
+  function tickArena(dt){
+    if(!arenaHz.length) return;
+    arenaT+=dt; hzCd=Math.max(0,hzCd-dt);
+    var live=!!battle && state==='fight' && !cine && !ain.dead;
+    for(var ai=0;ai<arenaHz.length;ai++){ var h=arenaHz[ai];
+      var k=(arenaT+h.offset)%h.period, warn=k<h.warning, act=!warn&&k<h.warning+h.active;
+      h.g.visible=warn||act;
+      if(warn){ var w=k/h.warning; h.fill.material.opacity=0.10+0.20*w; h.edge.material.opacity=0.45+0.45*w; }
+      else if(act){ h.fill.material.opacity=0.40; h.edge.material.opacity=0.95; }
+      if(act && live && hzCd<=0 && world.dist(P.x,P.y,h.x,h.y)<h.r){
+        hzCd=0.9; battle.hazard(h.damage, (arenaFx&&arenaFx.reason)||'아레나가 변했다. 위험 구역을 피해라.');
+      }
+    }
+  }
   function setupPhase(d){
     var k=d.kind; var tint=new THREE.Color((A.tint||{})[k]||0xffffff); boss.mats.forEach(function(m){ m.color.copy(m.userData.base||new THREE.Color(1,1,1)).multiply(tint); });   /* 텍스처 없는 재질은 기본색 × 색조 */
     Object.keys(boss.hits).forEach(function(kk){ boss.hits[kk].visible=false; });
@@ -469,7 +512,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var emberT=0;
 
   /* ---------- 허수아비 페이즈 ---------- */
-  function startPhase(i){ phase=i; var d=A.stages[i]; setupPhase(d);
+  function startPhase(i){ phase=i; var d=A.stages[i]; setupPhase(d); applyStageFx(i);
     battle=CB.createBattle({ char:CHAR, dummy:d, rules:RB, skills:SK, ult:ULT, seed:Date.now()&0xffff, hooks:hooks, player:PS, partMult:GB?GB.partDmg:1 });
     el.name.textContent=d.name+' 「'+d.lesson+'」'; el.ph.textContent='PHASE '+(i+1)+' / '+A.stages.length; guide(L.beats.phase[i], 4); }
   function scaledZone(z){ if(!z||zoneScale===1) return z; var o=Object.assign({}, z); if(o.r) o.r=Math.round(o.r*zoneScale); if(o.len) o.len=Math.round(o.len*zoneScale); if(o.w) o.w=Math.round(o.w*zoneScale); return o; }
@@ -731,6 +774,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var botStick=null, botMode=false;
   function cycleTarget(){if(!battle||paused||cine||ain.dead)return;var s=battle.snapshot(),ids=s.enemy.parts.map(function(p){return p.id;}),i=ids.indexOf(s.target);battle.input('target',ids[(i+1)%ids.length]);}
   $('#target-cycle').addEventListener('click',cycleTarget);
+  (function(){ var b=$('#lockon'); if(b) b.addEventListener('click', function(){ setLock(!lockOn); }); })();
   function curStick(){ if(botStick) return botStick; if(botMode) return Math.hypot(stick.sx,stick.sy)>0.15?{sx:stick.sx,sy:stick.sy}:null; var ks=keyStick(); if(ks) return ks; if(Math.hypot(stick.sx,stick.sy)>0.15) return stickWorld(); return null; }
   function nearestMob(){ var best=null, bd=1e9; skirm.mobs.forEach(function(m){ if(m.dead) return; var d=world.dist(P.x,P.y,m.x,m.y); if(d<bd){ bd=d; best=m; } }); return best; }
   function attack(){ if(paused||cine) return; if(battle){ if(!battle.snapshot().player.action && Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('attack'); } else if(skirm){ var m=nearestMob(); if(m && world.dist(P.x,P.y,m.x,m.y)<=L.player.reach*1.3) world.faceTo(P, m.x, m.y); skirm.input('attack'); } }
@@ -744,7 +788,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function atkUp(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } if(guarding){ guarding=false; guardIn(false); } el.actions.querySelectorAll('.is-hold').forEach(function(b){ b.classList.remove('is-hold'); }); }
   el.actions.addEventListener('pointerup', atkUp); el.actions.addEventListener('pointercancel', atkUp); el.actions.addEventListener('pointerleave', atkUp);
   document.addEventListener('keydown', function(e){ if(kd[e.code]) return; kd[e.code]=true; if(paused||cine||ain.dead) return;
-    if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyL') guardIn(true);
+    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyL') guardIn(true);
     else if(e.code==='KeyR') battle&&battle.input('ult'); else if(/^Digit[1-4]$/.test(e.code)) battle&&battle.input('skill', +e.code.slice(5)-1);
     else if((e.code==='KeyQ'||e.code==='Tab')&&battle){ e.preventDefault();cycleTarget(); }
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
@@ -772,7 +816,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     dungeonProps=buildDungeonProps(scene,expedition,SCALE,DEPTH);interactButton=$('#exp-interact');interactButton.addEventListener('click',interactDungeon);$('#exp-map').addEventListener('click',showMissionMap);syncExpeditionQuest();el.timerBox.classList.remove('is-off');
     applySettings(); el.loading.classList.add('is-off'); SFX.ambient(true); renderQuest(); renderProg(); ain.ready=true; DIAG.started=performance.now(); if(SAFE) guide('<b>저사양 모드</b>로 실행 중 (일시정지 → 진단에서 해제)', 4);
     overlay('<div class="ov__k">'+(L.code||'던전 01')+'</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+L.place+'</div><div class="ov__line">'+(L.beats.intro||'')+'</div><div class="ov__hint">'+(L.beats.introHint||'')+'</div><button class="btn btn--primary" data-go>입장</button>'+
-      '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 화면 드래그로 시점 회전 · 큰 버튼 탭 공격(4연타) · 길게 스매시 · 회피 · 방어 · 기술 1~4 · R · 조사 / 지도 버튼<br>키보드: WASD 이동 · Q/E 시점 · J 공격 · U 스매시 · K 회피 · L 방어 · 1~4 · R · Tab 조준 전환 · F 조사 · M 지도</div>', function(){ if(RETRY!=='gate') flyover(function(){ dialogue(L.beats.dialog, function(){ guide(L.beats.start, 4); }); }); else guide((L.beats.death&&L.beats.death.btn?L.beats.death.btn.replace(' 재도전',''):'격벽 앞')+'에서 다시. '+(A.hudName||'허수아비')+'가 기다린다', 3); });
+      '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 화면 드래그로 시점 회전 · 큰 버튼 탭 공격(4연타) · 길게 스매시 · 회피 · 방어 · 기술 1~4 · R · 조사 / 지도 버튼<br>키보드: WASD 이동 · Q/E 시점 · J 공격 · U 스매시 · K 회피 · L 방어 · 1~4 · R · Tab 조준 전환 · T 락온 · F 조사 · M 지도</div>', function(){ if(RETRY!=='gate') flyover(function(){ dialogue(L.beats.dialog, function(){ guide(L.beats.start, 4); }); }); else guide((L.beats.death&&L.beats.death.btn?L.beats.death.btn.replace(' 재도전',''):'격벽 앞')+'에서 다시. '+(A.hudName||'허수아비')+'가 기다린다', 3); });
     last=performance.now(); requestAnimationFrame(frame);
   }
 
@@ -793,6 +837,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     }
     if(lockedT>0) lockedT-=dt; if(comboT>0){ comboT-=dt; if(comboT<=0) el.combo.classList.remove('is-on'); }
     if(!ain.dead)tickPickups(dt);
+    tickArena(dt);
     if(battle){ var busy=s.enemy.state!=='idle'||s.player.hitstop>0; world.bossThink(Bs, P, dt, bossSlow<1?Object.assign({}, L.ai[phase], { speed:L.ai[phase].speed*bossSlow }):L.ai[phase], busy); battle.tick(dt); fightT+=dt; battle.drain().forEach(function(e){ if(e.t==='hit') lastHit=e.dmg; handle(e); }); }
     else Bs.dist=world.dist(Bs.x,Bs.y,P.x,P.y);
     if(guideT>0){ guideT-=dt; if(guideT<=0) el.guide.classList.remove('is-on'); } if(counterT>0){ counterT-=dt; if(counterT<=0) el.counter.classList.remove('is-on'); }
@@ -801,10 +846,17 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var flickT=0, last=0;
   function updateCamera(dt){
     /* 목표: 플레이어(전투 중엔 플레이어·보스 중간 쪽) 를 바라보며 뒤·위에서 */
-    var pp=v3(P.x,P.y,1.2); var look=pp.clone(); if(battle){ var bp=v3(Bs.x,Bs.y,1.4); look.lerp(bp, 0.3); }
-    if(dragT>0) dragT-=dt; else if(!cineCam){ var want=null; if(battle){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); } else if(P.moving && P.rollT<=0){ var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); }
-      if(want!=null){ var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; camYaw+=dy*Math.min(1,dt*(battle?1.6:0.9)); } }
-    var dist=camDist*camZoom; if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
+    var pp=v3(P.x,P.y,1.2); var look=pp.clone(); var locked=lockOn&&!!battle&&!cine;
+    var gap=0, bp=null;
+    if(battle){ bp=v3(Bs.x,Bs.y,1.4); gap=Math.hypot(bp.x-pp.x, bp.z-pp.z);
+      /* 락온이면 멀수록 둘의 «가운데» 쪽으로 — 보스가 화면 밖으로 나가지 않는다 */
+      look.lerp(bp, locked?Math.max(0.3,Math.min(0.5,0.28+gap*0.03)):0.3); }
+    if(dragT>0&&!locked) dragT-=dt; else if(!cineCam){ var want=null;
+      if(battle){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); } else if(P.moving && P.rollT<=0){ var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); }
+      if(want!=null){ var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; camYaw+=dy*Math.min(1,dt*(locked?4.5:battle?1.6:0.9)); } }
+    if(dragT>0&&locked) dragT=0;
+    var dist=camDist*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);   /* 멀어지면 물러나 둘 다 담는다 */
+    if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist);
     var z=Math.pow(0.001, dt);
     var target=new THREE.Vector3(look.x+Math.sin(camYaw)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(camYaw)*Math.cos(camPitch)*dist);
@@ -822,8 +874,22 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     /* 달빛 그림자 카메라를 플레이어 주변으로 */
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();
   }
+  /* 락온 표식: 조준한 부위에 링이 붙어 맥동한다 */
+  function tickLock(dt){
+    if(!lockRing){ lockRing=new THREE.Mesh(new THREE.RingGeometry(0.30,0.40,28), fxMat(0xE8C878,0.85)); lockRing.renderOrder=4; lockRing.visible=false; scene.add(lockRing); }
+    var on=lockOn&&battle&&!cine&&!ain.dead;
+    lockRing.visible=!!on; if(!on) return;
+    var s2=battle.snapshot(), p=bossHitPos(HITMAP[s2.target]||'body');
+    lockRing.position.copy(p); lockRing.lookAt(cam.position);
+    var k=0.9+Math.sin(performance.now()/210)*0.12; lockRing.scale.setScalar(k);
+    lockRing.material.color.setHex(s2.enemy.state==='downed'?0xFF9A45:s2.enemy.executable?0xFF9A45:0xE8C878);
+  }
+  function setLock(v){ lockOn=!!v; var b=$('#lockon'); if(b){ b.textContent='T · 락온 '+(lockOn?'켜짐':'꺼짐'); b.classList.toggle('is-off', !lockOn); }
+    guide(lockOn?'<b>락온</b> — 보스를 놓치지 않는다':'락온 해제 — 시점을 직접 돌린다', 1.4); }
   function render(dt){
     $('#target-cycle').hidden=!battle||cine||ain.dead;
+    var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
+    tickLock(dt);
     renderMobs(dt); tickSparks(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
     if(interactButton){
       if(executeReady()){ interactButton.hidden=false; interactButton.textContent='F · 처형'; interactButton.classList.add('is-exec'); }
@@ -878,5 +944,5 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
   function blackWatch(){ if(!DIAG.started||navigator.webdriver&&!window.TW_BW_TEST) return; var t=performance.now(); if(t-DIAG.started>25000||t-bwLast<1000) return; bwLast=t; try{ var gl=renderer.getContext(), c=renderer.domElement; gl.readPixels((c.width>>1)-16, (c.height>>1)-16, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, bwPx); var mx=0, mn=255; for(var i=0;i<bwPx.length;i+=4){ var v=(bwPx[i]*3+bwPx[i+1]*6+bwPx[i+2])/10; if(v>mx) mx=v; if(v<mn) mn=v; } /* 화면 중앙 32×32 가 완전히 균일(배경색만)하면 아무것도 그려지지 않은 것 */ if(mx-mn<3){ bwHits++; DIAG.black++; if(bwHits>=3){ DIAG.errors.push('EMPTY FRAME x3 (lum '+Math.round(mn)+'~'+Math.round(mx)+')'); if(!SAFE) safeMode('black'); else fatal('화면이 그려지지 않습니다', '저사양 모드에서도 검게 나옵니다. 아래 진단 정보를 알려 주세요.'); } } else bwHits=0; }catch(e){ DIAG.errors.push('readPixels '+e.message); } }
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();
