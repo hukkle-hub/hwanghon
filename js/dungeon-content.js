@@ -101,7 +101,7 @@
   });levels.d04=src4;
 
   function stage4(rage){return {id:rage?'overload':'relay',kind:rage?'rage':'relay',name:rage?'과부하 계전기':'계전기',
-    lesson:rage?'회피와 반격':'접점 파괴',hp:rage?260000:360000,timeLimit:rage?150:220,patternGap:rage?.95:1.45,
+    lesson:rage?'회피와 반격':'접점 파괴',hp:rage?220000:360000,timeLimit:rage?150:220,patternGap:rage?.95:1.45,
     counterWindow:rage?.14:.16,perfectWindow:.04,allBrokenDown:true,
     discipline:{normal:.3,skill:.65,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.8,evadeMult:2.2,evadeWindow:.85},
     parts:rage?[{id:'core',name:'방전 코일',weak:true,hp:null},{id:'body',name:'애자 기둥',hp:null}]:[
