@@ -1,0 +1,12 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>황혼 사운드 검수</title>
+<style>body{background:#171b21;color:#eee;font:18px system-ui;max-width:850px;margin:40px auto;padding:20px}button{padding:15px;margin:6px;background:#343844;color:white;border:1px solid #aaa}p{line-height:1.7}</style>
+<h1>황혼 · 사운드 1차 검수</h1><p>외부 샘플 없는 직접 합성 시안입니다. 첫 클릭 시 음원을 불러옵니다. 낮은 음량부터 들어 주세요. 배경은 16초 루프이며 효과음 발생 시 배경 음량을 잠시 낮춥니다.</p>
+<label>전체 음량 <input id="volume" type="range" min="0" max="1" step=".05" value=".5"></label>
+<div id="beds"></div><div id="sounds"></div><p id="status" aria-live="polite">재생 버튼을 누르세요.</p><p id="diagnostics"></p>
+<script src="js/sfx.js"></script><script>
+TW_SFX.volume=.5;
+for(const [id,label] of [['explore','탐색 배경'],['boss','보스 전투 배경'],['off','배경 정지']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{TW_SFX.unlock();TW_SFX.scene(id);document.querySelector('#status').textContent=label;};document.querySelector('#beds').append(b);}
+for(const [id,label] of [['swing','낫 휘두르기'],['hit','타격'],['hit_heavy','강타'],['counter','카운터'],['counter_perfect','퍼펙트 카운터'],['execute','처형'],['brk','부위 파괴'],['roll','회피'],['tele','위험 예고'],['phase','페이즈 전환']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>{TW_SFX.unlock();TW_SFX.play(id);document.querySelector('#status').textContent=label;};document.querySelector('#sounds').append(b);}
+document.querySelector('#volume').oninput=e=>TW_SFX.volume=+e.target.value;
+setInterval(()=>{const d=TW_SFX.diagnostics();document.querySelector('#diagnostics').textContent='음원 '+d.loaded+'/12 · 오디오 '+d.context+' · 배경 '+d.scene+' · 효과음 '+d.voices;},250);
+</script></html>
