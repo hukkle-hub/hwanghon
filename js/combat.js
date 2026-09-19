@@ -6,6 +6,8 @@
   function createBattle(o){
     var R=o.rules, C=o.char, D=o.dummy, S=o.skills||[], U=o.ult, HK=o.hooks||{}, st=C.stats, rand=rng(o.seed||7);
     var policy=D.discipline||{}, quantum=0.01, accumulator=0, serial=0, patternId=0, events=[], target, telePlus=0, firstCounterDone=false;
+    /* 무기별 리듬 (js/dungeons.js RULES.rhythm). 캐릭터마다 박자가 달라진다. */
+    var RH=(R.rhythm||{})[(C&&C.id)||'ain']||{}, rDur=RH.dur||1, rStop=RH.stop||1, rSt=RH.st||1;
     var counterWindow=(D.counterWindow||R.counter.window)+(R.counter.bonus||0), perfectWindow=D.perfectWindow||R.counter.perfect;
     var init=o.player||{};
     var P={hp:init.hp!=null?init.hp:st.hp,st:init.st!=null?init.st:R.stamina.max,ult:init.ult||0,
@@ -37,7 +39,8 @@
       else if(E.state!=='downed'){E.state='stagger';E.stagT=0.8;E.tele=0;}
     }
     /* 타격 종류별 정지 길이 — 약타와 스매시가 같은 무게로 느껴지지 않게 한다 */
-    function stopFor(opt){
+    function stopFor(opt){ return stopBase(opt)*rStop; }   /* 무기 리듬: 무거울수록 오래 멈춘다 */
+    function stopBase(opt){
       var h=R.hitstop,f=h.hit||0.08;
       if(opt.execute)return h.execute||h.brk||f;
       if(opt.counter)return (opt.perfect?h.perfect:h.counter)||f;
@@ -70,7 +73,7 @@
     function cancel(reason){if(!P.action)return;emit('actioncancel',{id:P.action.id,reason:reason});P.action=null;P.combo=0;P.comboT=0;}
     function canCancel(){return !P.action||P.action.elapsed>=P.action.cancelAt;}
     function action(kind,clip,mult,opt,profile){
-      var t=profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6);
+      var t=profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/rDur;   /* 무기 리듬: 느린 무기는 speed 가 내려간다 */
       var a={id:++serial,kind:kind,clip:clip,part:target,mult:mult,opt:opt||{},elapsed:0,
         hitAt:t.hit/speed,activeEnd:(t.hit+t.active)/speed,duration:t.duration/speed,cancelAt:t.cancel/speed,
         clipHit:(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
@@ -114,8 +117,9 @@
       action('smash','smash',R.combo.smash[tier],{riposte:rip,tier:tier},R.motion.smash);P.combo=0;P.comboT=0;emit('smash',{tier:tier,timed:true});
     }
     function dodge(){
-      if(B.over||P.dodgeCd>0||P.lockT>0||P.st<R.stamina.dodge||!canCancel()){if(P.st<R.stamina.dodge)emit('nost');return;}
-      cancel('dodge');P.buffer=null;P.st-=R.stamina.dodge;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
+      var dgSt=R.stamina.dodge*rSt;   /* 무기 리듬: 무거운 무기는 회피가 더 든다 */
+      if(B.over||P.dodgeCd>0||P.lockT>0||P.st<dgSt||!canCancel()){if(P.st<dgSt)emit('nost');return;}
+      cancel('dodge');P.buffer=null;P.st-=dgSt;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
       P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.dodges++;emit('dodge');
     }
     function guard(on){if(B.over)return;if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0||!canCancel()))return;if(on)cancel('guard');if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}

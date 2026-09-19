@@ -101,7 +101,7 @@
   });levels.d04=src4;
 
   function stage4(rage){return {id:rage?'overload':'relay',kind:rage?'rage':'relay',name:rage?'과부하 계전기':'계전기',
-    lesson:rage?'회피와 반격':'접점 파괴',hp:rage?260000:360000,timeLimit:rage?150:220,patternGap:rage?.95:1.45,
+    lesson:rage?'회피와 반격':'접점 파괴',hp:rage?220000:360000,timeLimit:rage?150:220,patternGap:rage?.95:1.45,
     counterWindow:rage?.14:.16,perfectWindow:.04,allBrokenDown:true,
     discipline:{normal:.3,skill:.65,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.8,evadeMult:2.2,evadeWindow:.85},
     parts:rage?[{id:'core',name:'방전 코일',weak:true,hp:null},{id:'body',name:'애자 기둥',hp:null}]:[
@@ -168,4 +168,194 @@
                {dx: 200,dy: -60,r:125,period:4.0,warning:1.1,active:1.3,offset:1.3,damage:0.07},
                {dx: -40,dy: 190,r:145,period:4.6,warning:1.2,active:1.4,offset:2.6,damage:0.08}]}],
     stages:[stage(false),stage(true)]};
+
+  /* ── 던전 05 · 버려진 식물원 ───────────────────────────────────────────────
+     d03 은 밸브 세 곳을 «병렬» 로, d04 는 축전기를 «순차» 로 잠갔다. 여기는 «넓게 흩어진» 구조다.
+     군락 다섯 곳이 온실 전체에 퍼져 있고 순서가 없다 — 어느 것부터 태워도 되지만,
+     태우지 않은 군락은 계속 포자를 뿜는다. 길을 고르는 문제지 순서를 외우는 문제가 아니다. */
+  var w5=46,h5=24,g5=Array.from({length:h5},function(){return Array(w5).fill('#');});
+  function room5(x1,y1,x2,y2){for(var y=y1;y<=y2;y++)for(var x=x1;x<=x2;x++)g5[y][x]='.';}
+  room5(1,10,8,15);                      /* 입구 관리동 */
+  room5(10,2,20,9);                      /* 북 온실 */
+  room5(10,15,20,22);                    /* 남 온실 */
+  room5(10,11,28,14);                    /* 중앙 통로 */
+  room5(22,2,30,9);                      /* 종자 보관동 */
+  room5(22,15,30,22);                    /* 퇴비장 */
+  room5(32,8,37,17);                     /* 분수 광장 */
+  room5(40,3,44,21);                     /* 보스 온실 */
+  room5(8,11,10,13);room5(15,9,17,11);room5(15,14,17,16);room5(25,9,27,11);room5(25,14,27,16);room5(28,11,32,13);
+  /* 보스 온실 진입로는 한 칸 — 격벽(G)이 유일한 목이다 */
+  for(var y5=8;y5<=17;y5++)for(var x5=38;x5<=39;x5++)g5[y5][x5]='#';
+  g5[12][38]='G';g5[12][39]='.';
+  g5[12][3]='S';g5[12][42]='B';g5[11][4]='s';
+  [[6,11],[4,14],[12,4],[18,4],[12,20],[18,20],[24,4],[28,20],[34,10],[34,15],[42,5],[42,19]].forEach(function(p){g5[p[1]][p[0]]='t';});
+  var src5=JSON.parse(JSON.stringify(levels.d01));
+  Object.assign(src5,{id:'d05',code:'던전 05',name:'버려진 식물원',place:'외곽지대 · 폐 온실 단지',arena:'grove',env:'swamp',bg:'boss-anatomy',
+    diff:'의뢰 B · 외곽지대', rows:g5.map(function(r){return r.join('');}), bossRoom:{minCx:40}, camDist:8.4,
+    ai:[{speed:70,keep:160,start:340,pick:'auto'},{speed:100,keep:140,start:360,pick:'auto'}],
+    attackMotion:{'덩굴 후려치기':{distance:120,stop:112,at:.55},'아가리 내려찍기':{distance:95,stop:120,at:.62}},
+    zones:{'덩굴 후려치기':{kind:'line',len:340,w:96},'아가리 내려찍기':{kind:'circle',r:165,fwd:110},'뿌리 쓸기':{kind:'circle',r:230,fwd:0},'포자 분출':{kind:'circle',r:270,fwd:0}},
+    beats:{questTitle:'변이체 토벌: 식인초',
+      start:'퍼져 있는 군락 다섯 곳을 태워라 · 순서는 없다',
+      gateLocked:'군락이 살아 있는 한 안쪽 온실 문은 열리지 않는다.',
+      gate:'문이 닫혔다. 뿌리가 바닥을 타고 모여든다',
+      sign:'관리동 메모 — “종자는 북쪽 보관동. 포자는 바람을 타니 정면에서 태우지 말 것.”',
+      mobsClear:'',
+      dialog:[['마태오','식물원이 통째로 둥지가 됐다. 군락이 다섯, 전부 태워라.'],['아인','순서가 있나요?'],['마태오','없다. 대신 안 태운 군락은 계속 포자를 뿜는다 — 길이 좁아진다는 뜻이야.'],['마태오','안쪽에 뿌리가 다 모이는 놈이 있다. 그놈이 본체다.']],
+      intro:'마태오 — “숨을 아껴라. 여기선 공기가 적이다.”',
+      introHint:'군락 5곳 소각 → 안쪽 온실 진입. F / 조사 버튼으로 상호작용한다.',
+      quest:[['군락 소각',5,'nests'],['본체 온실 진입',1,'gate'],['모근체 격파',1,'boss'],['씨앗 표본 채집',1,'seeds',true]],
+      phase:['덩굴 두 갈래를 먼저 끊어라. 연두색 분출은 튕길 수 없다.','포자가 터진다 — 자리를 피하고 반격해라'],
+      enter:['','포자낭이 부풀어 오른다'],
+      death:{k:'쓰러졌다',line:'마태오 — “포자를 마셨군. 태운 군락은 그대로다.”',hint:'최근 정비 지점에서 다시 시작한다. 태운 군락과 회수품은 유지된다.',btn:'정비 지점에서 재도전'}},
+    expedition:{required:['nest_nw','nest_ne','nest_sw','nest_se','nest_mid'],nodes:[
+      {id:'entry_rest',kind:'checkpoint',cx:5,cy:12,name:'관리동 정비대',text:'입구 정비 지점을 기록했다.'},
+      {id:'nest_nw',kind:'valve',cx:13,cy:5,name:'북서 군락 소각',objective:'nests',text:'북서 군락을 태웠다. 포자가 멎는다.'},
+      {id:'nest_ne',kind:'valve',cx:27,cy:5,name:'북동 군락 소각',objective:'nests',text:'북동 군락을 태웠다. 보관동 쪽이 트인다.'},
+      {id:'nest_sw',kind:'valve',cx:13,cy:19,name:'남서 군락 소각',objective:'nests',text:'남서 군락을 태웠다.'},
+      {id:'nest_se',kind:'valve',cx:27,cy:19,name:'남동 군락 소각',objective:'nests',text:'남동 군락을 태웠다. 퇴비장이 조용해졌다.'},
+      {id:'nest_mid',kind:'valve',cx:34,cy:12,name:'분수 광장 군락 소각',objective:'nests',text:'마지막 군락. 안쪽 온실 문이 열린다.'},
+      {id:'seeds',kind:'cache',cx:24,cy:4,name:'씨앗 표본 채집',objective:'seeds',text:'보관동에서 온전한 씨앗 표본을 챙겼다.',loot:[['m_dew',4],['m_fiber',8]]},
+      {id:'grove_rest',kind:'checkpoint',cx:36,cy:12,name:'분수 광장 야영지',text:'안쪽 온실 앞에 재도전 지점을 기록했다.',requires:['nest_mid']}
+    ],hazards:[
+      {id:'spore_nw',cx:16,cy:5,r:104,period:4.4,warning:1.2,active:1.5,disabledBy:'nest_nw',damage:.09},
+      {id:'spore_ne',cx:24,cy:6,r:104,period:4.8,offset:1.2,warning:1.2,active:1.5,disabledBy:'nest_ne',damage:.09},
+      {id:'spore_sw',cx:16,cy:19,r:104,period:4.6,offset:2.1,warning:1.3,active:1.5,disabledBy:'nest_sw',damage:.09},
+      {id:'spore_se',cx:24,cy:18,r:104,period:5.0,offset:.6,warning:1.3,active:1.5,disabledBy:'nest_se',damage:.09},
+      {id:'spore_mid',cx:31,cy:12,r:112,period:4.2,offset:1.7,warning:1.1,active:1.4,disabledBy:'nest_mid',damage:.10,reason:'광장 군락의 포자에 갇혔다. 연두색 원이 꺼진 사이에 지나가라.'}
+    ]},
+    praise:{S:'군락도 본체도 한 번에 태웠다.',A:'온실이 조용해졌다. 씨앗은 살릴 수 있겠군.',B:'살아 나왔군. 포자부터 다시 보자.',C:'간신히 태웠다. 분출 간격을 먼저 읽어라.'}
+  });levels.d05=src5;
+
+  function stage5(rage){return {id:rage?'bloom':'rootmass',kind:rage?'rage':'grove',name:rage?'만개한 모근체':'모근체',
+    lesson:rage?'회피와 반격':'덩굴 파괴',hp:rage?240000:330000,timeLimit:rage?150:210,patternGap:rage?1.0:1.5,
+    counterWindow:rage?.15:.18,perfectWindow:.04,allBrokenDown:true,
+    discipline:{normal:.3,skill:.65,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.8,evadeMult:2.2,evadeWindow:.85},
+    parts:rage?[{id:'core',name:'포자낭',weak:true,hp:null},{id:'body',name:'덩이줄기',hp:null}]:[
+      {id:'vinel',name:'왼 덩굴',hp:38000,breakable:true,onBreak:{zoneScale:.76},pos:'tl'},
+      {id:'viner',name:'오른 덩굴',hp:38000,breakable:true,onBreak:{slow:.62,telePlus:.12},pos:'tr'},
+      {id:'core',name:'포자낭',weak:true,hp:null,guardedBy:['vinel','viner'],guardReduce:.6},
+      {id:'body',name:'덩이줄기',hp:null}],
+    /* 연계·지연타: docs/design/18-boss-fight-design.md §2.
+       덩굴을 끊으면 그 덩굴이 맡던 연계 타격이 통째로 빠진다 — 파괴가 연계를 짧게 만든다. */
+    patterns:[
+      {name:'덩굴 후려치기',icon:'scythe',tele:rage?.85:1.15,dmg:rage?6400:5100,posture:32,guardCost:28,recovery:.8,range:'far',
+       chain:rage?[{tele:.5,dmg:5000,posture:26,gap:.2,disabledBy:['viner']},{tele:.5,dmg:5200,posture:28,gap:.2,disabledBy:['vinel']}]
+                 :[{tele:.6,dmg:4000,posture:26,gap:.24,disabledBy:['viner']}]},
+      {name:'아가리 내려찍기',icon:'hammer',tele:rage?.95:1.3,dmg:rage?7000:5600,posture:38,guardCost:30,recovery:.9,range:'near',
+       hold:{at:.58,dur:rage?.32:.42}},
+      {name:'뿌리 쓸기',icon:'bolt',tele:rage?1.05:1.4,dmg:rage?6000:4800,posture:30,guardCost:32,recovery:.85,range:'near',counterable:false,disabledBy:rage?[]:['vinel']},
+      {name:'포자 분출',icon:'flame',tele:rage?1.3:1.65,dmg:rage?8200:6600,counterable:false,unblockable:true,recovery:1.15,range:'any'}],
+    hint:'덩굴 파괴로 약화 · 연두색 분출은 회피 · 실패하면 정비 지점에서 재도전',
+    line:rage?'포자낭이 한계를 넘는다.':'뿌리가 모여든다.',mastery:[]};}
+
+  arenas.grove={id:'grove',name:'버려진 식물원',place:src5.place,char:'ain',hudName:'모근체',
+    procedural:'root',rigidRig:true,pieces:'nodes',bossScale:1.0,
+    tint:{grove:0xc6d4b0,rage:0xd8f0a0},glow:{grove:.7,rage:1.5},
+    parts3d:{core:{bone:'Core',off:[0,0,.45],r:.45},head:{bone:'Head',off:[0,.1,.2],r:.5},body:{bone:'Spine',off:[0,0,.6],r:.95},
+      vinel:{bone:'VineL',off:[-.5,-.3,.1],r:.6},viner:{bone:'VineR',off:[.5,-.3,.1],r:.6}},
+    atk:{scythe:{clip:'atk_lash',hitFrac:.48},hammer:{clip:'atk_slam',hitFrac:.49},bolt:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_spore',hitFrac:.55},
+      scytheB:{clip:'atk_lash_b',hitFrac:.47}},
+    rewards:{gold:2100,items:[['m_fiber',26],['m_dew',8],['m_bone',10]],sBonus:[['m_shard',2]]},
+    /* 광란: 터진 포자낭이 바닥에 구름을 남긴다 — 세 자리가 번갈아 켜진다 */
+    stageFx:[null,{light:0.9,fog:1.24,sky:0x121a10,color:0x9FE05A,line:'포자 구름이 내려앉는다 — 연두색 자리를 피해라',
+      reason:'포자 구름을 마셨다. 연두색 원이 켜지기 전에 비켜라.',
+      hazards:[{dx:-200,dy:-110,r:130,period:3.8,warning:1.1,active:1.3,offset:0,damage:0.07},
+               {dx: 205,dy: -70,r:130,period:3.8,warning:1.1,active:1.3,offset:1.3,damage:0.07},
+               {dx: -30,dy: 200,r:150,period:4.4,warning:1.2,active:1.4,offset:2.6,damage:0.08}]}],
+    stages:[stage5(false),stage5(true)]};
+
+  /* ── 던전 06 · 끊어진 수송로 ───────────────────────────────────────────────
+     여기는 «되돌아오는» 구조다. 잔해 세 무더기를 치우려면 기중기를 써야 하는데
+     기중기는 한 대뿐이라, 구간을 치울 때마다 조작대로 돌아와 다시 걸어야 한다.
+     앞으로만 가는 d04 와 달리 길을 왕복하게 만들어, 붕괴 구역을 몇 번이고 다시 읽게 한다. */
+  var w6=52,h6=22,g6=Array.from({length:h6},function(){return Array(w6).fill('#');});
+  function room6(x1,y1,x2,y2){for(var y=y1;y<=y2;y++)for(var x=x1;x<=x2;x++)g6[y][x]='.';}
+  room6(1,8,7,14);                       /* 검문소 */
+  room6(9,9,42,13);                      /* 수송로 본선 */
+  room6(14,3,22,8);                      /* 북측 갓길 (기중기 조작대) */
+  room6(26,14,34,19);                    /* 남측 갓길 (보급 적치장) */
+  room6(36,3,42,9);                      /* 고가 진입부 */
+  room6(45,2,50,19);                     /* 보스 구역 — 무너진 교차로 */
+  room6(7,10,9,12);room6(17,8,19,10);room6(29,13,31,15);room6(38,9,40,10);room6(42,10,45,12);
+  /* 보스 구역 진입로는 한 칸 — 격벽(G)이 유일한 목이다 */
+  for(var y6=9;y6<=13;y6++)for(var x6=43;x6<=44;x6++)g6[y6][x6]='#';
+  g6[11][43]='G';g6[11][44]='.';
+  g6[11][3]='S';g6[11][47]='B';g6[10][4]='s';
+  [[4,9],[4,13],[12,10],[20,12],[24,10],[32,12],[38,10],[16,5],[30,17],[47,4],[49,17]].forEach(function(p){g6[p[1]][p[0]]='t';});
+  var src6=JSON.parse(JSON.stringify(levels.d01));
+  Object.assign(src6,{id:'d06',code:'던전 06',name:'끊어진 수송로',place:'외곽지대 · 붕괴한 고가 하부',arena:'road',env:'bunker',bg:'lobby-city',
+    diff:'의뢰 A · 수송로 확보', rows:g6.map(function(r){return r.join('');}), bossRoom:{minCx:45}, camDist:8.8,
+    ai:[{speed:80,keep:170,start:360,pick:'auto'},{speed:115,keep:150,start:380,pick:'auto'}],
+    attackMotion:{'파쇄 물기':{distance:130,stop:118,at:.58},'차체 돌진':{distance:280,stop:120,at:.5}},
+    zones:{'파쇄 물기':{kind:'circle',r:180,fwd:125},'차체 돌진':{kind:'line',len:420,w:130},'평형추 강타':{kind:'circle',r:240,fwd:80},'과부하 배출':{kind:'circle',r:290,fwd:0}},
+    beats:{questTitle:'파괴된 수송로 확보',
+      start:'기중기로 잔해 세 무더기를 치워라 · 조작대는 북측 갓길 한 곳뿐이다',
+      gateLocked:'잔해를 다 치워야 교차로로 넘어갈 수 있다.',
+      gate:'뒤가 무너졌다. 기갑이 길을 막는다',
+      sign:'수송 표지 — “고가 하중 초과. 상판 진동 감지 시 즉시 대피.”',
+      mobsClear:'',
+      dialog:[['마태오','보급이 끊긴 건 길이 끊겼기 때문이다. 잔해 세 무더기를 치워라.'],['아인','기중기는요?'],['마태오','한 대뿐이다. 구간마다 조작대로 돌아와서 다시 걸어야 해.'],['마태오','머리 위 상판이 내려앉는다. 진동이 오면 멈춰 서라 — 뛰지 말고.']],
+      intro:'마태오 — “서두르면 길이 먼저 무너진다.”',
+      introHint:'조작대에서 걸고 → 구간으로 가서 치우고 → 다시 조작대. 세 번 반복한다.',
+      quest:[['수송로 구간 확보',3,'spans'],['교차로 진입',1,'gate'],['파쇄 기갑 정지',1,'boss'],['보급품 회수',1,'supply',true]],
+      phase:['턱과 평형추를 먼저 부숴라. 주황 배출은 튕길 수 없다.','동력로 과부하 — 배출을 피하고 반격해라'],
+      enter:['','동력로가 붉게 달아오른다'],
+      death:{k:'쓰러졌다',line:'마태오 — “길은 그대로 있다. 숨 고르고 다시 가라.”',hint:'최근 정비 지점에서 다시 시작한다. 치운 구간과 회수품은 유지된다.',btn:'정비 지점에서 재도전'}},
+    expedition:{required:['span_c'],nodes:[
+      {id:'gate_rest',kind:'checkpoint',cx:4,cy:11,name:'검문소 정비대',text:'입구 정비 지점을 기록했다.'},
+      {id:'crane',kind:'valve',cx:18,cy:5,name:'기중기 걸기',text:'기중기 붐을 다음 구간에 걸었다. 가서 치워라.'},
+      {id:'span_a',kind:'valve',cx:24,cy:11,name:'1구간 잔해 제거',objective:'spans',text:'1구간을 치웠다. 조작대로 돌아가 다시 걸어라.',requires:['crane']},
+      {id:'span_b',kind:'valve',cx:33,cy:11,name:'2구간 잔해 제거',objective:'spans',text:'2구간을 치웠다. 한 번 더 걸어야 한다.',requires:['span_a']},
+      {id:'span_c',kind:'valve',cx:40,cy:11,name:'3구간 잔해 제거',objective:'spans',text:'3구간을 치웠다. 교차로로 가는 길이 열린다.',requires:['span_b']},
+      {id:'supply',kind:'cache',cx:30,cy:17,name:'보급품 회수',objective:'supply',text:'적치장에서 남은 보급품을 회수했다.',loot:[['m_ore',12],['m_alloy',6],['c_potion',2]]},
+      {id:'span_rest',kind:'checkpoint',cx:41,cy:11,name:'고가 진입부 야영지',text:'교차로 앞에 재도전 지점을 기록했다.',requires:['span_c']}
+    ],hazards:[
+      {id:'fall_a',cx:21,cy:11,r:110,period:4.2,warning:1.2,active:1.5,damage:.10,reason:' 이 구간은 끝까지 내려앉는다. 진동이 멎은 사이에 지나가라.'},
+      {id:'fall_b',cx:28,cy:11,r:110,period:4.6,offset:1.5,warning:1.2,active:1.5,disabledBy:'span_a',damage:.10},
+      {id:'fall_c',cx:36,cy:11,r:110,period:5.0,offset:2.8,warning:1.3,active:1.5,disabledBy:'span_b',damage:.10},
+      {id:'fall_d',cx:12,cy:11,r:96,period:5.4,offset:.9,warning:1.3,active:1.4,disabledBy:'span_c',damage:.09}
+    ]},
+    praise:{S:'길도 기갑도 한 번에 뚫었다.',A:'보급이 다시 들어온다. 수고했다.',B:'살아 왔군. 잔해부터 다시 보자.',C:'간신히 뚫었다. 진동 간격을 먼저 읽어라.'}
+  });levels.d06=src6;
+
+  function stage6(rage){return {id:rage?'overload':'crusher',kind:rage?'rage':'road',name:rage?'과부하 파쇄 기갑':'파쇄 기갑',
+    lesson:rage?'회피와 반격':'팔 파괴',hp:rage?270000:380000,timeLimit:rage?160:230,patternGap:rage?1.0:1.55,
+    counterWindow:rage?.14:.17,perfectWindow:.04,allBrokenDown:true,
+    discipline:{normal:.3,skill:.65,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.8,evadeMult:2.2,evadeWindow:.85},
+    parts:rage?[{id:'core',name:'동력로',weak:true,hp:null},{id:'body',name:'차대',hp:null}]:[
+      {id:'jawr',name:'파쇄 턱',hp:46000,breakable:true,onBreak:{zoneScale:.76},pos:'tl'},
+      {id:'arml',name:'평형추',hp:44000,breakable:true,onBreak:{slow:.6,telePlus:.14},pos:'tr'},
+      {id:'core',name:'동력로',weak:true,hp:null,guardedBy:['jawr','arml'],guardReduce:.6},
+      {id:'body',name:'차대',hp:null}],
+    /* 연계·지연타: docs/design/18-boss-fight-design.md §2.
+       턱을 부수면 돌진의 마무리 물기가, 평형추를 부수면 강타의 «버티는» 구간이 빠진다. */
+    patterns:[
+      {name:'파쇄 물기',icon:'hammer',tele:rage?.9:1.25,dmg:rage?6800:5400,posture:36,guardCost:30,recovery:.85,range:'near',
+       chain:rage?[{tele:.5,dmg:5400,posture:28,gap:.2,icon:'hammerB',disabledBy:['arml']},{tele:.5,dmg:5600,posture:30,gap:.2,disabledBy:['jawr']}]
+                 :[{tele:.6,dmg:4400,posture:28,gap:.24,icon:'hammerB',disabledBy:['arml']}]},
+      {name:'차체 돌진',icon:'bolt',tele:rage?1.0:1.35,dmg:rage?7200:5800,posture:34,guardCost:34,recovery:1.0,range:'far',
+       chain:[{tele:.5,dmg:rage?5200:4200,posture:26,gap:.18,disabledBy:['jawr']}]},
+      {name:'평형추 강타',icon:'scythe',tele:rage?1.1:1.45,dmg:rage?7600:6000,posture:34,guardCost:30,recovery:.95,range:'near',
+       hold:{at:.6,dur:rage?.34:.46},disabledBy:rage?[]:['arml']},
+      {name:'과부하 배출',icon:'flame',tele:rage?1.35:1.7,dmg:rage?8800:7100,counterable:false,unblockable:true,recovery:1.2,range:'any'}],
+    hint:'턱·평형추 파괴로 약화 · 주황 배출은 회피 · 실패하면 정비 지점에서 재도전',
+    line:rage?'동력로가 한계를 넘는다.':'기갑이 다시 움직인다.',mastery:[]};}
+
+  arenas.road={id:'road',name:'끊어진 수송로',place:src6.place,char:'ain',hudName:'파쇄 기갑',
+    procedural:'hauler',rigidRig:true,pieces:'nodes',
+    tint:{road:0xc8c2b4,rage:0xffb894},glow:{road:.7,rage:1.5},
+    parts3d:{core:{bone:'Core',off:[0,0,-.5],r:.45},head:{bone:'Head',off:[0,0,.3],r:.45},body:{bone:'Spine',off:[0,0,.4],r:1.0},
+      jawr:{bone:'JawR',off:[.7,-.2,.5],r:.65},arml:{bone:'ArmL',off:[-.9,-.4,0],r:.6}},
+    atk:{hammer:{clip:'atk_bite',hitFrac:.47},bolt:{clip:'atk_ram',hitFrac:.5},scythe:{clip:'atk_quake',hitFrac:.55},flame:{clip:'atk_burst',hitFrac:.53},
+      hammerB:{clip:'atk_bite_b',hitFrac:.46}},
+    rewards:{gold:2600,items:[['m_ore',34],['m_alloy',10],['m_bone',12]],sBonus:[['m_core',1],['m_shard',2]]},
+    /* 광란: 고가가 무너진다 — 낙석 자리 네 곳이 번갈아 켜진다 */
+    stageFx:[null,{light:0.88,fog:1.26,sky:0x1a1410,color:0xE0903C,line:'상판이 내려앉는다 — 낙석 자리를 피해라',
+      reason:'낙석에 맞았다. 주황 원이 켜지기 전에 비켜라.',
+      hazards:[{dx:-215,dy:-125,r:132,period:3.6,warning:1.0,active:1.2,offset:0,damage:0.07},
+               {dx: 215,dy:-125,r:132,period:3.6,warning:1.0,active:1.2,offset:0.9,damage:0.07},
+               {dx:-215,dy: 135,r:132,period:3.6,warning:1.0,active:1.2,offset:1.8,damage:0.07},
+               {dx: 215,dy: 135,r:132,period:3.6,warning:1.0,active:1.2,offset:2.7,damage:0.07}]}],
+    stages:[stage6(false),stage6(true)]};
 })();

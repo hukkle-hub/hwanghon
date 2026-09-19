@@ -46,9 +46,53 @@ test('progression opens in order and sewage quest reward can be claimed only onc
  storage.set('tw:arena:marsh',JSON.stringify({cleared:true}));assert.equal(s.questState('q_sewage'),'available');assert.equal(s.routeForQuest('q_sewage').dungeon,'game3d.html?d=d03');
  storage.set('tw:arena:sewage',JSON.stringify({cleared:true}));const before=save.wallet();assert.ok(s.claim('q_sewage'));assert.equal(save.wallet()-before,12500);assert.equal(s.claim('q_sewage'),null);assert.equal(s.questState('q_sewage'),'claimed');
 });
+test('grove and road continue the chain: relay -> grove -> road, each with a two-stage arena',()=>{
+ const storage=new Map(),c=env(storage),s=c.window.TW_STORY,A=c.window.TW_DUNGEONS.ARENAS,L=c.window.TW_LEVELS;
+ for(const [arena,level,quest,proc] of [['grove','d05','q_plant','root'],['road','d06','q_road','hauler']]){
+  assert.ok(A[arena],arena);assert.equal(A[arena].stages.length,2,arena+' 단계');
+  assert.equal(A[arena].procedural,proc);assert.ok(A[arena].stageFx[1].hazards.length>0,arena+' 광란 구역');
+  /* 통상 단계의 파괴 부위는 전부 3D 부위 노드와 이름이 맞아야 표식이 붙는다 */
+  for(const part of A[arena].stages[0].parts)assert.ok(A[arena].parts3d[part.id],arena+':'+part.id);
+  /* 패턴 이름마다 구역 정의가 있어야 한다 — 없으면 서버가 빈 구역을 만든다 */
+  for(const pat of A[arena].stages[0].patterns)assert.ok(L[level].zones[pat.name],level+':'+pat.name);
+  assert.equal(s.routeForQuest(quest).dungeon,'game3d.html?d='+level);
+ }
+ assert.equal(s.questState('q_plant'),'locked');assert.equal(s.questState('q_road'),'locked');
+ for(const a of ['tutorial','marsh','sewage','relay'])storage.set('tw:arena:'+a,JSON.stringify({cleared:true}));
+ assert.equal(s.questState('q_plant'),'available');assert.equal(s.questState('q_road'),'locked');
+ storage.set('tw:arena:grove',JSON.stringify({cleared:true}));assert.equal(s.questState('q_road'),'available');
+});
 test('zero counters are saved as zero',()=>{const c=env(),s=c.window.TW_SAVE;s.stat('counters',0);assert.equal(s.get().stats.counters,0);});
 test('sewage loot has distinct first-clear rewards and rare rolls work',()=>{
  const c=env();vm.runInContext(fs.readFileSync('js/loot.js','utf8'),c);vm.runInContext('Math.random=()=>0',c);
  const L=c.window.TW_LOOT,sum={gold:2400,mats:[],rank:'B',counterRate:1,breaks:2,breakable:2};const first=L.clearRewards('sewage',sum,true),next=L.clearRewards('sewage',sum,false);
  assert.equal(first.gold-next.gold,2500);assert.ok(next.all.some(x=>x[0]==='m_heart'));
+});
+
+test('d02 연계 비트는 비트마다 다른 아이콘을 내보내고, 그 아이콘이 전용 클립으로 풀린다',()=>{
+ /* 「모션이 없다」의 정체는 여기였다: 연계 2·3타가 1타와 같은 아이콘을 내보내면
+    bossAttackSpec 이 같은 클립을 돌려줘 같은 동작을 두 번 본다.
+    combat.js 의 beatsOf 가 {...def,...raw} 로 덮으므로 chain[].icon 이 비트 아이콘이 된다. */
+ const {RULES,ARENAS}=C.window.TW_DUNGEONS,{createBattle}=CB;
+ const seen=(stageIndex,wanted)=>{
+  const dummy=ARENAS.marsh.stages[stageIndex];
+  /* 원하는 패턴만 고르게 pick 을 고정하고, 예고는 전부 그냥 맞아 준다 */
+  const want=dummy.patterns.findIndex(p=>p.icon===wanted);
+  const b=createBattle({char:C.window.TW_WORLD.CHARS.ain,rules:RULES,dummy,
+    hooks:{canHit:()=>true,canCounter:()=>false,inZone:()=>false,pick:list=>list[Math.max(0,list.findIndex(p=>p.icon===wanted))]}});
+  assert.ok(want>=0,wanted);
+  const icons=[];
+  for(let i=0;i<4000;i++){b.tick(.01);
+   for(const e of b.drain())if(e.t==='telegraph')icons.push([e.icon,e.beat,e.beats]);
+   if(icons.length&&icons[0][2]===icons.length)break;}
+  return icons;
+ };
+ const bolt=seen(0,'bolt');
+ assert.deepEqual(bolt.map(x=>x[0]),['bolt','boltB'],'돌진 베기 2타');
+ assert.deepEqual(bolt.map(x=>x[1]),[1,2]);
+ const drop=seen(1,'drop');
+ assert.deepEqual(drop.map(x=>x[0]),['drop','dropB','dropC'],'피의 광란 3타');
+ /* 그 아이콘들이 아레나에서 서로 다른 클립으로 풀린다 */
+ const clips=[...bolt,...drop].map(([icon])=>ARENAS.marsh.atk[icon].clip);
+ assert.equal(new Set(clips).size,clips.length,'같은 클립이 두 번: '+clips.join(','));
 });

@@ -558,3 +558,7 @@ html.mobile .sdlg__txt{font-size:13px;min-height:38px}
 .gline:last-child{border:0}.gline__k{color:var(--tx-dim);width:64px;flex:none}.gline__g{font-family:var(--f-serif);font-size:15px;width:30px;text-align:center;flex:none}
 .gline .bar{flex:1;height:4px}.gline__v{font-size:10.5px;color:var(--tx-faint);width:84px;text-align:right;flex:none}
 .pfx{display:flex;flex-direction:column;gap:4px}.pfx__row{display:flex;justify-content:space-between;gap:8px;font-size:11px}.pfx__row b{font-weight:500;color:var(--tx)}.pfx__row .who{color:var(--tx-faint);font-size:10px}
+
+/* 상단 바 나가기 — body[data-mback] 을 선언한 화면에 ui.js 가 붙인다 */
+.topbar__back{flex:none;margin-right:2px}
+.topbar__back .ico{transform:translateX(-1px)}

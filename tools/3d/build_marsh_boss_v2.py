@@ -2,7 +2,8 @@
 # 갈대습지 보스 「모르버스」 — bpy 절차 생성 (프리미티브 조립 + 사족 뼈대 + 절차 클립) → GLB
 #   python3 tools/3d/build_marsh_boss.py art/3d/boss_marsh.glb
 # 규약: 1 unit = 1 m, 정면 -Y(Blender) → 내보내기 후 +Z, 발바닥 z=0. 뼈 이름은 mixamorig: 접두사 없이 게임이 strip 해서 읽음
-# 클립: idle walk atk_bolt(돌진) atk_flame(포효) atk_hammer(강타) atk_scythe(꼬리) atk_drop(광란) hit stagger down up death
+# 클립: idle walk atk_bolt(돌진) atk_bolt_b(돌진 2타) atk_flame(포효) atk_hammer(강타) atk_scythe(꼬리)
+#       atk_drop/atk_drop_b/atk_drop_c(광란 1·2·3타 — 연계 비트마다 전용 모션) hit stagger down up death
 # 파괴 부위 노드: piece_back(등 견갑) piece_legf(앞다리 갑각) piece_tail(꼬리 가시) — 뼈에 부모, 게임이 이름으로 떼어낸다
 import bpy, bmesh, sys, math, random
 from mathutils import Vector, Matrix, Euler, Quaternion
@@ -236,10 +237,14 @@ def gait(t, key, amp=0.45, bob=0.06):
 def f_idle(t,key): breathe(t,key)
 def f_walk(t,key): gait(t,key)
 def f_bolt(t,key):   # 돌진 베기: 웅크림(0~.35) → 돌진(.35~.6, 앞으로 2.4 m) → 머리 휘두르기 → 복귀
-    c=bump(t,0,0.4); key('Hips', loc=(0,-0.5*c,-0.35*c)); key('Spine2', rot=(-0.25*c,0,0)); key('Neck', rot=(-0.3*c,0,0))
+    # 주의: 게임은 prepareMarshMotion 에서 Hips.position 의 수평 성분을 지운다(돌진 거리는 시뮬레이션이 갖는다).
+    #   그래서 «베는 맛» 을 루트 이동에 기대면 안 된다 — 골반 요우로 몸을 실어야 이동을 빼도 남는다.
+    c=bump(t,0,0.4); key('Hips', loc=(0,-0.5*c,-0.35*c), rot=(0,0,0.24*c)); key('Spine2', rot=(-0.25*c,0,0)); key('Neck', rot=(-0.3*c,0,0))
     for leg in LEGS_: key(leg+'_Up', rot=(0.5*c if leg[0]=='B' else -0.4*c,0,0)); key(leg+'_Low', rot=(0.6*c,0,0))
     d=pulse(t,0.35,0.55)*(1-pulse(t,0.75,1.0)); key('Hips', loc=(0,2.4*d,0.15*d)); key('Spine1', rot=(0.15*d,0,0))
-    sw=bump(t,0.45,0.7); key('Head', rot=(0.2*sw,0,-0.9*sw)); key('Neck', rot=(0,0,-0.4*sw)); key('Jaw', rot=(0.5*sw,0,0))
+    sw=bump(t,0.50,0.88)
+    key('Hips', rot=(0,0,-0.55*sw)); key('Spine1', rot=(0,0,-0.35*sw)); key('Spine2', rot=(0.1*sw,0,-0.30*sw))
+    key('Head', rot=(0.2*sw,0,-1.10*sw)); key('Neck', rot=(0,0,-0.55*sw)); key('Jaw', rot=(0.5*sw,0,0))
     gait(t*2.2,key,0.5,0.03) if 0.35<t<0.8 else None
 def f_flame(t,key):  # 광폭 포효: 앞다리 들고 상체 세움 → 입 벌리고 흔들기
     r=pulse(t,0,0.4)*(1-pulse(t,0.8,1.0)); key('Spine1', rot=(-0.35*r,0,0)); key('Spine2', rot=(-0.4*r,0,0)); key('Hips', loc=(0,0.3*r,0.35*r)); key('Neck', rot=(-0.35*r,0,0)); key('Head', rot=(-0.1*r,0,0))
@@ -253,10 +258,37 @@ def f_scythe(t,key): # 꼬리 휘두르기: 몸 전체 한 바퀴 회전(꼬리 
     y=ease(min(1,max(0,(t-0.25)/0.55)))*TAU; key('Hips', rot=(0,0,-y)); key('Tail1', rot=(0,0,0.6*bump(t,0.2,0.9))); key('Tail2', rot=(0,0,0.5*bump(t,0.2,0.9))); key('Tail3', rot=(0,0,0.3*bump(t,0.2,0.9)))
     c=bump(t,0,0.4); key('Hips', loc=(0,0,-0.25*c)); key('Spine2', rot=(0.1*c,0,0))
     for leg in LEGS_: key(leg+'_Low', rot=(0.5*c,0,0))
-def f_drop(t,key):   # 피의 광란: 빠른 좌우 발톱 연타 + 머리 흔들기
-    for i,(a,b) in enumerate(((0.05,0.3),(0.3,0.55),(0.55,0.8))):
-        k=bump(t,a,b); leg='FR' if i%2==0 else 'FL'; key(leg+'_Up', rot=(-1.1*k,0,(0.5 if leg=='FR' else -0.5)*k)); key(leg+'_Low', rot=(0.9*k,0,0)); key('Spine2', rot=(-0.15*k,0,(0.2 if leg=='FR' else -0.2)*k)); key('Head', rot=(0.1*k,0,(0.5 if leg=='FR' else -0.5)*k))
-    key('Jaw', rot=(0.5*bump(t,0.1,0.9),0,0)); key('Neck', rot=(-0.2*bump(t,0,1),0,0)); key('Hips', loc=(0,-0.3*bump(t,0,1),0))
+def f_bolt_b(t,key): # 돌진 베기 2타 «되받아 베기»: 돌진 없이 반대쪽으로 되받는다
+    # 접점 규약 — 이 리그의 타격 클립은 «치는 bump 가 시작되는 지점» 에서 최고속이 난다.
+    # 그래서 bump 의 시작을 hitFrac(0.5) 에 맞춘다 (atk_bolt/atk_hammer/atk_scythe 와 같은 짜임).
+    w=pulse(t,0,0.40)*(1-pulse(t,0.40,0.60))          # 반대쪽으로 감는다 — 1타와 거울
+    key('Spine1', rot=(0,0,0.32*w)); key('Spine2', rot=(-0.15*w,0,0.28*w)); key('Neck', rot=(-0.22*w,0,0.42*w)); key('Head', rot=(0,0,0.55*w))
+    sw=bump(t,0.50,0.88)                              # 1타가 -z 였으므로 되받음은 +z
+    key('Head', rot=(0.15*sw,0,0.95*sw)); key('Neck', rot=(0,0,0.45*sw)); key('Spine2', rot=(0,0,0.30*sw)); key('Jaw', rot=(0.55*sw,0,0))
+    st=bump(t,0.50,0.92); key('Hips', loc=(0,0.55*st,-0.10*st))   # 반보 밀고 들어온다 (돌진 아님)
+    for leg in LEGS_: key(leg+'_Low', rot=(0.32*st,0,0))
+def _claw(t,key,leg,amp=1.0):        # 발톱 한 번 — 광란 연계의 낱개 타격. 감았다(~0.47) 친다
+    s=1 if leg=='FR' else -1
+    w=pulse(t,0,0.34)*(1-pulse(t,0.34,0.48))
+    key(leg+'_Up', rot=(0.55*w,0,-0.25*s*w)); key(leg+'_Low', rot=(-0.35*w,0,0)); key('Spine2', rot=(0.12*w,0,-0.14*s*w))
+    k=bump(t,0.45,0.87)
+    key(leg+'_Up', rot=(-1.25*amp*k,0,0.55*s*k)); key(leg+'_Low', rot=(1.0*amp*k,0,0))
+    key('Spine2', rot=(-0.18*amp*k,0,0.24*s*k)); key('Head', rot=(0.1*k,0,0.5*s*k))
+    return k
+def f_drop(t,key):   # 피의 광란 1타: 오른 발톱
+    k=_claw(t,key,'FR'); key('Jaw', rot=(0.45*k,0,0))
+    key('Neck', rot=(-0.22*bump(t,0,1),0,0)); key('Hips', loc=(0,-0.28*bump(t,0,1),0))
+def f_drop_b(t,key): # 피의 광란 2타: 왼 발톱 — 더 낮고 깊게 되받는다
+    k=_claw(t,key,'FL',1.08); key('Jaw', rot=(0.35*k,0,0))
+    key('Neck', rot=(-0.14*bump(t,0,1),0,0)); key('Hips', loc=(0,-0.42*bump(t,0,1),-0.12*bump(t,0,1)))
+def f_drop_c(t,key): # 피의 광란 3타 «마무리»: 두 발톱을 함께 내리찍고 문다 — 반격 창은 여기
+    r=pulse(t,0,0.44)*(1-pulse(t,0.44,0.56))          # 두 앞발을 높이 든다 (atk_hammer 와 같은 짜임)
+    key('Spine2', rot=(-0.42*r,0,0)); key('Spine1', rot=(-0.22*r,0,0)); key('Hips', loc=(0,0.18*r,0.40*r)); key('Neck', rot=(-0.30*r,0,0)); key('Head', rot=(0.2*r,0,0))
+    key('FR_Up', rot=(-1.35*r,0,-0.18*r)); key('FL_Up', rot=(-1.35*r,0,0.18*r)); key('FR_Low', rot=(1.2*r,0,0)); key('FL_Low', rot=(1.2*r,0,0))
+    d=bump(t,0.53,0.85)                                # 내리꽂는다
+    key('FR_Up', rot=(1.15*d,0,0)); key('FL_Up', rot=(1.15*d,0,0)); key('FR_Low', rot=(-0.7*d,0,0)); key('FL_Low', rot=(-0.7*d,0,0))
+    key('Hips', loc=(0,0.30*d,-0.42*d)); key('Spine2', rot=(0.34*d,0,0)); key('Neck', rot=(0.28*d,0,0)); key('Jaw', rot=(0.85*d,0,0))
+    k=bump(t,0.78,1.0); key('Hips', loc=(0,-0.12*k,0.10*k)); key('Head', rot=(-0.15*k,0,0))   # 반동 — 여기서 비어 있다
 def f_hit(t,key):    # 피격: 뒤로 움찔
     k=bump(t,0,1); key('Hips', loc=(0,0.18*k,0)); key('Spine2', rot=(-0.12*k,0,0)); key('Neck', rot=(0.15*k,0,0)); key('Head', rot=(0.1*k,0,0.1*k))
 def f_stagger(t,key):# 경직: 머리 떨구고 비틀
@@ -271,7 +303,8 @@ def f_death(t,key):  # 사망: 앞으로 고꾸라지고 옆으로 기움
     k=pulse(t,0,0.7); key('Hips', loc=(0,0,-1.2*k), rot=(0,0.9*k,0)); key('Spine2', rot=(0.35*k,0,0)); key('Neck', rot=(0.7*k,0,0.2*k)); key('Head', rot=(0.3*k,0,0)); key('Jaw', rot=(0.6*k,0,0))
     for leg in LEGS_: key(leg+'_Up', rot=((0.8 if leg[0]=='B' else -0.7)*k,0,0)); key(leg+'_Low', rot=(1.5*k,0,0))
     key('Tail1', rot=(0.3*k,0,0.3*k))
-for name,dur,fn in [('idle',2.4,f_idle),('walk',1.0,f_walk),('atk_bolt',1.5,f_bolt),('atk_flame',1.6,f_flame),('atk_hammer',1.4,f_hammer),('atk_scythe',1.5,f_scythe),('atk_drop',1.3,f_drop),
+for name,dur,fn in [('idle',2.4,f_idle),('walk',1.0,f_walk),('atk_bolt',1.5,f_bolt),('atk_flame',1.6,f_flame),('atk_hammer',1.4,f_hammer),('atk_scythe',1.5,f_scythe),('atk_bolt_b',0.9,f_bolt_b),
+                    ('atk_drop',0.6,f_drop),('atk_drop_b',0.55,f_drop_b),('atk_drop_c',0.8,f_drop_c),
                     ('hit',0.4,f_hit),('stagger',1.0,f_stagger),('down',1.2,f_down),('up',0.9,f_up),('death',2.2,f_death)]:
     clip(name,dur,fn)
 

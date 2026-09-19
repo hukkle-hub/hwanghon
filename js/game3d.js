@@ -11,6 +11,8 @@ import { prepareTrainingMotion, sampleBossAttack } from './boss-motion.js';
 import { createTrainingParts } from './training-presentation.js';
 import { createFrameMetrics } from './frame-metrics.js';
 import { createRelayBoss } from './relay-boss.js';
+import { createRootBoss } from './root-boss.js';
+import { createHaulerBoss } from './hauler-boss.js';
 import { prepareMarshMotion, detachBossPiece, bossAttackSpec } from './marsh-motion.js';
 import { buildDungeonProps } from './dungeon-props.js';
 import { WeaponTrail, trailStyle } from './weapon-trail.js';
@@ -97,6 +99,19 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
+  /* 3인칭 추적 카메라 — 마영전·몬헌 벤치마크 (docs/design/22-camera-combat-benchmark.md).
+     핵심은 «시정수(tau)» 다. 예전엔 탐색 중 dt*0.9 로 붙어서 90° 돌면 1초 넘게 늦었다.
+     tau 는 «목표 각도의 63% 를 따라잡는 데 걸리는 초» — 값이 작을수록 딱 붙는다.
+       락온   0.16  몬헌 «포커스 카메라» — 대상을 계속 문다
+       전투   0.30  락온 없이 싸울 때. 붙되 시야는 남긴다
+       탐색   0.26  마영전처럼 달리는 방향 뒤로 바로 붙는다
+     멈추면 따라가지 않는다(idleHold) — 몬헌도 서 있을 때 카메라를 돌리지 않는다. */
+  var CAM={ tauLock:0.16, tauFight:0.30, tauMove:0.26, idleHold:true,
+            lookAhead:1.1,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
+            pitchMove:0.50, pitchFight:0.42,
+            fov:50, fovDash:57, fovHit:46, fovTau:0.10,
+            sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
+  var fovWant=CAM.fov, bossTall=0;
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0))*0.9   /* 조금 당겨 캐릭터를 크게 */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
@@ -228,12 +243,17 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   if(L.env==='swamp') buildSwamp(); else buildBunker();
   var gateMesh, fenceGeo;
   /* ---------- 허수아비 (Hi3D 생성 통나무 골렘 + 리깅·클립) ---------- */
+  /* 보스 크기 — 플레이어(CHAR_SCALE)를 키운 만큼 보스도 키운다. 보스는 «올려다보는 것» 이라
+     조금 더 준다. 아레나별로 bossScale 로 덮어쓸 수 있다(모르버스처럼 이미 큰 놈은 낮춘다).
+     충돌 반경·사거리는 레벨 데이터라 전투 규칙은 그대로다 — 보이는 크기만 바뀐다. */
+  var BOSS_SCALE=(A.bossScale||1.22)*(A.scale||1);
   var boss=(function(){
     var root=new THREE.Group(); root.position.set(X(Bs.x), 0, Z(Bs.y)); scene.add(root);
     var body=new THREE.Group(); root.add(body);
-    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.9 })); sp.scale.set(0.5,0.5,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
+    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.9 })); sp.scale.set(0.5*BOSS_SCALE,0.5*BOSS_SCALE,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
     /* 부위 → 뼈 + 오프셋(뼈 로컬 기준 대략: 앞쪽 = 모델 +Z) */
     var PART=JSON.parse(JSON.stringify(A.parts3d||{ body:{ bone:'Spine', off:[0,0.1,0.3], r:0.7 }, head:{ bone:'Head', off:[0,0.15,0.05], r:0.4 }, core:{ bone:'Spine2', off:[0,0.05,0.42], r:0.32 } }));
+    Object.keys(PART).forEach(function(k){ var q=PART[k]; q.off=q.off.map(function(v){ return v*BOSS_SCALE; }); q.r=(q.r||0.5)*BOSS_SCALE; });
     var coreGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFF6A3C, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.7 })); coreGlow.scale.set(0.9,0.9,1); scene.add(coreGlow);
     var eyeGlow=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xFF8A4C, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5 })); eyeGlow.scale.set(0.5,0.3,1); scene.add(eyeGlow);
     var anim={ lean:0, leanT:0, shake:0, down:0, collapse:0, glow:1, flash:0, tele:null, teleT:0, teleDur:1, swing:0, swingKind:null, walk:0 };
@@ -244,8 +264,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function bossAttachParts(){ boss.training=createTrainingParts(boss.model,{strawMap:strawTex});boss.pieces=boss.training.parts; }
   function tickDebris(dt){ for(var i=debris.length-1;i>=0;i--){ var d=debris[i]; d.t+=dt; d.vy-=9.8*dt; d.g.position.y+=d.vy*dt; d.g.position.x+=d.vx*dt; d.g.position.z+=d.vz*dt; d.g.rotation.x+=d.rx*dt; d.g.rotation.z+=d.rz*dt; if(d.g.position.y<0.05){ d.g.position.y=0.05; d.vy=-d.vy*0.3; d.vx*=0.6; d.vz*=0.6; d.rx*=0.5; d.rz*=0.5; } if(d.t>4){ scene.remove(d.g); debris.splice(i,1); } } }
   function bossCollectPieces(){ boss.pieces={}; boss.model.traverse(function(o){ if(/^piece_/.test(o.name)){ boss.pieces[o.name.slice(6)]=o; } }); }
-  function bossLoad(done){ function receive(g){ if(A.id==='marsh')g=prepareMarshMotion(g); if(A.id==='tutorial')g=prepareTrainingMotion(g); boss.model=g.scene; if(A.scale) boss.model.scale.setScalar(A.scale); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
-      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
+  function bossLoad(done){ function receive(g){ if(A.id==='marsh')g=prepareMarshMotion(g); if(A.id==='tutorial')g=prepareTrainingMotion(g); boss.model=g.scene; boss.model.scale.setScalar(BOSS_SCALE); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
+      boss.blob=makeBlob(Math.max(0.9, 0.55*BOSS_SCALE*(A.id==='marsh'?2.6:1.7)));
+      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;}if(A.procedural==='root'){receive(createRootBoss());return;}if(A.procedural==='hauler'){receive(createHaulerBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
   function bossAction(n){ var c=boss.clips[n]; if(!c||!boss.mixer) return null; return boss.mixer.clipAction(c); }
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
   function bossOnce(n, o){ o=o||{}; var a=bossAction(n); if(!a) return; if(boss.oneshot){ boss.oneshot.fadeOut(0.08); } a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.08); a.play(); if(boss.act) boss.act.fadeOut(0.08); boss.oneshot=a; boss.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.1); boss.oneshotT=0; boss.hold=!!o.hold; boss.oneshotName=n; }
@@ -330,8 +351,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     coreLight.intensity=SET.lights?(1.5+g*2.5):0;
     boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&ATKST.indexOf(snap.enemy.state)>=0; var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
     bossSpot.position.set(boss.root.position.x+1.5, SPOT_H, boss.root.position.z+2); bossSpot.intensity=SET.lights?60:0;
-    var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar(0.7+g*0.3);
+    var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar((0.7+g*0.3)*BOSS_SCALE);
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
+    if(boss.blob) tickBlob(boss.blob, boss.root.position, 1, 0);
     Object.keys(boss.hits).forEach(function(k){ var h=boss.hits[k]; if(!h.visible) return; h.position.copy(bossHitPos(k)); }); }
   function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true;
     var pcs=Object.keys(boss.pieces||{}).filter(function(k){return k===id||k.indexOf(id+'_')===0;}).map(function(k){return boss.pieces[k];}); pcs.forEach(function(pc){if(pc && pc.parent){ detachBossPiece(pc,scene); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); }}); }
@@ -363,10 +385,31 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     [[3,13.2],[8.5,1.5],[20,13.3],[30,1.6]].forEach(function(p){ spawn('rubble', X(map.cell*p[0]), Z(map.cell*p[1]), { rot:Math.random()*6.28 }); });
   }
 
+  /* ---------- 접지 그림자 ----------
+     그림자맵은 멀리서 뭉개지고 저사양에선 아예 꺼진다. 그래서 발밑에 «붙어 있는»
+     느낌을 주는 건 따로 만든다 — 방사형 그라데이션 한 장을 바닥에 눕힌다.
+     캐릭터·보스·원격 아바타가 같은 것을 쓴다. */
+  var blobTex=(function(){
+    var c=document.createElement('canvas'); c.width=c.height=64; var g=c.getContext('2d');
+    var rg=g.createRadialGradient(32,32,2,32,32,31);
+    rg.addColorStop(0,'rgba(0,0,0,0.62)'); rg.addColorStop(0.55,'rgba(0,0,0,0.26)'); rg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=rg; g.fillRect(0,0,64,64);
+    var t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; })();
+  function makeBlob(r){
+    var m=new THREE.Mesh(new THREE.PlaneGeometry(r*2, r*2),
+      new THREE.MeshBasicMaterial({ map:blobTex, transparent:true, depthWrite:false, opacity:0.9 }));
+    m.rotation.x=-Math.PI/2; m.position.y=0.035; m.renderOrder=1; scene.add(m); return m; }
+  /* 공중에 뜰수록 옅고 넓게 — 점프·구르기에서 «떠 있다» 가 읽힌다 */
+  function tickBlob(b, pos, r, h){
+    if(!b) return; b.position.set(pos.x, 0.035, pos.z);
+    var y=Math.max(0, h||0), k=Math.max(0.25, 1-y*0.55);
+    b.scale.setScalar(1/k*0.9+0.1); b.material.opacity=0.9*k; }
+
   /* ---------- 아인 (GLB + 애니메이션) ---------- */
   /* 캐릭터 크기 — 모션이 잘 보이도록 조금 키운다 (원점이 발바닥이라 바닥에 그대로 붙는다).
      충돌 반경·사거리는 레벨 데이터라 전투 규칙은 바뀌지 않는다. */
   var CHAR_SCALE=1.14;
+  var ainBlob=makeBlob(0.52);
   var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
   var loader=new GLTFLoader(LM); var loadN=0;
@@ -396,10 +439,15 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function action(n){ if(!ain.mixer) return null; var c=ain.clips[n]||ain.clips[CLIP_FALLBACK[n]]; return c?ain.mixer.clipAction(c):null; }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?1.15:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
   function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);
-    ain.oneshot=a; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.12); ain.oneshotT=0; ain.hold=!!o.hold; }
+    ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.12); ain.oneshotT=0; ain.hold=!!o.hold; }
   function ainTick(dt){ if(!ain.mixer) return;
     var moving=P.moving && P.rollT<=0 && P.lockT<=0; var guard=battle?battle.snapshot().player.guard:(skirm?skirm.snapshot().player.guard:false);
     if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ ain.oneshot.fadeOut(0.15); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(0.15); ain.act.play(); } } }
+    /* 제동: 달리다 멈추면 브레이크 모션을 한 번 재생하고 대기로 넘긴다.
+       없으면 달리기가 «톡» 끊긴다 (몬헌은 정지에 브레이크가 있다). */
+    if(!moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
+      playOnce('brake'); ain.braked=1; }
+    else if(moving) ain.braked=0;
     var want=ain.dead?'idle':guard?'guard':P.rollT>0?'run':moving?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
@@ -408,7 +456,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       else { ain.oneshot.stop(); ain.oneshot=null; ain.timed=null; if(ain.act){ain.act.reset().fadeIn(0.12).play();} }
     }
     ain.mixer.update(dt);
-    ain.root.position.copy(v3(P.x,P.y)); var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
+    ain.root.position.copy(v3(P.x,P.y)); tickBlob(ainBlob, ain.root.position, 0.52, ain.root.position.y);
+    var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base);
@@ -571,6 +620,15 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var shakeAmt=0, shakeT=0, shakeD=0.2, shakeDX=0, shakeDZ=0;
   function shake(i, d, dx, dz){ shakeAmt=Math.max(shakeAmt, (i||0.004)*40); shakeD=Math.max(shakeD,(d||200)/1000); shakeT=Math.max(shakeT,shakeD);
     if(dx||dz){ var m=Math.sqrt(dx*dx+dz*dz)||1; shakeDX=dx/m; shakeDZ=dz/m; } }
+  /* 회전 킥 — 위치만 흔들면 «화면이 떨린다», 각도를 틀면 «맞았다» 가 된다.
+     roll(화면 기울기)이 특히 타격감을 만든다. 감쇠 진동으로 금방 제자리. */
+  var kickY=0, kickP=0, kickR=0, kickV=[0,0,0];
+  function camKick(yaw, pitch, roll){
+    kickV[0]+=yaw||0; kickV[1]+=pitch||0; kickV[2]+=roll||0; }
+  function tickKick(dt){
+    var w=26, z=0.42, k=[kickY,kickP,kickR];          /* 감쇠 진동: 빠르게 튕겼다 돌아온다 */
+    for(var i=0;i<3;i++){ var a=-w*w*k[i]-2*z*w*kickV[i]; kickV[i]+=a*dt; k[i]+=kickV[i]*dt; }
+    kickY=k[0]; kickP=k[1]; kickR=k[2]; }
   /* 보스→플레이어 축 (맞는 방향), 플레이어→보스 축 (때리는 방향) */
   function axisFromBoss(){ return [X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)]; }
   function axisToBoss(){ return [X(Bs.x)-X(P.x), Z(Bs.y)-Z(P.y)]; }
@@ -582,7 +640,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
-      case 'evade': guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter'); break;
+      case 'evade': guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter');
+        /* 마영전식 회피 연출: 흘린 순간을 «보여 준다» — 지나온 자리에 잔상, 아주 짧은 슬로우 */
+        fxEvade(); slowmo(0.30, 240); camKick(0.018,-0.03,-0.026); vib(18); break;
       case 'recoverend': zone=null;hideZone(); if(boss.oneshot){boss.oneshot.stop();boss.oneshot=null;} if(boss.act)boss.act.reset().fadeIn(0.12).play(); break;
       /* 타격감: 소리·흔들림·파티클·정지를 같은 프레임에, 세기에 비례해서 (docs/design/18-boss-fight-design.md §1-2) */
       case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3;
@@ -631,10 +691,10 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1); try{ fxUlt(brColor(ULT)); }catch(x){ console.warn('fxUlt', x&&x.message); } break;
       case 'impact': var axI=axisToBoss();
         if(e.kind==='exec'){ SFX.play('brk'); flash(); slowmo(0.06,360); schedule(function(){ slowmo(0.35,420); },360);
-          shake(0.022,600,axI[0],axI[1]); vib([40,60,40]); burst(bossHitPos('core'),70,0xD94A45,axI); fxRing(boss.root.position,0xD94A45,5.0,0.8);
+          shake(0.022,600,axI[0],axI[1]); camKick(0.05,0.10,0.075); vib([40,60,40]); burst(bossHitPos('core'),70,0xD94A45,axI); fxRing(boss.root.position,0xD94A45,5.0,0.8);
           banner('E X E C U T E', e.dmg, (A.hudName||'보스')+' · 처형', true); break; }
-        if(e.kind==='ult'){SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);burst(bossHitPos('core'),60,0xD94A45,axI);}
-        else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,2.8,0xFFD8A0,0.2);}
+        if(e.kind==='ult'){SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
+        else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,2.8,0xFFD8A0,0.2);}
         break;
       case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
         if(k.dodge) doRoll(e.clip||'skill2');                               /* 그림자 걸음: 구르기가 아니라 도약 */
@@ -658,7 +718,23 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       else { var f=yawOf(P.aim==null?0:P.aim), wx=Math.sin(f), wz=Math.cos(f);
         var mx=ks.sx/m, mz=ks.sy/m, fwd=mx*wx+mz*wz, side=mx*wz-mz*wx;
         n=Math.abs(fwd)>=Math.abs(side)?(fwd>0?'roll':'dodgeB'):(side>0?'dodgeR':'dodgeL'); } }
-    playOnce(n,{ speed:0.38/L.player.rollDur }); }
+    /* 클립 전체가 회피 시간 안에 들어가도록 «클립 길이 ÷ 회피 시간». 예전엔 0.38초를
+       하드코딩해서, 더 긴 클립으로 갈아끼우면 뒷부분이 잘려나갔다. */
+    var rc=ain.clips[n]; playOnce(n,{ speed:(rc?rc.duration:0.38)/L.player.rollDur }); }
+  /* 회피 잔상: 지나온 자리에 늘어진 줄기 + 발밑 고리. 스킨 메시를 복제하지 않고
+     실루엣만 남겨 저사양에서도 싸다. */
+  function fxEvade(){
+    var here=ain.root.position.clone(), back=new THREE.Vector3(Math.sin(ain.root.rotation.y),0,Math.cos(ain.root.rotation.y));
+    var g=new THREE.Group();
+    for(var i=0;i<3;i++){
+      var m=new THREE.Mesh(new THREE.CapsuleGeometry(0.16,0.9,4,8),
+        new THREE.MeshBasicMaterial({ color:0x9FD8FF, transparent:true, opacity:0.30-i*0.08, depthWrite:false, blending:THREE.AdditiveBlending }));
+      m.position.copy(back).multiplyScalar(-(0.35+i*0.42)); m.position.y=0.95; g.add(m);
+    }
+    g.position.copy(here); scene.add(g);
+    fxPush(g, 0.34, function(o,k){ o.children.forEach(function(c){ c.material.opacity*=(1-k*0.14); c.scale.y=1+k*0.5; }); });
+    fxRing(here, 0x9FD8FF, 1.9, 0.30);
+  }
   function slowmo(scale, ms){ timeScale=scale; var t0=performance.now(); (function up(){ var k=Math.min(1,(performance.now()-t0)/ms); timeScale=scale+(1-scale)*k*k; if(k<1) requestAnimationFrame(up); else timeScale=1; })(); }
   function autoQuality(){ if(autoLow||!SET.lights||navigator.webdriver) return; var avg=fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length; if(avg<24){ autoLow=true; SET.lights=false; renderer.shadowMap.enabled=false; applySettings(); guide('프레임이 낮아 <b>조명을 껐습니다</b> (일시정지 메뉴에서 변경)', 3); } }
 
@@ -743,6 +819,13 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var bpos=v3(Bs.x,Bs.y,1.6), pcam=camPos.clone();
     schedule(function(){ cineCam={ from:pcam.clone(), to:bpos.clone().add(new THREE.Vector3(-3.5,1.4,4.5)), look:bpos, t:0, dur:1.1 }; SFX.play('chains'); bossPlay('stagger'); }, 500);
     schedule(function(){ boss.anim.glow=1.2; banner('B O S S', 0, A.stages[0].name+' · '+L.place, false); el.cV.textContent=A.hudName||'허수아비'; SFX.play('phase'); shake(0.012, 600); burst(bossHitPos('core'), 40, 0xD94A45); }, 1700);
+    /* 포효 — 몬헌은 사냥 시작에 몬스터가 울부짖고 카메라가 밀려든다.
+       보스 쪽으로 한 번 더 당겼다가 충격파를 퍼뜨리고 놓는다. */
+    schedule(function(){ if(!cineCam) return; var hp=bossHitPos('head');
+      cineCam={ from:camPos.clone(), to:hp.clone().add(new THREE.Vector3(-1.9,0.5,2.4)), look:hp, t:0, dur:0.45 };
+      bossPlay('stagger'); SFX.play('brk'); }, 2200);
+    schedule(function(){ shake(0.02, 700); camKick(0.05,0.11,0.05); vib([50,40,70]); slowmo(0.45, 420);
+      fxRing(boss.root.position, 0xD94A45, 6.5, 0.9); burst(bossHitPos('head'), 46, 0xFFB08A); }, 2620);
     schedule(function(){ cineCam={ from:cineCam.to.clone(), to:camPos.clone(), look:null, t:0, dur:0.9, back:true }; }, 3200);
     schedule(function(){ cineCam=null; cine=false; el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; startPhase(0); }, 4200); }
   function phaseClear(){ var m=Object.assign({}, battle.metrics); stageResults.push(m); PS=battle.exportPlayer(); bossStop(); zone=null; hideZone(); gainXp(150+phase*100, '페이즈 돌파');
@@ -880,25 +963,54 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     if(battle){ bp=v3(Bs.x,Bs.y,1.4); gap=Math.hypot(bp.x-pp.x, bp.z-pp.z);
       /* 락온이면 멀수록 둘의 «가운데» 쪽으로 — 보스가 화면 밖으로 나가지 않는다 */
       look.lerp(bp, locked?Math.max(0.3,Math.min(0.5,0.28+gap*0.03)):0.3); }
-    if(dragT>0&&!locked) dragT-=dt; else if(!cineCam){ var want=null;
-      if(battle){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); } else if(P.moving && P.rollT<=0){ var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); }
-      if(want!=null){ var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; camYaw+=dy*Math.min(1,dt*(locked?4.5:battle?1.6:0.9)); } }
-    if(dragT>0&&locked) dragT=0;
-    var dist=camDist*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);   /* 멀어지면 물러나 둘 다 담는다 */
+    /* 주시점을 진행 방향으로 살짝 밀어 «가는 곳» 이 보이게 (마영전) */
+    if(P.moving && P.rollT<=0 && !battle){ var la=yawOf(P.aim==null?0:P.aim);
+      look.x+=Math.sin(la)*CAM.lookAhead; look.z+=Math.cos(la)*CAM.lookAhead; }
+    /* 따라가기: 손으로 돌린 직후(dragT)엔 손이 이긴다. 락온 중 드래그는 대상 주위를 도는 것이라 유지한다. */
+    if(dragT>0) dragT-=dt;
+    if(dragT<=0 && !cineCam){
+      var want=null, tau;
+      if(locked){                      /* 몬헌 포커스: 플레이어 뒤에서 보스를 문다 */
+        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; }
+      else if(battle){                 /* 락온 없이: 보스를 화면에 두되 느슨하게 */
+        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauFight; }
+      else if(P.moving && P.rollT<=0){ /* 탐색: 달리는 방향 뒤로 */
+        var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); tau=CAM.tauMove; }
+      /* 멈춰 있으면 그대로 둔다 — 서 있을 때까지 카메라가 돌면 멀미가 난다 */
+      if(want!=null && !(CAM.idleHold && !P.moving && !battle)){
+        var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+        camYaw+=dy*(1-Math.exp(-dt/tau)); }
+    }
+    /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
+    var pitchWant=battle?CAM.pitchFight:CAM.pitchMove;
+    if(!camFree) camPitch+=(pitchWant-camPitch)*(1-Math.exp(-dt/0.5));
+    if(!bossTall && boss.model){ var bb=new THREE.Box3().setFromObject(boss.model); if(isFinite(bb.max.y)) bossTall=bb.max.y-bb.min.y; }
+    var big=battle?Math.max(0,(bossTall-2.2))*CAM.sizeDist:0;        /* 큰 놈일수록 물러난다 */
+    var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
-    dist=camClear(look, dist);
+    dist=camClear(look, dist, dt);
     var z=Math.pow(0.001, dt);
-    var target=new THREE.Vector3(look.x+Math.sin(camYaw)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(camYaw)*Math.cos(camPitch)*dist);
+    var yawEff=camYaw+camSlide;
+    var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist);
     if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, cineCam.back?k:Math.min(1,k*1.5)); }
     else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-Math.pow(0.0005,dt)); }
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
+    /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
+    var fv=CAM.fov; if(P.rollT>0) fv=CAM.fovDash; else if(camZoom<0.98) fv=CAM.fovHit;
+    fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
+    if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
     cam.position.copy(camPos);
     if(shakeT>0){ shakeT-=dt; var sk=Math.max(0,shakeT/Math.max(1e-3,shakeD)), se=sk*sk;
       if(shakeDX||shakeDZ){ var osc=Math.sin(shakeT*95)*shakeAmt*0.11*se;
         cam.position.x+=shakeDX*osc; cam.position.z+=shakeDZ*osc; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.03*se; }
       else { cam.position.x+=(Math.random()-0.5)*shakeAmt*0.1*se; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.1*se; } }
     else { shakeAmt=0; shakeDX=shakeDZ=0; }
+    tickKick(dt);
+    if(Math.abs(kickY)+Math.abs(kickP)+Math.abs(kickR)>1e-4){
+      camLook.y+=kickP*0.35;                       /* 위아래로 훑고 */
+      cam.up.set(Math.sin(kickR),Math.cos(kickR),0);   /* 화면을 기울인다 */
+    } else if(cam.up.x) cam.up.set(0,1,0);
     cam.lookAt(camLook); if(zoomPulse>0){ zoomPulse-=dt*4; cam.fov=50-Math.max(0,zoomPulse)*4; cam.updateProjectionMatrix(); }
     /* 달빛 그림자 카메라를 플레이어 주변으로 */
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();
@@ -943,7 +1055,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     fill('v-st', s2.player.st/s2.player.stMax*100); $('#v-stv').textContent=Math.round(s2.player.st)+' / '+s2.player.stMax;
     fill('v-ult', s2.player.ult); $('#v-ultv').textContent=Math.round(s2.player.ult)+'%';
     fill('p-bar', s2.player.hp/s2.player.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(s2.player.hp));
-    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar(tg?0.7:0.45); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
+    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.7:0.45)*BOSS_SCALE); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
     var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
     el.actions.querySelector('[data-ult]').classList.toggle('is-ready', s2.player.ult>=R.ult.max); el.actions.querySelector('[data-atk]').classList.toggle('is-ready', Bs.dist<=L.player.reach);
     var lines=[]; if(s2.enemy.bleed) lines.push(['drop','#C9534E','출혈','×'+s2.enemy.bleed]); if(s2.enemy.state==='downed') lines.push(['x','#C9A45E','격추',Math.ceil(s2.enemy.downT)+'s']); if(s2.enemy.state==='telegraph'&&!s2.enemy.counterable) lines.push(['x','#FF9A45','튕기기 불가 · 회피','']); if(s2.player.riposte) lines.push(['bolt','#C9A45E','반격 기회',s2.player.riposteT.toFixed(1)+'s']); if(s2.player.guard) lines.push(['shield','#7B9BD6','방어 중','']); if(s2.player.buffT>0) lines.push(['shield','#5FAE9B','결의',Math.ceil(s2.player.buffT)+'s']); if(s2.player.critNext) lines.push(['bolt','#C9A45E','치명타 확정','']); if(s2.player.locked) lines.push(['x','#8A8A8A','경직','']);
@@ -954,14 +1066,33 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     expedition.nodes.forEach(function(n){if(!expedition.discovered(n.id))return;mctx.fillStyle=expedition.completed(n.id)?'#527b68':n.kind==='checkpoint'?'#7abbd6':'#e8c179';mctx.fillRect(n.cx*sx-2,n.cy*sy-2,5,5);});
     mctx.fillStyle='#D9544E'; mctx.beginPath(); mctx.arc(Bs.x/map.cell*sx, Bs.y/map.cell*sy, 4, 0, Math.PI*2); mctx.fill(); mctx.fillStyle='#F0E4E4'; mctx.beginPath(); mctx.arc(P.x/map.cell*sx, P.y/map.cell*sy, 3.5, 0, Math.PI*2); mctx.fill(); }
   /* 카메라 차폐: 시선점→카메라 사이에 벽·격벽이 있으면 그 앞까지 당긴다 (3D→시뮬 좌표 역변환 후 격자 조회) */
-  function camClear(look, dist){
-    var sinY=Math.sin(camYaw)*Math.cos(camPitch), cosY=Math.cos(camYaw)*Math.cos(camPitch);
-    var step=0.25, margin=0.35;
-    for(var d=step; d<=dist; d+=step){
-      var wx=look.x+sinY*d, wz=look.z+cosY*d;
-      if(world.isSolid(wx*SCALE, wz*DEPTH*SCALE)) return Math.max(1.1, d-margin);
+  /* 시야가 막히면 «옆으로 미끄러진다». 예전엔 거리만 줄여서 벽을 등지면 카메라가
+     코앞까지 붙어 캐릭터만 화면을 채웠다. 마영전·몬헌은 벽을 따라 옆으로 흘린다.
+     camSlide 는 그 프레임에 더한 각도 — 부드럽게 되돌아온다. */
+  var camSlide=0;
+  function rayFree(look, yaw, dist){
+    var sy=Math.sin(yaw)*Math.cos(camPitch), cy=Math.cos(yaw)*Math.cos(camPitch);
+    for(var d=0.4; d<=dist; d+=0.28){
+      if(world.isSolid((look.x+sy*d)*SCALE, (look.z+cy*d)*DEPTH*SCALE)) return d;
     }
     return dist;
+  }
+  function camClear(look, dist, dt){
+    var want=0;
+    if(rayFree(look, camYaw+camSlide, dist) < dist-0.2){
+      /* 좌우로 벌려 보며 뚫리는 쪽을 찾는다 (가까운 각도 우선) */
+      var best=null, bestFree=rayFree(look, camYaw+camSlide, dist);
+      for(var a=0.16; a<=1.25; a+=0.16){
+        for(var sgn=-1; sgn<=1; sgn+=2){
+          var f=rayFree(look, camYaw+sgn*a, dist);
+          if(f>bestFree+0.15){ bestFree=f; best=sgn*a; }
+          if(f>=dist-0.1){ best=sgn*a; a=9; break; }
+        }
+      }
+      if(best!=null) want=best;
+    }
+    camSlide+=(want-camSlide)*(1-Math.exp(-(dt||0.016)/(want?0.12:0.35)));
+    return Math.max(1.6, rayFree(look, camYaw+camSlide, dist)-0.3);
   }
   var simAcc=0, scheduled=[];
   function schedule(fn,ms){var t={fn:fn,left:ms/1000,cancelled:false};scheduled.push(t);return t;}

@@ -6,6 +6,10 @@
 |---|---|---|
 | `glbxform.cjs` | Hi3D 원본 GLB | `art/3d/ain_hi3d_v1.glb` (Y-up, 1.68 m, 발 원점, 노멀맵 보존) |
 | `bake_vcol.py` | Hi3D 원본 + 4방향 원화 PNG | `art/3d/ain_hi3d_vcol_v1.glb` (임시 정점색) |
+| `mocap.py` | CMU ASF/AMC (내려받음) | `art/3d/mocap/*.bvh` — 잘라낸 모캡 클립 (`fetch` / `scan` / `build`) |
+| `amc2bvh.py` | ASF + AMC | BVH (의존성 없음, 축 프레임 `C·R·C⁻¹` 보정) |
+| `mocap_apply.py` | `<char>_anim.glb` + `mocap/*.bvh` | 같은 GLB — `idle`·`attack3`·`skill2`·`skill4` 만 모캡으로 교체 |
+| `rig_core.py` | — | 무기 주도 자세(해석 IK)·무기 궤도표. `rig_char.py` 와 `mocap_apply.py` 가 공유 |
 | `retarget_ain.py` | 정점색 GLB + KayKit `Rogue.glb`(CC0) | `art/3d/ain_anim.glb` — Mixamo 이름 뼈 23개 + 클립 21개 |
 
 ```
@@ -23,4 +27,4 @@ idle, idle2, walk, run, roll, dodgeB/L/R, attack1(베기), attack2(내려찍기)
 
 ## 출처
 - 메시: Hi3D 생성 (디렉터 계정). 컬러 텍스처는 아직 없음 → Hi3D PBR 텍스처 생성 후 교체 예정.
-- 애니메이션: KayKit Character Pack Adventurers (CC0 1.0). 
+- 애니메이션: KayKit Character Pack Adventurers (CC0 1.0) + CMU Graphics Lab Motion Capture Database (연구·상업 사용 자유, 데이터 재판매 금지 — `art/3d/mocap/SOURCES.md` 에 클립별 출처).

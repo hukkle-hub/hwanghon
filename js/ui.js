@@ -157,7 +157,8 @@
     var back = $('.hotbar a[href], .backbar a[href], .gnb a[href]');
     var bar = document.createElement('div'); bar.className = 'mbar';
     var b = document.createElement('a'); b.className = 'mbar__back';
-    b.href = main.getAttribute('data-mback') || (back ? back.getAttribute('href') : 'office.html');
+    /* data-mback 은 body 에 붙이는 화면이 많다 — 둘 다 본다 (상단 나가기 버튼과 같은 곳으로) */
+    b.href = main.getAttribute('data-mback') || document.body.getAttribute('data-mback') || (back ? back.getAttribute('href') : 'office.html');
     b.innerHTML = '<svg class="ico"><use href="#i-arrowl"/></svg>뒤로'; bar.appendChild(b);
     if (prim){ prim.classList.add('mbar__primary'); bar.appendChild(prim); }
     document.body.appendChild(bar);
@@ -423,6 +424,17 @@
     });
     sh.el.addEventListener('input', function(e){ var r = e.target.closest('[data-rng]'); if (r){ SET[r.getAttribute('data-rng')] = parseFloat(r.value); save(); } });
   }
+  /* 상단 바 나가기 버튼: body[data-mback] 을 선언한 화면에 «데스크톱에서도» 붙인다.
+     휴대폰은 하단 행동 바(mbar)가 뒤로를 맡지만, 그건 mobileLayout 에서만 만들어져서
+     데스크톱에서는 나갈 길이 아예 없었다 (이야기 화면이 그랬다). */
+  function backButton(){
+    var to = document.body.getAttribute('data-mback'); if (!to) return;
+    var tb = $('.topbar'); if (!tb || $('.topbar__back')) return;
+    var a = document.createElement('a'); a.className = 'iconbtn topbar__back'; a.href = to; a.title = '나가기';
+    a.innerHTML = '<svg class="ico ico--lg"><use href="#i-arrowl"/></svg>';
+    tb.insertBefore(a, tb.firstChild);
+  }
+
   function bindTopbar(){
     var map = { 'i-mail':mailSheet, 'i-book':recordsSheet, 'i-gear':settingsSheet };
     $$('.topbar .iconbtn, .sheethead .iconbtn, .bmhead .iconbtn').forEach(function(b){
@@ -440,7 +452,7 @@
     if (!embedded) rotateHint();
     if (!embedded) mobileLayout();
     if (!embedded) swUpdates();
-    bindTopbar();
+    bindTopbar(); backButton();
     fitStage();
     window.addEventListener('resize', fitStage);
     window.addEventListener('orientationchange', function(){ setTimeout(fitStage, 120); });

@@ -7,7 +7,7 @@
 (function(){
   var RULES = {
     tick: 0.01,
-    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.34,smash:0.78,ult:0.50,skill1:0.50,skill2:0.45,skill3:0.55,skill4:0.40,counter:0.48,exec:0.58}, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.50,smash:0.78,ult:0.50,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.58}   /* attack3·skill2·skill4 는 모캡 클립의 손목 최고속 지점 (tools/3d/mocap.py) */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
       smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
       ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},
@@ -16,6 +16,15 @@
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
     hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
     execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
+    /* 무기별 리듬 — 몬헌의 «무기 개성». 지금까지 네 캐릭터가 같은 박자로 휘둘렀다.
+       dur 은 모션 길이(클수록 느리고 무겁다), stop 은 히트스톱, st 는 스태미나 소모.
+       피해량은 건드리지 않는다 — 느린 쪽은 한 방이 크고, 빠른 쪽은 자주 친다(기존 배율 유지). */
+    rhythm: {
+      ain:  { nm:'낫',     dur:1.00, stop:1.00, st:1.00 },   /* 기준 */
+      kain: { nm:'대검',   dur:1.20, stop:1.28, st:1.14 },   /* 느리고 무겁다 — 멈춤이 길다 */
+      ryu:  { nm:'쌍단검', dur:0.82, stop:0.74, st:0.86 },   /* 빠르고 가볍다 — 멈춤이 짧다 */
+      sera: { nm:'시약',   dur:1.06, stop:0.86, st:1.04 }    /* 중간. 던지는 무기라 멈춤이 얕다 */
+    },
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
     dodge:   { iframes:0.30, cooldown:0.45 },
     guard:   { reduce:0.70, holdMs:220 },
@@ -114,7 +123,9 @@
       art:'boss-marsh', hudName:'모르버스',
       model:'art/3d/boss_marsh_v2.glb', scale:0.85, pieces:'nodes', tint:{ marsh:0xffffff, rage:0xffb0a0 }, glow:{ marsh:0.8, rage:1.4 },
       parts3d:{ head:{ bone:'Head', off:[0,0.15,0.55], r:0.6 }, back:{ bone:'Spine1', off:[0,0.85,0], r:0.8 }, legf:{ bone:'FR_Low', off:[0,0.35,0.1], r:0.6 }, tail:{ bone:'Tail2', off:[0,0.25,0], r:0.6 }, body:{ bone:'Spine', off:[0,0.1,0], r:1.0 }, core:{ bone:'Spine2', off:[0,-0.55,0.45], r:0.4 } },
-      atk:{ bolt:{ clip:'atk_bolt', hitFrac:0.5 }, flame:{ clip:'atk_flame', hitFrac:0.45 }, hammer:{ clip:'atk_hammer', hitFrac:0.5 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 }, drop:{ clip:'atk_drop', hitFrac:0.5 } },
+      atk:{ bolt:{ clip:'atk_bolt', hitFrac:0.5 }, flame:{ clip:'atk_flame', hitFrac:0.45 }, hammer:{ clip:'atk_hammer', hitFrac:0.5 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 }, drop:{ clip:'atk_drop', hitFrac:0.5 },
+        /* 연계 비트 전용 모션 — 같은 동작을 두 번 트는 대신 «되받는» 동작을 따로 둔다 */
+        boltB:{ clip:'atk_bolt_b', hitFrac:0.5 }, dropB:{ clip:'atk_drop_b', hitFrac:0.5 }, dropC:{ clip:'atk_drop_c', hitFrac:0.5 } },
       rewards:{ gold:18000, items:[['m_alloy',24],['m_shard',1],['m_core',1],['c_potion',2]], sBonus:[['m_core',1],['m_dew',3]] },
       stages:[
         dummy({ id:'morbus', name:'모르버스', lesson:'토벌', timeLimit:600, hp:1100000, kind:'marsh',
@@ -126,7 +137,7 @@
                   { id:'body', name:'몸통', hp:null, pos:'br' } ],
           /* 연계·지연타: docs/design/18-boss-fight-design.md §2. 반격 창은 연계의 마지막 타격에만 열린다 */
           patterns:[ { icon:'bolt',   name:'돌진 베기',   rank:'S', tele:0.9, window:0.40, dmg:1500, posture:40, guardCost:25, range:'far',  desc:'돌진 후 두 번 벤다 · 두 번째가 반격 기회',
-                       chain:[{ tele:0.55, dmg:1150, posture:30, gap:0.22 }] },
+                       chain:[{ tele:0.55, dmg:1150, posture:30, gap:0.22, icon:'boltB' }] },
                      { icon:'flame',  name:'광폭 포효',   rank:'A', tele:1.1, window:0.40, dmg:700,  posture:20, guardCost:35, range:'any',  recovery:1.3, desc:'넓은 충격파 · 끝난 뒤 크게 비어 있다' },
                      { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.35, window:0.40, dmg:1800, posture:60, guardCost:25, range:'near', hold:{ at:0.58, dur:0.35 }, desc:'앞발을 든 채 «버틴다» · 떨어지는 순간을 봐라' },
                      { icon:'scythe', name:'꼬리 휘두르기', rank:'A', tele:0.8, window:0.40, dmg:1100, posture:30, guardCost:30, range:'near', counterable:false, desc:'넓은 회전 · 튕길 수 없다, 범위 밖으로' } ],
@@ -136,7 +147,7 @@
           line:'핵이 드러났다. 예고가 짧다. 붙어서 끝내라.', hint:'광란 연타는 옆으로 구르고, 돌진 직후가 빈틈',
           parts:[ { id:'core', name:'핵', hp:null, weak:true, pos:'tl', effect:'피해 증가' }, { id:'head', name:'머리', hp:null, weak:true, pos:'tr', effect:'피해 증가' }, { id:'body', name:'몸통', hp:null, pos:'br' } ],
           patterns:[ { icon:'drop',   name:'피의 광란',   rank:'S', tele:0.7, window:0.36, dmg:1300, posture:40, guardCost:30, range:'near', desc:'발톱 3연격 · 마지막만 튕길 수 있다',
-                       chain:[{ tele:0.45, dmg:1050, posture:30, gap:0.18 }, { tele:0.45, dmg:1200, posture:35, gap:0.18 }] },
+                       chain:[{ tele:0.45, dmg:1050, posture:30, gap:0.18, icon:'dropB' }, { tele:0.45, dmg:1200, posture:35, gap:0.18, icon:'dropC' }] },
                      { icon:'bolt',   name:'돌진 베기',   rank:'S', tele:0.7, window:0.36, dmg:1600, posture:40, guardCost:25, range:'far',  desc:'더 빠른 돌진' },
                      { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.05, window:0.36, dmg:2000, posture:60, guardCost:25, range:'near', hold:{ at:0.6, dur:0.28 }, desc:'짧게 버텼다 내려찍는다' } ],
           patternGap:1.1, counterWindow:0.30,
