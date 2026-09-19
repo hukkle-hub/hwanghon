@@ -649,7 +649,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       else { var f=yawOf(P.aim==null?0:P.aim), wx=Math.sin(f), wz=Math.cos(f);
         var mx=ks.sx/m, mz=ks.sy/m, fwd=mx*wx+mz*wz, side=mx*wz-mz*wx;
         n=Math.abs(fwd)>=Math.abs(side)?(fwd>0?'roll':'dodgeB'):(side>0?'dodgeR':'dodgeL'); } }
-    playOnce(n,{ speed:0.38/L.player.rollDur }); }
+    /* 클립 전체가 회피 시간 안에 들어가도록 «클립 길이 ÷ 회피 시간». 예전엔 0.38초를
+       하드코딩해서, 더 긴 클립으로 갈아끼우면 뒷부분이 잘려나갔다. */
+    var rc=ain.clips[n]; playOnce(n,{ speed:(rc?rc.duration:0.38)/L.player.rollDur }); }
   function slowmo(scale, ms){ timeScale=scale; var t0=performance.now(); (function up(){ var k=Math.min(1,(performance.now()-t0)/ms); timeScale=scale+(1-scale)*k*k; if(k<1) requestAnimationFrame(up); else timeScale=1; })(); }
   function autoQuality(){ if(autoLow||!SET.lights||navigator.webdriver) return; var avg=fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length; if(avg<24){ autoLow=true; SET.lights=false; renderer.shadowMap.enabled=false; applySettings(); guide('프레임이 낮아 <b>조명을 껐습니다</b> (일시정지 메뉴에서 변경)', 3); } }
 
