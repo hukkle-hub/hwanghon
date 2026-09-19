@@ -16,6 +16,15 @@
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
     hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
     execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
+    /* 무기별 리듬 — 몬헌의 «무기 개성». 지금까지 네 캐릭터가 같은 박자로 휘둘렀다.
+       dur 은 모션 길이(클수록 느리고 무겁다), stop 은 히트스톱, st 는 스태미나 소모.
+       피해량은 건드리지 않는다 — 느린 쪽은 한 방이 크고, 빠른 쪽은 자주 친다(기존 배율 유지). */
+    rhythm: {
+      ain:  { nm:'낫',     dur:1.00, stop:1.00, st:1.00 },   /* 기준 */
+      kain: { nm:'대검',   dur:1.20, stop:1.28, st:1.14 },   /* 느리고 무겁다 — 멈춤이 길다 */
+      ryu:  { nm:'쌍단검', dur:0.82, stop:0.74, st:0.86 },   /* 빠르고 가볍다 — 멈춤이 짧다 */
+      sera: { nm:'시약',   dur:1.06, stop:0.86, st:1.04 }    /* 중간. 던지는 무기라 멈춤이 얕다 */
+    },
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
     dodge:   { iframes:0.30, cooldown:0.45 },
     guard:   { reduce:0.70, holdMs:220 },

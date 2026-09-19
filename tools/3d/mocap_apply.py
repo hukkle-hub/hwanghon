@@ -31,7 +31,8 @@ MOCAP_DIR = os.environ.get('MOCAP_DIR', os.path.join(ROOT, 'art', '3d', 'mocap')
 #   skill2   135_01  발색 카타의 최고 타 — 9.0 m/s (원래는 제자리 점프였다)
 #   skill4   135_05  하단 쓸기 — 6.8 m/s (원래는 주문 동작이었다)
 MOCAP = {'idle': 'mo_idle', 'attack3': 'mo_strike',
-         'skill2': 'mo_strike_hard', 'skill4': 'mo_sweep_low'}
+         'skill2': 'mo_strike_hard', 'skill4': 'mo_sweep_low',
+         'brake': 'mo_brake'}
 # 캐릭터별 제외: 모캡 몸통 위에서 무기 그립이 버티지 못하는 조합.
 #   kain 의 attack3 은 대검 양손 그립이 가라테 런지 자세에서 14.6cm 벌어진다
 #   (원본 0.001m → 모캡 0.146m, tools 측정). 나머지는 0.09m 이하라 유지한다.
@@ -42,6 +43,8 @@ PROFILES = {
     'ryu':  dict(two_hand=set(), carry=None),
     'sera': dict(two_hand=set(), carry=None),
 }
+for _p in PROFILES.values():
+    if _p['two_hand']: _p['two_hand'] = _p['two_hand'] | {'brake'}   # 제동도 무기를 든 채 달리는 자세다
 PROF = PROFILES[CHAR]; TWO_HAND = PROF['two_hand']
 CMU2KAY = {'root': 'hips', 'lowerback': 'spine', 'thorax': 'chest', 'head': 'head',
            'lhumerus': 'upperarm.l', 'lradius': 'lowerarm.l', 'lwrist': 'hand.l',
@@ -247,7 +250,8 @@ for clip, moname in MOCAP.items():
         print('건너뜀 %s (%s 는 이 클립에서 그립이 벌어진다)' % (clip, CHAR)); continue
     a = bpy.data.actions.get(moname)
     if not a: print('모캡 액션 없음:', moname); continue
-    if clip not in old_tracks: print('원본에 %s 클립이 없다 — 건너뜀' % clip); continue
+    # brake 처럼 원본에 없던 클립은 NLA 트랙을 새로 만든다 (기존 클립은 교체)
+    if clip not in old_tracks: old_tracks[clip] = arm.animation_data.nla_tracks.new(); old_tracks[clip].name = clip
     swapped[clip] = retarget(a, clip, clip + '_mo')
     print('교체 %s ← %s (%d프레임)' % (clip, moname, int(a.frame_range[1] - a.frame_range[0]) + 1))
 

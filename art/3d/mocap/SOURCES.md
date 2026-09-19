@@ -12,6 +12,7 @@ CMU Graphics Lab Motion Capture Database — http://mocap.cs.cmu.edu/
 | `mo_getup_face` | 140_01 | 200~580 | O |
 | `mo_roll` | 128_10 | 60~340 | O |
 | `mo_duck` | 127_29 | 20~200 | O |
+| `mo_brake` | 143_02 | 55~155 | O |
 | `mo_wounded` | 139_19 | 120~840 | O |
 | `mo_strike` | 143_23 | 165~275 | O |
 | `mo_strike_hard` | 143_23 | 537~647 | O |

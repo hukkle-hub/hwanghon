@@ -100,6 +100,8 @@ def build(J, parent, RESTL, CHAR, PROF, LEFT_OFF=0.28):
       'guardHit':dict(rh=(0.22,0.28,0.36), shaft=(-0.97,0.25,0), blade=(0,0,1), left=0.40),
       'guardUp':dict(rh=(0.22,0.28,0.36), shaft=(-0.97,0.25,0), blade=(0,0,1), left=0.40),
     }
+    CARRY['brake']=dict(CARRY['run'])        # 제동은 달리기와 같은 무기 자세
+    CARRY_SWORD['brake']=dict(CARRY_SWORD['run'])
     if PROF['carry']=='sword': CARRY=CARRY_SWORD
     elif PROF['carry'] is None: CARRY={}
     ARMS=['mixamorig:RightArm','mixamorig:RightForeArm','mixamorig:RightHand','mixamorig:RightHandSlot','mixamorig:LeftArm','mixamorig:LeftForeArm','mixamorig:LeftHand']
