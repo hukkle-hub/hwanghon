@@ -355,6 +355,11 @@
     }).join('');
     var sh = sheet('우편함', html || '<div class="t-faint">받은 우편이 없습니다.</div>', 'sheet--mail');
     sh.el.addEventListener('click', function(e){
+      var h = e.target.closest('.mail__h');
+      if (h){ var row = h.closest('.mail'), open = row.classList.contains('is-open');
+        sh.el.querySelectorAll('.mail.is-open').forEach(function(x){ x.classList.remove('is-open'); });
+        if (!open) row.classList.add('is-open');
+        return; }
       var b = e.target.closest('[data-claim]'); if (!b || b.disabled) return;
       var id = b.closest('.mail').getAttribute('data-id'), m = MAIL.filter(function(x){ return x.id === id; })[0];
       giveReward(m); b.disabled = true; b.textContent = '수령 완료'; b.classList.remove('btn--primary'); b.classList.add('btn--ghost'); b.closest('.mail').classList.add('is-done');

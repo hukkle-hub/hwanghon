@@ -40,8 +40,12 @@ html.mobile main>.mpane.is-active{display:flex;flex-direction:column;gap:10px;fl
 html.mobile .mpane>*{display:flex;flex-direction:column;gap:10px;min-height:0;flex:none;position:static}
 html.mobile .mpane>.panel{display:flex}
 html.mobile .panel{flex:none;min-height:0}
-html.mobile .panel__body{overflow:visible;flex:none}
-html.mobile .panel__body.scroll,html.mobile .scroll{overflow:visible;max-height:none}
+/* 모바일에서는 화면 안에 다 보이게 펼치지만, «모달 시트» 는 예외 —
+   내용이 넘칠 수 있으므로 시트 본문은 반드시 스크롤 컨테이너로 남긴다.
+   (이 규칙이 .sheet__body 의 overflow:auto 를 덮어써서 우편함이 스크롤되지 않던 버그) */
+html.mobile .panel__body:not(.sheet__body){overflow:visible;flex:none}
+html.mobile .panel__body.scroll:not(.sheet__body),html.mobile .scroll:not(.sheet__body){overflow:visible;max-height:none}
+html.mobile .sheet__body{overflow-y:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 html.mobile .panel__head{padding:11px 13px}
 html.mobile .panel__title{font-size:15px}
 html.mobile .fill{flex:none}

@@ -53,7 +53,8 @@ export class WeaponTrail{
     const inv=new T.Matrix4().copy(weapon.matrixWorld).invert(), box=new T.Box3(); let got=false;
     weapon.traverse(o=>{ if(o.isMesh&&o.geometry){ o.geometry.computeBoundingBox(); if(!o.geometry.boundingBox) return;
       const bb=o.geometry.boundingBox.clone(); bb.applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld)); box.union(bb); got=true; } });
-    if(!got) return;
+    if(!got){ /* 아직 메시가 안 붙었다 — 몇 번만 더 보고 포기한다 (매 프레임 재측정 방지) */
+      this.tries=(this.tries||0)+1; if(this.tries>30) this.measured=true; return; }
     this.tipY=Math.max(0.5, box.max.y); this.baseY=0; this.measured=true;
   }
   set(power, hex){ this.power=power||1; this.hue.setHex(hex==null?0xBFD8E8:hex); }

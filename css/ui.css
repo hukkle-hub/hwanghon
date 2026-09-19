@@ -485,7 +485,7 @@ html.portrait .navdock{position:fixed}
 .sheet__box{width:min(560px,94vw);max-height:min(86vh,86dvh);display:flex;flex-direction:column;background:rgba(12,13,17,.98);box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .sheet__box .panel__head{flex:none}
 .sheet__x{margin-left:auto}
-.sheet__body{overflow:auto;padding:12px 14px 16px;font-size:13px}
+.sheet__body{overflow-y:auto;flex:1 1 auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 14px 16px;font-size:13px}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--line-soft);min-height:44px}
 .srow:last-child{border-bottom:0}
 .srow>span:first-child{display:flex;flex-direction:column;gap:2px;color:var(--tx-hi)}
@@ -500,15 +500,34 @@ html.portrait .navdock{position:fixed}
 .segs button{height:32px;padding:0 12px;font-size:12px;color:var(--tx-faint);background:transparent;border:0;border-right:1px solid var(--line);cursor:pointer}
 .segs button:last-child{border-right:0}
 .segs button.is-on{color:#EBD6D6;background:rgba(165,28,28,.25)}
-.mail{padding:10px 0;border-bottom:1px solid var(--line-soft)}
+.mail{padding:8px 0;border-bottom:1px solid var(--line-soft)}
+.mail__h{cursor:pointer}
+.mail__b{display:none}
+.mail.is-open .mail__b{display:block}
+.mail__h b::before{content:'▸ ';color:var(--tx-faint);font-size:11px}
+.mail.is-open .mail__h b::before{content:'▾ '}
 .mail:last-child{border-bottom:0}
 .mail__h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .mail__h b{font-weight:500;color:var(--tx-hi);font-size:13.5px}
-.mail__b{margin-top:5px;font-size:12.5px;line-height:1.7;color:var(--tx-dim)}
+.mail__b{margin-top:5px;font-size:12.5px;line-height:1.65;color:var(--tx-dim)}
 .mail__f{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
 .mail__f .btn{margin-left:auto}
 .mail.is-done .mail__h b{color:var(--tx-faint)}
 .sheet__att{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border:1px solid var(--line);font-size:12px;color:var(--tx-dim)}
+/* 가로로 납작한 폰: 시트를 넓게 쓰고 항목을 2열로 세워 «스크롤 없이 한 화면» 에 담는다.
+   (넘칠 때를 대비한 스크롤은 그대로 살아 있다) */
+@media (orientation:landscape) and (max-height:560px){
+  .sheet__box{width:min(880px,96vw);max-height:min(94vh,94dvh)}
+  .sheet__body{padding:9px 14px 12px}
+  .sheet--set .sheet__body,.sheet--rec .sheet__body{column-count:2;column-gap:22px;column-rule:1px solid var(--line-soft)}
+  .sheet--set .srow,.sheet--rec .srow{break-inside:avoid}
+  .sheet--set .label-ko,.sheet--rec .label-ko{break-after:avoid}
+  .sheet--set .hr,.sheet--rec .hr{break-inside:avoid}
+  .srow{padding-top:4px;padding-bottom:4px;min-height:40px}
+  .sheet--set .hr,.sheet--rec .hr{margin:6px 0}
+  .sheet--set .label-ko,.sheet--rec .label-ko{margin-bottom:2px}
+  .mail{padding:6px 0}
+}
 html.mobile .sheet{place-items:end center}
 html.mobile .sheet__box{width:100%;max-height:min(88vh,88dvh);border-bottom:0}
 html.mobile .sheet__body{padding-bottom:max(16px,env(safe-area-inset-bottom))}

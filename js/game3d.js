@@ -446,7 +446,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var FX=[];
   function fxMat(color, op){ return new THREE.MeshBasicMaterial({ color:color, transparent:true, opacity:op==null?0.85:op, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide }); }
   function fxPush(obj, dur, fn){ scene.add(obj); FX.push({ o:obj, t:0, d:dur, fn:fn }); return obj; }
-  function fxKill(f){ scene.remove(f.o); f.o.traverse(function(c){ if(c.geometry) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
+  /* 스프라이트의 geometry 는 three.js 가 «전역으로 공유» 한다 — 여기서 dispose 하면
+     이후 모든 스프라이트의 버퍼가 매번 다시 올라간다. 재질만 정리한다. */
+  function fxKill(f){ scene.remove(f.o); f.o.traverse(function(c){ if(c.geometry && !c.isSprite) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
   /* 무기 궤적 · 칼바람 — 구현은 js/weapon-trail.js (온라인과 공유) */
   var trail=null;
   function trailSet(power, hex){ if(trail) trail.set(power, hex); }
