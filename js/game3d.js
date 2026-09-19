@@ -59,7 +59,17 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   renderer.debug.onShaderError=function(gl, program, vs, fs){ var msg=''; try{ msg=(gl.getProgramInfoLog(program)||'')+' | '+(gl.getShaderInfoLog(fs)||'')+' | '+(gl.getShaderInfoLog(vs)||''); }catch(e){} DIAG.errors.push('SHADER '+msg.slice(0,400)); console.error('shader error', msg); safeMode('shader'); };
   el.canvas.addEventListener('webglcontextlost', function(e){ e.preventDefault(); DIAG.errors.push('WEBGL CONTEXT LOST'); fatal('그래픽 장치 연결이 끊겼습니다', '메모리 부족이나 GPU 오류입니다. 저사양 모드로 다시 시작해 보세요.'); }, false);
   window.addEventListener('error', function(e){ DIAG.errors.push('JS '+(e.message||'')+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||0)); });
-  function safeMode(why){ DIAG.errors.push('safeMode: '+why); if(SAFE) return; try{ sessionStorage.setItem('tw:safe','1'); var st=JSON.parse(localStorage.getItem('tw:settings')||'{}'); st.lights=false; st.quality='low'; localStorage.setItem('tw:settings', JSON.stringify(st)); }catch(e){} location.reload(); }
+  /* 저사양으로 되살리기. «전투 중에는 새로 시작하지 않는다» — 리로드하면 진행 중인
+     출격이 통째로 날아가고, 화면에서는 그냥 «앱이 갑자기 다시 시작» 으로 보인다.
+     싸우는 중이면 그 자리에서 설정만 낮춘다. */
+  function safeMode(why){ DIAG.errors.push('safeMode: '+why); if(SAFE) return;
+    try{ sessionStorage.setItem('tw:safe','1'); var st=JSON.parse(localStorage.getItem('tw:settings')||'{}'); st.lights=false; st.quality='low'; localStorage.setItem('tw:settings', JSON.stringify(st)); }catch(e){}
+    if(battle||state==='fight'){
+      try{ SET.lights=false; SET.quality='low'; applySettings(); applyStageFx(phase); }catch(e){}
+      try{ guide('화면이 무거워 <b>저사양</b>으로 낮췄습니다', 3); }catch(e){}
+      return;
+    }
+    location.reload(); }
   function diagText(){ var avg=fpsSamples.length?Math.round(fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length):0, inf=renderer.info; var c=renderer.domElement;
     return ['build '+(window.TW&&TW.BUILD||'?')+' · '+(SAFE?'저사양 모드':'일반 모드')+' · 화질 '+SET.quality+' · 조명 '+(SET.lights?'켬':'끔'), 'GPU: '+DIAG.gpu, 'WebGL'+(DIAG.gl2?'2':'1')+' · 최대 텍스처 '+DIAG.maxTex+' · 프래그먼트 유니폼 '+DIAG.maxFU, '캔버스 '+c.width+'×'+c.height+' (배율 '+renderer.getPixelRatio().toFixed(2)+', 화면 '+innerWidth+'×'+innerHeight+')', 'FPS '+avg+' · 드로우콜 '+inf.render.calls+' · 삼각형 '+inf.render.triangles+' · 텍스처 '+inf.memory.textures+' · 지오메트리 '+inf.memory.geometries+' · 프로그램 '+(inf.programs?inf.programs.length:0), '로드 '+loadN+'/4 · 검은 프레임 '+DIAG.black+' · 시작 후 '+(DIAG.started?Math.round((performance.now()-DIAG.started)/1000)+'s':'-'), 'UA: '+navigator.userAgent.slice(0,90)].concat(DIAG.errors.length?['오류 '+DIAG.errors.length+'건:'].concat(DIAG.errors.slice(-6)):['오류 없음']).join('\n'); }
   function fatal(t, sub){ overlay('<div class="ov__k">오류</div><div class="ov__t">'+t+'</div><div class="ov__hint">'+sub+'</div><div class="xs t-faint" style="text-align:left;line-height:1.7;margin:0 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>저사양 모드로 다시 시작</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ try{ sessionStorage.removeItem('tw:safe'); }catch(e){} safeMode('fatal'); }); }
@@ -944,7 +954,40 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); renderer.render(scene, cam); blackWatch(); }
   /* 검은 화면 감시: 시작 후 25초 동안 1초마다 화면 중앙을 읽어 완전히 검으면 3회 연속 시 저사양 모드로 재시작 */
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
-  function blackWatch(){ if(!DIAG.started||navigator.webdriver&&!window.TW_BW_TEST) return; var t=performance.now(); if(t-DIAG.started>25000||t-bwLast<1000) return; bwLast=t; try{ var gl=renderer.getContext(), c=renderer.domElement; gl.readPixels((c.width>>1)-16, (c.height>>1)-16, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, bwPx); var mx=0, mn=255; for(var i=0;i<bwPx.length;i+=4){ var v=(bwPx[i]*3+bwPx[i+1]*6+bwPx[i+2])/10; if(v>mx) mx=v; if(v<mn) mn=v; } /* 화면 중앙 32×32 가 완전히 균일(배경색만)하면 아무것도 그려지지 않은 것 */ if(mx-mn<3){ bwHits++; DIAG.black++; if(bwHits>=3){ DIAG.errors.push('EMPTY FRAME x3 (lum '+Math.round(mn)+'~'+Math.round(mx)+')'); if(!SAFE) safeMode('black'); else fatal('화면이 그려지지 않습니다', '저사양 모드에서도 검게 나옵니다. 아래 진단 정보를 알려 주세요.'); } } else bwHits=0; }catch(e){ DIAG.errors.push('readPixels '+e.message); } }
+  /* 검은 화면 감시 — «아무것도 안 그려진» 상태를 잡아 저사양 모드로 되살린다.
+     예전엔 화면 «중앙 32×32» 한 군데만 보고 3번이면 곧장 location.reload() 를 불렀다.
+     보스 인트로처럼 카메라가 벽·보스에 바짝 붙어 중앙이 평평한 면 하나로 차는 순간을
+     «검은 화면» 으로 오해해서, 허수아비 전투 시작에 앱이 갑자기 새로 시작되곤 했다.
+     · 컷신·오버레이 중에는 아예 보지 않는다 (의도적으로 화면을 가리는 구간)
+     · 한 군데가 아니라 흩어진 네 군데를 보고, 네 군데가 «모두» 균일할 때만 센다
+     · 전투 중에는 리로드하지 않는다 — 진행을 날리지 않고 그 자리에서 저사양으로 낮춘다 */
+  var BW_PATCH=[[0.5,0.5],[0.25,0.32],[0.75,0.34],[0.5,0.78]];
+  function blackWatch(){
+    if(!DIAG.started||navigator.webdriver&&!window.TW_BW_TEST) return;
+    var t=performance.now(); if(t-DIAG.started>25000||t-bwLast<1000) return;
+    if(cine||cineCam||paused||el.ov.classList.contains('is-on')){ bwHits=0; return; }
+    bwLast=t;
+    try{
+      var gl=renderer.getContext(), c=renderer.domElement, flat=0;
+      for(var pi=0;pi<BW_PATCH.length;pi++){
+        var px=Math.max(0,Math.min(c.width-32, Math.round(c.width*BW_PATCH[pi][0])-16));
+        var py=Math.max(0,Math.min(c.height-32, Math.round(c.height*BW_PATCH[pi][1])-16));
+        gl.readPixels(px, py, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, bwPx);
+        var mx=0, mn=255;
+        for(var i=0;i<bwPx.length;i+=4){ var v=(bwPx[i]*3+bwPx[i+1]*6+bwPx[i+2])/10; if(v>mx) mx=v; if(v<mn) mn=v; }
+        if(mx-mn<3) flat++;
+      }
+      if(flat===BW_PATCH.length){
+        bwHits++; DIAG.black++;
+        if(bwHits>=4){
+          DIAG.errors.push('EMPTY FRAME x4 (네 곳 모두 균일)'); bwHits=0; DIAG.started=0;   /* 한 번만 판단한다 */
+          if(!SAFE) safeMode('black');
+          else fatal('화면이 그려지지 않습니다', '저사양 모드에서도 검게 나옵니다. 아래 진단 정보를 알려 주세요.');
+        }
+      } else bwHits=0;
+    }catch(e){ DIAG.errors.push('readPixels '+e.message); }
+  }
+
 
   window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, setBot:function(v){ botStick=v; }, applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();
