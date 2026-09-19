@@ -2,7 +2,7 @@
    TW_SFX.unlock() 은 첫 터치/키 입력에서 자동. TW_SFX.play(name) · TW_SFX.ambient(on) · TW_SFX.enabled */
 (function(){
   var ctx=null, master=null, amb=null, enabled=true, volume=0.7;
-  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; master.connect(ctx.destination); return ctx; }
+  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; var compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-8;compressor.knee.value=8;compressor.ratio.value=12;compressor.attack.value=.003;compressor.release.value=.2;master.connect(compressor);compressor.connect(ctx.destination); return ctx; }
   function unlock(){ var c=ac(); if(!c) return; if(c.state==='suspended') c.resume(); }
   function env(g, t0, a, d, s, r, peak){ g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak||1, t0+a); g.gain.exponentialRampToValueAtTime(Math.max(0.0001,(peak||1)*s), t0+a+d); g.gain.exponentialRampToValueAtTime(0.0001, t0+a+d+r); }
   function noise(dur){ var c=ac(), b=c.createBuffer(1, Math.ceil(c.sampleRate*dur), c.sampleRate), d=b.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; var s=c.createBufferSource(); s.buffer=b; return s; }
@@ -35,5 +35,46 @@
   var api={ get volume(){return volume;},set volume(v){volume=Math.max(0,Math.min(1,Number(v)||0));if(master)master.gain.value=enabled?volume:0;}, unlock:unlock, ambient:ambient, get enabled(){ return enabled; }, set enabled(v){ enabled=!!v; if(master) master.gain.value=enabled?volume:0; if(!enabled) ambient(false); },
     play:function(name, a){ if(!enabled||!ac()) return; try{ SFX[name] && SFX[name](a); }catch(e){} } };
   ['pointerdown','keydown','touchstart'].forEach(function(ev){ document.addEventListener(ev, unlock, { passive:true }); });
+  /* Original sample sketch pack. Existing synth remains the loading/error fallback. */
+  var buffers={}, loading=null, bed=null, desired='off', active=[], lastSound={};
+  var originalPlay=api.play, originalUnlock=unlock;
+  var audioBase=new URL('../art/audio/',document.currentScript.src);
+  function preload(){
+    if(loading)return loading;
+    var c=ac();if(!c)return Promise.resolve();
+    loading=Promise.all(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){
+      return fetch(new URL(name+'.wav',audioBase)).then(function(r){if(!r.ok)throw Error(r.status);return r.arrayBuffer();})
+        .then(function(data){return c.decodeAudioData(data);}).then(function(b){buffers[name]=b;})
+        .catch(function(){/* Keep the existing synth when a sample is unavailable. */});
+    })).then(syncBed);return loading;
+  }
+  function stopBed(){if(!bed)return;var old=bed;bed=null;old.g.gain.cancelScheduledValues(ctx.currentTime);old.g.gain.setTargetAtTime(0,ctx.currentTime,.15);old.s.stop(ctx.currentTime+.8);}
+  function syncBed(){
+    if(!ctx||!enabled||document.hidden||desired==='off'){stopBed();return;}
+    if(bed&&bed.name===desired)return;
+    stopBed();if(!buffers[desired]||ctx.state!=='running')return;
+    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[desired];s.loop=true;
+    g.gain.value=0;s.connect(g);g.connect(master);g.gain.setTargetAtTime(desired==='boss'?.15:.1,ctx.currentTime,.5);
+    s.onended=function(){s.disconnect();g.disconnect();};s.start();bed={s:s,g:g,name:desired};
+  }
+  api.scene=function(name){desired=['explore','boss'].indexOf(name)>=0?name:'off';syncBed();};
+  api.diagnostics=function(){return {loaded:Object.keys(buffers).length,context:ctx?ctx.state:'locked',scene:bed?bed.name:'off',voices:active.length};};
+  api.ambient=function(on){api.scene(on?'explore':'off');};
+  api.unlock=function(){originalUnlock();if(ctx)Promise.resolve(ctx.resume()).then(function(){preload();syncBed();}).catch(function(){});};
+  ['pointerdown','keydown','touchstart'].forEach(function(ev){document.removeEventListener(ev,unlock);document.addEventListener(ev,api.unlock,{passive:true});});
+  api.play=function(name,a){
+    if(!enabled||document.hidden)return;
+    var key=name==='hit'&&a?'hit_heavy':name==='counter'&&a?'counter_perfect':name;
+    if(!buffers[key]||!ctx||ctx.state!=='running'){originalPlay(name,a);return;}
+    var t=ctx.currentTime;if(t-(lastSound[key]||-10)<.045)return;lastSound[key]=t;
+    if(active.length>=12){try{active.shift().stop();}catch(e){}}
+    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];g.gain.value=.48;
+    s.connect(g);g.connect(master);active.push(s);
+    s.onended=function(){active=active.filter(function(x){return x!==s;});s.disconnect();g.disconnect();};s.start();
+    if(bed){bed.g.gain.cancelScheduledValues(t);bed.g.gain.setTargetAtTime(.035,t,.02);bed.g.gain.setTargetAtTime(desired==='boss'?.15:.1,t+.3,.3);}
+  };
+  Object.defineProperty(api,'enabled',{get:function(){return enabled;},set:function(v){enabled=!!v;if(master)master.gain.value=enabled?volume:0;syncBed();}});
+  document.addEventListener('visibilitychange',function(){syncBed();if(ctx){if(document.hidden)ctx.suspend();else if(enabled)ctx.resume().then(syncBed).catch(function(){});}});
+  window.addEventListener('pagehide',function(){desired='off';stopBed();});
   window.TW_SFX=api;
 })();

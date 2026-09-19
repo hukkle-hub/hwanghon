@@ -83,13 +83,17 @@ function renderRoom(){const hasRoom=!!room;$('choose-room').hidden=hasRoom;$('ro
 }
 function announce(text){$('announcement').textContent=text;noticeUntil=performance.now()+2600;}
 function processEvents(events){for(const e of events){if(e.id<=latestEvent)continue;latestEvent=e.id;
- if(e.type==='break')announce(e.name+' 파괴 — 보스가 흔들린다');
+ if(e.type==='break'){announce(e.name+' 파괴 — 보스가 흔들린다');window.TW_SFX?.play('brk');}
+ if(e.type==='telegraph')window.TW_SFX?.play('tele');
+ if(e.type==='down')window.TW_SFX?.play('down');
+ if(e.type==='dodge'&&e.player===profile?.id)window.TW_SFX?.play('roll');
+ if(e.type==='skill')window.TW_SFX?.play('swing');
  if(e.type==='counter'){announce((e.perfect?'PERFECT':'COUNTER')+' · '+(room.members.find(p=>p.id===e.player)?.name||'아인'));window.TW_SFX?.play('counter',e.perfect);}
  if(e.type==='evade'&&e.player===profile?.id)announce('회피 성공 · 지금 반격해라');
  if(e.type==='revive')announce('동료가 다시 일어섰다');
  if(e.type==='playerDown')announce('동료 다운 · 가까이서 V / 소생 버튼 유지');
  if(e.type==='interact')announce(e.name);
- if(e.type==='execute'){announce('처형 — '+(room.members.find(p=>p.id===e.player)?.name||'아인'));view?.flashBoss();window.TW_SFX?.play('brk');}
+ if(e.type==='execute'){announce('처형 — '+(room.members.find(p=>p.id===e.player)?.name||'아인'));view?.flashBoss();window.TW_SFX?.play('execute');}
  if(e.type==='phaseClear')announce('페이즈 돌파 — 보스가 깨어난다');
  if(e.type==='phase'){announce('P H A S E '+(e.phase+1)+' — '+(view?.A?.stages?.[e.phase]?.name||''));view?.flashBoss();window.TW_SFX?.play('phase');}
  if(e.type==='hit'){view?.flashBoss();window.TW_SFX?.play('hit',e.kind==='counter');}
@@ -223,6 +227,6 @@ class RaidView{
  drawMap(raid){const c=$('raid-map'),g=c.getContext('2d'),rows=this.L.rows,w=rows[0].length,h=rows.length,s=Math.min(c.width/w,c.height/h),ox=(c.width-w*s)/2,oy=(c.height-h*s)/2;g.clearRect(0,0,c.width,c.height);rows.forEach((r,y)=>[...r].forEach((ch,x)=>{g.fillStyle=ch==='#'?'#354744':'#101c22';g.fillRect(ox+x*s,oy+y*s,s,s);}));for(const n of this.adapter.nodes){g.fillStyle=raid.expedition.done[n.id]?'#69b28d':n.kind==='checkpoint'?'#76bdcf':'#d9b96c';g.fillRect(ox+n.cx*s,oy+n.cy*s,Math.max(3,s),Math.max(3,s));}for(const p of raid.players){g.fillStyle=COLORS[p.color%4];g.beginPath();g.arc(ox+p.x/this.L.cell*s,oy+p.y/this.L.cell*s,3,0,Math.PI*2);g.fill();}g.fillStyle='#dc594e';g.beginPath();g.arc(ox+raid.boss.x/this.L.cell*s,oy+raid.boss.y/this.L.cell*s,4,0,Math.PI*2);g.fill();}
  dispose(){for(const a of this.avatars.values())a.dispose(this.scene);this.boss?.dispose(this.scene);$('nameplates').replaceChildren();const resources=new Set();this.scene.traverse(o=>{if(o.geometry)resources.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m)resources.add(m);});for(const resource of resources)resource.dispose();this.renderer.dispose();}
 }
-let previous=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-previous)/1000);previous=now;if(view&&room?.raid)view.update(room.raid,dt);if(now>noticeUntil)$('announcement').textContent='';if(room?.raid&&now-lastReceived>3000){$('disconnect').hidden=false;$('disconnect').textContent='서버 응답을 기다리고 있습니다. 조작은 복귀 후 이어집니다.';}}requestAnimationFrame(frame);
+let previous=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-previous)/1000);previous=now;window.TW_SFX?.scene(connected&&view&&room?.raid?(room.raid.state==='fight'?'boss':room.raid.state==='explore'?'explore':'off'):'off');if(view&&room?.raid)view.update(room.raid,dt);if(now>noticeUntil)$('announcement').textContent='';if(room?.raid&&now-lastReceived>3000){$('disconnect').hidden=false;$('disconnect').textContent='서버 응답을 기다리고 있습니다. 조작은 복귀 후 이어집니다.';}}requestAnimationFrame(frame);
 const rpgUI=createRpgUI({send,connect,clearControls,getRoom:()=>room,saveToken:token=>storage.set(tokenKey,token)});
 if(storage.get(tokenKey))connect();
