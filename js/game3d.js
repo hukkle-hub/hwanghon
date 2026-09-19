@@ -97,6 +97,19 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
+  /* 3인칭 추적 카메라 — 마영전·몬헌 벤치마크 (docs/design/22-camera-combat-benchmark.md).
+     핵심은 «시정수(tau)» 다. 예전엔 탐색 중 dt*0.9 로 붙어서 90° 돌면 1초 넘게 늦었다.
+     tau 는 «목표 각도의 63% 를 따라잡는 데 걸리는 초» — 값이 작을수록 딱 붙는다.
+       락온   0.16  몬헌 «포커스 카메라» — 대상을 계속 문다
+       전투   0.30  락온 없이 싸울 때. 붙되 시야는 남긴다
+       탐색   0.26  마영전처럼 달리는 방향 뒤로 바로 붙는다
+     멈추면 따라가지 않는다(idleHold) — 몬헌도 서 있을 때 카메라를 돌리지 않는다. */
+  var CAM={ tauLock:0.16, tauFight:0.30, tauMove:0.26, idleHold:true,
+            lookAhead:1.1,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
+            pitchMove:0.50, pitchFight:0.42,
+            fov:50, fovDash:57, fovHit:46, fovTau:0.10,
+            sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
+  var fovWant=CAM.fov, bossTall=0;
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0))*0.9   /* 조금 당겨 캐릭터를 크게 */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
@@ -884,11 +897,30 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     if(battle){ bp=v3(Bs.x,Bs.y,1.4); gap=Math.hypot(bp.x-pp.x, bp.z-pp.z);
       /* 락온이면 멀수록 둘의 «가운데» 쪽으로 — 보스가 화면 밖으로 나가지 않는다 */
       look.lerp(bp, locked?Math.max(0.3,Math.min(0.5,0.28+gap*0.03)):0.3); }
-    if(dragT>0&&!locked) dragT-=dt; else if(!cineCam){ var want=null;
-      if(battle){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); } else if(P.moving && P.rollT<=0){ var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); }
-      if(want!=null){ var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; camYaw+=dy*Math.min(1,dt*(locked?4.5:battle?1.6:0.9)); } }
-    if(dragT>0&&locked) dragT=0;
-    var dist=camDist*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);   /* 멀어지면 물러나 둘 다 담는다 */
+    /* 주시점을 진행 방향으로 살짝 밀어 «가는 곳» 이 보이게 (마영전) */
+    if(P.moving && P.rollT<=0 && !battle){ var la=yawOf(P.aim==null?0:P.aim);
+      look.x+=Math.sin(la)*CAM.lookAhead; look.z+=Math.cos(la)*CAM.lookAhead; }
+    /* 따라가기: 손으로 돌린 직후(dragT)엔 손이 이긴다. 락온 중 드래그는 대상 주위를 도는 것이라 유지한다. */
+    if(dragT>0) dragT-=dt;
+    if(dragT<=0 && !cineCam){
+      var want=null, tau;
+      if(locked){                      /* 몬헌 포커스: 플레이어 뒤에서 보스를 문다 */
+        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; }
+      else if(battle){                 /* 락온 없이: 보스를 화면에 두되 느슨하게 */
+        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauFight; }
+      else if(P.moving && P.rollT<=0){ /* 탐색: 달리는 방향 뒤로 */
+        var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); tau=CAM.tauMove; }
+      /* 멈춰 있으면 그대로 둔다 — 서 있을 때까지 카메라가 돌면 멀미가 난다 */
+      if(want!=null && !(CAM.idleHold && !P.moving && !battle)){
+        var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
+        camYaw+=dy*(1-Math.exp(-dt/tau)); }
+    }
+    /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
+    var pitchWant=battle?CAM.pitchFight:CAM.pitchMove;
+    if(!camFree) camPitch+=(pitchWant-camPitch)*(1-Math.exp(-dt/0.5));
+    if(!bossTall && boss.model){ var bb=new THREE.Box3().setFromObject(boss.model); if(isFinite(bb.max.y)) bossTall=bb.max.y-bb.min.y; }
+    var big=battle?Math.max(0,(bossTall-2.2))*CAM.sizeDist:0;        /* 큰 놈일수록 물러난다 */
+    var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist);
     var z=Math.pow(0.001, dt);
@@ -897,6 +929,10 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-Math.pow(0.0005,dt)); }
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
+    /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
+    var fv=CAM.fov; if(P.rollT>0) fv=CAM.fovDash; else if(camZoom<0.98) fv=CAM.fovHit;
+    fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
+    if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
     cam.position.copy(camPos);
     if(shakeT>0){ shakeT-=dt; var sk=Math.max(0,shakeT/Math.max(1e-3,shakeD)), se=sk*sk;
       if(shakeDX||shakeDZ){ var osc=Math.sin(shakeT*95)*shakeAmt*0.11*se;
