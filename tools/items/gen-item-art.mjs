@@ -284,11 +284,34 @@ ART.q_fragment = () => { const c = grad(['#7a6aa0','#2b2340','#0a0810'], 70), f 
     <path d="M26 30 l6 -2 l2 4" stroke="#fff" stroke-width=".8" fill="none" opacity=".7"/>
     ${spec(24,18,1.5,6,20,.3)}</g>`); };
 
+/* 쌍단검: 짧은 날 두 자루를 교차 */
+function twin({blade, grip, gem}){
+  const b = grad(blade, 100), h = grad(grip || P.leather, 90), j = gem ? grad([gem, gem, '#000'], 0) : null;
+  const one = (deg) => `
+    <g transform="rotate(${deg} 32 34)">
+      <path d="M29.6 34 L 29.6 14 L 32 9 L 34.4 14 L 34.4 34 Z" fill="url(#${b.id})" ${OUTLINE}/>
+      <path d="M32 12 L 32 33" stroke="rgba(0,0,0,.35)" stroke-width=".7"/>
+      <path d="M26 34 h12 v2.4 h-12 z" fill="url(#${h.id})" ${OUTLINE}/>
+      <path d="M30.4 36.4 h3.2 v10 h-3.2 z" fill="url(#${h.id})" ${OUTLINE}/>
+      ${j ? `<circle cx="32" cy="35.2" r="1.5" fill="url(#${j.id})"/>` : ''}
+    </g>`;
+  return svg([b.def, h.def, ...(j ? [j.def] : [])], one(-28) + one(28));
+}
+ART.w_ryu_dagger = () => twin({ blade:['#d8b0a8','#8a3a32','#3a1210'], grip:['#4a4e58','#24262c','#0d0e11'], gem:'#ff4a3a' });
+ART.w_kain_greatsword = () => sword({ blade:['#e2e7f0','#8a93a3','#3d424c'], guard:['#f0d27a','#a8761f','#5a3a0e'], grip:['#6b5a48','#3d3226','#1b150f'], long:true, wide:true });
+ART.w_ryu_shiv = () => twin({ blade:['#9aa0a8','#565a63','#26282d'], grip:['#6b5a48','#3d3226','#1b150f'] });
+ART.w_ryu_twinfang = () => twin({ blade:['#ffe6a8','#c98a2b','#6e4a12'], grip:['#8a3a32','#5a1e1a','#2a0c0a'], gem:'#ff6c58' });
+ART.w_sera_vial = () => flask({ liquid:['#b9c9d2','#6f7f86','#2c383d'], glow:null, round:true, cork:'#6b5a48' });
+ART.w_sera_reagent = () => flask({ liquid:['#b8f4ea','#3fbfae','#12514a'], glow:'#6ff0dc', round:true, cork:'#c08c2c', stripe:'#f0d27a' });
+
 /* ---- 출력·검증 ---- */
 const items = readFileSync(join(ROOT, 'js', 'items.js'), 'utf8');
 const ids = [...items.matchAll(/id:'([a-z]+_[a-z_]+)'/g)].map(m => m[1]).filter((v,i,a) => a.indexOf(v)===i && !/^r_/.test(v));
-const missing = ids.filter(id => !ART[id]);
+const { existsSync } = await import('node:fs');
+const missing = ids.filter(id => !ART[id] && !existsSync(join(OUT, id + '.svg')));
+const handmade = ids.filter(id => !ART[id] && existsSync(join(OUT, id + '.svg')));
 if (missing.length){ console.error('아트 없는 아이템:', missing.join(' ')); process.exit(1); }
 let n = 0;
 for (const id of Object.keys(ART)){ const s = ART[id]().replace(/\n\s*/g, ''); writeFileSync(join(OUT, id + '.svg'), s); n++; }
-console.log(n + ' item images → art/items/ (' + ids.length + ' ids in items.js)');
+console.log(n + ' item images → art/items/ (' + ids.length + ' ids in items.js'
+  + (handmade.length ? ', 손으로 만든 ' + handmade.length + '종 유지: ' + handmade.join(' ') : '') + ')');
