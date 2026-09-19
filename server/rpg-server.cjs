@@ -37,6 +37,7 @@ function createRpgCommands(ctx){
   else if(op==='skillUp')result=store.skillUp(id,msg.skill);
   else if(op==='skillBranch')result=store.skillBranch(id,msg.skill,msg.branch);
   else if(op==='skillReset')result=store.skillReset(id);
+  else if(op==='switchCharacter')result=store.switchCharacter(id,msg.character);
   else if(op==='quest')result=store.questAction(id,msg.quest,msg.operation);
   else if(op==='quickslots')result=store.supplies(id,msg.slots);
   else if(op==='claimRewards'){store.deliverRewards(id);result={profile:store.public(id)};}

@@ -101,3 +101,38 @@ test('구버전 프로필은 아인으로 이관되고 장비를 잃지 않는�
  assert.equal(legacy.equipment.main,'w_rust_sword','기존 주무기 유지');
  assert.equal(legacy.equipment.chest,'a_reed_cuirass','기존 방어구 유지');
 });
+
+test('출격 캐릭터 변경: 골드를 받고 기술만 초기화하며 장비·재료는 유지한다',async t=>{
+ const {url,store}=await setup(t),a=await user(t,url,'switch');const id=a.profile.id;
+ const C=require('../server/content.cjs'),R=require('../server/rpg-rules.cjs');
+ // 준비: 골드·재료·기술 강화
+ const p=store.get(id);p.gold=10000;p.xp=1200*10;p.items.m_alloy=42;p.items.a_reed_cuirass=1;store.put(p);
+ await rpg(a,'skillUp',{skill:'slash'});
+ assert.equal(store.rpgState(id).skills.skills.find(s=>s.id==='slash').lv,2);
+ // 비용 부족은 거부
+ const broke=store.get(id);broke.gold=100;store.put(broke);
+ const poor=await rpg(a,'switchCharacter',{character:'kain'});
+ assert.equal(poor.type,'error');
+ assert.equal(store.get(id).character,'ain','실패하면 그대로');
+ // 정상 변경
+ const rich=store.get(id);rich.gold=10000;store.put(rich);
+ const ok=await rpg(a,'switchCharacter',{character:'kain'});
+ assert.equal(ok.type,'rpgResult');
+ const after=store.get(id);
+ assert.equal(after.character,'kain');
+ assert.equal(after.gold,10000-3000,'변경 비용이 빠진다');
+ assert.equal(after.items.m_alloy,42,'재료 유지');
+ assert.equal(after.items.a_reed_cuirass,1,'방어구 유지');
+ assert.equal(after.equipment.main,R.startingWeapon.kain,'새 캐릭터의 시작 무기를 든다');
+ assert.ok(after.items[R.startingWeapon.kain]>0,'시작 무기를 지급받는다');
+ assert.ok(after.items[R.startingWeapon.ain]>0,'이전 무기는 가방에 남는다');
+ const view=store.rpgState(id).skills;
+ assert.equal(view.character,'kain');
+ assert.equal(view.skills[0].name,C.skills.kain[0].name,'기술표가 새 캐릭터 것으로');
+ assert.equal(view.points.spent,0,'기술은 초기화되고 포인트를 돌려받는다');
+ const lv=1+Math.floor(after.xp/1200);
+ assert.equal(store.stats(id).hp,C.characters.kain.stats.hp+(lv-1)*150,'기본 체력이 새 캐릭터 + 레벨 성장분');
+ // 같은 캐릭터로는 변경 불가, 없는 캐릭터도 거부
+ assert.equal((await rpg(a,'switchCharacter',{character:'kain'})).type,'error');
+ assert.equal((await rpg(a,'switchCharacter',{character:'없는캐릭터'})).type,'error');
+});
