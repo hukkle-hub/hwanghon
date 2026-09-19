@@ -7,7 +7,7 @@ import {buildDungeonProps} from './dungeon-props.js';
 const $=id=>document.getElementById(id),levels=window.TW_LEVELS,arenas=window.TW_DUNGEONS.ARENAS,loader=new GLTFLoader();
 const storage={get(k){try{return localStorage.getItem(k);}catch{return null;}},set(k,v){try{localStorage.setItem(k,v);}catch{}},remove(k){try{localStorage.removeItem(k);}catch{}}};
 let socket,profile,room,sequence=0,connected=false,reconnectTimer,stopped=false,lastReceived=0,latestEvent=0,noticeUntil=0,view,assetPromise,assets,keys={},stick={x:0,y:0},pingTimer;
-let authRequest=null,guild=null,chatMessages=[];
+let authRequest=null,guild=null,chatMessages=[],pendingChat=null,chatTimer,chatChannel=null;
 const params=new URLSearchParams(location.search),invite=params.get('room');
 /* 파티 서버 주소: 기본은 이 페이지를 서빙한 서버. 정적 호스팅(GitHub Pages)에서는 ?server=<주소> 로 지정하면 기억한다 */
 const serverParam=params.get('server');
@@ -20,8 +20,8 @@ const server=partyServer();
 const tokenKey='tw:party-token:'+server.host;
 $('nickname').value=storage.get('tw:party-name')||'아인';if(invite)$('room-code').value=invite;
 function notice(text){$('notice').textContent=text;$('market-notice').textContent=text;$('shop-notice').textContent=text;}
-function send(message){if(!connected||socket?.readyState!==WebSocket.OPEN)return;socket.send(JSON.stringify({...message,seq:++sequence}));}
-function connect(request=null){authRequest=request;if(socket&&[0,1].includes(socket.readyState))return;stopped=false;clearTimeout(reconnectTimer);$('connect').disabled=true;$('connection').textContent='접속 중';
+function send(message){if(!connected||socket?.readyState!==WebSocket.OPEN)return false;socket.send(JSON.stringify({...message,seq:++sequence}));return true;}
+function connect(request=null){if(socket&&[0,1].includes(socket.readyState))return;authRequest=request;stopped=false;clearTimeout(reconnectTimer);$('connect').disabled=true;$('connection').textContent='접속 중';
  if(!/^https?:$/.test(location.protocol)){notice('파티 서버 주소에서 이 화면을 열어 주세요.');$('connect').disabled=false;return;}
  const scheme=(server.remote?server.origin.startsWith('https'):location.protocol==='https:')?'wss:':'ws:';
  socket=new WebSocket(scheme+'//'+server.host+'/party-socket');
@@ -33,7 +33,7 @@ function connect(request=null){authRequest=request;if(socket&&[0,1].includes(soc
   if(msg.type==='guild'){guild=msg.guild;renderGuild();return;}
   if(msg.type==='board'){renderBoard(msg);return;}
   if(msg.type==='chatHistory'){chatMessages=msg.messages;renderChat();return;}
-  if(msg.type==='chat'){appendChat(msg.message);return;}
+  if(msg.type==='chat'){const m=msg.message;if(pendingChat&&m.player===profile?.id&&m.channel===pendingChat.channel&&m.text===pendingChat.text){if($('chat-text').value===pendingChat.draft)$('chat-text').value='';finishChat();}appendChat(m);return;}
   if(msg.type==='rpgNotice'){notice(msg.text);announce(msg.text);return;}
   if(msg.type==='market'){renderMarket(msg.listings);return;}
   if(msg.type==='shop'){renderShop(msg.items);return;}
@@ -44,10 +44,10 @@ function connect(request=null){authRequest=request;if(socket&&[0,1].includes(soc
   if(msg.type==='left'){room=null;if(view){view.dispose();view=null;}$('arena').hidden=true;$('lobby').hidden=false;renderRoom();renderSocial();return;}
   if(msg.type==='pong'){const ms=Math.round(performance.now()-msg.echo);$('latency').textContent=ms+'ms'+(ms>120?' · 지연 높음':'');return;}
   if(msg.type==='superseded'){stopped=true;connected=false;notice('다른 창에서 같은 프로필로 접속했습니다.');$('disconnect').textContent='다른 창에서 접속했습니다. 한 캐릭터는 한 창에서 조작합니다.';$('disconnect').hidden=false;return;}
-  if(msg.type==='error'){notice(msg.message);announce(msg.message);if(!connected){$('login').hidden=false;$('online').hidden=true;$('fresh').hidden=false;stopped=true;socket.close();}}
+  if(msg.type==='error'){finishChat();notice(msg.message);announce(msg.message);if(!connected){$('login').hidden=false;$('online').hidden=true;$('fresh').hidden=false;stopped=true;socket.close();}}
  });
  socket.addEventListener('error',()=>{if(!server.remote&&!connected)notice('이 주소에는 파티 서버가 없습니다. 아래 «파티 서버 주소» 에 서버 주소를 넣고 접속하세요.');});
- socket.addEventListener('close',e=>{if(e.target!==socket)return;connected=false;clearInterval(pingTimer);$('connect').disabled=false;$('connection').textContent='연결 끊김';$('social-link-state').textContent='연결을 복구하는 중입니다';clearControls(false);if(room?.raid)$('disconnect').hidden=false;if(!stopped&&profile){notice('연결을 복구하고 있습니다.');reconnectTimer=setTimeout(connect,1500);}else if(!profile&&!stopped)notice('파티 서버에 연결할 수 없습니다. 서버를 실행한 주소로 접속해 주세요.');});
+ socket.addEventListener('close',e=>{if(e.target!==socket)return;connected=false;finishChat();clearInterval(pingTimer);$('connect').disabled=false;$('connection').textContent='연결 끊김';$('social-link-state').textContent='연결을 복구하는 중입니다';clearControls(false);if(room?.raid)$('disconnect').hidden=false;if(!stopped&&profile){notice('연결을 복구하고 있습니다.');reconnectTimer=setTimeout(connect,1500);}else if(!profile&&!stopped)notice('파티 서버에 연결할 수 없습니다. 서버를 실행한 주소로 접속해 주세요.');});
  socket.addEventListener('error',()=>notice('파티 서버에 연결할 수 없습니다. 기존 정적 사이트에서는 서버 실행이 필요합니다.'));
 }
 function updateProfile(){if(!profile)return;$('profile-name').textContent=profile.name;$('wallet').textContent=profile.gold.toLocaleString()+' G · '+profile.xp+' XP';$('stash').replaceChildren();for(const [id,n]of Object.entries(profile.items)){const row=document.createElement('div');row.textContent=(window.TW_ITEMS?.get(id)?.name||id)+' × '+n;$('stash').append(row);}if(!Object.keys(profile.items).length)$('stash').textContent='협동 던전을 완료하면 전리품이 여기에 쌓입니다.';
@@ -118,7 +118,7 @@ function updateHud(){const raid=room.raid,p=mine(),b=raid.boss;if(!p)return;
   const u=new URL(location.href);v?u.searchParams.set('server',v):u.searchParams.delete('server');location.href=u.href;});})();
 $('connect').onclick=()=>connect();$('fresh').onclick=()=>{storage.remove(tokenKey);profile=null;socket?.close();setTimeout(()=>connect(),100);};
 $('create').onclick=()=>send({type:'create',level:$('dungeon').value,public:$('public-room').checked,purpose:$('party-purpose').value});$('join').onclick=()=>send({type:'join',code:$('room-code').value});$('ready').onclick=()=>send({type:'ready',ready:!room.members.find(m=>m.id===profile.id)?.ready});$('start').onclick=()=>send({type:'start'});$('leave').onclick=()=>send({type:'leave'});
-$('invite').onclick=async()=>{const url=new URL('party.html',location.href);url.searchParams.set('room',room.code);try{await navigator.clipboard.writeText(url.href);notice('초대 링크를 복사했습니다.');}catch{notice('초대 주소: '+url.href);}};
+$('invite').onclick=async()=>{const url=new URL('party.html',location.href);url.searchParams.set('room',room.code);if(server.remote)url.searchParams.set('server',server.origin);try{await navigator.clipboard.writeText(url.href);notice('초대 링크를 복사했습니다.');}catch{notice('초대 주소: '+url.href);}};
 $('retry').onclick=()=>send({type:'retry'});$('return-lobby').onclick=()=>send({type:'lobby'});$('menu-button').onclick=()=>{clearControls();$('raid-menu').showModal();};$('close-menu').onclick=()=>$('raid-menu').close();$('exit-raid').onclick=()=>{$('raid-menu').close();send({type:'leave'});};
 function cycleTarget(){const p=mine();if(!p)return;const ids=room.raid.boss.parts.map(q=>q.id);send({type:'target',part:ids[(ids.indexOf(p.target)+1)%ids.length]});}
 $('target-button').onclick=cycleTarget;
@@ -137,8 +137,9 @@ function renderSocial(){$('chat-channel').querySelector('[value="party"]').disab
 function renderGuild(){$('guild-empty').hidden=!!guild;$('guild-home').hidden=!guild;if(guild){$('guild-notice').textContent=guild.notice||'등록된 길드 공지가 없습니다.';$('guild-title').textContent=guild.name+'의 쉘터';$('guild-invite').textContent='초대 코드 '+guild.code+' · '+guild.members.length+'명';$('guild-members').replaceChildren();for(const m of guild.members){const row=document.createElement('p');row.textContent=(m.online?'● ':'○ ')+m.name+(m.id===guild.owner?' · 길드장':'');$('guild-members').append(row);}}$('chat-channel').querySelector('[value="guild"]').disabled=!guild;if(!guild&&$('chat-channel').value==='guild')$('chat-channel').value='world';renderChat();}
 function renderBoard(b){$('population').textContent='접속 '+b.online+' / '+b.capacity+' · 인력사무소 '+b.office;$('party-board').replaceChildren();for(const r of b.rooms){const row=document.createElement('div');row.className='board-row';const text=document.createElement('span');text.textContent=r.leader+' · '+levels[r.level].name+' · '+({practice:'연습',first:'첫 클리어',repeat:'반복 토벌'}[r.purpose]||'모집')+' · '+r.count+'/4';const button=document.createElement('button');button.textContent='참가';button.disabled=!!room;button.onclick=()=>send({type:'join',code:r.code});row.append(text,button);$('party-board').append(row);}if(!b.rooms.length)$('party-board').textContent='새 파티를 만들어 동료를 모집하세요.';}
 function appendChat(m){chatMessages.push(m);if(chatMessages.length>150)chatMessages.shift();renderChat();}
-function renderChat(){const channel=$('chat-channel').value;$('chat-log').replaceChildren();for(const m of chatMessages.filter(m=>m.channel===channel)){const row=document.createElement('p');row.textContent=m.name+(m.channel==='whisper'?' → '+m.toName:'')+': '+m.text;$('chat-log').append(row);}$('chat-log').scrollTop=$('chat-log').scrollHeight;}
-$('chat-channel').onchange=renderChat;
+function renderChat(){const channel=$('chat-channel').value,log=$('chat-log'),top=log.scrollTop,follow=channel!==chatChannel||log.scrollHeight-log.clientHeight-top<32;log.replaceChildren();for(const m of chatMessages.filter(m=>m.channel===channel)){const row=document.createElement('p');row.textContent=m.name+(m.channel==='whisper'?' → '+m.toName:'')+': '+m.text;log.append(row);}log.scrollTop=follow?log.scrollHeight:top;chatChannel=channel;}
+$('chat-channel').onchange=()=>renderChat();
+function finishChat(){clearTimeout(chatTimer);pendingChat=null;const button=$('chat-form').querySelector('button');button.disabled=false;button.textContent='전송';}
 $('character-submit').onclick=()=>send({type:'character',name:$('character-name').value,character:$('character-pick').value});
 $('guild-create').onclick=()=>send({type:'guildCreate',name:$('guild-name').value});$('guild-join').onclick=()=>send({type:'guildJoin',code:$('guild-code').value});$('guild-leave').onclick=()=>send({type:'guildLeave'});
 $('raid-chat-toggle').onclick=()=>{clearControls();$('raid-chat').hidden=!$('raid-chat').hidden;};$('chat-close').onclick=()=>$('raid-chat').hidden=true;
@@ -147,7 +148,20 @@ function renderShop(items){$('shop-list').replaceChildren();for(const offer of i
 for(const mode of ['login','register'])$('account-'+mode).onclick=()=>connect({type:'account',mode,username:$('account-id').value,password:$('password').value,name:$('nickname').value});
 $('claim-submit').onclick=()=>send({type:'account',mode:'register',username:$('claim-id').value,password:$('claim-password').value});
 $('logout').onclick=()=>{stopped=true;send({type:'logout'});};
-$('chat-form').onsubmit=e=>{e.preventDefault();send($('chat-channel').value==='whisper'?{type:'rpg',action:'whisper',name:$('whisper-target').value,text:$('chat-text').value}:{type:'chat',channel:$('chat-channel').value,text:$('chat-text').value});$('chat-text').value='';};
+$('chat-form').onsubmit=e=>{
+ e.preventDefault();if(pendingChat)return;
+ const draft=$('chat-text').value,text=draft.replace(/[\u0000-\u001f\u007f<>]/g,'').trim(),channel=$('chat-channel').value;
+ if(!text){notice('채팅 내용을 입력하세요.');return;}
+ if(!connected||socket?.readyState!==WebSocket.OPEN){notice('연결이 끊겨 전송하지 못했습니다. 입력한 내용은 유지됩니다.');return;}
+ const name=$('whisper-target').value.trim();if(channel==='whisper'&&!name){notice('귓속말을 받을 캐릭터 이름을 입력하세요.');return;}
+ pendingChat={draft,text,channel};const button=$('chat-form').querySelector('button');button.disabled=true;button.textContent='전송 중';
+ chatTimer=setTimeout(()=>{finishChat();notice('전송을 확인하지 못했습니다. 채팅 내역을 확인한 뒤 다시 보내세요.');},10000);
+ send(channel==='whisper'?{type:'rpg',action:'whisper',name,text}:{type:'chat',channel,text});
+};
+// Enter confirms a completed input, never an in-progress Korean IME composition.
+function enterClicks(input,button){$(input).addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||e.keyCode===229||e.repeat)return;e.preventDefault();$(button).click();});}
+for(const [input,button] of [['account-id','account-login'],['password','account-login'],['character-name','character-submit'],['room-code','join'],['guild-code','guild-join'],['claim-password','claim-submit']])enterClicks(input,button);
+$('chat-text').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.isComposing||e.keyCode===229))e.preventDefault();});
 $('open-party').onclick=()=>$('recruitment').scrollIntoView({behavior:'smooth'});
 $('open-market').onclick=()=>{clearControls();$('market-dialog').showModal();send({type:'market'});};$('market-close').onclick=()=>$('market-dialog').close();$('market-refresh').onclick=()=>send({type:'market'});
 $('open-shop').onclick=()=>{clearControls();$('shop-dialog').showModal();send({type:'shop'});};$('shop-close').onclick=()=>$('shop-dialog').close();
