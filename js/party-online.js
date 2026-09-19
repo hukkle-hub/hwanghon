@@ -100,7 +100,7 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
  if(e.type==='interact')announce(e.name);
  if(e.type==='execute'){announce('처형 — '+(room.members.find(p=>p.id===e.player)?.name||'아인'));view?.flashBoss();window.TW_SFX?.play('execute');}
  if(e.type==='phaseClear')announce('페이즈 돌파 — 보스가 깨어난다');
- if(e.type==='phase'){announce('P H A S E '+(e.phase+1)+' — '+(view?.A?.stages?.[e.phase]?.name||''));view?.flashBoss();window.TW_SFX?.play('phase');}
+ if(e.type==='phase'){announce('P H A S E '+(e.phase+1)+' — '+(view?.A?.stages?.[e.phase]?.name||''));view?.phaseWake(e.phase+1);window.TW_SFX?.play('phase');}
  if(e.type==='hit'){view?.flashBoss();window.TW_SFX?.play('hit',e.kind==='counter');}
  if(e.type==='hurt'&&e.player===profile?.id){window.TW_SFX?.play('hurt');if(view)view.shake=.15;}
  if(e.type==='feedback'&&e.player===profile?.id)announce(e.text);
@@ -194,7 +194,12 @@ function windupAt(pat,t,dur){t=Math.max(0,Math.min(1,t));const h=pat&&pat.hold;
 const pos=(x,y,h=0)=>new T.Vector3(x/SCALE,h,y/(DEPTH*SCALE));
 class RaidView{
  constructor(canvas,raid,assets){this.canvas=canvas;this.raidId=raid.id;this.scene=new T.Scene();this.scene.background=new T.Color(0x131c21);this.scene.fog=new T.FogExp2(0x131c21,.022);this.camera=new T.PerspectiveCamera(50,1,.1,250);this.renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));this.renderer.outputColorSpace=T.SRGBColorSpace;this.renderer.toneMapping=T.ACESFilmicToneMapping;this.renderer.toneMappingExposure=1.35;this.avatars=new Map();this.labels=new Map();this.L=levels[raid.level];this.A=arenas[this.L.arena];this.phase=-1;this.look=new T.Vector3();this.first=true;
-  this.scene.add(new T.HemisphereLight(0xc5d7e2,0x4d4637,2));const key=new T.DirectionalLight(0xffd8a0,2.3);key.position.set(-10,25,12);this.scene.add(key);this.buildWorld();this.zoneCircle=new T.Mesh(new T.CircleGeometry(1,64),new T.MeshBasicMaterial({color:0xc83d33,transparent:true,opacity:.26,side:T.DoubleSide,depthWrite:false}));this.zoneCircle.rotation.x=-Math.PI/2;this.scene.add(this.zoneCircle);this.zoneLine=new T.Mesh(new T.PlaneGeometry(1,1),this.zoneCircle.material.clone());this.zoneLine.rotation.x=-Math.PI/2;this.scene.add(this.zoneLine);this.flash=0;this.resize();}
+  this.scene.add(new T.HemisphereLight(0xc5d7e2,0x4d4637,2));const key=new T.DirectionalLight(0xffd8a0,2.3);key.position.set(-10,25,12);this.scene.add(key);this.buildWorld();this.zoneCircle=new T.Mesh(new T.CircleGeometry(1,64),new T.MeshBasicMaterial({color:0xc83d33,transparent:true,opacity:.26,side:T.DoubleSide,depthWrite:false}));this.zoneCircle.rotation.x=-Math.PI/2;this.scene.add(this.zoneCircle);this.zoneLine=new T.Mesh(new T.PlaneGeometry(1,1),this.zoneCircle.material.clone());this.zoneLine.rotation.x=-Math.PI/2;this.scene.add(this.zoneLine);this.flash=0;
+  /* 페이즈 전환 컷 — 서버 state 가 'transition' 인 1.4초 동안만. 상태가 몰아주므로 모든 플레이어가 같은 그림을 본다 */
+  this.cut=0;this.ringT=0;this.ringDur=.9;
+  this.ring=new T.Mesh(new T.RingGeometry(.86,1,48),new T.MeshBasicMaterial({color:0xD94A45,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}));
+  this.ring.rotation.x=-Math.PI/2;this.ring.renderOrder=3;this.ring.visible=false;this.scene.add(this.ring);
+  this.resize();}
  resize(){const w=this.canvas.clientWidth||innerWidth,h=this.canvas.clientHeight||innerHeight;if(this.w===w&&this.h===h)return;this.w=w;this.h=h;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
  buildWorld(){const L=this.L,cell=L.cell,w=L.rows[0].length*cell/SCALE,h=L.rows.length*cell/(DEPTH*SCALE),swamp=L.env==='swamp';const floor=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({color:swamp?0x35443a:0x414a48,roughness:.95}));floor.rotation.x=-Math.PI/2;floor.position.set(w/2,-.03,h/2);this.scene.add(floor);const tiles=[];L.rows.forEach((r,y)=>[...r].forEach((ch,x)=>{if(ch==='#'||ch==='|')tiles.push([x,y]);}));const walls=new T.InstancedMesh(new T.BoxGeometry(cell/SCALE,swamp?1.6:2.2,cell/(DEPTH*SCALE)),new T.MeshStandardMaterial({color:swamp?0x283c32:0x293c42,transparent:true,opacity:.75,roughness:.9}),tiles.length);const matrix=new T.Matrix4();tiles.forEach(([x,y],i)=>walls.setMatrixAt(i,matrix.makeTranslation((x+.5)*cell/SCALE,swamp?.8:1.1,(y+.5)*cell/(DEPTH*SCALE))));this.scene.add(walls);
   const grid=new T.GridHelper(Math.max(w,h),Math.ceil(Math.max(w,h)/2),0x71877c,0x52645d);grid.position.set(w/2,.005,h/2);grid.material.transparent=true;grid.material.opacity=.13;this.scene.add(grid);
@@ -203,6 +208,10 @@ class RaidView{
  }
  makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='root'?createRootBoss():this.A.procedural==='hauler'?createHaulerBoss():this.A.procedural==='relay'?createRelayBoss():this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?prepareMarshMotion(assets.marsh):prepareTrainingMotion(assets.dummy);this.boss=new Animated(asset,this.scene,false,!!this.A.procedural);this.boss.model.scale.setScalar((this.A.bossScale||1.22)*(this.A.scale||1));   /* 보스 크기 — js/game3d.js BOSS_SCALE 과 같게 */this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});if(this.A.pieces==='dummy'){this.boss.training=createTrainingParts(this.boss.model,{owned:this.boss.owned});this.boss.training.sync(raid.boss.parts);}this.phase=raid.phase;}
  flashBoss(){this.flash=.12*rpgUI.settings.effects;}
+ /* 각성: 보스가 바뀌는 순간의 한 방. 솔로(js/game3d.js phaseClear) 와 같은 문법 */
+ phaseWake(phase){const fx=rpgUI.settings.effects;this.flash=.34*fx;this.shake=.09*fx;
+  this.ringT=this.ringDur;this.ring.material.color.setHex(phase>=2?0xD94A45:0xC9A45E);window.TW_SFX?.play('brk');
+  if(navigator.vibrate&&fx>0)try{navigator.vibrate([30,40,70]);}catch{}}
  update(raid,dt){this.resize();const age=Math.min(.05,(performance.now()-lastReceived)/1000);if(this.phase!==raid.phase)this.makeBoss(raid);
   for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){const ca=assets.chars[p.character]||Object.values(assets.chars)[0];a=new Animated(ca.model,this.scene,true,false,ca.weapon);a.root.position.copy(pos(p.x,p.y));const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
   const b=raid.boss,bb=this.boss;bb.root.position.lerp(pos(b.x,b.y),1-Math.exp(-dt*24));bb.root.rotation.y=Math.PI/2-b.aim;
@@ -211,6 +220,10 @@ class RaidView{
   else {const clip=raid.state==='clear'?'death':b.state==='downed'?'down':b.state==='stagger'?'stagger':b.moving?'walk':'idle';bb.play(clip);bb.current.paused=raid.state==='clear';if(bb.current.paused)bb.current.time=Math.max(0,bb.current.getClip().duration-1e-5);}
   bb.mixer.update(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
   bb.training?.sync(b.parts);
+  if(this.ringT>0){const k=1-this.ringT/this.ringDur;this.ringT=Math.max(0,this.ringT-dt);
+   this.ring.visible=true;this.ring.position.set(bb.root.position.x,.06,bb.root.position.z);
+   this.ring.scale.set(.9+k*7.2,1,.9+k*7.2);this.ring.material.opacity=.85*(1-k)*rpgUI.settings.effects;}
+  else this.ring.visible=false;
   for(const part of b.parts){if(this.A.pieces==='nodes'){for(const object of bossPartPieces(bb.model,part.id))object.visible=!part.broken;}}
   this.zoneCircle.visible=this.zoneLine.visible=false;if(b.zone&&b.state==='telegraph'){const z=b.zone,teach=this.L.id==='d01',col=b.pattern.counterable?(teach&&b.tele<=b.window?0xf7efd8:0xd84c3b):0xfca044;  /* 흰색 점등은 훈련장 전용 — 그 밖에서는 색이 «종류»만 말한다 */if(z.kind==='circle'){this.zoneCircle.visible=true;this.zoneCircle.position.copy(pos(z.x,z.y,.04));this.zoneCircle.scale.setScalar(z.r/SCALE);this.zoneCircle.material.color.setHex(col);}else{this.zoneLine.visible=true;this.zoneLine.position.copy(pos(z.x+Math.cos(z.a)*z.len/2,z.y+Math.sin(z.a)*z.len/2*DEPTH,.04));this.zoneLine.scale.set(z.len/SCALE,z.w/SCALE,1);this.zoneLine.rotation.set(-Math.PI/2,0,-z.a);this.zoneLine.material.color.setHex(col);}}
   /* 아레나 위험 구역 (광란 페이즈) — 서버가 phase 까지 계산해서 보낸다 */
@@ -228,11 +241,24 @@ class RaidView{
    o.fill.material.color.setHex(acol);o.edge.material.color.setHex(acol);
    o.fill.material.opacity=h.phase==='active'?.40:.16;o.edge.material.opacity=h.phase==='active'?.95:.6;});
   this.gate.visible=raid.state!=='explore'||(this.L.expedition.required||[]).some(id=>!raid.expedition.done[id]);this.props.update(raid.time);
-  const me=raid.players.find(p=>p.id===profile.id)||raid.players[0],target=pos(me.x,me.y,1);if(raid.state==='fight'&&target.distanceTo(bb.root.position)<20)target.lerp(bb.root.position.clone().add(new T.Vector3(0,1,0)),.2);if(this.first){this.look.copy(target);this.first=false;}else this.look.lerp(target,1-Math.exp(-dt*8*rpgUI.settings.camera));this.camera.position.copy(this.look).add(new T.Vector3(8,11,12).multiplyScalar(rpgUI.settings.zoom));this.shake=Math.max(0,(this.shake||0)-dt);if(rpgUI.settings.shake&&this.shake>0)this.camera.position.x+=Math.sin(performance.now()*.15)*this.shake;this.camera.lookAt(this.look);this.renderer.render(this.scene,this.camera);this.drawMap(raid);
+  const me=raid.players.find(p=>p.id===profile.id)||raid.players[0],target=pos(me.x,me.y,1);if(raid.state==='fight'&&target.distanceTo(bb.root.position)<20)target.lerp(bb.root.position.clone().add(new T.Vector3(0,1,0)),.2);
+  /* 전환 동안 서버가 모두를 멈춰 두므로(server/raid.cjs tick: state==='transition' 이면 플레이어를 돌리지 않는다)
+     이 사이에만 카메라를 보스로 밀어 넣는다. 조작을 뺏지 않고, 상태가 끝나면 저절로 풀린다. */
+  const wantCut=raid.state==='transition'?rpgUI.settings.effects:0;
+  this.cut+=(wantCut-this.cut)*(1-Math.exp(-dt/(wantCut>this.cut?.30:.45)));
+  if(this.cut>.002)target.lerp(bb.root.position.clone().add(new T.Vector3(0,1.7,0)),this.cut);
+  if(this.first){this.look.copy(target);this.first=false;}else this.look.lerp(target,1-Math.exp(-dt*8*rpgUI.settings.camera*(1+this.cut)));
+  const orb=this.cut*.55,off=new T.Vector3(8,11,12).multiplyScalar(rpgUI.settings.zoom*(1-.52*this.cut));
+  off.applyAxisAngle(new T.Vector3(0,1,0),orb);       /* 살짝 돌면서 들어간다 — 멈춘 그림이 아니라 «컷» 으로 읽히게 */
+  this.camera.position.copy(this.look).add(off);this.shake=Math.max(0,(this.shake||0)-dt);if(rpgUI.settings.shake&&this.shake>0)this.camera.position.x+=Math.sin(performance.now()*.15)*this.shake;this.camera.lookAt(this.look);this.renderer.render(this.scene,this.camera);this.drawMap(raid);
  }
  drawMap(raid){const c=$('raid-map'),g=c.getContext('2d'),rows=this.L.rows,w=rows[0].length,h=rows.length,s=Math.min(c.width/w,c.height/h),ox=(c.width-w*s)/2,oy=(c.height-h*s)/2;g.clearRect(0,0,c.width,c.height);rows.forEach((r,y)=>[...r].forEach((ch,x)=>{g.fillStyle=ch==='#'?'#354744':'#101c22';g.fillRect(ox+x*s,oy+y*s,s,s);}));for(const n of this.adapter.nodes){g.fillStyle=raid.expedition.done[n.id]?'#69b28d':n.kind==='checkpoint'?'#76bdcf':'#d9b96c';g.fillRect(ox+n.cx*s,oy+n.cy*s,Math.max(3,s),Math.max(3,s));}for(const p of raid.players){g.fillStyle=COLORS[p.color%4];g.beginPath();g.arc(ox+p.x/this.L.cell*s,oy+p.y/this.L.cell*s,3,0,Math.PI*2);g.fill();}g.fillStyle='#dc594e';g.beginPath();g.arc(ox+raid.boss.x/this.L.cell*s,oy+raid.boss.y/this.L.cell*s,4,0,Math.PI*2);g.fill();}
  dispose(){for(const a of this.avatars.values())a.dispose(this.scene);this.boss?.dispose(this.scene);$('nameplates').replaceChildren();const resources=new Set();this.scene.traverse(o=>{if(o.geometry)resources.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m)resources.add(m);});for(const resource of resources)resource.dispose();this.renderer.dispose();}
 }
 let previous=performance.now();function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-previous)/1000);previous=now;window.TW_SFX?.scene(connected&&view&&room?.raid?(room.raid.state==='fight'?'boss':room.raid.state==='explore'?'explore':'off'):'off');if(view&&room?.raid)view.update(room.raid,dt);if(now>noticeUntil)$('announcement').textContent='';if(room?.raid&&now-lastReceived>3000){$('disconnect').hidden=false;$('disconnect').textContent='서버 응답을 기다리고 있습니다. 조작은 복귀 후 이어집니다.';}}requestAnimationFrame(frame);
+/* 검수용 창구 — 솔로의 window.TW_DUNGEON 과 같은 구실. 렌더러 상태를 밖에서 볼 수 있게 한다 */
+window.TW_RAID={get view(){return view;},get room(){return room;},get connected(){return connected;},
+  get cut(){return view?view.cut:0;},camPos(){return view?view.camera.position.toArray().map(v=>+v.toFixed(2)):null;},
+  bossPos(){return view&&view.boss?view.boss.root.position.toArray().map(v=>+v.toFixed(2)):null;}};
 const rpgUI=createRpgUI({send,connect,clearControls,getRoom:()=>room,saveToken:token=>storage.set(tokenKey,token)});
 if(storage.get(tokenKey))connect();

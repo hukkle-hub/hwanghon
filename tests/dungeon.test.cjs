@@ -68,3 +68,31 @@ test('sewage loot has distinct first-clear rewards and rare rolls work',()=>{
  const L=c.window.TW_LOOT,sum={gold:2400,mats:[],rank:'B',counterRate:1,breaks:2,breakable:2};const first=L.clearRewards('sewage',sum,true),next=L.clearRewards('sewage',sum,false);
  assert.equal(first.gold-next.gold,2500);assert.ok(next.all.some(x=>x[0]==='m_heart'));
 });
+
+test('d02 연계 비트는 비트마다 다른 아이콘을 내보내고, 그 아이콘이 전용 클립으로 풀린다',()=>{
+ /* 「모션이 없다」의 정체는 여기였다: 연계 2·3타가 1타와 같은 아이콘을 내보내면
+    bossAttackSpec 이 같은 클립을 돌려줘 같은 동작을 두 번 본다.
+    combat.js 의 beatsOf 가 {...def,...raw} 로 덮으므로 chain[].icon 이 비트 아이콘이 된다. */
+ const {RULES,ARENAS}=C.window.TW_DUNGEONS,{createBattle}=CB;
+ const seen=(stageIndex,wanted)=>{
+  const dummy=ARENAS.marsh.stages[stageIndex];
+  /* 원하는 패턴만 고르게 pick 을 고정하고, 예고는 전부 그냥 맞아 준다 */
+  const want=dummy.patterns.findIndex(p=>p.icon===wanted);
+  const b=createBattle({char:C.window.TW_WORLD.CHARS.ain,rules:RULES,dummy,
+    hooks:{canHit:()=>true,canCounter:()=>false,inZone:()=>false,pick:list=>list[Math.max(0,list.findIndex(p=>p.icon===wanted))]}});
+  assert.ok(want>=0,wanted);
+  const icons=[];
+  for(let i=0;i<4000;i++){b.tick(.01);
+   for(const e of b.drain())if(e.t==='telegraph')icons.push([e.icon,e.beat,e.beats]);
+   if(icons.length&&icons[0][2]===icons.length)break;}
+  return icons;
+ };
+ const bolt=seen(0,'bolt');
+ assert.deepEqual(bolt.map(x=>x[0]),['bolt','boltB'],'돌진 베기 2타');
+ assert.deepEqual(bolt.map(x=>x[1]),[1,2]);
+ const drop=seen(1,'drop');
+ assert.deepEqual(drop.map(x=>x[0]),['drop','dropB','dropC'],'피의 광란 3타');
+ /* 그 아이콘들이 아레나에서 서로 다른 클립으로 풀린다 */
+ const clips=[...bolt,...drop].map(([icon])=>ARENAS.marsh.atk[icon].clip);
+ assert.equal(new Set(clips).size,clips.length,'같은 클립이 두 번: '+clips.join(','));
+});

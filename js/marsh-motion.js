@@ -14,35 +14,17 @@ export function prepareMarshMotion(asset) {
         }
       }
     }
-    if (clip.name === 'atk_drop') return strikeSegment(source,'atk_drop',.05,.30);
     return clip;
   });
-  const rage=asset.animations.find(c=>c.name==='atk_drop');
-  if(rage) animations.push(strikeSegment(rage,'atk_drop_left',.30,.55),
-    strikeSegment(rage,'atk_drop_finish',.55,.80));
   const result={...asset,animations};prepared.set(asset,result);return result;
 }
 
-function strikeSegment(source,name,from,to) {
-  const clip=source.clone(),duration=.65;
-  clip.name=name;
-  clip.tracks=source.tracks.map(track=>{
-    const times=[],values=[],sample=track.createInterpolant();
-    for(let i=0;i<25;i++){
-      const p=i/24;times.push(p*duration);
-      values.push(...sample.evaluate(source.duration*(from+(to-from)*p)));
-    }
-    return new track.constructor(track.name,times,values,track.getInterpolation());
-  });
-  clip.duration=duration;return clip;
-}
-
-// Both renderers supply one-based beat numbers, regardless of their snapshot format.
+/* 연계 비트의 모션은 데이터가 고른다: chain[].icon 이 arena.atk 의 다른 항목을 가리키면
+   그 비트만 전용 클립으로 돈다 (모르버스 boltB / dropB / dropC, 그 밖의 보스 hammerB 등).
+   icon 이 없는 비트는 1타 클립을 그대로 쓴다 — beat 는 남겨 둔다, 호출부가 이미 넘긴다. */
 export function bossAttackSpec(arena,icon,beat=1) {
-  const attacks=arena.atk||{},spec=attacks[icon]||Object.values(attacks)[0];
-  if(arena.id!=='marsh'||icon!=='drop'||!spec)return spec;
-  const clips=['atk_drop','atk_drop_left','atk_drop_finish'];
-  return {...spec,clip:clips[Math.max(0,Math.min(2,(beat||1)-1))]};
+  const attacks=arena.atk||{};
+  return attacks[icon]||Object.values(attacks)[0];
 }
 
 export function detachBossPiece(piece, scene) {
