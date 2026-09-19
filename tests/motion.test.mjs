@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import * as THREE from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {sampleAction,makeRigAdapter} from '../js/combat-motion.js';
+import {prepareTrainingMotion,sampleBossAttack} from '../js/boss-motion.js';
 async function model(path){
  const data=await readFile(path),loader=new GLTFLoader();
  // Geometry, skin weights and animations are real. Raster decoding is irrelevant to this test.
@@ -33,4 +34,40 @@ test('real Ain rig: required clips, finite transforms and bounded grip correctio
 });
 test('scarecrow contains anticipation, hit, stagger, down, recovery and death clips',async()=>{
  const g=await model('art/3d/boss_anim.glb');for(const name of ['idle','walk','atk_hammer','atk_bolt','atk_scythe','hit','stagger','down','up','death'])assert.ok(g.animations.some(c=>c.name===name),name);
+});
+test('training attacks are horizontally in-place, retain vertical motion and preserve original GLB',async()=>{
+ const raw=await model('art/3d/boss_anim.glb'),original=raw.animations.map(c=>c.toJSON());
+ const asset=prepareTrainingMotion(raw);assert.equal(prepareTrainingMotion(raw),asset);
+ for(const name of ['atk_hammer','atk_bolt','atk_scythe']){
+  const a=asset.animations.find(c=>c.name===name),b=raw.animations.find(c=>c.name===name);
+  const track=a.tracks.find(t=>/(^|mixamorig:?|[.:])Hips\.position$/.test(t.name));assert.ok(track,name);
+  const source=b.tracks.find(t=>t.name===track.name);
+  for(let i=0;i<track.values.length;i+=3){
+   assert.equal(track.values[i],track.values[0]);assert.equal(track.values[i+2],track.values[2]);
+   assert.equal(track.values[i+1],source.values[i+1]);
+  }
+ }
+ assert.deepEqual(raw.animations.map(c=>c.toJSON()),original);
+});
+test('both boss renderers meet at the same contact pose, then recover; links release scrubbing',()=>{
+ for(const hitFrac of [.48,.35,.30])for(const duration of [1,1.458333,2.375]){
+  const spec={hitFrac},contact=duration*hitFrac;
+  assert.equal(sampleBossAttack(spec,duration,{state:'telegraph',windup:0}),0);
+  assert.equal(sampleBossAttack(spec,duration,{state:'telegraph',windup:1}),contact);
+  assert.equal(sampleBossAttack(spec,duration,{state:'recover',recovery:.72,recoveryDur:.72}),contact);
+  assert.equal(sampleBossAttack(spec,duration,{state:'recover',recovery:0,recoveryDur:.72}),duration);
+  assert.equal(sampleBossAttack(spec,duration,{state:'link'}),null);
+  assert.equal(sampleBossAttack(spec,duration,{state:'stagger'}),null);
+  assert.ok(Number.isFinite(sampleBossAttack(spec,duration,{state:'recover',recovery:0,recoveryDur:0})));
+ }
+});
+test('calibrated thrust marker is near maximum forward hand extension after removing root motion',async()=>{
+ const g=prepareTrainingMotion(await model('art/3d/boss_anim.glb')),mixer=new THREE.AnimationMixer(g.scene);
+ let hand;g.scene.traverse(o=>{if(o.isBone&&/RightHand$/.test(o.name))hand=o;});assert.ok(hand);
+ const clip=g.animations.find(c=>c.name==='atk_bolt'),action=mixer.clipAction(clip);
+ action.play();action.paused=true;let max=-Infinity,contact;
+ for(let i=0;i<=200;i++){action.time=clip.duration*i/200;mixer.update(0);g.scene.updateMatrixWorld(true);
+  const z=hand.getWorldPosition(new THREE.Vector3()).z;max=Math.max(max,z);if(i===70)contact=z;
+ }
+ assert.ok(max-contact<.04,'thrust marker must remain within 4cm of forward extension');
 });

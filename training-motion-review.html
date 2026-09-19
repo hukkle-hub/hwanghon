@@ -1,0 +1,53 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 · 허수아비 공격 타이밍 검수</title>
+<style>body{margin:0;background:#14191b;color:#eee;font:15px system-ui}main{position:absolute;top:12px;left:12px;max-width:300px;padding:16px;background:#15191ee8;border:1px solid #635b4a;border-radius:10px}h1{font-size:20px}p{line-height:1.5;font-size:13px;color:#b7bbbc}button,select{font:inherit;background:#293238;color:#eee;border:1px solid #65757b;padding:10px;margin:3px;border-radius:5px}input{width:100%}a{color:#d9b77a}@media(max-width:650px){main{top:auto;bottom:8px;left:8px;right:8px;max-width:none;max-height:200px;overflow:auto}}</style>
+<main><h1>허수아비 · 공격 검수</h1><p>실제 GLB와 게임의 공격 시점 설정을 사용합니다.<br>청록색 점은 양손 뼈 위치입니다. 접촉 시점은 검수용 기준이며 실제 충돌 검증 완료를 뜻하지 않습니다.</p>
+<select id="attack" aria-label="공격 종류"><option value="hammer">내려찍기</option><option value="bolt">찌르기</option><option value="scythe">회전 후려치기</option></select>
+<button id="play">공방 재생</button><button id="contact">판정 순간 정지</button>
+<input id="seek" aria-label="공방 진행" type="range" min="0" max="1000" value="0">
+<p id="status">모델 로드 중…</p><a href="game3d.html?d=d01">실제 훈련장으로</a></main>
+<script src="js/world.js"></script><script src="js/dungeons.js"></script>
+<script type="module">
+import * as T from './vendor/three/three.module.js';
+import {GLTFLoader} from './vendor/three/GLTFLoader.js';
+import {OrbitControls} from './vendor/three/OrbitControls.js';
+import {prepareTrainingMotion,sampleBossAttack} from './js/boss-motion.js';
+import {createTrainingParts} from './js/training-presentation.js';
+const scene=new T.Scene();scene.background=new T.Color('#14191b');
+const camera=new T.PerspectiveCamera(40,innerWidth/innerHeight,.05,100);camera.position.set(5,3.4,7);
+const renderer=new T.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.toneMapping=T.ACESFilmicToneMapping;document.body.append(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.45,0);controls.update();
+scene.add(new T.HemisphereLight(0xe0eef9,0x493d2c,2));
+const key=new T.DirectionalLight(0xffe6cb,3);key.position.set(4,6,5);scene.add(key);
+scene.add(new T.GridHelper(10,20,0x788180,0x333c40));
+const $=id=>document.getElementById(id),clock=new T.Clock(),arena=window.TW_DUNGEONS.ARENAS.tutorial;
+let mixer,action,asset,running=false,time=0;const tell=1.2,recovery=.72,total=tell+recovery,markers=[];
+function choose(){
+ if(!mixer)return;running=false;time=0;mixer.stopAllAction();
+ action=mixer.clipAction(asset.animations.find(c=>c.name===arena.atk[$('attack').value].clip));action.play();action.paused=true;
+}
+try{
+ asset=prepareTrainingMotion(await new GLTFLoader().loadAsync(arena.model));scene.add(asset.scene);mixer=new T.AnimationMixer(asset.scene);
+ createTrainingParts(asset.scene).sync([{id:'shl'},{id:'shr'}]);
+ asset.scene.traverse(o=>{if(o.isBone&&/^(mixamorig:?)?(LeftHand|RightHand)$/.test(o.name)){
+  const marker=new T.Mesh(new T.SphereGeometry(.045,10,8),new T.MeshBasicMaterial({color:0x71e4d5,depthTest:false}));
+  marker.renderOrder=10;scene.add(marker);markers.push({bone:o,mesh:marker});
+ }});
+ choose();
+}catch(e){$('status').textContent='로드 실패: '+e.message;console.error(e);}
+$('attack').onchange=choose;
+$('play').onclick=()=>{if(action){time=0;running=true;}};
+$('contact').onclick=()=>{if(action){time=tell;running=false;}};
+$('seek').oninput=()=>{time=Number($('seek').value)/1000*total;running=false;};
+function frame(){requestAnimationFrame(frame);const dt=Math.min(.05,clock.getDelta());
+ if(action){if(running){time=Math.min(total,time+dt);if(time===total)running=false;}
+  const state=time<tell?{state:'telegraph',windup:(time/tell)**2}:{state:'recover',recovery:total-time,recoveryDur:recovery};
+  const spec=arena.atk[$('attack').value];action.time=sampleBossAttack(spec,action.getClip().duration,state);mixer.update(0);
+  asset.scene.updateMatrixWorld(true);for(const m of markers)m.bone.getWorldPosition(m.mesh.position);
+  $('seek').value=time/total*1000;
+  $('status').textContent=(time<tell?'준비':time===tell?'피해 판정 기준':'후속 동작')+' · 클립 '+action.time.toFixed(3)+'초 · 기준 '+Math.round(spec.hitFrac*100)+'%';
+ }
+ controls.update();renderer.render(scene,camera);
+}frame();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+</script></html>
