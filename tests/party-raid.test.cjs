@@ -63,3 +63,16 @@ test('shared optional cache is included once in each clear reward, even after a 
 test('storage failure leaves rewards pending and retries without a false paid result',()=>{
  let calls=0;const r=new Raid('d01',members,()=>{if(++calls===1)throw Error('disk full');});r.phase=r.A.stages.length-1;r.phaseClear();assert.equal(r.result.rewardStatus,'pending');tick(r,5.1);assert.equal(r.result.rewardStatus,'saved');assert.equal(calls,2);
 });
+
+test('online execution mirrors solo: only while downed, once, with the dedicated clip',()=>{
+ const r=new Raid('d01',members);r.startFight();const a=r.players.get('a');
+ a.x=r.boss.x-40;a.y=r.boss.y;
+ assert.equal(r.canExecute(a),false);                       /* 서 있는 보스는 처형할 수 없다 */
+ r.input('a',{type:'execute'});assert.equal(a.action,null);
+ r.boss.posture=100;r.checkDown();
+ assert.equal(r.boss.state,'downed');assert.equal(r.snapshot().boss.executable,true);
+ r.input('a',{type:'execute'});
+ assert.equal(a.action.clip,'exec');assert.equal(a.action.kind,'exec');
+ assert.equal(r.snapshot().boss.executable,false);
+ a.action=null;r.input('a',{type:'execute'});assert.equal(a.action,null);   /* 한 번뿐 */
+});

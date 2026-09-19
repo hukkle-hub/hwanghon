@@ -7,6 +7,7 @@ import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import { createPumpBoss } from './pump-boss.js';
 import { createRelayBoss } from './relay-boss.js';
 import { buildDungeonProps } from './dungeon-props.js';
+import { WeaponTrail, trailStyle } from './weapon-trail.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
@@ -403,77 +404,15 @@ import { buildDungeonProps } from './dungeon-props.js';
   function fxMat(color, op){ return new THREE.MeshBasicMaterial({ color:color, transparent:true, opacity:op==null?0.85:op, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide }); }
   function fxPush(obj, dur, fn){ scene.add(obj); FX.push({ o:obj, t:0, d:dur, fn:fn }); return obj; }
   function fxKill(f){ scene.remove(f.o); f.o.traverse(function(c){ if(c.geometry) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
-  /* ---------- 무기 궤적 · 칼바람 ----------
-     날 끝의 세계 좌표를 프레임마다 모아 리본을 만든다. 안쪽 띠는 «궤적»(밝고 얇게),
-     바깥 띠는 «바람»(넓고 흐리게). 실제 날보다 길게 잡아 궤도가 크게 보이도록 한다.
-     히트스톱 동안에는 점이 갱신되지 않아 궤적이 그대로 멈췄다가 다시 이어진다. */
-  var TRN=18, trail={ pts:[], mesh:null, wind:null, hold:0, power:1, hue:new THREE.Color(0xBFD8E8), tipY:1.25, baseY:0.18, measured:false };
-  function trailMesh(seg, alpha){
-    var g=new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRN*2*3), 3));
-    g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TRN*2*3), 3));
-    var idx=[]; for(var i=0;i<TRN-1;i++){ var a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }
-    g.setIndex(idx); g.setDrawRange(0,0);
-    var m=new THREE.MeshBasicMaterial({ vertexColors:true, transparent:true, opacity:alpha, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide });
-    var mh=new THREE.Mesh(g,m); mh.frustumCulled=false; mh.renderOrder=3; mh.visible=false; scene.add(mh); return mh;
-  }
-  function trailInit(){ if(!trail.mesh){ trail.mesh=trailMesh(1,0.7); trail.wind=trailMesh(1,0.26); } }
-  /* 무기 GLB 규약: 원점 = 자루 끝, +Y 자루 방향. 무기 로컬 좌표에서 실제 길이를 재 날 끝을 잡는다
-     (세계 좌표로 재면 그 순간의 자세에 휘둘린다). */
-  function trailMeasure(){
-    if(!ain.weapon) return; ain.weapon.updateMatrixWorld(true);
-    var inv=new THREE.Matrix4().copy(ain.weapon.matrixWorld).invert(), box=new THREE.Box3(), got=false;
-    ain.weapon.traverse(function(o){ if(o.isMesh&&o.geometry){ o.geometry.computeBoundingBox(); if(!o.geometry.boundingBox) return;
-      var bb=o.geometry.boundingBox.clone(); bb.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)); box.union(bb); got=true; } });
-    if(!got) return;
-    trail.tipY=Math.max(0.5, box.max.y); trail.baseY=trail.tipY*0.16; trail.measured=true; }
-  function trailSet(power, hex){ trail.power=power||1; trail.hue.setHex(hex||0xBFD8E8); }
-  function trailPush(){
-    ain.weapon.updateMatrixWorld(true);
-    var b=new THREE.Vector3(0, trail.baseY, 0).applyMatrix4(ain.weapon.matrixWorld);
-    var t=new THREE.Vector3(0, trail.tipY, 0).applyMatrix4(ain.weapon.matrixWorld);
-    trail.pts.unshift([b,t]); if(trail.pts.length>TRN) trail.pts.pop();
-  }
-  function trailWrite(mesh, under, over, bright){
-    var n=trail.pts.length; if(!mesh) return;
-    if(n<3){ mesh.visible=false; return; }
-    mesh.visible=true; var pos=mesh.geometry.attributes.position.array, col=mesh.geometry.attributes.color.array;
-    for(var i=0;i<n;i++){
-      var pair=trail.pts[i], b=pair[0], t=pair[1], k=1-i/(n-1);        /* k=1 최신 */
-      var dx=t.x-b.x, dy=t.y-b.y, dz=t.z-b.z;
-      var o=i*6;
-      pos[o]=b.x+dx*under; pos[o+1]=b.y+dy*under; pos[o+2]=b.z+dz*under;
-      pos[o+3]=b.x+dx*over; pos[o+4]=b.y+dy*over; pos[o+5]=b.z+dz*over;
-      var a=k*k*bright*trail.power;
-      col[o]=trail.hue.r*a; col[o+1]=trail.hue.g*a; col[o+2]=trail.hue.b*a;
-      col[o+3]=trail.hue.r*a*0.35; col[o+4]=trail.hue.g*a*0.35; col[o+5]=trail.hue.b*a*0.35;
-    }
-    mesh.geometry.attributes.position.needsUpdate=true; mesh.geometry.attributes.color.needsUpdate=true;
-    mesh.geometry.setDrawRange(0, (n-1)*6);
-  }
-  var windT=0;
+  /* 무기 궤적 · 칼바람 — 구현은 js/weapon-trail.js (온라인과 공유) */
+  var trail=null;
+  function trailSet(power, hex){ if(trail) trail.set(power, hex); }
   function tickTrail(dt){
-    if(!ain.weapon) return; trailInit(); if(!trail.measured) trailMeasure();
+    if(!ain.weapon) return;
+    if(!trail) trail=new WeaponTrail(scene);
     var sn=battle?battle.snapshot():(skirm?skirm.snapshot():null), act=sn&&sn.player.action;
-    var swinging=!!act && act.elapsed>=act.hitAt*0.30 && act.elapsed<=act.duration*0.85;
-    var rolling=P.rollT>0;
-    if(swinging||rolling){ trailPush(); trail.hold=0.16; }
-    else if(trail.hold>0){ trail.hold-=dt; if(trail.pts.length) trail.pts.pop(); }
-    else if(trail.pts.length) trail.pts.pop();
-    /* 자루까지 채우면 부채꼴 덩어리가 된다 — «날» 구간만 띠로 남긴다 */
-    trailWrite(trail.mesh, 0.58, 1.34, 0.72);   /* 궤적: 날보다 34% 길게 — 궤도가 커 보인다 */
-    trailWrite(trail.wind, 0.50, 1.95, 0.22);   /* 바람: 더 넓게, 대신 흐리게 (공기가 끌려오는 느낌) */
-    /* 큰 동작에서는 날 끝에서 바람 줄기가 떨어져 나간다 */
-    windT-=dt;
-    if(swinging && trail.power>=1.3 && windT<=0 && trail.pts.length>2){
-      windT=0.045; var a=trail.pts[0][1], b2=trail.pts[2][1];
-      var v=new THREE.Vector3().subVectors(a,b2); if(v.lengthSq()>1e-5){
-        var st=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:trail.hue.getHex(), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5 }));
-        st.position.copy(a); st.scale.set(0.9,0.35,1);
-        var dir=v.normalize().multiplyScalar(3.4);
-        fxPush(st, 0.34, function(o,k,d2){ o.position.addScaledVector(dir, d2); o.material.opacity=0.5*(1-k); o.scale.set(0.9+k*1.6, 0.35+k*0.25, 1); });
-      }
-    }
+    var swinging=(!!act && act.elapsed>=act.hitAt*0.30 && act.elapsed<=act.duration*0.85) || P.rollT>0;
+    trail.tick(dt, ain.weapon, swinging);
   }
   function tickFX(dt){ for(var i=FX.length-1;i>=0;i--){ var f=FX[i]; f.t+=dt; var k=Math.min(1,f.t/f.d); f.fn(f.o,k,dt); if(k>=1){ fxKill(f); FX.splice(i,1); } } }
   function brColor(k){ return k&&k.br==='A'?0xE8B860:k&&k.br==='B'?0xE04A3A:0xC89A4A; }
@@ -567,9 +506,7 @@ import { buildDungeonProps } from './dungeon-props.js';
   function handle(e){
     var s=battle?battle.snapshot():null;
     switch(e.t){
-      case 'actionstart':
-        trailSet(e.kind==='exec'?2.2:e.kind==='ult'?2.0:e.kind==='counter'?1.8:e.kind==='skill'?1.6:e.kind==='smash'?1.5:1.0,
-                 e.kind==='exec'?0xFFB08A:e.kind==='ult'?brColor(ULT):e.kind==='counter'?0xFFF1C8:e.kind==='smash'?0xE8D0A0:0xBFD8E8);
+      case 'actionstart': var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;

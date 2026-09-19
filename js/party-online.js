@@ -89,6 +89,9 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
  if(e.type==='revive')announce('동료가 다시 일어섰다');
  if(e.type==='playerDown')announce('동료 다운 · 가까이서 V / 소생 버튼 유지');
  if(e.type==='interact')announce(e.name);
+ if(e.type==='execute'){announce('처형 — '+(room.members.find(p=>p.id===e.player)?.name||'아인'));view?.flashBoss();window.TW_SFX?.play('brk');}
+ if(e.type==='phaseClear')announce('페이즈 돌파 — 보스가 깨어난다');
+ if(e.type==='phase'){announce('P H A S E '+(e.phase+1)+' — '+(view?.A?.stages?.[e.phase]?.name||''));view?.flashBoss();window.TW_SFX?.play('phase');}
  if(e.type==='hit'){view?.flashBoss();window.TW_SFX?.play('hit',e.kind==='counter');}
  if(e.type==='hurt'&&e.player===profile?.id){window.TW_SFX?.play('hurt');if(view)view.shake=.15;}
  if(e.type==='feedback'&&e.player===profile?.id)announce(e.text);
@@ -99,7 +102,7 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
 function mine(){return room?.raid?.players.find(p=>p.id===profile?.id);}
 function updateHud(){const raid=room.raid,p=mine(),b=raid.boss;if(!p)return;
  $('raid-place').textContent=levels[raid.level].name;$('raid-clock').textContent=Math.floor(raid.time/60)+':'+String(Math.floor(raid.time%60)).padStart(2,'0');$('boss-hud').hidden=raid.state==='explore';$('boss-name').textContent=b.name+' · '+(raid.phase+1)+' / '+raid.phases;$('boss-hp').value=b.hp/b.maxHp;
- $('boss-pattern').textContent=b.state==='telegraph'?(b.pattern.counterable?((raid.level==='d01'&&b.tele<=b.window)?'지금 카운터':'튕길 수 있다'):'회피 전용')+' · '+b.pattern.name+' · '+(raid.players.find(p=>p.id===b.target)?.name||''):b.state==='downed'?'격추 · 집중 공격':b.state==='recover'?'공격 후 빈틈':'';
+ $('boss-pattern').textContent=b.state==='telegraph'?(b.pattern.counterable?((raid.level==='d01'&&b.tele<=b.window)?'지금 카운터':'튕길 수 있다'):'회피 전용')+' · '+b.pattern.name+' · '+(raid.players.find(p=>p.id===b.target)?.name||''):b.state==='downed'?(b.executable?'격추 · 붙어서 F — 처형':'격추 · 집중 공격'):b.state==='recover'?'공격 후 빈틈':'';
  $('self-name').textContent=p.name+(p.hp<=0?(p.dead?' · 전투 불능':' · 소생 대기 '+Math.ceil(p.downT)+'초'):'');$('self-hp').value=p.hp/p.maxHp;$('self-st').value=p.st;$('self-numbers').textContent=Math.ceil(p.hp)+' HP · '+Math.floor(p.st)+' ST · 궁극 '+Math.floor(p.ult)+'%';
  const part=b.parts.find(q=>q.id===p.target)||b.parts[0];$('target-button').textContent='조준 · '+part.name+' '+(part.broken?'노출':part.hpMax?Math.ceil(part.hp/part.hpMax*100)+'%':'');
  $('party-vitals').replaceChildren();for(const q of raid.players){const row=document.createElement('div');row.className='member-bar';const n=document.createElement('span');n.textContent=q.name+(q.connected?'':' · 끊김');n.style.color=COLORS[q.color%4];const bar=document.createElement('progress');bar.max=1;bar.value=q.hp/q.maxHp;row.append(n,bar);$('party-vitals').append(row);}
@@ -123,7 +126,12 @@ $('invite').onclick=async()=>{const url=new URL('party.html',location.href);url.
 $('retry').onclick=()=>send({type:'retry'});$('return-lobby').onclick=()=>send({type:'lobby'});$('menu-button').onclick=()=>{clearControls();$('raid-menu').showModal();};$('close-menu').onclick=()=>$('raid-menu').close();$('exit-raid').onclick=()=>{$('raid-menu').close();send({type:'leave'});};
 function cycleTarget(){const p=mine();if(!p)return;const ids=room.raid.boss.parts.map(q=>q.id);send({type:'target',part:ids[(ids.indexOf(p.target)+1)%ids.length]});}
 $('target-button').onclick=cycleTarget;
-function control(command,on=true,index){if(!room?.raid||rpgUI.isModal()||!connected)return;if(command==='guard'||command==='revive')send({type:command,on});else if(on)send({type:command,...(index===undefined?{}:{index:Number(index)})});}
+/* 격추된 보스 옆에서는 F 가 «처형» 이 된다 (솔로와 같은 규칙) */
+function executeReady(){const b=room?.raid?.boss;if(!b||!b.executable)return false;
+ const me=room.raid.players.find(p=>p.id===profile?.id);if(!me||me.hp<=0)return false;
+ return Math.hypot(b.x-me.x,(b.y-me.y)/.55)<=(room.raid.reach||110)*1.4;}
+function control(command,on=true,index){if(!room?.raid||rpgUI.isModal()||!connected)return;
+ if(command==='interact'&&executeReady())command='execute';if(command==='guard'||command==='revive')send({type:command,on});else if(on)send({type:command,...(index===undefined?{}:{index:Number(index)})});}
 document.querySelectorAll('[data-command]').forEach(el=>{el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);control(el.dataset.command,true,el.dataset.index);});const release=()=>{if(el.hasAttribute('data-hold'))control(el.dataset.command,false);};el.addEventListener('pointerup',release);el.addEventListener('pointercancel',release);el.addEventListener('lostpointercapture',release);});
 const commands={KeyJ:'attack',Space:'attack',KeyU:'smash',KeyK:'dodge',KeyL:'guard',KeyF:'interact',KeyV:'revive',KeyR:'ult'};
 addEventListener('keydown',e=>{if(!room?.raid||e.target.matches('input,select,textarea')||rpgUI.isModal())return;if(e.repeat)return;keys[e.code]=true;const bound={[rpgUI.settings.attack]:'attack',[rpgUI.settings.dodge]:'dodge',[rpgUI.settings.guard]:'guard'},fixed={KeyU:'smash',KeyF:'interact',KeyV:'revive',KeyR:'ult'},cmd=bound[e.code]||fixed[e.code];if(cmd){e.preventDefault();control(cmd);}else if(e.code==='KeyQ'||e.code==='Tab'){e.preventDefault();cycleTarget();}else if(/^Digit[1-4]$/.test(e.code))control('skill',true,Number(e.code.slice(5))-1);});
