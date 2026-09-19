@@ -55,11 +55,27 @@ function updateProfile(){if(!profile)return;$('profile-name').textContent=profil
  for(const [id,n]of Object.entries(profile.items)){if(n<=0)continue;const item=window.TW_ITEMS.get(id);if(id.startsWith('m_')){const option=document.createElement('option');option.value=id;option.textContent=item.name+' · '+n+'개';$('sell-item').append(option);}if(item&&['armor','acc'].includes(item.type)){const row=document.createElement('div');row.className='inventory-row';const name=document.createElement('span');name.textContent=item.name;const button=document.createElement('button');const equipped=Object.values(profile.equipment).includes(id);button.textContent=equipped?'착용 중':'착용';button.disabled=equipped;button.onclick=()=>send({type:'equip',item:id});row.append(name,button);$('equipment-list').append(row);}}
 }
 
-function loadAssets(){if(assetPromise)return assetPromise;assetPromise=Promise.all(['art/3d/ain_anim.glb','art/3d/ain_scythe_tex.glb','art/3d/boss_anim.glb','art/3d/boss_marsh.glb'].map(url=>loader.loadAsync(url))).then(([ain,weapon,dummy,marsh])=>{assets={ain,weapon,dummy,marsh};$('asset-status').textContent='전투 준비 완료';renderRoom();renderSocial();return assets;}).catch(e=>{notice('3D 자산을 불러오지 못했습니다. 새로고침 후 다시 접속해 주세요.');$('asset-status').textContent='자산 로드 실패 · 새로고침 후 다시 접속';throw e;});return assetPromise;}
+/* 캐릭터별 모델·기본 무기. 방에 있는 캐릭터만 내려받는다 */
+const CHAR_ASSET={ain:['art/3d/ain_anim.glb','art/3d/ain_scythe_tex.glb'],kain:['art/3d/kain_anim.glb','art/3d/gear/w_kain_greatsword.glb'],ryu:['art/3d/ryu_anim.glb','art/3d/gear/w_ash_dirk.glb'],sera:['art/3d/sera_anim.glb','art/3d/gear/w_sera_flask.glb']};
+const charAssets=new Map();
+function loadCharacter(c){if(!CHAR_ASSET[c])c='ain';if(charAssets.has(c))return charAssets.get(c);
+ const task=Promise.all(CHAR_ASSET[c].map(url=>loader.loadAsync(url))).then(([model,weapon])=>({model,weapon}));
+ charAssets.set(c,task);return task;}
+function loadAssets(characters){const list=(characters||[]).filter(c=>CHAR_ASSET[c]);const want=[...new Set(list.length?list:['ain'])];
+ if(assetPromise&&want.every(c=>charAssets.has(c)))return assetPromise;
+ assetPromise=Promise.all([
+  Promise.all(want.map(loadCharacter)),
+  loader.loadAsync('art/3d/boss_anim.glb'),
+  loader.loadAsync('art/3d/boss_marsh.glb')
+ ]).then(([chars,dummy,marsh])=>{const by={};want.forEach((c,i)=>by[c]=chars[i]);
+  const first=by[want[0]];
+  assets={chars:by,ain:first.model,weapon:first.weapon,dummy,marsh};$('asset-status').textContent='전투 자산 준비 완료';renderRoom();return assets;
+ }).catch(e=>{$('asset-status').textContent='전투 자산을 불러오지 못했습니다.';throw e;});
+ return assetPromise;}
 function renderRoom(){const hasRoom=!!room;$('choose-room').hidden=hasRoom;$('room').hidden=!hasRoom;if(!hasRoom){$('arena').hidden=true;$('lobby').hidden=false;if(view){view.dispose();view=null;}return;}
  $('code').textContent=room.code;$('room-level').textContent=levels[room.level].name;$('roster').replaceChildren();for(const m of room.members){const row=document.createElement('li'),name=document.createElement('span'),status=document.createElement('small');name.textContent=m.name+(m.id===room.leader?' · 파티장':'');status.textContent=!m.connected?'재접속 대기':m.ready?'준비 완료':'준비 중';row.append(name,status);$('roster').append(row);}
  const me=room.members.find(m=>m.id===profile?.id);$('ready').textContent=me?.ready?'준비 취소':'준비 완료';$('ready').disabled=!assets||!connected;$('start').disabled=room.leader!==profile?.id||room.members.length<2||!room.members.every(m=>m.ready&&m.connected)||!connected;
- if(!assetPromise)loadAssets().catch(()=>{});
+ loadAssets(room.members.map(m=>m.character)).catch(()=>{});
  const active=!!room.raid;$('arena').hidden=!active;$('lobby').hidden=active;
  if(active&&assets&&!view){try{view=new RaidView($('scene'),room.raid,assets);}catch(e){notice('3D 화면 생성 실패: '+e.message);announce('3D 화면을 만들 수 없습니다. 다른 브라우저에서 다시 접속하세요.');}}
  if(active){updateHud();if(room.training)$('outcome-text').textContent='패턴 훈련 · 보상과 의뢰 진행 없음';}else if(view){view.dispose();view=null;}
@@ -123,7 +139,7 @@ function renderBoard(b){$('population').textContent='접속 '+b.online+' / '+b.c
 function appendChat(m){chatMessages.push(m);if(chatMessages.length>150)chatMessages.shift();renderChat();}
 function renderChat(){const channel=$('chat-channel').value;$('chat-log').replaceChildren();for(const m of chatMessages.filter(m=>m.channel===channel)){const row=document.createElement('p');row.textContent=m.name+(m.channel==='whisper'?' → '+m.toName:'')+': '+m.text;$('chat-log').append(row);}$('chat-log').scrollTop=$('chat-log').scrollHeight;}
 $('chat-channel').onchange=renderChat;
-$('character-submit').onclick=()=>send({type:'character',name:$('character-name').value});
+$('character-submit').onclick=()=>send({type:'character',name:$('character-name').value,character:$('character-pick').value});
 $('guild-create').onclick=()=>send({type:'guildCreate',name:$('guild-name').value});$('guild-join').onclick=()=>send({type:'guildJoin',code:$('guild-code').value});$('guild-leave').onclick=()=>send({type:'guildLeave'});
 $('raid-chat-toggle').onclick=()=>{clearControls();$('raid-chat').hidden=!$('raid-chat').hidden;};$('chat-close').onclick=()=>$('raid-chat').hidden=true;
 function renderMarket(listings){$('market-list').replaceChildren();for(const l of listings){const row=document.createElement('div');row.className='market-row';const text=document.createElement('span');text.textContent=(window.TW_ITEMS.get(l.item)?.name||l.item)+' × '+l.quantity+' · '+(l.quantity*l.price).toLocaleString()+' G · '+l.name;const button=document.createElement('button');const mine=l.seller===profile.id;button.textContent=mine?'판매 취소':'묶음 구매';button.disabled=!mine&&profile.gold<l.quantity*l.price;button.onclick=()=>send({type:mine?'cancelSale':'buy',listing:l.id});row.append(text,button);$('market-list').append(row);}if(!listings.length)$('market-list').textContent='등록된 재료가 없습니다.';}
@@ -151,7 +167,7 @@ class RaidView{
  makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?assets.marsh:assets.dummy;this.boss=new Animated(asset,this.scene,false,this.A.procedural==='pump');if(this.A.scale)this.boss.model.scale.setScalar(this.A.scale);this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});this.phase=raid.phase;}
  flashBoss(){this.flash=.12*rpgUI.settings.effects;}
  update(raid,dt){this.resize();const age=Math.min(.05,(performance.now()-lastReceived)/1000);if(this.phase!==raid.phase)this.makeBoss(raid);
-  for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){a=new Animated(assets.ain,this.scene,true,false,assets.weapon);a.root.position.copy(pos(p.x,p.y));const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
+  for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){const ca=assets.chars[p.character]||Object.values(assets.chars)[0];a=new Animated(ca.model,this.scene,true,false,ca.weapon);a.root.position.copy(pos(p.x,p.y));const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
   const b=raid.boss,bb=this.boss;bb.root.position.lerp(pos(b.x,b.y),1-Math.exp(-dt*24));bb.root.rotation.y=Math.PI/2-b.aim;
   if(['telegraph','recover'].includes(b.state)&&b.pattern){const spec=this.A.atk[b.pattern.icon],key=b.attackId;bb.play(spec.clip,key);bb.current.paused=true;const frac=b.state==='telegraph'?spec.hitFrac*(1-Math.max(0,b.tele-age)/b.teleDur):spec.hitFrac+(1-spec.hitFrac)*(1-Math.max(0,b.recovery-age)/b.recoveryDur);bb.current.time=bb.current.getClip().duration*frac;}
   else {const clip=raid.state==='clear'?'death':b.state==='downed'?'down':b.state==='stagger'?'stagger':b.moving?'walk':'idle';bb.play(clip);bb.current.paused=raid.state==='clear';if(bb.current.paused)bb.current.time=Math.max(0,bb.current.getClip().duration-1e-5);}

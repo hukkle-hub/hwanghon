@@ -61,3 +61,43 @@ test('성장하지 않은 출격자는 기본 수치로 싸운다',()=>{
  assert.equal(p.ultSkill.mult,C.skills.ainUlt.mult);
  assert.equal(p.ult,0,'궁극기 게이지는 정의와 섞이지 않는다');
 });
+
+test('출격 캐릭터는 생성 시 정해지고 스탯·무기·기술이 캐릭터를 따른다',async t=>{
+ const {url,store}=await setup(t);
+ const C=require('../server/content.cjs'),R=require('../server/rpg-rules.cjs');
+ const made={};
+ for(const c of ['ain','kain','ryu','sera']){
+  const conn=await connect(url,{type:'account',mode:'register',username:'chr_'+c,password:'password-long-test'});
+  t.after(()=>conn.close());
+  const p=(await conn.request({type:'character',name:'출격'+c,character:c},m=>m.type==='profile'||m.type==='error')).profile;
+  assert.equal(p.character,c,c+' 선택이 저장된다');
+  assert.equal(p.equipment.main,R.startingWeapon[c],c+' 시작 무기');
+  assert.equal(p.stats.hp,C.characters[c].stats.hp,c+' 기본 체력은 시트 그대로');
+  assert.equal(Math.round(p.stats.atk),C.characters[c].stats.atk,c+' 기본 공격력은 시트 그대로');
+  const view=store.rpgState(p.id).skills;
+  assert.equal(view.character,c);
+  assert.equal(view.skills[0].name,C.skills[c][0].name,c+' 자기 기술을 받는다');
+  made[c]=p.id;
+ }
+ // 남의 무기는 착용할 수 없다
+ const kain=made.kain,p=store.get(kain);p.items.w_sera_flask=1;store.put(p);
+ assert.throws(()=>store.equip(kain,'w_sera_flask'),/착용할 수 없는/);
+ // 방어구는 누구나
+ const armor=C.equipment.find(i=>i.type==='armor');
+ const q=store.get(kain);q.items[armor.id]=1;q.xp=1200*40;store.put(q);
+ assert.doesNotThrow(()=>store.equip(kain,armor.id),'방어구는 캐릭터 제한이 없다');
+ // 알 수 없는 캐릭터는 거부
+ const bad=await connect(url,{type:'account',mode:'register',username:'chr_bad',password:'password-long-test'});
+ t.after(()=>bad.close());
+ const err=await bad.request({type:'character',name:'잘못된선택',character:'없는캐릭터'},m=>m.type==='profile'||m.type==='error');
+ assert.equal(err.type,'error');
+});
+
+test('구버전 프로필은 아인으로 이관되고 장비를 잃지 않는다',()=>{
+ const {Store}=require('../server/store.cjs');
+ const store=new Store(null);
+ const legacy=store.normalize({gold:10,equipment:{main:'w_rust_sword',chest:'a_reed_cuirass'}});
+ assert.equal(legacy.character,'ain');
+ assert.equal(legacy.equipment.main,'w_rust_sword','기존 주무기 유지');
+ assert.equal(legacy.equipment.chest,'a_reed_cuirass','기존 방어구 유지');
+});
