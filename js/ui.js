@@ -6,7 +6,8 @@
   /* ---------- 화면 목록 ---------- */
   var SCREENS = [
     ['index.html',     '타이틀'],
-    ['lobby.html',     '메인 로비'],
+    ['index.html',     '메인 로비'],
+    ['title.html',     '타이틀'],
     ['board.html',     '컨셉 시트 (개발)'],
     ['office.html',    '인력사무실'],
     ['quest.html',     '의뢰 상세'],
