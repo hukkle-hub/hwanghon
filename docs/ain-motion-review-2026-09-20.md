@@ -1,0 +1,49 @@
+# Ain motion correction — local implementation, finger polish pending
+
+## Revision 2 — implemented locally, not deployed
+
+The rejected delta-smoothing prototype below is superseded by `ain-bind-repair.js` and `ain-two-hand.js`. Solo and online renderers now opt into this correction for **Ain only**. Other character models retain their existing adapters. No GLB, texture, source clip, server timing, damage value, or remote deployment was overwritten.
+
+Inspection of the bind mesh found the old wrist at y=0.8098 m while the hand mesh is around y=0.9–0.98 m. Only 21/29 vertices had >65% influence from their respective hand bones (some were not on the actual hand). The existing hand sockets therefore were not valid visual contact points.
+
+Changes:
+
+- Refit forearms to (±0.245,1.16,0.012), wrists to (±0.30,0.98,0.022), and palm sockets to (±0.318,0.93,0.04), measured/tuned against this mesh's A-pose.
+- Clone geometry and reweight 2,152 sleeve/hand vertices, including 444 distal hand vertices. Recompute bind inverses and replace cloned constant translation tracks for changed joints. Rest mesh vertex positions, UVs and textures stay unchanged.
+- Use a shared, smooth weapon trajectory with a fixed 32 cm grip separation in character units, translated into the intersection of both arms' reachable volumes. Solve elbows from stable torso-relative poles and the bind pose. Wrists keep neutral local rotation rather than spinning to follow the shaft.
+- Keep a two-handed ready pose for idle/run/guard and the endpoints of attacks. Death, hit, roll/dodge and non-combat gestures retain their authored arm poses. Their transitions still need dedicated aesthetic review; no claim of complete animation polish.
+- Contact pose maps to the existing action hitAt. This is authored runtime motion, not a new mocap recording. Slash, chop and thrust paths are distinct; other skills currently reuse these families with the existing torso/lower-body animation.
+
+Validation: the 79-test scoped suite passed, then the additional scaled/yawed-avatar regression passed. In 241 samples per idle/run/guard/attack1/attack2/attack3/smash/ult, the production adapter had maximum palm-to-shaft residual 0.0216 mm and adjacent arm-joint step 9.171 degrees. The corrected bind's undeformed mesh residual was 7.13e-8 m. Scaled (1.14), translated and yawed avatars retain contact, and death is not overridden. These are kinematic checks, not finger-contact or phone-performance acceptance.
+
+Visual checks: front, A-pose, rear at 0.32 s, side at 0.88 s, and close-ups at 0.59/0.88 s show corrected shoulder/hand placement. Added two reversible distal-hand curl morphs (position + normal deltas) as a basic grip shape, smoothly released outside combat poses. The undeformed source positions remain unchanged. Individual finger bones, thumb articulation, precise finger-to-shaft collision, and full anatomical grip polishing remain limitations; this is not finished finger articulation. Mobile device performance and the online server session have not been device-tested. The final scoped suite has **80 passing tests**.
+
+---
+
+## Historical rejected prototype
+
+Original GLB assets and production `combat-motion.js` remain unchanged. Experimental changes are isolated to `ain-rig-review.js`, `ain-motion-quality.js`, and the local `ain-pose-study.html` preview. No push or deployment.
+
+## Reproduced
+
+- The legacy grip target projects the shoulder onto the scythe and jumps between -0.12 and +0.12 m at the midpoint. Unconstrained CCD and a second preview IK pass prioritize target distance over anatomy.
+- In the six-pose study, the baseline adds up to 164.41 degrees of forearm correction. Adjacent samples jump 28.48 degrees at the upper arm and 50.69 degrees at the forearm. These are local bone rotations, not measured mesh strain or proof of an anatomical joint limit.
+- The actual model has hand and hand-slot bones, but no finger bones. A finger-closing animation cannot be implemented on this skeleton alone.
+- Original attack1 itself has a rapid rotation change near 0.34–0.40 seconds; grip IK is not the only issue.
+
+## Experimental correction
+
+Hand-based target projection without the midpoint jump; damped joint correction capped to 25/55 degrees relative to the authored pose; correction-delta smoothing during playback; symmetric quaternion filtering in cloned clips. No source animation or combat timestamps are overwritten. The preview no longer runs a second unconstrained IK pass.
+
+## Acceptance status: FAIL
+
+`node tools/audit-ain-joints.mjs` samples each clip 241 times. Fresh adapters isolate comparisons. At this sampling rate, the candidate six-pose maximum adjacent upper-arm/forearm change is 3.22/6.84 degrees instead of 28.48/50.69. However, maximum left-hand-to-shaft residual grows to 18.94 cm during continuous playback (attack1: 34.11 cm). This is unacceptable and is why the candidate is NOT wired into either production renderer.
+
+The local review uses deterministic static posing (`dt=0`) for seeking/thumbnails, so its displayed instantaneous error is not a claim about continuously filtered playback. Front/back inspection at 0.59 seconds still shows an open-palm grip. Safety tests passing do not establish visual acceptance.
+
+## Required next repair, without regenerating the character
+
+1. Author a stable two-handed rest grip and elbow poles together with the scythe path; solve torso/clavicle/arms as a coordinated chain instead of independently forcing the left wrist onto an existing weapon trajectory.
+2. Inspect shoulder skin weights in close-up at the worst frames before deciding whether weight painting is needed. This has not yet been established numerically.
+3. Add finger articulation and corresponding weights, or author a closed-grip corrective mesh/shape key if the existing geometry permits it. Do not claim wrist orientation is finger contact.
+4. Require simultaneous contact (<5 cm is only the existing coarse bone-target gate), bounded/continuous rotations, no visible intersections, and front/side/back real-time + slow-motion review before integrating or deploying.
