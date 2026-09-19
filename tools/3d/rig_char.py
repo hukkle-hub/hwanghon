@@ -27,8 +27,8 @@ PROFILES={
 }
 # 모션 증폭: 상체 회전을 «각도» 기준으로 키운다. 크게 휘두르는 것이 눈에 보여야 한다.
 # 소스 포즈 단계에서 키우므로 양손 그립 IK 가 증폭된 자세를 기준으로 다시 풀린다 (왼손이 자루에서 떨어지지 않는다).
-AMP={'attack1':1.25,'attack2':1.25,'attack3':1.22,'smash':1.30,'ult':1.30,
-     'skill1':1.28,'skill2':1.20,'skill3':1.30,'skill4':1.22,'exec':1.32,'counter':1.26,
+AMP={'attack1':1.38,'attack2':1.38,'attack3':1.32,'smash':1.45,'ult':1.45,
+     'skill1':1.42,'skill2':1.24,'skill3':1.45,'skill4':1.28,'exec':1.45,'counter':1.36,
      'hit':1.18,'hit2':1.18,'guardHit':1.20}
 AMP_BONES=('spine','chest','head','upperarm.l','lowerarm.l','upperarm.r','lowerarm.r')
 PROF=PROFILES[CHAR]; CLIPS=PROF['clips']; TWO_HAND=PROF['two_hand']
@@ -324,12 +324,22 @@ PATHS={
              (1.0,IDLE_K)],
 }
 def _lerp3(a,b,k): return tuple(a[i]+(b[i]-a[i])*k for i in range(3))
+# 궤도 확대: 휘두르는 «가운데» 에서만 손을 몸에서 더 멀리 민다. 클립 끝(대기 자세)은 건드리지 않아
+# 앞뒤 동작과 이어 붙일 때 튀지 않는다. 팔 길이를 넘지 않도록 반경을 자른다.
+SWING=1.20; REACH=0.62
+def _wide(rh, w):
+    if w<=0.001: return rh
+    x,y,z=rh[0]*SWING, rh[1]*(1+(SWING-1)*0.6), rh[2]*SWING
+    r=(x*x+y*y+z*z)**0.5
+    if r>REACH: f=REACH/r; x,y,z=x*f,y*f,z*f
+    return (rh[0]+(x-rh[0])*w, rh[1]+(y-rh[1])*w, rh[2]+(z-rh[2])*w)
 def path_spec(keys, t):
+    w=max(0.0, min(1.0, 4*t*(1-t)))     # 끝에서 0, 가운데에서 1
     for i in range(len(keys)-1):
         t0,a=keys[i]; t1,b=keys[i+1]
         if t<=t1:
             k=0 if t1<=t0 else (t-t0)/(t1-t0); k=k*k*(3-2*k)
-            return dict(rh=_lerp3(a['rh'],b['rh'],k), shaft=_lerp3(a['shaft'],b['shaft'],k), blade=_lerp3(a['blade'],b['blade'],k), left=a['left']+(b['left']-a['left'])*k)
+            return dict(rh=_wide(_lerp3(a['rh'],b['rh'],k), w), shaft=_lerp3(a['shaft'],b['shaft'],k), blade=_lerp3(a['blade'],b['blade'],k), left=a['left']+(b['left']-a['left'])*k)
     return dict(keys[-1][1])
 
 def retarget(action, clip):
