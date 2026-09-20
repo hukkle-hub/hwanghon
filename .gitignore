@@ -13,3 +13,6 @@ android/capacitor-cordova-android-plugins/
 # CMU 모캡 원본 (ASF/AMC). tools/3d/mocap.py fetch 로 다시 받는다 — 잘라낸 BVH 만 커밋한다.
 art/3d/mocap/src/
 __pycache__/
+
+# tools/recruit-scenario.mjs 스크린샷
+.recruit-shots/

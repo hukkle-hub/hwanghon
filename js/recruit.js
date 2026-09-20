@@ -41,20 +41,43 @@
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   var fmt=function(n){ return Number(n||0).toLocaleString(); };
 
-  /* ── 임무 목록 ── */
+  /* ── 임무 목록 ──
+     시트 03 의 왼쪽: 썸네일 · 임무명 · 지역 · Lv · 모집 배지, 위에 종류 탭,
+     아래에 «임무 목록 갱신». 종류는 겹칠 수 있는 «보기» 다 (분류가 아니다).
+       스토리 — 아직 안 깬 곳 = 본편에서 다음에 갈 곳   (프로필의 clears)
+       의뢰   — 난이도가 «의뢰 …» 인 곳 (훈련장 제외)   (던전의 diff)
+       토벌   — 의뢰 태그에 «토벌» 이 붙은 변이체 사냥   (world.js 의 tags)
+     셋 다 지어낸 축이 아니라 이미 있는 데이터를 읽는다. */
   var PURPOSE={first:'첫 클리어',repeat:'반복 파밍',practice:'연습'};
+  var kind='all';
+  function questOf(id){ var L=LV[id]; return L&&W&&W.quest&&QUEST_OF[L.arena]?W.quest(QUEST_OF[L.arena]):null; }
+  function cleared(id){ var L=LV[id]; return !!(profile&&profile.clears&&L&&profile.clears[L.arena]); }
+  function isKind(id,k){
+    if(k==='all') return true;
+    var q=questOf(id);
+    if(k==='hunt') return !!(q&&(q.tags||[]).some(function(t){ return t.indexOf('토벌')>=0; }));
+    if(k==='story') return !cleared(id);
+    return /^의뢰/.test((LV[id]||{}).diff||'');       /* 의뢰 = 의뢰 등급이 붙은 곳 */
+  }
   function missions(){
-    var ids=Object.keys(LV), box=$('rc-missions');
-    $('rc-mcount').textContent=ids.length+'곳';
+    var all=Object.keys(LV), ids=all.filter(function(id){ return isKind(id,kind); }), box=$('rc-missions');
+    $('rc-mcount').textContent=(kind==='all'?all.length+'곳':ids.length+' / '+all.length+'곳');
+    if(!ids.length){ box.innerHTML='<div class="mempty">이 종류의 임무가 없습니다.'+
+      '<br>«전체» 로 돌아가세요.</div>'; return; }
     box.innerHTML=ids.map(function(id){
-      var L=LV[id], a=AR[L.arena]||{}, q=W&&W.quest&&QUEST_OF[L.arena]?W.quest(QUEST_OF[L.arena]):null;
+      var L=LV[id], a=AR[L.arena]||{}, q=questOf(id);
       /* 해금 여부는 서버가 rpgState.unlocked 로 알려 준다. 접속 전에는 모두 열어 보여 준다. */
       var open=!connected||unlocked.indexOf(id)>=0;
       var n=filtered(rooms).filter(function(r){return r.level===id;}).length;
+      var art=(q&&q.art)||a.art||'lobby-city';
+      var where=q?q.area+' &gt; '+q.sub:esc(L.place||'');
+      var lv=q?'Lv. '+(q.lv||q.recLv||1):'튜토리얼';
       return '<div class="mrow3'+(id===pick?' is-on':'')+(open?'':' is-locked')+'" data-lv="'+id+'">'+
-        '<div class="fill"><div class="mrow3__t">'+esc(L.name)+'</div>'+
-        '<div class="mrow3__s">'+esc((L.diff||'').split(' · ')[0])+(q?' · 위험도 '+q.risk:'')+'</div></div>'+
-        '<span class="mrow3__n'+(n?'':' mrow3__n--0')+'">'+(n?'모집 '+n:'모집 0')+'</span></div>';
+        '<div class="mrow3__a art"><img src="art/'+esc(art)+'.webp" alt=""></div>'+
+        '<div class="mrow3__c"><div class="mrow3__t">'+esc(q?q.name:L.name)+'</div>'+
+        '<div class="mrow3__s">'+where+'</div>'+
+        '<div class="mrow3__f"><span class="mrow3__lv">'+lv+'</span>'+
+        '<span class="mrow3__n'+(n?'':' mrow3__n--0')+'">'+(n?'모집 '+n:'모집 0')+'</span></div></div></div>';
     }).join('');
   }
 
@@ -65,18 +88,18 @@
     $('rc-risk').innerHTML=q?'위험도 '+W.riskBadge(q.risk):'';
     var foes=''; for(var i=0;i<((q&&q.enemies)||1);i++)
       foes+='<span><svg class="ico ico--sm"><use href="#i-'+['skull','tree','bolt','anvil'][i%4]+'"/></svg></span>';
+    /* 시트 03 오른쪽의 차례 그대로: 이름 · 지역 · 아트 · 임무 목표 · 주요 적 ·
+       권장 전투력 · 보상 정보. «격파 대상» 은 아트 위 캡션으로 접었다 — 시트에
+       없던 두 줄이 권장 전투력·보상을 화면 밖으로 밀어내고 있었다. */
     $('rc-detail').innerHTML=
-      '<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+esc(L.name)+'</h2>'+
-      '<div class="xs t-faint mt1">'+esc(L.place||'')+'</div>'+
-      '<div class="qart2 art"><img src="art/'+((a.art)||'lobby-city')+'.webp" alt=""></div>'+
-      '<div class="label-ko">격파 대상</div><div class="sm t-dim">'+esc(a.hudName||'—')+'</div>'+
-      '<div class="hr"></div><div class="label-ko">임무 목표</div>'+
+      '<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+esc((q&&q.name)||L.name)+'</h2>'+
+      '<div class="xs t-faint mt1">'+esc(q?q.area+' · '+q.sub:(L.place||''))+'</div>'+
+      '<div class="qart2 art"><img src="art/'+((q&&q.art)||a.art||'lobby-city')+'.webp" alt="">'+
+        (a.hudName?'<span class="qart2__cap">'+esc(a.hudName)+'</span>':'')+'</div>'+
+      '<div class="label-ko">임무 목표</div>'+
       '<div class="sm t-dim">'+esc((q&&q.goal)||'지역을 확보하고 귀환한다.')+'</div>'+
       '<div class="hr"></div><div class="label-ko">주요 적</div><div class="foes">'+foes+'</div>'+
-      (q?'<div class="hr"></div><div class="flex ac jb"><span class="label-ko" style="margin:0">의뢰 보수</span>'+
-         '<span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg>'+
-         '<span class="num">'+fmt(q.reward)+'</span></span></div>':'')+
-      '<div class="xs t-faint mt3">출격 인원 2~4명 · 전원 준비 후 파티장이 출발합니다.</div>';
+      recCp(q)+rewardBoxes(q);
   }
 
   /* ── 필터 (시트 03 의 필터 바) ──
@@ -99,6 +122,31 @@
       if(pw==='fit'&&r.minPower&&power<r.minPower) return false;
       return true;
     });
+  }
+
+  /* 권장 전투력 — world.js 의 recCp. 내 전투력이 모자라면 붉게 말해 준다. */
+  function recCp(q){
+    if(!q) return '';
+    var me=myPower(), short=q.recCp&&me>0&&me<q.recCp;
+    return '<div class="hr"></div><div class="reccp">'+
+      '<div><div class="label-ko">권장 전투력</div>'+
+        '<b class="'+(short?'is-short':'')+'">'+fmt(q.recCp||0)+'</b>'+
+        '<span class="xs">'+(me?' 내 '+fmt(me)+(short?' · 부족':''):' 접속 전')+'</span></div>'+
+      '<div class="reccp__pay"><div class="label-ko">의뢰 보수</div>'+
+        '<span class="currency"><svg class="ico ico--sm"><use href="#i-coin"/></svg>'+
+        '<span class="num">'+fmt(q.reward)+'</span></span></div></div>';
+  }
+  /* 보상 4칸 — 시트의 EXP · 골드 · 재료 두 칸. 아이콘은 인력사무실과 같은 규칙. */
+  function rewardBoxes(q){
+    var T=window.TW_ITEMS;
+    if(!q||!q.rewards||!q.rewards.length||!T) return '';
+    var rw=q.rewards.map(function(r){
+      var it=r[0]==='exp'?null:T.get(r[0]), ic=it?it.icon:'exp';
+      var rar=it&&(it.rarity==='hero'||it.rarity==='legend')?' data-r="'+it.rarity+'"':'';
+      return '<div class="rw"'+rar+'>'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-'+ic+'"/></svg>')+
+        '<b>'+(typeof r[1]==='number'?fmt(r[1]):esc(r[1]))+'</b></div>';
+    }).join('');
+    return '<div class="hr"></div><div class="label-ko">보상 정보</div><div class="rewards">'+rw+'</div>';
   }
 
   /* ── 모집 목록 ── */
@@ -252,6 +300,14 @@
     else state('접속한 뒤 이용할 수 있습니다.',true); };
   $('rc-tabs').addEventListener('click',function(e){
     var b=e.target.closest('[data-v]'); if(b) setView(b.dataset.v); });
+  $('rc-kinds').addEventListener('click',function(e){
+    var b=e.target.closest('[data-k]'); if(!b) return;
+    kind=b.dataset.k;
+    [].forEach.call($('rc-kinds').querySelectorAll('.tab'),function(t){ t.classList.toggle('is-on',t.dataset.k===kind); });
+    missions(); });
+  $('rc-mrefresh').onclick=function(){
+    if(send({type:'rpg',action:'state'})) state('임무 목록을 갱신했습니다.');
+    else state('접속한 뒤 이용할 수 있습니다.',true); };
   $('rc-missions').addEventListener('click',function(e){
     var r=e.target.closest('[data-lv]'); if(!r) return;
     pick=r.dataset.lv; render(); });

@@ -20,6 +20,7 @@
 | 온라인 | `party.html` (2인 필요) + `window.TW_RAID` |
 | 쉘터 | `node server/index.cjs` + `shelter.html` + `window.TW_SHELTER` |
 | 설계 시트 ↔ 구현 | `compare.html` · `tools/screen-fit.mjs` |
+| 파티 모집 (2인) | `node tools/recruit-scenario.mjs` — 서버까지 한 프로세스에서 띄운다 |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.
@@ -36,10 +37,17 @@ tools/3d/pose-sheet.html?clip=hit,stagger&times=peak  # 클립마다 «가장 �
 
 ```
 node tools/serve.cjs &
-node tools/screen-fit.mjs          # 18화면 전부 952px 인지 + 잘림 검사
+node tools/screen-fit.mjs          # 20화면 전부 952px 인지 + 잘림 검사
 ```
 
 넘치면 «스테이지를 늘리는» 게 아니라 **패널 안에서 스크롤하게** 만든다.
+패널 «안» 이 넘치는 것도 눈으로 보지 말고 재라 — 시트가 한 화면에 보여 주는 것을
+스크롤 뒤에 숨기면 시트를 따른 게 아니다. `el.scrollHeight - el.clientHeight`
+를 **모든 경우에** 찍어 본다 (의뢰 7개를 다 눌러 봐야 가장 긴 것이 나온다).
+
+새 클래스 이름은 `css/ui.css` · `css/mobile.css` 에 **먼저 grep** 한다. `.mtabs`
+는 모바일 페인 탭 바가 이미 쓰고 있어서 (`display:none` 이 기본) 새로 만든 종류
+탭이 데스크톱에서 통째로 안 보였다 (docs/design/30 §7.1).
 
 **짧은 클립은 반드시 `times=peak`** 로 찍는다. 0/0.5/1 은 하필 «되돌아오는 지점» 에
 걸려 멀쩡한 클립도 죽은 것처럼 보인다 (hit 이 정확히 그랬다 — docs/design/25 §3).
