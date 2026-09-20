@@ -46,9 +46,9 @@ test('progression opens in order and sewage quest reward can be claimed only onc
  storage.set('tw:arena:marsh',JSON.stringify({cleared:true}));assert.equal(s.questState('q_sewage'),'available');assert.equal(s.routeForQuest('q_sewage').dungeon,'game3d.html?d=d03');
  storage.set('tw:arena:sewage',JSON.stringify({cleared:true}));const before=save.wallet();assert.ok(s.claim('q_sewage'));assert.equal(save.wallet()-before,12500);assert.equal(s.claim('q_sewage'),null);assert.equal(s.questState('q_sewage'),'claimed');
 });
-test('grove and road continue the chain: relay -> grove -> road, each with a two-stage arena',()=>{
+test('grove, road and ward continue the chain: relay -> grove -> road -> ward, each a two-stage arena',()=>{
  const storage=new Map(),c=env(storage),s=c.window.TW_STORY,A=c.window.TW_DUNGEONS.ARENAS,L=c.window.TW_LEVELS;
- for(const [arena,level,quest,proc] of [['grove','d05','q_plant','root'],['road','d06','q_road','hauler']]){
+ for(const [arena,level,quest,proc] of [['grove','d05','q_plant','root'],['road','d06','q_road','hauler'],['ward','d07','q_med','ward']]){
   assert.ok(A[arena],arena);assert.equal(A[arena].stages.length,2,arena+' 단계');
   assert.equal(A[arena].procedural,proc);assert.ok(A[arena].stageFx[1].hazards.length>0,arena+' 광란 구역');
   /* 통상 단계의 파괴 부위는 전부 3D 부위 노드와 이름이 맞아야 표식이 붙는다 */
@@ -61,6 +61,29 @@ test('grove and road continue the chain: relay -> grove -> road, each with a two
  for(const a of ['tutorial','marsh','sewage','relay'])storage.set('tw:arena:'+a,JSON.stringify({cleared:true}));
  assert.equal(s.questState('q_plant'),'available');assert.equal(s.questState('q_road'),'locked');
  storage.set('tw:arena:grove',JSON.stringify({cleared:true}));assert.equal(s.questState('q_road'),'available');
+ assert.equal(s.questState('q_med'),'locked');
+ storage.set('tw:arena:road',JSON.stringify({cleared:true}));assert.equal(s.questState('q_med'),'available');
+});
+test('d07 폐병원은 «수렴» 구조다: 상자 넷이 흩어져 있고 반출은 중앙 한 곳',()=>{
+ const c=env(),L=c.window.TW_LEVELS.d07,E=L.expedition;
+ /* vm 컨텍스트에서 온 배열은 프로토타입이 달라 deepStrictEqual 이 «참조가 다르다» 로 떨어진다.
+    Array.from 으로 이쪽 realm 으로 옮겨 놓고 쓴다. */
+ const nodes=Array.from(E.nodes),node=id=>nodes.find(n=>n.id===id);
+ /* 상자 넷은 서로 다른 병동에 있어야 한다 — 한데 모여 있으면 «수렴» 이 아니다 */
+ const meds=nodes.filter(n=>n.objective==='meds');
+ assert.equal(meds.length,4);
+ for(const a of meds)for(const b of meds)if(a!==b)
+  assert.ok(Math.hypot(a.cx-b.cx,a.cy-b.cy)>=9,a.id+' 와 '+b.id+' 가 너무 가깝다');
+ /* 반출구 하나가 상자 넷을 전부 요구하고, 그 반출구만이 격벽을 연다 */
+ assert.deepEqual(Array.from(E.required),['handoff']);
+ assert.deepEqual(Array.from(node('handoff').requires).sort(),meds.map(n=>n.id).sort());
+ /* 반출구는 중앙에 있다 — 상자 넷의 한가운데 */
+ const cx=meds.reduce((n,m)=>n+m.cx,0)/4, cy=meds.reduce((n,m)=>n+m.cy,0)/4;
+ assert.ok(Math.hypot(node('handoff').cx-cx,node('handoff').cy-cy)<3.5,'반출구가 가운데가 아니다');
+ /* 소독 가스는 상자를 회수할 때마다 한 곳씩 멎는다 */
+ const gas=Array.from(E.hazards).filter(h=>h.disabledBy);
+ assert.equal(gas.length,4);
+ assert.deepEqual(gas.map(h=>h.disabledBy).sort(),meds.map(n=>n.id).sort());
 });
 test('zero counters are saved as zero',()=>{const c=env(),s=c.window.TW_SAVE;s.stat('counters',0);assert.equal(s.get().stats.counters,0);});
 test('sewage loot has distinct first-clear rewards and rare rolls work',()=>{
