@@ -91,8 +91,8 @@ export function createHaulerBoss(){
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.78]),track('Spine','rotation[x]',[0,.7],[0,.5])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.78,1]),track('Spine','rotation[x]',[0,.8],[.5,0])]);
- clip('death',1.8,[track('Hips','position[y]',[0,.85,1.8],[1,.9,.84]),track('Spine','rotation[z]',[0,.85,1.8],[0,.22,.36]),track('Core','scale[x]',[0,.55,1.8],[1,.3,.05]),track('Core','scale[z]',[0,.55,1.8],[1,.3,.05])]);
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.84]),track('Spine','rotation[x]',[0,.7],[0,.76])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.84,1]),track('Spine','rotation[x]',[0,.8],[.76,0])]);
+ clip('death',1.8,[track('Hips','position[y]',[0,.85,1.8],[1,1.0,.98]),track('Spine','rotation[z]',[0,.85,1.8],[0,.26,.46]),track('Spine','rotation[x]',[0,.85,1.8],[0,.3,.7]),track('ArmL','rotation[z]',[0,.85,1.8],[0,-.2,-.45]),track('Core','scale[x]',[0,.55,1.8],[1,.3,.05]),track('Core','scale[z]',[0,.55,1.8],[1,.3,.05])]);
  return {scene,animations};
 }

@@ -69,8 +69,8 @@ export function createRelayBoss(){
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
- clip('down',.7,[track('Hips','position[y]',[0,.7],[.9,.62]),track('Spine','rotation[x]',[0,.7],[0,.5])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.62,.9]),track('Spine','rotation[x]',[0,.8],[.5,0])]);
- clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.7,.62]),track('Spine','rotation[z]',[0,.8,1.7],[0,.34,.6]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[.9,.66]),track('Spine','rotation[x]',[0,.7],[0,.78])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.66,.9]),track('Spine','rotation[x]',[0,.8],[.78,0])]);
+ clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.76,.7]),track('Spine','rotation[z]',[0,.8,1.7],[0,.5,1.0]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
  return {scene,animations};
 }

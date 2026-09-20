@@ -34,8 +34,8 @@ export function createPumpBoss(){
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.7]),track('Spine','rotation[x]',[0,.7],[0,.46])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.7,1]),track('Spine','rotation[x]',[0,.8],[.46,0])]);
- clip('death',1.6,[track('Hips','position[y]',[0,.8,1.6],[1,.8,.72]),track('Spine','rotation[z]',[0,.8,1.6],[0,.3,.54])]);
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.76]),track('Spine','rotation[x]',[0,.7],[0,.74])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.76,1]),track('Spine','rotation[x]',[0,.8],[.74,0])]);
+ clip('death',1.6,[track('Hips','position[y]',[0,.8,1.6],[1,.88,.84]),track('Spine','rotation[z]',[0,.8,1.6],[0,.3,.56]),track('Spine','rotation[x]',[0,.8,1.6],[0,.34,.76])]);
  return {scene,animations};
 }
