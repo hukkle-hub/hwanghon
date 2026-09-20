@@ -32,7 +32,7 @@ export class Animated{
   else if(gesture){this.play(gesture.clip,'gesture-'+gesture.id);this.current.paused=true;this.current.time=gesture.elapsed/gesture.duration*this.current.getClip().duration;}
   else if(data.rollT>0){this.play('roll','roll');this.current.paused=true;this.current.time=(1-Math.max(0,data.rollT-age)/.32)*this.current.getClip().duration;}
   else {this.play(data.guard?'guard':data.moving?'run':'idle');this.current.paused=false;}
-  this.mixer.update(dt);this.rig?.apply(data.action?{...data.action,elapsed:Math.min(data.action.duration,data.action.elapsed+age)}:gesture,data.moving,data.guard,dt,this.current?.getClip().name);
+  this.mixer.update(dt);this.rig?.apply(data.action?{...data.action,elapsed:Math.min(data.action.duration,data.action.elapsed+age)}:gesture,data.moving,data.guard,dt,this.current?.getClip().name,this.aimTarget||null);
   if(this.trail){const a=data.action;
    const sw=(!!a && a.elapsed+age>=a.hitAt*.3 && a.elapsed+age<=a.duration*.85)||data.rollT>0;
    if(a&&this.trailKey!==a.id){this.trailKey=a.id;const st=trailStyle(a.opt&&a.opt.skill?'skill':a.kind);this.trail.set(st[0],st[1]);}

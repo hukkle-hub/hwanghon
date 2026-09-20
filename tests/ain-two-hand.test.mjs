@@ -27,14 +27,15 @@ test('repaired Ain: two palm contacts, bounded wrists, fixed limb lengths and co
  let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});const rig=makeAinTwoHand(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene);
  let grip=0,step=0,peak='',wrist=0;
  const positions=new Map(Object.entries(rig.bones).filter(([n])=>/Arm$|Hand$/.test(n)).map(([n,b])=>[n,b.position.clone()]));
- for(const variant of ['idle','run','guard','attack1','attack2','attack3','smash','ult','skill1','skill2','skill3','skill4','counter','counterPerfect','exec']){
-  const name=variant==='counterPerfect'?'counter':variant;
+ for(const variant of ['idle','run','guard','attack1','attack2','attack3','smash','ult','skill1','skill2','skill3','skill4','counter','counterPerfect','exec','skill1Target','skill3Target','ultTarget']){
+  const name=variant==='counterPerfect'?'counter':variant.replace('Target','');
   rig.restore();mixer.stopAllAction();const c=g.animations.find(x=>x.name===name),act=mixer.clipAction(c);act.setLoop(T.LoopOnce,1).play();act.paused=true;const previous={};
   for(let i=0;i<=240;i++){
    rig.restore();act.time=c.duration*i/240;mixer.update(0);
    const a=/attack|smash|ult|skill|counter|exec/.test(name)?{id:name,clip:name,kind:'attack',elapsed:c.duration*i/240,duration:c.duration,hitAt:c.duration*.42}:null;
    if(a)a.opt={perfect:variant==='counterPerfect'};
-   rig.apply(a,name==='run',name==='guard',c.duration/240,name);grip=Math.max(grip,rig.diagnostics.gripError);
+   const target=variant.endsWith('Target')?new T.Vector3(.11+.05*Math.sin(i/30),2.58+.04*Math.sin(i/24),.58+.08*Math.cos(i/30)):null;
+   rig.apply(a,name==='run',name==='guard',c.duration/240,name,target);grip=Math.max(grip,rig.diagnostics.gripError);
    assert.ok(rig.diagnostics.rightGripError<.001);
    for(const side of ['Left','Right']){
     const hand=rig.bones[side+'Hand'];

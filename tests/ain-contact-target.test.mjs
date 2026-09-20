@@ -15,5 +15,20 @@ test('authored attack contact intersects measured training core envelope without
    assert.ok(d<.39,`${name}: distance offset ${dz}m / height offset ${dy}m misses (${d.toFixed(4)}m)`);
   }
   assert.ok(measureAinBladeContact(weapon,p.clone().add(new T.Vector3(0,3,0))).distance>1,'unreachable high target must fail');
+  for(const [coords,radius] of [[[.11,2.58,.58],.39]]){
+   rig.restore();mixer.update(0);const target=new T.Vector3(...coords);
+   rig.apply({id:2,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name);
+   if(name==='skill1')assert.ok(measureAinBladeContact(weapon,target).distance>radius,'negative control: legacy pose must reproduce miss');
+   rig.restore();mixer.update(0);
+   rig.apply({id:2,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name,target);
+   const corrected=measureAinBladeContact(weapon,target).distance;t.diagnostic(name+' corrected '+coords[1]+'m: '+corrected.toFixed(4));
+   assert.ok(corrected<radius,name+' adaptive contact misses '+coords);
+   assert.ok(rig.diagnostics.gripError<.001,'both palms stay attached');
+   root.position.set(4,0,-7);root.rotation.y=1.2;root.updateWorldMatrix(true,true);
+   const worldTarget=root.localToWorld(target.clone());rig.restore();mixer.update(0);
+   rig.apply({id:3,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name,worldTarget);
+   assert.ok(measureAinBladeContact(weapon,worldTarget).distance<radius,'translated/yawed target coordinate regression');
+   root.position.set(0,0,0);root.rotation.y=0;root.updateWorldMatrix(true,true);
+  }
  }
 });
