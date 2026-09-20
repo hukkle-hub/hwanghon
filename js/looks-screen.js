@@ -94,12 +94,13 @@
     n.className='xs '+(bad?'t-bad':'t-faint'); }
 
   /* --- 3D --- */
-  var frame=$('lk-3d'), ready=false;
+  var frame=$('lk-3d'), ready=false, bare=false;
   function send(m){ try{ if(ready&&frame.contentWindow) frame.contentWindow.postMessage(m,'*'); }catch(e){} }
   function relook(){ send({t:'relook'}); }
   function loadFrame(){
     ready=false;
     frame.src='viewer.html?equip=1&fit=1&char='+encodeURIComponent(G.char())+
+      (bare?'&body=1':'')+
       '&wind='+encodeURIComponent($('lk-wind').value)+'&t='+Date.now();
   }
   frame.addEventListener('load', function(){ ready=true;
@@ -163,6 +164,13 @@
   var spin=false;
   $('lk-spin').addEventListener('click', function(){ spin=!spin; send({t:'spin',v:spin});
     this.classList.toggle('is-on',spin); this.textContent=spin?'회전 멈춤':'자동 회전'; });
+  /* 옷을 갈아입으려면 몸을 봐야 한다 — 장비를 다 벗은 «기본 체형» (docs/design/40) */
+  $('lk-bare').addEventListener('click', function(){ bare=!bare;
+    this.classList.toggle('is-on',bare); this.setAttribute('aria-pressed',bare?'true':'false');
+    this.textContent=bare?'장비 차림':'속옷 차림';
+    note(bare?'기본 체형 — 장비를 벗은 몸입니다. 저장된 장비는 그대로입니다.'
+             :'장비 차림으로 돌아왔습니다.');
+    loadFrame(); });
 
   redraw(); loadFrame();
   window.TW_LOOKS_SCREEN={ redraw:redraw, slot:function(){ return sel; }, SWATCH:SWATCH, SLOTS:SLOTS };

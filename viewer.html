@@ -163,9 +163,9 @@ window.__TW_VIEW={ get scene(){return scene;}, get charRoot(){return charRoot;},
   play(name){ if(!mixer||!charGltf) return null; const c=(charGltf.animations||[]).find(a=>a.name===name); if(!c) return null; mixer.stopAllAction(); mixer.clipAction(c).reset().play(); mixer.update(0.001); return c.name; },
   clips(){ return (charGltf&&charGltf.animations||[]).map(a=>a.name); },
   look(cx,cy,cz,tx,ty,tz){ cam.position.set(cx,cy,cz); ctrl.target.set(tx,ty,tz); ctrl.update(); } };
-const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', FIT=q.get('fit')==='1'; const CHARID=q.get('char')||((window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'); if(window.TW_GEAR&&TW_GEAR.setChar) TW_GEAR.setChar(CHARID); loadChar(q.get('glb')||('art/3d/'+(EQUIP?CHARID:'ain')+'_anim.glb')); if(!EQUIP) loadWeapon('art/3d/ain_scythe_tex.glb');
+const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', FIT=q.get('fit')==='1', BARE=q.get('body')==='1'; const CHARID=q.get('char')||((window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'); if(window.TW_GEAR&&TW_GEAR.setChar) TW_GEAR.setChar(CHARID); loadChar(q.get('glb')||('art/3d/'+(EQUIP?CHARID:'ain')+(BARE?'_body':'_anim')+'.glb')); if(!EQUIP) loadWeapon('art/3d/ain_scythe_tex.glb');
 /* 장착 장비 외형 모드: 저장된 장비를 그대로 입힌다 (인벤토리 미리보기·검수) */
-function applyEquip(){ if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) return; const eq=TW_GEAR.state().equipped; builtInWeapon=true; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot);
+function applyEquip(){ if(BARE) return; if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) return; const eq=TW_GEAR.state().equipped; builtInWeapon=true; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot);
   const tintOf=id=>TW_GEAR.tintOf?TW_GEAR.tintOf(id):null, mixOf=id=>(TW_GEAR.dyeOf&&TW_GEAR.dyeOf(id))?0.75:null, baseOf=id=>{ const it=TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; };
   TW_LOOKS.attach(THREE, loader, charRoot, eq, { charId:CHARID, tintOf, mixOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t){ const mx=mixOf(eq.main)??0.55; wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),mx); } }); } } });
   $('#sock').textContent='장착 장비 외형: '+Object.keys(eq).filter(k=>eq[k]).map(k=>k+'='+eq[k]).join(' · '); }
