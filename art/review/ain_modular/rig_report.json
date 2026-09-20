@@ -1,0 +1,106 @@
+{
+  "status": "EXPERIMENT_NOT_RUNTIME_APPROVED",
+  "unweighted_vertices": 0,
+  "clips": [
+    "attack1",
+    "attack2",
+    "attack3",
+    "brake",
+    "cheer",
+    "counter",
+    "death",
+    "dodgeB",
+    "dodgeL",
+    "dodgeR",
+    "exec",
+    "guard",
+    "guardHit",
+    "guardUp",
+    "hit",
+    "hit2",
+    "idle",
+    "idle2",
+    "pickup",
+    "roll",
+    "run",
+    "skill1",
+    "skill2",
+    "skill3",
+    "skill4",
+    "smash",
+    "ult",
+    "walk"
+  ],
+  "evidence": [
+    {
+      "clip": "idle",
+      "frame": 47,
+      "bounds": [
+        [
+          -0.30920833349227905,
+          -0.17205452919006348,
+          -0.0282041747123003
+        ],
+        [
+          0.30495771765708923,
+          0.19878320395946503,
+          1.6159188747406006
+        ]
+      ]
+    },
+    {
+      "clip": "attack1",
+      "frame": 14,
+      "bounds": [
+        [
+          -0.18394717574119568,
+          -0.47223037481307983,
+          0.004472380969673395
+        ],
+        [
+          0.45925408601760864,
+          0.22728770971298218,
+          1.6044443845748901
+        ]
+      ]
+    },
+    {
+      "clip": "counter",
+      "frame": 13,
+      "bounds": [
+        [
+          -0.48498013615608215,
+          -1.0185399055480957,
+          0.0806003138422966
+        ],
+        [
+          0.2883065640926361,
+          0.03577233478426933,
+          1.5291179418563843
+        ]
+      ]
+    },
+    {
+      "clip": "roll",
+      "frame": 5,
+      "bounds": [
+        [
+          -0.5486841201782227,
+          -0.9533334374427795,
+          0.0690305083990097
+        ],
+        [
+          0.5370088219642639,
+          -0.07930032163858414,
+          1.5209970474243164
+        ]
+      ]
+    }
+  ],
+  "limitations": [
+    "Distance-based initial weights; no deformation retopology",
+    "No finger bones in existing skeleton",
+    "No separate garments yet",
+    "Pose landmarks have not been fitted to candidate anatomy"
+  ]
+}

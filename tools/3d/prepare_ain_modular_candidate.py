@@ -1,5 +1,5 @@
 """Static inspection candidate only. Does not establish animation-ready topology."""
-import bpy, sys, os, json
+import bpy, bmesh, sys, os, json
 from mathutils import Vector
 src, out = [os.path.abspath(p) for p in sys.argv[sys.argv.index('--')+1:]]
 os.makedirs(out, exist_ok=True)
@@ -21,6 +21,14 @@ hi = Vector([max(v.co[i] for v in obj.data.vertices) for i in range(3)])
 scale = 1.68 / (hi.z-lo.z)
 center = Vector(((lo.x+hi.x)/2, (lo.y+hi.y)/2, lo.z))
 for v in obj.data.vertices: v.co = (v.co-center)*scale
+obj.data.calc_loop_triangles()
+# Weld source UV-split duplicates BEFORE decimation, not after edge collapse.
+bm = bmesh.new()
+bm.from_mesh(obj.data)
+bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=0.000001)
+bm.to_mesh(obj.data)
+bm.free()
+obj.data.update()
 obj.data.calc_loop_triangles()
 dec = obj.modifiers.new('static_preview_budget', 'DECIMATE')
 dec.ratio = 59000/len(obj.data.loop_triangles)
