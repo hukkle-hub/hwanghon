@@ -18,7 +18,26 @@
 .sh{display:grid;grid-template-columns:352px 1fr 396px;gap:13px;padding:13px 20px;flex:1;min-height:0}
 .sh__l{display:grid;grid-template-rows:auto auto 1fr;gap:12px;min-height:0}
 .sh__c{display:grid;grid-template-rows:auto 1fr auto;gap:12px;min-height:0}
-.sh__r{display:grid;grid-template-rows:1fr;min-height:0}
+.sh__r{display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0}
+
+/* 동료 · 차단 */
+.crow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line-soft)}
+.crow:last-child{border:0}
+.crow__d{width:7px;height:7px;border-radius:50%;background:#4A5252;flex:none}
+.crow.is-on .crow__d{background:#79C07A;box-shadow:0 0 6px rgba(121,192,122,.65)}
+.crow__n{font-size:12px;color:var(--tx-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow.is-on .crow__n{color:var(--tx-hi)}
+.crow__k{font-size:10px;letter-spacing:.06em;color:var(--tx-faint);flex:none}
+.crow--block .crow__k{color:#C9807B}
+.crow__a{display:flex;gap:4px;flex:none}
+.crow__a button{font-size:10.5px;padding:3px 7px;min-height:0}
+.crow__a button[data-c="block"],.crow__a button[data-c="remove"]{color:#D98B86;border-color:rgba(199,85,80,.4)}
+.cform{display:flex;gap:6px;padding:9px 13px 4px}
+.cform .field{flex:1}
+.cacts{display:flex;gap:6px;padding:0 13px 10px}
+.cacts button{flex:1;font-size:11px;padding:5px 0;min-height:0}
+#sh-whisper-to{display:none}
+.chat[data-ch="whisper"] #sh-whisper-to{display:block;flex:0 0 118px}
 
 /* 접속 현황 */
 .pres{display:flex;align-items:center;gap:13px;padding:12px 14px}
@@ -70,7 +89,8 @@
 .chat__m[data-c="party"] .chat__ch{color:#8FBF8F;border-color:rgba(91,163,91,.4)}
 .chat__t{color:var(--tx)}
 .chat__f{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--line-soft)}
-.chat__f .field{flex:1}
+.chat__f .field{flex:1;min-width:0}
+.chat__f .btn{flex:none;white-space:nowrap}   /* 귓속말 칸이 생겨도 «전/송» 으로 갈리지 않게 */
 .chat__empty{font-size:11.5px;color:var(--tx-ghost);padding:14px 0;text-align:center}
 
 /* 접속 전 */
@@ -240,13 +260,31 @@
               <button class="tab is-on" data-ch="world">월드</button>
               <button class="tab" data-ch="guild">길드</button>
               <button class="tab" data-ch="party">파티</button>
+              <button class="tab" data-ch="whisper">귓속말</button>
             </span>
           </div>
           <div class="chat__log" id="sh-log"><div class="chat__empty">접속하면 대화가 표시됩니다.</div></div>
           <div class="chat__f">
+            <div class="field" id="sh-whisper-to"><input id="sh-to" maxlength="16" placeholder="받는 캐릭터"></div>
             <div class="field"><input id="sh-text" maxlength="160" placeholder="동료에게 한마디 (160자)"></div>
             <button type="button" class="btn btn--primary" id="sh-send">전송</button>
           </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">동료 · 차단</span>
+          <span class="panel__meta" id="sh-cmeta">—</span></div>
+        <div class="cform">
+          <div class="field"><input id="sh-who" maxlength="16" placeholder="캐릭터 이름"></div>
+          <button type="button" class="btn btn--sm" id="sh-friend">친구 요청</button>
+        </div>
+        <div class="cacts">
+          <button type="button" class="btn btn--sm" id="sh-block">차단</button>
+          <button type="button" class="btn btn--sm" id="sh-report">신고</button>
+        </div>
+        <div class="panel__body scroll" id="sh-contacts" style="max-height:186px">
+          <div class="chat__empty">접속하면 동료 목록이 표시됩니다.</div>
         </div>
       </section>
     </div>

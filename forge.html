@@ -188,7 +188,7 @@ html.mobile .itemglow .itart{width:72px;height:72px;align-self:start;margin-top:
         <div class="enhinfo">
           <div class="enhstep" id="enh-step">+5 강화 단계</div>
           <div class="rate">
-            <span class="xs t-faint">강화 성공 확률</span>
+            <span class="xs t-faint" id="enh-ratek">강화 성공 확률</span>
             <b id="enh-rate">65%</b>
           </div>
           <div class="flex ac jb mt3">
@@ -307,7 +307,10 @@ html.mobile .itemglow .itart{width:72px;height:72px;align-self:start;margin-top:
       return '<div class="stat"><span class="stat__k">'+(LBL[k]||k)+'</span><span class="stat__v num">'+a+u+(step?' <svg class="ico ico--xs" style="color:var(--up)"><use href="#i-arrowr"/></svg> <span class="up">'+b+u+'</span>':'')+'</span></div>'; }).join('')+
       '<div class="hr"></div><div class="flex ac g2"><svg class="ico ico--sm t-ghost"><use href="#i-lock"/></svg><span class="xs t-faint">옵션 잠금</span><span class="xs t-faint" style="margin-left:auto">'+(e>=7?'해금됨':'+7 강화 시 해금')+'</span></div>';
     $('#opt-meta').textContent=it.effect?'':'';
-    if(mode==='enh'){
+    if(mode==='enh'&&G.sealedOf(cur)){ $('#enh-extra').style.display='none'; $('#enh-step').textContent='봉인됨';
+      $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">봉인된 장비는 강화할 수 없습니다. 오른쪽 «봉인» 에서 풀 수 있습니다.</div>';
+      $('#enh-cost').textContent='0'; $('#enh-warn').textContent=''; btn.textContent='강화'; btn.disabled=true; }
+    else if(mode==='enh'){
       if(!step){ $('#enh-extra').style.display='none'; $('#enh-step').textContent='최대 강화'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">더 강화할 수 없습니다.</div>'; $('#enh-cost').textContent='0'; btn.textContent='강화'; btn.disabled=true; }
       else { var useB=!step.safe && $('#enh-boost').classList.contains('is-on'); var mats=step.mats.slice(); if(useB) mats.push(['m_booster', step.boosterN]);
         $('#enh-step').textContent='+'+step.to+' 강화 단계'+(step.safe?' · 안전 구간':''); $('#enh-rate').textContent=step.rate+'%'+(step.fs?' (+'+step.fs+')':''); $('#enh-cost').textContent=T.fmt(step.cost);
@@ -317,18 +320,27 @@ html.mobile .itemglow .itart{width:72px;height:72px;align-self:start;margin-top:
         btn.textContent='강화 ('+step.rate+'%)'; btn.disabled=!step.durOk||!G.canPay(mats, step.cost); }
     } else { $('#enh-extra').style.display='none'; }
     if(mode==='enh'){ /* 위에서 처리 */ } else if(mode==='repair'){ var c=G.repairCost(cur); $('#enh-step').textContent='대수선'; $('#enh-rate').textContent=dur+'%'; $('#enh-mats').innerHTML='<div class="xs t-dim">구조 안정성을 100 으로 복구합니다.</div>'; $('#enh-cost').textContent=T.fmt(c); $('#enh-warn').textContent=c?'비용은 장비 가치와 손상도에 비례':'손상이 없습니다'; btn.textContent='대수선'; btn.disabled=!c||G.wallet()<c; }
-    else if(mode==='salvage'){ var eq=G.isEquipped(cur); $('#enh-step').textContent='분해'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-dim">장비를 재료로 되돌립니다. 등급이 높을수록 좋은 재료. 내구도가 높을수록 더 많이.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=eq?'장착 중인 장비는 분해할 수 없습니다. 인벤토리에서 해제하세요.':'되돌릴 수 없습니다.'; btn.textContent='분해'; btn.disabled=eq; }
-    else { $('#enh-step').textContent='봉인'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-faint">잠재력 봉인은 준비 중입니다.</div>'; $('#enh-cost').textContent='0'; $('#enh-warn').textContent=''; btn.textContent='봉인'; btn.disabled=true; }
+    else if(mode==='salvage'){ var eq=G.isEquipped(cur), sl=G.sealedOf(cur); $('#enh-step').textContent='분해'; $('#enh-rate').textContent='—'; $('#enh-mats').innerHTML='<div class="xs t-dim">장비를 재료로 되돌립니다. 등급이 높을수록 좋은 재료. 내구도가 높을수록 더 많이.</div>'; $('#enh-cost').textContent='0';
+      /* 막힌 이유는 «누르기 전에» 보여야 한다 — 눌러 보고 토스트로 아는 건 늦다 */
+      $('#enh-warn').textContent=sl?'봉인된 장비입니다. 오른쪽 «봉인» 에서 풀어야 분해할 수 있습니다.':eq?'장착 중인 장비는 분해할 수 없습니다. 인벤토리에서 해제하세요.':'되돌릴 수 없습니다.'; btn.textContent='분해'; btn.disabled=eq||sl; }
+    else { var sealed=G.sealedOf(cur);
+      $('#enh-step').textContent=sealed?'봉인됨':'봉인'; $('#enh-rate').textContent=sealed?'잠김':'열림';
+      $('#enh-mats').innerHTML='<div class="xs t-dim">봉인한 장비는 <b>강화와 분해로 잃을 수 없습니다.</b><br>강화를 다시 하려면 봉인을 풉니다. 비용은 없습니다.</div>';
+      $('#enh-cost').textContent='0';
+      $('#enh-warn').textContent=sealed?'지금 이 장비는 강화·분해가 막혀 있습니다.':'강화 실패로 단계가 떨어지거나 파괴되는 것을 막습니다.';
+      btn.textContent=sealed?'봉인 해제':'봉인'; btn.disabled=false; }
+    $('#enh-ratek').textContent={enh:'강화 성공 확률',repair:'구조 안정성',salvage:'회수',seal:'봉인 상태'}[mode]||'강화 성공 확률';
     gold();
   }
   function act(){ if(!cur) return; var it=T.get(cur), r;
-    if(mode==='enh'){ r=G.enhance(cur, $('#enh-boost').classList.contains('is-on')); if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err==='dur'){ toast('구조 안정성이 낮습니다. 대수선 후 강화하세요.', true); return; } if(r.err) return;
+    if(mode==='enh'){ r=G.enhance(cur, $('#enh-boost').classList.contains('is-on')); if(r.err==='sealed'){ toast('봉인된 장비입니다. 봉인을 풀고 강화하세요.', true); return; } if(r.err==='pay'){ toast('골드나 재료가 부족합니다', true); return; } if(r.err==='dur'){ toast('구조 안정성이 낮습니다. 대수선 후 강화하세요.', true); return; } if(r.err) return;
       if(r.ok){ toast(it.name+' +'+r.enh+' 강화 성공'); if(window.TW_SFX) TW_SFX.play('clear'); $('#ih-glow').classList.add('is-hit'); setTimeout(function(){ $('#ih-glow').classList.remove('is-hit'); },600); }
       else if(r.broken){ toast(it.name+' 파괴됨 — 구조 안정성 0', true); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; }
       else { toast('강화 실패'+(r.drop?' · +'+r.from+' → +'+r.enh:' · 단계 유지')+' · 내구도 '+r.dur+' · 다음 성공률 +'+r.fs+'%p', true); if(window.TW_SFX) TW_SFX.play('hurt'); }
     }
     else if(mode==='repair'){ r=G.repair(cur); if(r.err==='pay'){ toast('골드가 부족합니다', true); return; } if(r.ok){ toast('대수선 완료 · -'+T.fmt(r.cost)+' G'); if(window.TW_SFX) TW_SFX.play('ui'); } }
-    else if(mode==='salvage'){ r=G.dismantle(cur); if(r.err==='equipped'){ toast('장착 중인 장비입니다', true); return; } if(r.ok){ toast(it.name+' 분해 → '+r.got.map(function(g){ return T.get(g[0]).name+' ×'+g[1]; }).join(', ')); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; } }
+    else if(mode==='seal'){ var on=!G.sealedOf(cur); G.seal(cur,on); toast(it.name+(on?' 봉인 — 강화·분해가 막힙니다':' 봉인 해제')); if(window.TW_SFX) TW_SFX.play('ui'); }
+    else if(mode==='salvage'){ r=G.dismantle(cur); if(r.err==='sealed'){ toast('봉인된 장비입니다. 봉인을 풀고 분해하세요.', true); return; } if(r.err==='equipped'){ toast('장착 중인 장비입니다', true); return; } if(r.ok){ toast(it.name+' 분해 → '+r.got.map(function(g){ return T.get(g[0]).name+' ×'+g[1]; }).join(', ')); if(window.TW_SFX) TW_SFX.play('brk'); cur=null; } }
     grid();
   }
   document.querySelector('.rail').addEventListener('click', function(e){ var b=e.target.closest('[data-mode]'); if(!b) return; mode=b.getAttribute('data-mode'); render(); });
