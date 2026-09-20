@@ -21,6 +21,7 @@
 | 쉘터 | `node server/index.cjs` + `shelter.html` + `window.TW_SHELTER` |
 | 설계 시트 ↔ 구현 | `compare.html` · `tools/screen-fit.mjs` |
 | 파티 모집 (2인) | `node tools/recruit-scenario.mjs` — 서버까지 한 프로세스에서 띄운다 |
+| 휴대폰 (Pixel 7) | 같은 명령에 `MOBILE=port` / `MOBILE=land` |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.
@@ -44,6 +45,15 @@ node tools/screen-fit.mjs          # 20화면 전부 952px 인지 + 잘림 검�
 패널 «안» 이 넘치는 것도 눈으로 보지 말고 재라 — 시트가 한 화면에 보여 주는 것을
 스크롤 뒤에 숨기면 시트를 따른 게 아니다. `el.scrollHeight - el.clientHeight`
 를 **모든 경우에** 찍어 본다 (의뢰 7개를 다 눌러 봐야 가장 긴 것이 나온다).
+
+**디렉터는 안드로이드로 논다.** 화면을 새로 만들면 데스크톱만 보고 끝내지 말고
+휴대폰 가로·세로를 같이 재라 (docs/design/31). 가로 넘침 0 은 «멀쩡하다» 가
+아니다 — 폭 0 으로 눌린 `<select>` 는 넘치지 않으면서 못 쓴다. 64px 미만인
+조작 요소도 같이 센다.
+
+`!important` 로 `display` 를 정할 때는 **항상 `:not([hidden])`** 을 붙인다.
+`html.mobile #x{display:flex!important}` 는 `[hidden]{display:none!important}`
+를 이겨서 숨겨야 할 것을 보이게 만든다 (같은 실수를 두 번 했다).
 
 새 클래스 이름은 `css/ui.css` · `css/mobile.css` 에 **먼저 grep** 한다. `.mtabs`
 는 모바일 페인 탭 바가 이미 쓰고 있어서 (`display:none` 이 기본) 새로 만든 종류

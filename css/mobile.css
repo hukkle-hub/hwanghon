@@ -122,6 +122,56 @@ html.mobile .chatzone{display:grid;grid-template-columns:1fr;height:auto;gap:8px
 html.mobile .chatzone>button{height:44px!important}
 html.mobile .rw4{display:grid;grid-template-columns:repeat(4,1fr)}
 html.mobile .setrow .sel{width:150px}
+/* 쉘터 (shelter.html) — 채팅 로그가 페인 높이를 먹게 한다 */
+html.mobile .sh__r>.panel:first-child{flex:1 1 auto;min-height:260px}
+html.mobile .chat__log{flex:1 1 auto;min-height:180px;overflow-y:auto}
+html.mobile .chan .tab{padding:10px 12px}
+html.mobile .gcrest{width:52px;height:52px}
+html.mobile .mrow .btn--sm,html.mobile .crow .btn--sm{flex:none}
+
+/* 파티 모집 (recruit.html)
+   세로에서 필터 세 칸이 한 줄에 눌려 폭 0 이 됐다 (nowrap + flex:1 1 0).
+   휴대폰에서는 두 줄로 접고, 4인 카드는 2x2 로 놓는다. */
+html.mobile .fbar{flex-wrap:wrap;gap:8px;padding:9px}
+html.mobile .fbar .field{flex:1 1 calc(50% - 4px);min-width:148px;height:42px;padding:0 10px}
+html.mobile .fbar .field select{font-size:13px}
+html.mobile .fbar .chk{flex:1 1 calc(50% - 4px);min-height:40px;font-size:13px}
+html.mobile .fbar .chk input{width:18px;height:18px}
+html.mobile .fbar .btn{flex:1 1 100%}
+html.mobile .ktabs .tab{padding:10px 0;font-size:13px}
+html.mobile .mrow3{padding:9px 4px}
+html.mobile .mrow3__a{width:92px;height:68px}
+html.mobile .mrow3__t{font-size:14px}
+html.mobile .pinfo{flex-wrap:wrap;gap:8px 12px}
+html.mobile .pinfo__cp{margin-left:0}
+/* :not([hidden]) 가 없으면 이 규칙이 [hidden]{display:none!important} 를 이겨
+   «파티 찾기» 와 «내 파티» 가 한꺼번에 보인다 (docs/design/30 §4.3 과 같은 함정) */
+html.mobile #rc-mine:not([hidden]){display:flex!important;flex-direction:column;height:auto}
+html.mobile .slots{grid-template-columns:repeat(2,1fr);gap:8px;padding:10px}
+/* flex:1 이면 초상이 카드를 다 먹고 이름·등급표가 아래로 밀린다 — 높이를 못 박는다 */
+html.mobile .slot4__art{flex:none;height:132px;min-height:0}
+html.mobile .slot4__e{padding:34px 8px}
+html.mobile .gtab div{padding:3.5px 9px}
+html.mobile .gtab span{font-size:11px}
+/* 높이를 auto 로 두면 log.scrollTop=scrollHeight 가 로그 대신 «페인» 을 끝까지
+   굴려서 4인 카드가 화면 밖으로 밀린다. 로그 안에서만 구르게 높이를 준다. */
+html.mobile .pchat__log{height:132px;overflow-y:auto}
+html.mobile .rcfoot{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+html.mobile .rcfoot .btn{width:auto}
+html.mobile .qart2{height:132px}
+html.mobile .reccp b{font-size:18px}
+/* 가로에서는 폭이 남는다 — 필터를 다시 한 줄로 되돌린다 (세로의 두 줄이 화면을 다 먹었다) */
+@media (orientation:landscape){
+  html.mobile .fbar{flex-wrap:nowrap;gap:6px;padding:7px}
+  html.mobile .fbar .field{flex:1 1 0;min-width:0;height:38px;padding:0 9px}
+  html.mobile .fbar .field select{font-size:12px}
+  html.mobile .fbar .chk{flex:0 0 auto;min-height:36px;font-size:12px}
+  html.mobile .fbar .btn{flex:0 0 auto}
+  html.mobile .slot4__art{height:96px}
+  html.mobile .qart2{height:110px}
+  html.mobile .pchat__log{height:92px}
+}
+
 /* 장비 / 인벤토리 */
 html.mobile .invtabs{padding:0 6px;overflow-x:auto;flex:none}
 html.mobile .invtabs .tabs{border:0}

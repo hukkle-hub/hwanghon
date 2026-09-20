@@ -1,0 +1,80 @@
+# 쉘터·파티 모집을 휴대폰에서 다시 짜다
+
+디렉터는 **안드로이드 APK** 로 논다. 그런데 새로 만든 두 화면
+(`shelter.html` · `recruit.html`)은 1672×952 데스크톱에서만 검수하고 올렸다.
+휴대폰에서 열어 보니 **정말로 깨져 있었다.**
+
+## 1. 무엇이 깨져 있었나
+
+| 곳 | 증상 |
+|---|---|
+| 파티 모집 · 세로 | **필터 세 칸이 폭 0 으로 눌렸다** — `.fbar` 가 `nowrap` + `flex:1 1 0` 이라 412px 에서 검은 조각 셋이 됐다 |
+| 파티 모집 | 하단 행동 바에 **뒤로만** 있었다 (인력사무실에는 「출격 준비」가 있다) |
+| 파티 모집 | 4인 카드가 가로 4열이라 한 칸이 90px — 초상도 등급표도 못 읽는다 |
+| 파티 모집 | 「파티 찾기」용 필터 바가 **「내 파티」에서도** 화면의 1/4 을 먹고 있었다 |
+| 쉘터 · 채팅 | 채팅 로그가 120px 로 고정돼 아래가 텅 비었다 |
+
+화면 밖으로 나간 요소는 0 이었다 — **가로 넘침이 없다고 «멀쩡하다» 가 아니다.**
+폭 0 으로 눌린 `<select>` 는 넘치지 않으면서 못 쓴다. 그래서 검사에
+「64px 미만인 조작 요소」를 같이 넣었다.
+
+## 2. 고친 것
+
+`css/mobile.css` 에 두 화면 절을 더했다. 다른 화면과 같은 방식이다.
+
+```css
+/* 세로: 두 줄로 접는다 */
+html.mobile .fbar{flex-wrap:wrap}
+html.mobile .fbar .field{flex:1 1 calc(50% - 4px);min-width:148px;height:42px}
+/* 가로: 폭이 남으니 다시 한 줄 */
+@media (orientation:landscape){ html.mobile .fbar{flex-wrap:nowrap} … }
+
+html.mobile .slots{grid-template-columns:repeat(2,1fr)}        /* 4인 카드 2x2 */
+html.mobile .slot4__art{flex:none;height:132px}                /* 가로 96px */
+html.mobile .chat__log{flex:1 1 auto;min-height:180px}         /* 쉘터 채팅 */
+```
+
+그리고 「모집 시작」에 `data-primary` 를 붙여 **하단 행동 바로 올렸다**.
+「파티 찾기」에서만 쓰는 필터 바는 `setView` 에서 숨긴다 — 데스크톱에서도
+「내 파티」 칸이 그만큼 넓어졌다 (초상 높이를 150px 로 되돌릴 수 있었다).
+
+## 3. 두 번 밟은 함정, 그리고 한 번 속은 것
+
+1. **`[hidden]` 을 또 이겼다.** `html.mobile #rc-mine{display:flex!important}` 이
+   `[hidden]{display:none!important}` 보다 특정도가 높아 「파티 찾기」와
+   「내 파티」가 **한꺼번에** 보였다. 문서 30 §4.3 과 똑같은 실수다.
+   `#rc-mine:not([hidden])` 로 막았다. — **`!important` 로 display 를 정할 때는
+   항상 `:not([hidden])` 을 붙인다.**
+2. **`height:auto` 인 채팅 로그.** `log.scrollTop = log.scrollHeight` 가 로그
+   대신 **페인 전체**를 끝까지 굴려 4인 카드가 화면 밖으로 밀렸다. 로그에
+   높이를 못 박아 로그 안에서만 구르게 했다.
+3. **속은 것 하나.** 「페인이 맨 아래로 내려가 있다」를 버그로 의심했는데,
+   Playwright 의 `click()` 이 대상을 화면 안으로 굴린 것이었다 — 아래쪽
+   「준비 완료」를 누른 탓이다. 검사 도구가 만든 자국을 제품 버그로 적을 뻔했다.
+   시나리오에서 찍기 전에 `scrollTop=0` 으로 되돌린다.
+
+## 4. 검수
+
+`tools/recruit-scenario.mjs` 에 `MOBILE=land|port` 를 달았다. 같은 시나리오를
+**Pixel 7 가로·세로에서 그대로** 돌린다 (페인 탭을 옮겨 다니며).
+
+```
+MOBILE=port node tools/recruit-scenario.mjs
+MOBILE=land node tools/recruit-scenario.mjs
+node tools/recruit-scenario.mjs            # 데스크톱
+```
+
+세 경우 모두 두 사람이 붙어 5줄 등급표·모집 조건·필터·종류 탭이 나왔다.
+
+| | 가로 915×412 | 세로 412×915 |
+|---|---|---|
+| 쉘터 (쉘터·명단·채팅) | 넘침 0 | 넘침 0 |
+| 파티 모집 (임무·파티·상세) | 넘침 0 | 넘침 0 |
+| 64px 미만 조작 요소 | 체크박스 입력 둘(라벨이 타깃) | 같음 |
+
+`npm test` **159/159**, 데스크톱 전 20화면 952px 유지.
+
+## 5. 남은 것
+
+- 실제 기기(APK) 확인. 여기서는 Pixel 7 뷰포트 + 터치 에뮬레이션까지다.
+- 다른 화면들의 재점검. 이번엔 **새로 만든 두 개**만 봤다.

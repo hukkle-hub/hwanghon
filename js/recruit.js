@@ -244,6 +244,8 @@
     view=v;
     [].forEach.call($('rc-tabs').querySelectorAll('.tab'),function(t){ t.classList.toggle('is-on',t.dataset.v===v); });
     $('rc-find').hidden=v!=='find'; $('rc-mine').hidden=v!=='mine';
+    /* 필터 바는 «파티 찾기» 에만 쓴다. 휴대폰에서는 이게 화면의 1/4 을 먹었다. */
+    $('rc-filters').hidden=v!=='find';
   }
   function render(){ missions(); detail(); findList(); slots(); head(); chat(); buttons(); }
 
