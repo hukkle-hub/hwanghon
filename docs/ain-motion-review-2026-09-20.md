@@ -10,6 +10,7 @@
 - Visual QA: original/closed hand closeups, actual textured attack2 closeup, skill2 side and ult rear six-pose sheets. Review supports all four skills, counter, execution and release poses, with an original/closed-hand comparison link.
 - Full suite initially exposed five pre-existing Windows SQLite teardown errors: temporary folders were removed before closing their database handles. Test-only cleanup order corrected; gameplay/server persistence code unchanged. Full pre-merge suite: 132/132 passing, followed by the new online-clone regression passing.
 - Scope: completed correction of the existing model's grip and arm motion, not a newly rigged character. There are no independent finger bones; existing coarse hand topology remains visible in extreme closeups. No Galaxy S25 Ultra physical-device performance claim. No paid regeneration.
+- Merged upstream through b1c289e, retaining dungeon 07, all boss/contact corrections and build rules. Final merged regression suite: **136/136 passing**.
 
 The sections below retain earlier findings and rejected experiments for comparison; revision 4 supersedes their pending-grip status.
 
