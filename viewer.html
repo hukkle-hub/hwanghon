@@ -67,6 +67,7 @@ html,body{height:100%;margin:0;background:#0B0C0F;color:#EBD6D6;font-family:var(
 <script src="js/studio-env.js"></script>
 <script src="js/pose-fix.js"></script>
 <script src="js/mat-fix.js"></script>
+<script src="js/wind.js"></script>
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
@@ -82,7 +83,7 @@ const ground=new THREE.Mesh(new THREE.CircleGeometry(6,48),new THREE.MeshStandar
 const grid=new THREE.GridHelper(12,24,0x3a3a44,0x24262c); grid.position.y=0.001; scene.add(grid);
 /* 168cm 기준 막대 */
 const ref=new THREE.Mesh(new THREE.BoxGeometry(0.02,1.68,0.02),new THREE.MeshBasicMaterial({color:0xC9A45E})); ref.position.set(-1.2,0.84,0); scene.add(ref);
-const loader=new GLTFLoader(); let charRoot=null, charGltf=null, skelHelper=null, mixer=null, clock=new THREE.Clock(), weapon=null, weaponRoot=null, handBone=null, bones=[];
+const loader=new GLTFLoader(); let wind=null; let charRoot=null, charGltf=null, skelHelper=null, mixer=null, clock=new THREE.Clock(), weapon=null, weaponRoot=null, handBone=null, bones=[];
 const SOCK={ bone:'', grip:0.75, rot:[0,0,0], off:[0,0,0] };
 window.THREE=THREE;
 try{ Object.assign(SOCK, JSON.parse(localStorage.getItem('tw:socket:ain')||'{}')); }catch(e){}
@@ -99,7 +100,11 @@ function loadChar(url, name){ loader.load(url, gltf=>{ if(charRoot) scene.remove
     /* 굽는 쪽이 고쳐질 때까지의 보정막 — 깨진 클립만 스스로 찾아 고친다 */
     if(window.TW_POSE){ const rep=TW_POSE.repair(THREE, gltf); if(rep.fixed.length) console.info('[tw-pose] 교정', rep.fixed.join(','), rep.checked); }
     /* 재질: GLB 가 metalness=1(규격 기본값)로 나와 피부까지 쇳덩이로 그려졌다 */
-    if(window.TW_MATFIX){ const mr=TW_MATFIX.repair(THREE, gltf.scene); if(mr.materials||mr.normals) console.info('[tw-mat] 재질',mr.materials,'법선',mr.normals); } bones=[]; charRoot.traverse(o=>{ if(o.isBone) bones.push(o.name); o.castShadow=true; o.receiveShadow=true; });
+    if(window.TW_MATFIX){ const mr=TW_MATFIX.repair(THREE, gltf.scene); if(mr.materials||mr.normals) console.info('[tw-mat] 재질',mr.materials,'법선',mr.normals); }
+    /* 바람: 머리카락·옷자락. ?wind=marsh 로 던전 성격을 미리 볼 수 있다 */
+    if(window.TW_WIND && q.get('wind')!=='off'){ TW_WIND.prepare(THREE, gltf.scene);
+      wind=TW_WIND.bind(THREE, gltf.scene, TW_WIND.profile(q.get('wind')||'marsh'));
+      console.info('[tw-wind]', wind.profile.name, '재질', wind.bound); } bones=[]; charRoot.traverse(o=>{ if(o.isBone) bones.push(o.name); o.castShadow=true; o.receiveShadow=true; });
     const b=bbox(charRoot); charRoot.position.y-=b.min.y; /* 바닥에 세움 */
     const hand=report($('#rep'), gltf, charRoot); $('#bones').textContent=bones.length?bones.join('\n'):'뼈 목록 (없음) — 정적 메시입니다. Mixamo 자동 리깅이 필요합니다.';
     const sel=$('#s-bone'); sel.innerHTML='<option value="">— 선택 —</option>'+bones.map(n=>'<option'+(n===(SOCK.bone||hand)?' selected':'')+'>'+n+'</option>').join(''); if(hand&&!SOCK.bone) sel.value=hand;
@@ -152,6 +157,7 @@ if(Math.min(innerWidth,innerHeight)<640) $('#panel').classList.add('is-off');
 /* 검수용 창구 — 확대해서 짚어 보려면 카메라를 밖에서 정해야 한다 (docs/design/33 §4) */
 window.__TW_VIEW={ get scene(){return scene;}, get charRoot(){return charRoot;}, cam:cam, ctrl:ctrl, renderer:renderer, THREE:THREE,
   get mixer(){return mixer;}, get gltf(){return charGltf;},
+  get wind(){return wind;},
   /* 바인드 포즈로 되돌린다 — 리그가 문제인지 클립이 문제인지 가른다 */
   rest(){ if(mixer){ mixer.stopAllAction(); } if(charGltf&&charGltf.scene){ charGltf.scene.traverse(o=>{ if(o.isSkinnedMesh&&o.skeleton) o.skeleton.pose(); }); } },
   play(name){ if(!mixer||!charGltf) return null; const c=(charGltf.animations||[]).find(a=>a.name===name); if(!c) return null; mixer.stopAllAction(); mixer.clipAction(c).reset().play(); mixer.update(0.001); return c.name; },
@@ -166,7 +172,7 @@ function applyEquip(){ if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) 
 window.addEventListener('message', e=>{ if(e.data==='tw:equip'){ try{ location.reload(); }catch(x){} } });
 if(FIT){ $('#panel').classList.add('is-off'); $('#hud').style.display='none'; $('#tg').style.display='none'; ref.visible=false; }
 addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
-(function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); ctrl.update(); renderer.render(scene,cam); })();
+(function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); if(wind&&charRoot) wind.update(dt, charRoot); ctrl.update(); renderer.render(scene,cam); })();
 window.TW_VIEWER={ get char(){ return charRoot; }, get weapon(){ return weaponRoot; }, get mixer(){ return mixer; }, get gltf(){ return charGltf; }, renderer, camera:cam, ctrl, bones:()=>bones, scene, attach, loadChar, SOCK };
 </script>
 </body>

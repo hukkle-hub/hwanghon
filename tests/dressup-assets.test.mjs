@@ -11,14 +11,12 @@ import * as T from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {repairAinBind,repairAinClips} from '../js/ain-bind-repair.js';
 
-/* 브라우저 스크립트(IIFE)를 window 스텁에 올려 쓴다 */
-async function browserModule(path){
-  const src=await readFile(path,'utf8'), win={};
-  new Function('window','document', src)(win, undefined);
-  return win;
-}
-const {TW_POSE}=await browserModule('js/pose-fix.js');
-const {TW_MATFIX}=await browserModule('js/mat-fix.js');
+/* 브라우저 스크립트(IIFE)를 그대로 평가해 globalThis 에 올린다 — 브라우저·node 가 같은 파일을 쓴다 */
+async function loadShim(path){ new Function(await readFile(path,'utf8'))(); }
+await loadShim('js/pose-fix.js');
+await loadShim('js/mat-fix.js');
+const {TW_POSE,TW_MATFIX}=globalThis;
+assert.ok(TW_POSE&&TW_MATFIX,'보정막이 globalThis 에 올라온다');
 
 async function load(char){
   const b=await readFile(`art/3d/${char}_anim.glb`), l=new GLTFLoader();

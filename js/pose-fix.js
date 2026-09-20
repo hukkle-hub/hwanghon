@@ -120,5 +120,5 @@
     return out;
   }
 
-  window.TW_POSE={ repair:repair, SUSPECT:SUSPECT, SOURCE:SOURCE, ARM:ARM };
+  globalThis.TW_POSE={ repair:repair, SUSPECT:SUSPECT, SOURCE:SOURCE, ARM:ARM };
 })();

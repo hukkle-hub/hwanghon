@@ -66,7 +66,14 @@ function updateProfile(){if(!profile)return;$('profile-name').textContent=profil
 const CHAR_ASSET={ain:['art/3d/ain_anim.glb','art/3d/ain_scythe_tex.glb'],kain:['art/3d/kain_anim.glb','art/3d/gear/w_kain_greatsword.glb'],ryu:['art/3d/ryu_anim.glb','art/3d/gear/w_ash_dirk.glb'],sera:['art/3d/sera_anim.glb','art/3d/gear/w_sera_flask.glb']};
 const charAssets=new Map();
 function loadCharacter(c){if(!CHAR_ASSET[c])c='ain';if(charAssets.has(c))return charAssets.get(c);
- const task=Promise.all(CHAR_ASSET[c].map(url=>loader.loadAsync(url))).then(([model,weapon])=>({model,weapon}));
+ const task=Promise.all(CHAR_ASSET[c].map(url=>loader.loadAsync(url))).then(([model,weapon])=>{
+  /* 구운 에셋 보정 — 믹서(Animated)보다 먼저. 아인·카인의 idle·run 오른팔과
+     metalness=1 로 나온 피부를 고친다 (docs/design/33 §4). 여기가 유일한 로드 지점이다. */
+  globalThis.TW_POSE?.repair(T, model);
+  globalThis.TW_MATFIX?.repair(T, model.scene);
+  globalThis.TW_WIND?.prepare(T, model.scene);
+  return {model,weapon};
+ });
  charAssets.set(c,task);return task;}
 function loadAssets(characters){const list=(characters||[]).filter(c=>CHAR_ASSET[c]);const want=[...new Set(list.length?list:['ain'])];
  if(assetPromise&&want.every(c=>charAssets.has(c)))return assetPromise;
@@ -214,7 +221,7 @@ class RaidView{
   this.ringT=this.ringDur;this.ring.material.color.setHex(phase>=2?0xD94A45:0xC9A45E);window.TW_SFX?.play('brk');
   if(navigator.vibrate&&fx>0)try{navigator.vibrate([30,40,70]);}catch{}}
  update(raid,dt){this.resize();const age=Math.min(.05,(performance.now()-lastReceived)/1000);if(this.phase!==raid.phase)this.makeBoss(raid);
-  for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){const ca=assets.chars[p.character]||Object.values(assets.chars)[0];a=new Animated(ca.model,this.scene,true,false,ca.weapon,p.character);a.root.position.copy(pos(p.x,p.y));const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
+  for(const p of raid.players){let a=this.avatars.get(p.id);if(!a){const ca=assets.chars[p.character]||Object.values(assets.chars)[0];a=new Animated(ca.model,this.scene,true,false,ca.weapon,p.character);a.root.position.copy(pos(p.x,p.y));if(globalThis.TW_WIND){a.wind=TW_WIND.bind(T,a.model,TW_WIND.profile(this.A.id));a.wind.materials.forEach(m=>a.owned.add(m));}const ring=new T.Mesh(new T.RingGeometry(.48,.56,40),new T.MeshBasicMaterial({color:COLORS[p.color%4],side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.03;a.root.add(ring);a.owned.add(ring.geometry);a.owned.add(ring.material);this.avatars.set(p.id,a);const label=document.createElement('span');label.className='nameplate';label.style.borderColor=COLORS[p.color%4];$('nameplates').append(label);this.labels.set(p.id,label);}a.update(p,dt,age);a.wind&&a.wind.update(dt,a.model);const label=this.labels.get(p.id);label.textContent=p.name+(p.id===profile.id?' · 나':'')+(p.hp<=0?' · 다운':'');const projected=a.root.position.clone().add(new T.Vector3(0,2.4,0)).project(this.camera);label.hidden=projected.z>1||projected.z< -1;label.style.left=(projected.x+1)*this.w/2+'px';label.style.top=(1-projected.y)*this.h/2+'px';}
   const b=raid.boss,bb=this.boss;bb.root.position.lerp(pos(b.x,b.y),1-Math.exp(-dt*24));bb.root.rotation.y=Math.PI/2-b.aim;
   if(['telegraph','recover'].includes(b.state)&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1),key=b.attackId;bb.play(spec.clip,key);bb.current.paused=true;bb.current.time=sampleBossAttack(spec,bb.current.getClip().duration,{...b,windup:windupAt(b.pattern,1-Math.max(0,b.tele-age)/b.teleDur,b.teleDur),recovery:Math.max(0,b.recovery-age)});}
   else if(b.state==='link'&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1);bb.play(spec.clip,b.attackId);bb.current.paused=false;}  /* 연계 사이: 여파 동작을 그대로 흘린다 */

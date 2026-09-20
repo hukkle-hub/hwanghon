@@ -419,6 +419,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
      충돌 반경·사거리는 레벨 데이터라 전투 규칙은 바뀌지 않는다. */
   var CHAR_SCALE=1.14;
   var ainBlob=makeBlob(0.52);
+  var wind=null;
   var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
   var loader=new GLTFLoader(LM); var loadN=0;
@@ -436,6 +437,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     /* 굽는 쪽이 고쳐질 때까지의 보정막 — idle·run 의 오른팔이 몸을 가로지른다 (docs/design/33 §4) */
     if(window.TW_POSE){ var rep=TW_POSE.repair(THREE, g); if(rep.fixed.length) console.info('[tw-pose] 교정', rep.fixed.join(',')); }
     if(window.TW_MATFIX) TW_MATFIX.repair(THREE, g.scene);
+    /* 던전마다 다른 바람 — 머리카락·옷자락이 흔들린다 (docs/design/33 §5) */
+    if(window.TW_WIND){ try{ TW_WIND.prepare(THREE, g.scene); var wp=TW_WIND.profile(A.id); wind=TW_WIND.bind(THREE, g.scene, wp); console.info('[tw-wind]', wp.name); }catch(e){ console.warn('wind', e); } }
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
@@ -454,6 +457,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);
     ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.12); ain.oneshotT=0; ain.hold=!!o.hold; }
   function ainTick(dt){ if(!ain.mixer) return;
+    if(wind) wind.update(dt, ain.model);
     var moving=P.moving && P.rollT<=0 && P.lockT<=0; var guard=battle?battle.snapshot().player.guard:(skirm?skirm.snapshot().player.guard:false);
     if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ ain.oneshot.fadeOut(0.15); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(0.15); ain.act.play(); } } }
     /* 제동: 달리다 멈추면 브레이크 모션을 한 번 재생하고 대기로 넘긴다.

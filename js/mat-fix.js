@@ -74,5 +74,5 @@
     return out;
   }
 
-  window.TW_MATFIX={ repair:repair, smoothNormals:smoothNormals, isDefaultPBR:isDefaultPBR };
+  globalThis.TW_MATFIX={ repair:repair, smoothNormals:smoothNormals, isDefaultPBR:isDefaultPBR };
 })();
