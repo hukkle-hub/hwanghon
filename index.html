@@ -38,6 +38,9 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
 .res__plus:hover{color:var(--tx-hi)}
 .lb__icons{display:flex;gap:2px;margin-left:6px}
 .lb__icons .iconbtn{background:rgba(6,7,10,.45);border:1px solid var(--line)}
+/* index.html 은 css/mobile.css 를 안 읽는다 — 터치 크기는 여기서 준다 */
+html.touch .lb__icons .iconbtn{width:44px;height:44px}
+html.touch .res__plus{width:40px;height:40px}
 /* 좌측 세로 메뉴 */
 .lb__menu{position:absolute;left:max(18px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:2px}
 .lb__menu a{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px 0 8px;color:var(--tx-dim);text-decoration:none;border-left:2px solid transparent;transition:.15s;cursor:pointer}
@@ -72,7 +75,8 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
   .lb__face{width:40px;height:40px}
   .lb__nm{font-size:15px}
   .res{height:28px;font-size:12px;padding:0 8px}
-  .lb__menu{top:54%;gap:0}
+  /* 12줄이 되면서 한 칸으로는 412px 높이에 안 들어간다 — 두 칸으로 접는다 */
+  .lb__menu{top:52%;gap:0 14px;display:grid;grid-template-columns:repeat(2,minmax(0,auto))}
   .lb__menu a{height:34px;gap:10px;padding-right:10px}
   .lb__menu a b{font-size:13px}
   .lb__menu a small{display:none}
@@ -94,10 +98,12 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
   .lb__res{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;row-gap:6px}
   .lb__icons{margin-left:0}
   .lb__menu{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));top:auto;bottom:max(100px,calc(env(safe-area-inset-bottom) + 94px));transform:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .lb__menu a{height:58px;flex-direction:column;justify-content:center;gap:4px;padding:0;border:1px solid var(--line);border-left:1px solid var(--line);background:rgba(6,7,10,.6)}
+  .lb__menu a{height:54px;flex-direction:column;justify-content:center;gap:4px;padding:0;border:1px solid var(--line);border-left:1px solid var(--line);background:rgba(6,7,10,.6)}
+  .lb__menu a b{font-size:12.5px;text-align:center}
   .lb__menu a b{font-size:13px}
   .lb__menu a small{display:none}
-  .lb__cards{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));top:auto;bottom:max(300px,calc(env(safe-area-inset-bottom) + 294px));transform:none;width:auto;flex-direction:row;gap:6px}
+  /* 메뉴가 3줄 → 4줄이 되면서 카드와 겹쳤다. 메뉴 높이(4×54 + 간격) 만큼 올린다. */
+  .lb__cards{left:max(14px,env(safe-area-inset-left));right:max(14px,env(safe-area-inset-right));top:auto;bottom:max(348px,calc(env(safe-area-inset-bottom) + 342px));transform:none;width:auto;flex-direction:row;gap:6px}
   .card{flex:1;height:56px;padding:0 8px}
   .card b{font-size:12.5px}
   .card img{width:44px}
@@ -140,6 +146,9 @@ html,body{height:100%;margin:0;background:#07080B;color:var(--tx-hi);font-family
     <a href="shop.html"><svg class="ico"><use href="#i-shop"/></svg><span><b>상점</b><small>SHOP</small></span></a>
     <a data-records><svg class="ico"><use href="#i-medal"/></svg><span><b>기록</b><small>RECORD</small></span></a>
     <a href="shelter.html"><svg class="ico"><use href="#i-users"/></svg><span><b>길드</b><small>GUILD</small></span></a>
+    <a href="recruit.html"><svg class="ico"><use href="#i-sword"/></svg><span><b>파티 모집</b><small>PARTY</small></span></a>
+    <a href="party.html"><svg class="ico"><use href="#i-shield"/></svg><span><b>협동 출격</b><small>CO-OP</small></span></a>
+    <a href="craft.html"><svg class="ico"><use href="#i-anvil"/></svg><span><b>제작</b><small>CRAFT</small></span></a>
   </nav>
 
   <aside class="lb__cards">

@@ -216,6 +216,10 @@ svg:not(.gauge svg){fill:none;stroke:currentColor;stroke-width:1.4;stroke-lineca
 
 /* ---------- 탭 ---------- */
 .tabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line-soft)}
+/* 패널 안에 들어가는 «칸을 나눠 쓰는» 탭 줄 (파티 모집의 임무 종류, 운영 도구의 신고 상태) */
+.ktabs{flex:none;justify-content:space-between;padding:0 4px}
+.ktabs .tab{padding:6px 0;font-size:11.5px;flex:1;text-align:center}
+.ktabs .tab.is-on::after{left:6px;right:6px}
 .tab{
   padding:8px 16px 9px;font-size:13px;color:var(--tx-faint);letter-spacing:.05em;
   position:relative;transition:color .15s;white-space:nowrap
