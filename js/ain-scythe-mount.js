@@ -1,4 +1,20 @@
 import * as T from '../vendor/three/three.module.js';
+const bladeCloud=new WeakMap();
+// Cache a bounded surface point cloud once, then transform only 160 samples
+// per impact. No full triangle scan in the mobile render loop.
+export function nearestAinBladePoint(weapon,target){
+ weapon.updateWorldMatrix(true,true);let points=bladeCloud.get(weapon);
+ if(!points){const all=[],inverse=weapon.matrixWorld.clone().invert();
+  weapon.traverse(o=>{if(!o.isMesh)return;const p=o.geometry.attributes.position;if(!p)return;
+   const matrix=inverse.clone().multiply(o.matrixWorld);
+   for(let i=0;i<p.count;i++){const v=new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(matrix);if(v.y>.5&&Math.hypot(v.x,v.z)>.12)all.push(v);}
+  });
+  points=Array.from({length:Math.min(160,all.length)},(_,i)=>all[Math.floor(i*all.length/Math.min(160,all.length))]);bladeCloud.set(weapon,points);
+ }
+ let distance=Infinity,point=null;const v=new T.Vector3();
+ for(const p of points){v.copy(p).applyMatrix4(weapon.matrixWorld);const d=v.distanceTo(target);if(d<distance){distance=d;point=v.clone();}}
+ return point?{point,distance}:null;
+}
 // Measure the straight handle, excluding the blade, butt ornament and collars.
 // The delivered Hi3D GLB is NOT Y-axis centred. Do not rewrite its geometry.
 export function measureAinScythe(root){

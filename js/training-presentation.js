@@ -8,6 +8,8 @@ export function createTrainingParts(model,{strawMap=null,owned=null}={}) {
  const chain=new T.MeshStandardMaterial({color:0x9a9298,roughness:.4,metalness:.9});
  const straw=new T.MeshStandardMaterial({map:strawMap,roughness:1,color:0x625741});
  for(const material of [iron,chain,straw])owned?.add(material);
+ const coreMaterial=new T.MeshStandardMaterial({color:0xff9060,emissive:0xff4820,emissiveIntensity:1.5,roughness:.45});
+ const core=new T.Mesh(new T.TorusGeometry(.18,.035,6,24),coreMaterial);core.position.set(0,.05,.43);core.visible=false;bones.Spine2?.add(core);owned?.add(core.geometry);owned?.add(coreMaterial);
  function add(id,bone,build){
   const parent=bones[bone];if(!parent)return;
   const group=new T.Group();group.name='training_piece_'+id;build(group);
@@ -27,12 +29,16 @@ export function createTrainingParts(model,{strawMap=null,owned=null}={}) {
   for(let i=0;i<2;i++){const plate=new T.Mesh(new T.BoxGeometry(.40-i*.04,.055,.19),iron);plate.position.set(0,.17-i*.055,(i-.5)*.14);plate.rotation.x=(i-.5)*.18;g.add(plate);}
  });
  function sync(stageParts,{restore=false}={}){
+  const weak=stageParts.find(p=>p.weak&&p.guardedBy?.length);
+  core.visible=!!weak&&weak.guardedBy.every(id=>stageParts.some(p=>p.id===id&&p.broken));
   for(const [id,part]of Object.entries(parts)){
    const state=stageParts.find(p=>p.id===id),visible=!!state&&!state.broken;
    if(restore&&visible){const h=homes[id];h.parent.add(part);part.position.copy(h.position);part.quaternion.copy(h.quaternion);part.scale.copy(h.scale);}
-   part.visible=visible;
+   // Detached solo fragments belong to the debris animation until it expires;
+   // online attached pieces are hidden immediately from authoritative state.
+   if(part.parent===homes[id].parent)part.visible=visible;
   }
  }
  sync([]);
- return {parts,sync};
+ return {parts,sync,core};
 }

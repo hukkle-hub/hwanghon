@@ -54,18 +54,18 @@
       var weak=p.broken?(policy.exposed||R.weak.broken):p.weak?R.weak.weak:R.weak.normal;
       var guard=p.guardedBy&&p.guardedBy.some(function(id){var q=B.part(id);return q&&!q.broken;})?1-p.guardReduce:1;
       var crit=P.critNext||rand()<st.crit/100;P.critNext=false;
-      var reward=opt.counter?(opt.perfect?R.counter.perfectMult:R.counter.mult):opt.riposte?(opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
+      var reward=opt.counter?(opt.perfect?R.counter.perfectMult:R.counter.mult):opt.riposte?(opt.riposte==='counter'?(policy.normal==null?1:policy.normal)*1.15:opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
         policy.normal!=null?(opt.skill?policy.skill:policy.normal):1;
       var partyPart=p.hp!=null&&!p.broken?(o.partMult||1):1;
       var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1));
       E.hp=Math.max(0,E.hp-amount);M.dmg+=amount;M.hits++;if(crit)M.crits++;
       if(opt.counter)M.counterDmg+=amount;else if(opt.riposte)M.riposteDmg+=amount;else M.normalDmg+=amount;
-      emit('hit',{part:p.id,dmg:amount,crit:crit,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
+      emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,contact:opt.contact||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
       if(p.breakable&&p.hp!=null&&!p.broken){
-        var partBonus=policy.partMult||1; if(opt.counter||opt.riposte)partBonus*=policy.precisePartMult||1;
+        var partBonus=policy.partMult||1; if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
         p.hp=Math.max(0,p.hp-Math.round(amount*partBonus));if(p.hp===0)breakPart(p);
       }
-      if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&!opt.riposte?policy.normal:1))bleed(1);
+      if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&(!opt.riposte||opt.riposte==='counter')?policy.normal:1))bleed(1);
       P.ult=clamp(P.ult+(opt.counter?R.counter.ult:R.ult.onAttack),0,R.ult.max);
       P.hitstop=Math.max(P.hitstop,stopFor(opt));
       if(E.hp===0)finish();return amount;
@@ -80,7 +80,8 @@
         clipHit:(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
       emit('actionstart',Object.assign({},a));return a;
     }
-    function queue(type,arg){if(P.action&&P.action.duration-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:R.motion.buffer||0.16};}
+    function defensive(type,arg){return type==='dodge'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
+    function queue(type,arg){var edge=P.action&&(defensive(type,arg)?P.action.cancelAt:P.action.duration);if(P.action&&edge-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};}
     function counter(){
       if(E.state!=='telegraph'||E.tele<=0||E.tele>counterWindow||E.pat.counterable===false||P.lockT>0||P.dodgeT>0||!canCancel()||(HK.canCounter&&!HK.canCounter()))return false;
       cancel('counter');P.buffer=null;P.guard=false;
@@ -88,6 +89,7 @@
       E.posture=clamp(E.posture+(E.pat.posture||R.counter.posture),0,R.posture.max);
       E.state='stagger';E.stagT=0.8;E.tele=0;
       action('counter','counter',1,{counter:true,perfect:perfect},R.motion.counter);
+      E.stagT=Math.max(E.stagT,P.action.duration+0.25);
       emit('counter',{perfect:perfect,pattern:E.pat.name});
       if(D.firstCounterUlt&&!firstCounterDone){firstCounterDone=true;P.ult=R.ult.max;emit('ultready',{first:true});}
       if(E.posture>=R.posture.max)down();return true;
@@ -119,14 +121,15 @@
     }
     function dodge(){
       var dgSt=R.stamina.dodge*rSt;   /* 무기 리듬: 무거운 무기는 회피가 더 든다 */
+      if(!B.over&&P.action&&!canCancel()){queue('dodge');return;}
       if(B.over||P.dodgeCd>0||P.lockT>0||P.st<dgSt||!canCancel()){if(P.st<dgSt)emit('nost');return;}
       cancel('dodge');P.buffer=null;P.st-=dgSt;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
       P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.dodges++;emit('dodge');
     }
-    function guard(on){if(B.over)return;if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0||!canCancel()))return;if(on)cancel('guard');if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
+    function guard(on){if(B.over)return;if(!on&&P.buffer&&P.buffer.type==='guard')P.buffer=null;if(on&&P.action&&!canCancel()){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
     function skill(i){
-      var k=S[i];if(!k||B.over)return;if(P.action){queue('skill',i);return;}
-      if(P.lockT>0||P.dodgeT>0||P.guard)return;if(P.cds[i]>0||P.st<k.st){emit(P.cds[i]>0?'cd':'nost',{skill:i});return;}
+      var k=S[i];if(!k||B.over)return;if(P.action){if(k.dodge&&canCancel()&&P.cds[i]<=0&&P.st>=k.st&&P.dodgeCd<=0){cancel('evasive-skill');P.buffer=null;}else{queue('skill',i);return;}}
+      if(P.lockT>0||P.dodgeT>0||P.guard||k.dodge&&P.dodgeCd>0)return;if(P.cds[i]>0||P.st<k.st){emit(P.cds[i]>0?'cd':'nost',{skill:i});return;}
       P.st-=k.st;P.stDelay=R.stamina.delay;P.cds[i]=k.cd;
       if(k.dodge){P.dodgeT=R.dodge.iframes;P.dodgeAgo=0;P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.dodgeCd=R.dodge.cooldown;M.dodges++;}
       if(k.critNext)P.critNext=true;if(k.buff){P.buffT=k.buff.dur;P.buffReduce=k.buff.reduce;}
@@ -146,12 +149,13 @@
     };
     function impact(a){
       a.resolved=true;
-      if(HK.canHit&&!HK.canHit(a.part,a)){M.whiffs++;fail('거리가 맞지 않았다. 낫이 닿는 위치에서 공격해라.');emit('whiff',{timed:true,action:a.id});return;}
+      var targets=a.opt.aoe?parts:[B.part(a.part)||parts[0]],contacts=targets.map(function(p){return {part:p,contact:HK.canHit?HK.canHit(p.id,a):true};}).filter(function(h){return !!h.contact;});
+      if(!contacts.length){M.whiffs++;fail('거리가 맞지 않았다. 낫이 닿는 위치에서 공격해라.');emit('whiff',{timed:true,action:a.id});return;}
       var amount=0;
       a.opt.kind=a.kind;a.opt.combo=a.opt.tier!=null?a.opt.tier+1:P.combo;
-      if(a.opt.aoe)parts.forEach(function(p){amount+=damage(p.id,a.mult/parts.length,a.opt);});
-      else amount=damage(a.part,a.mult,a.opt);
-      if(a.opt.riposte){M.ripostes++;E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
+      contacts.forEach(function(h){amount+=damage(h.part.id,a.mult/targets.length,Object.assign({},a.opt,{contact:typeof h.contact==='object'?h.contact:null}));});
+      if(a.opt.counter&&!E.dead){if(a.opt.perfect){P.riposteKind='counter';P.riposteT=Math.max(0,a.duration-a.elapsed)+.65;}emit('counterfollowup',{window:a.opt.perfect?.65:.35,perfect:!!a.opt.perfect});}
+      if(a.opt.riposte){M.ripostes++;if(a.opt.riposte!=='counter')E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
       if(a.kind==='smash')E.posture=clamp(E.posture+R.combo.smashPosture[a.opt.tier],0,R.posture.max);
       if(a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
       emit('impact',{id:a.id,kind:a.kind,dmg:amount});
@@ -239,7 +243,7 @@
       P.cds=P.cds.map(function(v){return Math.max(0,v-dt);});
       var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+dt);if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
       if(P.hitstop>0)return;
-      if(P.buffer){var b=P.buffer;if(!P.action&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
+      if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel())&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}
       switch(E.state){
         case 'idle':if(D.patterns.length){E.patT-=dt;if(E.patT<=1e-8)startTelegraph();}break;
@@ -274,7 +278,7 @@
         hold:!!(E.pat&&E.pat.hold),beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
         recovery:E.recovery,recoveryDur:E.recoveryDur,downT:E.downT,bleed:E.bleed.length,
         executable:E.state==='downed'&&!E.executed&&!B.over,
-        parts:parts.map(function(p){return {id:p.id,name:p.name,hp:p.hp,hpMax:p.hpMax,weak:!!p.weak,breakable:!!p.breakable,broken:p.broken,pos:p.pos};})}};};
+        parts:parts.map(function(p){return {id:p.id,name:p.name,hp:p.hp,hpMax:p.hpMax,weak:!!p.weak,breakable:!!p.breakable,broken:p.broken,pos:p.pos,guardedBy:p.guardedBy};})}};};
     return B;
   }
 

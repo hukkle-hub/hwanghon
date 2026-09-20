@@ -19,6 +19,7 @@ export const AIN_SKILL_PATHS={
 };
 // Shaft block, short brace, then a distinct release. Perfect counters travel
 // farther through the follow-through without changing authoritative timing.
+export const AIN_RAISED_CONTACT={smash:[.25,-.05,.25,-.20,.90,.15],counter:[.25,.10,.25,-.35,.90,-.30]};
 const counter=[[0,ready],[.16,[0,-.08,.31,-.98,.10,.12]],[.24,[0,-.08,.31,-.98,.10,.12]],[.42,[.06,-.13,.40,-.8,.12,.6]],[.70,[.13,-.18,.31,-.85,.1,.4]],[1,ready]];
 const perfectCounter=counter.map(([t,p])=>[t,p.slice()]);
 perfectCounter[4]=[.70,[.16,-.21,.32,-.8,-.18,.55]];
@@ -90,9 +91,19 @@ export function makeAinTwoHand(model,root,slot){
   const name=a?.clip||a?.id||'guard';
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
   // Contact remains at the existing combat hit timestamp, not a new timer.
-  if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=a.elapsed<=a.hitAt?.42*a.elapsed/a.hitAt:.42+.58*(a.elapsed-a.hitAt)/(a.duration-a.hitAt);
+  if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=globalThis.TW_COMBAT_QUALITY.phase(a);
   const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   const spec=path(keys,t),weaponQ=pathRotation(keys,t);
+  if(target&&/^(attack[123]|smash|counter|exec)$/.test(name)){
+   const local=root.worldToLocal(target.clone());
+   const weight=T.MathUtils.smootherstep(local.y,2.0,2.30)*(1-T.MathUtils.smootherstep(local.y,2.85,3.25))
+    *T.MathUtils.smootherstep(t,0,.30);
+   // A raised cut for the actual selected chest/core, not the old waist-high
+   // cut with a magically tall damage cone. Keep contact timing and palms.
+   const raised=keys.filter(([phase])=>(phase<=.42||phase===1)&&!(name==='counter'&&phase===.24)).map(([phase,p])=>[phase,phase===.42?(AIN_RAISED_CONTACT[name]||[.25,.10,.25,-.35,.90,-.10]):p]);
+   const lifted=path(raised,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],lifted[i],weight);
+   weaponQ.slerp(pathRotation(raised,t),weight);
+  }
   if(target&&name==='skill1'){
    const local=root.worldToLocal(target.clone()),high=T.MathUtils.smootherstep(local.y,2.7,3.0)*(1-T.MathUtils.smootherstep(local.y,3.25,3.6))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.5,2.2));
    if(high>0){
@@ -107,13 +118,16 @@ export function makeAinTwoHand(model,root,slot){
   // Nearby target adaptation is a bounded root-space translation, not wrist twist.
   // Fade in/out around contact so target selection cannot snap the idle pose.
   // The shared reach solver below still limits both arms together.
-  if(target&&['skill1','skill3','ult'].includes(name)){
+  if(target&&['skill1','skill3','ult','counter','smash','attack3'].includes(name)){
    const local=root.worldToLocal(target.clone()),weight=T.MathUtils.smootherstep(t,0,.32)*(1-T.MathUtils.smootherstep(t,.55,1))
     *T.MathUtils.smootherstep(local.y,1.9,2.1)*(1-T.MathUtils.smootherstep(local.y,2.7,2.95))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.8,2.5));
    if(weight>0){
-    const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):V(-.16,2.4,.5));
+    const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):name==='counter'?V(-.28,2.4,.80):name==='attack3'?V(-.20,2.4,.65):V(-.16,2.4,.5));
     delta.x=T.MathUtils.clamp(delta.x,-.3,.3);delta.y=T.MathUtils.clamp(delta.y,-.20,.35);delta.z=T.MathUtils.clamp(delta.z,-.2,.3);
-    center.add(delta.multiplyScalar(weight).applyQuaternion(root.getWorldQuaternion(Q())));
+    if(name==='smash')delta.set(T.MathUtils.clamp(delta.x,-.08,.16),0,0);
+    if(name==='counter')delta.set(T.MathUtils.clamp(delta.x,-.12,.22),0,T.MathUtils.clamp(delta.z,-.2,.1));
+    if(name==='attack3')delta.set(T.MathUtils.clamp(delta.x,-.12,.12),0,T.MathUtils.clamp(delta.z,-.08,.1));
+    center.add(delta.multiplyScalar(weight*(['counter','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,name==='attack3'?.29:.28,.42):1)).applyQuaternion(root.getWorldQuaternion(Q())));
    }
   }
   const shaftQ=frame.clone().multiply(weaponQ);

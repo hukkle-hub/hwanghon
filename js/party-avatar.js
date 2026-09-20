@@ -34,7 +34,7 @@ export class Animated{
   else {this.play(data.guard?'guard':data.moving?'run':'idle');this.current.paused=false;}
   this.mixer.update(dt);this.rig?.apply(data.action?{...data.action,elapsed:Math.min(data.action.duration,data.action.elapsed+age)}:gesture,data.moving,data.guard,dt,this.current?.getClip().name,this.aimTarget||null);
   if(this.trail){const a=data.action;
-   const sw=(!!a && a.elapsed+age>=a.hitAt*.3 && a.elapsed+age<=a.duration*.85)||data.rollT>0;
+   const sw=globalThis.TW_COMBAT_QUALITY.trailActive(a&&{...a,elapsed:a.elapsed+age});
    if(a&&this.trailKey!==a.id){this.trailKey=a.id;const st=trailStyle(a.opt&&a.opt.skill?'skill':a.kind);this.trail.set(st[0],st[1]);}
    this.trail.tick(dt,this.weapon,sw);}
  }

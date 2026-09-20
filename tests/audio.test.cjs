@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 test('sample pack decodes, starts one bed, respects mute and hidden tab, and bounds voices',async()=>{
  const listeners={},sources=[],param=()=>({value:0,cancelScheduledValues(){},setValueAtTime(){},setTargetAtTime(){},exponentialRampToValueAtTime(){}});
- const node=()=>({gain:param(),frequency:param(),Q:param(),connect(){},disconnect(){},start(){this.started=true;},stop(){this.stopped=true;}});
- class AC{constructor(){this.currentTime=1;this.state='running';this.destination={};this.sampleRate=24000;}createGain(){return node();}createDynamicsCompressor(){return Object.fromEntries(['threshold','knee','ratio','attack','release'].map(k=>[k,param()]).concat([['connect',()=>{}]]));}createBufferSource(){const n=node();sources.push(n);return n;}decodeAudioData(){return Promise.resolve({duration:16});}resume(){this.state='running';return Promise.resolve();}suspend(){this.state='suspended';return Promise.resolve();}}
+ const node=()=>({gain:param(),frequency:param(),Q:param(),playbackRate:param(),connect(){},disconnect(){},start(){this.started=true;},stop(){this.stopped=true;}});
+ class AC{constructor(){this.currentTime=1;this.state='running';this.destination={};this.sampleRate=24000;}createGain(){return node();}createBiquadFilter(){return node();}createDynamicsCompressor(){return Object.fromEntries(['threshold','knee','ratio','attack','release'].map(k=>[k,param()]).concat([['connect',()=>{}]]));}createBufferSource(){const n=node();sources.push(n);return n;}decodeAudioData(){return Promise.resolve({duration:16});}resume(){this.state='running';return Promise.resolve();}suspend(){this.state='suspended';return Promise.resolve();}}
  const document={hidden:false,currentScript:{src:'http://localhost/js/sfx.js'},addEventListener(k,v){listeners[k]=v;},removeEventListener(){}};
  const window={AudioContext:AC,addEventListener(){}};
  vm.runInNewContext(fs.readFileSync('js/sfx.js','utf8'),{window,document,URL,Promise,fetch:async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(2)}),setTimeout,setInterval,Math});
@@ -15,6 +15,10 @@ test('sample pack decodes, starts one bed, respects mute and hidden tab, and bou
  document.hidden=true;listeners.visibilitychange();assert.equal(a.diagnostics().scene,'off');
  document.hidden=false;listeners.visibilitychange();await new Promise(r=>setImmediate(r));assert.equal(a.diagnostics().scene,'boss');
  a.scene('off');assert.equal(a.diagnostics().scene,'off');
+ a.play('hit',{heavy:false,material:'straw'});assert.equal(sources.at(-1).playbackRate.value,.96);assert.ok(sources.at(-1).started);
+ a.play('hit',{heavy:true,material:'metal'});assert.equal(sources.at(-1).playbackRate.value,1.08);assert.ok(sources.at(-1).started);
+ for(const s of [...sources])assert.doesNotThrow(()=>s.onended?.(),'both music and filtered effects release safely');
+ assert.equal(a.diagnostics().voices,0);
 });
 test('all original WAV files are stereo PCM with valid lengths',()=>{
  const manifest=JSON.parse(fs.readFileSync('art/audio/manifest.json'));

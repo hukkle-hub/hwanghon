@@ -9,7 +9,7 @@ var ASSETS = ["js/party-avatar.js", "js/party-wire.js", "css/party-online.css", 
 var HAD_PREVIOUS = !!(self.registration && self.registration.active);
 ASSETS.push('js/ain-bind-repair.js','js/ain-two-hand.js','js/ain-grip-shape.js','js/ain-grip-ik.js','js/ain-scythe-mount.js');
 ASSETS.push('js/marsh-motion.js','js/training-presentation.js','js/frame-metrics.js','js/boss-motion.js');
-ASSETS.push('js/graphics-profile.js');
+ASSETS.push('js/graphics-profile.js','js/combat-quality.js','js/boss-contact-volumes.js');
 ASSETS=ASSETS.concat(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){return 'art/audio/'+name+'.wav';}));
 self.addEventListener('install', function(e){
   e.waitUntil(caches.open(VERSION).then(function(c){
