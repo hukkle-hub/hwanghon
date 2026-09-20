@@ -64,6 +64,7 @@ html,body{height:100%;margin:0;background:#0B0C0F;color:#EBD6D6;font-family:var(
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/looks.js"></script>
+<script src="js/hair.js"></script>
 <script src="js/studio-env.js"></script>
 <script src="js/pose-fix.js"></script>
 <script src="js/mat-fix.js"></script>
@@ -167,6 +168,7 @@ const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', 
 /* 장착 장비 외형 모드: 저장된 장비를 그대로 입힌다 (인벤토리 미리보기·검수) */
 function applyEquip(){ if(BARE) return; if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) return; const eq=TW_GEAR.state().equipped; builtInWeapon=true; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot);
   const tintOf=id=>TW_GEAR.tintOf?TW_GEAR.tintOf(id):null, mixOf=id=>(TW_GEAR.dyeOf&&TW_GEAR.dyeOf(id))?0.75:null, baseOf=id=>{ const it=TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; };
+  window.TW_HAIR && TW_HAIR.sync(charRoot, eq);          /* 머리 장비 = 머리카락 가림 */
   TW_LOOKS.attach(THREE, loader, charRoot, eq, { charId:CHARID, tintOf, mixOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t){ const mx=mixOf(eq.main)??0.55; wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),mx); } }); } } });
   $('#sock').textContent='장착 장비 외형: '+Object.keys(eq).filter(k=>eq[k]).map(k=>k+'='+eq[k]).join(' · '); }
 /* 외형 화면(looks.html)이 이 창을 iframe 으로 띄우고 여기로 지시를 보낸다.
