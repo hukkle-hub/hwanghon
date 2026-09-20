@@ -20,6 +20,10 @@
     /* 출격 캐릭터 (ain·kain·ryu·sera) */
     char:function(id){ if(id===undefined) return S.char||'ain'; S.char=id; save(); try{ window.dispatchEvent(new CustomEvent('tw:char',{detail:id})); }catch(e){} return id; },
     save:save,
+    /* 다른 창(외형 화면의 viewer iframe)이 저장을 고쳤을 때 다시 읽는다.
+       S 는 스크립트를 읽는 순간 한 번만 만들어지므로, 이게 없으면 iframe 은
+       제 기억 속의 옛 장비를 계속 입힌다 (docs/design/34 §3). */
+    reload:function(){ S=load(); return S; },
     reset:function(){ S=JSON.parse(JSON.stringify(DEF)); save(); }
   };
   window.TW_SAVE=api;

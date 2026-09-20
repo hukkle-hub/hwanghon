@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 외형</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+/* 설계 시트 34-외형: 왼쪽 슬롯 · 가운데 큰 3D · 오른쪽 염색/프리셋 */
+.lk{display:grid;grid-template-columns:318px 1fr 330px;gap:12px;padding:11px 18px;flex:1;min-height:0}
+.lk__l,.lk__r{display:grid;grid-template-rows:1fr;min-height:0}
+.lk__r{grid-template-rows:auto auto auto 1fr;gap:10px}
+.lk__c{display:grid;grid-template-rows:auto 1fr 168px;gap:10px;min-height:0}
+
+/* 슬롯 목록 */
+.slotrow{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+.slotrow:last-child{border:0}
+.slotrow:hover{background:rgba(255,255,255,.03)}
+.slotrow.is-on{background:linear-gradient(90deg,rgba(120,30,30,.30),rgba(120,30,30,.06));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.slotrow__i{width:42px;height:42px;flex:none;border:1px solid var(--line);background:var(--bg-inset);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.slotrow__i img{width:100%;height:100%;object-fit:contain}
+.slotrow.is-on .slotrow__i{border-color:var(--line-red)}
+.slotrow__c{min-width:0;flex:1}
+.slotrow__k{font-size:10px;letter-spacing:.08em;color:var(--tx-ghost)}
+.slotrow__t{font-size:12.5px;color:var(--tx-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px}
+.slotrow__t.is-empty{color:var(--tx-ghost)}
+/* 염색한 슬롯은 한눈에 — 오른쪽에 색 점 */
+.slotrow__dot{width:11px;height:11px;flex:none;border:1px solid rgba(255,255,255,.28);border-radius:50%}
+.slotrow__dot[hidden]{display:none}
+
+/* 3D 무대 */
+.lkview{position:relative;border:1px solid var(--line);background:#0b0c0f;overflow:hidden;min-height:0}
+.lkview iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.lkview__hint{position:absolute;left:10px;bottom:9px;font-size:10.5px;color:var(--tx-ghost);
+  background:rgba(8,9,12,.72);padding:3px 8px;pointer-events:none}
+.lkbar{display:flex;flex-direction:row;align-items:center;gap:8px;padding:7px 10px;flex:none;flex-wrap:nowrap}
+.lkbar .field{margin:0;flex:1 1 0;min-width:0;height:28px;padding:0 8px}
+.lkbar .field select{font-size:11px}
+.lkbar .btn{flex:none;white-space:nowrap}
+
+/* 소지품에서 고르기 */
+.picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px;padding:9px;
+  overflow-y:auto;align-content:start}
+.pick{border:1px solid var(--line);background:var(--bg-inset);aspect-ratio:1;position:relative;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;padding:4px}
+.pick:hover{border-color:var(--line-red)}
+.pick.is-on{border-color:var(--gold);box-shadow:inset 0 0 0 1px rgba(201,154,43,.35)}
+.pick img{width:100%;height:100%;object-fit:contain}
+.lk-empty{padding:16px 0;align-self:center}
+.pick__n{position:absolute;left:0;right:0;bottom:0;font-size:9px;text-align:center;
+  background:rgba(8,9,12,.82);color:var(--tx-dim);padding:1px 2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 염색 */
+.dye{padding:10px 11px}
+.dye__t{font-size:11.5px;color:var(--tx-dim);margin-bottom:8px}
+.dye__t b{color:var(--gold);font-weight:500}
+.sw{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-bottom:10px}
+.sw button{aspect-ratio:1;border:1px solid rgba(255,255,255,.14);cursor:pointer;padding:0}
+.sw button:hover{border-color:rgba(255,255,255,.5)}
+.sw button.is-on{border-color:var(--gold);box-shadow:0 0 0 1px rgba(201,154,43,.5)}
+.dye__row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.dye__row input[type=color]{width:42px;height:28px;padding:0;border:1px solid var(--line);
+  background:var(--bg-inset);cursor:pointer}
+.dye__hex{font-family:var(--f-serif);font-size:12px;letter-spacing:.08em;color:var(--tx-dim);
+  font-variant-numeric:tabular-nums}
+.dye__cost{margin-left:auto;font-size:11px;color:var(--tx-faint)}
+.dye__btns{display:flex;gap:7px}
+.dye__btns .btn{flex:1}
+
+/* 외형 프리셋 3칸 */
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 11px;
+  align-content:start;overflow-y:auto}
+.pset{border:1px solid var(--line);background:var(--bg-inset);padding:10px 6px;text-align:center;cursor:pointer;height:64px;
+  display:flex;flex-direction:column;justify-content:center}
+.pset:hover{border-color:var(--line-red)}
+.pset__n{font-size:11.5px;color:var(--tx-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pset__s{font-size:10px;color:var(--tx-ghost);margin-top:3px}
+.pset.is-empty .pset__n{color:var(--tx-ghost)}
+</style>
+</head>
+<body data-mback="inventory.html">
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">외형</h1>
+      <div class="topbar__sub">장비를 갈아입고 색을 물들입니다. 성능은 바뀌지 않습니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency" id="lk-wallet"><svg class="ico"><use href="#i-coin"/></svg><span class="num">—</span></span>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="lk">
+    <!-- 왼쪽: 슬롯 -->
+    <div class="lk__l" data-mpane="슬롯">
+      <div class="panel panel--framed" style="display:grid;grid-template-rows:auto 1fr;min-height:0">
+        <div class="panel__head"><span class="panel__title">착용 부위</span>
+          <span class="xs t-faint" id="lk-char">아인</span></div>
+        <div style="overflow-y:auto;padding:4px 10px" id="lk-slots"></div>
+      </div>
+    </div>
+
+    <!-- 가운데: 3D -->
+    <div class="lk__c" data-mpane="외형" data-mdefault>
+      <div class="panel panel--flat lkbar">
+        <label class="field"><select id="lk-pose">
+          <option value="idle">대기</option><option value="walk">걷기</option>
+          <option value="run">달리기</option><option value="attack1">공격</option>
+          <option value="cheer">환호</option></select></label>
+        <label class="field"><select id="lk-wind">
+          <option value="ward">멎은 공기</option><option value="tutorial">정체된 공기</option>
+          <option value="sewage">수면의 찬 기류</option><option value="relay">송풍기 맥동</option>
+          <option value="grove">온실의 소용돌이</option><option value="marsh" selected>습지의 맞바람</option>
+          <option value="road">고가의 강풍</option></select></label>
+        <label class="field"><select id="lk-light">
+          <option value="studio">스튜디오</option><option value="dungeon">던전</option></select></label>
+        <button class="btn btn--sm" id="lk-spin" type="button">자동 회전</button>
+      </div>
+      <div class="lkview"><iframe id="lk-3d" title="외형 3D" loading="lazy"></iframe>
+        <span class="lkview__hint">끌어서 회전 · 휠로 확대</span></div>
+      <div class="panel panel--flat" style="display:grid;grid-template-rows:auto 1fr;min-height:0">
+        <div class="panel__head"><span class="panel__title" id="lk-pick-t">소지품</span>
+          <button class="btn btn--sm" id="lk-off" type="button">벗기</button></div>
+        <div class="picks" id="lk-picks"></div>
+      </div>
+    </div>
+
+    <!-- 오른쪽: 염색 · 프리셋 -->
+    <div class="lk__r" data-mpane="염색">
+      <div class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">염색</span></div>
+        <div class="dye">
+          <div class="dye__t" id="lk-dye-t">부위를 고르세요.</div>
+          <div class="sw" id="lk-sw"></div>
+          <div class="dye__row">
+            <input type="color" id="lk-color" value="#8a2420" aria-label="색 고르기">
+            <span class="dye__hex" id="lk-hex">#8A2420</span>
+            <span class="dye__cost" id="lk-cost">—</span>
+          </div>
+          <div class="dye__btns">
+            <button class="btn btn--primary btn--sm" id="lk-apply" type="button" data-primary>물들이기</button>
+            <button class="btn btn--sm" id="lk-reset" type="button">되돌리기</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel panel--framed" style="display:grid;grid-template-rows:auto auto;min-height:0">
+        <div class="panel__head"><span class="panel__title">외형 프리셋</span></div>
+        <div class="presets" id="lk-presets"></div>
+      </div>
+      <div class="panel panel--flat" style="padding:9px 11px;flex:none">
+        <div class="xs t-faint" id="lk-note">염색은 외형만 바꿉니다. 공격력·방어력은 그대로입니다.</div>
+      </div>
+      <div></div>
+    </div>
+  </main>
+
+  <nav class="gnb">
+    <a href="index.html"><svg class="ico"><use href="#i-map"/></svg>로비</a>
+    <a href="office.html"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+    <a class="is-on"><svg class="ico"><use href="#i-shield"/></svg>외형</a>
+    <a href="forge.html"><svg class="ico"><use href="#i-anvil"/></svg>장비 관리</a>
+    <a href="craft.html"><svg class="ico"><use href="#i-hammer"/></svg>제작</a>
+  </nav>
+</div>
+
+<script src="js/world.js"></script>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/looks-screen.js"></script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

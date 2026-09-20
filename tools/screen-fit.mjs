@@ -14,7 +14,7 @@ const STAGE_H = 952;
 const SCREENS = process.argv.slice(2).length ? process.argv.slice(2) : [
   'index.html','title.html','office.html','quest.html','inventory.html','forge.html',
   'craft.html','shop.html','profile.html','result.html','characters.html','skills.html',
-  'story.html','battle.html','benchmark.html','arena.html','board.html','lobby.html','shelter.html','recruit.html','admin.html'];
+  'story.html','battle.html','benchmark.html','arena.html','board.html','lobby.html','shelter.html','recruit.html','admin.html','looks.html'];
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({viewport:{width:1672,height:941}, hasTouch:true});

@@ -110,6 +110,36 @@
     spend(mats, r.cost); if(SV.stat) SV.stat('crafted'); var g=state(); g.custom[id]={ base:r.result, picks:picks }; T.register(it); addGear(id); if(it.custom.startEnh){ g.enh[id]=it.custom.startEnh; it.enh=g.enh[id]; save(); }
     return { ok:true, item:it }; }
   function lookOf(id){ var it=T.get(id); return it&&it.custom ? it.custom.look : null; }
+
+  /* --- 염색 --- 아이템마다 색 한 개. 외형만 바뀌고 성능은 그대로다 (docs/design/34).
+     저장은 g.dye={아이템:'#rrggbb'} · 프리셋은 g.looks=[{name,equipped,dye}] 3칸 */
+  var DYE_COST=120;                                   /* 한 번 염색에 드는 금화 */
+  function dyeOf(id){ var g=state(); return (g.dye&&g.dye[id])||null; }
+  function setDye(id,hex){ if(!/^#[0-9a-fA-F]{6}$/.test(hex||'')) throw Error('색을 확인하세요.');
+    var g=state(); if(!g.dye) g.dye={}; g.dye[id]=hex.toLowerCase(); save(); return g.dye[id]; }
+  function clearDye(id){ var g=state(); if(g.dye&&g.dye[id]){ delete g.dye[id]; save(); } }
+  /* 외형에 실제로 먹일 색: 염색이 먼저, 없으면 제작품 색조 */
+  function tintOf(id){ var d=dyeOf(id); if(d) return d; var l=lookOf(id); return l&&l.tint?l.tint:null; }
+  function dyeCost(){ return DYE_COST; }
+
+  /* --- 외형 프리셋 3칸 --- 장비 구성과 염색을 통째로 저장해 두고 한 번에 갈아입는다 */
+  function looks(){ var g=state(); if(!g.looks) g.looks=[null,null,null]; return g.looks; }
+  function saveLook(i,name){ if(!(i>=0&&i<3)) throw Error('프리셋 칸을 확인하세요.');
+    var g=state(); looks()[i]={ name:(name||('외형 '+(i+1))).slice(0,12),
+      char:curChar(), equipped:Object.assign({},g.equipped), dye:Object.assign({},g.dye||{}) }; save(); return looks()[i]; }
+  function wearLook(i){ var L=looks()[i]; if(!L) throw Error('빈 칸입니다.');
+    var g=state();
+    /* 가진 것만 입는다 — 분해했거나 잃은 장비는 건너뛴다 */
+    var next={}, miss=[];
+    Object.keys(L.equipped).forEach(function(sl){ var id=L.equipped[sl]; if(!id) return;
+      if(g.owned.indexOf(id)>=0 || g.equipped[sl]===id || isEquipped(id)) next[sl]=id; else miss.push(id); });
+    var cur=Object.assign({},g.equipped);
+    Object.keys(cur).forEach(function(sl){ if(cur[sl]&&next[sl]!==cur[sl]) g.owned.push(cur[sl]); });
+    Object.keys(cur).forEach(function(sl){ g.equipped[sl]=null; });
+    Object.keys(next).forEach(function(sl){ g.equipped[sl]=next[sl]; g.owned=g.owned.filter(function(x){ return x!==next[sl]; }); });
+    g.dye=Object.assign({}, L.dye||{}); save();
+    return { worn:Object.keys(next).length, missing:miss }; }
+  function clearLook(i){ looks()[i]=null; save(); }
   loadCustom();
   /* 제작: items.js 의 canCraft/craft 를 저장 연동판으로 교체 */
   T.canCraft=function(r){ return canPay(r.mats, r.cost) && T.PLAYER.craftLv>=r.craftLv; };
@@ -117,5 +147,6 @@
   /* 시트 기본 강화 단계 표시(slotHTML 의 +N)를 저장 단계로 */
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
   window.TW_GEAR={ state:state, setChar:setChar, char:curChar, loadout:loadout, canEquip:canEquip, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
-    enhStep:enhStep, enhance:enhance, fsOf:fsOf, sealedOf:sealedOf, seal:seal, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
+    enhStep:enhStep, enhance:enhance, fsOf:fsOf, sealedOf:sealedOf, seal:seal, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, dyeOf:dyeOf, setDye:setDye, clearDye:clearDye, tintOf:tintOf, dyeCost:dyeCost,
+    looks:looks, saveLook:saveLook, wearLook:wearLook, clearLook:clearLook, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
 })();

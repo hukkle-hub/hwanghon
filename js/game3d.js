@@ -446,8 +446,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot);
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
-      if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ var l=G&&G.lookOf(id); return l&&l.tint?l.tint:null; };
-        TW_LOOKS.attach(THREE, loader, ain.model, eq, { charId:CID, baseOf:baseOf, tintOf:tintOf, prepareMain:function(model,spec){return CID==='ain'&&spec.glb==='art/3d/ain_scythe_tex.glb'?mountAinScythe(model):null;}, onMain:function(wr, w){ capTextures(w.scene); ain.weapon=wr; applyWeaponLook(wr); once(); }, onMainFail:once }); setTimeout(once, 20000); }
+      if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ return G&&G.tintOf?G.tintOf(id):null; }, mixOf=function(id){ return (G&&G.dyeOf&&G.dyeOf(id))?0.75:null; };
+        TW_LOOKS.attach(THREE, loader, ain.model, eq, { charId:CID, baseOf:baseOf, tintOf:tintOf, mixOf:mixOf, prepareMain:function(model,spec){return CID==='ain'&&spec.glb==='art/3d/ain_scythe_tex.glb'?mountAinScythe(model):null;}, onMain:function(wr, w){ capTextures(w.scene); ain.weapon=wr; applyWeaponLook(wr); once(); }, onMainFail:once }); setTimeout(once, 20000); }
       else once(); })();
     setBase('idle'); loaded(); }, undefined, function(err){ ldErr('아인 모델 로드 실패: '+(err&&err.message||err)); });
   /* 새로 넣은 동작이 없는(캐시된) GLB 에서도 끊기지 않도록 한 단계 대체한다 */

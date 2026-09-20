@@ -166,10 +166,21 @@ window.__TW_VIEW={ get scene(){return scene;}, get charRoot(){return charRoot;},
 const q=new URLSearchParams(location.search); const EQUIP=q.get('equip')==='1', FIT=q.get('fit')==='1'; const CHARID=q.get('char')||((window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'); if(window.TW_GEAR&&TW_GEAR.setChar) TW_GEAR.setChar(CHARID); loadChar(q.get('glb')||('art/3d/'+(EQUIP?CHARID:'ain')+'_anim.glb')); if(!EQUIP) loadWeapon('art/3d/ain_scythe_tex.glb');
 /* 장착 장비 외형 모드: 저장된 장비를 그대로 입힌다 (인벤토리 미리보기·검수) */
 function applyEquip(){ if(!EQUIP||!charRoot||!window.TW_LOOKS||!window.TW_GEAR) return; const eq=TW_GEAR.state().equipped; builtInWeapon=true; if(weaponRoot&&weaponRoot.parent) weaponRoot.parent.remove(weaponRoot);
-  const tintOf=id=>{ const l=TW_GEAR.lookOf(id); return l&&l.tint?l.tint:null; }, baseOf=id=>{ const it=TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; };
-  TW_LOOKS.attach(THREE, loader, charRoot, eq, { charId:CHARID, tintOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t) wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),0.55); } }); } });
+  const tintOf=id=>TW_GEAR.tintOf?TW_GEAR.tintOf(id):null, mixOf=id=>(TW_GEAR.dyeOf&&TW_GEAR.dyeOf(id))?0.75:null, baseOf=id=>{ const it=TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; };
+  TW_LOOKS.attach(THREE, loader, charRoot, eq, { charId:CHARID, tintOf, mixOf, baseOf, onMain:(wr)=>{ const t=tintOf(eq.main); if(t){ const mx=mixOf(eq.main)??0.55; wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),mx); } }); } } });
   $('#sock').textContent='장착 장비 외형: '+Object.keys(eq).filter(k=>eq[k]).map(k=>k+'='+eq[k]).join(' · '); }
-window.addEventListener('message', e=>{ if(e.data==='tw:equip'){ try{ location.reload(); }catch(x){} } });
+/* 외형 화면(looks.html)이 이 창을 iframe 으로 띄우고 여기로 지시를 보낸다.
+   모델을 다시 받으면 2초가 걸려 염색 미리보기가 답답하다 — 다시 붙이기만 한다. */
+window.addEventListener('message', e=>{ const m=e.data; try{
+  if(m==='tw:equip'){ location.reload(); return; }
+  if(!m||typeof m!=='object') return;
+  if(m.t==='relook'){ window.TW_SAVE&&TW_SAVE.reload&&TW_SAVE.reload(); applyEquip(); }
+  else if(m.t==='pose'&&charGltf){ const c=(charGltf.animations||[]).find(a=>a.name===m.v);
+    if(c&&mixer){ mixer.stopAllAction(); mixer.clipAction(c).reset().play(); } }
+  else if(m.t==='wind'&&wind&&window.TW_WIND) wind.setProfile(TW_WIND.profile(m.v));
+  else if(m.t==='light'&&window.TW_ENV) TW_ENV.apply(THREE, renderer, scene, m.v, m.v==='studio'?1.0:0.45);
+  else if(m.t==='spin'){ ctrl.autoRotate=!!m.v; ctrl.autoRotateSpeed=1.6; }
+}catch(x){ console.warn('viewer message', x); } });
 if(FIT){ $('#panel').classList.add('is-off'); $('#hud').style.display='none'; $('#tg').style.display='none'; ref.visible=false; }
 addEventListener('resize',()=>{ cam.aspect=innerWidth/innerHeight; cam.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 (function loop(){ requestAnimationFrame(loop); const dt=clock.getDelta(); if(mixer) mixer.update(dt); if(wind&&charRoot) wind.update(dt, charRoot); ctrl.update(); renderer.render(scene,cam); })();

@@ -374,3 +374,44 @@ html.mobile.portrait .goods{grid-template-columns:1fr}
 /* 제작 재료 선택 (터치 목표 ≥ 40px) */
 html.mobile .pickrow{grid-template-columns:1fr}
 html.mobile .pickopt{height:40px;padding:0 12px;font-size:12.5px}
+
+/* 외형 (looks.html) — 3열을 판으로 접는다. 3D 는 «주» 판이라 바닥 바에서 바로 연다.
+   세로에서는 3D 가 높이를 다 먹어야 옷이 보인다 (docs/design/34 §5). */
+html.mobile .lk{display:block;padding:8px 10px}
+html.mobile .lk > [data-mpane]{height:100%}
+html.mobile .lk__l,html.mobile .lk__r,html.mobile .lk__c{display:flex;flex-direction:column;gap:9px}
+html.mobile .lk__c{height:100%}
+html.mobile .lkview{flex:1;min-height:220px}
+/* 3D 조작 바: 좁으면 두 줄로 접는다 — 한 줄로 밀어 넣으면 선택 칸이 40px 밑으로 눌린다 */
+html.mobile .lkbar{flex-wrap:wrap;gap:7px;padding:8px}
+html.mobile .lkbar .field{flex:1 1 calc(50% - 4px);min-width:132px;height:40px}
+/* 선택 칸 자체가 터치 목표다 — label 만 키우면 안에서 14px 로 남는다 */
+html.mobile .lkbar .field select{height:100%;font-size:12.5px}
+html.mobile .lkbar .btn{flex:1 1 100%;height:40px}
+/* 터치 목표 */
+html.mobile .slotrow{padding:9px 4px}
+html.mobile .slotrow__i{width:46px;height:46px}
+html.mobile .picks{grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:7px}
+html.mobile .sw{grid-template-columns:repeat(8,1fr);gap:6px}
+html.mobile .sw button{min-height:34px}
+html.mobile .dye__row input[type=color]{width:52px;height:38px}
+html.mobile .dye__btns .btn{height:40px}
+html.mobile .pset{height:70px}
+/* 소지품 판은 세로에서 너무 크면 3D 를 밀어낸다 */
+html.mobile .lk__c > .panel:last-child{flex:none;height:146px}
+/* 가로는 세로 높이가 412px 뿐이다 — 조작 바·3D·소지품이 다 들어가려면
+   3D 의 최소 높이(220px)를 풀어 줘야 한다. 안 그러면 소지품 판이 바닥 바에 먹힌다
+   (재 보니 118px 중 106px 이 가려져 있었다). */
+@media (orientation:landscape){
+  html.mobile .lk{padding:6px 10px}
+  html.mobile .lk__c{gap:6px}
+  html.mobile .lkbar{flex-wrap:nowrap;padding:5px 8px}
+  /* 테두리 1px 탓에 label 40px 이 안쪽 select 38px 이 된다 — 손가락 기준은 select 다 */
+  html.mobile .lkbar .field{flex:1 1 0;min-width:0;height:40px}
+  html.mobile .lkbar .btn{flex:none;height:40px}
+  html.mobile .lkview{min-height:80px}
+  html.mobile .lk__c > .panel:last-child{height:92px}
+  html.mobile .picks{grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px;padding:6px}
+  html.mobile .pset{height:54px}
+  html.mobile .lk-empty{padding:6px 0;font-size:11px}
+}

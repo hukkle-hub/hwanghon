@@ -45,7 +45,7 @@
   };
   var texCache={};
   function tex(THREE, name){ if(!name) return null; var k=name; if(texCache[k]) return texCache[k]; var t=new THREE.TextureLoader().load('art/3d/tex/'+name+'.png'); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(2,2); texCache[k]=t; return t; }
-  function material(THREE, key, tint){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ map:tex(THREE, m[0]), color:m[1], roughness:m[2], metalness:m[3], side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), 0.5); return mt; }
+  function material(THREE, key, tint, mix){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ map:tex(THREE, m[0]), color:m[1], roughness:m[2], metalness:m[3], side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), mix==null?0.5:mix); return mt; }
   function geometry(THREE, kind, s, o){ o=o||{};
     switch(kind){
       case 'box': return new THREE.BoxGeometry(s[0],s[1],s[2]);
@@ -61,7 +61,7 @@
   }
   function bonesOf(model){ var b={}; model.traverse(function(o){ if(o.isBone) b[o.name.replace(/^mixamorig:?/,'')]=o; }); return b; }
   function fitScale(bone){ var ws=new THREE.Vector3(); bone.getWorldScale(ws); return 1/(ws.x||1); }
-  function buildArmor(THREE, id, bones, tint, charId){ var spec=ARMOR[id]; if(!spec) return []; var made=[]; var fit=CHARFIT[charId]||{}, f=fit[SLOT_OF[id]]||1;
+  function buildArmor(THREE, id, bones, tint, charId, mix){ mix=mix==null?0.35:mix; var spec=ARMOR[id]; if(!spec) return []; var made=[]; var fit=CHARFIT[charId]||{}, f=fit[SLOT_OF[id]]||1;
     spec.forEach(function(p){ var bone=bones[p[0]]; if(!bone) return; var k=fitScale(bone)*f;
       if(p[1]==='glb'){ var g=new THREE.Group(); g.userData.look=id; g.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); g.rotation.set(p[4][0],p[4][1],p[4][2]);
         /* p[5] 가 배열이면 축별 배율 — 거울(왼팔 건틀릿)에 쓴다 */
@@ -69,21 +69,23 @@
         bone.add(g); made.push(g);
         var mirrored=Array.isArray(sc)&&(sc[0]*sc[1]*sc[2]<0);
         if(LOADER) LOADER.load(p[2], function(w){ w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false;
-          if(mirrored){ o.material=o.material.clone(); o.material.side=THREE.DoubleSide; } if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),0.35); } } }); g.add(w.scene); }); return; }
-      var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint)); mesh.castShadow=true; mesh.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.setScalar(k); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
+          if(mirrored){ o.material=o.material.clone(); o.material.side=THREE.DoubleSide; } if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mix); } } }); g.add(w.scene); }); return; }
+      var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint,mix)); mesh.castShadow=true; mesh.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.setScalar(k); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
     return made; }
   var THREE=null, LOADER=null;
   /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id) → hex|null, lookOf(id), baseOf(id) } */
   function attach(T, loader, model, equipped, opts){ THREE=T; LOADER=loader; opts=opts||{}; var bones=bonesOf(model), out={ pieces:[], weapons:{} };
     var baseOf=opts.baseOf||function(id){ return id; };
+    /* 섞는 세기 — 제작품 색조는 «살짝»(기본값), 염색은 «확실히»(외형 화면이 0.75 를 준다) */
+    var mixOf=opts.mixOf||function(){ return null; };
     /* 이전 조각 제거 */ Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
     var mainId=equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
     if(DUAL[mainBase]&&bones.LeftHandSlot){ var osp=WEAPON[mainBase]; loader.load(osp.glb, function(w){ var g2=new THREE.Group(); g2.userData.look='offhand'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(osp.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(osp.tint), osp.mix||0.5); } } }); w.scene.position.set(0,-(osp.grip||0.1),0); g2.add(w.scene); bones.LeftHandSlot.add(g2); g2.scale.setScalar(fitScale(bones.LeftHandSlot)); out.weapons.offhand=g2; }); }
     if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(spec.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(spec.tint), spec.mix||0.5); } } }); var prepared=opts.prepareMain&&opts.prepareMain(w.scene,spec); if(prepared)wr.add(prepared);else{w.scene.position.set(0,-(spec.grip||0.75),0);wr.add(w.scene);} slot.add(wr); wr.scale.setScalar(fitScale(slot)); out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
     else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var sp=WEAPON[baseOf(id)]; if(!sp||!sp.bone||!bones[sp.bone]) return; var bone=bones[sp.bone];
-      loader.load(sp.glb, function(w){ var g=new THREE.Group(); g.userData.look=id; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); g.add(w.scene); var k=fitScale(bone); g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k); g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]); g.scale.setScalar(k*(sp.scale||1)); var tint=opts.tintOf&&opts.tintOf(id); if(tint) w.scene.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),0.55); } }); bone.add(g); out.weapons[sl]=g; }); });
-    ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var tint=opts.tintOf&&opts.tintOf(id); out.pieces=out.pieces.concat(buildArmor(THREE, baseOf(id), bones, tint, opts.charId)); });
+      loader.load(sp.glb, function(w){ var g=new THREE.Group(); g.userData.look=id; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); g.add(w.scene); var k=fitScale(bone); g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k); g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]); g.scale.setScalar(k*(sp.scale||1)); var tint=opts.tintOf&&opts.tintOf(id); if(tint){ var mx=mixOf(id); mx=mx==null?0.55:mx; w.scene.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mx); } }); } bone.add(g); out.weapons[sl]=g; }); });
+    ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var tint=opts.tintOf&&opts.tintOf(id); out.pieces=out.pieces.concat(buildArmor(THREE, baseOf(id), bones, tint, opts.charId, mixOf(id))); });
     return out; }
   window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf };
 })();
