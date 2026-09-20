@@ -5,7 +5,7 @@ async function client(url,name,token){const socket=new WebSocket(url),queue=[],w
  const next=(match=()=>true)=>{const i=queue.findIndex(match);if(i>=0)return Promise.resolve(queue.splice(i,1)[0]);return new Promise((resolve,reject)=>{const waiter={match,resolve,timer:setTimeout(()=>{waiters.splice(waiters.indexOf(waiter),1);reject(Error('message timeout'));},3000)};waiters.push(waiter);});};
  await once(socket,'open');socket.send(JSON.stringify({type:'hello',name,token}));const hello=await next(m=>m.type==='welcome');if(!hello.profile.characterCreated){socket.send(JSON.stringify({type:'character',name:('유저_'+hello.profile.id.replaceAll('-','')).slice(0,16)}));hello.profile=(await next(m=>m.type==='profile')).profile;}return {socket,hello,next,send:msg=>socket.send(JSON.stringify({seq:++seq,...msg})),clear:()=>queue.splice(0),close:()=>socket.terminate()};
 }
-async function setup(t,store=new Store(null)){const app=createPartyServer({store}),address=await app.listen(0,'127.0.0.1'),url='ws://127.0.0.1:'+address.port+'/party-socket';t.after(()=>app.close());return {app,url,base:'http://127.0.0.1:'+address.port};}
+async function setup(t,store=new Store(null),cleanup=()=>{}){const app=createPartyServer({store}),address=await app.listen(0,'127.0.0.1'),url='ws://127.0.0.1:'+address.port+'/party-socket';t.after(async()=>{await app.close();cleanup();});return {app,url,base:'http://127.0.0.1:'+address.port};}
 test('real sockets create/join/ready/start; identical shared damage, private identities and reconnect',async t=>{
  const {app,url}=await setup(t),a=await client(url,'첫째'),b=await client(url,'둘째');t.after(()=>{a.close();b.close();});
  a.send({type:'create',level:'d01'});const made=await a.next(m=>m.type==='state');b.send({type:'join',code:made.code});await b.next(m=>m.type==='state');
@@ -28,8 +28,8 @@ test('room isolation, capacity, stale input, origin rejection and private file b
  const bad=new WebSocket(url,{origin:'https://unrelated.example'});bad.on('error',()=>{});const [res]=await once(bad,'unexpected-response').then(([,res])=>[res]);assert.equal(res.statusCode,403);bad.terminate();
 });
 test('clear rewards reach both clients once and durable profile survives server-store restart',async t=>{
- const directory=fs.mkdtempSync(path.join(os.tmpdir(),'tw-party-'));t.after(()=>fs.rmSync(directory,{recursive:true,force:true}));const store=new Store(directory),a=store.login(null,'A'),b=store.login(null,'B');
- const {app,url}=await setup(t,store);
+ const directory=fs.mkdtempSync(path.join(os.tmpdir(),'tw-party-'));const store=new Store(directory),a=store.login(null,'A'),b=store.login(null,'B');
+ const {app,url}=await setup(t,store,()=>fs.rmSync(directory,{recursive:true,force:true}));
  const ca=await client(url,'A',a.token),cb=await client(url,'B',b.token);t.after(()=>{ca.close();cb.close();});ca.send({type:'create'});const made=await ca.next(m=>m.type==='state');cb.send({type:'join',code:made.code});await cb.next(m=>m.type==='state');ca.send({type:'ready',ready:true});cb.send({type:'ready',ready:true});await ca.next(m=>m.type==='state'&&m.members.every(p=>p.ready));ca.send({type:'start'});await ca.next(m=>m.type==='state'&&m.raid);
  const raid=app.rooms.get(made.code).raid;raid.phase=raid.A.stages.length-1;raid.setupBoss();raid.startFight();for(const p of raid.players.values()){p.x=raid.boss.x-100;p.y=raid.boss.y;p.target='body';}raid.boss.hp=1;ca.send({type:'attack'});
  const pa=await ca.next(m=>m.type==='profile'),pb=await cb.next(m=>m.type==='profile');assert.equal(pa.profile.gold,raid.A.rewards.gold+1000);assert.equal(pb.profile.gold,raid.A.rewards.gold+1000);raid.onClear(raid);assert.equal(app.store.public(a.profile.id).gold,raid.A.rewards.gold+1000);const restored=new Store(directory);assert.equal(restored.login(a.token,'A').profile.gold,raid.A.rewards.gold+1000);assert.equal(restored.public(b.profile.id).clears.tutorial,1);restored.close();

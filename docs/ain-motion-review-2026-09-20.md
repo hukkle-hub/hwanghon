@@ -1,4 +1,28 @@
-# Ain motion correction — local implementation, finger polish pending
+# Ain motion correction — calibrated shaft and closed-grip revision
+
+## Revision 4 — grip correction release
+
+- Root cause: the Hi3D handle is tilted 10.67 degrees in its source coordinates. The old y-only mount left its actual right-grip centre 66.69 mm sideways from the socket. Fit the shaft over eleven cross-sections, then rotate and translate a parent group. Source mesh/texture/GLB files remain untouched; fit residual is 0.578 mm.
+- Use the actual hand-local Z finger-spread axis, not X, to orient the shaft across both palms. Solve elbows on reachable circles with neutral wrists, stable upper-arm frames, and continuous weapon paths. Preserve body/lower-body clips and combat timestamps.
+- Reversible left/right grip morphs close fingers and oppose the thumb. Correct triangle surfaces and weld UV-seam displacement without subdividing: 59,999 triangles before and after. Corrected local hand triangles clear a 12 mm reference shaft (minimum 12.80 mm). This is a geometric regression check, not full animated cloth/finger collision simulation.
+- Keep the right hand closed and the weapon calibrated through hit/roll/dodge. Left hand can release; existing 120 ms release/regrip transition remains.
+- Fourteen actual clips, 241 samples each: idle/run/guard, attack1/2/3, smash, ult, skill1/2/3/4, counter, exec. Maximum steady two-palm residual 0.0002 mm, adjacent joint step 6.607 degrees, wrist-direction bend 6.92 degrees. Transition and transformed-avatar tests also pass. Online constructor test verifies two independently corrected avatar clones do not mutate their shared source.
+- Visual QA: original/closed hand closeups, actual textured attack2 closeup, skill2 side and ult rear six-pose sheets. Review supports all four skills, counter, execution and release poses, with an original/closed-hand comparison link.
+- Full suite initially exposed five pre-existing Windows SQLite teardown errors: temporary folders were removed before closing their database handles. Test-only cleanup order corrected; gameplay/server persistence code unchanged. Full pre-merge suite: 132/132 passing, followed by the new online-clone regression passing.
+- Scope: completed correction of the existing model's grip and arm motion, not a newly rigged character. There are no independent finger bones; existing coarse hand topology remains visible in extreme closeups. No Galaxy S25 Ultra physical-device performance claim. No paid regeneration.
+- Merged upstream through b1c289e, retaining dungeon 07, all boss/contact corrections and build rules. Final merged regression suite: **136/136 passing**.
+
+The sections below retain earlier findings and rejected experiments for comparison; revision 4 supersedes their pending-grip status.
+
+## Revision 3 — smoother weapon rotation, local only
+
+Revision 2 was deployed successfully as commit 92a6e161fa906ad276a25217880e5e2bbfaea919. The changes in this section are a subsequent local revision, not yet deployed.
+
+- Interpolate weapon orientation with quaternion slerp between authored keys instead of rebuilding orientation from each interpolated direction vector. Keep the existing impact at phase .42; begin the chop downswing at .20 rather than .25 to reduce peak angular velocity. Damage timing and source clips remain unchanged.
+- Retain neutral wrists. Experimental shaft-aligned hands reduced socket residual but hyperextended wrists (116 degrees) or introduced elbow branch flips (up to 176 degrees). Those experimental changes were removed, not shipped.
+- Add a wrist-direction regression and identify the exact clip/joint/sample of the maximum angular step. Across 241 samples in each of eight clips: maximum adjacent step 6.047 degrees (previous deployed baseline 11.431), wrist direction bend 6.92 degrees, palm residual 0.0211 mm. These measurements do not establish finger contact.
+- The review now selects actual attack1/attack2/attack3/smash/ult/idle/run/guard clips, adjusts the timeline to each duration, and exports six labelled poses for the selected clip. Review remains deterministic scrubbing, not a reproduction of the runtime release transition or authoritative per-skill impact timestamp.
+- Scoped suite: 83 passing tests. Original GLB, textures and other agents' working files untouched. Thumb/finger contact remains unaccepted; no finished-character claim.
 
 ## Revision 2 — implemented locally, not deployed
 
