@@ -10,6 +10,10 @@ test('authored attack contact intersects measured training core envelope without
   rig.restore();mixer.stopAllAction();const c=clips.find(c=>c.name===name),a=mixer.clipAction(c);a.play();a.paused=true;a.time=c.duration*contact;mixer.update(0);rig.apply({id:1,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name);
   assert.ok(Math.abs(rig.bones.Hips.position.x-report.hipsRest.x)<1e-6);assert.ok(Math.abs(rig.bones.Hips.position.z-report.hipsRest.z)<1e-6);
   const p=new T.Vector3(...target),hit=measureAinBladeContact(weapon,p);t.diagnostic(name+' core distance '+hit.distance.toFixed(4)+'m');assert.ok(hit.distance<.39,name+' blade misses measured core');
+  for(const dz of [-.10,0,.10])for(const dy of [-.04,0,.04]){
+   const d=measureAinBladeContact(weapon,p.clone().add(new T.Vector3(0,dy,dz))).distance;
+   assert.ok(d<.39,`${name}: distance offset ${dz}m / height offset ${dy}m misses (${d.toFixed(4)}m)`);
+  }
   assert.ok(measureAinBladeContact(weapon,p.clone().add(new T.Vector3(0,3,0))).distance>1,'unreachable high target must fail');
  }
 });

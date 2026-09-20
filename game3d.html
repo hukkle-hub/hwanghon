@@ -57,7 +57,7 @@
 .flash{position:absolute;inset:0;z-index:8;background:#A51C1C;opacity:0;pointer-events:none}.flash.is-on{animation:flash .28s}
 @keyframes flash{0%{opacity:0;background:#000}40%{opacity:.85;background:#000}55%{opacity:.5;background:#A51C1C}100%{opacity:0}}
 .ov{position:absolute;inset:0;z-index:20;display:none;place-items:center;background:rgba(6,7,10,.82);backdrop-filter:blur(2px)}.ov.is-on{display:grid}
-.ov__box{width:min(560px,86vw);text-align:center;padding:26px 28px;border:1px solid var(--line);background:rgba(11,12,15,.9)}
+.ov__box{box-sizing:border-box;width:min(560px,92vw);max-height:90dvh;overflow:auto;text-align:center;padding:20px clamp(12px,3vw,28px);border:1px solid var(--line);background:rgba(11,12,15,.9)}
 .ov__k{font-size:11px;letter-spacing:.3em;color:#C9A45E;font-family:var(--f-serif)}.ov__t{font-family:var(--f-serif);font-size:26px;color:var(--tx-hi);margin:8px 0 2px}.ov__l{font-size:12px;color:var(--tx-faint);letter-spacing:.1em}
 .ov__line{font-family:var(--f-serif);font-size:14px;color:#EBD6D6;margin:16px 0 4px;line-height:1.6}.ov__hint{font-size:12px;color:var(--tx-dim);margin-bottom:18px}
 .ov__stats{display:flex;justify-content:center;gap:22px;margin:14px 0 18px}.ov__stats div{font-size:11px;color:var(--tx-faint)}.ov__stats b{display:block;font-family:var(--f-serif);font-size:22px;color:var(--tx-hi);font-weight:400}
@@ -70,9 +70,11 @@ html.mobile .actions{grid-template-columns:repeat(4,46px);grid-auto-rows:46px;ga
 html.mobile .ov__t{font-size:22px}
 
 .mini{z-index:6}
-.setrow{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 14px;font-size:12px;color:var(--tx-dim)}
+.setrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:10px 0 14px;font-size:12px;color:var(--tx-dim)}
+.ov .setrow .btn{min-width:60px;min-height:44px}.setrow select{min-height:44px;background:#191c22;color:#eee;border:1px solid var(--line);padding:8px}.ov__box>.btn{margin-bottom:8px}
 .setrow input[type=range]{width:180px;accent-color:#C9A45E}
 .setrow label{letter-spacing:.08em}
+.setpair{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
 
 .quest{position:absolute;left:18px;top:130px;z-index:5;font-size:11px;color:var(--tx-dim);letter-spacing:.04em;background:rgba(6,7,10,.55);border-left:2px solid #C9A45E;padding:6px 10px;min-width:150px}
 .quest__t{font-family:var(--f-serif);font-size:11px;color:#C9A45E;letter-spacing:.14em;margin-bottom:4px}
@@ -129,7 +131,7 @@ html.mobile .loading__tip{font-size:12px}
 html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
 </style>
 </head>
-<body data-landscape data-nonav>
+<body data-landscape data-nonav data-responsive-mobile>
 <script src="js/icons.js"></script>
 <div class="stage">
   <div class="bt dg" id="dg">
