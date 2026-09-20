@@ -69,6 +69,9 @@
 
 /* 전투 준비 */
 .prep{display:flex;align-items:center;gap:11px;padding:10px 12px}
+/* 시트의 이 칸은 «전투 준비» 한 줄 높이다. 목록이 길어져도 스테이지 952px 예산을
+   넘기면 안 된다 — 넘기면 fitStage 가 화면 전체를 축소한다. 넘치면 여기서 스크롤. */
+.preplist{max-height:150px;overflow-y:auto}
 .prep__thumb{width:58px;height:40px;border:1px solid var(--line);flex:none}
 .prep__ico{width:30px;height:30px;color:var(--gold-dim);flex:none}
 
@@ -188,7 +191,7 @@
         <div class="panel__body scroll" id="q-info"></div>
       </section>
 
-      <section class="panel panel--framed">
+      <section class="panel panel--framed preplist">
         <a class="prep" href="game3d.html" id="of-arena" style="text-decoration:none;color:inherit">
           <svg class="prep__ico"><use href="#i-target"/></svg>
           <div class="fill">
