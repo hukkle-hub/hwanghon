@@ -54,9 +54,9 @@ commercialUssage     Allow      · credit  unnecessary · modification  allow
 
 ## 4. 결과
 
-![네 사람](../img/41-bodies.png)
-![움직임](../img/41-pose.png)
-![외형 화면](../img/41-screen.png)
+![네 사람](../img/42-bodies.png)
+![움직임](../img/42-pose.png)
+![외형 화면](../img/42-screen.png)
 
 외형 화면 오른쪽 위 **「속옷 차림」** — 보기만 바꾼다. 저장된 장비·염색은 그대로.
 
@@ -72,9 +72,14 @@ python3 tools/3d/build_body_vroid.py     # v2 — 애니메이션 체형 (지금
 python3 tools/3d/build_body.py           # v1 — 해부 가봉 인형 (얼굴 없음)
 ```
 
-**가장 좋은 답은 셋째 길이다:** 캐릭터를 Hi3D 로 **다시 뽑되 «몸» 과 «옷» 을 따로**
-뽑는 것. 그러면 얼굴도 살고 화풍도 맞고 옷 갈아입기가 제대로 된다.
-그 열쇠(Hi3D)는 지금 지피티 쪽에 있다 (`docs/design/39`).
+**가장 좋은 답은 셋째 길이고, 이미 진행 중이다.** 캐릭터를 Hi3D 로 다시 뽑되
+«몸» 과 «옷» 을 따로 뽑는 것 — 그러면 얼굴도 살고 화풍도 맞고 옷 갈아입기가 제대로 된다.
+지피티가 아인부터 그 길로 가고 있다: `docs/design/41-ain-modular-production.md`,
+후보 파일 `art/3d/base/ain_base_candidate.glb` (아직 런타임 미연결).
+
+**그러므로 이 v2 는 그때까지의 임시다.** 아인의 Hi3D 몸체가 검수를 통과하면
+`ain_body.glb` 는 그쪽으로 교체된다. 이 문서의 파이프라인(골격 비율 이식 · 살색/머리색
+옮기기 · 옷 재질 골라내기)은 그대로 재사용할 수 있다.
 
 ## 6. 남은 흠
 

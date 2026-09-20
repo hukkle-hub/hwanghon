@@ -21,4 +21,11 @@
   `_SKIN` `_FACE` `_EYE` `_HAIR` `_CLOTH`
 - 뼈 이름이 믹사모와 1:1 로 맞는다 (`J_Bip_C_Hips` → `Hips` …)
 
-두 바탕 모두 `tools/3d/build_body.py` 가 캐릭터 골격의 비율로 옮긴다.
+두 바탕 모두 캐릭터 골격의 비율로 옮겨 굽는다:
+`tools/3d/build_body.py` (MakeHuman) · `tools/3d/build_body_vroid.py` (VRoid, 지금 쓰는 것).
+
+## ain_base_candidate.glb — 지피티가 Hi3D 로 뽑는 아인 전용 몸체
+
+우리가 만든 것이 아니고 **아직 런타임에 연결돼 있지 않다.** 검수 후보다.
+내용과 규약은 `docs/design/41-ain-modular-production.md` 에 있다.
+이것이 통과하면 위의 «가져온 바탕» 을 대신하게 된다 (`docs/design/42` §5).
