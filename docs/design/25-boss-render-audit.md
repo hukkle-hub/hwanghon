@@ -91,3 +91,61 @@ hit: times [0, .15, .35, .65]  values [0, .17, -.09, 0]
 tools/3d/pose-sheet.html?rig=ward&clip=all&times=0,0.5,1
 tools/3d/pose-sheet.html?clip=hit,stagger&times=peak
 ```
+
+---
+
+## 6. 디자인 시트가 앱에 아예 안 들어가고 있었다
+
+「전에 프로젝트내에 디자인 시트 뽑은거 있을거야. 다 적용시키자.」
+
+`design-sheets/` 에 원본 설계 시트 **14장**이 있다 — 화면 시트 10장(컨셉·인력사무실·의뢰·
+파티·인벤토리·강화·프로필·결과·벤치마크·허수아비)과 캐릭터 시트 4장.
+
+이걸 가리키는 화면이 셋이다.
+
+| 화면 | 쓰임 |
+|---|---|
+| `compare.html` | 설계 시트 ↔ 구현 화면 겹쳐 비교 |
+| `characters.html` | 「캐릭터 시트」 버튼 |
+| `board.html` | 컨셉 시트 링크 |
+
+**그런데 `tools/build-www.sh` 의 복사 목록에 `design-sheets` 가 없었다.**
+
+```sh
+cp -r index.html *.html css js art vendor maps manifest.json sw.js www/
+#                            ↑ design-sheets 가 빠져 있다
+```
+
+`www/` 가 Capacitor 의 webDir 이므로 **안드로이드 APK 안에는 시트가 한 장도 없다.**
+앱에서 저 셋을 열면 전부 빈 칸이거나 404 다. 온라인이든 아니든 마찬가지다 —
+파일 자체가 패키지에 없으니까. (스크립트에는 `find www/art … design-sheets … -delete`
+라는 낡은 줄도 남아 있었다. 시트는 `art/` 밑에 있던 적이 없다 — 같이 지웠다.)
+
+고친 것: 복사 목록에 `design-sheets` 추가. `compare.html` 은 9종만 다루고 있어서
+빠져 있던 **허수아비 + 캐릭터 4장**을 넣어 **14종 전부**를 볼 수 있게 했다.
+
+> `sw.js` 프리캐시에는 **일부러 안 넣었다.** APK 안에서는 로컬 파일이라 네트워크가
+> 필요 없고, 웹에서는 서비스워커가 처음 열 때 받아서 캐시한다. 검수용 2.3MB 를
+> 모든 사용자의 첫 로딩에 얹을 이유가 없다.
+
+### 덤 — 빌드에 모캡 원본 28MB 가 딸려 가고 있었다
+
+시트를 넣고 빌드 크기를 재다가 찾았다. `www` 가 **103MB** 였는데 그중
+
+```
+www/art/3d/mocap/src   28MB   ← CMU 원본 ASF/AMC
+```
+
+`mocap.py` 가 원본을 `art/3d/mocap/src` 에 받아 두고 `.gitignore` 로 막아 둔다.
+git 에는 안 들어가지만 **`cp -r art` 는 작업 트리를 그대로 퍼 간다.** 모캡을 한 번이라도
+받아 본 기계에서 APK 를 빌드하면 28MB 가 얹힌다.
+
+런타임은 `art/3d/mocap` 을 **한 번도 읽지 않는다** (BVH 는 `mocap_apply.py` 가 GLB 를
+구울 때 쓰는 입력이다). 빌드에서 통째로 뺐다.
+
+**103MB → 75MB.** 시트 2.3MB 를 넣고도 28MB 가 줄었다.
+
+### 검수
+
+- `compare.html` 14탭 전부 실제 로드 확인 (`naturalWidth` 로 측정, 404 0건).
+- `npm test` 132/132.
