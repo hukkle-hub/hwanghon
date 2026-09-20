@@ -29,6 +29,7 @@
 
   var socket,seq=0,connected=false,stopped=false,retry,profile=null,guild=null,room=null;
   var messages=[],channel='world',lastSent=0,capacity=100,contacts=[];
+  var board=[],myApp=null;          /* 모집 중인 길드 목록 · 내가 낸 가입 신청 */
 
   function state(text,bad){ var el=$('sh-state'); el.textContent=text||''; el.classList.toggle('is-bad',!!bad); }
   function send(msg){ if(!connected||!socket||socket.readyState!==1) return false;
@@ -39,7 +40,9 @@
   function renderGate(){
     if(!profile){ pane('sh-gate'); $('sh-gstate').textContent=connected?'접속 중':'접속 전'; return; }
     if(!profile.characterCreated){ pane('sh-name'); $('sh-gstate').textContent='이름 미정'; return; }
-    if(!guild){ pane('sh-nogu'); $('sh-gstate').textContent='길드 없음';
+    if(!guild){ pane('sh-nogu'); $('sh-gstate').textContent=myApp?'신청 중':'길드 없음';
+      $('sh-applied').hidden=!myApp;
+      if(myApp) $('sh-appliedto').textContent=myApp.name;
       $('sh-gatehint')&&($('sh-gatehint').textContent=''); return; }
     pane('sh-guild'); $('sh-gstate').textContent='소속';
   }
@@ -54,8 +57,10 @@
   function renderGuild(){
     renderGate();
     var list=$('sh-members');
-    if(!guild){ $('sh-count').textContent='—'; $('sh-grole').textContent='';
-      list.innerHTML='<div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>'; return; }
+    /* 길드가 없을 때 이 칸은 «명단» 이 아니라 «모집 목록» 이다 */
+    $('sh-mtitle').textContent=guild?'길드 명단':'길드 찾기';
+    if(!guild){ $('sh-count').textContent=board.length?board.length+'곳 모집 중':'—';
+      $('sh-grole').textContent=''; renderBoard(list); return; }
     var role=myRole(), boss=role==='owner', staff=boss||role==='officer';
     $('sh-gtitle').textContent=guild.name;
     $('sh-gsub').textContent=guild.members.length+'명 · 정원 100명';
@@ -66,9 +71,20 @@
     ta.readOnly=!staff;
     ta.placeholder=staff?'공지를 적고 저장하세요 (240자)':'등록된 길드 공지가 없습니다.';
     $('sh-gnsave').hidden=!staff;
+    $('sh-gopen').hidden=!staff;
+    $('sh-gopen').textContent=guild.open?'공개 모집 닫기':'공개 모집 열기';
     var on=guild.members.filter(function(m){return m.online;}).length;
-    $('sh-count').textContent='접속 '+on+' / '+guild.members.length+'명';
-    list.innerHTML=guild.members.map(function(m){
+    $('sh-count').textContent='접속 '+on+' / '+guild.members.length+'명'+(guild.open?' · 모집 중':'');
+    /* 관리자에게만 신청 목록이 내려온다 (서버가 거른다) */
+    var apps=(staff&&guild.applications||[]).map(function(a){
+      return '<div class="mrow2"><span class="mrow2__d"></span>'+
+        '<span class="mrow2__n">'+esc(a.name)+
+        (a.message?'<div class="arow__msg">'+esc(a.message)+'</div>':'')+'</span>'+
+        '<span class="arow__a"><button type="button" class="btn btn--sm" data-a="yes" data-t="'+a.id+'">승인</button>'+
+        '<button type="button" class="btn btn--sm" data-a="no" data-t="'+a.id+'">거절</button></span></div>';
+    }).join('');
+    list.innerHTML=(apps?'<div class="sec">가입 신청 '+guild.applications.length+'건</div>'+apps+'<div class="sec">길드원</div>':'')+
+      guild.members.map(function(m){
       var mine=profile&&m.id===profile.id, acts='';
       /* 서버 규칙(rpg-store.guildManage)을 그대로 비춘다:
          길드장만 위임·임원 임명, 임원은 평 길드원만 추방, 길드장은 못 쫓아낸다. */
@@ -84,6 +100,25 @@
          m.role==='officer'?'<span class="mrow2__t mrow2__t--o">임원</span>':'')+
         (acts?'<span class="mrow2__a">'+acts+'</span>':'')+'</div>';
     }).join('');
+  }
+  function refreshBoard(){ send({type:'rpg',action:'guildBoard'}); }
+  function renderBoard(list){
+    if(!connected){ list.innerHTML='<div class="chat__empty">접속하면 모집 중인 길드가 표시됩니다.</div>'; return; }
+    if(myApp){ list.innerHTML='<div class="chat__empty">'+esc(myApp.name)+
+      ' 에 가입을 신청했습니다. 승인을 기다리는 동안에는 다른 곳에 신청할 수 없습니다.</div>'; return; }
+    if(!board.length){ list.innerHTML='<div class="chat__empty">공개 모집 중인 길드가 없습니다.'+
+      '<br>초대 코드를 받았다면 왼쪽에서 바로 합류할 수 있습니다.'+
+      '<br><button type="button" class="btn btn--sm mt3" id="sh-brefresh">새로고침</button></div>'; return; }
+    list.innerHTML='<div class="sec">모집 중인 길드 <button type="button" class="btn btn--sm" '+
+      'id="sh-brefresh" style="float:right;margin-top:-4px">새로고침</button></div>'+board.map(function(g){
+      return '<div class="grow"><span class="grow__m"><svg class="ico"><use href="#i-sigil"/></svg></span>'+
+        '<div class="fill"><div class="grow__n">'+esc(g.name)+'</div>'+
+        '<div class="grow__s">'+(g.notice?esc(g.notice):'등록된 공지가 없습니다.')+'</div></div>'+
+        '<span class="grow__c">'+g.members+' / 100</span>'+
+        '<button type="button" class="btn btn--sm" data-g="'+g.id+'">신청</button></div>';
+    }).join('')+
+    '<div class="applyrow"><div class="field"><input id="sh-appmsg" maxlength="120" '+
+    'placeholder="신청 한마디 (선택, 120자) — 신청 버튼과 함께 전달됩니다"></div></div>';
   }
   function btn(op,target,label){
     return '<button type="button" class="btn btn--sm" data-op="'+op+'" data-t="'+target+'">'+label+'</button>';
@@ -163,10 +198,12 @@
       if(msg.type==='welcome'){ connected=true; profile=msg.profile; store.set(tokenKey,msg.token);
         state(msg.ephemeral?'테스트 서버입니다 — 재시작 시 초기화됩니다.':'접속했습니다.');
         renderProfile(); renderGuild(); renderChat(); presence(1);
-        send({type:'rpg',action:'state'});          /* 동료·차단 목록을 받아 온다 */
+        send({type:'rpg',action:'state'});          /* 동료·차단 목록 */
+        setTimeout(refreshBoard,260);               /* 모집 목록 — rpg 명령은 120ms 간격 제한이 있다 */
         return; }
       if(msg.type==='profile'){ profile=msg.profile; renderProfile(); renderGate(); return; }
-      if(msg.type==='guild'){ guild=msg.guild; renderGuild(); return; }
+      if(msg.type==='guild'){ guild=msg.guild; if(guild) myApp=null; renderGuild(); return; }
+      if(msg.type==='guildBoard'){ board=msg.guilds||[]; myApp=msg.mine||null; renderGuild(); return; }
       if(msg.type==='board'){ capacity=msg.capacity||capacity; presence(msg.online||0); return; }
       if(msg.type==='chatHistory'){ messages=msg.messages||[]; renderChat(); return; }
       if(msg.type==='chat'){ messages.push(msg.message); if(messages.length>200) messages.shift();
@@ -176,7 +213,7 @@
       if(msg.type==='state'){ room=msg; return; }
       if(msg.type==='left'){ room=null; return; }
       if(msg.type==='loggedOut'){ stopped=true; connected=false; profile=null; guild=null; room=null;
-        messages=[]; contacts=[]; store.del(tokenKey); renderGuild(); renderChat(); renderContacts();
+        messages=[]; contacts=[]; board=[]; myApp=null; store.del(tokenKey); renderGuild(); renderChat(); renderContacts();
         presence(0); state('로그아웃했습니다.'); return; }
       if(msg.type==='error'){ state(msg.message,true); if(!connected){ stopped=true; socket.close(); } }
     });
@@ -203,6 +240,26 @@
   $('sh-gjoin').onclick=function(){ send({type:'guildJoin',code:$('sh-gcode').value.trim()}); };
   $('sh-gleave').onclick=function(){ send({type:'guildLeave'}); };
   $('sh-gnsave').onclick=function(){ manage('notice',null,$('sh-gnotice').value); };
+  $('sh-gopen').onclick=function(){
+    var on=!(guild&&guild.open);
+    if(!on&&!confirm('공개 모집을 닫습니다. 대기 중인 가입 신청도 함께 정리됩니다. 계속할까요?')) return;
+    manage('open',null,on); };
+  $('sh-appcancel').onclick=function(){
+    if(!send({type:'rpg',action:'guildCancelApply'})) state('접속한 뒤 이용할 수 있습니다.',true); };
+  /* 모집 목록의 «신청», 그리고 관리자 화면의 «승인·거절» */
+  $('sh-members').addEventListener('click',function(e){
+    if(e.target.closest('#sh-brefresh')){ refreshBoard(); return; }
+    var g=e.target.closest('[data-g]');
+    if(g){ var el=$('sh-appmsg');
+      if(!send({type:'rpg',action:'guildApply',guild:g.dataset.g,message:el?el.value.trim():''}))
+        state('접속한 뒤 이용할 수 있습니다.',true);
+      return; }
+    var a=e.target.closest('[data-a]');
+    if(a){ var yes=a.dataset.a==='yes';
+      if(!yes&&!confirm('가입 신청을 거절합니다. 계속할까요?')) return;
+      if(!send({type:'rpg',action:'guildDecide',target:a.dataset.t,accept:yes}))
+        state('접속한 뒤 이용할 수 있습니다.',true); }
+  });
   $('sh-members').addEventListener('click',function(e){
     var b=e.target.closest('[data-op]'); if(!b||!guild) return;
     var op=b.dataset.op, id=b.dataset.t;
@@ -275,5 +332,5 @@
   /* 이미 받아 둔 접속 키가 있으면 바로 붙는다 — 없으면 화면만 보여 준다. */
   if(store.get(tokenKey)) connect(null);
   window.TW_SHELTER={ state:function(){ return {connected:connected,guild:guild,profile:profile,
-    channel:channel,messages:messages.length,contacts:contacts}; } };
+    channel:channel,messages:messages.length,contacts:contacts,board:board,myApp:myApp}; } };
 })();

@@ -72,6 +72,25 @@
 .mrow2__a button{font-size:10.5px;padding:3px 8px;min-height:0;letter-spacing:.02em}
 .mrow2__a button[data-op="kick"]{color:#D98B86;border-color:rgba(199,85,80,.42)}
 
+/* 모집 중인 길드 · 가입 신청 */
+.sec{font-size:11px;letter-spacing:.1em;color:var(--gold-dim);padding:4px 2px 6px;border-bottom:1px solid var(--line-gold);margin-bottom:4px}
+.sec+.sec{margin-top:12px}
+.grow{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
+.grow:last-child{border:0}
+.grow__m{width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);color:var(--gold-dim);
+  background:radial-gradient(70% 70% at 50% 35%,rgba(150,120,60,.2),rgba(10,11,14,.55))}
+.grow__m .ico{width:17px;height:17px}
+.grow__n{font-size:13px;color:var(--tx-hi)}
+.grow__s{font-size:11px;color:var(--tx-faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px}
+.grow__c{font-size:11px;color:var(--tx-dim);flex:none}
+.arow__msg{font-size:11px;color:var(--tx-faint);margin-top:2px}
+.arow__a{display:flex;gap:5px;flex:none}
+.arow__a button{font-size:10.5px;padding:3px 9px;min-height:0}
+.arow__a button[data-a="yes"]{color:#9CC79C;border-color:rgba(120,180,120,.45)}
+.arow__a button[data-a="no"]{color:#D98B86;border-color:rgba(199,85,80,.4)}
+.applyrow{display:flex;gap:7px;padding:9px 0 2px}
+.applyrow .field{flex:1}
+
 /* 길드 공지 편집 */
 .gnotice{width:100%;min-height:62px;resize:vertical;font:inherit;font-size:12px;line-height:1.7;
   color:var(--tx);background:var(--bg-inset);border:1px solid var(--line);padding:8px 10px}
@@ -181,6 +200,12 @@
 
         <!-- 길드 없음 -->
         <div class="panel__body panel__body--flush" id="sh-nogu" hidden>
+          <div class="gate" id="sh-applied" hidden>
+            <div class="label-ko">가입 신청 중</div>
+            <div class="sm t-hi" id="sh-appliedto">—</div>
+            <div class="xs t-faint mt1">길드장이나 임원이 승인하면 바로 들어갑니다.</div>
+            <button type="button" class="btn btn--sm mt3" id="sh-appcancel" style="width:100%">신청 취소</button>
+          </div>
           <div class="gate">
             <div class="label-ko">새 길드</div>
             <div class="field"><input id="sh-gname" maxlength="24" placeholder="길드 이름"></div>
@@ -211,7 +236,8 @@
             <textarea class="gnotice mt2" id="sh-gnotice" maxlength="240" readonly
               placeholder="등록된 길드 공지가 없습니다."></textarea>
             <button type="button" class="btn btn--sm mt2" id="sh-gnsave" style="width:100%" hidden>공지 저장</button>
-            <button type="button" class="btn btn--sm mt3" id="sh-gleave" style="width:100%">길드 탈퇴</button>
+            <button type="button" class="btn btn--sm mt3" id="sh-gopen" style="width:100%" hidden>공개 모집 열기</button>
+            <button type="button" class="btn btn--sm mt2" id="sh-gleave" style="width:100%">길드 탈퇴</button>
           </div>
         </div>
         <div class="state" id="sh-state"></div>
@@ -236,7 +262,7 @@
         <div class="shart__q">“돌아올 곳이 있는 자만이 다시 나선다.”</div>
       </div>
       <section class="panel panel--framed">
-        <div class="panel__head"><span class="panel__title">길드 명단</span>
+        <div class="panel__head"><span class="panel__title" id="sh-mtitle">길드 명단</span>
           <span class="panel__meta" id="sh-count">—</span></div>
         <div class="panel__body scroll" id="sh-members">
           <div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>
