@@ -149,7 +149,7 @@
       <div class="eqcol" id="eq-left" data-mgoto="아이템"></div>
 
       <div class="dollart art art--doll">
-        <img id="doll" src="art/full-ain.webp" alt="아인">
+        <img id="doll" src="art/full-ain.webp" alt="아인" data-portrait="me-body">
         <iframe id="doll3d" title="장착 외형 3D" hidden loading="lazy"></iframe>
         <button type="button" class="btn btn--sm doll3d__tg" id="doll3d-tg">3D 외형</button>
       </div>
@@ -222,7 +222,11 @@
 <script src="js/items.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/grade.js"></script>
+<script src="js/looks.js"></script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
 <script src="js/inventory.js"></script>
+<script type="module" src="js/portrait3d.js"></script>
 <script>
 /* 3D 외형 미리보기: viewer.html 의 장착 모드. 장비를 바꾸면 다시 불러온다 */
 (function(){ var fr=document.getElementById('doll3d'), tg=document.getElementById('doll3d-tg'), doll=document.getElementById('doll'); if(!fr||!tg) return; var on=false;
@@ -241,8 +245,19 @@ document.querySelector('.chars').addEventListener('click', function(e){
   var c = e.target.closest('[data-char]'); if(!c) return;
   var d = document.getElementById('doll');
   d.style.opacity = 0;
-  setTimeout(function(){ d.src = 'art/full-' + c.dataset.char + '.webp'; d.onload = function(){ d.style.opacity = 1; }; }, 120);
+  setTimeout(function(){
+    /* 먼저 원화로 바꿔 바로 반응하게 하고, 3D 가 구워지면 그 위에 덮인다.
+       3D 굽기는 1~2초 걸리므로 그동안 빈 칸을 두지 않는다 (docs/design/36 §12) */
+    d.src = 'art/full-' + c.dataset.char + '.webp'; d.onload = function(){ d.style.opacity = 1; };
+    if(globalThis.TW_PORTRAIT) TW_PORTRAIT.apply();
+  }, 120);
 });
+/* 장비를 갈아 끼우면 종이인형도 따라간다. 열쇠가 그대로면 캐시라 공짜다 */
+(function(){ var t=null;
+  document.addEventListener('click', function(){ clearTimeout(t);
+    t=setTimeout(function(){ globalThis.TW_PORTRAIT&&TW_PORTRAIT.apply(); }, 260); }, true);
+  document.addEventListener('tw:gearchar', function(){ globalThis.TW_PORTRAIT&&TW_PORTRAIT.apply(); });
+})();
 document.getElementById('doll').style.transition = 'opacity .18s';
 /* 출격 캐릭터를 기본 선택 */
 (function(){ var c=(window.TW_SAVE&&TW_SAVE.char)?TW_SAVE.char():'ain'; var chip=document.querySelector('.chip-char[data-char="'+c+'"]'); if(chip&&!chip.classList.contains('is-on')){ document.querySelectorAll('.chip-char').forEach(function(x){ x.classList.remove('is-on'); }); chip.classList.add('is-on'); document.getElementById('doll').src='art/full-'+c+'.webp'; } })();
