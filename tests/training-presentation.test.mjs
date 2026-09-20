@@ -23,6 +23,7 @@ test('same stage parts in solo and online, hidden until enabled and absent after
 test('new phase restores a detached part to its original bone and transform',()=>{
  const model=rig(),view=createTrainingParts(model),piece=view.parts.shl,parent=piece.parent;
  const scene=new T.Scene();scene.add(model);scene.attach(piece);
+ piece.visible=true;view.sync([{id:'shl',broken:true}]);assert.equal(piece.visible,true,'detached fragment must finish its fall');
  piece.position.set(8,9,10);piece.rotation.y=2;piece.scale.setScalar(.3);
  view.sync([{id:'shl'}],{restore:true});
  assert.equal(piece.parent,parent);assert.deepEqual(piece.position.toArray(),[0,0,0]);

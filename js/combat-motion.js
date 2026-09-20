@@ -1,10 +1,13 @@
 /* Presentation adapter. Model/clip swaps do not own combat time or damage. */
 import * as THREE from '../vendor/three/three.module.js';
+import './boss-contact-volumes.js';
+import './combat-quality.js';
 
 export function sampleAction(a, duration) {
   const t=Math.max(0,Math.min(a.duration,a.elapsed));
   const contact=duration*a.clipHit;
-  return t<=a.hitAt ? contact*t/a.hitAt : contact+(duration-contact)*(t-a.hitAt)/(a.duration-a.hitAt);
+  const phase=globalThis.TW_COMBAT_QUALITY.phase({...a,elapsed:t});
+  return phase<=.42?contact*phase/.42:contact+(duration-contact)*(phase-.42)/.58;
 }
 
 function rotateToward(bone, end, target, amount) {

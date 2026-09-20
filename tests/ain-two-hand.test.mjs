@@ -27,7 +27,7 @@ test('repaired Ain: two palm contacts, bounded wrists, fixed limb lengths and co
  let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});const rig=makeAinTwoHand(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene);
  let grip=0,step=0,peak='',wrist=0;
  const positions=new Map(Object.entries(rig.bones).filter(([n])=>/Arm$|Hand$/.test(n)).map(([n,b])=>[n,b.position.clone()]));
- for(const variant of ['idle','run','guard','attack1','attack2','attack3','smash','ult','skill1','skill2','skill3','skill4','counter','counterPerfect','exec','skill1Target','skill3Target','ultTarget','skill1High']){
+ for(const variant of ['idle','run','guard','attack1','attack2','attack3','smash','ult','skill1','skill2','skill3','skill4','counter','counterPerfect','exec','skill1Target','skill3Target','ultTarget','skill1High','attack1Target','attack2Target','attack3Target','smashTarget','counterTarget','execTarget']){
   const name=variant==='counterPerfect'?'counter':variant.replace('Target','').replace('High','');
   rig.restore();mixer.stopAllAction();const c=g.animations.find(x=>x.name===name),act=mixer.clipAction(c);act.setLoop(T.LoopOnce,1).play();act.paused=true;const previous={};
   for(let i=0;i<=240;i++){

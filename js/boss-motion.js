@@ -1,5 +1,24 @@
 // Visual sampling only: simulation remains the owner of damage and movement.
 const prepared=new WeakMap();
+// Additive, bounded silhouette cues. Always restore BEFORE mixer evaluation:
+// paused clips and hitstop must never accumulate rotations frame over frame.
+export function createBossReadability(model){
+ const bones={},saved=new Map();model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});
+ function restore(){for(const [b,q]of saved)b.quaternion.copy(q);saved.clear();}
+ function rotate(name,axis,value){const b=bones[name];if(!b||!value)return;if(!saved.has(b))saved.set(b,b.quaternion.clone());b[axis](value);}
+ function apply(state){
+  const windup=Math.max(0,Math.min(1,state.windup||0)),cue=state.state==='telegraph'?Math.sin(Math.PI*Math.min(1,windup/.85)):0;
+  const icon=state.patIcon||state.pattern?.icon;
+  if(icon==='hammer'){rotate('Spine','rotateX',-.10*cue);rotate('LeftArm','rotateZ',.22*cue);rotate('RightArm','rotateZ',-.22*cue);}
+  else if(icon==='bolt'){rotate('Spine1','rotateY',-.16*cue);rotate('RightArm','rotateX',-.20*cue);}
+  else if(icon==='scythe'){rotate('Spine','rotateY',.22*cue);rotate('LeftArm','rotateZ',.14*cue);}
+  // Broken shoulder droops at rest, then blends out before committed contact.
+  const rest=['idle','stagger','recover'].includes(state.state)?1:state.state==='telegraph'?1-Math.min(1,windup*3):0;
+  for(const p of state.parts||[])if(p.broken){if(p.id==='shl')rotate('LeftArm','rotateZ',-.28*rest);if(p.id==='shr')rotate('RightArm','rotateZ',.28*rest);}
+  model.updateWorldMatrix(true,true);
+ }
+ return {restore,apply};
+}
 export function prepareTrainingMotion(asset) {
  if(prepared.has(asset))return prepared.get(asset);
  const animations=asset.animations.map(source=>{

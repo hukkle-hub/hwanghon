@@ -4,6 +4,26 @@ import{repairAinBind,repairAinClips}from'../js/ain-bind-repair.js';import{ainGri
 import{measureAinScythe,mountAinScythe}from'../js/ain-scythe-mount.js';import{makeAinRigAdapter}from'../js/ain-two-hand.js';
 import{Animated}from'../js/party-avatar.js';
 async function load(name){const b=await readFile('art/3d/'+name+'.glb'),loader=new GLTFLoader();loader.register(()=>({name:'no-raster',loadTexture:()=>Promise.resolve(new T.Texture())}));return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
+test('online repairs materials and pose before mixer without mutating cached assets',async()=>{
+ const asset=await load('ain_anim'),weapon=await load('ain_scythe_tex'),scene=new T.Scene();
+ const original=asset.animations.map(c=>c.toJSON());let source;asset.scene.traverse(o=>{if(o.isSkinnedMesh)source=o;});
+ const normals=source.geometry.attributes.normal.array.slice();
+ assert.equal(source.material.metalness,1,'negative control: source still has the bad material');
+ const first=new Animated(asset,scene,true,false,weapon,'ain'),second=new Animated(asset,scene,true,false,weapon,'ain');
+ try{
+  let a,b;first.model.traverse(o=>{if(o.isSkinnedMesh)a=o;});second.model.traverse(o=>{if(o.isSkinnedMesh)b=o;});
+  assert.equal(a.material.metalness,0);assert.equal(b.material.metalness,0);
+  assert.notEqual(a.material,b.material);assert.notEqual(a.geometry,b.geometry);
+  assert.equal(source.material.metalness,1);assert.deepEqual(source.geometry.attributes.normal.array,normals);
+  assert.deepEqual(asset.animations.map(c=>c.toJSON()),original);
+  for(const name of ['idle','run']){
+   first.mixer.stopAllAction();first.mixer.clipAction(first.clips[name]).reset().play();first.mixer.setTime(0);first.model.updateMatrixWorld(true);
+   assert.ok(first.rig.bones.RightHand.getWorldPosition(new T.Vector3()).x<0,name+' repaired before mixer');
+  }
+  let disposed=false;b.material.addEventListener('dispose',()=>{disposed=true;});first.dispose(scene);
+  assert.equal(disposed,false,'disposing one player must not dispose another player material');
+ }finally{if(first.root.parent)first.dispose(scene);second.dispose(scene);}
+});
 test('online Ain clones retain calibrated grip without altering the shared source',async()=>{
  const asset=await load('ain_anim'),weapon=await load('ain_scythe_tex'),scene=new T.Scene(),sourcePosition=weapon.scene.position.clone();
  const avatars=[new Animated(asset,scene,true,false,weapon,'ain'),new Animated(asset,scene,true,false,weapon,'ain')];

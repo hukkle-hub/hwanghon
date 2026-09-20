@@ -5,6 +5,8 @@ import {WeaponTrail,trailStyle} from './weapon-trail.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {mountAinScythe} from './ain-scythe-mount.js';
+import './pose-fix.js';
+import './mat-fix.js';
 /* 접지 그림자 — game3d.js 와 같은 규약. 그림자맵과 별개라 저사양에서도 발이 바닥에 붙는다. */
 /* 캔버스를 쓰므로 모듈을 읽는 순간이 아니라 «처음 쓸 때» 만든다 — 이 파일은 node 테스트에서도 import 된다. */
 let _blobTex;
@@ -19,6 +21,16 @@ function blobTex(){
 const pos=(x,y,h=0)=>new T.Vector3(x/50,h,y/(.55*50));
 export class Animated{
  constructor(asset,scene,isPlayer=false,ownsResources=false,weaponAsset=null,character=null){this.owned=new Set();if(ownsResources)asset.scene.traverse(o=>{if(o.geometry)this.owned.add(o.geometry);for(const m of (Array.isArray(o.material)?o.material:[o.material]))if(m)this.owned.add(m);});this.model=clone(asset.scene);this.model.scale.setScalar(isPlayer?1.14:1);   /* 캐릭터 크기 — js/game3d.js CHAR_SCALE 과 같게 */
+  if(isPlayer){
+   // SkeletonUtils shares geometry/materials; isolate mutable repairs so one
+   // player's correction/disposal cannot corrupt another player or asset cache.
+   const geometries=new Map(),materials=new Map();
+   const copy=(cache,resource)=>{if(!resource)return resource;if(!cache.has(resource)){const c=resource.clone();cache.set(resource,c);this.owned.add(c);}return cache.get(resource);};
+   this.model.traverse(o=>{if(!o.isMesh)return;o.geometry=copy(geometries,o.geometry);o.material=Array.isArray(o.material)?o.material.map(m=>copy(materials,m)):copy(materials,o.material);});
+   asset={...asset,scene:this.model,animations:asset.animations.map(c=>c.clone())};
+   globalThis.TW_POSE.repair(T,asset);
+   globalThis.TW_MATFIX.repair(T,this.model);
+  }
   if(isPlayer&&character==='ain'){const repair=repairAinBind(this.model);repair.geometries.forEach(g=>this.owned.add(g));asset={...asset,animations:repairAinClips(asset.animations,repair)};}
   this.root=new T.Group();this.root.add(this.model);scene.add(this.root);this.mixer=new T.AnimationMixer(this.model);this.clips=Object.fromEntries(asset.animations.map(c=>[c.name,c]));this.actions={};this.current=null;this.key=null;this.model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}});if(isPlayer){let slot;this.model.traverse(o=>{if(o.isBone&&/RightHandSlot/.test(o.name))slot=o;});if(slot){this.model.updateMatrixWorld(true);const w=clone(weaponAsset.scene),group=new T.Group();if(character==='ain')group.add(mountAinScythe(w));else{w.position.y=-.75;group.add(w);}const k=slot.getWorldScale(new T.Vector3()).x;group.scale.setScalar(1/k);slot.add(group);this.weapon=group;this.trail=new WeaponTrail(scene);}this.rig=(character==='ain'?makeAinRigAdapter:makeRigAdapter)(this.model,this.root,slot);}
   this.blob=new T.Mesh(new T.PlaneGeometry(1.04,1.04),new T.MeshBasicMaterial({map:blobTex(),transparent:true,depthWrite:false,opacity:.9}));
@@ -34,7 +46,7 @@ export class Animated{
   else {this.play(data.guard?'guard':data.moving?'run':'idle');this.current.paused=false;}
   this.mixer.update(dt);this.rig?.apply(data.action?{...data.action,elapsed:Math.min(data.action.duration,data.action.elapsed+age)}:gesture,data.moving,data.guard,dt,this.current?.getClip().name,this.aimTarget||null);
   if(this.trail){const a=data.action;
-   const sw=(!!a && a.elapsed+age>=a.hitAt*.3 && a.elapsed+age<=a.duration*.85)||data.rollT>0;
+   const sw=globalThis.TW_COMBAT_QUALITY.trailActive(a&&{...a,elapsed:a.elapsed+age});
    if(a&&this.trailKey!==a.id){this.trailKey=a.id;const st=trailStyle(a.opt&&a.opt.skill?'skill':a.kind);this.trail.set(st[0],st[1]);}
    this.trail.tick(dt,this.weapon,sw);}
  }

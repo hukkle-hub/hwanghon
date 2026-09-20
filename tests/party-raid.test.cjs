@@ -20,7 +20,7 @@ test('non-counterable zone attacks both players; outside player remains safe',()
  a.guard=true;b.x=r.boss.x-400;const ah=a.hp,bh=b.hp;r.tick(.01);assert.equal(a.hp,ah-1000);assert.equal(b.hp,bh);
 });
 test('shared part destruction disables corresponding boss pattern',()=>{
- const r=fight('d03'),p=r.players.get('a'),part=r.boss.parts.find(p=>p.id==='exhaust');part.hp=1;p.target='exhaust';r.input('a',{type:'attack'});tick(r,.3);assert.ok(part.broken);assert.equal(r.players.get('b').breaks,0);assert.equal(r.boss.zoneScale,.75);
+ const r=fight('d03'),p=r.players.get('a'),part=r.boss.parts.find(p=>p.id==='exhaust');part.hp=1;p.target='exhaust';const center=require('../js/combat-quality.js').partCenter({...r.boss,arena:r.A.id,scale:(r.A.bossScale||1.22)*(r.A.scale||1)},part,r.A.parts3d);p.x=center.x-60;p.y=center.y;r.input('a',{type:'attack'});tick(r,.3);assert.ok(part.broken);assert.equal(r.players.get('b').breaks,0);assert.equal(r.boss.zoneScale,.75);
  for(const p of r.players.values()){p.x=r.boss.x-300;p.hp=1e7;p.maxHp=1e7;}
  tick(r,18);const names=r.events.filter(e=>e.type==='telegraph').map(e=>e.pattern);assert.ok(names.length>1);assert.ok(!names.includes('고압 분사'));assert.ok(!names.includes('배출관 쓸기'));
 });
@@ -42,22 +42,39 @@ test('revive stops when helper leaves range or disconnects, and all-offline run 
    광란 체력을 260,000 → 220,000 으로 내려도 죽는 틱이 같다 — 병목은 보스 체력이 아니라
    받는 피해다. 간격·타격을 훑어봐도 1 HP 남기고 통과하는 «봇 맞춤» 수치만 나와서
    (docs/design/21-dungeon-05-06.md §6 의 표) 억지로 통과시키지 않는다.
-   이 봇은 가드·물약·스킬·궁극기를 안 쓰므로 사람이 못 깬다는 근거도 아니다. */
+   이 봇은 물약·소생을 안 쓰므로 사람이 못 깬다는 근거도 아니다.
+   부위별 판정 도입 후: 파괴 부위까지 접근하고, 회피 쿨다운 동안 방어하며
+   바닥 위험을 피하고 긴 빈틈에만 스킬/궁극기를 쓴다. 전투 수치는 봇에 맞추지 않는다. */
 test('two intent-driven fighters clear every phase of every dungeon without injected damage',()=>{
  for(const level of ['d01','d02','d03','d05','d06','d07']){
   let awards=0;const r=new Raid(level,members,()=>awards++);r.startFight();
   for(let i=0;i<60000&&r.state!=='clear'&&r.state!=='wiped';i++){
    for(const p of r.players.values()){
     if(!r.alive(p)||r.state!=='fight')continue;
-    const dx=r.boss.x-p.x,dy=(r.boss.y-p.y)/.55,far=Math.hypot(dx,dy)>115;
+    // Choose a reachable part. The old bot damaged the far tail from the front.
+    const Q=require('../js/combat-quality.js'),shape={...r.boss,arena:r.A.id,scale:(r.A.bossScale||1.22)*(r.A.scale||1)};
+    const reachable=q=>{const c=Q.partCenter(shape,q,r.A.parts3d);return r.world.dist(p.x,p.y,c.x,c.y)-c.radius<65;};
+    const target=r.boss.parts.find(q=>q.breakable&&!q.broken)||r.boss.parts.find(q=>q.weak&&reachable(q))||r.boss.parts.find(q=>q.id==='body')||r.boss.parts[0];
+    const hazard=(r.arenaHz||[]).find(h=>r.arenaPhase(h)!=='off'&&r.world.dist(p.x,p.y,h.x,h.y)<h.r+35);
+    if(hazard){r.input(p.id,{type:'guard',on:false});r.input(p.id,{type:'move',x:p.x-hazard.x||1,y:(p.y-hazard.y)/.55||1});if(r.arenaPhase(hazard)==='active')r.input(p.id,{type:'dodge'});continue;}
+    const center=Q.partCenter(shape,target,r.A.parts3d);
+    const dx=center.x-p.x,dy=(center.y-p.y)/.55,far=Math.hypot(dx,dy)>65;
     r.input(p.id,{type:'move',x:far?dx:0,y:far?dy:0});
-    r.input(p.id,{type:'target',part:r.boss.parts.find(q=>q.breakable&&!q.broken)?.id||r.boss.parts[0].id});
-    if(r.canCounter(p))r.input(p.id,{type:'attack'});
-    else if(r.inZone(p)&&r.boss.state==='telegraph'&&r.boss.tele<.15)r.input(p.id,{type:'dodge'});
-    else if(['idle','downed','stagger','recover'].includes(r.boss.state))r.input(p.id,{type:'attack'});
+    r.input(p.id,{type:'target',part:target.id});
+    if(r.canCounter(p)){r.input(p.id,{type:'guard',on:false});r.input(p.id,{type:'attack'});}
+    else if(r.inZone(p)&&r.boss.state==='telegraph'&&r.boss.tele<.15){
+      if(p.dodgeCd<=0&&p.st>=25)r.input(p.id,{type:'dodge'});
+      else if(!r.boss.pattern.unblockable)r.input(p.id,{type:'guard',on:true});
+    }
+    else if(['idle','downed','stagger','recover'].includes(r.boss.state)){
+      r.input(p.id,{type:'guard',on:false});const actor={...p,aim:r.targetAim(p)},opening=r.boss.state==='downed'?r.boss.timer:r.boss.state==='recover'?r.boss.recovery:r.boss.state==='stagger'?r.boss.timer:0;
+      if(!p.action&&opening>1&&p.ult>=100&&r.contact(actor,target,{clip:'ult'}))r.input(p.id,{type:'ult'});
+      else if(!p.action&&opening>.8&&p.cds[0]<=0&&p.st>=40&&r.contact(actor,target,{clip:'skill1'}))r.input(p.id,{type:'skill',index:0});
+      else if(r.contact(actor,target,{clip:'attack1'}))r.input(p.id,{type:'attack'});
+    }
    }r.tick(.01);
   }
-  assert.equal(r.state,'clear',level);assert.equal(r.phase,r.A.stages.length-1);assert.ok([...r.players.values()].every(p=>p.damage>0));assert.equal(awards,1);tick(r,10);assert.equal(awards,1);
+  assert.equal(r.state,'clear',JSON.stringify({level,phase:r.phase,time:r.time,hp:r.boss.hp,players:[...r.players.values()].map(p=>({whiffs:p.whiffs,damage:p.damage,counters:p.counters,breaks:p.breaks,reason:p.lastFailure}))}));assert.equal(r.phase,r.A.stages.length-1);assert.ok([...r.players.values()].every(p=>p.damage>0));assert.equal(awards,1);tick(r,10);assert.equal(awards,1);
  }
 });
 test('shared optional cache is included once in each clear reward, even after a wipe',()=>{

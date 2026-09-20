@@ -6,9 +6,9 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
-import {mountAinScythe,measureAinBladeContact} from './ain-scythe-mount.js';
+import {mountAinScythe,measureAinBladeContact,nearestAinBladePoint} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
-import { prepareTrainingMotion, sampleBossAttack } from './boss-motion.js';
+import { prepareTrainingMotion, sampleBossAttack, createBossReadability } from './boss-motion.js';
 import { createTrainingParts } from './training-presentation.js';
 import { createFrameMetrics } from './frame-metrics.js';
 import { graphicsProfile } from './graphics-profile.js';
@@ -275,7 +275,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function bossCollectPieces(){ boss.pieces={}; boss.model.traverse(function(o){ if(/^piece_/.test(o.name)){ boss.pieces[o.name.slice(6)]=o; } }); }
   function bossLoad(done){ function receive(g){ if(A.id==='marsh')g=prepareMarshMotion(g); if(A.id==='tutorial')g=prepareTrainingMotion(g); boss.model=g.scene; boss.model.scale.setScalar(BOSS_SCALE); capTextures(boss.model); boss.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; o.material=o.material.clone(); o.material.userData.base=o.material.color.clone(); if(o.material.emissive) o.material.userData.emis=o.material.emissive.clone(); boss.mats.push(o.material); boss.raycastable.push(o); } if(o.isBone||A.rigidRig){ var n=o.name.replace(/^mixamorig:?/,''); if(n)boss.bones[n]=o; } });
       boss.blob=makeBlob(Math.max(0.9, 0.55*BOSS_SCALE*(A.id==='marsh'?2.6:1.7)));
-      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;}if(A.procedural==='root'){receive(createRootBoss());return;}if(A.procedural==='hauler'){receive(createHaulerBoss());return;}if(A.procedural==='ward'){receive(createWardBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
+      boss.body.add(boss.model); boss.mixer=new THREE.AnimationMixer(boss.model); if(A.id==='tutorial')boss.readability=createBossReadability(boss.model); g.animations.forEach(function(c){ boss.clips[c.name]=c; }); if(A.pieces==='nodes') bossCollectPieces(); else bossAttachParts(); bossBase('idle'); done(); } if(A.procedural==='pump'){receive(createPumpBoss());return;}if(A.procedural==='relay'){receive(createRelayBoss());return;}if(A.procedural==='root'){receive(createRootBoss());return;}if(A.procedural==='hauler'){receive(createHaulerBoss());return;}if(A.procedural==='ward'){receive(createWardBoss());return;} loader.load(A.model||'art/3d/boss_anim.glb',receive,undefined,function(e){ldErr('보스 모델 로드 실패');}); }
   function bossAction(n){ var c=boss.clips[n]; if(!c||!boss.mixer) return null; return boss.mixer.clipAction(c); }
   function bossBase(n){ var a=bossAction(n); if(!a) return; if(boss.base===n && boss.act===a) return; var prev=boss.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='walk'?1.1:0.8; if(prev&&prev!==a) a.crossFadeFrom(prev, 0.25, true); a.play(); boss.act=a; boss.base=n; }
   function bossOnce(n, o){ o=o||{}; var a=bossAction(n); if(!a) return; if(boss.oneshot){ boss.oneshot.fadeOut(0.08); } a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.08); a.play(); if(boss.act) boss.act.fadeOut(0.08); boss.oneshot=a; boss.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.1); boss.oneshotT=0; boss.hold=!!o.hold; boss.oneshotName=n; }
@@ -354,7 +354,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
          hold 비트에서는 여기서 «들어올린 채 멈추는» 구간이 그대로 보인다. */
       if(boss.oneshot.getClip().name===spec.clip){var sampled=sampleBossAttack(spec,dur,bs.enemy);boss.oneshot.paused=sampled!==null;if(sampled!==null)boss.oneshot.time=sampled;}
     }
-    boss.mixer.update(dt);
+    boss.readability?.restore();boss.mixer.update(dt);if(bs)boss.readability?.apply(bs.enemy);if(bs)boss.training?.sync(bs.enemy.parts);
     var sh=a.shake>0 ? Math.sin(t*72)*0.085*a.shake : 0; boss.body.position.x=sh;   /* 피격 흔들림 폭 확대 */
     var g=a.glow*(0.8+Math.sin(t*3)*0.2)+(a.flash>0?1.5:0); boss.mats.forEach(function(m){ if(m.emissive){ var be=m.userData.emis; if(be) m.emissive.copy(be); else m.emissive.setHex(0); if(a.flash>0) m.emissive.add(FLASHC); } });
     coreLight.intensity=SET.lights?(1.5+g*2.5):0;
@@ -477,7 +477,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
-    if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||battle.snapshot().target||'core'):null);
+    if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
@@ -549,14 +549,14 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     if(!ain.weapon) return;
     if(!trail) trail=new WeaponTrail(scene);
     var sn=battle?battle.snapshot():(skirm?skirm.snapshot():null), act=sn&&sn.player.action;
-    var swinging=(!!act && act.elapsed>=act.hitAt*0.30 && act.elapsed<=act.duration*0.85) || P.rollT>0;
+    var swinging=globalThis.TW_COMBAT_QUALITY.trailActive(act);
     trail.tick(dt, ain.weapon, swinging);
   }
   function tickFX(dt){ for(var i=FX.length-1;i>=0;i--){ var f=FX[i]; f.t+=dt; var k=Math.min(1,f.t/f.d); f.fn(f.o,k,dt); if(k>=1){ fxKill(f); FX.splice(i,1); } } }
   function brColor(k){ return k&&k.br==='A'?0xE8B860:k&&k.br==='B'?0xE04A3A:0xC89A4A; }
   function fxArc(color, big){ var g=new THREE.Group(); g.position.copy(ain.root.position); g.rotation.y=ain.root.rotation.y; var t=new THREE.Mesh(new THREE.TorusGeometry(big?1.5:1.15, big?0.09:0.06, 6, 28, Math.PI*(big?1.6:1.1)), fxMat(color,0.9)); t.rotation.x=Math.PI/2; t.rotation.z=Math.PI*0.2; t.position.y=1.05; g.add(t);
     return fxPush(g, big?0.4:0.28, function(o,k,dt){ o.scale.setScalar(0.6+k*0.9); o.children[0].material.opacity=0.9*(1-k); o.children[0].rotation.z-=dt*(big?5:7); }); }
-  function fxRing(pos, color, r, dur){ var m=new THREE.Mesh(new THREE.RingGeometry(0.55,0.85,40), fxMat(color,0.8)); m.rotation.x=-Math.PI/2; m.position.set(pos.x,0.06,pos.z); return fxPush(m, dur||0.5, function(o,k){ var s=0.3+k*r; o.scale.set(s,s,1); o.material.opacity=0.8*(1-k*k); }); }
+  function fxRing(pos, color, r, dur){ var m=new THREE.Mesh(new THREE.RingGeometry(0.76,0.82,32), fxMat(color,0.42)); m.rotation.x=-Math.PI/2; m.position.set(pos.x,0.06,pos.z); return fxPush(m, dur||0.5, function(o,k){ var s=0.3+k*r; o.scale.set(s,s,1); o.material.opacity=0.42*(1-k*k); }); }
   function fxAura(color, dur){ var g=new THREE.Group(); var c=new THREE.Mesh(new THREE.CylinderGeometry(0.62,0.72,1.9,24,1,true), fxMat(color,0.22)); c.position.y=0.95; g.add(c); var r=new THREE.Mesh(new THREE.RingGeometry(0.62,0.8,40), fxMat(color,0.7)); r.rotation.x=-Math.PI/2; r.position.y=0.06; g.add(r);
     return fxPush(g, dur||2, function(o,k,dt){ o.position.copy(ain.root.position); o.rotation.y+=dt*1.5; var pulse=0.6+0.4*Math.sin(k*Math.PI*6); o.children[0].material.opacity=0.22*pulse*(1-k*0.7); o.children[1].material.opacity=0.7*pulse*(1-k); }); }
   function fxAfter(color){ var back=new THREE.Vector3(Math.sin(ain.root.rotation.y), 0, Math.cos(ain.root.rotation.y)).multiplyScalar(-1); for(var i=0;i<4;i++){ (function(i){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:color, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5 })); sp.scale.set(1.2,2.0,1); sp.position.copy(ain.root.position).addScaledVector(back, 0.35*i); sp.position.y+=0.95; fxPush(sp, 0.35+i*0.08, function(o,k){ o.material.opacity=0.5*(1-k); o.scale.set(1.2+k*0.6, 2.0+k*0.4, 1); }); })(i); } }
@@ -568,14 +568,14 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var a=ain.root.position, b=boss.root.position;
     var p=new THREE.Vector3((a.x*0.62+b.x*0.38), 1.25, (a.z*0.62+b.z*0.38));
     var ax=[b.x-a.x, b.z-a.z], m=Math.hypot(ax[0],ax[1])||1, sx=-ax[1]/m, sz=ax[0]/m;   /* 접촉면과 수직인 옆 방향 */
-    burst(p, perfect?44:30, perfect?0xFFF1C8:0xF0E4E4, [sx,sz]);
-    burst(p, perfect?30:20, 0xFFC864, [-sx,-sz]);
+    burst(p, perfect?22:14, perfect?0xFFF1C8:0xF0E4E4, [sx,sz]);
+    burst(p, perfect?14:8, 0xFFC864, [-sx,-sz]);
     var ring=new THREE.Mesh(new THREE.RingGeometry(0.18,0.34,28), fxMat(perfect?0xFFF1C8:0xE8DCC0, 0.95));
     ring.position.copy(p); ring.lookAt(cam.position);
-    fxPush(ring, perfect?0.42:0.32, function(o,k){ var sc=0.6+k*(perfect?5.2:3.6); o.scale.set(sc,sc,1); o.material.opacity=0.95*(1-k); });
+    fxPush(ring, perfect?0.22:0.16, function(o,k){ var sc=0.6+k*(perfect?2.2:1.5); o.scale.set(sc,sc,1); o.material.opacity=0.95*(1-k); });
     var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:perfect?0xFFF6E0:0xFFE6B8, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 }));
-    fl.position.copy(p); fl.scale.set(2.2,2.2,1);
-    fxPush(fl, perfect?0.34:0.24, function(o,k){ o.material.opacity=0.95*(1-k); o.scale.setScalar(2.2+k*2.4); });
+    fl.position.copy(p); fl.scale.set(1.0,1.0,1);
+    fxPush(fl, perfect?0.16:0.12, function(o,k){ o.material.opacity=0.65*(1-k); o.scale.setScalar(1+k*.5); });
     return p;
   }
   /* 몬스터헌터식: 맞는 순간 화면이 멈추고, 그 «멈춘 프레임» 에 충격 표식이 남았다가 궤도가 이어진다.
@@ -590,10 +590,10 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function fxSkill(k){ var kind=window.TW_SKILLS?TW_SKILLS.kindOf(k):(k.dodge?'dodge':k.buff?'buff':k.aoe?'aoe':'dmg'); var c=brColor(k);
     var lv=Math.max(1,Math.min(5,k.lv||1)), g=1+(lv-1)*0.22, br=k.br?1.15:1;   /* 단계가 올라가면 연출도 커진다 */
     num(above(P.x,P.y,2.35), k.name+' Lv'+lv+(k.br?' · '+k.br:''), 'skill');
-    if(kind==='dmg'){ fxArc(c, lv>=4); fxRing(ain.root.position, c, 1.6*g, 0.4); shake(0.004*g,160);
-      if(k.bleed) setTimeout(function(){ burst(bossHitPos('body'), Math.round(24*g), 0xB01818); }, 120); }
-    else if(kind==='aoe'){ fxArc(c, true); fxRing(ain.root.position, c, 3.2*g, 0.5); shake(0.006*g,200);
-      if(lv>=3) fxRing(ain.root.position, c, 4.6*g, 0.7); if(k.posture) burst(bossHitPos('body'), Math.round(20*g), 0x9AB0E0); }
+    if(kind==='dmg'){ if(CID!=='ain')fxArc(c, lv>=4); fxRing(ain.root.position, c, 1.0, 0.25);
+      /* Target feedback comes only from confirmed hit events. */ }
+    else if(kind==='aoe'){ if(CID!=='ain')fxArc(c, true); fxRing(ain.root.position, c, 1.6, 0.3);
+      /* No fake impact on the boss during windup or on a whiff. */ }
     else if(kind==='buff'){ fxAura(c, k.buff?k.buff.dur:2); fxRing(ain.root.position, c, 2.2*g*br, 0.6); SFX.play('guard'); }
     else if(kind==='dodge'){ fxAfter(c); fxRing(ain.root.position, c, 1.8*g, 0.4); } }
   /* dir=[dx,dz] 를 주면 파티클이 타격 벡터 방향으로 쏠린다 */
@@ -614,8 +614,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var director=window.TW_BOSS_DIRECTOR.create(world,Bs,P,L);
   function withinReach(reach){return world.dist(P.x,P.y,Bs.x,Bs.y)<=reach && world.angDiff(P.aim||0,world.angle(P.x,P.y,Bs.x,Bs.y))<=L.player.cone && world.lineOfSight(P.x,P.y,Bs.x,Bs.y);}
   var hooks={
-    canHit:function(){return withinReach(L.player.reach);},
-    canCounter:function(){return withinReach(L.player.reachCounter)&&!!zone&&world.inZone(zone,P.x,P.y);},
+    canHit:function(id,a,player){return globalThis.TW_COMBAT_QUALITY.contact({player:player||P,boss:{x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},part:battle&&battle.part(id),parts3d:A.parts3d,action:a,reach:L.player.reach,cone:L.player.cone,character:CID,lineOfSight:world.lineOfSight});},
+    canCounter:function(){var id=battle.snapshot().target,c=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},battle.part(id),A.parts3d);return !!zone&&world.inZone(zone,P.x,P.y)&&!!hooks.canHit(id,{clip:'counter'},Object.assign({},P,{aim:world.angle(P.x,P.y,c.x,c.y)}));},
     canExecute:function(){return world.dist(P.x,P.y,Bs.x,Bs.y)<=L.player.reach*1.4;},
     canStart:function(){return world.dist(P.x,P.y,Bs.x,Bs.y)<=L.ai[phase].start&&world.lineOfSight(P.x,P.y,Bs.x,Bs.y);},
     pick:function(pats,i){return director.pick(pats,i);},
@@ -650,10 +650,12 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function axisFromBoss(){ return [X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)]; }
   function axisToBoss(){ return [X(Bs.x)-X(P.x), Z(Bs.y)-Z(P.y)]; }
   var zoomPulse=0; function zoomKick(){ zoomPulse=1; }
+  var pendingContacts=[];
   function handle(e){
+    if((e.t==='hit'||e.t==='impact')&&!e.poseReady){pendingContacts.push(e);return;}
     var s=battle?battle.snapshot():null;
     switch(e.t){
-      case 'actionstart': var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
+      case 'actionstart': if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
@@ -662,13 +664,14 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
         fxEvade(); slowmo(0.30, 240); camKick(0.018,-0.03,-0.026); vib(18); break;
       case 'recoverend': zone=null;hideZone(); if(boss.oneshot){boss.oneshot.stop();boss.oneshot=null;} if(boss.act)boss.act.reset().fadeIn(0.12).play(); break;
       /* 타격감: 소리·흔들림·파티클·정지를 같은 프레임에, 세기에 비례해서 (docs/design/18-boss-fight-design.md §1-2) */
-      case 'hit': SFX.play('hit', e.crit||e.counter); var hp=bossHitPos(HITMAP[e.part]||'body'); hp.x+=Math.random()*0.6-0.3;
+      case 'hit': var material=globalThis.TW_COMBAT_QUALITY.material(e.part,A.stages[phase].kind),feedback=globalThis.TW_COMBAT_QUALITY.feedback({kind:e.kind,perfect:e.perfect,crit:e.crit,material:material}); SFX.play('hit', {heavy:e.crit||e.counter||e.kind==='smash',material:material}); var hp=bossHitPos(HITMAP[e.part]||'body');
+        if(ain.weapon){var nearest=nearestAinBladePoint(ain.weapon,hp);if(nearest&&nearest.distance<=((boss.PART[HITMAP[e.part]]||{}).r||.5))hp.copy(nearest.point);}
         num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12;
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
-        if(e.counter){ burst(hp, e.perfect?40:30, 0xF0E4E4, axisFromBoss()); fxImpact(hp, e.perfect?3.4:2.6, 0xFFF1C8, e.perfect?0.26:0.2); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
+        if(e.counter){ burst(hp, feedback.particles, feedback.color, axisFromBoss()); fxImpact(hp, feedback.size, 0xFFF1C8, feedback.duration); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
-        else { burst(hp, e.crit?22:(cmbH>=3?14:8), null, axH);
-          fxImpact(hp, e.crit?2.0:(cmbH>=3?1.5:1.1), e.crit?0xFFD08A:0xFFE8C0, e.crit?0.18:0.13);
+        else { burst(hp, feedback.particles, feedback.color, axH);
+          fxImpact(hp, feedback.size, feedback.color, feedback.duration);
           if(e.crit||cmbH>=3){ shake(0.003,120,axH[0],axH[1]); vib(10); }
           if(!s || ['idle','stagger'].indexOf(s.enemy.state)>=0) bossPlay('flinch'); }
         break;
@@ -679,11 +682,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
         fxClash(e.perfect);                                              /* 동작 자체는 actionstart 가 'counter' 클립으로 재생한다 */
         var cax=[boss.root.position.x-ain.root.position.x, boss.root.position.z-ain.root.position.z];
         var kx=Bs.x-P.x, ky=Bs.y-P.y, km=Math.hypot(kx,ky)||1;
-        slowmo(e.perfect?0.04:0.10, e.perfect?300:220);                 /* 맞물린 순간의 «멈춤» */
-        schedule(function(){ slowmo(e.perfect?0.25:0.4, e.perfect?420:320); }, e.perfect?300:220);  /* 밀어내며 서서히 돌아온다 */
+        slowmo(e.perfect?0.25:0.4, e.perfect?120:80);                 /* 맞물린 순간의 «멈춤» */
+        /* No second slow-motion layer over the deferred counter hit. */  /* 밀어내며 서서히 돌아온다 */
         shake(e.perfect?0.014:0.011, e.perfect?360:300, cax[0], cax[1]); zoomKick(); flash();
         vib(e.perfect?[20,40,20]:[20,30]);
-        try{ var kp=e.perfect?34:24; world.moveEntity(Bs, kx/km*kp, ky/km*kp*0.55); }catch(x){}   /* 보스가 뒤로 밀린다 */
+        /* Do not push the target out of range before the counter lands. */   /* 보스가 뒤로 밀린다 */
         banner(e.perfect?'P E R F E C T':'C O U N T E R', lastHit, e.pattern+(e.perfect?' · 완벽한 타이밍':' · 카운터 성공'), e.perfect);
         el.cV.textContent='튕겨내기'; bossStop(); if(!s||s.enemy.state!=='downed')bossPlay('stagger'); zone=null; hideZone(); break;
       case 'break': zone=null; hideZone(); bossStop(); if(e.dmg) num(bossHitPos(HITMAP[e.part]), '파괴 +'+W.fmt(e.dmg), 'counter'); SFX.play('brk'); var bp=bossHitPos(HITMAP[e.part]); num(bp, '부위 파괴 — '+e.name, 'crit'); var axB=[bp.x-boss.root.position.x, bp.z-boss.root.position.z]; burst(bp, 48, 0x7B9BD6, axB); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); bossDetach(HITMAP[e.part]); dropPart(e.part); bossPlay('stagger'); shake(0.014,400,axB[0],axB[1]); var pdef=A.stages[phase].parts.filter(function(p){ return p.id===e.part; })[0]; var removed=A.stages[phase].patterns.filter(function(p){return (p.disabledBy||[]).indexOf(e.part)>=0;});if(removed.length)guide('<b>'+e.name+'</b> 파괴 — '+removed.map(function(p){return p.name;}).join(' · ')+' 봉쇄',3); if(pdef&&pdef.onBreak){ if(pdef.onBreak.slow) bossSlow=Math.min(bossSlow, pdef.onBreak.slow); if(pdef.onBreak.zoneScale) zoneScale=Math.min(zoneScale, pdef.onBreak.zoneScale); } break;
@@ -705,13 +708,13 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
         break;
       case 'early': guide('선공은 후딜을 남긴다. <b>타격 직전</b>에 튕겨라', 1.6); break;
       case 'ultready': if(e.first) guide('궁극기 준비 완료 — <b>R</b> 을 눌러라', 3.5); break;
-      case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1); try{ fxUlt(brColor(ULT)); }catch(x){ console.warn('fxUlt', x&&x.message); } break;
+      case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1); fxRing(ain.root.position,brColor(ULT),1.2,.3); break;
       case 'impact': var axI=axisToBoss();
         if(e.kind==='exec'){ SFX.play('brk'); flash(); slowmo(0.06,360); schedule(function(){ slowmo(0.35,420); },360);
           shake(0.022,600,axI[0],axI[1]); camKick(0.05,0.10,0.075); vib([40,60,40]); burst(bossHitPos('core'),70,0xD94A45,axI); fxRing(boss.root.position,0xD94A45,5.0,0.8);
           banner('E X E C U T E', e.dmg, (A.hudName||'보스')+' · 처형', true); break; }
-        if(e.kind==='ult'){SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
-        else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,2.8,0xFFD8A0,0.2);}
+        if(e.kind==='ult'){fxUlt(brColor(ULT));SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
+        else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,.65,0xFFD8A0,.12);}
         break;
       case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
         if(k.dodge) doRoll(e.clip||'skill2');                               /* 그림자 걸음: 구르기가 아니라 도약 */
@@ -722,7 +725,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       case 'dodge': doRoll(); break;
       case 'death': if(e.fatal) deathOverlay(e.reason); else guide('마태오 — “다시.”', 2); break;
       case 'smash': if(!e.timed) ainAttack('smash'); comboShow('SMASH', true); break;
-      case 'riposte': banner('R I P O S T E', e.dmg||lastHit, e.kind==='evade'?'회피 성공 후 반격':'방어 직후 반격', true); SFX.play('counter', true); break;
+      case 'counterfollowup': guide('<b>되베기 성공</b> — 공격으로 잇거나 회피로 이탈',e.window+.4); break;
+      case 'riposte': banner('R I P O S T E', e.dmg||lastHit, e.kind==='evade'?'회피 성공 후 반격':e.kind==='counter'?'카운터 연계':'방어 직후 반격', true); SFX.play('counter', true); break;
       case 'guardhit': SFX.play('guard'); playOnce('guardHit',{speed:1.6}); var axG=axisFromBoss(); shake(0.004,200,axG[0],axG[1]); break;
       case 'clear': phaseClear(); break;
     }
@@ -896,7 +900,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   el.canvas.addEventListener('pointermove', function(e){ if(!drag||drag.id!==e.pointerId) return; var dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY; drag.moved+=Math.abs(dx)+Math.abs(dy); dragT=3; camYaw-=dx*0.006; camPitch=Math.max(0.25, Math.min(1.1, camPitch+dy*0.004)); });
   el.canvas.addEventListener('pointerup', function(e){ if(drag && drag.moved<8) tapTarget(e); drag=null; }); el.canvas.addEventListener('pointercancel', function(){ drag=null; });
   el.canvas.addEventListener('wheel', function(e){ camDist=Math.max(4, Math.min(14, camDist+e.deltaY*0.01)); }, { passive:true });
-  var ray=new THREE.Raycaster(); function tapTarget(e){ if(!battle) return; var r=el.canvas.getBoundingClientRect(); var m=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(m, cam); var hits=ray.intersectObjects(boss.raycastable, true); if(!hits.length) return; var pt=hits[0].point; var best=null, bd=1e9; Object.keys(boss.PART).forEach(function(k){ var d=bossHitPos(k).distanceTo(pt)/boss.PART[k].r; if(d<bd){ bd=d; best=k; } }); var pid=best; if(!pid) return; var s=battle.snapshot(); if(!s.enemy.parts.some(function(p){ return p.id===pid; })) return; battle.input('target', pid); var pn=s.enemy.parts.filter(function(p){ return p.id===pid; })[0]; guide('조준: <b>'+pn.name+'</b>', 1.2); }
+  var ray=new THREE.Raycaster(); function tapTarget(e){ if(!battle) return; var r=el.canvas.getBoundingClientRect(); var m=new THREE.Vector2(((e.clientX-r.left)/r.width)*2-1, -((e.clientY-r.top)/r.height)*2+1); ray.setFromCamera(m, cam); var hits=ray.intersectObjects(boss.raycastable, true); if(!hits.length) return; var pt=hits[0].point; var best=null, bd=1e9; Object.keys(boss.PART).filter(function(k){return battle.snapshot().enemy.parts.some(function(p){return p.id===k;});}).forEach(function(k){ var d=bossHitPos(k).distanceTo(pt)/boss.PART[k].r; if(d<bd){ bd=d; best=k; } }); var pid=best; if(!pid) return; var s=battle.snapshot(); if(!s.enemy.parts.some(function(p){ return p.id===pid; })) return; battle.input('target', pid); var pn=s.enemy.parts.filter(function(p){ return p.id===pid; })[0]; guide('조준: <b>'+pn.name+'</b>', 1.2); }
   /* 스틱 → 카메라 기준 월드 방향 */
   function stickWorld(){ var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-stick.sy).add(r.clone().multiplyScalar(stick.sx)); return { sx:d.x, sy:d.z }; }
   function keyStick(){ var x=(kd.KeyD||kd.ArrowRight?1:0)-(kd.KeyA||kd.ArrowLeft?1:0), y=(kd.KeyS||kd.ArrowDown?1:0)-(kd.KeyW||kd.ArrowUp?1:0); if(x||y){ var m=Math.hypot(x,y); var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-y/m).add(r.clone().multiplyScalar(x/m)); return {sx:d.x, sy:d.z}; } return null; }
@@ -1152,7 +1156,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function tickScheduled(dt){var ready=[];scheduled=scheduled.filter(function(t){if(t.cancelled)return false;t.left-=dt;if(t.left<=0){ready.push(t.fn);return false;}return true;});ready.forEach(function(fn){fn();});}
   function frame(now){ requestAnimationFrame(frame); var elapsed=now-last; FRAME_METRICS.add(elapsed,!document.hidden&&!paused&&!cine&&!el.dlg.classList.contains('is-on')&&!el.ov.classList.contains('is-on')&&(state==='fight'||state==='explore')); var dt=Math.min(0.1,elapsed/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ renderer.render(scene, cam); return; }
     fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); fpsSamples.length=0; }
-    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); renderer.render(scene, cam); blackWatch(); }
+    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); var contacts=pendingContacts;pendingContacts=[];contacts.forEach(function(e){e.poseReady=true;handle(e);}); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); renderer.render(scene, cam); blackWatch(); }
   /* 검은 화면 감시: 시작 후 25초 동안 1초마다 화면 중앙을 읽어 완전히 검으면 3회 연속 시 저사양 모드로 재시작 */
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
   /* 검은 화면 감시 — «아무것도 안 그려진» 상태를 잡아 저사양 모드로 되살린다.
