@@ -23,6 +23,7 @@
 | 파티 모집 (2인) | `node tools/recruit-scenario.mjs` — 서버까지 한 프로세스에서 띄운다 |
 | 휴대폰 (Pixel 7) | 같은 명령에 `MOBILE=port` / `MOBILE=land` |
 | 운영 도구 (3인) | `node tools/admin-scenario.mjs` — 운영자·신고자·대상 |
+| 장비 외형 | `viewer.html?equip=1&fit=1&char=…` + `window.__TW_VIEW.look()` 으로 확대 |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.
@@ -59,6 +60,13 @@ node tools/screen-fit.mjs          # 20화면 전부 952px 인지 + 잘림 검�
 새 클래스 이름은 `css/ui.css` · `css/mobile.css` 에 **먼저 grep** 한다. `.mtabs`
 는 모바일 페인 탭 바가 이미 쓰고 있어서 (`display:none` 이 기본) 새로 만든 종류
 탭이 데스크톱에서 통째로 안 보였다 (docs/design/30 §7.1).
+
+**전체 샷만 보고 «모델은 좋다» 고 하지 마라.** 얼굴·손·팔은 **확대해서** 본다.
+전신 1140px 에서는 오른팔이 통째로 없는 것도, 피부가 쇳덩이로 그려지는 것도 안 보였다
+(docs/design/33 §4). 뼈의 월드 좌표를 찍어 좌우를 **재고**, 재질의 metalness 를 **읽어라**.
+
+구운 에셋을 런타임에서 고칠 때는 **`AnimationMixer` 보다 먼저** 돌린다 — 클립을 갈아
+끼워도 이미 만들어진 액션은 옛 트랙을 붙들고 있다.
 
 **짧은 클립은 반드시 `times=peak`** 로 찍는다. 0/0.5/1 은 하필 «되돌아오는 지점» 에
 걸려 멀쩡한 클립도 죽은 것처럼 보인다 (hit 이 정확히 그랬다 — docs/design/25 §3).

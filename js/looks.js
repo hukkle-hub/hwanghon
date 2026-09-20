@@ -35,7 +35,9 @@
     a_hood:[ ['Head','glb','art/3d/gear/a_hood.glb',[0,-0.02,0.0],[0,0,0],1] ],
     a_reed_cuirass:[ ['Spine1','glb','art/3d/gear/a_reed_cuirass.glb',[0,0.02,0.02],[0,0,0],1] ],
     a_black_greaves:[ ['LeftLeg','glb','art/3d/gear/a_black_greaves_L.glb',[0,0.17,0],[Math.PI,0,0],1.02], ['RightLeg','glb','art/3d/gear/a_black_greaves_R.glb',[0,0.17,0],[Math.PI,0,0],1.02] ],
-    a_steel_gauntlet:[ ['RightForeArm','glb','art/3d/gear/a_steel_gauntlet.glb',[0,0.2,0],[Math.PI,0,0],1] ],
+    /* «장갑» 슬롯인데 오른팔에만 붙어 한쪽만 맨팔이었다. 왼팔은 x 를 뒤집어 거울로 쓴다. */
+    a_steel_gauntlet:[ ['RightForeArm','glb','art/3d/gear/a_steel_gauntlet.glb',[0,0.2,0],[Math.PI,0,0],1],
+                       ['LeftForeArm','glb','art/3d/gear/a_steel_gauntlet.glb',[0,0.2,0],[Math.PI,0,0],[-1,1,1]] ],
     a_ranger_boots:[ ['LeftLeg','glb','art/3d/gear/a_ranger_boots_L.glb',[0,0.25,0],[Math.PI,0,0],0.97], ['RightLeg','glb','art/3d/gear/a_ranger_boots_R.glb',[0,0.25,0],[Math.PI,0,0],0.97] ],
     acc_charm:[ ['Neck','glb','art/3d/gear/acc_charm.glb',[0,-0.01,0.0],[0,0,0],1] ],
     acc_blood_ring:[ ['LeftHand','glb','art/3d/gear/acc_blood_ring.glb',[0.012,0.06,0],[0,0,0],1] ],
@@ -61,8 +63,13 @@
   function fitScale(bone){ var ws=new THREE.Vector3(); bone.getWorldScale(ws); return 1/(ws.x||1); }
   function buildArmor(THREE, id, bones, tint, charId){ var spec=ARMOR[id]; if(!spec) return []; var made=[]; var fit=CHARFIT[charId]||{}, f=fit[SLOT_OF[id]]||1;
     spec.forEach(function(p){ var bone=bones[p[0]]; if(!bone) return; var k=fitScale(bone)*f;
-      if(p[1]==='glb'){ var g=new THREE.Group(); g.userData.look=id; g.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); g.rotation.set(p[4][0],p[4][1],p[4][2]); g.scale.setScalar(k*(p[5]||1)); bone.add(g); made.push(g);
-        if(LOADER) LOADER.load(p[2], function(w){ w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),0.35); } } }); g.add(w.scene); }); return; }
+      if(p[1]==='glb'){ var g=new THREE.Group(); g.userData.look=id; g.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); g.rotation.set(p[4][0],p[4][1],p[4][2]);
+        /* p[5] 가 배열이면 축별 배율 — 거울(왼팔 건틀릿)에 쓴다 */
+        var sc=p[5]==null?1:p[5]; if(Array.isArray(sc)) g.scale.set(k*sc[0],k*sc[1],k*sc[2]); else g.scale.setScalar(k*sc);
+        bone.add(g); made.push(g);
+        var mirrored=Array.isArray(sc)&&(sc[0]*sc[1]*sc[2]<0);
+        if(LOADER) LOADER.load(p[2], function(w){ w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false;
+          if(mirrored){ o.material=o.material.clone(); o.material.side=THREE.DoubleSide; } if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),0.35); } } }); g.add(w.scene); }); return; }
       var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint)); mesh.castShadow=true; mesh.position.set(p[3][0]*k,p[3][1]*k,p[3][2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.setScalar(k); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
     return made; }
   var THREE=null, LOADER=null;

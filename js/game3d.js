@@ -137,6 +137,8 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var ringTex=canvasTex(function(g,s){ g.strokeStyle='#fff'; g.lineWidth=s*0.08; g.beginPath(); g.arc(s/2,s/2,s*0.42,0,Math.PI*2); g.stroke(); }, 128);
 
   /* 조명 */
+  /* 금속이 반사할 것을 준다. 1.0 으로 넣으면 «황혼» 의 어두운 분위기가 날아가므로 0.35. */
+  if(window.TW_ENV) TW_ENV.apply(THREE, renderer, scene, 'dungeon', 0.35);
   var hemi=new THREE.HemisphereLight(0x6a7080, 0x2a2622, 2.6); scene.add(hemi);
   var moon=new THREE.DirectionalLight(0xa8b4d0, 2.2); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
   var pLight=new THREE.PointLight(0xE0D0B8, 3.0, 10, 1.4); scene.add(pLight);
@@ -430,7 +432,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     }catch(e){ console.warn('weapon look', e); } }
   function loaded(){ loadN++; if(loadN>=4){ ldSet(1, '입장'); ldDone=true; placeProps(); begin(); } }
   loadProps(loaded); bossLoad(loaded);
-  loader.load('art/3d/'+CID+'_anim.glb', function(g){ ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
+  loader.load('art/3d/'+CID+'_anim.glb', function(g){
+    /* 굽는 쪽이 고쳐질 때까지의 보정막 — idle·run 의 오른팔이 몸을 가로지른다 (docs/design/33 §4) */
+    if(window.TW_POSE){ var rep=TW_POSE.repair(THREE, g); if(rep.fixed.length) console.info('[tw-pose] 교정', rep.fixed.join(',')); }
+    if(window.TW_MATFIX) TW_MATFIX.repair(THREE, g.scene);
+    ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
