@@ -12,6 +12,8 @@ const methods={
  CREATE TABLE IF NOT EXISTS relationships(owner TEXT NOT NULL REFERENCES profiles(id),target TEXT NOT NULL REFERENCES profiles(id),kind TEXT NOT NULL,PRIMARY KEY(owner,target,kind));
  CREATE TABLE IF NOT EXISTS guild_settings(guild TEXT PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE,notice TEXT NOT NULL DEFAULT '');
  CREATE TABLE IF NOT EXISTS guild_roles(player TEXT PRIMARY KEY REFERENCES profiles(id),guild TEXT NOT NULL,role TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS guild_open(guild TEXT PRIMARY KEY REFERENCES guilds(id) ON DELETE CASCADE);
+ CREATE TABLE IF NOT EXISTS guild_applications(guild TEXT NOT NULL REFERENCES guilds(id) ON DELETE CASCADE,player TEXT NOT NULL REFERENCES profiles(id),message TEXT NOT NULL DEFAULT '',created INTEGER NOT NULL,PRIMARY KEY(guild,player));
  CREATE TABLE IF NOT EXISTS reports(id INTEGER PRIMARY KEY,reporter TEXT NOT NULL,target TEXT NOT NULL,reason TEXT NOT NULL,evidence TEXT NOT NULL,created INTEGER NOT NULL,status TEXT NOT NULL DEFAULT 'open');
  CREATE TABLE IF NOT EXISTS sanctions(player TEXT PRIMARY KEY,ban_until INTEGER NOT NULL DEFAULT 0,mute_until INTEGER NOT NULL DEFAULT 0,reason TEXT NOT NULL DEFAULT '');
  CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY,actor TEXT NOT NULL,action TEXT NOT NULL,target TEXT NOT NULL,detail TEXT NOT NULL,created INTEGER NOT NULL);
@@ -75,7 +77,58 @@ const methods={
  relationship(id,target,action){if(id===target)throw Error('자신을 대상으로 할 수 없습니다.');this.row(target);return this.transaction(()=>{if(action==='block'){if(!this.blocked(id,target)&&this.statement("SELECT count(*) n FROM relationships WHERE owner=? AND kind='block'").get(id).n>=200)throw Error('차단 목록은 200명까지입니다.');this.statement("DELETE FROM relationships WHERE ((owner=? AND target=?) OR (owner=? AND target=?)) AND kind!='block'").run(id,target,target,id);this.statement("INSERT OR IGNORE INTO relationships VALUES(?,?,'block')").run(id,target);}else if(action==='unblock')this.statement("DELETE FROM relationships WHERE owner=? AND target=? AND kind='block'").run(id,target);else if(action==='remove'){this.statement("DELETE FROM relationships WHERE ((owner=? AND target=?) OR (owner=? AND target=?)) AND kind!='block'").run(id,target,target,id);}else {if(this.blocked(id,target)||this.blocked(target,id))throw Error('이 요청을 보낼 수 없습니다.');if(action==='request'){if(this.statement("SELECT count(*) n FROM relationships WHERE (owner=? OR target=?) AND kind!='block'").get(id,id).n>=100||this.statement("SELECT count(*) n FROM relationships WHERE (owner=? OR target=?) AND kind!='block'").get(target,target).n>=100)throw Error('친구 요청 한도입니다.');if(!this.statement("SELECT 1 FROM relationships WHERE owner=? AND target=? AND kind='friend'").get(id,target))this.statement("INSERT OR IGNORE INTO relationships VALUES(?,?,'request')").run(id,target);}else if(action==='accept'){if(!this.statement("SELECT 1 FROM relationships WHERE owner=? AND target=? AND kind='request'").get(target,id))throw Error('받은 요청이 없습니다.');this.statement("DELETE FROM relationships WHERE ((owner=? AND target=?) OR (owner=? AND target=?)) AND kind='request'").run(id,target,target,id);for(const [a,b]of [[id,target],[target,id]])this.statement("INSERT OR IGNORE INTO relationships VALUES(?,?,'friend')").run(a,b);}else throw Error('친구 요청을 확인하세요.');}this.audit(id,action,target);this.blockCache?.delete(id);this.blockCache?.delete(target);});},
  contacts(id){return this.statement('SELECT * FROM relationships WHERE owner=? OR target=?').all(id,id).filter(r=>r.owner===id||r.kind==='request').map(r=>({id:r.owner===id?r.target:r.owner,name:this.get(r.owner===id?r.target:r.owner).name,kind:r.kind,incoming:r.owner!==id}));},
  guildManage(id,action,target,value){return this.transaction(()=>{const g=this.guild(id);if(!g)throw Error('가입한 길드가 없습니다.');const officer=this.statement("SELECT 1 FROM guild_roles WHERE player=? AND guild=? AND role='officer'").get(id,g.id);if(g.owner!==id&&!officer)throw Error('길드 관리 권한이 없습니다.');if(action==='notice'){const notice=value===''?'':text(value,240);this.statement('INSERT INTO guild_settings VALUES(?,?) ON CONFLICT(guild) DO UPDATE SET notice=excluded.notice').run(g.id,notice);}else {if(target===id||!g.members.some(m=>m.id===target))throw Error('길드원을 선택하세요.');const targetOfficer=this.statement('SELECT 1 FROM guild_roles WHERE player=? AND guild=?').get(target,g.id);if(action==='kick'){if(target===g.owner||officer&&targetOfficer)throw Error('해당 길드원을 추방할 수 없습니다.');this.statement('DELETE FROM guild_members WHERE player=?').run(target);this.statement('DELETE FROM guild_roles WHERE player=?').run(target);}else {if(g.owner!==id)throw Error('길드장만 실행할 수 있습니다.');if(action==='transfer'){this.statement('UPDATE guilds SET owner=? WHERE id=?').run(target,g.id);this.statement('DELETE FROM guild_roles WHERE player IN (?,?)').run(id,target);}else if(action==='officer')this.statement("INSERT INTO guild_roles VALUES(?,?,'officer') ON CONFLICT(player) DO UPDATE SET guild=excluded.guild,role=excluded.role").run(target,g.id);else if(action==='member')this.statement('DELETE FROM guild_roles WHERE player=?').run(target);else throw Error('관리 요청을 확인하세요.');}}this.audit(id,'guild:'+action,target||g.id);});},
- guildDetails(id){const g=this.guild(id);if(!g)return null;const roles=this.statement('SELECT * FROM guild_roles WHERE guild=?').all(g.id);return {...g,notice:this.statement('SELECT notice FROM guild_settings WHERE guild=?').get(g.id)?.notice||'',members:g.members.map(m=>({...m,role:m.id===g.owner?'owner':roles.find(r=>r.player===m.id)?.role||'member'}))};},
+ /* ---------- 길드 가입 신청 ----------
+    초대 코드만으로는 «아는 사람» 끼리만 모인다. 공개 모집을 켠 길드에 신청하고
+    길드장·임원이 승인·거절한다. 모집 여부는 기본이 «닫힘» 이다 — 켜는 쪽이 선택. */
+ guildStaff(id){const g=this.guild(id);if(!g)throw Error('가입한 길드가 없습니다.');
+  const officer=this.statement("SELECT 1 FROM guild_roles WHERE player=? AND guild=? AND role='officer'").get(id,g.id);
+  if(g.owner!==id&&!officer)throw Error('길드 관리 권한이 없습니다.');return g;},
+ guildMemberIds(gid){return this.statement('SELECT player FROM guild_members WHERE guild=?').all(gid).map(r=>r.player);},
+ guildOpenState(gid){return !!this.statement('SELECT 1 FROM guild_open WHERE guild=?').get(gid);},
+ guildBoard(){return this.statement(`SELECT g.id,g.name,
+    (SELECT count(*) FROM guild_members m WHERE m.guild=g.id) AS members,
+    (SELECT notice FROM guild_settings s WHERE s.guild=g.id) AS notice
+    FROM guilds g JOIN guild_open o ON o.guild=g.id ORDER BY g.name LIMIT 50`).all()
+  .map(r=>({...r,notice:r.notice||''}));},
+ guildApplication(id){const r=this.statement('SELECT a.*,g.name FROM guild_applications a JOIN guilds g ON g.id=a.guild WHERE a.player=?').get(id);
+  return r?{guild:r.guild,name:r.name,message:r.message,created:r.created}:null;},
+ guildApplications(id){const g=this.guildStaff(id);
+  return this.statement('SELECT * FROM guild_applications WHERE guild=? ORDER BY created').all(g.id)
+    .map(r=>({id:r.player,name:this.get(r.player).name,message:r.message,created:r.created}));},
+ guildApply(id,gid,message){return this.transaction(()=>{
+  if(this.guild(id))throw Error('이미 길드에 가입되어 있습니다.');
+  if(!this.statement('SELECT 1 FROM guilds WHERE id=?').get(gid))throw Error('길드를 찾을 수 없습니다.');
+  if(!this.guildOpenState(gid))throw Error('모집 중인 길드가 아닙니다.');
+  if(this.statement('SELECT count(*) n FROM guild_members WHERE guild=?').get(gid).n>=100)throw Error('길드가 가득 찼습니다.');
+  if(this.statement('SELECT count(*) n FROM guild_applications WHERE guild=?').get(gid).n>=50)throw Error('신청이 많습니다. 잠시 후 다시 시도하세요.');
+  /* 한 번에 한 곳만 신청한다 — 여러 길드에 뿌려 두고 잊는 것을 막는다 */
+  this.statement('DELETE FROM guild_applications WHERE player=?').run(id);
+  this.statement('INSERT INTO guild_applications VALUES(?,?,?,?)').run(gid,id,message?text(message,120):'',Date.now());
+  this.audit(id,'guild:apply',gid);return this.guildApplication(id);});},
+ guildCancelApply(id){return this.transaction(()=>{
+  if(!this.statement('SELECT 1 FROM guild_applications WHERE player=?').get(id))throw Error('신청한 길드가 없습니다.');
+  this.statement('DELETE FROM guild_applications WHERE player=?').run(id);this.audit(id,'guild:cancelApply',id);});},
+ guildDecide(id,target,accept){return this.transaction(()=>{const g=this.guildStaff(id);
+  if(!this.statement('SELECT 1 FROM guild_applications WHERE guild=? AND player=?').get(g.id,target))throw Error('해당 신청이 없습니다.');
+  this.statement('DELETE FROM guild_applications WHERE guild=? AND player=?').run(g.id,target);
+  if(accept){if(this.guild(target))throw Error('이미 다른 길드에 가입했습니다.');
+   if(this.statement('SELECT count(*) n FROM guild_members WHERE guild=?').get(g.id).n>=100)throw Error('길드가 가득 찼습니다.');
+   this.statement('INSERT INTO guild_members VALUES(?,?,?)').run(target,g.id,Date.now());
+   this.statement('DELETE FROM guild_applications WHERE player=?').run(target);}   /* 다른 곳 신청도 정리 */
+  this.audit(id,'guild:'+(accept?'accept':'reject'),target);return g.id;});},
+ guildOpen(id,on){return this.transaction(()=>{const g=this.guildStaff(id);
+  if(on)this.statement('INSERT OR IGNORE INTO guild_open VALUES(?)').run(g.id);
+  else {this.statement('DELETE FROM guild_open WHERE guild=?').run(g.id);
+        this.statement('DELETE FROM guild_applications WHERE guild=?').run(g.id);}  /* 닫으면 대기 중인 신청도 정리 */
+  this.audit(id,'guild:open',String(!!on));return !!on;});},
+
+ guildDetails(id){const g=this.guild(id);if(!g)return null;const roles=this.statement('SELECT * FROM guild_roles WHERE guild=?').all(g.id);
+  const staff=g.owner===id||roles.some(r=>r.player===id&&r.role==='officer');
+  return {...g,notice:this.statement('SELECT notice FROM guild_settings WHERE guild=?').get(g.id)?.notice||'',
+   open:this.guildOpenState(g.id),
+   /* 신청자 이름은 관리자에게만 — 평 길드원에게 흘리지 않는다 */
+   applications:staff?this.guildApplications(id):[],
+   members:g.members.map(m=>({...m,role:m.id===g.owner?'owner':roles.find(r=>r.player===m.id)?.role||'member'}))};},
  sanction(id){return this.statement('SELECT * FROM sanctions WHERE player=?').get(id)||{ban_until:0,mute_until:0};},
  checkBan(id){if(this.sanction(id).ban_until>Date.now())throw Error('이용이 제한된 계정입니다.');},
  report(id,target,reason,evidence=''){this.row(target);reason=text(reason,240);return this.transaction(()=>{if(this.statement('SELECT count(*) n FROM reports WHERE reporter=? AND created>?').get(id,Date.now()-3600000).n>=5)throw Error('신고는 시간당 5건까지 가능합니다.');this.statement('INSERT INTO reports(reporter,target,reason,evidence,created) VALUES(?,?,?,?,?)').run(id,target,reason,evidence.slice(0,1500),Date.now());return {reported:true};});},
@@ -93,6 +146,9 @@ function install(Store){const normalize=Store.prototype.normalize,stats=Store.pr
  Store.prototype.equip=function(id,item){const d=R.byId[item],who=this.get(id).character;if(!d?.stats||!R.supported(d,who))throw Error((C.characters[who]?.nm||'이 캐릭터')+'가 착용할 수 없는 장비입니다.');if(this.public(id).level<R.requirement(d))throw Error('착용 요구 레벨이 부족합니다.');if(d.type==='weapon')return this.mutate(id,'equip',p=>{this.requireOwned(p,item);p.equipment.main=item;}).profile;return equip.call(this,id,item);};
  Store.prototype.shop=function(who){return [...C.shop.filter(i=>i.buy&&!['c_tool'].includes(i.id)).map(i=>({id:i.id,price:i.buy})),...C.equipment.filter(i=>R.supported(i,who)).map(i=>({id:i.id,price:i.price}))];};
  Store.prototype.purchase=function(id,item,n){if(R.byId[item]?.stats){const p=this.get(id);if(n!==1||(p.items[item]||0)+(p.vault[item]||0)>0)throw Error('장비는 종류별 하나만 보유합니다.');}return purchase.call(this,id,item,n);};
- Store.prototype.leaveGuild=function(id){const result=leaveGuild.call(this,id);this.statement('DELETE FROM guild_roles WHERE player=?').run(id);return result;};
+ Store.prototype.leaveGuild=function(id){const result=leaveGuild.call(this,id);this.statement('DELETE FROM guild_roles WHERE player=?').run(id);
+ /* 길드가 사라졌으면 그 길드의 모집·신청도 같이 사라져야 한다 (ON DELETE CASCADE 는 PRAGMA 가 꺼져 있을 수 있다) */
+ if(!this.statement('SELECT 1 FROM guilds WHERE id=?').get(result)){this.statement('DELETE FROM guild_open WHERE guild=?').run(result);this.statement('DELETE FROM guild_applications WHERE guild=?').run(result);}
+ return result;};
 }
 module.exports={install};

@@ -18,6 +18,8 @@
 | 보스 자세 (쓰러짐·사망·공격) | `tools/3d/pose-sheet.html` |
 | 실제 전투 화면 | `game3d.html?d=dNN` + Playwright |
 | 온라인 | `party.html` (2인 필요) + `window.TW_RAID` |
+| 쉘터 | `node server/index.cjs` + `shelter.html` + `window.TW_SHELTER` |
+| 설계 시트 ↔ 구현 | `compare.html` · `tools/screen-fit.mjs` |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.
@@ -25,6 +27,19 @@ tools/3d/pose-sheet.html?clip=down&times=0,0.5,1      # 전 보스 × 한 클립
 tools/3d/pose-sheet.html?rig=ward&clip=all            # 한 보스 × 전 클립
 tools/3d/pose-sheet.html?clip=hit,stagger&times=peak  # 클립마다 «가장 멀어지는 순간»
 ```
+
+### UI 화면은 1672x952 한 장이다
+
+설계 시트가 그 크기다. 스테이지가 그보다 길어지면 `fitStage` 가 **화면 전체를**
+축소한다 — 인력사무실이 0.81배로 줄어 글씨가 시트보다 19% 작게 나오고 있었다
+(docs/design/26). UI 를 건드렸으면 반드시 재라.
+
+```
+node tools/serve.cjs &
+node tools/screen-fit.mjs          # 18화면 전부 952px 인지 + 잘림 검사
+```
+
+넘치면 «스테이지를 늘리는» 게 아니라 **패널 안에서 스크롤하게** 만든다.
 
 **짧은 클립은 반드시 `times=peak`** 로 찍는다. 0/0.5/1 은 하필 «되돌아오는 지점» 에
 걸려 멀쩡한 클립도 죽은 것처럼 보인다 (hit 이 정확히 그랬다 — docs/design/25 §3).
@@ -61,6 +76,12 @@ curl -s https://hukkle-hub.github.io/hwanghon/version.json   # 빌드 해시 확
   디렉터에게 반드시 알린다.
 - PR 은 **명시적으로 요청받을 때만** 만든다.
 
+## 3.5 «없다» 고 말하기 전에 소스를 읽는다
+
+이 세션에서 「서버에 그 명령이 없다」고 두 번 틀리게 말했다. 둘 다 있었고
+테스트까지 있었다. grep 한 번으로 단정하지 말고 **호출 경로를 끝까지 따라가거나
+실제로 돌려 본다.** 삼항 연산자 안의 문자열, 동적으로 만든 경로는 grep 에 안 걸린다.
+
 ## 4. 테스트
 
 `npm test` 는 항상 통과시킨다. 새 규칙을 테스트로 박을 때는
@@ -81,3 +102,9 @@ curl -s https://hukkle-hub.github.io/hwanghon/version.json   # 빌드 해시 확
 - `22` 마영전·몬헌 카메라/연출 벤치마크
 - `23` 던전 07 폐병원
 - `24` 접점·접지 감사 (전 보스 세밀 조정)
+- `25` 전 보스 렌더 감사 + 디자인 시트 빌드 포함
+- `26` 시트대로 화면 맞추기 (레이아웃 예산 952px)
+- `27` 쉘터 화면 (길드·채팅, 서버 무변경)
+- `28` 귓속말·차단 · 봉인 · 서비스워커 프리캐시 (0개였다)
+- `29` 길드 가입 신청·승인 (공개 모집)
+- `30` 파티 모집 화면 (설계 시트 03)

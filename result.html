@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="css/mobile.css">
 <style>
 /* 시트형 헤더 */
-.sheethead{display:grid;grid-template-columns:300px 1fr 300px;align-items:center;
+.sheethead{display:grid;grid-template-columns:300px minmax(0,1fr) auto;align-items:center;
   padding:13px 22px 11px;border-bottom:1px solid var(--line-soft)}
 .sheethead__l{display:flex;align-items:center;gap:12px}
 .brand{font-family:var(--f-serif);font-size:22px;color:var(--tx-hi);letter-spacing:.1em}
@@ -27,9 +27,10 @@
 .sheethead__c p{font-size:11.5px;color:var(--tx-faint);margin:5px 0 0}
 .sheethead__r{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .sheethead__icons{display:flex;align-items:center;gap:2px;margin-left:6px}
-.metachip{border:1px solid var(--line);padding:4px 8px;font-size:9.5px;color:var(--tx-faint);
-  line-height:1.5;text-align:center;background:rgba(0,0,0,.3)}
-.metachip b{display:block;color:var(--tx-dim);font-weight:400;font-size:10px;margin-top:2px}
+.metachip{border:1px solid var(--line);padding:4px 9px;font-size:9.5px;color:var(--tx-faint);
+  line-height:1.5;background:rgba(0,0,0,.3);
+  display:inline-flex;align-items:baseline;gap:7px;white-space:nowrap}
+.metachip b{color:var(--tx-dim);font-weight:400;font-size:10px}
 
 .rs{display:grid;grid-template-columns:286px 1fr;gap:14px;padding:12px 22px;flex:1;min-height:0}
 .rs__r{display:grid;grid-template-rows:1fr auto auto;gap:12px;min-height:0}

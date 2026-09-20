@@ -21,16 +21,16 @@
 .qs__r{display:grid;grid-template-rows:auto auto auto 1fr auto;gap:10px;min-height:0}
 
 /* 보스 헤더 */
-.bosshead{padding:11px 15px 0}
+.bosshead{padding:9px 15px 0}
 .bosshead__t{display:flex;align-items:center;gap:10px}
 .bosshead__t h2{font-size:18px;color:var(--tx-hi);letter-spacing:.05em}
-.bosshead__d{font-size:11px;color:var(--tx-dim);line-height:1.55;margin-top:6px}
-.bossart{height:110px;margin:9px 15px 12px;border:1px solid var(--line);position:relative}
+.bosshead__d{font-size:11px;color:var(--tx-dim);line-height:1.45;margin-top:5px}
+.bossart{height:74px;margin:7px 15px 9px;border:1px solid var(--line);position:relative}
 .bossart img{object-position:center 40%}
 
 /* 약점 다이어그램 */
-.weak{position:relative;height:156px}
-.weak__fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:212px;height:116px;
+.weak{position:relative;height:132px}
+.weak__fig{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:196px;height:104px;
   background:radial-gradient(60% 60% at 50% 55%,rgba(90,95,110,.22),transparent 70%)}
 .weak__fig img{width:100%;height:100%;object-fit:contain;opacity:.92}
 .callout{position:absolute;min-width:146px;border:1px solid var(--line-gold);background:rgba(20,18,12,.72);padding:6px 9px}
@@ -48,18 +48,21 @@
 
 /* 3분할 하위 패널 */
 .trio{display:grid;grid-template-columns:1.5fr 1fr .82fr;gap:10px;min-height:0}
-.atk{display:flex;align-items:center;gap:9px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
+.atk{display:flex;align-items:center;gap:9px;padding:3px 0;border-bottom:1px solid var(--line-soft)}
 .atk:last-child{border:0}
 .atk__ic{width:22px;height:22px;display:grid;place-items:center;color:#B4726C;flex:none}
 .atk__nm{font-size:12px;color:var(--tx);white-space:nowrap}
 .atk__d{font-size:10px;color:var(--tx-faint);margin-left:auto;text-align:right;white-space:nowrap}
-.trait{display:flex;gap:9px;padding:5px 0;border-bottom:1px solid var(--line-soft)}
+.trait{display:flex;gap:9px;padding:3px 0;border-bottom:1px solid var(--line-soft)}
 .trait:last-child{border:0}
-.trait__ic{width:24px;height:24px;display:grid;place-items:center;color:#9AA0AC;flex:none;
+.trait__ic{width:21px;height:21px;display:grid;place-items:center;color:#9AA0AC;flex:none;
   border:1px solid var(--line);background:rgba(0,0,0,.3)}
-.mrow{display:flex;align-items:flex-start;gap:10px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
+.mrow{display:flex;align-items:flex-start;gap:10px;padding:3px 0;border-bottom:1px solid var(--line-soft)}
 .mrow:last-child{border:0}
 .mrow__g{width:20px;text-align:center;font-family:var(--f-serif);font-size:15px;font-weight:700;flex:none}
+/* 3분할은 시트에서 «전부 보이는» 표다 — 줄간을 조여 5개·4개가 다 들어오게 한다 */
+.trait>div>div,.mrow .xs{line-height:1.36}
+.trait .mt1{margin-top:2px}
 
 /* 하단 3분할 */
 .qs__bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}

@@ -68,7 +68,15 @@
     var safe=e.to<=SAFE_TO; var gb=window.TW_GRADE?TW_GRADE.buffs():null; var rate=safe?100:Math.min(CAP, e.rate+fsOf()+(gb?gb.enhRate:0));
     return { to:e.to, cost:e.cost, mats:mats, rate:rate, baseRate:safe?100:e.rate, fs:safe?0:fsOf(), safe:safe, boosterN:boost?boost[1]:1, unlock:e.unlock,
       drop:e.to<=6?1:2, durLoss:safe?0:(6+e.to*2), durOk:durOf(id)>=DUR_MIN }; }
-  function enhance(id, useBooster){ var step=enhStep(id); if(!step) return { err:'max' }; if(!step.durOk) return { err:'dur' };
+  /* ---------- 봉인 ----------
+     시트(06-forge)의 «봉인 — 장비의 잠재력을 봉인합니다» 칸. 봉인한 장비는
+     강화(실패로 하락·파괴)와 분해로 잃을 수 없다. 되돌리려면 봉인을 푼다. */
+  function sealedOf(id){ var g=state(); return !!(g.sealed && g.sealed[id]); }
+  function seal(id, on){ var g=state(); if(!g.sealed) g.sealed={};
+    if(on) g.sealed[id]=1; else delete g.sealed[id]; save(); return sealedOf(id); }
+
+  function enhance(id, useBooster){ if(sealedOf(id)) return { err:'sealed' };
+    var step=enhStep(id); if(!step) return { err:'max' }; if(!step.durOk) return { err:'dur' };
     var mats=step.mats.slice(); if(useBooster && !step.safe) mats.push(['m_booster', step.boosterN]);
     if(!canPay(mats, step.cost)) return { err:'pay' };
     var g=state(); spend(mats, step.cost); var ok=step.safe || Math.random()*100<step.rate;
@@ -79,7 +87,7 @@
   function repairCost(id){ var it=T.get(id); var miss=100-durOf(id); var gb=window.TW_GRADE?TW_GRADE.buffs():null; return miss<=0?0:Math.max(100, Math.round((1-(gb?gb.repair:0))*(it.price||1000)*0.15*miss/100)); }   /* 파티 제작 등급: 수리비 할인 */
   function repair(id){ var c=repairCost(id); if(c<=0) return { err:'full' }; if(wallet()<c) return { err:'pay' }; if(SV.stat) SV.stat('repairs'); SV.addGold(-c); state().dur[id]=100; save(); return { ok:true, cost:c }; }
   var SALVAGE={ common:[['m_ore',2],['m_fiber',3]], rare:[['m_alloy',3],['m_ore',4]], hero:[['m_alloy',6],['m_shard',2]], legend:[['m_alloy',10],['m_shard',5],['m_core',1]], myth:[['m_alloy',16],['m_shard',8],['m_core',3],['m_heart',1]] };
-  function dismantle(id){ var it=T.get(id); if(!it) return { err:'none' }; if(isEquipped(id)) return { err:'equipped' }; var got=(SALVAGE[it.rarity]||SALVAGE.common).map(function(m){ var n=Math.max(1, Math.round(m[1]*(0.6+0.4*durOf(id)/100))); addItem(m[0], n); return [m[0], n]; }); removeGear(id); return { ok:true, got:got }; }
+  function dismantle(id){ var it=T.get(id); if(!it) return { err:'none' }; if(sealedOf(id)) return { err:'sealed' }; if(isEquipped(id)) return { err:'equipped' }; var got=(SALVAGE[it.rarity]||SALVAGE.common).map(function(m){ var n=Math.max(1, Math.round(m[1]*(0.6+0.4*durOf(id)/100))); addItem(m[0], n); return [m[0], n]; }); removeGear(id); return { ok:true, got:got }; }
 
   /* ---------- 제작 자유도: 재료 선택으로 만든 장비 인스턴스 (저장 gear.custom[id]) ---------- */
   function buildCustom(baseId, picks, id){ var base=T.get(baseId); if(!base||!base.stats) return null; var st={}; Object.keys(base.stats).forEach(function(k){ st[k]=base.stats[k]; });
@@ -109,5 +117,5 @@
   /* 시트 기본 강화 단계 표시(slotHTML 의 +N)를 저장 단계로 */
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
   window.TW_GEAR={ state:state, setChar:setChar, char:curChar, loadout:loadout, canEquip:canEquip, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
-    enhStep:enhStep, enhance:enhance, fsOf:fsOf, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
+    enhStep:enhStep, enhance:enhance, fsOf:fsOf, sealedOf:sealedOf, seal:seal, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
 })();

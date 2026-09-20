@@ -11,7 +11,9 @@
     ['board.html',     '컨셉 시트 (개발)'],
     ['office.html',    '인력사무실'],
     ['quest.html',     '의뢰 상세'],
-    ['party.html',     '파티 모집'],
+    ['party.html',     '협동 출격'],
+    ['shelter.html',   '쉘터'],
+    ['recruit.html',   '파티 모집'],
     ['story.html',     '이야기'],
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
@@ -210,7 +212,18 @@
       var r = 44, c = 2 * Math.PI * r;
       var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
       svg.setAttribute('viewBox','0 0 96 96');
+      /* 시트의 숙련도 링은 «눈금이 새겨진 나침반» 이다 (design-sheets/07-profile).
+         맨 원 + 얇은 호로는 같은 그림이 안 나온다 — 눈금 12개와 안쪽 테를 같이 그린다. */
+      var ticks = '';
+      for (var i = 0; i < 12; i++){
+        var ang = i * Math.PI / 6, major = i % 3 === 0;
+        var r0 = major ? 33.5 : 35.5, r1 = 38;
+        ticks += '<line class="gauge__tick'+(major?' gauge__tick--m':'')+'"'+
+          ' x1="'+(48 + Math.cos(ang)*r0).toFixed(2)+'" y1="'+(48 + Math.sin(ang)*r0).toFixed(2)+'"'+
+          ' x2="'+(48 + Math.cos(ang)*r1).toFixed(2)+'" y2="'+(48 + Math.sin(ang)*r1).toFixed(2)+'"/>';
+      }
       svg.innerHTML =
+        '<circle class="gauge__inner" cx="48" cy="48" r="39.5"/>'+ ticks +
         '<circle class="gauge__track" cx="48" cy="48" r="'+r+'"/>'+
         '<circle class="gauge__val" cx="48" cy="48" r="'+r+'" stroke="'+col+'" '+
         'stroke-dasharray="0 '+c+'"/>';

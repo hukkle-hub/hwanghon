@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 파티 모집</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+/* 설계 시트 03-party 의 3열: 임무 목록 · 파티 · 임무 상세 */
+.rctabs{display:flex;justify-content:center;gap:0;border-bottom:1px solid var(--line-soft);flex:none}
+.rctabs .tab{padding:9px 30px}
+.rc{display:grid;grid-template-columns:300px 1fr 322px;gap:12px;padding:11px 18px;flex:1;min-height:0}
+.rc__l{display:grid;grid-template-rows:1fr;min-height:0}
+.rc__c{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-height:0}
+.rc__r{display:grid;grid-template-rows:1fr auto;gap:10px;min-height:0}
+
+/* 임무 목록 */
+.mrow3{display:flex;align-items:center;gap:10px;padding:8px 3px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+.mrow3:last-child{border:0}
+.mrow3:hover{background:rgba(255,255,255,.03)}
+.mrow3.is-on{background:linear-gradient(90deg,rgba(120,30,30,.30),rgba(120,30,30,.06));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.mrow3.is-locked{opacity:.42}
+.mrow3__t{font-size:12.5px;color:var(--tx-hi)}
+.mrow3__s{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.mrow3__n{font-size:10px;letter-spacing:.06em;color:#8FBF8F;border:1px solid rgba(91,163,91,.4);padding:1px 6px;flex:none}
+.mrow3__n--0{color:var(--tx-ghost);border-color:var(--line)}
+
+/* 모집 목록 */
+.prow2{display:flex;align-items:center;gap:11px;padding:9px 3px;border-bottom:1px solid var(--line-soft)}
+.prow2:last-child{border:0}
+.prow2__c{font-family:var(--f-serif);font-size:13px;letter-spacing:.13em;color:var(--gold);flex:none;width:106px}
+.prow2__t{font-size:12.5px;color:var(--tx-hi)}
+.prow2__s{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
+.prow2__n{font-size:12px;color:var(--tx-dim);flex:none}
+
+/* 파티 정보 · 4인 카드 */
+.pinfo{display:flex;align-items:center;gap:12px;padding:9px 13px;border-bottom:1px solid var(--line-soft)}
+.pinfo__k{font-size:11px;color:var(--tx-faint);letter-spacing:.06em}
+.pinfo__code{font-family:var(--f-serif);font-size:17px;letter-spacing:.18em;color:var(--gold);user-select:all}
+.pinfo__cp{font-size:12px;color:var(--tx-dim);margin-left:auto}
+.pinfo__cp b{font-family:var(--f-serif);font-size:16px;color:var(--red-lit);margin-left:6px}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:11px 13px;min-height:0}
+.slot4{border:1px solid var(--line);background:linear-gradient(180deg,rgba(26,27,31,.9),rgba(15,16,20,.9));
+  display:flex;flex-direction:column;min-height:0}
+.slot4.is-me{border-color:var(--line-red);background:linear-gradient(180deg,rgba(58,20,20,.5),rgba(20,13,13,.85))}
+.slot4.is-empty{border-style:dashed;opacity:.55}
+.slot4__h{display:flex;align-items:center;gap:6px;padding:5px 8px;border-bottom:1px solid var(--line-soft)}
+.slot4__p{font-size:10px;letter-spacing:.08em;color:var(--gold-dim)}
+.slot4__st{font-size:10px;margin-left:auto;letter-spacing:.04em;color:var(--tx-faint)}
+.slot4__st.on{color:#8FBF8F}
+.slot4__st.lead{color:#D9C07A}
+.slot4__art{flex:1;min-height:96px;position:relative;overflow:hidden;background:#0A0B0E}
+.slot4__art img{width:100%;height:100%;object-fit:cover;object-position:center 22%}
+.slot4__b{padding:7px 9px 9px}
+.slot4__n{font-size:13px;color:var(--tx-hi)}
+.slot4__m{font-size:10.5px;color:var(--tx-faint);margin-top:3px}
+.slot4__cp{font-size:11.5px;color:var(--tx-dim);margin-top:4px;font-variant-numeric:tabular-nums}
+.slot4__e{flex:1;display:grid;place-items:center;font-size:11.5px;color:var(--tx-ghost);padding:22px 8px}
+
+/* 채팅 */
+.pchat{display:grid;grid-template-rows:1fr auto;min-height:0;border-top:1px solid var(--line-soft)}
+.pchat__log{height:118px}
+.pchat__log{overflow-y:auto;padding:8px 13px;min-height:0;display:flex;flex-direction:column;gap:4px}
+.pchat__m{font-size:11.5px;line-height:1.6;overflow-wrap:anywhere}
+.pchat__m b{color:var(--tx-dim);font-weight:400}
+.pchat__f{display:flex;gap:6px;padding:8px 11px;border-top:1px solid var(--line-soft)}
+.pchat__f .field{flex:1;min-width:0}
+.pchat__f .btn{flex:none;white-space:nowrap}
+#rc-mine{display:grid;grid-template-rows:1fr auto;min-height:0;height:100%}
+.rcfoot{display:flex;gap:9px;padding:10px 13px;border-top:1px solid var(--line-soft)}
+.rcfoot .btn{flex:1}
+
+/* 임무 상세 */
+.qart2{height:112px;border:1px solid var(--line);position:relative;overflow:hidden;margin:10px 0}
+.qart2 img{width:100%;height:100%;object-fit:cover}
+.foes{display:flex;gap:6px}
+.foes span{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);color:var(--tx-faint)}
+.setrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.setrow:last-child{border:0}
+.setrow__k{font-size:11.5px;color:var(--tx-faint);width:70px;flex:none}
+.setrow .field{flex:1;margin:0}
+.state2{font-size:11px;color:var(--gold-dim);min-height:15px;padding:0 13px 10px}
+.state2.is-bad{color:var(--red-lit)}
+.gate2{padding:13px}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">파티 모집 / 인력사무실</h1>
+      <div class="topbar__sub">필요한 인력을 모아 임무를 수행합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency" id="rc-wallet"><svg class="ico"><use href="#i-coin"/></svg><span class="num">—</span></span>
+      <span class="xs t-faint" id="rc-online">접속 전</span>
+      <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <div class="rctabs tabs" id="rc-tabs">
+    <button class="tab is-on" data-v="find">파티 찾기</button>
+    <button class="tab" data-v="mine">내 파티</button>
+  </div>
+
+  <main class="rc" data-mdefault="파티">
+    <!-- ======== 좌: 임무 목록 ======== -->
+    <div class="rc__l" data-mpane="임무">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">임무 목록</span>
+          <span class="panel__meta" id="rc-mcount">—</span></div>
+        <div class="panel__body scroll" id="rc-missions"></div>
+      </section>
+    </div>
+
+    <!-- ======== 중: 파티 ======== -->
+    <div class="rc__c" data-mpane="파티">
+      <section class="panel panel--framed" id="rc-head">
+        <div class="pinfo">
+          <span class="pinfo__k" id="rc-vis">모집 중인 파티</span>
+          <span class="pinfo__code" id="rc-code">—</span>
+          <button type="button" class="btn btn--sm" id="rc-copy" hidden>코드 복사</button>
+          <span class="pinfo__cp" id="rc-avg">평균 전투력 <b>—</b></span>
+        </div>
+      </section>
+
+      <section class="panel panel--framed" id="rc-body" style="overflow:hidden">
+        <div class="panel__body scroll" id="rc-find">
+          <div class="chat__empty">접속하면 모집 중인 파티가 표시됩니다.</div>
+        </div>
+        <div id="rc-mine" hidden>
+          <div class="slots" id="rc-slots"></div>
+          <div class="pchat">
+            <div class="pchat__log" id="rc-log"><div class="chat__empty">파티 채팅</div></div>
+            <div class="pchat__f">
+              <div class="field"><input id="rc-text" maxlength="160" placeholder="파티원에게 한마디"></div>
+              <button type="button" class="btn btn--sm" id="rc-say">전송</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="rcfoot">
+          <button type="button" class="btn" id="rc-ready" disabled>준비 완료</button>
+          <button type="button" class="btn btn--primary" id="rc-start" disabled>모집 시작</button>
+          <button type="button" class="btn btn--sm" id="rc-leave" hidden>파티 나가기</button>
+        </div>
+        <div class="state2" id="rc-state"></div>
+      </section>
+    </div>
+
+    <!-- ======== 우: 임무 상세 · 모집 설정 ======== -->
+    <div class="rc__r" data-mpane="상세">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">임무 상세</span>
+          <span class="risk" id="rc-risk"></span></div>
+        <div class="panel__body scroll" id="rc-detail"></div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">파티 모집 설정</span></div>
+        <div class="panel__body panel__body--tight">
+          <div class="setrow"><span class="setrow__k">모집 방식</span>
+            <div class="field"><select id="rc-public">
+              <option value="1">공개 · 목록에 올림</option>
+              <option value="0">비공개 · 코드로만</option>
+            </select></div></div>
+          <div class="setrow"><span class="setrow__k">모집 목적</span>
+            <div class="field"><select id="rc-purpose">
+              <option value="first">첫 클리어</option>
+              <option value="repeat">반복 파밍</option>
+              <option value="practice">연습</option>
+            </select></div></div>
+          <button type="button" class="btn btn--primary mt3" id="rc-create" style="width:100%">새 파티 만들기</button>
+          <div class="setrow mt3"><span class="setrow__k">방 코드 합류</span>
+            <div class="field"><input id="rc-join" maxlength="10" placeholder="10자리 코드"></div></div>
+          <button type="button" class="btn btn--sm mt2" id="rc-joinbtn" style="width:100%">참가</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="gnb">
+    <a href="index.html"><svg class="ico"><use href="#i-map"/></svg>로비</a>
+    <a href="office.html"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a href="shelter.html"><svg class="ico"><use href="#i-shield"/></svg>쉘터</a>
+    <a class="is-on"><svg class="ico"><use href="#i-sword"/></svg>파티 모집</a>
+    <a href="shop.html"><svg class="ico"><use href="#i-shop"/></svg>상점</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+  </nav>
+</div>
+
+<script src="js/party-wire.js"></script>
+<script src="js/world.js"></script>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/dungeons.js"></script>
+<script src="js/dungeon.js"></script>
+<script src="js/dungeon-content.js"></script>
+<script src="js/recruit.js"></script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 쉘터</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+.sh{display:grid;grid-template-columns:352px 1fr 396px;gap:13px;padding:13px 20px;flex:1;min-height:0}
+.sh__l{display:grid;grid-template-rows:auto auto 1fr;gap:12px;min-height:0}
+.sh__c{display:grid;grid-template-rows:auto 1fr auto;gap:12px;min-height:0}
+.sh__r{display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0}
+
+/* 동료 · 차단 */
+.crow{display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid var(--line-soft)}
+.crow:last-child{border:0}
+.crow__d{width:7px;height:7px;border-radius:50%;background:#4A5252;flex:none}
+.crow.is-on .crow__d{background:#79C07A;box-shadow:0 0 6px rgba(121,192,122,.65)}
+.crow__n{font-size:12px;color:var(--tx-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow.is-on .crow__n{color:var(--tx-hi)}
+.crow__k{font-size:10px;letter-spacing:.06em;color:var(--tx-faint);flex:none}
+.crow--block .crow__k{color:#C9807B}
+.crow__a{display:flex;gap:4px;flex:none}
+.crow__a button{font-size:10.5px;padding:3px 7px;min-height:0}
+.crow__a button[data-c="block"],.crow__a button[data-c="remove"]{color:#D98B86;border-color:rgba(199,85,80,.4)}
+.cform{display:flex;gap:6px;padding:9px 13px 4px}
+.cform .field{flex:1}
+.cacts{display:flex;gap:6px;padding:0 13px 10px}
+.cacts button{flex:1;font-size:11px;padding:5px 0;min-height:0}
+#sh-whisper-to{display:none}
+.chat[data-ch="whisper"] #sh-whisper-to{display:block;flex:0 0 118px}
+
+/* 접속 현황 */
+.pres{display:flex;align-items:center;gap:13px;padding:12px 14px}
+.pres__ico{width:30px;height:30px;color:var(--gold-dim);flex:none}
+.pres__n{font-family:var(--f-serif);font-size:23px;color:var(--tx-hi);letter-spacing:.02em}
+.pres__n small{font-size:12px;color:var(--tx-faint);font-family:var(--f-sans);margin-left:4px}
+.pres__k{font-size:11px;color:var(--tx-faint);letter-spacing:.06em;margin-top:2px}
+.pres__dot{width:7px;height:7px;border-radius:50%;background:#5E6A6A;flex:none}
+.pres__dot.is-up{background:#79C07A;box-shadow:0 0 7px rgba(121,192,122,.7)}
+
+/* 길드 카드 */
+.gcrest{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
+.gcrest__m{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);
+  background:radial-gradient(70% 70% at 50% 35%,rgba(150,120,60,.24),rgba(10,11,14,.6));color:var(--gold-dim)}
+.gcrest__m .ico{width:26px;height:26px}
+.gcrest__n{font-family:var(--f-serif);font-size:17px;color:var(--tx-hi);letter-spacing:.04em}
+.gcrest__s{font-size:11px;color:var(--tx-faint);margin-top:3px}
+.gcode{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--line-soft)}
+.gcode__v{font-family:var(--f-serif);font-size:16px;letter-spacing:.2em;color:var(--gold);user-select:all}
+
+/* 명단 */
+.mrow2{display:flex;align-items:center;gap:10px;padding:7px 2px;border-bottom:1px solid var(--line-soft)}
+.mrow2:last-child{border:0}
+.mrow2__d{width:7px;height:7px;border-radius:50%;background:#4A5252;flex:none}
+.mrow2.is-on .mrow2__d{background:#79C07A;box-shadow:0 0 6px rgba(121,192,122,.65)}
+.mrow2__n{font-size:12.5px;color:var(--tx-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mrow2.is-on .mrow2__n{color:var(--tx-hi)}
+.mrow2__t{font-size:10px;letter-spacing:.08em;color:var(--gold-dim);border:1px solid var(--line-gold);padding:1px 6px;flex:none}
+.mrow2__t--o{color:#A9B6C4;border-color:rgba(169,182,196,.35)}
+.mrow2__a{display:flex;gap:5px;flex:none;opacity:0;transition:opacity .12s}
+.mrow2:hover .mrow2__a,html.touch .mrow2__a{opacity:1}
+.mrow2__a button{font-size:10.5px;padding:3px 8px;min-height:0;letter-spacing:.02em}
+.mrow2__a button[data-op="kick"]{color:#D98B86;border-color:rgba(199,85,80,.42)}
+
+/* 모집 중인 길드 · 가입 신청 */
+.sec{font-size:11px;letter-spacing:.1em;color:var(--gold-dim);padding:4px 2px 6px;border-bottom:1px solid var(--line-gold);margin-bottom:4px}
+.sec+.sec{margin-top:12px}
+.grow{display:flex;align-items:center;gap:11px;padding:9px 2px;border-bottom:1px solid var(--line-soft)}
+.grow:last-child{border:0}
+.grow__m{width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);color:var(--gold-dim);
+  background:radial-gradient(70% 70% at 50% 35%,rgba(150,120,60,.2),rgba(10,11,14,.55))}
+.grow__m .ico{width:17px;height:17px}
+.grow__n{font-size:13px;color:var(--tx-hi)}
+.grow__s{font-size:11px;color:var(--tx-faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px}
+.grow__c{font-size:11px;color:var(--tx-dim);flex:none}
+.arow__msg{font-size:11px;color:var(--tx-faint);margin-top:2px}
+.arow__a{display:flex;gap:5px;flex:none}
+.arow__a button{font-size:10.5px;padding:3px 9px;min-height:0}
+.arow__a button[data-a="yes"]{color:#9CC79C;border-color:rgba(120,180,120,.45)}
+.arow__a button[data-a="no"]{color:#D98B86;border-color:rgba(199,85,80,.4)}
+.applyrow{display:flex;gap:7px;padding:9px 0 2px}
+.applyrow .field{flex:1}
+
+/* 길드 공지 편집 */
+.gnotice{width:100%;min-height:62px;resize:vertical;font:inherit;font-size:12px;line-height:1.7;
+  color:var(--tx);background:var(--bg-inset);border:1px solid var(--line);padding:8px 10px}
+.gnotice:focus{outline:none;border-color:var(--line-gold)}
+.gnotice[readonly]{border-color:transparent;background:transparent;padding:0;resize:none;color:var(--tx-dim)}
+
+/* 채팅 */
+.chat{display:grid;grid-template-rows:auto 1fr auto;min-height:0;height:100%}
+.chat__log{overflow-y:auto;padding:10px 13px;min-height:0;display:flex;flex-direction:column;gap:5px}
+.chat__m{font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+.chat__who{color:var(--tx-dim)}
+.chat__ch{font-size:10px;letter-spacing:.07em;margin-right:6px;padding:0 4px;border:1px solid var(--line)}
+.chat__m[data-c="world"] .chat__ch{color:#8FA8C4;border-color:rgba(143,168,196,.35)}
+.chat__m[data-c="guild"] .chat__ch{color:#D9C07A;border-color:rgba(201,164,94,.4)}
+.chat__m[data-c="party"] .chat__ch{color:#8FBF8F;border-color:rgba(91,163,91,.4)}
+.chat__t{color:var(--tx)}
+.chat__f{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--line-soft)}
+.chat__f .field{flex:1;min-width:0}
+.chat__f .btn{flex:none;white-space:nowrap}   /* 귓속말 칸이 생겨도 «전/송» 으로 갈리지 않게 */
+.chat__empty{font-size:11.5px;color:var(--tx-ghost);padding:14px 0;text-align:center}
+
+/* 접속 전 */
+.gate{padding:14px}
+.gate .field{margin-top:8px}
+.gate__hint{font-size:11px;color:var(--tx-faint);line-height:1.7;margin-top:9px}
+.state{font-size:11px;color:var(--gold-dim);min-height:15px;padding:0 14px 11px}
+.state.is-bad{color:var(--red-lit)}
+.prepbar2{display:flex;align-items:center;gap:13px;padding:11px 15px;text-decoration:none;color:inherit;
+  border:1px solid var(--line-gold);
+  background:linear-gradient(100deg,rgba(94,74,38,.5),rgba(46,38,22,.32) 65%,rgba(22,19,13,.26))}
+.prepbar2__ico{width:26px;height:26px;color:#D9C49A;flex:none}
+.prepbar2__k{font-size:13px;color:#EADFC4;letter-spacing:.06em}
+.prepbar2__v{font-size:11px;color:var(--tx-dim);margin-top:3px}
+.shart{position:relative;height:210px;border:1px solid var(--line-soft);overflow:hidden}
+.shart img{width:100%;height:100%;object-fit:cover;object-position:center 34%;opacity:.5}
+.shart__q{position:absolute;left:15px;bottom:12px;font-family:var(--f-serif);font-size:14px;color:#D9CDB4;
+  letter-spacing:.05em;text-shadow:0 2px 9px #000}
+</style>
+</head>
+<body>
+<script src="js/icons.js"></script>
+
+<div class="stage">
+
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">쉘터</h1>
+      <div class="topbar__sub">길드의 쉼터 — 소식을 나누고 동료를 기다립니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="currency" id="sh-wallet"><svg class="ico"><use href="#i-coin"/></svg><span class="num">—</span></span>
+      <button class="iconbtn" title="우편"><svg class="ico ico--lg"><use href="#i-mail"/></svg></button>
+      <button class="iconbtn" title="기록"><svg class="ico ico--lg"><use href="#i-book"/></svg></button>
+      <button class="iconbtn" title="설정"><svg class="ico ico--lg"><use href="#i-gear"/></svg></button>
+    </div>
+  </header>
+
+  <main class="sh" data-mdefault="쉘터">
+
+    <!-- ============ 좌: 접속 현황 · 내 길드 ============ -->
+    <div class="sh__l" data-mpane="쉘터">
+      <section class="panel panel--framed">
+        <div class="pres">
+          <svg class="pres__ico"><use href="#i-users"/></svg>
+          <div class="fill">
+            <div class="pres__n" id="sh-online">—<small id="sh-cap"></small></div>
+            <div class="pres__k">쉘터 접속</div>
+          </div>
+          <span class="pres__dot" id="sh-dot"></span>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">내 길드</span>
+          <span class="panel__meta" id="sh-gstate">접속 전</span></div>
+
+        <!-- 접속 전 -->
+        <div class="panel__body panel__body--flush" id="sh-gate">
+          <div class="gate">
+            <div class="label-ko">계정</div>
+            <div class="field"><input id="sh-id" maxlength="32" placeholder="계정 ID · 영문·숫자·밑줄 4–32자" autocomplete="username"></div>
+            <div class="field"><input id="sh-pw" type="password" maxlength="128" placeholder="비밀번호 10자 이상" autocomplete="current-password"></div>
+            <div class="flex g2 mt3">
+              <button type="button" class="btn btn--primary fill" id="sh-login">로그인</button>
+              <button type="button" class="btn fill" id="sh-register">계정 만들기</button>
+            </div>
+            <button type="button" class="btn btn--sm mt2" id="sh-guest" style="width:100%">체험 접속 — 길드 없이 둘러보기</button>
+            <div class="gate__hint" id="sh-gatehint">쉘터는 파티 서버에 접속해 있을 때 열립니다.<br>길드를 만들려면 계정이 필요합니다.</div>
+          </div>
+        </div>
+
+        <!-- 캐릭터 이름 -->
+        <div class="panel__body panel__body--flush" id="sh-name" hidden>
+          <div class="gate">
+            <div class="label-ko">캐릭터 이름</div>
+            <div class="field"><input id="sh-cname" maxlength="16" placeholder="한글·영문·숫자·밑줄 2–16자"></div>
+            <div class="label-ko mt3">출격 캐릭터</div>
+            <div class="field"><select id="sh-cpick">
+              <option value="ain">아인 · 낫 · 균형</option><option value="kain">카인 · 대검 · 체력·파괴</option>
+              <option value="ryu">류 · 쌍단검 · 속도·치명</option><option value="sera">세라 · 시약 · 기술·지원</option>
+            </select></div>
+            <button type="button" class="btn btn--primary mt3" id="sh-cgo" style="width:100%">이 이름으로 시작</button>
+          </div>
+        </div>
+
+        <!-- 길드 없음 -->
+        <div class="panel__body panel__body--flush" id="sh-nogu" hidden>
+          <div class="gate" id="sh-applied" hidden>
+            <div class="label-ko">가입 신청 중</div>
+            <div class="sm t-hi" id="sh-appliedto">—</div>
+            <div class="xs t-faint mt1">길드장이나 임원이 승인하면 바로 들어갑니다.</div>
+            <button type="button" class="btn btn--sm mt3" id="sh-appcancel" style="width:100%">신청 취소</button>
+          </div>
+          <div class="gate">
+            <div class="label-ko">새 길드</div>
+            <div class="field"><input id="sh-gname" maxlength="24" placeholder="길드 이름"></div>
+            <button type="button" class="btn btn--primary mt2" id="sh-gcreate" style="width:100%">길드 만들기</button>
+            <div class="label-ko mt3">초대 코드로 합류</div>
+            <div class="field"><input id="sh-gcode" maxlength="10" placeholder="10자리 코드"></div>
+            <button type="button" class="btn mt2" id="sh-gjoin" style="width:100%">쉘터 합류</button>
+          </div>
+        </div>
+
+        <!-- 길드 있음 -->
+        <div class="panel__body panel__body--flush" id="sh-guild" hidden>
+          <div class="gcrest">
+            <span class="gcrest__m"><svg class="ico"><use href="#i-sigil"/></svg></span>
+            <div class="fill">
+              <div class="gcrest__n" id="sh-gtitle">—</div>
+              <div class="gcrest__s" id="sh-gsub">—</div>
+            </div>
+          </div>
+          <div class="gcode">
+            <span class="xs t-faint">초대 코드</span>
+            <span class="gcode__v fill" id="sh-ginvite">—</span>
+            <button type="button" class="btn btn--sm" id="sh-gcopy">복사</button>
+          </div>
+          <div class="gate">
+            <div class="flex ac jb"><span class="label-ko" style="margin:0">길드 공지</span>
+              <span class="xs t-faint" id="sh-grole"></span></div>
+            <textarea class="gnotice mt2" id="sh-gnotice" maxlength="240" readonly
+              placeholder="등록된 길드 공지가 없습니다."></textarea>
+            <button type="button" class="btn btn--sm mt2" id="sh-gnsave" style="width:100%" hidden>공지 저장</button>
+            <button type="button" class="btn btn--sm mt3" id="sh-gopen" style="width:100%" hidden>공개 모집 열기</button>
+            <button type="button" class="btn btn--sm mt2" id="sh-gleave" style="width:100%">길드 탈퇴</button>
+          </div>
+        </div>
+        <div class="state" id="sh-state"></div>
+      </section>
+
+      <section class="panel panel--framed panel--flat">
+        <div class="panel__body">
+          <div class="label-ko">쉘터란</div>
+          <div class="xs t-faint" style="line-height:1.85">
+            길드 소속·접속 상태·초대 코드·길드 채팅을 쓰는 쉼터입니다.<br>
+            한 길드 정원은 100명, 한 캐릭터는 한 길드에만 속합니다.<br>
+            출격은 <a href="party.html" class="t-gold">협동 출격</a>에서 진행합니다.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============ 중: 명단 ============ -->
+    <div class="sh__c" data-mpane="명단">
+      <div class="shart art">
+        <img src="art/lobby-city.webp" alt="">
+        <div class="shart__q">“돌아올 곳이 있는 자만이 다시 나선다.”</div>
+      </div>
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title" id="sh-mtitle">길드 명단</span>
+          <span class="panel__meta" id="sh-count">—</span></div>
+        <div class="panel__body scroll" id="sh-members">
+          <div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>
+        </div>
+      </section>
+      <a class="prepbar2" href="party.html">
+        <svg class="prepbar2__ico"><use href="#i-sword"/></svg>
+        <div class="fill"><div class="prepbar2__k">협동 출격</div>
+          <div class="prepbar2__v">인력사무소에서 최대 4인 파티로 나섭니다</div></div>
+        <svg class="ico ico--lg t-faint"><use href="#i-arrowr"/></svg>
+      </a>
+    </div>
+
+    <!-- ============ 우: 채팅 ============ -->
+    <div class="sh__r" data-mpane="채팅">
+      <section class="panel panel--framed">
+        <div class="chat">
+          <div class="panel__head">
+            <span class="panel__title">채팅</span>
+            <span class="tabs tabs--sm" id="sh-chtabs" style="margin-left:auto">
+              <button class="tab is-on" data-ch="world">월드</button>
+              <button class="tab" data-ch="guild">길드</button>
+              <button class="tab" data-ch="party">파티</button>
+              <button class="tab" data-ch="whisper">귓속말</button>
+            </span>
+          </div>
+          <div class="chat__log" id="sh-log"><div class="chat__empty">접속하면 대화가 표시됩니다.</div></div>
+          <div class="chat__f">
+            <div class="field" id="sh-whisper-to"><input id="sh-to" maxlength="16" placeholder="받는 캐릭터"></div>
+            <div class="field"><input id="sh-text" maxlength="160" placeholder="동료에게 한마디 (160자)"></div>
+            <button type="button" class="btn btn--primary" id="sh-send">전송</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">동료 · 차단</span>
+          <span class="panel__meta" id="sh-cmeta">—</span></div>
+        <div class="cform">
+          <div class="field"><input id="sh-who" maxlength="16" placeholder="캐릭터 이름"></div>
+          <button type="button" class="btn btn--sm" id="sh-friend">친구 요청</button>
+        </div>
+        <div class="cacts">
+          <button type="button" class="btn btn--sm" id="sh-block">차단</button>
+          <button type="button" class="btn btn--sm" id="sh-report">신고</button>
+        </div>
+        <div class="panel__body scroll" id="sh-contacts" style="max-height:186px">
+          <div class="chat__empty">접속하면 동료 목록이 표시됩니다.</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="gnb">
+    <a href="index.html"><svg class="ico"><use href="#i-map"/></svg>로비</a>
+    <a href="office.html"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a class="is-on"><svg class="ico"><use href="#i-shield"/></svg>쉘터</a>
+    <a href="recruit.html"><svg class="ico"><use href="#i-sword"/></svg>파티 모집</a>
+    <a href="shop.html"><svg class="ico"><use href="#i-shop"/></svg>상점</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+  </nav>
+</div>
+
+<script src="js/shelter.js"></script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

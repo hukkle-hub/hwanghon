@@ -19,7 +19,50 @@ function createRpgCommands(ctx){
   account(id);
   if(['request','accept','remove','block','unblock'].includes(op)){const target=msg.target||store.playerNamed(msg.name);store.relationship(id,target,op);update(id);update(target);sendHistory(id);return true;}
   if(op==='report'){const target=msg.target||store.playerNamed(msg.name);store.report(id,target,msg.reason,ctx.evidence(id,target));send(ws,{type:'rpgNotice',text:'신고를 접수했습니다.'});return true;}
-  if(op==='guildManage'){const before=store.guild(id);store.guildManage(id,msg.operation,msg.target,msg.value);if(before)for(const member of before.members){sendGuild(member.id);update(member.id);sendHistory(member.id);}return true;}
+  /* ---------- 길드 가입 신청 ---------- */
+  if(op==='guildBoard'){send(ws,{type:'guildBoard',guilds:store.guildBoard(),mine:store.guildApplication(id)});return true;}
+  if(op==='guildApply'){const applied=store.guildApply(id,msg.guild,msg.message);
+   send(ws,{type:'guildBoard',guilds:store.guildBoard(),mine:applied});
+   send(ws,{type:'rpgNotice',text:applied.name+' 에 가입을 신청했습니다. 승인을 기다립니다.'});
+   /* 관리자 화면의 신청 목록을 즉시 갱신한다 */
+   for(const pid of store.guildMemberIds(applied.guild)){sendGuild(pid);update(pid);}
+   return true;}
+  if(op==='guildCancelApply'){const was=store.guildApplication(id);store.guildCancelApply(id);
+   send(ws,{type:'guildBoard',guilds:store.guildBoard(),mine:null});
+   send(ws,{type:'rpgNotice',text:'가입 신청을 취소했습니다.'});
+   if(was)for(const pid of store.guildMemberIds(was.guild)){sendGuild(pid);update(pid);}
+   return true;}
+  if(op==='guildDecide'){const accept=msg.accept===true,gid=store.guildDecide(id,msg.target,accept);
+   const who=(()=>{try{return store.get(msg.target).name;}catch{return '신청자';}})();
+   const gname=(()=>{try{return store.guild(id).name;}catch{return '길드';}})();
+   send(sessions.get(msg.target),{type:'rpgNotice',text:accept?gname+' 가입이 승인되었습니다.':gname+' 가입 신청이 거절되었습니다.'});
+   send(ws,{type:'rpgNotice',text:who+' 님의 신청을 '+(accept?'승인':'거절')+'했습니다.'});
+   sendGuild(msg.target);update(msg.target);sendHistory(msg.target);
+   const target=sessions.get(msg.target);
+   if(target)send(target,{type:'guildBoard',guilds:store.guildBoard(),mine:store.guildApplication(msg.target)});
+   for(const pid of store.guildMemberIds(gid)){sendGuild(pid);update(pid);sendHistory(pid);}
+   return true;}
+
+  if(op==='guildManage'&&msg.operation==='open'){const on=msg.value===true;store.guildOpen(id,on);
+   const g=store.guild(id);
+   send(ws,{type:'rpgNotice',text:on?'길드를 공개 모집으로 열었습니다.':'공개 모집을 닫았습니다. 대기 중이던 신청은 정리됩니다.'});
+   for(const m of g.members){sendGuild(m.id);update(m.id);}
+   return true;}
+  if(op==='guildManage'){const before=store.guild(id);store.guildManage(id,msg.operation,msg.target,msg.value);
+   /* 당한 쪽에게 «무슨 일이 있었는지» 를 알린다. 예전에는 추방당해도 길드가 조용히
+      사라지기만 해서, 나간 것인지 쫓겨난 것인지 화면으로 구분할 수 없었다. */
+   const named=pid=>{try{return store.get(pid).name;}catch{return '길드원';}};
+   const tell=(pid,text)=>{const peer=sessions.get(pid);if(peer)send(peer,{type:'rpgNotice',text});};
+   const actor=named(id),to=msg.target&&msg.target!==id?named(msg.target):'';
+   if(msg.operation==='notice'){tell(id,'길드 공지를 저장했습니다.');
+    if(before)for(const m of before.members)if(m.id!==id)tell(m.id,'[길드] '+actor+' 님이 공지를 바꿨습니다.');}
+   else if(msg.operation==='kick'){tell(msg.target,'길드에서 추방되었습니다.');tell(id,to+' 님을 추방했습니다.');
+    if(before)for(const m of before.members)if(m.id!==id&&m.id!==msg.target)tell(m.id,'[길드] '+to+' 님이 추방되었습니다.');}
+   else if(msg.operation==='transfer'){tell(msg.target,'길드장이 되었습니다.');tell(id,'길드장을 '+to+' 님에게 넘겼습니다.');
+    if(before)for(const m of before.members)if(m.id!==id&&m.id!==msg.target)tell(m.id,'[길드] '+to+' 님이 새 길드장입니다.');}
+   else if(msg.operation==='officer'){tell(msg.target,'길드 임원이 되었습니다.');tell(id,to+' 님을 임원으로 임명했습니다.');}
+   else if(msg.operation==='member'){tell(msg.target,'길드 임원에서 내려왔습니다.');tell(id,to+' 님의 임원을 해제했습니다.');}
+   if(before)for(const member of before.members){sendGuild(member.id);update(member.id);sendHistory(member.id);}return true;}
   if(op==='adminState'||op==='moderate'||op==='announcement'){
    if(!isAdmin(id))throw Error('운영 권한이 없습니다.');
    if(op==='moderate'){store.moderate(id,msg.operation,msg.target,msg.minutes,msg.reason);if(msg.operation==='ban')sessions.get(msg.target)?.close(4003,'Account restricted');}
