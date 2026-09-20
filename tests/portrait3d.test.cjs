@@ -16,9 +16,10 @@ test('한 번만 굽고 돌려 쓴다 — 자리마다 WebGL 맥락을 열지 �
 
 test('열쇠에 캐릭터·장착·염색이 모두 들어간다',()=>{
  /* 하나라도 빠지면 옷을 갈아입어도 옛 초상이 남는다 */
- const m=SRC.match(/function stateKey\(\)\{[\s\S]*?\n\}/);
+ const m=SRC.match(/function stateKey\(mode\)\{[\s\S]*?\n\}/);
  assert.ok(m,'stateKey 가 있다');
- assert.match(m[0],/G\.char\(\)/); assert.match(m[0],/s\.equipped/); assert.match(m[0],/s\.dye/);
+ assert.match(m[0],/mode/); assert.match(m[0],/G\.char\(\)/);
+ assert.match(m[0],/s\.equipped/); assert.match(m[0],/s\.dye/);
 });
 
 test('방어구가 다 올 때까지 기다린다 — 후드를 써도 초상이 그대로였던 버그',()=>{
@@ -47,4 +48,37 @@ test('초상을 쓰는 자리가 표시되어 있다',()=>{
    assert.match(h,/portrait3d\.js/, f+' 가 초상을 읽는다');
    assert.match(h,/js\/looks\.js/, f+' 가 장비 외형을 읽는다 — 없으면 맨몸이 구워진다');
  }
+ /* 전신을 쓰는 자리 */
+ for(const f of ['result.html','recruit.html']){
+   const h=fs.readFileSync(path.join(ROOT,f),'utf8');
+   assert.match(h,/portrait3d\.js/, f+' 가 초상을 읽는다');
+   assert.match(h,/js\/looks\.js/, f+' 가 장비 외형을 읽는다');
+ }
+ assert.match(fs.readFileSync(path.join(ROOT,'result.html'),'utf8'),/data-portrait="me-body"/);
+ assert.match(fs.readFileSync(path.join(ROOT,'js/recruit.js'),'utf8'),/data-portrait="me-body"/);
+});
+
+test('전신은 원화와 같은 비율로 굽는다 — 파티 카드에 나란히 선다',()=>{
+ /* art/full-*.webp 는 382×932 (0.41). 256×624 = 0.41 */
+ const m=SRC.match(/body:\{ w:(\d+), h:(\d+) \}/);
+ assert.ok(m,'전신 크기가 정의되어 있다');
+ const r=(+m[1])/(+m[2]);
+ assert.ok(Math.abs(r-382/932)<0.02, `비율 ${r.toFixed(3)} ≈ 0.410`);
+});
+
+test('전신은 «몸» 만 재서 맞춘다 — 낫을 넣으면 사람이 손톱만 해진다',()=>{
+ assert.match(SRC,/isSkinnedMesh\) bb\.expandByObject/,'스킨 메시만 잰다');
+ assert.match(SRC,/at\.y\+=h\*0\.045/,'머리 위 여백 — 결과 화면에서 정수리가 붙어 있었다');
+});
+
+test('얼굴·전신을 따로 담아 둔다',()=>{
+ assert.match(SRC,/function slot\(mode\)/,'모양마다 칸이 따로');
+ assert.match(SRC,/stateKey\(mode\)/,'열쇠에 모양이 들어간다');
+ assert.match(SRC,/const inflight=\{\}/,'모양마다 따로 굽는다');
+});
+
+test('내 칸에만 3D 를 끼운다 — 남의 장비는 알 수 없다',()=>{
+ const r=fs.readFileSync(path.join(ROOT,'js/recruit.js'),'utf8');
+ assert.match(r,/\(me\?' data-portrait="me-body"':''\)/,'me 인 칸만');
+ assert.match(r,/TW_PORTRAIT&&TW_PORTRAIT\.apply\(\)/,'카드를 다시 그리면 초상도 다시 끼운다');
 });

@@ -202,13 +202,17 @@
       out+='<div class="slot4'+(me?' is-me':'')+'"><div class="slot4__h">'+
         '<span class="slot4__p">'+(i+1)+'P</span>'+
         '<span class="slot4__st'+(lead?' lead':m.ready?' on':'')+'">'+st+'</span></div>'+
-        '<div class="slot4__art art"><img src="art/full-'+(m.character||'ain')+'.webp" alt=""></div>'+
+        /* 내 칸만 3D 전신 — 지금 입은 장비가 파티 카드에 그대로 보인다 (docs/design/36 §9).
+           남의 장비는 서버가 안 내려 주므로 원화 그대로다. */
+        '<div class="slot4__art art"'+(me?' data-portrait="me-body"':'')+
+        '><img src="art/full-'+(m.character||'ain')+'.webp" alt=""></div>'+
         '<div class="slot4__b"><div class="slot4__n">'+esc(m.name)+'</div>'+
         '<div class="slot4__m">'+(CHAR[m.character]||m.character||'—')+'</div>'+
         '<div class="slot4__cp">Lv.'+(m.level||1)+' · 전투력 '+fmt(m.power||0)+'</div>'+
         gradeTable(m.grades)+'</div></div>';
     }
     box.innerHTML=out;
+    globalThis.TW_PORTRAIT&&TW_PORTRAIT.apply();
   }
   function head(){
     if(!room){ $('rc-vis').textContent=connected?'모집 중인 파티':'접속 전'; $('rc-code').textContent='';

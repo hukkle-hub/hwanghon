@@ -129,7 +129,7 @@
     <!-- ===== 좌: 아트 ===== -->
     <div class="flex col" style="min-height:0" data-mpane="캐릭터">
       <div class="rsart art art--top">
-        <img src="art/char-result.webp" alt="아인">
+        <img src="art/char-result.webp" alt="아인" data-portrait="me-body">
         <div class="rsart__msg" id="rs-msg"></div>
         <div class="rsart__id">
           <div class="rsart__nm">Ain</div>
@@ -227,6 +227,10 @@
     p.rows.map(function(r){ return '<div class="pfstat"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>'; }).join('')+'</div></div>'+(p.mvp?'<span class="mvp">MVP</span>':'')+'</div>'; }).join('');
 })();
 </script>
+<script src="js/looks.js"></script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
+<script type="module" src="js/portrait3d.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>

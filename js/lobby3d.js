@@ -25,7 +25,10 @@ function start(canvas){
   try{
     renderer=new THREE.WebGLRenderer({canvas, alpha:true, antialias:true, powerPreference:'low-power'});
   }catch(e){ canvas.hidden=true; return; }               /* WebGL 이 없으면 배경 그림 그대로 */
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
+  /* 로비는 «메뉴» 다. 느린 대기 동작에 60fps 를 쓸 이유가 없고, 화소도 많이 필요 없다.
+     좁은 화면(휴대폰)에서는 더 내린다 — 눈에 안 보이는 차이로 채우기 비용이 반으로 준다. */
+  var small=Math.min(innerWidth,innerHeight)<820;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, small?1.25:1.6));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure=0.86;
@@ -178,14 +181,29 @@ function start(canvas){
   addEventListener('resize', layout, {passive:true});
   layout();
 
-  let hidden=false;
+  let hidden=false, acc=0, slow=0, frozen=false, seen=0;
+  const STEP=1/30;                     /* 30fps 로 충분하다 */
   document.addEventListener('visibilitychange', ()=>{ hidden=document.hidden; });
   (function loop(){
-    requestAnimationFrame(loop);
-    if(hidden) return;
-    const dt=Math.min(0.05, clock.getDelta());
-    if(mixer) mixer.update(dt);
-    if(wind&&model) wind.update(dt, model);
+    if(!frozen) requestAnimationFrame(loop);
+    if(hidden){ clock.getDelta(); return; }
+    const raw=clock.getDelta();          /* 진짜 간격 — 느린지 재려면 자르기 «전» 을 봐야 한다 */
+    const dt=Math.min(0.05, raw);
+    acc+=dt;
+    /* 약한 기기에서는 «덜덜거리며 계속 그리기» 보다 한 장 그려 두고 멈추는 편이 낫다.
+       옷은 그대로 보이고 메뉴는 매끄러워진다. */
+    if(model){
+      seen++;
+      if(raw>0.055) slow++; else slow=Math.max(0,slow-1);   /* dt 는 0.05 로 잘려 있어 절대 안 걸린다 */
+      if(!frozen&&seen>90&&slow>60){ frozen=true;
+        if(mixer) mixer.update(0); renderer.render(scene,cam);
+        console.info('[tw-lobby3d] 기기가 버거워 정지 화면으로 전환'); return; }
+      if(frozen) return;                 /* 이미 예약된 한 프레임이 남아 있다 */
+    }
+    if(acc<STEP) return;
+    const step=acc; acc=0;
+    if(mixer) mixer.update(step);
+    if(wind&&model) wind.update(step, model);
     renderer.render(scene,cam);
   })();
 

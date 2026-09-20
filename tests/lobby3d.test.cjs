@@ -65,3 +65,18 @@ test('낫까지 화면에 들어오도록 키를 줄인다',()=>{
  assert.ok(feet-want*ratio>=topGap-0.5, '낫 끝이 위 여백 안에 들어온다');
  assert.ok(want>60,'그렇다고 캐릭터가 사라질 만큼 줄지는 않는다');
 });
+
+test('약한 기기에서는 정지 화면으로 내려간다',()=>{
+ /* «덜덜거리며 계속 그리기» 보다 한 장 그려 두고 멈추는 편이 낫다 — 옷은 그대로 보인다 */
+ assert.match(SRC,/frozen=true/,'정지 전환이 있다');
+ assert.match(SRC,/const raw=clock\.getDelta\(\)/,'자르기 «전» 간격으로 잰다');
+ assert.match(SRC,/if\(raw>0\.055\) slow\+\+/,'0.05 로 자른 dt 로 재면 영원히 안 걸린다');
+ /* 자른 값으로 재는 실수가 되돌아오지 않게 */
+ assert.ok(!/if\(dt>0\.05/.test(SRC),'자른 dt 로 느림을 재지 않는다');
+});
+
+test('메뉴 화면답게 아낀다',()=>{
+ assert.match(SRC,/STEP=1\/30/,'30fps 로 충분하다');
+ assert.match(SRC,/small\?1\.25:1\.6/,'좁은 화면은 화소를 덜 쓴다');
+ assert.match(SRC,/hidden\)\{ clock\.getDelta\(\); return; \}/,'가려지면 그리지 않고 시계만 비운다');
+});
