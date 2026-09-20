@@ -137,11 +137,16 @@ def char_bones(arm):
     return out
 
 def frame(h, t):
-    """뼈 한 개의 좌표계. 두 뼈대에 «같은 규칙» 을 쓰므로 비틀림이 생기지 않는다."""
+    """뼈 한 개의 좌표계.
+
+    기준 벡터를 «뼈가 어느 쪽을 향하는가» 로 고르면 안 된다. T 자세 바탕(VRoid)의 팔은
+    수평, A 자세 캐릭터의 팔은 45° 라 서로 다른 가지를 타고, 팔이 90° 비틀린다.
+    두 뼈대 모두 −y 를 보고 서 있으므로 «앞» 을 고정 기준으로 삼는다."""
     y = (t - h)
     L = y.length
     y = y / L if L > 1e-9 else Vector((0, 1, 0))
-    ref = Vector((0, 0, 1)) if abs(y.z) < 0.85 else Vector((0, -1, 0))
+    ref = Vector((0, -1, 0))
+    if abs(y.dot(ref)) > 0.90: ref = Vector((0, 0, 1))      # 발가락처럼 앞을 향한 뼈
     x = ref.cross(y)
     if x.length < 1e-6:
         x = Vector((1, 0, 0)).cross(y)
