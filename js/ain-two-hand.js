@@ -74,7 +74,7 @@ export function makeAinTwoHand(model,root,slot){
  }
  function keep(b){if(!saved.has(b))saved.set(b,{q:b.quaternion.clone(),p:b.position.clone()});}
  function restore(){for(const [b,s]of saved){b.quaternion.copy(s.q);b.position.copy(s.p);}saved.clear();for(const m of gripMeshes)m.morphTargetInfluences.fill(0);}
- function apply(a,moving,guard,dt,poseName='idle'){
+ function apply(a,moving,guard,dt,poseName='idle',target=null){
   if(!slot)return;
   model.updateWorldMatrix(true,true);
   const active=!/death|hit|roll|dodge|pickup|cheer/.test(a?.clip||poseName);
@@ -94,6 +94,18 @@ export function makeAinTwoHand(model,root,slot){
   const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   const spec=path(keys,t),weaponQ=pathRotation(keys,t);
   const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));
+  // Nearby target adaptation is a bounded root-space translation, not wrist twist.
+  // Fade in/out around contact so target selection cannot snap the idle pose.
+  // The shared reach solver below still limits both arms together.
+  if(target&&['skill1','skill3','ult'].includes(name)){
+   const local=root.worldToLocal(target.clone()),weight=T.MathUtils.smootherstep(t,0,.32)*(1-T.MathUtils.smootherstep(t,.55,1))
+    *T.MathUtils.smootherstep(local.y,1.9,2.1)*(1-T.MathUtils.smootherstep(local.y,2.7,2.95))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.8,2.5));
+   if(weight>0){
+    const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):V(-.16,2.4,.5));
+    delta.x=T.MathUtils.clamp(delta.x,-.3,.3);delta.y=T.MathUtils.clamp(delta.y,-.20,.35);delta.z=T.MathUtils.clamp(delta.z,-.2,.3);
+    center.add(delta.multiplyScalar(weight).applyQuaternion(root.getWorldQuaternion(Q())));
+   }
+  }
   const shaftQ=frame.clone().multiply(weaponQ);
   const axis=V(0,1,0).applyQuaternion(shaftQ);
   const palms={Right:center.clone().addScaledVector(axis,.16*scale),Left:center.clone().addScaledVector(axis,-.16*scale)};
@@ -138,6 +150,6 @@ export function makeAinRigAdapter(model,root,slot){
  const base=makeRigAdapter(model,root,null),arms=makeAinTwoHand(model,root,slot);
  return {bones:arms.bones,diagnostics:arms.diagnostics,
   restore(){arms.restore();base.restore();},
-  apply(a,moving,guard,dt,poseName){base.apply(a,moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName);arms.diagnostics.footError=base.diagnostics.footError;}
+  apply(a,moving,guard,dt,poseName,target){base.apply(a,moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName,target);arms.diagnostics.footError=base.diagnostics.footError;}
  };
 }

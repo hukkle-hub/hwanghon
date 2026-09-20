@@ -221,6 +221,14 @@ class RaidView{
   else {const clip=raid.state==='clear'?'death':b.state==='downed'?'down':b.state==='stagger'?'stagger':b.moving?'walk':'idle';bb.play(clip);bb.current.paused=raid.state==='clear';if(bb.current.paused)bb.current.time=Math.max(0,bb.current.getClip().duration-1e-5);}
   bb.mixer.update(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
   bb.training?.sync(b.parts);
+  // Cache the latest rendered bone target for the next avatar frame, just as
+  // solo reads the boss pose before its next animation tick. No server hitbox change.
+  if(this.A.id==='tutorial'){
+   if(!bb.aimBones){bb.aimBones={};bb.model.traverse(o=>{if(o.isBone)bb.aimBones[o.name.replace(/^mixamorig:?/,'')]=o;});}
+   for(const p of raid.players){const avatar=this.avatars.get(p.id),part=this.A.parts3d[p.target||'core'],bone=part&&bb.aimBones[part.bone];
+    if(avatar)avatar.aimTarget=bone?bone.getWorldPosition(new T.Vector3()).add(new T.Vector3(...part.off).multiplyScalar((this.A.bossScale||1.22)*(this.A.scale||1)).applyAxisAngle(new T.Vector3(0,1,0),bb.root.rotation.y)):null;
+   }
+  }
   if(this.ringT>0){const k=1-this.ringT/this.ringDur;this.ringT=Math.max(0,this.ringT-dt);
    this.ring.visible=true;this.ring.position.set(bb.root.position.x,.06,bb.root.position.z);
    this.ring.scale.set(.9+k*7.2,1,.9+k*7.2);this.ring.material.opacity=.85*(1-k)*rpgUI.settings.effects;}
