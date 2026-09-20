@@ -25,6 +25,9 @@ npm run server       # 또는 START_PARTY_WINDOWS.bat / sh START_PARTY_MAC_LINUX
 3. **Apply** → 몇 분 뒤 `https://hwanghon-party.onrender.com` 형태의 주소가 생긴다
 4. 그 주소의 `/party.html` 로 접속하면 끝. 정적 사이트 쪽에서 붙이려면 아래 3번 참고
 
+> **재배포 대기 목록은 `docs/DEPLOY-PENDING.md`.** `render.yaml` 이
+> `autoDeployTrigger: "off"` 라 `server/` 변경은 손으로 눌러야 나간다.
+
 무료 플랜 주의: 15분 유휴면 잠들어 첫 접속이 30초쯤 걸리고, 재시작하면 `EPHEMERAL_STORAGE=1` 이라 계정·캐릭터가 초기화된다. 상시 유지가 필요하면 유료 플랜이나 디스크를 붙이고 `EPHEMERAL_STORAGE` 를 지운다.
 
 ## 3. GitHub Pages 사본에서 파티 서버에 붙이기
