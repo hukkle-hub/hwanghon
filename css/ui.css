@@ -605,3 +605,20 @@ html.mobile .sdlg__txt{font-size:13px;min-height:38px}
 /* 상단 바 나가기 — body[data-mback] 을 선언한 화면에 ui.js 가 붙인다 */
 .topbar__back{flex:none;margin-right:2px}
 .topbar__back .ico{transform:translateX(-1px)}
+
+/* 뒤로 가기 — 제 헤더를 쓰는 화면(협동 출격·로비)용 떠 있는 단추 (js/back.js, docs/design/37).
+   .topbar 가 있는 화면은 topbar__back 아이콘 단추로 들어가므로 이건 안 쓰인다. */
+.backfab{
+  position:fixed;z-index:60;
+  left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));
+  display:inline-flex;align-items:center;gap:6px;
+  min-height:40px;padding:0 14px 0 11px;
+  background:rgba(8,9,12,.82);border:1px solid var(--line);
+  color:var(--tx-dim);font-size:12.5px;letter-spacing:.04em;text-decoration:none;
+  backdrop-filter:blur(3px);
+}
+.backfab span{font-size:17px;line-height:1;color:var(--gold)}
+.backfab:hover,.backfab:active{border-color:var(--line-red);color:var(--tx-hi);background:rgba(18,10,10,.9)}
+html.touch .backfab{min-height:44px;padding:0 16px 0 13px}
+/* 제 헤더 안에 들어간 경우 — 떠 있지 않으므로 위치 속성을 되돌린다 */
+.backfab--inline{position:static;backdrop-filter:none;background:rgba(255,255,255,.05)}

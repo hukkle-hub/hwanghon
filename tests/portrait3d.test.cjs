@@ -49,13 +49,21 @@ test('초상을 쓰는 자리가 표시되어 있다',()=>{
    assert.match(h,/js\/looks\.js/, f+' 가 장비 외형을 읽는다 — 없으면 맨몸이 구워진다');
  }
  /* 전신을 쓰는 자리 */
- for(const f of ['result.html','recruit.html']){
+ for(const f of ['result.html','recruit.html','inventory.html']){
    const h=fs.readFileSync(path.join(ROOT,f),'utf8');
    assert.match(h,/portrait3d\.js/, f+' 가 초상을 읽는다');
    assert.match(h,/js\/looks\.js/, f+' 가 장비 외형을 읽는다');
  }
  assert.match(fs.readFileSync(path.join(ROOT,'result.html'),'utf8'),/data-portrait="me-body"/);
  assert.match(fs.readFileSync(path.join(ROOT,'js/recruit.js'),'utf8'),/data-portrait="me-body"/);
+ assert.match(fs.readFileSync(path.join(ROOT,'inventory.html'),'utf8'),/id="doll"[^>]*data-portrait="me-body"/);
+});
+
+test('인벤토리는 캐릭터를 바꿔도 종이인형이 따라간다',()=>{
+ const h=fs.readFileSync(path.join(ROOT,'inventory.html'),'utf8');
+ assert.match(h,/d\.src = 'art\/full-' \+ c\.dataset\.char/,'먼저 원화로 바로 반응한다');
+ assert.match(h,/TW_PORTRAIT\.apply\(\)/,'그 뒤 3D 를 덮는다');
+ assert.match(h,/tw:gearchar/,'캐릭터 교체 신호도 듣는다');
 });
 
 test('전신은 원화와 같은 비율로 굽는다 — 파티 카드에 나란히 선다',()=>{
