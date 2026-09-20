@@ -15,3 +15,11 @@ test('experimental body is explicitly NOT approved for runtime',()=>{
  assert.equal(r.status,'EXPERIMENT_NOT_RUNTIME_APPROVED');assert.equal(r.unweighted_vertices,0);
  assert.equal(r.evidence.length,4);
 });
+test('precision candidate preserves clips and improves sampled edge strain without claiming a visual pass',()=>{
+ const g=read('art/3d/base/ain_modular_precision_candidate.glb');
+ assert.equal(g.animations.length,28);assert.equal(g.skins[0].joints.length,24);
+ const load=p=>JSON.parse(fs.readFileSync(new URL('art/review/ain_modular/precision/'+p,root)));
+ const before=load('deformation_before.json'),after=load('deformation_audit.json');
+ assert.equal(after.samples.length,140);
+ assert.ok(Math.max(...after.samples.map(s=>s.p99))<Math.max(...before.samples.map(s=>s.p99)));
+});
