@@ -467,7 +467,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
-    if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(battle.snapshot().target||'core'):null);
+    if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||battle.snapshot().target||'core'):null);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
@@ -890,7 +890,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   /* 스틱 → 카메라 기준 월드 방향 */
   function stickWorld(){ var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-stick.sy).add(r.clone().multiplyScalar(stick.sx)); return { sx:d.x, sy:d.z }; }
   function keyStick(){ var x=(kd.KeyD||kd.ArrowRight?1:0)-(kd.KeyA||kd.ArrowLeft?1:0), y=(kd.KeyS||kd.ArrowDown?1:0)-(kd.KeyW||kd.ArrowUp?1:0); if(x||y){ var m=Math.hypot(x,y); var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-y/m).add(r.clone().multiplyScalar(x/m)); return {sx:d.x, sy:d.z}; } return null; }
-  var botStick=null, botMode=false;
+  var botStick=null, botMode=false, reviewAimPart=null;
   // Local-only deterministic visual review, using the actual battle/rig/trail.
   // No production route, account writes, rewards or network requests added.
   if(['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('weaponReview')){
@@ -907,7 +907,9 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       reviewTarget.visible=false;boss.coreGlow.visible=true;
       const distance=Math.max(.8,Math.min(3,Number(panel.querySelector('input').value)||1.2));reviewPart=panel.querySelector('[aria-label="검수 부위"]').value||'core';
       P.x=Bs.x-distance*SCALE;P.y=Bs.y;P.aim=0;P.rollT=0;P.lockT=0;botStick={sx:0,sy:0};
-      PS.ult=100;startPhase(0);const selected=panel.querySelector('select').value;
+      const validStage=A.stages.findIndex(s=>s.parts.some(p=>p.id===reviewPart));
+      reviewAimPart=validStage<0?reviewPart:null;
+      PS.ult=100;startPhase(Math.max(0,validStage));const selected=panel.querySelector('select').value;
       battle.input('target',reviewPart);
       battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',selected==='skill3'?2:0);
       watching=true;
@@ -916,7 +918,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;if(!a)return;
       if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
         panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';
-        const contact=measureAinBladeContact(ain.weapon,target),radius=boss.PART[reviewPart].r;panel.querySelector('[data-review-status]').textContent+=' · 선택 부위 '+reviewPart+' · 실제 날 표면 '+contact.distance.toFixed(3)+'m / 표적 반경 '+radius.toFixed(3)+'m · '+(contact.distance<=radius?'접촉':'빗나감');
+        const contact=measureAinBladeContact(ain.weapon,target),radius=boss.PART[reviewPart].r;panel.querySelector('[data-review-status]').textContent+=' · 선택 부위 '+reviewPart+' · 실제 날 표면 '+contact.distance.toFixed(3)+'m / 표적 반경 '+radius.toFixed(3)+'m · '+(contact.distance<=radius?'접촉':'빗나감')+(reviewAimPart?' · 자세 실험 전용: 게임에서 조준 불가, 피해 판정 검수 아님':' · 실제 전투 조준 '+s.target);
         // Hide only distracting presentation effects in this local frozen QA
         // view; show the unchanged target radius, never move/resize the target.
         FX.forEach(f=>f.o.visible=false);boss.coreGlow.visible=false;Object.values(boss.hits).forEach(o=>o.visible=false);el.counter.classList.remove('is-on');el.dg.querySelectorAll('.dmgnum').forEach(o=>o.remove());

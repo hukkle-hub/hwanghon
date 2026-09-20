@@ -93,6 +93,16 @@ export function makeAinTwoHand(model,root,slot){
   if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=a.elapsed<=a.hitAt?.42*a.elapsed/a.hitAt:.42+.58*(a.elapsed-a.hitAt)/(a.duration-a.hitAt);
   const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   const spec=path(keys,t),weaponQ=pathRotation(keys,t);
+  if(target&&name==='skill1'){
+   const local=root.worldToLocal(target.clone()),high=T.MathUtils.smootherstep(local.y,2.7,3.0)*(1-T.MathUtils.smootherstep(local.y,3.25,3.6))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.5,2.2));
+   if(high>0){
+    // Raised hook strike: shaft leans back while the hook travels above the
+    // hands. Both palms still use the common reach-constrained weapon pose.
+    const highKeys=keys.filter(([phase])=>phase!==.16).map(([phase,p])=>[phase===.70?.86:phase,phase===.42?[.44,.58,.37,-.025,1,-.66]:p]);
+    const highSpec=path(highKeys,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],highSpec[i],high);
+    weaponQ.slerp(pathRotation(highKeys,t),high);
+   }
+  }
   const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));
   // Nearby target adaptation is a bounded root-space translation, not wrist twist.
   // Fade in/out around contact so target selection cannot snap the idle pose.
