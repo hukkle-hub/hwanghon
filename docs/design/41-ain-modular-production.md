@@ -38,6 +38,16 @@ Git 공유용 검수 후보: `art/3d/base/ain_base_candidate.glb`, 실제 후보
 
 ## 이번 실행과 예산
 
+### 확대 정밀 보정 — 2026-09-21
+
+`art/3d/base/ain_modular_precision_candidate.glb`에 개선본을 별도 보관했다. 기존 후보/게임 기본 몸체는 그대로다. `art/review/ain_modular/precision/`에 얼굴·어깨·손·공격 확대 렌더와 수정 전 이미지를 함께 저장했다. 확대 이미지는 내보낸 GLB를 다시 읽어 렌더한 것이다.
+
+가슴이 팔에 끌려 꺾이고 손목이 뾰족해지는 문제를 발견했다. 좌표 구간으로 수동 보정한 v6~v8은 다른 부위에 악영향이 있어 채택하지 않았다. 최종 검수 후보는 Blender bone heat 가중치, 머리/머리카락 Head 고정, 정점당 최대 4개 영향 정규화를 적용했다. 29,440개 연결 정점 중 자동 가중치 없는 22개는 폴백으로 연결했다. 이 작업은 리토폴로지 또는 손가락 리깅의 대체가 아니다.
+
+28클립 × 5시점 = 140샘플 검사. 길이 1mm 초과 원본 에지의 변형 후 길이 비율을 측정했다. 각 샘플의 99백분위 중 최악은 6.618 → 1.512, 전체 최대는 83.896 → 17.595. 여전히 극단값이 있으므로 완전 합격이라고 표시하지 않는다. 충돌/피부 관통 검사가 아니며 개별 손가락, 팔꿈치 볼륨, 머리카락 끝의 구멍·덩어리감, 분리 의상은 남아 있다. Render 런타임 교체 없음, 추가 생성 크레딧 0.
+
+재현: `bind_ain_modular.py -- OUTPUT WELDED_STATIC_CANDIDATE --auto-weights`, `inspect_ain_closeup.py -- EXPORTED_GLB OUTPUT`, `audit_ain_deformation.py -- EXPORTED_GLB REPORT_JSON`. 경량화 전 UV 경계 병합된 candidate-v2를 입력으로 사용해야 한다.
+
 ### 2026-09-21 동작 연결 검수
 
 Claude 최신 `3210b9e`를 먼저 반영했다. 기존 `ain_body.glb`(VRoid 임시 몸체)는 변경하지 않았다.
