@@ -22,6 +22,7 @@
 | 설계 시트 ↔ 구현 | `compare.html` · `tools/screen-fit.mjs` |
 | 파티 모집 (2인) | `node tools/recruit-scenario.mjs` — 서버까지 한 프로세스에서 띄운다 |
 | 휴대폰 (Pixel 7) | 같은 명령에 `MOBILE=port` / `MOBILE=land` |
+| 운영 도구 (3인) | `node tools/admin-scenario.mjs` — 운영자·신고자·대상 |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.

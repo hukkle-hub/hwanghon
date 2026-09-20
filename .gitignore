@@ -16,3 +16,4 @@ __pycache__/
 
 # tools/recruit-scenario.mjs 스크린샷
 .recruit-shots/
+.admin-shots/

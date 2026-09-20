@@ -14,6 +14,7 @@
     ['party.html',     '협동 출격'],
     ['shelter.html',   '쉘터'],
     ['recruit.html',   '파티 모집'],
+    ['admin.html',     '운영 도구'],
     ['story.html',     '이야기'],
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],

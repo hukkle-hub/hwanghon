@@ -63,11 +63,25 @@ function createRpgCommands(ctx){
    else if(msg.operation==='officer'){tell(msg.target,'길드 임원이 되었습니다.');tell(id,to+' 님을 임원으로 임명했습니다.');}
    else if(msg.operation==='member'){tell(msg.target,'길드 임원에서 내려왔습니다.');tell(id,to+' 님의 임원을 해제했습니다.');}
    if(before)for(const member of before.members){sendGuild(member.id);update(member.id);sendHistory(member.id);}return true;}
-  if(op==='adminState'||op==='moderate'||op==='announcement'){
+  if(op==='adminState'||op==='moderate'||op==='announcement'||op==='adminFind'){
    if(!isAdmin(id))throw Error('운영 권한이 없습니다.');
+   /* 운영 화면은 UUID 가 아니라 «누구» 를 봐야 한다 — 이름과 현재 제재를 같이 싣는다 */
+   const named=pid=>{try{return store.get(pid).name;}catch{return '알 수 없음';}};
+   const sanctionOf=pid=>{const x=store.sanction(pid);return {ban:x.ban_until||0,mute:x.mute_until||0,reason:x.reason||''};};
+   if(op==='adminFind'){const pid=store.playerNamed(msg.name),p=store.public(pid);
+    send(ws,{type:'adminFind',player:{id:pid,name:p.name,level:p.level,account:p.account||null,sanction:sanctionOf(pid)}});return true;}
    if(op==='moderate'){store.moderate(id,msg.operation,msg.target,msg.minutes,msg.reason);if(msg.operation==='ban')sessions.get(msg.target)?.close(4003,'Account restricted');}
    if(op==='announcement'){if(typeof msg.text!=='string'||msg.text.length>240||/[<>\u0000-\u001f]/.test(msg.text))throw Error('공지는 240자 이하입니다.');store.transaction(()=>{store.db.prepare("INSERT INTO meta VALUES('announcement',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(msg.text);store.audit(id,'announcement','world');});for(const peer of sessions.values())send(peer,{type:'rpgNotice',text:'[공지] '+msg.text});}
-   send(ws,{type:'adminState',reports:store.db.prepare('SELECT * FROM reports ORDER BY created DESC LIMIT 50').all(),audit:store.db.prepare('SELECT * FROM audit ORDER BY id DESC LIMIT 50').all(),trades:store.db.prepare('SELECT * FROM trades ORDER BY id DESC LIMIT 50').all()});return true;
+   send(ws,{type:'adminState',
+    reports:store.db.prepare('SELECT * FROM reports ORDER BY created DESC LIMIT 50').all()
+      .map(r=>({...r,reporterName:named(r.reporter),targetName:named(r.target),sanction:sanctionOf(r.target)})),
+    audit:store.db.prepare('SELECT * FROM audit ORDER BY id DESC LIMIT 50').all()
+      .map(r=>({...r,actorName:named(r.actor),
+        targetName:/^[0-9a-f-]{36}$/.test(r.target||'')?named(r.target):null})),
+    trades:store.db.prepare('SELECT * FROM trades ORDER BY id DESC LIMIT 50').all()
+      .map(r=>({...r,buyerName:named(r.buyer),sellerName:named(r.seller)})),
+    announcement:store.db.prepare("SELECT value FROM meta WHERE key='announcement'").get()?.value||'',
+    online:[...sessions.keys()].length});return true;
   }
   if(op==='password'){requireOffice(id);const now=Date.now();if(now-(ws.lastPassword||0)<10000)throw Error('계정 변경은 10초 후 다시 시도하세요.');ws.lastPassword=now;await ctx.passwordChange(ws,msg);return true;}
   requireOffice(id);

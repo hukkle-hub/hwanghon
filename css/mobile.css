@@ -172,6 +172,18 @@ html.mobile .reccp b{font-size:18px}
   html.mobile .pchat__log{height:92px}
 }
 
+/* 운영 도구 (admin.html) */
+html.mobile .adhead{flex-wrap:wrap;gap:6px 10px}
+html.mobile .adhead__id{display:none}          /* 휴대폰에서 UUID 는 잘리기만 한다 */
+html.mobile .adacts{grid-template-columns:1fr 1fr;gap:8px}
+html.mobile .adrow__k{width:56px}
+html.mobile .logrow{font-size:12px;flex-wrap:wrap}
+html.mobile .logrow time{width:64px}
+html.mobile .logrow b{width:auto;max-width:120px}
+html.mobile .rprow{padding:11px 4px}
+html.mobile .rprow__t{font-size:14px}
+html.mobile #ad-reload{padding:0 12px}
+
 /* 장비 / 인벤토리 */
 html.mobile .invtabs{padding:0 6px;overflow-x:auto;flex:none}
 html.mobile .invtabs .tabs{border:0}

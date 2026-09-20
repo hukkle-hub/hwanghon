@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0B0C0F">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="art/face-ain.webp">
+<title>황혼 — 운영 도구</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/ui.css">
+<link rel="stylesheet" href="css/mobile.css">
+<style>
+/* 운영 도구 — 3열: 신고 목록 · 처리 · 공지/기록 */
+.ad{display:grid;grid-template-columns:318px 1fr 372px;gap:12px;padding:11px 18px;flex:1;min-height:0}
+.ad__l,.ad__c,.ad__r{display:grid;grid-template-rows:1fr;min-height:0}
+.ad__r{grid-template-rows:auto 1fr}
+
+/* 권한 없음 안내 */
+.nogate{display:grid;place-items:center;padding:40px 20px;text-align:center;gap:10px}
+.nogate__t{font-size:15px;color:var(--tx-hi);letter-spacing:.04em}
+.nogate__s{font-size:12px;color:var(--tx-faint);line-height:1.9}
+.nogate code{font-family:var(--f-serif);color:var(--gold-dim);letter-spacing:.04em}
+
+/* 신고 줄 */
+.rprow{display:flex;align-items:flex-start;gap:9px;padding:9px 3px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+.rprow:last-child{border:0}
+.rprow:hover{background:rgba(255,255,255,.03)}
+.rprow.is-on{background:linear-gradient(90deg,rgba(120,30,30,.30),rgba(120,30,30,.06));
+  box-shadow:inset 2px 0 0 var(--red-lit)}
+.rprow.is-done{opacity:.5}
+.rprow__n{font-family:var(--f-serif);font-size:12px;color:var(--gold-dim);flex:none;width:34px;padding-top:1px}
+.rprow__t{font-size:12.5px;color:var(--tx-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rprow__s{font-size:10.5px;color:var(--tx-faint);margin-top:3px}
+.rprow__st{font-size:10px;letter-spacing:.06em;padding:1px 6px;flex:none;
+  color:#D68B88;border:1px solid var(--line-red)}
+.rprow__st--done{color:var(--tx-ghost);border-color:var(--line)}
+
+/* 처리 */
+.adhead{display:flex;align-items:baseline;gap:10px;padding:10px 13px;border-bottom:1px solid var(--line-soft)}
+.adhead__n{font-size:16px;color:var(--tx-hi);letter-spacing:.03em}
+.adhead__id{font-size:10.5px;color:var(--tx-ghost);font-family:var(--f-serif);letter-spacing:.06em;
+  margin-left:auto;user-select:all}
+.quote{border-left:2px solid var(--line-red);padding:7px 11px;margin:6px 0 0;
+  background:rgba(0,0,0,.28);font-size:12px;color:var(--tx-dim);line-height:1.8;overflow-wrap:anywhere}
+.sanc{display:flex;align-items:center;gap:8px;padding:7px 11px;border:1px solid var(--line);
+  background:rgba(0,0,0,.3);font-size:12px}
+.sanc b{font-family:var(--f-serif);color:var(--red-lit)}
+.sanc--ok b{color:#8FBF8F}
+.adrow{display:flex;align-items:center;gap:8px;padding:6px 0}
+.adrow__k{font-size:11.5px;color:var(--tx-faint);width:66px;flex:none}
+.adrow .field{flex:1;margin:0}
+.adacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.adacts .btn{width:auto}
+.btn--danger{border-color:var(--line-red);color:#D68B88;background:rgba(165,28,28,.12)}
+.btn--danger:hover{background:rgba(165,28,28,.22)}
+
+/* 기록 */
+.logrow{display:flex;gap:9px;padding:6px 3px;border-bottom:1px solid rgba(255,255,255,.035);font-size:11px}
+.logrow:last-child{border:0}
+.logrow time{color:var(--tx-ghost);flex:none;width:76px;font-variant-numeric:tabular-nums}
+.logrow b{color:var(--tx-dim);font-weight:400;flex:none;width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logrow span{color:var(--tx-faint);overflow-wrap:anywhere}
+.ta{width:100%;min-height:62px;resize:vertical;font:inherit;font-size:12px;line-height:1.7;
+  color:var(--tx);background:rgba(0,0,0,.35);border:1px solid var(--line);padding:8px 10px}
+.ta:focus{outline:none;border-color:var(--line-gold)}
+.state2{font-size:11px;color:var(--gold-dim);min-height:15px;padding:0 13px 10px}
+.state2.is-bad{color:var(--red-lit)}
+</style>
+</head>
+<body data-mback="shelter.html">
+<script src="js/icons.js"></script>
+
+<div class="stage">
+  <header class="topbar">
+    <svg class="topbar__sigil"><use href="#i-sigil"/></svg>
+    <div>
+      <h1 class="topbar__title">운영 도구</h1>
+      <div class="topbar__sub">신고를 확인하고 제재·공지를 집행합니다.</div>
+    </div>
+    <div class="topbar__spacer"></div>
+    <div class="topbar__right">
+      <span class="xs t-faint" id="ad-online">접속 전</span>
+      <button type="button" class="btn btn--sm" id="ad-reload">
+        <svg class="ico ico--sm"><use href="#i-refresh"/></svg>새로 고침</button>
+    </div>
+  </header>
+
+  <main class="ad" data-mdefault="신고">
+    <!-- ======== 좌: 신고 목록 ======== -->
+    <div class="ad__l" data-mpane="신고">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">신고</span>
+          <span class="panel__meta" id="ad-rcount">—</span></div>
+        <div class="ktabs tabs" id="ad-filter">
+          <button class="tab is-on" data-f="open">미처리</button>
+          <button class="tab" data-f="resolved">처리됨</button>
+          <button class="tab" data-f="all">전체</button>
+        </div>
+        <div class="panel__body scroll" id="ad-reports">
+          <div class="chat__empty">접속하면 신고가 표시됩니다.</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ======== 중: 처리 ======== -->
+    <div class="ad__c" data-mpane="처리">
+      <section class="panel panel--framed">
+        <div class="adhead">
+          <span class="adhead__n" id="ad-who">대상 없음</span>
+          <span class="xs t-faint" id="ad-when"></span>
+          <span class="adhead__id" id="ad-pid"></span>
+        </div>
+        <div class="panel__body scroll" id="ad-detail">
+          <div class="chat__empty">왼쪽에서 신고를 고르거나,<br>아래에서 캐릭터 이름으로 찾으세요.</div>
+        </div>
+        <div class="state2" id="ad-state"></div>
+      </section>
+    </div>
+
+    <!-- ======== 우: 공지 · 기록 ======== -->
+    <div class="ad__r" data-mpane="공지">
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">서버 공지</span>
+          <span class="panel__meta">전체에게 즉시 전달</span></div>
+        <div class="panel__body panel__body--tight">
+          <textarea class="ta" id="ad-notice" rows="3" maxlength="240"
+            placeholder="접속한 모든 사람에게 한 번 전달됩니다 (240자)"></textarea>
+          <div class="flex g2 mt2">
+            <button type="button" class="btn btn--sm btn--primary" id="ad-post" style="flex:1">공지 게시</button>
+            <button type="button" class="btn btn--sm" id="ad-clear">비우기</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel panel--framed">
+        <div class="panel__head"><span class="panel__title">기록</span>
+          <span class="panel__meta" id="ad-lcount">—</span></div>
+        <div class="ktabs tabs" id="ad-logtab">
+          <button class="tab is-on" data-l="audit">운영</button>
+          <button class="tab" data-l="trades">거래</button>
+        </div>
+        <div class="panel__body scroll" id="ad-log"></div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="gnb">
+    <a href="index.html"><svg class="ico"><use href="#i-map"/></svg>로비</a>
+    <a href="office.html"><svg class="ico"><use href="#i-users"/></svg>인력 사무소</a>
+    <a href="shelter.html"><svg class="ico"><use href="#i-shield"/></svg>쉘터</a>
+    <a href="recruit.html"><svg class="ico"><use href="#i-sword"/></svg>파티 모집</a>
+    <a class="is-on"><svg class="ico"><use href="#i-gear"/></svg>운영 도구</a>
+    <a href="inventory.html"><svg class="ico"><use href="#i-bag"/></svg>창고</a>
+  </nav>
+</div>
+
+<script src="js/world.js"></script>
+<script src="js/items.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/ui.js"></script>
+<script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

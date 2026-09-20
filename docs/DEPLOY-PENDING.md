@@ -24,7 +24,11 @@
 | 4 | `8b9bfda` | (GPT) **아인 스킬 제스처·캐릭터별 모션 프로필** — 연출 전용, 피해·무적 없음 | `raid.cjs` |
 | 5 | `834e84a` | **기술 등급 5종 · 모집 조건 · 목록 새로 고침** — 전투/제작/강화/수리/소모품에서 `p.skill` 누적, `techGrades`, `state` 에 `grades`, `board` 에 `chars`·`minPower`·`voice` + 가득 찬 방 포함, `join()` 의 최소 전투력 강제, `{type:'board'}` 명령 | `index.cjs` `rpg-store.cjs` `raid.cjs` |
 
-합계 `server/` 4파일 · +156 / −14.
+| 6 | (이번) | **운영 도구** — `adminState` 에 이름·현재 제재·현재 공지, `adminFind` 신설, 제재 기간 상한 999분→1년, 신고 번호 999 제한 해제 | `rpg-server.cjs` `rpg-store.cjs` |
+
+운영 도구(`admin.html`)를 쓰려면 환경변수도 하나 더 필요하다 —
+`ADMIN_IDS = <플레이어 id>` (쉼표로 여러 명). 없으면 화면이 아무에게도
+보이지 않는다. 자기 id 는 그 화면의 안내에 찍힌다 (`docs/design/32`).
 
 ## 재배포 전까지 온라인에서 안 되는 것
 

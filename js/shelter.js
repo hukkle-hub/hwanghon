@@ -209,7 +209,10 @@
       if(msg.type==='chat'){ messages.push(msg.message); if(messages.length>200) messages.shift();
         renderChat(); return; }
       if(msg.type==='rpgNotice'){ state(msg.text); return; }
-      if(msg.type==='rpg'){ if(msg.data&&msg.data.contacts){ contacts=msg.data.contacts; renderContacts(); } return; }
+      if(msg.type==='rpg'){ if(msg.data&&msg.data.contacts){ contacts=msg.data.contacts; renderContacts(); }
+        /* 운영 도구는 권한이 있을 때만 드러낸다 — 서버가 어차피 거절하지만 없는 문을 보이지 않는다 */
+        if(msg.data&&typeof msg.data.admin==='boolean') $('sh-admin').hidden=!msg.data.admin;
+        return; }
       if(msg.type==='state'){ room=msg; return; }
       if(msg.type==='left'){ room=null; return; }
       if(msg.type==='loggedOut'){ stopped=true; connected=false; profile=null; guild=null; room=null;
