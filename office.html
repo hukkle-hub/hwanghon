@@ -69,19 +69,32 @@
 
 /* 전투 준비 */
 .prep{display:flex;align-items:center;gap:11px;padding:10px 12px}
+/* 시트의 의뢰 카드: 제목과 위험도가 같은 줄, 그 아래 지역, 가는 구분선, 의뢰 보수 */
+.qrow{align-items:stretch}
+.qrow__t{display:flex;align-items:center;gap:8px}
+.qrow__t .row__name{flex:1;min-width:0}
+.qrow__t .risk{flex:none}
+.qrow__hr{height:1px;background:var(--line-soft);margin:7px 0 6px}
+.qrow__pay{margin:0}
+.qrow.is-locked{opacity:.45}
+.qrow.is-locked.is-on{opacity:.62}
+/* 시트의 «전투 준비» — 금빛 띠 한 줄. 선택한 의뢰의 출격지를 따라간다. */
+.prepbar{display:flex;align-items:center;gap:12px;padding:9px 13px;text-decoration:none;color:inherit;
+  border:1px solid var(--line-gold);position:relative;overflow:hidden;
+  background:linear-gradient(100deg,rgba(94,74,38,.55),rgba(52,42,24,.38) 62%,rgba(24,20,14,.3))}
+.prepbar__ico{width:28px;height:28px;color:#D9C49A;flex:none}
+.prepbar__k{font-size:13px;color:#EADFC4;letter-spacing:.06em}
+.prepbar__v{font-size:11px;color:var(--tx-dim);margin-top:3px}
+.prepbar__art{position:absolute;right:0;top:0;bottom:0;width:150px;opacity:.28;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 55%);mask-image:linear-gradient(90deg,transparent,#000 55%)}
+.prepbar__art img{width:100%;height:100%;object-fit:cover}
+.prepbar.is-locked{filter:grayscale(.7);opacity:.6;pointer-events:none}
 /* 시트의 이 칸은 «전투 준비» 한 줄 높이다. 목록이 길어져도 스테이지 952px 예산을
    넘기면 안 된다 — 넘기면 fitStage 가 화면 전체를 축소한다. 넘치면 여기서 스크롤. */
 .preplist{max-height:150px;overflow-y:auto}
 .prep__thumb{width:58px;height:40px;border:1px solid var(--line);flex:none}
 .prep__ico{width:30px;height:30px;color:var(--gold-dim);flex:none}
 
-/* 하단 네비 */
-.gnb{display:flex;align-items:center;gap:34px;padding:11px 26px;
-  border-top:1px solid var(--line-soft);background:linear-gradient(0deg,rgba(0,0,0,.55),transparent);flex:none}
-.gnb a{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--tx-faint);letter-spacing:.04em}
-.gnb a:hover{color:var(--tx)}
-.gnb a.is-on{color:#D8C08A}
-.gnb a.is-on .ico{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -191,32 +204,12 @@
         <div class="panel__body scroll" id="q-info"></div>
       </section>
 
-      <section class="panel panel--framed preplist">
-        <a class="prep" href="game3d.html" id="of-arena" style="text-decoration:none;color:inherit">
-          <svg class="prep__ico"><use href="#i-target"/></svg>
-          <div class="fill">
-            <div class="sm t-hi">던전 01 <span class="xs t-faint">· 뒷마당 훈련장 입장</span></div>
-            <div class="xs t-faint mt1" id="of-prep">훈련용 허수아비</div>
-            <div class="xs mt1" id="of-record"></div>
-            <div class="xs t-faint mt1" id="of-drops"></div>
-          </div>
-          <div class="prep__thumb art art--forge"><img src="art/forge-kain.webp" alt=""></div>
-        </a>
-        <a class="prep" href="game3d.html?d=d02" id="of-arena2" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
-          <svg class="prep__ico"><use href="#i-skull"/></svg>
-          <div class="fill">
-            <div class="sm t-hi">던전 02 <span class="xs t-faint">· 갈대습지 · 의뢰 S</span></div>
-            <div class="xs t-faint mt1">대형 변이체 「모르버스」 토벌 · 부위 5 · 광란 페이즈</div>
-            <div class="xs mt1" id="of-record2"></div>
-            <div class="xs t-faint mt1" id="of-drops2"></div>
-          </div>
-          <div class="prep__thumb art"><img src="art/boss-marsh.webp" alt="" style="object-fit:cover"></div>
-        </a>
-        <a class="prep" href="quest.html?q=q_sewage" style="text-decoration:none;color:inherit;border-top:1px solid var(--line-soft)">
-          <svg class="prep__ico"><use href="#i-shield"/></svg>
-          <div class="fill"><div class="sm t-hi">던전 03 · 2경구 정화장</div><div class="xs t-faint mt1">오염원 3곳 차단 · 배관 파괴 · 과압 수문기 토벌</div></div>
-        </a>
-      </section>
+      <!-- 시트의 «전투 준비» 한 줄. 왼쪽에서 고른 의뢰의 출격지를 따라간다. -->
+      <a class="prepbar" id="of-prep-bar" href="game3d.html">
+        <svg class="prepbar__ico"><use href="#i-target"/></svg>
+        <div class="fill"><div class="prepbar__k">전투 준비</div><div class="prepbar__v" id="of-prep">훈련용 허수아비</div></div>
+        <span class="prepbar__art"><img id="of-prep-art" src="art/forge-kain.webp" alt=""></span>
+      </a>
 
       <button class="btn btn--deploy" data-primary>
         <span class="flex ac g2"><svg class="ico ico--lg"><use href="#i-sword"/></svg>출격 준비</span>
@@ -249,15 +242,22 @@
   var coin='<svg class="ico ico--xs" style="color:var(--gold-dim)"><use href="#i-coin"/></svg>';
   function rows(){
     $('#q-rows').innerHTML = W.QUESTS.map(function(q){
-      return '<div class="row'+(q.id===cur?' is-on':'')+'" data-q="'+q.id+'"><div class="row__main"><div class="row__name">'+q.name+'</div>'+
-        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="row__sub" style="margin-top:5px">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div>'+(window.TW_STORY?'<span class="qstate qstate--'+TW_STORY.questState(q.id)+'">'+TW_STORY.stateLabel(TW_STORY.questState(q.id))+'</span>':'')+'</div>'+
-        '<div class="row__right"><span class="risk">위험도 '+W.riskBadge(q.risk)+'</span></div></div>'; }).join('');
+      var st=window.TW_STORY?TW_STORY.questState(q.id):'available';
+      /* 시트에는 상태 칩이 없다. 눌러서 할 일이 있는 «보수 미수령» 만 남기고,
+         잠김은 칩 대신 카드를 흐리게 해서 보인다 — 여섯 줄 전부 「잠김」은 소음이다. */
+      var chip=st==='cleared'?'<span class="qstate qstate--cleared">보수 미수령</span>':'';
+      return '<div class="row qrow'+(q.id===cur?' is-on':'')+(st==='locked'?' is-locked':'')+'" data-q="'+q.id+'"><div class="row__main">'+
+        '<div class="qrow__t"><span class="row__name">'+q.name+'</span><span class="risk">위험도 '+W.riskBadge(q.risk)+'</span></div>'+
+        '<div class="row__sub">'+q.area+' &gt; '+q.sub+'</div><div class="qrow__hr"></div>'+
+        '<div class="row__sub qrow__pay">의뢰 보수 '+coin+'<span class="num t-dim">'+W.fmt(q.reward)+'</span></div>'+chip+'</div></div>'; }).join('');
   }
   function info(){
     var q=W.quest(cur); $('#q-risk').innerHTML='위험도 '+W.riskBadge(q.risk);
     var rw=q.rewards.map(function(r){ var it=r[0]==='exp'?null:T.get(r[0]); var ic=it?it.icon:'exp'; var rar=it&&(it.rarity==='hero'||it.rarity==='legend')?' data-r="'+it.rarity+'"':'';
       return '<div class="rw"'+rar+'>'+(it?T.artHTML(it.id):'<svg class="ico"><use href="#i-'+ic+'"/></svg>')+'<b>'+(typeof r[1]==='number'?W.fmt(r[1]):r[1])+'</b></div>'; }).join('');
-    var en=''; for(var i=0;i<q.enemies;i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-skull"/></svg></span>';
+    /* 시트의 «주요 적» 은 네 칸이 서로 다른 실루엣이다. 같은 해골 네 개는 정보가 0이다. */
+    var FOE=['skull','tree','bolt','anvil'],en='';
+    for(var i=0;i<q.enemies;i++) en+='<span class="enemy"><svg class="ico ico--sm"><use href="#i-'+FOE[i%FOE.length]+'"/></svg></span>';
     $('#q-info').innerHTML='<h2 class="lg" style="color:var(--tx-hi);letter-spacing:.04em">'+q.name+'</h2><div class="xs t-faint mt1">'+q.area+' &gt; '+q.sub+'</div>'+
       '<div class="qart art art--beast mt3"><img src="art/'+q.art+'.webp" alt=""></div><div class="hr"></div><div class="label-ko">의뢰 목표</div><div class="sm t-dim">'+q.goal+'</div>'+
       '<div class="hr"></div><div class="label-ko">주요 적</div><div class="enemies">'+en+'</div><div class="hr"></div>'+
@@ -277,22 +277,30 @@
       return '<div class="pcard'+(i===0?' is-on':'')+'"><div class="pcard__top">'+W.face(id,'pcard__face')+'<div class="fill"><div class="pcard__nm">'+c.nm+'</div><div class="pcard__lv">'+(id==='ain'&&window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'등급 '+(window.TW_GRADE?TW_GRADE.lvGrade(c.lv):c.lv))+'</div><div class="pcard__cp">전투력 '+W.fmt(c.cp)+'</div></div>'+
         '<svg class="ico pcard__role"><use href="#i-'+c.icon+'"/></svg></div><div class="pcard__ready"><svg class="ico ico--xs"><use href="#i-check"/></svg>준비 완료</div></div>'; }).join('');
   }
-  $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); info(); });
+  /* 시트의 «전투 준비» 띠 — 지금 무엇과 싸우러 가는지 한 줄. 훈련 미수료면 훈련장을 가리킨다. */
+  function prepBar(){
+    var ST=window.TW_STORY, bar=$('#of-prep-bar'); if(!bar) return;
+    var ch=ST&&(ST.cleared('tutorial')?ST.routeForQuest(cur):ST.ch('ch1'))||null;
+    var locked=!ch||(ST&&ch.quest&&ST.questState(ch.quest)==='locked');
+    bar.classList.toggle('is-locked',!!locked);
+    $('#of-prep').textContent=ch?ch.title:W.PARTY.office.prep;
+    $('#of-prep-art').src='art/'+((ch&&ch.art)||'forge-kain')+'.webp';
+    bar.setAttribute('href',(ch&&ch.dungeon)||'game3d.html');
+    bar.dataset.ch=(ch&&ch.id)||'ch1';
+  }
+  $('#of-prep-bar').addEventListener('click', function(e){
+    var ST=window.TW_STORY; if(!ST) return; var href=this.getAttribute('href');
+    if(ST.brief(this.dataset.ch||'ch1', function(){ location.href=href; })) e.preventDefault(); });
+  $('#q-rows').addEventListener('click', function(e){ var r=e.target.closest('[data-q]'); if(!r) return; cur=r.dataset.q; rows(); info(); prepBar(); });
   var o=W.PARTY.office;
+  $('#of-owner').textContent=o.owner;
   $('#of-lv').textContent='사무소 '+o.lv+'등급'; $('#of-exp').textContent=W.fmt(o.exp[0])+' / '+W.fmt(o.exp[1]);
   $('#of-rep').textContent=o.rep; $('#of-repexp').textContent=W.fmt(o.repExp[0])+' / '+W.fmt(o.repExp[1]);
   $('#of-bar1').setAttribute('data-fill', Math.round(o.exp[0]/o.exp[1]*100)); $('#of-bar2').setAttribute('data-fill', Math.round(o.repExp[0]/o.repExp[1]*100));
-  $('#of-prep').textContent=o.prep; $('#of-owner').textContent=o.owner;
   try{ var sv=window.TW_SAVE&&window.TW_SAVE.get(); var curEl=document.querySelector('.topbar .currency .num'); if(sv && curEl){ var base=(window.TW_ITEMS&&window.TW_ITEMS.PLAYER&&window.TW_ITEMS.PLAYER.gold)||75300; curEl.textContent=W.fmt(base+sv.gold); } }catch(e){}
-  try { if(window.TW_LOOT){ var dd=TW_LOOT.describe('tutorial'); $('#of-drops').innerHTML='부위 파괴: '+dd.parts.join('·')+' · 클리어 희귀: '+dd.rare.slice(0,3).join('·'); } } catch(e){}
-  try { if(window.TW_LOOT){ var d2=TW_LOOT.describe('marsh'); $('#of-drops2').innerHTML='부위 파괴: '+d2.parts.join('·')+' · 클리어 희귀: '+d2.rare.slice(0,4).join('·'); } } catch(e){}
-  try { var rec2=JSON.parse(localStorage.getItem('tw:arena:marsh')||'null'); $('#of-record2').innerHTML = rec2 && rec2.cleared ? '최고 기록 <b class="badge badge--'+rec2.rank.toLowerCase()+'">'+rec2.rank+'</b> <span class="t-faint">'+Math.round(rec2.time)+'초 · 카운터 '+Math.round(rec2.counterRate*100)+'%</span>' : '<span class="t-faint">미토벌 — 정찰대 신호 끊김</span>'; } catch(e){}
-  try { var rec=JSON.parse(localStorage.getItem('tw:arena:tutorial')||'null'); $('#of-record').innerHTML = rec && rec.cleared ? '최고 기록 <b class="badge badge--'+rec.rank.toLowerCase()+'">'+rec.rank+'</b> <span class="t-faint">'+Math.round(rec.time)+'초 · 카운터 '+Math.round(rec.counterRate*100)+'%</span>' : '<span class="t-red">미수료</span> <span class="t-faint">— 훈련을 마치면 의뢰 목록이 열린다</span>'; } catch(e){}
-  rows(); info(); cards();
+  rows(); info(); cards(); prepBar();
   /* 던전 카드: 첫 출격 전 마태오 브리핑 · 클리어 후 후일담 */
-  function guard(sel, chId){ var a=$(sel); if(!a||!window.TW_STORY) return; a.addEventListener('click', function(e){ var href=a.getAttribute('href'); if(TW_STORY.brief(chId, function(){ location.href=href; })) e.preventDefault(); }); }
-  guard('#of-arena','ch1'); guard('#of-arena2','ch2');
-  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){TW_STORY.afterClear('sewage',function(){rows();info();});}); }); } }catch(e){}
+  try{ if(window.TW_STORY && !navigator.webdriver){ TW_STORY.afterClear('tutorial', function(){ TW_STORY.afterClear('marsh', function(){TW_STORY.afterClear('sewage',function(){rows();info();prepBar();});}); }); } }catch(e){}
 })();
 </script>
 <script src="js/ui.js"></script>

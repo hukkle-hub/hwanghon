@@ -18,6 +18,7 @@
 | 보스 자세 (쓰러짐·사망·공격) | `tools/3d/pose-sheet.html` |
 | 실제 전투 화면 | `game3d.html?d=dNN` + Playwright |
 | 온라인 | `party.html` (2인 필요) + `window.TW_RAID` |
+| 쉘터 | `node server/index.cjs` + `shelter.html` + `window.TW_SHELTER` |
 | 설계 시트 ↔ 구현 | `compare.html` · `tools/screen-fit.mjs` |
 
 ```
@@ -97,3 +98,4 @@ curl -s https://hukkle-hub.github.io/hwanghon/version.json   # 빌드 해시 확
 - `24` 접점·접지 감사 (전 보스 세밀 조정)
 - `25` 전 보스 렌더 감사 + 디자인 시트 빌드 포함
 - `26` 시트대로 화면 맞추기 (레이아웃 예산 952px)
+- `27` 쉘터 화면 (길드·채팅, 서버 무변경)
