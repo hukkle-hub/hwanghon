@@ -118,7 +118,7 @@
       <div class="idrow">
         <section class="panel panel--framed">
           <div class="idcard">
-            <div class="idcard__face art art--avatar"><img src="art/face-ain.webp" alt="ain"></div>
+            <div class="idcard__face art art--avatar" data-portrait="me"><img src="art/face-ain.webp" alt="ain"></div>
             <div class="fill" id="idcard"></div>
           </div>
         </section>
@@ -236,6 +236,10 @@
     '<div><div class="sb__k">총 플레이 시간</div><div class="sb__v">'+sn.playtime+'</div></div><div><div class="sb__k">마지막 접속</div><div class="sb__v">'+sn.last+'</div></div><button class="btn btn--sm btn--ghost" style="justify-self:end">상세 시즌 기록</button>';
 })();
 </script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
+<script src="js/looks.js"></script>
+<script type="module" src="js/portrait3d.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 </body>
