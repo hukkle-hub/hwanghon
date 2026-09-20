@@ -400,7 +400,9 @@ svg:not(.gauge svg){fill:none;stroke:currentColor;stroke-width:1.4;stroke-lineca
   display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;
   background:rgba(0,0,0,.42);border:1px solid var(--line)
 }
-.field input{flex:1;min-width:0;background:none;border:0;outline:none;font-size:12px;color:var(--tx)}
+[hidden]{display:none!important}
+.field input,.field select{flex:1;min-width:0;background:none;border:0;outline:none;font-size:12px;color:var(--tx)}
+.field select option{background:#12161a;color:var(--tx)}
 .field input::placeholder{color:var(--tx-ghost)}
 .check{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--tx-faint);cursor:pointer;user-select:none}
 .check i{

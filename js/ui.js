@@ -13,6 +13,7 @@
     ['quest.html',     '의뢰 상세'],
     ['party.html',     '협동 출격'],
     ['shelter.html',   '쉘터'],
+    ['recruit.html',   '파티 모집'],
     ['story.html',     '이야기'],
     ['characters.html','캐릭터'],
     ['inventory.html', '장비/인벤토리'],
