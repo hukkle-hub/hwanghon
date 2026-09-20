@@ -1,9 +1,9 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>아인 · 6포즈 애니메이션 시험</title>
 <style>body{margin:0;background:#14191f;color:#e8e2d7;font:14px system-ui}header{padding:18px 24px}h1{margin:0;font-size:23px}p{color:#bbb;max-width:950px}button,a,select{background:#303b45;color:#fff;border:1px solid #71808b;border-radius:5px;padding:8px;cursor:pointer}#stage{height:48vh;min-height:300px}canvas{display:block}#strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:12px}#strip img{width:100%;background:#1e2630}#strip button{padding:4px}#status{padding:0 24px}input{width:200px}@media(max-width:700px){#strip{grid-template-columns:repeat(3,1fr)}}</style>
-<header><h1>아인 · 어깨·양손 교정 검수</h1><p>실제 동작 클립 또는 6포즈 연구를 선택해 확인합니다. 몸통·하체는 선택한 클립, 팔과 낫은 교정 경로를 사용합니다. 손가락 개별 리깅은 아직 없으며, 손바닥 기준점 오차가 손가락 접촉 품질을 보증하지는 않습니다.</p>
+<header><h1>아인 · 어깨·양손 교정 검수</h1><p>실제 동작 클립 또는 6포즈 연구를 선택해 확인합니다. 몸통·하체는 선택한 클립, 팔과 낫은 교정 경로를 사용합니다. 실제 낫의 중심축 보정과 양손 그립 모프 적용 · 59,999 삼각형 유지. 개별 손가락 뼈를 추가한 리깅은 아닙니다. <a href="ain-hand-review.html">원본 / 교정 손 확대 비교</a></p>
 <button id="play" disabled>연결 재생</button> <button id="stop" disabled>정지</button> <button id="bind">원본 A포즈</button>
 <select id="view" aria-label="시점"><option value="front">정면</option><option value="side">측면</option><option value="back">후면</option><option value="close">손·어깨 확대</option></select>
-<label>동작 <select id="clip" disabled><option value="study">6포즈 연구</option><option value="attack1">기본 베기</option><option value="attack2">내려찍기</option><option value="attack3">찌르기</option><option value="smash">강공격</option><option value="ult">궁극기</option><option value="idle">대기</option><option value="run">달리기</option><option value="guard">방어</option></select></label>
+<label>동작 <select id="clip" disabled><option value="study">6포즈 연구</option><option value="attack1">기본 베기</option><option value="attack2">내려찍기</option><option value="attack3">찌르기</option><option value="smash">강공격</option><option value="ult">궁극기</option><option value="skill1">스킬 1</option><option value="skill2">스킬 2</option><option value="skill3">스킬 3</option><option value="skill4">스킬 4</option><option value="counter">반격</option><option value="exec">처형</option><option value="idle">대기</option><option value="run">달리기</option><option value="guard">방어</option><option value="roll">구르기</option><option value="hit">피격</option></select></label>
 <label>속도 <select id="speed"><option value="1">1배</option><option value=".35">0.35배</option></select></label>
 <input id="seek" aria-label="애니메이션 시간" type="range" min="0" max="1400" value="0">
 <button id="sheet" disabled>6포즈 PNG 저장</button></header><div id="stage"></div><p id="status">모델과 낫 로드 중…</p><div id="strip"></div>
@@ -13,6 +13,7 @@ import {GLTFLoader} from './vendor/three/GLTFLoader.js';
 import {OrbitControls} from './vendor/three/OrbitControls.js';
 import {makeAinTwoHand as makeRigAdapter} from './js/ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './js/ain-bind-repair.js';
+import {mountAinScythe} from './js/ain-scythe-mount.js';
 import {KEYS,makePoseStudy} from './js/ain-pose-study.js';
 const $=id=>document.getElementById(id),scene=new T.Scene();scene.background=new T.Color('#1e2630');
 const camera=new T.PerspectiveCamera(36,1,.05,100),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;$('stage').append(renderer.domElement);
@@ -37,7 +38,7 @@ async function thumbnails(){
 }
 try{
  const loader=new GLTFLoader();asset=await loader.loadAsync('art/3d/ain_anim.glb');scene.add(asset.scene);asset.animations=repairAinClips(asset.animations,repairAinBind(asset.scene));asset.scene.traverse(o=>{if(o.isBone)bindBones.push([o,o.quaternion.clone(),o.position.clone()]);if(/RightHandSlot$/.test(o.name))slot=o;});if(!slot)throw Error('RightHandSlot missing');
- const w=await loader.loadAsync('art/3d/ain_scythe_tex.glb'),wr=new T.Group();w.scene.position.y=-.75;wr.add(w.scene);slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
+ const w=await loader.loadAsync('art/3d/ain_scythe_tex.glb'),wr=new T.Group();wr.add(mountAinScythe(w.scene));slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
  mixer=new T.AnimationMixer(asset.scene);rig=makeRigAdapter(asset.scene,asset.scene,slot);selectClip();
  await thumbnails();for(const id of ['play','stop','sheet','clip'])$(id).disabled=false;
 }catch(e){$('status').textContent='로드 실패: '+e.message;console.error(e);}

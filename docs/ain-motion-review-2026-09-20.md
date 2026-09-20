@@ -1,4 +1,17 @@
-# Ain motion correction — local implementation, finger polish pending
+# Ain motion correction — calibrated shaft and closed-grip revision
+
+## Revision 4 — grip correction release
+
+- Root cause: the Hi3D handle is tilted 10.67 degrees in its source coordinates. The old y-only mount left its actual right-grip centre 66.69 mm sideways from the socket. Fit the shaft over eleven cross-sections, then rotate and translate a parent group. Source mesh/texture/GLB files remain untouched; fit residual is 0.578 mm.
+- Use the actual hand-local Z finger-spread axis, not X, to orient the shaft across both palms. Solve elbows on reachable circles with neutral wrists, stable upper-arm frames, and continuous weapon paths. Preserve body/lower-body clips and combat timestamps.
+- Reversible left/right grip morphs close fingers and oppose the thumb. Correct triangle surfaces and weld UV-seam displacement without subdividing: 59,999 triangles before and after. Corrected local hand triangles clear a 12 mm reference shaft (minimum 12.80 mm). This is a geometric regression check, not full animated cloth/finger collision simulation.
+- Keep the right hand closed and the weapon calibrated through hit/roll/dodge. Left hand can release; existing 120 ms release/regrip transition remains.
+- Fourteen actual clips, 241 samples each: idle/run/guard, attack1/2/3, smash, ult, skill1/2/3/4, counter, exec. Maximum steady two-palm residual 0.0002 mm, adjacent joint step 6.607 degrees, wrist-direction bend 6.92 degrees. Transition and transformed-avatar tests also pass. Online constructor test verifies two independently corrected avatar clones do not mutate their shared source.
+- Visual QA: original/closed hand closeups, actual textured attack2 closeup, skill2 side and ult rear six-pose sheets. Review supports all four skills, counter, execution and release poses, with an original/closed-hand comparison link.
+- Full suite initially exposed five pre-existing Windows SQLite teardown errors: temporary folders were removed before closing their database handles. Test-only cleanup order corrected; gameplay/server persistence code unchanged. Full pre-merge suite: 132/132 passing, followed by the new online-clone regression passing.
+- Scope: completed correction of the existing model's grip and arm motion, not a newly rigged character. There are no independent finger bones; existing coarse hand topology remains visible in extreme closeups. No Galaxy S25 Ultra physical-device performance claim. No paid regeneration.
+
+The sections below retain earlier findings and rejected experiments for comparison; revision 4 supersedes their pending-grip status.
 
 ## Revision 3 — smoother weapon rotation, local only
 

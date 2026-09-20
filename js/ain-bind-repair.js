@@ -1,4 +1,5 @@
 import * as T from '../vendor/three/three.module.js';
+import {ainGripCenter,closeAinHandPoint,resolveAinGripSurface} from './ain-grip-shape.js';
 const V=(...v)=>new T.Vector3(...v);
 function distance(p,a,b){const d=b.clone().sub(a),t=T.MathUtils.clamp(p.clone().sub(a).dot(d)/d.lengthSq(),0,1);return p.distanceTo(a.clone().addScaledVector(d,t));}
 // Ain-specific measured landmarks, metres, in the existing mesh's bind space.
@@ -14,7 +15,7 @@ export function repairAinBind(model){
    const b=bones[side+name],world=model.localToWorld(p.clone());b.position.copy(b.parent.worldToLocal(world));changed.set(b.name,b.position.clone());b.updateWorldMatrix(false,true);
   }
   const hand=bones[side+'Hand'],slot=bones[side+'HandSlot'];
-  if(slot){slot.position.copy(hand.worldToLocal(model.localToWorld(V(sg*.318,.93,.04))));changed.set(slot.name,slot.position.clone());}
+  if(slot){slot.position.copy(ainGripCenter(side));changed.set(slot.name,slot.position.clone());}
  }
  model.updateWorldMatrix(true,true);
  for(const mesh of meshes){
@@ -25,7 +26,7 @@ export function repairAinBind(model){
   for(let i=0;i<p.count;i++){
    const v=V().fromBufferAttribute(p,i),sg=v.x>=0?1:-1,side=sg>0?'Left':'Right';
    // Sleeve/hand only. Do not reweight hanging coat tails near the hips.
-   if(v.y<.855||v.y>1.38||Math.abs(v.x)<.19||Math.abs(v.z)>.13)continue;
+   if(v.y<.83||v.y>1.38||Math.abs(v.x)<.19||Math.abs(v.z)>.13)continue;
    const start=V(sg*.1543,1.3843,.0215),elbow=V(sg*.245,1.16,.012),wrist=V(sg*.30,.98,.022),tip=V(sg*.327,.875,.035);
    const d=[distance(v,start,elbow),distance(v,elbow,wrist),distance(v,wrist,tip)];
    if(Math.min(...d)>.075)continue;
@@ -46,17 +47,23 @@ export function repairAinBind(model){
    for(const side of ['Left','Right']){
     const j=mesh.skeleton.bones.indexOf(bones[side+'Hand']),inv=mesh.skeleton.boneInverses[j],forward=inv.clone().invert(),delta=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++){
-     let w=0;for(let k=0;k<4;k++)if(si.getComponent(i,k)===j)w+=sw.getComponent(i,k);
-     if(w<.8)continue;
      const original=V().fromBufferAttribute(p,i),v=original.clone().applyMatrix4(inv);
-     if(v.y<.045||v.y>.15||Math.abs(v.x)>.065||Math.abs(v.z)>.055)continue;
-     const angle=Math.min(2.6,(v.y-.045)/.025);
-     v.y=.045+.025*Math.sin(angle);v.z-=.025*(1-Math.cos(angle));
+     const sg=side==='Left'?1:-1;
+     if(original.x*sg<.26||original.x*sg>.40||original.y<.75||original.y>1.01||Math.abs(original.z)>.12)continue;
+     // Finger spread is local Z, palm thickness is local X on this asset.
+     // Bend the whole connected distal region, not only high-weight vertices:
+     // partial vertex selection previously left spikes across triangle edges.
+     v.copy(closeAinHandPoint(v,side));
      v.applyMatrix4(forward).sub(original);delta.set(v.toArray(),i*3);
     }
+    report.surfaceAdjustment=Math.max(report.surfaceAdjustment||0,resolveAinGripSurface(g,delta,inv,forward,side));
     const attr=new T.BufferAttribute(delta,3);attr.name='ain_grip_'+side.toLowerCase();g.morphAttributes.position.push(attr);
     const temp=g.clone(),positions=p.array.slice();for(let i=0;i<positions.length;i++)positions[i]+=delta[i];temp.setAttribute('position',new T.BufferAttribute(positions,3));temp.computeVertexNormals();
-    const normals=temp.attributes.normal.array.slice();for(let i=0;i<normals.length;i++)normals[i]-=g.attributes.normal.array[i];g.morphAttributes.normal.push(new T.BufferAttribute(normals,3));temp.dispose();
+    const affected=new Set();for(let i=0;i<g.index.count;i+=3){const ids=[g.index.getX(i),g.index.getX(i+1),g.index.getX(i+2)];if(ids.some(k=>Math.abs(delta[k*3])+Math.abs(delta[k*3+1])+Math.abs(delta[k*3+2])>1e-7))ids.forEach(k=>affected.add(k));}
+    const normals=new Float32Array(p.count*3),welded=new Map();
+    for(const i of affected){const key=[p.getX(i),p.getY(i),p.getZ(i)].map(v=>Math.round(v*1e6)).join(',');let group=welded.get(key);if(!group){group={ids:[],normal:V(0,0,0)};welded.set(key,group);}group.ids.push(i);group.normal.add(V().fromBufferAttribute(temp.attributes.normal,i));}
+    for(const group of welded.values()){group.normal.normalize();for(const i of group.ids)normals.set(group.normal.clone().sub(V().fromBufferAttribute(g.attributes.normal,i)).toArray(),i*3);}
+    g.morphAttributes.normal.push(new T.BufferAttribute(normals,3));temp.dispose();
    }
    mesh.updateMorphTargets();report.grips.push(mesh);
   }
