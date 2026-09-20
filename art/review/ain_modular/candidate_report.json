@@ -1,0 +1,15 @@
+{
+  "status": "STATIC_CANDIDATE_NOT_GAME_APPROVED",
+  "source": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\ain-modular-body\\ain_base_source.glb",
+  "triangles": 59000,
+  "height_m": 1.68,
+  "rigged": false,
+  "clothing_separated": false,
+  "known_limitations": [
+    "Automatic decimation is not deformation retopology",
+    "Base underwear, hair and body remain one mesh; interchangeable garments not yet made",
+    "No baked normal map; two PNG textures only",
+    "Hand anatomy, rig compatibility and clipping not approved",
+    "Existing game files preserved"
+  ]
+}
