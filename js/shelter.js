@@ -43,22 +43,54 @@
       $('sh-gatehint')&&($('sh-gatehint').textContent=''); return; }
     pane('sh-guild'); $('sh-gstate').textContent='소속';
   }
+  /* 내 권한: 길드장 > 임원 > 길드원. 서버가 guildDetails 로 role 을 내려 준다 —
+     클라이언트가 정하는 게 아니다. 여기서는 «무엇을 보여 줄지» 만 결정한다. */
+  function myRole(){
+    if(!guild||!profile) return 'none';
+    var me=guild.members.filter(function(m){return m.id===profile.id;})[0];
+    return me?me.role:'none';
+  }
+  var ROLE={owner:'길드장',officer:'임원',member:''};
   function renderGuild(){
     renderGate();
     var list=$('sh-members');
-    if(!guild){ $('sh-count').textContent='—';
+    if(!guild){ $('sh-count').textContent='—'; $('sh-grole').textContent='';
       list.innerHTML='<div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>'; return; }
+    var role=myRole(), boss=role==='owner', staff=boss||role==='officer';
     $('sh-gtitle').textContent=guild.name;
     $('sh-gsub').textContent=guild.members.length+'명 · 정원 100명';
     $('sh-ginvite').textContent=guild.code;
-    $('sh-gnotice').textContent=guild.notice||'등록된 길드 공지가 없습니다.';
+    $('sh-grole').textContent=ROLE[role]?'내 권한 '+ROLE[role]:'';
+    var ta=$('sh-gnotice');
+    if(document.activeElement!==ta) ta.value=guild.notice||'';
+    ta.readOnly=!staff;
+    ta.placeholder=staff?'공지를 적고 저장하세요 (240자)':'등록된 길드 공지가 없습니다.';
+    $('sh-gnsave').hidden=!staff;
     var on=guild.members.filter(function(m){return m.online;}).length;
     $('sh-count').textContent='접속 '+on+' / '+guild.members.length+'명';
     list.innerHTML=guild.members.map(function(m){
+      var mine=profile&&m.id===profile.id, acts='';
+      /* 서버 규칙(rpg-store.guildManage)을 그대로 비춘다:
+         길드장만 위임·임원 임명, 임원은 평 길드원만 추방, 길드장은 못 쫓아낸다. */
+      if(!mine&&staff){
+        if(boss&&m.role==='officer') acts+=btn('member',m.id,'임원 해제');
+        if(boss&&m.role==='member')  acts+=btn('officer',m.id,'임원 임명');
+        if(boss&&m.role!=='owner')   acts+=btn('transfer',m.id,'길드장 위임');
+        if(m.role!=='owner'&&!(role==='officer'&&m.role==='officer')) acts+=btn('kick',m.id,'추방');
+      }
       return '<div class="mrow2'+(m.online?' is-on':'')+'"><span class="mrow2__d"></span>'+
         '<span class="mrow2__n">'+esc(m.name)+'</span>'+
-        (m.id===guild.owner?'<span class="mrow2__t">길드장</span>':'')+'</div>';
+        (m.role==='owner'?'<span class="mrow2__t">길드장</span>':
+         m.role==='officer'?'<span class="mrow2__t mrow2__t--o">임원</span>':'')+
+        (acts?'<span class="mrow2__a">'+acts+'</span>':'')+'</div>';
     }).join('');
+  }
+  function btn(op,target,label){
+    return '<button type="button" class="btn btn--sm" data-op="'+op+'" data-t="'+target+'">'+label+'</button>';
+  }
+  function manage(operation,target,value){
+    if(!send({type:'rpg',action:'guildManage',operation:operation,target:target,value:value}))
+      state('접속한 뒤 이용할 수 있습니다.',true);
   }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
@@ -106,6 +138,8 @@
       if(msg.type==='chatHistory'){ messages=msg.messages||[]; renderChat(); return; }
       if(msg.type==='chat'){ messages.push(msg.message); if(messages.length>200) messages.shift();
         renderChat(); return; }
+      if(msg.type==='rpgNotice'){ state(msg.text); return; }
+      if(msg.type==='rpg'){ return; }
       if(msg.type==='state'){ room=msg; return; }
       if(msg.type==='left'){ room=null; return; }
       if(msg.type==='loggedOut'){ stopped=true; connected=false; profile=null; guild=null; room=null;
@@ -135,6 +169,16 @@
   $('sh-gcreate').onclick=function(){ send({type:'guildCreate',name:$('sh-gname').value.trim()}); };
   $('sh-gjoin').onclick=function(){ send({type:'guildJoin',code:$('sh-gcode').value.trim()}); };
   $('sh-gleave').onclick=function(){ send({type:'guildLeave'}); };
+  $('sh-gnsave').onclick=function(){ manage('notice',null,$('sh-gnotice').value); };
+  $('sh-members').addEventListener('click',function(e){
+    var b=e.target.closest('[data-op]'); if(!b||!guild) return;
+    var op=b.dataset.op, id=b.dataset.t;
+    var who=(guild.members.filter(function(m){return m.id===id;})[0]||{}).name||'길드원';
+    /* 추방·위임은 되돌릴 수 없다 — 확인을 받는다. */
+    if(op==='kick'&&!confirm(who+' 님을 길드에서 추방합니다. 계속할까요?')) return;
+    if(op==='transfer'&&!confirm('길드장을 '+who+' 님에게 넘깁니다. 되돌리려면 새 길드장이 다시 넘겨야 합니다. 계속할까요?')) return;
+    manage(op,id,null);
+  });
   $('sh-gcopy').onclick=function(){ var t=$('sh-ginvite').textContent;
     if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){state('초대 코드를 복사했습니다.');},function(){});
     else state('초대 코드: '+t); };

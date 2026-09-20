@@ -47,6 +47,17 @@
 .mrow2__n{font-size:12.5px;color:var(--tx-dim);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow2.is-on .mrow2__n{color:var(--tx-hi)}
 .mrow2__t{font-size:10px;letter-spacing:.08em;color:var(--gold-dim);border:1px solid var(--line-gold);padding:1px 6px;flex:none}
+.mrow2__t--o{color:#A9B6C4;border-color:rgba(169,182,196,.35)}
+.mrow2__a{display:flex;gap:5px;flex:none;opacity:0;transition:opacity .12s}
+.mrow2:hover .mrow2__a,html.touch .mrow2__a{opacity:1}
+.mrow2__a button{font-size:10.5px;padding:3px 8px;min-height:0;letter-spacing:.02em}
+.mrow2__a button[data-op="kick"]{color:#D98B86;border-color:rgba(199,85,80,.42)}
+
+/* 길드 공지 편집 */
+.gnotice{width:100%;min-height:62px;resize:vertical;font:inherit;font-size:12px;line-height:1.7;
+  color:var(--tx);background:var(--bg-inset);border:1px solid var(--line);padding:8px 10px}
+.gnotice:focus{outline:none;border-color:var(--line-gold)}
+.gnotice[readonly]{border-color:transparent;background:transparent;padding:0;resize:none;color:var(--tx-dim)}
 
 /* 채팅 */
 .chat{display:grid;grid-template-rows:auto 1fr auto;min-height:0;height:100%}
@@ -175,8 +186,11 @@
             <button type="button" class="btn btn--sm" id="sh-gcopy">복사</button>
           </div>
           <div class="gate">
-            <div class="label-ko">길드 공지</div>
-            <div class="sm t-dim" id="sh-gnotice">—</div>
+            <div class="flex ac jb"><span class="label-ko" style="margin:0">길드 공지</span>
+              <span class="xs t-faint" id="sh-grole"></span></div>
+            <textarea class="gnotice mt2" id="sh-gnotice" maxlength="240" readonly
+              placeholder="등록된 길드 공지가 없습니다."></textarea>
+            <button type="button" class="btn btn--sm mt2" id="sh-gnsave" style="width:100%" hidden>공지 저장</button>
             <button type="button" class="btn btn--sm mt3" id="sh-gleave" style="width:100%">길드 탈퇴</button>
           </div>
         </div>
