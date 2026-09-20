@@ -110,7 +110,8 @@ function bake(char, mode){
           let settled=false, attached=false, timer=null;
           const once=()=>{ if(settled) return; settled=true; clearTimeout(timer); finish(); };
           mgr.onLoad=()=>{ if(!attached) return; clearTimeout(timer); timer=setTimeout(once,90); };
-          try{ TW_LOOKS.attach(THREE, loader, model, eq, { charId:char, baseOf, tintOf, mixOf }); }
+          try{ window.TW_HAIR && TW_HAIR.sync(model, eq); /* 머리 장비 = 머리카락 가림 */
+          TW_LOOKS.attach(THREE, loader, model, eq, { charId:char, baseOf, tintOf, mixOf }); }
           catch(e){ once(); }
           attached=true;
           /* 이미 다 받아 둔 조각뿐이면 onLoad 가 안 올 수도 있다 */
