@@ -1,5 +1,15 @@
 # Ain motion correction — local implementation, finger polish pending
 
+## Revision 3 — smoother weapon rotation, local only
+
+Revision 2 was deployed successfully as commit 92a6e161fa906ad276a25217880e5e2bbfaea919. The changes in this section are a subsequent local revision, not yet deployed.
+
+- Interpolate weapon orientation with quaternion slerp between authored keys instead of rebuilding orientation from each interpolated direction vector. Keep the existing impact at phase .42; begin the chop downswing at .20 rather than .25 to reduce peak angular velocity. Damage timing and source clips remain unchanged.
+- Retain neutral wrists. Experimental shaft-aligned hands reduced socket residual but hyperextended wrists (116 degrees) or introduced elbow branch flips (up to 176 degrees). Those experimental changes were removed, not shipped.
+- Add a wrist-direction regression and identify the exact clip/joint/sample of the maximum angular step. Across 241 samples in each of eight clips: maximum adjacent step 6.047 degrees (previous deployed baseline 11.431), wrist direction bend 6.92 degrees, palm residual 0.0211 mm. These measurements do not establish finger contact.
+- The review now selects actual attack1/attack2/attack3/smash/ult/idle/run/guard clips, adjusts the timeline to each duration, and exports six labelled poses for the selected clip. Review remains deterministic scrubbing, not a reproduction of the runtime release transition or authoritative per-skill impact timestamp.
+- Scoped suite: 83 passing tests. Original GLB, textures and other agents' working files untouched. Thumb/finger contact remains unaccepted; no finished-character claim.
+
 ## Revision 2 — implemented locally, not deployed
 
 Deployment preparation: merged upstream through f749e7c, preserving new mocap assets, cameras, ground shadows, boss/dungeon changes and online phase cuts. Revalidated the NEW Ain GLB. Added a 120 ms smooth transition between weapon control and authored release poses, plus quintic trajectory easing (continuous acceleration at keys). During deliberate release/regrip transitions, the palm socket is not claimed to remain locked. Added both runtime modules to offline precache. Scoped suite now passes 83 tests. Finger articulation limitations below remain.

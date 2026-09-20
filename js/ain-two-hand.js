@@ -17,12 +17,19 @@ function solve(upper,lower,hand,target,pole){
 }
 const ready=[0,-.12,.32,-.35,.92,.18];
 const slash=[[0,ready],[.23,[-.12,-.08,.28,-.72,.58,-.35]],[.42,[0,-.12,.40,-.15,.15,.98]],[.65,[.10,-.15,.32,.90,.22,.35]],[1,ready]];
-const chop=[[0,ready],[.25,[0,.12,.27,-.2,.95,-.22]],[.42,[0,-.1,.40,-.15,-.45,.88]],[.65,[0,-.22,.37,-.2,-.5,.84]],[1,ready]];
+const chop=[[0,ready],[.20,[0,.12,.27,-.2,.95,-.22]],[.42,[0,-.1,.40,-.15,-.45,.88]],[.65,[0,-.22,.37,-.2,-.5,.84]],[1,ready]];
 const thrust=[[0,ready],[.24,[-.08,-.13,.22,-.3,.15,.94]],[.42,[0,-.08,.48,-.2,.1,.98]],[.62,[0,-.12,.28,-.3,.3,.9]],[1,ready]];
 function path(keys,t){
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
  const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
  return a.map((v,j)=>T.MathUtils.lerp(v,b[j],u));
+}
+function pathRotation(keys,t){
+ // Interpolate complete orientations. Reconstructing a rotation from a
+ // normalized direction each frame amplifies roll near a direction reversal.
+ let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
+ const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
+ return Q().setFromUnitVectors(V(0,1,0),V(...a.slice(3)).normalize()).slerp(Q().setFromUnitVectors(V(0,1,0),V(...b.slice(3)).normalize()),u);
 }
 
 // Two palm sockets + a common weapon path, solved from the bind pose. This does
@@ -64,9 +71,11 @@ export function makeAinTwoHand(model,root,slot){
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
   // Contact remains at the existing combat hit timestamp, not a new timer.
   if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=a.elapsed<=a.hitAt?.42*a.elapsed/a.hitAt:.42+.58*(a.elapsed-a.hitAt)/(a.duration-a.hitAt);
-  const spec=path(/attack2|smash|exec/.test(name)?chop:/attack3|counter/.test(name)?thrust:slash,t);
+  const keys=/attack2|smash|exec/.test(name)?chop:/attack3|counter/.test(name)?thrust:slash;
+  const spec=path(keys,t),weaponQ=pathRotation(keys,t);
   const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));
-  const axis=V(...spec.slice(3)).normalize().applyQuaternion(frame),poles={Left:V(.8,-.65,-.25).applyQuaternion(frame),Right:V(-.8,-.65,-.25).applyQuaternion(frame)};
+  const shaftQ=frame.clone().multiply(weaponQ);
+  const axis=V(0,1,0).applyQuaternion(shaftQ),poles={Left:V(.8,-.65,-.25).applyQuaternion(frame),Right:V(-.8,-.65,-.25).applyQuaternion(frame)};
   const palms={Right:center.clone().addScaledVector(axis,.16*scale),Left:center.clone().addScaledVector(axis,-.16*scale)};
   for(const side of ['Left','Right'])for(const part of ['Arm','ForeArm','Hand']){const b=bones[side+part];keep(b);b.quaternion.copy(bind.get(side+part));}
   model.updateWorldMatrix(true,true);
@@ -84,15 +93,15 @@ export function makeAinTwoHand(model,root,slot){
     // Reset before each solve prevents accumulating axial twist.
     upper.quaternion.copy(bind.get(side+'Arm'));lower.quaternion.copy(bind.get(side+'ForeArm'));hand.quaternion.copy(bind.get(side+'Hand'));upper.updateWorldMatrix(false,true);
     solve(upper,lower,hand,target,poles[side]);
-    // Keep the wrist in its neutral local orientation. Aligning it to a shaft
-    // projection has a singularity when forearm and shaft become parallel.
-    const handQ=lower.getWorldQuaternion(Q()).multiply(bind.get(side+'Hand'));worldQ(hand,handQ);
+    // Preserve the neutral wrist until a grip authoring pass can satisfy both
+    // anatomical limits and finger contact. Shaft-only alignment hyperextends
+    // this asset's wrists and is intentionally not enabled.
+    const handQ=lower.getWorldQuaternion(Q()).multiply(bind.get(side+'Hand'));
+    worldQ(hand,handQ);
     target=palms[side].clone().sub(offsets[side].clone().multiplyScalar(scale).applyQuaternion(handQ));
    }
   }
   keep(slot);slot.position.copy(offsets.Right);
-  const shaftLocal=V(...spec.slice(3)).normalize();
-  const weaponQ=Q().setFromUnitVectors(V(0,1,0),shaftLocal);
   worldQ(slot,frame.clone().multiply(weaponQ));
   finishPose(true,dt);
   model.updateWorldMatrix(true,true);

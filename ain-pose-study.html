@@ -1,8 +1,9 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>아인 · 6포즈 애니메이션 시험</title>
 <style>body{margin:0;background:#14191f;color:#e8e2d7;font:14px system-ui}header{padding:18px 24px}h1{margin:0;font-size:23px}p{color:#bbb;max-width:950px}button,a,select{background:#303b45;color:#fff;border:1px solid #71808b;border-radius:5px;padding:8px;cursor:pointer}#stage{height:48vh;min-height:300px}canvas{display:block}#strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:12px}#strip img{width:100%;background:#1e2630}#strip button{padding:4px}#status{padding:0 24px}input{width:200px}@media(max-width:700px){#strip{grid-template-columns:repeat(3,1fr)}}</style>
-<header><h1>아인 · 어깨·양손 교정 검수</h1><p>팔꿈치·손목 위치와 팔·손 가중치를 교정하고 양손·낫 궤적을 함께 계산합니다. 몸통·하체는 기존 클립의 6포즈를 사용합니다. 손가락 개별 리깅은 아직 없으며, 손바닥 기준점 오차가 손가락 접촉 품질을 보증하지는 않습니다.</p>
+<header><h1>아인 · 어깨·양손 교정 검수</h1><p>실제 동작 클립 또는 6포즈 연구를 선택해 확인합니다. 몸통·하체는 선택한 클립, 팔과 낫은 교정 경로를 사용합니다. 손가락 개별 리깅은 아직 없으며, 손바닥 기준점 오차가 손가락 접촉 품질을 보증하지는 않습니다.</p>
 <button id="play" disabled>연결 재생</button> <button id="stop" disabled>정지</button> <button id="bind">원본 A포즈</button>
 <select id="view" aria-label="시점"><option value="front">정면</option><option value="side">측면</option><option value="back">후면</option><option value="close">손·어깨 확대</option></select>
+<label>동작 <select id="clip" disabled><option value="study">6포즈 연구</option><option value="attack1">기본 베기</option><option value="attack2">내려찍기</option><option value="attack3">찌르기</option><option value="smash">강공격</option><option value="ult">궁극기</option><option value="idle">대기</option><option value="run">달리기</option><option value="guard">방어</option></select></label>
 <label>속도 <select id="speed"><option value="1">1배</option><option value=".35">0.35배</option></select></label>
 <input id="seek" aria-label="애니메이션 시간" type="range" min="0" max="1400" value="0">
 <button id="sheet" disabled>6포즈 PNG 저장</button></header><div id="stage"></div><p id="status">모델과 낫 로드 중…</p><div id="strip"></div>
@@ -17,23 +18,31 @@ const $=id=>document.getElementById(id),scene=new T.Scene();scene.background=new
 const camera=new T.PerspectiveCamera(36,1,.05,100),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;$('stage').append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.25,0);
 scene.add(new T.HemisphereLight(0xe2edf7,0x55432f,2));const light=new T.DirectionalLight(0xffebd9,3);light.position.set(3,5,4);scene.add(light);scene.add(new T.GridHelper(8,16,0x707c81,0x39444c));
-let action,mixer,rig,time=0,running=false,asset,slot,images=[],bindMode=false,bindBones=[];const clock=new T.Clock();
+let action,mixer,rig,time=0,running=false,asset,slot,images=[],bindMode=false,bindBones=[],duration=1.4,reviewKeys=KEYS;const clock=new T.Clock();
 function view(){controls.target.set(0,1.25,0);camera.position.set(...({front:[0,1.6,3.8],side:[3.8,1.6,0],back:[0,1.6,-3.8],close:[.45,1.45,1.5]}[$('view').value]));controls.update();}
 function size(){const r=$('stage').getBoundingClientRect();renderer.setSize(r.width,r.height);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}size();view();addEventListener('resize',size);
-function pose(t){rig.restore();if(bindMode){for(const [b,q,p]of bindBones){b.quaternion.copy(q);b.position.copy(p);}asset.scene.updateMatrixWorld(true);return;}action.time=Math.min(1.4,t);mixer.update(0);rig.apply({id:'study',kind:'attack',duration:1.4,elapsed:t},true,true,0);asset.scene.updateMatrixWorld(true);}
+function pose(t){rig.restore();if(bindMode){for(const [b,q,p]of bindBones){b.quaternion.copy(q);b.position.copy(p);}asset.scene.updateMatrixWorld(true);return;}action.time=Math.min(duration,t);mixer.update(0);const name=$('clip').value,attack=!/idle|run|guard/.test(name);rig.apply(attack?{id:name,clip:name,kind:'attack',duration,elapsed:t,hitAt:duration*.42}:null,name==='run',name==='guard',0,name);asset.scene.updateMatrixWorld(true);}
+function selectClip(){
+ rig.restore();mixer.stopAllAction();bindMode=false;running=false;time=0;
+ const name=$('clip').value,clip=name==='study'?makePoseStudy(asset.animations.find(c=>c.name==='attack1'),{smooth:true}):asset.animations.find(c=>c.name===name);
+ if(!clip)throw Error('Missing clip: '+name);
+ duration=clip.duration;reviewKeys=name==='study'?KEYS:[0,.2,.42,.6,.8,1].map((u,i)=>({name:`${Math.round(u*100)}%`,time:u*duration}));
+ action=mixer.clipAction(clip);action.setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;$('seek').max=Math.round(duration*1000);
+}
 function draw(){renderer.render(scene,camera);}
 async function thumbnails(){
  const old=time;renderer.setSize(420,420);camera.aspect=1;camera.updateProjectionMatrix();images=[];$('strip').replaceChildren();
- for(let i=0;i<KEYS.length;i++){pose(KEYS[i].time);draw();const src=renderer.domElement.toDataURL('image/png');images.push(src);const b=document.createElement('button'),img=document.createElement('img');img.src=src;img.alt=KEYS[i].name;b.append(img,document.createTextNode(`${i+1}. ${KEYS[i].name}`));b.onclick=()=>{time=KEYS[i].time;running=false;};$('strip').append(b);}
+ for(let i=0;i<reviewKeys.length;i++){pose(reviewKeys[i].time);draw();const src=renderer.domElement.toDataURL('image/png');images.push(src);const b=document.createElement('button'),img=document.createElement('img');img.src=src;img.alt=reviewKeys[i].name;b.append(img,document.createTextNode(`${i+1}. ${reviewKeys[i].name}`));b.onclick=()=>{bindMode=false;time=reviewKeys[i].time;running=false;};$('strip').append(b);}
  size();pose(old);
 }
 try{
  const loader=new GLTFLoader();asset=await loader.loadAsync('art/3d/ain_anim.glb');scene.add(asset.scene);asset.animations=repairAinClips(asset.animations,repairAinBind(asset.scene));asset.scene.traverse(o=>{if(o.isBone)bindBones.push([o,o.quaternion.clone(),o.position.clone()]);if(/RightHandSlot$/.test(o.name))slot=o;});if(!slot)throw Error('RightHandSlot missing');
  const w=await loader.loadAsync('art/3d/ain_scythe_tex.glb'),wr=new T.Group();w.scene.position.y=-.75;wr.add(w.scene);slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
- mixer=new T.AnimationMixer(asset.scene);action=mixer.clipAction(makePoseStudy(asset.animations.find(c=>c.name==='attack1'),{smooth:true}));action.setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;rig=makeRigAdapter(asset.scene,asset.scene,slot);
- await thumbnails();for(const id of ['play','stop','sheet'])$(id).disabled=false;
+ mixer=new T.AnimationMixer(asset.scene);rig=makeRigAdapter(asset.scene,asset.scene,slot);selectClip();
+ await thumbnails();for(const id of ['play','stop','sheet','clip'])$(id).disabled=false;
 }catch(e){$('status').textContent='로드 실패: '+e.message;console.error(e);}
 $('bind').onclick=()=>{bindMode=!bindMode;running=false;};$('play').onclick=()=>{bindMode=false;time=0;running=true;};$('stop').onclick=()=>running=false;$('seek').oninput=()=>{bindMode=false;time=+$('seek').value/1000;running=false;};$('view').onchange=async()=>{view();if(action)await thumbnails();};
-$('sheet').onclick=async()=>{const canvas=document.createElement('canvas');canvas.width=1260;canvas.height=900;const c=canvas.getContext('2d');c.fillStyle='#1e2630';c.fillRect(0,0,1260,900);for(let i=0;i<6;i++){const img=new Image();img.src=images[i];await img.decode();const x=i%3*420,y=Math.floor(i/3)*450;c.drawImage(img,x,y);c.fillStyle='white';c.font='20px sans-serif';c.fillText(`${i+1}. ${KEYS[i].name}`,x+15,y+439);}const a=document.createElement('a');a.download='ain-six-poses.png';a.href=canvas.toDataURL();a.click();};
-function frame(){requestAnimationFrame(frame);const dt=Math.min(.05,clock.getDelta());if(action){if(running){time=Math.min(1.4,time+dt*+$('speed').value);if(time>=1.4)running=false;}pose(time);$('seek').value=time*1000;$('status').textContent=`${time.toFixed(2)} / 1.40초 · 왼손 손바닥 기준점→자루 오차 ${(rig.diagnostics.gripError*100).toFixed(1)}cm (손가락 검수 아님) · 발 고정 보정 미적용`;}controls.update();draw();}frame();
+$('clip').onchange=async()=>{selectClip();await thumbnails();};
+$('sheet').onclick=async()=>{const canvas=document.createElement('canvas');canvas.width=1260;canvas.height=900;const c=canvas.getContext('2d');c.fillStyle='#1e2630';c.fillRect(0,0,1260,900);for(let i=0;i<6;i++){const img=new Image();img.src=images[i];await img.decode();const x=i%3*420,y=Math.floor(i/3)*450;c.drawImage(img,x,y);c.fillStyle='white';c.font='20px sans-serif';c.fillText(`${i+1}. ${reviewKeys[i].name}`,x+15,y+439);}const a=document.createElement('a');a.download=`ain-${$('clip').value}-six-poses.png`;a.href=canvas.toDataURL();a.click();};
+function frame(){requestAnimationFrame(frame);const dt=Math.min(.05,clock.getDelta());if(action){if(running){time=Math.min(duration,time+dt*+$('speed').value);if(time>=duration)running=false;}pose(time);$('seek').value=time*1000;$('status').textContent=`${time.toFixed(2)} / ${duration.toFixed(2)}초 · 왼손 손바닥 기준점→자루 오차 ${(rig.diagnostics.gripError*100).toFixed(1)}cm (손가락 검수 아님) · 발 고정 보정 미적용`;}controls.update();draw();}frame();
 </script></html>
