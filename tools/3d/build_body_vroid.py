@@ -250,8 +250,11 @@ def build_one(char, keep_hair=True, tex=512):
     B1 = char_bones(arm1)
     hh1, ht1 = B1['Head']
     scale = B1['Neck'][0].z / B0['Neck'][0].z
-    B1['Head'] = (hh1, hh1 + (ht1 - hh1).normalized()
-                  * (B0['Head'][1] - B0['Head'][0]).length * scale)
+    # 머리 길이를 «바탕 두개골 × 배율» 로 잡으면 안 된다. VRoid 머리는 애니 비율이라 크고,
+    # 그 위에 머리카락까지 얹혀 아인이 1.68 m 가 아니라 1.75 m 가 됐다.
+    # 캐릭터 «자기 정수리 높이» 에 맞춰 늘린다.
+    charTop = max((src.matrix_world @ v.co).z for v in src.data.vertices)
+    B1['Head'] = (hh1, hh1 + (ht1 - hh1).normalized() * max(0.05, charTop - hh1.z))
 
     def girth(n):
         g = scale * cfg['girth']

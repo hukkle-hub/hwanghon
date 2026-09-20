@@ -9,6 +9,10 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHARS = ['ain', 'kain', 'ryu', 'sera'];
+/* 몸체가 두 갈래다. 아인은 지피티가 Hi3D 로 뽑아 온 «그 사람 자신» 이고 (docs/design/41),
+   나머지 셋은 CC0 에셋을 골격에 얹은 임시다 (docs/design/42). 공통 계약은 똑같이 건다. */
+const KIND = {ain: 'hi3d', kain: 'vroid', ryu: 'vroid', sera: 'vroid'};
+const VROID = CHARS.filter(c => KIND[c] === 'vroid');
 
 function glb(file) {
   const b = fs.readFileSync(path.join(ROOT, file));
@@ -52,7 +56,7 @@ test('네 캐릭터 모두 기본 체형이 있다', () => {
 });
 
 test('옷은 «가져오지 않았다» — 옷 재질이 한 조각도 남아 있으면 안 된다', () => {
-  for (const c of CHARS) {
+  for (const c of VROID) {
     const {g} = glb(`art/3d/${c}_body.glb`);
     const cloth = (g.materials || []).filter(m => /_CLOTH$/.test(m.name || ''));
     assert.equal(cloth.length, 0, `${c}: 옷이 남았다 — ${cloth.map(m => m.name)}`);
@@ -72,11 +76,22 @@ test('움직이면 살이 따라온다 — 모든 조각이 뼈에 매여 있다
 });
 
 test('키가 그 캐릭터 골격과 같다', () => {
+  /* 예전엔 14 cm 까지 봐줬더니 VRoid 머리카락이 두개골 위로 더 올라가
+     아인이 175 cm 로 나왔는데도 통과했다. 3 cm 로 조인다. */
   for (const c of CHARS) {
     const dressed = height(glb(`art/3d/${c}_anim.glb`));
     const bare = height(glb(`art/3d/${c}_body.glb`));
-    assert.ok(Math.abs(bare - dressed) < 0.14,
-      `${c}: 입은 키 ${dressed.toFixed(3)} vs 맨몸 ${bare.toFixed(3)} — 비율이 어긋났다`);
+    assert.ok(Math.abs(bare - dressed) < 0.03,
+      `${c}: 입은 키 ${(dressed * 100).toFixed(1)} vs 맨몸 ${(bare * 100).toFixed(1)} cm — 비율이 어긋났다`);
+  }
+});
+
+test('뼈대가 그 캐릭터 리그와 완전히 같다 — 장비·바람·초상이 그대로 돌아야 한다', () => {
+  for (const c of CHARS) {
+    const a = glb(`art/3d/${c}_anim.glb`), b = glb(`art/3d/${c}_body.glb`);
+    const an = a.g.skins[0].joints.map(i => a.g.nodes[i].name).sort();
+    const bn = b.g.skins[0].joints.map(i => b.g.nodes[i].name).sort();
+    assert.deepEqual(bn, an, `${c}: 뼈 구성이 다르다`);
   }
 });
 
@@ -87,13 +102,13 @@ test('캐릭터마다 체형이 다르다 — 골격에서 나온 값이므로',
 });
 
 test('머리색이 캐릭터마다 다르다 — 가져온 에셋의 청록이 그대로 남으면 안 된다', () => {
-  const seen = CHARS.map(c => {
+  const seen = VROID.map(c => {
     const b = imageBytes(glb(`art/3d/${c}_body.glb`), /Hair/i);
     assert.ok(b, `${c}: 머리카락 텍스처가 없다`);
     return b.length + ':' + b.slice(0, 64).toString('hex');
   });
-  assert.ok(new Set(seen).size >= 3,
-    '네 사람 머리카락 그림이 같다 — 캐릭터 색으로 물들이지 못했다');
+  assert.ok(new Set(seen).size >= seen.length,
+    '가져온 에셋을 쓴 캐릭터끼리 머리카락 그림이 같다 — 색을 물들이지 못했다');
 });
 
 test('움직임 클립이 따라온다 — 외형 화면에서 자세를 고를 수 있어야 한다', () => {
@@ -105,10 +120,22 @@ test('움직임 클립이 따라온다 — 외형 화면에서 자세를 고를 
   }
 });
 
-test('전화기로 받을 만한 크기다', () => {
+test('전화기로 받을 만한 크기다 — 옷 입은 본체보다 무거우면 안 된다', () => {
   for (const c of CHARS) {
-    const kb = fs.statSync(path.join(ROOT, `art/3d/${c}_body.glb`)).size / 1024;
-    assert.ok(kb < 2400, `${c}: ${kb.toFixed(0)} KB — 너무 무겁다`);
+    const body = fs.statSync(path.join(ROOT, `art/3d/${c}_body.glb`)).size / 1024;
+    const anim = fs.statSync(path.join(ROOT, `art/3d/${c}_anim.glb`)).size / 1024;
+    assert.ok(body < anim,
+      `${c}: 맨몸 ${body.toFixed(0)} KB 가 옷 입은 본체 ${anim.toFixed(0)} KB 보다 무겁다`);
+  }
+});
+
+test('텍스처는 JPEG 로 굽는다 — PNG 로 두면 아인만 7 MB 였다', () => {
+  for (const c of CHARS) {
+    const {g} = glb(`art/3d/${c}_body.glb`);
+    const png = (g.images || []).filter(i => i.mimeType === 'image/png');
+    const big = png.filter(i => g.bufferViews[i.bufferView].byteLength > 300 * 1024);
+    assert.equal(big.length, 0,
+      `${c}: 300 KB 넘는 PNG 텍스처 ${big.length}장 — JPEG 로 다시 구워야 한다`);
   }
 });
 
@@ -121,6 +148,7 @@ test('가져온 에셋의 출처와 조건이 저장소에 남아 있다', () =>
   assert.match(readme, /VRoid/, 'VRoid 출처 기록이 지워졌다');
   const mh = fs.readFileSync(path.join(dir, 'mh_base.obj'), 'utf8').slice(0, 900);
   assert.match(mh, /CC0/, 'MakeHuman 라이선스 머리말이 지워졌다');
-  for (const t of ['tools/3d/build_body.py', 'tools/3d/build_body_vroid.py'])
+  for (const t of ['tools/3d/build_body.py', 'tools/3d/build_body_vroid.py',
+                   'tools/3d/adopt_ain_body.py'])
     assert.ok(fs.existsSync(path.join(ROOT, t)), `${t} 가 없다`);
 });
