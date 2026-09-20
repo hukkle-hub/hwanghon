@@ -73,7 +73,7 @@
 .matgrid{--cols:5;gap:5px;padding:9px 10px}
 </style>
 </head>
-<body>
+<body data-mback="index.html">
 <script src="js/icons.js"></script>
 
 <div class="stage">
@@ -237,6 +237,7 @@
   try{ if(localStorage.getItem('tw:doll3d')==='1') tg.click(); }catch(e){} })();
 </script>
 <script>try{ document.querySelectorAll('[data-grade]').forEach(function(e){ e.textContent='등급 '+TW_GRADE.agent().g; }); }catch(e){}</script>
+<script src="js/back.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
 <script>

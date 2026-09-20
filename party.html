@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101417"><title>황혼 · 협동 출격</title><link rel="icon" href="art/face-ain.webp"><link rel="stylesheet" href="css/party-online.css"><link rel="stylesheet" href="css/party-rpg.css"><script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script></head>
-<body>
+<body data-mback="index.html">
 <main id="lobby">
  <header><a href="party.html" class="brand">황 혼</a><span class="eyebrow">SHELTER · PARTY EXPEDITION</span><span id="connection" role="status">접속 전</span></header>
  <div class="lobby-grid">
@@ -39,4 +39,5 @@
 <script src="js/mat-fix.js"></script>
 <script src="js/wind.js"></script>
 <script src="js/party-wire.js"></script><script src="js/world.js"></script><script src="js/items.js"></script><script src="js/dungeons.js"></script><script src="js/dungeon.js"></script><script src="js/dungeon-content.js"></script><script src="js/world-sim.js"></script><script src="js/looks.js"></script><script src="js/sfx.js"></script><script type="module" src="js/party-online.js"></script>
-<dialog id="market-dialog"><h2>재료 거래소</h2><p>등록한 수량은 판매 완료 또는 취소까지 보관됩니다.</p><form id="sell-form"><select id="sell-item" aria-label="판매 재료"></select><input id="sell-quantity" type="number" min="1" max="999" value="1" aria-label="판매 수량"><input id="sell-price" type="number" min="1" max="1000000" placeholder="개당 골드" aria-label="개당 골드" required><button>판매 등록</button></form><button id="market-refresh">새로고침</button><div id="market-list"></div><p id="market-notice" role="status"></p><button id="market-close">닫기</button></dialog><dialog id="shop-dialog"><h2>장비·소모품 보급</h2><p>골드로 장비와 재료를 구매합니다. 장비는 보유 목록에서 착용하세요.</p><div id="shop-list"></div><p id="shop-notice" role="status"></p><button id="shop-close">닫기</button></dialog></body></html>
+<dialog id="market-dialog"><h2>재료 거래소</h2><p>등록한 수량은 판매 완료 또는 취소까지 보관됩니다.</p><form id="sell-form"><select id="sell-item" aria-label="판매 재료"></select><input id="sell-quantity" type="number" min="1" max="999" value="1" aria-label="판매 수량"><input id="sell-price" type="number" min="1" max="1000000" placeholder="개당 골드" aria-label="개당 골드" required><button>판매 등록</button></form><button id="market-refresh">새로고침</button><div id="market-list"></div><p id="market-notice" role="status"></p><button id="market-close">닫기</button></dialog><dialog id="shop-dialog"><h2>장비·소모품 보급</h2><p>골드로 장비와 재료를 구매합니다. 장비는 보유 목록에서 착용하세요.</p><div id="shop-list"></div><p id="shop-notice" role="status"></p><button id="shop-close">닫기</button></dialog><script src="js/back.js"></script>
+</body></html>
