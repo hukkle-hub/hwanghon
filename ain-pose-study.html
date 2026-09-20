@@ -5,8 +5,10 @@
 <select id="view" aria-label="시점"><option value="front">정면</option><option value="side">측면</option><option value="back">후면</option><option value="close">손·어깨 확대</option></select>
 <label>동작 <select id="clip" disabled><option value="study">6포즈 연구</option><option value="attack1">기본 베기</option><option value="attack2">내려찍기</option><option value="attack3">찌르기</option><option value="smash">강공격</option><option value="ult">궁극기</option><option value="skill1">스킬 1</option><option value="skill2">스킬 2</option><option value="skill3">스킬 3</option><option value="skill4">스킬 4</option><option value="counter">반격</option><option value="exec">처형</option><option value="idle">대기</option><option value="run">달리기</option><option value="guard">방어</option><option value="roll">구르기</option><option value="hit">피격</option></select></label>
 <label>속도 <select id="speed"><option value="1">1배</option><option value=".35">0.35배</option></select></label>
+<label>공격 스킬 박자 <select id="pace"><option value="heavy">무게감 교정</option><option value="before">이전 박자</option></select></label>
 <input id="seek" aria-label="애니메이션 시간" type="range" min="0" max="1400" value="0">
 <button id="sheet" disabled>6포즈 PNG 저장</button></header><div id="stage"></div><p id="status">모델과 낫 로드 중…</p><div id="strip"></div>
+<script src="js/dungeons.js"></script>
 <script type="module">
 import * as T from './vendor/three/three.module.js';
 import {GLTFLoader} from './vendor/three/GLTFLoader.js';
@@ -15,19 +17,21 @@ import {makeAinTwoHand as makeRigAdapter} from './js/ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './js/ain-bind-repair.js';
 import {mountAinScythe} from './js/ain-scythe-mount.js';
 import {KEYS,makePoseStudy} from './js/ain-pose-study.js';
+import {sampleAction} from './js/combat-motion.js';
 const $=id=>document.getElementById(id),scene=new T.Scene();scene.background=new T.Color('#1e2630');
 const camera=new T.PerspectiveCamera(36,1,.05,100),renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;$('stage').append(renderer.domElement);
 const controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,1.25,0);
 scene.add(new T.HemisphereLight(0xe2edf7,0x55432f,2));const light=new T.DirectionalLight(0xffebd9,3);light.position.set(3,5,4);scene.add(light);scene.add(new T.GridHelper(8,16,0x707c81,0x39444c));
-let action,mixer,rig,time=0,running=false,asset,slot,images=[],bindMode=false,bindBones=[],duration=1.4,reviewKeys=KEYS;const clock=new T.Clock();
+let action,mixer,rig,time=0,running=false,asset,slot,images=[],bindMode=false,bindBones=[],duration=1.4,reviewKeys=KEYS,combatProfile=null;const clock=new T.Clock();
 function view(){controls.target.set(0,1.25,0);camera.position.set(...({front:[0,1.6,3.8],side:[3.8,1.6,0],back:[0,1.6,-3.8],close:[.45,1.45,1.5]}[$('view').value]));controls.update();}
 function size(){const r=$('stage').getBoundingClientRect();renderer.setSize(r.width,r.height);camera.aspect=r.width/r.height;camera.updateProjectionMatrix();}size();view();addEventListener('resize',size);
-function pose(t){rig.restore();if(bindMode){for(const [b,q,p]of bindBones){b.quaternion.copy(q);b.position.copy(p);}asset.scene.updateMatrixWorld(true);return;}action.time=Math.min(duration,t);mixer.update(0);const name=$('clip').value,attack=!/idle|run|guard/.test(name);rig.apply(attack?{id:name,clip:name,kind:'attack',duration,elapsed:t,hitAt:duration*.42}:null,name==='run',name==='guard',0,name);asset.scene.updateMatrixWorld(true);}
+function pose(t){rig.restore();if(bindMode){for(const [b,q,p]of bindBones){b.quaternion.copy(q);b.position.copy(p);}asset.scene.updateMatrixWorld(true);return;}const name=$('clip').value,attack=!/idle|run|guard/.test(name),a={id:name,clip:name,kind:name==='ult'?'ult':'skill',duration,elapsed:t,hitAt:combatProfile?.hit||duration*.42,clipHit:window.TW_DUNGEONS.RULES.motion.clipContacts[name]||.42};action.time=combatProfile?sampleAction(a,action.getClip().duration):Math.min(duration,t);mixer.update(0);rig.apply(attack?a:null,name==='run',name==='guard',0,name);asset.scene.updateMatrixWorld(true);}
 function selectClip(){
  rig.restore();mixer.stopAllAction();bindMode=false;running=false;time=0;
  const name=$('clip').value,clip=name==='study'?makePoseStudy(asset.animations.find(c=>c.name==='attack1'),{smooth:true}):asset.animations.find(c=>c.name===name);
  if(!clip)throw Error('Missing clip: '+name);
- duration=clip.duration;reviewKeys=name==='study'?KEYS:[0,.2,.42,.6,.8,1].map((u,i)=>({name:`${Math.round(u*100)}%`,time:u*duration}));
+ const motion=window.TW_DUNGEONS.RULES.motion,heavy=motion.characterProfiles?.ain?.[name];combatProfile=heavy?($('pace').value==='heavy'?heavy:motion[name==='ult'?'ult':'skill']):null;
+ duration=combatProfile?.duration||clip.duration;reviewKeys=name==='study'?KEYS:(combatProfile?[0,combatProfile.hit*.5,combatProfile.hit,combatProfile.hit+.1,combatProfile.cancel,duration].map((t,i)=>({name:`${['준비','모으기','타격','후속','회피 가능','복귀'][i]} ${t.toFixed(2)}s`,time:t})):[0,.2,.42,.6,.8,1].map((u,i)=>({name:`${Math.round(u*100)}%`,time:u*duration})));
  action=mixer.clipAction(clip);action.setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();action.paused=true;$('seek').max=Math.round(duration*1000);
 }
 function draw(){renderer.render(scene,camera);}
@@ -37,13 +41,14 @@ async function thumbnails(){
  size();pose(old);
 }
 try{
- const loader=new GLTFLoader();asset=await loader.loadAsync('art/3d/ain_anim.glb');scene.add(asset.scene);asset.animations=repairAinClips(asset.animations,repairAinBind(asset.scene));asset.scene.traverse(o=>{if(o.isBone)bindBones.push([o,o.quaternion.clone(),o.position.clone()]);if(/RightHandSlot$/.test(o.name))slot=o;});if(!slot)throw Error('RightHandSlot missing');
+ const loader=new GLTFLoader();asset=await loader.loadAsync('art/3d/ain_anim.glb?skill-review=20260920');scene.add(asset.scene);asset.animations=repairAinClips(asset.animations,repairAinBind(asset.scene));asset.scene.traverse(o=>{if(o.isBone)bindBones.push([o,o.quaternion.clone(),o.position.clone()]);if(/RightHandSlot$/.test(o.name))slot=o;});if(!slot)throw Error('RightHandSlot missing');
  const w=await loader.loadAsync('art/3d/ain_scythe_tex.glb'),wr=new T.Group();wr.add(mountAinScythe(w.scene));slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
  mixer=new T.AnimationMixer(asset.scene);rig=makeRigAdapter(asset.scene,asset.scene,slot);selectClip();
  await thumbnails();for(const id of ['play','stop','sheet','clip'])$(id).disabled=false;
 }catch(e){$('status').textContent='로드 실패: '+e.message;console.error(e);}
 $('bind').onclick=()=>{bindMode=!bindMode;running=false;};$('play').onclick=()=>{bindMode=false;time=0;running=true;};$('stop').onclick=()=>running=false;$('seek').oninput=()=>{bindMode=false;time=+$('seek').value/1000;running=false;};$('view').onchange=async()=>{view();if(action)await thumbnails();};
 $('clip').onchange=async()=>{selectClip();await thumbnails();};
+$('pace').onchange=async()=>{if(action){selectClip();await thumbnails();}};
 $('sheet').onclick=async()=>{const canvas=document.createElement('canvas');canvas.width=1260;canvas.height=900;const c=canvas.getContext('2d');c.fillStyle='#1e2630';c.fillRect(0,0,1260,900);for(let i=0;i<6;i++){const img=new Image();img.src=images[i];await img.decode();const x=i%3*420,y=Math.floor(i/3)*450;c.drawImage(img,x,y);c.fillStyle='white';c.font='20px sans-serif';c.fillText(`${i+1}. ${reviewKeys[i].name}`,x+15,y+439);}const a=document.createElement('a');a.download=`ain-${$('clip').value}-six-poses.png`;a.href=canvas.toDataURL();a.click();};
 function frame(){requestAnimationFrame(frame);const dt=Math.min(.05,clock.getDelta());if(action){if(running){time=Math.min(duration,time+dt*+$('speed').value);if(time>=duration)running=false;}pose(time);$('seek').value=time*1000;$('status').textContent=`${time.toFixed(2)} / ${duration.toFixed(2)}초 · 왼손 손바닥 기준점→자루 오차 ${(rig.diagnostics.gripError*100).toFixed(1)}cm (손가락 검수 아님) · 발 고정 보정 미적용`;}controls.update();draw();}frame();
 </script></html>

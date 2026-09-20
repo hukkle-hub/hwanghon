@@ -50,6 +50,8 @@ export class WeaponTrail{
      그 순간의 자세에 휘둘리지 않는다. */
   measure(weapon){
     if(!weapon) return; weapon.updateMatrixWorld(true);
+    this.bladeRoot=weapon.getObjectByName('AinBladeRoot');this.bladeTip=weapon.getObjectByName('AinBladeTip');
+    if(this.bladeRoot&&this.bladeTip){this.measured=true;return;}
     const inv=new T.Matrix4().copy(weapon.matrixWorld).invert(), box=new T.Box3(); let got=false;
     weapon.traverse(o=>{ if(o.isMesh&&o.geometry){ o.geometry.computeBoundingBox(); if(!o.geometry.boundingBox) return;
       const bb=o.geometry.boundingBox.clone(); bb.applyMatrix4(new T.Matrix4().multiplyMatrices(inv,o.matrixWorld)); box.union(bb); got=true; } });
@@ -60,8 +62,8 @@ export class WeaponTrail{
   set(power, hex){ this.power=power||1; this.hue.setHex(hex==null?0xBFD8E8:hex); }
   _push(weapon){
     weapon.updateMatrixWorld(true);
-    const b=new T.Vector3(0,this.baseY,0).applyMatrix4(weapon.matrixWorld);
-    const t=new T.Vector3(0,this.tipY,0).applyMatrix4(weapon.matrixWorld);
+    const b=this.bladeRoot?this.bladeRoot.getWorldPosition(new T.Vector3()):new T.Vector3(0,this.baseY,0).applyMatrix4(weapon.matrixWorld);
+    const t=this.bladeTip?this.bladeTip.getWorldPosition(new T.Vector3()):new T.Vector3(0,this.tipY,0).applyMatrix4(weapon.matrixWorld);
     this.pts.unshift([b,t]); if(this.pts.length>TRN) this.pts.pop();
   }
   _write(mesh, under, over, bright){
@@ -101,12 +103,13 @@ export class WeaponTrail{
   tick(dt, weapon, swinging){
     this._wind(dt);
     if(!weapon){ this.layers[0].visible=this.layers[1].visible=false; return; }
+    if(this.weapon!==weapon){this.weapon=weapon;this.measured=false;this.pts=[];this.hold=0;this.bladeRoot=this.bladeTip=null;}
     if(!this.measured) this.measure(weapon);
     if(swinging){ this._push(weapon); this.hold=0.16; }
     else if(this.hold>0){ this.hold-=dt; if(this.pts.length) this.pts.pop(); }
     else if(this.pts.length) this.pts.pop();
-    this._write(this.layers[0], INNER[0], OUTER[0], BRIGHT[0]);
-    this._write(this.layers[1], INNER[1], OUTER[1], BRIGHT[1]);
+    this._write(this.layers[0], this.bladeTip?0:INNER[0], this.bladeTip?1:OUTER[0], BRIGHT[0]);
+    this._write(this.layers[1], this.bladeTip?-.08:INNER[1], this.bladeTip?1.12:OUTER[1], BRIGHT[1]);
     this.windT-=dt;
     if(swinging && this.power>=1.3 && this.windT<=0){ this.windT=0.045; this._spawnWind(); }
   }

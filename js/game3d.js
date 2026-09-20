@@ -6,7 +6,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
-import {mountAinScythe} from './ain-scythe-mount.js';
+import {mountAinScythe,measureAinBladeContact} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
 import { prepareTrainingMotion, sampleBossAttack } from './boss-motion.js';
 import { createTrainingParts } from './training-presentation.js';
@@ -886,6 +886,34 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function stickWorld(){ var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-stick.sy).add(r.clone().multiplyScalar(stick.sx)); return { sx:d.x, sy:d.z }; }
   function keyStick(){ var x=(kd.KeyD||kd.ArrowRight?1:0)-(kd.KeyA||kd.ArrowLeft?1:0), y=(kd.KeyS||kd.ArrowDown?1:0)-(kd.KeyW||kd.ArrowUp?1:0); if(x||y){ var m=Math.hypot(x,y); var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-y/m).add(r.clone().multiplyScalar(x/m)); return {sx:d.x, sy:d.z}; } return null; }
   var botStick=null, botMode=false;
+  // Local-only deterministic visual review, using the actual battle/rig/trail.
+  // No production route, account writes, rewards or network requests added.
+  if(['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('weaponReview')){
+    const panel=document.createElement('div');panel.style.cssText='position:fixed;z-index:99999;top:8px;left:20%;background:#14202eee;color:white;padding:12px;font:14px sans-serif';
+    panel.innerHTML='<b>로컬 낫 접점 검수</b> <select aria-label="검수 공격"><option value="skill1">낫베기</option><option value="skill3">피의회전</option><option value="ult">궁극기</option><option value="attack">기본 공격</option></select> <button>타격 시점 검수</button> <button>검수 PNG 저장</button><div data-review-status>입장 후 사용 · 실제 전투 코드, 정지 표적</div>';
+    document.body.append(panel);let watching=false;
+    const reviewTarget=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),new THREE.MeshBasicMaterial({color:0x45ffaa,wireframe:true,transparent:true,opacity:.35,depthTest:false}));reviewTarget.visible=false;scene.add(reviewTarget);
+    panel.querySelectorAll('button')[0].onclick=function(){
+      if(!ain.mixer||!boss.model)return;
+      el.ov.classList.remove('is-on');endFlyover();el.dlg.classList.remove('is-on');cine=false;cineCam=null;scheduled=[];paused=false;state='fight';
+      reviewTarget.visible=false;boss.coreGlow.visible=true;
+      P.x=Bs.x-60;P.y=Bs.y;P.aim=0;P.rollT=0;P.lockT=0;botStick={sx:0,sy:0};
+      PS.ult=100;startPhase(0);const selected=panel.querySelector('select').value;
+      battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',selected==='skill3'?2:0);
+      watching=true;
+    };
+    panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download='ain-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
+    function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;if(!a)return;
+      if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos('core');
+        panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';
+        const contact=measureAinBladeContact(ain.weapon,target);panel.querySelector('[data-review-status]').textContent+=' · 실제 날 표면→핵 '+contact.distance.toFixed(3)+'m / 표적 반경 '+boss.PART.core.r.toFixed(3)+'m';
+        // Hide only distracting presentation effects in this local frozen QA
+        // view; show the unchanged target radius, never move/resize the target.
+        FX.forEach(f=>f.o.visible=false);boss.coreGlow.visible=false;Object.values(boss.hits).forEach(o=>o.visible=false);el.counter.classList.remove('is-on');el.dg.querySelectorAll('.dmgnum').forEach(o=>o.remove());
+        reviewTarget.position.copy(target);reviewTarget.scale.setScalar(boss.PART.core.r);reviewTarget.visible=true;
+      }
+    }requestAnimationFrame(reviewFrame);
+  }
   function cycleTarget(){if(!battle||paused||cine||ain.dead)return;var s=battle.snapshot(),ids=s.enemy.parts.map(function(p){return p.id;}),i=ids.indexOf(s.target);battle.input('target',ids[(i+1)%ids.length]);}
   $('#target-cycle').addEventListener('click',cycleTarget);
   (function(){ var b=$('#lockon'); if(b) b.addEventListener('click', function(){ setLock(!lockOn); }); })();

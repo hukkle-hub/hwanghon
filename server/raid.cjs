@@ -45,13 +45,16 @@ class Raid{
    if(k.dodge){this.dodge(p,0,k.iframes||1);p.critNext=true;}
    else if(k.buff){p.buffT=k.buff.dur;p.buffReduce=k.buff.reduce;}
    else this.action(p,'smash',k.mult,this.policy().skill,{aoe:k.aoe,skill:true,posture:k.posture,bleed:k.bleed,clip:'skill'+(msg.index+1)});
+   // Presentation only: no extra damage, lock or invulnerability. Include in
+   // snapshots so reconnecting clients do not depend on receiving an event.
+   if(p.character==='ain'&&(k.dodge||k.buff))p.gesture={id:++this.serial,clip:'skill'+(msg.index+1),elapsed:0,duration:k.dodge?this.L.player.rollDur:.875};
    this.event('skill',{player:id,index:msg.index,clip:'skill'+(msg.index+1),name:k.name});return;}
   if(msg.type==='ult'&&p.ult>=100){const k=p.ultSkill;p.ult=0;this.action(p,'ult',k.mult,1,{posture:k.posture,bleed:k.bleed});}
  }
  policy(){return {normal:.3,skill:.65,exposed:1.75,breakBurst:2.5,...this.stage.discipline};}
  canExecute(p){return this.state==='fight'&&this.boss.state==='downed'&&!this.boss.executed&&this.alive(p)&&!p.action&&p.lock<=0&&this.nearBoss(p,this.L.player.reach*1.4);}
  canCounter(p){return this.state==='fight'&&this.boss.state==='telegraph'&&this.boss.pattern.counterable!==false&&this.boss.tele>0&&this.boss.tele<=(this.stage.counterWindow||.18)&&this.nearBoss(p,this.L.player.reachCounter)&&this.inZone(p);}
- action(p,kind,mult,reward,opt={}){const profile=R.motion[kind==='attack'?'light':kind]||R.motion.light,speed=p.stats.aspd/100,clip=opt.clip||(kind==='counter'?'counter':kind==='ult'?'ult':'smash');p.action={id:++this.serial,kind,clip,part:p.target,elapsed:0,hitAt:profile.hit/speed,duration:profile.duration/speed,cancelAt:profile.cancel/speed,clipHit:R.motion.clipContacts[clip]||profile.clipHit,mult,reward,opt,resolved:false};p.riposteT=0;p.guard=false;p.regenDelay=R.stamina.delay;p.aim=this.world.angle(p.x,p.y,this.boss.x,this.boss.y);}
+ action(p,kind,mult,reward,opt={}){const clip=opt.clip||(kind==='counter'?'counter':kind==='ult'?'ult':'smash'),overrides=(R.motion.characterProfiles||{})[p.character||'ain']||{},profile=overrides[clip]||R.motion[kind==='attack'?'light':kind]||R.motion.light,speed=p.stats.aspd/100;p.action={id:++this.serial,kind,clip,part:p.target,elapsed:0,hitAt:profile.hit/speed,duration:profile.duration/speed,cancelAt:profile.cancel/speed,clipHit:R.motion.clipContacts[clip]||profile.clipHit,mult,reward,opt,resolved:false};p.riposteT=0;p.guard=false;p.regenDelay=R.stamina.delay;p.aim=this.world.angle(p.x,p.y,this.boss.x,this.boss.y);}
  dodge(p,cost,iframeMult){if(p.st<cost||p.dodgeCd>0)return;p.st-=cost;p.regenDelay=R.stamina.delay;p.dodgeT=R.dodge.iframes*(iframeMult||1);p.dodgeCd=R.dodge.cooldown;p.dodgeAt=this.time;p.dodgeThreat=this.inZone(p)?this.boss.attackId:null;p.guard=false;let {x,y}=p.axes;if(Math.hypot(x,y)<.1){x=Math.cos(p.aim);y=Math.sin(p.aim);}this.world.roll(p,x,y,this.L.player.rollLen,this.L.player.rollDur);this.event('dodge',{player:p.id});}
  interact(p){if(!this.expedition.interact(p))return;for(const e of this.expedition.drain()){if(e.t==='interact'){if(e.node.kind==='checkpoint')for(const q of this.players.values())if(this.alive(q)&&this.world.dist(q.x,q.y,p.x,p.y)<160){q.hp=q.maxHp;q.st=120;}this.event('interact',{player:p.id,name:e.node.name});}if(e.t==='gateReady')this.world.setSolid(this.gate.cx,this.gate.cy,false);}}
  impact(p,a){a.resolved=true;if(this.state!=='fight'||!this.nearBoss(p)||this.world.angDiff(p.aim,this.world.angle(p.x,p.y,this.boss.x,this.boss.y))>this.L.player.cone){p.whiffs++;p.lastFailure='공격이 닿지 않았습니다. 거리와 방향을 확인하세요.';this.event('whiff',{player:p.id});return;}
@@ -109,6 +112,7 @@ class Raid{
   const reviving=new Set();for(const p of this.players.values()){
    if(!this.alive(p)){p.downT=Math.max(0,p.downT-dt);if(p.downT===0)p.dead=true;continue;}
    for(const key of ['dodgeT','dodgeCd','lock','regenDelay','riposteT','comboT','buffT','hazardCd','itemCd','attackBuffT','moveBuffT'])p[key]=Math.max(0,p[key]-dt);p.cds=p.cds.map(t=>Math.max(0,t-dt));p.threat*=Math.exp(-dt*.12);
+   if(p.gesture){p.gesture.elapsed+=dt;if(p.gesture.elapsed>=p.gesture.duration||p.action||p.guard||p.lock>0||(p.gesture.clip==='skill4'&&(p.rollT>0||Math.hypot(p.axes.x,p.axes.y)>.1)))p.gesture=null;}
    if(p.bleedT>0){p.bleedT=Math.max(0,p.bleedT-dt);p.bleedTick-=dt;if(p.bleedTick<=0){p.bleedTick=1;p.hp=Math.max(1,p.hp-Math.round(p.maxHp*.01*(1-(p.stats.bleedResist||0))));}}
    if(!p.connected||this.time-p.lastInput>.25)p.axes={x:0,y:0};
    if(p.guard){p.st=Math.max(0,p.st-12*dt);if(p.st===0)p.guard=false;}else if(p.regenDelay===0)p.st=Math.min(120,p.st+18*dt);

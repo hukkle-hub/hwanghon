@@ -12,7 +12,14 @@
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
       ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},
       skill:{hit:0.42,active:0.14,duration:1.00,cancel:0.82,clipHit:0.50},
-      exec:{hit:0.72,active:0.20,duration:1.60,cancel:1.45,clipHit:0.58} },   /* 처형은 길고 확실하게 — 크게 들었다 내리꽂는다 */
+      exec:{hit:0.72,active:0.20,duration:1.60,cancel:1.45,clipHit:0.58},
+      /* 아인 공격 기술만: 준비와 회수를 늘린다. 이동/회피/버프/기본 연타는 유지.
+         서버와 솔로가 같은 clip별 시간표를 사용하며, 피해량/쿨타임은 바꾸지 않는다. */
+      characterProfiles:{ain:{
+        skill1:{hit:.58,active:.14,duration:1.32,cancel:1.02},
+        skill3:{hit:.64,active:.14,duration:1.42,cancel:1.10},
+        ult:{hit:.80,active:.15,duration:1.62,cancel:1.38}
+      }} },   /* 처형은 길고 확실하게 — 크게 들었다 내리꽂는다 */
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
     hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
     execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
