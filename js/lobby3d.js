@@ -31,7 +31,11 @@ function start(canvas){
   renderer.setPixelRatio(Math.min(devicePixelRatio, small?1.25:1.6));
   renderer.outputColorSpace=THREE.SRGBColorSpace;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=0.86;
+  /* 밝기는 노출이 아니라 «빛» 으로 잡았다. 노출만 0.70→1.35 로 훑어도 캐릭터 평균
+     밝기가 10.9→13.1 밖에 안 움직인다 — 아인의 옷 반사율이 거의 검정이라
+     곱해 주는 값으로는 안 올라온다. 빛을 2.5 배 올리고 노출을 조금 얹어
+     평균 11.5→17.5 (배경 중앙값의 −17 %) 로 맞췄다. docs/design/46 */
+  renderer.toneMappingExposure=1.10;
 
   const scene=new THREE.Scene();
   const cam=new THREE.PerspectiveCamera(26,1,0.1,60);
@@ -39,10 +43,10 @@ function start(canvas){
   /* 배경의 빛에 맞춘다 — 붉은 달이 오른쪽 위, 도시 불빛이 아래에서 희미하게 */
   /* 배경은 «차갑고 어두운» 그림이다. 처음엔 달빛을 2.6 으로 줬다가 캐릭터만
      청동빛으로 떠서, 값과 채도를 배경에 맞춰 내렸다. */
-  scene.add(new THREE.HemisphereLight(0x2c3340, 0x0f0d12, 0.62));
-  const moon=new THREE.DirectionalLight(0xB4675C, 1.15); moon.position.set(2.6,3.0,-2.2); scene.add(moon);
-  const fill=new THREE.DirectionalLight(0x50607e, 0.55); fill.position.set(-2.4,1.4,1.8); scene.add(fill);
-  const rim =new THREE.DirectionalLight(0x9a8452, 0.85); rim.position.set(-1.2,2.2,-3.0); scene.add(rim);
+  scene.add(new THREE.HemisphereLight(0x2c3340, 0x0f0d12, 1.45));
+  const moon=new THREE.DirectionalLight(0xB4675C, 2.90); moon.position.set(2.6,3.0,-2.2); scene.add(moon);
+  const fill=new THREE.DirectionalLight(0x50607e, 0.85); fill.position.set(-2.4,1.4,1.8); scene.add(fill);
+  const rim =new THREE.DirectionalLight(0x9a8452, 1.50); rim.position.set(-1.2,2.2,-3.0); scene.add(rim);
 
   const root=new THREE.Group(); scene.add(root);
   let model=null, mixer=null, wind=null, charH=1.7, fullH=1.7, clock=new THREE.Clock();

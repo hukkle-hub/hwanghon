@@ -80,3 +80,24 @@ test('메뉴 화면답게 아낀다',()=>{
  assert.match(SRC,/small\?1\.25:1\.6/,'좁은 화면은 화소를 덜 쓴다');
  assert.match(SRC,/hidden\)\{ clock\.getDelta\(\); return; \}/,'가려지면 그리지 않고 시계만 비운다');
 });
+
+/* 밝기는 «노출» 이 아니라 «빛» 으로 잡았다 (docs/design/46).
+   노출만 0.70→1.35 로 훑어도 캐릭터 평균 밝기는 10.9→13.1 밖에 안 움직인다 —
+   아인의 옷 반사율이 거의 검정이라 곱해 주는 값으로는 안 올라오기 때문이다.
+   누가 「너무 밝다」며 노출만 도로 내려도 이 검사는 안 잡히므로, 빛 쪽을 못 박는다. */
+test('밝기를 빛으로 잡았다 — 되돌리면 캐릭터가 검은 덩어리가 된다',()=>{
+  const num=(re,what)=>{ const m=re.exec(SRC); assert.ok(m, what+' 를 못 찾았다'); return +m[1]; };
+  const expo=num(/toneMappingExposure=([0-9.]+)/,'노출');
+  const hemi=num(/HemisphereLight\(0x2c3340, 0x0f0d12, ([0-9.]+)\)/,'하늘빛');
+  const moon=num(/DirectionalLight\(0xB4675C, ([0-9.]+)\)/,'달빛');
+  const rim =num(/DirectionalLight\(0x9a8452, ([0-9.]+)\)/,'테두리빛');
+  assert.ok(moon>=2.0, `달빛 ${moon} — 2.0 밑이면 옷 무늬가 안 보인다`);
+  assert.ok(hemi>=1.2, `하늘빛 ${hemi} — 1.2 밑이면 그늘이 순검정으로 눌린다`);
+  assert.ok(rim >=1.2, `테두리빛 ${rim} — 실루엣이 도시에 묻힌다`);
+  assert.ok(expo>=1.0 && expo<=1.3, `노출 ${expo} — 1.0~1.3 밖이면 배경과 따로 논다`);
+});
+
+test('왜 이 값인지 파일에 적혀 있다',()=>{
+  assert.match(SRC, /반사율|docs\/design\/46/,
+    '다음 사람이 「왜 이렇게 밝지」 하고 되돌릴 수 있다 — 이유를 남겨야 한다');
+});
