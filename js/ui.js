@@ -35,7 +35,7 @@
   var TOUCH = !!(window.matchMedia && (matchMedia('(pointer:coarse)').matches || matchMedia('(hover:none)').matches));
   if (TOUCH) document.documentElement.classList.add('touch');
   /* 휴대폰 판정: 터치 기기이면서 짧은 변이 640 CSS px 이하 (태블릿은 축소 스테이지 유지) */
-  var MOBILE = TOUCH && Math.min(window.innerWidth, window.innerHeight) <= 640 && !document.body.hasAttribute('data-nomobile');
+  var MOBILE = (TOUCH || document.body.hasAttribute('data-responsive-mobile')) && Math.min(window.innerWidth, window.innerHeight) <= 640 && !document.body.hasAttribute('data-nomobile');
   if (MOBILE) document.documentElement.classList.add('mobile');
   var $  = function(s,r){ return (r||document).querySelector(s); };
   var $$ = function(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };

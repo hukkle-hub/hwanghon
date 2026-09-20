@@ -8,6 +8,20 @@ const ready=[0,-.12,.32,-.65,.75,.18];
 const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,ready]];
 const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,.6]],[.65,[0,-.22,.37,-.7,-.5,.5]],[1,ready]];
 const thrust=[[0,ready],[.24,[-.08,-.13,.22,-.6,.15,.75]],[.42,[0,-.08,.48,-.6,.1,.75]],[.62,[0,-.12,.28,-.6,.3,.75]],[1,ready]];
+// Distinct skill silhouettes; the negative-X shaft component keeps the two
+// hands ordered instead of crossing through an elbow branch singularity.
+export const AIN_SKILL_PATHS={
+ skill1:[[0,ready],[.16,[-.13,.06,.27,-.8,.6,-.28]],[.42,[.25,.10,.25,-.35,.90,-.10]],[.70,[.15,-.20,.31,-.85,-.25,.3]],[1,ready]],
+ skill2:[[0,ready],[.22,[0,-.20,.23,-.8,.4,.12]],[.65,[0,-.20,.23,-.8,.4,.12]],[1,ready]],
+ skill3:[[0,ready],[.16,[-.09,-.14,.29,-.95,.12,-.25]],[.42,[.25,.10,.25,-.35,.90,-.10]],[.80,[.10,-.16,.32,-.95,.12,.25]],[1,ready]],
+ skill4:[[0,ready],[.28,[.03,-.15,.28,-.45,.88,.10]],[.76,[.03,-.20,.28,-.45,.88,.10]],[1,ready]],
+ ult:[[0,ready],[.20,[0,.15,.27,-.65,.75,-.22]],[.42,[.25,.10,.25,-.18,.98,-.10]],[.76,[0,-.22,.35,-.85,-.25,.40]],[1,ready]]
+};
+// Shaft block, short brace, then a distinct release. Perfect counters travel
+// farther through the follow-through without changing authoritative timing.
+const counter=[[0,ready],[.16,[0,-.08,.31,-.98,.10,.12]],[.24,[0,-.08,.31,-.98,.10,.12]],[.42,[.06,-.13,.40,-.8,.12,.6]],[.70,[.13,-.18,.31,-.85,.1,.4]],[1,ready]];
+const perfectCounter=counter.map(([t,p])=>[t,p.slice()]);
+perfectCounter[4]=[.70,[.16,-.21,.32,-.8,-.18,.55]];
 function path(keys,t){
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
  const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
@@ -18,7 +32,18 @@ function pathRotation(keys,t){
  // normalized direction each frame amplifies roll near a direction reversal.
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
  const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
- return Q().setFromUnitVectors(V(0,1,0),V(...a.slice(3)).normalize()).slerp(Q().setFromUnitVectors(V(0,1,0),V(...b.slice(3)).normalize()),u);
+ const swing=Q().setFromUnitVectors(V(0,1,0),V(...a.slice(3)).normalize()).slerp(Q().setFromUnitVectors(V(0,1,0),V(...b.slice(3)).normalize()),u);
+ return aimScytheBlade(V(0,1,0).applyQuaternion(swing));
+}
+// The measured asset's blade extends along -X, not along the shaft (+Y).
+// Specifying a shaft direction alone leaves its cutting plane unconstrained.
+// Keep the hooked blade ahead of the torso, in the shaft/forward plane; this
+// follows the whole-body turn and avoids presenting the blade's broad side.
+export function aimScytheBlade(shaft,forward=V(0,0,1)){
+ const y=shaft.clone().normalize(),blade=forward.clone().addScaledVector(y,-forward.dot(y));
+ if(blade.lengthSq()<1e-6)throw Error('Scythe shaft/forward singularity: author a non-collinear weapon pose');
+ const x=blade.normalize().negate(),z=x.clone().cross(y).normalize();
+ return Q().setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));
 }
 
 // Two palm sockets + a common weapon path, solved from the bind pose. This does
@@ -66,7 +91,7 @@ export function makeAinTwoHand(model,root,slot){
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
   // Contact remains at the existing combat hit timestamp, not a new timer.
   if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=a.elapsed<=a.hitAt?.42*a.elapsed/a.hitAt:.42+.58*(a.elapsed-a.hitAt)/(a.duration-a.hitAt);
-  const keys=/attack2|smash|exec/.test(name)?chop:/attack3|counter/.test(name)?thrust:slash;
+  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   const spec=path(keys,t),weaponQ=pathRotation(keys,t);
   const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));
   const shaftQ=frame.clone().multiply(weaponQ);
@@ -113,6 +138,6 @@ export function makeAinRigAdapter(model,root,slot){
  const base=makeRigAdapter(model,root,null),arms=makeAinTwoHand(model,root,slot);
  return {bones:arms.bones,diagnostics:arms.diagnostics,
   restore(){arms.restore();base.restore();},
-  apply(a,moving,guard,dt,poseName){base.apply(a,moving,guard,dt);arms.apply(a,moving,guard,dt,poseName);arms.diagnostics.footError=base.diagnostics.footError;}
+  apply(a,moving,guard,dt,poseName){base.apply(a,moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName);arms.diagnostics.footError=base.diagnostics.footError;}
  };
 }

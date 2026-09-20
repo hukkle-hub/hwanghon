@@ -6,11 +6,12 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
-import {mountAinScythe} from './ain-scythe-mount.js';
+import {mountAinScythe,measureAinBladeContact} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
 import { prepareTrainingMotion, sampleBossAttack } from './boss-motion.js';
 import { createTrainingParts } from './training-presentation.js';
 import { createFrameMetrics } from './frame-metrics.js';
+import { graphicsProfile } from './graphics-profile.js';
 import { createRelayBoss } from './relay-boss.js';
 import { createRootBoss } from './root-boss.js';
 import { createHaulerBoss } from './hauler-boss.js';
@@ -115,7 +116,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
             sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
   var fovWant=CAM.fov, bossTall=0;
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0))*0.9   /* 조금 당겨 캐릭터를 크게 */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
-  function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight; renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
+  function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight;
+    var profile=graphicsProfile({quality:SET.quality,mobile:MOBILE,safe:SAFE,degraded:autoLow,width:w,height:h,dpr:devicePixelRatio});
+    renderer.setPixelRatio(profile.pixelRatio);renderer.shadowMap.enabled=profile.shadowSize>0;
+    if(moon&&profile.shadowSize&&moon.shadow.mapSize.x!==profile.shadowSize){moon.shadow.mapSize.set(profile.shadowSize,profile.shadowSize);if(moon.shadow.map){moon.shadow.map.dispose();moon.shadow.map=null;}}
+    renderer.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
   addEventListener('resize', resize); resize();
   /* ---------- 로딩 화면: 모든 텍스처·GLB 를 한 매니저로 세어 진행률 표시 ---------- */
   var LM=new THREE.LoadingManager(), ldDone=false;
@@ -136,7 +141,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   var moon=new THREE.DirectionalLight(0xa8b4d0, 2.2); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
   var pLight=new THREE.PointLight(0xE0D0B8, 3.0, 10, 1.4); scene.add(pLight);
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
-    function applySettings(){ SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
+    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
   function noiseTex(draw, size, srgb){ var c=document.createElement('canvas'); c.width=c.height=size||256; var g=c.getContext('2d'); draw(g, c.width); var t=new THREE.CanvasTexture(c); if(srgb!==false) t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; }
@@ -738,7 +743,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     fxRing(here, 0x9FD8FF, 1.9, 0.30);
   }
   function slowmo(scale, ms){ timeScale=scale; var t0=performance.now(); (function up(){ var k=Math.min(1,(performance.now()-t0)/ms); timeScale=scale+(1-scale)*k*k; if(k<1) requestAnimationFrame(up); else timeScale=1; })(); }
-  function autoQuality(){ if(autoLow||!SET.lights||navigator.webdriver) return; var avg=fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length; if(avg<24){ autoLow=true; SET.lights=false; renderer.shadowMap.enabled=false; applySettings(); guide('프레임이 낮아 <b>조명을 껐습니다</b> (일시정지 메뉴에서 변경)', 3); } }
+  function autoQuality(){ if(autoLow||SET.quality!=='auto'||navigator.webdriver||paused||document.hidden) return; var avg=fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length; if(avg<24){ autoLow=true; applySettings(); guide('프레임이 낮아 <b>해상도와 그림자를 낮췄습니다</b> (일시정지 → 화질)', 3); } }
 
   /* ---------- 잡몹 이벤트 ---------- */
   function handleSk(e){
@@ -886,6 +891,39 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
   function stickWorld(){ var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-stick.sy).add(r.clone().multiplyScalar(stick.sx)); return { sx:d.x, sy:d.z }; }
   function keyStick(){ var x=(kd.KeyD||kd.ArrowRight?1:0)-(kd.KeyA||kd.ArrowLeft?1:0), y=(kd.KeyS||kd.ArrowDown?1:0)-(kd.KeyW||kd.ArrowUp?1:0); if(x||y){ var m=Math.hypot(x,y); var f=new THREE.Vector3(-Math.sin(camYaw), 0, -Math.cos(camYaw)); var r=new THREE.Vector3(-f.z, 0, f.x); var d=f.clone().multiplyScalar(-y/m).add(r.clone().multiplyScalar(x/m)); return {sx:d.x, sy:d.z}; } return null; }
   var botStick=null, botMode=false;
+  // Local-only deterministic visual review, using the actual battle/rig/trail.
+  // No production route, account writes, rewards or network requests added.
+  if(['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('weaponReview')){
+    const panel=document.createElement('div');panel.style.cssText='position:fixed;z-index:99999;top:8px;left:20%;background:#14202eee;color:white;padding:12px;font:14px sans-serif';
+    panel.innerHTML='<b>로컬 낫 접점 검수</b> <select aria-label="검수 공격"><option value="skill1">낫베기</option><option value="skill3">피의회전</option><option value="ult">궁극기</option><option value="attack">기본 공격</option></select> <button>타격 시점 검수</button> <button>검수 PNG 저장</button><div data-review-status>입장 후 사용 · 실제 전투 코드, 정지 표적</div>';
+    panel.style.maxWidth='75vw';
+    panel.insertAdjacentHTML('beforeend','<label>거리(m) <input aria-label="검수 거리" type="number" min="0.8" max="3" step="0.1" value="1.2" style="width:60px"></label> <label>부위 <select aria-label="검수 부위">'+Object.keys(A.parts3d||{}).map(k=>'<option value="'+k+'">'+k+'</option>').join('')+'</select></label>');
+    panel.querySelector('[aria-label="검수 부위"]').value='core';
+    document.body.append(panel);let watching=false,reviewPart='core';
+    const reviewTarget=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),new THREE.MeshBasicMaterial({color:0x45ffaa,wireframe:true,transparent:true,opacity:.35,depthTest:false}));reviewTarget.visible=false;scene.add(reviewTarget);
+    panel.querySelectorAll('button')[0].onclick=function(){
+      if(!ain.ready||!ain.mixer||!boss.model)return;
+      el.ov.classList.remove('is-on');endFlyover();el.dlg.classList.remove('is-on');cine=false;cineCam=null;scheduled=[];paused=false;state='fight';
+      reviewTarget.visible=false;boss.coreGlow.visible=true;
+      const distance=Math.max(.8,Math.min(3,Number(panel.querySelector('input').value)||1.2));reviewPart=panel.querySelector('[aria-label="검수 부위"]').value||'core';
+      P.x=Bs.x-distance*SCALE;P.y=Bs.y;P.aim=0;P.rollT=0;P.lockT=0;botStick={sx:0,sy:0};
+      PS.ult=100;startPhase(0);const selected=panel.querySelector('select').value;
+      battle.input('target',reviewPart);
+      battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',selected==='skill3'?2:0);
+      watching=true;
+    };
+    panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download='ain-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
+    function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;if(!a)return;
+      if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
+        panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';
+        const contact=measureAinBladeContact(ain.weapon,target),radius=boss.PART[reviewPart].r;panel.querySelector('[data-review-status]').textContent+=' · 선택 부위 '+reviewPart+' · 실제 날 표면 '+contact.distance.toFixed(3)+'m / 표적 반경 '+radius.toFixed(3)+'m · '+(contact.distance<=radius?'접촉':'빗나감');
+        // Hide only distracting presentation effects in this local frozen QA
+        // view; show the unchanged target radius, never move/resize the target.
+        FX.forEach(f=>f.o.visible=false);boss.coreGlow.visible=false;Object.values(boss.hits).forEach(o=>o.visible=false);el.counter.classList.remove('is-on');el.dg.querySelectorAll('.dmgnum').forEach(o=>o.remove());
+        reviewTarget.position.copy(target);reviewTarget.scale.setScalar(radius);reviewTarget.visible=true;
+      }
+    }requestAnimationFrame(reviewFrame);
+  }
   function cycleTarget(){if(!battle||paused||cine||ain.dead)return;var s=battle.snapshot(),ids=s.enemy.parts.map(function(p){return p.id;}),i=ids.indexOf(s.target);battle.input('target',ids[(i+1)%ids.length]);}
   $('#target-cycle').addEventListener('click',cycleTarget);
   (function(){ var b=$('#lockon'); if(b) b.addEventListener('click', function(){ setLock(!lockOn); }); })();
@@ -908,9 +946,10 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
   document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL') guardIn(false); });
   window.addEventListener('blur',function(){kd={};stick.sx=stick.sy=0;atkUp();});
-  function settingsHTML(){ return '<div class="setrow"><label>밝기</label><input type="range" min="0.5" max="1.5" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
-    '<div class="setrow"><label>동적 조명</label><button class="btn btn--sm" data-tog="lights">'+(SET.lights?'켜짐':'꺼짐')+'</button><label>진동</label><button class="btn btn--sm" data-tog="vib">'+(SET.vib?'켜짐':'꺼짐')+'</button><label>소리</label><button class="btn btn--sm" data-tog="sound">'+(SET.sound?'켜짐':'꺼짐')+'</button></div>'; }
+  function settingsHTML(){ return '<div class="setrow"><label for="quality-setting">화질</label><select id="quality-setting" data-quality>'+[['auto','자동'],['low','낮음'],['medium','보통'],['high','높음']].map(function(p){return '<option value="'+p[0]+'"'+(SET.quality===p[0]?' selected':'')+'>'+p[1]+'</option>';}).join('')+'</select><span>동작·판정은 동일</span></div><div class="setrow"><label>밝기</label><input type="range" min="0.5" max="1.5" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
+    '<div class="setrow">'+[['lights','동적 조명'],['vib','진동'],['sound','소리']].map(function(p){return '<span class="setpair"><span>'+p[1]+'</span><button class="btn btn--sm" aria-label="'+p[1]+' 전환" data-tog="'+p[0]+'">'+(SET[p[0]]?'켜짐':'꺼짐')+'</button></span>';}).join('')+'</div>'; }
   el.ovBox.addEventListener('input', function(e){ var k=e.target.getAttribute('data-set'); if(!k) return; SET[k]=+e.target.value; saveSet(); applySettings(); });
+  el.ovBox.addEventListener('change',function(e){if(!e.target.hasAttribute('data-quality'))return;SET.quality=e.target.value;autoLow=false;fpsSamples=[];saveSet();applySettings();});
   el.ovBox.addEventListener('click', function(e){ var b=e.target.closest('[data-tog]'); if(!b) return; var k=b.getAttribute('data-tog'); SET[k]=!SET[k]; b.textContent=SET[k]?'켜짐':'꺼짐'; saveSet(); applySettings(); if(k==='sound'&&SET.sound) SFX.ambient(true); SFX.play('ui'); });
   $('#btn-pause').addEventListener('click', function(){ if(el.ov.classList.contains('is-on'))return;paused=!paused;kd={};stick.sx=stick.sy=0;atkUp();SFX.play('ui'); if(paused) overlay('<div class="ov__k">일시정지</div><div class="ov__t">'+L.name+'</div><div class="ov__hint" style="margin-top:12px">'+(battle?A.stages[phase].hint:L.beats.start)+'</div>'+settingsHTML()+'<button class="btn btn--primary" data-go>계속</button> <button class="btn" data-diag style="margin-left:8px">진단</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ paused=false; }); var db=el.ovBox.querySelector('[data-diag]'); if(db) db.onclick=showDiag; });
 

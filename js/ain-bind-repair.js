@@ -9,7 +9,7 @@ export function repairAinBind(model){
  if(model.userData.ainBindRepair)return model.userData.ainBindRepair;
  const bones={},meshes=[];model.updateWorldMatrix(true,true);
  model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;if(o.isSkinnedMesh)meshes.push(o);});
- const changed=new Map(),report={vertices:0,handVertices:0,geometries:[],grips:[]};
+ const changed=new Map(),report={vertices:0,handVertices:0,geometries:[],grips:[],hipsRest:bones.Hips.position.clone()};
  for(const [side,sg]of [['Left',1],['Right',-1]]){
   for(const [name,p]of [['ForeArm',V(sg*.245,1.16,.012)],['Hand',V(sg*.30,.98,.022)]]){
    const b=bones[side+name],world=model.localToWorld(p.clone());b.position.copy(b.parent.worldToLocal(world));changed.set(b.name,b.position.clone());b.updateWorldMatrix(false,true);
@@ -71,8 +71,29 @@ export function repairAinBind(model){
  report.changed=changed;model.userData.ainBindRepair=report;return report;
 }
 export function repairAinClips(clips,report){return clips.map(clip=>{
- const result=clip.clone();result.tracks=result.tracks.map(track=>{
+ // Reuse coherent full-body source motions, not a torso-only 360 twist.
+ // Keep public clip names/durations and immutable source GLB animations.
+ const source=clips.find(c=>c.name===({skill3:'ult',skill4:'guard',ult:'smash'}[clip.name]))||clip;
+ const result=source.clone();result.name=clip.name;
+ if(source.duration!==clip.duration)for(const track of result.tracks)track.scale(clip.duration/source.duration);
+ // Align the reused body's impact to the destination combat clip contact.
+ // Spin finishes facing the opponent before recovery, not away at damage time.
+ const contact={skill3:[.98,.55],ult:[.78,.50]}[clip.name];
+ if(contact&&source!==clip)for(const track of result.tracks){
+  const [from,to]=contact,anchor=from*clip.duration,size=track.getValueSize();
+  // Insert the time-warp corner, otherwise interpolation across it delays
+  // contact when the source has sparse keys (notably the final spin key).
+  const value=Array.from(track.createInterpolant().evaluate(anchor)),times=Array.from(track.times),values=Array.from(track.values);
+  if(!times.some(t=>Math.abs(t-anchor)<1e-7)){let at=times.findIndex(t=>t>anchor);if(at<0)at=times.length;times.splice(at,0,anchor);values.splice(at*size,0,...value);}
+  track.times=new Float32Array(times.map(t=>{const u=t/clip.duration;return clip.duration*(u<=from?u*to/from:to+(u-from)*(1-to)/(1-from));}));
+  track.values=new Float32Array(values);
+ }
+ result.duration=clip.duration;
+ result.tracks=result.tracks.map(track=>{
   if(!track.name.endsWith('.position'))return track;
+  if(report.hipsRest&&/Hips.position$/.test(track.name)&&/^(attack[123]|smash|skill[134]|ult|counter|exec)$/.test(clip.name)){
+   for(let i=0;i<track.values.length;i+=3){track.values[i]=report.hipsRest.x;track.values[i+2]=report.hipsRest.z;}return track;
+  }
   const p=report.changed.get(track.name.slice(0,-9));if(!p)return track;
   return new T.VectorKeyframeTrack(track.name,[0,clip.duration],[...p.toArray(),...p.toArray()]);
  });return result;

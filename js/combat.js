@@ -73,7 +73,8 @@
     function cancel(reason){if(!P.action)return;emit('actioncancel',{id:P.action.id,reason:reason});P.action=null;P.combo=0;P.comboT=0;}
     function canCancel(){return !P.action||P.action.elapsed>=P.action.cancelAt;}
     function action(kind,clip,mult,opt,profile){
-      var t=profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/rDur;   /* 무기 리듬: 느린 무기는 speed 가 내려간다 */
+      var overrides=(R.motion.characterProfiles||{})[C.id||'ain']||{};
+      var t=overrides[clip]||profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/rDur;   /* 무기 리듬: 느린 무기는 speed 가 내려간다 */
       var a={id:++serial,kind:kind,clip:clip,part:target,mult:mult,opt:opt||{},elapsed:0,
         hitAt:t.hit/speed,activeEnd:(t.hit+t.active)/speed,duration:t.duration/speed,cancelAt:t.cancel/speed,
         clipHit:(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
