@@ -33,17 +33,30 @@
 .chk:hover{color:var(--tx-dim)}
 .rc__r{display:grid;grid-template-rows:1fr auto;gap:10px;min-height:0}
 
-/* 임무 목록 */
-.mrow3{display:flex;align-items:center;gap:10px;padding:8px 3px;border-bottom:1px solid var(--line-soft);cursor:pointer}
+/* 임무 목록 — 시트 03 의 썸네일 · 종류 탭 · 하단 갱신 */
+.ktabs{flex:none;justify-content:space-between;padding:0 4px}
+.ktabs .tab{padding:6px 0;font-size:11.5px;flex:1;text-align:center}
+.ktabs .tab.is-on::after{left:6px;right:6px}
+.mfoot{flex:none;padding:8px 10px;border-top:1px solid var(--line-soft)}
+.mfoot .btn{width:100%}
+.mrow3{display:flex;align-items:stretch;gap:10px;padding:7px 3px;border-bottom:1px solid var(--line-soft);cursor:pointer}
 .mrow3:last-child{border:0}
 .mrow3:hover{background:rgba(255,255,255,.03)}
 .mrow3.is-on{background:linear-gradient(90deg,rgba(120,30,30,.30),rgba(120,30,30,.06));
   box-shadow:inset 2px 0 0 var(--red-lit)}
 .mrow3.is-locked{opacity:.42}
-.mrow3__t{font-size:12.5px;color:var(--tx-hi)}
+.mrow3__a{width:72px;height:54px;flex:none;border:1px solid var(--line);overflow:hidden;position:relative}
+.mrow3__a img{width:100%;height:100%;object-fit:cover}
+.mrow3.is-on .mrow3__a{border-color:var(--line-red)}
+.mrow3__c{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1}
+.mrow3__t{font-size:12.5px;color:var(--tx-hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mrow3__s{font-size:10.5px;color:var(--tx-faint);margin-top:2px}
-.mrow3__n{font-size:10px;letter-spacing:.06em;color:#8FBF8F;border:1px solid rgba(91,163,91,.4);padding:1px 6px;flex:none}
+.mrow3__f{display:flex;align-items:center;gap:8px;margin-top:5px}
+.mrow3__lv{font-size:10.5px;color:var(--tx-dim);font-variant-numeric:tabular-nums}
+.mrow3__n{font-size:10px;letter-spacing:.06em;color:#8FBF8F;border:1px solid rgba(91,163,91,.4);
+  padding:1px 6px;flex:none;margin-left:auto}
 .mrow3__n--0{color:var(--tx-ghost);border-color:var(--line)}
+.mempty{padding:18px 6px;font-size:11.5px;color:var(--tx-ghost);text-align:center;line-height:1.7}
 
 /* 모집 목록 */
 .prow2{display:flex;align-items:center;gap:11px;padding:9px 3px;border-bottom:1px solid var(--line-soft)}
@@ -97,9 +110,21 @@
 .rcfoot .btn{flex:1}
 
 /* 임무 상세 */
-.qart2{height:96px;border:1px solid var(--line);position:relative;overflow:hidden;margin:8px 0}
+.qart2{height:76px;border:1px solid var(--line);position:relative;overflow:hidden;margin:8px 0}
 .qart2 img{width:100%;height:100%;object-fit:cover}
+.qart2__cap{position:absolute;left:0;bottom:0;padding:3px 8px;font-size:10.5px;color:var(--tx-dim);
+  letter-spacing:.04em;background:linear-gradient(90deg,rgba(8,9,12,.88),rgba(8,9,12,0))}
+/* 시트의 오른쪽 열은 한 화면에 다 들어간다 — 구분선·여백을 조여 스크롤을 없앤다 */
+.rc__r .hr{margin:7px 0}
+.rc__r .label-ko{margin-bottom:5px}
+.rc__r .rw{padding:6px 4px 5px}
+.rc__r .rw .ico{width:18px;height:18px}
 .foes{display:flex;gap:6px}
+.reccp{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.reccp b{font-family:var(--f-serif);font-size:16px;color:var(--tx-hi);font-variant-numeric:tabular-nums}
+.reccp b.is-short{color:var(--red-lit)}
+.reccp .xs{color:var(--tx-ghost)}
+.reccp__pay{text-align:right}
 .foes span{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);color:var(--tx-faint)}
 .setrow{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
 .setrow:last-child{border:0}
@@ -141,7 +166,17 @@
       <section class="panel panel--framed">
         <div class="panel__head"><span class="panel__title">임무 목록</span>
           <span class="panel__meta" id="rc-mcount">—</span></div>
+        <div class="ktabs tabs" id="rc-kinds">
+          <button class="tab is-on" data-k="all">전체</button>
+          <button class="tab" data-k="story">스토리</button>
+          <button class="tab" data-k="order">의뢰</button>
+          <button class="tab" data-k="hunt">토벌</button>
+        </div>
         <div class="panel__body scroll" id="rc-missions"></div>
+        <div class="mfoot">
+          <button type="button" class="btn btn--sm" id="rc-mrefresh">
+            <svg class="ico ico--sm"><use href="#i-refresh"/></svg>임무 목록 갱신</button>
+        </div>
       </section>
     </div>
 
@@ -245,10 +280,10 @@
               <option value="1">허용</option>
             </select></div>
             <svg class="ico ico--sm" style="color:var(--tx-ghost);flex:none"><use href="#i-headset"/></svg></div>
-          <button type="button" class="btn btn--primary mt3" id="rc-create" style="width:100%">새 파티 만들기</button>
-          <div class="setrow mt3"><span class="setrow__k">방 코드 합류</span>
-            <div class="field"><input id="rc-join" maxlength="10" placeholder="10자리 코드"></div></div>
-          <button type="button" class="btn btn--sm mt2" id="rc-joinbtn" style="width:100%">참가</button>
+          <button type="button" class="btn btn--primary mt2" id="rc-create" style="width:100%">새 파티 만들기</button>
+          <div class="setrow mt2" style="border:0">
+            <div class="field"><input id="rc-join" maxlength="10" placeholder="방 코드 10자리"></div>
+            <button type="button" class="btn btn--sm" id="rc-joinbtn">참가</button></div>
         </div>
       </section>
     </div>
