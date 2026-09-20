@@ -128,7 +128,7 @@
     tint:{relay:0xc4d2e0,rage:0xffc0a8},glow:{relay:.7,rage:1.4},
     parts3d:{core:{bone:'Core',off:[0,0,.4],r:.45},head:{bone:'Head',off:[0,0,0],r:.4},body:{bone:'Spine',off:[0,0,.6],r:.9},
       contactl:{bone:'ContactL',off:[0,-.3,.2],r:.55},contactr:{bone:'ContactR',off:[0,-.3,.2],r:.55}},
-    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_surge',hitFrac:.52},
+    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.60},flame:{clip:'atk_surge',hitFrac:.52},
       hammerL:{clip:'atk_slam_l',hitFrac:.45},hammerC:{clip:'atk_slam_c',hitFrac:.46}},   /* 연계 2·3타 전용 모션 */
     rewards:{gold:3600,items:[['m_alloy',16],['m_ore',18],['m_core',2]],sBonus:[['m_heart',1]]},
     /* 광란 페이즈: 바닥 모선이 살아난다 — 네 구역이 번갈아 방전한다 */
@@ -254,7 +254,7 @@
     tint:{grove:0xc6d4b0,rage:0xd8f0a0},glow:{grove:.7,rage:1.5},
     parts3d:{core:{bone:'Core',off:[0,0,.45],r:.45},head:{bone:'Head',off:[0,.1,.2],r:.5},body:{bone:'Spine',off:[0,0,.6],r:.95},
       vinel:{bone:'VineL',off:[-.5,-.3,.1],r:.6},viner:{bone:'VineR',off:[.5,-.3,.1],r:.6}},
-    atk:{scythe:{clip:'atk_lash',hitFrac:.48},hammer:{clip:'atk_slam',hitFrac:.49},bolt:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_spore',hitFrac:.55},
+    atk:{scythe:{clip:'atk_lash',hitFrac:.48},hammer:{clip:'atk_slam',hitFrac:.49},bolt:{clip:'atk_sweep',hitFrac:.60},flame:{clip:'atk_spore',hitFrac:.55},
       scytheB:{clip:'atk_lash_b',hitFrac:.47}},
     rewards:{gold:2100,items:[['m_fiber',26],['m_dew',8],['m_bone',10]],sBonus:[['m_shard',2]]},
     /* 광란: 터진 포자낭이 바닥에 구름을 남긴다 — 세 자리가 번갈아 켜진다 */
@@ -347,7 +347,7 @@
     tint:{road:0xc8c2b4,rage:0xffb894},glow:{road:.7,rage:1.5},
     parts3d:{core:{bone:'Core',off:[0,0,-.5],r:.45},head:{bone:'Head',off:[0,0,.3],r:.45},body:{bone:'Spine',off:[0,0,.4],r:1.0},
       jawr:{bone:'JawR',off:[.7,-.2,.5],r:.65},arml:{bone:'ArmL',off:[-.9,-.4,0],r:.6}},
-    atk:{hammer:{clip:'atk_bite',hitFrac:.47},bolt:{clip:'atk_ram',hitFrac:.5},scythe:{clip:'atk_quake',hitFrac:.55},flame:{clip:'atk_burst',hitFrac:.53},
+    atk:{hammer:{clip:'atk_bite',hitFrac:.47},bolt:{clip:'atk_ram',hitFrac:.5},scythe:{clip:'atk_quake',hitFrac:.63},flame:{clip:'atk_burst',hitFrac:.53},
       hammerB:{clip:'atk_bite_b',hitFrac:.46}},
     rewards:{gold:2600,items:[['m_ore',34],['m_alloy',10],['m_bone',12]],sBonus:[['m_core',1],['m_shard',2]]},
     /* 광란: 고가가 무너진다 — 낙석 자리 네 곳이 번갈아 켜진다 */
@@ -455,7 +455,7 @@
     tint:{ward:0xd2dcd8,rage:0xffb0b8},glow:{ward:.7,rage:1.6},
     parts3d:{core:{bone:'Core',off:[0,0,.35],r:.42},head:{bone:'Head',off:[0,0,.15],r:.48},body:{bone:'Spine',off:[0,.1,.2],r:.95},
       pumpl:{bone:'PumpL',off:[-.75,-.3,.25],r:.6},armr:{bone:'ArmR',off:[.85,-.3,0],r:.6}},
-    atk:{scythe:{clip:'atk_needle',hitFrac:.47},bolt:{clip:'atk_drag',hitFrac:.49},hammer:{clip:'atk_press',hitFrac:.55},flame:{clip:'atk_purge',hitFrac:.55},
+    atk:{scythe:{clip:'atk_needle',hitFrac:.47},bolt:{clip:'atk_drag',hitFrac:.49},hammer:{clip:'atk_press',hitFrac:.64},flame:{clip:'atk_purge',hitFrac:.55},
       scytheB:{clip:'atk_needle_b',hitFrac:.47}},
     rewards:{gold:2300,items:[['c_potion',10],['c_antidote',6],['m_oil',4]],sBonus:[['m_dew',3],['a_hood',1]]},
     /* 광란: 살균등이 돌아간다 — 홀 네 귀퉁이가 번갈아 켜진다 */

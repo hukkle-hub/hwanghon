@@ -119,12 +119,12 @@ export function createWardBoss(){
    track('Head','rotation[x]',[0,.85,1.1,2.0],[0,-.35,.3,0])]);
  for(const name of ['hit','stagger']) clip(name,.6,[track('Spine','rotation[z]',[0,.14,.34,.6],[0,.18,-.09,0]),
    track('Head','rotation[z]',[0,.14,.6],[0,.24,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[.92,.46]),track('Spine','rotation[x]',[0,.7],[0,.4]),
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[.92,.7]),track('Spine','rotation[x]',[0,.7],[0,.54]),
    track('Head','rotation[x]',[0,.7],[0,.3])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.46,.92]),track('Spine','rotation[x]',[0,.8],[.4,0]),
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.7,.92]),track('Spine','rotation[x]',[0,.8],[.54,0]),
    track('Head','rotation[x]',[0,.8],[.3,0])]);
- clip('death',2.0,[track('Hips','position[y]',[0,.9,2.0],[.92,.52,.28]),
-   track('Spine','rotation[x]',[0,.9,2.0],[0,.45,1.2]),
+ clip('death',2.0,[track('Hips','position[y]',[0,.9,2.0],[.92,.74,.62]),
+   track('Spine','rotation[x]',[0,.9,2.0],[0,.42,.78]),
    track('Core','scale[x]',[0,.6,2.0],[1,.28,.05]),track('Core','scale[y]',[0,.6,2.0],[1,.28,.05]),
    track('Head','rotation[x]',[0,.9,2.0],[0,.5,1.1])]);
  return {scene,animations};

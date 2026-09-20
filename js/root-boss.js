@@ -68,8 +68,11 @@ export function createRootBoss(){
  /* 뿌리 쓸기: 덩굴 둘을 펼치고 한 바퀴 */
  clip('atk_sweep',1.8,[track('Spine','rotation[y]',[0,.5,.95,1.35,1.8],[0,-.7,2.3,5.0,Math.PI*2]),track('VineL','rotation[z]',[0,.5,1.4,1.8],[0,-.6,-.6,0]),track('VineR','rotation[z]',[0,.5,1.4,1.8],[0,.6,.6,0])]);
  for(const name of ['hit','stagger']) clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.2,-.1,0]),track('Head','rotation[x]',[0,.15,.65],[0,.22,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1.02,.50]),track('Spine','rotation[x]',[0,.7],[0,.42])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.50,1.02]),track('Spine','rotation[x]',[0,.8],[.42,0])]);
- clip('death',1.9,[track('Hips','position[y]',[0,.9,1.9],[1.02,.55,.22]),track('Spine','rotation[x]',[0,.9,1.9],[0,.5,1.35]),track('Core','scale[x]',[0,.6,1.9],[1,.3,.05]),track('Core','scale[y]',[0,.6,1.9],[1,.3,.05])]);
+ /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
+    리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
+    게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[1.02,.76]),track('Spine','rotation[x]',[0,.7],[0,.58])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.76,1.02]),track('Spine','rotation[x]',[0,.8],[.58,0])]);
+ clip('death',1.9,[track('Hips','position[y]',[0,.9,1.9],[1.02,.84,.76]),track('Spine','rotation[x]',[0,.9,1.9],[0,.42,.7]),track('Core','scale[x]',[0,.6,1.9],[1,.3,.05]),track('Core','scale[y]',[0,.6,1.9],[1,.3,.05])]);
  return {scene,animations};
 }

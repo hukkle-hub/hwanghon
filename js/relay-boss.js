@@ -66,8 +66,11 @@ export function createRelayBoss(){
  /* 과부하: 기둥이 솟았다 주저앉으며 전역 방전 */
  clip('atk_surge',2.1,[track('Spine','position[y]',[0,.85,1.1,1.4,2.1],[.95,1.35,.62,.82,.95]),track('Core','scale[y]',[0,.85,1.1,2.1],[1,1.6,2.2,1]),track('Head','rotation[x]',[0,.85,1.1,2.1],[0,-.35,.3,0])]);
  for(const name of ['hit','stagger']) clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[.9,.4]),track('Spine','rotation[x]',[0,.7],[0,.34])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.4,.9]),track('Spine','rotation[x]',[0,.8],[.34,0])]);
- clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.45,.2]),track('Spine','rotation[z]',[0,.8,1.7],[0,.45,1.25]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
+ /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
+    리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
+    게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[.9,.62]),track('Spine','rotation[x]',[0,.7],[0,.5])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.62,.9]),track('Spine','rotation[x]',[0,.8],[.5,0])]);
+ clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.7,.62]),track('Spine','rotation[z]',[0,.8,1.7],[0,.34,.6]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
  return {scene,animations};
 }

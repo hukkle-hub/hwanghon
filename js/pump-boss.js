@@ -31,8 +31,11 @@ export function createPumpBoss(){
  clip('atk_scythe',1.8,[track('Spine','rotation[y]',[0,.5,.9,1.3,1.8],[0,-.8,2.4,5.2,Math.PI*2])]);
  clip('atk_flame',2,[track('Spine','position[y]',[0,.8,1,1.3,2],[.75,1.1,.45,.62,.75]),track('Core','scale[x]',[0,.8,1,2],[1,1.4,1.6,1])]);
  for(const name of ['hit','stagger'])clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.15,-.08,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.45]),track('Spine','rotation[x]',[0,.7],[0,.3])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.45,1]),track('Spine','rotation[x]',[0,.8],[.3,0])]);
- clip('death',1.6,[track('Hips','position[y]',[0,.8,1.6],[1,.5,.25]),track('Spine','rotation[z]',[0,.8,1.6],[0,.4,1.2])]);
+ /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
+    리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
+    게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
+ clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.7]),track('Spine','rotation[x]',[0,.7],[0,.46])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.7,1]),track('Spine','rotation[x]',[0,.8],[.46,0])]);
+ clip('death',1.6,[track('Hips','position[y]',[0,.8,1.6],[1,.8,.72]),track('Spine','rotation[z]',[0,.8,1.6],[0,.3,.54])]);
  return {scene,animations};
 }
