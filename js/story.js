@@ -38,7 +38,18 @@
       after:[['matteo','포자가 걷혔다고? 그럼 물도 다시 끌어올 수 있겠군.'],['ain','모근체는 태웠어요. 씨앗 표본도 몇 개 건졌고요.'],['matteo','씨앗은 세라한테 넘겨라. 약을 만들 수 있으면 다음 의뢰가 덜 아프다.'],['matteo','…그리고 보급이 또 끊겼다. 수송로다. 준비되면 말해라.']] },
     { id:'ch6', name:'6장', title:'파괴된 수송로 확보', art:'lobby-city', quest:'q_road', arena:'road', dungeon:'game3d.html?d=d06', flag:'ch_6',
       brief:[['matteo','보급이 끊긴 건 길이 끊겼기 때문이다. 잔해 세 무더기를 치워라.'],['ain','기중기는요?'],['matteo','한 대뿐이다. 구간마다 조작대로 돌아와서 다시 걸어야 해. 왕복이 길다.'],['matteo','머리 위 상판이 내려앉는다. 진동이 오면 멈춰 서라 — 뛰지 말고.']],
-      after:[['matteo','길이 뚫렸다. 오늘 밤엔 수레가 들어온다.'],['ain','기갑은 멈췄어요. 턱이랑 평형추, 둘 다 뜯어냈고요.'],['matteo','그 쇳덩이는 공방 몫이다. 카인이 좋아하겠군.'],['matteo','앉아라, 아인. 길이 열렸으니 이제 «밖» 얘기를 할 때가 됐다.']] }
+      after:[['matteo','길이 뚫렸다. 오늘 밤엔 수레가 들어온다.'],['ain','기갑은 멈췄어요. 턱이랑 평형추, 둘 다 뜯어냈고요.'],['matteo','그 쇳덩이는 공방 몫이다. 카인이 좋아하겠군.'],['matteo','앉아라, 아인. 길이 열렸으니 이제 «밖» 얘기를 할 때가 됐다.']] },
+    { id:'ch7', name:'7장', title:'자원 회수: 의료품', art:'story-city', quest:'q_med', arena:'ward', dungeon:'game3d.html?d=d07', flag:'ch_7',
+      brief:[['matteo','길이 열렸으니 도심지다. 제2시립병원 — 약이 남아 있다면 저기뿐이야.'],
+             ['ain','왜 아무도 안 갔죠?'],
+             ['matteo','갔다. 안 나왔고.'],
+             ['matteo','상자는 병동 네 군데에 흩어져 있다. 반출구는 중앙 홀 하나뿐이니 넷을 다 모아서 와라.'],
+             ['matteo','소독 장치가 아직 돈다. 가스가 뿜는 자리는 피해서 지나가라.']],
+      after:[['matteo','…이만큼이나. 세라가 울겠군.'],
+             ['ain','아래에 뭐가 있었어요. 사람 살리라고 만든 기계가… 계속 하고 있었어요.'],
+             ['matteo','멈췄나?'],
+             ['ain','멈췄어요.'],
+             ['matteo','…약은 창고로 보내라. 기록은 내가 읽겠다.']] }
 
   ];
   function ch(id){ return CHAPTERS.filter(function(c){ return c.id===id; })[0]; }
@@ -46,8 +57,8 @@
   function arenaRec(id){ try{ return JSON.parse(localStorage.getItem('tw:arena:'+id)||'null'); }catch(e){ return null; } }
   function cleared(id){ var r=arenaRec(id); return !!(r&&r.cleared); }
   /* ---------- 의뢰 상태 ---------- */
-  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage',q_relay:'relay',q_plant:'grove',q_road:'road'},
-      QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh',q_relay:'sewage',q_plant:'relay',q_road:'grove'};
+  var QUEST_ARENA={q_marsh:'marsh',q_sewage:'sewage',q_relay:'relay',q_plant:'grove',q_road:'road',q_med:'ward'},
+      QUEST_REQUIRED={q_marsh:'tutorial',q_sewage:'marsh',q_relay:'sewage',q_plant:'relay',q_road:'grove',q_med:'road'};
   function routeForQuest(id){return CHAPTERS.find(function(c){return c.quest===id&&!c.locked;})||null;}
   function questState(qid){ var a=QUEST_ARENA[qid]; if(!a) return 'locked'; if(flag('claim_'+qid)) return 'claimed'; if(cleared(a)) return 'cleared';if(QUEST_REQUIRED[qid]&&!cleared(QUEST_REQUIRED[qid]))return 'locked'; return 'available'; }
   function rnd(a,b){ return a+Math.floor(Math.random()*(b-a+1)); }

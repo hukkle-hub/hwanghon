@@ -128,7 +128,7 @@
     tint:{relay:0xc4d2e0,rage:0xffc0a8},glow:{relay:.7,rage:1.4},
     parts3d:{core:{bone:'Core',off:[0,0,.4],r:.45},head:{bone:'Head',off:[0,0,0],r:.4},body:{bone:'Spine',off:[0,0,.6],r:.9},
       contactl:{bone:'ContactL',off:[0,-.3,.2],r:.55},contactr:{bone:'ContactR',off:[0,-.3,.2],r:.55}},
-    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_surge',hitFrac:.52},
+    atk:{hammer:{clip:'atk_slam',hitFrac:.47},bolt:{clip:'atk_arc',hitFrac:.49},scythe:{clip:'atk_sweep',hitFrac:.60},flame:{clip:'atk_surge',hitFrac:.52},
       hammerL:{clip:'atk_slam_l',hitFrac:.45},hammerC:{clip:'atk_slam_c',hitFrac:.46}},   /* 연계 2·3타 전용 모션 */
     rewards:{gold:3600,items:[['m_alloy',16],['m_ore',18],['m_core',2]],sBonus:[['m_heart',1]]},
     /* 광란 페이즈: 바닥 모선이 살아난다 — 네 구역이 번갈아 방전한다 */
@@ -254,7 +254,7 @@
     tint:{grove:0xc6d4b0,rage:0xd8f0a0},glow:{grove:.7,rage:1.5},
     parts3d:{core:{bone:'Core',off:[0,0,.45],r:.45},head:{bone:'Head',off:[0,.1,.2],r:.5},body:{bone:'Spine',off:[0,0,.6],r:.95},
       vinel:{bone:'VineL',off:[-.5,-.3,.1],r:.6},viner:{bone:'VineR',off:[.5,-.3,.1],r:.6}},
-    atk:{scythe:{clip:'atk_lash',hitFrac:.48},hammer:{clip:'atk_slam',hitFrac:.49},bolt:{clip:'atk_sweep',hitFrac:.53},flame:{clip:'atk_spore',hitFrac:.55},
+    atk:{scythe:{clip:'atk_lash',hitFrac:.48},hammer:{clip:'atk_slam',hitFrac:.49},bolt:{clip:'atk_sweep',hitFrac:.60},flame:{clip:'atk_spore',hitFrac:.55},
       scytheB:{clip:'atk_lash_b',hitFrac:.47}},
     rewards:{gold:2100,items:[['m_fiber',26],['m_dew',8],['m_bone',10]],sBonus:[['m_shard',2]]},
     /* 광란: 터진 포자낭이 바닥에 구름을 남긴다 — 세 자리가 번갈아 켜진다 */
@@ -347,7 +347,7 @@
     tint:{road:0xc8c2b4,rage:0xffb894},glow:{road:.7,rage:1.5},
     parts3d:{core:{bone:'Core',off:[0,0,-.5],r:.45},head:{bone:'Head',off:[0,0,.3],r:.45},body:{bone:'Spine',off:[0,0,.4],r:1.0},
       jawr:{bone:'JawR',off:[.7,-.2,.5],r:.65},arml:{bone:'ArmL',off:[-.9,-.4,0],r:.6}},
-    atk:{hammer:{clip:'atk_bite',hitFrac:.47},bolt:{clip:'atk_ram',hitFrac:.5},scythe:{clip:'atk_quake',hitFrac:.55},flame:{clip:'atk_burst',hitFrac:.53},
+    atk:{hammer:{clip:'atk_bite',hitFrac:.47},bolt:{clip:'atk_ram',hitFrac:.5},scythe:{clip:'atk_quake',hitFrac:.63},flame:{clip:'atk_burst',hitFrac:.53},
       hammerB:{clip:'atk_bite_b',hitFrac:.46}},
     rewards:{gold:2600,items:[['m_ore',34],['m_alloy',10],['m_bone',12]],sBonus:[['m_core',1],['m_shard',2]]},
     /* 광란: 고가가 무너진다 — 낙석 자리 네 곳이 번갈아 켜진다 */
@@ -358,4 +358,111 @@
                {dx:-215,dy: 135,r:132,period:3.6,warning:1.0,active:1.2,offset:1.8,damage:0.07},
                {dx: 215,dy: 135,r:132,period:3.6,warning:1.0,active:1.2,offset:2.7,damage:0.07}]}],
     stages:[stage6(false),stage6(true)]};
+
+  /* ── 던전 07 · 봉쇄된 폐병원 ───────────────────────────────────────────────
+     여기는 «수렴» 구조다. 의료품 상자 넷이 네 병동 끝에 흩어져 있고, 반출은 중앙 홀
+     한 곳에서만 된다. 상자를 하나 집을 때마다 중앙으로 돌아와야 하는 게 아니라,
+     넷을 다 모아야 반출구가 열린다 — 바깥에서 안으로 좁혀 들어오는 동선이다.
+     d05 는 퍼져 나가고(확산), d06 은 오갔다면(왕복), 여기는 모아 온다. */
+  var w7=49,h7=27,g7=Array.from({length:h7},function(){return Array(w7).fill('#');});
+  function room7(x1,y1,x2,y2){for(var y=y1;y<=y2;y++)for(var x=x1;x<=x2;x++)g7[y][x]='.';}
+  room7(1,12,4,15);                      /* 정문 방호실 */
+  room7(4,13,6,14);
+  room7(6,10,14,17);                     /* 서 — 접수·영안실 */
+  room7(14,13,19,14);
+  room7(19,11,26,16);                    /* 중앙 홀 — 반출구 */
+  room7(22,8,23,11);
+  room7(18,3,27,8);                      /* 북 — 입원 병동 */
+  room7(22,16,23,19);
+  room7(18,19,27,24);                    /* 남 — 약제부 */
+  room7(26,13,31,14);
+  room7(31,10,38,17);                    /* 동 — 수술부 */
+  room7(41,3,47,23);                     /* 보스 — 지하 처치실. 폭 7칸: 3인칭 카메라와 광란 구역(±3칸)이 들어가야 한다 */
+  room7(38,13,40,13);
+  /* 처치실 진입로는 한 칸 — 격벽(G)이 유일한 목이다 */
+  for(var y7=3;y7<=23;y7++){g7[y7][39]='#';g7[y7][40]='#';}
+  g7[13][39]='G';g7[13][40]='.';
+  g7[13][2]='S';g7[13][45]='B';g7[14][3]='s';   /* 보스는 방 안쪽에 — 격벽 바로 뒤에 두면 카메라가 격벽 기둥에 박힌다 */
+  [[8,11],[8,16],[12,11],[12,16],[20,4],[25,4],[20,23],[25,23],[33,11],[37,11],[33,16],[37,16],[21,12],[24,15],[42,5],[46,5],[42,21],[46,21]]
+    .forEach(function(p){if(g7[p[1]][p[0]]==='.')g7[p[1]][p[0]]='t';});
+  var src7=JSON.parse(JSON.stringify(levels.d01));
+  Object.assign(src7,{id:'d07',code:'던전 07',name:'봉쇄된 폐병원',place:'도심지 · 제2시립병원',arena:'ward',env:'bunker',bg:'story-city',
+    diff:'의뢰 A · 의료품 회수', rows:g7.map(function(r){return r.join('');}), bossRoom:{minCx:41}, camDist:8.0,
+    ai:[{speed:78,keep:165,start:350,pick:'auto'},{speed:112,keep:145,start:370,pick:'auto'}],
+    attackMotion:{'주사 연타':{distance:120,stop:110,at:.55},'견인 후려치기':{distance:210,stop:118,at:.52}},
+    zones:{'주사 연타':{kind:'circle',r:175,fwd:120},'견인 후려치기':{kind:'line',len:380,w:140},'압박':{kind:'circle',r:235,fwd:75},'약물 분무':{kind:'circle',r:285,fwd:0}},
+    beats:{questTitle:'자원 회수: 의료품',
+      start:'의료품 상자 넷을 찾아 중앙 홀 반출구로 모아라',
+      gateLocked:'상자를 다 모아야 반출구가 처치실 격벽을 연다.',
+      gate:'격벽이 열린다. 아래에서 뭔가 숨을 쉬고 있다',
+      sign:'병원 안내 — “소독 주기 중 복도 통행 금지. 살균 가스 잔류 주의.”',
+      mobsClear:'',
+      dialog:[['마태오','제2시립병원이다. 약이 남아 있다면 저기뿐이야.'],['아인','왜 아무도 안 갔죠?'],['마태오','갔다. 안 나왔고.'],['마태오','상자는 병동 네 군데에 흩어져 있다. 반출구는 중앙 홀 하나뿐이니 넷을 다 모아서 와라.'],['마태오','소독 장치가 아직 돈다. 가스가 뿜는 자리는 피해서 지나가라.']],
+      intro:'마태오 — “약을 가지러 가는 거다. 싸우러 가는 게 아니야.”',
+      introHint:'네 병동에서 상자를 모아 중앙 홀로 → 반출구가 열린다',
+      quest:[['의료품 상자 회수',4,'meds'],['처치실 진입',1,'gate'],['소생기 정지',1,'boss'],['진료 기록 열람',1,'record',true]],
+      phase:['펌프와 견인 팔을 먼저 부숴라. 붉은 분무는 튕길 수 없다.','심박 코어가 드러났다 — 분무를 피하고 반격해라'],
+      enter:['','코어가 미친 듯이 뛴다'],
+      death:{k:'쓰러졌다',line:'마태오 — “약은 도망 안 간다. 숨 고르고 다시 가라.”',hint:'최근 정비 지점에서 다시 시작한다. 모은 상자와 기록은 유지된다.',btn:'정비 지점에서 재도전'}},
+    expedition:{required:['handoff'],nodes:[
+      {id:'gate_rest',kind:'checkpoint',cx:3,cy:13,name:'정문 방호실',text:'입구 정비 지점을 기록했다.'},
+      {id:'med_a',kind:'cache',cx:10,cy:13,name:'영안실 냉장고',objective:'meds',text:'영안실 냉장고에서 상자 하나. 아직 차갑다.',loot:[['c_antidote',2]]},
+      {id:'med_b',kind:'cache',cx:22,cy:5,name:'병동 약품장',objective:'meds',text:'입원 병동 약품장에서 상자 둘.',loot:[['c_potion',3]]},
+      {id:'med_c',kind:'cache',cx:22,cy:22,name:'약제부 조제대',objective:'meds',text:'조제대 아래에서 상자 셋.',loot:[['c_potion',3],['m_oil',1]]},
+      {id:'med_d',kind:'cache',cx:34,cy:13,name:'수술부 멸균 선반',objective:'meds',text:'멸균 선반에서 상자 넷. 이걸로 다 모았다.'},
+      {id:'record',kind:'cache',cx:7,cy:16,name:'진료 기록 열람',objective:'record',text:'접수대 단말이 아직 켜진다 — 마지막 진료 기록이 남아 있다.',loot:[['q_record',1]]},
+      {id:'handoff',kind:'valve',cx:22,cy:13,name:'중앙 홀 반출',text:'상자 넷을 반출구에 올렸다. 아래 격벽이 열린다.',requires:['med_a','med_b','med_c','med_d']},
+      {id:'ward_rest',kind:'checkpoint',cx:37,cy:13,name:'수술부 세척실',text:'처치실 앞에 재도전 지점을 기록했다.',requires:['handoff']}
+    ],hazards:[
+      /* 소독 주기 — 복도 네 곳에서 살균 가스가 번갈아 뿜는다. 상자를 하나 회수할 때마다 한 곳이 멎는다 */
+      {id:'gas_w',cx:16,cy:13,r:104,period:4.4,warning:1.2,active:1.4,damage:.09,disabledBy:'med_a',reason:' 소독 가스다. 뿜는 사이를 보고 지나가라.'},
+      {id:'gas_n',cx:22,cy:10,r:100,period:4.0,offset:1.2,warning:1.1,active:1.3,damage:.09,disabledBy:'med_b'},
+      {id:'gas_s',cx:22,cy:18,r:100,period:4.8,offset:2.4,warning:1.2,active:1.4,damage:.09,disabledBy:'med_c'},
+      {id:'gas_e',cx:29,cy:13,r:104,period:4.2,offset:3.1,warning:1.1,active:1.4,damage:.10,disabledBy:'med_d'}
+    ]},
+    praise:{S:'약도 기록도 한 번에 들고 나왔다.',A:'약이 들어온다. 오늘은 누굴 살릴 수 있겠군.',B:'살아 왔군. 상자는 다음에 더 챙겨라.',C:'간신히 나왔다. 소독 주기를 먼저 세라.'}
+  });levels.d07=src7;
+
+  function stage7(rage){return {id:rage?'arrest':'resus',kind:rage?'rage':'ward',name:rage?'심정지 소생기':'소생기',
+    lesson:rage?'회피와 반격':'팔 파괴',hp:rage?250000:350000,timeLimit:rage?155:220,patternGap:rage?1.0:1.5,
+    counterWindow:rage?.14:.18,perfectWindow:.04,allBrokenDown:true,
+    discipline:{normal:.3,skill:.65,partMult:1.3,precisePartMult:1.6,breakBurst:2.5,exposed:1.8,evadeMult:2.2,evadeWindow:.85},
+    parts:rage?[{id:'core',name:'심박 코어',weak:true,hp:null},{id:'body',name:'가대',hp:null}]:[
+      {id:'pumpl',name:'약물 펌프',hp:42000,breakable:true,onBreak:{zoneScale:.74},pos:'tl'},
+      {id:'armr',name:'견인 팔',hp:44000,breakable:true,onBreak:{slow:.62,telePlus:.13},pos:'tr'},
+      {id:'core',name:'심박 코어',weak:true,hp:null,guardedBy:['pumpl','armr'],guardReduce:.6},
+      {id:'body',name:'가대',hp:null}],
+    /* 연계·지연타: docs/design/18-boss-fight-design.md §2.
+       펌프를 부수면 주사 연계의 2타가, 견인 팔을 부수면 압박의 «버티는» 구간이 빠진다.
+       연계 비트는 icon 으로 자기 클립을 고른다 (docs/design/22 §5.2 — d02 에서 배운 것).
+       광란 주사 연타의 예고 0.95 는 실측값이다: 0.85 로 두면 3연타를 회피로 못 받아내
+       회피 재사용이 말라 «약물 분무» 가 대신 꽂힌다 (기준 봇 44,100 피해 → 전멸).
+       0.95 로 올리니 분무가 아예 안 맞는다 (docs/design/23-dungeon-07.md §4). */
+    patterns:[
+      {name:'주사 연타',icon:'scythe',tele:rage?.95:1.15,dmg:rage?6300:5000,posture:32,guardCost:28,recovery:.8,range:'near',
+       chain:rage?[{tele:.52,dmg:4900,posture:26,gap:.2,icon:'scytheB',disabledBy:['pumpl']},{tele:.52,dmg:5100,posture:28,gap:.2,disabledBy:['armr']}]
+                 :[{tele:.6,dmg:4000,posture:26,gap:.24,icon:'scytheB',disabledBy:['pumpl']}]},
+      {name:'견인 후려치기',icon:'bolt',tele:rage?.95:1.3,dmg:rage?6800:5400,posture:34,guardCost:32,recovery:.9,range:'far',
+       chain:[{tele:.5,dmg:rage?5000:4100,posture:26,gap:.2,disabledBy:['armr']}]},
+      {name:'압박',icon:'hammer',tele:rage?1.1:1.45,dmg:rage?7400:5900,posture:36,guardCost:30,recovery:.95,range:'near',
+       hold:{at:.6,dur:rage?.32:.44},disabledBy:rage?[]:['armr']},
+      {name:'약물 분무',icon:'flame',tele:rage?1.3:1.65,dmg:rage?8400:6800,counterable:false,unblockable:true,recovery:1.15,range:'any'}],
+    hint:'펌프·견인 팔 파괴로 약화 · 붉은 분무는 회피 · 실패하면 정비 지점에서 재도전',
+    line:rage?'심박이 한계를 넘는다.':'가대가 몸을 일으킨다.',mastery:[]};}
+
+  arenas.ward={id:'ward',name:'봉쇄된 폐병원',place:src7.place,char:'ain',hudName:'소생기',
+    procedural:'ward',rigidRig:true,pieces:'nodes',
+    tint:{ward:0xd2dcd8,rage:0xffb0b8},glow:{ward:.7,rage:1.6},
+    parts3d:{core:{bone:'Core',off:[0,0,.35],r:.42},head:{bone:'Head',off:[0,0,.15],r:.48},body:{bone:'Spine',off:[0,.1,.2],r:.95},
+      pumpl:{bone:'PumpL',off:[-.75,-.3,.25],r:.6},armr:{bone:'ArmR',off:[.85,-.3,0],r:.6}},
+    atk:{scythe:{clip:'atk_needle',hitFrac:.47},bolt:{clip:'atk_drag',hitFrac:.49},hammer:{clip:'atk_press',hitFrac:.64},flame:{clip:'atk_purge',hitFrac:.55},
+      scytheB:{clip:'atk_needle_b',hitFrac:.47}},
+    rewards:{gold:2300,items:[['c_potion',10],['c_antidote',6],['m_oil',4]],sBonus:[['m_dew',3],['a_hood',1]]},
+    /* 광란: 살균등이 돌아간다 — 홀 네 귀퉁이가 번갈아 켜진다 */
+    stageFx:[null,{light:0.92,fog:1.18,sky:0x161a1c,color:0xE85A6A,line:'살균등이 돌기 시작한다 — 붉은 자리를 피해라',
+      reason:'살균등 아래 서 있었다. 붉은 원이 켜지기 전에 비켜라.',
+      hazards:[{dx:-200,dy:-120,r:126,period:3.4,warning:1.0,active:1.2,offset:0,damage:0.07},
+               {dx: 200,dy:-120,r:126,period:3.4,warning:1.0,active:1.2,offset:1.7,damage:0.07},
+               {dx:   0,dy: 185,r:140,period:4.2,warning:1.1,active:1.3,offset:0.8,damage:0.08}]}],
+    stages:[stage7(false),stage7(true)]};
 })();

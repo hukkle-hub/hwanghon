@@ -73,15 +73,39 @@ export function createHaulerBoss(){
  clip('atk_bite',1.5,[track('JawR','rotation[y]',[0,.45,.7,.95,1.5],[0,1.2,-1.3,-.35,0]),track('Spine','rotation[y]',[0,.45,.7,1.5],[0,.32,-.42,0])]);
  /* 연계 2타: 평형추를 휘둘러 되받는다 */
  clip('atk_bite_b',1.2,[track('ArmL','rotation[y]',[0,.34,.56,.82,1.2],[0,-1.3,1.6,.4,0]),track('Spine','rotation[y]',[0,.34,.56,1.2],[0,-.3,.4,0])]);
- /* 돌진: 차대를 낮추고 밀고 들어온다 */
- clip('atk_ram',1.7,[track('Hips','position[y]',[0,.55,.85,1.2,1.7],[1,.86,.92,1.04,1]),track('Spine','rotation[x]',[0,.55,.85,1.7],[0,.22,-.16,0]),track('Head','rotation[x]',[0,.55,.85,1.7],[0,.2,-.14,0])]);
+ /* 돌진: 차대를 낮추고 밀고 들어온다.
+    주의 — 돌진 «거리» 는 시뮬레이션이 갖는다. 그래서 무게는 자세로 실어야 한다:
+    이 클립이 26개 공격 중 가장 덜 움직였다(0.38 rad). 턱·평형추를 당겼다 앞으로 내지르고
+    차대를 앞으로 처박게 고쳤다 (docs/design/24-contact-audit.md §3). */
+ clip('atk_ram',1.7,[track('Hips','position[y]',[0,.55,.85,1.2,1.7],[1,.88,.96,1.06,1]),
+   track('Hips','rotation[x]',[0,.55,.85,1.2,1.7],[0,-.1,.17,.05,0]),
+   track('Spine','rotation[x]',[0,.55,.85,1.2,1.7],[0,-.34,.52,-.1,0]),
+   track('Head','rotation[x]',[0,.55,.85,1.7],[0,-.3,.46,0]),
+   track('JawR','rotation[x]',[0,.55,.85,1.2,1.7],[0,.5,-.85,-.2,0]),
+   track('ArmL','rotation[x]',[0,.55,.85,1.2,1.7],[0,.4,-.7,-.15,0])]);
  /* 지면 강타: 평형추를 들었다가 내리꽂는다 (버티는 구간이 있다) */
  clip('atk_quake',1.9,[track('ArmL','rotation[x]',[0,.5,.95,1.2,1.5,1.9],[0,-1.9,-1.9,.85,.3,0]),track('Hips','position[y]',[0,.5,.95,1.2,1.9],[1,1.12,1.12,.8,1]),track('Spine','rotation[x]',[0,.5,1.2,1.9],[0,-.2,.3,0])]);
  /* 과부하 배출: 동력로가 부풀었다 터진다 (막을 수 없다) */
  clip('atk_burst',2.1,[track('Core','scale[x]',[0,.9,1.15,1.45,2.1],[1,1.8,2.4,1,1]),track('Core','scale[z]',[0,.9,1.15,1.45,2.1],[1,1.8,2.4,1,1]),track('Spine','position[y]',[0,.9,1.15,2.1],[.7,.95,.5,.7])]);
- for(const name of ['hit','stagger']) clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.16,-.08,0]),track('Head','rotation[z]',[0,.15,.65],[0,.2,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1,.55]),track('Spine','rotation[x]',[0,.7],[0,.34])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.55,1]),track('Spine','rotation[x]',[0,.8],[.34,0])]);
- clip('death',1.8,[track('Hips','position[y]',[0,.85,1.8],[1,.6,.35]),track('Spine','rotation[z]',[0,.85,1.8],[0,.4,1.1]),track('Core','scale[x]',[0,.55,1.8],[1,.3,.05]),track('Core','scale[z]',[0,.55,1.8],[1,.3,.05])]);
+ /* 피격: 짧게 움찔한다 */
+ clip('hit',.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0]),track('Head','rotation[z]',[0,.15,.65],[0,.2,0])]);
+ /* 자세 붕괴: 처형이 열리는 순간이다 — 피격과 «같은 클립» 이면 안 된다 (docs/design/25).
+    크게 휘청이고, 앞으로 꺾이고, 팔이 늘어지고, 잔진동으로 버틴다. */
+ clip('stagger',1.05,[track('Spine','rotation[z]',[0,.18,.45,.72,1.05],[0,.48,-.28,.13,0]),
+   track('Spine','rotation[x]',[0,.18,.52,1.05],[0,.32,.15,0]),
+   track('Hips','position[y]',[0,.18,.52,1.05],[1.0,0.87,0.94,1.0]),
+   track('Head','rotation[x]',[0,.18,.52,1.05],[0,.4,.19,0]),
+   track('JawR','rotation[x]',[0,.18,.52,1.05],[0,.5,.26,0]),
+   track('ArmL','rotation[x]',[0,.18,.52,1.05],[0,-.5,-.26,0])]);
+
+ /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
+    리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
+    게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
+ clip('down',.7,[    /* 받침이 꼼짝 않고 몸통만 기울면 «경첩이 부러진 것» 처럼 보인다 (docs/design/24 §7).
+       기울기 일부를 골반으로 옮겨 기계가 통째로 넘어가게 한다. 골반을 돌리면 받침
+       모서리가 파고드므로 그만큼 골반을 띄운다. */
+   track('Hips','position[y]',[0,.7],[1,1.02]),track('Hips','rotation[x]',[0,.7],[0,.24]),track('Spine','rotation[x]',[0,.7],[0,.52])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[1.02,1]),track('Hips','rotation[x]',[0,.8],[.24,0]),track('Spine','rotation[x]',[0,.8],[.52,0])]);
+ clip('death',1.8,[track('Hips','position[y]',[0,.85,1.8],[1,1.16,1.24]),track('Hips','rotation[x]',[0,.85,1.8],[0,.14,.3]),track('Spine','rotation[z]',[0,.85,1.8],[0,.26,.46]),track('Spine','rotation[x]',[0,.85,1.8],[0,.22,.46]),track('ArmL','rotation[z]',[0,.85,1.8],[0,-.2,-.45]),track('Core','scale[x]',[0,.55,1.8],[1,.3,.05]),track('Core','scale[z]',[0,.55,1.8],[1,.3,.05])]);
  return {scene,animations};
 }

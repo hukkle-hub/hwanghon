@@ -44,7 +44,7 @@ test('revive stops when helper leaves range or disconnects, and all-offline run 
    (docs/design/21-dungeon-05-06.md §6 의 표) 억지로 통과시키지 않는다.
    이 봇은 가드·물약·스킬·궁극기를 안 쓰므로 사람이 못 깬다는 근거도 아니다. */
 test('two intent-driven fighters clear every phase of every dungeon without injected damage',()=>{
- for(const level of ['d01','d02','d03','d05','d06']){
+ for(const level of ['d01','d02','d03','d05','d06','d07']){
   let awards=0;const r=new Raid(level,members,()=>awards++);r.startFight();
   for(let i=0;i<60000&&r.state!=='clear'&&r.state!=='wiped';i++){
    for(const p of r.players.values()){

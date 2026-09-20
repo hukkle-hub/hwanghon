@@ -65,9 +65,25 @@ export function createRelayBoss(){
  clip('atk_sweep',1.8,[track('Spine','rotation[y]',[0,.5,.95,1.35,1.8],[0,-.7,2.3,5.0,Math.PI*2]),track('ContactL','rotation[z]',[0,.5,1.4,1.8],[0,-.5,-.5,0]),track('ContactR','rotation[z]',[0,.5,1.4,1.8],[0,.5,.5,0])]);
  /* 과부하: 기둥이 솟았다 주저앉으며 전역 방전 */
  clip('atk_surge',2.1,[track('Spine','position[y]',[0,.85,1.1,1.4,2.1],[.95,1.35,.62,.82,.95]),track('Core','scale[y]',[0,.85,1.1,2.1],[1,1.6,2.2,1]),track('Head','rotation[x]',[0,.85,1.1,2.1],[0,-.35,.3,0])]);
- for(const name of ['hit','stagger']) clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[.9,.4]),track('Spine','rotation[x]',[0,.7],[0,.34])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.4,.9]),track('Spine','rotation[x]',[0,.8],[.34,0])]);
- clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.45,.2]),track('Spine','rotation[z]',[0,.8,1.7],[0,.45,1.25]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
+ /* 피격: 짧게 움찔한다 */
+ clip('hit',.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0])]);
+ /* 자세 붕괴: 처형이 열리는 순간이다 — 피격과 «같은 클립» 이면 안 된다 (docs/design/25).
+    크게 휘청이고, 앞으로 꺾이고, 팔이 늘어지고, 잔진동으로 버틴다. */
+ clip('stagger',1.05,[track('Spine','rotation[z]',[0,.18,.45,.72,1.05],[0,.48,-.28,.13,0]),
+   track('Spine','rotation[x]',[0,.18,.52,1.05],[0,.32,.15,0]),
+   track('Hips','position[y]',[0,.18,.52,1.05],[0.9,0.77,0.84,0.9]),
+   track('Head','rotation[x]',[0,.18,.52,1.05],[0,.4,.19,0]),
+   track('ContactR','rotation[x]',[0,.18,.52,1.05],[0,.5,.26,0]),
+   track('ContactL','rotation[x]',[0,.18,.52,1.05],[0,-.5,-.26,0])]);
+
+ /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
+    리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
+    게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
+ clip('down',.7,[    /* 받침이 꼼짝 않고 몸통만 기울면 «경첩이 부러진 것» 처럼 보인다 (docs/design/24 §7).
+       기울기 일부를 골반으로 옮겨 기계가 통째로 넘어가게 한다. 골반을 돌리면 받침
+       모서리가 파고드므로 그만큼 골반을 띄운다. */
+   track('Hips','position[y]',[0,.7],[.9,.9]),track('Hips','rotation[x]',[0,.7],[0,.26]),track('Spine','rotation[x]',[0,.7],[0,.52])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.9,.9]),track('Hips','rotation[x]',[0,.8],[.26,0]),track('Spine','rotation[x]',[0,.8],[.52,0])]);
+ clip('death',1.7,[track('Hips','position[y]',[0,.8,1.7],[.9,.96,1.0]),track('Hips','rotation[z]',[0,.8,1.7],[0,.16,.34]),track('Spine','rotation[z]',[0,.8,1.7],[0,.38,.7]),track('Core','scale[x]',[0,.5,1.7],[1,.3,.05])]);
  return {scene,animations};
 }
