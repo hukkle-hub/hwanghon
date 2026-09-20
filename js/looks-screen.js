@@ -107,9 +107,10 @@
     setTimeout(function(){ send({t:'pose',v:$('lk-pose').value});
       send({t:'light',v:$('lk-light').value}); }, 1200); });
 
-  function redraw(){ renderSlots(); renderPicks(); renderDye(); renderPresets(); wallet(); }
+  function redraw(){ renderSlots(); renderPicks(); renderDye(); renderPresets(); wallet(); $('lk-weaponskin').value=G.weaponSkin();$('lk-weaponskin').disabled=G.char()!=='ain'; }
 
   /* --- 조작 --- */
+  $('lk-weaponskin').addEventListener('change',function(){try{G.setWeaponSkin(this.value);note('무기 외형 적용 · 능력치와 금화는 바뀌지 않습니다.');relook();}catch(e){note(e.message,true);}redraw();});
   $('lk-slots').addEventListener('click', function(e){
     var r=e.target.closest('[data-slot]'); if(!r) return;
     sel=r.dataset.slot; cur=null; redraw(); });

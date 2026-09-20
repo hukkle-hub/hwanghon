@@ -5,6 +5,7 @@
    · 제작품(c_…)은 기본형 외형 + gear.js lookOf 색조 (game3d.applyWeaponLook) */
 (function(){
   var WEAPON={
+    w_red_tension:    { glb:'art/3d/gear/w_red_tension_hi3d.glb?v=2030h2', grip:0.75 },
     w_marsh_scythe:    { glb:'art/3d/ain_scythe_tex.glb', grip:0.75 },
     w_rust_executioner:{ glb:'art/3d/gear/w_rust_executioner.glb', grip:0.75 },
     w_marsh_blade:     { glb:'art/3d/gear/w_marsh_blade.glb', grip:0.75 },
@@ -80,6 +81,9 @@
     var mixOf=opts.mixOf||function(){ return null; };
     /* 이전 조각 제거 */ Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
     var mainId=equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
+    if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension') spec=WEAPON.w_red_tension;
+    // Explicit local QA skin. No inventory/stat/save mutation, no override for other characters.
+    if(opts.charId==='ain' && typeof location!=='undefined' && ['localhost','127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('gearPreview')==='red_tension') spec=WEAPON.w_red_tension;
     if(DUAL[mainBase]&&bones.LeftHandSlot){ var osp=WEAPON[mainBase]; loader.load(osp.glb, function(w){ var g2=new THREE.Group(); g2.userData.look='offhand'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(osp.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(osp.tint), osp.mix||0.5); } } }); w.scene.position.set(0,-(osp.grip||0.1),0); g2.add(w.scene); bones.LeftHandSlot.add(g2); g2.scale.setScalar(fitScale(bones.LeftHandSlot)); out.weapons.offhand=g2; }); }
     if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(spec.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(spec.tint), spec.mix||0.5); } } }); var prepared=opts.prepareMain&&opts.prepareMain(w.scene,spec); if(prepared)wr.add(prepared);else{w.scene.position.set(0,-(spec.grip||0.75),0);wr.add(w.scene);} slot.add(wr); wr.scale.setScalar(fitScale(slot)); out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
     else opts.onMainFail&&opts.onMainFail();

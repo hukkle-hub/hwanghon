@@ -120,6 +120,7 @@
     <!-- 가운데: 3D -->
     <div class="lk__c" data-mpane="외형" data-mdefault>
       <div class="panel panel--flat lkbar">
+        <label class="field">아인 무기 외형 <select id="lk-weaponskin" aria-label="아인 무기 외형"><option value="original">기존 무기</option><option value="red_tension">적선 · 2030</option></select></label>
         <label class="field"><select id="lk-pose">
           <option value="idle">대기</option><option value="walk">걷기</option>
           <option value="run">달리기</option><option value="attack1">공격</option>
@@ -133,6 +134,7 @@
           <option value="studio">스튜디오</option><option value="dungeon">던전</option></select></label>
         <button class="btn btn--sm" id="lk-spin" type="button">자동 회전</button>
       </div>
+      <p class="xs t-faint" style="padding:0 12px">무기 외형은 능력치·비용 변경 없이 로비와 솔로 던전에 적용됩니다. 온라인 파티는 기존 무기를 사용합니다.</p>
       <div class="lkview"><iframe id="lk-3d" title="외형 3D" loading="lazy"></iframe>
         <span class="lkview__hint">끌어서 회전 · 휠로 확대</span></div>
       <div class="panel panel--flat" style="display:grid;grid-template-rows:auto 1fr;min-height:0">

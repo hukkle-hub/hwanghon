@@ -16,6 +16,13 @@ function load(){
   return {G:global.TW_GEAR,T:global.TW_ITEMS,S:global.TW_SAVE,store};
 }
 
+test('아인 무기 스킨 저장·프리셋은 스탯·소유권·지갑을 바꾸지 않는다',()=>{
+ const {G,S}=load();const before={cp:G.cp(),gold:G.wallet(),owned:JSON.stringify(G.state().owned),eq:JSON.stringify(G.state().equipped)};
+ G.setWeaponSkin('red_tension');assert.equal(G.weaponSkin('ain'),'red_tension');G.saveLook(2,'적선');G.setWeaponSkin('original');G.wearLook(2);
+ assert.equal(G.weaponSkin('ain'),'red_tension');assert.equal(G.cp(),before.cp);assert.equal(G.wallet(),before.gold);assert.equal(JSON.stringify(G.state().owned),before.owned);assert.equal(JSON.stringify(G.state().equipped),before.eq);
+ S.reload();assert.equal(G.weaponSkin('ain'),'red_tension');assert.equal(G.weaponSkin('kain'),'original');G.setChar('kain');assert.throws(()=>G.setWeaponSkin('red_tension'));G.setChar('ain');assert.throws(()=>G.setWeaponSkin('invalid'));
+});
+
 test('염색은 외형만 바꾼다 — 능력치·전투력은 한 자리도 움직이지 않는다',()=>{
  const {G}=load();
  const id=G.state().equipped.chest;

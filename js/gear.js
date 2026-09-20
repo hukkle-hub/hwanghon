@@ -23,6 +23,8 @@
       Object.defineProperty(g,'equipped',{ enumerable:false, configurable:true, get:function(){ return loadoutOf(g, curChar()); }, set:function(v){ loadouts(g)[curChar()]=v; } }); }
     return g; }
   function setChar(cid){ CUR=cid||null; return curChar(); }
+  function weaponSkin(cid){ return (cid||curChar())==='ain'&&state().ainWeaponSkin==='red_tension'?'red_tension':'original'; }
+  function setWeaponSkin(id){ if(curChar()!=='ain') throw Error('아인 전용 외형입니다.'); if(id!=='original'&&id!=='red_tension') throw Error('알 수 없는 무기 외형입니다.'); state().ainWeaponSkin=id;save();return id; }
   function loadout(cid){ return loadoutOf(state(), cid||curChar()); }
   function canEquip(id, cid){ return T.usableBy ? T.usableBy(id, cid||curChar()) : true; }
   function save(){ SV.save(); try{ document.dispatchEvent(new CustomEvent('tw:gear')); }catch(e){} }
@@ -126,7 +128,7 @@
   function looks(){ var g=state(); if(!g.looks) g.looks=[null,null,null]; return g.looks; }
   function saveLook(i,name){ if(!(i>=0&&i<3)) throw Error('프리셋 칸을 확인하세요.');
     var g=state(); looks()[i]={ name:(name||('외형 '+(i+1))).slice(0,12),
-      char:curChar(), equipped:Object.assign({},g.equipped), dye:Object.assign({},g.dye||{}) }; save(); return looks()[i]; }
+      char:curChar(), equipped:Object.assign({},g.equipped), dye:Object.assign({},g.dye||{}), weaponSkin:weaponSkin() }; save(); return looks()[i]; }
   function wearLook(i){ var L=looks()[i]; if(!L) throw Error('빈 칸입니다.');
     var g=state();
     /* 가진 것만 입는다 — 분해했거나 잃은 장비는 건너뛴다 */
@@ -137,7 +139,7 @@
     Object.keys(cur).forEach(function(sl){ if(cur[sl]&&next[sl]!==cur[sl]) g.owned.push(cur[sl]); });
     Object.keys(cur).forEach(function(sl){ g.equipped[sl]=null; });
     Object.keys(next).forEach(function(sl){ g.equipped[sl]=next[sl]; g.owned=g.owned.filter(function(x){ return x!==next[sl]; }); });
-    g.dye=Object.assign({}, L.dye||{}); save();
+    g.dye=Object.assign({}, L.dye||{}); if(curChar()==='ain')g.ainWeaponSkin=L.weaponSkin==='red_tension'?'red_tension':'original';save();
     return { worn:Object.keys(next).length, missing:miss }; }
   function clearLook(i){ looks()[i]=null; save(); }
   loadCustom();
@@ -148,5 +150,5 @@
   T.EQUIP.forEach(function(e){ if(e.sheetEnh==null) e.sheetEnh=e.enh||0; e.enh=enhOf(e.id); });
   window.TW_GEAR={ state:state, setChar:setChar, char:curChar, loadout:loadout, canEquip:canEquip, stats:stats, base:base, cp:cp, itemCp:itemCp, itemStats:itemStats, mult:mult, enhOf:enhOf, durOf:durOf, equip:equip, unequip:unequip, addGear:addGear, removeGear:removeGear, isEquipped:isEquipped, allGear:allGear,
     enhStep:enhStep, enhance:enhance, fsOf:fsOf, sealedOf:sealedOf, seal:seal, DUR_MIN:DUR_MIN, previewCustom:previewCustom, customMats:customMats, mergeMats:mergeMats, craftCustom:craftCustom, lookOf:lookOf, dyeOf:dyeOf, setDye:setDye, clearDye:clearDye, tintOf:tintOf, dyeCost:dyeCost,
-    looks:looks, saveLook:saveLook, wearLook:wearLook, clearLook:clearLook, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
+    weaponSkin:weaponSkin, setWeaponSkin:setWeaponSkin, looks:looks, saveLook:saveLook, wearLook:wearLook, clearLook:clearLook, repairCost:repairCost, repair:repair, dismantle:dismantle, addItem:addItem, spend:spend, canPay:canPay, wallet:wallet, STEP:STEP };
 })();

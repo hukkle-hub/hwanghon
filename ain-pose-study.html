@@ -3,6 +3,7 @@
 <header><h1>아인 · 어깨·양손 교정 검수</h1><p>실제 동작 클립 또는 6포즈 연구를 선택해 확인합니다. 몸통·하체는 선택한 클립, 팔과 낫은 교정 경로를 사용합니다. 실제 낫의 중심축 보정과 양손 그립 모프 적용 · 59,999 삼각형 유지. 개별 손가락 뼈를 추가한 리깅은 아닙니다. <a href="ain-hand-review.html">원본 / 교정 손 확대 비교</a></p>
 <button id="play" disabled>연결 재생</button> <button id="stop" disabled>정지</button> <button id="bind">원본 A포즈</button>
 <select id="view" aria-label="시점"><option value="front">정면</option><option value="side">측면</option><option value="back">후면</option><option value="close">손·어깨 확대</option></select>
+<label>무기 <select id="weapon"><option value="original">기존 낫</option><option value="red_tension">적선 낫 · 2030</option></select></label>
 <label>동작 <select id="clip" disabled><option value="study">6포즈 연구</option><option value="attack1">기본 베기</option><option value="attack2">내려찍기</option><option value="attack3">찌르기</option><option value="smash">강공격</option><option value="ult">궁극기</option><option value="skill1">스킬 1</option><option value="skill2">스킬 2</option><option value="skill3">스킬 3</option><option value="skill4">스킬 4</option><option value="counter">반격</option><option value="exec">처형</option><option value="idle">대기</option><option value="run">달리기</option><option value="guard">방어</option><option value="roll">구르기</option><option value="hit">피격</option></select></label>
 <label>속도 <select id="speed"><option value="1">1배</option><option value=".35">0.35배</option></select></label>
 <label>공격 스킬 박자 <select id="pace"><option value="heavy">무게감 교정</option><option value="before">이전 박자</option></select></label>
@@ -42,11 +43,15 @@ async function thumbnails(){
 }
 try{
  const loader=new GLTFLoader();asset=await loader.loadAsync('art/3d/ain_anim.glb?skill-review=20260920');scene.add(asset.scene);asset.animations=repairAinClips(asset.animations,repairAinBind(asset.scene));asset.scene.traverse(o=>{if(o.isBone)bindBones.push([o,o.quaternion.clone(),o.position.clone()]);if(/RightHandSlot$/.test(o.name))slot=o;});if(!slot)throw Error('RightHandSlot missing');
- const w=await loader.loadAsync('art/3d/ain_scythe_tex.glb'),wr=new T.Group();wr.add(mountAinScythe(w.scene));slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
+ const pilot=new URLSearchParams(location.search).get('gearPreview')==='red_tension';$('weapon').value=pilot?'red_tension':'original';
+ const w=await loader.loadAsync(pilot?'art/3d/gear/w_red_tension_hi3d.glb?v=2030h2':'art/3d/ain_scythe_tex.glb'),wr=new T.Group();
+ if(pilot){w.scene.position.y=-.75;wr.add(w.scene);}else wr.add(mountAinScythe(w.scene));
+ slot.add(wr);asset.scene.updateMatrixWorld(true);const scale=slot.getWorldScale(new T.Vector3());wr.scale.setScalar(1/scale.x);
  mixer=new T.AnimationMixer(asset.scene);rig=makeRigAdapter(asset.scene,asset.scene,slot);selectClip();
  await thumbnails();for(const id of ['play','stop','sheet','clip'])$(id).disabled=false;
 }catch(e){$('status').textContent='로드 실패: '+e.message;console.error(e);}
 $('bind').onclick=()=>{bindMode=!bindMode;running=false;};$('play').onclick=()=>{bindMode=false;time=0;running=true;};$('stop').onclick=()=>running=false;$('seek').oninput=()=>{bindMode=false;time=+$('seek').value/1000;running=false;};$('view').onchange=async()=>{view();if(action)await thumbnails();};
+$('weapon').onchange=()=>{const url=new URL(location.href);if($('weapon').value==='red_tension')url.searchParams.set('gearPreview','red_tension');else url.searchParams.delete('gearPreview');location.href=url.href;};
 $('clip').onchange=async()=>{selectClip();await thumbnails();};
 $('pace').onchange=async()=>{if(action){selectClip();await thumbnails();}};
 $('sheet').onclick=async()=>{const canvas=document.createElement('canvas');canvas.width=1260;canvas.height=900;const c=canvas.getContext('2d');c.fillStyle='#1e2630';c.fillRect(0,0,1260,900);for(let i=0;i<6;i++){const img=new Image();img.src=images[i];await img.decode();const x=i%3*420,y=Math.floor(i/3)*450;c.drawImage(img,x,y);c.fillStyle='white';c.font='20px sans-serif';c.fillText(`${i+1}. ${reviewKeys[i].name}`,x+15,y+439);}const a=document.createElement('a');a.download=`ain-${$('clip').value}-six-poses.png`;a.href=canvas.toDataURL();a.click();};
