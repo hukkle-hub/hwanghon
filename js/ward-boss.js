@@ -119,12 +119,15 @@ export function createWardBoss(){
    track('Head','rotation[x]',[0,.85,1.1,2.0],[0,-.35,.3,0])]);
  for(const name of ['hit','stagger']) clip(name,.6,[track('Spine','rotation[z]',[0,.14,.34,.6],[0,.18,-.09,0]),
    track('Head','rotation[z]',[0,.14,.6],[0,.24,0])]);
- clip('down',.7,[track('Hips','position[y]',[0,.7],[.92,.76]),track('Spine','rotation[x]',[0,.7],[0,.82]),
+ clip('down',.7,[    /* 받침이 꼼짝 않고 몸통만 기울면 «경첩이 부러진 것» 처럼 보인다 (docs/design/24 §7).
+       기울기 일부를 골반으로 옮겨 기계가 통째로 넘어가게 한다. 골반을 돌리면 받침
+       모서리가 파고드므로 그만큼 골반을 띄운다. */
+   track('Hips','position[y]',[0,.7],[.92,.96]),track('Hips','rotation[x]',[0,.7],[0,.26]),track('Spine','rotation[x]',[0,.7],[0,.56]),
    track('Head','rotation[x]',[0,.7],[0,.3])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.76,.92]),track('Spine','rotation[x]',[0,.8],[.82,0]),
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[.96,.92]),track('Hips','rotation[x]',[0,.8],[.26,0]),track('Spine','rotation[x]',[0,.8],[.56,0]),
    track('Head','rotation[x]',[0,.8],[.3,0])]);
- clip('death',2.0,[track('Hips','position[y]',[0,.9,2.0],[.92,.82,.74]),
-   track('Spine','rotation[x]',[0,.9,2.0],[0,.62,1.18]),
+ clip('death',2.0,[track('Hips','position[y]',[0,.9,2.0],[.92,1.04,1.12]),track('Hips','rotation[x]',[0,.9,2.0],[0,.18,.4]),
+   track('Spine','rotation[x]',[0,.9,2.0],[0,.46,.82]),
    track('Core','scale[x]',[0,.6,2.0],[1,.28,.05]),track('Core','scale[y]',[0,.6,2.0],[1,.28,.05]),
    track('Head','rotation[x]',[0,.9,2.0],[0,.5,1.1])]);
  return {scene,animations};

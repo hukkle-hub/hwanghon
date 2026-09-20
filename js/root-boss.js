@@ -71,8 +71,11 @@ export function createRootBoss(){
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */
- clip('down',.7,[track('Hips','position[y]',[0,.7],[1.02,.82]),track('Spine','rotation[x]',[0,.7],[0,.86])]);
- clip('up',.8,[track('Hips','position[y]',[0,.8],[.82,1.02]),track('Spine','rotation[x]',[0,.8],[.86,0])]);
- clip('death',1.9,[track('Hips','position[y]',[0,.9,1.9],[1.02,.9,.84]),track('Spine','rotation[x]',[0,.9,1.9],[0,.6,1.12]),track('Core','scale[x]',[0,.6,1.9],[1,.3,.05]),track('Core','scale[y]',[0,.6,1.9],[1,.3,.05])]);
+ clip('down',.7,[    /* 받침이 꼼짝 않고 몸통만 기울면 «경첩이 부러진 것» 처럼 보인다 (docs/design/24 §7).
+       기울기 일부를 골반으로 옮겨 기계가 통째로 넘어가게 한다. 골반을 돌리면 받침
+       모서리가 파고드므로 그만큼 골반을 띄운다. */
+   track('Hips','position[y]',[0,.7],[1.02,1.0]),track('Hips','rotation[x]',[0,.7],[0,.3]),track('Spine','rotation[x]',[0,.7],[0,.56])]);
+ clip('up',.8,[track('Hips','position[y]',[0,.8],[1.0,1.02]),track('Hips','rotation[x]',[0,.8],[.3,0]),track('Spine','rotation[x]',[0,.8],[.56,0])]);
+ clip('death',1.9,[track('Hips','position[y]',[0,.9,1.9],[1.02,1.08,1.14]),track('Hips','rotation[x]',[0,.9,1.9],[0,.2,.42]),track('Spine','rotation[x]',[0,.9,1.9],[0,.44,.76]),track('Core','scale[x]',[0,.6,1.9],[1,.3,.05]),track('Core','scale[y]',[0,.6,1.9],[1,.3,.05])]);
  return {scene,animations};
 }
