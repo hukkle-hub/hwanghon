@@ -36,10 +36,12 @@ const methods={
   if(op==='dismantle'){if(!definition.stats||n!==1)throw Error('장비를 하나 선택하세요.');p.items[item]--;const mats=(R.salvage[definition.rarity]||R.salvage.common).map(([key,count])=>[key,Math.max(1,Math.round(count*(.6+.4*this.gearInfo(p,item).dur/100)))]);delete p.gear[item];this.addItems(p,mats);return {item,items:mats};}
   if(op==='vendorSell'){const unit=C.shop.find(s=>s.id===item)?.sell||(definition.stats?Math.floor(definition.price*.2):0);if(!unit)throw Error('판매할 수 없는 물품입니다.');p.items[item]-=n;p.gold+=unit*n;if(definition.stats)delete p.gear[item];return {item,gold:unit*n};}
   throw Error('지원하지 않는 가방 요청입니다.');});},
- craft(id,recipe){const r=R.recipes.find(r=>r.id===recipe);if(!r)throw Error('제작법을 확인하세요.');return this.mutate(id,'craft',p=>{if(1+Math.floor(p.xp/1200)<r.level)throw Error('제작 요구 레벨이 부족합니다.');if(R.byId[r.result].stats&&((p.items[r.result]||0)+(p.vault[r.result]||0)>0))throw Error('이미 보유한 장비입니다.');this.debit(p,r.mats,r.cost);this.addItems(p,[[r.result,r.yield||1]]);return {item:r.result,quantity:r.yield||1};});},
+ craft(id,recipe){const r=R.recipes.find(r=>r.id===recipe);if(!r)throw Error('제작법을 확인하세요.');return this.mutate(id,'craft',p=>{if(1+Math.floor(p.xp/1200)<r.level)throw Error('제작 요구 레벨이 부족합니다.');if(R.byId[r.result].stats&&((p.items[r.result]||0)+(p.vault[r.result]||0)>0))throw Error('이미 보유한 장비입니다.');this.debit(p,r.mats,r.cost);this.addItems(p,[[r.result,r.yield||1]]);
+  this.bumpSkill(p,R.byId[r.result]?.stats?{crafted:1}:{craftedCons:1});
+  return {item:r.result,quantity:r.yield||1};});},
  enhanceQuote(p,item){const meta=this.gearInfo(p,item);if(!meta)return null;const step=C.enhance.find(s=>s.to===meta.enh+1);if(!step)return null;return {...step,mats:step.mats.filter(([id])=>id!=='m_booster'),rate:Math.min(90,step.rate+(p.failstack||0)),booster:step.mats.find(([id])=>id==='m_booster')?.[1]||1,drop:step.to<=6?1:2,durLoss:6+step.to*2};},
- enhance(id,item,protect){return this.mutate(id,'enhance',p=>{const definition=this.requireOwned(p,item);if(!definition.stats)throw Error('장비를 선택하세요.');const meta=this.gearInfo(p,item),q=this.enhanceQuote(p,item);if(!q)throw Error('최대 강화 단계입니다.');if(meta.dur<20)throw Error('내구도 20 미만입니다. 먼저 수리하세요.');this.debit(p,[...q.mats,...(protect?[['m_booster',q.booster]]:[])],q.cost);const success=crypto.randomInt(100000)<q.rate*1000;if(success){meta.enh=q.to;meta.dur=Math.max(0,meta.dur-2);p.failstack=0;}else{p.failstack=Math.min(30,(p.failstack||0)+3);meta.dur=Math.max(0,meta.dur-q.durLoss);if(!protect)meta.enh=Math.max(0,meta.enh-q.drop);}p.gear[item]=meta;return {item,success,enh:meta.enh,dur:meta.dur,protected:!!protect,rate:q.rate};});},
- repair(id,item){return this.mutate(id,'repair',p=>{const d=this.requireOwned(p,item),m=this.gearInfo(p,item);if(!m||m.dur===100)throw Error('수리할 장비가 없습니다.');const cost=Math.max(100,Math.round(d.price*.15*(100-m.dur)/100));this.debit(p,[],cost);m.dur=100;p.gear[item]=m;return {item,cost};});},
+ enhance(id,item,protect){return this.mutate(id,'enhance',p=>{const definition=this.requireOwned(p,item);if(!definition.stats)throw Error('장비를 선택하세요.');const meta=this.gearInfo(p,item),q=this.enhanceQuote(p,item);if(!q)throw Error('최대 강화 단계입니다.');if(meta.dur<20)throw Error('내구도 20 미만입니다. 먼저 수리하세요.');this.debit(p,[...q.mats,...(protect?[['m_booster',q.booster]]:[])],q.cost);const success=crypto.randomInt(100000)<q.rate*1000;if(success){meta.enh=q.to;meta.dur=Math.max(0,meta.dur-2);p.failstack=0;this.bumpSkill(p,{enhOk:1});}else{p.failstack=Math.min(30,(p.failstack||0)+3);meta.dur=Math.max(0,meta.dur-q.durLoss);if(!protect)meta.enh=Math.max(0,meta.enh-q.drop);}p.gear[item]=meta;return {item,success,enh:meta.enh,dur:meta.dur,protected:!!protect,rate:q.rate};});},
+ repair(id,item){return this.mutate(id,'repair',p=>{const d=this.requireOwned(p,item),m=this.gearInfo(p,item);if(!m||m.dur===100)throw Error('수리할 장비가 없습니다.');const cost=Math.max(100,Math.round(d.price*.15*(100-m.dur)/100));this.debit(p,[],cost);m.dur=100;p.gear[item]=m;this.bumpSkill(p,{repairs:1});return {item,cost};});},
  /* 출격 캐릭터 변경 (A안): 계정당 캐릭터는 하나. 골드를 내고 갈아탄다.
     유지 — 골드·재료·장비·보관함·의뢰 진행·클리어 기록·경험치
     초기화 — 기술 (캐릭터마다 기술표가 다르므로 포인트를 돌려준다)
@@ -67,9 +69,16 @@ const methods={
  questAction(id,quest,op){const q=this.questState(id).find(q=>q.id===quest);if(!q)throw Error('의뢰를 확인하세요.');return this.mutate(id,'quest',p=>{if(op==='accept'&&q.status==='available'){p.quests[q.id]='accepted';return {quest,status:'accepted'};}if(op==='claim'&&q.status==='complete'){p.quests[q.id]='claimed';p.gold+=q.gold;p.xp+=q.xp;this.addItems(p,q.items);return {quest,status:'claimed',gold:q.gold,xp:q.xp,items:q.items};}throw Error('의뢰 조건을 확인하세요.');});},
  canEnter(id,level){const q=R.quests.find(q=>q.level===level);if(!q)return false;const p=this.get(id);return !q.previous||p.quests[q.previous]==='claimed'||p.clears[q.arena]>0;},
  supplies(id,slots){if(!Array.isArray(slots)||slots.length!==2||slots.some(i=>!['c_potion','c_antidote','c_throw'].includes(i)))throw Error('소모품 두 칸을 선택하세요.');return this.mutate(id,'quickslots',p=>{p.quickslots=slots;return {slots};});},
- consume(id,item){return this.mutate(id,'consume',p=>{this.debit(p,[[item,1]]);return {item};});},
+ consume(id,item){return this.mutate(id,'consume',p=>{this.debit(p,[[item,1]]);this.bumpSkill(p,{potions:1});return {item};});},
  startRun(run,level,ids){this.transaction(()=>this.statement('INSERT INTO expeditions VALUES(?,?,?,?,?)').run(run,level,JSON.stringify(ids),'active',Date.now()));},
- queueRewards(run,ids,arena,reward){this.transaction(()=>{for(const id of new Set(ids)){const p=this.get(id);const first=!p.clears[arena];const personal=reward.players?.find(x=>x.id===id);const grant={...reward,first,firstGold:first?1000:0,bonusItems:[...(first?[['m_booster',2],['m_heart',1]]:[]),...(reward.breaksTotal?[['m_bone',reward.breaksTotal]]:[])],record:personal||null};delete grant.players;this.statement('INSERT OR IGNORE INTO reward_mail VALUES(?,?,?,?,0,?)').run(run,id,arena,JSON.stringify(grant),Date.now());}this.statement("UPDATE expeditions SET state='clear' WHERE id=?").run(run);});return this.deliverRewards();},
+ queueRewards(run,ids,arena,reward){this.transaction(()=>{for(const id of new Set(ids)){const p=this.get(id);const first=!p.clears[arena];const personal=reward.players?.find(x=>x.id===id);
+  /* 전투 기록을 프로필에 쌓는다 — 기술 등급의 재료다 */
+  if(personal){const items=(reward.items||[]).reduce((n,[,c])=>n+c,0);
+   const rare=(reward.items||[]).filter(([iid])=>['hero','legend'].includes(R.byId[iid]?.rarity)).length;
+   this.bumpSkill(p,{counters:personal.counters||0,perfect:personal.perfect||0,
+     telegraphs:personal.counterAttempts||0,breaks:personal.breaks||0,
+     breakable:reward.breakable||0,items:items,rare:rare});}
+  const grant={...reward,first,firstGold:first?1000:0,bonusItems:[...(first?[['m_booster',2],['m_heart',1]]:[]),...(reward.breaksTotal?[['m_bone',reward.breaksTotal]]:[])],record:personal||null};delete grant.players;this.statement('INSERT OR IGNORE INTO reward_mail VALUES(?,?,?,?,0,?)').run(run,id,arena,JSON.stringify(grant),Date.now());}this.statement("UPDATE expeditions SET state='clear' WHERE id=?").run(run);});return this.deliverRewards();},
  deliverRewards(id){const rows=id?this.statement('SELECT * FROM reward_mail WHERE delivered=0 AND player=?').all(id):this.statement('SELECT * FROM reward_mail WHERE delivered=0').all();const changed={};for(const row of rows)this.transaction(()=>{if(this.statement('SELECT delivered FROM reward_mail WHERE run=? AND player=?').get(row.run,row.player).delivered)return;const reward=JSON.parse(row.reward),p=this.get(row.player);if(!this.statement('SELECT 1 FROM receipts WHERE run=? AND player=?').get(row.run,row.player)){reward.first=!p.clears[row.arena];reward.firstGold=reward.first?1000:0;reward.bonusItems=[...(reward.first?[['m_booster',2],['m_heart',1]]:[]),...(reward.breaksTotal?[['m_bone',reward.breaksTotal]]:[])];p.gold+=reward.gold+(reward.firstGold||0);p.xp+=600;p.clears[row.arena]=(p.clears[row.arena]||0)+1;this.addItems(p,[...reward.items,...(reward.bonusItems||[])]);this.put(p);this.statement('INSERT INTO receipts VALUES(?,?)').run(row.run,row.player);}this.statement('UPDATE reward_mail SET delivered=1,reward=? WHERE run=? AND player=?').run(JSON.stringify(reward),row.run,row.player);this.audit(row.player,'reward',row.run,{arena:row.arena,gold:reward.gold});changed[row.player]=this.public(row.player);});return changed;},
  rewardHistory(id){return this.statement('SELECT * FROM reward_mail WHERE player=? ORDER BY created DESC LIMIT 30').all(id).map(r=>({...r,reward:JSON.parse(r.reward)}));},
  playerNamed(name){const r=this.statement('SELECT player FROM character_names WHERE name_key=?').get(text(name,16).toLowerCase());if(!r)throw Error('캐릭터를 찾을 수 없습니다.');return r.player;},
@@ -83,6 +92,27 @@ const methods={
  guildStaff(id){const g=this.guild(id);if(!g)throw Error('가입한 길드가 없습니다.');
   const officer=this.statement("SELECT 1 FROM guild_roles WHERE player=? AND guild=? AND role='officer'").get(id,g.id);
   if(g.owner!==id&&!officer)throw Error('길드 관리 권한이 없습니다.');return g;},
+ /* ---------- 기술 등급 (js/grade.js 와 같은 임계값·점수식) ----------
+    오프라인은 save.stats 로 계산한다. 온라인은 그 기록이 없어서 모집 화면의
+    «5줄 등급표» 를 채울 수 없었다 (docs/design/30 §3). 클리어·제작·강화·수리에서
+    누적해 두고 같은 식으로 등급을 낸다. skill 은 프로필 안의 누적 카운터다. */
+ TECH:['C','B','A','S','SS'],
+ TECH_TH:{counter:[0,15,45,120,300],break:[0,20,60,150,350],refine:[0,12,40,110,260],drop:[0,15,50,140,320],craft:[0,10,35,100,240]},
+ bumpSkill(p,patch){const s=p.skill||(p.skill={});
+  for(const [k,v] of Object.entries(patch)) if(v) s[k]=(s[k]||0)+v; return s;},
+ techScores(st){st=st||{};
+  const tel=st.telegraphs||0, cr=tel?(st.counters||0)/tel:0;
+  const brk=st.breakable||0,  br=brk?(st.breaks||0)/brk:0;
+  return {counter:Math.round((st.counters||0)+(st.perfect||0)*2+cr*40),
+          break:Math.round((st.breaks||0)*10+br*40),
+          refine:Math.round((st.gathered||0)*2+(st.craftedCons||0)*5+(st.potions||0)*3),
+          drop:Math.round((st.items||0)+(st.rare||0)*10),
+          craft:Math.round((st.enhOk||0)*6+(st.crafted||0)*8+(st.repairs||0)*2)};},
+ techGrades(id){const sc=this.techScores(this.get(id).skill), out={};
+  for(const [k,v] of Object.entries(sc)){const th=this.TECH_TH[k];let i=0;
+   while(i<this.TECH.length-1&&v>=th[i+1])i++; out[k]=this.TECH[i];}
+  return out;},
+
  guildMemberIds(gid){return this.statement('SELECT player FROM guild_members WHERE guild=?').all(gid).map(r=>r.player);},
  guildOpenState(gid){return !!this.statement('SELECT 1 FROM guild_open WHERE guild=?').get(gid);},
  guildBoard(){return this.statement(`SELECT g.id,g.name,

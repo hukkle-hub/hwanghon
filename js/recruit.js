@@ -30,7 +30,9 @@
              del:function(k){try{localStorage.removeItem(k);}catch(e){}}};
 
   var socket,seq=0,connected=false,stopped=false,retry;
-  var profile=null,room=null,rooms=[],unlocked=[],messages=[],view='find',pick='d02';
+  /* 기본 선택은 훈련장이다. 해금 목록이 오면 «갈 수 있는 가장 앞선 곳» 으로 옮긴다 —
+   d02 를 기본으로 두면 갓 시작한 사람이 «새 파티 만들기» 에서 해금 오류를 본다. */
+  var profile=null,room=null,rooms=[],unlocked=[],messages=[],view='find',pick='d01',picked=false;
 
   function state(text,bad){ var el=$('rc-state'); el.textContent=text||''; el.classList.toggle('is-bad',!!bad); }
   function send(msg){ if(!connected||!socket||socket.readyState!==1) return false;
@@ -48,7 +50,7 @@
       var L=LV[id], a=AR[L.arena]||{}, q=W&&W.quest&&QUEST_OF[L.arena]?W.quest(QUEST_OF[L.arena]):null;
       /* 해금 여부는 서버가 rpgState.unlocked 로 알려 준다. 접속 전에는 모두 열어 보여 준다. */
       var open=!connected||unlocked.indexOf(id)>=0;
-      var n=rooms.filter(function(r){return r.level===id;}).length;
+      var n=filtered(rooms).filter(function(r){return r.level===id;}).length;
       return '<div class="mrow3'+(id===pick?' is-on':'')+(open?'':' is-locked')+'" data-lv="'+id+'">'+
         '<div class="fill"><div class="mrow3__t">'+esc(L.name)+'</div>'+
         '<div class="mrow3__s">'+esc((L.diff||'').split(' · ')[0])+(q?' · 위험도 '+q.risk:'')+'</div></div>'+
@@ -77,29 +79,69 @@
       '<div class="xs t-faint mt3">출격 인원 2~4명 · 전원 준비 후 파티장이 출발합니다.</div>';
   }
 
+  /* ── 필터 (시트 03 의 필터 바) ──
+     난이도는 던전의 `diff` 첫 등급(«의뢰 S · …»), 역할은 방에 있는 캐릭터,
+     전투력은 방이 건 최소 전투력이다. 전부 서버가 이미 내려 주는 축이다. */
+  function diffOf(level){ var L=LV[level]; var m=L&&/(?:^|\s)([SAB])(?:\s|$)/.exec(L.diff||''); return m?m[1]:''; }
+  /* 서버의 POWER 와 같은 식 (server/index.cjs): 공격 6 + 체력 0.3 */
+  function myPower(){ var st=profile&&profile.stats;
+    return st?Math.round((st.atk||0)*6+(st.hp||0)*0.3):0; }
+  function filtered(list){
+    var d=$('rc-f-diff').value, role=$('rc-f-role').value, pw=$('rc-f-pw').value,
+        openOnly=$('rc-f-open').checked, mineOnly=$('rc-f-mine').checked,
+        mine=(profile&&profile.character)||'ain', power=myPower();
+    return list.filter(function(r){
+      if(openOnly&&r.count>=4) return false;
+      if(d&&diffOf(r.level)!==d) return false;
+      if(role&&(r.chars||[]).indexOf(role)<0) return false;
+      if(mineOnly&&(r.chars||[]).indexOf(mine)>=0) return false;
+      if(pw==='free'&&r.minPower) return false;
+      if(pw==='fit'&&r.minPower&&power<r.minPower) return false;
+      return true;
+    });
+  }
+
   /* ── 모집 목록 ── */
   function findList(){
     var box=$('rc-find');
     if(!connected){ box.innerHTML='<div class="chat__empty">접속하면 모집 중인 파티가 표시됩니다.'+
       '<br>오른쪽에서 새 파티를 만들거나 방 코드로 합류할 수 있습니다.</div>'; return; }
-    var list=rooms.filter(function(r){ return r.level===pick; }), all=rooms;
-    var use=list.length?list:all, only=list.length>0;
-    if(!use.length){ box.innerHTML='<div class="chat__empty">공개 모집 중인 파티가 없습니다.'+
-      '<br>오른쪽에서 새 파티를 만들어 동료를 기다리세요.</div>'; return; }
+    var pool=filtered(rooms);
+    var list=pool.filter(function(r){ return r.level===pick; });
+    var use=list.length?list:pool, only=list.length>0;
+    if(!use.length){ box.innerHTML='<div class="chat__empty">'+
+      (rooms.length?'조건에 맞는 파티가 없습니다.<br>위의 필터를 넓혀 보세요.'
+                   :'공개 모집 중인 파티가 없습니다.<br>오른쪽에서 새 파티를 만들어 동료를 기다리세요.')+
+      '</div>'; return; }
     box.innerHTML=(only?'':'<div class="xs t-faint" style="padding:6px 2px">'+
         esc(LV[pick]?LV[pick].name:'')+' 모집이 없어 전체를 보여 줍니다.</div>')+
       use.map(function(r){
       var L=LV[r.level]||{};
+      var cond=[esc(r.leader),PURPOSE[r.purpose]||r.purpose];
+      if(r.minPower) cond.push('전투력 '+fmt(r.minPower)+' 이상');
+      if(r.voice) cond.push('음성');
+      var full=r.count>=4;
       return '<div class="prow2"><span class="prow2__c">'+esc(r.code)+'</span>'+
         '<div class="fill"><div class="prow2__t">'+esc(L.name||r.level)+'</div>'+
-        '<div class="prow2__s">'+esc(r.leader)+' · '+(PURPOSE[r.purpose]||r.purpose)+'</div></div>'+
+        '<div class="prow2__s">'+cond.join(' · ')+'</div></div>'+
         '<span class="prow2__n">'+r.count+' / 4</span>'+
-        '<button type="button" class="btn btn--sm" data-join="'+esc(r.code)+'">참가</button></div>';
+        '<button type="button" class="btn btn--sm" data-join="'+esc(r.code)+'"'+(full?' disabled':'')+'>'+
+        (full?'가득 참':'참가')+'</button></div>';
     }).join('');
   }
 
   /* ── 파티 (4인 카드) ── */
   var CHAR={ain:'아인 · 낫',kain:'카인 · 대검',ryu:'류 · 쌍단검',sera:'세라 · 시약'};
+  /* 시트 03 카드의 5줄 등급표. 서버가 techGrades 로 내려 준다 — 없으면 그리지 않는다
+     (없는 값을 C 로 지어내면 «아직 안 왔다» 와 «정말 C» 를 구분할 수 없다). */
+  var TECH=[['counter','카운터'],['break','부위파괴'],['refine','정 제'],['drop','드 랍'],['craft','제 작']];
+  function gradeTable(g){
+    if(!g) return '';
+    return '<div class="gtab">'+TECH.map(function(t){
+      var v=g[t[0]]||'C';
+      return '<div><span>'+t[1]+'</span><b class="grade-letter g-'+v.toLowerCase()+'">'+v+'</b></div>';
+    }).join('')+'</div>';
+  }
   function slots(){
     var box=$('rc-slots'), ms=(room&&room.members)||[], out='';
     for(var i=0;i<4;i++){
@@ -115,7 +157,8 @@
         '<div class="slot4__art art"><img src="art/full-'+(m.character||'ain')+'.webp" alt=""></div>'+
         '<div class="slot4__b"><div class="slot4__n">'+esc(m.name)+'</div>'+
         '<div class="slot4__m">'+(CHAR[m.character]||m.character||'—')+'</div>'+
-        '<div class="slot4__cp">Lv.'+(m.level||1)+' · 전투력 '+fmt(m.power||0)+'</div></div></div>';
+        '<div class="slot4__cp">Lv.'+(m.level||1)+' · 전투력 '+fmt(m.power||0)+'</div>'+
+        gradeTable(m.grades)+'</div></div>';
     }
     box.innerHTML=out;
   }
@@ -127,7 +170,10 @@
     $('rc-code').textContent=room.code; $('rc-copy').hidden=false;
     var ps=room.members.map(function(m){return m.power||0;});
     var avg=ps.length?Math.round(ps.reduce(function(a,b){return a+b;},0)/ps.length):0;
-    $('rc-avg').innerHTML='평균 전투력 <b>'+fmt(avg)+'</b>';
+    $('rc-avg').innerHTML=(room.minPower?'<span class="xs t-faint" style="margin-right:9px">최소 '+
+      fmt(room.minPower)+(room.voice?' · 음성':'')+'</span>':room.voice?
+      '<span class="xs t-faint" style="margin-right:9px">음성 채팅</span>':'')+
+      '평균 전투력 <b>'+fmt(avg)+'</b>';
   }
   function chat(){
     var log=$('rc-log'), rows=messages.filter(function(m){return m.channel==='party';});
@@ -175,7 +221,9 @@
         $('rc-wallet').querySelector('.num').textContent=fmt(profile.gold); render(); return; }
       if(msg.type==='board'){ rooms=msg.rooms||[];
         $('rc-online').textContent='접속 '+(msg.online||0)+' / '+(msg.capacity||100); render(); return; }
-      if(msg.type==='rpg'){ if(msg.data&&msg.data.unlocked){ unlocked=msg.data.unlocked; missions(); } return; }
+      if(msg.type==='rpg'){ if(msg.data&&msg.data.unlocked){ unlocked=msg.data.unlocked;
+        if(!picked){ picked=true; if(unlocked.length&&unlocked.indexOf(pick)<0) pick=unlocked[unlocked.length-1]; }
+        render(); } return; }
       if(msg.type==='chatHistory'){ messages=msg.messages||[]; chat(); return; }
       if(msg.type==='chat'){ messages.push(msg.message); if(messages.length>200) messages.shift(); chat(); return; }
       if(msg.type==='rpgNotice'){ state(msg.text); return; }
@@ -198,6 +246,10 @@
   }
 
   /* ── 조작 ── */
+  $('rc-filters').addEventListener('change',function(){ missions(); findList(); });
+  $('rc-refresh').onclick=function(){
+    if(send({type:'board'})) state('모집 목록을 갱신했습니다.');
+    else state('접속한 뒤 이용할 수 있습니다.',true); };
   $('rc-tabs').addEventListener('click',function(e){
     var b=e.target.closest('[data-v]'); if(b) setView(b.dataset.v); });
   $('rc-missions').addEventListener('click',function(e){
@@ -207,7 +259,8 @@
     var b=e.target.closest('[data-join]'); if(!b) return;
     if(!send({type:'join',code:b.dataset.join})) state('접속한 뒤 이용할 수 있습니다.',true); });
   $('rc-create').onclick=function(){
-    if(!send({type:'create',level:pick,public:$('rc-public').value==='1',purpose:$('rc-purpose').value}))
+    if(!send({type:'create',level:pick,public:$('rc-public').value==='1',purpose:$('rc-purpose').value,
+              minPower:Number($('rc-minpower').value)||0,voice:$('rc-voice').value==='1'}))
       state('접속한 뒤 이용할 수 있습니다.',true); };
   $('rc-joinbtn').onclick=function(){ var c=$('rc-join').value.trim();
     if(!c){ state('방 코드를 입력하세요.',true); return; }

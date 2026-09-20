@@ -20,7 +20,17 @@
 .rctabs .tab{padding:9px 30px}
 .rc{display:grid;grid-template-columns:300px 1fr 322px;gap:12px;padding:11px 18px;flex:1;min-height:0}
 .rc__l{display:grid;grid-template-rows:1fr;min-height:0}
-.rc__c{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-height:0}
+.rc__c{display:grid;grid-template-rows:auto auto 1fr auto;gap:10px;min-height:0}
+
+/* 필터 바 — 시트 03 의 «난이도 · 역할 · 전투력 제한 · 모집 중만 · 내 직업만 · 새로 고침» */
+.fbar{display:flex;align-items:center;gap:7px;padding:7px 9px;flex-wrap:nowrap}
+.fbar .field{margin:0;flex:1 1 0;min-width:0;height:26px;padding:0 8px}
+.fbar .field select{font-size:11px}
+.fbar .btn{flex:none;white-space:nowrap}
+.chk{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--tx-faint);
+  white-space:nowrap;cursor:pointer;flex:none}
+.chk input{width:12px;height:12px;accent-color:var(--red-lit);margin:0}
+.chk:hover{color:var(--tx-dim)}
 .rc__r{display:grid;grid-template-rows:1fr auto;gap:10px;min-height:0}
 
 /* 임무 목록 */
@@ -65,6 +75,12 @@
 .slot4__n{font-size:13px;color:var(--tx-hi)}
 .slot4__m{font-size:10.5px;color:var(--tx-faint);margin-top:3px}
 .slot4__cp{font-size:11.5px;color:var(--tx-dim);margin-top:4px;font-variant-numeric:tabular-nums}
+.gtab{margin:6px -9px -9px;border-top:1px solid var(--line-soft)}
+.gtab div{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:2.5px 9px;border-bottom:1px solid rgba(255,255,255,.035)}
+.gtab div:last-child{border-bottom:0}
+.gtab span{font-size:10px;color:var(--tx-faint);letter-spacing:.08em}
+.gtab b{font-size:11.5px}
 .slot4__e{flex:1;display:grid;place-items:center;font-size:11.5px;color:var(--tx-ghost);padding:22px 8px}
 
 /* 채팅 */
@@ -81,11 +97,11 @@
 .rcfoot .btn{flex:1}
 
 /* 임무 상세 */
-.qart2{height:112px;border:1px solid var(--line);position:relative;overflow:hidden;margin:10px 0}
+.qart2{height:96px;border:1px solid var(--line);position:relative;overflow:hidden;margin:8px 0}
 .qart2 img{width:100%;height:100%;object-fit:cover}
 .foes{display:flex;gap:6px}
 .foes span{width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--line);color:var(--tx-faint)}
-.setrow{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-soft)}
+.setrow{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line-soft)}
 .setrow:last-child{border:0}
 .setrow__k{font-size:11.5px;color:var(--tx-faint);width:70px;flex:none}
 .setrow .field{flex:1;margin:0}
@@ -131,6 +147,33 @@
 
     <!-- ======== 중: 파티 ======== -->
     <div class="rc__c" data-mpane="파티">
+      <section class="panel panel--framed" id="rc-filters">
+        <div class="fbar">
+          <div class="field"><select id="rc-f-diff">
+            <option value="">난이도 전체</option>
+            <option value="S">난이도 S</option>
+            <option value="A">난이도 A</option>
+            <option value="B">난이도 B</option>
+          </select></div>
+          <div class="field"><select id="rc-f-role">
+            <option value="">모든 역할</option>
+            <option value="ain">아인 · 낫</option>
+            <option value="kain">카인 · 대검</option>
+            <option value="ryu">류 · 쌍단검</option>
+            <option value="sera">세라 · 시약</option>
+          </select></div>
+          <div class="field"><select id="rc-f-pw">
+            <option value="">전투력 제한 없음</option>
+            <option value="fit">내 전투력으로 가능</option>
+            <option value="free">조건 없는 방만</option>
+          </select></div>
+          <label class="chk"><input type="checkbox" id="rc-f-open" checked>모집 중만 보기</label>
+          <label class="chk" title="내 직업이 아직 없는 파티만"><input type="checkbox" id="rc-f-mine">내 직업만 보기</label>
+          <button type="button" class="btn btn--sm" id="rc-refresh" title="모집 목록 갱신">
+            <svg class="ico ico--sm"><use href="#i-refresh"/></svg>새로 고침</button>
+        </div>
+      </section>
+
       <section class="panel panel--framed" id="rc-head">
         <div class="pinfo">
           <span class="pinfo__k" id="rc-vis">모집 중인 파티</span>
@@ -188,6 +231,20 @@
               <option value="repeat">반복 파밍</option>
               <option value="practice">연습</option>
             </select></div></div>
+          <div class="setrow"><span class="setrow__k">최소 전투력</span>
+            <div class="field"><select id="rc-minpower">
+              <option value="0">제한 없음</option>
+              <option value="10000">10,000 이상</option>
+              <option value="30000">30,000 이상</option>
+              <option value="60000">60,000 이상</option>
+              <option value="100000">100,000 이상</option>
+            </select></div></div>
+          <div class="setrow"><span class="setrow__k">음성 채팅</span>
+            <div class="field"><select id="rc-voice">
+              <option value="0">사용하지 않음</option>
+              <option value="1">허용</option>
+            </select></div>
+            <svg class="ico ico--sm" style="color:var(--tx-ghost);flex:none"><use href="#i-headset"/></svg></div>
           <button type="button" class="btn btn--primary mt3" id="rc-create" style="width:100%">새 파티 만들기</button>
           <div class="setrow mt3"><span class="setrow__k">방 코드 합류</span>
             <div class="field"><input id="rc-join" maxlength="10" placeholder="10자리 코드"></div></div>
