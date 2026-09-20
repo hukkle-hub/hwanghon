@@ -3,86 +3,140 @@
 <style>
  html,body{margin:0;background:#12161a;color:#cfd6dc;font:13px/1.4 system-ui,sans-serif}
  #sheet{display:block}
- #cap{position:fixed;left:0;top:0;padding:6px 10px;font-weight:600;letter-spacing:.04em}
 </style></head><body>
-<canvas id="sheet"></canvas><div id="cap"></div>
+<canvas id="sheet"></canvas>
+<!-- 아레나 데이터 — 게임에서 쓰는 실제 배율(scale·bossScale)을 그대로 읽는다 -->
+<script src="../../js/world.js"></script>
+<script src="../../js/items.js"></script>
+<script src="../../js/save.js"></script>
+<script src="../../js/dungeons.js"></script>
+<script src="../../js/dungeon.js"></script>
+<script src="../../js/dungeon-content.js"></script>
 <script type="module">
 /* 보스 리그의 «자세» 만 떼어 내 격자로 굽는다 — 게임을 띄우지 않으므로 빠르다.
    바닥판을 깔아 두므로 «얼마나 파고드는가» 가 눈으로 보인다.
-     pose-sheet.html?clip=down&times=0,0.5,1
-     pose-sheet.html?rig=hauler&clip=death&times=0,.25,.5,.75,1
-   docs/design/24-contact-audit.md */
+     pose-sheet.html?clip=down&times=0,0.5,1           전 보스 × 한 클립
+     pose-sheet.html?rig=hauler&clip=all              한 보스 × 전 클립
+   docs/design/24-contact-audit.md §7 */
 import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {createRelayBoss} from '../../js/relay-boss.js';
 import {createPumpBoss} from '../../js/pump-boss.js';
 import {createRootBoss} from '../../js/root-boss.js';
 import {createHaulerBoss} from '../../js/hauler-boss.js';
 import {createWardBoss} from '../../js/ward-boss.js';
+import {prepareMarshMotion} from '../../js/marsh-motion.js';
 
-const RIGS={relay:createRelayBoss,pump:createPumpBoss,root:createRootBoss,
-            hauler:createHaulerBoss,ward:createWardBoss};
-const NAME={relay:'계전기',pump:'수문기',root:'모근체',hauler:'파쇄 기갑',ward:'소생기'};
+const ARENAS=window.TW_DUNGEONS.ARENAS;
+/* 리그 → 그 리그를 쓰는 아레나 (배율을 거기서 읽는다) */
+const RIGS={
+ relay:{arena:'relay', name:'계전기',    make:()=>createRelayBoss()},
+ pump: {arena:'sewage',name:'수문기',    make:()=>createPumpBoss()},
+ root: {arena:'grove', name:'모근체',    make:()=>createRootBoss()},
+ hauler:{arena:'road', name:'파쇄 기갑', make:()=>createHaulerBoss()},
+ ward: {arena:'ward',  name:'소생기',    make:()=>createWardBoss()},
+ marsh:{arena:'marsh', name:'모르버스',  make:async()=>{
+   const g=await new GLTFLoader().loadAsync('../../art/3d/'+ARENAS.marsh.model.split('/').pop());
+   return prepareMarshMotion(g);}},
+};
 const q=new URLSearchParams(location.search);
 const rigIds=(q.get('rig')&&q.get('rig')!=='all')?q.get('rig').split(','):Object.keys(RIGS);
-const clips=(q.get('clip')||'down').split(',');
-const times=(q.get('times')||'0,0.5,1').split(',').map(Number);
-const SCALE=1.22;                                   /* 게임에서 보이는 크기 */
+const timesArg=q.get('times')||'0,0.5,1';
+/* times=peak — 짧은 클립은 0/0.5/1 이 하필 «되돌아오는 지점» 에 걸려 쉬는 자세로 보인다.
+   (hit·stagger 가 그랬다: t=0.5 가 정확히 영교차점이었다.)
+   그래서 클립마다 «쉬는 자세에서 가장 멀어지는 순간» 을 찾아 그걸 가운데 칸에 쓴다. */
+const PEAK=timesArg==='peak';
+const times=PEAK?[0,0.5,1]:timesArg.split(',').map(Number);
+function peakTime(clip){
+ let best=0,bt=0.5;
+ for(const tr of clip.tracks){
+  const v=tr.values,t=tr.times;
+  if(v.length!==t.length)continue;
+  for(let i=0;i<v.length;i++){const d=Math.abs(v[i]-v[0]);
+   if(d>best){best=d;bt=t[i]/clip.duration;}}
+ }
+ return bt;
+}
 const CELL=Number(q.get('cell')||300);
+const allClips=q.get('clip')==='all';
 
-const cols=clips.length*times.length, rows=rigIds.length;
+/* 리그는 «한 번만» 만든다. marsh 는 GLB 라 칸마다 다시 읽으면 느리고 빈 칸이 난다.
+   대신 칸마다 쉬는 자세로 되돌린 뒤 클립을 얹는다 — 앞 칸의 자세가 남지 않는다. */
+const built=[];
+for(const id of rigIds){
+ const spec=RIGS[id];
+ const A=ARENAS[spec.arena]||{};
+ const scale=(A.bossScale==null?1.22:A.bossScale)*(A.scale==null?1:A.scale);
+ const asset=await spec.make();
+ const rest=[];
+ asset.scene.traverse(o=>rest.push([o,o.position.clone(),o.quaternion.clone(),o.scale.clone()]));
+ const mixer=new T.AnimationMixer(asset.scene);
+ built.push({id,name:spec.name,scale,asset,rest,mixer,
+   reset(){for(const [o,p,q,s2] of this.rest){o.position.copy(p);o.quaternion.copy(q);o.scale.copy(s2);}}});
+}
+let rowSpecs;
+if(allClips){
+ const b=built[0];
+ rowSpecs=b.asset.animations.map(c=>({rig:b,clip:c.name}));
+}else{
+ const clips=(q.get('clip')||'down').split(',');
+ rowSpecs=[];
+ for(const c of clips) for(const b of built) rowSpecs.push({rig:b,clip:c});
+}
+const rows=rowSpecs.length, cols=times.length;
 const cv=document.getElementById('sheet');
 cv.width=CELL*cols; cv.height=CELL*rows;
 const renderer=new T.WebGLRenderer({canvas:cv,antialias:true});
 renderer.setPixelRatio(1); renderer.setSize(cv.width,cv.height,false);
 renderer.outputColorSpace=T.SRGBColorSpace;
-renderer.setScissorTest(true);
-renderer.autoClear=false;
-renderer.setClearColor(0x12161a,1);
-renderer.clear();
+renderer.setScissorTest(true); renderer.autoClear=false;
+renderer.setClearColor(0x12161a,1); renderer.clear();
 
-function makeScene(asset){
+/* 리그마다 장면을 하나씩 두고, 쉬는 자세의 크기에 맞춰 카메라를 잡는다.
+   칸마다 다시 잡으면 자세끼리 크기가 달라져 비교가 안 된다 — 리그당 한 번만 잡는다. */
+for(const b of built){
  const s=new T.Scene();
  s.add(new T.HemisphereLight(0xc8d8e4,0x39332a,2.1));
  const key=new T.DirectionalLight(0xffe2b4,2.2); key.position.set(-4,7,5); s.add(key);
  const rim=new T.DirectionalLight(0x7fa8d0,1.1); rim.position.set(5,3,-6); s.add(rim);
- /* 바닥 — 파고드는 양을 보려면 반드시 있어야 한다 */
- const floor=new T.Mesh(new T.PlaneGeometry(40,40),
+ const floor=new T.Mesh(new T.PlaneGeometry(60,60),
    new T.MeshStandardMaterial({color:0x2c3338,roughness:.95}));
  floor.rotation.x=-Math.PI/2; s.add(floor);
- const grid=new T.GridHelper(20,20,0x6d7f8a,0x3c474e);
+ const grid=new T.GridHelper(30,30,0x6d7f8a,0x3c474e);
  grid.material.transparent=true; grid.material.opacity=.45; grid.position.y=.004; s.add(grid);
- const holder=new T.Group(); holder.scale.setScalar(SCALE); holder.add(asset.scene); s.add(holder);
- return s;
+ const holder=new T.Group(); holder.scale.setScalar(b.scale); holder.add(b.asset.scene); s.add(holder);
+ s.updateMatrixWorld(true);
+ const box=new T.Box3().setFromObject(holder);
+ const size=box.getSize(new T.Vector3()), mid=box.getCenter(new T.Vector3());
+ const reach=Math.max(size.x,size.y,size.z);
+ b.scene=s;
+ b.look=new T.Vector3(0,Math.max(.8,mid.y),0);
+ b.dist=reach*1.75+1.2;
 }
-const cam=new T.PerspectiveCamera(32,1,.1,100);
-
+const cam=new T.PerspectiveCamera(32,1,.1,200);
 const labels=[];
-let col=0;
-for(const clipName of clips) for(const t of times){
- let row=0;
- for(const id of rigIds){
-  const asset=RIGS[id]();
-  const scene=makeScene(asset);
-  const clip=asset.animations.find(c=>c.name===clipName);
+for(let r=0;r<rows;r++){
+ const {rig,clip:clipName}=rowSpecs[r];
+ const clip=rig.asset.animations.find(x=>x.name===clipName);
+ const rowTimes=(PEAK&&clip)?[0,peakTime(clip),1]:times;
+ for(let c=0;c<cols;c++){
+  rig.reset();
   if(clip){
-   const mixer=new T.AnimationMixer(asset.scene);
-   const a=mixer.clipAction(clip); a.play(); a.paused=true;
-   a.time=clip.duration*Math.min(1,Math.max(0,t)); mixer.update(0);
+   rig.mixer.stopAllAction();
+   const a=rig.mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
+   a.time=clip.duration*Math.min(1,Math.max(0,rowTimes[c])); rig.mixer.update(0);
   }
-  scene.updateMatrixWorld(true);
-  /* 리그를 화면에 꽉 차게 — 쉬는 자세 기준으로 잡아야 클립끼리 크기가 같다 */
-  cam.position.set(6.6,3.4,7.4); cam.lookAt(0,1.7,0);
+  rig.scene.updateMatrixWorld(true);
+  const d=rig.dist;
+  cam.position.set(d*.62,rig.look.y+d*.34,d*.72); cam.lookAt(rig.look);
   cam.aspect=1; cam.updateProjectionMatrix();
-  const x=col*CELL,y=(rows-1-row)*CELL;   /* WebGL 원점은 좌하단 */
+  const x=c*CELL,y=(rows-1-r)*CELL;
   renderer.setViewport(x,y,CELL,CELL);
   renderer.setScissor(x,y,CELL,CELL);
-  renderer.render(scene,cam);
-  labels.push({cx:col,cy:row,text:NAME[id]+' · '+clipName+' · t='+t});
-  row++;
+  renderer.render(rig.scene,cam);
+  labels.push({cx:c,cy:r,text:rig.name+' · '+clipName+(clip?'':' (없음)')+' · t='+rowTimes[c].toFixed(2)});
  }
- col++;
 }
-/* 라벨은 캔버스 위에 2D 로 덧그린다 */
 const tag=document.createElement('canvas');
 tag.width=cv.width; tag.height=cv.height;
 tag.style.cssText='position:absolute;left:0;top:0;pointer-events:none';
@@ -94,6 +148,5 @@ for(const l of labels){
  g.fillStyle='rgba(10,14,17,.72)'; g.fillRect(x-6,y-4,g.measureText(l.text).width+12,22);
  g.fillStyle='#e6edf2'; g.fillText(l.text,x,y);
 }
-document.getElementById('cap').textContent='';
 window.__poseSheetReady=true;
 </script></body></html>

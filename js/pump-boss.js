@@ -30,7 +30,17 @@ export function createPumpBoss(){
  clip('atk_bolt',1.4,[track('Exhaust','rotation[x]',[0,.35,.63,1.4],[0,-1.15,-1.5,0]),track('Spine','position[z]',[0,.35,.63,1.4],[0,-.12,.28,0])]);
  clip('atk_scythe',1.8,[track('Spine','rotation[y]',[0,.5,.9,1.3,1.8],[0,-.8,2.4,5.2,Math.PI*2])]);
  clip('atk_flame',2,[track('Spine','position[y]',[0,.8,1,1.3,2],[.75,1.1,.45,.62,.75]),track('Core','scale[x]',[0,.8,1,2],[1,1.4,1.6,1])]);
- for(const name of ['hit','stagger'])clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.15,-.08,0])]);
+ /* 피격: 짧게 움찔한다 */
+ clip('hit',.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0])]);
+ /* 자세 붕괴: 처형이 열리는 순간이다 — 피격과 «같은 클립» 이면 안 된다 (docs/design/25).
+    크게 휘청이고, 앞으로 꺾이고, 팔이 늘어지고, 잔진동으로 버틴다. */
+ clip('stagger',1.05,[track('Spine','rotation[z]',[0,.18,.45,.72,1.05],[0,.48,-.28,.13,0]),
+   track('Spine','rotation[x]',[0,.18,.52,1.05],[0,.32,.15,0]),
+   track('Hips','position[y]',[0,.18,.52,1.05],[1.0,0.87,0.94,1.0]),
+   track('Head','rotation[x]',[0,.18,.52,1.05],[0,.4,.19,0]),
+   track('Intake','rotation[x]',[0,.18,.52,1.05],[0,.5,.26,0]),
+   track('Exhaust','rotation[x]',[0,.18,.52,1.05],[0,-.5,-.26,0])]);
+
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */

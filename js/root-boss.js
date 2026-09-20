@@ -67,7 +67,17 @@ export function createRootBoss(){
  clip('atk_spore',2.0,[track('Core','scale[x]',[0,.85,1.1,1.35,2.0],[1,1.9,2.6,1,1]),track('Core','scale[y]',[0,.85,1.1,1.35,2.0],[1,1.9,2.6,1,1]),track('Core','scale[z]',[0,.85,1.1,1.35,2.0],[1,1.9,2.6,1,1]),track('Spine','position[y]',[0,.85,1.1,2.0],[.75,.95,.55,.75])]);
  /* 뿌리 쓸기: 덩굴 둘을 펼치고 한 바퀴 */
  clip('atk_sweep',1.8,[track('Spine','rotation[y]',[0,.5,.95,1.35,1.8],[0,-.7,2.3,5.0,Math.PI*2]),track('VineL','rotation[z]',[0,.5,1.4,1.8],[0,-.6,-.6,0]),track('VineR','rotation[z]',[0,.5,1.4,1.8],[0,.6,.6,0])]);
- for(const name of ['hit','stagger']) clip(name,.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.2,-.1,0]),track('Head','rotation[x]',[0,.15,.65],[0,.22,0])]);
+ /* 피격: 짧게 움찔한다 */
+ clip('hit',.65,[track('Spine','rotation[z]',[0,.15,.35,.65],[0,.17,-.09,0]),track('Head','rotation[x]',[0,.15,.65],[0,.22,0])]);
+ /* 자세 붕괴: 처형이 열리는 순간이다 — 피격과 «같은 클립» 이면 안 된다 (docs/design/25).
+    크게 휘청이고, 앞으로 꺾이고, 팔이 늘어지고, 잔진동으로 버틴다. */
+ clip('stagger',1.05,[track('Spine','rotation[z]',[0,.18,.45,.72,1.05],[0,.48,-.28,.13,0]),
+   track('Spine','rotation[x]',[0,.18,.52,1.05],[0,.32,.15,0]),
+   track('Hips','position[y]',[0,.18,.52,1.05],[1.02,0.89,0.96,1.02]),
+   track('Head','rotation[x]',[0,.18,.52,1.05],[0,.4,.19,0]),
+   track('VineL','rotation[z]',[0,.18,.52,1.05],[0,.5,.26,0]),
+   track('VineR','rotation[z]',[0,.18,.52,1.05],[0,-.5,-.26,0])]);
+
  /* 쓰러짐·사망은 «가라앉는» 게 아니라 «주저앉는» 것이다 — 골반을 바닥 아래로 내리면
     리그가 통째로 지면을 뚫는다(실측: 전 보스 down 0.45~0.55m, death 0.64~1.52m, 게다가
     게임에서는 1.22배). 내려가는 양을 줄이고 기울기로 무너짐을 보인다. docs/design/24 §4 */

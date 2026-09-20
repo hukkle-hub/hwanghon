@@ -21,9 +21,13 @@
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.
-tools/3d/pose-sheet.html?clip=down&times=0,0.5,1
-tools/3d/pose-sheet.html?rig=hauler&clip=death&times=0,.25,.5,.75,1
+tools/3d/pose-sheet.html?clip=down&times=0,0.5,1      # 전 보스 × 한 클립
+tools/3d/pose-sheet.html?rig=ward&clip=all            # 한 보스 × 전 클립
+tools/3d/pose-sheet.html?clip=hit,stagger&times=peak  # 클립마다 «가장 멀어지는 순간»
 ```
+
+**짧은 클립은 반드시 `times=peak`** 로 찍는다. 0/0.5/1 은 하필 «되돌아오는 지점» 에
+걸려 멀쩡한 클립도 죽은 것처럼 보인다 (hit 이 정확히 그랬다 — docs/design/25 §3).
 
 ### 헤드리스의 함정 (네 번 밟았다)
 
@@ -34,8 +38,14 @@ tools/3d/pose-sheet.html?rig=hauler&clip=death&times=0,.25,.5,.75,1
 ## 2. 고치기 전에 잰다
 
 숫자로 재고, 고치고, 다시 재서 보여 준다. 눈대중으로 값을 만지지 않는다.
-그리고 **지표 자체가 맞는지 먼저 의심한다** — 한 리그에서 통한 측정법이
-다른 리그에서도 맞으리라는 보장은 없다.
+그리고 **지표 자체가 맞는지 먼저 의심한다.** 이 프로젝트에서 잘못된 지표로 결론을
+낼 뻔한 게 세 번이다:
+
+- 「최고속 = 접점」 — 선형 키프레임 리그에서는 틀리다 (docs/design/24 §1)
+- 헤드리스 벽시계 — 초당 1~2프레임이라 게임 시간이 아니다 (§1 위)
+- **bpy 선형색 vs JS sRGB 색** — 그냥 견주면 8배 차이로 보인다 (docs/design/25 §4)
+
+**단위와 공간부터 맞추고 재라.**
 
 ## 3. 배포
 

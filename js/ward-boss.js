@@ -117,8 +117,17 @@ export function createWardBoss(){
    track('Core','scale[z]',[0,.85,1.1,1.35,2.0],[1,1.8,2.5,1,1]),
    track('Spine','position[y]',[0,.85,1.1,2.0],[.62,.82,.42,.62]),
    track('Head','rotation[x]',[0,.85,1.1,2.0],[0,-.35,.3,0])]);
- for(const name of ['hit','stagger']) clip(name,.6,[track('Spine','rotation[z]',[0,.14,.34,.6],[0,.18,-.09,0]),
+ /* 피격: 짧게 움찔한다 */
+ clip('hit',.6,[track('Spine','rotation[z]',[0,.14,.34,.6],[0,.18,-.09,0]),
    track('Head','rotation[z]',[0,.14,.6],[0,.24,0])]);
+ /* 자세 붕괴: 처형이 열리는 순간이다 — 피격과 «같은 클립» 이면 안 된다 (docs/design/25).
+    크게 휘청이고, 앞으로 꺾이고, 팔이 늘어지고, 잔진동으로 버틴다. */
+ clip('stagger',1.05,[track('Spine','rotation[z]',[0,.18,.45,.72,1.05],[0,.48,-.28,.13,0]),
+   track('Spine','rotation[x]',[0,.18,.52,1.05],[0,.32,.15,0]),
+   track('Hips','position[y]',[0,.18,.52,1.05],[.92,.79,.86,.92]),
+   track('Head','rotation[x]',[0,.18,.52,1.05],[0,.4,.19,0]),
+   track('PumpL','rotation[x]',[0,.18,.52,1.05],[0,.5,.26,0]),
+   track('ArmR','rotation[x]',[0,.18,.52,1.05],[0,-.5,-.26,0])]);
  clip('down',.7,[    /* 받침이 꼼짝 않고 몸통만 기울면 «경첩이 부러진 것» 처럼 보인다 (docs/design/24 §7).
        기울기 일부를 골반으로 옮겨 기계가 통째로 넘어가게 한다. 골반을 돌리면 받침
        모서리가 파고드므로 그만큼 골반을 띄운다. */
