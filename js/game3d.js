@@ -119,10 +119,16 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
             pitchMove:0.26, pitchFight:0.19,   /* 위에서 내려다보지 않는다 — 등 뒤 눈높이 */
             shoulder:0.52,            /* 카메라를 오른쪽으로 (m) — 캐릭터가 화면 왼쪽 삼분점에 */
             lookUp:0.42,              /* 주시점을 가슴 위로 — 얼굴과 상체가 중앙에 온다 */
-            fov:58, fovDash:65, fovHit:53, fovTau:0.10,
+            /* 렌즈. three.js 의 fov 는 «세로» 다. 갓 오브 워 라그나로크는 기본 73°(고정)인데
+               그게 가로라면 16:9 에서 세로 약 45° 다. 58° 는 그보다 한참 넓은 광각이라
+               가까이 붙여도 압축감이 없고 가장자리가 늘어난다. 50° 로 조이고 대신 조금
+               물러나면 «캐릭터 크기는 그대로, 그림만 영화처럼» 이 된다.
+               우리 모바일 화면은 2.22:1 로 16:9 보다 넓어서, 세로 50° 여도 가로는 92° 다
+               — 원본이 우리보다 좁지 넓지 않다. */
+            fov:50, fovDash:57, fovHit:46, fovTau:0.10,
             sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
   var fovWant=CAM.fov, bossTall=0;
-  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?Math.min(L.camDist, MOBILE?3.2:3.5):(MOBILE?3.2:3.5))
+  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?Math.min(L.camDist, MOBILE?4.3:4.6):(MOBILE?4.3:4.6))
     /* 어깨 너머. 벽 천장(camClear 가 뒤쪽 벽까지로 자른다, 훈련장 7.9 m)에 한참 못 미치므로
        좁은 방에서도 잘리지 않는다 — 오히려 그게 이 시점의 장점이다.
        보스가 크면 CAM.sizeDist 가 알아서 물리고, 락온으로 멀어지면 gap 보정이 물린다. */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
