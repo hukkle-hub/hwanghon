@@ -21,6 +21,7 @@ import { buildDungeonProps } from './dungeon-props.js';
 import { WeaponTrail, trailStyle } from './weapon-trail.js';
 import { bwEmpty } from './blackwatch.js';
 import { runRate as calcRunRate } from './locomotion.js';
+import { createBloom } from './bloom.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
@@ -110,6 +111,20 @@ import { runRate as calcRunRate } from './locomotion.js';
   function capTextures(root){ var seen=new Set(); root.traverse(function(o){ if(!o.isMesh) return; [].concat(o.material).forEach(function(m){ ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(k){ var t=m[k]; if(!t||!t.image||seen.has(t)) return; seen.add(t); var im=t.image, w=im.width||im.videoWidth, h=im.height; if(!(w>TEX_MAX||h>TEX_MAX)) return; try{ var sc=TEX_MAX/Math.max(w,h), c=document.createElement('canvas'); c.width=Math.max(1,Math.round(w*sc)); c.height=Math.max(1,Math.round(h*sc)); c.getContext('2d').drawImage(im,0,0,c.width,c.height); t.image=c; t.needsUpdate=true; DIAG.errors.push('tex '+w+'x'+h+' → '+c.width+' ('+k+')'); }catch(e){ DIAG.errors.push('tex cap fail '+e.message); } }); }); }); }
   renderer.setPixelRatio(Math.min(SAFE?0.75:SET.quality==='high'?2:SET.quality==='low'?0.9:(MOBILE?1.25:2), devicePixelRatio)); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=2.4*SET.bright;
   renderer.shadowMap.enabled=!SAFE && !(MOBILE && SET.quality==='low'); renderer.shadowMap.type=MOBILE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
+  /* 블룸 — 램프·불꽃·궤적이 «밝은 그림» 이 아니라 «빛» 으로 보이게 (docs/design/57).
+     저사양·저화질에서는 끈다. 만들다 실패하면 null 이라 평소대로 그려진다.
+     draw() 한 군데로 모아, 켜져 있으면 포스트 패스로 아니면 곧장 캔버스로 간다. */
+  var bloom=(SAFE||SET.quality==='low'||SET.bloom===false)?null
+    :createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, amount:MOBILE?0.75:0.85 });
+  /* 설정에서 켜고 끌 수 있게. 프레임이 낮아 자동으로 낮춘 경우(autoLow)에도 끈다 —
+     빛 번짐은 «있으면 좋은 것» 이지 프레임을 내줄 만큼은 아니다. */
+  function bloomWanted(){ return !SAFE && !autoLow && SET.quality!=='low' && SET.bloom!==false; }
+  function syncBloom(){
+    if(bloomWanted() && !bloom)
+      bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, amount:MOBILE?0.75:0.85 });
+    else if(!bloomWanted() && bloom){ try{ bloom.dispose(); }catch(e){} bloom=null; renderer.setRenderTarget(null); }
+  }
+  function draw(){ if(bloom){ try{ bloom.render(scene, cam); return; }catch(e){ DIAG.errors.push('bloom '+e.message); bloom=null; renderer.setRenderTarget(null); } } renderer.render(scene, cam); }
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
@@ -208,7 +223,7 @@ import { runRate as calcRunRate } from './locomotion.js';
     }
   }
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
-    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
+    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
   function noiseTex(draw, size, srgb){ var c=document.createElement('canvas'); c.width=c.height=size||256; var g=c.getContext('2d'); draw(g, c.width); var t=new THREE.CanvasTexture(c); if(srgb!==false) t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; }
@@ -1336,9 +1351,9 @@ import { runRate as calcRunRate } from './locomotion.js';
   var simAcc=0, scheduled=[];
   function schedule(fn,ms){var t={fn:fn,left:ms/1000,cancelled:false};scheduled.push(t);return t;}
   function tickScheduled(dt){var ready=[];scheduled=scheduled.filter(function(t){if(t.cancelled)return false;t.left-=dt;if(t.left<=0){ready.push(t.fn);return false;}return true;});ready.forEach(function(fn){fn();});}
-  function frame(now){ requestAnimationFrame(frame); var elapsed=now-last; FRAME_METRICS.add(elapsed,!document.hidden&&!paused&&!cine&&!el.dlg.classList.contains('is-on')&&!el.ov.classList.contains('is-on')&&(state==='fight'||state==='explore')); var dt=Math.min(0.1,elapsed/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ renderer.render(scene, cam); return; }
+  function frame(now){ requestAnimationFrame(frame); var elapsed=now-last; FRAME_METRICS.add(elapsed,!document.hidden&&!paused&&!cine&&!el.dlg.classList.contains('is-on')&&!el.ov.classList.contains('is-on')&&(state==='fight'||state==='explore')); var dt=Math.min(0.1,elapsed/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ draw(); return; }
     fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); fpsSamples.length=0; }
-    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); var contacts=pendingContacts;pendingContacts=[];contacts.forEach(function(e){e.poseReady=true;handle(e);}); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); renderer.render(scene, cam); blackWatch(); }
+    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); var contacts=pendingContacts;pendingContacts=[];contacts.forEach(function(e){e.poseReady=true;handle(e);}); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); draw(); blackWatch(); }
   /* 검은 화면 감시: 시작 후 25초 동안 1초마다 화면 중앙을 읽어 완전히 검으면 3회 연속 시 저사양 모드로 재시작 */
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
   /* 검은 화면 감시 — «아무것도 안 그려진» 상태를 잡아 저사양 모드로 되살린다.

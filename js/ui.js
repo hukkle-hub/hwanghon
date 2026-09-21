@@ -418,7 +418,7 @@
     sheet('기록', html, 'sheet--rec');
   }
   function settingsSheet(){
-    var SET = Object.assign({ bright:1, lights:true, vib:true, sound:true, quality:'auto' }, lsGet('tw:settings', {}));
+    var SET = Object.assign({ bright:1, lights:true, vib:true, sound:true, bloom:true, quality:'auto' }, lsGet('tw:settings', {}));
     var dev = false; try { dev = localStorage.getItem('tw:dev') === '1'; } catch(e){}
     function tog(k, lb, sub){ return '<div class="srow"><span>'+lb+(sub?'<small class="t-faint">'+sub+'</small>':'')+'</span><button class="tog'+(SET[k]?' is-on':'')+'" data-tog="'+k+'" role="switch" aria-checked="'+(!!SET[k])+'"><i></i></button></div>'; }
     var html = '<div class="label-ko">게임</div>' + tog('sound', '효과음', '전투 효과음 · 환경음') + tog('vib', '진동', '피격 · 카운터 시 진동') +
@@ -426,6 +426,7 @@
       '<div class="srow"><span>화질<small class="t-faint">해상도 · 낮을수록 가볍다</small></span><span class="segs" data-seg="quality">' +
         ['low','auto','high'].map(function(q){ return '<button class="'+(SET.quality===q?'is-on':'')+'" data-q="'+q+'">'+({low:'낮음',auto:'자동',high:'높음'})[q]+'</button>'; }).join('') + '</span></div>' +
       tog('lights', '조명 효과', '벙커 등 · 그림자 (끄면 가벼워짐)') +
+      tog('bloom', '빛 번짐', '램프·불꽃·궤적이 빛나 보인다 (끄면 가벼워짐)') +
       '<div class="hr"></div><div class="label-ko">화면</div>' +
       '<div class="srow"><span>전체 화면</span><button class="btn btn--sm btn--ghost" data-act="fs">전환</button></div>' +
       '<div class="srow"><span>개발 메뉴<small class="t-faint">화면 전환 독 · 컨셉 보드</small></span><button class="tog'+(dev?' is-on':'')+'" data-tog="dev" role="switch" aria-checked="'+dev+'"><i></i></button></div>' +
