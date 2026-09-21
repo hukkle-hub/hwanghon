@@ -57,11 +57,24 @@
         p.kbT = Math.max(0, p.kbT - dt); p.moving = false; return;
       }
       if (p.rollT > 0){ moveCircle(map, p, p.rollDx*dt, p.rollDy*dt); p.rollT -= dt; return; }
-      if (!p.moving || p.lockT > 0) return;
-      if (m > 1){ sx/=m; sy/=m; }
-      moveCircle(map, p, sx*speed*dt, sy*speed*dt*DEPTH);
-      p.face = Math.abs(sx) > Math.abs(sy)*0.9 ? (sx < 0 ? 'left' : 'right') : (sy < 0 ? 'up' : 'down');
-      p.aim = Math.atan2(sy, sx);
+      /* 가속·감속. 예전엔 스틱을 미는 «그 프레임» 에 전속 4.6 m/s 가 됐다.
+         정지에서 전속까지 한 프레임이면 달리기 클립이 이미 발이 날고 있는 자세에서
+         시작해 «출발» 이 보이지 않는다. 멈출 때도 같은 이유로 뚝 끊긴다.
+         출발은 빠르게(0.11초), 멈춤은 조금 더 끌어(0.16초) 체중을 남긴다.
+         p.spd 는 0~1 — 던전은 이 값으로 달리기 배속도 같이 늦춘다 (docs/design/56). */
+      /* lockT 가 없는 호출자도 있다 — «undefined <= 0» 은 false 라, 뒤집어 쓰면
+         그런 호출자는 영영 안 움직인다 (실제로 탐사 시험이 「movement stuck」으로 잡아냈다). */
+      var want = (p.moving && !(p.lockT > 0)) ? Math.min(1, m) : 0;
+      var tau = want > (p.spd || 0) ? 0.11 : 0.16;
+      p.spd = (p.spd || 0) + (want - (p.spd || 0)) * (1 - Math.exp(-dt / tau));
+      if (p.spd < 0.02){ p.spd = 0; return; }
+      if (m > 1e-6){                       /* 스틱을 놓아도 마지막 방향으로 미끄러져 멈춘다 */
+        if (m > 1){ sx/=m; sy/=m; }
+        p.face = Math.abs(sx) > Math.abs(sy)*0.9 ? (sx < 0 ? 'left' : 'right') : (sy < 0 ? 'up' : 'down');
+        p.aim = Math.atan2(sy, sx);
+      }
+      var a = p.aim == null ? 0 : p.aim;
+      moveCircle(map, p, Math.cos(a)*p.spd*speed*dt, Math.sin(a)*p.spd*speed*dt*DEPTH);
     };
     /* 넉백: 맞은 방향으로 len px 를 dur 초에 걸쳐 밀려난다 (벽에 막히면 거기까지). */
     W.knock = function(p, sx, sy, len, dur){

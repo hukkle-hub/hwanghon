@@ -8,7 +8,11 @@ test('two independent players damage one shared boss only at contact',()=>{
 test('client positions, damage and excessive movement speed cannot change authority',()=>{
  const r=new Raid('d01',members),p=r.players.get('a'),x=p.x,y=p.y,hp=p.hp;
  r.input('a',{type:'teleport',x:9000,y:9000,hp:999999});assert.equal(p.x,x);assert.equal(p.hp,hp);
- r.input('a',{type:'move',x:10000,y:0,damage:999999});tick(r,.1);assert.ok(r.world.dist(x,y,p.x,p.y)<=24);tick(r,.5);const stopped=p.x;tick(r,.5);assert.equal(p.x,stopped,'stale input expires');
+ /* 낡은 입력은 만료된다. 「한 프레임도 안 움직인다」로 못 박으면 안 된다 — 이제 감속이
+    있어서 입력이 끊긴 뒤에도 잠깐 미끄러지며 선다 (docs/design/56). 「선다」를 본다. */
+ r.input('a',{type:'move',x:10000,y:0,damage:999999});tick(r,.1);assert.ok(r.world.dist(x,y,p.x,p.y)<=24);tick(r,.5);const stopped=p.x;tick(r,.5);
+ assert.ok(Math.abs(p.x-stopped)<3,'stale input expires: 멈춤 뒤 '+(p.x-stopped).toFixed(2)+'px 더 갔다');
+ assert.equal(p.spd,0,'완전히 선다');const rest=p.x;tick(r,.5);assert.equal(p.x,rest,'선 뒤에는 한 픽셀도 안 움직인다');
 });
 test('one counter interrupts the shared attack; other player cannot duplicate it',()=>{
  const r=fight();for(let i=0;i<1000;i++){r.tick(.01);if(r.boss.state==='telegraph'&&r.boss.tele<=.03)break;}

@@ -564,10 +564,13 @@ import { runRate as calcRunRate } from './locomotion.js';
     if(!moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
       playOnce('brake'); ain.braked=1; }
     else if(moving) ain.braked=0;
-    var want=ain.dead?'idle':guard?'guard':P.rollT>0?'run':moving?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
-    if(ain.base==='run' && ain.act){                    /* 스틱을 살살 밀면 다리도 천천히 돈다 */
-      var kst=curStick(), km=kst?Math.min(1,Math.hypot(kst.sx,kst.sy)):1;
-      ain.act.timeScale=RUN_RATE*Math.max(0.45, km);
+    /* 감속 중에도 달리기 자세를 유지한다 — 스틱을 놓는 «그 프레임» 에 대기로 끊기면
+       감속을 넣은 의미가 없다 (docs/design/56). */
+    var want=ain.dead?'idle':guard?'guard':P.rollT>0?'run':(moving||(P.spd||0)>0.12)?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
+    if(ain.base==='run' && ain.act){                    /* 천천히 가면 다리도 천천히 돈다 */
+      /* 스틱이 아니라 «실제 속도»(P.spd) 를 본다 — 가속·감속이 생긴 뒤로는 스틱을 끝까지
+         밀어도 출발 직후엔 아직 느리다. 스틱을 보면 그 구간에서 다시 미끄러진다. */
+      ain.act.timeScale=RUN_RATE*Math.max(0.45, P.spd==null?1:P.spd);
     }
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
@@ -762,6 +765,22 @@ import { runRate as calcRunRate } from './locomotion.js';
        · 보스 쪽에서 나를 향하는 방향으로 밀어낸다 (벽이 있으면 벽까지만)
        · 밀리는 동안 몸이 그 방향으로 기운다 — 어느 쪽에서 맞았는지가 보인다
      규칙 값은 js/dungeons.js 의 R.stagger 에 있다. */
+  /* 방향을 홱 틀 때 몸을 기울인다 (뱅킹). 회전 클립이 없어서 지금은 제자리에서 도는데,
+     달리는 중에 각속도만큼 안쪽으로 기울여 주면 «돌고 있다» 가 읽힌다.
+     회전 클립을 구하면 이 자리를 그 클립이 대신한다 (docs/design/56 §3). */
+  var bank=0, prevYaw=null;
+  function tickBank(dt){
+    if(dt<=0) return;
+    var y=ain.root.rotation.y;
+    if(prevYaw==null){ prevYaw=y; return; }
+    var d=y-prevYaw; while(d>Math.PI)d-=Math.PI*2; while(d<-Math.PI)d+=Math.PI*2;
+    prevYaw=y;
+    var rate=d/dt;                                    /* rad/s — 양수면 왼쪽으로 돈다 */
+    /* rate/6.0 — 3.2 로 나누면 웬만한 회전이 전부 상한(14.9°)에 붙어 «항상 기울어진»
+       그림이 된다. 6.0 이면 급회전만 상한에 닿고 완만한 회전은 그만큼만 기운다. */
+    var want=Math.max(-1,Math.min(1,rate/6.0))*0.26*Math.min(1,(P.spd||0)/0.6);
+    bank+=(want-bank)*(1-Math.exp(-dt/0.10));
+  }
   var lean={x:0,z:0,t:0,dur:0.001};
   function hitReact(e, src){
     var from=src||Bs;
@@ -774,17 +793,24 @@ import { runRate as calcRunRate } from './locomotion.js';
     if(ain.clips[clip]) playOnce(clip,{speed:e.tier==='heavy'?1.15:1.4});
     else if(!e.guarded) playOnce('hit',{speed:1.4});
   }
+  /* 몸통 기울기는 한 군데서만 쓴다 — 피격 반동(lean)과 회전 뱅킹(bank)을 더해서
+     ain.model.rotation 에 «한 번» 쓴다. 둘이 따로 쓰면 나중에 쓴 쪽이 앞을 지운다. */
   function tickLean(dt){
-    if(lean.t<=0){ if(ain.model){ ain.model.rotation.x=0; ain.model.rotation.z=0; } return; }
-    lean.t=Math.max(0,lean.t-dt);
-    var k=lean.t/lean.dur, a=0.30*k*k;                 /* rad — 뒤로 넘어가는 각 */
+    tickBank(dt);
     if(!ain.model) return;
-    /* 월드 방향을 캐릭터 로컬로 «되돌린다». three 의 Y 회전은
-       world = (cos·lx + sin·lz, −sin·lx + cos·lz) 이므로 역변환은 아래와 같다.
-       (처음에 정변환을 적어 뒀다가 유도해서 고쳤다 — 그대로 뒀으면 맞은 반대쪽으로 기울었다.) */
-    var yaw=ain.root.rotation.y, cy=Math.cos(yaw), sy=Math.sin(yaw);
-    var lx=lean.x*cy-lean.z*sy, lz=lean.x*sy+lean.z*cy;
-    ain.model.rotation.x=a*lz; ain.model.rotation.z=-a*lx;
+    var ax=0, az=0;
+    if(lean.t>0){
+      lean.t=Math.max(0,lean.t-dt);
+      var k=lean.t/lean.dur, a=0.30*k*k;               /* rad — 뒤로 넘어가는 각 */
+      /* 월드 방향을 캐릭터 로컬로 «되돌린다». three 의 Y 회전은
+         world = (cos·lx + sin·lz, −sin·lx + cos·lz) 이므로 역변환은 아래와 같다.
+         (처음에 정변환을 적어 뒀다가 유도해서 고쳤다 — 그대로 뒀으면 반대쪽으로 기울었다.) */
+      var yaw=ain.root.rotation.y, cy=Math.cos(yaw), sy=Math.sin(yaw);
+      var lx=lean.x*cy-lean.z*sy, lz=lean.x*sy+lean.z*cy;
+      ax=a*lz; az=-a*lx;
+    }
+    ain.model.rotation.x=ax;
+    ain.model.rotation.z=az+bank;                      /* 도는 쪽으로 기운다 */
   }
   var zoomPulse=0; function zoomKick(){ zoomPulse=1; }
   var pendingContacts=[];
