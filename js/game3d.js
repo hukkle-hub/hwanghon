@@ -114,7 +114,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
      여기서는 바짝 붙고 살짝 옆으로 비껴서 몸짓·무기·의상이 다 보이고 타격이 코앞에서
      터지게 한다 — 캐릭터와 전투에 올인하는 게임이니 그 둘이 화면을 차지해야 한다.
      가까울수록 시야가 좁아지므로 FOV 를 함께 넓힌다 (50 → 58). */
-  var CAM={ tauLock:0.16, tauFight:0.30, tauMove:0.26, idleHold:true,
+  var CAM={ tauLock:0.22, tauFight:0.34, tauMove:0.30, idleHold:true,   /* 가까워진 만큼 느슨하게 */
             lookAhead:1.1,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
             pitchMove:0.26, pitchFight:0.19,   /* 위에서 내려다보지 않는다 — 등 뒤 눈높이 */
             shoulder:0.52,            /* 카메라를 오른쪽으로 (m) — 캐릭터가 화면 왼쪽 삼분점에 */
@@ -126,7 +126,16 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
                우리 모바일 화면은 2.22:1 로 16:9 보다 넓어서, 세로 50° 여도 가로는 92° 다
                — 원본이 우리보다 좁지 넓지 않다. */
             fov:50, fovDash:57, fovHit:46, fovTau:0.10,
-            sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
+            sizeDist:0.55,            /* 보스가 클수록 물러난다 (보스 높이 m 당) */
+            /* 회전 — 어깨 너머로 오면서 «부자연스럽다» 는 지적이 나왔다. 세 가지가 빠져 있었다.
+               ① 각속도 상한이 없었다. 보스를 지나쳐 뒤쪽 방향이 뒤집히면 지수 감쇠만으로는
+                  180° 를 두 τ 만에 휩쓴다. 멀리 있을 땐 견뎠지만 3.9 m 에서는 폭력적이다.
+               ② 붙으면 목표각이 발산한다. atan2(플레이어−보스) 는 둘이 겹칠수록 불안정해서,
+                  근접에서 돌면 목표각이 요동치고 카메라가 그걸 그대로 쫓았다.
+               ③ 미세 떨림을 무시하는 구간이 없어 1도짜리 흔들림도 계속 따라갔다. */
+            maxYawRate:2.2,           /* rad/s — 126°/s. 이보다 빨리는 절대 안 돈다 */
+            yawDead:0.05,             /* 2.9° 안쪽은 안 쫓는다 */
+            nearGap:3.2, nearDamp:0.55 };   /* 이 거리 안으로 붙으면 그만큼 느리게 따라간다 */
   var fovWant=CAM.fov, bossTall=0;
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?Math.min(L.camDist, MOBILE?4.3:4.6):(MOBILE?4.3:4.6))
     /* 어깨 너머. 벽 천장(camClear 가 뒤쪽 벽까지로 자른다, 훈련장 7.9 m)에 한참 못 미치므로
@@ -1056,7 +1065,12 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       /* 멈춰 있으면 그대로 둔다 — 서 있을 때까지 카메라가 돌면 멀미가 난다 */
       if(want!=null && !(CAM.idleHold && !P.moving && !battle)){
         var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
-        camYaw+=dy*(1-Math.exp(-dt/tau)); }
+        if(Math.abs(dy)<CAM.yawDead) dy=0;                       /* ③ 미세 떨림은 무시 */
+        /* ② 붙을수록 목표각이 요동치므로 천천히 — gap 은 전투 중에만 뜻이 있다 */
+        var tEff=tau*(battle?1+Math.max(0,CAM.nearGap-gap)*CAM.nearDamp:1);
+        var step=dy*(1-Math.exp(-dt/tEff));
+        var lim=CAM.maxYawRate*dt;                               /* ① 휙 도는 것 방지 */
+        camYaw+=Math.max(-lim, Math.min(lim, step)); }
     }
     /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
     var pitchWant=battle?CAM.pitchFight:CAM.pitchMove;
