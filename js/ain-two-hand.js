@@ -20,6 +20,12 @@ export const AIN_SKILL_PATHS={
 // Shaft block, short brace, then a distinct release. Perfect counters travel
 // farther through the follow-through without changing authoritative timing.
 export const AIN_RAISED_CONTACT={smash:[.25,-.05,.25,-.20,.90,.15],counter:[.25,.10,.25,-.35,.90,-.30]};
+// 높은 부위(2.7 m 위)를 겨눌 때의 스킬1 접촉 자세. 손으로 맞춘 값이 아니라
+// «재서» 찾은 값이다 — punch.py 로 skill1 타이밍을 고치자 옛 값이 클립과 어긋나
+// 보정이 오히려 멀어지게 만들었다 (0.492 → 0.568, 반경 0.488). 좌표 하강으로
+// 다시 찾았다. 상수로 빼 둔 건 그 탐색이 이 값을 바꿔 가며 재야 하기 때문이다.
+// tools/3d 검수: scratchpad/highkey.mjs · docs/design/55-high-reach.md
+export const AIN_HIGH_CONTACT={skill1:[.253,.767,.557,-.212,1.1,-.51]};
 const counter=[[0,ready],[.16,[0,-.08,.31,-.98,.10,.12]],[.24,[0,-.08,.31,-.98,.10,.12]],[.42,[.06,-.13,.40,-.8,.12,.6]],[.70,[.13,-.18,.31,-.85,.1,.4]],[1,ready]];
 const perfectCounter=counter.map(([t,p])=>[t,p.slice()]);
 perfectCounter[4]=[.70,[.16,-.21,.32,-.8,-.18,.55]];
@@ -109,7 +115,7 @@ export function makeAinTwoHand(model,root,slot){
    if(high>0){
     // Raised hook strike: shaft leans back while the hook travels above the
     // hands. Both palms still use the common reach-constrained weapon pose.
-    const highKeys=keys.filter(([phase])=>phase!==.16).map(([phase,p])=>[phase===.70?.86:phase,phase===.42?[.44,.58,.37,-.025,1,-.66]:p]);
+    const highKeys=keys.filter(([phase])=>phase!==.16).map(([phase,p])=>[phase===.70?.86:phase,phase===.42?AIN_HIGH_CONTACT.skill1:p]);
     const highSpec=path(highKeys,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],highSpec[i],high);
     weaponQ.slerp(pathRotation(highKeys,t),high);
    }
@@ -119,7 +125,13 @@ export function makeAinTwoHand(model,root,slot){
   // Fade in/out around contact so target selection cannot snap the idle pose.
   // The shared reach solver below still limits both arms together.
   if(target&&['skill1','skill3','ult','counter','smash','attack3'].includes(name)){
-   const local=root.worldToLocal(target.clone()),weight=T.MathUtils.smootherstep(t,0,.32)*(1-T.MathUtils.smootherstep(t,.55,1))
+   // 언제 조준 보정을 켜는가. 기본은 «동작 초반부터 접점까지» 인데, 몸이 도는 기술은
+   // 그러면 안 된다 — 도는 동안 어깨가 같이 돌기 때문에, 고정된 세계 좌표를 향해
+   // 팔을 계속 끌면 팔꿈치 분기가 뒤집혀 한 프레임에 13.3° 튄다 (skill3Target).
+   // 몸이 도는 둘(피의 회전·궁극기)은 «한 바퀴가 끝나 갈 무렵» 부터 조준한다.
+   // [켜지기 시작, 다 켜짐, 꺼지기 시작, 다 꺼짐]. docs/design/55-high-reach.md
+   const WIN=name==='skill3'?[.44,.58,.74,1]:name==='ult'?[.34,.50,.74,1]:[0,.32,.55,1];
+   const local=root.worldToLocal(target.clone()),weight=T.MathUtils.smootherstep(t,WIN[0],WIN[1])*(1-T.MathUtils.smootherstep(t,WIN[2],WIN[3]))
     *T.MathUtils.smootherstep(local.y,1.9,2.1)*(1-T.MathUtils.smootherstep(local.y,2.7,2.95))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.8,2.5));
    if(weight>0){
     const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):name==='counter'?V(-.28,2.4,.80):name==='attack3'?V(-.20,2.4,.65):V(-.16,2.4,.5));
@@ -127,7 +139,9 @@ export function makeAinTwoHand(model,root,slot){
     if(name==='smash')delta.set(T.MathUtils.clamp(delta.x,-.08,.16),0,0);
     if(name==='counter')delta.set(T.MathUtils.clamp(delta.x,-.12,.22),0,T.MathUtils.clamp(delta.z,-.2,.1));
     if(name==='attack3')delta.set(T.MathUtils.clamp(delta.x,-.12,.12),0,T.MathUtils.clamp(delta.z,-.08,.1));
-    center.add(delta.multiplyScalar(weight*(['counter','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,name==='attack3'?.29:.28,.42):1)).applyQuaternion(root.getWorldQuaternion(Q())));
+    /* 카운터의 조준 경사로를 넓혔다 (.28~.42 → .20~.50). 좁으면 그 짧은 구간에
+       보정이 급히 들어와 팔꿈치가 8.27° 튄다 — 넓히면 5.33° 로 내려간다. */
+    center.add(delta.multiplyScalar(weight*(['counter','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,name==='attack3'?.29:.20,.50):1)).applyQuaternion(root.getWorldQuaternion(Q())));
    }
   }
   const shaftQ=frame.clone().multiply(weaponQ);

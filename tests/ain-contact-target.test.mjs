@@ -20,7 +20,10 @@ test('authored attack contact intersects measured training core envelope without
    if(coords[1]>3&&name!=='skill1')continue; // Other high-strike silhouettes are not yet validated.
    rig.restore();mixer.update(0);const target=new T.Vector3(...coords);
    rig.apply({id:2,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name);
-   if(name==='skill1')assert.ok(measureAinBladeContact(weapon,target).distance>radius,'negative control: legacy pose must reproduce miss');
+   // 음성 대조 — 적응 보정이 «실제로 하는 일» 이 있는지 본다. 낮은 표적(2.58 m)은
+   // punch.py 로 타이밍을 고친 뒤 보정 없이도 닿는다 (0.079 < 0.39) — 거기서는 대조가
+   // 성립하지 않는다. 팔이 못 미치는 높은 표적으로 옮겼다. docs/design/55-high-reach.md
+   if(name==='skill1'&&coords[1]>3)assert.ok(measureAinBladeContact(weapon,target).distance>radius,'negative control: legacy pose must reproduce miss');
    rig.restore();mixer.update(0);
    rig.apply({id:2,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name,target);
    const corrected=measureAinBladeContact(weapon,target).distance;t.diagnostic(name+' corrected '+coords[1]+'m: '+corrected.toFixed(4));
