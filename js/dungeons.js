@@ -25,7 +25,12 @@
        «회피로 빠져나갈 수 있는 시점» 이 벽시계 기준으로 뒤로 밀린다. +25% 만 올려도
        tests/combat-quality.test.cjs 의 입력 버퍼 계약이 깨졌다. 데이터 한 줄이 아니라
        combat.js 에서 취소 경계를 히트스톱과 분리해야 하는 건이다 (docs/design/50 §2). */
-    hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
+    /* 히트스톱. 평타를 통째로 올리는 건 안 된다 — 행동 시계가 멈추면 «회피로 빠져나갈 수
+       있는 시점» 이 벽시계 기준으로 밀려 입력 버퍼 계약이 깨진다 (docs/design/50 §2).
+       대신 «제대로 맞춘 순간» 에 건다. 카운터는 이미 확정된 한 박자라 빠져나갈 필요가 없다.
+       흘림 → 튕김 → 맞대기 로 갈수록 오래 멈춘다. 마영전의 힘겨루기가 이 자리다. */
+    hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08,
+               deflect:0.09, clash:0.34 },
     execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
     /* 무기별 리듬 — 몬헌의 «무기 개성». 지금까지 네 캐릭터가 같은 박자로 휘둘렀다.
        dur 은 모션 길이(클수록 느리고 무겁다), stop 은 히트스톱, st 는 스태미나 소모.
@@ -39,7 +44,13 @@
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
     dodge:   { iframes:0.30, cooldown:0.45 },
     guard:   { reduce:0.70, holdMs:220 },
-    counter: { window:0.25, perfect:0.10, mult:2.5, perfectMult:3.0, posture:30, ult:18 },
+    /* 카운터 3단. 남은 예고 시간(E.tele)이 «작을수록» 늦게, 즉 정확하게 받아친 것이다.
+         tele <= perfect  → 맞대기 clash  : 둘 다 멈춘다. 힘겨루기.
+         tele <= mid      → 튕김   repel  : 적이 밀려나고 반격창이 열린다.
+         그 밖            → 흘림   deflect: 스쳐 흘린다. 이득은 작다.
+       숙련도(R.counter.bonus)가 바깥 창을 넓히면 중간 경계도 같은 비율로 따라 넓어진다. */
+    counter: { window:0.25, perfect:0.10, mid:0.17, mult:2.5, perfectMult:3.0, deflectMult:1.7,
+               posture:30, tierPosture:{deflect:0.47, repel:1.0, clash:1.5}, ult:18 },
     combo:   { gap:0.55, mults:[1.0,1.0,1.1,1.2], smash:[1.6,2.0,2.6,3.4], smashPosture:[12,18,28,45], smashSt:[10,12,14,18], smashHold:0.2 },   /* 마영전식: 일반 4연타 + 스매시(타수별 배율) */
     weak:    { weak:1.5, broken:1.25, normal:1.0 },
     bleed:   { chance:0.07, dur:3, tickRate:0.20, maxStacks:3 },

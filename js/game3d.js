@@ -565,18 +565,21 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     var pil=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.55,6,20,1,true), fxMat(color,0.6)); pil.position.set(bp.x,3,bp.z); fxPush(pil, 0.7, function(o,k,dt){ o.rotation.y+=dt*4; o.scale.set(1+k*1.6,1,1+k*1.6); o.material.opacity=0.6*(1-k); });
     camZoom=0.78; }
   /* 카운터: 무기가 맞물리는 지점에서 불꽃이 옆으로 뿜어져 나온다 */
-  function fxClash(perfect){
+  /* g = 세기 0..1. 흘림 0.30 / 튕김 0.62 / 맞대기 1.0 — 예전 호출(perfect 만)도 받는다. */
+  function fxClash(perfect, tier){
+    var g=tier==='clash'?1:tier==='repel'?0.62:tier==='deflect'?0.30:(perfect?1:0.55);
+    var LI=function(lo,hi){return lo+(hi-lo)*g;}, LC=function(lo,hi){return g>=0.8?hi:lo;};
     var a=ain.root.position, b=boss.root.position;
     var p=new THREE.Vector3((a.x*0.62+b.x*0.38), 1.25, (a.z*0.62+b.z*0.38));
     var ax=[b.x-a.x, b.z-a.z], m=Math.hypot(ax[0],ax[1])||1, sx=-ax[1]/m, sz=ax[0]/m;   /* 접촉면과 수직인 옆 방향 */
-    burst(p, perfect?22:14, perfect?0xFFF1C8:0xF0E4E4, [sx,sz]);
-    burst(p, perfect?14:8, 0xFFC864, [-sx,-sz]);
-    var ring=new THREE.Mesh(new THREE.RingGeometry(0.18,0.34,28), fxMat(perfect?0xFFF1C8:0xE8DCC0, 0.95));
+    burst(p, Math.round(LI(10,22)), LC(0xF0E4E4,0xFFF1C8), [sx,sz]);
+    burst(p, Math.round(LI(6,14)), 0xFFC864, [-sx,-sz]);
+    var ring=new THREE.Mesh(new THREE.RingGeometry(0.18,0.34,28), fxMat(LC(0xE8DCC0,0xFFF1C8), 0.95));
     ring.position.copy(p); ring.lookAt(cam.position);
-    fxPush(ring, perfect?0.22:0.16, function(o,k){ var sc=0.6+k*(perfect?2.2:1.5); o.scale.set(sc,sc,1); o.material.opacity=0.95*(1-k); });
-    var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:perfect?0xFFF6E0:0xFFE6B8, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 }));
+    fxPush(ring, LI(0.13,0.22), function(o,k){ var sc=0.6+k*LI(1.2,2.2); o.scale.set(sc,sc,1); o.material.opacity=0.95*(1-k); });
+    var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:LC(0xFFE6B8,0xFFF6E0), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 }));
     fl.position.copy(p); fl.scale.set(1.0,1.0,1);
-    fxPush(fl, perfect?0.16:0.12, function(o,k){ o.material.opacity=0.65*(1-k); o.scale.setScalar(1+k*.5); });
+    fxPush(fl, LI(0.10,0.16), function(o,k){ o.material.opacity=0.65*(1-k); o.scale.setScalar(1+k*.5); });
     return p;
   }
   /* 몬스터헌터식: 맞는 순간 화면이 멈추고, 그 «멈춘 프레임» 에 충격 표식이 남았다가 궤도가 이어진다.
@@ -680,7 +683,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       case 'whiff': if(!e.timed) ainAttack('light', 1); SFX.play('swing'); num(above(P.x,P.y,2.1), e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
       /* 카운터: 잠깐 무기를 맞댔다가 밀어낸다 — 맞물림(정지+불꽃) → 밀림 → 벤다 */
       case 'counter': SFX.play('counter', e.perfect);
-        fxClash(e.perfect);                                              /* 동작 자체는 actionstart 가 'counter' 클립으로 재생한다 */
+        fxClash(e.perfect, e.tier);                                              /* 동작 자체는 actionstart 가 'counter' 클립으로 재생한다 */
         var cax=[boss.root.position.x-ain.root.position.x, boss.root.position.z-ain.root.position.z];
         var kx=Bs.x-P.x, ky=Bs.y-P.y, km=Math.hypot(kx,ky)||1;
         slowmo(e.perfect?0.25:0.4, e.perfect?120:80);                 /* 맞물린 순간의 «멈춤» */

@@ -136,3 +136,36 @@ test('hit stop is layered by strength, not one flat value',()=>{
  assert.ok(h.smash>=h.chain*1.5&&h.chain>h.light,'약타 < 연타 < 스매시');
  assert.ok(h.execute>h.brk&&h.brk>h.counter,'처형 > 부위파괴 > 카운터');
 });
+
+/* 카운터 3단 — 흘림 / 튕김 / 맞대기 (docs/design/51).
+   히트스톱을 평타 전체에 걸면 회피 취소 경계가 밀려 입력 버퍼가 깨진다. 그래서
+   «제대로 맞춘 순간» 에만 건다. 마영전의 힘겨루기가 이 자리다. */
+test('counter splits into deflect / repel / clash by how late you parry',()=>{
+ const seen={};
+ for(const [left,want] of [[.24,'deflect'],[.14,'repel'],[.05,'clash']]){
+  /* 던전 설정이 규칙보다 우선이다 (D.counterWindow || R.counter.window) — dummy 로 덮는다 */
+  const b=battle({patterns:[pat],dummy:{counterWindow:.30,perfectWindow:.08,midWindow:.18}});
+  tele(b,left);b.input('attack');
+  const e=b.drain().find(x=>x.t==='counter');
+  assert.ok(e,`${want}: 카운터가 안 났다`);
+  assert.equal(e.tier,want,`남은 예고 ${left} 는 ${want} 여야 한다 (실제 ${e.tier})`);
+  assert.equal(e.perfect,want==='clash','perfect 는 맞대기일 때만 true');
+  /* 히트스톱은 actionstart 가 아니라 «접점» 에서 걸린다 — 거기까지 돌린 뒤 읽는다 */
+  until(b,x=>x.player.hitstop>0);
+  seen[want]=b.snapshot().player.hitstop;
+ }
+ /* 늦게 받아칠수록 오래 멈춘다 — 그게 긴장감이다 */
+ assert.ok(seen.clash>seen.repel&&seen.repel>seen.deflect,
+   `멈춤이 단계로 길어져야 한다: ${JSON.stringify(seen)}`);
+ assert.ok(seen.clash>=RULES.hitstop.smash*1.5,'맞대기는 스매시보다 확실히 길다');
+});
+
+test('counter tiers scale posture, damage and the follow-up window',()=>{
+ const h=RULES.hitstop, c=RULES.counter;
+ assert.ok(h.clash>h.counter&&h.counter>h.deflect,'흘림 < 튕김 < 맞대기');
+ assert.ok(c.perfectMult>c.mult&&c.mult>c.deflectMult,'배율도 같은 순서');
+ const tp=c.tierPosture;
+ assert.ok(tp.clash>tp.repel&&tp.repel>tp.deflect,'자세 누적도 같은 순서');
+ /* 중간 경계는 던전이 창을 좁히면 같은 비율로 따라 좁아진다 */
+ assert.ok(c.mid>c.perfect&&c.mid<c.window,'mid 는 perfect 와 window 사이');
+});

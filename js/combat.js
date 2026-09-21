@@ -9,6 +9,9 @@
     /* 무기별 리듬 (js/dungeons.js RULES.rhythm). 캐릭터마다 박자가 달라진다. */
     var RH=(R.rhythm||{})[(C&&C.id)||'ain']||{}, rDur=RH.dur||1, rStop=RH.stop||1, rSt=RH.st||1;
     var counterWindow=(D.counterWindow||R.counter.window)+(R.counter.bonus||0), perfectWindow=D.perfectWindow||R.counter.perfect;
+    /* 흘림/튕김 경계. 던전이 창을 좁혀도 같은 비율로 따라 좁아진다. */
+    var midWindow=D.midWindow||(perfectWindow+(counterWindow-perfectWindow)*0.45);
+    function counterTier(tele){ return tele<=perfectWindow+1e-8?'clash':tele<=midWindow+1e-8?'repel':'deflect'; }
     var init=o.player||{};
     var P={hp:init.hp!=null?init.hp:st.hp,st:init.st!=null?init.st:R.stamina.max,ult:init.ult||0,
       guard:false,dodgeT:0,dodgeCd:0,dodgeAgo:99,dodgeThreat:0,lockT:0,stDelay:0,combo:0,comboT:0,
@@ -43,7 +46,7 @@
     function stopBase(opt){
       var h=R.hitstop,f=h.hit||0.08;
       if(opt.execute)return h.execute||h.brk||f;
-      if(opt.counter)return (opt.perfect?h.perfect:h.counter)||f;
+      if(opt.counter)return (opt.tier==='clash'?(h.clash||h.perfect):opt.tier==='deflect'?(h.deflect||h.counter):h.counter)||f;
       if(opt.riposte)return h.smash||f;
       if(opt.kind==='smash'||opt.kind==='ult')return h.smash||f;
       if(opt.skill)return h.chain||f;
@@ -54,7 +57,7 @@
       var weak=p.broken?(policy.exposed||R.weak.broken):p.weak?R.weak.weak:R.weak.normal;
       var guard=p.guardedBy&&p.guardedBy.some(function(id){var q=B.part(id);return q&&!q.broken;})?1-p.guardReduce:1;
       var crit=P.critNext||rand()<st.crit/100;P.critNext=false;
-      var reward=opt.counter?(opt.perfect?R.counter.perfectMult:R.counter.mult):opt.riposte?(opt.riposte==='counter'?(policy.normal==null?1:policy.normal)*1.15:opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
+      var reward=opt.counter?(opt.tier==='clash'?R.counter.perfectMult:opt.tier==='deflect'?(R.counter.deflectMult||R.counter.mult):R.counter.mult):opt.riposte?(opt.riposte==='counter'?(policy.normal==null?1:policy.normal)*1.15:opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
         policy.normal!=null?(opt.skill?policy.skill:policy.normal):1;
       var partyPart=p.hp!=null&&!p.broken?(o.partMult||1):1;
       var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1));
@@ -85,12 +88,13 @@
     function counter(){
       if(E.state!=='telegraph'||E.tele<=0||E.tele>counterWindow||E.pat.counterable===false||P.lockT>0||P.dodgeT>0||!canCancel()||(HK.canCounter&&!HK.canCounter()))return false;
       cancel('counter');P.buffer=null;P.guard=false;
-      var perfect=E.tele<=perfectWindow+1e-8;M.counters++;if(perfect)M.perfect++;
-      E.posture=clamp(E.posture+(E.pat.posture||R.counter.posture),0,R.posture.max);
-      E.state='stagger';E.stagT=0.8;E.tele=0;
-      action('counter','counter',1,{counter:true,perfect:perfect},R.motion.counter);
-      E.stagT=Math.max(E.stagT,P.action.duration+0.25);
-      emit('counter',{perfect:perfect,pattern:E.pat.name});
+      var tier=counterTier(E.tele), perfect=tier==='clash';M.counters++;if(perfect)M.perfect++;
+      var tp=(R.counter.tierPosture||{})[tier]||1;
+      E.posture=clamp(E.posture+(E.pat.posture||R.counter.posture)*tp,0,R.posture.max);
+      E.state='stagger';E.stagT=tier==='clash'?1.0:tier==='repel'?0.8:0.55;E.tele=0;
+      action('counter','counter',1,{counter:true,perfect:perfect,tier:tier},R.motion.counter);
+      E.stagT=Math.max(E.stagT,P.action.duration+(tier==='clash'?0.4:0.25));
+      emit('counter',{perfect:perfect,tier:tier,pattern:E.pat.name});
       if(D.firstCounterUlt&&!firstCounterDone){firstCounterDone=true;P.ult=R.ult.max;emit('ultready',{first:true});}
       if(E.posture>=R.posture.max)down();return true;
     }
@@ -154,7 +158,7 @@
       var amount=0;
       a.opt.kind=a.kind;a.opt.combo=a.opt.tier!=null?a.opt.tier+1:P.combo;
       contacts.forEach(function(h){amount+=damage(h.part.id,a.mult/targets.length,Object.assign({},a.opt,{contact:typeof h.contact==='object'?h.contact:null}));});
-      if(a.opt.counter&&!E.dead){if(a.opt.perfect){P.riposteKind='counter';P.riposteT=Math.max(0,a.duration-a.elapsed)+.65;}emit('counterfollowup',{window:a.opt.perfect?.65:.35,perfect:!!a.opt.perfect});}
+      if(a.opt.counter&&!E.dead){if(a.opt.perfect){P.riposteKind='counter';P.riposteT=Math.max(0,a.duration-a.elapsed)+.65;}emit('counterfollowup',{window:a.opt.perfect?.65:a.opt.tier==='repel'?.45:.25,perfect:!!a.opt.perfect,tier:a.opt.tier||null});}
       if(a.opt.riposte){M.ripostes++;if(a.opt.riposte!=='counter')E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
       if(a.kind==='smash')E.posture=clamp(E.posture+R.combo.smashPosture[a.opt.tier],0,R.posture.max);
       if(a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
