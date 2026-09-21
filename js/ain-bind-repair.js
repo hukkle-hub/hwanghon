@@ -70,10 +70,39 @@ export function repairAinBind(model){
  }
  report.changed=changed;model.userData.ainBindRepair=report;return report;
 }
+/* 골반에 «한 바퀴» 를 얹는다. at 에서 회전이 정확히 끝나 정면을 보고, 그 앞은
+   가속·감속(스무스스텝)이라 타격 직전이 제일 빠르다. 그 뒤는 회전 없음.
+   트랙이 성기면 계단이 보이므로 균일하게 다시 뜬다. */
+function spinHips(result,spin){
+ const track=result.tracks.find(t=>/Hips\.quaternion$/.test(t.name));
+ if(!track)return;
+ const N=48,dur=result.duration,src=track.createInterpolant(),q=new T.Quaternion(),y=new T.Quaternion();
+ const times=new Float32Array(N+1),values=new Float32Array((N+1)*4),full=spin.turns*Math.PI*2;
+ let prev=null;
+ for(let i=0;i<=N;i++){
+  const t=dur*i/N,u=Math.min(1,(t/dur)/spin.at),e=u*u*(3-2*u);      /* 스무스스텝 */
+  q.fromArray(Array.from(src.evaluate(t)));
+  y.setFromAxisAngle(new T.Vector3(0,1,0),full*e);
+  q.premultiply(y);                                                  /* 부모 공간의 Y 축 = 세계 요우 */
+  if(prev&&q.dot(prev)<0)q.set(-q.x,-q.y,-q.z,-q.w);                 /* 부호 이어 붙이기 */
+  times[i]=t;q.toArray(values,i*4);prev=q.clone();
+ }
+ track.times=times;track.values=values;
+}
+
 export function repairAinClips(clips,report){return clips.map(clip=>{
  // Reuse coherent full-body source motions, not a torso-only 360 twist.
  // Keep public clip names/durations and immutable source GLB animations.
- const source=clips.find(c=>c.name===({skill3:'ult',skill4:'guard',ult:'smash'}[clip.name]))||clip;
+ // skill3(피의 회전)은 «자기 클립 + 몸 회전» 으로 만든다. 예전엔 ult 소스를 빌렸는데,
+ // 그 소스는 352° 를 다 돌고 «나서야» 정면을 보고 그때는 속도가 남아 있지 않았다.
+ // 앵커를 쓸어 봐도 「정면(0.3 m/s)」 이나 「타격(11 m/s, 등을 보임)」 중 하나만 고를 수
+ // 있었다 (docs/design/49 §8.3). 회전하며 베는 소스가 따로 없으므로 합성한다:
+ // 가로 베기(skill3 자기 클립, 최고속 35.2 m/s · 판정과 +0.058)에 골반 요우 한 바퀴를
+ // 얹어, 「한 바퀴를 끝내는 순간 = 베는 순간」이 되게 한다. at 은 판정(0.55)이 아니라
+ // 베기의 최고속(0.61)에 맞춘다 — 쓸어 보니 그때가 판정 프레임의 정면(−2°)도, 속도
+ // (10.9 m/s)도 가장 좋았다. 0.55 에 맞추면 그 순간 각속도가 0 이라 오히려 느려진다.
+ const SPIN={skill3:{turns:1, at:.61}}[clip.name];
+ const source=clips.find(c=>c.name===({skill4:'guard',ult:'smash'}[clip.name]))||clip;
  const result=source.clone();result.name=clip.name;
  if(source.duration!==clip.duration)for(const track of result.tracks)track.scale(clip.duration/source.duration);
  // Align the reused body's impact to the destination combat clip contact.
@@ -94,6 +123,7 @@ export function repairAinClips(clips,report){return clips.map(clip=>{
   track.times=new Float32Array(times.map(t=>{const u=t/clip.duration;return clip.duration*(u<=from?u*to/from:to+(u-from)*(1-to)/(1-from));}));
   track.values=new Float32Array(values);
  }
+ if(SPIN)spinHips(result,SPIN);
  result.duration=clip.duration;
  result.tracks=result.tracks.map(track=>{
   if(!track.name.endsWith('.position'))return track;

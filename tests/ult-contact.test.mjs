@@ -70,3 +70,21 @@ test('궁극기의 최고속 지점이 판정과 같은 자리에 있다', async
   const t=(last+0.5)/sp.length;
   assert.ok(Math.abs(t-0.50)<0.12, '타격 봉우리가 t='+t.toFixed(3)+' — 판정 0.50 과 0.12 넘게 벌어졌다');
 });
+
+test('피의 회전은 판정 프레임에 «한 바퀴를 끝내고 정면을 보며» 친다', async () => {
+  const {root, clips}=await played();
+  const {sp, ext, yaw}=trace(root, clips.find(c=>c.name==='skill3'));
+  const k=Math.round(0.55*sp.length);                   /* clipContacts.skill3 = 0.55 */
+  /* 최고속(35 m/s)은 베기의 정점인 0.61 에 있고, 판정 프레임 0.55 는 그 직전이다.
+     고치기 전에는 이 자리가 0.3 m/s 였다 — 아무것도 안 하는 프레임에 피해가 떴다. */
+  assert.ok(sp[k]>8, '판정 순간 손 속도가 '+sp[k].toFixed(1)+' m/s — 고치기 전에는 0.3 이었다');
+  assert.ok(ext[k]>0.40, '판정 순간 팔이 '+ext[k].toFixed(2)+' m — 뻗어 있어야 한다');
+  assert.ok(Math.abs(yaw[k])<0.30, '판정 순간 상대를 봐야 한다 (요우 '+(yaw[k]*180/Math.PI).toFixed(0)+'°)');
+  const vmax=Math.max(...sp), pk=(sp.indexOf(vmax)+0.5)/sp.length;
+  assert.ok(Math.abs(pk-0.55)<0.12, '베기의 정점이 t='+pk.toFixed(3)+' — 판정 0.55 와 0.12 넘게 벌어졌다');
+  assert.ok(vmax>25, '최고속 '+vmax.toFixed(1)+' m/s — 기본 공격(32~42) 대역이어야 한다');
+  /* 그리고 한 바퀴를 «실제로» 돈다 — 팔만 휘두르는 것이 아니다 */
+  let total=0;
+  for(let i=1;i<yaw.length;i++) total+=Math.atan2(Math.sin(yaw[i]-yaw[i-1]),Math.cos(yaw[i]-yaw[i-1]));
+  assert.ok(Math.abs(total)>5.5, '골반 순회전 '+(Math.abs(total)*180/Math.PI).toFixed(0)+'° — 한 바퀴여야 한다');
+});

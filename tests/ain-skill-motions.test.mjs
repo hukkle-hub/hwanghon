@@ -12,10 +12,27 @@ async function load(name){const b=await readFile('art/3d/'+name+'.glb'),l=new GL
 test('five skills have distinct paths; spin uses full-body rotation and resolve a guarded body',async()=>{
  assert.equal(new Set(Object.values(AIN_SKILL_PATHS).map(JSON.stringify)).size,5);
  const asset=await load('ain_anim'),original=asset.animations.map(c=>c.toJSON()),clips=repairAinClips(asset.animations,{changed:new Map()});
- for(const [name,source] of [['skill3','ult'],['skill4','guard'],['ult','smash']]){
+ /* 몸을 빌려 오는 둘. skill4 는 guard 를 그대로(값까지 같다), ult 는 smash 를 시간만 옮겨 쓴다. */
+ for(const [name,source] of [['skill4','guard'],['ult','smash']]){
   const c=clips.find(c=>c.name===name),s=asset.animations.find(c=>c.name===source);
   assert.equal(c.duration,asset.animations.find(c=>c.name===name).duration);
   for(const t of c.tracks){const st=s.tracks.find(x=>x.name===t.name);assert.notEqual(t,st);assert.ok(t.times.length>=st.times.length);assert.ok(t.values.every(Number.isFinite));if(name==='skill4')assert.deepEqual(t.values,st.values);}
+ }
+ /* skill3(피의 회전)은 «자기 가로 베기 + 합성한 한 바퀴» 다 — 빌려 오지 않는다.
+    골반만 다시 뜨고 팔·다리는 원본 그대로여야 한다 (docs/design/49 §8.3). */
+ {
+  const c=clips.find(c=>c.name==='skill3'),s=asset.animations.find(c=>c.name==='skill3');
+  assert.equal(c.duration,s.duration);
+  const hips=c.tracks.find(t=>/Hips\.quaternion$/.test(t.name));
+  const hipsSrc=s.tracks.find(t=>/Hips\.quaternion$/.test(t.name));
+  assert.ok(hips&&hipsSrc,'골반 쿼터니언 트랙이 있어야 한다');
+  assert.notDeepEqual(Array.from(hips.values),Array.from(hipsSrc.values),'골반에 회전이 얹혀야 한다');
+  assert.ok(hips.values.every(Number.isFinite));
+  for(const t of c.tracks){
+   if(/Hips\./.test(t.name))continue;
+   const st=s.tracks.find(x=>x.name===t.name);
+   if(st)assert.deepEqual(Array.from(t.values),Array.from(st.values),t.name+' 은 건드리지 않는다');
+  }
  }
  assert.deepEqual(asset.animations.map(c=>c.toJSON()),original);
  const spin=clips.find(c=>c.name==='skill3').tracks.find(t=>/Hips.quaternion$/.test(t.name));
