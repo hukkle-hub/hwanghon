@@ -106,3 +106,12 @@ node tools/3d/check-hair-contract.mjs art/3d/base/ain_modular_rig_candidate.glb
   새 아인 머리는 더 크고 헐거우니 다시 재야 합니다 (`docs/design/44` §5).
 - 후드를 쓴 채로 **바람**이 불면 숨은 머리카락에도 계산이 돌아갑니다.
   숨김 상태에서 바람 계산을 건너뛰는 건, 분리된 뒤에 함께 정리하겠습니다.
+
+---
+
+## 5. 카인·류·세라도 같은 계약으로
+
+디렉터가 세 명의 운동복 3면도를 올렸다 (`ref/bodies/`). 이 셋을 Hi3D 로 뽑을 때는
+**처음부터** 이 계약대로 나눠 주시면 아인처럼 뜯어낼 일이 없다 — 규격과 무게,
+아인에서 배운 것들을 `docs/design/48-bodies-handoff.md` 에 정리해 뒀다.
+
