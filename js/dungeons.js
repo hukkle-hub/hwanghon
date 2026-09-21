@@ -21,6 +21,10 @@
         ult:{hit:.80,active:.15,duration:1.62,cancel:1.38}
       }} },   /* 처형은 길고 확실하게 — 크게 들었다 내리꽂는다 */
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
+    /* 히트스톱 — 올리고 싶지만 아직 못 올린다. 히트스톱은 행동 시계를 멈추므로
+       «회피로 빠져나갈 수 있는 시점» 이 벽시계 기준으로 뒤로 밀린다. +25% 만 올려도
+       tests/combat-quality.test.cjs 의 입력 버퍼 계약이 깨졌다. 데이터 한 줄이 아니라
+       combat.js 에서 취소 경계를 히트스톱과 분리해야 하는 건이다 (docs/design/50 §2). */
     hitstop: { light:0.06, chain:0.09, smash:0.15, counter:0.16, perfect:0.20, brk:0.24, execute:0.34, hurt:0.09, guard:0.05, hit:0.08 },
     execute: { mult:4.5 },   /* 처형 배율 (자세 붕괴 중 1회) */
     /* 무기별 리듬 — 몬헌의 «무기 개성». 지금까지 네 캐릭터가 같은 박자로 휘둘렀다.
