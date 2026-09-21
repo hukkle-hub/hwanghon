@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>클립 검수 시트 — 아인</title>
+<style>html,body{margin:0;background:#12151a;color:#cfd6dc;font:13px/1.4 system-ui,sans-serif}canvas{display:block}</style>
+</head><body>
+<canvas id="sheet"></canvas>
+<!-- 판정 시각은 게임 데이터에서 그대로 읽는다 — 시트가 게임과 어긋날 수 없게 -->
+<script src="../../js/world.js"></script>
+<script src="../../js/items.js"></script>
+<script src="../../js/save.js"></script>
+<script src="../../js/dungeons.js"></script>
+<script type="module">
+/* 플레이어 클립을 «게임이 실제로 재생하는 모습» 그대로 격자로 굽는다.
+   ain-bind-repair 가 런타임에 갈아 끼우므로 GLB 를 그냥 열면 다른 모션을 보게 된다
+   (ult ← smash 소스, skill3 ← ult 소스, skill4 ← guard 소스).
+
+   칸은 판정(clipContacts) 을 기준으로 잡는다 — 타격 애니메이션에서 볼 것은
+   «예비 → 감기 → 판정 → 따라감 → 여운» 다섯 박자이고, 그중 판정 칸이 본체다.
+     ain-sheet.html                       전 전투 클립
+     ain-sheet.html?clip=ult,smash        골라 보기
+     ain-sheet.html?clip=all              로코모션까지 전부
+     ain-sheet.html?side=1                옆에서 (보폭·다리 스윙용)
+     ain-sheet.html?glb=...&raw=1         갈아 끼우기 전 원본
+   docs/design/59-clip-sheet.md */
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {repairAinClips} from '../../js/ain-bind-repair.js';
+import {makeAinRigAdapter} from './../../js/ain-two-hand.js';
+
+const Q=new URLSearchParams(location.search);
+const CONTACTS=(window.TW_DUNGEONS.RULES.motion.clipContacts)||{};
+/* 전투 클립 — 판정이 정의된 것들. 순서는 연계 순 */
+const FIGHT=['attack1','attack2','attack3','smash','counter','exec','skill1','skill2','skill3','skill4','ult'];
+const CELL=Number(Q.get('cell')||260);
+const PHASE=['예비','감기','판정','따라감','여운'];
+
+const loader=new GLTFLoader();
+const g=await loader.loadAsync(Q.get('glb')||'../../art/3d/ain_anim.glb');
+/* 낫이 없으면 휘두름이 안 읽힌다 */
+let slot=null; g.scene.traverse(o=>{ if(o.isBone&&/RightHandSlot/.test(o.name)) slot=o; });
+let blade=null, bladeLocal=null;
+try{
+ const w=await loader.loadAsync('../../art/3d/ain_scythe_tex.glb');
+ if(slot){ slot.add(w.scene); blade=w.scene;
+  /* 날끝 = 무기 로컬 좌표에서 가장 먼 꼭짓점. 월드 bbox 를 로컬로 되돌리면
+     («worldToLocal(bb.min)») 회전한 만큼 엉뚱한 점이 나온다 — 정점에서 직접 구한다. */
+  blade.updateWorldMatrix(true,true);
+  const inv=new T.Matrix4().copy(blade.matrixWorld).invert();
+  let far=null, farD=-1;
+  blade.traverse(o=>{ if(!o.isMesh||!o.geometry) return;
+   o.geometry.computeBoundingBox(); const bb=o.geometry.boundingBox;
+   for(let i=0;i<8;i++){
+    const v=new T.Vector3(i&1?bb.max.x:bb.min.x, i&2?bb.max.y:bb.min.y, i&4?bb.max.z:bb.min.z);
+    v.applyMatrix4(o.matrixWorld).applyMatrix4(inv);
+    const d=v.length(); if(d>farD){ farD=d; far=v.clone(); }
+   }});
+  bladeLocal=far;
+  console.warn('날끝 로컬', far&&far.toArray().map(x=>x.toFixed(3)).join(','), '거리', farD.toFixed(3));
+ }
+}catch(e){ console.warn('scythe',e); }
+
+const clips=Q.get('raw')?g.animations:repairAinClips(g.animations,{changed:new Map()});
+const byName=new Map(clips.map(c=>[c.name,c]));
+const want=Q.get('clip')==='all'?clips.map(c=>c.name)
+  :Q.get('clip')?Q.get('clip').split(',')
+  :FIGHT;
+const rows=want.filter(n=>byName.has(n));
+const missing=want.filter(n=>!byName.has(n));
+if(missing.length) console.warn('없는 클립',missing);
+
+/* 판정(c) 을 가운데 칸으로. 판정이 없는 클립(로코모션)은 균등 분할 */
+function samples(name){
+ const c=CONTACTS[name];
+ if(c==null) return [0,.25,.5,.75,.999];
+ return [0, c*0.55, c, c+(1-c)*0.45, .999].map(u=>Math.min(.999,Math.max(0,u)));
+}
+
+const cols=5;
+const cv=document.getElementById('sheet');
+cv.width=CELL*cols; cv.height=CELL*rows.length;
+const r=new T.WebGLRenderer({canvas:cv,antialias:true});
+r.setPixelRatio(1); r.setSize(cv.width,cv.height,false);
+r.outputColorSpace=T.SRGBColorSpace;
+r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=1.45;
+r.setScissorTest(true); r.autoClear=false;
+r.setClearColor(0x12151a,1); r.clear();
+
+const sc=new T.Scene();
+sc.add(new T.HemisphereLight(0xcfe0ff,0x22262e,1.5));
+const key=new T.DirectionalLight(0xffe8cc,2.4); key.position.set(2.6,4.0,3.0); sc.add(key);
+const rim=new T.DirectionalLight(0x88aaff,1.5); rim.position.set(-2.8,2.2,-2.6); sc.add(rim);
+/* 바닥판 + 격자 — «발이 떠 있나 파고드나» 가 눈으로 보인다 */
+const floor=new T.Mesh(new T.PlaneGeometry(40,40),new T.MeshStandardMaterial({color:0x2a3037,roughness:.95}));
+floor.rotation.x=-Math.PI/2; sc.add(floor);
+const grid=new T.GridHelper(20,20,0x6d7f8a,0x3c474e);
+grid.material.transparent=true; grid.material.opacity=.4; grid.position.y=.004; sc.add(grid);
+sc.add(g.scene);
+
+/* 쉬는 자세를 기억해 둔다 — 칸마다 되돌리지 않으면 앞 칸 자세가 남는다 */
+const rest=[]; g.scene.traverse(o=>rest.push([o,o.position.clone(),o.quaternion.clone(),o.scale.clone()]));
+function reset(){ for(const [o,p,q,s] of rest){ o.position.copy(p); o.quaternion.copy(q); o.scale.copy(s); } }
+const mixer=new T.AnimationMixer(g.scene);
+/* 게임과 같은 양손 그립·접지 보정을 건다 — 안 걸면 낫이 손에서 떠 보인다.
+   적분형(감쇠) 보정이라 정지 화면에서는 몇 번 돌려 수렴시킨다. */
+const rig=Q.get('norig')?null:makeAinRigAdapter(g.scene,g.scene,slot);
+
+const cam=new T.PerspectiveCamera(30,1,.1,60);
+const SIDE=!!Q.get('side');
+const D=4.0;
+function place(){
+ if(SIDE) cam.position.set(D,1.15,0.24); else cam.position.set(D*0.52,1.50,D*0.80);
+ cam.lookAt(0,0.98,0); cam.aspect=1; cam.updateProjectionMatrix();
+}
+
+/* 한 시점의 자세를 세운다 (리그 보정까지 수렴시킨 뒤) */
+function pose(clip,name,u,tag,settle){
+ reset();
+ mixer.stopAllAction();
+ const a=mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
+ a.time=clip.duration*u; mixer.update(0);
+ if(rig){
+  const act={id:name+':'+tag, clip:name, kind:'attack',
+    duration:clip.duration, elapsed:clip.duration*u, clipHit:CONTACTS[name]||0.42};
+  rig.restore();
+  for(let k=0;k<(settle||10);k++){ reset(); a.time=clip.duration*u; mixer.update(0);
+    rig.apply(act,false,false,1/60,name,null); }
+ }
+ sc.updateMatrixWorld(true);
+ return a;
+}
+/* ── 수치는 «리그 보정을 끄고» 잰다 ───────────────────────────────────────────
+   그림은 보정을 켜고 그린다 (플레이어가 보는 것). 수치는 끄고 잰다 —
+   tests/ult-contact.test.mjs 와 docs/design/49 의 숫자가 전부 보정 없는
+   60 fps · 엉덩이 기준이라, 켜고 재면 기존 수치와 비교가 안 된다.
+   보정은 감쇠(적분)라서 표본 간격에 따라 값이 달라지기도 한다. */
+const FPS=Number(Q.get('fps')||60);
+function bladeTrace(clip,name){
+ if(!blade||!bladeLocal) return null;
+ const hips=[]; g.scene.traverse(o=>{ if(o.isBone&&/Hips$/.test(o.name)) hips.push(o); });
+ const hip=hips[0]; if(!hip) return null;
+ reset(); mixer.stopAllAction();
+ const a=mixer.clipAction(clip); a.reset(); a.setLoop(T.LoopOnce,1); a.clampWhenFinished=true; a.play();
+ const N=Math.max(4,Math.round(clip.duration*FPS)), pos=[];
+ for(let i=0;i<=N;i++){
+  mixer.setTime(Math.min(clip.duration*0.998,i/FPS)); g.scene.updateMatrixWorld(true);
+  pos.push(blade.localToWorld(bladeLocal.clone()).sub(hip.getWorldPosition(new T.Vector3())));
+ }
+ a.stop(); reset();
+ const sp=[]; for(let i=1;i<pos.length;i++) sp.push(pos[i-1].distanceTo(pos[i])*FPS);
+ return {sp,pos,N};
+}
+const METRIC={};
+for(const name of rows){
+ const clip=byName.get(name), c=CONTACTS[name], tr=bladeTrace(clip,name);
+ if(c==null||!tr){ METRIC[name]=null; continue; }
+ /* 판정 프레임의 속도 = 그 시각을 감싸는 구간 */
+ const idx=Math.min(tr.sp.length-1,Math.max(0,Math.round(c*clip.duration*FPS)-1));
+ let peak=0, pi=0; for(let i=0;i<tr.sp.length;i++) if(tr.sp[i]>peak){ peak=tr.sp[i]; pi=i; }
+ const at=(pi+0.5)/FPS/clip.duration;
+ if(Q.get('curve')) console.warn('CURVE '+name+' '+clip.duration.toFixed(3)+' '+tr.sp.map(x=>x.toFixed(1)).join(' '));
+ METRIC[name]={ speed:tr.sp[idx], peak:peak, peakAt:at, gap:at-c,
+   reach:Math.hypot(tr.pos[idx+1].x,tr.pos[idx+1].z), height:tr.pos[idx+1].y };
+}
+
+const labels=[];
+for(let row=0;row<rows.length;row++){
+ const name=rows[row], clip=byName.get(name), ts=samples(name);
+ for(let col=0;col<cols;col++){
+  const a=pose(clip,name,ts[col],col);
+  place();
+  const x=col*CELL, y=(rows.length-1-row)*CELL;
+  r.setViewport(x,y,CELL,CELL); r.setScissor(x,y,CELL,CELL); r.render(sc,cam);
+  labels.push({col,row,name,phase:CONTACTS[name]==null?'':PHASE[col],
+    t:(clip.duration*ts[col]).toFixed(2),u:ts[col],
+    hit:CONTACTS[name]!=null&&col===2, dur:clip.duration, m:METRIC[name]});
+ }
+}
+
+/* 글자는 캔버스 위에 겹친다 — 3D 렌더 위에 직접 그리면 씬을 건드리게 된다 */
+const tag=document.createElement('canvas');
+tag.width=cv.width; tag.height=cv.height;
+tag.style.cssText='position:absolute;left:0;top:0;pointer-events:none';
+document.body.append(tag);
+const c2=tag.getContext('2d');
+c2.textBaseline='top';
+for(const l of labels){
+ const x=l.col*CELL, y=l.row*CELL;
+ if(l.hit){ c2.strokeStyle='#ffca57'; c2.lineWidth=3; c2.strokeRect(x+2,y+2,CELL-4,CELL-4); }
+ const head=l.col===0?(l.name+'  '+l.dur.toFixed(2)+'초'):'';
+ let foot=(l.phase?l.phase+' ':'')+'t='+l.t+' ('+l.u.toFixed(2)+')';
+ /* 최고속·어긋남은 일부러 그림에 안 쓴다 — 되감기(time warp)로 계단이 생긴 클립에서는
+    표본 간격에 따라 값이 달라져 «비교할 수 없는 숫자» 가 된다 (docs/design/59 §3).
+    칸에는 표본 간격에 둔감한 것만 적는다. window.__ainSheet.metric 에는 다 들어 있다. */
+ if(l.hit&&l.m) foot+='  날끝 '+l.m.speed.toFixed(1)+' m/s · 뻗음 '+l.m.reach.toFixed(2)+' m · 높이 '+l.m.height.toFixed(2)+' m';
+ c2.font='600 14px system-ui,sans-serif';
+ if(head){ c2.fillStyle='rgba(10,14,17,.78)'; c2.fillRect(x+6,y+6,c2.measureText(head).width+14,23);
+   c2.fillStyle='#e6edf2'; c2.fillText(head,x+13,y+10); }
+ c2.font='12px system-ui,sans-serif';
+ c2.fillStyle='rgba(10,14,17,.72)'; c2.fillRect(x+6,y+CELL-26,c2.measureText(foot).width+14,20);
+ c2.fillStyle=l.hit?'#ffca57':'#b9c4cc'; c2.fillText(foot,x+13,y+CELL-23);
+}
+window.__ainSheet={rows:rows,missing:missing,cols:cols,metric:METRIC};
+window.__ainSheetReady=true;
+</script></body></html>
