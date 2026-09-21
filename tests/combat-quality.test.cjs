@@ -30,11 +30,24 @@ test('AoE checks every part and does not redistribute unreachable damage',()=>{
  const b=createBattle({rules:C.rules,char:C.character,skills:C.skills.ain,dummy:{hp:1e7,parts,patterns:[]},hooks:{canHit:id=>id==='near'}});
  b.input('skill',2);tick(b,1);assert.equal(b.metrics.hits,1);assert.equal(b.part('far').hp,1e7);assert.ok(b.part('near').hp<1e7);
 });
+/* 취소 경계는 «동작 시계» 위의 약속이다. 벽시계 초를 못 박으면 히트스톱을 올릴 때마다
+   계약과 무관하게 빨개진다 — 실제로는 회피가 늘 나가고, 멈춘 만큼 늦게 나갈 뿐이다.
+   그래서 «취소 경계 직전에 눌렀을 때» 로 잡고, 그 뒤 나가는지를 본다 (docs/design/50 §2.1). */
+const before=(get,margin)=>x=>{const a=get(x);return !!a&&a.cancelAt-a.elapsed<=margin&&a.cancelAt>a.elapsed;};
+function run(o,f,max=200){for(let i=0;i<max&&!f();i++)o.tick(.01);return f();}
 test('dodge, guard and evasive skill buffer to cancel boundary in both simulations',()=>{
  for(const type of ['dodge','guard','skill']){
-  const b=solo();b.input('attack');tick(b,.47);b.input(type,type==='guard'?true:type==='skill'?1:undefined);assert.ok(b.snapshot().player.action);
-  tick(b,.08);assert.equal(b.snapshot().player.action,null);assert.ok(type==='guard'?b.snapshot().player.guard:b.snapshot().player.dodging);
-  const {r,p}=raid();r.input('a',{type:'attack'});tick(r,.40);r.input('a',{type,on:true,index:1});assert.ok(p.action);tick(r,.09);assert.equal(p.action,null);assert.ok(type==='guard'?p.guard:p.dodgeT>0);
+  const b=solo();b.input('attack');
+  assert.ok(run(b,()=>before(x=>x.player.action,.14)(b.snapshot())),'버퍼 창(0.16) 안으로 진입');
+  b.input(type,type==='guard'?true:type==='skill'?1:undefined);
+  assert.ok(b.snapshot().player.action,'경계 전에는 아직 취소되지 않는다');
+  assert.ok(run(b,()=>!b.snapshot().player.action),'버퍼가 소화돼 동작이 끝난다');
+  assert.ok(type==='guard'?b.snapshot().player.guard:b.snapshot().player.dodging);
+  const {r,p}=raid();r.input('a',{type:'attack'});
+  assert.ok(run(r,()=>before(()=>p.action,.14)({})),'서버도 버퍼 창 안으로 진입');
+  r.input('a',{type,on:true,index:1});assert.ok(p.action);
+  assert.ok(run(r,()=>!p.action),'서버에서도 버퍼가 소화된다');
+  assert.ok(type==='guard'?p.guard:p.dodgeT>0);
  }
 });
 test('released guard and early dodge never become delayed phantom inputs',()=>{

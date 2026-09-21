@@ -47,12 +47,26 @@
     /* 플레이어 이동: 스틱 벡터(-1..1) */
     W.movePlayer = function(p, sx, sy, dt, speed){
       var m = Math.hypot(sx, sy); p.moving = m > 0.15;
+      /* 넉백이 스틱보다 먼저다 — 맞는 동안은 내 뜻대로 못 움직인다.
+         구르기와 같은 «밀림» 이지만 회피가 아니라서 rollT 와 섞지 않는다 (무적이 없다). */
+      if (p.kbT > 0){
+        /* 뒤로 갈수록 느려진다. 구간 «가운데» 에서 읽어야 dt 가 달라져도 총 거리가 len 이다
+           (앞에서 읽으면 0.01초 틱에서 60px 이 63px 이 된다). */
+        var f = Math.max(0, (p.kbT - dt*0.5) / (p.kbDur || 1));
+        moveCircle(map, p, p.kbDx*2*f*dt, p.kbDy*2*f*dt);
+        p.kbT = Math.max(0, p.kbT - dt); p.moving = false; return;
+      }
       if (p.rollT > 0){ moveCircle(map, p, p.rollDx*dt, p.rollDy*dt); p.rollT -= dt; return; }
       if (!p.moving || p.lockT > 0) return;
       if (m > 1){ sx/=m; sy/=m; }
       moveCircle(map, p, sx*speed*dt, sy*speed*dt*DEPTH);
       p.face = Math.abs(sx) > Math.abs(sy)*0.9 ? (sx < 0 ? 'left' : 'right') : (sy < 0 ? 'up' : 'down');
       p.aim = Math.atan2(sy, sx);
+    };
+    /* 넉백: 맞은 방향으로 len px 를 dur 초에 걸쳐 밀려난다 (벽에 막히면 거기까지). */
+    W.knock = function(p, sx, sy, len, dur){
+      var m = Math.hypot(sx, sy); if (m < 1e-6){ var a = p.aim==null ? 0 : p.aim; sx = -Math.cos(a); sy = -Math.sin(a); m = 1; }
+      sx/=m; sy/=m; p.kbT = dur; p.kbDur = dur; p.kbDx = sx*len/dur; p.kbDy = sy*len/dur*DEPTH;
     };
     W.roll = function(p, sx, sy, len, dur){ var m = Math.hypot(sx, sy); if (m < 0.15){ var a = p.aim==null ? 0 : p.aim; sx = Math.cos(a); sy = Math.sin(a); m = 1; } sx/=m; sy/=m; p.rollT = dur; p.rollDx = sx*len/dur; p.rollDy = sy*len/dur*DEPTH; };
     W.moveEntity = function(e,dx,dy){ moveCircle(map,e,dx,dy); };

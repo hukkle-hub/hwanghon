@@ -229,9 +229,15 @@
       }else{
         var guarded=P.guard&&P.st>0&&pat.unblockable!==true,dmg=pat.dmg;
         if(guarded){dmg=Math.round(dmg*(1-R.guard.reduce));P.st=Math.max(0,P.st-(pat.guardCost||0));M.guards++;E.posture=clamp(E.posture+R.posture.onGuard,0,R.posture.max);P.riposteT=0.8;P.riposteKind='guard';emit('guardhit');}
-        else {fail(pat.counterable===false?'튕길 수 없는 공격이다. 공격 범위 밖으로 피해라.':P.action?'공격 동작 중 맞았다. 빈틈을 확인하고 공격해라.':'타격 순간에 피하거나 튕겨내지 못했다.');cancel('hit');P.buffer=null;P.lockT=0.28;P.riposteT=0;P.riposteKind=null;}
+        /* 경직 단계. 한 방에 최대 체력의 heavyAt 이상을 잃으면 대경직이다 —
+           굳는 시간도 밀리는 거리도 달라진다 (R.stagger, docs/design/50 §4). */
+        var SG=R.stagger||{}, tier=guarded?'guard':(dmg>=st.hp*(SG.heavyAt||0.12)?'heavy':'light'), sg=SG[tier]||{};
+        /* 막아 낸 쪽에는 «굳힘» 을 걸지 않는다. 이 게임의 가드는 곧바로 반격(riposte)으로
+           이어지는 것이 설계다 — 블록 스턴을 넣으면 그 설계와 정면으로 부딪친다
+           (tests/combat.test.cjs 「guard retaliation ...」). 밀림·클립·흔들림만 쓴다. */
+        if(!guarded) {fail(pat.counterable===false?'튕길 수 없는 공격이다. 공격 범위 밖으로 피해라.':P.action?'공격 동작 중 맞았다. 빈틈을 확인하고 공격해라.':'타격 순간에 피하거나 튕겨내지 못했다.');cancel('hit');P.buffer=null;P.lockT=sg.lock||0.28;P.riposteT=0;P.riposteKind=null;}
         if(P.buffT>0)dmg=Math.round(dmg*(1-P.buffReduce));P.hp=Math.max(0,P.hp-dmg);M.dmgTaken+=dmg;P.ult=clamp(P.ult+R.ult.onHit,0,R.ult.max);
-        emit('damaged',{dmg:dmg,guarded:guarded,pattern:pat.name,reason:P.lastFailure,stop:(guarded?R.hitstop.guard:R.hitstop.hurt)||0});
+        emit('damaged',{dmg:dmg,guarded:guarded,tier:tier,pattern:pat.name,reason:P.lastFailure,stop:(guarded?R.hitstop.guard:R.hitstop.hurt)||0});
         if(P.hp===0){M.deaths++;if(o.mortal===false){P.hp=st.hp;emit('death');}else{B.over=true;B.dead=true;emit('death',{fatal:true,reason:P.lastFailure});}}
       }
       var nx=B.over?-1:nextBeat(E.beatI+1);

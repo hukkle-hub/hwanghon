@@ -32,9 +32,16 @@ test('range checked at impact; late departure whiffs and entering range connects
 test('windup cannot be cancelled; recovery permits dodge',()=>{
  const b=battle();b.input('attack');b.input('dodge');assert.equal(b.metrics.dodges,0);b.tick(.57);b.input('dodge');assert.equal(b.metrics.dodges,1);assert.equal(b.snapshot().player.action,null);
 });
+/* 벽시계 초를 못 박지 않는다 — 히트스톱이 길어지면 같은 «동작 시점» 이 더 늦게 온다.
+   0.74초·0.60초 같은 상수를 쓰면 손맛을 올릴 때마다 계약과 무관한 이유로 빨개진다. */
 test('late input buffers once; early spam does not queue',()=>{
- const b=battle();b.input('attack');b.input('attack');b.tick(.74);assert.equal(b.snapshot().player.action,null);
- b.input('attack');b.tick(.60);b.input('attack');b.tick(.16);assert.ok(b.snapshot().player.action);b.tick(1);assert.equal(b.metrics.hits,3);
+ const b=battle();b.input('attack');b.input('attack');                    /* 이른 연타는 큐에 들어가지 않는다 */
+ until(b,x=>!x.player.action);assert.equal(b.metrics.hits,1);
+ b.input('attack');
+ until(b,x=>!!x.player.action&&x.player.action.duration-x.player.action.elapsed<=.10);   /* 버퍼 창(0.16) 안 */
+ const first=b.snapshot().player.action.id;b.input('attack');
+ until(b,x=>!!x.player.action&&x.player.action.id!==first,60);            /* 늦은 입력은 이어진다 */
+ assert.ok(b.snapshot().player.action);b.tick(1);assert.equal(b.metrics.hits,3);
 });
 test('counter damage deferred and stronger; perfect requires final 40ms',()=>{
  const normal=battle();normal.input('attack','body');normal.tick(.24);

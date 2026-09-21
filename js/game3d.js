@@ -29,7 +29,7 @@ import { bwEmpty } from './blackwatch.js';
   var SCALE=50; /* px per m */
   var MOBILE=Math.min(window.innerWidth, window.innerHeight)<=640;
   var world=SIM.createWorld({rows:L.rows, cell:L.cell}), map=world.map;
-  var P=world.add('p',{x:world.marks('S')[0].x, y:world.marks('S')[0].y, r:L.player.r, rollT:0, lockT:0, aim:0, face:'down'});
+  var P=world.add('p',{x:world.marks('S')[0].x, y:world.marks('S')[0].y, r:L.player.r, rollT:0, lockT:0, kbT:0, aim:0, face:'down'});
   var Bs=world.add('b',{x:world.marks('B')[0].x, y:world.marks('B')[0].y, r:L.bossR||60, dist:999, faceX:1});
   var gate=world.marks('G')[0], sign=world.marks('s')[0];
   var state='explore', phase=0, battle=null, paused=false, stageResults=[], zone=null, fightT=0, acc=0, guideT=0, counterT=0, lastHit=0, seen={}, gateClosed=false;
@@ -514,6 +514,7 @@ import { bwEmpty } from './blackwatch.js';
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
+    tickLean(dt);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
@@ -688,6 +689,36 @@ import { bwEmpty } from './blackwatch.js';
   /* 보스→플레이어 축 (맞는 방향), 플레이어→보스 축 (때리는 방향) */
   function axisFromBoss(){ return [X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)]; }
   function axisToBoss(){ return [X(Bs.x)-X(P.x), Z(Bs.y)-Z(P.y)]; }
+  /* 피격 반응 — 맞으면 «밀리고», 세기에 따라 다른 클립·다른 경직으로 간다.
+     지금까지는 제자리에서 hit 한 장(최고속 1.9 m/s·진폭 0.30 m)만 재생했다.
+     클립 자체가 약한 건 소스 문제(전투 품질 D)라 여기서는 «이동» 과 «단계» 로 만든다:
+       · 보스 쪽에서 나를 향하는 방향으로 밀어낸다 (벽이 있으면 벽까지만)
+       · 밀리는 동안 몸이 그 방향으로 기운다 — 어느 쪽에서 맞았는지가 보인다
+     규칙 값은 js/dungeons.js 의 R.stagger 에 있다. */
+  var lean={x:0,z:0,t:0,dur:0.001};
+  function hitReact(e, src){
+    var from=src||Bs;
+    var SG=(R.stagger||{}), sg=SG[e.tier]||SG[e.guarded?'guard':'light']||{};
+    var ax=[X(P.x)-X(from.x), Z(P.y)-Z(from.y)], m=Math.hypot(ax[0],ax[1]);
+    var wx=(P.x-from.x), wy=(P.y-from.y);
+    if(sg.push) world.knock(P, wx, wy, sg.push, sg.dur||0.18);
+    if(m>1e-4){ lean.x=ax[0]/m; lean.z=ax[1]/m; lean.t=lean.dur=(sg.dur||0.18)*1.6; }
+    var clip=sg.clip||(e.guarded?'guardHit':'hit');
+    if(ain.clips[clip]) playOnce(clip,{speed:e.tier==='heavy'?1.15:1.4});
+    else if(!e.guarded) playOnce('hit',{speed:1.4});
+  }
+  function tickLean(dt){
+    if(lean.t<=0){ if(ain.model){ ain.model.rotation.x=0; ain.model.rotation.z=0; } return; }
+    lean.t=Math.max(0,lean.t-dt);
+    var k=lean.t/lean.dur, a=0.30*k*k;                 /* rad — 뒤로 넘어가는 각 */
+    if(!ain.model) return;
+    /* 월드 방향을 캐릭터 로컬로 «되돌린다». three 의 Y 회전은
+       world = (cos·lx + sin·lz, −sin·lx + cos·lz) 이므로 역변환은 아래와 같다.
+       (처음에 정변환을 적어 뒀다가 유도해서 고쳤다 — 그대로 뒀으면 맞은 반대쪽으로 기울었다.) */
+    var yaw=ain.root.rotation.y, cy=Math.cos(yaw), sy=Math.sin(yaw);
+    var lx=lean.x*cy-lean.z*sy, lz=lean.x*sy+lean.z*cy;
+    ain.model.rotation.x=a*lz; ain.model.rotation.z=-a*lx;
+  }
   var zoomPulse=0; function zoomKick(){ zoomPulse=1; }
   var pendingContacts=[];
   function handle(e){
@@ -740,9 +771,10 @@ import { bwEmpty } from './blackwatch.js';
       case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; if(!e.guarded) playOnce('hit',{speed:1.4});
-        var axD=axisFromBoss(); burst(above(P.x,P.y,1.2), e.guarded?10:18, 0xD94A45, axD); vib(e.guarded?15:60);
-        shake(e.guarded?0.004:0.012, e.guarded?200:300, axD[0], axD[1]);
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; hitReact(e);
+        var axD=axisFromBoss(), sgD=(R.stagger||{})[e.tier]||{};
+        burst(above(P.x,P.y,1.2), e.guarded?10:(e.tier==='heavy'?26:18), 0xD94A45, axD); vib(sgD.vib||(e.guarded?15:60));
+        shake(sgD.shake||(e.guarded?0.004:0.012), e.guarded?200:(e.tier==='heavy'?420:300), axD[0], axD[1]);
         slowmo(0.06, Math.max(60,(e.stop||(e.guarded?0.05:0.09))*1000));   /* 맞은 순간의 정지 — 연출에서만, 규칙은 건드리지 않는다 */
         break;
       case 'early': guide('선공은 후딜을 남긴다. <b>타격 직전</b>에 튕겨라', 1.6); break;
@@ -810,7 +842,9 @@ import { bwEmpty } from './blackwatch.js';
       case 'aggro': SFX.play('tele'); break;
       case 'telegraph': SFX.play('tele'); break;
       case 'swing': shake(0.004,120); break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; if(!e.guarded) playOnce('hit',{speed:1.4}); burst(above(P.x,P.y,1.2), 14, 0xD94A45); vib(e.guarded?15:60); shake(e.guarded?0.004:0.01, 260); break;
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18;
+        hitReact(e, m||Bs);                          /* 교전에서는 때린 «그 잡몹» 반대로 밀린다 */
+        burst(above(P.x,P.y,1.2), e.tier==='heavy'?22:14, 0xD94A45); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'dodge': doRoll(); break;
       case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
