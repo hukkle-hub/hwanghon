@@ -300,8 +300,17 @@
      2) 접속·앱 복귀 때마다 서버의 version.json 을 읽어 빌드가 다르면 워커 갱신 → 새 워커가 없으면 스스로 새로고침 (1회 보호) */
   var BUILD = '__BUILD__';
   var MYBUILD = BUILD.indexOf('__') === 0 ? 'dev' : BUILD;
+  /* 출격 중에는 새 빌드로 갈아타지 않는다.
+     던전 한복판에서 새로고침하면 진행이 통째로 날아가고, 화면에서는
+     「들어갔더니 밖으로 나가서 처음부터 다시」로 보인다 — 디렉터가 본 그 증상이다.
+     화면이 스스로 바쁘다고 알리면(window.TW_BUSY) 미뤄 두고, 한가해지면 그때 반영한다. */
+  function busyNow(){ try { return !!(window.TW_BUSY && window.TW_BUSY()); } catch(err){ return false; } }
+  var reloadPending = null;
   function reloadOnce(tag){
-    var key = 'tw:reloaded:' + tag; try { if (sessionStorage.getItem(key)) return; sessionStorage.setItem(key, '1'); } catch(err){}
+    var key = 'tw:reloaded:' + tag; try { if (sessionStorage.getItem(key)) return; } catch(err){}
+    if (busyNow()){ reloadPending = tag; return; }                 /* 끝나면 다시 본다 */
+    try { sessionStorage.setItem(key, '1');
+      sessionStorage.setItem('tw:restart', JSON.stringify({why:'update', tag:tag, at:Date.now()})); } catch(err){}
     location.reload();
   }
   function swUpdates(){
@@ -322,6 +331,7 @@
       }).catch(function(){});
     }
     document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') check(); });
+    setInterval(function(){ if (reloadPending && !busyNow()) reloadOnce(reloadPending); }, 20000);
     check();
   }
 

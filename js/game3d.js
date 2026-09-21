@@ -19,6 +19,7 @@ import { createWardBoss } from './ward-boss.js';
 import { prepareMarshMotion, detachBossPiece, bossAttackSpec } from './marsh-motion.js';
 import { buildDungeonProps } from './dungeon-props.js';
 import { WeaponTrail, trailStyle } from './weapon-trail.js';
+import { bwEmpty } from './blackwatch.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
@@ -82,7 +83,16 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
       try{ guide('화면이 무거워 <b>저사양</b>으로 낮췄습니다', 3); }catch(e){}
       return;
     }
+    restartCrumb(why);
     location.reload(); }
+  /* 왜 다시 시작했는지 한 줄 남긴다 — 다음 입장 화면과 진단에 그대로 뜬다.
+     재현이 안 되는 재시작을 「추측」이 아니라 「기록」으로 좁히기 위함이다. */
+  var RESTART_WHY={ black:'검은 화면 감지', shader:'셰이더 오류', fatal:'치명 오류', manual:'수동 전환', update:'새 빌드 반영' };
+  function restartCrumb(why){ try{ sessionStorage.setItem('tw:restart', JSON.stringify({ why:why,
+    level:(typeof L!=='undefined'&&L)?L.id:'?', state:state, at:Date.now(),
+    since:DIAG.started?Math.round(performance.now()-DIAG.started):0 })); }catch(e){} }
+  /* 출격 중임을 공용 런타임(ui.js)에 알린다 — 새 빌드가 떠도 던전 한복판에서 새로고침하지 않게 */
+  window.TW_BUSY=function(){ try{ return !!(battle||state==='fight'||state==='explore'); }catch(e){ return false; } };
   function diagText(){ var avg=fpsSamples.length?Math.round(fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length):0, inf=renderer.info; var c=renderer.domElement;
     return ['build '+(window.TW&&TW.BUILD||'?')+' · '+(SAFE?'저사양 모드':'일반 모드')+' · 화질 '+SET.quality+' · 조명 '+(SET.lights?'켬':'끔'), 'GPU: '+DIAG.gpu, 'WebGL'+(DIAG.gl2?'2':'1')+' · 최대 텍스처 '+DIAG.maxTex+' · 프래그먼트 유니폼 '+DIAG.maxFU, '캔버스 '+c.width+'×'+c.height+' (배율 '+renderer.getPixelRatio().toFixed(2)+', 화면 '+innerWidth+'×'+innerHeight+')', 'FPS '+avg+' · 드로우콜 '+inf.render.calls+' · 삼각형 '+inf.render.triangles+' · 텍스처 '+inf.memory.textures+' · 지오메트리 '+inf.memory.geometries+' · 프로그램 '+(inf.programs?inf.programs.length:0), '로드 '+loadN+'/4 · 검은 프레임 '+DIAG.black+' · 시작 후 '+(DIAG.started?Math.round((performance.now()-DIAG.started)/1000)+'s':'-'), '프레임 계측 (S25 실측 판정 아님): '+JSON.stringify(FRAME_METRICS.report()), 'UA: '+navigator.userAgent.slice(0,90)].concat(DIAG.errors.length?['오류 '+DIAG.errors.length+'건:'].concat(DIAG.errors.slice(-6)):['오류 없음']).join('\n'); }
   function fatal(t, sub){ overlay('<div class="ov__k">오류</div><div class="ov__t">'+t+'</div><div class="ov__hint">'+sub+'</div><div class="xs t-faint" style="text-align:left;line-height:1.7;margin:0 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>저사양 모드로 다시 시작</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ try{ sessionStorage.removeItem('tw:safe'); }catch(e){} safeMode('fatal'); }); }
@@ -1013,7 +1023,13 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     if(!L.expedition&&RETRY!=='gate'){ world.marks('q').forEach(function(mk){ spawnPickup(mk.x, mk.y, 'item', 1, 'q_record', '정찰대의 기록'); }); world.marks('f').forEach(function(mk){ spawnPickup(mk.x, mk.y, 'item', 3, 'm_fiber', '갈대 섬유'); if(Math.random()<0.6) spawnPickup(mk.x+34, mk.y+10, 'item', 1, 'm_dew', '붉은 이슬'); }); }
     dungeonProps=buildDungeonProps(scene,expedition,SCALE,DEPTH);interactButton=$('#exp-interact');interactButton.addEventListener('click',interactDungeon);$('#exp-map').addEventListener('click',showMissionMap);syncExpeditionQuest();el.timerBox.classList.remove('is-off');
     applySettings(); el.loading.classList.add('is-off'); SFX.ambient(true); renderQuest(); renderProg(); ain.ready=true; DIAG.started=performance.now(); if(SAFE) guide('<b>저사양 모드</b>로 실행 중 (일시정지 → 진단에서 해제)', 4);
-    overlay('<div class="ov__k">'+(L.code||'던전 01')+'</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+L.place+'</div><div class="ov__line">'+(L.beats.intro||'')+'</div><div class="ov__hint">'+(L.beats.introHint||'')+'</div><button class="btn btn--primary" data-go>입장</button>'+
+    var restartNote='';
+    try{ var LR=JSON.parse(sessionStorage.getItem('tw:restart')||'null'); sessionStorage.removeItem('tw:restart');
+      if(LR&&Date.now()-LR.at<120000){ var w=RESTART_WHY[LR.why]||LR.why;
+        DIAG.errors.push('직전 재시작: '+LR.why+' · '+(LR.state||'?')+' · '+Math.round((LR.since||0)/1000)+'s');
+        restartNote='<div class="ov__hint">직전에 <b>'+w+'</b>(으)로 다시 시작했습니다 — 계속 반복되면 알려 주세요</div>'; }
+    }catch(e){}
+    overlay('<div class="ov__k">'+(L.code||'던전 01')+'</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+L.place+'</div><div class="ov__line">'+(L.beats.intro||'')+'</div><div class="ov__hint">'+(L.beats.introHint||'')+'</div>'+restartNote+'<button class="btn btn--primary" data-go>입장</button>'+
       '<div class="ov__ctrl">폰: 왼쪽 스틱 이동 · 화면 드래그로 시점 회전 · 큰 버튼 탭 공격(4연타) · 길게 스매시 · 회피 · 방어 · 기술 1~4 · R · 조사 / 지도 버튼<br>키보드: WASD 이동 · Q/E 시점 · J 공격 · U 스매시 · K 회피 · L 방어 · 1~4 · R · Tab 조준 전환 · T 락온 · F 조사 · M 지도</div>', function(){ if(RETRY!=='gate') flyover(function(){ dialogue(L.beats.dialog, function(){ guide(L.beats.start, 4); }); }); else guide((L.beats.death&&L.beats.death.btn?L.beats.death.btn.replace(' 재도전',''):'격벽 앞')+'에서 다시. '+(A.hudName||'허수아비')+'가 기다린다', 3); });
     last=performance.now(); requestAnimationFrame(frame);
   }
@@ -1204,27 +1220,40 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
      «검은 화면» 으로 오해해서, 허수아비 전투 시작에 앱이 갑자기 새로 시작되곤 했다.
      · 컷신·오버레이 중에는 아예 보지 않는다 (의도적으로 화면을 가리는 구간)
      · 한 군데가 아니라 흩어진 네 군데를 보고, 네 군데가 «모두» 균일할 때만 센다
-     · 전투 중에는 리로드하지 않는다 — 진행을 날리지 않고 그 자리에서 저사양으로 낮춘다 */
+     · 전투 중에는 리로드하지 않는다 — 진행을 날리지 않고 그 자리에서 저사양으로 낮춘다
+
+     그런데 또 터졌다. 카메라를 어깨 너머(3.9 m, 눈높이)로 옮기자 어두운 벙커에서
+     네 군데가 모두 «균일» 해지는 순간이 생겼고, 보스전 전이라 battle 이 없어
+     그대로 location.reload() — 디렉터가 본 「들어가면 밖으로 나갔다가 다시 시작」이다.
+
+     원인은 판정이 «패치마다 균일함» 만 봤다는 것이다. 어두운 벽 한 면이 한 패치를 채우면
+     그 패치는 균일하지만, 그건 «안 그려진» 게 아니라 «그려진» 것이다.
+     진짜 «안 그려짐» 은 화면 «전체가 한 색» 인 상태다 — 네 곳이 서로도 같은 색이어야 한다.
+     허수아비에서 실측하면 네 곳이 22~58 / 32~65 / 21~62 / 16~212 로 서로 딴판이다
+     (docs/design/52-restart-bug.md). 그래서 패치 안 균일함에 더해 «네 곳의 색이 서로 같을 때»
+     만 센다. 어둡기가 아니라 고름을 보는 것이라, 배경색만 남는 실패도 그대로 잡힌다.
+     그리고 대사창이 뜬 동안에도 보지 않는다 — 가운데 패치를 대사창이 덮는다. */
   var BW_PATCH=[[0.5,0.5],[0.25,0.32],[0.75,0.34],[0.5,0.78]];
   function blackWatch(){
     if(!DIAG.started||navigator.webdriver&&!window.TW_BW_TEST) return;
     var t=performance.now(); if(t-DIAG.started>25000||t-bwLast<1000) return;
-    if(cine||cineCam||paused||el.ov.classList.contains('is-on')){ bwHits=0; return; }
+    if(cine||cineCam||paused||el.ov.classList.contains('is-on')||el.dlg.classList.contains('is-on')){ bwHits=0; return; }
     bwLast=t;
     try{
-      var gl=renderer.getContext(), c=renderer.domElement, flat=0;
+      var gl=renderer.getContext(), c=renderer.domElement, samp=[];
       for(var pi=0;pi<BW_PATCH.length;pi++){
         var px=Math.max(0,Math.min(c.width-32, Math.round(c.width*BW_PATCH[pi][0])-16));
         var py=Math.max(0,Math.min(c.height-32, Math.round(c.height*BW_PATCH[pi][1])-16));
         gl.readPixels(px, py, 32, 32, gl.RGBA, gl.UNSIGNED_BYTE, bwPx);
         var mx=0, mn=255;
         for(var i=0;i<bwPx.length;i+=4){ var v=(bwPx[i]*3+bwPx[i+1]*6+bwPx[i+2])/10; if(v>mx) mx=v; if(v<mn) mn=v; }
-        if(mx-mn<3) flat++;
+        samp.push([Math.round(mn), Math.round(mx)]);
       }
-      if(flat===BW_PATCH.length){
+      DIAG.bw=samp;                                  /* 검수용 — 문턱값을 실측으로 정한다 */
+      if(bwEmpty(samp)){
         bwHits++; DIAG.black++;
         if(bwHits>=4){
-          DIAG.errors.push('EMPTY FRAME x4 (네 곳 모두 균일)'); bwHits=0; DIAG.started=0;   /* 한 번만 판단한다 */
+          DIAG.errors.push('EMPTY FRAME x4 (화면 전체가 한 색)'); bwHits=0; DIAG.started=0;   /* 한 번만 판단한다 */
           if(!SAFE) safeMode('black');
           else fatal('화면이 그려지지 않습니다', '저사양 모드에서도 검게 나옵니다. 아래 진단 정보를 알려 주세요.');
         }
