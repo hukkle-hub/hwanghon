@@ -152,3 +152,20 @@ test('가져온 에셋의 출처와 조건이 저장소에 남아 있다', () =>
                    'tools/3d/adopt_ain_body.py'])
     assert.ok(fs.existsSync(path.join(ROOT, t)), `${t} 가 없다`);
 });
+
+/* 가슴은 디렉터 지시로 도입 단계에서 키운다 (tools/3d/adopt_ain_body.py --bust).
+   지피티 후보를 다시 받을 때 이 단계를 빠뜨리면 원래 몸으로 되돌아가므로 여기서 막는다.
+   내보낸 글턴은 y 가 위, +z 가 «앞» 이다 (블렌더 −y → glTF +z). */
+test('아인 몸체: 가슴이 도입 단계에서 키워져 있다', () => {
+  const m = glb('art/3d/ain_body.glb');
+  const pts = [];
+  for (const me of m.g.meshes)
+    for (const pr of me.primitives) pts.push(...positions(m, pr.attributes.POSITION));
+  const at = (w) => pts.filter(p => Math.abs(p[1] - 1.245) < 0.008 && Math.abs(p[0]) < w);
+  const apex = Math.max(...at(0.12).map(p => p[2]));
+  const mid = Math.max(...at(0.012).map(p => p[2]));
+  /* 원래 후보는 0.131 이었다. 22 mm 를 넣으면 0.147 이 된다. */
+  assert.ok(apex > 0.140 && apex < 0.200, `가슴 앞으로 ${apex.toFixed(3)} m — 키우는 단계가 빠졌나?`);
+  /* 봉우리가 둘로 갈라져 있어야 한다. 한 덩어리면 가운데가 꼭대기와 같은 높이로 나온다. */
+  assert.ok(apex - mid > 0.010, `가운데가 ${((apex - mid) * 1000).toFixed(0)} mm 밖에 안 들어갔다`);
+});
