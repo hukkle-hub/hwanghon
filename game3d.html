@@ -53,7 +53,11 @@
 @keyframes pulse{50%{box-shadow:0 0 6px rgba(201,164,94,.3)}}
 .ultg{display:flex;align-items:center;gap:8px;margin-top:6px}.ultg .bar{flex:1;height:6px}.ultg .bar__fill{background:linear-gradient(90deg,#5A2F14,#C9A45E)}
 .ultg__v{font-size:9.5px;color:var(--tx-faint);font-variant-numeric:tabular-nums;width:34px;text-align:right}
-.vignette{position:absolute;inset:0;z-index:3;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,rgba(0,0,0,0) 45%,rgba(0,0,0,.55) 100%)}
+/* 비네트 — 가장자리를 눌러 눈이 화면 가운데(캐릭터)로 가게. GPU 비용은 합성 한 장뿐이다.
+   몬헌·마영전 둘 다 어두운 스테이지에서 쓴다. 이미 어두운 방이라 과하면 답답하므로 약하게.
+   (선언만 해 두고 안 쓰던 클래스였다 — 이제 실제로 붙인다.) */
+.vignette{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 78% 74% at 50% 52%,rgba(0,0,0,0) 55%,rgba(0,0,0,.28) 82%,rgba(0,0,0,.50) 100%)}
 .flash{position:absolute;inset:0;z-index:8;background:#A51C1C;opacity:0;pointer-events:none}.flash.is-on{animation:flash .28s}
 @keyframes flash{0%{opacity:0;background:#000}40%{opacity:.85;background:#000}55%{opacity:.5;background:#A51C1C}100%{opacity:0}}
 .ov{position:absolute;inset:0;z-index:20;display:none;place-items:center;background:rgba(6,7,10,.82);backdrop-filter:blur(2px)}.ov.is-on{display:grid}
@@ -136,6 +140,7 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
 <div class="stage">
   <div class="bt dg" id="dg">
     <canvas id="game3d"></canvas>
+    <div class="vignette" id="vig"></div>
     <div class="flash" id="flash"></div>
     <div class="bosshp is-off" id="bosshp">
       <div class="bosshp__nm" id="b-name">—</div>

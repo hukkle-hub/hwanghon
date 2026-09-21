@@ -177,6 +177,35 @@ import { bwEmpty } from './blackwatch.js';
   var hemi=new THREE.HemisphereLight(0x6a7080, 0x2a2622, 2.6); scene.add(hemi);
   var moon=new THREE.DirectionalLight(0xa8b4d0, 2.2); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
   var pLight=new THREE.PointLight(0xE0D0B8, 3.0, 10, 1.4); scene.add(pLight);
+  /* 림 라이트 — 캐릭터·보스의 실루엣만 배경에서 떼어 낸다.
+     어두운 벙커에서 캐릭터가 바닥과 같은 명도로 묻혀 있었다 (docs/design/53 §1 의 «이전» 그림).
+     몬헌·마영전 둘 다 주인공 뒤에서 차가운 빛을 넣어 윤곽선을 살린다.
+
+     한 번 틀렸다. 그냥 방향광으로 넣었더니 «방 전체» 가 밝아져 어두운 벙커가
+     사라졌다 (§1 의 「너무 센 역광」 그림). 방향광은 장면을 가리지 않는다.
+     그래서 전용 레이어(RIM_LAYER)에 올리고, 그 레이어를 켠 물체 — 아인과 보스 —
+     만 받게 한다. 바닥·벽은 그대로 어둡다.
+
+     카메라→캐릭터 방향으로 «캐릭터 너머» 에 두면 항상 역광이다.
+     정면 바로 뒤에 두면 «등» 만 밝아지고 윤곽선이 안 산다. 카메라 축에서 좌우로 비틀어
+     3/4 역광 둘을 쓴다 — 차가운 쪽이 세고 반대쪽에 약한 따뜻한 빛. 조명 둘, 그림자 없음. */
+  var RIM_LAYER=2, RIM=[{ deg: 58, color:0x9FC0FF, i:3.0, up:3.6 },      /* 차가운 주 역광 */
+                        { deg:-68, color:0xFFB98A, i:1.5, up:2.6 }];     /* 반대쪽 약한 보조 */
+  var rimLights=RIM.map(function(r){ var l=new THREE.DirectionalLight(r.color, r.i);
+    l.castShadow=false; l.layers.set(RIM_LAYER); scene.add(l); scene.add(l.target); return l; });
+  function rimTake(root){ if(root) root.traverse(function(o){ o.layers.enable(RIM_LAYER); }); }
+  function tickRim(){
+    if(!ain.root) return;
+    rimTake(ain.model); rimTake(boss&&boss.root);     /* 장비·머리카락이 나중에 붙으므로 매 프레임 */
+    var p=ain.root.position, dx=p.x-cam.position.x, dz=p.z-cam.position.z, m=Math.hypot(dx,dz)||1;
+    var ax=dx/m, az=dz/m;
+    for(var i=0;i<RIM.length;i++){
+      var a=RIM[i].deg*Math.PI/180, c=Math.cos(a), s2=Math.sin(a);
+      var rx=ax*c-az*s2, rz=ax*s2+az*c;
+      rimLights[i].target.position.set(p.x, p.y+1.0, p.z);
+      rimLights[i].position.set(p.x+rx*7, p.y+RIM[i].up, p.z+rz*7);
+    }
+  }
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
     function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); }
 
@@ -1176,7 +1205,7 @@ import { bwEmpty } from './blackwatch.js';
   function render(dt){
     $('#target-cycle').hidden=!battle||cine||ain.dead;
     var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
-    tickLock(dt);
+    tickLock(dt); tickRim();
     renderMobs(dt); tickSparks(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
     if(interactButton){
       if(executeReady()){ interactButton.hidden=false; interactButton.textContent='F · 처형'; interactButton.classList.add('is-exec'); }
