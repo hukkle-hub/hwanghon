@@ -43,7 +43,12 @@
 # 휘두르는 그림이 판정보다 한참 먼저 끝나 있었다. 그래서 워프의 고정점을 «소스의
 # 최고속» 이 아니라 «엔진의 판정 시점» 으로 잡는다 — 최고속이 거기로 옮겨 온다.
 #
-# 사용: python3 tools/3d/punch.py --glb art/3d/ain_anim.glb [--dry]
+# ⚠ 이 도구는 «두 번 돌리면 안 된다» (멱등하지 않다). 이미 워프된 클립에 다시 워프를
+#   걸면 두 배로 눌린다 — 실제로 exec 를 추가하려고 네 캐릭터에 다시 돌렸다가
+#   skill1·2·3·4·counter 가 이중으로 워프돼 시험 셋이 깨졌다 (체간 34° → 10°).
+#   이미 구운 GLB 에 «새 클립 하나만» 더 넣을 때는 --only 로 범위를 좁혀라.
+#
+# 사용: python3 tools/3d/punch.py --glb art/3d/ain_anim.glb [--only exec] [--dry]
 import bpy, sys, os, math, json
 from mathutils import Vector, Quaternion
 
@@ -73,9 +78,15 @@ RX = {
     'skill4': dict(a=0.090, k=2.4, yaw=14.0),
 
 # 손대지 «않는» 것들, 그리고 이유 —
-#   exec   : 넣었더니 tests/ain-*.test.mjs 의 «처형이 훈련 표적에 닿는가» 가 깨졌다.
-#            타이밍을 바꾸면 판정 시점의 «자세» 가 바뀌어 팔이 표적에 못 닿는다.
-#            도달 검사를 함께 풀어야 하는 건이라 따로 뺀다.
+#   exec   : 두 번 시도했고 두 번 다 안 됐다. 이유가 바뀌었으니 적어 둔다.
+#            처음엔 「도달 검사가 깨진다」고 적었는데, 그 검사가 빨갰던 진짜 이유는
+#            따로 있었다 (docs/design/55). 그래서 다시 넣어 봤더니 —
+#            exec 소스의 최고속은 t=0.138 에 있는데 엔진 판정은 0.58 이다. 워프가
+#            읽는 소스 구간이 [0, 0.488] 로 잘려 «뒤쪽 절반이 통째로 버려진다»:
+#              최고속 13.8 → 20.7 m/s 로 오르지만 체간 34° → 10°, 정지 67% → 88%,
+#              그리고 처형이 표적에 못 닿는다.
+#            시간 재배분으로 풀 문제가 아니다. exec 는 «소스를 갈아야» 한다
+#            (docs/design/54 §4). 지금은 손대지 않는다.
 #   ult·smash : 둘 다 온몸 회전 기술이다. 워프가 «엉덩이가 도는가» 검사를 깬다 —
 #            회전을 시간으로 압축하면 골반 요우의 총량이 줄어든다. 회전 기술은
 #            시간만 주무를 게 아니라 회전 자체를 키워야 한다. 전용 처리가 필요하다.
@@ -128,7 +139,7 @@ def yaw_shape(t, tc):
     return pchip(xs, ys)(t)
 
 
-def main(glb, dry=False):
+def main(glb, dry=False, only=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.gltf(filepath=glb)
     arm = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
@@ -142,6 +153,8 @@ def main(glb, dry=False):
     for act in list(bpy.data.actions):
         # 구운 GLB 를 다시 들이면 액션 이름이 «clip_Armature» 가 된다
         base = act.name.split('_Armature')[0]
+        if only and base not in only:
+            continue
         rx = RX.get(base)
         if not rx:
             continue
@@ -248,4 +261,5 @@ def main(glb, dry=False):
 if __name__ == '__main__':
     a = sys.argv
     g = a[a.index('--glb') + 1] if '--glb' in a else os.path.join(ROOT, 'art/3d/ain_anim.glb')
-    main(g, '--dry' in a)
+    only = set(a[a.index('--only') + 1].split(',')) if '--only' in a else None
+    main(g, '--dry' in a, only)
