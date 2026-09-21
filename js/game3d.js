@@ -159,7 +159,12 @@ import { createBloom } from './bloom.js';
                ② 붙으면 목표각이 발산한다. atan2(플레이어−보스) 는 둘이 겹칠수록 불안정해서,
                   근접에서 돌면 목표각이 요동치고 카메라가 그걸 그대로 쫓았다.
                ③ 미세 떨림을 무시하는 구간이 없어 1도짜리 흔들림도 계속 따라갔다. */
-            maxYawRate:2.2,           /* rad/s — 126°/s. 이보다 빨리는 절대 안 돈다 */
+            /* rad/s — 이보다 빨리는 절대 안 돈다. 2.2(126°/s)로 시작했는데 그게 실제로
+               «부자연스럽다» 의 정체였다: 90° 꺾는 데 63% 따라잡는 시간이 2.31초였다
+               (설계 의도는 시정수 0.30초). 회전 제한이 지수 감쇠보다 먼저 걸려 버려서
+               카메라가 «끌려오는» 게 아니라 «기어서» 왔다. 5.0(286°/s)이면 급회전만
+               제한에 닿는다 — 실측 2.31 → 1.23초. docs/design/58 */
+            maxYawRate:5.0,
             yawDead:0.05,             /* 2.9° 안쪽은 안 쫓는다 */
             nearGap:3.2, nearDamp:0.55 };   /* 이 거리 안으로 붙으면 그만큼 느리게 따라간다 */
   var fovWant=CAM.fov, bossTall=0;
@@ -1238,7 +1243,7 @@ import { createBloom } from './bloom.js';
     var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist, dt);
-    var z=Math.pow(0.001, dt);
+    var z=Math.pow(0.0002, dt);            /* 시정수 약 0.12초 — 위치·주시점 공용 */
     var yawEff=camYaw+camSlide;
     /* 어깨 너머: 카메라와 주시점을 «같이» 옆으로 민다 → 캐릭터가 화면 삼분점으로 비껴난다.
        한쪽만 밀면 캐릭터를 비스듬히 보게 돼 어깨가 화면을 가린다. */
@@ -1247,7 +1252,10 @@ import { createBloom } from './bloom.js';
     look.x+=rx; look.z+=rz; look.y+=CAM.lookUp;
     var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist);
     if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, cineCam.back?k:Math.min(1,k*1.5)); }
-    else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-Math.pow(0.0005,dt)); }
+    /* 위치와 주시점을 «같은» 시정수로 따라간다. 예전엔 0.145초 / 0.13초로 달라서
+       회전 중에 카메라가 아직 안 온 자리를 겨누고 있었다 — 그게 프레이밍이 «헤엄치는»
+       느낌의 정체다. 이제 둘 다 0.12초. (docs/design/58) */
+    else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-z); }
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
     /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
