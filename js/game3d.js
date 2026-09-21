@@ -109,18 +109,23 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
        전투   0.30  락온 없이 싸울 때. 붙되 시야는 남긴다
        탐색   0.26  마영전처럼 달리는 방향 뒤로 바로 붙는다
      멈추면 따라가지 않는다(idleHold) — 몬헌도 서 있을 때 카메라를 돌리지 않는다. */
+  /* 어깨 너머(등 시점). 디렉터 결정 — 「캐릭터 등 시점에서 1인칭으로」.
+     전에는 7.8/8.6 으로 물러나 몸이 화면 세로의 27.6% 였다. 그건 «구경하는» 그림이다.
+     여기서는 바짝 붙고 살짝 옆으로 비껴서 몸짓·무기·의상이 다 보이고 타격이 코앞에서
+     터지게 한다 — 캐릭터와 전투에 올인하는 게임이니 그 둘이 화면을 차지해야 한다.
+     가까울수록 시야가 좁아지므로 FOV 를 함께 넓힌다 (50 → 58). */
   var CAM={ tauLock:0.16, tauFight:0.30, tauMove:0.26, idleHold:true,
             lookAhead:1.1,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
-            pitchMove:0.50, pitchFight:0.42,
-            fov:50, fovDash:57, fovHit:46, fovTau:0.10,
+            pitchMove:0.26, pitchFight:0.19,   /* 위에서 내려다보지 않는다 — 등 뒤 눈높이 */
+            shoulder:0.52,            /* 카메라를 오른쪽으로 (m) — 캐릭터가 화면 왼쪽 삼분점에 */
+            lookUp:0.42,              /* 주시점을 가슴 위로 — 얼굴과 상체가 중앙에 온다 */
+            fov:58, fovDash:65, fovHit:53, fovTau:0.10,
             sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
   var fovWant=CAM.fov, bossTall=0;
-  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.4:L.camDist+0.4):(MOBILE?7.8:8.6))*0.9
-    /* 「3인칭인데 1인칭 느낌」이라 뒤로 뺐다. 예전엔 «조금 당겨 캐릭터를 크게» 라고
-       6.2/7.0 이었는데, 뼈 기준으로 재 보니 몸이 화면 세로의 34.8% 를 먹고 있었다.
-       7.8 이면 25% 대로 내려와 보스와 아레나가 같이 들어온다 (docs/design/50 §6).
-       위로 더 못 빼는 이유는 camDist 가 아니라 «벽» 이다 — camClear() 가 뒤쪽 벽까지의
-       거리로 잘라서, 훈련장 벙커에서는 7.9 m 가 천장이다. 그 이상은 방을 넓혀야 한다. */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
+  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?Math.min(L.camDist, MOBILE?3.2:3.5):(MOBILE?3.2:3.5))
+    /* 어깨 너머. 벽 천장(camClear 가 뒤쪽 벽까지로 자른다, 훈련장 7.9 m)에 한참 못 미치므로
+       좁은 방에서도 잘리지 않는다 — 오히려 그게 이 시점의 장점이다.
+       보스가 크면 CAM.sizeDist 가 알아서 물리고, 락온으로 멀어지면 gap 보정이 물린다. */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight;
     var profile=graphicsProfile({quality:SET.quality,mobile:MOBILE,safe:SAFE,degraded:autoLow,width:w,height:h,dpr:devicePixelRatio});
     renderer.setPixelRatio(profile.pixelRatio);renderer.shadowMap.enabled=profile.shadowSize>0;
@@ -1057,6 +1062,11 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
     dist=camClear(look, dist, dt);
     var z=Math.pow(0.001, dt);
     var yawEff=camYaw+camSlide;
+    /* 어깨 너머: 카메라와 주시점을 «같이» 옆으로 민다 → 캐릭터가 화면 삼분점으로 비껴난다.
+       한쪽만 밀면 캐릭터를 비스듬히 보게 돼 어깨가 화면을 가린다. */
+    var sOff=CAM.shoulder*(battle?1:0.8);
+    var rx=Math.cos(yawEff)*sOff, rz=-Math.sin(yawEff)*sOff;
+    look.x+=rx; look.z+=rz; look.y+=CAM.lookUp;
     var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist);
     if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, cineCam.back?k:Math.min(1,k*1.5)); }
     else { camPos.lerp(target, 1-z); camLook.lerp(look, 1-Math.pow(0.0005,dt)); }
