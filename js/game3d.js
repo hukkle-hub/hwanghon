@@ -20,6 +20,7 @@ import { prepareMarshMotion, detachBossPiece, bossAttackSpec } from './marsh-mot
 import { buildDungeonProps } from './dungeon-props.js';
 import { WeaponTrail, trailStyle } from './weapon-trail.js';
 import { bwEmpty } from './blackwatch.js';
+import { runRate as calcRunRate } from './locomotion.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
@@ -506,6 +507,9 @@ import { bwEmpty } from './blackwatch.js';
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
+    /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
+       죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
+    try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
     var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); ain.slot=slot; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot);
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
@@ -518,7 +522,37 @@ import { bwEmpty } from './blackwatch.js';
   /* 새로 넣은 동작이 없는(캐시된) GLB 에서도 끊기지 않도록 한 단계 대체한다 */
   var CLIP_FALLBACK={ counter:'attack3', exec:'smash', skill1:'attack2', skill2:'roll', skill3:'smash', skill4:'guardUp' };
   function action(n){ if(!ain.mixer) return null; var c=ain.clips[n]||ain.clips[CLIP_FALLBACK[n]]; return c?ain.mixer.clipAction(c):null; }
-  function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?1.15:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
+  /* 달리기 배속 — «미끄러지지 않는 값» 을 클립에서 역산한다.
+     예전엔 1.15 로 박혀 있었는데, 그 배속으로 클립이 내는 지면 속도는 2.64 m/s 였고
+     엔진은 4.60 m/s 로 옮겼다 — 이동의 43%가 발이 흐르는 스케이트였다.
+     상수로 고쳐 박아도 캐릭터마다 다리 길이가 달라 또 어긋난다 (아인 보폭 1.18 m,
+     카인 1.31 m). 그래서 로드할 때 실제 클립의 보폭을 재서 계산한다.
+     (보폭 자체는 tools/3d/stride.py 로 0.96 → 1.18 m 로 키웠다. docs/design/54)
+     스틱을 살살 밀면 실제 속도도 느리므로 배속을 같이 줄인다 — 그때도 안 미끄러지게. */
+  var RUN_RATE=1.15;
+  function measureRunRate(){
+    var clip=ain.clips.run; if(!clip||!ain.model) return;
+    var bone={}; ain.model.traverse(function(o){ if(o.isBone) bone[o.name.replace(/^mixamorig:?/,'')]=o; });
+    if(!bone.Hips||!bone.LeftFoot||!bone.RightFoot) return;
+    var mx=new THREE.AnimationMixer(ain.model), a=mx.clipAction(clip);
+    a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.play();
+    /* 지역 변수 이름에 L 을 쓰면 «레벨» L 을 가린다 — 실제로 한 번 가려서 로더 콜백이
+       통째로 죽었다 (로드 2/4 에서 멈춤). LF/RF 로 둔다. */
+    var N=36, LF=[], RF=[], h=new THREE.Vector3();
+    for(var i=0;i<=N;i++){
+      mx.setTime(clip.duration*i/N); ain.model.updateMatrixWorld(true);
+      bone.Hips.getWorldPosition(h);
+      LF.push(bone.LeftFoot.getWorldPosition(new THREE.Vector3()).sub(h));
+      RF.push(bone.RightFoot.getWorldPosition(new THREE.Vector3()).sub(h));
+    }
+    a.stop(); mx.stopAllAction(); mx.uncacheClip(clip);
+    function span(arr,k){ var mn=1e9,mxv=-1e9; for(var j=0;j<arr.length;j++){ mn=Math.min(mn,arr[j][k]); mxv=Math.max(mxv,arr[j][k]); } return mxv-mn; }
+    var k=span(LF,'x')>span(LF,'z')?'x':'z';          /* 진행축 = 분산이 큰 쪽 */
+    var stride=(span(LF,k)+span(RF,k))/2;
+    RUN_RATE=calcRunRate(stride, clip.duration, L.player.speed/SCALE);
+    DIAG.errors.push('run 보폭 '+stride.toFixed(2)+'m → 배속 '+RUN_RATE.toFixed(2));
+  }
+  function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?RUN_RATE:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
   function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);
     ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.12); ain.oneshotT=0; ain.hold=!!o.hold; }
   function ainTick(dt){ if(!ain.mixer) return;
@@ -531,6 +565,10 @@ import { bwEmpty } from './blackwatch.js';
       playOnce('brake'); ain.braked=1; }
     else if(moving) ain.braked=0;
     var want=ain.dead?'idle':guard?'guard':P.rollT>0?'run':moving?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
+    if(ain.base==='run' && ain.act){                    /* 스틱을 살살 밀면 다리도 천천히 돈다 */
+      var kst=curStick(), km=kst?Math.min(1,Math.hypot(kst.sx,kst.sy)):1;
+      ain.act.timeScale=RUN_RATE*Math.max(0.45, km);
+    }
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
