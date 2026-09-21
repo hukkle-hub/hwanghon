@@ -115,7 +115,12 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
             fov:50, fovDash:57, fovHit:46, fovTau:0.10,
             sizeDist:0.55 };          /* 보스가 클수록 물러난다 (보스 높이 m 당) */
   var fovWant=CAM.fov, bossTall=0;
-  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.8:L.camDist):(MOBILE?6.2:7.0))*0.9   /* 조금 당겨 캐릭터를 크게 */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
+  var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?(MOBILE?L.camDist-0.4:L.camDist+0.4):(MOBILE?7.8:8.6))*0.9
+    /* 「3인칭인데 1인칭 느낌」이라 뒤로 뺐다. 예전엔 «조금 당겨 캐릭터를 크게» 라고
+       6.2/7.0 이었는데, 뼈 기준으로 재 보니 몸이 화면 세로의 34.8% 를 먹고 있었다.
+       7.8 이면 25% 대로 내려와 보스와 아레나가 같이 들어온다 (docs/design/50 §6).
+       위로 더 못 빼는 이유는 camDist 가 아니라 «벽» 이다 — camClear() 가 뒤쪽 벽까지의
+       거리로 잘라서, 훈련장 벙커에서는 7.9 m 가 천장이다. 그 이상은 방을 넓혀야 한다. */, dragT=0, camLook=new THREE.Vector3(), camPos=new THREE.Vector3(), camFree=false, camZoom=1;
   function resize(){ var w=el.dg.clientWidth||innerWidth, h=el.dg.clientHeight||innerHeight;
     var profile=graphicsProfile({quality:SET.quality,mobile:MOBILE,safe:SAFE,degraded:autoLow,width:w,height:h,dpr:devicePixelRatio});
     renderer.setPixelRatio(profile.pixelRatio);renderer.shadowMap.enabled=profile.shadowSize>0;
