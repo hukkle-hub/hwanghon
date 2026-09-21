@@ -78,7 +78,13 @@ export function repairAinClips(clips,report){return clips.map(clip=>{
  if(source.duration!==clip.duration)for(const track of result.tracks)track.scale(clip.duration/source.duration);
  // Align the reused body's impact to the destination combat clip contact.
  // Spin finishes facing the opponent before recovery, not away at damage time.
- const contact={skill3:[.98,.55],ult:[.78,.50]}[clip.name];
+ // Anchors are measured, not guessed: [where the impact sits in the SOURCE,
+ // where combat deals damage in the DESTINATION]. ult borrows smash, whose
+ // downward blow lands at .86 of the source. At the old .78 the hands were
+ // drifting at 1.5 m/s on the damage frame — the ultimate dealt its damage
+ // between swings. At .86 they cross it at 49.6 m/s, still facing the target.
+ // tests/ult-contact.test.mjs pins it. docs/design/49-skill-motion.md
+ const contact={skill3:[.98,.55],ult:[.86,.50]}[clip.name];
  if(contact&&source!==clip)for(const track of result.tracks){
   const [from,to]=contact,anchor=from*clip.duration,size=track.getValueSize();
   // Insert the time-warp corner, otherwise interpolation across it delays

@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>스킬 자세 검수</title>
+<!-- 런타임이 «실제로 재생하는» 클립(ain-bind-repair 가 갈아 끼운 것)을 임의 시점에 세워 본다.
+     GLB 를 그냥 열면 게임과 다른 모션을 보게 된다 — ult 는 smash 소스, skill3 은 ult 소스다.
+       window.setPose('ult', 0.50)   → 클립 50% 지점 자세로 세우고 한 장 그린다
+     낫은 RightHandSlot 에 그냥 붙인다 (양손 그립 IK 는 걸지 않는다 — 휘두름을 읽는 용도). -->
+<style>html,body{margin:0;background:#12151a;overflow:hidden}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {repairAinClips} from '../../js/ain-bind-repair.js';
+const W=520,H=720;
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true});
+r.setSize(W,H); r.setPixelRatio(2); r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=1.6;
+const sc=new T.Scene(); sc.background=new T.Color(0x12151a);
+const cam=new T.PerspectiveCamera(32,W/H,0.1,50);
+sc.add(new T.HemisphereLight(0xcfe0ff,0x20242c,1.3));
+const key=new T.DirectionalLight(0xffffff,2.2); key.position.set(2.2,3.4,2.6); sc.add(key);
+const rim=new T.DirectionalLight(0x88aaff,1.4); rim.position.set(-2.4,2.0,-2.2); sc.add(rim);
+const l=new GLTFLoader();
+const g=await l.loadAsync('../../art/3d/ain_anim.glb');
+sc.add(g.scene);
+/* 낫을 손에 붙인다 — 무기가 없으면 휘두름이 안 읽힌다 */
+try{
+  const w=await l.loadAsync('../../art/3d/ain_scythe_tex.glb');
+  let slot=null; g.scene.traverse(o=>{ if(o.isBone && /RightHandSlot$/.test(o.name)) slot=o; });
+  if(slot) slot.add(w.scene);
+}catch(e){ console.warn('scythe', e); }
+const clips=repairAinClips(g.animations,{changed:new Map()});
+const mixer=new T.AnimationMixer(g.scene);
+cam.position.set(2.0,1.35,2.5); cam.lookAt(0,0.95,0);
+let act=null;
+window.setPose=function(name,u){
+  const c=clips.find(x=>x.name===name); mixer.stopAllAction();
+  act=mixer.clipAction(c); act.reset(); act.setLoop(T.LoopOnce,1); act.clampWhenFinished=true; act.play();
+  act.paused=true; act.time=Math.min(c.duration*0.998,c.duration*u); mixer.update(0);
+  r.render(sc,cam); return true;
+};
+window.TW_READY=1; r.render(sc,cam);
+</script>
