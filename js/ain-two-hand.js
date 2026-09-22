@@ -98,6 +98,20 @@ function path(keys,t){
    값은 손으로 고른 게 아니라 «재서» 골랐다 — tools/3d/swing-measure.html 로
    날 끝 경로를 재고, tests/ain-two-hand 의 손목·연속성 검사를 제약으로 뒀다.
    docs/design/67-swing-gain.md */
+/* 자루 y 성분의 하한 — 날이 바닥을 뚫지 않게.
+   처음엔 «손잡이 y=1.03, 날 1.861 m» 로 계산해서 −0.50 을 넣었는데 거의 안
+   들었다. 재 보니 휘두르는 중에 손잡이가 0.6 m 까지 내려간다(웅크린다).
+   그래서 수치로 훑어 골랐다:
+       하한     smash    exec    attack2
+       −0.50    −0.06   −0.17    −0.44
+       −0.35    +0.06   −0.06    −0.37
+       −0.28    +0.14   +0.01    −0.31   ← 채택
+       +0.10    +0.78   +0.62    −0.09   (대신 스윙이 납작해진다)
+   −0.28 이면 스매시·처형이 바닥 위로 올라온다. attack1(−0.09)·attack2(−0.31)
+   은 남는데, 이 둘은 자루가 아니라 «엉덩이가 내려가서» 낮아지는 것이라
+   자루 하한으로는 못 고친다. 제대로 고치려면 손잡이 높이를 프레임마다 읽어
+   하한을 계산해야 한다 — docs/design/69 §4. */
+const MIN_SHAFT_Y=-0.28, SOFT_FLOOR=0.06;
 export const AIN_SWING_GAIN={
  /* 값은 «재서» 골랐다. 목표는 날 끝 경로를 늘리는 것, 제약은 두 가지다:
       · 날 끝이 바닥을 뚫으면 안 된다 (측정칸 «최저» ≥ 0)
@@ -118,7 +132,7 @@ export const AIN_SWING_GAIN={
                                                  (ready 와 거의 반대인 키가 있어
                                                   회전축이 불안정 — 64번 문서 §3)
     attack2·smash 의 바닥 관통은 따로 고쳐야 한다. docs/design/67 §3 */
- attack1:1.30, attack3:1.25, skill3:1.35, ult:1.25
+ attack1:1.30, attack3:1.25, skill3:1.35, ult:1.35
 };
 function amplify(dir,gain){
  if(!(gain>0)||Math.abs(gain-1)<1e-6) return dir;
@@ -138,7 +152,18 @@ function pathRotation(keys,t,gain){
  const tan=[0,1,2].map(k=>tangents(keys,3+k));
  const dir=V(hermite(keys,t,3,tan[0]),hermite(keys,t,4,tan[1]),hermite(keys,t,5,tan[2]));
  if(dir.lengthSq()<1e-9)dir.set(0,1,0);
- const swing=Q().setFromUnitVectors(V(0,1,0),dir.normalize());
+ dir.normalize();
+ /* 날이 바닥을 뚫지 않게. 낫은 1.861 m 라 자루가 조금만 숙여도 끝이 땅속으로
+    들어간다 — 실측으로 attack2 −0.47 m, smash −0.06 m, exec −0.17 m 였다.
+    손잡이가 대략 y=1.03 이므로 tip.y ≈ 1.03 + 1.861·dir.y. 여기서 자루의
+    y 성분에 하한을 준다. 딱 자르면 꺾이니 부드럽게 눌러 올린다.
+    («들고 다니는» 자세는 일부러 끌고 다니는 것이라 여기 오기 전에 섞인다.) */
+ if(dir.y<MIN_SHAFT_Y){
+  const over=MIN_SHAFT_Y-dir.y;
+  dir.y=MIN_SHAFT_Y-SOFT_FLOOR*(1-Math.exp(-over/SOFT_FLOOR));   /* 하한에 점근 */
+  dir.normalize();
+ }
+ const swing=Q().setFromUnitVectors(V(0,1,0),dir);
  /* ⚠ 전 구간을 똑같이 키우면 «접점 자세» 까지 밀려서 오히려 나빠진다.
     실측: 균일 배율 1.6 에서 skill3 접점 날끝 15.4 → 8.8 m/s, skill1 9.5 → 7.0.
     크게 휘두르되 «맞는 순간은 그대로» 여야 한다. 그래서 접점(.42)에서는 배율
