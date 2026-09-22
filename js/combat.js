@@ -26,7 +26,7 @@
     var E={hp:D.hp,hpMax:D.hp,posture:0,state:'idle',patI:0,patT:D.patternGap||1.4,pat:null,
       def:null,beats:[],beatI:0,linkT:0,
       tele:0,teleDur:0,recovery:0,recoveryDur:0,downT:0,stagT:0,bleed:[],dead:false};
-    var M={time:0,dmg:0,dmgTaken:0,hits:0,crits:0,counters:0,perfect:0,telegraphs:0,counterOpportunities:0,dodges:0,guards:0,breaks:0,
+    var M={time:0,dmg:0,dmgTaken:0,hits:0,crits:0,deflects:0,counters:0,perfect:0,telegraphs:0,counterOpportunities:0,dodges:0,guards:0,breaks:0,
       bleedDmg:0,ultUsed:0,downs:0,deaths:0,evades:0,ripostes:0,normalDmg:0,counterDmg:0,riposteDmg:0,breakDmg:0,whiffs:0};
     var B={time:0,poseTime:0,over:false,metrics:M,part:function(id){return parts.find(function(p){return p.id===id;});}};
     function emit(t,d){events.push(Object.assign({t:t,time:B.time},d||{}));}
@@ -58,13 +58,19 @@
     }
     function damage(pid,mult,opt){
       if(E.dead)return 0;opt=opt||{};var p=B.part(pid)||parts[0];
+      /* 튕김 판정은 «피해를 세기 전에» 난다 — 피해를 깎는 게 튕김의 본체다.
+         docs/design/65-contact-feel.md §5 */
+      var CF=G.TW_CONTACT_FEEL;
+      var mat=G.TW_COMBAT_QUALITY?G.TW_COMBAT_QUALITY.material(p.id,D.kind):'straw';
+      var deflect=!!(CF&&CF.deflects&&P.action&&!opt.counter&&!opt.riposte&&!opt.skill
+                     &&CF.deflects(mat,P.action.clip,p.broken));
       var weak=p.broken?(policy.exposed||R.weak.broken):p.weak?R.weak.weak:R.weak.normal;
       var guard=p.guardedBy&&p.guardedBy.some(function(id){var q=B.part(id);return q&&!q.broken;})?1-p.guardReduce:1;
       var crit=P.critNext||rand()<st.crit/100;P.critNext=false;
       var reward=opt.counter?(opt.tier==='clash'?R.counter.perfectMult:opt.tier==='deflect'?(R.counter.deflectMult||R.counter.mult):R.counter.mult):opt.riposte?(opt.riposte==='counter'?(policy.normal==null?1:policy.normal)*1.15:opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
         policy.normal!=null?(opt.skill?policy.skill:policy.normal):1;
       var partyPart=p.hp!=null&&!p.broken?(o.partMult||1):1;
-      var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1));
+      var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1)*(deflect?CF.DEFLECT.dmg:1));
       E.hp=Math.max(0,E.hp-amount);M.dmg+=amount;M.hits++;if(crit)M.crits++;
       if(opt.counter)M.counterDmg+=amount;else if(opt.riposte)M.riposteDmg+=amount;else M.normalDmg+=amount;
       /* 저항 — 히트스톱(정지) 뒤에 «느려짐» 을 잇는다. 정지는 «맞았다» 는 신호고,
@@ -72,15 +78,19 @@
          재질이 단단할수록 오래·깊게 끌린다. docs/design/65-contact-feel.md
          ⚠ emit('hit') «앞» 에 있어야 한다. 뒤에 뒀더니 이벤트가 feel:null 로
             나가서 연출이 저항을 아예 못 받았다. */
-      var CF=G.TW_CONTACT_FEEL;
       if(CF&&P.action){
-        var mat=G.TW_COMBAT_QUALITY?G.TW_COMBAT_QUALITY.material(p.id,D.kind):'straw';
         var cf=CF.onContact(mat,P.action.clip,0);
         if(cf.dragT>P.dragT){P.dragT=cf.dragT;P.dragTotal=cf.dragT;P.dragRate=cf.dragRate;}
-        opt.contactFeel={material:mat,dragT:cf.dragT,dragRate:cf.dragRate,depth:cf.depth,ring:cf.ring};
+        opt.contactFeel={material:mat,dragT:cf.dragT,dragRate:cf.dragRate,depth:cf.depth,
+          ring:cf.ring*(deflect?CF.DEFLECT.ring:1),deflect:deflect};
       }
-      emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,feel:opt.contactFeel||null,contact:opt.contact||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
-      if(p.breakable&&p.hp!=null&&!p.broken){
+      emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,deflect:deflect,feel:opt.contactFeel||null,contact:opt.contact||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
+      /* 튕기면 «장갑이 안 깎인다» — 약공격으로는 영영 못 벗긴다. 대신 내가 묶인다. */
+      /* 행동 자체는 끊지 않는다 — 끊으면 오히려 후딜이 «짧아져» 이득이 된다.
+         휘두르던 것은 끝까지 가고, 그 뒤에 경직으로 묶인다. */
+      if(deflect){ P.lockT=Math.max(P.lockT,CF.DEFLECT.lock); P.combo=0; P.comboT=0;
+        M.deflects++; emit('deflect',{part:p.id,lock:CF.DEFLECT.lock}); }
+      if(!deflect&&p.breakable&&p.hp!=null&&!p.broken){
         var partBonus=policy.partMult||1; if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
         p.hp=Math.max(0,p.hp-Math.round(amount*partBonus));if(p.hp===0)breakPart(p);
       }

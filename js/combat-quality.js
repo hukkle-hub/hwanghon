@@ -47,7 +47,10 @@
       particles:major?(perfect?22:16):heavy?14:crit?10:6,
       color:material==='metal'?0xB9CEE0:material==='core'?0xE7846C:0xCDB185};
   }
-  function material(part,kind){return part==='core'?'core':/shl|shr|armor|chain|gear|plate|exhaust/.test(part)||kind==='iron'?'metal':'straw';}
+  /* 재질. 기계 보스의 «장갑·접점·집게» 는 금속이다 — 계전기 접점(contact),
+     파쇄 기갑의 턱·팔(jaw/arm), 소생기의 펌프(pump). 눈에 쇠로 보이는 것은
+     쇠로 판정해야 튕김(contact-feel.js)이 말이 된다. 식물·짐승은 straw. */
+  function material(part,kind){return part==='core'?'core':/shl|shr|armor|chain|gear|plate|exhaust|contact|jaw|arm|pump/.test(part)||kind==='iron'?'metal':'straw';}
   function trailActive(a){return !!a&&a.elapsed>=a.hitAt*.6&&a.elapsed<=Math.min(a.duration,a.hitAt+.22);}
   function exposed(parts){return parts.some(p=>p.weak&&p.guardedBy?.length&&p.guardedBy.every(id=>parts.some(q=>q.id===id&&q.broken)));}
   const api={roles,role,phase,partCenter,contact,feedback,material,exposed,trailActive};

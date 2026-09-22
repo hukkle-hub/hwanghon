@@ -651,7 +651,12 @@ import { createBloom } from './bloom.js';
       else { ain.oneshot.stop(); ain.oneshot=null; ain.timed=null; if(ain.act){ain.act.reset().fadeIn(0.12).play();} }
     }
     ain.mixer.update(dt);
-    ain.root.position.copy(v3(P.x,P.y)); tickBlob(ainBlob, ain.root.position, 0.52, ain.root.position.y);
+    ain.root.position.copy(v3(P.x,P.y));
+    /* 튕김 반동 — 보스 반대 방향으로 밀린다(연출 전용, 판정 좌표는 그대로) */
+    var rk=recoilOffset();
+    if(rk>0 && boss && boss.root){ var bx=ain.root.position.x-boss.root.position.x, bz=ain.root.position.z-boss.root.position.z,
+      bl=Math.hypot(bx,bz)||1; ain.root.position.x+=bx/bl*rk; ain.root.position.z+=bz/bl*rk; }
+    tickBlob(ainBlob, ain.root.position, 0.52, ain.root.position.y);
     var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
@@ -744,6 +749,22 @@ import { createBloom } from './bloom.js';
     /* 빠져나오면 따라잡는다 — 남은 행동 시간 안에 반드시 0 이 되도록 빠르게 */
     if(dragLag>0){ dragLag=Math.max(0, dragLag - dt*2.2); }
   }
+  /* ── 튕김(弾かれ)의 «보이는» 몫 ───────────────────────────────────────────
+     끌림이 «날이 들어갔다» 라면, 튕김은 «안 들어갔다» 다. 반대로 그려야 한다:
+     날이 파고드는 게 아니라 되튀어 나오고, 몸이 뒤로 밀린다.
+     recoilT 동안 캐릭터를 보스 반대쪽으로 밀었다가 되돌린다 — «위치» 는
+     연출값일 뿐, 판정 좌표 P.x/P.y 는 건드리지 않는다. */
+  var recoilT=0, recoilDur=0, recoilDist=0;
+  function deflectRecoil(){ recoilT=recoilDur=0.26; recoilDist=0.30; }
+  function recoilOffset(){
+    if(!(recoilT>0)) return 0;
+    var u=1-recoilT/recoilDur;                 /* 0 → 1 */
+    /* 확 튀어나갔다가(0.18 에서 최대) 천천히 제자리로 */
+    var e=u<0.18 ? u/0.18 : 1-(u-0.18)/0.82;
+    return recoilDist*e*e;
+  }
+  function tickRecoil(dt){ if(recoilT>0) recoilT=Math.max(0,recoilT-dt); }
+
   function tickTrail(dt){
     if(!ain.weapon) return;
     if(!trail) trail=new WeaponTrail(scene);
@@ -762,6 +783,29 @@ import { createBloom } from './bloom.js';
   function fxUlt(color){ var bp=bossHitPos('core'); fxRing(ain.root.position, color, 4.5, 0.7); fxRing(bp, color, 3.0, 0.6);
     var pil=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.55,6,20,1,true), fxMat(color,0.6)); pil.position.set(bp.x,3,bp.z); fxPush(pil, 0.7, function(o,k,dt){ o.rotation.y+=dt*4; o.scale.set(1+k*1.6,1,1+k*1.6); o.material.opacity=0.6*(1-k); });
     camZoom=0.78; }
+  /* 튕김 섬광 — «안 들어갔다» 를 한눈에. 전투 카메라(4~6m)에서 읽혀야 하므로
+     카운터 맞대기와 비슷한 크기로 키웠다. 색은 차가운 강철빛으로 고정한다:
+     따뜻한 색(살·피)과 구별돼야 「쇠에 튕겼다」로 읽힌다.
+     처음엔 작게 넣었다가 헤드리스 캡처에서 점만 한 걸 보고 키웠다. */
+  function fxDeflect(pos, dir){
+    var ring=new THREE.Mesh(new THREE.RingGeometry(0.22,0.46,30), fxMat(0xCFE4FF, 0.95));
+    ring.position.copy(pos); ring.lookAt(cam.position);
+    fxPush(ring, 0.26, function(o,k){ var sc=0.7+k*2.6; o.scale.set(sc,sc,1); o.material.opacity=0.95*(1-k); });
+    /* 두 번째 링을 늦게 터뜨려 «되울림» 을 만든다 */
+    var ring2=new THREE.Mesh(new THREE.RingGeometry(0.30,0.40, 30), fxMat(0xFFFFFF, 0.0));
+    ring2.position.copy(pos); ring2.lookAt(cam.position);
+    fxPush(ring2, 0.34, function(o,k){ var u=Math.max(0,(k-0.35)/0.65), sc=0.5+u*2.0;
+      o.scale.set(sc,sc,1); o.material.opacity=0.7*u*(1-u)*4; });
+    var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xE6F1FF,
+      transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.95 }));
+    /* 섬광은 «작고 짧게». 처음엔 1.5 배로 크게 넣었더니 접점이 하얀 덩어리로
+       뭉개져서 무엇이 일어났는지 안 보였다. 읽히는 건 링이지 섬광이 아니다. */
+    fl.position.copy(pos); fl.scale.set(0.85,0.85,1);
+    fxPush(fl, 0.13, function(o,k){ var sc=0.85+k*0.5; o.scale.set(sc,sc,1); o.material.opacity=0.70*(1-k)*(1-k); });
+    /* 불꽃은 «나에게로» 되튄다 — 들어간 게 아니라 되나온 것이다 */
+    burst(pos, 34, 0xE8F2FF, dir);
+    burst(pos, 16, 0xFFF4D0, dir);
+  }
   /* 카운터: 무기가 맞물리는 지점에서 불꽃이 옆으로 뿜어져 나온다 */
   /* g = 세기 0..1. 흘림 0.30 / 튕김 0.62 / 맞대기 1.0 — 예전 호출(perfect 만)도 받는다. */
   function fxClash(perfect, tier){
@@ -1058,6 +1102,26 @@ import { createBloom } from './bloom.js';
           }
           if(e.crit||cmbH>=3){ shake(0.003,120,axH[0],axH[1]); vib(10); }
           if(!s || ['idle','stagger'].indexOf(s.enemy.state)>=0) bossPlay('flinch'); }
+        break;
+      /* 튕김 — 「안 들어갔다」를 보여 준다. 끌림(날이 파고듦)과 «반대» 연출이다.
+         쇳소리 + 되튄 불꽃 소나기 + 몸이 뒤로 밀림 + 콤보 끊김 표시.
+         몬헌에서 튕기면 사냥꾼이 경직에 묶이는 그 순간을 노린 것이다.
+         docs/design/65-contact-feel.md §5 */
+      case 'deflect': var dfp=bossHitPos(HITMAP[e.part]||'body'), dax=axisFromBoss();
+        SFX.play('hit',{heavy:true,material:'metal'});
+        fxDeflect(dfp, dax);
+        fxLight(0xCFE4FF, 5.0, 0.18);
+        /* 흔들림은 «카운터보다 약하게». 튕김은 자주 일어나므로 카운터만큼
+           흔들면 화면이 못 봐 준다. 카메라를 돌리는 킥은 아예 뺐다 —
+           한 번 크게 넣어 봤더니 보스가 화면 밖으로 나갔다. */
+        shake(0.009, 220, dax[0], dax[1]); camKick(0, -0.012, 0.010);
+        vib([18,30,18]);
+        /* 글자는 섬광이 «걷힌 뒤», 접점보다 한참 위에. 접점에 바로 띄웠더니
+           가산합성 섬광에 하얗게 묻혀서 캡처에서 아예 안 보였다. */
+        schedule(function(){ var up=dfp.clone(); up.y+=1.75; num(up, '튕겼다', 'deflect'); }, 170);
+        deflectRecoil(); trailSet(0, 0xBFD8E8);
+        schedule(function(){ trailSet(1.0, 0xBFD8E8); }, 260);
+        el.combo.classList.remove('is-on'); comboT=0;   /* 연계가 끊겼다 */
         break;
       case 'attack': if(!e.timed) ainAttack('light', e.combo); SFX.play('swing'); comboShow(e.combo, false); break;
       case 'whiff': if(!e.timed) ainAttack('light', 1); SFX.play('swing'); num(above(P.x,P.y,2.1), e.ult?'사거리 밖':'닿지 않는다', 'miss'); break;
@@ -1501,7 +1565,7 @@ import { createBloom } from './bloom.js';
     $('#target-cycle').hidden=!battle||cine||ain.dead;
     var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
     tickLock(dt); tickRim();
-    renderMobs(dt); tickSparks(dt); tickDrag(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
+    renderMobs(dt); tickSparks(dt); tickDrag(dt); tickRecoil(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
     if(interactButton){
       if(executeReady()){ interactButton.hidden=false; interactButton.textContent='F · 처형'; interactButton.classList.add('is-exec'); }
       else { interactButton.classList.remove('is-exec'); var near=state==='explore'&&!cine&&!ain.dead?expedition.nearest(P):null;interactButton.hidden=!near;if(near)interactButton.textContent='F · '+near.name; } }
@@ -1626,6 +1690,9 @@ import { createBloom } from './bloom.js';
     /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에
        수백 ms)로는 «사이사이» 만 찍힌다. 세워 놓고 찍어야 보인다. */
     freeze:function(v){ paused=!!v; },
+    /* 검수용: 튕김 연출만 한 번 재생한다 (전투 없이). 금속 부위가 있는
+       페이즈까지 실제로 싸워 가지 않고도 «튕겼을 때 무엇이 보이는가» 를 찍는다. */
+    deflectDemo:function(part){ handle({t:'deflect', part:part||'shl', lock:0.22}); },
     fxDemo:function(clip, lv, branch){
       var look=SFX_SPEC.look(clip||'skill3', lv||1, branch||null), col=brColor({br:branch});
       pendingSkillClip=clip||'skill3';
