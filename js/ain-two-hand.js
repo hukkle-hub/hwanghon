@@ -5,6 +5,16 @@ const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const Q=()=>new T.Quaternion();
 function worldQ(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));b.updateWorldMatrix(false,true);}
 const ready=[0,-.12,.32,-.65,.75,.18];
+// 평상시(전투 행동이 없을 때)의 «들고 다니는» 자세. ready 와 나누어 둔 이유는
+// ready 가 모든 공격 경로의 시작·끝 키이기 때문이다 — 그걸 내리면 모든 휘두름의
+// 예비와 여운이 같이 바뀐다. 큰 낫은 깃발처럼 세워 드는 물건이 아니라 자루를
+// 잡고 날을 뒤로 늘어뜨려 끌고 다니는 물건이다. 자루 방향을 아래·뒤로 돌린다.
+// 값은 재서 맞췄다 — 손잡이가 y=1.03, 날 길이 1.86 m 이므로 자루 y 성분이
+// 높이를 정한다. 날 끝 y: -.86→-0.73(바닥 아래 73cm, 파묻힘) · -.45→-0.09 ·
+// -.38→0.08 · -.34→0.17 · -.25→0.40(다시 뜬다). -.34 로 잡아 17 cm 를 남겼다 —
+// 회전 기울기(최대 15°)가 날 끝을 24 cm 끌어내리므로 여유가 필요하다.
+// scratch: scratchpad/carrysweep.mjs · docs/design/60-carry.md
+export const AIN_CARRY=[.06,-.30,.10,-.34,-.34,-.88];
 const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,ready]];
 const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,.6]],[.65,[0,-.22,.37,-.7,-.5,.5]],[1,ready]];
 const thrust=[[0,ready],[.24,[-.08,-.13,.22,-.6,.15,.75]],[.42,[0,-.08,.48,-.6,.1,.75]],[.62,[0,-.12,.28,-.6,.3,.75]],[1,ready]];
@@ -65,6 +75,7 @@ export function makeAinTwoHand(model,root,slot){
  for(const side of ['Left','Right'])offsets[side]=bones[side+'HandSlot']?.position.clone()||V(0,.055,-.025);
  const diagnostics={gripError:0,rightGripError:0,footError:0};
  let gripAmount=1;
+ let carryAmount=1;
  let lastGripSlot=Q().setFromUnitVectors(V(0,1,0),V(0,0,-1));
  const transitionBones=['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand','RightHandSlot'].map(n=>bones[n]).filter(Boolean);
  let previousPose=null,lastActive=null,transition=null;
@@ -98,8 +109,26 @@ export function makeAinTwoHand(model,root,slot){
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
   // Contact remains at the existing combat hit timestamp, not a new timer.
   if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=globalThis.TW_COMBAT_QUALITY.phase(a);
-  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
-  const spec=path(keys,t),weaponQ=pathRotation(keys,t);
+  // 전투 행동이 없으면(대기·걷기·달리기) «들고 다니는» 자세를 쓴다. 방어 중에는
+ // 낫을 세워 막아야 하므로 ready 를 그대로 둔다. carryAmount 로 섞어 전투에
+ // 들어가고 나올 때 낫이 «툭» 튀지 않게 한다.
+ const carrying=!a&&!guard;
+ // 들고 다니는 자세와 겨눔 자세는 자루 방향이 120° 넘게 벌어져 있다. 지수 감쇠로
+ // 섞으면 «처음 몇 프레임» 에 그 각도의 큰 몫이 한꺼번에 들어가 관절이 튄다
+ // (tests/ain-two-hand: 9.24°/프레임, 문턱 8°). 그래서 속도 자체를 제한한다.
+ // 비대칭이다: 싸우러 들어갈 때는 빨리 세우고(0.18초), 끝나고 내릴 때는 천천히(0.45초).
+ // 평타 접점이 0.30초라 올리는 쪽이 느리면 접점까지 반쯤 들린 채로 친다.
+ { const span=carrying?.45:.18, want=carrying?1:0;
+   if(dt>0){ const step=Math.min(dt,.05)/span, d=want-carryAmount;
+             carryAmount+=Math.abs(d)<=step?d:(d>0?step:-step); }
+   else carryAmount=want; }
+ const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
+  let spec=path(keys,t),weaponQ=pathRotation(keys,t);
+ if(carryAmount>1e-3){
+  const c=AIN_CARRY;
+  spec=spec.map((v,j)=>T.MathUtils.lerp(v,c[j],carryAmount));
+  weaponQ=weaponQ.clone().slerp(aimScytheBlade(V(c[3],c[4],c[5]).normalize()),carryAmount);
+ }
   if(target&&/^(attack[123]|smash|counter|exec)$/.test(name)){
    const local=root.worldToLocal(target.clone());
    const weight=T.MathUtils.smootherstep(local.y,2.0,2.30)*(1-T.MathUtils.smootherstep(local.y,2.85,3.25))

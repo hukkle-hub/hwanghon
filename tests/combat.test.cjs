@@ -6,6 +6,16 @@ for(const f of ['world','dungeons'])vm.runInNewContext(fs.readFileSync(`js/${f}.
 const {RULES,ARENAS,SKILLS}=ctx.window.TW_DUNGEONS,CHAR=ctx.window.TW_WORLD.CHARS.ain;
 const {createBattle,summarize}=require('../js/combat.js');
 const copy=x=>JSON.parse(JSON.stringify(x));
+/* 접점까지 «틱» 하는 일을 상수로 박지 않는다. 아인의 평타·카운터 박자는
+   클립 길이에 맞추느라 바뀔 수 있고(docs/design/61-attack-weight.md), 이 테스트들이
+   재려는 것은 «언제» 가 아니라 «입력이 아니라 접점에서 한 번 맞는다» 는 행동이다.
+   전에 히트스톱을 올렸을 때도 같은 이유로 여기가 빨갛게 됐었다. */
+const toHit=(b,extra)=>{const a=b.snapshot().player.action;b.tick(a.hitAt+(extra==null?.01:extra));};
+const beforeHit=(b,gap)=>{const a=b.snapshot().player.action;b.tick(Math.max(0,a.hitAt-(gap==null?.01:gap)));};
+/* 히트스톱이 행동 시계를 멈추므로 «cancelAt 만큼 틱» 으로는 회복 구간에 못 닿는다.
+   실제로 회복에 들어갈 때까지 잘게 돌린다 — 재려는 것은 «회복이 오면 회피된다» 다. */
+const pastCancel=(b,cap)=>{for(let i=0;i<(cap==null?400:cap);i++){const a=b.snapshot().player.action;
+ if(!a||a.elapsed>=a.cancelAt)return;b.tick(.01);}};
 function battle({stage=0,patterns=[],parts,hooks={},rules={},dummy={},char={},player,partMult=1,skills=SKILLS.ain}={}){
  const r=copy(RULES);r.bleed.chance=0;Object.assign(r,rules);
  const d=Object.assign(copy(ARENAS.tutorial.stages[stage]),{patterns},dummy);if(parts)d.parts=parts;
@@ -23,14 +33,14 @@ test('all tutorial stages attack; strict windows; other dungeon tuning preserved
 });
 test('one hit at contact, not on input; target frozen for each action',()=>{
  const b=battle();b.input('attack','body');b.input('target','core');assert.equal(b.metrics.hits,0);
- b.tick(.23);assert.equal(b.metrics.hits,0);b.tick(.01);assert.equal(b.metrics.hits,1);
+ beforeHit(b);assert.equal(b.metrics.hits,0);b.tick(.02);assert.equal(b.metrics.hits,1);
  assert.equal(b.drain().find(e=>e.t==='hit').part,'body');b.tick(1);assert.equal(b.metrics.hits,1);
 });
 test('range checked at impact; late departure whiffs and entering range connects',()=>{
- for(const initial of [true,false]){let can=initial;const b=battle({hooks:{canHit:()=>can}});b.input('attack');can=!initial;b.tick(.24);assert.equal(b.metrics.hits,initial?0:1);}
+ for(const initial of [true,false]){let can=initial;const b=battle({hooks:{canHit:()=>can}});b.input('attack');can=!initial;toHit(b);assert.equal(b.metrics.hits,initial?0:1);}
 });
 test('windup cannot be cancelled; recovery permits dodge',()=>{
- const b=battle();b.input('attack');b.input('dodge');assert.equal(b.metrics.dodges,0);b.tick(.57);b.input('dodge');assert.equal(b.metrics.dodges,1);assert.equal(b.snapshot().player.action,null);
+ const b=battle();b.input('attack');b.input('dodge');assert.equal(b.metrics.dodges,0);pastCancel(b);b.input('dodge');assert.equal(b.metrics.dodges,1);assert.equal(b.snapshot().player.action,null);
 });
 /* 벽시계 초를 못 박지 않는다 — 히트스톱이 길어지면 같은 «동작 시점» 이 더 늦게 온다.
    0.74초·0.60초 같은 상수를 쓰면 손맛을 올릴 때마다 계약과 무관한 이유로 빨개진다. */
@@ -44,11 +54,11 @@ test('late input buffers once; early spam does not queue',()=>{
  assert.ok(b.snapshot().player.action);b.tick(1);assert.equal(b.metrics.hits,3);
 });
 test('counter damage deferred and stronger; perfect requires final 40ms',()=>{
- const normal=battle();normal.input('attack','body');normal.tick(.24);
+ const normal=battle();normal.input('attack','body');toHit(normal);
  let prior=0;
  for(const [left,perfect] of [[.1,false],[.03,true]]){
   const b=battle({patterns:[pat]});tele(b,left);b.input('attack','body');assert.equal(b.metrics.counters,1);assert.equal(b.metrics.perfect,Number(perfect));assert.equal(b.metrics.hits,0);
-  b.tick(.18);assert.ok(b.metrics.dmg>normal.metrics.dmg*10);assert.ok(b.metrics.dmg>prior);prior=b.metrics.dmg;
+  toHit(b);assert.ok(b.metrics.dmg>normal.metrics.dmg*10);assert.ok(b.metrics.dmg>prior);prior=b.metrics.dmg;
  }
 });
 test('empty dodge and safe positioning cannot farm riposte',()=>{
@@ -56,7 +66,7 @@ test('empty dodge and safe positioning cannot farm riposte',()=>{
 });
 test('actual dodge grants one short reward, consumed even on whiff',()=>{
  const b=battle({patterns:[pat],hooks:{canHit:()=>false}});tele(b);b.input('dodge');b.tick(.32);assert.equal(b.metrics.evades,1);assert.equal(b.snapshot().player.riposte,true);
- b.input('attack');assert.equal(b.snapshot().player.action.opt.riposte,'evade');assert.equal(b.snapshot().player.riposte,false);b.tick(.24);assert.equal(b.metrics.whiffs,1);
+ b.input('attack');assert.equal(b.snapshot().player.action.opt.riposte,'evade');assert.equal(b.snapshot().player.riposte,false);toHit(b);assert.equal(b.metrics.whiffs,1);
  const c=battle({patterns:[pat]});tele(c);c.input('dodge');c.tick(1.1);assert.equal(c.snapshot().player.riposte,false);
 });
 test('dodge into safe space rewards only the threatened attack',()=>{
@@ -71,15 +81,15 @@ test('guard retaliation and interrupted windup do not grant free damage',()=>{
 });
 test('break burst occurs once, exposes armor and releases guarded core',()=>{
  const b=battle({stage:1,parts:[{id:'armor',name:'armor',hp:1,breakable:true},{id:'core',name:'core',hp:null,weak:true,guardedBy:['armor'],guardReduce:.5}]});
- b.input('attack','armor');b.tick(.24);assert.equal(b.metrics.breaks,1);assert.equal(b.metrics.breakDmg,7450);idle(b);b.input('attack','armor');b.tick(.24);assert.equal(b.metrics.breaks,1);
+ b.input('attack','armor');toHit(b);assert.equal(b.metrics.breaks,1);assert.equal(b.metrics.breakDmg,7450);idle(b);b.input('attack','armor');toHit(b);assert.equal(b.metrics.breaks,1);
  assert.equal(b.snapshot().enemy.parts.find(p=>p.id==='core').broken,false);
 });
 test('non-breakable hp never emits break; lethal break cannot resurrect boss',()=>{
- const b=battle({parts:[{id:'x',hp:1,breakable:false}]});b.input('attack');b.tick(.24);assert.equal(b.metrics.breaks,0);
- const c=battle({parts:[{id:'x',hp:1,breakable:true}],dummy:{hp:100,allBrokenDown:true}});c.input('attack');c.tick(.24);assert.equal(c.over,true);assert.equal(c.snapshot().enemy.state,'broken');
+ const b=battle({parts:[{id:'x',hp:1,breakable:false}]});b.input('attack');toHit(b);assert.equal(b.metrics.breaks,0);
+ const c=battle({parts:[{id:'x',hp:1,breakable:true}],dummy:{hp:100,allBrokenDown:true}});c.input('attack');toHit(c);assert.equal(c.over,true);assert.equal(c.snapshot().enemy.state,'broken');
 });
 test('hitstop freezes both action and enemy clock',()=>{
- const b=battle({patterns:[pat]});tele(b,.8);b.input('attack');b.tick(.24);const s=b.snapshot();assert.ok(s.player.hitstop>0);b.tick(.04);assert.equal(b.snapshot().player.action.elapsed,s.player.action.elapsed);assert.equal(b.snapshot().enemy.tele,s.enemy.tele);assert.equal(b.snapshot().poseTime,s.poseTime);
+ const b=battle({patterns:[pat]});tele(b,.8);b.input('attack');toHit(b);const s=b.snapshot();assert.ok(s.player.hitstop>0);b.tick(.04);assert.equal(b.snapshot().player.action.elapsed,s.player.action.elapsed);assert.equal(b.snapshot().enemy.tele,s.enemy.tele);assert.equal(b.snapshot().poseTime,s.poseTime);
 });
 test('same simulation at 30/60/120Hz',()=>{
  function run(fps){const b=battle({patterns:[pat],char:{hp:1e8}});b.input('attack');for(let i=0;i<fps*12;i++)b.tick(1/fps);return b.snapshot();}
@@ -91,7 +101,7 @@ test('four light attacks unlock strongest smash',()=>{
 
 module.exports={battle,copy,CHAR,RULES,ARENAS,SKILLS,createBattle,summarize};
 test('part break interrupts incoming attack as well as its animation',()=>{
- const b=battle({patterns:[pat],parts:[{id:'armor',hp:1,breakable:true}]});tele(b,.8);b.input('attack');b.tick(.24);assert.equal(b.snapshot().enemy.state,'stagger');assert.equal(b.snapshot().enemy.tele,0);b.tick(1);assert.equal(b.metrics.dmgTaken,0);
+ const b=battle({patterns:[pat],parts:[{id:'armor',hp:1,breakable:true}]});tele(b,.8);b.input('attack');toHit(b);assert.equal(b.snapshot().enemy.state,'stagger');assert.equal(b.snapshot().enemy.tele,0);b.tick(1);assert.equal(b.metrics.dmgTaken,0);
 });
 test('seeded full tutorial: spam fails; counter/break/dodge policy clears',()=>{
  const {simulate}=require('./balance.cjs');const spam=simulate('spam'),skilled=simulate('skilled');assert.equal(spam[0].clear,false);assert.equal(skilled.length,3);assert.ok(skilled.every(r=>r.clear));assert.equal(skilled[1].breaks,2);assert.ok(skilled[2].evades>0);assert.equal(skilled[2].breaks,1);
@@ -101,7 +111,7 @@ test('counter grade excludes attacks that can only be evaded',()=>{
 });
 
 test('party part damage bonus survives integration with timed impacts',()=>{
- const hits=[1,1.25].map(partMult=>{const b=battle({partMult,parts:[{id:'armor',hp:10000,breakable:true}]});b.input('attack');b.tick(.24);return b.metrics.dmg;});assert.ok(Math.abs(hits[1]-hits[0]*1.25)<=1);
+ const hits=[1,1.25].map(partMult=>{const b=battle({partMult,parts:[{id:'armor',hp:10000,breakable:true}]});b.input('attack');toHit(b);return b.metrics.dmg;});assert.ok(Math.abs(hits[1]-hits[0]*1.25)<=1);
 });
 test('party counter bonus extends stage window while perfect remains strict',()=>{
  const b=battle({patterns:[pat],rules:{counter:{...copy(RULES.counter),bonus:.09}}});tele(b,.25);b.input('attack');assert.equal(b.metrics.counters,1);assert.equal(b.metrics.perfect,0);assert.equal(b.snapshot().enemy.window,.27);

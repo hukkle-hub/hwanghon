@@ -118,11 +118,16 @@ function pose(clip,name,u,tag,settle){
  const a=mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
  a.time=clip.duration*u; mixer.update(0);
  if(rig){
-  const act={id:name+':'+tag, clip:name, kind:'attack',
-    duration:clip.duration, elapsed:clip.duration*u, clipHit:CONTACTS[name]||0.42};
+  /* 로코모션 클립에는 «전투 행동» 이 없다 — 게임도 a=null 로 부른다.
+     행동을 지어내 넘기면 전투 그립이 걸려 대기·달리기가 실제와 달라진다.
+     moving 도 같이 넘겨야 발 고정이 걸어가는 자세를 붙들지 않는다. */
+  const fight=CONTACTS[name]!=null;
+  const act=fight?{id:name+':'+tag, clip:name, kind:'attack',
+    duration:clip.duration, elapsed:clip.duration*u, clipHit:CONTACTS[name]}:null;
+  const moving=!fight&&/^(run|walk|brake)$/.test(name);
   rig.restore();
   for(let k=0;k<(settle||10);k++){ reset(); a.time=clip.duration*u; mixer.update(0);
-    rig.apply(act,false,false,1/60,name,null); }
+    rig.apply(act,moving,false,1/60,name,null); }
  }
  sc.updateMatrixWorld(true);
  return a;

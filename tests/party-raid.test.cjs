@@ -3,7 +3,10 @@ const members=[{id:'a',name:'아인 A'},{id:'b',name:'아인 B'}];
 const tick=(r,t)=>{for(let i=0;i<Math.round(t*100);i++)r.tick(.01);};
 function fight(level='d01'){const r=new Raid(level,members);r.startFight();for(const p of r.players.values()){p.x=r.boss.x-120;p.y=r.boss.y;p.target='body';}return r;}
 test('two independent players damage one shared boss only at contact',()=>{
- const r=fight(),hp=r.boss.hp;r.input('a',{type:'attack'});r.input('b',{type:'attack'});tick(r,.2);assert.equal(r.boss.hp,hp);tick(r,.04);const sum=[...r.players.values()].reduce((n,p)=>n+p.damage,0);assert.ok(sum>0);assert.equal(r.boss.hp,hp-sum);assert.equal(r.events.filter(e=>e.type==='hit').length,2);tick(r,.3);assert.equal(r.events.filter(e=>e.type==='hit').length,2);
+ const r=fight(),hp=r.boss.hp;r.input('a',{type:'attack'});r.input('b',{type:'attack'});
+ /* 접점 시각은 캐릭터 박자에서 읽는다 — 상수로 박으면 평타 박자를 고칠 때마다 깨진다 */
+ const hit=[...r.players.values()][0].action.hitAt;
+ tick(r,hit-.02);assert.equal(r.boss.hp,hp);tick(r,.04);const sum=[...r.players.values()].reduce((n,p)=>n+p.damage,0);assert.ok(sum>0);assert.equal(r.boss.hp,hp-sum);assert.equal(r.events.filter(e=>e.type==='hit').length,2);tick(r,.3);assert.equal(r.events.filter(e=>e.type==='hit').length,2);
 });
 test('client positions, damage and excessive movement speed cannot change authority',()=>{
  const r=new Raid('d01',members),p=r.players.get('a'),x=p.x,y=p.y,hp=p.hp;

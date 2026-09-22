@@ -56,8 +56,13 @@ test('released guard and early dodge never become delayed phantom inputs',()=>{
 });
 test('counter follow-up appears only after contact and is consumed once',()=>{
  const {r,p}=raid();r.boss.state='telegraph';r.boss.tele=.03;r.boss.pattern={name:'test',counterable:true};r.boss.zone={kind:'circle',x:r.boss.x,y:r.boss.y,r:200};
- r.input('a',{type:'attack'});assert.equal(p.riposteT,0);tick(r,.18);assert.equal(p.riposteKind,'counter');assert.ok(p.riposteT>0);
- tick(r,.40);r.input('a',{type:'attack'});assert.equal(p.riposteT,0);assert.equal(p.action.opt.followup,true);
+ r.input('a',{type:'attack'});assert.equal(p.riposteT,0);
+ tick(r,p.action.hitAt+.01);   /* 접점 시각을 상수로 박지 않는다 — docs/design/61 */
+ assert.equal(p.riposteKind,'counter');assert.ok(p.riposteT>0);
+ /* 카운터 행동이 끝난 뒤에 이어친다. .40 초로 박아 두면 카운터가 길어질 때
+    (아인 전용 박자) 아직 행동 중이라 입력이 버퍼로 들어가 버린다. */
+ for(let i=0;i<200&&p.action;i++)tick(r,.01);
+ r.input('a',{type:'attack'});assert.equal(p.riposteT,0);assert.equal(p.action.opt.followup,true);
 });
 test('heavy windup is slower initially but contact and recovery endpoints stay exact',()=>{
  for(const clip of ['skill1','skill3','ult','smash']){const a={clip,hitAt:.6,duration:1.3,elapsed:.3};assert.ok(Q.phase(a)<.21);a.elapsed=.6;assert.equal(Q.phase(a),.42);a.elapsed=1.3;assert.equal(Q.phase(a),1);}

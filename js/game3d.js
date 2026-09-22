@@ -73,7 +73,34 @@ import { createBloom } from './bloom.js';
   var renderer=new THREE.WebGLRenderer({ canvas:el.canvas, antialias:!MOBILE && !SAFE, powerPreference:'high-performance' });
   try{ var _gl=renderer.getContext(), _dbg=_gl.getExtension('WEBGL_debug_renderer_info'); DIAG.gpu=_dbg?_gl.getParameter(_dbg.UNMASKED_RENDERER_WEBGL):'(unmasked 불가)'; DIAG.gl2=!!renderer.capabilities.isWebGL2; DIAG.maxTex=_gl.getParameter(_gl.MAX_TEXTURE_SIZE); DIAG.maxFU=_gl.getParameter(_gl.MAX_FRAGMENT_UNIFORM_VECTORS); }catch(e){ DIAG.errors.push('GL info: '+e.message); }
   renderer.debug.onShaderError=function(gl, program, vs, fs){ var msg=''; try{ msg=(gl.getProgramInfoLog(program)||'')+' | '+(gl.getShaderInfoLog(fs)||'')+' | '+(gl.getShaderInfoLog(vs)||''); }catch(e){} DIAG.errors.push('SHADER '+msg.slice(0,400)); console.error('shader error', msg); safeMode('shader'); };
-  el.canvas.addEventListener('webglcontextlost', function(e){ e.preventDefault(); DIAG.errors.push('WEBGL CONTEXT LOST'); fatal('그래픽 장치 연결이 끊겼습니다', '메모리 부족이나 GPU 오류입니다. 저사양 모드로 다시 시작해 보세요.'); }, false);
+  /* 그래픽 장치 연결 끊김 — 되살릴 수 있는 사고다.
+     안드로이드에서는 «앱을 잠깐 내렸다 올리기»·«화면 끄기»·다른 앱의 메모리 압박으로
+     흔하게 일어난다. 그전에는 여기서 바로 fatal 을 띄웠다 — 되살아날 수 있는데도
+     막다른 화면을 보여 주니, 디렉터 입장에서는 그냥 「튕긴」 것이다.
+     preventDefault() 를 부르면 브라우저가 컨텍스트를 복구해 준다 (그게 이 호출의
+     본래 뜻이다). three 는 restore 에서 텍스처·버퍼·프로그램을 다시 올린다.
+     그래서 기다렸다가, 정말 안 돌아올 때만 fatal 로 간다. docs/design/62-context-lost.md */
+  var glLost=false, glTimer=0;
+  el.canvas.addEventListener('webglcontextlost', function(e){
+    e.preventDefault(); glLost=true;
+    DIAG.errors.push('WEBGL CONTEXT LOST'); DIAG.ctxLost=(DIAG.ctxLost||0)+1;
+    try{ if(bloom){ bloom=null; } }catch(x){}          /* 렌더 타깃은 복구 뒤 다시 만든다 */
+    hold('그래픽 장치를 다시 연결하는 중…');
+    clearTimeout(glTimer);
+    glTimer=setTimeout(function(){
+      if(!glLost) return;
+      restartCrumb('gl');
+      fatal('그래픽 장치 연결이 끊겼습니다', '메모리 부족이나 GPU 오류입니다. 저사양 모드로 다시 시작해 보세요.');
+    }, 8000);
+  }, false);
+  el.canvas.addEventListener('webglcontextrestored', function(){
+    glLost=false; clearTimeout(glTimer);
+    DIAG.errors.push('WEBGL CONTEXT RESTORED'); DIAG.ctxRestored=(DIAG.ctxRestored||0)+1;
+    /* 복구 직후에는 가장 싼 설정으로 되돌린다 — 끊긴 이유가 대개 메모리다.
+       블룸은 렌더 타깃을 세 장 더 쓰므로 다시 켜지 않는다. */
+    try{ SET.bloom=false; applySettings(); }catch(x){ DIAG.errors.push('restore '+x.message); }
+    unhold();
+  }, false);
   window.addEventListener('error', function(e){ DIAG.errors.push('JS '+(e.message||'')+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||0)); });
   /* 저사양으로 되살리기. «전투 중에는 새로 시작하지 않는다» — 리로드하면 진행 중인
      출격이 통째로 날아가고, 화면에서는 그냥 «앱이 갑자기 다시 시작» 으로 보인다.
@@ -97,6 +124,16 @@ import { createBloom } from './bloom.js';
   window.TW_BUSY=function(){ try{ return !!(battle||state==='fight'||state==='explore'); }catch(e){ return false; } };
   function diagText(){ var avg=fpsSamples.length?Math.round(fpsSamples.reduce(function(a,b){ return a+b; },0)/fpsSamples.length):0, inf=renderer.info; var c=renderer.domElement;
     return ['build '+(window.TW&&TW.BUILD||'?')+' · '+(SAFE?'저사양 모드':'일반 모드')+' · 화질 '+SET.quality+' · 조명 '+(SET.lights?'켬':'끔'), 'GPU: '+DIAG.gpu, 'WebGL'+(DIAG.gl2?'2':'1')+' · 최대 텍스처 '+DIAG.maxTex+' · 프래그먼트 유니폼 '+DIAG.maxFU, '캔버스 '+c.width+'×'+c.height+' (배율 '+renderer.getPixelRatio().toFixed(2)+', 화면 '+innerWidth+'×'+innerHeight+')', 'FPS '+avg+' · 드로우콜 '+inf.render.calls+' · 삼각형 '+inf.render.triangles+' · 텍스처 '+inf.memory.textures+' · 지오메트리 '+inf.memory.geometries+' · 프로그램 '+(inf.programs?inf.programs.length:0), '로드 '+loadN+'/4 · 검은 프레임 '+DIAG.black+' · 시작 후 '+(DIAG.started?Math.round((performance.now()-DIAG.started)/1000)+'s':'-'), '프레임 계측 (S25 실측 판정 아님): '+JSON.stringify(FRAME_METRICS.report()), 'UA: '+navigator.userAgent.slice(0,90)].concat(DIAG.errors.length?['오류 '+DIAG.errors.length+'건:'].concat(DIAG.errors.slice(-6)):['오류 없음']).join('\n'); }
+  /* 복구를 «기다리는» 화면. fatal 과 달리 버튼이 없고, 되살아나면 스스로 걷힌다.
+     전투 상태는 건드리지 않는다 — 컨텍스트만 끊겼을 뿐 싸움은 그대로다. */
+  var heldPause=false;
+  function hold(msg){
+    heldPause=paused; paused=true;
+    el.ovBox.innerHTML='<div class="ov__k">잠시만</div><div class="ov__t">'+msg+'</div>'+
+      '<div class="ov__hint">진행 중인 출격은 그대로입니다.</div>';
+    el.ov.classList.add('is-on');
+  }
+  function unhold(){ el.ov.classList.remove('is-on'); paused=heldPause; }
   function fatal(t, sub){ overlay('<div class="ov__k">오류</div><div class="ov__t">'+t+'</div><div class="ov__hint">'+sub+'</div><div class="xs t-faint" style="text-align:left;line-height:1.7;margin:0 0 14px;word-break:break-all">'+diagText().replace(/\n/g,'<br>')+'</div><button class="btn btn--primary" data-go>저사양 모드로 다시 시작</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ try{ sessionStorage.removeItem('tw:safe'); }catch(e){} safeMode('fatal'); }); }
   function downloadFrameReport(){
     var report={capturedAt:new Date().toISOString(),build:window.TW&&TW.BUILD||'local',level:L.id,phase:phase,state:state,
@@ -595,7 +632,18 @@ import { createBloom } from './bloom.js';
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
-      if(combatAction && combatAction.id===ain.timed.id){ ain.oneshot.time=sampleAction(combatAction,ain.oneshot.getClip().duration); ain.oneshot.paused=true; }
+      if(combatAction && combatAction.id===ain.timed.id){
+        /* clipSpan: 클립 전체가 아니라 앞 구간만 행동 시간에 편다. 여운이 긴 클립은
+           이래야 배속이 떨어진다 (행동 시간은 안 건드리므로 균형 불변).
+           clipHit 을 같이 나눠 주는 것이 핵심이다 — sampleAction 은 clipHit 을
+           «넘겨받은 길이» 의 비율로 읽으므로, 그냥 자르면 판정 프레임의 자세가
+           같은 비율로 앞당겨져 «맞는 그림» 과 «맞는 시각» 이 다시 어긋난다
+           (49 번 문서에서 궁극기로 겪은 그 문제다). 테스트가 못박는다.
+           docs/design/61-attack-weight.md */
+        var oc=ain.oneshot.getClip(), span=(R.motion.clipSpan||{})[oc.name],
+            act=span?Object.assign({},combatAction,{clipHit:combatAction.clipHit/span}):combatAction;
+        ain.oneshot.time=sampleAction(act, oc.duration*(span||1));
+        ain.oneshot.paused=true; }
       else { ain.oneshot.stop(); ain.oneshot=null; ain.timed=null; if(ain.act){ain.act.reset().fadeIn(0.12).play();} }
     }
     ain.mixer.update(dt);
@@ -720,9 +768,13 @@ import { createBloom } from './bloom.js';
   function fxSkill(k){ var kind=window.TW_SKILLS?TW_SKILLS.kindOf(k):(k.dodge?'dodge':k.buff?'buff':k.aoe?'aoe':'dmg'); var c=brColor(k);
     var lv=Math.max(1,Math.min(5,k.lv||1)), g=1+(lv-1)*0.22, br=k.br?1.15:1;   /* 단계가 올라가면 연출도 커진다 */
     num(above(P.x,P.y,2.35), k.name+' Lv'+lv+(k.br?' · '+k.br:''), 'skill');
-    if(kind==='dmg'){ if(CID!=='ain')fxArc(c, lv>=4); fxRing(ain.root.position, c, 1.0, 0.25);
+    /* 아인만 아크를 빼 두었었다 — 낫에 실제 궤적(weapon-trail)이 붙으니 겹친다고 봤다.
+       그런데 그 궤적은 날 폭만큼의 얇은 리본이라, 아인의 스킬에 남는 연출이
+       «발밑 링 0.25초» 하나뿐이었다. 디렉터: 「스킬은 먼지 하나도 보이지 않아」.
+       아크를 되돌리고 링도 눈에 남을 만큼 키운다. 궤적은 날, 아크는 «기술» 이다. */
+    if(kind==='dmg'){ fxArc(c, lv>=4); fxRing(ain.root.position, c, 1.7, 0.45);
       /* Target feedback comes only from confirmed hit events. */ }
-    else if(kind==='aoe'){ if(CID!=='ain')fxArc(c, true); fxRing(ain.root.position, c, 1.6, 0.3);
+    else if(kind==='aoe'){ fxArc(c, true); fxRing(ain.root.position, c, 2.4, 0.55);
       /* No fake impact on the boss during windup or on a whiff. */ }
     else if(kind==='buff'){ fxAura(c, k.buff?k.buff.dur:2); fxRing(ain.root.position, c, 2.2*g*br, 0.6); SFX.play('guard'); }
     else if(kind==='dodge'){ fxAfter(c); fxRing(ain.root.position, c, 1.8*g, 0.4); } }
