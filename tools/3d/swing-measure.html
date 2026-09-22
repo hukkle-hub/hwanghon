@@ -19,7 +19,7 @@
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
-import {makeAinRigAdapter} from '../../js/ain-two-hand.js';
+import {makeAinRigAdapter, AIN_SWING_GAIN} from '../../js/ain-two-hand.js';
 import {sampleAction} from '../../js/combat-motion.js';
 window.THREE=T;
 const R=window.TW_DUNGEONS.RULES, CONTACTS=R.motion.clipContacts||{}, SPAN=R.motion.clipSpan||{};
@@ -47,7 +47,7 @@ function reset(){ for(const k in bones) bones[k].quaternion.copy(rest[k]); }
 const rig=makeAinRigAdapter(g.scene, g.scene, slot);
 const byName={}; clips.forEach(c=>byName[c.name]=c);
 
-window.measure=function(name, durOverride){
+window.measure=function(name, durOverride, noRig){
   const clip=byName[name]; if(!clip) return null;
   const hit=CONTACTS[name]; if(hit==null) return null;
   const span=SPAN[name]||1;
@@ -71,7 +71,8 @@ window.measure=function(name, durOverride){
     const ca=Object.assign({},act,{clipHit:hit/span});
     a.time=Math.max(0,Math.min(clip.duration, sampleAction(ca, clip.duration*span)));
     mixer.update(0);
-    rig.apply(act, false, false, dt, name, null);
+    if(!noRig) rig.apply(act, false, false, dt, name, null);
+    else rig.restore();
     sc.updateMatrixWorld(true);
     const p=tip.clone().applyMatrix4(blade.matrixWorld);
     const handW=new T.Vector3(); slot.getWorldPosition(handW);
@@ -121,6 +122,21 @@ window.measure=function(name, durOverride){
    리그(두 손 그립·체간 스윙)가 자세를 크게 바꾸기 때문이다.
    그래서 clipContacts 후보를 훑으며 «접점 순간의 날끝 속도» 가 가장 큰 값을
    찾는다. 이게 곧 「때리는 그림과 맞는 순간이 같다」는 뜻이다. */
+/* 휘두름 크기(gain)를 훑는다. 목표는 «날 끝 경로» 를 키우는 것 —
+   제약은 tests/ain-two-hand 의 손목·연속성 검사다(여기선 못 돌리므로
+   후보만 뽑고 실제 합격 여부는 node --test 로 따로 본다). */
+window.gainSweep=function(name, from, to, step){
+  const keep=AIN_SWING_GAIN[name], out=[];
+  for(let g=from; g<=to+1e-9; g+=step){
+    AIN_SWING_GAIN[name]=+g.toFixed(2);
+    const r=window.measure(name);
+    out.push({g:+g.toFixed(2), path:r.path, sweep:r.sweep, peak:r.peak,
+              hitV:r.prof[r.hitBin][1], low:r.low, high:r.high});
+  }
+  if(keep===undefined) delete AIN_SWING_GAIN[name]; else AIN_SWING_GAIN[name]=keep;
+  return out;
+};
+window.setGain=function(n,g){ AIN_SWING_GAIN[n]=g; };
 window.solve=function(name){
   const keep=CONTACTS[name]; let best=null;
   for(let c=0.12;c<=0.88;c+=0.02){
@@ -151,6 +167,29 @@ window.rawPeak=function(name){
   let best=0,bi=0; sm.forEach((v,i)=>{if(v>best){best=v;bi=i;}});
   return { clip:name, peakAt:+((bi+0.5)/N).toFixed(3), peak:+best.toFixed(1),
            set:CONTACTS[name], gap:+(((bi+0.5)/N)-CONTACTS[name]).toFixed(3), dur:+clip.duration.toFixed(2) };
+};
+/* 모든 클립을 훑어 «날 끝이 얼마나 빠른가» 를 잰다 — 스킬 소스로 쓸 만한
+   «진짜 치는 동작» 이 어느 클립에 있는지 고르기 위해. raw=1 이면 교체 전 원본. */
+window.survey=function(raw){
+  const list=(raw?g.animations:clips), out=[];
+  for(const clip of list){
+    const N=Math.max(24,Math.round(clip.duration*90)), dt=clip.duration/N, pts=[];
+    const a=mixer.clipAction(clip);
+    for(let i=0;i<=N;i++){
+      reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+      a.time=Math.min(clip.duration*0.999, clip.duration*i/N); mixer.update(0);
+      sc.updateMatrixWorld(true);
+      pts.push(tip.clone().applyMatrix4(blade.matrixWorld));
+    }
+    const sp=[]; for(let i=1;i<=N;i++) sp.push(pts[i].distanceTo(pts[i-1])/dt);
+    const sm=sp.map((_,i)=>{let s=0,n=0;for(let k=-2;k<=2;k++){const j=i+k;if(j>=0&&j<sp.length){s+=sp[j];n++;}}return s/n;});
+    let best=0,bi=0; sm.forEach((v,i)=>{if(v>best){best=v;bi=i;}});
+    let path=0; for(const v of sp) path+=v*dt;
+    let lo=Infinity,hi=-Infinity; pts.forEach(p=>{lo=Math.min(lo,p.y);hi=Math.max(hi,p.y);});
+    out.push({clip:clip.name, dur:+clip.duration.toFixed(2), peak:+best.toFixed(1),
+      at:+((bi+0.5)/N).toFixed(3), path:+path.toFixed(2), low:+lo.toFixed(2), high:+hi.toFixed(2)});
+  }
+  return out.sort((a,b)=>b.peak-a.peak);
 };
 window.READY=1;
 </script></body></html>

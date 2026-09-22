@@ -63,9 +63,12 @@ export function makeRigAdapter(model,root,slot) {
         const k=(Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)
           ? globalThis.TW_COMBAT_QUALITY.phase(a) : active;
         const sw=SB.shape(k, SB.weightOf(a.clip, a.combo));
-        if(bones.Hips){ bones.Hips.rotateY(sw.yaw*SB.SHARE.Hips); bones.Hips.rotateX(sw.lean*SB.SHARE.Hips); }
-        if(bones.Spine){ bones.Spine.rotateY(sw.yaw*SB.SHARE.Spine); bones.Spine.rotateX(sw.lean*SB.SHARE.Spine); }
-        if(bones.Spine2){ bones.Spine2.rotateY(sw.yaw*SB.SHARE.Spine2); bones.Spine2.rotateX(sw.lean*SB.SHARE.Spine2);
+        /* 평타 연계는 타수마다 몸이 «반대로» 돈다 — 봉술의 여덟 방향 원리.
+           방향이 안 바뀌면 아무리 크게 휘둘러도 연계로 안 읽힌다 (66번 문서 §1) */
+        const side=SB.sideOf?SB.sideOf(a.clip, a.combo):1, yaw=sw.yaw*side;
+        if(bones.Hips){ bones.Hips.rotateY(yaw*SB.SHARE.Hips); bones.Hips.rotateX(sw.lean*SB.SHARE.Hips); }
+        if(bones.Spine){ bones.Spine.rotateY(yaw*SB.SHARE.Spine); bones.Spine.rotateX(sw.lean*SB.SHARE.Spine); }
+        if(bones.Spine2){ bones.Spine2.rotateY(yaw*SB.SHARE.Spine2); bones.Spine2.rotateX(sw.lean*SB.SHARE.Spine2);
           bones.Spine2.rotateZ(Math.sin(active*Math.PI)*0.025); }
       } else {
         const drive=Math.sin(active*Math.PI*2)*0.08;

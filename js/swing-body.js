@@ -122,6 +122,21 @@
   function coilEase(u, clip){ var x=Math.max(0,Math.min(1,u)); return Math.pow(x, coilPow(heftOf(clip))); }
   function throwEase(u, clip){ var x=Math.max(0,Math.min(1,u)); return 1-Math.pow(1-x, throwPow(heftOf(clip))); }
 
+  /* ── 연계는 «방향» 이 바뀌어야 한다
+     디렉터: 「기본공격도 연계가 전혀 없고」.
+     조사: 전투용 낫은 창·봉 계열이고 기본기가 봉술이다. 「쓸어치는 호를
+     찌르기로 굴리고, 날의 양면을 다 쓰고, 손을 바꿔 가며 여덟 방향으로
+     계속 회전 상태를 유지한다」 (docs/design/66 §1).
+     핵심은 크기가 아니라 **방향이 번갈아 바뀐다**는 것이다. 세 타가 다 같은
+     쪽으로 나가면 아무리 커도 «이어진다» 로 안 읽힌다.
+
+     몸통 비틀기의 부호를 타수마다 뒤집는다. 1타 오른쪽에서 왼쪽, 2타는
+     그 끝에서 «되돌아» 오른쪽으로, 3타는 다시 왼쪽. 되돌아오는 타는 이미
+     감겨 있으므로 예비가 필요 없다 — 그래서 연계가 빨라 보이기도 한다.
+     자루 방향(ain-two-hand 의 slash/chop/thrust)이 이미 셋 다 다르므로
+     여기서는 «몸이 어느 쪽으로 도는가» 만 맡는다. */
+  function chainSide(n){ return (n|0) % 2 === 1 ? -1 : 1; }
+
   /* 연계가 이어질수록 몸을 더 쓴다. 1타 1.00 · 2타 1.12 · 3타 1.24.
      「기본공격도 연계가 전혀 없고」 — 세 타가 같은 크기로 나가면 이어지는 느낌이
      안 난다. 뒤로 갈수록 커져야 «쌓인다» 로 읽힌다 (마영전 평타 연계). */
@@ -130,11 +145,17 @@
     var w = WEIGHT[clip]; w = (w == null ? 1 : w);
     return /^attack[123]$/.test(clip) ? w * comboGain(combo) : w;
   }
+  /* 평타 연계만 방향을 뒤집는다. 스매시·스킬·궁극기는 «한 방» 이라 방향이
+     고정이어야 읽힌다 — 매번 반대로 돌면 어느 쪽이 본체인지 흐려진다. */
+  function sideOf(clip, combo){
+    return /^attack[123]$/.test(clip) ? chainSide(combo) : 1;
+  }
   /* 몸통 세 마디에 나누는 비율. 골반이 먼저 돌고 가슴이 따라간다 */
   var SHARE = { Hips:0.40, Spine:0.34, Spine2:0.26 };
 
   var api = { WEIGHT:WEIGHT, YAW:YAW, LEAN:LEAN, SHARE:SHARE, HEFT:HEFT,
               shape:shape, weightOf:weightOf, comboGain:comboGain,
+              chainSide:chainSide, sideOf:sideOf,
               heftOf:heftOf, coilPow:coilPow, throwPow:throwPow,
               coilEase:coilEase, throwEase:throwEase };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

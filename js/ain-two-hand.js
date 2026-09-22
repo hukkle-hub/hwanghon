@@ -49,13 +49,64 @@ function path(keys,t){
  const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
  return a.map((v,j)=>T.MathUtils.lerp(v,b[j],u));
 }
-function pathRotation(keys,t){
+/* 휘두름 크기. 무기의 «움직임» 은 클립이 아니라 여기 적힌 키 경로가 만든다
+   (아래 keys 선택부). 그래서 「스킬이 어깨 위에서 달랑달랑한다」의 원인은
+   소스 클립이 아니라 이 경로가 작다는 것이다 — 클립을 갈아도 안 바뀐다.
+
+   gain 은 «겨눔 자세(ready)에서 그 키까지의 각» 을 몇 배로 밀지다. 자루는
+   방향이라 길이를 키워 봐야 소용없고, 대원 위에서 각을 더 밀어야 커진다.
+   날이 1.861 m 이므로 각 1° 가 날 끝 3.2 cm 다.
+
+   값은 손으로 고른 게 아니라 «재서» 골랐다 — tools/3d/swing-measure.html 로
+   날 끝 경로를 재고, tests/ain-two-hand 의 손목·연속성 검사를 제약으로 뒀다.
+   docs/design/67-swing-gain.md */
+export const AIN_SWING_GAIN={
+ /* 값은 «재서» 골랐다. 목표는 날 끝 경로를 늘리는 것, 제약은 두 가지다:
+      · 날 끝이 바닥을 뚫으면 안 된다 (측정칸 «최저» ≥ 0)
+      · tests/ain-two-hand 의 손목 한계·연속성 검사를 통과해야 한다
+    접점 속도는 텐트 배율 덕에 모든 값에서 그대로 유지된다.
+
+      클립      배율   날끝 경로        최저     왜
+      attack1   1.30   12.74 → 13.0 m   1.08
+      attack3   1.25    9.32 → 9.6 m    0.29
+      skill3    1.35   16.97 → 18.1 m   0.51
+      ult       1.25   12.79 → 13.4 m   0.27
+
+    처음엔 1.35~1.50 으로 잡았다가 관절 튐이 8.54°/프레임 이 나서(문턱 8°)
+    한 단계 내렸다 — 두 손 그립 IK 의 팔꿈치 특이점이 여기서도 천장이다.
+      attack2     —    (안 건다)       −0.47     이미 날이 바닥을 뚫는다
+      smash       —    (안 건다)       −0.06     위와 같음
+      skill1      —    (안 건다)                 1.1 에서 경로가 «줄었다»
+                                                 (ready 와 거의 반대인 키가 있어
+                                                  회전축이 불안정 — 64번 문서 §3)
+    attack2·smash 의 바닥 관통은 따로 고쳐야 한다. docs/design/67 §3 */
+ attack1:1.30, attack3:1.25, skill3:1.35, ult:1.25
+};
+function amplify(dir,gain){
+ if(!(gain>0)||Math.abs(gain-1)<1e-6) return dir;
+ const base=V(...ready.slice(3)).normalize();
+ const dot=T.MathUtils.clamp(base.dot(dir),-1,1), ang=Math.acos(dot);
+ if(ang<1e-4) return dir;
+ const axis=base.clone().cross(dir);
+ if(axis.lengthSq()<1e-12) return dir;
+ return base.clone().applyQuaternion(Q().setFromAxisAngle(axis.normalize(),ang*gain));
+}
+function pathRotation(keys,t,gain){
  // Interpolate complete orientations. Reconstructing a rotation from a
  // normalized direction each frame amplifies roll near a direction reversal.
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
  const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
  const swing=Q().setFromUnitVectors(V(0,1,0),V(...a.slice(3)).normalize()).slerp(Q().setFromUnitVectors(V(0,1,0),V(...b.slice(3)).normalize()),u);
- return aimScytheBlade(V(0,1,0).applyQuaternion(swing));
+ /* ⚠ 전 구간을 똑같이 키우면 «접점 자세» 까지 밀려서 오히려 나빠진다.
+    실측: 균일 배율 1.6 에서 skill3 접점 날끝 15.4 → 8.8 m/s, skill1 9.5 → 7.0.
+    크게 휘두르되 «맞는 순간은 그대로» 여야 한다. 그래서 접점(.42)에서는 배율
+    1, 예비와 여운으로 갈수록 커지는 텐트 모양으로 건다. */
+ return aimScytheBlade(amplify(V(0,1,0).applyQuaternion(swing), gainAt(t,gain)));
+}
+function gainAt(t,gain){
+ if(!(gain>0)||Math.abs(gain-1)<1e-6) return 1;
+ const d=t<=.42 ? (.42-t)/.42 : (t-.42)/.58;
+ return 1+(gain-1)*T.MathUtils.smootherstep(d,0,1);
 }
 // The measured asset's blade extends along -X, not along the shaft (+Y).
 // Specifying a shaft direction alone leaves its cutting plane unconstrained.
@@ -128,7 +179,7 @@ export function makeAinTwoHand(model,root,slot){
              carryAmount+=Math.abs(d)<=step?d:(d>0?step:-step); }
    else carryAmount=want; }
  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
-  let spec=path(keys,t),weaponQ=pathRotation(keys,t);
+  let spec=path(keys,t),weaponQ=pathRotation(keys,t,AIN_SWING_GAIN[name]);
  if(carryAmount>1e-3){
   const c=AIN_CARRY;
   spec=spec.map((v,j)=>T.MathUtils.lerp(v,c[j],carryAmount));
