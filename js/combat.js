@@ -67,6 +67,18 @@
       var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1));
       E.hp=Math.max(0,E.hp-amount);M.dmg+=amount;M.hits++;if(crit)M.crits++;
       if(opt.counter)M.counterDmg+=amount;else if(opt.riposte)M.riposteDmg+=amount;else M.normalDmg+=amount;
+      /* 저항 — 히트스톱(정지) 뒤에 «느려짐» 을 잇는다. 정지는 «맞았다» 는 신호고,
+         느려짐은 «살을 가르며 지나간다» 다. 둘은 다른 것이다.
+         재질이 단단할수록 오래·깊게 끌린다. docs/design/65-contact-feel.md
+         ⚠ emit('hit') «앞» 에 있어야 한다. 뒤에 뒀더니 이벤트가 feel:null 로
+            나가서 연출이 저항을 아예 못 받았다. */
+      var CF=G.TW_CONTACT_FEEL;
+      if(CF&&P.action){
+        var mat=G.TW_COMBAT_QUALITY?G.TW_COMBAT_QUALITY.material(p.id,D.kind):'straw';
+        var cf=CF.onContact(mat,P.action.clip,0);
+        if(cf.dragT>P.dragT){P.dragT=cf.dragT;P.dragTotal=cf.dragT;P.dragRate=cf.dragRate;}
+        opt.contactFeel={material:mat,dragT:cf.dragT,dragRate:cf.dragRate,depth:cf.depth,ring:cf.ring};
+      }
       emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,feel:opt.contactFeel||null,contact:opt.contact||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
       if(p.breakable&&p.hp!=null&&!p.broken){
         var partBonus=policy.partMult||1; if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
@@ -75,16 +87,6 @@
       if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&(!opt.riposte||opt.riposte==='counter')?policy.normal:1))bleed(1);
       P.ult=clamp(P.ult+(opt.counter?R.counter.ult:R.ult.onAttack),0,R.ult.max);
       P.hitstop=Math.max(P.hitstop,stopFor(opt));
-      /* 저항 — 히트스톱(정지) 뒤에 «느려짐» 을 잇는다. 정지는 «맞았다» 는 신호고,
-         느려짐은 «살을 가르며 지나간다» 다. 둘은 다른 것이다.
-         재질이 단단할수록 오래·깊게 끌린다. docs/design/65-contact-feel.md */
-      var CF=G.TW_CONTACT_FEEL;
-      if(CF&&P.action){
-        var mat=G.TW_COMBAT_QUALITY?G.TW_COMBAT_QUALITY.material(p.id,D.kind):'straw';
-        var cf=CF.onContact(mat,P.action.clip,0);
-        if(cf.dragT>P.dragT){P.dragT=cf.dragT;P.dragTotal=cf.dragT;P.dragRate=cf.dragRate;}
-        opt.contactFeel={material:mat,dragT:cf.dragT,dragRate:cf.dragRate,depth:cf.depth,ring:cf.ring};
-      }
       if(E.hp===0)finish();return amount;
     }
     function cancel(reason){if(!P.action)return;emit('actioncancel',{id:P.action.id,reason:reason});P.action=null;P.combo=0;P.comboT=0;}
@@ -267,10 +269,16 @@
       ['dodgeT','dodgeCd','lockT','stDelay','comboT','riposteT','buffT'].forEach(function(k){P[k]=Math.max(0,P[k]-dt);});P.dodgeAgo+=dt;
       if(P.stDelay<=0){if(P.guard){P.st=Math.max(0,P.st-R.stamina.guardPerSec*dt);if(P.st===0){P.guard=false;emit('guard',{on:false,broke:true});}}else P.st=Math.min(R.stamina.max,P.st+R.stamina.regen*dt);}
       P.cds=P.cds.map(function(v){return Math.max(0,v-dt);});
-      /* 감속은 «행동 시계» 에만 건다. 세상까지 느려지면 슬로모션이지 저항이 아니다. */
-      var adt=dt;
-      if(P.dragT>0){ adt=dt*CFEEL.dragScale(P.dragT,P.dragTotal,P.dragRate); P.dragT=Math.max(0,P.dragT-dt); if(P.dragT===0)P.dragRate=1; }
-      var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+adt);if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
+      /* ⚠ 저항은 «연출» 이다. 행동 시계를 늦추면 안 된다.
+         처음엔 여기서 a.elapsed 를 늦췄다. 그랬더니 한 대마다 0.07~0.19초씩
+         행동이 길어져 DPS 가 빠지고, **수문기 2페이즈를 기준 봇이 못 깼다**
+         (보스 HP 13,504 남기고 사망). 이 저장소의 규칙 —「연출이 판정을 옮기지
+         않는다」— 를 내가 깬 것이다.
+         이제 시계는 그대로 두고, 눈에 보이는 «클립 시각» 만 뒤처졌다 따라잡는다
+         (js/game3d.js tickDrag). 총 시간이 안 변하므로 균형도 안 변한다.
+         dragT 는 연출이 읽어 가도록 상태로만 남긴다. */
+      if(P.dragT>0) P.dragT=Math.max(0,P.dragT-dt);
+      var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+dt);if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
       if(P.hitstop>0)return;
       if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel())&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}

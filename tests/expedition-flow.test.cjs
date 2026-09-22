@@ -1,4 +1,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+/* ⚠ 균형 관문이다. 전투에 «끼어드는» 모듈은 여기서 전부 먼저 켜 둔다.
+   한 번 놓쳐서 사고가 났다: 접점 저항(contact-feel)이 행동 시계를 늦추는데도
+   이 테스트가 그 파일을 안 불러서 통과했고, 수문기 2페이즈가 깨지지 않는
+   상태로 배포됐다. combat.js 는 로드 시점에 전역을 붙잡으므로 순서가 중요하다. */
+require('../js/contact-feel.js');require('../js/combat-quality.js');
 const SIM=require('../js/world-sim.js'),EXP=require('../js/dungeon-run.js'),CB=require('../js/combat.js');
 test('sewage expedition walks the actual map, closes 3 valves, defeats both boss phases and settles',t=>{
  const c={window:{}};for(const n of ['world','dungeons','dungeon','dungeon-content'])vm.runInNewContext(fs.readFileSync('js/'+n+'.js','utf8'),c);

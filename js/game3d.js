@@ -642,7 +642,11 @@ import { createBloom } from './bloom.js';
            docs/design/61-attack-weight.md */
         var oc=ain.oneshot.getClip(), span=(R.motion.clipSpan||{})[oc.name],
             act=span?Object.assign({},combatAction,{clipHit:combatAction.clipHit/span}):combatAction;
-        ain.oneshot.time=sampleAction(act, oc.duration*(span||1));
+        /* 접점 저항 — «보이는 시각» 만 뒤처지게 한다. 판정 시계(combatAction.elapsed)는
+           건드리지 않는다. 날이 몸에 박힌 동안 그림이 느려지고, 빠져나오면 따라잡는다.
+           총 시간이 안 변하므로 DPS·균형은 그대로다. docs/design/65-contact-feel.md */
+        ain.oneshot.time=sampleAction(act, oc.duration*(span||1)) - dragLag;
+        if(ain.oneshot.time<0) ain.oneshot.time=0;
         ain.oneshot.paused=true; }
       else { ain.oneshot.stop(); ain.oneshot=null; ain.timed=null; if(ain.act){ain.act.reset().fadeIn(0.12).play();} }
     }
@@ -721,6 +725,25 @@ import { createBloom } from './bloom.js';
   /* 무기 궤적 · 칼바람 — 구현은 js/weapon-trail.js (온라인과 공유) */
   var trail=null;
   function trailSet(power, hex){ if(trail) trail.set(power, hex); }
+  /* ── 접점 저항의 «보이는» 몫 ─────────────────────────────────────────────
+     판정 시계는 정상 속도로 간다. 그림만 잠깐 뒤처졌다가 따라잡는다.
+     dragLag = 지금 몇 초 뒤처져 있는가. 접점에서 확 벌어졌다가 0 으로 돌아온다. */
+  var dragLag=0, dragT=0, dragTotal=0, dragRate=1;
+  function dragStart(feel){
+    if(!feel||!(feel.dragT>0)) return;
+    dragT=feel.dragT; dragTotal=feel.dragT; dragRate=feel.dragRate||0.4;
+  }
+  function tickDrag(dt){
+    var CF=globalThis.TW_CONTACT_FEEL;
+    if(dragT>0){
+      /* 끌리는 동안: 그림이 «느린 만큼» 뒤처진다 */
+      var sc=CF?CF.dragScale(dragT,dragTotal,dragRate):1;
+      dragLag+=dt*(1-sc);
+      dragT=Math.max(0,dragT-dt);
+    }
+    /* 빠져나오면 따라잡는다 — 남은 행동 시간 안에 반드시 0 이 되도록 빠르게 */
+    if(dragLag>0){ dragLag=Math.max(0, dragLag - dt*2.2); }
+  }
   function tickTrail(dt){
     if(!ain.weapon) return;
     if(!trail) trail=new WeaponTrail(scene);
@@ -1021,6 +1044,7 @@ import { createBloom } from './bloom.js';
              feel 은 combat.js 가 접점에서 재질을 보고 실어 보낸 것이다.
              docs/design/65-contact-feel.md */
           if(e.feel){
+            dragStart(e.feel);
             var ring=e.feel.ring||0;
             if(ring>0.15){
               shake(0.004+0.010*ring, 90+140*ring, axH[0], axH[1]);
@@ -1477,7 +1501,7 @@ import { createBloom } from './bloom.js';
     $('#target-cycle').hidden=!battle||cine||ain.dead;
     var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
     tickLock(dt); tickRim();
-    renderMobs(dt); tickSparks(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
+    renderMobs(dt); tickSparks(dt); tickDrag(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
     if(interactButton){
       if(executeReady()){ interactButton.hidden=false; interactButton.textContent='F · 처형'; interactButton.classList.add('is-exec'); }
       else { interactButton.classList.remove('is-exec'); var near=state==='explore'&&!cine&&!ain.dead?expedition.nearest(P):null;interactButton.hidden=!near;if(near)interactButton.textContent='F · '+near.name; } }

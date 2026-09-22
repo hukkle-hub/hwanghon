@@ -48,22 +48,49 @@ test('느려짐은 끝에서 원래 속도로 돌아온다 — 딱 끊으면 더
     assert.ok(v>=prev-1e-9,'단조 증가'); prev=v; }
 });
 
-test('저항은 «행동 시계» 만 늦춘다 — 세상까지 늦추면 슬로모션이다', () => {
+test('저항은 «연출» 이다 — 행동 시계도 세상 시계도 늦추지 않는다', () => {
+  /* ⚠ 이 테스트는 내가 실제로 낸 사고를 막는다.
+     처음엔 접점 뒤 a.elapsed 를 늦춰서 저항을 만들었다. 한 대마다 행동이
+     0.07~0.19초 길어졌고, DPS 가 빠져 «수문기 2페이즈» 를 기준 봇이 못 깼다
+     (보스 HP 13,504 남기고 사망). 규칙은 「연출이 판정을 옮기지 않는다」다.
+     저항은 눈에 보이는 클립 시각만 뒤처지게 한다(js/game3d.js tickDrag). */
   const r=cp(RULES); r.bleed.chance=0;
+  let feel=null;
   const b=createBattle({rules:r,dummy:cp(ARENAS.tutorial.stages[0]),
-    char:{...CHAR,stats:{...CHAR.stats,crit:0,aspd:100}},hooks:{},
+    char:{...CHAR,stats:{...CHAR.stats,crit:0,aspd:100}},
+    hooks:{},
     skills:SKILLS.ain,ult:SKILLS.ainUlt,seed:7});
   b.input('attack');
   const hit=b.snapshot().player.action.hitAt;
-  /* 히트스톱이 끝난 직후와, 충분히 지난 뒤의 «행동 시계 진행률» 을 비교한다 */
-  while(b.snapshot().player.hitstop>0 || b.snapshot().player.action.elapsed<hit) b.tick(.01);
-  const a0=b.snapshot().player.action.elapsed; const t0=b.snapshot().time;
+  while(b.snapshot().player.hitstop>0 || b.snapshot().player.action.elapsed<hit){
+    b.tick(.01);
+    for(const e of b.drain()) if(e.t==='hit'&&!feel) feel=e.feel;
+  }
+  const t0=b.snapshot().time;
+  const a0=b.snapshot().player.action.elapsed;
   b.tick(.04); const justAfter=b.snapshot().player.action.elapsed-a0;
   for(let i=0;i<20;i++) b.tick(.01);
   const a1=b.snapshot().player.action.elapsed;
   b.tick(.04); const later=b.snapshot().player.action.elapsed-a1;
-  assert.ok(justAfter < later*0.75,
-    `접점 직후 ${justAfter.toFixed(4)} 초가 나중 ${later.toFixed(4)} 초보다 확실히 느려야 한다`);
-  /* 세상 시계(B.time)는 준 만큼 그대로 흐른다 */
-  assert.ok(Math.abs((b.snapshot().time-t0)-0.28)<1e-6, '세상 시계는 정상 속도');
+  assert.ok(Math.abs(justAfter-0.04)<1e-9,
+    `접점 직후에도 행동 시계는 준 만큼 간다 (${justAfter.toFixed(5)})`);
+  assert.ok(Math.abs(later-0.04)<1e-9, '나중도 마찬가지');
+  assert.ok(Math.abs((b.snapshot().time-t0)-0.28)<1e-6, '세상 시계도 정상 속도');
+  /* 그래도 연출이 쓸 «저항» 은 타격 이벤트에 실려 나간다 */
+  assert.ok(feel && feel.dragT>0 && feel.dragRate<1, '타격 이벤트가 저항을 실어 보낸다');
+});
+
+test('끌림은 클립 «시각» 만 뒤처지게 했다가 반드시 따라잡는다', () => {
+  /* game3d.js tickDrag 의 산수를 그대로 돌린다.
+     뒤처진 양(lag)이 0 으로 돌아와야 총 재생 시간이 보존된다 — 곧 균형 불변. */
+  const dt=1/60, cf=CF.onContact('metal','smash',0);
+  let lag=0, left=cf.dragT, total=cf.dragT, peak=0;
+  for(let i=0;i<180;i++){
+    if(left>0){ lag+=dt*(1-CF.dragScale(left,total,cf.dragRate)); left=Math.max(0,left-dt); }
+    else if(lag>0) lag=Math.max(0,lag-dt*2.2);
+    peak=Math.max(peak,lag);
+  }
+  assert.ok(peak>0.02, `눈에 보일 만큼은 뒤처져야 한다 (${peak.toFixed(4)}초)`);
+  assert.ok(peak<0.12, `너무 뒤처지면 랙이다 (${peak.toFixed(4)}초)`);
+  assert.equal(lag,0,'끝에는 반드시 따라잡는다 — 총 재생 시간 보존');
 });
