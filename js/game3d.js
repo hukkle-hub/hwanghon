@@ -716,7 +716,8 @@ import { createBloom } from './bloom.js';
   function fxPush(obj, dur, fn){ scene.add(obj); FX.push({ o:obj, t:0, d:dur, fn:fn }); return obj; }
   /* 스프라이트의 geometry 는 three.js 가 «전역으로 공유» 한다 — 여기서 dispose 하면
      이후 모든 스프라이트의 버퍼가 매번 다시 올라간다. 재질만 정리한다. */
-  function fxKill(f){ scene.remove(f.o); f.o.traverse(function(c){ if(c.geometry && !c.isSprite) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
+  function fxKill(f){ scene.remove(f.o); if(f.o.isLight) return;   /* 라이트는 버릴 지오메트리가 없다 */
+    f.o.traverse(function(c){ if(c.geometry && !c.isSprite) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
   /* 무기 궤적 · 칼바람 — 구현은 js/weapon-trail.js (온라인과 공유) */
   var trail=null;
   function trailSet(power, hex){ if(trail) trail.set(power, hex); }
@@ -765,19 +766,124 @@ import { createBloom } from './bloom.js';
     var ring=new THREE.Mesh(new THREE.RingGeometry(0.2,0.30,24), fxMat(color||0xFFE8C0,0.85)); ring.position.copy(pos); ring.lookAt(cam.position);
     fxPush(ring, (dur||0.16)*1.4, function(o,k){ var sc=0.5+k*size*1.5; o.scale.set(sc,sc,1); o.material.opacity=0.85*(1-k); });
   }
+  /* ── 스킬 연출 v2 — 사양은 js/skill-fx.js, 그리기는 여기 ───────────────────
+     실시간 VFX 관행대로 «한 겹» 이 아니라 겹쳐 쌓는다. 한 겹짜리 도넛은
+     아무리 밝게 해도 «기술» 로 안 읽힌다 (docs/design/63-skill-vfx.md). */
+  var SFX_SPEC=globalThis.TW_SKILL_FX;
+
+  /* 아크를 놓는 면. 스킬마다 휘두르는 면이 달라 전부 같은 각도로 띄우면
+     베기·회전·내리꽂기가 구분되지 않는다. */
+  function fxPlane(g, plane, tilt){
+    if(plane==='flat'){ g.rotation.set(-Math.PI/2+tilt, 0, 0); }
+    else if(plane==='vert'){ g.rotation.set(0, 0, Math.PI*0.5+tilt); }
+    else { g.rotation.set(-Math.PI/2+0.95, 0, tilt); }     /* diag: 비스듬히 */
+  }
+  /* 아크 한 겹. w=두께 배수, sat=채도(밝기) 배수, life=수명, spin=따라 도는 양 */
+  function fxArcLayer(look, color, w, sat, life, delay, yOff){
+    var g=new THREE.Group();
+    g.position.copy(ain.root.position); g.position.y+=1.02+(yOff||0);
+    g.rotation.y=ain.root.rotation.y;
+    var inner=new THREE.Group(); g.add(inner);
+    fxPlane(inner, look.plane, look.tilt);
+    var m=new THREE.Mesh(new THREE.TorusGeometry(look.r, look.r*0.055*w, 5, 30, look.arc),
+                         fxMat(color, 0.9*sat));
+    m.rotation.z=-look.arc*0.5; inner.add(m);
+    return fxPush(g, life, function(o,k){
+      /* 지연 뒤에 «크게 → 0» 으로 줄인다. 이 곡선이 슬래시의 본체다. */
+      var u=delay>0?Math.max(0,(k-delay)/(1-delay)):k;
+      var sc=1.18-0.62*u*u;
+      o.scale.set(sc,sc,sc);
+      m.material.opacity=0.9*sat*Math.max(0,1-u*u*u);
+    });
+  }
+  /* 연출이 캐릭터를 «비춰야» 붙어 보인다. 빛이 없으면 아무리 밝은 아크를 띄워도
+     캐릭터는 어두운 실루엣으로 남아 «그림을 덧댄 것» 처럼 보인다. 마영전에서
+     스킬 순간 캐릭터가 같이 밝아지는 게 이 몫이다. 짧게(0.26초) 켰다 끈다. */
+  function fxLight(color, power, life){
+    var l=new THREE.PointLight(color, 0, 7.5);
+    l.position.copy(ain.root.position); l.position.y+=1.25;
+    scene.add(l);
+    var f={ o:l, t:0, d:life||0.26, fn:function(o,k){ o.intensity=power*(1-k)*(1-k)*(k<0.12?k/0.12:1); } };
+    FX.push(f); return l;
+  }
+  /* 쌓기: 굵고 흐린 겹 + 얇고 밝은 겹 + 반박자 늦은 꼬리 */
+  function fxSlash(look, color){
+    fxLight(color, 6.5+look.r*2.2, 0.28);
+    fxArcLayer(look, color, 2.4, 0.22, 0.34, 0,    0);
+    fxArcLayer(look, color, 1.0, 0.80, 0.28, 0,    0.02);
+    fxArcLayer(look, 0xFFF4DC, 0.45, 0.85, 0.22, 0.18, 0.04);   /* 심지 — 흰 속선 */
+  }
+  /* 예비 — 날에 빛이 모인다. 접점을 향해 «조여든다» (커지는 게 아니라 작아진다:
+     모으는 동작이라 안으로 와야 힘이 실려 보인다) */
+  function fxTell(look, color, dur){
+    if(!(look.tell>0)) return;
+    var g=new THREE.Group(); g.position.copy(ain.root.position); g.position.y+=0.06;
+    g.rotation.y=ain.root.rotation.y;
+    var ring=new THREE.Mesh(new THREE.RingGeometry(0.90,1.0,44), fxMat(color,0.5*look.tell));
+    ring.rotation.x=-Math.PI/2; g.add(ring);
+    var core=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:color,
+      transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.0 }));
+    core.position.y=1.15; core.scale.set(0.5,0.5,1); g.add(core);
+    fxPush(g, Math.max(0.12,dur), function(o,k){
+      var s=(2.6-1.7*k)*look.dust*0.45;
+      ring.scale.set(s,s,1); ring.material.opacity=0.5*look.tell*(0.25+0.75*k)*(1-k*k*k);
+      core.material.opacity=0.85*look.tell*k*k;
+      var cs=0.4+1.5*k*look.tell; core.scale.set(cs,cs,1);
+    });
+  }
+  /* 바닥 먼지 — 큰 낫이 지나가면 바닥이 반응해야 한다 (마영전의 파괴·물리 몫) */
+  function fxDust(r, color){
+    if(!(r>0)) return;
+    var m=new THREE.Mesh(new THREE.RingGeometry(0.55,0.78,40), fxMat(color,0.34));
+    m.rotation.x=-Math.PI/2; m.position.set(ain.root.position.x,0.05,ain.root.position.z);
+    fxPush(m, 0.46, function(o,k){ var s=0.5+k*r*1.35; o.scale.set(s,s,1);
+      o.material.opacity=0.34*(1-k)*(1-k); });
+  }
+  /* 여운 — 불티가 남아 흩어진다. «끝났다» 를 눈으로 알린다 */
+  function fxEmbers(n, color){
+    var p=ain.root.position, fwd=new THREE.Vector3(Math.sin(ain.root.rotation.y),0,Math.cos(ain.root.rotation.y));
+    for(var i=0;i<n;i++){
+      var a=Math.random()*Math.PI*2, rr=0.4+Math.random()*1.1;
+      var q=new THREE.Vector3(p.x+Math.cos(a)*rr, 0.35+Math.random()*1.3, p.z+Math.sin(a)*rr);
+      q.addScaledVector(fwd, 0.5);
+      sparkAt(q, color, 0.55+Math.random()*0.5);
+    }
+  }
+  /* 스파크 한 점을 임의 위치·수명으로 (burst 는 방향 다발이라 여운엔 안 맞는다) */
+  function sparkAt(pos, hex, life){
+    var c=new THREE.Color(hex), i=spI=(spI+1)%SPN;
+    spPos[i*3]=pos.x; spPos[i*3+1]=pos.y; spPos[i*3+2]=pos.z;
+    spVel[i].set((Math.random()-0.5)*0.5, 0.35+Math.random()*0.5, (Math.random()-0.5)*0.5);
+    spCol[i*3]=c.r; spCol[i*3+1]=c.g; spCol[i*3+2]=c.b; spLife[i]=life;
+  }
+
   function fxSkill(k){ var kind=window.TW_SKILLS?TW_SKILLS.kindOf(k):(k.dodge?'dodge':k.buff?'buff':k.aoe?'aoe':'dmg'); var c=brColor(k);
     var lv=Math.max(1,Math.min(5,k.lv||1)), g=1+(lv-1)*0.22, br=k.br?1.15:1;   /* 단계가 올라가면 연출도 커진다 */
     num(above(P.x,P.y,2.35), k.name+' Lv'+lv+(k.br?' · '+k.br:''), 'skill');
-    /* 아인만 아크를 빼 두었었다 — 낫에 실제 궤적(weapon-trail)이 붙으니 겹친다고 봤다.
-       그런데 그 궤적은 날 폭만큼의 얇은 리본이라, 아인의 스킬에 남는 연출이
-       «발밑 링 0.25초» 하나뿐이었다. 디렉터: 「스킬은 먼지 하나도 보이지 않아」.
-       아크를 되돌리고 링도 눈에 남을 만큼 키운다. 궤적은 날, 아크는 «기술» 이다. */
-    if(kind==='dmg'){ fxArc(c, lv>=4); fxRing(ain.root.position, c, 1.7, 0.45);
-      /* Target feedback comes only from confirmed hit events. */ }
-    else if(kind==='aoe'){ fxArc(c, true); fxRing(ain.root.position, c, 2.4, 0.55);
-      /* No fake impact on the boss during windup or on a whiff. */ }
-    else if(kind==='buff'){ fxAura(c, k.buff?k.buff.dur:2); fxRing(ain.root.position, c, 2.2*g*br, 0.6); SFX.play('guard'); }
-    else if(kind==='dodge'){ fxAfter(c); fxRing(ain.root.position, c, 1.8*g, 0.4); } }
+    /* 예전에는 여기서 아크 한 겹 + 발밑 링 하나로 끝냈다. 아인은 그 아크마저
+       빼 두어서(낫 궤적과 겹친다고 봤다) 「스킬은 먼지 하나도 보이지 않아」가 됐다.
+       이제 «예비 → 타격 → 여운» 세 박자를 쌓는다. 여기서는 예비만 띄우고,
+       타격은 실제 접점(skillStrike)에서 터뜨린다 — 빗나가면 안 터져야 한다.
+       docs/design/63-skill-vfx.md */
+    var look=SFX_SPEC.look(pendingSkillClip||'skill1', lv, k.br);
+    var act=battle?battle.snapshot().player.action:null;
+    var tw=SFX_SPEC.tellWindow(act?act.hitAt:0.42);
+    skillPending={ look:look, color:c, kind:kind, k:k };
+    fxTell(look, c, tw.dur);
+    fxDust(look.dust*0.55, c);
+    if(kind==='buff'){ fxAura(c, k.buff?k.buff.dur:2); fxSlash(look, c); fxEmbers(look.embers, c); SFX.play('guard'); skillPending=null; }
+    else if(kind==='dodge'){ fxAfter(c); fxSlash(look, c); skillPending=null; } }
+  /* 접점에서 터뜨리는 몫. 맞았을 때만 부른다 — 빗나간 스윙에 충격을 붙이면
+     «맞았나?» 가 흐려진다 (몬헌이 히트스톱으로 지키는 바로 그 구분이다). */
+  var skillPending=null, pendingSkillClip=null;
+  function fxSkillStrike(){
+    if(!skillPending) return;
+    var sp=skillPending; skillPending=null;
+    fxSlash(sp.look, sp.color);
+    fxDust(sp.look.dust, sp.color);
+    fxEmbers(sp.look.embers, sp.color);
+    if(sp.look.after>0) fxAfter(sp.color);
+  }
   /* dir=[dx,dz] 를 주면 파티클이 타격 벡터 방향으로 쏠린다 */
   function burst(p, n, hex, dir){ var c=new THREE.Color(hex||0xF0B070), bx=0, bz=0;
     if(dir){ var m=Math.sqrt(dir[0]*dir[0]+dir[1]*dir[1])||1; bx=dir[0]/m*4.2; bz=dir[1]/m*4.2; }
@@ -903,6 +1009,8 @@ import { createBloom } from './bloom.js';
         if(ain.weapon){var nearest=nearestAinBladePoint(ain.weapon,hp);if(nearest&&nearest.distance<=((boss.PART[HITMAP[e.part]]||{}).r||.5))hp.copy(nearest.point);}
         num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12;
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
+        /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
+        if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();
         if(e.counter){ burst(hp, feedback.particles, feedback.color, axisFromBoss()); fxImpact(hp, feedback.size, 0xFFF1C8, feedback.duration); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
         else { burst(hp, feedback.particles, feedback.color, axH);
@@ -944,7 +1052,14 @@ import { createBloom } from './bloom.js';
         break;
       case 'early': guide('선공은 후딜을 남긴다. <b>타격 직전</b>에 튕겨라', 1.6); break;
       case 'ultready': if(e.first) guide('궁극기 준비 완료 — <b>R</b> 을 눌러라', 3.5); break;
-      case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1); fxRing(ain.root.position,brColor(ULT),1.2,.3); break;
+      case 'ult': if(!e.timed)ainAttack('ult'); guide('<b>'+ULT.name+'</b> — 준비',1);
+        /* 궁극기도 같은 세 박자를 탄다. 예비는 여기, 타격은 접점에서. */
+        pendingSkillClip='ult';
+        var ulk=SFX_SPEC.look('ult', ULT.lv||1, ULT.br), ula=battle?battle.snapshot().player.action:null;
+        skillPending={ look:ulk, color:brColor(ULT), kind:'dmg', k:ULT };
+        fxTell(ulk, brColor(ULT), SFX_SPEC.tellWindow(ula?ula.hitAt:0.8).dur);
+        fxDust(ulk.dust*0.55, brColor(ULT));
+        break;
       case 'impact': var axI=axisToBoss();
         if(e.kind==='exec'){ SFX.play('brk'); flash(); slowmo(0.06,360); schedule(function(){ slowmo(0.35,420); },360);
           shake(0.022,600,axI[0],axI[1]); camKick(0.05,0.10,0.075); vib([40,60,40]); burst(bossHitPos('core'),70,0xD94A45,axI); fxRing(boss.root.position,0xD94A45,5.0,0.8);
@@ -952,7 +1067,7 @@ import { createBloom } from './bloom.js';
         if(e.kind==='ult'){fxUlt(brColor(ULT));SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
         else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,.65,0xFFD8A0,.12);}
         break;
-      case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
+      case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); pendingSkillClip=e.clip||null; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
         if(k.dodge) doRoll(e.clip||'skill2');                               /* 그림자 걸음: 구르기가 아니라 도약 */
         else if(!e.timed) playOnce(e.clip||('skill'+(e.index+1)), { speed:k.mult>0?1.25:1.0 });  /* 피해 없는 스킬도 동작이 나온다 */
         try{ fxSkill(k); }catch(x){ console.warn('fxSkill', x&&x.message); } break;
@@ -1464,5 +1579,19 @@ import { createBloom } from './bloom.js';
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },   /* 검수용: 피격 반응을 전투 없이 한 번 재생한다 */ applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, frameMetrics:FRAME_METRICS.report, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
+    /* 검수용: 전투 없이 스킬 연출만 한 번 재생한다. 락온 카메라가 보스를 보는
+       전투 화면에서는 플레이어가 프레임 밖이라 연출을 눈으로 못 본다. */
+    /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에
+       수백 ms)로는 «사이사이» 만 찍힌다. 세워 놓고 찍어야 보인다. */
+    freeze:function(v){ paused=!!v; },
+    fxDemo:function(clip, lv, branch){
+      var look=SFX_SPEC.look(clip||'skill3', lv||1, branch||null), col=brColor({br:branch});
+      pendingSkillClip=clip||'skill3';
+      fxTell(look, col, 0.28);
+      fxDust(look.dust*0.55, col);
+      schedule(function(){ fxSlash(look, col); fxDust(look.dust, col);
+        fxEmbers(look.embers, col); if(look.after>0) fxAfter(col); }, 280);
+      return look;
+    },   /* 검수용: 피격 반응을 전투 없이 한 번 재생한다 */ applySettings:function(set){ Object.assign(SET, set||{}); applySettings(); }, get diag(){ return DIAG; }, frameMetrics:FRAME_METRICS.report, diagText:diagText, showDiag:showDiag, SAFE:SAFE, get botMode(){ return botMode; }, set botMode(v){ botMode=!!v; }, start:function(){ var b=el.ovBox.querySelector('[data-go]'); if(b) b.click(); }, is3d:true };
 })();
