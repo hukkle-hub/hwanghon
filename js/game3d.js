@@ -1015,6 +1015,23 @@ import { createBloom } from './bloom.js';
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
         else { burst(hp, feedback.particles, feedback.color, axH);
           fxImpact(hp, feedback.size, feedback.color, feedback.duration);
+          /* 저항이 «플레이어 몸» 으로 돌아온다. 단단한 곳(ring 1.0)을 치면 날이
+             안 들어가고 튕기듯 손이 울린다 — 몬헌에서 사냥꾼이 경직에 묶이는
+             그 몫을 작게 가져왔다. 무른 곳은 거의 없다.
+             feel 은 combat.js 가 접점에서 재질을 보고 실어 보낸 것이다.
+             docs/design/65-contact-feel.md */
+          if(e.feel){
+            var ring=e.feel.ring||0;
+            if(ring>0.15){
+              shake(0.004+0.010*ring, 90+140*ring, axH[0], axH[1]);
+              camKick(0.012*ring, 0.026*ring, 0.020*ring);
+              vib(Math.round(8+22*ring));
+              burst(hp, Math.round(6+16*ring), 0xDCE9F5, axisFromBoss());  /* 되튄 불꽃 */
+            }
+            /* 날이 박혀 있는 동안 궤적을 끊는다 — 몸 안에서는 칼바람이 안 난다 */
+            trailSet(0.35, brColor({}));
+            schedule(function(){ trailSet(1.0, 0xBFD8E8); }, Math.round(e.feel.dragT*1000));
+          }
           if(e.crit||cmbH>=3){ shake(0.003,120,axH[0],axH[1]); vib(10); }
           if(!s || ['idle','stagger'].indexOf(s.enemy.state)>=0) bossPlay('flinch'); }
         break;
