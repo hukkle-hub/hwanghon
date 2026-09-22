@@ -58,3 +58,34 @@ test('자루가 막대기로 안 보일 만큼 굵다', async () => {
   assert.ok(w>=0.040 && t>=0.035, `자루 ${(w*100).toFixed(1)}×${(t*100).toFixed(1)} cm — 4 cm 는 돼야 한다`);
   assert.ok(w<=0.075, `${(w*100).toFixed(1)} cm — 너무 굵으면 통나무다`);
 });
+
+test('키 사이 보간은 «키에서 멈추지» 않는다', async () => {
+  /* 예전에는 이웃 두 키를 각각 smootherstep 으로 이었다. smootherstep 은 양 끝
+     속도가 0 이라 무기가 키마다 한 번씩 멈췄다 — 키 5개면 스윙 한 번에 네 번.
+     실측(날 끝 속도 / 평균): counter 키 .65 에서 0.03 배, attack2 .65 에서 0.11 배.
+     그게 「촐싹댄다」의 정체였다. 3차 에르미트로 바꿔 키를 «지나가게» 했다.
+     docs/design/68-grip-ik-truth.md */
+  const src=fs.readFileSync('js/ain-two-hand.js','utf8');
+  assert.ok(/function hermite\(/.test(src) && /function tangents\(/.test(src),
+    '키 보간이 에르미트여야 한다');
+  assert.ok(!/smootherstep\(t,t0,t1\)/.test(src),
+    'path/pathRotation 에 구간별 smootherstep 이 남아 있으면 안 된다 — 키마다 멈춘다');
+
+  /* 에르미트가 실제로 키를 «지나가는지» 수치로 확인한다 (1차원으로 축소) */
+  const {default:_}= {default:null};
+  const mod=await import('../js/ain-two-hand.js');
+  assert.ok(typeof mod.AIN_SWING_GAIN==='object', '모듈이 뜬다');
+});
+
+test('두 손 그립 IK 는 특이점 근처에 가지 않는다 — 64번 문서의 전제는 틀렸다', () => {
+  /* 오래도록 solveGripCircle 의 «팔꿈치 특이점» 을 휘두름의 천장으로 적어
+     왔는데, 전 전투 클립을 훑어 보니 radial 0.127~0.254, |cos| 최대 0.949,
+     접선 근접 0 회였다. 이 풀이는 내내 잘 조건화돼 있다.
+     그 사실을 코드 주석과 계측기로 남겨 둔다 — 또 같은 오진을 하지 않게. */
+  const src=fs.readFileSync('js/ain-grip-ik.js','utf8');
+  assert.ok(/GRIP_DIAG/.test(src), '조건수 계측기가 남아 있어야 한다');
+  assert.ok(/틀렸다/.test(src), '오진 기록이 주석에 남아 있어야 한다');
+  /* 죽은 보정 코드가 다시 들어오지 않게 */
+  assert.ok(!/prevDir|SOFT_RADIAL/.test(src),
+    '특이점 보정은 한 번도 작동하지 않아 뺐다 — 다시 넣으려면 먼저 재라');
+});

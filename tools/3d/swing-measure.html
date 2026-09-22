@@ -19,7 +19,8 @@
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
-import {makeAinRigAdapter, AIN_SWING_GAIN} from '../../js/ain-two-hand.js';
+import {GRIP_DIAG} from '../../js/ain-grip-ik.js';
+import {makeAinRigAdapter, AIN_SWING_GAIN, AIM_DIAG} from '../../js/ain-two-hand.js';
 import {sampleAction} from '../../js/combat-motion.js';
 window.THREE=T;
 const R=window.TW_DUNGEONS.RULES, CONTACTS=R.motion.clipContacts||{}, SPAN=R.motion.clipSpan||{};
@@ -41,7 +42,8 @@ tip=far; window.TIPLEN=farD;
 /* 게임과 같은 순서: 본 보정 → 클립 교체 → 리그 */
 const clips=repairAinClips(g.animations, repairAinBind(g.scene));
 const mixer=new T.AnimationMixer(g.scene);
-const bones={}; g.scene.traverse(o=>{ if(o.isBone) bones[o.name]=o; });
+/* 본 이름에 mixamorig: 접두가 붙어 있다 — 떼고 담는다(게임 코드와 같게) */
+const bones={}; g.scene.traverse(o=>{ if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o; });
 const rest={}; for(const k in bones) rest[k]=bones[k].quaternion.clone();
 function reset(){ for(const k in bones) bones[k].quaternion.copy(rest[k]); }
 const rig=makeAinRigAdapter(g.scene, g.scene, slot);
@@ -125,6 +127,99 @@ window.measure=function(name, durOverride, noRig){
 /* 휘두름 크기(gain)를 훑는다. 목표는 «날 끝 경로» 를 키우는 것 —
    제약은 tests/ain-two-hand 의 손목·연속성 검사다(여기선 못 돌리므로
    후보만 뽑고 실제 합격 여부는 node --test 로 따로 본다). */
+/* 두 손 그립 IK 의 «조건수» 를 잰다.
+   solveGripCircle 은 팔꿈치를 자루 축 둘레의 원 위에서 찾는데, 어깨가 그 축
+   위에 놓이면(radial→0) 원 위 어느 점이든 답이 돼서 팔꿈치가 아무 데나 튄다.
+   프레임마다 radial 과 팔꿈치 이동량을 찍어 «어디서 터지는가» 를 본다. */
+/* 키 «바로 그 시각» 의 날 끝 속도. smootherstep 은 양 끝 속도가 0 이라
+   키마다 무기가 멈춘다 — 스윙 한 번에 네 번 멈추는 셈이다. 정말 그런지 본다. */
+window.keyStall=function(name){
+  const clip=byName[name], hit=CONTACTS[name]; if(!clip||hit==null) return null;
+  const M=R.motion, prof=(M.characterProfiles&&M.characterProfiles.ain)||{};
+  const KIND={attack1:'light',attack2:'light',attack3:'light',smash:'smash',counter:'counter',
+              exec:'exec',ult:'ult',skill1:'skill',skill2:'skill',skill3:'skill',skill4:'skill'};
+  const base=M[KIND[name]]||M.light, P=prof[name]||{};
+  const dur=P.duration||base.duration, hitAt=(P.hit!=null?P.hit:base.hit), span=SPAN[name]||1;
+  const act={id:'k',clip:name,kind:'attack',duration:dur,hitAt:hitAt,elapsed:0,clipHit:hit,combo:0};
+  const N=600, dt=dur/N, a=mixer.clipAction(clip), sp=[];
+  let prev=null;
+  for(let i=0;i<=N;i++){
+    act.elapsed=dur*i/N;
+    reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+    a.time=Math.max(0,Math.min(clip.duration,sampleAction(Object.assign({},act,{clipHit:hit/span}),clip.duration*span)));
+    mixer.update(0); rig.apply(act,false,false,dt,name,null); sc.updateMatrixWorld(true);
+    const p=tip.clone().applyMatrix4(blade.matrixWorld);
+    if(prev) sp.push(p.distanceTo(prev)/dt);
+    prev=p;
+  }
+  const mean=sp.reduce((x,y)=>x+y,0)/sp.length;
+  /* 리그의 키 시각(t = 행동 진행도 0~1)에서의 속도를 평균과 비교 */
+  const KEYT=[0.20,0.42,0.65];   /* slash/chop 기준 내부 키 */
+  const at=KEYT.map(kt=>{ const i=Math.min(sp.length-1,Math.round(kt*sp.length));
+    return +(sp[i]/mean).toFixed(2); });
+  return {clip:name, mean:+mean.toFixed(1), atKeys:at};
+};
+window.cond=function(name){
+  const clip=byName[name]; if(!clip) return null;
+  const hit=CONTACTS[name]; if(hit==null) return null;
+  const M=R.motion, prof=(M.characterProfiles&&M.characterProfiles.ain)||{};
+  const KIND={attack1:'light',attack2:'light',attack3:'light',smash:'smash',counter:'counter',
+              exec:'exec',ult:'ult',skill1:'skill',skill2:'skill',skill3:'skill',skill4:'skill'};
+  const base=M[KIND[name]]||M.light, P=prof[name]||{};
+  const dur=P.duration||base.duration, hitAt=(P.hit!=null?P.hit:base.hit);
+  const span=SPAN[name]||1;
+  const act={id:'c',clip:name,kind:'attack',duration:dur,hitAt:hitAt,elapsed:0,clipHit:hit,combo:0};
+  const N=180, dt=dur/N, a=mixer.clipAction(clip);
+  /* ⚠ 예열이 필요하다. 리그는 «들고 다니는 자세 → 겨눔» 을 0.18초에 걸쳐
+     섞는데(carryAmount), 예열 없이 재면 그 블렌딩이 스윙 앞부분에 섞여
+     들어와 «끊김» 으로 잡힌다. 게임에서는 이미 겨눔 자세로 들어와 있다.
+     처음 이걸 빠뜨려서 평타 2차 차분이 66~128 cm 로 나왔었다 — 계측 버그였다. */
+  rig.restore();
+  for(let k=0;k<12;k++){
+    reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+    a.time=0; mixer.update(0);
+    rig.apply(Object.assign({},act,{elapsed:0,clipHit:hit/span}), false, false, 0.05, name, null);
+  }
+  GRIP_DIAG.reset(); AIM_DIAG.reset();
+  let worstStep=0, worstAt=0; const pts=[];
+  for(let i=0;i<=N;i++){
+    act.elapsed=dur*i/N;
+    reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+    const ca=Object.assign({},act,{clipHit:hit/span});
+    a.time=Math.max(0,Math.min(clip.duration,sampleAction(ca,clip.duration*span)));
+    mixer.update(0);
+    rig.apply(act,false,false,dt,name,null);
+    sc.updateMatrixWorld(true);
+    const L=bones.LeftForeArm&&bones.LeftForeArm.getWorldPosition(new T.Vector3());
+    const Rt=bones.RightForeArm&&bones.RightForeArm.getWorldPosition(new T.Vector3());
+    /* 입력(손·자루)과 출력(팔꿈치)을 «같은 잣대» 로 재서 어디서 끊기는지 가른다.
+       입력이 부드러운데 출력만 튀면 푸는 쪽(IK) 문제, 입력부터 거칠면
+       적어 둔 키 경로 문제다. */
+    const HR=bones.RightHand&&bones.RightHand.getWorldPosition(new T.Vector3());
+    const SH=new T.Vector3(0,1,0).applyQuaternion(slot.getWorldQuaternion(new T.Quaternion()));
+    pts.push({L:L,R:Rt,H:HR,S:SH});
+  }
+  /* ⚠ «한 프레임 이동량» 은 튐이 아니다 — 빨리 휘두르면 당연히 크다.
+     끊김은 «2차 차분»(속도의 변화)으로 봐야 한다. 부드러운 스윙은 빨라도
+     2차 차분이 작고, 튀면 한 프레임에서만 크게 솟는다.
+     단위는 60 fps 한 프레임으로 환산한다(표본 간격이 그보다 촘촘하므로). */
+  const f=(1/60)/dt;
+  const jolt=(side)=>{ let w=0,at=0;
+    for(let i=2;i<=N;i++){
+      const a0=pts[i-2][side], a1=pts[i-1][side], a2=pts[i][side];
+      if(!a0||!a1||!a2) continue;
+      const acc=a2.clone().sub(a1).sub(a1.clone().sub(a0)).length()*f*f;
+      if(acc>w){ w=acc; at=i/N; }
+    }
+    return [w,at]; };
+  const [eL]=jolt('L'), [eR,eAt]=jolt('R'), [hand]=jolt('H'), [shaft]=jolt('S');
+  worstStep=Math.max(eL,eR); worstAt=eAt;
+  return {clip:name, elbowJump:+(worstStep*100).toFixed(2), at:+worstAt.toFixed(2),
+    minRadial:+GRIP_DIAG.minRadial.toFixed(4), maxCos:+GRIP_DIAG.maxCos.toFixed(4),
+    minSin:+AIM_DIAG.minSin.toFixed(4),
+    hand:+(hand*100).toFixed(1), shaft:+(shaft*100).toFixed(1),
+    tangent:GRIP_DIAG.tangent, blends:GRIP_DIAG.blends, calls:GRIP_DIAG.calls};
+};
 window.gainSweep=function(name, from, to, step){
   const keep=AIN_SWING_GAIN[name], out=[];
   for(let g=from; g<=to+1e-9; g+=step){

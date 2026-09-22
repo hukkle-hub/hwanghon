@@ -44,10 +44,48 @@ export const AIN_HIGH_CONTACT={skill1:[.253,.767,.557,-.212,1.1,-.51]};
 const counter=[[0,ready],[.16,[0,-.08,.31,-.98,.10,.12]],[.24,[0,-.08,.31,-.98,.10,.12]],[.42,[.06,-.13,.40,-.8,.12,.6]],[.70,[.13,-.18,.31,-.85,.1,.4]],[1,ready]];
 const perfectCounter=counter.map(([t,p])=>[t,p.slice()]);
 perfectCounter[4]=[.70,[.16,-.21,.32,-.8,-.18,.55]];
-function path(keys,t){
+/* 키 사이를 어떻게 잇는가 — 여기가 「촐싹댄다」의 진짜 원인이었다.
+
+   예전에는 «이웃한 두 키 사이» 를 각각 smootherstep 으로 이었다. smootherstep 은
+   양 끝에서 «속도가 0» 이다. 그래서 무기가 **키마다 한 번씩 멈췄다가 다시
+   가속**했다. 키가 5개면 스윙 한 번에 네 번 멈추는 셈이다.
+
+   실측 (tools/3d/swing-measure.html 의 cond, 2차 차분 · 60 fps 환산):
+
+       클립      손    자루    팔꿈치
+       counter  153.7  298.2   128.3
+       attack3   86.0  249.7    81.5
+       attack1   80.6  236.0    66.8
+       skill3    11.5   28.2    11.0
+
+   **입력(자루)이 출력(팔꿈치)보다 거칠다.** 즉 IK 가 흔드는 게 아니라 오히려
+   다듬고 있었다. 64·66·67번 문서에서 두 손 그립 IK 를 천장으로 지목했는데
+   그건 틀렸다 — 재 보니 radial 0.13~0.25, |cos| 최대 0.95, 특이점 근처에
+   간 적이 없다.
+
+   고친 것: 키를 «지나가는» 3차 에르미트로 잇는다. 접선은 이웃 키의 시간차로
+   잡고(Catmull-Rom), 양 끝만 0 으로 둔다 — 시작과 끝은 실제로 멈춰 있어야
+   하니까. 키를 정확히 통과하므로 접점 자세는 그대로다. */
+function tangents(keys,j){
+ const n=keys.length;
+ return keys.map((_,i)=>{
+  if(i===0||i===n-1) return 0;                     /* 시작·끝은 정지 */
+  const dt=keys[i+1][0]-keys[i-1][0];
+  return dt>1e-6?(keys[i+1][1][j]-keys[i-1][1][j])/dt:0;
+ });
+}
+function hermite(keys,t,j,tan){
  let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
- const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
- return a.map((v,j)=>T.MathUtils.lerp(v,b[j],u));
+ const t0=keys[i][0],t1=keys[i+1][0],h=t1-t0;
+ if(h<=1e-6) return keys[i+1][1][j];
+ const u=T.MathUtils.clamp((t-t0)/h,0,1),u2=u*u,u3=u2*u;
+ const p0=keys[i][1][j],p1=keys[i+1][1][j],m0=tan[i]*h,m1=tan[i+1]*h;
+ return (2*u3-3*u2+1)*p0+(u3-2*u2+u)*m0+(-2*u3+3*u2)*p1+(u3-u2)*m1;
+}
+function path(keys,t){
+ const out=[];
+ for(let j=0;j<keys[0][1].length;j++) out.push(hermite(keys,t,j,tangents(keys,j)));
+ return out;
 }
 /* 휘두름 크기. 무기의 «움직임» 은 클립이 아니라 여기 적힌 키 경로가 만든다
    (아래 keys 선택부). 그래서 「스킬이 어깨 위에서 달랑달랑한다」의 원인은
@@ -92,11 +130,15 @@ function amplify(dir,gain){
  return base.clone().applyQuaternion(Q().setFromAxisAngle(axis.normalize(),ang*gain));
 }
 function pathRotation(keys,t,gain){
- // Interpolate complete orientations. Reconstructing a rotation from a
- // normalized direction each frame amplifies roll near a direction reversal.
- let i=0;while(i<keys.length-2&&t>keys[i+1][0])i++;
- const [t0,a]=keys[i],[t1,b]=keys[i+1],u=T.MathUtils.smootherstep(t,t0,t1);
- const swing=Q().setFromUnitVectors(V(0,1,0),V(...a.slice(3)).normalize()).slerp(Q().setFromUnitVectors(V(0,1,0),V(...b.slice(3)).normalize()),u);
+ /* 자루 방향도 같은 이유로 에르미트로 잇는다. 방향에서 회전을 «매 프레임
+    새로 세우면» 방향이 뒤집히는 근처에서 롤이 튄다고 예전 주석이 경고했는데,
+    그건 «각 키에서 독립적으로» 세울 때 얘기다. 여기서는 보간한 방향을
+    한 번만 세우고, 그 방향 자체가 이제 C1 이라 튀지 않는다.
+    실측으로 확인한다 (tests/ain-blade-direction · swing-measure 의 cond). */
+ const tan=[0,1,2].map(k=>tangents(keys,3+k));
+ const dir=V(hermite(keys,t,3,tan[0]),hermite(keys,t,4,tan[1]),hermite(keys,t,5,tan[2]));
+ if(dir.lengthSq()<1e-9)dir.set(0,1,0);
+ const swing=Q().setFromUnitVectors(V(0,1,0),dir.normalize());
  /* ⚠ 전 구간을 똑같이 키우면 «접점 자세» 까지 밀려서 오히려 나빠진다.
     실측: 균일 배율 1.6 에서 skill3 접점 날끝 15.4 → 8.8 m/s, skill1 9.5 → 7.0.
     크게 휘두르되 «맞는 순간은 그대로» 여야 한다. 그래서 접점(.42)에서는 배율
@@ -112,8 +154,10 @@ function gainAt(t,gain){
 // Specifying a shaft direction alone leaves its cutting plane unconstrained.
 // Keep the hooked blade ahead of the torso, in the shaft/forward plane; this
 // follows the whole-body turn and avoids presenting the blade's broad side.
+export const AIM_DIAG={minSin:Infinity,reset(){this.minSin=Infinity;}};
 export function aimScytheBlade(shaft,forward=V(0,0,1)){
  const y=shaft.clone().normalize(),blade=forward.clone().addScaledVector(y,-forward.dot(y));
+ { const s=blade.length(); if(s<AIM_DIAG.minSin)AIM_DIAG.minSin=s; }
  if(blade.lengthSq()<1e-6)throw Error('Scythe shaft/forward singularity: author a non-collinear weapon pose');
  const x=blade.normalize().negate(),z=x.clone().cross(y).normalize();
  return Q().setFromRotationMatrix(new T.Matrix4().makeBasis(x,y,z));
