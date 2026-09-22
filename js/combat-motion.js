@@ -2,6 +2,7 @@
 import * as THREE from '../vendor/three/three.module.js';
 import './boss-contact-volumes.js';
 import './combat-quality.js';
+import './swing-body.js';
 
 export function sampleAction(a, duration) {
   const t=Math.max(0,Math.min(a.duration,a.elapsed));
@@ -41,10 +42,27 @@ export function makeRigAdapter(model,root,slot) {
     const active=a&&a.kind!=='counter'?a.elapsed/a.duration:0;
     if(a){
       keep(['Hips','Spine','Spine2']);
-      const drive=Math.sin(active*Math.PI*2)*0.08;
-      if(bones.Hips)bones.Hips.rotateY(-drive*0.5);
-      if(bones.Spine)bones.Spine.rotateY(drive);
-      if(bones.Spine2)bones.Spine2.rotateZ(Math.sin(active*Math.PI)*0.025);
+      /* 몸통 비틀기 — «감았다 치고 멈춘다». 전에는 sin(2πt)*0.08 = ±4.6° 였다.
+         4.6° 로는 두 손으로 든 큰 낫이 어깨 위에서 흔들릴 뿐이다.
+         이제 js/swing-body.js 가 접점(0.42)에 맞춰 모양을 주고, 기술마다 세기를
+         다르게 준다 (스매시 ±25°, 평타 ±17°, 카운터는 작게).
+         팔이 아니라 몸을 돌리는 이유는 docs/design/64-swing-size.md — 팔로 키우면
+         두 손의 순서가 뒤집히며 팔꿈치가 튄다. 몸통은 어깨째 돌아 그 문제가 없다. */
+      const SB=globalThis.TW_SWING_BODY;
+      if(SB){
+        const k=(Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)
+          ? globalThis.TW_COMBAT_QUALITY.phase(a) : active;
+        const sw=SB.shape(k, SB.weightOf(a.clip, a.combo));
+        if(bones.Hips){ bones.Hips.rotateY(sw.yaw*SB.SHARE.Hips); bones.Hips.rotateX(sw.lean*SB.SHARE.Hips); }
+        if(bones.Spine){ bones.Spine.rotateY(sw.yaw*SB.SHARE.Spine); bones.Spine.rotateX(sw.lean*SB.SHARE.Spine); }
+        if(bones.Spine2){ bones.Spine2.rotateY(sw.yaw*SB.SHARE.Spine2); bones.Spine2.rotateX(sw.lean*SB.SHARE.Spine2);
+          bones.Spine2.rotateZ(Math.sin(active*Math.PI)*0.025); }
+      } else {
+        const drive=Math.sin(active*Math.PI*2)*0.08;
+        if(bones.Hips)bones.Hips.rotateY(-drive*0.5);
+        if(bones.Spine)bones.Spine.rotateY(drive);
+        if(bones.Spine2)bones.Spine2.rotateZ(Math.sin(active*Math.PI)*0.025);
+      }
       model.updateWorldMatrix(true,true);
     }
     // New main's idle is intentionally one-handed. Correct grip only while fighting/guarding.

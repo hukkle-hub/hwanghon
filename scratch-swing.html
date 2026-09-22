@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8"><canvas id="c" width="8" height="8"></canvas>
+<script src="js/world.js"></script><script src="js/items.js"></script>
+<script src="js/save.js"></script><script src="js/dungeons.js"></script>
+<script src="js/swing-body.js"></script>
+<script type="module">
+import * as T from './vendor/three/three.module.js';
+import {GLTFLoader} from './vendor/three/GLTFLoader.js';
+import {repairAinClips} from './js/ain-bind-repair.js';
+import {makeAinRigAdapter} from './js/ain-two-hand.js';
+const l=new GLTFLoader();
+const g=await l.loadAsync('art/3d/ain_anim.glb');
+let slot=null; g.scene.traverse(o=>{ if(o.isBone&&/RightHandSlot/.test(o.name)) slot=o; });
+const w=await l.loadAsync('art/3d/ain_scythe_tex.glb'); slot.add(w.scene); const blade=w.scene;
+blade.updateWorldMatrix(true,true);
+const inv=new T.Matrix4().copy(blade.matrixWorld).invert(); let far=null,fd=-1;
+blade.traverse(o=>{ if(!o.isMesh||!o.geometry)return; o.geometry.computeBoundingBox(); const bb=o.geometry.boundingBox;
+ for(let i=0;i<8;i++){ const v=new T.Vector3(i&1?bb.max.x:bb.min.x,i&2?bb.max.y:bb.min.y,i&4?bb.max.z:bb.min.z);
+  v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.length()>fd){fd=v.length();far=v.clone();} }});
+const clips=repairAinClips(g.animations,{changed:new Map()});
+const sc=new T.Scene(); sc.add(g.scene);
+const rest=[]; g.scene.traverse(o=>rest.push([o,o.position.clone(),o.quaternion.clone()]));
+const reset=()=>{for(const[o,p,q] of rest){o.position.copy(p);o.quaternion.copy(q);}};
+const mixer=new T.AnimationMixer(g.scene);
+const rig=makeAinRigAdapter(g.scene,g.scene,slot);
+const hips=[]; g.scene.traverse(o=>{if(o.isBone&&/Hips$/.test(o.name))hips.push(o);});
+const R=window.TW_DUNGEONS.RULES, PROF=(R.motion.characterProfiles||{}).ain||{};
+const CONTACT=R.motion.clipContacts||{};
+function profOf(clip){ return PROF[clip] || (clip==='smash'?R.motion.smash:clip==='counter'?R.motion.counter:
+  /^skill/.test(clip)?R.motion.skill:clip==='ult'?R.motion.ult:R.motion.light); }
+/* 클립 하나를 «전투가 재생하는 대로» 돌리며 날 끝 궤적을 잰다 */
+window.swing=function(name,N){
+  N=N||48;
+  const clip=clips.find(c=>c.name===name); if(!clip) return null;
+  const pr=profOf(name), dur=pr.duration, hit=pr.hit;
+  const pts=[], grips=[], absY=[];
+  reset(); mixer.stopAllAction();
+  const a=mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
+  rig.restore();
+  for(let i=0;i<=N;i++){
+    const el=dur*i/N;
+    const act={id:name, clip:name, kind:'attack', duration:dur, hitAt:hit, elapsed:el,
+               clipHit:CONTACT[name]||0.42};
+    for(let k=0;k<6;k++){ reset(); a.time=clip.duration*Math.min(.999,i/N); mixer.update(0);
+      rig.apply(act,false,false,1/60,name,null); }
+    g.scene.updateMatrixWorld(true);
+    const hip=hips[0].getWorldPosition(new T.Vector3());
+    const tw=blade.localToWorld(far.clone()); absY.push(tw.y);
+    pts.push(tw.clone().sub(hip));
+    grips.push(blade.getWorldPosition(new T.Vector3()).sub(hip));
+  }
+  let len=0; for(let i=1;i<pts.length;i++) len+=pts[i-1].distanceTo(pts[i]);
+  const ys=pts.map(p=>p.y), xs=pts.map(p=>p.x), zs=pts.map(p=>p.z);
+  let gl=0; for(let i=1;i<grips.length;i++) gl+=grips[i-1].distanceTo(grips[i]);
+  const rng=v=>Math.max(...v)-Math.min(...v);
+  return { 이동:+len.toFixed(2), 높이폭:+rng(ys).toFixed(2), 최고:+Math.max(...ys).toFixed(2),
+           최저:+Math.min(...ys).toFixed(2), 바닥높이:+Math.min(...absY).toFixed(2), 좌우:+rng(xs).toFixed(2), 앞뒤:+rng(zs).toFixed(2),
+           손이동:+gl.toFixed(2), 행동:+dur.toFixed(2) };
+};
+window.READY=1;
+</script>
