@@ -60,9 +60,18 @@ WINDUP = 0.35     # 예비 구간이 소스를 소화하는 배속 (1 보다 작
 RECOVER = 0.45    # 마무리 구간의 배속
 
 # js/dungeons.js 의 motion.clipContacts 와 같아야 한다 (tests/punch.test.mjs 가 고정한다).
-CONTACT = {'attack1': 0.34, 'attack2': 0.44, 'attack3': 0.50, 'smash': 0.78, 'ult': 0.50,
+#
+# 2026-09 갱신 — 이 도구의 계측 방식에 한계가 있었다. 여기서는 «손 위치» 로
+# 최고속을 쟀고, 리그를 안 씌운 «원본 클립» 을 봤다. 그런데 화면에 나오는 것은
+#   (1) 낫의 «날 끝» 이 때리는 그림이고 (손이 아니다)
+#   (2) 두 손 그립 + 체간 스윙 리그를 «씌운» 자세다 (원본이 아니다)
+# 그래서 tools/3d/swing-measure.html 로 파이프라인 그대로 다시 골랐다.
+# 여기 손대지 않았던 smash·exec·ult 가 크게 어긋나 있었다:
+#   smash 0.78 → 0.30 (접점 날끝 2.1 → 37.4 m/s), exec 0.58 → 0.18, ult 0.50 → 0.22
+# docs/design/66-scythe-weight.md
+CONTACT = {'attack1': 0.38, 'attack2': 0.52, 'attack3': 0.50, 'smash': 0.30, 'ult': 0.22,
            'skill1': 0.50, 'skill2': 0.50, 'skill3': 0.55, 'skill4': 0.50,
-           'counter': 0.48, 'exec': 0.58}
+           'counter': 0.48, 'exec': 0.18}
 
 # 클립별 처방. a = 출력 쪽 접점 창(정규화), b = 그 창에 몰아넣을 소스 시간, yaw = 체간 총 회전(도).
 # b > a 이면 접점이 빨라지고 나머지가 느려진다. 기본 공격이 23~43° 이므로 그 대역을 목표로.

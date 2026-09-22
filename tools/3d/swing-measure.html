@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>휘두름 계측 — 아인</title></head><body>
+<!-- 「낫이 무겁게 안 보인다」를 «수치» 로 만든다.
+     게임이 실제로 재생하는 그대로(클립 교체 → 행동 타임라인 리맵 → 두손 리그 →
+     체간 스윙)를 프레임마다 돌려 날 끝을 찍고, 벤치마크 항목과 같은 축으로 잰다:
+       경로   날 끝이 지나간 총 거리 (m)
+       각폭   자루가 쓸고 간 각도 (°)
+       최고속 정점 속도와 «그게 궤적의 몇 % 지점인가» — 업계 권장 60~70%
+       넘김   접점을 지나 더 간 각도 (°) — 권장 30~60°
+       몸통   접점 때의 몸통 비틀기 (°)
+     docs/design/66-scythe-weight.md -->
+<script src="../../js/world.js"></script>
+<script src="../../js/items.js"></script>
+<script src="../../js/save.js"></script>
+<script src="../../js/dungeons.js"></script>
+<script src="../../js/combat-quality.js"></script>
+<script src="../../js/swing-body.js"></script>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
+import {makeAinRigAdapter} from '../../js/ain-two-hand.js';
+import {sampleAction} from '../../js/combat-motion.js';
+window.THREE=T;
+const R=window.TW_DUNGEONS.RULES, CONTACTS=R.motion.clipContacts||{}, SPAN=R.motion.clipSpan||{};
+const loader=new GLTFLoader();
+const g=await loader.loadAsync('../../art/3d/ain_anim.glb');
+const sc=new T.Scene(); sc.add(g.scene);
+let slot=null; g.scene.traverse(o=>{ if(o.isBone&&/RightHandSlot/.test(o.name)) slot=o; });
+let tip=null;
+const w=await loader.loadAsync('../../art/3d/ain_scythe_tex.glb');
+slot.add(w.scene); const blade=w.scene;
+blade.updateWorldMatrix(true,true);
+const inv=new T.Matrix4().copy(blade.matrixWorld).invert();
+let far=null, farD=-1;
+blade.traverse(o=>{ if(!o.isMesh||!o.geometry) return;
+ o.geometry.computeBoundingBox(); const bb=o.geometry.boundingBox;
+ for(let i=0;i<8;i++){ const v=new T.Vector3(i&1?bb.max.x:bb.min.x,i&2?bb.max.y:bb.min.y,i&4?bb.max.z:bb.min.z);
+  v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if(v.length()>farD){farD=v.length(); far=v.clone();} }});
+tip=far; window.TIPLEN=farD;
+/* 게임과 같은 순서: 본 보정 → 클립 교체 → 리그 */
+const clips=repairAinClips(g.animations, repairAinBind(g.scene));
+const mixer=new T.AnimationMixer(g.scene);
+const bones={}; g.scene.traverse(o=>{ if(o.isBone) bones[o.name]=o; });
+const rest={}; for(const k in bones) rest[k]=bones[k].quaternion.clone();
+function reset(){ for(const k in bones) bones[k].quaternion.copy(rest[k]); }
+const rig=makeAinRigAdapter(g.scene, g.scene, slot);
+const byName={}; clips.forEach(c=>byName[c.name]=c);
+
+window.measure=function(name, durOverride){
+  const clip=byName[name]; if(!clip) return null;
+  const hit=CONTACTS[name]; if(hit==null) return null;
+  const span=SPAN[name]||1;
+  /* 행동 길이·접점 시각은 «게임 규칙» 에서 그대로 — 시트가 게임과 어긋날 수 없게.
+     아인 전용 프로파일이 있으면 그게 이긴다 (game3d 와 같은 순서). */
+  const M=R.motion, prof=(M.characterProfiles&&M.characterProfiles.ain)||{};
+  const KIND={attack1:'light',attack2:'light',attack3:'light',smash:'smash',
+              counter:'counter',exec:'exec',ult:'ult',
+              skill1:'skill',skill2:'skill',skill3:'skill',skill4:'skill'};
+  const base=M[KIND[name]]||M.light;
+  const P=prof[name]||{};
+  const dur=durOverride||P.duration||base.duration;
+  const hitAt=(P.hit!=null?P.hit:base.hit)*(durOverride?durOverride/(P.duration||base.duration):1);
+  const act={id:'m', clip:name, kind:'attack', duration:dur, hitAt:hitAt, elapsed:0, clipHit:hit, combo:0};
+  const N=240, dt=dur/N;
+  const pts=[], shafts=[], torso=[];
+  const a=mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
+  for(let i=0;i<=N;i++){
+    act.elapsed=dur*i/N;
+    reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+    const ca=Object.assign({},act,{clipHit:hit/span});
+    a.time=Math.max(0,Math.min(clip.duration, sampleAction(ca, clip.duration*span)));
+    mixer.update(0);
+    rig.apply(act, false, false, dt, name, null);
+    sc.updateMatrixWorld(true);
+    const p=tip.clone().applyMatrix4(blade.matrixWorld);
+    const handW=new T.Vector3(); slot.getWorldPosition(handW);
+    pts.push(p); shafts.push(p.clone().sub(handW).normalize());
+    torso.push(bones.Spine2?bones.Spine2.getWorldQuaternion(new T.Quaternion()).clone():null);
+  }
+  /* 경로 길이 · 속도 */
+  let path=0; const seg=[];
+  for(let i=1;i<=N;i++){ const d=pts[i].distanceTo(pts[i-1]); path+=d; seg.push(d/dt); }
+  /* 속도는 조금 다듬어서 본다 — 표본 잡음으로 정점이 튀지 않게 */
+  const sm=seg.map((_,i)=>{ let s=0,n=0; for(let k=-3;k<=3;k++){ const j=i+k; if(j>=0&&j<seg.length){s+=seg[j];n++;} } return s/n; });
+  let peak=0, peakI=0; sm.forEach((v,i)=>{ if(v>peak){peak=v; peakI=i;} });
+  /* 정점이 «궤적의» 몇 % 인가 — 시간이 아니라 지나간 거리 기준 */
+  let run=0; for(let i=0;i<peakI;i++) run+=seg[i]*dt;
+  const peakArcPct=path>0?run/path*100:0;
+  /* 각폭 · 넘김: 자루 방향이 쓸고 간 각 */
+  const ang=(u,v)=>Math.acos(Math.max(-1,Math.min(1,u.dot(v))))*180/Math.PI;
+  let sweep=0; for(let i=1;i<=N;i++) sweep+=ang(shafts[i],shafts[i-1]);
+  const hi=Math.max(0,Math.min(N,Math.round(hitAt/dur*N)));
+  let after=0; for(let i=hi+1;i<=N;i++) after+=ang(shafts[i],shafts[i-1]);
+  let before=sweep-after;
+  /* 몸통 비틀기(접점) — 체간 스윙이 넣은 값 */
+  const SB=globalThis.TW_SWING_BODY;
+  const sh=SB.shape(0.42, SB.weightOf(name,0));
+  const shPeak=(function(){ let m=0; for(let k=0;k<=100;k++){ const s=SB.shape(k/100,SB.weightOf(name,0)); m=Math.max(m,Math.abs(s.yaw)); } return m; })();
+  /* 바닥 최저 높이 */
+  let lowest=Infinity, highest=-Infinity;
+  pts.forEach(p=>{ lowest=Math.min(lowest,p.y); highest=Math.max(highest,p.y); });
+  return { clip:name, dur:+dur.toFixed(2), hitAt:+hitAt.toFixed(2), path:+path.toFixed(2), sweep:Math.round(sweep),
+    before:Math.round(before), after:Math.round(after),
+    peak:+peak.toFixed(1), peakArcPct:Math.round(peakArcPct),
+    torsoAtHit:+(sh.yaw*180/Math.PI).toFixed(1), torsoPeak:+(shPeak*180/Math.PI).toFixed(1),
+    low:+lowest.toFixed(2), high:+highest.toFixed(2),
+    /* 10등분 프로파일: 각 구간의 «각속도(°/s)» 와 «날끝 속도(m/s)» */
+    prof:(function(){ const out=[]; const B=10, per=Math.floor(N/B);
+      for(let b=0;b<B;b++){ let d=0, ar=0;
+        for(let i=b*per+1;i<=(b+1)*per;i++){ d+=pts[i].distanceTo(pts[i-1]); ar+=ang(shafts[i],shafts[i-1]); }
+        out.push([Math.round(ar/(per*dt)), +(d/(per*dt)).toFixed(1)]); }
+      return out; })(),
+    hitBin:Math.min(9,Math.floor(hitAt/dur*10)) };
+};
+/* 클립 «원본» 에서 날끝이 제일 빠른 시각. 판정(clipContacts)이 여기 맞아야
+   때리는 그림과 맞는 순간이 같아진다 (docs/design/49). punch.py 는 손 위치로
+   쟀지만 낫은 «날 끝» 이 때린다 — 자루 끝이 아니라 끝점으로 다시 잰다. */
+/* 판정 값을 «파이프라인 그대로» 돌려 가며 고른다.
+   rawPeak 은 리그를 안 씌운 원본 클립을 재므로 실제 화면과 다르다 —
+   리그(두 손 그립·체간 스윙)가 자세를 크게 바꾸기 때문이다.
+   그래서 clipContacts 후보를 훑으며 «접점 순간의 날끝 속도» 가 가장 큰 값을
+   찾는다. 이게 곧 「때리는 그림과 맞는 순간이 같다」는 뜻이다. */
+window.solve=function(name){
+  const keep=CONTACTS[name]; let best=null;
+  for(let c=0.12;c<=0.88;c+=0.02){
+    CONTACTS[name]=+c.toFixed(2);
+    const r=window.measure(name);
+    if(!r) continue;
+    const v=r.prof[r.hitBin][1];
+    if(!best||v>best.v) best={c:+c.toFixed(2), v, peakArc:r.peakArcPct};
+  }
+  CONTACTS[name]=keep;
+  const now=window.measure(name);
+  return { clip:name, now:keep, nowV:now.prof[now.hitBin][1],
+           best:best.c, bestV:best.v, bestArc:best.peakArc };
+};
+window.rawPeak=function(name){
+  const clip=byName[name]; if(!clip) return null;
+  const N=Math.max(24,Math.round(clip.duration*120)), dt=clip.duration/N, pts=[];
+  const a=mixer.clipAction(clip);
+  for(let i=0;i<=N;i++){
+    reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+    a.time=Math.min(clip.duration*0.999, clip.duration*i/N); mixer.update(0);
+    sc.updateMatrixWorld(true);
+    pts.push(tip.clone().applyMatrix4(blade.matrixWorld));
+  }
+  const sp=[]; for(let i=1;i<=N;i++) sp.push(pts[i].distanceTo(pts[i-1])/dt);
+  /* ±3 표본 평균으로 다듬는다 — 한 프레임짜리 가짜 정점을 피한다 */
+  const sm=sp.map((_,i)=>{let s=0,n=0;for(let k=-3;k<=3;k++){const j=i+k;if(j>=0&&j<sp.length){s+=sp[j];n++;}}return s/n;});
+  let best=0,bi=0; sm.forEach((v,i)=>{if(v>best){best=v;bi=i;}});
+  return { clip:name, peakAt:+((bi+0.5)/N).toFixed(3), peak:+best.toFixed(1),
+           set:CONTACTS[name], gap:+(((bi+0.5)/N)-CONTACTS[name]).toFixed(3), dur:+clip.duration.toFixed(2) };
+};
+window.READY=1;
+</script></body></html>

@@ -4,11 +4,21 @@ import './boss-contact-volumes.js';
 import './combat-quality.js';
 import './swing-body.js';
 
+/* 행동 시각 → 클립 시각. 접점(phase .42)은 반드시 클립의 접점 프레임에 못 박고,
+   그 앞뒤 «안에서» 만 시간을 다시 깎는다 — 무거운 것은 굼뜨게 감았다가
+   접점 근처에서 최고속을 찍어야 한다 (js/swing-body.js 의 무게 곡선).
+   판정 시각도 행동 길이도 안 변한다. docs/design/66-scythe-weight.md */
 export function sampleAction(a, duration) {
   const t=Math.max(0,Math.min(a.duration,a.elapsed));
   const contact=duration*a.clipHit;
   const phase=globalThis.TW_COMBAT_QUALITY.phase({...a,elapsed:t});
-  return phase<=.42?contact*phase/.42:contact+(duration-contact)*(phase-.42)/.58;
+  const SB=globalThis.TW_SWING_BODY;
+  if(phase<=.42){
+    const u=phase/.42;
+    return contact*(SB?SB.coilEase(u,a.clip):u);
+  }
+  const u=(phase-.42)/.58;
+  return contact+(duration-contact)*(SB?SB.throwEase(u,a.clip):u);
 }
 
 function rotateToward(bone, end, target, amount) {

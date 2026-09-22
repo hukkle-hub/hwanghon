@@ -7,7 +7,32 @@
 (function(){
   var RULES = {
     tick: 0.01,
-    motion: { clipContacts:{attack1:0.34,attack2:0.44,attack3:0.50,smash:0.78,ult:0.50,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.58}   /* attack3·skill2·skill4 는 모캡 클립의 손목 최고속 지점 (tools/3d/mocap.py) */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+    motion: { clipContacts:{attack1:0.38,attack2:0.52,attack3:0.50,smash:0.30,ult:0.22,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.18}
+   /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
+      그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
+      punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
+      낫은 «날 끝» 이 때리므로 끝점으로 다시 쟀다 (tools/3d/swing-measure.html):
+
+      처음엔 «원본 클립» 의 최고속으로 맞췄는데 그것도 틀렸다 — 화면에 나오는
+      건 리그(두 손 그립·체간 스윙)를 씌운 자세라 원본과 다르다. 그래서
+      후보값을 파이프라인 그대로 돌려 가며 «접점 순간의 날끝 속도» 가 가장
+      큰 값을 골랐다 (swing-measure.html 의 solve).
+
+        클립      옛 판정 → 새 판정   접점 날끝속도
+        exec        0.58 → 0.18       2.3 → 11.0 m/s   (4.8배)
+        attack2     0.44 → 0.52      20.0 → 36.3 m/s   (1.8배)
+        smash       0.78 → 0.30       2.1 → 95.9 m/s   (45배)
+        ult         0.50 → 0.22       3.3 →  8.7 m/s
+        attack1     0.34 → 0.38      41.5 → 55.1 m/s
+        나머지                        차이 5% 안 — 그대로 둔다
+
+      고치기 전 smash 는 접점 구간에서 날끝이 2.1 m/s 였다 (바로 앞 구간이
+      81.2 m/s). **무기가 멈춘 뒤에 맞은 것이다.** 그게 「무게감이 없다」였다.
+
+      아직 남은 것: ult·skill1·exec 는 제일 좋은 값으로도 접점 날끝이
+      8~11 m/s 밖에 안 된다 (평타 55, 스매시 96). 원본 클립이 «크게 치는
+      동작» 이 아니라서 그렇고, 판정을 옮겨서 될 일이 아니다.
+      skill4 는 방어 클립이 소스라 치는 동작이 아예 없다. docs/design/66 §4 */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
       smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
       ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},
@@ -43,7 +68,13 @@
          꼬리가 거의 없다 (span 을 .88 밑으로 내리면 판정이 잘려 나간다).
          2.52 배로 남는다 — 행동 시간을 늘리거나 클립을 다시 구워야 한다.
          docs/design/61-attack-weight.md */
-      clipSpan:{attack1:.88, attack2:.62, counter:.85} },   /* 처형은 길고 확실하게 — 크게 들었다 내리꽂는다 */
+      clipSpan:{attack1:.88, attack2:.62, counter:.85, smash:.45} },
+      /* smash 는 클립이 2.42초인데 행동은 0.96초다. 통째로 틀면 2.5배속이라
+         «휘리릭» 지나간다. 앞 45%(1.09초)만 쓰면 거의 1:1 속도로 재생돼
+         한 동작이 또렷해진다. 판정 정렬은 game3d 가 clipHit/span 으로 보정한다.
+         계측: 접점 前 272° / 後 246° — 감기와 따라감이 균형 잡힌다
+         (span 없을 때는 214°/463° 로 따라감이 또 휘도는 꼴이었다).
+         ult 은 클립이 0.71초뿐이라 자르면 5배 느려져서 안 건드린다. */
     /* 히트스톱은 세기에 비례한다 (docs/design/18-boss-fight-design.md §1-2). hit 은 하위 호환용 기본값 */
     /* 히트스톱 — 올렸다. 그전에 「못 올린다」고 적어 뒀던 이유가 틀렸다.
        「행동 시계가 멈추면 회피로 빠져나갈 시점이 밀려 입력 버퍼 계약이 깨진다」고 썼는데,
