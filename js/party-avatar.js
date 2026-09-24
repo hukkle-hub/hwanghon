@@ -4,6 +4,7 @@ import {sampleAction,makeRigAdapter} from './combat-motion.js';
 import {WeaponTrail,trailStyle} from './weapon-trail.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
+import {smoothCharacterClips} from './clip-smooth.js';
 import {mountAinScythe} from './ain-scythe-mount.js';
 import './pose-fix.js';
 import './mat-fix.js';
@@ -32,6 +33,8 @@ export class Animated{
    globalThis.TW_MATFIX.repair(T,this.model);
   }
   if(isPlayer&&character==='ain'){const repair=repairAinBind(this.model);repair.geometries.forEach(g=>this.owned.add(g));asset={...asset,animations:repairAinClips(asset.animations,repair)};}
+  /* 카인·류·세라 — 솔로와 같은 클립 곡선화 (docs/design/75) */
+  else if(isPlayer&&['kain','ryu','sera'].includes(character))asset={...asset,animations:smoothCharacterClips(character,asset.animations,globalThis.TW_DUNGEONS?.RULES?.motion?.clipContacts||{})};
   this.root=new T.Group();this.root.add(this.model);scene.add(this.root);this.mixer=new T.AnimationMixer(this.model);this.clips=Object.fromEntries(asset.animations.map(c=>[c.name,c]));this.actions={};this.current=null;this.key=null;this.model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}});if(isPlayer){let slot;this.model.traverse(o=>{if(o.isBone&&/RightHandSlot/.test(o.name))slot=o;});if(slot){this.model.updateMatrixWorld(true);const w=clone(weaponAsset.scene),group=new T.Group();if(character==='ain')group.add(mountAinScythe(w));else{w.position.y=-.75;group.add(w);}const k=slot.getWorldScale(new T.Vector3()).x;group.scale.setScalar(1/k);slot.add(group);this.weapon=group;this.trail=new WeaponTrail(scene);}this.rig=(character==='ain'?makeAinRigAdapter:makeRigAdapter)(this.model,this.root,slot);}
   this.blob=new T.Mesh(new T.PlaneGeometry(1.04,1.04),new T.MeshBasicMaterial({map:blobTex(),transparent:true,depthWrite:false,opacity:.9}));
   this.blob.rotation.x=-Math.PI/2;this.blob.position.y=.035;this.blob.renderOrder=1;scene.add(this.blob);}

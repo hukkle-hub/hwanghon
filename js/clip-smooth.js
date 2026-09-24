@@ -37,6 +37,10 @@ function tangentsFor(times,vals,size,cyclic,alignQuat){
 }
 const SIGMA=()=>globalThis.TW_CLIP_SIGMA!=null?globalThis.TW_CLIP_SIGMA:DEFAULT_SIGMA;
 let DEFAULT_SIGMA=0;
+/* 고정점(초). 단발 동작은 처음·끝 자세가 다른 동작과 이어 붙는 자리라 늘 고정했다.
+   카인·류·세라는 몸 클립이 곧 화면이라(아인처럼 두손 리그가 팔을 다시 풀지 않는다)
+   «맞는 순간» 자세도 고정해야 판정과 무기 위치가 안 어긋난다 → 접점 시각을 더한다. */
+let PINS=[];
 function smoothVals(times,vals,size,cyclic,isQ,sig){
  const n=times.length, src=Float32Array.from(vals), T0=times[n-1]-times[0], R=3*sig;
  for(let i=0;i<n;i++){
@@ -53,7 +57,8 @@ function smoothVals(times,vals,size,cyclic,isQ,sig){
    wsum+=w;
   }
   if(!cyclic){ /* 끝 키에서의 거리에 따라 원래 값으로 되돌린다 — 이음 자세 보호 */
-   const e=Math.min(times[i]-times[0],times[n-1]-times[i]), keep=Math.exp(-e*e/(2*sig*sig));
+   let e=Math.min(times[i]-times[0],times[n-1]-times[i]); for(const p of PINS) e=Math.min(e,Math.abs(times[i]-p));
+   const keep=Math.exp(-e*e/(2*sig*sig));
    for(let k=0;k<size;k++) vals[i*size+k]=(1-keep)*acc[k]/wsum+keep*src[i*size+k];
   } else for(let k=0;k<size;k++) vals[i*size+k]=acc[k]/wsum;
   if(isQ){ let l=0; for(let k=0;k<4;k++) l+=vals[i*4+k]**2; l=Math.sqrt(l)||1; for(let k=0;k<4;k++) vals[i*4+k]/=l; }
@@ -141,15 +146,39 @@ const POLICY={roll:'linear',
   cheer:'soft',pickup:'soft',death:'soft',brake:'soft'};
 export function clipPolicy(name){ return POLICY[name]||'curve'; }
 export function isLoop(name){ return LOOP.has(name); }
-export function smoothClip(clip){
+/* opts: {mode:'curve'|'soft'|'linear', pins:[초…]} — 없으면 아인 표(POLICY) */
+export function smoothClip(clip,opts={}){
  if(clip.userData?.smoothed) return clip;
  /* 계측용: TW_CLIP_SIGMA 가 있으면 모든 클립을 그 σ 로 (tools 가 쓸어 볼 때) */
- const measuring=globalThis.TW_CLIP_SIGMA!=null, mode=measuring?'curve':clipPolicy(clip.name);
+ const measuring=globalThis.TW_CLIP_SIGMA!=null, mode=measuring?'curve':(opts.mode||clipPolicy(clip.name));
  if(mode==='linear') return clip;
- const keep=DEFAULT_SIGMA; if(!measuring) DEFAULT_SIGMA=mode==='soft'?SOFT:0;
+ const keep=DEFAULT_SIGMA, keepPins=PINS; if(!measuring) DEFAULT_SIGMA=mode==='soft'?SOFT:0;
+ PINS=(opts.pins||[]).filter(Number.isFinite);
  const out=new T.AnimationClip(clip.name,clip.duration,clip.tracks.map(t=>resample(t,clip.duration,LOOP.has(clip.name))),clip.blendMode);
- DEFAULT_SIGMA=keep;
+ DEFAULT_SIGMA=keep; PINS=keepPins;
  out.userData={...(clip.userData||{}),smoothed:true};
  return out;
 }
 export function smoothClips(clips){ return clips.map(smoothClip); }
+/* ── 카인·류·세라 (docs/design/75) ────────────────────────────────────────
+   이들은 아인처럼 두손 리그가 팔을 다시 풀지 않는다 — 몸 클립이 곧 화면이다. 그래서
+   «맞는 순간» 자세를 고정(pins)한 채 편다. 클립마다 세 방식을 «재서» 골랐다
+   (tools/3d/char-clip-policy.mjs):
+     펴기 — 가장 매끄럽고, 자세 변화 ≤ 12°(판정 없는 고리 이동은 15°), 접점 자세 변화 ≤ 3°
+     곡선 — 원본보다 매끄러울 때 (키 자세 그대로)
+     선형 — 둘 다 원본보다 거칠 때 (원본 스냅을 곡선이 넘쳐 따라간다)
+   카인의 큰 휘두르기(1·2·3타·스매시)는 펴면 43~62° 달라져 동작이 지워진다 → 곡선.
+   평균 rJerk: 카인 2.41 → 1.94 · 류 2.66 → 1.78 · 세라 2.17 → 1.57 */
+const CHAR_POLICY={
+  kain:{soft:['brake', 'cheer', 'death', 'dodgeB', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'run', 'skill2', 'skill4', 'walk'],
+        linear:['roll', 'skill1', 'ult']},
+  ryu:{soft:['attack1', 'attack2', 'brake', 'cheer', 'death', 'dodgeB', 'exec', 'guardHit', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'pickup', 'run', 'skill1', 'skill2', 'smash', 'ult', 'walk'],
+        linear:['counter', 'dodgeL', 'dodgeR', 'roll', 'skill4']},
+  sera:{soft:['attack1', 'attack2', 'brake', 'cheer', 'death', 'dodgeB', 'exec', 'guardHit', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'pickup', 'run', 'skill1', 'skill2', 'smash', 'walk'],
+        linear:['counter', 'dodgeL', 'dodgeR', 'roll', 'skill3', 'skill4']} };
+export function charClipPolicy(ch,name){ const p=CHAR_POLICY[ch]; if(!p) return clipPolicy(name);
+ return p.soft.includes(name)?'soft':p.linear.includes(name)?'linear':'curve'; }
+/* contacts: {클립: 판정 비율} (js/dungeons.js motion.clipContacts) — 그 시각 자세를 고정 */
+export function smoothCharacterClips(ch,clips,contacts={}){
+ return clips.map(c=>smoothClip(c,{mode:charClipPolicy(ch,c.name),pins:contacts[c.name]!=null?[contacts[c.name]*c.duration]:[]}));
+}

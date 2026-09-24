@@ -6,6 +6,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
+import {smoothCharacterClips} from './clip-smooth.js';
 import {mountAinScythe,measureAinBladeContact,nearestAinBladePoint} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
 import { prepareTrainingMotion, sampleBossAttack, createBossReadability } from './boss-motion.js';
@@ -563,6 +564,8 @@ import { createBloom } from './bloom.js';
     if(window.TW_WIND){ try{ TW_WIND.prepare(THREE, g.scene); var wp=TW_WIND.profile(A.id); wind=TW_WIND.bind(THREE, g.scene, wp); console.info('[tw-wind]', wp.name); }catch(e){ console.warn('wind', e); } }
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
+    /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
+    else g.animations=smoothCharacterClips(CID,g.animations,(R.motion&&R.motion.clipContacts)||{});
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
