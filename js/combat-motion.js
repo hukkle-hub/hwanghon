@@ -13,6 +13,11 @@ export function sampleAction(a, duration) {
   const contact=duration*a.clipHit;
   const phase=globalThis.TW_COMBAT_QUALITY.phase({...a,elapsed:t});
   const SB=globalThis.TW_SWING_BODY;
+  /* 세 박자 템포가 있는 기술은 몸도 같은 곡선으로 흘린다 (js/swing-body.js TEMPO) */
+  const tempo=SB&&SB.TEMPO&&SB.TEMPO[a.clip];
+  /* 몸 클립은 접점 직후에도 제 속도로 크게 움직여서(원본이 도는 동작) 무기와 같은
+     bite 로는 감속이 안 보였다 — 몸 쪽 감속은 따로 둔다 (bodyBite). */
+  if(tempo) return SB.tempoCurve(phase, tempo.bodyBite!=null?Object.assign({},tempo,{bite:tempo.bodyBite}):tempo, contact, duration-contact);
   if(phase<=.42){
     const u=phase/.42;
     return contact*(SB?SB.coilEase(u,a.clip,a.clipHit):u);
@@ -62,7 +67,7 @@ export function makeRigAdapter(model,root,slot) {
       if(SB){
         const k=(Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)
           ? globalThis.TW_COMBAT_QUALITY.phase(a) : active;
-        const sw=SB.shape(k, SB.weightOf(a.clip, a.combo));
+        const sw=SB.shape(SB.tempoPhase?SB.tempoPhase(k,a.clip):k, SB.weightOf(a.clip, a.combo));
         /* 평타 연계는 타수마다 몸이 «반대로» 돈다 — 봉술의 여덟 방향 원리.
            방향이 안 바뀌면 아무리 크게 휘둘러도 연계로 안 읽힌다 (66번 문서 §1) */
         const side=SB.sideOf?SB.sideOf(a.clip, a.combo):1, yaw=sw.yaw*side;

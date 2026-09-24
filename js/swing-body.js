@@ -163,14 +163,41 @@
 
      k<1 은 «천천히 감았다가 빠르게 내친다», k>1 은 그 반대로 클립 자체가
      접점 뒤에서 느려지는 것을 상쇄한다. 적지 않은 클립은 k=1(정확히 맞춤)이다. */
-  var SEAM_BIAS = { attack3:1.20, smash:0.60, counter:0.80,
-                    skill1:1.40, skill2:0.80, ult:1.60, exec:0.40 };
+  /* ⚠ 위 표는 «매끄러움만» 보고 고른 72번 값이다. 디렉터가 «맞는 순간 속도는
+     줄어드는게 맞다» 고 해서, 이제는 «실제로 잰 접점 감속»(접점 뒤 50 ms 평균
+     각속도 ÷ 앞 50 ms)을 목표에 맞추도록 다시 쓸었다 (biteSweep 0.3~2.1).
+     목표는 js/ain-two-hand.js 의 BITE (근거 없음, 같이 조정할 값).
+
+       클립      k     잰 감속   목표   rJerkX(접점 제외 거칠기)
+       attack1  1.05   0.69    0.68   1.07
+       attack2  1.00   0.11    0.68   0.59   ← 땅에 박힌다(바닥 가드). 어떤 k 로도 0.10~0.14
+       attack3  1.95   0.70    0.70   0.87
+       smash    2.10   0.58    0.55   0.73
+       counter  0.45   0.56    0.80   1.01   ← 어떤 k 로도 0.57 이하. 튕겨 내는 기술이라 둔다
+       skill1   0.90   0.57    0.62   0.29
+       skill2   1.50   0.74    0.74   0.81
+       skill3   1.50   0.62    0.60   0.22
+       skill4   —      0.75    0.78   0.18   (무기 경로가 정한다 — k 무관)
+       ult      1.95   0.56    0.52   0.54
+       exec     0.30   0.30    0.55   1.22   ← 처형은 내리꽂아 멈춘다. k 무관 0.29~0.32 */
+  var SEAM_BIAS = { attack1:1.05, attack3:1.95, smash:2.10, counter:0.45,
+                    skill1:0.90, skill2:1.50, skill3:1.50, ult:1.95, exec:0.30 };
+  /* ── 접점 감속 (bite) ──
+     디렉터: 「맞는 순간 속도는 줄어드는게 맞아」.
+     위 SEAM_BIAS 는 «클립 자체의 속도 변화를 상쇄해 매끄럽게 잇는» 중립점이다.
+     그 위에 일부러 감속을 얹는다: 접점 직전 기울기는 그대로 두고, 직후만
+     BITE 배로 떨어뜨린다. 무게를 따른다 — 무거울수록 깊이 박히고 크게 잃는다.
+       bite(h) = 1 / (1 + 0.5·h)     smash 0.58 · 평타 0.67 · counter 0.80
+     값은 근거 없음 — 디렉터와 같이 조정할 값이다.
+     무기 경로의 감속(js/ain-two-hand.js BITE)과 같은 쪽으로 움직여야
+     몸과 날이 따로 놀지 않는다. */
+  function biteOf(h){ return 1/(1+0.5*(h==null?1:h)); }
   function seam(h, hit, clip){
     if(hit==null||hit<=0.02||hit>=0.98) return [0,0];
     var pc=coilPow(h), pt=throwPow(h);
-    var k=Math.sqrt(SEAM_BIAS[clip]||1);                      /* s⁻ : s⁺ = k² */
+    var k=Math.sqrt(SEAM_BIAS[clip]||1);                      /* 중립 s⁻ : s⁺ = k² */
     var sm=(hit*pc/0.42 + (1-hit)*pt/0.58)/2;                 /* 맞출 기울기 */
-    var a=pc-sm*k*0.42/hit, b=pt-(sm/k)*0.58/(1-hit);
+    var a=pc-sm*k*0.42/hit, b=pt-(sm/k)*biteOf(h)*0.58/(1-hit);
     /* 단조성 보호: 보정이 세면 곡선이 되돌아간다. 양쪽 다 묶어 둔다. */
     a=Math.max(-0.8, Math.min(pc-0.35, a));
     b=Math.max(-0.8, Math.min(pt-0.35, b));
@@ -214,11 +241,70 @@
   /* 몸통 세 마디에 나누는 비율. 골반이 먼저 돌고 가슴이 따라간다 */
   var SHARE = { Hips:0.40, Spine:0.34, Spine2:0.26 };
 
+  /* ── 세 박자 템포: 들고 → 머물고 → 내려친다 ─────────────────────────────
+     디렉터: 「스매쉬의 속도도 처음과 중간 마지막이 달라야하고」.
+     몬헌 대검의 모아베기, 마영전의 강타가 다 이 세 박자다:
+         들기     [0 , lift]   정점까지 올린다 — 보통 속도, 끝에서 느려진다
+         머묾     [lift, hold]  정점에서 거의 멈춘다 — 무게가 실리고 상대가 읽는 곳
+         내려치기  [hold, .42]  남은 호를 가속하며 쏟아붓는다 — 제일 빠르다
+         접점      .42         물리며 속도를 잃는다 (bite)
+         여운·회수 [.42, 1]    감속하며 제자리로
+     ⚠ 처음엔 무기 경로에만 걸었다. 그랬더니 몸(클립 재생·몸통 비틀기)이 머묾
+        구간에도 계속 돌아서 날끝 각속도로는 머묾(167°/s)이 들기(195°/s)와
+        구분이 안 됐다. 몸·몸통·무기가 «같은 곡선» 을 써야 박자가 보인다.
+        그래서 곡선을 여기 한 곳에 둔다.
+
+     tempoCurve(u, spec, pre, post) → [0, pre+post]
+       pre  = 접점까지 가야 할 양 (무기: 접점 키의 각도 비율, 몸: 접점의 클립 시각)
+       post = 접점 뒤 남은 양
+     접점(.42)에서 값이 정확히 pre — 판정·접점 자세 불변.
+     구간 경계는 기울기를 공유하는 3차 에르미트, 각 끝 기울기는 할선의 3배를
+     넘지 않게 묶어 단조를 지킨다(Fritsch–Carlson). 접점만 일부러 끊는다:
+     직후 기울기 = 직전 기울기 × bite (절대 속도 기준).
+
+     값은 근거 없음 — 관절 한 표본 이동량 8° 게이트 안에서 고른 것이다
+     (tests/ain-two-hand; strike 2.7 이면 14.9° 로 깨졌다). */
+  var TEMPO = { smash:{ lift:.20, hold:.28, top:.40, creep:.05, strike:1.2, bite:.55, bodyBite:.30, dwell:.06 } };
+  function herm(p, y0, y1, m0, m1, h){ var p2=p*p, p3=p2*p;
+    return (2*p3-3*p2+1)*y0+(p3-2*p2+p)*m0*h+(-2*p3+3*p2)*y1+(p3-p2)*m1*h; }
+  function tempoCurve(u, s, pre, post){
+    var x=Math.max(0,Math.min(1,u));
+    var X=[0,s.lift,s.hold,.42], P=[0,s.top,s.top+s.creep*(1-s.top),1], d=[];
+    for(var i=0;i<3;i++) d.push((P[i+1]-P[i])/(X[i+1]-X[i]));
+    var mh=Math.min(d[1],3*d[0],3*d[2]);                 /* 머묾 기울기를 양쪽이 나눠 쓴다 */
+    var m=[0, mh, mh, Math.min(s.strike,2.95)*d[2]];
+    if(x<=.42){ var k=0; while(k<2&&x>X[k+1]) k++;
+      var h=X[k+1]-X[k];
+      return pre*herm((x-X[k])/h, P[k], P[k+1], m[k], m[k+1], h); }
+    /* 접점 뒤: 물린 속도(bite)로 dwell 동안 «버티고», 그다음 회수.
+       ⚠ dwell 없이 바로 회수 곡선을 이으면, 접점 뒤에 남은 양(스매시 몸 클립은
+          70%)을 채우려고 곡선이 곧장 다시 가속해서 감속이 50 ms 도 안 보였다
+          (잰 감속 0.93). 물린 채 잠깐 버텨야 «박혔다» 로 읽힌다. */
+    var mp=post>1e-9?s.bite*m[3]*pre/post:0, dw=s.dwell||0;
+    if(dw>0){
+      var g=Math.min(.5, mp*dw*.9), m2=Math.min(mp*.8, 3*(1-g)/(.58-dw));
+      if(x<=.42+dw) return pre+post*herm((x-.42)/dw, 0, g, Math.min(mp,3*g/dw), m2, dw);
+      return pre+post*herm((x-.42-dw)/(.58-dw), g, 1, m2, 0, .58-dw);
+    }
+    return pre+post*herm((x-.42)/.58, 0, 1, Math.min(mp,2.95/.58), 0, .58);
+  }
+  /* 몸통 비틀기(shape)는 .28 에서 다 감기고 .42 에서 풀린다. 템포가 있는 기술은
+     그 «다 감긴» 순간이 머묾 구간 안에 머물도록 위상을 비튼다 — 몸도 정점에서 멈춘다. */
+  function tempoPhase(k, clip){
+    var s=TEMPO[clip]; if(!s||k>=.42) return k;
+    var X=[0,s.lift,s.hold,.42], Y=[0,.26,.29,.42], d=[];
+    for(var i=0;i<3;i++) d.push((Y[i+1]-Y[i])/(X[i+1]-X[i]));
+    var mh=Math.min(d[1],3*d[0],3*d[2]), m=[d[0], mh, mh, d[2]];
+    var j=0; while(j<2&&k>X[j+1]) j++;
+    var h=X[j+1]-X[j];
+    return herm((k-X[j])/h, Y[j], Y[j+1], m[j], m[j+1], h);
+  }
   var api = { WEIGHT:WEIGHT, YAW:YAW, LEAN:LEAN, SHARE:SHARE, HEFT:HEFT,
               shape:shape, weightOf:weightOf, comboGain:comboGain,
               chainSide:chainSide, sideOf:sideOf,
               heftOf:heftOf, coilPow:coilPow, throwPow:throwPow,
-              coilEase:coilEase, throwEase:throwEase, seam:seam, SEAM_BIAS:SEAM_BIAS };
+              coilEase:coilEase, throwEase:throwEase, seam:seam, SEAM_BIAS:SEAM_BIAS, biteOf:biteOf,
+              TEMPO:TEMPO, tempoCurve:tempoCurve, tempoPhase:tempoPhase };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.TW_SWING_BODY = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -1075,6 +1075,9 @@ import { createBloom } from './bloom.js';
       case 'hit': var material=globalThis.TW_COMBAT_QUALITY.material(e.part,A.stages[phase].kind),feedback=globalThis.TW_COMBAT_QUALITY.feedback({kind:e.kind,perfect:e.perfect,crit:e.crit,material:material}); SFX.play('hit', {heavy:e.crit||e.counter||e.kind==='smash',material:material}); var hp=bossHitPos(HITMAP[e.part]||'body');
         if(ain.weapon){var nearest=nearestAinBladePoint(ain.weapon,hp);if(nearest&&nearest.distance<=((boss.PART[HITMAP[e.part]]||{}).r||.5))hp.copy(nearest.point);}
         num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12;
+        /* 스매시 타점: 날끝으로 가장 빠른 곳에 맞았나(정타), 머리 위·자루로 스쳤나(빗맞음).
+           «보통» 은 굳이 적지 않는다 — 글자가 늘면 정타가 안 읽힌다. */
+        if(e.point&&e.point.grade!=='solid') num(hp.clone().add(new THREE.Vector3(0,.42,0)), e.point.grade==='sweet'?'정타':'빗맞음', 'pt-'+e.point.grade);
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
         /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
         if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();

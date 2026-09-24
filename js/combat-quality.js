@@ -39,7 +39,8 @@
     // boss's tail must remain hittable from behind without entering its torso.
     if(d-r>range||delta>cone*profile.cone+Math.asin(Math.min(1,r/Math.max(r,d)))||!lineOfSight(player.x,player.y,cx,cy))return null;
     const edge=Math.max(0,d-r),f=d?edge/d:0;
-    return {x:(player.x+dx*f)/50,y:center.height,z:(player.y/.55+dz*f)/50,part:part.id};
+    /* reach·range(m) — 스매시 «타점» 이 날의 어느 지점으로 맞았는지 가를 때 쓴다 (js/swing-point.js) */
+    return {x:(player.x+dx*f)/50,y:center.height,z:(player.y/.55+dz*f)/50,part:part.id,reach:edge/50,range:range/50};
   }
   function feedback({kind,perfect,crit,material='straw'}={}){
     const major=kind==='counter',heavy=major||kind==='smash'||kind==='ult'||kind==='exec';

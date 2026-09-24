@@ -20,7 +20,9 @@ import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
 import {GRIP_DIAG} from '../../js/ain-grip-ik.js';
-import {makeAinRigAdapter, AIN_SWING_GAIN, AIM_DIAG} from '../../js/ain-two-hand.js';
+import {makeAinRigAdapter, AIN_SWING_GAIN, AIM_DIAG, AIN_BITE} from '../../js/ain-two-hand.js';
+const AIN_TEMPO=globalThis.TW_SWING_BODY.TEMPO; window.AIN_BITE=AIN_BITE;
+window.setTempo=(n,o)=>{ AIN_TEMPO[n]=Object.assign({},AIN_TEMPO[n],o); };
 import {sampleAction} from '../../js/combat-motion.js';
 window.THREE=T;
 const R=window.TW_DUNGEONS.RULES, CONTACTS=R.motion.clipContacts||{}, SPAN=R.motion.clipSpan||{};
@@ -67,6 +69,12 @@ window.measure=function(name, durOverride, noRig){
   const N=240, dt=dur/N;
   const pts=[], shafts=[], torso=[];
   const a=mixer.clipAction(clip); a.reset(); a.play(); a.paused=true;
+  /* cond() 와 같은 예열 — 없으면 첫 측정만 «들고 다니는 자세 → 겨눔» 블렌딩이
+     섞여 첫 구간 속도가 부풀었다(스매시 첫 10% 가 551°/s 로 나왔다). */
+  if(!noRig){ rig.restore();
+    for(let k=0;k<12;k++){ reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
+      a.time=0; mixer.update(0);
+      rig.apply(Object.assign({},act,{elapsed:0}), false, false, 0.05, name, null); } }
   for(let i=0;i<=N;i++){
     act.elapsed=dur*i/N;
     reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
@@ -241,7 +249,8 @@ window.cond=function(name){
     act.elapsed=dur*i/N;
     reset(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;
     const ca=Object.assign({},act,{clipHit:hit/span});
-    a.time=Math.max(0,Math.min(clip.duration,sampleAction(ca,clip.duration*span)));
+    /* 계측 스위치 body: 몸 클립을 접점 자세에 세워 두고 «무기 경로만» 본다 */
+    a.time=globalThis.TW_AIN_ABLATE?.body?clip.duration*hit:Math.max(0,Math.min(clip.duration,sampleAction(ca,clip.duration*span)));
     mixer.update(0);
     rig.apply(act,false,false,dt,name,null);
     sc.updateMatrixWorld(true);
@@ -295,10 +304,25 @@ window.cond=function(name){
     const m=w.reduce((a,b)=>a+b,0)/w.length; let j=0,at=0;
     for(let i=1;i<w.length-1;i++){ const v=Math.abs(w[i+1]-2*w[i]+w[i-1]);
       if(v>j){ j=v; at=i/w.length; } }
+    /* 접점 감속을 «일부러» 넣은 뒤로는 접점 자리의 꺾임이 rJerk 를 차지한다.
+       그래서 둘을 따로 본다:
+         bite  = 접점 직후 4표본 평균 각속도 ÷ 직전 4표본 — 1 보다 작으면 물렸다
+         rJerkX = 접점 ±3표본을 뺀 rJerk — 의도하지 않은 덜컥거림만 */
+    const ic=Math.round(hitAt/dt), avg=(a,b)=>{let s2=0,n=0;for(let i=a;i<b;i++)if(i>=0&&i<w.length){s2+=w[i];n++;}return n?s2/n:0;};
+    /* 창은 «시간» 으로 잡는다 — 접점 앞뒤 50 ms (60 fps 로 세 프레임).
+       표본 몇 개로 잡으면 짧은 평타에선 한 프레임도 안 돼 눈에 안 보이는 감속을 잰다. */
+    const wn=Math.max(2,Math.round(0.05/dt));
+    window.__BITE__=avg(ic,ic+wn)/Math.max(1e-9,avg(ic-wn,ic));
+    { let jx=0; for(let i=1;i<w.length-1;i++){ if(Math.abs(i-ic)<=3) continue;
+        jx=Math.max(jx,Math.abs(w[i+1]-2*w[i]+w[i-1])); } window.__RJX__=m>1e-9?jx/m:0; }
     /* 검수 그림용으로 남겨 둔다 (rateProfile) */
-    const B=120, per=Math.floor(w.length/B), out=[];
-    for(let b=0;b<B;b++){ let sm2=0; for(let i=b*per;i<(b+1)*per;i++) sm2+=w[i];
-      out.push(+(sm2/(per*dt)*180/Math.PI).toFixed(0)); }
+    /* ⚠ 예전엔 per=floor(180/120)=1 이라 앞 120 표본(동작의 2/3)만 담겼다.
+       72번 그림의 가로축이 그래서 틀렸다. 이제 전 구간을 B 칸으로 나눈다. */
+    const B=90, out=[];
+    for(let b=0;b<B;b++){ const i0=Math.floor(b*w.length/B), i1=Math.max(i0+1,Math.floor((b+1)*w.length/B));
+      let sm2=0; for(let i=i0;i<i1;i++) sm2+=w[i];
+      out.push(+(sm2/((i1-i0)*dt)*180/Math.PI).toFixed(0)); }
+    window.__HITFRAC__=hitAt/dur;
     window.__RATE__=out;
     return [m>1e-9?j/m:0, at]; })();
   /* 자루 거칠기의 «위쪽 12개» 가 어느 위상에 몰려 있는지 — 키에 몰리면 잇는 방식,
@@ -314,6 +338,7 @@ window.cond=function(name){
     hand:+(hand*100).toFixed(1), shaft:+(shaft*100).toFixed(1),
     nShaft:+nS.toFixed(2), nHand:+nH.toFixed(2), nElbow:+nE.toFixed(2), nAt:+atS.toFixed(3), top:top,
     rJerk:+rj[0].toFixed(2), rAt:+rj[1].toFixed(3),
+    bite:+window.__BITE__.toFixed(2), rJerkX:+window.__RJX__.toFixed(2),
     tangent:GRIP_DIAG.tangent, blends:GRIP_DIAG.blends, calls:GRIP_DIAG.calls};
 };
 window.gainSweep=function(name, from, to, step){
@@ -333,6 +358,26 @@ window.rateProfile=function(name, bins){
   return src;
 };
 window.setGain=function(n,g){ AIN_SWING_GAIN[n]=g; };
+/* 박자별 평균 각속도 — 들기 / 머묾 / 내려치기 / 접점 뒤 여운 (°/s).
+   구간 경계는 템포 표의 위상(lift·hold·.42)을 «시간» 으로 옮겨서 자른다. */
+window.beats=function(name){
+  const d=window.cond(name), p=window.rateProfile(name), hf=window.__HITFRAC__, T0=AIN_TEMPO[name]||{lift:.20,hold:.30};
+  /* 위상 → 시간 비율: combat-quality.phase 의 역. 접점 전은 근사로 선형 (무거운 기술의 sin 보정 ±4%) */
+  const toT=u=>u<=.42?u/.42*hf:hf+(u-.42)/.58*(1-hf);
+  const seg=(a,b)=>{const i0=Math.floor(toT(a)*p.length),i1=Math.max(i0+1,Math.floor(toT(b)*p.length));
+    let s=0;for(let i=i0;i<i1;i++)s+=p[i];return Math.round(s/(i1-i0));};
+  return {lift:seg(0,T0.lift), hold:seg(T0.lift,T0.hold), strike:seg(T0.hold,.42), after:seg(.42,.60), bite:d.bite, rJerkX:d.rJerkX};
+};
+/* 접점 감속 쓸기 — 몸 이음매 비율을 바꿔 가며 «실제로 잰» 감속(bite)과 거칠기 */
+window.biteSweep=function(name, from, to, step){
+  const SB=globalThis.TW_SWING_BODY, keep=SB.SEAM_BIAS[name], out=[];
+  for(let k=from;k<=to+1e-9;k+=step){
+    SB.SEAM_BIAS[name]=+k.toFixed(2);
+    const d=window.cond(name); out.push({k:+k.toFixed(2), bite:d.bite, rJerkX:d.rJerkX});
+  }
+  if(keep===undefined) delete SB.SEAM_BIAS[name]; else SB.SEAM_BIAS[name]=keep;
+  return out;
+};
 /* 이음매 비율 쓸기 — 어느 값이 각속도 곡선을 제일 매끄럽게 만드는지 «재서» 고른다 */
 window.seamSweep=function(name, from, to, step){
   const SB=globalThis.TW_SWING_BODY, keep=SB.SEAM_BIAS[name], out=[];

@@ -70,8 +70,12 @@
       var reward=opt.counter?(opt.tier==='clash'?R.counter.perfectMult:opt.tier==='deflect'?(R.counter.deflectMult||R.counter.mult):R.counter.mult):opt.riposte?(opt.riposte==='counter'?(policy.normal==null?1:policy.normal)*1.15:opt.riposte==='evade'?(policy.evadeMult||2.2):1.5):
         policy.normal!=null?(opt.skill?policy.skill:policy.normal):1;
       var partyPart=p.hp!=null&&!p.broken?(o.partMult||1):1;
-      var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1)*(deflect?CF.DEFLECT.dmg:1));
-      E.hp=Math.max(0,E.hp-amount);M.dmg+=amount;M.hits++;if(crit)M.crits++;
+      /* 스매시 «타점» — 날이 스윙의 어느 지점(처음·정타·끝)에서, 날의 어디로
+         맞았나. 기하가 없으면(기준 봇·서버) 배율 1. docs/design/73-smash-tempo.md */
+      var SPT=G.TW_SWING_POINT, pt=SPT&&P.action&&opt.contact&&!opt.counter&&!opt.riposte?SPT.point(P.action.clip,opt.contact):null;
+      if(pt)opt.point=pt;
+      var amount=Math.round(st.atk*mult*weak*guard*reward*partyPart*(crit?st.critDmg/100:1)*(0.95+rand()*0.1)*(E.state==='downed'?R.posture.downMult:1)*(deflect?CF.DEFLECT.dmg:1)*(pt?pt.mult:1));
+      E.hp=Math.max(0,E.hp-amount);if(pt){M.points=M.points||{sweet:0,solid:0,glance:0};M.points[pt.grade]++;}M.dmg+=amount;M.hits++;if(crit)M.crits++;
       if(opt.counter)M.counterDmg+=amount;else if(opt.riposte)M.riposteDmg+=amount;else M.normalDmg+=amount;
       /* 저항 — 히트스톱(정지) 뒤에 «느려짐» 을 잇는다. 정지는 «맞았다» 는 신호고,
          느려짐은 «살을 가르며 지나간다» 다. 둘은 다른 것이다.
@@ -84,7 +88,7 @@
         opt.contactFeel={material:mat,dragT:cf.dragT,dragRate:cf.dragRate,depth:cf.depth,
           ring:cf.ring*(deflect?CF.DEFLECT.ring:1),deflect:deflect};
       }
-      emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,deflect:deflect,feel:opt.contactFeel||null,contact:opt.contact||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
+      emit('hit',{part:p.id,dmg:amount,crit:crit,kind:opt.kind,deflect:deflect,feel:opt.contactFeel||null,contact:opt.contact||null,point:opt.point||null,counter:!!opt.counter,perfect:!!opt.perfect,riposte:opt.riposte||null,skill:opt.skill||null});
       /* 튕기면 «장갑이 안 깎인다» — 약공격으로는 영영 못 벗긴다. 대신 내가 묶인다. */
       /* 행동 자체는 끊지 않는다 — 끊으면 오히려 후딜이 «짧아져» 이득이 된다.
          휘두르던 것은 끝까지 가고, 그 뒤에 경직으로 묶인다. */

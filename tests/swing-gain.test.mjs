@@ -88,11 +88,15 @@ test('무거운 기술은 «호 길이» 로 다시 매개화해서 각속도를
   const src=fs.readFileSync('js/ain-two-hand.js','utf8');
   const m=src.match(/var EVEN_PACE=\{([^}]*)\}/);
   assert.ok(m, 'EVEN_PACE 를 못 찾았다');
-  for(const clip of ['smash','ult','exec'])
+  for(const clip of ['ult','exec'])
     assert.ok(new RegExp(clip+':\\s*true').test(m[1]), clip+' 은 평탄화 대상이다');
+  /* 스매시는 뺐다 — 디렉터: 「스매쉬의 속도도 처음과 중간 마지막이 달라야하고」.
+     균등 각속도와 정면으로 어긋난다. 스매시는 세 박자 템포(js/swing-body.js TEMPO)가
+     맡는다 (tests/contact-seam.test.mjs 가 그 곡선을 검사한다). */
+  assert.ok(!/smash:\s*true/.test(m[1]), 'smash 는 균등 평탄화가 아니라 세 박자 템포다');
   /* ⚠ skill3 을 넣으면 관절 튐이 7.28 → 9.08 로 뛴다. 평타 계열은 12.1.
      자루를 고르게 펴는 것과 «팔» 이 고르게 도는 것은 다른 문제다 — 재고 넣어라. */
-  for(const clip of ['attack1','attack2','attack3','counter','skill1','skill3'])
+  for(const clip of ['attack1','attack2','attack3','counter','skill1','skill3','smash'])
     assert.ok(!new RegExp(clip+':\\s*true').test(m[1]), clip+' 은 대상이 아니다');
   /* 접점 고정은 «단조 3차» 여야 한다. 두 토막 선형으로 했더니 접점에서
      속도가 꺾여 관절 튐이 20.3° 까지 갔다 (68번에서 잡은 불연속의 재현). */

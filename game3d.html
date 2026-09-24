@@ -23,6 +23,9 @@
 .dmgnum{position:absolute;z-index:7;font-family:var(--f-serif);font-size:20px;color:#F0E4E4;text-shadow:0 1px 4px #000;pointer-events:none;animation:rise .9s forwards;font-variant-numeric:tabular-nums}
 .dmgnum.crit{color:#C9A45E;font-size:24px}.dmgnum.counter{color:#D9544E;font-size:30px}.dmgnum.taken{color:#C7332C;font-size:18px}.dmgnum.miss{color:#8A8A8A;font-size:14px;letter-spacing:.2em}
 .dmgnum.deflect{color:#CFE4FF;font-size:22px;letter-spacing:.18em;text-shadow:0 0 12px rgba(150,200,255,.8),0 1px 4px #000}
+/* 스매시 타점 — 날끝 정타는 금빛으로 크게, 빗맞음은 잿빛으로 작게 (js/swing-point.js) */
+.dmgnum.pt-sweet{color:#FFD27A;font-size:15px;letter-spacing:.22em;text-shadow:0 0 10px rgba(255,190,90,.75),0 1px 4px #000}
+.dmgnum.pt-glance{color:#9A958E;font-size:13px;letter-spacing:.22em}
 @keyframes rise{0%{transform:translate(-50%,0);opacity:0}15%{opacity:1}100%{transform:translate(-50%,-64px);opacity:0}}
 .counter{opacity:0;transition:opacity .25s;pointer-events:none}.counter.is-on{opacity:1}.counter.perfect .counter__lb{color:#F0E4E4}
 .guide{position:absolute;left:50%;top:92px;transform:translateX(-50%);z-index:6;font-size:13px;color:#EBD6D6;letter-spacing:.06em;text-shadow:0 1px 4px #000;padding:6px 14px;border:1px solid rgba(255,255,255,.12);background:rgba(6,7,10,.7);white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;max-width:92%}
@@ -213,6 +216,7 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
 <script src="js/skill-fx.js"></script>
 <script src="js/swing-body.js"></script>
 <script src="js/contact-feel.js"></script>
+<script src="js/swing-point.js"></script>
 <script src="js/skirmish.js"></script>
 <script src="js/sfx.js"></script>
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>

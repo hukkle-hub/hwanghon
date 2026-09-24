@@ -118,8 +118,8 @@ function hermite(keys,t,j,tan){
  const p0=keys[i][1][j],p1=keys[i+1][1][j],m0=tan[i]*h,m1=tan[i+1]*h;
  return (2*u3-3*u2+1)*p0+(u3-2*u2+u)*m0+(-2*u3+3*u2)*p1+(u3-u2)*m1;
 }
-function path(keys,t,even){
- const tt=even?evenPace(keys,t):t, out=[];
+function path(keys,t,pace){
+ const tt=paced(keys,t,pace), out=[];
  for(let j=0;j<keys[0][1].length;j++) out.push(hermite(keys,tt,j,tangents(keys,j)));
  return out;
 }
@@ -205,7 +205,9 @@ function amplify(dir,gain){
      최종  = A⁻¹( S(u) ) 지점의 키 값
    접점(u=.42)은 반드시 원래 접점 키의 각도 비율에 오도록 두 토막으로 맞춘다 —
    연출이 판정을 옮기지 않는다. */
-var EVEN_PACE={smash:true, ult:true, exec:true};
+/* smash 는 여기서 뺐다 — 균등 각속도는 디렉터의 «처음·중간·마지막 속도가
+   달라야 한다» 와 정면으로 어긋난다. 스매시는 아래 TEMPO 가 맡는다. */
+var EVEN_PACE={ult:true, exec:true};
 /* 계측용 스위치 — 어느 보정이 «끊김» 을 만드는지 하나씩 꺼 보며 재려고 둔다.
    기본은 전부 켜짐이고, tools/3d/swing-measure.html 에서만 끈다.
    (GRIP_DIAG 와 같은 성격의 계측 도구다. 게임 동작은 바뀌지 않는다.) */
@@ -276,13 +278,63 @@ function evenPace(keys,u){
  return tAtArc(keys, T.MathUtils.clamp(arc,0,1));
 }
 
-function pathRotation(keys,t,gain,even){
+/* ── 접점 감속 (bite) ─────────────────────────────────────────────────
+   디렉터: 「맞는 순간 속도는 줄어드는게 맞아」.
+   날이 뭔가를 «물면» 거기서 속도를 잃는다. 72번에서 접점 이음매를 매끄럽게
+   이었는데, 그건 몸이 «빨라지던» 걸 없앤 것이고, 이제 반대로 날이 «물리는»
+   감속을 일부러 넣는다.
+
+   키 경로의 시간 t 를 한 번 더 비튼다. 0·.42·1 세 점은 못 박고(접점 자세·
+   판정 불변), 접점 «직전» 기울기는 1 그대로(들어가는 속도는 안 깎는다),
+   접점 «직후» 기울기만 BITE 로 떨어뜨린다. 뒤는 3차 에르미트라 여운에서
+   다시 따라잡는다 — 물렸다가 밀고 나가는 모양이 된다.
+
+   비율(직후/직전 속도)은 무게를 따른다. 무거운 것일수록 더 깊이 박히고
+   더 크게 잃는다. 값은 근거 없음 — 디렉터와 같이 조정할 값이다. */
+const BITE={attack1:.68,attack2:.68,attack3:.70,smash:.55,counter:.80,
+            skill1:.62,skill2:.74,skill3:.60,skill4:.78,ult:.52,exec:.55};
+function biteT(t,r){
+ if(!(r>0)||r>=1||t<=.42) return t;
+ const h=.58, p=(t-.42)/h, p2=p*p, p3=p2*p;
+ /* (.42,.42) 기울기 r → (1,1) 기울기 1, 할선 1. r>0 이면 단조다. */
+ return (2*p3-3*p2+1)*.42+(p3-2*p2+p)*r*h+(-2*p3+3*p2)*1+(p3-p2)*1*h;
+}
+
+/* ── 세 박자 템포 (스매시) ─────────────────────────────────────────────
+   곡선은 js/swing-body.js 의 tempoCurve 한 곳에 있다 — 몸·몸통·무기가 같은
+   곡선을 써야 «머묾» 이 보인다(무기에만 걸었을 때 머묾 167°/s ≈ 들기 195°/s).
+   무기는 경로를 «지나온 각도» 로 다시 매개화해서 쓴다: 접점은 .42 키의
+   각도 비율에 못 박으므로 접점 자세는 원래 키 그대로다. */
+const TEMPO=new Proxy({},{get:(_,n)=>globalThis.TW_SWING_BODY?.TEMPO?.[n]});
+function arcAtKey(keys,time){
+ const tb=arcTable(keys); let lo=0;
+ while(lo+1<tb.ts.length && tb.ts[lo+1]<=time+1e-9) lo++;
+ return tb.cum[Math.min(lo,tb.cum.length-1)];
+}
+function tempoPace(keys,u,s){
+ const SB=globalThis.TW_SWING_BODY;
+ if(!SB?.tempoCurve) return evenPace(keys,biteT(u,s.bite));
+ const aC=arcAtKey(keys,.42);
+ return tAtArc(keys,T.MathUtils.clamp(SB.tempoCurve(u,s,aC,1-aC),0,1));
+}
+/* 키 시간을 어떻게 흘릴지 한 곳에서 정한다.
+   pace = {tempo} | {even,bite} | {bite} | 없음 */
+function paced(keys,t,pace){
+ if(!pace) return t;
+ if(pace===true) return evenPace(keys,t);
+ if(pace.tempo) return tempoPace(keys,t,pace.tempo);
+ const tb=pace.bite?biteT(t,pace.bite):t;
+ return pace.even?evenPace(keys,tb):tb;
+}
+export const AIN_BITE=BITE;
+
+function pathRotation(keys,t,gain,pace){
  /* 자루 방향도 같은 이유로 에르미트로 잇는다. 방향에서 회전을 «매 프레임
     새로 세우면» 방향이 뒤집히는 근처에서 롤이 튄다고 예전 주석이 경고했는데,
     그건 «각 키에서 독립적으로» 세울 때 얘기다. 여기서는 보간한 방향을
     한 번만 세우고, 그 방향 자체가 이제 C1 이라 튀지 않는다.
     실측으로 확인한다 (tests/ain-blade-direction · swing-measure 의 cond). */
- const tt=even?evenPace(keys,t):t;
+ const tt=paced(keys,t,pace);
  const tan=[0,1,2].map(k=>tangents(keys,3+k));
  const dir=V(hermite(keys,tt,3,tan[0]),hermite(keys,tt,4,tan[1]),hermite(keys,tt,5,tan[2]));
  if(dir.lengthSq()<1e-9)dir.set(0,1,0);
@@ -304,6 +356,13 @@ function gainAt(t,gain){
 // Keep the hooked blade ahead of the torso, in the shaft/forward plane; this
 // follows the whole-body turn and avoids presenting the blade's broad side.
 export const AIM_DIAG={minSin:Infinity,reset(){this.minSin=Infinity;}};
+/* 계측용 — 리그·몸·바닥 가드를 빼고 «키 경로가 뜻한» 자루 방향만 돌려준다.
+   swing-measure.html 이 몸통 프레임 기준 각속도와 실제 날 각속도를 갈라 볼 때 쓴다. */
+export function ainPathDir(name,t){
+ const keys=AIN_SKILL_PATHS[name]||(name==='counter'?counter:/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
+ const pace=TEMPO[name]?{tempo:TEMPO[name]}:{even:!!EVEN_PACE[name],bite:BITE[name]};
+ return V(0,1,0).applyQuaternion(pathRotation(keys,t,AIN_SWING_GAIN[name],pace));
+}
 export function aimScytheBlade(shaft,forward=V(0,0,1)){
  const y=shaft.clone().normalize(),blade=forward.clone().addScaledVector(y,-forward.dot(y));
  { const s=blade.length(); if(s<AIM_DIAG.minSin)AIM_DIAG.minSin=s; }
@@ -374,7 +433,10 @@ export function makeAinTwoHand(model,root,slot){
  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   /* 각속도 평탄화는 «무거운» 기술에만 건다 — 평타 계열은 관절이 먼저 튄다 */
   const even=(EVEN_PACE[name]||false)&&!AB().even;
-  let spec=path(keys,t,even),weaponQ=pathRotation(keys,t,AB().gain?undefined:AIN_SWING_GAIN[name],even);
+  /* 경로 시간을 흘리는 방식 — 스매시는 세 박자 템포, 나머지는 (균등 +) 접점 감속.
+     들어올림·높은 겨눔 경로도 «같은» 흐름으로 평가해야 섞을 때 박자가 안 어긋난다. */
+  const pace=AB().tempo||!a?(even?true:null):TEMPO[name]?{tempo:TEMPO[name]}:{even,bite:AB().bite?0:BITE[name]};
+  let spec=path(keys,t,pace),weaponQ=pathRotation(keys,t,AB().gain?undefined:AIN_SWING_GAIN[name],pace);
  if(carryAmount>1e-3){
   const c=AIN_CARRY;
   spec=spec.map((v,j)=>T.MathUtils.lerp(v,c[j],carryAmount));
@@ -387,8 +449,8 @@ export function makeAinTwoHand(model,root,slot){
    // A raised cut for the actual selected chest/core, not the old waist-high
    // cut with a magically tall damage cone. Keep contact timing and palms.
    const raised=keys.filter(([phase])=>(phase<=.42||phase===1)&&!(name==='counter'&&phase===.24)).map(([phase,p])=>[phase,phase===.42?(AIN_RAISED_CONTACT[name]||[.25,.10,.25,-.35,.90,-.10]):p]);
-   const lifted=path(raised,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],lifted[i],weight);
-   weaponQ.slerp(pathRotation(raised,t,AIN_SWING_GAIN[name],even),weight);
+   const lifted=path(raised,t,pace);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],lifted[i],weight);
+   weaponQ.slerp(pathRotation(raised,t,AIN_SWING_GAIN[name],pace),weight);
   }
   if(target&&name==='skill1'){
    const local=root.worldToLocal(target.clone()),high=T.MathUtils.smootherstep(local.y,2.7,3.0)*(1-T.MathUtils.smootherstep(local.y,3.25,3.6))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.5,2.2));
@@ -396,8 +458,8 @@ export function makeAinTwoHand(model,root,slot){
     // Raised hook strike: shaft leans back while the hook travels above the
     // hands. Both palms still use the common reach-constrained weapon pose.
     const highKeys=keys.filter(([phase])=>phase!==.16).map(([phase,p])=>[phase===.70?.86:phase,phase===.42?AIN_HIGH_CONTACT.skill1:p]);
-    const highSpec=path(highKeys,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],highSpec[i],high);
-    weaponQ.slerp(pathRotation(highKeys,t),high);
+    const highSpec=path(highKeys,t,pace);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],highSpec[i],high);
+    weaponQ.slerp(pathRotation(highKeys,t,undefined,pace),high);
    }
   }
   const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));

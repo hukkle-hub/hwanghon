@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import * as T from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {repairAinBind,repairAinClips} from '../js/ain-bind-repair.js';
+import '../js/swing-body.js';   /* 게임과 같이 — 세 박자 템포(TEMPO)가 여기 있다 */
 import {makeAinRigAdapter as makeAinTwoHand} from '../js/ain-two-hand.js';
 async function asset(){const b=await readFile('art/3d/ain_anim.glb'),l=new GLTFLoader();l.register(()=>({name:'no-raster',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
 test('Ain bind repair preserves rest mesh, source clips, UVs and shared geometry',async t=>{
