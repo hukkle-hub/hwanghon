@@ -76,13 +76,13 @@ import fs from 'node:fs';
 async function charClips(ch){const b=await readFile(`art/3d/${ch}_anim.glb`),l=new GLTFLoader();
  l.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));
  return (await l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')).animations;}
-const CONTACTS=(()=>{const ctx={window:{}};for(const f of ['world','dungeons'])vm.runInNewContext(fs.readFileSync(`js/${f}.js`,'utf8'),ctx,{filename:f});return ctx.window.TW_DUNGEONS.RULES.motion.clipContacts;})();
+const CONTACTS=(()=>{const ctx={window:{}};for(const f of ['world','dungeons'])vm.runInNewContext(fs.readFileSync(`js/${f}.js`,'utf8'),ctx,{filename:f});const M=ctx.window.TW_DUNGEONS.RULES.motion;return {common:M.clipContacts,by:M.clipContactsByChar||{}};})();
 test('카인·류·세라: 펴기 클립도 판정 시각 자세는 거의 그대로(3° 이내)', async()=>{
  for(const ch of ['kain','ryu','sera']){
-  const raw=await charClips(ch), out=smoothCharacterClips(ch,raw,CONTACTS);
+  const C={...CONTACTS.common,...CONTACTS.by[ch]}, raw=await charClips(ch), out=smoothCharacterClips(ch,raw,C);
   for(const [i,c] of raw.entries()){
-   if(charClipPolicy(ch,c.name)!=='soft'||CONTACTS[c.name]==null) continue;
-   const t=CONTACTS[c.name]*c.duration;
+   if(charClipPolicy(ch,c.name)!=='soft'||C[c.name]==null) continue;
+   const t=C[c.name]*c.duration;
    for(const tr of c.tracks.filter(x=>x.ValueTypeName==='quaternion')){
     const nt=out[i].tracks.find(x=>x.name===tr.name), a=Array.from(tr.createInterpolant().evaluate(t)), b=Array.from(nt.createInterpolant().evaluate(t));
     assert.ok(ang(a,b)<3*Math.PI/180, `${ch}/${c.name} ${tr.name} 판정 자세 ${(ang(a,b)*180/Math.PI).toFixed(1)}° 바뀜`);
@@ -95,7 +95,7 @@ test('카인·류·세라: 정책표는 실제 클립 이름만 가리킨다', a
   const names=new Set((await charClips(ch)).map(c=>c.name)), modes={curve:0,soft:0,linear:0};
   for(const n of names) modes[charClipPolicy(ch,n)]++;
   /* 표에 오타가 있으면 그 클립은 조용히 «곡선» 으로 떨어진다 — 펴기·선형 개수가 표와 같아야 한다 */
-  const want={kain:[13,3],ryu:[20,5],sera:[19,6]}[ch];
+  const want={kain:[13,2],ryu:[20,5],sera:[19,6]}[ch];
   assert.deepEqual([modes.soft,modes.linear],want,`${ch} ${JSON.stringify(modes)}`);
  }
 });

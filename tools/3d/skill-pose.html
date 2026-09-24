@@ -5,6 +5,7 @@
      낫은 RightHandSlot 에 그냥 붙인다 (양손 그립 IK 는 걸지 않는다 — 휘두름을 읽는 용도). -->
 <style>html,body{margin:0;background:#12151a;overflow:hidden}canvas{display:block}</style>
 <canvas id="c"></canvas>
+<script src="../../js/world.js"></script><script src="../../js/dungeons.js"></script>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
@@ -19,20 +20,27 @@ const key=new T.DirectionalLight(0xffffff,2.2); key.position.set(2.2,3.4,2.6); s
 const rim=new T.DirectionalLight(0x88aaff,1.4); rim.position.set(-2.4,2.0,-2.2); sc.add(rim);
 const l=new GLTFLoader();
 const Q=new URLSearchParams(location.search);
+r.toneMappingExposure=+(Q.get('exp')||1.6);   /* 카인·류·세라는 옷이 어두워 exp=3 정도로 본다 */
 const g=await l.loadAsync(Q.get('glb')||'../../art/3d/ain_anim.glb');
 sc.add(g.scene);
 /* 낫을 손에 붙인다 — 무기가 없으면 휘두름이 안 읽힌다 */
-try{
+/* weapon=none — 아인 낫을 다른 캐릭터(카인·류·세라)에 붙이면 헷갈린다 */
+if(Q.get('weapon')!=='none')try{
   const w=await l.loadAsync('../../art/3d/ain_scythe_tex.glb');
   let slot=null; g.scene.traverse(o=>{ if(o.isBone && /RightHandSlot$/.test(o.name)) slot=o; });
   if(slot) slot.add(w.scene);
 }catch(e){ console.warn('scythe', e); }
 /* raw=1 이면 갈아 끼우기 전 원본 트랙을 본다 (로코모션은 갈아 끼우지 않으므로 같다) */
-const clips=Q.get('raw')?g.animations:repairAinClips(g.animations,{changed:new Map()});
+/* smooth=kain|ryu|sera — 게임과 같은 클립 곡선화(docs/design/75)로 본다 */
+const clips=Q.get('smooth')?(await import('../../js/clip-smooth.js')).smoothCharacterClips(Q.get('smooth'),g.animations,{...window.TW_DUNGEONS?.RULES?.motion?.clipContacts,...window.TW_DUNGEONS?.RULES?.motion?.clipContactsByChar?.[Q.get('smooth')]})
+  :Q.get('raw')?g.animations:repairAinClips(g.animations,{changed:new Map()});
 const mixer=new T.AnimationMixer(g.scene);
 /* side=1 이면 옆에서 본다 — 보폭·다리 스윙은 옆에서 봐야 읽힌다 */
 if(Q.get('side')){ cam.position.set(3.4,1.05,0.2); cam.lookAt(0,0.92,0); }
 else { cam.position.set(2.0,1.35,2.5); cam.lookAt(0,0.95,0); }
+/* fit=1 — 키가 다른 캐릭터(카인 등)도 한 화면에 들어오게 카메라 거리를 키에 맞춘다 */
+if(Q.get('fit')){ g.scene.updateMatrixWorld(true); const hgt=new T.Box3().setFromObject(g.scene).max.y||1.9, k=hgt/1.9;
+  cam.position.multiplyScalar(k*1.25); cam.lookAt(0,0.5*hgt,0); }
 let act=null;
 window.setPose=function(name,u){
   const c=clips.find(x=>x.name===name); mixer.stopAllAction();

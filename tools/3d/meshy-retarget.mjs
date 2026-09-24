@@ -12,7 +12,7 @@
  * 둘 다 같은 메시의 같은 쉬는 자세라 변화량이 그대로 통한다. 골반 위치는 키 비율로.
  *
  * 사용: node tools/3d/meshy-retarget.mjs <meshy.glb> <이름> [시작초 끝초] [--fps 60]
- *          [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
+ *          [--target 캐릭터.glb] [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
  * 74번에 쓴 명령 (docs/design/74-meshy-clips.md):
  *   attack3  thrust.glb  0.25 1.25 --fps 60 --chest .48,20,.5,-13,-13,.5
  *   counter  charged.glb 0.75 1.65 --fps 60 --chest .44,0,.5,-13,-13,.5
@@ -26,7 +26,9 @@ const args=process.argv.slice(2), file=args[0], name=args[1];
 const t0=args[2]!=null&&!args[2].startsWith('--')?+args[2]:null, t1=args[3]!=null&&!args[3].startsWith('--')?+args[3]:null;
 const FPS=+(args[args.indexOf('--fps')+1]||30)||30;
 const load=async f=>{const b=await readFile(f),l=new GLTFLoader();l.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
-const src=await load(file), tgt=await load(new URL('../../art/3d/ain_anim.glb',import.meta.url).pathname);
+/* --target 캐릭터 glb (기본 아인). 카인·류·세라도 같은 Mixamo 이름 뼈대다 (docs/design/76) */
+const TARGET=args.includes('--target')?args[args.indexOf('--target')+1]:new URL('../../art/3d/ain_anim.glb',import.meta.url).pathname;
+const src=await load(file), tgt=await load(TARGET);
 /* 우리 뼈 → Meshy 뼈. 척추는 순서가 반대다. */
 const MAP={Hips:'Hips',Spine:'Spine02',Spine1:'Spine01',Spine2:'Spine',Neck:'neck',Head:'Head',
   LeftShoulder:'LeftShoulder',LeftArm:'LeftArm',LeftForeArm:'LeftForeArm',LeftHand:'LeftHand',
@@ -83,7 +85,10 @@ if(FACE){ const [g,h,c]=[FACE[0],FACE[1]||0,(FACE[2]||0)*Math.PI/180], Y=[];
    몸 전체를 같은 각만큼 돌린다(골반·다리 포함, 발 목표도). 각도는 «뼈 축 기준» 이다. */
 const CHEST=args.includes('--chest')?args[args.indexOf('--chest')+1].split(',').map(Number):null;
 if(CHEST){ const [uc,cc,g,c0=-13,c1=-13,w=0]=CHEST, r=Math.PI/180, C=[], H=[];
-  const yawOf=q=>{const v=new T.Vector3(0,0,1).applyQuaternion(q);return Math.atan2(v.x,v.z);};
+  /* --yaw-x: 옆 축(x)으로 잰다. 크게 숙이면(카인 해머 스윙 끝 90°) 앞 축은 바닥을 가리켜 yaw 가
+     엉망이 된다 — 옆 축은 숙여도 수평이다. 74번(아인) 명령은 앞 축 그대로. */
+  const YX=args.includes('--yaw-x');
+  const yawOf=q=>{ if(YX){const v=new T.Vector3(1,0,0).applyQuaternion(q);return Math.atan2(-v.z,v.x);} const v=new T.Vector3(0,0,1).applyQuaternion(q);return Math.atan2(v.x,v.z);};
   for(let i=0;i<=N;i++){ mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
     let y=yawOf(wq(S.Spine).multiply(restS.Spine.clone().invert()).multiply(restG.Spine2));
     if(C.length){ while(y-C[C.length-1]>Math.PI)y-=2*Math.PI; while(y-C[C.length-1]<-Math.PI)y+=2*Math.PI; } C.push(y);

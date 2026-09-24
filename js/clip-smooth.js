@@ -171,7 +171,7 @@ export function smoothClips(clips){ return clips.map(smoothClip); }
    평균 rJerk: 카인 2.41 → 1.94 · 류 2.66 → 1.78 · 세라 2.17 → 1.57 */
 const CHAR_POLICY={
   kain:{soft:['brake', 'cheer', 'death', 'dodgeB', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'run', 'skill2', 'skill4', 'walk'],
-        linear:['roll', 'skill1', 'ult']},
+        linear:['roll', 'ult']},   /* 스킬1 은 Meshy 60fps 로 바꿔 곡선 (docs/design/76) */
   ryu:{soft:['attack1', 'attack2', 'brake', 'cheer', 'death', 'dodgeB', 'exec', 'guardHit', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'pickup', 'run', 'skill1', 'skill2', 'smash', 'ult', 'walk'],
         linear:['counter', 'dodgeL', 'dodgeR', 'roll', 'skill4']},
   sera:{soft:['attack1', 'attack2', 'brake', 'cheer', 'death', 'dodgeB', 'exec', 'guardHit', 'guardUp', 'hit2', 'hit', 'idle2', 'idle', 'pickup', 'run', 'skill1', 'skill2', 'smash', 'walk'],
