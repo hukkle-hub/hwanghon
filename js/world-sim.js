@@ -56,7 +56,17 @@
         moveCircle(map, p, p.kbDx*2*f*dt, p.kbDy*2*f*dt);
         p.kbT = Math.max(0, p.kbT - dt); p.moving = false; return;
       }
-      if (p.rollT > 0){ moveCircle(map, p, p.rollDx*dt, p.rollDy*dt); p.rollT -= dt; return; }
+      /* 구르기: 예전엔 등속으로 밀다가 끝에서 뚝 멈췄다 — 시작과 끝 모두 속도 계단.
+         명조식으로: 튀어 나가서(평균의 2배) 미끄러지듯 멈춘다. 속도 ∝ (1−u),
+         위치 S(u) = 1 − (1−u)² 를 «구간 차» 로 읽어 dt 가 달라도 총 거리·시간은
+         예전과 정확히 같다 — 무적 시간·회피 거리(판정)는 안 바뀐다. */
+      if (p.rollT > 0){
+        var D = p.rollDur || p.rollT, u0 = Math.max(0, 1 - p.rollT/D), u1 = Math.min(1, u0 + dt/D);
+        var f = (1-(1-u1)*(1-u1)) - (1-(1-u0)*(1-u0));
+        moveCircle(map, p, p.rollDx*D*f, p.rollDy*D*f); p.rollT -= dt;
+        /* 끝나면 달리기는 «거의 멈춘 데서» 다시 붙는다 — 구르기 끝 속도(≈0)와 이어지게 */
+        if (p.rollT <= 0) p.spd = Math.min(p.spd || 0, 0.15);
+        return; }
       /* 가속·감속. 예전엔 스틱을 미는 «그 프레임» 에 전속 4.6 m/s 가 됐다.
          정지에서 전속까지 한 프레임이면 달리기 클립이 이미 발이 날고 있는 자세에서
          시작해 «출발» 이 보이지 않는다. 멈출 때도 같은 이유로 뚝 끊긴다.
@@ -81,7 +91,7 @@
       var m = Math.hypot(sx, sy); if (m < 1e-6){ var a = p.aim==null ? 0 : p.aim; sx = -Math.cos(a); sy = -Math.sin(a); m = 1; }
       sx/=m; sy/=m; p.kbT = dur; p.kbDur = dur; p.kbDx = sx*len/dur; p.kbDy = sy*len/dur*DEPTH;
     };
-    W.roll = function(p, sx, sy, len, dur){ var m = Math.hypot(sx, sy); if (m < 0.15){ var a = p.aim==null ? 0 : p.aim; sx = Math.cos(a); sy = Math.sin(a); m = 1; } sx/=m; sy/=m; p.rollT = dur; p.rollDx = sx*len/dur; p.rollDy = sy*len/dur*DEPTH; };
+    W.roll = function(p, sx, sy, len, dur){ var m = Math.hypot(sx, sy); if (m < 0.15){ var a = p.aim==null ? 0 : p.aim; sx = Math.cos(a); sy = Math.sin(a); m = 1; } sx/=m; sy/=m; p.rollT = dur; p.rollDur = dur; p.rollDx = sx*len/dur; p.rollDy = sy*len/dur*DEPTH; };
     W.moveEntity = function(e,dx,dy){ moveCircle(map,e,dx,dy); };
     /* 플레이어가 상대를 향하도록 */
     W.faceTo = function(p, tx, ty){ var a = angle(p.x, p.y, tx, ty); p.aim = a; p.face = Math.abs(Math.cos(a)) > 0.6 ? (Math.cos(a) < 0 ? 'left' : 'right') : (Math.sin(a) < 0 ? 'up' : 'down'); };

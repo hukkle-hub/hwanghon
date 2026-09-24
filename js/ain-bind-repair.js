@@ -1,5 +1,6 @@
 import * as T from '../vendor/three/three.module.js';
 import {ainGripCenter,closeAinHandPoint,resolveAinGripSurface} from './ain-grip-shape.js';
+import {smoothClip} from './clip-smooth.js';
 const V=(...v)=>new T.Vector3(...v);
 function distance(p,a,b){const d=b.clone().sub(a),t=T.MathUtils.clamp(p.clone().sub(a).dot(d)/d.lengthSq(),0,1);return p.distanceTo(a.clone().addScaledVector(d,t));}
 // Ain-specific measured landmarks, metres, in the existing mesh's bind space.
@@ -132,5 +133,8 @@ export function repairAinClips(clips,report){return clips.map(clip=>{
   }
   const p=report.changed.get(track.name.slice(0,-9));if(!p)return track;
   return new T.VectorKeyframeTrack(track.name,[0,clip.duration],[...p.toArray(),...p.toArray()]);
- });return result;
+ });
+ /* 24 fps 선형 키를 곡선으로 다시 뽑는다 — 키 자세는 그대로, 키 사이 속도만 이어진다.
+    js/clip-smooth.js · docs/design/73 §4 */
+ return globalThis.TW_NO_CLIP_SMOOTH?result:smoothClip(result);
 });}

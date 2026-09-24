@@ -11,7 +11,11 @@ const {Raid}=createRequire(import.meta.url)('../server/raid.cjs');
 async function load(name){const b=await readFile('art/3d/'+name+'.glb'),l=new GLTFLoader();l.register(()=>({name:'no-raster',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
 test('five skills have distinct paths; spin uses full-body rotation and resolve a guarded body',async()=>{
  assert.equal(new Set(Object.values(AIN_SKILL_PATHS).map(JSON.stringify)).size,5);
+ /* 여기는 «어느 트랙을 빌리고 어느 트랙을 그대로 두나» 라는 클립 수술만 본다.
+    곡선으로 다시 뽑는 단계(js/clip-smooth.js)는 tests/clip-smooth.test.mjs 가 따로 본다. */
+ globalThis.TW_NO_CLIP_SMOOTH=1;
  const asset=await load('ain_anim'),original=asset.animations.map(c=>c.toJSON()),clips=repairAinClips(asset.animations,{changed:new Map()});
+ delete globalThis.TW_NO_CLIP_SMOOTH;
  /* 몸을 빌려 오는 둘. skill4 는 guard 를 그대로(값까지 같다), ult 는 smash 를 시간만 옮겨 쓴다. */
  for(const [name,source] of [['skill4','guard'],['ult','smash']]){
   const c=clips.find(c=>c.name===name),s=asset.animations.find(c=>c.name===source);
