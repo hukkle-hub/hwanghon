@@ -128,7 +128,7 @@
         /* 날이 멈추고 DEF_CANCEL 초 뒤부터 회피·방어가 열린다 (명조식).
            연계 취소(cancelAt)보다 늦어지는 일은 없게 min 을 씌운다. */
         defCancelAt:Math.min(t.cancel/speed,(t.hit+t.active)/speed+(R.motion.defCancel||0.06)/speed),
-        clipHit:(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
+        clipHit:((R.motion.clipContactsByChar||{})[(C&&C.id)||'ain']||{})[clip]||(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
       emit('actionstart',Object.assign({},a));return a;
     }
     function defensive(type,arg){return type==='dodge'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}

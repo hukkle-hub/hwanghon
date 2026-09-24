@@ -36,7 +36,8 @@ test('펴기 클립(단발)은 처음·끝 자세가 그대로 — 다른 동작
 
 test('선형으로 둔 클립(원본 스냅이 있는 것)은 손대지 않는다', async()=>{
  for(const c of (await clips()).filter(c=>clipPolicy(c.name)==='linear')) assert.equal(smoothClip(c),c);
- for(const n of ['attack3','counter','skill1','skill2','roll']) assert.equal(clipPolicy(n),'linear');
+ for(const n of ['roll']) assert.equal(clipPolicy(n),'linear');
+ for(const n of ['attack3','counter','skill1','skill2']) assert.equal(clipPolicy(n),'curve');   /* Meshy 클립 — docs/design/74 */
 });
 
 test('곡선이 되면 키 사이 속도가 계단을 타지 않는다 — 걷기·달리기·대기가 매끄러워진다', async()=>{

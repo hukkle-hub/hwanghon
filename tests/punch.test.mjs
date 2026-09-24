@@ -16,12 +16,23 @@ const PUNCHED = ['skill1', 'skill2', 'skill3', 'skill4', 'counter'];
 const TRACK = ['LeftHand', 'RightHand', 'LeftFoot', 'RightFoot'];
 const FPS = 60;
 
-function contacts() {
+/* ch 를 주면 clipContactsByChar[ch] 가 공통 값을 덮는다 (아인의 Meshy 클립, docs/design/74) */
+function contacts(ch) {
   const src = fs.readFileSync(path.join(ROOT, 'js/dungeons.js'), 'utf8');
   const m = src.match(/clipContacts:\s*\{([^}]*)\}/);
   assert.ok(m, 'js/dungeons.js 에서 clipContacts 를 못 찾았다');
   const out = {};
   for (const [, k, v] of m[1].matchAll(/(\w+)\s*:\s*([0-9.]+)/g)) out[k] = parseFloat(v);
+  const by = ch && src.match(/clipContactsByChar:\s*\{(.*)\}\s*$/m);
+  const own = by && by[1].match(new RegExp('\\b' + ch + ':\\s*\\{([^}]*)\\}'));
+  if (own) for (const [, k, v] of own[1].matchAll(/(\w+)\s*:\s*([0-9.]+)/g)) out[k] = parseFloat(v);
+  return out;
+}
+
+function contactsByChar() {
+  const src = fs.readFileSync(path.join(ROOT, 'js/dungeons.js'), 'utf8');
+  const by = src.match(/clipContactsByChar:\s*\{(.*)\}\s*$/m), out = {};
+  if (by) for (const [, ch, body] of by[1].matchAll(/(\w+):\s*\{([^}]*)\}/g)) out[ch] = Object.fromEntries([...body.matchAll(/(\w+)\s*:\s*([0-9.]+)/g)].map(([, k, v]) => [k, parseFloat(v)]));
   return out;
 }
 
@@ -55,13 +66,18 @@ function peakTime(root, mixer, bone, clip) {
 
 for (const ch of ['ain', 'kain', 'ryu', 'sera']) {
   test(`${ch}: 스킬 클립의 최고속이 판정 시점과 맞는다`, async () => {
-    const C = contacts();
+    const C = contacts(ch);
     const g = await load(`art/3d/${ch}_anim.glb`);
     const root = g.scene; root.updateMatrixWorld(true);
     const bone = {};
     root.traverse(o => { if (o.isBone) bone[o.name.replace(/^mixamorig:?/, '')] = o; });
     const mixer = new T.AnimationMixer(root);
+    /* 아인의 Meshy 클립(docs/design/74)은 양손 리그가 팔을 통째로 다시 풀어서 «원본 손»
+       이 화면에 안 나온다 — 화면의 날끝은 tools/3d/swing-measure.html 로 잰다
+       (접점 감속·거칠기, 74번 표). 여기서는 원본 손을 쓰는 클립만 본다. */
+    const OWN = ch === 'ain' ? new Set(Object.keys(contactsByChar().ain || {})) : new Set();
     for (const name of PUNCHED) {
+      if (OWN.has(name)) continue;
       const clip = g.animations.find(a => a.name === name);
       if (!clip || C[name] == null) continue;
       const {t} = peakTime(root, mixer, bone, clip);

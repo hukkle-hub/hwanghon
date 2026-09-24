@@ -25,7 +25,7 @@ const AIN_TEMPO=globalThis.TW_SWING_BODY.TEMPO; window.AIN_BITE=AIN_BITE;
 window.setTempo=(n,o)=>{ AIN_TEMPO[n]=Object.assign({},AIN_TEMPO[n],o); };
 import {sampleAction} from '../../js/combat-motion.js';
 window.THREE=T;
-const R=window.TW_DUNGEONS.RULES, CONTACTS=R.motion.clipContacts||{}, SPAN=R.motion.clipSpan||{};
+const R=window.TW_DUNGEONS.RULES, CONTACTS=Object.assign({},R.motion.clipContacts,(R.motion.clipContactsByChar||{}).ain), SPAN=R.motion.clipSpan||{};
 const loader=new GLTFLoader();
 const g=await loader.loadAsync('../../art/3d/ain_anim.glb');
 const sc=new T.Scene(); sc.add(g.scene);

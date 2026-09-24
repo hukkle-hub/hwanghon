@@ -476,7 +476,10 @@ export function makeAinTwoHand(model,root,slot){
    const local=root.worldToLocal(target.clone()),weight=T.MathUtils.smootherstep(t,WIN[0],WIN[1])*(1-T.MathUtils.smootherstep(t,WIN[2],WIN[3]))
     *T.MathUtils.smootherstep(local.y,1.9,2.1)*(1-T.MathUtils.smootherstep(local.y,2.7,2.95))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.8,2.5));
    if(weight>0){
-    const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):name==='counter'?V(-.28,2.4,.80):name==='attack3'?V(-.20,2.4,.65):V(-.16,2.4,.5));
+    /* 기준점 = 보정 없이 날이 지나가는 자리. 반격·스킬1 은 Meshy 클립(docs/design/74)으로
+       바뀌며 날이 몸 앞 가운데로 왔다 — 옛 기준(반격 −.28,.80)을 두면 보정이 22 cm 나
+       끌어 왼팔이 가슴에 접힌 채 팔꿈치가 한 표본에 12.8° 튀었다(counterTarget). */
+    const delta=local.clone().sub(name==='ult'?V(.08,2.49,.48):name==='counter'?V(0,2.4,.65):name==='attack3'?V(-.20,2.4,.65):name==='skill1'?V(0,2.5,.6):V(-.16,2.4,.5));
     delta.x=T.MathUtils.clamp(delta.x,-.3,.3);delta.y=T.MathUtils.clamp(delta.y,-.20,.35);delta.z=T.MathUtils.clamp(delta.z,-.2,.3);
     if(name==='smash')delta.set(T.MathUtils.clamp(delta.x,-.08,.16),0,0);
     if(name==='counter')delta.set(T.MathUtils.clamp(delta.x,-.12,.22),0,T.MathUtils.clamp(delta.z,-.2,.1));

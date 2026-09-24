@@ -134,7 +134,9 @@ function resample(track,duration,loop){
    지워진다(σ .045 에서 1타 자세 최대 100° 변화). 키를 정확히 지나는 곡선만 쓴다. */
 const SOFT=.03;
 const LOOP=new Set(['run','walk','idle','idle2','guard']);
-const POLICY={attack3:'linear',counter:'linear',skill1:'linear',skill2:'linear',roll:'linear',
+/* 3타·반격·스킬1·2 는 스냅이 박힌 원본을 Meshy 전문가 클립으로 갈아 끼웠다
+   (tools/3d/meshy-retarget.mjs, docs/design/74). 60 fps 로 뽑아 곡선이 그대로 통한다. */
+const POLICY={roll:'linear',
   run:'soft',walk:'soft',idle:'soft',idle2:'soft',hit:'soft',hit2:'soft',guardUp:'soft',guardHit:'soft',
   cheer:'soft',pickup:'soft',death:'soft',brake:'soft'};
 export function clipPolicy(name){ return POLICY[name]||'curve'; }

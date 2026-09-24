@@ -45,7 +45,7 @@ const rig=makeAinRigAdapter(g.scene,root,slot), mixer=new T.AnimationMixer(g.sce
 const M=R.motion, prof=(M.characterProfiles&&M.characterProfiles.ain)||{}, P=prof[name]||{};
 const KIND={attack1:'light',attack2:'light',attack3:'light',smash:'smash',counter:'counter',exec:'exec',ult:'ult'};
 const base=M[KIND[name]]||M.light, dur=P.duration||base.duration, hitAt=(P.hit!=null?P.hit:base.hit);
-const hit=(M.clipContacts||{})[name], span=(M.clipSpan||{})[name]||1;
+const hit=((M.clipContactsByChar||{}).ain||{})[name]||(M.clipContacts||{})[name], span=(M.clipSpan||{})[name]||1;
 const clip=clips.find(c=>c.name===name), a=mixer.clipAction(clip);
 const act={id:'t',clip:name,kind:'attack',duration:dur,hitAt,elapsed:0,clipHit:hit,combo:0,opt:{}};
 const pose=e=>{ rig.restore(); mixer.stopAllAction(); a.reset(); a.play(); a.paused=true;

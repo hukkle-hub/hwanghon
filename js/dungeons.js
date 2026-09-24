@@ -7,7 +7,11 @@
 (function(){
   var RULES = {
     tick: 0.01,
-    motion: { clipContacts:{attack1:0.38,attack2:0.52,attack3:0.50,smash:0.30,ult:0.22,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.18}
+    motion: { clipContacts:{attack1:0.38,attack2:0.52,attack3:0.50,smash:0.30,ult:0.22,skill1:0.50,skill2:0.50,skill3:0.55,skill4:0.50,counter:0.48,exec:0.18},
+      /* 캐릭터마다 클립이 다르면 접점도 다르다. 아인의 3타·반격·스킬1·2 는 Meshy 클립으로
+         갈아 끼웠다(docs/design/74) — 날이 과녁에 닿고 날끝이 제일 빠른 시각.
+         카인·류·세라는 같은 이름의 옛 클립이라 위 공통 값을 그대로 쓴다. */
+      clipContactsByChar:{ain:{attack3:0.48,skill1:0.24,skill2:0.23,counter:0.44}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
@@ -77,7 +81,7 @@
          꼬리가 거의 없다 (span 을 .88 밑으로 내리면 판정이 잘려 나간다).
          2.52 배로 남는다 — 행동 시간을 늘리거나 클립을 다시 구워야 한다.
          docs/design/61-attack-weight.md */
-      clipSpan:{attack1:.88, attack2:.62, counter:.85, smash:.45} },
+      clipSpan:{attack1:.88, attack2:.62, smash:.45} },
       /* smash 는 클립이 2.42초인데 행동은 0.96초다. 통째로 틀면 2.5배속이라
          «휘리릭» 지나간다. 앞 45%(1.09초)만 쓰면 거의 1:1 속도로 재생돼
          한 동작이 또렷해진다. 판정 정렬은 game3d 가 clipHit/span 으로 보정한다.

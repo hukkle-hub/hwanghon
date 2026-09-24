@@ -27,7 +27,7 @@ import {repairAinClips} from '../../js/ain-bind-repair.js';
 import {makeAinRigAdapter} from './../../js/ain-two-hand.js';
 
 const Q=new URLSearchParams(location.search);
-const CONTACTS=(window.TW_DUNGEONS.RULES.motion.clipContacts)||{};
+const CONTACTS=Object.assign({},window.TW_DUNGEONS.RULES.motion.clipContacts,(window.TW_DUNGEONS.RULES.motion.clipContactsByChar||{}).ain);
 /* 전투 클립 — 판정이 정의된 것들. 순서는 연계 순 */
 const FIGHT=['attack1','attack2','attack3','smash','counter','exec','skill1','skill2','skill3','skill4','ult'];
 const CELL=Number(Q.get('cell')||260);

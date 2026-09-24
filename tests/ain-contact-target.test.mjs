@@ -6,7 +6,8 @@ test('authored attack contact intersects measured training core envelope without
  const g=await load('ain_anim'),w=await load('ain_scythe_tex'),root=new T.Group();root.add(g.scene);g.scene.scale.setScalar(1.14);const report=repairAinBind(g.scene),clips=repairAinClips(g.animations,report);
  let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});const weapon=new T.Group();weapon.add(mountAinScythe(w.scene));slot.add(weapon);weapon.scale.setScalar(1/slot.getWorldScale(new T.Vector3()).x);
  const rig=makeAinRigAdapter(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene);
- for(const [name,contact,target]of [['skill1',.5,[-.16,2.4,.5]],['skill3',.55,[-.16,2.4,.5]],['ult',.5,[.08,2.49,.48]]]){
+ // 스킬1 접점 .24 · 3타 .48 · 반격 .44 = Meshy 클립 (js/dungeons.js clipContactsByChar.ain, docs/design/74)
+ for(const [name,contact,target]of [['skill1',.24,[-.16,2.4,.5]],['skill3',.55,[-.16,2.4,.5]],['ult',.5,[.08,2.49,.48]]]){
   rig.restore();mixer.stopAllAction();const c=clips.find(c=>c.name===name),a=mixer.clipAction(c);a.play();a.paused=true;a.time=c.duration*contact;mixer.update(0);rig.apply({id:1,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name);
   assert.ok(Math.abs(rig.bones.Hips.position.x-report.hipsRest.x)<1e-6);assert.ok(Math.abs(rig.bones.Hips.position.z-report.hipsRest.z)<1e-6);
   const p=new T.Vector3(...target),hit=measureAinBladeContact(weapon,p);t.diagnostic(name+' core distance '+hit.distance.toFixed(4)+'m');assert.ok(hit.distance<.39,name+' blade misses measured core');
@@ -23,11 +24,14 @@ test('authored attack contact intersects measured training core envelope without
    // 음성 대조 — 적응 보정이 «실제로 하는 일» 이 있는지 본다. 낮은 표적(2.58 m)은
    // punch.py 로 타이밍을 고친 뒤 보정 없이도 닿는다 (0.079 < 0.39) — 거기서는 대조가
    // 성립하지 않는다. 팔이 못 미치는 높은 표적으로 옮겼다. docs/design/55-high-reach.md
-   if(name==='skill1'&&coords[1]>3)assert.ok(measureAinBladeContact(weapon,target).distance>radius,'negative control: legacy pose must reproduce miss');
+   // Meshy 스킬1(docs/design/74)은 보정 없이도 3.15 m 에 0.392 까지 온다 — «빗맞아야
+   // 한다» 대신 «보정이 실제로 거리를 줄인다» 로 대조한다 (0.392 → 0.317).
+   const raw=measureAinBladeContact(weapon,target).distance;
    rig.restore();mixer.update(0);
    rig.apply({id:2,clip:name,elapsed:.5,hitAt:.5,duration:1.2},false,false,0,name,target);
    const corrected=measureAinBladeContact(weapon,target).distance;t.diagnostic(name+' corrected '+coords[1]+'m: '+corrected.toFixed(4));
    assert.ok(corrected<radius,name+' adaptive contact misses '+coords);
+   if(name==='skill1'&&coords[1]>3)assert.ok(raw-corrected>.05,'negative control: correction must close the gap ('+raw.toFixed(3)+' → '+corrected.toFixed(3)+')');
    assert.ok(rig.diagnostics.gripError<.001,'both palms stay attached');
    root.position.set(4,0,-7);root.rotation.y=1.2;root.updateWorldMatrix(true,true);
    const worldTarget=root.localToWorld(target.clone());rig.restore();mixer.update(0);
@@ -43,7 +47,7 @@ test('basic cuts, smash, counter and execution physically reach the raised train
  const repair=repairAinBind(g.scene),clips=repairAinClips(g.animations,repair);let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});
  const weapon=new T.Group();weapon.add(mountAinScythe(w.scene));slot.add(weapon);weapon.scale.setScalar(1/slot.getWorldScale(new T.Vector3()).x);
  const rig=makeAinRigAdapter(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene);
- const contacts={attack1:.34,attack2:.44,attack3:.50,smash:.78,counter:.48,exec:.58};
+ const contacts={attack1:.34,attack2:.44,attack3:.48,smash:.78,counter:.44,exec:.58};
  for(const [clip,contact]of Object.entries(contacts)){
   let max=0;
   for(const coords of [[0,2.4,.5],[.09,2.36,.45],[.11,2.58,.58]]){
