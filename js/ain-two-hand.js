@@ -98,20 +98,11 @@ function path(keys,t,even){
    값은 손으로 고른 게 아니라 «재서» 골랐다 — tools/3d/swing-measure.html 로
    날 끝 경로를 재고, tests/ain-two-hand 의 손목·연속성 검사를 제약으로 뒀다.
    docs/design/67-swing-gain.md */
-/* 자루 y 성분의 하한 — 날이 바닥을 뚫지 않게.
-   처음엔 «손잡이 y=1.03, 날 1.861 m» 로 계산해서 −0.50 을 넣었는데 거의 안
-   들었다. 재 보니 휘두르는 중에 손잡이가 0.6 m 까지 내려간다(웅크린다).
-   그래서 수치로 훑어 골랐다:
-       하한     smash    exec    attack2
-       −0.50    −0.06   −0.17    −0.44
-       −0.35    +0.06   −0.06    −0.37
-       −0.28    +0.14   +0.01    −0.31   ← 채택
-       +0.10    +0.78   +0.62    −0.09   (대신 스윙이 납작해진다)
-   −0.28 이면 스매시·처형이 바닥 위로 올라온다. attack1(−0.09)·attack2(−0.31)
-   은 남는데, 이 둘은 자루가 아니라 «엉덩이가 내려가서» 낮아지는 것이라
-   자루 하한으로는 못 고친다. 제대로 고치려면 손잡이 높이를 프레임마다 읽어
-   하한을 계산해야 한다 — docs/design/69 §4. */
-const MIN_SHAFT_Y=-0.28, SOFT_FLOOR=0.06;
+/* 바닥 가드. 날 끝 = 손잡이 + BLADE_LEN·자루방향 이므로, 손잡이 높이를 알면
+   자루 y 의 하한이 바로 나온다. 69번에서는 고정 하한(−0.28)을 썼는데 그건
+   손잡이가 늘 1.03 m 라고 가정한 것이었고, 실제로는 휘두르며 0.6 m 까지
+   내려가서 attack1·attack2 를 못 고쳤다. 이제 매 프레임 실제 높이를 쓴다. */
+const BLADE_LEN=1.861, FLOOR_MARGIN=0.32, SOFT_FLOOR=0.06;
 export const AIN_SWING_GAIN={
  /* 값은 «재서» 골랐다. 목표는 날 끝 경로를 늘리는 것, 제약은 두 가지다:
       · 날 끝이 바닥을 뚫으면 안 된다 (측정칸 «최저» ≥ 0)
@@ -122,7 +113,9 @@ export const AIN_SWING_GAIN={
       attack1   1.30   12.74 → 13.0 m   1.08
       attack3   1.25    9.32 → 9.6 m    0.29
       skill3    1.35   16.97 → 18.1 m   0.51
-      ult       1.35   13.84 → 14.2 m   0.08   ← 바닥이 한계 (1.55 면 −0.13)
+      ult       1.60   12.79 → 16.9 m   0.05   ← 바닥 가드를 제대로 고치고
+                                               1.25→1.60 까지 열렸다 (1.70 이
+                                               바닥 0, 2.00 이면 −0.17)
       smash      —     (안 건다)               각속도 평탄화를 켜면 배율이
                                                사실상 안 먹는다 (1.0→1.6 에서
                                                경로 18.92→19.00 m). 호 길이로
@@ -137,7 +130,7 @@ export const AIN_SWING_GAIN={
                                                  (ready 와 거의 반대인 키가 있어
                                                   회전축이 불안정 — 64번 문서 §3)
     attack2·smash 의 바닥 관통은 따로 고쳐야 한다. docs/design/67 §3 */
- attack1:1.30, attack3:1.25, skill3:1.35, ult:1.35
+ attack1:1.30, attack3:1.25, skill3:1.35, ult:1.60
 };
 function amplify(dir,gain){
  if(!(gain>0)||Math.abs(gain-1)<1e-6) return dir;
@@ -253,16 +246,6 @@ function pathRotation(keys,t,gain,even){
  const dir=V(hermite(keys,tt,3,tan[0]),hermite(keys,tt,4,tan[1]),hermite(keys,tt,5,tan[2]));
  if(dir.lengthSq()<1e-9)dir.set(0,1,0);
  dir.normalize();
- /* 날이 바닥을 뚫지 않게. 낫은 1.861 m 라 자루가 조금만 숙여도 끝이 땅속으로
-    들어간다 — 실측으로 attack2 −0.47 m, smash −0.06 m, exec −0.17 m 였다.
-    손잡이가 대략 y=1.03 이므로 tip.y ≈ 1.03 + 1.861·dir.y. 여기서 자루의
-    y 성분에 하한을 준다. 딱 자르면 꺾이니 부드럽게 눌러 올린다.
-    («들고 다니는» 자세는 일부러 끌고 다니는 것이라 여기 오기 전에 섞인다.) */
- if(dir.y<MIN_SHAFT_Y){
-  const over=MIN_SHAFT_Y-dir.y;
-  dir.y=MIN_SHAFT_Y-SOFT_FLOOR*(1-Math.exp(-over/SOFT_FLOOR));   /* 하한에 점근 */
-  dir.normalize();
- }
  const swing=Q().setFromUnitVectors(V(0,1,0),dir);
  /* ⚠ 전 구간을 똑같이 키우면 «접점 자세» 까지 밀려서 오히려 나빠진다.
     실측: 균일 배율 1.6 에서 skill3 접점 날끝 15.4 → 8.8 m/s, skill1 9.5 → 7.0.
@@ -400,6 +383,22 @@ export function makeAinTwoHand(model,root,slot){
     center.add(delta.multiplyScalar(weight*(['counter','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,name==='attack3'?.29:.20,.50):1)).applyQuaternion(root.getWorldQuaternion(Q())));
    }
   }
+  /* ── 바닥 가드 ─────────────────────────────────────────────────────────
+     날 끝 = 손잡이 + BLADE_LEN·자루방향. 그러니 손잡이 높이를 알면 자루 y 의
+     하한이 바로 나온다. 중요한 건 «어느 높이를 쓰느냐» 다:
+       69번: 손잡이를 늘 1.03 m 로 «가정» → 고정 하한 −0.28. attack2 −0.31 남음.
+       1차 시도: 클립의 손 뼈를 읽음 → 리그가 손을 옮기기 «전» 값이라 여전히 빗나감.
+       지금: center — 리그가 실제로 손을 데려갈 «목표 지점» 이다. 여기가 맞다.
+     center 는 weaponQ 다음에 정해지므로, 여기서 자루를 한 번 더 눌러 올리고
+     shaftQ 를 다시 만든다. 지연도 반복도 없다. */
+  { const s0=frame.clone().multiply(weaponQ), ax=V(0,1,0).applyQuaternion(s0);
+    const lim=Math.max(-0.95,(FLOOR_MARGIN-center.y)/(BLADE_LEN*scale));
+    if(ax.y<lim){
+      const want=ax.clone();
+      want.y=lim-SOFT_FLOOR*(1-Math.exp(-(lim-ax.y)/SOFT_FLOOR));   /* 하한에 점근 */
+      want.normalize();
+      weaponQ=frame.clone().invert().multiply(Q().setFromUnitVectors(ax,want)).multiply(s0);
+    } }
   const shaftQ=frame.clone().multiply(weaponQ);
   const axis=V(0,1,0).applyQuaternion(shaftQ);
   const palms={Right:center.clone().addScaledVector(axis,.16*scale),Left:center.clone().addScaledVector(axis,-.16*scale)};

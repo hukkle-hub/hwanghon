@@ -26,14 +26,14 @@ test('휘두름 배율은 «재서» 고른 값이고 관절 한계 안에 있�
   assert.ok(m, 'AIN_SWING_GAIN 을 못 찾았다');
   const gains={};
   for(const [,k,v] of m[1].matchAll(/(\w+):([0-9.]+)/g)) gains[k]=parseFloat(v);
-  assert.deepEqual(gains, {attack1:1.30, attack3:1.25, skill3:1.35, ult:1.35});
+  assert.deepEqual(gains, {attack1:1.30, attack3:1.25, skill3:1.35, ult:1.60});
   /* ⚠ 문턱은 tests/ain-two-hand 의 «표본당 8°» 다. 그 검사는 행동 시간을
      240 등분해 재므로 **행동을 길게 해도 값이 안 변한다** — 실측으로 확인:
      궁극기 1.62초와 1.95초에서 8.116° 로 동일. 즉 시간을 사도 배율은 못 올린다.
      올리려면 «각속도 프로파일» 을 평평하게 만들어야 한다 (지금 정점이 평균의
      5.3배). docs/design/69 §3 */
   for(const [k,v] of Object.entries(gains))
-    assert.ok(v<=1.35, `${k} ${v} — 1.35 를 넘으면 관절이 튄다`);
+    assert.ok(v<=1.70, `${k} ${v} — 궁극기는 1.70 에서 날이 바닥에 닿는다`);
   /* attack2·smash 는 이미 날이 바닥을 뚫는다(−0.47 m, −0.06 m) — 배율을 걸면 더 나빠진다 */
   assert.equal(gains.attack2, undefined);
   assert.equal(gains.smash, undefined);
