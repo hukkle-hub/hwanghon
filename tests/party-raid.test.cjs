@@ -122,3 +122,13 @@ test('rage phase changes the arena: hazards appear, cycle, and only hurt inside'
  assert.ok(a.hp<far,'발동 중 구역 안에 있으면 피해를 받는다');
  assert.equal(r.snapshot().arena.hazards.length,r.arenaHz.length);
 });
+test('온라인 스매시도 «타점» 이 위력을 가른다 — 솔로(js/swing-point.js)와 같은 규칙',()=>{
+ /* 사거리 끝(날끝)에서 친 스매시는 정타, 붙어서 친 스매시는 자루 — 서버가 같은 기하로 판정한다 */
+ const hitAt=(dx)=>{const r=fight();const p=r.players.get('a');p.x=r.boss.x-dx;r.players.get('b').x=r.boss.x+4000;
+  r.input('a',{type:'smash'});for(let i=0;i<300;i++){r.tick(.01);const h=r.events.find(e=>e.type==='hit'&&e.player==='a');if(h)return h;}return null;};
+ const far=hitAt(120), near=hitAt(40);
+ assert.ok(far&&near,'둘 다 맞아야 한다');
+ assert.ok(far.point&&near.point,'스매시 타격에는 타점이 실려야 한다');
+ assert.ok(far.point.rho>near.point.rho,'멀리서 친 쪽이 날끝에 가깝다');
+ assert.ok(far.point.mult>near.point.mult);
+});

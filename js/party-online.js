@@ -111,6 +111,8 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
  if(e.type==='phaseClear')announce('페이즈 돌파 — 보스가 깨어난다');
  if(e.type==='phase'){announce('P H A S E '+(e.phase+1)+' — '+(view?.A?.stages?.[e.phase]?.name||''));view?.phaseWake(e.phase+1);window.TW_SFX?.play('phase');}
  if(e.type==='hit'){view?.flashBoss();view?.contactEffect(e);window.TW_SFX?.play('hit',{heavy:['counter','smash','ult'].includes(e.kind),material:e.material});}
+ /* 스매시 타점 — 내 스매시가 날끝 정타면 «정타», 머리 위·자루로 스쳤으면 «빗맞음» (솔로와 같은 규칙) */
+ if(e.type==='hit'&&e.point&&e.player===profile?.id&&e.point.grade!=='solid')announce(e.point.grade==='sweet'?'정타 — 날끝으로 들어갔다':'빗맞음 — 날이 덜 내려왔거나 자루로 맞았다');
  if(e.type==='counterfollowup'&&e.player===profile.id)announce('되베기 성공 — 공격으로 잇거나 회피로 이탈');
  if(e.type==='hurt'&&e.player===profile?.id){window.TW_SFX?.play('hurt');if(view)view.shake=.15;}
  if(e.type==='feedback'&&e.player===profile?.id)announce(e.text);
