@@ -82,9 +82,9 @@ function hermite(keys,t,j,tan){
  const p0=keys[i][1][j],p1=keys[i+1][1][j],m0=tan[i]*h,m1=tan[i+1]*h;
  return (2*u3-3*u2+1)*p0+(u3-2*u2+u)*m0+(-2*u3+3*u2)*p1+(u3-u2)*m1;
 }
-function path(keys,t){
- const out=[];
- for(let j=0;j<keys[0][1].length;j++) out.push(hermite(keys,t,j,tangents(keys,j)));
+function path(keys,t,even){
+ const tt=even?evenPace(keys,t):t, out=[];
+ for(let j=0;j<keys[0][1].length;j++) out.push(hermite(keys,tt,j,tangents(keys,j)));
  return out;
 }
 /* 휘두름 크기. 무기의 «움직임» 은 클립이 아니라 여기 적힌 키 경로가 만든다
@@ -122,7 +122,12 @@ export const AIN_SWING_GAIN={
       attack1   1.30   12.74 → 13.0 m   1.08
       attack3   1.25    9.32 → 9.6 m    0.29
       skill3    1.35   16.97 → 18.1 m   0.51
-      ult       1.25   12.79 → 13.4 m   0.27
+      ult       1.35   13.84 → 14.2 m   0.08   ← 바닥이 한계 (1.55 면 −0.13)
+      smash      —     (안 건다)               각속도 평탄화를 켜면 배율이
+                                               사실상 안 먹는다 (1.0→1.6 에서
+                                               경로 18.92→19.00 m). 호 길이로
+                                               다시 매개화하면 «총 각도» 가
+                                               정규화되기 때문이다.
 
     처음엔 1.35~1.50 으로 잡았다가 관절 튐이 8.54°/프레임 이 나서(문턱 8°)
     한 단계 내렸다 — 두 손 그립 IK 의 팔꿈치 특이점이 여기서도 천장이다.
@@ -143,14 +148,109 @@ function amplify(dir,gain){
  if(axis.lengthSq()<1e-12) return dir;
  return base.clone().applyQuaternion(Q().setFromAxisAngle(axis.normalize(),ang*gain));
 }
-function pathRotation(keys,t,gain){
+/* ── 각속도 평탄화 (자루 «호 길이» 로 다시 매개화)
+   문제: 같은 시간 안에서는 더 크게 못 휘두른다. 관문이 «표본당 최대 회전» 이라
+   총 각도가 아니라 **정점** 이 걸리기 때문이다. 그러니 정점을 낮추면 총 각도를
+   더 쓸 수 있다.
+
+   지금 우리 정점/평균은 5.3 이다. 적어 둔 키가 시간상 균등한데 «각도상» 은
+   전혀 균등하지 않아서, 각이 큰 구간에서 속도가 확 솟는다.
+
+   목표는 힉스필드 3D 리그 애니메이션 라이브러리(Meshy)의 «실제로 만들어진»
+   무거운 무기 클립에서 재 왔다. 프레임 간 움직임 세기로 정점/평균:
+
+       Heavy_Hammer_Swing   1.55   ← 대검·망치류의 본보기
+       Charged_Slash        2.18
+       Sword_Judgment       2.49
+       (우리)               5.3
+
+   Heavy_Hammer_Swing 의 프로파일(평균=1):
+       0.54 0.58 0.63 0.98 | 1.46 1.32 1.17 1.34 1.39 1.02
+   앞은 느리게 들고, 접점 부근에서 올라가서 **뒤끝까지 안 떨어진다.**
+   우리는 접점에서 치솟았다가 0.6 으로 주저앉는다 — 그게 «흘러가는» 느낌이다.
+
+   방법: 키 경로를 시간이 아니라 «지나온 각도» 로 다시 매개화한다.
+     A(t)  = t 까지 자루가 쓸고 온 각도 (0→1 로 정규화)
+     RATE  = 위 참고 프로파일을 부드럽게 만든 목표 속도 곡선
+     S(u)  = RATE 를 적분한 것 = 진행도 u 에서 있어야 할 «각도 비율»
+     최종  = A⁻¹( S(u) ) 지점의 키 값
+   접점(u=.42)은 반드시 원래 접점 키의 각도 비율에 오도록 두 토막으로 맞춘다 —
+   연출이 판정을 옮기지 않는다. */
+var EVEN_PACE={smash:true, ult:true, exec:true};
+var RATE=[0.60,0.62,0.70,0.95,1.35,1.30,1.20,1.30,1.35,1.10];   /* 위 표를 다듬은 것 */
+function rateAt(u){
+ var x=Math.max(0,Math.min(0.999999,u))*RATE.length, i=Math.floor(x), f=x-i;
+ return RATE[i]+(RATE[Math.min(RATE.length-1,i+1)]-RATE[i])*f;
+}
+/* 목표 곡선을 미리 적분해 둔다 (정규화된 «각도 비율» 표) */
+var SHAPE=(function(){ var N=256,acc=[0],s=0;
+ for(var i=0;i<N;i++){ s+=rateAt((i+0.5)/N)/N; acc.push(s); }
+ return acc.map(function(v){ return v/s; }); })();
+function shapeAt(u){
+ var x=Math.max(0,Math.min(1,u))*(SHAPE.length-1), i=Math.floor(x), f=x-i;
+ return SHAPE[i]+((SHAPE[Math.min(SHAPE.length-1,i+1)]||1)-SHAPE[i])*f;
+}
+/* 키 경로의 «각도 누적표». 경로마다 한 번만 만들고 캐시한다. */
+var ARC=new WeakMap();
+function arcTable(keys){
+ var got=ARC.get(keys); if(got) return got;
+ var N=192, ts=[], cum=[0], prev=null, total=0;
+ var tan=[0,1,2].map(function(k){ return tangents(keys,3+k); });
+ for(var i=0;i<=N;i++){
+  var t=i/N, d=V(hermite(keys,t,3,tan[0]),hermite(keys,t,4,tan[1]),hermite(keys,t,5,tan[2]));
+  if(d.lengthSq()<1e-9) d.set(0,1,0);
+  d.normalize(); ts.push(t);
+  if(prev){ var c=T.MathUtils.clamp(prev.dot(d),-1,1); total+=Math.acos(c); cum.push(total); }
+  prev=d;
+ }
+ var tbl={ts:ts, cum:cum.map(function(v){ return total>1e-6?v/total:0; })};
+ ARC.set(keys,tbl); return tbl;
+}
+/* 각도 비율 a 에 해당하는 원래 t 를 찾는다 (표에서 이분 + 선형) */
+function tAtArc(keys,a){
+ var tb=arcTable(keys), c=tb.cum, lo=0, hi=c.length-1;
+ if(a<=0) return 0; if(a>=1) return 1;
+ while(lo+1<hi){ var m=(lo+hi)>>1; if(c[m]<a) lo=m; else hi=m; }
+ var span=c[hi]-c[lo];
+ var f=span>1e-9?(a-c[lo])/span:0;
+ return tb.ts[lo]+(tb.ts[hi]-tb.ts[lo])*f;
+}
+/* 진행도 u → 원래 키 시간 t. 접점(.42)은 원래 접점 키의 각도 비율에 못 박는다.
+
+   ⚠ 처음엔 [0,.42] 과 [.42,1] 을 각각 «선형» 으로 사상했다. 그랬더니 접점에서
+      속도가 툭 꺾여서 관절 튐이 7.8° → **20.3°** 로 뛰었다. 68번에서 잡았던
+      sampleAction 의 불연속을 여기서 그대로 재현한 것이다.
+      그래서 세 매듭 (0,0)·(.42,aC)·(1,1) 을 지나는 «단조 3차» 로 잇는다
+      (Fritsch–Carlson 접선). 매듭을 정확히 지나면서 기울기가 연속이다. */
+function monoTan(h0,h1,d0,d1){
+ if(d0*d1<=0) return 0;
+ var w1=2*h1+h0, w2=h1+2*h0;
+ return (w1+w2)/(w1/d0+w2/d1);
+}
+function evenPace(keys,u){
+ var tb=arcTable(keys), lo=0;
+ while(lo+1<tb.ts.length && tb.ts[lo+1]<=.42) lo++;
+ var aC=tb.cum[Math.min(lo,tb.cum.length-1)];
+ var x=T.MathUtils.clamp(u,0,1), h0=.42, h1=.58;
+ var d0=aC/h0, d1=(1-aC)/h1;
+ var m0=Math.min(d0,3*d0), m1=monoTan(h0,h1,d0,d1), m2=Math.min(d1,3*d1);
+ var t0,y0,y1,mA,mB,h;
+ if(x<=h0){ t0=0; y0=0; y1=aC; mA=m0; mB=m1; h=h0; }
+ else     { t0=h0; y0=aC; y1=1; mA=m1; mB=m2; h=h1; }
+ var p=(x-t0)/h, p2=p*p, p3=p2*p;
+ var arc=(2*p3-3*p2+1)*y0+(p3-2*p2+p)*mA*h+(-2*p3+3*p2)*y1+(p3-p2)*mB*h;
+ return tAtArc(keys, T.MathUtils.clamp(arc,0,1));
+}
+
+function pathRotation(keys,t,gain,even){
  /* 자루 방향도 같은 이유로 에르미트로 잇는다. 방향에서 회전을 «매 프레임
     새로 세우면» 방향이 뒤집히는 근처에서 롤이 튄다고 예전 주석이 경고했는데,
     그건 «각 키에서 독립적으로» 세울 때 얘기다. 여기서는 보간한 방향을
     한 번만 세우고, 그 방향 자체가 이제 C1 이라 튀지 않는다.
     실측으로 확인한다 (tests/ain-blade-direction · swing-measure 의 cond). */
+ const tt=even?evenPace(keys,t):t;
  const tan=[0,1,2].map(k=>tangents(keys,3+k));
- const dir=V(hermite(keys,t,3,tan[0]),hermite(keys,t,4,tan[1]),hermite(keys,t,5,tan[2]));
+ const dir=V(hermite(keys,tt,3,tan[0]),hermite(keys,tt,4,tan[1]),hermite(keys,tt,5,tan[2]));
  if(dir.lengthSq()<1e-9)dir.set(0,1,0);
  dir.normalize();
  /* 날이 바닥을 뚫지 않게. 낫은 1.861 m 라 자루가 조금만 숙여도 끝이 땅속으로
@@ -248,7 +348,9 @@ export function makeAinTwoHand(model,root,slot){
              carryAmount+=Math.abs(d)<=step?d:(d>0?step:-step); }
    else carryAmount=want; }
  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
-  let spec=path(keys,t),weaponQ=pathRotation(keys,t,AIN_SWING_GAIN[name]);
+  /* 각속도 평탄화는 «무거운» 기술에만 건다 — 평타 계열은 관절이 먼저 튄다 */
+  const even=EVEN_PACE[name]||false;
+  let spec=path(keys,t,even),weaponQ=pathRotation(keys,t,AIN_SWING_GAIN[name],even);
  if(carryAmount>1e-3){
   const c=AIN_CARRY;
   spec=spec.map((v,j)=>T.MathUtils.lerp(v,c[j],carryAmount));
@@ -262,7 +364,7 @@ export function makeAinTwoHand(model,root,slot){
    // cut with a magically tall damage cone. Keep contact timing and palms.
    const raised=keys.filter(([phase])=>(phase<=.42||phase===1)&&!(name==='counter'&&phase===.24)).map(([phase,p])=>[phase,phase===.42?(AIN_RAISED_CONTACT[name]||[.25,.10,.25,-.35,.90,-.10]):p]);
    const lifted=path(raised,t);for(let i=0;i<3;i++)spec[i]=T.MathUtils.lerp(spec[i],lifted[i],weight);
-   weaponQ.slerp(pathRotation(raised,t),weight);
+   weaponQ.slerp(pathRotation(raised,t,AIN_SWING_GAIN[name],even),weight);
   }
   if(target&&name==='skill1'){
    const local=root.worldToLocal(target.clone()),high=T.MathUtils.smootherstep(local.y,2.7,3.0)*(1-T.MathUtils.smootherstep(local.y,3.25,3.6))*(1-T.MathUtils.smootherstep(Math.hypot(local.x,local.z),1.5,2.2));

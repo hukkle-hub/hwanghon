@@ -80,6 +80,25 @@ test('키 사이 보간은 «키에서 멈추지» 않는다', async () => {
   assert.ok(typeof mod.AIN_SWING_GAIN==='object', '모듈이 뜬다');
 });
 
+test('무거운 기술은 «호 길이» 로 다시 매개화해서 각속도를 고르게 편다', async () => {
+  /* 목표는 힉스필드 3D 리그 애니메이션 라이브러리(Meshy)의 실제 무거운 무기
+     클립에서 재 온 값이다 — 프레임 간 움직임 세기의 정점/평균:
+         Heavy_Hammer_Swing 1.55 · Charged_Slash 2.18 · Sword_Judgment 2.49
+     우리는 5.3 이었다. docs/design/70-even-pace.md */
+  const src=fs.readFileSync('js/ain-two-hand.js','utf8');
+  const m=src.match(/var EVEN_PACE=\{([^}]*)\}/);
+  assert.ok(m, 'EVEN_PACE 를 못 찾았다');
+  for(const clip of ['smash','ult','exec'])
+    assert.ok(new RegExp(clip+':\\s*true').test(m[1]), clip+' 은 평탄화 대상이다');
+  /* ⚠ skill3 을 넣으면 관절 튐이 7.28 → 9.08 로 뛴다. 평타 계열은 12.1.
+     자루를 고르게 펴는 것과 «팔» 이 고르게 도는 것은 다른 문제다 — 재고 넣어라. */
+  for(const clip of ['attack1','attack2','attack3','counter','skill1','skill3'])
+    assert.ok(!new RegExp(clip+':\\s*true').test(m[1]), clip+' 은 대상이 아니다');
+  /* 접점 고정은 «단조 3차» 여야 한다. 두 토막 선형으로 했더니 접점에서
+     속도가 꺾여 관절 튐이 20.3° 까지 갔다 (68번에서 잡은 불연속의 재현). */
+  assert.ok(/monoTan/.test(src), '접점 고정이 단조 3차여야 한다');
+});
+
 test('두 손 그립 IK 는 특이점 근처에 가지 않는다 — 64번 문서의 전제는 틀렸다', () => {
   /* 오래도록 solveGripCircle 의 «팔꿈치 특이점» 을 휘두름의 천장으로 적어
      왔는데, 전 전투 클립을 훑어 보니 radial 0.127~0.254, |cos| 최대 0.949,
