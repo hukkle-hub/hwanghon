@@ -15,10 +15,10 @@ export function sampleAction(a, duration) {
   const SB=globalThis.TW_SWING_BODY;
   if(phase<=.42){
     const u=phase/.42;
-    return contact*(SB?SB.coilEase(u,a.clip):u);
+    return contact*(SB?SB.coilEase(u,a.clip,a.clipHit):u);
   }
   const u=(phase-.42)/.58;
-  return contact+(duration-contact)*(SB?SB.throwEase(u,a.clip):u);
+  return contact+(duration-contact)*(SB?SB.throwEase(u,a.clip,a.clipHit):u);
 }
 
 function rotateToward(bone, end, target, amount) {

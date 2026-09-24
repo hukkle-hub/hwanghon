@@ -119,8 +119,69 @@
      경계는 스무스스텝이라 속도가 끊기지 않는다 — 완전 정지가 아니라 «느려짐» 이다. */
   function coilPow(h){ return Math.min(2.2, 1 + 0.55*(h==null?1:h)); }
   function throwPow(h){ return Math.min(2.2, 1 + 0.40*(h==null?1:h)); }
-  function coilEase(u, clip){ var x=Math.max(0,Math.min(1,u)); return Math.pow(x, coilPow(heftOf(clip))); }
-  function throwEase(u, clip){ var x=Math.max(0,Math.min(1,u)); return 1-Math.pow(1-x, throwPow(heftOf(clip))); }
+
+  /* ── 접점 이음매 ──────────────────────────────────────────────────────
+     감기(coilEase)와 내치기(throwEase)는 접점에서 «값» 은 이어지지만
+     «속도» 는 안 이어진다. 클립 시간으로 풀어 쓰면
+
+        접점 직전 기울기  hit·pc / .42
+        접점 직후 기울기  (1−hit)·pt / .58
+
+     이 둘이 다르면 **맞는 순간 몸 애니메이션의 재생 속도가 툭 바뀐다.**
+     스매시는 1.28 → 1.91 (+49%), 3타는 1.81 → 1.19 (−34%) 였다.
+
+     실측 (각속도 곡선 거칠기 rJerk, 전문가 클립 Heavy_Hammer_Swing = 1.50):
+     이 둘이 우리 클립 중 제일 거칠었다 — 스매시 4.06, 3타 4.88.
+     최악 위상도 각각 0.411 / 0.356 으로 접점 언저리였다.
+
+     고치는 법: 값을 1 로 유지한 채 «끝 기울기만» 바꿀 수 있는 보정항을 건다.
+        감기   x^pc · (1 + a(1−x))      → 값 h(1)=1 그대로, h'(1) = pc − a
+        내치기 1 − (1−x)^pt · (1 + b·x) → 값 h(0)=0 그대로, h'(0) = pt − b
+     a·b 를 양쪽 기울기가 «같아지도록» 잡는다. 접점의 값(clipHit)은 한 톨도
+     안 움직이므로 판정은 그대로다 — 「연출이 판정을 옮기지 않는다」.
+     hit 를 안 넘기면(옛 호출) 보정 없이 예전과 같이 동작한다. */
+  /* 그런데 «딱 1:1 로 맞추는 게» 언제나 최선은 아니다. 클립 자체가 접점에서
+     속도를 바꾸는 경우가 있어서, 그때는 이음매를 살짝 기울여 그걸 상쇄해야
+     최종 곡선이 매끄러워진다. 그래서 비율을 클립별로 둔다 — 기본은 1(맞춤).
+     값은 짐작이 아니라 tools/3d/swing-measure.html seamSweep() 으로 «재서» 넣는다. */
+  /* 실측값 — 매끄러움(rJerk)만 보고 고르면 안 된다. k<1 은 «접점으로 들어가는
+     속도를 깎아서» 매끄러워지는데, 그건 디렉터가 요구한 무게를 버리는 짓이다.
+     그래서 rJerk 와 «접점 날끝 속도» 를 같이 쓸어 보고 골랐다
+     (seamSweep 0.4~1.65. 전문가 클립 Heavy_Hammer_Swing 의 rJerk = 1.50):
+
+       클립      k     rJerk          접점속도(m/s)
+       attack1  1.00   1.47 ← 1.47    53.9  (k=1 이 최솟값이자 최고속)
+       attack2  1.00   1.23 ← 1.23    23.8  (k=0.4 면 0.81 이지만 속도 18.1 로 −24%)
+       attack3  1.20   3.26 ← 4.37    36.4
+       smash    0.60   0.71 ← 1.75    31.8  (−5% 속도로 매끄러움 2.5배)
+       counter  0.80   1.33 ← 2.41    27.1
+       skill1   1.40   0.92 ← 2.51    11.9
+       skill2   0.80   0.95 ← 1.27    17.2
+       skill3   1.00   1.08 ← 1.08    17.8
+       ult      1.60   0.57 ← 0.71     7.5
+       exec     0.40   1.73 ← 1.95    12.9
+
+     k<1 은 «천천히 감았다가 빠르게 내친다», k>1 은 그 반대로 클립 자체가
+     접점 뒤에서 느려지는 것을 상쇄한다. 적지 않은 클립은 k=1(정확히 맞춤)이다. */
+  var SEAM_BIAS = { attack3:1.20, smash:0.60, counter:0.80,
+                    skill1:1.40, skill2:0.80, ult:1.60, exec:0.40 };
+  function seam(h, hit, clip){
+    if(hit==null||hit<=0.02||hit>=0.98) return [0,0];
+    var pc=coilPow(h), pt=throwPow(h);
+    var k=Math.sqrt(SEAM_BIAS[clip]||1);                      /* s⁻ : s⁺ = k² */
+    var sm=(hit*pc/0.42 + (1-hit)*pt/0.58)/2;                 /* 맞출 기울기 */
+    var a=pc-sm*k*0.42/hit, b=pt-(sm/k)*0.58/(1-hit);
+    /* 단조성 보호: 보정이 세면 곡선이 되돌아간다. 양쪽 다 묶어 둔다. */
+    a=Math.max(-0.8, Math.min(pc-0.35, a));
+    b=Math.max(-0.8, Math.min(pt-0.35, b));
+    return [a,b];
+  }
+  function coilEase(u, clip, hit){ var x=Math.max(0,Math.min(1,u)), h=heftOf(clip);
+    var a=seam(h,hit,clip)[0];
+    return Math.pow(x, coilPow(h))*(1+a*(1-x)); }
+  function throwEase(u, clip, hit){ var x=Math.max(0,Math.min(1,u)), h=heftOf(clip);
+    var b=seam(h,hit,clip)[1];
+    return 1-Math.pow(1-x, throwPow(h))*(1+b*x); }
 
   /* ── 연계는 «방향» 이 바뀌어야 한다
      디렉터: 「기본공격도 연계가 전혀 없고」.
@@ -157,7 +218,7 @@
               shape:shape, weightOf:weightOf, comboGain:comboGain,
               chainSide:chainSide, sideOf:sideOf,
               heftOf:heftOf, coilPow:coilPow, throwPow:throwPow,
-              coilEase:coilEase, throwEase:throwEase };
+              coilEase:coilEase, throwEase:throwEase, seam:seam, SEAM_BIAS:SEAM_BIAS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.TW_SWING_BODY = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

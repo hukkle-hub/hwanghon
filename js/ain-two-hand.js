@@ -17,7 +17,15 @@ const ready=[0,-.12,.32,-.65,.75,.18];
 export const AIN_CARRY=[.06,-.30,.10,-.34,-.34,-.88];
 const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,ready]];
 const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,.6]],[.65,[0,-.22,.37,-.7,-.5,.5]],[1,ready]];
-const thrust=[[0,ready],[.24,[-.08,-.13,.22,-.6,.15,.75]],[.42,[0,-.08,.48,-.6,.1,.75]],[.62,[0,-.12,.28,-.6,.3,.75]],[1,ready]];
+/* 3타(찌르기)는 우리 클립 중 제일 거칠었다 (rJerk 4.37, 전문가 클립 1.50).
+   원인은 이음매가 아니라 «이 경로의 모양» 이다 — .24·.42·.62 세 키의 자루
+   방향이 (−.6, y, .75) 로 거의 같다. 즉 스윙 시간의 대부분은 자루가 «안 돌고»,
+   준비자세에서 찌르기 선으로 넘어가는 [0,.24] 와 되돌아오는 [.62,1] 에 회전이
+   통째로 몰린다. 각속도 곡선이 사각형에 가까워지니 당연히 거칠다.
+   고친 것: 양쪽 전환에 중간 키를 하나씩 넣어 회전을 펼친다. 접점 키(.42)는
+   값도 시점도 그대로라 판정·접촉 자세는 안 움직인다. */
+const thrust=[[0,ready],[.12,[-.05,-.05,.26,-.64,.50,.52]],[.24,[-.08,-.13,.26,-.62,.22,.72]],
+  [.42,[0,-.08,.48,-.6,.1,.75]],[.62,[0,-.12,.32,-.58,.20,.76]],[.80,[-.03,-.14,.30,-.62,.45,.60]],[1,ready]];
 // Distinct skill silhouettes; the negative-X shaft component keeps the two
 // hands ordered instead of crossing through an elbow branch singularity.
 export const AIN_SKILL_PATHS={
@@ -63,9 +71,37 @@ perfectCounter[4]=[.70,[.16,-.21,.32,-.8,-.18,.55]];
    그건 틀렸다 — 재 보니 radial 0.13~0.25, |cos| 최대 0.95, 특이점 근처에
    간 적이 없다.
 
-   고친 것: 키를 «지나가는» 3차 에르미트로 잇는다. 접선은 이웃 키의 시간차로
-   잡고(Catmull-Rom), 양 끝만 0 으로 둔다 — 시작과 끝은 실제로 멈춰 있어야
-   하니까. 키를 정확히 통과하므로 접점 자세는 그대로다. */
+   1차 수정: 키를 «지나가는» 3차 에르미트로 이었다. 접선은 이웃 키의 시간차로
+   잡고(Catmull-Rom), 양 끝만 0 으로 두었다. 멈춤은 사라졌다.
+
+   그런데 그래도 전문가 클립보다 거칠었다. Catmull-Rom 은 «속도» 만 잇는다
+   (C¹) — **가속도는 키마다 튄다**(C² 가 아니다). 키가 240 개인 클립에서는
+   그 틈이 안 보이지만 우리는 키가 다섯이라 한 번 튈 때마다 크게 보인다.
+
+   시간에 안 휘둘리는 잣대로 재 보면(표본당 2차차분 ÷ 표본당 평균 1차차분,
+   tools/3d/swing-measure.html 의 cond().nShaft — 전문가 클립 Heavy_Hammer_Swing
+   은 1.65):
+
+       보정 끄기          attack1 attack3  smash counter    ult
+       기준                 3.50    4.94   3.24    5.17   3.05
+       바닥가드 끔           3.50    4.94   3.24    5.17   2.88
+       조준보정 끔           3.50    4.94   3.24    5.17   3.05
+       들어올림 끔           3.50    4.94   3.24    5.17   3.05
+       증폭 끔              3.64    5.07   3.24    5.17   3.33
+       전부 끔              3.64    5.07   3.07    5.17   3.42
+
+   **보정 탓이 아니었다.** 전부 꺼도 그대로다 — 잇는 방식 자체가 원인이다.
+
+   그래서 «가속도까지 잇는» 고정단 3차 스플라인(C²)으로 바꿔 봤다. 결과:
+
+       rJerk       attack1 attack3  smash counter    ult
+       Catmull-Rom    1.88    4.88   4.06    2.64   1.75
+       C² 스플라인     1.88    4.88   4.06    2.41   1.75
+
+   **거의 안 움직였다.** 게다가 관절 한 프레임 이동량이 7.275° → 8.876°
+   (skill3 RightForeArm) 로 올라 tests/ain-two-hand 게이트(8°)를 깼다.
+   그래서 되돌렸다 — 잇는 방식은 원인이 아니었다. 진짜 원인은 접점 이음매였다
+   (js/swing-body.js 의 seam). 여기 적어 두는 건 같은 길을 또 파지 않기 위해서다. */
 function tangents(keys,j){
  const n=keys.length;
  return keys.map((_,i)=>{
@@ -170,6 +206,11 @@ function amplify(dir,gain){
    접점(u=.42)은 반드시 원래 접점 키의 각도 비율에 오도록 두 토막으로 맞춘다 —
    연출이 판정을 옮기지 않는다. */
 var EVEN_PACE={smash:true, ult:true, exec:true};
+/* 계측용 스위치 — 어느 보정이 «끊김» 을 만드는지 하나씩 꺼 보며 재려고 둔다.
+   기본은 전부 켜짐이고, tools/3d/swing-measure.html 에서만 끈다.
+   (GRIP_DIAG 와 같은 성격의 계측 도구다. 게임 동작은 바뀌지 않는다.) */
+const NOAB=Object.freeze({});
+const AB=()=>globalThis.TW_AIN_ABLATE||NOAB;
 var RATE=[0.60,0.62,0.70,0.95,1.35,1.30,1.20,1.30,1.35,1.10];   /* 위 표를 다듬은 것 */
 function rateAt(u){
  var x=Math.max(0,Math.min(0.999999,u))*RATE.length, i=Math.floor(x), f=x-i;
@@ -332,14 +373,14 @@ export function makeAinTwoHand(model,root,slot){
    else carryAmount=want; }
  const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   /* 각속도 평탄화는 «무거운» 기술에만 건다 — 평타 계열은 관절이 먼저 튄다 */
-  const even=EVEN_PACE[name]||false;
-  let spec=path(keys,t,even),weaponQ=pathRotation(keys,t,AIN_SWING_GAIN[name],even);
+  const even=(EVEN_PACE[name]||false)&&!AB().even;
+  let spec=path(keys,t,even),weaponQ=pathRotation(keys,t,AB().gain?undefined:AIN_SWING_GAIN[name],even);
  if(carryAmount>1e-3){
   const c=AIN_CARRY;
   spec=spec.map((v,j)=>T.MathUtils.lerp(v,c[j],carryAmount));
   weaponQ=weaponQ.clone().slerp(aimScytheBlade(V(c[3],c[4],c[5]).normalize()),carryAmount);
  }
-  if(target&&/^(attack[123]|smash|counter|exec)$/.test(name)){
+  if(target&&!AB().raised&&/^(attack[123]|smash|counter|exec)$/.test(name)){
    const local=root.worldToLocal(target.clone());
    const weight=T.MathUtils.smootherstep(local.y,2.0,2.30)*(1-T.MathUtils.smootherstep(local.y,2.85,3.25))
     *T.MathUtils.smootherstep(t,0,.30);
@@ -363,7 +404,7 @@ export function makeAinTwoHand(model,root,slot){
   // Nearby target adaptation is a bounded root-space translation, not wrist twist.
   // Fade in/out around contact so target selection cannot snap the idle pose.
   // The shared reach solver below still limits both arms together.
-  if(target&&['skill1','skill3','ult','counter','smash','attack3'].includes(name)){
+  if(target&&!AB().aim&&['skill1','skill3','ult','counter','smash','attack3'].includes(name)){
    // 언제 조준 보정을 켜는가. 기본은 «동작 초반부터 접점까지» 인데, 몸이 도는 기술은
    // 그러면 안 된다 — 도는 동안 어깨가 같이 돌기 때문에, 고정된 세계 좌표를 향해
    // 팔을 계속 끌면 팔꿈치 분기가 뒤집혀 한 프레임에 13.3° 튄다 (skill3Target).
@@ -391,7 +432,7 @@ export function makeAinTwoHand(model,root,slot){
        지금: center — 리그가 실제로 손을 데려갈 «목표 지점» 이다. 여기가 맞다.
      center 는 weaponQ 다음에 정해지므로, 여기서 자루를 한 번 더 눌러 올리고
      shaftQ 를 다시 만든다. 지연도 반복도 없다. */
-  { const s0=frame.clone().multiply(weaponQ), ax=V(0,1,0).applyQuaternion(s0);
+  if(!AB().floor){ const s0=frame.clone().multiply(weaponQ), ax=V(0,1,0).applyQuaternion(s0);
     const lim=Math.max(-0.95,(FLOOR_MARGIN-center.y)/(BLADE_LEN*scale));
     if(ax.y<lim){
       const want=ax.clone();
