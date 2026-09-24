@@ -100,7 +100,20 @@
       if(E.hp===0)finish();return amount;
     }
     function cancel(reason){if(!P.action)return;emit('actioncancel',{id:P.action.id,reason:reason});P.action=null;P.combo=0;P.comboT=0;}
-    function canCancel(){return !P.action||P.action.elapsed>=P.action.cancelAt;}
+    /* 취소 시점은 둘이다 — «도망» 과 «다음 공격» 은 다른 문제다.
+
+       명조(鳴潮)의 전투가 무거워 보이면서도 안 답답한 이유가 이것이다:
+       휘두르는 그림은 길어도 **날이 지나간 직후부터 회피가 열린다.** 그래서
+       큰 기술을 써도 «갇혔다» 는 느낌이 안 든다. 몬헌은 반대로 완전히
+       묶어서 «무게» 를 만든다. 디렉터가 둘 다 벤치마크로 꼽았으니 갈라 쓴다:
+         · 공격 연계(cancelAt)   — 몬헌처럼 늦게. 연타로 밀어붙이지 못하게.
+         · 회피·방어(defCancelAt) — 명조처럼 이르게. 날이 멈춘 직후.
+
+       ⚠ 회피가 빨라져도 **피해량은 안 오른다** — 도망만 빨라진다. 그래서
+          균형에는 «생존» 쪽으로만 작용한다. 연계 쪽(cancelAt)은 안 건드렸다. */
+    function canCancel(def){var a=P.action;
+      if(!a)return true;
+      return a.elapsed>=(def&&a.defCancelAt!=null?a.defCancelAt:a.cancelAt);}
     function action(kind,clip,mult,opt,profile){
       var overrides=(R.motion.characterProfiles||{})[C.id||'ain']||{};
       var t=overrides[clip]||profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/rDur;   /* 무기 리듬: 느린 무기는 speed 가 내려간다 */
@@ -108,11 +121,14 @@
          타인가» 를 알아야 뒤로 갈수록 커진다. 판정·피해에는 쓰지 않는다. */
       var a={id:++serial,kind:kind,clip:clip,part:target,mult:mult,opt:opt||{},elapsed:0,combo:P.combo||0,
         hitAt:t.hit/speed,activeEnd:(t.hit+t.active)/speed,duration:t.duration/speed,cancelAt:t.cancel/speed,
+        /* 날이 멈추고 DEF_CANCEL 초 뒤부터 회피·방어가 열린다 (명조식).
+           연계 취소(cancelAt)보다 늦어지는 일은 없게 min 을 씌운다. */
+        defCancelAt:Math.min(t.cancel/speed,(t.hit+t.active)/speed+(R.motion.defCancel||0.06)/speed),
         clipHit:(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
       emit('actionstart',Object.assign({},a));return a;
     }
     function defensive(type,arg){return type==='dodge'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
-    function queue(type,arg){var edge=P.action&&(defensive(type,arg)?P.action.cancelAt:P.action.duration);if(P.action&&edge-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};}
+    function queue(type,arg){var edge=P.action&&(defensive(type,arg)?(P.action.defCancelAt!=null?P.action.defCancelAt:P.action.cancelAt):P.action.duration);if(P.action&&edge-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};}
     function counter(){
       if(E.state!=='telegraph'||E.tele<=0||E.tele>counterWindow||E.pat.counterable===false||P.lockT>0||P.dodgeT>0||!canCancel()||(HK.canCounter&&!HK.canCounter()))return false;
       cancel('counter');P.buffer=null;P.guard=false;
@@ -153,14 +169,14 @@
     }
     function dodge(){
       var dgSt=R.stamina.dodge*rSt;   /* 무기 리듬: 무거운 무기는 회피가 더 든다 */
-      if(!B.over&&P.action&&!canCancel()){queue('dodge');return;}
-      if(B.over||P.dodgeCd>0||P.lockT>0||P.st<dgSt||!canCancel()){if(P.st<dgSt)emit('nost');return;}
+      if(!B.over&&P.action&&!canCancel(true)){queue('dodge');return;}
+      if(B.over||P.dodgeCd>0||P.lockT>0||P.st<dgSt||!canCancel(true)){if(P.st<dgSt)emit('nost');return;}
       cancel('dodge');P.buffer=null;P.st-=dgSt;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
       P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.dodges++;emit('dodge');
     }
-    function guard(on){if(B.over)return;if(!on&&P.buffer&&P.buffer.type==='guard')P.buffer=null;if(on&&P.action&&!canCancel()){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
+    function guard(on){if(B.over)return;if(!on&&P.buffer&&P.buffer.type==='guard')P.buffer=null;if(on&&P.action&&!canCancel(true)){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
     function skill(i){
-      var k=S[i];if(!k||B.over)return;if(P.action){if(k.dodge&&canCancel()&&P.cds[i]<=0&&P.st>=k.st&&P.dodgeCd<=0){cancel('evasive-skill');P.buffer=null;}else{queue('skill',i);return;}}
+      var k=S[i];if(!k||B.over)return;if(P.action){if(k.dodge&&canCancel(true)&&P.cds[i]<=0&&P.st>=k.st&&P.dodgeCd<=0){cancel('evasive-skill');P.buffer=null;}else{queue('skill',i);return;}}
       if(P.lockT>0||P.dodgeT>0||P.guard||k.dodge&&P.dodgeCd>0)return;if(P.cds[i]>0||P.st<k.st){emit(P.cds[i]>0?'cd':'nost',{skill:i});return;}
       P.st-=k.st;P.stDelay=R.stamina.delay;P.cds[i]=k.cd;
       if(k.dodge){P.dodgeT=R.dodge.iframes;P.dodgeAgo=0;P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.dodgeCd=R.dodge.cooldown;M.dodges++;}
@@ -290,7 +306,7 @@
       if(P.dragT>0) P.dragT=Math.max(0,P.dragT-dt);
       var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+dt);if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
       if(P.hitstop>0)return;
-      if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel())&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
+      if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel(true))&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}
       switch(E.state){
         case 'idle':if(D.patterns.length){E.patT-=dt;if(E.patT<=1e-8)startTelegraph();}break;

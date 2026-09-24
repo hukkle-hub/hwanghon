@@ -32,7 +32,10 @@
       아직 남은 것: ult·skill1·exec 는 제일 좋은 값으로도 접점 날끝이
       8~11 m/s 밖에 안 된다 (평타 55, 스매시 96). 원본 클립이 «크게 치는
       동작» 이 아니라서 그렇고, 판정을 옮겨서 될 일이 아니다.
-      skill4 는 방어 클립이 소스라 치는 동작이 아예 없다. docs/design/66 §4 */, buffer:0.16, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
+      skill4 는 방어 클립이 소스라 치는 동작이 아예 없다. docs/design/66 §4 */, buffer:0.16,
+      /* 날이 멈춘 뒤 이만큼 지나면 «회피·방어» 가 열린다 (명조식). 공격 연계는
+         따로 cancel 이 정한다 — 도망은 빠르게, 밀어붙이기는 느리게. */
+      defCancel:0.06, light:{hit:0.24,active:0.09,duration:0.66,cancel:0.48,clipHit:0.42},
       smash:{hit:0.40,active:0.12,duration:0.96,cancel:0.76,clipHit:0.48},
       counter:{hit:0.18,active:0.08,duration:0.56,cancel:0.40,clipHit:0.42},
       ult:{hit:0.55,active:0.15,duration:1.20,cancel:1.05,clipHit:0.50},
