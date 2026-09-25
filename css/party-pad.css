@@ -1,0 +1,32 @@
+/* 온라인 조작 패드 — 솔로(game3d.html)와 같은 배치 (디렉터 스케치, docs/design/77).
+   왼쪽: 세로로 긴 «이동» 패드(누른 자리가 스틱 중심). 오른쪽: 구석의 큰 공격 · 그 위로 올라가는
+   호에 스킬 1→4 · 호 아래 줄에 카운터(방어)·회피·궁극기. 온라인에만 있는 강타(U)는 호의 왼쪽 끝.
+   좌표는 버튼 «중심»(묶음 왼쪽 위 기준, px). party-rpg 설정의 버튼 크기(--rpg-buttons)는 그대로 곱한다. */
+#joystick{width:150px;height:196px;border-radius:30px;background:#0d131588;border:1px solid #c7cfbd44}
+#joystick b{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;left:50%;top:50%;border-radius:50%;border:1px solid #d6b77855;pointer-events:none}
+#joystick i{left:50%;top:50%;margin:-21px 0 0 -21px}
+#joystick span{bottom:10px}
+
+.actions{position:relative;width:340px;height:252px;flex:none;margin-left:auto}
+.actions .skills,.actions .combat-buttons{display:contents}
+.actions button{position:absolute;width:var(--d);height:var(--d);min-width:0;min-height:0;left:calc(var(--x) - var(--d)/2);top:calc(var(--y) - var(--d)/2);
+  border-radius:50%;padding:4px;display:grid;place-items:center;text-align:center;line-height:1.15;font-size:10px;word-break:keep-all;overflow:hidden;
+  background:#0a0d0fcc;border:1px solid #ffffff2a;color:#ecdcd6}
+.actions button:disabled{opacity:.45}
+.actions [data-command="skill"][data-index="0"]{--x:120px;--y:124px;--d:54px}
+.actions [data-command="skill"][data-index="1"]{--x:174px;--y:82px;--d:54px}
+.actions [data-command="skill"][data-index="2"]{--x:236px;--y:54px;--d:54px}
+.actions [data-command="skill"][data-index="3"]{--x:302px;--y:46px;--d:54px}
+.actions [data-command="smash"]{--x:56px;--y:140px;--d:48px;border-color:#c73a3677}
+.actions [data-command="ult"]{--x:40px;--y:206px;--d:58px;border-color:#c73a3699;font-size:9px}
+.actions [data-command="dodge"]{--x:112px;--y:206px;--d:62px;border-color:#7b9bd688}
+.actions [data-command="guard"]{--x:186px;--y:206px;--d:62px;border-color:#7b9bd6aa;background:radial-gradient(circle,#283a60bb,#080a10dd)}
+.actions [data-command="attack"]{--x:286px;--y:188px;--d:96px;font-size:13px;border-color:#c73a36aa;background:radial-gradient(circle,#781414cc,#1e0808dd);color:#fff}
+.utility{bottom:calc(272px + var(--rpg-offset))}
+
+@media(max-width:760px),(max-height:500px){
+  #joystick{width:132px;height:160px}
+  #joystick i{left:50%;top:50%}
+  .actions{transform:scale(calc(var(--rpg-buttons) * .84));margin-left:auto}
+  .utility{bottom:calc(226px + var(--rpg-offset))}
+}
