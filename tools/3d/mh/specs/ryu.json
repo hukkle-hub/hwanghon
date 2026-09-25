@@ -1,0 +1,56 @@
+{
+ "eyes": "eyes/low-poly/low-poly.mhclo",
+ "eyelashes": "eyelashes/eyelashes02/eyelashes02.mhclo",
+ "teeth": "teeth/teeth_shape01/teeth_shape01.mhclo",
+ "tongue": "tongue/tongue01/tongue01.mhclo",
+ "rig": "mixamo",
+ "proxy": "",
+ "name": "ryu",
+ "phenotype": {
+  "gender": 1.0,
+  "age": 0.42,
+  "muscle": 0.6,
+  "weight": 0.38,
+  "height": 0.66,
+  "proportions": 0.9,
+  "cupsize": 0.5,
+  "firmness": 0.5,
+  "race": {
+   "african": 0.0,
+   "asian": 0.6,
+   "caucasian": 0.4
+  }
+ },
+ "targets": [
+  {
+   "target": "chin-width-decr",
+   "value": 0.2
+  },
+  {
+   "target": "head-oval",
+   "value": 0.4
+  },
+  {
+   "target": "nose-scale-horiz-decr",
+   "value": 0.2
+  },
+  {
+   "target": "l-eye-scale-incr",
+   "value": 0.1
+  },
+  {
+   "target": "r-eye-scale-incr",
+   "value": 0.1
+  },
+  {
+   "target": "cheek-bones-incr",
+   "value": 0.3
+  }
+ ],
+ "skin_mhmat": "skins/young_asian_male/young_asian_male.mhmat",
+ "eyebrows": "eyebrows/eyebrow006/eyebrow006.mhclo",
+ "hair": "hair/short04/short04.mhclo",
+ "clothes": [
+  "clothes/male_casualsuit02/male_casualsuit02.mhclo"
+ ]
+}

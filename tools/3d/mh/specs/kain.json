@@ -1,0 +1,56 @@
+{
+ "eyes": "eyes/low-poly/low-poly.mhclo",
+ "eyelashes": "eyelashes/eyelashes02/eyelashes02.mhclo",
+ "teeth": "teeth/teeth_shape01/teeth_shape01.mhclo",
+ "tongue": "tongue/tongue01/tongue01.mhclo",
+ "rig": "mixamo",
+ "proxy": "",
+ "name": "kain",
+ "phenotype": {
+  "gender": 1.0,
+  "age": 0.5,
+  "muscle": 0.85,
+  "weight": 0.55,
+  "height": 0.8,
+  "proportions": 0.8,
+  "cupsize": 0.5,
+  "firmness": 0.5,
+  "race": {
+   "african": 0.05,
+   "asian": 0.25,
+   "caucasian": 0.7
+  }
+ },
+ "targets": [
+  {
+   "target": "chin-width-incr",
+   "value": 0.3
+  },
+  {
+   "target": "chin-prominent-incr",
+   "value": 0.3
+  },
+  {
+   "target": "head-square",
+   "value": 0.4
+  },
+  {
+   "target": "nose-scale-horiz-incr",
+   "value": 0.1
+  },
+  {
+   "target": "l-eye-scale-decr",
+   "value": 0.1
+  },
+  {
+   "target": "r-eye-scale-decr",
+   "value": 0.1
+  }
+ ],
+ "skin_mhmat": "skins/young_caucasian_male/young_caucasian_male.mhmat",
+ "eyebrows": "eyebrows/eyebrow001/eyebrow001.mhclo",
+ "hair": "hair/short02/short02.mhclo",
+ "clothes": [
+  "clothes/male_casualsuit01/male_casualsuit01.mhclo"
+ ]
+}

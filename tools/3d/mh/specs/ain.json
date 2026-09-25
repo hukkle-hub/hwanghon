@@ -1,0 +1,68 @@
+{
+ "eyes": "eyes/low-poly/low-poly.mhclo",
+ "eyelashes": "eyelashes/eyelashes02/eyelashes02.mhclo",
+ "teeth": "teeth/teeth_shape01/teeth_shape01.mhclo",
+ "tongue": "tongue/tongue01/tongue01.mhclo",
+ "rig": "mixamo",
+ "proxy": "",
+ "name": "ain",
+ "phenotype": {
+  "gender": 0.0,
+  "age": 0.42,
+  "muscle": 0.62,
+  "weight": 0.4,
+  "height": 0.5,
+  "proportions": 0.9,
+  "cupsize": 0.5,
+  "firmness": 0.65,
+  "race": {
+   "african": 0.0,
+   "asian": 0.6,
+   "caucasian": 0.4
+  }
+ },
+ "targets": [
+  {
+   "target": "l-eye-scale-incr",
+   "value": 0.35
+  },
+  {
+   "target": "r-eye-scale-incr",
+   "value": 0.35
+  },
+  {
+   "target": "nose-scale-horiz-decr",
+   "value": 0.3
+  },
+  {
+   "target": "nose-scale-depth-decr",
+   "value": 0.2
+  },
+  {
+   "target": "chin-width-decr",
+   "value": 0.3
+  },
+  {
+   "target": "chin-prominent-incr",
+   "value": 0.2
+  },
+  {
+   "target": "head-oval",
+   "value": 0.5
+  },
+  {
+   "target": "mouth-scale-horiz-decr",
+   "value": 0.15
+  },
+  {
+   "target": "cheek-bones-incr",
+   "value": 0.2
+  }
+ ],
+ "skin_mhmat": "skins/young_asian_female/young_asian_female.mhmat",
+ "eyebrows": "eyebrows/eyebrow012/eyebrow012.mhclo",
+ "hair": "hair/bob02/bob02.mhclo",
+ "clothes": [
+  "clothes/female_sportsuit01/female_sportsuit01.mhclo"
+ ]
+}

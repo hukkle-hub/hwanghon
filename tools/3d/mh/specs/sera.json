@@ -1,0 +1,72 @@
+{
+ "eyes": "eyes/low-poly/low-poly.mhclo",
+ "eyelashes": "eyelashes/eyelashes02/eyelashes02.mhclo",
+ "teeth": "teeth/teeth_shape01/teeth_shape01.mhclo",
+ "tongue": "tongue/tongue01/tongue01.mhclo",
+ "rig": "mixamo",
+ "proxy": "",
+ "name": "sera",
+ "phenotype": {
+  "gender": 0.0,
+  "age": 0.44,
+  "muscle": 0.5,
+  "weight": 0.36,
+  "height": 0.62,
+  "proportions": 0.95,
+  "cupsize": 0.55,
+  "firmness": 0.6,
+  "race": {
+   "african": 0.0,
+   "asian": 0.2,
+   "caucasian": 0.8
+  }
+ },
+ "targets": [
+  {
+   "target": "l-eye-scale-incr",
+   "value": 0.35
+  },
+  {
+   "target": "r-eye-scale-incr",
+   "value": 0.35
+  },
+  {
+   "target": "nose-scale-horiz-decr",
+   "value": 0.3
+  },
+  {
+   "target": "nose-scale-depth-decr",
+   "value": 0.2
+  },
+  {
+   "target": "chin-width-decr",
+   "value": 0.3
+  },
+  {
+   "target": "chin-prominent-incr",
+   "value": 0.2
+  },
+  {
+   "target": "head-oval",
+   "value": 0.5
+  },
+  {
+   "target": "mouth-scale-horiz-decr",
+   "value": 0.15
+  },
+  {
+   "target": "cheek-bones-incr",
+   "value": 0.2
+  },
+  {
+   "target": "head-scale-vert-incr",
+   "value": 0.1
+  }
+ ],
+ "skin_mhmat": "skins/young_caucasian_female/young_caucasian_female.mhmat",
+ "eyebrows": "eyebrows/eyebrow010/eyebrow010.mhclo",
+ "hair": "hair/long01/long01.mhclo",
+ "clothes": [
+  "clothes/female_sportsuit01/female_sportsuit01.mhclo"
+ ]
+}
