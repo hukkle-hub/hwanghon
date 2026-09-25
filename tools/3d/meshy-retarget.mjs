@@ -11,7 +11,7 @@
  *
  * 둘 다 같은 메시의 같은 쉬는 자세라 변화량이 그대로 통한다. 골반 위치는 키 비율로.
  *
- * 사용: node tools/3d/meshy-retarget.mjs <원본.glb> <이름> [시작초 끝초] [--fps 60] [--rig meshy|ual|kk|mixamo] [--clip 이름]
+ * 사용: node tools/3d/meshy-retarget.mjs <원본.glb> <이름> [시작초 끝초] [--fps 60] [--rig meshy|ual|ual1|kk|mixamo] [--mirror] [--clip 이름]
  *          [--target 캐릭터.glb] [--arm-max 도] [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
  * 74번에 쓴 명령 (docs/design/74-meshy-clips.md):
  *   attack3  thrust.glb  0.25 1.25 --fps 60 --chest .48,20,.5,-13,-13,.5
@@ -47,6 +47,10 @@ const MAPS={
  /* 휴대폰 영상 AI 모캡(Rokoko Video·DeepMotion 등)을 Mixamo 뼈대로 내보낸 것 — three 는 'mixamorig:Hips' 를 'mixamorigHips' 로 읽는다 */
  mixamo:Object.fromEntries(['Hips','Spine','Spine1','Spine2','Neck','Head','LeftShoulder','LeftArm','LeftForeArm','LeftHand','RightShoulder','RightArm','RightForeArm','RightHand',
   'LeftUpLeg','LeftLeg','LeftFoot','LeftToeBase','RightUpLeg','RightLeg','RightFoot','RightToeBase'].map(n=>[n,'mixamorig'+n])),
+ /* Quaternius UAL 1 (Rigify DEF- 이름, three 가 '.' 을 지운다) */
+ ual1:{Hips:'DEF-hips',Spine:'DEF-spine001',Spine1:'DEF-spine002',Spine2:'DEF-spine003',Neck:'DEF-neck',Head:'DEF-head',
+  LeftShoulder:'DEF-shoulderL',LeftArm:'DEF-upper_armL',LeftForeArm:'DEF-forearmL',LeftHand:'DEF-handL',RightShoulder:'DEF-shoulderR',RightArm:'DEF-upper_armR',RightForeArm:'DEF-forearmR',RightHand:'DEF-handR',
+  LeftUpLeg:'DEF-thighL',LeftLeg:'DEF-shinL',LeftFoot:'DEF-footL',LeftToeBase:'DEF-toeL',RightUpLeg:'DEF-thighR',RightLeg:'DEF-shinR',RightFoot:'DEF-footR',RightToeBase:'DEF-toeR'},
  kk:{Hips:'hips',Spine:'spine',Spine2:'chest',Head:'head',
   LeftArm:'upperarml',LeftForeArm:'lowerarml',LeftHand:'wristl',RightArm:'upperarmr',RightForeArm:'lowerarmr',RightHand:'wristr',
   LeftUpLeg:'upperlegl',LeftLeg:'lowerlegl',LeftFoot:'footl',LeftToeBase:'toesl',RightUpLeg:'upperlegr',RightLeg:'lowerlegr',RightFoot:'footr',RightToeBase:'toesr'}};
@@ -86,6 +90,10 @@ const order=[]; tgt.scene.traverse(o=>{if(o.isBone){const n=o.name.replace(/^mix
 for(const n of order) if(!restG[n]) restG[n]=wq(G[n]);
 const tracks={}; order.forEach(n=>tracks[n]=[]); const hips=[];
 const INPLACE=!args.includes('--root');
+/* --mirror: 좌우 반전 (docs/design/87) — 오른손 투척을 왼손 투척으로. 우리 왼뼈는 원본 오른뼈의 «쉬는 자세 대비 회전 변화» 를
+   X 거울(q → x,−y,−z,w)로 받는다. 뼈 축 규약과 무관하다. 발 박기도 원본 반대편 발을 x 반전해서 */
+const MIRROR=args.includes('--mirror'), mir=n=>n.startsWith('Left')?'Right'+n.slice(4):n.startsWith('Right')?'Left'+n.slice(5):n;
+const mq=q=>(MIRROR?q.set(q.x,-q.y,-q.z,q.w):q);
 const CROUCH=args.includes('--crouch')?+args[args.indexOf('--crouch')+1]:1;
 const SPINE=args.includes('--spine')?+args[args.indexOf('--spine')+1]:1;
 const LEAN=args.includes('--lean')?args[args.indexOf('--lean')+1].split(',').map(Number):null;
@@ -159,11 +167,11 @@ for(let i=0;i<=N;i++){
   mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
   const W={}, armFix={};
   for(const n of order){
-    const s=MAP[n];
+    const s=MAP[MIRROR?mir(n):n];
     if(!s){ /* 원본에 없는 뼈: 부모의 회전 변화를 그대로 받는다 */ const pn0=G[n].parent.name.replace(/^mixamorig:?/,''); const Wp=W[pn0];
       const D0=Wp?Wp.clone().multiply(restG[pn0].clone().invert()):new T.Quaternion(); if(yawR.length&&!Wp) D0.premultiply(Ry(i));
       W[n]=D0.multiply(restG[n]); const pw0=Wp||wq(G[n].parent); const loc0=pw0.clone().invert().multiply(W[n]); const pv=tracks[n][tracks[n].length-1]; if(pv&&pv.dot(loc0)<0) loc0.set(-loc0.x,-loc0.y,-loc0.z,-loc0.w); tracks[n].push(loc0); continue; }
-    const D=wq(S0[s]).multiply(restS[s].clone().invert());
+    const D=mq(wq(S0[s]).multiply(restS[s].clone().invert()));
     /* --spine k: 골반·척추의 «월드 회전 변화» 를 k 만큼만 — 몸통이 과하게 숙이거나
        비틀어 날이 과녁에서 돌아갈 때. 팔·다리는 그대로 따라간다. */
     if(SPINE!==1&&/^(Hips|Spine|Spine1|Spine2)$/.test(n)) D.slerp(new T.Quaternion(),1-SPINE);
@@ -190,7 +198,7 @@ for(let i=0;i<=N;i++){
     tracks[n].push(local);
   }
   /* 골반 위치: 원본 월드 변위 × 키 비율 → 아인 부모 공간 */
-  const dW=S.Hips.getWorldPosition(new T.Vector3()).sub(hipRestS).multiplyScalar(scale);
+  const dW=S.Hips.getWorldPosition(new T.Vector3()).sub(hipRestS).multiplyScalar(scale); if(MIRROR) dW.x=-dW.x;
   const d=dW.clone().applyQuaternion(armInv);
   const ps=armParent.getWorldScale(new T.Vector3()); d.divide(ps);
   if(INPLACE){ d.x=0; d.z=0; }
@@ -210,8 +218,9 @@ for(let i=0;i<=N;i++){
 function plantLegs(i,dW){
   const hipOff=new T.Vector3(dW.x,0,dW.z), rec={};
   for(const side of ['Left','Right']){
-    const sF=S[side+'Foot'], sK=S[side+'Leg'];
+    const sF=S[(MIRROR?mir(side):side)+'Foot'], sK=S[(MIRROR?mir(side):side)+'Leg'];
     const fW=sF.getWorldPosition(new T.Vector3()).multiplyScalar(scale), kW=sK.getWorldPosition(new T.Vector3()).multiplyScalar(scale);
+    if(MIRROR){ const cx=2*hipRestS.x*scale; fW.x=cx-fW.x; kW.x=cx-kW.x; }
     const st=plant[side];
     const low=fW.y<footRest[side]+0.05, slow=st.prev?fW.clone().setY(0).distanceTo(st.prev.clone().setY(0))*N/(B-A)<0.45:false;
     st.prev=fW.clone();

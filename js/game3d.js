@@ -1198,7 +1198,7 @@ import { createBloom } from './bloom.js';
         else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,.65,0xFFD8A0,.12);}
         break;
       case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); pendingSkillClip=e.clip||null; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
-        if(k.dodge) doRoll(e.clip||'skill2');                               /* 그림자 걸음: 구르기가 아니라 도약 */
+        if(k.dodge) doRoll(k.dirClip?null:(e.clip||'skill2'));   /* dirClip: 전용 도약 클립이 없는 캐릭터는 일반 회피처럼 방향 클립 */                               /* 그림자 걸음: 구르기가 아니라 도약 */
         else if(!e.timed) playOnce(e.clip||('skill'+(e.index+1)), { speed:k.mult>0?1.25:1.0 });  /* 피해 없는 스킬도 동작이 나온다 */
         try{ fxSkill(k); }catch(x){ console.warn('fxSkill', x&&x.message); } break;
       case 'nost': guide('스태미나 부족', 1); break;
@@ -1212,7 +1212,12 @@ import { createBloom } from './bloom.js';
       case 'clear': phaseClear(); break;
     }
   }
-  function doRoll(clipOverride){ var ks=curStick()||{sx:0,sy:0}; world.roll(P, ks.sx, ks.sy, L.player.rollLen, L.player.rollDur); SFX.play('roll');
+  function doRoll(clipOverride){ var ks=curStick()||{sx:0,sy:0};
+    /* 방향 입력 없이 피하면 뒤로 빠진다(백스텝) — 예전엔 앞(보스 쪽)으로 굴러가면서 «뒤로 빠지기» 클립을 틀어
+       몸은 뒷걸음질하는데 보스 품으로 미끄러져 들어갔다(docs/design/87). 전용 클립(아인 그림자 걸음)은 그대로 앞으로 */
+    if(!clipOverride && Math.hypot(ks.sx, ks.sy)<0.15){ var ba=P.aim==null?0:P.aim; ks={sx:-Math.cos(ba), sy:-Math.sin(ba)}; world.roll(P, ks.sx, ks.sy, L.player.rollLen, L.player.rollDur); ks={sx:0,sy:0}; }
+    else world.roll(P, ks.sx, ks.sy, L.player.rollLen, L.player.rollDur);
+    SFX.play('roll');
     var n=clipOverride;
     if(!n){ /* 이동 방향을 바라보는 방향 기준으로 돌려 앞/뒤/좌/우 구르기를 고른다 */
       var m=Math.hypot(ks.sx, ks.sy);
