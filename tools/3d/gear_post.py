@@ -8,7 +8,7 @@ import bpy, sys, os, argparse
 from mathutils import Vector, Matrix
 argv=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else sys.argv[1:]
 ap=argparse.ArgumentParser(); ap.add_argument('src'); ap.add_argument('id'); ap.add_argument('--keep'); ap.add_argument('--faces',type=int,default=20000); ap.add_argument('--tex',type=int,default=1024)
-ap.add_argument('--axis',default='y'); ap.add_argument('--len',type=float,default=1.0); ap.add_argument('--butt',type=float,default=0.0); ap.add_argument('--pair',action='store_true'); ap.add_argument('--armor',action='store_true'); ap.add_argument('--rotz',type=float,default=0); ap.add_argument('--blade',default='')  # 'neg' 이면 날이 -X 로 뻗도록(낫 규약: ain_scythe_tex 날 = -X)
+ap.add_argument('--axis',default='y'); ap.add_argument('--len',type=float,default=1.0); ap.add_argument('--butt',type=float,default=0.0); ap.add_argument('--pair',action='store_true'); ap.add_argument('--armor',action='store_true'); ap.add_argument('--rotz',type=float,default=0); ap.add_argument('--blade',default=''); ap.add_argument('--pca',action='store_true')  # --pca: 비스듬히 누운 칼을 주축으로 세움 · --blade 'neg' 이면 날이 -X 로 뻗도록(낫 규약: ain_scythe_tex 날 = -X)
 a=ap.parse_args(argv)
 OUT=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','art','3d','gear'); os.makedirs(OUT,exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True); bpy.ops.import_scene.gltf(filepath=a.src)
@@ -35,6 +35,16 @@ for img in bpy.data.images:
 # 정렬: 바운딩 계산 (Blender 좌표)
 def bbox(ob):
     xs=[v.co for v in ob.data.vertices]; mn=Vector([min(p[i] for p in xs) for i in range(3)]); mx=Vector([max(p[i] for p in xs) for i in range(3)]); return mn,mx
+if a.pca:
+    # 컨셉에서 누운 칼(Tripo 는 비스듬히·바닥에 눕혀 만든다)을 세운다: 3D 주축 → Blender +Z, 둘째 축(날 폭) → X
+    import numpy as np
+    P=np.array([v.co[:] for v in o.data.vertices]); c0=P.mean(0); w,V=np.linalg.eigh(np.cov((P-c0).T))
+    ax=V[:,2]; sd=V[:,1]; R=np.stack([sd, np.cross(ax,sd), ax])   # 행 = 새 x·y·z
+    if np.linalg.det(R)<0: R[1]*=-1
+    M=Matrix.Identity(4)
+    for i in range(3):
+        for j in range(3): M[i][j]=R[i][j]
+    o.data.transform(M @ Matrix.Translation(Vector(-c0))); o.data.update(); print('pca: 주축', np.round(ax,2), '→ +Z')
 mn,mx=bbox(o); size=mx-mn; c=(mn+mx)/2
 def xf(M): o.data.transform(M); o.data.update()
 s=a.len/size.z

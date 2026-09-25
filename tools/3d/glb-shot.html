@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>GLB 검수 샷</title>
+<!-- 생성 모델 검수(docs/design/82): ?glb=경로 → window.shot(az, el, zoom, fy) 한 장. zoom 1 = 전체가 화면에 꽉,
+     2 = 두 배 확대(찢어짐·늘어남 보기), fy = 바라볼 높이(0 아래 ~ 1 위). wire=1 이면 선 겹쳐 그림. -->
+<style>body{margin:0;background:#1d222a}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+const Q=new URLSearchParams(location.search), W=+(Q.get('w')||480), H=+(Q.get('h')||480);
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true,preserveDrawingBuffer:true}); r.setSize(W,H);
+r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=+(Q.get('exp')||1.2); r.outputColorSpace=T.SRGBColorSpace;
+const sc=new T.Scene(); sc.background=new T.Color(0x2a3038);
+sc.add(new T.HemisphereLight(0xdde6ff,0x303440,1.4)); const key=new T.DirectionalLight(0xffffff,2.6); key.position.set(2,3,2.5); sc.add(key);
+const rim=new T.DirectionalLight(0xffd8b0,1.0); rim.position.set(-2,1.5,-2); sc.add(rim);
+const g=await new GLTFLoader().loadAsync(Q.get('glb')); sc.add(g.scene);
+if(Q.get('wire')){ const ms=[]; g.scene.traverse(o=>{ if(o.isMesh) ms.push(o); });   // 돌면서 붙이면 붙인 것도 돈다
+  for(const o of ms) o.add(new T.Mesh(o.geometry,new T.MeshBasicMaterial({color:0x40ff90,wireframe:true,transparent:true,opacity:.25}))); }
+const box=new T.Box3().setFromObject(g.scene), size=box.getSize(new T.Vector3()), c=box.getCenter(new T.Vector3()), R=size.length()/2;
+let tris=0; g.scene.traverse(o=>{ if(o.isMesh) tris+=o.material.wireframe?0:(o.geometry.index?o.geometry.index.count:o.geometry.attributes.position.count)/3; });
+window.INFO={size:size.toArray().map(v=>+v.toFixed(3)),tris};
+const cam=new T.PerspectiveCamera(30,W/H,R/100,R*20);
+window.shot=(az=30,el=12,zoom=1,fy=.5)=>{ const A=az*Math.PI/180,E=el*Math.PI/180, d=R/Math.sin(15*Math.PI/180)/zoom;
+  const p=new T.Vector3(c.x,box.min.y+size.y*fy,c.z);
+  cam.position.set(p.x+d*Math.sin(A)*Math.cos(E),p.y+d*Math.sin(E),p.z+d*Math.cos(A)*Math.cos(E)); cam.lookAt(p); r.render(sc,cam); return 1; };
+window.READY=1;
+</script>

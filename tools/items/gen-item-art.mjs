@@ -299,10 +299,14 @@ function twin({blade, grip, gem}){
 }
 ART.w_ryu_dagger = () => twin({ blade:['#d8b0a8','#8a3a32','#3a1210'], grip:['#4a4e58','#24262c','#0d0e11'], gem:'#ff4a3a' });
 ART.w_kain_greatsword = () => sword({ blade:['#e2e7f0','#8a93a3','#3d424c'], guard:['#f0d27a','#a8761f','#5a3a0e'], grip:['#6b5a48','#3d3226','#1b150f'], long:true, wide:true });
-ART.w_ryu_shiv = () => twin({ blade:['#9aa0a8','#565a63','#26282d'], grip:['#6b5a48','#3d3226','#1b150f'] });
-ART.w_ryu_twinfang = () => twin({ blade:['#ffe6a8','#c98a2b','#6e4a12'], grip:['#8a3a32','#5a1e1a','#2a0c0a'], gem:'#ff6c58' });
-ART.w_sera_vial = () => flask({ liquid:['#b9c9d2','#6f7f86','#2c383d'], glow:null, round:true, cork:'#6b5a48' });
-ART.w_sera_reagent = () => flask({ liquid:['#b8f4ea','#3fbfae','#12514a'], glow:'#6ff0dc', round:true, cork:'#c08c2c', stripe:'#f0d27a' });
+/* 82번 문서: 전용 3D 모델이 생겨 아이콘 색을 모델에 맞췄다 (쌍칼 = 무딘 강철 + 검은 끈 · 쌍아 = 핏빛 날 + 뼈 손잡이 ·
+   시약병 = 흐린 녹회색 + 구리 · 촉매 = 진홍 + 황동 · 카인 쇠판 = 녹 · 파쇄 기갑의 턱 = 건메탈 + 붉은 심) */
+ART.w_ryu_shiv = () => twin({ blade:['#a4a8ae','#5c6068','#26282d'], grip:['#3a3c42','#1c1d21','#0a0a0c'] });
+ART.w_ryu_twinfang = () => twin({ blade:['#ff9a8a','#b8261c','#4a0a08'], grip:['#efe4cc','#b8a888','#5a4e3a'], gem:'#ff4a3a' });
+ART.w_sera_vial = () => flask({ liquid:['#b7c2a2','#6d7a5a','#2c3424'], glow:null, round:true, cork:'#b86a38' });
+ART.w_sera_reagent = () => flask({ liquid:['#ff8a7a','#c8161a','#4a0608'], glow:'#ff4a3a', round:false, cork:'#c09a48', stripe:'#f0d27a' });
+ART.w_kain_scrap = () => sword({ blade:['#c89a78','#7a4a2e','#3a2214'], guard:['#8a8e96','#4a4e56','#1e2024'], grip:['#8a7a62','#4a3e30','#1b150f'], long:true, wide:true, notch:true });
+ART.w_kain_crusher = () => sword({ blade:['#9aa2ae','#4a505a','#1a1c20'], guard:['#ff7a5a','#b8261c','#4a0a08'], grip:['#3a3c42','#1c1d21','#0a0a0c'], long:true, wide:true, notch:true, tint:'#ff4a3a' });
 
 /* ---- 출력·검증 ---- */
 const items = readFileSync(join(ROOT, 'js', 'items.js'), 'utf8');
