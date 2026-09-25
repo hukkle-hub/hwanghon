@@ -5,6 +5,8 @@
      없으면 저항 없이 예전처럼 동작한다. */
   var G=typeof globalThis!=='undefined'?globalThis:this;
   var CFEEL=G.TW_CONTACT_FEEL||{dragScale:function(){return 1;}};
+  /* 스킬 모션 이벤트(다단 접점·투척→폭발) — js/skill-events.js, docs/design/89 */
+  var SE=G.TW_SKILL_EVENTS||(typeof require==='function'?require('./skill-events.js'):null);
   function rng(seed){ var s=seed>>>0||1; return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; }; }
   function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
   function createBattle(o){
@@ -20,7 +22,7 @@
     var P={hp:init.hp!=null?init.hp:st.hp,st:init.st!=null?init.st:R.stamina.max,ult:init.ult||0,
       guard:false,dodgeT:0,dodgeCd:0,dodgeAgo:99,dodgeThreat:0,lockT:0,stDelay:0,combo:0,comboT:0,
       riposteT:0,riposteKind:null,opening:null,critNext:false,buffT:0,buffReduce:0,cds:S.map(function(){return 0;}),
-      hitstop:0,dragT:0,dragTotal:0,dragRate:1,action:null,buffer:null,lastFailure:'공격 준비 동작과 거리를 확인해라.'};
+      hitstop:0,dragT:0,dragTotal:0,dragRate:1,action:null,buffer:null,proj:[],lastFailure:'공격 준비 동작과 거리를 확인해라.'};
     var parts=D.parts.map(function(p){return Object.assign({},p,{hpMax:p.hp,broken:false});});
     target=(parts.filter(function(p){return p.weak;})[0]||parts[0]).id;
     var E={hp:D.hp,hpMax:D.hp,posture:0,state:'idle',patI:0,patT:D.patternGap||1.4,pat:null,
@@ -95,7 +97,7 @@
       if(deflect){ P.lockT=Math.max(P.lockT,CF.DEFLECT.lock); P.combo=0; P.comboT=0;
         M.deflects++; emit('deflect',{part:p.id,lock:CF.DEFLECT.lock}); }
       if(!deflect&&p.breakable&&p.hp!=null&&!p.broken){
-        var partBonus=policy.partMult||1; if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
+        var partBonus=(policy.partMult||1)*(opt.breakMult||1); if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
         p.hp=Math.max(0,p.hp-Math.round(amount*partBonus)-(opt.opening==='break'?Math.round(p.hpMax*OP.breakFrac):0));if(p.hp===0)breakPart(p);
       }
       if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&(!opt.riposte||opt.riposte==='counter')?policy.normal:1))bleed(1);
@@ -129,6 +131,7 @@
            연계 취소(cancelAt)보다 늦어지는 일은 없게 min 을 씌운다. */
         defCancelAt:Math.min(t.cancel/speed,(t.hit+t.active)/speed+(R.motion.defCancel||0.06)/speed),
         clipHit:((R.motion.clipContactsByChar||{})[(C&&C.id)||'ain']||{})[clip]||(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
+      a.events=SE&&a.opt.ev?SE.schedule(a.opt.ev,a):null;a.evI=0;
       emit('actionstart',Object.assign({},a));return a;
     }
     function defensive(type,arg){return type==='dodge'||type==='counter'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
@@ -206,33 +209,54 @@
       P.st-=k.st;P.stDelay=R.stamina.delay;P.cds[i]=k.cd;
       if(k.dodge){P.dodgeT=R.dodge.iframes;P.dodgeAgo=0;P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.dodgeCd=R.dodge.cooldown;M.dodges++;}
       if(k.critNext)P.critNext=true;if(k.buff){P.buffT=k.buff.dur;P.buffReduce=k.buff.reduce;}
+      if(k.ev&&k.ev.type==='heal'){var healed=Math.min(st.hp-P.hp,Math.round(st.hp*k.ev.frac));P.hp+=healed;emit('heal',{amount:healed,skill:k.id});}
       var sclip=k.clip||('skill'+(i+1));
-      if(k.mult>0)action('skill',sclip,k.mult,{skill:k.id,aoe:k.aoe},R.motion.skill||R.motion.smash);
+      if(k.mult>0)action('skill',sclip,k.mult,{skill:k.id,aoe:k.aoe,ev:k.ev,breakMult:k.breakMult,posture:k.posture,bleed:k.bleed},R.motion.skill||R.motion.smash);
       emit('skill',{index:i,id:k.id,name:k.name,clip:sclip,timed:k.mult>0});
     }
     function ult(){
       if(!U||B.over)return;if(P.action){queue('ult');return;}if(P.lockT>0||P.dodgeT>0||P.guard)return;
       if(P.ult<R.ult.max){emit('cd',{ult:true});return;}P.ult=0;M.ultUsed++;
-      action('ult','ult',U.mult,{skill:U.id,noBleed:true,bleed:U.bleed},R.motion.ult);emit('ult',{name:U.name,timed:true});
+      action('ult','ult',U.mult,{skill:U.id,noBleed:true,bleed:U.bleed,ev:U.ev},R.motion.ult);emit('ult',{name:U.name,timed:true});
     }
     B.input=function(type,arg){
       if(B.over)return;
       if(P.hitstop>0&&type!=='target'&&!(type==='guard'&&!arg)){P.buffer={type:type,arg:arg,ttl:R.motion.buffer};return;}
       switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'counter':if(!counter())guard(true);break;case 'opening':useOpening();break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
     };
-    function impact(a){
-      a.resolved=true;
+    /* e: 사건 하나 (js/skill-events.js). 없으면 예전처럼 한 번에 전부.
+       다단이면 가중치만큼 나눠 맞고, 반격·자세·잡기 같은 «한 번만» 효과는 첫 타에, 출혈은 마지막 타에 붙는다. */
+    function impact(a,e){
+      a.resolved=true;var w=e?e.w:1,first=!e||e.i===0,last=!e||e.i===e.n-1;
       var targets=a.opt.aoe?parts:[B.part(a.part)||parts[0]],contacts=targets.map(function(p){return {part:p,contact:HK.canHit?HK.canHit(p.id,a):true};}).filter(function(h){return !!h.contact;});
-      if(!contacts.length){M.whiffs++;fail('거리가 맞지 않았다. 낫이 닿는 위치에서 공격해라.');emit('whiff',{timed:true,action:a.id});return;}
+      if(!contacts.length){if(first){M.whiffs++;fail('거리가 맞지 않았다. 낫이 닿는 위치에서 공격해라.');}emit('whiff',{timed:true,action:a.id,seq:e?e.i+1:1});return;}
+      if(e&&e.kind==='release'){release(a,e,targets,contacts);return;}
       var amount=0;
       a.opt.kind=a.kind;a.opt.combo=a.opt.tier!=null?a.opt.tier+1:P.combo;
-      contacts.forEach(function(h){amount+=damage(h.part.id,a.mult/targets.length,Object.assign({},a.opt,{contact:typeof h.contact==='object'?h.contact:null}));});
+      contacts.forEach(function(h){amount+=damage(h.part.id,a.mult*w/targets.length,Object.assign({},a.opt,{contact:typeof h.contact==='object'?h.contact:null},first?null:{noBleed:true}));});
+      finishImpact(a,amount,first,last,e);
+    }
+    function finishImpact(a,amount,first,last,e){
+      if(!first){if(last&&a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();emit('impact',{id:a.id,kind:a.kind,dmg:amount,seq:e.i+1,of:e.n});return;}
+      if(a.opt.posture&&a.kind==='skill'&&!E.dead)E.posture=clamp(E.posture+a.opt.posture,0,R.posture.max);
       if(a.opt.counter&&!E.dead){if(a.opt.perfect){P.riposteKind='counter';P.riposteT=Math.max(0,a.duration-a.elapsed)+.65;}emit('counterfollowup',{window:a.opt.perfect?.65:a.opt.tier==='repel'?.45:.25,perfect:!!a.opt.perfect,tier:a.opt.tier||null});}
       if(a.opt.riposte){M.ripostes++;if(a.opt.riposte!=='counter')E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
       if(a.kind==='smash')E.posture=clamp(E.posture+R.combo.smashPosture[a.opt.tier],0,R.posture.max);
       if(a.opt.opening==='grab'&&!E.dead&&E.state!=='downed'){E.posture=clamp(E.posture+OP.grabPosture,0,R.posture.max);E.state='stagger';E.stagT=Math.max(E.stagT||0,OP.grabHold);E.tele=0;emit('grab',{hold:OP.grabHold});}
-      if(a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
-      emit('impact',{id:a.id,kind:a.kind,dmg:amount});
+      if(last&&a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
+      emit('impact',{id:a.id,kind:a.kind,dmg:amount,seq:e?e.i+1:1,of:e?e.n:1});
+    }
+    /* 투척: 손을 떠나는 순간(release) 겨냥이 정해지고, 날아가 터질 때(detonate) 피해가 난다.
+       던진 뒤 회피·다른 행동을 해도 병은 날아간다. */
+    function release(a,e,targets,contacts){
+      emit('release',{id:a.id,clip:a.clip,flight:e.flight,part:contacts[0].part.id,blasts:e.blasts.length});
+      e.blasts.forEach(function(b){P.proj.push({t:e.flight+b.delay,a:{id:a.id,kind:a.kind,clip:a.clip,mult:a.mult,opt:a.opt},n:targets.length,contacts:contacts,b:b});});
+    }
+    function detonate(pr){
+      var a=pr.a,b=pr.b,amount=0,first=b.i===0,last=b.i===b.n-1;
+      pr.contacts.forEach(function(h){amount+=damage(h.part.id,a.mult*b.w/pr.n,Object.assign({},a.opt,{contact:null,thrown:true},first?null:{noBleed:true}));});
+      emit('detonate',{id:a.id,clip:a.clip,part:pr.contacts[0].part.id,seq:b.i+1,of:b.n,dmg:amount});
+      finishImpact(a,amount,first,last,{i:b.i,n:b.n});
     }
     /* ---------- 연계(chain) · 지연타(hold) ----------
        패턴의 chain[] 은 첫 타격 뒤에 이어지는 «비트»다. 비트마다 patternId 를 올려
@@ -336,7 +360,12 @@
          (js/game3d.js tickDrag). 총 시간이 안 변하므로 균형도 안 변한다.
          dragT 는 연출이 읽어 가도록 상태로만 남긴다. */
       if(P.dragT>0) P.dragT=Math.max(0,P.dragT-dt);
-      var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+dt);if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
+      var a=P.action;if(a){a.elapsed=Math.min(a.duration,a.elapsed+dt);
+        if(a.events){while(a.evI<a.events.length&&a.elapsed+1e-8>=a.events[a.evI].t){impact(a,a.events[a.evI++]);if(B.over)return;}}
+        else if(!a.resolved&&a.elapsed+1e-8>=a.hitAt)impact(a);
+        if(B.over)return;if(a.elapsed+1e-8>=a.duration){P.action=null;emit('actionend',{id:a.id});}}
+      if(P.proj.length){for(var pi=0;pi<P.proj.length;pi++)P.proj[pi].t-=dt;var due=P.proj.filter(function(q){return q.t<=1e-8;});
+        if(due.length){P.proj=P.proj.filter(function(q){return q.t>1e-8;});for(var di=0;di<due.length&&!B.over&&!E.dead;di++)detonate(due[di]);if(B.over)return;}}
       if(P.hitstop>0)return;
       if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel(true))&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}

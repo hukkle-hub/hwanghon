@@ -13,7 +13,17 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
+  # 관문: 테스트가 하나라도 실패하면 배포하지 않는다 (docs/design/89). 서버 테스트가 Node 22 기능을 쓴다.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm test
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages

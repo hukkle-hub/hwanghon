@@ -9,7 +9,17 @@ concurrency:
   group: android
   cancel-in-progress: true
 jobs:
+  # 관문: 테스트가 실패하면 APK 를 만들지 않는다 (docs/design/89)
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci
+      - run: npm test
   apk:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

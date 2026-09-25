@@ -1087,6 +1087,24 @@ import { createBloom } from './bloom.js';
     spCol[i*3]=c.r; spCol[i*3+1]=c.g; spCol[i*3+2]=c.b; spLife[i]=life;
   }
 
+  /* 89 — 투척: 손을 떠나 포물선으로 날아가 맞은 부위에서 터진다 (세라). 색은 기술마다 */
+  var THROWC={ skill1:0x9BE86A, skill3:0xFFA64A, ult:0xC67BFF };
+  function fxThrow(e){
+    var from=new THREE.Vector3(); if(ain.weapon) ain.weapon.getWorldPosition(from); else { from.copy(ain.root.position); from.y+=1.4; }
+    var to=bossHitPos(HITMAP[e.part]||'body'), col=THROWC[e.clip]||0x9BE86A, dur=Math.max(0.12,e.flight||0.28), big=e.clip==='ult';
+    var g=new THREE.Group(); var jar=new THREE.Mesh(new THREE.SphereGeometry(big?0.16:0.1,10,8), new THREE.MeshStandardMaterial({ color:col, emissive:col, emissiveIntensity:0.8, roughness:0.3 })); g.add(jar);
+    var glow=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:col, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.7 })); glow.scale.set(big?0.9:0.55,big?0.9:0.55,1); g.add(glow); g.position.copy(from);
+    var trailT=0;
+    fxPush(g, dur, function(o,k,dt){ o.position.lerpVectors(from,to,k); o.position.y+=Math.sin(Math.PI*k)*(0.6+from.distanceTo(to)*0.12); o.rotation.x+=dt*14; o.rotation.z+=dt*9;
+      trailT-=dt; if(trailT<=0){ trailT=0.03; sparkAt(o.position.clone(), col, 0.35); } });
+  }
+  function fxDetonate(e){
+    var p=bossHitPos(HITMAP[e.part]||'body'), col=THROWC[e.clip]||0x9BE86A, big=e.clip==='ult', axD=axisToBoss();
+    fxImpact(p, big?2.6:1.5, col, big?0.3:0.2); burst(p, big?60:28, col, axD);
+    var gp=p.clone(); gp.y=0.05; fxRing(gp, col, big?5.0:2.6, big?0.7:0.45);
+    for(var i=0;i<(big?10:5);i++){ var q=p.clone(); q.x+=(Math.random()-0.5)*1.2; q.z+=(Math.random()-0.5)*1.2; q.y=Math.max(0.3,q.y-0.6+Math.random()*0.8); dustPuff(q, big?1.6:1.0, 0.9, 1.4); }
+    shake(big?0.016:0.009, big?420:220, axD[0], axD[1]); vib(big?[30,40,30]:25); SFX.play(big?'brk':'hit', true);
+  }
   function fxSkill(k){ var kind=window.TW_SKILLS?TW_SKILLS.kindOf(k):(k.dodge?'dodge':k.buff?'buff':k.aoe?'aoe':'dmg'); var c=brColor(k);
     var lv=Math.max(1,Math.min(5,k.lv||1)), g=1+(lv-1)*0.22, br=k.br?1.15:1;   /* 단계가 올라가면 연출도 커진다 */
     num(above(P.x,P.y,2.35), k.name+' Lv'+lv+(k.br?' · '+k.br:''), 'skill');
@@ -1344,9 +1362,14 @@ import { createBloom } from './bloom.js';
         if(e.kind==='exec'){ SFX.play('brk'); flash(); slowmo(0.06,360); schedule(function(){ slowmo(0.35,420); },360);
           shake(0.022,600,axI[0],axI[1]); camKick(0.05,0.10,0.075); vib([40,60,40]); burst(bossHitPos('core'),70,0xD94A45,axI); fxRing(boss.root.position,0xD94A45,5.0,0.8);
           banner('E X E C U T E', e.dmg, (A.hudName||'보스')+' · 처형', true); break; }
+        /* 다단(docs/design/89): 앞 타들은 가볍게, 큰 연출은 마지막 타에서 한 번 */
+        if(e.of>1&&e.seq<e.of){ var spM=bossHitPos(HITMAP[s&&s.target]||'body'); shake(0.005,140,axI[0],axI[1]); burst(spM,12,null,axI); fxImpact(spM,.45,0xFFE0B0,.1); break; }
         if(e.kind==='ult'){fxUlt(brColor(ULT));SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
         else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,.65,0xFFD8A0,.12);}
         break;
+      case 'release': fxThrow(e); SFX.play('swing'); break;
+      case 'detonate': fxDetonate(e); break;
+      case 'heal': fxAura(0x7CE08A, 1.4); if(e.amount>0) num(above(P.x,P.y,2.2), '+'+W.fmt(e.amount), 'crit'); break;
       case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); pendingSkillClip=e.clip||null; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
         if(k.dodge) doRoll(k.dirClip?null:(e.clip||'skill2'));   /* dirClip: 전용 도약 클립이 없는 캐릭터는 일반 회피처럼 방향 클립 */                               /* 그림자 걸음: 구르기가 아니라 도약 */
         else if(!e.timed) playOnce(e.clip||('skill'+(e.index+1)), { speed:k.mult>0?1.25:1.0 });  /* 피해 없는 스킬도 동작이 나온다 */

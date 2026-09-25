@@ -164,36 +164,36 @@
   /* 아인 기술 4 + 궁극기 (icons.js 심볼 이름 사용) */
   var SKILLS = {
     ain: [
-      { key:'1', id:'slash',  icon:'scythe', name:'낫 베기',     mult:2.2, cd:6,  st:15, desc:'좁은 전방의 선택 부위를 정밀하게 걸어 벤다' },
-      { key:'2', id:'step',   icon:'bolt',   name:'그림자 걸음', mult:0,   cd:8,  st:20, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
-      { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'넓은 전방에서 사거리 안에 들어온 부위를 벤다', aoe:true },
-      { key:'4', id:'resolve',icon:'shield', name:'결의',        mult:0,   cd:15, st:0,  desc:'2초간 받는 피해 50% 감소', buff:{dur:2, reduce:0.5} }
+      { key:'1', id:'slash',  icon:'scythe', name:'낫 베기',     mult:2.2, cd:6,  st:15, desc:'좁은 전방의 선택 부위를 정밀하게 걸어 벤다', ev:{type:'hit',hits:[[0.24,1]]} },
+      { key:'2', id:'step',   icon:'bolt',   name:'그림자 걸음', mult:0,   cd:8,  st:20, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true, ev:{type:'dodge'} },
+      { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'넓은 전방을 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.55,0.55],[0.80,0.45]]} },
+      { key:'4', id:'resolve',icon:'shield', name:'결의',        mult:0,   cd:15, st:0,  desc:'2초간 받는 피해 50% 감소', buff:{dur:2, reduce:0.5}, ev:{type:'buff'} }
     ],
-    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩' },
+    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩', ev:{type:'hit',hits:[[0.22,1]]} },
     /* 카인 — 블레이드 마스터(탱커/브루저): 대검. 파괴·버티기 */
     kain: [
-      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 파괴 피해 증가' },
-      { key:'2', id:'brace',  icon:'shield', name:'철벽',          mult:0,   cd:12, st:0,  desc:'3초간 받는 피해 60% 감소', buff:{dur:3, reduce:0.6} },
-      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격' }
+      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 부위 파괴 피해 ×1.5', breakMult:1.5, ev:{type:'hit',hits:[[0.73,1]]} },
+      { key:'2', id:'brace',  icon:'shield', name:'철벽',          mult:0,   cd:12, st:0,  desc:'3초간 받는 피해 60% 감소', buff:{dur:3, reduce:0.6}, ev:{type:'buff'} },
+      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위를 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.38,0.55],[0.60,0.45]]} },
+      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격 (자세 +30)', posture:30, ev:{type:'hit',hits:[[0.33,1]]} }
     ],
-    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 대검 강타 + 출혈' },
+    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 올려치고 내려찍는 2타 — 두 번째가 본타 + 출혈', ev:{type:'hit',hits:[[0.22,0.35],[0.89,0.65]]} },
     /* 류 — 레인저(딜러): 쌍단검. 기동·연속 처치 */
     ryu: [
-      { key:'1', id:'fan',    icon:'crosshair', name:'쌍날 난무',   mult:2.0, cd:5,  st:14, desc:'선택 부위에 빠른 연속 베기' },
-      { key:'2', id:'shadow', icon:'bolt',      name:'그림자 도약', mult:0,   cd:7,  st:18, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true },
-      { key:'3', id:'storm',  icon:'flame',     name:'칼날 폭풍',   mult:1.1, cd:11, st:24, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'mark',   icon:'eye',       name:'표식',        mult:0,   cd:14, st:0,  desc:'2초간 받는 피해 40% 감소', buff:{dur:2, reduce:0.4} }
+      { key:'1', id:'fan',    icon:'crosshair', name:'쌍날 난무',   mult:2.0, cd:5,  st:14, desc:'선택 부위에 빠른 3연속 베기', ev:{type:'hit',hits:[[0.37,0.3],[0.47,0.3],[0.65,0.4]]} },
+      { key:'2', id:'shadow', icon:'bolt',      name:'그림자 도약', mult:0,   cd:7,  st:18, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true, ev:{type:'dodge'} },
+      { key:'3', id:'storm',  icon:'flame',     name:'칼날 폭풍',   mult:1.1, cd:11, st:24, desc:'돌며 모든 부위를 세 번 벤다', aoe:true, ev:{type:'hit',hits:[[0.41,0.3],[0.61,0.35],[0.74,0.35]]} },
+      { key:'4', id:'mark',   icon:'eye',       name:'표식',        mult:0,   cd:14, st:0,  desc:'2초간 받는 피해 40% 감소', buff:{dur:2, reduce:0.4}, ev:{type:'buff'} }
     ],
-    ryuUlt: { key:'R', id:'redshadow', icon:'crosshair', name:'붉은 그림자', mult:5.2, bleed:3, desc:'궁극기. 연속 찌르기 + 출혈 3중첩' },
+    ryuUlt: { key:'R', id:'redshadow', icon:'crosshair', name:'붉은 그림자', mult:5.2, bleed:3, desc:'궁극기. 5연속 찌르기 + 출혈 3중첩', ev:{type:'hit',hits:[[0.30,0.15],[0.38,0.15],[0.46,0.2],[0.57,0.2],[0.68,0.3]]} },
     /* 세라 — 위치 메이커(서포터): 시약 투척·정제 */
     sera: [
-      { key:'1', id:'vial',   icon:'potion', name:'부식 시약',     mult:1.9, cd:6,  st:14, desc:'선택 부위에 시약 투척' },
-      { key:'2', id:'mist',   icon:'seal',   name:'정제 안개',     mult:0,   cd:9,  st:16, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true, dirClip:true },   /* 87: 누른 방향 회피 클립(뒤·옆·앞) — 점프 대신 */
-      { key:'3', id:'burst',  icon:'flame',  name:'연쇄 폭발',     mult:1.3, cd:12, st:26, desc:'모든 부위에 피해', aoe:true },
-      { key:'4', id:'ward',   icon:'heart',  name:'회복 결계',     mult:0,   cd:15, st:0,  desc:'3초간 받는 피해 50% 감소', buff:{dur:3, reduce:0.5} }
+      { key:'1', id:'vial',   icon:'potion', name:'부식 시약',     mult:1.9, cd:6,  st:14, desc:'선택 부위에 시약을 던진다 — 날아가 맞은 자리에서 터진다', ev:{type:'throw',at:0.29,flight:0.28,blasts:[[0,1]]} },
+      { key:'2', id:'mist',   icon:'seal',   name:'정제 안개',     mult:0,   cd:9,  st:16, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true, dirClip:true, ev:{type:'dodge'} },   /* 87: 누른 방향 회피 클립(뒤·옆·앞) — 점프 대신 */
+      { key:'3', id:'burst',  icon:'flame',  name:'연쇄 폭발',     mult:1.3, cd:12, st:26, desc:'던진 병이 두 번 연달아 터진다 — 모든 부위', aoe:true, ev:{type:'throw',at:0.20,flight:0.26,blasts:[[0,0.5],[0.2,0.5]]} },
+      { key:'4', id:'ward',   icon:'heart',  name:'회복 결계',     mult:0,   cd:15, st:0,  desc:'최대 체력 15% 회복 + 3초간 받는 피해 50% 감소', buff:{dur:3, reduce:0.5}, ev:{type:'heal',frac:0.15} }
     ],
-    seraUlt: { key:'R', id:'catalyst', icon:'potion', name:'촉매 폭발', mult:5.0, bleed:2, desc:'궁극기. 대형 시약 폭발 + 출혈 2중첩' }
+    seraUlt: { key:'R', id:'catalyst', icon:'potion', name:'촉매 폭발', mult:5.0, bleed:2, desc:'궁극기. 큰 병을 던져 대형 폭발 + 출혈 2중첩', ev:{type:'throw',at:0.22,flight:0.36,blasts:[[0,1]]} }
   };
 
   function dummy(o){
