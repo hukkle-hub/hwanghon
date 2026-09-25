@@ -162,6 +162,20 @@ html.mobile .loading__tip{font-size:12px}
 @media(max-height:640px){.lockon{top:158px;right:12px;font-size:11px;padding:6px 9px}}
 @media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}
 html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
+/* 폰 브라우저 안(세로 272 px 안팎, docs/design/84): 스킬 3·4 가 지도·조준 패널 위에, 락온이 공격 버튼 밑에, 의뢰 목록이 스틱 위에,
+   체력·기력 묶음이 캐릭터 몸 위에 겹쳤다. 갓 오브 워처럼 캐릭터 둘레는 비우고 정보는 모서리로. */
+@media (max-height:360px){
+ html.mobile .vitals{position:absolute;left:max(10px,env(safe-area-inset-left));top:118px;width:170px;max-width:none;z-index:6;pointer-events:none}
+ html.mobile .vital{margin-bottom:2px;gap:4px}html.mobile .vital .bar{height:4px}html.mobile .vital__ic{width:9px;height:9px}
+ html.mobile .vital__v{font-size:8px}html.mobile .xpg{display:none}html.mobile .ultg{margin-top:1px;gap:4px}html.mobile .ultg .bar{height:3px}html.mobile .ultg span:first-child{font-size:8px}html.mobile .ultg__v{font-size:8px;width:24px}
+ html.mobile .bthud .stick{height:112px}html.mobile .actions{margin-left:auto}
+ html.mobile .quest{top:6px;left:50%;transform:translateX(-50%);font-size:9.5px;min-width:0;padding:3px 7px}html.mobile.in-fight .quest{display:none}
+ html.mobile .mini{display:none}html.mobile .exp-map{top:44px}html.mobile.in-fight .exp-map{display:none}
+ html.mobile .target-cycle{top:44px;right:10px;min-width:0;min-height:0;max-width:150px;padding:3px 8px;font-size:10px}html.mobile .target-cycle small{display:none}
+ html.mobile .lockon{top:94px;left:max(10px,env(safe-area-inset-left));right:auto;padding:3px 8px;font-size:10px}
+ html.mobile .guide{top:auto;bottom:4px;left:150px;transform:none;max-width:230px;white-space:normal;font-size:10px;line-height:1.35;padding:3px 8px}
+ html.mobile .combo{top:70px;right:40%}
+}
 .pd-vig{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center,rgba(120,180,255,0) 45%,rgba(60,110,200,.38) 100%)}
 .pd-vig.on{animation:pdVig .9s ease-out}
 @keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}

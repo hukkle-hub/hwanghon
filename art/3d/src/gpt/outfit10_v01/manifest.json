@@ -1,0 +1,212 @@
+[
+  {
+    "set": 1,
+    "name": "01_Wolha",
+    "file": "ain_outfit_01_Wolha_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.826,
+      "depth": 0.365
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 2,
+    "name": "02_Jeogya",
+    "file": "ain_outfit_02_Jeogya_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.836,
+      "depth": 0.365
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 3,
+    "name": "03_Maehwa",
+    "file": "ain_outfit_03_Maehwa_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.845,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 4,
+    "name": "04_Yeonhwa",
+    "file": "ain_outfit_04_Yeonhwa_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.855,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 5,
+    "name": "05_Hongrin",
+    "file": "ain_outfit_05_Hongrin_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.865,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 6,
+    "name": "06_Heugu",
+    "file": "ain_outfit_06_Heugu_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.875,
+      "depth": 0.365
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 7,
+    "name": "07_Maedeup",
+    "file": "ain_outfit_07_Maedeup_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.885,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 8,
+    "name": "08_Simyeon",
+    "file": "ain_outfit_08_Simyeon_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.895,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 9,
+    "name": "09_Chunseol",
+    "file": "ain_outfit_09_Chunseol_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.905,
+      "depth": 0.365
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  },
+  {
+    "set": 10,
+    "name": "10_Hwaseol",
+    "file": "ain_outfit_10_Hwaseol_v01.glb",
+    "bbox_m": {
+      "width": 0.99,
+      "height": 1.915,
+      "depth": 0.315
+    },
+    "reference_body_height_m": 1.68,
+    "axis": "Y-up",
+    "units": "meters",
+    "ain_identity": [
+      "left shoulder armor only",
+      "right forearm gauntlet only",
+      "1.9m-class long scythe",
+      "light/mobile combat silhouette",
+      "modern Korean 2030 textile detailing"
+    ],
+    "status": "wearable blockout GLB; unskinned"
+  }
+]

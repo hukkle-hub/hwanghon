@@ -45,7 +45,7 @@ import { createBloom } from './bloom.js';
   var expedition=window.TW_EXPEDITION.create({level:L,world:world,saved:expeditionSaved,save:function(v){try{localStorage.setItem(expeditionKey,JSON.stringify(v));}catch(e){}}});
   var dungeonProps=null, interactButton=null, mapOpen=false;
   var RETRY=(function(){ try{ var v=sessionStorage.getItem('tw:retry'); sessionStorage.removeItem('tw:retry'); return v; }catch(e){ return null; } })();
-  var SET=(function(){ try{ return Object.assign({ bright:1, lights:true, vib:true, sound:true, quality:'auto' }, JSON.parse(localStorage.getItem('tw:settings')||'{}')); }catch(e){ return { bright:1, lights:true, vib:true, sound:true, quality:'auto' }; } })();
+  var SET=(function(){ try{ return Object.assign({ bright:1, lights:true, vib:true, sound:true, quality:'auto', camAuto:true, shake:true }, JSON.parse(localStorage.getItem('tw:settings')||'{}')); }catch(e){ return { bright:1, lights:true, vib:true, sound:true, quality:'auto' }; } })();
   function saveSet(){ try{ localStorage.setItem('tw:settings', JSON.stringify(SET)); }catch(e){} }
   var el={ dg:$('#dg'), flash:$('#flash'), bosshp:$('#bosshp'), name:$('#b-name'), stack:$('#b-stack'), ph:$('#b-ph'), timerBox:$('#bttimer'), timer:$('#b-timer'), counter:$('#counter'), cLb:$('#c-lb'), cV:$('#c-v'), cSub:$('#c-sub'), status:$('#status'), guide:$('#guide'), stickEl:$('#stick'), actions:$('#actions'), ov:$('#ov'), ovBox:$('#ov-box'), mini:$('#mini'), loading:$('#loading'), quest:$('#quest'), combo:$('#combo'), comboN:$('#combo-n'), toasts:$('#toasts'), dlg:$('#dlg'), dlgWho:$('#dlg-who'), dlgTxt:$('#dlg-txt'), stag:$('#b-stag'), canvas:$('#game3d') };
   var mctx=el.mini.getContext('2d');
@@ -180,8 +180,16 @@ import { createBloom } from './bloom.js';
      여기서는 바짝 붙고 살짝 옆으로 비껴서 몸짓·무기·의상이 다 보이고 타격이 코앞에서
      터지게 한다 — 캐릭터와 전투에 올인하는 게임이니 그 둘이 화면을 차지해야 한다.
      가까울수록 시야가 좁아지므로 FOV 를 함께 넓힌다 (50 → 58). */
-  var CAM={ tauLock:0.22, tauFight:0.34, tauMove:0.30, idleHold:true,   /* 가까워진 만큼 느슨하게 */
-            lookAhead:1.1,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
+  /* 멀미 (docs/design/84) — 디렉터: 「화면 돌아가는 것도 너무 어지러워」. 걸어서 보스까지 가는 54초 동안 카메라가 «스스로»
+     451° 를 돌았다(p95 101°/s). 멀미의 첫째 원인은 «내가 안 돌린 회전»·화면 기울기·화각 변화다(Xbox 접근성 지침 117,
+     Game Accessibility Guidelines). 갓 오브 워는 어깨 너머 «자유» 카메라 — 스스로 거의 안 돈다. 그래서:
+       탐색   달리는 방향 뒤로 붙던 것(0.30초) → 옆 성분만 느리게(1.6초, 최대 34°/s), 카메라 쪽으로 달리면 안 돈다
+       락온   보스가 화면 가운데 ±20° 안이면 안 돈다(데드존), 넘친 만큼만 최대 69°/s, 2.6 m 안으로 붙으면 멈춘다
+       락온 없는 전투   스스로 안 돈다
+     설정에서 «카메라 자동 회전»·«화면 흔들림» 을 끌 수 있다. */
+  var CAM={ tauLock:0.60, tauFight:0.60, tauMove:1.6, idleHold:true,
+            maxYawMove:0.6, lockDead:0.35, maxYawLock:1.2, lockNear:2.6, backCone:2.1,
+            lookAhead:0.5,            /* 주시점을 진행 방향으로 (m) — 가는 곳이 보인다 */
             pitchMove:0.26, pitchFight:0.19,   /* 위에서 내려다보지 않는다 — 등 뒤 눈높이 */
             shoulder:0.52,            /* 카메라를 오른쪽으로 (m) — 캐릭터가 화면 왼쪽 삼분점에 */
             lookUp:0.42,              /* 주시점을 가슴 위로 — 얼굴과 상체가 중앙에 온다 */
@@ -191,7 +199,7 @@ import { createBloom } from './bloom.js';
                물러나면 «캐릭터 크기는 그대로, 그림만 영화처럼» 이 된다.
                우리 모바일 화면은 2.22:1 로 16:9 보다 넓어서, 세로 50° 여도 가로는 92° 다
                — 원본이 우리보다 좁지 넓지 않다. */
-            fov:50, fovDash:57, fovHit:46, fovTau:0.10,
+            fov:50, fovDash:50, fovHit:50, fovTau:0.10,   /* 회피·타격 화각 변화(57°·46°)는 멀미라 뺐다 */
             sizeDist:0.55,            /* 보스가 클수록 물러난다 (보스 높이 m 당) */
             /* 회전 — 어깨 너머로 오면서 «부자연스럽다» 는 지적이 나왔다. 세 가지가 빠져 있었다.
                ① 각속도 상한이 없었다. 보스를 지나쳐 뒤쪽 방향이 뒤집히면 지수 감쇠만으로는
@@ -995,13 +1003,14 @@ import { createBloom } from './bloom.js';
   /* 화면 흔들림: 타격 축 방향으로 주고 빠르게 가라앉힌다 (docs/design/18-boss-fight-design.md §1-2).
      dx/dz 를 주지 않으면 예전처럼 무작위로 흔든다. */
   var shakeAmt=0, shakeT=0, shakeD=0.2, shakeDX=0, shakeDZ=0;
-  function shake(i, d, dx, dz){ shakeAmt=Math.max(shakeAmt, (i||0.004)*40); shakeD=Math.max(shakeD,(d||200)/1000); shakeT=Math.max(shakeT,shakeD);
+  function shake(i, d, dx, dz){ if(!SET.shake) return; shakeAmt=Math.max(shakeAmt, (i||0.004)*20);   /* 절반으로(멀미) */ shakeD=Math.max(shakeD,(d||200)/1000); shakeT=Math.max(shakeT,shakeD);
     if(dx||dz){ var m=Math.sqrt(dx*dx+dz*dz)||1; shakeDX=dx/m; shakeDZ=dz/m; } }
   /* 회전 킥 — 위치만 흔들면 «화면이 떨린다», 각도를 틀면 «맞았다» 가 된다.
      roll(화면 기울기)이 특히 타격감을 만든다. 감쇠 진동으로 금방 제자리. */
   var kickY=0, kickP=0, kickR=0, kickV=[0,0,0];
   function camKick(yaw, pitch, roll){
-    kickV[0]+=yaw||0; kickV[1]+=pitch||0; kickV[2]+=roll||0; }
+    /* 화면 기울기(roll)·옆 튕김(yaw)은 멀미를 부른다 — 위아래로 살짝만. 흔들림을 끄면 이것도 없다 */
+    if(!SET.shake) return; kickV[1]+=(pitch||0)*0.5; }
   function tickKick(dt){
     var w=26, z=0.42, k=[kickY,kickP,kickR];          /* 감쇠 진동: 빠르게 튕겼다 돌아온다 */
     /* 잘게 나눠 적분한다 — w·dt 가 2 를 넘으면(한 프레임 77 ms↑: 끊김·저사양) 오일러가 발산해
@@ -1065,7 +1074,7 @@ import { createBloom } from './bloom.js';
     ain.model.rotation.x=ax;
     ain.model.rotation.z=az+bank;                      /* 도는 쪽으로 기운다 */
   }
-  var zoomPulse=0; function zoomKick(){ zoomPulse=1; }
+  var zoomPulse=0; function zoomKick(){ /* 화각 펌핑(50→46°)은 멀미라 뺐다 */ }
   var pendingContacts=[];
   function handle(e){
     if((e.t==='hit'||e.t==='impact')&&!e.poseReady){pendingContacts.push(e);return;}
@@ -1157,7 +1166,7 @@ import { createBloom } from './bloom.js';
       case 'downed': SFX.play('down'); guide('<b>격추!</b> 붙어서 <b>F</b> — 처형', 3); bossPlay('down'); zone=null; hideZone(); shake(0.012,400); break;
       /* 처형: 카메라가 보스 쪽으로 붙고, 내리꽂는 순간에 크게 멈춘다 */
       case 'execute': SFX.play('execute'); guide('<b>처형</b>', 1.2); camZoom=0.82;
-        var eb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:eb.clone().add(new THREE.Vector3(-2.4,0.9,3.0)), look:bossHitPos('body'), t:0, dur:0.55 };
+        var eb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:eb.clone().add(new THREE.Vector3(-2.4,0.9,3.0)), look:bossHitPos('body'), t:0, dur:0.9 };
         schedule(function(){ cineCam={ from:(cineCam&&cineCam.to?cineCam.to.clone():camPos.clone()), to:camPos.clone(), look:null, t:0, dur:0.6, back:true }; }, 1100);
         schedule(function(){ cineCam=null; camZoom=1; }, 1750);
         break;
@@ -1348,7 +1357,7 @@ import { createBloom } from './bloom.js';
     /* 포효 — 몬헌은 사냥 시작에 몬스터가 울부짖고 카메라가 밀려든다.
        보스 쪽으로 한 번 더 당겼다가 충격파를 퍼뜨리고 놓는다. */
     schedule(function(){ if(!cineCam) return; var hp=bossHitPos('head');
-      cineCam={ from:camPos.clone(), to:hp.clone().add(new THREE.Vector3(-1.9,0.5,2.4)), look:hp, t:0, dur:0.45 };
+      cineCam={ from:camPos.clone(), to:hp.clone().add(new THREE.Vector3(-1.9,0.5,2.4)), look:hp, t:0, dur:0.9 };
       bossPlay('stagger'); SFX.play('brk'); }, 2200);
     schedule(function(){ shake(0.02, 700); camKick(0.05,0.11,0.05); vib([50,40,70]); slowmo(0.45, 420);
       fxRing(boss.root.position, 0xD94A45, 6.5, 0.9); burst(bossHitPos('head'), 46, 0xFFB08A); }, 2620);
@@ -1360,7 +1369,7 @@ import { createBloom } from './bloom.js';
       var next=phase+1; battle=null; cine=true; zone=null; hideZone();
       SFX.play('phase'); bossPlay('stagger'); flash(); vib([30,30,60]); shake(0.012,500);
       var cb=bossHitPos('core'), ch=bossHitPos('head');
-      cineCam={ from:camPos.clone(), to:ch.clone().add(new THREE.Vector3(-3.0,1.2,3.8)), look:cb, t:0, dur:0.8 };
+      cineCam={ from:camPos.clone(), to:ch.clone().add(new THREE.Vector3(-3.0,1.2,3.8)), look:cb, t:0, dur:0.95 };
       burst(cb, 50, next===1?0xC9A45E:0xD94A45);
       var enTxt=(L.beats.enter||[])[next]||(next===1?'사슬이 끊어진다':'핵이 타오른다');
       schedule(function(){ /* 각성: 부위 폭발 + 포효 + 기둥 */
@@ -1484,7 +1493,7 @@ import { createBloom } from './bloom.js';
   document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL'){ kd.__l=0; guarding=false; guardIn(false); } });
   window.addEventListener('blur',function(){kd={};stick.sx=stick.sy=0;atkUp();});
   function settingsHTML(){ return '<div class="setrow"><label for="quality-setting">화질</label><select id="quality-setting" data-quality>'+[['auto','자동'],['low','낮음'],['medium','보통'],['high','높음']].map(function(p){return '<option value="'+p[0]+'"'+(SET.quality===p[0]?' selected':'')+'>'+p[1]+'</option>';}).join('')+'</select><span>동작·판정은 동일</span></div><div class="setrow"><label>밝기</label><input type="range" min="0.5" max="1.5" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
-    '<div class="setrow">'+[['lights','동적 조명'],['vib','진동'],['sound','소리']].map(function(p){return '<span class="setpair"><span>'+p[1]+'</span><button class="btn btn--sm" aria-label="'+p[1]+' 전환" data-tog="'+p[0]+'">'+(SET[p[0]]?'켜짐':'꺼짐')+'</button></span>';}).join('')+'</div>'; }
+    '<div class="setrow">'+[['lights','동적 조명'],['vib','진동'],['sound','소리'],['camAuto','카메라 자동 회전'],['shake','화면 흔들림']].map(function(p){return '<span class="setpair"><span>'+p[1]+'</span><button class="btn btn--sm" aria-label="'+p[1]+' 전환" data-tog="'+p[0]+'">'+(SET[p[0]]?'켜짐':'꺼짐')+'</button></span>';}).join('')+'</div>'; }
   el.ovBox.addEventListener('input', function(e){ var k=e.target.getAttribute('data-set'); if(!k) return; SET[k]=+e.target.value; saveSet(); applySettings(); });
   el.ovBox.addEventListener('change',function(e){if(!e.target.hasAttribute('data-quality'))return;SET.quality=e.target.value;autoLow=false;fpsSamples=[];saveSet();applySettings();});
   el.ovBox.addEventListener('click', function(e){ var b=e.target.closest('[data-tog]'); if(!b) return; var k=b.getAttribute('data-tog'); SET[k]=!SET[k]; b.textContent=SET[k]?'켜짐':'꺼짐'; saveSet(); applySettings(); if(k==='sound'&&SET.sound) SFX.ambient(true); SFX.play('ui'); });
@@ -1539,7 +1548,7 @@ import { createBloom } from './bloom.js';
     if(guideT>0){ guideT-=dt; if(guideT<=0) el.guide.classList.remove('is-on'); } if(counterT>0){ counterT-=dt; if(counterT<=0) el.counter.classList.remove('is-on'); }
   }
   function fill(id, pct){ var b=$('#'+id), f=b&&b.querySelector('.bar__fill'); if(f){ f.style.transition='none'; f.style.width=Math.max(0,Math.min(100,pct))+'%'; } }
-  var flickT=0, last=0;
+  var flickT=0, last=0, inFight=false;
   function updateCamera(dt){
     /* 목표: 플레이어(전투 중엔 플레이어·보스 중간 쪽) 를 바라보며 뒤·위에서 */
     var pp=v3(P.x,P.y,1.2); var look=pp.clone(); var locked=lockOn&&!!battle&&!cine;
@@ -1553,21 +1562,18 @@ import { createBloom } from './bloom.js';
     /* 따라가기: 손으로 돌린 직후(dragT)엔 손이 이긴다. 락온 중 드래그는 대상 주위를 도는 것이라 유지한다. */
     if(dragT>0) dragT-=dt;
     if(dragT<=0 && !cineCam){
-      var want=null, tau;
-      if(locked){                      /* 몬헌 포커스: 플레이어 뒤에서 보스를 문다 */
-        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; }
-      else if(battle){                 /* 락온 없이: 보스를 화면에 두되 느슨하게 */
-        want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauFight; }
-      else if(P.moving && P.rollT<=0){ /* 탐색: 달리는 방향 뒤로 */
-        var a=P.aim||0; want=Math.atan2(-Math.cos(a), -Math.sin(a)); tau=CAM.tauMove; }
-      /* 멈춰 있으면 그대로 둔다 — 서 있을 때까지 카메라가 돌면 멀미가 난다 */
+      var want=null, tau, lim=CAM.maxYawLock, dead=CAM.yawDead;
+      if(locked){                      /* 몬헌 포커스: 플레이어 뒤에서 보스를 문다 — 단 데드존 밖으로 나갈 때만 */
+        if(gap>CAM.lockNear){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; dead=CAM.lockDead; } }
+      else if(battle){}                /* 락온 없이 싸울 땐 스스로 안 돈다 */
+      else if(SET.camAuto && P.moving && P.rollT<=0){ /* 탐색: 달리는 방향 뒤로 «천천히», 카메라 쪽으로 달리면 안 돈다 */
+        var a=P.aim||0, w0=Math.atan2(-Math.cos(a), -Math.sin(a)), d0=w0-camYaw; while(d0>Math.PI) d0-=Math.PI*2; while(d0<-Math.PI) d0+=Math.PI*2;
+        if(Math.abs(d0)<CAM.backCone){ want=w0; tau=CAM.tauMove; lim=CAM.maxYawMove; } }
       if(want!=null && !(CAM.idleHold && !P.moving && !battle)){
         var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
-        if(Math.abs(dy)<CAM.yawDead) dy=0;                       /* ③ 미세 떨림은 무시 */
-        /* ② 붙을수록 목표각이 요동치므로 천천히 — gap 은 전투 중에만 뜻이 있다 */
-        var tEff=tau*(battle?1+Math.max(0,CAM.nearGap-gap)*CAM.nearDamp:1);
-        var step=dy*(1-Math.exp(-dt/tEff));
-        var lim=CAM.maxYawRate*dt;                               /* ① 휙 도는 것 방지 */
+        dy=Math.abs(dy)<dead?0:dy-Math.sign(dy)*dead;            /* ③ 데드존: 안쪽은 무시, 넘친 만큼만 */
+        var step=dy*(1-Math.exp(-dt/tau));
+        lim*=dt;                                                  /* ① 휙 도는 것 방지 */
         camYaw+=Math.max(-lim, Math.min(lim, step)); }
     }
     /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
@@ -1578,7 +1584,7 @@ import { createBloom } from './bloom.js';
     var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist, dt);
-    var z=Math.pow(0.0002, dt);            /* 시정수 약 0.12초 — 위치·주시점 공용 */
+    var z=Math.exp(-dt/0.18);              /* 시정수 0.18초 — 위치·주시점 공용 (0.12 는 구르기마다 화면이 튀었다) */
     var yawEff=camYaw+camSlide;
     /* 어깨 너머: 카메라와 주시점을 «같이» 옆으로 민다 → 캐릭터가 화면 삼분점으로 비껴난다.
        한쪽만 밀면 캐릭터를 비스듬히 보게 돼 어깨가 화면을 가린다. */
@@ -1586,7 +1592,7 @@ import { createBloom } from './bloom.js';
     var rx=Math.cos(yawEff)*sOff, rz=-Math.sin(yawEff)*sOff;
     look.x+=rx; look.z+=rz; look.y+=CAM.lookUp;
     var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist);
-    if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, cineCam.back?k:Math.min(1,k*1.5)); }
+    if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, k);   /* 주시점을 위치보다 1.5배 빨리 돌리던 것이 휙 도는 느낌을 키웠다 — 같이 */ }
     /* 위치와 주시점을 «같은» 시정수로 따라간다. 예전엔 0.145초 / 0.13초로 달라서
        회전 중에 카메라가 아직 안 온 자리를 겨누고 있었다 — 그게 프레이밍이 «헤엄치는»
        느낌의 정체다. 이제 둘 다 0.12초. (docs/design/58) */
@@ -1608,7 +1614,7 @@ import { createBloom } from './bloom.js';
       camLook.y+=kickP*0.35;                       /* 위아래로 훑고 */
       cam.up.set(Math.sin(kickR),Math.cos(kickR),0);   /* 화면을 기울인다 */
     } else if(cam.up.x) cam.up.set(0,1,0);
-    cam.lookAt(camLook); if(zoomPulse>0){ zoomPulse-=dt*4; cam.fov=50-Math.max(0,zoomPulse)*4; cam.updateProjectionMatrix(); }
+    cam.lookAt(camLook);
     /* 달빛 그림자 카메라를 플레이어 주변으로 */
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();
   }
@@ -1625,6 +1631,7 @@ import { createBloom } from './bloom.js';
   function setLock(v){ lockOn=!!v; var b=$('#lockon'); if(b){ b.textContent='T · 락온 '+(lockOn?'켜짐':'꺼짐'); b.classList.toggle('is-off', !lockOn); }
     guide(lockOn?'<b>락온</b> — 보스를 놓치지 않는다':'락온 해제 — 시점을 직접 돌린다', 1.4); }
   function render(dt){
+    if((!!battle)!==inFight){ inFight=!!battle; document.documentElement.classList.toggle('in-fight', inFight); }   /* 좁은 화면 HUD 가 전투 중 정리된다 */
     $('#target-cycle').hidden=!battle||cine||ain.dead;
     var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
     tickLock(dt); tickRim();
@@ -1674,21 +1681,27 @@ import { createBloom } from './bloom.js';
     }
     return dist;
   }
+  /* 멀미 (docs/design/84): 탐색 중 «스스로 돈» 432° 가운데 325° 가 이 미끄럼이었다 — 벽이 시야를 가릴 때마다
+     최대 72° 를 0.12초 만에 옆으로 틀어, 좁은 통로에서는 좌우로 계속 휙휙 돌았다.
+     갓 오브 워처럼 먼저 «당긴다»(최소 2.2 m 까지) — 당겨도 모자랄 때만 옆으로, 34° 까지, 초당 40° 이하로. */
+  var SLIDE_MAX=0.6, SLIDE_RATE=0.7, CAM_MIN=2.2;
   function camClear(look, dist, dt){
-    var want=0;
-    if(rayFree(look, camYaw+camSlide, dist) < dist-0.2){
-      /* 좌우로 벌려 보며 뚫리는 쪽을 찾는다 (가까운 각도 우선) */
-      var best=null, bestFree=rayFree(look, camYaw+camSlide, dist);
-      for(var a=0.16; a<=1.25; a+=0.16){
+    dt=dt||0.016;
+    var free=rayFree(look, camYaw+camSlide, dist), want=0;
+    if(free<CAM_MIN+0.3){
+      /* 당겨도 모자란다: 좌우로 벌려 보며 뚫리는 쪽(가까운 각도 우선) */
+      var best=null, bestFree=free;
+      for(var a=0.1; a<=SLIDE_MAX+1e-6; a+=0.1){
         for(var sgn=-1; sgn<=1; sgn+=2){
           var f=rayFree(look, camYaw+sgn*a, dist);
           if(f>bestFree+0.15){ bestFree=f; best=sgn*a; }
-          if(f>=dist-0.1){ best=sgn*a; a=9; break; }
+          if(f>=CAM_MIN+0.6){ best=sgn*a; a=9; break; }
         }
       }
-      if(best!=null) want=best;
-    }
-    camSlide+=(want-camSlide)*(1-Math.exp(-(dt||0.016)/(want?0.12:0.35)));
+      want=best!=null?best:camSlide;
+    } else if(free<dist-0.2) want=camSlide;   /* 당기기로 충분 — 각도는 그대로 둔다 */
+    var step=(want-camSlide)*(1-Math.exp(-dt/(want?0.35:0.8))), lim=SLIDE_RATE*dt;
+    camSlide+=Math.max(-lim, Math.min(lim, step));
     return Math.max(1.6, rayFree(look, camYaw+camSlide, dist)-0.3);
   }
   var simAcc=0, scheduled=[];
