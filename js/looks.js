@@ -26,7 +26,7 @@
   /* FIT-END */
   var SLOT_OF={ a_hood:'head', a_reed_cuirass:'chest', a_black_greaves:'legs', a_steel_gauntlet:'gloves', a_ranger_boots:'boots', acc_charm:'acc', acc_blood_ring:'acc', acc_band:'acc',
     a_sluice_helm:'head', a_sluice_cuirass:'chest', a_sluice_greaves:'legs', a_sluice_gauntlet:'gloves', a_sluice_boots:'boots',
-    a_ward_mask:'head', a_ward_greaves:'legs', a_ward_gloves:'gloves', a_ward_boots:'boots' };
+    a_ward_mask:'head', a_ward_coat:'chest', a_ward_greaves:'legs', a_ward_gloves:'gloves', a_ward_boots:'boots' };
   WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75 };
   /* 카인 하위·상위 대검(docs/design/82): 모루의 대검과 같은 규약 — 1.6 m, 자루 끝 0.55, 손 0.75 */
   WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75 };
@@ -63,6 +63,9 @@
     a_sluice_boots:[ ['RightLeg','glb','art/3d/gear/a_sluice_boots_shaft.glb',[0,0.25,0],[Math.PI,0,0],0.97], ['LeftLeg','glb','art/3d/gear/a_sluice_boots_shaft.glb',[0,0.25,0],[Math.PI,0,0],[-0.97,0.97,0.97]],
       ['RightLeg','glb','art/3d/gear/a_sluice_boots_foot.glb',[0,0.25,0],[Math.PI,0,0],0.97,{via:'RightFoot'}], ['LeftLeg','glb','art/3d/gear/a_sluice_boots_foot.glb',[0,0.25,0],[Math.PI,0,0],[-0.97,0.97,0.97],{via:'LeftFoot'}] ],
     a_ward_mask:[ ['Head','glb','art/3d/gear/a_ward_mask.glb',[0,-0.02,0.0],[0,0,0],1] ],
+    /* 무릎까지 오는 코트는 뼈 하나에 붙이면 걸을 때 다리·팔이 뚫는다 → 캐릭터마다 몸에 입혀 스킨 무게까지 구운 파일(tools/3d/garment-fit.mjs,
+       docs/design/84)을 몸 뼈대에 그대로 묶는다. {char} 는 캐릭터 id */
+    a_ward_coat:[ ['Spine1','garment','art/3d/gear/a_ward_coat_{char}.glb'] ],
     a_ward_greaves:[ ['RightLeg','glb','art/3d/gear/a_ward_greaves.glb',[0,0.17,0],[Math.PI,0,0],1.02], ['LeftLeg','glb','art/3d/gear/a_ward_greaves.glb',[0,0.17,0],[Math.PI,0,0],[-1.02,1.02,1.02]] ],
     a_ward_gloves:[ ['RightForeArm','glb','art/3d/gear/a_ward_gloves.glb',[0,0.15,0],[Math.PI,0,0],1], ['LeftForeArm','glb','art/3d/gear/a_ward_gloves.glb',[0,0.15,0],[Math.PI,0,0],[-1,1,1]] ],
     a_ward_boots:[ ['RightLeg','glb','art/3d/gear/a_ward_boots_shaft.glb',[0,0.25,0],[Math.PI,0,0],0.97], ['LeftLeg','glb','art/3d/gear/a_ward_boots_shaft.glb',[0,0.25,0],[Math.PI,0,0],[-0.97,0.97,0.97]],
@@ -119,8 +122,32 @@
     var lo=slot==='head'?1.06:0.85;
     var r=[0,1,2].map(function(i){ return Math.min(1.4, Math.max(lo, sx[i]/sa[i]*(slot==='head'?1.06:1))); });
     return [[0,1,2].map(function(i){ return cx[i]+(pos[i]-ca[i])*r[i]; }), r, 0]; }
+  /* 옷(스킨): glb 정점은 이 캐릭터 몸 메시의 바인드 공간, JOINTS_0 은 extras.joints(뼈 이름) 번호 → 몸 skeleton 번호로 바꿔 묶는다 */
+  function buildGarment(THREE, id, p, tint, charId, mix){ var body=null; if(!MODEL||!LOADER) return null;
+    MODEL.traverse(function(o){ if(!body&&o.isSkinnedMesh&&o.skeleton) body=o; }); if(!body) return null;
+    var holder=new THREE.Group(); holder.userData.look=id; holder.userData.garment=true; body.parent.add(holder);
+    var bodies=[]; MODEL.traverse(function(o){ if(o.isSkinnedMesh&&o.skeleton===body.skeleton) bodies.push(o); });
+    LOADER.load(p[2].replace('{char}', charId||'ain'), function(w){ if(!holder.parent) return;
+      var names=body.skeleton.bones.map(function(b){ return b.name.replace(/^mixamorig:?/,''); });
+      w.scene.traverse(function(o){ if(!o.isMesh) return; var G=o.geometry, J=(o.userData.joints)||[], si=G.attributes.skinIndex; if(!si) return;
+        var map=J.map(function(n){ var i=names.indexOf(n); return i<0?0:i; });
+        for(var i=0;i<si.count;i++) for(var c=0;c<4;c++) si.setComponent(i,c,map[si.getComponent(i,c)]||0);
+        var mat=o.material; if(tint){ mat=mat.clone(); mat.color.lerp(new THREE.Color(tint), mix); }
+        var sm=new THREE.SkinnedMesh(G, mat); sm.castShadow=true; sm.frustumCulled=false; sm.userData.look=id;
+        sm.position.copy(body.position); sm.quaternion.copy(body.quaternion); sm.scale.copy(body.scale);
+        holder.add(sm); sm.bind(body.skeleton, body.bindMatrix);
+        /* 코트 밑에 깔린 몸 삼각형 숨기기 — 캐릭터 자기 옷이 코트를 뚫고 나오지 않게. 지오메트리는 공유될 수 있어 새로 만들어 끼운다 */
+        (o.userData.hide||[]).forEach(function(b64, mi){ var m=bodies[mi]; if(!m||!m.geometry.index) return; hideUnder(THREE, m, b64); }); }); });
+    return holder; }
+  function hideUnder(THREE, m, b64){ var bits=Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); }), g0=m.userData._origGeo||m.geometry, I=g0.index.array, keep=[];
+    for(var t=0;t<I.length;t+=3){ var a=I[t],b=I[t+1],c=I[t+2]; if((bits[a>>3]>>(a&7))&1 && (bits[b>>3]>>(b&7))&1 && (bits[c>>3]>>(c&7))&1) continue; keep.push(a,b,c); }
+    var g=new THREE.BufferGeometry(); Object.keys(g0.attributes).forEach(function(k){ g.setAttribute(k, g0.attributes[k]); }); g.morphAttributes=g0.morphAttributes;
+    g.setIndex(keep); g0.groups.forEach(function(gr){ g.addGroup(gr.start, gr.count, gr.materialIndex); }); g.boundingSphere=g0.boundingSphere; g.boundingBox=g0.boundingBox;
+    m.userData._origGeo=g0; m.geometry=g; }
+  function restoreBodies(model){ model.traverse(function(o){ if(o.isSkinnedMesh&&o.userData._origGeo){ o.geometry.dispose&&o.geometry.setIndex&&0; o.geometry=o.userData._origGeo; delete o.userData._origGeo; } }); }
   function buildArmor(THREE, id, bones, tint, charId, mix){ mix=mix==null?0.35:mix; var spec=ARMOR[id]; if(!spec) return []; var made=[]; var slot=SLOT_OF[id];
-    spec.forEach(function(p){ var bone=bones[p[0]]; if(!bone) return; var k=fitScale(bone), ft=fitPiece(charId, slot, p[0], p[3]), q=ft[0], r=ft[1], o6=p[1]==='glb'&&p[6]||{};
+    spec.forEach(function(p){ if(p[1]==='garment'){ var gh=buildGarment(THREE, id, p, tint, charId, mix==null?0.35:mix); if(gh) made.push(gh); return; }
+      var bone=bones[p[0]]; if(!bone) return; var k=fitScale(bone), ft=fitPiece(charId, slot, p[0], p[3]), q=ft[0], r=ft[1], o6=p[1]==='glb'&&p[6]||{};
       /* 발바닥 기울기 차(ft[2])는 쓰지 않는다 — 발 조각을 발 뼈에 옮기면 각 캐릭터 발 각도를 이미 따른다.
          카인(발 -2° 대 아인 -17°)에 기울기를 더하면 ±방향 모두 장화 코가 들리거나 신발이 튀어나왔다(렌더 비교) */
       var tilt=0;
@@ -141,7 +168,8 @@
     var baseOf=opts.baseOf||function(id){ return id; };
     /* 섞는 세기 — 제작품 색조는 «살짝»(기본값), 염색은 «확실히»(외형 화면이 0.75 를 준다) */
     var mixOf=opts.mixOf||function(){ return null; };
-    /* 이전 조각 제거 */ Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
+    /* 이전 조각 제거 (옷은 몸 메시 옆에 붙어 있다) */ var gone=[]; model.traverse(function(o){ if(o.userData&&o.userData.garment) gone.push(o); }); gone.forEach(function(o){ o.parent&&o.parent.remove(o); }); restoreBodies(model);
+    Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
     var mainId=equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
     if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension') spec=WEAPON.w_red_tension;
     // Explicit local QA skin. No inventory/stat/save mutation, no override for other characters.

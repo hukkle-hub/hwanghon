@@ -69,7 +69,7 @@
     { id:'q_med', name:'자원 회수: 의료품', area:'도심지', sub:'폐병원', risk:'A', reward:12400, recLv:25, recCp:17000, time:'00:14:00',
       party:'1~4명', penalty:'장비 내구도 7% 감소', lv:25, boss:null, art:'story-city', tags:['회수'], desc:'폐병원 창고에 의료품이 남아 있다. 들어간 사람은 나오지 않았다.', goal:'의료품 회수', enemies:2,
       objectives:{ must:['의료품 상자 4개 회수'], optional:[['진료 기록 열람',0,1]] }, rewards:[['exp',3200],['c_potion',10],['c_antidote','4~6'],['m_oil','2~4']],
-      loot:['a_hood','a_ward_mask','c_potion','c_antidote'], firstClear:'a_hood', drops:{ common:['c_potion','c_antidote','m_oil'], rare:['m_dew'], low:['a_hood','a_ward_mask','a_ward_greaves','a_ward_gloves','a_ward_boots'] }, note:'', checklist:[], src:'fill' }
+      loot:['a_hood','a_ward_mask','c_potion','c_antidote'], firstClear:'a_hood', drops:{ common:['c_potion','c_antidote','m_oil'], rare:['m_dew'], low:['a_hood','a_ward_mask','a_ward_coat','a_ward_greaves','a_ward_gloves','a_ward_boots'] }, note:'', checklist:[], src:'fill' }
   ];
   /* 파티 모집 임무 목록 (03-party) — 의뢰 5 + 추가 3 */
   var MISSIONS = [
