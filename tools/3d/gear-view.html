@@ -11,7 +11,7 @@ import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
 const Q=new URLSearchParams(location.search), CH=Q.get('char')||'ain', W=+(Q.get('w')||420), H=+(Q.get('h')||560);
 const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1.5);
 r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=+(Q.get('exp')||2.2); r.outputColorSpace=T.SRGBColorSpace;
-const sc=new T.Scene(); sc.background=new T.Color(0x1d222a);
+const sc=new T.Scene(); sc.background=new T.Color(Q.get('bg')?'#'+Q.get('bg'):'#1d222a');   /* ?bg=hex — 영상 모션 검증은 밝은 배경 */
 sc.add(new T.HemisphereLight(0xdde6ff,0x303440,1.6)); const key=new T.DirectionalLight(0xffffff,2.4); key.position.set(1.5,3,2.5); sc.add(key);
 const fill=new T.DirectionalLight(0xffe0c0,0.8); fill.position.set(-2,1.5,-1); sc.add(fill);
 const cam=new T.PerspectiveCamera(28,W/H,0.02,50);
@@ -19,16 +19,20 @@ const loader=new GLTFLoader(), g=await loader.loadAsync(Q.get('glb')||`../../art
 TW_MATFIX.repair(T,g.scene);
 let clips=g.animations; if(CH==='ain') clips=repairAinClips(g.animations,repairAinBind(g.scene));
 if(Q.get('clip')!=='none'){ const mixer=new T.AnimationMixer(g.scene), c=clips.find(x=>x.name===(Q.get('clip')||'idle'))||clips[0], a=mixer.clipAction(c); a.play(); a.paused=true; a.time=c.duration*+(Q.get('u')||0.3); mixer.update(0); }
+/* 프레임 넘기기(영상 모션 검증용, docs/design/86): setU(u) → 그 순간 자세, DUR = 클립 길이 */
+if(Q.get('clip')!=='none'){ const mixer=new T.AnimationMixer(g.scene), c=clips.find(x=>x.name===(Q.get('clip')||'idle'))||clips[0], a=mixer.clipAction(c); a.play(); a.paused=true; window.DUR=c.duration; window.setU=u=>{ a.time=c.duration*u; mixer.update(0); return 1; }; window.setU(+(Q.get('u')||0.3)); }
 const gear=(Q.get('gear')||'').split(',').filter(Boolean), eq={}; const slotOf={a_hood:'head',a_reed_cuirass:'chest',a_black_greaves:'legs',a_steel_gauntlet:'gloves',a_ranger_boots:'boots',acc_charm:'acc',acc_blood_ring:'acc',acc_band:'acc2'};
 for(const id of gear) eq[slotOf[id]||TW_LOOKS.SLOT_OF[id]||(/^w_/.test(id)?'main':id)]=id;
 /* looks.js 의 가짜 로더(경로를 이 페이지 기준으로) */
 const L={load:(p,ok,_,bad)=>loader.load('../../'+p,ok,undefined,bad||(()=>{}))};
 TW_LOOKS.attach(T,L,g.scene,eq,{charId:CH});
 await new Promise(res=>setTimeout(res,1500));
+if(Q.get('noweapon')) g.scene.traverse(o=>{ if(o.userData&&(o.userData.look==='main'||o.userData.look==='offhand'||/^w_/.test(o.userData.look||''))) o.visible=false; });
 if(Q.get('hidebody')){ const keep=new Set(); g.scene.traverse(o=>{ if(o.userData&&o.userData.garment) o.traverse(c=>keep.add(c)); }); g.scene.traverse(o=>{ if(o.isMesh&&!keep.has(o)) o.visible=false; }); }   /* 옷만 보기(스킨 찢어짐 검수) */
 const bones={}; g.scene.traverse(o=>{ if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o; });
 window.shot=(az=0,el=5,dist=2.6,bone='Hips',dy=0)=>{ g.scene.updateMatrixWorld(true);
   const p=bones[bone].getWorldPosition(new T.Vector3()).add(new T.Vector3(0,dy,0)), A=az*Math.PI/180, E=el*Math.PI/180;
   cam.position.set(p.x+dist*Math.sin(A)*Math.cos(E),p.y+dist*Math.sin(E),p.z+dist*Math.cos(A)*Math.cos(E)); cam.lookAt(p); r.render(sc,cam); return 1; };
+window.rend=()=>{ g.scene.updateMatrixWorld(true); r.render(sc,cam); return 1; };   /* 카메라 그대로 다시 그리기 */
 window.READY=1;
 </script>
