@@ -142,7 +142,15 @@
          그 밖            → 흘림   deflect: 스쳐 흘린다. 이득은 작다.
        숙련도(R.counter.bonus)가 바깥 창을 넓히면 중간 경계도 같은 비율로 따라 넓어진다. */
     counter: { window:0.25, perfect:0.10, mid:0.17, mult:2.5, perfectMult:3.0, deflectMult:1.7,
-               posture:30, tierPosture:{deflect:0.47, repel:1.0, clash:1.5}, ult:18 },
+               posture:30, tierPosture:{deflect:0.47, repel:1.0, clash:1.5}, ult:18,
+               cone:60 },   /* 카운터 탭: 스틱이 보스 쪽 ±60° 안이거나 중립이면 카운터, 밖이면 그 방향 회피 (docs/design/78, 근거 없음) */
+    /* 카운터 뒤 일시 탭 (디렉터 지시, docs/design/78). «제대로» = 튕김(repel)·맞부딪침(clash) — 너무 이른 흘림(deflect) 제외.
+       아인: 보스 큰 기술(순위 S 이거나 그 보스 최고 피해의 80% 이상)을 카운터하면 «부위 파괴».
+       카인: 카운터하면 «붙잡기» — 보스를 잡아 눌러 자세를 크게 깎고 잠시 묶는다.
+       류·세라: 아군(아인·카인)이 카운터하면 «부위 파괴» (온라인). 수치는 모두 근거 없음 — 폰에서 조정. */
+    opening: { dur:3.0, tiers:['clash','repel'], bigFrac:0.8, breakFrac:0.5, breakMult:2.0, grabMult:1.5, grabPosture:50, grabHold:2.2,
+               byChar:{ ain:{kind:'break', bigOnly:true, clip:'smash'}, kain:{kind:'grab', clip:'exec'} },
+               ally:{ ryu:{kind:'break', clip:'smash'}, sera:{kind:'break', clip:'smash'} }, allyFrom:['ain','kain'] },
     combo:   { gap:0.55, mults:[1.0,1.0,1.1,1.2], smash:[1.6,2.0,2.6,3.4], smashPosture:[12,18,28,45], smashSt:[10,12,14,18], smashHold:0.2 },   /* 마영전식: 일반 4연타 + 스매시(타수별 배율) */
     weak:    { weak:1.5, broken:1.25, normal:1.0 },
     bleed:   { chance:0.07, dur:3, tickRate:0.20, maxStacks:3 },

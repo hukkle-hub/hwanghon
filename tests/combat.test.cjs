@@ -195,3 +195,32 @@ test('counter tiers scale posture, damage and the follow-up window',()=>{
  /* 중간 경계는 던전이 창을 좁히면 같은 비율로 따라 좁아진다 */
  assert.ok(c.mid>c.perfect&&c.mid<c.window,'mid 는 perfect 와 window 사이');
 });
+/* 카운터 탭 · 카운터 뒤 일시 탭 (docs/design/78) */
+const battleAs=(id,o={})=>{const r=copy(RULES);r.bleed.chance=0;const d=Object.assign(copy(ARENAS.tutorial.stages[0]),{patterns:o.patterns||[pat]});if(o.parts)d.parts=o.parts;
+ const C=ctx.window.TW_WORLD.CHARS[id];return createBattle({rules:r,dummy:d,char:{...C,stats:{...C.stats,crit:0,aspd:100}},hooks:{},skills:SKILLS[id]||SKILLS.ain,ult:SKILLS[id+'Ult']||SKILLS.ainUlt,seed:7});};
+test('counter input: counters inside the window, otherwise guards (and guard releases)',()=>{
+ const a=battle({patterns:[pat]});tele(a);a.input('counter');assert.equal(a.metrics.counters,1);assert.equal(a.snapshot().player.action.kind,'counter');
+ const b=battle({patterns:[pat]});tele(b,.6);b.input('counter');assert.equal(b.metrics.counters,0);assert.equal(b.snapshot().player.guard,true);b.input('guard',false);assert.equal(b.snapshot().player.guard,false);
+});
+test('ain: countering a big skill opens «부위 파괴»; a small one does not',()=>{
+ const big={...pat,name:'big',rank:'S',dmg:4200},small={...pat,name:'small',dmg:1000};
+ const parts=[{id:'arm',name:'arm',hp:100000,breakable:true}];
+ const a=battleAs('ain',{patterns:[big,small],parts});tele(a);a.input('counter');assert.equal(a.snapshot().player.opening.kind,'break');
+ const n=battleAs('ain',{patterns:[big,small]});tele(n);n.input('counter');assert.equal(n.snapshot().player.opening,null,'부술 부위가 없으면 안 뜬다');
+ const b=battleAs('ain',{patterns:[small,big],parts});tele(b);assert.equal(b.snapshot().enemy.pattern,'small');b.input('counter');assert.equal(b.snapshot().player.opening,null);
+});
+test('ain «부위 파괴» takes a big bite of the targeted breakable part; the button expires',()=>{
+ const parts=[{id:'head',name:'head',hp:null,weak:true},{id:'arm',name:'arm',hp:100000,breakable:true}];
+ const a=battleAs('ain',{patterns:[{...pat,rank:'S'}],parts});tele(a);a.input('counter');idle(a);
+ assert.ok(a.snapshot().player.opening,'열려 있다');a.input('opening');assert.equal(a.snapshot().target,'arm');toHit(a);
+ assert.ok(a.snapshot().enemy.parts.find(p=>p.id==='arm').hp<=100000*(1-RULES.opening.breakFrac),'부위 체력 절반 이상');
+ const b=battleAs('ain',{patterns:[{...pat,rank:'S'}],parts});tele(b);b.input('counter');b.tick(RULES.opening.dur-.1);assert.ok(b.snapshot().player.opening,'dur 동안은 떠 있다');until(b,s=>!s.player.opening,200);   /* 히트스톱 동안은 멈춘다 */
+});
+test('kain: counter opens «붙잡기» — boss posture up and held',()=>{
+ const k=battleAs('kain');tele(k);k.input('counter');assert.equal(k.snapshot().player.opening.kind,'grab');idle(k);
+ const p0=k.snapshot().enemy.posture;k.input('opening');toHit(k);const s=k.snapshot().enemy;
+ assert.ok(s.posture>=Math.min(RULES.posture.max,p0+RULES.opening.grabPosture)||s.state==='downed','자세가 크게 깎인다');assert.ok(['stagger','downed'].includes(s.state));
+});
+test('ryu/sera get «부위 파괴» only from outside (ally counter); their own counter opens nothing',()=>{
+ for(const id of ['ryu','sera']){const b=battleAs(id,{parts:[{id:'arm',name:'arm',hp:100000,breakable:true}]});tele(b);b.input('counter');assert.equal(b.snapshot().player.opening,null);b.grantOpening('break','smash');assert.equal(b.snapshot().player.opening.kind,'break');}
+});

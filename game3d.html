@@ -114,6 +114,14 @@ html.mobile .actions{display:block!important;transform:scale(.84);margin-left:-5
 .abtn--guard .ico{width:24px;height:24px}
 .abtn--atk{--x:286px;--y:188px;--d:96px;border-color:rgba(199,58,54,.6);background:radial-gradient(circle,rgba(120,20,20,.8),rgba(30,8,8,.85))}
 .abtn--atk .sk__nm{bottom:-15px}
+/* 카운터 뒤 일시 탭 (docs/design/78) — 호와 공격 사이. 금빛으로 뛰고, 링이 남은 시간 */
+.abtn--open{--x:286px;--y:112px;--d:62px;border:2px solid #E8C170;background:radial-gradient(circle,rgba(150,104,30,.9),rgba(40,24,6,.9));box-shadow:0 0 22px rgba(232,193,112,.7);animation:openPulse .5s ease-in-out infinite alternate;z-index:2}
+.abtn--open[data-kind=grab]{border-color:#E07A4A;background:radial-gradient(circle,rgba(150,60,24,.9),rgba(40,14,6,.9));box-shadow:0 0 22px rgba(224,122,74,.7)}
+.abtn--open[hidden]{display:none}
+.abtn--open .open__lb{position:absolute;left:-10px;right:-10px;bottom:-15px;font-size:10px;color:#F2DFB0;text-align:center;letter-spacing:.06em;white-space:nowrap}
+.abtn--open .open__ring{position:absolute;inset:-5px;border-radius:50%;border:3px solid #F2DFB0;clip-path:inset(0 0 0 0);pointer-events:none}
+@keyframes openRing{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(100% 0 0 0)}}
+@keyframes openPulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
 /* 이동 패드: 세로로 긴 둥근 사각형. 누른 자리가 스틱 중심이 된다(떠 있는 스틱) */
 .bthud .stick{width:150px;height:196px;border-radius:30px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12)}
 html.mobile .bthud .stick{width:132px;height:172px}

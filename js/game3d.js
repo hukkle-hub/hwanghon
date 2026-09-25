@@ -62,7 +62,8 @@ import { createBloom } from './bloom.js';
   $('#btparty').innerHTML='<div class="pmem">'+W.face(CHAR.id,'pmem__face')+'<div class="fill"><div class="flex ac g2"><span class="pmem__n">'+CHAR.nm+'</span><span class="pmem__lv">'+(window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'LV.'+CHAR.lv)+'</span><span class="pmem__hp num" id="p-hp">'+W.fmt(CHAR.stats.hp)+'</span></div><div class="bar bar--hp" data-fill="100" id="p-bar"></div></div></div>';
   el.actions.innerHTML=SK.map(function(k,i){ return '<div class="abtn abtn--sk'+(i+1)+'" data-skill="'+i+'"><span class="sk__k">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg><span class="sk__cd" hidden></span>'+(k.lv>1?'<span class="sk__lv">Lv'+k.lv+(k.br?'·'+k.br:'')+'</span>':'')+'<span class="sk__nm">'+k.name+'</span></div>'; }).join('')+
     '<div class="abtn abtn--dodge" data-dodge><span class="sk__k">K</span><svg class="ico"><use href="#i-bolt"/></svg><span class="sk__nm">회피</span></div>'+
-    '<div class="abtn abtn--guard" data-guard><span class="sk__k">L</span><svg class="ico"><use href="#i-shield"/></svg><span class="sk__nm">카운터 · 길게 방어</span></div>'+
+    '<div class="abtn abtn--guard" data-guard><span class="sk__k">L</span><svg class="ico"><use href="#i-shield"/></svg><span class="sk__nm">카운터 · 옆뒤=회피</span></div>'+
+    '<div class="abtn abtn--open" data-open hidden><span class="sk__k">G</span><svg class="ico"><use href="#i-crosshair"/></svg><span class="open__lb"></span><i class="open__ring"></i></div>'+
     '<div class="abtn abtn--atk" data-atk><span class="sk__k">J</span><svg class="ico"><use href="#i-scythe"/></svg><span class="sk__nm">탭 공격 · 길게 스매시</span></div>'+
     '<div class="abtn abtn--ult" data-ult><span class="sk__k">R</span><svg class="ico"><use href="#i-'+ULT.icon+'"/></svg><span class="sk__nm">'+ULT.name+'</span></div>';
 
@@ -1074,6 +1075,9 @@ import { createBloom } from './bloom.js';
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
+      case 'opening': showOpening(e.kind, e.dur); break;
+      case 'openingend': case 'openinguse': hideOpening(); break;
+      case 'grab': guide('붙잡았다 — <b>보스가 묶였다 · 몰아쳐라</b>', e.hold); camKick(0,-0.06,0.05); SFX.play('counter', true); vib([30,40,30]); break;
       case 'evade':
         if(e.perfect){ perfectDodge(e); break; }
         guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter');
@@ -1230,6 +1234,12 @@ import { createBloom } from './bloom.js';
     (function fade(){ var k=(performance.now()-t0)/life; mat.opacity=opacity*Math.max(0,1-k)*(1-k*0.3);
       if(k<1) requestAnimationFrame(fade); else { scene.remove(holder); mat.dispose(); } })();
   }
+  /* 카운터 뒤 일시 탭 (docs/design/78) — 링이 dur 초 동안 줄어든다 */
+  var OPEN_TXT={ break:['부위 파괴','카운터 성공 — <b>부위 파괴</b> 탭!'], grab:['붙잡기','카운터 성공 — <b>붙잡기</b> 탭!'] };
+  function showOpening(kind, dur){ var b=el.actions.querySelector('[data-open]'); if(!b) return; var tx=OPEN_TXT[kind]||OPEN_TXT.break;
+    b.querySelector('.open__lb').textContent=tx[0]; b.dataset.kind=kind; b.hidden=false; var r=b.querySelector('.open__ring'); r.style.animation='none'; void r.offsetWidth; r.style.animation='openRing '+dur+'s linear forwards';
+    guide(tx[1], dur); SFX.play('counter'); vib([12,20,12]); }
+  function hideOpening(){ var b=el.actions.querySelector('[data-open]'); if(b) b.hidden=true; }
   function perfectDodge(e){
     guide('완벽 회피 — <b>반격 창이 길어졌다 · 기력 회복</b>', e.window); SFX.play('counter');
     slowmo(0.18, 760); camKick(0.03,-0.05,-0.04); vib([18,30,18]);
@@ -1448,19 +1458,30 @@ import { createBloom } from './bloom.js';
   function attack(){ if(paused||cine) return; if(battle){ if(!battle.snapshot().player.action && Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('attack'); } else if(skirm){ var m=nearestMob(); if(m && world.dist(P.x,P.y,m.x,m.y)<=L.player.reach*1.3) world.faceTo(P, m.x, m.y); skirm.input('attack'); } }
   function smashIn(){ if(paused||cine) return; if(battle){ if(!battle.snapshot().player.action && Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('smash'); } else if(skirm){ var m=nearestMob(); if(m && world.dist(P.x,P.y,m.x,m.y)<=L.player.reach*1.3) world.faceTo(P, m.x, m.y); skirm.input('smash'); } }
   function guardIn(on){if(on&&(paused||cine||ain.dead))return; if(battle) battle.input('guard', on); else if(skirm) skirm.input('guard', on); }
+  /* 카운터 탭 (디렉터 지시, docs/design/78): 스틱이 보스 쪽(±R.counter.cone°)이거나 중립이면 카운터 — 창 밖이면
+     누르고 있는 동안 방어. 옆·뒤로 기울여 누르면 그 방향으로 회피. 반환: 'counter' | 'dodge' */
+  function counterPress(){
+    if(paused||cine||ain.dead) return null;
+    var ks=curStick(), cone=(R.counter.cone||60)*Math.PI/180;
+    if(ks&&Math.hypot(ks.sx,ks.sy)>0.35){ var ax=axisToBoss(), la=Math.hypot(ax[0],ax[1]);
+      if(la>1e-6&&(ks.sx*ax[0]+ks.sy*ax[1])/(Math.hypot(ks.sx,ks.sy)*la)<Math.cos(cone)){ dodge(); return 'dodge'; } }
+    if(battle){ if(!battle.snapshot().player.action) world.faceTo(P, Bs.x, Bs.y); battle.input('counter'); } else guardIn(true);
+    return 'counter'; }
+  function openingIn(){ if(paused||cine||ain.dead||!battle) return; battle.input('opening'); }
   function dodge(){ if(paused||cine) return; if(battle) battle.input('dodge'); else if(skirm) skirm.input('dodge'); else if(P.rollT<=0) doRoll(); }
   el.actions.addEventListener('pointerdown', function(e){ e.preventDefault(); e.stopPropagation(); var t=e.target.closest('.abtn'); if(!t||paused||cine||ain.dead) return;
     if(t.hasAttribute('data-atk')){ attack(); t.classList.add('is-hold'); holdTimer=setTimeout(function(){ smashIn(); t.classList.remove('is-hold'); }, R.combo.smashHold*1000); }
-    else if(t.hasAttribute('data-guard')){ guarding=true; guardIn(true); t.classList.add('is-hold'); }
+    else if(t.hasAttribute('data-guard')){ if(counterPress()==='counter'){ guarding=true; t.classList.add('is-hold'); } }
+    else if(t.hasAttribute('data-open')) openingIn();
     else if(t.hasAttribute('data-dodge')) dodge(); else if(t.hasAttribute('data-ult')) battle&&battle.input('ult'); else if(t.hasAttribute('data-skill')) battle&&battle.input('skill', +t.getAttribute('data-skill')); });
   function atkUp(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } if(guarding){ guarding=false; guardIn(false); } el.actions.querySelectorAll('.is-hold').forEach(function(b){ b.classList.remove('is-hold'); }); }
   el.actions.addEventListener('pointerup', atkUp); el.actions.addEventListener('pointercancel', atkUp); el.actions.addEventListener('pointerleave', atkUp);
   document.addEventListener('keydown', function(e){ if(kd[e.code]) return; kd[e.code]=true; if(paused||cine||ain.dead) return;
-    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyL') guardIn(true);
+    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyL'){ if(!kd.__l){ kd.__l=1; if(counterPress()==='counter') guarding=true; } } else if(e.code==='KeyG') openingIn();
     else if(e.code==='KeyR') battle&&battle.input('ult'); else if(/^Digit[1-4]$/.test(e.code)) battle&&battle.input('skill', +e.code.slice(5)-1);
     else if((e.code==='KeyQ'||e.code==='Tab')&&battle){ e.preventDefault();cycleTarget(); }
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
-  document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL') guardIn(false); });
+  document.addEventListener('keyup', function(e){ kd[e.code]=false; if(e.code==='KeyL'){ kd.__l=0; guarding=false; guardIn(false); } });
   window.addEventListener('blur',function(){kd={};stick.sx=stick.sy=0;atkUp();});
   function settingsHTML(){ return '<div class="setrow"><label for="quality-setting">화질</label><select id="quality-setting" data-quality>'+[['auto','자동'],['low','낮음'],['medium','보통'],['high','높음']].map(function(p){return '<option value="'+p[0]+'"'+(SET.quality===p[0]?' selected':'')+'>'+p[1]+'</option>';}).join('')+'</select><span>동작·판정은 동일</span></div><div class="setrow"><label>밝기</label><input type="range" min="0.5" max="1.5" step="0.05" value="'+SET.bright+'" data-set="bright"></div>'+
     '<div class="setrow">'+[['lights','동적 조명'],['vib','진동'],['sound','소리']].map(function(p){return '<span class="setpair"><span>'+p[1]+'</span><button class="btn btn--sm" aria-label="'+p[1]+' 전환" data-tog="'+p[0]+'">'+(SET[p[0]]?'켜짐':'꺼짐')+'</button></span>';}).join('')+'</div>'; }

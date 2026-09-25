@@ -132,3 +132,25 @@ test('온라인 스매시도 «타점» 이 위력을 가른다 — 솔로(js/sw
  assert.ok(far.point.rho>near.point.rho,'멀리서 친 쪽이 날끝에 가깝다');
  assert.ok(far.point.mult>near.point.mult);
 });
+/* 카운터 탭 · 카운터 뒤 일시 탭 (docs/design/78) — 솔로와 같은 규칙, 서버 권위 */
+function fightAs(level,chars){const r=new Raid(level,chars.map((c,i)=>({id:'p'+i,name:c,character:c})));r.startFight();for(const p of r.players.values()){p.x=r.boss.x-120;p.y=r.boss.y;p.target='body';}return r;}
+function toCounter(r,p){for(let i=0;i<6000;i++){for(const q of r.players.values())q.hp=q.maxHp;r.tick(.01);if(r.canCounter(p))return true;}return false;}   /* 기다리는 동안 쓰러지지 않게 */
+test('counter tap: guards outside the window, counters inside it',()=>{
+ const r=fightAs('d01',['ain','ain']),a=r.players.get('p0');r.input('p0',{type:'counter'});assert.equal(a.guard,true);assert.equal(a.counters,0);r.input('p0',{type:'guard',on:false});
+ assert.ok(toCounter(r,a),'반격 창');r.input('p0',{type:'counter'});assert.equal(a.counters,1);
+});
+test('kain counter: kain gets «붙잡기», party ryu gets «부위 파괴»; grab holds the boss',()=>{
+ const r=fightAs('d02',['kain','ryu']),k=r.players.get('p0'),y=r.players.get('p1');assert.ok(toCounter(r,k),'반격 창');r.input('p0',{type:'counter'});
+ assert.equal(k.counters,1);assert.equal(k.opening?.kind,'grab');assert.equal(y.opening?.kind,'break');
+ tick(r,.6);const posture=r.boss.posture;r.input('p0',{type:'opening'});assert.equal(k.opening,null);assert.equal(k.action.kind,'opening');tick(r,k.action.hitAt+.05);
+ assert.ok(r.events.some(e=>e.type==='grab'));assert.ok(r.boss.posture>=posture+R_OPEN().grabPosture-1||r.boss.state==='downed');
+});
+test('ryu «부위 파괴» takes half of a breakable part; the tab expires',()=>{
+ assert.deepEqual(R_OPEN().allyFrom,['ain','kain']);   /* 아인 카운터도 같은 길로 연다 */
+ const r=fightAs('d02',['kain','ryu']),a=r.players.get('p0'),y=r.players.get('p1');
+ assert.ok(toCounter(r,a),'반격 창');r.input('p0',{type:'counter'});
+ assert.equal(y.opening?.kind,'break');tick(r,.6);y.target='back';const part=r.boss.parts.find(q=>q.id==='back'),hp0=part.hp;r.input('p1',{type:'opening'});tick(r,y.action.hitAt+.05);
+ assert.ok(part.hp<=hp0-Math.round(part.hpMax*R_OPEN().breakFrac),`부위 ${hp0} → ${part.hp}`);
+ const s=fightAs('d02',['kain','sera']),k=s.players.get('p0'),e=s.players.get('p1');assert.ok(toCounter(s,k));s.input('p0',{type:'counter'});assert.equal(e.opening?.kind,'break');tick(s,R_OPEN().dur+.1);assert.equal(e.opening,null);
+});
+function R_OPEN(){return require('../server/content.cjs').rules.opening;}

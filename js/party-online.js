@@ -103,6 +103,9 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
  if(e.type==='dodge'&&e.player===profile?.id)window.TW_SFX?.play('roll');
  if(e.type==='skill')window.TW_SFX?.play('swing');
  if(e.type==='counter'){announce((e.perfect?'PERFECT':'COUNTER')+' · '+(room.members.find(p=>p.id===e.player)?.name||'아인'));window.TW_SFX?.play('counter',e.perfect);}
+ /* 카운터 뒤 일시 탭 (docs/design/78) */
+ if(e.type==='opening'&&e.player===profile?.id){const by=room?.raid?.players.find(q=>q.id===e.from);announce(e.from!==profile.id&&by?by.name+'의 카운터 — 부위 파괴 탭!':e.kind==='grab'?'카운터 성공 — 붙잡기 탭!':'카운터 성공 — 부위 파괴 탭!');}
+ if(e.type==='grab')announce('붙잡았다 — 보스가 묶였다 · 몰아쳐라');
  if(e.type==='evade'&&e.player===profile?.id)announce(e.perfect?'완벽 회피 · 반격 창이 길다 · 기력 회복':'회피 성공 · 지금 반격해라');
  if(e.type==='revive')announce('동료가 다시 일어섰다');
  if(e.type==='playerDown')announce('동료 다운 · 가까이서 V / 소생 버튼 유지');
@@ -133,6 +136,7 @@ function updateHud(){const raid=room.raid,p=mine(),b=raid.boss;if(!p)return;
  document.querySelectorAll('[data-command="skill"]').forEach((el,i)=>{const k=p.kit?.[i];el.disabled=p.cds[i]>0||p.hp<=0||(k?p.st<k.st:false);
   const label=k?k.name+(k.lv>1?' Lv'+k.lv+(k.br?'·'+k.br:''):''):'기술 '+(i+1);
   el.textContent=(i+1)+' · '+(p.cds[i]>0?Math.ceil(p.cds[i])+'초':label);});
+ const openBtn=document.querySelector('[data-command="opening"]');if(openBtn){openBtn.hidden=!p.opening;if(p.opening){openBtn.dataset.kind=p.opening.kind;openBtn.textContent=(p.opening.kind==='grab'?'붙잡기':'부위 파괴')+' '+Math.ceil(p.opening.t)+'초';}}
  const ultBtn=document.querySelector('[data-command="ult"]');if(ultBtn&&p.ultName)ultBtn.textContent='R · '+p.ultName+(p.ultLv>1?' Lv'+p.ultLv:'')+' '+Math.floor(p.ult)+'%';
  const ended=['clear','wiped'].includes(raid.state);if(ended&&$('outcome').hidden)clearControls();$('outcome').hidden=!ended;if(ended){$('outcome-kicker').textContent=raid.state==='clear'?'EXPEDITION COMPLETE':'PARTY DOWN';$('outcome-title').textContent=raid.state==='clear'?'함께 돌아왔다.':'다시 일어설 시간.';$('outcome-text').textContent=raid.state==='clear'?(raid.result.rewardStatus==='saved'?raid.result.gold.toLocaleString()+' G와 전리품을 파티원 각각에게 지급했습니다.':'보상 저장을 재시도하고 있습니다. 이 파티에서 기다려 주세요.'):'조사한 지점은 유지됩니다. 정비 지점에서 다시 도전하세요.';$('scoreboard').replaceChildren();for(const q of raid.result?.players||raid.players){const row=document.createElement('div');row.textContent=q.name+' · 피해 '+Math.round(q.damage).toLocaleString()+' · 카운터 '+q.counters+' · 파괴 '+q.breaks;$('scoreboard').append(row);}const lead=room.leader===profile.id;$('retry').hidden=raid.state!=='wiped'&&!room.training;$('retry').disabled=!lead;$('return-lobby').disabled=!lead||raid.result?.rewardStatus==='pending';$('leader-hint').textContent=lead?'파티원이 함께 이동합니다.':'파티장이 다음 출격을 선택하고 있습니다.';}
 }
@@ -151,7 +155,12 @@ $('target-button').onclick=cycleTarget;
 function executeReady(){const b=room?.raid?.boss;if(!b||!b.executable)return false;
  const me=room.raid.players.find(p=>p.id===profile?.id);if(!me||me.hp<=0)return false;
  return Math.hypot(b.x-me.x,(b.y-me.y)/.55)<=(room.raid.reach||110)*1.4;}
+/* 카운터 탭 (docs/design/78): 이동 입력이 보스 쪽 ±cone° 이거나 중립이면 카운터(창 밖이면 누르는 동안 방어), 옆·뒤면 회피 */
+function moveVec(){const x=(keys[rpgUI.settings.right]||keys.ArrowRight?1:0)-(keys[rpgUI.settings.left]||keys.ArrowLeft?1:0)+stick.x,y=(keys[rpgUI.settings.back]||keys.ArrowDown?1:0)-(keys[rpgUI.settings.forward]||keys.ArrowUp?1:0)+stick.y;return {x:.832*x+.555*y,y:-.555*x+.832*y};}
+function counterIsDodge(){const r=room?.raid,me=r?.players.find(q=>q.id===profile?.id),b=r?.boss;if(!me||!b)return false;const m=moveVec(),lm=Math.hypot(m.x,m.y);if(lm<.35)return false;
+ const dx=b.x-me.x,dy=b.y-me.y,ld=Math.hypot(dx,dy);if(ld<1e-6)return false;return (m.x*dx+m.y*dy)/(lm*ld)<Math.cos(((window.TW_DUNGEONS?.RULES?.counter?.cone)||60)*Math.PI/180);}
 function control(command,on=true,index){if(!room?.raid||rpgUI.isModal()||!connected)return;
+ if(command==='guard'&&on){send(counterIsDodge()?{type:'dodge'}:{type:'counter'});return;}
  if(command==='interact'&&executeReady())command='execute';if(command==='guard'||command==='revive')send({type:command,on});else if(on)send({type:command,...(index===undefined?{}:{index:Number(index)})});}
 document.querySelectorAll('[data-command]').forEach(el=>{el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);control(el.dataset.command,true,el.dataset.index);});const release=()=>{if(el.hasAttribute('data-hold'))control(el.dataset.command,false);};el.addEventListener('pointerup',release);el.addEventListener('pointercancel',release);el.addEventListener('lostpointercapture',release);});
 const commands={KeyJ:'attack',Space:'attack',KeyU:'smash',KeyK:'dodge',KeyL:'guard',KeyF:'interact',KeyV:'revive',KeyR:'ult'};
@@ -163,7 +172,7 @@ addEventListener('blur',()=>clearControls());document.addEventListener('visibili
 let stickPointer=null,stickO={x:0,y:0};function stickAt(x,y){for(const t of ['b','i']){const n=$('joystick').querySelector(t);if(n){n.style.left=x==null?'':x+'px';n.style.top=y==null?'':y+'px';}}}
 function stickMove(e){if(e.pointerId!==stickPointer)return;const x=(e.clientX-stickO.x)/44,y=(e.clientY-stickO.y)/44,n=Math.max(1,Math.hypot(x,y));stick={x:x/n,y:y/n};$('joystick').querySelector('i').style.transform=`translate(${stick.x*44}px,${stick.y*44}px)`;}
 $('joystick').onpointerdown=e=>{if(stickPointer!==null)return;stickPointer=e.pointerId;const r=$('joystick').getBoundingClientRect(),m=24;stickO={x:Math.max(r.left+m,Math.min(r.right-m,e.clientX)),y:Math.max(r.top+m,Math.min(r.bottom-m,e.clientY))};stickAt(stickO.x-r.left,stickO.y-r.top);$('joystick').setPointerCapture(e.pointerId);stickMove(e);};$('joystick').onpointermove=stickMove;for(const type of ['pointerup','pointercancel','lostpointercapture'])$('joystick').addEventListener(type,e=>{if(e.pointerId===stickPointer){stickPointer=null;stick={x:0,y:0};$('joystick').querySelector('i').style.transform='';stickAt(null,null);send({type:'move',x:0,y:0});}});
-setInterval(()=>{if(!room?.raid||!connected||document.hidden||rpgUI.isModal()||!['explore','fight'].includes(room.raid.state))return;const x=(keys[rpgUI.settings.right]||keys.ArrowRight?1:0)-(keys[rpgUI.settings.left]||keys.ArrowLeft?1:0)+stick.x,y=(keys[rpgUI.settings.back]||keys.ArrowDown?1:0)-(keys[rpgUI.settings.forward]||keys.ArrowUp?1:0)+stick.y;send({type:'move',x:.832*x+.555*y,y:-.555*x+.832*y});},50);
+setInterval(()=>{if(!room?.raid||!connected||document.hidden||rpgUI.isModal()||!['explore','fight'].includes(room.raid.state))return;send({type:'move',...moveVec()});},50);
 
 function renderSocial(){$('chat-channel').querySelector('[value="party"]').disabled=!room;if(!room&&$('chat-channel').value==='party'){$('chat-channel').value='world';renderChat();}const active=!!profile?.characterCreated;$('social-area').hidden=!active;$('intro-copy').hidden=!!profile;$('social-link-state').textContent=connected?'':'접속이 끊겼습니다';const inRaid=!!room?.raid;const parent=inRaid?$('raid-chat'):$('social-chat-slot');if($('chat-panel').parentElement!==parent)parent.append($('chat-panel'));$('chat-close').hidden=!inRaid;if(!inRaid)$('raid-chat').hidden=true;}
 function renderGuild(){$('guild-empty').hidden=!!guild;$('guild-home').hidden=!guild;if(guild){$('guild-notice').textContent=guild.notice||'등록된 길드 공지가 없습니다.';$('guild-title').textContent=guild.name+'의 쉘터';$('guild-invite').textContent='초대 코드 '+guild.code+' · '+guild.members.length+'명';$('guild-members').replaceChildren();for(const m of guild.members){const row=document.createElement('p');row.textContent=(m.online?'● ':'○ ')+m.name+(m.id===guild.owner?' · 길드장':'');$('guild-members').append(row);}}$('chat-channel').querySelector('[value="guild"]').disabled=!guild;if(!guild&&$('chat-channel').value==='guild')$('chat-channel').value='world';renderChat();}

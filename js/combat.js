@@ -19,7 +19,7 @@
     var init=o.player||{};
     var P={hp:init.hp!=null?init.hp:st.hp,st:init.st!=null?init.st:R.stamina.max,ult:init.ult||0,
       guard:false,dodgeT:0,dodgeCd:0,dodgeAgo:99,dodgeThreat:0,lockT:0,stDelay:0,combo:0,comboT:0,
-      riposteT:0,riposteKind:null,critNext:false,buffT:0,buffReduce:0,cds:S.map(function(){return 0;}),
+      riposteT:0,riposteKind:null,opening:null,critNext:false,buffT:0,buffReduce:0,cds:S.map(function(){return 0;}),
       hitstop:0,dragT:0,dragTotal:0,dragRate:1,action:null,buffer:null,lastFailure:'공격 준비 동작과 거리를 확인해라.'};
     var parts=D.parts.map(function(p){return Object.assign({},p,{hpMax:p.hp,broken:false});});
     target=(parts.filter(function(p){return p.weak;})[0]||parts[0]).id;
@@ -96,7 +96,7 @@
         M.deflects++; emit('deflect',{part:p.id,lock:CF.DEFLECT.lock}); }
       if(!deflect&&p.breakable&&p.hp!=null&&!p.broken){
         var partBonus=policy.partMult||1; if(opt.counter||opt.riposte&&opt.riposte!=='counter')partBonus*=policy.precisePartMult||1;
-        p.hp=Math.max(0,p.hp-Math.round(amount*partBonus));if(p.hp===0)breakPart(p);
+        p.hp=Math.max(0,p.hp-Math.round(amount*partBonus)-(opt.opening==='break'?Math.round(p.hpMax*OP.breakFrac):0));if(p.hp===0)breakPart(p);
       }
       if(!opt.noBleed&&rand()<R.bleed.chance*(policy.normal!=null&&!opt.counter&&(!opt.riposte||opt.riposte==='counter')?policy.normal:1))bleed(1);
       P.ult=clamp(P.ult+(opt.counter?R.counter.ult:R.ult.onAttack),0,R.ult.max);
@@ -131,7 +131,7 @@
         clipHit:((R.motion.clipContactsByChar||{})[(C&&C.id)||'ain']||{})[clip]||(R.motion.clipContacts||{})[clip]||t.clipHit||0.42,resolved:false};P.action=a;P.guard=false;
       emit('actionstart',Object.assign({},a));return a;
     }
-    function defensive(type,arg){return type==='dodge'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
+    function defensive(type,arg){return type==='dodge'||type==='counter'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
     function queue(type,arg){var edge=P.action&&(defensive(type,arg)?(P.action.defCancelAt!=null?P.action.defCancelAt:P.action.cancelAt):P.action.duration);if(P.action&&edge-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};}
     function counter(){
       if(E.state!=='telegraph'||E.tele<=0||E.tele>counterWindow||E.pat.counterable===false||P.lockT>0||P.dodgeT>0||!canCancel()||(HK.canCounter&&!HK.canCounter()))return false;
@@ -143,8 +143,29 @@
       action('counter','counter',1,{counter:true,perfect:perfect,tier:tier},R.motion.counter);
       E.stagT=Math.max(E.stagT,P.action.duration+(tier==='clash'?0.4:0.25));
       emit('counter',{perfect:perfect,tier:tier,pattern:E.pat.name});
+      grantOpening(tier,E.pat);
       if(D.firstCounterUlt&&!firstCounterDone){firstCounterDone=true;P.ult=R.ult.max;emit('ultready',{first:true});}
       if(E.posture>=R.posture.max)down();return true;
+    }
+    /* ---------- 카운터 뒤 일시 탭 (R.opening, docs/design/78) ----------
+       아인: 큰 기술 카운터 → 부위 파괴 / 카인: 카운터 → 붙잡기. 버튼은 R.opening.dur 초만 뜬다. */
+    var OP=R.opening||null, maxPatDmg=Math.max.apply(null,[1].concat((D.patterns||[]).map(function(p){return Math.max(p.dmg||0,Math.max.apply(null,[0].concat((p.chain||[]).map(function(c){return c.dmg||0;}))));})));
+    function bigPattern(pat){return !!pat&&(pat.rank==='S'||pat.big===true||(pat.dmg||0)>=OP.bigFrac*maxPatDmg);}
+    function openFor(spec){if(!spec)return;if(spec.kind==='break'&&!parts.some(function(p){return p.breakable&&!p.broken;}))return;   /* 부술 부위가 없으면 뜨지 않는다 */
+      P.opening={kind:spec.kind,clip:spec.clip||'smash',t:OP.dur,dur:OP.dur};emit('opening',{kind:spec.kind,dur:OP.dur});}
+    function grantOpening(tier,pat){
+      if(!OP||OP.tiers.indexOf(tier)<0)return;var spec=(OP.byChar||{})[(C&&C.id)||'ain'];
+      if(!spec||spec.bigOnly&&!bigPattern(pat))return;openFor(spec);
+    }
+    /* 온라인 아군 카운터처럼 «밖에서» 여는 경우 (류·세라). 솔로에는 아군이 없어 부르지 않는다 */
+    B.grantOpening=function(kind,clip){if(OP&&!B.over)openFor({kind:kind,clip:clip});};
+    function useOpening(){
+      var o=P.opening;if(!o||B.over||E.dead||P.lockT>0)return false;
+      if(P.action)cancel('opening');P.buffer=null;P.guard=false;P.opening=null;
+      if(o.kind==='break'){var tp=B.part(target);if(!tp||!tp.breakable||tp.broken)tp=parts.filter(function(p){return p.breakable&&!p.broken;})[0]||tp;if(tp)target=tp.id;
+        action('opening',o.clip,OP.breakMult,{opening:'break',noBleed:true},R.motion.smash);}
+      else action('opening',o.clip,OP.grabMult,{opening:'grab',noBleed:true},R.motion.smash);
+      emit('openinguse',{kind:o.kind,part:target});return true;
     }
     /* 처형: 자세가 무너져 격추된 동안 근접에서 한 번만. 전용 동작 + 큰 피해 (§처형 연출) */
     function execute(){
@@ -178,7 +199,7 @@
       cancel('dodge');P.buffer=null;P.st-=dgSt;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
       P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.dodges++;emit('dodge');
     }
-    function guard(on){if(B.over)return;if(!on&&P.buffer&&P.buffer.type==='guard')P.buffer=null;if(on&&P.action&&!canCancel(true)){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
+    function guard(on){if(B.over)return;if(!on&&P.buffer&&(P.buffer.type==='guard'||P.buffer.type==='counter'))P.buffer=null;if(on&&P.action&&!canCancel(true)){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
     function skill(i){
       var k=S[i];if(!k||B.over)return;if(P.action){if(k.dodge&&canCancel(true)&&P.cds[i]<=0&&P.st>=k.st&&P.dodgeCd<=0){cancel('evasive-skill');P.buffer=null;}else{queue('skill',i);return;}}
       if(P.lockT>0||P.dodgeT>0||P.guard||k.dodge&&P.dodgeCd>0)return;if(P.cds[i]>0||P.st<k.st){emit(P.cds[i]>0?'cd':'nost',{skill:i});return;}
@@ -197,7 +218,7 @@
     B.input=function(type,arg){
       if(B.over)return;
       if(P.hitstop>0&&type!=='target'&&!(type==='guard'&&!arg)){P.buffer={type:type,arg:arg,ttl:R.motion.buffer};return;}
-      switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
+      switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'counter':if(!counter())guard(true);break;case 'opening':useOpening();break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
     };
     function impact(a){
       a.resolved=true;
@@ -209,6 +230,7 @@
       if(a.opt.counter&&!E.dead){if(a.opt.perfect){P.riposteKind='counter';P.riposteT=Math.max(0,a.duration-a.elapsed)+.65;}emit('counterfollowup',{window:a.opt.perfect?.65:a.opt.tier==='repel'?.45:.25,perfect:!!a.opt.perfect,tier:a.opt.tier||null});}
       if(a.opt.riposte){M.ripostes++;if(a.opt.riposte!=='counter')E.posture=clamp(E.posture+25,0,R.posture.max);emit('riposte',{kind:a.opt.riposte,dmg:amount});}
       if(a.kind==='smash')E.posture=clamp(E.posture+R.combo.smashPosture[a.opt.tier],0,R.posture.max);
+      if(a.opt.opening==='grab'&&!E.dead&&E.state!=='downed'){E.posture=clamp(E.posture+OP.grabPosture,0,R.posture.max);E.state='stagger';E.stagT=Math.max(E.stagT||0,OP.grabHold);E.tele=0;emit('grab',{hold:OP.grabHold});}
       if(a.opt.bleed&&!E.dead)bleed(a.opt.bleed);if(E.posture>=R.posture.max&&!E.dead)down();
       emit('impact',{id:a.id,kind:a.kind,dmg:amount});
     }
@@ -301,7 +323,8 @@
     function step(dt){
       if(B.over)return;B.time+=dt;M.time=B.time;
       if(P.hitstop>0){P.hitstop=Math.max(0,P.hitstop-dt);return;}B.poseTime+=dt;
-      ['dodgeT','dodgeCd','lockT','stDelay','comboT','riposteT','buffT'].forEach(function(k){P[k]=Math.max(0,P[k]-dt);});P.dodgeAgo+=dt;
+      ['dodgeT','dodgeCd','lockT','stDelay','comboT','riposteT','buffT'].forEach(function(k){P[k]=Math.max(0,P[k]-dt);});
+      if(P.opening){P.opening.t-=dt;if(P.opening.t<=0){P.opening=null;emit('openingend',{});}}P.dodgeAgo+=dt;
       if(P.stDelay<=0){if(P.guard){P.st=Math.max(0,P.st-R.stamina.guardPerSec*dt);if(P.st===0){P.guard=false;emit('guard',{on:false,broke:true});}}else P.st=Math.min(R.stamina.max,P.st+R.stamina.regen*dt);}
       P.cds=P.cds.map(function(v){return Math.max(0,v-dt);});
       /* ⚠ 저항은 «연출» 이다. 행동 시계를 늦추면 안 된다.
@@ -343,7 +366,7 @@
     B.snapshot=function(){return {time:B.time,poseTime:B.poseTime,over:B.over,target:target,
       player:{hp:P.hp,hpMax:st.hp,st:P.st,stMax:R.stamina.max,ult:P.ult,guard:P.guard,dodging:P.dodgeT>0,locked:P.lockT>0,
         riposte:P.riposteT>0,riposteKind:P.riposteKind,riposteT:P.riposteT,combo:P.combo,comboT:P.comboT,cds:P.cds.slice(),buffT:P.buffT,critNext:P.critNext,
-        hitstop:P.hitstop,action:P.action?Object.assign({},P.action):null,buffer:P.buffer?P.buffer.type:null,lastFailure:P.lastFailure},
+        opening:P.opening?{kind:P.opening.kind,t:P.opening.t,dur:P.opening.dur}:null,hitstop:P.hitstop,action:P.action?Object.assign({},P.action):null,buffer:P.buffer?P.buffer.type:null,lastFailure:P.lastFailure},
       enemy:{hp:E.hp,hpMax:E.hpMax,posture:E.posture,state:E.state,tele:E.tele,teleDur:E.teleDur,window:counterWindow,
         counterable:!E.pat||E.pat.counterable!==false,pattern:E.pat?E.pat.name:null,patIcon:E.pat?E.pat.icon:null,
         windup:E.state==='telegraph'&&E.teleDur?windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur):(E.state==='telegraph'?0:1),

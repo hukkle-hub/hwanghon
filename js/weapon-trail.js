@@ -25,6 +25,7 @@ export function trailStyle(kind, extra){
     case 'exec':    return [2.2, 0xFFB08A];
     case 'ult':     return [2.0, (extra|0)||0xC89A4A];
     case 'counter': return [1.8, 0xFFF1C8];
+    case 'opening': return [2.0, 0xFFC878];   /* 카운터 뒤 일시 탭 — 부위 파괴·붙잡기 (docs/design/78) */
     case 'skill':   return [1.6, (extra|0)||0xC89A4A];
     case 'smash':   return [1.5, 0xE8D0A0];
     default:        return [1.0, 0xBFD8E8];

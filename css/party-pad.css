@@ -22,6 +22,10 @@
 .actions [data-command="dodge"]{--x:112px;--y:206px;--d:62px;border-color:#7b9bd688}
 .actions [data-command="guard"]{--x:186px;--y:206px;--d:62px;border-color:#7b9bd6aa;background:radial-gradient(circle,#283a60bb,#080a10dd)}
 .actions [data-command="attack"]{--x:286px;--y:188px;--d:96px;font-size:13px;border-color:#c73a36aa;background:radial-gradient(circle,#781414cc,#1e0808dd);color:#fff}
+.actions [data-command="opening"]{--x:286px;--y:112px;--d:62px;border:2px solid #E8C170;background:radial-gradient(circle,#96681ee6,#281806e6);color:#F2DFB0;font-size:10px;box-shadow:0 0 22px #E8C170b3;animation:openPulse .5s ease-in-out infinite alternate;z-index:2}
+.actions [data-command="opening"][data-kind="grab"]{border-color:#E07A4A;background:radial-gradient(circle,#963c18e6,#280e06e6);box-shadow:0 0 22px #E07A4Ab3}
+.actions [data-command="opening"][hidden]{display:none}
+@keyframes openPulse{from{filter:brightness(1)}to{filter:brightness(1.35)}}
 .utility{bottom:calc(272px + var(--rpg-offset))}
 
 @media(max-width:760px),(max-height:500px){
