@@ -10,7 +10,7 @@
 ## 나중에 «옷 입히기» 때 쓸 도구 (모두 확대 계측으로 검증)
 | 도구 | 하는 일 | 잰 값 |
 |---|---|---|
-| `tools/3d/blender-autoweight.py` | Blender 뼈 열 확산 무게 + 팔 가리기(`--arm-mask`) · 목 띠 이웃 평균(`--region-smooth`) · 치맛단 골반 쪽(`--skirt`) · 머리 한 몸 · 6만 삼각형으로 줄이기(`--target`, 머리·손 보존) | 늘어난 변(17 클립) 아인 150→54‰ 상당(73.7k→40.4k 변), 세라 384→192‰ |
+| `tools/3d/blender-autoweight.py` | Blender 뼈 열 확산 무게 + 팔 가리기(`--arm-mask`) · 목 띠 이웃 평균(`--region-smooth`) · 치맛단 골반 쪽(`--skirt`) · 머리 한 몸 · 6만 삼각형으로 줄이기(`--target`, 머리·손 보존) | 늘어난 변 비율(17 클립, stretch-view) 아인 150→112‰ · 세라 384→192‰ — 그 뒤 띠 보정으로 아인 나쁜 변 73.7k→40.4k(28 클립, stretch-map) |
 | `tools/3d/stretch-map.mjs` | 늘어남을 «뼈 쌍» 별로 세어 어디가 문제인지 알려 준다 | — |
 | `tools/3d/ain-grip-frame.py` | 새 손을 옛 손 좌표로 겹치는 변환(ICP) → 검증된 «쥔 손» 을 그대로 쓴다 | 겹친 60 % 거리 6.8 / 7.6 mm |
 | `tools/3d/gear-anchor.mjs` | 옛 몸의 장비 자리를 새 뼈에 `gearAnchor` 로 | 후드가 어깨로 흘러내리던 것 해결 |
