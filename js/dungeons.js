@@ -132,7 +132,9 @@
       sera: { nm:'시약',   dur:1.06, stop:0.86, st:1.04 }    /* 중간. 던지는 무기라 멈춤이 얕다 */
     },
     stamina: { max:120, regen:18, delay:0.6, dodge:25, guardPerSec:12 },
-    dodge:   { iframes:0.30, cooldown:0.45 },
+    /* perfect: 공격이 떨어지기 직전 이 시간 안에 누른 회피 = 완벽 회피 (검은 신화: 오공 · docs/design/77).
+       보상은 반격 창 +0.35초와 회피 기력 되돌림 — 수치 근거 없음, 같이 조정할 값 */
+    dodge:   { iframes:0.30, cooldown:0.45, perfect:0.14, perfectRiposte:0.35 },
     guard:   { reduce:0.70, holdMs:220 },
     /* 카운터 3단. 남은 예고 시간(E.tele)이 «작을수록» 늦게, 즉 정확하게 받아친 것이다.
          tele <= perfect  → 맞대기 clash  : 둘 다 멈춘다. 힘겨루기.

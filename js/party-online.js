@@ -103,7 +103,7 @@ function processEvents(events){for(const e of events){if(e.id<=latestEvent)conti
  if(e.type==='dodge'&&e.player===profile?.id)window.TW_SFX?.play('roll');
  if(e.type==='skill')window.TW_SFX?.play('swing');
  if(e.type==='counter'){announce((e.perfect?'PERFECT':'COUNTER')+' · '+(room.members.find(p=>p.id===e.player)?.name||'아인'));window.TW_SFX?.play('counter',e.perfect);}
- if(e.type==='evade'&&e.player===profile?.id)announce('회피 성공 · 지금 반격해라');
+ if(e.type==='evade'&&e.player===profile?.id)announce(e.perfect?'완벽 회피 · 반격 창이 길다 · 기력 회복':'회피 성공 · 지금 반격해라');
  if(e.type==='revive')announce('동료가 다시 일어섰다');
  if(e.type==='playerDown')announce('동료 다운 · 가까이서 V / 소생 버튼 유지');
  if(e.type==='interact')announce(e.name);

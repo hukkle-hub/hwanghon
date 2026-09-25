@@ -273,7 +273,12 @@
       var pat=E.pat,inside=!HK.inZone||HK.inZone(pat),evaded=P.dodgeThreat===patternId&&P.dodgeAgo<=R.dodge.iframes+0.18&&(P.dodgeT>0||!inside);
       if(P.dodgeT>0||!inside){
         emit('miss',{pattern:pat.name,out:!inside});
-        if(evaded){P.riposteT=policy.evadeWindow||0.85;P.riposteKind='evade';P.dodgeThreat=0;M.evades++;emit('evade',{window:P.riposteT});}
+        if(evaded){
+          /* 완벽 회피 — 누른 지 R.dodge.perfect 초 안에 공격이 떨어졌다. 반격 창을 늘리고 회피 기력을 돌려준다 */
+          var perfect=P.dodgeAgo<=(R.dodge.perfect||0);
+          P.riposteT=(policy.evadeWindow||0.85)+(perfect?(R.dodge.perfectRiposte||0):0);P.riposteKind='evade';P.dodgeThreat=0;M.evades++;
+          if(perfect){M.perfectDodges=(M.perfectDodges||0)+1;P.st=Math.min(R.stamina.max,P.st+R.stamina.dodge*rSt);}
+          emit('evade',{window:P.riposteT,perfect:perfect});}
       }else{
         var guarded=P.guard&&P.st>0&&pat.unblockable!==true,dmg=pat.dmg;
         if(guarded){dmg=Math.round(dmg*(1-R.guard.reduce));P.st=Math.max(0,P.st-(pat.guardCost||0));M.guards++;E.posture=clamp(E.posture+R.posture.onGuard,0,R.posture.max);P.riposteT=0.8;P.riposteKind='guard';emit('guardhit');}

@@ -7,6 +7,7 @@ import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {smoothCharacterClips} from './clip-smooth.js';
+import {clone as cloneSkinned} from '../vendor/three/SkeletonUtils.js';
 import {mountAinScythe,measureAinBladeContact,nearestAinBladePoint} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
 import { prepareTrainingMotion, sampleBossAttack, createBossReadability } from './boss-motion.js';
@@ -59,9 +60,9 @@ import { createBloom } from './bloom.js';
 
   /* ---------- 파티 · 행동 버튼 ---------- */
   $('#btparty').innerHTML='<div class="pmem">'+W.face(CHAR.id,'pmem__face')+'<div class="fill"><div class="flex ac g2"><span class="pmem__n">'+CHAR.nm+'</span><span class="pmem__lv">'+(window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'LV.'+CHAR.lv)+'</span><span class="pmem__hp num" id="p-hp">'+W.fmt(CHAR.stats.hp)+'</span></div><div class="bar bar--hp" data-fill="100" id="p-bar"></div></div></div>';
-  el.actions.innerHTML=SK.map(function(k,i){ return '<div class="abtn" data-skill="'+i+'"><span class="sk__k">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg><span class="sk__cd" hidden></span>'+(k.lv>1?'<span class="sk__lv">Lv'+k.lv+(k.br?'·'+k.br:'')+'</span>':'')+'<span class="sk__nm">'+k.name+'</span></div>'; }).join('')+
+  el.actions.innerHTML=SK.map(function(k,i){ return '<div class="abtn abtn--sk'+(i+1)+'" data-skill="'+i+'"><span class="sk__k">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg><span class="sk__cd" hidden></span>'+(k.lv>1?'<span class="sk__lv">Lv'+k.lv+(k.br?'·'+k.br:'')+'</span>':'')+'<span class="sk__nm">'+k.name+'</span></div>'; }).join('')+
     '<div class="abtn abtn--dodge" data-dodge><span class="sk__k">K</span><svg class="ico"><use href="#i-bolt"/></svg><span class="sk__nm">회피</span></div>'+
-    '<div class="abtn abtn--guard" data-guard><span class="sk__k">L</span><svg class="ico"><use href="#i-shield"/></svg><span class="sk__nm">방어</span></div>'+
+    '<div class="abtn abtn--guard" data-guard><span class="sk__k">L</span><svg class="ico"><use href="#i-shield"/></svg><span class="sk__nm">카운터 · 길게 방어</span></div>'+
     '<div class="abtn abtn--atk" data-atk><span class="sk__k">J</span><svg class="ico"><use href="#i-scythe"/></svg><span class="sk__nm">탭 공격 · 길게 스매시</span></div>'+
     '<div class="abtn abtn--ult" data-ult><span class="sk__k">R</span><svg class="ico"><use href="#i-'+ULT.icon+'"/></svg><span class="sk__nm">'+ULT.name+'</span></div>';
 
@@ -1002,7 +1003,10 @@ import { createBloom } from './bloom.js';
     kickV[0]+=yaw||0; kickV[1]+=pitch||0; kickV[2]+=roll||0; }
   function tickKick(dt){
     var w=26, z=0.42, k=[kickY,kickP,kickR];          /* 감쇠 진동: 빠르게 튕겼다 돌아온다 */
-    for(var i=0;i<3;i++){ var a=-w*w*k[i]-2*z*w*kickV[i]; kickV[i]+=a*dt; k[i]+=kickV[i]*dt; }
+    /* 잘게 나눠 적분한다 — w·dt 가 2 를 넘으면(한 프레임 77 ms↑: 끊김·저사양) 오일러가 발산해
+       카메라가 뒤집혀 돌았다(docs/design/77). 1/120 초 단위면 어떤 dt 에서도 안정. */
+    var n=Math.max(1,Math.ceil(dt*120)), h=dt/n;
+    for(var s=0;s<n;s++) for(var i=0;i<3;i++){ var a=-w*w*k[i]-2*z*w*kickV[i]; kickV[i]+=a*h; k[i]+=kickV[i]*h; }
     kickY=k[0]; kickP=k[1]; kickR=k[2]; }
   /* 보스→플레이어 축 (맞는 방향), 플레이어→보스 축 (때리는 방향) */
   function axisFromBoss(){ return [X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)]; }
@@ -1070,7 +1074,9 @@ import { createBloom } from './bloom.js';
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
-      case 'evade': guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter');
+      case 'evade':
+        if(e.perfect){ perfectDodge(e); break; }
+        guide('회피 성공 — <b>지금 반격하면 큰 피해</b>', e.window); SFX.play('counter');
         /* 마영전식 회피 연출: 흘린 순간을 «보여 준다» — 지나온 자리에 잔상, 아주 짧은 슬로우 */
         fxEvade(); slowmo(0.30, 240); camKick(0.018,-0.03,-0.026); vib(18); break;
       case 'recoverend': zone=null;hideZone(); if(boss.oneshot){boss.oneshot.stop();boss.oneshot=null;} if(boss.act)boss.act.reset().fadeIn(0.12).play(); break;
@@ -1206,6 +1212,31 @@ import { createBloom } from './bloom.js';
     var rc=ain.clips[n]; playOnce(n,{ speed:(rc?rc.duration:0.38)/L.player.rollDur }); }
   /* 회피 잔상: 지나온 자리에 늘어진 줄기 + 발밑 고리. 스킨 메시를 복제하지 않고
      실루엣만 남겨 저사양에서도 싸다. */
+  /* ── 완벽 회피 (검은 신화: 오공 · docs/design/77) ─────────────────────────
+     레퍼런스 영상: 맞기 직전에 피하면 «캐릭터 모양 그대로의» 잔상이 남고 시간이 느려진다.
+     잔상 = 지금 자세를 얼린 복제(뼈대만 복제, 형상은 공유) + 더하기 합성. 느려진 시간 동안
+     70 ms(게임 시간)마다 하나씩 — 슬로우 중이라 실제로는 약 0.4초 간격으로 궤적이 남는다. */
+  var pdVig=null;
+  function ghostSnap(color, opacity, life){
+    if(!ain.model) return;
+    var g=cloneSkinned(ain.model), src=[], dst=[];
+    ain.model.traverse(function(o){ if(o.isBone) src.push(o); }); g.traverse(function(o){ if(o.isBone) dst.push(o); });
+    for(var i=0;i<src.length&&i<dst.length;i++){ dst[i].position.copy(src[i].position); dst[i].quaternion.copy(src[i].quaternion); dst[i].scale.copy(src[i].scale); }
+    var mat=new THREE.MeshBasicMaterial({ color:color, transparent:true, opacity:opacity, depthWrite:false, blending:THREE.AdditiveBlending });
+    g.traverse(function(o){ if(o.isMesh){ o.material=mat; o.castShadow=false; o.receiveShadow=false; o.frustumCulled=false; } });
+    ain.model.parent.updateMatrixWorld(true);
+    var holder=new THREE.Group(); holder.matrixAutoUpdate=false; holder.matrix.copy(ain.model.parent.matrixWorld); holder.add(g); scene.add(holder);
+    var t0=performance.now();
+    (function fade(){ var k=(performance.now()-t0)/life; mat.opacity=opacity*Math.max(0,1-k)*(1-k*0.3);
+      if(k<1) requestAnimationFrame(fade); else { scene.remove(holder); mat.dispose(); } })();
+  }
+  function perfectDodge(e){
+    guide('완벽 회피 — <b>반격 창이 길어졌다 · 기력 회복</b>', e.window); SFX.play('counter');
+    slowmo(0.18, 760); camKick(0.03,-0.05,-0.04); vib([18,30,18]);
+    for(var i=0;i<5;i++) (function(i){ schedule(function(){ ghostSnap(i%2?0x7FB8FF:0xB8E4FF, 0.42-i*0.05, 900-i*60); }, i*70); })(i);
+    if(!pdVig){ pdVig=document.createElement('div'); pdVig.className='pd-vig'; document.body.appendChild(pdVig); }
+    pdVig.classList.remove('on'); void pdVig.offsetWidth; pdVig.classList.add('on');
+  }
   function fxEvade(){
     var here=ain.root.position.clone(), back=new THREE.Vector3(Math.sin(ain.root.rotation.y),0,Math.cos(ain.root.rotation.y));
     var g=new THREE.Group();
@@ -1354,10 +1385,15 @@ import { createBloom } from './bloom.js';
     expedition.finish();location.href='result.html'; }
 
   /* ---------- 입력 ---------- */
-  el.stickEl.addEventListener('pointerdown', function(e){ e.preventDefault(); stick.id=e.pointerId; var r=el.stickEl.getBoundingClientRect(); stick.ox=r.left+r.width/2; stick.oy=r.top+r.height/2; el.stickEl.setPointerCapture(e.pointerId); stickMove(e); });
+  /* 이동 패드: 누른 자리가 스틱 중심(떠 있는 스틱) — 세로로 긴 패드 어디를 눌러도 된다 (디렉터 스케치).
+     바깥 고리(b)와 손잡이(i)가 누른 자리로 옮겨 간다. 반지름·감도는 전과 같다(44 px). */
+  function stickAt(x,y){ ['b','i'].forEach(function(t){ var n=el.stickEl.querySelector(t); if(n){ n.style.left=x==null?'':x+'px'; n.style.top=y==null?'':y+'px'; } }); }
+  el.stickEl.addEventListener('pointerdown', function(e){ e.preventDefault(); stick.id=e.pointerId; var r=el.stickEl.getBoundingClientRect(), m=24;
+    stick.ox=Math.max(r.left+m, Math.min(r.right-m, e.clientX)); stick.oy=Math.max(r.top+m, Math.min(r.bottom-m, e.clientY)); stickAt(stick.ox-r.left, stick.oy-r.top);
+    el.stickEl.setPointerCapture(e.pointerId); stickMove(e); });
   function stickMove(e){ if(stick.id!==e.pointerId) return; var dx=e.clientX-stick.ox, dy=e.clientY-stick.oy, m=Math.hypot(dx,dy), R0=44; if(m>R0){ dx=dx/m*R0; dy=dy/m*R0; } stick.sx=dx/R0; stick.sy=dy/R0; el.stickEl.querySelector('i').style.transform='translate(calc(-50% + '+dx+'px), calc(-50% + '+dy+'px))'; }
   el.stickEl.addEventListener('pointermove', stickMove);
-  function stickUp(e){ if(stick.id!==e.pointerId) return; stick.id=null; stick.sx=stick.sy=0; el.stickEl.querySelector('i').style.transform='translate(-50%,-50%)'; }
+  function stickUp(e){ if(stick.id!==e.pointerId) return; stick.id=null; stick.sx=stick.sy=0; el.stickEl.querySelector('i').style.transform='translate(-50%,-50%)'; stickAt(null,null); }
   el.stickEl.addEventListener('pointerup', stickUp); el.stickEl.addEventListener('pointercancel', stickUp);
   /* 카메라 회전: 캔버스 드래그 */
   var drag=null; el.canvas.addEventListener('pointerdown', function(e){ drag={ id:e.pointerId, x:e.clientX, y:e.clientY, moved:0 }; el.canvas.setPointerCapture(e.pointerId); });

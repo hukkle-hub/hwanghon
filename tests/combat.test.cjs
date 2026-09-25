@@ -67,7 +67,16 @@ test('empty dodge and safe positioning cannot farm riposte',()=>{
 test('actual dodge grants one short reward, consumed even on whiff',()=>{
  const b=battle({patterns:[pat],hooks:{canHit:()=>false}});tele(b);b.input('dodge');b.tick(.32);assert.equal(b.metrics.evades,1);assert.equal(b.snapshot().player.riposte,true);
  b.input('attack');assert.equal(b.snapshot().player.action.opt.riposte,'evade');assert.equal(b.snapshot().player.riposte,false);toHit(b);assert.equal(b.metrics.whiffs,1);
- const c=battle({patterns:[pat]});tele(c);c.input('dodge');c.tick(1.1);assert.equal(c.snapshot().player.riposte,false);
+ /* tele 기본값(0.1초 전)에 누르면 완벽 회피라 창이 0.35초 길다(1.2초) — 그 뒤에는 닫힌다 */
+ const c=battle({patterns:[pat]});tele(c);c.input('dodge');c.tick(1.5);assert.equal(c.snapshot().player.riposte,false);
+});
+test('perfect dodge: pressed in the last R.dodge.perfect seconds — longer riposte, stamina back (docs/design/77)',()=>{
+ const run=left=>{const b=battle({patterns:[pat],hooks:{canHit:()=>false}});tele(b,left);const ev=[];const st0=b.snapshot().player.st;b.input('dodge');b.tick(left+.02);for(const e of b.drain())ev.push(e);return {b,ev,st0};};
+ const late=run(.1), early=run(.25);   /* 무적 0.30초 안 · 완벽 창 0.14초 밖 */
+ assert.equal(late.b.metrics.evades,1);assert.equal(early.b.metrics.evades,1);
+ assert.equal(late.b.metrics.perfectDodges,1);assert.ok(!early.b.metrics.perfectDodges);
+ assert.ok(late.ev.some(e=>e.t==='evade'&&e.perfect===true));assert.ok(early.ev.some(e=>e.t==='evade'&&e.perfect===false));
+ assert.ok(late.b.snapshot().player.st>early.b.snapshot().player.st+10,'완벽 회피는 회피 기력을 돌려준다');
 });
 test('dodge into safe space rewards only the threatened attack',()=>{
  let inside=true;const b=battle({patterns:[pat],hooks:{inZone:()=>inside}});tele(b,.35);b.input('dodge');inside=false;b.tick(.36);assert.equal(b.metrics.evades,1);

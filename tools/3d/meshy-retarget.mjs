@@ -12,7 +12,7 @@
  * 둘 다 같은 메시의 같은 쉬는 자세라 변화량이 그대로 통한다. 골반 위치는 키 비율로.
  *
  * 사용: node tools/3d/meshy-retarget.mjs <meshy.glb> <이름> [시작초 끝초] [--fps 60]
- *          [--target 캐릭터.glb] [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
+ *          [--target 캐릭터.glb] [--arm-max 도] [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
  * 74번에 쓴 명령 (docs/design/74-meshy-clips.md):
  *   attack3  thrust.glb  0.25 1.25 --fps 60 --chest .48,20,.5,-13,-13,.5
  *   counter  charged.glb 0.75 1.65 --fps 60 --chest .44,0,.5,-13,-13,.5
@@ -108,11 +108,19 @@ if(CHEST){ const [uc,cc,g,c0=-13,c1=-13,w=0]=CHEST, r=Math.PI/180, C=[], H=[];
 const Ry=i=>new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),yawR.length?yawR[i]:0);
 const PIV=new T.Vector3(hipRestS.x*scale,0,hipRestS.z*scale);
 const turn=(p,i)=>yawR.length?p.clone().sub(PIV).applyAxisAngle(new T.Vector3(0,1,0),yawR[i]).add(PIV).setY(p.y):p;
+/* --arm-max 도 : 위팔 들어 올림(수평 위 각도)의 부드러운 상한. 카인·류 메시는 자동 리깅이라
+   팔을 머리 위로 올리면 겨드랑이·어깨 스킨이 칼날처럼 찢어진다(docs/design/77 열지도, 카인 해머
+   스윙 0.17 에서 변 4.8% 가 2배 넘게 늘어남). 상한 근처 20° 는 tanh 로 눌러 꺾임이 없다.
+   아래팔·손은 위팔과 같은 만큼 같이 돈다. */
+const ARM_MAX=args.includes('--arm-max')?+args[args.indexOf('--arm-max')+1]*Math.PI/180:null;
+const armRestDir={};
+for(const side of ['Left','Right']){ const a=G[side+'Arm'].getWorldPosition(new T.Vector3()), f=G[side+'ForeArm'].getWorldPosition(new T.Vector3()); armRestDir[side]=f.sub(a).normalize(); }
+const softCap=(e,m,band=20*Math.PI/180)=>e<=m-band?e:(m-band)+band*Math.tanh((e-(m-band))/band);
 const armParent=G.Hips.parent; armParent.updateMatrixWorld(true);
 const armQ=wq(armParent), armInv=armQ.clone().invert();
 for(let i=0;i<=N;i++){
   mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
-  const W={};
+  const W={}, armFix={};
   for(const n of order){
     const s=MAP[n], D=wq(S[s]).multiply(restS[s].clone().invert());
     /* --spine k: 골반·척추의 «월드 회전 변화» 를 k 만큼만 — 몸통이 과하게 숙이거나
@@ -127,6 +135,11 @@ for(let i=0;i<=N;i++){
       if(n==='Spine1'||n==='Spine2') D.premultiply(new T.Quaternion().setFromAxisAngle(
         new T.Vector3(1,0,0).applyQuaternion(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0),LEAN[1]*k*Math.PI/180)),LEAN[0]/2*k*Math.PI/180)); }
     if(yawR.length) D.premultiply(Ry(i));
+    if(ARM_MAX!=null){ const side=n.startsWith('Left')?'Left':n.startsWith('Right')?'Right':null;
+      if(side&&n===side+'Arm'){ const dir=armRestDir[side].clone().applyQuaternion(D), e=Math.asin(Math.max(-1,Math.min(1,dir.y))), e2=softCap(e,ARM_MAX);
+        if(e2<e-1e-6){ const h=new T.Vector3(dir.x,0,dir.z); if(h.lengthSq()<1e-8) h.set(side==='Left'?1:-1,0,0); h.normalize();
+          const want=h.multiplyScalar(Math.cos(e2)).add(new T.Vector3(0,Math.sin(e2),0)); armFix[side]=new T.Quaternion().setFromUnitVectors(dir,want.normalize()); } }
+      if(side&&armFix[side]&&/(Arm|ForeArm|Hand)$/.test(n)&&!/Shoulder/.test(n)) D.premultiply(armFix[side]); }
     W[n]=D.multiply(restG[n]);
     const pn=G[n].parent.name.replace(/^mixamorig:?/,'');
     const pw=W[pn]||(G[n].parent===armParent?armQ:wq(G[n].parent));

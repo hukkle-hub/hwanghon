@@ -41,18 +41,14 @@
 .stick{touch-action:none}
 .stick i{transition:none}
 .stick__lb{position:absolute;left:50%;bottom:-16px;transform:translateX(-50%);font-size:9px;color:var(--tx-faint);letter-spacing:.12em;white-space:nowrap}
-.actions{display:grid;grid-template-columns:repeat(4,50px);grid-auto-rows:50px;gap:8px;margin-left:auto;align-items:end}
 .abtn{border:1px solid rgba(255,255,255,.14);background:rgba(10,11,14,.72);display:grid;place-items:center;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent;color:#EBD6D6}
 .abtn:active{filter:brightness(1.5)}
 .abtn .sk__k{position:absolute;left:3px;top:2px;font-size:9px;color:var(--tx-faint)}
 .abtn .sk__cd{position:absolute;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;font-size:15px;color:#EBD6D6;font-variant-numeric:tabular-nums}
 .abtn .sk__nm{position:absolute;left:0;right:0;bottom:-14px;font-size:8.5px;color:var(--tx-faint);text-align:center;letter-spacing:.04em;white-space:nowrap}
 .abtn.is-ready{border-color:rgba(201,164,94,.7);box-shadow:0 0 12px rgba(201,164,94,.3)}
-.abtn--atk{grid-column:3/5;grid-row:2/4;width:auto;height:auto;border-color:rgba(199,58,54,.6);background:radial-gradient(circle,rgba(120,20,20,.8),rgba(30,8,8,.85))}
 .abtn--atk .ico{width:34px;height:34px}
-.abtn--dodge{grid-column:1/3;grid-row:2/3;width:auto;border-color:rgba(123,155,214,.5)}
 .abtn--dodge .ico{width:26px;height:26px}
-.abtn--ult{grid-column:1/3;grid-row:3/4;width:auto;border-color:rgba(199,58,54,.6)}
 .abtn--ult.is-ready{border-color:#C9A45E;box-shadow:0 0 18px rgba(201,164,94,.6);animation:pulse 1.2s infinite}
 @keyframes pulse{50%{box-shadow:0 0 6px rgba(201,164,94,.3)}}
 .ultg{display:flex;align-items:center;gap:8px;margin-top:6px}.ultg .bar{flex:1;height:6px}.ultg .bar__fill{background:linear-gradient(90deg,#5A2F14,#C9A45E)}
@@ -74,7 +70,6 @@
 html.mobile .guide{top:auto;bottom:126px;font-size:12px;padding:4px 10px}
 html.mobile .mini{top:56px;right:max(12px,env(safe-area-inset-right))}
 html.mobile .mini canvas{width:120px;height:36px}
-html.mobile .actions{grid-template-columns:repeat(4,46px);grid-auto-rows:46px;gap:6px}
 html.mobile .ov__t{font-size:22px}
 
 .mini{z-index:6}
@@ -100,9 +95,31 @@ html.mobile .ov__t{font-size:22px}
 .xpg{display:flex;align-items:center;gap:8px;margin-top:6px}.xpg .bar{flex:1;height:5px}.xpg .bar__fill{background:linear-gradient(90deg,#2B3C31,#5FAE9B)}
 .dlg{position:absolute;left:50%;bottom:150px;transform:translateX(-50%);width:min(640px,88%);z-index:25;background:rgba(6,7,10,.92);border:1px solid var(--line);border-left:3px solid #C9A45E;padding:12px 18px;display:none;cursor:pointer}
 .dlg.is-on{display:block}.dlg__face{float:left;width:58px;height:58px;margin:0 12px 6px 0;border:1px solid rgba(201,164,94,.5);object-fit:cover;background:#111}.dlg__who{font-family:var(--f-serif);font-size:12px;color:#C9A45E;letter-spacing:.2em;margin-bottom:6px}.dlg__txt{font-size:14px;color:#EBD6D6;line-height:1.6}.dlg__hint{font-size:10px;color:var(--tx-faint);text-align:right;margin-top:6px;letter-spacing:.1em}
-.abtn--guard{grid-column:2/3;grid-row:2/3;border-color:rgba(123,155,214,.5)}
-.abtn--dodge{grid-column:1/2;grid-row:2/3;width:auto}
 .abtn.is-hold{filter:brightness(1.5);box-shadow:inset 0 0 14px rgba(255,255,255,.25)}
+/* 조작 패드 (디렉터 스케치, docs/design/77) — 왼쪽 세로로 긴 «이동» 패드, 오른쪽은
+   구석의 큰 공격 · 그 위로 올라가는 호에 스킬 1→4 · 호 아래 줄에 카운터(방어)·회피·궁극기.
+   좌표는 버튼 «중심»(묶음 왼쪽 위 기준, px). 폰에서는 묶음째 줄인다. */
+.actions{position:relative;width:340px;height:250px;margin-left:auto;flex:none;transform-origin:100% 100%}
+html.mobile .actions{display:block!important;transform:scale(.84);margin-left:-54px}
+.actions .abtn{position:absolute;border-radius:50%;width:var(--d);height:var(--d);left:calc(var(--x) - var(--d)/2);top:calc(var(--y) - var(--d)/2)}
+.actions .abtn .sk__k{left:50%;top:3px;transform:translateX(-50%)}
+.actions .abtn .sk__cd{border-radius:50%}
+.abtn--sk1{--x:120px;--y:124px;--d:54px}
+.abtn--sk2{--x:174px;--y:82px;--d:54px}
+.abtn--sk3{--x:236px;--y:54px;--d:54px}
+.abtn--sk4{--x:302px;--y:46px;--d:54px}
+.abtn--ult{--x:40px;--y:206px;--d:58px;border-color:rgba(199,58,54,.6)}
+.abtn--dodge{--x:112px;--y:206px;--d:62px;border-color:rgba(123,155,214,.5)}
+.abtn--guard{--x:186px;--y:206px;--d:62px;border-color:rgba(123,155,214,.6);background:radial-gradient(circle,rgba(40,58,96,.75),rgba(8,10,16,.85))}
+.abtn--guard .ico{width:24px;height:24px}
+.abtn--atk{--x:286px;--y:188px;--d:96px;border-color:rgba(199,58,54,.6);background:radial-gradient(circle,rgba(120,20,20,.8),rgba(30,8,8,.85))}
+.abtn--atk .sk__nm{bottom:-15px}
+/* 이동 패드: 세로로 긴 둥근 사각형. 누른 자리가 스틱 중심이 된다(떠 있는 스틱) */
+.bthud .stick{width:150px;height:196px;border-radius:30px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.12)}
+html.mobile .bthud .stick{width:132px;height:172px}
+.stick b{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;border:1px solid rgba(255,255,255,.16);left:50%;top:50%;pointer-events:none;opacity:.55}
+.stick i{left:50%;top:50%}
+.stick__lb{bottom:10px}
 html.mobile .quest{left:max(10px,env(safe-area-inset-left));top:118px;font-size:10.5px;min-width:130px}
 html.mobile .combo{top:100px;right:170px}
 html.mobile .toasts{left:max(10px,env(safe-area-inset-left));top:210px}
@@ -137,6 +154,9 @@ html.mobile .loading__tip{font-size:12px}
 @media(max-height:640px){.lockon{top:158px;right:12px;font-size:11px;padding:6px 9px}}
 @media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}
 html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
+.pd-vig{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center,rgba(120,180,255,0) 45%,rgba(60,110,200,.38) 100%)}
+.pd-vig.on{animation:pdVig .9s ease-out}
+@keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
 </style>
 </head>
 <body data-landscape data-nonav data-responsive-mobile>
@@ -167,7 +187,7 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
     <div class="status" id="status"></div>
     <div class="guide" id="guide"></div>
     <div class="bthud"><div class="bthud__row">
-      <div class="stick" id="stick"><i></i><span class="stick__lb">이동</span></div>
+      <div class="stick" id="stick"><b></b><i></i><span class="stick__lb">이동</span></div>
       <div class="vitals" id="vitals">
         <div class="vital"><svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg><div class="bar bar--hp bar--tall" data-fill="100" id="v-hp"></div><span class="vital__v" id="v-hpv"></span></div>
         <div class="vital stamina"><svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg><div class="bar bar--tall" data-fill="100" id="v-st"></div><span class="vital__v" id="v-stv"></span></div>
