@@ -18,7 +18,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('skel'); ap.add_argument('mesh')
 ap.add_argument('--rot-y', type=float, default=0.0); ap.add_argument('--tex', type=int, default=2048)
 ap.add_argument('--height', type=float, default=None, help='새 메시 키(m) — 없으면 옛 메시 키')
-ap.add_argument('--out'); ap.add_argument('--static')
+ap.add_argument('--no-normal', action='store_true', help='법선 텍스처를 넣지 않는다'); ap.add_argument('--out'); ap.add_argument('--static')
 a = ap.parse_args()
 
 CT = {5126: '<f4', 5123: '<u2', 5125: '<u4', 5121: 'u1', 5120: 'i1', 5122: '<i2'}
@@ -67,7 +67,7 @@ P = (P - [(nmin[0] + nmax[0]) / 2, nmin[1], (nmin[2] + nmax[2]) / 2]) * s + [(om
 print(f'새 메시: 정점 {len(P)} 면 {len(I)} · 배율 {s:.4f} · 키 {H:.3f} m · 옛 상자 {omin.round(3)}~{omax.round(3)} · 새 상자 {P.min(0).round(3)}~{P.max(0).round(3)}')
 mat = JM['materials'][parts[0][0].get('material', 0)]; pbr = mat.get('pbrMetallicRoughness', {})
 base = image_bytes(JM, BM, pbr['baseColorTexture']['index'], a.tex, 'base')
-nrm = image_bytes(JM, BM, mat['normalTexture']['index'], a.tex, 'normal') if 'normalTexture' in mat else None
+nrm = image_bytes(JM, BM, mat['normalTexture']['index'], a.tex, 'normal') if ('normalTexture' in mat and not a.no_normal) else None
 
 def write(out, J, keep_skin):
     buf = bytearray(); views = []; accs = []
@@ -99,6 +99,8 @@ def write(out, J, keep_skin):
     if nrm: images.append({'bufferView': view(nrm), 'mimeType': 'image/jpeg', 'name': 'normal'}); textures.append({'sampler': 0, 'source': 1}); m['normalTexture'] = {'index': 1}
     J['images'] = images; J['textures'] = textures; J['samplers'] = [{'magFilter': 9729, 'minFilter': 9987}]; J['materials'] = [m]
     J['meshes'][0]['primitives'] = [{'attributes': attrs, 'indices': idx, 'material': 0}]
+    for nd in J['nodes']:   # 새 메시 표시 — js/ain-bind-repair.js 가 옛 메시용 보정(잰 손 위치)을 건너뛴다
+        if 'mesh' in nd: nd['extras'] = {**nd.get('extras', {}), 'meshSwap': True}
     if keep_skin:
         sk = J['skins'][0]
         if 'inverseBindMatrices' in sk: sk['inverseBindMatrices'] = copy_acc(sk['inverseBindMatrices'])
