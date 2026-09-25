@@ -176,6 +176,50 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
  html.mobile .guide{top:auto;bottom:4px;left:150px;transform:none;max-width:230px;white-space:normal;font-size:10px;line-height:1.35;padding:3px 8px}
  html.mobile .combo{top:70px;right:40%}
 }
+/* ===== 88 — 깔끔한 전투 UI (디렉터: 「조작패드도 그렇고 ui도 깔끔하게 하고. 맵은 필요없어」) =====
+   명조·몬헌 모바일처럼: 지도 없음, 체력·기력은 왼쪽 위 초상 밑 가는 줄, 스틱은 상자 없이 떠 있는 원,
+   버튼은 글자 없이 아이콘만(쿨타임은 부채꼴로 줄어든다), 조준·락온은 작은 알약. 캐릭터 둘레와 화면 가운데는 비운다. */
+.mini,.exp-map{display:none!important}
+.bthud{background:none}
+.bthud .stick,html.mobile .bthud .stick{background:none;border:none;border-radius:0}
+.stick b{width:104px;height:104px;margin:-52px 0 0 -52px;border:1.5px solid rgba(255,255,255,.22);background:radial-gradient(circle,rgba(255,255,255,.05),rgba(255,255,255,0) 70%);opacity:.5;transition:opacity .15s}
+.stick i{width:44px;height:44px;background:rgba(255,255,255,.18);border:1.5px solid rgba(255,255,255,.35);opacity:.6;transition:opacity .15s}
+.stick.is-on b,.stick.is-on i{opacity:1}
+.stick__lb,.abtn .sk__nm,.sk__lv{display:none!important}
+html.mobile .abtn .sk__k,html.touch .abtn .sk__k{display:none}
+.abtn .sk__k{font-size:8px;opacity:.55}
+.actions .abtn{background:rgba(12,13,17,.42);border:1.5px solid rgba(255,255,255,.2);box-shadow:none;backdrop-filter:blur(2px)}
+.actions .abtn .ico{opacity:.92}
+.actions .abtn.is-ready{border-color:rgba(232,210,160,.6);box-shadow:none}
+.abtn--atk{background:radial-gradient(circle,rgba(150,32,28,.62),rgba(40,10,10,.55))!important;border-color:rgba(230,120,110,.55)!important}
+.abtn--guard{background:radial-gradient(circle,rgba(46,66,110,.55),rgba(10,12,20,.5))!important;border-color:rgba(150,180,235,.5)!important}
+.abtn--dodge{border-color:rgba(150,180,235,.4)!important}
+.abtn--ult{border-color:rgba(230,120,110,.45)!important}
+.abtn--ult.is-ready{border-color:#E4C27A!important}
+.abtn .sk__cd{background:conic-gradient(rgba(0,0,0,.68) calc(var(--p,1)*360deg),rgba(0,0,0,.12) 0);font-size:14px;text-shadow:0 1px 3px #000}
+/* 체력·기력·궁극기: 초상 밑 */
+.vitals{position:absolute;left:max(18px,env(safe-area-inset-left));top:112px;width:240px;max-width:none;z-index:6;pointer-events:none}
+.vital{margin-bottom:3px;gap:6px}.vital .bar{height:6px;border:none;background:rgba(0,0,0,.5)}.vital.stamina .bar{height:4px}
+.vital__ic{width:11px;height:11px}.vital__v{font-size:9.5px;min-width:0;text-shadow:0 1px 2px #000}
+.xpg{display:none}
+.ultg{margin-top:2px;gap:6px}.ultg .bar{height:3px;border:none}.ultg span:first-child{font-size:8.5px}.ultg__v{font-size:8.5px;width:28px}
+.bthud__row{justify-content:space-between}
+/* 의뢰: 탐색 중에만, 초상 밑 작게 */
+.quest{top:176px;background:rgba(6,7,10,.38);border-left-width:2px;font-size:10.5px;min-width:0;padding:4px 9px}
+html.in-fight .quest{display:none}
+/* 조준·락온: 오른쪽 위 알약 */
+.target-cycle{top:62px;right:20px;min-width:0;min-height:0;max-width:190px;padding:5px 12px;border-radius:14px;border:1px solid rgba(232,210,160,.35);background:rgba(10,12,16,.5);font-size:11px}
+.target-cycle small{display:inline;margin:0 0 0 6px;font-size:9.5px}
+.lockon{top:96px;right:20px;padding:4px 11px;border-radius:14px;border:1px solid rgba(232,210,160,.35);background:rgba(10,12,16,.5);font-size:10.5px}
+.status{top:132px}
+.guide{background:rgba(6,7,10,.45);border:none;border-radius:3px;font-size:12px}
+.toasts{top:200px}
+@media(max-height:640px){.lockon{top:92px;right:12px}.target-cycle{top:58px;right:12px}}
+@media (max-height:360px){
+ html.mobile .vitals{top:94px;left:max(10px,env(safe-area-inset-left));width:160px}
+ html.mobile .lockon{top:6px;left:max(10px,env(safe-area-inset-left));right:auto}html.mobile .target-cycle{top:44px}
+ html.mobile .bthud .stick{height:150px;width:150px}
+}
 .pd-vig{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center,rgba(120,180,255,0) 45%,rgba(60,110,200,.38) 100%)}
 .pd-vig.on{animation:pdVig .9s ease-out}
 @keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
@@ -208,14 +252,14 @@ html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mob
     <div class="counter" id="counter"><div class="counter__lb" id="c-lb">C O U N T E R</div><div class="counter__v" id="c-v">0</div><div class="counter__sub" id="c-sub"></div></div>
     <div class="status" id="status"></div>
     <div class="guide" id="guide"></div>
+    <div class="vitals" id="vitals">
+      <div class="vital"><svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg><div class="bar bar--hp bar--tall" data-fill="100" id="v-hp"></div><span class="vital__v" id="v-hpv"></span></div>
+      <div class="vital stamina"><svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg><div class="bar bar--tall" data-fill="100" id="v-st"></div><span class="vital__v" id="v-stv"></span></div>
+      <div class="xpg"><span class="xs t-faint" style="letter-spacing:.14em" id="xp-lv">LV.1</span><div class="bar" data-fill="0" id="v-xp"></div><span class="ultg__v" id="v-gold">0</span></div>
+      <div class="ultg"><span class="xs t-faint" style="letter-spacing:.14em">ULT</span><div class="bar" data-fill="0" id="v-ult"></div><span class="ultg__v" id="v-ultv">0%</span></div>
+    </div>
     <div class="bthud"><div class="bthud__row">
       <div class="stick" id="stick"><b></b><i></i><span class="stick__lb">이동</span></div>
-      <div class="vitals" id="vitals">
-        <div class="vital"><svg class="ico ico--sm vital__ic"><use href="#i-heart"/></svg><div class="bar bar--hp bar--tall" data-fill="100" id="v-hp"></div><span class="vital__v" id="v-hpv"></span></div>
-        <div class="vital stamina"><svg class="ico ico--sm vital__ic"><use href="#i-bolt"/></svg><div class="bar bar--tall" data-fill="100" id="v-st"></div><span class="vital__v" id="v-stv"></span></div>
-        <div class="xpg"><span class="xs t-faint" style="letter-spacing:.14em" id="xp-lv">LV.1</span><div class="bar" data-fill="0" id="v-xp"></div><span class="ultg__v" id="v-gold">0</span></div>
-        <div class="ultg"><span class="xs t-faint" style="letter-spacing:.14em">ULT</span><div class="bar" data-fill="0" id="v-ult"></div><span class="ultg__v" id="v-ultv">0%</span></div>
-      </div>
       <div class="actions" id="actions"></div>
     </div></div>
     <div class="ov" id="ov"><div class="ov__box" id="ov-box"></div></div>

@@ -276,7 +276,7 @@ import { createBloom } from './bloom.js';
     }
   }
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
-    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=SET.lights?2.6:3.2; lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
+    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=(SET.lights?2.6:3.2)*(L.env==='subway'?1.3:1); lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
   function noiseTex(draw, size, srgb){ var c=document.createElement('canvas'); c.width=c.height=size||256; var g=c.getContext('2d'); draw(g, c.width); var t=new THREE.CanvasTexture(c); if(srgb!==false) t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; }
@@ -382,7 +382,114 @@ import { createBloom } from './bloom.js';
     fenceGeo=null;
   }
 
-  if(L.env==='swamp') buildSwamp(); else buildBunker();
+  /* ---------- 환경: 지하철 승강장을 개조한 훈련장 (88) ----------
+     디렉터: 「지하철을 개조한 공간이잖아. 너무 어두울 필요도 없고」. 벙커 콘크리트·붉은 비상등 대신
+     흰 타일 벽 + 노선 색 띠, 화강석 바닥, 북쪽은 선로(안전 난간 너머), 천장 형광등 줄, 역명판·비상구 표지.
+     충돌 격자는 그대로 — 북쪽 벽 한 줄(0행)이 승강장 끝이 되고, 선로는 그 바깥에만 그린다. */
+  function subwaySign(w, h, draw){ var c=document.createElement('canvas'); c.width=w; c.height=h; var g=c.getContext('2d'); draw(g,w,h); var t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4; return t; }
+  function buildSubway(){
+    var LINE='#3f9a62', LINEH=0x3f9a62;
+    scene.background=new THREE.Color(0x1d2024); scene.fog=new THREE.FogExp2(0x262a30, 0.009);
+    hemi.color.setHex(0xdfe4ec); hemi.groundColor.setHex(0x8c877e); moon.color.setHex(0xe8eef8); moon.intensity=1.6;
+    var edgeZ=cellD;                        /* 0행(벽) 안쪽 면 = 승강장 끝 */
+    /* 바닥: 화강석 60 cm 타일 */
+    var floorTex=noiseTex(function(g,s){ g.fillStyle='#8d8f93'; g.fillRect(0,0,s,s); grain(g,s,146,34,14000); g.fillStyle='rgba(40,40,44,.25)'; for(var i=0;i<2600;i++){ g.fillRect(Math.random()*s, Math.random()*s, 1.5, 1.5); }
+      g.strokeStyle='rgba(70,72,76,.9)'; g.lineWidth=3; for(var k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*s/4,0); g.lineTo(k*s/4,s); g.moveTo(0,k*s/4); g.lineTo(s,k*s/4); g.stroke(); } }, 512);
+    var fmat=new THREE.MeshStandardMaterial({ map:floorTex, roughness:0.55, metalness:0.05, color:0xc4c4c8 }); fmat.map.repeat.set(mapW/2.4, (mapD-edgeZ)/2.4);
+    var g=new THREE.PlaneGeometry(mapW, mapD-edgeZ); g.rotateX(-Math.PI/2); var ground=new THREE.Mesh(g, fmat); ground.position.set(mapW/2, 0, edgeZ+(mapD-edgeZ)/2); ground.receiveShadow=true; scene.add(ground);
+    /* 승강장 끝: 흰 선 + 노란 점자 블록 */
+    var dotTex=noiseTex(function(g,s){ g.fillStyle='#e0b41e'; g.fillRect(0,0,s,s); g.fillStyle='rgba(120,90,0,.55)'; for(var y=8;y<s;y+=16) for(var x=8;x<s;x+=16){ g.beginPath(); g.arc(x,y,4,0,6.28); g.fill(); } }, 64);
+    dotTex.repeat.set(mapW/0.3, 1); var strip=new THREE.Mesh(new THREE.PlaneGeometry(mapW, 0.32), new THREE.MeshStandardMaterial({ map:dotTex, roughness:0.7 })); strip.rotation.x=-Math.PI/2; strip.position.set(mapW/2, 0.012, edgeZ+0.75); scene.add(strip);
+    var white=new THREE.Mesh(new THREE.PlaneGeometry(mapW, 0.12), new THREE.MeshStandardMaterial({ color:0xf2f2ee, roughness:0.6 })); white.rotation.x=-Math.PI/2; white.position.set(mapW/2, 0.012, edgeZ+0.1); scene.add(white);
+    /* 선로 홈 (승강장 밖) */
+    var TD=-1.25, farZ=edgeZ-4.6;
+    var edgeFace=new THREE.Mesh(new THREE.BoxGeometry(mapW+16, -TD, 0.3), new THREE.MeshStandardMaterial({ map:concreteWall, color:0x8a8a90, roughness:0.9 })); edgeFace.position.set(mapW/2, TD/2, edgeZ-0.15); scene.add(edgeFace);
+    var gravel=noiseTex(function(g,s){ g.fillStyle='#3b3935'; g.fillRect(0,0,s,s); grain(g,s,70,46,9000); }, 256); gravel.repeat.set((mapW+16)/3, 2);
+    var tfloor=new THREE.Mesh(new THREE.PlaneGeometry(mapW+16, edgeZ-farZ), new THREE.MeshStandardMaterial({ map:gravel, roughness:1 })); tfloor.rotation.x=-Math.PI/2; tfloor.position.set(mapW/2, TD, (edgeZ+farZ)/2); scene.add(tfloor);
+    var sleeperN=Math.ceil((mapW+16)/0.62), sleepers=new THREE.InstancedMesh(new THREE.BoxGeometry(0.24,0.14,2.5), new THREE.MeshStandardMaterial({ color:0x5a524a, roughness:0.95 }), sleeperN), mtx=new THREE.Matrix4();
+    for(var si=0;si<sleeperN;si++){ mtx.makeTranslation(-8+si*0.62, TD+0.07, (edgeZ+farZ)/2); sleepers.setMatrixAt(si, mtx); } sleepers.instanceMatrix.needsUpdate=true; scene.add(sleepers);
+    var railMat=new THREE.MeshStandardMaterial({ color:0xa8acb2, roughness:0.3, metalness:0.9 });
+    [-0.72,0.72].forEach(function(o){ var r=new THREE.Mesh(new THREE.BoxGeometry(mapW+16, 0.14, 0.08), railMat); r.position.set(mapW/2, TD+0.21, (edgeZ+farZ)/2+o); scene.add(r); });
+    /* 벽 타일: 한 칸 면 전체를 그린 아틀라스 (아래 걸레받이 · 흰 타일 · 노선 띠 · 위 도장) */
+    function wallTex(rep){ var t=subwaySign(256, 512, function(g,w,h){ var ppm=h/(CEIL+0.4), Y=function(m){ return h-m*ppm; };
+      g.fillStyle='#b9bcc1'; g.fillRect(0,0,w,h);                                   /* 위 도장 */
+      g.fillStyle='#8e9197'; g.fillRect(0,Y(CEIL+0.4),w,Y(CEIL-0.5)-Y(CEIL+0.4));
+      g.fillStyle='#eeede8'; g.fillRect(0,Y(2.7),w,Y(0.18)-Y(2.7));                  /* 흰 타일 */
+      g.strokeStyle='rgba(150,150,146,.9)'; g.lineWidth=1.5; var th=0.1*ppm, tw=w/6.4;
+      for(var r=0, y=Y(0.18); y>Y(2.7); y-=th, r++){ g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); for(var x=(r%2?tw/2:0); x<w; x+=tw){ g.beginPath(); g.moveTo(x,y); g.lineTo(x,y-th); g.stroke(); } }
+      g.fillStyle=LINE; g.fillRect(0,Y(1.72),w,Y(1.46)-Y(1.72));                     /* 노선 띠 */
+      g.fillStyle='#2c2e32'; g.fillRect(0,Y(0.18),w,h-Y(0.18));                       /* 걸레받이 */
+      g.fillStyle='rgba(60,50,40,.10)'; for(var i=0;i<40;i++) g.fillRect(Math.random()*w, Y(0.18)-Math.random()*40, 2+Math.random()*6, 30+Math.random()*50);   /* 얼룩 조금 */
+    }); t.wrapS=THREE.RepeatWrapping; t.repeat.set(rep,1); return t; }
+    var wA=new THREE.MeshStandardMaterial({ map:wallTex(1), roughness:0.4, color:0xd4d4d4 }), wB=new THREE.MeshStandardMaterial({ map:wallTex(Math.round(cellD/cellW)), roughness:0.4, color:0xd4d4d4 });
+    var wallGeo=new THREE.BoxGeometry(cellW, CEIL+0.4, cellD), walls=new THREE.InstancedMesh(wallGeo, [wB,wB,wA,wA,wA,wA], map.w*map.h), n=0;
+    for(var y=1;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x], cx=X((x+0.5)*map.cell), cz=Z((y+0.5)*map.cell);
+      if(ch==='#'){ mtx.makeTranslation(cx, (CEIL+0.4)/2, cz); walls.setMatrixAt(n++, mtx); } }
+    walls.count=n; walls.instanceMatrix.needsUpdate=true; walls.receiveShadow=true; scene.add(walls);
+    /* 선로 건너 벽 · 양 끝 터널 입구 */
+    var farWall=new THREE.Mesh(new THREE.PlaneGeometry(mapW+16, CEIL-TD), new THREE.MeshStandardMaterial({ map:(function(){ var t=wallTex(Math.round((mapW+16)/cellW)); return t; })(), roughness:0.4 }));
+    farWall.position.set(mapW/2, (CEIL+TD)/2, farZ); scene.add(farWall);
+    var dark=new THREE.MeshBasicMaterial({ color:0x07080a });
+    [[-0.01, 1],[mapW+0.01, -1]].forEach(function(e){ var m=new THREE.Mesh(new THREE.PlaneGeometry(edgeZ-farZ, CEIL-TD), dark); m.rotation.y=Math.PI/2*e[1]; m.position.set(e[0]-e[1]*7, (CEIL+TD)/2, (edgeZ+farZ)/2); scene.add(m);
+      var lin=new THREE.Mesh(new THREE.BoxGeometry(0.6, CEIL-3.4, edgeZ-farZ), wA); lin.position.set(e[0]+(e[1]>0?0.3:-0.3), 3.4+(CEIL-3.4)/2, (edgeZ+farZ)/2); scene.add(lin); });
+    /* 안전 난간 (개조 공간) — 노랑 기둥 + 두 줄 난간 */
+    var postMat=new THREE.MeshStandardMaterial({ color:0xe2b12a, roughness:0.5, metalness:0.3 }), barMat=new THREE.MeshStandardMaterial({ color:0x9aa0a8, roughness:0.35, metalness:0.8 });
+    var pN=Math.floor((mapW-2*cellW)/2.56)+1, posts=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.045,0.05,1.1,8), postMat, pN);
+    for(var pi=0;pi<pN;pi++){ mtx.makeTranslation(cellW+pi*2.56, 0.55, edgeZ+0.04); posts.setMatrixAt(pi, mtx); } posts.instanceMatrix.needsUpdate=true; scene.add(posts);
+    [0.55,1.08].forEach(function(h){ var b=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,mapW-2*cellW,8), barMat); b.rotation.z=Math.PI/2; b.position.set(mapW/2, h, edgeZ+0.04); scene.add(b); });
+    /* 천장: 밝은 패널 + 형광등 줄 */
+    var cmat=new THREE.MeshStandardMaterial({ map:concreteWall.clone(), roughness:0.9, color:0xa9adb3, side:THREE.DoubleSide }); cmat.map.needsUpdate=true; cmat.map.repeat.set(mapW/6, mapD/6);
+    var ceil=new THREE.Mesh(new THREE.PlaneGeometry(mapW+16, mapD-farZ), cmat); ceil.rotation.x=Math.PI/2; ceil.position.set(mapW/2, CEIL, (mapD+farZ)/2); scene.add(ceil);
+    var tubeMat=new THREE.MeshBasicMaterial({ color:0xf6f9ff }), housingMat=new THREE.MeshStandardMaterial({ color:0xd0d4da, roughness:0.5, metalness:0.4 });
+    var rowsZ=[edgeZ-2.2, edgeZ+3.2, mapD*0.5, mapD-3.4], nT=0, tubes=[]; rowsZ.forEach(function(z){ for(var x=1.6; x<mapW+ (z<edgeZ?7:-1); x+=2.9){ tubes.push([x,z]); } });
+    var tubeI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.9,0.05,0.14), tubeMat, tubes.length), houseI=new THREE.InstancedMesh(new THREE.BoxGeometry(2.0,0.1,0.3), housingMat, tubes.length);
+    tubes.forEach(function(t,i){ mtx.makeTranslation(t[0], CEIL-0.12, t[1]); tubeI.setMatrixAt(i, mtx); mtx.makeTranslation(t[0], CEIL-0.06, t[1]); houseI.setMatrixAt(i, mtx); }); tubeI.instanceMatrix.needsUpdate=houseI.instanceMatrix.needsUpdate=true; scene.add(houseI); scene.add(tubeI);
+    function fluo(x,z,inten){ var lt=new THREE.PointLight(0xeef3ff, SET.lights?inten:0, 18, 1.1); lt.position.set(x, CEIL-0.4, z); if(lamps.length<LAMP_MAX) scene.add(lt);
+      var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xdfe8ff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.35 })); fl.scale.set(2.8,0.9,1); fl.position.set(x, CEIL-0.2, z); scene.add(fl); lamps.push({ l:lt, base:inten, fx:fl, x:x, z:z }); }
+    for(var ty=0;ty<map.h;ty++) for(var tx=0;tx<map.w;tx++) if(map.rows[ty][tx]==='t') fluo(X((tx+0.5)*map.cell), Z((ty+0.5)*map.cell), 9);
+    /* 선로 쪽 배관·케이블 트레이 */
+    var pipeMat=new THREE.MeshStandardMaterial({ map:metalTex, roughness:0.6, metalness:0.6, color:0x9a9088 }); pipeMat.map.repeat.set(8,1);
+    [[0.18, CEIL-0.5, farZ+0.3],[0.12, CEIL-0.85, farZ+0.3],[0.1, 0.6+TD, farZ+0.25]].forEach(function(p){ var pipe=new THREE.Mesh(new THREE.CylinderGeometry(p[0],p[0],mapW+16,10), pipeMat); pipe.rotation.z=Math.PI/2; pipe.position.set(mapW/2, p[1], p[2]); scene.add(pipe); });
+    /* 역명판 (선로 건너 벽) · 훈련장 현판 (동쪽 벽) · 비상구 */
+    var nameTex=subwaySign(1024, 256, function(g,w,h){ g.fillStyle='#f4f4f0'; g.fillRect(0,0,w,h); g.fillStyle=LINE; g.fillRect(0,h-34,w,34);
+      g.beginPath(); g.arc(92,h/2-14,52,0,6.28); g.fill(); g.fillStyle='#fff'; g.font='bold 64px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('1',92,h/2-12);
+      g.fillStyle='#1b1d20'; g.font='bold 104px sans-serif'; g.fillText('사무소앞',w/2+30,h/2-34); g.fillStyle='#6a6e74'; g.font='34px sans-serif'; g.fillText('폐역 · 인력사무소 훈련장',w/2+30,h/2+48);
+      g.fillStyle='#fff'; g.font='bold 24px sans-serif'; g.textAlign='left'; g.fillText('◀ 옛 시청',20,h-17); g.textAlign='right'; g.fillText('운행 중지 ▶',w-20,h-17); });
+    var nameMat=new THREE.MeshStandardMaterial({ map:nameTex, roughness:0.5, emissive:0xffffff, emissiveMap:nameTex, emissiveIntensity:0.18 });
+    [8, 22, 36].forEach(function(x){ var b=new THREE.Mesh(new THREE.PlaneGeometry(4.0,1.0), nameMat); b.position.set(x, 2.35, farZ+0.02); scene.add(b); });
+    var hallTex=subwaySign(1024, 320, function(g,w,h){ g.fillStyle='#24272c'; g.fillRect(0,0,w,h); g.fillStyle=LINE; g.fillRect(0,0,18,h); g.fillStyle='#f2efe6'; g.font='bold 120px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('훈 련 장',w/2,h/2-30); g.fillStyle='#c9a45e'; g.font='36px sans-serif'; g.fillText('읽고 · 튕기고 · 피하고 · 반격한다',w/2,h/2+70); });
+    var hall=new THREE.Mesh(new THREE.PlaneGeometry(5.2,1.6), new THREE.MeshStandardMaterial({ map:hallTex, roughness:0.6, emissive:0xffffff, emissiveMap:hallTex, emissiveIntensity:0.12 })); hall.rotation.y=-Math.PI/2; hall.position.set(mapW-cellW-0.02, 3.4, mapD*0.5); scene.add(hall);
+    var exitTex=subwaySign(256, 96, function(g,w,h){ g.fillStyle='#1f9a4a'; g.fillRect(0,0,w,h); g.fillStyle='#fff'; g.font='bold 44px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('비상구',w/2+26,h/2+2); g.fillRect(24,26,26,44); g.fillStyle='#1f9a4a'; g.fillRect(30,32,14,38); });
+    var exitMat=new THREE.MeshBasicMaterial({ map:exitTex }); [[1,-1],[-1,1]].forEach(function(e){ var s=new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.34), exitMat); s.rotation.y=Math.PI/2*e[0]; s.position.set(X(gate.x)+e[1]*0.02*-1 - e[0]*0.36, 3.6, Z(gate.y)); scene.add(s); });
+    /* 남쪽 벽: 광고판 자리였던 곳에 훈련 수칙·옛 노선도 */
+    var mapTex=subwaySign(512, 256, function(g,w,h){ g.fillStyle='#f0efe9'; g.fillRect(0,0,w,h); g.strokeStyle=LINE; g.lineWidth=10; g.beginPath(); g.moveTo(40,h/2); g.lineTo(w-40,h/2); g.stroke(); g.fillStyle='#fff'; g.strokeStyle='#333'; g.lineWidth=3; for(var i=0;i<7;i++){ var x=40+i*(w-80)/6; g.beginPath(); g.arc(x,h/2,11,0,6.28); g.fill(); g.stroke(); } g.fillStyle='#333'; g.font='bold 26px sans-serif'; g.fillText('1호선 — 운행 중지',40,50); g.fillStyle='#b03a30'; g.font='22px sans-serif'; g.fillText('※ 봉쇄 이후 전 구간 폐쇄',40,h-34); });
+    var mapMat=new THREE.MeshStandardMaterial({ map:mapTex, roughness:0.6 }), noticeMat=new THREE.MeshStandardMaterial({ map:noticeTex, roughness:0.8 });
+    for(var ai=0;ai<6;ai++){ var ax=X(map.cell*(3+ai*5.4)); var ad=new THREE.Mesh(new THREE.PlaneGeometry(ai%2?1.1:2.2, ai%2?1.4:1.1), ai%2?noticeMat:mapMat); ad.rotation.y=Math.PI; ad.position.set(ax, 2.1, mapD-cellD-0.02); scene.add(ad);
+      var fr=new THREE.Mesh(new THREE.BoxGeometry((ai%2?1.1:2.2)+0.12, (ai%2?1.4:1.1)+0.12, 0.04), new THREE.MeshStandardMaterial({ color:0x6c7078, metalness:0.7, roughness:0.4 })); fr.position.set(ax, 2.1, mapD-cellD-0.005); scene.add(fr); }
+    var sgn=[]; for(var y2=0;y2<map.h;y2++) for(var x2=0;x2<map.w;x2++) if(map.rows[y2][x2]==='s') sgn.push([X((x2+0.5)*map.cell), Z((y2+0.5)*map.cell)]);
+    sgn.forEach(function(p){ var nb=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.7,0.06), noticeMat); nb.position.set(p[0], 1.5, p[1]-cellD*0.45); scene.add(nb); var np=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1.6,5), barMat); np.position.set(p[0], 0.8, p[1]-cellD*0.45); scene.add(np); });
+    /* 보스 자리: 훈련 원 (밝게) */
+    var bm=world.marks('B')[0]; var ring=new THREE.Mesh(new THREE.PlaneGeometry(11.2, 11.2), new THREE.MeshBasicMaterial({ map:tex('ring'), transparent:true, opacity:0.28, depthWrite:false })); ring.rotation.x=-Math.PI/2; ring.position.set(X(bm.x), 0.02, Z(bm.y)); scene.add(ring);
+    /* 격벽 */
+    var postGeo=new THREE.CylinderGeometry(0.05,0.05,2.0,6), meshMat=new THREE.MeshStandardMaterial({ map:fenceTex, transparent:true, alphaTest:0.3, side:THREE.DoubleSide, roughness:0.5, metalness:0.6, color:0xd8d8de }); meshMat.map.repeat.set(2,3);
+    fenceGeo={ post:postGeo, postMat:postMat, rail:new THREE.BoxGeometry(0.05, 0.05, cellD), meshMat:meshMat };
+    gateMesh=new THREE.Group(); gateMesh.position.set(X(gate.x), 0, Z(gate.y)); scene.add(gateMesh);
+    var frame=new THREE.Mesh(new THREE.BoxGeometry(cellW*1.3, 0.5, 0.7), housingMat); frame.rotation.y=Math.PI/2; frame.position.set(X(gate.x), CEIL-0.25, Z(gate.y)); scene.add(frame);
+  }
+  function placePropsSubway(){
+    for(var y=0;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x], cx=X((x+0.5)*map.cell), cz=Z((y+0.5)*map.cell);
+      if(ch==='|' && fenceGeo){ var fp=new THREE.Mesh(fenceGeo.post, fenceGeo.postMat); fp.position.set(cx, 1.0, cz-cellD/2); scene.add(fp); var r1=new THREE.Mesh(fenceGeo.rail, fenceGeo.postMat); r1.position.set(cx, 1.95, cz); scene.add(r1); var mesh=new THREE.Mesh(new THREE.PlaneGeometry(cellD, 1.9), fenceGeo.meshMat); mesh.rotation.y=Math.PI/2; mesh.position.set(cx, 1.0, cz); scene.add(mesh); }
+      else if(ch==='b') spawn('barrel', cx, cz, { rot:Math.random()*6.28 });
+      else if(ch==='c') spawn('crate', cx, cz, { rot:(Math.random()-0.5)*0.6 });
+    }
+    var door=spawn('blast_door', X(gate.x), Z(gate.y), {}); if(door){ var dz=door.userData.size; if(dz.w>=dz.d){ door.rotation.y=Math.PI/2; door.children[0].scale.x*=(cellD*1.02)/Math.max(0.1,dz.w); } else { door.children[0].scale.z*=(cellD*1.02)/Math.max(0.1,dz.d); } scene.remove(door); gateMesh.add(door); door.position.set(0,0,0); }
+    /* 대기실 벤치 (남쪽 벽) */
+    var benchMat=new THREE.MeshStandardMaterial({ color:0x8a9098, metalness:0.7, roughness:0.35 });
+    [[4,13.35],[8,13.35]].forEach(function(p){ var b=new THREE.Mesh(new THREE.BoxGeometry(2.2,0.08,0.5), benchMat); b.position.set(X(map.cell*p[0]), 0.45, Z(map.cell*p[1])); scene.add(b); [-0.9,0.9].forEach(function(o){ var l=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.45,0.42), benchMat); l.position.set(X(map.cell*p[0])+o, 0.22, Z(map.cell*p[1])); scene.add(l); }); });
+    spawn('console', X(map.cell*9.5), Z(map.cell*13.5), { rot:Math.PI-0.3 });
+  }
+
+  if(L.env==='swamp') buildSwamp(); else if(L.env==='subway') buildSubway(); else buildBunker();
   var gateMesh, fenceGeo;
   /* ---------- 허수아비 (Hi3D 생성 통나무 골렘 + 리깅·클립) ---------- */
   /* 보스 크기 — 플레이어(CHAR_SCALE)를 키운 만큼 보스도 키운다. 보스는 «올려다보는 것» 이라
@@ -496,6 +603,7 @@ import { createBloom } from './bloom.js';
     var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar((0.7+g*0.3)*BOSS_SCALE);
     var hp=bossHitPos('head'); boss.eyeGlow.position.copy(hp).add(new THREE.Vector3(0,-0.05,0.18)); boss.eyeGlow.material.opacity=0.2+g*0.3;
     if(boss.blob) tickBlob(boss.blob, boss.root.position, 1, 0);
+    bossDustTick(dt);
     Object.keys(boss.hits).forEach(function(k){ var h=boss.hits[k]; if(!h.visible) return; h.position.copy(bossHitPos(k)); }); }
   function bossDetach(id){ var h=boss.hits[id]; if(h) h.visible=false; if(boss.PART[id]) boss.PART[id].broken=true;
     var pcs=Object.keys(boss.pieces||{}).filter(function(k){return k===id||k.indexOf(id+'_')===0;}).map(function(k){return boss.pieces[k];}); pcs.forEach(function(pc){if(pc && pc.parent){ detachBossPiece(pc,scene); var a=Math.random()*6.28; debris.push({ g:pc, t:0, vy:2.5+Math.random()*1.5, vx:Math.cos(a)*2.2, vz:Math.sin(a)*2.2, rx:(Math.random()-0.5)*6, rz:(Math.random()-0.5)*6 }); }}); }
@@ -506,7 +614,7 @@ import { createBloom } from './bloom.js';
   var propTpl={};
   function loadProps(done){ var names=(L.props3d||Object.keys(PROPS)).filter(function(n){ return !!PROPS[n]; }), left=names.length; if(!left){ done(); return; } names.forEach(function(n){ loader.load('art/3d/props/'+n+'.glb', function(g){ var root=g.scene; capTextures(root); root.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } }); var b=new THREE.Box3().setFromObject(root); root.userData.box=b; propTpl[n]=root; if(--left===0) done(); }, undefined, function(){ console.warn('prop load fail', n); if(--left===0) done(); }); }); }
   function spawn(n, x, z, o){ o=o||{}; var t=propTpl[n]; if(!t) return null; var c=t.clone(); var b=t.userData.box; var h=PROPS[n].h, sc=h/(b.max.y-b.min.y); var g=new THREE.Group(); c.scale.setScalar(sc); c.position.set(-(b.min.x+b.max.x)/2*sc, -b.min.y*sc, -(b.min.z+b.max.z)/2*sc); g.add(c); g.position.set(x, o.y||0, z); g.rotation.y=o.rot||0; if(o.sx) c.scale.x=sc*o.sx; if(o.sz) c.scale.z=sc*o.sz; scene.add(g); g.userData.size={ w:(b.max.x-b.min.x)*sc, h:h, d:(b.max.z-b.min.z)*sc }; return g; }
-  function placeProps(){ if(L.env==='swamp') placePropsSwamp(); else placePropsBunker(); }
+  function placeProps(){ if(L.env==='swamp') placePropsSwamp(); else if(L.env==='subway') placePropsSubway(); else placePropsBunker(); }
   function placePropsSwamp(){ [[6,4],[14,10],[24,3],[33,12],[36,3],[31,7]].forEach(function(p){ spawn('rubble', X(map.cell*(p[0]+0.5)), Z(map.cell*(p[1]+0.5)), { rot:Math.random()*6.28 }); }); }
   function placePropsBunker(){
     for(var y=0;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x], cx=X((x+0.5)*map.cell), cz=Z((y+0.5)*map.cell);
@@ -846,6 +954,48 @@ import { createBloom } from './bloom.js';
     var ring=new THREE.Mesh(new THREE.RingGeometry(0.2,0.30,24), fxMat(color||0xFFE8C0,0.85)); ring.position.copy(pos); ring.lookAt(cam.position);
     fxPush(ring, (dur||0.16)*1.4, function(o,k){ var sc=0.5+k*size*1.5; o.scale.set(sc,sc,1); o.material.opacity=0.85*(1-k); });
   }
+  /* 88 — 허수아비 보스 공격 이펙트. 맞는 순간 «무엇에 맞았는지» 가 보이게: 내려찍기 = 충격파·흙먼지,
+     돌진 = 발밑 먼지 꼬리, 앞차기 = 발끝 섬광, 회전 = 허리 높이 원호, 훅 = 주먹 섬광. 크기는 판정 모양(js/dungeon.js d01 zones)에 맞춘다. */
+  var DUSTC=0xB8A68C;
+  function bossBonePos(n){ var b=boss.bones[n], v=new THREE.Vector3(); if(b) b.getWorldPosition(v); else { v.copy(boss.root.position); v.y+=1; } return v; }
+  function dustPuff(pos, size, life, drift){
+    var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:DUSTC, transparent:true, depthWrite:false, opacity:0.5 }));
+    sp.position.copy(pos); sp.scale.set(size,size*0.7,1); var vx=(Math.random()-0.5)*(drift||1), vz=(Math.random()-0.5)*(drift||1);
+    fxPush(sp, life, function(o,k,dt){ o.position.x+=vx*dt; o.position.z+=vz*dt; o.position.y+=dt*0.5; var sc=size*(1+k*1.4); o.scale.set(sc,sc*0.7,1); o.material.opacity=0.5*(1-k)*(1-k); });
+  }
+  function bossSwingFx(icon){
+    if(A.id!=='tutorial') return;
+    var fwd=new THREE.Vector3(Math.sin(boss.root.rotation.y),0,Math.cos(boss.root.rotation.y)), i, q, a;
+    if(icon==='slam'){
+      var hp=bossBonePos('LeftHand').add(bossBonePos('RightHand')).multiplyScalar(0.5); hp.y=0.05;
+      fxRing(hp, 0xFFC890, 4.2, 0.55); schedule(function(){ fxRing(hp, DUSTC, 3.0, 0.7); }, 90);
+      fxImpact(new THREE.Vector3(hp.x,0.4,hp.z), 2.6, 0xFFD8A0, 0.2);
+      for(i=0;i<14;i++){ a=i/14*Math.PI*2; q=new THREE.Vector3(hp.x+Math.cos(a)*0.9, 0.25, hp.z+Math.sin(a)*0.9); dustPuff(q, 1.1+Math.random()*0.5, 0.9+Math.random()*0.4, 2.4); }
+      burst(new THREE.Vector3(hp.x,0.3,hp.z), 22, 0xE0C8A0); shake(0.016,380); vib(50); SFX.play('brk');
+    } else if(icon==='charge'){
+      var fp=boss.root.position.clone().addScaledVector(fwd, 1.2); fp.y=0.05;
+      fxRing(fp, DUSTC, 2.4, 0.45); fxImpact(bossHitPos('body'), 2.0, 0xFFE0B0, 0.16);
+      for(i=0;i<8;i++){ q=fp.clone().addScaledVector(fwd,-Math.random()*1.5); q.y=0.3; dustPuff(q, 1.0, 0.8, 1.6); }
+      shake(0.013,300); vib(40);
+    } else if(icon==='kick'){
+      var kp=bossBonePos('RightFoot'); fxImpact(kp, 0.8, 0xFFE8C0, 0.14); kp.y=0.05; fxRing(kp, DUSTC, 1.4, 0.35);
+    } else if(icon==='spin'){
+      var g=new THREE.Group(); g.position.copy(boss.root.position); g.position.y=1.1*BOSS_SCALE/1.22; g.rotation.y=boss.root.rotation.y;
+      var t=new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.08, 6, 40, Math.PI*1.7), fxMat(0xFFD0A0,0.8)); t.rotation.x=Math.PI/2; g.add(t);
+      fxPush(g, 0.4, function(o,k,dt){ o.scale.setScalar(0.8+k*0.5); o.children[0].material.opacity=0.8*(1-k); o.children[0].rotation.z-=dt*9; });
+      q=boss.root.position.clone(); q.y=0.05; fxRing(q, DUSTC, 2.6, 0.5); shake(0.012,260);
+    } else if(icon==='hookR'||icon==='hookL'){
+      fxImpact(bossBonePos(icon==='hookR'?'RightHand':'LeftHand'), 0.8, 0xFFE8C0, 0.12);
+    }
+  }
+  /* 돌진·도약처럼 빠르게 움직이는 동안 발밑에 먼지 — 움직임이 «힘으로» 읽히게 */
+  var bossPrev=null, bossDustT=0;
+  function bossDustTick(dt){
+    if(A.id!=='tutorial'||!boss.root) return; var p=boss.root.position;
+    if(bossPrev&&dt>0){ var v=Math.hypot(p.x-bossPrev.x, p.z-bossPrev.z)/dt; bossDustT-=dt;
+      if(v>2.5&&bossDustT<=0){ bossDustT=0.05; ['LeftFoot','RightFoot'].forEach(function(n){ var f=bossBonePos(n); if(f.y<0.5){ f.y=0.2; dustPuff(f, 0.8+Math.min(0.6,v*0.05), 0.7, 1.2); } }); } }
+    bossPrev=bossPrev||new THREE.Vector3(); bossPrev.copy(p);
+  }
   /* ── 스킬 연출 v2 — 사양은 js/skill-fx.js, 그리기는 여기 ───────────────────
      실시간 VFX 관행대로 «한 겹» 이 아니라 겹쳐 쌓는다. 한 겹짜리 도넛은
      아무리 밝게 해도 «기술» 로 안 읽힌다 (docs/design/63-skill-vfx.md). */
@@ -1172,7 +1322,7 @@ import { createBloom } from './bloom.js';
         break;
       case 'up': guide((A.hudName||'허수아비')+'가 자세를 되찾았다', 1.5); bossPlay('up'); break;
       case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
-      case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); schedule(function(){ zone=null; hideZone(); }, 180); break;
+      case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); bossSwingFx(s&&s.enemy.patIcon); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; hitReact(e);
         var axD=axisFromBoss(), sgD=(R.stagger||{})[e.tier]||{};
@@ -1411,7 +1561,7 @@ import { createBloom } from './bloom.js';
   /* ---------- 입력 ---------- */
   /* 이동 패드: 누른 자리가 스틱 중심(떠 있는 스틱) — 세로로 긴 패드 어디를 눌러도 된다 (디렉터 스케치).
      바깥 고리(b)와 손잡이(i)가 누른 자리로 옮겨 간다. 반지름·감도는 전과 같다(44 px). */
-  function stickAt(x,y){ ['b','i'].forEach(function(t){ var n=el.stickEl.querySelector(t); if(n){ n.style.left=x==null?'':x+'px'; n.style.top=y==null?'':y+'px'; } }); }
+  function stickAt(x,y){ el.stickEl.classList.toggle('is-on', x!=null); ['b','i'].forEach(function(t){ var n=el.stickEl.querySelector(t); if(n){ n.style.left=x==null?'':x+'px'; n.style.top=y==null?'':y+'px'; } }); }
   el.stickEl.addEventListener('pointerdown', function(e){ e.preventDefault(); stick.id=e.pointerId; var r=el.stickEl.getBoundingClientRect(), m=24;
     stick.ox=Math.max(r.left+m, Math.min(r.right-m, e.clientX)); stick.oy=Math.max(r.top+m, Math.min(r.bottom-m, e.clientY)); stickAt(stick.ox-r.left, stick.oy-r.top);
     el.stickEl.setPointerCapture(e.pointerId); stickMove(e); });
@@ -1665,7 +1815,7 @@ import { createBloom } from './bloom.js';
     fill('v-ult', s2.player.ult); $('#v-ultv').textContent=Math.round(s2.player.ult)+'%';
     fill('p-bar', s2.player.hp/s2.player.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(s2.player.hp));
     s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.7:0.45)*BOSS_SCALE); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
-    var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
+    var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); o.style.setProperty('--p', Math.min(1, cd/Math.max(0.1, SK[i].cd||cd)).toFixed(3)); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
     el.actions.querySelector('[data-ult]').classList.toggle('is-ready', s2.player.ult>=R.ult.max); el.actions.querySelector('[data-atk]').classList.toggle('is-ready', Bs.dist<=L.player.reach);
     var lines=[]; if(s2.enemy.bleed) lines.push(['drop','#C9534E','출혈','×'+s2.enemy.bleed]); if(s2.enemy.state==='downed') lines.push(['x','#C9A45E','격추',Math.ceil(s2.enemy.downT)+'s']); if(s2.enemy.state==='telegraph'&&!s2.enemy.counterable) lines.push(['x','#FF9A45','튕기기 불가 · 회피','']); if(s2.player.riposte) lines.push(['bolt','#C9A45E','반격 기회',s2.player.riposteT.toFixed(1)+'s']); if(s2.player.guard) lines.push(['shield','#7B9BD6','방어 중','']); if(s2.player.buffT>0) lines.push(['shield','#5FAE9B','결의',Math.ceil(s2.player.buffT)+'s']); if(s2.player.critNext) lines.push(['bolt','#C9A45E','치명타 확정','']); if(s2.player.locked) lines.push(['x','#8A8A8A','경직','']);
     el.status.innerHTML=lines.map(function(l){ return '<div class="stline"><svg class="ico ico--xs" style="color:'+l[1]+'"><use href="#i-'+l[0]+'"/></svg>'+l[2]+'<b>'+l[3]+'</b></div>'; }).join('');

@@ -1,7 +1,10 @@
 /* Dungeon content extends the existing renderer and combat data. */
 (function(){
   var levels=window.TW_LEVELS,arenas=window.TW_DUNGEONS.ARENAS;
-  levels.d01.attackMotion={'느린 내려찍기':{distance:65,stop:110,at:.65},'찌르기':{distance:115,stop:95,at:.6},'양손 내려찍기':{distance:85,stop:110,at:.65}};
+  levels.d01.attackMotion={'느린 내려찍기':{distance:65,stop:110,at:.65},'찌르기':{distance:115,stop:95,at:.6},'양손 내려찍기':{distance:85,stop:110,at:.65},
+    /* 88: 원투 훅은 반 걸음, 돌진은 멀리서 들이받고, 도약 내려찍기는 뛰어들어 착지 */
+    '원투 훅':{distance:70,stop:100,at:.55},'앞차기':{distance:60,stop:95,at:.6},'훅 연타 내려찍기':{distance:80,stop:100,at:.55},
+    '돌진':{distance:460,stop:70,at:.42},'도약 내려찍기':{distance:360,stop:40,at:.5}};
   levels.d02.attackMotion={'돌진 베기':{distance:260,stop:110,at:.48},'대지 강타':{distance:90,stop:140,at:.65},'피의 광란':{distance:100,stop:110,at:.55}};
   arenas.marsh.stages[0].patterns.forEach(function(p){if(p.name==='꼬리 휘두르기')p.disabledBy=['tail'];if(p.name==='돌진 베기')p.disabledBy=['legf'];});
   levels.d01.expedition={nodes:[{id:'training_rest',kind:'checkpoint',cx:9,cy:7,name:'훈련실 앞 보급대',text:'재도전 지점을 기록했다. 회복하고 허수아비에게 가자.'}]};

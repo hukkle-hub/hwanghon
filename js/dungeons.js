@@ -210,7 +210,10 @@
       /* 3D: 모델·부위→뼈·파괴 조각·패턴 아이콘→클립 (game3d.js) */
       model:'art/3d/boss_anim.glb', pieces:'dummy', tint:{ dormant:0xb8b0a8, chained:0xd8d0c8, awake:0xffffff }, glow:{ dormant:0.35, chained:0.6, awake:1 },
       parts3d:{ core:{ bone:'Spine2', off:[0,0.05,0.42], r:0.32 }, body:{ bone:'Spine', off:[0,0.1,0.3], r:0.7 }, head:{ bone:'Head', off:[0,0.15,0.05], r:0.4 }, shl:{ bone:'LeftArm', off:[0.05,0.1,0], r:0.36 }, shr:{ bone:'RightArm', off:[-0.05,0.1,0], r:0.36 }, chain:{ bone:'Spine1', off:[0,0.05,0.4], r:0.45 } },
-      atk:{ hammer:{ clip:'atk_hammer', hitFrac:0.48 }, bolt:{ clip:'atk_bolt', hitFrac:0.35 }, scythe:{ clip:'atk_scythe', hitFrac:0.30 } },
+      atk:{ hammer:{ clip:'atk_hammer', hitFrac:0.48 }, bolt:{ clip:'atk_bolt', hitFrac:0.35 }, scythe:{ clip:'atk_scythe', hitFrac:0.30 },
+        /* 88: 진짜 보스처럼 — 무료 모션(UAL2·KayKit 1.1, CC0)을 허수아비 뼈대로 옮긴 기본 공격·스킬. hitFrac = 손·발 최고속 */
+        hookR:{ clip:'atk_hookR', hitFrac:0.54 }, hookL:{ clip:'atk_hookL', hitFrac:0.54 }, kick:{ clip:'atk_kick', hitFrac:0.35 },
+        slam:{ clip:'atk_slam', hitFrac:0.26 }, charge:{ clip:'atk_charge', hitFrac:0.62 }, spin:{ clip:'atk_spin', hitFrac:0.49 } },
       rewards:{ gold:1500, items:[['m_fiber',20],['m_ore',10],['c_potion',3],['c_antidote',2]], sBonus:[['m_oil',2]] },
       stages:[
         dummy({ id:'dormant', name:'잠든 허수아비', lesson:'기본', timeLimit:30, hp:120000, kind:'dormant',
@@ -305,17 +308,31 @@
   training[0].lesson='거리와 반격';
   training[0].line='마구 베면 오래 걸린다. 공격을 읽고 되돌려라.';
   training[0].hint='일반 공격은 견제 · 정확한 카운터와 회피 후 반격으로 빈틈을 노려라';
+  /* 88 — 디렉터: 「허수아비 보스를 진짜 보스처럼. 서서 원만 생기는 게 아니라 스킬도, 기본 공격도」.
+     예전엔 팔 벌리고 선 채 몸짓이 거의 없는 클립 셋(내려찍기·회전·찌르기)이 바닥 원만 띄웠다.
+     기본 공격(원투 훅 연계·앞차기·양손 내려찍기) + 스킬(돌진·회전 후려치기·도약 내려찍기)을 단계마다 늘려 간다.
+     판정 모양·돌진 거리는 js/dungeon.js d01 zones · js/dungeon-content.js attackMotion. */
   training[0].patterns=[
-    {icon:'hammer',name:'느린 내려찍기',tele:1.15,window:0.18,dmg:4200,posture:30,guardCost:24,recovery:0.8},
-    {icon:'scythe',name:'회전 후려치기',tele:1.45,window:0.18,dmg:4600,posture:30,guardCost:28,recovery:0.85},
-    {icon:'bolt',name:'찌르기',tele:0.85,window:0.18,dmg:3800,posture:30,guardCost:22,recovery:0.7}
+    /* 첫 공격은 단발 — 튜토리얼에서 카운터를 먼저 배운다(연계는 마지막 타만 카운터된다). */
+    {icon:'kick',name:'앞차기',tele:0.75,window:0.18,dmg:4000,posture:35,guardCost:22,recovery:0.65,desc:'앞으로 밀어 찬다'},
+    {icon:'hookR',name:'원투 훅',tele:0.85,window:0.18,dmg:4200,posture:25,guardCost:18,recovery:0.7,desc:'오른손·왼손 연타 — 두 번째를 튕겨라',
+      chain:[{icon:'hookL',tele:0.38,dmg:4400,posture:25,gap:0.14}]},
+    {icon:'slam',name:'양손 내려찍기',tele:1.2,window:0.18,dmg:5200,posture:40,guardCost:28,recovery:0.95,desc:'뛰어올라 두 팔로 땅을 친다 — 충격파'}
   ];
-  training[1].patterns[0].dmg=5500; training[1].patterns[0].every=2.2;
-  training[1].patterns.push({icon:'bolt',name:'찌르기',tele:0.9,window:0.16,dmg:4800,posture:30,guardCost:26,recovery:0.7});
+  training[1].patterns=[
+    {icon:'slam',name:'양손 내려찍기',tele:1.1,window:0.16,dmg:5500,posture:40,guardCost:28,recovery:0.9,every:2.2,desc:'충격파'},
+    {icon:'hookR',name:'원투 훅',tele:0.8,window:0.16,dmg:4600,posture:28,guardCost:20,recovery:0.7,chain:[{icon:'hookL',tele:0.34,dmg:4800,posture:28,gap:0.13}]},
+    {icon:'charge',name:'돌진',tele:1.05,window:0.16,dmg:6000,posture:45,guardCost:34,recovery:0.95,counterable:false,unblockable:true,range:'far',desc:'멀리서 몸으로 들이받는다 — 옆으로 피하라'}
+  ];
   training[1].parts.filter(function(p){return p.breakable;}).forEach(function(p){p.hp=32000;p.hpMax=p.hp;});
-  training[2].patterns.forEach(function(p,i){p.dmg=[5600,6500,8000][i];});
-  training[2].patterns[1].counterable=false; training[2].patterns[1].unblockable=true;
-  training[2].patterns[1].desc='튕겨낼 수 없는 회전 공격. 위치 회피 후 반격';
+  training[2].patterns=[
+    {icon:'hookR',name:'훅 연타 내려찍기',tele:0.75,window:0.40,dmg:5200,posture:30,guardCost:20,recovery:0.9,desc:'훅·훅·내려찍기 3연계 — 마지막을 튕겨라',
+      chain:[{icon:'hookL',tele:0.32,dmg:5400,posture:30,gap:0.12},{icon:'slam',tele:0.62,dmg:8000,posture:60,gap:0.16}]},
+    {icon:'spin',name:'회전 후려치기',tele:1.45,window:0.40,dmg:6500,posture:30,guardCost:30,recovery:0.85,counterable:false,unblockable:true,desc:'튕겨낼 수 없는 회전 공격. 위치 회피 후 반격'},
+    {icon:'slam',name:'도약 내려찍기',tele:1.25,window:0.40,dmg:8000,posture:60,guardCost:30,recovery:1.0,range:'far',desc:'멀리서 뛰어들어 내려찍는다 — 착지점 충격파'},
+    {icon:'charge',name:'돌진',tele:1.0,window:0.40,dmg:7000,posture:45,guardCost:34,recovery:0.9,counterable:false,unblockable:true,range:'far',desc:'옆으로 피하라'},
+    {icon:'kick',name:'앞차기',tele:0.6,window:0.40,dmg:5600,posture:35,guardCost:22,recovery:0.6,range:'near'}
+  ];
   training[2].hint='백색선은 카운터 · 주황 X는 회피 · 파괴한 부위는 큰 빈틈';
   training[2].parts[1].hp=45000; training[2].parts[1].hpMax=45000;
 

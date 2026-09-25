@@ -27,11 +27,20 @@
     /* 페이지(phase) 별 AI — dungeons.js ARENAS.tutorial.stages[i] 와 1:1 */
     ai:[
       { speed:90, keep:140, start:260, pick:'seq' },
-      { speed:70,  keep:150, start:300, pick:'seq' },
-      { speed:120, keep:140, start:320, pick:'range' }
+      /* 88: 2·3단계엔 멀리서 쓰는 기술(돌진·도약 내려찍기, range:'far' = 240 px 밖)이 있다.
+         시작 거리가 300 이면 240~300 사이에서만 골라져 사실상 안 나왔다 — 멀리서도 시작하게 한다 */
+      { speed:70,  keep:150, start:520, pick:'seq' },
+      { speed:120, keep:140, start:560, pick:'range' }
     ],
     /* 패턴별 바닥 존 (이름으로 매칭) */
     zones:{
+      /* 88: 새 허수아비 기술 */
+      '원투 훅':        { kind:'circle', r:150, fwd:115 },
+      '앞차기':         { kind:'line', len:240, w:120 },
+      '양손 내려찍기':  { kind:'circle', r:190, fwd:130 },
+      '돌진':           { kind:'line', len:560, w:140 },
+      '훅 연타 내려찍기': { kind:'circle', r:170, fwd:120 },
+      '도약 내려찍기':  { kind:'circle', r:210, fwd:0 },
       '느린 내려찍기': { kind:'circle', r:150, fwd:120 },
       '찌르기':        { kind:'line', len:300, w:96 },
       '회전 후려치기':  { kind:'circle', r:210, fwd:0 },
@@ -115,7 +124,7 @@
     props3d:['rubble'],
     props:{ r:{ name:'갈대' }, T:{ name:'죽은 나무' }, w:{ name:'망루' }, t:{ name:'등불' }, s:{ name:'흔적' }, f:{ name:'채집' }, q:{ name:'기록' } }
   };
-  LEVEL.code='던전 01'; LEVEL.env='bunker'; LEVEL.diff='튜토리얼 · '+LEVEL.place; LEVEL.npc='마태오'; LEVEL.bossR=60; LEVEL.mobs={ m:LEVEL.mob }; LEVEL.props3d=['dummy_a','dummy_b','dummy_c','blast_door','fan','tank_glow','console','pillar','barrel','crate','rubble','wall_panel'];
+  LEVEL.code='던전 01'; LEVEL.env='subway'; LEVEL.place='마태오의 인력사무소 지하 · 폐역 승강장'; LEVEL.diff='튜토리얼 · '+LEVEL.place; LEVEL.npc='마태오'; LEVEL.bossR=60; LEVEL.mobs={ m:LEVEL.mob }; LEVEL.props3d=['dummy_a','dummy_b','dummy_c','blast_door','fan','tank_glow','console','pillar','barrel','crate','rubble','wall_panel'];
   LEVEL.beats.questTitle='훈련장 수료'; LEVEL.beats.quest=[ ['훈련장 입장', 1, 'gate'], ['허수아비 격파', 1, 'boss'] ]; LEVEL.beats.enter=['', '사슬이 끊어진다', '핵이 타오른다'];
   LEVEL.beats.intro='마태오 — “사무소 지하에 허수아비를 묶어 뒀다. 살아 있는 것처럼 굴 테니, 살아 있는 것처럼 상대해라.”'; LEVEL.beats.introHint='격벽을 지나면 전투가 시작된다. 붉은 범위 밖으로 구르고, 고리가 흰색일 때 붙어서 쳐라';
   LEVEL.beats.death={ k:'쓰러졌다', line:'마태오 — “다시.”', hint:'격벽 앞에서 다시 시작한다. 잡은 것과 얻은 것은 남는다.', btn:'격벽 앞에서 재도전' };
