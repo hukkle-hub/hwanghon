@@ -1,0 +1,176 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 스킬 모캡 플래너</title>
+<style>
+body{margin:0;background:#111418;color:#e8e8e8;font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif}
+main{max-width:1180px;margin:auto;padding:28px}
+h1{margin:0 0 8px;font-size:28px} .lead{color:#aeb5be;margin:0 0 20px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0} button{background:#242a31;color:#eee;border:1px solid #444;padding:10px 16px;border-radius:8px;cursor:pointer}
+button.active{background:#eee;color:#111} .character{display:none} .character.active{display:block}
+.charhead{border-left:4px solid #999;padding:4px 16px;margin-bottom:16px} .charhead h2{margin:0;font-size:24px} .charhead p{color:#b9c0c9}
+.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px} .skill{background:#1a1f25;border:1px solid #30363d;border-radius:10px;padding:14px}
+.skill-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline} .skill-head span,.meta{font-size:12px;color:#9ca6b2}
+.timeline{display:grid;grid-template-columns:20fr 25fr 13fr 24fr 18fr;height:34px;margin:12px 0;border-radius:6px;overflow:hidden}
+.phase{font-size:10px;display:flex;align-items:center;justify-content:center;color:#fff;border-right:1px solid #111}
+.p0{background:#3c4652}.p1{background:#596674}.p2{background:#8c3c45}.p3{background:#67464d}.p4{background:#394048}
+.meta{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap} .skill p{font-size:13px;line-height:1.5;margin:10px 0 0;color:#d3d7dc}
+.note{margin-top:20px;padding:14px;background:#171b20;border:1px solid #30363d;border-radius:10px;color:#c8ced5;line-height:1.6}
+@media(max-width:520px){main{padding:16px}.skills{grid-template-columns:1fr}}
+</style>
+<main><h1>황혼 · 스킬 모션캡처 플래너 v1</h1><p class="lead">모캡은 몸의 역학을 얻고, 무기 제약과 게임용 과장은 후처리에서 만든다.</p>
+<div class="tabs"><button data-target="ain">아인</button><button data-target="kain">카인</button><button data-target="ryu">류</button><button data-target="sera">세라</button></div>
+
+    <section class="character" data-char="ain">
+      <div class="charhead">
+        <h2>아인</h2><div>1.9m 낫 프록시</div>
+        <p>오른손이 무기 주도, 왼손은 자루 locator를 따라가게. 몸통 회전과 회수 관성 우선.</p>
+      </div>
+      <div class="skills">
+        <article class="skill">
+          <div class="skill-head"><b>낫 베기</b><span>정밀 절단</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>단일 접점</span></div>
+          <p>준비→몸통 회전→날끝 가속→정밀 접촉→깊은 따라감→회수</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>그림자 걸음</b><span>회피/재진입</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_inplace</span><span>접점 없음</span></div>
+          <p>낮은 중심→측/후방 한 걸음→시선 유지→재진입 준비</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>피의 회전</b><span>광역 절단</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>1차 접점</span></div>
+          <p>큰 원호 준비→골반 선행→전신 회전→주 접점→자루 회수</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>결의</b><span>방어 버프</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>upperbody_additive</span><span>접점 없음</span></div>
+          <p>방어 진입→플레이트/낫으로 중심선 보호→유지 루프→해제</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>낫의 황혼</b><span>궁극 강타</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>주 접점 1회</span></div>
+          <p>큰 예비→발/골반 고정→폭발적 회전→주 접점→긴 여운→복귀</p>
+        </article></div>
+    </section>
+    <section class="character" data-char="kain">
+      <div class="charhead">
+        <h2>카인</h2><div>1.6~1.8m 폼 대검 프록시</div>
+        <p>실제 중량물 사용 금지. 발-골반-어깨-검 순서와 버티는 자세를 연기하고, 무게는 후처리 물리로 강화.</p>
+      </div>
+      <div class="skills">
+        <article class="skill">
+          <div class="skill-head"><b>대검 내려치기</b><span>중량 파괴</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>단일 접점</span></div>
+          <p>발 넓힘→검 들어올림→골반 하강→수직 강타→반동 흡수</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>철벽</b><span>받아내기</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_hold</span><span>접점/가드 이벤트</span></div>
+          <p>검/몸으로 선 만들기→충격 대비→가드 유지→밀어내기→복귀</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>강철 회전</b><span>광역 중량 베기</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>주 접점 1회</span></div>
+          <p>옆으로 감기→축발 고정→큰 수평 회전→접점→검의 관성에 몸이 따라감</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>지면 강타</b><span>자세 파괴</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>지면 이벤트</span></div>
+          <p>무게 싣기→내려치기→지면 직전 정지→충격 반동→앵커 자세</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>모루의 심판</b><span>최대 중량 일격</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_weapon</span><span>주 접점 1회</span></div>
+          <p>긴 예비→응력 축적 표현→한 걸음 전진→강타→정지→느린 회수</p>
+        </article></div>
+    </section>
+    <section class="character" data-char="ryu">
+      <div class="charhead">
+        <h2>류</h2><div>폼 쌍단검 2개</div>
+        <p>빠른 몸동작은 60/120fps 촬영 권장. 손이 몸 뒤로 가려지지 않게 카메라 각도 확보.</p>
+      </div>
+      <div class="skills">
+        <article class="skill">
+          <div class="skill-head"><b>쌍날 난무</b><span>연속 타격</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_dualweapon</span><span>3접점 권장</span></div>
+          <p>진입→R 베기→L 베기→교차 베기→짧은 이탈</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>그림자 도약</b><span>회피/축회전</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_inplace</span><span>접점 없음</span></div>
+          <p>보스 축 기준 측면 스텝→상체는 목표 고정→발 교체→재진입</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>칼날 폭풍</b><span>광역 연속</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_dualweapon</span><span>2~3접점 권장</span></div>
+          <p>낮은 자세→회전 베기→반대손 후속→방향 전환→회수</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>표식</b><span>타깃 지정</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>upperbody_additive</span><span>표식 이벤트</span></div>
+          <p>시선 고정→한 손 표식→다른 손은 무기 준비→즉시 이동 가능</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>붉은 그림자</b><span>고속 연속 찌르기</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_dualweapon</span><span>3~5접점 권장</span></div>
+          <p>짧은 대시→교차 찌르기 연속→최종 관통 포즈→즉시 이탈</p>
+        </article></div>
+    </section>
+    <section class="character" data-char="sera">
+      <div class="charhead">
+        <h2>세라</h2><div>경량 정제환 2개 + 와이어는 디지털</div>
+        <p>원래 정체성인 쌍 정제환/와이어를 유지. 와이어는 모캡하지 않고 런타임 곡선/VFX로 처리.</p>
+      </div>
+      <div class="skills">
+        <article class="skill">
+          <div class="skill-head"><b>부식 시약</b><span>정제환 투척</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_prop</span><span>release + impact</span></div>
+          <p>정제환 준비→한 손 투척→반대손 회수 준비→목표 확인</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>정제 안개</b><span>회피/장 설치</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_prop</span><span>release 이벤트</span></div>
+          <p>환 위치 확인→와이어 당김 몸이동→낮은 착지→정제 자세</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>연쇄 폭발</b><span>다중 장치 연계</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_prop</span><span>2 release + detonate</span></div>
+          <p>양쪽 환 교차 투척→교차점 확인→손가락/손목 트리거→폭발</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>회복 결계</b><span>지원 유지</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>upperbody_additive</span><span>wardOn/wardOff</span></div>
+          <p>환 두 개 펼침→손을 작게 유지→장치가 크게 반응→해제</p>
+        </article>
+        <article class="skill">
+          <div class="skill-head"><b>촉매 폭발</b><span>대형 정제 폭발</span></div>
+          <div class="timeline"><span class="phase p0">준비</span><span class="phase p1">가속</span><span class="phase p2">접점/실행</span><span class="phase p3">여운</span><span class="phase p4">복귀</span></div>
+          <div class="meta"><span>fullbody_prop</span><span>release + detonate</span></div>
+          <p>양환 회수→가슴 앞 압축→전방 방출→폭발 확인→후퇴</p>
+        </article></div>
+    </section>
+<div class="note"><b>권장 공통 공정</b><br>키포즈 프리비즈 → 캡처 → Mixamo 계열 리타게팅 → 무기 constraint → 물리/발 접지 정리 → contact/release 이벤트 태깅 → GLB → 게임 검수</div>
+</main>
+<script>
+const buttons=[...document.querySelectorAll("button[data-target]")], sections=[...document.querySelectorAll(".character")];
+function show(id){buttons.forEach(b=>b.classList.toggle("active",b.dataset.target===id));sections.forEach(s=>s.classList.toggle("active",s.dataset.char===id));}
+buttons.forEach(b=>b.addEventListener("click",()=>show(b.dataset.target)));show("ain");
+</script></html>

@@ -1,0 +1,362 @@
+[
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_01_Wolha_bonebound_v02.glb",
+    "source": "ain_outfit_01_Wolha_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_02_Jeogya_bonebound_v02.glb",
+    "source": "ain_outfit_02_Jeogya_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_03_Maehwa_bonebound_v02.glb",
+    "source": "ain_outfit_03_Maehwa_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_04_Yeonhwa_bonebound_v02.glb",
+    "source": "ain_outfit_04_Yeonhwa_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_05_Hongrin_bonebound_v02.glb",
+    "source": "ain_outfit_05_Hongrin_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_06_Heugu_bonebound_v02.glb",
+    "source": "ain_outfit_06_Heugu_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_07_Maedeup_bonebound_v02.glb",
+    "source": "ain_outfit_07_Maedeup_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_08_Simyeon_bonebound_v02.glb",
+    "source": "ain_outfit_08_Simyeon_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_09_Chunseol_bonebound_v02.glb",
+    "source": "ain_outfit_09_Chunseol_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ain",
+    "file": "models/ain/ain_outfit_10_Hwaseol_bonebound_v02.glb",
+    "source": "ain_outfit_10_Hwaseol_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_01_Steelworks_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_01_Steelworks_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_02_Demolition_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_02_Demolition_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_03_Rescue_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_03_Rescue_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_04_Tunnel_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_04_Tunnel_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_05_Powerhouse_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_05_Powerhouse_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_06_HeavyCarry_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_06_HeavyCarry_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_07_Fireproof_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_07_Fireproof_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_08_ColdForge_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_08_ColdForge_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_09_FieldSmith_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_09_FieldSmith_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "kain",
+    "file": "models/kain/kain_outfit_10_CeremonialWork_bonebound_v02.glb",
+    "source": "models/kain/kain_outfit_10_CeremonialWork_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_01_FieldMedical_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_01_FieldMedical_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_02_PurificationSupport_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_02_PurificationSupport_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_03_TacticalControl_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_03_TacticalControl_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_04_ReconSupport_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_04_ReconSupport_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_05_RapidResponse_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_05_RapidResponse_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_06_Contamination_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_06_Contamination_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_07_EscortSupport_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_07_EscortSupport_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_08_UrbanRescue_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_08_UrbanRescue_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_09_ColdSupport_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_09_ColdSupport_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "sera",
+    "file": "models/sera/sera_outfit_10_RitualOperation_bonebound_v02.glb",
+    "source": "models/sera/sera_outfit_10_RitualOperation_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_01_Infiltration_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_01_Infiltration_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_02_Blitz_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_02_Blitz_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_03_UrbanScout_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_03_UrbanScout_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_04_CloseDisruption_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_04_CloseDisruption_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_05_HighPursuit_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_05_HighPursuit_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_06_AllWeather_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_06_AllWeather_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_07_SignalDisruption_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_07_SignalDisruption_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_08_Shadowless_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_08_Shadowless_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_09_CivilianDisguise_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_09_CivilianDisguise_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  },
+  {
+    "character": "ryu",
+    "file": "models/ryu/ryu_outfit_10_Ritual_bonebound_v02.glb",
+    "source": "models/ryu/ryu_outfit_10_Ritual_v01.glb",
+    "binding": "rigid bone parenting",
+    "bone_count": 24,
+    "weapon_parent": "mixamorig:RightHand",
+    "status": "pose-QA candidate; not smooth-skinned cloth"
+  }
+]

@@ -1,0 +1,21 @@
+﻿character,skill_id,skill_name,role,capture_mode,proxy,planned_events,motion_flow,takes,camera_note
+아인,skill1,낫 베기,정밀 절단,fullbody_weapon,1.9m 낫 프록시,단일 접점,준비→몸통 회전→날끝 가속→정밀 접촉→깊은 따라감→회수,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+아인,skill2,그림자 걸음,회피/재진입,fullbody_inplace,1.9m 낫 프록시,접점 없음,낮은 중심→측/후방 한 걸음→시선 유지→재진입 준비,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+아인,skill3,피의 회전,광역 절단,fullbody_weapon,1.9m 낫 프록시,1차 접점,큰 원호 준비→골반 선행→전신 회전→주 접점→자루 회수,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+아인,skill4,결의,방어 버프,upperbody_additive,1.9m 낫 프록시,접점 없음,방어 진입→플레이트/낫으로 중심선 보호→유지 루프→해제,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+아인,ult,낫의 황혼,궁극 강타,fullbody_weapon,1.9m 낫 프록시,주 접점 1회,큰 예비→발/골반 고정→폭발적 회전→주 접점→긴 여운→복귀,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+카인,skill1,대검 내려치기,중량 파괴,fullbody_weapon,1.6~1.8m 폼 대검 프록시,단일 접점,발 넓힘→검 들어올림→골반 하강→수직 강타→반동 흡수,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+카인,skill2,철벽,받아내기,fullbody_hold,1.6~1.8m 폼 대검 프록시,접점/가드 이벤트,검/몸으로 선 만들기→충격 대비→가드 유지→밀어내기→복귀,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+카인,skill3,강철 회전,광역 중량 베기,fullbody_weapon,1.6~1.8m 폼 대검 프록시,주 접점 1회,옆으로 감기→축발 고정→큰 수평 회전→접점→검의 관성에 몸이 따라감,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+카인,skill4,지면 강타,자세 파괴,fullbody_weapon,1.6~1.8m 폼 대검 프록시,지면 이벤트,무게 싣기→내려치기→지면 직전 정지→충격 반동→앵커 자세,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+카인,ult,모루의 심판,최대 중량 일격,fullbody_weapon,1.6~1.8m 폼 대검 프록시,주 접점 1회,긴 예비→응력 축적 표현→한 걸음 전진→강타→정지→느린 회수,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+류,skill1,쌍날 난무,연속 타격,fullbody_dualweapon,폼 쌍단검 2개,3접점 권장,진입→R 베기→L 베기→교차 베기→짧은 이탈,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+류,skill2,그림자 도약,회피/축회전,fullbody_inplace,폼 쌍단검 2개,접점 없음,보스 축 기준 측면 스텝→상체는 목표 고정→발 교체→재진입,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+류,skill3,칼날 폭풍,광역 연속,fullbody_dualweapon,폼 쌍단검 2개,2~3접점 권장,낮은 자세→회전 베기→반대손 후속→방향 전환→회수,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+류,skill4,표식,타깃 지정,upperbody_additive,폼 쌍단검 2개,표식 이벤트,시선 고정→한 손 표식→다른 손은 무기 준비→즉시 이동 가능,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+류,ult,붉은 그림자,고속 연속 찌르기,fullbody_dualweapon,폼 쌍단검 2개,3~5접점 권장,짧은 대시→교차 찌르기 연속→최종 관통 포즈→즉시 이탈,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+세라,skill1,부식 시약,정제환 투척,fullbody_prop,경량 정제환 2개 + 와이어는 디지털,release + impact,정제환 준비→한 손 투척→반대손 회수 준비→목표 확인,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+세라,skill2,정제 안개,회피/장 설치,fullbody_prop,경량 정제환 2개 + 와이어는 디지털,release 이벤트,환 위치 확인→와이어 당김 몸이동→낮은 착지→정제 자세,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+세라,skill3,연쇄 폭발,다중 장치 연계,fullbody_prop,경량 정제환 2개 + 와이어는 디지털,2 release + detonate,양쪽 환 교차 투척→교차점 확인→손가락/손목 트리거→폭발,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+세라,skill4,회복 결계,지원 유지,upperbody_additive,경량 정제환 2개 + 와이어는 디지털,wardOn/wardOff,환 두 개 펼침→손을 작게 유지→장치가 크게 반응→해제,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화
+세라,ult,촉매 폭발,대형 정제 폭발,fullbody_prop,경량 정제환 2개 + 와이어는 디지털,release + detonate,양환 회수→가슴 앞 압축→전방 방출→폭발 확인→후퇴,3 clean + 1 exaggerated + 1 slow reference,전신 고정 + 45도 보조 권장; 손/무기 가림 최소화

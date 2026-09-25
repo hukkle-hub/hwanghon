@@ -1,0 +1,971 @@
+{
+  "version": "1.0",
+  "coordinate_contract": {
+    "up": "+Y",
+    "unit": "meter",
+    "skeleton": "Mixamo-compatible 24-joint project skeleton",
+    "root_policy": "capture source may contain root; game clip exports keep root motion metadata separately",
+    "weapon_policy": "weapon is separate prop; dominant hand drives prop, off-hand uses locator/constraint when two-handed"
+  },
+  "event_types": [
+    "contact",
+    "release",
+    "detonate",
+    "guardOn",
+    "guardOff",
+    "wardOn",
+    "wardOff",
+    "footPlant",
+    "fx"
+  ],
+  "characters": {
+    "ain": {
+      "name": "아인",
+      "weapon_proxy": "1.9m 낫 프록시",
+      "capture_note": "오른손이 무기 주도, 왼손은 자루 locator를 따라가게. 몸통 회전과 회수 관성 우선.",
+      "skills": [
+        {
+          "id": "skill1",
+          "name": "낫 베기",
+          "role": "정밀 절단",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "단일 접점",
+          "motion_flow": "준비→몸통 회전→날끝 가속→정밀 접촉→깊은 따라감→회수",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill2",
+          "name": "그림자 걸음",
+          "role": "회피/재진입",
+          "capture_mode": "fullbody_inplace",
+          "event_plan": "접점 없음",
+          "motion_flow": "낮은 중심→측/후방 한 걸음→시선 유지→재진입 준비",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill3",
+          "name": "피의 회전",
+          "role": "광역 절단",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "1차 접점",
+          "motion_flow": "큰 원호 준비→골반 선행→전신 회전→주 접점→자루 회수",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill4",
+          "name": "결의",
+          "role": "방어 버프",
+          "capture_mode": "upperbody_additive",
+          "event_plan": "접점 없음",
+          "motion_flow": "방어 진입→플레이트/낫으로 중심선 보호→유지 루프→해제",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "ult",
+          "name": "낫의 황혼",
+          "role": "궁극 강타",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "주 접점 1회",
+          "motion_flow": "큰 예비→발/골반 고정→폭발적 회전→주 접점→긴 여운→복귀",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        }
+      ]
+    },
+    "kain": {
+      "name": "카인",
+      "weapon_proxy": "1.6~1.8m 폼 대검 프록시",
+      "capture_note": "실제 중량물 사용 금지. 발-골반-어깨-검 순서와 버티는 자세를 연기하고, 무게는 후처리 물리로 강화.",
+      "skills": [
+        {
+          "id": "skill1",
+          "name": "대검 내려치기",
+          "role": "중량 파괴",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "단일 접점",
+          "motion_flow": "발 넓힘→검 들어올림→골반 하강→수직 강타→반동 흡수",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill2",
+          "name": "철벽",
+          "role": "받아내기",
+          "capture_mode": "fullbody_hold",
+          "event_plan": "접점/가드 이벤트",
+          "motion_flow": "검/몸으로 선 만들기→충격 대비→가드 유지→밀어내기→복귀",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill3",
+          "name": "강철 회전",
+          "role": "광역 중량 베기",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "주 접점 1회",
+          "motion_flow": "옆으로 감기→축발 고정→큰 수평 회전→접점→검의 관성에 몸이 따라감",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill4",
+          "name": "지면 강타",
+          "role": "자세 파괴",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "지면 이벤트",
+          "motion_flow": "무게 싣기→내려치기→지면 직전 정지→충격 반동→앵커 자세",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "ult",
+          "name": "모루의 심판",
+          "role": "최대 중량 일격",
+          "capture_mode": "fullbody_weapon",
+          "event_plan": "주 접점 1회",
+          "motion_flow": "긴 예비→응력 축적 표현→한 걸음 전진→강타→정지→느린 회수",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        }
+      ]
+    },
+    "ryu": {
+      "name": "류",
+      "weapon_proxy": "폼 쌍단검 2개",
+      "capture_note": "빠른 몸동작은 60/120fps 촬영 권장. 손이 몸 뒤로 가려지지 않게 카메라 각도 확보.",
+      "skills": [
+        {
+          "id": "skill1",
+          "name": "쌍날 난무",
+          "role": "연속 타격",
+          "capture_mode": "fullbody_dualweapon",
+          "event_plan": "3접점 권장",
+          "motion_flow": "진입→R 베기→L 베기→교차 베기→짧은 이탈",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill2",
+          "name": "그림자 도약",
+          "role": "회피/축회전",
+          "capture_mode": "fullbody_inplace",
+          "event_plan": "접점 없음",
+          "motion_flow": "보스 축 기준 측면 스텝→상체는 목표 고정→발 교체→재진입",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill3",
+          "name": "칼날 폭풍",
+          "role": "광역 연속",
+          "capture_mode": "fullbody_dualweapon",
+          "event_plan": "2~3접점 권장",
+          "motion_flow": "낮은 자세→회전 베기→반대손 후속→방향 전환→회수",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill4",
+          "name": "표식",
+          "role": "타깃 지정",
+          "capture_mode": "upperbody_additive",
+          "event_plan": "표식 이벤트",
+          "motion_flow": "시선 고정→한 손 표식→다른 손은 무기 준비→즉시 이동 가능",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "ult",
+          "name": "붉은 그림자",
+          "role": "고속 연속 찌르기",
+          "capture_mode": "fullbody_dualweapon",
+          "event_plan": "3~5접점 권장",
+          "motion_flow": "짧은 대시→교차 찌르기 연속→최종 관통 포즈→즉시 이탈",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        }
+      ]
+    },
+    "sera": {
+      "name": "세라",
+      "weapon_proxy": "경량 정제환 2개 + 와이어는 디지털",
+      "capture_note": "원래 정체성인 쌍 정제환/와이어를 유지. 와이어는 모캡하지 않고 런타임 곡선/VFX로 처리.",
+      "skills": [
+        {
+          "id": "skill1",
+          "name": "부식 시약",
+          "role": "정제환 투척",
+          "capture_mode": "fullbody_prop",
+          "event_plan": "release + impact",
+          "motion_flow": "정제환 준비→한 손 투척→반대손 회수 준비→목표 확인",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill2",
+          "name": "정제 안개",
+          "role": "회피/장 설치",
+          "capture_mode": "fullbody_prop",
+          "event_plan": "release 이벤트",
+          "motion_flow": "환 위치 확인→와이어 당김 몸이동→낮은 착지→정제 자세",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill3",
+          "name": "연쇄 폭발",
+          "role": "다중 장치 연계",
+          "capture_mode": "fullbody_prop",
+          "event_plan": "2 release + detonate",
+          "motion_flow": "양쪽 환 교차 투척→교차점 확인→손가락/손목 트리거→폭발",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "skill4",
+          "name": "회복 결계",
+          "role": "지원 유지",
+          "capture_mode": "upperbody_additive",
+          "event_plan": "wardOn/wardOff",
+          "motion_flow": "환 두 개 펼침→손을 작게 유지→장치가 크게 반응→해제",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        },
+        {
+          "id": "ult",
+          "name": "촉매 폭발",
+          "role": "대형 정제 폭발",
+          "capture_mode": "fullbody_prop",
+          "event_plan": "release + detonate",
+          "motion_flow": "양환 회수→가슴 앞 압축→전방 방출→폭발 확인→후퇴",
+          "phases": [
+            {
+              "name": "anticipation",
+              "range": [
+                0.0,
+                0.2
+              ]
+            },
+            {
+              "name": "acceleration",
+              "range": [
+                0.2,
+                0.45
+              ]
+            },
+            {
+              "name": "commit/contact",
+              "range": [
+                0.45,
+                0.58
+              ]
+            },
+            {
+              "name": "followthrough",
+              "range": [
+                0.58,
+                0.82
+              ]
+            },
+            {
+              "name": "recover",
+              "range": [
+                0.82,
+                1.0
+              ]
+            }
+          ],
+          "note": "phase ranges are capture guides, not fixed combat timings; actual exported event times must be measured from the final clip."
+        }
+      ]
+    }
+  }
+}

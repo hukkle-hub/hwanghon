@@ -11,7 +11,7 @@
  *
  * 둘 다 같은 메시의 같은 쉬는 자세라 변화량이 그대로 통한다. 골반 위치는 키 비율로.
  *
- * 사용: node tools/3d/meshy-retarget.mjs <meshy.glb> <이름> [시작초 끝초] [--fps 60]
+ * 사용: node tools/3d/meshy-retarget.mjs <원본.glb> <이름> [시작초 끝초] [--fps 60] [--rig meshy|ual|kk|mixamo] [--clip 이름]
  *          [--target 캐릭터.glb] [--arm-max 도] [--root] [--crouch k] [--spine k] [--lean …] [--face g,h,c] [--chest 접점,가슴각,g,시작,끝,w] > out.json
  * 74번에 쓴 명령 (docs/design/74-meshy-clips.md):
  *   attack3  thrust.glb  0.25 1.25 --fps 60 --chest .48,20,.5,-13,-13,.5
@@ -23,30 +23,67 @@ import {readFile} from 'node:fs/promises';
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 const args=process.argv.slice(2), file=args[0], name=args[1];
-const t0=args[2]!=null&&!args[2].startsWith('--')?+args[2]:null, t1=args[3]!=null&&!args[3].startsWith('--')?+args[3]:null;
+const t0=args[2]!=null&&!args[2].startsWith('--')?+args[2]:null, t1=t0!=null&&args[3]!=null&&!args[3].startsWith('--')?+args[3]:null;
 const FPS=+(args[args.indexOf('--fps')+1]||30)||30;
 const load=async f=>{const b=await readFile(f),l=new GLTFLoader();l.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
 /* --target 캐릭터 glb (기본 아인). 카인·류·세라도 같은 Mixamo 이름 뼈대다 (docs/design/76) */
 const TARGET=args.includes('--target')?args[args.indexOf('--target')+1]:new URL('../../art/3d/ain_anim.glb',import.meta.url).pathname;
 const src=await load(file), tgt=await load(TARGET);
 /* 우리 뼈 → Meshy 뼈. 척추는 순서가 반대다. */
-const MAP={Hips:'Hips',Spine:'Spine02',Spine1:'Spine01',Spine2:'Spine',Neck:'neck',Head:'Head',
+/* --rig: 원본 뼈대 종류 (docs/design/85). meshy(기본) · ual(Quaternius UAL, UE 마네킹 이름) · kk(KayKit 1.1, 목·쇄골 없음).
+   three 는 노드 이름에서 '.' 을 지운다(upperarm.l → upperarml). */
+const RIG=args.includes('--rig')?args[args.indexOf('--rig')+1]:'meshy';
+const MAPS={
+ meshy:{Hips:'Hips',Spine:'Spine02',Spine1:'Spine01',Spine2:'Spine',Neck:'neck',Head:'Head',
   LeftShoulder:'LeftShoulder',LeftArm:'LeftArm',LeftForeArm:'LeftForeArm',LeftHand:'LeftHand',
   RightShoulder:'RightShoulder',RightArm:'RightArm',RightForeArm:'RightForeArm',RightHand:'RightHand',
   LeftUpLeg:'LeftUpLeg',LeftLeg:'LeftLeg',LeftFoot:'LeftFoot',LeftToeBase:'LeftToeBase',
-  RightUpLeg:'RightUpLeg',RightLeg:'RightLeg',RightFoot:'RightFoot',RightToeBase:'RightToeBase'};
-const S={},G={};
-src.scene.traverse(o=>{if(o.isBone)S[o.name]=o;}); tgt.scene.traverse(o=>{if(o.isBone)G[o.name.replace(/^mixamorig:?/,'')]=o;});
+  RightUpLeg:'RightUpLeg',RightLeg:'RightLeg',RightFoot:'RightFoot',RightToeBase:'RightToeBase'},
+ ual:{Hips:'pelvis',Spine:'spine_01',Spine1:'spine_02',Spine2:'spine_03',Neck:'neck_01',Head:'Head',
+  LeftShoulder:'clavicle_l',LeftArm:'upperarm_l',LeftForeArm:'lowerarm_l',LeftHand:'hand_l',
+  RightShoulder:'clavicle_r',RightArm:'upperarm_r',RightForeArm:'lowerarm_r',RightHand:'hand_r',
+  LeftUpLeg:'thigh_l',LeftLeg:'calf_l',LeftFoot:'foot_l',LeftToeBase:'ball_l',
+  RightUpLeg:'thigh_r',RightLeg:'calf_r',RightFoot:'foot_r',RightToeBase:'ball_r'},
+ /* 휴대폰 영상 AI 모캡(Rokoko Video·DeepMotion 등)을 Mixamo 뼈대로 내보낸 것 — three 는 'mixamorig:Hips' 를 'mixamorigHips' 로 읽는다 */
+ mixamo:Object.fromEntries(['Hips','Spine','Spine1','Spine2','Neck','Head','LeftShoulder','LeftArm','LeftForeArm','LeftHand','RightShoulder','RightArm','RightForeArm','RightHand',
+  'LeftUpLeg','LeftLeg','LeftFoot','LeftToeBase','RightUpLeg','RightLeg','RightFoot','RightToeBase'].map(n=>[n,'mixamorig'+n])),
+ kk:{Hips:'hips',Spine:'spine',Spine2:'chest',Head:'head',
+  LeftArm:'upperarml',LeftForeArm:'lowerarml',LeftHand:'wristl',RightArm:'upperarmr',RightForeArm:'lowerarmr',RightHand:'wristr',
+  LeftUpLeg:'upperlegl',LeftLeg:'lowerlegl',LeftFoot:'footl',LeftToeBase:'toesl',RightUpLeg:'upperlegr',RightLeg:'lowerlegr',RightFoot:'footr',RightToeBase:'toesr'}};
+const MAP0=MAPS[RIG]; if(!MAP0) throw new Error('--rig 는 '+Object.keys(MAPS).join('|'));
+const S0={},G={};
+src.scene.traverse(o=>{if(o.isBone||o.type==='Object3D')S0[o.name]=S0[o.name]||o;}); tgt.scene.traverse(o=>{if(o.isBone)G[o.name.replace(/^mixamorig:?/,'')]=o;});
+/* 원본에 없는 뼈(KayKit 의 목·쇄골·Spine1)는 빼고, 우리 쪽은 부모를 쉬는 자세 관계 그대로 따라가게 한다 */
+const MAP=Object.fromEntries(Object.entries(MAP0).filter(([g,s])=>S0[s]&&G[g]));
+const S=new Proxy({}, {get:(_,k)=>S0[MAP[k]]||S0[k]});   /* S.LeftFoot 처럼 «우리 이름» 으로도 원본 뼈를 부른다 */
 src.scene.updateMatrixWorld(true); tgt.scene.updateMatrixWorld(true);
 const wq=o=>o.getWorldQuaternion(new T.Quaternion());
 const restS={},restG={};
-for(const [g,s] of Object.entries(MAP)){ restS[s]=wq(S[s]); restG[g]=wq(G[g]); }
+for(const [g,s] of Object.entries(MAP)){ restS[s]=wq(S0[s]); restG[g]=wq(G[g]); }
+/* 쉬는 자세 맞추기: Meshy 는 우리 몸 그대로라 같지만 UAL·KayKit 은 T 자세다. 원본 뼈 방향(→자식)을 우리 뼈 방향으로 돌리는
+   최소 회전 Q 를 원본 쉬는 자세 앞에 곱해 «원본이 우리 자세로 서 있을 때» 를 기준으로 삼는다. 비틀림은 상대 변화라 상쇄된다 */
+const CHILDREN={Hips:['Spine'],Spine:['Spine1','Spine2'],Spine1:['Spine2'],Spine2:['Neck','Head'],Neck:['Head'],
+  LeftShoulder:['LeftArm'],LeftArm:['LeftForeArm'],LeftForeArm:['LeftHand'],RightShoulder:['RightArm'],RightArm:['RightForeArm'],RightForeArm:['RightHand'],
+  LeftUpLeg:['LeftLeg'],LeftLeg:['LeftFoot'],LeftFoot:['LeftToeBase'],RightUpLeg:['RightLeg'],RightLeg:['RightFoot'],RightFoot:['RightToeBase']};
+if(RIG!=='meshy'||args.includes('--align')){ let nAl=0;
+  for(const [g,s] of Object.entries(MAP)){ const ch=(CHILDREN[g]||[]).find(c=>MAP[c]); if(!ch) continue;
+    const ds=S0[MAP[ch]].getWorldPosition(new T.Vector3()).sub(S0[s].getWorldPosition(new T.Vector3())).normalize();
+    const dg=G[ch].getWorldPosition(new T.Vector3()).sub(G[g].getWorldPosition(new T.Vector3())).normalize();
+    restS[s]=new T.Quaternion().setFromUnitVectors(ds,dg).multiply(restS[s]); nAl++; }
+  /* 손·머리·발끝(자식 없음)은 부모와 같은 보정 */
+  for(const [g,p] of [['LeftHand','LeftForeArm'],['RightHand','RightForeArm'],['Head','Neck'],['LeftToeBase','LeftFoot'],['RightToeBase','RightFoot']]){
+    const pp=MAP[p]?p:(p==='Neck'?'Spine2':null); if(!MAP[g]||!pp||!MAP[pp]) continue;
+    const Qp=restS[MAP[pp]].clone().multiply(wq(S0[MAP[pp]]).invert()); restS[MAP[g]]=Qp.multiply(wq(S0[MAP[g]])); }
+  process.stderr.write(`  쉬는 자세 맞춤 ${nAl} 뼈 (${RIG})\n`); }
 const hipRestS=S.Hips.getWorldPosition(new T.Vector3()), hipRestG=G.Hips.position.clone();
 const scale=G.Hips.getWorldPosition(new T.Vector3()).y/hipRestS.y;
-const clip=src.animations[0], mixer=new T.AnimationMixer(src.scene); mixer.clipAction(clip).play();
+const CLIP=args.includes('--clip')?args[args.indexOf('--clip')+1]:null;
+const clip=CLIP?src.animations.find(a=>a.name===CLIP):src.animations[0]; if(!clip) throw new Error('클립 없음: '+CLIP+' — '+src.animations.map(a=>a.name).join(', '));
+const mixer=new T.AnimationMixer(src.scene); mixer.clipAction(clip).play();
 const A=t0!=null?t0:0, B=Math.min(t1!=null?t1:clip.duration, clip.duration-1e-4),   /* 끝 시각 그대로면 믹서가 0 으로 되감긴다 */ N=Math.max(2,Math.round((B-A)*FPS));
 /* 부모 먼저 — 계층 순서 */
-const order=[]; tgt.scene.traverse(o=>{if(o.isBone){const n=o.name.replace(/^mixamorig:?/,'');if(MAP[n])order.push(n);}});
+const order=[]; tgt.scene.traverse(o=>{if(o.isBone){const n=o.name.replace(/^mixamorig:?/,'');if(MAP[n]||MAP0[n]!==undefined||MAPS.meshy[n])order.push(n);}});
+for(const n of order) if(!restG[n]) restG[n]=wq(G[n]);
 const tracks={}; order.forEach(n=>tracks[n]=[]); const hips=[];
 const INPLACE=!args.includes('--root');
 const CROUCH=args.includes('--crouch')?+args[args.indexOf('--crouch')+1]:1;
@@ -71,7 +108,7 @@ const FACE=args.includes('--face')?args[args.indexOf('--face')+1].split(',').map
 const yawR=[];
 if(FACE){ const [g,h,c]=[FACE[0],FACE[1]||0,(FACE[2]||0)*Math.PI/180], Y=[];
   for(let i=0;i<=N;i++){ mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
-    const v=new T.Vector3(0,0,1).applyQuaternion(wq(S.Hips).multiply(restS.Hips.clone().invert()));
+    const v=new T.Vector3(0,0,1).applyQuaternion(wq(S.Hips).multiply(restS[MAP.Hips].clone().invert()));
     let y=Math.atan2(v.x,v.z); if(Y.length){ while(y-Y[Y.length-1]>Math.PI)y-=2*Math.PI; while(y-Y[Y.length-1]<-Math.PI)y+=2*Math.PI; } Y.push(y); }
   const net=Y[N]-Y[0], ss=u=>u*u*u*(u*(u*6-15)+10);
   for(let i=0;i<=N;i++){ const u=i/N, L=Y[0]+net*ss(u); yawR.push(c+g*(Y[i]-L)+h*net*(ss(u)-.5)-Y[i]); }
@@ -90,9 +127,9 @@ if(CHEST){ const [uc,cc,g,c0=-13,c1=-13,w=0]=CHEST, r=Math.PI/180, C=[], H=[];
   const YX=args.includes('--yaw-x');
   const yawOf=q=>{ if(YX){const v=new T.Vector3(1,0,0).applyQuaternion(q);return Math.atan2(-v.z,v.x);} const v=new T.Vector3(0,0,1).applyQuaternion(q);return Math.atan2(v.x,v.z);};
   for(let i=0;i<=N;i++){ mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
-    let y=yawOf(wq(S.Spine).multiply(restS.Spine.clone().invert()).multiply(restG.Spine2));
+    let y=yawOf(wq(S.Spine2).multiply(restS[MAP.Spine2].clone().invert()).multiply(restG.Spine2));
     if(C.length){ while(y-C[C.length-1]>Math.PI)y-=2*Math.PI; while(y-C[C.length-1]<-Math.PI)y+=2*Math.PI; } C.push(y);
-    let h=yawOf(wq(S.Hips).multiply(restS.Hips.clone().invert()).multiply(restG.Hips));
+    let h=yawOf(wq(S.Hips).multiply(restS[MAP.Hips].clone().invert()).multiply(restG.Hips));
     while(h-y>Math.PI)h-=2*Math.PI; while(h-y<-Math.PI)h+=2*Math.PI; H.push(h); }
   /* w: 시작·끝을 «골반 w : 가슴 1−w» 섞은 방향으로 맞춘다. 원본이 처음부터 몸을 꼰
      자세(반격: 골반·가슴 50°)면 가슴만 맞출 때 골반이 대기에서 51° 튄다 — 공격 섞기는
@@ -122,7 +159,11 @@ for(let i=0;i<=N;i++){
   mixer.setTime(A+(B-A)*i/N); src.scene.updateMatrixWorld(true);
   const W={}, armFix={};
   for(const n of order){
-    const s=MAP[n], D=wq(S[s]).multiply(restS[s].clone().invert());
+    const s=MAP[n];
+    if(!s){ /* 원본에 없는 뼈: 부모의 회전 변화를 그대로 받는다 */ const pn0=G[n].parent.name.replace(/^mixamorig:?/,''); const Wp=W[pn0];
+      const D0=Wp?Wp.clone().multiply(restG[pn0].clone().invert()):new T.Quaternion(); if(yawR.length&&!Wp) D0.premultiply(Ry(i));
+      W[n]=D0.multiply(restG[n]); const pw0=Wp||wq(G[n].parent); const loc0=pw0.clone().invert().multiply(W[n]); const pv=tracks[n][tracks[n].length-1]; if(pv&&pv.dot(loc0)<0) loc0.set(-loc0.x,-loc0.y,-loc0.z,-loc0.w); tracks[n].push(loc0); continue; }
+    const D=wq(S0[s]).multiply(restS[s].clone().invert());
     /* --spine k: 골반·척추의 «월드 회전 변화» 를 k 만큼만 — 몸통이 과하게 숙이거나
        비틀어 날이 과녁에서 돌아갈 때. 팔·다리는 그대로 따라간다. */
     if(SPINE!==1&&/^(Hips|Spine|Spine1|Spine2)$/.test(n)) D.slerp(new T.Quaternion(),1-SPINE);

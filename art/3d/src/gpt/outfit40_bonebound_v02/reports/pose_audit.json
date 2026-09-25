@@ -1,0 +1,2282 @@
+[
+  {
+    "character": "ain",
+    "source": "ain_outfit_01_Wolha_v01.glb",
+    "output": "ain_outfit_01_Wolha_bonebound_v02.glb",
+    "geometry_count": 48,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.1550000011920929
+      ],
+      [
+        0.36000001430511475,
+        1.8256042003631592,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8256,
+        "width": 0.99,
+        "height": 1.8256,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8303,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.7717,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.8439,
+        "width": 1.1195,
+        "height": 1.8656,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9479,
+        "width": 1.0774,
+        "height": 1.9644,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_02_Jeogya_v01.glb",
+    "output": "ain_outfit_02_Jeogya_bonebound_v02.glb",
+    "geometry_count": 47,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.1550000011920929
+      ],
+      [
+        0.36000001430511475,
+        1.8355069160461426,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8355,
+        "width": 0.99,
+        "height": 1.8355,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8403,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.7814,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.8439,
+        "width": 1.1195,
+        "height": 1.8656,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9574,
+        "width": 1.0774,
+        "height": 1.9738,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_03_Maehwa_v01.glb",
+    "output": "ain_outfit_03_Maehwa_bonebound_v02.glb",
+    "geometry_count": 47,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.8454095125198364,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8454,
+        "width": 0.99,
+        "height": 1.8454,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8503,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.791,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.7348,
+        "width": 1.1195,
+        "height": 1.7564,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9668,
+        "width": 1.0881,
+        "height": 1.9833,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_04_Yeonhwa_v01.glb",
+    "output": "ain_outfit_04_Yeonhwa_bonebound_v02.glb",
+    "geometry_count": 51,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.8553122282028198,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8553,
+        "width": 0.99,
+        "height": 1.8553,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8603,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8007,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.7443,
+        "width": 1.1195,
+        "height": 1.7659,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9762,
+        "width": 1.0881,
+        "height": 1.9927,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_05_Hongrin_v01.glb",
+    "output": "ain_outfit_05_Hongrin_bonebound_v02.glb",
+    "geometry_count": 46,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.8652149438858032,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8652,
+        "width": 0.99,
+        "height": 1.8652,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8702,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8104,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.7538,
+        "width": 1.1195,
+        "height": 1.7754,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9857,
+        "width": 1.0881,
+        "height": 2.0021,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_06_Heugu_v01.glb",
+    "output": "ain_outfit_06_Heugu_bonebound_v02.glb",
+    "geometry_count": 47,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.1550000011920929
+      ],
+      [
+        0.36000001430511475,
+        1.875117540359497,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8751,
+        "width": 0.99,
+        "height": 1.8751,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8802,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8201,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.8439,
+        "width": 1.1195,
+        "height": 1.8656,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 1.9951,
+        "width": 1.0774,
+        "height": 2.0116,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_07_Maedeup_v01.glb",
+    "output": "ain_outfit_07_Maedeup_bonebound_v02.glb",
+    "geometry_count": 44,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.8850202560424805,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.885,
+        "width": 0.99,
+        "height": 1.885,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.8902,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8298,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.7728,
+        "width": 1.1195,
+        "height": 1.7944,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 2.0045,
+        "width": 1.0774,
+        "height": 2.021,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_08_Simyeon_v01.glb",
+    "output": "ain_outfit_08_Simyeon_bonebound_v02.glb",
+    "geometry_count": 48,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.8949229717254639,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8949,
+        "width": 0.99,
+        "height": 1.8949,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.9002,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8395,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.7822,
+        "width": 1.1195,
+        "height": 1.8039,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 2.014,
+        "width": 1.0881,
+        "height": 2.0304,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_09_Chunseol_v01.glb",
+    "output": "ain_outfit_09_Chunseol_bonebound_v02.glb",
+    "geometry_count": 48,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.1550000011920929
+      ],
+      [
+        0.36000001430511475,
+        1.9048255681991577,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.9048,
+        "width": 0.99,
+        "height": 1.9048,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.9102,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8492,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.8439,
+        "width": 1.1195,
+        "height": 1.8656,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 2.0234,
+        "width": 1.0881,
+        "height": 2.0399,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ain",
+    "source": "ain_outfit_10_Hwaseol_v01.glb",
+    "output": "ain_outfit_10_Hwaseol_bonebound_v02.glb",
+    "geometry_count": 48,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.6299999952316284,
+        0.0,
+        -0.10499999672174454
+      ],
+      [
+        0.36000001430511475,
+        1.9147282838821411,
+        0.20999999344348907
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.9147,
+        "width": 0.99,
+        "height": 1.9147,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0027,
+        "max_y": 2.1982,
+        "width": 1.9202,
+        "height": 2.2009,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0025,
+        "max_y": 2.1459,
+        "width": 1.8589,
+        "height": 2.1434,
+        "finite": true
+      },
+      "run": {
+        "min_y": -0.0216,
+        "max_y": 1.8012,
+        "width": 1.1195,
+        "height": 1.8229,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0165,
+        "max_y": 2.0328,
+        "width": 1.0774,
+        "height": 2.0493,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_01_Steelworks_v01.glb",
+    "output": "kain_outfit_01_Steelworks_bonebound_v02.glb",
+    "geometry_count": 41,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.15139535069465637
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.9429,
+        "width": 1.2063,
+        "height": 1.9323,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_02_Demolition_v01.glb",
+    "output": "kain_outfit_02_Demolition_bonebound_v02.glb",
+    "geometry_count": 45,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.21898256242275238
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.8013,
+        "width": 1.2063,
+        "height": 1.7906,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_03_Rescue_v01.glb",
+    "output": "kain_outfit_03_Rescue_bonebound_v02.glb",
+    "geometry_count": 45,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.3271220922470093
+      ],
+      [
+        0.4627683162689209,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1685,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.9429,
+        "width": 1.2063,
+        "height": 1.9323,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2785,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_04_Tunnel_v01.glb",
+    "output": "kain_outfit_04_Tunnel_bonebound_v02.glb",
+    "geometry_count": 46,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.3271220922470093
+      ],
+      [
+        0.4650000035762787,
+        1.903255820274353,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.9033,
+        "width": 1.1707,
+        "height": 1.9033,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 2.0584,
+        "width": 1.2063,
+        "height": 2.0477,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_05_Powerhouse_v01.glb",
+    "output": "kain_outfit_05_Powerhouse_bonebound_v02.glb",
+    "geometry_count": 50,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.21898256242275238
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.9429,
+        "width": 1.2063,
+        "height": 1.9323,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_06_HeavyCarry_v01.glb",
+    "output": "kain_outfit_06_HeavyCarry_bonebound_v02.glb",
+    "geometry_count": 45,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.3271220922470093
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.8013,
+        "width": 1.2063,
+        "height": 1.7906,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_07_Fireproof_v01.glb",
+    "output": "kain_outfit_07_Fireproof_bonebound_v02.glb",
+    "geometry_count": 43,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.15139535069465637
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.9429,
+        "width": 1.2063,
+        "height": 1.9323,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_08_ColdForge_v01.glb",
+    "output": "kain_outfit_08_ColdForge_bonebound_v02.glb",
+    "geometry_count": 46,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.3271220922470093
+      ],
+      [
+        0.4627683162689209,
+        1.903255820274353,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.9033,
+        "width": 1.1685,
+        "height": 1.9033,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 2.0584,
+        "width": 1.2063,
+        "height": 2.0477,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2785,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_09_FieldSmith_v01.glb",
+    "output": "kain_outfit_09_FieldSmith_bonebound_v02.glb",
+    "geometry_count": 46,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.15139535069465637
+      ],
+      [
+        0.4650000035762787,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1707,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.8013,
+        "width": 1.2063,
+        "height": 1.7906,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2839,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "kain",
+    "source": "kain_outfit_10_CeremonialWork_v01.glb",
+    "output": "kain_outfit_10_CeremonialWork_bonebound_v02.glb",
+    "geometry_count": 42,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.7057209014892578,
+        0.0,
+        -0.15139535069465637
+      ],
+      [
+        0.4627683162689209,
+        1.8600000143051147,
+        0.23250000178813934
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.86,
+        "width": 1.1685,
+        "height": 1.86,
+        "finite": true
+      },
+      "attack": {
+        "min_y": -0.0032,
+        "max_y": 2.459,
+        "width": 1.8463,
+        "height": 2.4622,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 2.4111,
+        "width": 1.6593,
+        "height": 2.4111,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.0107,
+        "max_y": 1.9429,
+        "width": 1.2063,
+        "height": 1.9323,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0129,
+        "max_y": 2.0487,
+        "width": 1.2785,
+        "height": 2.0616,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_01_FieldMedical_v01.glb",
+    "output": "sera_outfit_01_FieldMedical_bonebound_v02.glb",
+    "geometry_count": 39,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_02_PurificationSupport_v01.glb",
+    "output": "sera_outfit_02_PurificationSupport_bonebound_v02.glb",
+    "geometry_count": 41,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_03_TacticalControl_v01.glb",
+    "output": "sera_outfit_03_TacticalControl_bonebound_v02.glb",
+    "geometry_count": 39,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_04_ReconSupport_v01.glb",
+    "output": "sera_outfit_04_ReconSupport_bonebound_v02.glb",
+    "geometry_count": 39,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.7599999904632568,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.76,
+        "width": 1.09,
+        "height": 1.76,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.874,
+        "width": 1.2866,
+        "height": 1.766,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.7854,
+        "width": 0.9139,
+        "height": 1.7974,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_05_RapidResponse_v01.glb",
+    "output": "sera_outfit_05_RapidResponse_bonebound_v02.glb",
+    "geometry_count": 41,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.4850000143051147,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.485,
+        "width": 1.09,
+        "height": 1.485,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.5961,
+        "width": 1.2866,
+        "height": 1.4881,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.5245,
+        "width": 0.9139,
+        "height": 1.5364,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_06_Contamination_v01.glb",
+    "output": "sera_outfit_06_Contamination_bonebound_v02.glb",
+    "geometry_count": 43,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.7599999904632568,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.76,
+        "width": 1.09,
+        "height": 1.76,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.874,
+        "width": 1.2866,
+        "height": 1.766,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.7854,
+        "width": 0.9139,
+        "height": 1.7974,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_07_EscortSupport_v01.glb",
+    "output": "sera_outfit_07_EscortSupport_bonebound_v02.glb",
+    "geometry_count": 40,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_08_UrbanRescue_v01.glb",
+    "output": "sera_outfit_08_UrbanRescue_bonebound_v02.glb",
+    "geometry_count": 43,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_09_ColdSupport_v01.glb",
+    "output": "sera_outfit_09_ColdSupport_bonebound_v02.glb",
+    "geometry_count": 43,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.30250000953674316
+      ],
+      [
+        0.5450000166893005,
+        1.7599999904632568,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.76,
+        "width": 1.09,
+        "height": 1.76,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.874,
+        "width": 1.2866,
+        "height": 1.766,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.7854,
+        "width": 0.9139,
+        "height": 1.7974,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "sera",
+    "source": "sera_outfit_10_RitualOperation_v01.glb",
+    "output": "sera_outfit_10_RitualOperation_bonebound_v02.glb",
+    "geometry_count": 35,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.5450000166893005,
+        0.0,
+        -0.12999999523162842
+      ],
+      [
+        0.5450000166893005,
+        1.6549999713897705,
+        0.2150000035762787
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.655,
+        "width": 1.09,
+        "height": 1.655,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0,
+        "max_y": 1.8847,
+        "width": 1.0081,
+        "height": 1.8847,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.9358,
+        "width": 0.898,
+        "height": 1.9358,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.108,
+        "max_y": 1.7672,
+        "width": 1.2866,
+        "height": 1.6592,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0119,
+        "max_y": 1.6831,
+        "width": 0.9139,
+        "height": 1.695,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_01_Infiltration_v01.glb",
+    "output": "ryu_outfit_01_Infiltration_bonebound_v02.glb",
+    "geometry_count": 35,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.15523256361484528
+      ],
+      [
+        0.45299020409584045,
+        1.8213953971862793,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8214,
+        "width": 0.906,
+        "height": 1.8214,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.8214,
+        "width": 1.0771,
+        "height": 1.8192,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.8327,
+        "width": 0.8222,
+        "height": 1.8327,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.9359,
+        "width": 1.2414,
+        "height": 1.8276,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.8477,
+        "width": 0.7684,
+        "height": 1.8601,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_02_Blitz_v01.glb",
+    "output": "ryu_outfit_02_Blitz_bonebound_v02.glb",
+    "geometry_count": 32,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.13194768130779266
+      ],
+      [
+        0.45299020409584045,
+        1.5368022918701172,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.5368,
+        "width": 0.906,
+        "height": 1.5368,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.5368,
+        "width": 1.0771,
+        "height": 1.5346,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.5461,
+        "width": 0.8222,
+        "height": 1.5461,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.649,
+        "width": 1.2414,
+        "height": 1.5407,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.5796,
+        "width": 0.762,
+        "height": 1.592,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_03_UrbanScout_v01.glb",
+    "output": "ryu_outfit_03_UrbanScout_bonebound_v02.glb",
+    "geometry_count": 38,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.31305232644081116
+      ],
+      [
+        0.45299020409584045,
+        1.7127325534820557,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.7127,
+        "width": 0.906,
+        "height": 1.7127,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.7127,
+        "width": 1.0771,
+        "height": 1.7105,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.7227,
+        "width": 0.8222,
+        "height": 1.7227,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.8254,
+        "width": 1.2414,
+        "height": 1.7171,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.7418,
+        "width": 0.7684,
+        "height": 1.7541,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_04_CloseDisruption_v01.glb",
+    "output": "ryu_outfit_04_CloseDisruption_bonebound_v02.glb",
+    "geometry_count": 38,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.13194768130779266
+      ],
+      [
+        0.45299020409584045,
+        1.5368022918701172,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.5368,
+        "width": 0.906,
+        "height": 1.5368,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.5368,
+        "width": 1.0771,
+        "height": 1.5346,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.5461,
+        "width": 0.8222,
+        "height": 1.5461,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.649,
+        "width": 1.2414,
+        "height": 1.5407,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.5796,
+        "width": 0.762,
+        "height": 1.592,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_05_HighPursuit_v01.glb",
+    "output": "ryu_outfit_05_HighPursuit_bonebound_v02.glb",
+    "geometry_count": 41,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.31305232644081116
+      ],
+      [
+        0.45299020409584045,
+        1.5368022918701172,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.5368,
+        "width": 0.906,
+        "height": 1.5368,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.5368,
+        "width": 1.0771,
+        "height": 1.5346,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.5461,
+        "width": 0.8222,
+        "height": 1.5461,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.649,
+        "width": 1.2414,
+        "height": 1.5407,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.5796,
+        "width": 0.7684,
+        "height": 1.592,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_06_AllWeather_v01.glb",
+    "output": "ryu_outfit_06_AllWeather_bonebound_v02.glb",
+    "geometry_count": 39,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.31305232644081116
+      ],
+      [
+        0.45299020409584045,
+        1.8213953971862793,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8214,
+        "width": 0.906,
+        "height": 1.8214,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.8214,
+        "width": 1.0771,
+        "height": 1.8192,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.8327,
+        "width": 0.8222,
+        "height": 1.8327,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.9359,
+        "width": 1.2414,
+        "height": 1.8276,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.8477,
+        "width": 0.7684,
+        "height": 1.8601,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_07_SignalDisruption_v01.glb",
+    "output": "ryu_outfit_07_SignalDisruption_bonebound_v02.glb",
+    "geometry_count": 41,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.31305232644081116
+      ],
+      [
+        0.45299020409584045,
+        1.7127325534820557,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.7127,
+        "width": 0.906,
+        "height": 1.7127,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.7127,
+        "width": 1.0771,
+        "height": 1.7105,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.7227,
+        "width": 0.8222,
+        "height": 1.7227,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.8254,
+        "width": 1.2414,
+        "height": 1.7171,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.7418,
+        "width": 0.7684,
+        "height": 1.7541,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_08_Shadowless_v01.glb",
+    "output": "ryu_outfit_08_Shadowless_bonebound_v02.glb",
+    "geometry_count": 33,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.15523256361484528
+      ],
+      [
+        0.45299020409584045,
+        1.8213953971862793,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8214,
+        "width": 0.906,
+        "height": 1.8214,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.8214,
+        "width": 1.0771,
+        "height": 1.8192,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.8327,
+        "width": 0.8222,
+        "height": 1.8327,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.9359,
+        "width": 1.2414,
+        "height": 1.8276,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.8477,
+        "width": 0.7684,
+        "height": 1.8601,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_09_CivilianDisguise_v01.glb",
+    "output": "ryu_outfit_09_CivilianDisguise_bonebound_v02.glb",
+    "geometry_count": 33,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.31305232644081116
+      ],
+      [
+        0.45299020409584045,
+        1.8213953971862793,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.8214,
+        "width": 0.906,
+        "height": 1.8214,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.8214,
+        "width": 1.0771,
+        "height": 1.8192,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.8327,
+        "width": 0.8222,
+        "height": 1.8327,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.9359,
+        "width": 1.2414,
+        "height": 1.8276,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.8477,
+        "width": 0.762,
+        "height": 1.8601,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  },
+  {
+    "character": "ryu",
+    "source": "ryu_outfit_10_Ritual_v01.glb",
+    "output": "ryu_outfit_10_Ritual_bonebound_v02.glb",
+    "geometry_count": 34,
+    "bone_count": 24,
+    "bind_bounds": [
+      [
+        -0.45299020409584045,
+        0.0,
+        -0.13453488051891327
+      ],
+      [
+        0.45299020409584045,
+        1.7127325534820557,
+        0.2224999964237213
+      ]
+    ],
+    "poses": {
+      "bind": {
+        "min_y": 0.0,
+        "max_y": 1.7127,
+        "width": 0.906,
+        "height": 1.7127,
+        "finite": true
+      },
+      "attack": {
+        "min_y": 0.0022,
+        "max_y": 1.7127,
+        "width": 1.0771,
+        "height": 1.7105,
+        "finite": true
+      },
+      "guard": {
+        "min_y": 0.0,
+        "max_y": 1.7227,
+        "width": 0.8222,
+        "height": 1.7227,
+        "finite": true
+      },
+      "run": {
+        "min_y": 0.1083,
+        "max_y": 1.8254,
+        "width": 1.2414,
+        "height": 1.7171,
+        "finite": true
+      },
+      "dodge": {
+        "min_y": -0.0124,
+        "max_y": 1.7418,
+        "width": 0.7684,
+        "height": 1.7541,
+        "finite": true
+      }
+    },
+    "parse_ok": true
+  }
+]

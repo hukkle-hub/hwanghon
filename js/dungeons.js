@@ -13,7 +13,8 @@
          카인·류·세라는 같은 이름의 옛 클립이라 위 공통 값을 그대로 쓴다. */
       /* 류 궁극기: 공통 .22 면 준비 자세에서 판정이 뜬다 — 돌진·베기는 .27~.59, 최고속 .46.
          카인 스킬1(해머 스윙)은 내려치는 순간, 스킬3(도끼 회전)은 오른손 최고속, 류 스킬3(쌍날 회전)은 왼날 .62·오른날 .72 사이 (docs/design/76) */
-      clipContactsByChar:{ain:{attack3:0.48,skill1:0.24,skill2:0.23,counter:0.44},kain:{skill1:0.73,skill3:0.38},ryu:{ult:0.46,skill3:0.65}}
+      /* 85: 카인 skill4·류 attack1~3·세라 skill1·3 은 새 클립(UAL2·KayKit 1.1)의 오른손 최고속, 류 skill1(쌍날 연속)은 마무리 왼날 최고속 .65 */
+      clipContactsByChar:{ain:{attack3:0.48,skill1:0.24,skill2:0.23,counter:0.44},kain:{skill1:0.73,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{skill1:0.29,skill3:0.20}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
