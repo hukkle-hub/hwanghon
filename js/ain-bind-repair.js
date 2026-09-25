@@ -14,9 +14,11 @@ export function repairAinBind(model){
  for(const [side,sg]of [['Left',1],['Right',-1]]){
   for(const [name,p]of [['ForeArm',V(sg*.245,1.16,.012)],['Hand',V(sg*.30,.98,.022)]]){
    const b=bones[side+name],world=model.localToWorld(p.clone());b.position.copy(b.parent.worldToLocal(world));changed.set(b.name,b.position.clone());b.updateWorldMatrix(false,true);
+   // Absolute landmark: the rerig anchor (old joint spot, docs/design/77) no longer applies here.
+   delete b.userData.rerigAnchor;
   }
   const hand=bones[side+'Hand'],slot=bones[side+'HandSlot'];
-  if(slot){slot.position.copy(ainGripCenter(side));changed.set(slot.name,slot.position.clone());}
+  if(slot){slot.position.copy(ainGripCenter(side));changed.set(slot.name,slot.position.clone());delete slot.userData.rerigAnchor;}
  }
  model.updateWorldMatrix(true,true);
  for(const mesh of meshes){

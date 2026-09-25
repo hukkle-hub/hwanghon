@@ -96,7 +96,15 @@ export async function buildRig(tgtPath,srcPath,opt={}){
     cur[i]=acc; fitD.push(Math.sqrt(best)); }
   const nb=Array.from({length:n},()=>new Set()), tidx=TM.geometry.index.array;
   for(let t=0;t<tidx.length;t+=3){ const a=tidx[t],b=tidx[t+1],c=tidx[t+2]; nb[a].add(b);nb[a].add(c);nb[b].add(a);nb[b].add(c);nb[c].add(a);nb[c].add(b); }
-  for(let it=0;it<(opt.smooth??1);it++){ const nx=new Array(n); for(let i=0;i<n;i++){ const w={}; for(const [bi,v] of Object.entries(cur[i])) w[bi]=.5*v; const L=[...nb[i]]; if(!L.length){nx[i]=cur[i];continue;} for(const j of L) for(const [bi,v] of Object.entries(cur[j])) w[bi]=(w[bi]||0)+.5*v/L.length; nx[i]=w; } for(let i=0;i<n;i++) cur[i]=nx[i]; }
+  /* 같은 자리 정점(UV 이음새에서 둘로 나뉜 정점)은 한 몸이다. 이웃을 합치고 끝에 무게를 똑같이 맞춘다 —
+     안 그러면 펴기가 서로 다른 이웃으로 달리 펴서, 움직일 때 이음새가 벌어진다(세라 머리칼·등의 검은 금, docs/design/77) */
+  const pa0=TM.geometry.attributes.position, grp=new Map(), gOf=new Int32Array(n);
+  for(let i=0;i<n;i++){ const k=Math.round(pa0.getX(i)*1e5)+','+Math.round(pa0.getY(i)*1e5)+','+Math.round(pa0.getZ(i)*1e5); if(!grp.has(k)) grp.set(k,[]); grp.get(k).push(i); }
+  const groups=[...grp.values()].filter(g=>g.length>1);
+  for(const g of groups){ const u=new Set(); for(const i of g) for(const j of nb[i]) u.add(j); for(const i of g) nb[i]=u; }
+  const weld=()=>{ for(const g of groups){ const w={}; for(const i of g) for(const [bi,v] of Object.entries(cur[i])) w[bi]=(w[bi]||0)+v/g.length; for(const i of g) cur[i]={...w}; } };
+  weld();
+  for(let it=0;it<(opt.smooth??1);it++){ const nx=new Array(n); for(let i=0;i<n;i++){ const w={}; for(const [bi,v] of Object.entries(cur[i])) w[bi]=.5*v; const L=[...nb[i]]; if(!L.length){nx[i]=cur[i];continue;} for(const j of L) for(const [bi,v] of Object.entries(cur[j])) w[bi]=(w[bi]||0)+.5*v/L.length; nx[i]=w; } for(let i=0;i<n;i++) cur[i]=nx[i]; weld(); }
   const J=new Uint16Array(n*4), Wt=new Float32Array(n*4);
   for(let i=0;i<n;i++){ const top=Object.entries(cur[i]).sort((x,y)=>y[1]-x[1]).slice(0,4), s=top.reduce((z,[,w])=>z+w,0)||1; for(let q=0;q<4;q++){ J[i*4+q]=top[q]?+top[q][0]:tIndex.Hips; Wt[i*4+q]=top[q]?top[q][1]/s:(q===0&&!top.length?1:0); } }
   TM.geometry.setAttribute('skinIndex',new T.BufferAttribute(J,4)); TM.geometry.setAttribute('skinWeight',new T.BufferAttribute(Wt,4));
@@ -108,7 +116,7 @@ export async function buildRig(tgtPath,srcPath,opt={}){
     for(const nme of order){ const b=TB[nme], vals=[];
       for(let i=0;i<s.times.length;i++){ const D=s.W[nme][i].clone().multiply(restQ[nme].clone().invert()), Wn=D.multiply(newRestQ[nme]);
         const pw=b.parent.isBone?s.W[short(b.parent.name)][i].clone().multiply(restQ[short(b.parent.name)].clone().invert()).multiply(newRestQ[short(b.parent.name)]):b.parent.getWorldQuaternion(new T.Quaternion());
-        const q=pw.invert().multiply(Wn); const L=vals.length; if(L&&(vals[L-4]*q.x+vals[L-3]*q.y+vals[L-2]*q.z+vals[L-1]*q.w)<0) q.set(-q.x,-q.y,-q.z,-q.w); vals.push(q.x,q.y,q.z,q.w); }
+        const q=pw.invert().multiply(Wn).normalize(); const L=vals.length; if(L&&(vals[L-4]*q.x+vals[L-3]*q.y+vals[L-2]*q.z+vals[L-1]*q.w)<0) q.set(-q.x,-q.y,-q.z,-q.w); vals.push(q.x,q.y,q.z,q.w); }
       tracks.push(new T.QuaternionKeyframeTrack(b.name+'.quaternion',s.times,vals)); }
     const hp=[]; const h0=ref.scene.getObjectByName(TB.Hips.name).position; for(const p of s.hips){ const d=p.clone().sub(h0); const q=TB.Hips.position.clone().add(d); hp.push(q.x,q.y,q.z); }
     tracks.push(new T.VectorKeyframeTrack(TB.Hips.name+'.position',s.times,hp));
