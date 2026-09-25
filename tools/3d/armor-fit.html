@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><title>방어구 자리 재기</title>
+<!-- 캐릭터마다 «장비가 붙는 뼈 자리» 에서 몸(머리칼·옷 포함)의 크기와 가운데를 잰다 (docs/design/83).
+     ?char=ain|kain|ryu|sera → window.FIT = { 뼈: { c:[x,y,z], s:[x,y,z], n } } — 게임과 똑같이 TW_LOOKS.bonesOf 의 장비 자리
+     (gearAnchor/rerigAnchor) 기준, 미터, 가만히 선 자세(clip 없음)에서 실제로 그려지는 정점(스키닝 적용)으로 잰다.
+     c = 2~98 % 범위의 가운데, s = 그 범위의 폭. 아인 자리에 맞춰 만든 장비를 다른 캐릭터에 옮길 때 쓴다(js/armor-fit.js). -->
+<script src="../../js/looks.js"></script>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {repairAinBind} from '../../js/ain-bind-repair.js';
+const CH=new URLSearchParams(location.search).get('char')||'ain';
+const g=await new GLTFLoader().loadAsync(`../../art/3d/${CH}_anim.glb`);
+if(CH==='ain') repairAinBind(g.scene);
+g.scene.updateMatrixWorld(true);
+TW_LOOKS.attach(T,{load(){}},g.scene,{},{charId:CH});   // THREE 를 looks.js 에 넘겨 장비 자리 노드를 만든다
+const anchors=TW_LOOKS.bonesOf(g.scene); g.scene.updateMatrixWorld(true);
+/* 장비 뼈 → 잴 뼈들(그 뼈에 무게가 실린 정점) */
+const REGION={ Head:['Head','HeadTop_End'], Spine1:['Spine1','Spine2'], _Spine:['Spine'], _Spine1:['Spine1'], _Spine2:['Spine2'], _Sh:['LeftShoulder','RightShoulder'], _Arm:['LeftArm','RightArm'], _Torso:['Spine','Spine1','Spine2','LeftShoulder','RightShoulder'], Neck:['Neck'],
+  LeftLeg:['LeftLeg'], RightLeg:['RightLeg'], LeftForeArm:['LeftForeArm'], RightForeArm:['RightForeArm'],
+  LeftFoot:['LeftLeg','LeftFoot','LeftToeBase'], RightFoot:['RightLeg','RightFoot','RightToeBase'], LeftHand:['LeftHand'], LeftSole:['LeftFoot','LeftToeBase'], RightSole:['RightFoot','RightToeBase'] };
+const strip=n=>n.replace(/^mixamorig:?/,'');
+const pts={}; Object.keys(REGION).forEach(k=>pts[k]=[]);
+const v=new T.Vector3();
+g.scene.traverse(o=>{ if(!o.isSkinnedMesh) return;
+  const p=o.geometry.attributes.position, si=o.geometry.attributes.skinIndex, sw=o.geometry.attributes.skinWeight, names=o.skeleton.bones.map(b=>strip(b.name));
+  for(let i=0;i<p.count;i++){
+    const w={}; for(let k=0;k<4;k++){ const nm=names[si.getComponent(i,k)]; w[nm]=(w[nm]||0)+sw.getComponent(i,k); }
+    let pos=null;
+    for(const key in REGION){ let s=0; for(const b of REGION[key]) s+=w[b]||0; if(s<0.5) continue;
+      if(!pos){ o.getVertexPosition(i,v); o.applyBoneTransform(i,v); v.applyMatrix4(o.matrixWorld); pos=v.clone(); }
+      pts[key].push(pos); } } });
+const FIT={};
+for(const key in REGION){ const bone=/^Left(Foot|Sole)$/.test(key)?'LeftLeg':/^Right(Foot|Sole)$/.test(key)?'RightLeg':key[0]==='_'?'Spine1':key; const a=anchors[bone]; if(!a||pts[key].length<20) continue;
+  const inv=new T.Matrix4().copy(a.matrixWorld).invert(), ws=a.getWorldScale(new T.Vector3());
+  const L=pts[key].map(p=>p.clone().applyMatrix4(inv).multiply(ws));   // 장비 자리 로컬, 미터
+  const q=(ax,f)=>{ const s=L.map(p=>p.getComponent(ax)).sort((x,y)=>x-y); return s[Math.floor(f*(s.length-1))]; };
+  const lo=[0,1,2].map(ax=>q(ax,.02)), hi=[0,1,2].map(ax=>q(ax,.98));
+  FIT[key]={ c:lo.map((l,i)=>+((l+hi[i])/2).toFixed(4)), s:lo.map((l,i)=>+(hi[i]-l).toFixed(4)), n:L.length };
+  /* 발바닥 기울기: 발 정점의 z(앞뒤)에 대한 y(다리 방향) 기울기 — 굽 높은 신발은 발끝이 크게 내려간다 */
+  if(/Sole$/.test(key)){ let mz=0,my=0; L.forEach(p=>{mz+=p.z;my+=p.y;}); mz/=L.length; my/=L.length; let szz=0,szy=0; L.forEach(p=>{szz+=(p.z-mz)**2; szy+=(p.z-mz)*(p.y-my);});
+    FIT[key].pitch=+(Math.atan2(szy,szz)*180/Math.PI).toFixed(1); } }
+/* 뼈 자리마다 «캐릭터 정면(월드 +Z)·위(+Y)» 가 로컬에서 어느 쪽인지 — 장비 회전이 캐릭터마다 다를 수 있다 */
+for(const key of ['Head','Spine1','Neck','LeftLeg','RightLeg','LeftForeArm','RightForeArm','LeftHand']){ const a=anchors[key]; if(!a||!FIT[key]) continue;
+  const q=a.getWorldQuaternion(new T.Quaternion()).invert();
+  FIT[key].fwd=new T.Vector3(0,0,1).applyQuaternion(q).toArray().map(v=>+v.toFixed(2)); FIT[key].up=new T.Vector3(0,1,0).applyQuaternion(q).toArray().map(v=>+v.toFixed(2)); }
+window.FIT=FIT; window.READY=1;
+</script>

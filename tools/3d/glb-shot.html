@@ -1,15 +1,16 @@
 <!doctype html><meta charset="utf-8"><title>GLB 검수 샷</title>
 <!-- 생성 모델 검수(docs/design/82): ?glb=경로 → window.shot(az, el, zoom, fy) 한 장. zoom 1 = 전체가 화면에 꽉,
      2 = 두 배 확대(찢어짐·늘어남 보기), fy = 바라볼 높이(0 아래 ~ 1 위). wire=1 이면 선 겹쳐 그림. -->
-<style>body{margin:0;background:#1d222a}canvas{display:block}</style>
+<style>body{margin:0;background:transparent}canvas{display:block}</style>
 <canvas id="c"></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 const Q=new URLSearchParams(location.search), W=+(Q.get('w')||480), H=+(Q.get('h')||480);
-const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true,preserveDrawingBuffer:true}); r.setSize(W,H);
+const BG=Q.get('bg')!=='none';   // bg=none → 투명 배경(아이템 아이콘용)
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true,preserveDrawingBuffer:true,alpha:!BG}); r.setSize(W,H);
 r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=+(Q.get('exp')||1.2); r.outputColorSpace=T.SRGBColorSpace;
-const sc=new T.Scene(); sc.background=new T.Color(0x2a3038);
+const sc=new T.Scene(); if(BG) sc.background=new T.Color(0x2a3038);
 sc.add(new T.HemisphereLight(0xdde6ff,0x303440,1.4)); const key=new T.DirectionalLight(0xffffff,2.6); key.position.set(2,3,2.5); sc.add(key);
 const rim=new T.DirectionalLight(0xffd8b0,1.0); rim.position.set(-2,1.5,-2); sc.add(rim);
 const g=await new GLTFLoader().loadAsync(Q.get('glb')); sc.add(g.scene);

@@ -52,7 +52,7 @@
     { id:'q_sewage', name:'지하 오염수 처리', area:'지하시설', sub:'2경구 정화장', risk:'A', reward:12500, recLv:22, recCp:16000, time:'00:15:00',
       party:'1~4명', penalty:'장비 내구도 8% 감소', lv:22, boss:null, art:'story-city', tags:['정화'], desc:'정화장 하부에서 오염수가 역류한다.', goal:'오염원 차단 및 변이체 처리', enemies:3,
       objectives:{ must:['오염원 3곳 차단'], optional:[['정화 장치 회수',0,1]] }, rewards:[['exp',3100],['m_alloy',1500],['m_dew','2~4'],['m_oil','1~2']],
-      loot:['a_black_greaves','m_dew','m_oil','c_antidote'], firstClear:'m_booster', drops:{ common:['m_fiber','m_oil','c_antidote'], rare:['m_dew','m_shard'], low:['acc_charm'] }, note:'', checklist:[], src:'fill' },
+      loot:['a_black_greaves','a_sluice_helm','a_sluice_cuirass','m_dew','m_oil','c_antidote'], firstClear:'m_booster', drops:{ common:['m_fiber','m_oil','c_antidote'], rare:['m_dew','m_shard'], low:['acc_charm','a_sluice_helm','a_sluice_cuirass','a_sluice_greaves','a_sluice_gauntlet','a_sluice_boots'] }, note:'', checklist:[], src:'fill' },
     { id:'q_relay', name:'배전 통제실 정지', area:'지하시설', sub:'3경구 변전소', risk:'S', reward:21000, recLv:28, recCp:26000, time:'00:22:00',
       party:'1~4명', penalty:'장비 내구도 10% 감소', lv:28, boss:null, art:'story-city', tags:['배전','고압'], desc:'3경구 변전소가 꺼지지 않는다. 계전기가 전력을 계속 끌어모은다.', goal:'축전기 충전 · 주 차단기 개방 · 계전기 정지', enemies:1,
       objectives:{ must:['축전기 2기 충전','주 차단기 개방'], optional:[['예비 접점 회수',0,1]] }, rewards:[['exp',4200],['m_alloy',2400],['m_core','2~3'],['m_shard','2~4']],
@@ -60,7 +60,7 @@
     { id:'q_road', name:'파괴된 수송로 확보', area:'외곽지대', sub:'끊어진 도로', risk:'A', reward:10800, recLv:23, recCp:15000, time:'00:15:00',
       party:'1~4명', penalty:'장비 내구도 8% 감소', lv:23, boss:null, art:'lobby-city', tags:['호위'], desc:'수송로가 끊겨 보급이 막혔다.', goal:'수송로 확보 및 잔해 제거', enemies:3,
       objectives:{ must:['수송로 3구간 확보'], optional:[['보급품 회수',0,2]] }, rewards:[['exp',2800],['m_ore',40],['m_alloy','4~8'],['m_bone','6~10']],
-      loot:['w_ruin_spear','m_ore','m_alloy'], firstClear:'m_shard', drops:{ common:['m_ore','m_bone','m_fiber'], rare:['m_alloy','m_dew'], low:['w_ruin_spear'] }, note:'', checklist:[], src:'fill' },
+      loot:['w_ruin_spear','w_kain_crusher','m_ore','m_alloy'], firstClear:'m_shard', drops:{ common:['m_ore','m_bone','m_fiber'], rare:['m_alloy','m_dew'], low:['w_ruin_spear','w_kain_crusher'] }, note:'', checklist:[], src:'fill' },
     { id:'q_plant', name:'변이체 토벌: 식인초', area:'외곽지대', sub:'버려진 식물원', risk:'B', reward:8300, recLv:21, recCp:12000, time:'00:12:00',
       party:'1~4명', penalty:'장비 내구도 5% 감소', lv:21, boss:null, art:'boss-anatomy', tags:['토벌'], desc:'식물원이 변이체의 둥지가 되었다.', goal:'식인초 군락 소각', enemies:2,
       objectives:{ must:['식인초 군락 5곳 소각'], optional:[['씨앗 표본 채집',0,3]] }, rewards:[['exp',2200],['m_fiber',60],['m_dew','3~5'],['c_throw','1~2']],
@@ -69,7 +69,7 @@
     { id:'q_med', name:'자원 회수: 의료품', area:'도심지', sub:'폐병원', risk:'A', reward:12400, recLv:25, recCp:17000, time:'00:14:00',
       party:'1~4명', penalty:'장비 내구도 7% 감소', lv:25, boss:null, art:'story-city', tags:['회수'], desc:'폐병원 창고에 의료품이 남아 있다. 들어간 사람은 나오지 않았다.', goal:'의료품 회수', enemies:2,
       objectives:{ must:['의료품 상자 4개 회수'], optional:[['진료 기록 열람',0,1]] }, rewards:[['exp',3200],['c_potion',10],['c_antidote','4~6'],['m_oil','2~4']],
-      loot:['a_hood','c_potion','c_antidote'], firstClear:'a_hood', drops:{ common:['c_potion','c_antidote','m_oil'], rare:['m_dew'], low:['a_hood'] }, note:'', checklist:[], src:'fill' }
+      loot:['a_hood','a_ward_mask','c_potion','c_antidote'], firstClear:'a_hood', drops:{ common:['c_potion','c_antidote','m_oil'], rare:['m_dew'], low:['a_hood','a_ward_mask','a_ward_greaves','a_ward_gloves','a_ward_boots'] }, note:'', checklist:[], src:'fill' }
   ];
   /* 파티 모집 임무 목록 (03-party) — 의뢰 5 + 추가 3 */
   var MISSIONS = [

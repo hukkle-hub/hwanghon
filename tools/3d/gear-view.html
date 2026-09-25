@@ -20,7 +20,7 @@ TW_MATFIX.repair(T,g.scene);
 let clips=g.animations; if(CH==='ain') clips=repairAinClips(g.animations,repairAinBind(g.scene));
 if(Q.get('clip')!=='none'){ const mixer=new T.AnimationMixer(g.scene), c=clips.find(x=>x.name===(Q.get('clip')||'idle'))||clips[0], a=mixer.clipAction(c); a.play(); a.paused=true; a.time=c.duration*+(Q.get('u')||0.3); mixer.update(0); }
 const gear=(Q.get('gear')||'').split(',').filter(Boolean), eq={}; const slotOf={a_hood:'head',a_reed_cuirass:'chest',a_black_greaves:'legs',a_steel_gauntlet:'gloves',a_ranger_boots:'boots',acc_charm:'acc',acc_blood_ring:'acc',acc_band:'acc2'};
-for(const id of gear) eq[slotOf[id]||(/^w_/.test(id)?'main':id)]=id;
+for(const id of gear) eq[slotOf[id]||TW_LOOKS.SLOT_OF[id]||(/^w_/.test(id)?'main':id)]=id;
 /* looks.js 의 가짜 로더(경로를 이 페이지 기준으로) */
 const L={load:(p,ok,_,bad)=>loader.load('../../'+p,ok,undefined,bad||(()=>{}))};
 TW_LOOKS.attach(T,L,g.scene,eq,{charId:CH});
