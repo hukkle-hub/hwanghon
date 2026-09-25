@@ -25,6 +25,10 @@ ap.add_argument('glb'); ap.add_argument('face')
 ap.add_argument('--mesh', required=True); ap.add_argument('--img', required=True); ap.add_argument('--mask', required=True)
 ap.add_argument('--out'); ap.add_argument('--tone', type=float, default=0.7); ap.add_argument('--preview')
 ap.add_argument('--contrast', type=float, default=0.2, help='대비를 원래 텍스처 쪽으로 맞추는 정도(0 = 시트 대비 그대로) — 1 이면 흐려진다')
+ap.add_argument('--keep-dark', type=float, default=0, help='원래 텍스처가 이 밝기(0~255)보다 어두운 삼각형(검은 머리칼)은 칠하지 않고 가림막으로도 안 친다')
+ap.add_argument('--core', type=float, default=0.8, help='가면 타원 안쪽 이 비율까지는 옆을 봐도 끝까지 칠한다(코 옆 덩어리가 조각으로 남지 않게)')
+ap.add_argument('--core-depth', type=float, default=0.006, help='가면 안쪽에서 앞면 뒤 몇 m 까지 칠하나')
+ap.add_argument('--drop-debris', type=int, default=0, help='가면 안쪽의 작은 떠 있는 조각(삼각형 N 개 미만의 연결 덩어리)을 지운다 — 아인 코 옆 덩어리')
 ap.add_argument('--island', type=int, default=0, help='얼굴 전용 섬(px) — 텍스처 아래에 S px 띠를 붙여 얼굴을 고해상도로 다시 편다')
 a = ap.parse_args()
 
@@ -53,9 +57,33 @@ Ms = np.array([[m[0], m[1], 1], [m[2], m[3], 1], [m[4], m[5], 1]]); Gs = np.arra
 AF = np.linalg.solve(Ms, Gs)   # 3x2
 def to_img(xy): return np.c_[xy, np.ones(len(xy))] @ AF
 cx, cy, rx, ry, *fe = [float(v) for v in a.mask.split(',')]; feather = fe[0] if fe else 0.18
-def mask_at(uv):
-    d = np.sqrt(((uv[:, 0] - cx) / rx) ** 2 + ((uv[:, 1] - cy) / ry) ** 2)
-    return np.clip((1 - d) / feather, 0, 1)
+def ell(uv): return np.sqrt(((uv[:, 0] - cx) / rx) ** 2 + ((uv[:, 1] - cy) / ry) ** 2)
+def mask_at(uv): return np.clip((1 - ell(uv)) / feather, 0, 1)
+
+def sample(img, u, v):   # 쌍선형
+    H, W = img.shape[:2]; u = np.clip(u, 0, W - 1.001); v = np.clip(v, 0, H - 1.001)
+    i, j = v.astype(int), u.astype(int); fu, fv = (u - j)[:, None], (v - i)[:, None]
+    return img[i, j] * (1 - fu) * (1 - fv) + img[i, j + 1] * fu * (1 - fv) + img[i + 1, j] * (1 - fu) * fv + img[i + 1, j + 1] * fu * fv
+
+IDX_CHANGED = False
+if a.drop_debris > 0:
+    # 같은 자리 정점을 하나로 보고 연결 덩어리를 나눈다 — 얼굴 가면 안쪽의 작은 덩어리는 Hi3D 가 남긴 부스러기
+    key = np.round(P / 1e-5).astype(np.int64); _, wid = np.unique(key, axis=0, return_inverse=True); wid = wid.ravel()
+    par = np.arange(wid.max() + 1)
+    def find(x):
+        while par[x] != x: par[x] = par[par[x]]; x = par[x]
+        return x
+    for t3 in wid[IDX]:
+        r0 = find(t3[0]); par[find(t3[1])] = r0; par[find(t3[2])] = r0
+    root = np.array([find(x) for x in wid[IDX[:, 0]]]); u_, inv_, cnt_ = np.unique(root, return_inverse=True, return_counts=True)
+    cen_ = P[IDX].mean(1); small = cnt_[inv_] < a.drop_debris
+    inmask = ell(to_img(cen_[:, :2])) < a.core
+    # 덩어리 전체가 가면 안쪽일 때만 (머리칼 끝이 조금 들어온 것은 두지 않는다 — 작은 덩어리만)
+    comp_in = np.zeros(len(u_), bool); comp_all = np.bincount(inv_, minlength=len(u_)); comp_inn = np.bincount(inv_, weights=inmask, minlength=len(u_))
+    comp_in = comp_inn >= comp_all
+    drop = small & comp_in[inv_]
+    IDX = IDX[~drop]; IDX_CHANGED = bool(drop.any())
+    print(f'부스러기 지움: 덩어리 {len(np.unique(inv_[drop]))} · 삼각형 {int(drop.sum())}')
 
 # 얼굴 쪽 메시 범위 (이미지 타원을 메시로 되돌린 상자)
 inv = np.linalg.inv(np.vstack([AF.T, [0, 0, 1]]))   # [u,v,1] → [x,y,1]
@@ -67,6 +95,12 @@ DR = 700; dx = (x1 - x0) / DR; dh = int((y1 - y0) / dx) + 1
 DEP = np.full((dh, DR), -1e9)
 tri = P[IDX]
 sel = (tri[:, :, 0].max(1) >= x0) & (tri[:, :, 0].min(1) <= x1) & (tri[:, :, 1].max(1) >= y0) & (tri[:, :, 1].min(1) <= y1)
+if a.keep_dark > 0:
+    # 검은 머리칼 조각(원래 텍스처가 어두운 삼각형)은 그대로 둔다 — 칠하지도, 뒤 피부를 가리지도 않는다
+    tuv = np.concatenate([UV[IDX], UV[IDX].mean(1, keepdims=True)], 1).reshape(-1, 2) * [TW, TH]
+    lum = (sample(TEX, tuv[:, 0], tuv[:, 1]) @ [0.299, 0.587, 0.114]).reshape(-1, 4).mean(1)
+    dark = sel & (lum < a.keep_dark); sel = sel & ~dark
+    print(f'어두운(머리칼) 삼각형 {int(dark.sum())} 은 그대로')
 for t in tri[sel]:
     px = (t[:, 0] - x0) / dx; py = (y1 - t[:, 1]) / dx
     ix0, ix1 = max(0, int(px.min())), min(DR - 1, int(px.max()) + 1); iy0, iy1 = max(0, int(py.min())), min(dh - 1, int(py.max()) + 1)
@@ -83,11 +117,6 @@ def depth_at(xy):
     ix = np.clip(((xy[:, 0] - x0) / dx).astype(int), 0, DR - 1); iy = np.clip(((y1 - xy[:, 1]) / dx).astype(int), 0, dh - 1)
     return DEP[iy, ix]
 
-def sample(img, u, v):   # 쌍선형
-    H, W = img.shape[:2]; u = np.clip(u, 0, W - 1.001); v = np.clip(v, 0, H - 1.001)
-    i, j = v.astype(int), u.astype(int); fu, fv = (u - j)[:, None], (v - i)[:, None]
-    return img[i, j] * (1 - fu) * (1 - fv) + img[i, j + 1] * fu * (1 - fv) + img[i + 1, j] * (1 - fu) * fv + img[i + 1, j + 1] * fu * fv
-
 
 def raster(uvpx, tol=-0.02):
     """삼각형 하나를 픽셀 격자에 — (X, Y, 무게중심좌표) 를 돌려준다"""
@@ -102,9 +131,12 @@ def raster(uvpx, tol=-0.02):
     return X[ins], Y[ins], np.c_[l0, l1, l2][ins]
 
 def weight_of(pos, nor):
-    vis = pos[:, 2] >= depth_at(pos[:, :2]) - 0.006
+    uvimg = to_img(pos[:, :2]); incore = ell(uvimg) < a.core
+    # 가면 안쪽은 앞면 바로 뒤(core-depth)까지 칠한다 — 튀어나온 덩어리의 윗면·옆면은 정면에서 안 보여도 비스듬히는 보인다
+    vis = pos[:, 2] >= depth_at(pos[:, :2]) - np.where(incore, a.core_depth, 0.006)
     face_on = np.clip((nor[:, 2] - 0.05) / 0.25, 0, 1)   # 옆을 볼수록 덜 — 로우폴리 법선이 흔들려도 앞얼굴은 1
-    uvimg = to_img(pos[:, :2]); return mask_at(uvimg) * face_on * vis, uvimg
+    face_on = np.maximum(face_on, np.clip((a.core - ell(uvimg)) / 0.1, 0, 1))   # 가면 안쪽은 옆면도 끝까지
+    return mask_at(uvimg) * face_on * vis, uvimg
 
 def tone_blend(src, orig, W_):
     core = W_ > 0.5
@@ -115,12 +147,15 @@ def tone_blend(src, orig, W_):
 
 fsel = np.where(sel)[0]
 NEWUV = None
+EXTRA_IMG = {}   # 이미지 번호 → 새 바이트 (섬 띠를 붙인 다른 텍스처)
 if a.island > 0:
     # ── 얼굴 전용 섬: 앞을 보고 · 보이고 · 가면 안에 드는 삼각형을 새 띠(S px)에 정면 투영으로 다시 편다
     S = a.island; NH = TH + S; m_ = 6
     cen = P[IDX[fsel]].mean(1); cn = N[IDX[fsel]].mean(1); cn /= np.linalg.norm(cn, axis=1, keepdims=True) + 1e-9
     wc, _ = weight_of(cen, cn)
-    isl = fsel[(wc > 0.0) & (cn[:, 2] > 0.25)]
+    core_c = ell(to_img(cen[:, :2])) < a.core
+    isl = fsel[(wc > 0.0) & ((cn[:, 2] > 0.25) | core_c)]
+    # 섬 UV 는 정면 투영이라 옆·위를 보는 삼각형은 가늘게 눌린다 — 덩어리 윗면은 색이 한 줄로 늘어나지만 피부색이라 괜찮다
     vids = np.unique(IDX[isl]); xy = P[vids, :2]
     bx0, by0 = xy.min(0); bx1, by1 = xy.max(0); sc = (S - 2 * m_) / max(bx1 - bx0, by1 - by0)
     ox = m_ + ((S - 2 * m_) - (bx1 - bx0) * sc) / 2
@@ -137,13 +172,35 @@ if a.island > 0:
     ok = (T_[:, 0] >= 0) & (T_[:, 0] < TW) & (T_[:, 1] >= TH) & (T_[:, 1] < NH); T_, W_, L_, O_ = T_[ok], W_[ok], L_[ok], O_[ok]
     orig = sample(TEX, O_[:, 0], O_[:, 1]); src = sample(FACE, L_[:, 0], L_[:, 1])
     NEW[T_[:, 1], T_[:, 0]] = tone_blend(src, orig, W_); filled[T_[:, 1], T_[:, 0]] = True
-    for _ in range(6):   # 섬 밖으로 번지게(밉맵에서 이음새가 안 보이게)
-        e = ~filled
-        if not e.any(): break
-        accum = np.zeros_like(NEW); cnt = np.zeros(filled.shape)
-        for dy_, dx_ in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-            sh = np.roll(np.roll(filled, dy_, 0), dx_, 1); accum += np.where(sh[..., None], np.roll(np.roll(NEW, dy_, 0), dx_, 1), 0); cnt += sh
-        grow = e & (cnt > 0); NEW[grow] = accum[grow] / cnt[grow][:, None]; filled |= grow
+    def dilate(img_, fil, n=6):   # 섬 밖으로 번지게(밉맵에서 이음새가 안 보이게)
+        fil = fil.copy()
+        for _ in range(n):
+            e = ~fil
+            if not e.any(): break
+            accum = np.zeros_like(img_); cnt = np.zeros(fil.shape)
+            for dy_, dx_ in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                sh = np.roll(np.roll(fil, dy_, 0), dx_, 1); accum += np.where(sh[..., None], np.roll(np.roll(img_, dy_, 0), dx_, 1), 0); cnt += sh
+            grow = e & (cnt > 0); img_[grow] = accum[grow] / cnt[grow][:, None]; fil |= grow
+    filled0 = filled.copy(); dilate(NEW, filled)
+    # 같은 UV 를 쓰는 다른 텍스처(거칠기·금속 등)도 섬 띠를 붙인다 — 안 그러면 섬 UV 가 엉뚱한 곳을 읽는다
+    for ti in {v_['index'] for k_, v_ in list(J['materials'][0]['pbrMetallicRoughness'].items()) + list(J['materials'][0].items()) if isinstance(v_, dict) and 'index' in v_}:
+        si = J['textures'][ti]['source']
+        if si == tex_i: continue
+        im_ = J['images'][si]; V2 = J['bufferViews'][im_['bufferView']]
+        pil = Image.open(io.BytesIO(bytes(BIN[V2.get('byteOffset', 0):V2.get('byteOffset', 0) + V2['byteLength']])))
+        mode = pil.mode if pil.mode in ('RGB', 'RGBA', 'L') else 'RGB'; X_ = np.asarray(pil.convert(mode)).astype(np.float64)
+        if X_.ndim == 2: X_ = X_[..., None]
+        MH, MW = X_.shape[:2]
+        vals = sample(X_, O_[:, 0] * MW / TW, O_[:, 1] * MH / TH)
+        # 칠한 곳은 재질도 피부로 — 코 옆 덩어리가 원래 «금속» 값이라 은색으로 번쩍였다. 가면 안쪽의 중앙값(= 피부)으로 무게만큼
+        skin = np.median(vals[W_ > 0.95], 0); vals = vals * (1 - W_[:, None]) + skin * W_[:, None]
+        strip = np.zeros((NH, TW, X_.shape[2])); strip[T_[:, 1], T_[:, 0]] = vals
+        f2 = np.zeros((NH, TW), bool); f2[T_[:, 1], T_[:, 0]] = True; f2[:TH] = True; dilate(strip, f2, 8)
+        sh_ = max(1, round(MH * S / TH)); tail = np.asarray(Image.fromarray(strip[TH:].astype(np.uint8).squeeze()).resize((MW, sh_), Image.BILINEAR)).astype(np.float64)
+        if tail.ndim == 2: tail = tail[..., None]
+        OUT2 = np.concatenate([X_, tail], 0).astype(np.uint8).squeeze()
+        b2 = io.BytesIO(); Image.fromarray(OUT2).save(b2, 'PNG' if im_.get('mimeType') == 'image/png' else 'JPEG', **({} if im_.get('mimeType') == 'image/png' else {'quality': 93}))
+        EXTRA_IMG[si] = b2.getvalue(); print(f'  텍스처 {si} 도 섬 띠 {MW}x{MH} → {MW}x{MH + sh_}')
     # 정점: 섬 삼각형이 쓰는 정점을 복제해 새 UV (위치·무게는 같아서 이음새는 벌어지지 않는다)
     newid = {int(v): P.shape[0] + i for i, v in enumerate(vids)}
     UVn = UV.copy(); UVn[:, 1] *= TH / NH
@@ -204,6 +261,8 @@ if NEWUV is not None:
         A_ = J['accessors'][ai]; arr = acc(ai); repl[ai] = (np.concatenate([arr, arr[DUP]]).astype(DT[A_['componentType']]), A_['componentType'])
     nv = UVall.shape[0]; ct = 5123 if nv < 65536 else 5125
     repl[prim['indices']] = (IDXn.reshape(-1).astype(DT[ct]), ct)
+if NEWUV is None and IDX_CHANGED:
+    ct = 5123 if P.shape[0] < 65536 else 5125; repl[prim['indices']] = (IDX.reshape(-1).astype(DT[ct]), ct)
 refs = list(prim['attributes'].values()) + [prim['indices']] + [s_['inverseBindMatrices'] for s_ in J.get('skins', []) if 'inverseBindMatrices' in s_]
 for an in J.get('animations', []):
     for sm in an['samplers']: refs += [sm['input'], sm['output']]
@@ -232,7 +291,7 @@ for an in J.get('animations', []):
     for sm in an['samplers']: sm['input'] = amap[sm['input']]; sm['output'] = amap[sm['output']]
 for k, im in enumerate(J['images']):
     V_ = J['bufferViews'][im['bufferView']]; o = V_.get('byteOffset', 0)
-    im['bufferView'] = view(NEWJPG if k == tex_i else bytes(BIN[o:o + V_['byteLength']]))
+    im['bufferView'] = view(NEWJPG if k == tex_i else EXTRA_IMG.get(k) or bytes(BIN[o:o + V_['byteLength']]))
 J['accessors'] = accs; J['bufferViews'] = views
 while len(out) % 4: out += b'\0'
 J['buffers'] = [{'byteLength': len(out)}]
