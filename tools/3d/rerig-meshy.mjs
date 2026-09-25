@@ -13,7 +13,7 @@
  *   4. glb 에 쓴다: 뼈 노드 이동값, 역바인드 행렬, JOINTS/WEIGHTS, 모든 애니메이션(원래 키 시각).
  *      뼈마다 «옛 관절 자리»를 extras.rerigAnchor 로 남긴다 — js/looks.js 가 장비를 거기에 붙인다.
  *
- *   node tools/3d/rerig-meshy.mjs <우리.glb> <meshy 리그.glb> [--out 파일] [--dry] [--clips a,b] [--smooth N]
+ *   node tools/3d/rerig-meshy.mjs <우리.glb> <meshy 리그.glb> [--out 파일] [--dry] [--clips a,b] [--smooth N] [--head-rigid [--chin y] [--neck-blend m] [--head-lo a --head-hi b]]
  *   --dry: 파일을 쓰지 않고 새 리그를 메모리에서 만들어 JSON 요약만 (검증용). 모듈로 import 해서
  *          buildRig() 를 쓰면 three 객체를 그대로 받는다.
  */
@@ -105,6 +105,18 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   const weld=()=>{ for(const g of groups){ const w={}; for(const i of g) for(const [bi,v] of Object.entries(cur[i])) w[bi]=(w[bi]||0)+v/g.length; for(const i of g) cur[i]={...w}; } };
   weld();
   for(let it=0;it<(opt.smooth??1);it++){ const nx=new Array(n); for(let i=0;i<n;i++){ const w={}; for(const [bi,v] of Object.entries(cur[i])) w[bi]=.5*v; const L=[...nb[i]]; if(!L.length){nx[i]=cur[i];continue;} for(const j of L) for(const [bi,v] of Object.entries(cur[j])) w[bi]=(w[bi]||0)+.5*v/L.length; nx[i]=w; } for(let i=0;i<n;i++) cur[i]=nx[i]; weld(); }
+  /* 얼굴은 머리와 한 몸 (--head-rigid, docs/design/78). Meshy 무게는 입·턱에 목·어깨가 섞여 공격 중 턱이 4~6 cm
+     휘었다(세라). 높이·위치만으로 «얼굴» 을 가르면 턱 높이까지 올라온 옷깃(세라 목폴라)이 머리를 따라가 턱선 밖으로
+     삐져나왔다 → Meshy 가 이미 매긴 «머리 몫» 을 다이얼로 쓴다: 머리 몫 ≥ hb(0.5) 는 Head 1.0, ≤ ha(0.15) 는 그대로,
+     사이는 부드럽게. 머리 가운데 R 안 · 턱(--chin) 3 cm 아래까지만. */
+  if(opt.headRigid){ const hd=newWorld.Head, hi=tIndex.Head, chin=opt.chin!=null?opt.chin:hd.y, lo=chin-(opt.neckBlend||0.03), R=opt.headR||0.17, ha=opt.headLo??0.15, hb=opt.headHi??0.5;
+    let cx=0,cy=0,cz=0,cn=0; for(let i=0;i<n;i++){ const y=TP[i*3+1]; if(y>hd.y+0.06&&Math.abs(TP[i*3]-hd.x)<0.12){ cx+=TP[i*3];cy+=y;cz+=TP[i*3+2];cn++; } }
+    const C=new T.Vector3(cx/cn,cy/cn,cz/cn); let changed=0;
+    for(let i=0;i<n;i++){ const y=TP[i*3+1]; if(y<lo||Math.hypot(TP[i*3]-C.x,y-C.y,TP[i*3+2]-C.z)>R) continue;
+      let hw=0,tw=0; for(const [bi,v] of Object.entries(cur[i])){ tw+=v; if(+bi===hi) hw+=v; } if(!tw) continue;
+      const t=Math.min(1,Math.max(0,(hw/tw-ha)/(hb-ha))), k=t*t*(3-2*t); if(k<=0) continue;
+      const w={}; for(const [bi,v] of Object.entries(cur[i])) w[bi]=(1-k)*v/tw; w[hi]=(w[hi]||0)+k; cur[i]=w; changed++; }
+    weld(); if(opt.log) opt.log(`머리 한 몸: ${changed} 정점 (머리 관절 y ${hd.y.toFixed(3)}, 턱 ${chin}, 가운데 ${C.toArray().map(v=>v.toFixed(3))})`); }
   const J=new Uint16Array(n*4), Wt=new Float32Array(n*4);
   for(let i=0;i<n;i++){ const top=Object.entries(cur[i]).sort((x,y)=>y[1]-x[1]).slice(0,4), s=top.reduce((z,[,w])=>z+w,0)||1; for(let q=0;q<4;q++){ J[i*4+q]=top[q]?+top[q][0]:tIndex.Hips; Wt[i*4+q]=top[q]?top[q][1]/s:(q===0&&!top.length?1:0); } }
   TM.geometry.setAttribute('skinIndex',new T.BufferAttribute(J,4)); TM.geometry.setAttribute('skinWeight',new T.BufferAttribute(Wt,4));
@@ -186,7 +198,7 @@ export function writeRigGlb(srcPath,outPath,R){
 if(import.meta.url===`file://${process.argv[1]}`){
   const args=process.argv.slice(2), val=k=>args.includes(k)?args[args.indexOf(k)+1]:null;
   const clipsOpt=val('--clips')?val('--clips').split(','):null;
-  const R=await buildRig(args[0],args[1],{clips:clipsOpt,smooth:val('--smooth')!=null?+val('--smooth'):1,keepTimes:true});
+  const R=await buildRig(args[0],args[1],{clips:clipsOpt,smooth:val('--smooth')!=null?+val('--smooth'):1,keepTimes:true,headRigid:args.includes('--head-rigid'),headLo:val('--head-lo')!=null?+val('--head-lo'):undefined,headHi:val('--head-hi')!=null?+val('--head-hi'):undefined,chin:val('--chin')!=null?+val('--chin'):null,neckBlend:val('--neck-blend')!=null?+val('--neck-blend'):null,log:m=>process.stderr.write(m+'\n')});
   const moved=R.order.filter(n=>MAP[n]).map(n=>`${n} ${(R.newWorld[n].distanceTo(R.oldWorld[n])*100).toFixed(1)}cm`);
   process.stderr.write(`메시 일치: 중앙 ${(R.fit.median*1000).toFixed(1)} mm · 95% ${(R.fit.p95*1000).toFixed(1)} mm · 최대 ${(R.fit.max*1000).toFixed(0)} mm\n관절 이동: ${moved.join(', ')}\n클립 ${R.g.animations.length}개 다시 구움\n`);
   if(!args.includes('--dry')){ const out=val('--out')||args[0]; const w=writeRigGlb(args[0],out,R);

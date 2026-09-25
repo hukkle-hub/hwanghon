@@ -91,7 +91,10 @@ function bake(char, mode){
             let head=null;
             model.traverse(o=>{ if(o.isBone&&o.name.replace(/^mixamorig:?/,'')==='Head') head=o; });
             const p=new THREE.Vector3();
-            if(head) head.getWorldPosition(p); else { const bb=new THREE.Box3().setFromObject(model); p.set(0,bb.max.y-0.16,0); }
+            /* 다시 리깅한 캐릭터(docs/design/77)는 머리 관절이 5~8 cm 내려갔다 — 옛 관절 자리(rerigAnchor)를 겨눈다 */
+            const an=head&&head.userData&&head.userData.rerigAnchor;
+            if(head&&an){ head.updateWorldMatrix(true,false); p.set(an[0],an[1],an[2]); head.localToWorld(p); }
+            else if(head) head.getWorldPosition(p); else { const bb=new THREE.Box3().setFromObject(model); p.set(0,bb.max.y-0.16,0); }
             at.set(p.x, p.y+0.042, p.z);
             cam.position.set(at.x+0.10, at.y+0.03, at.z+0.82);   /* 살짝 3/4 */
           }

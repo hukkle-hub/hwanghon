@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>얼굴 정면 (직교)</title>
+<!-- 바인드 자세 얼굴을 정면 직교로 — 텍스처 그대로(조명 없음). 픽셀 ↔ 메시 x·y 가 정확히 대응한다(docs/design/78).
+     ?char=ain&x0=-0.1&x1=0.1&y0=1.42&y1=1.70&px=1000 · window.TW_FACE = {x0,x1,y0,y1,w,h} -->
+<style>body{margin:0;background:#777}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+const Q=new URLSearchParams(location.search), CH=Q.get('char')||'ain';
+const x0=+(Q.get('x0')||-0.1), x1=+(Q.get('x1')||0.1), y0=+(Q.get('y0')||1.42), y1=+(Q.get('y1')||1.70), W=+(Q.get('px')||1000), H=Math.round(W*(y1-y0)/(x1-x0));
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1); r.outputColorSpace=T.SRGBColorSpace;
+const sc=new T.Scene(); sc.background=new T.Color(0x777777);
+const g=await new GLTFLoader().loadAsync(Q.get('glb')||`../../art/3d/${CH}_anim.glb`); sc.add(g.scene);
+g.scene.traverse(o=>{ if(o.isSkinnedMesh){ o.skeleton.pose(); const m=o.material; o.material=new T.MeshBasicMaterial({map:m.map,side:T.DoubleSide}); } });
+g.scene.updateMatrixWorld(true);
+const cam=new T.OrthographicCamera(x0,x1,y1,y0,-10,10); cam.position.set(0,0,5); cam.lookAt(0,0,0);   /* +z 에서 -z 로 = 정면 */
+r.render(sc,cam); window.TW_FACE={x0,x1,y0,y1,w:W,h:H}; window.TW_READY=1;
+</script>

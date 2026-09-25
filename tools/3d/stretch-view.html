@@ -46,10 +46,16 @@ function heat(on){ let worst=1,bad=0,tot=0;
       col.setXYZ(i, 1-.1*c, 1-s*.85-.3*c, 1-s*.85); }
     col.needsUpdate=true; }
   return {worst,bad:tot?bad/tot:0}; }
-window.view=function(clip,u,bone='Hips',dist=1.2,az=35,useHeat=1,el=10){
+window.view=function(clip,u,bone='Hips',dist=1.2,az=35,useHeat=1,el=10,dy=0){   /* dy: 뼈 위로 주시점 올리기(m) — 얼굴은 Head 관절보다 위 */
   pose(clip,u); const st=heat(!!useHeat);
-  const p=(bones[bone]||bones.Hips).getWorldPosition(new T.Vector3()), A=az*Math.PI/180, E=el*Math.PI/180;
+  const p=(bone==='FACE'?faceCenter():(bones[bone]||bones.Hips).getWorldPosition(new T.Vector3())).add(new T.Vector3(0,dy,0)), A=az*Math.PI/180, E=el*Math.PI/180;
   cam.position.set(p.x+dist*Math.sin(A)*Math.cos(E), p.y+dist*Math.sin(E), p.z+dist*Math.cos(A)*Math.cos(E)); cam.lookAt(p);
   r.render(sc,cam); return st; };
+/* 'FACE': 리그와 상관없이 메시 머리 가운데를 본다(바인드에서 맨 위 26 cm·가운데 10 cm 정점의 움직인 뒤 중심).
+   옛·새 리그는 머리 관절 높이가 5~8 cm 달라 관절을 겨누면 비교가 안 된다. */
+let FACE=null;
+function faceCenter(){ const I=info[0], m=I.m;
+  if(!FACE){ let top=-1e9; for(let i=0;i<I.R.length;i+=3) top=Math.max(top,I.R[i+1]); FACE=[]; for(let i=0;i<I.R.length;i+=3){ const y=I.R[i+1]; if(y>top-0.26&&y<top-0.02&&Math.abs(I.R[i])<0.1) FACE.push(i/3); } }
+  const c=new T.Vector3(), v=new T.Vector3(); for(const i of FACE){ m.getVertexPosition(i,v); c.add(v); } c.multiplyScalar(1/FACE.length); return c.applyMatrix4(m.matrixWorld); }
 window.TW_READY=1;
 </script>
