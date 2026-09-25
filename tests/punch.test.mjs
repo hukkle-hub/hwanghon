@@ -53,7 +53,12 @@ function peakTime(root, mixer, bone, clip) {
     mixer.setTime(Math.min(clip.duration * 0.998, i / FPS));
     root.updateMatrixWorld(true);
     const hip = bone.Hips.getWorldPosition(new T.Vector3());
-    pts.push(TRACK.filter(n => bone[n]).map(n => bone[n].getWorldPosition(new T.Vector3()).sub(hip)));
+    /* 다시 리깅한 캐릭터(docs/design/77)는 손 관절이 손목으로 옮겨졌다(예전엔 손끝 근처). 같은 «메시 위
+       점» 을 재야 하므로 glb 가 남긴 옛 관절 자리(rerigAnchor)를 잰다 — 손목을 재면 반지름이 짧아
+       손이 20% 느리게 나와 발이 «최고속» 을 가져간다(지표 오류). */
+    const at = n => { const a = bone[n].userData && bone[n].userData.rerigAnchor;
+      return a ? bone[n].localToWorld(new T.Vector3(a[0], a[1], a[2])) : bone[n].getWorldPosition(new T.Vector3()); };
+    pts.push(TRACK.filter(n => bone[n]).map(n => at(n).sub(hip)));
   }
   let best = 0, bi = 0;
   for (let i = 1; i < pts.length; i++) {

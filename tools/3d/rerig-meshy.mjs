@@ -5,7 +5,7 @@
  * 거의 그대로였다(409 → 325‱) — Meshy 무게는 Meshy 관절 위치를 전제로 한 것인데 우리 관절이
  * 4~15 cm 어긋나 있다(어깨 4 cm 아래, 가슴 척추 10 cm 아래, 넓적다리 8 cm 위). 그래서 관절째 옮긴다.
  *
- *   1. 관절 = Meshy 바인드 자세 관절(골반·머리로 맞춰 우리 크기로). 이름·부모는 우리 것 그대로.
+ *   1. 관절 = Meshy 바인드 자세 관절(메시 상자로 맞춰 — 메시 일치 중앙 0.0 mm). 이름·부모는 우리 것 그대로.
  *      손 슬롯(RightHandSlot 등)은 손에 대한 상대 위치·방향 그대로 따라간다.
  *   2. 무게 = Meshy 삼각형 위 가장 가까운 점의 무게(뼈 이름을 우리 것으로), 한 번 편다.
  *   3. 클립 = 옛 뼈대로 틀었을 때 각 뼈의 «월드 회전 변화» D(t)=W(t)·W_rest⁻¹ 를 새 뼈대에 그대로:
@@ -52,8 +52,14 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   const TB={}; tg.scene.traverse(o=>{if(o.isBone)TB[short(o.name)]=o;});
   const SB={}; sg.scene.traverse(o=>{if(o.isBone)SB[short(o.name)]=o;});
   const sw=n=>SB[n].getWorldPosition(new T.Vector3()), tw=n=>TB[n].getWorldPosition(new T.Vector3());
-  const tH=tw('Hips'), sH=sw('Hips'), k=tH.distanceTo(tw('Head'))/sH.distanceTo(sw('Head'));
-  const toOurs=p=>p.clone().sub(sH).multiplyScalar(k).add(tH);
+  /* 맞추기: 메시 상자(키로 배율, 가로·깊이는 가운데, 바닥은 바닥). 관절로 맞추면 안 된다 — 우리 관절이
+     틀려 있는 게 문제라서(골반→머리 거리로 재면 배율이 어긋나 메시가 2~4 cm 떠 있었다). */
+  const meshPts=(m,skin)=>{ const n=m.geometry.attributes.position.count,a=[],v=new T.Vector3(); for(let i=0;i<n;i++){ if(skin) m.getVertexPosition(i,v); else v.fromBufferAttribute(m.geometry.attributes.position,i); v.applyMatrix4(m.matrixWorld); a.push(v.clone()); } return a; };
+  const bbOf=a=>{ const b=new T.Box3(); a.forEach(p=>b.expandByPoint(p)); return b; };
+  const TA=meshPts(TM,false), SA=meshPts(SM,true), ta=bbOf(TA), tb=bbOf(SA), k=ta.getSize(new T.Vector3()).y/tb.getSize(new T.Vector3()).y, ca=ta.getCenter(new T.Vector3()), cb=tb.getCenter(new T.Vector3());
+  const mk=f=>p=>new T.Vector3((p.x-cb.x)*k*f+ca.x,(p.y-tb.min.y)*k+ta.min.y,(p.z-cb.z)*k*f+ca.z);
+  const err=f=>{ const m=mk(f), B=SA.filter((_,i)=>i%7===0).map(m); let s=0; for(let i=0;i<200;i++){ const p=TA[(i*997)%TA.length]; let d=1e9; for(const q of B){ const dd=p.distanceToSquared(q); if(dd<d) d=dd; } s+=Math.sqrt(d); } return s; };
+  const toOurs=mk(err(1)<=err(-1)?1:-1);
   /* 쉬는 자세의 월드 회전 (새 뼈대도 옛 뼈대의 쉬는 방향을 그대로 쓴다 — 관절 «위치» 만 옮긴다) */
   const restQ={}; for(const n in TB) restQ[n]=TB[n].getWorldQuaternion(new T.Quaternion());
   /* 1. 관절 위치: 매핑된 뼈는 Meshy 위치로, 나머지(슬롯 등)는 부모에 대한 월드 오프셋 유지 */
@@ -64,8 +70,6 @@ export async function buildRig(tgtPath,srcPath,opt={}){
     if(MAP[n]&&SB[MAP[n]]) newWorld[n]=toOurs(sw(MAP[n]));
     else if(pn) newWorld[n]=newWorld[pn].clone().add(oldWorld[n].clone().sub(oldWorld[pn]));
     else newWorld[n]=oldWorld[n].clone(); }
-  /* 발끝·발은 바닥 높이를 지킨다 — Meshy 발목은 우리 바닥보다 낮게 잡혀 있다(키 비율 오차) */
-  for(const n of ['LeftFoot','RightFoot','LeftToeBase','RightToeBase']) if(newWorld[n]) newWorld[n].y=Math.max(newWorld[n].y,oldWorld[n].y);
   for(const n of order){ const b=TB[n], p=b.parent; const pw=p.isBone?newWorld[short(p.name)]:null;
     /* 부모 로컬 = (내 월드 − 부모 월드)를 부모의 월드 회전·배율로 되돌린 것. 쉬는 회전은 그대로다 */
     const local=pw?newWorld[n].clone().sub(pw).applyQuaternion(restQ[short(p.name)].clone().invert()).divide(p.getWorldScale(new T.Vector3())):b.position.clone();
@@ -82,14 +86,14 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   const tri=new T.Triangle(), cp=new T.Vector3(), bary=new T.Vector3(), P=new T.Vector3();
   const sJ=SM.geometry.attributes.skinIndex, sW=SM.geometry.attributes.skinWeight, sName=SM.skeleton.bones.map(b=>short(b.name));
   const tIndex=Object.fromEntries(TM.skeleton.bones.map((b,i)=>[short(b.name),i]));
-  const n=TM.geometry.attributes.position.count, cur=new Array(n);
+  const n=TM.geometry.attributes.position.count, cur=new Array(n), fitD=[];   /* fitD: 우리 정점 ↔ Meshy 면 거리 (메시가 같은지) */
   for(let i=0;i<n;i++){ P.set(TP[i*3],TP[i*3+1],TP[i*3+2]); let best=Infinity,bt=-1,bb=null;
     for(let r=0;r<=6&&bt<0;r++){ const cx=Math.floor(P.x/cell),cy=Math.floor(P.y/cell),cz=Math.floor(P.z/cell);
       for(let x=cx-r;x<=cx+r;x++)for(let y=cy-r;y<=cy+r;y++)for(let z=cz-r;z<=cz+r;z++){ const L=grid.get(`${x},${y},${z}`); if(!L) continue;
         for(const t of L){ const a=sidx[t]*3,b=sidx[t+1]*3,c=sidx[t+2]*3; tri.a.set(SP[a],SP[a+1],SP[a+2]); tri.b.set(SP[b],SP[b+1],SP[b+2]); tri.c.set(SP[c],SP[c+1],SP[c+2]);
           tri.closestPointToPoint(P,cp); const d=cp.distanceToSquared(P); if(d<best){ best=d; bt=t; tri.getBarycoord(cp,bary); bb=bary.clone(); } } } }
     const acc={}; if(bt>=0) [0,1,2].forEach((c,ci)=>{ const v=sidx[bt+c], bw=[bb.x,bb.y,bb.z][ci]; for(let q=0;q<4;q++){ const w=sW.getComponent(v,q)*bw; if(w<=0) continue; const ti=tIndex[INV[sName[sJ.getComponent(v,q)]]]; if(ti==null) continue; acc[ti]=(acc[ti]||0)+w; } });
-    cur[i]=acc; }
+    cur[i]=acc; fitD.push(Math.sqrt(best)); }
   const nb=Array.from({length:n},()=>new Set()), tidx=TM.geometry.index.array;
   for(let t=0;t<tidx.length;t+=3){ const a=tidx[t],b=tidx[t+1],c=tidx[t+2]; nb[a].add(b);nb[a].add(c);nb[b].add(a);nb[b].add(c);nb[c].add(a);nb[c].add(b); }
   for(let it=0;it<(opt.smooth??1);it++){ const nx=new Array(n); for(let i=0;i<n;i++){ const w={}; for(const [bi,v] of Object.entries(cur[i])) w[bi]=.5*v; const L=[...nb[i]]; if(!L.length){nx[i]=cur[i];continue;} for(const j of L) for(const [bi,v] of Object.entries(cur[j])) w[bi]=(w[bi]||0)+.5*v/L.length; nx[i]=w; } for(let i=0;i<n;i++) cur[i]=nx[i]; }
@@ -113,7 +117,8 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   const anchor={}; tg.scene.updateMatrixWorld(true); for(const nme of order) anchor[nme]=TB[nme].worldToLocal(oldWorld[nme].clone()).toArray();
   const raw=fs.readFileSync(tgtPath), jl=raw.readUInt32LE(12), srcExtras={};
   for(const a of JSON.parse(raw.subarray(20,20+jl).toString('utf8')).animations||[]) if(a.extras) srcExtras[a.name]=a.extras;
-  return {g:tg,mesh:TM,bones:TB,order,newWorld,oldWorld,J,W:Wt,k,srcExtras,anchor};
+  fitD.sort((x,y)=>x-y); const fit={median:fitD[fitD.length>>1],p95:fitD[Math.floor(fitD.length*.95)],max:fitD[fitD.length-1]};
+  return {g:tg,mesh:TM,bones:TB,order,newWorld,oldWorld,J,W:Wt,k,srcExtras,anchor,fit};
 }
 
 /* glb 쓰기 — 원본 JSON 을 고쳐 쓰고, 안 쓰게 된 버퍼(옛 무게·역바인드·애니메이션)는 뺀다 */
@@ -175,7 +180,7 @@ if(import.meta.url===`file://${process.argv[1]}`){
   const clipsOpt=val('--clips')?val('--clips').split(','):null;
   const R=await buildRig(args[0],args[1],{clips:clipsOpt,smooth:val('--smooth')!=null?+val('--smooth'):1,keepTimes:true});
   const moved=R.order.filter(n=>MAP[n]).map(n=>`${n} ${(R.newWorld[n].distanceTo(R.oldWorld[n])*100).toFixed(1)}cm`);
-  process.stderr.write(`관절 이동: ${moved.join(', ')}\n클립 ${R.g.animations.length}개 다시 구움\n`);
+  process.stderr.write(`메시 일치: 중앙 ${(R.fit.median*1000).toFixed(1)} mm · 95% ${(R.fit.p95*1000).toFixed(1)} mm · 최대 ${(R.fit.max*1000).toFixed(0)} mm\n관절 이동: ${moved.join(', ')}\n클립 ${R.g.animations.length}개 다시 구움\n`);
   if(!args.includes('--dry')){ const out=val('--out')||args[0]; const w=writeRigGlb(args[0],out,R);
     process.stderr.write(`썼다 ${out} ${(fs.statSync(args[0]).size/1e6).toFixed(2)} → ${(w.bytes/1e6).toFixed(2)} MB, 애니메이션 ${w.anims}\n`); }
 }

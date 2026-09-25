@@ -97,5 +97,7 @@
       loader.load(sp.glb, function(w){ var g=new THREE.Group(); g.userData.look=id; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); g.add(w.scene); var k=fitScale(bone); g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k); g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]); g.scale.setScalar(k*(sp.scale||1)); var tint=opts.tintOf&&opts.tintOf(id); if(tint){ var mx=mixOf(id); mx=mx==null?0.55:mx; w.scene.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mx); } }); } bone.add(g); out.weapons[sl]=g; }); });
     ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var tint=opts.tintOf&&opts.tintOf(id); out.pieces=out.pieces.concat(buildArmor(THREE, baseOf(id), bones, tint, opts.charId, mixOf(id))); });
     return out; }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf };
+  /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
+  function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor };
 })();

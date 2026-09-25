@@ -46,6 +46,10 @@
     var sk=mesh.skeleton, seg=[], i, m=new THREE.Matrix4(), p=new THREE.Vector3();
     for(i=0;i<sk.bones.length;i++){
       m.copy(sk.boneInverses[i]).invert(); p.setFromMatrixPosition(m);
+      /* 다시 리깅한 캐릭터(docs/design/77): 바람 보정값은 옛 관절 자리 기준으로 맞춘 것이라
+         glb 가 남긴 옛 자리(rerigAnchor, 뼈 로컬)를 쓴다 — 옷자락 판정이 전과 같게 된다 */
+      var an=sk.bones[i].userData&&sk.bones[i].userData.rerigAnchor;
+      if(an) p.set(an[0],an[1],an[2]).applyMatrix4(m);
       seg.push({ name:STRIP(sk.bones[i].name), head:p.clone(), tail:null });
     }
     for(i=0;i<sk.bones.length;i++){
