@@ -13,7 +13,7 @@
  *   4. glb 에 쓴다: 뼈 노드 이동값, 역바인드 행렬, JOINTS/WEIGHTS, 모든 애니메이션(원래 키 시각).
  *      뼈마다 «옛 관절 자리»를 extras.rerigAnchor 로 남긴다 — js/looks.js 가 장비를 거기에 붙인다.
  *
- *   node tools/3d/rerig-meshy.mjs <우리.glb> <meshy 리그.glb> [--out 파일] [--dry] [--clips a,b] [--smooth N] [--head-rigid [--chin y] [--neck-blend m] [--head-lo a --head-hi b]]
+ *   node tools/3d/rerig-meshy.mjs <우리.glb> <meshy 리그.glb> [--out 파일] [--dry] [--no-anchor] [--align-hands|--align-all] [--clips a,b] [--smooth N] [--head-rigid [--chin y] [--neck-blend m] [--head-lo a --head-hi b]]
  *   --dry: 파일을 쓰지 않고 새 리그를 메모리에서 만들어 JSON 요약만 (검증용). 모듈로 import 해서
  *          buildRig() 를 쓰면 three 객체를 그대로 받는다.
  */
@@ -66,14 +66,29 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   const oldWorld={}; for(const n in TB) oldWorld[n]=tw(n);
   const newWorld={};
   const order=[]; tg.scene.traverse(o=>{if(o.isBone)order.push(short(o.name));});
+  const newRestQ={...restQ}, Rof={};
   for(const n of order){ const b=TB[n], pn=b.parent&&b.parent.isBone?short(b.parent.name):null;
     if(MAP[n]&&SB[MAP[n]]) newWorld[n]=toOurs(sw(MAP[n]));
     else if(pn) newWorld[n]=newWorld[pn].clone().add(oldWorld[n].clone().sub(oldWorld[pn]));
     else newWorld[n]=oldWorld[n].clone(); }
+  /* --align-all (메시를 새로 만든 경우, tools/3d/mesh-swap.py): 관절 «자리» 만 옮기면 뼈의 쉬는 «방향» 은 옛 메시 것이라
+     뼈를 따라 붙는 장비(부츠·건틀릿)와 손목이 어긋난다(세라 오른쪽 부츠가 바닥에 떴다, 아인 손목 17°).
+     뼈마다 «옛 자식 방향 → 새 자식 방향» 만큼 쉬는 회전을 돌린다(최소 회전). 자식이 없는 뼈(손·머리·발끝·슬롯)는 부모를 따라 돈다.
+     --align-hands: 손·손 슬롯만 (아래팔이 돈 만큼). */
+  const CHILD=opt.alignAll?{Hips:'Spine',Spine:'Spine1',Spine1:'Spine2',Spine2:'Neck',Neck:'Head',LeftShoulder:'LeftArm',LeftArm:'LeftForeArm',LeftForeArm:'LeftHand',RightShoulder:'RightArm',RightArm:'RightForeArm',RightForeArm:'RightHand',LeftUpLeg:'LeftLeg',LeftLeg:'LeftFoot',LeftFoot:'LeftToeBase',RightUpLeg:'RightLeg',RightLeg:'RightFoot',RightFoot:'RightToeBase'}:{};
+  for(const n of order){ const b=TB[n], pn=b.parent&&b.parent.isBone?short(b.parent.name):null; let R=null;
+    if(CHILD[n]&&TB[CHILD[n]]){ const c=CHILD[n]; R=new T.Quaternion().setFromUnitVectors(oldWorld[c].clone().sub(oldWorld[n]).normalize(),newWorld[c].clone().sub(newWorld[n]).normalize()); }
+    else if(opt.alignHands&&/^(Left|Right)Hand$/.test(n)){ const fa=n.replace('Hand','ForeArm'); R=new T.Quaternion().setFromUnitVectors(oldWorld[n].clone().sub(oldWorld[fa]).normalize(),newWorld[n].clone().sub(newWorld[fa]).normalize()); }
+    else if(pn&&Rof[pn]&&!(opt.alignAll&&MAP[n]&&!/Hand$|Head$|ToeBase$/.test(n))) R=Rof[pn];
+    if(R){ Rof[n]=R; newRestQ[n]=R.clone().multiply(restQ[n]); } }
+  /* 매핑 안 된 뼈(손 슬롯 등)는 부모가 돈 만큼 옛 오프셋도 돌려 붙인다 */
+  for(const n of order){ const b=TB[n], pn=b.parent&&b.parent.isBone?short(b.parent.name):null;
+    if(!(MAP[n]&&SB[MAP[n]])&&pn&&Rof[pn]) newWorld[n]=newWorld[pn].clone().add(oldWorld[n].clone().sub(oldWorld[pn]).applyQuaternion(Rof[pn])); }
   for(const n of order){ const b=TB[n], p=b.parent; const pw=p.isBone?newWorld[short(p.name)]:null;
-    /* 부모 로컬 = (내 월드 − 부모 월드)를 부모의 월드 회전·배율로 되돌린 것. 쉬는 회전은 그대로다 */
-    const local=pw?newWorld[n].clone().sub(pw).applyQuaternion(restQ[short(p.name)].clone().invert()).divide(p.getWorldScale(new T.Vector3())):b.position.clone();
-    if(pw){ b.position.copy(local); } }
+    /* 부모 로컬 = (내 월드 − 부모 월드)를 부모의 (새) 쉬는 월드 회전·배율로 되돌린 것 */
+    const local=pw?newWorld[n].clone().sub(pw).applyQuaternion(newRestQ[short(p.name)].clone().invert()).divide(p.getWorldScale(new T.Vector3())):b.position.clone();
+    if(pw){ b.position.copy(local); }
+    if(pw&&newRestQ[n]!==restQ[n]) b.quaternion.copy(newRestQ[short(p.name)].clone().invert().multiply(newRestQ[n])); }
   tg.scene.updateMatrixWorld(true);
   /* 역바인드 다시 계산 — 이 자세가 새 바인드 자세 */
   TM.skeleton.calculateInverses(); TM.bind(TM.skeleton,TM.bindMatrix);
@@ -121,7 +136,7 @@ export async function buildRig(tgtPath,srcPath,opt={}){
   for(let i=0;i<n;i++){ const top=Object.entries(cur[i]).sort((x,y)=>y[1]-x[1]).slice(0,4), s=top.reduce((z,[,w])=>z+w,0)||1; for(let q=0;q<4;q++){ J[i*4+q]=top[q]?+top[q][0]:tIndex.Hips; Wt[i*4+q]=top[q]?top[q][1]/s:(q===0&&!top.length?1:0); } }
   TM.geometry.setAttribute('skinIndex',new T.BufferAttribute(J,4)); TM.geometry.setAttribute('skinWeight',new T.BufferAttribute(Wt,4));
   /* 3. 클립 다시 굽기 */
-  const newRestQ=restQ;   /* 쉬는 회전은 그대로 — 위치만 옮겼다 */
+  /* 쉬는 회전은 그대로 — 위치만 옮겼다(--align-hands 면 손·손 슬롯만 아래팔이 돈 만큼) */
   const clips=[];
   for(const clip of ref.animations){ if(opt.clips&&!opt.clips.includes(clip.name)) continue;
     const s=sampleOld(ref,clip,60,opt.keepTimes), tracks=[];
@@ -151,9 +166,9 @@ export function writeRigGlb(srcPath,outPath,R){
   const nodeIndex={}; json.nodes.forEach((n,i)=>{ nodeIndex[short(n.name||'')]=i; });
   const prim=json.meshes[0].primitives; const skin=json.skins[0];
   /* 1. 뼈 노드 이동값 */
-  for(const n of R.order){ const i=nodeIndex[n]; if(i==null) throw Error('노드 없음 '+n); json.nodes[i].translation=R.bones[n].position.toArray();
+  for(const n of R.order){ const i=nodeIndex[n]; if(i==null) throw Error('노드 없음 '+n); json.nodes[i].translation=R.bones[n].position.toArray(); json.nodes[i].rotation=R.bones[n].quaternion.toArray();
     /* 장비 자리: 옛 관절 위치를 새 뼈 로컬로 남긴다 → js/looks.js 가 거기에 붙인다 */
-    const a=R.anchor[n]; if(a&&Math.hypot(...a)>1e-3) json.nodes[i].extras={...(json.nodes[i].extras||{}),rerigAnchor:a.map(v=>+v.toFixed(5))}; }
+    const a=R.noAnchor?null:R.anchor[n]; if(a&&Math.hypot(...a)>1e-3) json.nodes[i].extras={...(json.nodes[i].extras||{}),rerigAnchor:a.map(v=>+v.toFixed(5))}; }
   /* 2. 남길 접근자 → 새 버퍼로 옮겨 담는다 */
   const drop=new Set([skin.inverseBindMatrices]); prim.forEach(p=>{ drop.add(p.attributes.JOINTS_0); drop.add(p.attributes.WEIGHTS_0); });
   json.animations.forEach(a=>a.samplers.forEach(sm=>{ drop.add(sm.input); drop.add(sm.output); }));
@@ -198,9 +213,11 @@ export function writeRigGlb(srcPath,outPath,R){
 if(import.meta.url===`file://${process.argv[1]}`){
   const args=process.argv.slice(2), val=k=>args.includes(k)?args[args.indexOf(k)+1]:null;
   const clipsOpt=val('--clips')?val('--clips').split(','):null;
-  const R=await buildRig(args[0],args[1],{clips:clipsOpt,smooth:val('--smooth')!=null?+val('--smooth'):1,keepTimes:true,headRigid:args.includes('--head-rigid'),headLo:val('--head-lo')!=null?+val('--head-lo'):undefined,headHi:val('--head-hi')!=null?+val('--head-hi'):undefined,chin:val('--chin')!=null?+val('--chin'):null,neckBlend:val('--neck-blend')!=null?+val('--neck-blend'):null,log:m=>process.stderr.write(m+'\n')});
+  const R=await buildRig(args[0],args[1],{clips:clipsOpt,smooth:val('--smooth')!=null?+val('--smooth'):1,keepTimes:true,alignHands:args.includes('--align-hands'),alignAll:args.includes('--align-all'),headRigid:args.includes('--head-rigid'),headLo:val('--head-lo')!=null?+val('--head-lo'):undefined,headHi:val('--head-hi')!=null?+val('--head-hi'):undefined,chin:val('--chin')!=null?+val('--chin'):null,neckBlend:val('--neck-blend')!=null?+val('--neck-blend'):null,log:m=>process.stderr.write(m+'\n')});
   const moved=R.order.filter(n=>MAP[n]).map(n=>`${n} ${(R.newWorld[n].distanceTo(R.oldWorld[n])*100).toFixed(1)}cm`);
   process.stderr.write(`메시 일치: 중앙 ${(R.fit.median*1000).toFixed(1)} mm · 95% ${(R.fit.p95*1000).toFixed(1)} mm · 최대 ${(R.fit.max*1000).toFixed(0)} mm\n관절 이동: ${moved.join(', ')}\n클립 ${R.g.animations.length}개 다시 구움\n`);
+  /* --no-anchor: 메시를 새로 만든 경우(tools/3d/mesh-swap.py) — 옛 관절 자리는 옛 메시 기준이라 의미가 없다. 장비는 새 관절에 */
+  if(args.includes('--no-anchor')) R.noAnchor=true;
   if(!args.includes('--dry')){ const out=val('--out')||args[0]; const w=writeRigGlb(args[0],out,R);
     process.stderr.write(`썼다 ${out} ${(fs.statSync(args[0]).size/1e6).toFixed(2)} → ${(w.bytes/1e6).toFixed(2)} MB, 애니메이션 ${w.anims}\n`); }
 }
