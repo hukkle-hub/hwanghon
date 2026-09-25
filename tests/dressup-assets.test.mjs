@@ -80,14 +80,16 @@ test('캐릭터 재질이 순수 금속으로 구워져 나온다 — 피부로 
  const g=await load('ain'); const mats=[];
  g.scene.traverse(o=>{ if(o.isMesh||o.isSkinnedMesh) mats.push(o.material); });
  assert.ok(mats.length>0);
- assert.ok(mats.every(m=>m.metalness===1&&m.roughness===1),'구워진 그대로는 metal 1 / rough 1');
+ /* 몸은 Hi3D 가 구운 그대로(metal 1 / rough 1). 이식한 머리(head-graft, docs/design/79)는 처음부터 금속 0 */
+ const baked=mats.filter(m=>m.name!=='head_graft');
+ assert.ok(baked.length>0&&baked.every(m=>m.metalness===1&&m.roughness===1),'구워진 그대로는 metal 1 / rough 1');
 
  const r=TW_MATFIX.repair(T,g.scene);
- assert.equal(r.materials,mats.length,'전부 고쳤다');
+ assert.equal(r.materials,baked.length,'전부 고쳤다');
  assert.ok(mats.every(m=>m.metalness===0),'피부·천은 금속이 아니다');
  assert.ok(mats.every(m=>m.roughness>0.5&&m.roughness<1));
 
  const again=TW_MATFIX.repair(T,g.scene);
  assert.equal(again.materials,0,'두 번째에는 고칠 것이 없다');
- assert.equal(again.skipped,mats.length,'일부러 금속으로 만든 재질은 건드리지 않는다');
+ assert.equal(again.skipped,mats.length,'일부러 금속으로 만든 재질은 건드리지 않는다');   // (이식한 머리는 첫 번째에도 건너뛰었다)
 });

@@ -6,12 +6,12 @@ import{Animated}from'../js/party-avatar.js';
 async function load(name){const b=await readFile('art/3d/'+name+'.glb'),loader=new GLTFLoader();loader.register(()=>({name:'no-raster',loadTexture:()=>Promise.resolve(new T.Texture())}));return loader.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
 test('online repairs materials and pose before mixer without mutating cached assets',async()=>{
  const asset=await load('ain_anim'),weapon=await load('ain_scythe_tex'),scene=new T.Scene();
- const original=asset.animations.map(c=>c.toJSON());let source;asset.scene.traverse(o=>{if(o.isSkinnedMesh)source=o;});
+ const original=asset.animations.map(c=>c.toJSON());let source;asset.scene.traverse(o=>{if(o.isSkinnedMesh&&!source)source=o;});   // 첫 스킨 메시 = 몸 (둘째는 이식한 머리, docs/design/79)
  const normals=source.geometry.attributes.normal.array.slice();
  assert.equal(source.material.metalness,1,'negative control: source still has the bad material');
  const first=new Animated(asset,scene,true,false,weapon,'ain'),second=new Animated(asset,scene,true,false,weapon,'ain');
  try{
-  let a,b;first.model.traverse(o=>{if(o.isSkinnedMesh)a=o;});second.model.traverse(o=>{if(o.isSkinnedMesh)b=o;});
+  let a,b;first.model.traverse(o=>{if(o.isSkinnedMesh&&!a)a=o;});second.model.traverse(o=>{if(o.isSkinnedMesh&&!b)b=o;});
   assert.equal(a.material.metalness,0);assert.equal(b.material.metalness,0);
   assert.notEqual(a.material,b.material);assert.notEqual(a.geometry,b.geometry);
   assert.equal(source.material.metalness,1);assert.deepEqual(source.geometry.attributes.normal.array,normals);
@@ -47,7 +47,7 @@ test('actual scythe handle is calibrated, not assumed to lie on the source Y axi
  t.diagnostic(`source right-grip lateral offset ${(measurement.anchor.x*1000).toFixed(2)} mm; calibrated centreline residual ${(measurement.residual*1000).toFixed(3)} mm`);
 });
 test('closed hand triangles clear the shaft, thumb opposes, source topology stays under 60k',async t=>{
- const g=await load('ain_anim');repairAinBind(g.scene);let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh)mesh=o;});
+ const g=await load('ain_anim');repairAinBind(g.scene);let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o;});
  const geo=mesh.geometry,p=geo.attributes.position,idx=geo.index;assert.ok(idx.count/3<=60000);
  for(const [m,side]of ['Left','Right'].entries()){
   const morph=geo.morphAttributes.position[m],j=mesh.skeleton.bones.findIndex(b=>b.name.endsWith(side+'Hand')),inverse=mesh.skeleton.boneInverses[j],center=ainGripCenter(side);

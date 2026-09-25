@@ -22,9 +22,11 @@ export function repairAinBind(model){
  }
  model.updateWorldMatrix(true,true);
  for(const mesh of meshes){
-  mesh.geometry=mesh.geometry.clone();report.geometries.push(mesh.geometry);
   // Bind inverses operate in mesh bind coordinates, not avatar world scale/yaw.
   mesh.skeleton.boneInverses=mesh.skeleton.bones.map(b=>b.matrixWorld.clone().premultiply(model.matrixWorld.clone().invert()).invert());
+  // Grafted head (tools/3d/head-graft.py, docs/design/79): no arm/hand geometry — bind inverses only.
+  if(new T.Box3().setFromBufferAttribute(mesh.geometry.attributes.position).min.y>1.3)continue;
+  mesh.geometry=mesh.geometry.clone();report.geometries.push(mesh.geometry);
   const g=mesh.geometry,p=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight;
   for(let i=0;i<p.count;i++){
    const v=V().fromBufferAttribute(p,i),sg=v.x>=0?1:-1,side=sg>0?'Left':'Right';

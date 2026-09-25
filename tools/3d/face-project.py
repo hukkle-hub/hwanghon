@@ -29,6 +29,7 @@ ap.add_argument('--keep-dark', type=float, default=0, help='원래 텍스처가 
 ap.add_argument('--core', type=float, default=0.8, help='가면 타원 안쪽 이 비율까지는 옆을 봐도 끝까지 칠한다(코 옆 덩어리가 조각으로 남지 않게)')
 ap.add_argument('--core-depth', type=float, default=0.006, help='가면 안쪽에서 앞면 뒤 몇 m 까지 칠하나')
 ap.add_argument('--drop-debris', type=int, default=0, help='가면 안쪽의 작은 떠 있는 조각(삼각형 N 개 미만의 연결 덩어리)을 지운다 — 아인 코 옆 덩어리')
+ap.add_argument('--smooth-normals', type=float, default=0, help='얼굴 피부 법선을 반경 R(m) 안 면 법선 평균으로 — 큰 평면이 각져 보이는 것(로우폴리 얼굴)을 둥글게 비춘다')
 ap.add_argument('--island', type=int, default=0, help='얼굴 전용 섬(px) — 텍스처 아래에 S px 띠를 붙여 얼굴을 고해상도로 다시 편다')
 a = ap.parse_args()
 
@@ -146,6 +147,23 @@ def tone_blend(src, orig, W_):
     return orig * (1 - W_[:, None]) + np.clip(src, 0, 255) * W_[:, None]
 
 fsel = np.where(sel)[0]
+N_OUT = None
+if a.smooth_normals > 0:
+    # 칠할 피부 삼각형(가면 안 · 보임 · 머리칼 아님)의 면 법선을 넓게 평균 — 모양은 그대로, 빛만 둥글게
+    cen = P[IDX[fsel]].mean(1); e1 = P[IDX[fsel, 1]] - P[IDX[fsel, 0]]; e2 = P[IDX[fsel, 2]] - P[IDX[fsel, 0]]
+    fn = np.cross(e1, e2); ar = np.linalg.norm(fn, axis=1); fn = fn / (ar[:, None] + 1e-12)
+    wcen = mask_at(to_img(cen[:, :2])) * (cen[:, 2] >= depth_at(cen[:, :2]) - 0.006) * (fn[:, 2] > -0.2)
+    skin = wcen > 0; cS, fS, aS = cen[skin], fn[skin], ar[skin]
+    vids_ = np.unique(IDX[fsel[skin]]); R_ = a.smooth_normals
+    N_OUT = N.copy(); cnt_s = 0
+    for v in vids_:
+        d = np.linalg.norm(cS - P[v], axis=1); k = d < R_
+        if not k.any(): continue
+        acc_n = ((aS[k] * (1 - d[k] / R_))[:, None] * fS[k]).sum(0); ln = np.linalg.norm(acc_n)
+        if ln < 1e-12: continue
+        w_ = float(mask_at(to_img(P[v:v + 1, :2]))[0]); nn = N[v] * (1 - w_) + acc_n / ln * w_
+        N_OUT[v] = nn / (np.linalg.norm(nn) + 1e-12); cnt_s += 1
+    print(f'법선 고르게: 정점 {cnt_s} (반경 {R_*100:.1f} cm)')
 NEWUV = None
 EXTRA_IMG = {}   # 이미지 번호 → 새 바이트 (섬 띠를 붙인 다른 텍스처)
 if a.island > 0:
@@ -258,9 +276,10 @@ if NEWUV is not None:
     UVall, IDXn, DUP = NEWUV
     for name, ai in prim['attributes'].items():
         if name == 'TEXCOORD_0': repl[ai] = (UVall.astype('<f4'), 5126); continue
-        A_ = J['accessors'][ai]; arr = acc(ai); repl[ai] = (np.concatenate([arr, arr[DUP]]).astype(DT[A_['componentType']]), A_['componentType'])
+        A_ = J['accessors'][ai]; arr = N_OUT.astype('<f4') if (name == 'NORMAL' and N_OUT is not None) else acc(ai); repl[ai] = (np.concatenate([arr, arr[DUP]]).astype(DT[A_['componentType']]), A_['componentType'])
     nv = UVall.shape[0]; ct = 5123 if nv < 65536 else 5125
     repl[prim['indices']] = (IDXn.reshape(-1).astype(DT[ct]), ct)
+if NEWUV is None and N_OUT is not None: repl[prim['attributes']['NORMAL']] = (N_OUT.astype('<f4'), 5126)
 if NEWUV is None and IDX_CHANGED:
     ct = 5123 if P.shape[0] < 65536 else 5125; repl[prim['indices']] = (IDX.reshape(-1).astype(DT[ct]), ct)
 refs = list(prim['attributes'].values()) + [prim['indices']] + [s_['inverseBindMatrices'] for s_ in J.get('skins', []) if 'inverseBindMatrices' in s_]

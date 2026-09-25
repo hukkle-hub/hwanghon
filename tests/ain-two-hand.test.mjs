@@ -8,7 +8,7 @@ import '../js/swing-body.js';   /* 게임과 같이 — 세 박자 템포(TEMPO)
 import {makeAinRigAdapter as makeAinTwoHand} from '../js/ain-two-hand.js';
 async function asset(){const b=await readFile('art/3d/ain_anim.glb'),l=new GLTFLoader();l.register(()=>({name:'no-raster',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
 test('Ain bind repair preserves rest mesh, source clips, UVs and shared geometry',async t=>{
- const g=await asset(),original=g.animations.map(c=>c.toJSON());let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh)mesh=o;});
+ const g=await asset(),original=g.animations.map(c=>c.toJSON());let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o;});
  const oldGeometry=mesh.geometry,oldWeights=oldGeometry.attributes.skinWeight.array.slice(),oldInverse=mesh.skeleton.boneInverses.map(m=>m.clone());
  const report=repairAinBind(g.scene);assert.ok(report.vertices>100);assert.ok(report.handVertices>50);
  assert.equal(mesh.geometry.morphAttributes.position.length,2);

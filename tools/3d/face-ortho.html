@@ -9,8 +9,8 @@ const Q=new URLSearchParams(location.search), CH=Q.get('char')||'ain';
 const x0=+(Q.get('x0')||-0.1), x1=+(Q.get('x1')||0.1), y0=+(Q.get('y0')||1.42), y1=+(Q.get('y1')||1.70), W=+(Q.get('px')||1000), H=Math.round(W*(y1-y0)/(x1-x0));
 const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1); r.outputColorSpace=T.SRGBColorSpace;
 const sc=new T.Scene(); sc.background=new T.Color(0x777777);
-const g=await new GLTFLoader().loadAsync(Q.get('glb')||`../../art/3d/${CH}_anim.glb`); sc.add(g.scene);
-g.scene.traverse(o=>{ if(o.isSkinnedMesh){ o.skeleton.pose(); const m=o.material; o.material=new T.MeshBasicMaterial({map:m.map,side:T.DoubleSide}); } });
+const g=await new GLTFLoader().loadAsync(Q.get('glb')||`../../art/3d/${CH}_anim.glb`); sc.add(g.scene); g.scene.rotation.y=(+Q.get('ry')||0)*Math.PI/180;   /* ry: 머리 glb 앞이 +z 가 아닐 때 (head-graft --rot-y 와 같은 값) */
+g.scene.traverse(o=>{ if(o.isMesh){ if(o.isSkinnedMesh) o.skeleton.pose(); const m=o.material; o.material=new T.MeshBasicMaterial({map:m.map,side:T.DoubleSide}); } });   /* 뼈 없는 머리 glb(head-graft 입력)도 */
 g.scene.updateMatrixWorld(true);
 const cam=new T.OrthographicCamera(x0,x1,y1,y0,-10,10); cam.position.set(0,0,5); cam.lookAt(0,0,0);   /* +z 에서 -z 로 = 정면 */
 r.render(sc,cam); window.TW_FACE={x0,x1,y0,y1,w:W,h:H}; window.TW_READY=1;
