@@ -10,7 +10,9 @@ async function asset(){const b=await readFile('art/3d/ain_anim.glb'),l=new GLTFL
 test('Ain bind repair preserves rest mesh, source clips, UVs and shared geometry',async t=>{
  const g=await asset(),original=g.animations.map(c=>c.toJSON());let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o;});
  const oldGeometry=mesh.geometry,oldWeights=oldGeometry.attributes.skinWeight.array.slice(),oldInverse=mesh.skeleton.boneInverses.map(m=>m.clone());
- const report=repairAinBind(g.scene);assert.ok(report.vertices>100);assert.ok(report.handVertices>50);
+ const report=repairAinBind(g.scene),swap=report.skipped==='meshSwap';
+ /* 새 메시(docs/design/80)는 관절·무게가 이미 메시에 맞다 — 옛 메시용 소매 무게·바인드 다시 잡기는 건너뛰고 쥔 손만 만든다. */
+ if(swap)assert.equal(report.vertices,0);else{assert.ok(report.vertices>100);assert.ok(report.handVertices>50);}
  assert.equal(mesh.geometry.morphAttributes.position.length,2);
  for(const morph of mesh.geometry.morphAttributes.position){let changed=0;for(let i=0;i<morph.count;i++){const delta=new T.Vector3().fromBufferAttribute(morph,i);assert.ok(delta.toArray().every(Number.isFinite));assert.ok(delta.length()<.12);if(delta.length()>1e-6)changed++;}assert.ok(changed>20,'grip shape has no distal hand vertices');}
  assert.notEqual(mesh.geometry,oldGeometry);assert.deepEqual(oldGeometry.attributes.skinWeight.array,oldWeights);
@@ -19,7 +21,7 @@ test('Ain bind repair preserves rest mesh, source clips, UVs and shared geometry
  assert.ok(report.surfaceAdjustment<.015,'surface correction must remain local');
  const clips=repairAinClips(g.animations,report);assert.deepEqual(g.animations.map(c=>c.toJSON()),original);assert.equal(clips.length,g.animations.length);
  mesh.skeleton.update();let max=0;for(let i=0;i<mesh.geometry.attributes.position.count;i+=13){const p=new T.Vector3().fromBufferAttribute(mesh.geometry.attributes.position,i);max=Math.max(max,mesh.applyBoneTransform(i,p.clone()).distanceTo(p));}assert.ok(max<1e-5,`bind deformation ${max}`);
- assert.ok(mesh.skeleton.boneInverses.some((m,i)=>!m.equals(oldInverse[i])));
+ if(swap)assert.ok(mesh.skeleton.boneInverses.every((m,i)=>m.equals(oldInverse[i])),'new mesh keeps its own bind');else assert.ok(mesh.skeleton.boneInverses.some((m,i)=>!m.equals(oldInverse[i])));
  t.diagnostic(`reweighted ${report.vertices} sleeve/hand vertices, ${report.handVertices} distal hand vertices; bind residual ${max}`);
  t.diagnostic(`triangles ${oldGeometry.index.count/3} -> ${mesh.geometry.index.count/3}`);
 });

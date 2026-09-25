@@ -63,7 +63,8 @@
   /* 다시 리깅한 캐릭터(tools/3d/rerig-meshy.mjs, docs/design/77)는 관절이 옮겨졌다. 장비 자리는 옛 관절에 맞춰
      잡은 값이라, glb 가 뼈마다 남긴 «옛 관절 자리»(rerigAnchor, 뼈 로컬)에 빈 노드를 두고 거기에 붙인다 —
      바인드 자세에서 장비가 메시에 대해 전과 똑같은 자리에 온다. */
-  function anchorOf(o){ var a=o.userData&&o.userData.rerigAnchor; if(!a||!THREE) return o;
+  /* 새 몸(docs/design/80)은 옛 몸의 장비 자리를 gearAnchor 로 따로 적어 둔다(tools/3d/gear-anchor.mjs) */
+  function anchorOf(o){ var a=o.userData&&(o.userData.gearAnchor||o.userData.rerigAnchor); if(!a||!THREE) return o;
     if(!o.userData._anchor){ var n=new THREE.Object3D(); n.name=o.name+'Anchor'; n.position.set(a[0],a[1],a[2]); o.add(n); o.userData._anchor=n; }
     return o.userData._anchor; }
   function bonesOf(model){ var b={}; model.traverse(function(o){ if(o.isBone) b[o.name.replace(/^mixamorig:?/,'')]=anchorOf(o); }); return b; }

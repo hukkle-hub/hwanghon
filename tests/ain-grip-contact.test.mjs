@@ -47,10 +47,10 @@ test('actual scythe handle is calibrated, not assumed to lie on the source Y axi
  t.diagnostic(`source right-grip lateral offset ${(measurement.anchor.x*1000).toFixed(2)} mm; calibrated centreline residual ${(measurement.residual*1000).toFixed(3)} mm`);
 });
 test('closed hand triangles clear the shaft, thumb opposes, source topology stays under 60k',async t=>{
- const g=await load('ain_anim');repairAinBind(g.scene);let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o;});
+ const g=await load('ain_anim'),report=repairAinBind(g.scene);let mesh;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!mesh)mesh=o;});
  const geo=mesh.geometry,p=geo.attributes.position,idx=geo.index;assert.ok(idx.count/3<=60000);
  for(const [m,side]of ['Left','Right'].entries()){
-  const morph=geo.morphAttributes.position[m],j=mesh.skeleton.bones.findIndex(b=>b.name.endsWith(side+'Hand')),inverse=mesh.skeleton.boneInverses[j],center=ainGripCenter(side);
+  const morph=geo.morphAttributes.position[m],j=mesh.skeleton.bones.findIndex(b=>b.name.endsWith(side+'Hand')),inverse=mesh.skeleton.boneInverses[j].clone().premultiply(report.gripFrame?.[side]||new T.Matrix4()),center=ainGripCenter(side);   // 새 손(docs/design/80)은 옛 손 좌표로 옮겨서 잰다
   const point=i=>new T.Vector3().fromBufferAttribute(p,i).add(new T.Vector3().fromBufferAttribute(morph,i)).applyMatrix4(inverse);
   let minimum=Infinity,faces=0,thumb=0;const angles=[];
   for(let i=0;i<p.count;i++){

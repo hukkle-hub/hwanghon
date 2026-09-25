@@ -12,7 +12,14 @@ export function gripReachShift(shoulder,palm,axis,reach,scale,upperLength){
  const toShoulder=shoulder.clone().sub(center),radial=toShoulder.clone().addScaledVector(axis,-toShoulder.dot(axis));
  if(radial.lengthSq()<1e-10)return V();
  const closest=center.add(radial.setLength(radius)),toward=shoulder.clone().sub(closest),distance=toward.length();
- return distance>upperLength*.90?toward.multiplyScalar((distance-upperLength*.90)/distance):V();
+ /* 팔이 펴지면 두 손을 어깨 쪽으로 당긴다. 예전엔 90 % 에서 «딱» 켜졌다 — 그 직전까지 팔꿈치가 점점
+    빨라지다가(펴질수록 같은 손 이동에 팔꿈치가 크게 돈다) 켜지는 순간 한 표본에 끊겼다
+    (궁극기 끝 오른 아래팔 5.5 → 6.7 → 8.1 → 3.1°/표본, docs/design/80).
+    지금: 86 % 에서 0 으로 시작해 104 % 까지 이차식으로 이어(C1) 그 뒤는 «95 % 로 되돌림» — 당긴 뒤 팔은
+    어디서나 95 % 를 넘지 않는다. 가운데·폭은 재서 골랐다(가운데 .90~.95 × 폭 .03~.09):
+    새 아인 스킬3 접점 0.3876 m(기준 0.39) · 관절 한 표본 최대 7.28° (기준 8°) — 옛 아인 0.3674 · 6.97°. */
+ const x=distance-upperLength*.95,w=upperLength*.09,excess=x<=-w?0:x>=w?x:(x+w)*(x+w)/(4*w);
+ return excess>0?toward.multiplyScalar(excess/distance):V();
 }
 // 검수용 계측기 — 이 풀이가 특이점 근처에 가는지 감시한다 (게임 동작에 영향 없음).
 // tools/3d/swing-measure.html 이 읽는다.

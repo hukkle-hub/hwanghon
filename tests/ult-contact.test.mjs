@@ -77,7 +77,11 @@ test('피의 회전은 판정 프레임에 «한 바퀴를 끝내고 정면을 �
   const k=Math.round(0.55*sp.length);                   /* clipContacts.skill3 = 0.55 */
   /* 최고속(35 m/s)은 베기의 정점인 0.61 에 있고, 판정 프레임 0.55 는 그 직전이다.
      고치기 전에는 이 자리가 0.3 m/s 였다 — 아무것도 안 하는 프레임에 피해가 떴다. */
-  assert.ok(sp[k]>8, '판정 순간 손 속도가 '+sp[k].toFixed(1)+' m/s — 고치기 전에는 0.3 이었다');
+  /* «치는 중» 인가: 예전엔 8 m/s 고정. 새 몸(docs/design/80)은 팔이 5 % 짧아 같은 동작이 m/s 로 5 % 느리다
+     (옛 8.2 → 새 7.8, 최고속 27.1 → 26.2). 몸 크기와 상관없게 «이 동작 최고속의 ¼ 이상» + 바닥 6 m/s 로 잰다 —
+     고치기 전 0.3 m/s(최고속의 1 %)는 여전히 걸린다. */
+  const vpk=Math.max(...sp);
+  assert.ok(sp[k]>0.25*vpk&&sp[k]>6, '판정 순간 손 속도가 '+sp[k].toFixed(1)+' m/s (최고속 '+vpk.toFixed(1)+') — 고치기 전에는 0.3 이었다');
   assert.ok(ext[k]>0.40, '판정 순간 팔이 '+ext[k].toFixed(2)+' m — 뻗어 있어야 한다');
   assert.ok(Math.abs(yaw[k])<0.30, '판정 순간 상대를 봐야 한다 (요우 '+(yaw[k]*180/Math.PI).toFixed(0)+'°)');
   const vmax=Math.max(...sp), pk=(sp.indexOf(vmax)+0.5)/sp.length;

@@ -11,7 +11,20 @@ export function repairAinBind(model){
  const bones={},meshes=[];model.updateWorldMatrix(true,true);
  model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;if(o.isSkinnedMesh)meshes.push(o);});
  const changed=new Map(),report={vertices:0,handVertices:0,geometries:[],grips:[],hipsRest:bones.Hips.position.clone()};
- for(const [side,sg]of [['Left',1],['Right',-1]]){
+ // New mesh (tools/3d/mesh-swap.py + auto rig, docs/design/80): joints, bind and weights already fit the mesh.
+ // The landmarks and sleeve weights below were measured on the old Hi3D mesh — applying them would move the
+ // elbows 4–7 cm. Only the grip shape is still needed (the new hands are modelled open, too).
+ const swap=meshes.some(m=>m.userData.meshSwap);if(swap)report.skipped='meshSwap';
+ // New hands are tilted ~20–30° and 1–2 cm off the old ones. tools/3d/ain-grip-frame.py stores the rigid map
+ // new hand space → old hand space (extras.gripFrame); the calibrated grip shape then works unchanged,
+ // and the weapon slot moves to the mapped shaft centre.
+ const frame={};report.gripFrame=frame;
+ if(swap)for(const side of ['Left','Right']){
+  const f=bones[side+'Hand']?.userData.gripFrame,slot=bones[side+'HandSlot'];if(!f)continue;
+  frame[side]=new T.Matrix4().fromArray(f);
+  if(slot){slot.position.copy(ainGripCenter(side).applyMatrix4(frame[side].clone().invert()));changed.set(slot.name,slot.position.clone());delete slot.userData.rerigAnchor;}
+ }
+ if(!swap)for(const [side,sg]of [['Left',1],['Right',-1]]){
   for(const [name,p]of [['ForeArm',V(sg*.245,1.16,.012)],['Hand',V(sg*.30,.98,.022)]]){
    const b=bones[side+name],world=model.localToWorld(p.clone());b.position.copy(b.parent.worldToLocal(world));changed.set(b.name,b.position.clone());b.updateWorldMatrix(false,true);
    // Absolute landmark: the rerig anchor (old joint spot, docs/design/77) no longer applies here.
@@ -23,12 +36,17 @@ export function repairAinBind(model){
  model.updateWorldMatrix(true,true);
  for(const mesh of meshes){
   // Bind inverses operate in mesh bind coordinates, not avatar world scale/yaw.
-  mesh.skeleton.boneInverses=mesh.skeleton.bones.map(b=>b.matrixWorld.clone().premultiply(model.matrixWorld.clone().invert()).invert());
+  if(!swap)mesh.skeleton.boneInverses=mesh.skeleton.bones.map(b=>b.matrixWorld.clone().premultiply(model.matrixWorld.clone().invert()).invert());
   // Grafted head (tools/3d/head-graft.py, docs/design/79): no arm/hand geometry — bind inverses only.
   if(new T.Box3().setFromBufferAttribute(mesh.geometry.attributes.position).min.y>1.3)continue;
   mesh.geometry=mesh.geometry.clone();report.geometries.push(mesh.geometry);
   const g=mesh.geometry,p=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight;
-  for(let i=0;i<p.count;i++){
+  // Which vertices the grip may curl: old mesh = its measured box; new mesh = hand-bone weight (its hands sit
+  // elsewhere, and the A-pose hand hangs beside the skirt, so a box would also catch cloth).
+  const handWeight=(i,j)=>{let w=0;for(let k=0;k<4;k++)if(si.getComponent(i,k)===j)w+=sw.getComponent(i,k);return w;};
+  const inHand=swap?(i,original,side,j)=>handWeight(i,j)>.3
+   :(i,original,side)=>{const sg=side==='Left'?1:-1;return !(original.x*sg<.26||original.x*sg>.40||original.y<.75||original.y>1.01||Math.abs(original.z)>.12);};
+  if(!swap)for(let i=0;i<p.count;i++){
    const v=V().fromBufferAttribute(p,i),sg=v.x>=0?1:-1,side=sg>0?'Left':'Right';
    // Sleeve/hand only. Do not reweight hanging coat tails near the hips.
    if(v.y<.83||v.y>1.38||Math.abs(v.x)<.19||Math.abs(v.z)>.13)continue;
@@ -50,18 +68,17 @@ export function repairAinBind(model){
   if(!g.morphAttributes.position?.length){
    g.morphTargetsRelative=true;g.morphAttributes.position=[];g.morphAttributes.normal=[];
    for(const side of ['Left','Right']){
-    const j=mesh.skeleton.bones.indexOf(bones[side+'Hand']),inv=mesh.skeleton.boneInverses[j],forward=inv.clone().invert(),delta=new Float32Array(p.count*3);
+    const j=mesh.skeleton.bones.indexOf(bones[side+'Hand']),inv=frame[side]?frame[side].clone().multiply(mesh.skeleton.boneInverses[j]):mesh.skeleton.boneInverses[j],forward=inv.clone().invert(),delta=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++){
      const original=V().fromBufferAttribute(p,i),v=original.clone().applyMatrix4(inv);
-     const sg=side==='Left'?1:-1;
-     if(original.x*sg<.26||original.x*sg>.40||original.y<.75||original.y>1.01||Math.abs(original.z)>.12)continue;
+     if(!inHand(i,original,side,j))continue;
      // Finger spread is local Z, palm thickness is local X on this asset.
      // Bend the whole connected distal region, not only high-weight vertices:
      // partial vertex selection previously left spikes across triangle edges.
-     v.copy(closeAinHandPoint(v,side));
+     v.copy(closeAinHandPoint(v,side,bones[side+'Hand']?.userData.gripCurl||1));
      v.applyMatrix4(forward).sub(original);delta.set(v.toArray(),i*3);
     }
-    report.surfaceAdjustment=Math.max(report.surfaceAdjustment||0,resolveAinGripSurface(g,delta,inv,forward,side));
+    report.surfaceAdjustment=Math.max(report.surfaceAdjustment||0,resolveAinGripSurface(g,delta,inv,forward,side,(i,o)=>inHand(i,o,side,j)));
     const attr=new T.BufferAttribute(delta,3);attr.name='ain_grip_'+side.toLowerCase();g.morphAttributes.position.push(attr);
     const temp=g.clone(),positions=p.array.slice();for(let i=0;i<positions.length;i++)positions[i]+=delta[i];temp.setAttribute('position',new T.BufferAttribute(positions,3));temp.computeVertexNormals();
     const affected=new Set();for(let i=0;i<g.index.count;i+=3){const ids=[g.index.getX(i),g.index.getX(i+1),g.index.getX(i+2)];if(ids.some(k=>Math.abs(delta[k*3])+Math.abs(delta[k*3+1])+Math.abs(delta[k*3+2])>1e-7))ids.forEach(k=>affected.add(k));}

@@ -31,11 +31,13 @@ test('네 캐릭터 모두 머리카락·옷자락이 «눈에 보일 만큼» �
   g.scene.traverse(o=>{ if(!o.isBone) return; const n=strip(o.name);
    if(n==='Hips') hips=o.getWorldPosition(new T.Vector3());
    if(n==='Head') head=o.getWorldPosition(new T.Vector3()); });
-  const hair=[], cloth=[]; let rigid=0;
+  const hair=[], cloth=[]; let rigid=0, bodyFlex=0, total=0;
   g.scene.traverse(o=>{
    const a=o.isSkinnedMesh&&o.geometry.getAttribute('aFlex'); if(!a) return;
-   const p=o.geometry.attributes.position;
-   for(let i=0;i<a.count;i++){ const f=a.getX(i); if(f<=0.02){ rigid++; continue; }
+   const p=o.geometry.attributes.position, si=o.geometry.attributes.skinIndex, sw=o.geometry.attributes.skinWeight;
+   const dom=i=>{let b=0,w=-1;for(let k=0;k<4;k++)if(sw.getComponent(i,k)>w){w=sw.getComponent(i,k);b=si.getComponent(i,k);}return strip(o.skeleton.bones[b].name);};
+   for(let i=0;i<a.count;i++){ const f=a.getX(i); total++; if(f<=0.02){ rigid++; continue; }
+     if(p.getY(i)>hips.y&&dom(i)!=='Head') bodyFlex++;   // 엉덩이 위에서 머리 아닌 것(몸통·팔)이 흔들린다
      (p.getY(i)>hips.y?hair:cloth).push(f); } });
   const max=v=>Math.max(...v);
   assert.ok(hair.length>=400,`${c}: 머리카락 ${hair.length} 정점`);
@@ -47,7 +49,11 @@ test('네 캐릭터 모두 머리카락·옷자락이 «눈에 보일 만큼» �
   assert.ok(cm(max(hair))<6.0,`${c}: 머리칼이 ${cm(max(hair)).toFixed(1)}cm — 두피에서 떨어진다`);
   assert.ok(cm(max(cloth))>7.0,`${c}: 강풍에서 옷자락 끝 ${cm(max(cloth)).toFixed(1)}cm`);
   assert.ok(max(cloth)>max(hair)*2,`${c}: 옷자락이 머리칼보다 크게 일렁인다`);
-  assert.ok(rigid>hair.length+cloth.length,`${c}: 몸통·팔은 굳어 있다 (고정 ${rigid})`);
+  /* 몸통·팔은 굳어 있다 — 예전엔 «굳은 정점 > 흔들리는 정점» 으로 대신 쟀다. 새 세라(docs/design/80)는 긴 코트·치마가
+     메시의 절반이라 그 대리 지표가 무너졌다(고정 20156 · 흔들림 20751). 뜻 그대로 직접 센다: 엉덩이 위 몸통·팔 정점은 0 개,
+     그리고 흔들리는 쪽이 전체의 60 % 를 넘지 않는다. */
+  assert.equal(bodyFlex,0,`${c}: 몸통·팔 정점 ${bodyFlex} 개가 흔들린다`);
+  assert.ok(hair.length+cloth.length<total*0.6,`${c}: 흔들리는 정점 ${hair.length+cloth.length}/${total} — 몸 전체가 흔들린다`);
  }
 });
 

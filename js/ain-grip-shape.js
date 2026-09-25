@@ -2,10 +2,10 @@ import * as T from '../vendor/three/three.module.js';
 export function ainGripCenter(side){return new T.Vector3(.005-(side==='Left'?1:-1)*.022,.052,0);}
 // This GLB's fingers spread along local Z; X is palm thickness. The thumb
 // occupies the negative-Z edge. Keep this asset-specific, not a generic hand rig.
-export function closeAinHandPoint(point,side){
+export function closeAinHandPoint(point,side,curl=1){
  const sg=side==='Left'?1:-1,v=point.clone();
  if(point.y>.052){
-  const angle=Math.min(4.3,(point.y-.052)/.022),radius=.022+sg*(point.x-.005)*.32;
+  const angle=Math.min(4.3,(point.y-.052)/.022*curl),radius=.022+sg*(point.x-.005)*.32;
   const blend=T.MathUtils.smootherstep(point.y,.052,.072);
   v.x=T.MathUtils.lerp(point.x,.005-sg*.022+sg*radius*Math.cos(angle),blend);
   v.y=T.MathUtils.lerp(point.y,.052+radius*Math.sin(angle),blend);
@@ -30,11 +30,11 @@ export function closeAinHandPoint(point,side){
 // Resolve triangle/shaft chords, not just vertex/shaft distance. Keep the source
 // triangle budget: move shared hand vertices a few millimetres instead of adding
 // a high-density hand mesh. UV-seam copies share the same correction.
-export function resolveAinGripSurface(g,delta,inverse,forward,side){
+export function resolveAinGripSurface(g,delta,inverse,forward,side,inHand=null){
  const p=g.attributes.position,index=g.index,center=ainGripCenter(side),sg=side==='Left'?1:-1,groups=new Map(),byIndex=new Map();
  for(let i=0;i<p.count;i++){
   const original=new T.Vector3().fromBufferAttribute(p,i);
-  if(original.x*sg<.26||original.x*sg>.40||original.y<.75||original.y>1.01||Math.abs(original.z)>.12)continue;
+  if(inHand?!inHand(i,original):(original.x*sg<.26||original.x*sg>.40||original.y<.75||original.y>1.01||Math.abs(original.z)>.12))continue;
   const local=original.clone().applyMatrix4(inverse);if(local.y<.02)continue;
   const key=original.toArray().map(v=>Math.round(v*1e6)).join(',');
   let group=groups.get(key);if(!group){const value=original.clone().add(new T.Vector3().fromArray(delta,i*3)).applyMatrix4(inverse);group={value,start:value.clone(),indices:[]};groups.set(key,group);}

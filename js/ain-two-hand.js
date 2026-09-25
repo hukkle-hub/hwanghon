@@ -14,6 +14,8 @@ const ready=[0,-.12,.32,-.65,.75,.18];
 // -.38→0.08 · -.34→0.17 · -.25→0.40(다시 뜬다). -.34 로 잡아 17 cm 를 남겼다 —
 // 회전 기울기(최대 15°)가 날 끝을 24 cm 끌어내리므로 여유가 필요하다.
 // scratch: scratchpad/carrysweep.mjs · docs/design/60-carry.md
+// 옛 아인 뼈대(Hi3D + ain-bind-repair)의 쉬는 자세 두 어깨(LeftArm·RightArm) 가운데 — 경로를 잰 기준.
+const AUTHORED_SHOULDERS=V(.004,1.345,.0285);
 export const AIN_CARRY=[.06,-.30,.10,-.34,-.34,-.88];
 const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,ready]];
 const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,.6]],[.65,[0,-.22,.37,-.7,-.5,.5]],[1,ready]];
@@ -35,9 +37,10 @@ export const AIN_SKILL_PATHS={
  skill2:[[0,ready],[.22,[-.02,-.18,.18,-.82,.30,-.16]],[.50,[-.06,-.22,.26,-.80,-.06,.30]],
    [.74,[-.02,-.14,.24,-.82,.22,.34]],[1,ready]],
  skill3:[[0,ready],[.16,[-.09,-.14,.29,-.95,.12,-.25]],[.42,[.25,.10,.25,-.35,.90,-.10]],[.80,[.10,-.16,.32,-.95,.12,.25]],[1,ready]],
- /* 결의 — 역시 멈춰 있었다(1.06 m). 앞으로 내밀었다가 크게 세운다. */
+ /* 결의 — 역시 멈춰 있었다(1.06 m). 앞으로 내밀었다가 크게 세운다.
+    세운 키 .92 → .88: 마지막 8 % 에 준비 자세로 급히 돌아와 오른 위팔이 끝에서 한 표본 8.2° 튀었다 → 7° 아래 (docs/design/80). */
  skill4:[[0,ready],[.26,[.02,-.10,.30,-.50,.70,.36]],[.54,[.02,-.18,.32,-.52,.12,.52]],
-   [.76,[.02,-.16,.30,-.52,.18,.50]],[.92,[-.02,.12,.16,-.46,.86,.12]],[1,ready]],
+   [.76,[.02,-.16,.30,-.52,.18,.50]],[.88,[-.02,.12,.16,-.46,.86,.12]],[1,ready]],
  ult:[[0,ready],[.20,[0,.15,.27,-.65,.75,-.22]],[.42,[.25,.10,.25,-.18,.98,-.10]],[.76,[0,-.22,.35,-.85,-.25,.40]],[1,ready]]
 };
 // Shaft block, short brace, then a distinct release. Perfect counters travel
@@ -380,6 +383,11 @@ export function makeAinTwoHand(model,root,slot){
  for(const [n,b]of Object.entries(bones))if(restWorld.has(b)&&restWorld.has(b.parent))bind.set(n,Q().setFromRotationMatrix(restWorld.get(b.parent).clone().invert().multiply(restWorld.get(b))));
  const torso=bones.Spine2,restTorso=restWorld.has(torso)?Q().setFromRotationMatrix(restWorld.get(torso)):torso.getWorldQuaternion(Q());
  const scale=model.getWorldScale(V()).x,offsets={};
+ /* 휘두름 경로(spec 의 앞 셋)는 «두 어깨 가운데» 에서 잰 자리다. 경로를 짠 옛 뼈대의 쉬는 자세 어깨 가운데는
+    AUTHORED_SHOULDERS 이다. 새 몸(docs/design/80)은 어깨가 1.2 cm 낮고 0.7 cm 뒤라 낫 전체가 그만큼 내려가
+    스킬3 접점이 표적을 3 mm 빗나갔다 — 몸이 바뀌어도 낫은 짠 자리로 가게 차이만큼 옮긴다(옛 몸은 0). */
+ const restArm=n=>restWorld.has(bones[n])?V().setFromMatrixPosition(restWorld.get(bones[n])):bones[n].getWorldPosition(V());
+ const pathShift=AUTHORED_SHOULDERS.clone().sub(restArm('LeftArm').add(restArm('RightArm')).multiplyScalar(.5));
  for(const side of ['Left','Right'])offsets[side]=bones[side+'HandSlot']?.position.clone()||V(0,.055,-.025);
  const diagnostics={gripError:0,rightGripError:0,footError:0};
  let gripAmount=1;
@@ -462,7 +470,7 @@ export function makeAinTwoHand(model,root,slot){
     weaponQ.slerp(pathRotation(highKeys,t,undefined,pace),high);
    }
   }
-  const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).multiplyScalar(scale).applyQuaternion(frame));
+  const center=bones.LeftArm.getWorldPosition(V()).add(bones.RightArm.getWorldPosition(V())).multiplyScalar(.5).add(V(...spec.slice(0,3)).add(pathShift).multiplyScalar(scale).applyQuaternion(frame));
   // Nearby target adaptation is a bounded root-space translation, not wrist twist.
   // Fade in/out around contact so target selection cannot snap the idle pose.
   // The shared reach solver below still limits both arms together.
