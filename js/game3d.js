@@ -735,12 +735,12 @@ import { createBloom } from './bloom.js';
     DIAG.errors.push('run 보폭 '+stride.toFixed(2)+'m → 배속 '+RUN_RATE.toFixed(2));
   }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act, tr=transitionFor(CID,n); a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?RUN_RATE:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, tr.base, true); } a.play(); ain.act=a; ain.base=n; }
-  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; var tr=transitionFor(CID,n); if(ain.oneshot){ ain.oneshot.fadeOut(Math.min(.08,tr.out)); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); if(ain.act) ain.act.fadeOut(tr.in);
+  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; var tr=transitionFor(CID,n); if(ain.oneshot){ ain.oneshot.clampWhenFinished=true; ain.oneshot.fadeOut(Math.min(.08,tr.out)); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); if(ain.act) ain.act.fadeOut(tr.in);
     ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:Math.min(.14,tr.out*.8)); ain.oneshotT=0; ain.hold=!!o.hold; ain.oneshotOut=tr.out; }
   function ainTick(dt){ if(!ain.mixer) return;
     if(wind) wind.update(dt, ain.model);
     var moving=P.moving && P.rollT<=0 && P.lockT<=0; var guard=battle?battle.snapshot().player.guard:(skirm?skirm.snapshot().player.guard:false);
-    if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ var out=ain.oneshotOut||.15; ain.oneshot.fadeOut(out); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(out); ain.act.play(); } } }
+    if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ var out=ain.oneshotOut||.15; /* 끝 자세를 잡은 채 흐려진다 — 안 잡으면 클립이 흐려지는 도중(남은 0.14초 < 흐림 0.20~0.26초) 끝나 남은 무게 30~46% 가 한 프레임에 빠져 대검이 튀었다(카인 궁극기 끝 62 cm, docs/design/97) */ ain.oneshot.clampWhenFinished=true; ain.oneshot.fadeOut(out); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(out); ain.act.play(); } } }
     /* 제동: 달리다 멈추면 브레이크 모션을 한 번 재생하고 대기로 넘긴다.
        없으면 달리기가 «톡» 끊긴다 (몬헌은 정지에 브레이크가 있다). */
     if(!moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
@@ -1256,8 +1256,8 @@ import { createBloom } from './bloom.js';
     switch(e.t){
       case 'actionstart': if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
-      case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.06);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
-      case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot)ain.oneshot.fadeOut(0.12);ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
+      case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
+      case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.12);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
       case 'opening': showOpening(e.kind, e.dur); break;
       case 'openingend': case 'openinguse': hideOpening(); break;
       case 'grab': guide('붙잡았다 — <b>보스가 묶였다 · 몰아쳐라</b>', e.hold); camKick(0,-0.06,0.05); SFX.play('counter', true); vib([30,40,30]); break;

@@ -127,8 +127,17 @@ test('Kain two-hand IK: left fist hole on the greatsword axis, facing the blade,
   for(const clip of ['attack1','attack2','smash','skill1','exec']){const c=g.animations.find(a=>a.name===clip);
     for(let i=0;i<30;i++){ad.restore();ad.apply(null,false,false,1/60);}
     mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();let worst=9,at=0;
-    for(let t=0;t<c.duration;t+=1/60){act.time=t;mixer.update(0);ad.restore();ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:t,hitAt:c.duration*.42},false,false,1/60);root.updateMatrixWorld(true);
+    for(let t=0;t<c.duration;t+=1/60){ad.restore();act.time=t;mixer.update(0);ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:t,hitAt:c.duration*.42},false,false,1/60);root.updateMatrixWorld(true);
       if((ad.diagnostics.twoHand||0)<.05)continue;
       const dist=left.userData.gripPoint.clone().applyMatrix4(left.matrixWorld).distanceTo(slot.getWorldPosition(V()));if(dist<worst){worst=dist;at=t;}}
     assert.ok(worst>=.10,`kain ${clip}: ${at.toFixed(2)} 초에 두 주먹 중심 ${(worst*100).toFixed(1)} cm — 겹침`);}
+  /* 행동이 끝나면 두 손 잡기를 시간으로 놓는다 — 전에는 한 프레임에 0 이 돼 왼팔이 클립 자세로 튀었다(1타 끝 115 cm, docs/design/97) */
+  {const c=g.animations.find(a=>a.name==='attack2');for(let i=0;i<30;i++){ad.restore();ad.apply(null,false,false,1/60);}
+    mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();
+    for(let t=0;t<.6;t+=1/60){ad.restore();act.time=t;mixer.update(0);ad.apply({id:9,clip:'attack2',kind:'attack',duration:c.duration,elapsed:t,hitAt:c.duration*.42},false,false,1/60);}
+    assert.ok(ad.diagnostics.twoHand>.99,'kain attack2: 두 손으로 잡고 있어야 한다');
+    ad.restore();act.time=.6;mixer.update(0);ad.apply(null,false,false,1/60);
+    assert.ok(ad.diagnostics.twoHand>.8,`kain: 행동이 끝난 첫 프레임에 두 손 잡기가 ${ad.diagnostics.twoHand.toFixed(2)} — 한 번에 놓으면 왼팔이 튄다`);
+    for(let i=0;i<40;i++){ad.restore();mixer.update(0);ad.apply(null,false,false,1/60);}
+    assert.ok(ad.diagnostics.twoHand<.02,`kain: 행동이 끝나고 0.7초 뒤엔 놓아야 한다 (${ad.diagnostics.twoHand.toFixed(2)})`);}
 });

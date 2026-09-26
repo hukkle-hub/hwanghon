@@ -59,7 +59,7 @@ window.pose=(clip='idle',u=.4)=>{ const c=clips.find(x=>x.name===clip); if(!c) r
 /* 연속 재생: 대기 30 프레임 뒤 0 초부터 t 초까지 60 fps 로 돌린다 — 잡기 시작·놓기 도중(세기 < 1)을 본다 (docs/design/96) */
 window.play=(clip,t)=>{ const c=clips.find(x=>x.name===clip); if(!c) return 0; cinema.restore(); for(let i=0;i<30;i++){ rig.restore(); rig.apply(null,false,false,1/60); }
   mixer.stopAllAction(); act=mixer.clipAction(c); act.reset().play(); act.paused=true;
-  for(let k=0;k<=Math.round(t*60);k++){ const e=k/60; act.time=e; mixer.update(0); rig.restore(); rig.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:e,hitAt:c.duration*.42},false,false,1/60,clip,null); }
+  for(let k=0;k<=Math.round(t*60);k++){ const e=k/60; rig.restore(); act.time=e; mixer.update(0); rig.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:e,hitAt:c.duration*.42},false,false,1/60,clip,null); }
   model.updateMatrixWorld(true);
   mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
   mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
@@ -85,6 +85,6 @@ window.handVerts=(side='Right',min=.3)=>{ const hand=bones[side+'Hand'], out=[];
   const slot=bones[side+'HandSlot'], ay=new T.Vector3(0,1,0).applyQuaternion(slot.quaternion), az=new T.Vector3(0,0,1).applyQuaternion(slot.quaternion), ax=new T.Vector3(1,0,0).applyQuaternion(slot.quaternion);
   return {verts:out, slotPos:slot.position.toArray(), slotY:ay.toArray(), slotZ:az.toArray(), slotX:ax.toArray(), anchor:slot.userData.rerigAnchor||null, handScale:hand.getWorldScale(new T.Vector3()).x}; };
 window.marks=(on=true)=>{ Object.values(mk).forEach(m=>m.visible=on); return 1; };
-window.RIG=rig;
+window.RIG=rig; window.BONES=bones; window.CAM=cam; window.RENDER=()=>r.render(sc,cam);
 window.READY=1;
 </script>
