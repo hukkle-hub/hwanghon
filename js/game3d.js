@@ -9,6 +9,7 @@ import {makeAinRigAdapter} from './ain-two-hand.js';
 import {gripHands} from './hand-grip.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {smoothCharacterClips} from './clip-smooth.js';
+import {createArmBlend} from './arm-blend.js';
 import {clone as cloneSkinned} from '../vendor/three/SkeletonUtils.js';
 import {mountAinScythe,measureAinBladeContact,nearestAinBladePoint} from './ain-scythe-mount.js';
 import { createPumpBoss } from './pump-boss.js';
@@ -693,7 +694,7 @@ import { createBloom } from './bloom.js';
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
     try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
-    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.handGrip=handGrip; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain',handGrip:handGrip});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID);
+    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.handGrip=handGrip; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain',handGrip:handGrip});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID); if(CID!=='ain') ain.armBlend=createArmBlend(ain.model);   /* 팔 뼈 제자리 돌기 묶기 (docs/design/99) */
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ return G&&G.tintOf?G.tintOf(id):null; }, mixOf=function(id){ return (G&&G.dyeOf&&G.dyeOf(id))?0.75:null; };
@@ -755,6 +756,7 @@ import { createBloom } from './bloom.js';
       ain.act.timeScale=RUN_RATE*Math.max(0.45, P.spd==null?1:P.spd);
     }
     if(ain.cinema) ain.cinema.restore();
+    if(ain.armBlend) ain.armBlend.restore();   /* 팔 돌기 묶기는 두 손 보정 뒤에 씌우므로 먼저 되돌린다 */
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
@@ -787,6 +789,7 @@ import { createBloom } from './bloom.js';
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
+    if(ain.armBlend) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
     if(ain.cinema){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     tickLean(dt);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });

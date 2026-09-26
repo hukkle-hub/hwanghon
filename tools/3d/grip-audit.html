@@ -3,7 +3,7 @@
      게임과 같은 경로로 붙인다: TW_LOOKS.attach(아인은 mountAinScythe) → 손 보정(makeRigAdapter/makeAinRigAdapter) → 시네마 레이어.
      ?char=ain|kain|ryu|sera&clip=idle&u=0.4
      빨강 = 손바닥 중심(손 뼈에 무게 0.6 이상 실린 정점의 중심), 초록 = 무기가 붙는 자리, 파랑 = 왼손 손바닥(양손 무기).
-     window.pose(clip,u) · window.play(clip,t) · window.shot(side,az,el,dist) · window.metrics() -->
+     window.pose(clip,u) · window.play(clip,t) · window.seq(list,t) · window.shot(side,az,el,dist) · window.metrics() -->
 <style>body{margin:0;background:#20252d}canvas{display:block}</style>
 <canvas id="c"></canvas>
 <script src="../../js/looks.js"></script><script src="../../js/mat-fix.js"></script>
@@ -17,6 +17,8 @@ import {makeAinRigAdapter} from '../../js/ain-two-hand.js';
 import {makeRigAdapter} from '../../js/combat-motion.js';
 import {createCharacterCinema} from '../../js/character-cinema.js';
 import {gripHands} from '../../js/hand-grip.js';
+import {transitionFor} from '../../js/character-cinema.js';
+let createArmBlend=null; try{ ({createArmBlend}=await import('../../js/arm-blend.js')); }catch(e){}   /* docs/design/99 이전 판에는 없다 */
 const Q=new URLSearchParams(location.search), CH=Q.get('char')||'ain', W=+(Q.get('w')||420), H=+(Q.get('h')||420);
 const MAIN={ain:'w_marsh_scythe',kain:'w_kain_greatsword',ryu:'w_ryu_dagger',sera:'w_sera_flask'}[CH];
 const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1.5);
@@ -64,6 +66,25 @@ window.play=(clip,t)=>{ const c=clips.find(x=>x.name===clip); if(!c) return 0; c
   mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
   mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
   weapon.getWorldPosition(mk.grip.position); return {twoHand:rig.diagnostics.twoHand,dist:mk.palmL.position.distanceTo(mk.palmR.position)}; };
+/* 게임처럼 섞어 돌리기(docs/design/99): 대기 1 초 → list 의 동작을 transitionFor 교차 페이드로 잇고 → 대기로 돌아간다. 시작부터 t 초까지.
+   게임 순서: 팔 돌기 묶기 되돌림 → 손 보정 되돌림 → mixer.update → 손 보정 → 팔 돌기 묶기. ?roll=0 이면 묶기 끔 */
+window.seq=(list,t)=>{ const names=typeof list==='string'?list.split(','):list; cinema.restore(); mixer.stopAllAction();
+  const rig2=(CH==='ain'?makeAinRigAdapter:makeRigAdapter)(model,root,slot,{twoHand:CH==='kain',handGrip:HG}), ab=createArmBlend&&Q.get('roll')!=='0'&&CH!=='ain'?createArmBlend(model):null;
+  rig.restore(); const A=n=>mixer.clipAction(clips.find(c=>c.name===n)); const base=A('idle'); base.reset().play();
+  let act=null,cur=null,t0=0,time=0,tail=null,q=[...names],info={};
+  const step=a=>{ ab&&ab.restore(); rig2.restore(); mixer.update(1/60); rig2.apply(a,false,false,1/60); ab&&ab.apply(1/60); };
+  for(let i=0;i<60;i++) step(null);
+  const start=n=>{ const a=A(n),tr=transitionFor(CH,n); if(act){act.clampWhenFinished=true;act.fadeOut(Math.min(.08,tr.out));} a.reset(); a.setLoop(T.LoopOnce,1); a.clampWhenFinished=false; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); base.fadeOut(tr.in); act=a; cur=n; t0=time; };
+  start(q.shift());
+  for(let f=0;f<=Math.round(t*60);f++){ const el=time-t0;
+    if(act&&el>=act.getClip().duration-Math.min(.14,transitionFor(CH,cur).out*.8)){ if(q.length) start(q.shift()); else { const out=transitionFor(CH,cur).out; act.clampWhenFinished=true; act.fadeOut(out); base.reset(); base.fadeIn(out); base.play(); tail={clip:cur,dur:act.getClip().duration,t0}; act=null; cur=null; } }
+    time+=1/60;
+    const a=act?{id:cur,clip:cur,kind:'attack',duration:act.getClip().duration,elapsed:time-t0,hitAt:act.getClip().duration*.42}:(tail&&time-tail.t0<tail.dur?{id:tail.clip,clip:tail.clip,kind:'attack',duration:tail.dur,elapsed:time-tail.t0,hitAt:tail.dur*.42}:null);
+    step(a); info={clip:cur||'idle',elapsed:+(time-t0).toFixed(3),twoHand:rig2.diagnostics.twoHand,roll:ab?+(ab.diagnostics.maxRoll*57.3).toFixed(0):null}; }
+  model.updateMatrixWorld(true);
+  mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
+  mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
+  weapon.getWorldPosition(mk.grip.position); return info; };
 window.metrics=()=>({ rightGap:mk.grip.position.distanceTo(mk.palmR.position), leftGap:(()=>{ /* 왼손 손바닥 ↔ 무기 축(초록점에서 무기 +Y) 거리 */
   const ax=new T.Vector3(0,1,0).applyQuaternion(weapon.getWorldQuaternion(new T.Quaternion())), p=mk.palmL.position.clone().sub(mk.grip.position), t=p.dot(ax);
   return {axis:p.clone().sub(ax.clone().multiplyScalar(t)).length(), along:t}; })() });
