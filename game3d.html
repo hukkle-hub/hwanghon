@@ -220,6 +220,7 @@ html.in-fight .quest{display:none}
  html.mobile .lockon{top:6px;left:max(10px,env(safe-area-inset-left));right:auto}html.mobile .target-cycle{top:44px}
  html.mobile .bthud .stick{height:150px;width:150px}
 }
+.cine-grade{position:absolute;inset:0;pointer-events:none;z-index:1}   /* 연출 감독 화면 색 (docs/design/103) — 캔버스 바로 위, UI 아래 */
 .pd-vig{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center,rgba(120,180,255,0) 45%,rgba(60,110,200,.38) 100%)}
 .pd-vig.on{animation:pdVig .9s ease-out}
 @keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}

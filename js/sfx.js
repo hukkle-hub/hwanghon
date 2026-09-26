@@ -57,6 +57,8 @@
     g.gain.value=0;s.connect(g);g.connect(master);g.gain.setTargetAtTime(desired==='boss'?.15:.1,ctx.currentTime,.5);
     s.onended=function(){s.disconnect();g.disconnect();};s.start();bed={s:s,g:g,name:desired};
   }
+  /* 연출 감독: 배경음을 잠깐 눌렀다 돌려놓는다(받아친 순간 «뚝») — depth 0..1, ms */
+  api.duck=function(depth,ms){ if(!bed||!ctx) return; var g=bed.g.gain, t=ctx.currentTime, base=desired==='boss'?.15:.1; g.cancelScheduledValues(t); g.setTargetAtTime(base*(1-Math.max(0,Math.min(1,depth))),t,.012); g.setTargetAtTime(base,t+(ms||200)/1000,.12); };
   api.scene=function(name){desired=['explore','boss'].indexOf(name)>=0?name:'off';syncBed();};
   api.diagnostics=function(){return {loaded:Object.keys(buffers).length,context:ctx?ctx.state:'locked',scene:bed?bed.name:'off',voices:active.length};};
   api.ambient=function(on){api.scene(on?'explore':'off');};

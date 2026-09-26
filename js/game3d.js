@@ -27,6 +27,7 @@ import { WeaponTrail, trailStyle } from './weapon-trail.js';
 import { bwEmpty } from './blackwatch.js';
 import { runRate as calcRunRate } from './locomotion.js';
 import { createBloom } from './bloom.js';
+import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
@@ -168,6 +169,16 @@ import { createBloom } from './bloom.js';
     else if(!bloomWanted() && bloom){ try{ bloom.dispose(); }catch(e){} bloom=null; renderer.setRenderTarget(null); }
   }
   function draw(){ if(bloom){ try{ bloom.render(scene, cam); return; }catch(e){ DIAG.errors.push('bloom '+e.message); bloom=null; renderer.setRenderTarget(null); } } renderer.render(scene, cam); }
+  /* 연출 감독 (docs/design/102·103) — 전투 이벤트 → 카메라·시간·빛·색·소리 한 박자. 판정은 안 건드린다 */
+  var CINE=createCineDirector({ mode:SET.cine||'normal' });
+  var cineGrade=(function(){ var d=document.createElement('div'); d.className='cine-grade'; var cv=document.getElementById('game3d'); if(cv&&cv.parentNode) cv.parentNode.insertBefore(d, cv.nextSibling); else document.body.appendChild(d); return d; })(), gradeKey='';
+  function cineBeat(id, at, side){ var b=CINE.trigger(id, { at:at||null, side:side||1 }); if(!b) return null;
+    if(b.sound&&SFX.duck) SFX.duck(b.sound.duck, b.sound.ms);
+    var def=CINE_BEATS[id]; if(def&&def.light&&def.light.flash&&at){ var fl=fxLight(def.light.color, 9*def.light.flash*b.k, 0.16); fl.position.copy(at); }
+    return b; }
+  function tickCineGrade(o){ var key=o.desat.toFixed(2)+'|'+(o.tint?o.tint.join(','):''); if(key===gradeKey) return; gradeKey=key;
+    cineGrade.style.backdropFilter=cineGrade.style.webkitBackdropFilter=o.desat>0.01?'saturate('+(1-o.desat).toFixed(2)+') contrast('+(1+o.desat*0.18).toFixed(2)+')':'none';
+    cineGrade.style.background=o.tint&&o.tint[3]>0.005?'rgba('+o.tint[0]+','+o.tint[1]+','+o.tint[2]+','+o.tint[3].toFixed(3)+')':'transparent'; }
   var scene=new THREE.Scene(); scene.background=new THREE.Color(0x0B0C0F); scene.fog=new THREE.FogExp2(0x0a0b0e, 0.0145);
   var cam=new THREE.PerspectiveCamera(50, 1, 0.1, 200);
   var lockOn=true, lockRing=null;   /* 락온: 전투 중 기본 켜짐. T 또는 버튼으로 끈다 */
@@ -1322,6 +1333,7 @@ import { createBloom } from './bloom.js';
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
         /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
         if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();
+        if(!e.counter&&(e.kind==='smash'||cmbH===3)){ var fb=cineBeat('finisher', hp.clone(), 1); if(fb&&fb.slow) slowmo(fb.slow.scale, fb.slow.ms); }   /* 연계 마무리 */
         if(e.counter){ burst(hp, feedback.particles, feedback.color, axisFromBoss()); fxImpact(hp, feedback.size, 0xFFF1C8, feedback.duration); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
         else { burst(hp, feedback.particles, feedback.color, axH);
@@ -1374,7 +1386,9 @@ import { createBloom } from './bloom.js';
         fxClash(e.perfect, e.tier);                                              /* 동작 자체는 actionstart 가 'counter' 클립으로 재생한다 */
         var cax=[boss.root.position.x-ain.root.position.x, boss.root.position.z-ain.root.position.z];
         var kx=Bs.x-P.x, ky=Bs.y-P.y, km=Math.hypot(kx,ky)||1;
-        slowmo(e.perfect?0.25:0.4, e.perfect?120:80);                 /* 맞물린 순간의 «멈춤» */
+        var cTier=e.tier||(e.perfect?'clash':'repel'), cAt=boss.root.position.clone().lerp(ain.root.position,0.45); cAt.y=1.3;
+        var cb=cineBeat(cTier, cAt, 1);                                /* 연출 감독: 흘림·튕김·맞대기 (docs/design/103) */
+        if(cb&&cb.slow) slowmo(cb.slow.scale, cb.slow.ms); else slowmo(e.perfect?0.25:0.4, e.perfect?120:80);   /* 맞물린 순간의 «멈춤» */
         /* No second slow-motion layer over the deferred counter hit. */  /* 밀어내며 서서히 돌아온다 */
         shake(e.perfect?0.014:0.011, e.perfect?360:300, cax[0], cax[1]); zoomKick(); flash();
         vib(e.perfect?[20,40,20]:[20,30]);
@@ -1480,7 +1494,7 @@ import { createBloom } from './bloom.js';
   function hideOpening(){ var b=el.actions.querySelector('[data-open]'); if(b) b.hidden=true; }
   function perfectDodge(e){
     guide('완벽 회피 — <b>반격 창이 길어졌다 · 기력 회복</b>', e.window); SFX.play('counter');
-    slowmo(0.18, 760); camKick(0.03,-0.05,-0.04); vib([18,30,18]);
+    var pb=cineBeat('perfectDodge', null, -1); if(pb&&pb.slow) slowmo(pb.slow.scale, pb.slow.ms); else slowmo(0.18, 760); camKick(0.03,-0.05,-0.04); vib([18,30,18]);
     for(var i=0;i<5;i++) (function(i){ schedule(function(){ ghostSnap(i%2?0x7FB8FF:0xB8E4FF, 0.42-i*0.05, 900-i*60); }, i*70); })(i);
     if(!pdVig){ pdVig=document.createElement('div'); pdVig.className='pd-vig'; document.body.appendChild(pdVig); }
     pdVig.classList.remove('on'); void pdVig.offsetWidth; pdVig.classList.add('on');
@@ -1843,6 +1857,13 @@ import { createBloom } from './bloom.js';
     fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
     if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
     cam.position.copy(camPos);
+    /* 연출 박자: 접점 쪽으로 살짝 보고, 붙고, 조금 돈다 — 스무딩 뒤에 얹어 순간에 바로 보인다 */
+    var co=CINE.out, cLook=camLook;
+    if(co.active){ cLook=camLook.clone(); if(co.lookAt&&co.look) cLook.lerp(co.lookAt, co.look*0.5);
+      if(co.orbit){ var ox=cam.position.x-cLook.x, oz=cam.position.z-cLook.z, ca=Math.cos(co.orbit), sa=Math.sin(co.orbit); cam.position.x=cLook.x+ox*ca-oz*sa; cam.position.z=cLook.z+ox*sa+oz*ca; }
+      if(co.push) cam.position.lerp(cLook, Math.max(-0.3, Math.min(0.5, co.push)));
+      var fvc=fovWant+co.fov; if(Math.abs(cam.fov-fvc)>0.01){ cam.fov=fvc; cam.updateProjectionMatrix(); } }
+    else if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
     if(shakeT>0){ shakeT-=dt; var sk=Math.max(0,shakeT/Math.max(1e-3,shakeD)), se=sk*sk;
       if(shakeDX||shakeDZ){ var osc=Math.sin(shakeT*95)*shakeAmt*0.11*se;
         cam.position.x+=shakeDX*osc; cam.position.z+=shakeDZ*osc; cam.position.y+=(Math.random()-0.5)*shakeAmt*0.03*se; }
@@ -1853,7 +1874,7 @@ import { createBloom } from './bloom.js';
       camLook.y+=kickP*0.35;                       /* 위아래로 훑고 */
       cam.up.set(Math.sin(kickR),Math.cos(kickR),0);   /* 화면을 기울인다 */
     } else if(cam.up.x) cam.up.set(0,1,0);
-    cam.lookAt(camLook);
+    cam.lookAt(cLook); tickCineGrade(co);
     /* 달빛 그림자 카메라를 플레이어 주변으로 */
     moon.position.set(ain.root.position.x-8, 18, ain.root.position.z-6); moon.target.position.copy(ain.root.position); var sc=moon.shadow.camera; sc.left=-14; sc.right=14; sc.top=14; sc.bottom=-14; sc.updateProjectionMatrix();
   }
@@ -1878,7 +1899,7 @@ import { createBloom } from './bloom.js';
     if(interactButton){
       if(executeReady()){ interactButton.hidden=false; interactButton.textContent='F · 처형'; interactButton.classList.add('is-exec'); }
       else { interactButton.classList.remove('is-exec'); var near=state==='explore'&&!cine&&!ain.dead?expedition.nearest(P):null;interactButton.hidden=!near;if(near)interactButton.textContent='F · '+near.name; } }
-    flickT+=dt; lamps.forEach(function(t,i){ var f=t.red ? 0.6+Math.max(0,Math.sin(flickT*2.2+i))*0.6 : t.purple ? 0.85+Math.sin(flickT*4+i)*0.15 : (0.92+Math.sin(flickT*13+i*1.7)*0.03+(Math.random()<0.02?-0.35:0)); t.l.intensity=SET.lights?t.base*f:0; if(t.fx) t.fx.material.opacity=(t.red?0.5:0.45)*f; });
+    flickT+=dt; lamps.forEach(function(t,i){ var f=t.red ? 0.6+Math.max(0,Math.sin(flickT*2.2+i))*0.6 : t.purple ? 0.85+Math.sin(flickT*4+i)*0.15 : (0.92+Math.sin(flickT*13+i*1.7)*0.03+(Math.random()<0.02?-0.35:0)); if(t.red) f*=1-CINE.out.dip; t.l.intensity=SET.lights?t.base*f:0; if(t.fx) t.fx.material.opacity=(t.red?0.5:0.45)*f; });   /* 맞대기 순간 비상등이 꺼졌다 켜진다 */
     emberT+=dt; if(emberT>0.5){ emberT=0; if(L.env==='swamp'){ /* 반딧불: 바닥에서 떠올랐다 가라앉는 포물선 */ for(var fi=0;fi<2;fi++){ var ii=spI=(spI+1)%SPN; spPos[ii*3]=ain.root.position.x+(Math.random()-0.5)*14; spPos[ii*3+1]=0.3+Math.random()*0.5; spPos[ii*3+2]=ain.root.position.z+(Math.random()-0.5)*14; spVel[ii].set((Math.random()-0.5)*0.4, 9.8*1.4, (Math.random()-0.5)*0.4); spLife[ii]=2.8; spCol[ii*3]=0.65; spCol[ii*3+1]=0.95; spCol[ii*3+2]=0.35; } } else { /* 천장에서 떨어지는 먼지 */ for(var di=0;di<3;di++){ var i=spI=(spI+1)%SPN; spPos[i*3]=ain.root.position.x+(Math.random()-0.5)*10; spPos[i*3+1]=CEIL-0.3; spPos[i*3+2]=ain.root.position.z+(Math.random()-0.5)*10; spVel[i].set(0, 9.8*2.2-0.4, 0); spLife[i]=2.2; spCol[i*3]=0.5; spCol[i*3+1]=0.48; spCol[i*3+2]=0.45; } } }
     mist.forEach(function(m,i){ m.position.x=m.userData.x+Math.sin(flickT*0.12+i*1.3)*1.8; m.position.z=m.userData.z+Math.cos(flickT*0.09+i)*1.2; });
     /* 존 */
@@ -1948,7 +1969,7 @@ import { createBloom } from './bloom.js';
   function tickScheduled(dt){var ready=[];scheduled=scheduled.filter(function(t){if(t.cancelled)return false;t.left-=dt;if(t.left<=0){ready.push(t.fn);return false;}return true;});ready.forEach(function(fn){fn();});}
   function frame(now){ requestAnimationFrame(frame); var elapsed=now-last; FRAME_METRICS.add(elapsed,!document.hidden&&!paused&&!cine&&!el.dlg.classList.contains('is-on')&&!el.ov.classList.contains('is-on')&&(state==='fight'||state==='explore')); var dt=Math.min(0.1,elapsed/1000); last=now; SFX.scene(paused||el.ov.classList.contains('is-on')||state==='dead'||state==='clear'?'off':state==='fight'?'boss':'explore'); if(paused||el.ov.classList.contains('is-on')){ draw(); return; }
     fpsSamples.push(1/Math.max(0.001,dt)); if(fpsSamples.length>180){ fpsSamples.shift(); autoQuality(); fpsSamples.length=0; }
-    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); var contacts=pendingContacts;pendingContacts=[];contacts.forEach(function(e){e.poseReady=true;handle(e);}); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } render(dt*timeScale); draw(); blackWatch(); }
+    simAcc+=dt*timeScale; while(simAcc+1e-9>=R.tick){ var frozen=battle&&battle.snapshot().player.hitstop>0; step(R.tick); tickScheduled(R.tick); ainTick(frozen?0:R.tick); bossTick(frozen?0:R.tick); var contacts=pendingContacts;pendingContacts=[];contacts.forEach(function(e){e.poseReady=true;handle(e);}); simAcc-=R.tick; if(paused||el.ov.classList.contains('is-on')){simAcc=0;break;} } CINE.update(dt, state==='fight'); render(dt*timeScale); draw(); blackWatch(); }
   /* 검은 화면 감시: 시작 후 25초 동안 1초마다 화면 중앙을 읽어 완전히 검으면 3회 연속 시 저사양 모드로 재시작 */
   var bwN=0, bwLast=0, bwHits=0, bwPx=new Uint8Array(4*32*32);
   /* 검은 화면 감시 — «아무것도 안 그려진» 상태를 잡아 저사양 모드로 되살린다.
@@ -1999,7 +2020,7 @@ import { createBloom } from './bloom.js';
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, cine:CINE, cineDemo:function(ev){ handle(ev); }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
     /* 검수용: 전투 없이 스킬 연출만 한 번 재생한다. 락온 카메라가 보스를 보는
        전투 화면에서는 플레이어가 프레임 밖이라 연출을 눈으로 못 본다. */
     /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에
