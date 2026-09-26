@@ -56,10 +56,65 @@ export function solveLimb(upper,lower,end,target,weight=1) {
   return end.getWorldPosition(new THREE.Vector3()).distanceTo(target);
 }
 
+/* 왼손 두 손 잡기 풀이 (docs/design/95) — 주먹 구멍 점을 손잡이 축 위 target 에, 주먹 구멍 방향(새끼→엄지)을 칼날 쪽 축에.
+   남는 자유도 둘을 재서 고른다: 손잡이 둘레 돌림 φ(36) × 팔꿈치 돌림 ψ(13, ±120°). 값 = 손목 꺾임(쉬는 자세 34° 넘는 만큼)² + 손목 비틀림² + 팔꿈치 비틀림(클립 대비)² + 팔꿈치 돌림².
+   (돌림만 고르면 손목이 150° 꺾이거나 팔뚝 대비 172° 비틀렸다 — 손목 살이 꼬인다.) 장면 갱신 없이 벡터 셈만 한다. */
+const PSI=[0,-.35,.35,-.7,.7,-1.05,1.05,-1.4,1.4,-1.75,1.75,-2.1,2.1];
+function planLeftGrip(upper,lower,hand,slot,target){
+  const V=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion();
+  const la=hand.userData.gripAxis.clone().normalize(),lf=hand.userData.gripFinger?hand.userData.gripFinger.clone().normalize():null,palm=hand.userData.gripPoint;
+  const A=V().set(0,1,0).applyQuaternion(slot.getWorldQuaternion(Q())).normalize();
+  const S=upper.getWorldPosition(V()),E0=lower.getWorldPosition(V()),W0=hand.getWorldPosition(V());
+  const uW0=upper.getWorldQuaternion(Q()),lW0=lower.getWorldQuaternion(Q()),hW0=hand.getWorldQuaternion(Q()),k=hand.getWorldScale(V()).x;
+  const a=S.distanceTo(E0),b=E0.distanceTo(W0),boneAxis=hand.position.clone().normalize(),foreAxis=lower.position.clone().normalize();
+  const twistQ=(q,ax)=>{const p=V().set(q.x,q.y,q.z),pr=ax.clone().multiplyScalar(p.dot(ax));return new THREE.Quaternion(pr.x,pr.y,pr.z,q.w).normalize();};
+  const angOf=t=>2*Math.acos(Math.min(1,Math.abs(t.w)));
+  const twistOf=q=>angOf(twistQ(q,boneAxis));
+  /* 팔꿈치 비틀림은 클립 자세 대비로 잰다(클립이 원래 돌려 둔 만큼은 괜찮다) */
+  const e0=twistQ(uW0.clone().invert().multiply(lW0),foreAxis);
+  const elbowDev=(uW,lW)=>angOf(e0.clone().invert().multiply(twistQ(uW.clone().invert().multiply(lW),foreAxis)));
+  /* 손목 비틀림 30° 넘는 몫의 절반을 아래팔이 나눠 진다 — 실제 팔도 아래팔 전체가 돈다(회내·회외) */
+  const share=(lW,q)=>{const t=twistQ(lW.clone().invert().multiply(q),boneAxis),tw=angOf(t);return tw>.5?lW.clone().multiply(Q().slerp(t,(tw-.5)/2/tw)):lW;};
+  const base=Q().setFromUnitVectors(la.clone().applyQuaternion(hW0).normalize(),A).multiply(hW0);
+  let best=null,bestC=Infinity;
+  for(let r=0;r<36;r++){
+    const q=Q().setFromAxisAngle(A,r*Math.PI/18).multiply(base);
+    const Wt=target.clone().sub(palm.clone().multiplyScalar(k).applyQuaternion(q));
+    const toW=Wt.clone().sub(S);let d=toW.length();const u=toW.clone().normalize();const resid=Math.max(0,d-(a+b)*.999);d=Math.min(d,(a+b)*.999);
+    const cosA=THREE.MathUtils.clamp((a*a+d*d-b*b)/(2*a*d),-1,1),sinA=Math.sqrt(1-cosA*cosA);
+    const v0=E0.clone().sub(S);v0.addScaledVector(u,-v0.dot(u));if(v0.lengthSq()<1e-8)v0.set(0,-1,0).addScaledVector(u,-u.y);v0.normalize();const w=V().crossVectors(u,v0);
+    const Wr=S.clone().addScaledVector(u,d);
+    for(const psi of PSI){
+      const E=S.clone().addScaledVector(u,a*cosA).addScaledVector(v0,a*sinA*Math.cos(psi)).addScaledVector(w,a*sinA*Math.sin(psi));
+      const d1=Q().setFromUnitVectors(E0.clone().sub(S).normalize(),E.clone().sub(S).normalize());
+      const fwd=W0.clone().sub(E0).applyQuaternion(d1).normalize(),d2=Q().setFromUnitVectors(fwd,Wr.clone().sub(E).normalize());
+      const uW=d1.clone().multiply(uW0),lW=share(d2.clone().multiply(d1).multiply(lW0),q);
+      const tw=twistOf(lW.clone().invert().multiply(q)),bend=lf?lf.clone().applyQuaternion(q).angleTo(Wr.clone().sub(E)):0,el=elbowDev(uW,lW);
+      /* 못 닿는 돌림은 크게 벌한다 — 주먹 방향이 손목 각을 정하므로 팔이 닿는지는 돌림마다 다르다 */
+      const c=Math.max(0,bend-.6)**2+tw*tw+el*el+.15*psi*psi+(resid*40)**2;
+      if(c<bestC){bestC=c;best={q,lW,uW,tw,bend,el,resid};}
+    }
+  }
+  return best;
+}
+function applyLeftGrip(upper,lower,hand,target,best,hold){
+  const Q=()=>new THREE.Quaternion(),palm=hand.userData.gripPoint;
+  /* 적용: 위팔 → 아래팔 → 손 (hold 만큼 원래 자세에서 섞는다) */
+  const up=upper.parent.getWorldQuaternion(Q()).invert().multiply(best.uW);
+  upper.quaternion.slerp(up,hold);upper.updateWorldMatrix(false,true);
+  const lo=upper.getWorldQuaternion(Q()).invert().multiply(best.lW);
+  lower.quaternion.slerp(lo,hold);lower.updateWorldMatrix(false,true);
+  const hq=lower.getWorldQuaternion(Q()).invert().multiply(best.q);
+  hand.quaternion.slerp(hq,hold);hand.updateWorldMatrix(false,true);
+  /* 두 뼈 길이로 푼 팔꿈치가 1~2 mm 어긋날 수 있어 주먹 점으로 한 번 더 맞춘다(방향은 거의 그대로) */
+  if(hold>=1)solveLimbPoint(upper,lower,()=>palm.clone().applyMatrix4(hand.matrixWorld),target,1);
+  return best;
+}
+
 // opts.twoHand=false: 한손·쌍수 무기(류 단검·세라 시약) — 왼손을 오른손 무기로 끌어오지 않는다 (docs/design/93)
 // opts.handGrip: 쥔 손 모프(js/hand-grip.js) — 양손 그립 동안 왼손을 쥔다 (docs/design/94)
 export function makeRigAdapter(model,root,slot,opts={}) {
-  const twoHand=opts.twoHand!==false, handGrip=opts.handGrip||null;let leftGrip=handGrip?handGrip.amount.Left:0;
+  const twoHand=opts.twoHand!==false, handGrip=opts.handGrip||null;let leftGrip=handGrip?handGrip.amount.Left:0;let twoHandS=0,reachOK=true;
   const bones={};model.traverse(o=>{if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o;});
   const restCorrections=new Map(), anchors={}, diagnostics={gripError:0,footError:0};
   function restore(){for(const [b,q] of restCorrections)b.quaternion.copy(q);restCorrections.clear();}
@@ -107,6 +162,8 @@ export function makeRigAdapter(model,root,slot,opts={}) {
           const shoulder=upper.getWorldPosition(new THREE.Vector3());
           let off=THREE.MathUtils.clamp(shoulder.sub(pos).dot(axis),-0.55,0.5);
           if(Math.abs(off)<0.12)off=off<0?-0.12:0.12;
+          /* 무기가 손잡이 길이를 알려 주면 그 안에서만 (looks.js hand2) — 안 그러면 폼멜 너머 허공을 쥐었다 */
+          const h2=slot.userData.hand2;if(h2)off=THREE.MathUtils.clamp(off,h2[0],h2[1]);
           return pos.addScaledVector(axis,off);
         }
         let target=gripTarget();
@@ -122,20 +179,36 @@ export function makeRigAdapter(model,root,slot,opts={}) {
         // (팔+손 84 cm) 억지로 잡으면 왼손이 허공에서 손잡이 17 cm 옆에 멈췄다 (docs/design/94)
         const hold=1-THREE.MathUtils.smoothstep(excess-0.22,0.03,0.09);gripWant=hold;
         // Bring an overextended weapon hand inward without changing its world orientation.
-        if(hold>0&&excess>0){
+        let pulled=0;
+        const pullRight=len=>{len=Math.min(0.22-pulled,len);if(len<=.002)return;pulled+=len;
           keep(['RightArm','RightForeArm','RightHand']);
           const handQ=right.getWorldQuaternion(new THREE.Quaternion());
-          const pull=shoulder.clone().sub(target).setLength(Math.min(0.22,excess+0.02));
+          const pull=shoulder.clone().sub(target).setLength(len);
           solveLimb(bones.RightArm,bones.RightForeArm,right,right.getWorldPosition(new THREE.Vector3()).add(pull));
           right.quaternion.copy(right.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(handQ));
-          model.updateWorldMatrix(true,true);target=gripTarget();
-        }
+          model.updateWorldMatrix(true,true);target=gripTarget();};
+        if(hold>0&&excess>0)pullRight(excess+0.02);
         // 손 관절이 아니라 주먹(손바닥)을 손잡이에 — 다시 리깅한 몸은 손 관절이 손목 쪽이라 관절을 대면 13~29 cm 떴다.
         // 끝점을 «손에 붙은 점»으로 두고 풀어야 팔을 돌려 손 방향이 바뀌어도 그 점이 닿는다(관절+오프셋 되풀이로는 17 cm 남았다).
-        if(hold>0)solveLimbPoint(upper,lower,palmWorld,target,hold);
-        diagnostics.gripError=hold>0?palmWorld().distanceTo(target):0;diagnostics.twoHand=hold;
+        /* 쥔 손(gripAxis 있음): 주먹 위치 + 주먹 방향을 함께 푼다 — solveLeftGrip. 없으면 주먹 점만 CCD. */
+        const gAxis=left.userData.gripAxis;diagnostics.gripAngle=0;diagnostics.gripTwist=0;diagnostics.gripBend=0;
+        let hold2=hold;
+        if(hold>0&&gAxis){let plan=planLeftGrip(upper,lower,left,slot,target);
+          /* 주먹 방향이 손목 각을 정해 팔이 모자랄 수 있다 — 모자란 만큼 오른손을 더 당기고(합 22 cm 까지) 다시 푼다 */
+          for(let k=0;k<2&&plan.resid>.005&&pulled<.22;k++){pullRight(plan.resid+.02);plan=planLeftGrip(upper,lower,left,slot,target);}
+          /* 주먹 방향까지 맞추면 2~6 cm 넘게 못 닿는 자세는 두 손 잡기를 푼다(오른손 주먹과 겹치거나 허공을 쥐지 않게) */
+          /* 놓기·잡기는 켜고 끄기(4.5 cm 넘게 모자라면 놓고 2.5 cm 안이면 다시 잡는다) — 중간 세기로 멈추면 왼손이 손잡이 옆 허공에 떴다 */
+          if(reachOK&&plan.resid>.045)reachOK=false;else if(!reachOK&&plan.resid<.025)reachOK=true;
+          const want=reachOK?hold:0;diagnostics.gripResid=plan.resid;
+          /* 두 손 잡기 세기는 시간으로 따라간다(초당 10) — 행동 시작에 왼손이 손잡이로 «튀지» 않고 미끄러져 잡고,
+             한 손으로 내뻗는 순간(카인 공격1·3 접점, 오른팔 68 cm)엔 부드럽게 놓는다 */
+          twoHandS+=(want-twoHandS)*Math.min(1,(dt||1/60)*10);if(Math.abs(want-twoHandS)<.01)twoHandS=want;
+          hold2=twoHandS;gripWant=hold2;
+          if(hold2>0)applyLeftGrip(upper,lower,left,target,plan,hold2);}
+        else if(hold>0)solveLimbPoint(upper,lower,palmWorld,target,hold);
+        diagnostics.gripError=hold2>0?palmWorld().distanceTo(target):0;diagnostics.twoHand=hold2;
       }
-    }else{diagnostics.gripError=0;diagnostics.twoHand=0;}
+    }else{diagnostics.gripError=0;diagnostics.twoHand=0;twoHandS=0;reachOK=true;}
     if(handGrip&&twoHand){leftGrip+=(gripWant-leftGrip)*Math.min(1,(dt||1/60)*14);if(Math.abs(gripWant-leftGrip)<.01)leftGrip=gripWant;handGrip.set('Left',leftGrip);}
     // Flat training ground: preserve authored footfall height; anchor grounded feet during stationary actions.
     diagnostics.footError=0;

@@ -8,7 +8,7 @@
      n = 손바닥 쪽(a × f 부호를 손바닥 쪽 X 로 맞춤: 오른손 +X, 왼손 −X)
    손가락 사이 물갈퀴(web) 보다 PIVOT 아래를 손가락 뿌리로 보고, 뿌리 앞(손바닥 쪽) r 거리의 축 C 둘레로
    손가락을 호 길이 그대로 감는다. 엄지는 손가락 폭(q) 밖이라 감지 않는다 — 폭 경계에서 부드럽게 줄인다.
-   (엄지도 같은 축으로 감아 봤으나 엄지는 손바닥 면보다 4~7 cm 앞에 있어 엄지 두덩이 최대 30 배 늘어났다 — 되돌림) */
+   엄지는 따로 통째로 돌린다(fitThumb, docs/design/95). */
 import * as T from '../vendor/three/three.module.js';
 
 /* web: 잰 값 — tools/3d/hand-curl.html 로 손 삼각형을 손바닥 평면에 그려, 손가락 사이 홈 바닥의 손 뼈 Y(엄지 홈 제외).
@@ -52,11 +52,58 @@ export function fitHandGrip(verts,slotQuat,side,web,r){
   const C=K.clone().addScaledVector(n,r);
   /* 엄지 쪽: 세 캐릭터 모두 엄지가 손 뼈 −Z 쪽(렌더 확인). a 는 대략 −Z 라 q 가 큰 쪽 */
   const thumbHi=a.z<0;
-  return {a:a.toArray(),f:f.toArray(),n:n.toArray(),K:K.toArray(),c:C.toArray(),r,rho:r+t/2,t,qLo,qHi,thumbHi,side};
+  return {a:a.toArray(),f:f.toArray(),n:n.toArray(),K:K.toArray(),c:C.toArray(),r,rho:r+t/2,t,qLo,qHi,thumbHi,side,
+    thumb:thumbHi?fitThumb(verts,{a,f,n,C,r,t,qLo,qHi,sK}):null};
+}
+/* 엄지 (docs/design/95): 손바닥 앞으로 나온 엄지 덩어리의 주축 = 엄지 방향. 손잡이 높이의 마디에서 끝마디를 돌려 (가상 엄지 뼈)
+   주먹 앞을 가로질러 검지·중지 위에 눕게 한다.
+   손가락처럼 손바닥 면 기준으로 감으면 엄지 두덩이 30 배 늘어났다(94) — 마디에서 통째로 돌리면 늘어날 곳이 마디 둘레뿐이다 */
+const THUMB_UP=.44;   // 엄지가 가로선에서 위로 드는 각(rad, 25°). 「근거 없음」 — 렌더로 확인
+function fitThumb(verts,{a,f,n,C,r,t,qLo,qHi,sK}){
+  /* 엄지 = 손바닥 면보다 r+1 cm 넘게 앞으로 나온 덩어리(뿌리 3.5 cm 위까지, 검지 쪽 절반). 손가락 폭 바깥(q)으로 찾으면
+     엄지가 손바닥 앞에 붙어 있어 거의 안 잡혔다(카인·세라 0) — 앞 오프셋 지도: 카인 7~8 · 류 5~7 · 세라 4~6 cm */
+  const K0=C.clone().addScaledVector(n,-r),qMid=(qLo+qHi)/2;
+  const T=verts.filter(v=>{const d=v.clone().sub(K0);return d.dot(n)>r+.01&&d.dot(f)<.035&&v.dot(a)>qMid;});if(T.length<6)return null;   // 세라 손은 무게 .6 이상 정점이 167 개뿐
+  const m=V();T.forEach(v=>m.add(v));m.divideScalar(T.length);
+  /* 주축(거듭제곱법) */
+  const cov=[0,0,0,0,0,0,0,0,0];T.forEach(v=>{const d=[v.x-m.x,v.y-m.y,v.z-m.z];for(let i=0;i<3;i++)for(let j=0;j<3;j++)cov[i*3+j]+=d[i]*d[j];});
+  let d=V(0,1,0);for(let k=0;k<30;k++){d=V(cov[0]*d.x+cov[1]*d.y+cov[2]*d.z,cov[3]*d.x+cov[4]*d.y+cov[5]*d.z,cov[6]*d.x+cov[7]*d.y+cov[8]*d.z).normalize();}
+  if(d.dot(f)<0)d.negate();
+  const pr=T.map(v=>v.clone().sub(m).dot(d)).sort((x,y)=>x-y),p0=pr[Math.floor(pr.length*.02)],p1=pr[Math.floor(pr.length*.98)];
+  const root=m.clone().addScaledVector(d,p0),tip=m.clone().addScaledVector(d,p1),len=p1-p0;
+  /* 엄지 마디(J) = 엄지 축에서 손잡이 가운데 높이(f). 그 아래는 손잡이 옆에 서 있고, 그 위만 꺾어 주먹 앞을 가로지른다.
+     엄지 전체를 뿌리에서 돌리면 카인(엄지 11 cm, 뿌리가 손잡이 9 cm 아래)은 손바닥을 가로질러 손잡이 밑으로 삐져나왔다 */
+  /* 세라 엄지는 끝까지 손잡이 높이보다 낮아 마디를 엄지 60 % 에서 멈춘다(끝 40 % 는 늘 꺾임) */
+  const uJ=Math.min(len*.6,Math.max(len*.3,(C.clone().sub(root)).dot(f)/Math.max(.3,d.dot(f))));
+  const B=root.clone().addScaledVector(d,uJ);
+  /* 망치 쥐기: 엄지 끝마디는 주먹 앞을 가로질러 새끼 쪽(−a)으로 눕는다, 약간 위로(THUMB_UP) */
+  const dir=a.clone().multiplyScalar(-Math.cos(THUMB_UP)).addScaledVector(f,Math.sin(THUMB_UP)).normalize();
+  const rot=new T_Quat().setFromUnitVectors(tip.clone().sub(B).normalize(),dir);
+  /* 엄지 굵기: 엄지 정점의 축 거리 90 % — 이 밖(검지 뿌리 살 등)은 돌리지 않는다. 안 막으면 세라 검지 앞 살이 엄지와 같이 돌아 1 cm 늘어났다 */
+  const radial=T.map(v=>{const x=v.clone().sub(m);return x.addScaledVector(d,-x.dot(d)).length();}).sort((x,y)=>x-y),rad=radial[Math.floor(radial.length*.9)];
+  return {B:B.toArray(),d:d.toArray(),m:m.toArray(),rad,L:len-uJ,uJ,rot:[rot.x,rot.y,rot.z,rot.w],tip:tip.toArray(),target:B.clone().addScaledVector(dir,tip.distanceTo(B)).toArray()};
+}
+const T_Quat=T.Quaternion;
+/* 엄지 돌림 세기 0..1 (시험도 쓴다) */
+export function thumbWeight(v,g){
+  const th=g.thumb;if(!th)return 0;
+  const B=V(...th.B),u=v.clone().sub(B).dot(V(...th.d))/th.L,q=v.dot(V(...g.a));
+  const K0=V(...g.c).addScaledVector(V(...g.n),-g.r),hp=v.clone().sub(K0).dot(V(...g.n));
+  /* u: 마디 J 부터 끝마디 길이 비율. 마디 아래 35 % 부터 위 45 % 까지 서서히 꺾는다 — 짧게 꺾으면 마디 바깥 살이 1~2 cm 늘어났다 */
+  const x=v.clone().sub(V(...th.m)),dd=V(...th.d),rd=x.addScaledVector(dd,-x.dot(dd)).length();
+  return smooth(g.r,g.r+.01,hp)*smooth((g.qLo+g.qHi)/2-.01,(g.qLo+g.qHi)/2+.005,q)*smooth(-.35,.45,u)*(1-smooth(th.rad,th.rad*1.4,rd));
+}
+function thumbShape(p,v,g,amount){
+  const th=g.thumb;if(!th||amount<=0)return p;
+  const B=V(...th.B),w=thumbWeight(v,g)*amount;if(w<=0)return p;
+  const r=new T.Quaternion().slerp(new T.Quaternion(...th.rot),w);
+  return p.clone().sub(B).applyQuaternion(r).add(B);
 }
 
-/* 한 점을 감는다(손 뼈 로컬). amount 0..1 */
-export function handGripShape(v,g,amount=1){
+/* 한 점을 감는다(손 뼈 로컬). amount 0..1 — 손가락을 감고, 엄지를 돌린다 */
+export function handGripShape(v,g,amount=1){return THUMB?thumbShape(fingerShape(v,g,amount),v,g,amount):fingerShape(v,g,amount);}
+const THUMB=true;
+function fingerShape(v,g,amount){
   const a=V(...g.a),f=V(...g.f),n=V(...g.n),K=V(...g.K),C=V(...g.c),d=v.clone().sub(K);
   const s=d.dot(f),q=v.dot(a),hp=d.dot(n);let h=g.r-hp;
   if(s<=0||amount<=0)return v.clone();
@@ -146,6 +193,8 @@ export function buildHandGrip(model,charId){
     if(verts.length<30)continue;
     grips[side]=fitHandGrip(verts,slot.quaternion,side,P[side].web,P.r);
     hand.userData.gripPoint=V(...grips[side].c);   // looks.js 그립 노드·왼손 IK 가 이 점을 쓴다
+    hand.userData.gripAxis=V(...grips[side].a);    // 주먹 구멍 방향(새끼→엄지) — 왼손 IK 가 무기 축에 맞춘다
+    hand.userData.gripFinger=V(...grips[side].f);  // 손가락 방향 — 손잡이 둘레 돌림을 고를 때
     hands[side]=hand;
   }
   const targets=[];

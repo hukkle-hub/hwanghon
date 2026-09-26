@@ -27,10 +27,13 @@
   var SLOT_OF={ a_hood:'head', a_reed_cuirass:'chest', a_black_greaves:'legs', a_steel_gauntlet:'gloves', a_ranger_boots:'boots', acc_charm:'acc', acc_blood_ring:'acc', acc_band:'acc',
     a_sluice_helm:'head', a_sluice_cuirass:'chest', a_sluice_greaves:'legs', a_sluice_gauntlet:'gloves', a_sluice_boots:'boots',
     a_ward_mask:'head', a_ward_coat:'chest', a_ward_greaves:'legs', a_ward_gloves:'gloves', a_ward_boots:'boots' };
-  WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75 };
+  /* hand2: 두 손 잡기 때 왼손 주먹 자리 = 오른손에서 칼날 쪽으로 [최소, 최대] m (docs/design/95).
+     오른손(0.75)은 폼멜(0.56~0.68) 바로 위라 폼멜 쪽엔 7 cm 뿐 — 왼손은 칼날 쪽. 최소 = 주먹 폭 11 cm, 최대 = 코등이 − 5 cm.
+     잰 값: 대검 손잡이 0.69~1.00 · 코등이 1.02 / 고철 ~1.10 · 1.12 / 분쇄 ~1.04 · 1.06 */
+  WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75, hand2:[0.11,0.20] };
   /* 카인 하위·상위 대검(docs/design/82): 모루의 대검과 같은 규약 — 1.6 m, 자루 끝 0.55, 손 0.75 */
-  WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75 };
-  WEAPON.w_kain_crusher={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75 };
+  WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75, hand2:[0.11,0.30] };
+  WEAPON.w_kain_crusher={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75, hand2:[0.11,0.24] };
   WEAPON.w_ryu_dagger={ glb:'art/3d/gear/w_ash_dirk.glb', grip:0.10 };
   /* 시약병은 목(반지름 2.7 cm, 0.16~0.18 m)을 쥔다 — 던지는 손. 바닥(0.05)을 쥐면 반지름 6.7 cm 몸통이 손을 삼켰다(docs/design/93) */
   WEAPON.w_sera_flask={ glb:'art/3d/gear/w_sera_flask.glb', grip:0.17 };
@@ -195,7 +198,7 @@
     // Explicit local QA skin. No inventory/stat/save mutation, no override for other characters.
     if(opts.charId==='ain' && typeof location!=='undefined' && ['localhost','127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('gearPreview')==='red_tension') spec=WEAPON.w_red_tension;
     if(DUAL[mainBase]&&bones.LeftHandSlot){ var osp=WEAPON[mainBase]; loader.load(osp.glb, function(w){ var g2=new THREE.Group(); g2.userData.look='offhand'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(osp.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(osp.tint), osp.mix||0.5); } } }); w.scene.position.set(0,-(osp.grip||0.1),0); g2.add(w.scene); bones.LeftHandSlot.add(g2); g2.scale.setScalar(fitScale(bones.LeftHandSlot)); out.weapons.offhand=g2; }); }
-    if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(spec.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(spec.tint), spec.mix||0.5); } } }); var prepared=opts.prepareMain&&opts.prepareMain(w.scene,spec); if(prepared)wr.add(prepared);else{w.scene.position.set(0,-(spec.grip||0.75),0);wr.add(w.scene);} slot.add(wr); wr.scale.setScalar(fitScale(slot)); out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
+    if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(spec.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(spec.tint), spec.mix||0.5); } } }); var prepared=opts.prepareMain&&opts.prepareMain(w.scene,spec); if(prepared)wr.add(prepared);else{w.scene.position.set(0,-(spec.grip||0.75),0);wr.add(w.scene);} slot.add(wr); wr.scale.setScalar(fitScale(slot)); slot.userData.hand2=spec.hand2||null; out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
     else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var sp=WEAPON[baseOf(id)]; if(!sp||!sp.bone||!bones[sp.bone]) return; var bone=bones[sp.bone];
       loader.load(sp.glb, function(w){ var g=new THREE.Group(); g.userData.look=id; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); g.add(w.scene); var k=fitScale(bone); g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k); g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]); g.scale.setScalar(k*(sp.scale||1)); var tint=opts.tintOf&&opts.tintOf(id); if(tint){ var mx=mixOf(id); mx=mx==null?0.55:mx; w.scene.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mx); } }); } bone.add(g); out.weapons[sl]=g; }); });
