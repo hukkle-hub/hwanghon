@@ -403,6 +403,57 @@ html.in-fight .quest{display:none}
  .cinema-hud-v1.cinema-l3 .cine-matte::before,.cinema-hud-v1.cinema-l3 .cine-matte::after{height:min(3.5vh,18px)}
 }
 
+
+
+/* ===== 105 — CINEMATIC COMBAT FEEDBACK HUD v05 =====
+   목표: 전투 중 숫자/배너/상태칩의 "개발 UI" 느낌을 줄이고, 중요한 순간만 남긴다.
+   전투 판정/피해/입력은 바꾸지 않는다. */
+.cinema-hud-v1 .dmgnum{font-family:var(--f-serif);font-size:16px;color:#F1EBE2;letter-spacing:.01em;text-shadow:0 1px 5px #000,0 0 4px rgba(255,255,255,.08);animation:riseV5 .62s cubic-bezier(.18,.72,.2,1) forwards;will-change:transform,opacity}
+.cinema-hud-v1 .dmgnum.crit{font-size:21px;color:#E9C77B;text-shadow:0 0 10px rgba(226,177,80,.34),0 2px 6px #000}
+.cinema-hud-v1 .dmgnum.counter{font-size:24px;color:#F08A73;text-shadow:0 0 12px rgba(230,81,65,.34),0 2px 6px #000}
+.cinema-hud-v1 .dmgnum.taken{font-size:17px;color:#E45E56;text-shadow:0 0 10px rgba(211,54,47,.25),0 2px 5px #000}
+.cinema-hud-v1 .dmgnum.miss{font-size:11px;color:rgba(205,201,194,.52);letter-spacing:.18em}
+.cinema-hud-v1 .dmgnum.deflect{font-size:13px;color:#CFE4FF;letter-spacing:.24em;text-shadow:0 0 10px rgba(143,192,255,.35),0 1px 4px #000}
+.cinema-hud-v1 .dmgnum.pt-sweet{font-size:12px;color:#E7C67D;letter-spacing:.20em;text-shadow:0 0 8px rgba(226,177,80,.28),0 1px 4px #000}
+.cinema-hud-v1 .dmgnum.pt-glance{font-size:10px;color:rgba(190,187,181,.55);letter-spacing:.18em}
+@keyframes riseV5{0%{transform:translate(-50%,8px) scale(.92);opacity:0}16%{opacity:1;transform:translate(-50%,0) scale(1)}72%{opacity:.92}100%{transform:translate(-50%,-42px) scale(.98);opacity:0}}
+
+/* 카운터 결과는 중앙을 가리지 않는 짧은 타이포그래피로. */
+.cinema-hud-v1 .counter{top:27%;min-width:220px;padding:7px 22px 8px;background:linear-gradient(90deg,rgba(4,5,7,0),rgba(4,5,7,.58) 22%,rgba(4,5,7,.58) 78%,rgba(4,5,7,0));filter:drop-shadow(0 3px 12px rgba(0,0,0,.55));transition:opacity .12s ease,transform .18s ease}
+.cinema-hud-v1 .counter.is-on{animation:counterV5 .68s cubic-bezier(.18,.72,.2,1)}
+.cinema-hud-v1 .counter__lb{font-size:9px;letter-spacing:.46em;color:#EA7468;text-transform:uppercase}
+.cinema-hud-v1 .counter__v{font-size:32px;line-height:1.08;letter-spacing:.035em;color:#F5EEE5;text-shadow:0 0 10px rgba(219,56,50,.20),0 2px 6px #000}
+.cinema-hud-v1 .counter__sub{font-family:var(--f-serif);font-size:9px;letter-spacing:.18em;color:#D9BE82;margin-top:1px}
+.cinema-hud-v1 .counter.perfect .counter__lb{color:#F1D491}.cinema-hud-v1 .counter.perfect .counter__v{text-shadow:0 0 12px rgba(232,205,141,.22),0 2px 6px #000}
+@keyframes counterV5{0%{transform:translateX(-50%) translateY(8px) scale(.97);filter:blur(2px);opacity:0}18%{transform:translateX(-50%) translateY(0) scale(1);filter:none;opacity:1}78%{opacity:1}100%{opacity:.12}}
+
+/* 콤보는 숫자만 남기고 전투 장면보다 앞서지 않게. */
+.cinema-hud-v1 .combo{right:max(28px,env(safe-area-inset-right));top:41%;filter:drop-shadow(0 2px 7px #000)}
+.cinema-hud-v1 .combo b{font-size:29px;font-weight:400;color:rgba(244,238,229,.88);text-shadow:0 2px 5px #000}
+.cinema-hud-v1 .combo span{font-size:7px;letter-spacing:.38em;color:rgba(217,190,130,.64)}
+.cinema-hud-v1 .combo.big b{font-size:38px;color:#F08B78;text-shadow:0 0 10px rgba(224,76,62,.22),0 2px 6px #000}
+
+/* 상태 이상은 카드가 아니라 얇은 정보선. */
+.cinema-hud-v1 .status{width:138px;gap:3px}
+.cinema-hud-v1 .stline{border:0;border-left:1px solid rgba(220,193,137,.42);background:linear-gradient(90deg,rgba(5,6,8,.58),rgba(5,6,8,.12));padding:3px 7px 3px 8px;font-size:9px;letter-spacing:.04em;color:rgba(225,219,209,.70);backdrop-filter:blur(2px)}
+.cinema-hud-v1 .stline b{color:#D9BC7D;font-size:9px}
+
+/* 보스바의 위계를 조금 더 영화 자막처럼 — 수치보다 이름/페이즈 우선. */
+.cinema-hud-v1 .bosshp__nm{font-size:15px;letter-spacing:.17em}
+.cinema-hud-v1 .ph{letter-spacing:.34em;color:rgba(226,211,188,.82)}
+.cinema-hud-v1 .stagger .bar{opacity:.72}
+
+/* L1 동안 일반 숫자/콤보는 더 뒤로 물리고, counter/crit만 남긴다. */
+.cinema-hud-v1.cinema-l1 .dmgnum:not(.counter):not(.crit):not(.taken):not(.deflect){opacity:.45!important}
+.cinema-hud-v1.cinema-l1 .combo{opacity:.45!important}
+.cinema-hud-v1.cinema-l2 .dmgnum,.cinema-hud-v1.cinema-l3 .dmgnum{opacity:0!important}
+
+@media(max-width:900px),(max-height:520px){
+ .cinema-hud-v1 .counter{top:24%;min-width:160px;padding:4px 14px}.cinema-hud-v1 .counter__v{font-size:24px}.cinema-hud-v1 .counter__lb,.cinema-hud-v1 .counter__sub{font-size:7px}
+ .cinema-hud-v1 .combo{right:max(12px,env(safe-area-inset-right));top:39%}.cinema-hud-v1 .combo b{font-size:24px}.cinema-hud-v1 .combo.big b{font-size:31px}
+ .cinema-hud-v1 .dmgnum{font-size:13px}.cinema-hud-v1 .dmgnum.crit{font-size:17px}.cinema-hud-v1 .dmgnum.counter{font-size:19px}.cinema-hud-v1 .dmgnum.taken{font-size:14px}
+}
+
 </style>
 </head>
 <body class="cinema-hud-v1" data-landscape data-nonav data-responsive-mobile>
@@ -529,6 +580,23 @@ html.in-fight .quest{display:none}
   window.addEventListener('tw:cinematic:end',clear);
   try{var st=JSON.parse(localStorage.getItem('tw:settings')||'{}');mode(st.cine||'normal');}catch(e){mode('normal');}
   window.TW_CINEMATIC_HUD={set:set,clear:clear,get tier(){return root.classList.contains('cinema-l3')?'L3':root.classList.contains('cinema-l2')?'L2':root.classList.contains('cinema-l1')?'L1':'L0';},setMode:mode};
+})();
+</script>
+
+<script>
+/* 105 — 피해 숫자 클러터 가드. 전투 수치는 건드리지 않고 DOM 표기 수만 제한한다. */
+(function(){
+  var root=document.getElementById('dg'); if(!root||!window.MutationObserver) return;
+  function trim(){
+    var mobile=document.documentElement.classList.contains('mobile')||innerHeight<520;
+    var cap=mobile?6:9, nodes=[].slice.call(root.querySelectorAll('.dmgnum'));
+    if(nodes.length<=cap) return;
+    var keep=function(n){ return n.classList.contains('crit')||n.classList.contains('counter')||n.classList.contains('taken')||n.classList.contains('deflect'); };
+    var removable=nodes.filter(function(n){return !keep(n);});
+    while(nodes.length>cap&&removable.length){ var n=removable.shift(); if(n&&n.parentNode){n.remove();nodes.splice(nodes.indexOf(n),1);} }
+    while(nodes.length>cap){ var n=nodes.shift(); if(n&&n.parentNode)n.remove(); }
+  }
+  new MutationObserver(function(ms){ for(var i=0;i<ms.length;i++) if(ms[i].addedNodes&&ms[i].addedNodes.length){trim();break;} }).observe(root,{childList:true});
 })();
 </script>
 
