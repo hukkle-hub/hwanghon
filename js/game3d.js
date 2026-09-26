@@ -204,6 +204,10 @@ import { createBloom } from './bloom.js';
                — 원본이 우리보다 좁지 넓지 않다. */
             fov:50, fovDash:50, fovHit:50, fovTau:0.10,   /* 회피·타격 화각 변화(57°·46°)는 멀미라 뺐다 */
             sizeDist:0.55,            /* 보스가 클수록 물러난다 (보스 높이 m 당) */
+            /* 락온 전투 구도 (docs/design/101) — 목표 그림: 낮은 어깨 너머, 캐릭터가 화면 왼쪽 절반을 크게 차지하고
+               보스는 오른쪽에서 올려다보인다. 탐색 구도(위 값)는 그대로 두고 락온 전투에서만 이쪽으로 옮겨 간다.
+               숫자는 모두 「근거 없음」 — 1672×941·모바일 가로에서 캡처로 맞췄다. */
+            fight:{ dist:2.6, shoulder:1.7, lookSide:-0.1, near:1.2, dead:0.04, pitch:0.07, lookUp:0.2, toBoss:0.5, fov:52, blend:0.8 },
             /* 회전 — 어깨 너머로 오면서 «부자연스럽다» 는 지적이 나왔다. 세 가지가 빠져 있었다.
                ① 각속도 상한이 없었다. 보스를 지나쳐 뒤쪽 방향이 뒤집히면 지수 감쇠만으로는
                   180° 를 두 τ 만에 휩쓴다. 멀리 있을 땐 견뎠지만 3.9 m 에서는 폭력적이다.
@@ -218,7 +222,7 @@ import { createBloom } from './bloom.js';
             maxYawRate:5.0,
             yawDead:0.05,             /* 2.9° 안쪽은 안 쫓는다 */
             nearGap:3.2, nearDamp:0.55 };   /* 이 거리 안으로 붙으면 그만큼 느리게 따라간다 */
-  var fovWant=CAM.fov, bossTall=0;
+  var fovWant=CAM.fov, bossTall=0, fightK=0;
   var camYaw=-Math.PI*0.5, camPitch=0.50, camDist=(L.camDist?Math.min(L.camDist, MOBILE?4.3:4.6):(MOBILE?4.3:4.6))
     /* 어깨 너머. 벽 천장(camClear 가 뒤쪽 벽까지로 자른다, 훈련장 7.9 m)에 한참 못 미치므로
        좁은 방에서도 잘리지 않는다 — 오히려 그게 이 시점의 장점이다.
@@ -246,6 +250,8 @@ import { createBloom } from './bloom.js';
   /* 조명 */
   /* 금속이 반사할 것을 준다. 1.0 으로 넣으면 «황혼» 의 어두운 분위기가 날아가므로 0.35. */
   if(window.TW_ENV) TW_ENV.apply(THREE, renderer, scene, 'dungeon', 0.35);
+  /* 장면 분위기 배율 — 환경(build*)이 정하고 설정 적용(applySettings)이 따른다. 서한역(d01)은 어둡게 (docs/design/101) */
+  var MOOD={ exp:1, hemi:1, player:1 };
   var hemi=new THREE.HemisphereLight(0x6a7080, 0x2a2622, 2.6); scene.add(hemi);
   var moon=new THREE.DirectionalLight(0xa8b4d0, 2.2); moon.position.set(-8, 18, -6); moon.castShadow=true; moon.shadow.mapSize.set(MOBILE?1024:2048, MOBILE?1024:2048); moon.shadow.camera.near=1; moon.shadow.camera.far=60; moon.shadow.bias=-0.0015; scene.add(moon); scene.add(moon.target);
   var pLight=new THREE.PointLight(0xE0D0B8, 3.0, 10, 1.4); scene.add(pLight);
@@ -279,7 +285,7 @@ import { createBloom } from './bloom.js';
     }
   }
   var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
-    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright;  pLight.visible=SET.lights; coreLight.visible=SET.lights; hemi.intensity=(SET.lights?2.6:3.2)*(L.env==='subway'?1.3:1); lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
+    function applySettings(){ resize(); SFX.enabled=SET.sound; renderer.toneMappingExposure=2.4*SET.bright*MOOD.exp;  pLight.visible=SET.lights; pLight.intensity=3.0*MOOD.player; coreLight.visible=SET.lights; hemi.intensity=(SET.lights?2.6:3.2)*MOOD.hemi; lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
   function noiseTex(draw, size, srgb){ var c=document.createElement('canvas'); c.width=c.height=size||256; var g=c.getContext('2d'); draw(g, c.width); var t=new THREE.CanvasTexture(c); if(srgb!==false) t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; }
@@ -390,15 +396,36 @@ import { createBloom } from './bloom.js';
      흰 타일 벽 + 노선 색 띠, 화강석 바닥, 북쪽은 선로(안전 난간 너머), 천장 형광등 줄, 역명판·비상구 표지.
      충돌 격자는 그대로 — 북쪽 벽 한 줄(0행)이 승강장 끝이 되고, 선로는 그 바깥에만 그린다. */
   function subwaySign(w, h, draw){ var c=document.createElement('canvas'); c.width=w; c.height=h; var g=c.getContext('2d'); draw(g,w,h); var t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=4; return t; }
+  /* 서한역 분위기 (docs/design/101, 목표 그림) — 꺼진 형광등 사이로 비상등의 붉은 빛, 젖은 바닥에 번지는 반사, 짙은 안개.
+     «어둡지만 읽히게»: 바닥·벽은 가라앉히고 사람·보스는 역광(림)·붉은 등·플레이어 보조광으로 떼어 낸다.
+     값은 모두 「근거 없음」 — 캡처로 맞췄다(1672×941, 모바일 가로). */
+  var SUBWAY_MOOD={ bg:0x050506, fog:0x100a0a, fogD:MOBILE?0.050:0.055, exp:0.82, hemi:0.42, player:1.0,
+    hemiSky:0x46506a, hemiGround:0x1c0f0d, moon:0x93a4c8, moonI:0.55, fluoOn:0.5, fluoI:6, red:0xff2a1c, redI:7, redDist:15 };
+  /* 젖은 바닥이 비출 «가짜 주변»: 어둠 위에 붉은 등 번짐 몇 개·차가운 형광 줄 — 거칠기가 낮은 곳에서만 비친다 */
+  function wetEnv(){ var c=document.createElement('canvas'); c.width=512; c.height=256; var g=c.getContext('2d');
+    g.fillStyle='#050405'; g.fillRect(0,0,512,256);
+    for(var i=0;i<9;i++){ var x=Math.random()*512, y=70+Math.random()*60, r=g.createRadialGradient(x,y,0,x,y,6+Math.random()*10);
+      r.addColorStop(0,'rgba(255,70,50,1)'); r.addColorStop(1,'rgba(255,40,30,0)'); g.fillStyle=r; g.fillRect(0,0,512,256); }   /* 작은 붉은 점 — 번지는 건 등 자체의 반사광이 한다 */
+    g.fillStyle='rgba(200,215,245,.45)'; for(var k=0;k<5;k++) g.fillRect(Math.random()*512, 20+Math.random()*30, 26, 3);
+    var t=new THREE.CanvasTexture(c); t.mapping=THREE.EquirectangularReflectionMapping; t.colorSpace=THREE.SRGBColorSpace;
+    try{ var pm=new THREE.PMREMGenerator(renderer), rt=pm.fromEquirectangular(t); pm.dispose(); return rt.texture; }catch(e){ return null; } }
   function buildSubway(){
-    var LINE='#3f9a62', LINEH=0x3f9a62;
-    scene.background=new THREE.Color(0x1d2024); scene.fog=new THREE.FogExp2(0x262a30, 0.009);
-    hemi.color.setHex(0xdfe4ec); hemi.groundColor.setHex(0x8c877e); moon.color.setHex(0xe8eef8); moon.intensity=1.6;
+    var LINE='#3f9a62', LINEH=0x3f9a62, MD=SUBWAY_MOOD;
+    scene.background=new THREE.Color(MD.bg); scene.fog=new THREE.FogExp2(MD.fog, SAFE?MD.fogD*0.8:MD.fogD);
+    hemi.color.setHex(MD.hemiSky); hemi.groundColor.setHex(MD.hemiGround); moon.color.setHex(MD.moon); moon.intensity=MD.moonI;
+    MOOD.exp=MD.exp; MOOD.hemi=MD.hemi; MOOD.player=MD.player; hemi.intensity=2.6*MD.hemi; renderer.toneMappingExposure=2.4*SET.bright*MD.exp; pLight.intensity=3.0*MD.player;
+    /* 보조 역광을 붉게 — 비상등이 등 뒤에서 윤곽을 긋는다 */
+    if(rimLights[1]){ rimLights[1].color.setHex(0xff3a26); rimLights[1].intensity=2.6; }
+    /* 사람·보스만 받는 앞쪽 보조광(카메라 쪽 비스듬히) — 역광만 있으면 캐릭터가 검은 실루엣이 됐다 */
+    RIM.push({ deg:150, color:0xffd6bf, i:1.1, up:2.2 }); var fillL=new THREE.DirectionalLight(0xffd6bf, 1.1); fillL.castShadow=false; fillL.layers.set(RIM_LAYER); scene.add(fillL); scene.add(fillL.target); rimLights.push(fillL);
     var edgeZ=cellD;                        /* 0행(벽) 안쪽 면 = 승강장 끝 */
     /* 바닥: 화강석 60 cm 타일 */
     var floorTex=noiseTex(function(g,s){ g.fillStyle='#8d8f93'; g.fillRect(0,0,s,s); grain(g,s,146,34,14000); g.fillStyle='rgba(40,40,44,.25)'; for(var i=0;i<2600;i++){ g.fillRect(Math.random()*s, Math.random()*s, 1.5, 1.5); }
       g.strokeStyle='rgba(70,72,76,.9)'; g.lineWidth=3; for(var k=0;k<=4;k++){ g.beginPath(); g.moveTo(k*s/4,0); g.lineTo(k*s/4,s); g.moveTo(0,k*s/4); g.lineTo(s,k*s/4); g.stroke(); } }, 512);
-    var fmat=new THREE.MeshStandardMaterial({ map:floorTex, roughness:0.55, metalness:0.05, color:0xc4c4c8 }); fmat.map.repeat.set(mapW/2.4, (mapD-edgeZ)/2.4);
+    /* 젖은 바닥: 거칠기 지도(웅덩이 = 매끈) + 가짜 주변 반사 */
+    var wetTex=noiseTex(function(g,s){ g.fillStyle='rgb(150,150,150)'; g.fillRect(0,0,s,s); grain(g,s,150,60,5000);
+      for(var i=0;i<10;i++){ var x=Math.random()*s, y=Math.random()*s, r=g.createRadialGradient(x,y,0,x,y,20+Math.random()*50); r.addColorStop(0,'rgba(70,70,70,1)'); r.addColorStop(0.6,'rgba(95,95,95,.8)'); r.addColorStop(1,'rgba(95,95,95,0)'); g.fillStyle=r; g.fillRect(0,0,s,s); } }, 512, false);   /* 웅덩이 거칠기 0.27~0.37 — 거울이 아니라 번지는 반사 */
+    var fmat=new THREE.MeshStandardMaterial({ map:floorTex, roughness:1, roughnessMap:wetTex, metalness:0.1, color:0x4a4c50, envMap:wetEnv(), envMapIntensity:0.6 }); fmat.map.repeat.set(mapW/2.4, (mapD-edgeZ)/2.4); wetTex.repeat.set(mapW/9, (mapD-edgeZ)/9);
     var g=new THREE.PlaneGeometry(mapW, mapD-edgeZ); g.rotateX(-Math.PI/2); var ground=new THREE.Mesh(g, fmat); ground.position.set(mapW/2, 0, edgeZ+(mapD-edgeZ)/2); ground.receiveShadow=true; scene.add(ground);
     /* 승강장 끝: 흰 선 + 노란 점자 블록 */
     var dotTex=noiseTex(function(g,s){ g.fillStyle='#e0b41e'; g.fillRect(0,0,s,s); g.fillStyle='rgba(120,90,0,.55)'; for(var y=8;y<s;y+=16) for(var x=8;x<s;x+=16){ g.beginPath(); g.arc(x,y,4,0,6.28); g.fill(); } }, 64);
@@ -422,9 +449,10 @@ import { createBloom } from './bloom.js';
       for(var r=0, y=Y(0.18); y>Y(2.7); y-=th, r++){ g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); for(var x=(r%2?tw/2:0); x<w; x+=tw){ g.beginPath(); g.moveTo(x,y); g.lineTo(x,y-th); g.stroke(); } }
       g.fillStyle=LINE; g.fillRect(0,Y(1.72),w,Y(1.46)-Y(1.72));                     /* 노선 띠 */
       g.fillStyle='#2c2e32'; g.fillRect(0,Y(0.18),w,h-Y(0.18));                       /* 걸레받이 */
-      g.fillStyle='rgba(60,50,40,.10)'; for(var i=0;i<40;i++) g.fillRect(Math.random()*w, Y(0.18)-Math.random()*40, 2+Math.random()*6, 30+Math.random()*50);   /* 얼룩 조금 */
+      g.fillStyle='rgba(40,30,26,.16)'; for(var i=0;i<220;i++) g.fillRect(Math.random()*w, Y(0.18)-Math.random()*h*0.7, 2+Math.random()*7, 30+Math.random()*120);   /* 흘러내린 때 (서한역: 버려진 지 오래) */
+      g.fillStyle='rgba(20,14,12,.35)'; g.fillRect(0,Y(0.9),w,Y(0.18)-Y(0.9));
     }); t.wrapS=THREE.RepeatWrapping; t.repeat.set(rep,1); return t; }
-    var wA=new THREE.MeshStandardMaterial({ map:wallTex(1), roughness:0.4, color:0xd4d4d4 }), wB=new THREE.MeshStandardMaterial({ map:wallTex(Math.round(cellD/cellW)), roughness:0.4, color:0xd4d4d4 });
+    var wA=new THREE.MeshStandardMaterial({ map:wallTex(1), roughness:0.45, color:0x5c5a5a }), wB=new THREE.MeshStandardMaterial({ map:wallTex(Math.round(cellD/cellW)), roughness:0.45, color:0x5c5a5a });
     var wallGeo=new THREE.BoxGeometry(cellW, CEIL+0.4, cellD), walls=new THREE.InstancedMesh(wallGeo, [wB,wB,wA,wA,wA,wA], map.w*map.h), n=0;
     for(var y=1;y<map.h;y++) for(var x=0;x<map.w;x++){ var ch=map.rows[y][x], cx=X((x+0.5)*map.cell), cz=Z((y+0.5)*map.cell);
       if(ch==='#'){ mtx.makeTranslation(cx, (CEIL+0.4)/2, cz); walls.setMatrixAt(n++, mtx); } }
@@ -441,13 +469,27 @@ import { createBloom } from './bloom.js';
     for(var pi=0;pi<pN;pi++){ mtx.makeTranslation(cellW+pi*2.56, 0.55, edgeZ+0.04); posts.setMatrixAt(pi, mtx); } posts.instanceMatrix.needsUpdate=true; scene.add(posts);
     [0.55,1.08].forEach(function(h){ var b=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,mapW-2*cellW,8), barMat); b.rotation.z=Math.PI/2; b.position.set(mapW/2, h, edgeZ+0.04); scene.add(b); });
     /* 천장: 밝은 패널 + 형광등 줄 */
-    var cmat=new THREE.MeshStandardMaterial({ map:concreteWall.clone(), roughness:0.9, color:0xa9adb3, side:THREE.DoubleSide }); cmat.map.needsUpdate=true; cmat.map.repeat.set(mapW/6, mapD/6);
+    var cmat=new THREE.MeshStandardMaterial({ map:concreteWall.clone(), roughness:0.9, color:0x35373b, side:THREE.DoubleSide }); cmat.map.needsUpdate=true; cmat.map.repeat.set(mapW/6, mapD/6);
     var ceil=new THREE.Mesh(new THREE.PlaneGeometry(mapW+16, mapD-farZ), cmat); ceil.rotation.x=Math.PI/2; ceil.position.set(mapW/2, CEIL, (mapD+farZ)/2); scene.add(ceil);
     var tubeMat=new THREE.MeshBasicMaterial({ color:0xf6f9ff }), housingMat=new THREE.MeshStandardMaterial({ color:0xd0d4da, roughness:0.5, metalness:0.4 });
     var rowsZ=[edgeZ-2.2, edgeZ+3.2, mapD*0.5, mapD-3.4], nT=0, tubes=[]; rowsZ.forEach(function(z){ for(var x=1.6; x<mapW+ (z<edgeZ?7:-1); x+=2.9){ tubes.push([x,z]); } });
-    var tubeI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.9,0.05,0.14), tubeMat, tubes.length), houseI=new THREE.InstancedMesh(new THREE.BoxGeometry(2.0,0.1,0.3), housingMat, tubes.length);
-    tubes.forEach(function(t,i){ mtx.makeTranslation(t[0], CEIL-0.12, t[1]); tubeI.setMatrixAt(i, mtx); mtx.makeTranslation(t[0], CEIL-0.06, t[1]); houseI.setMatrixAt(i, mtx); }); tubeI.instanceMatrix.needsUpdate=houseI.instanceMatrix.needsUpdate=true; scene.add(houseI); scene.add(tubeI);
-    function fluo(x,z,inten){ var lt=new THREE.PointLight(0xeef3ff, SET.lights?inten:0, 18, 1.1); lt.position.set(x, CEIL-0.4, z); if(lamps.length<LAMP_MAX) scene.add(lt);
+    /* 형광등 절반 넘게 꺼짐 — 켜진 관만 빛나는 재질, 꺼진 관은 회색 */
+    var tubeOn=tubes.map(function(t,i){ return ((i*7919)%100)/100<MD.fluoOn; }), onN=tubeOn.filter(Boolean).length;
+    var tubeI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.9,0.05,0.14), tubeMat, Math.max(1,onN)), deadI=new THREE.InstancedMesh(new THREE.BoxGeometry(1.9,0.05,0.14), new THREE.MeshStandardMaterial({ color:0x3a3c40, roughness:0.6 }), Math.max(1,tubes.length-onN)), houseI=new THREE.InstancedMesh(new THREE.BoxGeometry(2.0,0.1,0.3), housingMat, tubes.length), ti=0, di=0;
+    tubes.forEach(function(t,i){ mtx.makeTranslation(t[0], CEIL-0.12, t[1]); if(tubeOn[i]) tubeI.setMatrixAt(ti++, mtx); else deadI.setMatrixAt(di++, mtx); mtx.makeTranslation(t[0], CEIL-0.06, t[1]); houseI.setMatrixAt(i, mtx); }); tubeI.count=ti; deadI.count=di; tubeI.instanceMatrix.needsUpdate=deadI.instanceMatrix.needsUpdate=houseI.instanceMatrix.needsUpdate=true; scene.add(houseI); scene.add(tubeI); scene.add(deadI);
+    /* 붉은 비상등: 승강장 양쪽 벽·보스 원 뒤 — 등 뒤에서 윤곽을 긋고 젖은 바닥에 번진다. 폰은 등 개수 한도(LAMP_MAX)가 있어 형광등보다 먼저 단다 */
+    var cone=new THREE.ConeGeometry(1.5, 3.6, 18, 1, true); cone.translate(0,-1.8,0);
+    var beamFade=noiseTex(function(g,sz){ var r=g.createLinearGradient(0,0,0,sz); r.addColorStop(0,'#fff'); r.addColorStop(0.18,'#666'); r.addColorStop(0.6,'#111'); r.addColorStop(1,'#000'); g.fillStyle=r; g.fillRect(0,0,sz,sz); }, 64, false);   /* 위(등)에서 아래로 사라지는 빛기둥 */
+    function redLamp(x,y,z,inten,beam){ var lt=new THREE.PointLight(MD.red, SET.lights?inten:0, MD.redDist, 1.4); lt.position.set(x,y,z); if(lamps.length<LAMP_MAX) scene.add(lt);
+      var box=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.16,0.12), new THREE.MeshBasicMaterial({ color:0xff3a2a })); box.position.set(x,y+0.12,z); scene.add(box);
+      var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:MD.red, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.7 })); fl.scale.set(1.6,1.6,1); fl.position.set(x,y+0.1,z); scene.add(fl);
+      if(beam){ var cm=new THREE.Mesh(cone, new THREE.MeshBasicMaterial({ color:MD.red, alphaMap:beamFade, transparent:true, opacity:0.07, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, fog:true })); cm.position.set(x,y,z); scene.add(cm); }
+      lamps.push({ l:lt, base:inten, fx:fl, red:true }); }
+    var bmk=world.marks('B')[0], bxx=X(bmk.x), bzz=Z(bmk.y);
+    redLamp(bxx+5.5, 3.6, bzz-3.5, MD.redI*1.3, true); redLamp(bxx+5.5, 3.6, bzz+3.5, MD.redI*1.3, true);   /* 보스 뒤 두 개 — 보스 실루엣 */
+    redLamp(bxx-4, CEIL-0.5, edgeZ+0.6, MD.redI, true);
+    for(var rx2=6; rx2<mapW-2; rx2+=11) redLamp(rx2, 3.1, mapD-cellD-0.25, MD.redI*0.7, false);
+    function fluo(x,z,inten){ if(((Math.round(x*13+z*7))%100)/100>=MD.fluoOn) return; inten=MD.fluoI; var lt=new THREE.PointLight(0xeef3ff, SET.lights?inten:0, 18, 1.1); lt.position.set(x, CEIL-0.4, z); if(lamps.length<LAMP_MAX) scene.add(lt);
       var fl=new THREE.Sprite(new THREE.SpriteMaterial({ map:glowTex, color:0xdfe8ff, transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.35 })); fl.scale.set(2.8,0.9,1); fl.position.set(x, CEIL-0.2, z); scene.add(fl); lamps.push({ l:lt, base:inten, fx:fl, x:x, z:z }); }
     for(var ty=0;ty<map.h;ty++) for(var tx=0;tx<map.w;tx++) if(map.rows[ty][tx]==='t') fluo(X((tx+0.5)*map.cell), Z((ty+0.5)*map.cell), 9);
     /* 선로 쪽 배관·케이블 트레이 */
@@ -1740,9 +1782,12 @@ import { createBloom } from './bloom.js';
     /* 목표: 플레이어(전투 중엔 플레이어·보스 중간 쪽) 를 바라보며 뒤·위에서 */
     var pp=v3(P.x,P.y,1.2); var look=pp.clone(); var locked=lockOn&&!!battle&&!cine;
     var gap=0, bp=null;
+    /* 락온 전투 구도로 옮겨 가는 정도(0→1, 시정수 CAM.fight.blend 초) — 들어갈 때·풀 때 한 번에 튀지 않게 */
+    fightK+=((locked?1:0)-fightK)*(1-Math.exp(-dt/CAM.fight.blend));
     if(battle){ bp=v3(Bs.x,Bs.y,1.4); gap=Math.hypot(bp.x-pp.x, bp.z-pp.z);
       /* 락온이면 멀수록 둘의 «가운데» 쪽으로 — 보스가 화면 밖으로 나가지 않는다 */
-      look.lerp(bp, locked?Math.max(0.3,Math.min(0.5,0.28+gap*0.03)):0.3); }
+      var tb=locked?Math.max(0.3,Math.min(0.5,0.28+gap*0.03)):0.3;
+      look.lerp(bp, tb+(CAM.fight.toBoss-tb)*fightK); }
     /* 주시점을 진행 방향으로 살짝 밀어 «가는 곳» 이 보이게 (마영전) */
     if(P.moving && P.rollT<=0 && !battle){ var la=yawOf(P.aim==null?0:P.aim);
       look.x+=Math.sin(la)*CAM.lookAhead; look.z+=Math.cos(la)*CAM.lookAhead; }
@@ -1751,7 +1796,10 @@ import { createBloom } from './bloom.js';
     if(dragT<=0 && !cineCam){
       var want=null, tau, lim=CAM.maxYawLock, dead=CAM.yawDead;
       if(locked){                      /* 몬헌 포커스: 플레이어 뒤에서 보스를 문다 — 단 데드존 밖으로 나갈 때만 */
-        if(gap>CAM.lockNear){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; dead=CAM.lockDead; } }
+        /* 전투 구도(fightK)에선 어깨 쪽 비껴 보기가 «보스 쪽 선» 을 기준으로 하므로, 2.6 m 안에서도(1.2 m 까지) 따라가고 데드존을 좁힌다.
+           안 그러면 다가오던 방향에 멈춘 카메라가 비껴 보기를 상쇄해 캐릭터가 보스를 가렸다 */
+        var near=CAM.lockNear+(CAM.fight.near-CAM.lockNear)*fightK;
+        if(gap>near){ want=Math.atan2(pp.x-X(Bs.x), pp.z-Z(Bs.y)); tau=CAM.tauLock; dead=CAM.lockDead+(CAM.fight.dead-CAM.lockDead)*fightK; } }
       else if(battle){}                /* 락온 없이 싸울 땐 스스로 안 돈다 */
       else if(SET.camAuto && P.moving && P.rollT<=0){ /* 탐색: 달리는 방향 뒤로 «천천히», 카메라 쪽으로 달리면 안 돈다 */
         var a=P.aim||0, w0=Math.atan2(-Math.cos(a), -Math.sin(a)), d0=w0-camYaw; while(d0>Math.PI) d0-=Math.PI*2; while(d0<-Math.PI) d0+=Math.PI*2;
@@ -1764,21 +1812,25 @@ import { createBloom } from './bloom.js';
         camYaw+=Math.max(-lim, Math.min(lim, step)); }
     }
     /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
-    var pitchWant=battle?CAM.pitchFight:CAM.pitchMove;
+    var pitchWant=battle?CAM.pitchFight+(CAM.fight.pitch-CAM.pitchFight)*fightK:CAM.pitchMove;
     if(!camFree) camPitch+=(pitchWant-camPitch)*(1-Math.exp(-dt/0.5));
     if(!bossTall && boss.model){ var bb=new THREE.Box3().setFromObject(boss.model); if(isFinite(bb.max.y)) bossTall=bb.max.y-bb.min.y; }
     var big=battle?Math.max(0,(bossTall-2.2))*CAM.sizeDist:0;        /* 큰 놈일수록 물러난다 */
     var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
+    /* 락온 전투: 바짝 붙는다. 사용자가 휠로 바꾼 거리 비율(camDist/기본)은 살린다 */
+    if(fightK>1e-3){ var fd=(CAM.fight.dist*camDist/(MOBILE?4.3:4.6)+big*0.6)*camZoom*(1+Math.max(0,Math.min(0.35,(gap-3)/14))); dist+=(fd-dist)*fightK; }
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist, dt);
     var z=Math.exp(-dt/0.18);              /* 시정수 0.18초 — 위치·주시점 공용 (0.12 는 구르기마다 화면이 튀었다) */
     var yawEff=camYaw+camSlide;
     /* 어깨 너머: 카메라와 주시점을 «같이» 옆으로 민다 → 캐릭터가 화면 삼분점으로 비껴난다.
        한쪽만 밀면 캐릭터를 비스듬히 보게 돼 어깨가 화면을 가린다. */
-    var sOff=CAM.shoulder*(battle?1:0.8);
-    var rx=Math.cos(yawEff)*sOff, rz=-Math.sin(yawEff)*sOff;
-    look.x+=rx; look.z+=rz; look.y+=CAM.lookUp;
-    var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist, look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist);
+    var sOff=CAM.shoulder*(battle?1:0.8); sOff+=(CAM.fight.shoulder-sOff)*fightK;
+    /* 전투 구도에선 주시점은 조금만, 카메라는 많이 옆으로 — 비스듬히(3/4 등) 보게 돼 캐릭터는 왼쪽, 보스는 오른쪽으로 갈라진다 */
+    var lOff=sOff+(CAM.fight.lookSide-sOff)*fightK;
+    var rx=Math.cos(yawEff), rz=-Math.sin(yawEff);
+    look.x+=rx*lOff; look.z+=rz*lOff; look.y+=CAM.lookUp+(CAM.fight.lookUp-CAM.lookUp)*fightK;
+    var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist+rx*(sOff-lOff), look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist+rz*(sOff-lOff));
     if(cineCam){ cineCam.t+=dt; var k=Math.min(1,cineCam.t/cineCam.dur); k=k*k*(3-2*k); var to=cineCam.back?target:cineCam.to; camPos.copy(cineCam.from).lerp(to,k); camLook.lerp(cineCam.look||look, k);   /* 주시점을 위치보다 1.5배 빨리 돌리던 것이 휙 도는 느낌을 키웠다 — 같이 */ }
     /* 위치와 주시점을 «같은» 시정수로 따라간다. 예전엔 0.145초 / 0.13초로 달라서
        회전 중에 카메라가 아직 안 온 자리를 겨누고 있었다 — 그게 프레이밍이 «헤엄치는»
@@ -1787,7 +1839,7 @@ import { createBloom } from './bloom.js';
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
     /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
-    var fv=CAM.fov; if(P.rollT>0) fv=CAM.fovDash; else if(camZoom<0.98) fv=CAM.fovHit;
+    var fv=CAM.fov+(CAM.fight.fov-CAM.fov)*fightK; if(P.rollT>0) fv=Math.max(fv,CAM.fovDash); else if(camZoom<0.98) fv=CAM.fovHit;
     fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
     if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
     cam.position.copy(camPos);
@@ -1947,7 +1999,7 @@ import { createBloom } from './bloom.js';
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
     /* 검수용: 전투 없이 스킬 연출만 한 번 재생한다. 락온 카메라가 보스를 보는
        전투 화면에서는 플레이어가 프레임 밖이라 연출을 눈으로 못 본다. */
     /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에
