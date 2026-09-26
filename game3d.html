@@ -534,6 +534,37 @@ html.touch .cinema-hud-v1 .abtn .sk__k,html.mobile .cinema-hud-v1 .abtn .sk__k{d
   html.mobile .cinema-hud-v1 .lockon{top:max(40px,calc(env(safe-area-inset-top) + 40px))}
 }
 
+
+/* ===== 109 — CINEMATIC BOSS STATE / PART UX v08 =====
+   보스 상태는 보스바 주변에서 읽고, 우측 status는 플레이어가 당장 반응할 정보만 남긴다.
+   combat/posture/downDur/part HP 수치는 그대로 표시만 재구성한다. */
+.cinema-hud-v1 .bosshp__bar .stack{
+  min-width:0;margin-left:2px;font-family:var(--f-serif);font-size:8px;letter-spacing:.10em;white-space:nowrap;
+  color:rgba(239,126,112,.88);text-shadow:0 1px 4px #000,0 0 8px rgba(210,55,47,.18);
+}
+.cinema-hud-v1 .stagger{width:73%;margin:4px auto 0;gap:7px;position:relative}
+.cinema-hud-v1 .stagger__lb{
+  display:block;flex:0 0 auto;min-width:48px;text-align:right;font-family:var(--f-serif);font-size:7px;line-height:1;
+  letter-spacing:.18em;color:rgba(220,207,185,.52);transition:color .15s ease,text-shadow .15s ease;
+}
+.cinema-hud-v1 .stagger.is-down .stagger__lb{color:#F1D292;text-shadow:0 0 8px rgba(232,191,105,.28)}
+.cinema-hud-v1 .stagger.is-down .bar__fill{background:linear-gradient(90deg,#8C672F,#E9C36E);box-shadow:0 0 8px rgba(232,193,112,.26)}
+.cinema-hud-v1 .target-cycle{position:absolute;overflow:visible}
+.cinema-hud-v1 .target-cycle::after{
+  content:'';position:absolute;left:12px;right:12px;bottom:-2px;height:1px;pointer-events:none;opacity:.72;
+  background:linear-gradient(90deg,#D7BD80 0 var(--part-dur,100%),rgba(220,210,193,.13) var(--part-dur,100%) 100%);
+  box-shadow:0 1px 5px rgba(215,189,128,.16);
+}
+.cinema-hud-v1 .target-cycle.is-low::after{background:linear-gradient(90deg,#D95B4E 0 var(--part-dur,100%),rgba(220,210,193,.13) var(--part-dur,100%) 100%);box-shadow:0 0 6px rgba(217,91,78,.22)}
+.cinema-hud-v1 .target-cycle.is-broken{opacity:.42!important;text-decoration:line-through;text-decoration-thickness:1px}
+.cinema-hud-v1 .target-cycle.is-broken::after{opacity:.20;background:rgba(220,210,193,.28)}
+.cinema-hud-v1 .status{max-width:138px}
+@media(max-width:900px),(max-height:520px){
+  html.mobile .cinema-hud-v1 .stagger__lb{min-width:38px;font-size:6px;letter-spacing:.12em}
+  html.mobile .cinema-hud-v1 .bosshp__bar .stack{font-size:6.5px;letter-spacing:.06em}
+  html.mobile .cinema-hud-v1 .target-cycle::after{left:8px;right:8px;bottom:-1px}
+}
+
 </style>
 </head>
 <body class="cinema-hud-v1" data-landscape data-nonav data-responsive-mobile>
@@ -549,7 +580,7 @@ html.touch .cinema-hud-v1 .abtn .sk__k,html.mobile .cinema-hud-v1 .abtn .sk__k{d
     <div class="bosshp is-off" id="bosshp">
       <div class="bosshp__nm" id="b-name">—</div>
       <div class="bosshp__bar"><svg class="ico ico--sm" style="color:#C9534E"><use href="#i-skull"/></svg><div class="bar" data-fill="100" id="b-hp"></div><span class="stack" id="b-stack"></span></div>
-      <div class="stagger"><span class="stagger__lb">격추</span><div class="bar" data-fill="0" id="b-stag"></div></div>
+      <div class="stagger"><span class="stagger__lb" id="b-stag-lb">STAGGER</span><div class="bar" data-fill="0" id="b-stag"></div></div>
       <div class="ph" id="b-ph"></div>
     </div>
     <div class="bttimer is-off" id="bttimer"><span class="bttimer__t"><svg class="ico ico--sm"><use href="#i-clock"/></svg><span id="b-timer">00 : 00</span></span><button class="iconbtn" id="btn-pause" aria-label="일시정지"><svg class="ico ico--lg"><use href="#i-pause"/></svg></button></div>
