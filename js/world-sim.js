@@ -99,9 +99,23 @@
     W.bossThink = function(b, p, dt, ai, busy){
       var d = dist(b.x, b.y, p.x, p.y); b.dist = d;
       if (busy || !ai.speed){ b.moving = false; return; }
-      if (d > ai.keep){ var a = angle(b.x, b.y, p.x, p.y); moveCircle(map, b, Math.cos(a)*ai.speed*dt, Math.sin(a)*ai.speed*dt*DEPTH); b.moving = true; }
-      else b.moving = false;
-      b.faceX = p.x < b.x ? -1 : 1;
+      var a = angle(b.x, b.y, p.x, p.y), dead=ai.deadzone||18, moved=false;
+      /* 기본은 접근. 선택적으로 너무 가까우면 한 걸음 빼고, 적정 거리에서는 옆걸음.
+         값이 없는 기존 보스는 예전과 완전히 같은 동작이다. */
+      if (d > ai.keep + dead){
+        var x0=b.x,y0=b.y; moveCircle(map,b,Math.cos(a)*ai.speed*dt,Math.sin(a)*ai.speed*dt*DEPTH);
+        moved=dist(x0,y0,b.x,b.y)>0.01;
+      } else if (ai.retreat && d < ai.keep-ai.retreat){
+        var x1=b.x,y1=b.y; moveCircle(map,b,-Math.cos(a)*ai.speed*.72*dt,-Math.sin(a)*ai.speed*.72*dt*DEPTH);
+        moved=dist(x1,y1,b.x,b.y)>0.01;
+      } else if (ai.orbit){
+        b.orbitT=(b.orbitT||0)-dt;if(!b.orbitDir)b.orbitDir=1;
+        if(b.orbitT<=0){b.orbitT=ai.orbitFlip||2.4;b.orbitDir*=-1;}
+        var tx=-Math.sin(a)*b.orbitDir,tz=Math.cos(a)*b.orbitDir,x2=b.x,y2=b.y;
+        moveCircle(map,b,tx*ai.orbit*dt,tz*ai.orbit*dt*DEPTH);moved=dist(x2,y2,b.x,b.y)>0.01;
+        if(!moved){b.orbitDir*=-1;b.orbitT=.7;}
+      }
+      b.moving=moved;b.faceX=p.x<b.x?-1:1;
     };
     W.dist = dist; W.angle = angle; W.angDiff = angDiff; W.inZone = inZone; W.makeZone = makeZone; W.isSolid = function(x,y){ return isSolid(map,x,y); }; W.setSolid = function(cx,cy,v){ setSolid(map,cx,cy,v); };
     W.lineOfSight=function(ax,ay,bx,by){var n=Math.max(1,Math.ceil(dist(ax,ay,bx,by)/(map.cell/4)));for(var i=1;i<=n;i++){if(isSolid(map,ax+(bx-ax)*i/n,ay+(by-ay)*i/n))return false;}return true;};

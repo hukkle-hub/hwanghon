@@ -5,7 +5,13 @@
     /* 88: 원투 훅은 반 걸음, 돌진은 멀리서 들이받고, 도약 내려찍기는 뛰어들어 착지 */
     '원투 훅':{distance:70,stop:100,at:.55},'앞차기':{distance:60,stop:95,at:.6},'훅 연타 내려찍기':{distance:80,stop:100,at:.55},
     '돌진':{distance:460,stop:70,at:.42},'도약 내려찍기':{distance:360,stop:40,at:.5}};
-  levels.d02.attackMotion={'돌진 베기':{distance:260,stop:110,at:.48},'대지 강타':{distance:90,stop:140,at:.65},'피의 광란':{distance:100,stop:110,at:.55}};
+  levels.d02.ai=[{speed:105,keep:200,start:360,pick:'auto',orbit:34,retreat:46,deadzone:24,orbitFlip:2.1},
+                  {speed:150,keep:180,start:380,pick:'auto',orbit:54,retreat:42,deadzone:20,orbitFlip:1.45}];
+  levels.d02.attackMotion={'돌진 베기':{distance:260,stop:110,at:.48,curve:'rush'},
+    '대지 강타':{distance:90,stop:140,at:.65,curve:'heavy'},
+    '꼬리 휘두르기':{distance:35,stop:145,at:.72,lateral:45,curve:'snap'},
+    '광폭 포효':{distance:20,stop:175,at:.75,curve:'heavy'},
+    '피의 광란':{distance:110,stop:105,at:.52,lateral:34,curve:'rush'}};
   arenas.marsh.stages[0].patterns.forEach(function(p){if(p.name==='꼬리 휘두르기')p.disabledBy=['tail'];if(p.name==='돌진 베기')p.disabledBy=['legf'];});
   levels.d01.expedition={nodes:[{id:'training_rest',kind:'checkpoint',cx:9,cy:7,name:'훈련실 앞 보급대',text:'재도전 지점을 기록했다. 회복하고 허수아비에게 가자.'}]};
   levels.d02.expedition={nodes:[
@@ -26,8 +32,8 @@
   [[6,4],[6,18],[14,3],[27,4],[14,11],[28,12],[15,19],[28,19],[36,4],[44,18]].forEach(function(p){grid[p[1]][p[0]]='t';});
   var source=JSON.parse(JSON.stringify(levels.d01));
   Object.assign(source,{id:'d03',code:'던전 03',name:'2경구 정화장',place:'지하시설 · 오염수 처리 구역',arena:'sewage',env:'bunker',bg:'story-city',diff:'의뢰 A · 지하시설',rows:grid.map(function(r){return r.join('');}),bossRoom:{minCx:34},bossR:72,camDist:8.6,mobs:{},mob:null,
-    ai:[{speed:65,keep:155,start:330,pick:'auto'},{speed:95,keep:145,start:360,pick:'auto'}],
-    attackMotion:{'압력 망치':{distance:105,stop:115,at:.6}},
+    ai:[{speed:65,keep:155,start:330,pick:'auto',retreat:26,deadzone:18},{speed:95,keep:145,start:360,pick:'auto',orbit:18,retreat:24,deadzone:16,orbitFlip:2.3}],
+    attackMotion:{'압력 망치':{distance:105,stop:115,at:.6,curve:'heavy'},'고압 분사':{distance:55,stop:180,at:.68,curve:'snap'},'배출관 쓸기':{distance:30,stop:145,at:.72,lateral:38,curve:'heavy'}},
     zones:{'압력 망치':{kind:'circle',r:170,fwd:110},'배출관 쓸기':{kind:'circle',r:215,fwd:0},'고압 분사':{kind:'line',len:370,w:100},'과압 폭발':{kind:'circle',r:260,fwd:0}},
     beats:{questTitle:'지하 오염수 처리',start:'세 처리실의 밸브를 잠가라 · 북쪽, 중앙, 남쪽 처리실',gateLocked:'오염원 세 곳을 차단해야 격벽을 열 수 있다.',gate:'격벽이 닫혔다. 남은 압력이 수문기에 몰린다.',sign:'작업 메모 — “북·중앙·남측 밸브를 모두 잠근 뒤 주 펌프를 정지할 것.”',
       dialog:[['마태오','오염원은 세 곳이다. 밸브를 잠가라. 막무가내로 주 펌프에 가면 압력에 휩쓸린다.'],['아인','분출이 멎을 때 움직이면 되겠네요.'],['마태오','안쪽 수문기는 아직 움직인다. 배관을 부수고 핵을 노려라.']],
@@ -71,8 +77,8 @@
   var src4=JSON.parse(JSON.stringify(levels.d01));
   Object.assign(src4,{id:'d04',code:'던전 04',name:'3경구 변전소',place:'지하시설 · 배전 통제 구역',arena:'relay',env:'bunker',bg:'story-city',
     diff:'의뢰 S · 배전 통제', rows:g4.map(function(r){return r.join('');}), bossRoom:{minCx:41},
-    ai:[{speed:75,keep:150,start:340,pick:'auto'},{speed:110,keep:135,start:370,pick:'auto'}],
-    attackMotion:{'접점 내려찍기':{distance:110,stop:118,at:.6}},
+    ai:[{speed:75,keep:150,start:340,pick:'auto',orbit:18,retreat:28,deadzone:18,orbitFlip:2.8},{speed:110,keep:135,start:370,pick:'auto',orbit:30,retreat:24,deadzone:15,orbitFlip:1.8}],
+    attackMotion:{'접점 내려찍기':{distance:110,stop:118,at:.6,curve:'heavy'},'모선 방전':{distance:45,stop:185,at:.7,curve:'snap'},'접점 쓸기':{distance:35,stop:140,at:.7,lateral:42,curve:'glide'}},
     zones:{'접점 내려찍기':{kind:'circle',r:175,fwd:115},'모선 방전':{kind:'line',len:400,w:110},'접점 쓸기':{kind:'circle',r:225,fwd:0},'과부하 방전':{kind:'circle',r:280,fwd:0}},
     beats:{questTitle:'배전 통제실 정지',
       start:'축전기를 순서대로 충전하고 주 차단기를 올려라 · 북 → 남 → 차단기실',
@@ -195,8 +201,8 @@
   var src5=JSON.parse(JSON.stringify(levels.d01));
   Object.assign(src5,{id:'d05',code:'던전 05',name:'버려진 식물원',place:'외곽지대 · 폐 온실 단지',arena:'grove',env:'swamp',bg:'boss-anatomy',
     diff:'의뢰 B · 외곽지대', rows:g5.map(function(r){return r.join('');}), bossRoom:{minCx:40}, camDist:8.4,
-    ai:[{speed:70,keep:160,start:340,pick:'auto'},{speed:100,keep:140,start:360,pick:'auto'}],
-    attackMotion:{'덩굴 후려치기':{distance:120,stop:112,at:.55},'아가리 내려찍기':{distance:95,stop:120,at:.62}},
+    ai:[{speed:70,keep:160,start:340,pick:'auto',orbit:26,retreat:34,deadzone:20,orbitFlip:3.0},{speed:100,keep:140,start:360,pick:'auto',orbit:42,retreat:30,deadzone:17,orbitFlip:2.0}],
+    attackMotion:{'덩굴 후려치기':{distance:120,stop:112,at:.55,lateral:32,curve:'snap'},'아가리 내려찍기':{distance:95,stop:120,at:.62,curve:'heavy'},'뿌리 쓸기':{distance:28,stop:145,at:.72,lateral:48,curve:'glide'}},
     zones:{'덩굴 후려치기':{kind:'line',len:340,w:96},'아가리 내려찍기':{kind:'circle',r:165,fwd:110},'뿌리 쓸기':{kind:'circle',r:230,fwd:0},'포자 분출':{kind:'circle',r:270,fwd:0}},
     beats:{questTitle:'변이체 토벌: 식인초',
       start:'퍼져 있는 군락 다섯 곳을 태워라 · 순서는 없다',
@@ -289,8 +295,10 @@
   var src6=JSON.parse(JSON.stringify(levels.d01));
   Object.assign(src6,{id:'d06',code:'던전 06',name:'끊어진 수송로',place:'외곽지대 · 붕괴한 고가 하부',arena:'road',env:'bunker',bg:'lobby-city',
     diff:'의뢰 A · 수송로 확보', rows:g6.map(function(r){return r.join('');}), bossRoom:{minCx:45}, camDist:8.8,
-    ai:[{speed:80,keep:170,start:360,pick:'auto'},{speed:115,keep:150,start:380,pick:'auto'}],
-    attackMotion:{'파쇄 물기':{distance:130,stop:118,at:.58},'차체 돌진':{distance:280,stop:120,at:.5}},
+    ai:[{speed:80,keep:170,start:360,pick:'auto',orbit:14,retreat:22,deadzone:18,orbitFlip:3.0},{speed:115,keep:150,start:380,pick:'auto',orbit:22,retreat:18,deadzone:15,orbitFlip:2.0}],
+    attackMotion:{'파쇄 물기':{distance:130,stop:118,at:.58,curve:'snap'},'차체 돌진':{distance:280,stop:120,at:.5,curve:'rush'},'평형추 강타':{distance:60,stop:135,at:.7,curve:'heavy'}},
+    /* 평형추 강타는 옆걸음 없이 곧장 내려찍는다 — 파쇄 기갑은 «직진 압박, 배회 최소» (docs/design/90 §3).
+       인수인계 초안의 lateral:28 은 그 설계와 어긋났고, 2인 봇이 2단계에서 전멸했다(과부하 배출 4회). */
     zones:{'파쇄 물기':{kind:'circle',r:180,fwd:125},'차체 돌진':{kind:'line',len:420,w:130},'평형추 강타':{kind:'circle',r:240,fwd:80},'과부하 배출':{kind:'circle',r:290,fwd:0}},
     beats:{questTitle:'파괴된 수송로 확보',
       start:'기중기로 잔해 세 무더기를 치워라 · 조작대는 북측 갓길 한 곳뿐이다',
@@ -391,8 +399,8 @@
   var src7=JSON.parse(JSON.stringify(levels.d01));
   Object.assign(src7,{id:'d07',code:'던전 07',name:'봉쇄된 폐병원',place:'도심지 · 제2시립병원',arena:'ward',env:'bunker',bg:'story-city',
     diff:'의뢰 A · 의료품 회수', rows:g7.map(function(r){return r.join('');}), bossRoom:{minCx:41}, camDist:8.0,
-    ai:[{speed:78,keep:165,start:350,pick:'auto'},{speed:112,keep:145,start:370,pick:'auto'}],
-    attackMotion:{'주사 연타':{distance:120,stop:110,at:.55},'견인 후려치기':{distance:210,stop:118,at:.52}},
+    ai:[{speed:78,keep:165,start:350,pick:'auto',orbit:22,retreat:32,deadzone:18,orbitFlip:2.6},{speed:112,keep:145,start:370,pick:'auto',orbit:36,retreat:28,deadzone:15,orbitFlip:1.8}],
+    attackMotion:{'주사 연타':{distance:120,stop:110,at:.55,lateral:22,curve:'snap'},'견인 후려치기':{distance:210,stop:118,at:.52,curve:'rush'},'압박':{distance:70,stop:128,at:.69,curve:'heavy'}},
     zones:{'주사 연타':{kind:'circle',r:175,fwd:120},'견인 후려치기':{kind:'line',len:380,w:140},'압박':{kind:'circle',r:235,fwd:75},'약물 분무':{kind:'circle',r:285,fwd:0}},
     beats:{questTitle:'자원 회수: 의료품',
       start:'의료품 상자 넷을 찾아 중앙 홀 반출구로 모아라',

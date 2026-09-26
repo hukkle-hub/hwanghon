@@ -15,12 +15,24 @@
       if(!result)result=candidates[index%n];
       last=result.name;return result;  /* 연계는 한 패턴 안에서 처리되므로 여기서는 루트 패턴만 고른다 */
     }
+    function curve(name,t){
+      t=Math.max(0,Math.min(1,t));
+      if(name==='rush')return 1-Math.pow(1-t,3);       // 초반부터 확 파고든다
+      if(name==='heavy')return t*t*t;                  // 끝에서 무게를 싣는다
+      if(name==='snap')return t<.68?.16*Math.pow(t/.68,2):.16+.84*Math.pow((t-.68)/.32,1.45);
+      if(name==='glide')return t;
+      return t*t*(3-2*t);
+    }
     function start(pattern,zoneSpec){
       var motion=(level.attackMotion||{})[pattern.zoneKey||pattern.name]||{},angle=world.angle(boss.x,boss.y,player.x,player.y);
       var distance=Math.min(motion.distance||0,Math.max(0,world.dist(boss.x,boss.y,player.x,player.y)-(motion.stop||100)));
       var dest={x:boss.x,y:boss.y,r:boss.r};
       world.moveEntity(dest,Math.cos(angle)*distance,Math.sin(angle)*distance*.55);
-      plan={from:{x:boss.x,y:boss.y},to:dest,angle:angle,at:motion.at==null?.65:motion.at,applied:0};
+      if(motion.lateral){
+        var side=boss.orbitDir||1,lat=motion.lateral*side;
+        world.moveEntity(dest,-Math.sin(angle)*lat,Math.cos(angle)*lat*.55);
+      }
+      plan={from:{x:boss.x,y:boss.y},to:dest,angle:angle,at:motion.at==null?.65:motion.at,curve:motion.curve||'smooth',applied:0};
       // A line attack warns along its entire approach; circles warn at the landing point.
       var origin=zoneSpec.kind==='line'?plan.from:dest;
       var zone=world.makeZone({zone:zoneSpec},origin.x,origin.y,origin.x+Math.cos(angle),origin.y+Math.sin(angle)*.55);
@@ -28,7 +40,7 @@
     }
     function advance(progress){
       if(!plan)return;
-      var t=Math.max(0,Math.min(1,(progress-plan.at)/(1-plan.at))),e=t*t*(3-2*t),delta=e-plan.applied;
+      var t=Math.max(0,Math.min(1,(progress-plan.at)/(1-plan.at))),e=curve(plan.curve,t),delta=e-plan.applied;
       world.moveEntity(boss,(plan.to.x-plan.from.x)*delta,(plan.to.y-plan.from.y)*delta);plan.applied=e;
       boss.dist=world.dist(boss.x,boss.y,player.x,player.y);
     }

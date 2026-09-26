@@ -4,7 +4,7 @@ import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {Animated} from './party-avatar.js';
 import {nearestAinBladePoint} from './ain-scythe-mount.js';
 import {createPumpBoss} from './pump-boss.js';
-import {prepareTrainingMotion,sampleBossAttack,createBossReadability} from './boss-motion.js';
+import {prepareTrainingMotion,sampleBossAttack,createBossReadability,createBossBehavior} from './boss-motion.js';
 import {createTrainingParts} from './training-presentation.js';
 import {createRelayBoss} from './relay-boss.js';
 import {createRootBoss} from './root-boss.js';
@@ -97,12 +97,12 @@ function renderRoom(){const hasRoom=!!room;$('choose-room').hidden=hasRoom;$('ro
 }
 function announce(text){$('announcement').textContent=text;noticeUntil=performance.now()+2600;}
 function processEvents(events){for(const e of events){if(e.id<=latestEvent)continue;latestEvent=e.id;
- if(e.type==='break'){announce(e.name+' 파괴 — 보스가 흔들린다');window.TW_SFX?.play('brk');}
+ if(e.type==='break'){announce(e.name+' 파괴 — 보스가 흔들린다');view?.boss?.behavior?.react('break',1.1);window.TW_SFX?.play('brk');}
  if(e.type==='telegraph')window.TW_SFX?.play('tele');
  if(e.type==='down')window.TW_SFX?.play('down');
  if(e.type==='dodge'&&e.player===profile?.id)window.TW_SFX?.play('roll');
  if(e.type==='skill')window.TW_SFX?.play('swing');
- if(e.type==='counter'){announce((e.perfect?'PERFECT':'COUNTER')+' · '+(room.members.find(p=>p.id===e.player)?.name||'아인'));window.TW_SFX?.play('counter',e.perfect);}
+ if(e.type==='counter'){announce((e.perfect?'PERFECT':'COUNTER')+' · '+(room.members.find(p=>p.id===e.player)?.name||'아인'));view?.boss?.behavior?.react(e.perfect?'clash':'repel',1);window.TW_SFX?.play('counter',e.perfect);}
  /* 카운터 뒤 일시 탭 (docs/design/78) */
  if(e.type==='opening'&&e.player===profile?.id){const by=room?.raid?.players.find(q=>q.id===e.from);announce(e.from!==profile.id&&by?by.name+'의 카운터 — 부위 파괴 탭!':e.kind==='grab'?'카운터 성공 — 붙잡기 탭!':'카운터 성공 — 부위 파괴 탭!');}
  if(e.type==='grab')announce('붙잡았다 — 보스가 묶였다 · 몰아쳐라');
@@ -229,7 +229,7 @@ class RaidView{
   const gateChar=L.rows.map((row,y)=>({x:row.indexOf('G'),y})).find(p=>p.x>=0);this.gate=new T.Mesh(new T.BoxGeometry(.3,2.8,cell/(DEPTH*SCALE)),new T.MeshStandardMaterial({color:0xa7744a,metalness:.5,roughness:.45}));this.gate.position.copy(pos((gateChar.x+.5)*cell,(gateChar.y+.5)*cell,1.4));this.scene.add(this.gate);
   this.adapter={nodes:(L.expedition.nodes||[]).map(n=>({...n,x:(n.cx+.5)*cell,y:(n.cy+.5)*cell})),hazards:(L.expedition.hazards||[]).map(n=>({...n,x:(n.cx+.5)*cell,y:(n.cy+.5)*cell})),completed:id=>!!room?.raid?.expedition.done[id],hazardPhase:h=>room?.raid?.hazards.find(q=>q.id===h.id)?.phase||'off'};this.props=buildDungeonProps(this.scene,this.adapter,SCALE,DEPTH);
  }
- makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='ward'?createWardBoss():this.A.procedural==='root'?createRootBoss():this.A.procedural==='hauler'?createHaulerBoss():this.A.procedural==='relay'?createRelayBoss():this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?prepareMarshMotion(assets.marsh):prepareTrainingMotion(assets.dummy);this.boss=new Animated(asset,this.scene,false,!!this.A.procedural);this.boss.model.scale.setScalar((this.A.bossScale||1.22)*(this.A.scale||1));   /* 보스 크기 — js/game3d.js BOSS_SCALE 과 같게 */this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});if(this.A.pieces==='dummy'){this.boss.training=createTrainingParts(this.boss.model,{owned:this.boss.owned});this.boss.training.sync(raid.boss.parts);this.boss.readability=createBossReadability(this.boss.model);}this.phase=raid.phase;}
+ makeBoss(raid){if(this.boss)this.boss.dispose(this.scene);const asset=this.A.procedural==='ward'?createWardBoss():this.A.procedural==='root'?createRootBoss():this.A.procedural==='hauler'?createHaulerBoss():this.A.procedural==='relay'?createRelayBoss():this.A.procedural==='pump'?createPumpBoss():this.A.id==='marsh'?prepareMarshMotion(assets.marsh):prepareTrainingMotion(assets.dummy);this.boss=new Animated(asset,this.scene,false,!!this.A.procedural);this.boss.model.scale.setScalar((this.A.bossScale||1.22)*(this.A.scale||1));   /* 보스 크기 — js/game3d.js BOSS_SCALE 과 같게 */this.boss.root.position.copy(pos(raid.boss.x,raid.boss.y));this.boss.mats=[];this.boss.model.traverse(o=>{if(o.isMesh){o.material=o.material.clone();this.boss.owned.add(o.material);if(o.material.emissive){o.userData.em=o.material.emissive.clone();this.boss.mats.push(o);}}});if(this.A.pieces==='dummy'){this.boss.training=createTrainingParts(this.boss.model,{owned:this.boss.owned});this.boss.training.sync(raid.boss.parts);this.boss.readability=createBossReadability(this.boss.model);}this.boss.behavior=createBossBehavior(this.boss.model,this.A.id);this.phase=raid.phase;}
  contactEffect(event){
   if(event.kind==='bleed'||!this.boss)return;
   const part=this.A.parts3d[event.part],bb=this.boss;
@@ -260,7 +260,7 @@ class RaidView{
   if(['telegraph','recover'].includes(b.state)&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1),key=b.attackId;bb.play(spec.clip,key);bb.current.paused=true;bb.current.time=sampleBossAttack(spec,bb.current.getClip().duration,{...b,windup:windupAt(b.pattern,1-Math.max(0,b.tele-age)/b.teleDur,b.teleDur),recovery:Math.max(0,b.recovery-age)});}
   else if(b.state==='link'&&b.pattern){const spec=bossAttackSpec(this.A,b.pattern.icon,b.pattern.beat||1);bb.play(spec.clip,b.attackId);bb.current.paused=false;}  /* 연계 사이: 여파 동작을 그대로 흘린다 */
   else {const clip=raid.state==='clear'?'death':b.state==='downed'?'down':b.state==='stagger'?'stagger':b.moving?'walk':'idle';bb.play(clip);bb.current.paused=raid.state==='clear';if(bb.current.paused)bb.current.time=Math.max(0,bb.current.getClip().duration-1e-5);}
-  bb.readability?.restore();bb.mixer.update(dt);bb.readability?.apply(b);this.tickContactEffects(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
+  bb.behavior?.restore();bb.readability?.restore();bb.mixer.update(dt);bb.readability?.apply(b);bb.behavior?.apply({...b,rage:raid.phase>0,moving:b.moving},performance.now()/1000,dt);this.tickContactEffects(dt);this.flash=Math.max(0,this.flash-dt);bb.mats.forEach(o=>{o.material.emissive.copy(o.userData.em);if(this.flash>0)o.material.emissive.add(new T.Color(.25,.08,.02));});
   bb.training?.sync(b.parts);
   // Cache the latest rendered bone target for the next avatar frame, just as
   // solo reads the boss pose before its next animation tick. No server hitbox change.
