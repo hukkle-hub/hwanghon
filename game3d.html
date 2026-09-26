@@ -223,15 +223,114 @@ html.in-fight .quest{display:none}
 .pd-vig{position:fixed;inset:0;pointer-events:none;z-index:40;opacity:0;background:radial-gradient(ellipse at center,rgba(120,180,255,0) 45%,rgba(60,110,200,.38) 100%)}
 .pd-vig.on{animation:pdVig .9s ease-out}
 @keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
+
+/* ===== 101 — CINEMATIC COMBAT HUD v01 =====
+   목표: 컨셉 시트의 정보 위계만 실제 전투 DOM에 이식한다.
+   전투 판정·입력·버튼 DOM id는 바꾸지 않고, game3d.js가 쓰는 기존 노드를 재배치한다. */
+.cinema-hud-v1 .dg::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:
+  linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.10) 15%,rgba(0,0,0,0) 33%,rgba(0,0,0,0) 70%,rgba(0,0,0,.23) 100%),
+  radial-gradient(ellipse 72% 70% at 50% 48%,rgba(0,0,0,0) 56%,rgba(0,0,0,.24) 100%)}
+/* 플레이어 카드 — 초상/이름/레벨을 한 덩어리로 */
+.cinema-hud-v1 .btparty{left:max(22px,env(safe-area-inset-left));top:max(18px,env(safe-area-inset-top));width:330px;z-index:10;filter:drop-shadow(0 3px 10px rgba(0,0,0,.7))}
+.cinema-hud-v1 .pmem{position:relative;gap:12px;align-items:flex-start;padding:0;background:none}
+.cinema-hud-v1 .pmem__face{width:74px;height:74px;object-fit:cover;border:1px solid rgba(232,210,160,.58);box-shadow:inset 0 0 0 2px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.8);background:#0a0b0e}
+.cinema-hud-v1 .pmem__face::after{content:""}
+.cinema-hud-v1 .pmem .fill{padding-top:2px;min-width:214px}
+.cinema-hud-v1 .pmem__n{font-family:var(--f-serif);font-size:17px;letter-spacing:.08em;color:#F4EEE5;text-shadow:0 2px 5px #000}
+.cinema-hud-v1 .pmem__lv{position:absolute;left:54px;top:58px;min-width:28px;height:28px;display:grid;place-items:center;transform:translate(-50%,0);font-family:var(--f-serif);font-size:10px;color:#F2DFB0;background:rgba(8,9,12,.92);border:1px solid rgba(232,210,160,.58);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);z-index:2}
+.cinema-hud-v1 .pmem__hp{font-family:var(--f-serif);font-size:11px;color:#E6DDD1;margin-top:4px;text-shadow:0 1px 3px #000}
+.cinema-hud-v1 .pmem .bar{display:none}
+/* 실제 HP/ST/ULT 데이터는 기존 vitals를 카드 안으로 끌어온다. */
+.cinema-hud-v1 .vitals{left:max(108px,calc(env(safe-area-inset-left) + 108px));top:max(52px,calc(env(safe-area-inset-top) + 52px));width:236px;z-index:10}
+.cinema-hud-v1 .vital{position:relative;display:grid;grid-template-columns:1fr auto;gap:7px;margin:0 0 5px;padding-left:0}
+.cinema-hud-v1 .vital__ic{display:none}
+.cinema-hud-v1 .vital .bar{grid-column:1/2;height:8px;border:1px solid rgba(238,227,210,.34);background:rgba(5,6,8,.74);box-shadow:0 1px 3px #000;overflow:visible}
+.cinema-hud-v1 .vital .bar__fill{box-shadow:0 0 7px rgba(210,45,44,.32)}
+.cinema-hud-v1 .vital.stamina .bar{height:5px}
+.cinema-hud-v1 .vital__v{grid-column:2/3;font-family:var(--f-serif);font-size:10px;color:#E9E1D5;min-width:66px;text-align:right;line-height:8px}
+.cinema-hud-v1 .ultg{margin-top:0;display:grid;grid-template-columns:1fr 34px;gap:7px;align-items:center}
+.cinema-hud-v1 .ultg>span:first-child{display:none}
+.cinema-hud-v1 .ultg .bar{height:3px;border:0;background:rgba(0,0,0,.55)}
+.cinema-hud-v1 .ultg .bar__fill{background:linear-gradient(90deg,#7b1c1b,#df4038);box-shadow:0 0 6px rgba(211,54,48,.35)}
+.cinema-hud-v1 .ultg__v{font-size:9px;color:#CFC3B5;text-align:right}
+/* 보스 — 화면 상단 한 줄의 전투 위계 */
+.cinema-hud-v1 .bosshp{top:max(19px,env(safe-area-inset-top));width:min(690px,52vw);z-index:10;filter:drop-shadow(0 3px 10px rgba(0,0,0,.78))}
+.cinema-hud-v1 .bosshp__nm{font-family:var(--f-serif);font-size:16px;letter-spacing:.13em;color:#F2ECE4;text-shadow:0 2px 6px #000;margin-bottom:5px}
+.cinema-hud-v1 .bosshp__bar{gap:10px;margin-top:0}
+.cinema-hud-v1 .bosshp__bar>.ico{width:24px;height:24px;padding:4px;color:#E3433D!important;border:1px solid rgba(229,67,61,.55);border-radius:50%;background:rgba(25,7,8,.7);box-shadow:0 0 14px rgba(218,53,47,.28)}
+.cinema-hud-v1 .bosshp__bar .bar{height:12px;border:1px solid rgba(230,220,205,.28);background:rgba(2,3,5,.74);box-shadow:0 2px 5px #000}
+.cinema-hud-v1 .bosshp__bar .bar__fill{background:linear-gradient(90deg,#8D1816 0%,#E13C34 76%,#F16A5A 100%);box-shadow:0 0 8px rgba(230,58,50,.42)}
+.cinema-hud-v1 .stagger{width:73%;margin:4px auto 0;gap:7px}
+.cinema-hud-v1 .stagger__lb{display:none}
+.cinema-hud-v1 .stagger .bar{height:3px;border:0;background:rgba(255,255,255,.10)}
+.cinema-hud-v1 .ph{margin-top:6px;font-family:var(--f-serif);font-size:9px;letter-spacing:.28em;color:#D8C9B3}
+/* 우상단: 전투 시간과 일시정지만 남기고 유리판 느낌 제거 */
+.cinema-hud-v1 .bttimer{top:max(22px,env(safe-area-inset-top));right:max(24px,env(safe-area-inset-right));z-index:10;gap:12px;padding:2px 4px;color:#EEE8DF;text-shadow:0 2px 4px #000}
+.cinema-hud-v1 .bttimer__t{font-family:var(--f-serif);font-size:13px;letter-spacing:.14em}
+.cinema-hud-v1 .bttimer .iconbtn{width:32px;height:32px;border:0;border-left:1px solid rgba(255,255,255,.25);border-radius:0;background:transparent;color:#F1EBE3}
+/* 콤보 — 오른쪽 중앙에 액션 결과만, 과한 패널은 없음 */
+.cinema-hud-v1 .combo{right:max(28px,env(safe-area-inset-right));top:43%;z-index:10;min-width:130px;text-align:right;filter:drop-shadow(0 2px 6px #000)}
+.cinema-hud-v1 .combo b{display:inline-block;font-family:var(--f-serif);font-size:48px;font-style:italic;font-weight:400;color:#F4EEE7;line-height:.9;border-bottom:1px solid rgba(213,60,55,.65);padding:0 5px 4px 18px}
+.cinema-hud-v1 .combo span{display:inline-block;margin-left:4px;font-family:var(--f-serif);font-size:10px;letter-spacing:.18em;color:#E8D8C5}
+.cinema-hud-v1 .combo.big b{font-size:54px;color:#F7E8E1;text-shadow:0 0 12px rgba(230,53,46,.5)}
+/* 입력 — 컨셉처럼 우하단에 군집, 공격만 확실히 크고 붉다. */
+.cinema-hud-v1 .bthud{z-index:11;padding:0 max(24px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));pointer-events:none}
+.cinema-hud-v1 .bthud__row{align-items:flex-end;justify-content:space-between}
+.cinema-hud-v1 .bthud .stick,.cinema-hud-v1 html.mobile .bthud .stick{pointer-events:auto;width:176px;height:176px;opacity:.72}
+.cinema-hud-v1 .stick b{width:132px;height:132px;margin:-66px 0 0 -66px;border:1px solid rgba(238,233,225,.21);background:radial-gradient(circle,rgba(255,255,255,.055),rgba(0,0,0,0) 67%);opacity:.52}
+.cinema-hud-v1 .stick b::before,.cinema-hud-v1 .stick b::after{content:"";position:absolute;left:50%;top:50%;background:rgba(255,255,255,.16);transform:translate(-50%,-50%)}
+.cinema-hud-v1 .stick b::before{width:1px;height:150%}.cinema-hud-v1 .stick b::after{width:150%;height:1px}
+.cinema-hud-v1 .stick i{width:48px;height:48px;border:1px solid rgba(255,255,255,.30);background:rgba(220,222,220,.16);box-shadow:0 2px 8px rgba(0,0,0,.55)}
+.cinema-hud-v1 .actions{pointer-events:auto;width:350px;height:270px;filter:drop-shadow(0 3px 8px rgba(0,0,0,.65))}
+.cinema-hud-v1 .actions .abtn{border:1px solid rgba(225,222,216,.34);background:radial-gradient(circle,rgba(25,27,31,.74),rgba(5,6,8,.68));box-shadow:inset 0 0 0 1px rgba(0,0,0,.44),0 2px 8px rgba(0,0,0,.45);backdrop-filter:blur(3px);transition:transform .08s,filter .08s,border-color .15s,box-shadow .15s}
+.cinema-hud-v1 .actions .abtn:active{transform:scale(.94)}
+.cinema-hud-v1 .actions .abtn .ico{width:32px;height:32px;color:#F0EEE8;filter:drop-shadow(0 1px 2px #000)}
+.cinema-hud-v1 .abtn--atk{--x:294px;--y:204px;--d:112px!important;background:radial-gradient(circle at 46% 42%,rgba(174,33,30,.90),rgba(69,8,10,.88) 58%,rgba(20,4,6,.86))!important;border:1.5px solid rgba(255,124,112,.74)!important;box-shadow:0 0 0 4px rgba(110,9,12,.28),0 0 24px rgba(215,38,32,.36),inset 0 0 22px rgba(255,85,69,.12)!important}
+.cinema-hud-v1 .abtn--atk .ico{width:46px;height:46px;color:#FFF4EC}
+.cinema-hud-v1 .abtn--sk1{--x:208px;--y:110px;--d:64px}
+.cinema-hud-v1 .abtn--sk2{--x:278px;--y:82px;--d:64px}
+.cinema-hud-v1 .abtn--sk3{--x:333px;--y:128px;--d:58px}
+.cinema-hud-v1 .abtn--sk4{--x:326px;--y:51px;--d:54px}
+.cinema-hud-v1 .abtn--dodge{--x:184px;--y:214px;--d:66px;border-color:rgba(205,215,229,.42)!important}
+.cinema-hud-v1 .abtn--guard{--x:244px;--y:238px;--d:64px;background:radial-gradient(circle,rgba(43,52,68,.78),rgba(7,9,13,.76))!important;border-color:rgba(185,200,224,.50)!important}
+.cinema-hud-v1 .abtn--ult{--x:121px;--y:232px;--d:58px;border-color:rgba(220,97,83,.55)!important;background:radial-gradient(circle,rgba(78,18,20,.7),rgba(9,7,9,.7))!important}
+.cinema-hud-v1 .abtn--ult.is-ready{box-shadow:0 0 18px rgba(226,62,51,.50)!important;border-color:#EF7464!important}
+.cinema-hud-v1 .abtn .sk__k{display:block;left:50%;top:auto;bottom:-18px;transform:translateX(-50%);min-width:20px;padding:2px 4px;font-family:var(--f-serif);font-size:9px;text-align:center;color:#E6DED2;background:rgba(3,4,6,.78);border:1px solid rgba(230,223,210,.23);border-radius:2px;opacity:.9}
+.cinema-hud-v1 html.touch .abtn .sk__k,.cinema-hud-v1 html.mobile .abtn .sk__k{display:none}
+.cinema-hud-v1 .abtn .sk__cd{border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) calc(var(--p,1)*360deg),rgba(0,0,0,.10) 0);font-family:var(--f-serif)}
+/* 안내는 화면 아래 중앙 한 줄. */
+.cinema-hud-v1 .guide{top:auto;bottom:max(22px,env(safe-area-inset-bottom));left:50%;max-width:min(680px,50vw);white-space:normal;text-align:center;padding:7px 18px;border:1px solid rgba(238,230,216,.19);background:linear-gradient(90deg,rgba(4,5,7,0),rgba(4,5,7,.72) 16%,rgba(4,5,7,.72) 84%,rgba(4,5,7,0));font-family:var(--f-serif);font-size:11px;letter-spacing:.055em;color:#E6DED1}
+.cinema-hud-v1 .counter{top:29%;z-index:12}.cinema-hud-v1 .counter__lb{font-size:14px;color:#FF665A}.cinema-hud-v1 .counter__v{font-size:58px;text-shadow:0 0 20px rgba(219,56,50,.38),0 3px 8px #000}
+/* 탐색용 텍스트는 전투 중 완전히 제거한다. */
+.cinema-hud-v1.in-fight .quest,.cinema-hud-v1.in-fight .toasts{opacity:.0;pointer-events:none}
+.cinema-hud-v1 .target-cycle,.cinema-hud-v1 .lockon{border-radius:2px;background:rgba(6,8,12,.58);border-color:rgba(221,207,181,.24);color:#E2D7C6;backdrop-filter:blur(3px)}
+/* 작은 브랜드 마크 — 세계관을 게임 화면 안에 붙인다. */
+.combat-brand{position:absolute;left:max(24px,env(safe-area-inset-left));bottom:max(12px,env(safe-area-inset-bottom));z-index:10;pointer-events:none;display:flex;align-items:baseline;gap:10px;color:rgba(235,229,219,.62);text-shadow:0 1px 4px #000}
+.combat-brand b{font-family:var(--f-serif);font-size:18px;font-weight:400;letter-spacing:.16em}.combat-brand span{font-family:var(--f-serif);font-size:8px;letter-spacing:.35em}
+/* 모바일: 같은 위계를 유지하되 정보량만 줄인다. */
+@media(max-width:900px),(max-height:520px){
+ .cinema-hud-v1 .btparty{left:max(10px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));width:245px}
+ .cinema-hud-v1 .pmem__face{width:54px;height:54px}.cinema-hud-v1 .pmem__n{font-size:13px}.cinema-hud-v1 .pmem__lv{left:40px;top:42px;width:23px;height:23px;font-size:8px}
+ .cinema-hud-v1 .vitals{left:max(72px,calc(env(safe-area-inset-left) + 72px));top:max(34px,calc(env(safe-area-inset-top) + 34px));width:170px}.cinema-hud-v1 .vital__v{font-size:8px;min-width:49px}.cinema-hud-v1 .vital .bar{height:6px}.cinema-hud-v1 .vital.stamina .bar{height:3px}
+ .cinema-hud-v1 .bosshp{top:max(8px,env(safe-area-inset-top));width:min(480px,53vw)}.cinema-hud-v1 .bosshp__nm{font-size:12px}.cinema-hud-v1 .bosshp__bar .bar{height:8px}.cinema-hud-v1 .bosshp__bar>.ico{width:18px;height:18px}.cinema-hud-v1 .ph{font-size:7px;margin-top:3px}
+ .cinema-hud-v1 .bttimer{top:max(8px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right))}.cinema-hud-v1 .bttimer__t{font-size:10px}.cinema-hud-v1 .bttimer .iconbtn{width:26px;height:26px}
+ .cinema-hud-v1 .combo{right:max(12px,env(safe-area-inset-right));top:38%}.cinema-hud-v1 .combo b{font-size:34px}.cinema-hud-v1 .combo.big b{font-size:40px}
+ .cinema-hud-v1 .bthud{padding:0 max(7px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}
+ .cinema-hud-v1 .bthud .stick{width:124px;height:124px!important}.cinema-hud-v1 .stick b{width:98px;height:98px;margin:-49px 0 0 -49px}.cinema-hud-v1 .stick i{width:38px;height:38px}
+ .cinema-hud-v1 .actions{transform:scale(.72);transform-origin:100% 100%;margin-left:-96px}
+ .cinema-hud-v1 .guide{bottom:max(5px,env(safe-area-inset-bottom));max-width:44vw;font-size:9px;padding:4px 10px}
+ .combat-brand{display:none}
+}
 </style>
 </head>
-<body data-landscape data-nonav data-responsive-mobile>
+<body class="cinema-hud-v1" data-landscape data-nonav data-responsive-mobile>
 <script src="js/icons.js"></script>
 <div class="stage">
   <div class="bt dg" id="dg">
     <canvas id="game3d"></canvas>
     <div class="vignette" id="vig"></div>
     <div class="flash" id="flash"></div>
+    <div class="combat-brand" aria-hidden="true"><b>황혼</b><span>HWANGHON · 2030 · SEOUL</span></div>
     <div class="bosshp is-off" id="bosshp">
       <div class="bosshp__nm" id="b-name">—</div>
       <div class="bosshp__bar"><svg class="ico ico--sm" style="color:#C9534E"><use href="#i-skull"/></svg><div class="bar" data-fill="100" id="b-hp"></div><span class="stack" id="b-stack"></span></div>
