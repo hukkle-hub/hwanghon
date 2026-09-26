@@ -4,6 +4,7 @@
 import * as THREE from '../vendor/three/three.module.js';
 import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
+import {createCharacterCinema,transitionFor} from './character-cinema.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {smoothCharacterClips} from './clip-smooth.js';
@@ -661,7 +662,7 @@ import { createBloom } from './bloom.js';
   var CHAR_SCALE=1.14;
   var ainBlob=makeBlob(0.52);
   var wind=null;
-  var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false };
+  var ain={ root:new THREE.Group(), mixer:null, clips:{}, base:'idle', cur:null, act:null, oneshot:null, hitT:0, ready:false, model:null, dead:false, cinema:null };
   ain.root.position.copy(v3(P.x,P.y)); scene.add(ain.root);
   var loader=new GLTFLoader(LM); var loadN=0;
   /* 제작 자유도: 장착한 주무기가 제작품이면 재료에 따라 낫의 색·광택·발광·크기를 바꾼다 (gear.js lookOf) */
@@ -689,7 +690,7 @@ import { createBloom } from './bloom.js';
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
     try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
-    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot);
+    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot); ain.cinema=createCharacterCinema(ain.model,ain.root,CID);
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ return G&&G.tintOf?G.tintOf(id):null; }, mixOf=function(id){ return (G&&G.dyeOf&&G.dyeOf(id))?0.75:null; };
@@ -730,13 +731,13 @@ import { createBloom } from './bloom.js';
     RUN_RATE=calcRunRate(stride, clip.duration, L.player.speed/SCALE);
     DIAG.errors.push('run 보폭 '+stride.toFixed(2)+'m → 배속 '+RUN_RATE.toFixed(2));
   }
-  function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act; a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?RUN_RATE:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, 0.18, true); } a.play(); ain.act=a; ain.base=n; }
-  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; if(ain.oneshot){ ain.oneshot.fadeOut(0.05); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(0.06); a.play(); if(ain.act) ain.act.fadeOut(0.06);
-    ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:0.12); ain.oneshotT=0; ain.hold=!!o.hold; }
+  function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act, tr=transitionFor(CID,n); a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?RUN_RATE:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, tr.base, true); } a.play(); ain.act=a; ain.base=n; }
+  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; var tr=transitionFor(CID,n); if(ain.oneshot){ ain.oneshot.fadeOut(Math.min(.08,tr.out)); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); if(ain.act) ain.act.fadeOut(tr.in);
+    ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:Math.min(.14,tr.out*.8)); ain.oneshotT=0; ain.hold=!!o.hold; ain.oneshotOut=tr.out; }
   function ainTick(dt){ if(!ain.mixer) return;
     if(wind) wind.update(dt, ain.model);
     var moving=P.moving && P.rollT<=0 && P.lockT<=0; var guard=battle?battle.snapshot().player.guard:(skirm?skirm.snapshot().player.guard:false);
-    if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ ain.oneshot.fadeOut(0.15); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(0.15); ain.act.play(); } } }
+    if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ var out=ain.oneshotOut||.15; ain.oneshot.fadeOut(out); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(out); ain.act.play(); } } }
     /* 제동: 달리다 멈추면 브레이크 모션을 한 번 재생하고 대기로 넘긴다.
        없으면 달리기가 «톡» 끊긴다 (몬헌은 정지에 브레이크가 있다). */
     if(!moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
@@ -750,6 +751,7 @@ import { createBloom } from './bloom.js';
          밀어도 출발 직후엔 아직 느리다. 스틱을 보면 그 구간에서 다시 미끄러진다. */
       ain.act.timeScale=RUN_RATE*Math.max(0.45, P.spd==null?1:P.spd);
     }
+    if(ain.cinema) ain.cinema.restore();
     if(ain.rig) ain.rig.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
@@ -782,6 +784,7 @@ import { createBloom } from './bloom.js';
     var motionAction=combatAction;
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
+    if(ain.cinema){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     tickLean(dt);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
