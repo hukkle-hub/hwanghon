@@ -1,0 +1,47 @@
+<!doctype html><meta charset="utf-8"><title>손 말기 검수</title>
+<!-- 쥔 손 모프(js/hand-grip.js)를 게임과 같은 코드로 만들고, 손만 떼어 손 뼈 좌표(바인드)로 본다 (docs/design/94).
+     축: X 빨강 · Y 초록 · Z 파랑 · 파란 원기둥 = 무기 손잡이 자리(반지름 r).
+     ?char=kain&side=Right&min=.3&raw=1(모프 없이) · window.view(dir,up,dist) · window.curl(amount) · window.stats() · window.tris() -->
+<style>body{margin:0;background:#20252d}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {buildHandGrip} from '../../js/hand-grip.js';
+const Q=new URLSearchParams(location.search), CH=Q.get('char')||'kain', SIDE=Q.get('side')||'Right', W=+(Q.get('w')||420), H=+(Q.get('h')||420), MIN=+(Q.get('min')||.3), RAW=Q.get('raw')==='1';
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1.5);
+const sc=new T.Scene(); sc.background=new T.Color('#20252d');
+sc.add(new T.HemisphereLight(0xffffff,0x404050,1.6)); const key=new T.DirectionalLight(0xffffff,2); key.position.set(1,2,3); sc.add(key);
+const cam=new T.PerspectiveCamera(30,W/H,0.005,10);
+const g=await new GLTFLoader().loadAsync(`../../art/3d/${CH}_anim.glb`);
+const bones={}; g.scene.traverse(o=>{ if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o; });
+const hand=bones[SIDE+'Hand'];
+const api=RAW?null:buildHandGrip(g.scene,CH), spec=api&&api.grips[SIDE]; window.SPEC=spec;
+/* 손 뼈 무게 MIN 이상 정점만 쓰는 삼각형 → 손 뼈 로컬 */
+const parts=[];
+g.scene.traverse(o=>{ if(!o.isSkinnedMesh) return; const bi=o.skeleton.bones.indexOf(hand); if(bi<0) return;
+  const G=o.geometry, P=G.attributes.position, SI=G.attributes.skinIndex, SW=G.attributes.skinWeight, I=G.index;
+  const w=new Float32Array(P.count); for(let i=0;i<P.count;i++){ for(let k=0;k<4;k++) if(SI.getComponent(i,k)===bi) w[i]+=SW.getComponent(i,k); }
+  const M=o.skeleton.boneInverses[bi].clone().multiply(o.bindMatrix), idx=[];
+  for(let t=0;t<I.count;t+=3){ const a=I.getX(t),b=I.getX(t+1),c=I.getX(t+2); if(w[a]>=MIN&&w[b]>=MIN&&w[c]>=MIN) idx.push(a,b,c); }
+  if(!idx.length) return;
+  const tgt=api&&api.targets.find(t=>t.mesh===o), D=tgt&&tgt.index[SIDE]!=null?G.morphAttributes.position[tgt.index[SIDE]].array:null;
+  const geo=new T.BufferGeometry(); geo.setAttribute('position',new T.BufferAttribute(new Float32Array(P.count*3),3)); geo.setIndex(idx);
+  const mesh=new T.Mesh(geo,new T.MeshStandardMaterial({color:0xc9b8a8,roughness:.7,side:T.DoubleSide})); sc.add(mesh);
+  const wire=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial({color:0x000000,transparent:true,opacity:.25})); sc.add(wire);
+  parts.push({mesh,wire,P,D,M}); });
+sc.add(new T.AxesHelper(.08));
+let shaft=null; if(spec){ const c=new T.Mesh(new T.CylinderGeometry(spec.r,spec.r,.16,24),new T.MeshStandardMaterial({color:0x5080ff,transparent:true,opacity:.45}));
+  c.position.fromArray(spec.c); c.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),new T.Vector3().fromArray(spec.a).normalize()); sc.add(c); shaft=c; }
+window.curl=(amount=1)=>{ for(const p of parts){ const out=p.mesh.geometry.attributes.position, v=new T.Vector3();
+    for(let i=0;i<p.P.count;i++){ v.fromBufferAttribute(p.P,i); if(p.D&&amount){ v.x+=p.D[i*3]*amount; v.y+=p.D[i*3+1]*amount; v.z+=p.D[i*3+2]*amount; } v.applyMatrix4(p.M); out.setXYZ(i,v.x,v.y,v.z); }
+    out.needsUpdate=true; p.mesh.geometry.computeVertexNormals(); p.wire.geometry.dispose(); p.wire.geometry=new T.WireframeGeometry(p.mesh.geometry); } return 1; };
+curl(0);
+function hbox(){ const box=new T.Box3(), v=new T.Vector3(); parts.forEach(p=>{ const P=p.mesh.geometry.attributes.position, I=p.mesh.geometry.index; for(let k=0;k<I.count;k++) box.expandByPoint(v.fromBufferAttribute(P,I.getX(k))); }); return box; }
+window.view=(dir=[1,0,0],up=[0,1,0],dist=.35)=>{ const c=hbox().getCenter(new T.Vector3());
+  cam.position.copy(c).add(new T.Vector3(...dir).normalize().multiplyScalar(dist)); cam.up.set(...up); cam.lookAt(c); r.render(sc,cam); return 1; };
+window.stats=()=>{ const box=hbox(); let v=0,t=0; parts.forEach(p=>{ v+=p.P.count; t+=p.mesh.geometry.index.count/3; }); return {min:box.min.toArray(),max:box.max.toArray(),verts:v,handTris:t}; };
+window.shaft=on=>{ if(shaft) shaft.visible=on; return 1; };
+window.tris=()=>{ const out=[]; for(const p of parts){ const P=p.mesh.geometry.attributes.position, I=p.mesh.geometry.index; for(let k=0;k<I.count;k++){ const i=I.getX(k); out.push(+P.getX(i).toFixed(5),+P.getY(i).toFixed(5),+P.getZ(i).toFixed(5)); } } return out; };
+window.READY=1;
+</script>

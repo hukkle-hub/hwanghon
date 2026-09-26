@@ -11,6 +11,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b0e;col
 <script src="./js/looks.js"></script>
 <script type="module">
 import * as T from './vendor/three/three.module.js';
+import {gripHands} from './js/hand-grip.js';
 import {GLTFLoader} from './vendor/three/GLTFLoader.js';
 import {smoothCharacterClips} from './js/clip-smooth.js';
 import {makeRigAdapter} from './js/combat-motion.js';
@@ -43,11 +44,11 @@ const STATES=[
 ];
 let model,mixer,clips={},slot,weapon,rig,cinema,current,currentAction,currentIndex=0;const loader=new GLTFLoader();const load=u=>new Promise((res,rej)=>loader.load(u,res,undefined,rej));
 const [cg,wg]=await Promise.all([load('./art/3d/kain_anim.glb'),load('./art/3d/gear/w_kain_greatsword.glb')]);
-model=cg.scene;model.scale.setScalar(1.14);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}if(o.isBone&&/RightHandSlot/.test(o.name))slot=o;});scene.add(model);
+model=cg.scene;const HG=gripHands(model,'kain');model.scale.setScalar(1.14);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}if(o.isBone&&/RightHandSlot/.test(o.name))slot=o;});scene.add(model);
 /* 게임과 같은 손 그립 — 손바닥 중심(js/looks.js, docs/design/93). 옛 관절 자리에 달면 대검이 손 밖 12 cm 에 떴다 */if(slot&&window.TW_LOOKS)slot=TW_LOOKS.anchor(T,slot);
 const sm=smoothCharacterClips('kain',cg.animations,CONTACT);sm.forEach(c=>clips[c.name]=c);mixer=new T.AnimationMixer(model);
 if(slot){model.updateMatrixWorld(true);const wr=wg.scene,group=new T.Group();wr.position.y=-.75;group.add(wr);const k=slot.getWorldScale(new T.Vector3()).x;group.scale.setScalar(1/k);slot.add(group);weapon=group;wr.traverse(o=>{if(o.isMesh)o.castShadow=true;});}
-rig=makeRigAdapter(model,model,slot,{twoHand:true});cinema=createCharacterCinema(model,model,'kain');
+rig=makeRigAdapter(model,model,slot,{twoHand:true,handGrip:HG});cinema=createCharacterCinema(model,model,'kain');
 function fit(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}addEventListener('resize',fit);fit();
 function select(i,fade=true){currentIndex=(i+STATES.length)%STATES.length;const [label,clip]=STATES[currentIndex];current={label,clip};const a=mixer.clipAction(clips[clip]||clips.idle);a.reset().enabled=true;a.setEffectiveWeight(1);a.setLoop(T.LoopRepeat,Infinity);const tr=transitionFor('kain',clip);if(currentAction&&currentAction!==a&&fade)a.crossFadeFrom(currentAction,tr.base,true);a.play();currentAction=a;document.querySelector('#name').textContent=label.toUpperCase().replaceAll('_',' ');document.querySelector('#desc').textContent=STATES[currentIndex][2];}
 function params(label,clip,phase){const moving=['walk','run'].includes(clip),guard=label==='iron_wall';let action=null;if(/attack|smash|skill1|skill3|skill4|counter|ult|exec/.test(clip)){const dur=clips[clip].duration;action={id:1,clip,kind:'attack',duration:dur,elapsed:dur*phase,hitAt:dur*(CONTACT[clip]??.46)};}return {clip,moving,speed:moving?1:0,localX:0,localZ:moving?1:0,guard,action};}

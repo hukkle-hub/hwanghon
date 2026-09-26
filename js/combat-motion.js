@@ -28,13 +28,22 @@ export function sampleAction(a, duration) {
 
 function rotateToward(bone, end, target, amount) {
   const origin=bone.getWorldPosition(new THREE.Vector3());
-  const from=end.getWorldPosition(new THREE.Vector3()).sub(origin).normalize();
+  const from=(typeof end==='function'?end():end.getWorldPosition(new THREE.Vector3())).sub(origin).normalize();
   const to=target.clone().sub(origin).normalize();
   if(!from.lengthSq()||!to.lengthSq()) return;
   const delta=new THREE.Quaternion().setFromUnitVectors(from,to);
   const parent=bone.parent.getWorldQuaternion(new THREE.Quaternion());
   const local=parent.clone().invert().multiply(delta).multiply(parent).multiply(bone.quaternion);
   bone.quaternion.slerp(local,amount);bone.updateWorldMatrix(false,true);
+}
+
+/* 끝점이 뼈가 아니라 «손에 붙은 점»(주먹 구멍)일 때 — 손목 관절이 아니라 그 점을 target 에 (docs/design/94) */
+export function solveLimbPoint(upper,lower,point,target,weight=1) {
+  const u=upper.getWorldPosition(new THREE.Vector3()), l=lower.getWorldPosition(new THREE.Vector3());
+  const reach=u.distanceTo(l)+l.distanceTo(point()), delta=target.clone().sub(u);
+  if(delta.length()>reach*0.985) target=u.clone().add(delta.setLength(reach*0.985));
+  for(let i=0;i<10;i++){rotateToward(lower,point,target,weight);rotateToward(upper,point,target,weight);}
+  return point().distanceTo(target);
 }
 
 /* Reach-bounded CCD correction; never scales limbs. */
@@ -48,8 +57,9 @@ export function solveLimb(upper,lower,end,target,weight=1) {
 }
 
 // opts.twoHand=false: 한손·쌍수 무기(류 단검·세라 시약) — 왼손을 오른손 무기로 끌어오지 않는다 (docs/design/93)
+// opts.handGrip: 쥔 손 모프(js/hand-grip.js) — 양손 그립 동안 왼손을 쥔다 (docs/design/94)
 export function makeRigAdapter(model,root,slot,opts={}) {
-  const twoHand=opts.twoHand!==false;
+  const twoHand=opts.twoHand!==false, handGrip=opts.handGrip||null;let leftGrip=handGrip?handGrip.amount.Left:0;
   const bones={};model.traverse(o=>{if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o;});
   const restCorrections=new Map(), anchors={}, diagnostics={gripError:0,footError:0};
   function restore(){for(const [b,q] of restCorrections)b.quaternion.copy(q);restCorrections.clear();}
@@ -86,6 +96,7 @@ export function makeRigAdapter(model,root,slot,opts={}) {
       model.updateWorldMatrix(true,true);
     }
     // New main's idle is intentionally one-handed. Correct grip only while fighting/guarding.
+    let gripWant=0;
     if(slot&&twoHand&&(a||guard)){
       keep(['LeftArm','LeftForeArm','LeftHand']);
       const left=bones.LeftHand,right=bones.RightHand,upper=bones.LeftArm,lower=bones.LeftForeArm;
@@ -101,10 +112,17 @@ export function makeRigAdapter(model,root,slot,opts={}) {
         let target=gripTarget();
         const shoulder=upper.getWorldPosition(new THREE.Vector3());
         const elbow=lower.getWorldPosition(new THREE.Vector3());
-        const reach=(shoulder.distanceTo(elbow)+elbow.distanceTo(left.getWorldPosition(new THREE.Vector3())))*0.975;
-        const excess=shoulder.distanceTo(target)-reach;
+        // 손바닥(쥔 손이면 주먹 구멍, docs/design/94)을 손잡이에 댄다 — 팔이 닿는지도 그 점으로 잰다
+        const palm=globalThis.TW_LOOKS&&TW_LOOKS.palm?TW_LOOKS.palm(THREE,left):null;
+        const palmWorld=()=>palm?palm.clone().applyMatrix4(left.matrixWorld):left.getWorldPosition(new THREE.Vector3());
+        /* 팔이 닿는 거리 = 어깨→팔꿈치 + 팔꿈치→주먹 (손목에서 주먹까지가 카인은 20 cm, 손목 각도에 따라 다르다) */
+        const reachP=(shoulder.distanceTo(elbow)+elbow.distanceTo(palmWorld()))*0.975;
+        const excess=shoulder.distanceTo(target)-reachP;
+        // 오른손을 22 cm 당겨도 3~9 cm 넘게 모자라면 두 손 잡기를 풀어 준다 — 카인 공격1 은 한 손으로 88 cm 내뻗어
+        // (팔+손 84 cm) 억지로 잡으면 왼손이 허공에서 손잡이 17 cm 옆에 멈췄다 (docs/design/94)
+        const hold=1-THREE.MathUtils.smoothstep(excess-0.22,0.03,0.09);gripWant=hold;
         // Bring an overextended weapon hand inward without changing its world orientation.
-        if(excess>0){
+        if(hold>0&&excess>0){
           keep(['RightArm','RightForeArm','RightHand']);
           const handQ=right.getWorldQuaternion(new THREE.Quaternion());
           const pull=shoulder.clone().sub(target).setLength(Math.min(0.22,excess+0.02));
@@ -112,17 +130,13 @@ export function makeRigAdapter(model,root,slot,opts={}) {
           right.quaternion.copy(right.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(handQ));
           model.updateWorldMatrix(true,true);target=gripTarget();
         }
-        // 손 관절이 아니라 손바닥을 손잡이에 — 다시 리깅한 몸은 손 관절이 손목 쪽이라 관절을 대면 손바닥이 13~29 cm 떴다.
-        // 팔을 돌리면 손 방향도 바뀌어 손바닥 오프셋이 달라지므로 세 번 되풀이한다.
-        const palm=globalThis.TW_LOOKS&&TW_LOOKS.palm?TW_LOOKS.palm(THREE,left):null;
-        const palmWorld=()=>palm?palm.clone().applyMatrix4(left.matrixWorld):left.getWorldPosition(new THREE.Vector3());
-        for(let k=0;k<(palm?3:1);k++){
-          const off=palmWorld().sub(left.getWorldPosition(new THREE.Vector3()));
-          solveLimb(upper,lower,left,target.clone().sub(off));left.updateWorldMatrix(true,false);
-        }
-        diagnostics.gripError=palmWorld().distanceTo(target);
+        // 손 관절이 아니라 주먹(손바닥)을 손잡이에 — 다시 리깅한 몸은 손 관절이 손목 쪽이라 관절을 대면 13~29 cm 떴다.
+        // 끝점을 «손에 붙은 점»으로 두고 풀어야 팔을 돌려 손 방향이 바뀌어도 그 점이 닿는다(관절+오프셋 되풀이로는 17 cm 남았다).
+        if(hold>0)solveLimbPoint(upper,lower,palmWorld,target,hold);
+        diagnostics.gripError=hold>0?palmWorld().distanceTo(target):0;diagnostics.twoHand=hold;
       }
-    }else diagnostics.gripError=0;
+    }else{diagnostics.gripError=0;diagnostics.twoHand=0;}
+    if(handGrip&&twoHand){leftGrip+=(gripWant-leftGrip)*Math.min(1,(dt||1/60)*14);if(Math.abs(gripWant-leftGrip)<.01)leftGrip=gripWant;handGrip.set('Left',leftGrip);}
     // Flat training ground: preserve authored footfall height; anchor grounded feet during stationary actions.
     diagnostics.footError=0;
     for(const side of ['Left','Right']){

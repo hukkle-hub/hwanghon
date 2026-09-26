@@ -1,0 +1,90 @@
+/* 쥔 손 모프 — 카인·류·세라 (docs/design/94). 실제 캐릭터 GLB 로.
+   손가락을 쪼개고 감아도 (1) 틈이 없고 (2) 크게 늘어나지 않고 (3) 손잡이 속으로 들어가지 않고
+   (4) 무기 그립·왼손 IK 가 주먹 구멍을 쓰는지 본다. */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import * as T from '../vendor/three/three.module.js';
+import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
+import {buildHandGrip,gripHands} from '../js/hand-grip.js';
+import {makeRigAdapter} from '../js/combat-motion.js';
+import {clone as skClone} from '../vendor/three/SkeletonUtils.js';
+
+globalThis.window=globalThis;
+if(!globalThis.TW_LOOKS)vm.runInThisContext(fs.readFileSync('js/looks.js','utf8'));
+const L=globalThis.TW_LOOKS;
+
+async function load(ch){const b=fs.readFileSync(`art/3d/${ch}_anim.glb`);const l=new GLTFLoader();l.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');}
+const key=(P,i)=>[P.getX(i),P.getY(i),P.getZ(i)].map(v=>Math.round(v*1e5)).join(',');
+/* 같은 자리 정점을 합친 뒤 삼각형 하나에만 속한 모서리 길이 합 — T 자 이음(틈)이 생기면 늘어난다 */
+function boundaryLen(G){const P=G.attributes.position,I=G.index,m=new Map();for(let t=0;t<I.count;t+=3){const ids=[I.getX(t),I.getX(t+1),I.getX(t+2)].map(i=>key(P,i));for(let k=0;k<3;k++){const a=ids[k],b=ids[(k+1)%3],e=a<b?a+'|'+b:b+'|'+a;m.set(e,(m.get(e)||0)+1);}}
+  let len=0;for(const [e,c] of m)if(c===1){const [a,b]=e.split('|').map(s=>s.split(',').map(Number));len+=Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2])/1e5;}return len;}
+
+test('hand grip morph: no cracks, no tearing stretch, fingers stay out of the handle (kain, ryu, sera)',async()=>{
+  for(const ch of ['kain','ryu','sera']){
+    const g=await load(ch),orig=new Map();g.scene.traverse(o=>{if(o.isSkinnedMesh)orig.set(o,o.geometry);});
+    const api=buildHandGrip(g.scene,ch);
+    assert.ok(api.grips.Right&&api.grips.Left&&api.targets.length,`${ch}: 양손 모프가 있어야 한다`);
+    for(const t of api.targets){
+      const G=t.mesh.geometry,P=G.attributes.position,I=G.index;
+      const b0=boundaryLen(orig.get(t.mesh)),b1=boundaryLen(G);
+      assert.ok(Math.abs(b1-b0)<=b0*1e-3,`${ch}: 쪼갠 뒤 열린 모서리 ${b0.toFixed(3)} → ${b1.toFixed(3)} (틈)`);
+      for(const side of ['Right','Left']){
+        const D=G.morphAttributes.position[t.index[side]].array,r=t.regions.find(x=>x.side===side),gp=api.grips[side];
+        const moved=i=>D[i*3]||D[i*3+1]||D[i*3+2], pos=(i,amt)=>V(P.getX(i)+D[i*3]*amt,P.getY(i)+D[i*3+1]*amt,P.getZ(i)+D[i*3+2]*amt).applyMatrix4(r.M);
+        let n=0,tear=0,ratio=0;
+        for(let k=0;k<I.count;k+=3){const ids=[I.getX(k),I.getX(k+1),I.getX(k+2)];if(!ids.some(moved))continue;
+          for(let e=0;e<3;e++){const a=ids[e],c=ids[(e+1)%3],l0=pos(a,0).distanceTo(pos(c,0)),l1=pos(a,1).distanceTo(pos(c,1));if(l1-l0>.008)tear++;if(l0>1e-3)ratio=Math.max(ratio,l1/l0);}}
+        /* 잰 값: 늘어남 최대 1.2~3.9 배, 8 mm 넘게 늘어난 모서리 0 */
+        assert.equal(tear,0,`${ch} ${side}: 8 mm 넘게 늘어난 모서리 ${tear}`);
+        assert.ok(ratio<5,`${ch} ${side}: 모서리가 ${ratio.toFixed(1)} 배 늘어났다`);
+        /* 손잡이 속: 뿌리 1 cm 위 정점은 축에서 반지름의 절반 이상 (잰 최소 0.61 · 뿌리 주름은 손잡이가 손바닥을 누르는 자리라 뺀다) */
+        const C=V(...gp.c),A=V(...gp.a),K=V(...gp.K),F=V(...gp.f);let worst=9;
+        for(let i=0;i<P.count;i++){if(!moved(i))continue;const l0=pos(i,0);if(l0.clone().sub(K).dot(F)<.01)continue;
+          const v=pos(i,1).sub(C);if(Math.abs(v.dot(A))>.06)continue;n++;worst=Math.min(worst,v.sub(A.clone().multiplyScalar(v.dot(A))).length()/gp.r);}
+        assert.ok(n>200,`${ch} ${side}: 감긴 정점이 너무 적다 (${n})`);
+        assert.ok(worst>=.5,`${ch} ${side}: 손가락이 손잡이 속 ${((1-worst)*100).toFixed(0)} % 까지 들어갔다`);
+        /* 같은 자리(UV 이음매) 정점은 같이 움직여야 한다 */
+        const seen=new Map();for(let i=0;i<P.count;i++){const k=key(P,i);if(seen.has(k)){const j=seen.get(k);assert.ok(Math.hypot(D[i*3]-D[j*3],D[i*3+1]-D[j*3+1],D[i*3+2]-D[j*3+2])<1e-6,`${ch} ${side}: 이음매가 벌어진다`);}else seen.set(k,i);}
+      }
+    }
+  }
+});
+const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
+
+test('grip point = fist hole; right hand closed, Ryu left closed, Sera left open; clones share geometry',async()=>{
+  const want={kain:0,ryu:1,sera:0};
+  for(const ch of ['kain','ryu','sera']){
+    const g=await load(ch),twin=skClone(g.scene),api=gripHands(g.scene,ch),bones={};g.scene.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});
+    for(const side of ['Right','Left']){const hand=bones[side+'Hand'];
+      assert.ok(hand.userData.gripPoint&&hand.userData.gripPoint.distanceTo(V(...api.grips[side].c))<1e-9,`${ch} ${side}: 손 뼈에 주먹 구멍 자리`);
+      assert.equal(L.palm(T,hand),hand.userData.gripPoint,`${ch} ${side}: TW_LOOKS.palm 은 주먹 구멍`);}
+    const slot=L.anchor(T,bones.RightHandSlot);assert.ok(slot.position.distanceTo(bones.RightHand.userData.gripPoint)<1e-9,`${ch}: 무기는 주먹 구멍에`);
+    for(const t of api.targets){assert.equal(t.mesh.morphTargetInfluences[t.index.Right],1);assert.equal(t.mesh.morphTargetInfluences[t.index.Left],want[ch],`${ch}: 왼손 기본 세기`);}
+    /* 온라인 파티: 같은 원본을 나눠 쓰는 복제본은 쪼갠 지오메트리를 다시 만들지 않고 같이 쓴다(모프 세기는 따로) */
+    const api2=gripHands(twin,ch);
+    assert.equal(api2.targets.length,api.targets.length);
+    api2.targets.forEach((t,i)=>{assert.equal(t.mesh.geometry,api.targets[i].mesh.geometry,`${ch}: 복제본 지오메트리 공유`);assert.notEqual(t.mesh.morphTargetInfluences,api.targets[i].mesh.morphTargetInfluences);});
+  }
+});
+
+test('Kain two-hand IK puts the left fist hole on the greatsword axis and closes the left hand',async()=>{
+  const g=await load('kain'),root=new T.Group(),m=g.scene;m.scale.setScalar(1.14);root.add(m);
+  const bones={};m.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});
+  const HG=gripHands(m,'kain'),slot=L.anchor(T,bones.RightHandSlot),ad=makeRigAdapter(m,root,slot,{twoHand:true,handGrip:HG}),mixer=new T.AnimationMixer(m),left=bones.LeftHand;
+  for(const clip of ['attack1','attack3','smash','guard']){
+    const c=g.animations.find(a=>a.name===clip);mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();act.time=c.duration*.35;mixer.update(0);root.updateMatrixWorld(true);
+    for(let i=0;i<40;i++){ad.restore();ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:c.duration*.35,hitAt:c.duration*.42},false,clip==='guard',1/60);}
+    root.updateMatrixWorld(true);
+    const fist=left.userData.gripPoint.clone().applyMatrix4(left.matrixWorld),p=slot.getWorldPosition(V()),ax=V(0,1,0).applyQuaternion(slot.getWorldQuaternion(new T.Quaternion()));
+    const d=fist.sub(p),off=d.sub(ax.clone().multiplyScalar(d.dot(ax))).length();
+    /* 잰 값 0.0~0.1 cm (전에는 손목 관절을 대서 15~17 cm) */
+    assert.ok(off<=.02,`kain ${clip}: 왼손 주먹이 대검 축에서 ${(off*100).toFixed(1)} cm`);
+    assert.ok(HG.amount.Left>.95,`kain ${clip}: 두 손 잡기 중 왼손을 쥐어야 한다 (${HG.amount.Left.toFixed(2)})`);
+    ad.restore();
+  }
+  /* 행동이 끝나면 왼손을 편다 */
+  for(let i=0;i<40;i++){ad.restore();ad.apply(null,false,false,1/60);}
+  assert.ok(HG.amount.Left<.05,`kain: 대기에서는 왼손을 편다 (${HG.amount.Left.toFixed(2)})`);
+});

@@ -8,6 +8,7 @@ var ASSETS = ["js/party-avatar.js", "js/party-wire.js", "css/party-online.css", 
 /* 이 워커가 설치되는 시점에 이전 워커가 있었는가 → 있었다면 열린 화면들은 옛 버전이므로 활성화 직후 직접 다시 불러온다 */
 var HAD_PREVIOUS = !!(self.registration && self.registration.active);
 ASSETS.push('js/ain-bind-repair.js','js/clip-smooth.js','js/ain-two-hand.js','js/ain-grip-shape.js','js/ain-grip-ik.js','js/ain-scythe-mount.js');
+ASSETS.push('js/hand-grip.js');   /* 카인·류·세라 쥔 손 모프 (docs/design/94) */
 ASSETS.push('js/marsh-motion.js','js/training-presentation.js','js/frame-metrics.js','js/boss-motion.js');
 ASSETS.push('js/graphics-profile.js','js/combat-quality.js','js/boss-contact-volumes.js');
 ASSETS=ASSETS.concat(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){return 'art/audio/'+name+'.wav';}));

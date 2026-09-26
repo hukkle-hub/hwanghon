@@ -52,8 +52,8 @@ test('two-hand grip IK only for Kain; puts the left palm on the greatsword axis'
       if(!twoHand){assert.ok(rel().distanceTo(before)*1.14<.01,`${ch} ${clip}: 한손·쌍수 캐릭터의 왼손을 무기로 끌면 안 된다`);ad.restore();continue;}
       const palm=L.palm(T,left).clone().applyMatrix4(left.matrixWorld),p=slot.getWorldPosition(new T.Vector3()),ax=new T.Vector3(0,1,0).applyQuaternion(slot.getWorldQuaternion(new T.Quaternion()));
       const d=palm.clone().sub(p),off=d.clone().sub(ax.clone().multiplyScalar(d.dot(ax))).length();
-      /* 잰 값 1.3~7.7 cm (u=.35). 팔 길이 한계로 못 닿는 자세가 있어 10 cm 로 둔다 — 전에는 13~29 cm */
-      assert.ok(off<=.10,`${ch} ${clip}: 왼손 손바닥이 대검 축에서 ${(off*100).toFixed(1)} cm`);ad.restore();
+      /* 잰 값 0.0 cm (u=.35) — 끝점을 손바닥 점으로 풀면서(docs/design/94). 관절을 대던 때는 13~29 cm */
+      assert.ok(off<=.03,`${ch} ${clip}: 왼손 손바닥이 대검 축에서 ${(off*100).toFixed(1)} cm`);ad.restore();
     }
   }
 });

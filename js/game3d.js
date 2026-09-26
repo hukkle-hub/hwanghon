@@ -6,6 +6,7 @@ import { GLTFLoader } from '../vendor/three/GLTFLoader.js';
 import { sampleAction, makeRigAdapter } from './combat-motion.js';
 import {createCharacterCinema,transitionFor} from './character-cinema.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
+import {gripHands} from './hand-grip.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {smoothCharacterClips} from './clip-smooth.js';
 import {clone as cloneSkinned} from '../vendor/three/SkeletonUtils.js';
@@ -679,6 +680,8 @@ import { createBloom } from './bloom.js';
     /* 굽는 쪽이 고쳐질 때까지의 보정막 — idle·run 의 오른팔이 몸을 가로지른다 (docs/design/33 §4) */
     if(window.TW_POSE){ var rep=TW_POSE.repair(THREE, g); if(rep.fixed.length) console.info('[tw-pose] 교정', rep.fixed.join(',')); }
     if(window.TW_MATFIX) TW_MATFIX.repair(THREE, g.scene);
+    /* 카인·류·세라 쥔 손 모프 — 바람 준비(지오메트리에 속성을 더한다)보다 먼저, 무기 그립 노드보다 먼저 (docs/design/94) */
+    var handGrip=CID!=='ain'?gripHands(g.scene, CID):null;
     /* 던전마다 다른 바람 — 머리카락·옷자락이 흔들린다 (docs/design/33 §5) */
     if(window.TW_WIND){ try{ TW_WIND.prepare(THREE, g.scene); var wp=TW_WIND.profile(A.id); wind=TW_WIND.bind(THREE, g.scene, wp); console.info('[tw-wind]', wp.name); }catch(e){ console.warn('wind', e); } }
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
@@ -690,7 +693,7 @@ import { createBloom } from './bloom.js';
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
     try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
-    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain'});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID);
+    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.handGrip=handGrip; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain',handGrip:handGrip});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID);
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ return G&&G.tintOf?G.tintOf(id):null; }, mixOf=function(id){ return (G&&G.dyeOf&&G.dyeOf(id))?0.75:null; };

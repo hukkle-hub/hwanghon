@@ -98,7 +98,10 @@
   /* 손바닥 중심(손 뼈 로컬): 손 뼈에 무게 0.6 이상 실린 몸 정점의 바인드 자세 중심 (docs/design/93).
      카인·류·세라는 다시 리깅하며 손 관절이 손목 쪽으로 옮겨졌고 옛 관절 자리(rerigAnchor)는 손바닥에서 12~19 cm 떨어져 있었다 —
      무기가 손 밖에 떠 있었다. 손가락 뼈가 없는 리그라 손 모양은 못 바꾸지만, 손잡이는 손바닥 안에 넣을 수 있다 */
-  function palmOf(hand){ if(!hand||!THREE) return null; if(hand.userData._palm!==undefined) return hand.userData._palm;
+  function palmOf(hand){ if(!hand||!THREE) return null;
+    /* 쥔 손 모프(js/hand-grip.js, docs/design/94)가 있으면 주먹 구멍 가운데 — 손가락이 감는 축 */
+    if(hand.userData.gripPoint) return hand.userData.gripPoint;
+    if(hand.userData._palm!==undefined) return hand.userData._palm;
     var top=hand; while(top.parent) top=top.parent; var s=new THREE.Vector3(), v=new THREE.Vector3(), n=0;
     top.traverse(function(o){ if(!o.isSkinnedMesh||(o.userData&&o.userData.look)) return; var bi=o.skeleton.bones.indexOf(hand); if(bi<0) return;
       var inv=o.skeleton.boneInverses[bi], P=o.geometry.attributes.position, SI=o.geometry.attributes.skinIndex, SW=o.geometry.attributes.skinWeight; if(!SI||!SW) return;

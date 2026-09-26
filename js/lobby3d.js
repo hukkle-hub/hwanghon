@@ -12,6 +12,7 @@
    배경은 cover 로 깔리므로 화면 비율이 달라져도 같은 자리에 서도록 cover 셈을 그대로 따른다. */
 import * as THREE from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
+import {gripHands} from './hand-grip.js';
 
 const BG_W=1920, BG_H=1080;          /* 배경 그림 크기 */
 const FIG={ cx:555, feet:930, top:300 };
@@ -59,6 +60,7 @@ function start(canvas){
     /* 던전·뷰어와 같은 순서 — 보정막은 믹서보다 «먼저» (docs/design/33 §4.3) */
     globalThis.TW_POSE?.repair(THREE, g);
     globalThis.TW_MATFIX?.repair(THREE, g.scene);
+    if(CHAR!=='ain') gripHands(g.scene, CHAR);   /* 쥔 손 — 바람 준비·무기보다 먼저 (docs/design/94) */
     if(globalThis.TW_WIND){ try{
       TW_WIND.prepare(THREE, g.scene);
       wind=TW_WIND.bind(THREE, g.scene, TW_WIND.profile('road'));   /* 고가의 강풍 — 로비는 옥외 고지대다 */

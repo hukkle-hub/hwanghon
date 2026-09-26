@@ -9,6 +9,7 @@
    «반영된 척» 을 할 수 없다. 원화 그대로 둔다. */
 import * as THREE from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
+import {gripHands} from './hand-grip.js';
 
 /* 두 가지로 굽는다 — 얼굴(정사각)과 전신(파티 카드·결과 화면). 전신 비율은
    원화 art/full-*.webp (382×932 ≈ 0.41) 에 맞춘다. 같은 칸에 나란히 서야 한다. */
@@ -61,6 +62,7 @@ function bake(char, mode){
       try{
         globalThis.TW_POSE?.repair(THREE, g);
         globalThis.TW_MATFIX?.repair(THREE, g.scene);
+        if(char!=='ain') gripHands(g.scene, char);   /* 쥔 손 (docs/design/94) */
         const model=g.scene; scene.add(model);
         /* 초상은 «정면 얼굴» — 대기 자세 한 프레임만 쓰고 믹서는 버린다 */
         const mx=new THREE.AnimationMixer(model);
