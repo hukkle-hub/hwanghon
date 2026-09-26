@@ -422,13 +422,15 @@
     sheet('기록', html, 'sheet--rec');
   }
   function settingsSheet(){
-    var SET = Object.assign({ bright:1, lights:true, vib:true, sound:true, bloom:true, quality:'auto' }, lsGet('tw:settings', {}));
+    var SET = Object.assign({ bright:1, lights:true, vib:true, sound:true, bloom:true, quality:'auto', cine:'normal' }, lsGet('tw:settings', {}));
     var dev = false; try { dev = localStorage.getItem('tw:dev') === '1'; } catch(e){}
     function tog(k, lb, sub){ return '<div class="srow"><span>'+lb+(sub?'<small class="t-faint">'+sub+'</small>':'')+'</span><button class="tog'+(SET[k]?' is-on':'')+'" data-tog="'+k+'" role="switch" aria-checked="'+(!!SET[k])+'"><i></i></button></div>'; }
     var html = '<div class="label-ko">게임</div>' + tog('sound', '효과음', '전투 효과음 · 환경음') + tog('vib', '진동', '피격 · 카운터 시 진동') +
       '<div class="srow"><span>밝기<small class="t-faint">던전 화면</small></span><input type="range" min="0.7" max="1.5" step="0.05" value="'+SET.bright+'" data-rng="bright"></div>' +
       '<div class="srow"><span>화질<small class="t-faint">해상도 · 낮을수록 가볍다</small></span><span class="segs" data-seg="quality">' +
         ['low','auto','high'].map(function(q){ return '<button class="'+(SET.quality===q?'is-on':'')+'" data-q="'+q+'">'+({low:'낮음',auto:'자동',high:'높음'})[q]+'</button>'; }).join('') + '</span></div>' +
+      '<div class="srow"><span>시네마틱 연출<small class="t-faint">카메라 · 슬로 · HUD 집중도</small></span><span class="segs" data-seg="cine">' +
+        ['cinema','normal','minimal','off'].map(function(c){ return '<button class="'+(SET.cine===c?'is-on':'')+'" data-cine="'+c+'">'+({cinema:'영화',normal:'기본',minimal:'최소',off:'끔'})[c]+'</button>'; }).join('') + '</span></div>' +
       tog('lights', '조명 효과', '벙커 등 · 그림자 (끄면 가벼워짐)') +
       tog('bloom', '빛 번짐', '램프·불꽃·궤적이 빛나 보인다 (끄면 가벼워짐)') +
       '<div class="hr"></div><div class="label-ko">화면</div>' +
@@ -445,6 +447,7 @@
         if (k === 'dev'){ try { on ? localStorage.setItem('tw:dev','1') : localStorage.removeItem('tw:dev'); } catch(e){} var d = $('.navdock'), tg = $('.navdock__toggle'); if (d) d.style.display = on ? '' : 'none'; if (tg) tg.style.display = on ? '' : 'none'; if (on && TOUCH && !tg) navDockToggle(); return; }
         SET[k] = on; save(); return; }
       var q = e.target.closest('[data-q]'); if (q){ SET.quality = q.getAttribute('data-q'); [].forEach.call(q.parentNode.children, function(b){ b.classList.toggle('is-on', b === q); }); save(); return; }
+      var c = e.target.closest('[data-cine]'); if (c){ SET.cine = c.getAttribute('data-cine'); [].forEach.call(c.parentNode.children, function(b){ b.classList.toggle('is-on', b === c); }); save(); return; }
       var a = e.target.closest('[data-act]'); if (!a) return;
       if (a.getAttribute('data-act') === 'fs'){ var de = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (de.requestFullscreen) de.requestFullscreen().catch(function(){}); }
       if (a.getAttribute('data-act') === 'reset'){ if (!confirm('진행(레벨·골드·가방·기록)을 모두 지웁니다. 계속할까요?')) return;

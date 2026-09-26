@@ -9,7 +9,8 @@ import fs from 'node:fs';
 import {createCineDirector,BEATS,FOV_BACK} from '../js/cine-director.js';
 
 const L1=['deflect','repel','clash','perfectDodge','comboFinish'];
-const L2=['execute','ult','poiseBreakCinematic','bossBigTellCinematic'];
+const L2=['execute','ult','poiseBreak','bossBigTellCinematic'];
+const HOOKS=['bossBigTellCinematic','bossIntro','phase','victory'];
 const L3=['bossIntro','phase','victory'];
 const mk=(mode)=>{ const ev=[]; const d=createCineDirector({ mode, emit:(n,detail)=>ev.push({n,detail}) }); return {d,ev}; };
 const step=(d,sec)=>{ let o; for(let t=0;t<sec-1e-9;t+=1/120) o=d.update(1/120,true); return o; };
@@ -31,11 +32,11 @@ test('L1 never takes control and never slows time before a judgement: only trigg
   assert.equal(d.lostRatio,0); step(d,BEATS.clash.dur+0.1); assert.equal(d.lostRatio,0,'L1 은 조작 뺏김 예산을 쓰지 않는다');
 });
 
-test('camera: L1 push peaks at 15~25 % and fov dips ~-4° then returns within 0.3 s',()=>{
+test('camera: L1 push peaks at 12~25 % (clash 후보 0.18, 나머지는 비례) and fov dips ~-4° then returns within 0.3 s',()=>{
   for(const id of L1){
     const {d}=mk('normal'); d.trigger(id,{}); let push=0, fovMin=0, tPeak=0, t=0, backAt=null;
     for(;t<BEATS[id].dur;t+=1/120){ const o=d.update(1/120,true); if(Math.abs(o.push)>push) push=Math.abs(o.push); if(o.fov<fovMin){ fovMin=o.fov; tPeak=t; } if(backAt===null&&t>tPeak&&fovMin<-3.9&&o.fov>-0.01) backAt=t; }
-    assert.ok(push>=0.15-1e-6&&push<=0.25+1e-6,`${id}: 밀착 ${push.toFixed(3)} (15~25 %)`);
+    assert.ok(push>=0.12-1e-6&&push<=0.25+1e-6,`${id}: 밀착 ${push.toFixed(3)} (12~25 %)`);
     assert.ok(fovMin<=-3.9,`${id}: 화각 ${fovMin.toFixed(2)}°`);
     assert.ok(backAt!==null&&backAt-tPeak<=FOV_BACK+0.02,`${id}: 화각 복귀 ${backAt===null?'없음':(backAt-tPeak).toFixed(2)+' s'}`);
   }
@@ -53,14 +54,17 @@ test('tw:cinematic:end is emitted when a beat finishes, is cancelled, or the dir
 test('L2/L3 hooks: right tier, given duration, and they mirror existing cuts regardless of mode; L1 is skipped inside a cut',()=>{
   for(const id of L2) assert.equal(BEATS[id].tier,'L2',id);
   for(const id of L3) assert.equal(BEATS[id].tier,'L3',id);
-  for(const id of [...L2,...L3]) assert.ok(BEATS[id].hook&&!BEATS[id].cam&&!BEATS[id].slow,`${id}: 훅만 — 카메라·시간은 아직 없다`);
-  const {d,ev}=mk('off'); const h=d.hook('execute',1.7);
-  assert.deepEqual(h,{ id:'execute', tier:'L2', duration:1700 }); assert.deepEqual(ev[0],{ n:'tw:cinematic', detail:h });
-  const {d:d2,ev:ev2}=mk('normal'); d2.hook('phase'); assert.equal(ev2[0].detail.duration,Math.round(BEATS.phase.dur*1000),'길이 생략 시 표 값');
+  for(const id of HOOKS) assert.ok(BEATS[id].hook&&!BEATS[id].cam&&!BEATS[id].slow,`${id}: 훅만 — 카메라·시간은 아직 없다`);
+  const {d,ev}=mk('off'); const h=d.hook('bossBigTellCinematic',0.8);
+  assert.deepEqual(h,{ id:'bossBigTellCinematic', tier:'L2', duration:800 });
+  assert.deepEqual(ev[0],{ n:'tw:cinematic', detail:{ id:'bossBigTellCinematic', tier:'L1', duration:800, keepInput:true } },'큰 기술 예고: 입력 유지 → HUD 엔 L1(조작 UI 유지)');
+  assert.ok(d.trigger('clash',{})===null,'off 모드'); const kk=mk('normal'); kk.d.hook('bossBigTellCinematic',0.8); assert.ok(kk.d.trigger('deflect',{}),'입력 유지 훅은 L1 을 막지 않는다');
+  const {d:d2,ev:ev2}=mk('normal'); d2.hook('phase',undefined,{ phase:2, title:'눈뜬 허수아비', subtitle:'핵이 타오른다' }); assert.equal(ev2[0].detail.duration,Math.round(BEATS.phase.dur*1000),'길이 생략 시 표 값');
+  assert.deepEqual(ev2[0].detail,{ id:'phase', tier:'L3', duration:2850, phase:2, title:'눈뜬 허수아비', subtitle:'핵이 타오른다' },'L3 장면 제목을 detail 에 싣는다(105)');
   assert.equal(d2.trigger('clash',{}),null,'컷 도중 L1 은 생략'); assert.equal(d2.log.at(-1).why,'cut');
   step(d2,BEATS.phase.dur+0.05); assert.ok(d2.trigger('clash',{}),'컷이 끝나면 받는다');
   d2.cancel(); assert.equal(ev2.at(-1).n,'tw:cinematic:end');
-  assert.equal(d2.trigger('execute',{dur:1.7}).tier,'L2','trigger 로 불러도 훅으로 간다');
+  assert.equal(d2.trigger('bossIntro',{dur:4.2}).tier,'L3','trigger 로 불러도 훅으로 간다');
 });
 
 test('game3d wiring: events are dispatched on window and beats fire after the judgement cases',()=>{
@@ -70,7 +74,7 @@ test('game3d wiring: events are dispatched on window and beats fire after the ju
   assert.ok(at("case 'counter':")<at("cineBeat(cTier, cAt, 1)"),'카운터 판정(counter 이벤트) 뒤에 박자');
   assert.ok(at("function perfectDodge")<at("cineBeat('perfectDodge'"));
   at("cineBeat('comboFinish'");
-  for(const h of ["CINE.hook('execute'","CINE.hook('ult'","CINE.hook('bossIntro'","CINE.hook('phase'","CINE.hook('victory'"]) at(h);
+  for(const h of ["CINE.hook('execute'","CINE.hook('ult'","CINE.hook('bossIntro', 4.2, { title:","CINE.hook('phase', 2.85, { phase:next+1, title:","CINE.hook('victory', 1.5, { title:","l2Cut('execute')"]) at(h);
   assert.ok(js.split('CINE.cancel()').length-1>=3,'컷 끝(등장·페이즈)·사망에서 end 를 낸다');
   assert.ok(!/battle\.input\([^)]*\)\s*;?\s*[^\n]*cineBeat/.test(js),'박자가 입력을 대신 넣지 않는다');
 });
