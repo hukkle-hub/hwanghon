@@ -170,7 +170,8 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
   }
   function draw(){ if(bloom){ try{ bloom.render(scene, cam); return; }catch(e){ DIAG.errors.push('bloom '+e.message); bloom=null; renderer.setRenderTarget(null); } } renderer.render(scene, cam); }
   /* 연출 감독 (docs/design/102·103) — 전투 이벤트 → 카메라·시간·빛·색·소리 한 박자. 판정은 안 건드린다 */
-  var CINE=createCineDirector({ mode:SET.cine||'normal' });
+  var CINE=createCineDirector({ mode:SET.cine||'normal', emit:function(name, detail){ try{ window.dispatchEvent(new CustomEvent(name, { detail:detail })); }catch(e){} } });   /* HUD 계약 tw:cinematic / tw:cinematic:end (docs/design/103-cinematic-combat-hud.md, GPT) */
+  try{ if(window.TW_CINEMATIC_HUD) window.TW_CINEMATIC_HUD.setMode(SET.cine==='minimal'?'minimal':'default'); }catch(e){}
   var cineGrade=(function(){ var d=document.createElement('div'); d.className='cine-grade'; var cv=document.getElementById('game3d'); if(cv&&cv.parentNode) cv.parentNode.insertBefore(d, cv.nextSibling); else document.body.appendChild(d); return d; })(), gradeKey='';
   function cineBeat(id, at, side){ var b=CINE.trigger(id, { at:at||null, side:side||1 }); if(!b) return null;
     if(b.sound&&SFX.duck) SFX.duck(b.sound.duck, b.sound.ms);
@@ -1333,7 +1334,7 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
         /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
         if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();
-        if(!e.counter&&(e.kind==='smash'||cmbH===3)){ var fb=cineBeat('finisher', hp.clone(), 1); if(fb&&fb.slow) slowmo(fb.slow.scale, fb.slow.ms); }   /* 연계 마무리 */
+        if(!e.counter&&(e.kind==='smash'||cmbH===3)){ var fb=cineBeat('comboFinish', hp.clone(), 1); if(fb&&fb.slow) slowmo(fb.slow.scale, fb.slow.ms); }   /* 연계 마무리 */
         if(e.counter){ burst(hp, feedback.particles, feedback.color, axisFromBoss()); fxImpact(hp, feedback.size, 0xFFF1C8, feedback.duration); el.cV.textContent=W.fmt(e.dmg); flash(); vib(e.perfect?[20,40,20]:[20,30]);
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
         else { burst(hp, feedback.particles, feedback.color, axH);
@@ -1398,7 +1399,7 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
       case 'break': zone=null; hideZone(); bossStop(); boss.behavior?.react('break',1.1); if(e.dmg) num(bossHitPos(HITMAP[e.part]), '파괴 +'+W.fmt(e.dmg), 'counter'); SFX.play('brk'); var bp=bossHitPos(HITMAP[e.part]); num(bp, '부위 파괴 — '+e.name, 'crit'); var axB=[bp.x-boss.root.position.x, bp.z-boss.root.position.z]; burst(bp, 48, 0x7B9BD6, axB); vib([30,40,30]); guide('<b>'+e.name+'</b> 파괴. 자세가 무너진다', 2.5); bossDetach(HITMAP[e.part]); dropPart(e.part); bossPlay('stagger'); shake(0.014,400,axB[0],axB[1]); var pdef=A.stages[phase].parts.filter(function(p){ return p.id===e.part; })[0]; var removed=A.stages[phase].patterns.filter(function(p){return (p.disabledBy||[]).indexOf(e.part)>=0;});if(removed.length)guide('<b>'+e.name+'</b> 파괴 — '+removed.map(function(p){return p.name;}).join(' · ')+' 봉쇄',3); if(pdef&&pdef.onBreak){ if(pdef.onBreak.slow) bossSlow=Math.min(bossSlow, pdef.onBreak.slow); if(pdef.onBreak.zoneScale) zoneScale=Math.min(zoneScale, pdef.onBreak.zoneScale); } break;
       case 'downed': SFX.play('down'); guide('<b>격추!</b> 붙어서 <b>F</b> — 처형', 3); bossPlay('down'); zone=null; hideZone(); shake(0.012,400); break;
       /* 처형: 카메라가 보스 쪽으로 붙고, 내리꽂는 순간에 크게 멈춘다 */
-      case 'execute': SFX.play('execute'); guide('<b>처형</b>', 1.2); camZoom=0.82;
+      case 'execute': SFX.play('execute'); guide('<b>처형</b>', 1.2); camZoom=0.82; CINE.hook('execute', 1.7);   /* L2 훅: 기존 컷 길이(0.9+0.2+0.6) 만 HUD 에 알린다 */
         var eb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:eb.clone().add(new THREE.Vector3(-2.4,0.9,3.0)), look:bossHitPos('body'), t:0, dur:0.9 };
         schedule(function(){ cineCam={ from:(cineCam&&cineCam.to?cineCam.to.clone():camPos.clone()), to:camPos.clone(), look:null, t:0, dur:0.6, back:true }; }, 1100);
         schedule(function(){ cineCam=null; camZoom=1; }, 1750);
@@ -1429,7 +1430,7 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
           banner('E X E C U T E', e.dmg, (A.hudName||'보스')+' · 처형', true); break; }
         /* 다단(docs/design/89): 앞 타들은 가볍게, 큰 연출은 마지막 타에서 한 번 */
         if(e.of>1&&e.seq<e.of){ var spM=bossHitPos(HITMAP[s&&s.target]||'body'); shake(0.005,140,axI[0],axI[1]); burst(spM,12,null,axI); fxImpact(spM,.45,0xFFE0B0,.1); break; }
-        if(e.kind==='ult'){fxUlt(brColor(ULT));SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
+        if(e.kind==='ult'){CINE.hook('ult', 0.6);fxUlt(brColor(ULT));SFX.play('ult');slowmo(0.3,500);banner('T W I L I G H T',e.dmg,ULT.name+' · 출혈 3중첩',true);flash();vib([50,30,80]);shake(0.02,500,axI[0],axI[1]);camKick(0.04,0.085,0.06);burst(bossHitPos('core'),60,0xD94A45,axI);}
         else if(e.kind==='smash'){var sp2=bossHitPos(HITMAP[s&&s.target]||'body');shake(0.008,240,axI[0],axI[1]);camKick(0.022,0.045,0.032);vib(25);burst(sp2,26,null,axI);fxImpact(sp2,.65,0xFFD8A0,.12);}
         break;
       case 'release': fxThrow(e); SFX.play('swing'); break;
@@ -1569,7 +1570,7 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
   function endFlyover(){ if(!flyDone) return; if(flyT)flyT.cancelled=true; cineCam=null; cine=false; var d=flyDone; flyDone=null; d(); }
   el.dlg.addEventListener('pointerdown', function(e){ e.stopPropagation(); dlgI++; if(dlgI<dlgLines.length) showLine(); else { el.dlg.classList.remove('is-on'); cine=false; dlgDone&&dlgDone(); } });
   document.addEventListener('keydown', function(e){ if(el.dlg.classList.contains('is-on') && (e.code==='Space'||e.code==='Enter')){ e.preventDefault(); el.dlg.dispatchEvent(new PointerEvent('pointerdown')); } });
-  function deathOverlay(reason){if(state==='dead')return;if(skirm)skirm.state.hp=0;PS.hp=0;scheduled=[]; state='dead'; battle=null; SFX.play('down'); flash(); shake(0.02,600); ain.hitT=9; ain.dead=true; playOnce('death',{ hold:true, speed:1.1 }); camZoom=1.25;
+  function deathOverlay(reason){if(state==='dead')return;if(skirm)skirm.state.hp=0;PS.hp=0;scheduled=[]; state='dead'; battle=null; CINE.cancel(); SFX.play('down'); flash(); shake(0.02,600); ain.hitT=9; ain.dead=true; playOnce('death',{ hold:true, speed:1.1 }); camZoom=1.25;
     schedule(function(){ el.ov.classList.add('deathov'); var DD=L.beats.death||{}; overlay('<div class="ov__k">'+(DD.k||'쓰러졌다')+'</div><div class="ov__t">'+L.name+'</div><div class="ov__line">'+(DD.line||'마태오 — “다시.”')+'</div><div class="ov__hint">'+(reason||DD.hint||'격벽 앞에서 다시 시작한다. 잡은 것과 얻은 것은 남는다.')+'</div><button class="btn btn--primary" data-go>'+(DD.btn||'격벽 앞에서 재도전')+'</button> <a class="btn" href="office.html" style="margin-left:8px">사무실로</a>', function(){ try{ sessionStorage.setItem('tw:retry','gate'); }catch(e){} location.reload(); }); }, 1400); }
 
   /* 목표 키는 레벨의 quest 정의에서 읽는다 — 던전이 늘어도 여기를 고칠 필요가 없다.
@@ -1593,7 +1594,7 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
   var cineCam=null; /* {from,to,look,t,dur} */
   function startFight(){ if(!expedition.ready())return; if(skirm)PS=Object.assign({},skirm.state); state='fight'; world.setSolid(gate.cx, gate.cy, true); gateClosed=true; P.x=Math.max(P.x, (gate.cx+1)*map.cell + P.r + 6); gateMesh.visible=true;
     SFX.play('gate'); vib([40,60,40]); shake(0.01,500); guide(L.beats.gate, 2.5);
-    cine=true; stick.sx=stick.sy=0;
+    cine=true; stick.sx=stick.sy=0; CINE.hook('bossIntro', 4.2);   /* L3 훅 */
     var bpos=v3(Bs.x,Bs.y,1.6), pcam=camPos.clone();
     schedule(function(){ cineCam={ from:pcam.clone(), to:bpos.clone().add(new THREE.Vector3(-3.5,1.4,4.5)), look:bpos, t:0, dur:1.1 }; SFX.play('chains'); bossPlay('stagger'); }, 500);
     schedule(function(){ boss.anim.glow=1.2; banner('B O S S', 0, A.stages[0].name+' · '+L.place, false); el.cV.textContent=A.hudName||'허수아비'; SFX.play('phase'); shake(0.012, 600); burst(bossHitPos('core'), 40, 0xD94A45); }, 1700);
@@ -1605,11 +1606,11 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
     schedule(function(){ shake(0.02, 700); camKick(0.05,0.11,0.05); vib([50,40,70]); slowmo(0.45, 420);
       fxRing(boss.root.position, 0xD94A45, 6.5, 0.9); burst(bossHitPos('head'), 46, 0xFFB08A); }, 2620);
     schedule(function(){ cineCam={ from:cineCam.to.clone(), to:camPos.clone(), look:null, t:0, dur:0.9, back:true }; }, 3200);
-    schedule(function(){ cineCam=null; cine=false; el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; startPhase(0); }, 4200); }
+    schedule(function(){ cineCam=null; cine=false; CINE.cancel(); el.bosshp.classList.remove('is-off'); el.timerBox.classList.remove('is-off'); fightT=0; startPhase(0); }, 4200); }
   function phaseClear(){ var m=Object.assign({}, battle.metrics); stageResults.push(m); PS=battle.exportPlayer(); bossStop(); zone=null; hideZone(); gainXp(150+phase*100, '페이즈 돌파');
     if (phase < A.stages.length-1){
       /* 페이즈 전환 컷: 입력을 끊고 카메라를 보스에 붙인 뒤 각성을 보여 주고 돌아온다 */
-      var next=phase+1; battle=null; cine=true; zone=null; hideZone();
+      var next=phase+1; battle=null; cine=true; zone=null; hideZone(); CINE.hook('phase', 2.85);   /* L3 훅 */
       SFX.play('phase'); bossPlay('stagger'); flash(); vib([30,30,60]); shake(0.012,500);
       var cb=bossHitPos('core'), ch=bossHitPos('head');
       cineCam={ from:camPos.clone(), to:ch.clone().add(new THREE.Vector3(-3.0,1.2,3.8)), look:cb, t:0, dur:0.95 };
@@ -1624,9 +1625,9 @@ import { createCineDirector, BEATS as CINE_BEATS } from './cine-director.js';
         slowmo(0.35, 700);
       }, 900);
       schedule(function(){ cineCam={ from:cineCam&&cineCam.to?cineCam.to.clone():camPos.clone(), to:camPos.clone(), look:null, t:0, dur:0.7, back:true }; }, 2100);
-      schedule(function(){ cineCam=null; cine=false; startPhase(next); }, 2850); }
+      schedule(function(){ cineCam=null; cine=false; CINE.cancel(); startPhase(next); }, 2850); }
     else { battle=null; state='clear'; quest.boss=1; renderQuest(); gainXp(A.id==='tutorial'?600:1500, A.stages[A.stages.length-1].name+' 격파'); SAVE.stat('runs'); SFX.play('brk'); schedule(function(){ SFX.play('clear'); }, 900); bossPlay('collapse'); playOnce('cheer',{hold:true}); el.timerBox.classList.add('is-off'); var sum=CB.summarize(R, A, stageResults); camZoom=1.15; runLuck=window.TW_LOOT?TW_LOOT.luckOf(sum):1;
-      /* 격파 컷신: 무너지는 보스 앞으로 카메라 */ cine=true; var hb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:hb.clone().add(new THREE.Vector3(-3.2,1.4,4.2)), look:bossHitPos('body'), t:0, dur:1.5 };
+      /* 격파 컷신: 무너지는 보스 앞으로 카메라 */ cine=true; CINE.hook('victory', 1.5);   /* L3 훅 */ var hb=bossHitPos('head'); cineCam={ from:camPos.clone(), to:hb.clone().add(new THREE.Vector3(-3.2,1.4,4.2)), look:bossHitPos('body'), t:0, dur:1.5 };
       schedule(function(){ overlay('<div class="ov__k">던전 클리어</div><div class="ov__t">'+L.name+'</div><div class="ov__l">'+A.stages[A.stages.length-1].name+' 격파</div>'+
         '<div class="ov__stats"><div>유효 반격<b>'+sum.ripostes+'</b></div><div>등급<b class="g-'+sum.rank+'">'+sum.rank+'</b></div><div>시간<b>'+sum.op.time+'</b></div><div>카운터<b>'+sum.op.counterRate+'</b></div><div>부위 파괴<b>'+sum.breaks+'/'+sum.breakable+'</b></div><div>받은 피해<b>'+sum.op.dmgTaken+'</b></div></div>'+
         '<button class="btn btn--primary" data-go>정산으로</button>', function(){ finish(sum); }); }, 2600); } }

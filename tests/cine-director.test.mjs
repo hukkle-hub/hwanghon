@@ -4,9 +4,11 @@ import assert from 'node:assert/strict';
 import {createCineDirector,BEATS,MODES,BUDGET} from '../js/cine-director.js';
 
 const run=(d,sec,fighting=true)=>{ let o; for(let t=0;t<sec;t+=1/60) o=d.update(1/60,fighting); return o; };
+const L1=Object.entries(BEATS).filter(([,b])=>!b.hook);
 
-test('L1 beats: every beat is L1, never takes control, and fades back to zero',()=>{
-  for(const [id,b] of Object.entries(BEATS)){
+test('L1 beats: every played beat is L1, never takes control, and fades back to zero',()=>{
+  assert.deepEqual(L1.map(([id])=>id),['deflect','repel','clash','perfectDodge','comboFinish']);
+  for(const [id,b] of L1){
     assert.equal(b.tier,'L1',id);
     const d=createCineDirector(); const r=d.trigger(id,{at:{x:0,y:1,z:0}});
     assert.ok(r,`${id} 재생`); assert.equal(d.lostRatio,0,`${id}: L1 은 조작을 뺏지 않는다`);

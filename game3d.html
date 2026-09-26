@@ -225,8 +225,8 @@ html.in-fight .quest{display:none}
 .pd-vig.on{animation:pdVig .9s ease-out}
 @keyframes pdVig{0%{opacity:0}12%{opacity:1}100%{opacity:0}}
 
-/* ===== 101 — CINEMATIC COMBAT HUD v01 =====
-   목표: 컨셉 시트의 정보 위계만 실제 전투 DOM에 이식한다.
+/* ===== 103 — CINEMATIC COMBAT HUD v02 =====
+   목표: 컨셉 시트의 정보 위계를 실제 전투 DOM에 이식하고, L0~L3 시네마틱 연출 단계와 HUD 가시성을 동기화한다.
    전투 판정·입력·버튼 DOM id는 바꾸지 않고, game3d.js가 쓰는 기존 노드를 재배치한다. */
 .cinema-hud-v1 .dg::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;background:
   linear-gradient(180deg,rgba(0,0,0,.42) 0,rgba(0,0,0,.10) 15%,rgba(0,0,0,0) 33%,rgba(0,0,0,0) 70%,rgba(0,0,0,.23) 100%),
@@ -322,6 +322,52 @@ html.in-fight .quest{display:none}
  .cinema-hud-v1 .guide{bottom:max(5px,env(safe-area-inset-bottom));max-width:44vw;font-size:9px;padding:4px 10px}
  .combat-brand{display:none}
 }
+
+
+/* ===== 103 — CINEMATIC HUD STATE CONTRACT v02 =====
+   Claude의 Cinematic Director가 tw:cinematic 이벤트를 보내면 HUD가 같은 박자로 비워진다.
+   L1은 입력을 유지하므로 조작 UI를 보존, L2/L3만 조작 UI를 감춘다. */
+.cinema-hud-v1 .btparty,.cinema-hud-v1 .vitals,.cinema-hud-v1 .bosshp,
+.cinema-hud-v1 .bttimer,.cinema-hud-v1 .combo,.cinema-hud-v1 .bthud,
+.cinema-hud-v1 .target-cycle,.cinema-hud-v1 .lockon,.cinema-hud-v1 .status,
+.cinema-hud-v1 .guide,.cinema-hud-v1 .counter,.cinema-hud-v1 .quest,
+.cinema-hud-v1 .toasts,.cinema-hud-v1 .combat-brand{transition:opacity .16s ease,filter .16s ease,transform .18s ease}
+/* L1: 받아치기/완벽회피. 입력은 그대로, 정보만 한 박자 뒤로 물린다. */
+.cinema-hud-v1.cinema-l1 .quest,.cinema-hud-v1.cinema-l1 .toasts,
+.cinema-hud-v1.cinema-l1 .target-cycle,.cinema-hud-v1.cinema-l1 .lockon{opacity:0!important;pointer-events:none!important}
+.cinema-hud-v1.cinema-l1 .btparty,.cinema-hud-v1.cinema-l1 .vitals{opacity:.72}
+.cinema-hud-v1.cinema-l1 .bosshp{filter:drop-shadow(0 3px 14px rgba(0,0,0,.9)) brightness(.92)}
+.cinema-hud-v1.cinema-l1 .bthud{opacity:.82}
+/* L2: 처형/궁극기 전용 카메라. 조작을 뺏는 동안 컨트롤과 생활 정보는 완전히 비운다. */
+.cinema-hud-v1.cinema-l2 .bthud,.cinema-hud-v1.cinema-l2 .combo,
+.cinema-hud-v1.cinema-l2 .target-cycle,.cinema-hud-v1.cinema-l2 .lockon,
+.cinema-hud-v1.cinema-l2 .status,.cinema-hud-v1.cinema-l2 .guide,
+.cinema-hud-v1.cinema-l2 .quest,.cinema-hud-v1.cinema-l2 .toasts,
+.cinema-hud-v1.cinema-l2 .combat-brand{opacity:0!important;pointer-events:none!important}
+.cinema-hud-v1.cinema-l2 .btparty,.cinema-hud-v1.cinema-l2 .vitals{opacity:.18}
+.cinema-hud-v1.cinema-l2 .bttimer{opacity:.20}
+.cinema-hud-v1.cinema-l2 .bosshp{opacity:.52;transform:translateY(-3px)}
+.cinema-hud-v1.cinema-l2 .counter{opacity:0!important}
+/* L3: 등장/페이즈/격파. 이름과 PHASE만 남겨 장면의 제목처럼 쓴다. */
+.cinema-hud-v1.cinema-l3 .btparty,.cinema-hud-v1.cinema-l3 .vitals,
+.cinema-hud-v1.cinema-l3 .bttimer,.cinema-hud-v1.cinema-l3 .combo,
+.cinema-hud-v1.cinema-l3 .bthud,.cinema-hud-v1.cinema-l3 .target-cycle,
+.cinema-hud-v1.cinema-l3 .lockon,.cinema-hud-v1.cinema-l3 .status,
+.cinema-hud-v1.cinema-l3 .guide,.cinema-hud-v1.cinema-l3 .counter,
+.cinema-hud-v1.cinema-l3 .quest,.cinema-hud-v1.cinema-l3 .toasts,
+.cinema-hud-v1.cinema-l3 .combat-brand{opacity:0!important;pointer-events:none!important}
+.cinema-hud-v1.cinema-l3 .bosshp{opacity:1;transform:translateY(8px)}
+.cinema-hud-v1.cinema-l3 .bosshp__bar,.cinema-hud-v1.cinema-l3 .stagger{opacity:0}
+.cinema-hud-v1.cinema-l3 .bosshp__nm{font-size:20px;letter-spacing:.20em;text-shadow:0 3px 12px #000}
+.cinema-hud-v1.cinema-l3 .ph{font-size:10px;color:#E7D9C5}
+/* HUD 연출 강도: 최소 모드는 L2/L3 자동 숨김을 끄고 L1 정리만 유지한다. */
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l2 .bthud,
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l3 .bthud{opacity:.86!important;pointer-events:auto!important}
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l2 .btparty,
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l3 .btparty,
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l2 .vitals,
+.cinema-hud-v1[data-cinema-hud="minimal"].cinema-l3 .vitals{opacity:.72!important}
+
 </style>
 </head>
 <body class="cinema-hud-v1" data-landscape data-nonav data-responsive-mobile>
@@ -410,5 +456,24 @@ html.in-fight .quest{display:none}
 <script type="module" src="js/game3d.js"></script>
 <script src="js/ui.js"></script>
 <script>if("serviceWorker" in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+
+<script>
+/* 103 — HUD ↔ Cinematic Director 공개 계약.
+   Claude 쪽 연출 감독은 window.dispatchEvent(new CustomEvent('tw:cinematic',{detail:{tier:'L1',id:'clash',duration:350}})) 만 호출하면 된다. */
+(function(){
+  var root=document.body, timer=0, tiers=['cinema-l1','cinema-l2','cinema-l3'];
+  function clear(){ tiers.forEach(function(c){root.classList.remove(c);}); if(timer){clearTimeout(timer);timer=0;} root.removeAttribute('data-cinema-id'); }
+  function set(detail){
+    detail=detail||{}; var tier=String(detail.tier||'').toUpperCase(); clear();
+    if(tier==='L1'||tier==='L2'||tier==='L3') root.classList.add('cinema-'+tier.toLowerCase());
+    if(detail.id) root.setAttribute('data-cinema-id',String(detail.id));
+    var dur=Number(detail.duration||detail.dur||0); if(dur>0) timer=setTimeout(clear,Math.max(80,dur));
+  }
+  window.addEventListener('tw:cinematic',function(e){set(e.detail);});
+  window.addEventListener('tw:cinematic:end',clear);
+  window.TW_CINEMATIC_HUD={set:set,clear:clear,get tier(){return root.classList.contains('cinema-l3')?'L3':root.classList.contains('cinema-l2')?'L2':root.classList.contains('cinema-l1')?'L1':'L0';},setMode:function(mode){root.setAttribute('data-cinema-hud',mode==='minimal'?'minimal':'default');}};
+})();
+</script>
+
 </body>
 </html>
