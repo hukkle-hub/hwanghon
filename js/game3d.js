@@ -573,7 +573,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   var boss=(function(){
     var root=new THREE.Group(); root.position.set(X(Bs.x), 0, Z(Bs.y)); scene.add(root);
     var body=new THREE.Group(); root.add(body);
-    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.9 })); sp.scale.set(0.5*BOSS_SCALE,0.5*BOSS_SCALE,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
+    var hits={}; Object.keys(A.parts3d||{}).forEach(function(k){ var sp=new THREE.Sprite(new THREE.SpriteMaterial({ map:ringTex, color:0xC9A45E, transparent:true, depthTest:false, opacity:0.22 })); sp.scale.set(0.26*BOSS_SCALE,0.26*BOSS_SCALE,1); sp.visible=false; sp.renderOrder=5; scene.add(sp); hits[k]=sp; });
     /* 부위 → 뼈 + 오프셋(뼈 로컬 기준 대략: 앞쪽 = 모델 +Z) */
     var PART=JSON.parse(JSON.stringify(A.parts3d||{ body:{ bone:'Spine', off:[0,0.1,0.3], r:0.7 }, head:{ bone:'Head', off:[0,0.15,0.05], r:0.4 }, core:{ bone:'Spine2', off:[0,0.05,0.42], r:0.32 } }));
     Object.keys(PART).forEach(function(k){ var q=PART[k]; q.off=q.off.map(function(v){ return v*BOSS_SCALE; }); q.r=(q.r||0.5)*BOSS_SCALE; });
@@ -900,21 +900,21 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
 
   /* ---------- 존(바닥 범위) ---------- */
   var zones={};
-  function zoneMesh(id){ if(zones[id]) return zones[id]; var mat=new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.22, depthWrite:false, side:THREE.DoubleSide }); var outer=new THREE.Mesh(new THREE.CircleGeometry(1,40), mat); outer.rotation.x=-Math.PI/2; var inner=new THREE.Mesh(new THREE.CircleGeometry(1,40), new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.3, depthWrite:false })); inner.rotation.x=-Math.PI/2; inner.position.y=0.01;
-    var edge=new THREE.Mesh(new THREE.RingGeometry(0.96,1,48), new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.9, depthWrite:false, side:THREE.DoubleSide })); edge.rotation.x=-Math.PI/2; edge.position.y=0.015;
+  function zoneMesh(id){ if(zones[id]) return zones[id]; var mat=new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.055, depthWrite:false, side:THREE.DoubleSide }); var outer=new THREE.Mesh(new THREE.CircleGeometry(1,40), mat); outer.rotation.x=-Math.PI/2; var inner=new THREE.Mesh(new THREE.CircleGeometry(1,40), new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.11, depthWrite:false })); inner.rotation.x=-Math.PI/2; inner.position.y=0.01;
+    var edge=new THREE.Mesh(new THREE.RingGeometry(0.975,1,48), new THREE.MeshBasicMaterial({ color:0xC7332C, transparent:true, opacity:0.48, depthWrite:false, side:THREE.DoubleSide })); edge.rotation.x=-Math.PI/2; edge.position.y=0.015;
     var rect=new THREE.Mesh(new THREE.PlaneGeometry(1,1), mat.clone()); rect.rotation.x=-Math.PI/2; var rectIn=new THREE.Mesh(new THREE.PlaneGeometry(1,1), inner.material.clone()); rectIn.rotation.x=-Math.PI/2; rectIn.position.y=0.01;
     var g=new THREE.Group(); g.add(outer, inner, edge, rect, rectIn); g.position.y=0.03; g.renderOrder=2; scene.add(g); zones[id]={ g:g, outer:outer, inner:inner, edge:edge, rect:rect, rectIn:rectIn }; [outer,inner,edge,rect,rectIn].forEach(function(m){ m.userData.op=m.material.opacity; }); return zones[id]; }
   /* tell='teach' : 바닥 게이지가 «언제» 맞는지까지 채워서 알려준다 (훈련장 전용)
      tell='read'  : «어디» 만 깔아 두고 «언제» 는 보스 모션으로 읽는다 (기본).
                     fr=0 이면 채움 면이 사라지고 테두리만 남아 카운트다운이 되지 않는다. */
   var TELL=L.tell||(L.id==='d01'?'teach':'read'), TEACH=TELL==='teach';
-  function drawZone(z, fr, col, id){ if(!TEACH) fr=0; var zm=zoneMesh(id||'boss'); zm.g.visible=true; var dim=CINE.out.tier==='L1'?ZONE_DIM:1;   /* L1 연출 중엔 표식을 낮춘다(정보는 그대로) */
+  function drawZone(z, fr, col, id){ if(!TEACH) fr=0; var zm=zoneMesh(id||'boss'); zm.g.visible=true; var activeBeat=CINE.out.active&&CINE_BEATS[CINE.out.active], dim=activeBeat&&activeBeat.tier==='L1'?ZONE_DIM:1;   /* 실제 L1 박자를 보고 표식을 낮춘다(CINE.out.tier 와 같은 값 — v09 형태 유지) */
     [zm.outer,zm.inner,zm.edge,zm.rect,zm.rectIn].forEach(function(m){ m.material.color.setHex(col); m.material.opacity=(m.userData.op||m.material.opacity)*dim; });
     if(z.kind==='circle'){ zm.outer.visible=zm.inner.visible=zm.edge.visible=true; zm.rect.visible=zm.rectIn.visible=false; var r=M(z.r); zm.g.position.set(X(z.x), 0.03, Z(z.y)); zm.outer.scale.set(r,r,1); zm.edge.scale.set(r,r,1); zm.inner.scale.set(r*fr+0.001,r*fr+0.001,1); zm.g.rotation.y=0; }
     else { zm.outer.visible=zm.inner.visible=zm.edge.visible=false; zm.rect.visible=zm.rectIn.visible=true; var len=M(z.len), w=M(z.w); zm.g.position.set(X(z.x), 0.03, Z(z.y)); zm.g.rotation.y=-z.a; zm.rect.scale.set(len+M(20), w, 1); zm.rect.position.set((len-M(20))/2, 0, 0); zm.rectIn.scale.set((len+M(20))*fr+0.001, w, 1); zm.rectIn.position.set(-M(20)+(len+M(20))*fr/2, 0.01, 0); } }
   function hideZone(id){ var zm=zones[id||'boss']; if(zm) zm.g.visible=false; }
   /* 플레이어 사거리 링 */
-  var reachRing=new THREE.Mesh(new THREE.RingGeometry(M(L.player.reach)-0.03, M(L.player.reach), 64), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.12, depthWrite:false, side:THREE.DoubleSide })); reachRing.rotation.x=-Math.PI/2; reachRing.position.y=0.02; reachRing.visible=false; scene.add(reachRing);
+  var reachRing=new THREE.Mesh(new THREE.RingGeometry(M(L.player.reach)-0.018, M(L.player.reach), 64), new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:0.045, depthWrite:false, side:THREE.DoubleSide })); reachRing.rotation.x=-Math.PI/2; reachRing.position.y=0.02; reachRing.visible=false; scene.add(reachRing);
 
   /* ---------- 파티클(스파크) ---------- */
   var SPN=400, spPos=new Float32Array(SPN*3), spVel=[], spLife=new Float32Array(SPN), spCol=new Float32Array(SPN*3), spI=0;
@@ -1907,12 +1907,12 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   }
   /* 락온 표식: 조준한 부위에 링이 붙어 맥동한다 */
   function tickLock(dt){
-    if(!lockRing){ lockRing=new THREE.Mesh(new THREE.RingGeometry(0.30,0.40,28), fxMat(0xE8C878,0.85)); lockRing.renderOrder=4; lockRing.visible=false; scene.add(lockRing); }
+    if(!lockRing){ lockRing=new THREE.Mesh(new THREE.RingGeometry(0.18,0.23,32), fxMat(0xE8C878,0.54)); lockRing.renderOrder=4; lockRing.visible=false; scene.add(lockRing); }
     var on=lockOn&&battle&&!cine&&!ain.dead;
     lockRing.visible=!!on; if(!on) return;
     var s2=battle.snapshot(), p=bossHitPos(HITMAP[s2.target]||'body');
     lockRing.position.copy(p); lockRing.lookAt(cam.position);
-    var k=0.9+Math.sin(performance.now()/210)*0.12; lockRing.scale.setScalar(k);
+    var k=0.98+Math.sin(performance.now()/260)*0.045; lockRing.scale.setScalar(k); lockRing.material.opacity=(s2.enemy.executable||s2.enemy.state==='downed')?0.40:0.54;
     lockRing.material.color.setHex(s2.enemy.state==='downed'?0xFF9A45:s2.enemy.executable?0xFF9A45:0xE8C878);
   }
   function setLock(v){ lockOn=!!v; var b=$('#lockon'), tc=$('#target-cycle'); if(b){ b.classList.toggle('is-off', !lockOn); b.dataset.state=lockOn?'on':'off'; b.setAttribute('aria-pressed', String(lockOn)); b.setAttribute('aria-label', lockOn?'락온 켜짐':'락온 꺼짐'); } if(tc) tc.dataset.lock=lockOn?'on':'off';
@@ -1934,7 +1934,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       /* 카운터 창을 «흰색»으로 켜 주는 건 시점을 그대로 알려주는 것이라 훈련장에서만 한다.
          그 밖에서는 색이 «종류»만 말한다 — 붉은색 튕기기 가능 / 주황 회피 전용. */
       win=TEACH&&s.enemy.counterable&&s.enemy.state==='telegraph'&&s.enemy.tele<=s.enemy.window, col=!s.enemy.counterable?0xFF9A45:win?0xF0E4E4:0xC7332C, fr=s.enemy.state==='telegraph'?1-s.enemy.tele/s.enemy.teleDur:1; drawZone(zone, fr, col, 'boss'); } else hideZone('boss');
-    reachRing.visible=!!battle; if(battle){ reachRing.position.set(ain.root.position.x, 0.02, ain.root.position.z); reachRing.material.color.setHex(Bs.dist<=L.player.reach?0xC9A45E:0xFFFFFF); reachRing.material.opacity=Bs.dist<=L.player.reach?0.5:0.12; }
+    reachRing.visible=!!battle; if(battle){ reachRing.position.set(ain.root.position.x, 0.02, ain.root.position.z); reachRing.material.color.setHex(Bs.dist<=L.player.reach?0xC9A45E:0xFFFFFF); reachRing.material.opacity=Bs.dist<=L.player.reach?(TEACH?0.13:0.08):(TEACH?0.055:0.035); }
     updateCamera(dt); drawMini();
     if(!battle){el.timer.textContent=CB.fmtTime(travelTime); if(skirm){ var sp=skirm.snapshot().player; fill('v-hp', sp.hp/sp.hpMax*100); $('#v-hpv').textContent=W.fmt(Math.round(sp.hp))+' / '+W.fmt(sp.hpMax); fill('v-st', sp.st/sp.stMax*100); $('#v-stv').textContent=Math.round(sp.st)+' / '+sp.stMax; fill('v-ult', sp.ult); $('#v-ultv').textContent=Math.round(sp.ult)+'%'; fill('p-bar', sp.hp/sp.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(sp.hp)); } return; }
     var s2=battle.snapshot();
@@ -1947,7 +1947,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     fill('v-st', s2.player.st/s2.player.stMax*100); $('#v-stv').textContent=Math.round(s2.player.st)+' / '+s2.player.stMax;
     fill('v-ult', s2.player.ult); $('#v-ultv').textContent=Math.round(s2.player.ult)+'%';
     fill('p-bar', s2.player.hp/s2.player.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(s2.player.hp));
-    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.7:0.45)*BOSS_SCALE); h.material.opacity=tg?1:0.55; if(p.broken) h.visible=false; });
+    s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.38:0.22)*BOSS_SCALE); h.material.opacity=tg?0.34:(TEACH?0.10:0.045); if(p.broken) h.visible=false; });
     var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); o.style.setProperty('--p', Math.min(1, cd/Math.max(0.1, SK[i].cd||cd)).toFixed(3)); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
     el.actions.querySelector('[data-ult]').classList.toggle('is-ready', s2.player.ult>=R.ult.max); el.actions.querySelector('[data-atk]').classList.toggle('is-ready', Bs.dist<=L.player.reach);
     var lines=[]; if(s2.enemy.state==='telegraph'&&!s2.enemy.counterable) lines.push(['x','#FF9A45','튕기기 불가 · 회피','']); if(s2.player.riposte) lines.push(['bolt','#C9A45E','반격 기회',s2.player.riposteT.toFixed(1)+'s']); if(s2.player.guard) lines.push(['shield','#7B9BD6','방어 중','']); if(s2.player.buffT>0) lines.push(['shield','#5FAE9B','결의',Math.ceil(s2.player.buffT)+'s']); if(s2.player.critNext) lines.push(['bolt','#C9A45E','치명타 확정','']); if(s2.player.locked) lines.push(['x','#8A8A8A','경직','']);

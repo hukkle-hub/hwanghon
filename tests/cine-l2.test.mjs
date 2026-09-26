@@ -62,7 +62,7 @@ test('game3d wiring: l2Cut on execute/ult/downed, invulnerability via the inZone
   const js=fs.readFileSync(new URL('../js/game3d.js', import.meta.url),'utf8');
   for(const s of ["l2Cut('execute')","l2Cut('ult')","l2Cut('poiseBreak')","!l2Invuln&&!!zone&&world.inZone","if(battle&&!cineHold)","cine=true; l2Invuln=true; cineHold=!!r.hold","back:true"]) assert.ok(js.includes(s),`missing ${s}`);
   const dim=+(js.match(/ZONE_DIM=([0-9.]+)/)||[])[1]; assert.ok(dim>=0.45&&dim<=0.55,`ZONE_DIM ${dim}`);
-  assert.ok(/CINE\.out\.tier==='L1'\?ZONE_DIM:1/.test(js),'표식 감쇠는 L1 연출 중에만'); assert.ok(js.includes("m.material.opacity=(m.userData.op||m.material.opacity)*dim"),'표식은 남고 강도만 낮춘다');
+  assert.ok(/tier==='L1'\?ZONE_DIM:1/.test(js),'표식 감쇠는 L1 연출 중에만 (CINE.out.tier 또는 CINE_BEATS[active].tier — 둘 다 같은 값)'); assert.ok(js.includes("m.material.opacity=(m.userData.op||m.material.opacity)*dim"),'표식은 남고 강도만 낮춘다');
   assert.ok(!/l2Invuln[^\n]*R\.dodge|R\.dodge[^\n]*l2Invuln/.test(js),'회피 무적 값은 건드리지 않는다');
   const combat=fs.readFileSync(new URL('../js/combat.js', import.meta.url),'utf8'); assert.ok(!/cine|L2|invuln/i.test(combat.replace(/\/\*[\s\S]*?\*\//g,'')),'combat.js 에 연출 코드가 없다');
 });
