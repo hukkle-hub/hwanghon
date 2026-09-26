@@ -1,0 +1,78 @@
+<!doctype html><meta charset="utf-8"><title>무기 그립 검수</title>
+<!-- 무기가 손바닥에 실제로 쥐어져 있는지 본다 (docs/design/93).
+     게임과 같은 경로로 붙인다: TW_LOOKS.attach(아인은 mountAinScythe) → 손 보정(makeRigAdapter/makeAinRigAdapter) → 시네마 레이어.
+     ?char=ain|kain|ryu|sera&clip=idle&u=0.4
+     빨강 = 손바닥 중심(손 뼈에 무게 0.6 이상 실린 정점의 중심), 초록 = 무기가 붙는 자리, 파랑 = 왼손 손바닥(양손 무기).
+     window.pose(clip,u) · window.shot(side,az,el,dist) · window.metrics() -->
+<style>body{margin:0;background:#20252d}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script src="../../js/looks.js"></script><script src="../../js/mat-fix.js"></script>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {repairAinBind,repairAinClips} from '../../js/ain-bind-repair.js';
+import {smoothCharacterClips} from '../../js/clip-smooth.js';
+import {mountAinScythe} from '../../js/ain-scythe-mount.js';
+import {makeAinRigAdapter} from '../../js/ain-two-hand.js';
+import {makeRigAdapter} from '../../js/combat-motion.js';
+import {createCharacterCinema} from '../../js/character-cinema.js';
+const Q=new URLSearchParams(location.search), CH=Q.get('char')||'ain', W=+(Q.get('w')||420), H=+(Q.get('h')||420);
+const MAIN={ain:'w_marsh_scythe',kain:'w_kain_greatsword',ryu:'w_ryu_dagger',sera:'w_sera_flask'}[CH];
+const r=new T.WebGLRenderer({canvas:document.querySelector('#c'),antialias:true}); r.setSize(W,H); r.setPixelRatio(1.5);
+r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=2.2; r.outputColorSpace=T.SRGBColorSpace;
+const sc=new T.Scene(); sc.background=new T.Color('#20252d');
+sc.add(new T.HemisphereLight(0xdde6ff,0x303440,1.7)); const key=new T.DirectionalLight(0xffffff,2.4); key.position.set(1.5,3,2.5); sc.add(key);
+const cam=new T.PerspectiveCamera(30,W/H,0.01,50);
+const loader=new GLTFLoader(), g=await loader.loadAsync(`../../art/3d/${CH}_anim.glb`);
+const root=new T.Group(); sc.add(root); const model=g.scene; model.scale.setScalar(1.14); root.add(model); TW_MATFIX.repair(T,model);
+let clips=CH==='ain'?repairAinClips(g.animations,repairAinBind(model)):smoothCharacterClips(CH,g.animations,{});
+const bones={}; model.traverse(o=>{ if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o; });
+const L={load:(p,ok,_,bad)=>loader.load('../../'+p.split('?')[0],ok,undefined,bad||(()=>{}))};
+let weapon=null;
+TW_LOOKS.attach(T,L,model,{main:MAIN},{charId:CH,prepareMain:(m,spec)=>CH==='ain'&&spec.glb==='art/3d/ain_scythe_tex.glb'?mountAinScythe(m):null,onMain:w=>{weapon=w;}});
+await new Promise(res=>{const t=setInterval(()=>{if(weapon){clearInterval(t);res();}},50);});
+let slot=bones.RightHandSlot; if(slot&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(T,slot);
+const rig=(CH==='ain'?makeAinRigAdapter:makeRigAdapter)(model,root,slot,{twoHand:CH==='kain'}), cinema=createCharacterCinema(model,root,CH);
+/* 손바닥 중심: 바인드 자세에서 손 뼈 좌표로 잰 정점 중심 → 매 자세마다 손 뼈로 옮긴다 */
+function palmLocal(side){ const hand=bones[side+'Hand']; let s=new T.Vector3(),n=0;
+  model.traverse(o=>{ if(!o.isSkinnedMesh) return; const bi=o.skeleton.bones.indexOf(hand); if(bi<0) return; const inv=o.skeleton.boneInverses[bi];
+    const P=o.geometry.attributes.position,SI=o.geometry.attributes.skinIndex,SW=o.geometry.attributes.skinWeight;
+    for(let i=0;i<P.count;i++){ let w=0; for(let k=0;k<4;k++) if(SI.getComponent(i,k)===bi) w+=SW.getComponent(i,k); if(w<.6) continue;
+      s.add(new T.Vector3().fromBufferAttribute(P,i).applyMatrix4(o.bindMatrix).applyMatrix4(inv)); n++; } });
+  return n?s.divideScalar(n):new T.Vector3(); }
+const PALM={Right:palmLocal('Right'),Left:palmLocal('Left')};
+const dot=(c)=>{ const m=new T.Mesh(new T.SphereGeometry(.012,12,8),new T.MeshBasicMaterial({color:c,depthTest:false})); m.renderOrder=9; sc.add(m); return m; };
+const mk={palmR:dot(0xff3040),grip:dot(0x30ff60),palmL:dot(0x3080ff)};
+const mixer=new T.AnimationMixer(model); let act=null;
+window.CLIPS=clips.map(c=>c.name);
+window.pose=(clip='idle',u=.4)=>{ const c=clips.find(x=>x.name===clip); if(!c) return 0; mixer.stopAllAction(); act=mixer.clipAction(c); act.reset().play(); act.paused=true;
+  cinema.restore(); rig.restore(); act.time=c.duration*u; mixer.update(0); model.updateMatrixWorld(true);
+  const combat=/attack|skill|smash|ult|counter|exec/.test(clip), a=combat?{id:1,clip,kind:'attack',duration:c.duration,elapsed:c.duration*u,hitAt:c.duration*.42}:null;
+  const moving=clip==='run'||clip==='walk';
+  rig.apply(a,moving,false,1/60,clip,null); cinema.apply({dt:1/60,clip,clipTime:u,moving,speed:moving?1:0,localZ:moving?1:0,action:a}); model.updateMatrixWorld(true);
+  mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
+  mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
+  weapon.getWorldPosition(mk.grip.position); return 1; };
+window.metrics=()=>({ rightGap:mk.grip.position.distanceTo(mk.palmR.position), leftGap:(()=>{ /* 왼손 손바닥 ↔ 무기 축(초록점에서 무기 +Y) 거리 */
+  const ax=new T.Vector3(0,1,0).applyQuaternion(weapon.getWorldQuaternion(new T.Quaternion())), p=mk.palmL.position.clone().sub(mk.grip.position), t=p.dot(ax);
+  return {axis:p.clone().sub(ax.clone().multiplyScalar(t)).length(), along:t}; })() });
+window.shot=(side='Right',az=60,el=10,dist=.55)=>{ const p=(side==='Right'?mk.palmR:side==='Left'?mk.palmL:mk.grip).position, A=az*Math.PI/180, E=el*Math.PI/180;
+  const f=new T.Vector3(); root.getWorldDirection(f);
+  cam.position.set(p.x+dist*Math.sin(A)*Math.cos(E),p.y+dist*Math.sin(E),p.z+dist*Math.cos(A)*Math.cos(E)); cam.lookAt(p); r.render(sc,cam); return 1; };
+window.wide=(az=35,el=8,dist=3)=>{ const p=bones.Hips.getWorldPosition(new T.Vector3()), A=az*Math.PI/180, E=el*Math.PI/180; cam.position.set(p.x+dist*Math.sin(A)*Math.cos(E),p.y+.2+dist*Math.sin(E),p.z+dist*Math.cos(A)*Math.cos(E)); cam.lookAt(p.x,p.y+.2,p.z); r.render(sc,cam); return 1; };
+/* 손 뼈 축 기준 근접: axis = 'x'|'-x'|'z'|'-z' (손 뼈 로컬, Y = 손가락 쪽). 몸이 가리지 않게 손 옆에서 본다 */
+window.hshot=(side='Right',axis='x',dist=.32)=>{ const hand=bones[side+'Hand'], q=hand.getWorldQuaternion(new T.Quaternion()), p=(side==='Right'?mk.palmR:mk.palmL).position;
+  const d={x:[1,0,0],'-x':[-1,0,0],z:[0,0,1],'-z':[0,0,-1]}[axis]; const dir=new T.Vector3(...d).applyQuaternion(q), up=new T.Vector3(0,-1,0).applyQuaternion(q);
+  cam.position.copy(p).addScaledVector(dir,dist); cam.up.copy(up); cam.lookAt(p); cam.near=dist*.5; cam.updateProjectionMatrix(); r.render(sc,cam); cam.up.set(0,1,0); cam.near=.01; cam.updateProjectionMatrix(); return 1; };
+window.rest=()=>{ mixer.stopAllAction(); model.traverse(o=>{ if(o.isSkinnedMesh) o.skeleton.pose(); }); model.updateMatrixWorld(true);
+  mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld)); mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld)); weapon.getWorldPosition(mk.grip.position); return 1; };
+/* 손 정점 덤프(손 뼈 로컬, 바인드) — 쥔 손 모양 설계용 */
+window.handVerts=(side='Right',min=.3)=>{ const hand=bones[side+'Hand'], out=[]; model.traverse(o=>{ if(!o.isSkinnedMesh) return; const bi=o.skeleton.bones.indexOf(hand); if(bi<0) return; const inv=o.skeleton.boneInverses[bi];
+  const P=o.geometry.attributes.position,SI=o.geometry.attributes.skinIndex,SW=o.geometry.attributes.skinWeight;
+  for(let i=0;i<P.count;i++){ let w=0; for(let k=0;k<4;k++) if(SI.getComponent(i,k)===bi) w+=SW.getComponent(i,k); if(w<min) continue;
+    const v=new T.Vector3().fromBufferAttribute(P,i).applyMatrix4(o.bindMatrix).applyMatrix4(inv); out.push([+v.x.toFixed(4),+v.y.toFixed(4),+v.z.toFixed(4),+w.toFixed(2)]); } });
+  const slot=bones[side+'HandSlot'], ay=new T.Vector3(0,1,0).applyQuaternion(slot.quaternion), az=new T.Vector3(0,0,1).applyQuaternion(slot.quaternion), ax=new T.Vector3(1,0,0).applyQuaternion(slot.quaternion);
+  return {verts:out, slotPos:slot.position.toArray(), slotY:ay.toArray(), slotZ:az.toArray(), slotX:ax.toArray(), anchor:slot.userData.rerigAnchor||null, handScale:hand.getWorldScale(new T.Vector3()).x}; };
+window.marks=(on=true)=>{ Object.values(mk).forEach(m=>m.visible=on); return 1; };
+window.READY=1;
+</script>

@@ -47,7 +47,9 @@ export function solveLimb(upper,lower,end,target,weight=1) {
   return end.getWorldPosition(new THREE.Vector3()).distanceTo(target);
 }
 
-export function makeRigAdapter(model,root,slot) {
+// opts.twoHand=false: 한손·쌍수 무기(류 단검·세라 시약) — 왼손을 오른손 무기로 끌어오지 않는다 (docs/design/93)
+export function makeRigAdapter(model,root,slot,opts={}) {
+  const twoHand=opts.twoHand!==false;
   const bones={};model.traverse(o=>{if(o.isBone) bones[o.name.replace(/^mixamorig:?/,'')]=o;});
   const restCorrections=new Map(), anchors={}, diagnostics={gripError:0,footError:0};
   function restore(){for(const [b,q] of restCorrections)b.quaternion.copy(q);restCorrections.clear();}
@@ -84,7 +86,7 @@ export function makeRigAdapter(model,root,slot) {
       model.updateWorldMatrix(true,true);
     }
     // New main's idle is intentionally one-handed. Correct grip only while fighting/guarding.
-    if(slot&&(a||guard)){
+    if(slot&&twoHand&&(a||guard)){
       keep(['LeftArm','LeftForeArm','LeftHand']);
       const left=bones.LeftHand,right=bones.RightHand,upper=bones.LeftArm,lower=bones.LeftForeArm;
       if(left&&right&&upper&&lower){
@@ -110,8 +112,15 @@ export function makeRigAdapter(model,root,slot) {
           right.quaternion.copy(right.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(handQ));
           model.updateWorldMatrix(true,true);target=gripTarget();
         }
-        solveLimb(upper,lower,left,target);
-        diagnostics.gripError=left.getWorldPosition(new THREE.Vector3()).distanceTo(target);
+        // 손 관절이 아니라 손바닥을 손잡이에 — 다시 리깅한 몸은 손 관절이 손목 쪽이라 관절을 대면 손바닥이 13~29 cm 떴다.
+        // 팔을 돌리면 손 방향도 바뀌어 손바닥 오프셋이 달라지므로 세 번 되풀이한다.
+        const palm=globalThis.TW_LOOKS&&TW_LOOKS.palm?TW_LOOKS.palm(THREE,left):null;
+        const palmWorld=()=>palm?palm.clone().applyMatrix4(left.matrixWorld):left.getWorldPosition(new THREE.Vector3());
+        for(let k=0;k<(palm?3:1);k++){
+          const off=palmWorld().sub(left.getWorldPosition(new THREE.Vector3()));
+          solveLimb(upper,lower,left,target.clone().sub(off));left.updateWorldMatrix(true,false);
+        }
+        diagnostics.gripError=palmWorld().distanceTo(target);
       }
     }else diagnostics.gripError=0;
     // Flat training ground: preserve authored footfall height; anchor grounded feet during stationary actions.

@@ -32,13 +32,14 @@
   WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75 };
   WEAPON.w_kain_crusher={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75 };
   WEAPON.w_ryu_dagger={ glb:'art/3d/gear/w_ash_dirk.glb', grip:0.10 };
-  WEAPON.w_sera_flask={ glb:'art/3d/gear/w_sera_flask.glb', grip:0.05 };
+  /* 시약병은 목(반지름 2.7 cm, 0.16~0.18 m)을 쥔다 — 던지는 손. 바닥(0.05)을 쥐면 반지름 6.7 cm 몸통이 손을 삼켰다(docs/design/93) */
+  WEAPON.w_sera_flask={ glb:'art/3d/gear/w_sera_flask.glb', grip:0.17 };
   /* 류 상·하위 쌍단검: 전용 모델(docs/design/82, Tripo → gear_post --pca). 손 = 자루 끝에서 0.05 m (0.08 은 확대 렌더에서 주먹이 코등이에 붙고 자루가 뒤로 삐져나와 내렸다) */
   WEAPON.w_ryu_shiv={ glb:'art/3d/gear/w_ryu_shiv.glb', grip:0.05 };
   WEAPON.w_ryu_twinfang={ glb:'art/3d/gear/w_ryu_twinfang.glb', grip:0.05 };
   /* 세라 하위·상위 시약: 전용 모델(docs/design/82). 흐린 시약병 0.22 m · 정제 촉매 0.26 m */
-  WEAPON.w_sera_vial={ glb:'art/3d/gear/w_sera_vial.glb', grip:0.05 };
-  WEAPON.w_sera_reagent={ glb:'art/3d/gear/w_sera_reagent.glb', grip:0.06 };
+  WEAPON.w_sera_vial={ glb:'art/3d/gear/w_sera_vial.glb', grip:0.19 };
+  WEAPON.w_sera_reagent={ glb:'art/3d/gear/w_sera_reagent.glb', grip:0.12 };
   var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0] };
   /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질, 옵션] — 크기/위치 m, 회전 rad. 뼈 로컬: 몸통·머리 z=앞 / 팔·다리 y=뼈 방향(아래) z=뒤
      몸 치수(뷰어 측정): 머리 r≈0.12(머리카락 포함 ≈0.16) · 가슴 앞 z 0.16 · 정강이 r≈0.06 · 팔뚝 r≈0.04 · 발 길이 0.22
@@ -94,7 +95,23 @@
      잡은 값이라, glb 가 뼈마다 남긴 «옛 관절 자리»(rerigAnchor, 뼈 로컬)에 빈 노드를 두고 거기에 붙인다 —
      바인드 자세에서 장비가 메시에 대해 전과 똑같은 자리에 온다. */
   /* 새 몸(docs/design/80)은 옛 몸의 장비 자리를 gearAnchor 로 따로 적어 둔다(tools/3d/gear-anchor.mjs) */
+  /* 손바닥 중심(손 뼈 로컬): 손 뼈에 무게 0.6 이상 실린 몸 정점의 바인드 자세 중심 (docs/design/93).
+     카인·류·세라는 다시 리깅하며 손 관절이 손목 쪽으로 옮겨졌고 옛 관절 자리(rerigAnchor)는 손바닥에서 12~19 cm 떨어져 있었다 —
+     무기가 손 밖에 떠 있었다. 손가락 뼈가 없는 리그라 손 모양은 못 바꾸지만, 손잡이는 손바닥 안에 넣을 수 있다 */
+  function palmOf(hand){ if(!hand||!THREE) return null; if(hand.userData._palm!==undefined) return hand.userData._palm;
+    var top=hand; while(top.parent) top=top.parent; var s=new THREE.Vector3(), v=new THREE.Vector3(), n=0;
+    top.traverse(function(o){ if(!o.isSkinnedMesh||(o.userData&&o.userData.look)) return; var bi=o.skeleton.bones.indexOf(hand); if(bi<0) return;
+      var inv=o.skeleton.boneInverses[bi], P=o.geometry.attributes.position, SI=o.geometry.attributes.skinIndex, SW=o.geometry.attributes.skinWeight; if(!SI||!SW) return;
+      for(var i=0;i<P.count;i++){ var w=0; for(var k=0;k<4;k++) if(SI.getComponent(i,k)===bi) w+=SW.getComponent(i,k); if(w<0.6) continue;
+        s.add(v.fromBufferAttribute(P,i).applyMatrix4(o.bindMatrix).applyMatrix4(inv)); n++; } });
+    hand.userData._palm=n?s.divideScalar(n):null; return hand.userData._palm; }
+  /* 손 그립 노드: 손 뼈 자식, 자리 = 손바닥 중심(고정), 방향 = 손 자리 뼈(HandSlot)의 손 기준 회전(클립이 돌린다).
+     자리 뼈 아래에 두면 자리 뼈가 돌 때 16 cm 지렛대로 무기가 손 밖으로 휘돌았다 — 이제 손바닥을 중심으로 돈다 */
+  function gripOf(slot){ var hand=slot.parent, palm=hand&&hand.isBone&&palmOf(hand); if(!palm) return null;
+    var n=new THREE.Object3D(), base=THREE.Object3D.prototype.updateMatrix; n.name=slot.name+'Grip'; n.userData.gripOf=slot; n.position.copy(palm);
+    n.updateMatrix=function(){ this.quaternion.copy(slot.quaternion); base.call(this); }; hand.add(n); return n; }
   function anchorOf(o){ var a=o.userData&&(o.userData.gearAnchor||o.userData.rerigAnchor); if(!a||!THREE) return o;
+    if(!o.userData._anchor&&/HandSlot$/.test(o.name)){ var gn=gripOf(o); if(gn) o.userData._anchor=gn; }
     if(!o.userData._anchor){ var n=new THREE.Object3D(); n.name=o.name+'Anchor'; n.position.set(a[0],a[1],a[2]); o.add(n); o.userData._anchor=n; }
     return o.userData._anchor; }
   function bonesOf(model){ var b={}; model.traverse(function(o){ if(o.isBone) b[o.name.replace(/^mixamorig:?/,'')]=anchorOf(o); }); return b; }
@@ -183,5 +200,6 @@
     return out; }
   /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
   function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor };
+  function palm(T, hand){ THREE=THREE||T; return palmOf(hand); }
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
 })();
