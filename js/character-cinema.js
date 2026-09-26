@@ -59,6 +59,28 @@ export const CINEMA_STYLE={
   }
 };
 
+
+/* Kain phase-2: the generic profile establishes his identity; this pass adds
+   planted weight, contact-synchronised compression, guard bracing and a short
+   post-swing momentum memory. It never edits combat timing or hand bones. */
+export const KAIN_CINEMA_V02={
+  locomotion:{walkBob:.010,runBob:.018,counterSwing:.018},
+  guard:{sink:.048,lean:.070,twist:.034},
+  momentum:{build:12.5,release:5.4},
+  attack:{
+    attack1:{side:1,plant:.055,drive:.075,follow:.080,push:.020},
+    attack2:{side:-1,plant:.065,drive:.085,follow:.090,push:.018},
+    attack3:{side:1,plant:.060,drive:.090,follow:.095,push:.022},
+    smash:{side:1,plant:.110,drive:.120,follow:.140,push:.028},
+    skill1:{side:1,plant:.090,drive:.110,follow:.120,push:.026},
+    skill3:{side:-1,plant:.075,drive:.095,follow:.115,push:.018,spin:1},
+    skill4:{side:1,plant:.120,drive:.135,follow:.125,push:.030},
+    ult:{side:1,plant:.145,drive:.160,follow:.170,push:.036},
+    counter:{side:-1,plant:.075,drive:.100,follow:.110,push:.012,lock:.12},
+    exec:{side:1,plant:.155,drive:.170,follow:.180,push:.038}
+  }
+};
+
 export function transitionFor(cid,name){
   const base={ain:{fast:.045,hit:.025,atk:.065,fin:.10,out:.17,finOut:.22,base:.22},
               kain:{fast:.065,hit:.035,atk:.085,fin:.12,out:.20,finOut:.26,base:.24},
@@ -75,8 +97,8 @@ export function createCharacterCinema(model,root,cid='ain'){
   const profile=CINEMA_STYLE[cid];
   if(!profile)return {restore(){},apply(){},diagnostics:{}};
   const bones={}; model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});
-  const saved=new Map(); const savedPos=new Map(); let hipsMoved=false;
-  const s={t:0,prevYaw:root.rotation.y,turn:0,moveX:0,moveZ:0,spd:0};
+  const saved=new Map(); const savedPos=new Map(); let hipsMoved=false, savedModelPos=null;
+  const s={t:0,prevYaw:root.rotation.y,turn:0,moveX:0,moveZ:0,spd:0,resYaw:0,resPitch:0,resDrop:0,lastClip:''};
   const diagnostics={turnLag:0,lean:0,mode:'idle'};
   function keepQ(n){const b=bones[n];if(b&&!saved.has(b))saved.set(b,b.quaternion.clone());return b;}
   function keepP(n){const b=bones[n];if(b&&!savedPos.has(b))savedPos.set(b,b.position.clone());return b;}
@@ -86,6 +108,8 @@ export function createCharacterCinema(model,root,cid='ain'){
   /* 골반을 옮기면 다리 IK 가 없어 발까지 같이 꺼진다(카인 백스텝에서 12 cm). 끝에서 발을 원래 자리로 되돌리고 무릎을 굽힌다. */
   function py(n,v){const b=keepP(n);if(b&&v){b.position.y+=v;if(n==='Hips')hipsMoved=true;}}
   function px(n,v){const b=keepP(n);if(b&&v){b.position.x+=v;if(n==='Hips')hipsMoved=true;}}
+  /* v02 카인: 모델째 살짝 누르거나 민다 — 이것도 발을 옮기므로 끝에서 재고정한다 */
+  function modelShift(x=0,y=0,z=0){if(!savedModelPos)savedModelPos=model.position.clone();model.position.x+=x;model.position.y+=y;model.position.z+=z;if(x||y||z)hipsMoved=true;}
   const feet0={L:new T.Vector3(),R:new T.Vector3()};
   function replant(){
     if(!hipsMoved)return;model.updateWorldMatrix(true,true);
@@ -94,6 +118,7 @@ export function createCharacterCinema(model,root,cid='ain'){
   function restore(){
     for(const [b,q] of saved)b.quaternion.copy(q);saved.clear();
     for(const [b,p] of savedPos)b.position.copy(p);savedPos.clear();
+    if(savedModelPos){model.position.copy(savedModelPos);savedModelPos=null;}
   }
   function attackShape(a){
     if(!a)return null; const clip=a.clip||a.name||''; const cfg=profile.attack[clip]; if(!cfg)return null;
@@ -104,6 +129,17 @@ export function createCharacterCinema(model,root,cid='ain'){
     const follow=u<.42?0:u<.82?Math.sin((u-.42)/.40*Math.PI):0;
     const side=/attack2|skill3|counter/.test(clip)?-1:1;
     return {clip,u,cfg,pre,strike,follow,side};
+  }
+  function kainBeat(a){
+    if(cid!=='kain'||!a)return null;const clip=a.clip||a.name||'',cfg=KAIN_CINEMA_V02.attack[clip];if(!cfg)return null;
+    const dur=Math.max(.001,a.duration||1),u=sat((a.elapsed||0)/dur);
+    const contact=clamp(Number.isFinite(a.hitAt)?a.hitAt/dur:.46,.28,.72);
+    const preEnd=Math.max(.10,contact-.035);
+    const plant=u<contact?smooth(u/preEnd):Math.max(0,1-smooth((u-contact)/.14));
+    const impact=Math.exp(-Math.pow((u-contact)/.055,2));
+    const follow=u<=contact?0:Math.sin(Math.PI*sat((u-contact)/Math.max(.12,.90-contact)));
+    const lock=cfg.lock&&u>=contact-.02&&u<=contact+cfg.lock?1:0;
+    return {clip,cfg,u,contact,plant,impact,follow,lock};
   }
   function apply(ctx={}){
     const dt=Math.max(0,ctx.dt||0); s.t+=dt;
@@ -182,6 +218,57 @@ export function createCharacterCinema(model,root,cid='ain'){
       // 눈/머리가 날보다 아주 조금 먼저 다음 선을 본다. 과하면 목 꺾임이므로 작게.
       ry('Neck',-side*cfg.coil*pre*.18 + side*cfg.snap*strike*.16);
       ry('Head',-side*cfg.coil*pre*.14 + side*cfg.snap*strike*.12);
+    }
+
+    // 7) 카인 v02 — 대검의 무게를 발/골반에서 받아낸 뒤 상체가 따라오게 한다.
+    // 손/팔을 직접 만지지 않아 makeRigAdapter의 양손 그립 보정과 충돌하지 않는다.
+    if(cid==='kain'){
+      const k=KAIN_CINEMA_V02, ph=sat(ctx.clipTime||0);
+      if(!action&&!isDodge&&!isHit&&!ctx.guard&&clip!=='skill2'&&!moving){
+        py('Hips',-.008);ry('Hips',.010);ry('Spine',-.016);rz('Spine2',-.010);
+      }
+      if(moving&&!action&&!isDodge){
+        const bob=(clip==='run'?k.locomotion.runBob:k.locomotion.walkBob)*(0.5+0.5*Math.cos(ph*Math.PI*4));
+        const counter=Math.sin(ph*Math.PI*4)*k.locomotion.counterSwing;
+        py('Hips',-bob);rx('Spine',counter*.32);rx('Spine2',-counter*.24);ry('Head',-counter*.12);modelShift(0,-bob*.12,0);
+      }
+      if(isDodge){
+        const bell=Math.sin(Math.PI*ph),dir=/L$/.test(clip)?-1:/R$/.test(clip)?1:0;
+        modelShift(dir*.012*bell,-.012*bell,0);rx('Spine2',-.030*bell);rx('Head',.018*bell);
+      }
+      if(isHit){
+        const kick=Math.sin(Math.PI*sat(ph/.50));modelShift(0,-.006*kick,-.015*kick);rx('Hips',-.025*kick);rx('Spine2',.020*kick);
+      }
+      const kb=kainBeat(action);
+      if(kb){
+        const {cfg,plant,impact,follow,side,lock}=Object.assign({side:kb.cfg.side},kb),brace=cfg.plant*plant;
+        py('Hips',-(brace*.46+cfg.drive*impact*.10));
+        rx('Hips',-brace*.20+cfg.drive*impact*.08);
+        ry('Hips',-side*brace*.24+side*cfg.follow*follow*.10);
+        rx('Spine',brace*.26-cfg.drive*impact*.20+cfg.follow*follow*.08);
+        ry('Spine',side*brace*.38-side*cfg.drive*impact*.28-side*cfg.follow*follow*.18);
+        rx('Spine2',brace*.12-cfg.drive*impact*.16);ry('Spine2',side*brace*.22+side*cfg.drive*impact*.30+side*cfg.follow*follow*.24);
+        rz('Spine2',-side*(cfg.drive*impact*.22+cfg.follow*follow*.14));
+        rx('Neck',-brace*.09+cfg.drive*impact*.08);rx('Head',-brace*.06+cfg.drive*impact*.05);
+        if(cfg.spin){ry('Hips',-side*follow*.065);ry('Spine2',side*follow*.090);}
+        if(lock){py('Hips',-.018);rx('Spine',.035);modelShift(0,-.006,0);}
+        modelShift(0,-brace*.045,cfg.push*impact);
+        const build=k.momentum.build;
+        s.resYaw=expDamp(s.resYaw,side*cfg.follow*follow*.18,build,dt);
+        s.resPitch=expDamp(s.resPitch,cfg.follow*follow*.10,build,dt);
+        s.resDrop=expDamp(s.resDrop,cfg.plant*follow*.055,build,dt);s.lastClip=kb.clip;
+        diagnostics.impact=impact;diagnostics.contact=kb.contact;
+      }else{
+        s.resYaw=expDamp(s.resYaw,0,k.momentum.release,dt);s.resPitch=expDamp(s.resPitch,0,k.momentum.release,dt);s.resDrop=expDamp(s.resDrop,0,k.momentum.release,dt);
+        diagnostics.impact=0;
+      }
+      if(Math.abs(s.resYaw)+Math.abs(s.resPitch)+Math.abs(s.resDrop)>.0001){
+        py('Hips',-s.resDrop);ry('Hips',s.resYaw*.18);ry('Spine',-s.resYaw*.42);ry('Spine2',-s.resYaw*.30);rx('Spine',s.resPitch*.24);rx('Spine2',s.resPitch*.18);
+      }
+      if((ctx.guard||clip==='skill2')&&!action){
+        const g=k.guard;py('Hips',-g.sink);rx('Hips',-g.lean*.30);rx('Spine',g.lean*.46);rx('Spine2',g.lean*.28);ry('Spine',-g.twist);ry('Head',g.twist*.35);modelShift(0,-.010,0);
+      }
+      diagnostics.residual=Math.hypot(s.resYaw,s.resPitch,s.resDrop);
     }
 
     // 가드: 정면에서 버티되 완전 대칭을 피한다.

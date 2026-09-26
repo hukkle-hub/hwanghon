@@ -1,0 +1,56 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>황혼 · 카인 시네마틱 중량 모션 v02</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b0e;color:#eef;font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}canvas{position:absolute;inset:0;width:100%;height:100%}
+#hud{position:absolute;left:24px;top:20px;padding:15px 17px;background:#090c11d9;border:1px solid #4a3f35;border-radius:10px;min-width:340px;backdrop-filter:blur(8px)}
+#hud h1{font-size:18px;margin:0 0 6px;color:#e5d5c6}#name{font-size:27px;font-weight:850;letter-spacing:-.04em}#desc{color:#b9b0a8;font-size:13px;max-width:430px;line-height:1.5;margin-top:4px}
+#phase{height:4px;background:#24211e;margin-top:12px;border-radius:4px;overflow:hidden}#phase i{display:block;height:100%;background:#c07a42;width:0}
+#diag{margin-top:9px;color:#958a80;font:11px ui-monospace,monospace}#legend{position:absolute;right:22px;bottom:20px;background:#090c11c9;border:1px solid #3d3731;border-radius:9px;padding:10px 13px;font-size:12px;color:#bcb3aa;line-height:1.55;text-align:right}
+.badge{display:inline-block;border:1px solid #66584d;padding:2px 6px;border-radius:4px;color:#e2d8cf;font-size:11px;margin-right:5px}
+</style></head><body><canvas id="c"></canvas><div id="hud"><h1>KAIN · IRON WEIGHT CINEMA v02</h1><div id="name">LOADING</div><div id="desc"></div><div id="phase"><i></i></div><div id="diag"></div></div><div id="legend"><span class="badge">실제 kain_anim.glb</span><span class="badge">실제 모루의 대검</span><br>접점 hitAt 동기화 · 양손 IK 보존 · 판정/피해/이동 불변</div>
+<script type="module">
+import * as T from './vendor/three/three.module.js';
+import {GLTFLoader} from './vendor/three/GLTFLoader.js';
+import {smoothCharacterClips} from './js/clip-smooth.js';
+import {makeRigAdapter} from './js/combat-motion.js';
+import {createCharacterCinema,transitionFor} from './js/character-cinema.js';
+
+const CONTACT={attack1:.38,attack2:.52,attack3:.50,smash:.30,ult:.22,skill1:.73,skill2:.18,skill3:.38,skill4:.33,counter:.48,exec:.18};
+const canvas=document.querySelector('#c'),renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio));renderer.shadowMap.enabled=true;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+const scene=new T.Scene();scene.background=new T.Color(0x090b0e);scene.fog=new T.Fog(0x090b0e,8,15);
+const camera=new T.PerspectiveCamera(33,1,.05,30);camera.position.set(3.35,1.72,5.25);camera.lookAt(0,1.06,0);
+scene.add(new T.HemisphereLight(0xe0d2c2,0x17191e,1.7));const key=new T.DirectionalLight(0xffefe2,3.7);key.position.set(3.5,5,4.5);key.castShadow=true;scene.add(key);const rim=new T.DirectionalLight(0x8fa3c8,1.8);rim.position.set(-4,3,-3);scene.add(rim);const warm=new T.PointLight(0xc46f35,5.5,8);warm.position.set(-2,1.3,2);scene.add(warm);
+const ground=new T.Mesh(new T.CircleGeometry(4.8,80),new T.MeshStandardMaterial({color:0x141516,roughness:.94,metalness:.07}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);const ring=new T.Mesh(new T.RingGeometry(1.8,1.825,96),new T.MeshBasicMaterial({color:0x4a3a2d,transparent:true,opacity:.72,side:T.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=.004;scene.add(ring);
+
+const STATES=[
+ ['combat_idle','idle','전투 대기 · 오른쪽 대검의 하중을 골반으로 받아 비대칭 정적을 만든다'],
+ ['run_forward','run','달리기 · 발은 묵직하게 딛고 머리는 흔들림을 절제한다'],
+ ['backstep','dodgeB','백스텝 · 몸을 낮추고 칼을 버리지 않은 채 짧게 거리만 뺀다'],
+ ['hit_light','hit','약 피격 · 크게 날아가지 않고 몸통이 충격을 흡수한다'],
+ ['hit_heavy','hit2','강 피격 · 중심이 눌린 뒤 상체가 늦게 되돌아온다'],
+ ['iron_cut_1','attack1','1타 · 발을 심고 몸통을 감아 대검을 끌어낸 뒤 접점에서 폭발'],
+ ['return_cut_2','attack2','2타 · 반대쪽으로 무게를 넘겨 되받아치는 역방향 연결'],
+ ['finish_3','attack3','3타 · 짧은 압축 뒤 전진 체중으로 마무리'],
+ ['heavy_smash','smash','스매시 · 높이 들기보다 하체에 압축을 모아 한 번에 내리꽂는다'],
+ ['greatsword_drop','skill1','대검 내려치기 · 긴 준비를 버티고 판정 시각에 중심이 함께 내려간다'],
+ ['iron_wall','skill2','철벽 · 대검을 방패처럼 세우고 골반을 낮춰 충격을 받는다'],
+ ['steel_spin','skill3','강철 회전 · 팔 회전이 아니라 골반과 흉곽이 대검을 끌고 돈다'],
+ ['ground_slam','skill4','지면 강타 · 넓은 스탠스의 시각적 압축 → 접점 → 무거운 회수'],
+ ['counter_lock','counter','카운터 · 받아낸 접점에서 잠깐 잠그고 체중으로 밀어낸다'],
+ ['anvil_judgment','ult','모루의 심판 · 가장 긴 압축과 가장 긴 여운을 가진 피니시'],
+ ['execution','exec','처형 · 중심을 완전히 심은 뒤 수직으로 끝내는 확정 동작']
+];
+let model,mixer,clips={},slot,weapon,rig,cinema,current,currentAction,currentIndex=0;const loader=new GLTFLoader();const load=u=>new Promise((res,rej)=>loader.load(u,res,undefined,rej));
+const [cg,wg]=await Promise.all([load('./art/3d/kain_anim.glb'),load('./art/3d/gear/w_kain_greatsword.glb')]);
+model=cg.scene;model.scale.setScalar(1.14);model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false;}if(o.isBone&&/RightHandSlot/.test(o.name))slot=o;});scene.add(model);
+const an=slot&&slot.userData&&slot.userData.rerigAnchor;if(an){const n=new T.Object3D();n.name=slot.name+'Anchor';n.position.set(an[0],an[1],an[2]);slot.add(n);slot=n;}
+const sm=smoothCharacterClips('kain',cg.animations,CONTACT);sm.forEach(c=>clips[c.name]=c);mixer=new T.AnimationMixer(model);
+if(slot){model.updateMatrixWorld(true);const wr=wg.scene,group=new T.Group();wr.position.y=-.75;group.add(wr);const k=slot.getWorldScale(new T.Vector3()).x;group.scale.setScalar(1/k);slot.add(group);weapon=group;wr.traverse(o=>{if(o.isMesh)o.castShadow=true;});}
+rig=makeRigAdapter(model,model,slot);cinema=createCharacterCinema(model,model,'kain');
+function fit(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}addEventListener('resize',fit);fit();
+function select(i,fade=true){currentIndex=(i+STATES.length)%STATES.length;const [label,clip]=STATES[currentIndex];current={label,clip};const a=mixer.clipAction(clips[clip]||clips.idle);a.reset().enabled=true;a.setEffectiveWeight(1);a.setLoop(T.LoopRepeat,Infinity);const tr=transitionFor('kain',clip);if(currentAction&&currentAction!==a&&fade)a.crossFadeFrom(currentAction,tr.base,true);a.play();currentAction=a;document.querySelector('#name').textContent=label.toUpperCase().replaceAll('_',' ');document.querySelector('#desc').textContent=STATES[currentIndex][2];}
+function params(label,clip,phase){const moving=['walk','run'].includes(clip),guard=label==='iron_wall';let action=null;if(/attack|smash|skill1|skill3|skill4|counter|ult|exec/.test(clip)){const dur=clips[clip].duration;action={id:1,clip,kind:'attack',duration:dur,elapsed:dur*phase,hitAt:dur*(CONTACT[clip]??.46)};}return {clip,moving,speed:moving?1:0,localX:0,localZ:moving?1:0,guard,action};}
+function renderState(i,phase=.5){select(i,false);const [label,clip]=STATES[currentIndex],c=clips[clip]||clips.idle,t=c.duration*phase;cinema.restore();rig.restore();mixer.setTime(t);const q=params(label,clip,phase);rig.apply(q.action,q.moving,q.guard,1/60,clip,null);cinema.apply({...q,dt:1/60,clipTime:phase});model.updateMatrixWorld(true);renderer.render(scene,camera);document.querySelector('#phase i').style.width=(phase*100).toFixed(1)+'%';document.querySelector('#diag').textContent='contact '+((cinema.diagnostics.contact??CONTACT[clip]??0)*100).toFixed(0)+'% · impact '+(cinema.diagnostics.impact??0).toFixed(2)+' · residual '+(cinema.diagnostics.residual??0).toFixed(3);return {label,clip,phase,diag:{...cinema.diagnostics}};}
+function smooth(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}function renderTimeline(sec){const per=1.55,i=Math.floor(sec/per)%STATES.length,u=(sec%per)/per,phase=u<.12?0:u>.90?1:smooth((u-.12)/.78);return renderState(i,phase);}
+window.REVIEW={STATES,CONTACT,renderState,renderTimeline,select,get ready(){return !!model}};select(0,false);renderState(0,.35);document.documentElement.dataset.ready='1';
+</script></body></html>
