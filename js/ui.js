@@ -326,7 +326,11 @@
         if (!v || !v.build || v.build === MYBUILD || MYBUILD === 'dev') return;
         if (hasSW) navigator.serviceWorker.getRegistration().then(function(r){
           if (r) r.update().catch(function(){});
-          setTimeout(function(){ reloadOnce(v.build); }, 2500);   /* 워커가 먼저 재로드하면 이 타이머는 실행되지 않는다 */
+          /* 새 워커가 넘겨받은 뒤(controllerchange)에 새로고침 — 전에는 2.5 초 뒤 무조건 새로고침해 옛 워커가 옛 GLB 를 내줬다(docs/design/98).
+             15 초 안에 안 넘어오면 그래도 새로고침(아트는 이제 서버에 되묻는다) */
+          var fired=false, go=function(){ if (fired) return; fired=true; reloadOnce(v.build); };
+          navigator.serviceWorker.addEventListener('controllerchange', go);
+          setTimeout(go, r ? 15000 : 0);
         }); else reloadOnce(v.build);
       }).catch(function(){});
     }

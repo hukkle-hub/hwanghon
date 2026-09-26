@@ -10,6 +10,7 @@
  *   3. 두 뼈 IK — 팔꿈치 쪽(--elbow follow, 기본)은 앞 프레임을 이어받되 원본 키의 팔꿈치 쪽으로 --pull(0.5)만큼 당긴다.
  *      원본이 한결같은 곳에선 원본 자세에 붙고, 뒤집히는 곳에선 이어받기가 버틴다.
  *   4. 위팔·아래팔 비틀림(--twist orig, 기본)은 원본 그대로 두고 방향만 최소 회전으로 맞춘다.
+ *   --design : 설계 경로(carry-paths.mjs)와 견줘 앞이 뒤집힌 키의 양손을 되돌린다(1타·2타·스매시, docs/design/98).
  *   --window a,b,f : a~b 초만 다시 풀고 f 초 동안 원본으로 되섞는다(3타는 0,0.28,0.06 — 판정 0.44초 이후는 원본 그대로).
  *
  * 해 보고 버린 것(렌더로 확인): 경첩 축 맞춤(--twist hinge)·자연 방향 당김(--elbow smooth) — 매끄럽지만 위팔 비틀림이
@@ -42,12 +43,28 @@ const wq=o=>o.getWorldQuaternion(Q()), wp=o=>o.getWorldPosition(V());
 const pose=t=>{act.time=t;mixer.update(0);m.updateMatrixWorld(true);};
 const chest=B.Spine2||B.Spine1||B.Spine;
 m.updateMatrixWorld(true); const chestBindInv=wq(chest).invert();   /* 바인드(클립 적용 전) 가슴 회전 */
+const hipsBindInv=wq(B.Hips).invert();
 /* 원본 키 시각(모든 트랙의 합집합) */
 const keyT=[...new Set(clip.tracks.flatMap(tr=>[...tr.times].map(x=>+x.toFixed(5))))].sort((a,b)=>a-b);
+/* 0. --design: 굽는 단계의 앞 뒤집힘 되돌리기 (docs/design/98, tools/3d/carry-paths.mjs).
+   키마다 설계 경로의 오른손 자리를 «진짜 앞»(골반의 수평 회전 — 스매시처럼 몸이 돌면 같이 돈다)으로 놓고, 원본 오른손과 수평 각을 견준다.
+   90° 넘게 어긋난 키는 굽는 단계가 앞을 뒤집어 손·대검을 몸 뒤로 거울처럼 옮긴 것 → 양손·팔꿈치를 골반 세로축 둘레로 되돌린다 */
+const DESIGN=args.includes('--design');
+const corr=keyT.map(()=>null); const report=[];
+if(DESIGN){ const {PATHS,pathSpec}=await import('./carry-paths.mjs'); const keysP=PATHS[name]; if(!keysP) throw Error('설계 경로 없음: '+name);
+  keyT.forEach((t,k)=>{ pose(t); const hp=wp(B.Hips), D=wq(B.Hips).multiply(hipsBindInv);
+    const F=V(0,0,1).applyQuaternion(D); F.y=0; F.normalize(); const R=V().crossVectors(F,V(0,1,0));
+    const sp=pathSpec(keysP,t/clip.duration), E=R.clone().multiplyScalar(sp.rh[0]).addScaledVector(F,sp.rh[2]);
+    const A=wp(B.RightHand).sub(hp); A.y=0;
+    const d=Math.atan2(V().crossVectors(E,A).y,E.dot(A));        /* E → A 수평 각 */
+    if(Math.abs(d)>Math.PI/2){ corr[k]={hp,q:Q().setFromAxisAngle(V(0,1,0),-d)}; }
+    report.push((corr[k]?'✗':'·')+t.toFixed(2)+':'+(d*57.3).toFixed(0)); });
+  process.stderr.write(`설계 대비 오른손 수평 각(✗ = 뒤집혀 되돌림) ${report.join(' ')}\n`); }
 /* 1. 키마다 손을 가슴 공간으로 */
 const keys={};
-for(const s of SIDES){ keys[s]=keyT.map(t=>{ pose(t); const ci=chest.matrixWorld.clone().invert(), h=B[s+'Hand'];
-  return {p:wp(h).applyMatrix4(ci), q:wq(chest).invert().multiply(wq(h)), e:wp(B[s+'ForeArm']).applyMatrix4(ci), sh:wp(B[s+'Arm']).applyMatrix4(ci)}; });
+for(const s of SIDES){ keys[s]=keyT.map((t,k)=>{ pose(t); const ci=chest.matrixWorld.clone().invert(), h=B[s+'Hand'], c=corr[k];
+  const fixP=v=>c?v.sub(c.hp).applyQuaternion(c.q).add(c.hp):v, fixQ=q=>c?c.q.clone().multiply(q):q;
+  return {p:fixP(wp(h)).applyMatrix4(ci), q:wq(chest).invert().multiply(fixQ(wq(h))), e:fixP(wp(B[s+'ForeArm'])).applyMatrix4(ci), sh:wp(B[s+'Arm']).applyMatrix4(ci)}; });
   for(let k=1;k<keys[s].length;k++) if(keys[s][k].q.dot(keys[s][k-1].q)<0){const q=keys[s][k].q;q.set(-q.x,-q.y,-q.z,-q.w);} }
 /* 팔꿈치 경첩 축(위팔 로컬): «자연 클립»(대기·달리기·Meshy 전문가 클립 등, --hinge-ref)에서 30° 넘게 굽은 키의 굽힘 축을 모아
    주축(부호 없는 거듭제곱법)을 잡고, 쉬는 자세에서 그 축으로 굽혔을 때 손이 앞으로 가는 쪽을 + 로 한다.
@@ -129,11 +146,11 @@ for(let i=0;i<=N;i++){ const t=clip.duration*i/N; times.push(+t.toFixed(5)); pos
     const err=wp(ha).distanceTo(tg.p); stats[s]=Math.max(stats[s]||0,err);
   }
   if(w<1) for(const s of SIDES) for(const a of ARM){ const bn=B[s+a], o=orig[s+a]; if(o.dot(bn.quaternion)<0) o.set(-o.x,-o.y,-o.z,-o.w); bn.quaternion.copy(o.slerp(bn.quaternion.clone(),w)); }
-  for(const n of names){ const q=B[n].quaternion, arr=out[n], k=arr.length;
+  for(const n of names){ const q=B[n].quaternion.clone().normalize(), arr=out[n], k=arr.length;   /* 단위 길이로 — 반올림 오차가 1 mrad 넘게 번지지 않게 */
     if(k>=4&&(arr[k-4]*q.x+arr[k-3]*q.y+arr[k-2]*q.z+arr[k-1]*q.w)<0) arr.push(-q.x,-q.y,-q.z,-q.w); else arr.push(q.x,q.y,q.z,q.w); }
   hips.push(B.Hips.position.x,B.Hips.position.y,B.Hips.position.z);
 }
 for(const s of SIDES) process.stderr.write(`${s} 손 목표 최대 오차 ${(stats[s]*100).toFixed(2)} cm\n`);
-const r5=v=>+v.toFixed(6);
+const r5=v=>+v.toFixed(7);
 console.log(JSON.stringify({name,source:file.split('/').pop(),sourceClip:name+' (팔 다시 풂)',from:0,to:clip.duration,duration:+clip.duration.toFixed(5),fps:FPS,times,
   tracks:Object.fromEntries(Object.entries(out).map(([n,a])=>[n,a.map(r5)])),hips:hips.map(r5)}));
