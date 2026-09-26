@@ -94,7 +94,8 @@ test('Kain two-hand IK: left fist hole on the greatsword axis, facing the blade,
   const ad=makeRigAdapter(m,root,slot,{twoHand:true,handGrip:HG}),mixer=new T.AnimationMixer(m),left=bones.LeftHand;
   const settle=(clip,u)=>{const c=g.animations.find(a=>a.name===clip);mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();act.time=c.duration*u;mixer.update(0);root.updateMatrixWorld(true);
     for(let i=0;i<60;i++){ad.restore();ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:c.duration*u,hitAt:c.duration*.42},false,clip==='guard',1/60);}root.updateMatrixWorld(true);};
-  for(const [clip,u] of [['attack2',.35],['smash',.35],['smash',.6],['skill1',.35],['guard',.35],['ult',.35],['counter',.35]]){
+  /* 공격1·2·3 접점 포함 — 몸통 비틀기로 왼어깨가 멀어져 전에는 왼주먹이 오른주먹과 3 cm 겹쳤다. 이제 쇄골을 내밀어 닿는다 (docs/design/96) */
+  for(const [clip,u] of [['attack1',.35],['attack2',.45],['attack2',.6],['attack3',.35],['smash',.35],['smash',.6],['skill1',.35],['guard',.35],['ult',.35],['counter',.35]]){
     settle(clip,u);
     assert.ok(ad.diagnostics.twoHand>.99,`kain ${clip}: 두 손으로 잡아야 한다 (${ad.diagnostics.twoHand.toFixed(2)})`);
     const fist=left.userData.gripPoint.clone().applyMatrix4(left.matrixWorld),p=slot.getWorldPosition(V()),ax=V(0,1,0).applyQuaternion(slot.getWorldQuaternion(new T.Quaternion()));
@@ -102,7 +103,8 @@ test('Kain two-hand IK: left fist hole on the greatsword axis, facing the blade,
     /* 잰 값 0.0 cm (전에는 손목 관절을 대서 15~17 cm) */
     assert.ok(off<=.02,`kain ${clip}: 왼손 주먹이 대검 축에서 ${(off*100).toFixed(1)} cm`);
     /* 손잡이 위: 오른손에서 칼날 쪽 11~20 cm (대검 손잡이 0.69~1.00, 오른손 0.75) — 폼멜 너머 허공을 쥐지 않는다 */
-    assert.ok(along>=.105&&along<=.205,`kain ${clip}: 왼손이 손잡이 밖 (오른손에서 ${(along*100).toFixed(1)} cm)`);
+    /* 주먹 폭 10.8 cm — 두 주먹 중심이 그보다 가까우면 겹친다 */
+    assert.ok(along>=.105&&along<=.205,`kain ${clip} u=${u}: 왼손이 손잡이 밖이거나 오른주먹과 겹침 (오른손에서 ${(along*100).toFixed(1)} cm)`);
     assert.ok(HG.amount.Left>.95,`kain ${clip}: 두 손 잡기 중 왼손을 쥐어야 한다 (${HG.amount.Left.toFixed(2)})`);
     /* 주먹 방향: 주먹 구멍 축(새끼→엄지)이 대검 축(칼날 쪽)과 5° 안 — 전에는 방향을 안 맞춰 손잡이가 주먹을 비스듬히 지났다 (docs/design/95) */
     const fa=left.userData.gripAxis.clone().applyQuaternion(left.getWorldQuaternion(new T.Quaternion()));
@@ -120,4 +122,13 @@ test('Kain two-hand IK: left fist hole on the greatsword axis, facing the blade,
   /* 행동이 끝나면 왼손을 편다 */
   for(let i=0;i<40;i++){ad.restore();ad.apply(null,false,false,1/60);}
   assert.ok(HG.amount.Left<.05,`kain: 대기에서는 왼손을 편다 (${HG.amount.Left.toFixed(2)})`);
+  /* 연속 재생(60 fps): 잡기 시작·놓기 도중(세기 < 1)도 두 주먹 중심이 10 cm 넘게 떨어져야 한다(주먹 폭 10.8, 잰 값 최소 10.6).
+     멈춘 자세만 재면 공격2·스매시·스킬1·처형이 잡기 시작에서 9.6~10.1 cm 로 겹쳤던 것을 못 잡았다 (docs/design/96) */
+  for(const clip of ['attack1','attack2','smash','skill1','exec']){const c=g.animations.find(a=>a.name===clip);
+    for(let i=0;i<30;i++){ad.restore();ad.apply(null,false,false,1/60);}
+    mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();let worst=9,at=0;
+    for(let t=0;t<c.duration;t+=1/60){act.time=t;mixer.update(0);ad.restore();ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:t,hitAt:c.duration*.42},false,false,1/60);root.updateMatrixWorld(true);
+      if((ad.diagnostics.twoHand||0)<.05)continue;
+      const dist=left.userData.gripPoint.clone().applyMatrix4(left.matrixWorld).distanceTo(slot.getWorldPosition(V()));if(dist<worst){worst=dist;at=t;}}
+    assert.ok(worst>=.10,`kain ${clip}: ${at.toFixed(2)} 초에 두 주먹 중심 ${(worst*100).toFixed(1)} cm — 겹침`);}
 });

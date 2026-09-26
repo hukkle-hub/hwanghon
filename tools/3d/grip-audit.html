@@ -3,7 +3,7 @@
      게임과 같은 경로로 붙인다: TW_LOOKS.attach(아인은 mountAinScythe) → 손 보정(makeRigAdapter/makeAinRigAdapter) → 시네마 레이어.
      ?char=ain|kain|ryu|sera&clip=idle&u=0.4
      빨강 = 손바닥 중심(손 뼈에 무게 0.6 이상 실린 정점의 중심), 초록 = 무기가 붙는 자리, 파랑 = 왼손 손바닥(양손 무기).
-     window.pose(clip,u) · window.shot(side,az,el,dist) · window.metrics() -->
+     window.pose(clip,u) · window.play(clip,t) · window.shot(side,az,el,dist) · window.metrics() -->
 <style>body{margin:0;background:#20252d}canvas{display:block}</style>
 <canvas id="c"></canvas>
 <script src="../../js/looks.js"></script><script src="../../js/mat-fix.js"></script>
@@ -56,6 +56,14 @@ window.pose=(clip='idle',u=.4)=>{ const c=clips.find(x=>x.name===clip); if(!c) r
   mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
   mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
   weapon.getWorldPosition(mk.grip.position); return 1; };
+/* 연속 재생: 대기 30 프레임 뒤 0 초부터 t 초까지 60 fps 로 돌린다 — 잡기 시작·놓기 도중(세기 < 1)을 본다 (docs/design/96) */
+window.play=(clip,t)=>{ const c=clips.find(x=>x.name===clip); if(!c) return 0; cinema.restore(); for(let i=0;i<30;i++){ rig.restore(); rig.apply(null,false,false,1/60); }
+  mixer.stopAllAction(); act=mixer.clipAction(c); act.reset().play(); act.paused=true;
+  for(let k=0;k<=Math.round(t*60);k++){ const e=k/60; act.time=e; mixer.update(0); rig.restore(); rig.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:e,hitAt:c.duration*.42},false,false,1/60,clip,null); }
+  model.updateMatrixWorld(true);
+  mk.palmR.position.copy(PALM.Right.clone().applyMatrix4(bones.RightHand.matrixWorld));
+  mk.palmL.position.copy(PALM.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld));
+  weapon.getWorldPosition(mk.grip.position); return {twoHand:rig.diagnostics.twoHand,dist:mk.palmL.position.distanceTo(mk.palmR.position)}; };
 window.metrics=()=>({ rightGap:mk.grip.position.distanceTo(mk.palmR.position), leftGap:(()=>{ /* 왼손 손바닥 ↔ 무기 축(초록점에서 무기 +Y) 거리 */
   const ax=new T.Vector3(0,1,0).applyQuaternion(weapon.getWorldQuaternion(new T.Quaternion())), p=mk.palmL.position.clone().sub(mk.grip.position), t=p.dot(ax);
   return {axis:p.clone().sub(ax.clone().multiplyScalar(t)).length(), along:t}; })() });
@@ -77,5 +85,6 @@ window.handVerts=(side='Right',min=.3)=>{ const hand=bones[side+'Hand'], out=[];
   const slot=bones[side+'HandSlot'], ay=new T.Vector3(0,1,0).applyQuaternion(slot.quaternion), az=new T.Vector3(0,0,1).applyQuaternion(slot.quaternion), ax=new T.Vector3(1,0,0).applyQuaternion(slot.quaternion);
   return {verts:out, slotPos:slot.position.toArray(), slotY:ay.toArray(), slotZ:az.toArray(), slotX:ax.toArray(), anchor:slot.userData.rerigAnchor||null, handScale:hand.getWorldScale(new T.Vector3()).x}; };
 window.marks=(on=true)=>{ Object.values(mk).forEach(m=>m.visible=on); return 1; };
+window.RIG=rig;
 window.READY=1;
 </script>
