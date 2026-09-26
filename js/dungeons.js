@@ -320,17 +320,17 @@
     {icon:'slam',name:'양손 내려찍기',tele:1.2,window:0.18,dmg:5200,posture:40,guardCost:28,recovery:0.95,desc:'뛰어올라 두 팔로 땅을 친다 — 충격파'}
   ];
   training[1].patterns=[
-    {icon:'slam',name:'양손 내려찍기',tele:1.1,window:0.16,dmg:5500,posture:40,guardCost:28,recovery:0.9,every:2.2,desc:'충격파'},
+    {icon:'slam',name:'양손 내려찍기',tele:1.1,window:0.16,dmg:5500,posture:40,guardCost:28,recovery:0.9,every:2.2,big:true,desc:'충격파'},
     {icon:'hookR',name:'원투 훅',tele:0.8,window:0.16,dmg:4600,posture:28,guardCost:20,recovery:0.7,chain:[{icon:'hookL',tele:0.34,dmg:4800,posture:28,gap:0.13}]},
-    {icon:'charge',name:'돌진',tele:1.05,window:0.16,dmg:6000,posture:45,guardCost:34,recovery:0.95,counterable:false,unblockable:true,range:'far',desc:'멀리서 몸으로 들이받는다 — 옆으로 피하라'}
+    {icon:'charge',name:'돌진',tele:1.05,window:0.16,dmg:6000,posture:45,guardCost:34,recovery:0.95,counterable:false,unblockable:true,range:'far',lunge:{dist:210,dur:0.32},desc:'멀리서 몸으로 들이받는다 — 옆으로 피하라. 뚫고 지나간 뒤 돌아선다'}
   ];
   training[1].parts.filter(function(p){return p.breakable;}).forEach(function(p){p.hp=32000;p.hpMax=p.hp;});
   training[2].patterns=[
     {icon:'hookR',name:'훅 연타 내려찍기',tele:0.75,window:0.40,dmg:5200,posture:30,guardCost:20,recovery:0.9,desc:'훅·훅·내려찍기 3연계 — 마지막을 튕겨라',
-      chain:[{icon:'hookL',tele:0.32,dmg:5400,posture:30,gap:0.12},{icon:'slam',tele:0.62,dmg:8000,posture:60,gap:0.16}]},
-    {icon:'spin',name:'회전 후려치기',tele:1.45,window:0.40,dmg:6500,posture:30,guardCost:30,recovery:0.85,counterable:false,unblockable:true,desc:'튕겨낼 수 없는 회전 공격. 위치 회피 후 반격'},
-    {icon:'slam',name:'도약 내려찍기',tele:1.25,window:0.40,dmg:8000,posture:60,guardCost:30,recovery:1.0,range:'far',desc:'멀리서 뛰어들어 내려찍는다 — 착지점 충격파'},
-    {icon:'charge',name:'돌진',tele:1.0,window:0.40,dmg:7000,posture:45,guardCost:34,recovery:0.9,counterable:false,unblockable:true,range:'far',desc:'옆으로 피하라'},
+      chain:[{icon:'hookL',tele:0.32,dmg:5400,posture:30,gap:0.7,walk:true},{icon:'slam',tele:0.62,dmg:8000,posture:60,gap:0.16}]},   /* 훅·훅 → «걷기 1 박» → 내려찍기 (렐라나 B 연계, 문서 112) */
+    {icon:'spin',name:'회전 후려치기',tele:1.45,window:0.40,dmg:6500,posture:30,guardCost:30,recovery:0.85,counterable:false,unblockable:true,big:true,desc:'튕겨낼 수 없는 회전 공격. 위치 회피 후 반격'},
+    {icon:'slam',name:'도약 내려찍기',tele:1.25,window:0.40,dmg:8000,posture:60,guardCost:30,recovery:1.0,range:'far',big:true,desc:'멀리서 뛰어들어 내려찍는다 — 착지점 충격파'},
+    {icon:'charge',name:'돌진',tele:1.0,window:0.40,dmg:7000,posture:45,guardCost:34,recovery:0.9,counterable:false,unblockable:true,range:'far',lunge:{dist:230,dur:0.3},desc:'옆으로 피하라 — 뚫고 지나간 뒤 돌아선다'},
     {icon:'kick',name:'앞차기',tele:0.6,window:0.40,dmg:5600,posture:35,guardCost:22,recovery:0.6,range:'near'}
   ];
   training[2].hint='백색선은 카운터 · 주황 X는 회피 · 파괴한 부위는 큰 빈틈';

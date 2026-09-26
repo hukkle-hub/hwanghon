@@ -18,7 +18,10 @@ export const BOSS_PROFILES={
       hammer:[['Spine','rotateX',-.08],['LeftArm','rotateZ',.18],['RightArm','rotateZ',-.18]],
       bolt:[['Spine1','rotateY',-.13],['RightArm','rotateX',-.16]],
       scythe:[['Spine','rotateY',.18],['LeftArm','rotateZ',.12]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    /* 회복 = 별도 포즈(문서 112 §3-3). 렐라나는 공격 뒤 «무릎 → 기립» 이 따로 있다.
+       다리 IK 가 없어 엉덩이는 조금만 내리고(발이 바닥을 뚫지 않게) 상체 숙임으로 무게를 보인다. */
+    settle:[['Hips','moveY',-.045],['Spine','rotateX',.30],['Spine1','rotateX',.10],['Head','rotateX',-.16],['LeftArm','rotateZ',.10],['RightArm','rotateZ',-.10]]
   },
   marsh:{
     name:'모르버스',tempo:1.08,
@@ -32,7 +35,8 @@ export const BOSS_PROFILES={
       drop:[['Hips','rotateY',.20],['Spine','rotateY',.22],['Head','rotateX',-.12],['Tail1','rotateY',-.22]],
       dropB:[['Hips','rotateY',-.18],['Spine1','rotateY',-.20]],
       dropC:[['Spine','rotateX',-.16],['Head','rotateX',-.12]]
-    },recoil:['Spine2','rotateZ']
+    },recoil:['Spine2','rotateZ'],
+    settle:[['Hips','moveY',-.06],['Spine','rotateX',.14],['Head','rotateX',.12],['Tail1','rotateY',.10]]
   },
   sewage:{
     name:'오염 수문기',tempo:.82,
@@ -43,7 +47,8 @@ export const BOSS_PROFILES={
       bolt:[['Exhaust','rotateY',-.20],['Spine','rotateY',.08]],
       scythe:[['Exhaust','rotateZ',-.24],['Hips','rotateY',.10]],
       flame:[['Core','scaleX',.18],['Core','scaleY',.18],['Core','scaleZ',.18],['Spine','moveY',.06]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    settle:[['Spine','rotateX',.10],['Core','scaleY',-.10],['Intake','rotateX',.16]]
   },
   relay:{
     name:'과부하 계전기',tempo:1.18,
@@ -55,7 +60,8 @@ export const BOSS_PROFILES={
       bolt:[['ContactL','rotateY',.18],['ContactR','rotateY',-.18],['Core','scaleX',.16],['Core','scaleZ',.16]],
       scythe:[['Hips','rotateY',.14],['ContactL','rotateZ',.18],['ContactR','rotateZ',-.18]],
       flame:[['Core','scaleX',.24],['Core','scaleY',.20],['Core','scaleZ',.24],['Head','rotateX',-.10]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    settle:[['Spine','rotateX',.10],['Core','scaleY',-.12],['ContactL','rotateX',.18],['ContactR','rotateX',.18]]
   },
   grove:{
     name:'모근체',tempo:.72,
@@ -66,7 +72,8 @@ export const BOSS_PROFILES={
       hammer:[['Spine','rotateX',-.15],['Head','rotateX',-.20],['VineL','rotateX',-.10],['VineR','rotateX',-.10]],
       bolt:[['Hips','rotateY',.12],['VineL','rotateZ',.24],['VineR','rotateZ',-.24]],
       flame:[['Core','scaleX',.20],['Core','scaleY',.24],['Core','scaleZ',.20],['Head','rotateX',-.12]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    settle:[['Spine','rotateX',.12],['Core','scaleY',-.10],['VineL','rotateX',.14],['VineR','rotateX',.14]]
   },
   road:{
     name:'파쇄 기갑',tempo:.92,
@@ -77,7 +84,8 @@ export const BOSS_PROFILES={
       bolt:[['Hips','rotateX',-.11],['Spine','rotateX',-.16],['JawR','rotateX',.15],['ArmL','rotateX',.12]],
       scythe:[['ArmL','rotateX',-.30],['Spine','rotateX',-.10]],
       flame:[['Core','scaleX',.20],['Core','scaleZ',.20],['Spine','moveY',.05]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    settle:[['Spine','rotateX',.14],['JawR','rotateX',.16],['ArmL','rotateX',.16],['Core','scaleY',-.08]]
   },
   ward:{
     name:'소생기',tempo:1.00,
@@ -88,9 +96,29 @@ export const BOSS_PROFILES={
       bolt:[['ArmR','rotateZ',-.26],['Spine','rotateY',.12]],
       hammer:[['Spine','rotateX',-.16],['PumpL','rotateX',-.16],['ArmR','rotateX',-.16],['Head','rotateX',-.10]],
       flame:[['Core','scaleX',.22],['Core','scaleY',.22],['Core','scaleZ',.22],['Head','rotateX',-.12]]
-    },recoil:['Spine','rotateZ']
+    },recoil:['Spine','rotateZ'],
+    settle:[['Spine','rotateX',.12],['PumpL','rotateX',.14],['ArmR','rotateX',.14],['Core','scaleY',-.08]]
   }
 };
+
+/* 회복 포즈 곡선 — 접점 직후 «툭» 가라앉고(0→.18) 천천히 일어선다(.35→1).
+   렐라나: 점프 찍기 뒤 무릎 착지 0.9 s, 대검 뒤 0.7 s (문서 112 §1). */
+export function settleCurve(rec){
+ const r=clamp(rec), drop=r<.18?Math.sin(r/.18*Math.PI/2):1, rise=r<.35?0:Math.min(1,(r-.35)/.65);
+ return drop*(1-rise*rise);
+}
+
+/* 예비 «홀드 프레임» — 렐라나식: 무기를 극단 위치로 «빨리» 가져가 멈춘 채 0.3 s 를 보이고,
+   마지막 0.1 s 에 접점까지 꽂는다(문서 112 §3-1). 판정 시계(tele)는 그대로 — 클립 표본 위치만 다시 깎는다.
+   p = 판정 진행률(0→1). 반환 = 접점 대비 클립 진행률(0→1). 양끝(0,1)은 그대로라 접점 프레임이 안 움직인다. */
+export function tellCurve(p, teleDur){
+ p=clamp(p); const T=Math.max(.15,teleDur||1);
+ const H=Math.min(.42,Math.max(.15,.30/T)), S=Math.min(.16,Math.max(.06,.10/T)), A=.84, D=.04;
+ const r0=1-H-S, r1=1-S;
+ if(p<=r0){ const u=p/Math.max(1e-6,r0); return A*(u*u*(3-2*u)); }
+ if(p<=r1){ return A+D*((p-r0)/Math.max(1e-6,H)); }
+ return A+D+(1-A-D)*((p-r1)/Math.max(1e-6,S));
+}
 
 export function bossProfile(id){return BOSS_PROFILES[id]||BOSS_PROFILES.tutorial;}
 
@@ -136,9 +164,9 @@ export function createBossBehavior(model,arenaId){
    if(state.state==='idle'){
      for(const t of p.idle||[]){const ph=t[3]||0, w=Math.sin(time*tempo*2*Math.PI+ph);op(t,w);}
    }else if(state.state==='recover'){
-     /* 공격 뒤에는 완전히 곧바로 대기로 돌아가지 않고 무게가 남는다. */
-     const rec=1-clamp(state.recovery/Math.max(.001,state.recoveryDur||1));const rr=Math.sin(Math.PI*rec);
-     op(['Spine','rotateX',-.035],rr);op(['Hips','moveY',-.025],rr);
+     /* 공격 뒤 «무릎 → 기립» — 대기로 페이드하지 않고 별도 포즈로 가라앉았다 일어선다 (문서 112 §3-3). */
+     const rec=1-clamp(state.recovery/Math.max(.001,state.recoveryDur||1));const k=settleCurve(rec);
+     for(const t of p.settle||[['Spine','rotateX',.16],['Hips','moveY',-.04]])op(t,k);
    }else if(state.state==='telegraph'){
      const icon=state.patIcon||state.pattern?.icon,wind=clamp(state.windup||0);
      /* 중간에 가장 크게 읽히고 접점 직전에는 authored clip에 자리를 돌려준다. */
@@ -175,11 +203,15 @@ export function sampleBossAttack(spec,duration,state) {
  const contact=duration*clamp(spec.hitFrac);
  if(state.state==='telegraph'){
   const progress=Number.isFinite(state.windup)?state.windup:1-state.tele/Math.max(.001,state.teleDur);
-  return contact*clamp(progress);
+  /* hold 비트는 combat 의 windup 곡선이 이미 «들고 버티기» 를 담고 있다 — 그대로. 나머지는 홀드 프레임 곡선. */
+  if(state.hold||spec.noHold) return contact*clamp(progress);
+  return contact*tellCurve(progress,state.teleDur);
  }
  if(state.state==='recover'){
-  const progress=1-Math.max(0,state.recovery)/Math.max(.001,state.recoveryDur);
-  return contact+(duration-contact)*clamp(progress);
+  const progress=clamp(1-Math.max(0,state.recovery)/Math.max(.001,state.recoveryDur));
+  /* 남은 클립을 앞 40 % 에 다 쓰고 끝 자세로 «착지» 한 채 머문다 — 그 위에 settle 포즈가 얹힌다 */
+  const eased=1-Math.pow(1-progress,2.4);
+  return contact+(duration-contact)*eased;
  }
  return null; // link/interrupt states must not remain paused at the last windup pose
 }

@@ -304,7 +304,8 @@
       M.telegraphs++;if(E.pat.counterable!==false)M.counterOpportunities++;
       if(HK.enemyStart)HK.enemyStart(E.pat,E.teleDur);
       emit('telegraph',{pattern:E.pat.name,icon:E.pat.icon,dur:E.teleDur,window:counterWindow,
-        counterable:E.pat.counterable!==false,beat:i+1,beats:E.beats.length,last:last,hold:!!E.pat.hold});
+        counterable:E.pat.counterable!==false,beat:i+1,beats:E.beats.length,last:last,hold:!!E.pat.hold,
+        big:!!(E.pat.big||E.pat.rank==='S'),lunge:E.pat.lunge||null});
     }
     function startTelegraph(){
       if(HK.canStart&&!HK.canStart()){E.patT=0.2;return;}
@@ -340,7 +341,7 @@
         if(P.hp===0){M.deaths++;if(o.mortal===false){P.hp=st.hp;emit('death');}else{B.over=true;B.dead=true;emit('death',{fatal:true,reason:P.lastFailure});}}
       }
       var nx=B.over?-1:nextBeat(E.beatI+1);
-      if(nx>=0){E.state='link';E.linkT=pat.gap!=null?pat.gap:0.28;}
+      if(nx>=0){E.state='link';E.linkT=pat.gap!=null?pat.gap:0.28;E.walk=!!pat.walk;}   /* walk: 연계 사이 «중립 걷기» — 링크 동안 이동 허용(문서 112 §4) */
       else {E.state='recover';E.recoveryDur=pat.recovery||0.65;E.recovery=E.recoveryDur;}
       if(E.posture>=R.posture.max&&!B.over)down();
     }
@@ -371,7 +372,7 @@
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}
       switch(E.state){
         case 'idle':if(D.patterns.length){E.patT-=dt;if(E.patT<=1e-8)startTelegraph();}break;
-        case 'telegraph':E.tele=Math.max(0,E.tele-dt);if(HK.enemyAdvance)HK.enemyAdvance(E.pat,windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur));if(E.tele<=1e-8){emit('swing',{pattern:E.pat.name,beat:E.beatI+1,last:!!E.pat.final});landAttack();}break;
+        case 'telegraph':E.tele=Math.max(0,E.tele-dt);if(HK.enemyAdvance)HK.enemyAdvance(E.pat,windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur));if(E.tele<=1e-8){emit('swing',{pattern:E.pat.name,icon:E.pat.icon,beat:E.beatI+1,last:!!E.pat.final,big:!!(E.pat.big||E.pat.rank==='S'),lunge:E.pat.lunge||null,recovery:E.pat.final?(E.pat.recovery||0.65):0});landAttack();}break;
         case 'link':E.linkT-=dt;if(E.linkT<=0){var nb=nextBeat(E.beatI+1);if(nb<0){E.state='recover';E.recoveryDur=E.pat.recovery||0.65;E.recovery=E.recoveryDur;}else startBeat(nb);}break;
         case 'recover':E.recovery-=dt;if(E.recovery<=0){E.state='idle';E.patT=E.pat.every||D.patternGap||1.4;emit('recoverend');}break;
         case 'stagger':E.stagT-=dt;if(E.stagT<=0){E.state='idle';E.patT=D.patternGap||1.4;}break;
@@ -399,7 +400,7 @@
       enemy:{hp:E.hp,hpMax:E.hpMax,posture:E.posture,state:E.state,tele:E.tele,teleDur:E.teleDur,window:counterWindow,
         counterable:!E.pat||E.pat.counterable!==false,pattern:E.pat?E.pat.name:null,patIcon:E.pat?E.pat.icon:null,
         windup:E.state==='telegraph'&&E.teleDur?windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur):(E.state==='telegraph'?0:1),
-        hold:!!(E.pat&&E.pat.hold),beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
+        hold:!!(E.pat&&E.pat.hold),walking:E.state==='link'&&!!E.walk,beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
         recovery:E.recovery,recoveryDur:E.recoveryDur,downT:E.downT,bleed:E.bleed.length,
         executable:E.state==='downed'&&!E.executed&&!B.over,
         parts:parts.map(function(p){return {id:p.id,name:p.name,hp:p.hp,hpMax:p.hpMax,weak:!!p.weak,breakable:!!p.breakable,broken:p.broken,pos:p.pos,guardedBy:p.guardedBy};})}};};

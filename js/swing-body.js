@@ -20,9 +20,12 @@
   var WEIGHT = {
     attack1:1.00, attack2:1.15, attack3:0.95,
     smash:1.45, exec:1.45,
-    skill1:1.30, skill2:0.70, skill3:1.40, skill4:0.55, ult:1.50,
+    skill1:1.40, skill2:0.95, skill3:1.45, skill4:0.85, ult:1.50,
     counter:0.55, hit:0, hit2:0, guard:0, guardHit:0
   };
+  /* 디렉터: 「스킬 모션도 저 게임처럼 큼지막하게」(문서 112). 가벼운 스킬(skill2/4)도 몸통을 쓰게 0.70/0.55 → 0.95/0.85,
+     skill1/3 은 스매시급(1.40/1.45). YAW 상한 0.52 는 그대로 — 1.45 × 0.52 = 43°, 두 손 IK 한계 안. */
+  var BIGS = function(){ return typeof window==='undefined' || window.TW_BIG_SKILLS!==false; };
   /* 기준 비틀기 진폭(rad). 몸통 셋에 나눠 담는다.
      0.30(17°)에서 0.52(30°)로 올렸다. 업계 기준은 두 손 무기 = 「몸통 회전이
      휘두름을 «구동» 한다」인데 17°는 그냥 어깨만 도는 정도였다.
@@ -34,6 +37,7 @@
         여유를 두고 0.52. 이 위로 올리려면 solveGripCircle 을 먼저 고쳐야 한다. */
   var YAW = 0.52;
   var LEAN = 0.22;   /* 앞뒤 기울기 — 가슴이 앞으로 나가면 사거리가 늘고 무게가 실린다 */
+  var LEAN_BIG = 0.30; /* 큰 기술(무게 1.3 이상)에서 — 가슴이 더 앞으로 나가 궤적이 커 보인다 (문서 112) */
 
   function smoother(e0,e1,x){
     var t = Math.max(0, Math.min(1, (x-e0)/(e1-e0 || 1e-6)));
@@ -58,7 +62,7 @@
     return {
       yaw:  YAW  * w * (-coil + release) * live,
       /* 기울기는 접점에서 살짝 앞으로 — 가슴이 앞으로 나가면 사거리가 늘어난다 */
-      lean: LEAN * w * (-0.35*coil + 1.1*release) * live,
+      lean: ((BIGS() && w >= 1.3) ? LEAN_BIG : LEAN) * w * (-0.35*coil + 1.1*release) * live,
       coil:coil, release:release
     };
   }

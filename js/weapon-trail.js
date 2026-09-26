@@ -6,7 +6,9 @@
    솔로(js/game3d.js)와 온라인(js/party-avatar.js)이 같은 연출을 공유한다. */
 import * as T from '../vendor/three/three.module.js';
 
-const TRN=18;                                   /* 궤적 마디 수 */
+const TRN=28;                                   /* 궤적 마디 수 — 18→28: 큰 기술의 호가 한 화면에 남는다 (문서 112 §3-5, 렐라나 붉은 링 0.3 s) */
+/* 큰 기술 «큼지막» 스위치 — 검수용 A/B (window.TW_BIG_SKILLS=false 로 끔) */
+const BIG=()=>typeof window==='undefined'||window.TW_BIG_SKILLS!==false;
 const INNER=[0.58,0.50], OUTER=[1.34,1.95], BRIGHT=[0.72,0.22], ALPHA=[0.7,0.26];
 
 let GLOW=null;
@@ -98,7 +100,8 @@ export class WeaponTrail{
     const a=this.pts[0][1], b=this.pts[2][1], v=new T.Vector3().subVectors(a,b);
     if(v.lengthSq()<1e-5) return;
     const sp=new T.Sprite(new T.SpriteMaterial({map:glowTexture(),color:this.hue.getHex(),transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0.5}));
-    sp.position.copy(a); sp.scale.set(0.9,0.35,1); this.scene.add(sp);
+    const big=(BIG()&&this.power>=1.6)?1.35:1;
+    sp.position.copy(a); sp.scale.set(0.9*big,0.35*big,1); this.scene.add(sp);
     this.streaks.push({o:sp,t:0,v:v.normalize().multiplyScalar(3.4)});
   }
   tick(dt, weapon, swinging){
@@ -106,11 +109,13 @@ export class WeaponTrail{
     if(!weapon){ this.layers[0].visible=this.layers[1].visible=false; return; }
     if(this.weapon!==weapon){this.weapon=weapon;this.measured=false;this.pts=[];this.hold=0;this.bladeRoot=this.bladeTip=null;}
     if(!this.measured) this.measure(weapon);
-    if(swinging){ this._push(weapon); this.hold=0.16; }
+    if(swinging){ this._push(weapon); this.hold=(BIG()&&this.power>=1.5)?0.30:0.16; }   /* 큰 기술은 궤적이 0.3 s 남는다 */
     else if(this.hold>0){ this.hold-=dt; if(this.pts.length) this.pts.pop(); }
     else if(this.pts.length) this.pts.pop();
+    /* 큰 기술일수록 바깥 띠가 넓다 — 날 길이의 1.12 → 최대 1.45 배 (power 2.2 기준) */
+    const widen=BIG()?1+Math.max(0,this.power-1)*0.28:1;
     this._write(this.layers[0], this.bladeTip?0:INNER[0], this.bladeTip?1:OUTER[0], BRIGHT[0]);
-    this._write(this.layers[1], this.bladeTip?-.08:INNER[1], this.bladeTip?1.12:OUTER[1], BRIGHT[1]);
+    this._write(this.layers[1], this.bladeTip?-.08:INNER[1], this.bladeTip?1+.12*widen:OUTER[1]*widen, BRIGHT[1]);
     this.windT-=dt;
     if(swinging && this.power>=1.3 && this.windT<=0){ this.windT=0.045; this._spawnWind(); }
   }
