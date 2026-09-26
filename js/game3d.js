@@ -1597,7 +1597,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   var EXP_SKIP={gate:1,boss:1,mobs:1};
   function syncExpeditionQuest(){ (L.beats.quest||[]).forEach(function(it,i){ var k=it[2]||['mobs','gate','boss'][i]; if(!k||EXP_SKIP[k]) return; quest[k]=Math.max(quest[k]||0,expedition.objectiveCount(k)); }); renderQuest(); }
   /* 자세가 무너진 보스에게 붙어 있으면 조사 버튼이 «처형 기회 표식» 으로 바뀐다.
-     화면 하단 고정 버튼이 아니라 보스 가슴 위 월드 좌표를 카메라로 투영한다(docs/design/106). */
+     화면 하단 고정 버튼이 아니라 보스 가슴 위 월드 좌표를 카메라로 투영한다(docs/design/107). */
   function placeExecutePrompt(){ if(!interactButton||!boss||!boss.root) return; var p=bossHitPos('core').clone(); p.y+=0.45; p.project(cam);
     /* 레이아웃 px 기준(clientWidth) — PC 는 .stage 가 CSS 로 축소돼 있어 getBoundingClientRect() 로 재면 24% 짧게 찍혀 표식이 보스에서 벗어났다 */
     var box={ width:el.dg.clientWidth||el.dg.getBoundingClientRect().width, height:el.dg.clientHeight||el.dg.getBoundingClientRect().height }, pad=MOBILE?48:58; var x=(p.x*0.5+0.5)*box.width, y=(-p.y*0.5+0.5)*box.height;
@@ -1915,7 +1915,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     var k=0.9+Math.sin(performance.now()/210)*0.12; lockRing.scale.setScalar(k);
     lockRing.material.color.setHex(s2.enemy.state==='downed'?0xFF9A45:s2.enemy.executable?0xFF9A45:0xE8C878);
   }
-  function setLock(v){ lockOn=!!v; var b=$('#lockon'); if(b){ b.textContent='T · 락온 '+(lockOn?'켜짐':'꺼짐'); b.classList.toggle('is-off', !lockOn); }
+  function setLock(v){ lockOn=!!v; var b=$('#lockon'), tc=$('#target-cycle'); if(b){ b.classList.toggle('is-off', !lockOn); b.dataset.state=lockOn?'on':'off'; b.setAttribute('aria-pressed', String(lockOn)); b.setAttribute('aria-label', lockOn?'락온 켜짐':'락온 꺼짐'); } if(tc) tc.dataset.lock=lockOn?'on':'off';
     guide(lockOn?'<b>락온</b> — 보스를 놓치지 않는다':'락온 해제 — 시점을 직접 돌린다', 1.4); }
   function render(dt){
     if((!!battle)!==inFight){ inFight=!!battle; document.documentElement.classList.toggle('in-fight', inFight); }   /* 좁은 화면 HUD 가 전투 중 정리된다 */
@@ -1938,7 +1938,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     updateCamera(dt); drawMini();
     if(!battle){el.timer.textContent=CB.fmtTime(travelTime); if(skirm){ var sp=skirm.snapshot().player; fill('v-hp', sp.hp/sp.hpMax*100); $('#v-hpv').textContent=W.fmt(Math.round(sp.hp))+' / '+W.fmt(sp.hpMax); fill('v-st', sp.st/sp.stMax*100); $('#v-stv').textContent=Math.round(sp.st)+' / '+sp.stMax; fill('v-ult', sp.ult); $('#v-ultv').textContent=Math.round(sp.ult)+'%'; fill('p-bar', sp.hp/sp.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(sp.hp)); } return; }
     var s2=battle.snapshot();
-    var selectedPart=s2.enemy.parts.find(function(p){return p.id===s2.target;});if(selectedPart){$('#target-name').textContent='조준 · '+selectedPart.name;$('#target-health').textContent=(selectedPart.broken?'파괴 완료 · 노출':selectedPart.hpMax?'내구도 '+Math.ceil(selectedPart.hp/selectedPart.hpMax*100)+'%':selectedPart.weak?'약점':'몸통')+' / Q · 탭하여 전환';}
+    var selectedPart=s2.enemy.parts.find(function(p){return p.id===s2.target;});if(selectedPart){ var tc=$('#target-cycle'), tn=$('#target-name'), th=$('#target-health'), pct=selectedPart.hpMax?Math.ceil(selectedPart.hp/selectedPart.hpMax*100):null; if(tn)tn.textContent=selectedPart.name; if(th)th.textContent=selectedPart.broken?'파괴':pct!=null?pct+'%':selectedPart.weak?'약점':''; if(tc){tc.dataset.lock=lockOn?'on':'off';tc.setAttribute('aria-label','부위 조준 '+selectedPart.name+(selectedPart.broken?' 파괴':pct!=null?' '+pct+'%':'')+' · 탭하여 전환');} }
     fill('b-hp', s2.enemy.hp/s2.enemy.hpMax*100); el.stack.textContent=s2.enemy.bleed?'출혈 ×'+s2.enemy.bleed:'';
     fill('b-stag', s2.enemy.state==='downed'?100:s2.enemy.posture); el.stag.parentNode.classList.toggle('is-down', s2.enemy.state==='downed');
     el.timer.textContent=CB.fmtTime(fightT);

@@ -1,6 +1,6 @@
 # 103 — 연출 감독 + L1 «순간» 연출 1 차 (2026-09-26)
 
-> GPT 의 HUD 계약 문서 `103-cinematic-combat-hud.md` 와 번호가 같다(둘 다 103). 이 문서는 연출 감독(Claude) 쪽, 저 문서는 HUD(GPT) 쪽 — 사이의 약속은 `tw:cinematic` 이벤트 하나다.
+> GPT 의 HUD 계약 문서 `103-cinematic-combat-hud.md` 와 번호가 같다(둘 다 103). GPT 문서 번호(v07 에서 정리): 104 설정 동기화 · 105 L2/L3 매트·캡션 · 106 전투 피드백 · 107 기회 UX(처형 표식) · 108 락온·부위 조준. 이 문서는 연출 감독(Claude) 쪽, 저 문서는 HUD(GPT) 쪽 — 사이의 약속은 `tw:cinematic` 이벤트 하나다.
 
 디렉터: 「연출 감독이랑 L1부터 진행해보고 시안을 보여줘. 이미지로 봐야지」 (102 번 기획의 9 장 1 순위)
 
@@ -107,6 +107,23 @@ GPT 쪽 제안(HUD 는 GPT 소유라 여기선 안 고쳤다): 모바일 규칙�
 
 - **수정 1건(game3d.js, Claude 파일)**: `placeExecutePrompt` 가 `el.dg.getBoundingClientRect()` 로 폭·높이를 쟀는데 PC 는 `.stage` 가 CSS 로 0.76 배 축소돼 있어(1672×952 → 1272×724) 좌표가 24% 짧게 찍혀 표식이 보스 왼쪽 위로 벗어났다. `clientWidth/clientHeight`(레이아웃 px)로 바꿨다. 모바일은 축소가 없어 원래 정확했다.
 - 첫 1회 안내(`seen['opening-'+kind]`)는 코드로 확인(같은 종류 두 번째 호출은 guide 를 안 부른다). 캡처 원본 `gs/opp2/`.
+
+## 1-6. HUD v07 검수 — 모바일 핫픽스 · 락온/부위 조준 (GPT 패치, 2026-09-26)
+
+v07(v05 검수 핫픽스 + 락온/부위 조준 UI 축소 + 문서 번호 105~108 정리)을 3-way 로 병합했다(베이스 26aae75 blob 이 있어 진짜 3-way. 충돌 3곳: 번호 주석은 GPT 쪽, `placeExecutePrompt` 의 clientWidth 수정과 검수 플래그는 Claude 쪽 유지).
+
+![위: PC 조준선·락온 아이콘 / 락온 OFF + 처형 표식 · 아래: 모바일 안내줄 하단 / 카운터 12%](../img/108-lock-hotfix-check.jpg)
+
+| 항목 | PC 1280×720 | 모바일 915×412 |
+|---|---|---|
+| 안내 줄 | 하단(bottom 22 px) | **하단 5 px 로 고정됨**(`html.mobile .cinema-hud-v1 .guide`, 전엔 화면 중앙) |
+| 카운터 배너 | top 27%, 숫자 32 px, 캐릭터·보스 점 안 가림 | **top 12%(y 49)·22 px** — 보스가 가까워 머리가 화면 위에 오면 머리와 겹침(핵은 안 가림) |
+| 부위 조준선 | 보스 바 아래 중앙 «핵 · 약점»(60×19) | 같은 자리(y 48) |
+| 락온 아이콘 | 우상단 26 px 원, T 힌트. OFF 시 흐려짐 + 안내 «락온 해제» | 30 px, 키 문자 숨김 |
+| 처형 표식 | 투영점과 13 px | 보스 핵이 화면 위 밖일 때 위 clamp(72 px) |
+| 3D lockRing · target 입력 · combat | game3d.js 변경은 `setLock`·조준선 텍스트뿐. lockRing·`battle.input`·판정 코드 diff 없음 | |
+
+캡처 원본 `gs/v07/`.
 
 ## 2. 시안
 

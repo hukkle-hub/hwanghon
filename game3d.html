@@ -167,7 +167,7 @@ html.mobile .loading__tip{font-size:12px}
 @media(max-height:640px){.target-cycle{top:107px;right:12px;min-width:130px;max-width:170px;font-size:11px}}
 html.mobile .exp-interact{bottom:128px;font-size:12px;padding:10px 14px}html.mobile .exp-map{top:66px;right:10px;padding:6px 9px;font-size:11px}
 
-/* ===== 106 — CINEMATIC OPPORTUNITY UX v06 =====
+/* ===== 107 — CINEMATIC OPPORTUNITY UX v06 =====
    처형은 중앙 사각 버튼이 아니라 «무너진 적 위에 뜨는 기회 표식»으로 보인다.
    탐색 조사 버튼은 기존 위치를 유지하고, 전투 중 처형일 때만 월드 좌표 투영 위치를 쓴다. */
 .exp-interact.is-exec{width:72px;height:72px;min-width:72px;min-height:72px;padding:0;border-radius:50%;border:1px solid rgba(238,157,100,.78);background:radial-gradient(circle at 50% 48%,rgba(115,23,15,.78) 0 43%,rgba(24,7,8,.95) 45% 100%);box-shadow:0 0 0 1px rgba(0,0,0,.76),0 0 22px rgba(220,82,50,.42),inset 0 0 18px rgba(230,100,55,.16);color:transparent;font-size:0;letter-spacing:0;transform:translate(-50%,-50%);animation:execOpportunityGlow 1.05s ease-in-out infinite alternate;overflow:visible;backdrop-filter:blur(1px)}
@@ -294,7 +294,7 @@ html.in-fight .quest{display:none}
 /* 입력 — 컨셉처럼 우하단에 군집, 공격만 확실히 크고 붉다. */
 .cinema-hud-v1 .bthud{z-index:11;padding:0 max(24px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left));pointer-events:none}
 .cinema-hud-v1 .bthud__row{align-items:flex-end;justify-content:space-between}
-.cinema-hud-v1 .bthud .stick,.cinema-hud-v1 html.mobile .bthud .stick{pointer-events:auto;width:176px;height:176px;opacity:.72}
+.cinema-hud-v1 .bthud .stick,html.mobile .cinema-hud-v1 .bthud .stick{pointer-events:auto;width:176px;height:176px;opacity:.72}
 .cinema-hud-v1 .stick b{width:132px;height:132px;margin:-66px 0 0 -66px;border:1px solid rgba(238,233,225,.21);background:radial-gradient(circle,rgba(255,255,255,.055),rgba(0,0,0,0) 67%);opacity:.52}
 .cinema-hud-v1 .stick b::before,.cinema-hud-v1 .stick b::after{content:"";position:absolute;left:50%;top:50%;background:rgba(255,255,255,.16);transform:translate(-50%,-50%)}
 .cinema-hud-v1 .stick b::before{width:1px;height:150%}.cinema-hud-v1 .stick b::after{width:150%;height:1px}
@@ -314,7 +314,7 @@ html.in-fight .quest{display:none}
 .cinema-hud-v1 .abtn--ult{--x:121px;--y:232px;--d:58px;border-color:rgba(220,97,83,.55)!important;background:radial-gradient(circle,rgba(78,18,20,.7),rgba(9,7,9,.7))!important}
 .cinema-hud-v1 .abtn--ult.is-ready{box-shadow:0 0 18px rgba(226,62,51,.50)!important;border-color:#EF7464!important}
 .cinema-hud-v1 .abtn .sk__k{display:block;left:50%;top:auto;bottom:-18px;transform:translateX(-50%);min-width:20px;padding:2px 4px;font-family:var(--f-serif);font-size:9px;text-align:center;color:#E6DED2;background:rgba(3,4,6,.78);border:1px solid rgba(230,223,210,.23);border-radius:2px;opacity:.9}
-.cinema-hud-v1 html.touch .abtn .sk__k,.cinema-hud-v1 html.mobile .abtn .sk__k{display:none}
+html.touch .cinema-hud-v1 .abtn .sk__k,html.mobile .cinema-hud-v1 .abtn .sk__k{display:none}
 .cinema-hud-v1 .abtn .sk__cd{border-radius:50%;background:conic-gradient(rgba(0,0,0,.72) calc(var(--p,1)*360deg),rgba(0,0,0,.10) 0);font-family:var(--f-serif)}
 /* 안내는 화면 아래 중앙 한 줄. */
 .cinema-hud-v1 .guide{top:auto;bottom:max(22px,env(safe-area-inset-bottom));left:50%;max-width:min(680px,50vw);white-space:normal;text-align:center;padding:7px 18px;border:1px solid rgba(238,230,216,.19);background:linear-gradient(90deg,rgba(4,5,7,0),rgba(4,5,7,.72) 16%,rgba(4,5,7,.72) 84%,rgba(4,5,7,0));font-family:var(--f-serif);font-size:11px;letter-spacing:.055em;color:#E6DED1}
@@ -469,6 +469,69 @@ html.in-fight .quest{display:none}
  .cinema-hud-v1 .counter{top:24%;min-width:160px;padding:4px 14px}.cinema-hud-v1 .counter__v{font-size:24px}.cinema-hud-v1 .counter__lb,.cinema-hud-v1 .counter__sub{font-size:7px}
  .cinema-hud-v1 .combo{right:max(12px,env(safe-area-inset-right));top:39%}.cinema-hud-v1 .combo b{font-size:24px}.cinema-hud-v1 .combo.big b{font-size:31px}
  .cinema-hud-v1 .dmgnum{font-size:13px}.cinema-hud-v1 .dmgnum.crit{font-size:17px}.cinema-hud-v1 .dmgnum.counter{font-size:19px}.cinema-hud-v1 .dmgnum.taken{font-size:14px}
+}
+
+
+/* ===== 106 — MOBILE HUD CASCADE HOTFIX v05.1 =====
+   오래된 html.mobile 규칙보다 높은 specificity로, 최신 시네마틱 HUD의 위치를 보장한다.
+   html은 body의 조상이므로 body 뒤에 html.mobile을 두는 역방향 선택자는 쓰지 않는다. */
+@media(max-width:900px),(max-height:520px){
+  html.mobile .cinema-hud-v1 .guide{
+    top:auto!important;bottom:max(5px,env(safe-area-inset-bottom))!important;left:50%!important;right:auto!important;
+    transform:translateX(-50%)!important;max-width:44vw!important;white-space:normal;text-align:center;
+    font-size:9px;line-height:1.35;padding:4px 10px;
+  }
+  html.mobile .cinema-hud-v1 .counter{
+    top:12%!important;min-width:144px;padding:3px 12px 4px;
+  }
+  html.mobile .cinema-hud-v1 .counter__v{font-size:22px;line-height:1.02}
+  html.mobile .cinema-hud-v1 .counter__lb,html.mobile .cinema-hud-v1 .counter__sub{font-size:6.5px}
+  html.mobile .cinema-hud-v1 .bthud .stick{width:124px;height:124px!important}
+  html.mobile .cinema-hud-v1 .abtn .sk__k,html.touch .cinema-hud-v1 .abtn .sk__k{display:none!important}
+}
+@media(max-height:360px){
+  html.mobile .cinema-hud-v1 .guide{bottom:3px!important;max-width:38vw!important;font-size:8.5px;padding:3px 8px}
+  html.mobile .cinema-hud-v1 .counter{top:10%!important}
+}
+
+/* ===== 108 — CINEMATIC TARGET / LOCK UX v07 =====
+   3D lockRing이 실제 조준 위치를 말하고, DOM은 선택 부위와 락온 상태만 작게 보조한다.
+   우측의 큰 텍스트 알약은 제거한다. */
+.cinema-hud-v1 .target-cycle{
+  left:50%;right:auto;top:max(62px,calc(env(safe-area-inset-top) + 62px));transform:translateX(-50%);
+  min-width:0;max-width:38vw;min-height:0;padding:4px 12px;display:flex;align-items:center;justify-content:center;gap:8px;
+  border:0;border-top:1px solid rgba(231,211,174,.28);border-radius:0;background:linear-gradient(90deg,rgba(5,7,10,0),rgba(5,7,10,.54) 20%,rgba(5,7,10,.54) 80%,rgba(5,7,10,0));
+  color:#E9DED0;font-family:var(--f-serif);font-size:10px;letter-spacing:.10em;text-align:center;backdrop-filter:none;
+  opacity:.88;transition:opacity .15s ease,filter .15s ease;
+}
+.cinema-hud-v1 .target-cycle::before{content:'◎';font-family:system-ui,sans-serif;font-size:11px;color:#D9C18A;opacity:.82}
+.cinema-hud-v1 .target-cycle[data-lock="off"]{opacity:.46;filter:saturate(.6)}
+.cinema-hud-v1 .target-cycle #target-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cinema-hud-v1 .target-cycle small{display:inline;margin:0;font-family:var(--f-serif);font-size:8px;letter-spacing:.06em;color:rgba(219,207,187,.62);white-space:nowrap}
+.cinema-hud-v1 .lockon{
+  top:max(62px,calc(env(safe-area-inset-top) + 62px));right:max(18px,env(safe-area-inset-right));left:auto;
+  width:34px;height:34px;min-width:34px;padding:0;border-radius:50%;border:1px solid rgba(222,207,179,.30);
+  background:rgba(6,8,11,.38);color:transparent;font-size:0;display:grid;place-items:center;backdrop-filter:blur(2px);
+  opacity:.88;transition:opacity .15s ease,border-color .15s ease,transform .12s ease;
+}
+.cinema-hud-v1 .lockon::before{content:'◎';font-family:system-ui,sans-serif;font-size:17px;line-height:1;color:#E5D4AF;text-shadow:0 1px 4px #000}
+.cinema-hud-v1 .lockon::after{content:'T';position:absolute;right:-2px;bottom:-7px;font-family:var(--f-serif);font-size:7px;color:rgba(225,215,198,.50);text-shadow:0 1px 3px #000}
+.cinema-hud-v1 .lockon.is-off{opacity:.42;border-color:rgba(150,154,160,.22)}
+.cinema-hud-v1 .lockon.is-off::before{content:'○';color:#A5A9AE}
+.cinema-hud-v1 .lockon:active{transform:scale(.93)}
+.cinema-hud-v1.cinema-l1 .target-cycle,.cinema-hud-v1.cinema-l1 .lockon,
+.cinema-hud-v1.cinema-l2 .target-cycle,.cinema-hud-v1.cinema-l2 .lockon,
+.cinema-hud-v1.cinema-l3 .target-cycle,.cinema-hud-v1.cinema-l3 .lockon{opacity:0!important;pointer-events:none!important}
+@media(max-width:900px),(max-height:520px){
+  html.mobile .cinema-hud-v1 .target-cycle{top:max(48px,calc(env(safe-area-inset-top) + 48px));max-width:42vw;padding:3px 8px;gap:6px;font-size:8.5px}
+  html.mobile .cinema-hud-v1 .target-cycle small{font-size:7px}
+  html.mobile .cinema-hud-v1 .lockon{top:max(48px,calc(env(safe-area-inset-top) + 48px));right:max(8px,env(safe-area-inset-right));width:30px;height:30px;min-width:30px}
+  html.mobile .cinema-hud-v1 .lockon::before{font-size:15px}
+  html.mobile .cinema-hud-v1 .lockon::after{display:none}
+}
+@media(max-height:360px){
+  html.mobile .cinema-hud-v1 .target-cycle{top:max(40px,calc(env(safe-area-inset-top) + 40px));max-width:36vw}
+  html.mobile .cinema-hud-v1 .lockon{top:max(40px,calc(env(safe-area-inset-top) + 40px))}
 }
 
 </style>
