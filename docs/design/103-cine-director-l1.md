@@ -92,6 +92,22 @@ v05(피해 숫자 16/13 px·0.62 초, 동시 표시 PC 9·모바일 6, 카운터
 
 GPT 쪽 제안(HUD 는 GPT 소유라 여기선 안 고쳤다): 모바일 규칙을 `html.mobile .cinema-hud-v1 .guide{…}` 처럼 `html.mobile` 을 앞에 붙여 specificity 를 넘기고(`.cinema-hud-v1 html.mobile …` 은 html 이 body 의 조상이라 절대 안 맞는다), 카운터 배너는 모바일에서 `top` 을 더 올리거나(≤14%) 보스 핵 표식 높이를 피하게 한다. 캡처 원본은 스크래치패드 `gs/fb2/`.
 
+## 1-5. 시네마틱 기회 UX v06 검수 (GPT 패치, 2026-09-26)
+
+처형 표식(보스 core+0.45 m 투영)·가장자리 clamp·L2/L3 중 숨김·파괴/제압 원형 시간표시를 PC 1280×720·모바일 915×412 에서 쟀다(표식은 검수용 `demoExec` 로 강제 표시 — 판정 `executeReady()`/`battle.input('execute')` 는 그대로).
+
+![위: PC 표식 / PC clamp · 아래: 모바일 표식 / 파괴 기회 링](../img/106-opportunity-check.jpg)
+
+| 항목 | PC | 모바일 |
+|---|---|---|
+| 표식 ↔ 투영점 거리 | 패치 원본 **127 px 어긋남** → 수정 후 **11 px** | 8 px(위 clamp 72 px 에 걸리면 22 px) |
+| 가장자리 clamp | 보스가 프레임 밖(투영 y=-285)일 때 y=104(=72+반높이)로 고정, x 는 pad 58 안 | y=72, x pad 48 안 |
+| L2 컷 중 | `.cinema-l2` 에서 투명도 0 → 컷 끝나면 복귀(오차 2 px) | 같음 |
+| 파괴/제압 링 | SVG `openRing` 애니메이션 진행(dashoffset 0→9.4 px 확인), 라벨 «파괴»/«제압» | 같음 |
+
+- **수정 1건(game3d.js, Claude 파일)**: `placeExecutePrompt` 가 `el.dg.getBoundingClientRect()` 로 폭·높이를 쟀는데 PC 는 `.stage` 가 CSS 로 0.76 배 축소돼 있어(1672×952 → 1272×724) 좌표가 24% 짧게 찍혀 표식이 보스 왼쪽 위로 벗어났다. `clientWidth/clientHeight`(레이아웃 px)로 바꿨다. 모바일은 축소가 없어 원래 정확했다.
+- 첫 1회 안내(`seen['opening-'+kind]`)는 코드로 확인(같은 종류 두 번째 호출은 guide 를 안 부른다). 캡처 원본 `gs/opp2/`.
+
 ## 2. 시안
 
 시간을 늦춰(브라우저 시계 0.55% 배속) 박자를 프레임 단위로 찍었다(1280×720, d01 훈련장 허수아비). 맞대기는 위: 연출 감독 끔(`off`) · 아래: 켬(`normal`). 끔 쪽 시각은 방아쇠 시점을 못 재서 «~» 로 맞춘 근사값. 캡처는 GPT HUD v01 병합 전 화면이다(연출은 HUD 와 무관 — 색 막은 캔버스 위·UI 아래).
