@@ -13,7 +13,15 @@ const clamp=v=>Math.max(0,Math.min(1,Number.isFinite(v)?v:0));
 export const BOSS_PROFILES={
   tutorial:{
     name:'훈련 허수아비',tempo:1,
-    idle:[['Spine','rotateX',.018,0],['Head','rotateY',.025,1.4]],
+    /* 문서 120: 대기 = 숨(가슴 0.3 Hz)·체중 옮김(골반·반대로 허리 0.2 Hz)·머리 두리번. 다섯째 값 = 주기 배수(없으면 1 Hz). 「근거 없음」 진폭 */
+    idle:[['Spine','rotateX',.018,0],['Head','rotateY',.025,1.4],['Spine1','rotateX',.022,0,.3],['Spine2','rotateX',-.012,.6,.3],
+          ['Hips','rotateZ',.030,0,.2],['Spine','rotateZ',-.022,0,.2],['Hips','moveX',.018,0,.2]],
+    /* 패턴별 회복 자세 — 내려찍기는 깊게 박힌 채, 돌진은 뒤로 버티며 감속, 회전은 반대로 풀리며 멈춤 (문서 120) */
+    settleBy:{
+      slam:[['Hips','moveY',-.070],['Spine','rotateX',.40],['Spine1','rotateX',.14],['Head','rotateX',-.20],['LeftArm','rotateZ',.14],['RightArm','rotateZ',-.14]],
+      charge:[['Hips','moveY',-.035],['Spine','rotateX',-.16],['Spine1','rotateX',-.06],['Head','rotateX',.10]],
+      spin:[['Hips','moveY',-.040],['Spine','rotateY',-.30],['Spine1','rotateY',-.12],['Spine','rotateX',.16]]
+    },
     prep:{
       hammer:[['Spine','rotateX',-.08],['LeftArm','rotateZ',.18],['RightArm','rotateZ',-.18]],
       bolt:[['Spine1','rotateY',-.13],['RightArm','rotateX',-.16]],
@@ -155,26 +163,59 @@ export function createBossBehavior(model,arenaId){
    else if(kind==='moveX')o.position.x+=v;else if(kind==='moveY')o.position.y+=v;else if(kind==='moveZ')o.position.z+=v;
    else if(kind==='scaleX')o.scale.x*=Math.max(.65,1+v);else if(kind==='scaleY')o.scale.y*=Math.max(.65,1+v);else if(kind==='scaleZ')o.scale.z*=Math.max(.65,1+v);
  }
+ /* 피격 위계 (문서 120): 평타 < 마무리(3타) < 스매시 < 카운터(튕김 < 밀침 < 맞부딪침) < 경직 < 파괴.
+    [세기, 길이 s]. 방향은 side(맞은 쪽의 반대로 기운다). 공격 상태는 끊지 않는다 — 클립 위에 얹는 덧셈이다. 「근거 없음」 값 */
+ const REACT={hit:[.34,.18],finish:[.50,.24],smash:[.64,.30],deflect:[.70,.26],repel:[.80,.34],counter:[.80,.34],clash:[.92,.46],stagger:[1.0,.45],break:[1.15,.55]};
  function react(kind,strength=1,duration,side=1){
- const map={deflect:[.38,.22],repel:[.68,.34],clash:[1,.50],counter:[.72,.34],break:[1.15,.55],hit:[.42,.20],stagger:[.95,.42]};
- const v=map[kind]||map.hit;reaction={kind,strength:v[0]*strength,left:duration||v[1],dur:duration||v[1],side:side<0?-1:1};
+ const v=REACT[kind]||REACT.hit;reaction={kind:REACT[kind]?kind:'hit',strength:v[0]*strength,left:duration||v[1],dur:duration||v[1],side:side<0?-1:1};
+ if(v[0]>=REACT.deflect[0])stagT=-1;   /* 새 충격(카운터·경직·파괴)은 경직 순서를 처음부터 */
+ }
+ /* 카운터 세 갈래는 세기만이 아니라 모양이 다르다: 튕김 = 상체가 옆으로 비틀림, 밀침 = 뒤로 젖혀 밀림, 맞부딪침 = 두 팔이 벌어지며 젖혀짐 */
+ const SHAPE={deflect:[['Spine1','rotateY',.26,1]],repel:[['Spine','rotateX',.14],['Head','rotateX',.10],['Hips','moveY',-.02]],
+   clash:[['Spine','rotateX',.16],['LeftArm','rotateZ',.18],['RightArm','rotateZ',-.18],['Head','rotateX',.10]],
+   stagger:[['Spine','rotateX',.16],['Spine1','rotateX',.10],['LeftArm','rotateZ',.20],['RightArm','rotateZ',-.20],['Hips','moveY',-.05],['Head','rotateX',.12]],
+   break:[['Spine','rotateX',.20],['Spine1','rotateX',.12],['LeftArm','rotateZ',.26],['RightArm','rotateZ',-.26],['Hips','moveY',-.06],['Head','rotateX',.14]]};
+ /* 경직 = 충격 → 균형 잃음 → 발 다시 딛기 → 낮춤 → 회복 (문서 120). 스냅숏에 남은 시간이 없어 들어온 뒤 경과로 그린다. 「근거 없음」 구간 */
+ let stagT=-1,prevYaw=null,lead=0;
+ function staggerPose(t){
+   const ss=u=>{u=clamp(u);return u*u*(3-2*u);};
+   const lose=ss((t-.06)/.16)*(1-.55*ss((t-.28)/.14));        // 뒤·옆으로 휘청
+   const step=Math.sin(Math.PI*clamp((t-.22)/.18));            // 발 다시 딛기(골반이 옆으로 한 번 옮겨 감)
+   const low=ss((t-.34)/.20);                                   // 낮춤 — 무게를 싣고 버틴다
+   return {lose,step,low};
  }
  function apply(state,time=0,dt=0){
    const rage=state.rage?1.22:1,tempo=(p.tempo||1)*rage;
    if(state.state==='idle'){
-     for(const t of p.idle||[]){const ph=t[3]||0, w=Math.sin(time*tempo*2*Math.PI+ph);op(t,w);}
+     for(const t of p.idle||[]){const ph=t[3]||0, w=Math.sin(time*tempo*(t[4]||1)*2*Math.PI+ph);op(t,w);}
    }else if(state.state==='recover'){
-     /* 공격 뒤 «무릎 → 기립» — 대기로 페이드하지 않고 별도 포즈로 가라앉았다 일어선다 (문서 112 §3-3). */
+     /* 공격 뒤 «무릎 → 기립» — 대기로 페이드하지 않고 별도 포즈로 가라앉았다 일어선다 (문서 112 §3-3).
+        패턴마다 다른 회복 자세 = 반격 기회가 «무엇 때문에» 열렸는지 몸으로 보인다 (문서 120) */
      const rec=1-clamp(state.recovery/Math.max(.001,state.recoveryDur||1));const k=settleCurve(rec);
-     for(const t of p.settle||[['Spine','rotateX',.16],['Hips','moveY',-.04]])op(t,k);
+     const icon=state.patIcon||state.pattern?.icon;
+     for(const t of (p.settleBy&&p.settleBy[icon])||p.settle||[['Spine','rotateX',.16],['Hips','moveY',-.04]])op(t,k);
    }else if(state.state==='telegraph'){
      const icon=state.patIcon||state.pattern?.icon,wind=clamp(state.windup||0);
      /* 중간에 가장 크게 읽히고 접점 직전에는 authored clip에 자리를 돌려준다. */
      const cue=Math.sin(Math.PI*Math.min(1,wind))*rage;
      for(const t of (p.prep&&p.prep[icon])||[])op(t,cue);
    }
+   if(state.state==='stagger'){ stagT=stagT<0?0:stagT+dt; const s=staggerPose(stagT), sd=reaction?reaction.side:1;
+     op(['Spine','rotateX',.20],s.lose); op(['Spine','rotateZ',.16*sd],s.lose); op(['Head','rotateX',.12],s.lose);
+     op(['Hips','moveX',.05*sd],s.step); op(['Hips','rotateZ',-.06*sd],s.step);
+     op(['Hips','moveY',-.07],s.low); op(['Spine1','rotateX',.16],s.low); op(['LeftArm','rotateZ',.12],s.low); op(['RightArm','rotateZ',-.12],s.low);
+   } else stagT=-1;
+   /* 머리·가슴이 먼저 돈다 — 몸통 방향이 바뀌는 속도(°/s)를 머리·가슴이 앞질러 읽힌다(골반은 뒤따라온다). 「근거 없음」 0.10 s 앞섬, 최대 0.35 rad */
+   { const par=model.parent||model, yaw=par.rotation?par.rotation.y:0;
+     if(prevYaw!=null&&dt>0){ let d=yaw-prevYaw; while(d>Math.PI)d-=2*Math.PI; while(d<-Math.PI)d+=2*Math.PI;
+       const want=Math.max(-.35,Math.min(.35,d/dt*.10)); lead+=(want-lead)*Math.min(1,dt*10); }
+     prevYaw=yaw; if(Math.abs(lead)>1e-3){ op(['Head','rotateY',.55],lead); op(['Spine2','rotateY',.30],lead); op(['Hips','rotateY',-.15],lead); } }
    if(reaction){
-     reaction.left=Math.max(0,reaction.left-dt);const k=1-reaction.left/reaction.dur, pulse=Math.sin(Math.PI*clamp(k))*reaction.strength;
+     /* 충격 정점은 세기와 상관없이 0.06 s(접점 뒤 4 프레임) — 그다음 세기별 길이만큼 가라앉는다.
+        길이에 비례한 사인이면 짧은 반응이 같은 시각에 더 높이 올라 위계가 뒤집혔다 (문서 120) */
+     reaction.left=Math.max(0,reaction.left-dt);const el=reaction.dur-reaction.left, RISE=.06,
+       pulse=(el<RISE?Math.sin(Math.PI/2*el/RISE):.5+.5*Math.cos(Math.PI*clamp((el-RISE)/Math.max(.01,reaction.dur-RISE))))*reaction.strength;
+     for(const t of SHAPE[reaction.kind]||[])op(t[3]?[t[0],t[1],t[2]*reaction.side]:t,pulse);
      const [n,a]=p.recoil||['Spine','rotateZ'];op([n,a,.30*reaction.side],pulse);
      /* 공격 클립은 계속 재생하되 충격 방향의 작은 전신 반동을 항상 얹는다. */
      op(['Spine','rotateX',.10],pulse);
@@ -183,7 +224,7 @@ export function createBossBehavior(model,arenaId){
    }
    model.updateWorldMatrix(true,true);
  }
- return {profile:p,nodes,restore,apply,react,get reaction(){return reaction;}};
+ return {profile:p,nodes,restore,apply,react,REACT,get reaction(){return reaction;}};
 }
 
 export function prepareTrainingMotion(asset) {

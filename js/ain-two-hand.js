@@ -17,7 +17,17 @@ const ready=[0,-.12,.32,-.65,.75,.18];
 // 옛 아인 뼈대(Hi3D + ain-bind-repair)의 쉬는 자세 두 어깨(LeftArm·RightArm) 가운데 — 경로를 잰 기준.
 const AUTHORED_SHOULDERS=V(.004,1.345,.0285);
 export const AIN_CARRY=[.06,-.30,.10,-.34,-.34,-.88];
-const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,ready]];
+/* 기본 3 타 «연계 문법» (문서 120, 블소 레볼루션 연계 무공 참고 — 애니 복제 없이 pose-to-pose 원리만).
+   예전엔 세 경로가 모두 ready 에서 시작해 ready 로 끝났다 → 1 타 날이 중립으로 돌아간 뒤 2 타가 다시 감았다
+   («1 타 → 중립 → 2 타», 디렉터 금지 1 순위). 이제:
+     1 타 끝 = SLASH_END (따라감 자세, 중립 복귀 없음)
+     2 타    = 1 타 호를 «거꾸로» — SLASH_END → 작은 재감기(≈50 ms) → 같은 접점 자세 → 1 타 예비 쪽으로 뽑음 → REV_END
+     3 타    = REV_END 에서 바로 찌르기 준비로
+   접점 키(.42)는 셋 다 값·시각 그대로라 판정 자리·접촉 자세 불변. 연계가 끊기면(행동 없음) 리그가 들고 다니는 자세로 섞는다. */
+const SLASH_END=[.12,-.17,.30,-.92,.12,.30];
+const REV_END=[-.08,-.08,.27,-.72,.46,.10];
+const slash=[[0,ready],[.20,[-.12,-.08,.28,-.8,.45,-.35]],[.42,[0,-.12,.30,-.75,.15,.65]],[.65,[.10,-.15,.30,-.90,.22,.35]],[1,SLASH_END]];
+const reverse=[[0,SLASH_END],[.08,[.13,-.14,.30,-.88,.20,.32]],[.42,[0,-.12,.30,-.75,.15,.65]],[.66,[-.10,-.10,.28,-.78,.40,-.20]],[1,REV_END]];
 const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,.6]],[.65,[0,-.22,.37,-.7,-.5,.5]],[1,ready]];
 /* 3타(찌르기)는 우리 클립 중 제일 거칠었다 (rJerk 4.37, 전문가 클립 1.50).
    원인은 이음매가 아니라 «이 경로의 모양» 이다 — .24·.42·.62 세 키의 자루
@@ -26,7 +36,7 @@ const chop=[[0,ready],[.20,[0,.12,.27,-.65,.75,-.22]],[.42,[0,-.1,.40,-.65,-.45,
    통째로 몰린다. 각속도 곡선이 사각형에 가까워지니 당연히 거칠다.
    고친 것: 양쪽 전환에 중간 키를 하나씩 넣어 회전을 펼친다. 접점 키(.42)는
    값도 시점도 그대로라 판정·접촉 자세는 안 움직인다. */
-const thrust=[[0,ready],[.12,[-.05,-.05,.26,-.64,.50,.52]],[.24,[-.08,-.13,.26,-.62,.22,.72]],
+const thrust=[[0,REV_END],[.12,[-.05,-.05,.26,-.64,.50,.52]],[.24,[-.08,-.13,.26,-.62,.22,.72]],
   [.42,[0,-.08,.48,-.6,.1,.75]],[.62,[0,-.12,.32,-.58,.20,.76]],[.80,[-.03,-.14,.30,-.62,.45,.60]],[1,ready]];
 // Distinct skill silhouettes; the negative-X shaft component keeps the two
 // hands ordered instead of crossing through an elbow branch singularity.
@@ -362,7 +372,7 @@ export const AIM_DIAG={minSin:Infinity,reset(){this.minSin=Infinity;}};
 /* 계측용 — 리그·몸·바닥 가드를 빼고 «키 경로가 뜻한» 자루 방향만 돌려준다.
    swing-measure.html 이 몸통 프레임 기준 각속도와 실제 날 각속도를 갈라 볼 때 쓴다. */
 export function ainPathDir(name,t){
- const keys=AIN_SKILL_PATHS[name]||(name==='counter'?counter:/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
+ const keys=AIN_SKILL_PATHS[name]||(name==='counter'?counter:name==='attack2'?reverse:/smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
  const pace=TEMPO[name]?{tempo:TEMPO[name]}:{even:!!EVEN_PACE[name],bite:BITE[name]};
  return V(0,1,0).applyQuaternion(pathRotation(keys,t,AIN_SWING_GAIN[name],pace));
 }
@@ -438,7 +448,7 @@ export function makeAinTwoHand(model,root,slot){
    if(dt>0){ const step=Math.min(dt,.05)/span, d=want-carryAmount;
              carryAmount+=Math.abs(d)<=step?d:(d>0?step:-step); }
    else carryAmount=want; }
- const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):/attack2|smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
+ const keys=AIN_SKILL_PATHS[name]||(name==='counter'?(a?.opt?.perfect?perfectCounter:counter):name==='attack2'?reverse:/smash|exec/.test(name)?chop:/attack3/.test(name)?thrust:slash);
   /* 각속도 평탄화는 «무거운» 기술에만 건다 — 평타 계열은 관절이 먼저 튄다 */
   const even=(EVEN_PACE[name]||false)&&!AB().even;
   /* 경로 시간을 흘리는 방식 — 스매시는 세 박자 템포, 나머지는 (균등 +) 접점 감속.
@@ -474,7 +484,7 @@ export function makeAinTwoHand(model,root,slot){
   // Nearby target adaptation is a bounded root-space translation, not wrist twist.
   // Fade in/out around contact so target selection cannot snap the idle pose.
   // The shared reach solver below still limits both arms together.
-  if(target&&!AB().aim&&['skill1','skill3','ult','counter','smash','attack3'].includes(name)){
+  if(target&&!AB().aim&&['skill1','skill3','ult','counter','smash','attack2','attack3'].includes(name)){
    // 언제 조준 보정을 켜는가. 기본은 «동작 초반부터 접점까지» 인데, 몸이 도는 기술은
    // 그러면 안 된다 — 도는 동안 어깨가 같이 돌기 때문에, 고정된 세계 좌표를 향해
    // 팔을 계속 끌면 팔꿈치 분기가 뒤집혀 한 프레임에 13.3° 튄다 (skill3Target).
@@ -492,9 +502,11 @@ export function makeAinTwoHand(model,root,slot){
     if(name==='smash')delta.set(T.MathUtils.clamp(delta.x,-.08,.16),0,0);
     if(name==='counter')delta.set(T.MathUtils.clamp(delta.x,-.12,.22),0,T.MathUtils.clamp(delta.z,-.2,.1));
     if(name==='attack3')delta.set(T.MathUtils.clamp(delta.x,-.12,.12),0,T.MathUtils.clamp(delta.z,-.08,.1));
+    /* 2 타 역베기(문서 120): 몸 클립이 바뀌어 날이 표적 옆을 지난다 — 3 타와 같은 폭(±12 cm)으로만 끌어 준다 */
+    if(name==='attack2')delta.set(T.MathUtils.clamp(delta.x,-.12,.12),T.MathUtils.clamp(delta.y,-.10,.20),T.MathUtils.clamp(delta.z,-.08,.1));
     /* 카운터의 조준 경사로를 넓혔다 (.28~.42 → .20~.50). 좁으면 그 짧은 구간에
        보정이 급히 들어와 팔꿈치가 8.27° 튄다 — 넓히면 5.33° 로 내려간다. */
-    center.add(delta.multiplyScalar(weight*(['counter','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,name==='attack3'?.29:.20,.50):1)).applyQuaternion(root.getWorldQuaternion(Q())));
+    center.add(delta.multiplyScalar(weight*(['counter','attack2','attack3','smash'].includes(name)?T.MathUtils.smootherstep(t,/attack[23]/.test(name)?.29:.20,.50):1)).applyQuaternion(root.getWorldQuaternion(Q())));
    }
   }
   /* ── 바닥 가드 ─────────────────────────────────────────────────────────

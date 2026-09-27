@@ -275,6 +275,13 @@
      값은 근거 없음 — 관절 한 표본 이동량 8° 게이트 안에서 고른 것이다
      (tests/ain-two-hand; strike 2.7 이면 14.9° 로 깨졌다). */
   var TEMPO = { smash:{ lift:.20, hold:.28, top:.40, creep:.05, strike:1.2, bite:.55, bodyBite:.30, dwell:.06 } };
+  /* 캐릭터마다 클립이 다르면 템포도 다르다. 카인 smash 는 문서 120 에서 KayKit 1.1 Rig_Large
+     Melee_2H_Slam(CC0, 2.83 s, 접점 .324)으로 바꿨다. 행동 1.152 s·판정 .48 s 에서
+     들기 0–.25 s · 머묾 .25–.34 s · 내리침 .34–.48 s · 박힘 .48–.55 s 가 되도록 위상을 풀었다:
+     phase(.25 s)=.205, phase(.34 s)=.287, 박힘 .07 s = .060.
+     top .617 = 클립이 손을 다 든 자리(.20)÷접점, creep .403 = 클립 자체 머묾(.20–.25)을 머묾 안에서 다 쓴다. */
+  var TEMPO_BY_CHAR = { kain:{ smash:{ lift:.205, hold:.287, top:.617, creep:.403, strike:1.2, bite:.55, bodyBite:.30, dwell:.06 } } };
+  function tempoFor(clip, cid){ var own=cid&&TEMPO_BY_CHAR[cid]; return (own&&own[clip])||TEMPO[clip]; }
   function herm(p, y0, y1, m0, m1, h){ var p2=p*p, p3=p2*p;
     return (2*p3-3*p2+1)*y0+(p3-2*p2+p)*m0*h+(-2*p3+3*p2)*y1+(p3-p2)*m1*h; }
   function tempoCurve(u, s, pre, post){
@@ -314,7 +321,7 @@
               chainSide:chainSide, sideOf:sideOf,
               heftOf:heftOf, coilPow:coilPow, throwPow:throwPow,
               coilEase:coilEase, throwEase:throwEase, seam:seam, SEAM_BIAS:SEAM_BIAS, biteOf:biteOf,
-              TEMPO:TEMPO, tempoCurve:tempoCurve, tempoPhase:tempoPhase };
+              TEMPO:TEMPO, TEMPO_BY_CHAR:TEMPO_BY_CHAR, tempoFor:tempoFor, tempoCurve:tempoCurve, tempoPhase:tempoPhase };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.TW_SWING_BODY = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

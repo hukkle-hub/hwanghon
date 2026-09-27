@@ -14,7 +14,7 @@ export function sampleAction(a, duration) {
   const phase=globalThis.TW_COMBAT_QUALITY.phase({...a,elapsed:t});
   const SB=globalThis.TW_SWING_BODY;
   /* 세 박자 템포가 있는 기술은 몸도 같은 곡선으로 흘린다 (js/swing-body.js TEMPO) */
-  const tempo=SB&&SB.TEMPO&&SB.TEMPO[a.clip];
+  const tempo=SB&&(SB.tempoFor?SB.tempoFor(a.clip,a.cid):SB.TEMPO&&SB.TEMPO[a.clip]);
   /* 몸 클립은 접점 직후에도 제 속도로 크게 움직여서(원본이 도는 동작) 무기와 같은
      bite 로는 감속이 안 보였다 — 몸 쪽 감속은 따로 둔다 (bodyBite). */
   if(tempo) return SB.tempoCurve(phase, tempo.bodyBite!=null?Object.assign({},tempo,{bite:tempo.bodyBite}):tempo, contact, duration-contact);
@@ -78,8 +78,10 @@ function planLeftGrip(upper,lower,hand,slot,target,prev,pole){
   /* 팔꿈치 비틀림은 클립 자세 대비로 잰다(클립이 원래 돌려 둔 만큼은 괜찮다) */
   const e0=twistQ(uW0.clone().invert().multiply(lW0),foreAxis);
   const elbowDev=(uW,lW)=>angOf(e0.clone().invert().multiply(twistQ(uW.clone().invert().multiply(lW),foreAxis)));
-  /* 손목 비틀림 30° 넘는 몫의 절반을 아래팔이 나눠 진다 — 실제 팔도 아래팔 전체가 돈다(회내·회외) */
-  const share=(lW,q)=>{const t=twistQ(lW.clone().invert().multiply(q),boneAxis),tw=angOf(t);return tw>.5?lW.clone().multiply(Q().slerp(t,(tw-.5)/2/tw)):lW;};
+  /* 손목 비틀림 30° 넘는 몫의 2/3 를 아래팔이 나눠 진다 — 실제 팔도 아래팔 전체가 돈다(회내·회외).
+     절반이던 때 카인 평1→평2→평3→스매시를 60 fps 로 이어 재생하면 왼손목(아래팔 대비)이 평1 127°·평3 89~98°·스매시 77~102°
+     였다(원본 클립도 같다). 2/3 로 107°·69°·60° (문서 120). 「근거 없음」 2/3 */
+  const share=(lW,q)=>{const t=twistQ(lW.clone().invert().multiply(q),boneAxis),tw=angOf(t);return tw>.5?lW.clone().multiply(Q().slerp(t,(tw-.5)/1.5/tw)):lW;};
   const base=Q().setFromUnitVectors(la.clone().applyQuaternion(hW0).normalize(),A).multiply(hW0);
   const sInv=slot.getWorldQuaternion(Q()).invert(),pInv=upper.parent.getWorldQuaternion(Q()).invert();   /* 손은 무기 기준, 위팔은 쇄골 기준으로 앞 프레임과 견준다 */
   let best=null,bestC=Infinity;
@@ -101,11 +103,16 @@ function planLeftGrip(upper,lower,hand,slot,target,prev,pole){
       /* 못 닿는 돌림은 크게 벌한다 — 주먹 방향이 손목 각을 정하므로 팔이 닿는지는 돌림마다 다르다 */
       /* 앞 프레임 해와의 차이도 값에 — 매 프레임 따로 고르면 손잡이 둘레 돌림·팔꿈치 돌림이 한 프레임에 바뀌어
          왼위팔·아래팔이 한 프레임 120~176° 돌았다(카인 1타 잡기 시작·스매시, docs/design/99). 「근거 없음」 2 */
-      let coh=0;if(prev){const hr=sInv.clone().multiply(q),ur=pInv.clone().multiply(uW);coh=2*(hr.angleTo(prev.hr)**2+ur.angleTo(prev.ur)**2);}
+      let coh=0;if(prev){const hr=sInv.clone().multiply(q),ur=pInv.clone().multiply(uW);coh=2*(hr.angleTo(prev.lure||prev.hr)**2+ur.angleTo(prev.ur)**2);}
       const c=Math.max(0,bend-.6)**2+tw*tw+el*el+.15*psi*psi+(resid*40)**2+coh;
       if(c<bestC){bestC=c;best={q,lW,uW,tw,bend,el,resid,E,S,hr:sInv.clone().multiply(q),ur:pInv.clone().multiply(uW)};}
     }
   }
+  /* 앞 프레임에 묶여 «나쁜 골짜기» 에 갇히는 경우 — 역베기 평2(문서 120)처럼 가슴이 크게 돈 뒤엔 손잡이 둘레 돌림이
+     비틀림 81° 해에 머물러 평3·스매시 내내 손목이 꼬였다(묶지 않고 풀면 18°). 비틀림이 50° 를 넘고 묶지 않은 해가
+     20° 넘게 낫다면, 앞 프레임 대신 그 해를 향해 끌어온다 — 창(20°/프레임)은 그대로라 한 프레임에 튀지 않는다. 「근거 없음」 50°·20° */
+  if(prev&&!prev.lure&&best&&best.tw>.87){const free=planLeftGrip(upper,lower,hand,slot,target,null,pole);
+    if(free&&free.tw<best.tw-.35)return planLeftGrip(upper,lower,hand,slot,target,{hr:prev.hr,ur:prev.ur,lure:free.hr},pole)||best;}
   return best;
 }
 function applyLeftGrip(upper,lower,hand,target,best,hold){

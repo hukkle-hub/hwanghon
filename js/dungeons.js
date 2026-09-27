@@ -14,7 +14,7 @@
       /* 류 궁극기: 공통 .22 면 준비 자세에서 판정이 뜬다 — 돌진·베기는 .27~.59, 최고속 .46.
          카인 스킬1(해머 스윙)은 내려치는 순간, 스킬3(도끼 회전)은 오른손 최고속, 류 스킬3(쌍날 회전)은 왼날 .62·오른날 .72 사이 (docs/design/76) */
       /* 85: 카인 skill4·류 attack1~3·세라 skill1·3 은 새 클립(UAL2·KayKit 1.1)의 오른손 최고속, 류 skill1(쌍날 연속)은 마무리 왼날 최고속 .65, 카인 skill2(철벽, 피해 없음)는 막기 올림 .18, 세라 1·2타(좌우 투척) .54 · 3타 .29 (87) */
-      clipContactsByChar:{ain:{attack3:0.48,skill1:0.24,skill2:0.23,counter:0.44},kain:{skill1:0.73,skill2:0.18,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
+      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.24,skill2:0.23,counter:0.44},kain:{attack2:0.22,smash:0.324,skill1:0.73,skill2:0.18,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
@@ -84,7 +84,13 @@
          꼬리가 거의 없다 (span 을 .88 밑으로 내리면 판정이 잘려 나간다).
          2.52 배로 남는다 — 행동 시간을 늘리거나 클립을 다시 구워야 한다.
          docs/design/61-attack-weight.md */
-      clipSpan:{attack1:.88, attack2:.62, smash:.45} },
+      clipSpan:{attack1:.88, attack2:.62, smash:.45},
+      /* 캐릭터마다 클립이 다르면 자르는 자리도 다르다 (clipContactsByChar 와 같은 이유).
+         아인 attack2 는 문서 120 에서 역베기(KayKit 1.1 Rig_Large Melee_2H_Attack 좌우 반전·0.22 s 부터,
+         CC0, 1.11 s, 오른손 최고속 .22)로 교체 — 통째로 감으면 1.68 배, 평1 과 같이 .88 에서 잘라 1.48 배 */
+      /* 카인 attack2 도 같은 역베기(1.11 s, 접점 .22), smash 는 KayKit Melee_2H_Slam(2.83 s, 접점 .324) —
+         .78(2.21 s)에서 자르면 낮게 박힌 뒤 일어서기 시작하는 자리에서 끝난다 */
+      clipSpanByChar:{ain:{attack2:.88}, kain:{attack2:.88, smash:.78}} },
       /* smash 는 클립이 2.42초인데 행동은 0.96초다. 통째로 틀면 2.5배속이라
          «휘리릭» 지나간다. 앞 45%(1.09초)만 쓰면 거의 1:1 속도로 재생돼
          한 동작이 또렷해진다. 판정 정렬은 game3d 가 clipHit/span 으로 보정한다.

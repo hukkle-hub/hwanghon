@@ -92,8 +92,12 @@ test('Kain two-hand IK: left fist hole on the greatsword axis, facing the blade,
   const bones={};m.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});
   const HG=gripHands(m,'kain'),slot=L.anchor(T,bones.RightHandSlot);slot.userData.hand2=L.WEAPON.w_kain_greatsword.hand2;
   const ad=makeRigAdapter(m,root,slot,{twoHand:true,handGrip:HG}),mixer=new T.AnimationMixer(m),left=bones.LeftHand;
-  const settle=(clip,u)=>{const c=g.animations.find(a=>a.name===clip);mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();act.time=c.duration*u;mixer.update(0);root.updateMatrixWorld(true);
-    for(let i=0;i<60;i++){ad.restore();ad.apply({id:1,clip,kind:'attack',duration:c.duration,elapsed:c.duration*u,hitAt:c.duration*.42},false,clip==='guard',1/60);}root.updateMatrixWorld(true);};
+  /* 게임처럼 클립 처음부터 u 까지 60 fps 로 재생한 뒤 굳힌다. 왼손 IK 는 앞 프레임을 이어 받으므로(손잡이 둘레 20°/프레임·팔꿈치 458°/s)
+     앞 클립 한가운데서 이 자세로 순간이동시키면 게임에 없는 골짜기에 갇힌다 — 역베기 평2(문서 120) 뒤 평3 u=.35 로 건너뛰면 81°,
+     평2→평3 을 이어 재생하면 최대 56°(원본 클립도 56°) */
+  const settle=(clip,u)=>{const c=g.animations.find(a=>a.name===clip);mixer.stopAllAction();const act=mixer.clipAction(c);act.reset().play();
+    const N=Math.max(1,Math.round(c.duration*u*60)),A=el=>({id:clip,clip,kind:'attack',duration:c.duration,elapsed:el,hitAt:c.duration*.42});
+    for(let i=0;i<=N+60;i++){ad.restore();act.time=c.duration*u*Math.min(1,i/N);mixer.update(0);root.updateMatrixWorld(true);ad.apply(A(act.time),false,clip==='guard',1/60);}root.updateMatrixWorld(true);};
   /* 공격1·2·3 접점 포함 — 몸통 비틀기로 왼어깨가 멀어져 전에는 왼주먹이 오른주먹과 3 cm 겹쳤다. 이제 쇄골을 내밀어 닿는다 (docs/design/96) */
   for(const [clip,u] of [['attack1',.35],['attack2',.45],['attack2',.6],['attack3',.35],['smash',.35],['smash',.6],['skill1',.35],['guard',.35],['ult',.35],['counter',.35]]){
     settle(clip,u);

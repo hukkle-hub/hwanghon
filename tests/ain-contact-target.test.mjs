@@ -47,7 +47,7 @@ test('basic cuts, smash, counter and execution physically reach the raised train
  const repair=repairAinBind(g.scene),clips=repairAinClips(g.animations,repair);let slot;g.scene.traverse(o=>{if(o.name.endsWith('RightHandSlot'))slot=o;});
  const weapon=new T.Group();weapon.add(mountAinScythe(w.scene));slot.add(weapon);weapon.scale.setScalar(1/slot.getWorldScale(new T.Vector3()).x);
  const rig=makeAinRigAdapter(g.scene,root,slot),mixer=new T.AnimationMixer(g.scene);
- const contacts={attack1:.34,attack2:.44,attack3:.48,smash:.78,counter:.44,exec:.58};
+ const contacts={attack1:.34,attack2:.22,attack3:.48,smash:.78,counter:.44,exec:.58};
  for(const [clip,contact]of Object.entries(contacts)){
   let max=0;
   for(const coords of [[0,2.4,.5],[.09,2.36,.45],[.11,2.58,.58]]){

@@ -21,9 +21,10 @@ test('리본은 자루부터 채우지 않고 날 바깥 구간만 사용',()=>{
 
 test('일반 명중도 보스 공격을 끊지 않는 additive reaction을 항상 받는다',()=>{
   assert.match(boss,/function react\(kind,strength=1,duration,side=1\)/);
-  assert.match(boss,/hit:\[\.42,\.20\]/);
+  /* 문서 120: 위계를 평타 < 마무리 < 스매시 < 카운터 < 경직·파괴로 나눴다 — 평타 .42 → .34, 마무리·스매시는 따로 */
+  assert.match(boss,/hit:\[\.34,\.18\],finish:\[\.50,\.24\],smash:\[\.64,\.30\]/);
   assert.match(boss,/\.30\*reaction\.side/);
-  assert.match(game,/boss\.behavior\?\.react\('hit',hitHeavy\?/);
+  assert.match(game,/boss\.behavior\?\.react\(e\.kind==='smash'\?'smash':hitHeavy\?'finish':'hit',1,null,hitSide\)/);
 });
 
 test('일반 hit 전체 빨강 플래시는 제거하고 큰 명중만 짧게 남긴다',()=>{

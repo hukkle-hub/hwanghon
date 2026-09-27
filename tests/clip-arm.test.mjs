@@ -36,12 +36,18 @@ test('Kain attack1/attack2/smash/exec: hands stay on the designed side (no mirro
   const m=g.scene,B={};m.traverse(o=>{if(o.isBone)B[o.name.replace(/^mixamorig:?/,'')]=o;});
   m.traverse(o=>{if(o.isSkinnedMesh)o.skeleton.pose();});m.updateMatrixWorld(true);const bindInv=B.Hips.getWorldQuaternion(new T.Quaternion()).invert();
   const mixer=new T.AnimationMixer(m);
+  const RETARGET=new Set(['attack2','smash']);
   for(const cn of ['attack1','attack2','smash','exec']){const c=g.animations.find(x=>x.name===cn);const a=mixer.clipAction(c);mixer.stopAllAction();a.reset().play();
     for(let t=0;t<=c.duration+1e-6;t+=1/30){a.time=t;mixer.update(0);m.updateMatrixWorld(true);
       const D=B.Hips.getWorldQuaternion(new T.Quaternion()).multiply(bindInv),F=new T.Vector3(0,0,1).applyQuaternion(D);F.y=0;F.normalize();const Rt=new T.Vector3().crossVectors(F,new T.Vector3(0,1,0));
-      const sp=pathSpec(PATHS[cn],t/c.duration),E=Rt.multiplyScalar(sp.rh[0]).addScaledVector(F,sp.rh[2]);
+      /* 문서 120: 평2 는 설계 경로로 굽지 않고 CC0 역베기(KayKit Melee_2H_Attack 좌우 반전)를 옮겨 왔다 — 설계 경로(옛 오른쪽 베기)와는
+         감는 쪽이 반대라 비교할 수 없다. 스매시도 CC0 내려찍기(KayKit Melee_2H_Slam)로 바꿨다.
+         대신 «몸 뒤로 넘어가지 않는가» 를 본다: 오른손이 골반보다 20 cm 넘게 뒤(골반 정면 축 기준)면 실패.
+         잰 값: 평2 최소 +5 cm(내내 몸 앞, 옛 클립은 −123° 로 등 뒤), 스매시 −18 cm(머리 위 2.06 m 로 들 때). 「근거 없음」 20 cm */
+      const sp=RETARGET.has(cn)?{rh:[0,0,1]}:pathSpec(PATHS[cn],t/c.duration),E=Rt.multiplyScalar(sp.rh[0]).addScaledVector(F,sp.rh[2]);
       const A=B.RightHand.getWorldPosition(new T.Vector3()).sub(B.Hips.getWorldPosition(new T.Vector3()));A.y=0;
       const ang=Math.abs(Math.atan2(new T.Vector3().crossVectors(E,A).y,E.dot(A)))*180/Math.PI;
+      if(RETARGET.has(cn)){assert.ok(A.dot(F)>=-.20,`kain ${cn} ${t.toFixed(2)}초: 오른손이 골반 뒤 ${(-A.dot(F)*100).toFixed(0)} cm — 몸 뒤로 넘어감`);continue;}
       assert.ok(ang<=90,`kain ${cn} ${t.toFixed(2)}초: 오른손이 설계 방향과 ${ang.toFixed(0)}° — 몸 뒤로 뒤집힘`);}}
   const clips=smoothCharacterClips('kain',g.animations,Object.assign({},R.motion.clipContacts,R.motion.clipContactsByChar.kain));
   for(const cn of ['attack1','attack2','smash','exec']){const c=clips.find(x=>x.name===cn);const a=mixer.clipAction(c);mixer.stopAllAction();a.reset().play();

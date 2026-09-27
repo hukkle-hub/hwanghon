@@ -846,8 +846,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
            같은 비율로 앞당겨져 «맞는 그림» 과 «맞는 시각» 이 다시 어긋난다
            (49 번 문서에서 궁극기로 겪은 그 문제다). 테스트가 못박는다.
            docs/design/61-attack-weight.md */
-        var oc=ain.oneshot.getClip(), span=(R.motion.clipSpan||{})[oc.name],
-            act=span?Object.assign({},combatAction,{clipHit:combatAction.clipHit/span}):combatAction;
+        var oc=ain.oneshot.getClip(), spanBy=((R.motion.clipSpanByChar||{})[CID]||{})[oc.name],
+            span=spanBy!=null?spanBy:(R.motion.clipSpan||{})[oc.name],
+            act=Object.assign({},combatAction,{clipHit:combatAction.clipHit/(span||1), cid:CID});
         /* 접점 저항 — «보이는 시각» 만 뒤처지게 한다. 판정 시계(combatAction.elapsed)는
            건드리지 않는다. 날이 몸에 박힌 동안 그림이 느려지고, 빠져나오면 따라잡는다.
            총 시간이 안 변하므로 DPS·균형은 그대로다. docs/design/65-contact-feel.md */
@@ -1455,7 +1456,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         var hitHeavy=e.kind==='smash'||cmbH>=3||e.crit, byaw=boss.root.rotation.y, hrx=Math.cos(byaw), hrz=-Math.sin(byaw), hm=Math.hypot(axH[0],axH[1])||1;
         var hitSide=Math.sign((axH[0]/hm)*hrx+(axH[1]/hm)*hrz)||1;
         boss.anim.flash=hitHeavy?0.055:0;
-        boss.behavior?.react('hit',hitHeavy?(e.kind==='smash'?1.8:1.45):1,null,hitSide);
+        boss.behavior?.react(e.kind==='smash'?'smash':hitHeavy?'finish':'hit',1,null,hitSide);   /* 위계: 평타 < 마무리 < 스매시 < 카운터 < 경직·파괴 (문서 120) */
         /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
         if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();
         if(!e.counter&&(e.kind==='smash'||cmbH===3)){ var fb=cineBeat('comboFinish', hp.clone(), 1); if(fb&&fb.slow) slowmo(fb.slow.scale, fb.slow.ms); }   /* 연계 마무리 */

@@ -15,7 +15,9 @@ import {repairAinClips} from '../js/ain-bind-repair.js';
 const ctx={window:{}};
 for(const f of ['world','dungeons']) vm.runInNewContext(fs.readFileSync(`js/${f}.js`,'utf8'),ctx,{filename:f});
 const R=ctx.window.TW_DUNGEONS.RULES;
-const SPAN=R.motion.clipSpan||{}, CONTACT=R.motion.clipContacts||{};
+/* 이 테스트는 아인 클립(ain_anim.glb)을 잰다 — 캐릭터별 값이 공통 값을 덮는다 */
+const SPAN=Object.assign({},R.motion.clipSpan,(R.motion.clipSpanByChar||{}).ain),
+      CONTACT=Object.assign({},R.motion.clipContacts,(R.motion.clipContactsByChar||{}).ain);
 
 async function clipDurations(){
   const b=await readFile('art/3d/ain_anim.glb'), l=new GLTFLoader();
@@ -37,8 +39,10 @@ test('평타·스매시가 행동 시간보다 과하게 빨리 감기지 않는
     worst.push([clip, +rate.toFixed(2)]);
     assert.ok(rate<1.85, `${clip} 배속 ${rate.toFixed(2)} — 1.85 를 넘으면 촐싹댄다`);
   }
-  /* 음성 대조: 자르지 않으면 평2 는 상한을 넘는다 (2.53) */
-  assert.ok(dur.attack2/actionDur('attack2')>1.85, '음성 대조 — 자르기 전에는 넘어야 한다');
+  /* 음성 대조: 자르지 않으면 평1 은 상한에 바짝 붙는다 (1.13 s → 1.71 배).
+     평2 는 문서 120 에서 역베기 교체 클립(1.11 s → 1.68 배)으로 바뀌었다 — 옛 클립(1.67 s)은 2.53 배였다. */
+  assert.ok(dur.attack1/actionDur('attack1')>1.6, '음성 대조 — 평1 은 자르기 전에 1.6 배를 넘는다');
+  assert.ok(dur.attack2/actionDur('attack2')>1.6, '음성 대조 — 평2(역베기 교체) 도 자르기 전에 1.6 배를 넘는다');
 });
 
 test('잘라낸 끝이 판정보다 뒤에 있다 — 맞기 전에 모션이 끝나면 안 된다', () => {

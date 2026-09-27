@@ -32,7 +32,7 @@ for(const jp of jsons){
     samplers.push({input:tIdx,output:push(new Float32Array(c.hips),'VEC3'),interpolation:'LINEAR'});
     channels.push({sampler:samplers.length-1,target:{node:nodeIndex.Hips,path:'translation'}});
   }
-  const anim={name:c.name,channels,samplers,extras:{source:`meshy:${c.sourceClip}`,from:c.from,to:c.to}};
+  const anim={name:c.name,channels,samplers,extras:{source:/:/.test(c.sourceClip||'')?c.sourceClip:`meshy:${c.sourceClip}`,from:c.from,to:c.to}};
   const i=json.animations.findIndex(a=>a.name===c.name);
   if(i>=0) json.animations[i]=anim; else json.animations.push(anim);
   console.log(`${c.name}: ${channels.length} 채널, ${c.times.length} 키, ${c.duration}s ← ${c.sourceClip}`);
