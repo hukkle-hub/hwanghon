@@ -237,7 +237,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
             /* 락온 전투 구도 (docs/design/101) — 목표 그림: 낮은 어깨 너머, 캐릭터가 화면 왼쪽 절반을 크게 차지하고
                보스는 오른쪽에서 올려다보인다. 탐색 구도(위 값)는 그대로 두고 락온 전투에서만 이쪽으로 옮겨 간다.
                숫자는 모두 「근거 없음」 — 1672×941·모바일 가로에서 캡처로 맞췄다. */
-            fight:{ dist:2.6, shoulder:1.7, lookSide:-0.1, near:1.2, dead:0.04, pitch:0.07, lookUp:0.2, toBoss:0.5, fov:52, blend:0.8 },
+            fight:{ dist:2.6, shoulder:1.7, lookSide:-0.1, near:1.6, dead:0.04, pitch:0.07, lookUp:0.2, toBoss:0.5, fov:52, blend:0.8 },
             /* 회전 — 어깨 너머로 오면서 «부자연스럽다» 는 지적이 나왔다. 세 가지가 빠져 있었다.
                ① 각속도 상한이 없었다. 보스를 지나쳐 뒤쪽 방향이 뒤집히면 지수 감쇠만으로는
                   180° 를 두 τ 만에 휩쓴다. 멀리 있을 땐 견뎠지만 3.9 m 에서는 폭력적이다.
@@ -1936,14 +1936,18 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         lim*=dt;                                                  /* ① 휙 도는 것 방지 */
         camYaw+=Math.max(-lim, Math.min(lim, step)); }
     }
+    /* 근접 구도 보정: 2.1m 안에서는 둘이 한 덩어리로 겹치지 않게
+       조금 물러나고/올라가고/옆으로 비킨다. 판정·락온 대상에는 영향 없음. */
+    var nearK=battle&&locked?Math.max(0,Math.min(1,(2.1-gap)/0.9)):0; nearK=nearK*nearK*(3-2*nearK);
     /* 높이: 싸울 때는 낮게 깔아 보스가 커 보이게, 걸을 때는 조금 위에서 */
     var pitchWant=battle?CAM.pitchFight+(CAM.fight.pitch-CAM.pitchFight)*fightK:CAM.pitchMove;
+    pitchWant+=0.055*nearK;
     if(!camFree) camPitch+=(pitchWant-camPitch)*(1-Math.exp(-dt/0.5));
     if(!bossTall && boss.model){ var bb=new THREE.Box3().setFromObject(boss.model); if(isFinite(bb.max.y)) bossTall=bb.max.y-bb.min.y; }
     var big=battle?Math.max(0,(bossTall-2.2))*CAM.sizeDist:0;        /* 큰 놈일수록 물러난다 */
     var dist=(camDist+big)*camZoom*(locked?1+Math.max(0,Math.min(0.45,(gap-3)/12)):1);
     /* 락온 전투: 바짝 붙는다. 사용자가 휠로 바꾼 거리 비율(camDist/기본)은 살린다 */
-    if(fightK>1e-3){ var fd=(CAM.fight.dist*camDist/(MOBILE?4.3:4.6)+big*0.6)*camZoom*(1+Math.max(0,Math.min(0.35,(gap-3)/14))); dist+=(fd-dist)*fightK; }
+    if(fightK>1e-3){ var fd=(CAM.fight.dist*camDist/(MOBILE?4.3:4.6)+big*0.6)*camZoom*(1+Math.max(0,Math.min(0.35,(gap-3)/14))); fd+=nearK*(MOBILE?0.45:0.58); dist+=(fd-dist)*fightK; }
     if(camZoom>1) camZoom+= (1-camZoom)*Math.min(1,dt*0.35);
     dist=camClear(look, dist, dt);
     var z=Math.exp(-dt/0.18);              /* 시정수 0.18초 — 위치·주시점 공용 (0.12 는 구르기마다 화면이 튀었다) */
@@ -1951,8 +1955,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 어깨 너머: 카메라와 주시점을 «같이» 옆으로 민다 → 캐릭터가 화면 삼분점으로 비껴난다.
        한쪽만 밀면 캐릭터를 비스듬히 보게 돼 어깨가 화면을 가린다. */
     var sOff=CAM.shoulder*(battle?1:0.8); sOff+=(CAM.fight.shoulder-sOff)*fightK;
+    sOff+=0.30*nearK;
     /* 전투 구도에선 주시점은 조금만, 카메라는 많이 옆으로 — 비스듬히(3/4 등) 보게 돼 캐릭터는 왼쪽, 보스는 오른쪽으로 갈라진다 */
     var lOff=sOff+(CAM.fight.lookSide-sOff)*fightK;
+    lOff-=0.08*nearK;
     var rx=Math.cos(yawEff), rz=-Math.sin(yawEff);
     look.x+=rx*lOff; look.z+=rz*lOff; look.y+=CAM.lookUp+(CAM.fight.lookUp-CAM.lookUp)*fightK;
     var target=new THREE.Vector3(look.x+Math.sin(yawEff)*Math.cos(camPitch)*dist+rx*(sOff-lOff), look.y+Math.sin(camPitch)*dist, look.z+Math.cos(yawEff)*Math.cos(camPitch)*dist+rz*(sOff-lOff));
@@ -1964,7 +1970,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 벽 안쪽으로: 맵 밖으로 나가지 않게 */
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
     /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
-    var fv=CAM.fov+(CAM.fight.fov-CAM.fov)*fightK; if(P.rollT>0) fv=Math.max(fv,CAM.fovDash); else if(camZoom<0.98) fv=CAM.fovHit;
+    var fv=CAM.fov+(CAM.fight.fov-CAM.fov)*fightK+nearK*1.5; if(P.rollT>0) fv=Math.max(fv,CAM.fovDash); else if(camZoom<0.98) fv=CAM.fovHit;
     if(bigSkillNow()) fv+=5;   /* 큰 기술: 화각 +5° — 넓어진 호와 궤적이 화면에 들어온다 (문서 112) */
     fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
     if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }

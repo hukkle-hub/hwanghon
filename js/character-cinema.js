@@ -19,8 +19,8 @@ export const CINEMA_STYLE={
     idle:{breath:.018, sway:.020, weight:.018, look:.065},
     move:{leanF:.11, leanSide:.15, hipSide:.055, headStab:.55},
     turn:{lag:.19, lead:.10, max:.22}, dodge:{drop:.075, side:.18, twist:.15}, hit:{light:.15, heavy:.28},
-    attack:{attack1:{coil:.08,snap:.08,follow:.10,drop:.025},attack2:{coil:.10,snap:.07,follow:.12,drop:.030},attack3:{coil:.06,snap:.06,follow:.08,drop:.018},
-      smash:{coil:.14,snap:.10,follow:.16,drop:.055},skill1:{coil:.11,snap:.08,follow:.13,drop:.028},skill2:{coil:.04,snap:.03,follow:.07,drop:.050},
+    attack:{attack1:{coil:.105,snap:.105,follow:.135,drop:.035},attack2:{coil:.060,snap:.120,follow:.145,drop:.030},attack3:{coil:.115,snap:.155,follow:.185,drop:.048},
+      smash:{coil:.165,snap:.145,follow:.205,drop:.070},skill1:{coil:.11,snap:.08,follow:.13,drop:.028},skill2:{coil:.04,snap:.03,follow:.07,drop:.050},
       skill3:{coil:.13,snap:.08,follow:.15,drop:.035},skill4:{coil:.06,snap:.03,follow:.04,drop:.025},ult:{coil:.16,snap:.11,follow:.18,drop:.060},
       counter:{coil:.06,snap:.06,follow:.10,drop:.035},exec:{coil:.16,snap:.12,follow:.18,drop:.070}}
   },
@@ -122,13 +122,17 @@ export function createCharacterCinema(model,root,cid='ain'){
   }
   function attackShape(a){
     if(!a)return null; const clip=a.clip||a.name||''; const cfg=profile.attack[clip]; if(!cfg)return null;
-    const u=sat((a.elapsed||0)/Math.max(.001,a.duration||1));
-    // 0-.24 준비, .24-.46 가속/접점, 이후 여운. 접점 판정 시간 자체는 바꾸지 않는다.
-    const pre=u<.24?smooth(u/.24):u<.46?1-smooth((u-.24)/.22):0;
-    const strike=u<.24?0:u<.46?smooth((u-.24)/.22):u<.70?1-smooth((u-.46)/.24):0;
-    const follow=u<.42?0:u<.82?Math.sin((u-.42)/.40*Math.PI):0;
+    const dur=Math.max(.001,a.duration||1),u=sat((a.elapsed||0)/dur);
+    /* 보조 전신 연기도 실제 판정 접점에 묶는다.
+       예전의 고정 .46은 클립/기술마다 다른 hitAt 과 어긋나 골반·가슴이
+       «맞기 전/후 다른 순간»에 힘을 쓰는 원인이었다. */
+    const contact=clamp(Number.isFinite(a.hitAt)?a.hitAt/dur:.42,.20,.72);
+    const pre=u<contact?Math.sin(Math.PI*sat(u/contact)):0;
+    const iw=Math.max(.035,Math.min(.085,contact*.16));
+    const strike=Math.exp(-Math.pow((u-contact)/iw,2));
+    const follow=u<=contact?0:Math.sin(Math.PI*sat((u-contact)/Math.max(.16,.86-contact)));
     const side=/attack2|skill3|counter/.test(clip)?-1:1;
-    return {clip,u,cfg,pre,strike,follow,side};
+    return {clip,u,contact,cfg,pre,strike,follow,side};
   }
   function kainBeat(a){
     if(cid!=='kain'||!a)return null;const clip=a.clip||a.name||'',cfg=KAIN_CINEMA_V02.attack[clip];if(!cfg)return null;
@@ -210,11 +214,15 @@ export function createCharacterCinema(model,root,cid='ain'){
     const sh=attackShape(action);
     if(sh){
       const {cfg,pre,strike,follow,side}=sh;
-      py('Hips',-cfg.drop*(pre*.75+strike*.35));
-      ry('Hips',-side*cfg.coil*pre*.30 + side*cfg.follow*follow*.12);
-      ry('Spine',side*cfg.coil*pre*.58 - side*cfg.snap*strike*.20 - side*cfg.follow*follow*.20);
-      ry('Spine2',side*cfg.coil*pre*.38 + side*cfg.snap*strike*.30 + side*cfg.follow*follow*.28);
-      rz('Spine2',-side*(cfg.snap*strike*.30+cfg.follow*follow*.18));
+      /* 발은 replant()로 제자리에 둔 채 중심을 낮추고 골반이 먼저 구동한다.
+         2타는 coil 값 자체를 작게 해서 1타 끝에서 바로 되받아치고,
+         3타는 snap/follow를 가장 크게 해 마무리 실루엣을 만든다. */
+      py('Hips',-cfg.drop*(pre*.82+strike*.42));
+      ry('Hips',-side*cfg.coil*pre*.42 + side*cfg.follow*follow*.16);
+      ry('Spine',side*cfg.coil*pre*.50 - side*cfg.snap*strike*.30 - side*cfg.follow*follow*.24);
+      ry('Spine2',side*cfg.coil*pre*.34 + side*cfg.snap*strike*.38 + side*cfg.follow*follow*.32);
+      rz('Spine2',-side*(cfg.snap*strike*.34+cfg.follow*follow*.22));
+      rx('Hips',cfg.snap*strike*.12); rx('Spine',-cfg.snap*strike*.24);
       // 눈/머리가 날보다 아주 조금 먼저 다음 선을 본다. 과하면 목 꺾임이므로 작게.
       ry('Neck',-side*cfg.coil*pre*.18 + side*cfg.snap*strike*.16);
       ry('Head',-side*cfg.coil*pre*.14 + side*cfg.snap*strike*.12);
