@@ -12,6 +12,14 @@ const smooth=t=>{t=sat(t);return t*t*(3-2*t);};
 const expDamp=(a,b,lambda,dt)=>b+(a-b)*Math.exp(-lambda*Math.max(0,dt));
 const angleDelta=(a,b)=>{let d=a-b;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;};
 
+/* 공격 접점 주변 지지발 잠금 가중치. 시각 레이어 전용이며 root/판정 좌표는 안 움직인다. */
+export function contactPlantWeight(elapsed,hitAt,pre=.09,post=.08){
+  const t=Math.max(0,Number(elapsed)||0), h=Math.max(0,Number(hitAt)||0);
+  pre=Math.max(.001,pre); post=Math.max(.001,post);
+  if(t<h-pre||t>h+post)return 0;
+  return t<=h?smooth((t-(h-pre))/pre):1-smooth((t-h)/post);
+}
+
 export const CINEMA_STYLE={
   /* 아인 — 선이 먼저 보이고 몸이 그 선을 따라간다. */
   ain:{
@@ -111,9 +119,42 @@ export function createCharacterCinema(model,root,cid='ain'){
   /* v02 카인: 모델째 살짝 누르거나 민다 — 이것도 발을 옮기므로 끝에서 재고정한다 */
   function modelShift(x=0,y=0,z=0){if(!savedModelPos)savedModelPos=model.position.clone();model.position.x+=x;model.position.y+=y;model.position.z+=z;if(x||y||z)hipsMoved=true;}
   const feet0={L:new T.Vector3(),R:new T.Vector3()};
+  const plant={id:null,side:null,anchor:new T.Vector3(),prevL:new T.Vector3(),prevR:new T.Vector3(),havePrev:false};
   function replant(){
     if(!hipsMoved)return;model.updateWorldMatrix(true,true);
     for(const [k,side] of [['L','Left'],['R','Right']]){const up=keepQ(side+'UpLeg'),lo=keepQ(side+'Leg'),ft=bones[side+'Foot'];if(up&&lo&&ft)for(let i=0;i<8&&solveLimb(up,lo,ft,feet0[k],1)>.004;i++);;}
+  }
+  function rememberFeet(){plant.prevL.copy(feet0.L);plant.prevR.copy(feet0.R);plant.havePrev=true;}
+  function contactPlant(action,clip){
+    if(cid!=='ain'||!action||! /^(attack1|attack2|attack3|smash)$/.test(clip)){
+      plant.id=plant.side=null; diagnostics.plantWeight=0; diagnostics.plantSide=''; rememberFeet(); return;
+    }
+    const smash=clip==='smash', pre=smash?.14:.085, post=smash?.045:.075,
+          t=Number(action.elapsed)||0, hit=Number(action.hitAt)||0,
+          w=contactPlantWeight(t,hit,pre,post);
+    /* 새 행동의 예비 구간에서는 이전 행동의 anchor를 반드시 버린다.
+       action id가 같은 attack1을 나중에 다시 써도 옛 발 위치를 재사용하지 않는다. */
+    if(t<hit-pre){plant.id=plant.side=null;}
+    if(!(w>0)){
+      diagnostics.plantWeight=0; diagnostics.plantSide='';
+      if(t>hit+post){plant.id=plant.side=null;}
+      rememberFeet(); return;
+    }
+    if(plant.id!==action.id||!plant.side){
+      const dL=plant.havePrev?feet0.L.distanceTo(plant.prevL):0,
+            dR=plant.havePrev?feet0.R.distanceTo(plant.prevR):0;
+      plant.id=action.id; plant.side=dL<=dR?'L':'R';
+      plant.anchor.copy(feet0[plant.side]);
+    }
+    const side=plant.side==='L'?'Left':'Right',up=keepQ(side+'UpLeg'),lo=keepQ(side+'Leg'),ft=bones[side+'Foot'];
+    if(up&&lo&&ft){
+      model.updateWorldMatrix(true,true);
+      const cur=ft.getWorldPosition(new T.Vector3()), target=cur.clone().lerp(plant.anchor,w);
+      for(let i=0;i<8&&solveLimb(up,lo,ft,target,.86)>.005;i++);
+      model.updateWorldMatrix(true,true);
+      diagnostics.plantError=ft.getWorldPosition(cur).distanceTo(target);
+    }
+    diagnostics.plantWeight=w; diagnostics.plantSide=plant.side; rememberFeet();
   }
   function restore(){
     for(const [b,q] of saved)b.quaternion.copy(q);saved.clear();
@@ -284,6 +325,7 @@ export function createCharacterCinema(model,root,cid='ain'){
       py('Hips',-.022); rx('Hips',-.025); ry('Spine',-.035); rz('Spine2',.025); ry('Head',.018);
     }
     replant();
+    contactPlant(action,clip);
     model.updateWorldMatrix(true,true);
   }
   return {restore,apply,diagnostics,bones};
