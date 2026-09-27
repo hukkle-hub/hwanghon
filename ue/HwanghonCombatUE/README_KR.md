@@ -42,8 +42,8 @@
 - Mobile Deferred `r.Mobile.ShadingPath=1`
 - High-tier baseline
 
-UE 5.8에서는 Mobile Deferred가 모바일 품질/동적 조명에 유리한 경로이므로
-Vertical Slice의 High tier 기준으로 사용한다.
+Mobile Deferred(UE 5.1+ 지원)가 모바일 품질/동적 조명에 유리한 경로이므로
+Vertical Slice의 High tier 기준으로 사용한다. (엔진은 UE 5.5 — 디렉터 결정 2026-09-27)
 
 ## 아직 없는 것
 

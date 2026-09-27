@@ -1,7 +1,7 @@
 """
 Create Hwanghon preview master material + physically distinct material instances.
 
-Run inside UE 5.8 Editor:
+Run inside UE 5.5 Editor:
   py ".../HwanghonCombatUE/Scripts/ue_create_material_library.py"
 
 Purpose:

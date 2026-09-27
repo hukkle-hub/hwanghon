@@ -1,15 +1,21 @@
 # Android Build / Performance — Vertical Slice 1.1
 
-## UE 5.8 Android 기준
+## UE 5.5 Android 기준
 
-Epic UE 5.8 문서 기준:
-- Target SDK 권장: 35
-- Minimum compile SDK: 34
+엔진이 UE 5.8 → 5.5 로 바뀌었다(디렉터 결정 2026-09-27). 아래 5.5 값은 Epic 문서
+«Android Development Requirements» 검색 결과로 옮긴 것이고, 원문 페이지는 이 컨테이너에서
+열리지 않아(프록시 차단) **직접 대조하지 못했다.** 정답은 설치된 엔진이 들고 있는 값이다 —
+아래 `-InstallSDK`(Turnkey `-BestAvailable`)는 그 엔진 버전에 맞는 SDK/NDK 를 고르므로
+수동 설치보다 이것을 먼저 쓴다.
+
+- Android Studio: Koala 2024.1.2
+- Target SDK / Minimum compile SDK: 34
 - Minimum install SDK: 26
-- NDK: r27c
-- Build-tools: 35.0.1
-- Java: OpenJDK 21.0.3
+- NDK: r25b
+- Build-tools: 34.0.0
 - Vulkan 1.1 compatible Android 10+ 권장 테스트군
+
+(이전 5.8 기준 — 참고용: target 35 · NDK r27c · build-tools 35.0.1 · OpenJDK 21.0.3)
 
 ## SDK 설치
 

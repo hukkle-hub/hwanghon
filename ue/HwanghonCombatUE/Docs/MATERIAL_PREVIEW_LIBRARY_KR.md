@@ -5,7 +5,7 @@
 텍스처가 완성되기 전에라도
 **천 / 가죽 / 금속 / 콘크리트가 같은 조명에서 서로 다르게 읽히는지** 먼저 검수한다.
 
-UE5.8 MaterialEditingLibrary로 자동 생성한다.
+UE 5.5 MaterialEditingLibrary로 자동 생성한다.
 
 ## 실행
 
