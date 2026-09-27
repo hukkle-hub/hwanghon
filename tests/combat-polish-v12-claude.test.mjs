@@ -38,7 +38,8 @@ test('발 앵커 해제는 한 프레임 스냅이 아니라 0.12 s 섞기 (comb
   assert.match(m,/if\(p\.y>anchor\.y\+0\.10\)an\.lift=true;/); assert.match(m,/an\.w-=\(dt\|\|1\/60\)\/0\.12;/); assert.match(m,/p\.clone\(\)\.lerp\(anchor,Math\.max\(0,an\.w\)\)/);
 });
 
-test('아인 attack1/2/3/smash 는 발 고정 재굽기 클립(extras.source footlock) — 판정 시각은 clipContacts 그대로', async ()=>{
+test('아인 attack1/2/3 는 발 고정 재굽기 클립(smash 는 원본)(extras.source footlock) — 판정 시각은 clipContacts 그대로', async ()=>{
   const b=await readFile(new URL('../art/3d/ain_anim.glb',import.meta.url)); const jl=b.readUInt32LE(12); const j=JSON.parse(b.subarray(20,20+jl).toString());
-  for(const n of ['attack1','attack2','attack3','smash']){ const a=j.animations.find(x=>x.name===n); assert.ok(a&&a.extras&&/footlock/.test(a.extras.source),n+' footlock'); }
+  for(const n of ['attack1','attack2','attack3']){ const a=j.animations.find(x=>x.name===n); assert.ok(a&&a.extras&&/footlock/.test(a.extras.source),n+' footlock'); }
+  const sm=j.animations.find(x=>x.name==='smash'); assert.ok(!(sm.extras&&/footlock/.test(sm.extras.source)),'smash 는 원본(골반 rest) — 세 박자 빠른 내리침에 골반 뿌리 이동이 얹히면 접점 한 프레임에 44 cm 튄다');
 });
