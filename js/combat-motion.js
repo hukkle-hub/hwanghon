@@ -80,7 +80,7 @@ function planLeftGrip(upper,lower,hand,slot,target,prev,pole){
   const elbowDev=(uW,lW)=>angOf(e0.clone().invert().multiply(twistQ(uW.clone().invert().multiply(lW),foreAxis)));
   /* 손목 비틀림 30° 넘는 몫의 2/3 를 아래팔이 나눠 진다 — 실제 팔도 아래팔 전체가 돈다(회내·회외).
      절반이던 때 카인 평1→평2→평3→스매시를 60 fps 로 이어 재생하면 왼손목(아래팔 대비)이 평1 127°·평3 89~98°·스매시 77~102°
-     였다(원본 클립도 같다). 2/3 로 107°·69°·60° (문서 120). 「근거 없음」 2/3 */
+     였다(원본 클립도 같다). 2/3 로 107°·68°·60° (문서 120 최종 클립). 「근거 없음」 2/3 */
   const share=(lW,q)=>{const t=twistQ(lW.clone().invert().multiply(q),boneAxis),tw=angOf(t);return tw>.5?lW.clone().multiply(Q().slerp(t,(tw-.5)/1.5/tw)):lW;};
   const base=Q().setFromUnitVectors(la.clone().applyQuaternion(hW0).normalize(),A).multiply(hW0);
   const sInv=slot.getWorldQuaternion(Q()).invert(),pInv=upper.parent.getWorldQuaternion(Q()).invert();   /* 손은 무기 기준, 위팔은 쇄골 기준으로 앞 프레임과 견준다 */
