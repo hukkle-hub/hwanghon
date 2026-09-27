@@ -15,8 +15,8 @@ test('sample pack decodes, starts one bed, respects mute and hidden tab, and bou
  document.hidden=true;listeners.visibilitychange();assert.equal(a.diagnostics().scene,'off');
  document.hidden=false;listeners.visibilitychange();await new Promise(r=>setImmediate(r));assert.equal(a.diagnostics().scene,'boss');
  a.scene('off');assert.equal(a.diagnostics().scene,'off');
- a.play('hit',{heavy:false,material:'straw'});assert.equal(sources.at(-1).playbackRate.value,.96);assert.ok(sources.at(-1).started);
- a.play('hit',{heavy:true,material:'metal'});assert.equal(sources.at(-1).playbackRate.value,1.08);assert.ok(sources.at(-1).started);
+ a.play('hit',{heavy:false,material:'straw'});assert.ok(Math.abs(sources.at(-1).playbackRate.value-1.04*.98)<1e-9);   /* P2 위계: light 1.04 × 짚 .98 */assert.ok(sources.at(-1).started);
+ a.play('hit',{heavy:true,material:'metal',tier:'smash'});assert.ok(Math.abs(sources.at(-1).playbackRate.value-.90*1.05)<1e-9);   /* P2 위계: smash .90 × 금속 1.05 */assert.ok(sources.at(-1).started);
  for(const s of [...sources])assert.doesNotThrow(()=>s.onended?.(),'both music and filtered effects release safely');
  assert.equal(a.diagnostics().voices,0);
 });

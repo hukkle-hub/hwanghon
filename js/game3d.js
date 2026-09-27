@@ -1412,13 +1412,13 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         fxEvade(); slowmo(0.30, 240); camKick(0.018,-0.03,-0.026); vib(18); break;
       case 'recoverend': zone=null;hideZone(); if(boss.oneshot){boss.oneshot.stop();boss.oneshot=null;} if(boss.act)boss.act.reset().fadeIn(0.12).play(); break;
       /* 타격감: 소리·흔들림·파티클·정지를 같은 프레임에, 세기에 비례해서 (docs/design/18-boss-fight-design.md §1-2) */
-      case 'hit': var material=globalThis.TW_COMBAT_QUALITY.material(e.part,A.stages[phase].kind),feedback=globalThis.TW_COMBAT_QUALITY.feedback({kind:e.kind,perfect:e.perfect,crit:e.crit,material:material}); SFX.play('hit', {heavy:e.crit||e.counter||e.kind==='smash',material:material}); var hp=bossHitPos(HITMAP[e.part]||'body');
+      case 'hit': var cmbH=s?s.player.combo:0,material=globalThis.TW_COMBAT_QUALITY.material(e.part,A.stages[phase].kind),feedback=globalThis.TW_COMBAT_QUALITY.feedback({kind:e.kind,perfect:e.perfect,crit:e.crit,finish:cmbH>=3,material:material}); SFX.play('hit', {heavy:feedback.tier!=='light',material:material,tier:feedback.tier}); var hp=bossHitPos(HITMAP[e.part]||'body');
         if(ain.weapon){var nearest=nearestAinBladePoint(ain.weapon,hp);if(nearest&&nearest.distance<=((boss.PART[HITMAP[e.part]]||{}).r||.5))hp.copy(nearest.point);}
         num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':'');
         /* 스매시 타점: 날끝으로 가장 빠른 곳에 맞았나(정타), 머리 위·자루로 스쳤나(빗맞음).
            «보통» 은 굳이 적지 않는다 — 글자가 늘면 정타가 안 읽힌다. */
         if(e.point&&e.point.grade!=='solid') num(hp.clone().add(new THREE.Vector3(0,.42,0)), e.point.grade==='sweet'?'정타':'빗맞음', 'pt-'+e.point.grade);
-        var axH=axisToBoss(), cmbH=s?s.player.combo:0;
+        var axH=axisToBoss();
         var hitHeavy=e.kind==='smash'||cmbH>=3||e.crit, byaw=boss.root.rotation.y, hrx=Math.cos(byaw), hrz=-Math.sin(byaw), hm=Math.hypot(axH[0],axH[1])||1;
         var hitSide=Math.sign((axH[0]/hm)*hrx+(axH[1]/hm)*hrz)||1;
         boss.anim.flash=hitHeavy?0.055:0;
@@ -1430,6 +1430,11 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
           shake(e.perfect?0.012:0.010, e.perfect?340:300, axH[0], axH[1]); zoomKick(); }
         else { burst(hp, feedback.particles, feedback.color, axH);
           fxImpact(hp, feedback.size, feedback.color, feedback.duration);
+          /* 재질별 2차 반응은 finish 이상에서만 — 평타마다 화면에 먼지/스파크를 덮지 않는다. */
+          if(feedback.tier==='finish'||feedback.tier==='smash'){
+            if(material==='straw'){ var dp=hp.clone(); dp.y=Math.max(.08,dp.y-.16); dustPuff(dp,.14+feedback.size*.16,.16,.30); }
+            else if(material==='metal') burst(hp,Math.min(7,Math.max(3,Math.round(feedback.particles*.4))),0xF2F7FF,axH);
+          }
           /* 저항이 «플레이어 몸» 으로 돌아온다. 단단한 곳(ring 1.0)을 치면 날이
              안 들어가고 튕기듯 손이 울린다 — 몬헌에서 사냥꾼이 경직에 묶이는
              그 몫을 작게 가져왔다. 무른 곳은 거의 없다.

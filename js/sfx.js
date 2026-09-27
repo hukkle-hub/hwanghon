@@ -73,10 +73,21 @@
     if(!buffers[key]||!ctx||ctx.state!=='running'){return;}
     var t=ctx.currentTime;if(t-(lastSound[key]||-10)<.045)return;lastSound[key]=t;
     if(active.length>=12){try{active.shift().stop();}catch(e){}}
-    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];g.gain.value=name==='ui'?.08:name==='guard'?.24:.48;
-    var filter=null;if(name==='hit'&&detail){s.playbackRate.value=detail.material==='metal'?1.08:detail.material==='core'?.92:.96;filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=detail.material==='metal'?8500:detail.material==='core'?3800:2400;s.connect(filter);filter.connect(g);}else s.connect(g);g.connect(master);active.push(s);
+    var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];
+    var tier=detail&&detail.tier||'light',tg={light:.40,crit:.46,finish:.52,smash:.58,counter:.62}[tier]||.48;
+    g.gain.value=name==='ui'?.08:name==='guard'?.24:name==='hit'?tg:.48;
+    var filter=null;if(name==='hit'&&detail){
+      /* 무거울수록 약간 낮게, 금속은 재질의 고역을 남긴다.
+         볼륨만 키우면 모든 타격이 같은 소리의 큰/작은 버전으로 들린다. */
+      var tr={light:1.04,crit:.99,finish:.95,smash:.90,counter:.88}[tier]||1,
+          mr=detail.material==='metal'?1.05:detail.material==='core'?.95:.98;
+      s.playbackRate.value=tr*mr;
+      filter=ctx.createBiquadFilter();filter.type='lowpass';
+      filter.frequency.value=detail.material==='metal'?9000:detail.material==='core'?4300:2900;
+      s.connect(filter);filter.connect(g);
+    }else s.connect(g);g.connect(master);active.push(s);
     s.onended=function(){active=active.filter(function(x){return x!==s;});s.disconnect();if(filter)filter.disconnect();g.disconnect();};s.start();
-    if(bed){bed.g.gain.cancelScheduledValues(t);bed.g.gain.setTargetAtTime(.035,t,.02);bed.g.gain.setTargetAtTime(desired==='boss'?.15:.1,t+.3,.3);}
+    if(bed){var deep=name==='hit'&&(tier==='smash'||tier==='counter');bed.g.gain.cancelScheduledValues(t);bed.g.gain.setTargetAtTime(deep?.022:.035,t,.02);bed.g.gain.setTargetAtTime(desired==='boss'?.15:.1,t+(deep?.36:.3),.3);}
   };
   Object.defineProperty(api,'enabled',{get:function(){return enabled;},set:function(v){enabled=!!v;if(master)master.gain.value=enabled?volume:0;syncBed();}});
   document.addEventListener('visibilitychange',function(){syncBed();if(ctx){if(document.hidden)ctx.suspend();else if(enabled)ctx.resume().then(syncBed).catch(function(){});}});

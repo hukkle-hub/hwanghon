@@ -42,11 +42,20 @@
     /* reach·range(m) — 스매시 «타점» 이 날의 어느 지점으로 맞았는지 가를 때 쓴다 (js/swing-point.js) */
     return {x:(player.x+dx*f)/50,y:center.height,z:(player.y/.55+dz*f)/50,part:part.id,reach:edge/50,range:range/50};
   }
-  function feedback({kind,perfect,crit,material='straw'}={}){
-    const major=kind==='counter',heavy=major||kind==='smash'||kind==='ult'||kind==='exec';
-    return {size:major?(perfect?1.1:.85):heavy?.8:crit?.55:.38,duration:major?.16:heavy?.13:.10,
-      particles:major?(perfect?22:16):heavy?14:crit?10:6,
-      color:material==='metal'?0xB9CEE0:material==='core'?0xE7846C:0xCDB185};
+  /* 접점 위계 — 일반 타격을 크게 만드는 대신 finish/smash/counter 때만 단계가 오른다.
+     actual damage/timing과 무관한 presentation 사양. */
+  function feedback({kind,perfect,crit,finish,material='straw'}={}){
+    const major=kind==='counter',heavy=kind==='smash'||kind==='ult'||kind==='exec';
+    const tier=major?'counter':heavy?'smash':finish?'finish':crit?'crit':'light';
+    const spec={
+      light:  {size:.30,duration:.085,particles:5},
+      crit:   {size:.43,duration:.105,particles:8},
+      finish: {size:.53,duration:.120,particles:10},
+      smash:  {size:.68,duration:.145,particles:14},
+      counter:{size:perfect?1.00:.82,duration:.160,particles:perfect?20:16}
+    }[tier];
+    const color=material==='metal'?0xDCE9F5:material==='core'?0xE88468:0xC8AD7D;
+    return {tier,size:spec.size,duration:spec.duration,particles:spec.particles,color};
   }
   /* 재질. 기계 보스의 «장갑·접점·집게» 는 금속이다 — 계전기 접점(contact),
      파쇄 기갑의 턱·팔(jaw/arm), 소생기의 펌프(pump). 눈에 쇠로 보이는 것은
