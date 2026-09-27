@@ -13,6 +13,11 @@ const TRN=64, MAX_SEG=0.22;
 /* 큰 기술 «큼지막» 스위치 — 검수용 A/B (window.TW_BIG_SKILLS=false 로 끔) */
 const BIG=()=>typeof window==='undefined'||window.TW_BIG_SKILLS!==false;
 const INNER=[0.76,0.70], OUTER=[1.03,1.08], BRIGHT=[0.80,0.18], ALPHA=[0.72,0.16];
+/* 꼬리 테이퍼 (문서 121 §2): 꼬리 폭 = 머리의 TAPER_MIN 배, 폭·밝기 곡선 지수, 안쪽 가장자리 밝기(날끝 대비).
+   정점색은 «선형» 공간이다 — 화면(sRGB)에서 반으로 보이려면 선형으로는 ~0.2 라서,
+   밝기 지수는 감마(≈2.2)만큼 세게, 안쪽 가장자리는 0 에 가깝게 둔다 (0.12 로는 화면에서 0.35 로 보여 판이 그대로였다).
+   값은 스매시 «판» 을 줄이는 쪽으로 잡은 시안(근거 없음) */
+const TAPER_MIN=0.2, TAPER_W=0.8, TAPER_A=2.2, EDGE_IN=0.0;
 export function trailLifetime(power){ return BIG()&&power>=1.5?0.17:0.11; }
 
 let GLOW=null;
@@ -95,11 +100,17 @@ export class WeaponTrail{
     for(let i=0;i<n;i++){
       const e=this.pts[i], b=e.b, t=e.t, k=Math.max(0,1-e.age/Math.max(.001,life)), o=i*6;
       const dx=t.x-b.x, dy=t.y-b.y, dz=t.z-b.z;
-      pos[o]=b.x+dx*under; pos[o+1]=b.y+dy*under; pos[o+2]=b.z+dz*under;
+      /* 문서 121 §2: 꼬리로 갈수록 날끝 선(over) 쪽으로 가늘어지고 흐려진다.
+         나이(age)만으로 흐리면 빠른 동작(스매시 내려찍기)은 점이 다 «젊어서» 균일하게 밝고,
+         곧은 경로라 리본이 몸통 너비의 «판» 으로 읽혔다. 머리(i=0)는 예전과 같다. */
+      const u=n>1?i/(n-1):0, keep=TAPER_MIN+(1-TAPER_MIN)*Math.pow(1-u,TAPER_W), inner=over-(over-under)*keep;
+      pos[o]=b.x+dx*inner; pos[o+1]=b.y+dy*inner; pos[o+2]=b.z+dz*inner;
       pos[o+3]=b.x+dx*over; pos[o+4]=b.y+dy*over; pos[o+5]=b.z+dz*over;
-      const a=k*k*bright*this.power;
-      col[o]=this.hue.r*a;      col[o+1]=this.hue.g*a;      col[o+2]=this.hue.b*a;
-      col[o+3]=this.hue.r*a*.35; col[o+4]=this.hue.g*a*.35; col[o+5]=this.hue.b*a*.35;
+      const a=k*k*bright*this.power*Math.pow(1-u,TAPER_A);
+      /* 폭 방향 밝기: 날끝(over) 이 가장 밝고 안쪽으로 흐려진다. 예전엔 거꾸로(안쪽 a, 날끝 .35a)라
+         안쪽 가장자리에 딱딱한 밝은 선이 서서 리본이 «판» 으로 읽혔다 (문서 121 §2). */
+      col[o]=this.hue.r*a*EDGE_IN; col[o+1]=this.hue.g*a*EDGE_IN; col[o+2]=this.hue.b*a*EDGE_IN;
+      col[o+3]=this.hue.r*a;       col[o+4]=this.hue.g*a;       col[o+5]=this.hue.b*a;
     }
     mesh.geometry.attributes.position.needsUpdate=true; mesh.geometry.attributes.color.needsUpdate=true;
     mesh.geometry.setDrawRange(0,(n-1)*6);

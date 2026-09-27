@@ -16,12 +16,13 @@ import fs from 'node:fs';
 
 const PORT=Number(process.env.HWANGHON_PORT||8777), D=process.env.D||'d01', CHAR=process.env.CHAR||'';
 const SECONDS=Number(process.env.SECONDS||24), BOT=process.env.BOT||'hold', SHOT=!!process.env.SHOT;
-const OUT=process.env.OUT||'', SEED=Number(process.env.SEED||7), SHOT_F=Number(process.env.SHOT_F||0), SHOT_PNG=process.env.SHOT_PNG||'fight-overlap.png';
+const OUT=process.env.OUT||'', SEED=Number(process.env.SEED||7), SHOT_F=Number(process.env.SHOT_F||0), SHOT_PNG=process.env.SHOT_PNG||'fight-overlap.png', SHOT_HIT=Number(process.env.SHOT_HIT||0), SHOT_AFTER=Number(process.env.SHOT_AFTER||0), TRAIL=!!process.env.TRAIL, SHOT_ACT=process.env.SHOT_ACT||'';   /* SHOT_ACT=smash:0.62:2 → 두 번째 스매시가 경과 0.62 s 를 처음 넘는 프레임 */
 const url=`http://127.0.0.1:${PORT}/game3d.html?d=${D}&combatAudit=1`;
 
 const browser=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
 const page=await browser.newPage({viewport:{width:1280,height:720}});
 page.on('pageerror',e=>console.error('[pageerror]',e.message));
+if(process.env.SET) await page.addInitScript(v=>{try{localStorage.setItem('tw:settings',v);}catch(e){}},process.env.SET);   /* 예: SET='{"cine":"minimal","quality":"low"}' */
 if(CHAR) await page.addInitScript(c=>{try{localStorage.setItem('tw:save',JSON.stringify({char:c}));}catch(e){}},CHAR);   /* TW_SAVE.char() 가 읽는 자리 */
 await page.addInitScript(({seed})=>{
   /* 가상 시계 — 게임이 읽는 now 는 우리가 민 만큼만 간다. 로딩 중(시계 멈춤 전)은 실시간. */
@@ -62,7 +63,7 @@ const entered=await page.evaluate(async()=>{
 console.log('entered',JSON.stringify(entered));
 if(!entered.battle){console.error('전투에 들어가지 못했다');await browser.close();process.exit(1);}
 
-const res=await page.evaluate(({SECONDS,BOT,SHOT_F})=>{
+const res=await page.evaluate(({SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT})=>{
   const G=window.TW_DUNGEON,P=G.P,B=G.B,SCALE=50,DEPTH=.55,rows=[],events=[];let fr=0,lastEv=[];
   const reach=150;
   const wdist=()=>G.world.dist(P.x,P.y,B.x,B.y);   /* 게임·combatAudit 과 같은 깊이 보정 공간 */
@@ -83,8 +84,27 @@ const res=await page.evaluate(({SECONDS,BOT,SHOT_F})=>{
     G.setBot(BOT==='hold'||far?{sx:dx/m,sy:dy/m}:{sx:0,sy:0});
     if(!far&&!p.action){ if(p.combo>=3&&p.st>40)b.input('smash'); else b.input('attack'); }
   }
+  /* 궤적 리본(weapon-trail.js, 점 64 개 × 2 정점, renderOrder 3) — 화면 크기와 이웃 점 간격을 잰다 */
+  const V=G.cam.position.constructor;let ribbons=null;const trail=[];
+  function trailMetric(){
+    if(!ribbons){ribbons=[];G.scene.traverse(o=>{if(o.isMesh&&o.renderOrder===3&&o.material&&o.material.vertexColors&&o.geometry.attributes.position&&o.geometry.attributes.position.count===128)ribbons.push(o);});}
+    const m=ribbons[1]||ribbons[0];if(!m||!m.visible)return null;
+    const n=Math.round(m.geometry.drawRange.count/6)+1;if(n<3)return null;
+    const a=m.geometry.attributes.position.array;G.cam.updateMatrixWorld();
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,gap=0,v=new V(),w=new V();
+    for(let i=0;i<n;i++){for(const k of [0,3]){v.set(a[i*6+k],a[i*6+k+1],a[i*6+k+2]).project(G.cam);x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
+      if(i>0){v.set(a[i*6+3],a[i*6+4],a[i*6+5]);w.set(a[i*6-3],a[i*6-2],a[i*6-1]);gap=Math.max(gap,v.distanceTo(w));}}
+    const W=innerWidth,H=innerHeight;
+    /* 밝기 가중 화면 넓이: 두 겹 리본의 사각형마다 (화면 넓이 px² × 네 정점 색 평균 × 재질 opacity) — «판» 이 얼마나 밝게 넓은가 */
+    let lit=0;for(const r of ribbons){if(!r.visible)continue;const rn=Math.round(r.geometry.drawRange.count/6)+1,pa=r.geometry.attributes.position.array,ca=r.geometry.attributes.color.array,sp=[];
+      for(let i=0;i<rn*2;i++){v.set(pa[i*3],pa[i*3+1],pa[i*3+2]).project(G.cam);sp.push([v.x*W/2,v.y*H/2]);}
+      for(let i=0;i<rn-1;i++){const q=[sp[i*2],sp[i*2+1],sp[i*2+3],sp[i*2+2]];let A=0;for(let j=0;j<4;j++){const a1=q[j],a2=q[(j+1)%4];A+=a1[0]*a2[1]-a2[0]*a1[1];}
+        let L=0;for(const k of [i*2,i*2+1,i*2+2,i*2+3])L+=(ca[k*3]+ca[k*3+1]+ca[k*3+2])/3;lit+=Math.abs(A)/2*L/4*r.material.opacity;}}
+    return {n,wPx:Math.round((x1-x0)/2*W),hPx:Math.round((y1-y0)/2*H),gap:+gap.toFixed(3),lit:Math.round(lit)};
+  }
   window.__vtTick=function(){
     fr++;hook();
+    if(TRAIL){const t=trailMetric();if(t){const s0=bat()&&bat().snapshot();trail.push(Object.assign({f:fr,act:s0&&s0.player.action?(s0.player.action.clip||s0.player.action.kind):'',el:s0&&s0.player.action?+s0.player.action.elapsed.toFixed(3):null,hs:s0?+s0.player.hitstop.toFixed(3):0},t));}}
     const b=bat();const s=b&&b.snapshot();
     const gap=wdist()/SCALE,body=(P.r+B.r)/SCALE,pen=Math.max(0,body-gap);
     rows.push({f:fr,gap:+gap.toFixed(3),pen:+pen.toFixed(3),lunge:!!G.lungeState,roll:P.rollT>0,kb:P.kbT>0,spd:+(P.spd||0).toFixed(2),
@@ -92,10 +112,10 @@ const res=await page.evaluate(({SECONDS,BOT,SHOT_F})=>{
       px:+P.x.toFixed(1),py:+P.y.toFixed(1),bx:+B.x.toFixed(1),by:+B.y.toFixed(1),ev:pen>0?lastEv.map(x=>x.t+(x.pattern?':'+x.pattern:'')+(x.tier?':'+x.tier:'')).join(' '):''});
   };
   const N=Math.round(SECONDS*60);
-  for(let i=0;i<N;i++){bot();window.__vt.step(1);if(bat()&&bat().snapshot().over)break;if(SHOT_F&&fr>=SHOT_F)break;}
-  window.__vtTick=null;if(!SHOT_F)G.setBot({sx:0,sy:0});
-  return {rows,events,body:(P.r+B.r)/SCALE,pr:P.r,br:B.r};
-},{SECONDS,BOT,SHOT_F});
+  for(let i=0;i<N;i++){bot();window.__vt.step(1);if(bat()&&bat().snapshot().over)break;if(SHOT_F&&fr>=SHOT_F)break;if(SHOT_ACT){const [c,e,nth]=SHOT_ACT.split(':'),a=bat()&&bat().snapshot().player.action;if(a&&(a.clip||a.kind)===c&&a.elapsed>=Number(e)&&a.id!==window.__shotSeen){window.__shotSeen=a.id;window.__shotN=(window.__shotN||0)+1;if(window.__shotN>=Number(nth||1))break;}}if(SHOT_HIT&&!SHOT_F){const h=events.filter(e=>e.t==='hit');if(h.length>=SHOT_HIT){SHOT_F=h[SHOT_HIT-1].f+SHOT_AFTER;}}}
+  window.__vtTick=null;if(!SHOT_F&&!SHOT_HIT&&!SHOT_ACT)G.setBot({sx:0,sy:0});
+  return {rows,events,trail,body:(P.r+B.r)/SCALE,pr:P.r,br:B.r};
+},{SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT});
 
 const rows=res.rows,normal=rows.filter(r=>!r.lunge);
 const worst=normal.reduce((a,r)=>r.pen>a.pen?r:a,{pen:-1});
@@ -112,12 +132,21 @@ const minGap=normal.reduce((a,r)=>Math.min(a,r.gap),1e9),moving=rows.filter(r=>r
 console.log(`  최소 중심 간격 ${minGap.toFixed(2)} m · 이동 중 프레임 ${moving}`);
 console.log(`  > 8 cm 프레임 ${over(.08)} · > 20 cm ${over(.2)} · 관통 돌진 프레임 ${rows.length-normal.length}`);
 console.log(`  겹침이 커진 프레임의 원인 — 플레이어만 움직임 ${cause.player} · 보스만 ${cause.boss} · 둘 다 ${cause.both}`);
+if(TRAIL){const t=res.trail;console.log(`궤적 표본 ${t.length} 프레임`);
+  const top=[...t].sort((a,b)=>b.wPx*b.hPx-a.wPx*a.hPx).slice(0,8);top.forEach(r=>console.log(`  f${r.f} ${r.act} ${r.el} hs ${r.hs} · 화면 ${r.wPx}×${r.hPx}px · lit ${r.lit} · 점 ${r.n} · 이웃 점 최대 ${r.gap} m`));
+  const by={};for(const r of t){const k=r.act||'-';(by[k]=by[k]||[]).push(r.lit);}
+  console.log('  행동별 밝기 가중 넓이(lit) 최대/중앙: '+Object.entries(by).map(([k,v])=>{v.sort((a,b)=>a-b);return `${k} ${v[v.length-1]}/${v[v.length>>1]}`;}).join(' · '));
+  const gx=[...t].sort((a,b)=>b.gap-a.gap).slice(0,5);console.log('  이웃 점 간격 상위: '+gx.map(r=>`f${r.f} ${r.act} ${r.gap} m`).join(' · '));}
 if(OUT)fs.writeFileSync(OUT,JSON.stringify(res,null,1));
-if(SHOT_F){
+if(SHOT_F||SHOT_HIT||SHOT_ACT){
   /* 그 프레임에서 멈추고 렌더를 켜 한 장. 카메라·자세는 NOSHOT 동안에도 매 프레임 갱신됐다(render 호출만 건너뜀). */
   const last=rows[rows.length-1];
-  await page.evaluate(()=>{window.TW_DUNGEON.freeze(true);window.__NOSHOT=false;window.__vt.step(2);});
+  await page.evaluate(hide=>{const G=window.TW_DUNGEON;G.freeze(true);
+    /* HIDE=trail: 궤적 리본만 숨겨 «이 판이 궤적인가» 를 가른다 */
+    if(hide==='trail')G.scene.traverse(o=>{if(o.isMesh&&o.renderOrder===3&&o.material&&o.material.vertexColors&&o.geometry.attributes.position&&o.geometry.attributes.position.count===128)o.visible=false;});
+    window.__NOSHOT=false;window.__vt.step(2);},process.env.HIDE||'');
   await page.screenshot({path:SHOT_PNG});
-  console.log(`SHOT f${last.f} gap ${last.gap} m pen ${(last.pen*100).toFixed(1)} cm → ${SHOT_PNG}`);
+  const tl=res.trail&&res.trail[res.trail.length-1];
+  console.log(`SHOT f${last.f}${tl&&tl.f===last.f?` · 궤적 ${tl.wPx}×${tl.hPx}px lit ${tl.lit}`:''} (${SHOT_HIT?'hit #'+SHOT_HIT+' +'+SHOT_AFTER+'f · ':''}${last.act||'-'}) gap ${last.gap} m pen ${(last.pen*100).toFixed(1)} cm → ${SHOT_PNG}`);
 } else if(worst.f>0) console.log(`  찍기: SHOT_F=${worst.f} SEED=${SEED} BOT=${BOT}${CHAR?' CHAR='+CHAR:''} node tools/fight-overlap.mjs`);
 await browser.close();
