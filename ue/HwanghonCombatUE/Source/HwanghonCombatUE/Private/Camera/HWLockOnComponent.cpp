@@ -17,14 +17,21 @@ void UHWLockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+    AActor* CurrentTarget = GetTarget();
+    if (!CurrentTarget)
+    {
+        ClearTarget();
+        return;
+    }
+
     APawn* Pawn = Cast<APawn>(GetOwner());
-    if (!Pawn || !Pawn->GetController() || !Target.IsValid())
+    if (!Pawn || !Pawn->GetController())
     {
         return;
     }
 
     const FVector From = Pawn->GetActorLocation();
-    const FVector To = Target->GetActorLocation();
+    const FVector To = CurrentTarget->GetActorLocation();
     FRotator Desired = (To - From).Rotation();
     Desired.Pitch = FMath::Clamp(Desired.Pitch, -25.f, 25.f);
     Desired.Roll = 0.f;
@@ -49,7 +56,7 @@ void UHWLockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 void UHWLockOnComponent::ToggleLockOn()
 {
-    if (Target.IsValid())
+    if (IsLocked())
     {
         ClearTarget();
         return;
@@ -63,6 +70,18 @@ void UHWLockOnComponent::ClearTarget()
     Target.Reset();
 }
 
+AActor* UHWLockOnComponent::GetTarget() const
+{
+    AActor* Candidate = Target.Get();
+    return Candidate && !Candidate->IsActorBeingDestroyed() && Candidate->ActorHasTag(TEXT("LockOnTarget"))
+        ? Candidate : nullptr;
+}
+
+bool UHWLockOnComponent::IsLocked() const
+{
+    return GetTarget() != nullptr;
+}
+
 AActor* UHWLockOnComponent::FindBestTarget() const
 {
     TArray<AActor*> Candidates;
@@ -74,7 +93,7 @@ AActor* UHWLockOnComponent::FindBestTarget() const
 
     for (AActor* Candidate : Candidates)
     {
-        if (!IsValid(Candidate) || Candidate == GetOwner())
+        if (!IsValid(Candidate) || Candidate->IsActorBeingDestroyed() || Candidate == GetOwner())
         {
             continue;
         }

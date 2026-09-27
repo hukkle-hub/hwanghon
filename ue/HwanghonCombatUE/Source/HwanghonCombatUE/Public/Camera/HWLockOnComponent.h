@@ -22,10 +22,10 @@ public:
     void ClearTarget();
 
     UFUNCTION(BlueprintPure)
-    AActor* GetTarget() const { return Target.Get(); }
+    AActor* GetTarget() const;
 
     UFUNCTION(BlueprintPure)
-    bool IsLocked() const { return Target.IsValid(); }
+    bool IsLocked() const;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float SearchRadius = 2500.f;

@@ -5,8 +5,11 @@
 #include "Combat/HWCombatTypes.h"
 #include "HWBossCharacter.generated.h"
 
+class AHWBossCharacter;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossStateChangedSignature, EHWBossState, NewState, FName, PatternId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossReactionSignature, EHWAttackTier, Tier, FVector, WorldDirection);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharacter*, Boss);
 
 class UHWCombatTuningAsset;
 class AHWAinCharacter;
@@ -29,6 +32,10 @@ public:
     UPROPERTY(BlueprintAssignable, Category="Boss")
     FHWBossReactionSignature OnBossReaction;
 
+    // Broadcast exactly once, after damage, pending attacks and movement are disabled.
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossDiedSignature OnBossDied;
+
     UFUNCTION(BlueprintCallable)
     void ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVector SourceLocation);
 
@@ -46,6 +53,12 @@ public:
 
     UFUNCTION(BlueprintPure)
     EHWBossState GetBossState() const { return State; }
+
+    UFUNCTION(BlueprintPure)
+    bool IsDead() const { return State == EHWBossState::Dead; }
+
+    UFUNCTION(BlueprintPure)
+    float GetHealth() const { return Health; }
 
     UFUNCTION(BlueprintPure)
     FName GetCurrentPatternId() const { return CurrentPattern.Id; }
@@ -72,6 +85,11 @@ protected:
     bool TryCountered(const FHWBossBeatSpec& Beat);
 
 private:
+    friend struct FHWBossLifecycleTestAccess;
+
+    void Die();
+    void CancelPendingAttack();
+
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWBossPresentationComponent> Presentation;
 

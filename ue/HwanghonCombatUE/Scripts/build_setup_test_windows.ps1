@@ -5,6 +5,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'build_validation.ps1')
 $ProjectDir = Split-Path -Parent $PSScriptRoot
 $Project = Join-Path $ProjectDir "HwanghonCombatUE.uproject"
 $SetupScript = Join-Path $ProjectDir "Scripts\ue_setup.py"
@@ -28,6 +29,7 @@ if ([string]::IsNullOrWhiteSpace($UERoot) -or !(Test-Path $UERoot)) {
     throw "UE 5.5 root not found. Set UE55_ROOT or pass -UERoot."
 }
 
+$EngineVersion = Assert-HWEngineVersion -UERoot $UERoot -Project $Project
 $BuildBat = Join-Path $UERoot "Engine\Build\BatchFiles\Build.bat"
 $EditorCmd = Join-Path $UERoot "Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
 
@@ -36,6 +38,7 @@ if (!(Test-Path $EditorCmd)) { throw "UnrealEditor-Cmd.exe not found: $EditorCmd
 
 Write-Host "== Hwanghon UE Vertical Slice =="
 Write-Host "UE: $UERoot"
+Write-Host "Verified engine version: $EngineVersion"
 Write-Host "Project: $Project"
 
 Write-Host "`n[1/4] Compile Editor target"
@@ -67,19 +70,27 @@ if ($LASTEXITCODE -ne 0) {
     throw "Asset audit failed: exit $LASTEXITCODE"
 }
 
-Write-Host "`n[4/4] Combat automation tests"
+Write-Host "`n[4/4] Hwanghon combat / progression automation tests"
 New-Item -ItemType Directory -Force -Path $ReportDir | Out-Null
+$RunDir = Join-Path $ReportDir ([guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $RunDir | Out-Null
+$RunStartedUtc = [datetime]::UtcNow
 
+# UE 5.5 documents this queued Quit syntax: it exits after the test queue.
+# A zero exit code alone is insufficient: validate the completed report below.
 & $EditorCmd $Project `
-    '-ExecCmds=Automation RunTest Hwanghon.Combat;Quit' `
-    "-ReportExportPath=$ReportDir" `
+    '-ExecCmds=Automation RunTest Hwanghon.;Quit' `
+    "-ReportExportPath=$RunDir" `
+    "-abslog=$(Join-Path $RunDir 'automation.log')" `
     -unattended -nop4 -nosplash -NullRHI
 
 if ($LASTEXITCODE -ne 0) {
     throw "Automation tests failed: exit $LASTEXITCODE"
 }
 
-Write-Host "`nPASS"
-Write-Host "Automation report: $ReportDir"
+$Result = Assert-HWAutomationReport -ReportDir $RunDir -RunStartedUtc $RunStartedUtc `
+    -RequiredSuites @('Hwanghon.Combat.', 'Hwanghon.Progression.', 'Hwanghon.Content.')
+Write-Host "`nPASS: $($Result.Passed) automation tests; $($Result.SucceededWithWarnings) passed with warnings."
+Write-Host "Automation report: $($Result.ReportPath)"
 Write-Host "Asset audit: $(Join-Path $ProjectDir 'Saved\AssetAudit\asset_audit.json')"
 Write-Host "Open project and PIE: T lock-on / J or Space attack / U smash / K dodge / I jump / L counter / F9 audit save"
