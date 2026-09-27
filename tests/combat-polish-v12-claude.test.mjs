@@ -47,3 +47,8 @@ test('아인 attack1/2/3 는 발 고정 재굽기 클립(smash 는 원본)(extra
 test('보스 핵 광구 팽창은 flash ≥ .05(무거운 타격)만 — 평타마다 몸통만 한 주황 구가 뜨지 않는다', ()=>{
   assert.ok(!G.includes("(a.flash>0?1.5:0)")); assert.match(G,/\(a\.flash>=0\.05\?1\.5:0\)/);
 });
+
+test('낫 궤적·바람 스프라이트는 톤매핑 제외(toneMapped:false) — 블룸 없는 경로(저사양·bloom 끔)에서도 «흰 판» 이 되지 않는다', ()=>{
+  assert.match(TR,/MeshBasicMaterial\(\{vertexColors:true,transparent:true,opacity:alpha,depthWrite:false,blending:T\.AdditiveBlending,side:T\.DoubleSide,toneMapped:false\}\)/);
+  assert.match(TR,/SpriteMaterial\(\{map:glowTexture\(\),color:this\.hue\.getHex\(\),transparent:true,blending:T\.AdditiveBlending,depthWrite:false,opacity:0\.5,toneMapped:false\}\)/);
+});

@@ -50,7 +50,7 @@ export class WeaponTrail{
     g.setAttribute('color', new T.BufferAttribute(new Float32Array(TRN*2*3),3));
     const idx=[]; for(let i=0;i<TRN-1;i++){ const a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }
     g.setIndex(idx); g.setDrawRange(0,0);
-    const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:alpha,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide});
+    const m=new T.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:alpha,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide,toneMapped:false});   /* v12: 블룸 없는 경로(저사양·bloom 끔)에서 톤매핑 노출 2.2 배가 꼬리의 어두운 정점색까지 끌어올려 «흰 판» 이 됐다 — 궤적은 톤매핑 제외 */
     const mesh=new T.Mesh(g,m); mesh.frustumCulled=false; mesh.renderOrder=3; mesh.visible=false; this.scene.add(mesh); return mesh;
   }
   /* 무기 GLB 규약: 원점 = 자루 끝, +Y 자루 방향. 무기 «로컬» 좌표에서 길이를 재야
@@ -117,7 +117,7 @@ export class WeaponTrail{
     if(this.pts.length<3) return;
     const a=this.pts[0].t, b=this.pts[2].t, v=new T.Vector3().subVectors(a,b);
     if(v.lengthSq()<1e-5) return;
-    const sp=new T.Sprite(new T.SpriteMaterial({map:glowTexture(),color:this.hue.getHex(),transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0.5}));
+    const sp=new T.Sprite(new T.SpriteMaterial({map:glowTexture(),color:this.hue.getHex(),transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0.5,toneMapped:false}));
     const big=(BIG()&&this.power>=1.6)?1.35:1;
     sp.position.copy(a); sp.scale.set(0.55*big,0.20*big,1); sp.material.opacity=0.32; this.scene.add(sp);   /* v12 보정: 0.9×0.35 → 0.55×0.20 — 스매시 때 노란 구름이 되지 않게 */
     this.streaks.push({o:sp,t:0,v:v.normalize().multiplyScalar(3.4)});
