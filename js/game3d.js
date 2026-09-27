@@ -314,7 +314,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       rimLights[i].position.set(p.x+rx*7, p.y+RIM[i].up, p.z+rz*7);
     }
   }
-  var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 9, 1.4); scene.add(coreLight);
+  var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 5.5, 1.4); scene.add(coreLight);   /* v12 보정: 닿는 거리 9 → 5.5 m — 큰 기술 «달아오름» 이 붙어 선 아인을 통째로 붉게 칠하지 않게(핵 주변만) */
     function applySettings(){ resize(); SFX.enabled=SET.sound; CINE.mode=SET.cine||'normal'; try{ if(window.TW_CINEMATIC_HUD&&TW_CINEMATIC_HUD.setMode)TW_CINEMATIC_HUD.setMode(SET.cine||'normal'); }catch(e){} renderer.toneMappingExposure=2.4*SET.bright*MOOD.exp;  pLight.visible=SET.lights; pLight.intensity=3.0*MOOD.player; coreLight.visible=SET.lights; hemi.intensity=(SET.lights?2.6:3.2)*MOOD.hemi; lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
@@ -672,7 +672,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     boss.behavior?.restore();boss.readability?.restore();boss.mixer.update(dt);if(bs)boss.readability?.apply(bs.enemy);if(bs)boss.behavior?.apply(Object.assign({},bs.enemy,{rage:phase>0,moving:Bs.moving}),t,dt);if(bs)boss.training?.sync(bs.enemy.parts);
     var sh=a.shake>0 ? Math.sin(t*72)*0.085*a.shake : 0; boss.body.position.x=sh;   /* 피격 흔들림 폭 확대 */
     var g=a.glow*(0.8+Math.sin(t*3)*0.2)+(a.flash>0?1.5:0); boss.mats.forEach(function(m){ if(m.emissive){ var be=m.userData.emis; if(be) m.emissive.copy(be); else m.emissive.setHex(0); if(a.flash>0) m.emissive.add(FLASHC); } });
-    coreLight.intensity=SET.lights?(1.5+g*2.5+(a.charge||0)*7):0;   /* 큰 기술 «보여주기» 동안 핵이 달아오른다 */
+    coreLight.intensity=SET.lights?(1.5+g*2.5+(a.charge||0)*3.5):0;   /* 큰 기술 «보여주기» 동안 핵이 달아오른다 — v12 보정: 정점 7 → 3.5(핵 스프라이트가 읽기를 맡고, 빛은 아인을 덮지 않게) */
     boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&ATKST.indexOf(snap.enemy.state)>=0&&!snap.enemy.walking;   /* 걷기 링크 중엔 플레이어를 다시 본다 */ var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
     bossSpot.position.set(boss.root.position.x+1.5, SPOT_H, boss.root.position.z+2); bossSpot.intensity=SET.lights?60:0;
     var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar((0.7+g*0.3)*BOSS_SCALE);
@@ -762,6 +762,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 던전마다 다른 바람 — 머리카락·옷자락이 흔들린다 (docs/design/33 §5) */
     if(window.TW_WIND){ try{ TW_WIND.prepare(THREE, g.scene); var wp=TW_WIND.profile(A.id); wind=TW_WIND.bind(THREE, g.scene, wp); console.info('[tw-wind]', wp.name); }catch(e){ console.warn('wind', e); } }
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
+    /* GLTFLoader 는 animations[i].extras 를 클립 userData 에 안 옮긴다 → 직접 옮긴다(footlock 표식을 ain-bind-repair 가 읽는다, 문서 116) */
+    try{ var adefs=g.parser&&g.parser.json&&g.parser.json.animations; if(adefs) g.animations.forEach(function(c,i){ if(adefs[i]&&adefs[i].extras) Object.assign(c.userData,adefs[i].extras); }); }catch(e){}
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
     else g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
@@ -872,7 +874,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
     tickJump(dt);
     tickLean(dt);
-    if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
+    if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x4a1a12:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.10 s 0x4a1a12 — 옷 재질이 남게(전체 단색 빨강 금지) */
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
 
@@ -958,7 +960,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       dragT=Math.max(0,dragT-dt);
     }
     /* 빠져나오면 따라잡는다 — 남은 행동 시간 안에 반드시 0 이 되도록 빠르게 */
-    if(dragLag>0){ dragLag=Math.max(0, dragLag - dt*2.2); }
+    /* v12 보정: 따라잡기 3.2 배(2.2)는 접점 직후 «확 가속» 으로 보였다(들린 발이 한 프레임에 44 cm, 문서 116 §3).
+       남은 행동 시간 안에 0 이 되는 최소 속도로, 바닥 0.7(그림 1.7 배) — 판정 시계는 그대로 */
+    if(dragLag>0){ var pa=battle&&battle.snapshot().player.action, rem=pa?Math.max(0.06,(pa.duration||0.6)-(pa.elapsed||0)-0.08):0.3; dragLag=Math.max(0, dragLag - dt*Math.max(0.7, dragLag/rem)); }
   }
   /* ── 튕김(弾かれ)의 «보이는» 몫 ───────────────────────────────────────────
      끌림이 «날이 들어갔다» 라면, 튕김은 «안 들어갔다» 다. 반대로 그려야 한다:
@@ -1085,8 +1089,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   /* ---------- 렐라나식 보스 연출 (문서 112 §3) ----------
      관통 돌진: 타격 순간부터 dur 동안 플레이어를 «뚫고» 지나간다(판정은 이미 끝났고, 이후 Bs 는 실제로
      이동하므로 히트박스와 그림이 어긋나지 않는다). 끝나면 시선 고정을 풀어 돌아선다 — 그 돌아섬이 다음 예비다. */
-  var bossLunge=null;
-  function startLunge(l){ if(!l||!boss.root) return; var ang=world.angle(Bs.x,Bs.y,P.x,P.y), total=world.dist(Bs.x,Bs.y,P.x,P.y)+(l.dist||200);
+  var bossLunge=null, camCalmT=0;   /* 관통 돌진 뒤 카메라 요우 상한을 낮추는 남은 시간(s) */
+  function startLunge(l){ if(!l||!boss.root) return; camCalmT=0.9; var ang=world.angle(Bs.x,Bs.y,P.x,P.y), total=world.dist(Bs.x,Bs.y,P.x,P.y)+(l.dist||200);
     bossLunge={ t:0, dur:Math.max(0.12,l.dur||0.3), ang:ang, total:total }; }
   function tickLunge(dt){ if(!bossLunge) return; var L1=bossLunge, ease=function(u){ return 1-(1-u)*(1-u); };
     var u0=Math.min(1,L1.t/L1.dur); L1.t+=dt; var u1=Math.min(1,L1.t/L1.dur), step=(ease(u1)-ease(u0))*L1.total;
@@ -1533,7 +1537,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); bossSwingFx(s&&s.enemy.patIcon); if(e.lunge) startLunge(e.lunge); if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); }   /* «순간·잔광» 은 마지막 박에만 */ if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; hitReact(e);
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.10; hitReact(e);
         var axD=axisFromBoss(), sgD=(R.stagger||{})[e.tier]||{};
         burst(above(P.x,P.y,1.2), e.guarded?10:(e.tier==='heavy'?26:18), 0xD94A45, axD); vib(sgD.vib||(e.guarded?15:60));
         shake(sgD.shake||(e.guarded?0.004:0.012), e.guarded?200:(e.tier==='heavy'?420:300), axD[0], axD[1]);
@@ -1653,7 +1657,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       case 'aggro': SFX.play('tele'); break;
       case 'telegraph': SFX.play('tele'); if(e.big&&(e.beat||1)===1&&boss&&boss.root) fxBigTell(e.dur||1); break;   /* 온라인: 서버 이벤트로 같은 «보여주기» */
       case 'swing': shake(0.004,120); if(boss&&boss.root){ if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); } if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); } break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18;
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.10;
         hitReact(e, m||Bs);                          /* 교전에서는 때린 «그 잡몹» 반대로 밀린다 */
         burst(above(P.x,P.y,1.2), e.tier==='heavy'?22:14, 0xD94A45); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
@@ -1962,6 +1966,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         var dy=want-camYaw; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2;
         dy=Math.abs(dy)<dead?0:dy-Math.sign(dy)*dead;            /* ③ 데드존: 안쪽은 무시, 넘친 만큼만 */
         var step=dy*(1-Math.exp(-dt/tau));
+        if(camCalmT>0){ camCalmT-=dt; lim*=0.4; }   /* v12 보정: 보스 관통 돌진 뒤 0.9 s 는 천천히 돈다 — 급회전 억제 */
         lim*=dt;                                                  /* ① 휙 도는 것 방지 */
         camYaw+=Math.max(-lim, Math.min(lim, step)); }
     }
@@ -2000,6 +2005,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     camPos.x=Math.max(-2, Math.min(mapW+2, camPos.x)); camPos.z=Math.max(-2, Math.min(mapD+4, camPos.z)); camPos.y=Math.max(1.2, Math.min(CEIL-0.4, camPos.y));
     /* 화각: 회피에 넓히고(속도감) 큰 타격에 좁힌다(무게감). 둘 다 금방 되돌아온다. */
     var fv=CAM.fov+(CAM.fight.fov-CAM.fov)*fightK+nearK*1.5; if(P.rollT>0) fv=Math.max(fv,CAM.fovDash); else if(camZoom<0.98) fv=CAM.fovHit;
+    else { var sa3=battle&&battle.snapshot().player.action; if(sa3&&(sa3.clip==='attack3'||sa3.clip==='smash')) fv+=3; }   /* v12 보정: 3 타·스매시는 낫 끝이 프레임 밖으로 잘리지 않게 +3° */
     if(bigSkillNow()) fv+=5;   /* 큰 기술: 화각 +5° — 넓어진 호와 궤적이 화면에 들어온다 (문서 112) */
     fovWant+=(fv-fovWant)*(1-Math.exp(-dt/CAM.fovTau));
     if(Math.abs(cam.fov-fovWant)>0.01){ cam.fov=fovWant; cam.updateProjectionMatrix(); }
@@ -2173,7 +2179,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get state(){ return state; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, cine:CINE, cineDemo:function(ev){ handle(ev); }, cineBeats:CINE_BEATS, set demoExec(v){ demoExec=!!v; }, bossHitPos:function(k){ return bossHitPos(k); }, get interactBox(){ return interactButton?interactButton.getBoundingClientRect():null; }, set demoZone(z){ zone=z; }, set zoneDim(v){ ZONE_DIM=v; }, l2Cut:l2Cut, lunge:startLunge, jump:jumpIn, get lungeState(){ return bossLunge; },   /* 검수용: 관통 돌진 */ get l2State(){ return { cine:cine, invuln:l2Invuln, hold:cineHold }; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, get renderInfo(){ var i=renderer&&renderer.info; return i?{calls:i.render.calls,triangles:i.render.triangles,geometries:i.memory.geometries,textures:i.memory.textures,programs:i.programs?i.programs.length:0}:null; }, world:world, get battle(){ return battle; }, get state(){ return state; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, cine:CINE, cineDemo:function(ev){ handle(ev); }, cineBeats:CINE_BEATS, set demoExec(v){ demoExec=!!v; }, bossHitPos:function(k){ return bossHitPos(k); }, get interactBox(){ return interactButton?interactButton.getBoundingClientRect():null; }, set demoZone(z){ zone=z; }, set zoneDim(v){ ZONE_DIM=v; }, l2Cut:l2Cut, lunge:startLunge, jump:jumpIn, get lungeState(){ return bossLunge; },   /* 검수용: 관통 돌진 */ get l2State(){ return { cine:cine, invuln:l2Invuln, hold:cineHold }; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
     /* 검수용: 전투 없이 스킬 연출만 한 번 재생한다. 락온 카메라가 보스를 보는
        전투 화면에서는 플레이어가 프레임 밖이라 연출을 눈으로 못 본다. */
     /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에

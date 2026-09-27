@@ -119,7 +119,7 @@ export class WeaponTrail{
     if(v.lengthSq()<1e-5) return;
     const sp=new T.Sprite(new T.SpriteMaterial({map:glowTexture(),color:this.hue.getHex(),transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0.5}));
     const big=(BIG()&&this.power>=1.6)?1.35:1;
-    sp.position.copy(a); sp.scale.set(0.9*big,0.35*big,1); this.scene.add(sp);
+    sp.position.copy(a); sp.scale.set(0.55*big,0.20*big,1); sp.material.opacity=0.32; this.scene.add(sp);   /* v12 보정: 0.9×0.35 → 0.55×0.20 — 스매시 때 노란 구름이 되지 않게 */
     this.streaks.push({o:sp,t:0,v:v.normalize().multiplyScalar(3.4)});
   }
   tick(dt, weapon, swinging){
@@ -136,7 +136,7 @@ export class WeaponTrail{
     this._write(this.layers[0], INNER[0], OUTER[0], BRIGHT[0]);
     this._write(this.layers[1], INNER[1], OUTER[1]*widen, BRIGHT[1]);
     this.windT-=dt;
-    if(swinging && this.power>=1.3 && this.windT<=0){ this.windT=0.045; this._spawnWind(); }
+    if(swinging && this.power>=1.3 && this.windT<=0){ this.windT=0.07; this._spawnWind(); }   /* v12 보정: 0.045 → 0.07 s */
   }
   dispose(){
     for(const m of this.layers){ this.scene.remove(m); m.geometry.dispose(); m.material.dispose(); }

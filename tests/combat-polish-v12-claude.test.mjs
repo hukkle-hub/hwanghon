@@ -1,0 +1,33 @@
+/* v12 8/8 Claude 보정 — GPT P0~P5 위에 얹은 것만 못박는다(판정 combat.js 무변경).
+   ① 접점 끌림 따라잡기 완만(3.2 배 → 남은 행동 시간 기준, 최소 1.7 배) ② 보스 핵 빛 5.5 m·정점 3.5(붙어 선 아인을 붉게 칠하지 않게)
+   ③ 관통 돌진 뒤 0.9 s 요우 상한 ×0.4 ④ 3 타·스매시 화각 +3° ⑤ 플레이어 피격 플래시 0.10 s 0x4a1a12 ⑥ GLB extras → 클립 userData(footlock 표식)
+   ⑦ 바람 스프라이트 0.55×0.20·0.07 s ⑧ renderInfo 진단. */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+
+let G='',TR='',BR='';
+test.before(async ()=>{ G=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8'); TR=await readFile(new URL('../js/weapon-trail.js',import.meta.url),'utf8'); BR=await readFile(new URL('../js/ain-bind-repair.js',import.meta.url),'utf8'); });
+
+test('끌림 따라잡기: dt*2.2 고정 대신 남은 행동 시간 기준(바닥 0.7)', ()=>{
+  assert.ok(!/dragLag - dt\*2\.2/.test(G)); assert.match(G,/dragLag - dt\*Math\.max\(0\.7, dragLag\/rem\)/);
+});
+test('보스 핵 빛: 닿는 거리 5.5 m, 큰 기술 정점 3.5', ()=>{
+  assert.match(G,/new THREE\.PointLight\(0xE04A3C, 3\.0, 5\.5, 1\.4\)/); assert.match(G,/\(a\.charge\|\|0\)\*3\.5/);
+});
+test('카메라: 관통 돌진 뒤 급회전 억제, 3 타·스매시 +3°, 흔들림 계수 무변경', ()=>{
+  assert.match(G,/function startLunge\(l\)\{ if\(!l\|\|!boss\.root\) return; camCalmT=0\.9;/); assert.match(G,/if\(camCalmT>0\)\{ camCalmT-=dt; lim\*=0\.4; \}/);
+  assert.match(G,/sa3\.clip==='attack3'\|\|sa3\.clip==='smash'\)\) fv\+=3;/);
+  assert.match(G,/shake\(0\.008,240,axI\[0\],axI\[1\]\)/,'스매시 흔들림 계수 그대로');
+});
+test('플레이어 피격 플래시 0.10 s 0x4a1a12 (전체 단색 빨강 아님)', ()=>{
+  assert.ok(!/ain\.hitT=0\.18/.test(G)); assert.match(G,/ain\.hitT=0\.10; hitReact\(e\)/); assert.match(G,/ain\.hitT>0\?0x4a1a12:0x000000/);
+});
+test('GLB extras → 클립 userData, footlock 클립은 골반 XZ 를 지우지 않는다', ()=>{
+  assert.ok(G.includes("Object.assign(c.userData,adefs[i].extras)")); assert.ok(G.indexOf("Object.assign(c.userData,adefs[i].extras)")<G.indexOf("g.animations=repairAinClips("));
+  assert.match(BR,/!\/footlock\/\.test\(\(clip\.userData&&clip\.userData\.source\)\|\|''\)/);
+});
+test('바람 스프라이트 0.55×0.20, 0.07 s 간격; renderInfo 진단', ()=>{
+  assert.match(TR,/sp\.scale\.set\(0\.55\*big,0\.20\*big,1\)/); assert.match(TR,/this\.windT=0\.07/);
+  assert.match(G,/get renderInfo\(\)/);
+});

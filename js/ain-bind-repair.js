@@ -149,7 +149,8 @@ export function repairAinClips(clips,report){return clips.map(clip=>{
  result.duration=clip.duration;
  result.tracks=result.tracks.map(track=>{
   if(!track.name.endsWith('.position'))return track;
-  if(report.hipsRest&&/Hips.position$/.test(track.name)&&/^(attack[123]|smash|skill[134]|ult|counter|exec)$/.test(clip.name)){
+  /* 발 고정으로 다시 구운 클립(tools/3d/clip-footlock.mjs, extras.source 에 footlock)은 골반 XZ 가 «디딘 발을 제자리에 두는 보정» 이라 지우면 안 된다 (문서 116) */
+  if(report.hipsRest&&/Hips.position$/.test(track.name)&&/^(attack[123]|smash|skill[134]|ult|counter|exec)$/.test(clip.name)&&!/footlock/.test((clip.userData&&clip.userData.source)||'')){
    for(let i=0;i<track.values.length;i+=3){track.values[i]=report.hipsRest.x;track.values[i+2]=report.hipsRest.z;}return track;
   }
   const p=report.changed.get(track.name.slice(0,-9));if(!p)return track;
