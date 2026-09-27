@@ -1,0 +1,213 @@
+#include "Animation/HWPlayerPresentationComponent.h"
+
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
+#include "Animation/AnimSequenceBase.h"
+#include "Combat/HWCombatComponent.h"
+#include "Combat/HWCombatTuningAsset.h"
+#include "GameFramework/Character.h"
+
+UHWPlayerPresentationComponent::UHWPlayerPresentationComponent()
+{
+    PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UHWPlayerPresentationComponent::BeginPlay()
+{
+    Super::BeginPlay();
+
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character || !Character->GetMesh())
+    {
+        return;
+    }
+
+    Combat = Character->FindComponentByClass<UHWCombatComponent>();
+    AnimInstance = Character->GetMesh()->GetAnimInstance();
+
+    if (Combat)
+    {
+        Combat->OnActionStarted.AddDynamic(this, &UHWPlayerPresentationComponent::HandleActionStarted);
+        Combat->OnActionEnded.AddDynamic(this, &UHWPlayerPresentationComponent::HandleActionEnded);
+    }
+}
+
+void UHWPlayerPresentationComponent::TickComponent(
+    float DeltaTime,
+    ELevelTick TickType,
+    FActorComponentTickFunction* ThisTickFunction)
+{
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (bPendingStop)
+    {
+        bPendingStop = false;
+        if (ActiveAction == EHWActionType::None)
+        {
+            StopActive(ActiveBinding.BlendOut);
+        }
+    }
+
+    SyncToCombatClock();
+}
+
+void UHWPlayerPresentationComponent::HandleActionStarted(EHWActionType Action)
+{
+    // End + next start may happen in the same combat tick.
+    // Cancelling the pending stop avoids an idle leak between combo attacks.
+    bPendingStop = false;
+
+    if (!AnimationSet)
+    {
+        ActiveAction = Action;
+        return;
+    }
+
+    const FHWSequenceBinding* Binding = AnimationSet->GetPlayerBinding(Action);
+    if (!Binding || !Binding->Sequence)
+    {
+        ActiveAction = Action;
+        ActiveBinding = FHWSequenceBinding();
+        return;
+    }
+
+    PlayBinding(Action, *Binding);
+}
+
+void UHWPlayerPresentationComponent::HandleActionEnded(EHWActionType Action)
+{
+    if (Action != ActiveAction)
+    {
+        return;
+    }
+
+    ActiveAction = EHWActionType::None;
+    bPendingStop = true;
+}
+
+void UHWPlayerPresentationComponent::PlayBinding(
+    EHWActionType Action,
+    const FHWSequenceBinding& Binding)
+{
+    if (!AnimInstance || !Binding.Sequence)
+    {
+        return;
+    }
+
+    ActiveBinding = Binding;
+    ActiveAction = Action;
+    ActiveSourceTime = 0.f;
+    PreviousCombatElapsed = 0.f;
+    bVisualContactFired = false;
+
+    ActiveMontage = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+        Binding.Sequence,
+        Binding.SlotName,
+        Binding.BlendIn,
+        Binding.BlendOut,
+        1.f,
+        Binding.bLoop ? 999 : 1,
+        -1.f,
+        0.f);
+
+    if (ActiveMontage)
+    {
+        // Combat clock is authoritative. Keep the montage alive but scrub its
+        // position every frame, so hitstop naturally freezes visual motion too.
+        AnimInstance->Montage_SetPlayRate(ActiveMontage, 0.f);
+        AnimInstance->Montage_SetPosition(ActiveMontage, 0.f);
+    }
+}
+
+void UHWPlayerPresentationComponent::StopActive(float BlendOut)
+{
+    if (AnimInstance && ActiveMontage)
+    {
+        AnimInstance->Montage_Stop(FMath::Max(0.f, BlendOut), ActiveMontage);
+    }
+
+    ActiveMontage = nullptr;
+    ActiveBinding = FHWSequenceBinding();
+    ActiveSourceTime = 0.f;
+    PreviousCombatElapsed = 0.f;
+    bVisualContactFired = false;
+}
+
+void UHWPlayerPresentationComponent::SyncToCombatClock()
+{
+    if (!Combat || !AnimInstance || !ActiveMontage || !ActiveBinding.Sequence)
+    {
+        return;
+    }
+
+    const EHWActionType CombatAction = Combat->GetCurrentAction();
+    if (CombatAction == EHWActionType::None || CombatAction != ActiveAction || !Combat->Tuning)
+    {
+        return;
+    }
+
+    const FHWActionSpec& Spec = Combat->Tuning->GetActionSpec(CombatAction);
+    const float SourceLength = FMath::Max(0.001f, ActiveBinding.Sequence->GetPlayLength());
+    const float CombatElapsed = Combat->GetActionElapsed();
+
+    ActiveSourceTime = MapCombatTimeToSourceTime(
+        CombatElapsed,
+        Spec.Duration,
+        Spec.HitAt,
+        SourceLength,
+        ActiveBinding.SourceContactNormalized);
+
+    AnimInstance->Montage_SetPosition(ActiveMontage, ActiveSourceTime);
+
+    if (!bVisualContactFired
+        && Spec.HitAt >= 0.f
+        && PreviousCombatElapsed < Spec.HitAt
+        && CombatElapsed >= Spec.HitAt)
+    {
+        bVisualContactFired = true;
+        OnVisualContact.Broadcast(ActiveAction, ActiveSourceTime);
+    }
+
+    PreviousCombatElapsed = CombatElapsed;
+}
+
+float UHWPlayerPresentationComponent::MapCombatTimeToSourceTime(
+    float CombatElapsed,
+    float CombatDuration,
+    float HitAt,
+    float SourceLength,
+    float SourceContactNormalized) const
+{
+    CombatDuration = FMath::Max(0.001f, CombatDuration);
+    CombatElapsed = FMath::Clamp(CombatElapsed, 0.f, CombatDuration);
+    SourceLength = FMath::Max(0.001f, SourceLength);
+
+    if (HitAt <= 0.f || HitAt >= CombatDuration)
+    {
+        return SourceLength * (CombatElapsed / CombatDuration);
+    }
+
+    const float SourceContact = SourceLength * FMath::Clamp(SourceContactNormalized, 0.01f, 0.99f);
+
+    if (CombatElapsed <= HitAt)
+    {
+        return SourceContact * (CombatElapsed / HitAt);
+    }
+
+    const float AfterCombat = FMath::Max(0.001f, CombatDuration - HitAt);
+    const float U = (CombatElapsed - HitAt) / AfterCombat;
+    return SourceContact + (SourceLength - SourceContact) * U;
+}
+
+float UHWPlayerPresentationComponent::GetActiveSourceNormalized() const
+{
+    if (!ActiveBinding.Sequence)
+    {
+        return 0.f;
+    }
+
+    return FMath::Clamp(
+        ActiveSourceTime / FMath::Max(0.001f, ActiveBinding.Sequence->GetPlayLength()),
+        0.f,
+        1.f);
+}

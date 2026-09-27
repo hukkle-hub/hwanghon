@@ -1,0 +1,32 @@
+{
+  "status": "provisional_vertical_slice_targets",
+  "notes": [
+    "These are internal mobile Vertical Slice targets, not universal industry standards.",
+    "Finalize after Android GPU/thermal profiling."
+  ],
+  "hero_character": {
+    "min_lods": 3,
+    "max_material_slots": 8,
+    "preferred_material_slots": 6,
+    "texture_max_default": 2048,
+    "texture_4096": "High-tier exception only; justify in audit",
+    "lod0_triangle_target": "70000-120000 provisional",
+    "skeleton_bones_target": "<=120 preferred; profile actual skinning cost"
+  },
+  "hero_boss": {
+    "min_lods": 3,
+    "max_material_slots": 10,
+    "texture_max_default": 2048,
+    "lod0_triangle_target": "100000-180000 provisional"
+  },
+  "weapon": {
+    "min_lods": 3,
+    "max_material_slots": 4,
+    "texture_max_default": 2048
+  },
+  "environment": {
+    "texture_max_default": 2048,
+    "small_prop_texture_target": 1024,
+    "material_instances_over_unique_masters": true
+  }
+}

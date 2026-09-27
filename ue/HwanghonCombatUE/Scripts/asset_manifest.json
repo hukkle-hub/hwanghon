@@ -1,0 +1,21 @@
+{
+  "source_root_env": "HWANGHON_REPO",
+  "assets": [
+    {
+      "source": "art/3d/ain_anim.glb",
+      "destination": "/Game/Characters/Ain"
+    },
+    {
+      "source": "art/3d/kain_anim.glb",
+      "destination": "/Game/Characters/Kain"
+    },
+    {
+      "source": "art/3d/ain_scythe_tex.glb",
+      "destination": "/Game/Weapons/Ain"
+    },
+    {
+      "source": "art/3d/boss_anim.glb",
+      "destination": "/Game/Bosses/Training"
+    }
+  ]
+}

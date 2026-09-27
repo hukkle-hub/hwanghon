@@ -1,0 +1,15 @@
+{
+  "Ain": {
+    "Attack1": {"source_contact_normalized": 0.38, "blend_in": 0.05, "blend_out": 0.14},
+    "Attack2": {"source_contact_normalized": 0.52, "blend_in": 0.05, "blend_out": 0.14},
+    "Attack3": {"source_contact_normalized": 0.48, "blend_in": 0.05, "blend_out": 0.22},
+    "Smash": {"source_contact_normalized": 0.30, "blend_in": 0.085, "blend_out": 0.22}
+  },
+  "Boss": {
+    "HookCombo": {"source_beats": [0.20, 0.51, 0.84]},
+    "Charge": {"source_beats": [0.62]},
+    "Slam": {"source_beats": [0.26]},
+    "Spin": {"source_beats": [0.22, 0.50, 0.78]},
+    "GroundWave": {"source_beats": [0.26]}
+  }
+}

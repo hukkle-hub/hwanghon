@@ -1,0 +1,8 @@
+material,metallic_range,roughness_range,notes
+skin,0.00,0.42-0.68,face variation + micro normal
+fabric,0.00,0.62-0.90,weave normal / crease response
+leather,0.00,0.38-0.62,broad soft specular
+painted_metal,0.00-1.00,0.28-0.58,metal exposed only where paint chips
+weapon_metal,0.85-1.00,0.18-0.42,strong readable edge highlight
+dry_concrete,0.00,0.72-0.94,macro roughness breakup
+wet_concrete,0.00,0.12-0.48,mask based; avoid full mirror
