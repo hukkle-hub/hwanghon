@@ -2017,6 +2017,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     tickArena(dt);
     if(battle&&!cineHold){ var busy=(s.enemy.state!=='idle'&&!s.enemy.walking)||s.player.hitstop>0;   /* walk 링크: 연계 사이 중립 걷기 (문서 112 §4) */ world.bossThink(Bs, P, dt, bossSlow<1?Object.assign({}, L.ai[phase], { speed:L.ai[phase].speed*bossSlow }):L.ai[phase], busy); battle.tick(dt); fightT+=dt; battle.drain().forEach(function(e){ if(e.t==='hit') lastHit=e.dmg; handle(e); }); }
     else Bs.dist=world.dist(Bs.x,Bs.y,P.x,P.y);
+    /* 몸 겹침: 플레이어·보스가 다 움직인 «뒤에» 플레이어만 밀어낸다. 관통 돌진(bossLunge)은 뚫고 지나가는 게 의도라 뺀다 (문서 121) */
+    if(battle&&!bossLunge&&!ain.dead&&world.separate(P, Bs)>0) Bs.dist=world.dist(Bs.x,Bs.y,P.x,P.y);
     if(guideT>0){ guideT-=dt; if(guideT<=0) el.guide.classList.remove('is-on'); } if(counterT>0){ counterT-=dt; if(counterT<=0) el.counter.classList.remove('is-on'); }
   }
   function fill(id, pct){ var b=$('#'+id), f=b&&b.querySelector('.bar__fill'); if(f){ f.style.transition='none'; f.style.width=Math.max(0,Math.min(100,pct))+'%'; } }
