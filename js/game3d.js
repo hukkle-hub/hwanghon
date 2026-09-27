@@ -1402,15 +1402,30 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     ain.model.rotation.z=az+bank;                      /* 도는 쪽으로 기운다 */
   }
   var zoomPulse=0; function zoomKick(){ /* 화각 펌핑(50→46°)은 멀미라 뺐다 */ }
-  var pendingContacts=[];
+  var pendingContacts=[], actionReturn=null;
+  /* 콤보 시각 이음매:
+     combat은 actionend를 낸 같은 tick에 버퍼된 다음 actionstart를 낼 수 있다.
+     예전엔 actionend에서 먼저 idle/run을 fadeIn해서 1→2→3타 사이에 아주 짧게
+     대기 자세를 거쳤다. 다음 actionstart가 곧 오면 이전 끝 자세를 그대로 잡아
+     새 공격과 직접 cross-fade한다. 판정/행동 시계는 전혀 건드리지 않는다. */
+  function deferActionReturn(id){
+    if(actionReturn) actionReturn.cancelled=true;
+    actionReturn=schedule(function(){
+      actionReturn=null;
+      if(ain.timed || !ain.oneshot) return;
+      ain.oneshot.clampWhenFinished=true; ain.oneshot.paused=false; ain.oneshot.fadeOut(0.12);
+      ain.oneshot=null;
+      if(ain.act){ ain.act.reset(); ain.act.fadeIn(0.12); ain.act.play(); }
+    },20);
+  }
   function handle(e){
     if((e.t==='hit'||e.t==='impact')&&!e.poseReady){pendingContacts.push(e);return;}
     var s=battle?battle.snapshot():null;
     switch(e.t){
-      case 'actionstart': if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
+      case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
-      case 'actioncancel': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
-      case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.12);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.12).play();} break;
+      case 'actioncancel': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
+      case 'actionend': if(ain.timed&&ain.timed.id===e.id){ain.timed=null;deferActionReturn(e.id);} break;
       case 'opening': showOpening(e.kind, e.dur); break;
       case 'openingend': case 'openinguse': hideOpening(); break;
       case 'grab': guide('붙잡았다 — <b>보스가 묶였다 · 몰아쳐라</b>', e.hold); camKick(0,-0.06,0.05); SFX.play('counter', true); vib([30,40,30]); break;
