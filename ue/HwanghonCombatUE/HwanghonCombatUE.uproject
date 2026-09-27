@@ -1,0 +1,21 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.5",
+	"Category": "",
+	"Description": "황혼 UE5 모바일 전투 Vertical Slice — 아인 · d01 보스 · 서한역 전투방 (docs/design/118, 119)",
+	"Modules": [
+		{
+			"Name": "HwanghonCombat",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [ "Engine", "CoreUObject", "EnhancedInput", "Json", "JsonUtilities" ]
+		}
+	],
+	"Plugins": [
+		{ "Name": "EnhancedInput", "Enabled": true },
+		{ "Name": "PythonScriptPlugin", "Enabled": true },
+		{ "Name": "EditorScriptingUtilities", "Enabled": true },
+		{ "Name": "AndroidPermission", "Enabled": true }
+	],
+	"TargetPlatforms": [ "Android" ]
+}
