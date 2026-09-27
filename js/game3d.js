@@ -314,7 +314,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       rimLights[i].position.set(p.x+rx*7, p.y+RIM[i].up, p.z+rz*7);
     }
   }
-  var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 5.5, 1.4); scene.add(coreLight);   /* v12 보정: 닿는 거리 9 → 5.5 m — 큰 기술 «달아오름» 이 붙어 선 아인을 통째로 붉게 칠하지 않게(핵 주변만) */
+  var coreLight=new THREE.PointLight(0xE04A3C, 3.0, 4.0, 1.4); scene.add(coreLight);   /* v12 보정: 닿는 거리 9 → 4.0 m — 큰 기술 «달아오름» 이 붙어 선 아인을 통째로 붉게 칠하지 않게(핵 주변만) */
     function applySettings(){ resize(); SFX.enabled=SET.sound; CINE.mode=SET.cine||'normal'; try{ if(window.TW_CINEMATIC_HUD&&TW_CINEMATIC_HUD.setMode)TW_CINEMATIC_HUD.setMode(SET.cine||'normal'); }catch(e){} renderer.toneMappingExposure=2.4*SET.bright*MOOD.exp;  pLight.visible=SET.lights; pLight.intensity=3.0*MOOD.player; coreLight.visible=SET.lights; hemi.intensity=(SET.lights?2.6:3.2)*MOOD.hemi; lamps.forEach(function(t){ t.l.visible=SET.lights; }); syncBloom(); }
 
   /* ---------- 환경: 지하 벙커 훈련실 (콘크리트·배관·매단 등·격벽) ---------- */
@@ -672,7 +672,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     boss.behavior?.restore();boss.readability?.restore();boss.mixer.update(dt);if(bs)boss.readability?.apply(bs.enemy);if(bs)boss.behavior?.apply(Object.assign({},bs.enemy,{rage:phase>0,moving:Bs.moving}),t,dt);if(bs)boss.training?.sync(bs.enemy.parts);
     var sh=a.shake>0 ? Math.sin(t*72)*0.085*a.shake : 0; boss.body.position.x=sh;   /* 피격 흔들림 폭 확대 */
     var g=a.glow*(0.8+Math.sin(t*3)*0.2)+(a.flash>0?1.5:0); boss.mats.forEach(function(m){ if(m.emissive){ var be=m.userData.emis; if(be) m.emissive.copy(be); else m.emissive.setHex(0); if(a.flash>0) m.emissive.add(FLASHC); } });
-    coreLight.intensity=SET.lights?(1.5+g*2.5+(a.charge||0)*3.5):0;   /* 큰 기술 «보여주기» 동안 핵이 달아오른다 — v12 보정: 정점 7 → 3.5(핵 스프라이트가 읽기를 맡고, 빛은 아인을 덮지 않게) */
+    coreLight.intensity=SET.lights?(1.5+g*2.5+(a.charge||0)*2.0):0;   /* 큰 기술 «보여주기» 동안 핵이 달아오른다 — v12 보정: 정점 7 → 2.0(핵 스프라이트가 읽기를 맡고, 빛은 아인을 덮지 않게) */
     boss.root.position.x=X(Bs.x); boss.root.position.z=Z(Bs.y); var snap=battle&&battle.snapshot(); var attackLocked=snap&&ATKST.indexOf(snap.enemy.state)>=0&&!snap.enemy.walking;   /* 걷기 링크 중엔 플레이어를 다시 본다 */ var want=attackLocked&&boss.lockYaw!=null?boss.lockYaw:Math.atan2(X(P.x)-X(Bs.x), Z(P.y)-Z(Bs.y)); var dy=want-boss.root.rotation.y; while(dy>Math.PI) dy-=Math.PI*2; while(dy<-Math.PI) dy+=Math.PI*2; boss.root.rotation.y+=dy*Math.min(1,dt*(a.tele?1.2:3));
     bossSpot.position.set(boss.root.position.x+1.5, SPOT_H, boss.root.position.z+2); bossSpot.intensity=SET.lights?60:0;
     var cp=bossHitPos('core'); coreLight.position.copy(cp).add(new THREE.Vector3(0,0.1,0.5)); boss.coreGlow.position.copy(cp); boss.coreGlow.material.opacity=0.35+g*0.3; boss.coreGlow.scale.setScalar((0.7+g*0.3)*BOSS_SCALE);

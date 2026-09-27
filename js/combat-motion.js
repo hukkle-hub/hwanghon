@@ -305,11 +305,15 @@ export function makeRigAdapter(model,root,slot,opts={}) {
       const p=foot.getWorldPosition(new THREE.Vector3());
       if(moving||!a){delete anchors[side];continue;}
       const key=a.id;
-      if(!anchors[side]||anchors[side].id!==key)anchors[side]={id:key,pos:p.clone()};
-      const anchor=anchors[side].pos;
-      if(p.y>anchor.y+0.10){delete anchors[side];continue;}
+      if(!anchors[side]||anchors[side].id!==key)anchors[side]={id:key,pos:p.clone(),w:1,lift:false};
+      const an=anchors[side],anchor=an.pos;
+      /* v12: 발이 10 cm 들리면 앵커를 «즉시» 풀었다 → 앵커에 붙들려 있던 발이 원본 자세(최대 40 cm 뒤)로 한 프레임에 튀었다
+         (문서 116 §3, attack2 R 발 42 cm). 들리면 0.12 s 동안 앵커→원본 자세로 섞어 풀고, 그 뒤 새 자리에 다시 앵커한다. */
+      if(p.y>anchor.y+0.10)an.lift=true;
+      if(an.lift){an.w-=(dt||1/60)/0.12;if(an.w<=0){delete anchors[side];continue;}}
       keep([side+'UpLeg',side+'Leg',side+'Foot']);
-      const err=solveLimb(bones[side+'UpLeg'],bones[side+'Leg'],foot,anchor,0.85);
+      const target=an.lift?p.clone().lerp(anchor,Math.max(0,an.w)):anchor;
+      const err=solveLimb(bones[side+'UpLeg'],bones[side+'Leg'],foot,target,0.85);
       diagnostics.footError=Math.max(diagnostics.footError,err);
     }
   }

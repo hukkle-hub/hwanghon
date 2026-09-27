@@ -12,8 +12,8 @@ test.before(async ()=>{ G=await readFile(new URL('../js/game3d.js',import.meta.u
 test('끌림 따라잡기: dt*2.2 고정 대신 남은 행동 시간 기준(바닥 0.7)', ()=>{
   assert.ok(!/dragLag - dt\*2\.2/.test(G)); assert.match(G,/dragLag - dt\*Math\.max\(0\.7, dragLag\/rem\)/);
 });
-test('보스 핵 빛: 닿는 거리 5.5 m, 큰 기술 정점 3.5', ()=>{
-  assert.match(G,/new THREE\.PointLight\(0xE04A3C, 3\.0, 5\.5, 1\.4\)/); assert.match(G,/\(a\.charge\|\|0\)\*3\.5/);
+test('보스 핵 빛: 닿는 거리 4.0 m, 큰 기술 정점 2.0', ()=>{
+  assert.match(G,/new THREE\.PointLight\(0xE04A3C, 3\.0, 4\.0, 1\.4\)/); assert.match(G,/\(a\.charge\|\|0\)\*2\.0/);
 });
 test('카메라: 관통 돌진 뒤 급회전 억제, 3 타·스매시 +3°, 흔들림 계수 무변경', ()=>{
   assert.match(G,/function startLunge\(l\)\{ if\(!l\|\|!boss\.root\) return; camCalmT=0\.9;/); assert.match(G,/if\(camCalmT>0\)\{ camCalmT-=dt; lim\*=0\.4; \}/);
@@ -30,4 +30,10 @@ test('GLB extras → 클립 userData, footlock 클립은 골반 XZ 를 지우지
 test('바람 스프라이트 0.55×0.20, 0.07 s 간격; renderInfo 진단', ()=>{
   assert.match(TR,/sp\.scale\.set\(0\.55\*big,0\.20\*big,1\)/); assert.match(TR,/this\.windT=0\.07/);
   assert.match(G,/get renderInfo\(\)/);
+});
+
+test('발 앵커 해제는 한 프레임 스냅이 아니라 0.12 s 섞기 (combat-motion)', async ()=>{
+  const m=await readFile(new URL('../js/combat-motion.js',import.meta.url),'utf8');
+  assert.ok(!/if\(p\.y>anchor\.y\+0\.10\)\{delete anchors\[side\];continue;\}/.test(m),'즉시 삭제 제거');
+  assert.match(m,/if\(p\.y>anchor\.y\+0\.10\)an\.lift=true;/); assert.match(m,/an\.w-=\(dt\|\|1\/60\)\/0\.12;/); assert.match(m,/p\.clone\(\)\.lerp\(anchor,Math\.max\(0,an\.w\)\)/);
 });
