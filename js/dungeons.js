@@ -257,7 +257,7 @@
       rewards:{ gold:18000, items:[['m_alloy',24],['m_shard',1],['m_core',1],['c_potion',2]], sBonus:[['m_core',1],['m_dew',3]] },
       stages:[
         dummy({ id:'morbus', name:'모르버스', lesson:'토벌', timeLimit:600, hp:1100000, kind:'marsh',
-          line:'머리를 노려라. 등·앞다리·꼬리를 부수면 놈이 무너진다.', hint:'돌진은 옆으로 구르고, 강타는 뒤로. 포효는 방어',
+          line:'머리를 노려라. 등·앞다리·꼬리를 부수면 놈이 무너진다.', hint:'돌진은 옆으로 구르고, 강타는 뛰어넘어라(I). 포효는 방어',
           parts:[ { id:'head', name:'머리', hp:null, weak:true, pos:'tl', effect:'피해 증가' },
                   { id:'back', name:'등 견갑', hp:160000, breakable:true, pos:'tr', effect:'자세 파괴', onBreak:{ posture:60 } },
                   { id:'legf', name:'앞다리', hp:140000, breakable:true, pos:'bl', effect:'이동 둔화', onBreak:{ slow:0.6 } },
@@ -267,7 +267,7 @@
           patterns:[ { icon:'bolt',   name:'돌진 베기',   rank:'S', tele:0.9, window:0.40, dmg:1500, posture:40, guardCost:25, range:'far',  desc:'돌진 후 두 번 벤다 · 두 번째가 반격 기회',
                        chain:[{ tele:0.55, dmg:1150, posture:30, gap:0.22, icon:'boltB' }] },
                      { icon:'flame',  name:'광폭 포효',   rank:'A', tele:1.1, window:0.40, dmg:700,  posture:20, guardCost:35, range:'any',  recovery:1.3, desc:'넓은 충격파 · 끝난 뒤 크게 비어 있다' },
-                     { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.35, window:0.40, dmg:1800, posture:60, guardCost:25, range:'near', hold:{ at:0.58, dur:0.35 }, desc:'앞발을 든 채 «버틴다» · 떨어지는 순간을 봐라' },
+                     { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.35, window:0.40, dmg:1800, posture:60, guardCost:25, range:'near', hold:{ at:0.58, dur:0.35 }, jumpOnly:true, unblockable:true, desc:'앞발을 든 채 «버틴다» · 떨어지는 순간 뛰어넘어라 (구르기·방어 불가, 튕기기는 된다)' },
                      { icon:'scythe', name:'꼬리 휘두르기', rank:'A', tele:0.8, window:0.40, dmg:1100, posture:30, guardCost:30, range:'near', counterable:false, desc:'넓은 회전 · 튕길 수 없다, 범위 밖으로' } ],
           patternGap:1.6, counterWindow:0.32,
           mastery:[ ['S','5분 이내 처치 · 모든 파괴 부위 파괴'], ['A','10분 이내 처치 · 파괴 부위 2개 이상'], ['B','15분 이내 처치 · 파괴 부위 1개 이상'], ['C','15분 초과'] ] }),
@@ -277,7 +277,7 @@
           patterns:[ { icon:'drop',   name:'피의 광란',   rank:'S', tele:0.7, window:0.36, dmg:1300, posture:40, guardCost:30, range:'near', desc:'발톱 3연격 · 마지막만 튕길 수 있다',
                        chain:[{ tele:0.45, dmg:1050, posture:30, gap:0.18, icon:'dropB' }, { tele:0.45, dmg:1200, posture:35, gap:0.18, icon:'dropC' }] },
                      { icon:'bolt',   name:'돌진 베기',   rank:'S', tele:0.7, window:0.36, dmg:1600, posture:40, guardCost:25, range:'far',  desc:'더 빠른 돌진' },
-                     { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.05, window:0.36, dmg:2000, posture:60, guardCost:25, range:'near', hold:{ at:0.6, dur:0.28 }, desc:'짧게 버텼다 내려찍는다' } ],
+                     { icon:'hammer', name:'대지 강타',   rank:'S', tele:1.05, window:0.36, dmg:2000, posture:60, guardCost:25, range:'near', hold:{ at:0.6, dur:0.28 }, jumpOnly:true, unblockable:true, desc:'짧게 버텼다 내려찍는다 · 뛰어넘어라' } ],
           patternGap:1.1, counterWindow:0.30,
           mastery:[ ['S','—'], ['A','—'], ['B','—'], ['C','—'] ] })
       ]

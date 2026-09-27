@@ -91,3 +91,14 @@ test('game3d 배선: jump 이벤트 → 전용 클립, 공중 구간 스크럽(J
   const cc=await readFile(new URL('../js/character-cinema.js',import.meta.url),'utf8'); assert.match(cc,/\/\^dodge\|roll\|jump\|skill2\$\//);
   const th=await readFile(new URL('../js/ain-two-hand.js',import.meta.url),'utf8'); assert.match(th,/death\|hit\|roll\|dodge\|jump\|pickup\|cheer/);
 });
+
+/* 모르버스 «대지 강타» jumpOnly (문서 114 「남은 것」 → 디렉터 「넣어」): 홀드 비트는 그대로, 구르기·방어는 안 통하고 튕기기(카운터)는 남는다 */
+test('d02 모르버스 대지 강타: 두 단계 모두 jumpOnly·unblockable, hold 유지, counterable 유지; 솔로 시뮬에서 구르기는 맞고 점프는 넘는다', ()=>{
+  const st=ARENAS.marsh.stages; for(const i of [0,1]){ const w=st[i].patterns.find(p=>p.name==='대지 강타'); assert.ok(w.jumpOnly&&w.unblockable&&w.hold&&w.counterable!==false,'stage '+i); }
+  assert.ok(!st[0].patterns.find(p=>p.name==='돌진 베기').jumpOnly);
+  const r=copy(RULES); r.bleed.chance=0; const d=Object.assign(copy(st[0]),{patterns:[copy(st[0].patterns.find(p=>p.name==='대지 강타'))]});
+  const mk=()=>createBattle({rules:r,dummy:d,char:{...CHAR,stats:{...CHAR.stats,crit:0,aspd:100}},hooks:{},skills:SKILLS.ain,ult:SKILLS.ainUlt,seed:7});
+  const b1=mk(); tele(b1,.05); const hp1=b1.snapshot().player.hp; b1.input('dodge'); land(b1); assert.ok(b1.snapshot().player.hp<hp1,'구르기는 안 통한다');
+  const b2=mk(); tele(b2,.05); const hp2=b2.snapshot().player.hp; b2.input('jump'); land(b2); assert.equal(b2.snapshot().player.hp,hp2,'점프로 넘었다');
+  const b3=mk(); tele(b3,.05); const hp3=b3.snapshot().player.hp; b3.input('guard',true); land(b3); assert.ok(b3.snapshot().player.hp<hp3,'방어도 안 통한다');
+});
