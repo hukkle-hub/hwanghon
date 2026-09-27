@@ -20,6 +20,14 @@ export function contactPlantWeight(elapsed,hitAt,pre=.09,post=.08){
   return t<=h?smooth((t-(h-pre))/pre):1-smooth((t-h)/post);
 }
 
+/* B&S Revolution의 "연계 pose → 다음 pose" 문법을 황혼식으로 번역한
+   아인 기본 3타 presentation 프로파일. 전투 시간/판정은 바꾸지 않는다. */
+export const AIN_BNS_CHAIN={
+  attack1:{prep:.55,strike:.060,followEnd:.78,drive:.90,side:1},
+  attack2:{prep:.22,strike:.050,followEnd:.74,drive:1.00,side:-1},
+  attack3:{prep:.42,strike:.070,followEnd:.92,drive:1.18,side:1}
+};
+
 export const CINEMA_STYLE={
   /* 아인 — 선이 먼저 보이고 몸이 그 선을 따라간다. */
   ain:{
@@ -27,7 +35,7 @@ export const CINEMA_STYLE={
     idle:{breath:.018, sway:.020, weight:.018, look:.065},
     move:{leanF:.11, leanSide:.15, hipSide:.055, headStab:.55},
     turn:{lag:.19, lead:.10, max:.22}, dodge:{drop:.075, side:.18, twist:.15}, hit:{light:.15, heavy:.28},
-    attack:{attack1:{coil:.105,snap:.105,follow:.135,drop:.035},attack2:{coil:.060,snap:.120,follow:.145,drop:.030},attack3:{coil:.115,snap:.155,follow:.185,drop:.048},
+    attack:{attack1:{coil:.110,snap:.110,follow:.140,drop:.034},attack2:{coil:.035,snap:.135,follow:.160,drop:.028},attack3:{coil:.100,snap:.170,follow:.215,drop:.050},
       smash:{coil:.165,snap:.145,follow:.205,drop:.070},skill1:{coil:.11,snap:.08,follow:.13,drop:.028},skill2:{coil:.04,snap:.03,follow:.07,drop:.050},
       skill3:{coil:.13,snap:.08,follow:.15,drop:.035},skill4:{coil:.06,snap:.03,follow:.04,drop:.025},ult:{coil:.16,snap:.11,follow:.18,drop:.060},
       counter:{coil:.06,snap:.06,follow:.10,drop:.035},exec:{coil:.16,snap:.12,follow:.18,drop:.070}}
@@ -90,7 +98,7 @@ export const KAIN_CINEMA_V02={
 };
 
 export function transitionFor(cid,name){
-  const base={ain:{fast:.045,hit:.025,atk:.065,fin:.10,out:.17,finOut:.22,base:.22},
+  const base={ain:{fast:.045,hit:.025,atk:.050,fin:.085,out:.14,finOut:.22,base:.22},
               kain:{fast:.065,hit:.035,atk:.085,fin:.12,out:.20,finOut:.26,base:.24},
               ryu:{fast:.035,hit:.020,atk:.045,fin:.065,out:.11,finOut:.15,base:.15},
               sera:{fast:.050,hit:.030,atk:.060,fin:.080,out:.15,finOut:.19,base:.19}}[cid]||{fast:.05,hit:.03,atk:.06,fin:.08,out:.15,finOut:.20,base:.18};
@@ -168,12 +176,17 @@ export function createCharacterCinema(model,root,cid='ain'){
        예전의 고정 .46은 클립/기술마다 다른 hitAt 과 어긋나 골반·가슴이
        «맞기 전/후 다른 순간»에 힘을 쓰는 원인이었다. */
     const contact=clamp(Number.isFinite(a.hitAt)?a.hitAt/dur:.42,.20,.72);
-    const pre=u<contact?Math.sin(Math.PI*sat(u/contact)):0;
-    const iw=Math.max(.035,Math.min(.085,contact*.16));
+    const chain=cid==='ain'?AIN_BNS_CHAIN[clip]:null;
+    /* 2타는 1타 반동을 바로 되받아치므로 preparation을 매우 짧게.
+       3타는 마무리 실루엣을 위해 다시 조금 열어 준다. */
+    const prep=chain?chain.prep:1,preStart=contact*(1-prep);
+    const pre=u<preStart?0:u<contact?Math.sin(Math.PI*sat((u-preStart)/Math.max(.001,contact-preStart))):0;
+    const iw=chain?chain.strike:Math.max(.035,Math.min(.085,contact*.16));
     const strike=Math.exp(-Math.pow((u-contact)/iw,2));
-    const follow=u<=contact?0:Math.sin(Math.PI*sat((u-contact)/Math.max(.16,.86-contact)));
-    const side=/attack2|skill3|counter/.test(clip)?-1:1;
-    return {clip,u,contact,cfg,pre,strike,follow,side};
+    const followEnd=chain?chain.followEnd:.86;
+    const follow=u<=contact?0:Math.sin(Math.PI*sat((u-contact)/Math.max(.12,followEnd-contact)));
+    const side=chain?chain.side:(/attack2|skill3|counter/.test(clip)?-1:1),drive=chain?chain.drive:1;
+    return {clip,u,contact,cfg,pre,strike,follow,side,drive};
   }
   function kainBeat(a){
     if(cid!=='kain'||!a)return null;const clip=a.clip||a.name||'',cfg=KAIN_CINEMA_V02.attack[clip];if(!cfg)return null;
@@ -254,7 +267,7 @@ export function createCharacterCinema(model,root,cid='ain'){
     //    손뼈를 직접 만지지 않아 두손 그립 IK / 접점 보정과 충돌하지 않는다.
     const sh=attackShape(action);
     if(sh){
-      const {cfg,pre,strike,follow,side}=sh;
+      const {cfg,pre,strike,follow,side,drive}=sh;
       /* 발은 replant()로 제자리에 둔 채 중심을 낮추고 골반이 먼저 구동한다.
          2타는 coil 값 자체를 작게 해서 1타 끝에서 바로 되받아치고,
          3타는 snap/follow를 가장 크게 해 마무리 실루엣을 만든다. */
@@ -263,7 +276,7 @@ export function createCharacterCinema(model,root,cid='ain'){
       ry('Spine',side*cfg.coil*pre*.50 - side*cfg.snap*strike*.30 - side*cfg.follow*follow*.24);
       ry('Spine2',side*cfg.coil*pre*.34 + side*cfg.snap*strike*.38 + side*cfg.follow*follow*.32);
       rz('Spine2',-side*(cfg.snap*strike*.34+cfg.follow*follow*.22));
-      rx('Hips',cfg.snap*strike*.12); rx('Spine',-cfg.snap*strike*.24);
+      rx('Hips',cfg.snap*strike*.12*drive); rx('Spine',-cfg.snap*strike*.24*drive);
       // 눈/머리가 날보다 아주 조금 먼저 다음 선을 본다. 과하면 목 꺾임이므로 작게.
       ry('Neck',-side*cfg.coil*pre*.18 + side*cfg.snap*strike*.16);
       ry('Head',-side*cfg.coil*pre*.14 + side*cfg.snap*strike*.12);

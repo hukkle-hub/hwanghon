@@ -6,9 +6,9 @@ const cc=await readFile(new URL('../js/character-cinema.js',import.meta.url),'ut
 const game=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8');
 
 test('아인 1·2·3타 전신 연기 위계: 2타는 작은 감기, 3타는 가장 큰 snap/follow',()=>{
-  assert.match(cc,/attack1:\{coil:\.105,snap:\.105,follow:\.135,drop:\.035\}/);
-  assert.match(cc,/attack2:\{coil:\.060,snap:\.120,follow:\.145,drop:\.030\}/);
-  assert.match(cc,/attack3:\{coil:\.115,snap:\.155,follow:\.185,drop:\.048\}/);
+  assert.match(cc,/attack1:\{coil:\.110,snap:\.110,follow:\.140,drop:\.034\}/);   /* P8 값 */
+  assert.match(cc,/attack2:\{coil:\.035,snap:\.135,follow:\.160,drop:\.028\}/);
+  assert.match(cc,/attack3:\{coil:\.100,snap:\.170,follow:\.215,drop:\.050\}/);
 });
 
 test('전신 연기 레이어가 고정 46%가 아니라 실제 hitAt에 동기화',()=>{
@@ -19,7 +19,7 @@ test('전신 연기 레이어가 고정 46%가 아니라 실제 hitAt에 동기�
 
 test('공격은 골반 선행 + 접점 전후 상체 구동, 발은 기존 replant 유지',()=>{
   assert.match(cc,/ry\('Hips',-side\*cfg\.coil\*pre\*\.42/);
-  assert.match(cc,/rx\('Hips',cfg\.snap\*strike\*\.12\)/);
+  assert.match(cc,/rx\('Hips',cfg\.snap\*strike\*\.12\*drive\)/);   /* P8 drive */
   assert.match(cc,/replant\(\);/);
 });
 
