@@ -2,18 +2,52 @@
 #include "Content/HWGameContentSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Subsystems/SubsystemCollection.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "HAL/IConsoleManager.h"
 
 namespace
 {
     const FString ProfileSlot = TEXT("HwanghonCombatUE_Profile_v1");
     constexpr int32 ProfileUser = 0;
+#if !UE_BUILD_SHIPPING
+    TAutoConsoleVariable<int32> FailQASaves(TEXT("hw.QA.FailProfileSaves"), 0,
+        TEXT("Simulate storage failure only for explicitly isolated HWShellQA profiles."), ECVF_Cheat);
+#endif
 
     class FHWPlatformProfileStorage final : public IHWProfileStorage
     {
     public:
-        virtual bool Exists() const override { return UGameplayStatics::DoesSaveGameExist(ProfileSlot, ProfileUser); }
-        virtual UHWSaveGame* Load() override { return Cast<UHWSaveGame>(UGameplayStatics::LoadGameFromSlot(ProfileSlot, ProfileUser)); }
-        virtual bool Save(UHWSaveGame* Candidate) override { return UGameplayStatics::SaveGameToSlot(Candidate, ProfileSlot, ProfileUser); }
+        FHWPlatformProfileStorage() : Slot(ProfileSlot)
+        {
+#if !UE_BUILD_SHIPPING
+            if (FParse::Param(FCommandLine::Get(), TEXT("HWShellQA")))
+            {
+                FString Override;
+                const bool bFound = FParse::Value(FCommandLine::Get(), TEXT("HWProfileSlot="), Override);
+                bool bSafeCharacters = true;
+                for (TCHAR C : Override) { bSafeCharacters &= FChar::IsAlnum(C) || C == TCHAR('_'); }
+                const bool bSafe = bFound && Override.StartsWith(TEXT("Hwanghon_Automation_"))
+                    && Override.Len() > 19 && Override.Len() <= 100
+                    && bSafeCharacters;
+                // Malformed QA flags must never fall back to a user's real slot.
+                Slot = bSafe ? Override : FString();
+                bAutomationProfile = bSafe;
+            }
+#endif
+        }
+        virtual bool Exists() const override { return Slot.IsEmpty() || UGameplayStatics::DoesSaveGameExist(Slot, ProfileUser); }
+        virtual UHWSaveGame* Load() override { return Slot.IsEmpty() ? nullptr : Cast<UHWSaveGame>(UGameplayStatics::LoadGameFromSlot(Slot, ProfileUser)); }
+        virtual bool Save(UHWSaveGame* Candidate) override
+        {
+#if !UE_BUILD_SHIPPING
+            if (bAutomationProfile && FailQASaves.GetValueOnGameThread() != 0) { return false; }
+#endif
+            return !Slot.IsEmpty() && UGameplayStatics::SaveGameToSlot(Candidate, Slot, ProfileUser);
+        }
+    private:
+        FString Slot;
+        bool bAutomationProfile = false;
     };
 }
 

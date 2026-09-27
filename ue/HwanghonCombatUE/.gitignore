@@ -4,3 +4,8 @@
 /DerivedDataCache/
 /.vs/
 /*.sln
+# Generated with Scripts/ue_setup.py on the target engine (5.5).
+# Do not commit diagnostic 5.8 binary assets into the 5.5 project.
+/Content/Maps/HW_Lobby.umap
+/Content/Maps/HW_Training.umap
+/Content/Materials/M_HWPrototypeColor.uasset

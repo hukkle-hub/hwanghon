@@ -15,6 +15,6 @@ public class HwanghonCombatUE : ModuleRules
             "EnhancedInput"
         });
 
-        PrivateDependencyModuleNames.Add("Json");
+        PrivateDependencyModuleNames.AddRange(new string[] { "Json", "Slate", "SlateCore" });
     }
 }

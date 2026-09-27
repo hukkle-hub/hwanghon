@@ -56,7 +56,7 @@ if (!$SkipImport) {
         Write-Warning "HWANGHON_REPO not set; setup will create map but skip legacy GLB import."
     }
 
-    & $EditorCmd $Project "-ExecutePythonScript=$SetupScript" -unattended -nop4 -nosplash
+    & $EditorCmd $Project /Engine/Maps/Entry "-ExecutePythonScript=$SetupScript" -unattended -nop4 -nosplash
     if ($LASTEXITCODE -ne 0) {
         throw "Editor setup failed: exit $LASTEXITCODE"
     }

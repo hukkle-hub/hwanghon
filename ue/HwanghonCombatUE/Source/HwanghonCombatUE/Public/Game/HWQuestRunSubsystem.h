@@ -31,6 +31,9 @@ class HWANGHONCOMBATUE_API UHWEncounterSettings : public UObject
 public:
     UPROPERTY(Config, EditAnywhere, Category="Hwanghon|Encounters")
     TArray<FHWEncounterRoute> Routes;
+
+    UPROPERTY(Config, EditAnywhere, Category="Hwanghon|Encounters")
+    TSoftObjectPtr<UWorld> LobbyMap;
 };
 
 UENUM(BlueprintType)
@@ -92,6 +95,23 @@ public:
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Quest")
     bool RetryVictorySave();
 
+    // Live combat requires an explicit abandon request. The result remains until
+    // the configured lobby actually loads; a failed travel can be retried safely.
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Quest")
+    bool ReturnToLobby(bool bAbandonActiveRun = false);
+
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Quest")
+    bool RetryEncounter();
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Quest")
+    bool IsReturningToLobby() const { return bReturningToLobby; }
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Quest")
+    bool CanPrepareQuest(FName QuestId, FString& OutReason) const;
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Quest")
+    bool CanPrepareTraining(FString& OutReason) const;
+
     UFUNCTION(BlueprintPure, Category="Hwanghon|Quest")
     EHWQuestRunState GetRunState() const { return State; }
 
@@ -108,8 +128,11 @@ public:
 private:
     friend class AHWCombatGameMode;
     friend struct FHWQuestRunTestAccess;
+    friend struct FHWShellFlowTestAccess;
 
     bool Prepare(FName QuestId, FName ArenaId, FName DungeonId);
+    bool CanPrepareEncounter(FName ArenaId, FName DungeonId, FString& OutPackage, FString& OutReason) const;
+    bool RestoreRetryResult();
     bool AttachEncounter(UWorld* World, FName ArenaId, FName DungeonId,
         const FGuid& RequestedRun, FGuid& OutRun);
     bool CompleteEncounter(UWorld* World, const FGuid& RunId);
@@ -132,6 +155,12 @@ private:
     TWeakObjectPtr<UWorld> ActiveWorld;
     EHWQuestRunState State = EHWQuestRunState::Idle;
     bool bSavingVictory = false;
+    bool bReturningToLobby = false;
+    FString LobbyTravelPackage;
+    bool bRetryTravel = false;
+    FHWQuestRunTicket PreviousTicket;
+    EHWQuestRunState PreviousState = EHWQuestRunState::Idle;
+    TWeakObjectPtr<UWorld> PreviousWorld;
     FString LastError;
     FDelegateHandle TravelFailureHandle;
     FDelegateHandle MapLoadedHandle;

@@ -83,7 +83,9 @@ void UHWGraphicsQualitySubsystem::ApplyTier(EHWGraphicsTier Tier, bool bSaveSett
         }
 
         Settings->SetDynamicResolutionEnabled(false);
-        Settings->ApplySettings(false);
+        // A quality tier changes rendering cost, never the window size or mode.
+        // ApplySettings also reapplies saved resolution and discards launch overrides.
+        Settings->ApplyNonResolutionSettings();
 
         if (bSaveSettings)
         {

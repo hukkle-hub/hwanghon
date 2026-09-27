@@ -15,6 +15,8 @@
 AHWCombatGameMode::AHWCombatGameMode()
 {
     DefaultPawnClass = AHWAinCharacter::StaticClass();
+    EncounterBossClass = AHWBossCharacter::StaticClass();
+    ArenaClass = AHWGrayboxArena::StaticClass();
 }
 
 void AHWCombatGameMode::BeginPlay()
@@ -45,7 +47,7 @@ void AHWCombatGameMode::BeginPlay()
 
     if (!UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
     {
-        GetWorld()->SpawnActor<AHWGrayboxArena>(AHWGrayboxArena::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
+        GetWorld()->SpawnActor<AHWGrayboxArena>(ArenaClass, FVector::ZeroVector, FRotator::ZeroRotator);
     }
 
     ACharacter* Player = UGameplayStatics::GetPlayerCharacter(this, 0);
@@ -65,7 +67,7 @@ void AHWCombatGameMode::BeginPlay()
     if (!Boss)
     {
         Boss = GetWorld()->SpawnActor<AHWBossCharacter>(
-            AHWBossCharacter::StaticClass(),
+            EncounterBossClass,
             FVector(450.f, 0.f, 115.f),
             FRotator(0.f, 180.f, 0.f));
     }

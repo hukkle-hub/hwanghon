@@ -151,6 +151,8 @@ bool FHWEncounterRoutesTest::RunTest(const FString& Parameters)
 
     FHWRunFixture Fixture;
     if (!TestTrue(TEXT("Fixture catalog and isolated profile ready"), Fixture.bReady)) { return false; }
+    TGuardValue<TArray<FHWEncounterRoute>> MissingRoutes(
+        GetMutableDefault<UHWEncounterSettings>()->Routes, TArray<FHWEncounterRoute>());
     TestFalse(TEXT("Prerequisite blocks quest before route lookup"), Fixture.Runs->PrepareQuest(TEXT("q_marsh")));
     TestFalse(TEXT("Training cannot invent a missing map route"), Fixture.Runs->PrepareTraining());
     TestTrue(TEXT("Failed preparation leaves idle"), Fixture.Runs->GetRunState() == EHWQuestRunState::Idle);

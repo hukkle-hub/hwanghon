@@ -6,9 +6,12 @@ Run inside Unreal Editor after the C++ project compiles:
 
 Environment:
   HWANGHON_REPO=/path/to/original/hwanghon
+  HW_SHELL_ONLY=1  # create native prototype shell maps without legacy imports
 
 It imports the existing placeholder GLBs, creates Seohan_Combat_VS01,
-and places the C++ graybox arena + boss + PlayerStart.
+and places the C++ graybox arena + boss + PlayerStart. It also creates
+HW_Lobby and HW_Training for the native shell; the other quests have no
+authored playable maps yet. Existing maps and materials are preserved.
 """
 from __future__ import annotations
 
@@ -103,6 +106,87 @@ def create_vertical_slice_level():
     log(f"saved {level_path}")
     return level_path
 
+
+def ensure_prototype_material():
+    """Editor-generated material; generate with the project's target UE version."""
+    asset_path = "/Game/Materials/M_HWPrototypeColor"
+    if unreal.EditorAssetLibrary.does_asset_exist(asset_path):
+        log(f"preserving existing material {asset_path}")
+        return asset_path
+
+    material = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+        "M_HWPrototypeColor", "/Game/Materials", unreal.Material,
+        unreal.MaterialFactoryNew()
+    )
+    if not material:
+        raise RuntimeError(f"failed to create material {asset_path}")
+    editing = unreal.MaterialEditingLibrary
+    tint = editing.create_material_expression(
+        material, unreal.MaterialExpressionVectorParameter, -400, 0
+    )
+    tint.set_editor_property("parameter_name", "Tint")
+    tint.set_editor_property("default_value", unreal.LinearColor(0.25, 0.4, 0.65, 1.0))
+    editing.connect_material_property(tint, "", unreal.MaterialProperty.MP_BASE_COLOR)
+    roughness = editing.create_material_expression(
+        material, unreal.MaterialExpressionConstant, -200, 140
+    )
+    roughness.set_editor_property("r", 0.85)
+    editing.connect_material_property(roughness, "", unreal.MaterialProperty.MP_ROUGHNESS)
+    # A small fill makes the stand-ins legible without hiding their lit shape.
+    emissive = editing.create_material_expression(
+        material, unreal.MaterialExpressionMultiply, -200, 280
+    )
+    emissive.set_editor_property("const_b", 0.035)
+    editing.connect_material_expressions(tint, "", emissive, "A")
+    editing.connect_material_property(emissive, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    editing.recompile_material(material)
+    if not unreal.EditorAssetLibrary.save_loaded_asset(material):
+        raise RuntimeError(f"failed to save material {asset_path}")
+    log(f"saved {asset_path}")
+    return asset_path
+
+
+def create_shell_level(level_path: str, mode_path: str, training: bool):
+    level_subsystem = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    actor_subsystem = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+    mode_class = load_cpp_class(mode_path)
+    if unreal.EditorAssetLibrary.does_asset_exist(level_path):
+        if not level_subsystem.load_level(level_path):
+            raise RuntimeError(f"failed to open existing level {level_path}")
+        world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+        actual_mode = world.get_world_settings().get_editor_property("default_game_mode")
+        if actual_mode != mode_class:
+            warn(f"preserving authored level {level_path}, but its GameMode is "
+                 f"{actual_mode}; shell route expects {mode_path}. Review World Settings.")
+        else:
+            log(f"verified existing level {level_path}: {mode_path}")
+        return level_path
+
+    if not level_subsystem.new_level(level_path):
+        raise RuntimeError(f"failed to create level {level_path}")
+    world = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem).get_editor_world()
+    world.get_world_settings().set_editor_property("default_game_mode", mode_class)
+    spawn_actor(actor_subsystem, unreal.PlayerStart, (-450.0, 0.0, 96.0))
+    if training:
+        arena_class = load_cpp_class("/Script/HwanghonCombatUE.HWTrainingArena")
+        spawn_actor(actor_subsystem, arena_class, (0.0, 0.0, 0.0))
+        # GameMode spawns the visible native boss and player. Do not duplicate them.
+    if not level_subsystem.save_current_level():
+        raise RuntimeError(f"failed to save level {level_path}")
+    log(f"saved {level_path}: {mode_path}")
+    return level_path
+
+
+def create_shell_levels():
+    ensure_prototype_material()
+    lobby = create_shell_level(
+        "/Game/Maps/HW_Lobby", "/Script/HwanghonCombatUE.HWShellGameMode", False
+    )
+    training = create_shell_level(
+        "/Game/Maps/HW_Training", "/Script/HwanghonCombatUE.HWTrainingGameMode", True
+    )
+    return [lobby, training]
+
 def ensure_content_folders():
     for p in [
         "/Game/Maps",
@@ -119,10 +203,15 @@ def ensure_content_folders():
 def main():
     log("starting")
     ensure_content_folders()
-    imported = import_assets()
-    level = create_vertical_slice_level()
-    log(f"done: level={level}, imported={len(imported)} objects")
-    log("Next: create AnimBP parents HWAinAnimInstance / HWBossAnimInstance and assign imported skeletal meshes.")
+    shell_only = os.environ.get("HW_SHELL_ONLY", "").strip().lower() in ("1", "true", "yes")
+    imported = [] if shell_only else import_assets()
+    legacy_level = None if shell_only else create_vertical_slice_level()
+    shell_levels = create_shell_levels()
+    unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).load_level(shell_levels[0])
+    log(f"done: legacy={legacy_level}, shell={shell_levels}, imported={len(imported)} objects")
+    log("HW_Training uses explicit native stand-ins. Other quest arenas remain unavailable.")
+    if not shell_only:
+        log("Next: create AnimBP parents HWAinAnimInstance / HWBossAnimInstance and assign imported skeletal meshes.")
 
 if __name__ == "__main__":
     main()

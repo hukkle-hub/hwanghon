@@ -91,49 +91,85 @@ bool UHWQuestRunSubsystem::ResolveRoute(const TArray<FHWEncounterRoute>& Routes,
 
 bool UHWQuestRunSubsystem::PrepareQuest(FName QuestId)
 {
+    FString Reason;
+    if (!CanPrepareQuest(QuestId, Reason)) { return Fail(Reason); }
+    FHWQuestDefinition Quest;
+    Content->GetQuest(QuestId, Quest);
+    return Prepare(Quest.Id, Quest.ArenaId, Quest.DungeonId);
+}
+
+bool UHWQuestRunSubsystem::CanPrepareQuest(FName QuestId, FString& OutReason) const
+{
+    OutReason.Reset();
     FHWQuestDefinition Quest;
     if (!Content || !Content->IsContentLoaded() || !Content->GetQuest(QuestId, Quest)
         || !Profile || !Profile->IsProfileAvailable())
     {
-        return Fail(TEXT("Quest catalog or saved profile is unavailable."));
+        OutReason = TEXT("Quest catalog or saved profile is unavailable.");
+        return false;
     }
     const EHWQuestState QuestState = Profile->GetQuestState(QuestId);
     if (QuestState == EHWQuestState::Unavailable || QuestState == EHWQuestState::Locked)
     {
-        return Fail(TEXT("Complete the prerequisite encounter before selecting this quest."));
+        OutReason = TEXT("Complete the prerequisite encounter before selecting this quest.");
+        return false;
     }
-    return Prepare(Quest.Id, Quest.ArenaId, Quest.DungeonId);
+    FString Package;
+    return CanPrepareEncounter(Quest.ArenaId, Quest.DungeonId, Package, OutReason);
 }
 
 bool UHWQuestRunSubsystem::PrepareTraining()
 {
+    FString Reason;
+    if (!CanPrepareTraining(Reason)) { return Fail(Reason); }
+    return Prepare(NAME_None, TEXT("tutorial"), TEXT("d01"));
+}
+
+bool UHWQuestRunSubsystem::CanPrepareTraining(FString& OutReason) const
+{
+    OutReason.Reset();
     if (!Content || !Content->IsContentLoaded() || !Profile || !Profile->IsProfileAvailable())
     {
-        return Fail(TEXT("Quest catalog or saved profile is unavailable."));
+        OutReason = TEXT("Quest catalog or saved profile is unavailable.");
+        return false;
     }
-    return Prepare(NAME_None, TEXT("tutorial"), TEXT("d01"));
+    FString Package;
+    return CanPrepareEncounter(TEXT("tutorial"), TEXT("d01"), Package, OutReason);
+}
+
+bool UHWQuestRunSubsystem::CanPrepareEncounter(FName ArenaId, FName DungeonId,
+    FString& OutPackage, FString& OutReason) const
+{
+    OutPackage.Reset();
+    OutReason.Reset();
+    if (bSavingVictory || bReturningToLobby
+        || (State != EHWQuestRunState::Idle && State != EHWQuestRunState::Prepared))
+    {
+        OutReason = TEXT("Finish or reset the previous run before selecting another encounter.");
+        return false;
+    }
+    if (!Profile || !Profile->IsProfileAvailable() || Profile->HasPendingSave())
+    {
+        OutReason = TEXT("A saved profile is required; retry any pending save before starting another run.");
+        return false;
+    }
+    if (!ResolveRoute(GetDefault<UHWEncounterSettings>()->Routes, ArenaId, DungeonId, OutPackage, OutReason))
+    {
+        return false;
+    }
+    if (!FPackageName::DoesPackageExist(OutPackage))
+    {
+        OutPackage.Reset();
+        OutReason = TEXT("The encounter map is not installed/cooked. Selection was not changed.");
+        return false;
+    }
+    return true;
 }
 
 bool UHWQuestRunSubsystem::Prepare(FName QuestId, FName ArenaId, FName DungeonId)
 {
-    if (State != EHWQuestRunState::Idle && State != EHWQuestRunState::Prepared)
-    {
-        return Fail(TEXT("Finish or reset the previous run before selecting another encounter."));
-    }
-    if (Profile->HasPendingSave())
-    {
-        return Fail(TEXT("Retry the pending profile save before starting another run."));
-    }
-    FString Package;
-    FString RouteError;
-    if (!ResolveRoute(GetDefault<UHWEncounterSettings>()->Routes, ArenaId, DungeonId, Package, RouteError))
-    {
-        return Fail(RouteError);
-    }
-    if (!FPackageName::DoesPackageExist(Package))
-    {
-        return Fail(TEXT("The encounter map is not installed/cooked. Selection was not changed."));
-    }
+    FString Package, Reason;
+    if (!CanPrepareEncounter(ArenaId, DungeonId, Package, Reason)) { return Fail(Reason); }
 
     FHWQuestRunTicket NewTicket;
     NewTicket.RunId = FGuid::NewGuid();
@@ -149,7 +185,7 @@ bool UHWQuestRunSubsystem::Prepare(FName QuestId, FName ArenaId, FName DungeonId
 
 bool UHWQuestRunSubsystem::OpenPreparedEncounter()
 {
-    if (State != EHWQuestRunState::Prepared || !GetWorld() || !Profile
+    if (bSavingVictory || bReturningToLobby || State != EHWQuestRunState::Prepared || !GetWorld() || !Profile
         || !Profile->IsProfileAvailable() || Profile->HasPendingSave())
     {
         return Fail(TEXT("A prepared encounter and a saved profile are required to travel."));
@@ -184,18 +220,21 @@ bool UHWQuestRunSubsystem::AttachEncounter(UWorld* World, FName ArenaId, FName D
     const FGuid& RequestedRun, FGuid& OutRun)
 {
     OutRun.Invalidate();
-    if (State != EHWQuestRunState::Traveling || !World || !RequestedRun.IsValid()
+    if (bReturningToLobby || State != EHWQuestRunState::Traveling || !World || !RequestedRun.IsValid()
         || RequestedRun != Ticket.RunId || ArenaId != Ticket.ArenaId || DungeonId != Ticket.DungeonId
         || GetMapPackage(World) != Ticket.MapPackageName)
     {
         // A manually opened graybox must never clear whichever quest was selected.
         if (State == EHWQuestRunState::Traveling)
         {
-            State = EHWQuestRunState::Aborted;
+            if (!RestoreRetryResult()) { State = EHWQuestRunState::Aborted; }
         }
         return Fail(TEXT("Loaded encounter does not match the requested run, map and arena/dungeon identity."));
     }
     ActiveWorld = World;
+    bRetryTravel = false;
+    PreviousTicket = FHWQuestRunTicket();
+    PreviousWorld.Reset();
     State = EHWQuestRunState::InCombat;
     OutRun = Ticket.RunId;
     LastError.Reset();
@@ -221,7 +260,7 @@ bool UHWQuestRunSubsystem::CompleteEncounter(UWorld* World, const FGuid& RunId)
 
 bool UHWQuestRunSubsystem::RetryVictorySave()
 {
-    if (bSavingVictory || State != EHWQuestRunState::VictoryPendingSave || !Profile)
+    if (bSavingVictory || bReturningToLobby || State != EHWQuestRunState::VictoryPendingSave || !Profile)
     {
         return false;
     }
@@ -262,7 +301,7 @@ void UHWQuestRunSubsystem::LeaveEncounter(UWorld* World, const FGuid& RunId)
 
 bool UHWQuestRunSubsystem::ResetRun()
 {
-    if (bSavingVictory || State == EHWQuestRunState::Traveling || State == EHWQuestRunState::InCombat
+    if (bSavingVictory || bReturningToLobby || State == EHWQuestRunState::Traveling || State == EHWQuestRunState::InCombat
         || State == EHWQuestRunState::VictoryPendingSave || (Profile && Profile->HasPendingSave()))
     {
         return Fail(TEXT("An active run or pending save cannot be discarded."));
@@ -270,25 +309,122 @@ bool UHWQuestRunSubsystem::ResetRun()
     Ticket = FHWQuestRunTicket();
     State = EHWQuestRunState::Idle;
     ActiveWorld.Reset();
+    bRetryTravel = false;
+    PreviousTicket = FHWQuestRunTicket();
+    PreviousWorld.Reset();
     LastError.Reset();
+    return true;
+}
+
+bool UHWQuestRunSubsystem::ReturnToLobby(bool bAbandonActiveRun)
+{
+    if (bSavingVictory || bReturningToLobby || State == EHWQuestRunState::Traveling
+        || State == EHWQuestRunState::VictoryPendingSave || !Profile
+        || !Profile->IsProfileAvailable() || Profile->HasPendingSave())
+    {
+        return Fail(TEXT("Finish travel and retry any pending save before returning to the lobby."));
+    }
+    if (State == EHWQuestRunState::InCombat && !bAbandonActiveRun)
+    {
+        return Fail(TEXT("Returning during combat requires an explicit abandon request."));
+    }
+    const FSoftObjectPath Path = GetDefault<UHWEncounterSettings>()->LobbyMap.ToSoftObjectPath();
+    const FString Package = Path.GetLongPackageName();
+    if (!Path.IsValid() || !Path.GetSubPathString().IsEmpty() || !Package.StartsWith(TEXT("/Game/"))
+        || !FPackageName::IsValidLongPackageName(Package)
+        || Path.GetAssetName() != FPackageName::GetShortName(Package)
+        || !FPackageName::DoesPackageExist(Package))
+    {
+        return Fail(TEXT("The configured lobby map is not installed/cooked. The run was retained."));
+    }
+    if (!GetWorld())
+    {
+        return Fail(TEXT("A world is required to return to the lobby. The run was retained."));
+    }
+    // Commit abandonment before any EndPlay callback. Never manufacture a clear
+    // when leaving live combat, and never erase a result before map acknowledgment.
+    if (State == EHWQuestRunState::InCombat) { State = EHWQuestRunState::Aborted; }
+    bReturningToLobby = true;
+    LobbyTravelPackage = Package;
+    LastError.Reset();
+    UGameplayStatics::OpenLevel(this, FName(*Package), true);
+    return true;
+}
+
+bool UHWQuestRunSubsystem::RetryEncounter()
+{
+    if (bSavingVictory || bReturningToLobby || !Profile || !Profile->IsProfileAvailable()
+        || Profile->HasPendingSave() || !Ticket.RunId.IsValid()
+        || (State != EHWQuestRunState::Victory && State != EHWQuestRunState::Defeat
+            && State != EHWQuestRunState::Aborted))
+    {
+        return Fail(TEXT("Only a finished encounter with no pending save can be retried."));
+    }
+    if (!GetWorld()) { return Fail(TEXT("A world is required to retry the encounter.")); }
+    const FHWQuestRunTicket OldTicket = Ticket;
+    const EHWQuestRunState OldState = State;
+    const TWeakObjectPtr<UWorld> OldWorld = ActiveWorld;
+    if (!ResetRun()) { return false; }
+    PreviousTicket = OldTicket;
+    PreviousState = OldState;
+    PreviousWorld = OldWorld;
+    bRetryTravel = true;
+    const bool bPrepared = OldTicket.QuestId.IsNone()
+        ? (OldTicket.ArenaId == TEXT("tutorial") && OldTicket.DungeonId == TEXT("d01") && PrepareTraining())
+        : PrepareQuest(OldTicket.QuestId);
+    if (!bPrepared || !OpenPreparedEncounter())
+    {
+        RestoreRetryResult();
+        if (LastError.IsEmpty()) { LastError = TEXT("The previous encounter cannot be retried."); }
+        return false;
+    }
+    return true;
+}
+
+bool UHWQuestRunSubsystem::RestoreRetryResult()
+{
+    if (!bRetryTravel) { return false; }
+    Ticket = PreviousTicket;
+    State = PreviousState;
+    ActiveWorld = PreviousWorld;
+    bRetryTravel = false;
+    PreviousTicket = FHWQuestRunTicket();
+    PreviousWorld.Reset();
     return true;
 }
 
 void UHWQuestRunSubsystem::HandleTravelFailure(UWorld* World, ETravelFailure::Type Failure, const FString& Message)
 {
-    if (State == EHWQuestRunState::Traveling && World && World->GetGameInstance() == GetGameInstance())
+    if (!World || World->GetGameInstance() != GetGameInstance()) { return; }
+    if (bReturningToLobby)
     {
-        State = EHWQuestRunState::Aborted;
+        bReturningToLobby = false;
+        LobbyTravelPackage.Reset();
+        LastError = TEXT("Lobby travel failed; the run was retained: ") + Message;
+    }
+    else if (State == EHWQuestRunState::Traveling)
+    {
+        if (!RestoreRetryResult()) { State = EHWQuestRunState::Aborted; }
         LastError = TEXT("Encounter travel failed: ") + Message;
     }
 }
 
 void UHWQuestRunSubsystem::HandleMapLoaded(UWorld* World)
 {
-    // PostLoadMap runs after BeginPlay. A different GameMode would never attach.
-    if (State == EHWQuestRunState::Traveling && World && World->GetGameInstance() == GetGameInstance())
+    if (!World || World->GetGameInstance() != GetGameInstance()) { return; }
+    if (bReturningToLobby)
     {
-        State = EHWQuestRunState::Aborted;
+        bReturningToLobby = false;
+        const bool bCorrectLobby = GetMapPackage(World) == LobbyTravelPackage;
+        LobbyTravelPackage.Reset();
+        if (bCorrectLobby) { ResetRun(); }
+        else { LastError = TEXT("A different map loaded; the previous run was retained."); }
+        return;
+    }
+    // PostLoadMap runs after BeginPlay. A different GameMode would never attach.
+    if (State == EHWQuestRunState::Traveling)
+    {
+        if (!RestoreRetryResult()) { State = EHWQuestRunState::Aborted; }
         LastError = TEXT("Map loaded without acknowledging the requested combat encounter.");
     }
 }

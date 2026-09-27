@@ -7,6 +7,7 @@
 class AHWBossCharacter;
 class AHWAinCharacter;
 class UHWQuestRunSubsystem;
+class AHWGrayboxArena;
 
 UCLASS()
 class HWANGHONCOMBATUE_API AHWCombatGameMode : public AGameModeBase
@@ -26,6 +27,13 @@ public:
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Hwanghon|Progression")
     FName DungeonId;
+
+protected:
+    UPROPERTY(EditDefaultsOnly, Category="Hwanghon|Encounter")
+    TSubclassOf<AHWBossCharacter> EncounterBossClass;
+
+    UPROPERTY(EditDefaultsOnly, Category="Hwanghon|Encounter")
+    TSubclassOf<AHWGrayboxArena> ArenaClass;
 
 private:
     friend struct FHWQuestRunTestAccess;
