@@ -429,8 +429,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   /* 서한역 분위기 (docs/design/101, 목표 그림) — 꺼진 형광등 사이로 비상등의 붉은 빛, 젖은 바닥에 번지는 반사, 짙은 안개.
      «어둡지만 읽히게»: 바닥·벽은 가라앉히고 사람·보스는 역광(림)·붉은 등·플레이어 보조광으로 떼어 낸다.
      값은 모두 「근거 없음」 — 캡처로 맞췄다(1672×941, 모바일 가로). */
-  var SUBWAY_MOOD={ bg:0x050506, fog:0x100a0a, fogD:MOBILE?0.050:0.055, exp:0.82, hemi:0.42, player:1.0,
-    hemiSky:0x46506a, hemiGround:0x1c0f0d, moon:0x93a4c8, moonI:0.55, fluoOn:0.5, fluoI:6, red:0xff2a1c, redI:7, redDist:15 };
+  var SUBWAY_MOOD={ bg:0x08090b, fog:0x151012, fogD:MOBILE?0.043:0.048, exp:0.92, hemi:0.50, player:1.15,
+  hemiSky:0x56627a, hemiGround:0x211514, moon:0xa8b8d6, moonI:0.68, fluoOn:0.55, fluoI:6.5, red:0xff2a1c, redI:6.2, redDist:15 };
   /* 젖은 바닥이 비출 «가짜 주변»: 어둠 위에 붉은 등 번짐 몇 개·차가운 형광 줄 — 거칠기가 낮은 곳에서만 비친다 */
   function wetEnv(){ var c=document.createElement('canvas'); c.width=512; c.height=256; var g=c.getContext('2d');
     g.fillStyle='#050405'; g.fillRect(0,0,512,256);
@@ -445,9 +445,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     hemi.color.setHex(MD.hemiSky); hemi.groundColor.setHex(MD.hemiGround); moon.color.setHex(MD.moon); moon.intensity=MD.moonI;
     MOOD.exp=MD.exp; MOOD.hemi=MD.hemi; MOOD.player=MD.player; hemi.intensity=2.6*MD.hemi; renderer.toneMappingExposure=2.4*SET.bright*MD.exp; pLight.intensity=3.0*MD.player;
     /* 보조 역광을 붉게 — 비상등이 등 뒤에서 윤곽을 긋는다 */
-    if(rimLights[1]){ rimLights[1].color.setHex(0xff3a26); rimLights[1].intensity=2.6; }
+    if(rimLights[1]){ rimLights[1].color.setHex(0xff4938); rimLights[1].intensity=1.8; }
     /* 사람·보스만 받는 앞쪽 보조광(카메라 쪽 비스듬히) — 역광만 있으면 캐릭터가 검은 실루엣이 됐다 */
-    RIM.push({ deg:150, color:0xffd6bf, i:1.1, up:2.2 }); var fillL=new THREE.DirectionalLight(0xffd6bf, 1.1); fillL.castShadow=false; fillL.layers.set(RIM_LAYER); scene.add(fillL); scene.add(fillL.target); rimLights.push(fillL);
+    RIM.push({ deg:150, color:0xffdfcf, i:1.6, up:2.2 }); var fillL=new THREE.DirectionalLight(0xffdfcf, 1.6); fillL.castShadow=false; fillL.layers.set(RIM_LAYER); scene.add(fillL); scene.add(fillL.target); rimLights.push(fillL);
     var edgeZ=cellD;                        /* 0행(벽) 안쪽 면 = 승강장 끝 */
     /* 바닥: 화강석 60 cm 타일 */
     var floorTex=noiseTex(function(g,s){ g.fillStyle='#8d8f93'; g.fillRect(0,0,s,s); grain(g,s,146,34,14000); g.fillStyle='rgba(40,40,44,.25)'; for(var i=0;i<2600;i++){ g.fillRect(Math.random()*s, Math.random()*s, 1.5, 1.5); }
@@ -646,8 +646,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   }
   var ATK=A.atk||{ hammer:{ clip:'atk_hammer', hitFrac:0.42 }, bolt:{ clip:'atk_bolt', hitFrac:0.45 }, scythe:{ clip:'atk_scythe', hitFrac:0.5 } };
   function bossPlay(n, o){ var a=boss.anim; o=o||{};
-    if(n==='flinch'){ a.shake=0.34; a.flash=0.2; boss.behavior?.react('hit'); if(!a.tele && !boss.oneshot) bossOnce('hit',{speed:1.5}); }   /* 맞은 것이 확실히 보이게 */
-    else if(n==='stagger'){ a.shake=0.6; a.flash=0.2; boss.behavior?.react('stagger'); bossOnce('stagger',{speed:1.1}); a.tele=null; }
+    if(n==='flinch'){ a.shake=0.22; a.flash=Math.max(a.flash,0.04); if(!a.tele && !boss.oneshot) bossOnce('hit',{speed:1.5}); }   /* additive 반동은 hit 이벤트에서 항상 넣는다 */
+    else if(n==='stagger'){ a.shake=0.6; a.flash=Math.max(a.flash,0.10); boss.behavior?.react('stagger'); bossOnce('stagger',{speed:1.1}); a.tele=null; }
     else if(n==='down'){ a.down=1; bossOnce('down',{hold:true, speed:1.3}); a.tele=null; }
     else if(n==='up'){ a.down=0; bossOnce('up',{speed:1.2}); }
     else if(n==='collapse'){ a.collapse=1; bossOnce('death',{hold:true, speed:0.9}); }
@@ -655,7 +655,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     else if(n.indexOf('hit_')===0){ a.tele=null; a.swing=0.4; a.swingKind=n.slice(4); if(boss.oneshot && boss.oneshot.timeScale<1){ boss.oneshot.timeScale=1.4; } } }
   /* 예고·연계 사이·후딜은 «공격 중» 이다 — 이 동안은 대기 모션으로 돌아가지 않고 시선도 고정한다 */
   var ATKST=['telegraph','link','recover'];
-  var FLASHC=new THREE.Color(0x40160e);
+  var FLASHC=new THREE.Color(0x2a180f);
   function bossStop(){ boss.anim.tele=null; }
   function bossTick(dt){ var a=boss.anim, t=performance.now()/1000; if(!boss.mixer) return; tickLunge(dt);
     if(a.shake>0) a.shake-=dt; if(a.flash>0) a.flash-=dt; if(a.tele){ a.teleT-=dt; } if(a.swing>0) a.swing-=dt;
@@ -1414,11 +1414,15 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       /* 타격감: 소리·흔들림·파티클·정지를 같은 프레임에, 세기에 비례해서 (docs/design/18-boss-fight-design.md §1-2) */
       case 'hit': var material=globalThis.TW_COMBAT_QUALITY.material(e.part,A.stages[phase].kind),feedback=globalThis.TW_COMBAT_QUALITY.feedback({kind:e.kind,perfect:e.perfect,crit:e.crit,material:material}); SFX.play('hit', {heavy:e.crit||e.counter||e.kind==='smash',material:material}); var hp=bossHitPos(HITMAP[e.part]||'body');
         if(ain.weapon){var nearest=nearestAinBladePoint(ain.weapon,hp);if(nearest&&nearest.distance<=((boss.PART[HITMAP[e.part]]||{}).r||.5))hp.copy(nearest.point);}
-        num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':''); boss.anim.flash=0.12;
+        num(hp, W.fmt(e.dmg), e.counter?'counter':e.crit?'crit':'');
         /* 스매시 타점: 날끝으로 가장 빠른 곳에 맞았나(정타), 머리 위·자루로 스쳤나(빗맞음).
            «보통» 은 굳이 적지 않는다 — 글자가 늘면 정타가 안 읽힌다. */
         if(e.point&&e.point.grade!=='solid') num(hp.clone().add(new THREE.Vector3(0,.42,0)), e.point.grade==='sweet'?'정타':'빗맞음', 'pt-'+e.point.grade);
         var axH=axisToBoss(), cmbH=s?s.player.combo:0;
+        var hitHeavy=e.kind==='smash'||cmbH>=3||e.crit, byaw=boss.root.rotation.y, hrx=Math.cos(byaw), hrz=-Math.sin(byaw), hm=Math.hypot(axH[0],axH[1])||1;
+        var hitSide=Math.sign((axH[0]/hm)*hrx+(axH[1]/hm)*hrz)||1;
+        boss.anim.flash=hitHeavy?0.055:0;
+        boss.behavior?.react('hit',hitHeavy?(e.kind==='smash'?1.8:1.45):1,null,hitSide);
         /* 스킬 타격 몫은 «맞았을 때» 만. 빗나간 스윙에 충격을 붙이면 맞았는지가 흐려진다. */
         if(e.skill||e.kind==='ult'||e.kind==='skill') fxSkillStrike();
         if(!e.counter&&(e.kind==='smash'||cmbH===3)){ var fb=cineBeat('comboFinish', hp.clone(), 1); if(fb&&fb.slow) slowmo(fb.slow.scale, fb.slow.ms); }   /* 연계 마무리 */

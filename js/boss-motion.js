@@ -155,9 +155,9 @@ export function createBossBehavior(model,arenaId){
    else if(kind==='moveX')o.position.x+=v;else if(kind==='moveY')o.position.y+=v;else if(kind==='moveZ')o.position.z+=v;
    else if(kind==='scaleX')o.scale.x*=Math.max(.65,1+v);else if(kind==='scaleY')o.scale.y*=Math.max(.65,1+v);else if(kind==='scaleZ')o.scale.z*=Math.max(.65,1+v);
  }
- function react(kind,strength=1,duration){
-   const map={deflect:[.38,.22],repel:[.68,.34],clash:[1,.50],counter:[.72,.34],break:[1.15,.55],hit:[.24,.16],stagger:[.85,.42]};
-   const v=map[kind]||map.hit;reaction={kind,strength:v[0]*strength,left:duration||v[1],dur:duration||v[1]};
+ function react(kind,strength=1,duration,side=1){
+ const map={deflect:[.38,.22],repel:[.68,.34],clash:[1,.50],counter:[.72,.34],break:[1.15,.55],hit:[.42,.20],stagger:[.95,.42]};
+ const v=map[kind]||map.hit;reaction={kind,strength:v[0]*strength,left:duration||v[1],dur:duration||v[1],side:side<0?-1:1};
  }
  function apply(state,time=0,dt=0){
    const rage=state.rage?1.22:1,tempo=(p.tempo||1)*rage;
@@ -175,8 +175,10 @@ export function createBossBehavior(model,arenaId){
    }
    if(reaction){
      reaction.left=Math.max(0,reaction.left-dt);const k=1-reaction.left/reaction.dur, pulse=Math.sin(Math.PI*clamp(k))*reaction.strength;
-     const [n,a]=p.recoil||['Spine','rotateZ'];op([n,a,.24],pulse);
-     op(['Hips','moveY',-.055],pulse);
+     const [n,a]=p.recoil||['Spine','rotateZ'];op([n,a,.30*reaction.side],pulse);
+     /* 공격 클립은 계속 재생하되 충격 방향의 작은 전신 반동을 항상 얹는다. */
+     op(['Spine','rotateX',.10],pulse);
+     op(['Hips','moveY',-.060],pulse);
      if(reaction.left<=0)reaction=null;
    }
    model.updateWorldMatrix(true,true);

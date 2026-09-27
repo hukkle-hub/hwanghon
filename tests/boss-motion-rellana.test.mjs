@@ -73,7 +73,7 @@ test('game3d/weapon-trail/swing-body: 관통·큰 기술 3 단·회전 링·큰 
     assert.ok(g.includes(k),k);
   assert.match(g,/skillLungeOffset\(\)\{ if\(window\.TW_BIG_SKILLS===false\) return 0;/);
   const t=await readFile(new URL('../js/weapon-trail.js',import.meta.url),'utf8');
-  assert.match(t,/const TRN=28/); assert.match(t,/this\.power>=1\.5\)\?0\.30:0\.16/); assert.match(t,/TW_BIG_SKILLS!==false/);
+  assert.match(t,/const TRN=64, MAX_SEG=0\.22/); assert.match(t,/trailLifetime\(power\)/);   /* P0: 플레이어 낫은 0.3 s 판 잔상이 아니라 0.11/0.17 s 시간 기반 리본 */ assert.match(t,/TW_BIG_SKILLS!==false/);
   const sb=await readFile(new URL('../js/swing-body.js',import.meta.url),'utf8');
   assert.match(sb,/skill1:1\.40, skill2:0\.95, skill3:1\.45, skill4:0\.85, ult:1\.50/); assert.match(sb,/var YAW = 0\.52;/,'두 손 IK 한계 유지'); assert.match(sb,/LEAN_BIG = 0\.30/);
 });

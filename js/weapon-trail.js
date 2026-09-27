@@ -6,10 +6,14 @@
    솔로(js/game3d.js)와 온라인(js/party-avatar.js)이 같은 연출을 공유한다. */
 import * as T from '../vendor/three/three.module.js';
 
-const TRN=28;                                   /* 궤적 마디 수 — 18→28: 큰 기술의 호가 한 화면에 남는다 (문서 112 §3-5, 렐라나 붉은 링 0.3 s) */
+/* P0 전투 질감:
+   플레이어 낫은 보스의 0.3 s 링 잔상과 다르다. 짧고 얇게 지나가고, 명중은 접점 반응으로 읽힌다.
+   MAX_SEG 는 저FPS에서 두 표본 사이가 큰 삼각형/판으로 벌어지는 것을 막는 재표본 간격(m). */
+const TRN=64, MAX_SEG=0.22;
 /* 큰 기술 «큼지막» 스위치 — 검수용 A/B (window.TW_BIG_SKILLS=false 로 끔) */
 const BIG=()=>typeof window==='undefined'||window.TW_BIG_SKILLS!==false;
-const INNER=[0.58,0.50], OUTER=[1.34,1.95], BRIGHT=[0.72,0.22], ALPHA=[0.7,0.26];
+const INNER=[0.76,0.70], OUTER=[1.03,1.08], BRIGHT=[0.80,0.18], ALPHA=[0.72,0.16];
+export function trailLifetime(power){ return BIG()&&power>=1.5?0.17:0.11; }
 
 let GLOW=null;
 function glowTexture(){
@@ -67,15 +71,29 @@ export class WeaponTrail{
     weapon.updateMatrixWorld(true);
     const b=this.bladeRoot?this.bladeRoot.getWorldPosition(new T.Vector3()):new T.Vector3(0,this.baseY,0).applyMatrix4(weapon.matrixWorld);
     const t=this.bladeTip?this.bladeTip.getWorldPosition(new T.Vector3()):new T.Vector3(0,this.tipY,0).applyMatrix4(weapon.matrixWorld);
-    this.pts.unshift([b,t]); if(this.pts.length>TRN) this.pts.pop();
+    const prev=this.pts[0];
+    if(!prev){ this.pts.unshift({b,t,age:0}); return; }
+    /* 프레임이 끊겨도 이전 tip→현재 tip 사이를 최대 22 cm 간격으로 메운다.
+       한 프레임에 지나치게 많은 버텍스를 만들지 않도록 8분할 상한. */
+    const steps=Math.max(1,Math.min(8,Math.ceil(prev.t.distanceTo(t)/MAX_SEG)));
+    for(let i=1;i<=steps;i++){
+      const q=i/steps;
+      this.pts.unshift({
+        b:prev.b.clone().lerp(b,q),
+        t:prev.t.clone().lerp(t,q),
+        age:0
+      });
+    }
+    if(this.pts.length>TRN)this.pts.length=TRN;
   }
   _write(mesh, under, over, bright){
     const n=this.pts.length;
     if(n<3){ mesh.visible=false; return; }
     mesh.visible=true;
     const pos=mesh.geometry.attributes.position.array, col=mesh.geometry.attributes.color.array;
+    const life=trailLifetime(this.power);
     for(let i=0;i<n;i++){
-      const [b,t]=this.pts[i], k=1-i/(n-1), o=i*6;
+      const e=this.pts[i], b=e.b, t=e.t, k=Math.max(0,1-e.age/Math.max(.001,life)), o=i*6;
       const dx=t.x-b.x, dy=t.y-b.y, dz=t.z-b.z;
       pos[o]=b.x+dx*under; pos[o+1]=b.y+dy*under; pos[o+2]=b.z+dz*under;
       pos[o+3]=b.x+dx*over; pos[o+4]=b.y+dy*over; pos[o+5]=b.z+dz*over;
@@ -97,7 +115,7 @@ export class WeaponTrail{
   }
   _spawnWind(){
     if(this.pts.length<3) return;
-    const a=this.pts[0][1], b=this.pts[2][1], v=new T.Vector3().subVectors(a,b);
+    const a=this.pts[0].t, b=this.pts[2].t, v=new T.Vector3().subVectors(a,b);
     if(v.lengthSq()<1e-5) return;
     const sp=new T.Sprite(new T.SpriteMaterial({map:glowTexture(),color:this.hue.getHex(),transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0.5}));
     const big=(BIG()&&this.power>=1.6)?1.35:1;
@@ -109,13 +127,14 @@ export class WeaponTrail{
     if(!weapon){ this.layers[0].visible=this.layers[1].visible=false; return; }
     if(this.weapon!==weapon){this.weapon=weapon;this.measured=false;this.pts=[];this.hold=0;this.bladeRoot=this.bladeTip=null;}
     if(!this.measured) this.measure(weapon);
-    if(swinging){ this._push(weapon); this.hold=(BIG()&&this.power>=1.5)?0.30:0.16; }   /* 큰 기술은 궤적이 0.3 s 남는다 */
-    else if(this.hold>0){ this.hold-=dt; if(this.pts.length) this.pts.pop(); }
-    else if(this.pts.length) this.pts.pop();
-    /* 큰 기술일수록 바깥 띠가 넓다 — 날 길이의 1.12 → 최대 1.45 배 (power 2.2 기준) */
-    const widen=BIG()?1+Math.max(0,this.power-1)*0.28:1;
-    this._write(this.layers[0], this.bladeTip?0:INNER[0], this.bladeTip?1:OUTER[0], BRIGHT[0]);
-    this._write(this.layers[1], this.bladeTip?-.08:INNER[1], this.bladeTip?1+.12*widen:OUTER[1]*widen, BRIGHT[1]);
+    for(const p of this.pts)p.age+=dt;
+    if(swinging)this._push(weapon);
+    const life=trailLifetime(this.power);
+    this.pts=this.pts.filter(p=>p.age<=life).slice(0,TRN);
+    /* 자루→날 전체를 채우지 않는다. 날의 바깥 약 25~35%만 얇은 두 겹 리본으로 보인다. */
+    const widen=BIG()?1+Math.max(0,this.power-1)*0.05:1;
+    this._write(this.layers[0], INNER[0], OUTER[0], BRIGHT[0]);
+    this._write(this.layers[1], INNER[1], OUTER[1]*widen, BRIGHT[1]);
     this.windT-=dt;
     if(swinging && this.power>=1.3 && this.windT<=0){ this.windT=0.045; this._spawnWind(); }
   }
