@@ -2,7 +2,28 @@
 
 디렉터 지시: `CLAUDE_HWANGHON_UE5_VERTICAL_SLICE_PHASE_AB.md`(문서 118 의 실행판, 원문은 아래 부록 A). 「기존 Three.js 전투는 규칙·밸런스·데이터 참조용, 렌더/애니/VFX 구조 포팅 금지, 새 기능·콘텐츠 금지. UE5 모바일 프로젝트 → 서한역 Graybox → 아인 → 보스 → lock-on → 1→2→3 → smash → dodge/jump/counter → 보스 combo/lunge/slam/big → 피격 반응 → 20~30 초 영상 → Android 실기기 성능.」
 
-## 0. 결론 먼저 — 이 컨테이너에서 된 것 / 안 된 것
+## 0-bis. 갱신 — GPT Vertical Slice 1.2 패키지 채택 (같은 날, 뒤)
+
+디렉터가 `HwanghonCombatUE_VerticalSlice_1_2.zip`(GPT)을 올렸다. 같은 설계(규칙은 데이터, 런타임 모션 보정은 combat 시계 기준 접점 정렬 하나, 락온·그레이박스·감사)를 더 넓게 갖췄다: Animation Blueprint 계약·AnimInstance·Presentation Component·Graphics Quality Subsystem·서한역 조명 rig·자동화 테스트·Windows 원클릭 빌드·Android 패키지 스크립트·에셋 감사. 그래서 **아래 §0~§6 의 Claude 골격(모듈 `HwanghonCombat`)은 버리고 `ue/HwanghonCombatUE` 를 GPT 1.2 로 교체**했다(커밋 `32b01bd`). §3(애니 source·라이선스)·§5(blocking issue) 는 그대로 유효하다.
+
+| 한 일 | 결과 |
+|---|---|
+| 패키지 검증 `python Scripts/verify_scaffold.py` | PASS |
+| three.js 규칙 대조 `node tools/ue/check-ue-tuning.mjs` (+ `tests/ue-tuning-crosscheck.test.mjs`) | 필수 항목 전부 같음 — 3 타 0.66/0.24/0.48·방어 취소 0.39, 스매시 1.15/0.48/0.91/0.68, 카운터 0.56/0.18/0.40, 기력 120/18/0.6, 회피 25/0.30/0.45, 점프 15/0.45/0.8, 카운터 창 0.25/0.10/0.17, 보스 5 패턴 예고·카운터 가능·jumpOnly |
+| 카메라 보정(커밋 뒤따름) | 락온 요우 상한 220°/s + 몸 겹침 1.8 m 안 요우 유지. 관통 돌진 모의(60 fps): 프레임당 최대 요우 16.9° → 3.7° |
+
+### 0-ter. 디렉터 판단이 필요한 수치 차이 (UE 1.2 ↔ three.js, 고치지 않음)
+
+| 항목 | three.js | UE 1.2 | 메모 |
+|---|---|---|---|
+| Charge(돌진) 거리 | 9.2 m (`attackMotion` 460 px ÷ 50) | 460 cm | px 값을 cm 로 옮긴 것으로 보임 — 관통 거리가 절반 |
+| Spin(회전 후려치기) 피해 | 6,500 (1 타) | 2,200+2,200+2,600 = 7,000 (3 타) | 다단화하며 합계가 7.7 % 늘었다 |
+| 앞차기 | 있음(카운터 가능, 5,600) | 없음 | Vertical Slice 5 패턴 범위 |
+| 스매시 기력 | 타수별 10/12/14/18 | 20 단일 | UE 는 tier 가 없다 |
+
+카운터 창: 규칙 기본은 0.25 s 이고 UE 도 0.25 s 다. three.js 의 d01 «깨어난 허수아비» 단계는 런타임에 0.24 s 로 뜬다(녹화 로그 `win 0.24`) — 단계별 창을 UE 로 옮길지 결정 필요.
+
+## 0. 결론 먼저 — 이 컨테이너에서 된 것 / 안 된 것 (Claude 골격 기준, §0-bis 로 대체됨)
 
 | 완료물(지시 §15) | 상태 | 어디 |
 |---|---|---|
