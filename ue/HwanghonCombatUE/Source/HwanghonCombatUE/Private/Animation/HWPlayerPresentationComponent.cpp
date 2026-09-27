@@ -39,6 +39,14 @@ void UHWPlayerPresentationComponent::TickComponent(
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+    if (Combat && Combat->IsDead())
+    {
+        ActiveAction = EHWActionType::None;
+        bPendingStop = false;
+        StopActive(0.f);
+        return;
+    }
+
     if (bPendingStop)
     {
         bPendingStop = false;
@@ -53,6 +61,10 @@ void UHWPlayerPresentationComponent::TickComponent(
 
 void UHWPlayerPresentationComponent::HandleActionStarted(EHWActionType Action)
 {
+    if (Combat && Combat->IsDead())
+    {
+        return;
+    }
     // End + next start may happen in the same combat tick.
     // Cancelling the pending stop avoids an idle leak between combo attacks.
     bPendingStop = false;
@@ -135,7 +147,7 @@ void UHWPlayerPresentationComponent::StopActive(float BlendOut)
 
 void UHWPlayerPresentationComponent::SyncToCombatClock()
 {
-    if (!Combat || !AnimInstance || !ActiveMontage || !ActiveBinding.Sequence)
+    if (!Combat || Combat->IsDead() || !AnimInstance || !ActiveMontage || !ActiveBinding.Sequence)
     {
         return;
     }
@@ -166,6 +178,10 @@ void UHWPlayerPresentationComponent::SyncToCombatClock()
     {
         bVisualContactFired = true;
         OnVisualContact.Broadcast(ActiveAction, ActiveSourceTime);
+        if (Combat->IsDead() || Combat->GetCurrentAction() != CombatAction)
+        {
+            return;
+        }
     }
 
     PreviousCombatElapsed = CombatElapsed;

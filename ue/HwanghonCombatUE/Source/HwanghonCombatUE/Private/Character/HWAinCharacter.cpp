@@ -146,6 +146,10 @@ void AHWAinCharacter::LockOnPressed()
 
 void AHWAinCharacter::HandleActionStarted(EHWActionType Action)
 {
+    if (Combat->IsDead())
+    {
+        return;
+    }
     if (Action == EHWActionType::Dodge)
     {
         LaunchCharacter(GetActorForwardVector() * 780.f, false, false);
@@ -170,7 +174,15 @@ void AHWAinCharacter::HandleActionEnded(EHWActionType Action)
 
 void AHWAinCharacter::HandleContact(EHWActionType Action, EHWAttackTier Tier, float Damage)
 {
+    if (Combat->IsDead())
+    {
+        return;
+    }
     BP_OnPlayerContact(Action, Tier);
+    if (Combat->IsDead())
+    {
+        return;
+    }
 
     AActor* Target = LockOn->GetTarget();
     AHWBossCharacter* Boss = Cast<AHWBossCharacter>(Target);
