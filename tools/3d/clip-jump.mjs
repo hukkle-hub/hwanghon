@@ -12,6 +12,9 @@ import fs from 'node:fs';
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 const [F,SRC='jump']=process.argv.slice(2), FPS=60, DUR=0.60, AIR=0.45;
+/* ARMS=<rad>: 팔 벌림 줄이기 — 원본은 양팔을 옆으로 크게 벌리는데 대검 캐릭터(카인)엔 커 보인다(디렉터 「카인 팔 벌림 줄여」). 0.03~0.50 s 에 위팔을 몸쪽으로 |ARMS| rad */
+const ARMS=+(process.env.ARMS||0);
+function armW(t){ if(t<=0.03||t>=0.50) return 0; const u=t<0.12?(t-0.03)/0.09:t>0.42?(0.50-t)/0.08:1; return u*u*(3-2*u); }
 /* 출력 시각 → 원본 시각 (Jump_Full_Short: 웅크림 바닥 0.27 · 이륙 0.40 · 정점 0.47 · 착지 0.68 · 착지 바닥 0.76 · 기립 1.03) */
 const MAP=[[0,0.17],[0.06,0.27],[0.13,0.40],[0.22,0.47],[0.32,0.55],[0.40,0.68],[0.45,0.76],[0.60,1.03]];
 function srcTime(t){ for(let i=1;i<MAP.length;i++){ if(t<=MAP[i][0]){ const [a,b]=MAP[i-1],[c,d]=MAP[i]; return b+(d-b)*(t-a)/(c-a); } } return MAP.at(-1)[1]; }
@@ -29,6 +32,7 @@ const AX={x:new T.Vector3(1,0,0),y:new T.Vector3(0,1,0),z:new T.Vector3(0,0,1)};
 for(let i=0;i<=N;i++){ const t=DUR*i/N; a.time=Math.min(c.duration-1e-4,srcTime(t)); m.update(0);
   const k=tuck(t);
   for(const n of order){ const q=G[n].quaternion.clone(); const L=LAYER[n]; if(L&&k>0) q.multiply(new T.Quaternion().setFromAxisAngle(AX[L[0]],L[1]*k));
+    if(ARMS&&(n==='LeftArm'||n==='RightArm')){ const w=armW(t); if(w>0) q.multiply(new T.Quaternion().setFromAxisAngle(AX.z,(n==='LeftArm'?1:-1)*ARMS*w)); }
     const p=tracks[n][tracks[n].length-1]; if(p&&p.dot(q)<0) q.set(-q.x,-q.y,-q.z,-q.w); tracks[n].push(q); }
   const hp=G.Hips.position.clone(), dy=hp.y-restHipsY; hp.y=restHipsY+(dy<0?dy*0.6:dy*0.15); hips.push(hp); times.push(+t.toFixed(5)); }
 console.log(JSON.stringify({name:'jump', source:F.split('/').pop(), sourceClip:'KayKit Jump_Full_Short → clip-jump', duration:DUR, air:AIR, fps:FPS, times,
