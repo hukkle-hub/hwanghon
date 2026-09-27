@@ -17,5 +17,5 @@ test('L1 dim reads active beat tier instead of nonexistent out.tier',()=>{
   assert.doesNotMatch(js,/CINE\.out\.tier==='L1'/);
 });
 test('reach ring is subdued',()=>{
-  assert.match(js,/TEACH\?0\.13:0\.08/); assert.match(js,/TEACH\?0\.055:0\.035/);
+  assert.match(js,/TEACH\?0\.13:0\.10/); assert.match(js,/TEACH\?0\.09:0\.06/);   /* GPT v12 조작·HUD: 사정거리 링 살짝 더 보이게(0.08→0.10, 0.035→0.06) */
 });

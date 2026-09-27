@@ -66,6 +66,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   $('#btparty').innerHTML='<div class="pmem">'+W.face(CHAR.id,'pmem__face')+'<div class="fill"><div class="flex ac g2"><span class="pmem__n">'+CHAR.nm+'</span><span class="pmem__lv">'+(window.TW_GRADE?'등급 '+TW_GRADE.agent().g:'LV.'+CHAR.lv)+'</span><span class="pmem__hp num" id="p-hp">'+W.fmt(CHAR.stats.hp)+'</span></div><div class="bar bar--hp" data-fill="100" id="p-bar"></div></div></div>';
   el.actions.innerHTML=SK.map(function(k,i){ return '<div class="abtn abtn--sk'+(i+1)+'" data-skill="'+i+'"><span class="sk__k">'+k.key+'</span><svg class="ico"><use href="#i-'+k.icon+'"/></svg><span class="sk__cd" hidden></span>'+(k.lv>1?'<span class="sk__lv">Lv'+k.lv+(k.br?'·'+k.br:'')+'</span>':'')+'<span class="sk__nm">'+k.name+'</span></div>'; }).join('')+
     '<div class="abtn abtn--dodge" data-dodge><span class="sk__k">K</span><svg class="ico"><use href="#i-bolt"/></svg><span class="sk__nm">회피</span></div>'+
+    '<div class="abtn abtn--jump" data-jump><span class="sk__k">I</span><span class="jump__arrow" aria-hidden="true">↑</span><span class="sk__cd" hidden></span><span class="sk__nm">점프</span></div>'+
     '<div class="abtn abtn--guard" data-guard><span class="sk__k">L</span><svg class="ico"><use href="#i-shield"/></svg><span class="sk__nm">카운터 · 옆뒤=회피</span></div>'+
     '<div class="abtn abtn--open" data-open hidden><span class="sk__k">G</span><svg class="ico"><use href="#i-crosshair"/></svg><span class="open__lb"></span><svg class="open__ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="18" pathLength="100"/></svg></div>'+
     '<div class="abtn abtn--atk" data-atk><span class="sk__k">J</span><svg class="ico"><use href="#i-scythe"/></svg><span class="sk__nm">탭 공격 · 길게 스매시</span></div>'+
@@ -1492,7 +1493,11 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         schedule(function(){ cineCam=null; camZoom=1; }, 1750);
         break;
       case 'up': guide((A.hudName||'허수아비')+'가 자세를 되찾았다', 1.5); bossPlay('up'); break;
-      case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(e.big&&(e.beat||1)===1) fxBigTell(e.dur); if(e.jumpOnly&&!seen.jump){ seen.jump=1; guide('구르기로는 못 피한다 — <b>뛰어넘어라</b> ('+(MOBILE?'회피 버튼 위로':'I')+')', 3.2); }   /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
+      case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(e.big&&(e.beat||1)===1) fxBigTell(e.dur);
+        if(e.jumpOnly&&!seen.jump){ seen.jump=1; var jb0=el.actions.querySelector('[data-jump]');
+          if(jb0){ jb0.classList.add('is-cue'); schedule(function(){ jb0.classList.remove('is-cue'); }, 1000); }
+          guide('구르기로는 못 피한다 — <b>뛰어넘어라</b> ('+(MOBILE?'점프 버튼':'I')+')', 3.2); }
+        /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); bossSwingFx(s&&s.enemy.patIcon); if(e.lunge) startLunge(e.lunge); if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); }   /* «순간·잔광» 은 마지막 박에만 */ if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; hitReact(e);
@@ -1818,17 +1823,20 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     return 'counter'; }
   function openingIn(){ if(paused||cine||ain.dead||!battle) return; battle.input('opening'); }
   function dodge(){ if(paused||cine) return; if(battle) battle.input('dodge'); else if(skirm) skirm.input('dodge'); else if(P.rollT<=0) doRoll(); }
-  /* 점프 회피 — 규칙은 combat.js jump(). PC I 키(패드 버튼은 GPT, 문서 114 §1) */
-  function jumpIn(){ if(paused||cine||ain.dead) return; if(battle) battle.input('jump'); }
+  /* 점프 회피 — 전투 중 즉시 반응해야 하므로 «회피 버튼 스와이프» 대신 독립 버튼.
+     스와이프 판정을 기다리면 회피 입력 자체가 늦어지는 문제가 생긴다. */
+  function emitCombatInput(type,source){ try{ window.dispatchEvent(new CustomEvent('tw:input',{ detail:{ type:type, source:source||'ui' } })); }catch(e){} }
+  function jumpIn(source){ if(paused||cine||ain.dead||!battle) return; emitCombatInput('jump',source||'keyboard'); battle.input('jump'); }
   el.actions.addEventListener('pointerdown', function(e){ e.preventDefault(); e.stopPropagation(); var t=e.target.closest('.abtn'); if(!t||paused||cine||ain.dead) return;
+    var js=battle&&battle.snapshot(); if(js&&js.player.jumping&&(t.hasAttribute('data-atk')||t.hasAttribute('data-guard'))) return;
     if(t.hasAttribute('data-atk')){ attack(); t.classList.add('is-hold'); holdTimer=setTimeout(function(){ smashIn(); t.classList.remove('is-hold'); }, R.combo.smashHold*1000); }
     else if(t.hasAttribute('data-guard')){ if(counterPress()==='counter'){ guarding=true; t.classList.add('is-hold'); } }
     else if(t.hasAttribute('data-open')) openingIn();
-    else if(t.hasAttribute('data-dodge')) dodge(); else if(t.hasAttribute('data-ult')) battle&&battle.input('ult'); else if(t.hasAttribute('data-skill')) battle&&battle.input('skill', +t.getAttribute('data-skill')); });
+    else if(t.hasAttribute('data-dodge')) dodge(); else if(t.hasAttribute('data-jump')) jumpIn('pad'); else if(t.hasAttribute('data-ult')) battle&&battle.input('ult'); else if(t.hasAttribute('data-skill')) battle&&battle.input('skill', +t.getAttribute('data-skill')); });
   function atkUp(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } if(guarding){ guarding=false; guardIn(false); } el.actions.querySelectorAll('.is-hold').forEach(function(b){ b.classList.remove('is-hold'); }); }
   el.actions.addEventListener('pointerup', atkUp); el.actions.addEventListener('pointercancel', atkUp); el.actions.addEventListener('pointerleave', atkUp);
   document.addEventListener('keydown', function(e){ if(kd[e.code]) return; kd[e.code]=true; if(paused||cine||ain.dead) return;
-    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyI') jumpIn(); else if(e.code==='KeyL'){ if(!kd.__l){ kd.__l=1; if(counterPress()==='counter') guarding=true; } } else if(e.code==='KeyG') openingIn();
+    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyI') jumpIn('keyboard'); else if(e.code==='KeyL'){ if(!kd.__l){ kd.__l=1; if(counterPress()==='counter') guarding=true; } } else if(e.code==='KeyG') openingIn();
     else if(e.code==='KeyR') battle&&battle.input('ult'); else if(/^Digit[1-4]$/.test(e.code)) battle&&battle.input('skill', +e.code.slice(5)-1);
     else if((e.code==='KeyQ'||e.code==='Tab')&&battle){ e.preventDefault();cycleTarget(); }
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
@@ -2007,10 +2015,13 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       /* 카운터 창을 «흰색»으로 켜 주는 건 시점을 그대로 알려주는 것이라 훈련장에서만 한다.
          그 밖에서는 색이 «종류»만 말한다 — 붉은색 튕기기 가능 / 주황 회피 전용. */
       win=TEACH&&s.enemy.counterable&&s.enemy.state==='telegraph'&&s.enemy.tele<=s.enemy.window, col=s.enemy.jumpOnly?0x4A8BE0:!s.enemy.counterable?0xFF9A45:win?0xF0E4E4:0xC7332C, fr=s.enemy.state==='telegraph'?1-s.enemy.tele/s.enemy.teleDur:1; drawZone(zone, fr, col, 'boss'); } else hideZone('boss');
-    reachRing.visible=!!battle; if(battle){ reachRing.position.set(ain.root.position.x, 0.02, ain.root.position.z); reachRing.material.color.setHex(Bs.dist<=L.player.reach?0xC9A45E:0xFFFFFF); reachRing.material.opacity=Bs.dist<=L.player.reach?(TEACH?0.13:0.08):(TEACH?0.055:0.035); }
+    reachRing.visible=!!battle; if(battle){ reachRing.position.set(ain.root.position.x, 0.02, ain.root.position.z); reachRing.material.color.setHex(Bs.dist<=L.player.reach?0xC9A45E:0xFFFFFF); reachRing.material.opacity=Bs.dist<=L.player.reach?(TEACH?0.13:0.10):(TEACH?0.09:0.06); }
     updateCamera(dt); drawMini();
     if(!battle){el.timer.textContent=CB.fmtTime(travelTime); if(skirm){ var sp=skirm.snapshot().player; fill('v-hp', sp.hp/sp.hpMax*100); $('#v-hpv').textContent=W.fmt(Math.round(sp.hp))+' / '+W.fmt(sp.hpMax); fill('v-st', sp.st/sp.stMax*100); $('#v-stv').textContent=Math.round(sp.st)+' / '+sp.stMax; fill('v-ult', sp.ult); $('#v-ultv').textContent=Math.round(sp.ult)+'%'; fill('p-bar', sp.hp/sp.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(sp.hp)); } return; }
     var s2=battle.snapshot();
+    /* 모바일 카운터 배너: 보스 머리가 상단 22% 안에 들어오면 서로 가리지 않게 하단으로 피한다. */
+    if(MOBILE&&el.counter.classList.contains('is-on')&&boss&&boss.root){ cam.updateMatrixWorld(true); var bh=bossHitPos('head').clone().project(cam), by=(-bh.y*0.5+0.5); el.counter.style.top=by<0.22?'72%':''; }
+    else el.counter.style.top='';
     var selectedPart=s2.enemy.parts.find(function(p){return p.id===s2.target;});if(selectedPart){ var tc=$('#target-cycle'), tn=$('#target-name'), th=$('#target-health'), pct=selectedPart.hpMax?Math.ceil(selectedPart.hp/selectedPart.hpMax*100):null; if(tn)tn.textContent=selectedPart.name; if(th)th.textContent=selectedPart.broken?'파괴':pct!=null?pct+'%':selectedPart.weak?'약점':''; if(tc){ var durPct=selectedPart.broken?0:(pct==null?100:Math.max(0,Math.min(100,pct))); tc.dataset.lock=lockOn?'on':'off'; tc.style.setProperty('--part-dur',durPct+'%'); tc.classList.toggle('is-low',!selectedPart.broken&&pct!=null&&pct<=35); tc.classList.toggle('is-broken',!!selectedPart.broken); tc.setAttribute('aria-label','부위 조준 '+selectedPart.name+(selectedPart.broken?' 파괴':pct!=null?' '+pct+'%':'')+' · 탭하여 전환');} }
     fill('b-hp', s2.enemy.hp/s2.enemy.hpMax*100); el.stack.textContent=s2.enemy.bleed?'출혈 ×'+s2.enemy.bleed:'';
     var bossDown=s2.enemy.state==='downed', postureMax=Math.max(1,(R.posture&&R.posture.max)||100), downDur=Math.max(.001,(R.posture&&R.posture.downDur)||1);
@@ -2022,6 +2033,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     fill('p-bar', s2.player.hp/s2.player.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(s2.player.hp));
     s2.enemy.parts.forEach(function(p){ var k=HITMAP[p.id], h=boss.hits[k]; if(!h) return; var tg=p.id===s2.target; h.scale.setScalar((tg?0.38:0.22)*BOSS_SCALE); h.material.opacity=tg?0.34:(TEACH?0.10:0.045); if(p.broken) h.visible=false; });
     var sks=el.actions.querySelectorAll('[data-skill]'); s2.player.cds.forEach(function(cd,i){ var k=sks[i], o=k.querySelector('.sk__cd'); if(cd>0){ o.hidden=false; o.textContent=Math.ceil(cd); o.style.setProperty('--p', Math.min(1, cd/Math.max(0.1, SK[i].cd||cd)).toFixed(3)); k.classList.remove('is-ready'); } else { o.hidden=true; k.classList.toggle('is-ready', s2.player.st>=SK[i].st); } });
+    var jb=el.actions.querySelector('[data-jump]'), jd=Math.max(0,s2.player.jumpCd||0), jm=Math.max(.1,(R.jump&&R.jump.cooldown)||.8); if(jb){ var jc=jb.querySelector('.sk__cd'); if(jd>0){ jc.hidden=false; jc.textContent=jd.toFixed(1); jc.style.setProperty('--p',Math.min(1,jd/jm).toFixed(3)); } else jc.hidden=true; jb.classList.toggle('is-ready',jd<=0&&s2.player.st>=((R.jump&&R.jump.st)||15)); }
+    el.actions.classList.toggle('is-jumping',!!s2.player.jumping);
     el.actions.querySelector('[data-ult]').classList.toggle('is-ready', s2.player.ult>=R.ult.max); el.actions.querySelector('[data-atk]').classList.toggle('is-ready', Bs.dist<=L.player.reach);
     var lines=[]; if(s2.enemy.state==='telegraph'&&!s2.enemy.counterable) lines.push(['x','#FF9A45','튕기기 불가 · 회피','']); if(s2.player.riposte) lines.push(['bolt','#C9A45E','반격 기회',s2.player.riposteT.toFixed(1)+'s']); if(s2.player.guard) lines.push(['shield','#7B9BD6','방어 중','']); if(s2.player.buffT>0) lines.push(['shield','#5FAE9B','결의',Math.ceil(s2.player.buffT)+'s']); if(s2.player.critNext) lines.push(['bolt','#C9A45E','치명타 확정','']); if(s2.player.locked) lines.push(['x','#8A8A8A','경직','']);
     el.status.innerHTML=lines.map(function(l){ return '<div class="stline"><svg class="ico ico--xs" style="color:'+l[1]+'"><use href="#i-'+l[0]+'"/></svg>'+l[2]+'<b>'+l[3]+'</b></div>'; }).join('');

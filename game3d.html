@@ -110,6 +110,11 @@ html.mobile .actions{display:block!important;transform:scale(.84);margin-left:-5
 .abtn--sk4{--x:302px;--y:46px;--d:54px}
 .abtn--ult{--x:40px;--y:206px;--d:58px;border-color:rgba(199,58,54,.6)}
 .abtn--dodge{--x:112px;--y:206px;--d:62px;border-color:rgba(123,155,214,.5)}
+.abtn--jump{--x:55px;--y:138px;--d:52px;border-color:rgba(106,168,235,.58);background:radial-gradient(circle,rgba(40,76,122,.72),rgba(8,13,22,.84))}
+html:not(.mobile):not(.touch) .abtn--jump{display:none}
+.abtn--jump .jump__arrow{font-family:system-ui,sans-serif;font-size:24px;line-height:1;color:#E5F1FF;text-shadow:0 1px 5px #000;transform:translateY(-1px)}
+.abtn--jump.is-cue{animation:jumpCue .28s ease-in-out 3}
+@keyframes jumpCue{50%{border-color:#8FC6FF;box-shadow:0 0 18px rgba(90,170,255,.58);filter:brightness(1.35)}}
 .abtn--guard{--x:186px;--y:206px;--d:62px;border-color:rgba(123,155,214,.6);background:radial-gradient(circle,rgba(40,58,96,.75),rgba(8,10,16,.85))}
 .abtn--guard .ico{width:24px;height:24px}
 .abtn--atk{--x:286px;--y:188px;--d:96px;border-color:rgba(199,58,54,.6);background:radial-gradient(circle,rgba(120,20,20,.8),rgba(30,8,8,.85))}
@@ -211,6 +216,8 @@ html.mobile .abtn .sk__k,html.touch .abtn .sk__k{display:none}
 .abtn--atk{background:radial-gradient(circle,rgba(150,32,28,.62),rgba(40,10,10,.55))!important;border-color:rgba(230,120,110,.55)!important}
 .abtn--guard{background:radial-gradient(circle,rgba(46,66,110,.55),rgba(10,12,20,.5))!important;border-color:rgba(150,180,235,.5)!important}
 .abtn--dodge{border-color:rgba(150,180,235,.4)!important}
+.abtn--jump{border-color:rgba(136,190,242,.48)!important}
+.actions.is-jumping [data-atk],.actions.is-jumping [data-guard]{pointer-events:none;opacity:.42;filter:saturate(.6)}
 .abtn--ult{border-color:rgba(230,120,110,.45)!important}
 .abtn--ult.is-ready{border-color:#E4C27A!important}
 .abtn .sk__cd{background:conic-gradient(rgba(0,0,0,.68) calc(var(--p,1)*360deg),rgba(0,0,0,.12) 0);font-size:14px;text-shadow:0 1px 3px #000}
@@ -310,6 +317,7 @@ html.in-fight .quest{display:none}
 .cinema-hud-v1 .abtn--sk3{--x:333px;--y:128px;--d:58px}
 .cinema-hud-v1 .abtn--sk4{--x:326px;--y:51px;--d:54px}
 .cinema-hud-v1 .abtn--dodge{--x:184px;--y:214px;--d:66px;border-color:rgba(205,215,229,.42)!important}
+.cinema-hud-v1 .abtn--jump{--x:124px;--y:164px;--d:54px;border-color:rgba(151,196,241,.52)!important;background:radial-gradient(circle,rgba(40,74,112,.70),rgba(7,10,16,.72))!important}
 .cinema-hud-v1 .abtn--guard{--x:244px;--y:238px;--d:64px;background:radial-gradient(circle,rgba(43,52,68,.78),rgba(7,9,13,.76))!important;border-color:rgba(185,200,224,.50)!important}
 .cinema-hud-v1 .abtn--ult{--x:121px;--y:232px;--d:58px;border-color:rgba(220,97,83,.55)!important;background:radial-gradient(circle,rgba(78,18,20,.7),rgba(9,7,9,.7))!important}
 .cinema-hud-v1 .abtn--ult.is-ready{box-shadow:0 0 18px rgba(226,62,51,.50)!important;border-color:#EF7464!important}

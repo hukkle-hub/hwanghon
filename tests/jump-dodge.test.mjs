@@ -72,7 +72,7 @@ test('레이드 서버: 같은 규칙 — jumpOnly 는 점프로만, 공중 입�
 
 test('game3d 배선: I 키 → jump, 점프 이벤트, jumpOnly 바닥 파랑(0x4A8BE0), 안내줄, 절차 도약이 리그 뒤에 얹힌다', async ()=>{
   const g=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8');
-  assert.ok(g.includes("e.code==='KeyI') jumpIn()")); assert.ok(g.includes("case 'jump': SFX.play('dodge')")); assert.ok(g.includes('s.enemy.jumpOnly?0x4A8BE0'));
+  assert.ok(g.includes("e.code==='KeyI') jumpIn('keyboard')"));   /* GPT v12: 입력 출처를 넘긴다 */ assert.ok(g.includes("case 'jump': SFX.play('dodge')")); assert.ok(g.includes('s.enemy.jumpOnly?0x4A8BE0'));
   assert.ok(g.includes('뛰어넘어라')); assert.ok(g.indexOf('tickJump(dt);')>g.indexOf('if(ain.rig) ain.rig.apply('),'발 IK 뒤');
   assert.match(g,/ain\.root\.position\.y\+=\(J\.height\|\|1\.1\)\*4\*u\*\(1-u\)/);
 });
