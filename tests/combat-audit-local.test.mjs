@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+
+const g=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8');
+
+test('combatAudit는 localhost 전용 query flag',()=>{
+  assert.match(g,/\['127\.0\.0\.1','localhost'\]\.includes\(location\.hostname\).*combatAudit/);
+});
+
+test('감사는 판정 입력 없이 snapshot과 renderer 통계만 기록',()=>{
+  const i=g.indexOf('function auditSnapshot()');
+  const block=g.slice(i,i+2500);
+  assert.match(block,/battle\.snapshot\(\)/);
+  assert.match(block,/FRAME_METRICS\.report\(\)/);
+  assert.match(block,/renderer\.info\.render\.calls/);
+  assert.match(block,/renderer\.info\.render\.triangles/);
+  assert.ok(!block.includes("battle.input("));
+});
+
+test('P5 지지발과 P0 보스 reaction, 카메라 거리, 프레임을 한 로그에 남긴다',()=>{
+  assert.match(g,/plantSide:cd\.plantSide/);
+  assert.match(g,/plantError:cd\.plantError/);
+  assert.match(g,/bossReaction:boss\.behavior&&boss\.behavior\.reaction/);
+  assert.match(g,/gapM:.*world\.dist\(P\.x,P\.y,Bs\.x,Bs\.y\)\/SCALE/);
+  assert.match(g,/p95Ms:fm\.p95Ms/);
+});
+
+test('핵심 전투 이벤트만 타임라인에 저장',()=>{
+  assert.match(g,/actionstart\|actionend\|actioncancel\|hit\|impact\|counter\|damaged\|dodge\|jump\|deflect\|break/);
+  assert.match(g,/auditEvent\(e\)/);
+});
+
+test('감사 JSON은 실제 전투를 관찰만 했음을 명시',()=>{
+  assert.match(g,/combatAudit는 실제 전투를 관찰만 하며 판정\/AI\/보상에 개입하지 않는다/);
+  assert.match(g,/hwanghon-combat-audit-/);
+});
+
+test('정렬 버튼은 검수 구도만 1.3m로 맞추고 전투 규칙은 건드리지 않는다',()=>{
+  assert.match(g,/P\.x=Bs\.x-1\.3\*SCALE/);
+  assert.match(g,/setLock\(true\)/);
+});

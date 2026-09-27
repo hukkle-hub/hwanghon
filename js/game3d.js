@@ -1425,6 +1425,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   function handle(e){
     if((e.t==='hit'||e.t==='impact')&&!e.poseReady){pendingContacts.push(e);return;}
     var s=battle?battle.snapshot():null;
+    auditEvent(e);
     switch(e.t){
       case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
@@ -1841,6 +1842,77 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       }
     }requestAnimationFrame(reviewFrame);
   }
+  /* 로컬 전투 감사 모드 — 실제 전투를 그대로 플레이하면서 이벤트/포즈/성능을 기록한다.
+     사용: localhost ...game3d.html?d=d01&combatAudit=1
+     production route·보상·판정·AI를 건드리지 않는다. */
+  var AUDIT_LOCAL=['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('combatAudit');
+  var combatAudit=null;
+  function auditNow(){ return performance.now()/1000; }
+  function auditSnapshot(){
+    if(!AUDIT_LOCAL||!battle)return null;
+    var s=battle.snapshot(), a=s.player.action, cd=ain.cinema&&ain.cinema.diagnostics||{}, fm=FRAME_METRICS.report();
+    return {
+      t:+(auditNow()-(combatAudit?combatAudit.t0:auditNow())).toFixed(3),
+      fight:+fightT.toFixed(3),
+      clip:a?(a.clip||a.kind||'action'):'',
+      actionId:a&&a.id!=null?a.id:null,
+      elapsed:a?+a.elapsed.toFixed(3):null,
+      hitAt:a?+a.hitAt.toFixed(3):null,
+      combo:s.player.combo||0,
+      hitstop:+(s.player.hitstop||0).toFixed(3),
+      bossState:s.enemy.state,
+      gapM:+(world.dist(P.x,P.y,Bs.x,Bs.y)/SCALE).toFixed(3),
+      base:ain.base||'',
+      oneShot:ain.oneshotName||'',
+      plantSide:cd.plantSide||'',
+      plantWeight:+(cd.plantWeight||0).toFixed(3),
+      plantError:cd.plantError==null?null:+cd.plantError.toFixed(4),
+      bossReaction:boss.behavior&&boss.behavior.reaction?boss.behavior.reaction.kind:'',
+      fps:fm.fps||0,p95Ms:fm.p95Ms||0,p99Ms:fm.p99Ms||0,over50ms:fm.over50ms||0,
+      drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles
+    };
+  }
+  function auditEvent(e){
+    if(!combatAudit||!combatAudit.on)return;
+    if(!/^(actionstart|actionend|actioncancel|hit|impact|counter|damaged|dodge|jump|deflect|break)$/.test(e.t))return;
+    var s=auditSnapshot()||{}, row=Object.assign({kind:'event',event:e.t},s);
+    row.eventClip=e.clip||'';row.eventId=e.id==null?null:e.id;row.dmg=e.dmg||0;row.part=e.part||'';
+    combatAudit.events.push(row);
+    if(combatAudit.events.length>240)combatAudit.events.shift();
+  }
+  function auditTick(){
+    if(!combatAudit||!combatAudit.on||!battle)return;
+    var now=auditNow();if(now-combatAudit.lastSample<.05)return;combatAudit.lastSample=now;
+    var row=auditSnapshot();if(row)combatAudit.samples.push(row);
+    if(combatAudit.samples.length>2400)combatAudit.samples.shift();
+    if(combatAudit.live){
+      var a=row&&row.clip?row.clip:'—',ae=row&&row.elapsed!=null?row.elapsed.toFixed(2):'—',ah=row&&row.hitAt!=null?row.hitAt.toFixed(2):'—',
+          pe=row&&row.plantError!=null?(row.plantError*100).toFixed(1)+'cm':'—';
+      combatAudit.live.textContent='ACT '+a+' '+ae+'/'+ah+'  COMBO '+(row?row.combo:0)+'\n'
+        +'GAP '+(row?row.gapM:'—')+'m  BASE '+(row?row.base:'—')+'  ONE '+(row?row.oneShot:'—')+'\n'
+        +'PLANT '+(row&&row.plantSide||'—')+' '+(row?Math.round(row.plantWeight*100):0)+'% err '+pe+'\n'
+        +'BOSS '+(row&&row.bossState||'—')+' / '+(row&&row.bossReaction||'—')+'\n'
+        +'FPS '+(row?row.fps:'—')+'  p95 '+(row?row.p95Ms:'—')+'ms  calls '+(row?row.drawCalls:'—');
+    }
+  }
+  function auditExport(){
+    if(!combatAudit)return;
+    var payload={capturedAt:new Date().toISOString(),build:window.TW&&TW.BUILD||'local',level:L.id,
+      note:'combatAudit는 실제 전투를 관찰만 하며 판정/AI/보상에 개입하지 않는다.',
+      events:combatAudit.events,samples:combatAudit.samples,frameMetrics:FRAME_METRICS.report()};
+    var url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),a=document.createElement('a');
+    a.href=url;a.download='hwanghon-combat-audit-'+Date.now()+'.json';a.click();setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  }
+  if(AUDIT_LOCAL){
+    combatAudit={on:true,t0:auditNow(),lastSample:0,events:[],samples:[],live:null};
+    var ap=document.createElement('div');ap.style.cssText='position:fixed;z-index:99998;left:8px;top:8px;width:310px;background:#071019e6;color:#dfe9f5;border:1px solid #58708a;padding:8px;font:11px/1.45 monospace;white-space:pre-wrap;pointer-events:auto';
+    ap.innerHTML='<b style="font:12px sans-serif">COMBAT AUDIT · LOCAL</b><div data-audit-live style="margin:5px 0">전투 시작 대기</div><button data-audit-align>1.3m 정렬</button> <button data-audit-clear>기록 초기화</button> <button data-audit-save>JSON 저장</button> <button data-audit-hide>숨김</button>';
+    document.body.appendChild(ap);combatAudit.live=ap.querySelector('[data-audit-live]');
+    ap.querySelector('[data-audit-align]').onclick=function(){if(!battle)return;P.x=Bs.x-1.3*SCALE;P.y=Bs.y;world.faceTo(P,Bs.x,Bs.y);setLock(true);};
+    ap.querySelector('[data-audit-clear]').onclick=function(){combatAudit.events=[];combatAudit.samples=[];combatAudit.t0=auditNow();combatAudit.lastSample=0;};
+    ap.querySelector('[data-audit-save]').onclick=auditExport;
+    ap.querySelector('[data-audit-hide]').onclick=function(){ap.style.display='none';};
+  }
   function cycleTarget(){if(!battle||paused||cine||ain.dead)return;var s=battle.snapshot(),ids=s.enemy.parts.map(function(p){return p.id;}),i=ids.indexOf(s.target);battle.input('target',ids[(i+1)%ids.length]);}
   $('#target-cycle').addEventListener('click',cycleTarget);
   (function(){ var b=$('#lockon'); if(b) b.addEventListener('click', function(){ setLock(!lockOn); }); })();
@@ -2047,6 +2119,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if((!!battle)!==inFight){ inFight=!!battle; document.documentElement.classList.toggle('in-fight', inFight); }   /* 좁은 화면 HUD 가 전투 중 정리된다 */
     $('#target-cycle').hidden=!battle||cine||ain.dead;
     var lb=$('#lockon'); if(lb) lb.hidden=!battle||cine||ain.dead;
+    auditTick();
     tickLock(dt); tickRim();
     renderMobs(dt); tickSparks(dt); tickDrag(dt); tickRecoil(dt); tickTrail(dt); tickFX(dt); tickDebris(dt);if(dungeonProps)dungeonProps.update(travelTime);
     if(interactButton){
