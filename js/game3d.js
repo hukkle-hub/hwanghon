@@ -763,7 +763,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(window.TW_WIND){ try{ TW_WIND.prepare(THREE, g.scene); var wp=TW_WIND.profile(A.id); wind=TW_WIND.bind(THREE, g.scene, wp); console.info('[tw-wind]', wp.name); }catch(e){ console.warn('wind', e); } }
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     /* GLTFLoader 는 animations[i].extras 를 클립 userData 에 안 옮긴다 → 직접 옮긴다(footlock 표식을 ain-bind-repair 가 읽는다, 문서 116) */
-    try{ var adefs=g.parser&&g.parser.json&&g.parser.json.animations; if(adefs) g.animations.forEach(function(c,i){ if(adefs[i]&&adefs[i].extras) Object.assign(c.userData,adefs[i].extras); }); }catch(e){}
+    try{ var adefs=g.parser&&g.parser.json&&g.parser.json.animations; if(adefs) g.animations.forEach(function(c,i){ if(adefs[i]&&adefs[i].extras) c.userData=Object.assign(c.userData||{},adefs[i].extras); }); }catch(e){ DIAG.errors.push('extras '+e.message); }   /* r170 AnimationClip 은 userData 가 없다(undefined) — 만들어서 넣는다 */
     if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
     else g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));

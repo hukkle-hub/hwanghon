@@ -24,7 +24,7 @@ test('플레이어 피격 플래시 0.08 s 0x30120e (전체 단색 빨강 아님
   assert.ok(!/ain\.hitT=0\.18/.test(G)); assert.match(G,/ain\.hitT=0\.08; hitReact\(e\)/); assert.match(G,/ain\.hitT>0\?0x30120e:0x000000/);
 });
 test('GLB extras → 클립 userData, footlock 클립은 골반 XZ 를 지우지 않는다', ()=>{
-  assert.ok(G.includes("Object.assign(c.userData,adefs[i].extras)")); assert.ok(G.indexOf("Object.assign(c.userData,adefs[i].extras)")<G.indexOf("g.animations=repairAinClips("));
+  assert.ok(G.includes("c.userData=Object.assign(c.userData||{},adefs[i].extras)"),'r170 AnimationClip 은 userData 가 undefined — 만들어 넣는다'); assert.ok(G.indexOf("c.userData=Object.assign(c.userData||{}")<G.indexOf("g.animations=repairAinClips("));
   assert.match(BR,/!\/footlock\/\.test\(\(clip\.userData&&clip\.userData\.source\)\|\|''\)/);
 });
 test('바람 스프라이트 0.55×0.20, 0.07 s 간격; renderInfo 진단', ()=>{
