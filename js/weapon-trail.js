@@ -18,6 +18,13 @@ const INNER=[0.76,0.70], OUTER=[1.03,1.08], BRIGHT=[0.80,0.18], ALPHA=[0.72,0.16
    밝기 지수는 감마(≈2.2)만큼 세게, 안쪽 가장자리는 0 에 가깝게 둔다 (0.12 로는 화면에서 0.35 로 보여 판이 그대로였다).
    값은 스매시 «판» 을 줄이는 쪽으로 잡은 시안(근거 없음) */
 const TAPER_MIN=0.2, TAPER_W=0.8, TAPER_A=2.2, EDGE_IN=0.0;
+/* 기술별 차등 (디렉터 2026-09-27 «궤적 밝기는 스킬에 따라 차등», 문서 121 §5): 세기(trailStyle)가 클수록 꼬리가 덜 가늘고 덜 흐리다.
+   g = (세기 − 1) ÷ 1.2 (0~1): 평타 1.0 → 0(위 값 그대로) · 스매시 1.5 → .42 · 기술 1.6~ · 카운터 1.8 → .67 · 궁극기·틈새 2.0 → .83 · 처형 2.2 → 1.
+   끝값(g=1): 꼬리 폭 .5 · 밝기 지수 1.0 · 안쪽 가장자리 .22. 「근거 없음」 시안 */
+export function trailTaper(power){ const g=Math.max(0,Math.min(1,((power||1)-1)/1.2));
+  /* 안쪽 가장자리는 카운터급(g > .5)부터만 켠다 — 스매시(g .42)에 .09 만 줘도 sRGB 로 .33 이라 머리 쪽이 다시 «판» 이 됐다 */
+  const ge=Math.max(0,(g-0.5)/0.5);
+  return { min:TAPER_MIN+(0.5-TAPER_MIN)*g, a:TAPER_A+(1.0-TAPER_A)*g, edge:EDGE_IN+(0.22-EDGE_IN)*ge }; }
 export function trailLifetime(power){ return BIG()&&power>=1.5?0.17:0.11; }
 
 let GLOW=null;
@@ -96,20 +103,20 @@ export class WeaponTrail{
     if(n<3){ mesh.visible=false; return; }
     mesh.visible=true;
     const pos=mesh.geometry.attributes.position.array, col=mesh.geometry.attributes.color.array;
-    const life=trailLifetime(this.power);
+    const life=trailLifetime(this.power), tp=trailTaper(this.power);
     for(let i=0;i<n;i++){
       const e=this.pts[i], b=e.b, t=e.t, k=Math.max(0,1-e.age/Math.max(.001,life)), o=i*6;
       const dx=t.x-b.x, dy=t.y-b.y, dz=t.z-b.z;
       /* 문서 121 §2: 꼬리로 갈수록 날끝 선(over) 쪽으로 가늘어지고 흐려진다.
          나이(age)만으로 흐리면 빠른 동작(스매시 내려찍기)은 점이 다 «젊어서» 균일하게 밝고,
          곧은 경로라 리본이 몸통 너비의 «판» 으로 읽혔다. 머리(i=0)는 예전과 같다. */
-      const u=n>1?i/(n-1):0, keep=TAPER_MIN+(1-TAPER_MIN)*Math.pow(1-u,TAPER_W), inner=over-(over-under)*keep;
+      const u=n>1?i/(n-1):0, keep=tp.min+(1-tp.min)*Math.pow(1-u,TAPER_W), inner=over-(over-under)*keep;
       pos[o]=b.x+dx*inner; pos[o+1]=b.y+dy*inner; pos[o+2]=b.z+dz*inner;
       pos[o+3]=b.x+dx*over; pos[o+4]=b.y+dy*over; pos[o+5]=b.z+dz*over;
-      const a=k*k*bright*this.power*Math.pow(1-u,TAPER_A);
+      const a=Math.min(bright,k*k*bright*this.power)*Math.pow(1-u,tp.a);   /* 머리 밝기는 겹의 최대(bright)에서 멈춘다 — 세기 1.5+ 가 1 을 넘겨 포화된 «판» 이 됐다. 세기는 꼬리 길이·밝기로 드러난다 */
       /* 폭 방향 밝기: 날끝(over) 이 가장 밝고 안쪽으로 흐려진다. 예전엔 거꾸로(안쪽 a, 날끝 .35a)라
          안쪽 가장자리에 딱딱한 밝은 선이 서서 리본이 «판» 으로 읽혔다 (문서 121 §2). */
-      col[o]=this.hue.r*a*EDGE_IN; col[o+1]=this.hue.g*a*EDGE_IN; col[o+2]=this.hue.b*a*EDGE_IN;
+      col[o]=this.hue.r*a*tp.edge; col[o+1]=this.hue.g*a*tp.edge; col[o+2]=this.hue.b*a*tp.edge;
       col[o+3]=this.hue.r*a;       col[o+4]=this.hue.g*a;       col[o+5]=this.hue.b*a;
     }
     mesh.geometry.attributes.position.needsUpdate=true; mesh.geometry.attributes.color.needsUpdate=true;

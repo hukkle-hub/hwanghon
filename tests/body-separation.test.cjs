@@ -31,3 +31,11 @@ test('game3d: 전투 중 플레이어·보스가 다 움직인 뒤 separate, 관
  assert.ok(tick>0&&sep>tick,'battle.tick(보스 이동 포함) 뒤에 온다');
  assert.match(src.slice(sep-80,sep),/battle&&!bossLunge&&!ain\.dead&&$/);
 });
+test('구르기로 보스를 뚫고 지나가지 못한다 (디렉터 결정 2026-09-27, 문서 121 §5)',()=>{
+ /* 보스 정면으로 구르기 — 매 틱 이동 뒤 separate. 보스 반대편(오른쪽)으로 넘어가면 안 된다 */
+ const w=room(),b={x:360,y:192,r:60},p={x:200,y:192,r:22,aim:0,rollT:0,lockT:0,kbT:0};
+ w.roll(p,1,0,400,.32);for(let t=0;t<.4;t+=.01){w.movePlayer(p,0,0,.01,230);w.separate(p,b);}
+ assert.ok(p.x<b.x,'보스 앞에 막힌다');assert.ok(w.dist(p.x,p.y,b.x,b.y)>=82-1e-6);
+ const src=fs.readFileSync('js/game3d.js','utf8'),line=src.slice(src.lastIndexOf('\n',src.indexOf('world.separate(P, Bs)')),src.indexOf('world.separate(P, Bs)'));
+ assert.doesNotMatch(line,/rollT/,'구르기 중에 몸 막기를 끄지 않는다');
+});

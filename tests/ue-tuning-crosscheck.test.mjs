@@ -12,5 +12,5 @@ test('UE 1.2 튜닝: 판정·타이밍·기력·회피·점프·카운터·보�
 
 test('UE 1.2 튜닝: 알려진 차이는 이 4 개뿐 (디렉터 판단 대기 — 문서 119 §7)',()=>{
   const diffs=rows.filter(r=>!r.required&&!r.ok).map(r=>r.item).sort();
-  assert.deepEqual(diffs,['Charge 돌진 거리 (cm)','Spin 피해 합계','UE 에 없는 d01 패턴','smash stamina (tier 3)'].sort());
+  assert.deepEqual(diffs,['UE 에 없는 d01 패턴','smash stamina (tier 3)'].sort());   /* 돌진 920 cm·회전 합계 6500 은 규칙대로 맞췄다 (문서 121 §5) */
 });

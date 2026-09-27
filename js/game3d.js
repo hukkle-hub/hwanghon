@@ -944,7 +944,12 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     f.o.traverse(function(c){ if(c.geometry && !c.isSprite) c.geometry.dispose(); if(c.material) c.material.dispose(); }); }
   /* 무기 궤적 · 칼바람 — 구현은 js/weapon-trail.js (온라인과 공유) */
   var trail=null;
+  /* 지금 행동의 궤적 세기·색 — 접점 저항·튕김이 잠깐 낮췄다가 «이 값» 으로 되돌린다.
+     예전엔 1.0·기본색으로 되돌려 스매시·기술·카운터가 명중 뒤 평타 궤적(옅은 하늘색)으로 그려졌다 (문서 121 §5) */
+  var trailBase=[1.0, 0xBFD8E8];
   function trailSet(power, hex){ if(trail) trail.set(power, hex); }
+  function trailStyleSet(power, hex){ trailBase=[power, hex]; trailSet(power, hex); }
+  function trailRestore(){ trailSet(trailBase[0], trailBase[1]); }
   /* ── 접점 저항의 «보이는» 몫 ─────────────────────────────────────────────
      판정 시계는 정상 속도로 간다. 그림만 잠깐 뒤처졌다가 따라잡는다.
      dragLag = 지금 몇 초 뒤처져 있는가. 접점에서 확 벌어졌다가 0 으로 돌아온다. */
@@ -1432,7 +1437,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     var s=battle?battle.snapshot():null;
     auditEvent(e);
     switch(e.t){
-      case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} heldAction=null; if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
+      case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} heldAction=null; if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailStyleSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
       case 'actioncancel': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} heldAction=null; if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
       case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(lastAction&&lastAction.id===e.id)heldAction=Object.assign({},lastAction,{elapsed:lastAction.duration});ain.timed=null;deferActionReturn(e.id);} break;
@@ -1485,7 +1490,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
             }
             /* 날이 박혀 있는 동안 궤적을 끊는다 — 몸 안에서는 칼바람이 안 난다 */
             trailSet(0.35, brColor({}));
-            schedule(function(){ trailSet(1.0, 0xBFD8E8); }, Math.round(e.feel.dragT*1000));
+            schedule(trailRestore, Math.round(e.feel.dragT*1000));
           }
           if(e.crit||cmbH>=3){ shake(0.003,120,axH[0],axH[1]); vib(10); }
           if(!s || ['idle','stagger'].indexOf(s.enemy.state)>=0) bossPlay('flinch'); }
@@ -1507,7 +1512,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
            가산합성 섬광에 하얗게 묻혀서 캡처에서 아예 안 보였다. */
         schedule(function(){ var up=dfp.clone(); up.y+=1.75; num(up, '튕겼다', 'deflect'); }, 170);
         deflectRecoil(); trailSet(0, 0xBFD8E8);
-        schedule(function(){ trailSet(1.0, 0xBFD8E8); }, 260);
+        schedule(trailRestore, 260);
         el.combo.classList.remove('is-on'); comboT=0;   /* 연계가 끊겼다 */
         break;
       case 'attack': if(!e.timed) ainAttack('light', e.combo); SFX.play('swing'); comboShow(e.combo, false); break;
@@ -1571,7 +1576,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       case 'release': fxThrow(e); SFX.play('swing'); break;
       case 'detonate': fxDetonate(e); break;
       case 'heal': fxAura(0x7CE08A, 1.4); if(e.amount>0) num(above(P.x,P.y,2.2), '+'+W.fmt(e.amount), 'crit'); break;
-      case 'skill': var k=SK[e.index]; trailSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); pendingSkillClip=e.clip||null; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
+      case 'skill': var k=SK[e.index]; trailStyleSet(1.5+Math.min(4,(k.lv||1)-1)*0.16, brColor(k)); pendingSkillClip=e.clip||null; if(k.mult===0) guide('<b>'+k.name+'</b> — '+k.desc, 1.4);
         if(k.dodge) doRoll(k.dirClip?null:(e.clip||'skill2'));   /* dirClip: 전용 도약 클립이 없는 캐릭터는 일반 회피처럼 방향 클립 */                               /* 그림자 걸음: 구르기가 아니라 도약 */
         else if(!e.timed) playOnce(e.clip||('skill'+(e.index+1)), { speed:k.mult>0?1.25:1.0 });  /* 피해 없는 스킬도 동작이 나온다 */
         try{ fxSkill(k); }catch(x){ console.warn('fxSkill', x&&x.message); } break;

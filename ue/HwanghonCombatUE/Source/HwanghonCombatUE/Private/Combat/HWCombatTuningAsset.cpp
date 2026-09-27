@@ -73,7 +73,7 @@ UHWCombatTuningAsset::UHWCombatTuningAsset()
 
         Pattern("Charge", 1.00f, 0.32f, 0.90f,
             { Beat(0.10f, 7000.f, 240.f, false) },
-            false, true, false, false, 460.f, 0.30f),
+            false, true, false, false, 920.f, 0.30f),   // three.js 규칙 460 px ÷ 50 = 9.2 m (문서 121 §5 — px 를 cm 로 옮겨 절반이던 값)
 
         Pattern("Slam", 1.25f, 0.22f, 1.00f,
             { Beat(0.12f, 8000.f, 290.f, true) },
@@ -81,9 +81,9 @@ UHWCombatTuningAsset::UHWCombatTuningAsset()
 
         Pattern("Spin", 1.45f, 0.55f, 0.85f,
             {
-                Beat(0.12f, 2200.f, 280.f, false),
-                Beat(0.29f, 2200.f, 280.f, false),
-                Beat(0.46f, 2600.f, 280.f, false)
+                Beat(0.12f, 2000.f, 280.f, false),   // three.js 규칙 합계 6500 (1 타). 다단은 두고 합계만 맞춘다 (문서 121 §5)
+                Beat(0.29f, 2000.f, 280.f, false),
+                Beat(0.46f, 2500.f, 280.f, false)
             },
             false, true, false, true),
 
