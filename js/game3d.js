@@ -687,7 +687,11 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   /* ---------- Hi3D 소품 (art/3d/props) ---------- */
   var PROPS={ dummy_a:{h:1.8}, dummy_b:{h:1.8}, dummy_c:{h:1.8}, blast_door:{h:CEIL-0.6}, fan:{h:1.7}, tank_glow:{h:3.0}, console:{h:1.6}, pillar:{h:CEIL}, barrel:{h:1.0}, crate:{h:0.9}, rubble:{h:0.45}, wall_panel:{h:3.2} };
   var propTpl={};
-  function loadProps(done){ var names=(L.props3d||Object.keys(PROPS)).filter(function(n){ return !!PROPS[n]; }), left=names.length; if(!left){ done(); return; } names.forEach(function(n){ loader.load('art/3d/props/'+n+'.glb', function(g){ var root=g.scene; capTextures(root); root.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } }); var b=new THREE.Box3().setFromObject(root); root.userData.box=b; propTpl[n]=root; if(--left===0) done(); }, undefined, function(){ console.warn('prop load fail', n); if(--left===0) done(); }); }); }
+  function loadProps(done){ var names=(L.props3d||Object.keys(PROPS)).filter(function(n){ return !!PROPS[n]; }), left=names.length; if(!left){ done(); return; } names.forEach(function(n){ loader.load('art/3d/props/'+n+'.glb', function(g){ var root=g.scene; capTextures(root); root.traverse(function(o){ if(o.isMesh){
+      /* 모바일 auto/medium은 환경 소품의 shadow pass를 생략한다.
+         플레이어·보스 castShadow는 그대로라 전투 접지감은 유지. 명시적 high면 다시 허용. */
+      o.castShadow=!MOBILE||SET.quality==='high'; o.receiveShadow=true;
+    } }); var b=new THREE.Box3().setFromObject(root); root.userData.box=b; propTpl[n]=root; if(--left===0) done(); }, undefined, function(){ console.warn('prop load fail', n); if(--left===0) done(); }); }); }
   function spawn(n, x, z, o){ o=o||{}; var t=propTpl[n]; if(!t) return null; var c=t.clone(); var b=t.userData.box; var h=PROPS[n].h, sc=h/(b.max.y-b.min.y); var g=new THREE.Group(); c.scale.setScalar(sc); c.position.set(-(b.min.x+b.max.x)/2*sc, -b.min.y*sc, -(b.min.z+b.max.z)/2*sc); g.add(c); g.position.set(x, o.y||0, z); g.rotation.y=o.rot||0; if(o.sx) c.scale.x=sc*o.sx; if(o.sz) c.scale.z=sc*o.sz; scene.add(g); g.userData.size={ w:(b.max.x-b.min.x)*sc, h:h, d:(b.max.z-b.min.z)*sc }; return g; }
   function placeProps(){ if(L.env==='swamp') placePropsSwamp(); else if(L.env==='subway') placePropsSubway(); else placePropsBunker(); }
   function placePropsSwamp(){ [[6,4],[14,10],[24,3],[33,12],[36,3],[31,7]].forEach(function(p){ spawn('rubble', X(map.cell*(p[0]+0.5)), Z(map.cell*(p[1]+0.5)), { rot:Math.random()*6.28 }); }); }
@@ -1180,6 +1184,11 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
      캐릭터는 어두운 실루엣으로 남아 «그림을 덧댄 것» 처럼 보인다. 마영전에서
      스킬 순간 캐릭터가 같이 밝아지는 게 이 몫이다. 짧게(0.26초) 켰다 끈다. */
   function fxLight(color, power, life){
+    /* 모바일은 P0의 캐릭터 전용 fill/rim + 자체 VFX로 읽기를 보장한다.
+       매 타격마다 PointLight 수를 0↔1 바꾸면 Three.js가 라이트 개수별 shader
+       variant를 오가며 첫 사용/연속 사용에서 hitch가 날 수 있으므로 추가하지 않는다.
+       position.copy() 계약은 cineBeat가 쓰므로 dummy position은 유지한다. */
+    if(MOBILE) return { position:new THREE.Vector3() };
     var l=new THREE.PointLight(color, 0, 7.5);
     l.position.copy(ain.root.position); l.position.y+=1.25;
     scene.add(l);
