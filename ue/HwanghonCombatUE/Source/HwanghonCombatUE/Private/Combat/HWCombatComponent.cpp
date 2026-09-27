@@ -1,5 +1,9 @@
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 UHWCombatComponent::UHWCombatComponent()
 {
@@ -22,6 +26,11 @@ void UHWCombatComponent::BeginPlay()
 void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    if (bDead)
+    {
+        return;
+    }
 
     TickStamina(DeltaTime);
     DodgeCooldownRemaining = FMath::Max(0.f, DodgeCooldownRemaining - DeltaTime);
@@ -58,6 +67,10 @@ void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     {
         bContactFired = true;
         OnContact.Broadcast(CurrentAction, Spec.Tier, Spec.Damage);
+        if (bDead)
+        {
+            return;
+        }
     }
 
     if (CurrentAction == ActionAtFrameStart && ActionElapsed >= Spec.Duration)
@@ -68,6 +81,11 @@ void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
 bool UHWCombatComponent::RequestAttack()
 {
+    if (bDead)
+    {
+        return false;
+    }
+
     if (CurrentAction == EHWActionType::None)
     {
         return StartAction(EHWActionType::Attack1);
@@ -84,7 +102,7 @@ bool UHWCombatComponent::RequestAttack()
 
 bool UHWCombatComponent::RequestSmash()
 {
-    if (CurrentAction != EHWActionType::None)
+    if (bDead || CurrentAction != EHWActionType::None)
     {
         return false;
     }
@@ -94,7 +112,7 @@ bool UHWCombatComponent::RequestSmash()
 
 bool UHWCombatComponent::RequestDodge()
 {
-    if (DodgeCooldownRemaining > 0.f)
+    if (bDead || DodgeCooldownRemaining > 0.f)
     {
         return false;
     }
@@ -104,7 +122,7 @@ bool UHWCombatComponent::RequestDodge()
 
 bool UHWCombatComponent::RequestJump()
 {
-    if (JumpCooldownRemaining > 0.f || IsJumping())
+    if (bDead || JumpCooldownRemaining > 0.f || IsJumping())
     {
         return false;
     }
@@ -114,7 +132,7 @@ bool UHWCombatComponent::RequestJump()
 
 bool UHWCombatComponent::RequestCounter()
 {
-    if (CurrentAction != EHWActionType::None)
+    if (bDead || CurrentAction != EHWActionType::None)
     {
         return false;
     }
@@ -124,13 +142,37 @@ bool UHWCombatComponent::RequestCounter()
 
 bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
 {
-    if (IsInvulnerable())
+    if (bDead || IsInvulnerable())
     {
         return false;
     }
 
     Health = FMath::Max(0.f, Health - FMath::Max(0.f, Damage));
+    const bool bLethal = Health <= 0.f;
+    const EHWActionType Interrupted = CurrentAction;
+    if (bLethal)
+    {
+        // Damage listeners may request another action, tick, or apply more damage.
+        // They must observe committed death, never a zero-health living actor.
+        CommitDeath();
+    }
     OnDamaged.Broadcast(Damage, Tier);
+
+    if (bLethal)
+    {
+        if (Interrupted != EHWActionType::None)
+        {
+            OnActionEnded.Broadcast(Interrupted);
+        }
+        OnDied.Broadcast();
+        return true;
+    }
+
+    // A nonlethal damage listener can recursively deal the lethal hit.
+    if (bDead)
+    {
+        return true;
+    }
 
     // Graybox reaction. Later animation work can keep light reactions additive.
     if (Tier == EHWAttackTier::Break || Tier == EHWAttackTier::Stagger)
@@ -153,22 +195,26 @@ bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
 
 void UHWCombatComponent::ApplyHitStop(float Seconds)
 {
+    if (bDead)
+    {
+        return;
+    }
     HitStopRemaining = FMath::Max(HitStopRemaining, Seconds);
 }
 
 bool UHWCombatComponent::IsInvulnerable() const
 {
-    return CurrentAction == EHWActionType::Dodge && ActionElapsed <= Tuning->DodgeIFrames;
+    return !bDead && Tuning && CurrentAction == EHWActionType::Dodge && ActionElapsed <= Tuning->DodgeIFrames;
 }
 
 bool UHWCombatComponent::IsJumping() const
 {
-    return CurrentAction == EHWActionType::Jump && ActionElapsed <= Tuning->JumpDuration;
+    return !bDead && Tuning && CurrentAction == EHWActionType::Jump && ActionElapsed <= Tuning->JumpDuration;
 }
 
 bool UHWCombatComponent::IsCounterActive() const
 {
-    return CurrentAction == EHWActionType::Counter && ActionElapsed <= Tuning->CounterWindow;
+    return !bDead && Tuning && CurrentAction == EHWActionType::Counter && ActionElapsed <= Tuning->CounterWindow;
 }
 
 float UHWCombatComponent::GetActionNormalized() const
@@ -187,9 +233,40 @@ float UHWCombatComponent::GetMaxHealth() const
     return Tuning ? Tuning->MaxHealth : 0.f;
 }
 
+void UHWCombatComponent::CommitDeath()
+{
+    bDead = true;
+    Health = 0.f;
+    CurrentAction = EHWActionType::None;
+    QueuedAction = EHWActionType::None;
+    ActionElapsed = 0.f;
+    bContactFired = true;
+    HitStopRemaining = 0.f;
+    SetComponentTickEnabled(false);
+
+    if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+    {
+        Character->StopJumping();
+        Character->ConsumeMovementInputVector();
+        if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+        {
+            Movement->StopMovementImmediately();
+            Movement->ClearAccumulatedForces();
+            Movement->DisableMovement();
+        }
+        if (USkeletalMeshComponent* Mesh = Character->GetMesh())
+        {
+            if (UAnimInstance* AnimInstance = Mesh->GetAnimInstance())
+            {
+                AnimInstance->StopAllMontages(0.f);
+            }
+        }
+    }
+}
+
 bool UHWCombatComponent::StartAction(EHWActionType Action)
 {
-    if (!Tuning)
+    if (bDead || !Tuning)
     {
         return false;
     }
@@ -226,6 +303,10 @@ bool UHWCombatComponent::StartAction(EHWActionType Action)
 
 bool UHWCombatComponent::RequestDefensiveAction(EHWActionType Action)
 {
+    if (bDead)
+    {
+        return false;
+    }
     if (CurrentAction == EHWActionType::None)
     {
         return StartAction(Action);
@@ -257,6 +338,10 @@ bool UHWCombatComponent::RequestDefensiveAction(EHWActionType Action)
 
 void UHWCombatComponent::InterruptInto(EHWActionType Action)
 {
+    if (bDead)
+    {
+        return;
+    }
     if (CurrentAction != EHWActionType::None)
     {
         const EHWActionType Interrupted = CurrentAction;
@@ -272,6 +357,10 @@ void UHWCombatComponent::InterruptInto(EHWActionType Action)
 
 void UHWCombatComponent::FinishAction()
 {
+    if (bDead)
+    {
+        return;
+    }
     const EHWActionType Finished = CurrentAction;
     CurrentAction = EHWActionType::None;
     ActionElapsed = 0.f;

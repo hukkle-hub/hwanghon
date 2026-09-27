@@ -11,6 +11,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWActionStartedSignature, EHWAction
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWActionEndedSignature, EHWActionType, Action);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FHWContactSignature, EHWActionType, Action, EHWAttackTier, Tier, float, Damage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWDamagedSignature, float, Damage, EHWAttackTier, Tier);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHWPlayerDiedSignature);
 
 UCLASS(ClassGroup=(Hwanghon), meta=(BlueprintSpawnableComponent))
 class HWANGHONCOMBATUE_API UHWCombatComponent : public UActorComponent
@@ -37,6 +38,10 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FHWDamagedSignature OnDamaged;
+
+    // Health and all pending combat work are already terminal when this fires.
+    UPROPERTY(BlueprintAssignable)
+    FHWPlayerDiedSignature OnDied;
 
     UFUNCTION(BlueprintCallable)
     bool RequestAttack();
@@ -81,12 +86,18 @@ public:
     float GetHealth() const { return Health; }
 
     UFUNCTION(BlueprintPure)
+    bool IsDead() const { return bDead; }
+
+    UFUNCTION(BlueprintPure)
     float GetStamina() const { return Stamina; }
 
     UFUNCTION(BlueprintPure)
     float GetMaxHealth() const;
 
 private:
+    friend struct FHWPlayerDeathTestAccess;
+
+    void CommitDeath();
     bool StartAction(EHWActionType Action);
     void FinishAction();
     bool RequestDefensiveAction(EHWActionType Action);
@@ -109,4 +120,5 @@ private:
     float Health = 1.f;
     float Stamina = 0.f;
     float StaminaRegenBlocked = 0.f;
+    bool bDead = false;
 };
