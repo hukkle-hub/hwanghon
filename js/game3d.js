@@ -1850,7 +1850,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   function auditNow(){ return performance.now()/1000; }
   function auditSnapshot(){
     if(!AUDIT_LOCAL||!battle)return null;
-    var s=battle.snapshot(), a=s.player.action, cd=ain.cinema&&ain.cinema.diagnostics||{}, fm=FRAME_METRICS.report();
+    var s=battle.snapshot(), a=s.player.action, cd=ain.cinema&&ain.cinema.diagnostics||{}, fm=FRAME_METRICS.report(),
+        gapM=world.dist(P.x,P.y,Bs.x,Bs.y)/SCALE,
+        bodyRadiusM=(Math.max(0,P.r||0)+Math.max(0,Bs.r||0))/SCALE,
+        penetrationM=Math.max(0,bodyRadiusM-gapM);
     return {
       t:+(auditNow()-(combatAudit?combatAudit.t0:auditNow())).toFixed(3),
       fight:+fightT.toFixed(3),
@@ -1861,7 +1864,11 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       combo:s.player.combo||0,
       hitstop:+(s.player.hitstop||0).toFixed(3),
       bossState:s.enemy.state,
-      gapM:+(world.dist(P.x,P.y,Bs.x,Bs.y)/SCALE).toFixed(3),
+      gapM:+gapM.toFixed(3),
+      bodyRadiusM:+bodyRadiusM.toFixed(3),
+      clearanceM:+(gapM-bodyRadiusM).toFixed(3),
+      penetrationM:+penetrationM.toFixed(3),
+      bossLunge:!!bossLunge,
       base:ain.base||'',
       oneShot:ain.oneshotName||'',
       plantSide:cd.plantSide||'',
@@ -1889,7 +1896,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       var a=row&&row.clip?row.clip:'—',ae=row&&row.elapsed!=null?row.elapsed.toFixed(2):'—',ah=row&&row.hitAt!=null?row.hitAt.toFixed(2):'—',
           pe=row&&row.plantError!=null?(row.plantError*100).toFixed(1)+'cm':'—';
       combatAudit.live.textContent='ACT '+a+' '+ae+'/'+ah+'  COMBO '+(row?row.combo:0)+'\n'
-        +'GAP '+(row?row.gapM:'—')+'m  BASE '+(row?row.base:'—')+'  ONE '+(row?row.oneShot:'—')+'\n'
+        +'GAP '+(row?row.gapM:'—')+'m / BODY '+(row?row.bodyRadiusM:'—')+'m  PEN '+(row?Math.round(row.penetrationM*100):0)+'cm'+(row&&row.bossLunge?' [LUNGE]':'')+'\n'
+        +'BASE '+(row?row.base:'—')+'  ONE '+(row?row.oneShot:'—')+'\n'
         +'PLANT '+(row&&row.plantSide||'—')+' '+(row?Math.round(row.plantWeight*100):0)+'% err '+pe+'\n'
         +'BOSS '+(row&&row.bossState||'—')+' / '+(row&&row.bossReaction||'—')+'\n'
         +'FPS '+(row?row.fps:'—')+'  p95 '+(row?row.p95Ms:'—')+'ms  calls '+(row?row.drawCalls:'—');
@@ -1906,9 +1914,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   if(AUDIT_LOCAL){
     combatAudit={on:true,t0:auditNow(),lastSample:0,events:[],samples:[],live:null};
     var ap=document.createElement('div');ap.style.cssText='position:fixed;z-index:99998;left:8px;top:8px;width:310px;background:#071019e6;color:#dfe9f5;border:1px solid #58708a;padding:8px;font:11px/1.45 monospace;white-space:pre-wrap;pointer-events:auto';
-    ap.innerHTML='<b style="font:12px sans-serif">COMBAT AUDIT · LOCAL</b><div data-audit-live style="margin:5px 0">전투 시작 대기</div><button data-audit-align>1.3m 정렬</button> <button data-audit-clear>기록 초기화</button> <button data-audit-save>JSON 저장</button> <button data-audit-hide>숨김</button>';
+    ap.innerHTML='<b style="font:12px sans-serif">COMBAT AUDIT · LOCAL</b><div data-audit-live style="margin:5px 0">전투 시작 대기</div><button data-audit-align>안전 간격 정렬</button> <button data-audit-clear>기록 초기화</button> <button data-audit-save>JSON 저장</button> <button data-audit-hide>숨김</button>';
     document.body.appendChild(ap);combatAudit.live=ap.querySelector('[data-audit-live]');
-    ap.querySelector('[data-audit-align]').onclick=function(){if(!battle)return;P.x=Bs.x-1.3*SCALE;P.y=Bs.y;world.faceTo(P,Bs.x,Bs.y);setLock(true);};
+    ap.querySelector('[data-audit-align]').onclick=function(){if(!battle)return;var d=(P.r+Bs.r)/SCALE+.12;P.x=Bs.x-d*SCALE;P.y=Bs.y;world.faceTo(P,Bs.x,Bs.y);setLock(true);};
     ap.querySelector('[data-audit-clear]').onclick=function(){combatAudit.events=[];combatAudit.samples=[];combatAudit.t0=auditNow();combatAudit.lastSample=0;};
     ap.querySelector('[data-audit-save]').onclick=auditExport;
     ap.querySelector('[data-audit-hide]').onclick=function(){ap.style.display='none';};

@@ -22,7 +22,9 @@ test('P5 지지발과 P0 보스 reaction, 카메라 거리, 프레임을 한 로
   assert.match(g,/plantSide:cd\.plantSide/);
   assert.match(g,/plantError:cd\.plantError/);
   assert.match(g,/bossReaction:boss\.behavior&&boss\.behavior\.reaction/);
-  assert.match(g,/gapM:.*world\.dist\(P\.x,P\.y,Bs\.x,Bs\.y\)\/SCALE/);
+  assert.match(g,/bodyRadiusM=\(Math\.max\(0,P\.r\|\|0\)\+Math\.max\(0,Bs\.r\|\|0\)\)\/SCALE/);
+  assert.match(g,/penetrationM:\+penetrationM\.toFixed\(3\)/);
+  assert.match(g,/bossLunge:!!bossLunge/);
   assert.match(g,/p95Ms:fm\.p95Ms/);
 });
 
@@ -36,7 +38,8 @@ test('감사 JSON은 실제 전투를 관찰만 했음을 명시',()=>{
   assert.match(g,/hwanghon-combat-audit-/);
 });
 
-test('정렬 버튼은 검수 구도만 1.3m로 맞추고 전투 규칙은 건드리지 않는다',()=>{
-  assert.match(g,/P\.x=Bs\.x-1\.3\*SCALE/);
+test('정렬 버튼은 충돌 반지름 합 + 12cm로 맞추고 전투 규칙은 건드리지 않는다',()=>{
+  assert.match(g,/var d=\(P\.r\+Bs\.r\)\/SCALE\+\.12/);
+  assert.match(g,/P\.x=Bs\.x-d\*SCALE/);
   assert.match(g,/setLock\(true\)/);
 });

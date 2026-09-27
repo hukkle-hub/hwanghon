@@ -8,13 +8,19 @@ const finite=x=>Number.isFinite(Number(x))?Number(x):null;
 export function analyzeAudit(data={}){
   const events=Array.isArray(data.events)?data.events:[], samples=Array.isArray(data.samples)?data.samples:[];
   const out={
-    duration:0,minGapM:null,maxPlantErrorM:null,maxPlantWeight:0,
+    duration:0,minGapM:null,minClearanceM:null,maxPenetrationM:0,maxLungePenetrationM:0,worstOverlap:null,worstLungeOverlap:null,maxPlantErrorM:null,maxPlantWeight:0,
     handoffs:[],idleLeaks:[],hitDeltasMs:[],reactionLagMs:[],
     performance:data.frameMetrics||{},sampleCount:samples.length,eventCount:events.length
   };
   for(const s of samples){
     const t=finite(s.t);if(t!=null)out.duration=Math.max(out.duration,t);
     const g=finite(s.gapM);if(g!=null)out.minGapM=out.minGapM==null?g:Math.min(out.minGapM,g);
+    const body=finite(s.bodyRadiusM), clearance=finite(s.clearanceM),
+          pen=finite(s.penetrationM)!=null?finite(s.penetrationM):(g!=null&&body!=null?Math.max(0,body-g):null);
+    if(!s.bossLunge){
+      if(clearance!=null)out.minClearanceM=out.minClearanceM==null?clearance:Math.min(out.minClearanceM,clearance);
+      if(pen!=null&&pen>=out.maxPenetrationM){out.maxPenetrationM=pen;out.worstOverlap={t,clip:s.clip||'',bossState:s.bossState||'',gapM:g,bodyRadiusM:body,penetrationM:pen};}
+    }else if(pen!=null&&pen>=out.maxLungePenetrationM){out.maxLungePenetrationM=pen;out.worstLungeOverlap={t,clip:s.clip||'',bossState:s.bossState||'',gapM:g,bodyRadiusM:body,penetrationM:pen};}
     const pe=finite(s.plantError);if(pe!=null)out.maxPlantErrorM=out.maxPlantErrorM==null?pe:Math.max(out.maxPlantErrorM,pe);
     const pw=finite(s.plantWeight);if(pw!=null)out.maxPlantWeight=Math.max(out.maxPlantWeight,pw);
   }
@@ -51,7 +57,7 @@ export function auditVerdict(a){
     combo:maxHandoff==null?'NO_DATA':maxHandoff<=35&&!a.idleLeaks.length?'PASS':'CHECK',
     contact:maxHit==null?'NO_DATA':maxHit<=25?'PASS':'CHECK',
     plant:a.maxPlantErrorM==null?'NO_DATA':a.maxPlantErrorM<=.02?'PASS':'CHECK',
-    overlap:a.minGapM==null?'NO_DATA':a.minGapM>=.80?'PASS':'CHECK',
+    overlap:a.minGapM==null?'NO_DATA':a.maxPenetrationM<=.08?'PASS':a.maxPenetrationM<=.20?'CHECK':'FAIL',
     reaction:maxReaction==null?'NO_DATA':maxReaction<=50?'PASS':'CHECK',
     frame:p95==null?'NO_DATA':p95<=20?'PASS':p95<=25?'CHECK':'FAIL'
   };
@@ -62,6 +68,7 @@ export function markdownReport(data){
   const hand=a.handoffs.length?a.handoffs.map(x=>`${x.from}→${x.to} ${x.ms}ms`).join(', '):'—';
   const hit=a.hitDeltasMs.length?a.hitDeltasMs.map(x=>`${x.clip||'?'} ${x.ms}ms`).join(', '):'—';
   const react=a.reactionLagMs.length?a.reactionLagMs.map(x=>`${x.clip||'?'} ${x.ms==null?'없음':x.ms+'ms'}`).join(', '):'—';
+  const wo=a.worstOverlap?`${fmt(a.worstOverlap.t,2)}s · ${a.worstOverlap.clip||'neutral'} · boss ${a.worstOverlap.bossState||'?'} · ${fmt(a.worstOverlap.penetrationM*100,1)}cm`:'—';
   return `# 황혼 전투 감사 보고
 
 | 항목 | 값 | 판정 |
@@ -71,7 +78,10 @@ export function markdownReport(data){
 | idle 경유 | ${a.idleLeaks.length}회 | ${a.idleLeaks.length?'CHECK':'PASS'} |
 | hit 시각 오차 | ${hit} | ${v.contact} |
 | 최대 지지발 오차 | ${a.maxPlantErrorM==null?'—':fmt(a.maxPlantErrorM*100,1)+'cm'} | ${v.plant} |
-| 최소 플레이어-보스 간격 | ${a.minGapM==null?'—':fmt(a.minGapM,2)+'m'} | ${v.overlap} |
+| 최소 중심 간격 | ${a.minGapM==null?'—':fmt(a.minGapM,2)+'m'} | — |
+| 일반 전투 최대 body penetration | ${fmt(a.maxPenetrationM*100,1)}cm | ${v.overlap} |
+| 최악 일반 overlap 순간 | ${wo} | — |
+| 관통 돌진 중 최대 penetration | ${fmt(a.maxLungePenetrationM*100,1)}cm | 의도된 관통 |
 | 보스 반응 지연 | ${react} | ${v.reaction} |
 | FPS | ${a.performance?.fps??'—'} | — |
 | p95 frame | ${a.performance?.p95Ms??'—'}ms | ${v.frame} |
@@ -82,7 +92,10 @@ export function markdownReport(data){
 - combo CHECK: P4 뒤에도 1→2→3 사이 base 자세가 끼거나 handoff가 35ms를 넘는다.
 - contact CHECK: visual hit 이벤트가 action hitAt에서 ±25ms보다 멀다.
 - plant CHECK: P5 지지발 목표 오차가 2cm를 넘는다.
-- overlap CHECK: 실제 전투 좌표 간격이 0.80m 아래로 들어간 적이 있다. 이때만 P7 body separation을 검토한다.
+- overlap PASS: 보스 관통 돌진을 제외한 body penetration이 8cm 이하.
+- overlap CHECK: 8~20cm. 영상에서 실제 메시 관통이 보이는지 확인한다.
+- overlap FAIL: 일반 전투에서 20cm 초과. P7 body separation 우선 후보.
+- bossLunge=true 표본은 의도된 관통이므로 일반 overlap 판정에서 제외한다.
 - reaction CHECK: hit 뒤 50ms 안에 boss additive reaction이 관측되지 않는다.
 `;
 }
