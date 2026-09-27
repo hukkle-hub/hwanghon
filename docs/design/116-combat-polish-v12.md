@@ -19,8 +19,12 @@
 | 6 | `8164964` | `hwanghon_combat_polish_p4_combo_handoff_v12_fixed.patch` | actionend 뒤 20 ms 안에 다음 actionstart 가 오면 idle/run 을 거치지 않고 끝 자세→다음 공격 cross-fade | 깨끗 |
 | 7 | `f3c5742` | `hwanghon_combat_polish_p5_contact_foot_v12_FIXED.patch` | 아인 attack1/2/3/smash 접점 ±85/75 ms(스매시 140/45) 동안 덜 움직인 발을 다리 IK 로 세계 고정, plantSide/plantError 진단 | 깨끗 |
 | 8 | `3e8beb2` | (Claude 보정) | §2 | — |
+| 9 | `c6be1e5` | (Claude) | `combat-motion.js` 발 앵커 해제 0.12 s 섞기 · 핵 빛 4.0 m·정점 2.0 | 20 초 녹화 2 차 |
+| 10 | `aa76658` | (Claude, 클립 교체) | attack1/2/3(+smash) 발 고정 재굽기 클립 · 플레이어 피격 플래시 0.08 s 0x30120e | 20 초 녹화 3 차 |
+| 11 | `afb6426` | (Claude) | 클립 extras 복사 수정(r170 `AnimationClip.userData` 없음) | 페이지 계측 |
+| 12 | `e57e080` | (Claude) | smash 는 원본 클립으로 되돌림(footlock 은 attack1/2/3 만) | 20 초 녹화 4 차 |
 
-각 단계 개별 테스트 + `npm test` 통과(마지막 497/497). 패치 안 README 5 개(`README_*_KR.md`)도 그대로 들어왔다.
+각 단계 개별 테스트 + `npm test` 통과(마지막 499/499). 패치 안 README 5 개(`README_*_KR.md`)도 그대로 들어왔다.
 
 ## 2. Claude 보정 (8/8) — 20 초 녹화 분석에서 나온 것만
 

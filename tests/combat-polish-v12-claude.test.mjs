@@ -43,3 +43,7 @@ test('아인 attack1/2/3 는 발 고정 재굽기 클립(smash 는 원본)(extra
   for(const n of ['attack1','attack2','attack3']){ const a=j.animations.find(x=>x.name===n); assert.ok(a&&a.extras&&/footlock/.test(a.extras.source),n+' footlock'); }
   const sm=j.animations.find(x=>x.name==='smash'); assert.ok(!(sm.extras&&/footlock/.test(sm.extras.source)),'smash 는 원본(골반 rest) — 세 박자 빠른 내리침에 골반 뿌리 이동이 얹히면 접점 한 프레임에 44 cm 튄다');
 });
+
+test('보스 핵 광구 팽창은 flash ≥ .05(무거운 타격)만 — 평타마다 몸통만 한 주황 구가 뜨지 않는다', ()=>{
+  assert.ok(!G.includes("(a.flash>0?1.5:0)")); assert.match(G,/\(a\.flash>=0\.05\?1\.5:0\)/);
+});
