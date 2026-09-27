@@ -156,6 +156,15 @@ if(SHOT_F||SHOT_HIT||SHOT_ACT){
         const [ox,oz,oy]=off;G.cam.position.copy(p).addScaledVector(new V(1,0,0).applyQuaternion(q),ox).addScaledVector(new V(0,0,1).applyQuaternion(q),oz).add(new V(0,oy,0));G.cam.lookAt(p);G.cam.updateMatrixWorld();}}
     window.__NOSHOT=false;window.__vt.step(2);},{hide:process.env.HIDE||'',close:process.env.CLOSE||'',off:(process.env.CLOSE_OFF||'-0.8,0.8,0.25').split(',').map(Number)});
   await page.screenshot({path:SHOT_PNG});
+  /* ARMS=1: 그 순간 팔 뼈 위치 ↔ 그 뼈가 주 무게인 피부 정점들의 «실제 그려진» 중심 — 팔이 사라지면 둘이 멀어지거나 정점이 뭉친다 */
+  if(process.env.ARMS){const arms=await page.evaluate(()=>{const G=window.TW_DUNGEON,V=G.cam.position.constructor,out=[];let sm=null;G.ain.model.traverse(o=>{if(!sm&&o.isSkinnedMesh)sm=o;});if(!sm)return 'no skinned mesh';
+    sm.updateMatrixWorld(true);sm.skeleton.update();const sk=sm.geometry.attributes.skinIndex,sw=sm.geometry.attributes.skinWeight,n=sk.count,bones=sm.skeleton.bones,v=new V();
+    for(const nm of ['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand']){const bi=bones.findIndex(b=>b.name.replace(/^mixamorig:?/,'')===nm);if(bi<0){out.push(nm+' 없음');continue;}
+      const bp=bones[bi].getWorldPosition(new V());let c=new V(),k=0,far=0;const pts=[];
+      for(let i=0;i<n;i++){let best=-1,bw=0;for(let j=0;j<4;j++){const w=sw.getComponent(i,j);if(w>bw){bw=w;best=sk.getComponent(i,j);}}if(best!==bi)continue;sm.getVertexPosition(i,v);v.applyMatrix4(sm.matrixWorld);pts.push(v.clone());c.add(v);k++;}
+      c.divideScalar(k||1);let spread=0;for(const q of pts){spread=Math.max(spread,q.distanceTo(c));far=Math.max(far,q.distanceTo(bp));}
+      out.push(`${nm.padEnd(12)} 정점 ${String(k).padStart(5)} · 뼈→정점중심 ${(bp.distanceTo(c)*100).toFixed(1)} cm · 정점 퍼짐 ${(spread*100).toFixed(1)} cm · 뼈에서 가장 먼 정점 ${(far*100).toFixed(1)} cm · 뼈 ${bp.toArray().map(x=>x.toFixed(2)).join(',')}`);}
+    return out.join('\n');});console.log(arms);}
   const rd=await page.evaluate(()=>{const d=window.TW_DUNGEON.ain.rig&&window.TW_DUNGEON.ain.rig.diagnostics;return d?{two:+(d.twoHand||0).toFixed(2),err:+((d.gripError||0)*100).toFixed(1),resid:d.gripResid!=null?+(d.gripResid*100).toFixed(1):null}:null;});
   if(rd)console.log(`  두 손 잡기 ${rd.two} · 왼주먹-손잡이 ${rd.err} cm · 팔 모자람 ${rd.resid} cm`);
   const tl=res.trail&&res.trail[res.trail.length-1];
