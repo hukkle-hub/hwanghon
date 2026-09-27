@@ -63,7 +63,7 @@ const entered=await page.evaluate(async()=>{
 console.log('entered',JSON.stringify(entered));
 if(!entered.battle){console.error('전투에 들어가지 못했다');await browser.close();process.exit(1);}
 
-const res=await page.evaluate(({SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT})=>{
+const res=await page.evaluate(({MASH,SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT})=>{
   const G=window.TW_DUNGEON,P=G.P,B=G.B,SCALE=50,DEPTH=.55,rows=[],events=[];let fr=0,lastEv=[];
   const reach=150;
   const wdist=()=>G.world.dist(P.x,P.y,B.x,B.y);   /* 게임·combatAudit 과 같은 깊이 보정 공간 */
@@ -82,7 +82,8 @@ const res=await page.evaluate(({SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHO
     /* hold: 사람처럼 스틱을 보스 쪽으로 계속 민다 · polite: 사거리 밖일 때만 */
     const far=wdist()>reach*.85;
     G.setBot(BOT==='hold'||far?{sx:dx/m,sy:dy/m}:{sx:0,sy:0});
-    if(!far&&!p.action){ if(p.combo>=3&&p.st>40)b.input('smash'); else b.input('attack'); }
+    /* MASH=1: 사람처럼 연타(행동 중에도 누름 → 0.16 s 버퍼). 기본은 행동이 끝난 뒤에만 누른다 */
+    if(!far&&(MASH||!p.action)){ if(p.combo>=3&&p.st>40)b.input('smash'); else b.input('attack'); }
   }
   /* 궤적 리본(weapon-trail.js, 점 64 개 × 2 정점, renderOrder 3) — 화면 크기와 이웃 점 간격을 잰다 */
   const V=G.cam.position.constructor;let ribbons=null;const trail=[];
@@ -116,7 +117,7 @@ const res=await page.evaluate(({SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHO
   for(let i=0;i<N;i++){bot();window.__vt.step(1);if(bat()&&bat().snapshot().over)break;if(SHOT_F&&fr>=SHOT_F)break;if(SHOT_ACT){const [c,e,nth]=SHOT_ACT.split(':'),a=bat()&&bat().snapshot().player.action;if(a&&(a.clip||a.kind)===c&&a.elapsed>=Number(e)&&a.id!==window.__shotSeen){window.__shotSeen=a.id;window.__shotN=(window.__shotN||0)+1;if(window.__shotN>=Number(nth||1))break;}}if(SHOT_HIT&&!SHOT_F){const h=events.filter(e=>e.t==='hit');if(h.length>=SHOT_HIT){SHOT_F=h[SHOT_HIT-1].f+SHOT_AFTER;}}}
   window.__vtTick=null;if(!SHOT_F&&!SHOT_HIT&&!SHOT_ACT)G.setBot({sx:0,sy:0});
   return {rows,events,trail,body:(P.r+B.r)/SCALE,pr:P.r,br:B.r};
-},{SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT});
+},{MASH:!!process.env.MASH,SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHOT_ACT});
 
 const rows=res.rows,normal=rows.filter(r=>!r.lunge);
 const worst=normal.reduce((a,r)=>r.pen>a.pen?r:a,{pen:-1});
