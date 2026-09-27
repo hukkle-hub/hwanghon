@@ -411,7 +411,7 @@ export function makeAinTwoHand(model,root,slot){
  function apply(a,moving,guard,dt,poseName='idle',target=null){
   if(!slot)return;
   model.updateWorldMatrix(true,true);
-  const active=!/death|hit|roll|dodge|pickup|cheer/.test(a?.clip||poseName);
+  const active=!/death|hit|roll|dodge|jump|pickup|cheer/.test(a?.clip||poseName);
   gripAmount=dt>0?T.MathUtils.lerp(gripAmount,active?1:0,1-Math.exp(-Math.min(dt,.05)*24)):(active?1:0);
   for(const m of gripMeshes){m.morphTargetInfluences[0]=gripAmount;m.morphTargetInfluences[1]=1;}
   if(!active){

@@ -86,7 +86,7 @@ export function transitionFor(cid,name){
               kain:{fast:.065,hit:.035,atk:.085,fin:.12,out:.20,finOut:.26,base:.24},
               ryu:{fast:.035,hit:.020,atk:.045,fin:.065,out:.11,finOut:.15,base:.15},
               sera:{fast:.050,hit:.030,atk:.060,fin:.080,out:.15,finOut:.19,base:.19}}[cid]||{fast:.05,hit:.03,atk:.06,fin:.08,out:.15,finOut:.20,base:.18};
-  if(/^dodge|roll|skill2$/.test(name))return {in:base.fast,out:Math.min(base.out,.13),base:base.base};
+  if(/^dodge|roll|jump|skill2$/.test(name))return {in:base.fast,out:Math.min(base.out,.13),base:base.base};
   if(/^hit/.test(name))return {in:base.hit,out:Math.min(base.out,.12),base:base.base};
   if(/^(smash|ult|exec)$/.test(name))return {in:base.fin,out:base.finOut,base:base.base};
   if(/^(attack|skill|counter)/.test(name))return {in:base.atk,out:base.out,base:base.base};

@@ -76,3 +76,18 @@ test('game3d 배선: I 키 → jump, 점프 이벤트, jumpOnly 바닥 파랑(0x
   assert.ok(g.includes('뛰어넘어라')); assert.ok(g.indexOf('tickJump(dt);')>g.indexOf('if(ain.rig) ain.rig.apply('),'발 IK 뒤');
   assert.match(g,/ain\.root\.position\.y\+=\(J\.height\|\|1\.1\)\*4\*u\*\(1-u\)/);
 });
+
+/* 전용 도약 클립 (문서 113 §7-2): 4 캐릭터 GLB 에 «jump» 0.60 s 가 들어 있고, game3d 가 공중 구간을 jumpT 로 스크럽한다 */
+function glbAnims(path){ const b=fs.readFileSync(new URL(path,import.meta.url)); const len=b.readUInt32LE(12); const j=JSON.parse(b.subarray(20,20+len).toString('utf8')); return (j.animations||[]).map(a=>a.name); }
+function glbClipDur(path,name){ const b=fs.readFileSync(new URL(path,import.meta.url)); const len=b.readUInt32LE(12); const j=JSON.parse(b.subarray(20,20+len).toString('utf8')); const a=j.animations.find(x=>x.name===name); const acc=j.accessors[a.samplers[0].input]; return acc.max[0]; }
+test('전용 도약 클립: 4 캐릭터 GLB 에 jump 0.60 s (공중 0.45 = 75 %) + Hips 이동 채널', ()=>{
+  for(const c of ['ain','kain','ryu','sera']){ const p=`../art/3d/${c}_anim.glb`; assert.ok(glbAnims(p).includes('jump'),c+' jump 클립'); assert.ok(Math.abs(glbClipDur(p,'jump')-0.6)<1e-3,c+' 길이'); }
+});
+test('game3d 배선: jump 이벤트 → 전용 클립, 공중 구간 스크럽(JUMP_CLIP_AIR 0.75)이 mixer 앞에, 클립이 있으면 절차 접기 생략, 회피 결 전환·왼손 놓기', async ()=>{
+  const g=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8');
+  assert.equal((g.match(/case 'jump': SFX\.play\('dodge'\); jumpClipStart\(\); break;/g)||[]).length,2,'솔로·온라인 둘 다');
+  assert.match(g,/var JUMP_CLIP_AIR=0\.75;/); assert.ok(g.indexOf('jumpClipScrub();\n    ain.mixer.update(dt);')>0,'스크럽이 mixer.update 직전');
+  assert.match(g,/ain\.oneshot\.time=u\*ain\.oneshot\.getClip\(\)\.duration\*JUMP_CLIP_AIR/); assert.match(g,/if\(jumpClipOn\(\)\) return;/);
+  const cc=await readFile(new URL('../js/character-cinema.js',import.meta.url),'utf8'); assert.match(cc,/\/\^dodge\|roll\|jump\|skill2\$\//);
+  const th=await readFile(new URL('../js/ain-two-hand.js',import.meta.url),'utf8'); assert.match(th,/death\|hit\|roll\|dodge\|jump\|pickup\|cheer/);
+});

@@ -35,6 +35,8 @@ AMP_BONES=('spine','chest','head','upperarm.l','lowerarm.l','upperarm.r','lowera
 # 모캡(CMU)으로 몸을 갈아끼우는 것은 tools/3d/mocap_apply.py 가 «이미 구운 GLB» 위에서 한다
 # — 여기서 처음부터 구울 때는 KayKit 클립만 쓴다.
 PROF=PROFILES[CHAR]; CLIPS=PROF['clips']; TWO_HAND=PROF['two_hand']
+# 클립 몇 개만 다시 굽기(예: CLIPS_ONLY=jump:Jump_Full_Short): 임시 GLB 로 뽑아 clip-copy → glb-put-clips 로 기존 <char>_anim.glb 에 «덧붙인다» (Meshy 교체 클립을 잃지 않는다)
+if os.environ.get('CLIPS_ONLY'): CLIPS=[tuple(x.split(':')) for x in os.environ['CLIPS_ONLY'].split(',')]
 MAP={'hips':'Hips','spine':'Spine','chest':'Spine2','head':'Head','upperarm.l':'LeftArm','lowerarm.l':'LeftForeArm','hand.l':'LeftHand','upperarm.r':'RightArm','lowerarm.r':'RightForeArm','hand.r':'RightHand',
      'upperleg.l':'LeftUpLeg','lowerleg.l':'LeftLeg','foot.l':'LeftFoot','toes.l':'LeftToeBase','upperleg.r':'RightUpLeg','lowerleg.r':'RightLeg','foot.r':'RightFoot','toes.r':'RightToeBase','handslot.r':'RightHandSlot','handslot.l':'LeftHandSlot'}
 

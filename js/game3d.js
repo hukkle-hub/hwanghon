@@ -849,6 +849,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         ain.oneshot.paused=true; }
       else { ain.oneshot.stop(); ain.oneshot=null; ain.timed=null; if(ain.act){ain.act.reset().fadeIn(0.12).play();} }
     }
+    jumpClipScrub();
     ain.mixer.update(dt);
     ain.root.position.copy(v3(P.x,P.y));
     /* 튕김 반동 — 보스 반대 방향으로 밀린다(연출 전용, 판정 좌표는 그대로) */
@@ -970,11 +971,20 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   }
   function tickRecoil(dt){ if(recoilT>0) recoilT=Math.max(0,recoilT-dt); }
   var jumpBones=null;
+  /* 전용 도약 클립 «jump» (tools/3d/clip-jump.mjs, 0.60 s: 앞 JUMP_CLIP_AIR 비율이 공중 0.45 s, 뒤 0.15 s 는 착지 기립).
+     공중 구간은 jumpT 로 스크럽(규칙 시계와 한 몸), 착지 뒤엔 흘려 보내고 대기로 흐려진다. 클립이 없는 캐릭터는 절차 도약(tickJump)이 대신한다. */
+  var JUMP_CLIP_AIR=0.75;
+  function jumpClipStart(){ if(!ain.clips.jump||ain.dead) return; playOnce('jump'); if(ain.oneshot){ ain.oneshot.paused=true; ain.oneshot.time=0; } }
+  function jumpClipOn(){ return !!(ain.oneshot&&ain.oneshotName==='jump'); }
+  function jumpClipScrub(){ if(!jumpClipOn()) return; var sn=battle&&battle.snapshot(), jt=sn?sn.player.jumpT:0, J=R.jump||{dur:0.45};
+    if(jt>0){ var u=1-jt/Math.max(0.05,J.dur); ain.oneshot.time=u*ain.oneshot.getClip().duration*JUMP_CLIP_AIR; ain.oneshot.paused=true; }
+    else ain.oneshot.paused=false; }
   function tickJump(dt){
     var sn=battle&&battle.snapshot(), jt=sn?sn.player.jumpT:0;
     if(!(jt>0)) return;
     var J=R.jump||{dur:0.45,height:1.1}, u=1-jt/Math.max(0.05,J.dur), k=Math.sin(Math.PI*u);
     ain.root.position.y+=(J.height||1.1)*4*u*(1-u);
+    if(jumpClipOn()) return;   /* 전용 클립이 다리·상체를 맡는다 — 절차 접기는 클립 없는 캐릭터용 */
     if(!jumpBones){ jumpBones={}; ain.model.traverse(function(o){ if(o.isBone) jumpBones[o.name.replace(/^mixamorig:?/,'')]=o; }); }
     var b=jumpBones, rot=function(n,ax,v){ var o=b[n]; if(o) o[ax](v); };
     /* 무릎을 접고 상체를 살짝 숙인다 — 뛰어넘는 실루엣. 착지에서 0 으로 */
@@ -1520,6 +1530,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       case 'nost': guide('스태미나 부족', 1); break;
       case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
       case 'dodge': doRoll(); break;
+      case 'jump': SFX.play('dodge'); jumpClipStart(); break;
       case 'death': if(e.fatal) deathOverlay(e.reason); else guide('마태오 — “다시.”', 2); break;
       case 'smash': if(!e.timed) ainAttack('smash'); comboShow('SMASH', true); break;
       case 'counterfollowup': guide('<b>되베기 성공</b> — 공격으로 잇거나 회피로 이탈',e.window+.4); break;
@@ -1609,7 +1620,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         burst(above(P.x,P.y,1.2), e.tier==='heavy'?22:14, 0xD94A45); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'dodge': doRoll(); break;
-      case 'jump': SFX.play('dodge'); break;
+      case 'jump': SFX.play('dodge'); jumpClipStart(); break;
       case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
       case 'nost': guide('스태미나 부족', 1); break;
       case 'death': deathOverlay(); break;
