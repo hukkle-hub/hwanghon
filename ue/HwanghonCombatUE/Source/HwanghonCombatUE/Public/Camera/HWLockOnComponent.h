@@ -33,6 +33,15 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float RotationSpeed = 10.f;
 
+    /** Yaw speed cap (deg/s). A boss lunge passes through the player; without a cap the
+        desired yaw flips 180 deg and RInterpTo spins the camera in a few frames. Initial value, needs capture review. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Comfort")
+    float MaxYawRateDegPerSec = 220.f;
+
+    /** Inside this 2D distance (cm) the target direction is unstable (bodies overlap), so yaw is held. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Comfort")
+    float OverlapHoldDistanceCm = 180.f;
+
 private:
     AActor* FindBestTarget() const;
 

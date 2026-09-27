@@ -30,7 +30,21 @@ void UHWLockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     Desired.Roll = 0.f;
 
     const FRotator Current = Pawn->GetController()->GetControlRotation();
-    Pawn->GetController()->SetControlRotation(FMath::RInterpTo(Current, Desired, DeltaTime, RotationSpeed));
+
+    // Overlap (boss lunge passing through the player): the direction to the target is unstable, so keep the current yaw.
+    if (FVector::Dist2D(From, To) < OverlapHoldDistanceCm)
+    {
+        Desired.Yaw = Current.Yaw;
+    }
+
+    FRotator Next = FMath::RInterpTo(Current, Desired, DeltaTime, RotationSpeed);
+
+    // Cap yaw speed so a target that ends up behind us is followed smoothly instead of snapping 180 deg.
+    const float MaxStep = MaxYawRateDegPerSec * DeltaTime;
+    const float YawStep = FMath::FindDeltaAngleDegrees(Current.Yaw, Next.Yaw);
+    Next.Yaw = Current.Yaw + FMath::Clamp(YawStep, -MaxStep, MaxStep);
+
+    Pawn->GetController()->SetControlRotation(Next);
 }
 
 void UHWLockOnComponent::ToggleLockOn()
