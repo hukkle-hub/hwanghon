@@ -4,6 +4,8 @@
 #include "World/HWGrayboxArena.h"
 #include "World/HWSeohanLightingRig.h"
 #include "Audit/HWCombatAuditActor.h"
+#include "Progression/HWProfileSubsystem.h"
+#include "Engine/GameInstance.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -15,6 +17,7 @@ AHWCombatGameMode::AHWCombatGameMode()
 void AHWCombatGameMode::BeginPlay()
 {
     Super::BeginPlay();
+    RunId = FGuid::NewGuid();
 
     if (!UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
     {
@@ -38,6 +41,11 @@ void AHWCombatGameMode::BeginPlay()
     }
 
 
+    if (Boss)
+    {
+        Boss->OnBossDied.AddUniqueDynamic(this, &AHWCombatGameMode::HandleBossDied);
+    }
+
     if (!UGameplayStatics::GetActorOfClass(this, AHWSeohanLightingRig::StaticClass()))
     {
         GetWorld()->SpawnActor<AHWSeohanLightingRig>(
@@ -52,5 +60,18 @@ void AHWCombatGameMode::BeginPlay()
             AHWCombatAuditActor::StaticClass(),
             FVector::ZeroVector,
             FRotator::ZeroRotator);
+    }
+}
+
+void AHWCombatGameMode::HandleBossDied(AHWBossCharacter* Boss)
+{
+    if (!Boss || !Boss->IsDead() || !GetGameInstance())
+    {
+        return;
+    }
+    UHWProfileSubsystem* Profile = GetGameInstance()->GetSubsystem<UHWProfileSubsystem>();
+    if (Profile)
+    {
+        Profile->RecordVictory(RunId, EncounterId);
     }
 }

@@ -86,7 +86,7 @@ test('전용 도약 클립: 4 캐릭터 GLB 에 jump 0.60 s (공중 0.45 = 75 %)
 test('game3d 배선: jump 이벤트 → 전용 클립, 공중 구간 스크럽(JUMP_CLIP_AIR 0.75)이 mixer 앞에, 클립이 있으면 절차 접기 생략, 회피 결 전환·왼손 놓기', async ()=>{
   const g=await readFile(new URL('../js/game3d.js',import.meta.url),'utf8');
   assert.equal((g.match(/case 'jump': SFX\.play\('dodge'\); jumpClipStart\(\); break;/g)||[]).length,2,'솔로·온라인 둘 다');
-  assert.match(g,/var JUMP_CLIP_AIR=0\.75;/); assert.ok(g.indexOf('jumpClipScrub();\n    ain.mixer.update(dt);')>0,'스크럽이 mixer.update 직전');
+  assert.match(g,/var JUMP_CLIP_AIR=0\.75;/); assert.match(g,/jumpClipScrub\(\);\r?\n    ain\.mixer\.update\(dt\);/,'스크럽이 mixer.update 직전 (LF/CRLF)');
   assert.match(g,/ain\.oneshot\.time=u\*ain\.oneshot\.getClip\(\)\.duration\*JUMP_CLIP_AIR/); assert.match(g,/if\(jumpClipOn\(\)\) return;/);
   const cc=await readFile(new URL('../js/character-cinema.js',import.meta.url),'utf8'); assert.match(cc,/\/\^dodge\|roll\|jump\|skill2\$\//);
   const th=await readFile(new URL('../js/ain-two-hand.js',import.meta.url),'utf8'); assert.match(th,/death\|hit\|roll\|dodge\|jump\|pickup\|cheer/);

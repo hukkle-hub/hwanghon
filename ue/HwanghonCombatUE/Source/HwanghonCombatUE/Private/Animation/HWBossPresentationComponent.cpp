@@ -45,6 +45,19 @@ void UHWBossPresentationComponent::HandleBossStateChanged(EHWBossState NewState,
     PreviousStatePhase = 0.f;
     NextVisualBeat = 0;
 
+    if (NewState == EHWBossState::Dead)
+    {
+        if (AnimInstance)
+        {
+            if (ActiveStateMontage) AnimInstance->Montage_Stop(0.f, ActiveStateMontage);
+            if (ActiveReactionMontage) AnimInstance->Montage_Stop(0.f, ActiveReactionMontage);
+        }
+        ActiveStateMontage = nullptr;
+        ActiveReactionMontage = nullptr;
+        ActiveStateBinding = FHWSequenceBinding();
+        return;
+    }
+
     if (!AnimationSet || !AnimInstance)
     {
         return;
@@ -87,7 +100,7 @@ void UHWBossPresentationComponent::HandleBossReaction(
     EHWAttackTier Tier,
     FVector WorldDirection)
 {
-    if (!AnimationSet)
+    if (!AnimationSet || !Boss || Boss->IsDead())
     {
         return;
     }
@@ -148,10 +161,17 @@ void UHWBossPresentationComponent::PlayReactionBinding(const FHWSequenceBinding&
 
 void UHWBossPresentationComponent::SyncStateToBossClock()
 {
-    if (!Boss || !AnimInstance || !ActiveStateMontage || !ActiveStateBinding.Sequence)
+    if (!IsValid(Boss) || Boss->IsActorBeingDestroyed() || Boss->IsDead()
+        || !IsValid(AnimInstance) || !ActiveStateMontage || !ActiveStateBinding.Sequence)
     {
         return;
     }
+
+    const EHWBossState StateAtStart = ActiveState;
+    const EHWBossState CombatStateAtStart = Boss->GetBossState();
+    const FName PatternAtStart = ActivePatternId;
+    UAnimMontage* const MontageAtStart = ActiveStateMontage;
+    UAnimInstance* const AnimInstanceAtStart = AnimInstance;
 
     const float StatePhase = Boss->GetBossStateNormalized();
     const float SourceLength = FMath::Max(0.001f, ActiveStateBinding.Sequence->GetPlayLength());
@@ -178,8 +198,17 @@ void UHWBossPresentationComponent::SyncStateToBossClock()
 
                 if (PreviousStatePhase < BeatPhase && StatePhase >= BeatPhase)
                 {
-                    OnVisualBossBeat.Broadcast(ActivePatternId, NextVisualBeat);
-                    ++NextVisualBeat;
+                    // Consume before invoking listeners: they may kill or interrupt the boss.
+                    const int32 BeatIndex = NextVisualBeat++;
+                    OnVisualBossBeat.Broadcast(PatternAtStart, BeatIndex);
+                    if (!IsValid(Boss) || Boss->IsActorBeingDestroyed() || Boss->IsDead()
+                        || ActiveState != StateAtStart || Boss->GetBossState() != CombatStateAtStart
+                        || ActivePatternId != PatternAtStart || ActiveStateMontage != MontageAtStart
+                        || AnimInstance != AnimInstanceAtStart || !IsValid(AnimInstance))
+                    {
+                        // Do not process more beats or seek a montage cleared by the callback.
+                        return;
+                    }
                 }
                 else
                 {

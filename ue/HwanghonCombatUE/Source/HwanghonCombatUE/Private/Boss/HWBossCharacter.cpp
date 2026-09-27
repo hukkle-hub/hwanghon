@@ -4,7 +4,9 @@
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
 
+#include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -27,6 +29,11 @@ void AHWBossCharacter::BeginPlay()
     RuntimeTuning = NewObject<UHWCombatTuningAsset>(this, TEXT("BossRuntimeTuning"));
     TargetPlayer = Cast<AHWAinCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 
+    if (IsDead())
+    {
+        return;
+    }
+
     State = EHWBossState::Idle;
     OnBossStateChanged.Broadcast(State, NAME_None);
     BP_OnBossStateChanged(State, NAME_None);
@@ -35,6 +42,11 @@ void AHWBossCharacter::BeginPlay()
 void AHWBossCharacter::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+
+    if (IsDead())
+    {
+        return;
+    }
 
     if (!TargetPlayer)
     {
@@ -81,14 +93,16 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
             break;
 
         case EHWBossState::Strike:
-            while (NextBeatIndex < CurrentPattern.Beats.Num()
+            while (State == EHWBossState::Strike
+                && NextBeatIndex < CurrentPattern.Beats.Num()
                 && StateElapsed >= CurrentPattern.Beats[NextBeatIndex].At)
             {
-                ResolveBeat(NextBeatIndex);
-                ++NextBeatIndex;
+                // Consume before dispatch: a beat can synchronously counter or kill us.
+                const int32 BeatIndex = NextBeatIndex++;
+                ResolveBeat(BeatIndex);
             }
 
-            if (StateElapsed >= CurrentPattern.StrikeDuration)
+            if (State == EHWBossState::Strike && StateElapsed >= CurrentPattern.StrikeDuration)
             {
                 BeginRecover();
             }
@@ -122,7 +136,17 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
 
 void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVector SourceLocation)
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     Health = FMath::Max(0.f, Health - FMath::Max(0.f, Damage));
+    if (Health <= 0.f)
+    {
+        Die();
+        return;
+    }
 
     FVector ReactionDirection = GetActorLocation() - SourceLocation;
     ReactionDirection.Z = 0.f;
@@ -131,10 +155,20 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
     LastReactionTier = Tier;
     LastReactionWorldTime = GetWorld()->GetTimeSeconds();
     OnBossReaction.Broadcast(Tier, ReactionDirection);
+    if (IsDead())
+    {
+        return;
+    }
+
     BP_OnBossReaction(Tier, ReactionDirection);
+    if (IsDead())
+    {
+        return;
+    }
 
     if (Tier == EHWAttackTier::Break)
     {
+        CancelPendingAttack();
         State = EHWBossState::Break;
         StateElapsed = 0.f;
         OnBossStateChanged.Broadcast(State, CurrentPattern.Id);
@@ -142,6 +176,7 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
     }
     else if (Tier == EHWAttackTier::Stagger || Tier == EHWAttackTier::Counter)
     {
+        CancelPendingAttack();
         State = EHWBossState::Stagger;
         StateElapsed = 0.f;
         OnBossStateChanged.Broadcast(State, CurrentPattern.Id);
@@ -149,8 +184,52 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
     }
 }
 
+void AHWBossCharacter::CancelPendingAttack()
+{
+    NextBeatIndex = CurrentPattern.Beats.Num();
+    LungeRemaining = 0.f;
+    LungeDirection = FVector::ZeroVector;
+}
+
+void AHWBossCharacter::Die()
+{
+    if (IsDead())
+    {
+        return;
+    }
+
+    // Commit the terminal state before invoking any external callbacks.
+    State = EHWBossState::Dead;
+    Health = 0.f;
+    StateElapsed = 0.f;
+    IdleElapsed = 0.f;
+    HitStopRemaining = 0.f;
+    CancelPendingAttack();
+    TargetPlayer = nullptr;
+    Tags.Remove(TEXT("LockOnTarget"));
+
+    GetCharacterMovement()->StopMovementImmediately();
+    GetCharacterMovement()->ClearAccumulatedForces();
+    GetCharacterMovement()->DisableMovement();
+    SetActorEnableCollision(false);
+
+    if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+    {
+        AnimInstance->StopAllMontages(0.f);
+    }
+
+    OnBossStateChanged.Broadcast(State, CurrentPattern.Id);
+    BP_OnBossStateChanged(State, CurrentPattern.Id);
+    OnBossDied.Broadcast(this);
+}
+
 void AHWBossCharacter::BeginPattern(const FHWBossPatternSpec& Pattern)
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     CurrentPattern = Pattern;
     State = EHWBossState::Tell;
     StateElapsed = 0.f;
@@ -164,11 +243,16 @@ void AHWBossCharacter::BeginPattern(const FHWBossPatternSpec& Pattern)
 
 void AHWBossCharacter::BeginStrike()
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     State = EHWBossState::Strike;
     StateElapsed = 0.f;
     NextBeatIndex = 0;
 
-    if (CurrentPattern.LungeDistanceCm > 0.f && CurrentPattern.LungeDuration > 0.f)
+    if (TargetPlayer && CurrentPattern.LungeDistanceCm > 0.f && CurrentPattern.LungeDuration > 0.f)
     {
         LungeRemaining = CurrentPattern.LungeDuration;
         LungeDirection = (TargetPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal2D();
@@ -180,6 +264,11 @@ void AHWBossCharacter::BeginStrike()
 
 void AHWBossCharacter::BeginRecover()
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     State = EHWBossState::Recover;
     StateElapsed = 0.f;
     LungeRemaining = 0.f;
@@ -189,6 +278,11 @@ void AHWBossCharacter::BeginRecover()
 
 void AHWBossCharacter::FinishRecover()
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     State = EHWBossState::Idle;
     StateElapsed = 0.f;
     IdleElapsed = 0.f;
@@ -199,15 +293,16 @@ void AHWBossCharacter::FinishRecover()
 
 void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
 {
-    if (!TargetPlayer || !CurrentPattern.Beats.IsValidIndex(BeatIndex))
+    if (State != EHWBossState::Strike || !TargetPlayer || !CurrentPattern.Beats.IsValidIndex(BeatIndex))
     {
         return;
     }
 
-    const FHWBossBeatSpec& Beat = CurrentPattern.Beats[BeatIndex];
+    // A Blueprint beat callback may interrupt this attack and invalidate its storage.
+    const FHWBossBeatSpec Beat = CurrentPattern.Beats[BeatIndex];
     BP_OnBossBeat(CurrentPattern.Id, BeatIndex);
 
-    if (TryCountered(Beat))
+    if (State != EHWBossState::Strike || !TargetPlayer || TryCountered(Beat))
     {
         return;
     }
@@ -234,7 +329,7 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
 
 void AHWBossCharacter::ChooseNextPattern()
 {
-    if (!RuntimeTuning || RuntimeTuning->BossPatterns.IsEmpty())
+    if (IsDead() || !TargetPlayer || !RuntimeTuning || RuntimeTuning->BossPatterns.IsEmpty())
     {
         return;
     }
@@ -270,7 +365,7 @@ void AHWBossCharacter::ChooseNextPattern()
 
 void AHWBossCharacter::TickLunge(float DeltaSeconds)
 {
-    if (LungeRemaining <= 0.f || CurrentPattern.LungeDuration <= 0.f)
+    if (State != EHWBossState::Strike || LungeRemaining <= 0.f || CurrentPattern.LungeDuration <= 0.f)
     {
         return;
     }
@@ -282,7 +377,7 @@ void AHWBossCharacter::TickLunge(float DeltaSeconds)
 
 bool AHWBossCharacter::TryCountered(const FHWBossBeatSpec& Beat)
 {
-    if (!Beat.bCounterable || !CurrentPattern.bCounterable || !TargetPlayer)
+    if (State != EHWBossState::Strike || !Beat.bCounterable || !CurrentPattern.bCounterable || !TargetPlayer)
     {
         return false;
     }
@@ -338,5 +433,10 @@ float AHWBossCharacter::GetLastReactionAgeSeconds() const
 
 void AHWBossCharacter::ApplyHitStop(float Seconds)
 {
+    if (IsDead())
+    {
+        return;
+    }
+
     HitStopRemaining = FMath::Max(HitStopRemaining, Seconds);
 }

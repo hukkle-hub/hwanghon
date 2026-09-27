@@ -37,7 +37,8 @@ enum class EHWBossState : uint8
     Strike,
     Recover,
     Stagger,
-    Break
+    Break,
+    Dead
 };
 
 USTRUCT(BlueprintType)
