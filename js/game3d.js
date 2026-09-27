@@ -866,7 +866,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       bl=Math.hypot(bx,bz)||1; ain.root.position.x+=bx/bl*rk; ain.root.position.z+=bz/bl*rk; }
     tickBlob(ainBlob, ain.root.position, 0.52, ain.root.position.y);
     var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
-    var motionAction=combatAction;
+    if(combatAction) lastAction=combatAction;
+    var motionAction=combatAction||(heldAction&&ain.oneshot&&ain.oneshot.getClip().name===heldAction.clip?heldAction:null);
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.armBlend) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
@@ -1406,7 +1407,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     ain.model.rotation.z=az+bank;                      /* 도는 쪽으로 기운다 */
   }
   var zoomPulse=0; function zoomKick(){ /* 화각 펌핑(50→46°)은 멀미라 뺐다 */ }
-  var pendingContacts=[], actionReturn=null;
+  var pendingContacts=[], actionReturn=null, lastAction=null, heldAction=null;
+  /* P4 이음매 동안(actionend 뒤 20 ms) 리그·전신 레이어에 넘길 «마지막 행동» — 행동이 null 이 되는 순간
+     오른손 그립·체간 스윙·P8 전신 레이어가 clip 시간 기준의 임시 행동(아래 motionAction 대체)으로 바뀌며
+     한 프레임 팔 98°·가슴 23° 가 튀었다(60 fps 로그, 문서 116 §5.4). 판정 시계와 무관, 그림만. */
   /* 콤보 시각 이음매:
      combat은 actionend를 낸 같은 tick에 버퍼된 다음 actionstart를 낼 수 있다.
      예전엔 actionend에서 먼저 idle/run을 fadeIn해서 1→2→3타 사이에 아주 짧게
@@ -1415,7 +1419,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   function deferActionReturn(id){
     if(actionReturn) actionReturn.cancelled=true;
     actionReturn=schedule(function(){
-      actionReturn=null;
+      actionReturn=null; heldAction=null;
       if(ain.timed || !ain.oneshot) return;
       ain.oneshot.clampWhenFinished=true; ain.oneshot.paused=false; ain.oneshot.fadeOut(0.12);
       ain.oneshot=null;
@@ -1427,10 +1431,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     var s=battle?battle.snapshot():null;
     auditEvent(e);
     switch(e.t){
-      case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
+      case 'actionstart': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} heldAction=null; if(battle){var selected=battle.part(e.part);if(selected){var center=globalThis.TW_COMBAT_QUALITY.partCenter({x:Bs.x,y:Bs.y,aim:Math.PI/2-boss.root.rotation.y,scale:BOSS_SCALE,arena:A.id},selected,A.parts3d);world.faceTo(P,center.x,center.y);}} var tsy=trailStyle(e.kind, e.kind==='ult'?brColor(ULT):0); trailSet(tsy[0], tsy[1]);
         playOnce(e.clip); ain.timed=e; if(ain.oneshot){ain.oneshot.paused=true;ain.oneshot.time=0;} break;
-      case 'actioncancel': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
-      case 'actionend': if(ain.timed&&ain.timed.id===e.id){ain.timed=null;deferActionReturn(e.id);} break;
+      case 'actioncancel': if(actionReturn){actionReturn.cancelled=true;actionReturn=null;} heldAction=null; if(ain.timed&&ain.timed.id===e.id){if(ain.oneshot){ain.oneshot.clampWhenFinished=true;ain.oneshot.fadeOut(0.06);}ain.oneshot=null;ain.timed=null;if(ain.act)ain.act.reset().fadeIn(0.08).play();} break;
+      case 'actionend': if(ain.timed&&ain.timed.id===e.id){if(lastAction&&lastAction.id===e.id)heldAction=Object.assign({},lastAction,{elapsed:lastAction.duration});ain.timed=null;deferActionReturn(e.id);} break;
       case 'opening': showOpening(e.kind, e.dur); break;
       case 'openingend': case 'openinguse': hideOpening(); break;
       case 'grab': guide('붙잡았다 — <b>보스가 묶였다 · 몰아쳐라</b>', e.hold); camKick(0,-0.06,0.05); SFX.play('counter', true); vib([30,40,30]); break;

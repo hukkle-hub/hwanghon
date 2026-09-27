@@ -52,3 +52,11 @@ test('낫 궤적·바람 스프라이트는 톤매핑 제외(toneMapped:false) �
   assert.match(TR,/MeshBasicMaterial\(\{vertexColors:true,transparent:true,opacity:alpha,depthWrite:false,blending:T\.AdditiveBlending,side:T\.DoubleSide,toneMapped:false\}\)/);
   assert.match(TR,/SpriteMaterial\(\{map:glowTexture\(\),color:this\.hue\.getHex\(\),transparent:true,blending:T\.AdditiveBlending,depthWrite:false,opacity:0\.5,toneMapped:false\}\)/);
 });
+
+test('P4 이음매 동안 리그·전신 레이어는 «마지막 행동(끝 자세)» 을 받는다 — 한 프레임 팔·가슴 튐 제거', ()=>{
+  const src=G;
+  assert.match(src,/heldAction=Object\.assign\(\{\},lastAction,\{elapsed:lastAction\.duration\}\)/);
+  assert.match(src,/var motionAction=combatAction\|\|\(heldAction&&ain\.oneshot/);
+  assert.match(src,/case 'actionstart':[^\n]*heldAction=null/);
+  assert.match(src,/actionReturn=null; heldAction=null;/);
+});
