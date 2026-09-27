@@ -20,7 +20,7 @@
     function counterTier(tele){ return tele<=perfectWindow+1e-8?'clash':tele<=midWindow+1e-8?'repel':'deflect'; }
     var init=o.player||{};
     var P={hp:init.hp!=null?init.hp:st.hp,st:init.st!=null?init.st:R.stamina.max,ult:init.ult||0,
-      guard:false,dodgeT:0,dodgeCd:0,dodgeAgo:99,dodgeThreat:0,lockT:0,stDelay:0,combo:0,comboT:0,
+      guard:false,dodgeT:0,dodgeCd:0,dodgeAgo:99,dodgeThreat:0,jumpT:0,jumpCd:0,jumpAgo:99,jumpThreat:0,lockT:0,stDelay:0,combo:0,comboT:0,
       riposteT:0,riposteKind:null,opening:null,critNext:false,buffT:0,buffReduce:0,cds:S.map(function(){return 0;}),
       hitstop:0,dragT:0,dragTotal:0,dragRate:1,action:null,buffer:null,proj:[],lastFailure:'공격 준비 동작과 거리를 확인해라.'};
     var parts=D.parts.map(function(p){return Object.assign({},p,{hpMax:p.hp,broken:false});});
@@ -134,7 +134,7 @@
       a.events=SE&&a.opt.ev?SE.schedule(a.opt.ev,a):null;a.evI=0;
       emit('actionstart',Object.assign({},a));return a;
     }
-    function defensive(type,arg){return type==='dodge'||type==='counter'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
+    function defensive(type,arg){return type==='dodge'||type==='jump'||type==='counter'||type==='guard'&&arg||type==='skill'&&S[arg]&&S[arg].dodge;}
     function queue(type,arg){var edge=P.action&&(defensive(type,arg)?(P.action.defCancelAt!=null?P.action.defCancelAt:P.action.cancelAt):P.action.duration);if(P.action&&edge-P.action.elapsed<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};}
     function counter(){
       if(E.state!=='telegraph'||E.tele<=0||E.tele>counterWindow||E.pat.counterable===false||P.lockT>0||P.dodgeT>0||!canCancel()||(HK.canCounter&&!HK.canCounter()))return false;
@@ -202,7 +202,16 @@
       cancel('dodge');P.buffer=null;P.st-=dgSt;P.stDelay=R.stamina.delay;P.dodgeT=R.dodge.iframes;P.dodgeCd=R.dodge.cooldown;P.dodgeAgo=0;
       P.dodgeThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.dodges++;emit('dodge');
     }
-    function guard(on){if(B.over)return;if(!on&&P.buffer&&(P.buffer.type==='guard'||P.buffer.type==='counter'))P.buffer=null;if(on&&P.action&&!canCancel(true)){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
+    /* 점프 회피 — 바닥 광역(pattern.jumpOnly)만 넘는다. 공중에서 다른 공격은 그대로 맞는다(무적 아님).
+       구르기와 같은 취소 규칙·기력(R.jump.st)·쿨(R.jump.cooldown). 문서 112 §4 · 114 §1 */
+    function jump(){
+      var J=R.jump||{dur:0.45,cooldown:0.8,st:15,perfect:0.14}, jSt=J.st*rSt;
+      if(!B.over&&P.action&&!canCancel(true)){queue('jump');return;}
+      if(B.over||P.jumpCd>0||P.jumpT>0||P.dodgeT>0||P.lockT>0||P.st<jSt||!canCancel(true)){if(P.st<jSt)emit('nost');return;}
+      cancel('jump');P.buffer=null;P.st-=jSt;P.stDelay=R.stamina.delay;P.jumpT=J.dur;P.jumpCd=J.cooldown;P.jumpAgo=0;
+      P.jumpThreat=E.state==='telegraph'&&(!HK.inZone||HK.inZone(E.pat))?patternId:0;P.guard=false;M.jumps=(M.jumps||0)+1;emit('jump',{dur:J.dur});
+    }
+    function guard(on){if(B.over)return;if(!on&&P.buffer&&(P.buffer.type==='guard'||P.buffer.type==='counter'))P.buffer=null;if(on&&P.action&&!canCancel(true)){queue('guard',true);return;}if(on&&(P.st<=0||P.lockT>0||P.dodgeT>0||P.jumpT>0))return;if(on){cancel('guard');P.buffer=null;}if(on!==P.guard){P.guard=on;emit('guard',{on:on});}}
     function skill(i){
       var k=S[i];if(!k||B.over)return;if(P.action){if(k.dodge&&canCancel(true)&&P.cds[i]<=0&&P.st>=k.st&&P.dodgeCd<=0){cancel('evasive-skill');P.buffer=null;}else{queue('skill',i);return;}}
       if(P.lockT>0||P.dodgeT>0||P.guard||k.dodge&&P.dodgeCd>0)return;if(P.cds[i]>0||P.st<k.st){emit(P.cds[i]>0?'cd':'nost',{skill:i});return;}
@@ -222,7 +231,9 @@
     B.input=function(type,arg){
       if(B.over)return;
       if(P.hitstop>0&&type!=='target'&&!(type==='guard'&&!arg)){P.buffer={type:type,arg:arg,ttl:R.motion.buffer};return;}
-      switch(type){case 'attack':attack(arg);break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'counter':if(!counter())guard(true);break;case 'opening':useOpening();break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
+      /* 공중에서는 공격·회피·가드가 안 나간다 — 착지 직전이면 버퍼에 남긴다 */
+      if(P.jumpT>0&&type!=='jump'&&type!=='target'&&!(type==='guard'&&!arg)){if(P.jumpT<=(R.motion.buffer||0.16))P.buffer={type:type,arg:arg,ttl:(R.motion.buffer||0.16)+quantum};return;}
+      switch(type){case 'attack':attack(arg);break;case 'jump':jump();break;case 'smash':smash(arg);break;case 'dodge':dodge();break;case 'guard':guard(!!arg);break;case 'counter':if(!counter())guard(true);break;case 'opening':useOpening();break;case 'skill':skill(arg|0);break;case 'ult':ult();break;case 'execute':execute();break;case 'target':if(B.part(arg))target=arg;break;}
     };
     /* e: 사건 하나 (js/skill-events.js). 없으면 예전처럼 한 번에 전부.
        다단이면 가중치만큼 나눠 맞고, 반격·자세·잡기 같은 «한 번만» 효과는 첫 타에, 출혈은 마지막 타에 붙는다. */
@@ -304,7 +315,7 @@
       M.telegraphs++;if(E.pat.counterable!==false)M.counterOpportunities++;
       if(HK.enemyStart)HK.enemyStart(E.pat,E.teleDur);
       emit('telegraph',{pattern:E.pat.name,icon:E.pat.icon,dur:E.teleDur,window:counterWindow,
-        counterable:E.pat.counterable!==false,beat:i+1,beats:E.beats.length,last:last,hold:!!E.pat.hold,
+        counterable:E.pat.counterable!==false,beat:i+1,beats:E.beats.length,last:last,hold:!!E.pat.hold,jumpOnly:!!E.pat.jumpOnly,
         big:!!(E.pat.big||E.pat.rank==='S'),lunge:E.pat.lunge||null});
     }
     function startTelegraph(){
@@ -317,12 +328,15 @@
       startBeat(i);
     }
     function landAttack(){
-      var pat=E.pat,inside=!HK.inZone||HK.inZone(pat),evaded=P.dodgeThreat===patternId&&P.dodgeAgo<=R.dodge.iframes+0.18&&(P.dodgeT>0||!inside);
-      if(P.dodgeT>0||!inside){
-        emit('miss',{pattern:pat.name,out:!inside});
+      var pat=E.pat,inside=!HK.inZone||HK.inZone(pat),JR=R.jump||{dur:0.45,perfect:0.14},jumpOnly=!!pat.jumpOnly,
+          /* jumpOnly: 구르기 무적은 안 통하고 공중(jumpT)만 넘는다. 그 밖의 공격은 구르기만 통하고 공중은 맞는다 */
+          avoided=jumpOnly?P.jumpT>0:P.dodgeT>0,
+          evaded=jumpOnly?(P.jumpThreat===patternId&&P.jumpAgo<=JR.dur+0.18&&(P.jumpT>0||!inside)):(P.dodgeThreat===patternId&&P.dodgeAgo<=R.dodge.iframes+0.18&&(P.dodgeT>0||!inside));
+      if(avoided||!inside){
+        emit('miss',{pattern:pat.name,out:!inside,jumped:jumpOnly&&P.jumpT>0});
         if(evaded){
           /* 완벽 회피 — 누른 지 R.dodge.perfect 초 안에 공격이 떨어졌다. 반격 창을 늘리고 회피 기력을 돌려준다 */
-          var perfect=P.dodgeAgo<=(R.dodge.perfect||0);
+          var perfect=jumpOnly?P.jumpAgo<=(JR.perfect||0):P.dodgeAgo<=(R.dodge.perfect||0);
           P.riposteT=(policy.evadeWindow||0.85)+(perfect?(R.dodge.perfectRiposte||0):0);P.riposteKind='evade';P.dodgeThreat=0;M.evades++;
           if(perfect){M.perfectDodges=(M.perfectDodges||0)+1;P.st=Math.min(R.stamina.max,P.st+R.stamina.dodge*rSt);}
           emit('evade',{window:P.riposteT,perfect:perfect});}
@@ -348,7 +362,7 @@
     function step(dt){
       if(B.over)return;B.time+=dt;M.time=B.time;
       if(P.hitstop>0){P.hitstop=Math.max(0,P.hitstop-dt);return;}B.poseTime+=dt;
-      ['dodgeT','dodgeCd','lockT','stDelay','comboT','riposteT','buffT'].forEach(function(k){P[k]=Math.max(0,P[k]-dt);});
+      ['dodgeT','dodgeCd','jumpT','jumpCd','lockT','stDelay','comboT','riposteT','buffT'].forEach(function(k){P[k]=Math.max(0,P[k]-dt);});P.jumpAgo+=dt;
       if(P.opening){P.opening.t-=dt;if(P.opening.t<=0){P.opening=null;emit('openingend',{});}}P.dodgeAgo+=dt;
       if(P.stDelay<=0){if(P.guard){P.st=Math.max(0,P.st-R.stamina.guardPerSec*dt);if(P.st===0){P.guard=false;emit('guard',{on:false,broke:true});}}else P.st=Math.min(R.stamina.max,P.st+R.stamina.regen*dt);}
       P.cds=P.cds.map(function(v){return Math.max(0,v-dt);});
@@ -368,7 +382,7 @@
       if(P.proj.length){for(var pi=0;pi<P.proj.length;pi++)P.proj[pi].t-=dt;var due=P.proj.filter(function(q){return q.t<=1e-8;});
         if(due.length){P.proj=P.proj.filter(function(q){return q.t>1e-8;});for(var di=0;di<due.length&&!B.over&&!E.dead;di++)detonate(due[di]);if(B.over)return;}}
       if(P.hitstop>0)return;
-      if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel(true))&&P.lockT<=0&&P.dodgeT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
+      if(P.buffer){var b=P.buffer;if((!P.action||defensive(b.type,b.arg)&&canCancel(true))&&P.lockT<=0&&P.dodgeT<=0&&P.jumpT<=0){P.buffer=null;B.input(b.type,b.arg);}else {b.ttl-=dt;if(b.ttl<=0)P.buffer=null;}}
       if(E.bleed.length){var amount=st.atk*R.bleed.tickRate*E.bleed.length*dt;E.hp=Math.max(0,E.hp-amount);M.bleedDmg+=amount;M.dmg+=amount;E.bleed=E.bleed.map(function(v){return v-dt;}).filter(function(v){return v>0;});if(E.hp===0){finish();return;}}
       switch(E.state){
         case 'idle':if(D.patterns.length){E.patT-=dt;if(E.patT<=1e-8)startTelegraph();}break;
@@ -394,11 +408,11 @@
     B.drain=function(){var r=events;events=[];return r;};
     B.exportPlayer=function(){return {hp:P.hp,st:P.st,ult:P.ult};};
     B.snapshot=function(){return {time:B.time,poseTime:B.poseTime,over:B.over,target:target,
-      player:{hp:P.hp,hpMax:st.hp,st:P.st,stMax:R.stamina.max,ult:P.ult,guard:P.guard,dodging:P.dodgeT>0,locked:P.lockT>0,
+      player:{hp:P.hp,hpMax:st.hp,st:P.st,stMax:R.stamina.max,ult:P.ult,guard:P.guard,dodging:P.dodgeT>0,jumping:P.jumpT>0,jumpT:P.jumpT,jumpCd:P.jumpCd,locked:P.lockT>0,
         riposte:P.riposteT>0,riposteKind:P.riposteKind,riposteT:P.riposteT,combo:P.combo,comboT:P.comboT,cds:P.cds.slice(),buffT:P.buffT,critNext:P.critNext,
         opening:P.opening?{kind:P.opening.kind,t:P.opening.t,dur:P.opening.dur}:null,hitstop:P.hitstop,action:P.action?Object.assign({},P.action):null,buffer:P.buffer?P.buffer.type:null,lastFailure:P.lastFailure},
       enemy:{hp:E.hp,hpMax:E.hpMax,posture:E.posture,state:E.state,tele:E.tele,teleDur:E.teleDur,window:counterWindow,
-        counterable:!E.pat||E.pat.counterable!==false,pattern:E.pat?E.pat.name:null,patIcon:E.pat?E.pat.icon:null,
+        counterable:!E.pat||E.pat.counterable!==false,jumpOnly:!!(E.pat&&E.pat.jumpOnly),pattern:E.pat?E.pat.name:null,patIcon:E.pat?E.pat.icon:null,
         windup:E.state==='telegraph'&&E.teleDur?windupOf(E.pat,1-E.tele/E.teleDur,E.teleDur):(E.state==='telegraph'?0:1),
         hold:!!(E.pat&&E.pat.hold),walking:E.state==='link'&&!!E.walk,beat:E.pat?E.pat.beat+1:0,beats:E.beats.length,lastBeat:!!(E.pat&&E.pat.final),linkT:E.linkT,
         recovery:E.recovery,recoveryDur:E.recoveryDur,downT:E.downT,bleed:E.bleed.length,

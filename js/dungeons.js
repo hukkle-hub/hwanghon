@@ -136,6 +136,8 @@
     /* perfect: 공격이 떨어지기 직전 이 시간 안에 누른 회피 = 완벽 회피 (검은 신화: 오공 · docs/design/77).
        보상은 반격 창 +0.35초와 회피 기력 되돌림 — 수치 근거 없음, 같이 조정할 값 */
     dodge:   { iframes:0.30, cooldown:0.45, perfect:0.14, perfectRiposte:0.35 },
+    /* 점프 회피(문서 112 §4·114 §1): 바닥 광역(jumpOnly)만 넘는다. 공중에서 다른 공격은 맞는다. 렐라나 쌍달 = 점프 3 번 */
+    jump:    { dur:0.45, cooldown:0.8, st:15, perfect:0.14, height:1.1 },
     guard:   { reduce:0.70, holdMs:220 },
     /* 카운터 3단. 남은 예고 시간(E.tele)이 «작을수록» 늦게, 즉 정확하게 받아친 것이다.
          tele <= perfect  → 맞대기 clash  : 둘 다 멈춘다. 힘겨루기.
@@ -331,7 +333,9 @@
     {icon:'spin',name:'회전 후려치기',tele:1.45,window:0.40,dmg:6500,posture:30,guardCost:30,recovery:0.85,counterable:false,unblockable:true,big:true,desc:'튕겨낼 수 없는 회전 공격. 위치 회피 후 반격'},
     {icon:'slam',name:'도약 내려찍기',tele:1.25,window:0.40,dmg:8000,posture:60,guardCost:30,recovery:1.0,range:'far',big:true,desc:'멀리서 뛰어들어 내려찍는다 — 착지점 충격파'},
     {icon:'charge',name:'돌진',tele:1.0,window:0.40,dmg:7000,posture:45,guardCost:34,recovery:0.9,counterable:false,unblockable:true,range:'far',lunge:{dist:230,dur:0.3},desc:'옆으로 피하라 — 뚫고 지나간 뒤 돌아선다'},
-    {icon:'kick',name:'앞차기',tele:0.6,window:0.40,dmg:5600,posture:35,guardCost:22,recovery:0.6,range:'near'}
+    {icon:'kick',name:'앞차기',tele:0.6,window:0.40,dmg:5600,posture:35,guardCost:22,recovery:0.6,range:'near'},
+    /* 렐라나 쌍달식 — 구르기 무적으로는 못 피하고 «뛰어넘어야» 한다 (jumpOnly). 바닥 범위는 파랑 */
+    {icon:'slam',name:'지면 충격파',tele:1.15,window:0.40,dmg:6500,posture:40,guardCost:30,recovery:1.0,counterable:false,unblockable:true,jumpOnly:true,big:true,range:'near',desc:'바닥을 쳐 충격파 — 구르기로는 못 피한다, 뛰어넘어라'}
   ];
   training[2].hint='백색선은 카운터 · 주황 X는 회피 · 파괴한 부위는 큰 빈틈';
   training[2].parts[1].hp=45000; training[2].parts[1].hpMax=45000;

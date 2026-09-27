@@ -70,7 +70,8 @@ test('two intent-driven fighters clear every phase of every dungeon without inje
     r.input(p.id,{type:'target',part:target.id});
     if(r.canCounter(p)){r.input(p.id,{type:'guard',on:false});r.input(p.id,{type:'attack'});}
     else if(r.inZone(p)&&r.boss.state==='telegraph'&&r.boss.tele<.15){
-      if(p.dodgeCd<=0&&p.st>=25)r.input(p.id,{type:'dodge'});
+      if(r.boss.pattern.jumpOnly){if(p.jumpCd<=0&&p.st>=15)r.input(p.id,{type:'jump'});}   /* 지면 충격파는 뛰어넘는다 (문서 114 §1) */
+      else if(p.dodgeCd<=0&&p.st>=25)r.input(p.id,{type:'dodge'});
       else if(!r.boss.pattern.unblockable)r.input(p.id,{type:'guard',on:true});
     }
     else if(['idle','downed','stagger','recover'].includes(r.boss.state)){

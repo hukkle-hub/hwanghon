@@ -863,6 +863,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.armBlend) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
     if(ain.cinema){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
+    /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
+    tickJump(dt);
     tickLean(dt);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x802020:0x000000); } });
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
@@ -967,6 +969,19 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     return recoilDist*e*e;
   }
   function tickRecoil(dt){ if(recoilT>0) recoilT=Math.max(0,recoilT-dt); }
+  var jumpBones=null;
+  function tickJump(dt){
+    var sn=battle&&battle.snapshot(), jt=sn?sn.player.jumpT:0;
+    if(!(jt>0)) return;
+    var J=R.jump||{dur:0.45,height:1.1}, u=1-jt/Math.max(0.05,J.dur), k=Math.sin(Math.PI*u);
+    ain.root.position.y+=(J.height||1.1)*4*u*(1-u);
+    if(!jumpBones){ jumpBones={}; ain.model.traverse(function(o){ if(o.isBone) jumpBones[o.name.replace(/^mixamorig:?/,'')]=o; }); }
+    var b=jumpBones, rot=function(n,ax,v){ var o=b[n]; if(o) o[ax](v); };
+    /* 무릎을 접고 상체를 살짝 숙인다 — 뛰어넘는 실루엣. 착지에서 0 으로 */
+    rot('LeftUpLeg','rotateX',-0.85*k); rot('RightUpLeg','rotateX',-0.70*k); rot('LeftLeg','rotateX',1.25*k); rot('RightLeg','rotateX',1.05*k);
+    rot('Spine','rotateX',0.16*k); rot('LeftArm','rotateZ',0.35*k); rot('RightArm','rotateZ',-0.35*k);
+    ain.model.updateWorldMatrix(true,true);
+  }
   /* 큰 기술 «전진» — 접점(phase .42)에선 0, 풀림 구간에 앞으로 나갔다가 끝에 제자리 (렐라나의 관통과 같은 논리).
      연출 오프셋일 뿐 판정 좌표 P.x/P.y 는 그대로다. window.TW_BIG_SKILLS=false 로 끈다(검수 A/B). */
   var SKILL_LUNGE={ smash:0.45, ult:0.60, skill1:0.42, skill2:0.22, skill3:0.55, skill4:0.18, exec:0 };
@@ -1467,7 +1482,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         schedule(function(){ cineCam=null; camZoom=1; }, 1750);
         break;
       case 'up': guide((A.hudName||'허수아비')+'가 자세를 되찾았다', 1.5); bossPlay('up'); break;
-      case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(e.big&&(e.beat||1)===1) fxBigTell(e.dur);   /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
+      case 'telegraph': SFX.play('tele'); bossPlay('tele_'+e.icon, { dur:e.dur }); if(e.big&&(e.beat||1)===1) fxBigTell(e.dur); if(e.jumpOnly&&!seen.jump){ seen.jump=1; guide('구르기로는 못 피한다 — <b>뛰어넘어라</b> ('+(MOBILE?'회피 버튼 위로':'I')+')', 3.2); }   /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); bossSwingFx(s&&s.enemy.patIcon); if(e.lunge) startLunge(e.lunge); if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); }   /* «순간·잔광» 은 마지막 박에만 */ if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.18; hitReact(e);
@@ -1594,6 +1609,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         burst(above(P.x,P.y,1.2), e.tier==='heavy'?22:14, 0xD94A45); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
       case 'dodge': doRoll(); break;
+      case 'jump': SFX.play('dodge'); break;
       case 'guard': if(e.on) SFX.play('guard'); if(e.broke) guide('스태미나 소진 — 방어 해제', 1.5); break;
       case 'nost': guide('스태미나 부족', 1); break;
       case 'death': deathOverlay(); break;
@@ -1791,6 +1807,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     return 'counter'; }
   function openingIn(){ if(paused||cine||ain.dead||!battle) return; battle.input('opening'); }
   function dodge(){ if(paused||cine) return; if(battle) battle.input('dodge'); else if(skirm) skirm.input('dodge'); else if(P.rollT<=0) doRoll(); }
+  /* 점프 회피 — 규칙은 combat.js jump(). PC I 키(패드 버튼은 GPT, 문서 114 §1) */
+  function jumpIn(){ if(paused||cine||ain.dead) return; if(battle) battle.input('jump'); }
   el.actions.addEventListener('pointerdown', function(e){ e.preventDefault(); e.stopPropagation(); var t=e.target.closest('.abtn'); if(!t||paused||cine||ain.dead) return;
     if(t.hasAttribute('data-atk')){ attack(); t.classList.add('is-hold'); holdTimer=setTimeout(function(){ smashIn(); t.classList.remove('is-hold'); }, R.combo.smashHold*1000); }
     else if(t.hasAttribute('data-guard')){ if(counterPress()==='counter'){ guarding=true; t.classList.add('is-hold'); } }
@@ -1799,7 +1817,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   function atkUp(){ if(holdTimer){ clearTimeout(holdTimer); holdTimer=null; } if(guarding){ guarding=false; guardIn(false); } el.actions.querySelectorAll('.is-hold').forEach(function(b){ b.classList.remove('is-hold'); }); }
   el.actions.addEventListener('pointerup', atkUp); el.actions.addEventListener('pointercancel', atkUp); el.actions.addEventListener('pointerleave', atkUp);
   document.addEventListener('keydown', function(e){ if(kd[e.code]) return; kd[e.code]=true; if(paused||cine||ain.dead) return;
-    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyL'){ if(!kd.__l){ kd.__l=1; if(counterPress()==='counter') guarding=true; } } else if(e.code==='KeyG') openingIn();
+    if(e.code==='KeyT'){e.preventDefault();setLock(!lockOn);}else if(e.code==='KeyF'){e.preventDefault();interactDungeon();}else if(e.code==='KeyM'){e.preventDefault();showMissionMap();}else if(e.code==='Space'||e.code==='KeyJ'){ e.preventDefault(); attack(); } else if(e.code==='KeyU') smashIn(); else if(e.code==='KeyK') dodge(); else if(e.code==='KeyI') jumpIn(); else if(e.code==='KeyL'){ if(!kd.__l){ kd.__l=1; if(counterPress()==='counter') guarding=true; } } else if(e.code==='KeyG') openingIn();
     else if(e.code==='KeyR') battle&&battle.input('ult'); else if(/^Digit[1-4]$/.test(e.code)) battle&&battle.input('skill', +e.code.slice(5)-1);
     else if((e.code==='KeyQ'||e.code==='Tab')&&battle){ e.preventDefault();cycleTarget(); }
     else if(e.code==='KeyE') camYaw-=0.3; else if(e.code==='KeyQ') camYaw+=0.3; });
@@ -1977,7 +1995,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(zone && battle){ var s=battle.snapshot(),
       /* 카운터 창을 «흰색»으로 켜 주는 건 시점을 그대로 알려주는 것이라 훈련장에서만 한다.
          그 밖에서는 색이 «종류»만 말한다 — 붉은색 튕기기 가능 / 주황 회피 전용. */
-      win=TEACH&&s.enemy.counterable&&s.enemy.state==='telegraph'&&s.enemy.tele<=s.enemy.window, col=!s.enemy.counterable?0xFF9A45:win?0xF0E4E4:0xC7332C, fr=s.enemy.state==='telegraph'?1-s.enemy.tele/s.enemy.teleDur:1; drawZone(zone, fr, col, 'boss'); } else hideZone('boss');
+      win=TEACH&&s.enemy.counterable&&s.enemy.state==='telegraph'&&s.enemy.tele<=s.enemy.window, col=s.enemy.jumpOnly?0x4A8BE0:!s.enemy.counterable?0xFF9A45:win?0xF0E4E4:0xC7332C, fr=s.enemy.state==='telegraph'?1-s.enemy.tele/s.enemy.teleDur:1; drawZone(zone, fr, col, 'boss'); } else hideZone('boss');
     reachRing.visible=!!battle; if(battle){ reachRing.position.set(ain.root.position.x, 0.02, ain.root.position.z); reachRing.material.color.setHex(Bs.dist<=L.player.reach?0xC9A45E:0xFFFFFF); reachRing.material.opacity=Bs.dist<=L.player.reach?(TEACH?0.13:0.08):(TEACH?0.055:0.035); }
     updateCamera(dt); drawMini();
     if(!battle){el.timer.textContent=CB.fmtTime(travelTime); if(skirm){ var sp=skirm.snapshot().player; fill('v-hp', sp.hp/sp.hpMax*100); $('#v-hpv').textContent=W.fmt(Math.round(sp.hp))+' / '+W.fmt(sp.hpMax); fill('v-st', sp.st/sp.stMax*100); $('#v-stv').textContent=Math.round(sp.st)+' / '+sp.stMax; fill('v-ult', sp.ult); $('#v-ultv').textContent=Math.round(sp.ult)+'%'; fill('p-bar', sp.hp/sp.hpMax*100); $('#p-hp').textContent=W.fmt(Math.round(sp.hp)); } return; }
@@ -2092,7 +2110,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   }
 
 
-  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, cine:CINE, cineDemo:function(ev){ handle(ev); }, cineBeats:CINE_BEATS, set demoExec(v){ demoExec=!!v; }, bossHitPos:function(k){ return bossHitPos(k); }, get interactBox(){ return interactButton?interactButton.getBoundingClientRect():null; }, set demoZone(z){ zone=z; }, set zoneDim(v){ ZONE_DIM=v; }, l2Cut:l2Cut, lunge:startLunge, get lungeState(){ return bossLunge; },   /* 검수용: 관통 돌진 */ get l2State(){ return { cine:cine, invuln:l2Invuln, hold:cineHold }; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
+  window.TW_DUNGEON={ fxCount:function(){ return FX.length; }, world:world, get battle(){ return battle; }, get skirm(){ return skirm; }, get expedition(){return expedition;}, get quest(){ return quest; }, get gateOpen(){ return gateOpen; }, dlg:function(){ if(flyDone){ endFlyover(); return; } var d=document.querySelector('#dlg'); if(d.classList.contains('is-on')) d.dispatchEvent(new PointerEvent('pointerdown')); }, killPlayer:function(){ deathOverlay(); }, phaseTo:function(i){ if(A.stages[i]) startPhase(i); },   /* 검수용: 페이즈를 바로 띄운다 */ P:P, B:Bs, get state(){ return state; }, get phase(){ return phase; }, stick:stick, scene:scene, cam:cam, ain:ain, boss:boss, get camYaw(){ return camYaw; }, set camYaw(v){ camYaw=v; }, get camDist(){ return camDist; }, set camDist(v){ camDist=v; }, get camFight(){ return fightK; }, cine:CINE, cineDemo:function(ev){ handle(ev); }, cineBeats:CINE_BEATS, set demoExec(v){ demoExec=!!v; }, bossHitPos:function(k){ return bossHitPos(k); }, get interactBox(){ return interactButton?interactButton.getBoundingClientRect():null; }, set demoZone(z){ zone=z; }, set zoneDim(v){ ZONE_DIM=v; }, l2Cut:l2Cut, lunge:startLunge, jump:jumpIn, get lungeState(){ return bossLunge; },   /* 검수용: 관통 돌진 */ get l2State(){ return { cine:cine, invuln:l2Invuln, hold:cineHold }; }, get camState(){ return {cine:!!cineCam, drag:dragT, free:camFree}; }, get camLock(){ return lockOn&&!!battle&&!cine; },   /* 프레이밍 검수용 — tools/3d 스윕이 읽고 쓴다 */ setBot:function(v){ botStick=v; }, react:function(tier, src){ hitReact({tier:tier, guarded:tier==='guard'}, src||Bs); },
     /* 검수용: 전투 없이 스킬 연출만 한 번 재생한다. 락온 카메라가 보스를 보는
        전투 화면에서는 플레이어가 프레임 밖이라 연출을 눈으로 못 본다. */
     /* 검수용: 화면을 세운다. 연출은 0.2~0.3초짜리라 헤드리스 캡처(한 장에

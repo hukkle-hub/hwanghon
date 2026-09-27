@@ -41,6 +41,7 @@
       '돌진':           { kind:'line', len:560, w:140 },
       '훅 연타 내려찍기': { kind:'circle', r:170, fwd:120 },
       '도약 내려찍기':  { kind:'circle', r:210, fwd:0 },
+      '지면 충격파':    { kind:'circle', r:280, fwd:0 },
       '느린 내려찍기': { kind:'circle', r:150, fwd:120 },
       '찌르기':        { kind:'line', len:300, w:96 },
       '회전 후려치기':  { kind:'circle', r:210, fwd:0 },
