@@ -30,6 +30,9 @@ import { createBloom } from './bloom.js';
 import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-director.js';
 (function(){
   var W=window.TW_WORLD, DG=window.TW_DUNGEONS, CB=window.TW_COMBAT, SIM=window.TW_WORLDSIM, L=(function(){ var id=null; try{ id=new URLSearchParams(location.search).get('d'); }catch(e){} return window.TW_LEVELS[id]||window.TW_LEVELS.d01; })(), $=function(s){return document.querySelector(s);};
+  /* 검수 전용 층 끄기 (localhost 만, 문서 122): ?layersOff=clips,rig,armBlend,cinema,lean — 원본 클립과 게임 보정층을 층별로 견준다 */
+  var LAYER_OFF=(['127.0.0.1','localhost'].includes(location.hostname)?String(new URLSearchParams(location.search).get('layersOff')||''):'').split(',').filter(Boolean);
+  function layerOn(n){ return LAYER_OFF.indexOf(n)<0 && LAYER_OFF.indexOf('all')<0; }
   var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
   if(window.TW_SKILLS){ var _ap=TW_SKILLS.apply(CID, SK, ULT); SK=_ap.skills; ULT=_ap.ult||ULT; }
   var GB=window.TW_GRADE?TW_GRADE.buffs():null;   /* 파티 기술 등급 효과 */
@@ -764,9 +767,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     ain.model=g.scene; ain.model.scale.setScalar(CHAR_SCALE); capTextures(ain.model); ain.model.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.receiveShadow=false; o.frustumCulled=false; } }); ain.root.add(ain.model);
     /* GLTFLoader 는 animations[i].extras 를 클립 userData 에 안 옮긴다 → 직접 옮긴다(footlock 표식을 ain-bind-repair 가 읽는다, 문서 116) */
     try{ var adefs=g.parser&&g.parser.json&&g.parser.json.animations; if(adefs) g.animations.forEach(function(c,i){ if(adefs[i]&&adefs[i].extras) c.userData=Object.assign(c.userData||{},adefs[i].extras); }); }catch(e){ DIAG.errors.push('extras '+e.message); }   /* r170 AnimationClip 은 userData 가 없다(undefined) — 만들어서 넣는다 */
-    if(CID==='ain')g.animations=repairAinClips(g.animations,repairAinBind(ain.model));
+    if(CID==='ain'){ var ainBindFix=layerOn('bind')?repairAinBind(ain.model):null; if(layerOn('clips'))g.animations=repairAinClips(g.animations,ainBindFix); }
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
-    else g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
+    else if(layerOn('clips'))g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
@@ -870,12 +873,12 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(combatAction) lastAction=combatAction;
     var motionAction=combatAction||(heldAction&&ain.oneshot&&ain.oneshot.getClip().name===heldAction.clip?heldAction:null);
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
-    if(ain.rig) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
-    if(ain.armBlend) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
-    if(ain.cinema){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
+    if(ain.rig&&layerOn('rig')) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
+    if(ain.armBlend&&layerOn('armBlend')) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
+    if(ain.cinema&&layerOn('cinema')){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
     tickJump(dt);
-    tickLean(dt);
+    if(layerOn('lean'))tickLean(dt);
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x30120e:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.08 s 0x30120e — 옷 재질이 남게(전체 단색 빨강 금지). 스매시 뒤 맞는 프레임에서 0x4a1a12 도 큰 기술 흰 섬광과 겹쳐 분홍 실루엣이 됐다 */
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }

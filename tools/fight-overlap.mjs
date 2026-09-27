@@ -17,7 +17,7 @@ import fs from 'node:fs';
 const PORT=Number(process.env.HWANGHON_PORT||8777), D=process.env.D||'d01', CHAR=process.env.CHAR||'';
 const SECONDS=Number(process.env.SECONDS||24), BOT=process.env.BOT||'hold', SHOT=!!process.env.SHOT;
 const OUT=process.env.OUT||'', SEED=Number(process.env.SEED||7), SHOT_F=Number(process.env.SHOT_F||0), SHOT_PNG=process.env.SHOT_PNG||'fight-overlap.png', SHOT_HIT=Number(process.env.SHOT_HIT||0), SHOT_AFTER=Number(process.env.SHOT_AFTER||0), TRAIL=!!process.env.TRAIL, SHOT_ACT=process.env.SHOT_ACT||'';   /* SHOT_ACT=smash:0.62:2 → 두 번째 스매시가 경과 0.62 s 를 처음 넘는 프레임 */
-const url=`http://127.0.0.1:${PORT}/game3d.html?d=${D}&combatAudit=1`;
+const url=`http://127.0.0.1:${PORT}/game3d.html?d=${D}&combatAudit=1`+(process.env.LAYERS_OFF?`&layersOff=${process.env.LAYERS_OFF}`:'');   /* LAYERS_OFF=all|clips,rig,armBlend,cinema,lean,bind */
 
 const browser=await chromium.launch({args:['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
 const page=await browser.newPage({viewport:{width:1280,height:720}});
