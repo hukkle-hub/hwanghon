@@ -107,7 +107,8 @@ const res=await page.evaluate(({SECONDS,BOT,SHOT_F,SHOT_HIT,SHOT_AFTER,TRAIL,SHO
     if(TRAIL){const t=trailMetric();if(t){const s0=bat()&&bat().snapshot();trail.push(Object.assign({f:fr,act:s0&&s0.player.action?(s0.player.action.clip||s0.player.action.kind):'',el:s0&&s0.player.action?+s0.player.action.elapsed.toFixed(3):null,hs:s0?+s0.player.hitstop.toFixed(3):0},t));}}
     const b=bat();const s=b&&b.snapshot();
     const gap=wdist()/SCALE,body=(P.r+B.r)/SCALE,pen=Math.max(0,body-gap);
-    rows.push({f:fr,gap:+gap.toFixed(3),pen:+pen.toFixed(3),lunge:!!G.lungeState,roll:P.rollT>0,kb:P.kbT>0,spd:+(P.spd||0).toFixed(2),
+    const rdg=G.ain.rig&&G.ain.rig.diagnostics,sl=G.ain.slot,sp=sl?sl.getWorldPosition(new V()):null,dSl=sp&&window.__prevSl?sp.distanceTo(window.__prevSl):0;window.__prevSl=sp;
+    rows.push({dSl:+(dSl*100).toFixed(1),grip:rdg&&rdg.twoHand>.99?+((rdg.gripError||0)*100).toFixed(1):null,f:fr,gap:+gap.toFixed(3),pen:+pen.toFixed(3),lunge:!!G.lungeState,roll:P.rollT>0,kb:P.kbT>0,spd:+(P.spd||0).toFixed(2),
       act:s&&s.player.action?(s.player.action.clip||s.player.action.kind):'',boss:s?s.enemy.state:'',pat:s?s.enemy.pattern||'':'',
       px:+P.x.toFixed(1),py:+P.y.toFixed(1),bx:+B.x.toFixed(1),by:+B.y.toFixed(1),ev:pen>0?lastEv.map(x=>x.t+(x.pattern?':'+x.pattern:'')+(x.tier?':'+x.tier:'')).join(' '):''});
   };
@@ -132,6 +133,9 @@ const minGap=normal.reduce((a,r)=>Math.min(a,r.gap),1e9),moving=rows.filter(r=>r
 console.log(`  최소 중심 간격 ${minGap.toFixed(2)} m · 이동 중 프레임 ${moving}`);
 console.log(`  > 8 cm 프레임 ${over(.08)} · > 20 cm ${over(.2)} · 관통 돌진 프레임 ${rows.length-normal.length}`);
 console.log(`  겹침이 커진 프레임의 원인 — 플레이어만 움직임 ${cause.player} · 보스만 ${cause.boss} · 둘 다 ${cause.both}`);
+{const g=rows.filter(r=>r.grip!=null);if(g.length){const w=g.reduce((a,r)=>r.grip>a.grip?r:a,{grip:-1});
+  const ds=g.map(r=>r.dSl).sort((a,b)=>a-b);console.log(`잡은 프레임 대검(오른손 슬롯) 프레임당 이동 최대 ${ds[ds.length-1]} cm · 99% ${ds[Math.floor(ds.length*.99)]} cm`);
+  console.log(`두 손 잡기(카인) 잡은 프레임 ${g.length} · 주먹-손잡이 최대 ${w.grip} cm @f${w.f} ${w.act} · > 2 cm 프레임 ${g.filter(r=>r.grip>2).length} · > 5 cm ${g.filter(r=>r.grip>5).length}`);}}
 if(TRAIL){const t=res.trail;console.log(`궤적 표본 ${t.length} 프레임`);
   const top=[...t].sort((a,b)=>b.wPx*b.hPx-a.wPx*a.hPx).slice(0,8);top.forEach(r=>console.log(`  f${r.f} ${r.act} ${r.el} hs ${r.hs} · 화면 ${r.wPx}×${r.hPx}px · lit ${r.lit} · 점 ${r.n} · 이웃 점 최대 ${r.gap} m`));
   const by={};for(const r of t){const k=r.act||'-';(by[k]=by[k]||[]).push(r.lit);}
@@ -141,11 +145,18 @@ if(OUT)fs.writeFileSync(OUT,JSON.stringify(res,null,1));
 if(SHOT_F||SHOT_HIT||SHOT_ACT){
   /* 그 프레임에서 멈추고 렌더를 켜 한 장. 카메라·자세는 NOSHOT 동안에도 매 프레임 갱신됐다(render 호출만 건너뜀). */
   const last=rows[rows.length-1];
-  await page.evaluate(hide=>{const G=window.TW_DUNGEON;G.freeze(true);
+  await page.evaluate(({hide,close,off})=>{const G=window.TW_DUNGEON;G.freeze(true);
     /* HIDE=trail: 궤적 리본만 숨겨 «이 판이 궤적인가» 를 가른다 */
     if(hide==='trail')G.scene.traverse(o=>{if(o.isMesh&&o.renderOrder===3&&o.material&&o.material.vertexColors&&o.geometry.attributes.position&&o.geometry.attributes.position.count===128)o.visible=false;});
-    window.__NOSHOT=false;window.__vt.step(2);},process.env.HIDE||'');
+    /* CLOSE=뼈이름(예: LeftHand): 그 뼈를 캐릭터 기준 CLOSE_OFF=옆,앞,위(m, 기본 -0.8,0.8,0.25)에서 확대 — 전신 화면에선 손이 몸에 가린다.
+       game3d 는 멈춘(freeze) 동안 draw() 만 부르므로 카메라를 옮겨도 되돌리지 않는다 */
+    if(close){let b=null;G.ain.model.traverse(o=>{if(!b&&o.isBone&&o.name.replace(/^mixamorig:?/,'')===close)b=o;});
+      if(b){const V=G.cam.position.constructor,q=G.ain.root.getWorldQuaternion(G.ain.root.quaternion.clone()),p=b.getWorldPosition(new V());
+        const [ox,oz,oy]=off;G.cam.position.copy(p).addScaledVector(new V(1,0,0).applyQuaternion(q),ox).addScaledVector(new V(0,0,1).applyQuaternion(q),oz).add(new V(0,oy,0));G.cam.lookAt(p);G.cam.updateMatrixWorld();}}
+    window.__NOSHOT=false;window.__vt.step(2);},{hide:process.env.HIDE||'',close:process.env.CLOSE||'',off:(process.env.CLOSE_OFF||'-0.8,0.8,0.25').split(',').map(Number)});
   await page.screenshot({path:SHOT_PNG});
+  const rd=await page.evaluate(()=>{const d=window.TW_DUNGEON.ain.rig&&window.TW_DUNGEON.ain.rig.diagnostics;return d?{two:+(d.twoHand||0).toFixed(2),err:+((d.gripError||0)*100).toFixed(1),resid:d.gripResid!=null?+(d.gripResid*100).toFixed(1):null}:null;});
+  if(rd)console.log(`  두 손 잡기 ${rd.two} · 왼주먹-손잡이 ${rd.err} cm · 팔 모자람 ${rd.resid} cm`);
   const tl=res.trail&&res.trail[res.trail.length-1];
   console.log(`SHOT f${last.f}${tl&&tl.f===last.f?` · 궤적 ${tl.wPx}×${tl.hPx}px lit ${tl.lit}`:''} (${SHOT_HIT?'hit #'+SHOT_HIT+' +'+SHOT_AFTER+'f · ':''}${last.act||'-'}) gap ${last.gap} m pen ${(last.pen*100).toFixed(1)} cm → ${SHOT_PNG}`);
 } else if(worst.f>0) console.log(`  찍기: SHOT_F=${worst.f} SEED=${SEED} BOT=${BOT}${CHAR?' CHAR='+CHAR:''} node tools/fight-overlap.mjs`);

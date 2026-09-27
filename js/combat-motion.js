@@ -64,6 +64,10 @@ const CLAV_MAX=.55;
 const PULL_RATE=1.0;  // 당김이 바뀌는 최대 속도(m/s). 「근거 없음」 — 매 프레임 새로 재면 0↔20 cm 로 뒤바뀌어 대검이 한 프레임 60 cm 튀었다 (docs/design/97)
 const POLE_RATE=8;  // 왼팔꿈치 쪽이 도는 최대 속도(rad/s, 458°/s). 「근거 없음」 — 전문가 클립 팔꿈치 돌림 최대 15~17°/프레임
 const CLAV_RATE=5;    // 쇄골 각이 바뀌는 최대 속도(rad/s). 「근거 없음」   // 왼쇄골을 내미는 최대 각(rad, 31°). 「근거 없음」 — 렌더로 확인
+/* 늘릴 때만 빠르게 (문서 121 §3): 카인 평3(몸통 비틀기, 문서 120) u .29 에 필요한 쇄골 각이 한 프레임에 0 → 최대(31°), 당김이 0 → 21 cm 로 뛰는데
+   대칭 제한(5 rad/s·1 m/s)으로는 몇 틱 늦어, 두 손으로 «잡은» 채 왼주먹이 손잡이에서 최대 19~20 cm 뜨고 손목이 68° 꼬였다.
+   줄일 때는 예전 속도 그대로라 0↔최대로 뒤바뀌어도 한 프레임에 튀지 않는다. 「근거 없음」 값 */
+const PULL_RISE=8.0, CLAV_RISE=40, RISE_GATE=.02;   // 빠른 상승은 «잡은 채(세기 .99+) 보통 속도로는 2 cm 넘게 못 닿을 때» 만
 const PSI=[0,-.35,.35,-.7,.7,-1.05,1.05,-1.4,1.4,-1.75,1.75,-2.1,2.1],PSI0=[0];
 function planLeftGrip(upper,lower,hand,slot,target,prev,pole){
   const V=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion();
@@ -282,14 +286,17 @@ export function makeRigAdapter(model,root,slot,opts={}) {
           if(reachOK&&plan.resid>.008)reachOK=false;else if(!reachOK&&plan.resid<.004)reachOK=true;
           /* 필요한 당김·쇄골 각은 매 프레임 새로 재지만, 실제로 쓰는 양은 시간으로 따라간다(PULL_RATE·CLAV_RATE) —
              안 그러면 자세에 따라 0 과 최대 사이를 한 프레임에 오가 대검·왼팔이 튀었다. 모자란 몇 프레임은 두 주먹 떼기가 막는다 */
-          {const needP=pulled,needC=clav?Math.min(clavUsed,CLAV_MAX):0,step=(dt||1/60);
-            pullS+=THREE.MathUtils.clamp(needP-pullS,-PULL_RATE*step,PULL_RATE*step);clavS+=THREE.MathUtils.clamp(needC-clavS,-CLAV_RATE*step,CLAV_RATE*step);
-            if(Math.abs(pullS-needP)>1e-4||Math.abs(clavS-needC)>1e-4){
+          {const needP=pulled,needC=clav?Math.min(clavUsed,CLAV_MAX):0,step=(dt||1/60);diagnostics.gripNeedPull=needP;diagnostics.gripNeedClav=needC;
+            const p0=pullS,c0=clavS;
+            const limit=fast=>{pullS=p0+THREE.MathUtils.clamp(needP-p0,-PULL_RATE*step,(fast?PULL_RISE:PULL_RATE)*step);clavS=c0+THREE.MathUtils.clamp(needC-c0,-CLAV_RATE*step,(fast?CLAV_RISE:CLAV_RATE)*step);
+              if(Math.abs(pullS-needP)<=1e-4&&Math.abs(clavS-needC)<=1e-4)return false;
               for(const n of ['RightArm','RightForeArm','RightHand','LeftShoulder']){const b=bones[n],q0=b&&restCorrections.get(b);if(q0)b.quaternion.copy(q0);}
               model.updateWorldMatrix(true,true);target=gripTarget();pulled=0;clavUsed=0;
               if(clavS>1e-4)reachClavicle(clavS*Math.max(.05,clav.getWorldPosition(new THREE.Vector3()).distanceTo(upper.getWorldPosition(new THREE.Vector3()))));
               if(pullS>2e-3)pullRight(pullS);
-              plan=planLeftGrip(upper,lower,left,slot,target,prevPlan,pole);}}
+              plan=planLeftGrip(upper,lower,left,slot,target,prevPlan,pole);return true;};
+            /* 보통 속도로 풀어 본 뒤, 잡은 채(세기 .99+) 2 cm 넘게 못 닿으면 이 프레임만 빠른 속도로 다시 (문서 121 §3) */
+            if(limit(false)&&twoHandS>.99&&plan.resid>RISE_GATE&&(needP>pullS+1e-4||needC>clavS+1e-4))limit(true);}
           const want=acting&&reachOK?hold:0;diagnostics.gripResid=plan.resid;diagnostics.gripPull=pulled;diagnostics.gripClav=clavUsed;
           /* 두 손 잡기 세기는 시간으로 따라간다(초당 10) — 행동 시작에 왼손이 손잡이로 «튀지» 않고 미끄러져 잡고,
              한 손으로 내뻗는 순간(카인 공격1·3 접점, 오른팔 68 cm)엔 부드럽게 놓는다 */
