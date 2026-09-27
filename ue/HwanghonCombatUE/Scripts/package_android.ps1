@@ -1,5 +1,5 @@
 param(
-    [string]$UERoot = $env:UE58_ROOT,
+    [string]$UERoot = $env:UE55_ROOT,
     [ValidateSet("Development","Shipping","DebugGame")]
     [string]$Configuration = "Development",
     [string]$ArchiveDir = "",
@@ -12,8 +12,8 @@ $Project = Join-Path $ProjectDir "HwanghonCombatUE.uproject"
 
 if ([string]::IsNullOrWhiteSpace($UERoot)) {
     $Candidates = @(
-        "C:\Program Files\Epic Games\UE_5.8",
-        "D:\Epic Games\UE_5.8"
+        "C:\Program Files\Epic Games\UE_5.5",
+        "D:\Epic Games\UE_5.5"
     )
     foreach ($C in $Candidates) {
         if (Test-Path $C) {
@@ -24,7 +24,7 @@ if ([string]::IsNullOrWhiteSpace($UERoot)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($UERoot) -or !(Test-Path $UERoot)) {
-    throw "UE 5.8 root not found. Set UE58_ROOT or pass -UERoot."
+    throw "UE 5.5 root not found. Set UE55_ROOT or pass -UERoot."
 }
 
 $RunUAT = Join-Path $UERoot "Engine\Build\BatchFiles\RunUAT.bat"

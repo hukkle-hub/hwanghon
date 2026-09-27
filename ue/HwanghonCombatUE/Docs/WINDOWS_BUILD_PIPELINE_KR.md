@@ -1,11 +1,11 @@
 # Windows 원클릭 Build / Setup / Test
 
-UE 5.8이 설치된 Windows PC에서:
+UE 5.5가 설치된 Windows PC에서:
 
 ```powershell
 cd HwanghonCombatUE
 powershell -ExecutionPolicy Bypass -File .\Scripts\build_setup_test_windows.ps1 `
-  -UERoot "C:\Program Files\Epic Games\UE_5.8" `
+  -UERoot "C:\Program Files\Epic Games\UE_5.5" `
   -HwanghonRepo "D:\work\hwanghon"
 ```
 
@@ -25,7 +25,7 @@ powershell -ExecutionPolicy Bypass -File .\Scripts\build_setup_test_windows.ps1 
 환경변수로도 가능:
 
 ```powershell
-$env:UE58_ROOT="C:\Program Files\Epic Games\UE_5.8"
+$env:UE55_ROOT="C:\Program Files\Epic Games\UE_5.5"
 $env:HWANGHON_REPO="D:\work\hwanghon"
 .\Scripts\build_setup_test_windows.ps1
 ```

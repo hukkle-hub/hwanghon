@@ -60,7 +60,7 @@ Vertical Slice의 High tier 기준으로 사용한다.
 
 ## 실행 순서
 
-1. UE 5.8에서 `HwanghonCombatUE.uproject` 열기
+1. UE 5.5에서 `HwanghonCombatUE.uproject` 열기 (uproject EngineAssociation 5.5 — 디렉터 결정 2026-09-27)
 2. C++ compile
 3. Empty Level 생성
 4. World Settings GameMode = `HWCombatGameMode`

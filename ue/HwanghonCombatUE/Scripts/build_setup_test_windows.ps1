@@ -1,5 +1,5 @@
 param(
-    [string]$UERoot = $env:UE58_ROOT,
+    [string]$UERoot = $env:UE55_ROOT,
     [string]$HwanghonRepo = $env:HWANGHON_REPO,
     [switch]$SkipImport
 )
@@ -13,8 +13,8 @@ $ReportDir = Join-Path $ProjectDir "Saved\AutomationReport"
 
 if ([string]::IsNullOrWhiteSpace($UERoot)) {
     $Candidates = @(
-        "C:\Program Files\Epic Games\UE_5.8",
-        "D:\Epic Games\UE_5.8"
+        "C:\Program Files\Epic Games\UE_5.5",
+        "D:\Epic Games\UE_5.5"
     )
     foreach ($C in $Candidates) {
         if (Test-Path $C) {
@@ -25,7 +25,7 @@ if ([string]::IsNullOrWhiteSpace($UERoot)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($UERoot) -or !(Test-Path $UERoot)) {
-    throw "UE 5.8 root not found. Set UE58_ROOT or pass -UERoot."
+    throw "UE 5.5 root not found. Set UE55_ROOT or pass -UERoot."
 }
 
 $BuildBat = Join-Path $UERoot "Engine\Build\BatchFiles\Build.bat"
