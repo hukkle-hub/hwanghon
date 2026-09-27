@@ -121,7 +121,8 @@ export function settleCurve(rec){
    p = 판정 진행률(0→1). 반환 = 접점 대비 클립 진행률(0→1). 양끝(0,1)은 그대로라 접점 프레임이 안 움직인다. */
 export function tellCurve(p, teleDur){
  p=clamp(p); const T=Math.max(.15,teleDur||1);
- const H=Math.min(.42,Math.max(.15,.30/T)), S=Math.min(.16,Math.max(.06,.10/T)), A=.84, D=.04;
+/* 내리침은 짧은 연계(예고 0.32~0.38 s)에서도 80 ms 이상 — 50~60 ms 면 «순간이동» 으로 읽힌다(문서 120 작은 공격 80~160 ms) */
+ const H=Math.min(.42,Math.max(.15,.30/T)), S=Math.max(.08/T,Math.min(.16,Math.max(.06,.10/T))), A=.84, D=.04;
  const r0=1-H-S, r1=1-S;
  if(p<=r0){ const u=p/Math.max(1e-6,r0); return A*(u*u*(3-2*u)); }
  if(p<=r1){ return A+D*((p-r0)/Math.max(1e-6,H)); }
