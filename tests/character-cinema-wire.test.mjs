@@ -5,7 +5,7 @@ test('game3d wires cinematic layer after two-hand rig without changing combat cl
  const restoreCinema=s.indexOf('if(ain.cinema) ain.cinema.restore()');
  const restoreRig=s.indexOf('if(ain.rig) ain.rig.restore()',restoreCinema);
  const mixer=s.indexOf('ain.mixer.update(dt)',restoreRig);
- const applyRig=s.indexOf('if(ain.rig) ain.rig.apply(',mixer);
+ const applyRig=s.indexOf('ain.rig.apply(',mixer);   /* 검수 전용 층 스위치(layerOn) 조건이 붙어도 순서는 같다 (문서 122) */
  const applyCinema=s.indexOf('ain.cinema.apply(',applyRig);
  assert.ok(restoreCinema>=0&&restoreCinema<restoreRig&&restoreRig<mixer&&mixer<applyRig&&applyRig<applyCinema);
  assert.doesNotMatch(s,/combatAction\.elapsed\s*[+\-*/]?=/); // presentation layer must not rewrite authoritative action time
