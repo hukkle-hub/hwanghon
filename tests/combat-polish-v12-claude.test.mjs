@@ -20,8 +20,8 @@ test('카메라: 관통 돌진 뒤 급회전 억제, 3 타·스매시 +3°, 흔�
   assert.match(G,/sa3\.clip==='attack3'\|\|sa3\.clip==='smash'\)\) fv\+=3;/);
   assert.match(G,/shake\(0\.008,240,axI\[0\],axI\[1\]\)/,'스매시 흔들림 계수 그대로');
 });
-test('플레이어 피격 플래시 0.10 s 0x4a1a12 (전체 단색 빨강 아님)', ()=>{
-  assert.ok(!/ain\.hitT=0\.18/.test(G)); assert.match(G,/ain\.hitT=0\.10; hitReact\(e\)/); assert.match(G,/ain\.hitT>0\?0x4a1a12:0x000000/);
+test('플레이어 피격 플래시 0.08 s 0x30120e (전체 단색 빨강 아님)', ()=>{
+  assert.ok(!/ain\.hitT=0\.18/.test(G)); assert.match(G,/ain\.hitT=0\.08; hitReact\(e\)/); assert.match(G,/ain\.hitT>0\?0x30120e:0x000000/);
 });
 test('GLB extras → 클립 userData, footlock 클립은 골반 XZ 를 지우지 않는다', ()=>{
   assert.ok(G.includes("Object.assign(c.userData,adefs[i].extras)")); assert.ok(G.indexOf("Object.assign(c.userData,adefs[i].extras)")<G.indexOf("g.animations=repairAinClips("));
@@ -36,4 +36,9 @@ test('발 앵커 해제는 한 프레임 스냅이 아니라 0.12 s 섞기 (comb
   const m=await readFile(new URL('../js/combat-motion.js',import.meta.url),'utf8');
   assert.ok(!/if\(p\.y>anchor\.y\+0\.10\)\{delete anchors\[side\];continue;\}/.test(m),'즉시 삭제 제거');
   assert.match(m,/if\(p\.y>anchor\.y\+0\.10\)an\.lift=true;/); assert.match(m,/an\.w-=\(dt\|\|1\/60\)\/0\.12;/); assert.match(m,/p\.clone\(\)\.lerp\(anchor,Math\.max\(0,an\.w\)\)/);
+});
+
+test('아인 attack1/2/3/smash 는 발 고정 재굽기 클립(extras.source footlock) — 판정 시각은 clipContacts 그대로', async ()=>{
+  const b=await readFile(new URL('../art/3d/ain_anim.glb',import.meta.url)); const jl=b.readUInt32LE(12); const j=JSON.parse(b.subarray(20,20+jl).toString());
+  for(const n of ['attack1','attack2','attack3','smash']){ const a=j.animations.find(x=>x.name===n); assert.ok(a&&a.extras&&/footlock/.test(a.extras.source),n+' footlock'); }
 });

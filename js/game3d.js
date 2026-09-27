@@ -874,7 +874,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
     tickJump(dt);
     tickLean(dt);
-    if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x4a1a12:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.10 s 0x4a1a12 — 옷 재질이 남게(전체 단색 빨강 금지) */
+    if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x30120e:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.08 s 0x30120e — 옷 재질이 남게(전체 단색 빨강 금지). 스매시 뒤 맞는 프레임에서 0x4a1a12 도 큰 기술 흰 섬광과 겹쳐 분홍 실루엣이 됐다 */
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
 
@@ -1537,7 +1537,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         /* 큰 기술 «보여주기» 는 첫 박에만 */ if(!TEACH && !seen.read1){ seen.read1=1; guide('바닥은 «범위»만 알려준다 — <b>때</b>는 보스 동작에서 읽어라', 3.5); } if(phase===2 && !seen.tele3){ seen.tele3=1; guide(TEACH?'붉은 범위 안에 있으면 맞는다 · <b>흰색</b>은 카운터 · <b>주황 X</b>는 회피 후 반격':'<b>붉은 범위</b>는 튕길 수 있다 · <b>주황 X</b>는 회피 후 반격', 3.5); } if(phase===1 && !seen.tele2){ seen.tele2=1; guide('붉은 범위 <b>밖으로 구르면</b> 피한다', 3); } break;
       case 'swing': bossPlay('hit_'+(s?s.enemy.patIcon:'hammer')); shake(0.009,220); bossSwingFx(s&&s.enemy.patIcon); if(e.lunge) startLunge(e.lunge); if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); }   /* «순간·잔광» 은 마지막 박에만 */ if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); schedule(function(){ zone=null; hideZone(); }, 180); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.10; hitReact(e);
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.08; hitReact(e);
         var axD=axisFromBoss(), sgD=(R.stagger||{})[e.tier]||{};
         burst(above(P.x,P.y,1.2), e.guarded?10:(e.tier==='heavy'?26:18), 0xD94A45, axD); vib(sgD.vib||(e.guarded?15:60));
         shake(sgD.shake||(e.guarded?0.004:0.012), e.guarded?200:(e.tier==='heavy'?420:300), axD[0], axD[1]);
@@ -1657,7 +1657,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       case 'aggro': SFX.play('tele'); break;
       case 'telegraph': SFX.play('tele'); if(e.big&&(e.beat||1)===1&&boss&&boss.root) fxBigTell(e.dur||1); break;   /* 온라인: 서버 이벤트로 같은 «보여주기» */
       case 'swing': shake(0.004,120); if(boss&&boss.root){ if(e.big&&e.last!==false){ fxBigStrike(); fxAfterglow(e.recovery||0.9); } if(e.icon==='spin'||e.icon==='scythe') fxBossRing(); } break;
-      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.10;
+      case 'damaged': SFX.play('hurt', e.guarded); num(above(P.x,P.y,2.1), '-'+W.fmt(e.dmg)+(e.guarded?' 방어':''), 'taken'); ain.hitT=0.08;
         hitReact(e, m||Bs);                          /* 교전에서는 때린 «그 잡몹» 반대로 밀린다 */
         burst(above(P.x,P.y,1.2), e.tier==='heavy'?22:14, 0xD94A45); break;
       case 'miss': num(above(P.x,P.y,2.1), e.out?'범위 밖':'회피', 'miss'); break;
