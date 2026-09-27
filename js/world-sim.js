@@ -93,6 +93,19 @@
     };
     W.roll = function(p, sx, sy, len, dur){ var m = Math.hypot(sx, sy); if (m < 0.15){ var a = p.aim==null ? 0 : p.aim; sx = Math.cos(a); sy = Math.sin(a); m = 1; } sx/=m; sy/=m; p.rollT = dur; p.rollDur = dur; p.rollDx = sx*len/dur; p.rollDy = sy*len/dur*DEPTH; };
     W.moveEntity = function(e,dx,dy){ moveCircle(map,e,dx,dy); };
+    /* 몸 겹침 풀기: p 를 e 에서 «반지름 합» 만큼 떨어뜨린다 (dist 와 같은 깊이 보정 공간).
+       예전엔 몸끼리 막는 게 아예 없어서 스틱을 보스 쪽으로 밀면 그대로 파고들었다 —
+       d01 봇 24 초에서 최대 40 cm, 40 초에서 68 cm (문서 121). 반지름 방향으로만 밀어
+       옆으로 도는 움직임은 그대로 살고, 벽은 moveCircle 이 막는다.
+       e 는 움직이지 않는다 — 보스 위치는 패턴·예고 구역·판정의 기준이다. 밀어낸 거리(px)를 돌려준다. */
+    W.separate = function(p, e, pad){
+      var min = p.r + e.r + (pad || 0), dx = p.x - e.x, dz = (p.y - e.y)/DEPTH, d = Math.sqrt(dx*dx + dz*dz), ux, uz;
+      if (d >= min) return 0;
+      if (d > 1e-6){ ux = dx/d; uz = dz/d; }
+      else { var a = p.aim == null ? 0 : p.aim; ux = -Math.cos(a); uz = -Math.sin(a); }   /* 정확히 겹치면 보는 쪽의 반대로 */
+      var x0 = p.x, y0 = p.y; moveCircle(map, p, ux*(min-d), uz*(min-d)*DEPTH);
+      return dist(x0, y0, p.x, p.y);
+    };
     /* 플레이어가 상대를 향하도록 */
     W.faceTo = function(p, tx, ty){ var a = angle(p.x, p.y, tx, ty); p.aim = a; p.face = Math.abs(Math.cos(a)) > 0.6 ? (Math.cos(a) < 0 ? 'left' : 'right') : (Math.sin(a) < 0 ? 'up' : 'down'); };
     /* 보스 AI: 추적/거리 유지 */

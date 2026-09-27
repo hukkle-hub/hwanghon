@@ -1,5 +1,5 @@
 """
-UE5.8 editor asset quality audit for Hwanghon Vertical Slice.
+UE 5.5 editor asset quality audit for Hwanghon Vertical Slice.
 
 Run:
   UnrealEditor-Cmd.exe HwanghonCombatUE.uproject -ExecutePythonScript=Scripts/ue_asset_audit.py -unattended
@@ -73,7 +73,7 @@ def skeleton_path(asset):
     return unreal.EditorAssetLibrary.get_path_name_for_loaded_asset(skel)
 
 def lod_count(asset):
-    # Editor subsystem is the supported UE5.8 path when available.
+    # Editor subsystem is the supported UE5 path when available.
     try:
         subsystem = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
         return int(subsystem.get_lod_count(asset))

@@ -114,6 +114,7 @@ UE 5.8에서 수행한 호환성 진단은 UE 5.5 빌드·Android 기기 검증�
 - High-tier baseline
 
 Mobile Deferred를 High tier 기준으로 설정했다. 실제 Android 성능·화질은 측정이 필요하다.
+목표 엔진은 UE 5.5다(디렉터 결정 2026-09-27).
 
 ## 아직 없는 것
 
