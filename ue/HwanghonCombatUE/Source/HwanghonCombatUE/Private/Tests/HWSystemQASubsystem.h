@@ -70,6 +70,13 @@ private:
     void TickNet(float Dt);
     void TickShowcase(float Dt);
     void TickBossShow(float Dt);
+    void TickClipReview(float Dt);
+    TArray<TWeakObjectPtr<AActor>> ReviewActors;
+    UPROPERTY()
+    TArray<TObjectPtr<class UAnimSequenceBase>> ReviewClips;
+    TArray<float> ReviewTimes;
+    TArray<float> ReviewContacts;
+    int32 ReviewShotStep = 0;
     TSet<FString> BossShotsTaken;
     EHWBossState BossShowState = EHWBossState::Idle;
     FName BossShowPattern = NAME_None;

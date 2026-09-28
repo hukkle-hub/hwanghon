@@ -1,0 +1,12 @@
+﻿owner,slot,source,source_asset,target_asset,retargeter,contact_error_frames,foot_slide_cm,grip,trail_off_readable,status,notes
+ain,attack1,,,,,,,,,TODO,
+ain,attack2,,,,,,,,,TODO,
+ain,attack3,,,,,,,,,TODO,
+ain,smash,,,,,,,,,TODO,
+kain,attack1,,,,,,,,,TODO,
+kain,attack2,,,,,,,,,TODO,
+kain,attack3,,,,,,,,,TODO,
+kain,smash,,,,,,,,,TODO,
+boss,charge,,,,,,,,,TODO,
+boss,slam,,,,,,,,,TODO,
+boss,ground_wave,,,,,,,,,TODO,

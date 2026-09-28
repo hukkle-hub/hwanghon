@@ -1,0 +1,742 @@
+{
+  "schema": "hwanghon-animation-donor-manifest-v1",
+  "rules": {
+    "no_character_switching": true,
+    "combat_timing_is_authoritative": true,
+    "timings": {
+      "basic": {
+        "duration": 0.66,
+        "hit": 0.24,
+        "cancel": 0.48
+      },
+      "smash": {
+        "duration": 1.15,
+        "hit": 0.48,
+        "cancel": 0.91
+      },
+      "counter": {
+        "duration": 0.56,
+        "hit": 0.18,
+        "cancel": 0.4
+      },
+      "dodge": {
+        "duration": 0.45,
+        "iframe": 0.3
+      },
+      "jump": {
+        "duration": 0.45
+      }
+    },
+    "paragon_ai_processing_forbidden": true,
+    "retarget_then_modify_not_copy_verbatim": true,
+    "root_motion_policy": "use donor root motion only after Motion Warping/target-distance QA",
+    "foot_slide_target_cm": 2.0,
+    "contact_tolerance_frames_at_60fps": 2
+  },
+  "workspace": {
+    "target_root": "/Game/Hwanghon/Animation",
+    "donor_roots": [
+      "/Game/GameAnimationSample",
+      "/Game/ParagonCountess",
+      "/Game/ParagonKwang",
+      "/Game/ParagonGreystone",
+      "/Game/ParagonSerath",
+      "/Game/ParagonGadget",
+      "/Game/ParagonSevarog",
+      "/Game/ParagonGrux",
+      "/Game/ParagonRampage",
+      "/Game/Quaternius",
+      "/Game/Mixamo",
+      "/Game/Rokoko",
+      "/Game/ParagonMorigesh",
+      "/Game/ParagonPhase",
+      "/Game/ParagonDekker"
+    ],
+    "source_root_hints": {
+      "epic_game_animation_sample": [
+        "/Game",
+        "GameAnimationSample",
+        "GameAnimation",
+        "MotionMatching",
+        "Characters"
+      ],
+      "paragon_countess": [
+        "/Game/ParagonCountess",
+        "ParagonCountess",
+        "Countess"
+      ],
+      "paragon_kwang": [
+        "/Game/ParagonKwang",
+        "ParagonKwang",
+        "Kwang"
+      ],
+      "paragon_greystone": [
+        "/Game/ParagonGreystone",
+        "ParagonGreystone",
+        "Greystone"
+      ],
+      "paragon_serath": [
+        "/Game/ParagonSerath",
+        "ParagonSerath",
+        "Serath"
+      ],
+      "paragon_gadget": [
+        "/Game/ParagonGadget",
+        "ParagonGadget",
+        "Gadget"
+      ],
+      "paragon_sevarog": [
+        "/Game/ParagonSevarog",
+        "ParagonSevarog",
+        "Sevarog"
+      ],
+      "paragon_grux": [
+        "/Game/ParagonGrux",
+        "ParagonGrux",
+        "Grux"
+      ],
+      "paragon_rampage": [
+        "/Game/ParagonRampage",
+        "ParagonRampage",
+        "Rampage"
+      ],
+      "quaternius_ual1": [
+        "/Game/Quaternius",
+        "Quaternius",
+        "UniversalAnimationLibrary"
+      ],
+      "quaternius_ual2": [
+        "/Game/Quaternius",
+        "Quaternius",
+        "UniversalAnimationLibrary2",
+        "UAL2"
+      ],
+      "mixamo": [
+        "/Game/Mixamo",
+        "Mixamo"
+      ],
+      "rokoko_create": [
+        "/Game/Rokoko",
+        "Rokoko",
+        "Vision"
+      ],
+      "paragon_morigesh": [
+        "/Game/ParagonMorigesh",
+        "ParagonMorigesh",
+        "Morigesh"
+      ],
+      "paragon_phase": [
+        "/Game/ParagonPhase",
+        "ParagonPhase",
+        "Phase"
+      ],
+      "paragon_dekker": [
+        "/Game/ParagonDekker",
+        "ParagonDekker",
+        "Dekker"
+      ]
+    }
+  },
+  "characters": {
+    "ain": {
+      "primary": [
+        "paragon_countess",
+        "paragon_kwang"
+      ],
+      "secondary": [
+        "quaternius_ual2",
+        "rokoko_create"
+      ],
+      "locomotion": "epic_game_animation_sample",
+      "slots": {
+        "idle": {
+          "keywords": [
+            "idle",
+            "combat_idle",
+            "stance"
+          ],
+          "donors": [
+            "epic_game_animation_sample",
+            "paragon_countess"
+          ]
+        },
+        "run": {
+          "keywords": [
+            "run",
+            "jog",
+            "sprint"
+          ],
+          "donors": [
+            "epic_game_animation_sample"
+          ]
+        },
+        "dodge": {
+          "keywords": [
+            "dodge",
+            "evade",
+            "dash",
+            "roll"
+          ],
+          "donors": [
+            "paragon_countess",
+            "epic_game_animation_sample"
+          ]
+        },
+        "attack1": {
+          "keywords": [
+            "attack",
+            "slash",
+            "light",
+            "melee"
+          ],
+          "donors": [
+            "paragon_countess",
+            "paragon_kwang"
+          ],
+          "edit": "pelvis leads; two-hand scythe grip; thin arc; contact=0.24s"
+        },
+        "attack2": {
+          "keywords": [
+            "attack",
+            "slash",
+            "back",
+            "reverse",
+            "combo"
+          ],
+          "donors": [
+            "paragon_kwang",
+            "paragon_countess"
+          ],
+          "edit": "reverse pelvis/chest; no neutral; direct handoff from attack1"
+        },
+        "attack3": {
+          "keywords": [
+            "attack",
+            "heavy",
+            "finisher",
+            "combo"
+          ],
+          "donors": [
+            "paragon_kwang",
+            "quaternius_ual2"
+          ],
+          "edit": "largest body drive; clear silhouette; contact=0.24s"
+        },
+        "smash": {
+          "keywords": [
+            "heavy",
+            "overhead",
+            "smash",
+            "attack"
+          ],
+          "donors": [
+            "paragon_kwang",
+            "quaternius_ual2"
+          ],
+          "edit": "hold then drop; scythe head path widened; contact=0.48s"
+        },
+        "counter": {
+          "keywords": [
+            "counter",
+            "parry",
+            "block",
+            "attack"
+          ],
+          "donors": [
+            "paragon_kwang",
+            "paragon_countess"
+          ],
+          "edit": "compact response; weapon/torso sync"
+        },
+        "skill_custom": {
+          "keywords": [
+            "scythe",
+            "spin",
+            "reap"
+          ],
+          "donors": [
+            "rokoko_create",
+            "quaternius_ual2"
+          ],
+          "edit": "prefer self-recorded motion for signature skills"
+        }
+      }
+    },
+    "kain": {
+      "primary": [
+        "paragon_greystone",
+        "paragon_kwang"
+      ],
+      "secondary": [
+        "quaternius_ual2",
+        "rokoko_create"
+      ],
+      "locomotion": "epic_game_animation_sample",
+      "slots": {
+        "idle": {
+          "keywords": [
+            "idle",
+            "combat_idle",
+            "stance"
+          ],
+          "donors": [
+            "paragon_greystone"
+          ]
+        },
+        "run": {
+          "keywords": [
+            "run",
+            "jog",
+            "sprint"
+          ],
+          "donors": [
+            "epic_game_animation_sample",
+            "paragon_greystone"
+          ]
+        },
+        "dodge": {
+          "keywords": [
+            "dodge",
+            "evade",
+            "step"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "epic_game_animation_sample"
+          ]
+        },
+        "attack1": {
+          "keywords": [
+            "attack",
+            "sword",
+            "slash",
+            "light"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "paragon_kwang"
+          ],
+          "edit": "heavy whole-body drive; feet/pelvis before sword"
+        },
+        "attack2": {
+          "keywords": [
+            "attack",
+            "sword",
+            "combo",
+            "slash"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "paragon_kwang"
+          ],
+          "edit": "maintain momentum; no idle reset"
+        },
+        "attack3": {
+          "keywords": [
+            "attack",
+            "heavy",
+            "finisher",
+            "sword"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "paragon_kwang"
+          ],
+          "edit": "larger follow-through, planted support foot"
+        },
+        "smash": {
+          "keywords": [
+            "heavy",
+            "overhead",
+            "slam",
+            "attack"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "quaternius_ual2"
+          ],
+          "edit": "0-.25 lift; hold; strike to .48; long follow-through"
+        },
+        "guard": {
+          "keywords": [
+            "guard",
+            "block",
+            "defend",
+            "idle"
+          ],
+          "donors": [
+            "paragon_greystone",
+            "paragon_kwang"
+          ],
+          "edit": "convert shield/sword stance to greatsword guard"
+        },
+        "skill_custom": {
+          "keywords": [
+            "greatsword",
+            "heavy",
+            "slam"
+          ],
+          "donors": [
+            "rokoko_create",
+            "quaternius_ual2"
+          ],
+          "edit": "custom capture only for signature greatsword attacks"
+        }
+      }
+    },
+    "ryu": {
+      "primary": [
+        "paragon_countess",
+        "paragon_serath"
+      ],
+      "secondary": [
+        "quaternius_ual2",
+        "rokoko_create"
+      ],
+      "locomotion": "epic_game_animation_sample",
+      "slots": {
+        "idle": {
+          "keywords": [
+            "idle",
+            "combat_idle",
+            "stance"
+          ],
+          "donors": [
+            "paragon_countess",
+            "paragon_serath"
+          ]
+        },
+        "run": {
+          "keywords": [
+            "run",
+            "sprint",
+            "jog"
+          ],
+          "donors": [
+            "epic_game_animation_sample"
+          ]
+        },
+        "dodge": {
+          "keywords": [
+            "dodge",
+            "dash",
+            "evade",
+            "roll"
+          ],
+          "donors": [
+            "paragon_countess",
+            "paragon_serath"
+          ]
+        },
+        "attack1": {
+          "keywords": [
+            "attack",
+            "combo",
+            "slash",
+            "melee"
+          ],
+          "donors": [
+            "paragon_countess",
+            "paragon_serath",
+            "quaternius_ual2"
+          ],
+          "edit": "remove excess recovery; dual-weapon hand offsets"
+        },
+        "attack2": {
+          "keywords": [
+            "attack",
+            "combo",
+            "slash",
+            "melee"
+          ],
+          "donors": [
+            "paragon_serath",
+            "quaternius_ual2"
+          ],
+          "edit": "fast cross-body chain"
+        },
+        "attack3": {
+          "keywords": [
+            "attack",
+            "finisher",
+            "combo"
+          ],
+          "donors": [
+            "paragon_serath",
+            "quaternius_ual2"
+          ],
+          "edit": "final stop is sharp, not heavy"
+        },
+        "skill_custom": {
+          "keywords": [
+            "spin",
+            "combo",
+            "parkour",
+            "attack"
+          ],
+          "donors": [
+            "quaternius_ual2",
+            "rokoko_create"
+          ],
+          "edit": "use Rokoko only from original/self-recorded clips"
+        }
+      }
+    },
+    "sera": {
+      "primary": [
+        "paragon_morigesh",
+        "paragon_phase"
+      ],
+      "secondary": [
+        "paragon_dekker",
+        "paragon_gadget",
+        "mixamo",
+        "quaternius_ual1",
+        "rokoko_create"
+      ],
+      "locomotion": "epic_game_animation_sample",
+      "slots": {
+        "idle": {
+          "keywords": [
+            "idle",
+            "caster",
+            "magic",
+            "stance"
+          ],
+          "donors": [
+            "paragon_morigesh",
+            "paragon_phase"
+          ]
+        },
+        "run": {
+          "keywords": [
+            "run",
+            "jog"
+          ],
+          "donors": [
+            "epic_game_animation_sample"
+          ]
+        },
+        "dodge": {
+          "keywords": [
+            "dodge",
+            "evade",
+            "dash"
+          ],
+          "donors": [
+            "paragon_phase",
+            "epic_game_animation_sample"
+          ]
+        },
+        "throw": {
+          "keywords": [
+            "throw",
+            "grenade",
+            "toss",
+            "cast"
+          ],
+          "donors": [
+            "paragon_morigesh",
+            "mixamo"
+          ],
+          "edit": "hand socket drives vial release; projectile spawn frame must match release"
+        },
+        "cast": {
+          "keywords": [
+            "cast",
+            "magic",
+            "spell",
+            "gesture"
+          ],
+          "donors": [
+            "paragon_morigesh",
+            "paragon_phase"
+          ],
+          "edit": "small body motion; readable hand silhouette; no oversized mage posing"
+        },
+        "support": {
+          "keywords": [
+            "support",
+            "heal",
+            "ability",
+            "cast",
+            "skill"
+          ],
+          "donors": [
+            "paragon_phase",
+            "paragon_dekker"
+          ],
+          "edit": "open silhouette; calm recovery; device/off-hand remains readable"
+        },
+        "device_cast": {
+          "keywords": [
+            "device",
+            "cast",
+            "ability",
+            "skill",
+            "attack"
+          ],
+          "donors": [
+            "paragon_dekker",
+            "paragon_gadget"
+          ],
+          "edit": "off-hand manipulates vial/device; release hand stays clean"
+        },
+        "hit": {
+          "keywords": [
+            "hit",
+            "react",
+            "damage"
+          ],
+          "donors": [
+            "quaternius_ual1",
+            "mixamo"
+          ]
+        },
+        "death": {
+          "keywords": [
+            "death",
+            "die",
+            "fall"
+          ],
+          "donors": [
+            "quaternius_ual1",
+            "mixamo"
+          ]
+        },
+        "skill_custom": {
+          "keywords": [
+            "throw",
+            "cast",
+            "gesture",
+            "catalyst"
+          ],
+          "donors": [
+            "rokoko_create"
+          ],
+          "edit": "custom vial/ward gestures from self-recorded clips"
+        }
+      }
+    }
+  },
+  "boss": {
+    "primary": [
+      "paragon_sevarog",
+      "paragon_grux",
+      "paragon_rampage"
+    ],
+    "slots": {
+      "idle": {
+        "keywords": [
+          "idle",
+          "combat_idle",
+          "roar"
+        ],
+        "donors": [
+          "paragon_sevarog",
+          "paragon_grux"
+        ]
+      },
+      "hook_combo": {
+        "keywords": [
+          "attack",
+          "combo",
+          "swing",
+          "melee"
+        ],
+        "donors": [
+          "paragon_grux",
+          "paragon_sevarog"
+        ],
+        "edit": "tell hold -> fast strike -> neutral beat -> slam recovery"
+      },
+      "charge": {
+        "keywords": [
+          "charge",
+          "run",
+          "rush",
+          "attack"
+        ],
+        "donors": [
+          "paragon_grux",
+          "paragon_rampage"
+        ],
+        "edit": "low stance, pass-through, decel, turn after"
+      },
+      "slam": {
+        "keywords": [
+          "slam",
+          "jump",
+          "land",
+          "attack",
+          "smash"
+        ],
+        "donors": [
+          "paragon_rampage",
+          "paragon_sevarog"
+        ],
+        "edit": "compression + hold + pelvis drop + recovery"
+      },
+      "spin": {
+        "keywords": [
+          "spin",
+          "attack",
+          "combo"
+        ],
+        "donors": [
+          "paragon_grux",
+          "quaternius_ual2"
+        ],
+        "edit": "planted foot, pelvis/chest sequence; never turntable"
+      },
+      "ground_wave": {
+        "keywords": [
+          "heavy",
+          "slam",
+          "ultimate",
+          "attack"
+        ],
+        "donors": [
+          "paragon_sevarog",
+          "paragon_rampage"
+        ],
+        "edit": "full-body tell; impact and ground wave share contact event"
+      },
+      "hit_react": {
+        "keywords": [
+          "hit",
+          "react",
+          "stagger"
+        ],
+        "donors": [
+          "paragon_grux",
+          "paragon_sevarog",
+          "paragon_rampage"
+        ]
+      },
+      "break": {
+        "keywords": [
+          "stagger",
+          "knockdown",
+          "fall",
+          "stun"
+        ],
+        "donors": [
+          "paragon_sevarog",
+          "paragon_grux"
+        ]
+      }
+    }
+  },
+  "qa": {
+    "must_pass": [
+      "trail_off_motion_readable",
+      "no_combo_idle_leak",
+      "support_foot_slide_le_2cm",
+      "contact_within_2_frames",
+      "silhouette_readable",
+      "weapon_grip_consistent",
+      "no_paragon_asset_sent_to_ai_service"
+    ]
+  }
+}

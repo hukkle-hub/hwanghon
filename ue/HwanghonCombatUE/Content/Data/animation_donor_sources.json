@@ -1,0 +1,149 @@
+{
+  "schema": "hwanghon-animation-donor-sources-v1",
+  "sources": [
+    {
+      "id": "epic_game_animation_sample",
+      "name": "Game Animation Sample",
+      "url": "https://www.fab.com/listings/880e319a-a59e-4ed2-b268-b32dac7fa016",
+      "license_note": "Free; Unreal Engine-only content. 500+ animations; locomotion/motion-matching reference.",
+      "ai_input_allowed": false,
+      "use": "common locomotion, jump/fall, direction changes, traversal reference"
+    },
+    {
+      "id": "paragon_countess",
+      "name": "Paragon: Countess",
+      "url": "https://www.fab.com/listings/0bf014eb-f2ed-4029-adda-81a855eb5220",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Ain/Ryu fast entry, dodge, assassin-like body mechanics"
+    },
+    {
+      "id": "paragon_kwang",
+      "name": "Paragon: Kwang",
+      "url": "https://www.fab.com/listings/f4c67e92-b976-4b5b-ab9f-4c25b010f6f3",
+      "license_note": "Free for Unreal Engine projects; Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Ain/Kain sword torso mechanics, finishers, guard/counter body mechanics"
+    },
+    {
+      "id": "paragon_greystone",
+      "name": "Paragon: Greystone",
+      "url": "https://www.fab.com/listings/122fd7bf-6f12-4304-a930-cccbbacdaebc",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Kain heavy sword, anticipation, recovery, guard"
+    },
+    {
+      "id": "paragon_serath",
+      "name": "Paragon: Serath",
+      "url": "https://www.fab.com/listings/522b6160-15ab-492b-a2b0-c09f9bb5f6e6",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Ryu fast melee and aerial/body-flow donor"
+    },
+    {
+      "id": "paragon_gadget",
+      "name": "Paragon: Gadget",
+      "url": "https://www.fab.com/listings/52a621fd-28bb-4898-a2e7-93229a40e3f4",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Sera caster/throw gesture reference"
+    },
+    {
+      "id": "paragon_sevarog",
+      "name": "Paragon: Sevarog",
+      "url": "https://www.fab.com/listings/a4882b5e-cfad-4830-a3dd-46a6c31a79b2",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "boss tell/hold, heavy scythe/reaper-like attacks, ground-wave donor"
+    },
+    {
+      "id": "paragon_grux",
+      "name": "Paragon: Grux",
+      "url": "https://www.fab.com/listings/8c4bac2c-f7f7-4632-a644-47f4e104f5d8",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "boss charge, multi-hit, heavy impact donor"
+    },
+    {
+      "id": "paragon_rampage",
+      "name": "Paragon: Rampage",
+      "url": "https://www.fab.com/listings/0807cf74-08fd-4a33-8c8d-f33c9439fb1f",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "boss leap/slam/landing/roar weight donor"
+    },
+    {
+      "id": "quaternius_ual1",
+      "name": "Quaternius Universal Animation Library",
+      "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+      "license_note": "CC0; 120+ animations; commercial use allowed.",
+      "ai_input_allowed": true,
+      "use": "fallback locomotion, hit/death, generic combat"
+    },
+    {
+      "id": "quaternius_ual2",
+      "name": "Quaternius Universal Animation Library 2",
+      "url": "https://quaternius.com/packs/universalanimationlibrary2.html",
+      "license_note": "CC0; 130+ animations; commercial use allowed; includes melee/armed combos and parkour.",
+      "ai_input_allowed": true,
+      "use": "armed combos, melee multi-hit, parkour, fallback combat"
+    },
+    {
+      "id": "mixamo",
+      "name": "Adobe Mixamo",
+      "url": "https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html",
+      "license_note": "Free with Adobe ID; characters/animations royalty-free for commercial games. Humanoid biped auto-rig only.",
+      "ai_input_allowed": null,
+      "use": "throw/cast/hit/death/utility fallback and quick humanoid auto-rig"
+    },
+    {
+      "id": "rokoko_create",
+      "name": "Rokoko Create / Vision 3.0",
+      "url": "https://create.rokoko.com/",
+      "license_note": "Generated video/text-to-motion data can be used commercially. Current free allowance is limited; export path supports FBX and UE/Mixamo skeleton presets.",
+      "ai_input_allowed": true,
+      "use": "ONLY original/self-recorded custom scythe/greatsword/twin-blade gestures; never feed Paragon assets into it"
+    },
+    {
+      "id": "accurig",
+      "name": "ActorCore AccuRIG",
+      "url": "https://actorcore.reallusion.com/static-page/auto-rig/pre_page/accurig/accurig.html",
+      "license_note": "Free auto-rigging tool. Supports A/T pose humanoids and Unreal export; third-party motion licenses remain separate.",
+      "ai_input_allowed": null,
+      "use": "auto-rig Hwanghon humanoid meshes when source rig is missing/weak"
+    },
+    {
+      "id": "paragon_morigesh",
+      "name": "Paragon: Morigesh",
+      "url": "https://www.fab.com/listings/29e67175-fa08-448f-822b-37f411530749",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark/character identity in title or marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Sera throw/cast/body gesture donor"
+    },
+    {
+      "id": "paragon_phase",
+      "name": "Paragon: Phase",
+      "url": "https://www.fab.com/listings/b2c95d5c-a805-460b-a01b-db6da3a778f0",
+      "license_note": "Free for Unreal Engine projects; do not emulate original IP identity or use original names/trademarks in marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Sera support/dodge/cast donor"
+    },
+    {
+      "id": "paragon_dekker",
+      "name": "Paragon: Dekker",
+      "url": "https://www.fab.com/listings/6cc4f913-db56-44cc-9a42-6aeeeb147c79",
+      "license_note": "Free for Unreal Engine projects; donor motion only; Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "Sera device/support gesture donor"
+    },
+    {
+      "id": "paragon_minions",
+      "name": "Paragon: Minions",
+      "url": "https://www.fab.com/listings/039ea035-9360-4e76-ad06-5d3a92da6f65",
+      "license_note": "Free for Unreal Engine projects; do not use PARAGON trademark in title/marketing. Fab currently marks AI usage not allowed.",
+      "ai_input_allowed": false,
+      "use": "mob placeholder, hit/death and generic grunt motion source"
+    }
+  ]
+}

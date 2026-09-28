@@ -47,6 +47,8 @@
 #include "Animation/HWBossPresentationComponent.h"
 #include "Animation/HWAnimationSetAsset.h"
 #include "Animation/AnimSequenceBase.h"
+#include "Animation/SkeletalMeshActor.h"
+#include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UnrealClient.h"
 #include "Engine/DirectionalLight.h"
@@ -364,6 +366,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("net")) TickNet(Dt);
     else if (Mode == TEXT("showcase")) TickShowcase(Dt);
     else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
+    else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -1553,7 +1556,8 @@ void UHWSystemQASubsystem::Shot(const FString& Name)
 void UHWSystemQASubsystem::MeasureBody(const FString& Label, AActor* Actor)
 {
     ACharacter* Character = Cast<ACharacter>(Actor);
-    USkeletalMeshComponent* Mesh = Character ? Character->GetMesh() : nullptr;
+    USkeletalMeshComponent* Mesh = Character ? Character->GetMesh()
+        : (Actor ? Actor->FindComponentByClass<USkeletalMeshComponent>() : nullptr);
     if (!Mesh) return;
     TSharedPtr<FJsonObject> O = MakeShared<FJsonObject>();
     O->SetStringField(TEXT("label"), Label);
@@ -1923,5 +1927,119 @@ void UHWSystemQASubsystem::TickBossShow(float Dt)
         if (T > 2.3f) Once(TEXT("91_death_a"));
         if (T > 4.5f) Once(TEXT("92_death_end"));
         if (T > 5.f) Finish(Done == 5, FString::Printf(TEXT("boss show: patterns %d/5"), Done));
+    }
+}
+
+// ---------------------------------------------------------------- clip review (-HWQA=clipreview, doc 133)
+// Candidate clips side by side on one body: -HWQAClips=<anim path>+... -HWQAMesh=<skeletal mesh path>
+// -HWQATimes=0.2+0.4+... (normalized). One shot per time, clips in a row seen from the side, bones measured.
+static float ReviewSpacing(int32 Count)
+{
+    return Count <= 2 ? 220.f : 300.f;   // a donor/target pair stands close for a large side view
+}
+
+void UHWSystemQASubsystem::TickClipReview(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    if (!World) return;
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        FString Clips = Param(TEXT("HWQAClips="));
+        FString MeshPath = Param(TEXT("HWQAMesh="));
+        FString Times = Param(TEXT("HWQATimes="));
+        if (MeshPath.IsEmpty()) MeshPath = TEXT("/Game/ParagonCountess/Characters/Heroes/Countess/Meshes/SM_Countess.SM_Countess");
+        if (Times.IsEmpty()) Times = TEXT("0.15+0.3+0.45+0.6+0.75+0.9");
+        TArray<FString> ClipList, TimeList;
+        // '+' separated: the command-line parser stops values at commas.
+        Clips.ParseIntoArray(ClipList, TEXT("+"));
+        Times.ParseIntoArray(TimeList, TEXT("+"));
+        for (const FString& T : TimeList) ReviewTimes.Add(T == TEXT("c") ? -1.f : FCString::Atof(*T));   // c = each clip's contact
+        USkeletalMesh* Body = LoadObject<USkeletalMesh>(nullptr, *MeshPath);
+        FVector Origin(0.f, 0.f, 0.f);
+        if (ACharacter* P = GetPawn())
+        {
+            // Stand the row on the floor the player stands on.
+            Origin = P->GetActorLocation() - FVector(0.f, 0.f, P->GetCapsuleComponent()->GetScaledCapsuleHalfHeight())
+                + FVector(200.f, 0.f, 0.f);   // start inside the platform, not on its edge
+            P->SetActorHiddenInGame(true);
+        }
+        for (TActorIterator<AHWBossCharacter> It(World); It; ++It) It->SetActorHiddenInGame(true);
+        for (int32 I = 0; I < ClipList.Num(); ++I)
+        {
+            // Entry: <anim path>[@<skeletal mesh path>][@<contact 0..1>] — donor and retarget side by side.
+            TArray<FString> Parts;
+            ClipList[I].ParseIntoArray(Parts, TEXT("@"));
+            UAnimSequenceBase* Seq = LoadObject<UAnimSequenceBase>(nullptr, *Parts[0]);
+            USkeletalMesh* ClipBody = Parts.Num() > 1 && !Parts[1].IsEmpty() ? LoadObject<USkeletalMesh>(nullptr, *Parts[1]) : Body;
+            ReviewContacts.Add(Parts.Num() > 2 ? FCString::Atof(*Parts[2]) : 0.5f);
+            ASkeletalMeshActor* A = World->SpawnActor<ASkeletalMeshActor>(ASkeletalMeshActor::StaticClass(),
+                Origin + FVector(ReviewSpacing(ClipList.Num()) * I, 0.f, 0.f), FRotator(0.f, 0.f, 0.f));
+            if (!A || !ClipBody || !Seq)
+            {
+                Note(FString::Printf(TEXT("clip review: missing %s"), *ClipList[I]));
+                continue;
+            }
+            USkeletalMeshComponent* M = A->GetSkeletalMeshComponent();
+            M->SetMobility(EComponentMobility::Movable);
+            M->SetSkeletalMeshAsset(ClipBody);
+            M->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));   // mannequin/Countess face +Y
+            M->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+            M->PlayAnimation(Seq, false);
+            M->Stop();
+            ReviewActors.Add(A);
+            ReviewClips.Add(Seq);
+        }
+        if (ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), FVector::ZeroVector, FRotator(-35.f, 150.f, 0.f)))
+        {
+            Sun->GetLightComponent()->SetIntensity(3.f);
+        }
+        if (ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator))
+        {
+            // Side view: bodies stand in a row along X, all facing +X; the camera looks from -Y.
+            const float Span = ReviewSpacing(ReviewActors.Num()) * FMath::Max(0, ReviewActors.Num() - 1);
+            const FVector Center = Origin + FVector(Span * 0.5f + 40.f, 0.f, 95.f);
+            const FVector From = Center + FVector(0.f, -(Span * 0.8f + 300.f), 10.f);
+            Cam->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+            Cam->GetCameraComponent()->SetFieldOfView(55.f);
+            Cam->GetCameraComponent()->bConstrainAspectRatio = false;
+            if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        }
+        Note(FString::Printf(TEXT("clip review: %d clips x %d times"), ReviewActors.Num(), ReviewTimes.Num()));
+        return;
+    }
+    ShowTime = World->GetTimeSeconds() - ShowStart;
+    if (ShowTime < 4.f) return;   // shaders
+    const int32 Step = FMath::FloorToInt((ShowTime - 4.f) / 0.6f);   // pose at +0, shot at +0.3
+    const int32 K = Step;
+    if (K >= ReviewTimes.Num())
+    {
+        Finish(true, TEXT("clip review done"));
+        return;
+    }
+    const float U = ReviewTimes[K];
+    for (int32 I = 0; I < ReviewActors.Num(); ++I)
+    {
+        ASkeletalMeshActor* A = Cast<ASkeletalMeshActor>(ReviewActors[I].Get());
+        if (!A || !ReviewClips[I]) continue;
+        const float Ui = U < 0.f && ReviewContacts.IsValidIndex(I) ? ReviewContacts[I] : U;
+        A->GetSkeletalMeshComponent()->SetPosition(Ui * ReviewClips[I]->GetPlayLength(), false);
+    }
+    const float Into = (ShowTime - 4.f) - Step * 0.6f;
+    if (Into > 0.3f && ReviewShotStep < K + 1)
+    {
+        ReviewShotStep = K + 1;
+        const FString Tag = U < 0.f ? FString(TEXT("contact")) : FString::Printf(TEXT("t%03d"), FMath::RoundToInt(U * 100.f));
+        Shot(Tag);
+        for (int32 I = 0; I < ReviewActors.Num(); ++I)
+        {
+            if (AActor* A = ReviewActors[I].Get())
+            {
+                MeasureBody(FString::Printf(TEXT("%s %s"), *Tag, *ReviewClips[I]->GetName()), A);
+            }
+        }
     }
 }
