@@ -1,4 +1,5 @@
 #include "Character/HWAinCharacter.h"
+#include "Character/HWHeadSteadyMeshComponent.h"
 #include "Combat/HWCombatComponent.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Animation/HWPlayerPresentationComponent.h"
@@ -23,6 +24,7 @@
 #include "GameFramework/SpringArmComponent.h"
 
 AHWAinCharacter::AHWAinCharacter()
+    : Super(FObjectInitializer::Get().SetDefaultSubobjectClass<UHWHeadSteadyMeshComponent>(ACharacter::MeshComponentName))
 {
     PrimaryActorTick.bCanEverTick = true;
 

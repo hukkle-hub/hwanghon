@@ -3,6 +3,7 @@
 #include "Boss/HWBossCharacter.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
+#include "Character/HWHeadSteadyMeshComponent.h"
 #include "Combat/HWCombatComponent.h"
 #include "Game/HWCombatGameMode.h"
 #include "Network/HWRaidExpeditionProxy.h"
@@ -377,6 +378,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
     else if (Mode == TEXT("storyshow")) TickStoryShow(Dt);
     else if (Mode == TEXT("styleshow")) TickStyleShow(Dt);
+    else if (Mode == TEXT("neckprobe")) TickNeckProbe(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -2409,5 +2411,89 @@ void UHWSystemQASubsystem::TickStyleShow(float Dt)
     {
         StyleDelay -= Dt;
         if (StyleDelay <= 0.f) Shot(StylePending);
+    }
+}
+
+// ---------------------------------------------------------------- neck probe (-HWQA=neckprobe)
+// Director review 2026-09-29: "the character's neck is bent down". Ain stands still; the camera pitch is forced to
+// -20..+20 and the head's lean is measured from the bones: angle of neck->head against the body's up axis, positive
+// = bowed forward. If the lean follows the pitch, the aim offset is driven by the camera (and its sign is visible).
+void UHWSystemQASubsystem::TickNeckProbe(float Dt)
+{
+    APlayerController* PC = GetPC();
+    ACharacter* Ain = PC ? Cast<ACharacter>(PC->GetPawn()) : nullptr;
+    if (!Ain || Elapsed < 4.f) return;
+    static const float Pitches[] = { -20.f, -10.f, 0.f, 10.f, 20.f };
+    if (NeckStep < 0)
+    {
+        NeckStep = 0;
+        NeckTime = 0.f;
+        ShotDir = Param(TEXT("HWQAShots="));
+        PC->SetViewTarget(Ain);
+        USkeletalMeshComponent* M = Ain->GetMesh();
+        FString Bones;
+        for (int32 I = 0; I < M->GetNumBones(); ++I)
+        {
+            const FString N = M->GetBoneName(I).ToString();
+            if (N.Contains(TEXT("neck")) || N.Contains(TEXT("head")) || N.Contains(TEXT("spine"))) Bones += N + TEXT(" ");
+        }
+        Note(TEXT("neck probe bones: ") + Bones);
+    }
+    NeckTime += Dt;
+    auto Lean = [&](float& HeadLean, float& Bend)
+    {
+        USkeletalMeshComponent* M = Ain->GetMesh();
+        const FVector Neck = M->GetBoneLocation(TEXT("neck_01")), Head = M->GetBoneLocation(TEXT("head")), Chest = M->GetBoneLocation(TEXT("spine_03"));
+        const FVector NH = (Head - Neck).GetSafeNormal(), CN = (Neck - Chest).GetSafeNormal();
+        HeadLean = FMath::RadiansToDegrees(FMath::Atan2(FVector::DotProduct(NH, Ain->GetActorForwardVector()), NH.Z));
+        Bend = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector::DotProduct(NH, CN), -1.f, 1.f)));
+    };
+    if (NeckStep >= 5)
+    {
+        // an attack: the head through the swing (the review shots that looked bowed were mid-attack)
+        AHWAinCharacter* Hero = Cast<AHWAinCharacter>(Ain);
+        if (NeckStep == 5 && Hero && Hero->GetCombat())
+        {
+            Hero->GetCombat()->RequestAttack();
+            NeckStep = 6;
+            NeckTime = 0.f;
+            return;
+        }
+        const int32 Sample = FMath::FloorToInt(NeckTime / 0.1f);
+        if (Sample != NeckStep - 6 && NeckStep - 6 < 12)
+        {
+            float L, B; Lean(L, B);
+            const UHWHeadSteadyMeshComponent* Steady = Cast<UHWHeadSteadyMeshComponent>(Ain->GetMesh());
+            Note(FString::Printf(TEXT("neck probe attack t=%.1f: head lean %+.1f, neck bend %.1f, steadied %.1f"), NeckTime, L, B, Steady ? Steady->GetLastCorrectionDeg() : -1.f));
+            if ((NeckStep - 6) % 3 == 0) Shot(FString::Printf(TEXT("neck_attack_%02d"), NeckStep - 6), false);
+            ++NeckStep;
+        }
+        if (NeckStep - 6 >= 12) Finish(true, TEXT("neck probe done"));
+        return;
+    }
+    const float P = Pitches[FMath::Min(NeckStep, 4)];
+    PC->SetControlRotation(FRotator(P, Ain->GetActorRotation().Yaw, 0.f));
+    if (NeckTime >= 1.2f)
+    {
+        USkeletalMeshComponent* M = Ain->GetMesh();
+        auto Bone = [&](std::initializer_list<const TCHAR*> Names)
+        {
+            for (const TCHAR* N : Names) if (M->GetBoneIndex(N) != INDEX_NONE) return M->GetBoneLocation(N);
+            return FVector::ZeroVector;
+        };
+        const FVector Neck = Bone({ TEXT("neck_01"), TEXT("neck_02"), TEXT("Neck") });
+        const FVector Head = Bone({ TEXT("head"), TEXT("Head") });
+        const FVector Chest = Bone({ TEXT("spine_03"), TEXT("spine_02"), TEXT("Spine2") });
+        const FVector Up = FVector::UpVector, Fwd = Ain->GetActorForwardVector();
+        const FVector NH = (Head - Neck).GetSafeNormal(), CN = (Neck - Chest).GetSafeNormal();
+        const float HeadLean = FMath::RadiansToDegrees(FMath::Atan2(FVector::DotProduct(NH, Fwd), FVector::DotProduct(NH, Up)));
+        const float ChestLean = FMath::RadiansToDegrees(FMath::Atan2(FVector::DotProduct(CN, Fwd), FVector::DotProduct(CN, Up)));
+        const float Bend = FMath::RadiansToDegrees(FMath::Acos(FMath::Clamp(FVector::DotProduct(NH, CN), -1.f, 1.f)));
+        UAnimInstance* AI = M->GetAnimInstance();
+        Note(FString::Printf(TEXT("neck probe: camera pitch %+.0f -> head lean %+.1f deg, upper spine lean %+.1f, neck bend %.1f (+ = forward/down) visible=%d anim=%s"),
+            P, HeadLean, ChestLean, Bend, M->IsVisible() && !Ain->IsHidden() ? 1 : 0, AI ? *AI->GetClass()->GetName() : TEXT("none")));
+        Shot(FString::Printf(TEXT("neck_pitch_%+03.0f"), P), false);
+        NeckTime = 0.f;
+        ++NeckStep;
     }
 }

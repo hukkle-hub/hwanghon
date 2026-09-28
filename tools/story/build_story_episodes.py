@@ -655,6 +655,35 @@ EPISODES = {
     ]},
 }
 
+# 원문 보스 몸 (docs/design/151): 디자인 시트 id, 키(m), 뼈대 종류. 키는 원문 수치가 있으면 원문, 없으면 설계값(TBD_CANON).
+# art/3d/part1/<id>.glb (사람 뼈대) 또는 <id>_static.glb (정적) 가 있으면 그 보스의 모든 전투가 그 몸을 입는다.
+BODIES = {
+    "클레이브": dict(id="clave", height=2.5, kind="rig", src="L1774"),
+    "클레이브 두 기": dict(id="clave", height=2.5, kind="rig", src="L1774"),
+    "에이지스-07": dict(id="aegis_07", height=4.0, kind="static", src="L7097"),
+    "레비아탄": dict(id="leviathan", height=2.2, kind="static", src="TBD_CANON"),
+    "셀레스티얼": dict(id="celestial", height=4.0, kind="static", src="L11001-L11024"),
+    "실험체 09호": dict(id="subject_09", height=2.4, kind="rig", src="TBD_CANON"),
+    "섀도우 팽": dict(id="shadow_fang", height=2.6, kind="rig", src="TBD_CANON"),
+    "아스널 오버로드": dict(id="arsenal_overlord", height=8.0, kind="static", src="코어 7 m L13171-L13189"),
+    "발사대 탑": dict(id="amplifier_tower", height=16.0, kind="static", src="TBD_CANON"),
+    "정 장관": dict(id="minister_jeong_candidate", height=1.8, kind="rig", src="TBD_CANON"),
+}
+BODY_DIR = os.path.join(ROOT, "art", "3d", "part1")
+
+
+def wear(b):
+    body = BODIES.get(b.get("boss_ko"))
+    if not body:
+        return
+    bid = body["id"]
+    if os.path.exists(os.path.join(BODY_DIR, f"{bid}.glb")):
+        b["body"] = f"boss_{bid}"
+    elif os.path.exists(os.path.join(BODY_DIR, f"{bid}_static.glb")):
+        n = f"{bid}_static"
+        b["body_static"] = f"/Game/Bosses/Part1/{n}/StaticMeshes/{n}.{n}"
+
+
 # 전투 없는 화 (원문에 보스전이 없다): 카드로만 진행한다.
 for _ep in ("EP12", "EP13", "EP19", "EP20", "EP24", "EP25"):
     EPISODES[_ep] = {"battles": []}
@@ -696,6 +725,7 @@ def main():
             if at <= last:
                 sys.exit(f"{ep}: battles must be in scene order ({b['first_scene']})")
             last = at
+            wear(b)
             if "script" in b:
                 finish_battle(ep, i, b)
                 for s in b["script"]["steps"]:
@@ -720,7 +750,7 @@ def main():
                     if s["Location"] not in locs:
                         locs.append(s["Location"])
             e["arena_locations"] = locs if e.get("battles") else []
-    out = {"schema": "hwanghon-story-episodes-v1", "episodes": {k: EPISODES[k] for k in eps}}
+    out = {"schema": "hwanghon-story-episodes-v1", "bodies": BODIES, "episodes": {k: EPISODES[k] for k in eps}}
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
         f.write("\n")

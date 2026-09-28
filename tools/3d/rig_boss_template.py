@@ -11,6 +11,9 @@ from mathutils import Vector
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 STATIC = '--static' in argv
+# --hold=<bone>: big separate pieces (>= 5% of the vertices, not the body) ride that bone rigidly -
+# the Clave's shutter in its left hand (EP02 L1774-L1796)
+HOLD = next((a.split('=', 1)[1] for a in argv if a.startswith('--hold=')), None)
 argv = [a for a in argv if not a.startswith('--')]
 SRC, HEIGHT, OUT = argv[0], float(argv[1]), argv[2]
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -103,7 +106,112 @@ for act in bpy.data.actions:
                             kp.handle_left.y *= k
                             kp.handle_right.y *= k
 
-# ---- 3. weights: nearest two bone segments, 1/d^4
+# ---- 3. weights
+# proxy (default): a watertight voxel copy takes Blender's bone-heat weights, then they are carried to the real surface
+# (nearest face, interpolated). Hi3D meshes are open and layered, where bone heat fails and where nearest-bone weights
+# tear (robe between the legs split between two thighs: x24 edge stretch, doc 151 §2.1).
+WEIGHTS = os.environ.get('WEIGHTS', 'distance')   # measured: distance+smooth12 beats proxy (doc 151 §2.1)
+
+
+def proxy_weights():
+    select([body])
+    bpy.ops.object.duplicate()
+    proxy = bpy.context.view_layer.objects.active
+    proxy.name = 'WeightProxy'
+    rm = proxy.modifiers.new('vox', 'REMESH')
+    rm.mode = 'VOXEL'
+    rm.voxel_size = HEIGHT / float(os.environ.get('PROXY_RES', '90'))
+    bpy.ops.object.modifier_apply(modifier='vox')
+    select([proxy, arm], arm)
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    empty = sum(1 for v in proxy.data.vertices if not v.groups)
+    print(f'[rig] proxy {len(proxy.data.vertices)} verts, {empty} without weight')
+    for g in proxy.vertex_groups:
+        if g.name not in body.vertex_groups:
+            body.vertex_groups.new(name=g.name)
+    dt = body.modifiers.new('wt', 'DATA_TRANSFER')
+    dt.object = proxy
+    dt.use_vert_data = True
+    dt.data_types_verts = {'VGROUP_WEIGHTS'}
+    dt.vert_mapping = 'POLYINTERP_NEAREST'
+    dt.layers_vgroup_select_src = 'ALL'
+    dt.layers_vgroup_select_dst = 'NAME'
+    select([body])
+    bpy.ops.object.modifier_apply(modifier='wt')
+    bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+    bpy.ops.object.vertex_group_limit_total(limit=4)
+    bpy.ops.object.vertex_group_normalize_all(lock_active=False)
+    unweighted = [v.index for v in body.data.vertices if sum(g.weight for g in v.groups) < 1e-4]
+    print(f'[rig] transfer: {len(unweighted)} of {len(body.data.vertices)} vertices without weight, groups {len(body.vertex_groups)}')
+    # a vertex the transfer missed takes the weights of the nearest vertex that has them
+    if unweighted:
+        from mathutils.kdtree import KDTree
+        vs = body.data.vertices
+        missing = set(unweighted)
+        kd = KDTree(len(vs) - len(missing))
+        for v in vs:
+            if v.index not in missing:
+                kd.insert(v.co, v.index)
+        kd.balance()
+        for i in unweighted:
+            _, j, _ = kd.find(vs[i].co)
+            for g in vs[j].groups:
+                body.vertex_groups[g.group].add([i], g.weight, 'REPLACE')
+    smooth_weights(int(os.environ.get('SMOOTH', '6')))
+    bpy.data.objects.remove(proxy)
+
+
+def smooth_weights(rounds, keep=4):
+    """Neighbour averaging over mesh edges (half own, half neighbours), then the 4 strongest bones, normalised."""
+    vs = body.data.vertices
+    names = [g.name for g in body.vertex_groups]
+    W = np.zeros((len(vs), len(names)))
+    for v in vs:
+        for g in v.groups:
+            W[v.index, g.group] = g.weight
+    E2 = np.array([e.vertices[:] for e in body.data.edges])
+    # touching pieces (robe hem on the torso) are smoothed together too, or they crack apart in motion
+    from mathutils.kdtree import KDTree
+    kd = KDTree(len(vs))
+    for v in vs:
+        kd.insert(v.co, v.index)
+    kd.balance()
+    near = float(os.environ.get('NEAR', '0.03'))
+    pairs = [(v.index, j) for v in vs for (_, j, _) in kd.find_range(v.co, near) if j > v.index]
+    if pairs:
+        E2 = np.concatenate([E2, np.array(pairs)])
+    deg = np.bincount(E2.ravel(), minlength=len(vs)).astype(float)
+    # UV-seam twins (same spot, no edge) keep equal weights or the seam cracks open
+    co = np.array([v.co[:] for v in vs])
+    _, same = np.unique(np.round(co / 1e-5).astype(np.int64), axis=0, return_inverse=True)
+    same = same.ravel()
+    cnt = np.bincount(same).astype(float)
+
+    def weld(M):
+        acc = np.zeros((cnt.size, M.shape[1]))
+        np.add.at(acc, same, M)
+        return (acc / cnt[:, None])[same]
+    W = weld(W)
+    for _ in range(rounds):
+        acc = np.zeros_like(W)
+        np.add.at(acc, E2[:, 0], W[E2[:, 1]])
+        np.add.at(acc, E2[:, 1], W[E2[:, 0]])
+        has = deg > 0
+        W[has] = 0.5 * W[has] + 0.5 * acc[has] / deg[has, None]
+        W = weld(W)
+    if keep:
+        cut = np.sort(W, axis=1)[:, -keep][:, None]
+        W[W < cut] = 0.0
+    W /= np.maximum(W.sum(1, keepdims=True), 1e-9)
+    W = weld(W)
+    for j, g in enumerate(body.vertex_groups):
+        g.remove(list(range(len(vs))))
+        idx = np.nonzero(W[:, j] > 1e-4)[0]
+        for i in idx:
+            g.add([int(i)], float(W[i, j]), 'REPLACE')
+
+
+# nearest two bone segments, 1/d^4 (WEIGHTS=distance; also the rigid hold below)
 bones = [b for b in arm.data.bones if b.use_deform and not b.name.endswith('HandSlot')]
 heads = np.array([(arm.matrix_world @ b.head_local)[:] for b in bones])
 tails = np.array([(arm.matrix_world @ b.tail_local)[:] for b in bones])
@@ -119,14 +227,52 @@ near = np.argsort(D, axis=1)[:, :2]
 d = np.take_along_axis(D, near, axis=1) + 1e-3
 w = 1.0 / d ** 4
 w /= w.sum(1, keepdims=True)
-for b in bones:
-    body.vertex_groups.new(name=b.name)
-for j, b in enumerate(bones):
-    g = body.vertex_groups[b.name]
-    for col in range(2):
-        idx = np.nonzero(near[:, col] == j)[0]
-        for i in idx:
-            g.add([int(i)], float(w[i, col]), 'ADD')
+held = np.zeros(len(V), dtype=bool)
+hb = next((j for j, bn in enumerate(bones) if bn.name == HOLD), 0)
+if HOLD:
+    # loose parts by union-find over edges
+    par = np.arange(len(V))
+    def find(x):
+        while par[x] != x:
+            par[x] = par[par[x]]
+            x = par[x]
+        return x
+    for e in body.data.edges:
+        a_, b_ = find(e.vertices[0]), find(e.vertices[1])
+        if a_ != b_:
+            par[a_] = b_
+    roots = np.array([find(i) for i in range(len(V))])
+    ids, counts = np.unique(roots, return_counts=True)
+    order = np.argsort(-counts)
+    for k in order[1:]:
+        if counts[k] >= 0.05 * len(V):
+            m_ = roots == ids[k]
+            held |= m_
+    near[held] = hb
+    w[held] = [1.0, 0.0]
+    print(f'[rig] {int(held.sum())} vertices of {len(ids)} parts ride {HOLD}')
+if WEIGHTS == 'proxy':
+    proxy_weights()
+    if held.any():
+        for g in body.vertex_groups:
+            g.remove([int(i) for i in np.nonzero(held)[0]])
+        g = body.vertex_groups[bones[hb].name] if bones[hb].name in body.vertex_groups else body.vertex_groups.new(name=bones[hb].name)
+        g.add([int(i) for i in np.nonzero(held)[0]], 1.0, 'REPLACE')
+else:
+    for b in bones:
+        body.vertex_groups.new(name=b.name)
+    for j, b in enumerate(bones):
+        g = body.vertex_groups[b.name]
+        for col in range(2):
+            idx = np.nonzero(near[:, col] == j)[0]
+            for i in idx:
+                g.add([int(i)], float(w[i, col]), 'ADD')
+    if int(os.environ.get('SMOOTH', '12')) > 0:
+        smooth_weights(int(os.environ.get('SMOOTH', '12')))
+        if held.any():   # the held piece stays rigid
+            for g in body.vertex_groups:
+                g.remove([int(i) for i in np.nonzero(held)[0]])
+            body.vertex_groups[bones[hb].name].add([int(i) for i in np.nonzero(held)[0]], 1.0, 'REPLACE')
 body.parent = arm
 mod = body.modifiers.new('Armature', 'ARMATURE')
 mod.object = arm

@@ -135,7 +135,7 @@ def shell(p, cx, kind, sx, sy, spec):
             box(f"{p}Wall_X{side}", CUBE, (cx + side * (hx + 50), 0, h / 2), (1, sy / 100, h / 100), M(wall))
         box(f"{p}Ceiling", CUBE, (cx, 0, h + 50), (sx / 100, sy / 100, 1), M("Ceiling"))
         for i in range(-2, 3):   # a light down the middle; the room is otherwise dark
-            point_light(f"{p}Lamp_{i}", (cx + i * sx / 5, 0, h - 60), 60.0 if kind != "indoor" else 35.0,
+            point_light(f"{p}Lamp_{i}", (cx + i * sx / 5, 0, h - 60), 40.0 if kind != "indoor" else 25.0,
                         (1.0, 0.82, 0.62) if kind != "water" else (0.75, 0.9, 1.0), radius=max(sx, sy) * 0.6)
         if kind == "underground":
             for i in (-1, 1):
@@ -246,13 +246,22 @@ def environment(ep, e):
     sun.light_component.set_light_color(unreal.LinearColor(1.0, 0.55, 0.32, 1))   # 황혼
     sky = eas.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 2000), unreal.Rotator(0, 0, 0))
     sky.set_actor_label("SkyLight")
-    sky.light_component.set_intensity(0.6 if any_outdoor else 0.15)
+    sky.light_component.set_intensity(1.3 if any_outdoor else 0.35)   # fill: the low dusk sun backlights the party
     fog = eas.spawn_actor_from_class(unreal.ExponentialHeightFog, unreal.Vector(0, 0, 0), unreal.Rotator(0, 0, 0))
     fog.set_actor_label("Fog")
     dense = any(b.get("arena", {}).get("fog") == "dense" for b in e.get("battles", []))
-    fog.component.set_editor_property("fog_density", 0.12 if dense else 0.02)
+    fog.component.set_editor_property("fog_density", 0.12 if dense else 0.008)   # thin haze: 0.02 greyed every outdoor frame
     fog.component.set_editor_property("fog_inscattering_luminance", unreal.LinearColor(0.35, 0.25, 0.2, 1))
-    for a in (sun, sky, fog):
+    # Exposure: auto exposure lifted the dim dusk to flat grey (mean 140-156 of 255, doc 150 §7). A full stop down made
+    # silhouettes (mean 43-67); -0.4 with more sky fill.
+    ppv = eas.spawn_actor_from_class(unreal.PostProcessVolume, unreal.Vector(0, 0, 0), unreal.Rotator(0, 0, 0))
+    ppv.set_actor_label("Exposure")
+    ppv.set_editor_property("unbound", True)
+    st = ppv.get_editor_property("settings")
+    st.set_editor_property("override_auto_exposure_bias", True)
+    st.set_editor_property("auto_exposure_bias", -0.4)
+    ppv.set_editor_property("settings", st)
+    for a in (sun, sky, fog, ppv):
         LAYER_ACTORS.setdefault("DL_Base", []).append(a)
 
 

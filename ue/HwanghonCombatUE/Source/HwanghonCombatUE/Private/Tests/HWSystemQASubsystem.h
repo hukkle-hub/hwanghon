@@ -96,6 +96,10 @@ private:
     int32 SeverShots = 0;
     int32 RecoverStage = 0;
     int32 StoryBattleSeen = -1;
+    // neckprobe: head lean at forced camera pitches
+    void TickNeckProbe(float Dt);
+    int32 NeckStep = -1;
+    float NeckTime = 0.f;
 
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()

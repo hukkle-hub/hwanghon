@@ -1,5 +1,67 @@
 {
   "schema": "hwanghon-story-episodes-v1",
+  "bodies": {
+    "클레이브": {
+      "id": "clave",
+      "height": 2.5,
+      "kind": "rig",
+      "src": "L1774"
+    },
+    "클레이브 두 기": {
+      "id": "clave",
+      "height": 2.5,
+      "kind": "rig",
+      "src": "L1774"
+    },
+    "에이지스-07": {
+      "id": "aegis_07",
+      "height": 4.0,
+      "kind": "static",
+      "src": "L7097"
+    },
+    "레비아탄": {
+      "id": "leviathan",
+      "height": 2.2,
+      "kind": "static",
+      "src": "TBD_CANON"
+    },
+    "셀레스티얼": {
+      "id": "celestial",
+      "height": 4.0,
+      "kind": "static",
+      "src": "L11001-L11024"
+    },
+    "실험체 09호": {
+      "id": "subject_09",
+      "height": 2.4,
+      "kind": "rig",
+      "src": "TBD_CANON"
+    },
+    "섀도우 팽": {
+      "id": "shadow_fang",
+      "height": 2.6,
+      "kind": "rig",
+      "src": "TBD_CANON"
+    },
+    "아스널 오버로드": {
+      "id": "arsenal_overlord",
+      "height": 8.0,
+      "kind": "static",
+      "src": "코어 7 m L13171-L13189"
+    },
+    "발사대 탑": {
+      "id": "amplifier_tower",
+      "height": 16.0,
+      "kind": "static",
+      "src": "TBD_CANON"
+    },
+    "정 장관": {
+      "id": "minister_jeong_candidate",
+      "height": 1.8,
+      "kind": "rig",
+      "src": "TBD_CANON"
+    }
+  },
   "episodes": {
     "EP01": {
       "world": "/Game/Hwanghon/Story/EP01/EP01_TrainingRoom_World",
