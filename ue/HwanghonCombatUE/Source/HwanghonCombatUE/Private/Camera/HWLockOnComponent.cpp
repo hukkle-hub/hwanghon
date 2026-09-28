@@ -2,6 +2,9 @@
 #include "GameFramework/Pawn.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h"
+#include "Boss/HWBossCharacter.h"
+#include "System/HWBossPartTarget.h"
 
 UHWLockOnComponent::UHWLockOnComponent()
 {
@@ -87,14 +90,29 @@ AActor* UHWLockOnComponent::FindBestTarget() const
     TArray<AActor*> Candidates;
     UGameplayStatics::GetAllActorsWithTag(GetWorld(), TEXT("LockOnTarget"), Candidates);
 
+    // A fresh lock prefers a body/enemy; boss parts are reached with CycleTarget and are only
+    // chosen here when nothing else is in range.
     AActor* Best = nullptr;
+    AActor* BestPart = nullptr;
     float BestDistSq = SearchRadius * SearchRadius;
+    float BestPartDistSq = BestDistSq;
     const FVector Origin = GetOwner()->GetActorLocation();
 
     for (AActor* Candidate : Candidates)
     {
         if (!IsValid(Candidate) || Candidate->IsActorBeingDestroyed() || Candidate == GetOwner())
         {
+            continue;
+        }
+
+        if (Candidate->IsA<AHWBossPartTarget>())
+        {
+            const float PartDistSq = FVector::DistSquared2D(Origin, Candidate->GetActorLocation());
+            if (PartDistSq < BestPartDistSq)
+            {
+                BestPart = Candidate;
+                BestPartDistSq = PartDistSq;
+            }
             continue;
         }
 
@@ -106,5 +124,44 @@ AActor* UHWLockOnComponent::FindBestTarget() const
         }
     }
 
-    return Best;
+    return Best ? Best : BestPart;
+}
+
+void UHWLockOnComponent::CycleTarget()
+{
+    AActor* Current = GetTarget();
+    if (!Current)
+    {
+        Target = FindBestTarget();
+        return;
+    }
+    AActor* BossActor = Current;
+    if (const AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Current))
+    {
+        BossActor = Part->GetBoss();
+    }
+    TArray<AActor*> Ring;
+    if (IsValid(BossActor) && BossActor->ActorHasTag(TEXT("LockOnTarget")))
+    {
+        Ring.Add(BossActor);
+    }
+    TArray<AHWBossPartTarget*> Parts;
+    for (TActorIterator<AHWBossPartTarget> It(GetWorld()); It; ++It)
+    {
+        if (It->GetBoss() == BossActor && It->ActorHasTag(TEXT("LockOnTarget")) && !It->IsActorBeingDestroyed())
+        {
+            Parts.Add(*It);
+        }
+    }
+    Parts.Sort([](const AHWBossPartTarget& A, const AHWBossPartTarget& B) { return A.GetPartId().LexicalLess(B.GetPartId()); });
+    for (AHWBossPartTarget* Part : Parts)
+    {
+        Ring.Add(Part);
+    }
+    if (Ring.Num() == 0)
+    {
+        return;
+    }
+    const int32 Index = Ring.IndexOfByKey(Current);
+    Target = Ring[(Index + 1) % Ring.Num()];
 }

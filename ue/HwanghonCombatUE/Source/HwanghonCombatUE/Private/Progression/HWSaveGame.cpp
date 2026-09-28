@@ -96,7 +96,11 @@ void UHWSaveGame::Serialize(FArchive& Ar)
 
 bool UHWSaveGame::IsValidProfile() const
 {
-    if (bDeserializationFailed || Version != CurrentVersion || !ValidClears(Clears) || Gold < 0 || Experience < 0) return false;
+    const bool bValidCharacter =
+        SelectedCharacter == TEXT("ain") || SelectedCharacter == TEXT("kain")
+        || SelectedCharacter == TEXT("ryu") || SelectedCharacter == TEXT("sera");
+    if (bDeserializationFailed || Version != CurrentVersion || !bValidCharacter
+        || !ValidClears(Clears) || Gold < 0 || Experience < 0) return false;
     int64 ExpectedGold = 0, ExpectedExperience = 0;
     TMap<FName, int64> ExpectedInventory;
     TSet<FName> SeenQuests, SeenFlags;
@@ -125,10 +129,27 @@ bool UHWSaveGame::IsValidProfile() const
 bool UHWSaveGame::MigrateToCurrentVersion()
 {
     if (Version == CurrentVersion) return IsValidProfile();
-    // v1 contained only clear receipts; unexpected v2 fields are never discarded.
-    if (bDeserializationFailed || Version != 1 || !ValidClears(Clears) || Gold != 0 || Experience != 0 || !Inventory.IsEmpty() || !Claims.IsEmpty()) return false;
-    Version = CurrentVersion;
-    return true;
+    if (bDeserializationFailed) return false;
+
+    if (Version == 1)
+    {
+        // v1 contained only clear receipts. Do not silently discard unexpected data.
+        if (!ValidClears(Clears) || Gold != 0 || Experience != 0
+            || !Inventory.IsEmpty() || !Claims.IsEmpty()) return false;
+        SelectedCharacter = TEXT("ain");
+        Version = CurrentVersion;
+        return IsValidProfile();
+    }
+
+    if (Version == 2)
+    {
+        // v2 already validates clears/rewards through IsValidProfile after the version lift.
+        SelectedCharacter = TEXT("ain");
+        Version = CurrentVersion;
+        return IsValidProfile();
+    }
+
+    return false;
 }
 
 bool UHWSaveGame::ValidateAgainstCatalog(const TArray<FHWQuestDefinition>& Quests) const

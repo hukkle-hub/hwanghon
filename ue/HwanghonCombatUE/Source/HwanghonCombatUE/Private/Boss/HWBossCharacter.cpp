@@ -3,6 +3,8 @@
 #include "Animation/HWBossPresentationComponent.h"
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
+#include "System/HWCoopCombatSubsystem.h"
+#include "System/HWBossSystemComponent.h"
 
 #include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
@@ -20,6 +22,7 @@ AHWBossCharacter::AHWBossCharacter()
 
     Tags.Add(TEXT("LockOnTarget"));
     Presentation = CreateDefaultSubobject<UHWBossPresentationComponent>(TEXT("Presentation"));
+    BossSystem = CreateDefaultSubobject<UHWBossSystemComponent>(TEXT("BossSystem"));
 }
 
 void AHWBossCharacter::BeginPlay()
@@ -28,6 +31,7 @@ void AHWBossCharacter::BeginPlay()
 
     RuntimeTuning = NewObject<UHWCombatTuningAsset>(this, TEXT("BossRuntimeTuning"));
     TargetPlayer = Cast<AHWAinCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+    if (BossSystem) BossSystem->InitializeBoss(Health);
 
     if (IsDead())
     {
@@ -48,10 +52,29 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
         return;
     }
 
-    if (!TargetPlayer)
+    if (bNetworkAuthoritative) return;
+
+    if (UHWCoopCombatSubsystem* Coop =
+        GetWorld() ? GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>() : nullptr)
+    {
+        AHWAinCharacter* ThreatTarget = Coop->SelectHighestThreatTarget();
+        if (!ThreatTarget)
+        {
+            ThreatTarget = Coop->SelectClosestLivingTarget(GetActorLocation());
+        }
+        if (ThreatTarget)
+        {
+            TargetPlayer = ThreatTarget;
+        }
+    }
+
+    if (!TargetPlayer || !TargetPlayer->GetCombat() || TargetPlayer->GetCombat()->IsDead())
     {
         TargetPlayer = Cast<AHWAinCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-        return;
+        if (!TargetPlayer || !TargetPlayer->GetCombat() || TargetPlayer->GetCombat()->IsDead())
+        {
+            return;
+        }
     }
 
     if (HitStopRemaining > 0.f)
@@ -73,7 +96,13 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
 
     TickLunge(DeltaSeconds);
 
-    StateElapsed += DeltaSeconds;
+    const float SystemSpeed =
+        BossSystem && (State == EHWBossState::Tell
+            || State == EHWBossState::Strike
+            || State == EHWBossState::Recover)
+        ? BossSystem->GetPatternSpeedScale()
+        : 1.f;
+    StateElapsed += DeltaSeconds * SystemSpeed;
 
     switch (State)
     {
@@ -123,7 +152,7 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
             break;
 
         case EHWBossState::Break:
-            if (StateElapsed >= 1.45f)
+            if (StateElapsed >= SystemBreakDuration)
             {
                 FinishRecover();
             }
@@ -136,7 +165,7 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
 
 void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVector SourceLocation)
 {
-    if (IsDead())
+    if (IsDead() || bNetworkAuthoritative)
     {
         return;
     }
@@ -146,6 +175,15 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
     {
         Die();
         return;
+    }
+
+    if (BossSystem)
+    {
+        BossSystem->NotifyHit(Damage, Tier, SourceLocation);
+        if (State == EHWBossState::Break && Tier != EHWAttackTier::Break)
+        {
+            return;
+        }
     }
 
     FVector ReactionDirection = GetActorLocation() - SourceLocation;
@@ -324,7 +362,7 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
         return;
     }
 
-    PlayerCombat->ApplyIncomingDamage(Beat.Damage, CurrentPattern.bBig ? EHWAttackTier::Smash : EHWAttackTier::Light);
+    PlayerCombat->ApplyIncomingDamage(Beat.Damage * (BossSystem ? BossSystem->GetOutgoingDamageScale() : 1.f), CurrentPattern.bBig ? EHWAttackTier::Smash : EHWAttackTier::Light);
 }
 
 void AHWBossCharacter::ChooseNextPattern()
@@ -340,6 +378,12 @@ void AHWBossCharacter::ChooseNextPattern()
     for (int32 Index = 0; Index < RuntimeTuning->BossPatterns.Num(); ++Index)
     {
         const FHWBossPatternSpec& Pattern = RuntimeTuning->BossPatterns[Index];
+        const int32 SystemPhase = BossSystem ? BossSystem->GetPhase() : 1;
+
+        if (SystemPhase == 1 && Pattern.Id == "GroundWave")
+        {
+            continue;
+        }
 
         if (Pattern.Id == "Charge" && Distance < 500.f)
         {
@@ -439,4 +483,76 @@ void AHWBossCharacter::ApplyHitStop(float Seconds)
     }
 
     HitStopRemaining = FMath::Max(HitStopRemaining, Seconds);
+}
+
+
+bool AHWBossCharacter::ReceiveSystemHit_Implementation(
+    float Damage,
+    EHWAttackTier Tier,
+    FVector SourceLocation,
+    AActor* InstigatorActor)
+{
+    if (IsDead()) return false;
+    ReceivePlayerHit(Damage, Tier, SourceLocation);
+    return true;
+}
+
+void AHWBossCharacter::ConfigureSystemHealth(float NewMaxHealth)
+{
+    if (IsDead()) return;
+    Health = FMath::Max(1.f, NewMaxHealth);
+}
+
+void AHWBossCharacter::EnterSystemBreak(float Duration, FVector SourceLocation)
+{
+    if (IsDead()) return;
+
+    CancelPendingAttack();
+    State = EHWBossState::Break;
+    StateElapsed = 0.f;
+    SystemBreakDuration = FMath::Max(0.5f, Duration);
+
+    FVector ReactionDirection = GetActorLocation() - SourceLocation;
+    ReactionDirection.Z = 0.f;
+    ReactionDirection.Normalize();
+
+    LastReactionTier = EHWAttackTier::Break;
+    LastReactionWorldTime = GetWorld()->GetTimeSeconds();
+
+    OnBossReaction.Broadcast(EHWAttackTier::Break, ReactionDirection);
+    BP_OnBossReaction(EHWAttackTier::Break, ReactionDirection);
+    OnBossStateChanged.Broadcast(State, CurrentPattern.Id);
+    BP_OnBossStateChanged(State, CurrentPattern.Id);
+}
+
+
+void AHWBossCharacter::SetNetworkAuthoritative(bool bEnabled)
+{
+    bNetworkAuthoritative=bEnabled;
+    if (BossSystem) BossSystem->SetComponentTickEnabled(!bEnabled);
+}
+
+void AHWBossCharacter::ApplyAuthoritativeSnapshot(float NewHealth,float NewMaxHealth,float NewPosture,FName StateName,bool bRaidClear)
+{
+    bNetworkAuthoritative=true;
+    Health=FMath::Max(0.f,NewHealth);
+    EHWBossState NewState=State;
+    if (bRaidClear || Health<=0.f) NewState=EHWBossState::Dead;
+    else if (StateName==TEXT("idle")) NewState=EHWBossState::Idle;
+    else if (StateName==TEXT("telegraph")) NewState=EHWBossState::Tell;
+    else if (StateName==TEXT("attack") || StateName==TEXT("link")) NewState=EHWBossState::Strike;
+    else if (StateName==TEXT("recover")) NewState=EHWBossState::Recover;
+    else if (StateName==TEXT("stagger")) NewState=EHWBossState::Stagger;
+    else if (StateName==TEXT("downed")) NewState=EHWBossState::Break;
+    if (NewState!=State)
+    {
+        State=NewState;StateElapsed=0.f;
+        OnBossStateChanged.Broadcast(State,CurrentPattern.Id);
+        BP_OnBossStateChanged(State,CurrentPattern.Id);
+    }
+    if (State==EHWBossState::Dead)
+    {
+        Tags.Remove(TEXT("LockOnTarget"));
+        SetActorEnableCollision(false);
+    }
 }

@@ -1,0 +1,35 @@
+{
+  "package": "HWANGHON_SYSTEM_CORE_V2_2_CURRENT_MAIN_FINAL",
+  "base_commit_checked": "d08b0a3e68071052186651eb4b38fa1570b91246",
+  "scope": [
+    "single-character combat kits",
+    "1-4 player co-op",
+    "boss phase/break/parts/threat/enrage",
+    "dungeon rooms/checkpoint/retry",
+    "authoritative party websocket client",
+    "snapshot/delta reconciliation",
+    "expedition/hazard/gate presentation",
+    "initial server character creation bridge",
+    "preflight dry-run integration",
+    "server four-client smoke test",
+    "selected-character save schema v3",
+    "frontend selection persistence",
+    "single-pawn GameMode selection"
+  ],
+  "forbidden": [
+    "three-character combat party",
+    "in-dungeon character switching",
+    "client authoritative damage",
+    "client authoritative rewards"
+  ],
+  "validation": {
+    "system_tests": "26 PASS + 4 server-runtime tests included",
+    "v1_static": "PASS",
+    "v2_static": "PASS",
+    "python_apply_ast": "PASS",
+    "ue_compile": "REQUIRED IN CLAUDE UE 5.8.1 ENVIRONMENT",
+    "2p_4p_runtime": "REQUIRED IN CLAUDE SERVER ENVIRONMENT",
+    "preflight": "DRY-RUN SCRIPT INCLUDED; runs against actual repo before mutation",
+    "selection_tests": "4/4 PASS; UE automation source included"
+  }
+}

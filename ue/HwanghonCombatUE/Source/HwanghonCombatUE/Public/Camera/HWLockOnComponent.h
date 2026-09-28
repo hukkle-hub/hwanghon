@@ -21,6 +21,10 @@ public:
     UFUNCTION(BlueprintCallable)
     void ClearTarget();
 
+    // Boss -> its unbroken parts -> boss. Starts a lock when none (part lock-on, SYSTEM CORE).
+    UFUNCTION(BlueprintCallable)
+    void CycleTarget();
+
     UFUNCTION(BlueprintPure)
     AActor* GetTarget() const;
 
@@ -43,6 +47,7 @@ public:
     float OverlapHoldDistanceCm = 180.f;
 
 private:
+    // Parts of a boss are reached with CycleTarget; a fresh lock prefers the body/enemy.
     AActor* FindBestTarget() const;
 
     UPROPERTY(Transient)

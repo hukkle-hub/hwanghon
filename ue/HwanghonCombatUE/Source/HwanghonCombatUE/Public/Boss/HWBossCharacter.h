@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Combat/HWCombatTypes.h"
+#include "System/HWCombatTargetInterface.h"
 #include "HWBossCharacter.generated.h"
 
 class AHWBossCharacter;
@@ -14,9 +15,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharact
 class UHWCombatTuningAsset;
 class AHWAinCharacter;
 class UHWBossPresentationComponent;
+class UHWBossSystemComponent;
 
 UCLASS()
-class HWANGHONCOMBATUE_API AHWBossCharacter : public ACharacter
+class HWANGHONCOMBATUE_API AHWBossCharacter : public ACharacter, public IHWCombatTargetInterface
 {
     GENERATED_BODY()
 
@@ -61,6 +63,32 @@ public:
     float GetHealth() const { return Health; }
 
     UFUNCTION(BlueprintPure)
+    UHWBossSystemComponent* GetBossSystem() const { return BossSystem; }
+
+    UFUNCTION(BlueprintCallable)
+    void ConfigureSystemHealth(float NewMaxHealth);
+
+    UFUNCTION(BlueprintCallable)
+    void EnterSystemBreak(float Duration, FVector SourceLocation);
+
+    UFUNCTION(BlueprintCallable)
+    void SetNetworkAuthoritative(bool bEnabled);
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyAuthoritativeSnapshot(float NewHealth, float NewMaxHealth, float NewPosture, FName StateName, bool bRaidClear);
+
+    virtual bool ReceiveSystemHit_Implementation(
+        float Damage,
+        EHWAttackTier Tier,
+        FVector SourceLocation,
+        AActor* InstigatorActor) override;
+
+    virtual bool IsSystemTargetDead_Implementation() const override
+    {
+        return IsDead();
+    }
+
+    UFUNCTION(BlueprintPure)
     FName GetCurrentPatternId() const { return CurrentPattern.Id; }
 
     UFUNCTION(BlueprintPure)
@@ -94,6 +122,9 @@ private:
     TObjectPtr<UHWBossPresentationComponent> Presentation;
 
     UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UHWBossSystemComponent> BossSystem;
+
+    UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWCombatTuningAsset> RuntimeTuning;
 
     UPROPERTY(Transient)
@@ -110,4 +141,6 @@ private:
     EHWAttackTier LastReactionTier = EHWAttackTier::Light;
     float LastReactionWorldTime = -1000.f;
     float HitStopRemaining = 0.f;
+    float SystemBreakDuration = 1.45f;
+    bool bNetworkAuthoritative = false;
 };

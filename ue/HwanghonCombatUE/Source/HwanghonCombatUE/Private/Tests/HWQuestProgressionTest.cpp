@@ -326,7 +326,7 @@ bool FHWQuestMigrationAndCorruptLoadTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Next transaction writes current version"), Profile->ClaimQuest(Quests[0].Id));
     UHWSaveGame* Current = Storage->Load();
     if (!TestNotNull(TEXT("Current save reloads"), Current)) return false;
-    TestEqual(TEXT("Saved schema advanced to v2"), Current->Version, 2);
+    TestEqual(TEXT("Saved schema advanced to the current version"), Current->Version, UHWSaveGame::CurrentVersion);
     TestTrue(TEXT("Current save validates"), Current->ValidateAgainstCatalog(Quests));
     const TArray<uint8> GoodBytes = Storage->Bytes;
 

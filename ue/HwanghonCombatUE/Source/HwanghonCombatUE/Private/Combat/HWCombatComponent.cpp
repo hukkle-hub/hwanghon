@@ -33,6 +33,8 @@ void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     }
 
     TickStamina(DeltaTime);
+    DamageReductionRemaining = FMath::Max(0.f, DamageReductionRemaining - DeltaTime);
+    if (DamageReductionRemaining <= 0.f) DamageReductionFraction = 0.f;
     DodgeCooldownRemaining = FMath::Max(0.f, DodgeCooldownRemaining - DeltaTime);
     JumpCooldownRemaining = FMath::Max(0.f, JumpCooldownRemaining - DeltaTime);
 
@@ -147,7 +149,8 @@ bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
         return false;
     }
 
-    Health = FMath::Max(0.f, Health - FMath::Max(0.f, Damage));
+    const float AppliedDamage = FMath::Max(0.f, Damage) * (1.f - FMath::Clamp(DamageReductionFraction, 0.f, 0.90f));
+    Health = FMath::Max(0.f, Health - AppliedDamage);
     const bool bLethal = Health <= 0.f;
     const EHWActionType Interrupted = CurrentAction;
     if (bLethal)
@@ -156,7 +159,7 @@ bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
         // They must observe committed death, never a zero-health living actor.
         CommitDeath();
     }
-    OnDamaged.Broadcast(Damage, Tier);
+    OnDamaged.Broadcast(AppliedDamage, Tier);
 
     if (bLethal)
     {
@@ -190,6 +193,101 @@ bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
         OnActionStarted.Broadcast(CurrentAction);
     }
 
+    return true;
+}
+
+void UHWCombatComponent::Heal(float Amount)
+{
+    if (bDead || !Tuning || Amount <= 0.f) return;
+    Health = FMath::Min(Tuning->MaxHealth, Health + Amount);
+}
+
+bool UHWCombatComponent::Revive(float HealthFraction)
+{
+    if (!bDead || !Tuning) return false;
+    bDead = false;
+    Health = FMath::Max(1.f, Tuning->MaxHealth * FMath::Clamp(HealthFraction, 0.05f, 1.f));
+    Stamina = FMath::Max(Stamina, Tuning->MaxStamina * 0.35f);
+    CurrentAction = EHWActionType::None;
+    QueuedAction = EHWActionType::None;
+    ActionElapsed = 0.f;
+    bContactFired = false;
+    HitStopRemaining = 0.f;
+    SetComponentTickEnabled(true);
+    if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+    {
+        Character->SetActorEnableCollision(true);
+        if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+        {
+            Movement->SetMovementMode(MOVE_Walking);
+        }
+    }
+    return true;
+}
+
+void UHWCombatComponent::ApplyAuthoritativeVitals(
+    float NewHealth, float NewMaxHealth, float NewStamina, bool bIncapacitated)
+{
+    if (!Tuning) return;
+    Tuning->MaxHealth = FMath::Max(1.f, NewMaxHealth);
+    Health = FMath::Clamp(NewHealth, 0.f, Tuning->MaxHealth);
+    Stamina = FMath::Clamp(NewStamina, 0.f, Tuning->MaxStamina);
+    bDead = bIncapacitated;
+    if (bDead)
+    {
+        CurrentAction = EHWActionType::None;
+        QueuedAction = EHWActionType::None;
+        ActionElapsed = 0.f;
+        bContactFired = true;
+        if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+        {
+            Character->StopJumping();
+            if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+            {
+                Movement->StopMovementImmediately();
+                Movement->DisableMovement();
+            }
+        }
+    }
+    else
+    {
+        SetComponentTickEnabled(true);
+        if (ACharacter* Character = Cast<ACharacter>(GetOwner()))
+        {
+            Character->SetActorEnableCollision(true);
+            if (UCharacterMovementComponent* Movement = Character->GetCharacterMovement())
+            {
+                if (Movement->MovementMode == MOVE_None) Movement->SetMovementMode(MOVE_Walking);
+            }
+        }
+    }
+}
+
+void UHWCombatComponent::ApplyDamageReduction(float Fraction, float Duration)
+{
+    DamageReductionFraction = FMath::Max(DamageReductionFraction,FMath::Clamp(Fraction,0.f,0.90f));
+    DamageReductionRemaining = FMath::Max(DamageReductionRemaining,FMath::Max(0.f,Duration));
+}
+
+bool UHWCombatComponent::TrySpendStamina(float Cost)
+{
+    if (bDead || !Tuning || Cost < 0.f || Stamina + KINDA_SMALL_NUMBER < Cost) return false;
+    Stamina -= Cost;
+    if (Cost > 0.f) StaminaRegenBlocked = Tuning->StaminaRegenDelay;
+    return true;
+}
+
+bool UHWCombatComponent::RequestSystemDodge(float StaminaCost)
+{
+    if (bDead || !Tuning || DodgeCooldownRemaining > 0.f
+        || CurrentAction != EHWActionType::None || !TrySpendStamina(StaminaCost))
+        return false;
+    DodgeCooldownRemaining = Tuning->DodgeCooldown;
+    QueuedAction = EHWActionType::None;
+    CurrentAction = EHWActionType::Dodge;
+    ActionElapsed = 0.f;
+    bContactFired = true;
+    OnActionStarted.Broadcast(CurrentAction);
     return true;
 }
 

@@ -18,6 +18,7 @@
 #include "InputCoreTypes.h"
 #include "Kismet/GameplayStatics.h"
 #include "Progression/HWProfileSubsystem.h"
+#include "Network/HWRaidNetworkSubsystem.h"
 #include "UI/HWFrontendScreens.h"
 #include "UI/HWUICatalog.h"
 
@@ -131,6 +132,10 @@ void UHWFrontendRootWidget::NativeConstruct()
     Super::NativeConstruct();
     GActiveRoot = this;
     SetIsFocusable(true);
+    if (UHWProfileSubsystem* Profile = ProfileSystem())
+    {
+        if (Profile->IsProfileAvailable()) SelectedCharacter = Profile->GetSelectedCharacter();
+    }
     if (!Screens.Contains(Current) || Current == EHWFrontendScreen::Title)
     {
         ShowScreen(EHWFrontendScreen::Title);
@@ -410,6 +415,38 @@ void UHWFrontendRootWidget::Toast(const FText& Message)
         }
         ToastRemaining = 3.5f;
     }
+}
+
+bool UHWFrontendRootWidget::SelectCharacter(FName CharacterId)
+{
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UHWRaidNetworkSubsystem* Network = GI->GetSubsystem<UHWRaidNetworkSubsystem>())
+        {
+            const FHWNetProfile NetProfile = Network->GetProfile();
+            if (Network->IsConnected() && NetProfile.bCharacterCreated
+                && NetProfile.Character != CharacterId)
+            {
+                Toast(NSLOCTEXT("HWUI", "OnlineCharacterLocked",
+                    "온라인 캐릭터는 서버 프로필에 고정되어 있습니다."));
+                return false;
+            }
+        }
+    }
+
+    UHWProfileSubsystem* Profile = ProfileSystem();
+    if (!Profile || !Profile->IsProfileAvailable())
+    {
+        Toast(NSLOCTEXT("HWUI", "NoProfileForCharacter", "캐릭터 선택을 저장할 프로필이 없습니다."));
+        return false;
+    }
+    if (!Profile->SelectCharacter(CharacterId))
+    {
+        Toast(FText::FromString(Profile->GetLastError()));
+        return false;
+    }
+    SelectedCharacter = CharacterId;
+    return true;
 }
 
 void UHWFrontendRootWidget::Sortie(FName QuestId)

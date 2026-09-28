@@ -68,7 +68,7 @@ class HWANGHONCOMBATUE_API UHWSaveGame : public USaveGame
     GENERATED_BODY()
 
 public:
-    static constexpr int32 CurrentVersion = 2;
+    static constexpr int32 CurrentVersion = 3;
 
     virtual void Serialize(FArchive& Ar) override;
 
@@ -91,6 +91,10 @@ public:
 
     UPROPERTY(SaveGame)
     TArray<FHWQuestClaimReceipt> Claims;
+
+    // One player controls one character per sortie. This is not a combat-party slot.
+    UPROPERTY(SaveGame)
+    FName SelectedCharacter = TEXT("ain");
 
     bool IsValidProfile() const;
     bool MigrateToCurrentVersion();

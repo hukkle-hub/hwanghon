@@ -1,12 +1,19 @@
 #include "Game/HWCombatGameMode.h"
 #include "Boss/HWBossCharacter.h"
 #include "Character/HWAinCharacter.h"
+#include "System/HWPlayableCharacterVariants.h"
 #include "World/HWGrayboxArena.h"
 #include "World/HWSeohanLightingRig.h"
 #include "Audit/HWCombatAuditActor.h"
 #include "Progression/HWProfileSubsystem.h"
 #include "Game/HWQuestRunSubsystem.h"
 #include "Combat/HWCombatComponent.h"
+#include "System/HWSystemTypes.h"
+#include "Network/HWRaidWorldBridge.h"
+#include "Network/HWRaidNetworkSubsystem.h"
+#include "System/HWCoopCombatSubsystem.h"
+#include "System/HWDungeonDirector.h"
+#include "System/HWCoopLifeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/GameInstance.h"
 #include "UI/HWCombatHUD.h"
@@ -19,10 +26,36 @@ AHWCombatGameMode::AHWCombatGameMode()
     HUDClass = AHWCombatHUD::StaticClass();
 }
 
+UClass* AHWCombatGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
+{
+    FName CharacterId = TEXT("ain");
+    if (UGameInstance* GI = GetGameInstance())
+    {
+        if (UHWRaidNetworkSubsystem* Network = GI->GetSubsystem<UHWRaidNetworkSubsystem>())
+        {
+            const FHWNetProfile NetProfile = Network->GetProfile();
+            if (Network->GetRoom().bHasRaid && NetProfile.bCharacterCreated)
+                CharacterId = NetProfile.Character;
+            else if (UHWProfileSubsystem* Profile = GI->GetSubsystem<UHWProfileSubsystem>())
+                CharacterId = Profile->GetSelectedCharacter();
+        }
+        else if (UHWProfileSubsystem* Profile = GI->GetSubsystem<UHWProfileSubsystem>())
+        {
+            CharacterId = Profile->GetSelectedCharacter();
+        }
+    }
+
+    if (CharacterId == TEXT("kain")) return AHWKainCharacter::StaticClass();
+    if (CharacterId == TEXT("ryu")) return AHWRyuCharacter::StaticClass();
+    if (CharacterId == TEXT("sera")) return AHWSeraCharacter::StaticClass();
+    return AHWAinCharacter::StaticClass();
+}
+
 void AHWCombatGameMode::BeginPlay()
 {
     Super::BeginPlay();
     RunId = FGuid::NewGuid();
+    const bool bOnlineRaid = GetGameInstance() && GetGameInstance()->GetSubsystem<UHWRaidNetworkSubsystem>() && GetGameInstance()->GetSubsystem<UHWRaidNetworkSubsystem>()->GetRoom().bHasRaid;
 
     if (GetGameInstance())
     {
@@ -45,7 +78,43 @@ void AHWCombatGameMode::BeginPlay()
         }
     }
 
-    if (!UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
+    // A local dungeon can also be opened on any combat map with ?HWDungeon=<id> (development/QA).
+    // Such runs never credit progression.
+    FName LocalDungeonId = DungeonId;
+    const FString DungeonOption = UGameplayStatics::ParseOption(OptionsString, TEXT("HWDungeon"));
+    if (LocalDungeonId.IsNone() && !DungeonOption.IsEmpty())
+    {
+        LocalDungeonId = FName(*DungeonOption);
+        bCanRecordVictory = false;
+    }
+
+    if (!bOnlineRaid && !LocalDungeonId.IsNone())
+    {
+        EncounterDungeon = Cast<AHWDungeonDirector>(
+            UGameplayStatics::GetActorOfClass(this, AHWDungeonDirector::StaticClass()));
+
+        if (!EncounterDungeon)
+        {
+            EncounterDungeon = GetWorld()->SpawnActor<AHWDungeonDirector>(
+                AHWDungeonDirector::StaticClass(),
+                FVector::ZeroVector,
+                FRotator::ZeroRotator);
+        }
+
+        if (EncounterDungeon)
+        {
+            EncounterDungeon->ConfigureDungeon(LocalDungeonId, EHWSystemDifficulty::Normal);
+            EncounterDungeon->OnDungeonCompleted.AddUniqueDynamic(
+                this,
+                &AHWCombatGameMode::HandleDungeonCompleted);
+            EncounterDungeon->OnDungeonFailed.AddUniqueDynamic(
+                this,
+                &AHWCombatGameMode::HandleDungeonFailed);
+            EncounterDungeon->StartDungeon();
+        }
+    }
+
+    if (!bOnlineRaid && !UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
     {
         GetWorld()->SpawnActor<AHWGrayboxArena>(AHWGrayboxArena::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
     }
@@ -64,7 +133,7 @@ void AHWCombatGameMode::BeginPlay()
     }
 
     AHWBossCharacter* Boss = Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(this, AHWBossCharacter::StaticClass()));
-    if (!Boss)
+    if (!Boss && !EncounterDungeon)
     {
         Boss = GetWorld()->SpawnActor<AHWBossCharacter>(
             AHWBossCharacter::StaticClass(),
@@ -86,6 +155,11 @@ void AHWCombatGameMode::BeginPlay()
             AHWSeohanLightingRig::StaticClass(),
             FVector::ZeroVector,
             FRotator::ZeroRotator);
+    }
+
+    if (bOnlineRaid && !UGameplayStatics::GetActorOfClass(this, AHWRaidWorldBridge::StaticClass()))
+    {
+        GetWorld()->SpawnActor<AHWRaidWorldBridge>(AHWRaidWorldBridge::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
     }
 
     if (!UGameplayStatics::GetActorOfClass(this, AHWCombatAuditActor::StaticClass()))
@@ -135,6 +209,23 @@ void AHWCombatGameMode::HandlePlayerDied()
     {
         return;
     }
+
+    if (UHWCoopCombatSubsystem* Coop =
+        GetWorld() ? GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>() : nullptr)
+    {
+        if (Coop->GetPartySize() > 1 && Coop->GetAliveCount() > 0)
+        {
+            // One player is down. The other players may revive them.
+            return;
+        }
+    }
+
+    if (EncounterDungeon)
+    {
+        EncounterDungeon->ReportPartyWipe();
+        return;
+    }
+
     bOutcomeResolved = true;
     if (EncounterBoss)
     {
@@ -171,4 +262,73 @@ void AHWCombatGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
         QuestRuns->LeaveEncounter(GetWorld(), RunId);
     }
     Super::EndPlay(EndPlayReason);
+}
+
+
+void AHWCombatGameMode::HandleDungeonCompleted()
+{
+    if (bOutcomeResolved)
+    {
+        return;
+    }
+
+    bOutcomeResolved = true;
+    if (!bCanRecordVictory)
+    {
+        return;
+    }
+
+    if (bQuestRun)
+    {
+        if (QuestRuns)
+        {
+            QuestRuns->CompleteEncounter(GetWorld(), RunId);
+        }
+        return;
+    }
+
+    if (GetGameInstance())
+    {
+        if (UHWProfileSubsystem* Profile =
+            GetGameInstance()->GetSubsystem<UHWProfileSubsystem>())
+        {
+            Profile->RecordVictory(RunId, EncounterId);
+        }
+    }
+}
+
+bool AHWCombatGameMode::RetryDungeonFromCheckpoint()
+{
+    if (bQuestRun || !EncounterDungeon || !IsValid(EncounterPlayer)
+        || EncounterDungeon->GetDungeonState() != EHWSystemDungeonState::Failed)
+    {
+        return false;
+    }
+    UHWCombatComponent* PlayerCombat = EncounterPlayer->GetCombat();
+    if (!PlayerCombat || !EncounterDungeon->RetryFromCheckpoint())
+    {
+        return false;
+    }
+    PlayerCombat->Revive(1.f);
+    if (UHWCoopLifeComponent* Life = EncounterPlayer->GetCoopLife())
+    {
+        Life->ResetForRetry();
+    }
+    EncounterPlayer->SetActorLocation(FVector(-450.f, 0.f, 96.f));
+    bOutcomeResolved = false;
+    return true;
+}
+
+void AHWCombatGameMode::HandleDungeonFailed(FString Reason)
+{
+    if (bOutcomeResolved)
+    {
+        return;
+    }
+
+    bOutcomeResolved = true;
+    if (bQuestRun && QuestRuns)
+    {
+        QuestRuns->FailEncounter(GetWorld(), RunId);
+    }
 }

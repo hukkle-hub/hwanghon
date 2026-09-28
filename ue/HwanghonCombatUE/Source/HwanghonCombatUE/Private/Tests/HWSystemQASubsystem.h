@@ -1,0 +1,189 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "Tickable.h"
+#include "HWSystemQASubsystem.generated.h"
+
+class FJsonObject;
+class FJsonValue;
+class AActor;
+class AHWAinCharacter;
+class APlayerController;
+class UHWRaidNetworkSubsystem;
+class UHWProfileSubsystem;
+struct FHWRaidNetPlayer;
+struct FHWRaidNetSnapshot;
+
+/**
+ * Command-line QA driver for the SYSTEM CORE gates (driven by tools/ue/system-core-qa.cjs).
+ * Exists only with -HWQA=<select|writev2|local|net> and never in Shipping.
+ * It plays through the real input mappings (APlayerController::InputKey), so the pawn, kit,
+ * lock-on and network bridge paths are the ones a player uses. It never writes combat results;
+ * online damage/phase/parts/rewards stay with server/raid.cjs.
+ */
+UCLASS()
+class UHWSystemQASubsystem : public UGameInstanceSubsystem, public FTickableGameObject
+{
+    GENERATED_BODY()
+
+public:
+    virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+    virtual void Deinitialize() override;
+
+    virtual void Tick(float DeltaTime) override;
+    virtual TStatId GetStatId() const override;
+    virtual ETickableTickType GetTickableTickType() const override;
+    virtual bool IsTickable() const override;
+    virtual bool IsTickableWhenPaused() const override { return true; }
+
+private:
+    // Report
+    void Gate(const FString& Name, bool bPass, const FString& Detail);
+    void Note(const FString& Line);
+    void Finish(bool bOk, const FString& Why);
+    void Flush();
+    void WriteShare(const FString& Name, const FString& Body) const;
+    bool ReadShare(const FString& Name, FString& Out) const;
+    bool HasShare(const FString& Name) const;
+
+    // Input (real mappings)
+    APlayerController* GetPC() const;
+    AHWAinCharacter* GetPawn() const;
+    FKey KeyForAction(FName Action) const;
+    void Tap(FName Action);
+    void Hold(FName Action, bool bDown);
+    void Steer(float YawDegrees, bool bMove);
+    void Backpedal(bool bBack);
+    void ReleaseAll();
+
+    // Identity: selected/online character -> exactly one pawn of that class
+    void RecordIdentity(AHWAinCharacter* Pawn, FName Expected, bool bOnline);
+
+    // Modes
+    void TickSelect();
+    void TickWriteV2();
+    void TickLocal(float Dt);
+    void LocalSummary(const struct FHWSystemDungeonDefinition& Def);
+    void TickNet(float Dt);
+    void TickRaid(float Dt);
+    void RaidExplore(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me);
+    void RaidFight(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me, float Dt);
+    void SampleRaid(const FHWRaidNetSnapshot& R);
+    void ConsumeRaidEvents(const FHWRaidNetSnapshot& R);
+    bool SteerToServerPoint(const FHWRaidNetPlayer& Me, float X, float Y, float Arrive);
+    bool ReviveDuty(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me);
+    int32 SkillAttemptsNet[4] = {0,0,0,0};
+    bool LoadGrid();
+
+    FString Mode;
+    FString OutPath;
+    FString ShareDir;
+    float Elapsed = 0.f;
+    float FlushTimer = 0.f;
+    float ExitTimer = -1.f;
+    bool bFinished = false;
+
+    TSharedPtr<FJsonObject> Report;
+    TSharedPtr<FJsonObject> Gates;
+    TArray<TSharedPtr<FJsonValue>> Timeline;
+    TArray<TSharedPtr<FJsonValue>> Lines;
+    TMap<FString, int32> Counters;
+
+    TSet<FName> HeldActions;
+    bool bHoldingForward = false;
+    bool bHoldingBack = false;
+
+    // select / local
+    FName ExpectCharacter = NAME_None;
+    FName NextCharacter = NAME_None;
+    bool bCheckOnly = false;
+    bool bIdentityDone = false;
+    FName LocalDungeonId = NAME_None;
+    int32 LastRoom = -2;
+    uint8 LastDungeonState = 255;
+    TArray<FString> RoomOrder;
+    bool bWipeTest = false;
+    bool bWipeDone = false;
+    bool bForcedWipe = false;
+    float WipeTimer = 0.f;
+    float FailedTimer = 0.f;
+    int32 Retries = 0;
+    float BossRoomTime = 0.f;
+    int32 MaxPhase = 0;
+    int32 BreakCount = 0;
+    TSet<FName> BrokenParts;
+    bool bPartLocked = false;
+    int32 SkillAttempts[5] = {0,0,0,0,0};
+    int32 SkillActivations[5] = {0,0,0,0,0};
+    float SkillDamage[5] = {0.f,0.f,0.f,0.f,0.f};
+    int32 PendingSlot = -1;
+    float PendingTimer = 0.f;
+    float PendingHpBefore = 0.f;
+    TWeakObjectPtr<AActor> PendingTarget;
+    float AttackTimer = 0.f;
+    float LockTimer = 0.f;
+    float CounterTimer = 0.f;
+    float SkillTimer = 0.f;
+    int32 ElitesSeen = 0;
+    int32 ObjectivesTouched = 0;
+    int32 LastObjectivesRemaining = -1;
+    float LastLocalHealth = -1.f;
+    float StartTimer = 0.f;
+    float TargetTimer = 0.f;
+
+    // net
+    enum class ENetStage : uint8 { Connect, Go, Room, Ready, WaitRaid, Raid, Done };
+    ENetStage NetStage = ENetStage::Connect;
+    FString Role;
+    int32 Index = 0;
+    int32 Players = 1;
+    FString LevelId;
+    int32 VictimIndex = -1;
+    bool bResume = false;
+    float StageTimer = 0.f;
+    float ActionTimer = 0.f;
+    float SampleTimer = 0.f;
+    float DecisionTimer = 0.f;
+    FString ServerUrl;
+    FString KnownToken;
+    FString KnownId;
+    FName LastRaidState = NAME_None;
+    int32 LastRaidPhase = -1;
+    int64 LastEventId = 0;
+    float TeleEnd = -1.f;
+    FString TeleTarget;
+    bool bTeleCounterable = false;
+    bool bVictimDowned = false;
+    bool bVictimRevived = false;
+    float VictimDownAt = -1.f;
+    FString ReviveHelping;
+    float LastReviveProgress = 0.f;
+    float ReviveStall = 0.f;
+    bool bWipeMode = false;
+    bool bRetrySent = false;
+    float RetryTimer = 0.f;
+    bool bReconnectPlanned = false;
+    int32 ReconnectStage = 0;
+    float ReconnectTimer = 0.f;
+    float PostReconnectTimer = -1.f;
+    float FightTime = 0.f;
+    float PhaseOneTime = 0.f;
+    float ClearTimer = 0.f;
+    int32 TargetSwitches = 0;
+    FString LastTelegraphTarget;
+    TArray<TSharedPtr<FJsonValue>> TelegraphLog;
+    TSet<FString> HazardPhasesSeen;
+    TSet<FString> PartsBrokenNet;
+    TMap<FString, float> HpAtDown;
+
+    // Grid (server level rows) for explore pathing
+    int32 GridW = 0;
+    int32 GridH = 0;
+    float Cell = 64.f;
+    TArray<uint8> Solid;
+    TArray<FVector2D> Path;
+    FVector2D PathGoal = FVector2D(-1.f, -1.f);
+    float PathAge = 0.f;
+};

@@ -64,6 +64,24 @@ public:
     UFUNCTION(BlueprintCallable)
     void ApplyHitStop(float Seconds);
 
+    UFUNCTION(BlueprintCallable)
+    void Heal(float Amount);
+
+    UFUNCTION(BlueprintCallable)
+    bool Revive(float HealthFraction = 0.30f);
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyAuthoritativeVitals(float NewHealth, float NewMaxHealth, float NewStamina, bool bIncapacitated);
+
+    UFUNCTION(BlueprintCallable)
+    void ApplyDamageReduction(float Fraction, float Duration);
+
+    UFUNCTION(BlueprintCallable)
+    bool TrySpendStamina(float Cost);
+
+    UFUNCTION(BlueprintCallable)
+    bool RequestSystemDodge(float StaminaCost);
+
     UFUNCTION(BlueprintPure)
     bool IsInvulnerable() const;
 
@@ -120,5 +138,7 @@ private:
     float Health = 1.f;
     float Stamina = 0.f;
     float StaminaRegenBlocked = 0.f;
+    float DamageReductionRemaining = 0.f;
+    float DamageReductionFraction = 0.f;
     bool bDead = false;
 };

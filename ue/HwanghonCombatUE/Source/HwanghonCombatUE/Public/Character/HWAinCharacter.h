@@ -10,6 +10,9 @@ class UCameraComponent;
 class UHWCombatComponent;
 class UHWLockOnComponent;
 class UHWPlayerPresentationComponent;
+class UHWCharacterKitComponent;
+class UHWCoopLifeComponent;
+class UHWNetworkCombatBridgeComponent;
 
 UCLASS()
 class HWANGHONCOMBATUE_API AHWAinCharacter : public ACharacter
@@ -20,6 +23,7 @@ public:
     AHWAinCharacter();
 
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -31,6 +35,21 @@ public:
 
     UFUNCTION(BlueprintPure)
     UHWPlayerPresentationComponent* GetPresentation() const { return Presentation; }
+
+    UFUNCTION(BlueprintPure)
+    UHWCharacterKitComponent* GetCharacterKit() const { return CharacterKit; }
+
+    UFUNCTION(BlueprintPure)
+    UHWCoopLifeComponent* GetCoopLife() const { return CoopLife; }
+
+    UFUNCTION(BlueprintPure)
+    UHWNetworkCombatBridgeComponent* GetNetworkBridge() const { return NetworkBridge; }
+
+    UFUNCTION(BlueprintPure)
+    FName GetSystemCharacterId() const { return SystemCharacterId; }
+
+    UFUNCTION(BlueprintCallable)
+    void SetSystemCharacterId(FName CharacterId);
 
     UFUNCTION(BlueprintImplementableEvent, Category="Animation")
     void BP_OnCombatActionStarted(EHWActionType Action);
@@ -50,11 +69,24 @@ protected:
     void CombatJumpPressed();
     void CounterPressed();
     void LockOnPressed();
+    void CycleTargetPressed();
     void SaveAuditPressed();
     void GraphicsLowPressed();
     void GraphicsMidPressed();
     void GraphicsHighPressed();
     void PerfCapturePressed();
+    void Skill1Pressed();
+    void Skill2Pressed();
+    void Skill3Pressed();
+    void Skill4Pressed();
+    void UltimatePressed();
+    void RevivePressed();
+    void ReviveReleased();
+    void InteractPressed();
+    void GuardPressed();
+    void GuardReleased();
+    void OpeningPressed();
+    void ExecutePressed();
 
     UFUNCTION()
     void HandleActionStarted(EHWActionType Action);
@@ -80,4 +112,16 @@ private:
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWPlayerPresentationComponent> Presentation;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UHWCharacterKitComponent> CharacterKit;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UHWCoopLifeComponent> CoopLife;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UHWNetworkCombatBridgeComponent> NetworkBridge;
+
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Character")
+    FName SystemCharacterId = TEXT("ain");
 };

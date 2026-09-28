@@ -53,6 +53,12 @@ public:
     int64 GetExperience() const;
 
     UFUNCTION(BlueprintPure, Category="Hwanghon|Progression")
+    FName GetSelectedCharacter() const;
+
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Progression")
+    bool SelectCharacter(FName CharacterId);
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Progression")
     int64 GetItemCount(FName ItemId) const;
 
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Progression")

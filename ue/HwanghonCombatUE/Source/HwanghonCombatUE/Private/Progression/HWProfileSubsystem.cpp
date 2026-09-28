@@ -148,6 +148,29 @@ EHWQuestState UHWProfileSubsystem::GetQuestState(FName QuestId) const
     return Profile && Quest ? Profile->GetQuestState(*Quest) : EHWQuestState::Unavailable;
 }
 
+FName UHWProfileSubsystem::GetSelectedCharacter() const
+{
+    return Profile ? Profile->SelectedCharacter : FName(TEXT("ain"));
+}
+
+bool UHWProfileSubsystem::SelectCharacter(FName CharacterId)
+{
+    if (!Profile) return Fail(TEXT("Profile unavailable; character selection was not saved."));
+    const bool bAllowed =
+        CharacterId == TEXT("ain") || CharacterId == TEXT("kain")
+        || CharacterId == TEXT("ryu") || CharacterId == TEXT("sera");
+    if (!bAllowed) return Fail(TEXT("Unknown playable character."));
+
+    const UHWSaveGame* Source = PendingProfile ? PendingProfile.Get() : Profile.Get();
+    if (Source->SelectedCharacter == CharacterId && !PendingProfile) return true;
+
+    UHWSaveGame* Candidate = DuplicateObject<UHWSaveGame>(Source, this);
+    Candidate->SelectedCharacter = CharacterId;
+    if (!Candidate->IsValidProfile()) return Fail(TEXT("Selected character produced an invalid profile candidate."));
+    PendingProfile = Candidate;
+    return RetryPendingSave();
+}
+
 int64 UHWProfileSubsystem::GetGold() const { return Profile ? Profile->Gold : 0; }
 int64 UHWProfileSubsystem::GetExperience() const { return Profile ? Profile->Experience : 0; }
 int64 UHWProfileSubsystem::GetItemCount(FName ItemId) const { return Profile ? Profile->Inventory.FindRef(ItemId) : 0; }

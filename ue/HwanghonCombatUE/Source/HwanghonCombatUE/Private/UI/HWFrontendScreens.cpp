@@ -447,7 +447,7 @@ void UHWCharacterScreen::Build(UCanvasPanel* Root)
         const FName Id = Other.Id;
         AddH(Carousel, Sized(WidgetTree, SelectableCard(Body, Other.Id == Ch->Id, [this, F, Id]()
         {
-            if (F) { F->SelectedCharacter = Id; }
+            if (F) { F->SelectCharacter(Id); }
             RequestRefresh();
         }, FMargin(14.f, 10.f)), 240.f, 0.f), FMargin(0.f, 0.f, M(EHWUIMetricToken::CardGap), 0.f));
     }
@@ -479,7 +479,7 @@ void UHWSkillsScreen::Build(UCanvasPanel* Root)
 
     const float ListWidth = 1180.f;
     UVerticalBox* List = VBox(WidgetTree);
-    AddV(List, CharacterTabs(this, WidgetTree, CharId, [this, F](FName Id) { if (F) { F->SelectedCharacter = Id; } Selected = 0; RequestRefresh(); },
+    AddV(List, CharacterTabs(this, WidgetTree, CharId, [this, F](FName Id) { if (F) { F->SelectCharacter(Id); } Selected = 0; RequestRefresh(); },
         [this](UWidget* W, TFunction<void()> Fn) { return TapGhost(W, MoveTemp(Fn), FMargin(0.f, 8.f)); }), FMargin(0.f, 0.f, 0.f, 16.f));
     UScrollBox* Scroll = WidgetTree->ConstructWidget<UScrollBox>();
     for (int32 Index = 0; Index < Skills.Num(); ++Index)
@@ -548,7 +548,7 @@ void UHWLooksScreen::Build(UCanvasPanel* Root)
     Place(Root, Hero, FAnchors(0.5f, 1.f), FMargin(0.f, -ContentBottom(), 440.f, 860.f), FVector2D(0.5f, 1.f));
 
     UVerticalBox* Left = VBox(WidgetTree);
-    AddV(Left, CharacterTabs(this, WidgetTree, Ch->Id, [this, F](FName Id) { if (F) { F->SelectedCharacter = Id; } RequestRefresh(); },
+    AddV(Left, CharacterTabs(this, WidgetTree, Ch->Id, [this, F](FName Id) { if (F) { F->SelectCharacter(Id); } RequestRefresh(); },
         [this](UWidget* W, TFunction<void()> Fn) { return TapGhost(W, MoveTemp(Fn), FMargin(0.f, 8.f)); }), FMargin(0.f, 0.f, 0.f, 18.f));
     AddV(Left, SectionTitle(NSLOCTEXT("HWUI", "Look", "외형 설명")), FMargin(0.f, 0.f, 0.f, 8.f));
     AddV(Left, TextWrap(WidgetTree, FText::FromString(Ch->Look), EHWUITextToken::Body, EHWUIColorToken::TextSecondary));

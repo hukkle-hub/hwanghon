@@ -62,6 +62,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Hwanghon|UI")
     void Sortie(FName QuestId);
 
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|UI")
+    bool SelectCharacter(FName CharacterId);
+
     EHWFrontendScreen GetScreen() const { return Current; }
     EHWFrontendOverlay GetOverlay() const { return Overlay; }
     UHWScreenWidget* GetScreenWidget(EHWFrontendScreen Screen);
