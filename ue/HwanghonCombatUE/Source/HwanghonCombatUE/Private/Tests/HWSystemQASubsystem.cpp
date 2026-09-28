@@ -1708,7 +1708,12 @@ void UHWSystemQASubsystem::TickShowcase(float Dt)
         At(T += 0.45f, [this]() { Shot(TEXT("31_avatars_clips_b")); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_clip_b"), A.Get()); });
         // Replicated movement -> AnimBP locomotion (velocity fed from snapshots).
         At(T += 1.2f, [this]() { WalkFrom = ShowTime; });
-        At(T += 1.0f, [this]() { Shot(TEXT("32_avatars_moving")); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_moving"), A.Get()); WalkFrom = -1.f; });
+        At(T += 1.0f, [this]() {
+            Shot(TEXT("32_avatars_moving"));
+            for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_moving"), A.Get());
+            WalkFrom = -1.f;
+            // Stop like the server would: one more snapshot at rest.
+            for (auto& A : ShowAvatars) if (AHWRaidRemoteAvatar* R = Cast<AHWRaidRemoteAvatar>(A.Get())) R->ApplySnapshot(R->GetPlayerId(), R->GetCharacterId(), R->GetActorLocation(), 0.f, 1000.f, 1000.f, false, 0.016f); });
         // Down: online hp 0 for the pawn, downed flag for avatars.
         At(T += 1.5f, [this, Pawn, Side]() {
             Side();
@@ -1720,7 +1725,13 @@ void UHWSystemQASubsystem::TickShowcase(float Dt)
             Shot(TEXT("41_downed_b"));
             MeasureBody(TEXT("downed_b"), Pawn);
             for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_downed"), A.Get()); });
-        At(T += 0.8f, [this]() { Finish(true, TEXT("showcase done")); });
+        // Revive: the ragdoll re-attaches and the body gets up.
+        At(T += 0.6f, [this, Pawn]() {
+            Pawn->GetCombat()->ApplyAuthoritativeVitals(Pawn->GetCombat()->GetMaxHealth() * 0.3f, Pawn->GetCombat()->GetMaxHealth(), 50.f, false);
+            for (auto& A : ShowAvatars) if (AHWRaidRemoteAvatar* R = Cast<AHWRaidRemoteAvatar>(A.Get())) R->ApplyAction(NAME_None, 0.f, 0.f, false); });
+        At(T += 0.35f, [this, Pawn]() { Shot(TEXT("50_getup_a")); MeasureBody(TEXT("getup_a"), Pawn); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_getup_a"), A.Get()); });
+        At(T += 1.2f, [this, Pawn]() { Shot(TEXT("51_getup_b")); MeasureBody(TEXT("getup_b"), Pawn); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_getup_b"), A.Get()); });
+        At(T += 0.5f, [this]() { Finish(true, TEXT("showcase done")); });
         return;
     }
     const float PrevShow = ShowTime;

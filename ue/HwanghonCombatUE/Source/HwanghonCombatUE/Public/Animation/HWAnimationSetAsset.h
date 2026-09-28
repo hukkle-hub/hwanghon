@@ -111,6 +111,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Life")
     FHWSequenceBinding Death;
 
+    // Played from GetUpStartSeconds when a ragdolled (downed) body is revived.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Life")
+    FHWSequenceBinding GetUp;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Life")
+    float GetUpStartSeconds = 0.4f;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss")
     TMap<FName, FHWBossPatternAnimationBinding> BossPatterns;
 

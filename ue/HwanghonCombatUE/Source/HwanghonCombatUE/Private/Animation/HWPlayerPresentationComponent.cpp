@@ -6,6 +6,9 @@
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
 #include "System/HWCharacterKitComponent.h"
+#include "Animation/HWCharacterVisualSettings.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "TimerManager.h"
 #include "GameFramework/Character.h"
 
 UHWPlayerPresentationComponent::UHWPlayerPresentationComponent()
@@ -68,6 +71,14 @@ bool UHWPlayerPresentationComponent::PlayOneShot(const FHWSequenceBinding* Bindi
     return OneShotMontage != nullptr;
 }
 
+void UHWPlayerPresentationComponent::Collapse()
+{
+    if (!Combat || !Combat->IsDead()) return;
+    USkeletalMeshComponent* Mesh = GetOwner() ? GetOwner()->FindComponentByClass<USkeletalMeshComponent>() : nullptr;
+    // Keep the buckled pose as the ragdoll's starting pose (no montage stop: a pose snap becomes velocity).
+    bRagdoll = UHWCharacterVisualSettings::SetRagdoll(Mesh, true, SavedMeshRelative);
+}
+
 void UHWPlayerPresentationComponent::UpdateLifePose()
 {
     const bool bDead = Combat && Combat->IsDead();
@@ -77,7 +88,29 @@ void UHWPlayerPresentationComponent::UpdateLifePose()
         return;
     }
     bWasDead = bDead;
-    if (bDead && AnimationSet)
+    USkeletalMeshComponent* Mesh = GetOwner() ? GetOwner()->FindComponentByClass<USkeletalMeshComponent>() : nullptr;
+    if (bDead && Mesh && Mesh->GetPhysicsAsset() && GetWorld())
+    {
+        // Straight to ragdoll from the current pose (a buckle montage under the ragdoll launched bodies, doc 130 §2).
+        AnimInstance->StopAllMontages(0.f);
+        GetWorld()->GetTimerManager().SetTimer(CollapseTimer, this, &UHWPlayerPresentationComponent::Collapse, 0.05f, false);
+        return;
+    }
+    if (!bDead && GetWorld())
+    {
+        GetWorld()->GetTimerManager().ClearTimer(CollapseTimer);
+    }
+    if (!bDead && bRagdoll)
+    {
+        bRagdoll = false;
+        UHWCharacterVisualSettings::SetRagdoll(Mesh, false, SavedMeshRelative);
+        if (AnimationSet && AnimationSet->GetUp.Sequence)
+        {
+            const FHWSequenceBinding& Up = AnimationSet->GetUp;
+            AnimInstance->PlaySlotAnimationAsDynamicMontage(Up.Sequence, Up.SlotName, 0.f, Up.BlendOut, 1.f, 1, -1.f, AnimationSet->GetUpStartSeconds);
+        }
+    }
+    if (bDead && !bRagdoll && AnimationSet)
     {
         // Online hp 0 / co-op bleed-out is "downed" (revivable); a solo death uses the death clip.
         const FHWSequenceBinding& Pose = AnimationSet->Downed.Sequence ? AnimationSet->Downed : AnimationSet->Death;

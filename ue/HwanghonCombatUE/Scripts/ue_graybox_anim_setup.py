@@ -72,7 +72,10 @@ SOURCES = {
                   ("Ultimate", COUNTESS + "/Animations/Ability_Ultimate"),
                   # The pack has no lying-down clip: Death floats up (pelvis 113 -> 179 cm) and Knock_* are
                   # airborne (feet 30-60 cm up). Stun keeps the feet on the floor, bent double (head 115 cm).
-                  ("Downed", COUNTESS + "/Animations/Stun_Loop", True), ("Death", COUNTESS + "/Animations/Stun_Start")],
+                  # Downed/Death are the fallback when a body has no physics asset; the Countess bodies ragdoll
+                  # and get up with Respawn from 0.4 s (crouch -> stand, doc 130).
+                  ("Downed", COUNTESS + "/Animations/Stun_Loop", True), ("Death", COUNTESS + "/Animations/Stun_Start"),
+                  ("GetUp", COUNTESS + "/Animations/Respawn")],
     },
 }
 

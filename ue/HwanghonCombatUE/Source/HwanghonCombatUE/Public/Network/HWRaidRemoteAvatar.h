@@ -43,6 +43,11 @@ private:
     float LastElapsed=0.f;
     int32 ComboCount=0;
     bool bBodyApplied=false;
+    bool bRagdoll=false;
+    bool bDownedNow=false;
+    FTransform SavedMeshRelative;
+    FTimerHandle CollapseTimer;
+    void Collapse();
     FString PlayerId;
     FName CharacterId=TEXT("ain");
     float Health=0.f,MaxHealth=0.f;

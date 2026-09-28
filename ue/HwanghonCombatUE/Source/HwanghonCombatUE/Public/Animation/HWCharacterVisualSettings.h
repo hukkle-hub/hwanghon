@@ -55,4 +55,10 @@ public:
 
     /** Puts the configured body/anim class on Mesh. Returns the motion set (may be null). */
     static UHWAnimationSetAsset* ApplyTo(FName CharacterId, USkeletalMeshComponent* Mesh, float CapsuleHalfHeight);
+
+    /**
+     * Downed/dead body lies down by ragdoll (no pack has a lying clip, doc 130). Off re-attaches the mesh to
+     * the capsule at SavedRelative. Returns false (caller keeps a pose clip) when the body has no physics asset.
+     */
+    static bool SetRagdoll(USkeletalMeshComponent* Mesh, bool bOn, FTransform& SavedRelative);
 };

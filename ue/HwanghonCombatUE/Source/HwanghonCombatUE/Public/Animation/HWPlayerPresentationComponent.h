@@ -97,6 +97,10 @@ private:
     TObjectPtr<UAnimMontage> StateMontage;
 
     bool bWasDead = false;
+    bool bRagdoll = false;
+    FTransform SavedMeshRelative;
+    FTimerHandle CollapseTimer;
+    void Collapse();
 
     FHWSequenceBinding ActiveBinding;
     EHWActionType ActiveAction = EHWActionType::None;

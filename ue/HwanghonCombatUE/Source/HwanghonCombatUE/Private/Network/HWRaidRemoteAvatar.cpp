@@ -44,11 +44,31 @@ void AHWRaidRemoteAvatar::ApplyAction(FName Clip,float Elapsed,float Duration,bo
 {
     UAnimInstance* Anim=GetMesh()?GetMesh()->GetAnimInstance():nullptr;
     if(!Anim||!AnimationSet)return;
-    if(bDowned!=(DownMontage!=nullptr))
+    const bool bWasDowned=bDownedNow;bDownedNow=bDowned;
+    if(bDowned&&!bWasDowned)
     {
-        const FHWSequenceBinding& Pose=AnimationSet->Downed.Sequence?AnimationSet->Downed:AnimationSet->Death;
-        if(bDowned&&Pose.Sequence){DownMontage=Anim->PlaySlotAnimationAsDynamicMontage(Pose.Sequence,Pose.SlotName,Pose.BlendIn,Pose.BlendOut,1.f,Pose.bLoop?999:1,-1.f,0.f);if(DownMontage&&!Pose.bLoop)DownMontage->bEnableAutoBlendOut=false;}
-        else if(!bDowned&&DownMontage){Anim->Montage_Stop(.25f,DownMontage);DownMontage=nullptr;}
+        Anim->StopAllMontages(.1f);
+        if(GetMesh()->GetPhysicsAsset())
+        {
+            // Ragdoll from the current pose one frame after the montages stop (same as the local body).
+            GetWorldTimerManager().SetTimer(CollapseTimer,this,&AHWRaidRemoteAvatar::Collapse,.05f,false);
+        }
+        else
+        {
+            const FHWSequenceBinding& Pose=AnimationSet->Downed.Sequence?AnimationSet->Downed:AnimationSet->Death;
+            if(Pose.Sequence){DownMontage=Anim->PlaySlotAnimationAsDynamicMontage(Pose.Sequence,Pose.SlotName,Pose.BlendIn,Pose.BlendOut,1.f,Pose.bLoop?999:1,-1.f,0.f);if(DownMontage&&!Pose.bLoop)DownMontage->bEnableAutoBlendOut=false;}
+        }
+    }
+    else if(!bDowned&&bWasDowned)
+    {
+        GetWorldTimerManager().ClearTimer(CollapseTimer);
+        if(DownMontage){Anim->Montage_Stop(.25f,DownMontage);DownMontage=nullptr;}
+        if(bRagdoll)
+        {
+            bRagdoll=false;UHWCharacterVisualSettings::SetRagdoll(GetMesh(),false,SavedMeshRelative);
+            const FHWSequenceBinding& Up=AnimationSet->GetUp;
+            if(Up.Sequence)Anim->PlaySlotAnimationAsDynamicMontage(Up.Sequence,Up.SlotName,0.f,Up.BlendOut,1.f,1,-1.f,AnimationSet->GetUpStartSeconds);
+        }
     }
     if(bDowned)return;
     const bool bNew=!Clip.IsNone()&&(Clip!=LastClip||Elapsed+0.02f<LastElapsed);
@@ -60,4 +80,10 @@ void AHWRaidRemoteAvatar::ApplyAction(FName Clip,float Elapsed,float Duration,bo
     const float Len=B->Sequence->GetPlayLength();
     const float Start=Duration>KINDA_SMALL_NUMBER?FMath::Clamp(Elapsed/Duration,0.f,0.95f)*Len:0.f;
     ActionMontage=Anim->PlaySlotAnimationAsDynamicMontage(B->Sequence,B->SlotName,B->BlendIn,B->BlendOut,Duration>KINDA_SMALL_NUMBER?Len/Duration:1.f,1,-1.f,Start);
+}
+
+void AHWRaidRemoteAvatar::Collapse()
+{
+    if(!bDownedNow)return;
+    bRagdoll=UHWCharacterVisualSettings::SetRagdoll(GetMesh(),true,SavedMeshRelative);
 }
