@@ -4,3 +4,7 @@
 /DerivedDataCache/
 /.vs/
 /*.sln
+
+# Editor-generated content (Scripts/ue_setup.py, ue_graybox_anim_setup.py). Only Content/Data is source.
+/Content/*
+!/Content/Data/
