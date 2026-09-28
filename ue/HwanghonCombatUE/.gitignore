@@ -8,3 +8,6 @@
 # Editor-generated content (Scripts/ue_setup.py, ue_graybox_anim_setup.py). Only Content/Data is source.
 /Content/*
 !/Content/Data/
+
+# Third-party VRM importer (MIT, github.com/ruyo/VRM4U) — installed locally for the anime-look test (docs/design/140), not committed.
+/Plugins/VRM4U/

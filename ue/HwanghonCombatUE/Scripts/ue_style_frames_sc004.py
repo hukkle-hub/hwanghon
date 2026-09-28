@@ -26,6 +26,11 @@ MAP = f"{ROOT}/EP01_SC004_StyleFrames"
 MAT = f"{ROOT}/Materials"
 AIN_MESH = "/Game/Characters/Ain/ain_anim/SkeletalMeshes/ain_anim"
 AIN_IDLE = "/Game/Characters/Ain/ain_anim/SkeletalMeshes/ain_animidle"
+AIN_BODY_TEX = "/Game/Characters/Ain/ain_anim/Textures/Image_0"
+AIN_HEAD_TEX = "/Game/Characters/Ain/ain_anim/Textures/head_base"
+SCYTHE = "/Game/Weapons/Ain/ain_scythe_tex/StaticMeshes/ain_scythe_tex"
+SCYTHE_TEX = "/Game/Weapons/Ain/ain_scythe_tex/Textures/Image_0"
+SUN_DIR = (0.983, -0.138, 0.122)   # towards the low sun behind the city (the DirectionalLight below)
 CUBE = "/Engine/BasicShapes/Cube.Cube"
 CYL = "/Engine/BasicShapes/Cylinder.Cylinder"
 PLANE = "/Engine/BasicShapes/Plane.Plane"
@@ -156,6 +161,114 @@ c += (f.h(uv * 1731.0) - 0.5) * 0.035;
 c *= 1 - 0.15 * f.lumEdge(uv, px, 1.4);
 return c;""",
 }
+
+
+# 6: Korean action-webtoon look — the character keeps crisp cel shading (custom depth marks her); only the world is painted.
+LOOKS["STYLE_6_WebtoonAction"] = r"""
+float sd = f.dep(uv);
+float cd = SceneTextureLookup(uv, 13, false).r;
+bool ch = cd < sd + 2.0;
+float3 c;
+if (ch) { c = f.col(uv); }
+else { c = f.kuw(uv, px * 1.4, 4) * (0.88 + 0.24 * f.stroke(uv, 60, 700)); }
+// ink contour: where the character's custom depth steps (her outline against the world, hair mass against face)
+float w = 1.6;
+float c0 = min(cd, 1e6);
+float cl = min(SceneTextureLookup(uv - float2(px.x, 0) * w, 13, false).r, 1e6);
+float cr = min(SceneTextureLookup(uv + float2(px.x, 0) * w, 13, false).r, 1e6);
+float cu = min(SceneTextureLookup(uv - float2(0, px.y) * w, 13, false).r, 1e6);
+float cdn = min(SceneTextureLookup(uv + float2(0, px.y) * w, 13, false).r, 1e6);
+float step_ = max(max(abs(cl - c0), abs(cr - c0)), max(abs(cu - c0), abs(cdn - c0)));
+float ink = smoothstep(0.02, 0.05, step_ / max(min(c0, 5000), 1));
+c = lerp(c, float3(0.035, 0.015, 0.03), ink * 0.95);
+float l = f.lum(c);
+c = lerp(c * float3(0.80, 0.74, 1.06), c * float3(1.15, 0.9, 0.7), smoothstep(0.15, 0.75, l));
+float v = 1 - 0.55 * pow(saturate(length(uv - 0.5) * 1.35), 2.2);
+c *= v;
+c += (f.h(uv * 1731.0) - 0.5) * 0.02;
+return c;"""
+
+
+def toon_master():
+    """Cel shading for the webtoon-action look: two light steps, violet shadow, hard orange rim from the low sun.
+    Unlit on purpose: an anime face is shaded by the ramp, not by scene shadows (docs/design/140)."""
+    m = fresh_material("M_Toon_Webtoon")
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property("used_with_skeletal_mesh", True)
+    tex = mel.create_material_expression(m, unreal.MaterialExpressionTextureSampleParameter2D, -1100, -200)
+    tex.set_editor_property("parameter_name", "BaseTex")
+    tex.set_editor_property("texture", unreal.load_asset(AIN_BODY_TEX))
+    nrm = mel.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -1100, 0)
+    cam = mel.create_material_expression(m, unreal.MaterialExpressionCameraVectorWS, -1100, 100)
+    ins = ["B", "N", "V", "LD", "ST", "LC", "RC", "TH"]
+    code = (
+        "float3 n = normalize(N); float3 L = normalize(LD);\n"
+        "float ndl = dot(n, L);\n"
+        "float lit = smoothstep(TH - 0.04, TH + 0.04, ndl);\n"
+        "float hi = smoothstep(TH + 0.45, TH + 0.52, ndl);\n"
+        "float3 shadow = B * ST;\n"
+        "float3 light = B * LC;\n"
+        "float3 c = lerp(shadow, lerp(B * lerp(ST, LC, 0.6), light, hi), lit);\n"
+        "float fr = 1 - saturate(dot(n, normalize(V)));\n"
+        "float rim = smoothstep(0.62, 0.7, fr) * saturate(ndl * 0.6 + 0.6);\n"
+        "c += RC * rim;\n"
+        "return c;")
+    cu = custom(m, code, unreal.CustomMaterialOutputType.CMOT_FLOAT3, ins, -500, 0)
+    mel.connect_material_expressions(tex, "RGB", cu, "B")
+    mel.connect_material_expressions(nrm, "", cu, "N")
+    mel.connect_material_expressions(cam, "", cu, "V")
+    y = 250
+    for name, val in (("LD", SUN_DIR), ("ST", (0.34, 0.24, 0.50)), ("LC", (1.15, 0.80, 0.62)), ("RC", (1.2, 0.5, 0.18))):
+        vp = mel.create_material_expression(m, unreal.MaterialExpressionVectorParameter, -900, y)
+        vp.set_editor_property("parameter_name", name)
+        vp.set_editor_property("default_value", unreal.LinearColor(val[0], val[1], val[2], 1))
+        mel.connect_material_expressions(vp, "", cu, name)
+        y += 120
+    th = mel.create_material_expression(m, unreal.MaterialExpressionScalarParameter, -900, y)
+    th.set_editor_property("parameter_name", "TH")
+    th.set_editor_property("default_value", 0.0)
+    mel.connect_material_expressions(th, "", cu, "TH")
+    mel.connect_material_property(cu, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.recompile_material(m)
+    lib.save_loaded_asset(m)
+    return m
+
+
+def toon_instance(master, name, tex_path, threshold):
+    path = f"{MAT}/{name}"
+    mi = unreal.load_asset(path) if lib.does_asset_exist(path) else tools.create_asset(
+        name, MAT, unreal.MaterialInstanceConstant, unreal.MaterialInstanceConstantFactoryNew())
+    mi.set_editor_property("parent", master)
+    mel.set_material_instance_texture_parameter_value(mi, "BaseTex", unreal.load_asset(tex_path))
+    mel.set_material_instance_scalar_parameter_value(mi, "TH", threshold)
+    lib.save_loaded_asset(mi)
+    return mi
+
+
+def outline_material():
+    """Inverted hull as an overlay pass: the mesh pushed out along its normal, back faces only, near-black violet."""
+    m = fresh_material("M_Toon_Outline")
+    m.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_UNLIT)
+    m.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+    m.set_editor_property("two_sided", True)
+    m.set_editor_property("used_with_skeletal_mesh", True)
+    nrm = mel.create_material_expression(m, unreal.MaterialExpressionVertexNormalWS, -700, 300)
+    k = mel.create_material_expression(m, unreal.MaterialExpressionConstant, -700, 420)
+    k.set_editor_property("r", 0.3)   # thicker turned every hair strand into a scribble
+    mul = mel.create_material_expression(m, unreal.MaterialExpressionMultiply, -450, 350)
+    mel.connect_material_expressions(nrm, "", mul, "A")
+    mel.connect_material_expressions(k, "", mul, "B")
+    mel.connect_material_property(mul, "", unreal.MaterialProperty.MP_WORLD_POSITION_OFFSET)
+    tss = mel.create_material_expression(m, unreal.MaterialExpressionTwoSidedSign, -700, 100)
+    cu = custom(m, "return S < 0 ? 1 : 0;", unreal.CustomMaterialOutputType.CMOT_FLOAT1, ["S"], -450, 100)
+    mel.connect_material_expressions(tss, "", cu, "S")
+    mel.connect_material_property(cu, "", unreal.MaterialProperty.MP_OPACITY_MASK)
+    c3 = mel.create_material_expression(m, unreal.MaterialExpressionConstant3Vector, -450, -100)
+    c3.set_editor_property("constant", unreal.LinearColor(0.035, 0.015, 0.03, 1))
+    mel.connect_material_property(c3, "", unreal.MaterialProperty.MP_EMISSIVE_COLOR)
+    mel.recompile_material(m)
+    lib.save_loaded_asset(m)
+    return m
 
 
 def after_tonemap():
@@ -388,23 +501,50 @@ def build():
     return M
 
 
-def place_ain(M):
+def spawn_ain(label, tags, materials=None, overlay=None, scythe_mat=None, custom_depth=False):
     mesh = unreal.load_asset(AIN_MESH)
     idle = unreal.load_asset(AIN_IDLE)
     a = eas.spawn_actor_from_class(unreal.SkeletalMeshActor, unreal.Vector(1880, -40, 0), unreal.Rotator(roll=0, pitch=0, yaw=-104))
-    a.set_actor_label("Ain")
+    a.set_actor_label(label)
+    a.tags = tags
     c = a.skeletal_mesh_component
     c.set_skeletal_mesh_asset(mesh)
-    ext = mesh.get_bounds().box_extent
-    s = 168.0 / max(1.0, ext.z * 2)
-    a.set_actor_scale3d(unreal.Vector(s, s, s))
     c.set_animation_mode(unreal.AnimationMode.ANIMATION_SINGLE_NODE)
     pd = unreal.SingleAnimationPlayData()
     pd.set_editor_property("anim_to_play", idle)
     pd.set_editor_property("saved_position", 0.6)
     pd.set_editor_property("saved_play_rate", 0.0)
     c.set_editor_property("animation_data", pd)
-    log(f"Ain mesh extent z {ext.z:.1f} -> scale {s:.3f}")
+    for i, mat in enumerate(materials or []):
+        c.set_material(i, mat)
+    if overlay:
+        c.set_editor_property("overlay_material", overlay)
+    if custom_depth:
+        c.set_editor_property("render_custom_depth", True)
+    # the 172 cm pipe-cutter scythe (L63) in the hand slot the web game used
+    sc = eas.spawn_actor_from_object(unreal.load_asset(SCYTHE), unreal.Vector(1880, -40, 100), unreal.Rotator())
+    sc.set_actor_label(label + "_Scythe")
+    sc.tags = tags
+    if scythe_mat:
+        sc.static_mesh_component.set_material(0, scythe_mat)
+    if overlay:
+        sc.static_mesh_component.set_editor_property("overlay_material", overlay)
+    if custom_depth:
+        sc.static_mesh_component.set_editor_property("render_custom_depth", True)
+    sc.attach_to_actor(a, "mixamorig_RightHandSlot", unreal.AttachmentRule.SNAP_TO_TARGET,
+                       unreal.AttachmentRule.SNAP_TO_TARGET, unreal.AttachmentRule.KEEP_WORLD, False)
+    return a
+
+
+def place_ain(M):
+    spawn_ain("Ain", ["HIDE_STYLE_6_WebtoonAction"])
+    master = toon_master()
+    outline = outline_material()
+    body = toon_instance(master, "MI_Toon_AinBody", AIN_BODY_TEX, 0.0)
+    head = toon_instance(master, "MI_Toon_AinHead", AIN_HEAD_TEX, -0.35)   # the face stays mostly in the light step
+    blade = toon_instance(master, "MI_Toon_Scythe", SCYTHE_TEX, 0.0)
+    # contour is drawn by STYLE_6 from custom depth; the inflated-hull outline scribbled every hair card
+    spawn_ain("Ain_Webtoon", ["ONLY_STYLE_6_WebtoonAction"], [body, head], None, blade, custom_depth=True)
     # Spine core (L57-L61): an orange line down the back that pulses with the heart. Glow only; the model has none.
     # the line itself: a thin emissive strip down the back (the light alone lit her whole body gold)
     strip = eas.spawn_actor_from_object(unreal.load_asset(CYL), unreal.Vector(1866, -37, 122), unreal.Rotator())
@@ -417,7 +557,6 @@ def place_ain(M):
     core.point_light_component.set_intensity(0.25)
     core.point_light_component.set_light_color(unreal.LinearColor(1.0, 0.42, 0.08, 1))
     core.point_light_component.set_attenuation_radius(45.0)
-    return a
 
 
 def camera():
@@ -432,6 +571,15 @@ def camera():
     fs = cc.get_editor_property("focus_settings")
     fs.set_editor_property("focus_method", unreal.CameraFocusMethod.DISABLE)
     cc.set_editor_property("focus_settings", fs)
+    # 3/4 front close-up: the face is what the webtoon look is about. From outside the ledge, low sun on her face.
+    loc2 = unreal.Vector(2040, 20, 150)
+    look2 = unreal.Vector(1880, -45, 140)
+    cam2 = eas.spawn_actor_from_class(unreal.CineCameraActor, loc2, unreal.MathLibrary.find_look_at_rotation(loc2, look2))
+    cam2.set_actor_label("STYLE_CAM_Close")
+    cam2.tags = ["STYLE_CAM_Close"]
+    cc2 = cam2.get_cine_camera_component()
+    cc2.set_editor_property("current_focal_length", 45.0)
+    cc2.set_editor_property("focus_settings", fs)
     return cam
 
 
@@ -442,7 +590,7 @@ def post_volumes():
     base.set_editor_property("unbound", True)
     pp = base.get_editor_property("settings")
     for k, v in (("auto_exposure_min_brightness", 1.0), ("auto_exposure_max_brightness", 1.0), ("auto_exposure_bias", 0.5),
-                 ("bloom_intensity", 0.6), ("vignette_intensity", 0.25)):
+                 ("bloom_intensity", 0.9), ("vignette_intensity", 0.25)):
         pp.set_editor_property("override_" + k, True)
         pp.set_editor_property(k, v)
     base.set_editor_property("settings", pp)

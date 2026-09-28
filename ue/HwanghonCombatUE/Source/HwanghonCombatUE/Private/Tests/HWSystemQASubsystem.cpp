@@ -2331,8 +2331,9 @@ void UHWSystemQASubsystem::TickCanonFight(AHWStoryDirector* D, float Dt)
     }
 }
 
-// ---------------------------------------------------------------- style frames (-HWQA=styleshow, doc 139)
-// One camera (tag STYLE_CAM), the raw frame, then each look (PostProcessVolume tagged STYLE_<n>_<name>) alone.
+// ---------------------------------------------------------------- style frames (-HWQA=styleshow, doc 139/140)
+// Every camera tagged STYLE_CAM*, and for each: the raw frame, then each look (PostProcessVolume tagged
+// STYLE_<n>_<name>) alone. Actors tagged ONLY_<look> show only in that look, HIDE_<look> hide in it.
 void UHWSystemQASubsystem::TickStyleShow(float Dt)
 {
     UWorld* World = GetGameInstance()->GetWorld();
@@ -2359,17 +2360,22 @@ void UHWSystemQASubsystem::TickStyleShow(float Dt)
         });
         for (TActorIterator<ACameraActor> It(World); It; ++It)
         {
-            if (It->Tags.Contains(TEXT("STYLE_CAM"))) PC->SetViewTargetWithBlend(*It, 0.f);
+            if (It->Tags.Num() > 0 && It->Tags[0].ToString().StartsWith(TEXT("STYLE_CAM"))) StyleCameras.Add(*It);
         }
+        StyleCameras.Sort([](const TWeakObjectPtr<ACameraActor>& A, const TWeakObjectPtr<ACameraActor>& B)
+        {
+            return A->Tags[0].LexicalLess(B->Tags[0]);
+        });
         for (TActorIterator<APawn> It(World); It; ++It) It->SetActorHiddenInGame(true);
-        Note(FString::Printf(TEXT("style show: %d looks"), StyleVolumes.Num()));
+        Note(FString::Printf(TEXT("style show: %d looks x %d cameras"), StyleVolumes.Num(), StyleCameras.Num()));
         return;
     }
     ShowTime = World->GetTimeSeconds() - ShowStart;
     const float Settle = 10.f, Per = 3.f;   // shaders compile on first use
     if (ShowTime < Settle) return;
+    const int32 PerCam = StyleVolumes.Num() + 1;
     const int32 K = FMath::FloorToInt((ShowTime - Settle) / Per);
-    if (K > StyleVolumes.Num())
+    if (K >= PerCam * FMath::Max(1, StyleCameras.Num()))
     {
         Finish(true, TEXT("style show done"));
         return;
@@ -2377,11 +2383,33 @@ void UHWSystemQASubsystem::TickStyleShow(float Dt)
     if (K != StyleShot)
     {
         StyleShot = K;
+        const int32 Look = K % PerCam;
+        const int32 CamIndex = K / PerCam;
+        const FName LookTag = Look == 0 ? FName(TEXT("STYLE_0_Raw")) : StyleVolumes[Look - 1]->Tags[0];
         for (int32 I = 0; I < StyleVolumes.Num(); ++I)
         {
-            if (StyleVolumes[I].IsValid()) StyleVolumes[I]->bEnabled = (I == K - 1);
+            if (StyleVolumes[I].IsValid()) StyleVolumes[I]->bEnabled = (I == Look - 1);
         }
-        StylePending = K == 0 ? FString(TEXT("STYLE_0_Raw")) : StyleVolumes[K - 1]->Tags[0].ToString();
+        const FString Only = TEXT("ONLY_") + LookTag.ToString(), Hide = TEXT("HIDE_") + LookTag.ToString();
+        for (TActorIterator<AActor> It(World); It; ++It)
+        {
+            bool bOnlyFor = false, bOnlyThis = false, bHideThis = false;
+            for (const FName& T : It->Tags)
+            {
+                const FString S = T.ToString();
+                if (S.StartsWith(TEXT("ONLY_"))) { bOnlyFor = true; bOnlyThis |= S == Only; }
+                if (S == Hide) bHideThis = true;
+                if (S.StartsWith(TEXT("HIDE_"))) It->SetActorHiddenInGame(false);
+            }
+            if (bOnlyFor) It->SetActorHiddenInGame(!bOnlyThis);
+            if (bHideThis) It->SetActorHiddenInGame(true);
+        }
+        if (StyleCameras.IsValidIndex(CamIndex) && StyleCameras[CamIndex].IsValid())
+        {
+            PC->SetViewTargetWithBlend(StyleCameras[CamIndex].Get(), 0.f);
+        }
+        const FString CamName = StyleCameras.IsValidIndex(CamIndex) ? StyleCameras[CamIndex]->Tags[0].ToString() : TEXT("cam");
+        StylePending = CamName + TEXT("__") + LookTag.ToString();
         StyleDelay = 1.8f;
     }
     if (StyleDelay > 0.f)
