@@ -1,5 +1,6 @@
 #include "Boss/HWBossCharacter.h"
 #include "Animation/HWCharacterVisualSettings.h"
+#include "Animation/HWAnimationSetAsset.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Character/HWAinCharacter.h"
@@ -33,7 +34,11 @@ void AHWBossCharacter::BeginPlay()
     // Spawned from code (dungeon director, online raid): wear the configured stand-in body.
     if (GetMesh() && !GetMesh()->GetSkeletalMeshAsset())
     {
-        UHWCharacterVisualSettings::ApplyTo(TEXT("boss"), GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+        UHWAnimationSetAsset* Set = UHWCharacterVisualSettings::ApplyTo(TEXT("boss"), GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+        if (Set && Presentation && !Presentation->AnimationSet)
+        {
+            Presentation->AnimationSet = Set;
+        }
     }
     Super::BeginPlay();
 
@@ -60,7 +65,11 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
         return;
     }
 
-    if (bNetworkAuthoritative) return;
+    if (bNetworkAuthoritative)
+    {
+        StateElapsed += DeltaSeconds;   // presentation clock only; the server owns the state
+        return;
+    }
 
     if (UHWCoopCombatSubsystem* Coop =
         GetWorld() ? GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>() : nullptr)
@@ -448,6 +457,16 @@ bool AHWBossCharacter::TryCountered(const FHWBossBeatSpec& Beat)
 }
 
 
+float AHWBossCharacter::GetPresentationStatePhase() const
+{
+    // Online the server 'attack' has no progress (0); the body still has to swing through its contact.
+    if (bNetworkAuthoritative && State == EHWBossState::Strike)
+    {
+        return FMath::Clamp(StateElapsed / FMath::Max(0.001f, GetPresentedPattern().StrikeDuration), 0.f, 1.f);
+    }
+    return GetBossStateNormalized();
+}
+
 float AHWBossCharacter::GetBossStateNormalized() const
 {
     if (bNetworkAuthoritative)
@@ -545,6 +564,24 @@ void AHWBossCharacter::SetNetworkAuthoritative(bool bEnabled)
 {
     bNetworkAuthoritative=bEnabled;
     if (BossSystem) BossSystem->SetComponentTickEnabled(!bEnabled);
+}
+
+void AHWBossCharacter::ApplyAuthoritativeMotion(FName PatternIcon, float TellSeconds, float RecoverySeconds)
+{
+    if (PatternIcon.IsNone()) return;
+    if (NetworkMotion.Id != PatternIcon || (State == EHWBossState::Tell && TellSeconds > 0.f))
+    {
+        NetworkMotion.Id = PatternIcon;
+        NetworkMotion.TellDuration = TellSeconds > 0.f ? TellSeconds : NetworkMotion.TellDuration;
+        NetworkMotion.StrikeDuration = 0.25f;   // server 'attack' is the contact itself
+        NetworkMotion.RecoveryDuration = RecoverySeconds > 0.f ? RecoverySeconds : 0.7f;
+        NetworkMotion.Beats.SetNum(1);
+        NetworkMotion.Beats[0].At = 0.f;
+    }
+    else if (State == EHWBossState::Recover && RecoverySeconds > 0.f)
+    {
+        NetworkMotion.RecoveryDuration = RecoverySeconds;
+    }
 }
 
 void AHWBossCharacter::ApplyAuthoritativeSnapshot(

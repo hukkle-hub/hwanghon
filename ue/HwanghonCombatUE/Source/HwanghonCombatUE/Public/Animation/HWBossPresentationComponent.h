@@ -33,6 +33,10 @@ public:
     UPROPERTY(BlueprintAssignable)
     FHWVisualBossBeatSignature OnVisualBossBeat;
 
+    // Single-node body: the clip and time last shown (motion review).
+    UAnimSequenceBase* GetShownClip() const { return ShownClip; }
+    float GetShownTime() const { return ShownTime; }
+
 private:
     UFUNCTION()
     void HandleBossStateChanged(EHWBossState NewState, FName PatternId);
@@ -47,6 +51,16 @@ private:
 
     void PlayReactionBinding(const FHWSequenceBinding& Binding);
     void SyncStateToBossClock();
+
+    // Body without an AnimBP (the training boss): scrub its clips on the boss clock.
+    void TickSingleNode(float DeltaTime);
+    void TickSingleNodePose(float DeltaTime);
+    // Keeps the body on the floor: per-clip offset, and a measured drop while dead / broken (the source
+    // death and down clips end lying in the air).
+    void GroundBody(float DeltaTime);
+    void ShowClip(UAnimSequenceBase* Sequence, float Time, bool bLoop);
+    UAnimSequenceBase* PatternClipAt(const FHWBossPatternAnimationBinding& Binding, const FHWBossPatternSpec& Spec,
+        EHWBossState State, float Phase, float& OutTime) const;
     float MapStrikePhaseToSourcePhase(
         float StatePhase,
         const FHWBossPatternSpec& Pattern,
@@ -69,4 +83,21 @@ private:
     FName ActivePatternId = NAME_None;
     float PreviousStatePhase = 0.f;
     int32 NextVisualBeat = 0;
+
+    UPROPERTY(Transient)
+    TObjectPtr<class USkeletalMeshComponent> BodyMesh;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequenceBase> ReactionSequence;
+
+    bool bSingleNode = false;
+    float ReactionTime = -1.f;
+    float BaseTime = 0.f;
+    float DeathTime = 0.f;
+    float MeshBaseZ = 0.f;
+    float ClipGroundCm = 0.f;
+    float LyingDrop = 0.f;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequenceBase> ShownClip;
+    float ShownTime = 0.f;
 };

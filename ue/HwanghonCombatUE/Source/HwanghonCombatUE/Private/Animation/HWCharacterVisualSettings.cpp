@@ -99,6 +99,11 @@ UHWAnimationSetAsset* UHWCharacterVisualSettings::ApplyTo(
         Mesh->SetAnimationMode(EAnimationMode::AnimationBlueprint);
         Mesh->SetAnimInstanceClass(AnimClass);
     }
+    else
+    {
+        // No AnimBP for this body: its presentation drives single-node clips directly.
+        Mesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
+    }
     Mesh->SetVisibility(true, true);
     return Visual->AnimationSet.LoadSynchronous();
 }

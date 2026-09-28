@@ -21,6 +21,17 @@ BONES = ["pelvis", "spine_01", "spine_02", "spine_03", "neck_01", "head",
          "weapon_l", "weapon_r", "sword_tail_l_02", "sword_tail_r_02"]
 
 
+# Mixamo rigs (the web game's training boss) use other names; output keeps the standard keys.
+MIXAMO = {"pelvis": "mixamorig_Hips", "spine_01": "mixamorig_Spine", "spine_02": "mixamorig_Spine1",
+          "spine_03": "mixamorig_Spine2", "neck_01": "mixamorig_Neck", "head": "mixamorig_Head",
+          "clavicle_l": "mixamorig_LeftShoulder", "upperarm_l": "mixamorig_LeftArm", "lowerarm_l": "mixamorig_LeftForeArm",
+          "hand_l": "mixamorig_LeftHand", "clavicle_r": "mixamorig_RightShoulder", "upperarm_r": "mixamorig_RightArm",
+          "lowerarm_r": "mixamorig_RightForeArm", "hand_r": "mixamorig_RightHand", "weapon_r": "mixamorig_RightHandSlot",
+          "thigh_l": "mixamorig_LeftUpLeg", "calf_l": "mixamorig_LeftLeg", "foot_l": "mixamorig_LeftFoot",
+          "ball_l": "mixamorig_LeftToeBase", "thigh_r": "mixamorig_RightUpLeg", "calf_r": "mixamorig_RightLeg",
+          "foot_r": "mixamorig_RightFoot", "ball_r": "mixamorig_RightToeBase"}
+
+
 def main():
     clips = [c for c in os.environ.get("HW_POSE_CLIPS", ",".join(DEFAULT)).split(",") if c]
     out = os.environ.get("HW_POSE_OUT", os.path.join(unreal.Paths.project_saved_dir(), "AnimPose", "poses.json"))
@@ -40,8 +51,9 @@ def main():
             names = set(str(n) for n in unreal.AnimPoseExtensions.get_bone_names(pose))
             bones = {}
             for b in BONES:
-                if b in names:
-                    tr = unreal.AnimPoseExtensions.get_bone_pose(pose, b, unreal.AnimPoseSpaces.WORLD)
+                src = b if b in names else MIXAMO.get(b)
+                if src in names:
+                    tr = unreal.AnimPoseExtensions.get_bone_pose(pose, src, unreal.AnimPoseSpaces.WORLD)
                     loc = tr.translation
                     bones[b] = [round(loc.x, 1), round(loc.y, 1), round(loc.z, 1)]
             frames.append({"t": round(t, 3), "bones": bones})

@@ -70,6 +70,7 @@ void AHWRaidWorldBridge::ReconcileBoss(const FHWRaidNetBoss& B,FName RaidState,f
     const FVector T=ServerToWorld(B.X,B.Y,BossActor->GetActorLocation().Z),C=BossActor->GetActorLocation();
     BossActor->SetActorLocation(FVector::Dist2D(C,T)>450.f?T:FMath::VInterpTo(C,T,Dt,10.f),false);
     BossActor->SetActorRotation(FMath::RInterpTo(BossActor->GetActorRotation(),FRotator(0.f,FMath::RadiansToDegrees(B.Aim),0.f),Dt,12.f));
+    BossActor->ApplyAuthoritativeMotion(B.PatternIcon, B.TeleDur, B.RecoveryDuration);
     float StateProgress = 0.f;
     if (B.State == TEXT("telegraph"))
     {

@@ -289,9 +289,10 @@ void UHWRaidNetworkSubsystem::ParseRoomState()
             Raid.Boss.TelegraphProgress=(float)ReadNumber(B,TEXT("windup"));
             Raid.Boss.RecoveryRemaining=(float)ReadNumber(B,TEXT("recovery"));
             Raid.Boss.RecoveryDuration=(float)ReadNumber(B,TEXT("recoveryDur"));
+            Raid.Boss.TeleDur=(float)ReadNumber(B,TEXT("teleDur"));
             Raid.Boss.LinkRemaining=(float)ReadNumber(B,TEXT("linkT"));
             Raid.Boss.bExecutable=ReadBool(B,TEXT("executable"));B->TryGetStringField(TEXT("name"),Raid.Boss.Name);
-            if(auto Ptn=Obj(B,TEXT("pattern"))){Ptn->TryGetStringField(TEXT("name"),Raid.Boss.PatternName);Raid.Boss.bPatternCounterable=ReadBool(Ptn,TEXT("counterable"));}
+            if(auto Ptn=Obj(B,TEXT("pattern"))){Ptn->TryGetStringField(TEXT("name"),Raid.Boss.PatternName);FString Icon;if(Ptn->TryGetStringField(TEXT("icon"),Icon))Raid.Boss.PatternIcon=FName(*Icon);Raid.Boss.bPatternCounterable=ReadBool(Ptn,TEXT("counterable"));}
             if(auto Parts=Arr(B,TEXT("parts")))for(const auto& V:*Parts)
             {
                 auto O=V.IsValid()&&V->Type==EJson::Object?V->AsObject():nullptr;if(!O.IsValid())continue;

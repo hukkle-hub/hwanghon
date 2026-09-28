@@ -16,7 +16,7 @@ What it builds (all under /Game, nothing binary is committed):
   2. DA_Ain_Graybox (UHWAnimationSetAsset). SourceContactNormalized = notify time / length,
      so the runtime contact retime lands the authored contact on the combat HitAt.
   3. Seohan_Combat_VS01: World Settings GameMode = HWCombatGameMode, a placed HWAinCharacter
-     "Ain_Graybox" (auto-possess Player0), a Quinn stand-in body on the boss, and a ReviewCamera.
+     "Ain_Graybox" (auto-possess Player0), no baked boss body (config applies it), and a ReviewCamera.
 """
 from __future__ import annotations
 
@@ -252,22 +252,12 @@ def configure_level(anim_set, source: str):
     for a in eas.get_all_level_actors():
         if unreal.MathLibrary.class_is_child_of(a.get_class(), ain_cls):
             eas.destroy_actor(a)
-    abp = unreal.load_asset(MANNY + "/Anims/Unarmed/ABP_Unarmed")   # boss stand-in
-
-    # The C++ boss is a bare capsule (no visible mesh). Give the placed boss a
-    # stand-in body so captures show where it is and which way it faces.
-    # Capsule and gameplay are unchanged; boss pattern animation is not bound yet.
+    # The placed boss wears no baked body: AHWBossCharacter::BeginPlay puts on the "boss" entry of
+    # UHWCharacterVisualSettings (the training boss and its clips, doc 132) when the mesh is empty.
     boss_cls = unreal.load_class(None, "/Script/HwanghonCombatUE.HWBossCharacter")
     for boss in [a for a in eas.get_all_level_actors() if a.get_class() == boss_cls]:
-        bmesh = boss.get_editor_property("mesh")
-        bmesh.set_skeletal_mesh_asset(unreal.load_asset(MANNY + "/Meshes/SKM_Quinn_Simple"))
-        bmesh.set_editor_property("animation_mode", unreal.AnimationMode.ANIMATION_BLUEPRINT)
-        bmesh.set_editor_property("anim_class", abp.generated_class())
-        half = boss.get_editor_property("capsule_component").get_unscaled_capsule_half_height()
-        bmesh.set_editor_property("relative_location", unreal.Vector(0.0, 0.0, -half))
-        bmesh.set_editor_property("relative_rotation", unreal.Rotator(roll=0.0, pitch=0.0, yaw=-90.0))
-        bmesh.set_editor_property("relative_scale3d", unreal.Vector(1.25, 1.25, 1.25))
-        log(f"boss stand-in body on {boss.get_actor_label()} (capsule half-height {half:.0f})")
+        boss.get_editor_property("mesh").set_skeletal_mesh_asset(None)
+        log(f"boss body cleared on {boss.get_actor_label()} (config body applies at BeginPlay)")
 
     # Review camera for ue_pie_capture.py HW_CAPTURE_VIEW=side. Not auto-activated:
     # play uses the lock-on camera unless the capture script switches the view target.
@@ -283,7 +273,7 @@ def configure_level(anim_set, source: str):
 
 
 def main():
-    copy_mannequin_pack()   # the boss stand-in (Quinn) always uses it
+    copy_mannequin_pack()   # the dungeon enemy stand-in (Manny) uses it
     source = pick_source()
     if source == "countess":
         sanitize_countess_pawn()

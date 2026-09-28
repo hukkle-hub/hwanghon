@@ -102,6 +102,18 @@ public:
             : CurrentPattern.bCounterable;
     }
 
+    // Online motion only: the server beat (web icon hookL/slam/...) and its telegraph/recovery lengths.
+    void ApplyAuthoritativeMotion(FName PatternIcon, float TellSeconds, float RecoverySeconds);
+
+    // Clock the body animates on: GetBossStateNormalized, plus a local swing through an online strike.
+    float GetPresentationStatePhase() const;
+
+    // Pattern the body is animating: the local pattern, or online the server beat from ApplyAuthoritativeMotion.
+    const FHWBossPatternSpec& GetPresentedPattern() const
+    {
+        return bNetworkAuthoritative && NetworkMotion.Id != NAME_None ? NetworkMotion : CurrentPattern;
+    }
+
     virtual bool ReceiveSystemHit_Implementation(
         float Damage,
         EHWAttackTier Tier,
@@ -157,6 +169,9 @@ private:
 
     EHWBossState State = EHWBossState::Idle;
     FHWBossPatternSpec CurrentPattern;
+
+    UPROPERTY(Transient)
+    FHWBossPatternSpec NetworkMotion;
     float StateElapsed = 0.f;
     float IdleElapsed = 0.f;
     int32 NextBeatIndex = 0;

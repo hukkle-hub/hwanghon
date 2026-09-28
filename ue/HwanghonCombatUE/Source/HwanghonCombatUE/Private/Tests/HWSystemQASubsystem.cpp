@@ -44,6 +44,9 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Animation/HWBossPresentationComponent.h"
+#include "Animation/HWAnimationSetAsset.h"
+#include "Animation/AnimSequenceBase.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UnrealClient.h"
 #include "Engine/DirectionalLight.h"
@@ -360,6 +363,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("local")) TickLocal(Dt);
     else if (Mode == TEXT("net")) TickNet(Dt);
     else if (Mode == TEXT("showcase")) TickShowcase(Dt);
+    else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -1565,10 +1569,21 @@ void UHWSystemQASubsystem::MeasureBody(const FString& Label, AActor* Actor)
     // Bone positions in the actor frame (cm): what the body is actually doing.
     const FTransform ActorT = Actor->GetActorTransform();
     const TCHAR* Bones[] = { TEXT("pelvis"), TEXT("head"), TEXT("hand_r"), TEXT("weapon_r"), TEXT("hand_l"), TEXT("foot_l") };
+    // Mixamo rigs (the training boss) name the same bones differently; keys stay the standard ones.
+    static const TMap<FString, FName> Mixamo = {
+        { TEXT("pelvis"), TEXT("mixamorig_Hips") }, { TEXT("head"), TEXT("mixamorig_Head") },
+        { TEXT("hand_r"), TEXT("mixamorig_RightHand") }, { TEXT("hand_l"), TEXT("mixamorig_LeftHand") },
+        { TEXT("foot_l"), TEXT("mixamorig_LeftFoot") }, { TEXT("weapon_r"), TEXT("mixamorig_RightHandSlot") } };
     for (const TCHAR* Bone : Bones)
     {
-        if (Mesh->GetBoneIndex(Bone) == INDEX_NONE) continue;
-        const FVector L = ActorT.InverseTransformPosition(Mesh->GetBoneLocation(Bone));
+        FName Name = Bone;
+        if (Mesh->GetBoneIndex(Name) == INDEX_NONE)
+        {
+            const FName* Alt = Mixamo.Find(Bone);
+            if (!Alt || Mesh->GetBoneIndex(*Alt) == INDEX_NONE) continue;
+            Name = *Alt;
+        }
+        const FVector L = ActorT.InverseTransformPosition(Mesh->GetBoneLocation(Name));
         TArray<TSharedPtr<FJsonValue>> V = { Num(FMath::RoundToFloat(L.X)), Num(FMath::RoundToFloat(L.Y)), Num(FMath::RoundToFloat(L.Z)) };
         O->SetArrayField(Bone, V);
     }
@@ -1756,5 +1771,157 @@ void UHWSystemQASubsystem::TickShowcase(float Dt)
         ShowSteps[ShowStep].Value();
         ++ShowStep;
         if (bFinished) return;
+    }
+}
+
+// ---------------------------------------------------------------- boss show (-HWQA=bossshow, doc 132)
+// The boss fights a pawn that cannot die; every pattern is shot from the side at mid-telegraph, at each
+// gameplay beat (the combat contact) and mid-recovery, with bone positions, then a flinch and the death.
+void UHWSystemQASubsystem::TickBossShow(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    AHWAinCharacter* Pawn = GetPawn();
+    AHWBossCharacter* Boss = World ? Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(World, AHWBossCharacter::StaticClass())) : nullptr;
+    if (!World || !Pawn || !Boss)
+    {
+        if (Elapsed > 90.f) Finish(false, TEXT("No pawn/boss for boss show"));
+        return;
+    }
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        Pawn->GetCombat()->ConfigureCharacterStats(1.0e8f, 1.f, 0.f, 0.f, 100.f, 100.f);   // the target never dies
+        if (APlayerController* PC = GetPC()) Pawn->DisableInput(PC);
+        Boss->SetActorLocation(Pawn->GetActorLocation() + FVector(900.f, 0.f, 0.f));
+        if (ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), Pawn->GetActorLocation(), FRotator(-35.f, 120.f, 0.f)))
+        {
+            Sun->GetLightComponent()->SetIntensity(3.f);
+            BossShowLight = Sun;
+        }
+        {
+            USkeletalMeshComponent* M = Boss->GetMesh();
+            const UHWBossPresentationComponent* Pres = Boss->FindComponentByClass<UHWBossPresentationComponent>();
+            Note(FString::Printf(TEXT("boss body %s mode %d anim %s set %s scale %.2f yaw %.0f"),
+                M && M->GetSkeletalMeshAsset() ? *M->GetSkeletalMeshAsset()->GetPathName() : TEXT("-"),
+                M ? (int32)M->GetAnimationMode() : -1,
+                M && M->GetAnimInstance() ? *M->GetAnimInstance()->GetClass()->GetName() : TEXT("-"),
+                Pres && Pres->AnimationSet ? *Pres->AnimationSet->GetName() : TEXT("-"),
+                M ? M->GetRelativeScale3D().X : 0.f, M ? M->GetRelativeRotation().Yaw : 0.f));
+        }
+        if (ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), Pawn->GetActorLocation(), FRotator::ZeroRotator))
+        {
+            Cam->GetCameraComponent()->SetFieldOfView(50.f);
+            Cam->GetCameraComponent()->bConstrainAspectRatio = false;
+            ShowCamera = Cam;
+            if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        }
+        return;
+    }
+    ShowTime = World->GetTimeSeconds() - ShowStart;
+
+    // Side camera on the boss, square to the boss -> pawn line.
+    if (AActor* C = ShowCamera.Get())
+    {
+        FVector Line = Pawn->GetActorLocation() - Boss->GetActorLocation();
+        Line.Z = 0.f;
+        const FVector Side = FVector::CrossProduct(Line.GetSafeNormal(), FVector::UpVector);
+        const FVector Center = (Boss->GetActorLocation() * 0.7f + Pawn->GetActorLocation() * 0.3f) + FVector(0.f, 0.f, 10.f);
+        const FVector From = Center + Side * 560.f + FVector(0.f, 0.f, 40.f);
+        C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+        if (AActor* L = BossShowLight.Get())
+        {
+            // Key light from over the camera's shoulder: the side we look at is the lit side.
+            L->SetActorRotation(FRotator(-35.f, (Center - From).Rotation().Yaw + 25.f, 0.f));
+        }
+    }
+    auto Snap = [this, Boss](const FString& Tag)
+    {
+        Shot(Tag);
+        MeasureBody(Tag, Boss);
+        const UHWBossPresentationComponent* Pres = Boss->FindComponentByClass<UHWBossPresentationComponent>();
+        if (Pres && Pres->GetShownClip())
+        {
+            const float Len = FMath::Max(0.001f, Pres->GetShownClip()->GetPlayLength());
+            Note(FString::Printf(TEXT("%s clip %s t=%.3f (%.3f) phase %.3f"), *Tag, *Pres->GetShownClip()->GetName(),
+                Pres->GetShownTime(), Pres->GetShownTime() / Len, Boss->GetPresentationStatePhase()));
+        }
+    };
+
+    if (ShowTime < 5.f) return;   // warm-up (shaders)
+    if (!BossShotsTaken.Contains(TEXT("00_walk")) && Boss->GetVelocity().Size2D() > 30.f) { BossShotsTaken.Add(TEXT("00_walk")); Snap(TEXT("00_walk")); }
+
+    const EHWBossState State = Boss->GetBossState();
+    const FName Pattern = Boss->GetCurrentPatternId();
+    const float Phase = Boss->GetBossStateNormalized();
+    if (State == EHWBossState::Idle && !BossShotsTaken.Contains(TEXT("01_idle")) && Boss->GetVelocity().Size2D() < 5.f)
+    {
+        BossShotsTaken.Add(TEXT("01_idle"));
+        Snap(TEXT("01_idle"));
+    }
+    if (State != BossShowState || Pattern != BossShowPattern)
+    {
+        BossShowState = State;
+        BossShowPattern = Pattern;
+        BossShowPrevPhase = 0.f;
+    }
+    auto Once = [this, &Snap](const FString& Tag)
+    {
+        if (BossShotsTaken.Contains(Tag)) return;
+        BossShotsTaken.Add(Tag);
+        Snap(Tag);
+    };
+    const FString P = Pattern.ToString();
+    if (State == EHWBossState::Tell && BossShowPrevPhase < 0.6f && Phase >= 0.6f) Once(FString::Printf(TEXT("%s_1tell"), *P));
+    if (State == EHWBossState::Recover && BossShowPrevPhase < 0.5f && Phase >= 0.5f) Once(FString::Printf(TEXT("%s_3recover"), *P));
+    if (State == EHWBossState::Strike)
+    {
+        const FHWBossPatternSpec& Spec = Boss->GetCurrentPattern();
+        for (int32 K = 0; K < Spec.Beats.Num(); ++K)
+        {
+            const float BeatPhase = Spec.StrikeDuration > 0.f ? Spec.Beats[K].At / Spec.StrikeDuration : 0.f;
+            if (BossShowPrevPhase < BeatPhase && Phase >= BeatPhase) Once(FString::Printf(TEXT("%s_2beat%d"), *P, K));
+        }
+    }
+    BossShowPrevPhase = State == BossShowState ? Phase : 0.f;
+
+    int32 Done = 0;
+    for (const TCHAR* Id : { TEXT("HookCombo"), TEXT("Charge"), TEXT("Slam"), TEXT("Spin"), TEXT("GroundWave") })
+    {
+        if (BossShotsTaken.Contains(FString::Printf(TEXT("%s_3recover"), Id))) ++Done;
+    }
+    // Charge is only picked from 5 m+: once the close patterns are in, step the boss back out.
+    const bool bNeedCharge = !BossShotsTaken.Contains(TEXT("Charge_3recover"));
+    if (bNeedCharge && State == EHWBossState::Idle && ShowTime - BossShowMovedAt > 4.f
+        && BossShotsTaken.Contains(TEXT("HookCombo_3recover")) && BossShotsTaken.Contains(TEXT("Spin_3recover"))
+        && FVector::Dist2D(Boss->GetActorLocation(), Pawn->GetActorLocation()) < 600.f)
+    {
+        BossShowMovedAt = ShowTime;
+        Boss->SetActorLocation(Pawn->GetActorLocation() + FVector(900.f, 0.f, 0.f));
+        Note(TEXT("boss stepped back for Charge"));
+    }
+    if (Done == 4 && !BossShowPhasePush && !BossShotsTaken.Contains(TEXT("GroundWave_3recover")) && State == EHWBossState::Idle)
+    {
+        // GroundWave is a phase 2+ pattern: take the boss past the first phase threshold.
+        BossShowPhasePush = true;
+        Boss->ReceivePlayerHit(Boss->GetHealth() * 0.45f, EHWAttackTier::Light, Pawn->GetActorLocation());
+        Note(FString::Printf(TEXT("phase push: boss hp %.0f"), Boss->GetHealth()));
+    }
+    if (BossEndAt < 0.f && (Done == 5 || ShowTime > 200.f) && State == EHWBossState::Idle)
+    {
+        BossEndAt = ShowTime;
+        Note(FString::Printf(TEXT("patterns captured %d/5"), Done));
+        Boss->ReceivePlayerHit(1.f, EHWAttackTier::Light, Pawn->GetActorLocation());
+    }
+    if (BossEndAt >= 0.f)
+    {
+        const float T = ShowTime - BossEndAt;
+        if (T > 0.25f) Once(TEXT("90_hit"));
+        if (T > 1.5f && !Boss->IsDead()) Boss->ReceivePlayerHit(1.0e9f, EHWAttackTier::Break, Pawn->GetActorLocation());
+        if (T > 2.3f) Once(TEXT("91_death_a"));
+        if (T > 4.5f) Once(TEXT("92_death_end"));
+        if (T > 5.f) Finish(Done == 5, FString::Printf(TEXT("boss show: patterns %d/5"), Done));
     }
 }

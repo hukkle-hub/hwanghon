@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Tickable.h"
+#include "Combat/HWCombatTypes.h"
 #include "HWSystemQASubsystem.generated.h"
 
 class FJsonObject;
@@ -68,6 +69,15 @@ private:
     void LocalSummary(const struct FHWSystemDungeonDefinition& Def);
     void TickNet(float Dt);
     void TickShowcase(float Dt);
+    void TickBossShow(float Dt);
+    TSet<FString> BossShotsTaken;
+    EHWBossState BossShowState = EHWBossState::Idle;
+    FName BossShowPattern = NAME_None;
+    float BossShowPrevPhase = 0.f;
+    float BossEndAt = -1.f;
+    bool BossShowPhasePush = false;
+    float BossShowMovedAt = -100.f;
+    TWeakObjectPtr<AActor> BossShowLight;
     void Shot(const FString& Name);
     void MeasureBody(const FString& Label, AActor* Actor);
     void TickRaid(float Dt);

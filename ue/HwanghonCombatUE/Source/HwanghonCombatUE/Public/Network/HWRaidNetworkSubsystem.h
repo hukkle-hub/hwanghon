@@ -110,6 +110,9 @@ struct FHWRaidNetBoss
     UPROPERTY(BlueprintReadOnly) float RecoveryRemaining = 0.f;
     UPROPERTY(BlueprintReadOnly) float RecoveryDuration = 0.f;
     UPROPERTY(BlueprintReadOnly) float LinkRemaining = 0.f;
+    // Motion only (doc 132): the web clip key (hookL/slam/...) and the telegraph length in seconds.
+    UPROPERTY(BlueprintReadOnly) FName PatternIcon = NAME_None;
+    UPROPERTY(BlueprintReadOnly) float TeleDur = 0.f;
     UPROPERTY(BlueprintReadOnly) bool bPatternCounterable = false;
     UPROPERTY(BlueprintReadOnly) bool bExecutable = false;
     UPROPERTY(BlueprintReadOnly) TArray<FHWRaidNetBossPart> Parts;

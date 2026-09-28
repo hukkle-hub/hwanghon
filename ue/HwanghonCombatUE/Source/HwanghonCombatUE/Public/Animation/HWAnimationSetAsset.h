@@ -52,6 +52,12 @@ struct FHWBossPatternAnimationBinding
     // Example three-hit combo: [0.22, 0.52, 0.82].
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<float> SourceBeatNormalized;
+
+    // Single-node bodies (no AnimBP, doc 131): each clip holds windup + contact + recovery, like the web game.
+    // Beat k plays BeatSequences[k] (empty -> Strike) with its contact SourceBeatNormalized[k] on the beat;
+    // Tell scrubs the first clip's windup, Recover the last clip's tail.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TArray<TObjectPtr<UAnimSequenceBase>> BeatSequences;
 };
 
 UCLASS(BlueprintType)
@@ -138,6 +144,21 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Reaction")
     FHWSequenceBinding BossBreakReaction;
+
+    // Bodies driven without an AnimBP (single node): locomotion + death come from these clips.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossIdle;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossWalk;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossDeath;
+
+    // Mesh-space cm a clip stands above the idle ground (clips moved from other rigs float, doc 132);
+    // the single-node body is lowered by this while the clip plays.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    TMap<TObjectPtr<UAnimSequenceBase>, float> ClipGroundOffsetCm;
 
     const FHWSequenceBinding* GetPlayerBinding(EHWActionType Action) const;
     const FHWSequenceBinding* GetAbilityBinding(EHWAbilitySlot Slot) const;
