@@ -32,6 +32,8 @@ public:
     // Story mode (docs/design/137): the story director decides what follows the fight — no result modal.
     void SetStoryOwnsOutcome(bool bOwns) { bStoryOwnsOutcome = bOwns; }
     void SetBossName(const FText& Name);
+    // A novel beat said on screen for a moment (the story director: "틱—", "되돌림", "스위트 스폿").
+    void ShowCallout(const FString& Word) { Flash(Word); }
 
 protected:
     virtual void Build(UCanvasPanel* Root) override;

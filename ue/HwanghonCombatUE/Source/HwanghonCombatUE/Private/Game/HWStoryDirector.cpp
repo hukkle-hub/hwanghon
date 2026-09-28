@@ -2,6 +2,9 @@
 
 #include "AssetRegistry/IAssetRegistry.h"
 #include "Boss/HWBossCharacter.h"
+#include "Boss/HWBossCanonRules.h"
+#include "System/HWCoopCombatSubsystem.h"
+#include "System/HWPlayableCharacterVariants.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/HWLockOnComponent.h"
@@ -29,6 +32,7 @@
 namespace
 {
     const FName TagAinStart(TEXT("AinStart"));
+    const FName TagKainStart(TEXT("KainStart"));
     const FName TagBossSpawn(TEXT("BossSpawn"));
     // The graybox stand-in of the boss body (DL_Phase1): the cinema shows it, the fight replaces it.
     const FName TagStandIn(TEXT("HW_BossStandIn"));
@@ -201,6 +205,7 @@ void AHWStoryDirector::Tick(float DeltaSeconds)
                 Combat->SetBossName(BossName);
             }
         }
+        SpawnKain();
         StartSegment(StartIndex);
         return;
     }
@@ -433,6 +438,12 @@ void AHWStoryDirector::BeginBattle(bool bFromCinema)
         if (Boss)
         {
             Boss->OnBossDied.AddUniqueDynamic(this, &AHWStoryDirector::HandleBossDied);
+            Boss->SpawnDefaultController();   // the rules walk it in when it is far
+            // The novel's rules for this boss: spin/elbow, the scythe band, Kain's rebound, the sever (doc 138).
+            UHWHeosuabiRules* Rules = NewObject<UHWHeosuabiRules>(Boss, TEXT("CanonRules"));
+            Rules->SetCast(Ain, Kain);
+            Rules->OnCanonBeat.AddDynamic(this, &AHWStoryDirector::HandleCanonBeat);
+            Rules->RegisterComponent();
         }
     }
 
@@ -485,6 +496,44 @@ void AHWStoryDirector::EnterBattleControl()
         Ain->GetCombat()->OnDied.AddUniqueDynamic(this, &AHWStoryDirector::HandlePlayerDied);
     }
     Emit(TEXT("battle"));
+}
+
+void AHWStoryDirector::SpawnKain()
+{
+    if (Kain) return;
+    const AActor* Spot = FindTagged(TagKainStart);
+    const AActor* BossSpot = FindTagged(TagBossSpawn);
+    if (!Spot) return;
+    FVector Location = Spot->GetActorLocation() + FVector(0.f, 0.f, 100.f);
+    const float Yaw = BossSpot ? (BossSpot->GetActorLocation() - Location).Rotation().Yaw : 0.f;
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    Kain = GetWorld()->SpawnActor<AHWKainCharacter>(AHWKainCharacter::StaticClass(), Location, FRotator(0.f, Yaw, 0.f), Params);
+    if (!Kain) return;
+    Kain->SpawnDefaultController();
+    // The boss answers Ain (the novel's fight is hers); Kain is not a threat target here.
+    if (UHWCoopCombatSubsystem* Coop = GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>())
+    {
+        Coop->UnregisterCombatant(Kain);
+    }
+}
+
+void AHWStoryDirector::HandleCanonBeat(FName Beat)
+{
+    static const TMap<FName, FString> Words = {
+        { TEXT("deflect"), TEXT("틱— 너무 붙었다") },   // L481-L491
+        { TEXT("too_far"), TEXT("닿지 않는다") },        // L499
+        { TEXT("rebound"), TEXT("되돌림 — 숨 한 번") },  // L515-L529
+        { TEXT("sever"), TEXT("스위트 스폿") },          // L555
+    };
+    if (const FString* Word = Words.Find(Beat))
+    {
+        if (AHWStoryHUD* HUD = GetStoryHUD())
+        {
+            if (UHWCombatHUDWidget* Combat = HUD->GetCombatWidget()) Combat->ShowCallout(*Word);
+        }
+    }
+    Emit(FName(*(TEXT("canon_") + Beat.ToString())));
 }
 
 void AHWStoryDirector::HandleBossDied(AHWBossCharacter* DeadBoss)
@@ -575,6 +624,16 @@ void AHWStoryDirector::PlacePlayer(bool bVisible)
         Ain->SetActorLocationAndRotation(Location, FRotator(0.f, Yaw, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
     }
     Ain->SetActorHiddenInGame(!bVisible);
+    if (Kain)
+    {
+        if (const AActor* KainSpot = FindTagged(TagKainStart))
+        {
+            FVector KainAt = KainSpot->GetActorLocation();
+            KainAt.Z += Kain->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 2.f;
+            Kain->SetActorLocationAndRotation(KainAt, Ain->GetActorRotation(), false, nullptr, ETeleportType::TeleportPhysics);
+        }
+        Kain->SetActorHiddenInGame(!bVisible);
+    }
 }
 
 void AHWStoryDirector::SetPlayerControl(bool bEnabled)

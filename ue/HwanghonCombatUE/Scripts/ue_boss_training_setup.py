@@ -31,6 +31,8 @@ LOCAL = {
     "Slam": [("atk_slam", None)],
     "Spin": [("atk_spin", 0.29), ("atk_spin", 0.48), ("atk_spin", 0.535)],          # arms cross the front: L, R, L (one turn)
     "GroundWave": [("atk_hammer", None)],
+    # EP01 canon elbow (doc 138): no elbow clip yet — the short right hook is its stand-in body.
+    "Elbow": [("atk_hookR", None)],
 }
 # Online beats are keyed by the server's pattern icon (server/raid.cjs snapshot boss.pattern.icon).
 ONLINE = {"hookL": "atk_hookL", "hookR": "atk_hookR", "charge": "atk_charge", "slam": "atk_slam", "spin": "atk_spin",

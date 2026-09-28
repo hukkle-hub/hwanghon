@@ -2226,14 +2226,9 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
             Ain->GetCombat()->ApplyIncomingDamage(1.0e7f, EHWAttackTier::Finisher);
         }
     }
-    if (P == EHWStoryPhase::Battle && !bStoryKilled && StoryKeyTime >= 4.f && (bStoryAinDied || !FParse::Param(FCommandLine::Get(), TEXT("HWQAStoryDie"))))
+    if (P == EHWStoryPhase::Battle && (bStoryAinDied || !FParse::Param(FCommandLine::Get(), TEXT("HWQAStoryDie"))))
     {
-        if (AHWBossCharacter* B = D->GetBoss())
-        {
-            bStoryKilled = true;
-            Note(TEXT("story show: QA ends the fight"));
-            B->ReceivePlayerHit(B->GetHealth() + 10.f, EHWAttackTier::Finisher, B->GetActorLocation() - B->GetActorForwardVector() * 200.f);
-        }
+        TickCanonFight(D, Dt);
     }
     // Boss mode has no animation after the fight either: the combat HUD result is the end.
     if (!D->IsStoryMode() && P == EHWStoryPhase::BattleOver && StoryKeyTime >= 4.f)
@@ -2248,5 +2243,88 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     if (Elapsed > 400.f)
     {
         Finish(false, TEXT("story show timeout at ") + Key);
+    }
+}
+
+// The EP01 fight by its novel rules, played through the real inputs (doc 138): an attack from inside the guard
+// must glance off and bring the elbow; Kain must take the spin back; the one attack from the band in that breath
+// must sever. Each step is shot and logged; a step that does not happen fails the run.
+void UHWSystemQASubsystem::TickCanonFight(AHWStoryDirector* D, float Dt)
+{
+    AHWBossCharacter* B = D->GetBoss();
+    AHWAinCharacter* Ain = Cast<AHWAinCharacter>(GetPC() ? GetPC()->GetPawn() : nullptr);
+    if (!B || !Ain || B->IsDead()) return;
+    CanonStageTime += Dt;
+    auto PlaceAin = [&](float DistanceCm)
+    {
+        const FVector Dir = (Ain->GetActorLocation() - B->GetActorLocation()).GetSafeNormal2D();
+        FVector At = B->GetActorLocation() + (Dir.IsNearlyZero() ? FVector(-1.f, 0.f, 0.f) : Dir) * DistanceCm;
+        At.Z = Ain->GetActorLocation().Z;
+        Ain->SetActorLocationAndRotation(At, FRotator(0.f, (B->GetActorLocation() - At).Rotation().Yaw, 0.f));
+    };
+    auto Next = [&](int32 Stage, const TCHAR* What)
+    {
+        CanonStage = Stage;
+        CanonStageTime = 0.f;
+        Note(FString::Printf(TEXT("canon stage %d: %s (boss %s, hp %.0f)"), Stage, What, *UEnum::GetValueAsString(B->GetBossState()), B->GetHealth()));
+    };
+    switch (CanonStage)
+    {
+    case 0:   // too close: the blade glances off, the elbow answers
+        if (CanonStageTime >= 3.0f && (B->GetBossState() == EHWBossState::Idle || B->GetBossState() == EHWBossState::Tell
+            || B->GetBossState() == EHWBossState::Recover))   // after the two battle shots; the elbow answers at once only then
+        {
+            PlaceAin(110.f);
+            Ain->GetCombat()->RequestAttack();
+            Next(10, TEXT("attack from 110 cm"));
+        }
+        break;
+    case 10:
+        if (CanonStageTime >= 0.45f)
+        {
+            Shot(TEXT("canon_1_deflect"), true);
+            const bool bElbow = B->GetCurrentPatternId() == TEXT("Elbow");
+            Note(FString::Printf(TEXT("canon deflect check: pattern=%s state=%s hp=%.0f"), *B->GetCurrentPatternId().ToString(),
+                *UEnum::GetValueAsString(B->GetBossState()), B->GetHealth()));
+            if (!bElbow) { Finish(false, TEXT("canon: attack from inside the guard did not bring the elbow")); return; }
+            Next(1, TEXT("elbow answered; stand where only the spin reaches"));
+        }
+        break;
+    case 1:   // the spin, Kain's rebound
+        if (CanonStageTime >= 1.2f && CanonStageTime < 1.3f) PlaceAin(330.f);
+        if (B->GetCurrentPatternId() == TEXT("Spin") && B->GetBossState() == EHWBossState::Tell && !bCanonSpinShot
+            && B->GetBossStateNormalized() > 0.8f)
+        {
+            bCanonSpinShot = true;
+            Shot(TEXT("canon_2_spin_breath"), true);
+        }
+        if (B->GetBossState() == EHWBossState::Break)
+        {
+            Shot(TEXT("canon_3_rebound"), true);
+            Next(2, TEXT("rebound — one breath"));
+        }
+        else if (CanonStageTime > 15.f)
+        {
+            Finish(false, TEXT("canon: no rebound in 15 s"));
+            return;
+        }
+        break;
+    case 2:   // one scythe length, one attack
+        if (CanonStageTime >= 0.3f)
+        {
+            PlaceAin(200.f);
+            Ain->GetCombat()->RequestAttack();
+            Next(20, TEXT("attack from 200 cm inside the breath"));
+        }
+        break;
+    case 20:   // the boss dies on the contact; the director's "over" shot is the frame after
+        if (CanonStageTime > 3.f)
+        {
+            Finish(false, FString::Printf(TEXT("canon: no sever (state %s)"), *UEnum::GetValueAsString(B->GetBossState())));
+            return;
+        }
+        break;
+    default:
+        break;
     }
 }

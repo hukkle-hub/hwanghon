@@ -39,7 +39,7 @@ namespace
     {
         static const TMap<FName, FString> Names = {
             { TEXT("HookCombo"), TEXT("훅 연타") }, { TEXT("Charge"), TEXT("돌진") }, { TEXT("Slam"), TEXT("내려찍기") },
-            { TEXT("Spin"), TEXT("회전 후려치기") }, { TEXT("GroundWave"), TEXT("지면 충격파 · 점프") },
+            { TEXT("Spin"), TEXT("회전 후려치기") }, { TEXT("Elbow"), TEXT("팔꿈치") }, { TEXT("GroundWave"), TEXT("지면 충격파 · 점프") },
         };
         const FString* Found = Names.Find(Pattern);
         return Found ? *Found : Pattern.ToString();

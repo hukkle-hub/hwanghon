@@ -133,6 +133,9 @@ public:
 
     const FHWBossPatternSpec& GetCurrentPattern() const { return CurrentPattern; }
 
+    // Novel rules (UHWBossCanonRules on this boss) start their own pattern, e.g. the elbow that answers a deflect.
+    void StartCanonPattern(const FHWBossPatternSpec& Pattern) { BeginPattern(Pattern); }
+
     UFUNCTION(BlueprintPure)
     EHWAttackTier GetLastReactionTier() const { return LastReactionTier; }
 

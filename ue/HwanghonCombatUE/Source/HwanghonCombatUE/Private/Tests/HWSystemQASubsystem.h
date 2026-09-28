@@ -84,6 +84,10 @@ private:
     int32 StoryShots = 0;
     bool bStoryKilled = false;
     bool bStoryAinDied = false;   // -HWQAStoryDie: Ain falls once first; the director must reopen at the fight
+    int32 CanonStage = 0;          // doc 138: 0 deflect, 1 wait rebound, 2 sever, 3 done
+    float CanonStageTime = 0.f;
+    bool bCanonSpinShot = false;
+    void TickCanonFight(class AHWStoryDirector* D, float Dt);
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()
     TArray<TObjectPtr<class UAnimSequenceBase>> ReviewClips;

@@ -9,6 +9,7 @@
 #include "Combat/HWCombatTuningAsset.h"
 #include "System/HWCoopCombatSubsystem.h"
 #include "System/HWBossSystemComponent.h"
+#include "Boss/HWBossCanonRules.h"
 
 #include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
@@ -21,6 +22,8 @@ AHWBossCharacter::AHWBossCharacter()
     PrimaryActorTick.bCanEverTick = true;
 
     GetCapsuleComponent()->InitCapsuleSize(60.f, 115.f);
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+    GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
     GetCharacterMovement()->MaxWalkSpeed = 260.f;
     GetCharacterMovement()->bOrientRotationToMovement = false;
 
@@ -187,6 +190,17 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
         return;
     }
 
+    // A boss that follows its novel judges the hit first (docs/design/138): distance, openings, what ends it.
+    EHWCanonHit Canon = EHWCanonHit::Normal;
+    if (UHWBossCanonRules* Rules = FindComponentByClass<UHWBossCanonRules>())
+    {
+        Canon = Rules->FilterPlayerHit(*this, Damage, Tier, SourceLocation);
+        if (Canon == EHWCanonHit::Swallow || IsDead())
+        {
+            return;
+        }
+    }
+
     Health = FMath::Max(0.f, Health - FMath::Max(0.f, Damage));
     if (Health <= 0.f)
     {
@@ -194,7 +208,7 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
         return;
     }
 
-    if (BossSystem)
+    if (BossSystem && Canon == EHWCanonHit::Normal)
     {
         BossSystem->NotifyHit(Damage, Tier, SourceLocation);
         if (State == EHWBossState::Break && Tier != EHWAttackTier::Break)
@@ -361,6 +375,13 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
     {
         return;
     }
+    if (UHWBossCanonRules* Rules = FindComponentByClass<UHWBossCanonRules>())
+    {
+        if (Rules->InterceptBeat(*this, Beat) || State != EHWBossState::Strike)
+        {
+            return;
+        }
+    }
 
     UHWCombatComponent* PlayerCombat = TargetPlayer->GetCombat();
     if (!PlayerCombat)
@@ -384,6 +405,15 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
 
 void AHWBossCharacter::ChooseNextPattern()
 {
+    if (UHWBossCanonRules* Rules = IsDead() ? nullptr : FindComponentByClass<UHWBossCanonRules>())
+    {
+        FHWBossPatternSpec Pattern;
+        if (Rules->ChoosePattern(*this, Pattern))
+        {
+            BeginPattern(Pattern);
+        }
+        return;
+    }
     if (IsDead() || !TargetPlayer || !RuntimeTuning || RuntimeTuning->BossPatterns.IsEmpty())
     {
         return;

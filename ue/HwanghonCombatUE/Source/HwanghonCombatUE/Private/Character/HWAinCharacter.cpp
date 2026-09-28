@@ -38,6 +38,10 @@ AHWAinCharacter::AHWAinCharacter()
     GetCharacterMovement()->JumpZVelocity = 560.f;
     GetCharacterMovement()->AirControl = 0.25f;
 
+    // Bodies never pull the camera in: with Kain half a step behind her, the arm collapsed into her back (doc 138).
+    GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+    GetMesh()->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
     // Free framing; Tick blends to the locked-on framing (see the header, docs/design/137).

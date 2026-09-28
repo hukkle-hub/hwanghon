@@ -90,6 +90,7 @@ public:
     float GetPhaseElapsed() const { return PhaseElapsed; }
     bool IsPlayingSequence() const { return SequencePlayer != nullptr; }
     AHWBossCharacter* GetBoss() const { return Boss; }
+    AHWAinCharacter* GetKain() const { return Kain; }
 
     // QA: shorter novel cards and no travel at the end.
     void SetQAMode(float InCardSeconds) { CardSeconds = InCardSeconds; bQA = true; }
@@ -118,6 +119,8 @@ private:
     AHWStoryHUD* GetStoryHUD() const;
     void Emit(FName Event);
 
+    void SpawnKain();
+    UFUNCTION() void HandleCanonBeat(FName Beat);
     UFUNCTION() void HandleBossDied(AHWBossCharacter* DeadBoss);
     UFUNCTION() void HandlePlayerDied();
 
@@ -127,6 +130,8 @@ private:
     UPROPERTY(Transient) TObjectPtr<ACameraActor> HandoffCamera;
     UPROPERTY(Transient) TObjectPtr<AHWBossCharacter> Boss;
     UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Ain;
+    // EP01: Kain is in the room, half a step behind — and the fight's rebound is his (AI in 1P, doc 138).
+    UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Kain;
 
     FText EpisodeTitle;
     int32 SegmentIndex = -1;
