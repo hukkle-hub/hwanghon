@@ -1,6 +1,38 @@
 {
   "schema": "hwanghon-part1-saveflags-v1",
   "source": "docs/story/source/production/황혼_1부_EP01-28_전체_제작마스터_v1.0.md",
+  "canon_fixes": {
+    "EP04": {
+      "remove": [
+        "SF_Archive_CelestialReleasedAin"
+      ],
+      "why": "셀레스티얼이 아인을 놓아주는 서술 없음"
+    },
+    "EP07": {
+      "remove": [
+        "SF_Party_RyuJoined"
+      ],
+      "why": "류는 EP07 끝에 등록을 거절"
+    },
+    "EP10": {
+      "add": {
+        "SF_Party_RyuJoined": "true"
+      },
+      "why": "류 상시 동행 확정 (지분 계약)"
+    },
+    "EP11": {
+      "add": {
+        "SF_Kain_KneeInjury": "true"
+      },
+      "why": "카인 무릎 영구 부상"
+    },
+    "EP14": {
+      "add": {
+        "SF_NPC_MinkyungAlive": "false"
+      },
+      "why": "민경 사망"
+    }
+  },
   "episodes": {
     "EP01": {
       "SF_EP01_COMPLETE": "true",
@@ -28,7 +60,6 @@
     "EP04": {
       "SF_EP04_COMPLETE": "true",
       "SF_Boss_Celestial_State": "Roaming",
-      "SF_Archive_CelestialReleasedAin": "true",
       "SF_CurrentEpisode": "5"
     },
     "EP05": {
@@ -45,7 +76,6 @@
     },
     "EP07": {
       "SF_EP07_COMPLETE": "true",
-      "SF_Party_RyuJoined": "true",
       "SF_Boss_Aegis07_State": "Defeated",
       "SF_CurrentEpisode": "8"
     },
@@ -64,13 +94,15 @@
       "SF_EP10_COMPLETE": "true",
       "SF_Archive_CommandList": "true",
       "SF_Archive_MarkSystem": "true",
-      "SF_CurrentEpisode": "11"
+      "SF_CurrentEpisode": "11",
+      "SF_Party_RyuJoined": "true"
     },
     "EP11": {
       "SF_EP11_COMPLETE": "true",
       "SF_Archive_CommandTruth_L1": "true",
       "SF_World_Namtaeryeong_State": "Exposed",
-      "SF_CurrentEpisode": "12"
+      "SF_CurrentEpisode": "12",
+      "SF_Kain_KneeInjury": "true"
     },
     "EP12": {
       "SF_EP12_COMPLETE": "true",
@@ -88,7 +120,8 @@
       "SF_EP14_COMPLETE": "true",
       "SF_Boss_Subject09_State": "Regenerating",
       "SF_Archive_RegenerationRoutes": "true",
-      "SF_CurrentEpisode": "15"
+      "SF_CurrentEpisode": "15",
+      "SF_NPC_MinkyungAlive": "false"
     },
     "EP15": {
       "SF_EP15_COMPLETE": "true",

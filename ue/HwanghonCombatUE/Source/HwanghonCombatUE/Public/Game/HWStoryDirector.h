@@ -10,6 +10,7 @@ class AHWBossCharacter;
 class AHWAinCharacter;
 class ACameraActor;
 class AHWStoryHUD;
+class UHWBossCanonRules;
 
 UENUM(BlueprintType)
 enum class EHWStorySegmentKind : uint8
@@ -27,7 +28,7 @@ enum class EHWStoryPhase : uint8
     Battle,
     BattleOver,
     Finished,
-    Recover      // after the fight: walk to the crystal and take it (L565) — story mode only
+    Recover      // after the fight: walk to the crystal and take it (EP01 L565) — story mode only
 };
 
 // One scene of the episode, in novel order (docs/story/_scenes/EPxx.json -> Content/Data/novel_game_master.json).
@@ -38,8 +39,8 @@ struct FHWStorySegment
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FName SceneId;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) EHWStorySegmentKind Kind = EHWStorySegmentKind::Cinematic;
-    // First GameMode of the scene in the novel master (STORY_CINEMATIC, BOSS_ENTRY, BOSS_RESULT ...).
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FString GameMode;
+    // GameModes of the scene in the novel master (STORY_CINEMATIC, BOSS_ENTRY, BOSS_RESULT ...).
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FString> GameModes;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FString LocationId;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FText LocationName;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FText Summary;
@@ -48,13 +49,47 @@ struct FHWStorySegment
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FSoftObjectPath Sequence;
     // A battle segment covers every consecutive BOSS_BATTLE scene of the novel (EP01: SC016-SC018).
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> CoveredScenes;
+    // Battle segments: index into the episode's battles (Content/Data/story_episodes.json).
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) int32 Battle = INDEX_NONE;
+};
+
+// One fight of the episode as the novel stages it (Content/Data/story_episodes.json, docs/design/150).
+USTRUCT(BlueprintType)
+struct FHWStoryBattle
+{
+    GENERATED_BODY()
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FName FirstScene;
+    // UHWBossCanonRules subclass (reflection name without the U, e.g. "HWHeosuabiRules").
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FString RulesClass;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FText BossName;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float BossScale = 1.f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) bool bSpawnBoss = true;
+    // Who is in the fight besides Ain: kain / ryu / sera (AI companions) and story NPCs (ojeonggil ...).
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> Party;
+    // Marker tags: <Prefix>BossSpawn, <Prefix>AinStart, <Prefix><Member>Start (EP01 has no prefix).
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FString Prefix;
+    // "crystal": the joint's crystal is taken after the fight.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FName Recover;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float CrystalScale = 0.035f;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FText RecoverLine;
+    // Canon beat -> the novel's line shown on screen (with its line number in the data).
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TMap<FName, FString> Callouts;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> LayersPre;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> LayersFight;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> LayersAfter;
+
+    int32 SegmentIndex = INDEX_NONE;
+    int32 EntryIndex = INDEX_NONE;
+    int32 ResultIndex = INDEX_NONE;
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWStoryEvent, FName, Event, FName, SceneId);
 
-// Story mode (docs/design/137): the episode plays as animation — skippable scene by scene — until the boss,
-// then the camera leaves the cinema and settles behind Ain, and the fight is played. After the boss the story
-// continues as animation. Boss mode (?HWStory=0) plays the same arena with no animation at all.
+// Story mode (docs/design/137, 150): each episode plays as animation — skippable scene by scene — until a fight,
+// then the camera leaves the cinema and settles behind Ain, and the fight is played by the novel's rules.
+// After it the story goes on; at the end the episode's SaveFlags are written and the next episode opens.
+// Boss mode (?HWStory=0) plays the same arena with no animation at all.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWStoryDirector : public AActor
 {
@@ -66,18 +101,16 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
+    // Taken from the world name (EP02_World -> EP02) when it starts with EPnn.
     UPROPERTY(EditAnywhere, Category="Hwanghon|Story") FName EpisodeId = TEXT("EP01");
-    UPROPERTY(EditAnywhere, Category="Hwanghon|Story") FString SequenceFolder = TEXT("/Game/Hwanghon/Story/EP01/Sequences");
-    UPROPERTY(EditAnywhere, Category="Hwanghon|Story") FName ArenaLocationId = TEXT("loc_heosuabi_training_ground");
     UPROPERTY(EditAnywhere, Category="Hwanghon|Story") float CardSeconds = 7.f;
     UPROPERTY(EditAnywhere, Category="Hwanghon|Story") float HandoffBlendSeconds = 1.4f;
-    UPROPERTY(EditAnywhere, Category="Hwanghon|Story") FText BossName;
     UPROPERTY(EditAnywhere, Category="Hwanghon|Story") FString ExitMap = TEXT("/Game/Maps/HW_Frontend");
 
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Story")
     void SkipCurrent();
 
-    // L565: "아인이 낫 끝으로 툭 건드려 손바닥에 받았다" — within one scythe length of the crystal.
+    // EP01 L565: "아인이 낫 끝으로 툭 건드려 손바닥에 받았다" — within one scythe length of the crystal.
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Story")
     bool TryRecoverCrystal();
 
@@ -93,13 +126,17 @@ public:
     int32 GetSegmentIndex() const { return SegmentIndex; }
 
     const TArray<FHWStorySegment>& GetSegments() const { return Segments; }
+    const TArray<FHWStoryBattle>& GetBattles() const { return Battles; }
     const FHWStorySegment* GetCurrentSegment() const { return Segments.IsValidIndex(SegmentIndex) ? &Segments[SegmentIndex] : nullptr; }
     float GetPhaseElapsed() const { return PhaseElapsed; }
     bool IsPlayingSequence() const { return SequencePlayer != nullptr; }
     AHWBossCharacter* GetBoss() const { return Boss; }
-    AHWAinCharacter* GetKain() const { return Kain; }
+    UHWBossCanonRules* GetRules() const { return Rules; }
+    AActor* GetMember(FName Id) const { return PartyActors.FindRef(Id); }
+    AHWAinCharacter* GetKain() const;
     AStaticMeshActor* GetCrystal() const { return Crystal; }
     bool IsSeverSlowing() const { return SeverRealStart >= 0.0; }
+    int32 GetCurrentBattle() const { return CurrentBattle; }
 
     // QA: shorter novel cards and no travel at the end.
     void SetQAMode(float InCardSeconds) { CardSeconds = InCardSeconds; bQA = true; }
@@ -109,43 +146,50 @@ public:
 
 private:
     bool LoadEpisode();
+    bool LoadEpisodeConfig(TMap<FName, int32>& OutBattleByScene);
     void StartSegment(int32 Index);
     void EndSegment();
     void BeginBattle(bool bFromCinema);
     void EnterBattleControl();
+    void EndBattle(float Pause);
     void FinishEpisode();
     void WriteEpisodeFlags();
     void BeginRecover();
 
     enum class EArenaState : uint8 { PreBattle, Fight, After };
-    void SetArenaState(EArenaState State);
-    EArenaState StateAtStart(int32 Index) const;
-    EArenaState StateAtEnd(int32 Index) const;
+    EArenaState BattleStateAt(const FHWStoryBattle& B, int32 Index, bool bAtEnd) const;
+    void ApplyLayers(int32 Index, bool bAtEnd);
+    int32 BattleForSegment(int32 Index) const;
 
     void SetStandInsHidden(bool bHide);
-    void PlacePlayer(bool bVisible);
+    void PlaceCast(bool bVisible);
+    void SpawnParty(const FHWStoryBattle& B);
     void SetPlayerControl(bool bEnabled);
     ACameraActor* FindCamera(FName Tag) const;
     AActor* FindTagged(FName Tag) const;
+    AActor* FindMarker(const FString& Name) const;
     AHWStoryHUD* GetStoryHUD() const;
     void Emit(FName Event);
+    void Callout(const FString& Text);
 
-    void SpawnKain();
-    // L545-L567: "세상이 늘어졌다" — the world slows, colour floods, and the joint's crystal falls out of the cut.
+    // "세상이 늘어졌다" (EP01 L545-L567): the world slows, colour floods, and the joint's crystal falls out of the cut.
     void BeginSever();
     void TickSever();
+    void DropCrystal();
     UFUNCTION() void HandleCanonBeat(FName Beat);
     UFUNCTION() void HandleBossDied(AHWBossCharacter* DeadBoss);
     UFUNCTION() void HandlePlayerDied();
 
     UPROPERTY(Transient) TArray<FHWStorySegment> Segments;
+    UPROPERTY(Transient) TArray<FHWStoryBattle> Battles;
     UPROPERTY(Transient) TObjectPtr<ULevelSequencePlayer> SequencePlayer;
     UPROPERTY(Transient) TObjectPtr<ALevelSequenceActor> SequenceActor;
     UPROPERTY(Transient) TObjectPtr<ACameraActor> HandoffCamera;
     UPROPERTY(Transient) TObjectPtr<AHWBossCharacter> Boss;
+    UPROPERTY(Transient) TObjectPtr<UHWBossCanonRules> Rules;
     UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Ain;
-    // EP01: Kain is in the room, half a step behind — and the fight's rebound is his (AI in 1P, doc 138).
-    UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Kain;
+    // Companions (kain / ryu / sera) and story NPCs of the fights, spawned once and kept for the episode.
+    UPROPERTY(Transient) TMap<FName, TObjectPtr<AActor>> PartyActors;
     UPROPERTY(Transient) TObjectPtr<class APostProcessVolume> SeverPost;
     UPROPERTY(Transient) TObjectPtr<class AStaticMeshActor> Crystal;
     double SeverRealStart = -1.0;
@@ -153,14 +197,16 @@ private:
     FDelegateHandle InteractHandle;
 
     FText EpisodeTitle;
+    FString SequenceFolder;
+    TArray<FString> ArenaLocations;
+    FName CardCamera = TEXT("CAM_Entry_Wide");
+    FString NextWorld;
     int32 SegmentIndex = -1;
-    int32 BattleIndex = INDEX_NONE;
-    int32 EntryIndex = INDEX_NONE;
-    int32 ResultIndex = INDEX_NONE;
+    int32 CurrentBattle = INDEX_NONE;
     int32 StartIndex = 0;
     EHWStoryPhase Phase = EHWStoryPhase::Idle;
     float PhaseElapsed = 0.f;
-    float PendingTimer = -1.f;   // Handoff blend, BattleOver pause, Finished exit
+    float PendingTimer = -1.f;   // BattleOver pause, Finished exit
     bool bStoryMode = true;
     bool bStarted = false;
     bool bQA = false;

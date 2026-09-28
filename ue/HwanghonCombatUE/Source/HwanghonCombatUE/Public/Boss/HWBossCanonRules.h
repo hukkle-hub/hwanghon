@@ -32,12 +32,27 @@ public:
     // true: the beat is taken by the story (e.g. a rebound) and does not hit.
     virtual bool InterceptBeat(AHWBossCharacter& Boss, const FHWBossBeatSpec& Beat) { return false; }
 
+    // Who is in the fight (the story director spawns them from Content/Data/story_episodes.json).
+    virtual void SetupCast(AHWAinCharacter* InAin, const TMap<FName, AActor*>& InCast);
+
+    // QA (-HWQA=storyshow): play the canonical player actions of this fight. Notes are logged, Shots are captured.
+    virtual void QAStep(AHWBossCharacter& Boss, AHWAinCharacter& Player, float Dt, TArray<FString>& Notes, TArray<FString>& Shots) {}
+
     // Novel beats as they happen in play ("deflect", "elbow", "rebound", "sever", "too_far"...).
+    // "battle_end" ends a fight the novel does not end with a death (a retreat, a containment).
     UPROPERTY(BlueprintAssignable)
     FHWCanonBeatSignature OnCanonBeat;
 
 protected:
     void Beat(FName Name);
+    AActor* Member(FName Id) const { const TWeakObjectPtr<AActor>* A = CastMembers.Find(Id); return A ? A->Get() : nullptr; }
+    // Move a companion or NPC toward a point (AI-controlled pawns; no-op otherwise).
+    static void Steer(AActor* Who, const FVector& Goal, float AcceptCm = 25.f);
+    static void Face(AActor* Who, const FVector& Target);
+
+    TWeakObjectPtr<AHWAinCharacter> CastAin;
+    TMap<FName, TWeakObjectPtr<AActor>> CastMembers;
+    float Elapsed = 0.f;
 };
 
 // EP01 훈련용 짚단 허수아비 (마감본 L461-L566, docs/dungeons/boss_training_heosuabi_DUNGEON_SPEC.md).
@@ -60,6 +75,8 @@ public:
     virtual bool InterceptBeat(AHWBossCharacter& Boss, const FHWBossBeatSpec& Beat) override;
 
     void SetCast(AHWAinCharacter* InAin, AHWAinCharacter* InKain) { Ain = InAin; Kain = InKain; }
+    virtual void SetupCast(AHWAinCharacter* InAin, const TMap<FName, AActor*>& InCast) override;
+    virtual void QAStep(AHWBossCharacter& Boss, AHWAinCharacter& Player, float Dt, TArray<FString>& Notes, TArray<FString>& Shots) override;
 
     enum class EBand : uint8 { TooClose, Band, TooFar };
     // Centre-to-centre distance, the same the arena rings mark (doc 136: 1.5 m / 2.3 m).
@@ -85,4 +102,7 @@ private:
     TWeakObjectPtr<AHWAinCharacter> Kain;
     bool bElbowAnswer = false;
     bool bInterceptCalled = false;
+    int32 QAStage = 0;
+    float QATime = 0.f;
+    bool bQASpinShot = false;
 };

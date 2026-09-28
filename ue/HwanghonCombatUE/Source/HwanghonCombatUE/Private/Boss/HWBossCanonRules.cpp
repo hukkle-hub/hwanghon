@@ -5,6 +5,30 @@
 #include "Combat/HWCombatComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+void UHWBossCanonRules::SetupCast(AHWAinCharacter* InAin, const TMap<FName, AActor*>& InCast)
+{
+    CastAin = InAin;
+    CastMembers.Reset();
+    for (const auto& Pair : InCast) CastMembers.Add(Pair.Key, Pair.Value);
+}
+
+void UHWBossCanonRules::Steer(AActor* Who, const FVector& Goal, float AcceptCm)
+{
+    APawn* Pawn = Cast<APawn>(Who);
+    if (!Pawn) return;
+    const FVector Delta = Goal - Pawn->GetActorLocation();
+    if (Delta.Size2D() > AcceptCm)
+    {
+        Pawn->AddMovementInput(Delta.GetSafeNormal2D(), FMath::Clamp(Delta.Size2D() / 120.f, 0.35f, 1.f));
+    }
+}
+
+void UHWBossCanonRules::Face(AActor* Who, const FVector& Target)
+{
+    if (!Who) return;
+    Who->SetActorRotation(FRotator(0.f, (Target - Who->GetActorLocation()).Rotation().Yaw, 0.f));
+}
+
 void UHWBossCanonRules::Beat(FName Name)
 {
     UE_LOG(LogTemp, Display, TEXT("[HWCanon] %s %s"), GetOwner() ? *GetOwner()->GetName() : TEXT("-"), *Name.ToString());
@@ -14,6 +38,13 @@ void UHWBossCanonRules::Beat(FName Name)
 UHWHeosuabiRules::UHWHeosuabiRules()
 {
     PrimaryComponentTick.bCanEverTick = true;
+}
+
+void UHWHeosuabiRules::SetupCast(AHWAinCharacter* InAin, const TMap<FName, AActor*>& InCast)
+{
+    Super::SetupCast(InAin, InCast);
+    Ain = InAin;
+    Kain = Cast<AHWAinCharacter>(InCast.FindRef(TEXT("kain")));
 }
 
 UHWHeosuabiRules::EBand UHWHeosuabiRules::Classify(float DistanceCm)
@@ -214,5 +245,70 @@ void UHWHeosuabiRules::TickKain(AHWBossCharacter& Boss, float DeltaTime)
     {
         const FRotator Face = (B - Kain->GetActorLocation()).Rotation();
         Kain->SetActorRotation(FRotator(0.f, Face.Yaw, 0.f));
+    }
+}
+
+void UHWHeosuabiRules::QAStep(AHWBossCharacter& Boss, AHWAinCharacter& Player, float Dt, TArray<FString>& Notes, TArray<FString>& Shots)
+{
+    // The fight as the novel plays it, through the real inputs (doc 138): inside the guard -> glance + elbow;
+    // Kain takes the spin back; one attack from the band inside that breath severs.
+    QATime += Dt;
+    auto PlaceAin = [&](float DistanceCm)
+    {
+        const FVector Dir = (Player.GetActorLocation() - Boss.GetActorLocation()).GetSafeNormal2D();
+        FVector At = Boss.GetActorLocation() + (Dir.IsNearlyZero() ? FVector(-1.f, 0.f, 0.f) : Dir) * DistanceCm;
+        At.Z = Player.GetActorLocation().Z;
+        Player.SetActorLocationAndRotation(At, FRotator(0.f, (Boss.GetActorLocation() - At).Rotation().Yaw, 0.f));
+    };
+    const EHWBossState S = Boss.GetBossState();
+    switch (QAStage)
+    {
+    case 0:
+        if (QATime >= 3.f && (S == EHWBossState::Idle || S == EHWBossState::Tell || S == EHWBossState::Recover))
+        {
+            PlaceAin(110.f);
+            Player.GetCombat()->RequestAttack();
+            Notes.Add(TEXT("canon: attack from 110 cm"));
+            QAStage = 10; QATime = 0.f;
+        }
+        break;
+    case 10:
+        if (QATime >= 0.45f)
+        {
+            Shots.Add(TEXT("canon_1_deflect"));
+            if (Boss.GetCurrentPatternId() != TEXT("Elbow")) { Notes.Add(TEXT("FAIL: attack from inside the guard did not bring the elbow")); return; }
+            Notes.Add(TEXT("canon: elbow answered; stand where only the spin reaches"));
+            QAStage = 1; QATime = 0.f;
+        }
+        break;
+    case 1:
+        if (QATime >= 1.2f && QATime < 1.2f + Dt + 0.001f) PlaceAin(330.f);
+        if (Boss.GetCurrentPatternId() == TEXT("Spin") && S == EHWBossState::Tell && !bQASpinShot && Boss.GetBossStateNormalized() > 0.8f)
+        {
+            bQASpinShot = true;
+            Shots.Add(TEXT("canon_2_spin_breath"));
+        }
+        if (S == EHWBossState::Break)
+        {
+            Shots.Add(TEXT("canon_3_rebound"));
+            Notes.Add(TEXT("canon: rebound — one breath"));
+            QAStage = 2; QATime = 0.f;
+        }
+        else if (QATime > 15.f) Notes.Add(TEXT("FAIL: no rebound in 15 s"));
+        break;
+    case 2:
+        if (QATime >= 0.3f)
+        {
+            PlaceAin(200.f);
+            Player.GetCombat()->RequestAttack();
+            Notes.Add(TEXT("canon: attack from 200 cm inside the breath"));
+            QAStage = 20; QATime = 0.f;
+        }
+        break;
+    case 20:
+        if (QATime > 3.f) Notes.Add(TEXT("FAIL: no sever"));
+        break;
+    default:
+        break;
     }
 }

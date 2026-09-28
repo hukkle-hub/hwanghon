@@ -12,6 +12,20 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "ue", "HwanghonCombatUE", "Content", "Data", "part1_saveflags.json")
 
+# The novel wins over the master (docs/design/144). Each fix names the novel lines it follows.
+CANON_FIXES = {
+    "EP04": {"remove": ["SF_Archive_CelestialReleasedAin"],   # L4380-L4550: she is dropped, Kain pulls her up
+             "why": "셀레스티얼이 아인을 놓아주는 서술 없음"},
+    "EP07": {"remove": ["SF_Party_RyuJoined"],                # L7151-L7218: Ryu refuses registration
+             "why": "류는 EP07 끝에 등록을 거절"},
+    "EP10": {"add": {"SF_Party_RyuJoined": "true"},           # L8283: 편성은 넷 — 지분 계약의 류
+             "why": "류 상시 동행 확정 (지분 계약)"},
+    "EP11": {"add": {"SF_Kain_KneeInjury": "true"},           # L8854-L8921: permanent knee injury
+             "why": "카인 무릎 영구 부상"},
+    "EP14": {"add": {"SF_NPC_MinkyungAlive": "false"},        # L9983-L10072: 민경 dies throwing the fixative
+             "why": "민경 사망"},
+}
+
 
 def main():
     src = sorted(glob.glob(os.path.join(ROOT, "docs", "story", "source", "production", "*제작마스터*.md")))
@@ -28,11 +42,17 @@ def main():
                 flags[k] = v.strip()
         if not flags:
             sys.exit(f"{ep}: no SaveFlag block")
+        fix = CANON_FIXES.get(ep, {})
+        for k in fix.get("remove", []):
+            if k not in flags:
+                sys.exit(f"{ep}: canon fix removes {k}, which the master no longer has")
+            del flags[k]
+        flags.update(fix.get("add", {}))
         episodes[ep] = flags
     if len(episodes) != 28:
         sys.exit(f"expected 28 episodes, got {len(episodes)}")
     out = {"schema": "hwanghon-part1-saveflags-v1", "source": os.path.relpath(src[-1], ROOT).replace("\\", "/"),
-           "episodes": episodes}
+           "canon_fixes": CANON_FIXES, "episodes": episodes}
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
         f.write("\n")

@@ -1,0 +1,47 @@
+{
+  "schema": "hwanghon-story-episodes-v1",
+  "episodes": {
+    "EP01": {
+      "world": "/Game/Hwanghon/Story/EP01/EP01_TrainingRoom_World",
+      "hand_built": true,
+      "arena_locations": [
+        "loc_heosuabi_training_ground"
+      ],
+      "card_camera": "CAM_Entry_Wide",
+      "battles": [
+        {
+          "first_scene": "EP01_SC016",
+          "rules": "HWHeosuabiRules",
+          "boss_ko": "훈련용 짚단 허수아비",
+          "boss_scale": 1.0,
+          "party": [
+            "kain"
+          ],
+          "prefix": "",
+          "recover": "crystal",
+          "crystal_scale": 0.035,
+          "recover_line": "…아직 따뜻했다",
+          "layers": {
+            "pre": [
+              "DL_Story_PreBattle"
+            ],
+            "fight": [
+              "DL_Phase1"
+            ],
+            "after": [
+              "DL_Aftermath"
+            ]
+          },
+          "callouts": {
+            "deflect": "…거리. 너무 붙었어.",
+            "too_far": "너무 멀면 닿지 않는다",
+            "intercept": "비켜!",
+            "rebound": "내 뒤로는… 못 지난다!",
+            "sever": "걸었다… 스위트 스폿!"
+          }
+        }
+      ],
+      "next_world": "/Game/Hwanghon/Story/EP02/EP02_World"
+    }
+  }
+}
