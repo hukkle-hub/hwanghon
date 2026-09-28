@@ -148,8 +148,12 @@ def main() -> None:
                 'tests/system-core-v1.test.mjs',
                 'tests/system-core-v2-network.test.mjs',
                 'tests/system-core-v2-selection.test.mjs',
+                'tests/system-core-v2-character-stats.test.mjs',
                 'tests/system-core-v3-server-snapshot.test.cjs',
                 'tests/system-core-v2-server-smoke.test.cjs',
+                'tests/system-core-v2-server-character-stats.test.cjs',
+                'tests/system-core-v2-solo-authority.test.cjs',
+                'tests/system-core-v2-role-identity.test.cjs',
             ]
             tests = [t for t in tests if (dst / t).exists()]
             rc, out = run(['node','--test',*tests], dst, optional=True)

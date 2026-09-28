@@ -124,7 +124,7 @@ function createPartyServer(options={}){
   if(msg.type==='ready'){if(room.raid)throw Error('이미 출격했습니다.');room.members.get(id).ready=msg.ready===true;broadcast(room);return;}
   if(['start','retry','lobby'].includes(msg.type)&&room.leader!==id)throw Error('파티장만 실행할 수 있습니다.');
   if(msg.type==='start'){
-   if(room.raid)throw Error('이미 출격했습니다.');const members=[...room.members.values()];if(members.length<2||!members.every(m=>m.connected&&m.ready))throw Error('2명 이상이 연결되어 모두 준비해야 합니다.');
+   if(room.raid)throw Error('이미 출격했습니다.');const members=[...room.members.values()];if(members.length<1||!members.every(m=>m.connected&&m.ready))throw Error('1명 이상이 연결되어 모두 준비해야 합니다.');
    for(const m of members)if(!store.canEnter(m.id,room.level))throw Error('모든 파티원의 지역 해금이 필요합니다.');
    const raid=new Raid(room.level,members.map(m=>({...m,stats:store.stats(m.id),quickslots:store.get(m.id).quickslots,skills:store.skillsFor(m.id),character:store.get(m.id).character})),raid=>{const profiles=store.queueRewards(raid.id,[...raid.players.keys()].filter(pid=>!raid.withdrawn.has(pid)),raid.A.id,raid.result);for(const profile of Object.values(profiles)){profileUpdate(profile);rpg.update(profile.id);}});store.startRun(raid.id,room.level,members.map(m=>m.id));room.raid=raid;broadcast(room);sendBoard();return;
   }

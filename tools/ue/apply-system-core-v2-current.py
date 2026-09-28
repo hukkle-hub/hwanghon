@@ -34,23 +34,72 @@ if 'ApplyAuthoritativeVitals' not in s:
     bool TrySpendStamina(float Cost);
 
     UFUNCTION(BlueprintCallable)
-    bool RequestSystemDodge(float StaminaCost);'''
+    bool RequestSystemDodge(float StaminaCost);
+
+    UFUNCTION(BlueprintCallable)
+    void ConfigureCharacterStats(
+        float NewMaxHealth,
+        float NewBaseAttack,
+        float NewDefense,
+        float NewAttackSpeedPercent);
+
+    UFUNCTION(BlueprintPure)
+    float GetBaseAttack() const { return BaseAttack; }
+
+    UFUNCTION(BlueprintPure)
+    float GetDefense() const { return Defense; }
+
+    UFUNCTION(BlueprintPure)
+    float GetAttackSpeedMultiplier() const { return AttackSpeedMultiplier; }'''
     if anchor not in s: raise SystemExit('Combat Revive declaration context changed')
     s=s.replace(anchor,anchor+extra,1)
 if 'DamageReductionRemaining' not in s:
     s=s.replace('    float StaminaRegenBlocked = 0.f;',
                 '    float StaminaRegenBlocked = 0.f;\n    float DamageReductionRemaining = 0.f;\n    float DamageReductionFraction = 0.f;',1)
-write(h,s); print('APPLY combat network declarations')
+if 'BaseAttack = 2980.f;' not in s:
+    s=s.replace('    bool bDead = false;',
+                '    float BaseAttack = 2980.f;\n    float Defense = 1780.f;\n    float AttackSpeedMultiplier = 1.f;\n    bool bDead = false;',1)
+write(h,s); print('APPLY combat network/character-stat declarations')
 
 cpp='ue/HwanghonCombatUE/Source/HwanghonCombatUE/Private/Combat/HWCombatComponent.cpp'
 s=read(cpp)
+if 'DuplicateObject<UHWCombatTuningAsset>(Tuning, this)' not in s:
+    old='''    if (!Tuning)
+    {
+        Tuning = NewObject<UHWCombatTuningAsset>(this, TEXT("RuntimeCombatTuning"));
+    }
+
+    Health = Tuning->MaxHealth;'''
+    new='''    if (Tuning)
+    {
+        Tuning = DuplicateObject<UHWCombatTuningAsset>(Tuning, this);
+    }
+    else
+    {
+        Tuning = NewObject<UHWCombatTuningAsset>(this, TEXT("RuntimeCombatTuning"));
+    }
+
+    Health = Tuning->MaxHealth;'''
+    if old not in s: raise SystemExit('Combat BeginPlay tuning context changed')
+    s=s.replace(old,new,1)
+if 'const float ActionClockScale' not in s:
+    old='    ActionElapsed += DeltaTime;'
+    new='''    const float ActionClockScale =
+        (IsAttackAction(CurrentAction)
+            || CurrentAction == EHWActionType::Smash
+            || CurrentAction == EHWActionType::Counter)
+        ? AttackSpeedMultiplier : 1.f;
+    ActionElapsed += DeltaTime * ActionClockScale;'''
+    if old not in s: raise SystemExit('Combat ActionElapsed context changed')
+    s=s.replace(old,new,1)
+
 if 'DamageReductionRemaining = FMath::Max' not in s:
     marker='    TickStamina(DeltaTime);'
     if marker not in s: raise SystemExit('Combat tick context changed')
     s=s.replace(marker,marker+'\n    DamageReductionRemaining = FMath::Max(0.f, DamageReductionRemaining - DeltaTime);\n    if (DamageReductionRemaining <= 0.f) DamageReductionFraction = 0.f;',1)
 if 'const float AppliedDamage =' not in s:
     old='    Health = FMath::Max(0.f, Health - FMath::Max(0.f, Damage));'
-    new='    const float AppliedDamage = FMath::Max(0.f, Damage) * (1.f - FMath::Clamp(DamageReductionFraction, 0.f, 0.90f));\n    Health = FMath::Max(0.f, Health - AppliedDamage);'
+    new='    const float DefenseReduction = FMath::Min(0.25f, Defense / FMath::Max(1.f, Defense + 5000.f));\n    const float AppliedDamage = FMath::Max(0.f, Damage) * (1.f - DefenseReduction) * (1.f - FMath::Clamp(DamageReductionFraction, 0.f, 0.90f));\n    Health = FMath::Max(0.f, Health - AppliedDamage);'
     if old not in s: raise SystemExit('Combat damage line changed')
     s=s.replace(old,new,1)
     start=s.index('bool UHWCombatComponent::ApplyIncomingDamage')
@@ -123,6 +172,30 @@ bool UHWCombatComponent::RequestSystemDodge(float StaminaCost)
     bContactFired = true;
     OnActionStarted.Broadcast(CurrentAction);
     return true;
+}
+
+void UHWCombatComponent::ConfigureCharacterStats(
+    float NewMaxHealth,
+    float NewBaseAttack,
+    float NewDefense,
+    float NewAttackSpeedPercent)
+{
+    if (!Tuning || bDead) return;
+
+    BaseAttack = FMath::Max(1.f, NewBaseAttack);
+    Defense = FMath::Max(0.f, NewDefense);
+    AttackSpeedMultiplier =
+        FMath::Clamp(NewAttackSpeedPercent / 100.f, 0.70f, 1.40f);
+
+    Tuning->MaxHealth = FMath::Max(1.f, NewMaxHealth);
+    Health = Tuning->MaxHealth;
+
+    // Preserve the established Ain graybox ratios while scaling from each
+    // character's authoritative base ATK.
+    Tuning->Attack1.Damage = BaseAttack * 0.386f;
+    Tuning->Attack2.Damage = BaseAttack * 0.419f;
+    Tuning->Attack3.Damage = BaseAttack * 0.537f;
+    Tuning->Smash.Damage = BaseAttack * 0.872f;
 }
 
 '''
@@ -330,9 +403,42 @@ if line not in s:
     s+='\n'+line+'\n'
 write(game_ini,s); print('APPLY online map packaging')
 
+# Quests are authored as 1~4 players. Use the same authoritative Raid for solo too.
+index='server/index.cjs'
+ix=read(index)
+old_start="""if(members.length<2||!members.every(m=>m.connected&&m.ready))throw Error('2명 이상이 연결되어 모두 준비해야 합니다.');"""
+new_start="""if(members.length<1||!members.every(m=>m.connected&&m.ready))throw Error('1명 이상이 연결되어 모두 준비해야 합니다.');"""
+if new_start not in ix:
+    if old_start not in ix: raise SystemExit('server solo-start context changed')
+    ix=ix.replace(old_start,new_start,1)
+    write(index,ix); print('APPLY authoritative 1~4 player Raid start')
+
+# Authoritative character stats: keep the design-sheet identity in online Raid.
+# Previously store.stats() dropped base DEF/crit/critDamage/MSPD.
+store='server/store.cjs'
+ss=read(store)
+old_stats=""" stats(p){if(typeof p==='string')p=this.get(p);const level=1+Math.floor(p.xp/1200),base=(C.characters[p.character]||C.character).stats;let hp=base.hp+(level-1)*150,defense=0;for(const id of Object.values(p.equipment||{})){const item=C.equipment.find(i=>i.id===id);if(item&&item.type!=='weapon'){hp+=item.stats.hp||0;defense+=item.stats.def||0;}}return {hp,atk:base.atk+(level-1)*15,aspd:base.aspd,defense};}"""
+new_stats=""" stats(p){if(typeof p==='string')p=this.get(p);const level=1+Math.floor(p.xp/1200),base=(C.characters[p.character]||C.character).stats;let hp=base.hp+(level-1)*150,defense=base.def||0;for(const id of Object.values(p.equipment||{})){const item=C.equipment.find(i=>i.id===id);if(item&&item.type!=='weapon'){hp+=item.stats.hp||0;defense+=item.stats.def||0;}}return {hp,atk:base.atk+(level-1)*15,aspd:base.aspd,mspd:base.mspd,defense,critChance:(base.crit||0)/100,critDamage:(base.critDmg||100)/100,moveMult:(base.mspd||100)/100,threatMult:p.character==='kain'?1.25:1};}"""
+if new_stats not in ss:
+    if old_stats not in ss: raise SystemExit('server store.stats context changed')
+    ss=ss.replace(old_stats,new_stats,1)
+    write(store,ss); print('APPLY authoritative character DEF/crit/MSPD stats')
+
 # Server presentation-only snapshot extension.
 raid='server/raid.cjs'
 s=read(raid)
+# Role identity hooks already exist in Raid; wire them to the character definitions.
+old_threat="p.damage+=amount;p.threat+=amount;this.event('hit'"
+new_threat="p.damage+=amount;p.threat+=amount*(p.stats.threatMult||1);this.event('hit'"
+if new_threat not in s:
+    if old_threat not in s: raise SystemExit('Raid threat context changed')
+    s=s.replace(old_threat,new_threat,1)
+
+old_buff="""else if(k.buff){p.buffT=k.buff.dur;p.buffReduce=k.buff.reduce;if(k.ev?.type==='heal'){const h=Math.max(0,Math.min(p.maxHp-p.hp,Math.round(p.maxHp*k.ev.frac)));p.hp+=h;this.event('heal',{player:id,amount:h});}}"""
+new_buff="""else if(k.buff){const targets=p.character==='sera'&&k.ev?.type==='heal'?[...this.players.values()].filter(q=>this.alive(q)&&q.connected&&(q===p||this.world.dist(p.x,p.y,q.x,q.y)<=this.L.player.reach*2)&&this.world.lineOfSight(p.x,p.y,q.x,q.y)):[p];for(const q of targets){q.buffT=Math.max(q.buffT||0,k.buff.dur);q.buffReduce=Math.max(q.buffReduce||0,k.buff.reduce);if(k.ev?.type==='heal'){const h=Math.max(0,Math.min(q.maxHp-q.hp,Math.round(q.maxHp*k.ev.frac)));q.hp+=h;this.event('heal',{player:q.id,by:id,amount:h});}}}"""
+if new_buff not in s:
+    if old_buff not in s: raise SystemExit('Raid buff/heal context changed')
+    s=s.replace(old_buff,new_buff,1)
 old='expedition:this.expedition.snapshot(),hazards:this.expedition.hazards.map'
 new='''expedition:{...this.expedition.snapshot(),nodes:this.expedition.nodes.map(n=>({
    id:n.id,kind:n.kind||'',name:n.name||'',x:n.x,y:n.y,range:n.range||110,objective:n.objective||null,

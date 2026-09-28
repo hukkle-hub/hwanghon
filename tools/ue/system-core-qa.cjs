@@ -119,7 +119,7 @@ async function online(n) {
     const p = app.store.public(c.id); before[c.id] = {gold: p.gold, xp: p.xp, clears: {...p.clears}, character: p.character, name: p.name, created: p.characterCreated};
     app.store.mutate(c.id, 'qa-fixture', p => {
       p.quests = {...(p.quests || {}), training: 'claimed', marsh: 'claimed'};   // d03 unlock
-      if (n === 2) { p.xp = Math.max(p.xp, 22800); Object.assign(p.equipment, {chest: 'a_sluice_cuirass', legs: 'a_sluice_greaves', gloves: 'a_sluice_gauntlet', boots: 'a_sluice_boots', head: 'a_sluice_helm', acc: 'acc_charm'}); }
+      if (n <= 2) { p.xp = Math.max(p.xp, 22800); Object.assign(p.equipment, {chest: 'a_sluice_cuirass', legs: 'a_sluice_greaves', gloves: 'a_sluice_gauntlet', boots: 'a_sluice_boots', head: 'a_sluice_helm', acc: 'acc_charm'}); }
     });
   }
   log(scenario, 'accounts ready', ids.map(c => `${c.name}/${c.character}`).join(', '));
@@ -146,6 +146,13 @@ async function online(n) {
   }, 100);
   while (Date.now() < limit) {
     await sleep(1000);
+    if (n === 1 && !fs.existsSync(path.join(share, 'end'))) {
+      // Solo: nobody can revive, so the run ends at the clear or after five minutes of authoritative fight.
+      const raid = [...app.rooms.values()].map(r => r.raid).find(Boolean);
+      if (raid && (raid.state === 'clear' || (raid.state === 'fight' && raid.time > 300))) {
+        log('1p: raid', raid.state, 'rt', raid.time.toFixed(0), '-> end'); fs.writeFileSync(path.join(share, 'end'), '1p');
+      }
+    }
     if (n >= 4 && !resumed && fs.existsSync(path.join(share, 'retried'))) {
       if (!killedAt) killedAt = Date.now();
       if (Date.now() - killedAt > 6000) {
@@ -211,6 +218,17 @@ function evaluate(n, level, ids, reports, resumeReport, before, after, serverTel
   }
   g.push(['스킬 1~4 (서버 쿨다운 관측)', Object.values(skillUse).every(v => v.every(Boolean)), JSON.stringify(skillUse)]);
   g.push(['궁극기 (게이지 100 → 소모)', Object.values(ultUse).some(v => v.used), JSON.stringify(ultUse)]);
+  if (n === 1) {
+    // Solo authority (v2.4): the server starts a one-member room; everything below still comes from raid.cjs.
+    g.push(['1인 서버 레이드 출격', host?.party_size === 1 && samples(host).some(s => s.st === 'fight'), `party_size ${host?.party_size}, fight ${samples(host).some(s => s.st === 'fight')}`]);
+    const raidSamples = samples(host).filter(s => ['explore', 'fight'].includes(s.st));
+    const bossSync = samples(host).filter(s => s.st === 'fight' && s.ue_boss_hp != null);
+    const bossOk = bossSync.filter(s => Math.abs(s.ue_boss_hp - s.boss.hp) <= Math.max(1, s.boss.max * .02)).length;
+    g.push(['UE 보정 (보스 HP = 서버)', bossSync.length > 0 && bossOk >= bossSync.length * .9, `${bossOk}/${bossSync.length} 샘플, 원격 아바타 0 (${raidSamples.filter(s => s.ue_remote_avatars === 0).length}/${raidSamples.length})`]);
+    const end = samples(host).at(-1);
+    g.push(['전투 진행 (클리어 또는 5분)', !!end && (end.st === 'clear' || end.boss?.hp < end.boss?.max), `마지막 ${end?.st} stage ${end?.ph} 보스 ${Math.round(end?.boss?.hp)}/${end?.boss?.max}`]);
+    return {name: `${n}P online (${level})`, gates: g, reports: {count: all.length}};
+  }
   // parts / threat
   const broken = new Set();
   for (const s of samples(host)) for (const p of s.boss?.parts || []) if (p.broken) broken.add(`${s.ph}:${p.id}`);
@@ -275,10 +293,11 @@ function evaluate(n, level, ids, reports, resumeReport, before, after, serverTel
   const out = [];
   try {
     if (which === 'local' || which === 'all') out.push(await local());
-    if (which === '2p' || which === '4p' || which === 'all') {
+    if (['1p', '2p', '4p', 'all'].includes(which)) {
       // Local save says "sera" so the online pawn must come from the server profile instead.
       await run('select_sera', '/Game/Maps/HW_Frontend', ['-HWQA=select', '-HWQASelect=sera', `-HWQAOut=${path.join(OUT, 'select_sera.json')}`], OUT, 180e3);
     }
+    if (which === '1p' || which === 'all') out.push(await online(1));
     if (which === '2p' || which === 'all') out.push(await online(2));
     if (which === '4p' || which === 'all') out.push(await online(4));
   } finally {

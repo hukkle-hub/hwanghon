@@ -33,7 +33,7 @@ try {
         python tools/ue/apply-system-core-v2-1-selection.py
     }
     Step "5. System regression tests" {
-        node --test tests/system-core-v1.test.mjs tests/system-core-v2-network.test.mjs tests/system-core-v2-selection.test.mjs tests/system-core-v3-server-snapshot.test.cjs tests/system-core-v2-server-smoke.test.cjs
+        node --test tests/system-core-v1.test.mjs tests/system-core-v2-network.test.mjs tests/system-core-v2-selection.test.mjs tests/system-core-v2-character-stats.test.mjs tests/system-core-v3-server-snapshot.test.cjs tests/system-core-v2-server-smoke.test.cjs tests/system-core-v2-server-character-stats.test.cjs tests/system-core-v2-solo-authority.test.cjs tests/system-core-v2-role-identity.test.cjs
     }
     Step "6. Static contracts" {
         python scripts/verify_system_core_v1.py
