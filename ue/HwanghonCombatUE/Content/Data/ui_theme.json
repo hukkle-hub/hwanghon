@@ -1,0 +1,61 @@
+{
+  "schema": "hwanghon-clean-ui-v1",
+  "referenceVideo": "10465.mp4",
+  "referenceResolution": {
+    "width": 2340,
+    "height": 1080
+  },
+  "colors": {
+    "BackgroundDeep": "#070D14",
+    "Panel": "#0D1724DE",
+    "PanelStrong": "#0A121DF2",
+    "PanelSoft": "#182333B8",
+    "OverlayDim": "#02060A99",
+    "TextPrimary": "#F2EFE7",
+    "TextSecondary": "#A8B0BC",
+    "TextMuted": "#727D8C",
+    "Line": "#7C87964D",
+    "Gold": "#D0AE5A",
+    "GoldSoft": "#9A8148",
+    "Cyan": "#62B7CF",
+    "Blue": "#527EC6",
+    "Danger": "#B74643",
+    "Success": "#62A984"
+  },
+  "layout1080p": {
+    "SafeHorizontal": 92,
+    "SafeTop": 24,
+    "SafeBottom": 22,
+    "TopBarHeight": 72,
+    "BottomNavHeight": 88,
+    "BottomNavIcon": 30,
+    "LeftRailWidth": 340,
+    "SlimRailWidth": 76,
+    "DrawerWidth": 820,
+    "ModalWidth": 1680,
+    "ModalHeight": 720,
+    "PrimaryCTA": 150,
+    "PanelPadding": 24,
+    "CardGap": 12,
+    "SectionGap": 22,
+    "Border": 1,
+    "SelectionBar": 3
+  },
+  "typography1080p": {
+    "Hero": 34,
+    "PageTitle": 28,
+    "SectionTitle": 19,
+    "Body": 15,
+    "Caption": 12,
+    "Micro": 10,
+    "NumberLarge": 24
+  },
+  "rules": {
+    "cornerRadius": "0-6px only; prefer square/sharp panels",
+    "panelOpacity": "0.72-0.90",
+    "modalDim": "0.55-0.65",
+    "accentUsage": "Gold = selection/action. Red = danger only. Cyan = information/skill.",
+    "blur": "Avoid stacked BackgroundBlur on mobile; use dim translucent surfaces. High tier may use one full-screen blur only.",
+    "informationHierarchy": "Hero/background first; UI lives on edges; center stays visually open."
+  }
+}
