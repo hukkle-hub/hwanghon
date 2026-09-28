@@ -84,4 +84,5 @@ private:
     TWeakObjectPtr<AHWAinCharacter> Ain;
     TWeakObjectPtr<AHWAinCharacter> Kain;
     bool bElbowAnswer = false;
+    bool bInterceptCalled = false;
 };

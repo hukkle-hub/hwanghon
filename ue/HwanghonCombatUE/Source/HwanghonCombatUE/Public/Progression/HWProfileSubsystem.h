@@ -58,6 +58,12 @@ public:
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Progression")
     bool SelectCharacter(FName CharacterId);
 
+    // Story progress flags (SF_*). Applied together and saved once; an invalid key/value rejects the whole set.
+    bool SetStoryFlags(const TMap<FName, FString>& Flags);
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Progression")
+    FString GetStoryFlag(FName Flag) const;
+
     UFUNCTION(BlueprintPure, Category="Hwanghon|Progression")
     int64 GetItemCount(FName ItemId) const;
 

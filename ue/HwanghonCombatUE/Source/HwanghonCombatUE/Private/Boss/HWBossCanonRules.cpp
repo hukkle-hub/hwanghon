@@ -182,6 +182,11 @@ void UHWHeosuabiRules::TickKain(AHWBossCharacter& Boss, float DeltaTime)
 
     // Side = Ain's left as she faces the boss; the camera sits over her right shoulder, so Kain keeps to her left.
     const FVector Side = FVector::CrossProduct(FVector::UpVector, BossToAin);
+    if (bSpinComing && !bInterceptCalled)
+    {
+        Beat(TEXT("intercept"));   // L507-L509: the mountain moves in — "비켜!"
+    }
+    bInterceptCalled = bSpinComing;
     FVector Goal;
     if (bSpinComing)
     {

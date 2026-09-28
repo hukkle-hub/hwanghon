@@ -363,6 +363,14 @@ void UHWBossPresentationComponent::TickSingleNodePose(float DeltaTime)
 
     if (Boss->IsDead())
     {
+        // Killed while already down (the EP01 sever lands inside the break): stay down — play the down clip on
+        // to its end instead of a death clip that starts from standing (doc 141).
+        if (DownedClip)
+        {
+            DownedTime = FMath::Min(DownedTime + DeltaTime, Len(DownedClip));
+            ShowClip(DownedClip, DownedTime, false);
+            return;
+        }
         if (UAnimSequenceBase* Death = AnimationSet->BossDeath.Sequence)
         {
             DeathTime += DeltaTime;
@@ -393,9 +401,12 @@ void UHWBossPresentationComponent::TickSingleNodePose(float DeltaTime)
         if (B.Sequence)
         {
             ShowClip(B.Sequence, Phase * Len(B.Sequence), false);
+            DownedClip = State == EHWBossState::Break ? B.Sequence.Get() : nullptr;
+            DownedTime = Phase * Len(B.Sequence);
             return;
         }
     }
+    DownedClip = nullptr;
     if (ReactionTime >= 0.f && ReactionSequence)
     {
         ReactionTime += DeltaTime;

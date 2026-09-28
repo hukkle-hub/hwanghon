@@ -1,0 +1,193 @@
+{
+  "schema": "hwanghon-part1-saveflags-v1",
+  "source": "docs/story/source/production/황혼_1부_EP01-28_전체_제작마스터_v1.0.md",
+  "episodes": {
+    "EP01": {
+      "SF_EP01_COMPLETE": "true",
+      "SF_Rank_Ain": "C",
+      "SF_Rank_Kain": "C",
+      "SF_Boss_TrainingDummy_State": "Destroyed",
+      "SF_Archive_FirstCrystal": "true",
+      "SF_CurrentEpisode": "2"
+    },
+    "EP02": {
+      "SF_EP02_COMPLETE": "true",
+      "SF_Boss_Cleave_State": "Observed",
+      "SF_Archive_Cleave_Telegraph": "true",
+      "SF_World_GangnamStation_State": "Hostile",
+      "SF_CurrentEpisode": "3"
+    },
+    "EP03": {
+      "SF_EP03_COMPLETE": "true",
+      "SF_Boss_Cleave_State": "Defeated",
+      "SF_Rank_Ain": "B",
+      "SF_Rank_Kain": "B",
+      "SF_Archive_OJeonggilName": "true",
+      "SF_CurrentEpisode": "4"
+    },
+    "EP04": {
+      "SF_EP04_COMPLETE": "true",
+      "SF_Boss_Celestial_State": "Roaming",
+      "SF_Archive_CelestialReleasedAin": "true",
+      "SF_CurrentEpisode": "5"
+    },
+    "EP05": {
+      "SF_EP05_COMPLETE": "true",
+      "SF_Archive_K3": "true",
+      "SF_Archive_DrJinHint": "true",
+      "SF_CurrentEpisode": "6"
+    },
+    "EP06": {
+      "SF_EP06_COMPLETE": "true",
+      "SF_Boss_Aegis07_State": "Observed",
+      "SF_Archive_RyuTrace": "true",
+      "SF_CurrentEpisode": "7"
+    },
+    "EP07": {
+      "SF_EP07_COMPLETE": "true",
+      "SF_Party_RyuJoined": "true",
+      "SF_Boss_Aegis07_State": "Defeated",
+      "SF_CurrentEpisode": "8"
+    },
+    "EP08": {
+      "SF_EP08_COMPLETE": "true",
+      "SF_Boss_Leviathan_State": "GillDamaged",
+      "SF_CurrentEpisode": "9"
+    },
+    "EP09": {
+      "SF_EP09_COMPLETE": "true",
+      "SF_Boss_Leviathan_State": "Contained",
+      "SF_World_HanRiver_State": "RouteCollapsed",
+      "SF_CurrentEpisode": "10"
+    },
+    "EP10": {
+      "SF_EP10_COMPLETE": "true",
+      "SF_Archive_CommandList": "true",
+      "SF_Archive_MarkSystem": "true",
+      "SF_CurrentEpisode": "11"
+    },
+    "EP11": {
+      "SF_EP11_COMPLETE": "true",
+      "SF_Archive_CommandTruth_L1": "true",
+      "SF_World_Namtaeryeong_State": "Exposed",
+      "SF_CurrentEpisode": "12"
+    },
+    "EP12": {
+      "SF_EP12_COMPLETE": "true",
+      "SF_TeamRank": "B",
+      "SF_Archive_PaperLedger": "true",
+      "SF_CurrentEpisode": "13"
+    },
+    "EP13": {
+      "SF_EP13_COMPLETE": "true",
+      "SF_Archive_TwoKnocks": "true",
+      "SF_World_Pangyo_State": "Entered",
+      "SF_CurrentEpisode": "14"
+    },
+    "EP14": {
+      "SF_EP14_COMPLETE": "true",
+      "SF_Boss_Subject09_State": "Regenerating",
+      "SF_Archive_RegenerationRoutes": "true",
+      "SF_CurrentEpisode": "15"
+    },
+    "EP15": {
+      "SF_EP15_COMPLETE": "true",
+      "SF_Party_SeraJoined": "true",
+      "SF_Boss_Subject09_State": "Defeated",
+      "SF_CurrentEpisode": "16"
+    },
+    "EP16": {
+      "SF_EP16_COMPLETE": "true",
+      "SF_Boss_ShadowFang_State": "Engaged",
+      "SF_Sera_Catalyst": "0",
+      "SF_CurrentEpisode": "17"
+    },
+    "EP17": {
+      "SF_EP17_COMPLETE": "true",
+      "SF_Boss_ShadowFang_State": "Defeated",
+      "SF_Boss_Celestial_State": "Dead",
+      "SF_Archive_SeraBlank": "true",
+      "SF_CurrentEpisode": "18"
+    },
+    "EP18": {
+      "SF_EP18_COMPLETE": "true",
+      "SF_NPC_HanJanginAlive": "false",
+      "SF_Hub_GangnamState": "Damaged",
+      "SF_Duna_Rank": "C",
+      "SF_CurrentEpisode": "19"
+    },
+    "EP19": {
+      "SF_EP19_COMPLETE": "true",
+      "SF_Archive_InductionProgram": "true",
+      "SF_Archive_LossLedger": "true",
+      "SF_CurrentEpisode": "20"
+    },
+    "EP20": {
+      "SF_EP20_COMPLETE": "true",
+      "SF_Rank_Ain": "A",
+      "SF_Rank_Kain": "A",
+      "SF_Rank_Ryu": "A",
+      "SF_Rank_Sera": "SurfaceA",
+      "SF_Archive_SeraConfession": "true",
+      "SF_CurrentEpisode": "21"
+    },
+    "EP21": {
+      "SF_EP21_COMPLETE": "true",
+      "SF_Boss_ArsenalOverlord_State": "Observed",
+      "SF_NPC_GyeryongGuideAlive": "false",
+      "SF_Archive_TurretPattern": "true",
+      "SF_CurrentEpisode": "22"
+    },
+    "EP22": {
+      "SF_EP22_COMPLETE": "true",
+      "SF_Boss_ArsenalOverlord_State": "Defeated",
+      "SF_World_Gyeryong_DeepGate": "Open",
+      "SF_CurrentEpisode": "23"
+    },
+    "EP23": {
+      "SF_EP23_COMPLETE": "true",
+      "SF_Boss_BrigadierPark_State": "Defeated",
+      "SF_Rank_Ain": "S",
+      "SF_Rank_Kain": "S",
+      "SF_Rank_Ryu": "S",
+      "SF_Rank_Sera": "S",
+      "SF_Archive_RankTruth": "true",
+      "SF_CurrentEpisode": "24"
+    },
+    "EP24": {
+      "SF_EP24_COMPLETE": "true",
+      "SF_Ain_WeaponLocked": "false",
+      "SF_Party_ResolveRestored": "true",
+      "SF_CurrentEpisode": "25"
+    },
+    "EP25": {
+      "SF_EP25_COMPLETE": "true",
+      "SF_NPC_JeongSiblingsRescued": "true",
+      "SF_World_Goheung_Alert": "1",
+      "SF_CurrentEpisode": "26"
+    },
+    "EP26": {
+      "SF_EP26_COMPLETE": "true",
+      "SF_Boss_MinisterJeong_State": "Defeated",
+      "SF_World_Goheung_Alert": "2",
+      "SF_CurrentEpisode": "27"
+    },
+    "EP27": {
+      "SF_EP27_COMPLETE": "true",
+      "SF_Boss_NanoNova_State": "HeartStopped",
+      "SF_World_Goheung_Signal": "Active",
+      "SF_Archive_DeliveryTruth": "true",
+      "SF_CurrentEpisode": "28"
+    },
+    "EP28": {
+      "SF_EP28_COMPLETE": "true",
+      "SF_Rank_Ain": "SS",
+      "SF_Rank_Kain": "SS",
+      "SF_Rank_Ryu": "SS",
+      "SF_Rank_Sera": "SS",
+      "SF_World_Goheung_Signal": "Reduced",
+      "SF_Part1_Complete": "true",
+      "SF_CurrentEpisode": "END_PART1"
+    }
+  }
+}

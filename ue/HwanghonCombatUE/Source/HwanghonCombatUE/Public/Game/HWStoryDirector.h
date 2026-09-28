@@ -91,6 +91,8 @@ public:
     bool IsPlayingSequence() const { return SequencePlayer != nullptr; }
     AHWBossCharacter* GetBoss() const { return Boss; }
     AHWAinCharacter* GetKain() const { return Kain; }
+    AStaticMeshActor* GetCrystal() const { return Crystal; }
+    bool IsSeverSlowing() const { return SeverRealStart >= 0.0; }
 
     // QA: shorter novel cards and no travel at the end.
     void SetQAMode(float InCardSeconds) { CardSeconds = InCardSeconds; bQA = true; }
@@ -105,6 +107,7 @@ private:
     void BeginBattle(bool bFromCinema);
     void EnterBattleControl();
     void FinishEpisode();
+    void WriteEpisodeFlags();
 
     enum class EArenaState : uint8 { PreBattle, Fight, After };
     void SetArenaState(EArenaState State);
@@ -120,6 +123,9 @@ private:
     void Emit(FName Event);
 
     void SpawnKain();
+    // L545-L567: "세상이 늘어졌다" — the world slows, colour floods, and the joint's crystal falls out of the cut.
+    void BeginSever();
+    void TickSever();
     UFUNCTION() void HandleCanonBeat(FName Beat);
     UFUNCTION() void HandleBossDied(AHWBossCharacter* DeadBoss);
     UFUNCTION() void HandlePlayerDied();
@@ -132,6 +138,9 @@ private:
     UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Ain;
     // EP01: Kain is in the room, half a step behind — and the fight's rebound is his (AI in 1P, doc 138).
     UPROPERTY(Transient) TObjectPtr<AHWAinCharacter> Kain;
+    UPROPERTY(Transient) TObjectPtr<class APostProcessVolume> SeverPost;
+    UPROPERTY(Transient) TObjectPtr<class AStaticMeshActor> Crystal;
+    double SeverRealStart = -1.0;
 
     FText EpisodeTitle;
     int32 SegmentIndex = -1;

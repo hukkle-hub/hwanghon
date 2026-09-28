@@ -68,7 +68,7 @@ class HWANGHONCOMBATUE_API UHWSaveGame : public USaveGame
     GENERATED_BODY()
 
 public:
-    static constexpr int32 CurrentVersion = 3;
+    static constexpr int32 CurrentVersion = 4;
 
     virtual void Serialize(FArchive& Ar) override;
 
@@ -95,6 +95,11 @@ public:
     // One player controls one character per sortie. This is not a combat-party slot.
     UPROPERTY(SaveGame)
     FName SelectedCharacter = TEXT("ain");
+
+    // Story progress (v4): the Part 1 production master's SaveFlags — SF_EP01_COMPLETE=true, SF_Rank_Ain=C,
+    // SF_CurrentEpisode=2 ... (docs/story/source/production, docs/design/143). Keys start with SF_, values non-empty.
+    UPROPERTY(SaveGame)
+    TMap<FName, FString> StoryFlags;
 
     bool IsValidProfile() const;
     bool MigrateToCurrentVersion();

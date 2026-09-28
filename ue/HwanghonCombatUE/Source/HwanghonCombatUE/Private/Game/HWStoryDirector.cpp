@@ -13,6 +13,12 @@
 #include "Components/CapsuleComponent.h"
 #include "Dom/JsonObject.h"
 #include "EngineUtils.h"
+#include "Engine/PostProcessVolume.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/PointLightComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
@@ -25,6 +31,7 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "UI/HWCombatHUD.h"
+#include "Progression/HWProfileSubsystem.h"
 #include "UI/HWStoryHUD.h"
 #include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "WorldPartition/DataLayer/DataLayerManager.h"
@@ -210,6 +217,7 @@ void AHWStoryDirector::Tick(float DeltaSeconds)
         return;
     }
     PhaseElapsed += DeltaSeconds;
+    TickSever();
 
     // Data Layer cells stream in a frame or more after activation: keep the stand-in hidden once the fight owns the arena.
     if (Phase == EHWStoryPhase::Handoff || Phase == EHWStoryPhase::Battle || Phase == EHWStoryPhase::BattleOver
@@ -520,11 +528,13 @@ void AHWStoryDirector::SpawnKain()
 
 void AHWStoryDirector::HandleCanonBeat(FName Beat)
 {
+    // The novel's own lines at the moments they are said (마감본 line numbers).
     static const TMap<FName, FString> Words = {
-        { TEXT("deflect"), TEXT("틱— 너무 붙었다") },   // L481-L491
-        { TEXT("too_far"), TEXT("닿지 않는다") },        // L499
-        { TEXT("rebound"), TEXT("되돌림 — 숨 한 번") },  // L515-L529
-        { TEXT("sever"), TEXT("스위트 스폿") },          // L555
+        { TEXT("deflect"), TEXT("…거리. 너무 붙었어.") },          // L493 (Ain, after the elbow)
+        { TEXT("too_far"), TEXT("너무 멀면 닿지 않는다") },         // L499 (narration)
+        { TEXT("intercept"), TEXT("비켜!") },                      // L509 (Kain)
+        { TEXT("rebound"), TEXT("내 뒤로는… 못 지난다!") },         // L523 (Kain)
+        { TEXT("sever"), TEXT("걸었다… 스위트 스폿!") },            // L557 (Ain)
     };
     if (const FString* Word = Words.Find(Beat))
     {
@@ -533,7 +543,90 @@ void AHWStoryDirector::HandleCanonBeat(FName Beat)
             if (UHWCombatHUDWidget* Combat = HUD->GetCombatWidget()) Combat->ShowCallout(*Word);
         }
     }
+    if (Beat == TEXT("sever"))
+    {
+        BeginSever();
+    }
     Emit(FName(*(TEXT("canon_") + Beat.ToString())));
+}
+
+void AHWStoryDirector::BeginSever()
+{
+    UWorld* World = GetWorld();
+    SeverRealStart = World->GetRealTimeSeconds();
+    UGameplayStatics::SetGlobalTimeDilation(this, 0.25f);
+
+    // Saturation bursts, the swing's trail breaks into pieces (fringe) — L547-L549.
+    SeverPost = World->SpawnActor<APostProcessVolume>(APostProcessVolume::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
+    if (SeverPost)
+    {
+        SeverPost->bUnbound = true;
+        SeverPost->Priority = 100.f;
+        SeverPost->BlendWeight = 0.f;
+        FPostProcessSettings& S = SeverPost->Settings;
+        S.bOverride_ColorSaturation = true;
+        S.ColorSaturation = FVector4(1.45f, 1.45f, 1.45f, 1.f);   // 1.75 blew the lit ceiling out to yellow
+        S.bOverride_ColorContrast = true;
+        S.ColorContrast = FVector4(1.15f, 1.15f, 1.15f, 1.f);
+        S.bOverride_SceneFringeIntensity = true;
+        S.SceneFringeIntensity = 2.5f;
+    }
+
+    // L563-L567: a thumbnail-sized orange crystal rolls out of the torn joint, still warm, faintly beating.
+    if (Boss)
+    {
+        FVector At = Boss->GetActorLocation() + FVector(0.f, 0.f, 60.f);
+        for (const TCHAR* Bone : { TEXT("mixamorig_RightForeArm"), TEXT("mixamorig_LeftForeArm") })
+        {
+            if (Boss->GetMesh() && Boss->GetMesh()->DoesSocketExist(Bone))
+            {
+                At = Boss->GetMesh()->GetSocketLocation(Bone);
+                break;
+            }
+        }
+        FActorSpawnParameters Params;
+        Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+        Crystal = World->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), At, FRotator(45.f, 30.f, 45.f), Params);
+        if (Crystal)
+        {
+            UStaticMeshComponent* Mesh = Crystal->GetStaticMeshComponent();
+            Mesh->SetMobility(EComponentMobility::Movable);
+            Mesh->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube")));
+            Crystal->SetActorScale3D(FVector(0.035f));
+            if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial")))
+            {
+                UMaterialInstanceDynamic* Mid = UMaterialInstanceDynamic::Create(Base, Crystal);
+                Mid->SetVectorParameterValue(TEXT("Color"), FLinearColor(1.f, 0.42f, 0.06f));
+                Mesh->SetMaterial(0, Mid);
+            }
+            Mesh->SetCollisionProfileName(TEXT("PhysicsActor"));
+            Mesh->SetSimulatePhysics(true);
+            UPointLightComponent* Glow = NewObject<UPointLightComponent>(Crystal, TEXT("CrystalGlow"));
+            Glow->SetupAttachment(Mesh);
+            Glow->RegisterComponent();
+            Glow->SetIntensity(12.f);   // thumbnail-sized: the light pool is what the eye finds
+            Glow->SetAttenuationRadius(220.f);
+            Glow->SetLightColor(FLinearColor(1.f, 0.45f, 0.1f));
+            Crystal->Tags.Add(TEXT("EP01_Crystal"));
+        }
+    }
+}
+
+void AHWStoryDirector::TickSever()
+{
+    if (SeverRealStart < 0.0) return;
+    const float T = static_cast<float>(GetWorld()->GetRealTimeSeconds() - SeverRealStart);
+    if (SeverPost)
+    {
+        SeverPost->BlendWeight = T < 0.15f ? T / 0.15f : (T > 1.0f ? FMath::Max(0.f, 1.f - (T - 1.0f) / 0.2f) : 1.f);
+    }
+    if (T >= 1.2f)
+    {
+        UGameplayStatics::SetGlobalTimeDilation(this, 1.f);
+        if (SeverPost) SeverPost->Destroy();
+        SeverPost = nullptr;
+        SeverRealStart = -1.0;
+    }
 }
 
 void AHWStoryDirector::HandleBossDied(AHWBossCharacter* DeadBoss)
@@ -559,12 +652,47 @@ void AHWStoryDirector::FinishEpisode()
     Phase = EHWStoryPhase::Finished;
     PhaseElapsed = 0.f;
     SetPlayerControl(false);
+    if (bStoryMode)
+    {
+        WriteEpisodeFlags();
+    }
     if (AHWStoryHUD* HUD = GetStoryHUD())
     {
         HUD->SetCombatVisible(false);
         HUD->GetOverlay()->ShowEnd(FText::FromString(FString::Printf(TEXT("%s  %s"), *EpisodeId.ToString(), *EpisodeTitle.ToString())));
     }
     Emit(TEXT("finished"));
+}
+
+void AHWStoryDirector::WriteEpisodeFlags()
+{
+    // The production master's end-of-episode SaveFlags (tools/story/build_part1_saveflags.py, docs/design/143).
+    FString Raw;
+    TSharedPtr<FJsonObject> Root;
+    const FString Path = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/part1_saveflags.json"));
+    if (!FFileHelper::LoadFileToString(Raw, *Path) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Raw), Root) || !Root)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[HWStory] saveflags: %s missing"), *Path);
+        return;
+    }
+    const TSharedPtr<FJsonObject>* Episodes = nullptr;
+    const TSharedPtr<FJsonObject>* Mine = nullptr;
+    if (!Root->TryGetObjectField(TEXT("episodes"), Episodes) || !(*Episodes)->TryGetObjectField(EpisodeId.ToString(), Mine))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[HWStory] saveflags: no entry for %s"), *EpisodeId.ToString());
+        return;
+    }
+    TMap<FName, FString> Flags;
+    FString Line;
+    for (const auto& Pair : (*Mine)->Values)
+    {
+        Flags.Add(FName(*Pair.Key), Pair.Value->AsString());
+        Line += FString::Printf(TEXT(" %s=%s"), *Pair.Key, *Pair.Value->AsString());
+    }
+    UHWProfileSubsystem* Profile = GetGameInstance() ? GetGameInstance()->GetSubsystem<UHWProfileSubsystem>() : nullptr;
+    const bool bSaved = !bQA && Profile && Profile->SetStoryFlags(Flags);
+    UE_LOG(LogTemp, Display, TEXT("[HWStory] saveflags %s (%s):%s"), *EpisodeId.ToString(),
+        bQA ? TEXT("QA, not written") : (bSaved ? TEXT("saved") : TEXT("save failed")), *Line);
 }
 
 AHWStoryDirector::EArenaState AHWStoryDirector::StateAtStart(int32 Index) const

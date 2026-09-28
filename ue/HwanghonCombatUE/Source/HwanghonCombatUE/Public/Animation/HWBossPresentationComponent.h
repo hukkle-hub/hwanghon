@@ -94,6 +94,9 @@ private:
     float ReactionTime = -1.f;
     float BaseTime = 0.f;
     float DeathTime = 0.f;
+    // The down clip the boss was in when it died (held instead of the death clip).
+    UPROPERTY(Transient) TObjectPtr<UAnimSequenceBase> DownedClip;
+    float DownedTime = 0.f;
     float MeshBaseZ = 0.f;
     float ClipGroundCm = 0.f;
     float LyingDrop = 0.f;

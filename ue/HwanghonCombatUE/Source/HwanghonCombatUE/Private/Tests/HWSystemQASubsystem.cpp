@@ -43,6 +43,7 @@
 #include "Animation/HWPlayerPresentationComponent.h"
 #include "Camera/CameraActor.h"
 #include "Engine/StaticMeshActor.h"
+#include "GameFramework/WorldSettings.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/HWBossPresentationComponent.h"
@@ -2231,6 +2232,20 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     if (P == EHWStoryPhase::Battle && (bStoryAinDied || !FParse::Param(FCommandLine::Get(), TEXT("HWQAStoryDie"))))
     {
         TickCanonFight(D, Dt);
+    }
+    // L545-L567: the sever slows the world; shoot it (twice, real time) and check the crystal fell out of the cut.
+    if (D->IsSeverSlowing() && SeverShots < 2)
+    {
+        static double First = 0.0;
+        const double Now = World->GetRealTimeSeconds();
+        if (SeverShots == 0 || Now - First > 0.55)
+        {
+            if (SeverShots == 0) First = Now;
+            Shot(FString::Printf(TEXT("canon_4_sever_%d"), SeverShots), true);
+            Note(FString::Printf(TEXT("sever slow: dilation %.2f crystal %s"), World->GetWorldSettings()->TimeDilation,
+                D->GetCrystal() ? *D->GetCrystal()->GetActorLocation().ToCompactString() : TEXT("none")));
+            ++SeverShots;
+        }
     }
     // Boss mode has no animation after the fight either: the combat HUD result is the end.
     if (!D->IsStoryMode() && P == EHWStoryPhase::BattleOver && StoryKeyTime >= 4.f)

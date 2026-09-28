@@ -171,6 +171,32 @@ bool UHWProfileSubsystem::SelectCharacter(FName CharacterId)
     return RetryPendingSave();
 }
 
+bool UHWProfileSubsystem::SetStoryFlags(const TMap<FName, FString>& Flags)
+{
+    if (!Profile) return Fail(TEXT("Profile unavailable; story progress was not saved."));
+    const UHWSaveGame* Source = PendingProfile ? PendingProfile.Get() : Profile.Get();
+    bool bChanged = false;
+    for (const auto& Flag : Flags)
+    {
+        const FString* Old = Source->StoryFlags.Find(Flag.Key);
+        bChanged |= !Old || *Old != Flag.Value;
+    }
+    if (!bChanged && !PendingProfile) return true;
+
+    UHWSaveGame* Candidate = DuplicateObject<UHWSaveGame>(Source, this);
+    for (const auto& Flag : Flags) Candidate->StoryFlags.Add(Flag.Key, Flag.Value);
+    if (!Candidate->IsValidProfile()) return Fail(TEXT("Story flags must be SF_* with a value."));
+    PendingProfile = Candidate;
+    return RetryPendingSave();
+}
+
+FString UHWProfileSubsystem::GetStoryFlag(FName Flag) const
+{
+    const UHWSaveGame* Source = PendingProfile ? PendingProfile.Get() : Profile.Get();
+    const FString* Value = Source ? Source->StoryFlags.Find(Flag) : nullptr;
+    return Value ? *Value : FString();
+}
+
 int64 UHWProfileSubsystem::GetGold() const { return Profile ? Profile->Gold : 0; }
 int64 UHWProfileSubsystem::GetExperience() const { return Profile ? Profile->Experience : 0; }
 int64 UHWProfileSubsystem::GetItemCount(FName ItemId) const { return Profile ? Profile->Inventory.FindRef(ItemId) : 0; }

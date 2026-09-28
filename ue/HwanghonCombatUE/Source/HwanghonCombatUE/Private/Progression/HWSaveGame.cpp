@@ -101,6 +101,10 @@ bool UHWSaveGame::IsValidProfile() const
         || SelectedCharacter == TEXT("ryu") || SelectedCharacter == TEXT("sera");
     if (bDeserializationFailed || Version != CurrentVersion || !bValidCharacter
         || !ValidClears(Clears) || Gold < 0 || Experience < 0) return false;
+    for (const auto& Flag : StoryFlags)
+    {
+        if (!Flag.Key.ToString().StartsWith(TEXT("SF_")) || Flag.Value.IsEmpty()) return false;
+    }
     int64 ExpectedGold = 0, ExpectedExperience = 0;
     TMap<FName, int64> ExpectedInventory;
     TSet<FName> SeenQuests, SeenFlags;
@@ -135,7 +139,7 @@ bool UHWSaveGame::MigrateToCurrentVersion()
     {
         // v1 contained only clear receipts. Do not silently discard unexpected data.
         if (!ValidClears(Clears) || Gold != 0 || Experience != 0
-            || !Inventory.IsEmpty() || !Claims.IsEmpty()) return false;
+            || !Inventory.IsEmpty() || !Claims.IsEmpty() || !StoryFlags.IsEmpty()) return false;
         SelectedCharacter = TEXT("ain");
         Version = CurrentVersion;
         return IsValidProfile();
@@ -144,7 +148,16 @@ bool UHWSaveGame::MigrateToCurrentVersion()
     if (Version == 2)
     {
         // v2 already validates clears/rewards through IsValidProfile after the version lift.
+        if (!StoryFlags.IsEmpty()) return false;
         SelectedCharacter = TEXT("ain");
+        Version = CurrentVersion;
+        return IsValidProfile();
+    }
+
+    if (Version == 3)
+    {
+        // v4 only adds story flags; a v3 save has none yet.
+        if (!StoryFlags.IsEmpty()) return false;
         Version = CurrentVersion;
         return IsValidProfile();
     }
