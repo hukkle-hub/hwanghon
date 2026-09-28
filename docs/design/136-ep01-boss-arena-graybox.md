@@ -3,7 +3,7 @@
 지침: `docs/design/132-story-boss-dungeon-pipeline-v1.md`(디렉터), `133-dungeon-free-samples-youtube-v1.md`.
 보스 스펙: `docs/dungeons/boss_training_heosuabi_DUNGEON_SPEC.md`. 원문: `docs/story/source/황혼_1부_소설판_제01화_마감본.txt`.
 
-> `HWANGHON_DUNGEON_RESEARCH_IMPLEMENTATION_V1.zip` 본체는 받지 못했다(업로드에 sha256·132·133 만 있음 — sha256 `d88dddae…40e1b7`). 동봉 `CLAUDE_STORY_DUNGEON_IMPLEMENTATION_V1.md` 는 디렉터 메시지의 지시 전문을 최상위 지침으로 대신했다. zip 이 오면 대조한다.
+> `HWANGHON_DUNGEON_RESEARCH_IMPLEMENTATION_V1.zip` 은 이 문서 뒤에 받아 병합했다(sha256 `d88dddae…40e1b7` 일치, doc 137 §8). 동봉 지시서는 디렉터 메시지와 같은 내용이었다.
 
 ## 0. 결론
 
@@ -14,7 +14,7 @@
 | 치수(원문 없음, TBD_CANON 설계값) | 방 16×12 m, 보스 위치 방 중앙에서 +3 m, 문(남쪽) — 사무소·훈련장 공간 관계는 원문 미서술 |
 | 직접 배치(132: 절차 생성 금지) | `GP_BossSpawn`, `GP_AinStart`, `GP_KainStart_HalfStepBehind`(L107 반보 뒤), `GP_MateoWindow`, 보스 둘레 링 3 개 — 너무 붙음 1.5 m / 낫 띠 바깥 2.3 m / 회전 도달 2.6 m(원문 «낫은 원이다» L499-L501) |
 | Data Layers (런타임) | Base 115 · Story_PreBattle 13 · Phase1 36 · **Phase2_Damaged 0 · Phase3_Critical 0**(원문에 이 보스의 아레나 변화 없음 — 이유 없는 변화 금지) · Aftermath 20 · Cinematic 7 카메라 |
-| Sequencer (같은 월드) | `LS_EP01_SC015_BossEntry` 8 s(컷 4, 원문 줄 마커 6, 폭발 프레임에 PreBattle→Phase1 레이어 전환) · `LS_EP01_SC016_SC017_Rebound` 4 s · `LS_EP01_SC018_Sever` 3 s · `LS_EP01_SC019_BossDeath` 6 s(Phase1→Aftermath) |
+| Sequencer (같은 월드) | `LS_EP01_SC015_BossEntry` 8 s(doc 137 에서 9.5 s — 핸드오프 컷 추가, 레이어 트랙 겹침 수정)(컷 4, 원문 줄 마커 6, 폭발 프레임에 PreBattle→Phase1 레이어 전환) · `LS_EP01_SC016_SC017_Rebound` 4 s · `LS_EP01_SC018_Sever` 3 s · `LS_EP01_SC019_BossDeath` 6 s(Phase1→Aftermath) |
 | Chaos | 쓰지 않았다 — EP01 원문에서 **파괴되는 구조물이 없다**(허수아비는 몸이 터지는 것, 구조물 아님) |
 | PCG | 쓰지 않았다 — 그레이박스 단계. 마지막 단계(132 §9)에서 짚·먼지 set dressing 만 |
 | 검수 모드 | `-HWQA=arenashow` — 레이어 상태 3 개 × 시네 카메라 7 + 조감 1 = 24 장 |

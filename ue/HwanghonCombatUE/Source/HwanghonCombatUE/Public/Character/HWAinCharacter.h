@@ -97,6 +97,17 @@ protected:
     UFUNCTION()
     void HandleContact(EHWActionType Action, EHWAttackTier Tier, float Damage);
 
+    // Camera framing (director reference 2026-09-28, docs/design/137). Locked on: Ain large at the lower left,
+    // seen 3/4 from behind the right shoulder, the target on the right third. Free: a plain over-the-shoulder view,
+    // because the locked framing turns the camera away from where "forward" moves her.
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float LockedArmLength = 200.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") FVector LockedSocketOffset = FVector(0.f, 128.f, 25.f);
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float LockedCameraYaw = -27.f;   // turned toward Ain: she sits left of centre, the target right
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FreeArmLength = 240.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") FVector FreeSocketOffset = FVector(0.f, 55.f, 30.f);
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FramingBlendSpeed = 4.f;
+    float LockFraming = 0.f;
+
 private:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<USpringArmComponent> CameraBoom;

@@ -40,8 +40,9 @@ AHWAinCharacter::AHWAinCharacter()
 
     CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
     CameraBoom->SetupAttachment(RootComponent);
-    CameraBoom->TargetArmLength = 420.f;
-    CameraBoom->SocketOffset = FVector(0.f, 65.f, 70.f);
+    // Free framing; Tick blends to the locked-on framing (see the header, docs/design/137).
+    CameraBoom->TargetArmLength = FreeArmLength;
+    CameraBoom->SocketOffset = FreeSocketOffset;
     CameraBoom->bUsePawnControlRotation = true;
     CameraBoom->bEnableCameraLag = true;
     CameraBoom->CameraLagSpeed = 12.f;
@@ -49,7 +50,7 @@ AHWAinCharacter::AHWAinCharacter()
     FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
     FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
     FollowCamera->bUsePawnControlRotation = false;
-    FollowCamera->FieldOfView = 52.f;
+    FollowCamera->FieldOfView = 70.f;
 
     Combat = CreateDefaultSubobject<UHWCombatComponent>(TEXT("Combat"));
     LockOn = CreateDefaultSubobject<UHWLockOnComponent>(TEXT("LockOn"));
@@ -113,6 +114,12 @@ void AHWAinCharacter::Tick(float DeltaSeconds)
     {
         GetCharacterMovement()->bOrientRotationToMovement = true;
     }
+
+    const bool bLocked = LockOn->IsLocked() && LockOn->GetTarget();
+    LockFraming = FMath::FInterpTo(LockFraming, bLocked ? 1.f : 0.f, DeltaSeconds, FramingBlendSpeed);
+    CameraBoom->TargetArmLength = FMath::Lerp(FreeArmLength, LockedArmLength, LockFraming);
+    CameraBoom->SocketOffset = FMath::Lerp(FreeSocketOffset, LockedSocketOffset, LockFraming);
+    FollowCamera->SetRelativeRotation(FRotator(0.f, LockedCameraYaw * LockFraming, 0.f));
 }
 
 void AHWAinCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)

@@ -29,6 +29,10 @@ public:
     FString GetLastFlash() const { return LastFlash; }
     float GetFlashAge() const { return FlashAge; }
 
+    // Story mode (docs/design/137): the story director decides what follows the fight — no result modal.
+    void SetStoryOwnsOutcome(bool bOwns) { bStoryOwnsOutcome = bOwns; }
+    void SetBossName(const FText& Name);
+
 protected:
     virtual void Build(UCanvasPanel* Root) override;
     virtual void NativeConstruct() override;
@@ -49,6 +53,7 @@ private:
     TWeakObjectPtr<AHWAinCharacter> Player;
     TWeakObjectPtr<AHWBossCharacter> Boss;
 
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> BossNameText;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> BossBar;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> BossTell;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> HpBar;
@@ -65,6 +70,8 @@ private:
     float EndDelay = -1.f;
     bool bEndVictory = false;
     bool bResultShown = false;
+    bool bStoryOwnsOutcome = false;
+    FText BossNameValue;
     FString LastFlash;
     float FlashAge = 99.f;
 };

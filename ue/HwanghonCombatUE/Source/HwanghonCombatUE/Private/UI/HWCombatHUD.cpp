@@ -96,7 +96,8 @@ void UHWCombatHUDWidget::Build(UCanvasPanel* Root)
     // Boss bar: top centre, thin.
     UVerticalBox* BossBox = VBox(WidgetTree);
     UHorizontalBox* BossHead = HBox(WidgetTree);
-    AddH(BossHead, Text(WidgetTree, NSLOCTEXT("HWUI", "BossName", "훈련 보스"), EHWUITextToken::Body, EHWUIColorToken::TextPrimary, EHWUIWeight::Medium), FMargin(0), true);
+    BossNameText = Text(WidgetTree, BossNameValue.IsEmpty() ? NSLOCTEXT("HWUI", "BossName", "훈련 보스") : BossNameValue, EHWUITextToken::Body, EHWUIColorToken::TextPrimary, EHWUIWeight::Medium);
+    AddH(BossHead, BossNameText, FMargin(0), true);
     BossTell = Text(WidgetTree, FText::GetEmpty(), EHWUITextToken::Caption, EHWUIColorToken::TextSecondary);
     AddH(BossHead, BossTell);
     AddV(BossBox, BossHead, FMargin(0.f, 0.f, 0.f, 6.f));
@@ -251,7 +252,7 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
             if (PartyHp) { PartyHp->SetPercent(Hp); }
             if (StBar) { StBar->SetPercent(Combat->GetStamina() / MaxSt); }
             if (HpText) { HpText->SetText(FText::AsNumber(FMath::RoundToInt(Combat->GetHealth()))); }
-            if (!bResultShown && EndDelay < 0.f && Combat->IsDead())
+            if (!bResultShown && !bStoryOwnsOutcome && EndDelay < 0.f && Combat->IsDead())
             {
                 EndDelay = 1.4f;
                 bEndVictory = false;
@@ -277,7 +278,7 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
         }
     }
 
-    if (Boss.IsValid() && !bResultShown && EndDelay < 0.f && Boss->IsDead())
+    if (Boss.IsValid() && !bResultShown && !bStoryOwnsOutcome && EndDelay < 0.f && Boss->IsDead())
     {
         EndDelay = 1.4f;
         bEndVictory = true;
@@ -306,6 +307,15 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
             CenterWord->SetRenderOpacity(Alpha);
             CenterWord->SetRenderScale(FVector2D(1.f + 0.06f * FMath::Max(0.f, 1.f - FlashAge / 0.12f)));
         }
+    }
+}
+
+void UHWCombatHUDWidget::SetBossName(const FText& Name)
+{
+    BossNameValue = Name;
+    if (BossNameText)
+    {
+        BossNameText->SetText(Name);
     }
 }
 

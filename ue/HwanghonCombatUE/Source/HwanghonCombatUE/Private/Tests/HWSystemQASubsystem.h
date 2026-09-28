@@ -77,6 +77,13 @@ private:
     int32 ArenaShot = -1;
     float ArenaShotDelay = 0.f;
     FString ArenaPendingTag;
+    void TickStoryShow(float Dt);
+    TWeakObjectPtr<class AHWStoryDirector> StoryDirector;
+    FString StoryKey;
+    float StoryKeyTime = 0.f;
+    int32 StoryShots = 0;
+    bool bStoryKilled = false;
+    bool bStoryAinDied = false;   // -HWQAStoryDie: Ain falls once first; the director must reopen at the fight
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()
     TArray<TObjectPtr<class UAnimSequenceBase>> ReviewClips;
@@ -91,7 +98,7 @@ private:
     bool BossShowPhasePush = false;
     float BossShowMovedAt = -100.f;
     TWeakObjectPtr<AActor> BossShowLight;
-    void Shot(const FString& Name);
+    void Shot(const FString& Name, bool bShowUI = false);
     void MeasureBody(const FString& Label, AActor* Actor);
     void TickRaid(float Dt);
     void RaidExplore(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me);

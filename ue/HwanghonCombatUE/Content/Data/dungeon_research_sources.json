@@ -1,0 +1,186 @@
+{
+  "schema": "hwanghon-dungeon-research-v1",
+  "samples": [
+    {
+      "id": "derelict_corridor",
+      "name": "Derelict Corridor Megascans Sample",
+      "kind": "fab_sample",
+      "cost": "free",
+      "url": "https://www.fab.com/listings/d825ff9c-77da-45a4-9619-c989e6dfdda6",
+      "use": [
+        "bunker",
+        "underground_facility",
+        "abandoned_corridor",
+        "hospital",
+        "research_facility"
+      ],
+      "take": [
+        "distressed_concrete",
+        "pipes",
+        "cables",
+        "rubble",
+        "debris",
+        "atmospheric_lighting",
+        "corridor_storytelling"
+      ],
+      "avoid": [
+        "copying_layout_verbatim",
+        "foreign_signage_as_final"
+      ]
+    },
+    {
+      "id": "dark_ruins",
+      "name": "Dark Ruins Megascans Sample",
+      "kind": "fab_sample",
+      "cost": "free",
+      "url": "https://www.fab.com/listings/836ed2f8-e2d6-49be-98d3-59d104bd351e",
+      "use": [
+        "large_boss_arena",
+        "cave",
+        "collapsed_structure",
+        "high_contrast_underground"
+      ],
+      "take": [
+        "arena_scale",
+        "focal_lighting",
+        "collapsed_geometry",
+        "negative_space",
+        "depth_composition"
+      ],
+      "avoid": [
+        "fantasy_tomb_identity_as_final"
+      ]
+    },
+    {
+      "id": "electric_dreams",
+      "name": "Electric Dreams Environment",
+      "kind": "epic_sample",
+      "cost": "free",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/electric-dreams-environment-in-unreal-engine",
+      "use": [
+        "pcg_set_dressing",
+        "soundscape",
+        "puddles",
+        "procedural_clutter",
+        "environment_fx"
+      ],
+      "take": [
+        "pcg_tools",
+        "pcg_subgraphs",
+        "soundscape",
+        "fluid_puddle_example"
+      ],
+      "avoid": [
+        "shipping_full_4km_sample",
+        "mobile_copy_of_high_end_settings"
+      ]
+    },
+    {
+      "id": "valley_ancient",
+      "name": "Valley of the Ancient",
+      "kind": "epic_sample",
+      "cost": "free",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/valley-of-the-ancient-sample-game-for-unreal-engine",
+      "use": [
+        "boss_arena_reference",
+        "data_layers",
+        "level_instances",
+        "chaos",
+        "control_rig",
+        "motion_warping"
+      ],
+      "take": [
+        "boss_centered_flow",
+        "data_layer_state_changes",
+        "chaos_event_setpieces",
+        "cinematic_gameplay_shared_scene"
+      ],
+      "avoid": [
+        "copying_visual_theme"
+      ]
+    },
+    {
+      "id": "content_examples",
+      "name": "Content Examples",
+      "kind": "epic_sample",
+      "cost": "free",
+      "url": "https://dev.epicgames.com/documentation/unreal-engine/content-examples-sample-project-for-unreal-engine",
+      "use": [
+        "chaos_reference",
+        "control_rig_reference",
+        "blueprint_reference",
+        "niagara_reference"
+      ],
+      "take": [
+        "isolated_feature_examples"
+      ],
+      "avoid": [
+        "shipping_example_maps"
+      ]
+    }
+  ],
+  "youtube": [
+    {
+      "id": "megascans_environment",
+      "title": "Creating an Environment in Unreal Engine 5 using Megascans",
+      "url": "https://www.youtube.com/watch?v=ExS7LzrkdQ8"
+    },
+    {
+      "id": "quixel_construction",
+      "title": "Create a Realistic Construction Site Environment in Unreal Engine 5",
+      "url": "https://www.youtube.com/watch?v=wNMHF3jGXtw"
+    },
+    {
+      "id": "data_layers",
+      "title": "World Partition And Data Layers - Unreal Engine 5 Tutorial",
+      "url": "https://www.youtube.com/watch?v=lkjlP0Y4zvc"
+    },
+    {
+      "id": "chaos",
+      "title": "Unreal Engine 5 Chaos Destruction Tutorial For Beginners",
+      "url": "https://www.youtube.com/watch?v=9V5zqRLYEsE"
+    },
+    {
+      "id": "sequencer",
+      "title": "Unreal Engine 5 Sequencer Tutorial for Beginners",
+      "url": "https://www.youtube.com/watch?v=9getRmp3GGk"
+    }
+  ],
+  "rules": {
+    "dungeon_formula": [
+      "story",
+      "boss_entry",
+      "boss_arena",
+      "boss_battle",
+      "boss_result",
+      "story"
+    ],
+    "pcg_allowed": [
+      "rubble",
+      "trash",
+      "cables_clutter",
+      "vegetation",
+      "small_debris"
+    ],
+    "manual_layout": [
+      "player_spawn",
+      "boss_spawn",
+      "charge_lane",
+      "dodge_space",
+      "camera_readability",
+      "safe_zone",
+      "part_target",
+      "phase_destruction",
+      "cinematic_staging"
+    ],
+    "data_layers": [
+      "DL_Arena_Base",
+      "DL_Story_PreBattle",
+      "DL_Phase1",
+      "DL_Phase2_Damaged",
+      "DL_Phase3_Critical",
+      "DL_Aftermath",
+      "DL_Cinematic"
+    ]
+  }
+}

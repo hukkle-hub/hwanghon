@@ -50,6 +50,7 @@
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/SkeletalMeshActor.h"
 #include "WorldPartition/DataLayer/DataLayerManager.h"
+#include "Game/HWStoryDirector.h"
 #include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -371,6 +372,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
     else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
     else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
+    else if (Mode == TEXT("storyshow")) TickStoryShow(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -1550,10 +1552,10 @@ void UHWSystemQASubsystem::RaidFight(const FHWRaidNetSnapshot& R, const FHWRaidN
 
 // ---------------------------------------------------------------- showcase (motion review)
 
-void UHWSystemQASubsystem::Shot(const FString& Name)
+void UHWSystemQASubsystem::Shot(const FString& Name, bool bShowUI)
 {
     if (ShotDir.IsEmpty()) return;
-    FScreenshotRequest::RequestScreenshot(FPaths::Combine(ShotDir, Name + TEXT(".png")), false, false);
+    FScreenshotRequest::RequestScreenshot(FPaths::Combine(ShotDir, Name + TEXT(".png")), bShowUI, false);
     Note(TEXT("shot ") + Name);
 }
 
@@ -2136,5 +2138,115 @@ void UHWSystemQASubsystem::TickArenaShow(float Dt)
     {
         ArenaShotDelay -= Dt;
         if (ArenaShotDelay <= 0.f) Shot(ArenaPendingTag);
+    }
+}
+
+// ---------------------------------------------------------------- story show (-HWQA=storyshow, doc 137)
+// EP01 story mode end to end: novel cards and sequences (skippable), the cinema -> gameplay camera handoff,
+// the fight (boss killed by QA after a few seconds), the result sequence, the aftermath and the end card.
+// Each battle shot logs where Ain and the boss land on screen, to compare with the director's reference frame.
+void UHWSystemQASubsystem::TickStoryShow(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    if (!World) return;
+    if (!StoryDirector.IsValid())
+    {
+        if (Elapsed > 90.f) { Finish(false, TEXT("no story director")); return; }
+        StoryDirector = Cast<AHWStoryDirector>(UGameplayStatics::GetActorOfClass(World, AHWStoryDirector::StaticClass()));
+        if (StoryDirector.IsValid())
+        {
+            StoryDirector->SetQAMode(1.6f);
+            ShotDir = Param(TEXT("HWQAShots="));
+            Note(FString::Printf(TEXT("story show: %d segments, mode %s"), StoryDirector->GetSegments().Num(),
+                StoryDirector->IsStoryMode() ? TEXT("story") : TEXT("boss")));
+        }
+        return;
+    }
+    AHWStoryDirector* D = StoryDirector.Get();
+    const FHWStorySegment* Seg = D->GetCurrentSegment();
+    static const TCHAR* PhaseNames[] = { TEXT("idle"), TEXT("cine"), TEXT("handoff"), TEXT("battle"), TEXT("over"), TEXT("finished") };
+    const EHWStoryPhase P = D->GetPhase();
+    const FString Key = FString::Printf(TEXT("%02d_%s_%s"), D->GetSegmentIndex(), Seg ? *Seg->SceneId.ToString() : TEXT("-"), PhaseNames[(int32)P]);
+    if (Key != StoryKey)
+    {
+        StoryKey = Key;
+        StoryKeyTime = 0.f;
+        StoryShots = 0;
+        Note(TEXT("story ") + Key);
+    }
+    StoryKeyTime += Dt;
+
+    TArray<float> Times;
+    switch (P)
+    {
+    case EHWStoryPhase::Cinematic: Times = D->IsPlayingSequence() ? TArray<float>{ 0.6f, 2.6f, 4.6f, 6.9f, 8.7f } : TArray<float>{ 0.8f }; break;
+    case EHWStoryPhase::Handoff:   Times = { 0.02f, 0.45f, 0.9f, 1.3f }; break;
+    case EHWStoryPhase::Battle:    Times = { 0.8f, 2.6f }; break;
+    case EHWStoryPhase::BattleOver: Times = D->IsStoryMode() ? TArray<float>{ 0.6f } : TArray<float>{ 0.6f, 3.0f }; break;
+    case EHWStoryPhase::Finished:  Times = { 0.8f }; break;
+    default: break;
+    }
+    if (StoryShots < Times.Num() && StoryKeyTime >= Times[StoryShots])
+    {
+        const FString Name = FString::Printf(TEXT("%s_%d"), *Key, StoryShots);
+        ++StoryShots;
+        Shot(Name, true);   // the story layer (letterbox, novel card, skip) is part of what is reviewed
+        APlayerController* PC = GetPC();
+        if (PC && PC->PlayerCameraManager)
+        {
+            const FMinimalViewInfo& V = PC->PlayerCameraManager->GetCameraCacheView();
+            FString Where;
+            int32 SX = 0, SY = 0;
+            PC->GetViewportSize(SX, SY);
+            auto Screen = [&](const TCHAR* Label, const FVector& W)
+            {
+                FVector2D S;
+                if (SX > 0 && PC->ProjectWorldLocationToScreen(W, S, true))
+                    Where += FString::Printf(TEXT(" %s=(%.2f,%.2f)"), Label, S.X / SX, S.Y / SY);
+            };
+            if (ACharacter* Ain = Cast<ACharacter>(PC->GetPawn()))
+            {
+                Screen(TEXT("ain_head"), Ain->GetMesh()->GetSocketLocation(TEXT("head")));
+                Screen(TEXT("ain_pelvis"), Ain->GetMesh()->GetSocketLocation(TEXT("pelvis")));
+            }
+            if (AHWBossCharacter* B = D->GetBoss())
+            {
+                Screen(TEXT("boss_center"), B->GetActorLocation());
+            }
+            Note(FString::Printf(TEXT("shot %s cam=(%.0f,%.0f,%.0f) pitch=%.1f yaw=%.1f fov=%.0f%s"), *Name,
+                V.Location.X, V.Location.Y, V.Location.Z, V.Rotation.Pitch, V.Rotation.Yaw, V.FOV, *Where));
+        }
+    }
+    if (P == EHWStoryPhase::Battle && !bStoryAinDied && StoryKeyTime >= 2.f && FParse::Param(FCommandLine::Get(), TEXT("HWQAStoryDie")))
+    {
+        if (AHWAinCharacter* Ain = Cast<AHWAinCharacter>(GetPC() ? GetPC()->GetPawn() : nullptr))
+        {
+            bStoryAinDied = true;
+            Note(TEXT("story show: QA fells Ain (retry must reopen at the fight)"));
+            Ain->GetCombat()->ApplyIncomingDamage(1.0e7f, EHWAttackTier::Finisher);
+        }
+    }
+    if (P == EHWStoryPhase::Battle && !bStoryKilled && StoryKeyTime >= 4.f && (bStoryAinDied || !FParse::Param(FCommandLine::Get(), TEXT("HWQAStoryDie"))))
+    {
+        if (AHWBossCharacter* B = D->GetBoss())
+        {
+            bStoryKilled = true;
+            Note(TEXT("story show: QA ends the fight"));
+            B->ReceivePlayerHit(B->GetHealth() + 10.f, EHWAttackTier::Finisher, B->GetActorLocation() - B->GetActorForwardVector() * 200.f);
+        }
+    }
+    // Boss mode has no animation after the fight either: the combat HUD result is the end.
+    if (!D->IsStoryMode() && P == EHWStoryPhase::BattleOver && StoryKeyTime >= 4.f)
+    {
+        Finish(true, TEXT("boss mode show done"));
+        return;
+    }
+    if (P == EHWStoryPhase::Finished && StoryKeyTime >= 2.f)
+    {
+        Finish(true, TEXT("story show done"));
+    }
+    if (Elapsed > 400.f)
+    {
+        Finish(false, TEXT("story show timeout at ") + Key);
     }
 }

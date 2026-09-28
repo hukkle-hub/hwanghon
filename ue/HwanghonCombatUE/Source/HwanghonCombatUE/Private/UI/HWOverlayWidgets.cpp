@@ -12,6 +12,7 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Content/HWGameContentSubsystem.h"
 #include "Game/HWQuestRunSubsystem.h"
+#include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Progression/HWProfileSubsystem.h"
 #include "Progression/HWSaveGame.h"
@@ -215,7 +216,15 @@ void UHWResultModal::Build(UCanvasPanel* Root)
     AddH(Actions, SecondaryAction(NSLOCTEXT("HWUI", "Again", "다시"), [this, F, QuestId, bQuest, bCombat]()
     {
         if (F) { F->CloseOverlay(); F->Sortie(bQuest ? QuestId : NAME_None); }
-        else if (bCombat) { UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this))); }
+        else if (bCombat)
+        {
+            // A story episode world opens in story mode by default: boss mode (?HWStory=0) must retry as boss mode.
+            // Only that option is carried — a quest run id must not re-attach a finished run.
+            const AGameModeBase* GM = GetWorld() ? GetWorld()->GetAuthGameMode() : nullptr;
+            const FString Story = GM ? UGameplayStatics::ParseOption(GM->OptionsString, TEXT("HWStory")) : FString();
+            UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)), true,
+                Story.IsEmpty() ? FString() : TEXT("HWStory=") + Story);
+        }
     }), FMargin(0.f, 0.f, M(EHWUIMetricToken::CardGap), 0.f))->SetVerticalAlignment(VAlign_Center);
     AddH(Actions, PrimaryAction(NSLOCTEXT("HWUI", "ToLobby", "로비로"), FText::GetEmpty(), true, [this, F, RunsPtr]()
     {

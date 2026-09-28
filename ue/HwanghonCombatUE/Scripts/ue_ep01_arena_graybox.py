@@ -169,9 +169,11 @@ def build_geometry():
             rot=(0, 45 * dx, 60), layer="DL_Story_PreBattle")
     box("SP_Rune", PLANE, (BOSS.x, BOSS.y, 7), (1.1, 1.1, 1), M["Rune"], layer="DL_Story_PreBattle")
     # --- DL_Phase1: after the blast (L433-L439) — 3 m strand body, snapped chains, straw debris, dimmed light
-    box("P1_BossBody_3m", CYL, (BOSS.x, BOSS.y, 150), (0.9, 0.9, 3.0), M["Boss"], layer="DL_Phase1")
-    box("P1_BossArm_L", CYL, (BOSS.x, BOSS.y + 120, 170), (0.25, 0.25, 2.2), M["Boss"], rot=(0, 0, -60), layer="DL_Phase1")
-    box("P1_BossArm_R", CYL, (BOSS.x, BOSS.y - 120, 170), (0.25, 0.25, 2.2), M["Boss"], rot=(0, 0, 60), layer="DL_Phase1")
+    stand_in = [box("P1_BossBody_3m", CYL, (BOSS.x, BOSS.y, 150), (0.9, 0.9, 3.0), M["Boss"], layer="DL_Phase1"),
+                box("P1_BossArm_L", CYL, (BOSS.x, BOSS.y + 120, 170), (0.25, 0.25, 2.2), M["Boss"], rot=(0, 0, -60), layer="DL_Phase1"),
+                box("P1_BossArm_R", CYL, (BOSS.x, BOSS.y - 120, 170), (0.25, 0.25, 2.2), M["Boss"], rot=(0, 0, 60), layer="DL_Phase1")]
+    for a in stand_in:   # the cinema shows this body; the story director hides it when the real boss spawns (doc 137)
+        a.tags = ["HW_BossStandIn"]
     for k in range(28):
         a = 2 * math.pi * k / 28
         r = 180 + (k * 37) % 220
@@ -180,7 +182,8 @@ def build_geometry():
     for k in range(4):
         box(f"P1_ChainSnapped_{k}", CYL, (BOSS.x - 150 + k * 90, BOSS.y + (-1) ** k * 180, 5), (0.04, 0.04, 1.4),
             M["Chain"], rot=(90, k * 40, 0), layer="DL_Phase1")
-    light("P1_EmberGlow", (BOSS.x, BOSS.y, 120), 80.0, (1.0, 0.45, 0.1), layer="DL_Phase1", radius=600.0)
+    ember = light("P1_EmberGlow", (BOSS.x, BOSS.y, 120), 80.0, (1.0, 0.45, 0.1), layer="DL_Phase1", radius=600.0)
+    ember.point_light_component.set_cast_shadows(False)   # from the floor it threw the boss across the whole ceiling
     # --- DL_Phase2_Damaged / DL_Phase3_Critical: intentionally empty (the text has no arena change for this boss)
     # --- DL_Aftermath (L613, L573): dented mats, debris, the grey dust where the body collapsed
     box("AF_DustPile", SPHERE, (BOSS.x, BOSS.y, 0), (1.6, 1.6, 0.25), M["Dust"], layer="DL_Aftermath")
@@ -199,6 +202,10 @@ def build_geometry():
         "CAM_Rebound": camera("CAM_Rebound", (BOSS.x - 150, -330, 110), (BOSS.x - 150, 0, 110), 45),
         "CAM_Sever": camera("CAM_Sever", (BOSS.x - 120, 420, 70), (BOSS.x, BOSS.y + 80, 170), 45),
         "CAM_Death": camera("CAM_Death", (BOSS.x - 300, -150, 170), (BOSS.x - 40, 0, 60), 40),
+        # Last cinema frame before the fight: behind Ain, wider than play — the handoff blends from here (doc 137).
+        # The result opens on the fallen body (the fight, not the cinema, did the severing — doc 137).
+        "CAM_Result_Low": camera("CAM_Result_Low", (BOSS.x - 260, 140, 70), (BOSS.x, 0, 25), 45),
+        "CAM_Handoff": camera("CAM_Handoff", (-560, 110, 200), (BOSS.x, 0, 140), 60),
         "CAM_Gameplay_Ref": camera("CAM_Gameplay_Ref", (-620, 0, 260), (BOSS.x, 0, 90), 60),
     }
     return cams
@@ -253,10 +260,12 @@ def sequence(name, seconds, cuts, marks, layer_events=()):
         seq.add_marked_frame(mf)
     for t, activate, deactivate in layer_events:
         try:
-            track = seq.add_track(unreal.MovieSceneDataLayerTrack)
+            # One track per state: two overlapping sections on one row evaluate only one of them
+            # (the activate was silently lost behind the unload — doc 137 §3).
             for assets, st in ((activate, unreal.DataLayerRuntimeState.ACTIVATED), (deactivate, unreal.DataLayerRuntimeState.UNLOADED)):
                 if not assets:
                     continue
+                track = seq.add_track(unreal.MovieSceneDataLayerTrack)
                 s = track.add_section()
                 s.set_range_seconds(t, seconds)
                 s.set_editor_property("data_layer_assets", assets)
@@ -275,16 +284,18 @@ def main():
         lib.delete_asset(MAP)
     les.new_level(MAP, True)   # World Partition: Data Layers switch the phase state at runtime
     ws = unreal.EditorLevelLibrary.get_editor_world().get_world_settings()
-    ws.set_editor_property("default_game_mode", unreal.GameModeBase.static_class())
+    # Story mode by default (?HWStory=0 = boss mode, same world). doc 137
+    ws.set_editor_property("default_game_mode", unreal.load_class(None, "/Script/HwanghonCombatUE.HWStoryGameMode"))
     cams = build_geometry()
     layers = data_layers()
     A = lambda n: layers[n][0]
     # Boss Entry (EP01_SC015, L415-L459)
-    sequence("LS_EP01_SC015_BossEntry", 8.0,
+    sequence("LS_EP01_SC015_BossEntry", 9.5,
              [(cams["CAM_Entry_Close"], 0, 2), (cams["CAM_Entry_Wide"], 2, 4.5), (cams["CAM_Entry_Close"], 4.5, 6.5),
-              (cams["CAM_Observation"], 6.5, 8)],
+              (cams["CAM_Observation"], 6.5, 8), (cams["CAM_Handoff"], 8, 9.5)],
              [(0.0, "L417 문양이 균열을 따라 번짐"), (1.8, "L419 카인! 물러나! / L421 …뭐?"), (3.0, "L427-429 섬광·폭발"),
-              (4.5, "L435-439 붉은 안광·3m 강선체"), (5.8, "L451 이중 음성 / L455 목소리가 두 개"), (6.8, "L457 마태오 담배")],
+              (4.5, "L435-439 붉은 안광·3m 강선체"), (5.8, "L451 이중 음성 / L455 목소리가 두 개"), (6.8, "L457 마태오 담배"),
+              (8.0, "L459 저건… 짚단이 아니야! → L461 ◇ 거리: 아인 뒤로, 전투 진입")],
              layer_events=[(3.0, [A("DL_Phase1")], [A("DL_Story_PreBattle")])])
     # Transition: too close -> rebound (EP01_SC016 -> SC017, L505-L529)
     sequence("LS_EP01_SC016_SC017_Rebound", 4.0, [(cams["CAM_Rebound"], 0, 4)],
@@ -295,7 +306,7 @@ def main():
              [(0.0, "L537-541 뛰지 않는다 — 낫 하나 길이"), (0.8, "L545 이번엔—"), (1.2, "L547-549 세상이 늘어짐"),
               (2.2, "L553-557 원의 가장 바깥 / 걸었다… 스위트 스폿!"), (2.8, "L561-563 콰드득 — 관절")])
     # Boss death / result (EP01_SC019, L565-L581)
-    sequence("LS_EP01_SC019_BossDeath", 6.0, [(cams["CAM_Sever"], 0, 2), (cams["CAM_Death"], 2, 6)],
+    sequence("LS_EP01_SC019_BossDeath", 6.0, [(cams["CAM_Result_Low"], 0, 2), (cams["CAM_Death"], 2, 6)],
              [(0.0, "L563 관절이 뜯겨 나감"), (1.0, "L565 주황 결정이 굴러떨어짐 — 손바닥에"), (3.0, "L571 …또 가루야"),
               (4.0, "L575-579 결정 역류 → 회색 가루 → 칩")],
              layer_events=[(3.0, [A("DL_Aftermath")], [A("DL_Phase1")])])
