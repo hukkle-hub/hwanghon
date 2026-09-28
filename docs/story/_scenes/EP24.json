@@ -1,0 +1,1658 @@
+{
+  "EpisodeId": "EP24",
+  "TitleKo": "황혼이 진 다음 날",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      13697,
+      14032
+    ]
+  },
+  "SummaryKo": "계룡을 나온 일행은 사흘째 비를 만나 빈 시골 마을의 폐가에 머문다. 아인은 휘두를수록 익는다는 셈 때문에 이 년 만에 처음으로 새벽 낫 수련을 거른다. 카인은 셔터 사태 날 벙커 앞에서 잃은 일곱 살 딸 이야기를 처음으로 끝까지 하고, 미움을 보낼 주소를 잃었다고 털어놓으며 류의 물음에 딸의 이름을 소리 내어 말한다. 세라는 코어 파괴는 자살이며 자신의 목표는 처음부터 신호였다고 밝히고, 부름이 시작된 고흥 발사장이 다음 목적지가 된다. 그 밤 류는 인식표를 기둥에 걸어 두고 북쪽으로 떠나지만, 계룡에서 찢어 온 명부 속 정 일병 남매의 이름을 보고 돌아선다. 새벽에 돌아온 류는 인식표를 다시 걸고, 아인은 스승의 세 규칙을 다시 세운 뒤 알고도 휘두르기로 셈을 바꿔 낫 수련 백 번을 채운다. 밤에 아인은 마태오의 손실 장부에 현OO 중위를 이름으로 적고 류의 명부 장을 끼운다. 떠나는 아침 다섯은 동맹을 갱신하고, 비 갠 국도를 걸어 고흥 방면 이정표 앞에서 남은 거리가 걸어서 열흘임을 확인한다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC001",
+      "NovelSource": "L13697-L13722 §1 아침이 오는 법",
+      "NovelSummary": "계룡을 나와 이틀을 걷고 사흘째 비가 오자 일행은 빈 시골 마을의 폐가에 든다. 서두름이 진행을 앞당긴다는 것을 알게 된 다섯은 처음으로 서두르지 않고, 하루 종일 오는 비를 아무도 불평하지 않는다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "낮 (사흘째, 하루 종일 비)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "계룡 이후의 휴지 — 성장·단련·전진이 진행의 동의어가 된 세계",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "폐가에 도착해 머문다",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "종일 비. 지붕이 반쯤 남은 폐가, 마루에서 보이는 빗속 마당",
+      "Props": [],
+      "VFX": [
+        "비",
+        "처마 낙수"
+      ],
+      "SFX": [
+        "빗소리"
+      ],
+      "Music": "정적인 휴지, 비의 앰비언트",
+      "GameplayEntry": "EP23 종료 후 계룡 이탈 이동 컷에서 진입",
+      "GameplayExit": "폐가 마루 정착 후 SC002로",
+      "AnimationRequired": [
+        "sit_floor_edge"
+      ],
+      "CinematicRequired": "true: 챕터 오프닝 분위기 확립(비·폐가)",
+      "SaveFlags": [
+        "EP24_REACHED_PYEGA"
+      ],
+      "Prerequisites": [
+        "EP23_COMPLETE"
+      ],
+      "NextScene": "EP24_SC002",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:sit_floor_edge",
+        "vfx:비",
+        "vfx:처마 낙수",
+        "sfx:빗소리",
+        "bgm:정적인 휴지, 비의 앰비언트"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC002",
+      "NovelSource": "L13723-L13744 §2 낫",
+      "NovelSummary": "아인은 새벽마다 하던 낫 수련(원을 그리는 동작 하루 백 번)을 하려 하지만, 휘두를수록 코어가 발화해 진행이 가까워진다는 셈 때문에 낫이 올라가지 않는다. 한 시간을 서 있다가 낫을 내려놓고, 이 년 만에 처음으로 수련을 거른다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "새벽 (비)",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫"
+      ],
+      "StoryBeat": "정체성의 균열 — 수련이 곧 익힘이라는 자각",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "처마 밑에서 낫 수련을 시도한다",
+      "Interaction": [
+        "낫 수련 입력 시 낫이 올라가지 않음(연출용 실패 입력)",
+        "낫 내려놓기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "마당 구석 처마 밑, 비가 마당을 두드림",
+      "Props": [
+        "prop_nat"
+      ],
+      "VFX": [
+        "비",
+        "목덜미 코어 미광"
+      ],
+      "SFX": [
+        "빗소리"
+      ],
+      "Music": "무음에 가까운 긴장",
+      "GameplayEntry": "폐가 마당 구석에서 아인 조작 시작",
+      "GameplayExit": "낫을 내려놓으면 종료",
+      "AnimationRequired": [
+        "stand_frozen_hold_scythe",
+        "set_down_scythe"
+      ],
+      "CinematicRequired": "false: 짧은 조작+연출로 충분",
+      "SaveFlags": [
+        "EP24_AIN_SKIPPED_DRILL"
+      ],
+      "Prerequisites": [
+        "EP24_SC001"
+      ],
+      "NextScene": "EP24_SC003",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "prop:prop_nat",
+        "anim:stand_frozen_hold_scythe",
+        "anim:set_down_scythe",
+        "vfx:비",
+        "vfx:목덜미 코어 미광",
+        "sfx:빗소리",
+        "bgm:무음에 가까운 긴장"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC003",
+      "NovelSource": "L13745-L13780 §3 주소 잃은 분노",
+      "NovelSummary": "마루 끝에서 비를 보던 카인이 불쑥 딸 이야기를 꺼낸다. 셔터 사태 날 대피 벙커 앞에서 일곱 살 딸의 손을 놓쳤고, 정원 초과로 군용 수트들이 셔터를 내렸으며, 그 벙커는 사흘 뒤 함락되었다. 윗선까지 올라가 값을 받아내려던 셈이 계룡에서 부서져 미움을 보낼 주소가 없다고 말한다. 아인은 낫자루 위의 손이 오래 고요하고, 류가 딸의 이름을 묻자 카인은 이 년 만에 처음으로 그 이름을 소리 내어 말한다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "TBD_CANON (같은 날 저녁 이전, 비)",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "카인의 과거 고백 — 복수의 셈이 무너진 자리",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…딸이 있었어.",
+          "Source": "L13751"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "일곱 살이었고.",
+          "Source": "L13755"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그 벙커, 사흘 뒤에 함락됐어.",
+          "Source": "L13759"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "미워할 주소가 없어졌어.",
+          "Source": "L13769"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "보낼 데가 없어.",
+          "Source": "L13769"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…따님 이름이 뭐예요.",
+          "Source": "L13775"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "카인의 고백을 듣는다",
+      "Interaction": [
+        "대화 진행(선택지 없음, 침묵 유지)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "마루 끝, 빗소리가 문장 위로 내림",
+      "Props": [
+        "prop_dambae_ban",
+        "prop_nat"
+      ],
+      "VFX": [
+        "비"
+      ],
+      "SFX": [
+        "빗소리"
+      ],
+      "Music": "저음 현악, 절제된 비가",
+      "GameplayEntry": "마루 대화 트리거",
+      "GameplayExit": "카인이 딸의 이름을 말하는 순간 빗소리로 컷",
+      "AnimationRequired": [
+        "sit_floor_edge"
+      ],
+      "CinematicRequired": "true: 딸의 이름을 빗소리에 반쯤 묻히게 들려주는 연출(이름은 원고 미기재)",
+      "SaveFlags": [
+        "EP24_KAIN_DAUGHTER_CONFESSED"
+      ],
+      "Prerequisites": [
+        "EP24_SC002"
+      ],
+      "NextScene": "EP24_SC004",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_ryu",
+        "prop:prop_dambae_ban",
+        "prop:prop_nat",
+        "anim:sit_floor_edge",
+        "vfx:비",
+        "sfx:빗소리",
+        "bgm:저음 현악, 절제된 비가"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC004",
+      "NovelSource": "L13781-L13814 §4 코어 파괴",
+      "NovelSummary": "저녁에 카인이 목덜미의 코어를 떼면 어떻게 되느냐고 세라에게 묻는다. 세라는 코어가 척수·신경을 타고 뇌간까지 자라 들어가 코어 파괴는 자살이라고 답하고, 자신의 목표는 처음부터 코어가 아니라 부르는 신호였다고 밝힌다. 아인이 「신호를 끈다」고 받고 「고흥」을 말하자, 세라는 부름이 시작된 발사장에 스위치가 있다면 거기 있다고 한다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "저녁",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "목표 재설정 — 코어 제거 불가, 신호 차단으로",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "떼면 어떻게 되나.",
+          "Source": "L13789"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "코어는 붙어 있는 게 아니야.",
+          "Source": "L13793"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "코어 파괴는 자살이야.",
+          "Source": "L13797"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "신호를 끈다.",
+          "Source": "L13803"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "고흥.",
+          "Source": "L13807"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "발사장. 부름이 시작된 곳.",
+          "Source": "L13811"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "다음 목적지(고흥 발사장)를 확정한다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "폐가의 방 안, 조용해진 저녁",
+      "Props": [],
+      "VFX": [
+        "목덜미 코어 미광"
+      ],
+      "SFX": [
+        "빗소리(원경)"
+      ],
+      "Music": "낮은 긴장, 결의로 전환",
+      "GameplayEntry": "저녁 방 안 대화 트리거",
+      "GameplayExit": "목적지 고흥 설정",
+      "AnimationRequired": [
+        "thumb_point_nape"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP24_GOAL_GOHEUNG_SIGNAL"
+      ],
+      "Prerequisites": [
+        "EP24_SC003"
+      ],
+      "NextScene": "EP24_SC005",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:thumb_point_nape",
+        "vfx:목덜미 코어 미광",
+        "sfx:빗소리(원경)",
+        "bgm:낮은 긴장, 결의로 전환"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC005",
+      "NovelSource": "L13815-L13840 §5 셋째 밤",
+      "NovelSummary": "그 밤 경계 교대에 나가 보니 류의 자리가 비어 있다. 배낭·후드·쌍단검이 없고, 마루 기둥에 C가 새겨진 인식표만 걸려 있다. 쫓아가려는 카인을 아인이 손으로 누르며, 걸어 둔 인식표는 버리고 간 것이 아니라 돌아올 자리의 표시라고 읽는다. 넷 중 셋이 뜬눈으로 밤을 샌다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "밤 (비)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류의 이탈 — 신뢰의 시험",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…쫓아가게.",
+          "Source": "L13823"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어디로 갔는지 알아요?",
+          "Source": "L13825"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "모르면 못 쫓아요.",
+          "Source": "L13829"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "저건 버리고 간 게 아니에요.",
+          "Source": "L13833"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "빈 자리와 기둥의 인식표를 확인한다",
+      "Interaction": [
+        "류의 빈 자리 조사",
+        "기둥의 인식표 살피기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "경계 교대 시각, 빈 자리, 기둥에 걸린 인식표",
+      "Props": [
+        "prop_ryu_insikpyo"
+      ],
+      "VFX": [
+        "비"
+      ],
+      "SFX": [
+        "빗소리"
+      ],
+      "Music": "불안한 정적",
+      "GameplayEntry": "경계 교대 이벤트",
+      "GameplayExit": "밤샘 페이드아웃",
+      "AnimationRequired": [
+        "restrain_with_hand"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP24_RYU_LEFT"
+      ],
+      "Prerequisites": [
+        "EP24_SC004"
+      ],
+      "NextScene": "EP24_SC006",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_sera",
+        "prop:prop_ryu_insikpyo",
+        "anim:restrain_with_hand",
+        "vfx:비",
+        "sfx:빗소리",
+        "bgm:불안한 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC006",
+      "NovelSource": "L13841-L13869 §6 혼자 걷는 길",
+      "NovelSummary": "류는 빗속에 북쪽으로 걷는다. 도망은 그의 전공이라 여겨 왔지만, 두 시간째 주머니 속 명부 한 장 — 정 일병, 정 민간, 생체 이송·발사장 — 이 바스락거린다. 폐차장의 밤 누나의 손목을 잡았다가 함께 끌려간 두 사람을 떠올린 류는 오래 서 있다가 돌아선다.",
+      "Location": "loc_bukjjok_gil",
+      "TimeOfDay": "밤 (비)",
+      "Characters": [
+        "char_ryu"
+      ],
+      "RequiredCostumes": [
+        "류: 후드"
+      ],
+      "RequiredEquipment": [
+        "쌍단검",
+        "배낭"
+      ],
+      "StoryBeat": "류의 선택 — 뛰는 쪽에서 돌아서는 쪽으로",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK",
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "북쪽으로 걷다가 명부를 확인하고 돌아선다",
+      "Interaction": [
+        "빗속 걷기",
+        "주머니의 명부 장 꺼내 보기",
+        "폐차장의 밤 회상",
+        "돌아서기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빗속 밤길, 후드를 두드리는 비",
+      "Props": [
+        "prop_myeongbu_jang",
+        "prop_usb",
+        "prop_baenang_ryu",
+        "prop_ssangdangeom"
+      ],
+      "VFX": [
+        "비",
+        "회상 전환 필터"
+      ],
+      "SFX": [
+        "빗소리",
+        "종이 바스락"
+      ],
+      "Music": "고독한 솔로 악기",
+      "GameplayEntry": "류 단독 조작으로 전환",
+      "GameplayExit": "돌아서는 순간 컷",
+      "AnimationRequired": [
+        "walk_in_rain_hood",
+        "read_paper_shield_rain",
+        "turn_back"
+      ],
+      "CinematicRequired": "true: 폐차장의 밤 회상 삽입",
+      "SaveFlags": [
+        "EP24_RYU_TURNED_BACK"
+      ],
+      "Prerequisites": [
+        "EP24_SC005"
+      ],
+      "NextScene": "EP24_SC007",
+      "RequiredAssets": [
+        "env:loc_bukjjok_gil",
+        "char:char_ryu",
+        "prop:prop_myeongbu_jang",
+        "prop:prop_usb",
+        "prop:prop_baenang_ryu",
+        "prop:prop_ssangdangeom",
+        "anim:walk_in_rain_hood",
+        "anim:read_paper_shield_rain",
+        "anim:turn_back",
+        "vfx:비",
+        "vfx:회상 전환 필터",
+        "sfx:빗소리",
+        "sfx:종이 바스락",
+        "bgm:고독한 솔로 악기"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC007",
+      "NovelSource": "L13870-L13889 §7 새벽",
+      "NovelSummary": "동트기 직전 류가 폐가 마당에 들어선다. 자지 않은 채 마루에 앉아 있던 아인과 짧게 말을 주고받고, 류는 기둥의 인식표를 도로 목에 건다. 아인은 어디 갔었느냐 묻지 않고, 류가 젖은 명부 장을 처마 밑에 펴서 말리는 것을 못 본 척 본다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "새벽 (동트기 직전, 비)",
+      "Characters": [
+        "char_ryu",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류의 귀환 — 설명 없는 복귀",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ryu",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…산책이요.",
+          "Source": "L13876"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "길었네요.",
+          "Source": "L13880"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…길이 미끄러워서.",
+          "Source": "L13882"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "류의 귀환을 맞는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빗줄기 사이 새벽 마당",
+      "Props": [
+        "prop_ryu_insikpyo",
+        "prop_myeongbu_jang"
+      ],
+      "VFX": [
+        "비",
+        "새벽빛"
+      ],
+      "SFX": [
+        "빗소리"
+      ],
+      "Music": "잔잔한 안도",
+      "GameplayEntry": "새벽 컷신",
+      "GameplayExit": "인식표를 다시 거는 동작 후 종료",
+      "AnimationRequired": [
+        "hang_tag_on_neck",
+        "dry_paper_under_eaves",
+        "sit_floor_edge"
+      ],
+      "CinematicRequired": "true: 대사 최소, 동작으로 전달되는 귀환",
+      "SaveFlags": [
+        "EP24_RYU_RETURNED"
+      ],
+      "Prerequisites": [
+        "EP24_SC006"
+      ],
+      "NextScene": "EP24_SC008",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ryu",
+        "char:char_ain",
+        "prop:prop_ryu_insikpyo",
+        "prop:prop_myeongbu_jang",
+        "anim:hang_tag_on_neck",
+        "anim:dry_paper_under_eaves",
+        "anim:sit_floor_edge",
+        "vfx:비",
+        "vfx:새벽빛",
+        "sfx:빗소리",
+        "bgm:잔잔한 안도"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC008",
+      "NovelSource": "L13890-L13913 §8 세 개의 규칙",
+      "NovelSummary": "낮에 아인은 혼자 마을 어귀까지 걸으며 스승의 세 규칙을 뒤집힌 사전 위에 다시 세워 본다. 감당 못 하는 것과는 싸우지 않는다 — 신호는 싸우러가 아니라 끄러 간다. 두 번 치지 않는다 — 낭비에 관한 규칙으로 더 무겁게 선다. 물에는 두지 않는다 — 이름을 지우지 않는 것으로 규칙보다 크게 선다. 세 개가 다 선다.",
+      "Location": "loc_sigol_maeul_eogwi",
+      "TimeOfDay": "낮",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "스승의 규칙 재정립",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "마을 어귀까지 걸으며 세 규칙을 되새긴다",
+      "Interaction": [
+        "자유 보행",
+        "규칙 셋 내레이션 트리거"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "마을 어귀 길",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "발소리",
+        "빗소리(약)"
+      ],
+      "Music": "회상적 선율",
+      "GameplayEntry": "폐가에서 마을 어귀로 걷기 시작",
+      "GameplayExit": "세 규칙이 다 서면 복귀",
+      "AnimationRequired": [
+        "walk_contemplative"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP24_THREE_RULES_REAFFIRMED"
+      ],
+      "Prerequisites": [
+        "EP24_SC007"
+      ],
+      "NextScene": "EP24_SC009",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_eogwi",
+        "char:char_ain",
+        "anim:walk_contemplative",
+        "sfx:발소리",
+        "sfx:빗소리(약)",
+        "bgm:회상적 선율"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC009",
+      "NovelSource": "L13914-L13939 §9 다시 드는 법",
+      "NovelSummary": "돌아온 아인이 마당 구석에서 낫을 든다. 어제와 달리 「휘두를수록 가까워진다, 알고도 휘두른다」는 셈으로 낫이 올라간다. 장부와 명부, 벙커의 두 아이, 꺼야 할 스위치를 위한 원이라면 진행이 아니라 지불이라 여기며 원을 백 번 채운다. 처마 밑에서 보던 카인이 낫 소리가 이 집에서 제일 멀쩡한 소리라고 말한다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "낮 (비)",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫"
+      ],
+      "StoryBeat": "결의 회복 — 알고도 휘두른다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…들리네.",
+          "Source": "L13930"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "뭐가요.",
+          "Source": "L13934"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "이 집에서 제일 멀쩡한 소리다.",
+          "Source": "L13936"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "낫 수련 백 번을 채운다",
+      "Interaction": [
+        "낫 원 그리기 입력(백 번을 압축한 수련 연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "마당 구석 처마 밑, 빗물",
+      "Props": [
+        "prop_nat"
+      ],
+      "VFX": [
+        "낫 궤적",
+        "빗물 가르기"
+      ],
+      "SFX": [
+        "낫 바람 소리",
+        "빗소리"
+      ],
+      "Music": "결의의 모티프 재등장",
+      "GameplayEntry": "마당 구석에서 낫 들기 입력",
+      "GameplayExit": "백 번째 원이 제자리에 떨어지면 카인 대사 컷",
+      "AnimationRequired": [
+        "scythe_circle_drill"
+      ],
+      "CinematicRequired": "true: 백 번째 원 슬로모션",
+      "SaveFlags": [
+        "EP24_AIN_RESUMED_DRILL"
+      ],
+      "Prerequisites": [
+        "EP24_SC008"
+      ],
+      "NextScene": "EP24_SC010",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_nat",
+        "anim:scythe_circle_drill",
+        "vfx:낫 궤적",
+        "vfx:빗물 가르기",
+        "sfx:낫 바람 소리",
+        "sfx:빗소리",
+        "bgm:결의의 모티프 재등장"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC010",
+      "NovelSource": "L13940-L13957 §10 이름을 적는 밤",
+      "NovelSummary": "밤에 아인은 등잔 밑에서 마태오의 손실 장부를 편다. 목록 끝 첫 빈 줄에 검체 41-B가 아닌 「현OO. 중위.」를 이름으로 적고, 등급 칸은 비우고 처리 칸에 「물 밖에 눕힘」이라 쓴다. 다음 줄에 류가 말린 명부 장(정 일병과 누나)을 펴서 끼운다. 유진의 말을 떠올리며 이름을 적는 것이 저항임을 깨닫고, 장부를 방수포로 싼다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "기록이 저항이 되는 순간",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "장부에 이름을 적는다",
+      "Interaction": [
+        "장부 펴기",
+        "이름 기입",
+        "명부 장 끼우기",
+        "방수포로 싸기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "등잔 불빛 아래 방",
+      "Props": [
+        "prop_sonsil_jangbu",
+        "prop_pen",
+        "prop_deungjan",
+        "prop_myeongbu_jang",
+        "prop_bangsupo"
+      ],
+      "VFX": [
+        "등잔 불빛"
+      ],
+      "SFX": [
+        "펜 긁는 소리",
+        "종이 넘김"
+      ],
+      "Music": "고요한 피아노",
+      "GameplayEntry": "밤 이벤트",
+      "GameplayExit": "장부를 방수포로 싸면 종료",
+      "AnimationRequired": [
+        "write_ledger",
+        "wrap_in_tarp"
+      ],
+      "CinematicRequired": "true: 장부 클로즈업(적힌 문구 노출)",
+      "SaveFlags": [
+        "EP24_LEDGER_HYEON_JUNGWI_WRITTEN"
+      ],
+      "Prerequisites": [
+        "EP24_SC009"
+      ],
+      "NextScene": "EP24_SC011",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "prop:prop_sonsil_jangbu",
+        "prop:prop_pen",
+        "prop:prop_deungjan",
+        "prop:prop_myeongbu_jang",
+        "prop:prop_bangsupo",
+        "anim:write_ledger",
+        "anim:wrap_in_tarp",
+        "vfx:등잔 불빛",
+        "sfx:펜 긁는 소리",
+        "sfx:종이 넘김",
+        "bgm:고요한 피아노"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC011",
+      "NovelSource": "L13958-L13983 §11 갱신",
+      "NovelSummary": "떠나는 아침 다섯이 마당에 선다. 카인은 계룡 전과 후는 다른 길이며 지금 빠져도 셈하지 않는다고 확인한다. 아무도 움직이지 않고, 류는 받을 이자가 있다고, 세라는 자기가 끄러 가고 너희는 호위라고, 아인은 같은 데를 보니까 간다고 답한다. 동맹의 이름은 그대로, 무게만 바뀐다.",
+      "Location": "loc_sigol_maeul_pyega",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "동맹 갱신",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "확인하자.",
+          "Source": "L13962"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "알면서 가는 놈만 가.",
+          "Source": "L13966"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "이자 받을 게 있어서요.",
+          "Source": "L13970"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "내가 끄러 가는 거야. 너흰 호위고.",
+          "Source": "L13974"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…같은 데를 보니까, 가요.",
+          "Source": "L13978"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "동맹을 확인하고 출발한다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "비 그친 아침 마당",
+      "Props": [
+        "prop_ryu_insikpyo",
+        "prop_chokmae_gabang",
+        "prop_nat"
+      ],
+      "VFX": [],
+      "SFX": [
+        "아침 새소리 없음 — 정적"
+      ],
+      "Music": "동맹 테마",
+      "GameplayEntry": "출발 아침 이벤트",
+      "GameplayExit": "아인이 낫을 어깨에 걸면 출발",
+      "AnimationRequired": [
+        "fidget_tag",
+        "adjust_bag_strap",
+        "shoulder_scythe"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP24_ALLIANCE_RENEWED"
+      ],
+      "Prerequisites": [
+        "EP24_SC010"
+      ],
+      "NextScene": "EP24_SC012",
+      "RequiredAssets": [
+        "env:loc_sigol_maeul_pyega",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_ryu_insikpyo",
+        "prop:prop_chokmae_gabang",
+        "prop:prop_nat",
+        "anim:fidget_tag",
+        "anim:adjust_bag_strap",
+        "anim:shoulder_scythe",
+        "sfx:아침 새소리 없음 — 정적",
+        "bgm:동맹 테마"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC012",
+      "NovelSource": "L13984-L13999 §12 비 갠 하늘",
+      "NovelSummary": "마을을 나서는 길에 비가 갠다. 다섯은 물웅덩이에 담긴 하늘을 밟으며 남쪽으로 걷는다. 카인은 미움의 새 수신인을 「신호」로 적어 두고 걸음이 가벼워졌다. 아인은 스무 걸음의 고요 밑으로 남쪽에서 커다란 박동이 어제보다 분명하게 닿아 오는 것을 듣고, 그것을 노래라 부르지 않기로 한다.",
+      "Location": "loc_jeojeun_gukdo",
+      "TimeOfDay": "아침~낮 (비 갬, 해가 낮게 듦)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "남쪽의 부름이 뚜렷해짐",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "남쪽으로 이동한다",
+      "Interaction": [
+        "이동",
+        "멈춰서 남쪽 박동 청취(아인의 청각)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "젖은 국도, 물웅덩이에 비친 하늘",
+      "Props": [],
+      "VFX": [
+        "물웅덩이 하늘 반사",
+        "낮은 햇빛"
+      ],
+      "SFX": [
+        "발에 밟히는 물",
+        "원거리 거대 박동(희미)"
+      ],
+      "Music": "담담한 여정 테마 위로 저음 박동",
+      "GameplayEntry": "마을 출발",
+      "GameplayExit": "저녁 갈림길 도착",
+      "AnimationRequired": [
+        "group_walk"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP24_HEARD_SOUTHERN_PULSE"
+      ],
+      "Prerequisites": [
+        "EP24_SC011"
+      ],
+      "NextScene": "EP24_SC013",
+      "RequiredAssets": [
+        "env:loc_jeojeun_gukdo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:group_walk",
+        "vfx:물웅덩이 하늘 반사",
+        "vfx:낮은 햇빛",
+        "sfx:발에 밟히는 물",
+        "sfx:원거리 거대 박동(희미)",
+        "bgm:담담한 여정 테마 위로 저음 박동"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP24",
+      "SceneId": "EP24_SC013",
+      "NovelSource": "L14000-L14032 §13 남은 거리",
+      "NovelSummary": "저녁 무렵 갈림길의 녹슨 이정표에 「고흥 방면」과 남은 거리가 남아 있다. 오정길이 있었다면 「걸어서 열흘」이라 했을 것이고, 이제 지도를 보는 세라의 수치도 같다. 익지 않으려 아껴 걷고 늦지 않게 걷는 열흘을 앞두고, 다섯은 황혼 속으로 이정표를 지나간다. (화 끝 및 제25화 예고 포함)",
+      "Location": "loc_galimgil_ijeongpyo",
+      "TimeOfDay": "저녁 무렵 (황혼)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "남은 거리 확정 — 열흘",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "TRANSITION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "이정표를 확인하고 지나간다",
+      "Interaction": [
+        "이정표 살피기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "해 지는 갈림길, 젖은 길 위의 황혼, 앞서 걷는 긴 그림자",
+      "Props": [
+        "prop_ijeongpyo"
+      ],
+      "VFX": [
+        "황혼 광",
+        "긴 그림자"
+      ],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "황혼 테마(에피소드 엔딩)",
+      "GameplayEntry": "갈림길 도착",
+      "GameplayExit": "에피소드 종료 → EP25",
+      "AnimationRequired": [
+        "look_up_sign",
+        "group_walk"
+      ],
+      "CinematicRequired": "true: 에피소드 엔딩 황혼 롱숏",
+      "SaveFlags": [
+        "EP24_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP24_SC012"
+      ],
+      "NextScene": "EP25_SC001",
+      "RequiredAssets": [
+        "env:loc_galimgil_ijeongpyo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_ijeongpyo",
+        "anim:look_up_sign",
+        "anim:group_walk",
+        "vfx:황혼 광",
+        "vfx:긴 그림자",
+        "sfx:바람",
+        "bgm:황혼 테마(에피소드 엔딩)"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_sigol_maeul_pyega",
+      "NameKo": "빈 시골 마을의 폐가",
+      "DescriptionKo": "계룡에서 이틀을 걸은 뒤 머문 폐가. 지붕이 반쯤 살아 있고, 마루에서 마당에 비 떨어지는 것이 보인다. 마당 구석 처마 밑, 마루 기둥, 등잔 켜는 방.",
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC002",
+        "EP24_SC003",
+        "EP24_SC004",
+        "EP24_SC005",
+        "EP24_SC007",
+        "EP24_SC009",
+        "EP24_SC010",
+        "EP24_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_bukjjok_gil",
+      "NameKo": "북쪽으로 난 밤길 (빗속)",
+      "DescriptionKo": "류가 홀로 두 시간을 걸은 북쪽 길. 구체적 지형은 원고에 없음.",
+      "Scenes": [
+        "EP24_SC006"
+      ]
+    },
+    {
+      "LocationId": "loc_sigol_maeul_eogwi",
+      "NameKo": "마을 어귀",
+      "DescriptionKo": "아인이 낮에 혼자 걸어 나가 스승의 세 규칙을 되짚는 곳.",
+      "Scenes": [
+        "EP24_SC008"
+      ]
+    },
+    {
+      "LocationId": "loc_jeojeun_gukdo",
+      "NameKo": "비 갠 젖은 국도",
+      "DescriptionKo": "마을을 나서는 길. 해가 낮게 들고 물웅덩이마다 하늘이 담긴다.",
+      "Scenes": [
+        "EP24_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_galimgil_ijeongpyo",
+      "NameKo": "고흥 방면 갈림길 이정표",
+      "DescriptionKo": "녹슨 표지판에 지워지다 만 지명과 숫자. 「고흥 방면」과 남은 거리.",
+      "Scenes": [
+        "EP24_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공, 낫잡이(S). 낫 수련을 거르고 다시 드는 인물",
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC002",
+        "EP24_SC003",
+        "EP24_SC004",
+        "EP24_SC005",
+        "EP24_SC007",
+        "EP24_SC008",
+        "EP24_SC009",
+        "EP24_SC010",
+        "EP24_SC011",
+        "EP24_SC012",
+        "EP24_SC013"
+      ],
+      "StateChangesKo": [
+        "EP24_SC002: 이 년 만에 처음으로 새벽 낫 수련을 거름",
+        "EP24_SC009: 알고도 휘두른다는 셈으로 낫 수련 백 번 재개",
+        "EP24_SC010: 손실 장부에 현OO 중위를 이름으로 기입, 장부를 방수포로 쌈"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 사용자. 딸을 잃은 과거를 처음 끝까지 말함",
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC003",
+        "EP24_SC004",
+        "EP24_SC005",
+        "EP24_SC009",
+        "EP24_SC011",
+        "EP24_SC012",
+        "EP24_SC013"
+      ],
+      "StateChangesKo": [
+        "EP24_SC003: 담배를 피우지 않음, 딸 이야기를 처음으로 끝맺고 딸의 이름을 소리 내어 말함",
+        "EP24_SC012: 걸음이 가벼워짐 — 미움의 새 수신인을 「신호」로 정함"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "쌍단검·후드의 정보상. 한밤에 떠났다가 새벽에 돌아옴",
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC003",
+        "EP24_SC004",
+        "EP24_SC006",
+        "EP24_SC007",
+        "EP24_SC011",
+        "EP24_SC012",
+        "EP24_SC013"
+      ],
+      "StateChangesKo": [
+        "EP24_SC005: 배낭·후드·쌍단검을 챙겨 사라짐, C 인식표를 마루 기둥에 걸어 둠",
+        "EP24_SC007: 인식표를 도로 목에 걺, 젖은 명부 장을 처마 밑에 말림"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "연구자 출신. 촉매·계측기. 코어 파괴 불가와 신호 차단 목표를 밝힘",
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC004",
+        "EP24_SC005",
+        "EP24_SC011",
+        "EP24_SC012",
+        "EP24_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "(언급) 손실 장부의 원 주인",
+      "Scenes": [
+        "EP24_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "(언급·회상 목소리) 「기록은 남아야 하니까요」",
+      "Scenes": [
+        "EP24_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "(언급) 일행에 없음 — 「있었다면 그렇게 말했을 것」",
+      "Scenes": [
+        "EP24_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seuseung",
+      "NameKo": "스승",
+      "RoleKo": "(언급) 아인에게 낫과 세 규칙을 가르친 스승",
+      "Scenes": [
+        "EP24_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_cha_hanbyeol",
+      "NameKo": "차한별",
+      "RoleKo": "(언급) 항해일지의 마지막 문장 — 「나는 신호를 끄지 못했다」",
+      "Scenes": [
+        "EP24_SC004"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_kain_ttal",
+      "NameKo": "카인의 딸",
+      "RoleKo": "(언급) 셔터 사태 날 벙커 앞에서 손을 놓친 일곱 살 딸. 이름은 원고에 적히지 않음",
+      "Scenes": [
+        "EP24_SC003"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_ilbyeong",
+      "NameKo": "정 일병",
+      "RoleKo": "(언급) 명부에 적힌 생체 이송 대상 — 폐차장의 밤에 끌려간 사람",
+      "Scenes": [
+        "EP24_SC006",
+        "EP24_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_nuna",
+      "NameKo": "정 일병의 누나",
+      "RoleKo": "(언급) 명부에 적힌 민간인 생체 이송 대상",
+      "Scenes": [
+        "EP24_SC006",
+        "EP24_SC010"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "sit_floor_edge",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC001",
+        "EP24_SC003",
+        "EP24_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "마루 끝에 앉아 비를 보는 대기 자세"
+    },
+    {
+      "Action": "stand_frozen_hold_scythe",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫자루를 쥔 채 한 시간 서 있음 — 낫이 올라가지 않는 망설임"
+    },
+    {
+      "Action": "set_down_scythe",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫을 내려놓음"
+    },
+    {
+      "Action": "thumb_point_nape",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP24_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "제 목덜미를 엄지로 가리킴"
+    },
+    {
+      "Action": "restrain_with_hand",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP24_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "일어서려는 카인을 아인이 손으로 눌러 앉힘"
+    },
+    {
+      "Action": "walk_in_rain_hood",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "후드를 쓰고 빗속을 걸음"
+    },
+    {
+      "Action": "read_paper_shield_rain",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "주머니에서 명부 장을 꺼내 손바닥으로 비를 가리며 봄"
+    },
+    {
+      "Action": "turn_back",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "빗속에 오래 서 있다가 돌아섬"
+    },
+    {
+      "Action": "hang_tag_on_neck",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "기둥의 인식표를 집어 도로 목에 걺"
+    },
+    {
+      "Action": "dry_paper_under_eaves",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "젖은 명부 장을 처마 밑에 펴서 말림"
+    },
+    {
+      "Action": "walk_contemplative",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "혼자 천천히 걸으며 생각"
+    },
+    {
+      "Action": "scythe_circle_drill",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원을 그리는 낫 수련 동작 (백 번 반복, 빗물을 가름)"
+    },
+    {
+      "Action": "write_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "등잔 밑에서 장부에 펜으로 기입"
+    },
+    {
+      "Action": "wrap_in_tarp",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장부를 방수포로 쌈"
+    },
+    {
+      "Action": "shoulder_scythe",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP24_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 어깨에 걺"
+    },
+    {
+      "Action": "adjust_bag_strap",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP24_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "촉매 가방을 고쳐 멤"
+    },
+    {
+      "Action": "fidget_tag",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP24_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "인식표를 만지작거림"
+    },
+    {
+      "Action": "group_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP24_SC012",
+        "EP24_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "일행이 나란히 걷는 이동"
+    },
+    {
+      "Action": "look_up_sign",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP24_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "이정표를 올려다봄"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_nat",
+      "NameKo": "아인의 낫",
+      "Scenes": [
+        "EP24_SC002",
+        "EP24_SC003",
+        "EP24_SC009",
+        "EP24_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_ssangdangeom",
+      "NameKo": "류의 쌍단검",
+      "Scenes": [
+        "EP24_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_ryu_insikpyo",
+      "NameKo": "류의 C 인식표",
+      "Scenes": [
+        "EP24_SC005",
+        "EP24_SC007",
+        "EP24_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_dambae_ban",
+      "NameKo": "카인의 반 개비 담배(비닐 포장)",
+      "Scenes": [
+        "EP24_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_myeongbu_jang",
+      "NameKo": "계룡에서 찢어 온 명부 한 장 (정 일병·정 민간)",
+      "Scenes": [
+        "EP24_SC006",
+        "EP24_SC007",
+        "EP24_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_usb",
+      "NameKo": "여섯 명 값의 USB",
+      "Scenes": [
+        "EP24_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_sonsil_jangbu",
+      "NameKo": "마태오의 손실 장부",
+      "Scenes": [
+        "EP24_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_pen",
+      "NameKo": "펜",
+      "Scenes": [
+        "EP24_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_deungjan",
+      "NameKo": "등잔",
+      "Scenes": [
+        "EP24_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_bangsupo",
+      "NameKo": "방수포",
+      "Scenes": [
+        "EP24_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_chokmae_gabang",
+      "NameKo": "세라의 촉매 가방",
+      "Scenes": [
+        "EP24_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_ijeongpyo",
+      "NameKo": "녹슨 이정표",
+      "Scenes": [
+        "EP24_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_baenang_ryu",
+      "NameKo": "류의 배낭",
+      "Scenes": [
+        "EP24_SC006"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP24_SC001",
+      "QuestionKo": "원고는 일행을 「다섯」이라 부르나(§1·§11·§12 등), 이 화에 등장·언급되는 동행은 아인·카인·류·세라 넷뿐이고 오정길은 부재로 명시됨. EP28 §7은 「넷이 온전히 돌아온 것」이라 함. 다섯 번째 인원이 누구인지(또는 표기 오류인지) 미확정."
+    },
+    {
+      "Scene": "EP24_SC003",
+      "QuestionKo": "카인이 소리 내어 말한 딸의 이름은 원고에 적히지 않음(의도적 공백). 게임에서 음성/자막 처리 방식 TBD."
+    },
+    {
+      "Scene": "EP24_SC003",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (같은 날 저녁 이전, 비)」"
+    },
+    {
+      "Scene": "EP24_SC005",
+      "QuestionKo": "원고는 「넷 중 셋이 뜬눈으로 밤을 났다」고 하여 류를 뺀 인원을 넷으로 셈 — 전체 인원 「다섯」 표기와의 관계 미확정(SC001 참조)."
+    },
+    {
+      "Scene": "EP24_SC006",
+      "QuestionKo": "류가 걸은 북쪽 길의 구체적 장소·지형 원고 미기재."
+    },
+    {
+      "Scene": "EP24_SC011",
+      "QuestionKo": "「떠나는 아침, 다섯은 마당에 섰다」 — 대사자는 카인·류·세라·아인 넷. 다섯 번째 인원 미확정(SC001 참조)."
+    },
+    {
+      "Scene": "EP24_SC001",
+      "QuestionKo": "이 화 전체에서 인물 의상 묘사가 거의 없음(류의 후드, 세라의 촉매 가방 정도). 기본 의상은 이전 화/모델시트 기준 — 이 화 원고로는 확정 불가."
+    }
+  ]
+}

@@ -1,0 +1,2253 @@
+{
+  "EpisodeId": "EP28",
+  "TitleKo": "황혼의 서울: 사신의 각인",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      14972,
+      15321
+    ]
+  },
+  "SummaryKo": "지상으로 나오자 발사대가 목덜미로 듣는 노래를 부르고, 세라는 송신원이 자신들이라 멀어져서는 안 되며 증폭기인 탑을 부숴야 한다고 계산한다. 류가 케이블 다발의 소켓을 끊어 주각의 결정을 쇠로 되돌리고, 세라가 마지막 촉매로 응력점을 드러내고, 카인이 첫 주각에 장검을 박아 지렛대를 만들고, 아인이 트러스를 올라 두 번째 주각의 응력점을 단 한 번의 원으로 벤다. 탑은 바다 쪽으로 넘어가고 노래가 끊긴다. 그러나 그래프는 멈추지 않고 느려졌을 뿐이며, 그날 낮 방파제 끝에서 넷은 SS에 도달한다. 넷 다 아직 자신임을 확인하고, 아인은 서울로 돌아가자고 한다. 한 달의 귀로 동안 지휘를 잃은 집행관들 사이를 싸우지 않고 지나 강남 벙커에 돌아오자 오정길이 귀환의 종을 치고, 두호·두나와 벙커 사람들이 맞는다. 넷은 관제실에서 전부를 보고하고, 마태오는 이름부터 다시 적겠다며 새 장부를 꺼낸다. 세라는 닥터 진의 처방지 필체를 어디선가 본 듯하지만 더 묻지 않는다. 이레째 황혼의 옥상에서 넷은 남은 동안 무엇을 할지는 저놈들이 정하지 못한다고 말하고, 아인은 장부 사본에 차한별과 여섯, 정 장관의 이름을 적고 카인은 딸의 이름을 쓴다. 두호는 두나에게 노크 셈을 가르치고, 오정길의 저녁 순찰을 따라간 두나의 목덜미에 갓 태어난 결정이 빛난다. 그 밤 두나는 별들 사이에서 이쪽으로 오는 빛을 보고 허공을 두 번 두드린다 — 하늘 저편의 무언가가 신호를 수신했다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC001",
+      "NovelSource": "L14972-L15007 §1 노래하는 탑",
+      "NovelSummary": "갱도를 거슬러 지상에 나오자 발사대 탑의 뼈대 전체가 목덜미로 듣는 노래를 부르고, 박자를 맞출 때마다 그래프가 한 눈금씩 자란다. 새벽의 발사장을 뛰며 세라는 멀어져서는 안 된다 — 탑은 증폭기이고 송신원은 우리이며 도달까지 몇 시간이라 계산하고, 탑을 부순다고 한다. 카인이 그녀의 오래된 문장을 대신 끝내고, 도망치던 길이 마지막 전장으로 가는 길이 된다.",
+      "Location": "loc_goheung_balsajang",
+      "TimeOfDay": "새벽",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방"
+      ],
+      "StoryBeat": "마지막 적은 탑",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "멀어지는 걸로는 안 돼.",
+          "Source": "L14994"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "송신원은 우리고.",
+          "Source": "L14994"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "탑을 부순다.",
+          "Source": "L14998"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "남은 길은 그거 하나다.",
+          "Source": "L15000"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "탑을 향해 방향을 튼다",
+      "Interaction": [
+        "발사장 횡단 이동"
+      ],
+      "BossId": "boss_balsadae_tap",
+      "BossPhase": "",
+      "EnvironmentState": "새벽, 노래하는 탑",
+      "Props": [],
+      "VFX": [
+        "탑 공명 파동",
+        "목덜미 발광 동조"
+      ],
+      "SFX": [
+        "탑의 웅웅거림",
+        "달리는 발소리"
+      ],
+      "Music": "긴박 → 결의",
+      "GameplayEntry": "EP27 갱도 탈출 직후",
+      "GameplayExit": "탑 기저 도착",
+      "AnimationRequired": [
+        "run_across",
+        "boss_tower_hum"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP28_DECIDED_DESTROY_TOWER"
+      ],
+      "Prerequisites": [
+        "EP27_COMPLETE"
+      ],
+      "NextScene": "EP28_SC002",
+      "RequiredAssets": [
+        "env:loc_goheung_balsajang",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:run_across",
+        "anim:boss_tower_hum",
+        "vfx:탑 공명 파동",
+        "vfx:목덜미 발광 동조",
+        "sfx:탑의 웅웅거림",
+        "sfx:달리는 발소리",
+        "bgm:긴박 → 결의"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC002",
+      "NovelSource": "L15008-L15035 §2 마지막 전투",
+      "NovelSummary": "탑에는 심장이 없어 벨 곳이 없지만 구조가 있다 — 주각 넷, 트러스, 결정이 신경처럼 오른 케이블 다발. 세라는 같은 쪽 주각 둘을 끊으면 자중으로 바다 쪽으로 넘어간다고 읽는다. 류가 케이블 소켓을 꿰어 결정의 신경을 끊자 주각이 쇠로 돌아가고, 세라가 마지막 촉매로 이음매에 서명을 전사해 응력점을 떠올린다. 카인이 첫 주각 응력점에 장검을 박아 지렛대를 만들고(모루), 아인이 트러스를 타고 케이블에 낫을 걸어 두 번째 주각 응력점까지 올라 가장 큰 원을 한 번 그린다.",
+      "Location": "loc_balsadae_tap",
+      "TimeOfDay": "새벽 (TBD_CANON — §3에서 해가 오름)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방"
+      ],
+      "StoryBeat": "탑을 베다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "주각 둘을 같은 쪽에서 끊으면 자중으로 넘어가.",
+          "Source": "L15014"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "모루.",
+          "Source": "L15020"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "주각 둘의 응력점을 끊어 탑을 넘어뜨린다",
+      "Interaction": [
+        "구조 분석(세라)",
+        "케이블 소켓 절단(류) — 결정 신경 해제",
+        "응력점 표시(세라 촉매)",
+        "지렛대 고정(카인)",
+        "트러스 수직 등반·낫 걸기",
+        "응력점 단일 타격"
+      ],
+      "BossId": "boss_balsadae_tap",
+      "BossPhase": "P1",
+      "EnvironmentState": "강철과 결정이 얽힌 주각, 트러스, 결정 케이블 다발, 노래하는 탑",
+      "Props": [
+        "prop_tap_jugak",
+        "prop_chokmae_gabang",
+        "prop_kain_janggeom",
+        "prop_nat",
+        "prop_ssangdangeom"
+      ],
+      "VFX": [
+        "결정 신경 소등",
+        "응력점 발광",
+        "가장 큰 원 궤적"
+      ],
+      "SFX": [
+        "소켓 절단",
+        "강철 비명",
+        "서걱"
+      ],
+      "Music": "최종 결전 — 탑의 노래 위 대위 선율",
+      "GameplayEntry": "탑 기저 도착",
+      "GameplayExit": "두 번째 주각 절단 → SC003",
+      "AnimationRequired": [
+        "socket_cut_cable",
+        "catalyst_transfer_stresspoint",
+        "anvil_lever_sword",
+        "truss_climb_scythe_hook",
+        "scythe_greatest_circle",
+        "boss_tower_hum"
+      ],
+      "CinematicRequired": "true: 가장 큰 원 결정타",
+      "SaveFlags": [
+        "EP28_TOWER_LEGS_CUT"
+      ],
+      "Prerequisites": [
+        "EP28_SC001"
+      ],
+      "NextScene": "EP28_SC003",
+      "RequiredAssets": [
+        "env:loc_balsadae_tap",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_tap_jugak",
+        "prop:prop_chokmae_gabang",
+        "prop:prop_kain_janggeom",
+        "prop:prop_nat",
+        "prop:prop_ssangdangeom",
+        "anim:socket_cut_cable",
+        "anim:catalyst_transfer_stresspoint",
+        "anim:anvil_lever_sword",
+        "anim:truss_climb_scythe_hook",
+        "anim:scythe_greatest_circle",
+        "anim:boss_tower_hum",
+        "vfx:결정 신경 소등",
+        "vfx:응력점 발광",
+        "vfx:가장 큰 원 궤적",
+        "sfx:소켓 절단",
+        "sfx:강철 비명",
+        "sfx:서걱",
+        "bgm:최종 결전 — 탑의 노래 위 대위 선율"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC003",
+      "NovelSource": "L15036-L15063 §3 넘어가는 탑",
+      "NovelSummary": "주각 둘을 잃은 탑이 제 무게에 바다 쪽으로 기울고 트러스가 차례로 비명을 지르며, 이 반도에서 가장 높았던 것이 새 없는 하늘을 그으며 물속으로 무너진다. 노래가 끊긴다. 방파제에서 다섯은 해가 오르는 바다를 보고, 카인이 끝났냐고 묻는다. 세라가 계측기를 닫지 못한 채 — 그래프는 멈춘 것이 아니라 느려졌다고 보고한다.",
+      "Location": "loc_bangpaje",
+      "TimeOfDay": "아침 (해가 오름)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "승리와 멈추지 않는 그래프",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…끝났나.",
+          "Source": "L15048"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…느려졌어.",
+          "Source": "L15056"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "멈춘 게 아니라, 느려졌어.",
+          "Source": "L15060"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "탑이 무너지는 것을 본다",
+      "Interaction": [],
+      "BossId": "boss_balsadae_tap",
+      "BossPhase": "",
+      "EnvironmentState": "바다로 무너지는 탑, 물기둥, 해돋이, 웅웅거림이 사라진 정적",
+      "Props": [
+        "prop_sonmok_gyecheukgi"
+      ],
+      "VFX": [
+        "탑 붕괴",
+        "물기둥",
+        "해돋이"
+      ],
+      "SFX": [
+        "트러스 비명",
+        "거대 낙수",
+        "노래 끊김 후 정적",
+        "파도"
+      ],
+      "Music": "붕괴 → 정적 → 쓸쓸한 해돋이 테마",
+      "GameplayEntry": "결정타 직후",
+      "GameplayExit": "SC004",
+      "AnimationRequired": [
+        "boss_tower_topple",
+        "stand_watch",
+        "open_wrist_gauge"
+      ],
+      "CinematicRequired": "true: 탑 붕괴 컷신",
+      "SaveFlags": [
+        "EP28_BOSS_TOWER_DESTROYED"
+      ],
+      "Prerequisites": [
+        "EP28_SC002"
+      ],
+      "NextScene": "EP28_SC004",
+      "RequiredAssets": [
+        "env:loc_bangpaje",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_sonmok_gyecheukgi",
+        "anim:boss_tower_topple",
+        "anim:stand_watch",
+        "anim:open_wrist_gauge",
+        "vfx:탑 붕괴",
+        "vfx:물기둥",
+        "vfx:해돋이",
+        "sfx:트러스 비명",
+        "sfx:거대 낙수",
+        "sfx:노래 끊김 후 정적",
+        "sfx:파도",
+        "bgm:붕괴 → 정적 → 쓸쓸한 해돋이 테마"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC004",
+      "NovelSource": "L15064-L15095 §4 문턱의 아침",
+      "NovelSummary": "그날 낮 방파제 끝에서 넷의 그래프가 마지막 눈금에 닿는다. 빛기둥도 굉음도 없이 — 아인의 스무 걸음은 백 걸음이 되어 파도 밑 모래 구르는 소리까지 들리고, 카인의 관절 주황은 흐르고, 류의 잔상은 세 겹이 된다. 세라가 네 손목을 재자 계측기가 처음으로 「SS」를 띄운다. 축하 없이, 카인이 「아직, 너야?」 묻고 아인이 「저예요」, 카인은 「나다. 아직」이라 답한다. 억제제와 감광 조치, 그리고 마찰이라 불렀던 사람의 쓸데없는 것들이 자아를 붙들고 있다.",
+      "Location": "loc_bangpaje",
+      "TimeOfDay": "낮",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "[SS] 도달 — 아직 넷이다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…아직, 너야?",
+          "Source": "L15078"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…저예요.",
+          "Source": "L15082"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "카인은요.",
+          "Source": "L15086"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…나다. 아직.",
+          "Source": "L15088"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "SS 도달을 확인한다",
+      "Interaction": [
+        "감각 확장 체험(청각 백 걸음)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "바닷바람 부는 방파제 끝",
+      "Props": [
+        "prop_sonmok_gyecheukgi"
+      ],
+      "VFX": [
+        "관절 주황 흐름(카인)",
+        "잔상 세 겹(류)",
+        "계측기 SS 표시"
+      ],
+      "SFX": [
+        "네 번의 삑",
+        "파도 밑 모래 구르는 소리(확장 청각)"
+      ],
+      "Music": "정적인 문턱 테마",
+      "GameplayEntry": "SC003 이후 낮",
+      "GameplayExit": "SC005",
+      "AnimationRequired": [
+        "open_wrist_gauge",
+        "exchange_gaze"
+      ],
+      "CinematicRequired": "true: SS 표시와 네 사람의 눈",
+      "SaveFlags": [
+        "EP28_SS_REACHED"
+      ],
+      "Prerequisites": [
+        "EP28_SC003"
+      ],
+      "NextScene": "EP28_SC005",
+      "RequiredAssets": [
+        "env:loc_bangpaje",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_sonmok_gyecheukgi",
+        "anim:open_wrist_gauge",
+        "anim:exchange_gaze",
+        "vfx:관절 주황 흐름(카인)",
+        "vfx:잔상 세 겹(류)",
+        "vfx:계측기 SS 표시",
+        "sfx:네 번의 삑",
+        "sfx:파도 밑 모래 구르는 소리(확장 청각)",
+        "bgm:정적인 문턱 테마"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC005",
+      "NovelSource": "L15096-L15117 §5 돌아가는 길",
+      "NovelSummary": "아인이 서울로 가자고 한다. 벙커가 등급과 수거의 진실을 알아야 하고, 억제제를 양산할 수 있는 세라와 닥터 진이 만나야 하며, 노크를 배운 두 아이가 있기 때문이다. 세라는 걸어서 한 달이라 하고, 카인은 장검을 지팡이 삼아 살아 있는 동안엔 걷는 거라 한다. 넷은 남으로 배송되던 길을 다 익은 채 제 발로 북으로 거슬러 걷는다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "귀환 결정 — 마지막 형태의 자유",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "서울로 가요.",
+          "Source": "L15098"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "걸어서 한 달.",
+          "Source": "L15106"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…걷지. 살아 있는 동안엔, 걷는 거야.",
+          "Source": "L15110"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "귀환을 결정한다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "원고 미기재",
+      "Props": [
+        "prop_kain_janggeom"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "귀로 테마 도입",
+      "GameplayEntry": "SC004 이후",
+      "GameplayExit": "북상 시작 → SC006",
+      "AnimationRequired": [
+        "walk_with_sword_cane",
+        "group_walk"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP28_RETURN_TO_SEOUL"
+      ],
+      "Prerequisites": [
+        "EP28_SC004"
+      ],
+      "NextScene": "EP28_SC006",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_kain_janggeom",
+        "anim:walk_with_sword_cane",
+        "anim:group_walk",
+        "sfx:바람",
+        "bgm:귀로 테마 도입"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC006",
+      "NovelSource": "L15118-L15140 §6 황혼의 귀로",
+      "NovelSummary": "한 달의 귀로. 심장이 꺼진 뒤 집행관들의 순찰은 흐트러졌고 어떤 것들은 제자리에서 움직이지 않는다. SS의 몸 앞에서 싸움이 성립하지 않아 넷은 싸우지 않고 지나간다. 북상 길목마다 서 하사의 표식이 바로 서 있고, 어느 갈림길에는 들꽃 놓인 돌무더기가 있어 잠깐 멈췄다 지난다. 저녁마다 황혼 속을 걷고, 한 달째 저녁 지평선에 무너진 남산타워가 보인다.",
+      "Location": "loc_bukhyang_gukdo",
+      "TimeOfDay": "한 달간, 저녁마다 황혼 — 한 달째 저녁",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "거슬러 걷는 길",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "서울까지 북상한다",
+      "Interaction": [
+        "이동",
+        "정지한 집행관 사이를 교전 없이 통과",
+        "표식 따라가기",
+        "돌무더기 앞 정지"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "흐트러진 집행관 순찰, 바로 선 표식, 황혼의 국도, 원경의 무너진 남산타워",
+      "Props": [
+        "prop_pyosik_dolmudeogi"
+      ],
+      "VFX": [
+        "황혼 광",
+        "목덜미 나란한 반짝임"
+      ],
+      "SFX": [
+        "바람",
+        "발소리"
+      ],
+      "Music": "황혼의 귀로 테마",
+      "GameplayEntry": "귀환 결정 후",
+      "GameplayExit": "남산타워가 보이면 SC007",
+      "AnimationRequired": [
+        "group_walk",
+        "pause_by_cairn"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP28_SEOUL_IN_SIGHT"
+      ],
+      "Prerequisites": [
+        "EP28_SC005"
+      ],
+      "NextScene": "EP28_SC007",
+      "RequiredAssets": [
+        "env:loc_bukhyang_gukdo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_pyosik_dolmudeogi",
+        "anim:group_walk",
+        "anim:pause_by_cairn",
+        "vfx:황혼 광",
+        "vfx:목덜미 나란한 반짝임",
+        "sfx:바람",
+        "sfx:발소리",
+        "bgm:황혼의 귀로 테마"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC007",
+      "NovelSource": "L15141-L15152 §7 벙커 (귀환)",
+      "NovelSummary": "강남 벙커 철문 앞에서 경비 오정길이 먼저 알아보고, 넷을 하나씩 눈으로 세어 넷이 온전히 돌아온 것을 확인한 뒤 귀환의 종을 세 번 친다. 마태오·유진·수희·한 장인과 두 아이가 달려 나오고, 두호가 아인 앞에서 허공을 두 번 두드리자 아인이 무릎을 굽혀 처음으로 소리 내어 대답한다. 두나가 C 인식표를 자랑스럽게 들어 보이고, 아인은 그 글자에 반 박자 머물렀다가 웃어 준다.",
+      "Location": "loc_gangnam_bunker_cheolmun",
+      "TimeOfDay": "TBD_CANON (한 달째 저녁 남산타워 조망 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_oh_jeonggil",
+        "char_mateo",
+        "char_yujin",
+        "char_suhui",
+        "char_han_jangin",
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "귀환 — 깡, 깡",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_oh_jeonggil",
+        "char_mateo",
+        "char_yujin",
+        "char_suhui",
+        "char_han_jangin",
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "왔어. — 어디 있어도, 라고 했잖아.",
+          "Source": "L15149"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "벙커로 귀환한다",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 철문 앞, 쏟아져 나오는 사람들",
+      "Props": [
+        "prop_gwihwan_jong",
+        "prop_duna_insikpyo"
+      ],
+      "VFX": [],
+      "SFX": [
+        "귀환의 종 3회",
+        "깡, 깡(허공 노크 — 효과음 처리 TBD)",
+        "환호"
+      ],
+      "Music": "귀환 테마(온기)",
+      "GameplayEntry": "벙커 도착",
+      "GameplayExit": "SC008",
+      "AnimationRequired": [
+        "ring_bell",
+        "run_to_greet",
+        "air_knock_twice",
+        "kneel_eye_level",
+        "show_tag_proud"
+      ],
+      "CinematicRequired": "true: 귀환 컷신",
+      "SaveFlags": [
+        "EP28_RETURNED_TO_BUNKER"
+      ],
+      "Prerequisites": [
+        "EP28_SC006"
+      ],
+      "NextScene": "EP28_SC008",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker_cheolmun",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_oh_jeonggil",
+        "char:char_mateo",
+        "char:char_yujin",
+        "char:char_suhui",
+        "char:char_han_jangin",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_gwihwan_jong",
+        "prop:prop_duna_insikpyo",
+        "anim:ring_bell",
+        "anim:run_to_greet",
+        "anim:air_knock_twice",
+        "anim:kneel_eye_level",
+        "anim:show_tag_proud",
+        "sfx:귀환의 종 3회",
+        "sfx:깡, 깡(허공 노크 — 효과음 처리 TBD)",
+        "sfx:환호",
+        "bgm:귀환 테마(온기)"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC008",
+      "NovelSource": "L15153-L15166 §7 벙커 (관제실 보고)",
+      "NovelSummary": "그날 밤 관제실에서 넷은 등급의 정체, 수거의 이유, 억제제의 뜻, 탑과 심장과 신호까지 전부를 보고한다 — 함구령의 시대는 끝났다. 끝까지 들은 마태오는 무너뜨리는 건 하루면 되지만 다음 날 아침은 누가 책임지느냐던 자신의 질문을 돌려놓고, 서랍에서 새 장부를 꺼내 우리가 책임진다, 등급 말고 이름부터 다시 적는다고 한다.",
+      "Location": "loc_bunker_gwanjesil",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "다음 날 아침의 책임",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "…무너뜨리는 건 하루면 된다고 했었지.",
+          "Source": "L15157"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "우리가 책임진다. 내일부터.",
+          "Source": "L15161"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "이름부터 다시 적는다.",
+          "Source": "L15161"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "전부를 보고한다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤의 관제실",
+      "Props": [
+        "prop_sae_jangbu"
+      ],
+      "VFX": [],
+      "SFX": [
+        "서랍 여는 소리"
+      ],
+      "Music": "무게 있는 현악",
+      "GameplayEntry": "그날 밤",
+      "GameplayExit": "SC009",
+      "AnimationRequired": [
+        "take_out_ledger"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP28_TRUTH_REPORTED",
+        "EP28_NEW_LEDGER_STARTED"
+      ],
+      "Prerequisites": [
+        "EP28_SC007"
+      ],
+      "NextScene": "EP28_SC009",
+      "RequiredAssets": [
+        "env:loc_bunker_gwanjesil",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_mateo",
+        "prop:prop_sae_jangbu",
+        "anim:take_out_ledger",
+        "sfx:서랍 여는 소리",
+        "bgm:무게 있는 현악"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC009",
+      "NovelSource": "L15167-L15190 §8 두 개의 처방",
+      "NovelSummary": "이튿날 의무실에서 세라와 닥터 진이 억제제(성숙 지연제) 양산을 위해 배합식을 나란히 놓는다. 세라의 눈은 배합식이 아니라 획 끝이 아래로 꺾이는 닥터 진의 글씨에서 멈춘다 — 어디선가 본 필체. 어디서 배웠느냐 묻자 닥터 진은 안경을 고쳐 쓰며 오래된 얘기라며 처방지를 도로 가져간다. 세라는 더 묻지 않지만 그 뒤 이따금 약장의 라벨을 오래 바라본다.",
+      "Location": "loc_bunker_uimusil",
+      "TimeOfDay": "TBD_CANON (이튿날)",
+      "Characters": [
+        "char_sera",
+        "char_dr_jin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "필체의 복선",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_sera",
+        "char_dr_jin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…이 제법.",
+          "Source": "L15175"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "어디서 배웠어요?",
+          "Source": "L15179"
+        },
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "…오래된 얘깁니다. 배합이나 맞춥시다.",
+          "Source": "L15183"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "처방을 맞춰 본다",
+      "Interaction": [
+        "처방지 비교(필체 클로즈업)",
+        "약장 라벨 살피기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "의무실 책상, 약장",
+      "Props": [
+        "prop_cheobangji",
+        "prop_angyeong",
+        "prop_yakjang"
+      ],
+      "VFX": [],
+      "SFX": [
+        "종이 소리"
+      ],
+      "Music": "미스터리 저음 모티프",
+      "GameplayEntry": "이튿날 의무실",
+      "GameplayExit": "SC010",
+      "AnimationRequired": [
+        "exchange_papers",
+        "adjust_glasses"
+      ],
+      "CinematicRequired": "true: 필체 클로즈업",
+      "SaveFlags": [
+        "EP28_SUPPRESSANT_PRODUCTION_STARTED",
+        "EP28_DR_JIN_HANDWRITING_SEEN"
+      ],
+      "Prerequisites": [
+        "EP28_SC008"
+      ],
+      "NextScene": "EP28_SC010",
+      "RequiredAssets": [
+        "env:loc_bunker_uimusil",
+        "char:char_sera",
+        "char:char_dr_jin",
+        "prop:prop_cheobangji",
+        "prop:prop_angyeong",
+        "prop:prop_yakjang",
+        "anim:exchange_papers",
+        "anim:adjust_glasses",
+        "sfx:종이 소리",
+        "bgm:미스터리 저음 모티프"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC010",
+      "NovelSource": "L15191-L15224 §9 옥상",
+      "NovelSummary": "돌아온 지 이레째 저녁, 넷은 벙커 옥상 난간에 나란히 기댄다 — 낫을 어깨에 건 아인, 장검을 짚은 카인, 후드를 벗은 류, 빈 촉매 가방을 멘 세라. 무너진 남산타워 너머 황혼의 서울. 세라가 습관처럼 계측기를 열었다 닫고 코트 주머니에 넣는다. 류가 앞으로 얼마나 남았을지 묻자 세라는 모른다며, 남은 동안 우리가 뭘 하는지는 저놈들이 못 정한다고 답한다. 수확자를 수확하는 낫이 주인의 어깨에 얌전히 걸려 있다.",
+      "Location": "loc_bunker_oksang",
+      "TimeOfDay": "저녁 (이레째, 황혼)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "아인: 낫을 어깨에 걺",
+        "카인: 장검을 짚음",
+        "류: 후드 벗음",
+        "세라: 빈 촉매 가방, 코트"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "제1부의 결론 — 남은 동안은 우리가 정한다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…재서 뭐 하게.",
+          "Source": "L15203"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "그러게.",
+          "Source": "L15207"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…앞으로 얼마나 남았을까.",
+          "Source": "L15211"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "몰라.",
+          "Source": "L15215"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "남은 동안, 우리가 뭘 하는지는 저놈들이 못 정해.",
+          "Source": "L15219"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "옥상에서 황혼을 본다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "황혼, 서쪽 하늘을 등진 무너진 남산타워, 비어 가는 도시",
+      "Props": [
+        "prop_nat",
+        "prop_kain_janggeom",
+        "prop_chokmae_gabang",
+        "prop_sonmok_gyecheukgi"
+      ],
+      "VFX": [
+        "황혼 광",
+        "네 목덜미의 나란한 빛"
+      ],
+      "SFX": [
+        "도시의 바람"
+      ],
+      "Music": "메인 테마 「황혼」 풀 버전",
+      "GameplayEntry": "이레째 저녁",
+      "GameplayExit": "SC011",
+      "AnimationRequired": [
+        "lean_on_railing",
+        "pocket_gauge"
+      ],
+      "CinematicRequired": "true: 제1부 키 비주얼 숏(난간의 넷)",
+      "SaveFlags": [
+        "EP28_ROOFTOP_CONCLUSION"
+      ],
+      "Prerequisites": [
+        "EP28_SC009"
+      ],
+      "NextScene": "EP28_SC011",
+      "RequiredAssets": [
+        "env:loc_bunker_oksang",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_nat",
+        "prop:prop_kain_janggeom",
+        "prop:prop_chokmae_gabang",
+        "prop:prop_sonmok_gyecheukgi",
+        "anim:lean_on_railing",
+        "anim:pocket_gauge",
+        "vfx:황혼 광",
+        "vfx:네 목덜미의 나란한 빛",
+        "sfx:도시의 바람",
+        "bgm:메인 테마 「황혼」 풀 버전"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC011",
+      "NovelSource": "L15225-L15244 §10 이름",
+      "NovelSummary": "그 밤 아인은 등잔 밑에서 남쪽까지 갔다 온 장부 — 콘솔 위에 두고 온 원본을 유진이 밤새 옮겨 적은 사본 — 을 편다. 끝의 빈 줄에 차한별, 항해일지의 여섯 강·박·윤·한·조·서를 검체 번호가 아닌 이름으로 적고, 망설이다 정 장관의 이름도 「미안—」의 몫으로 적는다. 마지막으로 카인을 불러 따님 이름을 청하고, 카인은 펜을 받아 이 년 만에 두 번째로 그 이름을 이번에는 글씨로 적는다.",
+      "Location": "loc_gangnam_bunker",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "대항 기록 — 이름",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…따님 이름.",
+          "Source": "L15237"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "장부에 이름을 적는다",
+      "Interaction": [
+        "장부 사본 펴기",
+        "이름 기입",
+        "카인 부르기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "등잔 불빛",
+      "Props": [
+        "prop_jangbu_sabon",
+        "prop_deungjan",
+        "prop_pen"
+      ],
+      "VFX": [
+        "등잔 불빛"
+      ],
+      "SFX": [
+        "펜 소리"
+      ],
+      "Music": "고요한 피아노(EP24 장부 테마 회귀)",
+      "GameplayEntry": "그 밤",
+      "GameplayExit": "장부가 덮이면 SC012",
+      "AnimationRequired": [
+        "write_ledger"
+      ],
+      "CinematicRequired": "true: 장부 클로즈업",
+      "SaveFlags": [
+        "EP28_NAMES_WRITTEN"
+      ],
+      "Prerequisites": [
+        "EP28_SC010"
+      ],
+      "NextScene": "EP28_SC012",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_jangbu_sabon",
+        "prop:prop_deungjan",
+        "prop:prop_pen",
+        "anim:write_ledger",
+        "vfx:등잔 불빛",
+        "sfx:펜 소리",
+        "bgm:고요한 피아노(EP24 장부 테마 회귀)"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC012",
+      "NovelSource": "L15245-L15264 §11 노크",
+      "NovelSummary": "며칠 뒤 저녁 아이들 구역에서 두호가 두나에게 셈을 가르친다 — 한 번이면 기다려, 두 번이면 형이 와, 어디 있어도. 두나가 철제 프레임을 깡, 깡 두드리고, 그 소리가 벙커 뼈대를 타고 복도를 지나던 아인의 발밑에 닿는다. 아인은 걸음을 멈추고 그 신호 — 약속의 최소 단위 — 를 들으며, 저 소리가 살아 있는 한 다음 날 아침은 온다고 믿기로 한다.",
+      "Location": "loc_bunker_aideul_guyeok",
+      "TimeOfDay": "저녁 (며칠 뒤)",
+      "Characters": [
+        "char_duho",
+        "char_duna",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "약속의 최소 단위",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_duna",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duho",
+          "Line": "한 번이면?",
+          "Source": "L15249"
+        },
+        {
+          "Speaker": "char_duna",
+          "Line": "기다려!",
+          "Source": "L15251"
+        },
+        {
+          "Speaker": "char_duho",
+          "Line": "두 번이면?",
+          "Source": "L15253"
+        },
+        {
+          "Speaker": "char_duna",
+          "Line": "형이 와! 어디 있어도!",
+          "Source": "L15255"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "노크 신호를 듣는다",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "아이들 구역, 벙커 뼈대를 타고 번지는 소리",
+      "Props": [
+        "prop_cheolje_frame"
+      ],
+      "VFX": [],
+      "SFX": [
+        "깡, 깡(철제 프레임)",
+        "뼈대 전달 울림"
+      ],
+      "Music": "작은 희망의 모티프",
+      "GameplayEntry": "며칠 뒤 저녁",
+      "GameplayExit": "SC013",
+      "AnimationRequired": [
+        "knock_metal_frame",
+        "stop_and_listen"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP28_KNOCK_TAUGHT"
+      ],
+      "Prerequisites": [
+        "EP28_SC011"
+      ],
+      "NextScene": "EP28_SC013",
+      "RequiredAssets": [
+        "env:loc_bunker_aideul_guyeok",
+        "char:char_duho",
+        "char:char_duna",
+        "char:char_ain",
+        "prop:prop_cheolje_frame",
+        "anim:knock_metal_frame",
+        "anim:stop_and_listen",
+        "sfx:깡, 깡(철제 프레임)",
+        "sfx:뼈대 전달 울림",
+        "bgm:작은 희망의 모티프"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC013",
+      "NovelSource": "L15265-L15284 §12 후임들",
+      "NovelSummary": "저녁 배급 뒤 두호와 두나는 오정길의 외곽 깡통 경보 점검 순찰을 따라다닌다 — 구경에서 수업으로, 이제는 임무로. 그날 저녁도 셋은 출격문 밖 외곽 초소까지의 줄을 짚으며 걷는다. 두호가 매듭을 다시 묶고 오정길이 낮은 지평선을 훑는 동안, 두나는 초소 벽에 기대 별 많은 하늘을 본다. 두나의 목덜미가 간지럽고, 갓 태어난 결정이 아이도 모르게 반딧불처럼 빛난다 — 자라는 그래프의 첫 눈금.",
+      "Location": "loc_bunker_oegwak_choso",
+      "TimeOfDay": "저녁 (어둠이 내림)",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "다음 세대의 첫 눈금",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "저녁 순찰을 지켜본다",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "출격문 밖 외곽, 깡통 경보 줄, 별이 많은 밤",
+      "Props": [
+        "prop_kkangtong_gyeongbo",
+        "prop_duna_insikpyo"
+      ],
+      "VFX": [
+        "두나 목덜미의 여린 결정 발광"
+      ],
+      "SFX": [
+        "깡통 줄 소리",
+        "밤벌레 없음 — 정적"
+      ],
+      "Music": "불안이 스민 자장가",
+      "GameplayEntry": "저녁 배급 후",
+      "GameplayExit": "SC014",
+      "AnimationRequired": [
+        "tie_knot_check",
+        "scan_horizon",
+        "lean_wall_look_up",
+        "scratch_nape"
+      ],
+      "CinematicRequired": "true: 결정 발광 클로즈업",
+      "SaveFlags": [
+        "EP28_DUNA_CORE_AWAKENED"
+      ],
+      "Prerequisites": [
+        "EP28_SC012"
+      ],
+      "NextScene": "EP28_SC014",
+      "RequiredAssets": [
+        "env:loc_bunker_oegwak_choso",
+        "char:char_oh_jeonggil",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_kkangtong_gyeongbo",
+        "prop:prop_duna_insikpyo",
+        "anim:tie_knot_check",
+        "anim:scan_horizon",
+        "anim:lean_wall_look_up",
+        "anim:scratch_nape",
+        "vfx:두나 목덜미의 여린 결정 발광",
+        "sfx:깡통 줄 소리",
+        "sfx:밤벌레 없음 — 정적",
+        "bgm:불안이 스민 자장가"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP28",
+      "SceneId": "EP28_SC014",
+      "NovelSource": "L15285-L15321 §13 응답",
+      "NovelSummary": "두나는 별들 사이에서 움직이는 별 하나를 보고 「새다」라고 중얼거리지만 새가 아니다. 별들보다 높은 곳에서 다른 빛으로, 천천히 그러나 분명하게 이쪽으로 오고 있다. 심장이 꺼지고 탑이 넘어간 뒤에도 신호는 목덜미에서 목덜미로 이어져 하늘까지 닿을 빛이 모였고, 하늘 저편의 무언가가 그것을 수신했다. 오정길은 지평선을, 두호는 매듭을 본다 — 줄은 전부 땅을 향해 매여 있다. 두나는 배운 대로 허공을 두 번 두드린다. 두 번이면, 온다는 뜻이었다. 빛은 오고 있었다. (제1부 完)",
+      "Location": "loc_bunker_oegwak_choso",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_duna",
+        "char_oh_jeonggil",
+        "char_duho"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "하늘이 대답한다 — 제1부 엔딩",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duna",
+        "char_oh_jeonggil",
+        "char_duho"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duna",
+          "Line": "…새다.",
+          "Source": "L15291"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "엔딩을 본다",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "별이 많은 밤하늘, 이쪽으로 오는 움직이는 빛, 땅을 향해 매인 줄들",
+      "Props": [
+        "prop_kkangtong_gyeongbo"
+      ],
+      "VFX": [
+        "움직이는 빛(별과 다른 색)",
+        "두나 목덜미 결정 발광"
+      ],
+      "SFX": [
+        "정적",
+        "깡, 깡(허공 노크)"
+      ],
+      "Music": "엔딩 테마 → 무음",
+      "GameplayEntry": "SC013 연속",
+      "GameplayExit": "제1부 종료 — 크레딧",
+      "AnimationRequired": [
+        "air_knock_twice",
+        "tie_knot_check",
+        "scan_horizon"
+      ],
+      "CinematicRequired": "true: 제1부 엔딩 컷신",
+      "SaveFlags": [
+        "EP28_SKY_RESPONDED",
+        "PART1_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP28_SC013"
+      ],
+      "NextScene": "",
+      "RequiredAssets": [
+        "env:loc_bunker_oegwak_choso",
+        "char:char_duna",
+        "char:char_oh_jeonggil",
+        "char:char_duho",
+        "prop:prop_kkangtong_gyeongbo",
+        "anim:air_knock_twice",
+        "anim:tie_knot_check",
+        "anim:scan_horizon",
+        "vfx:움직이는 빛(별과 다른 색)",
+        "vfx:두나 목덜미 결정 발광",
+        "sfx:정적",
+        "sfx:깡, 깡(허공 노크)",
+        "bgm:엔딩 테마 → 무음"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_balsadae_tap",
+      "NameKo": "발사대 탑 (증폭기)",
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002",
+        "EP28_SC003"
+      ],
+      "NovelReasonForBattle": "「이 년의 마지막 적은, 괴물이 아니라 탑이었다」 — 다 익은 코어 넷(송신원)의 신호를 하늘까지 쏘아 올리는 증폭기. 멀어지는 것으로는 막을 수 없어 탑을 부순다.",
+      "ArenaLocationId": "loc_balsadae_tap",
+      "PhasesInNovel": [
+        "단일 국면: 구조 판독 → 결정 신경(케이블) 차단 → 응력점 전사 → 첫 주각 지렛대 → 두 번째 주각 단일 타격 → 바다 쪽 붕괴"
+      ],
+      "PatternsInNovel": [
+        "목덜미로 듣는 노래 — 박자를 맞출 때마다 그래프가 한 눈금씩 자람(시간 압박)",
+        "탑 자체의 능동 공격은 원고에 없음"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "주각 넷(같은 쪽 둘을 끊으면 자중으로 바다 쪽 전도)",
+        "결정이 신경처럼 오른 케이블 다발의 소켓",
+        "주각 이음매의 응력점(촉매로 드러남)"
+      ],
+      "BreakCounterInNovel": [
+        "류의 소켓 절단 → 주각 결정이 빛을 잃고 순수한 쇠로",
+        "세라의 서명 전사 → 응력점 발광",
+        "카인의 모루 지렛대(첫 주각)",
+        "아인의 가장 큰 원 한 번(두 번째 주각)"
+      ],
+      "EnvironmentInBattle": [
+        "새벽의 발사장",
+        "트러스·케이블(낫을 걸어 수직 등반)",
+        "바다 쪽으로 기우는 구조"
+      ],
+      "Outcome": "탑이 바다 쪽으로 넘어가 물속으로 무너지고 노래가 끊김. 그러나 그래프는 멈추지 않고 느려졌을 뿐.",
+      "Source": "L14986-L15060"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_goheung_balsajang",
+      "NameKo": "고흥 발사장 (지상)",
+      "DescriptionKo": "새벽의 발사장. 갱도에서 나와 노래하는 탑을 향해 가로지름.",
+      "Scenes": [
+        "EP28_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_balsadae_tap",
+      "NameKo": "발사대 탑",
+      "DescriptionKo": "주각 넷, 트러스, 결정이 신경처럼 타고 오른 케이블 다발. 바다를 등지고 섬. 마지막 전장.",
+      "Scenes": [
+        "EP28_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_bangpaje",
+      "NameKo": "방파제",
+      "DescriptionKo": "탑이 바다로 넘어가는 것을 보는 방파제. 그날 낮 방파제 끝에서 SS 도달.",
+      "Scenes": [
+        "EP28_SC003",
+        "EP28_SC004"
+      ]
+    },
+    {
+      "LocationId": "loc_bukhyang_gukdo",
+      "NameKo": "북상 귀로 (국도)",
+      "DescriptionKo": "한 달의 귀로. 흐트러진 집행관 순찰, 바로 선 서 하사의 표식, 들꽃 놓인 돌무더기, 저녁마다 황혼. 한 달째 저녁 지평선의 무너진 남산타워.",
+      "Scenes": [
+        "EP28_SC006"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_bunker_cheolmun",
+      "NameKo": "강남 벙커 철문",
+      "DescriptionKo": "경비 오정길이 지키는 철문. 귀환의 종.",
+      "Scenes": [
+        "EP28_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_gwanjesil",
+      "NameKo": "강남 벙커 관제실",
+      "DescriptionKo": "넷이 전부를 보고하는 곳. 마태오의 서랍에서 새 장부.",
+      "Scenes": [
+        "EP28_SC008"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_uimusil",
+      "NameKo": "강남 벙커 의무실",
+      "DescriptionKo": "세라와 닥터 진이 처방을 맞춰 보는 곳. 약장의 라벨.",
+      "Scenes": [
+        "EP28_SC009"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_oksang",
+      "NameKo": "강남 벙커 옥상",
+      "DescriptionKo": "난간, 서쪽 하늘을 등진 무너진 남산타워, 황혼의 서울. 이야기가 시작된 자리.",
+      "Scenes": [
+        "EP28_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_bunker",
+      "NameKo": "강남 벙커 (방 미특정)",
+      "DescriptionKo": "아인이 등잔 밑에서 장부를 펴는 방 — 구체적 방은 원고 미기재.",
+      "Scenes": [
+        "EP28_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_aideul_guyeok",
+      "NameKo": "강남 벙커 아이들 구역",
+      "DescriptionKo": "철제 프레임, 복도로 번지는 노크 소리.",
+      "Scenes": [
+        "EP28_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_oegwak_choso",
+      "NameKo": "벙커 출격문 밖 외곽 초소",
+      "DescriptionKo": "출격문 밖 외곽 초소까지 이어진 깡통 경보 줄들. 별이 많은 밤하늘.",
+      "Scenes": [
+        "EP28_SC013",
+        "EP28_SC014"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 탑의 주각을 베고 SS 도달, 귀환 후 이름을 적음",
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002",
+        "EP28_SC003",
+        "EP28_SC004",
+        "EP28_SC005",
+        "EP28_SC006",
+        "EP28_SC007",
+        "EP28_SC008",
+        "EP28_SC010",
+        "EP28_SC011",
+        "EP28_SC012"
+      ],
+      "StateChangesKo": [
+        "EP28_SC004: SS 도달 — 스무 걸음의 청각이 백 걸음으로 확장, 자아 유지(「…저예요」)",
+        "EP28_SC007: 두호에게 처음으로 소리 내어 대답",
+        "EP28_SC011: 장부 사본에 차한별·여섯·정 장관 이름 기입"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검(「모루」). 탑 첫 주각의 지렛대",
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002",
+        "EP28_SC003",
+        "EP28_SC004",
+        "EP28_SC005",
+        "EP28_SC006",
+        "EP28_SC007",
+        "EP28_SC008",
+        "EP28_SC010",
+        "EP28_SC011"
+      ],
+      "StateChangesKo": [
+        "EP28_SC004: SS 도달 — 관절 틈새의 주황이 새지 않고 흐름, 자아 유지(「…나다. 아직.」)",
+        "EP28_SC005: 장검을 지팡이 삼아 걸음",
+        "EP28_SC011: 딸의 이름을 장부에 글씨로 적음(이름 원고 미기재)"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "쌍단검. 케이블 소켓을 끊어 결정 신경 차단",
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002",
+        "EP28_SC003",
+        "EP28_SC004",
+        "EP28_SC005",
+        "EP28_SC006",
+        "EP28_SC007",
+        "EP28_SC008",
+        "EP28_SC010"
+      ],
+      "StateChangesKo": [
+        "EP28_SC004: SS 도달 — 잔상 세 겹",
+        "EP28_SC010: 후드를 벗은 모습으로 옥상에 섬"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "구조 해석·마지막 촉매로 응력점 전사. 억제제 양산 담당",
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002",
+        "EP28_SC003",
+        "EP28_SC004",
+        "EP28_SC005",
+        "EP28_SC006",
+        "EP28_SC007",
+        "EP28_SC008",
+        "EP28_SC009",
+        "EP28_SC010"
+      ],
+      "StateChangesKo": [
+        "EP28_SC002: 남은 촉매의 마지막 병 사용",
+        "EP28_SC004: SS 문턱 앞의 얼굴(측정자) — 네 손목 SS 판정",
+        "EP28_SC010: 빈 촉매 가방을 멤, 계측기를 코트 주머니에 넣음"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "강남 벙커 경비. 귀환의 종을 치고 아이들에게 경보 줄 점검을 가르침",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC013",
+        "EP28_SC014"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "강남 벙커 책임자. 보고를 듣고 새 장부로 「이름부터 다시 적는다」",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC008"
+      ],
+      "StateChangesKo": [
+        "EP28_SC008: 이 년 전보다 늙은 얼굴"
+      ]
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "평가소 기록 담당. 콘솔에 두고 온 장부 원본의 사본을 밤새 옮겨 적어 둠",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_suhui",
+      "NameKo": "수희",
+      "RoleKo": "벙커 주민 — 귀환을 맞으러 나옴",
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_han_jangin",
+      "NameKo": "한 장인",
+      "RoleKo": "벙커의 장인 — 귀환을 맞으러 나옴",
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duho",
+      "NameKo": "두호",
+      "RoleKo": "노크 신호를 아는 아이(형). 두나에게 셈을 가르치고 순찰 「후임」",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC012",
+        "EP28_SC013",
+        "EP28_SC014"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duna",
+      "NameKo": "두나",
+      "RoleKo": "두호의 동생. C 인식표. 하늘의 응답을 처음 목격",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC012",
+        "EP28_SC013",
+        "EP28_SC014"
+      ],
+      "StateChangesKo": [
+        "EP28_SC007: 목의 C 인식표를 자랑스럽게 들어 보임",
+        "EP28_SC013: 목덜미에 갓 태어난 결정이 반딧불처럼 빛남(첫 눈금)"
+      ]
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "벙커 의무실 의사. 억제제 배합식을 가진 또 한 사람. 필체의 비밀",
+      "Scenes": [
+        "EP28_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_cha_hanbyeol",
+      "NameKo": "차한별",
+      "RoleKo": "(언급) 장부에 이름이 적힘",
+      "Scenes": [
+        "EP28_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_hanghae_yeoseot",
+      "NameKo": "항해일지의 여섯 (강·박·윤·한·조·서)",
+      "RoleKo": "(언급) 장부에 이름으로 적힘",
+      "Scenes": [
+        "EP28_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_janggwan",
+      "NameKo": "정 장관",
+      "RoleKo": "(언급) 「미안—」의 몫으로 장부에 이름이 적힘",
+      "Scenes": [
+        "EP28_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_kain_ttal",
+      "NameKo": "카인의 딸",
+      "RoleKo": "(언급) 카인이 장부에 이름을 적음 — 이름 원고 미기재",
+      "Scenes": [
+        "EP28_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "(언급) 북상 길목마다 바로 선 표식",
+      "Scenes": [
+        "EP28_SC006"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "run_across",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "발사장을 가로질러 뜀"
+    },
+    {
+      "Action": "boss_tower_hum",
+      "Category": "boss",
+      "Characters": [],
+      "Scenes": [
+        "EP28_SC001",
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "탑 전체가 낮게 웅웅거리며 공명(구조물 진동)"
+    },
+    {
+      "Action": "socket_cut_cable",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "케이블 다발의 소켓을 차례로 꿰어 결정 신경을 끊음"
+    },
+    {
+      "Action": "catalyst_transfer_stresspoint",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "마지막 촉매로 쇠의 이음매에 서명 전사 → 응력점 발광"
+    },
+    {
+      "Action": "anvil_lever_sword",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "「모루」 — 주각 응력점에 장검을 박아 온 체중으로 지렛대"
+    },
+    {
+      "Action": "truss_climb_scythe_hook",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "트러스를 타고 케이블에 낫을 걸어 수직 등반(남산의 문법)"
+    },
+    {
+      "Action": "scythe_greatest_circle",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP28_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가장 큰 원 — 응력점에 단 한 번"
+    },
+    {
+      "Action": "boss_tower_topple",
+      "Category": "boss",
+      "Characters": [],
+      "Scenes": [
+        "EP28_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "주각 둘을 잃고 바다 쪽으로 천천히 넘어가 물속으로 무너짐"
+    },
+    {
+      "Action": "stand_watch",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "방파제에 서서 바라봄"
+    },
+    {
+      "Action": "open_wrist_gauge",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC003",
+        "EP28_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계측기를 열어 오래 들고 있음 / 네 손목 측정"
+    },
+    {
+      "Action": "exchange_gaze",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP28_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서로의 눈을 확인"
+    },
+    {
+      "Action": "walk_with_sword_cane",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP28_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검을 지팡이 삼아 몸을 돌려 걸음"
+    },
+    {
+      "Action": "group_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC005",
+        "EP28_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "북으로 걷는 이동"
+    },
+    {
+      "Action": "pause_by_cairn",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "돌무더기 앞에서 잠깐 멈춤"
+    },
+    {
+      "Action": "ring_bell",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종을 세 번 침"
+    },
+    {
+      "Action": "run_to_greet",
+      "Category": "locomotion",
+      "Characters": [
+        "char_duho",
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "아이들이 달려 나옴"
+    },
+    {
+      "Action": "air_knock_twice",
+      "Category": "gesture",
+      "Characters": [
+        "char_duho",
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "주먹으로 허공을 두 번 두드림(깡, 깡)"
+    },
+    {
+      "Action": "kneel_eye_level",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎을 굽혀 아이와 눈을 맞춤"
+    },
+    {
+      "Action": "show_tag_proud",
+      "Category": "gesture",
+      "Characters": [
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목의 인식표를 자랑스럽게 들어 보임"
+    },
+    {
+      "Action": "take_out_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP28_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서랍에서 새 장부를 꺼냄"
+    },
+    {
+      "Action": "exchange_papers",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera",
+        "char_dr_jin"
+      ],
+      "Scenes": [
+        "EP28_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "처방지를 내밀고 도로 가져감"
+    },
+    {
+      "Action": "adjust_glasses",
+      "Category": "gesture",
+      "Characters": [
+        "char_dr_jin"
+      ],
+      "Scenes": [
+        "EP28_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "안경을 고쳐 씀"
+    },
+    {
+      "Action": "lean_on_railing",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "난간에 나란히 기대섬"
+    },
+    {
+      "Action": "pocket_gauge",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP28_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계측기를 열었다 닫아 코트 주머니에 넣음"
+    },
+    {
+      "Action": "write_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP28_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "장부에 이름 기입 / 펜을 받아 적음"
+    },
+    {
+      "Action": "knock_metal_frame",
+      "Category": "interaction",
+      "Characters": [
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "철제 프레임을 두 번 두드림"
+    },
+    {
+      "Action": "stop_and_listen",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP28_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "복도에서 걸음을 멈추고 들음"
+    },
+    {
+      "Action": "tie_knot_check",
+      "Category": "interaction",
+      "Characters": [
+        "char_duho",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP28_SC013",
+        "EP28_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "깡통 매듭 다시 묶기·줄 팽팽함 재기"
+    },
+    {
+      "Action": "scan_horizon",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP28_SC013",
+        "EP28_SC014"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "지평선을 훑어봄"
+    },
+    {
+      "Action": "lean_wall_look_up",
+      "Category": "emotion",
+      "Characters": [
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "초소 벽에 기대 하늘을 올려다봄"
+    },
+    {
+      "Action": "scratch_nape",
+      "Category": "gesture",
+      "Characters": [
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP28_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "잠결에 하듯 목덜미를 긁적임"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_nat",
+      "NameKo": "아인의 낫",
+      "Scenes": [
+        "EP28_SC002",
+        "EP28_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_kain_janggeom",
+      "NameKo": "카인의 장검(하늘의 것의 뼈로 벼린 날)",
+      "Scenes": [
+        "EP28_SC002",
+        "EP28_SC005",
+        "EP28_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_ssangdangeom",
+      "NameKo": "류의 쌍단검",
+      "Scenes": [
+        "EP28_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_chokmae_gabang",
+      "NameKo": "세라의 촉매 가방",
+      "Scenes": [
+        "EP28_SC002",
+        "EP28_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_sonmok_gyecheukgi",
+      "NameKo": "세라의 손목 계측기",
+      "Scenes": [
+        "EP28_SC003",
+        "EP28_SC004",
+        "EP28_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_tap_jugak",
+      "NameKo": "탑의 주각·트러스·케이블 다발",
+      "Scenes": [
+        "EP28_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_pyosik_dolmudeogi",
+      "NameKo": "서 하사 표식·들꽃 놓인 돌무더기",
+      "Scenes": [
+        "EP28_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_gwihwan_jong",
+      "NameKo": "귀환의 종",
+      "Scenes": [
+        "EP28_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_duna_insikpyo",
+      "NameKo": "두나의 C 인식표",
+      "Scenes": [
+        "EP28_SC007",
+        "EP28_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_sae_jangbu",
+      "NameKo": "마태오의 새 장부",
+      "Scenes": [
+        "EP28_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_cheobangji",
+      "NameKo": "세라·닥터 진의 처방지(배합식)",
+      "Scenes": [
+        "EP28_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_angyeong",
+      "NameKo": "닥터 진의 안경",
+      "Scenes": [
+        "EP28_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_yakjang",
+      "NameKo": "의무실 약장 라벨",
+      "Scenes": [
+        "EP28_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_jangbu_sabon",
+      "NameKo": "유진이 옮겨 적은 장부 사본",
+      "Scenes": [
+        "EP28_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_deungjan",
+      "NameKo": "등잔",
+      "Scenes": [
+        "EP28_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_pen",
+      "NameKo": "펜",
+      "Scenes": [
+        "EP28_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_cheolje_frame",
+      "NameKo": "철제 프레임(노크)",
+      "Scenes": [
+        "EP28_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_kkangtong_gyeongbo",
+      "NameKo": "깡통 경보 줄·매듭",
+      "Scenes": [
+        "EP28_SC013",
+        "EP28_SC014"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP28_SC002",
+      "QuestionKo": "탑은 「이 년의 마지막 적」으로 서술되나 생물/집행관이 아닌 구조물 — 게임에서 보스전(BOSS_BATTLE)으로 표현할지 구조 파괴 퍼즐/시네마틱으로 할지 TBD. 탑 자체의 공격 패턴은 원고에 없음."
+    },
+    {
+      "Scene": "EP28_SC002",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「새벽 (TBD_CANON — §3에서 해가 오름)」"
+    },
+    {
+      "Scene": "EP28_SC003",
+      "QuestionKo": "「다섯은 방파제에 서서」 — 「넷의 수치」와 인원 불일치(EP24 TBD 참조)."
+    },
+    {
+      "Scene": "EP28_SC005",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON」"
+    },
+    {
+      "Scene": "EP28_SC005",
+      "QuestionKo": "장면 장소가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP28_SC006",
+      "QuestionKo": "귀로의 집행관은 「싸우지 않고 지나갔다」 — 게임에서 교전 불가 통과 구간으로만 표현(전투 추가 금지). 개별 집행관 종류 원고 미기재."
+    },
+    {
+      "Scene": "EP28_SC007",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (한 달째 저녁 남산타워 조망 이후)」"
+    },
+    {
+      "Scene": "EP28_SC009",
+      "QuestionKo": "세라가 닥터 진의 필체를 어디서 봤는지, 닥터 진의 제법 출처는 원고가 「이 이야기의 바깥에 있다」며 명시하지 않음."
+    },
+    {
+      "Scene": "EP28_SC009",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (이튿날)」"
+    },
+    {
+      "Scene": "EP28_SC011",
+      "QuestionKo": "아인이 장부를 편 방이 벙커의 어디인지 원고 미기재(loc_gangnam_bunker로 일반 처리)."
+    },
+    {
+      "Scene": "EP28_SC011",
+      "QuestionKo": "카인이 적은 딸의 이름은 원고에 적히지 않음."
+    },
+    {
+      "Scene": "EP28_SC014",
+      "QuestionKo": "다가오는 빛의 정체·형태·도착 시점은 원고에 없음(제2부 사항). NextScene 비움 — 제2부 첫 장면 미정."
+    },
+    {
+      "Scene": "EP28_SC002",
+      "QuestionKo": "이 화 탑 전투에서 플레이어 조작 인물은 원고가 정하지 않음 — char_ain(등반·결정타)은 각색 제안."
+    }
+  ]
+}

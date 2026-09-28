@@ -1,0 +1,1911 @@
+{
+  "EpisodeId": "EP23",
+  "TitleKo": "제23화 — 자라는 그래프",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      13308,
+      13696
+    ]
+  },
+  "SummaryKo": "문지기 박 준장은 코어 발화를 읽는 대각인자 전투 특화 병기로, 사람의 검술로 카운터하며 카인의 어깨를 찢고 류의 잔상을 모두 간파한다. 아인은 골짜기의 반대로 세라에게 자신의 출력을 꺼 달라 하고, 카인이 가장 밝은 미끼가 된 사이 읽히지 않는 아인이 목덜미 결정을 얕게 그은 뒤 재점등한 두 번째 원으로 끊는다. 문지기는 반쯤의 경례와 함께 쓰러진다. 문 안쪽은 각인 표본 보관실 — 캡슐마다 C·B·A로 오르다 '검체 고정'된 그래프 명판이 있다. 중앙 진열장의 「노바 1호 항해일지 — 차한별」은 등급 C·B·A·S·SS가 우주에서 승무원의 발현을 기록하려 붙인 이름이며, SS에 닿은 여섯이 모두 '신호에 응답함'을 남기고 사람이기를 그쳤음을 알린다. 각인은 감염의 진행, 랭크는 숙주의 성숙도였고, 수거는 익은 것부터 거둔 수확이었다. 아인은 빈 캡슐의 현 중위 명판에서 자신이 벤 것이 '먼저 익은 사람'이었음을 알고, 류는 과천의 남매가 발사장으로 생체 이송된 명부를 챙긴다. 바닥 아래 박동에 일행 전원이 강제로 S에 진입하고, 세라는 자신은 골짜기에서부터였다고 밝힌다. 일지 마지막 장의 고흥 좌표를 향해 일행은 홀을 떠난다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC001",
+      "NovelSource": "L13308-L13347 §1 문지기",
+      "NovelSummary": "박 준장이었던 것은 빠르지도 크지도 않지만 '읽는다' — 장검의 궤도, 류의 진짜 잔상, 아인 원의 끝자락 도착점을 먼저 안다. 세라는 출력이 실리는 순간의 코어 발화를 읽는 대(對)각인자 전투 특화, 사람의 검술이 얹힌 카운터라 분석한다. 다섯 합에 카인의 어깨가 찢기고 여덟 합에 류의 잔상이 다 읽힌다. 좁은 복도에서 아인은 골짜기의 반대로 — 자기를 '꺼 달라'고 세라에게 청한다.",
+      "Location": "loc_gyeryong_sterile_corridor",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경",
+        "char_bak_junjang: 소매가 찢긴 전투복, 준장 계급장, 명찰 '박(朴)', 비대한 팔·등줄기 결정 창"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "보스전 P1 — 읽는 적",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…카운터야.",
+          "Source": "L13328"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "각인자를 잡으라고 지은 몸이야.",
+          "Source": "L13332"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "이건 사람의 검술이 얹혀 있어.",
+          "Source": "L13332"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "세라.",
+          "Source": "L13340"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "골짜기 반대로 해요. — 저를 꺼 주세요.",
+          "Source": "L13344"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "카운터를 당하며 적의 읽기 패턴을 파악한다",
+      "Interaction": [
+        "공격 시도(읽혀서 카운터됨)",
+        "결계 뒤 분석(세라)"
+      ],
+      "BossId": "boss_bak_junjang",
+      "BossPhase": "P1",
+      "EnvironmentState": "좁은 복도(원 반경이 반 뼘씩 모자람), 지치지 않는 문지기",
+      "Props": [],
+      "VFX": [
+        "코어 발화 예고광",
+        "카운터 섬광",
+        "결계"
+      ],
+      "SFX": [
+        "검격",
+        "살 찢기는 소리"
+      ],
+      "Music": "보스전 P1(검술)",
+      "GameplayEntry": "문지기 첫걸음 직후",
+      "GameplayExit": "아인의 '저를 꺼 주세요'",
+      "AnimationRequired": [
+        "boss_read_step_back",
+        "boss_counter_stance",
+        "longsword_swing",
+        "afterimage_decoy",
+        "barrier_cast"
+      ],
+      "CinematicRequired": "false: 인게임",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP22_SC013"
+      ],
+      "NextScene": "EP23_SC002",
+      "RequiredAssets": [
+        "env:loc_gyeryong_sterile_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_bak_junjang",
+        "anim:boss_read_step_back",
+        "anim:boss_counter_stance",
+        "anim:longsword_swing",
+        "anim:afterimage_decoy",
+        "anim:barrier_cast",
+        "vfx:코어 발화 예고광",
+        "vfx:카운터 섬광",
+        "vfx:결계",
+        "sfx:검격",
+        "sfx:살 찢기는 소리",
+        "bgm:보스전 P1(검술)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC002",
+      "NovelSource": "L13348-L13373 §2 결착",
+      "NovelSummary": "세라의 봉이 아인의 출력을 끈다 — 낫이 두 배로 무거워지고 읽을 발화가 없는 칼. 카인이 온몸의 주황을 끌어올려 가장 밝은 예고로 크게 휘두르고, 문지기는 그것을 정확히 읽어 카운터 자세에 몸을 건다. 그 미래에 없는 아인이 어둠과 같은 밝기로 사각을 돌아 목덜미 결정을 얕게 긋고, 무너진 반 박자에 세라가 아인을 다시 켜 두 번째 원이 끊는다. 문지기가 무릎을 꿇고, 오른손이 경례의 각도로 반쯤 오르다 떨어진다.",
+      "Location": "loc_gyeryong_sterile_corridor",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경",
+        "char_bak_junjang: 소매가 찢긴 전투복, 준장 계급장, 명찰 '박(朴)', 비대한 팔·등줄기 결정 창"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "보스전 P2 — 끄고 켜기, 두 번이 하나",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "출력을 끈 아인으로 사각을 돌아 목덜미 결정을 긋고, 재점등 후 두 번째 원으로 끊는다",
+      "Interaction": [
+        "세라: 아인 소등",
+        "카인: 최대 출력 미끼 공격",
+        "아인: 무출력 잠입 베기",
+        "세라: 재점등 → 아인 두 번째 원(연계 QTE 제안)"
+      ],
+      "BossId": "boss_bak_junjang",
+      "BossPhase": "P2",
+      "EnvironmentState": "좁은 복도, 소등된 아인(어둠과 같은 밝기)",
+      "Props": [],
+      "VFX": [
+        "아인 목덜미 빛 소등/재점등",
+        "카인 주황 출력 폭증",
+        "얕은 골 → 두 번째 원"
+      ],
+      "SFX": [
+        "서걱",
+        "무릎 꿇는 소리"
+      ],
+      "Music": "보스전 P2 → 비장한 여운",
+      "GameplayEntry": "아인 소등",
+      "GameplayExit": "문지기의 손이 바닥에 떨어짐",
+      "AnimationRequired": [
+        "staff_toggle_output",
+        "longsword_bait_swing",
+        "unlit_flank_slash",
+        "second_arc_finish",
+        "boss_kneel_half_salute"
+      ],
+      "CinematicRequired": "true: 결착과 반쯤의 경례",
+      "SaveFlags": [
+        "EP23_BAK_JUNJANG_DEFEATED"
+      ],
+      "Prerequisites": [
+        "EP23_SC001"
+      ],
+      "NextScene": "EP23_SC003",
+      "RequiredAssets": [
+        "env:loc_gyeryong_sterile_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_bak_junjang",
+        "anim:staff_toggle_output",
+        "anim:longsword_bait_swing",
+        "anim:unlit_flank_slash",
+        "anim:second_arc_finish",
+        "anim:boss_kneel_half_salute",
+        "vfx:아인 목덜미 빛 소등/재점등",
+        "vfx:카인 주황 출력 폭증",
+        "vfx:얕은 골 → 두 번째 원",
+        "sfx:서걱",
+        "sfx:무릎 꿇는 소리",
+        "bgm:보스전 P2 → 비장한 여운"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC003",
+      "NovelSource": "L13374-L13399 §3 문",
+      "NovelSummary": "문지기가 지키던 강화문은 잠겨 있지 않다. 카인이 문을 밀자 소독약 냄새가 짙어지고 자동 조명이 켜진다. 천장 높은 원형 홀, 벽과 중앙 열주를 따라 사람 크기의 세로 유리 캡슐 수십 기 — 일부에 사람의 형태가 떠 있다. 세라는 이곳이 죽음이 아니라 '표본'을 보관한다고 말한다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "각인 표본 보관실 공개",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…시신 안치소인가.",
+          "Source": "L13386"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "안치소는 죽음을 보관해.",
+          "Source": "L13390"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "여긴 — 표본을 보관해.",
+          "Source": "L13394"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "홀에 들어가 캡슐을 살핀다",
+      "Interaction": [
+        "문 밀기",
+        "캡슐 접근"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "원형 홀, 자동 점등, 수십 기의 유리 캡슐(빈 것/찬 것)",
+      "Props": [
+        "prop_specimen_capsule"
+      ],
+      "VFX": [
+        "안쪽부터 차례로 켜지는 조명"
+      ],
+      "SFX": [
+        "강화문 밀리는 소리",
+        "조명 점등음"
+      ],
+      "Music": "무균의 공포",
+      "GameplayEntry": "강화문 개방",
+      "GameplayExit": "아인이 첫 명판 앞에 무릎 꿇음",
+      "AnimationRequired": [
+        "push_door",
+        "kneel_read"
+      ],
+      "CinematicRequired": "true: 홀 공개 와이드",
+      "SaveFlags": [
+        "EP23_SPECIMEN_HALL_ENTERED"
+      ],
+      "Prerequisites": [
+        "EP23_SC002"
+      ],
+      "NextScene": "EP23_SC004",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_specimen_capsule",
+        "anim:push_door",
+        "anim:kneel_read",
+        "vfx:안쪽부터 차례로 켜지는 조명",
+        "sfx:강화문 밀리는 소리",
+        "sfx:조명 점등음",
+        "bgm:무균의 공포"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC004",
+      "NovelSource": "L13400-L13439 §4 명판",
+      "NovelSummary": "명판마다 이름·계급·검체 번호와 C·B·A 눈금을 지나 오르는 그래프, 그리고 'S 도달 전 검체 고정'. 아인은 평가소 계측기와 닥터 진의 종이에서 본 '자라는 그래프'를 알아본다. 최OO 상사 07-C, 이OO 중사 12-B, 김OO 대위 03-A — 전부 같은 방향. 홀 중앙 진열장에 낡은 서류 가방과 「노바 1호 항해일지 — 차한별」 수첩이 있다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "등급의 정체 암시",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…이거.",
+          "Source": "L13426"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "등급이 아니에요. 등급이 아니라—",
+          "Source": "L13430"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "명판을 차례로 읽는다",
+      "Interaction": [
+        "명판 조사(07-C, 12-B, 03-A)",
+        "중앙 진열장 발견"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "캡슐 발치의 금속 명판, 중앙 열주 안쪽 유리 진열장",
+      "Props": [
+        "prop_specimen_plaque",
+        "prop_specimen_capsule",
+        "prop_display_case",
+        "prop_briefcase",
+        "prop_nova_logbook"
+      ],
+      "VFX": [
+        "명판 그래프 하이라이트"
+      ],
+      "SFX": [],
+      "Music": "불안한 현악",
+      "GameplayEntry": "첫 명판",
+      "GameplayExit": "항해일지 표지 확인",
+      "AnimationRequired": [
+        "kneel_read",
+        "walk_along_row"
+      ],
+      "CinematicRequired": "false: 조사",
+      "SaveFlags": [
+        "EP23_PLAQUES_READ"
+      ],
+      "Prerequisites": [
+        "EP23_SC003"
+      ],
+      "NextScene": "EP23_SC005",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_specimen_plaque",
+        "prop:prop_specimen_capsule",
+        "prop:prop_display_case",
+        "prop:prop_briefcase",
+        "prop:prop_nova_logbook",
+        "anim:kneel_read",
+        "anim:walk_along_row",
+        "vfx:명판 그래프 하이라이트",
+        "bgm:불안한 현악"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC005",
+      "NovelSource": "L13440-L13463 §5 항해일지",
+      "NovelSummary": "류가 진열장을 따며 처음으로 손이 떨린다. 수첩은 절반이 항해, 절반이 관찰 기록. 류가 소리 내어 읽는다 — 61일차 회수·격리 화물칸, 87일차 강 기관사 목덜미 발진, 102일차 결정화·악력 두 배, 130일차 셋의 발현과 단계 명명 '첫 단계를 C라고 부르기로 한다. 그냥 셋째 줄이 C였다.' 아인의 숨이 멎는다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "등급 체계의 출생지",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "회수 작업 완료. 검체는 격리 화물칸에.",
+          "Source": "L13448"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "이상이 없는데 발진이 있다.",
+          "Source": "L13450"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "악력 측정치가 입사 검진의 두 배다.",
+          "Source": "L13452"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "첫 단계를 C라고 부르기로 한다.",
+          "Source": "L13456"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "항해일지를 읽는다",
+      "Interaction": [
+        "진열장 따기",
+        "일지 낭독 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "움직이지 않는 캡슐 속 형태들",
+      "Props": [
+        "prop_display_case",
+        "prop_nova_logbook"
+      ],
+      "VFX": [
+        "일지 필체 인서트(반듯→흐트러짐)"
+      ],
+      "SFX": [
+        "자물쇠 따는 소리",
+        "종이 넘김"
+      ],
+      "Music": "낭독 배경(우주적 고요)",
+      "GameplayEntry": "진열장 따기",
+      "GameplayExit": "'C' 명명에 아인의 숨이 멎음",
+      "AnimationRequired": [
+        "lockpick",
+        "read_aloud"
+      ],
+      "CinematicRequired": "true: 일지 낭독 연출",
+      "SaveFlags": [
+        "EP23_LOGBOOK_ACQUIRED"
+      ],
+      "Prerequisites": [
+        "EP23_SC004"
+      ],
+      "NextScene": "EP23_SC006",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_display_case",
+        "prop:prop_nova_logbook",
+        "anim:lockpick",
+        "anim:read_aloud",
+        "vfx:일지 필체 인서트(반듯→흐트러짐)",
+        "sfx:자물쇠 따는 소리",
+        "sfx:종이 넘김",
+        "bgm:낭독 배경(우주적 고요)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC006",
+      "NovelSource": "L13464-L13494 §6 자라는 것",
+      "NovelSummary": "166일차 '성장이 아니다… 이것은 진행이다.' 201일차 A — 신이 주신 힘이라 행복해함. 228일차 S — 밤에 혼자 웃고 노래가 들린다 함. 244일차에서 류가 읽기를 멈추고, 카인도 입을 다물고, 아인이 받아 읽는다: 'SS 도달. 04시 11분… 마지막 말 — 신호에 응답함.'",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "SS — 신호에 응답함",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "성장이 아니다.",
+          "Source": "L13466"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "신이 주신 힘이라고 했다.",
+          "Source": "L13472"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "밤에 혼자 웃는다.",
+          "Source": "L13474"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "강 기관사 — SS 도달. 04시 11분.",
+          "Source": "L13486"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "신호에 응답함.",
+          "Source": "L13486"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "일지를 끝까지 읽는다",
+      "Interaction": [
+        "일지를 이어받아 읽기(류→카인→아인)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "눈 감은 세라, 하얘진 류의 손마디",
+      "Props": [
+        "prop_nova_logbook"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "낭독 → 정지",
+      "GameplayEntry": "낭독 계속",
+      "GameplayExit": "244일차 기록",
+      "AnimationRequired": [
+        "read_aloud",
+        "pass_book"
+      ],
+      "CinematicRequired": "true: 수첩 인계 연출",
+      "SaveFlags": [
+        "EP23_SS_SIGNAL_LEARNED"
+      ],
+      "Prerequisites": [
+        "EP23_SC005"
+      ],
+      "NextScene": "EP23_SC007",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_nova_logbook",
+        "anim:read_aloud",
+        "anim:pass_book",
+        "bgm:낭독 → 정지"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC007",
+      "NovelSource": "L13495-L13518 §7 일곱 개의 그래프",
+      "NovelSummary": "박 항법사, 윤 의무관, 한 부기관사, 조 통신사, 서 화물관리관 — SS에 닿은 여섯이 토씨 하나 다르지 않게 '신호에 응답함'을 남긴다. 차한별 자신의 기록은 S에서 끊기고, 마지막 장들은 수신인 없는 편지다 — 밤마다 들리는 아름다운 노래, 누른 것인지 시킨 것인지 모를 귀환 버튼, 그리고 '우리가 침략당한 채로 돌아온 것이다… 저것은 그저 부르고 있다.'",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "노바 1호의 진실 — 부르는 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "밤마다 노래가 들린다. 아름답다.",
+          "Source": "L13511"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "나는 귀환 버튼을 눌렀다.",
+          "Source": "L13513"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "우리가 침략당한 채로 돌아온 것이다.",
+          "Source": "L13515"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "저것은 그저 — 부르고 있다.",
+          "Source": "L13515"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "일지 후반을 읽는다",
+      "Interaction": [
+        "일지 넘기기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "홀의 정적",
+      "Props": [
+        "prop_nova_logbook"
+      ],
+      "VFX": [
+        "흐트러진 필체 인서트"
+      ],
+      "SFX": [],
+      "Music": "아름답고 섬뜩한 노래 모티프(제안)",
+      "GameplayEntry": "일지 후반",
+      "GameplayExit": "마지막 편지",
+      "AnimationRequired": [
+        "read_aloud"
+      ],
+      "CinematicRequired": "true: 편지 낭독",
+      "SaveFlags": [
+        "EP23_NOVA_CREW_FATE"
+      ],
+      "Prerequisites": [
+        "EP23_SC006"
+      ],
+      "NextScene": "EP23_SC008",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_nova_logbook",
+        "anim:read_aloud",
+        "vfx:흐트러진 필체 인서트",
+        "bgm:아름답고 섬뜩한 노래 모티프(제안)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC008",
+      "NovelSource": "L13519-L13544 §8 뒤집히는 사전",
+      "NovelSummary": "수첩이 내려지고 이 년 치의 단어들이 뒤집힌다. 각인은 감염의 진행 단계, 랭크는 숙주의 성숙도, 계측기는 여명을 재는 기계, 유진의 축하는 진행 고지. 억제제는 늦출 뿐이고, 'B 이상 우선'은 익은 것부터 거둔 수확이었다. 셀레스티얼이 아인을 놓아준 이유도 덜 익어서였다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "세계관 반전 — 랭크는 성숙도",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 진실의 재해석",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "조용한 홀",
+      "Props": [
+        "prop_nova_logbook"
+      ],
+      "VFX": [
+        "과거 장면 단어 오버레이(평가소·억제제·수거 명단) 제안"
+      ],
+      "SFX": [
+        "사전 페이지 넘어가는 듯한 소리"
+      ],
+      "Music": "반전 테마(저음 합창 제안)",
+      "GameplayEntry": "수첩을 내림",
+      "GameplayExit": "각자의 침묵",
+      "AnimationRequired": [
+        "lower_book"
+      ],
+      "CinematicRequired": "true: 내면 반전 몽타주",
+      "SaveFlags": [
+        "EP23_RANK_TRUTH_REVEALED"
+      ],
+      "Prerequisites": [
+        "EP23_SC007"
+      ],
+      "NextScene": "EP23_SC009",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_nova_logbook",
+        "anim:lower_book",
+        "vfx:과거 장면 단어 오버레이(평가소·억제제·수거 명단) 제안",
+        "sfx:사전 페이지 넘어가는 듯한 소리",
+        "bgm:반전 테마(저음 합창 제안)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC009",
+      "NovelSource": "L13545-L13576 §9 옆 캡슐",
+      "NovelSummary": "아인이 캡슐 열을 따라 걷다 끝에서 두 번째, 빈 캡슐의 명판 「현OO. 중위. 검체 41-B.」 앞에 선다. '검체 미확보. 야전 성숙 진행 — 최종 단계 도달 추정. 회수 1회 시도, 실패. 잔여물 수거 완료.' 터널 물속에서 걸어 나오던 군복의 감염체는 사고가 아니라 프로그램의 정상 결과였다. 아인이 벤 것은 괴물이 아니라 먼저 익은 사람이었다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "아인의 죄 — 먼저 익은 사람",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "캡슐 열을 따라가 현 중위의 명판을 찾는다",
+      "Interaction": [
+        "명판 조사(41-B)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빈 캡슐, 채워진 명판",
+      "Props": [
+        "prop_specimen_capsule",
+        "prop_specimen_plaque"
+      ],
+      "VFX": [
+        "회상 인서트: 터널 물속의 군복 감염체(원고 묘사 범위)"
+      ],
+      "SFX": [
+        "서 하사 목소리 환청"
+      ],
+      "Music": "죄책의 저음",
+      "GameplayEntry": "캡슐 열 걷기",
+      "GameplayExit": "낫자루 위에서 떨리는 손",
+      "AnimationRequired": [
+        "walk_along_row",
+        "trembling_hands"
+      ],
+      "CinematicRequired": "true: 아인 감정 클로즈업",
+      "SaveFlags": [
+        "EP23_HYEON_PLAQUE_FOUND"
+      ],
+      "Prerequisites": [
+        "EP23_SC008"
+      ],
+      "NextScene": "EP23_SC010",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_specimen_capsule",
+        "prop:prop_specimen_plaque",
+        "anim:walk_along_row",
+        "anim:trembling_hands",
+        "vfx:회상 인서트: 터널 물속의 군복 감염체(원고 묘사 범위)",
+        "sfx:서 하사 목소리 환청",
+        "bgm:죄책의 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC010",
+      "NovelSource": "L13577-L13605 §10 이송 명부",
+      "NovelSummary": "류가 진열장 아래 서랍에서 최근 몇 달·몇 주의 입고 명부를 찾는다. 처리 구분은 '검체 고정'과 '생체 이송 — 남부 발사장 구역'. 한 줄에 정OO 일병(C)과 정OO 민간(B) — 과천 폐차장에서 끌려간 남매 — 가 '생체 이송, 발사장'으로 나란히 있다. 류가 그 장을 찢어 품는다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "산 사람의 명단 — 발사장",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…발사장?",
+          "Source": "L13587"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "서랍을 뒤져 이송 명부를 확보한다",
+      "Interaction": [
+        "서랍 뒤지기",
+        "명부 넘기기",
+        "장 찢어 챙기기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "진열장 아래 서랍",
+      "Props": [
+        "prop_display_case",
+        "prop_transfer_register"
+      ],
+      "VFX": [],
+      "SFX": [
+        "서랍 여는 소리",
+        "종이 찢는 소리"
+      ],
+      "Music": "작은 희망의 긴장",
+      "GameplayEntry": "서랍 조사",
+      "GameplayExit": "찢은 장을 품에 넣음",
+      "AnimationRequired": [
+        "rummage_drawer",
+        "tear_page"
+      ],
+      "CinematicRequired": "false: 조사",
+      "SaveFlags": [
+        "EP23_TRANSFER_REGISTER_TAKEN",
+        "EP23_JEONG_SIBLINGS_ALIVE"
+      ],
+      "Prerequisites": [
+        "EP23_SC009"
+      ],
+      "NextScene": "EP23_SC011",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_display_case",
+        "prop:prop_transfer_register",
+        "anim:rummage_drawer",
+        "anim:tear_page",
+        "sfx:서랍 여는 소리",
+        "sfx:종이 찢는 소리",
+        "bgm:작은 희망의 긴장"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC011",
+      "NovelSource": "L13606-L13637 §11 심부의 박동",
+      "NovelSummary": "홀 바닥 바로 아래에서 산만 한 심장이 크게 울리고 조명과 캡슐 유리가 공명한다. 일행의 코어가 아래의 박자에 맞춰 강제로 한 단계 끌려 올라가고, 아인은 무릎을 짚고 카인의 관절이 밝아지며 류는 벽에 기댄다. 세라의 계측기가 조용히 네 개의 수치를 갱신한다 — 전원 S 진입. 카인의 물음에 세라는 자신은 골짜기에서부터였다고 밝힌다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "EP22 당일 이어서(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "강제 승급 — 오르는 게 아니라 끌려가는 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…전원.",
+          "Source": "L13618"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "S 진입.",
+          "Source": "L13622"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…당신도 지금.",
+          "Source": "L13628"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "아니.",
+          "Source": "L13630"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "나는 — 골짜기에서부터였어.",
+          "Source": "L13634"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 박동에 의한 강제 승급",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "흔들리는 조명, 공명하는 캡슐 유리",
+      "Props": [
+        "prop_sera_wrist_meter"
+      ],
+      "VFX": [
+        "아인 목덜미 강제 발광 상승",
+        "카인 관절 틈 강한 발광",
+        "조명 흔들림"
+      ],
+      "SFX": [
+        "바닥 아래 거대한 박동",
+        "유리 공명"
+      ],
+      "Music": "박동 동기화 앰비언트",
+      "GameplayEntry": "박동",
+      "GameplayExit": "세라의 고백",
+      "AnimationRequired": [
+        "kneel_brace",
+        "lean_on_wall",
+        "read_meter"
+      ],
+      "CinematicRequired": "true: 강제 승급 연출",
+      "SaveFlags": [
+        "EP23_PARTY_FORCED_S",
+        "EP23_SERA_S_SINCE_VALLEY"
+      ],
+      "Prerequisites": [
+        "EP23_SC010"
+      ],
+      "NextScene": "EP23_SC012",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_sera_wrist_meter",
+        "anim:kneel_brace",
+        "anim:lean_on_wall",
+        "anim:read_meter",
+        "vfx:아인 목덜미 강제 발광 상승",
+        "vfx:카인 관절 틈 강한 발광",
+        "vfx:조명 흔들림",
+        "sfx:바닥 아래 거대한 박동",
+        "sfx:유리 공명",
+        "bgm:박동 동기화 앰비언트"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC012",
+      "NovelSource": "L13638-L13657 §12 유리에 비친 것",
+      "NovelSummary": "떠나기 전 아인이 검체 07-C 캡슐 앞에 선다. 유리 안의 형태와 유리에 비친 제 얼굴 — 고정된 그래프와 아직 자라는 그래프가 겹친다. 목덜미는 S의 온도. 노래 이야기가 떠오르지만, 아인은 '아직은, 아무것도 안 들려' 한 문장만 스스로에게 허락한다.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "밤인지 낮인지 모를 시간",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "아인의 유예",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "아직은, 아무것도 안 들려.",
+          "Source": "L13652"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 유리에 비친 자신을 본다",
+      "Interaction": [
+        "캡슐 앞에 서기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "캡슐 유리의 반사",
+      "Props": [
+        "prop_specimen_capsule"
+      ],
+      "VFX": [
+        "유리 반사 이중 얼굴"
+      ],
+      "SFX": [],
+      "Music": "고요한 독백",
+      "GameplayEntry": "캡슐 앞",
+      "GameplayExit": "유리에서 눈을 뗌",
+      "AnimationRequired": [
+        "touch_neck"
+      ],
+      "CinematicRequired": "true: 반사 연출",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP23_SC011"
+      ],
+      "NextScene": "EP23_SC013",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "prop:prop_specimen_capsule",
+        "anim:touch_neck",
+        "vfx:유리 반사 이중 얼굴",
+        "bgm:고요한 독백"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP23",
+      "SceneId": "EP23_SC013",
+      "NovelSource": "L13658-L13696 §13 마지막 장",
+      "NovelSummary": "아인이 일지 마지막 장을 편다 — 좌표 하나(남해안 고흥, 노바 1호가 떠나고 돌아온 곳)와 '나는 신호를 끄지 못했다. — 끌 수 있는 것인지도, 모른다.' 박동이 또 울리고, 세라가 '끝까지 봤지. 이제 물어봐도 돼 — 걸으면서, 여기 오래 있을수록 익는다'고 말한다. 일행이 홀을 나서고 등 뒤로 캡슐 조명이 꺼진다. 남쪽, 좌표를 향해.",
+      "Location": "loc_gyeryong_specimen_hall",
+      "TimeOfDay": "밤인지 낮인지 모를 시간",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검",
+        "char_sera: 봉(결계·점등/소등), 손목 계측기"
+      ],
+      "StoryBeat": "다음 목적지 — 고흥",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "나는 신호를 끄지 못했다.",
+          "Source": "L13664"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…끝까지 봤지.",
+          "Source": "L13670"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "이제 물어봐도 돼.",
+          "Source": "L13674"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "여기, 오래 있을수록 익어.",
+          "Source": "L13674"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "일지 마지막 장을 확인하고 홀을 떠난다",
+      "Interaction": [
+        "일지 마지막 장 확인",
+        "출구로 이동"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "차례로 꺼지는 캡슐 조명",
+      "Props": [
+        "prop_nova_logbook"
+      ],
+      "VFX": [
+        "좌표 인서트",
+        "조명 순차 소등"
+      ],
+      "SFX": [
+        "박동",
+        "목덜미 공명 화음"
+      ],
+      "Music": "출발 테마(불안한 화음)",
+      "GameplayEntry": "마지막 장 펼침",
+      "GameplayExit": "홀을 나섬 → EP24",
+      "AnimationRequired": [
+        "read_aloud",
+        "walk_out_room"
+      ],
+      "CinematicRequired": "true: 마무리 연출",
+      "SaveFlags": [
+        "EP23_GOHEUNG_COORD_ACQUIRED"
+      ],
+      "Prerequisites": [
+        "EP23_SC012"
+      ],
+      "NextScene": "EP24_SC001",
+      "RequiredAssets": [
+        "env:loc_gyeryong_specimen_hall",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_nova_logbook",
+        "anim:read_aloud",
+        "anim:walk_out_room",
+        "vfx:좌표 인서트",
+        "vfx:조명 순차 소등",
+        "sfx:박동",
+        "sfx:목덜미 공명 화음",
+        "bgm:출발 테마(불안한 화음)"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_bak_junjang",
+      "NameKo": "박 준장(문지기)",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002"
+      ],
+      "NovelReasonForBattle": "각인 표본 보관실 강화문의 문지기. EP22 말미 경례 후 공격 개시.",
+      "ArenaLocationId": "loc_gyeryong_sterile_corridor",
+      "PhasesInNovel": [
+        "P1: 읽기·카운터 우세 — 다섯 합에 카인 어깨 부상, 여덟 합에 류 잔상 간파(L13322-L13347)",
+        "P2: 소등/점등 페인트 — 세라가 아인 출력 소등, 카인 최대 출력 미끼, 아인 무출력 사각 베기, 재점등 두 번째 원으로 결착(L13348-L13373)"
+      ],
+      "PatternsInNovel": [
+        "출력이 실리는 순간의 코어 발화를 읽어 반보 물러남(L13326, L13332)",
+        "류 잔상 중 진짜 쪽으로 몸을 틂",
+        "원의 끝자락 도착 지점에 팔을 세워 카운터(L13326)",
+        "지치지 않음, 사람의 검술(L13332-L13334)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "목덜미 결정(L13360)",
+        "카운터 자세로 굳은 순간(읽은 미래에 몸을 전부 건 자세, L13356)"
+      ],
+      "BreakCounterInNovel": [
+        "출력을 끈 아인은 읽히지 않음 → 사각 진입 얕은 베기 → 자세 붕괴(반 박자) → 재점등 두 번째 원으로 끊음"
+      ],
+      "EnvironmentInBattle": [
+        "좁은 복도 — 원을 그릴 반경이 늘 반 뼘 모자람(L13334)",
+        "세라 결계 뒤 엄폐"
+      ],
+      "Outcome": "격파. 무릎을 꿇고 오른손이 경례 각도로 반쯤 오르다 바닥에 떨어짐.",
+      "Source": "L13322-L13373"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_gyeryong_sterile_corridor",
+      "NameKo": "소독약 냄새 복도",
+      "DescriptionKo": "좁은 복도, 끝에 잠기지 않은 강화문. 박 준장 결전지.",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_specimen_hall",
+      "NameKo": "각인 표본 보관실(원형 홀)",
+      "DescriptionKo": "천장 높은 원형 홀. 벽과 중앙 열주를 따라 사람 크기 세로 유리 캡슐 수십 기, 명판, 중앙 유리 진열장과 서랍. 바닥 아래에서 박동.",
+      "Scenes": [
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC009",
+        "EP23_SC010",
+        "EP23_SC011",
+        "EP23_SC012",
+        "EP23_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002",
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC009",
+        "EP23_SC010",
+        "EP23_SC011",
+        "EP23_SC012",
+        "EP23_SC013"
+      ],
+      "StateChangesKo": [
+        "EP23_SC002: 소등→재점등으로 두 번 베기",
+        "EP23_SC011: 강제 S 진입(목덜미 S의 온도)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 사용자",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002",
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC009",
+        "EP23_SC010",
+        "EP23_SC011",
+        "EP23_SC013"
+      ],
+      "StateChangesKo": [
+        "EP23_SC001: 어깨가 찢김(부상)",
+        "EP23_SC011: 강제 S 진입, 관절 틈새 발광"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "정보상 출신",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002",
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC009",
+        "EP23_SC010",
+        "EP23_SC011",
+        "EP23_SC013"
+      ],
+      "StateChangesKo": [
+        "EP23_SC010: 이송 명부 한 장을 찢어 품에 넣음",
+        "EP23_SC011: 강제 S 진입"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "결계·계측",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002",
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC009",
+        "EP23_SC010",
+        "EP23_SC011",
+        "EP23_SC013"
+      ],
+      "StateChangesKo": [
+        "EP23_SC011: 자신은 골짜기에서부터 S였음을 공개"
+      ]
+    },
+    {
+      "CharacterId": "char_bak_junjang",
+      "NameKo": "박 준장",
+      "RoleKo": "대(對)각인자 전투 특화 문지기",
+      "Scenes": [
+        "EP23_SC001",
+        "EP23_SC002"
+      ],
+      "StateChangesKo": [
+        "EP23_SC002: 격파(무릎 꿇고 반쯤의 경례)"
+      ]
+    },
+    {
+      "CharacterId": "char_cha_hanbyeol",
+      "NameKo": "차한별",
+      "RoleKo": "노바 1호 선장. 항해일지로 등장",
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_gang_gigwansa",
+      "NameKo": "강 기관사",
+      "RoleKo": "노바 1호 승무원. 첫 발현자, SS 도달. 일지로만 등장",
+      "Scenes": [
+        "EP23_SC005",
+        "EP23_SC006"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_nova1_crew",
+      "NameKo": "노바 1호 승무원(박 항법사·윤 의무관·한 부기관사·조 통신사·서 화물관리관)",
+      "RoleKo": "SS 도달 후 '신호에 응답함'. 일지로만 등장",
+      "Scenes": [
+        "EP23_SC007"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_hyeon_jungwi",
+      "NameKo": "현 중위",
+      "RoleKo": "검체 41-B, 야전 성숙. 명판으로만 등장(아인이 이전에 벤 감염체)",
+      "Scenes": [
+        "EP23_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_siblings",
+      "NameKo": "정OO 일병·정OO 민간",
+      "RoleKo": "과천 폐차장에서 끌려간 두 사람. 이송 명부로만 등장(발사장으로 생체 이송)",
+      "Scenes": [
+        "EP23_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "회상 속 목소리",
+      "Scenes": [
+        "EP23_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "'자라는 그래프' 회상",
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "평가소 등급 부여 회상",
+      "Scenes": [
+        "EP23_SC005",
+        "EP23_SC008"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "boss_read_step_back",
+      "Category": "boss",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP23_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "궤도 전에 반보 물러남"
+    },
+    {
+      "Action": "boss_counter_stance",
+      "Category": "boss",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP23_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원 끝자락 도착점에 팔을 세운 카운터 자세"
+    },
+    {
+      "Action": "longsword_swing",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP23_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검 휘두르기"
+    },
+    {
+      "Action": "afterimage_decoy",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP23_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "두 겹 잔상"
+    },
+    {
+      "Action": "barrier_cast",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP23_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결계"
+    },
+    {
+      "Action": "staff_toggle_output",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP23_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "봉으로 아인 출력 끄기/켜기"
+    },
+    {
+      "Action": "longsword_bait_swing",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP23_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "온몸 주황 출력으로 크게 휘두르는 미끼"
+    },
+    {
+      "Action": "unlit_flank_slash",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무출력으로 사각을 돌아 목덜미 결정 얕게 긋기"
+    },
+    {
+      "Action": "second_arc_finish",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "재점등 후 같은 골을 따라 두 번째 원"
+    },
+    {
+      "Action": "boss_kneel_half_salute",
+      "Category": "death",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP23_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무릎 꿇고 경례 각도로 반쯤 오른 손이 떨어짐"
+    },
+    {
+      "Action": "push_door",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP23_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "강화문 밀기"
+    },
+    {
+      "Action": "kneel_read",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC003",
+        "EP23_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "명판 앞에 무릎 꿇고 읽기"
+    },
+    {
+      "Action": "walk_along_row",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "캡슐 열을 따라 걷기"
+    },
+    {
+      "Action": "lockpick",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP23_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "진열장 따기(손 떨림)"
+    },
+    {
+      "Action": "read_aloud",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수첩 소리 내어 읽기"
+    },
+    {
+      "Action": "pass_book",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu",
+        "char_kain",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수첩 건네기"
+    },
+    {
+      "Action": "lower_book",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수첩을 내림"
+    },
+    {
+      "Action": "trembling_hands",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫자루 위에서 손이 미세하게 떨림"
+    },
+    {
+      "Action": "rummage_drawer",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP23_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서랍 뒤지기"
+    },
+    {
+      "Action": "tear_page",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP23_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "명부 한 장 찢기"
+    },
+    {
+      "Action": "kneel_brace",
+      "Category": "injury",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎 짚기"
+    },
+    {
+      "Action": "lean_on_wall",
+      "Category": "injury",
+      "Characters": [
+        "char_ryu",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP23_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 기대기/짚기"
+    },
+    {
+      "Action": "read_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP23_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손목 계측기 확인"
+    },
+    {
+      "Action": "touch_neck",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP23_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "목덜미에 손 대기"
+    },
+    {
+      "Action": "walk_out_room",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP23_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "홀을 나섬"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_specimen_capsule",
+      "NameKo": "세로 유리 캡슐(표본)",
+      "Scenes": [
+        "EP23_SC003",
+        "EP23_SC004",
+        "EP23_SC009",
+        "EP23_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_specimen_plaque",
+      "NameKo": "금속 명판(이름·계급·검체 번호·등급 그래프)",
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_display_case",
+      "NameKo": "중앙 유리 진열장(아래 서랍)",
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_briefcase",
+      "NameKo": "낡은 서류 가방",
+      "Scenes": [
+        "EP23_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_nova_logbook",
+      "NameKo": "「노바 1호 항해일지 — 차한별」 수첩",
+      "Scenes": [
+        "EP23_SC004",
+        "EP23_SC005",
+        "EP23_SC006",
+        "EP23_SC007",
+        "EP23_SC008",
+        "EP23_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_transfer_register",
+      "NameKo": "입고·이송 명부(찢은 한 장)",
+      "Scenes": [
+        "EP23_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_sera_wrist_meter",
+      "NameKo": "세라의 손목 계측기",
+      "Scenes": [
+        "EP23_SC011"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP23_SC001",
+      "QuestionKo": "박 준장이 게임 정규 보스인지 확인 필요 — 원고 헤더는 '박 준장 결착'만 명시(여기서는 보스로 처리). 난수 방송 발신자(장성)와의 관계도 미공개."
+    },
+    {
+      "Scene": "EP23_SC001",
+      "QuestionKo": "일행이 '다섯'으로 표기됨(§1 '다섯 합'은 횟수, §5·§11·§13 '다섯'은 인원) — 안내인 사망 후 넷인데 다섯 번째 인물 불명. §11 계측기는 '네 개의 수치'."
+    },
+    {
+      "Scene": "EP23_SC004",
+      "QuestionKo": "진열장 속 낡은 서류 가방의 내용물은 원고에 없음."
+    },
+    {
+      "Scene": "EP23_SC004",
+      "QuestionKo": "캡슐 안 '사람의 형태'들의 생사·상태(검체 고정의 의미)는 구체 서술 없음."
+    },
+    {
+      "Scene": "EP23_SC007",
+      "QuestionKo": "'신호'의 발신원·의미는 원고상 미공개(차한별도 모름)."
+    },
+    {
+      "Scene": "EP23_SC010",
+      "QuestionKo": "남부 발사장 구역으로의 '생체 이송' 목적 미공개."
+    },
+    {
+      "Scene": "EP23_SC011",
+      "QuestionKo": "세라가 '골짜기에서부터' S였다는 것 외에 현재 정확한 등급 미공개."
+    },
+    {
+      "Scene": "EP23_SC013",
+      "QuestionKo": "원고 헤더의 '강제 승급' 이후 게임 성장 시스템 반영 방식 TBD."
+    }
+  ]
+}

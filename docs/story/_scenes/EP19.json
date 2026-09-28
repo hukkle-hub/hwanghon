@@ -1,0 +1,1937 @@
+{
+  "EpisodeId": "EP19",
+  "TitleKo": "제19화 — 손실",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      11725,
+      12074
+    ]
+  },
+  "SummaryKo": "남행 준비 닷새 동안 카인은 새 장검에, 아인은 임계 이후의 새 몸에 적응하고 세라는 촉매를 고은다. 벙커 무전실에 늙은 목소리의 군 난수 방송이 흘러들고, 류가 2년간 지녀 온 USB — 여섯 동료를 잃고 빼낸 물건 — 를 내놓는다. 세라는 방송이 매일 USB의 열쇠 조각을 불러 주고 있음을 알아내 잠금을 푼다. 문서는 「각인 유도 프로그램 — 설계 기준서」로, 각인이 우연이 아니라 대규모 노출로 얻는 공정이었음을 드러낸다. 승인란의 기안 기관은 세라의 옛 소속, 최종 승인자는 백 실장이었고 세라는 '내일 얘기해'라며 자리를 뜬다. 그 밤 카인이 갚으려던 허수아비 값은 처음부터 '손실'로 처리된 빚이었고, 아인은 장부의 손실 명단이 대부분 B·A 등급 미귀환자임을 발견한다. 마태오는 명단을 남쪽에 가져가라 맡긴다. 방송의 마지막 조각은 '증거의 원본은 계룡에 있다'고 전하고, 다섯은 계룡을 향해 벙커를 떠난다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC001",
+      "NovelSource": "L11725-L11752 §1 정비의 날들",
+      "NovelSummary": "남행 준비 닷새. 카인은 훈련장에서 새 장검에 몸을 맞추며 허수아비 둘을 부수고, 아인은 임계 이후 어긋난 원의 감각을 분필 원으로 교정한다. 세라는 의무실 옆 빈 방에서 촉매를 고으며 구경하던 두나를 쫓지 않는다. 닷새째 밤 류가 처음으로 사람들을 불러 모은다.",
+      "Location": "loc_bunker_training",
+      "TimeOfDay": "닷새간(낮·밤 몽타주)",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_sera",
+        "char_duna",
+        "char_mateo",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 새 장검(긴 장검)",
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "출발 전 정비 — 새 무기·새 몸의 눈금 맞추기",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_sera",
+        "char_duna",
+        "char_mateo",
+        "char_ryu"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "훈련장에서 분필 원 위에 날끝을 떨어뜨리는 감각 연습(연출)을 마친다",
+      "Interaction": [
+        "분필 원 그리기",
+        "원 선 위로 낫 끝 떨어뜨리기(연출용 조작)",
+        "세라 작업실 들여다보기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 훈련장: 부서진 허수아비 두 개, 바닥의 분필 원. 의무실 옆 빈 방: 촉매 작업대(위험물이 높은 곳으로 옮겨짐)",
+      "Props": [
+        "prop_scarecrow",
+        "prop_chalk",
+        "prop_catalyst"
+      ],
+      "VFX": [
+        "분필 원 선 하이라이트"
+      ],
+      "SFX": [
+        "장검 찌르기 휘두름",
+        "허수아비 파손",
+        "분필 긋는 소리"
+      ],
+      "Music": "고요한 정비 몽타주",
+      "GameplayEntry": "몽타주 시작(카인 훈련장)",
+      "GameplayExit": "닷새째 밤, 류가 사람들을 불러 모으는 장면으로 전환",
+      "AnimationRequired": [
+        "longsword_thrust_practice",
+        "draw_chalk_circle",
+        "scythe_precision_drop"
+      ],
+      "CinematicRequired": "true: 다인물 몽타주(카인·아인·세라·두나)",
+      "SaveFlags": [
+        "EP19_PREP_MONTAGE_DONE"
+      ],
+      "Prerequisites": [
+        "EP18_COMPLETE"
+      ],
+      "NextScene": "EP19_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_training",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_sera",
+        "char:char_duna",
+        "char:char_mateo",
+        "char:char_ryu",
+        "prop:prop_scarecrow",
+        "prop:prop_chalk",
+        "prop:prop_catalyst",
+        "anim:longsword_thrust_practice",
+        "anim:draw_chalk_circle",
+        "anim:scythe_precision_drop",
+        "vfx:분필 원 선 하이라이트",
+        "sfx:장검 찌르기 휘두름",
+        "sfx:허수아비 파손",
+        "sfx:분필 긋는 소리",
+        "bgm:고요한 정비 몽타주"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC002",
+      "NovelSource": "L11753-L11784 §2 수신",
+      "NovelSummary": "송신을 끊은 무전실에 사흘 전부터 매일 같은 시각 늙은 목소리의 난수 방송이 들어온다. 무전수 박 씨의 수첩을 본 세라가 구형 군 야전 난수 체계라 판별하지만 난수표 없이는 못 읽는다고 한다. 류가 난수표를 갖고 있다고 입을 연다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "닷새째 밤",
+      "Characters": [
+        "char_ryu",
+        "char_mujeonsu_bak",
+        "char_sera",
+        "char_mateo",
+        "char_oh_jeonggil",
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "미스터리 도입 — 난수 방송과 류의 고백 예고",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_ryu",
+        "char_mujeonsu_bak",
+        "char_sera",
+        "char_mateo",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mujeonsu_bak",
+          "Line": "난수 방송입니다.",
+          "Source": "L11759"
+        },
+        {
+          "Speaker": "char_mujeonsu_bak",
+          "Line": "사람 목소리예요. 기계가 아니라. 늙은 목소리.",
+          "Source": "L11763"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "군 야전 난수 체계야. 그것도 구형.",
+          "Source": "L11769"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "난수표가 있으면. 없으면 못 읽어.",
+          "Source": "L11773"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…난수표라면.",
+          "Source": "L11777"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "본 적 있어요. 아니 — 갖고 있어요.",
+          "Source": "L11781"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "난수 방송의 정체에 대한 논의를 듣는다",
+      "Interaction": [
+        "무전수 수첩 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "수신 전용이 된 벙커 무전 설비, 숫자로 가득한 수첩",
+      "Props": [
+        "prop_radio_notebook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "무전 잡음 속 숫자 낭독(늙은 목소리)"
+      ],
+      "Music": "긴장된 정적",
+      "GameplayEntry": "류가 모은 자리에서 대화 시작",
+      "GameplayExit": "류의 '갖고 있어요' 후 전환",
+      "AnimationRequired": [
+        "hand_over_notebook"
+      ],
+      "CinematicRequired": "false: 대화 장면",
+      "SaveFlags": [
+        "EP19_NUMBER_STATION_HEARD"
+      ],
+      "Prerequisites": [
+        "EP19_SC001"
+      ],
+      "NextScene": "EP19_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_ryu",
+        "char:char_mujeonsu_bak",
+        "char:char_sera",
+        "char:char_mateo",
+        "char:char_oh_jeonggil",
+        "char:char_ain",
+        "prop:prop_radio_notebook",
+        "anim:hand_over_notebook",
+        "sfx:무전 잡음 속 숫자 낭독(늙은 목소리)",
+        "bgm:긴장된 정적"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC003",
+      "NovelSource": "L11785-L11810 §3 류의 것",
+      "NovelSummary": "류가 2년간 몸에 지녀 온 USB를 테이블에 올리고 처음으로 제 이야기를 한다. 군 시설에서 물건 하나를 빼 오는 의뢰에 여섯이 들어가 류만 물건을 쥐고 나왔다. 암호로 잠겨 열지 못한 그것을 류가 세라 앞으로 민다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "닷새째 밤",
+      "Characters": [
+        "char_ryu",
+        "char_sera",
+        "char_ain",
+        "char_kain",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "류의 과거 고백 — 여섯 명 값의 USB",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_ryu",
+        "char_sera",
+        "char_kain",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "군 시설에서 물건 하나를 빼 오는 일.",
+          "Source": "L11795"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "들어간 건 여섯이었고, 나온 건 나였어요.",
+          "Source": "L11799"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "뭔지는 알고 죽어야죠.",
+          "Source": "L11803"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "주머니에 넣고 다니면, 표시는 안 나거든요.",
+          "Source": "L11807"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "류의 고백을 듣는다",
+      "Interaction": [
+        "USB 클로즈업 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "테이블 위 닳아 반질한 USB",
+      "Props": [
+        "prop_usb"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "낮은 현악, 고백",
+      "GameplayEntry": "류가 USB를 테이블에 올림",
+      "GameplayExit": "USB를 세라 앞으로 밀어 줌",
+      "AnimationRequired": [
+        "place_object_on_table",
+        "slide_object_across_table"
+      ],
+      "CinematicRequired": "true: 류 첫 고백 클로즈업",
+      "SaveFlags": [
+        "EP19_RYU_USB_REVEALED"
+      ],
+      "Prerequisites": [
+        "EP19_SC002"
+      ],
+      "NextScene": "EP19_SC004",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_mateo",
+        "prop:prop_usb",
+        "anim:place_object_on_table",
+        "anim:slide_object_across_table",
+        "bgm:낮은 현악, 고백"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC004",
+      "NovelSource": "L11811-L11834 §4 열쇠",
+      "NovelSummary": "세라가 이틀 밤을 방에서 나오지 않고 암호를 뜯다가, USB 잠금과 난수 방송이 같은 세대 같은 규격임을 발견한다. 방송은 매일 열쇠를 한 조각씩 불러 주고 있었고, 사흘 치를 이어 USB를 단말에 꽂자 이 초 만에 잠금이 풀린다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "이틀 밤 뒤 사흘째 새벽",
+      "Characters": [
+        "char_sera",
+        "char_ryu",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "해독 — 자물쇠와 열쇠가 같은 집에서 나옴",
+      "PlayerCharacter": "char_sera",
+      "NPCs": [
+        "char_ryu",
+        "char_ain",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "같은 집에서 나온 자물쇠와 열쇠야.",
+          "Source": "L11819"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "매일 열쇠를 한 조각씩 불러 주고 있는 거야.",
+          "Source": "L11823"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "이 USB가 세상 어딘가에 살아 있다는 걸 아는 사람이.",
+          "Source": "L11827"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "ANIMATION_ONLY"
+      ],
+      "PlayerGoal": "수첩의 숫자를 옮겨 적고 USB를 연다(연출)",
+      "Interaction": [
+        "수첩 사흘 치 펼치기",
+        "USB를 단말에 꽂기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "충혈된 눈의 세라, 테이블 위 수첩 사흘 치와 단말",
+      "Props": [
+        "prop_usb",
+        "prop_radio_notebook",
+        "prop_sera_terminal"
+      ],
+      "VFX": [
+        "단말 잠금 해제 표시"
+      ],
+      "SFX": [
+        "USB 꽂는 소리",
+        "잠금 해제 알림음"
+      ],
+      "Music": "해독 긴장 → 정적",
+      "GameplayEntry": "세라 작업 몽타주",
+      "GameplayExit": "잠금 해제(2초)",
+      "AnimationRequired": [
+        "insert_usb",
+        "write_numbers"
+      ],
+      "CinematicRequired": "true: '2년과 여섯 명과 이 초' 해제 순간",
+      "SaveFlags": [
+        "EP19_USB_DECRYPTED"
+      ],
+      "Prerequisites": [
+        "EP19_SC003"
+      ],
+      "NextScene": "EP19_SC005",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_sera",
+        "char:char_ryu",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_usb",
+        "prop:prop_radio_notebook",
+        "prop:prop_sera_terminal",
+        "anim:insert_usb",
+        "anim:write_numbers",
+        "vfx:단말 잠금 해제 표시",
+        "sfx:USB 꽂는 소리",
+        "sfx:잠금 해제 알림음",
+        "bgm:해독 긴장 → 정적"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC005",
+      "NovelSource": "L11835-L11852 §5 제목",
+      "NovelSummary": "화면에 수백 장의 문서철이 열리고 첫 장 제목 「각인 유도 프로그램 — 설계 기준서」를 모두가 읽는다. 벼락 같은 기적이라던 각인에 확률표가 있었다. 아무도 다음 장을 말하지 못하고, 떨리는 세라의 손이 장을 넘긴다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "사흘째 새벽",
+      "Characters": [
+        "char_sera",
+        "char_ryu",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "충격 — 각인은 유도된 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera",
+        "char_ryu",
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "문서 제목을 확인한다",
+      "Interaction": [
+        "단말 화면 보기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "단말 화면에 문서철",
+      "Props": [
+        "prop_sera_terminal",
+        "prop_design_document"
+      ],
+      "VFX": [
+        "화면 글자 부각"
+      ],
+      "SFX": [
+        "정적"
+      ],
+      "Music": "충격의 저음",
+      "GameplayEntry": "문서철 열림",
+      "GameplayExit": "세라가 장을 넘김",
+      "AnimationRequired": [
+        "trembling_hands"
+      ],
+      "CinematicRequired": "true: 제목 공개 연출",
+      "SaveFlags": [
+        "EP19_DOC_TITLE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP19_SC004"
+      ],
+      "NextScene": "EP19_SC006",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_sera",
+        "char:char_ryu",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_sera_terminal",
+        "prop:prop_design_document",
+        "anim:trembling_hands",
+        "vfx:화면 글자 부각",
+        "sfx:정적",
+        "bgm:충격의 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC006",
+      "NovelSource": "L11853-L11877 §6 넘겨지는 장",
+      "NovelSummary": "노출 농도 조절, 숙주 선별, 발현률 제고 — 문서는 사람을 숙주로, 죽음을 탈락으로 적은 공학 문서였다. 카인이 뜻을 묻자 아인이 '우연이 아니었다'고 답한다. 세라의 손이 결재 서식의 승인란 앞에서 멈춘다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "사흘째 새벽",
+      "Characters": [
+        "char_sera",
+        "char_kain",
+        "char_ain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 새 장검(긴 장검)",
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "진실 1단 — 만 명을 노출시켜 한 명을 얻는 공정",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera",
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…이게 무슨 뜻이야.",
+          "Source": "L11859"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…우연이 아니었다는 뜻이에요. 우리가.",
+          "Source": "L11863"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "문서 내용을 넘겨 본다",
+      "Interaction": [
+        "문서 페이지 넘기기(연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "단말 화면: 권장 노출 집단 규모가 만 단위로 적힌 표",
+      "Props": [
+        "prop_sera_terminal",
+        "prop_design_document"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "무거운 저음",
+      "GameplayEntry": "장 넘김",
+      "GameplayExit": "승인란에서 멈춤",
+      "AnimationRequired": [
+        "scroll_document"
+      ],
+      "CinematicRequired": "false: 대화·화면 인서트",
+      "SaveFlags": [
+        "EP19_DOC_READ"
+      ],
+      "Prerequisites": [
+        "EP19_SC005"
+      ],
+      "NextScene": "EP19_SC007",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_sera",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_ryu",
+        "prop:prop_sera_terminal",
+        "prop:prop_design_document",
+        "anim:scroll_document",
+        "bgm:무거운 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC007",
+      "NovelSource": "L11878-L11909 §7 승인란",
+      "NovelSummary": "승인 서식의 기안 부서는 세라의 옛 소속 연구 기관이었다. 류가 세라와 기관명 사이의 거리를 읽고, 최종 승인자 '백 실장'의 서명을 본 세라의 얼굴에서 표정이 빠진다. 아인의 물음에 세라는 화면을 끄고 '내일 얘기해'라며 방을 나간다.",
+      "Location": "loc_bunker",
+      "TimeOfDay": "사흘째 새벽",
+      "Characters": [
+        "char_sera",
+        "char_ryu",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "세라의 과거 연결 — 처음으로 도망친 세라",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera",
+        "char_ryu",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…이 연구소.",
+          "Source": "L11888"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "들어 본 이름인데.",
+          "Source": "L11892"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…이 사람을 알아?",
+          "Source": "L11900"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "내일 얘기해.",
+          "Source": "L11904"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "승인란을 확인한다",
+      "Interaction": [
+        "승인란 확대"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "화면의 직인과 서명, 최종 승인자 '백 실장'",
+      "Props": [
+        "prop_sera_terminal",
+        "prop_design_document"
+      ],
+      "VFX": [],
+      "SFX": [
+        "화면 꺼지는 소리",
+        "문 닫힘"
+      ],
+      "Music": "불협 현악",
+      "GameplayEntry": "승인란 클로즈업",
+      "GameplayExit": "세라 퇴장",
+      "AnimationRequired": [
+        "turn_off_screen",
+        "walk_out_room"
+      ],
+      "CinematicRequired": "true: 세라 표정 소거 클로즈업",
+      "SaveFlags": [
+        "EP19_BAEK_NAME_SEEN"
+      ],
+      "Prerequisites": [
+        "EP19_SC006"
+      ],
+      "NextScene": "EP19_SC008",
+      "RequiredAssets": [
+        "env:loc_bunker",
+        "char:char_sera",
+        "char:char_ryu",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_sera_terminal",
+        "prop:prop_design_document",
+        "anim:turn_off_screen",
+        "anim:walk_out_room",
+        "sfx:화면 꺼지는 소리",
+        "sfx:문 닫힘",
+        "bgm:불협 현악"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC008",
+      "NovelSource": "L11910-L11951 §8 삼십만 원",
+      "NovelSummary": "그 밤 카인이 혼자 관제실로 가 셀레스티얼전 의뢰비 중 삼십만 원을 '허수아비 값'으로 마태오 책상에 올린다. 마태오는 2년 치 장부에서 허수아비 3호 옆 '손실' 두 글자를 보여 주며, 빚이라 해야 카인이 돌아올 것 같아 그랬다고 한다. 돈을 되돌리고 장부를 덮으려는데 문가의 아인이 멈춘다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_kain",
+        "char_mateo",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "char_kain: 새 장검(긴 장검)",
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "카인·마태오 — 존재하지 않던 빚",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_mateo",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "허수아비 값.",
+          "Source": "L11916"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "장부다.",
+          "Source": "L11930"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "빚이라고 해야 네가 살 것 같아서 그랬다.",
+          "Source": "L11934"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "빚은 사람을 돌아오게 해.",
+          "Source": "L11938"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "장부는 못 고친다. 한번 손실은 손실이야.",
+          "Source": "L11944"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…잠깐만요.",
+          "Source": "L11948"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "마태오에게 허수아비 값을 갚는다",
+      "Interaction": [
+        "돈 세어 올려놓기",
+        "장부 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실 책상, 2년 치 서류철 든 서랍",
+      "Props": [
+        "prop_money_300k",
+        "prop_mateo_ledger"
+      ],
+      "VFX": [],
+      "SFX": [
+        "지폐 세는 소리",
+        "서랍 여는 소리"
+      ],
+      "Music": "따뜻하지만 무거운 피아노",
+      "GameplayEntry": "카인 관제실 진입",
+      "GameplayExit": "아인이 '잠깐만요'",
+      "AnimationRequired": [
+        "count_money",
+        "open_drawer",
+        "push_object_back"
+      ],
+      "CinematicRequired": "false: 대화 장면",
+      "SaveFlags": [
+        "EP19_SCARECROW_DEBT_REVEALED"
+      ],
+      "Prerequisites": [
+        "EP19_SC007"
+      ],
+      "NextScene": "EP19_SC009",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_kain",
+        "char:char_mateo",
+        "char:char_ain",
+        "prop:prop_money_300k",
+        "prop:prop_mateo_ledger",
+        "anim:count_money",
+        "anim:open_drawer",
+        "anim:push_object_back",
+        "sfx:지폐 세는 소리",
+        "sfx:서랍 여는 소리",
+        "bgm:따뜻하지만 무거운 피아노"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC009",
+      "NovelSource": "L11952-L11985 §9 손실의 목록",
+      "NovelSummary": "아인이 장부 뒷장에서 비품이 아닌 이름들 — 미귀환·손실로 처리된 사람들 — 을 넘겨 본다. 미귀환이 거의 B와 A라는 것을 아인이 짚고, 마태오는 2년간 맞지 않던 셈이 남태령의 답으로 닫혔다고 말한다. 마태오가 명단을 가져가 남쪽 어느 책상에든 올려놓으라며 건넨다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_mateo",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "수거 기준(B 이상 우선)과 손실 명단의 연결",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_mateo",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…C는 거의 없네요.",
+          "Source": "L11966"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "미귀환이 — 거의 다 B랑 A예요.",
+          "Source": "L11970"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "강한 놈들이 먼저 죽는 직업이 어딨나.",
+          "Source": "L11976"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "삼십만 원은 손실이다. — 이 명단은 아니야.",
+          "Source": "L11982"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "어느 놈 책상에든 이걸 올려놓고 와.",
+          "Source": "L11982"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "장부의 손실 명단을 끝까지 넘겨 본다",
+      "Interaction": [
+        "장부 페이지 넘기기",
+        "명단 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실, 장부의 손실 목록(정민호·이서연·강태우 등)",
+      "Props": [
+        "prop_mateo_ledger"
+      ],
+      "VFX": [],
+      "SFX": [
+        "종이 넘기는 소리",
+        "서랍 닫힘"
+      ],
+      "Music": "침묵에 가까운 저음",
+      "GameplayEntry": "아인이 장부를 넘김",
+      "GameplayExit": "명단(장부)을 받음",
+      "AnimationRequired": [
+        "flip_pages",
+        "hand_over_ledger"
+      ],
+      "CinematicRequired": "false: 대화·인서트",
+      "SaveFlags": [
+        "EP19_LOSS_LEDGER_ACQUIRED"
+      ],
+      "Prerequisites": [
+        "EP19_SC008"
+      ],
+      "NextScene": "EP19_SC010",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_ain",
+        "char:char_mateo",
+        "char:char_kain",
+        "prop:prop_mateo_ledger",
+        "anim:flip_pages",
+        "anim:hand_over_ledger",
+        "sfx:종이 넘기는 소리",
+        "sfx:서랍 닫힘",
+        "bgm:침묵에 가까운 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC010",
+      "NovelSource": "L11986-L12011 §10 마지막 조각",
+      "NovelSummary": "이튿날 새벽 난수 방송의 마지막 조각이 들어와 본문이 열린다. '문서는 진본이다 / 증거의 원본은 계룡에 있다 / 들리는 자가 가라.' 호출 부호는 장성급 개인 부호였고, 류는 탈영 장성이라 중얼거리며 서 하사의 이야기와 겹친다. 목적지는 계룡.",
+      "Location": "loc_bunker_radio_room",
+      "TimeOfDay": "이튿날 새벽",
+      "Characters": [
+        "char_sera",
+        "char_ryu",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트",
+        "char_ryu: 후드"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "목적지 확정 — 계룡",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera",
+        "char_ryu",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_nansu_sender",
+          "Line": "문서는 진본이다.",
+          "Source": "L11992"
+        },
+        {
+          "Speaker": "char_nansu_sender",
+          "Line": "증거의 원본은 계룡에 있다.",
+          "Source": "L11994"
+        },
+        {
+          "Speaker": "char_nansu_sender",
+          "Line": "나는 더 못 내려간다. — 들리는 자가 가라.",
+          "Source": "L11996"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…탈영 장성.",
+          "Source": "L12000"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "위에도 있었다는 거네.",
+          "Source": "L12004"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "해독된 메시지를 확인한다",
+      "Interaction": [
+        "무전 수신 내용 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "무전실, 밤을 새운 세라",
+      "Props": [
+        "prop_radio_notebook"
+      ],
+      "VFX": [
+        "숫자가 글자로 변환되는 인서트"
+      ],
+      "SFX": [
+        "무전 수신음",
+        "늙은 목소리 낭독"
+      ],
+      "Music": "결의의 저음",
+      "GameplayEntry": "세라가 마지막 조각을 받아 적음",
+      "GameplayExit": "'계룡.' 타이틀 인서트",
+      "AnimationRequired": [
+        "write_numbers"
+      ],
+      "CinematicRequired": "true: 메시지 해독 인서트",
+      "SaveFlags": [
+        "EP19_GYERYONG_TARGET_SET"
+      ],
+      "Prerequisites": [
+        "EP19_SC009"
+      ],
+      "NextScene": "EP19_SC011",
+      "RequiredAssets": [
+        "env:loc_bunker_radio_room",
+        "char:char_sera",
+        "char:char_ryu",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_radio_notebook",
+        "anim:write_numbers",
+        "vfx:숫자가 글자로 변환되는 인서트",
+        "sfx:무전 수신음",
+        "sfx:늙은 목소리 낭독",
+        "bgm:결의의 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC011",
+      "NovelSource": "L12012-L12023 §11 대답하지 않은 사람",
+      "NovelSummary": "짐을 싸는 저녁, 아인이 세라의 방 앞에서 노크하려다 멈춘다. 문틈으로 세라가 승인란의 '백 실장'을 계산이 끝나지 않는 얼굴로 바라보고 있다. 아인은 노크하지 않고 돌아선다.",
+      "Location": "loc_bunker_sera_room",
+      "TimeOfDay": "저녁",
+      "Characters": [
+        "char_ain",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_sera: 코트"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "아인의 기다림 — 재촉하지 않는 법",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "세라의 방 앞까지 가서 돌아선다",
+      "Interaction": [
+        "노크하려다 멈추기(선택 없음)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "문틈으로 보이는 단말 화면의 승인란",
+      "Props": [
+        "prop_sera_terminal"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "잔잔한 피아노",
+      "GameplayEntry": "복도에서 방 앞으로 이동",
+      "GameplayExit": "돌아서 떠남",
+      "AnimationRequired": [
+        "hesitate_knock",
+        "turn_away"
+      ],
+      "CinematicRequired": "true: 문틈 시점 연출",
+      "SaveFlags": [
+        "EP19_AIN_DID_NOT_KNOCK"
+      ],
+      "Prerequisites": [
+        "EP19_SC010"
+      ],
+      "NextScene": "EP19_SC012",
+      "RequiredAssets": [
+        "env:loc_bunker_sera_room",
+        "char:char_ain",
+        "char:char_sera",
+        "prop:prop_sera_terminal",
+        "anim:hesitate_knock",
+        "anim:turn_away",
+        "bgm:잔잔한 피아노"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC012",
+      "NovelSource": "L12024-L12043 §12 출발 전야",
+      "NovelSummary": "마태오가 지도 위에 마지막 브리핑을 편다. 계룡까지 직선 140km, 보름 걸음, 인계 지점 추정치 둘을 피해 갈 것. 벙커는 지킨다며 창 너머 오정길이 두호 등 아이들에게 깡통 묶는 법을 가르치는 훈련장을 가리킨다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "출발 전야",
+      "Characters": [
+        "char_mateo",
+        "char_ain",
+        "char_oh_jeonggil",
+        "char_duho"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "브리핑 — 남행선과 벙커의 후임",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_mateo",
+        "char_oh_jeonggil",
+        "char_duho"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "계룡. 직선 백사십 킬로. 너희 걸음으로 보름.",
+          "Source": "L12028"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "중간에 인계 지점 추정치가 둘 더 있다. 피해 가.",
+          "Source": "L12028"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "벙커는.",
+          "Source": "L12032"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "지킨다. 셔터가 있고, 경비가 있고 —",
+          "Source": "L12036"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "— 후임도 생겼으니까.",
+          "Source": "L12040"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "브리핑을 듣는다",
+      "Interaction": [
+        "지도 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실 지도, 창 너머 훈련장에서 깡통 묶기 수업",
+      "Props": [
+        "prop_map",
+        "prop_cans"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "담담한 희망",
+      "GameplayEntry": "지도 펼침",
+      "GameplayExit": "창 너머 훈련장 인서트",
+      "AnimationRequired": [
+        "spread_map",
+        "chin_gesture",
+        "tie_cans"
+      ],
+      "CinematicRequired": "false: 브리핑",
+      "SaveFlags": [
+        "EP19_BRIEFING_DONE"
+      ],
+      "Prerequisites": [
+        "EP19_SC011"
+      ],
+      "NextScene": "EP19_SC013",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "char:char_oh_jeonggil",
+        "char:char_duho",
+        "prop:prop_map",
+        "prop:prop_cans",
+        "anim:spread_map",
+        "anim:chin_gesture",
+        "anim:tie_cans",
+        "bgm:담담한 희망"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP19",
+      "SceneId": "EP19_SC013",
+      "NovelSource": "L12044-L12074 §13 손에 든 것들",
+      "NovelSummary": "떠나는 아침, 카인은 장검을, 류는 열린 USB를, 아인은 이름 잃은 인식표 두 개와 손실 장부를 교신 기록부와 같은 방수포에 싸서 품는다. 철문이 오르고 두호와 두나가 허공에 두 번 주먹을 든다. 다섯이 안개 속 남쪽으로 걸어 들어간다.",
+      "Location": "loc_bunker_gate",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_ain",
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 새 장검(긴 장검)",
+        "char_ain: 낫"
+      ],
+      "StoryBeat": "출정 — 설계자들의 주소를 향해",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "벙커를 떠난다",
+      "Interaction": [
+        "장부를 방수포에 싸기",
+        "철문 밖으로 걷기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "올라가는 철문, 배웅 인파, 바깥 안개",
+      "Props": [
+        "prop_usb",
+        "prop_mateo_ledger",
+        "prop_nameless_tags",
+        "prop_comm_log",
+        "prop_tarp",
+        "prop_duna_tag"
+      ],
+      "VFX": [
+        "아침 빛에 반짝이는 두나의 새 인식표",
+        "안개"
+      ],
+      "SFX": [
+        "철문 상승음",
+        "깡, 깡(허공 두 번)"
+      ],
+      "Music": "출정 테마",
+      "GameplayEntry": "짐 꾸리기",
+      "GameplayExit": "안개 속으로 걸어 들어감 → EP20",
+      "AnimationRequired": [
+        "wrap_in_tarp",
+        "fist_raise_twice",
+        "walk_into_fog"
+      ],
+      "CinematicRequired": "true: 출정 연출",
+      "SaveFlags": [
+        "EP19_DEPARTED_SOUTH"
+      ],
+      "Prerequisites": [
+        "EP19_SC012"
+      ],
+      "NextScene": "EP20_SC001",
+      "RequiredAssets": [
+        "env:loc_bunker_gate",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_ain",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_usb",
+        "prop:prop_mateo_ledger",
+        "prop:prop_nameless_tags",
+        "prop:prop_comm_log",
+        "prop:prop_tarp",
+        "prop:prop_duna_tag",
+        "anim:wrap_in_tarp",
+        "anim:fist_raise_twice",
+        "anim:walk_into_fog",
+        "vfx:아침 빛에 반짝이는 두나의 새 인식표",
+        "vfx:안개",
+        "sfx:철문 상승음",
+        "sfx:깡, 깡(허공 두 번)",
+        "bgm:출정 테마"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_training",
+      "NameKo": "벙커 훈련장",
+      "DescriptionKo": "허수아비와 분필 원이 있는 벙커 내 훈련 공간. 창 너머 관제실에서 보인다.",
+      "Scenes": [
+        "EP19_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_infirmary_annex",
+      "NameKo": "의무실 옆 빈 방",
+      "DescriptionKo": "세라가 빌려 촉매를 다시 고는 작업실.",
+      "Scenes": [
+        "EP19_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker",
+      "NameKo": "벙커 (방 미특정)",
+      "DescriptionKo": "류가 사람들을 모은 방·세라가 이틀 밤 틀어박힌 방. 원고에 방 이름이 명시되지 않음.",
+      "Scenes": [
+        "EP19_SC002",
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_radio_room",
+      "NameKo": "무전실",
+      "DescriptionKo": "두 달 넘게 송신을 끊고 수신만 하는 벙커 무전실.",
+      "Scenes": [
+        "EP19_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "관제실",
+      "DescriptionKo": "마태오의 책상과 2년 치 서류철 서랍, 훈련장이 내려다보이는 창.",
+      "Scenes": [
+        "EP19_SC008",
+        "EP19_SC009",
+        "EP19_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_sera_room",
+      "NameKo": "세라의 방",
+      "DescriptionKo": "아인이 문틈으로 세라를 본 방.",
+      "Scenes": [
+        "EP19_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_gate",
+      "NameKo": "벙커 철문",
+      "DescriptionKo": "배웅 인파가 모이는 벙커 출입 철문. 바깥은 안개.",
+      "Scenes": [
+        "EP19_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 낫 사용자",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC002",
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007",
+        "EP19_SC008",
+        "EP19_SC009",
+        "EP19_SC010",
+        "EP19_SC011",
+        "EP19_SC012",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": [
+        "EP19_SC013: 이름 잃은 인식표 두 개와 손실 장부를 방수포에 싸서 품에 지님"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 사용자, 무릎 부상으로 회피 제약",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007",
+        "EP19_SC008",
+        "EP19_SC009",
+        "EP19_SC010",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": [
+        "EP19_SC001: 대검 대신 새 장검에 적응",
+        "EP19_SC013: 등에 긴 장검"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "정보상 출신, 후드",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC002",
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007",
+        "EP19_SC010",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": [
+        "EP19_SC003: 2년 지닌 USB를 공개",
+        "EP19_SC013: 열린 USB를 주머니에"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "촉매·결계 사용자, 옛 국방 산하 연구 기관 소속",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC002",
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007",
+        "EP19_SC010",
+        "EP19_SC011",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": [
+        "EP19_SC007: 승인란의 백 실장을 보고 방을 나감"
+      ]
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 관리자(관제실)",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC002",
+        "EP19_SC003",
+        "EP19_SC008",
+        "EP19_SC009",
+        "EP19_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "벙커에 남아 아이들을 가르침",
+      "Scenes": [
+        "EP19_SC002",
+        "EP19_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duna",
+      "NameKo": "두나",
+      "RoleKo": "벙커의 아이, 새 인식표를 목에 검",
+      "Scenes": [
+        "EP19_SC001",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duho",
+      "NameKo": "두호",
+      "RoleKo": "벙커의 아이",
+      "Scenes": [
+        "EP19_SC012",
+        "EP19_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mujeonsu_bak",
+      "NameKo": "무전수 박 씨",
+      "RoleKo": "벙커 무전수",
+      "Scenes": [
+        "EP19_SC002"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_nansu_sender",
+      "NameKo": "난수 방송 발신자",
+      "RoleKo": "장성급 개인 호출 부호를 쓴 늙은 목소리. 신원 미상(류는 '탈영 장성'으로 추정)",
+      "Scenes": [
+        "EP19_SC002",
+        "EP19_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_baek_siljang",
+      "NameKo": "백 실장",
+      "RoleKo": "각인 유도 프로그램 설계 기준서의 최종 승인자. 문서상 이름으로만 등장",
+      "Scenes": [
+        "EP19_SC007",
+        "EP19_SC011"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "longsword_thrust_practice",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP19_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "대검에서 장검으로 — 길이로 찌르는 훈련"
+    },
+    {
+      "Action": "draw_chalk_circle",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "바닥에 분필로 원 그리기"
+    },
+    {
+      "Action": "scythe_precision_drop",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원 선 위에 정확히 날끝 떨어뜨리기"
+    },
+    {
+      "Action": "hand_over_notebook",
+      "Category": "interaction",
+      "Characters": [
+        "char_mujeonsu_bak"
+      ],
+      "Scenes": [
+        "EP19_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수첩 내밀기"
+    },
+    {
+      "Action": "place_object_on_table",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP19_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "USB를 테이블에 올려놓음"
+    },
+    {
+      "Action": "slide_object_across_table",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP19_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "USB를 세라 앞으로 밂"
+    },
+    {
+      "Action": "insert_usb",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "단말에 USB 꽂기"
+    },
+    {
+      "Action": "write_numbers",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC004",
+        "EP19_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "숫자 옮겨 적기"
+    },
+    {
+      "Action": "trembling_hands",
+      "Category": "emotion",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "떨리는 손으로 장 넘기기"
+    },
+    {
+      "Action": "scroll_document",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "단말 문서 넘기기"
+    },
+    {
+      "Action": "turn_off_screen",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "화면 끄기"
+    },
+    {
+      "Action": "walk_out_room",
+      "Category": "locomotion",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "방을 나감"
+    },
+    {
+      "Action": "count_money",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP19_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "삼십만 원 세어 올려놓기"
+    },
+    {
+      "Action": "open_drawer",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP19_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서랍 열고 장부 꺼내기"
+    },
+    {
+      "Action": "push_object_back",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP19_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "돈을 도로 밀기"
+    },
+    {
+      "Action": "flip_pages",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "장부 넘기기"
+    },
+    {
+      "Action": "hand_over_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP19_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "명단 건네기"
+    },
+    {
+      "Action": "hesitate_knock",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "노크하려던 손이 멈춤"
+    },
+    {
+      "Action": "turn_away",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "돌아서기"
+    },
+    {
+      "Action": "spread_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP19_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "지도 펼치기"
+    },
+    {
+      "Action": "chin_gesture",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP19_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "창 너머 턱짓"
+    },
+    {
+      "Action": "tie_cans",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP19_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "깡통 묶는 법 가르치기(배경)"
+    },
+    {
+      "Action": "wrap_in_tarp",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP19_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장부와 교신 기록부를 방수포에 싸기"
+    },
+    {
+      "Action": "fist_raise_twice",
+      "Category": "gesture",
+      "Characters": [
+        "char_duho",
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP19_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "허공에 주먹 두 번(깡, 깡)"
+    },
+    {
+      "Action": "walk_into_fog",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP19_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "안개 속으로 걸어 들어감"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_scarecrow",
+      "NameKo": "훈련장 허수아비",
+      "Scenes": [
+        "EP19_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_chalk",
+      "NameKo": "분필",
+      "Scenes": [
+        "EP19_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_catalyst",
+      "NameKo": "촉매(병)",
+      "Scenes": [
+        "EP19_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_radio_notebook",
+      "NameKo": "무전수 박 씨의 수첩(난수 기록)",
+      "Scenes": [
+        "EP19_SC002",
+        "EP19_SC004",
+        "EP19_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_usb",
+      "NameKo": "류의 USB",
+      "Scenes": [
+        "EP19_SC003",
+        "EP19_SC004",
+        "EP19_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_sera_terminal",
+      "NameKo": "세라의 단말",
+      "Scenes": [
+        "EP19_SC004",
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007",
+        "EP19_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_design_document",
+      "NameKo": "「각인 유도 프로그램 — 설계 기준서」 문서철(디지털)",
+      "Scenes": [
+        "EP19_SC005",
+        "EP19_SC006",
+        "EP19_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_money_300k",
+      "NameKo": "삼십만 원(의뢰비 정산분)",
+      "Scenes": [
+        "EP19_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_mateo_ledger",
+      "NameKo": "마태오의 장부(허수아비 3호·손실 명단)",
+      "Scenes": [
+        "EP19_SC008",
+        "EP19_SC009",
+        "EP19_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_map",
+      "NameKo": "남행 브리핑 지도",
+      "Scenes": [
+        "EP19_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_cans",
+      "NameKo": "깡통",
+      "Scenes": [
+        "EP19_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_nameless_tags",
+      "NameKo": "이름 잃은 인식표 두 개",
+      "Scenes": [
+        "EP19_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_comm_log",
+      "NameKo": "교신 기록부",
+      "Scenes": [
+        "EP19_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_tarp",
+      "NameKo": "방수포",
+      "Scenes": [
+        "EP19_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_duna_tag",
+      "NameKo": "두나의 새 인식표",
+      "Scenes": [
+        "EP19_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP19_SC002",
+      "QuestionKo": "류가 사람들을 모은 방, 세라가 이틀 밤 틀어박힌 '그 방'(§2~§7)의 구체적 장소가 원고에 명시되지 않음(loc_bunker로 임시 처리)."
+    },
+    {
+      "Scene": "EP19_SC002",
+      "QuestionKo": "§2 자리에 있던 인원 구성 불명확 — 마태오·오정길은 '읽지 못했다'로 언급되나 현장 동석 여부가 명시되지 않음."
+    },
+    {
+      "Scene": "EP19_SC004",
+      "QuestionKo": "§4에 '이틀 밤'과 '사흘째 새벽'이 함께 나옴 — 해독에 걸린 정확한 날수 불명."
+    },
+    {
+      "Scene": "EP19_SC007",
+      "QuestionKo": "백 실장의 풀네임·외형·세라와의 관계는 원고 미공개."
+    },
+    {
+      "Scene": "EP19_SC010",
+      "QuestionKo": "난수 방송 발신자(장성급 호출 부호)의 신원·위치 미공개."
+    },
+    {
+      "Scene": "EP19_SC013",
+      "QuestionKo": "'다섯이 안개 속으로' — 떠나는 다섯 중 아인·카인·류·세라 외 다섯 번째 인물이 원고에 명시되지 않음."
+    },
+    {
+      "Scene": "EP19_SC013",
+      "QuestionKo": "아인의 복장·교신 기록부의 출처 등 세부는 이 화에 서술 없음."
+    }
+  ]
+}

@@ -1,0 +1,1894 @@
+{
+  "EpisodeId": "EP15",
+  "TitleKo": "두 번",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      10168,
+      10644
+    ]
+  },
+  "SummaryKo": "새벽에 아인은 '못 붙게 하는 방법'을 찾지만 답을 내지 못하고, 카인은 민경이 남긴 시약 두 병을 던지자고 하나 류는 두 병으로는 팔 하나밖에 못 굳힌다고 정리한다. 아침에 다시 들어가자 굳힌 이음매가 더 굳어 있고, 밤사이 서로를 먹어 커진 개체와 작은 둘이 지상층 로비로 올라온다. 자르면 늘어나기에 넷은 오전 내내 자르지 않고 버티지만 지쳐 가고, 큰 개체가 카인을 감싼 순간 유리창 밖에서 날아든 금속 원통의 푸른빛이 개체를 벌어진 채 붙지 않게 만든다. 롱코트의 여자가 들어와 봉으로 재생 신호를 막는 '봉쇄'를 걸고, 아인은 그 삼 초 안에 처음으로 같은 자리를 두 번 쳐서 개체를 무너뜨린다. 봉쇄-모루-흩기-두 번의 순서로 여덟 번의 두 번 끝에 개체들이 다시 모이지 않는다. 여자는 어제부터 지켜보고도 돕지 않았음을 숨기지 않고, 민경이 죽은 것은 그 애가 아는 걸 넷이 몰랐기 때문이라고 말한다. 그녀는 세라라는 이름과 함께 '성숙을 늦추는' 라벨 없는 병 세 개를 주고 남쪽까지 동행하는 계약을 맺는다. 아인은 스승의 말을 '두 번 칠 필요가 없게 쳐라'로 고쳐 듣고, 다섯이 되어 판교를 떠난다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC001",
+      "NovelSource": "L10183-L10206 §1 못 붙게 하는 법",
+      "NovelSummary": "새벽에 아인은 '굳히는 것 말고, 못 붙게 하는 방법' 아래에 태운다·떼어 놓는다·얼린다를 적고 하나씩 지운다. 불은 넷도 태우고, 흩어도 사십 초면 모이고, 얼리는 방법은 없다. 어제 본 것 중 아직 계산에 넣지 않은 것이 있다는 감각만 남는다. 굳는다는 게 뭔지 알았을 민경은 없다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "새벽",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "해법 탐색 — 못 붙게 하는 법",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "굳히는 것 말고, 못 붙게 하는 방법.",
+          "Source": "L10187"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "굳는다는 게 뭔데.",
+          "Source": "L10201"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(입력 없음) 아인의 메모 독백",
+      "Interaction": [
+        "메모 열람(선택지가 하나씩 지워지는 연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "새벽",
+      "Props": [
+        "prop_regen_notes"
+      ],
+      "VFX": [
+        "지워지는 글자"
+      ],
+      "SFX": [
+        "펜 긋는 소리"
+      ],
+      "Music": "새벽 — 고민",
+      "GameplayEntry": "에피소드 오프닝",
+      "GameplayExit": "메모를 접음",
+      "AnimationRequired": [
+        "unfold_paper_write"
+      ],
+      "CinematicRequired": "true — 메모 인서트 연출",
+      "SaveFlags": [
+        "EP15_no_merge_problem_posed"
+      ],
+      "Prerequisites": [
+        "EP14_SC013"
+      ],
+      "NextScene": "EP15_SC002",
+      "RequiredAssets": [
+        "char:char_ain",
+        "prop:prop_regen_notes",
+        "anim:unfold_paper_write",
+        "vfx:지워지는 글자",
+        "sfx:펜 긋는 소리",
+        "bgm:새벽 — 고민"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC002",
+      "NovelSource": "L10207-L10252 §2 재고",
+      "NovelSummary": "카인이 민경이 찾은 시약 두 병을 꺼내 던져서 굳히자고 한다. 아인은 억제제 재료라고 맞서고, 카인은 여섯 달 더 살자고 셋을 놔두면 뒤에 올 벙커 사람들이 만난다고 말한다. 아인은 대답하지 못한다. 류는 어제 세 병으로 팔 하나를 굳혔으니 두 병으로는 팔 하나뿐이고, 쓰면 답이 없어지는 건 확실하다고 정리한다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "자원 딜레마 — 아인의 수명 vs 뒤에 올 사람들",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…이거 쓰자.",
+          "Source": "L10213"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…이건 억제제 재료예요.",
+          "Source": "L10221"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "너 여섯 달 더 살자고 저기 세 마리 놔두고 갈 거야?",
+          "Source": "L10231"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…두 병으로 셋을 굳혀요?",
+          "Source": "L10239"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "근데 쓰면 답이 없어지는 건 확실해요.",
+          "Source": "L10249"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "시약 사용 여부 논쟁을 지켜본다(시약은 사용하지 않음)",
+      "Interaction": [
+        "대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "휴식 중(장소 미기재)",
+      "Props": [
+        "prop_reagent_bottles"
+      ],
+      "VFX": [],
+      "SFX": [
+        "병을 무겁게 내려놓는 소리"
+      ],
+      "Music": "긴장된 정적",
+      "GameplayEntry": "카인이 병을 꺼냄",
+      "GameplayExit": "류의 결론 후 정적",
+      "AnimationRequired": [
+        "set_down_bottle_heavy",
+        "fidget_fingers_seated"
+      ],
+      "CinematicRequired": "false — 대화 장면",
+      "SaveFlags": [
+        "EP15_reagents_kept"
+      ],
+      "Prerequisites": [
+        "EP15_SC001"
+      ],
+      "NextScene": "EP15_SC003",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_reagent_bottles",
+        "anim:set_down_bottle_heavy",
+        "anim:fidget_fingers_seated",
+        "sfx:병을 무겁게 내려놓는 소리",
+        "bgm:긴장된 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC003",
+      "NovelSource": "L10253-L10284 §3 두 번째 계단",
+      "NovelSummary": "넷은 아침에 보기 위해 다시 들어간다. 어제 굳힌 계단 중턱 이음매는 버티고 있고 아래에서 조각들이 벽을 타는 소리가 난다. 아인은 굳은 자리가 어제보다 더 굳었다는 것, 굳는 데도 붙는 데도 시간이 걸린다는 것을 계산에 넣다가, 아래의 소리가 이음매를 치는 소리로 바뀌는 것을 듣는다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "관찰 — 시간이 변수다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…이거 아직 굳고 있어요.",
+          "Source": "L10263"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어제보다 더 굳었어요. 시간이 지날수록.",
+          "Source": "L10267"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "굳는 데 시간이 걸린다. 붙는 데도 시간이 걸린다.",
+          "Source": "L10271"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…나오는데요.",
+          "Source": "L10279"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "굳은 이음매를 조사한다",
+      "Interaction": [
+        "이음매 만지기·두드리기"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P1",
+      "EnvironmentState": "회백색으로 굳은 이음매(어제보다 밝음), 아래에서 긁는 소리 → 부딪히는 소리",
+      "Props": [
+        "prop_hardened_joint"
+      ],
+      "VFX": [
+        "굳은 표면 질감"
+      ],
+      "SFX": [
+        "두드리면 나는 돌 소리",
+        "긁는 소리",
+        "아래에서 치는 충격음"
+      ],
+      "Music": "불안 고조",
+      "GameplayEntry": "계단 도착",
+      "GameplayExit": "개체가 이음매를 치고 올라옴",
+      "AnimationRequired": [
+        "touch_hardened_surface",
+        "boss_bash_from_below"
+      ],
+      "CinematicRequired": "false — 조사 후 전투 전환",
+      "SaveFlags": [
+        "EP15_hardening_time_noted"
+      ],
+      "Prerequisites": [
+        "EP15_SC002"
+      ],
+      "NextScene": "EP15_SC004",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_silheomche_09",
+        "prop:prop_hardened_joint",
+        "anim:touch_hardened_surface",
+        "anim:boss_bash_from_below",
+        "vfx:굳은 표면 질감",
+        "sfx:두드리면 나는 돌 소리",
+        "sfx:긁는 소리",
+        "sfx:아래에서 치는 충격음",
+        "bgm:불안 고조"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC004",
+      "NovelSource": "L10285-L10310 §4 셋",
+      "NovelSummary": "지하실에서 셋이 올라오는데 밤사이 서로를 먹어 하나가 커졌다. 카인이 계단 위에서 큰 것을 받자 대검이 몸통에 감싸여 뽑히지 않고, 류가 위에서 갈라 빼낸 순간 카인이 넘어진다. 작은 둘이 그 틈으로 지상층 로비로 올라온다. 아인은 낫을 들었다가 자르면 늘어난다는 생각에 멈춘다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "자를 수 없는 적",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…놔! 이거!",
+          "Source": "L10295"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "자르면 늘어난다.",
+          "Source": "L10305"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "올라오는 3개체를 계단 위에서 받아낸다",
+      "Interaction": [
+        "카인의 대검 빼내기(류)"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P1",
+      "EnvironmentState": "계단 위 → 지상층 로비(넓음)",
+      "Props": [],
+      "VFX": [
+        "회백색 몸이 대검을 감쌈"
+      ],
+      "SFX": [
+        "대검 파고드는 소리",
+        "넘어지는 소리"
+      ],
+      "Music": "보스전 재개",
+      "GameplayEntry": "개체 3이 계단으로 올라옴",
+      "GameplayExit": "아인이 낫을 들고 멈춤",
+      "AnimationRequired": [
+        "greatsword_stuck_pull",
+        "dagger_slash_down",
+        "raise_weapon_hesitate"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP15_boss09_merged"
+      ],
+      "Prerequisites": [
+        "EP15_SC003"
+      ],
+      "NextScene": "EP15_SC005",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_silheomche_09",
+        "anim:greatsword_stuck_pull",
+        "anim:dagger_slash_down",
+        "anim:raise_weapon_hesitate",
+        "vfx:회백색 몸이 대검을 감쌈",
+        "sfx:대검 파고드는 소리",
+        "sfx:넘어지는 소리",
+        "bgm:보스전 재개"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC005",
+      "NovelSource": "L10311-L10332 §5 자르지 않는 싸움",
+      "NovelSummary": "넷은 오전 내내 자르지 않고 버틴다. 카인이 밀고, 류가 발을 걸고, 오정길이 파티션을 쓰러뜨려 길을 막고, 아인은 낫자루로만 친다. 버티지만 줄지 않고, 한 시간 뒤 카인의 팔이 느려지고 두 시간째 류의 잔상이 흐트러진다. 아인은 로비 유리창 밖 옥상 쪽에서 움직이는 빛 반사를 한 번 보고 시선을 거둔다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "오전",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "소모전 — 우리가 먼저 없어진다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "이대로면 우리가 먼저 없어진다.",
+          "Source": "L10321"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "날을 쓰지 않고 버틴다(밀기·발 걸기·파티션·자루 타격)",
+      "Interaction": [
+        "파티션 쓰러뜨리기",
+        "자루 타격",
+        "유리창 밖 빛 관찰"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "로비 파티션 쓰러짐, 나무가 미는 유리창, 옥상에서 반사광",
+      "Props": [
+        "prop_lobby_partition"
+      ],
+      "VFX": [
+        "옥상의 빛 반사"
+      ],
+      "SFX": [
+        "둔탁한 자루 타격음",
+        "거친 숨"
+      ],
+      "Music": "소모전 — 지친 리듬",
+      "GameplayEntry": "비절단 교전 시작",
+      "GameplayExit": "두 시간 경과, 큰 개체 움직임",
+      "AnimationRequired": [
+        "shove_push",
+        "trip_sweep",
+        "topple_partition",
+        "scythe_handle_strike",
+        "fatigue_slow_arms"
+      ],
+      "CinematicRequired": "false — 지구전 인게임",
+      "SaveFlags": [
+        "EP15_rooftop_glint_seen"
+      ],
+      "Prerequisites": [
+        "EP15_SC004"
+      ],
+      "NextScene": "EP15_SC006",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_silheomche_09",
+        "prop:prop_lobby_partition",
+        "anim:shove_push",
+        "anim:trip_sweep",
+        "anim:topple_partition",
+        "anim:scythe_handle_strike",
+        "anim:fatigue_slow_arms",
+        "vfx:옥상의 빛 반사",
+        "sfx:둔탁한 자루 타격음",
+        "sfx:거친 숨",
+        "bgm:소모전 — 지친 리듬"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC006",
+      "NovelSource": "L10333-L10379 §6 벌어진다",
+      "NovelSummary": "큰 것이 어제 민경 앞에서처럼, 그러나 더 크게 몸을 벌린다. 앞에는 뒤가 파티션에 막힌 카인이 있다. 아인은 뛰지만 어제와 같은 계산, 같은 결론으로 늦고, 카인이 감싸인다. 그때 유리창이 깨지며 금속 원통이 날아들어 큰 개체의 등에서 터지고, 푸른빛이 그물처럼 퍼져 움직임이 멎는다. 굳지는 않았지만 붙지 않았고, 카인이 벌어진 틈으로 빠져나온다. 창 너머에서 목소리가 온다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "오전",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "반복된 늦음 — 그리고 외부의 개입",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "열둘. 여섯 걸음. 두 박자.",
+          "Source": "L10345"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "늦는다.",
+          "Source": "L10347"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…잘라도 안 죽는 걸, 왜 계속 자르고 있어.",
+          "Source": "L10371"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "카인에게 달려간다(늦음) — 개입 연출",
+      "Interaction": [
+        "달려가기"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "로비 유리창 파손, 큰 개체 등에 푸른빛 그물",
+      "Props": [
+        "prop_metal_canister",
+        "prop_lobby_partition"
+      ],
+      "VFX": [
+        "푸른빛 그물 확산",
+        "유리 파편"
+      ],
+      "SFX": [
+        "유리창 깨짐",
+        "원통 터지는 소리"
+      ],
+      "Music": "위기 → 반전",
+      "GameplayEntry": "큰 개체가 몸을 벌림",
+      "GameplayExit": "창 너머 목소리",
+      "AnimationRequired": [
+        "boss_open_engulf",
+        "sprint_too_late",
+        "engulfed_struggle_escape",
+        "canister_throw_through_window"
+      ],
+      "CinematicRequired": "true — 카인 위기와 세라의 첫 개입",
+      "SaveFlags": [
+        "EP15_sera_intervened"
+      ],
+      "Prerequisites": [
+        "EP15_SC005"
+      ],
+      "NextScene": "EP15_SC007",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_silheomche_09",
+        "prop:prop_metal_canister",
+        "prop:prop_lobby_partition",
+        "anim:boss_open_engulf",
+        "anim:sprint_too_late",
+        "anim:engulfed_struggle_escape",
+        "anim:canister_throw_through_window",
+        "vfx:푸른빛 그물 확산",
+        "vfx:유리 파편",
+        "sfx:유리창 깨짐",
+        "sfx:원통 터지는 소리",
+        "bgm:위기 → 반전"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC007",
+      "NovelSource": "L10380-L10413 §7 봉쇄",
+      "NovelSummary": "롱코트에 흑발 단발, 안경을 쓴 여자가 깨진 창틀을 넘어 들어온다. 금속 봉을 쥔 손목 소매 밖으로 청색 회로 문신이 올라간다. 봉을 수평으로 들자 공간이 접히는 듯한 것이 작은 개체를 그물처럼 덮어 멈춘다. 재생은 코어의 신호로 조직이 서로를 찾는 것이니 신호를 막으면 못 찾는다고 설명하고, 붙지 않는 삼 초 안에 끊으라고 한다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "오전",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "세라: 개조한 가죽 롱코트, 흑발 단발, 안경, 손목에서 팔로 올라가는 청색 회로 문신"
+      ],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검",
+        "세라: 금속 봉"
+      ],
+      "StoryBeat": "세라 등장 — 봉쇄의 원리",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…봉쇄야.",
+          "Source": "L10392"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "신호를 막으면 코어가 있어도 못 찾아.",
+          "Source": "L10400"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…그럼 지금 저거.",
+          "Source": "L10404"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "안 붙어. 삼 초.",
+          "Source": "L10406"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "삼 초 안에 끊어.",
+          "Source": "L10410"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "봉쇄 메커닉 소개 — 봉쇄된 개체를 인지한다",
+      "Interaction": [
+        "봉쇄 상태 개체 표시"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P3",
+      "EnvironmentState": "봉쇄된 작은 개체(공간이 접힌 그물)",
+      "Props": [],
+      "VFX": [
+        "공간이 접히는 그물(빛도 탄도 아님)",
+        "청색 회로 문신 발광"
+      ],
+      "SFX": [
+        "공간 왜곡음"
+      ],
+      "Music": "세라 테마 — 차갑고 정밀",
+      "GameplayEntry": "세라 진입 컷",
+      "GameplayExit": "'삼 초 안에 끊어' — 조작 복귀",
+      "AnimationRequired": [
+        "window_climb_in",
+        "staff_seal_cast"
+      ],
+      "CinematicRequired": "true — 신규 주요 인물 등장",
+      "SaveFlags": [
+        "EP15_sera_met",
+        "EP15_seal_mechanic_learned"
+      ],
+      "Prerequisites": [
+        "EP15_SC006"
+      ],
+      "NextScene": "EP15_SC008",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_silheomche_09",
+        "anim:window_climb_in",
+        "anim:staff_seal_cast",
+        "vfx:공간이 접히는 그물(빛도 탄도 아님)",
+        "vfx:청색 회로 문신 발광",
+        "sfx:공간 왜곡음",
+        "bgm:세라 테마 — 차갑고 정밀"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC008",
+      "NovelSource": "L10414-L10445 §8 두 번",
+      "NovelSummary": "아인이 그물 눈 사이의 발광점에 낫을 넣는다. 한 번, 갈라지고 붙지 않는다. 삼 초 안에 아인은 같은 자리를 두 번째로 친다. 이 년 동안 하지 않은 일이지만 두 번째는 첫 번째를 고치는 것이 아니라 첫 번째가 만든 자리를 넓히는 것이었다. 안쪽에서 아직 형태 없는 '코어가 되려던 것'이 드러나고, 세 번째 없이 개체가 무너져 모이지 않는다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "오전",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "세라: 금속 봉"
+      ],
+      "StoryBeat": "첫 두 번 치기 — 첫 번째가 만든 자리를 넓힌다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "삼 초.",
+          "Source": "L10426"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "봉쇄 3초 안에 같은 자리를 두 번 친다",
+      "Interaction": [
+        "봉쇄 타이밍 2연타(같은 지점)"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P3",
+      "EnvironmentState": "봉쇄 그물 아래 개체",
+      "Props": [],
+      "VFX": [
+        "발광점",
+        "틈이 벌어지며 드러나는 형태 없는 빛",
+        "무너지는 덩어리"
+      ],
+      "SFX": [
+        "낫 2연타",
+        "붕괴음"
+      ],
+      "Music": "해답 — 상승",
+      "GameplayEntry": "봉쇄 개시",
+      "GameplayExit": "첫 개체 붕괴(재결합 없음)",
+      "AnimationRequired": [
+        "scythe_double_strike_same_spot",
+        "boss_collapse_no_merge"
+      ],
+      "CinematicRequired": "true — 두 번째 타격 슬로 연출",
+      "SaveFlags": [
+        "EP15_double_strike_learned"
+      ],
+      "Prerequisites": [
+        "EP15_SC007"
+      ],
+      "NextScene": "EP15_SC009",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_silheomche_09",
+        "anim:scythe_double_strike_same_spot",
+        "anim:boss_collapse_no_merge",
+        "vfx:발광점",
+        "vfx:틈이 벌어지며 드러나는 형태 없는 빛",
+        "vfx:무너지는 덩어리",
+        "sfx:낫 2연타",
+        "sfx:붕괴음",
+        "bgm:해답 — 상승"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC009",
+      "NovelSource": "L10446-L10469 §9 넷과 하나",
+      "NovelSummary": "그다음은 순서였다. 여자가 봉쇄하고, 카인이 자리를 잡고, 류가 조각을 흩고, 아인이 두 번씩 친다. 큰 것에는 봉쇄가 두 번 걸리고 여자의 이마에 땀이 밴다. 촉매 잔량 3할, 두 번 더 쓰면 끝이라 큰 것부터 처리한다. 여덟 번의 두 번이 끝나자 로비 바닥의 덩어리들은 서로를 향해 기어가지 않는다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "오전",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검",
+        "세라: 금속 봉"
+      ],
+      "StoryBeat": "4+1 공식 — 격파",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…잔량 3할.",
+          "Source": "L10452"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "촉매. 두 번 더 쓰면 끝이야.",
+          "Source": "L10458"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "그러니까 큰 거부터.",
+          "Source": "L10458"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "봉쇄-모루-흩기-두 번 순서로 모든 개체를 처리한다(큰 것 우선)",
+      "Interaction": [
+        "팀 순서 공략",
+        "촉매 잔량 관리"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P3",
+      "EnvironmentState": "로비 바닥에 흩어져 움직이지 않는 회백색 덩어리들",
+      "Props": [],
+      "VFX": [
+        "봉쇄 그물",
+        "코어 소멸"
+      ],
+      "SFX": [
+        "낫 2연타 반복",
+        "정적"
+      ],
+      "Music": "보스전 클라이맥스 → 정적",
+      "GameplayEntry": "순서 공략 개시",
+      "GameplayExit": "정적 — 격파",
+      "AnimationRequired": [
+        "staff_seal_cast",
+        "anvil_stance",
+        "dagger_scatter_fragments",
+        "scythe_double_strike_same_spot",
+        "wipe_sweat_strain",
+        "boss_collapse_no_merge"
+      ],
+      "CinematicRequired": "true — 격파 후 정적",
+      "SaveFlags": [
+        "EP15_boss09_defeated"
+      ],
+      "Prerequisites": [
+        "EP15_SC008"
+      ],
+      "NextScene": "EP15_SC010",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_silheomche_09",
+        "anim:staff_seal_cast",
+        "anim:anvil_stance",
+        "anim:dagger_scatter_fragments",
+        "anim:scythe_double_strike_same_spot",
+        "anim:wipe_sweat_strain",
+        "anim:boss_collapse_no_merge",
+        "vfx:봉쇄 그물",
+        "vfx:코어 소멸",
+        "sfx:낫 2연타 반복",
+        "sfx:정적",
+        "bgm:보스전 클라이맥스 → 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC010",
+      "NovelSource": "L10470-L10509 §10 잘라도 안 죽는 걸",
+      "NovelSummary": "여자가 봉을 짚고 넷을 채점하듯 훑는다. 어제부터 세 번 자르는 걸 봤다는 말에 카인이 오른팔을 떨며 왜 안 도와줬냐 묻고, 여자는 '내가 왜'라고만 답한다. 류가 소리 없이 웃는다. 오늘 도운 것도 불쌍해서가 아니라 저게 밖으로 나오면 자기가 가는 길에 있게 되니 지금 치우는 게 싸다는 계산이었다고 말한다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "세라: 개조한 가죽 롱코트, 흑발 단발, 안경, 손목에서 팔로 올라가는 청색 회로 문신"
+      ],
+      "RequiredEquipment": [
+        "세라: 금속 봉",
+        "카인: 대검"
+      ],
+      "StoryBeat": "세라의 성격 — 계산으로 움직이는 사람",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…어제부터 봤어.",
+          "Source": "L10476"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "왜 안 도와줬어.",
+          "Source": "L10490"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "내가 왜.",
+          "Source": "L10494"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…솔직하시네.",
+          "Source": "L10500"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "계산해 보니까 지금 치우는 게 싸.",
+          "Source": "L10506"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "세라와 대화한다",
+      "Interaction": [
+        "대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "교전 후 로비",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "냉정한 대화",
+      "GameplayEntry": "격파 직후",
+      "GameplayExit": "세라가 봉을 등에 걺",
+      "AnimationRequired": [
+        "lean_on_staff_evaluate",
+        "lean_on_greatsword_trembling",
+        "adjust_glasses",
+        "silent_laugh_hood",
+        "sling_staff_on_back"
+      ],
+      "CinematicRequired": "false — 대화 장면",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP15_SC009"
+      ],
+      "NextScene": "EP15_SC011",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "anim:lean_on_staff_evaluate",
+        "anim:lean_on_greatsword_trembling",
+        "anim:adjust_glasses",
+        "anim:silent_laugh_hood",
+        "anim:sling_staff_on_back",
+        "bgm:냉정한 대화"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC011",
+      "NovelSource": "L10510-L10551 §11 스물아홉",
+      "NovelSummary": "아인이 어제 옥상에 여섯 시간 있었냐고 묻고, 빛이 새벽과 아침에 두 번 움직였다고 말한다. 여자는 처음으로 아인을 제대로 보고 목덜미를 오래 본 뒤 소리 듣는 애냐고 한다. 그럼 스물아홉짜리가 병 세 개 던지는 소리도 들었겠다며, 네 번째를 못 던진 것을 사실로 확인한다. 그 애가 아는 걸 너희가 몰라서 죽은 것이며 너희 넷은 자르는 것밖에 모른다고 말한다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "민경의 죽음이 지닌 의미 — 자르는 것밖에 모른다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…어제 옥상에 있었어요?",
+          "Source": "L10514"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "빛이 두 번 움직였어요. 새벽하고 아침에요.",
+          "Source": "L10522"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…소리 듣는 애구나.",
+          "Source": "L10526"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "네 번째는 못 던졌지.",
+          "Source": "L10538"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "너희 넷은 자르는 것밖에 몰라.",
+          "Source": "L10548"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "세라와 대화한다",
+      "Interaction": [
+        "대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "로비, 유리 밖을 보는 세라",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "애도 — 낮은 현",
+      "GameplayEntry": "아인의 질문",
+      "GameplayExit": "세라의 결론",
+      "AnimationRequired": [],
+      "CinematicRequired": "false — 대화 장면",
+      "SaveFlags": [
+        "EP15_minkyung_death_meaning"
+      ],
+      "Prerequisites": [
+        "EP15_SC010"
+      ],
+      "NextScene": "EP15_SC012",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_sera",
+        "bgm:애도 — 낮은 현"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC012",
+      "NovelSource": "L10552-L10597 §12 계약",
+      "NovelSummary": "여자가 코트 안쪽에서 라벨 없는, 닥터 진의 것보다 맑은 병 세 개를 꺼내 아인 앞에 놓는다. 목에 있는 것을 늦추는 약이며, 어제 긁힌 팔이 두 시간 만에 닫힌 것은 진행이 빠르다는 뜻이라고 한다. 값은 남쪽 — 같은 목적지로 동행하되 서로 이유는 묻지 않는 조건이다. 이름은 세라. 치료제가 아니라 성숙을 늦추는 것뿐이라 말하고, 무엇이 익느냐는 물음에는 대답하지 않는다. 아인은 마신다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "세라: 개조한 가죽 롱코트, 흑발 단발, 안경, 손목에서 팔로 올라가는 청색 회로 문신"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "계약 — 세라 합류",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "네 목에 있는 거 늦추는 거.",
+          "Source": "L10560"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "값은 남쪽이야.",
+          "Source": "L10568"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "목적지는 같은 곳. 이유는 서로 안 묻는 걸로.",
+          "Source": "L10572"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…당신 뭐 하는 사람인데.",
+          "Source": "L10576"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "세라.",
+          "Source": "L10582"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "치료제가 아니야. 성숙을 늦추는 것뿐이지.",
+          "Source": "L10586"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "세라의 조건을 듣고 약을 받는다",
+      "Interaction": [
+        "병 받기",
+        "마시기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "로비",
+      "Props": [
+        "prop_unlabeled_vials"
+      ],
+      "VFX": [
+        "맑은 액체"
+      ],
+      "SFX": [
+        "병 여는 소리"
+      ],
+      "Music": "계약 — 불길한 온기",
+      "GameplayEntry": "세라가 병을 꺼냄",
+      "GameplayExit": "아인이 마심",
+      "AnimationRequired": [
+        "place_vials",
+        "drink_vial"
+      ],
+      "CinematicRequired": "true — 합류 계약과 첫 복용",
+      "SaveFlags": [
+        "EP15_sera_joined",
+        "EP15_sera_vials_3",
+        "EP15_sera_vial_drunk_1"
+      ],
+      "Prerequisites": [
+        "EP15_SC011"
+      ],
+      "NextScene": "EP15_SC013",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_sera",
+        "prop:prop_unlabeled_vials",
+        "anim:place_vials",
+        "anim:drink_vial",
+        "vfx:맑은 액체",
+        "sfx:병 여는 소리",
+        "bgm:계약 — 불길한 온기"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP15",
+      "SceneId": "EP15_SC013",
+      "NovelSource": "L10598-L10630 §13 원칙이 자란다",
+      "NovelSummary": "떠나기 전 아인은 여덟 번의 두 번이 남긴 덩어리들을 본다. 스승의 '두 번 치지 않는다'를 처음으로 '두 번 칠 필요가 없게 쳐라'로 고쳐 듣는다. 두 번은 한 번의 두 배가 아니라 하나의 일이었고, 원칙이 틀린 것이 아니라 자신이 좁게 알아들었던 것이다. 낫을 어깨에 걸고, 세라의 병 세 개와 쓰지 않은 민경의 시약 두 병을 품은 채 넷은 다섯이 되어 판교를 나선다.",
+      "Location": "loc_pangyo_lab_lobby",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "원칙 갱신 — 넷이 다섯이 되다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "두 번 치지 않는다.",
+          "Source": "L10604"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "두 번 칠 필요가 없게 쳐라.",
+          "Source": "L10610"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…스승님은 이런 걸 안 만나 봤는데.",
+          "Source": "L10618"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "(입력 없음) 원칙 독백 후 판교 출발",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "덩어리가 흩어진 로비 → 출발",
+      "Props": [
+        "prop_unlabeled_vials",
+        "prop_reagent_bottles"
+      ],
+      "VFX": [],
+      "SFX": [
+        "품 안에서 병이 부딪히는 소리"
+      ],
+      "Music": "엔딩 — 성장",
+      "GameplayEntry": "출발 직전",
+      "GameplayExit": "판교를 나서는 다섯 — EP16 전환",
+      "AnimationRequired": [
+        "shoulder_scythe_walk"
+      ],
+      "CinematicRequired": "true — 원칙 갱신 엔딩",
+      "SaveFlags": [
+        "EP15_principle_updated",
+        "EP15_party_five"
+      ],
+      "Prerequisites": [
+        "EP15_SC012"
+      ],
+      "NextScene": "EP16_SC001",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_lobby",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "prop:prop_unlabeled_vials",
+        "prop:prop_reagent_bottles",
+        "anim:shoulder_scythe_walk",
+        "sfx:품 안에서 병이 부딪히는 소리",
+        "bgm:엔딩 — 성장"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_silheomche_09",
+      "NameKo": "실험체 09호 (개체 09)",
+      "Scenes": [
+        "EP15_SC003",
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009"
+      ],
+      "NovelReasonForBattle": "전날 분열한 3개체가 굳힌 계단 이음매를 아래에서 치고 올라옴. 카인은 이대로 두면 뒤따르는 벙커 사람들이 만난다고 주장",
+      "ArenaLocationId": "loc_pangyo_lab_lobby",
+      "PhasesInNovel": [
+        "재대면: 밤사이 서로를 먹어 큰 개체 1 + 작은 개체 2로 변함, 지상층 로비로 올라옴",
+        "자르지 않는 싸움: 자르면 늘어나므로 밀기·발 걸기·파티션·낫자루로 오전 내내 버팀(줄지 않음)",
+        "세라 개입: 금속 원통의 푸른빛 그물로 큰 개체가 벌어진 채 붙지 않음 → 봉쇄 3초 안에 같은 자리 두 번 치기",
+        "순서 공략: 봉쇄→카인 자리 잡기→류 조각 흩기→아인 두 번. 큰 것에는 봉쇄 두 번. 여덟 번의 두 번으로 종료"
+      ],
+      "PatternsInNovel": [
+        "대검이 파고든 자리가 대검을 감싸 붙잡음",
+        "가슴부터 양옆으로 몸을 벌려 대상을 감쌈(두 개체를 먹어 전날보다 큼)",
+        "넓은 로비에서 흩어진 조각이 사방으로 돎",
+        "굳힌 이음매를 아래에서 부딪쳐 돌파 시도"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "표면의 발광점(코어)",
+        "두 번째 타격으로 열린 안쪽의 '코어가 되려던 것' — 아직 형태가 없음"
+      ],
+      "BreakCounterInNovel": [
+        "세라의 봉쇄: 재생 신호(코어→조직)를 막아 3초간 붙지 않음 — 그 안에 끊어야 함",
+        "같은 자리를 두 번: 첫 타가 만든 틈을 두 번째가 넓혀 신생 코어까지 도달",
+        "금속 원통 명중 시 푸른빛 그물 — 움직임이 멎고 벌어진 채 오므라들지 못함",
+        "고정액으로 굳힌 이음매는 시간이 지날수록 더 굳음"
+      ],
+      "EnvironmentInBattle": [
+        "계단 중턱의 굳은 이음매",
+        "지상층 로비 — 넓어서 조각이 사방으로 돎",
+        "로비 파티션(오정길이 쓰러뜨려 길을 막음, 카인의 퇴로를 막기도 함)",
+        "나무가 밀고 있는 로비 유리창(세라가 깨고 진입)"
+      ],
+      "Outcome": "격파 — 여덟 번의 두 번 뒤 로비 바닥의 회백색 덩어리들이 더 이상 서로를 향해 기어가지 않음",
+      "Source": "L10253-L10469"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_pangyo_lab_b3",
+      "NameKo": "판교 연구소 지하 계단 (굳은 이음매)",
+      "DescriptionKo": "전날 고정액을 부어 굳힌 계단 중턱 이음매. 돌처럼 굳어 두드리면 소리가 나고 시간이 지날수록 더 굳음. 아래에서 조각들이 벽을 타는 소리.",
+      "Scenes": [
+        "EP15_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_lab_lobby",
+      "NameKo": "판교 연구소 지상층 로비",
+      "DescriptionKo": "지하실보다 넓은 로비. 파티션, 2년간 자란 나무가 밀고 있는 유리창. 넓어서 흩어진 조각이 사방으로 돌 수 있음. 세라가 유리창을 깨고 들어옴.",
+      "Scenes": [
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC011",
+        "EP15_SC012",
+        "EP15_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 낫을 쓰는 각인자",
+      "Scenes": [
+        "EP15_SC001",
+        "EP15_SC002",
+        "EP15_SC003",
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC011",
+        "EP15_SC012",
+        "EP15_SC013"
+      ],
+      "StateChangesKo": [
+        "EP15_SC008: 이 년 만에 처음으로 같은 자리를 두 번 침",
+        "EP15_SC012: 세라에게서 라벨 없는 병 3개를 받고 1병을 마심(성숙을 늦추는 약)",
+        "EP15_SC013: 원칙 갱신 — '두 번 칠 필요가 없게 쳐라'. 민경의 시약 두 병은 쓰지 않고 지님"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검을 쓰는 동료(모루)",
+      "Scenes": [
+        "EP15_SC002",
+        "EP15_SC003",
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC012",
+        "EP15_SC013"
+      ],
+      "StateChangesKo": [
+        "EP15_SC004: 대검이 개체 몸통에 감싸여 안 뽑힘 → 류가 갈라 빼냈고 뒤로 넘어짐",
+        "EP15_SC006: 큰 개체에 감싸였다가 세라의 원통 투척으로 빠져나옴",
+        "EP15_SC010: 오른팔이 떨림(장시간 교전 피로)"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "단검을 쓰는 동료. 이 년 동안 정보를 팔아 온 자",
+      "Scenes": [
+        "EP15_SC002",
+        "EP15_SC003",
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC013"
+      ],
+      "StateChangesKo": [
+        "EP15_SC005: 두 시간째 잔상이 흐트러짐(피로)"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "각인 없는 동행자",
+      "Scenes": [
+        "EP15_SC003",
+        "EP15_SC004",
+        "EP15_SC005",
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC013"
+      ],
+      "StateChangesKo": [
+        "EP15_SC005: 로비 파티션을 쓰러뜨려 길을 막음"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "봉(촉매)으로 '봉쇄'를 거는 여자. 전날 옥상의 관찰자. 남쪽행 계약으로 합류",
+      "Scenes": [
+        "EP15_SC006",
+        "EP15_SC007",
+        "EP15_SC008",
+        "EP15_SC009",
+        "EP15_SC010",
+        "EP15_SC011",
+        "EP15_SC012",
+        "EP15_SC013"
+      ],
+      "StateChangesKo": [
+        "EP15_SC006: 유리창 밖에서 금속 원통 투척(첫 개입)",
+        "EP15_SC009: 촉매 잔량 3할, 이마에 땀",
+        "EP15_SC012: 이름을 밝히고 '값은 남쪽' 계약으로 합류"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "unfold_paper_write",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이를 폈다 접었다 하며 적고 지움"
+    },
+    {
+      "Action": "set_down_bottle_heavy",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "병을 무겁게 내려놓음"
+    },
+    {
+      "Action": "fidget_fingers_seated",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "앉아서 담배 없이 손가락만 놀림"
+    },
+    {
+      "Action": "touch_hardened_surface",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "굳은 이음매를 손끝으로 짚고 두드림"
+    },
+    {
+      "Action": "boss_bash_from_below",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP15_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "굳은 이음매를 아래에서 치고 올라옴"
+    },
+    {
+      "Action": "greatsword_stuck_pull",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검이 개체에 감싸여 뽑히지 않음 → 빠지며 뒤로 넘어짐"
+    },
+    {
+      "Action": "dagger_slash_down",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "위에서 내려 가르기"
+    },
+    {
+      "Action": "raise_weapon_hesitate",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 들었다가 멈춤(자르면 늘어난다)"
+    },
+    {
+      "Action": "shove_push",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "밀어내기"
+    },
+    {
+      "Action": "trip_sweep",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "발 걸기"
+    },
+    {
+      "Action": "topple_partition",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP15_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "파티션을 쓰러뜨려 길을 막음"
+    },
+    {
+      "Action": "scythe_handle_strike",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "날 대신 낫자루로 치기"
+    },
+    {
+      "Action": "fatigue_slow_arms",
+      "Category": "injury",
+      "Characters": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "지쳐 팔이 느려지고 잔상이 흐트러짐"
+    },
+    {
+      "Action": "boss_open_engulf",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP15_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가슴부터 양옆으로 몸을 벌려 감쌈"
+    },
+    {
+      "Action": "sprint_too_late",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뛰지만 늦음"
+    },
+    {
+      "Action": "engulfed_struggle_escape",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "감싸였다가 벌어진 틈으로 빠져나옴"
+    },
+    {
+      "Action": "canister_throw_through_window",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "유리창 밖에서 금속 원통 투척, 창 깨짐"
+    },
+    {
+      "Action": "window_climb_in",
+      "Category": "traversal",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "깨진 창틀을 넘어 들어옴"
+    },
+    {
+      "Action": "staff_seal_cast",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC007",
+        "EP15_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "봉을 수평으로 들어 봉쇄(공간이 접히는 그물) — 반 뼘 틀기"
+    },
+    {
+      "Action": "scythe_double_strike_same_spot",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC008",
+        "EP15_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "발광점에 한 번, 3초 안에 같은 자리를 두 번째로 넓히며 들어감"
+    },
+    {
+      "Action": "boss_collapse_no_merge",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP15_SC008",
+        "EP15_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무너진 덩어리가 모이지 않음"
+    },
+    {
+      "Action": "dagger_scatter_fragments",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "조각을 흩음"
+    },
+    {
+      "Action": "anvil_stance",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "대검으로 자리 잡고 버팀"
+    },
+    {
+      "Action": "wipe_sweat_strain",
+      "Category": "emotion",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "이마에 땀이 뱀, 소모"
+    },
+    {
+      "Action": "lean_on_staff_evaluate",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "봉을 짚고 서서 훑어봄"
+    },
+    {
+      "Action": "adjust_glasses",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "안경 고쳐 쓰기"
+    },
+    {
+      "Action": "lean_on_greatsword_trembling",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP15_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "대검을 짚고 오른팔이 떨림"
+    },
+    {
+      "Action": "silent_laugh_hood",
+      "Category": "emotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP15_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "후드 안에서 소리 없이 웃음"
+    },
+    {
+      "Action": "sling_staff_on_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "봉을 등에 걺"
+    },
+    {
+      "Action": "place_vials",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP15_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "코트 안쪽에서 병 세 개를 꺼내 놓고 하나를 손끝으로 밈"
+    },
+    {
+      "Action": "drink_vial",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "병을 열다 멈췄다가 마심"
+    },
+    {
+      "Action": "shoulder_scythe_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP15_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫을 어깨에 걸고 걸음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_regen_notes",
+      "NameKo": "아인의 기록 종이(못 붙게 하는 방법 — 태운다/떼어 놓는다/얼린다)",
+      "Scenes": [
+        "EP15_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_reagent_bottles",
+      "NameKo": "민경이 찾은 시약 2병 (억제제 재료, 여섯 달어치)",
+      "Scenes": [
+        "EP15_SC002",
+        "EP15_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_hardened_joint",
+      "NameKo": "계단 중턱의 굳은 이음매",
+      "Scenes": [
+        "EP15_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_lobby_partition",
+      "NameKo": "로비 파티션",
+      "Scenes": [
+        "EP15_SC005",
+        "EP15_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_metal_canister",
+      "NameKo": "세라가 던진 금속 원통 (터지며 푸른빛 그물)",
+      "Scenes": [
+        "EP15_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_unlabeled_vials",
+      "NameKo": "세라의 라벨 없는 병 3개 (성숙을 늦추는 약)",
+      "Scenes": [
+        "EP15_SC012",
+        "EP15_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP15_SC001",
+      "QuestionKo": "장소 미기재 (해당: EP15_SC001, EP15_SC002). SC002는 시간대도 미기재"
+    },
+    {
+      "Scene": "EP15_SC006",
+      "QuestionKo": "세라가 던진 금속 원통의 정체(촉매 용기인지 등)와 봉쇄와의 관계 미기재"
+    },
+    {
+      "Scene": "EP15_SC009",
+      "QuestionKo": "'여덟 번의 두 번'이 큰 개체 1·작은 개체 2에 어떻게 배분되는지 미기재(큰 것에 봉쇄 두 번만 명시)"
+    },
+    {
+      "Scene": "EP15_SC010",
+      "QuestionKo": "교전 후 시간대 미기재 (해당: EP15_SC010, EP15_SC011, EP15_SC012, EP15_SC013)"
+    },
+    {
+      "Scene": "EP15_SC012",
+      "QuestionKo": "세라의 약이 늦추는 '성숙'의 정체, 세라의 소속·목적 — 원고가 의도적으로 답하지 않음"
+    },
+    {
+      "Scene": "EP15_SC013",
+      "QuestionKo": "'넷이 다섯이 되어' — 넷에 오정길 포함으로 해석(아인·카인·류·오정길+세라)"
+    }
+  ]
+}

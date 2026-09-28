@@ -1,0 +1,2764 @@
+{
+  "EpisodeId": "EP05",
+  "TitleKo": "내려간다",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      4856,
+      5881
+    ]
+  },
+  "SummaryKo": "훈련장에서 아인은 다친 오른쪽 어깨 때문에 낫이 걸리는 띠가 두 뼘에서 한 뼘으로 줄었음을 확인하고, 억제제 라벨의 손글씨를 본다. 어제의 패배에도 셋은 다시 남산으로 가지만 하늘은 비어 있고, 타워 하부에서 발톱 네 줄 자국과 함께 중장갑 낙하형 괴물 케이블카 드로퍼 넷에게 급습당해 계단 아래로 밀려난다. 지하 3층의 국방부 철문을 이번에는 오정길이 배전반으로 연다. 통신실에서 아인은 「각인 계측 대장」을 찾는데, 유진 노트와 같은 칸 순서와 눈에 익은 필체, 2030년 2월에 끊긴 S등급 열한 명, 채혈 도구, '성숙으로 판독할 것'이라는 메모, 뜯긴 계측자 서명란, 강남 A구역 회수 D-30 카운트를 본다. 남아 있던 출력전달 보조기 K-3를 차자 어깨 대신 척추와 골반으로 힘이 흘러 낫이 온전히 돌고, 아인은 드로퍼 셋을 한 획에 벤다(하나는 도주). 그 뒤 등이 뜨겁고 코어가 오래 밝다. 승강장에서 아인은 처음으로 카인에게 등급이 오를수록 죽는다는 함정을 말하지만 답은 없고, 순찰 일정표로 셀레스티얼이 여의도로 인수인계를 떠났음을 알고 잡지 않고 돌아선다. 오정길은 와이어의 시신 넷을 내려 이름을 적어 유진에게 전하고, 의무실의 닥터 진은 평소와 다른 거리·순서·침묵으로 아인을 진찰한다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC001",
+      "NovelSource": "L4856-L4926 §1 한 뼘",
+      "NovelSummary": "아무도 없는 훈련장. 아인이 붕대 때문에 느리게 낫을 들어 한 바퀴 돌리자 오른쪽 어깨에서 궤도가 멈춘다 — 힘은 있는데 신호가 어깨에서 흩어진다. 바닥에 바깥·안쪽 반원 두 개를 그려 보니 낫이 걸리는 띠가 원래 두 뼘에서 한 뼘으로 줄었다. 실수할 여유가 절반, 더 가까이 가야 한다. 오른손이 안 돼 왼손으로 바꿔 쥔다. 주머니의 억제제 병 손글씨 라벨 「3회분 / 하루 한 번 이상 금지」 — 눌러쓴 듯 진하고 획 끝이 아래로 꺾인 글씨 — 를 확인하고 도로 넣는다.",
+      "Location": "loc_bunker_training_ground",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_ain: 억제제 병(주머니)"
+      ],
+      "StoryBeat": "부상으로 낫의 띠가 한 뼘으로 줄었다. 억제제 라벨 필체(닥터 진 복선 ①).",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "낫을 돌려 현재 사거리 띠를 확인한다",
+      "Interaction": [
+        "낫 한 바퀴 돌리기(오른쪽 어깨에서 멈춤)",
+        "바닥에 반원 두 개 그리기",
+        "왼손으로 바꿔 쥐기",
+        "억제제 병 라벨 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빈 훈련장, 바닥에 그린 반원 두 개(띠 = 한 뼘).",
+      "Props": [
+        "prop_floor_semicircles",
+        "prop_suppressant_vial"
+      ],
+      "VFX": [
+        "sickle_band_indicator (낫 사거리 띠 표시 — 한 뼘)"
+      ],
+      "SFX": [
+        "sickle_swing_stall (궤도 중간에서 멈추는 낫)",
+        "chalk_scrape (바닥 긋는 소리)"
+      ],
+      "Music": "bgm_training_alone — 홀로 점검하는 정적",
+      "GameplayEntry": "에피소드 시작, 훈련장에서 조작",
+      "GameplayExit": "라벨 확인 후 병을 넣으면 마태오 장면으로",
+      "AnimationRequired": [
+        "sickle_swing_stall_shoulder",
+        "draw_semicircle_floor",
+        "switch_grip_left",
+        "check_vial_label",
+        "pocket_item"
+      ],
+      "CinematicRequired": "false — 튜토리얼성 플레이, 라벨은 클로즈업 UI",
+      "SaveFlags": [
+        "EP05_SICKLE_BAND_ONE_SPAN",
+        "EP05_LABEL_HANDWRITING_SEEN"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP05_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_training_ground",
+        "char:char_ain",
+        "prop:prop_floor_semicircles",
+        "prop:prop_suppressant_vial",
+        "anim:sickle_swing_stall_shoulder",
+        "anim:draw_semicircle_floor",
+        "anim:switch_grip_left",
+        "anim:check_vial_label",
+        "anim:pocket_item",
+        "vfx:sickle_band_indicator",
+        "sfx:sickle_swing_stall",
+        "sfx:chalk_scrape",
+        "bgm:bgm_training_alone"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC002",
+      "NovelSource": "L4927-L4956 §2 오늘도",
+      "NovelSummary": "마태오가 계산기를 두드리다 멈추고 '오늘도 간다고, 어제 그 꼴 나고?'라고 묻는다. 카인이 '…그러니까 가는 거죠'라고 답한다. 마태오는 담배를 반대쪽 입꼬리로 옮겨 물고 장부에 짧게 두 줄을 적는다(내용은 보이지 않는다). 출격문이 올라가고 아인의 왼쪽 턱 근육이 한 번 도드라졌다 풀린다.",
+      "Location": "loc_bunker_mateo_table",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo",
+        "char_kain",
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목"
+      ],
+      "StoryBeat": "어제의 패배에도 다시 출격한다.",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_kain",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "오늘도 간다고.",
+          "Source": "L4931"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "네.",
+          "Source": "L4933"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "어제 그 꼴 나고?",
+          "Source": "L4935"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그러니까 가는 거죠.",
+          "Source": "L4939"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "없음(출격 연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "마태오의 자리(계산기·장부). 출격문이 올라감.",
+      "Props": [
+        "prop_calculator",
+        "prop_mateo_ledger",
+        "prop_unlit_cigarette",
+        "prop_sortie_gate"
+      ],
+      "VFX": [],
+      "SFX": [
+        "calculator_keys (계산기)",
+        "gate_rise (출격문 올라가는 소리)"
+      ],
+      "Music": "bgm_briefing_low — 낮게 깔린 긴장",
+      "GameplayEntry": "SC001 후 컷",
+      "GameplayExit": "출격문 개방 → 남산 승강장",
+      "AnimationRequired": [
+        "type_calculator",
+        "shift_cigarette_mouth",
+        "write_ledger",
+        "jaw_clench"
+      ],
+      "CinematicRequired": "true — 짧은 대화 + 출격문 개방 컷",
+      "SaveFlags": [
+        "EP05_SORTIE"
+      ],
+      "Prerequisites": [
+        "EP05_SC001"
+      ],
+      "NextScene": "EP05_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_mateo_table",
+        "char:char_mateo",
+        "char:char_kain",
+        "char:char_ain",
+        "prop:prop_calculator",
+        "prop:prop_mateo_ledger",
+        "prop:prop_unlit_cigarette",
+        "prop:prop_sortie_gate",
+        "anim:type_calculator",
+        "anim:shift_cigarette_mouth",
+        "anim:write_ledger",
+        "anim:jaw_clench",
+        "sfx:calculator_keys",
+        "sfx:gate_rise",
+        "bgm:bgm_briefing_low"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC003",
+      "NovelSource": "L4957-L4994 §3 없다",
+      "NovelSummary": "승강장은 어제 그대로 — 유리 파편, 케이블카 두 대, 와이어에 걸린 넷. 하늘은 비어 있다. 셋은 흩어져 위치를 잡고 기다리지만 케이블카 그림자가 한 뼘쯤 옮겨갈 동안 아무것도 지나가지 않는다. '…안 오는데', '순찰 나간 거 아닐까요.' 아인이 와이어와 타워 본체를 보고 '안에 들어가 봐요'라고 한다.",
+      "Location": "loc_namsan_cablecar_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목",
+        "char_oh_jeonggil: 총"
+      ],
+      "StoryBeat": "보스(셀레스티얼)가 나타나지 않는다. 탐색 방향을 타워 내부로 바꾼다.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…안 오는데.",
+          "Source": "L4977"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "순찰 나간 거 아닐까요.",
+          "Source": "L4981"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…안에 들어가 봐요.",
+          "Source": "L4991"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "위치를 잡고 기다린 뒤, 타워 내부로 향한다",
+      "Interaction": [
+        "매복 위치 잡기",
+        "와이어·타워 본체 관찰"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어제와 동일(유리 파편, 케이블카 2대, 와이어의 시신 넷). 빈 하늘, 옮겨가는 케이블카 그림자.",
+      "Props": [
+        "prop_cablecar",
+        "prop_wire_bodies"
+      ],
+      "VFX": [
+        "shadow_time_lapse (케이블카 그림자 이동)"
+      ],
+      "SFX": [
+        "wind_high (고지대 바람)",
+        "wire_creak_wind (와이어 삐걱)"
+      ],
+      "Music": "bgm_empty_sky_wait — 텅 빈 하늘의 기다림",
+      "GameplayEntry": "승강장 도착",
+      "GameplayExit": "타워 하부 입구로 이동",
+      "AnimationRequired": [
+        "take_cover_wait",
+        "look_up"
+      ],
+      "CinematicRequired": "false — 대기 구간은 플레이, 시간 경과만 연출",
+      "SaveFlags": [
+        "EP05_CELESTIAL_ABSENT"
+      ],
+      "Prerequisites": [
+        "EP05_SC002"
+      ],
+      "NextScene": "EP05_SC004",
+      "RequiredAssets": [
+        "env:loc_namsan_cablecar_station",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_cablecar",
+        "prop:prop_wire_bodies",
+        "anim:take_cover_wait",
+        "anim:look_up",
+        "vfx:shadow_time_lapse",
+        "sfx:wind_high",
+        "sfx:wire_creak_wind",
+        "bgm:bgm_empty_sky_wait"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC004",
+      "NovelSource": "L4995-L5046 §4 네 줄",
+      "NovelSummary": "남산타워 하부 — 전망대 아래 층들, 유리가 다 깨져 바람이 통째로 지나가고, 식당이나 기념품점이었을 자리에 테이블이 넘어져 있고 벽지가 부풀어 있다. 벽에 긁힌 자국이 네 줄이다. 어제 그놈은 셋이었다 — '…발톱이 넷이야.' 천장 배관에서 '드드득' 소리가 나고, 매달려 있던 것이 떨어지자 바닥이 꺼진다. 파편 사이로 케이블카 드로퍼가 드러난다: 중장갑, 비정상적으로 긴 팔, 반대로 꺾인 무릎, 높은 데서 떨어지는 데 최적화된 형태. 넷이다.",
+      "Location": "loc_namsan_tower_lower",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목",
+        "char_oh_jeonggil: 총"
+      ],
+      "StoryBeat": "다른 개체(발톱 넷)의 흔적 발견 → 케이블카 드로퍼 4체 출현.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…발톱이 넷이야.",
+          "Source": "L5013"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "타워 하부를 살핀다",
+      "Interaction": [
+        "벽의 네 줄 긁힌 자국 조사"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "깨진 유리, 넘어진 테이블, 습기로 부푼 벽지, 천장 배관. 드로퍼 낙하로 바닥이 꺼짐.",
+      "Props": [
+        "prop_claw_marks_four",
+        "prop_ceiling_pipes"
+      ],
+      "VFX": [
+        "floor_cave_in_debris (바닥 붕괴 파편)"
+      ],
+      "SFX": [
+        "pipe_scrape (배관 '드드득')",
+        "heavy_impact_floor (낙하 충격)"
+      ],
+      "Music": "bgm_dropper_reveal — 급습",
+      "GameplayEntry": "타워 하부 진입",
+      "GameplayExit": "드로퍼 4체 드러남 → 교전 연출",
+      "AnimationRequired": [
+        "inspect_wall_marks",
+        "dropper_ceiling_hang",
+        "dropper_drop_impact"
+      ],
+      "CinematicRequired": "true — 드로퍼 등장 컷",
+      "SaveFlags": [
+        "EP05_FOUR_CLAW_MARKS",
+        "EP05_DROPPERS_ENCOUNTERED"
+      ],
+      "Prerequisites": [
+        "EP05_SC003"
+      ],
+      "NextScene": "EP05_SC005",
+      "RequiredAssets": [
+        "env:loc_namsan_tower_lower",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cablecar_dropper",
+        "prop:prop_claw_marks_four",
+        "prop:prop_ceiling_pipes",
+        "anim:inspect_wall_marks",
+        "anim:dropper_ceiling_hang",
+        "anim:dropper_drop_impact",
+        "vfx:floor_cave_in_debris",
+        "sfx:pipe_scrape",
+        "sfx:heavy_impact_floor",
+        "bgm:bgm_dropper_reveal"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC005",
+      "NovelSource": "L5047-L5102 §5 숨이 없다",
+      "NovelSummary": "아인이 거리를 재며 보폭을 옮기는데 하나가 위에서 떨어진다. 숨이 없다 — 큰 기술 직전의 들숨과 반 박자를 잡는 게 아인의 일인데, 낙하에는 예비 동작이 없다. 중력은 예비 동작을 하지 않는다. 아인이 옆으로 구르다 오른쪽 어깨가 바닥에 닿고 붕대에 피가 번진다. 카인이 하나를 대검으로 받아내지만 부목 손이 떨려 두 번째는 못 받을 것 같다. 오정길은 뒤로 물러난다. '여긴 위가 열려 있어요. 아래로 내려가요.' 셋은 이기고 물러나는 게 아니라 밀려서 계단 아래로 내려간다.",
+      "Location": "loc_namsan_tower_lower",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어) — 붕대에 피 번짐",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목",
+        "char_oh_jeonggil: 총"
+      ],
+      "StoryBeat": "낙하 공격엔 읽을 '숨'이 없다. 아인의 어깨가 재출혈하고 셋은 밀려 내려간다.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…아래로.",
+          "Source": "L5087"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "뭐?",
+          "Source": "L5089"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "여긴 위가 열려 있어요. 아래로 내려가요.",
+          "Source": "L5091"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(비보스 교전 연출 — 게임 표현 TBD)",
+      "Interaction": [
+        "구르기 회피(연출 내 QTE 제안)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "위가 열린 타워 하부, 드로퍼 낙하.",
+      "Props": [],
+      "VFX": [
+        "bandage_blood_spread (붕대에 피 번짐)",
+        "impact_dust (낙하 먼지)"
+      ],
+      "SFX": [
+        "heavy_impact_floor (낙하 충격)",
+        "greatsword_block_heavy (대검으로 받아내는 충격)"
+      ],
+      "Music": "bgm_pushed_down — 밀리는 긴장",
+      "GameplayEntry": "SC004 직후",
+      "GameplayExit": "계단으로 밀려 내려감 → 지하 3층",
+      "AnimationRequired": [
+        "footwork_measure",
+        "dropper_drop_impact",
+        "dodge_roll_injured",
+        "greatsword_block_trembling",
+        "step_back",
+        "retreat_down_stairs"
+      ],
+      "CinematicRequired": "true — 비보스 교전은 연출로 처리(게임 표현 TBD)",
+      "SaveFlags": [
+        "EP05_AIN_SHOULDER_REBLEED"
+      ],
+      "Prerequisites": [
+        "EP05_SC004"
+      ],
+      "NextScene": "EP05_SC006",
+      "RequiredAssets": [
+        "env:loc_namsan_tower_lower",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cablecar_dropper",
+        "anim:footwork_measure",
+        "anim:dropper_drop_impact",
+        "anim:dodge_roll_injured",
+        "anim:greatsword_block_trembling",
+        "anim:step_back",
+        "anim:retreat_down_stairs",
+        "vfx:bandage_blood_spread",
+        "vfx:impact_dust",
+        "sfx:heavy_impact_floor",
+        "sfx:greatsword_block_heavy",
+        "bgm:bgm_pushed_down"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC006",
+      "NovelSource": "L5103-L5151 §6 국방부 마크",
+      "NovelSummary": "지하 3층에서 계단이 끝나고 국방부 마크가 찍힌 철문이 있다. '군 시설이 왜 여기 있어' — 오정길이 타워는 원래 방송 시설이라 군 통신도 같이 썼을 거라고 설명한다. 그가 문 옆 배전반을 연다. 어제 케이블카 통제소 앞에서 손을 내렸던 그가 오늘은 '…이건 건물 겁니다'라고 한다. '끼기긱' 문이 열린다.",
+      "Location": "loc_namsan_tower_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목",
+        "char_oh_jeonggil: 총"
+      ],
+      "StoryBeat": "오정길의 대구 — 어제는 못 했고, 오늘은 연다.",
+      "PlayerCharacter": "char_oh_jeonggil",
+      "NPCs": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…군 시설이 왜 여기 있어.",
+          "Source": "L5117"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "타워는 원래 방송 시설이니까요.",
+          "Source": "L5119"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…이건 건물 겁니다.",
+          "Source": "L5137"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "배전반을 조작해 철문을 연다",
+      "Interaction": [
+        "철문의 국방부 마크 조사",
+        "배전반 열기·조작(오정길)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "지하 3층 계단 끝, 국방부 마크 철문, 문 옆 배전반.",
+      "Props": [
+        "prop_mnd_steel_door",
+        "prop_door_distribution_panel"
+      ],
+      "VFX": [],
+      "SFX": [
+        "panel_open (배전반 여는 소리)",
+        "steel_door_grind (철문 '끼기긱')"
+      ],
+      "Music": "bgm_underground_secret — 지하의 비밀",
+      "GameplayEntry": "계단 끝 도착",
+      "GameplayExit": "철문 개방 → 통신실",
+      "AnimationRequired": [
+        "open_panel",
+        "operate_panel",
+        "open_door"
+      ],
+      "CinematicRequired": "false — 오정길 조작 파트(짧은 대사)",
+      "SaveFlags": [
+        "EP05_MND_DOOR_OPENED"
+      ],
+      "Prerequisites": [
+        "EP05_SC005"
+      ],
+      "NextScene": "EP05_SC007",
+      "RequiredAssets": [
+        "env:loc_namsan_tower_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_mnd_steel_door",
+        "prop:prop_door_distribution_panel",
+        "anim:open_panel",
+        "anim:operate_panel",
+        "anim:open_door",
+        "sfx:panel_open",
+        "sfx:steel_door_grind",
+        "bgm:bgm_underground_secret"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC007",
+      "NovelSource": "L5152-L5219 §7 같은 칸",
+      "NovelSummary": "통신실. 벽을 따라 늘어선 콘솔은 대부분 죽어 있고 먼지가 두 마디쯤 쌓였으며 의자 하나가 넘어져 있다. 캐비닛의 서류철 중 아인이 하나를 꺼낸다 — 「각인 계측 대장」. 표의 칸(날짜/이름/공명 주파수/결정 밀도/등급)은 인쇄, 안쪽은 수백 줄 전부 같은 손글씨다. 유진의 노트와 칸 순서가 같지만, 잴 것이 정해져 있으면 칸도 그렇게 나뉜다고 여기고 넘긴다. 다만 눌러쓴 듯 진하고 획 끝이 아래로 꺾인 글씨가 눈에 익는데, 어디서 봤는지는 생각나지 않는다. 카인이 어깨 너머로 '글씨 지저분하네'라고 한다.",
+      "Location": "loc_namsan_mnd_commroom",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목"
+      ],
+      "StoryBeat": "계측 대장 발견. 유진 노트와 같은 칸 순서, 억제제 라벨과 같은 필체(복선 ②) — 아인은 연결하지 않는다.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…글씨 지저분하네.",
+          "Source": "L5210"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "통신실을 조사한다",
+      "Interaction": [
+        "캐비닛에서 서류철 꺼내기",
+        "「각인 계측 대장」 열람"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "대부분 꺼진 콘솔, 두꺼운 먼지, 넘어진 의자, 정렬된 서류철 캐비닛.",
+      "Props": [
+        "prop_consoles_dead",
+        "prop_file_cabinet",
+        "prop_imprint_measurement_ledger"
+      ],
+      "VFX": [
+        "dust_motes (먼지)"
+      ],
+      "SFX": [
+        "paper_page_turn (종이 넘기는 소리)"
+      ],
+      "Music": "bgm_archive_unease — 기록실의 불편한 고요",
+      "GameplayEntry": "철문 통과",
+      "GameplayExit": "장을 넘기며 다음 조사로",
+      "AnimationRequired": [
+        "pull_file_from_cabinet",
+        "read_flip_pages",
+        "look_over_shoulder"
+      ],
+      "CinematicRequired": "false — 문서 열람 UI",
+      "SaveFlags": [
+        "EP05_LEDGER_FOUND"
+      ],
+      "Prerequisites": [
+        "EP05_SC006"
+      ],
+      "NextScene": "EP05_SC008",
+      "RequiredAssets": [
+        "env:loc_namsan_mnd_commroom",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_consoles_dead",
+        "prop:prop_file_cabinet",
+        "prop:prop_imprint_measurement_ledger",
+        "anim:pull_file_from_cabinet",
+        "anim:read_flip_pages",
+        "anim:look_over_shoulder",
+        "vfx:dust_motes",
+        "sfx:paper_page_turn",
+        "bgm:bgm_archive_unease"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC008",
+      "NovelSource": "L5220-L5323 §8 열한 명",
+      "NovelSummary": "대장에는 수백 명(C, B, A…) 가운데 S가 있다. 아인이 세어 보니 S는 열한 명이고, 전부 기록이 2030년 2월에서 끊겨 있다. 콘솔 반대편의 소독용 스테인리스 트레이에 끝이 가늘고 긴 도구와 채혈용 도구가 남아 있다 — 여기서 사람을 쟀다. 표지 안쪽의 같은 손글씨 메모 「복제율 상승은 손상이 아니라 성숙으로 판독할 것」을 읽지만, 어제 들은 말은 어제 들은 말이다. 마지막 장 근처의 계측자 서명란 몇 페이지가 손으로 뜯겨 있다. 카인이 '강남?'이라고 하고, 아직 살아 있는 초록 콘솔 화면에 「강남 A구역 / 다음 회수 D-31」이 떠 있다가 보는 동안 D-30으로 바뀐다.",
+      "Location": "loc_namsan_mnd_commroom",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목"
+      ],
+      "StoryBeat": "S등급 열한 명(2030년 2월 단절), 채혈 도구, '성숙' 메모, 뜯긴 서명란, 강남 회수 D-30.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "강남?",
+          "Source": "L5284"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "대장·트레이·콘솔을 조사한다",
+      "Interaction": [
+        "S등급 인원 세기",
+        "소독 트레이 조사",
+        "표지 안쪽 메모 읽기",
+        "뜯긴 서명란 확인",
+        "살아 있는 콘솔 화면 확인(D-31→D-30)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "살아 있는 콘솔 하나(초록 화면), 스테인리스 트레이.",
+      "Props": [
+        "prop_imprint_measurement_ledger",
+        "prop_sterile_tray",
+        "prop_live_console"
+      ],
+      "VFX": [
+        "console_countdown_tick (D-31→D-30 변경)"
+      ],
+      "SFX": [
+        "console_beep (콘솔 갱신음)",
+        "paper_page_turn (종이 넘기는 소리)"
+      ],
+      "Music": "bgm_archive_unease — 기록실의 불편한 고요",
+      "GameplayEntry": "SC007에서 이어짐",
+      "GameplayExit": "서류철을 덮고 D-30 확인 후 K-3 상자로",
+      "AnimationRequired": [
+        "read_flip_pages",
+        "close_file",
+        "look_at_screen"
+      ],
+      "CinematicRequired": "false — 문서/화면 조사 UI, D-30 전환만 짧은 연출",
+      "SaveFlags": [
+        "EP05_S_RANK_ELEVEN",
+        "EP05_MATURATION_MEMO_READ",
+        "EP05_SIGNATURE_TORN_SEEN",
+        "EP05_GANGNAM_D30"
+      ],
+      "Prerequisites": [
+        "EP05_SC007"
+      ],
+      "NextScene": "EP05_SC009",
+      "RequiredAssets": [
+        "env:loc_namsan_mnd_commroom",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_imprint_measurement_ledger",
+        "prop:prop_sterile_tray",
+        "prop:prop_live_console",
+        "anim:read_flip_pages",
+        "anim:close_file",
+        "anim:look_at_screen",
+        "vfx:console_countdown_tick",
+        "sfx:console_beep",
+        "sfx:paper_page_turn",
+        "bgm:bgm_archive_unease"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC009",
+      "NovelSource": "L5324-L5375 §9 K-3",
+      "NovelSummary": "벽의 금속 상자들은 대부분 비어 완충재만 남았고 하나가 남아 있다 — 「출력전달 보조기 K-3 / 각인자 전용」. 가죽과 금속으로 된 장구로, 등판을 따라 세로 뼈대가 있고 아래에서 골반대로 갈라지며, 어깨에 거는 부분 없이 겨드랑이 아래로 띠 두 개가 지난다. 설명 「어깨·주관절 부하를 척주 및 골반대로 분산. 최대 출력 시 착용 권장.」 '…이거 뭡니까' — '어깨를 안 쓰는 거요.' 아인은 그렇게만 읽는다. 힘이 척추를 지난다는 뜻이기도 했지만, 그 부분을 읽고도 어깨 생각만 한다.",
+      "Location": "loc_namsan_mnd_commroom",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대(겨드랑이 밑). 기본 의상은 본문 미서술(EP04에서는 테크웨어)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)"
+      ],
+      "StoryBeat": "K-3 획득. 힘이 척추(코어가 있는 자리)를 지난다는 대가를 아인은 놓친다.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…이거 뭡니까.",
+          "Source": "L5356"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…어깨를 안 쓰는 거요.",
+          "Source": "L5358"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "남은 상자를 열어 장비를 확인한다",
+      "Interaction": [
+        "금속 상자 열기",
+        "K-3 설명 읽기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "뚜껑 열린 빈 금속 상자들(완충재만), 하나 남은 K-3 상자.",
+      "Props": [
+        "prop_metal_cases",
+        "prop_k3_harness"
+      ],
+      "VFX": [
+        "item_highlight (획득 아이템 하이라이트)"
+      ],
+      "SFX": [
+        "case_latch_open (상자 여는 소리)"
+      ],
+      "Music": "bgm_archive_unease — 기록실의 불편한 고요",
+      "GameplayEntry": "상자 벽 조사",
+      "GameplayExit": "K-3 획득",
+      "AnimationRequired": [
+        "open_case",
+        "read_label"
+      ],
+      "CinematicRequired": "false — 아이템 획득 UI",
+      "SaveFlags": [
+        "EP05_K3_ACQUIRED"
+      ],
+      "Prerequisites": [
+        "EP05_SC008"
+      ],
+      "NextScene": "EP05_SC010",
+      "RequiredAssets": [
+        "env:loc_namsan_mnd_commroom",
+        "char:char_ain",
+        "char:char_oh_jeonggil",
+        "char:char_kain",
+        "prop:prop_metal_cases",
+        "prop:prop_k3_harness",
+        "anim:open_case",
+        "anim:read_label",
+        "vfx:item_highlight",
+        "sfx:case_latch_open",
+        "bgm:bgm_archive_unease"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC010",
+      "NovelSource": "L5376-L5393 §10 한 바퀴(착용)",
+      "NovelSummary": "아인이 낫을 내려놓고 장구를 찬다. 왼손으로만 해야 해서 오래 걸리고, 오정길이 뒤쪽 버클을 잠가준다. 등판 뼈대가 척추를 따라 목덜미 코어 바로 아래까지 붙는다. 아인이 한 번 몸을 비틀어 본다.",
+      "Location": "loc_namsan_mnd_commroom",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)"
+      ],
+      "StoryBeat": "K-3 착용. 뼈대가 코어 바로 아래까지 온다.",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "K-3를 착용한다",
+      "Interaction": [
+        "K-3 장착(오정길이 버클 보조)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "통신실.",
+      "Props": [
+        "prop_k3_harness"
+      ],
+      "VFX": [
+        "core_glow_nape (목덜미 코어 — 뼈대 끝과 맞닿음)"
+      ],
+      "SFX": [
+        "buckle_click (버클)",
+        "leather_creak (가죽 장구)"
+      ],
+      "Music": "bgm_resolve_rising — 다시 올라갈 결의",
+      "GameplayEntry": "SC009 직후",
+      "GameplayExit": "착용 완료 → 계단으로",
+      "AnimationRequired": [
+        "put_down_weapon",
+        "don_harness_left_hand",
+        "buckle_assist_back",
+        "torso_twist_test"
+      ],
+      "CinematicRequired": "true — 장비 착용 컷(외형 변화)",
+      "SaveFlags": [
+        "EP05_K3_EQUIPPED"
+      ],
+      "Prerequisites": [
+        "EP05_SC009"
+      ],
+      "NextScene": "EP05_SC011",
+      "RequiredAssets": [
+        "env:loc_namsan_mnd_commroom",
+        "char:char_ain",
+        "char:char_oh_jeonggil",
+        "prop:prop_k3_harness",
+        "anim:put_down_weapon",
+        "anim:don_harness_left_hand",
+        "anim:buckle_assist_back",
+        "anim:torso_twist_test",
+        "vfx:core_glow_nape",
+        "sfx:buckle_click",
+        "sfx:leather_creak",
+        "bgm:bgm_resolve_rising"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC011",
+      "NovelSource": "L5394-L5467 §10 한 바퀴(교전)",
+      "NovelSummary": "계단을 다시 오르자 드로퍼 넷이 기다리고 있다. 하나가 떨어지고 아인이 낫을 든다 — 한 바퀴가 다 돈다. 어깨가 안 움직이는데 힘이 등을 타고 허리로, 골반으로 내려가 몸통 전체가 축이 된다. 띠는 두 뼘으로, 그보다 넓게 돌아온다. 낙하에는 여전히 숨이 없지만 띠가 넓어 어디 떨어지든 안에 들어온다. 걸고, 당겨 '콰드득' — 넷 중 셋을 한 번의 획으로 긋고, 나머지 하나는 도망친다. 낫을 들고 처음인 깔끔한 획. 숨을 고르는데 등이 뜨겁고, 목덜미 코어가 평소보다 한참 오래 밝다. 아인이 그것을 한 번 만지고 손을 뗀다.",
+      "Location": "loc_namsan_tower_lower",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫(왼손으로 바꿔 쥠)",
+        "char_kain: 대검",
+        "char_kain: 오른손 부목",
+        "char_oh_jeonggil: 총"
+      ],
+      "StoryBeat": "K-3로 띠가 두 뼘 이상 회복, 드로퍼 셋 격살. 대가 — 등이 뜨겁고 코어가 오래 밝다(EP18 복선).",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cablecar_dropper"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(비보스 교전 연출 — 게임 표현 TBD)",
+      "Interaction": [
+        "낫 원 궤도 한 획(연출 내 타이밍 입력 제안)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "타워 하부(드로퍼 넷 대기). 교전 후 셋 쓰러짐, 하나 도주.",
+      "Props": [
+        "prop_k3_harness"
+      ],
+      "VFX": [
+        "sickle_full_circle_arc (낫의 완전한 원 궤적)",
+        "sickle_band_indicator (띠 — 두 뼘 이상)",
+        "core_glow_nape_long (코어 장시간 발광)",
+        "spine_heat_glow (등 뼈대 열기)"
+      ],
+      "SFX": [
+        "heavy_impact_floor (낙하 충격)",
+        "sickle_rend_armor (중장갑 가르는 '콰드득')",
+        "heavy_breath (숨 고르기)"
+      ],
+      "Music": "bgm_one_stroke — 해방감 있는 일격",
+      "GameplayEntry": "계단을 올라 타워 하부 재진입",
+      "GameplayExit": "드로퍼 셋 처치, 하나 도주 → 승강장으로",
+      "AnimationRequired": [
+        "climb_stairs",
+        "dropper_drop_impact",
+        "sickle_full_circle_k3",
+        "dropper_death",
+        "dropper_flee",
+        "catch_breath",
+        "touch_nape_core"
+      ],
+      "CinematicRequired": "true — 한 획 연출이 핵심(비보스 교전)",
+      "SaveFlags": [
+        "EP05_DROPPERS_3_KILLED",
+        "EP05_DROPPER_1_FLED",
+        "EP05_CORE_LONG_GLOW"
+      ],
+      "Prerequisites": [
+        "EP05_SC010"
+      ],
+      "NextScene": "EP05_SC012",
+      "RequiredAssets": [
+        "env:loc_namsan_tower_lower",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cablecar_dropper",
+        "prop:prop_k3_harness",
+        "anim:climb_stairs",
+        "anim:dropper_drop_impact",
+        "anim:sickle_full_circle_k3",
+        "anim:dropper_death",
+        "anim:dropper_flee",
+        "anim:catch_breath",
+        "anim:touch_nape_core",
+        "vfx:sickle_full_circle_arc",
+        "vfx:sickle_band_indicator",
+        "vfx:core_glow_nape_long",
+        "vfx:spine_heat_glow",
+        "sfx:heavy_impact_floor",
+        "sfx:sickle_rend_armor",
+        "sfx:heavy_breath",
+        "bgm:bgm_one_stroke"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC012",
+      "NovelSource": "L5468-L5547 §11 C는 없었어요",
+      "NovelSummary": "승강장으로 돌아와도 하늘은 비어 있다. 카인이 '안 잡고 가요?'라고 묻는다. 서류철을 든 아인이 '카인'이라고 부르고, 어제 그 시신들의 인식표가 전부 B와 A였고 C는 없었다고 말한다. 그저께 우리는 C였고 지금은 B다 — 카인이 거기서 알아챈다. '안 올리면 되잖아' — '안 올리면 큰 의뢰를 못 받고, 못 받으면 못 먹어요.' '그럼 어쩌라고' — '몰라요.' 아인은 시신 여섯을 봤을 때부터 알았지만 여섯은 여섯일 뿐이었고, 지금은 수백 명이 손에 들려 있다.",
+      "Location": "loc_namsan_cablecar_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 대검",
+        "char_ain: 각인 계측 대장(서류철)"
+      ],
+      "StoryBeat": "아인이 처음으로 카인에게 말한다 — 등급이 오를수록 수거 대상이 된다는 함정. 답은 없다.",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…안 잡고 가요?",
+          "Source": "L5478"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어제 그 시신들. 인식표가 전부 B랑 A였어요.",
+          "Source": "L5492"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "C는 없었어요.",
+          "Source": "L5500"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "지금 B고요.",
+          "Source": "L5514"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그럼 어쩌라고.",
+          "Source": "L5532"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "몰라요.",
+          "Source": "L5536"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "없음(대화)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빈 하늘, 승강장.",
+      "Props": [
+        "prop_imprint_measurement_ledger",
+        "prop_wire_bodies"
+      ],
+      "VFX": [],
+      "SFX": [
+        "wind_high (고지대 바람)"
+      ],
+      "Music": "bgm_trap_realized — 무거운 깨달음",
+      "GameplayEntry": "승강장 복귀",
+      "GameplayExit": "대화 종료 후 순찰 일정표 발견",
+      "AnimationRequired": [
+        "look_up",
+        "hold_file_stand"
+      ],
+      "CinematicRequired": "true — 핵심 대화, 카인의 표정 변화(늦게 '붙는' 순간)",
+      "SaveFlags": [
+        "EP05_GRADE_TRAP_SPOKEN"
+      ],
+      "Prerequisites": [
+        "EP05_SC011"
+      ],
+      "NextScene": "EP05_SC013",
+      "RequiredAssets": [
+        "env:loc_namsan_cablecar_station",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_oh_jeonggil",
+        "prop:prop_imprint_measurement_ledger",
+        "prop:prop_wire_bodies",
+        "anim:look_up",
+        "anim:hold_file_stand",
+        "sfx:wind_high",
+        "bgm:bgm_trap_realized"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC013",
+      "NovelSource": "L5548-L5597 §12 넘겨주러 갔어요",
+      "NovelSummary": "서류철 사이에 순찰 일정표 한 장 — 「남산 → 여의도 인수인계 / 진행 중」. 아인은 놈이 여기 돌아오지 않고 넘겨주러 갔다고, 잡을 이유가 없다고 말한다. 카인이 대검을 세게 고쳐 멘다. '어제 아무것도 못 했는데… 오늘도 못 잡고.' '네.' 카인은 뭐라 더 하려다 만다. 그는 여기에 하나를 더 두고 가게 됐다.",
+      "Location": "loc_namsan_cablecar_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)",
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 대검"
+      ],
+      "StoryBeat": "보스는 여의도로 떠났다 — 잡지 않고 끝난다(다음 화 여의도 연결).",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "놈은 여기 안 돌아와요.",
+          "Source": "L5560"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "넘겨주러 갔어요.",
+          "Source": "L5564"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그럼 잡을 이유가.",
+          "Source": "L5568"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "없어요.",
+          "Source": "L5570"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…어제 아무것도 못 했는데.",
+          "Source": "L5578"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "오늘도 못 잡고.",
+          "Source": "L5582"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "순찰 일정표 확인",
+      "Interaction": [
+        "서류철 사이 순찰 일정표 읽기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "승강장, 빈 하늘.",
+      "Props": [
+        "prop_patrol_schedule",
+        "prop_imprint_measurement_ledger"
+      ],
+      "VFX": [],
+      "SFX": [
+        "greatsword_strap_yank (대검 세게 고쳐 메는 소리)"
+      ],
+      "Music": "bgm_trap_realized — 무거운 깨달음",
+      "GameplayEntry": "SC012에서 이어짐",
+      "GameplayExit": "오정길이 와이어로 향함",
+      "AnimationRequired": [
+        "read_paper",
+        "adjust_greatsword_hard",
+        "start_to_speak_stop"
+      ],
+      "CinematicRequired": "true — 대화 연출",
+      "SaveFlags": [
+        "EP05_CELESTIAL_HANDOVER_YEOUIDO",
+        "EP05_BOSS_NOT_HUNTED"
+      ],
+      "Prerequisites": [
+        "EP05_SC012"
+      ],
+      "NextScene": "EP05_SC014",
+      "RequiredAssets": [
+        "env:loc_namsan_cablecar_station",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_patrol_schedule",
+        "prop:prop_imprint_measurement_ledger",
+        "anim:read_paper",
+        "anim:adjust_greatsword_hard",
+        "anim:start_to_speak_stop",
+        "sfx:greatsword_strap_yank",
+        "bgm:bgm_trap_realized"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC014",
+      "NovelSource": "L5598-L5631 §13 이름(와이어)",
+      "NovelSummary": "아무도 시키지 않았는데 오정길이 와이어 쪽으로 걸어가, 몸째 걸린 넷을 오래 걸려 하나씩 내린다. 주머니에서 지갑, 사원증, 낡은 명함 한 장을 찾고, 종이를 꺼내 삐뚤어진 손글씨로 이름 네 개를 적어 접어서 안주머니에 넣는다. 잡지도 못하고 내려가는 길에 그것만 했다.",
+      "Location": "loc_namsan_cablecar_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "오정길이 와이어의 죽은 이들의 이름을 거둔다.",
+      "PlayerCharacter": "char_oh_jeonggil",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "시신을 내리고 이름을 적는다",
+      "Interaction": [
+        "시신 내리기(4)",
+        "소지품 뒤지기(지갑·사원증·명함)",
+        "이름 적기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "와이어에서 시신 넷을 내림.",
+      "Props": [
+        "prop_wire_bodies",
+        "prop_victim_belongings",
+        "prop_name_paper"
+      ],
+      "VFX": [],
+      "SFX": [
+        "wire_creak_weight (와이어 삐걱)",
+        "pencil_write (필기)"
+      ],
+      "Music": "bgm_names_quiet — 조용한 애도",
+      "GameplayEntry": "오정길이 와이어로 걸어감",
+      "GameplayExit": "종이를 안주머니에 넣고 귀환(귀환 과정 미서술)",
+      "AnimationRequired": [
+        "lower_body_from_wire",
+        "search_pockets",
+        "write_on_paper",
+        "fold_paper_inner_pocket"
+      ],
+      "CinematicRequired": "true — 긴 시간 경과를 압축하는 연출",
+      "SaveFlags": [
+        "EP05_OH_NAMES_WRITTEN"
+      ],
+      "Prerequisites": [
+        "EP05_SC013"
+      ],
+      "NextScene": "EP05_SC015",
+      "RequiredAssets": [
+        "env:loc_namsan_cablecar_station",
+        "char:char_oh_jeonggil",
+        "prop:prop_wire_bodies",
+        "prop:prop_victim_belongings",
+        "prop:prop_name_paper",
+        "anim:lower_body_from_wire",
+        "anim:search_pockets",
+        "anim:write_on_paper",
+        "anim:fold_paper_inner_pocket",
+        "sfx:wire_creak_weight",
+        "sfx:pencil_write",
+        "bgm:bgm_names_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC015",
+      "NovelSource": "L5632-L5659 §13 이름(각인 평가소)",
+      "NovelSummary": "벙커로 돌아와 오정길이 각인 평가소에 들러 유진 앞에 종이를 내려놓는다. '…와이어에 있던 사람들입니다. 네 명이요.' 유진은 태블릿에서 눈을 떼고 아무 말 없이 서랍에서 노트를 꺼내 이름 네 개를 옮겨 적는다. 아인은 그 장면을 보지 않았다 — 방금 통신실에서 같은 양식의 대장을 들고 있었는데도.",
+      "Location": "loc_bunker_imprint_assessment",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "이름이 유진의 노트로 옮겨진다(EP18 회수). 아인은 보지 못한다.",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…와이어에 있던 사람들입니다. 네 명이요.",
+          "Source": "L5638"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "각인 평가소, 유진의 태블릿과 서랍.",
+      "Props": [
+        "prop_name_paper",
+        "prop_yujin_tablet",
+        "prop_yujin_notebook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "paper_place (종이 내려놓는 소리)",
+        "drawer_open (서랍)",
+        "pencil_write (필기)"
+      ],
+      "Music": "bgm_names_quiet — 조용한 애도",
+      "GameplayEntry": "벙커 귀환 컷",
+      "GameplayExit": "의무실 장면으로",
+      "AnimationRequired": [
+        "place_paper_on_desk",
+        "look_up_from_tablet",
+        "take_notebook_from_drawer",
+        "copy_names"
+      ],
+      "CinematicRequired": "true — 대사 거의 없는 연출",
+      "SaveFlags": [
+        "EP05_NAMES_TO_YUJIN"
+      ],
+      "Prerequisites": [
+        "EP05_SC014"
+      ],
+      "NextScene": "EP05_SC016",
+      "RequiredAssets": [
+        "env:loc_bunker_imprint_assessment",
+        "char:char_oh_jeonggil",
+        "char:char_yujin",
+        "prop:prop_name_paper",
+        "prop:prop_yujin_tablet",
+        "prop:prop_yujin_notebook",
+        "anim:place_paper_on_desk",
+        "anim:look_up_from_tablet",
+        "anim:take_notebook_from_drawer",
+        "anim:copy_names",
+        "sfx:paper_place",
+        "sfx:drawer_open",
+        "sfx:pencil_write",
+        "bgm:bgm_names_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC016",
+      "NovelSource": "L5660-L5727 §13 이름(의무실)",
+      "NovelSummary": "어깨가 재출혈해 아인이 의무실에 들르고 닥터 진이 붕대를 갈아준다. 그런데 그가 2년 동안 서던 자리(팔이 닿는 거리에서 한 걸음 물러난 곳)보다 반 뼘 안쪽에 선다. 늘 코어가 치우친 왼쪽 어깨부터 보던 진찰이 오늘은 등부터다. K-3 뼈대가 지난 자리를 목덜미 코어 바로 아래에서 골반까지 손끝으로 한 번 훑는다. 늘 하던 '어디서 다쳤냐'는 질문도 없다 — 어디 갔다 왔는지 이미 아는 사람처럼. 아인은 거리 하나, 순서 하나, 없어진 질문 하나를 세고, 무엇이 어긋났는지는 몰라도 어긋났다는 것만은 안다. 그리고 아무것도 하지 않는다.",
+      "Location": "loc_bunker_infirmary",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_dr_jin"
+      ],
+      "RequiredCostumes": [
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)(진찰 중 착용 여부 미서술)",
+        "TBD_CANON: 오정길·마태오·닥터 진·유진 의상 미서술"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "닥터 진 복선 ⑥ — 아인이 감이 아니라 계측으로 어긋남을 알아챈다. 본편에서 답하지 않는다.",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_dr_jin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "의무실. 조명·침대 위치 변화 없음.",
+      "Props": [
+        "prop_infirmary_bed",
+        "prop_bandage"
+      ],
+      "VFX": [
+        "distance_measure_overlay (반 뼘 거리 인지 연출 제안)"
+      ],
+      "SFX": [
+        "bandage_unwrap (붕대)"
+      ],
+      "Music": "bgm_infirmary_quiet — 차가운 정적",
+      "GameplayEntry": "의무실 방문 컷",
+      "GameplayExit": "진찰 종료 → 통로",
+      "AnimationRequired": [
+        "change_bandage",
+        "trace_spine_fingertip",
+        "sit_on_bed_exam"
+      ],
+      "CinematicRequired": "true — 미세한 위치·순서 차이를 카메라로 보여줘야 함",
+      "SaveFlags": [
+        "EP05_JIN_ANOMALY_COUNTED"
+      ],
+      "Prerequisites": [
+        "EP05_SC015"
+      ],
+      "NextScene": "EP05_SC017",
+      "RequiredAssets": [
+        "env:loc_bunker_infirmary",
+        "char:char_ain",
+        "char:char_dr_jin",
+        "prop:prop_infirmary_bed",
+        "prop:prop_bandage",
+        "anim:change_bandage",
+        "anim:trace_spine_fingertip",
+        "anim:sit_on_bed_exam",
+        "vfx:distance_measure_overlay",
+        "sfx:bandage_unwrap",
+        "bgm:bgm_infirmary_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP05",
+      "SceneId": "EP05_SC017",
+      "NovelSource": "L5728-L5759 §13 이름(통로)",
+      "NovelSummary": "통로에서 카인이 벽에 기대 앉아 주머니 속 억제제 병과 자물쇠를 번갈아 움켜쥐고 굴린다. 이번에는 자물쇠에 손가락을 걸지 않는다. 아인이 통로 저편을 지나가고, 등판 뼈대가 걸을 때마다 척추를 따라 미세하게 움직이며, 그 위로 목덜미 코어가 평소보다 조금 오래 밝다. 제5화 끝.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain",
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "char_kain: 본문 미서술(EP04에서는 진압 수트)",
+        "char_ain: 오른쪽 어깨 붕대 + 출력전달 보조기 K-3(등판 뼈대·골반대·겨드랑이 아래 띠 둘)"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 오른손 부목"
+      ],
+      "StoryBeat": "카인의 변화(고리에 손가락을 걸지 않음). 아인의 코어가 오래 밝다.",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(엔딩 컷)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 통로.",
+      "Props": [
+        "prop_suppressant_vial",
+        "prop_yellow_padlock",
+        "prop_k3_harness"
+      ],
+      "VFX": [
+        "core_glow_nape_long (코어 장시간 발광)"
+      ],
+      "SFX": [
+        "lock_click_pocket (주머니 속 금속 소리)"
+      ],
+      "Music": "bgm_ep_end_distance — 여운",
+      "GameplayEntry": "SC016 후 컷",
+      "GameplayExit": "에피소드 종료 → 제6화 예고",
+      "AnimationRequired": [
+        "sit_against_wall",
+        "fiddle_in_pocket",
+        "walk_past"
+      ],
+      "CinematicRequired": "true — 엔딩 컷",
+      "SaveFlags": [
+        "EP05_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP05_SC016"
+      ],
+      "NextScene": "EP06_SC001",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_kain",
+        "char:char_ain",
+        "prop:prop_suppressant_vial",
+        "prop:prop_yellow_padlock",
+        "prop:prop_k3_harness",
+        "anim:sit_against_wall",
+        "anim:fiddle_in_pocket",
+        "anim:walk_past",
+        "vfx:core_glow_nape_long",
+        "sfx:lock_click_pocket",
+        "bgm:bgm_ep_end_distance"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_celestial",
+      "NameKo": "셀레스티얼",
+      "Scenes": [
+        "EP05_SC003",
+        "EP05_SC012",
+        "EP05_SC013"
+      ],
+      "NovelReasonForBattle": "EP04에서 놓친 놈을 다시 잡으러 남산에 오지만, 놈은 나타나지 않는다(교전 없음).",
+      "ArenaLocationId": "loc_namsan_cablecar_station",
+      "PhasesInNovel": [],
+      "PatternsInNovel": [],
+      "PartsOrWeakpointsInNovel": [
+        "발톱 셋(L5011 '어제 그놈은 셋이었다')"
+      ],
+      "BreakCounterInNovel": [],
+      "EnvironmentInBattle": [],
+      "Outcome": "출현하지 않음. 순찰 일정표 「남산 → 여의도 인수인계 / 진행 중」으로 놈이 넘겨주러 떠났다고 판단, 잡을 이유가 없어져 교전 없이 철수.",
+      "Source": "L4957-L4994, L5468-L5597"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_training_ground",
+      "NameKo": "훈련장",
+      "DescriptionKo": "아무도 없는 훈련장. 아인이 바닥에 반원을 그려 낫의 띠를 잰다.",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_mateo_table",
+      "NameKo": "마태오의 자리",
+      "DescriptionKo": "마태오가 계산기와 장부를 두는 자리(EP04의 홀로그램 테이블과 같은 공간인지는 미서술). 출격문이 올라가는 것이 이어서 서술됨.",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_namsan_cablecar_station",
+      "NameKo": "남산 케이블카 승강장",
+      "DescriptionKo": "어제 그대로의 승강장 — 유리 파편, 와이어에 멈춘 케이블카 두 대, 와이어에 걸린 시신 넷.",
+      "Scenes": [
+        "EP05_SC003",
+        "EP05_SC012",
+        "EP05_SC013",
+        "EP05_SC014"
+      ]
+    },
+    {
+      "LocationId": "loc_namsan_tower_lower",
+      "NameKo": "남산타워 하부",
+      "DescriptionKo": "전망대 아래 층들. 유리가 다 깨져 바람이 통과하고, 식당·기념품점 자리에 테이블이 넘어져 있으며 벽지가 습기로 부풀었다. 벽에 네 줄 긁힌 자국, 천장 배관. 위가 열려 있다.",
+      "Scenes": [
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_namsan_tower_b3",
+      "NameKo": "남산타워 지하 3층 철문 앞",
+      "DescriptionKo": "계단이 끝나는 지하 3층. 국방부 마크가 찍힌 철문과 문 옆 배전반.",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "LocationId": "loc_namsan_mnd_commroom",
+      "NameKo": "국방부 통신실",
+      "DescriptionKo": "벽을 따라 늘어선 대부분 죽은 콘솔, 두 마디 먼지, 넘어진 의자, 서류철 캐비닛, 살아 있는 초록 화면 콘솔 하나, 소독용 스테인리스 트레이, 벽의 금속 상자들.",
+      "Scenes": [
+        "EP05_SC007",
+        "EP05_SC008",
+        "EP05_SC009",
+        "EP05_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_imprint_assessment",
+      "NameKo": "각인 평가소",
+      "DescriptionKo": "유진이 있는 벙커 내 각인 평가소(태블릿, 서랍 속 노트).",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_infirmary",
+      "NameKo": "의무실",
+      "DescriptionKo": "닥터 진의 의무실.",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_corridor",
+      "NameKo": "벙커 통로",
+      "DescriptionKo": "카인이 벽에 기대 앉는 통로.",
+      "Scenes": [
+        "EP05_SC017"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공, 낫을 쓰는 각인자",
+      "Scenes": [
+        "EP05_SC001",
+        "EP05_SC002",
+        "EP05_SC003",
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC006",
+        "EP05_SC007",
+        "EP05_SC008",
+        "EP05_SC009",
+        "EP05_SC010",
+        "EP05_SC011",
+        "EP05_SC012",
+        "EP05_SC013",
+        "EP05_SC016",
+        "EP05_SC017"
+      ],
+      "StateChangesKo": [
+        "EP05_SC001: 오른쪽 어깨 붕대, 낫의 띠 한 뼘(원래 두 뼘), 낫을 왼손으로 바꿔 쥠",
+        "EP05_SC005: 구르다 오른쪽 어깨가 바닥에 닿아 붕대에 피(재출혈)",
+        "EP05_SC010: 출력전달 보조기 K-3 착용(등판 뼈대가 목덜미 코어 바로 아래까지)",
+        "EP05_SC011: 띠 두 뼘 이상 회복, 드로퍼 셋 처치. 등이 뜨겁고 코어가 오래 밝음",
+        "EP05_SC016: 붕대 교체",
+        "EP05_SC017: K-3 착용 상태, 코어가 평소보다 조금 오래 밝음"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검을 쓰는 동료",
+      "Scenes": [
+        "EP05_SC002",
+        "EP05_SC003",
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC006",
+        "EP05_SC007",
+        "EP05_SC008",
+        "EP05_SC009",
+        "EP05_SC011",
+        "EP05_SC012",
+        "EP05_SC013",
+        "EP05_SC017"
+      ],
+      "StateChangesKo": [
+        "EP05 전체: 오른손 부목",
+        "EP05_SC005: 대검으로 드로퍼 하나를 받아냄(부목 손 떨림)",
+        "EP05_SC012: 등급 함정을 알게 됨",
+        "EP05_SC017: 자물쇠 고리에 손가락을 걸지 않음"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "동행하는 비각인자, 건물 전문가",
+      "Scenes": [
+        "EP05_SC003",
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC006",
+        "EP05_SC007",
+        "EP05_SC008",
+        "EP05_SC009",
+        "EP05_SC010",
+        "EP05_SC011",
+        "EP05_SC012",
+        "EP05_SC013",
+        "EP05_SC014",
+        "EP05_SC015"
+      ],
+      "StateChangesKo": [
+        "EP05_SC006: 배전반으로 국방부 철문 개방",
+        "EP05_SC010: K-3 뒤쪽 버클을 잠가줌",
+        "EP05_SC014: 와이어의 시신 넷을 내리고 이름을 적은 종이를 안주머니에",
+        "EP05_SC015: 이름 종이를 유진에게 전달"
+      ]
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "의뢰를 주는 인물",
+      "Scenes": [
+        "EP05_SC002"
+      ],
+      "StateChangesKo": [
+        "EP05_SC002: 장부에 두 줄을 적음(내용 미공개)"
+      ]
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "의무실 의사",
+      "Scenes": [
+        "EP05_SC016"
+      ],
+      "StateChangesKo": [
+        "EP05_SC016: 평소보다 반 뼘 안쪽에 서고, 등부터 진찰하며, 질문하지 않음"
+      ]
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "각인 평가소 담당(노트)",
+      "Scenes": [
+        "EP05_SC015"
+      ],
+      "StateChangesKo": [
+        "EP05_SC015: 이름 넷을 노트에 옮겨 적음"
+      ]
+    },
+    {
+      "CharacterId": "char_cablecar_dropper",
+      "NameKo": "케이블카 드로퍼",
+      "RoleKo": "비보스 적 4체. 중장갑, 비정상적으로 긴 팔, 반대로 꺾인 무릎, 천장 배관에 매달렸다 낙하, 발톱 넷",
+      "Scenes": [
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC011"
+      ],
+      "StateChangesKo": [
+        "EP05_SC011: 넷 중 셋이 아인의 한 획에 처치, 하나 도주"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "sickle_swing_stall_shoulder",
+      "Category": "injury",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫 궤도가 오른쪽 어깨에서 멈춤",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "Action": "draw_semicircle_floor",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "바닥에 반원 두 개 그리기",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "Action": "switch_grip_left",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "오른손을 폈다 접은 뒤 왼손으로 바꿔 쥠",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "Action": "check_vial_label",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "억제제 병을 꺼내 라벨 확인",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "Action": "pocket_item",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도로 넣기",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "Action": "type_calculator",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "계산기 두드리다 멈춤",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "Action": "shift_cigarette_mouth",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 반대쪽 입꼬리로",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "Action": "write_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "장부에 두 줄",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "Action": "jaw_clench",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "왼쪽 턱 근육이 도드라졌다 풀림(페이셜)",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "Action": "take_cover_wait",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "흩어져 위치 잡고 대기",
+      "Scenes": [
+        "EP05_SC003"
+      ]
+    },
+    {
+      "Action": "look_up",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "하늘/와이어 보기",
+      "Scenes": [
+        "EP05_SC003",
+        "EP05_SC012"
+      ]
+    },
+    {
+      "Action": "inspect_wall_marks",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽의 긁힌 자국 조사",
+      "Scenes": [
+        "EP05_SC004"
+      ]
+    },
+    {
+      "Action": "dropper_ceiling_hang",
+      "Category": "combat",
+      "Characters": [
+        "char_cablecar_dropper"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "천장 배관에 매달림",
+      "Scenes": [
+        "EP05_SC004"
+      ]
+    },
+    {
+      "Action": "dropper_drop_impact",
+      "Category": "combat",
+      "Characters": [
+        "char_cablecar_dropper"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "예비 동작 없이 낙하, 바닥이 꺼짐",
+      "Scenes": [
+        "EP05_SC004",
+        "EP05_SC005",
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "footwork_measure",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "거리를 재며 보폭 옮기기",
+      "Scenes": [
+        "EP05_SC005"
+      ]
+    },
+    {
+      "Action": "dodge_roll_injured",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "옆으로 구르다 다친 어깨가 바닥에 닿음",
+      "Scenes": [
+        "EP05_SC005"
+      ]
+    },
+    {
+      "Action": "greatsword_block_trembling",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검으로 받아내며 부목 손 떨림",
+      "Scenes": [
+        "EP05_SC005"
+      ]
+    },
+    {
+      "Action": "step_back",
+      "Category": "locomotion",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뒤로 물러남",
+      "Scenes": [
+        "EP05_SC005"
+      ]
+    },
+    {
+      "Action": "retreat_down_stairs",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "밀려서 계단 아래로",
+      "Scenes": [
+        "EP05_SC005"
+      ]
+    },
+    {
+      "Action": "open_panel",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배전반 열기",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "Action": "operate_panel",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배전반 조작",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "Action": "open_door",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "철문 개방",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "Action": "pull_file_from_cabinet",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "캐비닛에서 서류철 꺼내기",
+      "Scenes": [
+        "EP05_SC007"
+      ]
+    },
+    {
+      "Action": "read_flip_pages",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "장 넘기기, 손 멈춤",
+      "Scenes": [
+        "EP05_SC007",
+        "EP05_SC008"
+      ]
+    },
+    {
+      "Action": "look_over_shoulder",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "어깨 너머로 보기",
+      "Scenes": [
+        "EP05_SC007"
+      ]
+    },
+    {
+      "Action": "close_file",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서류철 덮기",
+      "Scenes": [
+        "EP05_SC008"
+      ]
+    },
+    {
+      "Action": "look_at_screen",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "콘솔 화면 보기",
+      "Scenes": [
+        "EP05_SC008"
+      ]
+    },
+    {
+      "Action": "open_case",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "금속 상자 열기",
+      "Scenes": [
+        "EP05_SC009"
+      ]
+    },
+    {
+      "Action": "read_label",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "설명문 읽기",
+      "Scenes": [
+        "EP05_SC009"
+      ]
+    },
+    {
+      "Action": "put_down_weapon",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫 내려놓기",
+      "Scenes": [
+        "EP05_SC010"
+      ]
+    },
+    {
+      "Action": "don_harness_left_hand",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "왼손만으로 장구 착용",
+      "Scenes": [
+        "EP05_SC010"
+      ]
+    },
+    {
+      "Action": "buckle_assist_back",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "뒤쪽 버클 잠가주기",
+      "Scenes": [
+        "EP05_SC010"
+      ]
+    },
+    {
+      "Action": "torso_twist_test",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "몸을 한 번 비틀어 보기",
+      "Scenes": [
+        "EP05_SC010"
+      ]
+    },
+    {
+      "Action": "climb_stairs",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계단 다시 오르기",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "sickle_full_circle_k3",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "어깨 대신 몸통 전체를 축으로 한 바퀴 — 한 획에 셋",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "dropper_death",
+      "Category": "death",
+      "Characters": [
+        "char_cablecar_dropper"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "셋이 한 획에 베여 쓰러짐",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "dropper_flee",
+      "Category": "locomotion",
+      "Characters": [
+        "char_cablecar_dropper"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "남은 하나가 도망",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "catch_breath",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "숨 고르기(등이 뜨거움)",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "touch_nape_core",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목덜미 코어를 한 번 만지고 뗌",
+      "Scenes": [
+        "EP05_SC011"
+      ]
+    },
+    {
+      "Action": "hold_file_stand",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서류철을 든 채 서 있기",
+      "Scenes": [
+        "EP05_SC012"
+      ]
+    },
+    {
+      "Action": "read_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "순찰 일정표 읽기",
+      "Scenes": [
+        "EP05_SC013"
+      ]
+    },
+    {
+      "Action": "adjust_greatsword_hard",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 세게 고쳐 멤",
+      "Scenes": [
+        "EP05_SC013"
+      ]
+    },
+    {
+      "Action": "start_to_speak_stop",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "뭐라 더 하려다 맒",
+      "Scenes": [
+        "EP05_SC013"
+      ]
+    },
+    {
+      "Action": "lower_body_from_wire",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "와이어에 몸째 걸린 시신을 하나씩 내림",
+      "Scenes": [
+        "EP05_SC014"
+      ]
+    },
+    {
+      "Action": "search_pockets",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "주머니 뒤지기",
+      "Scenes": [
+        "EP05_SC014"
+      ]
+    },
+    {
+      "Action": "write_on_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이에 이름 적기",
+      "Scenes": [
+        "EP05_SC014"
+      ]
+    },
+    {
+      "Action": "fold_paper_inner_pocket",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "접어서 안주머니에",
+      "Scenes": [
+        "EP05_SC014"
+      ]
+    },
+    {
+      "Action": "place_paper_on_desk",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "유진 앞에 종이 내려놓기",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "Action": "look_up_from_tablet",
+      "Category": "gesture",
+      "Characters": [
+        "char_yujin"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "태블릿에서 눈을 뗌",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "Action": "take_notebook_from_drawer",
+      "Category": "interaction",
+      "Characters": [
+        "char_yujin"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서랍에서 노트 꺼내기",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "Action": "copy_names",
+      "Category": "interaction",
+      "Characters": [
+        "char_yujin"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "이름 넷을 옮겨 적기",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "Action": "change_bandage",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin",
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "붕대 갈기",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "Action": "trace_spine_fingertip",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin",
+        "char_ain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "K-3 뼈대 자리를 목덜미~골반까지 손끝으로 훑음",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "Action": "sit_on_bed_exam",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "진찰받으며 앉아 있기",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "Action": "sit_against_wall",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "통로 벽에 기대 앉기",
+      "Scenes": [
+        "EP05_SC017"
+      ]
+    },
+    {
+      "Action": "fiddle_in_pocket",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "주머니 속 병과 자물쇠를 번갈아 쥠(고리에 손가락 걸지 않음)",
+      "Scenes": [
+        "EP05_SC017"
+      ]
+    },
+    {
+      "Action": "walk_past",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "통로 저편을 지나감(등판 뼈대 미세 움직임)",
+      "Scenes": [
+        "EP05_SC017"
+      ]
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_floor_semicircles",
+      "NameKo": "바닥에 그린 반원 두 개",
+      "Scenes": [
+        "EP05_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_suppressant_vial",
+      "NameKo": "억제제 병(손글씨 라벨 「3회분 / 하루 한 번 이상 금지」)",
+      "Scenes": [
+        "EP05_SC001",
+        "EP05_SC017"
+      ]
+    },
+    {
+      "PropId": "prop_calculator",
+      "NameKo": "마태오의 계산기",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_mateo_ledger",
+      "NameKo": "마태오의 장부",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_unlit_cigarette",
+      "NameKo": "마태오의 담배",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_sortie_gate",
+      "NameKo": "출격문",
+      "Scenes": [
+        "EP05_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_cablecar",
+      "NameKo": "와이어에 멈춘 케이블카 2대",
+      "Scenes": [
+        "EP05_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_wire_bodies",
+      "NameKo": "와이어에 걸린 시신 넷",
+      "Scenes": [
+        "EP05_SC003",
+        "EP05_SC012",
+        "EP05_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_claw_marks_four",
+      "NameKo": "벽의 네 줄 긁힌 자국",
+      "Scenes": [
+        "EP05_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_ceiling_pipes",
+      "NameKo": "천장 배관",
+      "Scenes": [
+        "EP05_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_mnd_steel_door",
+      "NameKo": "국방부 마크 철문",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_door_distribution_panel",
+      "NameKo": "철문 옆 배전반",
+      "Scenes": [
+        "EP05_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_consoles_dead",
+      "NameKo": "꺼진 통신 콘솔들",
+      "Scenes": [
+        "EP05_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_file_cabinet",
+      "NameKo": "서류철 캐비닛",
+      "Scenes": [
+        "EP05_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_imprint_measurement_ledger",
+      "NameKo": "「각인 계측 대장」 서류철(손글씨, 서명란 뜯김, 표지 안쪽 메모)",
+      "Scenes": [
+        "EP05_SC007",
+        "EP05_SC008",
+        "EP05_SC012",
+        "EP05_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_sterile_tray",
+      "NameKo": "소독용 스테인리스 트레이(가늘고 긴 도구, 채혈 도구)",
+      "Scenes": [
+        "EP05_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_live_console",
+      "NameKo": "살아 있는 콘솔(초록 화면 「강남 A구역 / 다음 회수 D-31→D-30」)",
+      "Scenes": [
+        "EP05_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_metal_cases",
+      "NameKo": "벽의 금속 상자들(대부분 비어 완충재만)",
+      "Scenes": [
+        "EP05_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_k3_harness",
+      "NameKo": "출력전달 보조기 K-3(가죽·금속 장구)",
+      "Scenes": [
+        "EP05_SC009",
+        "EP05_SC010",
+        "EP05_SC011",
+        "EP05_SC017"
+      ]
+    },
+    {
+      "PropId": "prop_patrol_schedule",
+      "NameKo": "순찰 일정표 「남산 → 여의도 인수인계 / 진행 중」",
+      "Scenes": [
+        "EP05_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_victim_belongings",
+      "NameKo": "시신의 소지품(지갑, 사원증, 낡은 명함)",
+      "Scenes": [
+        "EP05_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_name_paper",
+      "NameKo": "오정길이 이름 넷을 적은 종이",
+      "Scenes": [
+        "EP05_SC014",
+        "EP05_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_yujin_tablet",
+      "NameKo": "유진의 태블릿",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_yujin_notebook",
+      "NameKo": "유진의 노트",
+      "Scenes": [
+        "EP05_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_infirmary_bed",
+      "NameKo": "의무실 침대",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "PropId": "prop_bandage",
+      "NameKo": "붕대",
+      "Scenes": [
+        "EP05_SC016"
+      ]
+    },
+    {
+      "PropId": "prop_yellow_padlock",
+      "NameKo": "카인의 노란 자물쇠",
+      "Scenes": [
+        "EP05_SC017"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP05_SC001",
+      "QuestionKo": "EP05 전 장면의 시간대 미서술(EP04 다음 날로 읽히나 명시적 시각 없음). 훈련장의 위치·구조도 미서술."
+    },
+    {
+      "Scene": "EP05_SC001",
+      "QuestionKo": "아인·카인의 기본 의상과 오정길·마태오·닥터 진·유진의 의상이 이 화에 서술되지 않음."
+    },
+    {
+      "Scene": "EP05_SC002",
+      "QuestionKo": "마태오의 계산기·장부 자리가 EP04의 홀로그램 테이블과 같은 공간인지, 출격문과의 위치 관계 미서술. '네.'(L4933)의 화자 미지정."
+    },
+    {
+      "Scene": "EP05_SC003",
+      "QuestionKo": "'…안 오는데.' / '순찰 나간 거 아닐까요.'의 화자 미지정."
+    },
+    {
+      "Scene": "EP05_SC004",
+      "QuestionKo": "'…발톱이 넷이야.'의 화자 미지정."
+    },
+    {
+      "Scene": "EP05_SC005",
+      "QuestionKo": "케이블카 드로퍼와의 교전 — non-boss combat in novel — game representation TBD. (집필 노트상 이 화의 보스는 '안 잡는다'이며, 드로퍼 4체는 보스로 명시되지 않음. EP04 화 제목 「케이블카 드로퍼」와의 관계 확인 필요.) '…아래로.' 등 대사 화자 미지정."
+    },
+    {
+      "Scene": "EP05_SC006",
+      "QuestionKo": "'…군 시설이 왜 여기 있어.'의 화자 미지정."
+    },
+    {
+      "Scene": "EP05_SC009",
+      "QuestionKo": "'…이거 뭡니까.'의 화자 미지정(말투상 오정길로 보이나 명시 없음)."
+    },
+    {
+      "Scene": "EP05_SC011",
+      "QuestionKo": "케이블카 드로퍼 재교전(3체 처치, 1체 도주) — non-boss combat in novel — game representation TBD. 도주한 1체의 이후 행방 미서술."
+    },
+    {
+      "Scene": "EP05_SC012",
+      "QuestionKo": "'어제 그 시신들. 인식표가 전부 B랑 A였어요'와 '시신 여섯을 봤을 때 … 이틀 전부터'가 가리키는 시신(와이어의 넷인지, 이전 화의 여섯인지)과 시점이 불명확."
+    },
+    {
+      "Scene": "EP05_SC012",
+      "QuestionKo": "셀레스티얼은 이 화에 등장하지 않음 — 보스전 없음. 여의도 인수인계의 '인수 대상'이 무엇인지 미서술."
+    },
+    {
+      "Scene": "EP05_SC014",
+      "QuestionKo": "시신 넷의 이름(의도적 비공개), 케이블카 안 앉은 자세의 사람들 처리 여부, 남산에서 벙커로의 귀환 과정 미서술."
+    },
+    {
+      "Scene": "EP05_SC016",
+      "QuestionKo": "진찰 시 아인이 K-3를 착용하고 있었는지 미서술(뼈대가 지난 자리를 훑었다고만 함)."
+    }
+  ]
+}

@@ -1,0 +1,2179 @@
+{
+  "EpisodeId": "EP08",
+  "TitleKo": "한 번",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      7351,
+      7776
+    ]
+  },
+  "SummaryKo": "관제실 계측기가 사흘째 꺾이지 않고 오르는 한강 침수 터널로 원정이 편성되고, 하수도 정비 20년 경력의 강 씨가 합류한다. 강 씨는 물속에서는 소리로 방향을 잡을 수 없다고 경고하지만 아인은 흘려듣는다. 오정길이 입구에 80m 윈치를 고정하고, 넷은 300m부터 차오르는 물속으로 들어간다. 500m에서 아인은 파동을 오른쪽으로 짚지만 놈은 왼쪽에서 오고, 물이 소리를 여러 겹으로 접어 방향을 지운다는 것이 드러난다. 두 번째 접촉에서 머리 앞 격자의 흡입에 류가 다치고, 잠복 뒤 소용돌이 속에서 강 씨가 자기 고리를 풀어 아인의 걸린 케이블을 뜯어내고 휩쓸려 간다. 밖에서는 물에서 걸어 나온 감염된 현 중위를 아인이 한 번에 쓰러뜨리고 물 밖에 눕힌다. 이튿날 강 씨가 남긴 도면에서 차수문 3-B를 찾아 물을 빼기로 하고, 오후 재진입에서 아인은 귀 대신 눈으로 재 놈을 맞힌다. 카인의 대검을 밟고 도약한 아인이 아가미 뿌리를 가르자 놈은 한쪽 아가미로 숨 쉬며 물러난다. 그날 밤 유진은 등급 칸이 빈 강 씨의 이름 옆에 '손실'을 적는다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC001",
+      "NovelSource": "L7351-L7385 §1 꺾이지 않는 선",
+      "NovelSummary": "관제실의 가장 오래된 계측기가 사흘째 완만하게, 단 한 번도 꺾이지 않고 오르기만 하는 선을 긋는다. 지역명은 한강 침수 터널. 전술 테이블의 터널 단면도에서 아인이 수위선을 따라가며 입구 300m부터 물이라고 짚는다. 깊이는 재난 전 도면이라 모른다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "지역④ 한강 침수 터널 제시",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "사흘째 오르기만 한다. 내려온 적이 없어.",
+          "Source": "L7372"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "입구에서 300. 거기부터 물이에요.",
+          "Source": "L7378"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "깊이는.",
+          "Source": "L7380"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "모릅니다. 도면은 재난 전 거니까요.",
+          "Source": "L7382"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "브리핑 시청",
+      "Interaction": [
+        "계측기 기록 열람",
+        "터널 단면도 열람"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실, 사각거리는 계측기, 전술 테이블",
+      "Props": [
+        "prop_chart_recorder",
+        "prop_tunnel_section_map"
+      ],
+      "VFX": [],
+      "SFX": [
+        "chart_needle_scratch(바늘 사각거림)",
+        "paper_feed(종이 밀려 나옴)"
+      ],
+      "Music": "서서히 오르는 불안",
+      "GameplayEntry": "에피소드 시작",
+      "GameplayExit": "브리핑 이어짐",
+      "AnimationRequired": [
+        "arms_crossed_watch",
+        "trace_map_line"
+      ],
+      "CinematicRequired": "true — 계측기 선 클로즈업",
+      "SaveFlags": [
+        "EP08_START",
+        "EP08_HANGANG_TUNNEL_BRIEFED"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP08_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "prop:prop_chart_recorder",
+        "prop:prop_tunnel_section_map",
+        "anim:arms_crossed_watch",
+        "anim:trace_map_line",
+        "sfx:chart_needle_scratch",
+        "sfx:paper_feed",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC002",
+      "NovelSource": "L7386-L7407 §2 물을 아는 사람",
+      "NovelSummary": "편성에 강 씨(52세, 재난 전 하수도 정비 20년, 벙커 8개월째)가 붙는다. 그는 물이 차면 터널이 딴 데가 되어 위아래가 없어진다고 말한다. 카인이 아인은 소리로 안다고 하자 강 씨는 물에서는 그것도 안 된다고 고개를 젓는다. 아인은 흘려듣는다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kang",
+        "char_kain",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "강 씨 합류 — 경고를 흘려듣는다(복선)",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kang",
+        "char_kain",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kang",
+          "Line": "물이 차면 딴 데가 됩니다.",
+          "Source": "L7396"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그건 아인이 압니다. 소리로.",
+          "Source": "L7398"
+        },
+        {
+          "Speaker": "char_kang",
+          "Line": "물에서는 그것도 안 됩니다.",
+          "Source": "L7402"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "편성 확인",
+      "Interaction": [
+        "강 씨와 대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도면 앞",
+      "Props": [
+        "prop_tunnel_section_map"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "담담한 복선",
+      "GameplayEntry": "SC001 이후",
+      "GameplayExit": "출발",
+      "AnimationRequired": [
+        "shake_head"
+      ],
+      "CinematicRequired": "true — 대화 컷신",
+      "SaveFlags": [
+        "EP08_KANG_JOINED"
+      ],
+      "Prerequisites": [
+        "EP08_SC001"
+      ],
+      "NextScene": "EP08_SC003",
+      "RequiredAssets": [
+        "char:char_kang",
+        "char:char_kain",
+        "char:char_ain",
+        "prop:prop_tunnel_section_map",
+        "anim:shake_head",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC003",
+      "NovelSource": "L7408-L7425 §3 윈치와 총",
+      "NovelSummary": "터널 입구에서 오정길이 망설임 없이 기둥에 윈치를 고정한다. 케이블 길이는 팔십, 그 이상은 못 당긴다. 그는 허리춤의 총을 버릇처럼 한 번 만진다 — 총알은 나가지만 그것들에게 아무 일도 일어나지 않는다. 지킬 것이 있는 사람의 손이 가는 자리다.",
+      "Location": "loc_hangang_tunnel_entrance",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "윈치",
+        "총(오정길)"
+      ],
+      "StoryBeat": "생명줄 설치 — 80미터의 한계",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "케이블 길이가 팔십입니다. 그 이상은 못 당깁니다.",
+          "Source": "L7412"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "팔십이면 되나.",
+          "Source": "L7414"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "안 되면 놓으셔야죠.",
+          "Source": "L7416"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "진입 준비",
+      "Interaction": [
+        "윈치 설치 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "터널 입구, 물가, 기둥",
+      "Props": [
+        "prop_winch",
+        "prop_cable",
+        "prop_gun"
+      ],
+      "VFX": [],
+      "SFX": [
+        "bolt_ratchet(볼트 조임)"
+      ],
+      "Music": "무거운 준비",
+      "GameplayEntry": "입구 도착",
+      "GameplayExit": "진입",
+      "AnimationRequired": [
+        "tighten_bolt_winch",
+        "touch_holstered_gun"
+      ],
+      "CinematicRequired": "true — 오정길 손 클로즈업",
+      "SaveFlags": [
+        "EP08_WINCH_SET"
+      ],
+      "Prerequisites": [
+        "EP08_SC002"
+      ],
+      "NextScene": "EP08_SC004",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_entrance",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_kang",
+        "char:char_oh_jeonggil",
+        "prop:prop_winch",
+        "prop:prop_cable",
+        "prop:prop_gun",
+        "anim:tighten_bolt_winch",
+        "anim:touch_holstered_gun",
+        "sfx:bolt_ratchet",
+        "bgm:bgm_hangang_tunnel"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC004",
+      "NovelSource": "L7426-L7445 §4 물의 안쪽",
+      "NovelSummary": "300m 지점부터 물이 허리·가슴·어깨로 차오른다. 넷은 헤드램프를 방수포로 싸고 케이블을 허리에 묶는다. 강 씨가 앞에서 발을 들지 않고 바닥을 쓸듯 민다. 아인이 따라 하며 눈을 감고 듣지만 소리에 방향이 붙지 않는다. 익숙해지면 되겠지 했지만 익숙해지지 않는다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프(방수포로 쌈)",
+        "허리 케이블(윈치 연결)"
+      ],
+      "StoryBeat": "청각의 균열이 시작된다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kang",
+          "Line": "발 들면 몸이 뜹니다. 뜨면 방향을 잃어요.",
+          "Source": "L7432"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "수몰 구간 전진(바닥을 쓸며 걷기)",
+      "Interaction": [
+        "수중 보행(발 들면 부력 — 튜토리얼)",
+        "눈 감고 듣기(방향 표시 실패)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어깨 높이 물, 헤드램프 빛, 케이블 팽팽",
+      "Props": [
+        "prop_headlamp",
+        "prop_cable"
+      ],
+      "VFX": [
+        "underwater_murk(탁한 물)",
+        "headlamp_beam(헤드램프 빛)"
+      ],
+      "SFX": [
+        "water_lap_wall(물이 벽에 닿는 소리)",
+        "cable_tension(케이블 팽팽)",
+        "breathing_group(넷의 숨)"
+      ],
+      "Music": "고요한 수중 불안",
+      "GameplayEntry": "300m 지점",
+      "GameplayExit": "500m 지점",
+      "AnimationRequired": [
+        "wrap_headlamp_tie_cable",
+        "wade_shuffle_deep",
+        "stop_listen_eyes_closed"
+      ],
+      "CinematicRequired": "false — 이동 플레이",
+      "SaveFlags": [
+        "EP08_FLOODED_SECTION_ENTERED"
+      ],
+      "Prerequisites": [
+        "EP08_SC003"
+      ],
+      "NextScene": "EP08_SC005",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_kang",
+        "prop:prop_headlamp",
+        "prop:prop_cable",
+        "anim:wrap_headlamp_tie_cable",
+        "anim:wade_shuffle_deep",
+        "anim:stop_listen_eyes_closed",
+        "vfx:underwater_murk",
+        "vfx:headlamp_beam",
+        "sfx:water_lap_wall",
+        "sfx:cable_tension",
+        "sfx:breathing_group",
+        "bgm:bgm_hangang_tunnel"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC005",
+      "NovelSource": "L7446-L7479 §5 소리가 거짓말을 한다",
+      "NovelSummary": "500m 지점에서 물결이 크게 흔들린다. 아인이 파동 방향을 오른쪽으로 짚고 정확한 각도로 낫을 돌리지만 놈은 왼쪽에서 온다. 거대한 것이 옆구리를 스치고, 헤드램프에 마디진 몸통과 마디마다 둘린 결정의 띠가 끝없이 길게 비친다. 카인이 케이블로 끌어올리자 아인은 방향이 안 잡힌다고 말한다. 물이 소리를 여러 겹으로 접어 방향을 지운 것이다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프(방수포로 쌈)",
+        "허리 케이블(윈치 연결)",
+        "낫(아인)"
+      ],
+      "StoryBeat": "2년간 거짓말한 적 없는 귀가 처음부터 거짓말을 한다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "어디야!",
+          "Source": "L7462"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…모르겠어요.",
+          "Source": "L7464"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "방향이 안 잡혀요.",
+          "Source": "L7468"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "파동에 반응해 공격(청각 단서가 반대로 틀리는 것을 체험)",
+      "Interaction": [
+        "정지 신호",
+        "파동 방향 판단 → 오답",
+        "케이블로 수면 복귀"
+      ],
+      "BossId": "boss_hangang_tunnel_creature",
+      "BossPhase": "P1",
+      "EnvironmentState": "어깨 물, 소리의 다중 반사",
+      "Props": [
+        "prop_headlamp",
+        "prop_cable"
+      ],
+      "VFX": [
+        "wave_surge(큰 물결)",
+        "headlamp_sweep(벽 훑는 빛)",
+        "crystal_band_glint(결정 띠)"
+      ],
+      "SFX": [
+        "underwater_echo_multi(겹친 수중음)",
+        "rush_pass(거대한 것이 스침)"
+      ],
+      "Music": "보이지 않는 거대함",
+      "GameplayEntry": "파동 감지",
+      "GameplayExit": "수면 위로 끌어올려짐",
+      "AnimationRequired": [
+        "raise_hand_halt",
+        "underwater_scythe_swing",
+        "boss_sideswipe",
+        "underwater_spin_knock",
+        "cable_pull_surface"
+      ],
+      "CinematicRequired": "true — 헤드램프에 드러나는 몸통 컷",
+      "SaveFlags": [
+        "EP08_BOSS_ENCOUNTERED",
+        "EP08_SOUND_UNRELIABLE"
+      ],
+      "Prerequisites": [
+        "EP08_SC004"
+      ],
+      "NextScene": "EP08_SC006",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_kang",
+        "prop:prop_headlamp",
+        "prop:prop_cable",
+        "anim:raise_hand_halt",
+        "anim:underwater_scythe_swing",
+        "anim:boss_sideswipe",
+        "anim:underwater_spin_knock",
+        "anim:cable_pull_surface",
+        "vfx:wave_surge",
+        "vfx:headlamp_sweep",
+        "vfx:crystal_band_glint",
+        "sfx:underwater_echo_multi",
+        "sfx:rush_pass",
+        "bgm:bgm_boss_hangang"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC006",
+      "NovelSource": "L7480-L7536 §6 물결이 멎는다",
+      "NovelSummary": "두 번째 접촉에서 머리 앞 격자가 열리며 물을 빨아들이고, 류가 끌려가다 벽에 단검을 박아 버티지만 왼쪽 다리가 격자 가장자리에 갈린다. 강 씨가 흡입이라며 머리 앞 구멍이 열리면 뒤로 빠지라고 외친다. 세 번째 접촉 대신 물결이 멎는다 — 잠복. 곧 터널 단면 전체가 콘크리트·철근 파편을 섞어 회전하는 소용돌이가 된다. 윈치로 류와 카인이 끌려 나가지만 아인의 케이블이 벽에 걸린다. 강 씨가 자기 고리를 풀고 다가와 두 번 만에 케이블을 뜯어낸다. 아인은 당겨지고, 고리를 푼 강 씨는 당겨지지 않는다. 아인의 손가락이 그의 소매를 잡았지만 회전이 뜯어 간다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프(방수포로 쌈)",
+        "허리 케이블(윈치 연결)",
+        "단검(류)"
+      ],
+      "StoryBeat": "강 씨의 희생 — 잠복과 소용돌이",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kang",
+          "Line": "흡입이에요!",
+          "Source": "L7486"
+        },
+        {
+          "Speaker": "char_kang",
+          "Line": "머리 앞에 구멍 있습니다!",
+          "Source": "L7490"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…나가야 해요.",
+          "Source": "L7498"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "지금요. 잠복했어요.",
+          "Source": "L7502"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "윈치! 당겨!",
+          "Source": "L7512"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "흡입을 피하고 소용돌이에서 탈출(윈치)",
+      "Interaction": [
+        "흡입 회피(뒤로)",
+        "물결 멎음 감지 → 탈출 판단",
+        "걸린 케이블 풀기(실패 → 강 씨 컷신)"
+      ],
+      "BossId": "boss_hangang_tunnel_creature",
+      "BossPhase": "P2",
+      "EnvironmentState": "흡입 흐름 → 정적(물결 멎음) → 터널 단면 전체 소용돌이, 콘크리트·철근 파편",
+      "Props": [
+        "prop_cable",
+        "prop_winch",
+        "prop_headlamp"
+      ],
+      "VFX": [
+        "suction_flow(흡입 흐름)",
+        "vortex_debris(소용돌이·파편)",
+        "headlamp_sweep(벽 훑는 빛)"
+      ],
+      "SFX": [
+        "suction_roar(흡입)",
+        "silence_drop(정적)",
+        "vortex_grind(회전·파편 갈림)",
+        "cable_snap_tension(케이블)"
+      ],
+      "Music": "공포 → 비극",
+      "GameplayEntry": "두 번째 접촉",
+      "GameplayExit": "아인 생환, 강 씨 손실",
+      "AnimationRequired": [
+        "boss_suction_grille",
+        "dagger_anchor_wall",
+        "boss_vortex",
+        "swept_by_vortex",
+        "winch_pulled_out",
+        "unhook_own_cable",
+        "tear_snagged_cable",
+        "reach_grab_sleeve",
+        "lost_in_vortex"
+      ],
+      "CinematicRequired": "true — 강 씨 희생은 반드시 컷신(플레이어 조작으로 바뀌면 안 됨)",
+      "SaveFlags": [
+        "EP08_RYU_LEG_INJURED",
+        "EP08_KANG_LOST",
+        "EP08_BOSS_SUCTION_KNOWN"
+      ],
+      "Prerequisites": [
+        "EP08_SC005"
+      ],
+      "NextScene": "EP08_SC007",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_kang",
+        "prop:prop_cable",
+        "prop:prop_winch",
+        "prop:prop_headlamp",
+        "anim:boss_suction_grille",
+        "anim:dagger_anchor_wall",
+        "anim:boss_vortex",
+        "anim:swept_by_vortex",
+        "anim:winch_pulled_out",
+        "anim:unhook_own_cable",
+        "anim:tear_snagged_cable",
+        "anim:reach_grab_sleeve",
+        "anim:lost_in_vortex",
+        "vfx:suction_flow",
+        "vfx:vortex_debris",
+        "vfx:headlamp_sweep",
+        "sfx:suction_roar",
+        "sfx:silence_drop",
+        "sfx:vortex_grind",
+        "sfx:cable_snap_tension",
+        "bgm:bgm_boss_hangang"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC007",
+      "NovelSource": "L7537-L7564 §7 군복",
+      "NovelSummary": "셋이 입구 밖으로 끌려 나오고 오정길이 윈치를 잠그고 달려와 두 번 센다. 물가에서 물에 절어 색 빠진 전투복·군화·명찰의 무언가가 사람의 걸음으로 걸어 나온다. 목덜미에 결정이 있다. 류가 명찰을 읽는다 — 현, 중위. 아인의 낫이 한 번 가고 목덜미 결정이 갈라져 쓰러진다. 아인은 스승이 그랬듯 그것을 물 밖으로 끌어내 눕힌다.",
+      "Location": "loc_hangang_tunnel_entrance",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_hyeon"
+      ],
+      "RequiredCostumes": [
+        "물에 절어 색이 빠진 전투복·정강이 군화·왼쪽 가슴 명찰(현)"
+      ],
+      "RequiredEquipment": [
+        "낫(아인)",
+        "헤드램프"
+      ],
+      "StoryBeat": "물에서 나온 군인 — 한 번에 끝내고 물에 두지 않는다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_hyeon"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…현.",
+          "Source": "L7553"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 감염된 군인 처리",
+      "Interaction": [
+        "명찰 확인",
+        "시신을 물 밖으로 옮기기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "입구 밖 물가, 헤드램프 빛",
+      "Props": [
+        "prop_winch",
+        "prop_nametag_hyeon",
+        "prop_headlamp"
+      ],
+      "VFX": [
+        "neck_crystal_glint(목덜미 결정)"
+      ],
+      "SFX": [
+        "boots_in_water(물에서 나오는 군화)",
+        "crystal_crack(결정 갈라짐)"
+      ],
+      "Music": "비탄과 냉정",
+      "GameplayEntry": "윈치로 끌려 나옴",
+      "GameplayExit": "시신을 눕힘",
+      "AnimationRequired": [
+        "winch_pulled_out",
+        "run_to_count",
+        "infected_walk_out_of_water",
+        "scythe_one_strike",
+        "kneel_fall_forward",
+        "drag_body_lay_down"
+      ],
+      "CinematicRequired": "true — 전투가 아닌 연출로 처리",
+      "SaveFlags": [
+        "EP08_HYEON_LAID_TO_REST"
+      ],
+      "Prerequisites": [
+        "EP08_SC006"
+      ],
+      "NextScene": "EP08_SC008",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_entrance",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_hyeon",
+        "prop:prop_winch",
+        "prop:prop_nametag_hyeon",
+        "prop:prop_headlamp",
+        "anim:winch_pulled_out",
+        "anim:run_to_count",
+        "anim:infected_walk_out_of_water",
+        "anim:scythe_one_strike",
+        "anim:kneel_fall_forward",
+        "anim:drag_body_lay_down",
+        "vfx:neck_crystal_glint",
+        "sfx:boots_in_water",
+        "sfx:crystal_crack",
+        "bgm:bgm_hangang_grief"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC008",
+      "NovelSource": "L7565-L7594 §8 셀 수 없는 것",
+      "NovelSummary": "그날 밤 넷은 입구 바깥에서 불을 피우지 않는다. 카인은 담배를 꺼냈다 도로 넣고, 류는 다리 상처를 천으로 감고, 오정길은 80m 케이블을 다 감고 다시 풀었다 감는다. 아인은 물가에 앉아 방향 없는 소리를 계속 듣는다. 내가 왼쪽을 알았으면 — 셈은 거기까지 갔다가, 그다음을 세면 안 된다는 것을 알아 멈춘다.",
+      "Location": "loc_hangang_tunnel_entrance",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "애도 — 세면 안 되는 셈",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…아인아.",
+          "Source": "L7573"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "네.",
+          "Source": "L7577"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "뭐 하냐.",
+          "Source": "L7579"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "듣고 있어요.",
+          "Source": "L7581"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 밤의 침묵",
+      "Interaction": [
+        "아인에게 말 걸기(카인)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤, 불 없음, 물가",
+      "Props": [
+        "prop_cigarette",
+        "prop_bandage_cloth",
+        "prop_cable"
+      ],
+      "VFX": [],
+      "SFX": [
+        "water_night_ambient(방향 없는 물소리)",
+        "cable_coil(케이블 감기)"
+      ],
+      "Music": "무거운 애도",
+      "GameplayEntry": "밤",
+      "GameplayExit": "아인의 셈이 멈춤",
+      "AnimationRequired": [
+        "cigarette_take_put_back",
+        "bandage_leg",
+        "coil_cable_repeat",
+        "sit_waterside_listen"
+      ],
+      "CinematicRequired": "true — 내면 독백 연출",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP08_SC007"
+      ],
+      "NextScene": "EP08_SC009",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_entrance",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_cigarette",
+        "prop:prop_bandage_cloth",
+        "prop:prop_cable",
+        "anim:cigarette_take_put_back",
+        "anim:bandage_leg",
+        "anim:coil_cable_repeat",
+        "anim:sit_waterside_listen",
+        "sfx:water_night_ambient",
+        "sfx:cable_coil",
+        "bgm:bgm_hangang_grief"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC009",
+      "NovelSource": "L7595-L7634 §9 경첩이 아니라 밸브",
+      "NovelSummary": "이튿날 아침 오정길이 강 씨 배낭에서 나온 하수 계통도를 가져온다. 여백에 연필로 '차수문 3-B. 작동 여부 미상.' 오정길이 차수문을 설명한다 — 닫으면 안쪽으로 물이 안 가 터널 안쪽 물이 빠진다. 아인은 강 씨의 말을 떠올린다. 물을 빼면 벽이 다시 벽이 된다. 놈은 물에서 안 나오니 물을 없애면 된다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "강 씨가 남긴 해법 — 물을 뺀다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "차수문입니다.",
+          "Source": "L7605"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "닫으면 뭐가 되는데.",
+          "Source": "L7613"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "터널 안쪽 물이 빠집니다.",
+          "Source": "L7619"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…물을 빼요.",
+          "Source": "L7627"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "놈은 물에서 안 나와요.",
+          "Source": "L7631"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "강 씨의 도면에서 해법 발견",
+      "Interaction": [
+        "하수 계통도 열람(차수문 3-B 메모)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "아침",
+      "Props": [
+        "prop_sewer_map_kang"
+      ],
+      "VFX": [],
+      "SFX": [
+        "paper_unfold(종이)"
+      ],
+      "Music": "슬픔 속 결의",
+      "GameplayEntry": "아침",
+      "GameplayExit": "작전 결정: 차수문까지 지나간다",
+      "AnimationRequired": [
+        "read_map"
+      ],
+      "CinematicRequired": "true — 강 씨 글씨 클로즈업",
+      "SaveFlags": [
+        "EP08_FLOODGATE_3B_KNOWN"
+      ],
+      "Prerequisites": [
+        "EP08_SC008"
+      ],
+      "NextScene": "EP08_SC010",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_sewer_map_kang",
+        "anim:read_map",
+        "sfx:paper_unfold",
+        "bgm:bgm_hangang_grief"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC010",
+      "NovelSource": "L7635-L7660 §10 한 번 더",
+      "NovelSummary": "차수문 3-B는 도면상 600m, 놈의 영역 한가운데라 목표는 이기는 것이 아니라 지나가는 것이다. 그날 오후 넷이 다시 들어가고 아인이 앞에 선다. 거짓말하는 귀를 쓰지 않고 눈으로 잰다 — 빛의 거리, 부유물이 흔들리는 방향, 벽 이음매 수. 엄지로 빛의 끝을 재는 것이 물속에서도 된다. 400m에서 부유물이 오른쪽에서 왼쪽으로 밀리고, 오른쪽으로 간 낫이 이번엔 맞아 결정 띠를 긁는다. 놈이 처음으로 궤도를 튼다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "오후",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프(방수포로 쌈)",
+        "허리 케이블(윈치 연결)",
+        "낫(아인)"
+      ],
+      "StoryBeat": "오차 교정 — 귀 대신 눈으로 잰다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "청각 대신 부유물 흐름으로 방향을 읽고 반격",
+      "Interaction": [
+        "부유물 흐름 읽기(시각 단서)",
+        "엄지 측정",
+        "방향 맞춰 낫 공격"
+      ],
+      "BossId": "boss_hangang_tunnel_creature",
+      "BossPhase": "P3",
+      "EnvironmentState": "수몰 구간, 헤드램프 빛 속 부유물 흐름",
+      "Props": [
+        "prop_headlamp",
+        "prop_cable"
+      ],
+      "VFX": [
+        "floating_particles_flow(부유물 흐름)",
+        "headlamp_beam(헤드램프 빛)",
+        "crystal_band_scratch(결정 띠 긁힘)"
+      ],
+      "SFX": [
+        "scythe_scrape_crystal(결정 긁힘)"
+      ],
+      "Music": "집중",
+      "GameplayEntry": "재진입",
+      "GameplayExit": "놈이 궤도를 틈",
+      "AnimationRequired": [
+        "wade_shuffle_deep",
+        "thumb_measure",
+        "underwater_scythe_swing"
+      ],
+      "CinematicRequired": "false — 핵심 플레이(시각 단서 전투)",
+      "SaveFlags": [
+        "EP08_SECOND_DIVE",
+        "EP08_FIRST_HIT"
+      ],
+      "Prerequisites": [
+        "EP08_SC009"
+      ],
+      "NextScene": "EP08_SC011",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_headlamp",
+        "prop:prop_cable",
+        "anim:wade_shuffle_deep",
+        "anim:thumb_measure",
+        "anim:underwater_scythe_swing",
+        "vfx:floating_particles_flow",
+        "vfx:headlamp_beam",
+        "vfx:crystal_band_scratch",
+        "sfx:scythe_scrape_crystal",
+        "bgm:bgm_boss_hangang"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC011",
+      "NovelSource": "L7661-L7694 §11 아가미",
+      "NovelSummary": "놈이 궤도를 트는 순간 옆구리에서 부채 같은 것이 좌우 한 쌍 펼쳐져 물을 밀어 방향을 바꾼다. 류가 수면 위로 올라와 외치고, 오정길이 케이블 너머에서 그것이 아가미라고, 나가면 물속에 못 있다고 외친다. 세 번째 접촉에서 아인은 놈이 아닌 아가미가 펼쳐질 자리를 노린다. 카인이 벽에 붙어 대검을 수평으로 뻗어 난간을 만들고, 아인이 밟고 도약해 느린 궤도 안에서 각도를 두 번 고친다. 아가미가 펼쳐지고, 낫이 그 뿌리를 가른다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "오후",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프(방수포로 쌈)",
+        "허리 케이블(윈치 연결)",
+        "낫(아인)",
+        "대검(카인)"
+      ],
+      "StoryBeat": "한 부위가 두 가지를 한다 — 아가미 파괴",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "옆구리요! 부채 같은 거!",
+          "Source": "L7669"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "아가미입니다!",
+          "Source": "L7671"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "그거 나가면 물속에 못 있어요!",
+          "Source": "L7675"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "아가미가 펼쳐질 자리를 선점해 파괴",
+      "Interaction": [
+        "카인 대검 난간 밟기",
+        "수중 도약 중 각도 2회 수정",
+        "아가미 뿌리 공격"
+      ],
+      "BossId": "boss_hangang_tunnel_creature",
+      "BossPhase": "P3",
+      "EnvironmentState": "수몰 구간",
+      "Props": [
+        "prop_cable"
+      ],
+      "VFX": [
+        "gill_fan_spread(아가미 펼침·물 밀림)",
+        "scythe_arc_underwater(수중 낫 궤적)"
+      ],
+      "SFX": [
+        "water_push(물 밀림)",
+        "gill_cut(절단)"
+      ],
+      "Music": "절정",
+      "GameplayEntry": "궤도 틈 직후",
+      "GameplayExit": "아가미 뿌리 절단",
+      "AnimationRequired": [
+        "boss_gill_turn",
+        "surface_shout",
+        "greatsword_rail_brace",
+        "underwater_leap_off_blade",
+        "scythe_gill_root_cut"
+      ],
+      "CinematicRequired": "true — 도약과 절단은 슬로모션 컷 권장",
+      "SaveFlags": [
+        "EP08_GILL_BROKEN"
+      ],
+      "Prerequisites": [
+        "EP08_SC010"
+      ],
+      "NextScene": "EP08_SC012",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_cable",
+        "anim:boss_gill_turn",
+        "anim:surface_shout",
+        "anim:greatsword_rail_brace",
+        "anim:underwater_leap_off_blade",
+        "anim:scythe_gill_root_cut",
+        "vfx:gill_fan_spread",
+        "vfx:scythe_arc_underwater",
+        "sfx:water_push",
+        "sfx:gill_cut",
+        "bgm:bgm_boss_hangang"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC012",
+      "NovelSource": "L7695-L7734 §12 물러난다",
+      "NovelSummary": "물은 붉어지지 않는다. 놈은 방향을 틀 때마다 한 박자가 더 걸리고 벽에 두 번 부딪히다 터널 안쪽으로 물러난다. 쫓지 않고 케이블을 따라 나오며 아인이 돌아보니, 한쪽 아가미로 규칙적으로 크게 숨 쉬는 소리가 들린다. 이겼느냐는 류의 물음에 아인은 아니라고, 물속에 있을 수 있는 시간을 하나 뜯었다고 답한다. 카인은 담배를 반으로 잘라 두 모금 피우고 끈다. 이제 놈은 물속에 오래 못 있고 우리는 물을 뺄 수 있다 — 내일 다시 들어간다.",
+      "Location": "loc_hangang_tunnel_entrance",
+      "TimeOfDay": "오후",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "미격파 — 그러나 하나를 뜯었다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…이겼어요?",
+          "Source": "L7709"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "아니요.",
+          "Source": "L7713"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "근데 하나 뜯었어요.",
+          "Source": "L7717"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…뜯은 게 뭔데.",
+          "Source": "L7721"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "물속에 있을 수 있는 시간이요.",
+          "Source": "L7723"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "내일 다시 들어가요.",
+          "Source": "L7731"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "이탈 후 결과 정리",
+      "Interaction": [
+        "케이블 따라 이탈",
+        "도면 확인"
+      ],
+      "BossId": "boss_hangang_tunnel_creature",
+      "BossPhase": "",
+      "EnvironmentState": "터널 안쪽에서 한쪽 아가미 호흡음, 물가",
+      "Props": [
+        "prop_cable",
+        "prop_cigarette",
+        "prop_sewer_map_kang"
+      ],
+      "VFX": [],
+      "SFX": [
+        "one_gill_breathing(규칙적으로 빨려 드는 물소리)"
+      ],
+      "Music": "절제된 결의",
+      "GameplayEntry": "아가미 파괴 직후",
+      "GameplayExit": "내일 재진입 결정",
+      "AnimationRequired": [
+        "boss_gill_lost_retreat",
+        "cigarette_cut_light",
+        "fold_map"
+      ],
+      "CinematicRequired": "true — 결과 컷",
+      "SaveFlags": [
+        "EP08_BOSS_RETREATED",
+        "EP08_FLOODGATE_PLAN"
+      ],
+      "Prerequisites": [
+        "EP08_SC011"
+      ],
+      "NextScene": "EP08_SC013",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_entrance",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_cable",
+        "prop:prop_cigarette",
+        "prop:prop_sewer_map_kang",
+        "anim:boss_gill_lost_retreat",
+        "anim:cigarette_cut_light",
+        "anim:fold_map",
+        "sfx:one_gill_breathing",
+        "bgm:bgm_hangang_grief"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP08",
+      "SceneId": "EP08_SC013",
+      "NovelSource": "L7735-L7776 §13 내려앉지 못하는 펜",
+      "NovelSummary": "그날 밤 유진의 평가소. 원정 보고서 — 참가 다섯, 귀환 넷. 유진은 이름 넷을 적고 다섯 번째 줄에서 펜을 멈춘다. 8개월 동안 배수로를 고쳐 준, 지난달 세면대 배관도 고친 강 씨. 한참 뒤 이름 '강OO'을 적고 등급 칸을 비운다 — 각인이 없는 사람에게는 등급이 없다. 처리 칸에 '손실'. 등급이 없으면 수거되지 않지만, 다치면 그걸로 끝이다. 유진은 그 계산을 처음으로 끝까지 하고 대장을 덮는다.",
+      "Location": "loc_yujin_evaluation_office",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_yujin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "손실 — 등급 없는 이름",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_yujin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "ANIMATION_ONLY"
+      ],
+      "PlayerGoal": "(연출) 보고서 처리",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤, 평가소, 대장",
+      "Props": [
+        "prop_expedition_report",
+        "prop_pen"
+      ],
+      "VFX": [],
+      "SFX": [
+        "page_turn(종이 넘김)",
+        "pen_scratch(펜)"
+      ],
+      "Music": "조용한 애도",
+      "GameplayEntry": "밤",
+      "GameplayExit": "대장을 덮음 → EP09",
+      "AnimationRequired": [
+        "write_ledger_hesitate"
+      ],
+      "CinematicRequired": "true — 대사 없는 엔딩 컷",
+      "SaveFlags": [
+        "EP08_END",
+        "EP08_KANG_RECORDED_LOSS"
+      ],
+      "Prerequisites": [
+        "EP08_SC012"
+      ],
+      "NextScene": "EP09_SC001",
+      "RequiredAssets": [
+        "env:loc_yujin_evaluation_office",
+        "char:char_yujin",
+        "prop:prop_expedition_report",
+        "prop:prop_pen",
+        "anim:write_ledger_hesitate",
+        "sfx:page_turn",
+        "sfx:pen_scratch",
+        "bgm:bgm_hangang_grief"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_hangang_tunnel_creature",
+      "NameKo": "TBD_CANON(한강 침수 터널의 마디진 수중체 — 산문에 명칭 없음)",
+      "Scenes": [
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC010",
+        "EP08_SC011",
+        "EP08_SC012"
+      ],
+      "NovelReasonForBattle": "관제실 계측기가 사흘째 오르기만 하는 한강 침수 터널(지역④ 1/2) 원정. 두 번째 진입의 목표는 이기는 것이 아니라 600m 차수문 3-B까지 지나가는 것.",
+      "ArenaLocationId": "loc_hangang_flooded_tunnel",
+      "PhasesInNovel": [
+        "첫 접촉(500m): 소리 방향 착오, 옆구리 스침(§5)",
+        "두 번째 접촉: 머리 앞 격자 흡입 → 물결 멎음(잠복) → 터널 단면 소용돌이, 강 씨 손실(§6)",
+        "재진입(400m, 오후): 시각으로 방향 판단 → 결정 띠 긁힘 → 아가미 뿌리 절단 → 후퇴(§10-12)"
+      ],
+      "PatternsInNovel": [
+        "측면 돌진·스침(파동 방향이 청각상 반대로 느껴짐)",
+        "머리 앞 격자 개방 흡입",
+        "잠복(물결이 멎음)",
+        "터널 단면 전체 소용돌이(콘크리트·철근 파편 동반)",
+        "옆구리 아가미 한 쌍을 펼쳐 방향 전환"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "마디진 긴 몸통, 마디마다 결정의 띠",
+        "머리 앞 격자(흡입구)",
+        "옆구리 부채 = 아가미 한 쌍(방향 전환 + 호흡)"
+      ],
+      "BreakCounterInNovel": [
+        "부유물 흐름으로 접근 방향을 읽어 결정 띠 타격 → 처음으로 궤도를 틈",
+        "카인 대검 난간 → 아인 수중 도약 → 펼쳐지는 아가미 뿌리 절단 → 방향 전환 한 박자 지연·벽 충돌·물속 체류 시간 감소"
+      ],
+      "EnvironmentInBattle": [
+        "입구 300m부터 수몰(허리→가슴→어깨)",
+        "물속 소리 다중 반사 — 청각 방향 불가",
+        "헤드램프의 좁은 시야, 부유물",
+        "윈치 케이블 80m 생명줄",
+        "차수문 3-B(600m, 작동 여부 미상)"
+      ],
+      "Outcome": "미격파 — 한쪽 아가미 파괴, 놈이 터널 안쪽으로 물러남(한쪽 아가미로 호흡). 강 씨 손실",
+      "Source": "L7446-L7531, L7635-L7707"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "벙커 관제실",
+      "DescriptionKo": "벙커에서 가장 오래된 계측기(바늘이 종이에 선을 긋는 기계)가 있는 곳. 전술 테이블에 터널 단면도가 펼쳐진다.",
+      "Scenes": [
+        "EP08_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_tunnel_entrance",
+      "NameKo": "한강 침수 터널 입구",
+      "DescriptionKo": "터널 입구 기둥에 윈치(케이블 80m)를 고정. 입구 바깥 물가에서 야영·휴식한다.",
+      "Scenes": [
+        "EP08_SC003",
+        "EP08_SC007",
+        "EP08_SC008",
+        "EP08_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_flooded_tunnel",
+      "NameKo": "한강 침수 터널(수몰 구간)",
+      "DescriptionKo": "입구 300m부터 물(허리→가슴→어깨). 물속에서 소리가 여러 겹으로 꺾여 방향이 사라진다. 헤드램프 빛 속 부유물, 벽 이음매. 차수문 3-B는 도면상 600m 지점.",
+      "Scenes": [
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC010",
+        "EP08_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_yujin_evaluation_office",
+      "NameKo": "유진의 평가소",
+      "DescriptionKo": "유진이 원정 보고서와 대장을 처리하는 곳. 강 씨가 지난달 세면대 배관을 고쳤다.",
+      "Scenes": [
+        "EP08_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 물속에서 청각이 거짓말을 한다는 것을 알고 눈으로 재는 법으로 바꾼다",
+      "Scenes": [
+        "EP08_SC001",
+        "EP08_SC002",
+        "EP08_SC003",
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC007",
+        "EP08_SC008",
+        "EP08_SC009",
+        "EP08_SC010",
+        "EP08_SC011",
+        "EP08_SC012"
+      ],
+      "StateChangesKo": [
+        "EP08_SC006: 케이블이 걸려 소용돌이에 밀림 — 강 씨가 풀어 줘 생환(손가락으로 그의 소매를 잡았다 놓침)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검 사용자. 물속에서 대검을 난간처럼 뻗어 아인의 도약대가 된다",
+      "Scenes": [
+        "EP08_SC002",
+        "EP08_SC003",
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC007",
+        "EP08_SC008",
+        "EP08_SC009",
+        "EP08_SC010",
+        "EP08_SC011",
+        "EP08_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "동행(수중 진입 인원). 흡입과 아가미를 발견",
+      "Scenes": [
+        "EP08_SC003",
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC007",
+        "EP08_SC008",
+        "EP08_SC010",
+        "EP08_SC011",
+        "EP08_SC012"
+      ],
+      "StateChangesKo": [
+        "EP08_SC006: 흡입에 끌려 단검을 벽에 박아 버팀, 왼쪽 다리가 격자 가장자리에 갈림",
+        "EP08_SC008: 다리 상처를 천으로 감음"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "입구에서 윈치 담당. 차수문과 아가미를 설명한다. 쏘아도 소용없는 총을 버릇처럼 만진다",
+      "Scenes": [
+        "EP08_SC003",
+        "EP08_SC007",
+        "EP08_SC008",
+        "EP08_SC009",
+        "EP08_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "계측기 이상(사흘째 오르기만 함)을 보고 편성에 강 씨를 붙인다",
+      "Scenes": [
+        "EP08_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_kang",
+      "NameKo": "강 씨",
+      "RoleKo": "52세, 재난 전 하수도 정비 20년, 벙커 8개월째(배수로 청소·급수관 수리). 물속 구조물과 흐름을 아는 유일한 사람",
+      "Scenes": [
+        "EP08_SC002",
+        "EP08_SC003",
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC009",
+        "EP08_SC013"
+      ],
+      "StateChangesKo": [
+        "EP08_SC006: 자기 케이블 고리를 풀고 아인의 걸린 케이블을 뜯어낸 뒤 소용돌이에 휩쓸려 귀환하지 못함(유진 대장에 '손실' 처리, EP08_SC013)"
+      ]
+    },
+    {
+      "CharacterId": "char_hyeon",
+      "NameKo": "현(중위)",
+      "RoleKo": "물가에서 걸어 나온 감염된 군인. 명찰 '현', 계급 중위",
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "StateChangesKo": [
+        "EP08_SC007: 목덜미 결정이 갈려 쓰러짐(사망), 아인이 물 밖으로 끌어내 눕힘"
+      ]
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "평가소 담당. 원정 보고서에 강 씨를 '손실'로 적는다",
+      "Scenes": [
+        "EP08_SC013"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "arms_crossed_watch",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP08_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "팔짱 끼고 계측기 앞에 서 있음"
+    },
+    {
+      "Action": "trace_map_line",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수위선을 손끝으로 따라감"
+    },
+    {
+      "Action": "shake_head",
+      "Category": "gesture",
+      "Characters": [
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "고개를 저음"
+    },
+    {
+      "Action": "tighten_bolt_winch",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP08_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "기둥에 윈치 고정, 볼트 조이기"
+    },
+    {
+      "Action": "touch_holstered_gun",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP08_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "허리춤 총을 한 번 만지는 버릇"
+    },
+    {
+      "Action": "wrap_headlamp_tie_cable",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "헤드램프 방수포 싸기, 케이블 허리에 묶기"
+    },
+    {
+      "Action": "wade_shuffle_deep",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC004",
+        "EP08_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "발을 들지 않고 바닥을 쓸듯 미는 수중 보행(강 씨 방식, 아인 모방)"
+    },
+    {
+      "Action": "stop_listen_eyes_closed",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "눈을 감고 듣기"
+    },
+    {
+      "Action": "raise_hand_halt",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손을 들어 정지 신호"
+    },
+    {
+      "Action": "underwater_scythe_swing",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC005",
+        "EP08_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "물 저항으로 반 박자 느린 낫 휘두르기"
+    },
+    {
+      "Action": "underwater_spin_knock",
+      "Category": "injury",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "옆구리 스침에 물속에서 반 바퀴 돎"
+    },
+    {
+      "Action": "cable_pull_surface",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "케이블 당겨 수면 위로 끌어올림"
+    },
+    {
+      "Action": "dagger_anchor_wall",
+      "Category": "traversal",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "흡입에 끌리며 벽에 단검 박아 버팀"
+    },
+    {
+      "Action": "swept_by_vortex",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "소용돌이에 벽 쪽으로 끌려감"
+    },
+    {
+      "Action": "winch_pulled_out",
+      "Category": "traversal",
+      "Characters": [
+        "char_ryu",
+        "char_kain",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC006",
+        "EP08_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "윈치 케이블에 당겨져 끌려 나감"
+    },
+    {
+      "Action": "unhook_own_cable",
+      "Category": "interaction",
+      "Characters": [
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "자기 케이블 고리를 풂"
+    },
+    {
+      "Action": "tear_snagged_cable",
+      "Category": "interaction",
+      "Characters": [
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "걸린 케이블을 손으로 두 번 뜯어냄"
+    },
+    {
+      "Action": "reach_grab_sleeve",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손을 뻗어 소매를 잡았다 뜯겨 감"
+    },
+    {
+      "Action": "lost_in_vortex",
+      "Category": "death",
+      "Characters": [
+        "char_kang"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "물속에서 벽 쪽으로 도는 모습(원거리 실루엣)"
+    },
+    {
+      "Action": "run_to_count",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "윈치 잠그고 달려와 인원을 두 번 셈"
+    },
+    {
+      "Action": "infected_walk_out_of_water",
+      "Category": "locomotion",
+      "Characters": [
+        "char_hyeon"
+      ],
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "물에서 나오는 사람의 걸음"
+    },
+    {
+      "Action": "scythe_one_strike",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목덜미 결정을 가르는 한 번"
+    },
+    {
+      "Action": "kneel_fall_forward",
+      "Category": "death",
+      "Characters": [
+        "char_hyeon"
+      ],
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎 꿇고 앞으로 쓰러짐"
+    },
+    {
+      "Action": "drag_body_lay_down",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "시신을 물 밖으로 끌어내 눕힘"
+    },
+    {
+      "Action": "cigarette_take_put_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP08_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "담배를 꺼냈다 도로 넣음"
+    },
+    {
+      "Action": "bandage_leg",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP08_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "다리 상처를 천으로 감음"
+    },
+    {
+      "Action": "coil_cable_repeat",
+      "Category": "emotion",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP08_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "80m 케이블을 다 감고 다시 풀었다 감음"
+    },
+    {
+      "Action": "sit_waterside_listen",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "물가에 앉아 계속 듣기"
+    },
+    {
+      "Action": "read_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP08_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면 받아 들고 들여다봄"
+    },
+    {
+      "Action": "thumb_measure",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "오른손 엄지를 세워 빛의 끝까지 재기(물속 처음)"
+    },
+    {
+      "Action": "greatsword_rail_brace",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP08_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "벽에 붙어 대검을 수평으로 뻗어 난간 역할"
+    },
+    {
+      "Action": "underwater_leap_off_blade",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 밟고 수중 도약, 궤도 안에서 각도 두 번 수정"
+    },
+    {
+      "Action": "scythe_gill_root_cut",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "펼쳐진 아가미 뿌리를 가름"
+    },
+    {
+      "Action": "surface_shout",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP08_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수면 위로 올라와 소리침"
+    },
+    {
+      "Action": "cigarette_cut_light",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP08_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 반으로 잘라 불붙여 두 모금 피우고 끔"
+    },
+    {
+      "Action": "fold_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP08_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면을 폈다 접음"
+    },
+    {
+      "Action": "write_ledger_hesitate",
+      "Category": "emotion",
+      "Characters": [
+        "char_yujin"
+      ],
+      "Scenes": [
+        "EP08_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "펜이 내려앉지 못하고 멈췄다가 적음, 대장 덮기"
+    },
+    {
+      "Action": "boss_sideswipe",
+      "Category": "boss",
+      "Characters": [
+        "boss_hangang_tunnel_creature"
+      ],
+      "Scenes": [
+        "EP08_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "거대한 마디 몸통이 옆구리를 스치고 지나감"
+    },
+    {
+      "Action": "boss_suction_grille",
+      "Category": "boss",
+      "Characters": [
+        "boss_hangang_tunnel_creature"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "머리 앞 격자가 열리며 흡입"
+    },
+    {
+      "Action": "boss_vortex",
+      "Category": "boss",
+      "Characters": [
+        "boss_hangang_tunnel_creature"
+      ],
+      "Scenes": [
+        "EP08_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "잠복 후 터널 단면 전체를 회전시키는 소용돌이"
+    },
+    {
+      "Action": "boss_gill_turn",
+      "Category": "boss",
+      "Characters": [
+        "boss_hangang_tunnel_creature"
+      ],
+      "Scenes": [
+        "EP08_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "옆구리 부채(아가미) 한 쌍을 펼쳐 방향 전환"
+    },
+    {
+      "Action": "boss_gill_lost_retreat",
+      "Category": "boss",
+      "Characters": [
+        "boss_hangang_tunnel_creature"
+      ],
+      "Scenes": [
+        "EP08_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "방향 전환 지연, 벽에 두 번 부딪히고 안쪽으로 물러남"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_chart_recorder",
+      "NameKo": "관제실 계측기(바늘이 종이에 선을 긋는 기계, 사흘째 오르기만 하는 선)",
+      "Scenes": [
+        "EP08_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_tunnel_section_map",
+      "NameKo": "한강 침수 터널 단면도(재난 전 도면, 300m부터 파란 수위선)",
+      "Scenes": [
+        "EP08_SC001",
+        "EP08_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_winch",
+      "NameKo": "윈치(케이블 80m)",
+      "Scenes": [
+        "EP08_SC003",
+        "EP08_SC006",
+        "EP08_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_cable",
+      "NameKo": "허리에 묶는 윈치 케이블",
+      "Scenes": [
+        "EP08_SC003",
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC008",
+        "EP08_SC010",
+        "EP08_SC011",
+        "EP08_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_headlamp",
+      "NameKo": "헤드램프(방수포로 쌈)",
+      "Scenes": [
+        "EP08_SC004",
+        "EP08_SC005",
+        "EP08_SC006",
+        "EP08_SC007",
+        "EP08_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_gun",
+      "NameKo": "오정길의 총(허리춤)",
+      "Scenes": [
+        "EP08_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "카인의 담배",
+      "Scenes": [
+        "EP08_SC008",
+        "EP08_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_nametag_hyeon",
+      "NameKo": "군복 왼쪽 가슴 명찰(현, 중위)",
+      "Scenes": [
+        "EP08_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_sewer_map_kang",
+      "NameKo": "강 씨의 하수 계통도(여백 연필 메모 「차수문 3-B. 작동 여부 미상.」)",
+      "Scenes": [
+        "EP08_SC009",
+        "EP08_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_bandage_cloth",
+      "NameKo": "다리 상처를 감는 천",
+      "Scenes": [
+        "EP08_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_expedition_report",
+      "NameKo": "원정 보고서 / 대장(참가 5, 귀환 4)",
+      "Scenes": [
+        "EP08_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_pen",
+      "NameKo": "유진의 펜",
+      "Scenes": [
+        "EP08_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP08_SC001",
+      "QuestionKo": "'깊이는.' / '모릅니다. 도면은 재난 전 거니까요.' 화자 미기술"
+    },
+    {
+      "Scene": "EP08_SC001",
+      "QuestionKo": "시간대 미기술"
+    },
+    {
+      "Scene": "EP08_SC002",
+      "QuestionKo": "편성 장면 장소 미기술(관제실 연속인지 불명)"
+    },
+    {
+      "Scene": "EP08_SC003",
+      "QuestionKo": "'팔십이면 되나.' 화자 미기술"
+    },
+    {
+      "Scene": "EP08_SC003",
+      "QuestionKo": "입구 장면에 류·강 씨·아인·카인이 모두 있는지 명시 없음(§4 '넷'으로 추정)"
+    },
+    {
+      "Scene": "EP08_SC005",
+      "QuestionKo": "'어디야!' 화자 미기술(카인이 케이블을 당긴 직후)"
+    },
+    {
+      "Scene": "EP08_SC005",
+      "QuestionKo": "L7454 '삼 년을 그린 원' — 다른 곳의 '이 년'과 불일치, 설정 확인"
+    },
+    {
+      "Scene": "EP08_SC006",
+      "QuestionKo": "강 씨의 최후(사망 확인 여부) — 산문은 '벽 쪽으로 도는 것'까지와 대장 '손실' 처리만 기술"
+    },
+    {
+      "Scene": "EP08_SC007",
+      "QuestionKo": "non-boss combat in novel — game representation TBD (감염된 현 중위를 한 번에 처치)"
+    },
+    {
+      "Scene": "EP08_SC007",
+      "QuestionKo": "'스승'의 정체 이 화 산문에서 미기술"
+    },
+    {
+      "Scene": "EP08_SC009",
+      "QuestionKo": "장소 미기술(입구 바깥 야영지로 추정되나 명시 없음)"
+    },
+    {
+      "Scene": "EP08_SC009",
+      "QuestionKo": "'…이게 뭔데요.'(L7603) 화자 미기술"
+    },
+    {
+      "Scene": "EP08_SC009",
+      "QuestionKo": "류가 이 장면에 있는지 미기술"
+    },
+    {
+      "Scene": "EP08_SC010",
+      "QuestionKo": "재진입 인원 '넷'의 구성 미기술(강 씨 부재 — 아인·카인·류 + 케이블 너머 오정길로 추정)"
+    },
+    {
+      "Scene": "EP08_SC011",
+      "QuestionKo": "오정길이 입구 윈치에 있는지 물속 케이블 근처에 있는지 미기술('케이블 너머')"
+    },
+    {
+      "Scene": "EP08_SC012",
+      "QuestionKo": "물러난 뒤 대화 장소 — '물가'(L7719)로만 기술, 입구 물가로 기입"
+    },
+    {
+      "Scene": "EP08_SC012",
+      "QuestionKo": "오정길 동석 여부 미기술"
+    },
+    {
+      "Scene": "EP08_SC005",
+      "QuestionKo": "보스 명칭 미기술(EP07 예고 제목 '물속에는 얼굴이 있다'와 달리 산문에 '얼굴' 묘사 없음)"
+    },
+    {
+      "Scene": "EP08_SC001",
+      "QuestionKo": "파티 기본 의상 미기술"
+    },
+    {
+      "Scene": "EP08_SC003",
+      "QuestionKo": "SC003~SC007 시간대 미기술"
+    }
+  ]
+}

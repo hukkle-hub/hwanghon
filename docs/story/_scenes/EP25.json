@@ -1,0 +1,1288 @@
+{
+  "EpisodeId": "EP25",
+  "TitleKo": "새가 없다",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      14033,
+      14255
+    ]
+  },
+  "SummaryKo": "열흘째 아침 일행은 남해를 보고, 반도 끝의 고흥 발사장에 닿는다. 발사대 탑 위 하늘에는 새가 없다. 발사장 외곽 방어선에는 사람이 없고 클레이브 계열 기갑과 점거 차량으로 이뤄진 집행관 의장대가 무언가를 맞이하듯 도열해 있다. 일행은 배수로와 케이블 트렌치로 도열의 등 뒤를 지나 발사 통제동에 들고, 아인은 마태오의 장부를 관제실 주 콘솔 위에 펼쳐 둔다. 류는 격리동에서 명부에 적힌 정 일병과 그 누나를 찾아 구출한다. 그 밤 일행은 방파제 아래에서 파도 소리를 들으며 잠들지 못한다. 이튿날 아침 정 남매를 서 하사의 표식을 따라 북으로 보낸다. 그 뒤 의장대가 일제히 일행 쪽으로 고개를 돌리고 대열이 갈라지며, 별 넷의 정복을 입은 마지막 국방장관 — 정 장관이었던 것 — 이 걸어온다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC001",
+      "NovelSource": "L14033-L14069 §1 바다",
+      "NovelSummary": "열흘째 아침 다섯은 이 년 만에 바다를 본다. 해안선을 따라 반나절 남하하자 반도 끝에 발사장 — 우주센터의 흰 구조물, 조립동, 바다를 등진 발사대 탑 — 이 보인다. 탑 위 하늘이 비어 있고, 류가 「새가 없네요」라고 중얼거린다. 반도 전체가 부르는 것의 둥지다.",
+      "Location": "loc_namhae_haeanseon",
+      "TimeOfDay": "열흘째 아침 ~ 반나절 후",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "도착 — 부름의 둥지",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…새가 없네요.",
+          "Source": "L14062"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "해안선을 따라 발사장 가시권까지 이동한다",
+      "Interaction": [
+        "이동",
+        "발사장 원경 조망 포인트"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "남해의 물빛, 무심한 파도, 원경의 발사장과 새 없는 하늘",
+      "Props": [],
+      "VFX": [
+        "원경 발사대 실루엣",
+        "빈 하늘"
+      ],
+      "SFX": [
+        "파도",
+        "목덜미 공명 박동"
+      ],
+      "Music": "광활하나 불길한 도착 테마",
+      "GameplayEntry": "EP24 이정표 이후 열흘 경과 컷",
+      "GameplayExit": "발사장 외곽 접근",
+      "AnimationRequired": [
+        "group_walk",
+        "look_up_empty_sky"
+      ],
+      "CinematicRequired": "true: 발사장 첫 공개 원경",
+      "SaveFlags": [
+        "EP25_ARRIVED_GOHEUNG"
+      ],
+      "Prerequisites": [
+        "EP24_COMPLETE"
+      ],
+      "NextScene": "EP25_SC002",
+      "RequiredAssets": [
+        "env:loc_namhae_haeanseon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:group_walk",
+        "anim:look_up_empty_sky",
+        "vfx:원경 발사대 실루엣",
+        "vfx:빈 하늘",
+        "sfx:파도",
+        "sfx:목덜미 공명 박동",
+        "bgm:광활하나 불길한 도착 테마"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC002",
+      "NovelSource": "L14070-L14091 §2 방어선",
+      "NovelSummary": "발사장 외곽 방어선은 철책·초소·대열로 되어 있지만 사람이 하나도 없다. 클레이브 계열 기갑이 초소마다 부동자세로 서 있고 점거 차량이 도로에 열을 지었다. 쌍안경을 내린 세라는 이것이 경비가 아니라 무언가를 맞이하는 의장대의 도열이라고 판단한다. 맞이하는 것이 자신들임을 모두 안다.",
+      "Location": "loc_balsajang_bangeoseon",
+      "TimeOfDay": "TBD_CANON (열흘째, 반나절 이동 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_uijangdae"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "의장대 — 맞이하는 배치",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_uijangdae"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…경비가 아니야.",
+          "Source": "L14078"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "저건 의장대야. 도열이야.",
+          "Source": "L14082"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "뭘 맞이하는데.",
+          "Source": "L14084"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "방어선을 정찰한다",
+      "Interaction": [
+        "쌍안경 정찰(세라)",
+        "도열 배치 관찰"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "낡고 조용한 방어선, 부동자세의 집행관, 도로의 차량 열",
+      "Props": [
+        "prop_ssangangyeong"
+      ],
+      "VFX": [
+        "목덜미 코어 동조 발광"
+      ],
+      "SFX": [
+        "정적",
+        "같은 박자의 목덜미 박동"
+      ],
+      "Music": "숨죽인 긴장",
+      "GameplayEntry": "방어선 접근",
+      "GameplayExit": "정찰 완료 → 잠입",
+      "AnimationRequired": [
+        "binocular_scout"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP25_HONOR_GUARD_SCOUTED"
+      ],
+      "Prerequisites": [
+        "EP25_SC001"
+      ],
+      "NextScene": "EP25_SC003",
+      "RequiredAssets": [
+        "env:loc_balsajang_bangeoseon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_uijangdae",
+        "prop:prop_ssangangyeong",
+        "anim:binocular_scout",
+        "vfx:목덜미 코어 동조 발광",
+        "sfx:정적",
+        "sfx:같은 박자의 목덜미 박동",
+        "bgm:숨죽인 긴장"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC003",
+      "NovelSource": "L14092-L14097 §3 통제동 (잠입)",
+      "NovelSummary": "방어선의 사각을 뚫는 데 한나절이 걸린다. 맞이할 것을 기다리는 도열은 막을 것을 상정하지 않아, 다섯은 도열의 등 뒤로 배수로와 케이블 트렌치를 타고 발사장 내부에 든다.",
+      "Location": "loc_baesuro_teurenchi",
+      "TimeOfDay": "TBD_CANON (한나절 소요)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "잠입",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "의장대의 등 뒤로 발사장 내부에 잠입한다",
+      "Interaction": [
+        "배수로·트렌치 이동",
+        "도열 시선 사각 이용"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도열의 등 뒤, 배수로와 케이블 트렌치",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "물 흐르는 소리",
+        "발소리 억제"
+      ],
+      "Music": "잠입 저음",
+      "GameplayEntry": "정찰 종료 후",
+      "GameplayExit": "통제동 도착",
+      "AnimationRequired": [
+        "crawl_drain_trench"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP25_INFILTRATED_LAUNCH_SITE"
+      ],
+      "Prerequisites": [
+        "EP25_SC002"
+      ],
+      "NextScene": "EP25_SC004",
+      "RequiredAssets": [
+        "env:loc_baesuro_teurenchi",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:crawl_drain_trench",
+        "sfx:물 흐르는 소리",
+        "sfx:발소리 억제",
+        "bgm:잠입 저음"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC004",
+      "NovelSource": "L14098-L14111 §3 통제동",
+      "NovelSummary": "첫 번째로 닿은 건물은 발사 통제동이다. 먼지 아래 고요한 관제실 — 노바 1호 발사 버튼이 눌리고 귀환 궤도가 승인된 방. 아인은 방수포를 풀어 마태오의 장부를 이 방에서 가장 높은 책상인 주 콘솔 위에 첫 장이 위로 오게 펼쳐 둔다.",
+      "Location": "loc_balsa_tongjedong",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "판결문을 놓다 — 장부를 책상에",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "관제실에서 장부를 주 콘솔에 올려 둔다",
+      "Interaction": [
+        "관제실 조사",
+        "주 콘솔 상호작용: 장부 펼치기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "먼지 덮인 관제실, 죽은 스크린, 이 년 전 각도로 밀려난 의자",
+      "Props": [
+        "prop_bangsupo",
+        "prop_sonsil_jangbu",
+        "prop_ju_console"
+      ],
+      "VFX": [
+        "먼지 입자",
+        "창빛"
+      ],
+      "SFX": [
+        "정적",
+        "종이 펼침"
+      ],
+      "Music": "장중한 침묵",
+      "GameplayEntry": "통제동 진입",
+      "GameplayExit": "장부를 펼쳐 두고 퇴장",
+      "AnimationRequired": [
+        "unwrap_tarp_spread_ledger"
+      ],
+      "CinematicRequired": "true: 장부가 콘솔 위에 펼쳐진 채 남는 숏",
+      "SaveFlags": [
+        "EP25_LEDGER_ON_CONSOLE"
+      ],
+      "Prerequisites": [
+        "EP25_SC003"
+      ],
+      "NextScene": "EP25_SC005",
+      "RequiredAssets": [
+        "env:loc_balsa_tongjedong",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_bangsupo",
+        "prop:prop_sonsil_jangbu",
+        "prop:prop_ju_console",
+        "anim:unwrap_tarp_spread_ledger",
+        "vfx:먼지 입자",
+        "vfx:창빛",
+        "sfx:정적",
+        "sfx:종이 펼침",
+        "bgm:장중한 침묵"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC005",
+      "NovelSource": "L14112-L14149 §4 격리동",
+      "NovelSummary": "류는 명부의 도착지를 찾아 통제동 뒤편 격리동의 잠금을 딴다. 대부분 빈 격리실에 최근까지 쓰인 흔적이 있고, 끝에서 두 번째 방에 마른 남녀가 등을 맞대고 앉아 있다. 여자가 남동생을 뒤로 밀며 일어서자 류가 후드를 벗고 「정 일병」을 부른다. 폐차장의 밤 뛰라고 외치던 목소리를 기억한 정 일병에게 류는 이번엔 걸어도 된다고, 데리러 왔다고 말한다.",
+      "Location": "loc_gyeokridong",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu",
+        "char_jeong_ilbyeong",
+        "char_jeong_nuna"
+      ],
+      "RequiredCostumes": [
+        "류: 후드(벗음)",
+        "정 남매: 마른 모습 — 복장 TBD_CANON"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "명부의 잉크가 사람이 되다 — 정 남매 구출",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [
+        "char_jeong_ilbyeong",
+        "char_jeong_nuna"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…정 일병.",
+          "Source": "L14126"
+        },
+        {
+          "Speaker": "char_jeong_ilbyeong",
+          "Line": "뛰라고 했던 사람이네요.",
+          "Source": "L14130"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…이번엔 걸어도 돼요.",
+          "Source": "L14132"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "데리러 왔으니까.",
+          "Source": "L14136"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "격리동에서 정 남매를 찾아 구출한다",
+      "Interaction": [
+        "격리동 문 잠금 따기",
+        "격리실 수색",
+        "정 남매와 대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "격리실 복도, 대부분 빈 방, 벽의 손톱자국",
+      "Props": [
+        "prop_gyeokrisil_mun",
+        "prop_damyo_sikpan"
+      ],
+      "VFX": [
+        "복도 형광 잔광 없음 — 어둑함"
+      ],
+      "SFX": [
+        "잠금 해제음",
+        "문 열림"
+      ],
+      "Music": "긴장에서 온기로",
+      "GameplayEntry": "류 조작으로 전환, 격리동 앞",
+      "GameplayExit": "남매가 복도를 걸어 나오면 종료",
+      "AnimationRequired": [
+        "pick_lock",
+        "remove_hood",
+        "shield_sibling_stand"
+      ],
+      "CinematicRequired": "true: 후드를 벗고 이름을 부르는 순간",
+      "SaveFlags": [
+        "EP25_JEONG_SIBLINGS_RESCUED"
+      ],
+      "Prerequisites": [
+        "EP25_SC004"
+      ],
+      "NextScene": "EP25_SC006",
+      "RequiredAssets": [
+        "env:loc_gyeokridong",
+        "char:char_ryu",
+        "char:char_jeong_ilbyeong",
+        "char:char_jeong_nuna",
+        "prop:prop_gyeokrisil_mun",
+        "prop:prop_damyo_sikpan",
+        "anim:pick_lock",
+        "anim:remove_hood",
+        "anim:shield_sibling_stand",
+        "vfx:복도 형광 잔광 없음 — 어둑함",
+        "sfx:잠금 해제음",
+        "sfx:문 열림",
+        "bgm:긴장에서 온기로"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC006",
+      "NovelSource": "L14150-L14189 §5 파도",
+      "NovelSummary": "밤에 넷은 방파제 아래에 누워 있지만 아무도 자지 못한다. 이 년 만의 파도 소리의 박자를 아인은 세다 그만둔다. 류는 바다를 처음 본다며 「바다는 항상 다음에 가는 거였다」, 「다음이 없네요」라고 말한다. 카인은 담배를 반으로 잘라 불을 붙이려다 바람 때문에 도로 넣는다. 세라는 방파제 끝에 혼자 앉아 계측기를 열지 않는다.",
+      "Location": "loc_bangpaje",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "폭풍 전야의 휴지",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…바다 본 적 있어요?",
+          "Source": "L14166"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어릴 때요.",
+          "Source": "L14168"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "저는 처음이에요.",
+          "Source": "L14170"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…다음이 없네요.",
+          "Source": "L14178"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…불이 안 붙네.",
+          "Source": "L14182"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "방파제 아래의 밤을 보낸다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤 방파제 아래, 센 바람, 어둠 속의 물",
+      "Props": [
+        "prop_dambae_ban",
+        "prop_sonmok_gyecheukgi"
+      ],
+      "VFX": [
+        "어두운 바다 반사광"
+      ],
+      "SFX": [
+        "파도",
+        "센 바람"
+      ],
+      "Music": "파도 박자에 맞춘 미니멀 테마",
+      "GameplayEntry": "밤 휴식 이벤트",
+      "GameplayExit": "새벽 페이드",
+      "AnimationRequired": [
+        "lie_awake",
+        "remove_hood",
+        "cut_cigarette_half",
+        "sit_alone_breakwater"
+      ],
+      "CinematicRequired": "true: 인물별 짧은 컷 연결",
+      "SaveFlags": [
+        "EP25_NIGHT_AT_BREAKWATER"
+      ],
+      "Prerequisites": [
+        "EP25_SC005"
+      ],
+      "NextScene": "EP25_SC007",
+      "RequiredAssets": [
+        "env:loc_bangpaje",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_dambae_ban",
+        "prop:prop_sonmok_gyecheukgi",
+        "anim:lie_awake",
+        "anim:remove_hood",
+        "anim:cut_cigarette_half",
+        "anim:sit_alone_breakwater",
+        "vfx:어두운 바다 반사광",
+        "sfx:파도",
+        "sfx:센 바람",
+        "bgm:파도 박자에 맞춘 미니멀 테마"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC007",
+      "NovelSource": "L14190-L14213 §6 북으로",
+      "NovelSummary": "이튿날 아침 정 남매를 북으로 보낸다. 류는 지도에 서 하사의 표식을 바로 선 것과 뒤집힌 것으로 나란히 그려 바로 선 것만 따르라 하고, 값을 받지 않고 물과 건량을 넘긴다. 같이 안 가느냐는 정 일병에게 반대쪽이라 답하고 걸어서 가라 한다. 방파제 길 위로 두 사람의 등이 작아지고, 아인은 명부에서 이름 둘은 지우고 간다고 말한다.",
+      "Location": "loc_bangpaje",
+      "TimeOfDay": "이튿날 아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_jeong_ilbyeong",
+        "char_jeong_nuna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "산 이름 둘을 북으로",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_jeong_ilbyeong",
+        "char_jeong_nuna"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_jeong_ilbyeong",
+          "Line": "…같이 안 가세요?",
+          "Source": "L14196"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "우린 반대쪽이라서요.",
+          "Source": "L14200"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "걸어서 가세요. 이번엔 걸어도 돼요.",
+          "Source": "L14204"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…명부에서 이름 둘은 지우고 가는 거예요.",
+          "Source": "L14208"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "정 남매를 떠나보낸다",
+      "Interaction": [
+        "대화 진행",
+        "물자 전달"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "아침 방파제 길",
+      "Props": [
+        "prop_jido_pyosik",
+        "prop_mul_geollyang"
+      ],
+      "VFX": [
+        "아침 햇빛"
+      ],
+      "SFX": [
+        "파도",
+        "발소리 멀어짐"
+      ],
+      "Music": "담담한 이별",
+      "GameplayEntry": "아침 이벤트",
+      "GameplayExit": "두 사람의 등이 작아지면 종료",
+      "AnimationRequired": [
+        "draw_on_map",
+        "hand_over_supplies"
+      ],
+      "CinematicRequired": "true: 멀어지는 뒷모습",
+      "SaveFlags": [
+        "EP25_JEONG_SIBLINGS_SENT_NORTH"
+      ],
+      "Prerequisites": [
+        "EP25_SC006"
+      ],
+      "NextScene": "EP25_SC008",
+      "RequiredAssets": [
+        "env:loc_bangpaje",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_jeong_ilbyeong",
+        "char:char_jeong_nuna",
+        "prop:prop_jido_pyosik",
+        "prop:prop_mul_geollyang",
+        "anim:draw_on_map",
+        "anim:hand_over_supplies",
+        "vfx:아침 햇빛",
+        "sfx:파도",
+        "sfx:발소리 멀어짐",
+        "bgm:담담한 이별"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP25",
+      "SceneId": "EP25_SC008",
+      "NovelSource": "L14214-L14255 §7 사이렌 없는 경보",
+      "NovelSummary": "남매를 통제동에 숨기고 나왔을 때 발사장의 공기가 바뀌어 있다. 소리 없이 의장대 전체가 일제히 넷 쪽으로 고개를 돌리고, 대열이 좌우로 갈라져 길이 열린다. 그 끝에서 별 넷 계급장과 명찰을 단 정복 차림의 사람 — 이 나라의 마지막 국방장관이 성숙의 결정을 두른 채 걸어온다. 세라가 「…정 장관」이라고 그 이름을 부른다. (화 끝 및 제26화 예고 포함)",
+      "Location": "loc_balsajang_doro",
+      "TimeOfDay": "TBD_CANON (이튿날)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_uijangdae",
+        "char_jeong_janggwan"
+      ],
+      "RequiredCostumes": [
+        "정 장관: 정복, 어깨 별 넷 계급장, 가슴 명찰, 성숙의 결정"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "최종 관문의 지휘관 등장 — 클리프행어",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_uijangdae",
+        "char_jeong_janggwan"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…정 장관.",
+          "Source": "L14232"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "정 장관의 등장을 목격한다",
+      "Interaction": [],
+      "BossId": "boss_jeong_janggwan",
+      "BossPhase": "",
+      "EnvironmentState": "사이렌도 방송도 없는 정적, 일제히 돌아간 의장대의 고개, 갈라진 대열 사이의 길",
+      "Props": [
+        "prop_gundo"
+      ],
+      "VFX": [
+        "성숙 결정의 광택",
+        "의장대 고개 일제 회전"
+      ],
+      "SFX": [
+        "무음 경보(정적)",
+        "정복 구두 발소리"
+      ],
+      "Music": "보스 등장 전조 — 행진곡 변주",
+      "GameplayEntry": "남매 은신 후 통제동에서 나옴",
+      "GameplayExit": "세라가 이름을 부르는 순간 컷 → EP26",
+      "AnimationRequired": [
+        "executioners_turn_heads",
+        "ranks_part",
+        "commander_walk"
+      ],
+      "CinematicRequired": "true: 보스 등장 컷신",
+      "SaveFlags": [
+        "EP25_JEONG_JANGGWAN_APPEARED",
+        "EP25_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP25_SC007"
+      ],
+      "NextScene": "EP26_SC001",
+      "RequiredAssets": [
+        "env:loc_balsajang_doro",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_uijangdae",
+        "char:char_jeong_janggwan",
+        "prop:prop_gundo",
+        "anim:executioners_turn_heads",
+        "anim:ranks_part",
+        "anim:commander_walk",
+        "vfx:성숙 결정의 광택",
+        "vfx:의장대 고개 일제 회전",
+        "sfx:무음 경보(정적)",
+        "sfx:정복 구두 발소리",
+        "bgm:보스 등장 전조 — 행진곡 변주"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_jeong_janggwan",
+      "NameKo": "정 장관 (정 장관이었던 것)",
+      "Scenes": [
+        "EP25_SC008"
+      ],
+      "NovelReasonForBattle": "발사장에 도착한 일행을 향해 의장대가 갈라지고 이 나라의 마지막 국방장관이 성숙한 집행관으로 걸어옴(EP25는 등장만, 전투는 EP26).",
+      "ArenaLocationId": "loc_balsajang_doro",
+      "PhasesInNovel": [
+        "EP25: 등장만 — 전투 없음"
+      ],
+      "PatternsInNovel": [
+        "의장대 전체를 일제히 움직임(고개 돌림, 대열 갈라짐)"
+      ],
+      "PartsOrWeakpointsInNovel": [],
+      "BreakCounterInNovel": [],
+      "EnvironmentInBattle": [
+        "의장대 도열",
+        "점거 차량 열"
+      ],
+      "Outcome": "EP26에서 전투 — 이 화는 등장 클리프행어로 끝남",
+      "Source": "L14214-L14234"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_namhae_haeanseon",
+      "NameKo": "남해 해안선",
+      "DescriptionKo": "열흘째 아침 처음 보는 바다. 해안선을 따라 반나절 남하하면 반도 끝에 발사장이 보인다.",
+      "Scenes": [
+        "EP25_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_balsajang_bangeoseon",
+      "NameKo": "발사장 외곽 방어선",
+      "DescriptionKo": "철책·초소·대열. 계룡보다 낡고 조용하며 사람이 없음. 초소마다 클레이브 계열 기갑이 부동자세, 도로에 점거 차량 열.",
+      "Scenes": [
+        "EP25_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_baesuro_teurenchi",
+      "NameKo": "배수로·케이블 트렌치",
+      "DescriptionKo": "의장대 도열의 사각을 따라 발사장 내부로 드는 잠입 경로.",
+      "Scenes": [
+        "EP25_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_balsa_tongjedong",
+      "NameKo": "발사 통제동 관제실",
+      "DescriptionKo": "콘솔이 늘어선 먼지 덮인 관제실. 죽은 스크린, 이 년 전 각도로 밀려난 의자. 노바 1호 발사·귀환 승인이 이뤄진 방.",
+      "Scenes": [
+        "EP25_SC004"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeokridong",
+      "NameKo": "격리동",
+      "DescriptionKo": "통제동 뒤편 낮은 건물. 복도 양편 격리실, 최근까지 쓰인 흔적(접힌 담요·식판·벽의 손톱자국).",
+      "Scenes": [
+        "EP25_SC005"
+      ]
+    },
+    {
+      "LocationId": "loc_bangpaje",
+      "NameKo": "방파제",
+      "DescriptionKo": "발사장 인근 방파제. 아래에서 밤을 보내고, 방파제 길로 정 남매가 북으로 떠남.",
+      "Scenes": [
+        "EP25_SC006",
+        "EP25_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_balsajang_doro",
+      "NameKo": "발사장 도로·활주로 (의장대 도열지)",
+      "DescriptionKo": "의장대가 도열한 발사장 내부 도로. 대열이 좌우로 갈라져 길이 열림. EP26 전장.",
+      "Scenes": [
+        "EP25_SC008"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 장부를 통제동 콘솔에 올려 둠",
+      "Scenes": [
+        "EP25_SC001",
+        "EP25_SC002",
+        "EP25_SC003",
+        "EP25_SC004",
+        "EP25_SC006",
+        "EP25_SC007",
+        "EP25_SC008"
+      ],
+      "StateChangesKo": [
+        "EP25_SC004: 마태오의 장부를 관제실 주 콘솔 위에 펼쳐 두고 옴(장부 원본 소지 해제)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 사용자",
+      "Scenes": [
+        "EP25_SC001",
+        "EP25_SC002",
+        "EP25_SC003",
+        "EP25_SC004",
+        "EP25_SC006",
+        "EP25_SC007",
+        "EP25_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "정 남매 구출의 주역",
+      "Scenes": [
+        "EP25_SC001",
+        "EP25_SC002",
+        "EP25_SC003",
+        "EP25_SC004",
+        "EP25_SC005",
+        "EP25_SC006",
+        "EP25_SC007",
+        "EP25_SC008"
+      ],
+      "StateChangesKo": [
+        "EP25_SC005: 격리동 문의 잠금을 따고 후드를 벗음",
+        "EP25_SC006: 후드를 벗고 바다를 봄 — 바다를 처음 봄"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "쌍안경·계측기로 정찰, 정 장관을 알아봄",
+      "Scenes": [
+        "EP25_SC001",
+        "EP25_SC002",
+        "EP25_SC003",
+        "EP25_SC004",
+        "EP25_SC006",
+        "EP25_SC007",
+        "EP25_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_ilbyeong",
+      "NameKo": "정 일병",
+      "RoleKo": "명부의 생체 이송 대상, 격리동에서 구출된 남동생",
+      "Scenes": [
+        "EP25_SC005",
+        "EP25_SC007"
+      ],
+      "StateChangesKo": [
+        "EP25_SC005: 격리실에서 구출됨(마른 모습)",
+        "EP25_SC007: 누나와 함께 북으로 떠남"
+      ]
+    },
+    {
+      "CharacterId": "char_jeong_nuna",
+      "NameKo": "정 일병의 누나",
+      "RoleKo": "명부의 민간인 생체 이송 대상, 격리동에서 구출",
+      "Scenes": [
+        "EP25_SC005",
+        "EP25_SC007"
+      ],
+      "StateChangesKo": [
+        "EP25_SC005: 남동생을 제 뒤로 밀며 일어섬 — 구출됨",
+        "EP25_SC007: 북으로 떠남"
+      ]
+    },
+    {
+      "CharacterId": "char_uijangdae",
+      "NameKo": "집행관 의장대",
+      "RoleKo": "발사장 방어선에 도열한 집행관들(클레이브 계열 기갑·점거 차량). 사람은 없음",
+      "Scenes": [
+        "EP25_SC002",
+        "EP25_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_janggwan",
+      "NameKo": "정 장관 (정 장관이었던 것)",
+      "RoleKo": "이 나라의 마지막 국방장관이 성숙한 집행관. 별 넷 정복 차림으로 의장대 사이를 걸어옴",
+      "Scenes": [
+        "EP25_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "(언급) 장부의 원 주인 — 「어느 놈 책상에든 올려놓고 오라」던 부탁",
+      "Scenes": [
+        "EP25_SC004"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_cha_hanbyeol",
+      "NameKo": "차한별",
+      "RoleKo": "(언급) 좌표를 남긴 자",
+      "Scenes": [
+        "EP25_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "(언급) 북상 길의 표식을 남긴 인물",
+      "Scenes": [
+        "EP25_SC007"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "group_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP25_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "해안선을 따라 걷는 이동"
+    },
+    {
+      "Action": "look_up_empty_sky",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP25_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "새 없는 하늘을 올려다보며 중얼거림"
+    },
+    {
+      "Action": "binocular_scout",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP25_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쌍안경으로 보고 내림"
+    },
+    {
+      "Action": "crawl_drain_trench",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP25_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배수로·케이블 트렌치를 타고 잠입"
+    },
+    {
+      "Action": "unwrap_tarp_spread_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP25_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "방수포를 풀어 장부를 콘솔 위에 첫 장이 위로 오게 펼침"
+    },
+    {
+      "Action": "pick_lock",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP25_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "문의 잠금을 땀"
+    },
+    {
+      "Action": "remove_hood",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP25_SC005",
+        "EP25_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "후드를 벗음"
+    },
+    {
+      "Action": "shield_sibling_stand",
+      "Category": "emotion",
+      "Characters": [
+        "char_jeong_nuna"
+      ],
+      "Scenes": [
+        "EP25_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "남동생을 제 뒤로 밀며 일어섬(반복된 방어 동작)"
+    },
+    {
+      "Action": "lie_awake",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP25_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "누워 있으나 잠들지 못함"
+    },
+    {
+      "Action": "cut_cigarette_half",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP25_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 반으로 자르고 불붙이려다 도로 주머니에 넣음"
+    },
+    {
+      "Action": "sit_alone_breakwater",
+      "Category": "emotion",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP25_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "방파제 끝에 혼자 앉음, 계측기를 열지 않음"
+    },
+    {
+      "Action": "draw_on_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP25_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "지도에 바로 선 표식과 뒤집힌 표식을 나란히 그림"
+    },
+    {
+      "Action": "hand_over_supplies",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP25_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "물과 건량을 넘김"
+    },
+    {
+      "Action": "executioners_turn_heads",
+      "Category": "boss",
+      "Characters": [
+        "char_uijangdae"
+      ],
+      "Scenes": [
+        "EP25_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "도열한 의장대 전체가 일제히 고개를 돌림"
+    },
+    {
+      "Action": "ranks_part",
+      "Category": "boss",
+      "Characters": [
+        "char_uijangdae"
+      ],
+      "Scenes": [
+        "EP25_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "집행관들이 좌우로 물러나 길을 엶"
+    },
+    {
+      "Action": "commander_walk",
+      "Category": "boss",
+      "Characters": [
+        "char_jeong_janggwan"
+      ],
+      "Scenes": [
+        "EP25_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "서두르지 않는 지휘관의 걸음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_ssangangyeong",
+      "NameKo": "세라의 쌍안경",
+      "Scenes": [
+        "EP25_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_bangsupo",
+      "NameKo": "방수포",
+      "Scenes": [
+        "EP25_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_sonsil_jangbu",
+      "NameKo": "마태오의 손실 장부",
+      "Scenes": [
+        "EP25_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_ju_console",
+      "NameKo": "관제실 주 콘솔",
+      "Scenes": [
+        "EP25_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_gyeokrisil_mun",
+      "NameKo": "격리실 문 잠금",
+      "Scenes": [
+        "EP25_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_damyo_sikpan",
+      "NameKo": "접힌 담요·식판(격리실 흔적)",
+      "Scenes": [
+        "EP25_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_dambae_ban",
+      "NameKo": "카인의 반 개비 담배",
+      "Scenes": [
+        "EP25_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_sonmok_gyecheukgi",
+      "NameKo": "세라의 손목 계측기",
+      "Scenes": [
+        "EP25_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_jido_pyosik",
+      "NameKo": "서 하사의 표식을 그린 지도",
+      "Scenes": [
+        "EP25_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_mul_geollyang",
+      "NameKo": "물과 건량",
+      "Scenes": [
+        "EP25_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_gundo",
+      "NameKo": "정 장관의 지휘도(군도)",
+      "Scenes": [
+        "EP25_SC008"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP25_SC001",
+      "QuestionKo": "원고는 일행을 「다섯」이라 하나 이 화에 등장하는 동행은 넷(아인·카인·류·세라)이며 §5에서는 「넷은 방파제 아래에서 잤다」. 인원 표기 불일치(EP24 TBD와 동일)."
+    },
+    {
+      "Scene": "EP25_SC002",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (열흘째, 반나절 이동 이후)」"
+    },
+    {
+      "Scene": "EP25_SC003",
+      "QuestionKo": "의장대의 등 뒤를 지나는 잠입이 게임에서 발각 조건이 있는 스텔스인지 단순 이동인지 원고상 근거 없음(원고는 무사 통과만 서술) — 게임 표현 TBD."
+    },
+    {
+      "Scene": "EP25_SC003",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (한나절 소요)」"
+    },
+    {
+      "Scene": "EP25_SC004",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON」"
+    },
+    {
+      "Scene": "EP25_SC005",
+      "QuestionKo": "정 남매의 복장·외형 상세(「마른 남자와 마른 여자」 외) 원고 미기재."
+    },
+    {
+      "Scene": "EP25_SC005",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON」"
+    },
+    {
+      "Scene": "EP25_SC007",
+      "QuestionKo": "원고 불일치: §6에서 남매를 북으로 보냈으나 §7 첫 문장은 「남매를 통제동에 숨기고 나왔을 때」이고, EP26 §7~8에서 다시 아인이 북으로 보내자고 하며 류가 물·건량을 넘기고 두 사람이 방파제 길로 떠남. 남매의 출발 시점(EP25 §6 vs EP26 §7~8) 확정 필요."
+    },
+    {
+      "Scene": "EP25_SC008",
+      "QuestionKo": "시각(TimeOfDay) 원고에 명시 없음 — 현재 표기: 「TBD_CANON (이튿날)」"
+    }
+  ]
+}

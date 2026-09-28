@@ -1,0 +1,2087 @@
+{
+  "EpisodeId": "EP14",
+  "TitleKo": "봉합",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      9679,
+      10167
+    ]
+  },
+  "SummaryKo": "닥터 진이 아인의 약 재료 목록 열두 줄을 건네고, 마태오는 판교 연구단지행과 라벨을 읽을 동행 민경을 붙인다. 판교의 한 건물 지하 3층은 콘크리트로 봉인되어 있었고, 지하 2층에서 약품 두 개를 찾은 일행은 봉인을 안쪽에서 밀고 나온 봉합선투성이의 회백색 개체(실험체 09호)와 마주친다. 코어를 정확히 끊어 세 번 쓰러뜨리지만 매번 재생하고, 아인은 스승의 원칙 '두 번 치지 않는다'가 세계가 아니었음을 처음 깨닫는다. 잘게 나누자 개체는 셋으로 분열하고, 민경이 던진 고정액으로 굳은 부위는 붙지 않는다는 것이 드러나지만 민경은 네 번째 병을 꺼내다 감싸여 죽는다. 일행은 계단을 고정액으로 임시 봉쇄하고 철수하며, 아인은 긁힌 팔이 두 시간 만에 닫힌 것을 숨긴다. 밤에 아인은 재생 데이터를 정리하고 '두 번 칠게요'라고 결심한다. 옥상에서는 누군가가 이 모든 것을 여섯 시간 동안 관찰하며 기록하고 있었다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC001",
+      "NovelSource": "L9694-L9725 §1 목록",
+      "NovelSummary": "닥터 진이 만년필로 쓴 약품 목록 열두 줄을 아인에게 내민다. 지금 약은 넉 달 치이며 셋을 구하면 여섯 달, 여섯을 구하면 일 년이 된다. 재료는 판교 연구단지의 옛 시약 창고에 있을 것이다. 마태오는 판교가 계룡 가는 길목이라 판단하고, 글씨를 읽을 줄 아는 동행 한 명을 붙이기로 한다.",
+      "Location": "loc_gangnam_bunker",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_dr_jin",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "원정 목적 제시 — 아인의 남은 수명(약)과 판교 시약 창고",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_dr_jin",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…이게 뭔데요.",
+          "Source": "L9700"
+        },
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "재료입니다.",
+          "Source": "L9702"
+        },
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "판교 연구단지요.",
+          "Source": "L9710"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "동행 하나 붙인다.",
+          "Source": "L9718"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "글씨를 읽을 줄 아는 사람이 있어야 해.",
+          "Source": "L9722"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "닥터 진의 목록을 받고 판교행 브리핑을 듣는다",
+      "Interaction": [
+        "목록 받기",
+        "지도 옆 목록 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 내부, 지도와 목록이 놓인 자리",
+      "Props": [
+        "prop_reagent_list",
+        "prop_bunker_map"
+      ],
+      "VFX": [],
+      "SFX": [
+        "종이 넘기는 소리"
+      ],
+      "Music": "담담하고 무거운 브리핑",
+      "GameplayEntry": "대화 시작 — 닥터 진이 종이를 내미는 컷",
+      "GameplayExit": "마태오의 동행 배정 대사 후 암전",
+      "AnimationRequired": [
+        "hand_over_paper",
+        "adjust_glasses"
+      ],
+      "CinematicRequired": "false — 대화 연출로 충분",
+      "SaveFlags": [
+        "EP14_reagent_list_received",
+        "EP14_pangyo_route_set"
+      ],
+      "Prerequisites": [
+        "EP13_complete"
+      ],
+      "NextScene": "EP14_SC002",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker",
+        "char:char_ain",
+        "char:char_dr_jin",
+        "char:char_mateo",
+        "prop:prop_reagent_list",
+        "prop:prop_bunker_map",
+        "anim:hand_over_paper",
+        "anim:adjust_glasses",
+        "sfx:종이 넘기는 소리",
+        "bgm:담담하고 무거운 브리핑"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC002",
+      "NovelSource": "L9726-L9749 §2 계약직",
+      "NovelSummary": "동행자는 스물아홉 살 민경. 재난 전 판교 연구소에서 시약 정리와 세척, 폐기물 분류를 하던 계약직이었다. 라벨은 읽지만 무슨 약인지는 모르고 어느 칸에 넣는지만 안다. 벙커에서만 지낸 그녀의 걸음이 느려, 넷은 아무 말 없이 속도를 늦춘다.",
+      "Location": "loc_route_pangyo",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 배낭"
+      ],
+      "StoryBeat": "동행자 민경 소개 — 라벨을 읽는 사람",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…그럼 라벨은 읽으세요?",
+          "Source": "L9732"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "라벨은 읽죠. 그거 읽는 게 제 일이었으니까요.",
+          "Source": "L9736"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "근데 뭐 하는 약인지는 몰라요.",
+          "Source": "L9740"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그거면 됐지 뭐. 우린 칸도 모르는데.",
+          "Source": "L9744"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "민경과 대화하며 그녀의 느린 걸음에 맞춰 이동한다",
+      "Interaction": [
+        "동행 대화",
+        "보행 속도 맞추기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "이동 구간(지형 미기재)",
+      "Props": [
+        "prop_minkyung_backpack"
+      ],
+      "VFX": [],
+      "SFX": [
+        "발소리"
+      ],
+      "Music": "조용한 여정",
+      "GameplayEntry": "출발 직후 보행 시작",
+      "GameplayExit": "판교 도착 전환",
+      "AnimationRequired": [
+        "walk_slow_group",
+        "adjust_backpack"
+      ],
+      "CinematicRequired": "false — 보행 대화",
+      "SaveFlags": [
+        "EP14_minkyung_joined"
+      ],
+      "Prerequisites": [
+        "EP14_SC001"
+      ],
+      "NextScene": "EP14_SC003",
+      "RequiredAssets": [
+        "env:loc_route_pangyo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_minkyung",
+        "prop:prop_minkyung_backpack",
+        "anim:walk_slow_group",
+        "anim:adjust_backpack",
+        "sfx:발소리",
+        "bgm:조용한 여정"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC003",
+      "NovelSource": "L9750-L9789 §3 봉인",
+      "NovelSummary": "판교는 조용하고 건물이 온전하다. 민경이 세 번째 건물 앞에서 멈춘다. 유리문의 삭은 공지에는 '내부 인원 전원 대피 완료. 지하 3층 봉인.'이라 적혀 있다. 지하 계단 하나는 급히 부은 콘크리트로 막혔고 사람 하나 지날 균열이 나 있다. 아인이 틈에 손을 넣자 미지근한 공기가 나오고, 아인은 안에 살아 있는 것이 있다고 말한다.",
+      "Location": "loc_pangyo_research_complex",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "봉인된 지하 — 살아 있는 것의 기척",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_minkyung",
+          "Line": "…여기예요.",
+          "Source": "L9758"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "봉인?",
+          "Source": "L9764"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…안에 뭐가 있어요.",
+          "Source": "L9776"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "시약 창고요.",
+          "Source": "L9778"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "살아 있는 게요.",
+          "Source": "L9786"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "봉인 공지와 콘크리트 균열을 조사한다",
+      "Interaction": [
+        "공지 읽기",
+        "균열에 손 넣기(미지근한 공기)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "온전한 건물들, 인도를 덮은 화단 나무, 반쯤 삭은 A4 공지, 거푸집 자국 남은 갈라진 콘크리트",
+      "Props": [
+        "prop_evac_notice",
+        "prop_concrete_seal"
+      ],
+      "VFX": [
+        "균열에서 새는 미지근한 공기(미세한 먼지 흐름)"
+      ],
+      "SFX": [
+        "정적",
+        "바람"
+      ],
+      "Music": "불안한 정적",
+      "GameplayEntry": "세 번째 건물 앞 도착",
+      "GameplayExit": "균열을 지나 지하로 진입",
+      "AnimationRequired": [
+        "reach_into_crack"
+      ],
+      "CinematicRequired": "false — 조사 상호작용",
+      "SaveFlags": [
+        "EP14_pangyo_seal_found"
+      ],
+      "Prerequisites": [
+        "EP14_SC002"
+      ],
+      "NextScene": "EP14_SC004",
+      "RequiredAssets": [
+        "env:loc_pangyo_research_complex",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_minkyung",
+        "prop:prop_evac_notice",
+        "prop:prop_concrete_seal",
+        "anim:reach_into_crack",
+        "vfx:균열에서 새는 미지근한 공기(미세한 먼지 흐름)",
+        "sfx:정적",
+        "sfx:바람",
+        "bgm:불안한 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC004",
+      "NovelSource": "L9790-L9841 §4 형태가 없다",
+      "NovelSummary": "지하 2층 시약 창고에서 민경이 목록의 약품 두 개를 찾아 배낭에 넣는다(여섯 달). 나머지 냉장 약품은 지하 3층에 있다. 3층 계단 입구의 콘크리트는 안쪽에서 밀려 부서져 있다. 헤드램프 아래 사람 키 두 배의 회백색 덩어리가 액체처럼 흐르다 사람 실루엣으로 선다. 온몸에 봉합선이 나 있고, 민경은 그것이 잘린 자국이라고 떤다.",
+      "Location": "loc_pangyo_lab_b2",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "헤드램프",
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "시약 2개 확보, 실험체 09호 첫 조우",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_minkyung",
+          "Line": "두 개요. 여섯 달.",
+          "Source": "L9796"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…밖에서 막았는데 안에서 밀었네.",
+          "Source": "L9806"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "이미 나왔죠.",
+          "Source": "L9812"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "저거… 잘린 자국이에요.",
+          "Source": "L9834"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "저만큼 잘렸었다는 거예요. 전부.",
+          "Source": "L9838"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "시약 창고를 탐색해 약품을 확보하고 지하 3층 계단으로 내려간다",
+      "Interaction": [
+        "선반 탐색(민경)",
+        "부서진 콘크리트 조사",
+        "헤드램프로 어둠 비추기"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P1",
+      "EnvironmentState": "지하 2층은 비어 있음. 3층 계단 입구 콘크리트가 안에서 밖으로 밀려 부서짐. 계단 아래 어둠",
+      "Props": [
+        "prop_reagent_bottles",
+        "prop_minkyung_backpack",
+        "prop_concrete_seal",
+        "prop_headlamp"
+      ],
+      "VFX": [
+        "헤드램프 빔",
+        "액체처럼 흐르는 회백색 표면",
+        "봉합선"
+      ],
+      "SFX": [
+        "표면이 흐르는 소리"
+      ],
+      "Music": "보스 등장 — 불쾌한 저음",
+      "GameplayEntry": "지하 2층 탐색 시작",
+      "GameplayExit": "개체가 사람 실루엣으로 선 뒤 전투 진입",
+      "AnimationRequired": [
+        "search_shelf",
+        "cigarette_take_out_put_back",
+        "boss_reform_humanoid",
+        "step_back_fear"
+      ],
+      "CinematicRequired": "true — 보스 첫 등장(형태가 잡히는 과정)",
+      "SaveFlags": [
+        "EP14_reagents_2_obtained",
+        "EP14_boss09_encountered"
+      ],
+      "Prerequisites": [
+        "EP14_SC003"
+      ],
+      "NextScene": "EP14_SC005",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b2",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_minkyung",
+        "char:boss_silheomche_09",
+        "prop:prop_reagent_bottles",
+        "prop:prop_minkyung_backpack",
+        "prop:prop_concrete_seal",
+        "prop:prop_headlamp",
+        "anim:search_shelf",
+        "anim:cigarette_take_out_put_back",
+        "anim:boss_reform_humanoid",
+        "anim:step_back_fear",
+        "vfx:헤드램프 빔",
+        "vfx:액체처럼 흐르는 회백색 표면",
+        "vfx:봉합선",
+        "sfx:표면이 흐르는 소리",
+        "bgm:보스 등장 — 불쾌한 저음"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC005",
+      "NovelSource": "L9842-L9897 §5 세 번",
+      "NovelSummary": "첫 번째는 쉬웠다. 느린 개체를 카인이 받고 류가 뒷목에 단검을 박아 코어를 드러내자 아인의 낫이 한 번에 가른다. 무너진 덩어리는 다시 모여 서고, 벤 자리에 봉합선이 하나 늘어 있다. 두 번째는 아인이 혼자 몸통 정중앙으로 옮겨 간 코어를 가르지만 두 조각이 기어가 붙는다. 세 번째는 넷이 동시에 흩어 놓지만 사십 초 만에 다시 모인다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검",
+        "오정길: 조명"
+      ],
+      "StoryBeat": "격파 3회 — 전부 재생",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "싱겁네.",
+          "Source": "L9860"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "약한 것 같은데요.",
+          "Source": "L9862"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "코어를 찾아 끊는다(3회) — 재생을 관찰한다",
+      "Interaction": [
+        "코어 절단",
+        "협공(카인 정면·류 뒷목)",
+        "4인 동시 공격"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P1",
+      "EnvironmentState": "계단 아래 지하실, 오정길이 계단 위에서 조명. 흩어진 조각이 벽 네 군데에 붙음",
+      "Props": [
+        "prop_headlamp"
+      ],
+      "VFX": [
+        "코어 발광",
+        "봉합선이 하나 늘어나는 효과",
+        "회백색 덩어리 퍼짐·재결합"
+      ],
+      "SFX": [
+        "대검 파고드는 소리",
+        "낫 절단음",
+        "덩어리가 기어가는 소리"
+      ],
+      "Music": "보스전 — 반복되는 불안",
+      "GameplayEntry": "개체와 교전 개시",
+      "GameplayExit": "세 번째 재결합(40초) 확인",
+      "AnimationRequired": [
+        "greatsword_receive",
+        "dagger_stab",
+        "scythe_circle_slash",
+        "boss_slow_reach",
+        "boss_collapse_spread",
+        "boss_reform_humanoid",
+        "boss_fragments_crawl_merge",
+        "hold_light",
+        "retreat_back"
+      ],
+      "CinematicRequired": "false — 전투 중 재결합은 인게임 연출",
+      "SaveFlags": [
+        "EP14_boss09_regen_x3"
+      ],
+      "Prerequisites": [
+        "EP14_SC004"
+      ],
+      "NextScene": "EP14_SC006",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_minkyung",
+        "char:boss_silheomche_09",
+        "prop:prop_headlamp",
+        "anim:greatsword_receive",
+        "anim:dagger_stab",
+        "anim:scythe_circle_slash",
+        "anim:boss_slow_reach",
+        "anim:boss_collapse_spread",
+        "anim:boss_reform_humanoid",
+        "anim:boss_fragments_crawl_merge",
+        "anim:hold_light",
+        "anim:retreat_back",
+        "vfx:코어 발광",
+        "vfx:봉합선이 하나 늘어나는 효과",
+        "vfx:회백색 덩어리 퍼짐·재결합",
+        "sfx:대검 파고드는 소리",
+        "sfx:낫 절단음",
+        "sfx:덩어리가 기어가는 소리",
+        "bgm:보스전 — 반복되는 불안"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC006",
+      "NovelSource": "L9898-L9932 §6 원칙",
+      "NovelSummary": "아인은 낫을 든 채 서 있다. 세 번 다 정확했지만 세 번 다 다시 일어났다. 스승의 '두 번 치지 않는다'를 지켜 왔는데 지금 한 것은 한 번을 세 번 한 것이다. 아인은 처음으로 스승이 이런 것을 만나 보지 못했다고 생각하고, 스승의 말이 세계가 아니라 한 사람이 살아남으며 배운 것이었음을 깨닫는다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "원칙 오차 — 스승의 말이 세계가 아니었다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "두 번 치지 않는다.",
+          "Source": "L9906"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…스승님은 이런 걸 안 만나 봤구나.",
+          "Source": "L9916"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(입력 없음) 아인의 내면 독백",
+      "Interaction": [],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P1",
+      "EnvironmentState": "재결합한 개체가 선 지하실",
+      "Props": [],
+      "VFX": [
+        "시간이 느려지는 연출"
+      ],
+      "SFX": [
+        "숨소리"
+      ],
+      "Music": "내면 독백 — 정적",
+      "GameplayEntry": "세 번째 재결합 직후 자동 전환",
+      "GameplayExit": "네 번째 시도로 복귀",
+      "AnimationRequired": [
+        "stand_holding_weapon_still"
+      ],
+      "CinematicRequired": "true — 원칙이 흔들리는 핵심 내면 장면",
+      "SaveFlags": [
+        "EP14_principle_doubt"
+      ],
+      "Prerequisites": [
+        "EP14_SC005"
+      ],
+      "NextScene": "EP14_SC007",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:boss_silheomche_09",
+        "anim:stand_holding_weapon_still",
+        "vfx:시간이 느려지는 연출",
+        "sfx:숨소리",
+        "bgm:내면 독백 — 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC007",
+      "NovelSource": "L9933-L9956 §7 나뉜다",
+      "NovelSummary": "네 번째 시도에서 아인은 코어를 끊지 않고 몸을 잘게 나누기로 한다. 낫이 원을 다섯 번 그리고 조각이 바닥·벽·천장에 붙는다. 민경은 계단을 뛰어 올라간다. 조각들은 모이지 않고 각각 서서, 발광점을 하나씩 가진 사람 키만 한 개체 셋이 된다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "분열 — 나누면 늘어난다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "이거 나누면 안 되는 거였네요.",
+          "Source": "L9953"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "몸을 잘게 나눠 재결합 시간을 번다(시도)",
+      "Interaction": [
+        "연속 원 베기"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "조각이 바닥·벽·천장에 붙음 → 3개체로 분열",
+      "Props": [],
+      "VFX": [
+        "조각 흩어짐",
+        "3개체 각각의 발광점"
+      ],
+      "SFX": [
+        "낫 연속 절단음"
+      ],
+      "Music": "보스전 — 전환",
+      "GameplayEntry": "아인의 네 번째 시도",
+      "GameplayExit": "3개체 기립",
+      "AnimationRequired": [
+        "scythe_multi_circle",
+        "boss_split_three",
+        "run_up_stairs"
+      ],
+      "CinematicRequired": "true — 분열 연출(모이지 않고 각각 섬)",
+      "SaveFlags": [
+        "EP14_boss09_split3"
+      ],
+      "Prerequisites": [
+        "EP14_SC006"
+      ],
+      "NextScene": "EP14_SC008",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_minkyung",
+        "char:boss_silheomche_09",
+        "anim:scythe_multi_circle",
+        "anim:boss_split_three",
+        "anim:run_up_stairs",
+        "vfx:조각 흩어짐",
+        "vfx:3개체 각각의 발광점",
+        "sfx:낫 연속 절단음",
+        "bgm:보스전 — 전환"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC008",
+      "NovelSource": "L9957-L9982 §8 좁은 계단",
+      "NovelSummary": "셋이 되자 지하실이 좁아지고 넷은 폭 두 사람 너비의 계단으로 물러난다. 계단 중턱에서 카인이 첫 번째를 받자 그 팔이 떨어져 나가 카인의 다리를 감고, 류가 잘라도 조각이 각각 움직인다. 두 번째가 올라오자 아인이 난간을 밟고 도약해 넘어가며 코어를 노리지만 표면 여러 곳이 발광해 진짜를 모른다. 착지한 지하실 바닥 뒤에 세 번째가 있다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "좁은 계단의 이점과 함정",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…뭐야 이거!",
+          "Source": "L9969"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어디가 진짜인지 모른다.",
+          "Source": "L9977"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "좁은 계단에서 3개체를 상대하고, 난간 도약으로 코어를 노린다",
+      "Interaction": [
+        "난간 도약",
+        "다리 감긴 카인 구출(류)"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "폭 두 사람 너비 계단, 난간, 지하실 바닥",
+      "Props": [],
+      "VFX": [
+        "표면 여러 곳 발광(가짜 코어)"
+      ],
+      "SFX": [
+        "팔이 떨어지는 소리"
+      ],
+      "Music": "보스전 — 압박",
+      "GameplayEntry": "계단으로 후퇴",
+      "GameplayExit": "아인이 지하실 바닥에 착지, 세 번째 개체와 대면",
+      "AnimationRequired": [
+        "greatsword_receive",
+        "boss_detached_arm_grab",
+        "leg_bound_struggle",
+        "dagger_stab",
+        "railing_vault_over_enemy"
+      ],
+      "CinematicRequired": "false — 인게임 전투",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP14_SC007"
+      ],
+      "NextScene": "EP14_SC009",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_silheomche_09",
+        "anim:greatsword_receive",
+        "anim:boss_detached_arm_grab",
+        "anim:leg_bound_struggle",
+        "anim:dagger_stab",
+        "anim:railing_vault_over_enemy",
+        "vfx:표면 여러 곳 발광(가짜 코어)",
+        "sfx:팔이 떨어지는 소리",
+        "bgm:보스전 — 압박"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC009",
+      "NovelSource": "L9983-L10014 §9 벌어진다",
+      "NovelSummary": "세 번째 개체가 가슴부터 몸을 양옆으로 벌린다. 아인은 그것이 감싸 안으로 넣으려는 것이며 몸의 봉합선 수만큼 그런 일이 있었다는 뜻임을 안다. 뒤는 벽이고 계산상 늦는다. 그때 위에서 시약병이 떨어져 깨지고, 닿은 자리가 하얗게 굳어 멈춘다. 계단 위에서 민경이 고정액이라고 외친다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "고정액 — 계약직이 아는 것의 첫 등장",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "열둘. 뛰면 여섯. 두 박자.",
+          "Source": "L9997"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "늦는다.",
+          "Source": "L9999"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "고정액이요!",
+          "Source": "L10007"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "조직 굳히는 거예요!",
+          "Source": "L10011"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "감싸기를 피한다(벽에 막힘) — 고정액 투척으로 구조됨",
+      "Interaction": [
+        "회피 시도"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "아인 뒤는 벽. 굳은 자리가 하얗게 멈춤",
+      "Props": [
+        "prop_fixative_bottle"
+      ],
+      "VFX": [
+        "몸이 벌어지는 회백색 내부",
+        "병 깨짐·하얗게 굳는 표면"
+      ],
+      "SFX": [
+        "유리병 깨지는 소리",
+        "민경의 외침"
+      ],
+      "Music": "위기 — 급정지",
+      "GameplayEntry": "세 번째 개체가 몸을 벌림",
+      "GameplayExit": "민경의 외침",
+      "AnimationRequired": [
+        "boss_open_engulf",
+        "back_to_wall",
+        "throw_bottle",
+        "shout_from_stairs"
+      ],
+      "CinematicRequired": "true — 감싸기 위기와 고정액 투척",
+      "SaveFlags": [
+        "EP14_fixative_learned"
+      ],
+      "Prerequisites": [
+        "EP14_SC008"
+      ],
+      "NextScene": "EP14_SC010",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_minkyung",
+        "char:boss_silheomche_09",
+        "prop:prop_fixative_bottle",
+        "anim:boss_open_engulf",
+        "anim:back_to_wall",
+        "anim:throw_bottle",
+        "anim:shout_from_stairs",
+        "vfx:몸이 벌어지는 회백색 내부",
+        "vfx:병 깨짐·하얗게 굳는 표면",
+        "sfx:유리병 깨지는 소리",
+        "sfx:민경의 외침",
+        "bgm:위기 — 급정지"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC010",
+      "NovelSource": "L10015-L10050 §10 계약직이 아는 것",
+      "NovelSummary": "민경이 병을 던지자 세 번째 개체의 팔이 굳고, 개체가 그 팔을 떼어낸다. 굳은 데는 안 붙는다며 민경이 계단을 뛰어 내려온다. 세 번째 병이 두 번째 개체의 얼굴 자리에 맞자 그것이 민경을 향해 돈다. 민경은 네 번째 병을 꺼내 던질 계산을 하느라 뛰지 않았고, 류가 도착했을 때 이미 감싸여 있었다. 류가 갈라 떨어지는 그녀를 받았지만 무게가 이상했다.",
+      "Location": "loc_pangyo_lab_b3",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_minkyung"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검",
+        "류: 단검"
+      ],
+      "StoryBeat": "동행자 사망 — 계산할 시간이 없었다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_minkyung"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_minkyung",
+          "Line": "…굳은 데는 안 붙어요!",
+          "Source": "L10021"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "제가 삼 년 동안 이거 정리했어요!",
+          "Source": "L10025"
+        },
+        {
+          "Speaker": "char_minkyung",
+          "Line": "굳으면 못 떼요!",
+          "Source": "L10025"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "개체들을 붙든 채 민경 쪽으로 향한다(류) — 구조 실패",
+      "Interaction": [
+        "개체 저지(카인·아인)",
+        "민경에게 달려감(류)"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "P2",
+      "EnvironmentState": "계단이 열려 있음, 굳어 떨어진 팔이 바닥에 정지",
+      "Props": [
+        "prop_fixative_bottle",
+        "prop_minkyung_backpack"
+      ],
+      "VFX": [
+        "굳은 팔",
+        "감싸는 회백색 몸"
+      ],
+      "SFX": [
+        "병 깨짐",
+        "단검 절단음"
+      ],
+      "Music": "비극 — 음이 끊김",
+      "GameplayEntry": "민경의 투척 지원 중 교전",
+      "GameplayExit": "류가 민경을 받음(무게가 이상함)",
+      "AnimationRequired": [
+        "throw_bottle",
+        "boss_self_sever_limb",
+        "run_up_stairs",
+        "engulfed_victim",
+        "dagger_stab",
+        "catch_falling_body"
+      ],
+      "CinematicRequired": "true — 민경 사망",
+      "SaveFlags": [
+        "EP14_minkyung_dead"
+      ],
+      "Prerequisites": [
+        "EP14_SC009"
+      ],
+      "NextScene": "EP14_SC011",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_b3",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_minkyung",
+        "char:boss_silheomche_09",
+        "prop:prop_fixative_bottle",
+        "prop:prop_minkyung_backpack",
+        "anim:throw_bottle",
+        "anim:boss_self_sever_limb",
+        "anim:run_up_stairs",
+        "anim:engulfed_victim",
+        "anim:dagger_stab",
+        "anim:catch_falling_body",
+        "vfx:굳은 팔",
+        "vfx:감싸는 회백색 몸",
+        "sfx:병 깨짐",
+        "sfx:단검 절단음",
+        "bgm:비극 — 음이 끊김"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC011",
+      "NovelSource": "L10051-L10072 §11 붙지 않는 것",
+      "NovelSummary": "이십 분 뒤 넷은 지하실을 나온다. 세 개체를 다 죽이지 못해, 민경이 남긴 마지막 병을 계단 중턱 이음매에 쏟아 굳혀 막았다. 며칠이면 돌아 나올 임시 조치다. 민경의 배낭에 시약 두 개가 있었고 카인이 그것을 아인에게 건넨다. 아인은 지하실에서 긁힌 팔뚝이 두 시간 만에 이미 닫혀 있는 것을 보고 소매로 덮는다.",
+      "Location": "loc_pangyo_research_complex",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "임시 봉쇄 후 철수 — 빨리 닫힌 상처",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_RESULT",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "계단을 굳혀 막고 건물 밖으로 나온다",
+      "Interaction": [
+        "이음매에 고정액 붓기",
+        "시약 받기",
+        "팔 확인"
+      ],
+      "BossId": "boss_silheomche_09",
+      "BossPhase": "",
+      "EnvironmentState": "계단 중턱 이음매가 굳어 조각이 못 넘음(며칠 내 돌파 예상)",
+      "Props": [
+        "prop_fixative_bottle",
+        "prop_reagent_bottles",
+        "prop_minkyung_backpack"
+      ],
+      "VFX": [
+        "하얗게 굳는 이음매",
+        "닫힌 상처"
+      ],
+      "SFX": [
+        "침묵"
+      ],
+      "Music": "침묵 뒤 낮은 현",
+      "GameplayEntry": "이십 분 뒤 건물 밖",
+      "GameplayExit": "아인이 팔을 소매로 덮음",
+      "AnimationRequired": [
+        "pour_liquid",
+        "hand_over_paper",
+        "look_at_arm_cover_sleeve"
+      ],
+      "CinematicRequired": "true — 결과 정리와 상처 발견",
+      "SaveFlags": [
+        "EP14_stair_sealed_temp",
+        "EP14_ain_fast_healing_seen"
+      ],
+      "Prerequisites": [
+        "EP14_SC010"
+      ],
+      "NextScene": "EP14_SC012",
+      "RequiredAssets": [
+        "env:loc_pangyo_research_complex",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_silheomche_09",
+        "prop:prop_fixative_bottle",
+        "prop:prop_reagent_bottles",
+        "prop:prop_minkyung_backpack",
+        "anim:pour_liquid",
+        "anim:hand_over_paper",
+        "anim:look_at_arm_cover_sleeve",
+        "vfx:하얗게 굳는 이음매",
+        "vfx:닫힌 상처",
+        "sfx:침묵",
+        "bgm:침묵 뒤 낮은 현"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC012",
+      "NovelSource": "L10073-L10128 §12 데이터",
+      "NovelSummary": "밤에 카인이 내일 다시 들어갈 거냐 묻는다. 아인은 오정길이 조명을 잡아 주는 옆에서 재생 시간(30·35·40초), 분열, 굳은 부위는 안 붙음을 적는다. 시약은 다 썼고 남은 것은 목숨값 두 병뿐이다. '굳히는 것 말고, 못 붙게 하는 방법'까지 적고 펜을 놓는다. 스승의 말을 묻는 카인에게 아인은 스승이 이런 걸 안 만나 봤다며 두 번 치겠다고 답한다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "데이터 정리와 원칙 수정 결심",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…내일 다시 들어갈 거야?",
+          "Source": "L10077"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…두 번 치지 말라고요.",
+          "Source": "L10107"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…스승님은 이런 걸 안 만나 봤어요.",
+          "Source": "L10113"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "그럼 어쩌게.",
+          "Source": "L10117"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "두 번 칠게요.",
+          "Source": "L10125"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "전투 데이터를 정리하고 카인과 대화한다",
+      "Interaction": [
+        "기록 종이 열람(재생 시간표)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤, 오정길의 조명",
+      "Props": [
+        "prop_regen_notes",
+        "prop_reagent_bottles"
+      ],
+      "VFX": [
+        "손전등 빛"
+      ],
+      "SFX": [
+        "펜 소리"
+      ],
+      "Music": "밤 — 조용한 결의",
+      "GameplayEntry": "밤 휴식 대화",
+      "GameplayExit": "'두 번 칠게요'",
+      "AnimationRequired": [
+        "sit_write_notes",
+        "hold_light",
+        "fold_paper_into_coat",
+        "short_laugh"
+      ],
+      "CinematicRequired": "false — 대화 장면",
+      "SaveFlags": [
+        "EP14_regen_data_noted",
+        "EP14_ain_resolve_two_strikes"
+      ],
+      "Prerequisites": [
+        "EP14_SC011"
+      ],
+      "NextScene": "EP14_SC013",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_regen_notes",
+        "prop:prop_reagent_bottles",
+        "anim:sit_write_notes",
+        "anim:hold_light",
+        "anim:fold_paper_into_coat",
+        "anim:short_laugh",
+        "vfx:손전등 빛",
+        "sfx:펜 소리",
+        "bgm:밤 — 조용한 결의"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP14",
+      "SceneId": "EP14_SC013",
+      "NovelSource": "L10129-L10153 §13 위에서",
+      "NovelSummary": "넷은 몰랐지만 건물 옥상에 한 사람이 여섯 시간 동안 지하실을 내려다보고 있었다. 계단이 굳는 것도, 셋이 서는 것도, 민경이 병 셋을 던지고 넷째를 못 던진 것도 봤지만 아무것도 하지 않았다. 그 사람은 옥상 난간에 앉아 노트에 개체 09의 봉인 해제와 재생 주기, 분열 상태, 접촉자 4인의 각인을 적고, 잘라도 안 죽는 걸 왜 계속 자르냐고 적는다.",
+      "Location": "loc_pangyo_lab_rooftop",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "관찰자의 존재 — 다음 화 세라 등장 예고",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "개체 09. 봉인 해제 확인.",
+          "Source": "L10141"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "접촉자 4인. 각인 보유. 전원 진행 중.",
+          "Source": "L10145"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…잘라도 안 죽는 걸, 왜 계속 자르고 있지.",
+          "Source": "L10149"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(입력 없음) 관찰자 시점 컷신",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밤의 옥상 난간",
+      "Props": [
+        "prop_observer_notebook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 소리",
+        "바람"
+      ],
+      "Music": "미스터리 — 차가운 관찰",
+      "GameplayEntry": "에피소드 엔딩 컷신",
+      "GameplayExit": "EP15 전환",
+      "AnimationRequired": [
+        "sit_on_railing_observe",
+        "sit_write_notes"
+      ],
+      "CinematicRequired": "true — 신원 미공개 관찰자 연출(얼굴 노출 여부 TBD)",
+      "SaveFlags": [
+        "EP14_rooftop_observer"
+      ],
+      "Prerequisites": [
+        "EP14_SC012"
+      ],
+      "NextScene": "EP15_SC001",
+      "RequiredAssets": [
+        "env:loc_pangyo_lab_rooftop",
+        "char:char_sera",
+        "prop:prop_observer_notebook",
+        "anim:sit_on_railing_observe",
+        "anim:sit_write_notes",
+        "sfx:펜 소리",
+        "sfx:바람",
+        "bgm:미스터리 — 차가운 관찰"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_silheomche_09",
+      "NameKo": "실험체 09호 (개체 09)",
+      "Scenes": [
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC006",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC009",
+        "EP14_SC010",
+        "EP14_SC011"
+      ],
+      "NovelReasonForBattle": "닥터 진의 목록 중 냉장 보관 약품이 있는 지하 3층으로 내려가려는데, 콘크리트 봉인을 안쪽에서 밀어내고 나온 개체가 계단 아래에 있었음",
+      "ArenaLocationId": "loc_pangyo_lab_b3",
+      "PhasesInNovel": [
+        "격파 1: 카인이 받고 류가 뒷목에 단검, 아인이 코어를 한 번에 가름 → 바닥에 퍼졌다 재결합, 벤 자리에 봉합선 1개 증가",
+        "격파 2: 아인 단독, 코어가 몸통 정중앙으로 이동 → 두 조각이 서로 기어가 붙음",
+        "격파 3: 4인 동시(오정길은 조명) — 조각을 벽 네 군데로 흩음 → 40초 후 재결합(첫 번째보다 10초 김)",
+        "격파 4 시도: 코어 대신 몸을 잘게 나눔(낫 원 다섯 번) → 모이지 않고 사람 키만 한 3개체로 분열"
+      ],
+      "PatternsInNovel": [
+        "느린 팔 뻗기 — 반 박자 지연, 목표를 지나침, 복귀에 또 반 박자",
+        "액체처럼 흐르다 어깨·목·머리가 생기며 사람 실루엣으로 재형성",
+        "절단된 팔이 바닥에 닿기 전 방향을 틀어 대상의 다리를 감음, 잘린 조각이 각각 움직임",
+        "표면 여러 곳이 동시에 발광해 진짜 코어 위치를 숨김",
+        "가슴부터 양옆으로 몸을 벌려 대상을 감싸 안으로 넣음(흡수)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "발광하는 코어(처음 뒷목, 이후 몸통 정중앙 등으로 이동)",
+        "몸 전체에 가로·세로·사선으로 난 봉합선(민경: 잘린 자국)"
+      ],
+      "BreakCounterInNovel": [
+        "고정액(조직 고정 시약)이 닿은 부위는 하얗게 굳어 움직이지 않음",
+        "굳은 부위는 다시 붙지 않음 — 개체가 굳은 팔을 스스로 떼어냄",
+        "재생 시간: 30초 → 35초 → 40초(아인의 기록)"
+      ],
+      "EnvironmentInBattle": [
+        "지하 3층 계단 아래 어둠, 헤드램프·오정길의 조명",
+        "폭이 사람 둘 너비인 좁은 계단 — 하나씩만 오르내림(이점이자 함정)",
+        "계단 난간(아인이 밟고 도약)",
+        "지하실 바닥·벽·천장에 조각이 달라붙음",
+        "계단 위에서 민경이 고정액 병을 투척"
+      ],
+      "Outcome": "세 번 격파했으나 전부 재생으로 무효. 분열한 3개체를 처치하지 못하고 계단 중턱 콘크리트 이음매에 마지막 고정액을 부어 임시 봉쇄 후 철수. 동행자 민경 사망.",
+      "Source": "L9790-L10072"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_gangnam_bunker",
+      "NameKo": "강남 벙커",
+      "DescriptionKo": "마태오가 이끄는 지하 벙커 거점. 닥터 진이 약품 목록을 건네고 마태오가 지도 옆에 두고 판교행을 결정하는 곳.",
+      "Scenes": [
+        "EP14_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_route_pangyo",
+      "NameKo": "판교로 가는 길",
+      "DescriptionKo": "벙커에서 판교까지의 도상 구간. 원고는 민경의 느린 걸음만 서술하며 구체적 지형은 없음.",
+      "Scenes": [
+        "EP14_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_research_complex",
+      "NameKo": "판교 연구단지 (세 번째 건물 앞)",
+      "DescriptionKo": "건물이 온전하고 유리 깨진 곳이 드묾. 화단 나무가 2년간 자라 인도를 덮음. 세 번째 건물 외벽에 회사 이름, 유리문에 반쯤 삭은 A4 공지. 지하 계단 둘 중 하나는 급히 부은 콘크리트로 막혔고 사람 하나 지날 만한 균열이 있음.",
+      "Scenes": [
+        "EP14_SC003",
+        "EP14_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_lab_b2",
+      "NameKo": "판교 연구소 지하 2층 시약 창고",
+      "DescriptionKo": "선반이 늘어선 시약 창고. 세 번째 선반에서 목록의 약품 2종을 찾음.",
+      "Scenes": [
+        "EP14_SC004"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_lab_b3",
+      "NameKo": "판교 연구소 지하 3층 계단·지하실",
+      "DescriptionKo": "지하 3층으로 내려가는 계단. 입구 콘크리트가 안쪽에서 밀려 부서짐. 계단 폭은 사람 둘 너비, 난간 있음. 아래 지하실은 어둡고 헤드램프로만 보임.",
+      "Scenes": [
+        "EP14_SC005",
+        "EP14_SC006",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC009",
+        "EP14_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_lab_rooftop",
+      "NameKo": "판교 연구소 건물 옥상",
+      "DescriptionKo": "지하실을 내려다볼 수 있는 옥상 난간. 관찰자가 여섯 시간 머무름.",
+      "Scenes": [
+        "EP14_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 낫을 쓰는 각인자, 스승의 원칙을 따르는 사신",
+      "Scenes": [
+        "EP14_SC001",
+        "EP14_SC002",
+        "EP14_SC003",
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC006",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC009",
+        "EP14_SC010",
+        "EP14_SC011",
+        "EP14_SC012"
+      ],
+      "StateChangesKo": [
+        "EP14_SC006: '두 번 치지 않는다' 원칙이 처음으로 흔들림",
+        "EP14_SC011: 지하실에서 세 번째 개체 표면에 스쳐 팔뚝이 긁혔던 상처가 두 시간 만에 닫혀 있음을 발견, 소매로 덮음",
+        "EP14_SC012: '두 번 칠게요' — 원칙 수정 결심"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검을 쓰는 동료, 정면에서 받는 모루 역",
+      "Scenes": [
+        "EP14_SC002",
+        "EP14_SC003",
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC010",
+        "EP14_SC011",
+        "EP14_SC012"
+      ],
+      "StateChangesKo": [
+        "EP14_SC008: 떨어져 나온 개체의 팔이 다리를 감음(류가 절단해 풀어 줌)"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "단검을 쓰는 동료",
+      "Scenes": [
+        "EP14_SC002",
+        "EP14_SC003",
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC010",
+        "EP14_SC011"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "각인 없는 동행자. 전투 중 계단 위에서 조명을 잡음",
+      "Scenes": [
+        "EP14_SC002",
+        "EP14_SC003",
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC007",
+        "EP14_SC008",
+        "EP14_SC011",
+        "EP14_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "벙커 의사. 아인의 약(억제제) 재료 목록을 작성",
+      "Scenes": [
+        "EP14_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "강남 벙커 대장. 판교행과 동행 배정을 결정",
+      "Scenes": [
+        "EP14_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_minkyung",
+      "NameKo": "민경",
+      "RoleKo": "29세. 재난 전 판교 연구소 계약직(시약 정리·유리 기구 세척·폐기물 분류). 라벨을 읽는 동행자",
+      "Scenes": [
+        "EP14_SC002",
+        "EP14_SC003",
+        "EP14_SC004",
+        "EP14_SC005",
+        "EP14_SC007",
+        "EP14_SC009",
+        "EP14_SC010"
+      ],
+      "StateChangesKo": [
+        "EP14_SC004: 시약 2개(여섯 달어치)를 배낭에 넣음",
+        "EP14_SC009~SC010: 고정액 병을 세 개 던져 개체를 굳힘",
+        "EP14_SC010: 네 번째 병을 꺼내다 두 번째 개체에 감싸임 — 류가 끌어냈으나 사망(EP15에서 '그 애가 죽은 거야'로 확인)"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "옥상의 관찰자. EP14에서는 이름 없이 등장하며 EP15에서 세라로 확인됨",
+      "Scenes": [
+        "EP14_SC013"
+      ],
+      "StateChangesKo": [
+        "EP14_SC013: 옥상 난간에서 여섯 시간 관찰하며 노트 기록, 개입하지 않음"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "hand_over_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin",
+        "char_mateo",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC001",
+        "EP14_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이·병을 건네고 받기"
+    },
+    {
+      "Action": "adjust_glasses",
+      "Category": "gesture",
+      "Characters": [
+        "char_dr_jin",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP14_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "안경 고쳐 쓰기"
+    },
+    {
+      "Action": "walk_slow_group",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "민경의 느린 걸음에 넷이 속도를 맞춤"
+    },
+    {
+      "Action": "adjust_backpack",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배낭 고쳐 메기"
+    },
+    {
+      "Action": "reach_into_crack",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "콘크리트 균열에 손을 넣어 공기를 느끼고 빼기"
+    },
+    {
+      "Action": "search_shelf",
+      "Category": "interaction",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "목록을 들고 선반 사이를 돌며 병을 찾아 배낭에 넣기"
+    },
+    {
+      "Action": "cigarette_take_out_put_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 꺼냈다가 도로 넣음"
+    },
+    {
+      "Action": "step_back_fear",
+      "Category": "emotion",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "겁에 질려 뒤로 물러섬"
+    },
+    {
+      "Action": "boss_reform_humanoid",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC004",
+        "EP14_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "퍼진 회백색 덩어리가 가운데로 모여 어깨·목·머리가 생기며 섬. 흐트러졌다 다시 잡힘"
+    },
+    {
+      "Action": "boss_slow_reach",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "반 박자 늦은 팔 뻗기, 목표를 지나쳤다 복귀"
+    },
+    {
+      "Action": "boss_collapse_spread",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "코어가 끊겨 바닥으로 퍼지고 발광이 꺼짐"
+    },
+    {
+      "Action": "boss_fragments_crawl_merge",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "두 조각/흩어진 조각이 서로 기어가 붙음"
+    },
+    {
+      "Action": "boss_split_three",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "잘게 나뉜 조각이 벽·천장에 붙었다가 각각 사람 키만 한 개체로 섬"
+    },
+    {
+      "Action": "boss_detached_arm_grab",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "떨어진 팔이 방향을 틀어 다리를 감음"
+    },
+    {
+      "Action": "boss_open_engulf",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가슴부터 양옆으로 몸을 벌려 대상을 감쌈"
+    },
+    {
+      "Action": "boss_self_sever_limb",
+      "Category": "boss",
+      "Characters": [
+        "boss_silheomche_09"
+      ],
+      "Scenes": [
+        "EP14_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "굳은 팔을 스스로 떼어냄"
+    },
+    {
+      "Action": "greatsword_receive",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC005",
+        "EP14_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "정면에서 대검으로 받아 파고듦(모루)"
+    },
+    {
+      "Action": "dagger_stab",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP14_SC005",
+        "EP14_SC008",
+        "EP14_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "단검 찌르기/베기"
+    },
+    {
+      "Action": "scythe_circle_slash",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫이 원을 그리며 끝자락 4분의 1로 코어를 가름"
+    },
+    {
+      "Action": "scythe_multi_circle",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫으로 원을 다섯 번 그려 몸을 잘게 나눔"
+    },
+    {
+      "Action": "hold_light",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP14_SC005",
+        "EP14_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "조명을 들고 비춤"
+    },
+    {
+      "Action": "stand_holding_weapon_still",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫을 든 채 서서 생각에 잠김"
+    },
+    {
+      "Action": "retreat_back",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP14_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "물러나 숨을 고름"
+    },
+    {
+      "Action": "run_up_stairs",
+      "Category": "locomotion",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC007",
+        "EP14_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계단을 뛰어 오르내림"
+    },
+    {
+      "Action": "railing_vault_over_enemy",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "계단 난간을 밟고 도약해 적 위를 넘어 착지"
+    },
+    {
+      "Action": "leg_bound_struggle",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "다리가 감겨 버둥거림"
+    },
+    {
+      "Action": "back_to_wall",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뒤로 뛰다 벽에 막힘"
+    },
+    {
+      "Action": "throw_bottle",
+      "Category": "combat",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC009",
+        "EP14_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "고정액 병을 위에서 던짐, 네 번째는 배낭에서 꺼내다 멈춤"
+    },
+    {
+      "Action": "shout_from_stairs",
+      "Category": "gesture",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계단 위에서 소리침"
+    },
+    {
+      "Action": "engulfed_victim",
+      "Category": "death",
+      "Characters": [
+        "char_minkyung"
+      ],
+      "Scenes": [
+        "EP14_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "개체에 감싸임 — 이후 무게가 이상한 상태로 떨어짐(사망)"
+    },
+    {
+      "Action": "catch_falling_body",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP14_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "갈라진 개체 안에서 떨어지는 민경을 받음"
+    },
+    {
+      "Action": "pour_liquid",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP14_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계단 중턱 이음매에 마지막 병을 쏟음(수행자 미기재)"
+    },
+    {
+      "Action": "look_at_arm_cover_sleeve",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "자기 팔을 보고 소매로 덮음"
+    },
+    {
+      "Action": "sit_write_notes",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP14_SC012",
+        "EP14_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이/노트에 적기"
+    },
+    {
+      "Action": "fold_paper_into_coat",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP14_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이를 접어 품에 넣음"
+    },
+    {
+      "Action": "short_laugh",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP14_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "숨에 가까운 짧은 웃음"
+    },
+    {
+      "Action": "sit_on_railing_observe",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP14_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "옥상 난간에 앉아 무릎 위 노트를 펴고 내려다봄"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_reagent_list",
+      "NameKo": "닥터 진의 약품 목록 (열두 줄, 만년필 글씨, 여백에 지번)",
+      "Scenes": [
+        "EP14_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_bunker_map",
+      "NameKo": "마태오의 지도",
+      "Scenes": [
+        "EP14_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_evac_notice",
+      "NameKo": "유리문의 A4 공지 '내부 인원 전원 대피 완료. 지하 3층 봉인.'",
+      "Scenes": [
+        "EP14_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_concrete_seal",
+      "NameKo": "급히 부은 콘크리트 봉인 (갈라진 틈/안쪽에서 부서진 자국)",
+      "Scenes": [
+        "EP14_SC003",
+        "EP14_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_reagent_bottles",
+      "NameKo": "목록의 시약 2병 (억제제 재료, 여섯 달어치)",
+      "Scenes": [
+        "EP14_SC004",
+        "EP14_SC011",
+        "EP14_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_fixative_bottle",
+      "NameKo": "고정액 병 (조직 고정 시약)",
+      "Scenes": [
+        "EP14_SC009",
+        "EP14_SC010",
+        "EP14_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_headlamp",
+      "NameKo": "헤드램프",
+      "Scenes": [
+        "EP14_SC004",
+        "EP14_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_minkyung_backpack",
+      "NameKo": "민경의 배낭",
+      "Scenes": [
+        "EP14_SC002",
+        "EP14_SC004",
+        "EP14_SC010",
+        "EP14_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_regen_notes",
+      "NameKo": "아인이 재생 시간을 적은 종이",
+      "Scenes": [
+        "EP14_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_observer_notebook",
+      "NameKo": "옥상 관찰자의 노트",
+      "Scenes": [
+        "EP14_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP14_SC001",
+      "QuestionKo": "연속성: EP13 §12~§13에서 일행은 이미 판교 건물 앞에서 야영하고 균열을 조사했는데 EP14는 벙커의 목록 장면부터 다시 시작함. 또 EP13 예고는 EP14를 '지역⑥·소리를 지우는 것'으로 소개하나 EP14 헤더는 '지역⑤ 판교'. 어느 쪽이 정본인가"
+    },
+    {
+      "Scene": "EP14_SC001",
+      "QuestionKo": "시간대 미기재 (해당: EP14_SC001, EP14_SC002, EP14_SC003, EP14_SC004, EP14_SC005, EP14_SC006, EP14_SC007, EP14_SC008, EP14_SC009, EP14_SC010, EP14_SC011). EP15에서 관찰자 빛이 '새벽하고 아침'에 움직였다고 언급됨"
+    },
+    {
+      "Scene": "EP14_SC002",
+      "QuestionKo": "판교까지 이동 구간의 장소·지형 미기재(EP13은 벙커에서 판교까지 걸어서 나흘이라 언급)"
+    },
+    {
+      "Scene": "EP14_SC004",
+      "QuestionKo": "실험체 09호의 게임 내 보스 지위: 원고 헤더 '실험체 09호 조우'와 '격파 3회'로 지역⑤ 보스로 채택했으나 공식 보스 명칭·등급 미확정"
+    },
+    {
+      "Scene": "EP14_SC004",
+      "QuestionKo": "§5의 '넷'에 오정길이 포함되는지(계단 위 조명 담당) — 4인 동시 공격 구성원이 불명확"
+    },
+    {
+      "Scene": "EP14_SC011",
+      "QuestionKo": "민경의 시신 수습 여부·방법 미기재. 마지막 병을 이음매에 쏟은 인물도 미기재"
+    },
+    {
+      "Scene": "EP14_SC011",
+      "QuestionKo": "아인이 팔뚝을 긁힌 정확한 시점(세 번째 개체에 스친 순간) — SC009/SC010 중 어디서 연출할지"
+    },
+    {
+      "Scene": "EP14_SC012",
+      "QuestionKo": "밤 대화 장소 미기재(건물 밖 야영지로 추정되나 원고에 없음)"
+    },
+    {
+      "Scene": "EP14_SC013",
+      "QuestionKo": "옥상 관찰자는 EP14에서 무명이며 EP15 §11에서 세라로 확인됨. EP14 연출에서 얼굴·복장 노출 여부"
+    }
+  ]
+}

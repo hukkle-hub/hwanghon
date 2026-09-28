@@ -1,0 +1,1911 @@
+{
+  "EpisodeId": "EP12",
+  "TitleKo": "제12화 — 우선",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      8979,
+      9310
+    ]
+  },
+  "SummaryKo": "카인이 대검을 지팡이 삼아 걷는 박자에 맞춰 일행은 사흘 만에 강남 벙커로 돌아온다. 서 하사 일행은 벙커가 '명단이 있는 곳'이라며 들어오지 않고, 남쪽 길목의 표식(뒤집혀 있으면 오지 말 것)을 아인에게 남기고 떠난다. 닥터 진은 카인의 무릎이 관절 손상이라 이 다리로 사는 법을 배워야 한다고 선고한다. 같은 날 사신 용병단은 B등급으로 승격되고 벙커는 잔치를 벌이며, 정기 회신의 '축하 전달 바람' 문구에 더 크게 환호하지만 마태오만 웃지 않는다. 밤의 닫힌 관제실에서 아인은 증거 두 점과 함께 본 것을 보고하고, 마태오는 '믿는다'며 격주 정기 보고를 중지시킨다. 마태오는 함구령을 내리고, 아인은 다음 남쪽 의뢰를 전부 받겠다는 조건을 건다. 유진은 기록을 종이로만 계속하기로 한다. 두호는 구출된 아이를 제 옆에 재우고, 카인은 B 인식표를 대검 자루에 건다. 아인은 B 인식표와 'B 이상 우선' 문구를 나란히 내려다본다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC001",
+      "NovelSource": "L8979-L9002 §1 박자",
+      "NovelSummary": "돌아가는 길은 사흘. 카인이 대검을 짚고 걷는 박자에 열 명의 걸음이 맞춰지고, 구출된 아이가 사흘 내내 카인 곁에서 걷는다. 후미의 아인에게 스무 개의 보폭은 들리지 않고, 들리지 않는 것이 더 크게 들린다.",
+      "Location": "loc_return_road_to_bunker",
+      "TimeOfDay": "사흘간 (주·야)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검(지팡이)"
+      ],
+      "StoryBeat": "한 사람의 다리에 맞춘 열 명의 박자",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "대검 지팡이로 벙커까지 걷는다",
+      "Interaction": [
+        "(제안) 지팡이 보행 리듬 입력 — 쿵, 걸음, 걸음"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "사흘의 귀환길",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [],
+      "SFX": [
+        "쿵, 걸음, 걸음"
+      ],
+      "Music": "느린 귀환",
+      "GameplayEntry": "은신처 출발",
+      "GameplayExit": "벙커 출격문이 보이는 거리",
+      "AnimationRequired": [
+        "sword_cane_walk",
+        "child_match_steps"
+      ],
+      "CinematicRequired": "false: 이동",
+      "SaveFlags": [
+        "EP12_RETURN_3DAYS"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP12_SC002",
+      "RequiredAssets": [
+        "env:loc_return_road_to_bunker",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_talyeongbyeong",
+        "char:char_guchul_noin",
+        "char:char_guchul_yeoja",
+        "char:char_guchul_ai",
+        "prop:prop_cracked_greatsword",
+        "anim:sword_cane_walk",
+        "anim:child_match_steps"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC002",
+      "NovelSource": "L9003-L9024 §2 명단이 있는 곳",
+      "NovelSummary": "벙커 출격문이 보이는 곳에서 서 하사 일행 셋이 멈춘다. 벙커는 명단이 있는 곳이라 들어가지 않겠다는 서 하사는 보급 꾸러미를 받고 남쪽 길목 표식이 그려진 수첩 반 장을 아인에게 준다 — 뒤집혀 있으면 오지 말라고. 오정길의 미완성 경례 속에 셋이 어스름으로 돌아선다.",
+      "Location": "loc_bunker_sortie_gate",
+      "TimeOfDay": "어스름",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "명단의 의미가 바뀌다 — 이별과 표식",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…안 들어와?",
+          "Source": "L9009"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "벙커는… 명단이 있는 곳이라서요.",
+          "Source": "L9013"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "뒤집혀 있으면 — 오지 마시오.",
+          "Source": "L9019"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 탈영병들과의 이별",
+      "Interaction": [
+        "(제안) 표식 쪽지 획득"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "출격문 백 걸음 앞, 철문 앞의 마중 인원과 마태오의 실루엣",
+      "Props": [
+        "prop_supply_bundle",
+        "prop_seo_marker_note"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "쓸쓸한 이별",
+      "GameplayEntry": "출격문 도착",
+      "GameplayExit": "셋이 어스름으로 사라짐",
+      "AnimationRequired": [
+        "tear_notebook",
+        "half_salute"
+      ],
+      "CinematicRequired": "true: 미완성 경례",
+      "SaveFlags": [
+        "EP12_SEO_MARKS_RECEIVED",
+        "EP12_DESERTERS_DEPART"
+      ],
+      "Prerequisites": [
+        "EP12_SC001"
+      ],
+      "NextScene": "EP12_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_sortie_gate",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_talyeongbyeong",
+        "char:char_guchul_noin",
+        "char:char_guchul_yeoja",
+        "char:char_guchul_ai",
+        "char:char_mateo",
+        "char:char_bunker_saramdeul",
+        "prop:prop_supply_bundle",
+        "prop:prop_seo_marker_note",
+        "anim:tear_notebook",
+        "anim:half_salute"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC003",
+      "NovelSource": "L9025-L9042 §3 선고 (의무실)",
+      "NovelSummary": "닥터 진이 카인의 무릎을 두 번 굽혀 보고, 인대가 아니라 관절이며 앞으로는 이 다리로 사는 법을 배워야 한다고 말한다. 카인은 지팡이 짚는 용병이라며 농담하고, 처방지를 보지도 않고 접어 넣는다. 문가의 아인은 아무 말도 하지 않는다.",
+      "Location": "loc_bunker_infirmary",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_dr_jin",
+        "char_kain",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "선고 — 돌아오지 않는 무릎",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_dr_jin",
+        "char_kain",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "인대가 아니라 관절입니다.",
+          "Source": "L9031"
+        },
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "…앞으로는, 이 다리로 사는 법을 배우셔야 합니다.",
+          "Source": "L9035"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…지팡이 짚는 용병이라. 값 좀 쳐주려나.",
+          "Source": "L9039"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 진단",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "의무실",
+      "Props": [
+        "prop_prescription"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 소리"
+      ],
+      "Music": "담담한 비감",
+      "GameplayEntry": "진찰",
+      "GameplayExit": "처방지를 주머니에",
+      "AnimationRequired": [
+        "bend_knee_exam",
+        "write_prescription",
+        "fold_into_pocket"
+      ],
+      "CinematicRequired": "true: 같은 지점에서 멈추는 각도",
+      "SaveFlags": [
+        "EP12_KAIN_KNEE_PERMANENT"
+      ],
+      "Prerequisites": [
+        "EP12_SC002"
+      ],
+      "NextScene": "EP12_SC004",
+      "RequiredAssets": [
+        "env:loc_bunker_infirmary",
+        "char:char_dr_jin",
+        "char:char_kain",
+        "char:char_ain",
+        "prop:prop_prescription",
+        "anim:bend_knee_exam",
+        "anim:write_prescription",
+        "anim:fold_into_pocket"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC004",
+      "NovelSource": "L9043-L9050 §3 선고 (게시판)",
+      "NovelSummary": "복도 게시판 공고문에 '사신 용병단, 금일 부로 B등급 승격. 금일 저녁 각인 평가소.'가 적혀 있다. 카인의 얼굴이 무릎도 잊은 듯 확 펴진다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "당일 (저녁 승급식 이전)",
+      "Characters": [
+        "char_kain",
+        "char_bunker_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "승격 공고",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_bunker_saramdeul"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "밝게 웅성거리는 게시판 앞",
+      "Props": [
+        "prop_notice_board"
+      ],
+      "VFX": [],
+      "SFX": [
+        "밝은 웅성거림"
+      ],
+      "Music": "밝아지는 전환",
+      "GameplayEntry": "복도로 나옴",
+      "GameplayExit": "카인의 얼굴이 펴짐",
+      "AnimationRequired": [],
+      "CinematicRequired": "false: 짧은 컷",
+      "SaveFlags": [
+        "EP12_PROMOTION_NOTICE"
+      ],
+      "Prerequisites": [
+        "EP12_SC003"
+      ],
+      "NextScene": "EP12_SC005",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_kain",
+        "char:char_bunker_saramdeul",
+        "prop:prop_notice_board"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC005",
+      "NovelSource": "L9051-L9078 §4 경사",
+      "NovelSummary": "저녁 각인 평가소 앞에 사람들이 모인다. 유진이 두 사람을 계측해 안정 범위, B등급을 선언하고 각인기가 새 인식표에 B를 박는다. 카인은 인식표를 들고 크게 웃으며 허수아비 값을 갚겠다고 외치고, 뒤에서 이를 들은 마태오의 표정이 잠깐 이상해진다. 아인은 인식표를 목에 걸며 B를 한 번 내려다본다.",
+      "Location": "loc_bunker_assessment_office",
+      "TimeOfDay": "저녁",
+      "Characters": [
+        "char_yujin",
+        "char_ain",
+        "char_kain",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "경사 — 그리고 아인만의 한 컷",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_yujin",
+        "char_ain",
+        "char_kain",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_yujin",
+          "Line": "두 분 다 안정 범위입니다. — 축하드립니다. B등급.",
+          "Source": "L9059"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "B다, B! 의뢰비도 오르지?!",
+          "Source": "L9067"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…좋아, 허수아비 값 이제 갚는다!",
+          "Source": "L9067"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 승급식",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "평가소 앞 군중, 박수·휘파람",
+      "Props": [
+        "prop_core_meter",
+        "prop_paper_ledger",
+        "prop_engraver",
+        "prop_dogtag_b"
+      ],
+      "VFX": [],
+      "SFX": [
+        "각인기 압인음",
+        "박수",
+        "휘파람"
+      ],
+      "Music": "축제",
+      "GameplayEntry": "평가소 집결",
+      "GameplayExit": "아인이 B를 내려다봄",
+      "AnimationRequired": [
+        "place_wrist_on_meter",
+        "raise_dogtag_laugh",
+        "applause_crowd",
+        "hang_tag_on_neck",
+        "look_down_at_tag"
+      ],
+      "CinematicRequired": "true: 카인의 웃음과 아인의 B 컷",
+      "SaveFlags": [
+        "EP12_AIN_KAIN_RANK_B"
+      ],
+      "Prerequisites": [
+        "EP12_SC004"
+      ],
+      "NextScene": "EP12_SC006",
+      "RequiredAssets": [
+        "env:loc_bunker_assessment_office",
+        "char:char_yujin",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_mateo",
+        "char:char_bunker_saramdeul",
+        "prop:prop_core_meter",
+        "prop:prop_paper_ledger",
+        "prop:prop_engraver",
+        "prop:prop_dogtag_b",
+        "anim:place_wrist_on_meter",
+        "anim:raise_dogtag_laugh",
+        "anim:applause_crowd",
+        "anim:hang_tag_on_neck",
+        "anim:look_down_at_tag"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC006",
+      "NovelSource": "L9079-L9134 §5 웃는 날",
+      "NovelSummary": "식당의 조촐한 잔치. 구출된 셋도 끼어 앉고, 카인은 실내라 담배를 못 피운다고 투덜대며, 두호는 구출된 아이에게 반찬을 옮겨 준다. 류는 벽 쪽에서 주머니를 짚는다. 무전수 박 씨가 가져온 정기 회신에 '승급자 이 명 확인. 축하 전달 바람.'이 있어 식당이 더 크게 환호하지만, 마태오는 웃지 않고 종이를 접어 넣은 뒤 아인에게 저녁 후 관제실로 오라고 한다.",
+      "Location": "loc_bunker_cafeteria",
+      "TimeOfDay": "저녁",
+      "Characters": [
+        "char_kain",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_duho",
+        "char_ryu",
+        "char_ain",
+        "char_park_ssi",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "위에서 온 축하 — 작성된 축하",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_duho",
+        "char_ryu",
+        "char_ain",
+        "char_park_ssi",
+        "char_mateo",
+        "char_bunker_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…경사날에 한 대도 못 태우네. B등급이 뭐 소용이야.",
+          "Source": "L9087"
+        },
+        {
+          "Speaker": "char_park_ssi",
+          "Line": "관리관님. 회신 왔습니다.",
+          "Source": "L9097"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "귀 거점 B등급 승급자 이 명 확인.",
+          "Source": "L9107"
+        },
+        {
+          "Speaker": "char_bunker_saramdeul",
+          "Line": "위에서도 축하한대!",
+          "Source": "L9111"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "…저녁 끝나고. 관제실로.",
+          "Source": "L9129"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "오늘은 벙커가 웃는 날이다.",
+          "Source": "L9133"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 잔치와 회신",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "넉넉한 배급, 웃음, 무전실 쪽",
+      "Props": [
+        "prop_meal_tray",
+        "prop_cigarette",
+        "prop_radio_reply",
+        "prop_dogtag_b"
+      ],
+      "VFX": [],
+      "SFX": [
+        "웃음",
+        "숟가락",
+        "박수",
+        "잔 부딪힘"
+      ],
+      "Music": "잔치 → 불길한 여운",
+      "GameplayEntry": "잔치 시작",
+      "GameplayExit": "마태오의 호출",
+      "AnimationRequired": [
+        "put_cigarette_back",
+        "share_side_dish",
+        "touch_pocket",
+        "read_paper_aloud",
+        "fold_into_pocket"
+      ],
+      "CinematicRequired": "true: 웃지 않는 마태오",
+      "SaveFlags": [
+        "EP12_REPLY_CONGRATS_RECEIVED"
+      ],
+      "Prerequisites": [
+        "EP12_SC005"
+      ],
+      "NextScene": "EP12_SC007",
+      "RequiredAssets": [
+        "env:loc_bunker_cafeteria",
+        "char:char_kain",
+        "char:char_guchul_noin",
+        "char:char_guchul_yeoja",
+        "char:char_guchul_ai",
+        "char:char_duho",
+        "char:char_ryu",
+        "char:char_ain",
+        "char:char_park_ssi",
+        "char:char_mateo",
+        "char:char_bunker_saramdeul",
+        "prop:prop_meal_tray",
+        "prop:prop_cigarette",
+        "prop:prop_radio_reply",
+        "prop:prop_dogtag_b",
+        "anim:put_cigarette_back",
+        "anim:share_side_dish",
+        "anim:touch_pocket",
+        "anim:read_paper_aloud",
+        "anim:fold_into_pocket"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC007",
+      "NovelSource": "L9135-L9159 §6 닫힌 문",
+      "NovelSummary": "밤, 문이 닫힌 관제실에 마태오·아인·카인과 배석한 유진이 있다. 아인이 교신 기록부와 군 마크 휴대 계측기를 놓고 본 것만 순서대로 짧게 보고한다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "비공개 보고",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…문마다 등급이 적혀 있었어요. 분필로.",
+          "Source": "L9147"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "계측하고. 나눠 세우고. 표시 뜬 쪽을 데려갔어요.",
+          "Source": "L9149"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "집행관이 — 대열이랑 같이 걸었어요. 표식을 달고.",
+          "Source": "L9151"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "장교가 명령했고. 그게 들었어요.",
+          "Source": "L9153"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 보고",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "닫힌 관제실, 계측기가 수평선을 긋는 소리",
+      "Props": [
+        "prop_comm_logbook",
+        "prop_portable_meter_military"
+      ],
+      "VFX": [],
+      "SFX": [
+        "계측기 사각거림"
+      ],
+      "Music": "긴장된 정적",
+      "GameplayEntry": "관제실 입실",
+      "GameplayExit": "보고 종료",
+      "AnimationRequired": [
+        "place_evidence_on_table"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP12_REPORT_TO_MATEO"
+      ],
+      "Prerequisites": [
+        "EP12_SC006"
+      ],
+      "NextScene": "EP12_SC008",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_yujin",
+        "prop:prop_comm_logbook",
+        "prop:prop_portable_meter_military",
+        "anim:place_evidence_on_table"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC008",
+      "NovelSource": "L9160-L9179 §7 아귀",
+      "NovelSummary": "마태오는 놀라지 않는다. 이 년 동안 어긋나 있던 숫자들 — 돌아오지 않은 용병들, B와 A만 비던 자리들 — 이 맞아 들어가는 얼굴이다. 시선이 서랍을 스치지만 열지 않고, 계측기의 군 마크를 오래 본 뒤 '믿는다'고만 말한다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "장부의 아귀가 맞다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "…믿는다.",
+          "Source": "L9174"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실",
+      "Props": [
+        "prop_mateo_drawer",
+        "prop_portable_meter_military"
+      ],
+      "VFX": [],
+      "SFX": [
+        "침묵"
+      ],
+      "Music": "저음 긴장",
+      "GameplayEntry": "긴 침묵",
+      "GameplayExit": "'믿는다'",
+      "AnimationRequired": [
+        "glance_drawer",
+        "inspect_meter_mark"
+      ],
+      "CinematicRequired": "true: 서랍을 스치는 시선",
+      "SaveFlags": [
+        "EP12_MATEO_BELIEVES"
+      ],
+      "Prerequisites": [
+        "EP12_SC007"
+      ],
+      "NextScene": "EP12_SC009",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_yujin",
+        "prop:prop_mateo_drawer",
+        "prop:prop_portable_meter_military",
+        "anim:glance_drawer",
+        "anim:inspect_meter_mark"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC009",
+      "NovelSource": "L9180-L9197 §8 믿는 방식",
+      "NovelSummary": "마태오가 무전실 쪽 창을 열고 박 씨에게 격주 정기 현황 보고를 오늘부로 중지하고 수신만 하라고 한다. 무전수의 손이 송신 스위치에서 떨어진다. 이 년간 보낸 생존자 수·등록 현황·등급 분포의 의미를 각자 계산한다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_mateo",
+        "char_park_ssi",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "믿음은 스위치에서 떨어지는 손으로 왔다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_park_ssi",
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "…박 씨. 정기 현황 보고, 오늘부로 중지한다.",
+          "Source": "L9184"
+        },
+        {
+          "Speaker": "char_park_ssi",
+          "Line": "…예? 격주 생존자 현황—",
+          "Source": "L9186"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "중지한다. 수신만 해.",
+          "Source": "L9188"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "무전실 쪽 창",
+      "Props": [
+        "prop_radio_switch"
+      ],
+      "VFX": [],
+      "SFX": [
+        "창 여는 소리",
+        "스위치"
+      ],
+      "Music": "",
+      "GameplayEntry": "마태오가 일어남",
+      "GameplayExit": "스위치에서 손이 떨어짐",
+      "AnimationRequired": [
+        "open_window",
+        "hand_off_switch"
+      ],
+      "CinematicRequired": "true: 손 클로즈업",
+      "SaveFlags": [
+        "EP12_REPORTS_HALTED"
+      ],
+      "Prerequisites": [
+        "EP12_SC008"
+      ],
+      "NextScene": "EP12_SC010",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_park_ssi",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_yujin",
+        "prop:prop_radio_switch",
+        "anim:open_window",
+        "anim:hand_off_switch"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC010",
+      "NovelSource": "L9198-L9225 §9 함구",
+      "NovelSummary": "마태오는 이 이야기를 당분간 방 밖으로 내지 않겠다고 한다. 카인이 반발하지만, 등급은 배급표이자 질서이며 무너뜨린 다음 날 아침을 누가 책임지냐는 말에 반박하지 못한다. 아인은 조건으로 다음 남쪽 의뢰를 전부 자신들이 받겠다고 하고 마태오가 끄덕인다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_mateo",
+        "char_kain",
+        "char_ain",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "함구의 값 — 침묵 대신 방향",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_kain",
+        "char_ain",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "이 방 밖으로는, 당분간 나가지 않는 얘기다.",
+          "Source": "L9200"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…사람들이 알아야 하는 거 아냐?",
+          "Source": "L9204"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "알면 뭘 하지. 계측을 거부하나. 인식표를 버리나.",
+          "Source": "L9206"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "무너뜨리는 건 하루면 되는데,",
+          "Source": "L9210"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…조건 하나요.",
+          "Source": "L9216"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "다음 남쪽 의뢰. 우리가 받아요. 전부.",
+          "Source": "L9220"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 함구령과 조건",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "팽팽한 대화",
+      "GameplayEntry": "함구 선언",
+      "GameplayExit": "마태오의 끄덕임",
+      "AnimationRequired": [],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP12_GAG_ORDER",
+        "EP12_SOUTH_MISSIONS_PROMISED"
+      ],
+      "Prerequisites": [
+        "EP12_SC009"
+      ],
+      "NextScene": "EP12_SC011",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_yujin"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC011",
+      "NovelSource": "L9226-L9243 §10 종이",
+      "NovelSummary": "배석한 유진이 일어나 문가에서 돌아보며, 기록은 계속하되 전파를 타지 않는 종이로만 하겠다고 말하고 문을 닫는다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_yujin",
+        "char_mateo",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "기록하는 사람의 선택",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_yujin",
+        "char_mateo",
+        "char_ain",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_yujin",
+          "Line": "…기록은, 계속합니다. 종이로만.",
+          "Source": "L9232"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "종이는 — 전파를 안 타니까요.",
+          "Source": "L9236"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실 문가",
+      "Props": [
+        "prop_paper_ledger"
+      ],
+      "VFX": [],
+      "SFX": [
+        "문 닫힘"
+      ],
+      "Music": "",
+      "GameplayEntry": "유진이 일어남",
+      "GameplayExit": "문이 닫힘",
+      "AnimationRequired": [
+        "hug_ledger"
+      ],
+      "CinematicRequired": "true: 대장을 고쳐 안는 손",
+      "SaveFlags": [
+        "EP12_YUJIN_PAPER_ONLY"
+      ],
+      "Prerequisites": [
+        "EP12_SC010"
+      ],
+      "NextScene": "EP12_SC012",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_yujin",
+        "char:char_mateo",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_paper_ledger",
+        "anim:hug_ledger"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC012",
+      "NovelSource": "L9244-L9257 §11 두 아이",
+      "NovelSummary": "취침 시간 복도에서 두호가 구출된 아이에게 담요 접는 법을 가르치고 함께 접은 뒤, 제 자리 옆 바닥을 두 번 두드려 여기서 자라고 한다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "취침 시간 (밤)",
+      "Characters": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "이 화의 온기",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "취침 시간 복도",
+      "Props": [
+        "prop_blanket"
+      ],
+      "VFX": [],
+      "SFX": [
+        "담요 접는 소리",
+        "바닥 두드림 두 번"
+      ],
+      "Music": "따뜻한 소품",
+      "GameplayEntry": "담요 시범",
+      "GameplayExit": "바닥 두 번 두드림",
+      "AnimationRequired": [
+        "fold_blanket_together",
+        "pat_floor_twice"
+      ],
+      "CinematicRequired": "true: 네 개의 작은 손",
+      "SaveFlags": [
+        "EP12_DUHO_CHILD_BOND"
+      ],
+      "Prerequisites": [
+        "EP12_SC011"
+      ],
+      "NextScene": "EP12_SC013",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_duho",
+        "char:char_guchul_ai",
+        "prop:prop_blanket",
+        "anim:fold_blanket_together",
+        "anim:pat_floor_twice"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC013",
+      "NovelSource": "L9258-L9271 §12 자루에 건 것",
+      "NovelSummary": "옥상 환기구 옆에서 카인이 담배를 반만 태우고 끈다. 벽에 기댄 대검 지팡이의 자루에 새 B 인식표가 걸려 있다. 저녁부터 목에서 무거워진 그것을 풀어 걸었고, 이유는 생각하지 않기로 한다.",
+      "Location": "loc_bunker_rooftop_vent",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "목이 아니라 자루에",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "옥상 환기구 옆",
+      "Props": [
+        "prop_cigarette",
+        "prop_cracked_greatsword",
+        "prop_dogtag_b"
+      ],
+      "VFX": [
+        "담배 연기"
+      ],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "",
+      "GameplayEntry": "담배에 불",
+      "GameplayExit": "반 개비가 식음",
+      "AnimationRequired": [
+        "smoke_half_cigarette"
+      ],
+      "CinematicRequired": "true: 자루에 걸린 B",
+      "SaveFlags": [
+        "EP12_KAIN_TAG_ON_HILT"
+      ],
+      "Prerequisites": [
+        "EP12_SC012"
+      ],
+      "NextScene": "EP12_SC014",
+      "RequiredAssets": [
+        "env:loc_bunker_rooftop_vent",
+        "char:char_kain",
+        "prop:prop_cigarette",
+        "prop:prop_cracked_greatsword",
+        "prop:prop_dogtag_b",
+        "anim:smoke_half_cigarette"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP12",
+      "SceneId": "EP12_SC014",
+      "NovelSource": "L9272-L9310 §13 우선",
+      "NovelSummary": "어두운 자리에서 아인은 손바닥의 새 B 인식표와 교신 기록부의 'B 이상 우선'을 나란히 놓는다. 같은 글자가 한쪽에선 축하, 다른 쪽에선 순번이다. 둘 다 버릴 수 없다. 다음 화 예고: 남쪽 의뢰, 그리고 두호의 오래전 말.",
+      "Location": "loc_ain_seat",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "같은 글자 — 축하와 순번",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 에피소드 종료",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어두운 자리",
+      "Props": [
+        "prop_dogtag_b",
+        "prop_comm_logbook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "정적"
+      ],
+      "Music": "엔딩 여운",
+      "GameplayEntry": "자리에 앉음",
+      "GameplayExit": "오래 내려다봄 → EP13",
+      "AnimationRequired": [
+        "compare_tag_and_logbook"
+      ],
+      "CinematicRequired": "true: 인식표와 기록부 나란히",
+      "SaveFlags": [
+        "EP12_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP12_SC013"
+      ],
+      "NextScene": "EP13_SC001",
+      "RequiredAssets": [
+        "env:loc_ain_seat",
+        "char:char_ain",
+        "prop:prop_dogtag_b",
+        "prop:prop_comm_logbook",
+        "anim:compare_tag_and_logbook"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_return_road_to_bunker",
+      "NameKo": "벙커 귀환길",
+      "DescriptionKo": "은신처에서 강남 벙커까지 사흘 걸린 귀환 경로 (구체 지점 미명시).",
+      "Scenes": [
+        "EP12_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_sortie_gate",
+      "NameKo": "강남 벙커 출격문",
+      "DescriptionKo": "철문 앞. 마중 나온 벙커 인원과 마태오.",
+      "Scenes": [
+        "EP12_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_infirmary",
+      "NameKo": "벙커 의무실",
+      "DescriptionKo": "닥터 진이 카인의 무릎을 진찰한 의무실.",
+      "Scenes": [
+        "EP12_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_corridor",
+      "NameKo": "벙커 복도",
+      "DescriptionKo": "게시판이 있는 복도. 취침 시간에는 아이들이 담요를 접는 곳.",
+      "Scenes": [
+        "EP12_SC004",
+        "EP12_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_assessment_office",
+      "NameKo": "각인 평가소",
+      "DescriptionKo": "계측기·종이 대장·각인기가 있는 평가소. 저녁 승급식 장소.",
+      "Scenes": [
+        "EP12_SC005"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_cafeteria",
+      "NameKo": "벙커 식당",
+      "DescriptionKo": "조촐한 잔치가 열린 식당. 무전실 쪽과 연결.",
+      "Scenes": [
+        "EP12_SC006"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "관제실",
+      "DescriptionKo": "밤에 문을 닫은 관제실. 무전실 쪽 창, 마태오의 책상 서랍, 수평선을 긋는 계측기.",
+      "Scenes": [
+        "EP12_SC007",
+        "EP12_SC008",
+        "EP12_SC009",
+        "EP12_SC010",
+        "EP12_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_rooftop_vent",
+      "NameKo": "옥상 환기구",
+      "DescriptionKo": "카인이 혼자 담배를 피우는 옥상 환기구 옆.",
+      "Scenes": [
+        "EP12_SC013"
+      ]
+    },
+    {
+      "LocationId": "loc_ain_seat",
+      "NameKo": "아인의 자리",
+      "DescriptionKo": "어두운 아인의 자리 (벙커 내 위치 미명시).",
+      "Scenes": [
+        "EP12_SC014"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "사신 용병단 — B등급 승격. 비공개 보고자",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC003",
+        "EP12_SC005",
+        "EP12_SC006",
+        "EP12_SC007",
+        "EP12_SC008",
+        "EP12_SC009",
+        "EP12_SC010",
+        "EP12_SC011",
+        "EP12_SC014"
+      ],
+      "StateChangesKo": [
+        "EP12_SC005: B등급 승격, 새 B 인식표를 목에 걺 (거는 순간 B를 내려다봄)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "사신 용병단 — B등급 승격. 무릎 부상",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC003",
+        "EP12_SC004",
+        "EP12_SC005",
+        "EP12_SC006",
+        "EP12_SC007",
+        "EP12_SC008",
+        "EP12_SC009",
+        "EP12_SC010",
+        "EP12_SC011",
+        "EP12_SC013"
+      ],
+      "StateChangesKo": [
+        "EP12_SC001: 대검을 지팡이로 짚고 사흘 귀환",
+        "EP12_SC003: 닥터 진 진단 — 인대가 아니라 관절, 영구적 (부목은 풀어도 됨), 진통 소염 처방",
+        "EP12_SC005: B등급 승격",
+        "EP12_SC013: B 인식표를 목이 아닌 대검 지팡이 자루에 걺"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "지분 계약 용병 (인식표 미착용)",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC006"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "경로 담당. 떠나는 탈영병들에게 미완성 거수경례",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 관리관. 보고를 믿고 정기 보고 중지·함구령",
+      "Scenes": [
+        "EP12_SC002",
+        "EP12_SC005",
+        "EP12_SC006",
+        "EP12_SC007",
+        "EP12_SC008",
+        "EP12_SC009",
+        "EP12_SC010",
+        "EP12_SC011"
+      ],
+      "StateChangesKo": [
+        "EP12_SC009: 격주 정기 현황 보고 중지 — 수신만"
+      ]
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "각인 평가소 기록 담당. 비공개 보고 배석",
+      "Scenes": [
+        "EP12_SC005",
+        "EP12_SC007",
+        "EP12_SC008",
+        "EP12_SC009",
+        "EP12_SC010",
+        "EP12_SC011"
+      ],
+      "StateChangesKo": [
+        "EP12_SC011: 기록을 종이로만 계속하기로 함"
+      ]
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "의무실 의사. 카인 무릎 진단 (획 끝이 아래로 꺾이는 글씨)",
+      "Scenes": [
+        "EP12_SC003"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "탈영병 선두. 벙커에 들어오지 않고 떠남",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002"
+      ],
+      "StateChangesKo": [
+        "EP12_SC002: 남쪽 길목 표식 설명이 그려진 수첩 반 장을 아인에게 줌"
+      ]
+    },
+    {
+      "CharacterId": "char_talyeongbyeong",
+      "NameKo": "탈영병들",
+      "RoleKo": "서 하사와 함께 떠나는 탈영병 (서 하사 포함 세 사람)",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_guchul_noin",
+      "NameKo": "구출된 노인",
+      "RoleKo": "구출된 셋 중 하나 — 벙커 합류",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC006"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_guchul_yeoja",
+      "NameKo": "구출된 여자",
+      "RoleKo": "구출된 셋 중 하나 — 벙커 합류",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC006"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_guchul_ai",
+      "NameKo": "구출된 아이",
+      "RoleKo": "사흘 내내 카인 곁에서 걸은 아이. 두호와 가까워짐",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC002",
+        "EP12_SC006",
+        "EP12_SC012"
+      ],
+      "StateChangesKo": [
+        "EP12_SC012: 두호의 자리 옆에서 자게 됨"
+      ]
+    },
+    {
+      "CharacterId": "char_duho",
+      "NameKo": "두호",
+      "RoleKo": "벙커의 아이. 구출된 아이를 돌봄",
+      "Scenes": [
+        "EP12_SC006",
+        "EP12_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_park_ssi",
+      "NameKo": "박 씨",
+      "RoleKo": "벙커 무전수",
+      "Scenes": [
+        "EP12_SC006",
+        "EP12_SC009"
+      ],
+      "StateChangesKo": [
+        "EP12_SC009: 송신 스위치에서 손을 뗌"
+      ]
+    },
+    {
+      "CharacterId": "char_bunker_saramdeul",
+      "NameKo": "벙커 사람들",
+      "RoleKo": "승격을 축하하는 벙커 주민들",
+      "Scenes": [
+        "EP12_SC002",
+        "EP12_SC004",
+        "EP12_SC005",
+        "EP12_SC006"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "sword_cane_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "쿵, 걸음, 걸음 — 대검 지팡이 보행"
+    },
+    {
+      "Action": "child_match_steps",
+      "Category": "locomotion",
+      "Characters": [
+        "char_guchul_ai"
+      ],
+      "Scenes": [
+        "EP12_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "두 걸음에 세 걸음으로 보폭을 맞춤"
+    },
+    {
+      "Action": "tear_notebook",
+      "Category": "interaction",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP12_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "수첩을 찢어 반 장을 건넴"
+    },
+    {
+      "Action": "half_salute",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP12_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "거수경례가 되다 도중에 내려옴"
+    },
+    {
+      "Action": "bend_knee_exam",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎을 굽혔다 폄 — 같은 지점에서 멈춤"
+    },
+    {
+      "Action": "write_prescription",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin"
+      ],
+      "Scenes": [
+        "EP12_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "처방지에 펜"
+    },
+    {
+      "Action": "fold_into_pocket",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain",
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP12_SC003",
+        "EP12_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이를 접어 주머니에"
+    },
+    {
+      "Action": "place_wrist_on_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "계측기 위에 손목"
+    },
+    {
+      "Action": "raise_dogtag_laugh",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "새 인식표를 머리 위로 들고 크게 웃음"
+    },
+    {
+      "Action": "hang_tag_on_neck",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP12_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "인식표를 목에 걺"
+    },
+    {
+      "Action": "look_down_at_tag",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP12_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손안의 B를 한 번 내려다봄"
+    },
+    {
+      "Action": "applause_crowd",
+      "Category": "gesture",
+      "Characters": [
+        "char_bunker_saramdeul"
+      ],
+      "Scenes": [
+        "EP12_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "박수·휘파람"
+    },
+    {
+      "Action": "put_cigarette_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 꺼냈다가 실내라 도로 넣음"
+    },
+    {
+      "Action": "share_side_dish",
+      "Category": "interaction",
+      "Characters": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "Scenes": [
+        "EP12_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "제 반찬 하나를 아이 식판으로 옮김"
+    },
+    {
+      "Action": "touch_pocket",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP12_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무의식적으로 인식표 든 주머니 위를 짚음"
+    },
+    {
+      "Action": "read_paper_aloud",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP12_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "회신 종이를 들고 읽음"
+    },
+    {
+      "Action": "place_evidence_on_table",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP12_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "기록부와 계측기를 테이블에 놓음"
+    },
+    {
+      "Action": "glance_drawer",
+      "Category": "emotion",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP12_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "시선이 책상 서랍 쪽을 스침 (열지 않음)"
+    },
+    {
+      "Action": "inspect_meter_mark",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP12_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "휴대 계측기의 군 마크를 오래 봄"
+    },
+    {
+      "Action": "open_window",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP12_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무전실 쪽 창을 엶"
+    },
+    {
+      "Action": "hand_off_switch",
+      "Category": "gesture",
+      "Characters": [
+        "char_park_ssi"
+      ],
+      "Scenes": [
+        "EP12_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "송신 스위치에서 손이 떨어짐"
+    },
+    {
+      "Action": "hug_ledger",
+      "Category": "emotion",
+      "Characters": [
+        "char_yujin"
+      ],
+      "Scenes": [
+        "EP12_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대장을 안은 팔에 힘이 들어감, 고쳐 안음"
+    },
+    {
+      "Action": "fold_blanket_together",
+      "Category": "interaction",
+      "Characters": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "Scenes": [
+        "EP12_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "네 개의 손이 담요 모서리를 맞춤"
+    },
+    {
+      "Action": "pat_floor_twice",
+      "Category": "gesture",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP12_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "제 자리 옆 바닥을 손바닥으로 두 번"
+    },
+    {
+      "Action": "smoke_half_cigarette",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP12_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "반만 태우고 끔"
+    },
+    {
+      "Action": "compare_tag_and_logbook",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP12_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손바닥의 B 인식표와 펼친 기록부를 나란히 두고 내려다봄"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_cracked_greatsword",
+      "NameKo": "카인의 금 간 대검 (지팡이)",
+      "Scenes": [
+        "EP12_SC001",
+        "EP12_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_supply_bundle",
+      "NameKo": "보급 꾸러미",
+      "Scenes": [
+        "EP12_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_seo_marker_note",
+      "NameKo": "서 하사의 수첩 반 장 (남쪽 길목 표식)",
+      "Scenes": [
+        "EP12_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_prescription",
+      "NameKo": "진통 소염 처방지",
+      "Scenes": [
+        "EP12_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_notice_board",
+      "NameKo": "게시판 공고문 (사신 용병단 B등급 승격)",
+      "Scenes": [
+        "EP12_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_core_meter",
+      "NameKo": "각인 계측기",
+      "Scenes": [
+        "EP12_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_paper_ledger",
+      "NameKo": "종이 대장",
+      "Scenes": [
+        "EP12_SC005",
+        "EP12_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_engraver",
+      "NameKo": "각인기",
+      "Scenes": [
+        "EP12_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_dogtag_b",
+      "NameKo": "B등급 인식표",
+      "Scenes": [
+        "EP12_SC005",
+        "EP12_SC006",
+        "EP12_SC013",
+        "EP12_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_meal_tray",
+      "NameKo": "식판·국그릇",
+      "Scenes": [
+        "EP12_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "담배",
+      "Scenes": [
+        "EP12_SC006",
+        "EP12_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_radio_reply",
+      "NameKo": "격주 보고 정기 회신 종이 ('축하 전달 바람')",
+      "Scenes": [
+        "EP12_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_comm_logbook",
+      "NameKo": "교신 기록부",
+      "Scenes": [
+        "EP12_SC007",
+        "EP12_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_portable_meter_military",
+      "NameKo": "군 마크 휴대 계측기",
+      "Scenes": [
+        "EP12_SC007",
+        "EP12_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_mateo_drawer",
+      "NameKo": "마태오의 책상 서랍 (이 년치 서류철)",
+      "Scenes": [
+        "EP12_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_radio_switch",
+      "NameKo": "무전 송신 스위치",
+      "Scenes": [
+        "EP12_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_blanket",
+      "NameKo": "담요",
+      "Scenes": [
+        "EP12_SC012"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP12_SC003",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP12_SC005",
+      "QuestionKo": "'허수아비 값'과 마태오만 아는 '이 년 전 장부의 칸' 내용 — 이 화에서 미공개"
+    },
+    {
+      "Scene": "EP12_SC008",
+      "QuestionKo": "마태오 서랍 속 이 년치 서류철의 내용 미공개"
+    },
+    {
+      "Scene": "EP12_SC014",
+      "QuestionKo": "아인의 자리(숙소)의 벙커 내 위치 미명시"
+    }
+  ]
+}

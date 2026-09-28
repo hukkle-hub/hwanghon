@@ -1,0 +1,1948 @@
+{
+  "EpisodeId": "EP13",
+  "TitleKo": "제13화 — 두드림",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      9311,
+      9678
+    ]
+  },
+  "SummaryKo": "구출된 아이에게서 폐차장의 계측·분류 이야기를 들은 두호는 결심하고 아인에게 아무도 믿지 않았던 이야기를 한다. 2030년 군인들이 어른들의 목덜미에 기계를 대 분류했고, 아빠는 오른쪽으로 끌려가 엄마와 함께 돌아오지 않았으며, 줄 옆에는 괴물들이 아무도 해치지 않고 서 있었다는 것. 강남역에서 철근을 들고 튀어나온 것도 군인인 줄 알았기 때문이었다. 아인은 잘못 본 게 아니라고 믿어 주지만 함구령 때문에 그 이상은 말하지 못하고, 대신 두드림 신호(한 번 기다려, 두 번이면 내가 간다)를 건넨다. 공식 명분 '남부 교역로 개척'의 남쪽 의뢰로 넷이 두호의 배웅을 받으며 출발한다. 서 하사의 표식을 따라가다 뒤집힌 표식을 만나 우회하고, 닥터 진의 약품 목록 때문에 판교를 경유하기로 한다. 남쪽으로 갈수록 아인의 코어가 강하게 뛰어 억제제를 복용한다. 정리하고 떠난 듯 조용한 판교에서 '지하 3층 봉인' 공지와 콘크리트 균열을 발견하고, 균열에서 나오는 미지근한 공기에 아인은 살아 있는 것이 있다고 말한다. 그날 밤 벽을 두드린 아인은 한 겹이 아닌 반향을 듣는다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC001",
+      "NovelSource": "L9311-L9338 §1 아이들의 말 (낮)",
+      "NovelSummary": "낮의 아이들 구역에서 구출된 아이가 두호에게 폐차장의 일 — 삑 소리, 줄 서기, 좌우 분류 — 을 이야기한다. 기계를 목에 댔냐는 물음에 아이가 그렇다고 하자, 두호의 손이 주먹이 된다. 두 해 전 문틈으로 본 것과 이어진다.",
+      "Location": "loc_bunker_children_area",
+      "TimeOfDay": "낮",
+      "Characters": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "삑 소리 하나로 이어진 두 기억",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duho",
+          "Line": "…기계를, 목에 댔어?",
+          "Source": "L9333"
+        },
+        {
+          "Speaker": "char_guchul_ai",
+          "Line": "응. 삑, 하고.",
+          "Source": "L9335"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "아이들 구역, 어른 없음",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "아이들의 낮은 목소리"
+      ],
+      "Music": "불안한 소품",
+      "GameplayEntry": "나란히 앉은 두 아이",
+      "GameplayExit": "두호의 주먹",
+      "AnimationRequired": [
+        "children_sit_talk",
+        "fist_on_knee"
+      ],
+      "CinematicRequired": "true: 굳어 가는 두호의 얼굴",
+      "SaveFlags": [
+        "EP13_DUHO_HEARD_SCRAPYARD"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP13_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_children_area",
+        "char:char_duho",
+        "char:char_guchul_ai",
+        "anim:children_sit_talk",
+        "anim:fist_on_knee"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC002",
+      "NovelSource": "L9339-L9346 §1 아이들의 말 (저녁)",
+      "NovelSummary": "저녁, 두호는 건강해진 동생 두나 곁에 앉아 이마를 한 번 보고, 결심한 걸음으로 일어선다.",
+      "Location": "loc_bunker_children_area",
+      "TimeOfDay": "저녁",
+      "Characters": [
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "형이 지켜 낸 숨소리 — 결심",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "잠든 두나의 고른 숨소리",
+      "Props": [
+        "prop_bed_frame"
+      ],
+      "VFX": [],
+      "SFX": [
+        "고르고 깊은 숨소리"
+      ],
+      "Music": "잔잔한 결의",
+      "GameplayEntry": "두나 곁",
+      "GameplayExit": "일어섬",
+      "AnimationRequired": [
+        "sit_by_sleeping",
+        "stand_resolve"
+      ],
+      "CinematicRequired": "true: 짧은 컷",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP13_SC001"
+      ],
+      "NextScene": "EP13_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_children_area",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_bed_frame",
+        "anim:sit_by_sleeping",
+        "anim:stand_resolve"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC003",
+      "NovelSource": "L9347-L9358 §2 아무도 안 믿었던 얘기 (정비 구역)",
+      "NovelSummary": "장비 정비 구역에서 낫날을 손질하던 아인 앞에 두호가 한참 서 있다가, 아무도 안 믿었던 얘기를 해도 되냐고 묻는다. 아인은 재촉하지 않는다.",
+      "Location": "loc_bunker_equipment_maintenance",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_duho"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "어른의 침묵 — 말을 고르는 아이",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_duho"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duho",
+          "Line": "…누나. 나, 얘기해도 돼?",
+          "Source": "L9353"
+        },
+        {
+          "Speaker": "char_duho",
+          "Line": "아무도 안 믿었던 얘긴데.",
+          "Source": "L9357"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "정비 구역",
+      "Props": [
+        "prop_scythe"
+      ],
+      "VFX": [],
+      "SFX": [
+        "숫돌 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "낫 손질 중",
+      "GameplayExit": "두호가 입을 엶",
+      "AnimationRequired": [
+        "sharpen_scythe",
+        "stand_hesitate"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP13_DUHO_ASKS"
+      ],
+      "Prerequisites": [
+        "EP13_SC002"
+      ],
+      "NextScene": "EP13_SC004",
+      "RequiredAssets": [
+        "env:loc_bunker_equipment_maintenance",
+        "char:char_ain",
+        "char:char_duho",
+        "prop:prop_scythe",
+        "anim:sharpen_scythe",
+        "anim:stand_hesitate"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC004",
+      "NovelSource": "L9359-L9362 §2 아무도 안 믿었던 얘기 (두나의 침상 옆)",
+      "NovelSummary": "이야기는 두나의 침상 옆에서 이뤄진다. 두호는 동생이 자는 옆에서만 말하겠다고 하고, 아인은 이유를 묻지 않고 아이의 눈높이로 바닥에 앉는다.",
+      "Location": "loc_bunker_children_area",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "증언의 자리",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "TRANSITION"
+      ],
+      "PlayerGoal": "(연출) 장소 이동",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "두나의 침상 옆, 낮은 목소리",
+      "Props": [
+        "prop_bed_frame"
+      ],
+      "VFX": [],
+      "SFX": [
+        "숨소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "정비 구역에서 이동",
+      "GameplayExit": "이야기 시작",
+      "AnimationRequired": [
+        "sit_on_floor_eye_level"
+      ],
+      "CinematicRequired": "false: 전환",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP13_SC003"
+      ],
+      "NextScene": "EP13_SC005",
+      "RequiredAssets": [
+        "env:loc_bunker_children_area",
+        "char:char_ain",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_bed_frame",
+        "anim:sit_on_floor_eye_level"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC005",
+      "NovelSource": "L9363-L9384 §3 2030년",
+      "NovelSummary": "두호의 회상. 군인이 와서 다들 살았다고 했다. 젖은 아스팔트 위 군화들 앞에 어른들이 줄을 섰고, 장갑 낀 손이 목덜미에 기계를 대 '삑' — 아빠의 다리가 오른쪽으로 걸어가고 엄마의 치마 자락은 군인의 팔에 막혔다. 문 뒤에 숨은 두호는 문틈으로 줄 옆에 괴물들이 서 있는데 아무도 잡아먹지 않는 것을 봤다. 아빠도 엄마도 돌아오지 않았다.",
+      "Location": "loc_flashback_2030_street",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_duho",
+        "char_duna",
+        "char_duho_appa",
+        "char_duho_eomma",
+        "char_2030_gunindeul",
+        "char_2030_geugeotdeul"
+      ],
+      "RequiredCostumes": [
+        "군인들: 군화·장갑",
+        "(아이 시점) 아빠의 바지, 엄마의 치마"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "최초의 목격 — 괴물과 군인이 함께 있었다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_duna",
+        "char_duho_appa",
+        "char_duho_eomma",
+        "char_2030_gunindeul",
+        "char_2030_geugeotdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duho",
+          "Line": "괴물이 있었는데 아무도 안 잡아먹었어",
+          "Source": "L9379"
+        }
+      ],
+      "GameMode": [
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "(연출) 회상",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "젖은 아스팔트, 열을 지은 군화, 줄 선 어른들 — 아이의 허리 아래 시점",
+      "Props": [
+        "prop_2030_scanner"
+      ],
+      "VFX": [
+        "(제안) 어른의 허리 아래 시점, 얼굴 없는 기억"
+      ],
+      "SFX": [
+        "삑",
+        "군화 소리"
+      ],
+      "Music": "회상 — 차가운 동요",
+      "GameplayEntry": "두호가 말을 시작",
+      "GameplayExit": "돌아오지 않은 부모",
+      "AnimationRequired": [
+        "scan_neck_with_meter",
+        "arm_block",
+        "hide_behind_door_peek"
+      ],
+      "CinematicRequired": "true: 아이 시점 회상 시퀀스",
+      "SaveFlags": [
+        "EP13_FLASHBACK_2030"
+      ],
+      "Prerequisites": [
+        "EP13_SC004"
+      ],
+      "NextScene": "EP13_SC006",
+      "RequiredAssets": [
+        "env:loc_flashback_2030_street",
+        "char:char_duho",
+        "char:char_duna",
+        "char:char_duho_appa",
+        "char:char_duho_eomma",
+        "char:char_2030_gunindeul",
+        "char:char_2030_geugeotdeul",
+        "prop:prop_2030_scanner",
+        "anim:scan_neck_with_meter",
+        "anim:arm_block",
+        "anim:hide_behind_door_peek"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC006",
+      "NovelSource": "L9385-L9412 §4 철근",
+      "NovelSummary": "두호는 이 년 전 강남역 지하상가에서 철근을 들고 튀어나온 것이 아인 일행을 군인으로 알았기 때문이라고 고백한다. 괴물과 군인이 같이 있었다고 어른들에게 말했지만 모두 잘못 봤다고 했다. 아인은 반 박자도 두지 않고 잘못 본 게 아니라고 말하지만, 함구령 때문에 그 이상은 말하지 못한다.",
+      "Location": "loc_bunker_children_area",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_duho",
+        "char_ain",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "믿어 주는 어른 — 그러나 함구령 안쪽",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_duho",
+        "char_ain",
+        "char_duna"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_duho",
+          "Line": "군인 놈들인 줄 알고. …철근 들고.",
+          "Source": "L9391"
+        },
+        {
+          "Speaker": "char_duho",
+          "Line": "…어른들한테 말했었어. 옛날에.",
+          "Source": "L9395"
+        },
+        {
+          "Speaker": "char_duho",
+          "Line": "무서워서 잘못 봤겠지, 그랬어. 다들.",
+          "Source": "L9399"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…잘못 본 거 아니야.",
+          "Source": "L9405"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "두나의 침상 옆",
+      "Props": [
+        "prop_rebar"
+      ],
+      "VFX": [],
+      "SFX": [
+        "숨소리"
+      ],
+      "Music": "절제된 감정 고조",
+      "GameplayEntry": "회상 종료",
+      "GameplayExit": "아인이 말을 멈춤",
+      "AnimationRequired": [
+        "head_down_confess"
+      ],
+      "CinematicRequired": "true: 두호가 고개를 드는 컷",
+      "SaveFlags": [
+        "EP13_AIN_BELIEVES_DUHO"
+      ],
+      "Prerequisites": [
+        "EP13_SC005"
+      ],
+      "NextScene": "EP13_SC007",
+      "RequiredAssets": [
+        "env:loc_bunker_children_area",
+        "char:char_duho",
+        "char:char_ain",
+        "char:char_duna",
+        "prop:prop_rebar",
+        "anim:head_down_confess"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC007",
+      "NovelSource": "L9413-L9434 §5 두드림",
+      "NovelSummary": "아인이 침상 철제 프레임을 손가락 등으로 한 번 치고, 한 번이면 기다리고 두 번이면 어디 있어도 자기가 간다고 신호를 건넨다. 두호가 따라 두 번 치고, 잠든 두나의 손가락이 작게 움찔한다.",
+      "Location": "loc_bunker_children_area",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_duho",
+        "char_duna"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "말보다 오래 사는 신호",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_duho",
+        "char_duna"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…한 번이면, 기다려.",
+          "Source": "L9421"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "두 번이면 — 내가 가. 어디 있어도.",
+          "Source": "L9425"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 신호 전달",
+      "Interaction": [
+        "(제안) 프레임 두드리기 — 한 번/두 번"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "아이들 구역의 어둠",
+      "Props": [
+        "prop_bed_frame"
+      ],
+      "VFX": [],
+      "SFX": [
+        "깡",
+        "깡. 깡."
+      ],
+      "Music": "따뜻한 긴장",
+      "GameplayEntry": "아인이 프레임을 침",
+      "GameplayExit": "두나의 손가락이 움찔",
+      "AnimationRequired": [
+        "knock_bed_frame",
+        "duna_finger_twitch"
+      ],
+      "CinematicRequired": "true: 두드림 교환",
+      "SaveFlags": [
+        "EP13_KNOCK_SIGNAL_PROMISE"
+      ],
+      "Prerequisites": [
+        "EP13_SC006"
+      ],
+      "NextScene": "EP13_SC008",
+      "RequiredAssets": [
+        "env:loc_bunker_children_area",
+        "char:char_ain",
+        "char:char_duho",
+        "char:char_duna",
+        "prop:prop_bed_frame",
+        "anim:knock_bed_frame",
+        "anim:duna_finger_twitch"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC008",
+      "NovelSource": "L9435-L9448 §6 목숨값 (관제실)",
+      "NovelSummary": "남쪽 의뢰의 공식 명분은 남부 교역로 개척으로 공지되지만, 관제실 지도에는 서 하사 증언에 따른 인계 지점 추정 위치 세 곳이 찍혀 있다. 편성은 넷, 카인은 자신이 이제 '거치형'이라며 마태오의 우려를 먼저 자른다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_mateo",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검(지팡이)"
+      ],
+      "StoryBeat": "표면의 교역로, 이면의 인계 지점",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_mateo",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "지점을 잇는 선이 어디로 가는지. 끝까지.",
+          "Source": "L9441"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "거치형이야, 이제.",
+          "Source": "L9445"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "도망을 못 칠 뿐이지.",
+          "Source": "L9445"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 의뢰 수령",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실 지도",
+      "Props": [
+        "prop_wall_map_handover"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "브리핑",
+      "GameplayEntry": "관제실",
+      "GameplayExit": "편성 확정",
+      "AnimationRequired": [],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP13_SOUTH_MISSION_ASSIGNED"
+      ],
+      "Prerequisites": [
+        "EP13_SC007"
+      ],
+      "NextScene": "EP13_SC009",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_ain",
+        "char:char_mateo",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_wall_map_handover"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC009",
+      "NovelSource": "L9449-L9467 §6 목숨값 (출격문)",
+      "NovelSummary": "출격문 앞 배웅 인파 맨 앞에서 두호가 두나의 손을 잡고, 주먹으로 허공에 두 번 두드리는 시늉을 한다. 아인은 한 번 끄덕인다. 철문이 오르고 넷은 안개 속으로 들어가며, 카인은 우리가 파는 건 목숨값이라 중얼거린다.",
+      "Location": "loc_bunker_sortie_gate",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_duho",
+        "char_duna",
+        "char_bunker_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "배웅 — 두 번의 두드림",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_duho",
+        "char_duna",
+        "char_bunker_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…교역로 개척이라. 팔 물건도 없으면서.",
+          "Source": "L9457"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "우리가 파는 건 결국 이 목숨값이잖아.",
+          "Source": "L9457"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "(연출) 출발",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "배웅 인파, 오르는 철문, 안개",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [],
+      "SFX": [
+        "철문 오르는 소리",
+        "인파"
+      ],
+      "Music": "출정",
+      "GameplayEntry": "배웅",
+      "GameplayExit": "안개 속으로",
+      "AnimationRequired": [
+        "air_knock_twice",
+        "nod_once",
+        "sword_cane_walk"
+      ],
+      "CinematicRequired": "true: 허공의 두드림과 끄덕임",
+      "SaveFlags": [
+        "EP13_DEPARTED_SOUTH"
+      ],
+      "Prerequisites": [
+        "EP13_SC008"
+      ],
+      "NextScene": "EP13_SC010",
+      "RequiredAssets": [
+        "env:loc_bunker_sortie_gate",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_duho",
+        "char:char_duna",
+        "char:char_bunker_saramdeul",
+        "prop:prop_cracked_greatsword",
+        "anim:air_knock_twice",
+        "anim:nod_once",
+        "anim:sword_cane_walk"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC010",
+      "NovelSource": "L9468-L9497 §7 표식을 따라",
+      "NovelSummary": "남행 이틀째부터 폐허가 더 오래돼 보이고 안개가 붉어진다. 전신주 아래 서 하사의 표식이 바로 서 있고 오정길은 사흘 안쪽에 지나갔다고 판단한다. 아인은 무의식적으로 목덜미를 만진다. 세 번째 갈림길 고가 밑의 표식은 뒤집혀 있고, 아인은 직진도 귀환도 아닌 '다른 길로, 같은 곳'을 택한다.",
+      "Location": "loc_south_road_junctions",
+      "TimeOfDay": "낮 (남행 이틀째)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "뒤집힌 표식 — 세 번째 선택",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…지나갔습니다. 사흘 안쪽입니다.",
+          "Source": "L9476"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "돌아가요. 다른 길로, 같은 곳.",
+          "Source": "L9494"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "서 하사의 표식을 따라가다 경로를 결정한다",
+      "Interaction": [
+        "표식 확인 (바로 섬/뒤집힘)",
+        "(제안) 경로 선택 — 우회"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "외벽 침식이 깊어지고 안개의 붉은기가 진함, 전신주 갈림길, 고가 밑",
+      "Props": [
+        "prop_seo_marker"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "불길한 남행",
+      "GameplayEntry": "남행 이틀째",
+      "GameplayExit": "우회 결정",
+      "AnimationRequired": [
+        "inspect_marker",
+        "touch_neck_core"
+      ],
+      "CinematicRequired": "true: 뒤집힌 표식",
+      "SaveFlags": [
+        "EP13_MARK_INVERTED_FOUND",
+        "EP13_DETOUR"
+      ],
+      "Prerequisites": [
+        "EP13_SC009"
+      ],
+      "NextScene": "EP13_SC011",
+      "RequiredAssets": [
+        "env:loc_south_road_junctions",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_seo_marker",
+        "anim:inspect_marker",
+        "anim:touch_neck_core"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC011",
+      "NovelSource": "L9498-L9531 §8 목록",
+      "NovelSummary": "과천을 지나 이틀째 저녁, 아인이 닥터 진이 준 열두 줄 약품 목록을 꺼낸다. 약 만드는 재료이며 가져오면 만들 사람이 있고, 여백의 지번은 계룡 가는 길목의 판교다. 세 개면 여섯 달, 여섯 개면 일 년 — 지금은 얼마냐는 카인의 물음에 아인은 대답하지 않는다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "저녁 (과천을 지나 이틀째)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "억제제의 시한 — 판교 경유",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…그거 뭐예요.",
+          "Source": "L9504"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "약 만드는 재료요.",
+          "Source": "L9508"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "판교예요.",
+          "Source": "L9516"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…얼마나 벌어.",
+          "Source": "L9520"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "세 개 구하면 여섯 달, 여섯 개면 일 년이요.",
+          "Source": "L9522"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "지금은.",
+          "Source": "L9524"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 목적지 추가(판교)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "TBD_CANON",
+      "Props": [
+        "prop_drjin_medicine_list"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "목록을 꺼냄",
+      "GameplayExit": "카인이 더 묻지 않음",
+      "AnimationRequired": [
+        "take_out_paper"
+      ],
+      "CinematicRequired": "true: 대답 없는 침묵",
+      "SaveFlags": [
+        "EP13_PANGYO_LIST"
+      ],
+      "Prerequisites": [
+        "EP13_SC010"
+      ],
+      "NextScene": "EP13_SC012",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_drjin_medicine_list",
+        "anim:take_out_paper"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC012",
+      "NovelSource": "L9532-L9547 §9 반응",
+      "NovelSummary": "방음벽 아래 야영지에서 아인의 목덜미 코어가 평소보다 밝고 빠르게 뛰고, 낫을 쥔 손끝이 처음으로 떨린다. 아인은 등을 돌려 억제제를 한 모금 넘기고 손이 가라앉는다. 남쪽으로 갈수록 크게 뛰고, 약은 두 병째의 중간이다.",
+      "Location": "loc_soundwall_camp",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "남쪽에서 커지는 반응",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "국도 옆 방음벽 아래",
+      "Props": [
+        "prop_suppressant_bottle",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "목덜미 코어의 밝고 빠른 맥동"
+      ],
+      "SFX": [
+        "심장 박동"
+      ],
+      "Music": "불안한 맥동",
+      "GameplayEntry": "야영",
+      "GameplayExit": "약을 옷 안쪽에 넣음",
+      "AnimationRequired": [
+        "core_glow_hand_tremble",
+        "drink_suppressant_turned_away"
+      ],
+      "CinematicRequired": "true: 떨리는 손끝",
+      "SaveFlags": [
+        "EP13_CORE_REACTION_SOUTH",
+        "EP13_SUPPRESSANT_BOTTLE2_HALF"
+      ],
+      "Prerequisites": [
+        "EP13_SC011"
+      ],
+      "NextScene": "EP13_SC013",
+      "RequiredAssets": [
+        "env:loc_soundwall_camp",
+        "char:char_ain",
+        "prop:prop_suppressant_bottle",
+        "prop:prop_scythe",
+        "anim:core_glow_hand_tremble",
+        "anim:drink_suppressant_turned_away"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC013",
+      "NovelSource": "L9548-L9569 §10 정리하고 떠난 자리",
+      "NovelSummary": "나흘째 아침 판교에 들어선다. 건물이 온전하고 나무가 인도를 덮은, 정리하고 떠난 자리 같은 폐허다. 류가 너무 멀쩡하다고 하고, 아인은 귀를 열지만 이상한 것이 없다는 것이 이상하다.",
+      "Location": "loc_pangyo_streets",
+      "TimeOfDay": "아침 (나흘째)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "지역⑥ 진입 — 조용한 것은 안전하지 않다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…여기 왜 이래요.",
+          "Source": "L9556"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "너무 멀쩡한데.",
+          "Source": "L9562"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "판교 시가지를 탐색한다",
+      "Interaction": [
+        "(제안) 청취 — 이상 없음",
+        "도보 탐색"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "온전한 건물, 거의 안 깨진 유리, 인도를 덮은 화단 나무, 정적",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "정적"
+      ],
+      "Music": "너무 조용한 도시",
+      "GameplayEntry": "판교 진입",
+      "GameplayExit": "세 번째 건물 앞",
+      "AnimationRequired": [
+        "slow_walk_listen"
+      ],
+      "CinematicRequired": "false: 탐색",
+      "SaveFlags": [
+        "EP13_ARRIVED_PANGYO"
+      ],
+      "Prerequisites": [
+        "EP13_SC012"
+      ],
+      "NextScene": "EP13_SC014",
+      "RequiredAssets": [
+        "env:loc_pangyo_streets",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "anim:slow_walk_listen"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC014",
+      "NovelSource": "L9570-L9597 §11 봉인",
+      "NovelSummary": "세 번째 건물 유리문의 반쯤 삭은 A4 공지에 '내부 인원 전원 대피 완료. 지하 3층 봉인.'이 남아 있다. 카인이 봉인은 뭘 가뒀다는 뜻이라고 읽는다. 뒤편 지하 계단 하나는 급히 부은 콘크리트로 막혔고, 갈라진 틈이 사람 하나 지날 만하다.",
+      "Location": "loc_pangyo_sealed_building",
+      "TimeOfDay": "낮 (나흘째)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "봉인 — 이 년 전에 가둔 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…봉인.",
+          "Source": "L9578"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "봉인이면 뭘 가뒀다는 거잖아.",
+          "Source": "L9582"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "봉인 공지와 막힌 계단을 조사한다",
+      "Interaction": [
+        "공지 읽기",
+        "건물 뒤편 지하 계단 두 곳 확인",
+        "콘크리트 균열 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "반쯤 삭은 공지, 거푸집 자국이 남은 갈라진 콘크리트",
+      "Props": [
+        "prop_evacuation_notice",
+        "prop_concrete_seal"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "불길한 조사",
+      "GameplayEntry": "건물 앞",
+      "GameplayExit": "균열 발견",
+      "AnimationRequired": [],
+      "CinematicRequired": "true: 공지 클로즈업",
+      "SaveFlags": [
+        "EP13_SEAL_NOTICE_FOUND"
+      ],
+      "Prerequisites": [
+        "EP13_SC013"
+      ],
+      "NextScene": "EP13_SC015",
+      "RequiredAssets": [
+        "env:loc_pangyo_sealed_building",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_evacuation_notice",
+        "prop:prop_concrete_seal"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC015",
+      "NovelSource": "L9598-L9623 §12 미지근한 공기",
+      "NovelSummary": "아인이 콘크리트 틈에 손을 넣자 이 년간 닫힌 지하에서 차가워야 할 공기가 미지근하게 나온다. 류는 시약 창고일 거라 하지만, 아인은 살아 있는 게 있다고 말한다.",
+      "Location": "loc_pangyo_sealed_building",
+      "TimeOfDay": "낮 (나흘째)",
+      "Characters": [
+        "char_ain",
+        "char_ryu",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "살아 있는 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_ryu",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…안에 뭐가 있어요.",
+          "Source": "L9610"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "시약 창고겠죠.",
+          "Source": "L9612"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "살아 있는 게요.",
+          "Source": "L9620"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "균열 안의 공기를 확인한다",
+      "Interaction": [
+        "균열에 손 넣기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "균열에서 나오는 미지근한 공기",
+      "Props": [
+        "prop_concrete_seal"
+      ],
+      "VFX": [
+        "(제안) 미세한 공기 흐름"
+      ],
+      "SFX": [
+        "공기 흐름"
+      ],
+      "Music": "긴장 스팅",
+      "GameplayEntry": "균열 앞",
+      "GameplayExit": "'살아 있는 게요.'",
+      "AnimationRequired": [
+        "reach_into_crack"
+      ],
+      "CinematicRequired": "true: 대사 스팅",
+      "SaveFlags": [
+        "EP13_LUKEWARM_AIR"
+      ],
+      "Prerequisites": [
+        "EP13_SC014"
+      ],
+      "NextScene": "EP13_SC016",
+      "RequiredAssets": [
+        "env:loc_pangyo_sealed_building",
+        "char:char_ain",
+        "char:char_ryu",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_concrete_seal",
+        "anim:reach_into_crack"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP13",
+      "SceneId": "EP13_SC016",
+      "NovelSource": "L9624-L9678 §13 두 개의 두드림",
+      "NovelSummary": "넷은 들어가는 것을 아침으로 미루고 건물 밖에서 야영한다. 경계를 서던 아인이 건물 벽을 한 번 치자 되돌아온 소리가 벽 안쪽 어딘가에서 한 번 더, 한 겹이 아니게 울린다. 아인은 나흘 거리의 두호에게 한 '어디 있어도'라는 약속의 무게를 처음으로 달아 보며 새벽까지 앉아 있다. 다음 화 예고: 소리를 지우고 오는 것.",
+      "Location": "loc_pangyo_sealed_building",
+      "TimeOfDay": "밤~새벽",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "이중 메아리 — 지킬 수 없는 약속",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "벽을 두드려 반향을 확인한다",
+      "Interaction": [
+        "(제안) 벽 두드리기 — 되돌아오는 소리 세기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "건물 밖 야영, 소리 없는 판교의 밤",
+      "Props": [],
+      "VFX": [
+        "(제안) 이중 반향 시각화"
+      ],
+      "SFX": [
+        "깡",
+        "벽 안쪽의 두 번째 울림"
+      ],
+      "Music": "엔딩 — 불길한 여운",
+      "GameplayEntry": "경계 근무",
+      "GameplayExit": "새벽 → EP14",
+      "AnimationRequired": [
+        "knock_wall_listen",
+        "sit_until_dawn"
+      ],
+      "CinematicRequired": "true: 이중 메아리와 엔딩 독백",
+      "SaveFlags": [
+        "EP13_DOUBLE_ECHO",
+        "EP13_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP13_SC015"
+      ],
+      "NextScene": "EP14_SC001",
+      "RequiredAssets": [
+        "env:loc_pangyo_sealed_building",
+        "char:char_ain",
+        "anim:knock_wall_listen",
+        "anim:sit_until_dawn"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_children_area",
+      "NameKo": "벙커 아이들 구역",
+      "DescriptionKo": "아이들이 지내는 구역. 두나의 침상(철제 프레임)이 있음.",
+      "Scenes": [
+        "EP13_SC001",
+        "EP13_SC002",
+        "EP13_SC004",
+        "EP13_SC006",
+        "EP13_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_equipment_maintenance",
+      "NameKo": "장비 정비 구역",
+      "DescriptionKo": "아인이 낫날을 손질하는 벙커의 정비 구역.",
+      "Scenes": [
+        "EP13_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_flashback_2030_street",
+      "NameKo": "2030년 회상 — 분류가 이뤄진 거리",
+      "DescriptionKo": "두호의 기억 속 젖은 아스팔트 위, 군화가 열을 짓고 어른들이 줄을 선 곳. 문 뒤에 두호와 두나가 숨음 (구체적 장소 미명시).",
+      "Scenes": [
+        "EP13_SC005"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "관제실",
+      "DescriptionKo": "서 하사 증언에 따른 인계 지점 추정 위치 세 곳이 찍힌 지도가 있는 관제실.",
+      "Scenes": [
+        "EP13_SC008"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_sortie_gate",
+      "NameKo": "강남 벙커 출격문",
+      "DescriptionKo": "배웅 인파가 모인 철문 앞. 문 너머 안개.",
+      "Scenes": [
+        "EP13_SC009"
+      ]
+    },
+    {
+      "LocationId": "loc_south_road_junctions",
+      "NameKo": "남행 갈림길",
+      "DescriptionKo": "건물 외벽 침식이 깊고 안개의 붉은기가 진한 남쪽 길. 갈림길 전신주 아래와 고가 밑에 서 하사의 표식.",
+      "Scenes": [
+        "EP13_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_soundwall_camp",
+      "NameKo": "방음벽 아래 야영지",
+      "DescriptionKo": "국도 옆 방음벽 아래 야영지.",
+      "Scenes": [
+        "EP13_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_streets",
+      "NameKo": "판교 시가지",
+      "DescriptionKo": "EP13 헤더상 '지역⑥ 진입'(EP14 헤더는 '지역⑤ 판교'로 표기 — 충돌). 건물이 온전하고 유리가 거의 깨지지 않았으며 화단 나무가 인도를 덮은, 정리하고 떠난 듯한 조용한 도시.",
+      "Scenes": [
+        "EP13_SC013"
+      ]
+    },
+    {
+      "LocationId": "loc_pangyo_sealed_building",
+      "NameKo": "판교 봉인 건물",
+      "DescriptionKo": "세 번째 건물. 유리문에 '지하 3층 봉인' 공지, 뒤편 지하 계단 두 개 중 하나는 급히 부은 콘크리트로 막혔고 사람 하나 지날 만한 균열에서 미지근한 공기가 나옴.",
+      "Scenes": [
+        "EP13_SC014",
+        "EP13_SC015",
+        "EP13_SC016"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "사신 용병단 B등급 용병. 두호의 증언을 믿어 주고 남행을 이끎",
+      "Scenes": [
+        "EP13_SC003",
+        "EP13_SC004",
+        "EP13_SC006",
+        "EP13_SC007",
+        "EP13_SC008",
+        "EP13_SC009",
+        "EP13_SC010",
+        "EP13_SC011",
+        "EP13_SC012",
+        "EP13_SC013",
+        "EP13_SC014",
+        "EP13_SC015",
+        "EP13_SC016"
+      ],
+      "StateChangesKo": [
+        "EP13_SC007: 두호에게 두드림 신호(한 번=기다려, 두 번=내가 가) 전달",
+        "EP13_SC010: 남행 중 목덜미의 것이 크게 뛰는 느낌",
+        "EP13_SC012: 코어가 평소보다 밝고 빠르게 뛰고 낫 쥔 손끝이 처음으로 떨림 — 억제제 복용(두 병째 중간)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "B등급 용병. 대검 지팡이의 '거치형'",
+      "Scenes": [
+        "EP13_SC008",
+        "EP13_SC009",
+        "EP13_SC010",
+        "EP13_SC011",
+        "EP13_SC013",
+        "EP13_SC014",
+        "EP13_SC015"
+      ],
+      "StateChangesKo": [
+        "장비: 금 간 대검(지팡이) — 스스로 '거치형'이라 칭함, 도망을 못 침"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "용병. 남행 동행",
+      "Scenes": [
+        "EP13_SC008",
+        "EP13_SC009",
+        "EP13_SC010",
+        "EP13_SC011",
+        "EP13_SC013",
+        "EP13_SC014",
+        "EP13_SC015"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "경로 담당. 서 하사의 표식 판독",
+      "Scenes": [
+        "EP13_SC008",
+        "EP13_SC009",
+        "EP13_SC010",
+        "EP13_SC011",
+        "EP13_SC013",
+        "EP13_SC014",
+        "EP13_SC015"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 관리관. 남쪽 의뢰(공식 명분: 남부 교역로 개척) 배정",
+      "Scenes": [
+        "EP13_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duho",
+      "NameKo": "두호",
+      "RoleKo": "벙커의 아이. 2030년 부모가 군인에게 분류되어 끌려가는 것을 문틈으로 목격한 증인",
+      "Scenes": [
+        "EP13_SC001",
+        "EP13_SC002",
+        "EP13_SC003",
+        "EP13_SC004",
+        "EP13_SC005",
+        "EP13_SC006",
+        "EP13_SC007",
+        "EP13_SC009"
+      ],
+      "StateChangesKo": [
+        "EP13_SC006: 이 년 만에 처음으로 믿어 주는 어른을 만남",
+        "EP13_SC009: 배웅에서 허공에 두 번 두드리는 시늉"
+      ]
+    },
+    {
+      "CharacterId": "char_duna",
+      "NameKo": "두나",
+      "RoleKo": "두호의 동생. 건강을 회복함 (볼에 살이 오르고 숨소리가 고르다)",
+      "Scenes": [
+        "EP13_SC002",
+        "EP13_SC004",
+        "EP13_SC005",
+        "EP13_SC006",
+        "EP13_SC007",
+        "EP13_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_guchul_ai",
+      "NameKo": "구출된 아이",
+      "RoleKo": "폐차장에서 구출된 아이. 두호에게 계측·분류 이야기를 함",
+      "Scenes": [
+        "EP13_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_bunker_saramdeul",
+      "NameKo": "벙커 사람들",
+      "RoleKo": "B등급 용병단의 첫 남행을 배웅하는 인파",
+      "Scenes": [
+        "EP13_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duho_appa",
+      "NameKo": "두호의 아빠",
+      "RoleKo": "회상 — 계측 후 오른쪽으로 걸어가 돌아오지 않음 (얼굴 없이 다리로만 기억)",
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "StateChangesKo": [
+        "EP13_SC005: 돌아오지 않음"
+      ]
+    },
+    {
+      "CharacterId": "char_duho_eomma",
+      "NameKo": "두호의 엄마",
+      "RoleKo": "회상 — 따라가려다 군인의 팔에 막힘, 돌아오지 않음 (치마 자락으로만 기억)",
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "StateChangesKo": [
+        "EP13_SC005: 돌아오지 않음"
+      ]
+    },
+    {
+      "CharacterId": "char_2030_gunindeul",
+      "NameKo": "2030년의 군인들",
+      "RoleKo": "회상 — 군화, 장갑 낀 손으로 목덜미에 기계를 댐",
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_2030_geugeotdeul",
+      "NameKo": "그것들 (괴물)",
+      "RoleKo": "회상 — 줄 옆에 서 있었지만 아무도 물지 않은 괴물들 (종류 미명시)",
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "표식을 남긴 탈영병 선두 (언급·표식만)",
+      "Scenes": [
+        "EP13_SC008",
+        "EP13_SC010"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "children_sit_talk",
+      "Category": "gesture",
+      "Characters": [
+        "char_duho",
+        "char_guchul_ai"
+      ],
+      "Scenes": [
+        "EP13_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "나란히 앉아 조용조용 이야기"
+    },
+    {
+      "Action": "fist_on_knee",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무릎 위에서 손이 주먹이 됨"
+    },
+    {
+      "Action": "sit_by_sleeping",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "잠든 동생 옆에 앉아 이마를 봄"
+    },
+    {
+      "Action": "stand_resolve",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결심한 걸음으로 일어섬"
+    },
+    {
+      "Action": "sharpen_scythe",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫날 손질"
+    },
+    {
+      "Action": "stand_hesitate",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "한참을 서서 말을 고름"
+    },
+    {
+      "Action": "sit_on_floor_eye_level",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "아이의 눈높이로 바닥에 앉음"
+    },
+    {
+      "Action": "scan_neck_with_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_2030_gunindeul"
+      ],
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장갑 낀 손이 목덜미에 기계 — 삑"
+    },
+    {
+      "Action": "arm_block",
+      "Category": "gesture",
+      "Characters": [
+        "char_2030_gunindeul",
+        "char_duho_eomma"
+      ],
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "군인의 팔 하나가 엄마를 막음"
+    },
+    {
+      "Action": "hide_behind_door_peek",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho",
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP13_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "문 뒤에 숨어 문틈으로 봄"
+    },
+    {
+      "Action": "head_down_confess",
+      "Category": "emotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "고개 숙여 말함, 목소리가 흔들림"
+    },
+    {
+      "Action": "knock_bed_frame",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손가락 등으로 철제 프레임을 침 (깡)"
+    },
+    {
+      "Action": "duna_finger_twitch",
+      "Category": "emotion",
+      "Characters": [
+        "char_duna"
+      ],
+      "Scenes": [
+        "EP13_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "잠든 채 손가락이 작게 움찔"
+    },
+    {
+      "Action": "air_knock_twice",
+      "Category": "gesture",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP13_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "주먹으로 허공에 두 번 두드리는 시늉"
+    },
+    {
+      "Action": "nod_once",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "고개를 한 번 끄덕임"
+    },
+    {
+      "Action": "sword_cane_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP13_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검 지팡이 보행"
+    },
+    {
+      "Action": "touch_neck_core",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무의식적으로 목덜미를 만짐"
+    },
+    {
+      "Action": "inspect_marker",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP13_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "전신주 아래 표식 확인"
+    },
+    {
+      "Action": "take_out_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "품에서 목록을 꺼내 여백을 짚음"
+    },
+    {
+      "Action": "core_glow_hand_tremble",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "코어가 밝고 빠르게 뜀, 낫 쥔 손끝의 미세한 떨림"
+    },
+    {
+      "Action": "drink_suppressant_turned_away",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "등을 돌리고 억제제를 한 모금 넘김"
+    },
+    {
+      "Action": "slow_walk_listen",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "걸음을 늦추고 귀를 엶"
+    },
+    {
+      "Action": "reach_into_crack",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "콘크리트 균열에 손을 넣었다 뺌"
+    },
+    {
+      "Action": "knock_wall_listen",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "건물 벽을 손가락 등으로 한 번 치고 되돌아오는 소리를 셈"
+    },
+    {
+      "Action": "sit_until_dawn",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP13_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "새벽까지 경계하며 앉아 있음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_bed_frame",
+      "NameKo": "두나 침상의 철제 프레임",
+      "Scenes": [
+        "EP13_SC002",
+        "EP13_SC004",
+        "EP13_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_rebar",
+      "NameKo": "철근 (두호의 과거 — 언급)",
+      "Scenes": [
+        "EP13_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_scythe",
+      "NameKo": "아인의 낫",
+      "Scenes": [
+        "EP13_SC003",
+        "EP13_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_wall_map_handover",
+      "NameKo": "관제실 지도 (인계 지점 추정 위치 세 곳)",
+      "Scenes": [
+        "EP13_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_cracked_greatsword",
+      "NameKo": "카인의 금 간 대검 (지팡이)",
+      "Scenes": [
+        "EP13_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_seo_marker",
+      "NameKo": "서 하사의 표식 (바로 선 / 뒤집힌)",
+      "Scenes": [
+        "EP13_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_drjin_medicine_list",
+      "NameKo": "닥터 진의 약품 목록 (열두 줄, 만년필, 판교 지번)",
+      "Scenes": [
+        "EP13_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_suppressant_bottle",
+      "NameKo": "억제제 병 (두 병째 중간)",
+      "Scenes": [
+        "EP13_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_evacuation_notice",
+      "NameKo": "유리문의 A4 공지 ('내부 인원 전원 대피 완료. 지하 3층 봉인.')",
+      "Scenes": [
+        "EP13_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_concrete_seal",
+      "NameKo": "콘크리트로 막힌 지하 계단 (균열)",
+      "Scenes": [
+        "EP13_SC014",
+        "EP13_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_2030_scanner",
+      "NameKo": "회상 — 목덜미에 대는 기계 (삑)",
+      "Scenes": [
+        "EP13_SC005"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP13_SC002",
+      "QuestionKo": "'여덟 살은 열 살이 되었고'(L9339)가 두호·두나 중 누구의 나이인지 문장상 모호 — 두 아이의 나이 TBD"
+    },
+    {
+      "Scene": "EP13_SC003",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC004",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC005",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC005",
+      "QuestionKo": "회상 장소(거리·건물) 미명시"
+    },
+    {
+      "Scene": "EP13_SC005",
+      "QuestionKo": "줄 옆에 서 있던 '그것들'의 종류(클레이브 등) 미명시"
+    },
+    {
+      "Scene": "EP13_SC006",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC007",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC008",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC009",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP13_SC010",
+      "QuestionKo": "뒤집힌 표식 앞 대화('…오지 말라는 거지.' 등, L9486-L9490)의 화자 미명시"
+    },
+    {
+      "Scene": "EP13_SC011",
+      "QuestionKo": "§8 목록 장면의 구체적 장소 미명시 (과천을 지난 이틀째 저녁)"
+    },
+    {
+      "Scene": "EP13_SC011",
+      "QuestionKo": "L9508·L9520 대사의 화자 표기 없음 — 문맥상 아인·카인으로 배정"
+    },
+    {
+      "Scene": "EP13_SC011",
+      "QuestionKo": "목록 '세 개/여섯 개'의 단위(무엇을 구하는지) 미명시"
+    },
+    {
+      "Scene": "EP13_SC012",
+      "QuestionKo": "코어 반응을 일으키는 대상(무엇에 가까워지는지) 미명시"
+    },
+    {
+      "Scene": "EP13_SC012",
+      "QuestionKo": "이 장면의 동행자 동석 여부 미명시(야영이므로 추정)"
+    },
+    {
+      "Scene": "EP13_SC014",
+      "QuestionKo": "'지하 3층 봉인'이 무엇을 가뒀는지 미명시"
+    },
+    {
+      "Scene": "EP13_SC016",
+      "QuestionKo": "벽 안쪽 두 번째 울림의 정체 미명시 (다음 화 예고와 연결)"
+    },
+    {
+      "Scene": "EP13_SC013",
+      "QuestionKo": "판교의 지역 번호 충돌: EP13 헤더(L9316)는 '지역⑥ 진입', EP14 헤더(L9684)는 '지역⑤ 판교' — 어느 쪽이 정본인지 TBD"
+    }
+  ]
+}

@@ -1,0 +1,1799 @@
+{
+  "EpisodeId": "EP07",
+  "TitleKo": "소켓",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      6616,
+      7282
+    ]
+  },
+  "SummaryKo": "벙커 통로 벽의 손그림으로 아인은 에이지스-07의 약점을 정리한다. 등 상부는 배리어가 켜져 있을 때만 열을 빼려고 열리며, 배리어는 가장 큰 위협 쪽으로 쏠려 앞이 두꺼워지면 뒤가 얇아진다. 뒤를 맡을 각인자가 필요하지만 오정길은 각인자가 아니다. 아침 안개가 절반 걷힌 여의도에서 같은 보폭의 발자국이 다시 놈 쪽으로 향한다. 카인이 이번엔 버티지 않고 정면을 쳐 배리어를 쏠리게 하고 아인이 측면으로 들어가 등을 열지만, 뒤에는 아무도 없다. 그때 인식표 없는 후드 차림의 청년이 나타나 코어 파편 삼분의 일을 조건으로 합류한다. 셋의 연계로 류가 등에 두 날을 동시에 꽂아 배리어를 끄고, 네 조건을 맞춘 아인의 한 번에 4미터짜리가 무너진다. 류는 벙커 등록 권유를 '표시가 난다'며 거절하고, 이름만 남기고 떠난다. 의무실에서 닥터 진의 처방 글씨 획 끝은 아래로 꺾여 있고, 아인은 처음으로 카인 옆에 말없이 앉는다. 승급은 없었다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC001",
+      "NovelSource": "L6616-L6683 §1 켜져 있어야 보인다",
+      "NovelSummary": "벙커 통로 벽에 공동구 도면과 4미터 다각 보행체의 뒷모습 손그림이 붙어 있다. 등 상부 동그라미 — 불꽃이 튄 자리이고 직후 그것이 꺼졌다. 아인은 그 부위가 배리어가 켜져 있을 때만 열린다고 한다. 열을 빼야 하기 때문이다. 켜져 있어야 보이고, 켜져 있으면 못 간다는 역설.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "역설 제시 — 켜져 있어야 보이고, 켜져 있으면 못 간다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…제가 본 자리 맞습니다.",
+          "Source": "L6642"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "그럼 거기만 치면 되겠네.",
+          "Source": "L6648"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "그게 켜져 있을 때만 열려요.",
+          "Source": "L6660"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "열이 나니까요. 안 빼면 자기가 타요.",
+          "Source": "L6664"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…켜져 있어야 보이는데.",
+          "Source": "L6674"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "켜져 있으면 못 가요.",
+          "Source": "L6676"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "작전 회의 청취(약점 구조 이해)",
+      "Interaction": [
+        "손그림 열람(등 상부 동그라미)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "통로 벽의 도면·손그림",
+      "Props": [
+        "prop_utility_tunnel_map",
+        "prop_aegis_rear_sketch"
+      ],
+      "VFX": [],
+      "SFX": [
+        "pencil_scratch(연필)"
+      ],
+      "Music": "숙고",
+      "GameplayEntry": "에피소드 시작",
+      "GameplayExit": "침묵",
+      "AnimationRequired": [
+        "draw_on_paper"
+      ],
+      "CinematicRequired": "true — 작전 회의 컷신",
+      "SaveFlags": [
+        "EP07_START",
+        "EP07_WEAKPOINT_BACK_KNOWN"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP07_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_utility_tunnel_map",
+        "prop:prop_aegis_rear_sketch",
+        "anim:draw_on_paper",
+        "sfx:pencil_scratch",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC002",
+      "NovelSource": "L6684-L6729 §2 셋",
+      "NovelSummary": "아인이 도면 위에 앞·옆·뒤 셋을 그린다. 배리어는 전방향이 아니라 가장 큰 위협 쪽으로 쏠리고, 앞이 두꺼워지면 뒤가 얇아진다. 뒤는 누가 가느냐는 물음에 아인은 오정길을 보고 고개를 젓는다 — 각인자여야 한다. 거절이 아닌 사실이었고 그도 안다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "해법 — 배리어는 위협 방향으로만 쏠린다. 그러나 뒤를 맡을 각인자가 없다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "그게 전방향이 아닐 거예요.",
+          "Source": "L6692"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "제일 큰 위협 쪽으로 쏠려요.",
+          "Source": "L6694"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "앞이 두꺼워지면 뒤가 얇아지고요.",
+          "Source": "L6696"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…여긴 누가 가.",
+          "Source": "L6704"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "각인자여야 해요.",
+          "Source": "L6720"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "작전 회의 청취(3인 배치 이해)",
+      "Interaction": [
+        "배치도 열람(앞·옆·뒤)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "통로 벽 도면",
+      "Props": [
+        "prop_aegis_rear_sketch"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "숙고, 결핍",
+      "GameplayEntry": "SC001에서 이어짐",
+      "GameplayExit": "아무도 더 말하지 않음",
+      "AnimationRequired": [
+        "draw_on_paper",
+        "point_at_sketch",
+        "shake_head"
+      ],
+      "CinematicRequired": "true — 작전 회의 컷신",
+      "SaveFlags": [
+        "EP07_PLAN_THREE_POINTS"
+      ],
+      "Prerequisites": [
+        "EP07_SC001"
+      ],
+      "NextScene": "EP07_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_aegis_rear_sketch",
+        "anim:draw_on_paper",
+        "anim:point_at_sketch",
+        "anim:shake_head",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC003",
+      "NovelSource": "L6730-L6775 §3 절반",
+      "NovelSummary": "공동구를 나오니 안개가 어제보다 얕아 무릎 위가 트이고 쉰 걸음쯤 보인다. 아인이 멈춰 듣지만 소리는 여전히 안 잡힌다 — 보이는 것은 돌아왔고 들리는 것은 안 돌아왔다. 광고판은 여전히 돌아가고, 셋 중 카인만 한 번 올려다본다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "안개 절반 회복 — 시야는 돌아오고 청각은 아니다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…아침이라 그런가 봅니다.",
+          "Source": "L6738"
+        }
+      ],
+      "GameMode": [
+        "TRANSITION",
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "여의도 재진입, 협곡 전진",
+      "Interaction": [
+        "멈춰 듣기(여전히 실패)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "얕은 안개(무릎 위 트임, 가시거리 약 50걸음), 광고판 작동 중",
+      "Props": [
+        "prop_led_billboard"
+      ],
+      "VFX": [
+        "shallow_fog(얕은 안개)",
+        "led_bloom_in_fog(광고판 빛)"
+      ],
+      "SFX": [
+        "echo_canyon(유리벽 반향)"
+      ],
+      "Music": "조금 걷힌 불안",
+      "GameplayEntry": "공동구 출구",
+      "GameplayExit": "광고판 아래를 지나감",
+      "AnimationRequired": [
+        "stop_listen",
+        "look_up"
+      ],
+      "CinematicRequired": "false — 이동 구간",
+      "SaveFlags": [
+        "EP07_YEOUIDO_REENTERED"
+      ],
+      "Prerequisites": [
+        "EP07_SC002"
+      ],
+      "NextScene": "EP07_SC004",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_led_billboard",
+        "anim:stop_listen",
+        "anim:look_up",
+        "vfx:shallow_fog",
+        "vfx:led_bloom_in_fog",
+        "sfx:echo_canyon",
+        "bgm:bgm_yeouido_fog"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC004",
+      "NovelSource": "L6776-L6801 §4 또 왔다",
+      "NovelSummary": "젖은 바닥에 어제 것 위로 새 발자국이 겹쳐 있다. 보폭이 같다 — 같은 사람이 또 왔다. 발자국은 놈이 있는 쪽을 향한다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류의 흔적이 다시 — 놈 쪽으로 향한다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…또 왔어요.",
+          "Source": "L6788"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "같은 놈?",
+          "Source": "L6790"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "보폭이 같아요.",
+          "Source": "L6792"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "발자국 조사",
+      "Interaction": [
+        "발자국 비교(어제 것과 보폭 일치)",
+        "방향 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "젖은 바닥, 얕은 안개",
+      "Props": [
+        "prop_footprints"
+      ],
+      "VFX": [
+        "footprint_highlight(조사 하이라이트)"
+      ],
+      "SFX": [],
+      "Music": "긴장",
+      "GameplayEntry": "광고판 통과 후",
+      "GameplayExit": "발자국 방향 = 놈 쪽",
+      "AnimationRequired": [
+        "crouch_inspect"
+      ],
+      "CinematicRequired": "false — 조사 플레이",
+      "SaveFlags": [
+        "EP07_CLUE_SAME_STRIDE"
+      ],
+      "Prerequisites": [
+        "EP07_SC003"
+      ],
+      "NextScene": "EP07_SC005",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_footprints",
+        "anim:crouch_inspect",
+        "vfx:footprint_highlight",
+        "bgm:bgm_investigation"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC005",
+      "NovelSource": "L6802-L6863 §5 이번엔 치세요",
+      "NovelSummary": "구동음과 함께 에이지스-07이 어제 끊긴 다리를 보정하며 절뚝이며 나온다. 공기가 일렁인다. 아인이 카인에게 정면을, 이번엔 버티지 말고 치라고 한다 — 배리어를 앞으로 쏠리게 하려면 위협이 커야 한다. 카인이 대검으로 연달아 치자 정면 공기가 아지랑이처럼 두꺼워진다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "대검(카인)"
+      ],
+      "StoryBeat": "지시 반전 — 지난번 '버텨' ↔ 이번 '치세요'",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "카인. 정면.",
+          "Source": "L6814"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…버텨?",
+          "Source": "L6816"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "아니요. 이번엔 치세요.",
+          "Source": "L6820"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…앞이 두꺼워졌어요.",
+          "Source": "L6860"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "정면을 강하게 연타해 배리어를 앞으로 쏠리게 한다",
+      "Interaction": [
+        "정면 연타(흡수되어도 계속)",
+        "배리어 두께 변화 관찰"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P1",
+      "EnvironmentState": "얕은 안개, 정면 배리어 가시화(아지랑이)",
+      "Props": [],
+      "VFX": [
+        "air_shimmer_barrier(공기 일렁임)",
+        "barrier_thicken_haze(정면 아지랑이)"
+      ],
+      "SFX": [
+        "servo_hum(구동음)",
+        "impact_clang(콰창)"
+      ],
+      "Music": "공세",
+      "GameplayEntry": "보스 재등장 컷",
+      "GameplayExit": "정면이 두꺼워짐 → 아인 측면 진입",
+      "AnimationRequired": [
+        "boss_limp_walk",
+        "greatsword_twohand_strike",
+        "boss_barrier_thicken"
+      ],
+      "CinematicRequired": "true — 재등장 컷(절뚝이는 다리)",
+      "SaveFlags": [
+        "EP07_AEGIS_ENGAGED"
+      ],
+      "Prerequisites": [
+        "EP07_SC004"
+      ],
+      "NextScene": "EP07_SC006",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:boss_limp_walk",
+        "anim:greatsword_twohand_strike",
+        "anim:boss_barrier_thicken",
+        "vfx:air_shimmer_barrier",
+        "vfx:barrier_thicken_haze",
+        "sfx:servo_hum",
+        "sfx:impact_clang",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC006",
+      "NovelSource": "L6864-L6896 §6 아무도 없다",
+      "NovelSummary": "아인이 측면에서 들어가자 놈의 상체가 돌아가며 등이 열린다. 그러나 뒤에는 아무도 없다. 셋이 필요했는데 둘밖에 없었다. 놈이 돌아서고 아인이 굴러 피하며 등이 다시 닫힌다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "조건은 만들었지만 사람이 부족하다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "측면 진입으로 등을 열게 한다(뒤를 칠 사람이 없음을 체험)",
+      "Interaction": [
+        "측면 진입",
+        "회피"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P1",
+      "EnvironmentState": "얕은 안개",
+      "Props": [],
+      "VFX": [
+        "back_vent_open(등 개방)"
+      ],
+      "SFX": [],
+      "Music": "결핍",
+      "GameplayEntry": "정면 배리어 두꺼워진 상태",
+      "GameplayExit": "등이 다시 닫힘",
+      "AnimationRequired": [
+        "side_approach_run",
+        "boss_turn_upper",
+        "dodge_roll"
+      ],
+      "CinematicRequired": "true — '둘밖에 없었다' 강조 컷",
+      "SaveFlags": [
+        "EP07_BACK_OPEN_NOBODY"
+      ],
+      "Prerequisites": [
+        "EP07_SC005"
+      ],
+      "NextScene": "EP07_SC007",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:side_approach_run",
+        "anim:boss_turn_upper",
+        "anim:dodge_roll",
+        "vfx:back_vent_open",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC007",
+      "NovelSource": "L6897-L6990 §7 셋이면 되겠네",
+      "NovelSummary": "빌딩 그림자 쪽에서 '셋이면 되겠네' 하는 목소리. 방향은 안 잡히고, 스물 안팎의 후드 쓴 마른 청년이 양손에 얇은 날을 하나씩 들고 걸어 나온다. 목에 인식표가 없다. 그는 돕는 게 아니라며 코어 파편 삼분의 일을 요구한다 — 혼자서는 어그로가 자기에게 와서 등 뒤로 못 가고, 어제도 스치고 말았다고. 놈의 코어는 무거워서 관심 없다. 아인이 삼분의 일에 동의한다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [
+        "후드(류)"
+      ],
+      "RequiredEquipment": [
+        "얇은 날 두 개(류)"
+      ],
+      "StoryBeat": "류 첫 등장 — 도우러 온 게 아니라 구조가 그를 요구한다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…셋이면 되겠네.",
+          "Source": "L6903"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "코어 파편. 삼분의 일.",
+          "Source": "L6945"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "안 도와줘요.",
+          "Source": "L6953"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "저거 등 뒤로 혼자 못 가요.",
+          "Source": "L6963"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "관심 없어요. 무거워서.",
+          "Source": "L6977"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…삼분의 일.",
+          "Source": "L6985"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "낯선 자와 지분 협상",
+      "Interaction": [
+        "대화(지분 삼분의 일 수락)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "빌딩 그림자, 얕은 안개",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "footstep_soft(가벼운 발소리)"
+      ],
+      "Music": "건조하고 가벼운 긴장",
+      "GameplayEntry": "목소리 컷",
+      "GameplayExit": "협상 성립",
+      "AnimationRequired": [
+        "touch_neck",
+        "raise_three_fingers"
+      ],
+      "CinematicRequired": "true — 류 등장 컷신",
+      "SaveFlags": [
+        "EP07_RYU_MET",
+        "EP07_DEAL_ONE_THIRD"
+      ],
+      "Prerequisites": [
+        "EP07_SC006"
+      ],
+      "NextScene": "EP07_SC008",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_ryu",
+        "anim:touch_neck",
+        "anim:raise_three_fingers",
+        "sfx:footstep_soft",
+        "bgm:bgm_ryu_theme"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC008",
+      "NovelSource": "L6991-L7052 §8 열린다",
+      "NovelSummary": "셋이 흩어진다. 카인이 정면, 아인이 측면, 류는 보이지 않고 목소리만 온다. 카인이 세게 정면을 치자 정면이 두꺼워지고, 아인이 측면으로 들어가자 상체가 돌며 등이 열린다 — 배리어가 켜져 있어서 열려 있다. 류가 놈의 다리를 밟고 올라가 얇은 날 두 개로 한 번에 두 군데를 찌르고, 등에서 불꽃이 터지며 일렁임이 끊긴다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "대검(카인)",
+        "낫(아인)",
+        "얇은 날 두 개(류)"
+      ],
+      "StoryBeat": "3인 전술 성공 — 배리어 꺼짐",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "치세요. 세게.",
+          "Source": "L6999"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "꺼졌어요!",
+          "Source": "L7049"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "측면 진입으로 등을 열어 류의 공격 기회를 만든다",
+      "Interaction": [
+        "카인 정면 타격 신호",
+        "아인 측면 진입",
+        "류 등 공격(동료 연계)"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P2",
+      "EnvironmentState": "얕은 안개, 등 개방",
+      "Props": [],
+      "VFX": [
+        "back_vent_open(등 개방)",
+        "back_spark_burst(파직 불꽃)",
+        "barrier_break(일렁임 끊김)"
+      ],
+      "SFX": [
+        "impact_clang(콰창)",
+        "spark_burst(파직)"
+      ],
+      "Music": "연계 절정",
+      "GameplayEntry": "흩어짐",
+      "GameplayExit": "배리어 해제",
+      "AnimationRequired": [
+        "greatsword_twohand_strike",
+        "side_approach_run",
+        "boss_turn_upper",
+        "climb_boss_leg",
+        "dual_blade_stab"
+      ],
+      "CinematicRequired": "true — 류의 등 공격은 연출 컷 권장",
+      "SaveFlags": [
+        "EP07_BARRIER_DOWN"
+      ],
+      "Prerequisites": [
+        "EP07_SC007"
+      ],
+      "NextScene": "EP07_SC009",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_ryu",
+        "anim:greatsword_twohand_strike",
+        "anim:side_approach_run",
+        "anim:boss_turn_upper",
+        "anim:climb_boss_leg",
+        "anim:dual_blade_stab",
+        "vfx:back_vent_open",
+        "vfx:back_spark_burst",
+        "vfx:barrier_break",
+        "sfx:impact_clang",
+        "sfx:spark_burst",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC009",
+      "NovelSource": "L7053-L7100 §9 넷",
+      "NovelSummary": "아인의 발이 한 뼘 안쪽에서 멈춘다. 놈이 팔을 든다. 숨, 세상이 늘어지고, 반 박자. 배리어가 없다 — 네 번째. 넷이 맞았다. 낫이 원을 그려 걸고 당긴다. 한 번에 4미터짜리가 무너진다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "네 조건 충족 — 한 번의 일격으로 격파",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "거리·숨·반 박자·배리어 없음 네 조건을 맞춰 일격",
+      "Interaction": [
+        "한 뼘 거리 정지",
+        "숨·반 박자 타이밍 입력",
+        "낫 일격"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P3",
+      "EnvironmentState": "배리어 해제 상태",
+      "Props": [],
+      "VFX": [
+        "time_dilation(세상이 늘어짐)",
+        "scythe_arc(원)"
+      ],
+      "SFX": [
+        "crunch_break(콰직)"
+      ],
+      "Music": "정적 후 일격",
+      "GameplayEntry": "배리어 해제 직후",
+      "GameplayExit": "보스 붕괴",
+      "AnimationRequired": [
+        "scythe_finisher",
+        "boss_collapse"
+      ],
+      "CinematicRequired": "true — 슬로모션 피니시",
+      "SaveFlags": [
+        "EP07_AEGIS07_DEFEATED"
+      ],
+      "Prerequisites": [
+        "EP07_SC008"
+      ],
+      "NextScene": "EP07_SC010",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_ryu",
+        "anim:scythe_finisher",
+        "anim:boss_collapse",
+        "vfx:time_dilation",
+        "vfx:scythe_arc",
+        "sfx:crunch_break",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC010",
+      "NovelSource": "L7101-L7126 §10 삼분의 일",
+      "NovelSummary": "류가 어디를 뒤져야 하는지 아는 익숙한 걸음으로 잔해에 가 소켓 단면에서 큰 파편만 셋 골라낸다. 하나를 아인 쪽으로 던지며 '삼분의 일'. 아인이 왼손으로 받는다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "지분 정산",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "삼분의 일.",
+          "Source": "L7119"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "보상 수령",
+      "Interaction": [
+        "코어 파편 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "잔해",
+      "Props": [
+        "prop_core_fragment"
+      ],
+      "VFX": [
+        "core_fragment_glow(파편)"
+      ],
+      "SFX": [
+        "fragment_clink(파편)"
+      ],
+      "Music": "건조함",
+      "GameplayEntry": "격파 직후",
+      "GameplayExit": "파편 수령",
+      "AnimationRequired": [
+        "loot_fragments",
+        "throw_catch"
+      ],
+      "CinematicRequired": "true — 결과 컷",
+      "SaveFlags": [
+        "EP07_CORE_FRAGMENT_ONE_THIRD"
+      ],
+      "Prerequisites": [
+        "EP07_SC009"
+      ],
+      "NextScene": "EP07_SC011",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_ryu",
+        "prop:prop_core_fragment",
+        "anim:loot_fragments",
+        "anim:throw_catch",
+        "vfx:core_fragment_glow",
+        "sfx:fragment_clink",
+        "bgm:bgm_ryu_theme"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC011",
+      "NovelSource": "L7127-L7192 §11 표시가 나잖아요",
+      "NovelSummary": "아인이 벙커로 오라고, 등록하면 의뢰를 받을 수 있다고 한다. 류는 목을 아까보다 길게 만지며 등급을 받으면 표시가 나지 않느냐고, 뭔지는 모르지만 나면 안 될 것 같다고 한다. 아인은 시신 여섯과 계측 대장 수백 장으로 그 이유를 알고 있다. 그는 이유를 모르는데 결론이 같다. 말하면 그가 안 올 것이라 말하지 않는다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "이 화의 핵심 — 아인은 이유를 알고 류는 모른다, 결론은 같다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "벙커 와요.",
+          "Source": "L7129"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "등록하면 의뢰 받아요. 이거보다 나아요.",
+          "Source": "L7137"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "등급 받으면 표시가 나잖아요.",
+          "Source": "L7151"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…뭐가요.",
+          "Source": "L7159"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "몰라요.",
+          "Source": "L7163"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "그냥, 나면 안 될 것 같아서.",
+          "Source": "L7171"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "류에게 벙커 합류 권유",
+      "Interaction": [
+        "대화(권유)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "잔해 주변",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "굳은 침묵",
+      "GameplayEntry": "파편 수령 후",
+      "GameplayExit": "아인이 말하지 않기로 함",
+      "AnimationRequired": [
+        "touch_neck",
+        "shrug"
+      ],
+      "CinematicRequired": "true — 아인의 굳은 얼굴·내면 서술",
+      "SaveFlags": [
+        "EP07_RYU_DECLINED_REGISTRATION"
+      ],
+      "Prerequisites": [
+        "EP07_SC010"
+      ],
+      "NextScene": "EP07_SC012",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_ryu",
+        "anim:touch_neck",
+        "anim:shrug",
+        "bgm:bgm_ryu_theme"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC012",
+      "NovelSource": "L7193-L7220 §12 류",
+      "NovelSummary": "류가 돌아서며 넷은 밥이 두 배라고 말하고 안개 쪽으로 걸어간다. 아인이 이름을 묻자 돌아보지 않고 '류요'라고 답한다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "아침",
+      "Characters": [
+        "char_ain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류는 합류하지 않고 이름만 남긴다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "그리고 넷은 밥이 두 배잖아요.",
+          "Source": "L7199"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…이름.",
+          "Source": "L7209"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "류요.",
+          "Source": "L7217"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "이름 묻기",
+      "Interaction": [
+        "대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "얕은 안개",
+      "Props": [],
+      "VFX": [
+        "shallow_fog(얕은 안개)"
+      ],
+      "SFX": [],
+      "Music": "여운",
+      "GameplayEntry": "대화 이어짐",
+      "GameplayExit": "류 퇴장 → 벙커 귀환",
+      "AnimationRequired": [
+        "walk_away_no_look"
+      ],
+      "CinematicRequired": "true — 뒷모습 퇴장 컷",
+      "SaveFlags": [
+        "EP07_RYU_NAME_KNOWN"
+      ],
+      "Prerequisites": [
+        "EP07_SC011"
+      ],
+      "NextScene": "EP07_SC013",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_ryu",
+        "anim:walk_away_no_look",
+        "vfx:shallow_fog",
+        "bgm:bgm_ryu_theme"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC013",
+      "NovelSource": "L7221-L7240 §13 승급은 없다 (의무실)",
+      "NovelSummary": "벙커 의무실에서 닥터 진이 오늘도 등부터 아인의 어깨를 본다. 건넨 처방 종이의 글씨는 획 끝이 아래로 꺾여 있다. 아인은 종이를 접어 주머니에 넣는다.",
+      "Location": "loc_bunker_infirmary",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_dr_jin"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "계측자의 세 번째 흔적 — 아래로 꺾인 획",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_dr_jin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "진찰 받기",
+      "Interaction": [
+        "처방 종이 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "의무실",
+      "Props": [
+        "prop_prescription"
+      ],
+      "VFX": [],
+      "SFX": [
+        "paper_fold(종이)"
+      ],
+      "Music": "담담함",
+      "GameplayEntry": "귀환",
+      "GameplayExit": "종이를 주머니에",
+      "AnimationRequired": [
+        "medical_exam_back",
+        "fold_paper_pocket"
+      ],
+      "CinematicRequired": "true — 처방 글씨 클로즈업(반응 없음)",
+      "SaveFlags": [
+        "EP07_PRESCRIPTION_STROKE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP07_SC012"
+      ],
+      "NextScene": "EP07_SC014",
+      "RequiredAssets": [
+        "env:loc_bunker_infirmary",
+        "char:char_ain",
+        "char:char_dr_jin",
+        "prop:prop_prescription",
+        "anim:medical_exam_back",
+        "anim:fold_paper_pocket",
+        "sfx:paper_fold",
+        "bgm:bgm_bunker_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP07",
+      "SceneId": "EP07_SC014",
+      "NovelSource": "L7241-L7282 §13 승급은 없다 (통로)",
+      "NovelSummary": "통로에 카인이 벽에 기대 앉아 있고, 아인이 처음으로 그 옆에 앉는다. 아무 말도 하지 않는다. 통로 저편에서 오정길은 쏘지도 못하는 총을 손질한다. 아인의 손에는 코어 파편 하나, 삼분의 일. 승급은 없었다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "관계의 첫 걸음 — 옆에 앉는다. 승급은 없다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "ANIMATION_ONLY"
+      ],
+      "PlayerGoal": "엔딩 연출",
+      "Interaction": [
+        "카인 옆에 앉기(선택 없는 연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 통로, 조용함",
+      "Props": [
+        "prop_core_fragment",
+        "prop_gun"
+      ],
+      "VFX": [],
+      "SFX": [
+        "gun_cleaning(총 손질)"
+      ],
+      "Music": "말없는 온기",
+      "GameplayEntry": "의무실에서 나옴",
+      "GameplayExit": "에피소드 종료 → EP08",
+      "AnimationRequired": [
+        "sit_beside",
+        "clean_gun"
+      ],
+      "CinematicRequired": "true — 대사 없는 엔딩 컷",
+      "SaveFlags": [
+        "EP07_END",
+        "EP07_SAT_BESIDE_KAIN",
+        "EP07_NO_PROMOTION"
+      ],
+      "Prerequisites": [
+        "EP07_SC013"
+      ],
+      "NextScene": "EP08_SC001",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_core_fragment",
+        "prop:prop_gun",
+        "anim:sit_beside",
+        "anim:clean_gun",
+        "sfx:gun_cleaning",
+        "bgm:bgm_bunker_quiet"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_aegis_07",
+      "NameKo": "에이지스-07",
+      "Scenes": [
+        "EP07_SC005",
+        "EP07_SC006",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010"
+      ],
+      "NovelReasonForBattle": "여의도(지역③ 2/2) 재도전. 불가시 배리어의 쏠림을 이용해 등의 방열부를 노린다.",
+      "ArenaLocationId": "loc_yeouido_fog_canyon",
+      "PhasesInNovel": [
+        "카인 정면 연타 → 정면 두꺼워짐 → 아인 측면 → 등 열림, 그러나 뒤에 아무도 없음(§5-6)",
+        "류 합류 후 3인 배치: 정면 카인·측면 아인·류가 다리 밟고 올라 등에 얇은 날 두 개 동시 → 배리어 꺼짐(§8)",
+        "배리어 없음 = 네 번째 조건 충족, 아인의 한 번으로 격파(§9)"
+      ],
+      "PatternsInNovel": [
+        "다리 하나 잃은 채 보정하며 절뚝이는 보행",
+        "배리어가 가장 큰 위협 방향으로 쏠림(앞이 두꺼워지면 뒤가 얇아짐)",
+        "측면 위협에 상체가 돌아감 → 등이 열림",
+        "돌아서기",
+        "아인 쪽으로 팔을 듦"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "등 상부(손그림의 동그라미) — 배리어가 켜져 있을 때만 열림(열 배출)",
+        "소켓 단면(파편 수거 부위)",
+        "불가시 배리어(방향성, 출력 한계)",
+        "다리(전 화에서 하나 절단)"
+      ],
+      "BreakCounterInNovel": [
+        "정면 강타로 배리어를 앞으로 쏠리게 함",
+        "측면 진입으로 상체를 돌려 등 개방",
+        "류의 두 군데 동시 공격 → 등 불꽃, 배리어 꺼짐",
+        "배리어 없는 반 박자에 낫 일격 → 붕괴"
+      ],
+      "EnvironmentInBattle": [
+        "얕은 안개(무릎 위 트임, 약 50걸음 시야)",
+        "소리 방향 여전히 판별 불가",
+        "빌딩 그림자"
+      ],
+      "Outcome": "격파 — 한 번의 일격으로 무너짐. 류가 코어 파편 셋을 챙겨 하나를 아인에게 줌",
+      "Source": "L6802-L7126"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_corridor",
+      "NameKo": "벙커 통로",
+      "DescriptionKo": "벙커 내부 통로. 벽에 도면과 손그림이 붙은 작전 회의 장소가 되고, 마지막엔 카인이 벽에 기대 앉아 있다.",
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002",
+        "EP07_SC014"
+      ]
+    },
+    {
+      "LocationId": "loc_yeouido_fog_canyon",
+      "NameKo": "여의도 금융가 빌딩 협곡(안개)",
+      "DescriptionKo": "빌딩 협곡. 이 화의 아침 안개는 어제보다 얕아 무릎 위가 트이고 쉰 걸음쯤 보인다. 소리는 여전히 방향이 안 잡힌다. 「2029 신년 특별전」 광고판이 여전히 돌아간다.",
+      "Scenes": [
+        "EP07_SC003",
+        "EP07_SC004",
+        "EP07_SC005",
+        "EP07_SC006",
+        "EP07_SC007",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010",
+        "EP07_SC011",
+        "EP07_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_infirmary",
+      "NameKo": "벙커 의무실",
+      "DescriptionKo": "닥터 진이 부상을 보는 곳.",
+      "Scenes": [
+        "EP07_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 배리어 편향 해법을 세우고 마지막 일격을 넣는다",
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002",
+        "EP07_SC003",
+        "EP07_SC004",
+        "EP07_SC005",
+        "EP07_SC006",
+        "EP07_SC007",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010",
+        "EP07_SC011",
+        "EP07_SC012",
+        "EP07_SC013",
+        "EP07_SC014"
+      ],
+      "StateChangesKo": [
+        "EP07_SC010: 코어 파편 하나(삼분의 일)를 왼손으로 받음",
+        "EP07_SC013: 닥터 진에게 어깨 진찰, 처방 종이를 주머니에 넣음"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검 사용자. 이번엔 버티지 않고 정면을 친다",
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002",
+        "EP07_SC003",
+        "EP07_SC004",
+        "EP07_SC005",
+        "EP07_SC006",
+        "EP07_SC007",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010",
+        "EP07_SC014"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "동행. 등 불꽃 위치의 목격자. 각인자가 아니어서 뒤 역할에서 제외된다",
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002",
+        "EP07_SC003",
+        "EP07_SC004",
+        "EP07_SC005",
+        "EP07_SC006",
+        "EP07_SC007",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010",
+        "EP07_SC014"
+      ],
+      "StateChangesKo": [
+        "EP07_SC014: 쏘지도 못하는 총을 손질"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "무등록 헌터. 스물 안팎, 후드, 마른 체격, 얇은 날 두 개, 인식표 없음. 지분(코어 파편 삼분의 일)을 조건으로 합류했다가 떠난다",
+      "Scenes": [
+        "EP07_SC007",
+        "EP07_SC008",
+        "EP07_SC009",
+        "EP07_SC010",
+        "EP07_SC011",
+        "EP07_SC012"
+      ],
+      "StateChangesKo": [
+        "EP07_SC007: 첫 등장(후드, 양손 얇은 날, 인식표 없음)",
+        "EP07_SC010: 코어 파편 셋 수거, 하나를 아인에게",
+        "EP07_SC012: 이름을 밝히고 안개 속으로 떠남"
+      ]
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "벙커 의무실 의사",
+      "Scenes": [
+        "EP07_SC013"
+      ],
+      "StateChangesKo": [
+        "EP07_SC013: 처방 종이 글씨의 획 끝이 아래로 꺾여 있음"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "draw_on_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손그림에 화살표·사람 셋 그리기"
+    },
+    {
+      "Action": "point_at_sketch",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP07_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뒤쪽 동그라미 짚기"
+    },
+    {
+      "Action": "shake_head",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "오정길을 보고 고개를 저음"
+    },
+    {
+      "Action": "stop_listen",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "멈춰 소리를 듣는 절차 동작"
+    },
+    {
+      "Action": "look_up",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP07_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "광고판을 한 번 올려다봄"
+    },
+    {
+      "Action": "crouch_inspect",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쪼그려 앉아 발자국 확인"
+    },
+    {
+      "Action": "greatsword_twohand_strike",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP07_SC005",
+        "EP07_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검 양손 고쳐 쥐고 정면 연타"
+    },
+    {
+      "Action": "side_approach_run",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC006",
+        "EP07_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "측면 진입"
+    },
+    {
+      "Action": "dodge_roll",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "구르며 회피"
+    },
+    {
+      "Action": "touch_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC007",
+        "EP07_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "인식표가 없는 목을 만지는 버릇(SC011에서 더 길게)"
+    },
+    {
+      "Action": "raise_three_fingers",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손가락 세 개를 폄"
+    },
+    {
+      "Action": "climb_boss_leg",
+      "Category": "traversal",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "보스 다리를 밟고 등으로 올라감"
+    },
+    {
+      "Action": "dual_blade_stab",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "얇은 날 두 개로 동시에 두 군데"
+    },
+    {
+      "Action": "scythe_finisher",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원을 그리고 걸고 당기는 한 번의 일격(네 조건 충족)"
+    },
+    {
+      "Action": "loot_fragments",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "소켓 단면에서 큰 파편만 골라냄"
+    },
+    {
+      "Action": "throw_catch",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "파편을 던지고 아인이 왼손으로 받음"
+    },
+    {
+      "Action": "shrug",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "어깨를 으쓱"
+    },
+    {
+      "Action": "walk_away_no_look",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP07_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "돌아보지 않고 안개 쪽으로 걸어감"
+    },
+    {
+      "Action": "medical_exam_back",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "등부터 보는 어깨 진찰"
+    },
+    {
+      "Action": "fold_paper_pocket",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP07_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "처방 종이를 접어 주머니에"
+    },
+    {
+      "Action": "sit_beside",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP07_SC014"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 기댄 카인 옆에 처음 앉음(붙어 앉지 않음)"
+    },
+    {
+      "Action": "clean_gun",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP07_SC014"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "총 손질"
+    },
+    {
+      "Action": "boss_limp_walk",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP07_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "다리 하나 잃은 채 보정하며 절뚝이는 보행"
+    },
+    {
+      "Action": "boss_barrier_thicken",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP07_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "위협 방향으로 배리어가 두꺼워짐(아지랑이, 형체 흐릿)"
+    },
+    {
+      "Action": "boss_turn_upper",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP07_SC006",
+        "EP07_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "상체가 측면 위협 쪽으로 돌고 등이 열림"
+    },
+    {
+      "Action": "boss_collapse",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP07_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "4미터짜리가 무너짐"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_utility_tunnel_map",
+      "NameKo": "여의도 공동구 계통도(통로 벽에 붙임)",
+      "Scenes": [
+        "EP07_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_aegis_rear_sketch",
+      "NameKo": "4m 다각 보행체 뒷모습 손그림(등 상부 동그라미, 화살표, 사람 셋)",
+      "Scenes": [
+        "EP07_SC001",
+        "EP07_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_led_billboard",
+      "NameKo": "빌딩 외벽 LED 광고판(「2029 신년 특별전 / ~1.31」)",
+      "Scenes": [
+        "EP07_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_footprints",
+      "NameKo": "젖은 바닥의 발자국(어제 것 위에 새것이 겹침)",
+      "Scenes": [
+        "EP07_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_core_fragment",
+      "NameKo": "코어 파편",
+      "Scenes": [
+        "EP07_SC010",
+        "EP07_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_prescription",
+      "NameKo": "닥터 진의 처방 종이(획 끝이 아래로 꺾임)",
+      "Scenes": [
+        "EP07_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_gun",
+      "NameKo": "오정길의 총",
+      "Scenes": [
+        "EP07_SC014"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP07_SC001",
+      "QuestionKo": "'여기서 불꽃이 튀었어요.'(L6640) 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC003",
+      "QuestionKo": "'…아침이라 그런가 봅니다.' 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC003",
+      "QuestionKo": "공동구 통과 과정 산문 생략"
+    },
+    {
+      "Scene": "EP07_SC004",
+      "QuestionKo": "'같은 놈?' 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC007",
+      "QuestionKo": "'…누구야.'(L6933) 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC007",
+      "QuestionKo": "'…왜 도와줘요.'(L6949) 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC007",
+      "QuestionKo": "협상 중 에이지스-07의 위치·상태(교전 중단 여부) 미기술"
+    },
+    {
+      "Scene": "EP07_SC008",
+      "QuestionKo": "'꺼졌어요!' 화자 미기술"
+    },
+    {
+      "Scene": "EP07_SC010",
+      "QuestionKo": "파편 세 개 외 나머지 잔해·코어 본체의 처리 미기술"
+    },
+    {
+      "Scene": "EP07_SC011",
+      "QuestionKo": "카인·오정길이 이 대화에 동석했는지 미기술"
+    },
+    {
+      "Scene": "EP07_SC013",
+      "QuestionKo": "어깨 부상의 구체 상태·처방 내용 미기술"
+    },
+    {
+      "Scene": "EP07_SC013",
+      "QuestionKo": "시간대 미기술"
+    },
+    {
+      "Scene": "EP07_SC005",
+      "QuestionKo": "SC005~SC012 시간대가 '아침' 이후 어떻게 흐르는지 미기술(SC003 L6738 '아침' 기준으로 기입)"
+    },
+    {
+      "Scene": "EP07_SC001",
+      "QuestionKo": "파티 기본 의상 미기술(류 후드 외)"
+    },
+    {
+      "Scene": "EP07_SC001",
+      "QuestionKo": "SC001·SC002 시간대 미기술"
+    }
+  ]
+}

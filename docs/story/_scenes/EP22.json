@@ -1,0 +1,1832 @@
+{
+  "EpisodeId": "EP22",
+  "TitleKo": "제22화 — 열여덟",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      12894,
+      13307
+    ]
+  },
+  "SummaryKo": "안내인을 잃은 이튿날 아침, 넷은 종이의 숫자 열여덟 개와 스물세 걸음의 계획을 들고 격납고로 다시 내려간다. 세라는 7m 높이의 코어 대신 주포탑 여섯의 선회 관절을 목표로 정하고, 좁은 틈에는 원을 그리는 낫이 아니라 직선의 장검만 들어간다는 결론에 따라 아인이 무릎이 불편한 카인을 끌고 박자의 골을 건넌다. 세라의 이동 결계와 류의 잔상이 길을 열고 카인이 첫 관절을 꿰뚫는다. 세 번째 관절 이후 탑이 사격 간격을 재배치하자 아인은 결계 3초 안에 간격이 세 종류뿐이라는 안내인의 유산으로 다시 읽어 낸다. 다섯 번째 관절 뒤 출력이 코어로 몰려 과부하가 시작되고, 여섯 번째 관절이 죽어 눈먼 탑이 되자 카인이 눕힌 장검을 발판으로 아인이 날아올라 코어를 벤다. 환호 없는 승리 뒤, 소독약 냄새 나는 복도 끝에서 명찰 '박', 준장 계급장의 문지기가 경례를 하고 변형하며 첫걸음을 내딛는다. (전편 §4~§6은 후편과 중복되는 이중 판본이다.)",
+  "Scenes": [
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC001",
+      "NovelSource": "L12894-L12938 §1 두 번째 아침",
+      "NovelSummary": "넷이 그날 아침 다시 경사로를 내려간다. 어제 다섯이 내려간 길을 넷이 걸어 발소리가 하나 적다. 아인의 품에는 반은 연필, 반은 다른 필체의 숫자 열여덟 개. 카인과 아인이 스물세 걸음 — 골 여섯 번, 한 번에 네 걸음, 마지막만 세 걸음 — 을 다시 확인한다.",
+      "Location": "loc_gyeryong_ramp",
+      "TimeOfDay": "이튿날 아침",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "재진입 — 계획 확인",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…다시 확인하자.",
+          "Source": "L12917"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "스물세 걸음. 골이 몇 번 열려?",
+          "Source": "L12921"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "여섯 번요.",
+          "Source": "L12923"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "한 번에 네 걸음이요. 마지막만 세 걸음.",
+          "Source": "L12927"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "어긋나면 그 자리에서 끝나요.",
+          "Source": "L12931"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "그럼 안 어긋나면 되겠네.",
+          "Source": "L12935"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "경사로를 내려가며 작전을 확인한다",
+      "Interaction": [
+        "스물세 걸음 계획 복기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어제와 같은 경사로와 초록 유도등",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [],
+      "SFX": [
+        "넷의 발소리"
+      ],
+      "Music": "애도 속 결의",
+      "GameplayEntry": "경사로 하강",
+      "GameplayExit": "격납고 입구 도착",
+      "AnimationRequired": [
+        "walk_downhill"
+      ],
+      "CinematicRequired": "false: 이동·대화",
+      "SaveFlags": [
+        "EP22_REENTRY"
+      ],
+      "Prerequisites": [
+        "EP21_SC015"
+      ],
+      "NextScene": "EP22_SC002",
+      "RequiredAssets": [
+        "env:loc_gyeryong_ramp",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_guide_paper",
+        "anim:walk_downhill",
+        "sfx:넷의 발소리",
+        "bgm:애도 속 결의"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC002",
+      "NovelSource": "L12939-L12968 §2 관절",
+      "NovelSummary": "격납고 입구에서 세라가 목표를 정한다. 코어는 7m 높이라 지금은 아무도 닿지 못하니 오늘 목표는 주포탑 여섯의 선회 관절. 관절이 죽으면 그 포탑은 조준을 못 하고, 사각이 넓어져 길이 굵어진다. 뜯을 때마다 판이 바뀌니 매번 다시 세야 한다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "작전 수립 — 관절 여섯",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "목표를 정하자.",
+          "Source": "L12943"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "코어는 칠 미터야.",
+          "Source": "L12947"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "관절.",
+          "Source": "L12951"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "길이 굵어진다.",
+          "Source": "L12957"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "여섯 개. 하나씩.",
+          "Source": "L12965"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "보스 약점(선회 관절)과 목표를 확인한다",
+      "Interaction": [
+        "봉으로 탑 상부 지시(연출)"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "",
+      "EnvironmentState": "격납고 입구에서 본 탑(부포탑 1기 파괴 상태)",
+      "Props": [],
+      "VFX": [
+        "약점 하이라이트(선회 관절)"
+      ],
+      "SFX": [],
+      "Music": "보스 재도전 전주",
+      "GameplayEntry": "격납고 입구",
+      "GameplayExit": "장검 논의로",
+      "AnimationRequired": [
+        "point_with_staff"
+      ],
+      "CinematicRequired": "false: 브리핑",
+      "SaveFlags": [
+        "EP22_TARGET_JOINTS"
+      ],
+      "Prerequisites": [
+        "EP22_SC001"
+      ],
+      "NextScene": "EP22_SC003",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:point_with_staff",
+        "vfx:약점 하이라이트(선회 관절)",
+        "bgm:보스 재도전 전주"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC003",
+      "NovelSource": "L12969-L12998 §3 눕힌 장검",
+      "NovelSummary": "관절은 포탑 밑동, 틈은 손가락 두 마디. 원을 그리는 낫은 못 들어가고 직선만 들어간다. 이 년 동안 아인이 앞에 서고 카인이 받았지만 오늘은 반대다 — 그러나 카인은 스물세 걸음의 골을 밟을 다리가 아니다. '그래서 넷이서 가는 거예요.'",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "역할 역전 — 직선만 들어간다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…관절이 어디쯤인데.",
+          "Source": "L12973"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "낫으로는 못 들어가겠네.",
+          "Source": "L12983"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "낫은 원이니까.",
+          "Source": "L12985"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "직선만 들어가요.",
+          "Source": "L12989"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…내가 못 가.",
+          "Source": "L12993"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "작전의 역할 분담을 정한다",
+      "Interaction": [],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "",
+      "EnvironmentState": "격납고 입구",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "결의",
+      "GameplayEntry": "대화",
+      "GameplayExit": "작전 개시",
+      "AnimationRequired": [
+        "look_at_knee"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP22_SC002"
+      ],
+      "NextScene": "EP22_SC004",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:look_at_knee",
+        "bgm:결의"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC004",
+      "NovelSource": "L12999-L13026 §4 사각의 지도",
+      "NovelSummary": "포화 속에서 아인이 눈을 감고 열여덟 포탑의 사출과 재장전 사이의 골, 사각이 겹치는 자리를 귀로 주워 지도로 그린다. 탑 밑까지 스물세 걸음, 혼자 갈 길. 선회 관절은 장갑판이 못 덮는 좁고 깊은 틈이라 직선만 들어간다며 카인의 장검을 본다(EP21 §13·EP22 §3과 대사가 중복).",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "사각의 지도 그리기",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "길이 있어요.",
+          "Source": "L13005"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "두 명이 들어가면 골이 안 맞아요.",
+          "Source": "L13009"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "직선만 들어가요.",
+          "Source": "L13017"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…내가 못 가.",
+          "Source": "L13021"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "포화 속에서 사격 골과 사각을 청취해 경로를 그린다",
+      "Interaction": [
+        "눈 감고 청취(사각 지도 UI 제안)"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "18포탑(부포탑 1기 파괴됨)의 포화",
+      "Props": [],
+      "VFX": [
+        "청각 시각화: 사각 경로 선"
+      ],
+      "SFX": [
+        "포탑별 사출·재장전 박자"
+      ],
+      "Music": "보스전 P1",
+      "GameplayEntry": "포화 속 진입",
+      "GameplayExit": "경로 확정",
+      "AnimationRequired": [
+        "eyes_closed_listen"
+      ],
+      "CinematicRequired": "false: 인게임",
+      "SaveFlags": [
+        "EP22_BLINDSPOT_MAP"
+      ],
+      "Prerequisites": [
+        "EP22_SC003"
+      ],
+      "NextScene": "EP22_SC005",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:eyes_closed_listen",
+        "vfx:청각 시각화: 사각 경로 선",
+        "sfx:포탑별 사출·재장전 박자",
+        "bgm:보스전 P1"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC005",
+      "NovelSource": "L13027-L13046 §5 공식의 확장",
+      "NovelSummary": "골짜기의 공식을 격납고 크기로: 세라가 다섯 걸음마다 이동 결계를 깔고, 류가 부포탑 사선으로 몸을 던져 두 겹 잔상으로 세 명분 조준을 훔친다. 아인이 낫을 카인 장검 코등이에 걸어 끌며 스물세 걸음을 건너 탑 밑동에 닿는다. 주포탑이 아래로 꺾이는 순간 카인이 장검 온 길이를 선회 관절에 찔러 넣어 첫 포탑을 죽인다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "첫 관절 파괴",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "관절.",
+          "Source": "L13037"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "아인이 카인을 끌고 스물세 걸음을 건너 첫 선회 관절을 찌른다",
+      "Interaction": [
+        "박자에 맞춘 경로 이동(아인)",
+        "카인 끌기",
+        "관절 찌르기(카인 QTE 제안)",
+        "이동 결계(세라)·어그로(류) 협동"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "이동 결계가 점점이 깔린 경로, 파여 나가는 콘크리트",
+      "Props": [],
+      "VFX": [
+        "이동 결계 점선",
+        "류 두 겹 잔상",
+        "관절 심부 결정 파괴"
+      ],
+      "SFX": [
+        "사출 스침",
+        "장검 관통음"
+      ],
+      "Music": "보스전 P1",
+      "GameplayEntry": "작전 개시",
+      "GameplayExit": "첫 번째 포탑 사망",
+      "AnimationRequired": [
+        "drag_ally_by_guard",
+        "longsword_joint_stab",
+        "barrier_cast",
+        "afterimage_decoy"
+      ],
+      "CinematicRequired": "false: 인게임(관통 순간 슬로 제안)",
+      "SaveFlags": [
+        "EP22_JOINT_1"
+      ],
+      "Prerequisites": [
+        "EP22_SC004"
+      ],
+      "NextScene": "EP22_SC006",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:drag_ally_by_guard",
+        "anim:longsword_joint_stab",
+        "anim:barrier_cast",
+        "anim:afterimage_decoy",
+        "vfx:이동 결계 점선",
+        "vfx:류 두 겹 잔상",
+        "vfx:관절 심부 결정 파괴",
+        "sfx:사출 스침",
+        "sfx:장검 관통음",
+        "bgm:보스전 P1"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC006",
+      "NovelSource": "L13047-L13078 §6 무너지는 탑",
+      "NovelSummary": "관절이 죽을 때마다 사각이 넓어지고 길이 굵어진다. 류가 부포탑 사출구에 단검을 꽂아 자폭을 유도하고, 세라의 마지막 이동 결계가 반대편까지 길을 깐다. 여섯 번째 관절이 죽자 눈먼 탑이 되고, 카인이 장검을 눕히고 아인이 그 위를 밟아 날아올라 7m 높이 코어를 벤다. 탑이 죽고 '다섯 사람의 숨소리'만 남는다(후편 §7~§10과 전개 중복).",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "요약 판본의 격파(후편과 중복)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "남은 관절을 차례로 파괴한다",
+      "Interaction": [
+        "부포탑 사출구에 단검(류)",
+        "이동 결계 경로"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "넓어지는 사각, 눈먼 탑",
+      "Props": [],
+      "VFX": [
+        "부포탑 자폭",
+        "코어 절단"
+      ],
+      "SFX": [
+        "서걱"
+      ],
+      "Music": "보스전 P1→클라이맥스",
+      "GameplayEntry": "첫 관절 이후",
+      "GameplayExit": "(중복 판본) 탑 사망",
+      "AnimationRequired": [
+        "dagger_plant",
+        "sword_launch_platform",
+        "aerial_scythe_arc"
+      ],
+      "CinematicRequired": "true: 중복 판본 — 게임에서는 SC007~SC009로 대체 제안",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP22_SC005"
+      ],
+      "NextScene": "EP22_SC007",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:dagger_plant",
+        "anim:sword_launch_platform",
+        "anim:aerial_scythe_arc",
+        "vfx:부포탑 자폭",
+        "vfx:코어 절단",
+        "sfx:서걱",
+        "bgm:보스전 P1→클라이맥스"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC007",
+      "NovelSource": "L13079-L13130 §7 다시 세야 한다",
+      "NovelSummary": "세 번째 관절이 죽었을 때 열여덟 간격 중 셋이 바뀐다(4→5, 6→4). 탑이 재배치했다 — 배웠다. 열두 걸음째에서 길이 사라진 아인은 엎드려 사출을 피하고 파편에 목덜미가 긁힌다. 처음으로 남의 이름을 불러 세라에게 결계 한 장(3초)을 청하고, 그 안에서 안내인의 종이를 떠올려 숫자가 세 종류뿐이라는 것 — 외울 것은 셋 — 으로 다시 센 뒤 결계가 깨지는 순간 뛴다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "아인의 오차 — 학습하는 적, 3초 재계산",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "아인아!",
+          "Source": "L13091"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…세라!",
+          "Source": "L13103"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "결계 한 장!",
+          "Source": "L13107"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "한 장이면 삼 초야!",
+          "Source": "L13109"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "삼 초면 돼요!",
+          "Source": "L13111"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "재배치된 사격 박자를 결계 3초 안에 다시 읽는다",
+      "Interaction": [
+        "엎드려 회피",
+        "세라에게 결계 요청",
+        "결계 3초 동안 박자 재인식(리듬 재설정 미니게임 제안)"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P2",
+      "EnvironmentState": "관절 3개 파괴, 포탑 15 활성, 사격 간격 재배치",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [
+        "결계 3초 타이머",
+        "목덜미 긁힘 발열"
+      ],
+      "SFX": [
+        "바뀐 박자",
+        "파편"
+      ],
+      "Music": "보스전 P2(리듬 변조)",
+      "GameplayEntry": "세 번째 관절 파괴 직후",
+      "GameplayExit": "결계 파괴와 동시에 질주",
+      "AnimationRequired": [
+        "prone_dodge",
+        "barrier_cast",
+        "eyes_closed_listen"
+      ],
+      "CinematicRequired": "true: 아인 내면 재계산 인서트",
+      "SaveFlags": [
+        "EP22_BOSS_RECONFIGURED"
+      ],
+      "Prerequisites": [
+        "EP22_SC006"
+      ],
+      "NextScene": "EP22_SC008",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_guide_paper",
+        "anim:prone_dodge",
+        "anim:barrier_cast",
+        "anim:eyes_closed_listen",
+        "vfx:결계 3초 타이머",
+        "vfx:목덜미 긁힘 발열",
+        "sfx:바뀐 박자",
+        "sfx:파편",
+        "bgm:보스전 P2(리듬 변조)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC008",
+      "NovelSource": "L13131-L13168 §8 여섯",
+      "NovelSummary": "네 번째, 다섯 번째 관절이 죽자 탑 안쪽에서 무언가 감기며 높아지는 소리가 난다. 세라의 계측: 포탑 다섯이 죽어 출력이 갈 데를 잃고 코어로 몰린다. 갈라진 장갑 틈이 붉어지고 터진다 — 언제인지는 처음으로 수치를 말하지 못한다. 카인이 그 전에 끝내자며 일어선다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "과부하 개시",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…세라.",
+          "Source": "L13139"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "들려.",
+          "Source": "L13141"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "출력이 갈 데를 잃었어.",
+          "Source": "L13145"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "코어로 몰려.",
+          "Source": "L13149"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…모르겠어. 근데 오래는 아니야.",
+          "Source": "L13161"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "그럼 그 전에 끝내면 되지.",
+          "Source": "L13165"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "관절 4·5를 파괴하고 과부하 징후를 확인한다",
+      "Interaction": [
+        "관절 파괴",
+        "과부하 경고 인지"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P2",
+      "EnvironmentState": "붉어지는 코어 틈, 감기는 고음",
+      "Props": [
+        "prop_sera_meter"
+      ],
+      "VFX": [
+        "코어 붉은 발광 상승"
+      ],
+      "SFX": [
+        "내부에서 감기며 높아지는 소리"
+      ],
+      "Music": "보스전 P2→P3 전환",
+      "GameplayEntry": "관절 4 파괴",
+      "GameplayExit": "카인 기립",
+      "AnimationRequired": [
+        "read_meter",
+        "rise_with_sword_cane"
+      ],
+      "CinematicRequired": "false: 인게임",
+      "SaveFlags": [
+        "EP22_OVERLOAD_STARTED"
+      ],
+      "Prerequisites": [
+        "EP22_SC007"
+      ],
+      "NextScene": "EP22_SC009",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_sera_meter",
+        "anim:read_meter",
+        "anim:rise_with_sword_cane",
+        "vfx:코어 붉은 발광 상승",
+        "sfx:내부에서 감기며 높아지는 소리",
+        "bgm:보스전 P2→P3 전환"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC009",
+      "NovelSource": "L13169-L13192 §9 눕힌 것 위로",
+      "NovelSummary": "여섯 번째 관절이 죽자 조준을 잃은 포탑들이 무작위로 사출을 흩뿌리고 천장 콘크리트가 떨어진다. 붉게 뛰는 7m 높이 코어. 카인이 장검을 수평으로 눕히고 아인이 그 위를 밟는다 — 부러진 대검으로 이 년을 해 온 합, 새 검으로 하는 첫 합. 포물선 정점에서 원이 그려지고 끝자락 4분의 1이 코어를 문다. 서걱.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "피니시 — 새 검으로 하는 첫 합",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "낙하물과 무작위 사출 속에서 카인-아인 합으로 코어를 벤다",
+      "Interaction": [
+        "카인 장검 발판 합(협동 QTE 제안)",
+        "공중 원 궤적 타이밍(사거리·타이밍·출력)"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P3",
+      "EnvironmentState": "눈먼 사격, 천장 콘크리트 낙하, 붉게 뛰는 코어",
+      "Props": [],
+      "VFX": [
+        "천장 낙하",
+        "활처럼 휘는 장검",
+        "공중 원 궤적",
+        "코어 절단"
+      ],
+      "SFX": [
+        "무작위 사출",
+        "서걱"
+      ],
+      "Music": "보스전 P3 클라이맥스",
+      "GameplayEntry": "여섯 번째 관절 파괴",
+      "GameplayExit": "코어 절단",
+      "AnimationRequired": [
+        "sword_launch_platform",
+        "aerial_scythe_arc"
+      ],
+      "CinematicRequired": "true: 피니시 연출",
+      "SaveFlags": [
+        "EP22_CORE_CUT"
+      ],
+      "Prerequisites": [
+        "EP22_SC008"
+      ],
+      "NextScene": "EP22_SC010",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:sword_launch_platform",
+        "anim:aerial_scythe_arc",
+        "vfx:천장 낙하",
+        "vfx:활처럼 휘는 장검",
+        "vfx:공중 원 궤적",
+        "vfx:코어 절단",
+        "sfx:무작위 사출",
+        "sfx:서걱",
+        "bgm:보스전 P3 클라이맥스"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC010",
+      "NovelSource": "L13193-L13224 §10 꺼진다",
+      "NovelSummary": "탑이 죽고 열여덟 눈이 위에서부터 꺼진다. 초록 점선과 네 사람의 숨소리. 아인 목덜미의 긁힌 자국은 두 시간이 아니라 한 시간 만에 닫혀 있다. 류가 '이겼어요'라 확인하고 카인이 '그러네'라 답하지만, 어제 다섯이 내려와 오늘 넷이 이긴 셈은 맞지 않는다. 아인이 종이를 꺼내 봤다가 접어 넣는다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "환호 없는 승리",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…이겼어요.",
+          "Source": "L13205"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…그러네.",
+          "Source": "L13209"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "(결과) 격파 확인",
+      "Interaction": [
+        "종이 꺼내 보기"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "",
+      "EnvironmentState": "꺼진 탑, 초록 유도등만",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [
+        "포탑 불빛 순차 소등",
+        "상처 재생"
+      ],
+      "SFX": [
+        "감기던 소리가 풀림",
+        "숨소리"
+      ],
+      "Music": "애도의 승리",
+      "GameplayEntry": "코어 절단 직후",
+      "GameplayExit": "종이를 접어 넣음",
+      "AnimationRequired": [
+        "sit_catch_breath",
+        "unfold_paper"
+      ],
+      "CinematicRequired": "true: 결과 연출",
+      "SaveFlags": [
+        "EP22_ARSENAL_OVERLORD_DEFEATED"
+      ],
+      "Prerequisites": [
+        "EP22_SC009"
+      ],
+      "NextScene": "EP22_SC011",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_guide_paper",
+        "anim:sit_catch_breath",
+        "anim:unfold_paper",
+        "vfx:포탑 불빛 순차 소등",
+        "vfx:상처 재생",
+        "sfx:감기던 소리가 풀림",
+        "sfx:숨소리",
+        "bgm:애도의 승리"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC011",
+      "NovelSource": "L13225-L13242 §11 내려가는 복도",
+      "NovelSummary": "문 너머는 비상등이 살고 바닥이 닦이고 소독약 냄새가 나는, 병원 같은 복도. 소리를 낼 것이 아무것도 없는 침묵 속에 일정한 간격의 어두운 관측창. 아인의 목덜미는 억제제를 넘어 뛰고, 산만 한 심장 박동이 가까워진다. 복도 끝 마지막 문 앞에 무언가가 서 있다.",
+      "Location": "loc_gyeryong_sterile_corridor",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "분위기 전환 — 병원의 냄새",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "복도를 따라 마지막 문으로 간다",
+      "Interaction": [
+        "관측창 들여다보기(어두움)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "비상등, 닦인 바닥, 소독약 냄새, 어두운 관측창",
+      "Props": [],
+      "VFX": [
+        "아인 목덜미 발광"
+      ],
+      "SFX": [
+        "과하게 울리는 발소리",
+        "심장 박동(점증)"
+      ],
+      "Music": "무균의 정적",
+      "GameplayEntry": "격납고 문 통과",
+      "GameplayExit": "문 앞의 실루엣 발견",
+      "AnimationRequired": [
+        "cautious_walk",
+        "neck_pulse"
+      ],
+      "CinematicRequired": "false: 이동",
+      "SaveFlags": [
+        "EP22_CORRIDOR_ENTERED"
+      ],
+      "Prerequisites": [
+        "EP22_SC010"
+      ],
+      "NextScene": "EP22_SC012",
+      "RequiredAssets": [
+        "env:loc_gyeryong_sterile_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:cautious_walk",
+        "anim:neck_pulse",
+        "vfx:아인 목덜미 발광",
+        "sfx:과하게 울리는 발소리",
+        "sfx:심장 박동(점증)",
+        "bgm:무균의 정적"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC012",
+      "NovelSource": "L13243-L13264 §12 명찰",
+      "NovelSummary": "전투복을 입고 문을 등진 채 부동자세로 선, 어떤 집행관보다 사람에 가까운 실루엣. 랜턴 빛에 목덜미 결정이 빛나고 눈은 비어 있다. 왼쪽 가슴 명찰 '박(朴)', 계급장은 준장의 별. 류가 숨으로 '준장'이라 말하고, 세라는 이름을 아는 얼굴로 하얗게 굳지만 부탁대로 말하지 않는다.",
+      "Location": "loc_gyeryong_sterile_corridor",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경",
+        "char_bak_junjang: 전투복, 준장 계급장(별), 왼쪽 가슴 명찰 '박(朴)'"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "문지기 — 별을 달았던 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…준장.",
+          "Source": "L13257"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "문지기를 확인한다",
+      "Interaction": [
+        "랜턴으로 명찰 비추기"
+      ],
+      "BossId": "boss_bak_junjang",
+      "BossPhase": "",
+      "EnvironmentState": "복도 끝 마지막 문, 부동자세의 문지기",
+      "Props": [
+        "prop_lantern"
+      ],
+      "VFX": [
+        "목덜미 결정 발광",
+        "명찰 클로즈업"
+      ],
+      "SFX": [
+        "정적"
+      ],
+      "Music": "불길한 정적",
+      "GameplayEntry": "복도 끝 접근",
+      "GameplayExit": "세라의 굳은 얼굴",
+      "AnimationRequired": [
+        "stand_at_attention",
+        "raise_lantern"
+      ],
+      "CinematicRequired": "true: 명찰·계급장 공개",
+      "SaveFlags": [
+        "EP22_BAK_JUNJANG_SEEN"
+      ],
+      "Prerequisites": [
+        "EP22_SC011"
+      ],
+      "NextScene": "EP22_SC013",
+      "RequiredAssets": [
+        "env:loc_gyeryong_sterile_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_bak_junjang",
+        "prop:prop_lantern",
+        "anim:stand_at_attention",
+        "anim:raise_lantern",
+        "vfx:목덜미 결정 발광",
+        "vfx:명찰 클로즈업",
+        "sfx:정적",
+        "bgm:불길한 정적"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP22",
+      "SceneId": "EP22_SC013",
+      "NovelSource": "L13265-L13307 §13 경례",
+      "NovelSummary": "그것이 공격이 아니라 경례를 한다 — 자아가 소멸한 몸에 남은 마지막 동작. 아인은 끝까지 올라가던 오정길의 손을 떠올린다. 경례가 끝나고 손이 내려오자, 전투복 소매를 찢으며 팔이 두 배로 부풀고 결정이 등줄기를 따라 창처럼 돋은 채 첫걸음을 내디딘다.",
+      "Location": "loc_gyeryong_sterile_corridor",
+      "TimeOfDay": "두 번째 날 아침 이후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드, 목의 C 인식표",
+        "char_sera: 코트, 안경",
+        "char_bak_junjang: 전투복, 준장 계급장(별), 왼쪽 가슴 명찰 '박(朴)'"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 장검(하늘의 것의 뼈로 벼린 날)",
+        "char_ryu: 단검",
+        "char_sera: 봉, 촉매(이동 결계), 계측기"
+      ],
+      "StoryBeat": "문지기의 인사 → 변형",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_bak_junjang"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 경례와 변형을 지켜본다",
+      "Interaction": [],
+      "BossId": "boss_bak_junjang",
+      "BossPhase": "",
+      "EnvironmentState": "좁은 복도",
+      "Props": [],
+      "VFX": [
+        "팔 비대화·소매 찢김",
+        "등줄기 결정 창 돋음"
+      ],
+      "SFX": [
+        "천 찢기는 소리",
+        "결정 성장음"
+      ],
+      "Music": "보스 등장 테마(비장)",
+      "GameplayEntry": "문지기 움직임",
+      "GameplayExit": "첫걸음 → EP23 전투",
+      "AnimationRequired": [
+        "military_salute",
+        "boss_transform_arms_spikes"
+      ],
+      "CinematicRequired": "true: 경례·변형 연출",
+      "SaveFlags": [
+        "EP22_BAK_JUNJANG_AWAKENED"
+      ],
+      "Prerequisites": [
+        "EP22_SC012"
+      ],
+      "NextScene": "EP23_SC001",
+      "RequiredAssets": [
+        "env:loc_gyeryong_sterile_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_bak_junjang",
+        "anim:military_salute",
+        "anim:boss_transform_arms_spikes",
+        "vfx:팔 비대화·소매 찢김",
+        "vfx:등줄기 결정 창 돋음",
+        "sfx:천 찢기는 소리",
+        "sfx:결정 성장음",
+        "bgm:보스 등장 테마(비장)"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_arsenal_overlord",
+      "NameKo": "아스널 오버로드",
+      "Scenes": [
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010"
+      ],
+      "NovelReasonForBattle": "EP21 진입 실패 후 재진입. 탑을 넘어야 격납고 안쪽(복도 문)으로 갈 수 있음.",
+      "ArenaLocationId": "loc_gyeryong_main_hangar",
+      "PhasesInNovel": [
+        "P1: 주포탑 선회 관절 1~3 파괴 — 원래 사격 박자(4·5·6초), 스물세 걸음 경로(L13027-L13046)",
+        "P2: 세 번째 관절 파괴 후 간격 재배치(학습) — 관절 4~5 파괴(L13079-L13168)",
+        "P3: 다섯 번째 관절 이후 출력이 코어로 몰려 과부하·붉은 코어, 여섯 번째 이후 눈먼 무작위 사격·천장 낙하 → 코어 일격(L13131-L13192)"
+      ],
+      "PatternsInNovel": [
+        "18포탑(부포탑 1기 파괴 상태) 나노 사출, 포탑별 간격 4·5·6초",
+        "사출과 재장전 사이의 골·사각이 겹치는 자리가 이동 경로(L13003)",
+        "탑 밑동 도달 시 주포탑 여섯이 일제히 아래로 꺾임(L13035)",
+        "재배치: 간격 3개가 바뀜(4→5, 6→4) — 종류(4·5·6)는 불변(L13083-L13123)",
+        "과부하: 출력이 코어로 몰려 폭발 예고, 시간은 원고상 미정(L13145-L13161)",
+        "눈먼 탑: 지향 없는 무작위 사출, 천장 콘크리트 낙하(L13173)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "주포탑 선회 관절 ×6 — 포탑 밑동, 틈 손가락 두 마디, 장갑판이 못 덮는 자리, 직선(장검)만 들어감",
+        "부포탑 사출구·급탄로 — 단검을 꽂으면 자폭",
+        "코어 — 복합체 중앙, 갈라진 장갑 틈의 주먹만 한 코어, 높이 7m"
+      ],
+      "BreakCounterInNovel": [
+        "관절 파괴 → 해당 주포탑 조준 불능 → 사각 확대·경로 굵어짐",
+        "부포탑 사출구 단검 → 자폭",
+        "관절 6개 파괴 → 요새 기능 상실(눈먼 탑)",
+        "카인 장검 수평 발판 → 아인 공중 원 → 코어 절단(격파)"
+      ],
+      "EnvironmentInBattle": [
+        "세라 이동 결계(다섯 걸음마다 한 장, 한 장 3초)",
+        "류 두 겹 잔상 어그로",
+        "천장 콘크리트 낙하(P3)",
+        "죽은 장갑차 엄폐물"
+      ],
+      "Outcome": "격파. 열여덟 개의 눈이 위에서부터 꺼짐. 일행 생존(아인 목덜미 긁힘, 1시간 내 재생).",
+      "Source": "L12939-L13224"
+    },
+    {
+      "BossId": "boss_bak_junjang",
+      "NameKo": "박 준장(문지기)",
+      "Scenes": [
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "NovelReasonForBattle": "각인 표본 보관실로 통하는 복도 끝 마지막 문의 문지기로 세워져 있음. 경례 후 공격 개시.",
+      "ArenaLocationId": "loc_gyeryong_sterile_corridor",
+      "PhasesInNovel": [
+        "등장(EP22): 부동자세 → 경례 → 변형(팔 두 배, 등줄기 결정 창) — 본전투는 EP23"
+      ],
+      "PatternsInNovel": [
+        "공격 전 경례(L13271-L13279)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "목덜미 결정(L13251)"
+      ],
+      "BreakCounterInNovel": [],
+      "EnvironmentInBattle": [
+        "좁은 복도(병원 냄새, 관측창)"
+      ],
+      "Outcome": "EP23에서 결착.",
+      "Source": "L13243-L13307"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_gyeryong_ramp",
+      "NameKo": "계룡 지하 경사로",
+      "DescriptionKo": "어제와 같은 경사로, 초록 유도등.",
+      "Scenes": [
+        "EP22_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_main_hangar",
+      "NameKo": "주 격납고",
+      "DescriptionKo": "아스널 오버로드의 아레나. 입구에서 작전 수립.",
+      "Scenes": [
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_sterile_corridor",
+      "NameKo": "소독약 냄새 복도",
+      "DescriptionKo": "격납고 문 너머, 비상등·닦인 바닥·관측창이 있는 병원 같은 복도. 끝에 마지막 문과 문지기.",
+      "Scenes": [
+        "EP22_SC011",
+        "EP22_SC012",
+        "EP22_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 박자를 읽는 길잡이",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010",
+        "EP22_SC011",
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "StateChangesKo": [
+        "EP22_SC007: 파편에 목덜미 긁힘",
+        "EP22_SC010: 긁힌 자국이 한 시간 만에 닫힘(어제보다 빠름)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 — 관절을 찌르는 직선",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010",
+        "EP22_SC011",
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "StateChangesKo": [
+        "EP22_SC005: 무릎 탓에 아인에게 끌려 이동"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "어그로·부포탑 자폭 유도",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010",
+        "EP22_SC011",
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "이동 결계·계측",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC002",
+        "EP22_SC003",
+        "EP22_SC004",
+        "EP22_SC005",
+        "EP22_SC006",
+        "EP22_SC007",
+        "EP22_SC008",
+        "EP22_SC009",
+        "EP22_SC010",
+        "EP22_SC011",
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "StateChangesKo": [
+        "EP22_SC012: 박 준장의 이름을 아는 얼굴로 굳음(침묵)"
+      ]
+    },
+    {
+      "CharacterId": "char_bak_junjang",
+      "NameKo": "박 준장",
+      "RoleKo": "문지기로 세워진 자아 소멸 감염체(전 준장)",
+      "Scenes": [
+        "EP22_SC012",
+        "EP22_SC013"
+      ],
+      "StateChangesKo": [
+        "EP22_SC013: 팔 두 배 비대, 전투복 소매 찢김, 등줄기에 결정 창"
+      ]
+    },
+    {
+      "CharacterId": "char_annaein",
+      "NameKo": "안내인(이름 미상)",
+      "RoleKo": "고인. 종이와 기억으로만 등장",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC007",
+        "EP22_SC010"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_han_jangin",
+      "NameKo": "한 장인",
+      "RoleKo": "장검을 벼린 장인. 언급만('장인의 말대로')",
+      "Scenes": [
+        "EP22_SC005"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "아인의 회상 속 경례. 언급만",
+      "Scenes": [
+        "EP22_SC013"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "walk_downhill",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "경사로 하강"
+    },
+    {
+      "Action": "point_with_staff",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "봉 끝으로 탑 상부 지시"
+    },
+    {
+      "Action": "look_at_knee",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP22_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "제 무릎을 내려다봄"
+    },
+    {
+      "Action": "eyes_closed_listen",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC004",
+        "EP22_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "눈 감고 박자 듣기"
+    },
+    {
+      "Action": "drag_ally_by_guard",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP22_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 장검 코등이에 걸어 카인을 끌고 박자 이동(2인 연동)"
+    },
+    {
+      "Action": "longsword_joint_stab",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP22_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검 온 길이를 관절 틈에 찌르고 체중으로 누름"
+    },
+    {
+      "Action": "barrier_cast",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC005",
+        "EP22_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "이동 결계 전개"
+    },
+    {
+      "Action": "afterimage_decoy",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP22_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "두 겹 잔상으로 조준 훔치기"
+    },
+    {
+      "Action": "dagger_plant",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP22_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "부포탑 사출구에 단검 꽂기"
+    },
+    {
+      "Action": "sword_launch_platform",
+      "Category": "combat",
+      "Characters": [
+        "char_kain",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC006",
+        "EP22_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검을 수평으로 눕혀 아인을 튕겨 올림"
+    },
+    {
+      "Action": "aerial_scythe_arc",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC006",
+        "EP22_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "포물선 정점에서 원 궤적 베기"
+    },
+    {
+      "Action": "prone_dodge",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "엎드려 회피"
+    },
+    {
+      "Action": "read_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계측기 확인"
+    },
+    {
+      "Action": "rise_with_sword_cane",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP22_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검을 짚고 일어섬"
+    },
+    {
+      "Action": "sit_catch_breath",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "앉아서 숨 고르기"
+    },
+    {
+      "Action": "unfold_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이 꺼내 보고 접기"
+    },
+    {
+      "Action": "cautious_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP22_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "걸음 죽여 걷기"
+    },
+    {
+      "Action": "neck_pulse",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목덜미 박동"
+    },
+    {
+      "Action": "stand_at_attention",
+      "Category": "boss",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP22_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "부동자세"
+    },
+    {
+      "Action": "raise_lantern",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP22_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "랜턴 비추기"
+    },
+    {
+      "Action": "military_salute",
+      "Category": "boss",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP22_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "정확한 거수경례"
+    },
+    {
+      "Action": "boss_transform_arms_spikes",
+      "Category": "boss",
+      "Characters": [
+        "char_bak_junjang"
+      ],
+      "Scenes": [
+        "EP22_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "팔 비대화·등줄기 결정 창 돋음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_guide_paper",
+      "NameKo": "안내인의 종이(18개 간격)",
+      "Scenes": [
+        "EP22_SC001",
+        "EP22_SC007",
+        "EP22_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_sera_meter",
+      "NameKo": "세라의 계측기",
+      "Scenes": [
+        "EP22_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_lantern",
+      "NameKo": "랜턴",
+      "Scenes": [
+        "EP22_SC012"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP22_SC004",
+      "QuestionKo": "§4는 EP21 §13·EP22 §3과 대사('길이 있어요'/'밑은 제가 아니에요'/'내가 못 가'/'넷이서 가는 거예요')가 중복 — 원고 정리 전 초안 흔적으로 보임. 게임 채택 판본 TBD."
+    },
+    {
+      "Scene": "EP22_SC006",
+      "QuestionKo": "§6(전편)이 관절 1~6 파괴와 코어 격파까지 요약 서술한 뒤, 후편 §7~§10이 '세 번째 관절' 시점으로 되돌아가 재서술 — 이중 판본. 게임은 SC007~SC010 채택을 제안하나 확정 필요."
+    },
+    {
+      "Scene": "EP22_SC006",
+      "QuestionKo": "§6은 격파 후 '다섯 사람의 숨소리', §10은 '네 사람의 숨소리'로 인원 불일치."
+    },
+    {
+      "Scene": "EP22_SC011",
+      "QuestionKo": "§11 '다섯은 저도 모르게 걸음을 죽였다', §13 '다섯을 향해' — 안내인 사망 후 넷인데 '다섯'으로 표기. 다섯 번째 인물 불명."
+    },
+    {
+      "Scene": "EP22_SC008",
+      "QuestionKo": "원고 헤더의 '과부하 90초'는 본문에 없음(세라: '모르겠어. 근데 오래는 아니야'). 과부하 제한 시간 TBD."
+    },
+    {
+      "Scene": "EP22_SC013",
+      "QuestionKo": "원고 헤더의 '노바 문패'는 본문에 등장하지 않음."
+    },
+    {
+      "Scene": "EP22_SC012",
+      "QuestionKo": "세라가 박 준장을 아는 이유와 관계 미공개."
+    },
+    {
+      "Scene": "EP22_SC005",
+      "QuestionKo": "카인이 스물세 걸음을 끌려가는 방식(아인 낫이 장검 코등이에 걸림)의 구체 동선은 원고 한 문단 — 2인 연동 조작 설계 TBD."
+    }
+  ]
+}

@@ -1,0 +1,2262 @@
+{
+  "EpisodeId": "EP09",
+  "TitleKo": "제9화 — 격벽",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      7778,
+      8236
+    ]
+  },
+  "SummaryKo": "류는 두 그릇을 받기 위해 평가소에서 성 없는 이름으로 C랭크 등록을 하지만 인식표를 목에 걸지 않는다. 아인은 몸이 없는 놈을 잴 수 없다는 한계에서 발상을 바꿔 터널 양 끝의 차수문으로 놈을 가두는 작전을 세우고, 오정길의 설명과 배관 두드림 신호(한 번 대기, 두 번 낙하)로 계획을 완성한다. 마태오는 놈이 한강으로 나가기 전에 가둬야 한다는 판단 아래 승인한다. 카인이 미끼로 수면을 내리쳐 놈을 끌어내고, 아인의 신호에 류가 내측 차수문을 떨어뜨린다. 돌아선 놈이 해일처럼 밀려오는 가운데 카인이 외측 문턱을 통과하고, 아인은 놈 안에서 겹친 얼굴들을 본 뒤 눈을 뜬 채 핀을 자른다. 외측 문이 놈의 앞부분을 끊고 놈은 터널에 갇힌다. 귀환은 지상으로 바뀌어 사흘 길이 열흘이 되고, 관제실의 그래프는 수평으로 멈춘다. 아인과 카인은 서로가 얼굴을 봤다는 것을 말없이 알고, 아인은 도면을 버리지 않고 서랍에 접어 넣는다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC001",
+      "NovelSource": "L7778-L7808 §1 두 그릇 (배급 줄)",
+      "NovelSummary": "배급 줄 끝의 후드 쓴 류가 '미등록은 한 그릇' 규칙을 듣고, 계산 끝에 평가소로 걸어간다.",
+      "Location": "loc_bunker_ration_line",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu",
+        "char_baegeup_ajumeoni"
+      ],
+      "RequiredCostumes": [
+        "류: 후드"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "류 — 한 그릇과 두 그릇 사이를 저울질해 등록을 택함",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [
+        "char_baegeup_ajumeoni"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_baegeup_ajumeoni",
+          "Line": "미등록은 한 그릇. 두 그릇은 등록자만.",
+          "Source": "L7798"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "배급대 규칙을 듣고 평가소로 걸어간다",
+      "Interaction": [
+        "평가소 방향으로 이동"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 배급 줄",
+      "Props": [
+        "prop_ration_bowl"
+      ],
+      "VFX": [],
+      "SFX": [
+        "배급 줄 웅성임"
+      ],
+      "Music": "건조하고 조용한 일상",
+      "GameplayEntry": "배급 줄 끝에서 차례가 옴",
+      "GameplayExit": "평가소 도착",
+      "AnimationRequired": [
+        "stand_in_line",
+        "turn_and_walk_away"
+      ],
+      "CinematicRequired": "true: 류의 '계산하는 얼굴' 클로즈업",
+      "SaveFlags": [],
+      "Prerequisites": [],
+      "NextScene": "EP09_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_ration_line",
+        "char:char_ryu",
+        "char:char_baegeup_ajumeoni",
+        "prop:prop_ration_bowl",
+        "anim:stand_in_line",
+        "anim:turn_and_walk_away"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC002",
+      "NovelSource": "L7809-L7838 §1 두 그릇 (평가소 등록)",
+      "NovelSummary": "유진이 류를 계측하고 성 없는 이름 '류'로 C랭크 등록한다. 류는 인식표를 목에 걸지 않고 주머니에 넣고, 유진은 묻지 않는다.",
+      "Location": "loc_bunker_assessment_office",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [
+        "류: 후드"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "류 등록(C랭크) — 인식표를 걸지 않는 습관 제시",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ryu",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_yujin",
+          "Line": "C랭크입니다. 등록 완료.",
+          "Source": "L7820"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 류의 등록",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "평가소, 계측기 작동",
+      "Props": [
+        "prop_core_meter",
+        "prop_paper_ledger",
+        "prop_dogtag_c"
+      ],
+      "VFX": [],
+      "SFX": [
+        "계측기 사무적인 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "평가소 도착",
+      "GameplayExit": "대장이 덮임",
+      "AnimationRequired": [
+        "place_wrist_on_meter",
+        "write_ledger",
+        "touch_neck",
+        "pocket_item"
+      ],
+      "CinematicRequired": "true: 인식표를 주머니에 넣는 손과 그것을 보는 유진",
+      "SaveFlags": [
+        "EP09_RYU_REGISTERED_C",
+        "EP09_RYU_TAG_IN_POCKET"
+      ],
+      "Prerequisites": [
+        "EP09_SC001"
+      ],
+      "NextScene": "EP09_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_assessment_office",
+        "char:char_ryu",
+        "char:char_yujin",
+        "prop:prop_core_meter",
+        "prop:prop_paper_ledger",
+        "prop:prop_dogtag_c",
+        "anim:place_wrist_on_meter",
+        "anim:write_ledger",
+        "anim:touch_neck",
+        "anim:pocket_item"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC003",
+      "NovelSource": "L7839-L7853 §1 두 그릇 (식당)",
+      "NovelSummary": "류가 식당에서 두 그릇을 조용히 빠르게 비우고, 건너편 카인이 한마디 던지지만 아무도 대꾸하지 않는다.",
+      "Location": "loc_bunker_cafeteria",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류의 굶주린 과거 암시, 카인의 무심한 농담",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ryu",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "저 몸에 두 그릇이 다 어디로 가는 거야.",
+          "Source": "L7846"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "각인이 밥도 먹나.",
+          "Source": "L7846"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 식사",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 식당",
+      "Props": [
+        "prop_ration_bowl"
+      ],
+      "VFX": [],
+      "SFX": [
+        "식기 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "밥 두 그릇 수령",
+      "GameplayExit": "식사 종료",
+      "AnimationRequired": [
+        "eat_fast_quiet"
+      ],
+      "CinematicRequired": "false: 짧은 캐릭터 컷",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP09_SC002"
+      ],
+      "NextScene": "EP09_SC004",
+      "RequiredAssets": [
+        "env:loc_bunker_cafeteria",
+        "char:char_ryu",
+        "char:char_kain",
+        "prop:prop_ration_bowl",
+        "anim:eat_fast_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC004",
+      "NovelSource": "L7854-L7879 §2 출구에 그리는 동그라미",
+      "NovelSummary": "아인은 어제의 터널 도면 위에서 몸이 없는 놈을 잴 곳을 찾지 못하다가, 터널의 양 끝을 재기로 하고 차수문 위치에 동그라미 두 개를 그린다.",
+      "Location": "loc_bunker_tactical_table",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "발상의 전환 — 몸이 아니라 터널을 잰다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…몸은 못 재요.",
+          "Source": "L7868"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "터널은 재요.",
+          "Source": "L7872"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "도면에서 놈 대신 터널 양 끝(차수문)을 표시한다",
+      "Interaction": [
+        "도면 위 펜 위치 선택 — 차수문 두 곳에 동그라미"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "전술 테이블 위 어제의 도면",
+      "Props": [
+        "prop_tunnel_blueprint",
+        "prop_pen"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 끝 소리"
+      ],
+      "Music": "사유하는 저음",
+      "GameplayEntry": "도면 앞",
+      "GameplayExit": "동그라미 두 개 완성",
+      "AnimationRequired": [
+        "draw_on_map"
+      ],
+      "CinematicRequired": "false: 인터랙션 중심",
+      "SaveFlags": [
+        "EP09_PLAN_FLOODGATES"
+      ],
+      "Prerequisites": [
+        "EP09_SC003"
+      ],
+      "NextScene": "EP09_SC005",
+      "RequiredAssets": [
+        "env:loc_bunker_tactical_table",
+        "char:char_ain",
+        "prop:prop_tunnel_blueprint",
+        "prop:prop_pen",
+        "anim:draw_on_map"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC005",
+      "NovelSource": "L7880-L7919 §3 문지기",
+      "NovelSummary": "오정길이 차수문은 고정핀을 뽑으면 평형추가 끌어내린다고 설명하고, 아인은 두 문이 거의 동시에 떨어져야 한다며 무전 대신 배관 두드림 신호(한 번=대기, 두 번=낙하)를 정한다.",
+      "Location": "loc_bunker_tactical_table",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "작전 수립 — 차수문 이중 낙하와 소리 신호",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "차수문입니다.",
+          "Source": "L7882"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "고정핀을 뽑으면 평형추가 알아서 끌어내려요.",
+          "Source": "L7886"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "두 문이 거의 같이 떨어져야 해요.",
+          "Source": "L7898"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "물속에서 무전 안 터져.",
+          "Source": "L7900"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…무전 필요 없어요.",
+          "Source": "L7904"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "한 번이면 대기. 두 번이면 낙하.",
+          "Source": "L7912"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "작전 브리핑을 듣고 배관 신호 규칙을 익힌다",
+      "Interaction": [
+        "배관을 낫자루로 두드려 신호 시연 (튜토리얼 제안)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도면 위 기계실 두 곳(내측·외측) 표시",
+      "Props": [
+        "prop_tunnel_blueprint",
+        "prop_wall_pipe"
+      ],
+      "VFX": [],
+      "SFX": [
+        "배관 '깡' — 벽을 타고 퍼지는 맑은 소리"
+      ],
+      "Music": "결의가 서는 긴장",
+      "GameplayEntry": "오정길이 도면 위로 몸을 숙임",
+      "GameplayExit": "신호 규칙 확정",
+      "AnimationRequired": [
+        "lean_over_table",
+        "jaw_clench",
+        "tap_pipe_with_scythe_handle"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP09_SIGNAL_RULE_KNOWN"
+      ],
+      "Prerequisites": [
+        "EP09_SC004"
+      ],
+      "NextScene": "EP09_SC006",
+      "RequiredAssets": [
+        "env:loc_bunker_tactical_table",
+        "char:char_oh_jeonggil",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_tunnel_blueprint",
+        "prop:prop_wall_pipe",
+        "anim:lean_over_table",
+        "anim:jaw_clench",
+        "anim:tap_pipe_with_scythe_handle"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC006",
+      "NovelSource": "L7920-L7939 §4 창",
+      "NovelSummary": "관제실 그래프가 계속 오른다. 터널이 좁아지면 놈이 한강으로 나갈 것이라는 판단 앞에서 마태오가 고개를 끄덕여 승인한다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "시한 — 문이 있는 동안에만 문을 쓸 수 있다, 승인",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "커지고 있다는 거지.",
+          "Source": "L7924"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "물을 당기니까요. 터널이 좁아지면—",
+          "Source": "L7928"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…한강으로 나간다.",
+          "Source": "L7930"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 작전 승인",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실, 오르는 그래프",
+      "Props": [
+        "prop_graph_recorder"
+      ],
+      "VFX": [],
+      "SFX": [
+        "계측기 사각거림"
+      ],
+      "Music": "압박하는 저음",
+      "GameplayEntry": "그래프 앞",
+      "GameplayExit": "마태오의 끄덕임(승인)",
+      "AnimationRequired": [],
+      "CinematicRequired": "false: 짧은 대화",
+      "SaveFlags": [
+        "EP09_MATEO_APPROVED"
+      ],
+      "Prerequisites": [
+        "EP09_SC005"
+      ],
+      "NextScene": "EP09_SC007",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "prop:prop_graph_recorder"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC007",
+      "NovelSource": "L7940-L7959 §5 미끼 (입구)",
+      "NovelSummary": "수위가 가슴께까지 온 터널 입구에서 넷이 갈라진다(내측 류, 외측 아인, 물 한가운데 카인, 입구 윈치 오정길). 카인이 미끼가 제일 편하다고 말하고 류가 처음으로 그를 오래 본다.",
+      "Location": "loc_hangang_tunnel_entrance",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검",
+        "아인: 낫",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "배치 — 각자의 어둠으로",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…미끼가 제일 편해. 생각을 안 해도 되거든.",
+          "Source": "L7948"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "외측 기계실로 이동",
+      "Interaction": [
+        "배치 확인 후 외측 기계실로 이동"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "수위 가슴께(지난번보다 높음), 어둠",
+      "Props": [
+        "prop_winch",
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [],
+      "SFX": [
+        "물 헤치는 소리"
+      ],
+      "Music": "긴장 전조",
+      "GameplayEntry": "터널 입구 도착",
+      "GameplayExit": "넷이 흩어짐",
+      "AnimationRequired": [
+        "rest_sword_on_shoulder",
+        "wade_chest_deep"
+      ],
+      "CinematicRequired": "true: 류가 카인을 오래 보는 컷",
+      "SaveFlags": [
+        "EP09_POSITIONS_ASSIGNED"
+      ],
+      "Prerequisites": [
+        "EP09_SC006"
+      ],
+      "NextScene": "EP09_SC008",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_entrance",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_winch",
+        "prop:prop_cracked_greatsword",
+        "anim:rest_sword_on_shoulder",
+        "anim:wade_chest_deep"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC008",
+      "NovelSource": "L7960-L7973 §5 미끼 (수면 타격)",
+      "NovelSummary": "물 한가운데서 카인이 대검으로 수면을 거듭 내리쳐 진동을 퍼뜨리고, 터널 안쪽에서 낮은 울음이 대답한다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검"
+      ],
+      "StoryBeat": "유인 개시 — 놈의 응답",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "수면 타격 진동으로 놈을 끌어낸다",
+      "Interaction": [
+        "대검 수면 내리치기 (반복, 진동 유인)"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "",
+      "EnvironmentState": "물 한가운데, 진동이 물을 타고 퍼짐",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [
+        "물기둥",
+        "수면 진동 파문"
+      ],
+      "SFX": [
+        "콰앙 (수면 타격)",
+        "터널 안쪽의 낮은 울음"
+      ],
+      "Music": "보스 등장 전조",
+      "GameplayEntry": "카인이 물 한가운데 섬",
+      "GameplayExit": "낮은 울음 응답",
+      "AnimationRequired": [
+        "greatsword_water_slam"
+      ],
+      "CinematicRequired": "true: 어둠 속 울음 응답",
+      "SaveFlags": [
+        "EP09_LURE_STARTED"
+      ],
+      "Prerequisites": [
+        "EP09_SC007"
+      ],
+      "NextScene": "EP09_SC009",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_kain",
+        "prop:prop_cracked_greatsword",
+        "anim:greatsword_water_slam"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC009",
+      "NovelSource": "L7974-L7998 §6 귀",
+      "NovelSummary": "외측 기계실에서 아인이 눈을 감고 고정핀 위에 낫날을 댄 채 소리의 지도를 듣는다. 물살이 안에서 밖으로 방향을 바꾸고, 카인은 헤엄칠 준비를 한다. 놈이 온다.",
+      "Location": "loc_hangang_tunnel_outer_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "두려움의 전환 — 들리는 것으로 싸운다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "소리로 질량의 접근을 추적한다",
+      "Interaction": [
+        "눈 감고 청취 — 카인의 파문·류의 숨·윈치 마찰음·다가오는 질량",
+        "낫날을 고정핀에 댄 채 대기"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "",
+      "EnvironmentState": "물살이 안→밖으로 급변, 어둠 저편 수면이 부풀어 오름",
+      "Props": [
+        "prop_fixing_pin",
+        "prop_floodgate"
+      ],
+      "VFX": [
+        "(제안) 소리 지도 시각화"
+      ],
+      "SFX": [
+        "파문",
+        "숨",
+        "윈치 미세 마찰음",
+        "밀려오는 물"
+      ],
+      "Music": "숨죽인 긴장",
+      "GameplayEntry": "외측 기계실 도착",
+      "GameplayExit": "놈의 접근",
+      "AnimationRequired": [
+        "close_eyes_listen",
+        "hand_on_pin_wait"
+      ],
+      "CinematicRequired": "false: 플레이 가능한 청취 구간 제안",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP09_SC008"
+      ],
+      "NextScene": "EP09_SC010",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_outer_machine_room",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_fixing_pin",
+        "prop:prop_floodgate",
+        "anim:close_eyes_listen",
+        "anim:hand_on_pin_wait"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC010",
+      "NovelSource": "L7999-L8013 §7 두 번 두드리면 (신호)",
+      "NovelSummary": "질량이 카인의 지점을 지나 내측 차수문 라인을 넘자, 아인이 눈을 뜨고 낫자루로 배관을 두 번 때린다.",
+      "Location": "loc_hangang_tunnel_outer_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "낙하 신호",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "질량이 내측 문 라인을 넘는 순간 낙하 신호(2회)를 보낸다",
+      "Interaction": [
+        "배관 2회 타격 타이밍 입력"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "P1",
+      "EnvironmentState": "질량이 내측 차수문 라인 통과",
+      "Props": [
+        "prop_wall_pipe"
+      ],
+      "VFX": [],
+      "SFX": [
+        "깡. 깡."
+      ],
+      "Music": "보스전 긴장",
+      "GameplayEntry": "질량 통과 감지",
+      "GameplayExit": "신호 송신",
+      "AnimationRequired": [
+        "tap_pipe_with_scythe_handle"
+      ],
+      "CinematicRequired": "false: 타이밍 입력",
+      "SaveFlags": [
+        "EP09_SIGNAL_DROP_SENT"
+      ],
+      "Prerequisites": [
+        "EP09_SC009"
+      ],
+      "NextScene": "EP09_SC011",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_outer_machine_room",
+        "char:char_ain",
+        "prop:prop_wall_pipe",
+        "anim:tap_pipe_with_scythe_handle"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC011",
+      "NovelSource": "L8014-L8034 §7 두 번 두드리면 (내측 차수문)",
+      "NovelSummary": "내측 기계실의 류가 배관으로 두 번의 진동을 받고, 쌍단검을 교차해 고정핀 두 개를 동시에 자른다. 평형추가 떨어지고 내측 차수문이 수십 톤의 무게로 낙하한다.",
+      "Location": "loc_hangang_tunnel_inner_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "첫 번째 문 — 한 번에 두 군데",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "신호를 받아 고정핀 두 개를 동시에 절단한다",
+      "Interaction": [
+        "배관 진동 2회 감지",
+        "쌍단검 교차 — 핀 2개 동시 절단"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "P1",
+      "EnvironmentState": "내측 차수문 낙하, 물이 벽에 부딪혀 부서짐, 터널 전체 진동",
+      "Props": [
+        "prop_wall_pipe",
+        "prop_fixing_pin",
+        "prop_counterweight_chain",
+        "prop_floodgate"
+      ],
+      "VFX": [
+        "차수문 낙하",
+        "하얀 물보라",
+        "터널 흔들림"
+      ],
+      "SFX": [
+        "체인 비명",
+        "콰아아앙"
+      ],
+      "Music": "보스전 고조",
+      "GameplayEntry": "배관에 손을 댄 류",
+      "GameplayExit": "내측 차수문 폐쇄",
+      "AnimationRequired": [
+        "hand_on_pipe_feel",
+        "twin_dagger_cross_cut"
+      ],
+      "CinematicRequired": "true: 수십 톤 강철 낙하",
+      "SaveFlags": [
+        "EP09_INNER_GATE_DOWN"
+      ],
+      "Prerequisites": [
+        "EP09_SC010"
+      ],
+      "NextScene": "EP09_SC012",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_inner_machine_room",
+        "char:char_ryu",
+        "prop:prop_wall_pipe",
+        "prop:prop_fixing_pin",
+        "prop:prop_counterweight_chain",
+        "prop:prop_floodgate",
+        "anim:hand_on_pipe_feel",
+        "anim:twin_dagger_cross_cut"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC012",
+      "NovelSource": "L8035-L8052 §8 돌아서는 물 (해일)",
+      "NovelSummary": "반 박자의 정적 뒤, 문이 닫힌 것을 안 덩어리가 돌아서고 터널의 물 전체가 해일이 되어 외측으로 밀려온다. 출구는 하나, 카인은 반은 헤엄치고 반은 떠밀리며 달아나고 간격이 줄어든다.",
+      "Location": "loc_hangang_flooded_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검"
+      ],
+      "StoryBeat": "추격 — 출구는 하나",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "해일에 앞서 외측 문턱까지 헤엄쳐 빠져나간다",
+      "Interaction": [
+        "해일 추격 속 헤엄 (간격 유지)"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "P2",
+      "EnvironmentState": "물 전체가 외측으로 해일처럼 밀려옴, 벽 같은 질량이 추격",
+      "Props": [],
+      "VFX": [
+        "해일",
+        "벽 같은 질량"
+      ],
+      "SFX": [
+        "밀려오는 물의 굉음"
+      ],
+      "Music": "추격",
+      "GameplayEntry": "내측 문 폐쇄 직후",
+      "GameplayExit": "카인이 외측 문턱에 접근",
+      "AnimationRequired": [
+        "swim_pushed_by_wave"
+      ],
+      "CinematicRequired": "true: 덩어리가 돌아서는 순간",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP09_SC011"
+      ],
+      "NextScene": "EP09_SC013",
+      "RequiredAssets": [
+        "env:loc_hangang_flooded_tunnel",
+        "char:char_kain",
+        "anim:swim_pushed_by_wave"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC013",
+      "NovelSource": "L8053-L8066 §8 돌아서는 물 (두 거리)",
+      "NovelSummary": "외측 기계실의 아인은 핀 위에 낫날을 댄 채 카인의 위치와 놈의 위치, 두 거리를 동시에 잰다. 지금 베면 카인이 못 나오고, 기다리면 놈이 나온다.",
+      "Location": "loc_hangang_tunnel_outer_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "사거리와 타이밍 — 터널 하나의 크기로",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "두 거리를 동시에 재며 절단 타이밍을 기다린다",
+      "Interaction": [
+        "카인·놈 위치 동시 추적",
+        "절단 입력 대기(조기 입력 시 카인 고립)"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "P2",
+      "EnvironmentState": "외측 기계실, 해일 접근",
+      "Props": [
+        "prop_fixing_pin"
+      ],
+      "VFX": [],
+      "SFX": [
+        "접근하는 물"
+      ],
+      "Music": "긴장 지속",
+      "GameplayEntry": "해일 접근",
+      "GameplayExit": "카인 문턱 도달",
+      "AnimationRequired": [
+        "hand_on_pin_wait"
+      ],
+      "CinematicRequired": "false: 판단 구간",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP09_SC012"
+      ],
+      "NextScene": "EP09_SC014",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_outer_machine_room",
+        "char:char_ain",
+        "prop:prop_fixing_pin",
+        "anim:hand_on_pin_wait"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC014",
+      "NovelSource": "L8067-L8098 §9 얼굴과 손",
+      "NovelSummary": "카인이 문턱 아래로 미끄러져 통과한다. 베려는 순간, 갈라진 물 사이로 비상등 빛이 놈의 내부를 관통하고 눈 감은 여러 얼굴이 겹쳐 스친다. 낫이 한순간 멈췄다가, 아인은 눈을 뜬 채 핀을 자른다.",
+      "Location": "loc_hangang_tunnel_outer_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫"
+      ],
+      "StoryBeat": "놈 안의 얼굴들 — 눈을 뜬 채 벤다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "카인 통과 직후 고정핀을 절단한다",
+      "Interaction": [
+        "카인 통과 확인",
+        "핀 절단 (연출상 한 박자 정지 후)"
+      ],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "P3",
+      "EnvironmentState": "쇄도하는 놈 앞에서 물이 갈라지고 비상등 빛이 내부를 관통",
+      "Props": [
+        "prop_fixing_pin",
+        "prop_emergency_light"
+      ],
+      "VFX": [
+        "갈라진 물 사이 비상등 빛",
+        "겹친 얼굴들(눈 감은)"
+      ],
+      "SFX": [
+        "서걱"
+      ],
+      "Music": "정지된 순간의 침묵",
+      "GameplayEntry": "카인 문턱 통과",
+      "GameplayExit": "외측 핀 절단",
+      "AnimationRequired": [
+        "slide_under_threshold",
+        "scythe_cut_pin"
+      ],
+      "CinematicRequired": "true: 얼굴들 목격과 멈춤, 눈을 뜬 채의 절단",
+      "SaveFlags": [
+        "EP09_KAIN_PASSED",
+        "EP09_AIN_SAW_FACES"
+      ],
+      "Prerequisites": [
+        "EP09_SC013"
+      ],
+      "NextScene": "EP09_SC015",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_outer_machine_room",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_fixing_pin",
+        "prop:prop_emergency_light",
+        "anim:slide_under_threshold",
+        "anim:scythe_cut_pin"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC015",
+      "NovelSource": "L8099-L8128 §10 한 번",
+      "NovelSummary": "외측 차수문이 낙하해 문턱을 넘어 뻗은 놈의 앞부분을 끊는다. 끊긴 것은 코어도 파편도 남기지 않고 형태를 잃는다. 문 너머에서 한 번 '쿵' 두드리는 진동이 오고 조용해진다. 아무도 환호하지 않고 아인은 낫을 거둔다.",
+      "Location": "loc_hangang_tunnel_outer_machine_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "가둠 — 낫이 못 한 것을 문이 했다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "(결과) 놈을 터널 안쪽에 가둠",
+      "Interaction": [],
+      "BossId": "boss_hangang_tunnel_nom",
+      "BossPhase": "",
+      "EnvironmentState": "외측 차수문 폐쇄, 절단된 앞부분이 물속에서 형태를 잃음, 부서진 물이 가라앉음",
+      "Props": [
+        "prop_floodgate",
+        "prop_counterweight_chain"
+      ],
+      "VFX": [
+        "차수문 낙하·절단",
+        "형태 붕괴(코어·파편 없음)"
+      ],
+      "SFX": [
+        "평형추 낙하",
+        "쿵 (문 너머 두드림)",
+        "정적"
+      ],
+      "Music": "무음에 가까운 여운",
+      "GameplayEntry": "핀 절단",
+      "GameplayExit": "정적",
+      "AnimationRequired": [
+        "sheathe_scythe"
+      ],
+      "CinematicRequired": "true: 문의 절단과 문 너머 한 번의 두드림",
+      "SaveFlags": [
+        "EP09_OUTER_GATE_DOWN",
+        "EP09_BOSS_SEALED"
+      ],
+      "Prerequisites": [
+        "EP09_SC014"
+      ],
+      "NextScene": "EP09_SC016",
+      "RequiredAssets": [
+        "env:loc_hangang_tunnel_outer_machine_room",
+        "char:char_ain",
+        "prop:prop_floodgate",
+        "prop:prop_counterweight_chain",
+        "anim:sheathe_scythe"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC016",
+      "NovelSource": "L8129-L8140 §11 수평선 (귀환길)",
+      "NovelSummary": "귀환은 지상으로 한다. 오정길이 지도의 터널 경로에 X를 긋고, ⑤구역은 이제 지상으로 돌아가야 해 사흘 길이 열흘이 됐다고 말한다.",
+      "Location": "loc_surface_return_route",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "값 — 터널 경로 폐쇄",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…⑤구역은 이제 지상으로 돌아가야 합니다.",
+          "Source": "L8135"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "사흘 길이 열흘이 됐습니다.",
+          "Source": "L8135"
+        }
+      ],
+      "GameMode": [
+        "TRANSITION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 귀환",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "지상 귀환길",
+      "Props": [
+        "prop_old_map"
+      ],
+      "VFX": [],
+      "SFX": [
+        "지도 펼치는 소리"
+      ],
+      "Music": "무거운 귀환",
+      "GameplayEntry": "터널 이탈",
+      "GameplayExit": "지도의 X",
+      "AnimationRequired": [
+        "draw_x_on_map"
+      ],
+      "CinematicRequired": "true: 지도의 X",
+      "SaveFlags": [
+        "EP09_TUNNEL_ROUTE_CLOSED"
+      ],
+      "Prerequisites": [
+        "EP09_SC015"
+      ],
+      "NextScene": "EP09_SC017",
+      "RequiredAssets": [
+        "env:loc_surface_return_route",
+        "char:char_oh_jeonggil",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_old_map",
+        "anim:draw_x_on_map"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC017",
+      "NovelSource": "L8141-L8160 §11 수평선 (관제실)",
+      "NovelSummary": "관제실 계측기 앞에서 그래프가 오르지도 내려오지도 않고 수평이다. 끝난 거냐는 물음에 아인은 멈춘 것이라고 답한다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "끝이 아닌 정지",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "…끝난 건가.",
+          "Source": "L8149"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "아니요.",
+          "Source": "L8151"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…멈춘 거예요.",
+          "Source": "L8155"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 결과 확인",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "수평선을 긋는 그래프, 오른쪽 여백",
+      "Props": [
+        "prop_graph_recorder"
+      ],
+      "VFX": [],
+      "SFX": [
+        "계측기 사각거림"
+      ],
+      "Music": "불안한 여운",
+      "GameplayEntry": "관제실",
+      "GameplayExit": "수평선 컷",
+      "AnimationRequired": [],
+      "CinematicRequired": "true: 그래프 수평선",
+      "SaveFlags": [
+        "EP09_GRAPH_FLAT"
+      ],
+      "Prerequisites": [
+        "EP09_SC016"
+      ],
+      "NextScene": "EP09_SC018",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "prop:prop_graph_recorder"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC018",
+      "NovelSource": "L8161-L8170 §12 서로 아는 것 (류)",
+      "NovelSummary": "류는 의뢰비 지분을 세지 않고 인식표가 든 주머니에 넣고, 목을 한 번 만진 뒤 배급 줄이 아니라 어둠 쪽으로 걸어간다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류 — 등록했지만 걸지 않는 자",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ryu"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "TBD_CANON",
+      "Props": [
+        "prop_share_payment",
+        "prop_dogtag_c"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "지분 수령",
+      "GameplayExit": "어둠 쪽으로 퇴장",
+      "AnimationRequired": [
+        "pocket_item",
+        "touch_neck"
+      ],
+      "CinematicRequired": "true: 짧은 캐릭터 컷",
+      "SaveFlags": [
+        "EP09_RYU_PAID"
+      ],
+      "Prerequisites": [
+        "EP09_SC017"
+      ],
+      "NextScene": "EP09_SC019",
+      "RequiredAssets": [
+        "char:char_ryu",
+        "prop:prop_share_payment",
+        "prop:prop_dogtag_c",
+        "anim:pocket_item",
+        "anim:touch_neck"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC019",
+      "NovelSource": "L8171-L8188 §12 서로 아는 것 (통로)",
+      "NovelSummary": "통로에서 벽에 기댄 카인과 지나가던 아인이 서로를 본다. 둘 다 물속의 얼굴을 봤다는 것을 서로 알고, 말없이 아인이 다시 걷는다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "공유된 비밀 — 혼자 드는 것은 끝났다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 통로",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "발소리"
+      ],
+      "Music": "절제된 감정선",
+      "GameplayEntry": "아인이 통로를 지나감",
+      "GameplayExit": "아인이 다시 걸음",
+      "AnimationRequired": [
+        "lean_on_wall",
+        "mutual_gaze"
+      ],
+      "CinematicRequired": "true: 무언의 시선 교환",
+      "SaveFlags": [
+        "EP09_AIN_KAIN_SHARED_FACES"
+      ],
+      "Prerequisites": [
+        "EP09_SC018"
+      ],
+      "NextScene": "EP09_SC020",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "anim:lean_on_wall",
+        "anim:mutual_gaze"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC020",
+      "NovelSource": "L8189-L8204 §13 접는 도면 (카인)",
+      "NovelSummary": "카인이 담배에 불을 붙여 반만 태우고 비벼 끄고 주머니에 넣는다. 문 너머에 남긴 것들을 생각하지 않으려 한다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "카인 — 돌아온 버릇, 달라진 얼굴",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "TBD_CANON",
+      "Props": [
+        "prop_cigarette"
+      ],
+      "VFX": [
+        "담배 연기"
+      ],
+      "SFX": [
+        "라이터/불 붙이는 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "담배를 꺼냄",
+      "GameplayExit": "반 개비가 주머니 속에서 식음",
+      "AnimationRequired": [
+        "smoke_half_cigarette"
+      ],
+      "CinematicRequired": "true: 짧은 캐릭터 컷",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP09_SC019"
+      ],
+      "NextScene": "EP09_SC021",
+      "RequiredAssets": [
+        "char:char_kain",
+        "prop:prop_cigarette",
+        "anim:smoke_half_cigarette"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP09",
+      "SceneId": "EP09_SC021",
+      "NovelSource": "L8205-L8236 §13 접는 도면 (전술 테이블)",
+      "NovelSummary": "전술 테이블에 혼자 남은 아인이 동그라미 두 개가 그려진 도면을 버리지 않고 두 번 접어 서랍에 넣는다. 다음 화 예고: 사흘 길이 열흘이 됐다.",
+      "Location": "loc_bunker_tactical_table",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "버리지 않는다 — 수평선은 다시 오를 수 있다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 에피소드 종료",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "전술 테이블, 서랍",
+      "Props": [
+        "prop_tunnel_blueprint",
+        "prop_drawer"
+      ],
+      "VFX": [],
+      "SFX": [
+        "종이 접는 소리",
+        "서랍 닫힘"
+      ],
+      "Music": "엔딩 여운",
+      "GameplayEntry": "아인 혼자 테이블 앞",
+      "GameplayExit": "서랍이 닫힘 → EP10",
+      "AnimationRequired": [
+        "fold_paper_into_drawer"
+      ],
+      "CinematicRequired": "true: 에피소드 엔딩 컷",
+      "SaveFlags": [
+        "EP09_BLUEPRINT_KEPT",
+        "EP09_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP09_SC020"
+      ],
+      "NextScene": "EP10_SC001",
+      "RequiredAssets": [
+        "env:loc_bunker_tactical_table",
+        "char:char_ain",
+        "prop:prop_tunnel_blueprint",
+        "prop:prop_drawer",
+        "anim:fold_paper_into_drawer"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_hangang_tunnel_nom",
+      "NameKo": "한강 침수 터널의 '놈' (정식 명칭 TBD_CANON)",
+      "Scenes": [
+        "EP09_SC008",
+        "EP09_SC009",
+        "EP09_SC010",
+        "EP09_SC011",
+        "EP09_SC012",
+        "EP09_SC013",
+        "EP09_SC014",
+        "EP09_SC015"
+      ],
+      "NovelReasonForBattle": "물을 당겨 커지고 있어(관제실 그래프 상승), 터널이 좁아지면 한강으로 나가 가둘 수 없게 되기 때문에 차수문이 있는 동안 터널에 가둔다 (L7922-L7932).",
+      "ArenaLocationId": "loc_hangang_flooded_tunnel",
+      "PhasesInNovel": [
+        "P1 유인·내측 폐쇄: 카인의 수면 타격으로 끌어내고, 내측 차수문 라인 통과 시 아인의 2회 신호 → 류가 내측 문 낙하 (L7960-L8031)",
+        "P2 해일 추격: 문이 닫힌 것을 안 덩어리가 돌아서 물 전체를 외측으로 밀어냄, 카인 탈출과 아인의 두 거리 측정 (L8037-L8063)",
+        "P3 외측 폐쇄: 카인 문턱 통과 직후 아인의 핀 절단 → 외측 문이 앞부분 절단 (L8069-L8109)"
+      ],
+      "PatternsInNovel": [
+        "진동(수면 타격)에 반응해 낮은 울음으로 응답 (L7968-L7970)",
+        "접근 시 물살이 안에서 밖으로 급변, 수면이 부풀어 오름 (L7986)",
+        "문이 닫힌 것을 감지하고 돌아서 터널 물 전체를 해일로 밀어냄 (L8039-L8043)",
+        "벽 같은 질량으로 추격 (L8049)",
+        "폐쇄 후 문 너머에서 한 번 두드림 (L8117-L8121)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "몸이 없어 목이 없고, 잴 곳(약점)이 없음 — 해답은 터널 양 끝 차수문 (L7860-L7876)",
+        "내부에 눈 감은 여러 얼굴이 겹쳐 있음 (L8081-L8083)"
+      ],
+      "BreakCounterInNovel": [
+        "차수문 두 개의 거의 동시 낙하로 가둠; 외측 문이 문턱을 넘은 앞부분을 절단 (L8101-L8109)",
+        "절단된 부분은 코어·파편 없이 형태를 잃음 — 죽은 것이 아니라 본체에서 떨어진 것 (L8111-L8113)"
+      ],
+      "EnvironmentInBattle": [
+        "가슴께 수위의 침수 터널 (L7942)",
+        "내측·외측 기계실의 고정핀·평형추·체인·차수문 (L8019-L8031, L8101-L8103)",
+        "배관을 통한 두드림 신호 (1회 대기, 2회 낙하) (L7906-L7912, L8007-L8017)",
+        "비상등 (L8077)",
+        "입구 윈치(오정길) (L7944)"
+      ],
+      "Outcome": "가둠 — 놈의 앞부분이 절단되고 본체는 터널 안에 봉쇄됨. 관제실 그래프는 수평(끝이 아니라 멈춤). 터널 경로 폐쇄로 ⑤구역 사흘 길이 열흘이 됨.",
+      "Source": "L7940-L8157"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_ration_line",
+      "NameKo": "벙커 배급대",
+      "DescriptionKo": "배급 줄이 늘어서는 배급대. 미등록자는 한 그릇, 등록자는 두 그릇.",
+      "Scenes": [
+        "EP09_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_assessment_office",
+      "NameKo": "각인 평가소",
+      "DescriptionKo": "계측기와 종이 대장이 있는 등록·등급 평가 장소.",
+      "Scenes": [
+        "EP09_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_cafeteria",
+      "NameKo": "벙커 식당",
+      "DescriptionKo": "배급받은 밥을 먹는 식당.",
+      "Scenes": [
+        "EP09_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_tactical_table",
+      "NameKo": "전술 테이블",
+      "DescriptionKo": "터널 도면이 펼쳐진 벙커의 전술 테이블. 벽에 배관이 지나가고 서랍이 있다. 방의 명칭은 원고에 명시되지 않음.",
+      "Scenes": [
+        "EP09_SC004",
+        "EP09_SC005",
+        "EP09_SC021"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "관제실",
+      "DescriptionKo": "계측기 그래프가 사흘째 오르던 벙커 관제실.",
+      "Scenes": [
+        "EP09_SC006",
+        "EP09_SC017"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_tunnel_entrance",
+      "NameKo": "한강 침수 터널 입구",
+      "DescriptionKo": "넷이 갈라지는 입구. 오정길이 윈치를 맡는다.",
+      "Scenes": [
+        "EP09_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_flooded_tunnel",
+      "NameKo": "한강 침수 터널",
+      "DescriptionKo": "지역④. 수위가 가슴께까지 찬 어두운 터널, 비상등. 양 끝에 차수문.",
+      "Scenes": [
+        "EP09_SC008",
+        "EP09_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_tunnel_inner_machine_room",
+      "NameKo": "내측 기계실",
+      "DescriptionKo": "내측 차수문의 고정핀 두 개와 평형추·체인이 있는 기계실. 벽에 배관.",
+      "Scenes": [
+        "EP09_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_hangang_tunnel_outer_machine_room",
+      "NameKo": "외측 기계실",
+      "DescriptionKo": "외측 차수문의 고정핀과 기계실 창이 있는 곳. 아인의 위치.",
+      "Scenes": [
+        "EP09_SC009",
+        "EP09_SC010",
+        "EP09_SC013",
+        "EP09_SC014",
+        "EP09_SC015"
+      ]
+    },
+    {
+      "LocationId": "loc_surface_return_route",
+      "NameKo": "지상 귀환길",
+      "DescriptionKo": "터널을 쓰지 못해 지상으로 돌아가는 귀환 경로 (구체 지점 미명시).",
+      "Scenes": [
+        "EP09_SC016"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_corridor",
+      "NameKo": "벙커 통로",
+      "DescriptionKo": "카인이 벽에 기대 있던 벙커 내부 통로.",
+      "Scenes": [
+        "EP09_SC019"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "사신 용병단 C급 용병. 차수문 봉쇄 작전 설계, 외측 기계실 절단 담당",
+      "Scenes": [
+        "EP09_SC004",
+        "EP09_SC005",
+        "EP09_SC007",
+        "EP09_SC009",
+        "EP09_SC010",
+        "EP09_SC013",
+        "EP09_SC014",
+        "EP09_SC015",
+        "EP09_SC016",
+        "EP09_SC017",
+        "EP09_SC019",
+        "EP09_SC021"
+      ],
+      "StateChangesKo": [
+        "EP09_SC014: 놈 내부의 겹친 얼굴들을 목격 — 한 박자 멈춘 뒤 눈을 뜬 채 핀 절단",
+        "장비: 낫 (자루로 배관 신호, 날로 고정핀 절단)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "사신 용병단 C급 용병. 수면 타격으로 놈을 끄는 미끼",
+      "Scenes": [
+        "EP09_SC003",
+        "EP09_SC005",
+        "EP09_SC007",
+        "EP09_SC008",
+        "EP09_SC009",
+        "EP09_SC012",
+        "EP09_SC014",
+        "EP09_SC016",
+        "EP09_SC019",
+        "EP09_SC020"
+      ],
+      "StateChangesKo": [
+        "장비: 금 간 대검 (EP09 전반, 수면 타격에 사용)",
+        "EP09_SC012~SC014: 해일에 떠밀리며 외측 문턱 아래로 통과 (부상 언급 없음)",
+        "EP09_SC020: 담배 반 개비만 태우고 끄는 옛 버릇이 돌아옴"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "미등록 각인자 → C랭크 등록. 내측 기계실 절단 담당 (의뢰비 지분 계약)",
+      "Scenes": [
+        "EP09_SC001",
+        "EP09_SC002",
+        "EP09_SC003",
+        "EP09_SC007",
+        "EP09_SC011",
+        "EP09_SC016",
+        "EP09_SC018"
+      ],
+      "StateChangesKo": [
+        "EP09_SC002: C랭크 등록, 인식표를 목에 걸지 않고 주머니에 넣음",
+        "EP09_SC003: 등록자로서 밥 두 그릇 수령",
+        "EP09_SC018: 의뢰비 지분 수령 (인식표와 같은 주머니)",
+        "장비: 쌍단검, 후드"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "차수문 구조를 아는 전직 경비원. 입구 윈치 담당, 귀환 경로 지도",
+      "Scenes": [
+        "EP09_SC005",
+        "EP09_SC007",
+        "EP09_SC016"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 관리관. 차수문 작전 승인",
+      "Scenes": [
+        "EP09_SC006",
+        "EP09_SC017"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "각인 평가소 기록 담당",
+      "Scenes": [
+        "EP09_SC002"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_baegeup_ajumeoni",
+      "NameKo": "배급대 아주머니",
+      "RoleKo": "배급대 담당 (이름 미명시)",
+      "Scenes": [
+        "EP09_SC001"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "stand_in_line",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배급 줄에서 자세를 바꾸지 않고 서 있음"
+    },
+    {
+      "Action": "turn_and_walk_away",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "돌아서서 평가소 쪽으로 걸어감"
+    },
+    {
+      "Action": "place_wrist_on_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "계측기 위에 손목을 올림"
+    },
+    {
+      "Action": "write_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_yujin"
+      ],
+      "Scenes": [
+        "EP09_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이 대장에 펜으로 기입"
+    },
+    {
+      "Action": "touch_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC002",
+        "EP09_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "류의 습관 — 손이 목을 한 번 만짐"
+    },
+    {
+      "Action": "pocket_item",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC002",
+        "EP09_SC018"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "인식표·지분을 주머니에 넣음"
+    },
+    {
+      "Action": "eat_fast_quiet",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "두 그릇을 조용히 빠르게 비움"
+    },
+    {
+      "Action": "draw_on_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "펜으로 도면에 동그라미"
+    },
+    {
+      "Action": "lean_over_table",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP09_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면 위로 몸을 숙이고 기계실 두 곳을 짚음"
+    },
+    {
+      "Action": "jaw_clench",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아인의 왼쪽 턱 근육이 도드라졌다 풀림"
+    },
+    {
+      "Action": "tap_pipe_with_scythe_handle",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC005",
+        "EP09_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫자루로 배관을 두드려 신호 (1회=대기, 2회=낙하)"
+    },
+    {
+      "Action": "rest_sword_on_shoulder",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "금 간 대검을 어깨에 굄"
+    },
+    {
+      "Action": "greatsword_water_slam",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 두 손으로 들어 수면을 내리침 (물기둥)"
+    },
+    {
+      "Action": "wade_chest_deep",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP09_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "가슴께 수위의 물속 이동"
+    },
+    {
+      "Action": "close_eyes_listen",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "눈을 감고 소리의 지도를 들음"
+    },
+    {
+      "Action": "hand_on_pin_wait",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC009",
+        "EP09_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "한 손은 고정핀 위, 낫날을 핀에 댄 채 대기"
+    },
+    {
+      "Action": "hand_on_pipe_feel",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "배관에 손을 대고 진동을 받음"
+    },
+    {
+      "Action": "twin_dagger_cross_cut",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP09_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "쌍단검 교차 — 핀 두 개 동시 절단"
+    },
+    {
+      "Action": "swim_pushed_by_wave",
+      "Category": "traversal",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "반은 헤엄, 반은 떠밀림"
+    },
+    {
+      "Action": "slide_under_threshold",
+      "Category": "traversal",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "문턱 아래로 미끄러져 통과"
+    },
+    {
+      "Action": "scythe_cut_pin",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫이 핀 위에서 멈췄다가 눈을 뜬 채 절단"
+    },
+    {
+      "Action": "sheathe_scythe",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫을 거둠"
+    },
+    {
+      "Action": "draw_x_on_map",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP09_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낡은 지도의 터널 경로에 X"
+    },
+    {
+      "Action": "lean_on_wall",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC019"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "통로 벽에 기대 있음"
+    },
+    {
+      "Action": "mutual_gaze",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC019"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "말없이 서로를 봄"
+    },
+    {
+      "Action": "smoke_half_cigarette",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP09_SC020"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "불 붙이고 반만 태운 뒤 비벼 끄고 주머니에"
+    },
+    {
+      "Action": "fold_paper_into_drawer",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP09_SC021"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면을 두 번 접어 서랍에 넣고 닫음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_ration_bowl",
+      "NameKo": "배급 밥그릇",
+      "Scenes": [
+        "EP09_SC001",
+        "EP09_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_core_meter",
+      "NameKo": "각인 계측기",
+      "Scenes": [
+        "EP09_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_paper_ledger",
+      "NameKo": "종이 대장",
+      "Scenes": [
+        "EP09_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_dogtag_c",
+      "NameKo": "C랭크 인식표",
+      "Scenes": [
+        "EP09_SC002",
+        "EP09_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_tunnel_blueprint",
+      "NameKo": "터널 도면 (차수문 위치에 동그라미 두 개)",
+      "Scenes": [
+        "EP09_SC004",
+        "EP09_SC005",
+        "EP09_SC021"
+      ]
+    },
+    {
+      "PropId": "prop_pen",
+      "NameKo": "펜",
+      "Scenes": [
+        "EP09_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_wall_pipe",
+      "NameKo": "배관",
+      "Scenes": [
+        "EP09_SC005",
+        "EP09_SC010",
+        "EP09_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_winch",
+      "NameKo": "윈치",
+      "Scenes": [
+        "EP09_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_cracked_greatsword",
+      "NameKo": "카인의 금 간 대검",
+      "Scenes": [
+        "EP09_SC007",
+        "EP09_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_floodgate",
+      "NameKo": "차수문 (내측·외측)",
+      "Scenes": [
+        "EP09_SC009",
+        "EP09_SC011",
+        "EP09_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_fixing_pin",
+      "NameKo": "차수문 고정핀",
+      "Scenes": [
+        "EP09_SC009",
+        "EP09_SC011",
+        "EP09_SC013",
+        "EP09_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_counterweight_chain",
+      "NameKo": "평형추·체인",
+      "Scenes": [
+        "EP09_SC011",
+        "EP09_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_emergency_light",
+      "NameKo": "비상등",
+      "Scenes": [
+        "EP09_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_old_map",
+      "NameKo": "오정길의 낡은 지도 (터널 경로에 X)",
+      "Scenes": [
+        "EP09_SC016"
+      ]
+    },
+    {
+      "PropId": "prop_graph_recorder",
+      "NameKo": "관제실 계측기 그래프",
+      "Scenes": [
+        "EP09_SC006",
+        "EP09_SC017"
+      ]
+    },
+    {
+      "PropId": "prop_share_payment",
+      "NameKo": "의뢰비 지분",
+      "Scenes": [
+        "EP09_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "담배 (반 개비)",
+      "Scenes": [
+        "EP09_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_drawer",
+      "NameKo": "전술 테이블 서랍",
+      "Scenes": [
+        "EP09_SC021"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP09_SC001",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC002",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC003",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC004",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC004",
+      "QuestionKo": "전술 테이블이 놓인 방의 명칭(관제실과 동일 공간인지) 미명시"
+    },
+    {
+      "Scene": "EP09_SC005",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC006",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC006",
+      "QuestionKo": "대사의 화자가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC006",
+      "QuestionKo": "마태오 외 관제실 동석 인물 미명시"
+    },
+    {
+      "Scene": "EP09_SC007",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC008",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC009",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC010",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC011",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC012",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC013",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC014",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC015",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC016",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC017",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC017",
+      "QuestionKo": "'…끝난 건가.'의 화자 표기 없음 — 아인의 응답 구조상 마태오로 추정"
+    },
+    {
+      "Scene": "EP09_SC018",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC018",
+      "QuestionKo": "류가 지분을 받은 장소 미명시"
+    },
+    {
+      "Scene": "EP09_SC019",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC020",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC020",
+      "QuestionKo": "카인이 담배를 피운 장소 미명시"
+    },
+    {
+      "Scene": "EP09_SC021",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP09_SC008",
+      "QuestionKo": "보스의 정식 명칭이 원고에 없음 ('놈', '덩어리', '질량'으로만 지칭) — 보스 이름 TBD"
+    },
+    {
+      "Scene": "EP09_SC014",
+      "QuestionKo": "놈 내부의 얼굴들의 정체(수거·흡수된 사람들인지) 미명시"
+    }
+  ]
+}

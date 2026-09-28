@@ -1,0 +1,1966 @@
+{
+  "EpisodeId": "EP11",
+  "TitleKo": "제11화 — 표식",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      8661,
+      8978
+    ]
+  },
+  "SummaryKo": "탈영병 은신처에서 서 하사는 자신들의 임무가 남쪽으로의 민간인 도보 이송 경계였다고 절반만 증언하고, 아인 일행과 탈영병 넷은 행렬의 발자국을 따라 남쪽으로 간다. 빈 마을의 대문마다 분필로 등급이 적혀 있고 완료를 뜻하는 가로줄이 그어져 있으며, 마을 끝에는 두고 간 유모차가 서 있다. 해질녘 폐차장 공터에서 방호복 인원들이 묶이지도 않은 채 줄 선 사람들을 휴대 계측기로 분류하고, 「제OO수거대」 표식이 찍힌 클레이브가 장교의 손짓에 복종해 대열을 이끈다. 누나를 발견한 정 일병이 뛰어들어 난전이 벌어지고, 정 일병과 누나는 대열에 끌려간다. 카인은 구출된 셋의 퇴로를 가드로 지키다 오른 무릎을 다치고, 아인이 클레이브의 무릎 관절을 끊어 일행은 셋을 데리고 빠져나온다. 은신처에서 카인은 대검을 지팡이로 짚고 서고, 서 하사는 철책 안으로 들어간 사람들은 나오지 않고 장비만 나왔다는 나머지 증언을 한다. 아인은 교신 기록부와 군 마크 휴대 계측기 앞에서 괴물을 기르는 게 누군지 몰랐을 뿐이라고 말한다 (1차 반전).",
+  "Scenes": [
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC001",
+      "NovelSource": "L8661-L8708 §1 절반의 증언",
+      "NovelSummary": "과천 방면 고가 아래 탈영병 은신처. 아인이 교신 기록부를 바닥에 놓자 서 하사가 자신들의 임무가 남쪽으로의 민간인 도보 이송 경계였고 목적지는 몰랐다고 절반만 증언한다. 아인이 행렬을 따라가 보겠다고 하자 정 일병이 처음 입을 열어 함께 가겠다고 한다.",
+      "Location": "loc_deserter_hideout",
+      "TimeOfDay": "새벽",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [
+        "탈영병들: 군복·사복 혼합"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "증언의 절반 — 추적 결정",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…이게 뭔지, 알잖아.",
+          "Source": "L8681"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "우리 임무가 이송 경계였습니다. 민간인 이송.",
+          "Source": "L8685"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…어디로 가는 건지는, 몰랐습니다.",
+          "Source": "L8689"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…행렬. 따라가요.",
+          "Source": "L8695"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "보게요.",
+          "Source": "L8699"
+        },
+        {
+          "Speaker": "char_jeong_ilbyeong",
+          "Line": "…저도 갑니다.",
+          "Source": "L8703"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 증언 청취와 추적 결정",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "불 없는 은신처, 방수포 틈으로 새벽 냉기",
+      "Props": [
+        "prop_comm_logbook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "방수포 바람 소리"
+      ],
+      "Music": "무거운 고백",
+      "GameplayEntry": "은신처",
+      "GameplayExit": "추적 결정",
+      "AnimationRequired": [
+        "sit_testimony",
+        "fold_hands_on_knees"
+      ],
+      "CinematicRequired": "true: 정 일병이 처음 입을 여는 컷",
+      "SaveFlags": [
+        "EP11_SEO_TESTIMONY_HALF",
+        "EP11_JEONG_JOINS"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP11_SC002",
+      "RequiredAssets": [
+        "env:loc_deserter_hideout",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "prop:prop_comm_logbook",
+        "anim:sit_testimony",
+        "anim:fold_hands_on_knees"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC002",
+      "NovelSource": "L8709-L8724 §2 보폭을 따라",
+      "NovelSummary": "용병 넷과 탈영병 넷이 낮의 국도를 한 줄로 걷는다. 아인이 갓길 발자국의 보폭을 손뼘으로 재어 자로 잰 듯 같음을 확인하고, 어젯밤 스물의 것이며 갈 때보다 올 때가 무거웠다고 말한다.",
+      "Location": "loc_south_national_road",
+      "TimeOfDay": "낮",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "훈련된 보폭 — 무거워진 귀로",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…어젯밤 거예요. 스물.",
+          "Source": "L8715"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "무게가 달라요. 갈 때보다, 올 때가 무거웠어요.",
+          "Source": "L8719"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "행렬의 발자국을 조사하며 남쪽으로 추적한다",
+      "Interaction": [
+        "발자국 보폭 손뼘 측정",
+        "발자국 깊이 비교"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "갓길 흙 위에 겹쳐 찍힌 발자국",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "발소리"
+      ],
+      "Music": "추적",
+      "GameplayEntry": "출발",
+      "GameplayExit": "남쪽으로 계속",
+      "AnimationRequired": [
+        "crouch_measure_footprint"
+      ],
+      "CinematicRequired": "false: 조사",
+      "SaveFlags": [
+        "EP11_FOOTPRINTS_READ"
+      ],
+      "Prerequisites": [
+        "EP11_SC001"
+      ],
+      "NextScene": "EP11_SC003",
+      "RequiredAssets": [
+        "env:loc_south_national_road",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "anim:crouch_measure_footprint"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC003",
+      "NovelSource": "L8725-L8748 §3 분필",
+      "NovelSummary": "국도변 빈 마을의 대문마다 분필 등급 표기(「B1 · C3」, 「C2」)가 있고, 어떤 표기에는 완료를 뜻하는 반듯한 가로줄이 그어져 있다. 오정길이 호구 조사라 읽고, 서 하사가 문지른 분필은 아직 마르지 않았다. 마을 끝에는 짐을 실은 빈 유모차가 서 있다.",
+      "Location": "loc_roadside_village",
+      "TimeOfDay": "낮 (해질녘 이전)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "감정 없는 장부 — 두고 간 유모차",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…호구 조사입니다. 이건.",
+          "Source": "L8735"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "마을의 분필 표기와 흔적을 조사한다",
+      "Interaction": [
+        "대문 분필 표기 조사",
+        "분필 가루 확인(마르지 않음)",
+        "빈 유모차 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "문이 전부 열린 빈 마을 이십여 채",
+      "Props": [
+        "prop_chalk_marking",
+        "prop_empty_stroller"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람",
+        "소리 없음"
+      ],
+      "Music": "섬뜩한 정적",
+      "GameplayEntry": "마을 진입",
+      "GameplayExit": "말없이 통과",
+      "AnimationRequired": [
+        "rub_chalk",
+        "jaw_clench"
+      ],
+      "CinematicRequired": "true: 가로줄과 유모차 컷",
+      "SaveFlags": [
+        "EP11_CHALK_CENSUS_SEEN"
+      ],
+      "Prerequisites": [
+        "EP11_SC002"
+      ],
+      "NextScene": "EP11_SC004",
+      "RequiredAssets": [
+        "env:loc_roadside_village",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "prop:prop_chalk_marking",
+        "prop:prop_empty_stroller",
+        "anim:rub_chalk",
+        "anim:jaw_clench"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC004",
+      "NovelSource": "L8749-L8768 §4 집결지",
+      "NovelSummary": "해질녘, 여덟이 능선의 폐버스 뒤에 엎드려 폐차장 공터를 내려다본다. 방호복 십수 명과 줄 선 사람 서른쯤 — 아무도 묶이지 않았는데 줄이 흐트러지지 않는다. 서 하사는 군이 오라면 사람들은 아직도 간다고 말한다.",
+      "Location": "loc_scrapyard_ridge",
+      "TimeOfDay": "해질녘",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "강제가 아니라 신뢰가 세운 줄",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…묶여 있지도 않은데.",
+          "Source": "L8757"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…군이니까요. 군이 오라면, 사람들은 갑니다. 아직도.",
+          "Source": "L8761"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "능선에서 집결지를 관찰한다",
+      "Interaction": [
+        "(제안) 엎드린 채 관찰"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "조명 없는 공터, 질서 있는 줄",
+      "Props": [
+        "prop_abandoned_bus"
+      ],
+      "VFX": [],
+      "SFX": [
+        "속삭임"
+      ],
+      "Music": "숨죽인 관찰",
+      "GameplayEntry": "언덕 도착",
+      "GameplayExit": "관찰 지속",
+      "AnimationRequired": [
+        "prone_observe"
+      ],
+      "CinematicRequired": "true: 능선에서 내려다본 줄",
+      "SaveFlags": [
+        "EP11_ASSEMBLY_POINT_FOUND"
+      ],
+      "Prerequisites": [
+        "EP11_SC003"
+      ],
+      "NextScene": "EP11_SC005",
+      "RequiredAssets": [
+        "env:loc_scrapyard_ridge",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "char:char_banghobok",
+        "char:char_julseon_saramdeul",
+        "prop:prop_abandoned_bus",
+        "anim:prone_observe"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC005",
+      "NovelSource": "L8769-L8782 §5 계측",
+      "NovelSummary": "방호복 하나가 벙커 것보다 새것인 휴대 계측기를 사람들 목덜미에 댄다. 표시가 뜨면 오른쪽 줄, 안 뜨면 왼쪽 줄. 짧은 오른쪽 줄 사람들의 어깨가 더 낮다.",
+      "Location": "loc_scrapyard_ridge",
+      "TimeOfDay": "해질녘",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "분류 — 각인은 축하가 아니었다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 분류 관찰",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "공터, 좌우로 나뉘는 줄",
+      "Props": [
+        "prop_portable_meter_military"
+      ],
+      "VFX": [],
+      "SFX": [
+        "삑. 삑."
+      ],
+      "Music": "냉기",
+      "GameplayEntry": "관찰 지속",
+      "GameplayExit": "분류 진행 중",
+      "AnimationRequired": [
+        "scan_neck_with_meter"
+      ],
+      "CinematicRequired": "true: 오른쪽 줄의 낮은 어깨",
+      "SaveFlags": [
+        "EP11_SORTING_SEEN"
+      ],
+      "Prerequisites": [
+        "EP11_SC004"
+      ],
+      "NextScene": "EP11_SC006",
+      "RequiredAssets": [
+        "env:loc_scrapyard_ridge",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "char:char_banghobok",
+        "char:char_julseon_saramdeul",
+        "prop:prop_portable_meter_military",
+        "anim:scan_neck_with_meter"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC006",
+      "NovelSource": "L8783-L8809 §6 표식",
+      "NovelSummary": "공터 안쪽 어둠에서 금속 관절음이 나고 여덟은 습격이라 여겨 무기에 손을 댄다. 그러나 방호복들은 비키지 않고, 클레이브 두 기가 줄 선 사람들 옆으로 나란히 걸어 나온다. 몸통에는 「제OO수거대」 스텐실이 찍혀 있다.",
+      "Location": "loc_scrapyard_ridge",
+      "TimeOfDay": "해질녘 이후 (어둠)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul",
+        "char_clave"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "1차 반전의 시작 — 표식 달린 집행관",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_banghobok",
+        "char_julseon_saramdeul",
+        "char_clave"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 반전 목격",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어둠 속 금속 관절음, 비키지 않는 방호복",
+      "Props": [
+        "prop_suguedae_stencil"
+      ],
+      "VFX": [
+        "스텐실 글자 클로즈업"
+      ],
+      "SFX": [
+        "금속 관절음",
+        "숨 멈춤"
+      ],
+      "Music": "반전 스팅",
+      "GameplayEntry": "발소리",
+      "GameplayExit": "아무도 숨을 쉬지 않음",
+      "AnimationRequired": [
+        "reach_for_weapon",
+        "clave_patrol_walk"
+      ],
+      "CinematicRequired": "true: 「제OO수거대」 표식 공개",
+      "SaveFlags": [
+        "EP11_MARKED_CLAVE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP11_SC005"
+      ],
+      "NextScene": "EP11_SC007",
+      "RequiredAssets": [
+        "env:loc_scrapyard_ridge",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "char:char_banghobok",
+        "char:char_julseon_saramdeul",
+        "char:char_clave",
+        "prop:prop_suguedae_stencil",
+        "anim:reach_for_weapon",
+        "anim:clave_patrol_walk"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC007",
+      "NovelSource": "L8810-L8827 §7 복종",
+      "NovelSummary": "전투복에 마스크를 쓴 장교가 클레이브 옆구리를 가축 다루듯 두 번 치자, 클레이브가 오른쪽 줄 선두로 가 앞장선다. '회수 계속' 명령 아래, 능선 위의 아인은 세상의 규칙이 부서지는 것을 보고 처음으로 거리 재기를 멈춘다.",
+      "Location": "loc_scrapyard_ridge",
+      "TimeOfDay": "해질녘 이후 (어둠)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_mask_jangyo",
+        "char_clave",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "RequiredCostumes": [
+        "장교: 전투복·마스크·장갑"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "규칙의 붕괴 — 베어야 할 것은 멀리 있다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_mask_jangyo",
+        "char_clave",
+        "char_banghobok",
+        "char_julseon_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mask_jangyo",
+          "Line": "3조, 회수 계속. 목록 대조 확인.",
+          "Source": "L8818"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "공터, 오른쪽 줄 선두의 클레이브",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "툭, 툭"
+      ],
+      "Music": "무너지는 저음",
+      "GameplayEntry": "장교 등장",
+      "GameplayExit": "아인의 시선이 멈춤",
+      "AnimationRequired": [
+        "officer_pat_clave",
+        "clave_lead_line"
+      ],
+      "CinematicRequired": "true: 가축 다루는 손",
+      "SaveFlags": [
+        "EP11_CLAVE_OBEDIENCE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP11_SC006"
+      ],
+      "NextScene": "EP11_SC008",
+      "RequiredAssets": [
+        "env:loc_scrapyard_ridge",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "char:char_mask_jangyo",
+        "char:char_clave",
+        "char:char_banghobok",
+        "char:char_julseon_saramdeul",
+        "anim:officer_pat_clave",
+        "anim:clave_lead_line"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC008",
+      "NovelSource": "L8828-L8853 §8 먼저 뛴 사람",
+      "NovelSummary": "정 일병이 오른쪽 줄에서 누나를 보고 능선을 뛰어 내려간다. 공터가 뒤집히고 나머지 일곱도 뛰어든다. 아인은 방호복들을 날이 아닌 자루로만 치고, 류는 사람들을 어둠으로 밀어낸다. 정 일병은 누나의 손목을 잡지만 방호복 셋에게 제압되어 둘 다 대열 속으로 끌려간다.",
+      "Location": "loc_scrapyard_lot",
+      "TimeOfDay": "해질녘 이후 (어둠)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_jeong_ilbyeong_nuna",
+        "char_banghobok",
+        "char_mask_jangyo",
+        "char_clave",
+        "char_julseon_saramdeul"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫(자루 사용)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "먼저 뛴 사람 — 잡았다, 그리고 삼켜졌다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong",
+        "char_jeong_ilbyeong_nuna",
+        "char_banghobok",
+        "char_mask_jangyo",
+        "char_clave",
+        "char_julseon_saramdeul"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_jeong_ilbyeong",
+          "Line": "…누나.",
+          "Source": "L8834"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "뛰어. 불 없는 쪽으로.",
+          "Source": "L8844"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 난전",
+      "Interaction": [
+        "(제안, TBD) 난전 구간 표현 방식"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "호루라기, 흩어지는 방호복, 사방으로 달아나는 왼쪽 줄",
+      "Props": [
+        "prop_whistle"
+      ],
+      "VFX": [],
+      "SFX": [
+        "호루라기",
+        "비명",
+        "자루 타격음"
+      ],
+      "Music": "혼란",
+      "GameplayEntry": "정 일병 돌발",
+      "GameplayExit": "두 뒷모습이 대열에 삼켜짐",
+      "AnimationRequired": [
+        "sprint_downhill_shout",
+        "blow_whistle",
+        "civilians_flee",
+        "scythe_handle_strike_joint",
+        "push_civilians_to_dark",
+        "grab_wrist",
+        "restrain_takedown"
+      ],
+      "CinematicRequired": "true: 삼켜지는 두 뒷모습",
+      "SaveFlags": [
+        "EP11_JEONG_CAPTURED"
+      ],
+      "Prerequisites": [
+        "EP11_SC007"
+      ],
+      "NextScene": "EP11_SC009",
+      "RequiredAssets": [
+        "env:loc_scrapyard_lot",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "char:char_jeong_ilbyeong",
+        "char:char_talyeongbyeong",
+        "char:char_jeong_ilbyeong_nuna",
+        "char:char_banghobok",
+        "char:char_mask_jangyo",
+        "char:char_clave",
+        "char:char_julseon_saramdeul",
+        "prop:prop_whistle",
+        "anim:sprint_downhill_shout",
+        "anim:blow_whistle",
+        "anim:civilians_flee",
+        "anim:scythe_handle_strike_joint",
+        "anim:push_civilians_to_dark",
+        "anim:grab_wrist",
+        "anim:restrain_takedown"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC009",
+      "NovelSource": "L8854-L8881 §9 무릎",
+      "NovelSummary": "구출된 노인·여자·아이 셋의 퇴로를 클레이브가 막고 아이가 넘어진다. 카인이 금 간 대검으로 완벽한 가드를 세워 일격을 버티지만, 잔해에 걸린 오른발 위에서 무릎이 잘못된 방향으로 눌린다. 세 걸음의 시간을 벌자 아인이 클레이브의 무릎 관절을 끊고, 서 하사와 류가 카인을 부축해 어둠으로 달린다. 장교는 쫓지 않고 행렬은 다시 남쪽으로 움직인다.",
+      "Location": "loc_scrapyard_lot",
+      "TimeOfDay": "해질녘 이후 (어둠)",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_seo_hasa",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_clave",
+        "char_mask_jangyo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검",
+        "아인: 낫"
+      ],
+      "StoryBeat": "카인의 무릎 — 세 걸음의 값",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_seo_hasa",
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_clave",
+        "char_mask_jangyo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mask_jangyo",
+          "Line": "…계속해.",
+          "Source": "L8876"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 퇴로 확보",
+      "Interaction": [
+        "(제안, TBD) 가드 유지 연출"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "무너진 잔해 틈, 어둠 쪽 퇴로",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [
+        "가드 충격 전달(날→팔→다리)"
+      ],
+      "SFX": [
+        "콰아앙",
+        "무소음의 부상"
+      ],
+      "Music": "비장한 저음",
+      "GameplayEntry": "퇴로 차단",
+      "GameplayExit": "어둠으로 이탈, 행렬 재개",
+      "AnimationRequired": [
+        "child_fall",
+        "kain_perfect_guard",
+        "knee_buckle_injury",
+        "scythe_cut_knee_joint",
+        "clave_tilt",
+        "shoulder_carry_support"
+      ],
+      "CinematicRequired": "true: 소리 없는 부상",
+      "SaveFlags": [
+        "EP11_KAIN_KNEE_INJURED",
+        "EP11_RESCUED_THREE"
+      ],
+      "Prerequisites": [
+        "EP11_SC008"
+      ],
+      "NextScene": "EP11_SC010",
+      "RequiredAssets": [
+        "env:loc_scrapyard_lot",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_ryu",
+        "char:char_seo_hasa",
+        "char:char_guchul_noin",
+        "char:char_guchul_yeoja",
+        "char:char_guchul_ai",
+        "char:char_clave",
+        "char:char_mask_jangyo",
+        "prop:prop_cracked_greatsword",
+        "anim:child_fall",
+        "anim:kain_perfect_guard",
+        "anim:knee_buckle_injury",
+        "anim:scythe_cut_knee_joint",
+        "anim:clave_tilt",
+        "anim:shoulder_carry_support"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC010",
+      "NovelSource": "L8882-L8899 §10 값",
+      "NovelSummary": "불 없는 밤의 은신처. 구출된 셋은 담요를 받고 말이 없다. 서 하사는 데려온 수와 두고 온 수를 꼽다 주먹을 쥐고, 오정길은 카인의 무릎에 부목을 대다 한 번 멈춘다. 구출된 아이가 카인의 소매를 한 번 쥐었다 놓는다.",
+      "Location": "loc_deserter_hideout",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_seo_hasa",
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "셋과 스물몇 — 부목으로 안 되는 것",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_guchul_noin",
+        "char_guchul_yeoja",
+        "char_guchul_ai",
+        "char_seo_hasa",
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "불 없는 은신처, 숨소리만",
+      "Props": [
+        "prop_blanket",
+        "prop_splint"
+      ],
+      "VFX": [],
+      "SFX": [
+        "숨소리"
+      ],
+      "Music": "침잠",
+      "GameplayEntry": "은신처 복귀",
+      "GameplayExit": "아이가 소매를 놓음",
+      "AnimationRequired": [
+        "count_fingers_fist",
+        "apply_splint",
+        "grip_sleeve"
+      ],
+      "CinematicRequired": "true: 소매를 쥐는 아이",
+      "SaveFlags": [
+        "EP11_KAIN_SPLINTED"
+      ],
+      "Prerequisites": [
+        "EP11_SC009"
+      ],
+      "NextScene": "EP11_SC011",
+      "RequiredAssets": [
+        "env:loc_deserter_hideout",
+        "char:char_guchul_noin",
+        "char:char_guchul_yeoja",
+        "char:char_guchul_ai",
+        "char:char_seo_hasa",
+        "char:char_oh_jeonggil",
+        "char:char_kain",
+        "prop:prop_blanket",
+        "prop:prop_splint",
+        "anim:count_fingers_fist",
+        "anim:apply_splint",
+        "anim:grip_sleeve"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC011",
+      "NovelSource": "L8900-L8921 §11 지팡이",
+      "NovelSummary": "카인이 부축을 뿌리치고 일어서려다 기울자 대검 날을 땅에 꽂고 자루를 짚고 선다. 대검은 지팡이가 되었고, 날의 금은 뿌리까지 닿았지만 아무도 모른다. 류는 벽에 기대 셈을 하지 않고, 아무것도 걸리지 않은 목을 오래 만진다.",
+      "Location": "loc_deserter_hideout",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검(지팡이)"
+      ],
+      "StoryBeat": "실루엣의 변화 — 대검이 지팡이가 되다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어두운 은신처",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [
+        "날의 금이 뿌리까지 (클로즈업)"
+      ],
+      "SFX": [
+        "날이 땅에 박히는 소리"
+      ],
+      "Music": "절제된 비감",
+      "GameplayEntry": "카인이 일어섬",
+      "GameplayExit": "류가 목을 만짐",
+      "AnimationRequired": [
+        "stand_with_sword_cane",
+        "lean_on_wall",
+        "touch_neck"
+      ],
+      "CinematicRequired": "true: 새 실루엣",
+      "SaveFlags": [
+        "EP11_GREATSWORD_AS_CANE",
+        "EP11_GREATSWORD_CRACK_TO_ROOT"
+      ],
+      "Prerequisites": [
+        "EP11_SC010"
+      ],
+      "NextScene": "EP11_SC012",
+      "RequiredAssets": [
+        "env:loc_deserter_hideout",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_cracked_greatsword",
+        "anim:stand_with_sword_cane",
+        "anim:lean_on_wall",
+        "anim:touch_neck"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC012",
+      "NovelSource": "L8922-L8941 §12 증언의 나머지",
+      "NovelSummary": "아무도 묻지 않았을 때 서 하사가 나머지를 말한다. 작년 겨울 인계 지점이 얼어 예정보다 남쪽까지 갔다가 철책을 봤고, 안으로 들어간 사람들은 나오지 않고 옷·신발·목발만 트럭에 실려 나왔다. 중위의 정식 질의서는 사유 없이 반려되고 그 주에 이송 배정이 두 배가 되어, 그들은 나왔다. 명령을 지킨 건 자신들이라고 말한다.",
+      "Location": "loc_deserter_hideout",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "증언의 나머지 — 철책과 장비만 나온 트럭",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…이송 종점을 본 게, 작년 겨울입니다.",
+          "Source": "L8926"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "철책이 있었습니다.",
+          "Source": "L8930"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "장비만 나왔습니다.",
+          "Source": "L8930"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "반려됐습니다. 사유도 없이.",
+          "Source": "L8934"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "명령을 지킨 건 우리 쪽이라고, 지금도 생각합니다.",
+          "Source": "L8938"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "(연출) 증언 청취",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어둠",
+      "Props": [],
+      "VFX": [
+        "(제안) 눈 오는 철책·트럭 회상 인서트"
+      ],
+      "SFX": [
+        "어둠 속 목소리"
+      ],
+      "Music": "무거운 고백",
+      "GameplayEntry": "서 하사가 입을 엶",
+      "GameplayExit": "아인을 똑바로 봄",
+      "AnimationRequired": [
+        "sit_testimony"
+      ],
+      "CinematicRequired": "true: 증언 회상",
+      "SaveFlags": [
+        "EP11_SEO_TESTIMONY_FULL"
+      ],
+      "Prerequisites": [
+        "EP11_SC011"
+      ],
+      "NextScene": "EP11_SC013",
+      "RequiredAssets": [
+        "env:loc_deserter_hideout",
+        "char:char_seo_hasa",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "anim:sit_testimony"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP11",
+      "SceneId": "EP11_SC013",
+      "NovelSource": "L8942-L8978 §13 명명",
+      "NovelSummary": "아인이 교신 기록부와 류가 주워 온 군 마크 휴대 계측기를 바닥에 놓는다. 조각들이 하나의 그림이 된다. 대검을 짚고 온 카인이 이 년 동안 뭐랑 싸운 거냐고 묻자, 아인은 괴물이랑 싸웠지만 괴물을 기르는 게 누군지 몰랐을 뿐이라고 답한다. 다음 화 예고.",
+      "Location": "loc_deserter_hideout",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "1차 반전의 명명 — 괴물을 기르는 자",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…이 년 동안, 우리가 뭐랑 싸운 거야.",
+          "Source": "L8952"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…괴물이랑요.",
+          "Source": "L8956"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…괴물을 기르는 게 누군지 몰랐을 뿐이에요.",
+          "Source": "L8960"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 에피소드 종료",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "은신처 바닥의 증거 두 점",
+      "Props": [
+        "prop_comm_logbook",
+        "prop_portable_meter_military"
+      ],
+      "VFX": [],
+      "SFX": [
+        "침묵"
+      ],
+      "Music": "반전 엔딩 테마",
+      "GameplayEntry": "증거 배치",
+      "GameplayExit": "아인이 남쪽을 봄 → EP12",
+      "AnimationRequired": [
+        "sword_cane_walk"
+      ],
+      "CinematicRequired": "true: 1차 반전 엔딩",
+      "SaveFlags": [
+        "EP11_PORTABLE_METER_OBTAINED",
+        "EP11_REVELATION_1",
+        "EP11_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP11_SC012"
+      ],
+      "NextScene": "EP12_SC001",
+      "RequiredAssets": [
+        "env:loc_deserter_hideout",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_comm_logbook",
+        "prop:prop_portable_meter_military",
+        "anim:sword_cane_walk"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_deserter_hideout",
+      "NameKo": "탈영병 은신처",
+      "DescriptionKo": "과천 방면 고가 아래, 컨테이너 두 개와 방수포로 지은 거처. 밖에서는 버려진 공사 자재 더미로 보이게 위장. 불을 피우지 않음.",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC010",
+        "EP11_SC011",
+        "EP11_SC012",
+        "EP11_SC013"
+      ]
+    },
+    {
+      "LocationId": "loc_south_national_road",
+      "NameKo": "남쪽 국도 (행렬 추적 구간)",
+      "DescriptionKo": "행렬의 발자국이 갓길 흙 위에 겹쳐 찍힌 국도.",
+      "Scenes": [
+        "EP11_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_roadside_village",
+      "NameKo": "국도변 마을",
+      "DescriptionKo": "국도변 이십여 채의 집. 문이 전부 열려 있고 사람이 없음. 대문마다 분필 등급 표기, 마을 끝 길 한가운데 빈 유모차.",
+      "Scenes": [
+        "EP11_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_scrapyard_ridge",
+      "NameKo": "폐차장 언덕 능선",
+      "DescriptionKo": "폐차장 공터를 내려다보는 언덕 능선의 폐버스 뒤 관측 지점.",
+      "Scenes": [
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_scrapyard_lot",
+      "NameKo": "폐차장 공터 (집결지)",
+      "DescriptionKo": "조명 없이 질서가 선 집결지. 방호복 인원, 줄 선 사람들, 클레이브, 무너진 잔해.",
+      "Scenes": [
+        "EP11_SC008",
+        "EP11_SC009"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "사신 용병단 C급 용병. 행렬 추적과 증거 수집",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009",
+        "EP11_SC012",
+        "EP11_SC013"
+      ],
+      "StateChangesKo": [
+        "EP11_SC008: 방호복 인원을 날이 아닌 자루로만 제압 (사람에게 날을 향하지 않음)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "사신 용병단 C급 용병. 구출자들의 퇴로를 가드로 지킴",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009",
+        "EP11_SC010",
+        "EP11_SC011",
+        "EP11_SC012",
+        "EP11_SC013"
+      ],
+      "StateChangesKo": [
+        "EP11_SC009: 오른발이 잔해에 걸린 채 클레이브 일격을 가드 — 오른 무릎이 꺾이면 안 되는 방향으로 눌려 부상",
+        "EP11_SC010: 오정길이 무릎에 부목을 댐",
+        "EP11_SC011: 오른 다리가 무게를 받지 못함 — 금 간 대검을 지팡이로 짚고 섬. 날의 금이 뿌리까지 닿음(아무도 모름)"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "지분 계약 용병. 오른쪽 줄 사람들을 어둠으로 밀어냄",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009",
+        "EP11_SC011",
+        "EP11_SC012",
+        "EP11_SC013"
+      ],
+      "StateChangesKo": [
+        "EP11_SC013: 난전 중 떨어진 군 마크 휴대 계측기를 주워 옴"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "경로 담당. 분필 표기를 호구 조사로 판독, 카인에게 부목",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC010",
+        "EP11_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "탈영병 선두, 전 이송 경계 임무 부사관. 증언자",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009",
+        "EP11_SC010",
+        "EP11_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_jeong_ilbyeong",
+      "NameKo": "정 일병",
+      "RoleKo": "이십 대 초반 탈영병, 물어뜯긴 손톱. 누나를 보고 먼저 뛰어듦",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008"
+      ],
+      "StateChangesKo": [
+        "EP11_SC008: 방호복 셋에게 제압되어 누나와 함께 오른쪽 줄로 끌려감"
+      ]
+    },
+    {
+      "CharacterId": "char_jeong_ilbyeong_nuna",
+      "NameKo": "정 일병의 누나",
+      "RoleKo": "오른쪽 줄(각인 반응자)에 서 있던 정 일병의 누나 (이름 미명시)",
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "StateChangesKo": [
+        "EP11_SC008: 정 일병과 함께 대열 속으로 끌려감"
+      ]
+    },
+    {
+      "CharacterId": "char_talyeongbyeong",
+      "NameKo": "탈영병들",
+      "RoleKo": "서 하사·정 일병 외 동행 탈영병 (용병 넷 + 탈영병 넷)",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC002",
+        "EP11_SC003",
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_banghobok",
+      "NameKo": "방호복 인원",
+      "RoleKo": "폐차장 공터의 방호복 차림 인원 십수 명. 휴대 계측기로 분류",
+      "Scenes": [
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mask_jangyo",
+      "NameKo": "마스크 쓴 장교",
+      "RoleKo": "전투복·마스크 차림의 지휘자. 클레이브를 가축처럼 다룸 (이름 미명시)",
+      "Scenes": [
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_clave",
+      "NameKo": "클레이브",
+      "RoleKo": "「제OO수거대」 스텐실이 찍힌 집행관 2기 (보스 아님)",
+      "Scenes": [
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008",
+        "EP11_SC009"
+      ],
+      "StateChangesKo": [
+        "EP11_SC009: 1기가 아인에게 무릎 관절을 끊겨 기울어짐"
+      ]
+    },
+    {
+      "CharacterId": "char_julseon_saramdeul",
+      "NameKo": "줄 선 사람들",
+      "RoleKo": "폐차장 공터에 묶이지 않고 줄 선 민간인 약 서른",
+      "Scenes": [
+        "EP11_SC004",
+        "EP11_SC005",
+        "EP11_SC006",
+        "EP11_SC007",
+        "EP11_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_guchul_noin",
+      "NameKo": "구출된 노인",
+      "RoleKo": "구출된 셋 중 하나",
+      "Scenes": [
+        "EP11_SC009",
+        "EP11_SC010"
+      ],
+      "StateChangesKo": [
+        "EP11_SC009: 구출"
+      ]
+    },
+    {
+      "CharacterId": "char_guchul_yeoja",
+      "NameKo": "구출된 여자",
+      "RoleKo": "구출된 셋 중 하나",
+      "Scenes": [
+        "EP11_SC009",
+        "EP11_SC010"
+      ],
+      "StateChangesKo": [
+        "EP11_SC009: 구출"
+      ]
+    },
+    {
+      "CharacterId": "char_guchul_ai",
+      "NameKo": "구출된 아이",
+      "RoleKo": "구출된 셋 중 하나. 카인의 소매를 쥠 (이름 미명시)",
+      "Scenes": [
+        "EP11_SC009",
+        "EP11_SC010"
+      ],
+      "StateChangesKo": [
+        "EP11_SC009: 퇴로에서 넘어졌다 구출"
+      ]
+    },
+    {
+      "CharacterId": "char_hyeon_jungwi",
+      "NameKo": "현 중위",
+      "RoleKo": "서 하사의 상관 — 상부에 질의서를 올렸다가 반려됨 (언급만)",
+      "Scenes": [
+        "EP11_SC012"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "sit_testimony",
+      "Category": "gesture",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "기록부를 내려다보다 입을 여는 증언 자세"
+    },
+    {
+      "Action": "fold_hands_on_knees",
+      "Category": "emotion",
+      "Characters": [
+        "char_jeong_ilbyeong"
+      ],
+      "Scenes": [
+        "EP11_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎 위에서 두 손을 접음"
+    },
+    {
+      "Action": "crouch_measure_footprint",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP11_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "쪼그려 앉아 보폭을 손뼘으로 잼"
+    },
+    {
+      "Action": "rub_chalk",
+      "Category": "interaction",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP11_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "분필 자국을 손끝으로 문지름"
+    },
+    {
+      "Action": "jaw_clench",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP11_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아인의 왼쪽 턱 근육이 도드라졌다 풀림"
+    },
+    {
+      "Action": "prone_observe",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa",
+        "char_jeong_ilbyeong",
+        "char_talyeongbyeong"
+      ],
+      "Scenes": [
+        "EP11_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "능선 폐버스 뒤에 엎드려 관찰"
+    },
+    {
+      "Action": "scan_neck_with_meter",
+      "Category": "interaction",
+      "Characters": [
+        "char_banghobok"
+      ],
+      "Scenes": [
+        "EP11_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "휴대 계측기를 목덜미에 대 '삑' — 좌우로 분류"
+    },
+    {
+      "Action": "clave_patrol_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_clave"
+      ],
+      "Scenes": [
+        "EP11_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "금속 관절음과 함께 줄 옆을 나란히 걸음"
+    },
+    {
+      "Action": "reach_for_weapon",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP11_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫·단검으로 손이 감"
+    },
+    {
+      "Action": "officer_pat_clave",
+      "Category": "gesture",
+      "Characters": [
+        "char_mask_jangyo"
+      ],
+      "Scenes": [
+        "EP11_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장갑 낀 손으로 클레이브 옆구리를 툭 두 번 — 가축 다루듯"
+    },
+    {
+      "Action": "clave_lead_line",
+      "Category": "locomotion",
+      "Characters": [
+        "char_clave"
+      ],
+      "Scenes": [
+        "EP11_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "오른쪽 줄 선두로 가 앞장섬"
+    },
+    {
+      "Action": "sprint_downhill_shout",
+      "Category": "locomotion",
+      "Characters": [
+        "char_jeong_ilbyeong"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "소리치며 능선을 뛰어 내려감"
+    },
+    {
+      "Action": "blow_whistle",
+      "Category": "gesture",
+      "Characters": [
+        "char_banghobok"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "호루라기"
+    },
+    {
+      "Action": "scythe_handle_strike_joint",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 돌려 자루로 관절만 침"
+    },
+    {
+      "Action": "push_civilians_to_dark",
+      "Category": "interaction",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "사람들을 어둠 쪽으로 밀어냄"
+    },
+    {
+      "Action": "grab_wrist",
+      "Category": "interaction",
+      "Characters": [
+        "char_jeong_ilbyeong"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "누나의 손목을 잡음"
+    },
+    {
+      "Action": "restrain_takedown",
+      "Category": "combat",
+      "Characters": [
+        "char_banghobok",
+        "char_jeong_ilbyeong"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "방호복 셋의 훈련된 제압 — 무릎이 꺾임"
+    },
+    {
+      "Action": "civilians_flee",
+      "Category": "locomotion",
+      "Characters": [
+        "char_julseon_saramdeul"
+      ],
+      "Scenes": [
+        "EP11_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "비명과 함께 사방으로 달아남"
+    },
+    {
+      "Action": "child_fall",
+      "Category": "injury",
+      "Characters": [
+        "char_guchul_ai"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "퇴로에서 넘어짐"
+    },
+    {
+      "Action": "kain_perfect_guard",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "금 간 대검을 세운 완벽한 가드 — 강남역 이래의 각도"
+    },
+    {
+      "Action": "knee_buckle_injury",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "잔해에 걸린 오른발 위에서 무릎이 잘못된 방향으로 눌림 — 무너지지 않고 버팀"
+    },
+    {
+      "Action": "scythe_cut_knee_joint",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "클레이브의 무릎 관절 절단"
+    },
+    {
+      "Action": "clave_tilt",
+      "Category": "combat",
+      "Characters": [
+        "char_clave"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무릎이 끊겨 기체가 기욺"
+    },
+    {
+      "Action": "shoulder_carry_support",
+      "Category": "traversal",
+      "Characters": [
+        "char_seo_hasa",
+        "char_ryu",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "카인의 양팔을 어깨에 둘러 부축"
+    },
+    {
+      "Action": "count_fingers_fist",
+      "Category": "emotion",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP11_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손가락을 꼽다가 주먹을 쥠"
+    },
+    {
+      "Action": "apply_splint",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎에 부목 — 한 번 멈췄다 나머지를 감음"
+    },
+    {
+      "Action": "grip_sleeve",
+      "Category": "emotion",
+      "Characters": [
+        "char_guchul_ai",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아이가 카인의 소매를 한 번 쥐었다 놓음"
+    },
+    {
+      "Action": "stand_with_sword_cane",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "날을 땅에 꽂고 자루를 짚고 일어섬"
+    },
+    {
+      "Action": "lean_on_wall",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP11_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 기댐"
+    },
+    {
+      "Action": "touch_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP11_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아무것도 걸리지 않은 목을 오래 만짐"
+    },
+    {
+      "Action": "sword_cane_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP11_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 짚고 걸어와 섬"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_comm_logbook",
+      "NameKo": "교신 기록부 (등급 명단 재송부 요청)",
+      "Scenes": [
+        "EP11_SC001",
+        "EP11_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_chalk_marking",
+      "NameKo": "대문의 분필 표기 (「B1 · C3」, 「C2」, 가로줄)",
+      "Scenes": [
+        "EP11_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_empty_stroller",
+      "NameKo": "짐(담요·보온병·옷가지)이 실린 빈 유모차",
+      "Scenes": [
+        "EP11_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_abandoned_bus",
+      "NameKo": "능선의 폐버스",
+      "Scenes": [
+        "EP11_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_portable_meter_military",
+      "NameKo": "군 마크가 찍힌 휴대 계측기 (신품)",
+      "Scenes": [
+        "EP11_SC005",
+        "EP11_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_suguedae_stencil",
+      "NameKo": "클레이브 몸통의 「제OO수거대」 스텐실",
+      "Scenes": [
+        "EP11_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_whistle",
+      "NameKo": "호루라기",
+      "Scenes": [
+        "EP11_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_cracked_greatsword",
+      "NameKo": "카인의 금 간 대검",
+      "Scenes": [
+        "EP11_SC009",
+        "EP11_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_splint",
+      "NameKo": "부목",
+      "Scenes": [
+        "EP11_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_blanket",
+      "NameKo": "담요",
+      "Scenes": [
+        "EP11_SC010"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP11_SC005",
+      "QuestionKo": "능선(관측 지점)과 공터의 거리 — 계측기 신품 여부까지 보이는 시점 설정 미명시"
+    },
+    {
+      "Scene": "EP11_SC008",
+      "QuestionKo": "non-boss combat in novel — game representation TBD (방호복 인원·클레이브와의 난전)"
+    },
+    {
+      "Scene": "EP11_SC009",
+      "QuestionKo": "non-boss combat in novel — game representation TBD (방호복 인원·클레이브와의 난전)"
+    },
+    {
+      "Scene": "EP11_SC010",
+      "QuestionKo": "'밤의 은신처'가 §1의 과천 방면 고가 아래 은신처와 같은 곳인지 명시 없음"
+    },
+    {
+      "Scene": "EP11_SC012",
+      "QuestionKo": "철책(이송 종점)의 위치 미명시"
+    },
+    {
+      "Scene": "EP11_SC006",
+      "QuestionKo": "「제OO수거대」의 부대 번호(OO)는 원고상 가려져 있음 — 표기 방식 TBD"
+    }
+  ]
+}

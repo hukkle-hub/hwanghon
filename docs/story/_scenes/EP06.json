@@ -1,0 +1,1794 @@
+{
+  "EpisodeId": "EP06",
+  "TitleKo": "여의도 금융가의 유령들",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      5882,
+      6546
+    ]
+  },
+  "SummaryKo": "마태오의 홀로그램 브리핑에서 여의도는 다리가 모두 끊긴 섬으로 드러난다. 마태오는 처음으로 계산기에서 손을 떼고, 20년 전 인부를 넣었던 공사의 「여의도 지하 공동구 계통도」를 내준다. 아인·카인·오정길은 강 밑 관로를 지나 여의도 지하주차장으로 올라가지만, 지상은 짙은 안개와 빌딩 반향으로 아인의 귀가 방향을 잡지 못한다. 안개 속 사람 형상은 2년 전 끝난 광고를 돌리는 LED 광고판이었다. 가볍게 뛴 작은 발자국과, 얇은 날로 두 번 소켓만 잘린 채 파편조차 없는 감염체 시신이 누군가의 존재를 알린다. 수도방위사령부 마크의 4미터 다각 보행 병기가 나타나 불가시 배리어로 아인의 낫을 튕기고 카인의 반사를 흡수한다. 안개 속에서 흩어진 셋은 재는 법을 잃지만, 놈의 등 뒤 누군가가 불꽃을 튀게 해 배리어가 끊긴 순간 아인이 다리 하나를 끊는다. 놈은 무너지지 않고 셋은 퇴각한다. 벙커에서 아인은 억제제 라벨의 3이 2로 고쳐진 것을 보지만 고친 기억이 없다. 아인은 마태오에게 도면을 한 번 더 받는다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC001",
+      "NovelSource": "L5882-L5927 §1 섬",
+      "NovelSummary": "홀로그램 위 여의도 브리핑. 마포·서강 다리는 끊기고 원효는 중간이 내려앉아 진입로가 없다. 배는 한강 아래 무엇이 있는지 몰라 불가하다는 공기가 흐른다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "지역③ 여의도 제시 — 섬이고 다리가 없다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "다리는요.",
+          "Source": "L5904"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "마포 끊겼고, 서강 끊겼고, 원효는 중간이 내려앉았다.",
+          "Source": "L5906"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…배는요.",
+          "Source": "L5912"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "타 봐라.",
+          "Source": "L5914"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "물속에 뭐가 있는지.",
+          "Source": "L5918"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "브리핑 시청(여의도 접근 불가 상황 파악)",
+      "Interaction": [
+        "홀로그램 지도 열람(다리 붉은 점)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "홀로그램 여의도 지도, 다리 3곳 붉은 점 표시",
+      "Props": [
+        "prop_hologram_yeouido"
+      ],
+      "VFX": [
+        "hologram_map(여의도 홀로그램)",
+        "hologram_red_marker(붉은 점 점등)"
+      ],
+      "SFX": [
+        "hologram_blip(점 켜지는 소리)"
+      ],
+      "Music": "무거운 브리핑, 정적",
+      "GameplayEntry": "에피소드 시작 컷신",
+      "GameplayExit": "정적 후 SC002로 컷",
+      "AnimationRequired": [
+        "point_hologram"
+      ],
+      "CinematicRequired": "true — 브리핑 대사 컷신",
+      "SaveFlags": [
+        "EP06_START"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP06_SC002",
+      "RequiredAssets": [
+        "char:char_mateo",
+        "char:char_kain",
+        "prop:prop_hologram_yeouido",
+        "anim:point_hologram",
+        "vfx:hologram_map",
+        "vfx:hologram_red_marker",
+        "sfx:hologram_blip",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC002",
+      "NovelSource": "L5928-L5973 §2 도면",
+      "NovelSummary": "마태오가 처음으로 계산기에서 손을 떼고 서랍에서 낡은 「여의도 지하 공동구 계통도 / 2021」을 꺼낸다. 전기·통신·상수도 관로가 강 밑을 지난다. 20년 전 공사 때 인부를 넣어준 사람이 자신이라고 대수롭지 않게 말하고 도면을 밀어 준다.",
+      "Location": "loc_mateo_office",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "마태오의 과거가 처음으로 쓸모가 된다 — 진입로 확보",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "전기, 통신, 상수도. 다 한 관로로 묶어놨어.",
+          "Source": "L5948"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "강 밑으로 지나간다.",
+          "Source": "L5952"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…이걸 어떻게.",
+          "Source": "L5956"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "깔 때 인부 넣어준 게 나야.",
+          "Source": "L5960"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "공동구 도면 획득",
+      "Interaction": [
+        "도면 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "사무소 책상, 서랍",
+      "Props": [
+        "prop_calculator",
+        "prop_utility_tunnel_map",
+        "prop_cigarette"
+      ],
+      "VFX": [],
+      "SFX": [
+        "drawer_open(서랍)",
+        "paper_unfold(낡은 종이 펼침)"
+      ],
+      "Music": "담담함",
+      "GameplayEntry": "SC001에서 이어짐",
+      "GameplayExit": "도면이 책상 위로 밀려옴 → 공동구 입구로 전환",
+      "AnimationRequired": [
+        "push_aside_calculator",
+        "open_drawer",
+        "trace_map_line",
+        "shift_cigarette_mouth",
+        "slide_document"
+      ],
+      "CinematicRequired": "true — 도면 클로즈업과 마태오 연기 중심",
+      "SaveFlags": [
+        "EP06_UTILITY_MAP_OBTAINED"
+      ],
+      "Prerequisites": [
+        "EP06_SC001"
+      ],
+      "NextScene": "EP06_SC003",
+      "RequiredAssets": [
+        "env:loc_mateo_office",
+        "char:char_mateo",
+        "prop:prop_calculator",
+        "prop:prop_utility_tunnel_map",
+        "prop:prop_cigarette",
+        "anim:push_aside_calculator",
+        "anim:open_drawer",
+        "anim:trace_map_line",
+        "anim:shift_cigarette_mouth",
+        "anim:slide_document",
+        "sfx:drawer_open",
+        "sfx:paper_unfold",
+        "bgm:bgm_briefing_tense"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC003",
+      "NovelSource": "L5974-L6005 §3 방향이 안 잡힌다",
+      "NovelSummary": "공동구 입구는 지름 2미터 콘크리트 원통이고 발목까지 물이 차 있다. 아인이 먼저 소리를 듣지만 물 떨어지는 소리가 벽을 타고 돌아 방향이 잡히지 않는다. 잠시 서 있다가 그냥 들어간다.",
+      "Location": "loc_yeouido_utility_tunnel",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "첫 번째 불안 — 소리의 방향이 안 잡힌다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "공동구 관로 진입",
+      "Interaction": [
+        "입구에서 멈춰 듣기(방향 표시 실패 연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "지름 2m 원통, 발목 물, 벽을 따라 이어진 케이블 다발, 사방에서 울리는 물방울 소리",
+      "Props": [
+        "prop_cable_bundle"
+      ],
+      "VFX": [
+        "water_ripple(발목 물결)"
+      ],
+      "SFX": [
+        "water_drip_echo(방향 없는 물방울 반향)",
+        "footstep_water(물 속 발걸음)"
+      ],
+      "Music": "밀폐된 불안",
+      "GameplayEntry": "관로 입구 도착",
+      "GameplayExit": "관로 안으로 진입",
+      "AnimationRequired": [
+        "stop_listen",
+        "wade_ankle_water"
+      ],
+      "CinematicRequired": "false — 짧은 이동 구간",
+      "SaveFlags": [
+        "EP06_TUNNEL_ENTERED"
+      ],
+      "Prerequisites": [
+        "EP06_SC002"
+      ],
+      "NextScene": "EP06_SC004",
+      "RequiredAssets": [
+        "env:loc_yeouido_utility_tunnel",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_cable_bundle",
+        "anim:stop_listen",
+        "anim:wade_ankle_water",
+        "vfx:water_ripple",
+        "sfx:water_drip_echo",
+        "sfx:footstep_water",
+        "bgm:bgm_tunnel_ambient"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC004",
+      "NovelSource": "L6006-L6013 §4 안개 (지하주차장)",
+      "NovelSummary": "관로는 여의도 지하주차장에서 끝난다. B3·B2·B1이 찍힌 경사로를 따라 올라간다.",
+      "Location": "loc_yeouido_parking",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "강 밑을 건너 여의도 도착",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "TRANSITION",
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "경사로를 따라 지상으로",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "지하주차장 경사로, 벽의 B3/B2/B1 표기",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "footstep_concrete(콘크리트 발걸음)"
+      ],
+      "Music": "이동",
+      "GameplayEntry": "관로 끝",
+      "GameplayExit": "지상 출구",
+      "AnimationRequired": [
+        "walk_up_ramp"
+      ],
+      "CinematicRequired": "false — 이동 구간",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP06_SC003"
+      ],
+      "NextScene": "EP06_SC005",
+      "RequiredAssets": [
+        "env:loc_yeouido_parking",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:walk_up_ramp",
+        "sfx:footstep_concrete",
+        "bgm:bgm_tunnel_ambient"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC005",
+      "NovelSource": "L6014-L6061 §4 안개",
+      "NovelSummary": "지상은 빌딩 사이가 통째로 하얀 안개다. 스무 걸음 앞에서 세상이 끝난다. 아인이 멈춰 듣지만 빌딩 협곡의 유리벽 반향 때문에 소리가 어디서 오는지 모른다. 2년의 절차 — 먼저 서고 귀로 듣는다 — 가 통하지 않자 낫자루를 고쳐 쥔다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "신규 제약: 안개 — 아인의 '소리부터 듣는다'가 무력화",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "안개 속 협곡 전진",
+      "Interaction": [
+        "멈춰 듣기(방향 판별 실패)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "짙은 안개(가시거리 약 20걸음), 빌딩 윤곽만, 유리벽 반향",
+      "Props": [],
+      "VFX": [
+        "dense_fog(짙은 안개)"
+      ],
+      "SFX": [
+        "echo_canyon(유리벽 반향)"
+      ],
+      "Music": "하얗고 방향 없는 불안",
+      "GameplayEntry": "지상 출구",
+      "GameplayExit": "안개 속 빛 발견",
+      "AnimationRequired": [
+        "stop_listen",
+        "regrip_scythe"
+      ],
+      "CinematicRequired": "true — 안개 첫 공개 컷",
+      "SaveFlags": [
+        "EP06_FOG_REACHED"
+      ],
+      "Prerequisites": [
+        "EP06_SC004"
+      ],
+      "NextScene": "EP06_SC006",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:stop_listen",
+        "anim:regrip_scythe",
+        "vfx:dense_fog",
+        "sfx:echo_canyon",
+        "bgm:bgm_yeouido_fog"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC006",
+      "NovelSource": "L6062-L6123 §5 유령",
+      "NovelSummary": "안개 속에 빛이 번진 거대한 사람 형상이 보인다. 오정길이 총을 들지만 아인이 막는다. 가까이 가 보니 아직 돌아가는 3층 높이 LED 광고판이다 — 「2029 신년 특별전 / ~1.31」, 2년 전에 끝난 광고 속 여자가 소리 없이 웃고 있다. 안개 너머에도 광고판이 줄지어 있다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)",
+        "총(오정길)"
+      ],
+      "StoryBeat": "유령의 정체 — 아무도 안 보는 화면이 계속 돌아간다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…사람인 줄 알았습니다.",
+          "Source": "L6112"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…나도.",
+          "Source": "L6114"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "빛나는 형상에 접근해 확인",
+      "Interaction": [
+        "형상 접근(가까워질수록 광고판으로 드러남)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "안개, 외벽 LED 광고판 여러 개 작동 중(무음)",
+      "Props": [
+        "prop_led_billboard"
+      ],
+      "VFX": [
+        "led_bloom_in_fog(안개에 번지는 광고판 빛)"
+      ],
+      "SFX": [],
+      "Music": "쓸쓸함",
+      "GameplayEntry": "안개 속 빛 발견",
+      "GameplayExit": "광고판 아래를 지나감",
+      "AnimationRequired": [
+        "raise_gun",
+        "raise_hand_stop"
+      ],
+      "CinematicRequired": "true — 형상이 광고판으로 드러나는 연출",
+      "SaveFlags": [
+        "EP06_BILLBOARD_SEEN"
+      ],
+      "Prerequisites": [
+        "EP06_SC005"
+      ],
+      "NextScene": "EP06_SC007",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_led_billboard",
+        "anim:raise_gun",
+        "anim:raise_hand_stop",
+        "vfx:led_bloom_in_fog",
+        "bgm:bgm_yeouido_fog"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC007",
+      "NovelSource": "L6124-L6214 §6 두 시간 안쪽",
+      "NovelSummary": "젖은 바닥에 두 시간 안쪽의 신발 발자국 — 보폭 좁고 발이 작고 뒤꿈치가 얕아 소리 없이 가볍게 뛴 자국이다. 따라가니 목 뒤 소켓이 얇은 것으로 두 번, 깨끗이 잘린 감염체 시신이 있다. 코어 파편도 가루도 없다. 발자국은 안개 속으로 사라진다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "류의 흔적 — 우리와 다른 방식으로 사냥하는 누군가",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…최근 거예요. 두 시간 안쪽.",
+          "Source": "L6132"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "감염체?",
+          "Source": "L6134"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "신발 신었어요.",
+          "Source": "L6136"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "가볍게 뛰었어요. 소리 안 나게.",
+          "Source": "L6146"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…우리가 하는 방식이 아니에요.",
+          "Source": "L6176"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "가루도 없어요.",
+          "Source": "L6200"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "발자국과 시신 조사",
+      "Interaction": [
+        "발자국 조사(보폭·크기·뒤꿈치)",
+        "발자국 추적",
+        "시신 소켓 단면 조사",
+        "주변 파편 수색(없음)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "안개, 젖은 바닥",
+      "Props": [
+        "prop_footprints",
+        "prop_infected_corpse_socket_cut"
+      ],
+      "VFX": [
+        "footprint_highlight(조사 하이라이트)"
+      ],
+      "SFX": [],
+      "Music": "긴장된 추적",
+      "GameplayEntry": "광고판 아래를 지난 뒤",
+      "GameplayExit": "발자국이 안개 속으로 사라짐",
+      "AnimationRequired": [
+        "crouch_inspect",
+        "inspect_corpse"
+      ],
+      "CinematicRequired": "false — 조사 플레이",
+      "SaveFlags": [
+        "EP06_CLUE_FOOTPRINTS",
+        "EP06_CLUE_SOCKET_CUT",
+        "EP06_CLUE_NO_FRAGMENT"
+      ],
+      "Prerequisites": [
+        "EP06_SC006"
+      ],
+      "NextScene": "EP06_SC008",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_footprints",
+        "prop:prop_infected_corpse_socket_cut",
+        "anim:crouch_inspect",
+        "anim:inspect_corpse",
+        "vfx:footprint_highlight",
+        "bgm:bgm_investigation"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC008",
+      "NovelSource": "L6215-L6304 §7 안 보인다",
+      "NovelSummary": "안개 속 낮은 구동음, 방향을 못 잡은 채 옆에서 '쿵' — 수도방위사령부 마크가 찍힌 4미터 다각 보행 병기가 나타나 정지한다. 공기가 한 번 일렁인다. 아인이 거리·숨·반 박자를 맞춰 들어가지만 낫이 아무것도 없는 허공에서 '틱' 튕기고 뒤로 나가떨어진다. 셔터는 보였지만 이건 안 보인다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)"
+      ],
+      "StoryBeat": "네 번째 조건 — 안 보인다(불가시 배리어)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…뭔가 폈어요.",
+          "Source": "L6251"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "뭘?",
+          "Source": "L6253"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…모르겠어요.",
+          "Source": "L6255"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "놈에게 낫을 걸어 본다(배리어에 막히는 것을 체험)",
+      "Interaction": [
+        "거리·숨·반 박자 조건 맞추기",
+        "낫 공격 → 불가시 벽에 튕김"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P1",
+      "EnvironmentState": "짙은 안개, 방향 없는 구동음, 젖은 아스팔트",
+      "Props": [],
+      "VFX": [
+        "air_shimmer_barrier(공기 일렁임)",
+        "invisible_deflect_spark(허공 튕김)"
+      ],
+      "SFX": [
+        "servo_hum(낮은 구동음)",
+        "heavy_step_thud(쿵)",
+        "tick_deflect(틱)"
+      ],
+      "Music": "보이지 않는 위협",
+      "GameplayEntry": "측면 등장 컷신",
+      "GameplayExit": "아인 튕겨남 후 카인 전진",
+      "AnimationRequired": [
+        "boss_multileg_walk",
+        "boss_barrier_deploy",
+        "scythe_hook_strike",
+        "scythe_deflect_knockback"
+      ],
+      "CinematicRequired": "true — 보스 등장·첫 튕김",
+      "SaveFlags": [
+        "EP06_AEGIS_ENCOUNTERED"
+      ],
+      "Prerequisites": [
+        "EP06_SC007"
+      ],
+      "NextScene": "EP06_SC009",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:boss_multileg_walk",
+        "anim:boss_barrier_deploy",
+        "anim:scythe_hook_strike",
+        "anim:scythe_deflect_knockback",
+        "vfx:air_shimmer_barrier",
+        "vfx:invisible_deflect_spark",
+        "sfx:servo_hum",
+        "sfx:heavy_step_thud",
+        "sfx:tick_deflect",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC009",
+      "NovelSource": "L6305-L6334 §8 스펀지",
+      "NovelSummary": "카인이 앞으로 나서고 놈이 상체 포문을 연다. 대검을 세로로 세우고 충돌 0.2초 전 출력을 전개하지만 반사가 되지 않는다. 되돌려준 힘이 스펀지에 박힌 듯 먹히고, 카인은 아스팔트를 파며 2미터 밀려난다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "대검(카인)"
+      ],
+      "StoryBeat": "카인의 반사가 흡수된다",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "포격을 대검으로 받아 반사 시도",
+      "Interaction": [
+        "충돌 0.2초 전 반사 입력(흡수되어 실패)"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P1",
+      "EnvironmentState": "안개, 아스팔트",
+      "Props": [],
+      "VFX": [
+        "cannon_muzzle(포문 발사)",
+        "reflect_absorbed(반사 흡수 파동)"
+      ],
+      "SFX": [
+        "impact_clang(콰창)",
+        "asphalt_scrape(발이 아스팔트를 팜)"
+      ],
+      "Music": "압박",
+      "GameplayEntry": "카인 전진",
+      "GameplayExit": "카인 2m 밀려남",
+      "AnimationRequired": [
+        "boss_open_cannon",
+        "greatsword_vertical_brace",
+        "pushed_back_slide"
+      ],
+      "CinematicRequired": "true — 반사 실패 슬로모션",
+      "SaveFlags": [
+        "EP06_REFLECT_ABSORBED"
+      ],
+      "Prerequisites": [
+        "EP06_SC008"
+      ],
+      "NextScene": "EP06_SC010",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:boss_open_cannon",
+        "anim:greatsword_vertical_brace",
+        "anim:pushed_back_slide",
+        "vfx:cannon_muzzle",
+        "vfx:reflect_absorbed",
+        "sfx:impact_clang",
+        "sfx:asphalt_scrape",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC010",
+      "NovelSource": "L6335-L6374 §9 어디를 재나",
+      "NovelSummary": "셋이 흩어지고 안개 때문에 서로가 안 보인다. 카인의 목소리는 방향이 틀리게 들린다. 아인은 무엇을 재야 할지 모른다 — 거리는 안개가, 숨은 소리가 먹었고, 보이지 않는 것에는 반 박자가 없다. 놈의 다리가 옆을 스치자 아인이 굴러 피하며 오른쪽 어깨의 K-3 뼈대가 바닥에 긁힌다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)",
+        "K-3 뼈대(아인)"
+      ],
+      "StoryBeat": "절차의 붕괴 — 거리·숨·반 박자 셋 다 안 된다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "안개 속에서 생존(회피)",
+      "Interaction": [
+        "다리 휩쓸기 회피(구르기)"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P1",
+      "EnvironmentState": "흩어진 파티, 서로 안 보임, 방향이 틀린 목소리",
+      "Props": [],
+      "VFX": [
+        "dense_fog(짙은 안개)"
+      ],
+      "SFX": [
+        "voice_wrong_direction(엉뚱한 방향의 카인 목소리)",
+        "metal_scrape(지익)"
+      ],
+      "Music": "혼란",
+      "GameplayEntry": "분산",
+      "GameplayExit": "회피 직후",
+      "AnimationRequired": [
+        "boss_leg_sweep",
+        "dodge_roll_shoulder"
+      ],
+      "CinematicRequired": "false — 플레이 구간(청각 단서 무력)",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP06_SC009"
+      ],
+      "NextScene": "EP06_SC011",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:boss_leg_sweep",
+        "anim:dodge_roll_shoulder",
+        "vfx:dense_fog",
+        "sfx:voice_wrong_direction",
+        "sfx:metal_scrape",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC011",
+      "NovelSource": "L6375-L6444 §10 불꽃",
+      "NovelSummary": "벽에 붙어 있던 오정길이 안개 저편, 놈의 뒤쪽에서 무언가 지나가는 것을 본다. 놈의 등에서 불꽃이 튀고 공기의 일렁임이 끊긴다. 아인이 들어가 이번엔 걸려 놈의 다리 하나를 끊지만 놈은 무너지지 않는다. '빠져요!' 셋은 안개 속으로 달아나고, 뒤돌아본 놈의 뒤쪽에는 아무도 없다.",
+      "Location": "loc_yeouido_fog_canyon",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫(아인)",
+        "총(오정길)"
+      ],
+      "StoryBeat": "누군가의 개입 — 배리어가 끊긴 틈에 다리 절단, 그러나 패퇴",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…지금.",
+          "Source": "L6407"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "빠져요!",
+          "Source": "L6429"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "배리어가 끊긴 순간 공격 후 이탈",
+      "Interaction": [
+        "배리어 해제 타이밍에 공격",
+        "안개 속으로 이탈"
+      ],
+      "BossId": "boss_aegis_07",
+      "BossPhase": "P2",
+      "EnvironmentState": "안개, 놈의 등 뒤로 형체 불명의 무언가가 지나감",
+      "Props": [],
+      "VFX": [
+        "back_spark(등 불꽃)",
+        "barrier_break(일렁임 끊김)",
+        "leg_sever_debris(다리 절단 파편)"
+      ],
+      "SFX": [
+        "spark_crackle(치직)",
+        "crunch_sever(콰드득)"
+      ],
+      "Music": "짧은 반격 후 퇴각",
+      "GameplayEntry": "오정길 시점 목격 컷",
+      "GameplayExit": "이탈 성공, 뒤를 보니 아무도 없음",
+      "AnimationRequired": [
+        "wall_hug",
+        "boss_leg_lost_stagger",
+        "scythe_leg_sever",
+        "run_retreat",
+        "look_back"
+      ],
+      "CinematicRequired": "true — 오정길 시점 목격과 퇴각 연출",
+      "SaveFlags": [
+        "EP06_AEGIS_LEG_SEVERED",
+        "EP06_RETREAT",
+        "EP06_UNKNOWN_FIGURE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP06_SC010"
+      ],
+      "NextScene": "EP06_SC012",
+      "RequiredAssets": [
+        "env:loc_yeouido_fog_canyon",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "anim:wall_hug",
+        "anim:boss_leg_lost_stagger",
+        "anim:scythe_leg_sever",
+        "anim:run_retreat",
+        "anim:look_back",
+        "vfx:back_spark",
+        "vfx:barrier_break",
+        "vfx:leg_sever_debris",
+        "sfx:spark_crackle",
+        "sfx:crunch_sever",
+        "bgm:bgm_boss_aegis"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC012",
+      "NovelSource": "L6445-L6496 §11 이회분",
+      "NovelSummary": "벙커로 돌아와 셋이 젖은 채 통로에 앉아 있다. 뒤에 있던 것이 뭐였냐는 물음에 아인은 대답하지 않고, 오정길은 사람 같기도 했다고 말한다. 아인이 꺼낸 억제제 병의 손글씨 라벨 「3회분」의 3이 지워지고 2가 덧쓰여 있다. 어제 한 병을 마셨지만 고친 기억은 없다. 도로 넣는다.",
+      "Location": "loc_bunker_corridor",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "젖은 옷(셋)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "계측자의 흔적 — 고친 기억이 없는 라벨",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…뭐였어. 그 뒤에 있던 거.",
+          "Source": "L6453"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "저도 잠깐 봤는데.",
+          "Source": "L6461"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "사람 같기도 했고.",
+          "Source": "L6465"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "휴식(대화 청취)",
+      "Interaction": [
+        "억제제 병 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 통로, 침묵",
+      "Props": [
+        "prop_suppressant_bottle"
+      ],
+      "VFX": [],
+      "SFX": [
+        "bottle_rattle(병 소리)"
+      ],
+      "Music": "지친 침묵",
+      "GameplayEntry": "귀환",
+      "GameplayExit": "병을 도로 넣음",
+      "AnimationRequired": [
+        "sit_exhausted_wet",
+        "take_out_bottle"
+      ],
+      "CinematicRequired": "true — 라벨 클로즈업(서술자 암시 없음)",
+      "SaveFlags": [
+        "EP06_LABEL_ALTERED_SEEN"
+      ],
+      "Prerequisites": [
+        "EP06_SC011"
+      ],
+      "NextScene": "EP06_SC013",
+      "RequiredAssets": [
+        "env:loc_bunker_corridor",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_suppressant_bottle",
+        "anim:sit_exhausted_wet",
+        "anim:take_out_bottle",
+        "sfx:bottle_rattle",
+        "bgm:bgm_bunker_quiet"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP06",
+      "SceneId": "EP06_SC013",
+      "NovelSource": "L6497-L6546 §12 한 번 더",
+      "NovelSummary": "마태오가 도면을 접어 서랍에 넣으려는 참에 아인이 문 앞에 선다. 내일도 들어가야 하니 도면을 한 번 더 달라고 하고, 마태오는 서랍을 다시 열어 건넨다. 접힌 자국이 조금 더 하얘진다. 오른쪽 아래 모니터에서는 케이크 앞 아이 둘과 웃는 여자 영상이 끊기고 처음부터 반복된다.",
+      "Location": "loc_mateo_office",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "재도전 결의 — 도면을 다시 받는다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…내일도 들어가야 해요.",
+          "Source": "L6509"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "그래.",
+          "Source": "L6511"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "도면 한 번 더.",
+          "Source": "L6513"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "…가져가.",
+          "Source": "L6517"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "도면 재수령",
+      "Interaction": [
+        "마태오에게 말 걸기",
+        "도면 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "사무소, 반복 재생되는 모니터",
+      "Props": [
+        "prop_utility_tunnel_map",
+        "prop_mateo_monitor"
+      ],
+      "VFX": [
+        "monitor_loop_glow(모니터 빛)"
+      ],
+      "SFX": [
+        "drawer_open(서랍)"
+      ],
+      "Music": "잔잔한 여운",
+      "GameplayEntry": "사무소 문 앞",
+      "GameplayExit": "에피소드 종료 → EP07",
+      "AnimationRequired": [
+        "open_drawer",
+        "slide_document"
+      ],
+      "CinematicRequired": "true — 모니터 반복 영상으로 끝나는 엔딩 컷",
+      "SaveFlags": [
+        "EP06_END",
+        "EP06_MAP_REISSUED"
+      ],
+      "Prerequisites": [
+        "EP06_SC012"
+      ],
+      "NextScene": "EP07_SC001",
+      "RequiredAssets": [
+        "env:loc_mateo_office",
+        "char:char_ain",
+        "char:char_mateo",
+        "prop:prop_utility_tunnel_map",
+        "prop:prop_mateo_monitor",
+        "anim:open_drawer",
+        "anim:slide_document",
+        "vfx:monitor_loop_glow",
+        "sfx:drawer_open",
+        "bgm:bgm_bunker_quiet"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_aegis_07",
+      "NameKo": "에이지스-07",
+      "Scenes": [
+        "EP06_SC008",
+        "EP06_SC009",
+        "EP06_SC010",
+        "EP06_SC011"
+      ],
+      "NovelReasonForBattle": "여의도 안개 속에서 조우(지역③ 1/2). 놈은 정지해 배리어를 펼 뿐이고 아인이 먼저 들어간다. 명칭은 EP06 산문에 없고 EP07 L6806에서 '에이지스-07'로 나온다.",
+      "ArenaLocationId": "loc_yeouido_fog_canyon",
+      "PhasesInNovel": [
+        "등장·정지·배리어 전개, 아인의 낫 튕김(§7)",
+        "카인 반사 흡수(§8)",
+        "안개 속 분산·다리 휩쓸기(§9)",
+        "등 불꽃으로 배리어 끊김 → 다리 하나 절단 → 퇴각(§10)"
+      ],
+      "PatternsInNovel": [
+        "다각 보행, 옆에서 '쿵' 하고 나타남",
+        "정지 후 불가시 배리어 전개(공기 일렁임) — 낫을 허공에서 튕겨냄",
+        "상체 포문 개방·사격",
+        "다리로 옆을 스침"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "4미터 다각 보행체, 상체가 통째로 무기",
+        "어깨 수도방위사령부 마크",
+        "상체 포문",
+        "불가시 배리어(반사를 스펀지처럼 흡수)",
+        "등 — 불꽃이 튄 자리",
+        "다리(하나 절단)"
+      ],
+      "BreakCounterInNovel": [
+        "누군가가 등에 불꽃을 냄 → 배리어 일렁임 끊김 → 그 순간 낫이 걸려 다리 하나 절단"
+      ],
+      "EnvironmentInBattle": [
+        "짙은 안개(시야 약 20걸음)",
+        "빌딩 협곡 유리벽 반향 — 소리 방향 판별 불가",
+        "젖은 아스팔트",
+        "벽(오정길이 붙어 있음)"
+      ],
+      "Outcome": "패퇴 — 다리 하나를 끊었으나 놈은 무너지지 않음. 셋은 안개 속으로 이탈",
+      "Source": "L6215-L6444"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_mateo_office",
+      "NameKo": "마태오의 사무소",
+      "DescriptionKo": "벙커 내 마태오의 사무소. 계산기·서랍(여의도 공동구 도면 보관)·오른쪽 아래 모니터(케이크 앞 아이 둘 영상 반복 재생)가 있다.",
+      "Scenes": [
+        "EP06_SC002",
+        "EP06_SC013"
+      ]
+    },
+    {
+      "LocationId": "loc_yeouido_utility_tunnel",
+      "NameKo": "여의도 지하 공동구",
+      "DescriptionKo": "지름 2미터 콘크리트 원통 관로. 발목까지 물이 차 있고 케이블 다발이 벽을 따라 이어진다. 물소리가 벽을 타고 돌아 방향이 잡히지 않는다. 한강 아래를 지나 여의도 지하주차장에서 끝난다.",
+      "Scenes": [
+        "EP06_SC003"
+      ]
+    },
+    {
+      "LocationId": "loc_yeouido_parking",
+      "NameKo": "여의도 지하주차장",
+      "DescriptionKo": "공동구 관로의 끝. 벽에 B3·B2·B1이 찍힌 경사로를 따라 지상으로 올라간다.",
+      "Scenes": [
+        "EP06_SC004"
+      ]
+    },
+    {
+      "LocationId": "loc_yeouido_fog_canyon",
+      "NameKo": "여의도 금융가 빌딩 협곡(안개)",
+      "DescriptionKo": "빌딩 사이가 통째로 하얀 안개. 스무 걸음 앞에서 시야가 끝난다. 유리벽 반향으로 소리의 방향을 알 수 없다. 젖은 아스팔트, 아직 돌아가는 3층 높이 LED 광고판들(「2029 신년 특별전 / ~1.31」).",
+      "Scenes": [
+        "EP06_SC005",
+        "EP06_SC006",
+        "EP06_SC007",
+        "EP06_SC008",
+        "EP06_SC009",
+        "EP06_SC010",
+        "EP06_SC011"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_corridor",
+      "NameKo": "벙커 통로",
+      "DescriptionKo": "벙커 내부 통로. 원정에서 돌아온 셋이 젖은 채로 앉아 있는 곳.",
+      "Scenes": [
+        "EP06_SC012"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 소리로 재는 낫 사용자. 이 화에서 청각 판별이 무력화된다",
+      "Scenes": [
+        "EP06_SC003",
+        "EP06_SC004",
+        "EP06_SC005",
+        "EP06_SC006",
+        "EP06_SC007",
+        "EP06_SC008",
+        "EP06_SC009",
+        "EP06_SC010",
+        "EP06_SC011",
+        "EP06_SC012",
+        "EP06_SC013"
+      ],
+      "StateChangesKo": [
+        "EP06_SC010: 굴러 피하다 오른쪽 어깨가 아스팔트에 닿고 K-3 뼈대가 긁힘",
+        "EP06_SC012: 젖은 상태. 억제제 병 라벨의 '3회분'이 '2'로 고쳐져 있음을 발견(고친 기억 없음)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검 사용자. 반사(충돌 0.2초 전 출력 전개)를 시도",
+      "Scenes": [
+        "EP06_SC001",
+        "EP06_SC003",
+        "EP06_SC004",
+        "EP06_SC005",
+        "EP06_SC006",
+        "EP06_SC007",
+        "EP06_SC008",
+        "EP06_SC009",
+        "EP06_SC010",
+        "EP06_SC011",
+        "EP06_SC012"
+      ],
+      "StateChangesKo": [
+        "EP06_SC009: 반사가 흡수되어 2미터가량 밀려남",
+        "EP06_SC012: 젖은 상태"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "동행. 총을 들지만 쏘지 않는다. 놈의 등 뒤 움직임과 불꽃을 목격",
+      "Scenes": [
+        "EP06_SC003",
+        "EP06_SC004",
+        "EP06_SC005",
+        "EP06_SC006",
+        "EP06_SC007",
+        "EP06_SC008",
+        "EP06_SC009",
+        "EP06_SC010",
+        "EP06_SC011",
+        "EP06_SC012"
+      ],
+      "StateChangesKo": [
+        "EP06_SC012: 젖은 상태"
+      ]
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 인력 중개. 20년 전 공동구 공사에 인부를 넣은 과거로 도면을 제공",
+      "Scenes": [
+        "EP06_SC001",
+        "EP06_SC002",
+        "EP06_SC013"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "본인 미등장. 발자국·소켓 절단 시신·놈의 등 불꽃의 주인으로 흔적만 나온다(EP07 L6965 본인 발언으로 확인)",
+      "Scenes": [
+        "EP06_SC007",
+        "EP06_SC011"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "point_hologram",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손가락으로 다리를 하나씩 짚음"
+    },
+    {
+      "Action": "push_aside_calculator",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "계산기를 옆으로 밀어놓음"
+    },
+    {
+      "Action": "open_drawer",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC002",
+        "EP06_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "서랍 열기(SC002·SC013)"
+    },
+    {
+      "Action": "trace_map_line",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면 선을 손끝으로 따라감"
+    },
+    {
+      "Action": "shift_cigarette_mouth",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 반대쪽 입꼬리로 옮겨 묾"
+    },
+    {
+      "Action": "slide_document",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP06_SC002",
+        "EP06_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "도면을 책상 위로 밀어 줌 / 건넴"
+    },
+    {
+      "Action": "stop_listen",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC003",
+        "EP06_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "멈춰 서서 소리를 듣는 아인의 절차 동작"
+    },
+    {
+      "Action": "wade_ankle_water",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "발목 물 속 보행"
+    },
+    {
+      "Action": "walk_up_ramp",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "주차장 경사로 오르기"
+    },
+    {
+      "Action": "regrip_scythe",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫자루 고쳐 쥐기"
+    },
+    {
+      "Action": "raise_gun",
+      "Category": "combat",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "총을 듦(쏘지 않음)"
+    },
+    {
+      "Action": "raise_hand_stop",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손을 들어 오정길을 막음"
+    },
+    {
+      "Action": "crouch_inspect",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쪼그려 앉아 발자국 확인"
+    },
+    {
+      "Action": "inspect_corpse",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "시신 소켓·주변 훑기"
+    },
+    {
+      "Action": "scythe_hook_strike",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "거리·숨·반 박자를 맞춘 낫 걸기 진입"
+    },
+    {
+      "Action": "scythe_deflect_knockback",
+      "Category": "injury",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫이 허공(불가시 배리어)에서 '틱' 튕기고 뒤로 나가떨어짐"
+    },
+    {
+      "Action": "greatsword_vertical_brace",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP06_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 세로로 세우고 두 발·무기를 땅에 — 반사 자세"
+    },
+    {
+      "Action": "pushed_back_slide",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP06_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "아스팔트를 파며 2미터 밀려남"
+    },
+    {
+      "Action": "dodge_roll_shoulder",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "구르며 오른쪽 어깨(K-3 뼈대) 긁힘"
+    },
+    {
+      "Action": "wall_hug",
+      "Category": "locomotion",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 붙어 대기"
+    },
+    {
+      "Action": "scythe_leg_sever",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "놈의 다리 하나를 끊는 일격"
+    },
+    {
+      "Action": "run_retreat",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "안개 속으로 이탈"
+    },
+    {
+      "Action": "look_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뒤를 한 번 봄"
+    },
+    {
+      "Action": "sit_exhausted_wet",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP06_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "젖은 채 통로에 앉아 있음"
+    },
+    {
+      "Action": "take_out_bottle",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP06_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "억제제 병 꺼냈다 도로 넣기"
+    },
+    {
+      "Action": "boss_multileg_walk",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP06_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "4m 다각 보행체 보행·정지"
+    },
+    {
+      "Action": "boss_barrier_deploy",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP06_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "정지 후 불가시 배리어 전개(공기 일렁임)"
+    },
+    {
+      "Action": "boss_open_cannon",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP06_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "상체 포문 개방·발사"
+    },
+    {
+      "Action": "boss_leg_sweep",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP06_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "다리 하나가 옆을 스침"
+    },
+    {
+      "Action": "boss_leg_lost_stagger",
+      "Category": "boss",
+      "Characters": [
+        "boss_aegis_07"
+      ],
+      "Scenes": [
+        "EP06_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "다리 절단 후 균형 상실, 무너지지는 않음"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_hologram_yeouido",
+      "NameKo": "여의도 홀로그램(다리 단절 붉은 점 표시)",
+      "Scenes": [
+        "EP06_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_calculator",
+      "NameKo": "마태오의 계산기",
+      "Scenes": [
+        "EP06_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "담배",
+      "Scenes": [
+        "EP06_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_utility_tunnel_map",
+      "NameKo": "「여의도 지하 공동구 계통도 / 2021」 도면(접힌 자국이 하얗게 닳음)",
+      "Scenes": [
+        "EP06_SC002",
+        "EP06_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_cable_bundle",
+      "NameKo": "공동구 벽 케이블 다발",
+      "Scenes": [
+        "EP06_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_led_billboard",
+      "NameKo": "빌딩 외벽 LED 광고판(「2029 신년 특별전 / ~1.31」)",
+      "Scenes": [
+        "EP06_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_footprints",
+      "NameKo": "젖은 바닥의 발자국(보폭 좁음·발 작음·뒤꿈치 얕음)",
+      "Scenes": [
+        "EP06_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_infected_corpse_socket_cut",
+      "NameKo": "목 뒤 소켓이 깨끗이 잘린 감염체 시신",
+      "Scenes": [
+        "EP06_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_suppressant_bottle",
+      "NameKo": "억제제 병(손글씨 라벨 「3회분 / 하루 한 번 이상 금지」, 3 위에 2 덧씀)",
+      "Scenes": [
+        "EP06_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_mateo_monitor",
+      "NameKo": "마태오 사무소 오른쪽 아래 모니터(케이크·촛불·아이 둘 영상 반복)",
+      "Scenes": [
+        "EP06_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP06_SC001",
+      "QuestionKo": "브리핑 장소 미기술(홀로그램이 있는 곳 — 마태오 사무소인지 불명)"
+    },
+    {
+      "Scene": "EP06_SC001",
+      "QuestionKo": "'다리는요.', '…배는요.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC001",
+      "QuestionKo": "아인·오정길이 이 자리에 있는지 미기술"
+    },
+    {
+      "Scene": "EP06_SC002",
+      "QuestionKo": "'…이걸 어떻게.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC003",
+      "QuestionKo": "공동구 진입 시 동행 인원 명시 없음(§5에서 '셋'으로 확인 — 아인·오정길·카인)"
+    },
+    {
+      "Scene": "EP06_SC006",
+      "QuestionKo": "'…사람인 줄 알았습니다.' / '…나도.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC007",
+      "QuestionKo": "'감염체?', '…놈들이 가져갔나.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC008",
+      "QuestionKo": "'뭘?' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC010",
+      "QuestionKo": "카인의 대사 내용 미기술(목소리만)"
+    },
+    {
+      "Scene": "EP06_SC011",
+      "QuestionKo": "'…지금.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC011",
+      "QuestionKo": "'빠져요!' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC011",
+      "QuestionKo": "놈의 뒤에서 지나간 존재의 형태 미기술(사람 같기도 함)"
+    },
+    {
+      "Scene": "EP06_SC012",
+      "QuestionKo": "'…뭐였어. 그 뒤에 있던 거.' 화자 미기술"
+    },
+    {
+      "Scene": "EP06_SC012",
+      "QuestionKo": "시간대 미기술"
+    },
+    {
+      "Scene": "EP06_SC003",
+      "QuestionKo": "SC003~SC010 시간대(주간/야간) 미기술"
+    },
+    {
+      "Scene": "EP06_SC003",
+      "QuestionKo": "파티 기본 의상 미기술"
+    },
+    {
+      "Scene": "EP06_SC010",
+      "QuestionKo": "K-3 뼈대의 정체(장비/보철) 이 화 산문에서 미기술"
+    }
+  ]
+}

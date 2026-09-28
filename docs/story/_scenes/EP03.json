@@ -1,0 +1,3526 @@
+{
+  "EpisodeId": "EP03",
+  "TitleKo": "제3화 — 사형집행관",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      1986,
+      3879
+    ]
+  },
+  "SummaryKo": "클레이브에게 패하고 배수로로 빠져나온 뒤, 아인은 오른손이 펴지지 않고 카인은 오른손이 부러지고 대검에 금이 간다. 아인은 낫이 걸리는 세 조건 외에 상대마다 다른 '네 번째'가 있으며, 클레이브의 셔터는 경첩(레일 고정부)으로 쥐는 구조물이라는 공략을 세운다. 한 장인은 대검을 벼리지만 금은 남고, 아인이 두고 간 칩을 밀어내던 장인의 손이 파편을 한 번에 집지 못한다. 마태오는 의뢰서도 없이 또 가느냐고 한다. 22년간 셔터를 여닫은 경비복 남자가 따라나서 '오른쪽 아래 경첩만 끊으면 자기 무게로 내려앉는다'는 결정적 정보를 준다. 광장에서 카인은 밀다가 실패하고, 매대에 발을 걸어 '버티는' 법을 배우며, 대검 대신 진열대에 깔린 남자를 구하고 맨손으로 셔터를 붙잡아 놈이 양손을 쓰게 만든다. 기울어진 셔터 뒤 오른쪽 아래 소켓을 아인이 네 조건을 맞춰 끊자, 셔터 뒤에 등이 도려내진 시신 여섯이 매달려 있었다. 클레이브는 기둥을 베어 지하 2호선 선로로 무너뜨리지만, 카인이 팔에 매달린 사이 아인이 목 아래 왼쪽을 한 번에 끊는다. 주황 결정과 '수도방위사령부… 다음 회수까지' 교신, B와 A뿐인 시신들의 인식표로 아인은 'C는 안 거둬간다'는 것을 깨닫는다. 남자는 오정길이라는 이름을 밝히고, 아인과 카인은 B로 승급하지만 아인의 주머니에는 시신에서 뗀 B 인식표가 하나 더 있다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC001",
+      "NovelSource": "L1986-L2054 §1 굳은 손",
+      "NovelSummary": "배수로를 기어 나온 생존자 열 몇 명이 벙커 외곽 통로에 젖은 채 널브러진다. 각인자인 카인이 셔터에 한 번 밀린 것만으로 사흘 굶은 사람처럼 헐떡인다. 아인은 오른손 손가락이 완전히 펴지지 않는 것을 확인하고, 낫지 않은 부상들(왼쪽 갈비뼈 실금, 왼쪽 어깨, 오른쪽 무릎)을 떠올린다. 경비복 남자는 물에 잠겼던 K2를 여전히 쥐고 있는데, 손가락이 굳어 펴지지 않는다. 카인이 그 손을 한참 보지만 아무 말도 하지 않는다.",
+      "Location": "loc_gangnam_bunker_outer_passage",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)"
+      ],
+      "StoryBeat": "패배 직후의 대가 — 몸에 쌓이는 부상과 굳은 손",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음 (연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "생존자들이 젖은 채 통로 바닥에 널브러짐, 모두 기침하고 침묵",
+      "Props": [
+        "prop_k2_rifle"
+      ],
+      "VFX": [
+        "wet_drip (젖은 옷에서 떨어지는 물방울)"
+      ],
+      "SFX": [
+        "cough_breath (기침·헐떡임)",
+        "water_drip (물 떨어지는 소리)"
+      ],
+      "Music": "침묵에 가까운 저음, 패배의 여운 [bgm_ep03_aftermath]",
+      "GameplayEntry": "EP02 종료 직후 배수로 탈출 컷에서 진입",
+      "GameplayExit": "카인이 오정길의 굳은 손을 보는 컷으로 페이드",
+      "AnimationRequired": [
+        "crawl_out_drain",
+        "sit_against_wall_exhausted",
+        "look_at_own_hand"
+      ],
+      "CinematicRequired": "true: 대사 없는 부상 상태 제시 연출",
+      "SaveFlags": [
+        "EP03_STARTED",
+        "EP03_AIN_RIGHT_HAND_STIFF"
+      ],
+      "Prerequisites": [
+        "EP02_COMPLETE"
+      ],
+      "NextScene": "EP03_SC002",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker_outer_passage",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_k2_rifle",
+        "anim:crawl_out_drain",
+        "anim:sit_against_wall_exhausted",
+        "anim:look_at_own_hand",
+        "vfx:wet_drip",
+        "sfx:cough_breath",
+        "sfx:water_drip",
+        "bgm:bgm_ep03_aftermath"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC002",
+      "NovelSource": "L2055-L2186 §2 경첩",
+      "NovelSummary": "아인이 젖은 바닥에 손가락으로 셔터(가로 직사각형)와 그 뒤의 원 두 개를 그린다. 낫이 걸리는 세 조건(거리·숨·반 박자) 외에 상대마다 다른 '네 번째'가 있고, 어제의 네 번째는 셔터였다고 정리한다. 아인은 놈이 쥔 것은 셔터가 아니라 레일 고정부인 경첩이며, 구조물이라 힘이 한 점으로 모인다고 설명한다. 한 점에 몰아넣는 건 낫이 하겠다고 하고, 카인이 정면에서 버티면 놈이 양손으로 쥘 것이라고 말한다. 카인은 반대로 꺾여 부어오른 자기 오른손을 내려다보며 아무 말도 하지 않는다.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "공략의 발견 — 경첩과 '네 번째 조건'",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…경첩.",
+          "Source": "L2105"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…뭐라고?",
+          "Source": "L2109"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "놈은 셔터를 쥔 게 아니야. 이걸 쥔 거야.",
+          "Source": "L2123"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…한 점에 몰아넣는 건, 내가 해.",
+          "Source": "L2149"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "네가 정면에서 버티면.",
+          "Source": "L2165"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "놈이 양손으로 쥘 거야.",
+          "Source": "L2169"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "바닥 그림으로 셔터 구조를 정리해 공략 가설(경첩)을 세운다",
+      "Interaction": [
+        "바닥에 직사각형·원 두 개 그리기",
+        "원 지우고 다시 그리기",
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "젖은 바닥, 손가락으로 그린 도식",
+      "Props": [
+        "prop_floor_diagram"
+      ],
+      "VFX": [
+        "floor_diagram_glow_ui (바닥 도식 강조 UI(원 두 개))"
+      ],
+      "SFX": [
+        "finger_on_wet_concrete (젖은 콘크리트 문지르는 소리)"
+      ],
+      "Music": "낮고 집중된 분석 테마 [bgm_ep03_analysis]",
+      "GameplayEntry": "SC001 이후 컷 전환",
+      "GameplayExit": "카인이 부은 오른손을 내려다보는 컷",
+      "AnimationRequired": [
+        "crouch_draw_on_floor",
+        "look_at_own_hand"
+      ],
+      "CinematicRequired": "false: 대화·조사 중심, 마지막 손 컷만 연출",
+      "SaveFlags": [
+        "EP03_HINGE_THEORY",
+        "EP03_KAIN_RIGHT_WRIST_BROKEN"
+      ],
+      "Prerequisites": [
+        "EP03_SC001"
+      ],
+      "NextScene": "EP03_SC003",
+      "RequiredAssets": [
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_floor_diagram",
+        "anim:crouch_draw_on_floor",
+        "anim:look_at_own_hand",
+        "vfx:floor_diagram_glow_ui",
+        "sfx:finger_on_wet_concrete",
+        "bgm:bgm_ep03_analysis"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC003",
+      "NovelSource": "L2187-L2224 §3 벼린다",
+      "NovelSummary": "한 장인이 말없이 손을 내밀고, 카인이 금 간 대검을 작업대에 올린다(작업대 다리가 휘청). 장인은 칼등에서 사선으로 난 금을 훑고 고개를 저은 뒤 대검을 화로에 넣는다. 카인은 불빛 앞에서 눈을 감지 않는다. 달구는 데 두 시간, 두드리는 데 네 시간, 식히는 데 하루. 깡깡 소리가 통로 끝까지 울리고, 벙커 사람들은 그 소리를 좋아한다.",
+      "Location": "loc_han_workshop",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain",
+        "char_han_jangin"
+      ],
+      "RequiredCostumes": [
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_han_jangin: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)"
+      ],
+      "StoryBeat": "무기의 내력 — 벼려도 없어지지 않는 금",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_han_jangin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음 (연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "화로 가동, 작업대 위 금 간 대검",
+      "Props": [
+        "prop_greatsword",
+        "prop_workbench",
+        "prop_forge"
+      ],
+      "VFX": [
+        "forge_fire_glow (화로 불빛)",
+        "hammer_sparks (망치질 불똥)"
+      ],
+      "SFX": [
+        "sword_thud_workbench (쿵 — 작업대에 대검 올리는 소리)",
+        "hammer_clang_loop (깡. 깡. 깡.)"
+      ],
+      "Music": "리듬감 있는 담담한 대장간 테마 [bgm_ep03_forge]",
+      "GameplayEntry": "벙커 통로에서 작업장으로 컷",
+      "GameplayExit": "망치 소리가 통로 끝까지 울리는 몽타주 후 다음 날로 전환",
+      "AnimationRequired": [
+        "place_heavy_sword_on_bench",
+        "inspect_blade_crack",
+        "put_sword_in_forge",
+        "forge_hammering"
+      ],
+      "CinematicRequired": "true: 장시간 단조를 몽타주로 압축",
+      "SaveFlags": [
+        "EP03_SWORD_REFORGE_STARTED"
+      ],
+      "Prerequisites": [
+        "EP03_SC002"
+      ],
+      "NextScene": "EP03_SC004",
+      "RequiredAssets": [
+        "env:loc_han_workshop",
+        "char:char_kain",
+        "char:char_han_jangin",
+        "prop:prop_greatsword",
+        "prop:prop_workbench",
+        "prop:prop_forge",
+        "anim:place_heavy_sword_on_bench",
+        "anim:inspect_blade_crack",
+        "anim:put_sword_in_forge",
+        "anim:forge_hammering",
+        "vfx:forge_fire_glow",
+        "vfx:hammer_sparks",
+        "sfx:sword_thud_workbench",
+        "sfx:hammer_clang_loop",
+        "bgm:bgm_ep03_forge"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC004",
+      "NovelSource": "L2225-L2250 §3 벼린다 (다음 날)",
+      "NovelSummary": "다음 날 대검이 다시 나온다. 카인이 눈높이로 들어 보지만 금은 그대로이고 선만 조금 얇아졌다. 카인이 '안 없어지네요'라고 하자 장인은 고개를 한 번 젓는다. 티타늄은 한 번 금이 가면 없어지지 않고 벌어지는 걸 늦출 뿐이며, 카인은 그걸 알면서도 다른 이유로 물었다.",
+      "Location": "loc_han_workshop",
+      "TimeOfDay": "다음 날 (시각 TBD_CANON)",
+      "Characters": [
+        "char_kain",
+        "char_han_jangin"
+      ],
+      "RequiredCostumes": [
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_han_jangin: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)"
+      ],
+      "StoryBeat": "금은 남는다 — 카인의 속내",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_han_jangin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…안 없어지네요.",
+          "Source": "L2235"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "없음 (연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "식힌 대검, 금 선이 조금 얇아짐",
+      "Props": [
+        "prop_greatsword",
+        "prop_workbench"
+      ],
+      "VFX": [
+        "blade_crack_highlight (칼몸 금 클로즈업 강조)"
+      ],
+      "SFX": [],
+      "Music": "리듬감 있는 담담한 대장간 테마 (잔향) [bgm_ep03_forge]",
+      "GameplayEntry": "시간 경과 자막/전환",
+      "GameplayExit": "장인이 고개를 젓는 컷",
+      "AnimationRequired": [
+        "lift_sword_eye_level",
+        "head_shake"
+      ],
+      "CinematicRequired": "true: 짧은 감정 연출",
+      "SaveFlags": [
+        "EP03_SWORD_REFORGED_CRACK_REMAINS"
+      ],
+      "Prerequisites": [
+        "EP03_SC003"
+      ],
+      "NextScene": "EP03_SC005",
+      "RequiredAssets": [
+        "env:loc_han_workshop",
+        "char:char_kain",
+        "char:char_han_jangin",
+        "prop:prop_greatsword",
+        "prop:prop_workbench",
+        "anim:lift_sword_eye_level",
+        "anim:head_shake",
+        "vfx:blade_crack_highlight",
+        "bgm:bgm_ep03_forge"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC005",
+      "NovelSource": "L2251-L2296 §4 밀어 놓는다",
+      "NovelSummary": "아인이 어제 광장·그저께 잡일·지난주 몫까지 모은 나노 칩을 작업대에 올리지만 장인은 아인 쪽으로 밀어 놓는다. 두 사람이 몇 번 칩을 밀고 되민다. 먼저 시선을 돌린 장인이 코어 파편을 집으려다 손이 미끄러지고, 두 번째에야 집는다. 엄지손톱만 한 것을 못 집는 장인을 본 아인은 말없이 칩을 그대로 두고 돌아서며 한 번 돌아본다.",
+      "Location": "loc_han_workshop",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_han_jangin"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_han_jangin: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "장인의 손 이상(복선) — 말 없는 거래",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_han_jangin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "칩을 작업대에 놓고 떠난다",
+      "Interaction": [
+        "나노 칩 작업대에 올리기(반복)",
+        "칩을 두고 돌아서기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "작업대 위 코어 파편 흩어짐",
+      "Props": [
+        "prop_nano_chips",
+        "prop_core_fragments",
+        "prop_workbench"
+      ],
+      "VFX": [],
+      "SFX": [
+        "chips_click (달칵 — 칩 내려놓는 소리)"
+      ],
+      "Music": "잔잔한 변주 [bgm_ep03_forge]",
+      "GameplayEntry": "작업장, 아인 시점",
+      "GameplayExit": "아인이 한 번 돌아보는 컷",
+      "AnimationRequired": [
+        "place_items_on_table",
+        "push_items_across_table",
+        "reach_grab_miss",
+        "turn_away_look_back"
+      ],
+      "CinematicRequired": "true: 손이 미끄러지는 디테일 클로즈업 필요",
+      "SaveFlags": [
+        "EP03_HAN_CHIPS_LEFT",
+        "EP03_HAN_HAND_SLIP_SEEN"
+      ],
+      "Prerequisites": [
+        "EP03_SC004"
+      ],
+      "NextScene": "EP03_SC006",
+      "RequiredAssets": [
+        "env:loc_han_workshop",
+        "char:char_ain",
+        "char:char_han_jangin",
+        "prop:prop_nano_chips",
+        "prop:prop_core_fragments",
+        "prop:prop_workbench",
+        "anim:place_items_on_table",
+        "anim:push_items_across_table",
+        "anim:reach_grab_miss",
+        "anim:turn_away_look_back",
+        "sfx:chips_click",
+        "bgm:bgm_ep03_forge"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC006",
+      "NovelSource": "L2297-L2354 §5 계산기",
+      "NovelSummary": "사무소 문을 열자 마태오가 왼손으로 계산기를, 오른손으로 장부를 쓰며 불 안 붙인 담배를 물고 있다. 죽을 뻔했는데 또 가냐고 묻고, 의뢰서는 아직 안 썼으니 지금 죽으면 무보수라고 한다. '알아요'라는 대답에 '알면 됐고'라며 장부에 짧게 두 줄을 적는다. 오른쪽 아래 모니터에서는 여자와 아이 둘, 케이크와 촛불 영상이 반복 재생되고, 마태오는 그 화면을 등지고 앉아 있다.",
+      "Location": "loc_mateo_office",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "char_mateo: TBD_CANON (의상 묘사 없음, 불 안 붙인 담배를 묾)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "재출격 결정 — 마태오의 무보수 경고와 장부 두 줄(복선)",
+      "PlayerCharacter": "TBD_CANON",
+      "NPCs": [
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "죽을 뻔했다며.",
+          "Source": "L2309"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "근데 또 간다고.",
+          "Source": "L2313"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "의뢰서는 아직 안 썼다. 지금 죽으면 무보수야.",
+          "Source": "L2321"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "…알면 됐고.",
+          "Source": "L2325"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "마태오와 대화해 재출격을 알린다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "모니터에서 가족 영상 반복 재생",
+      "Props": [
+        "prop_calculator",
+        "prop_ledger",
+        "prop_unlit_cigarette",
+        "prop_monitor_video"
+      ],
+      "VFX": [
+        "monitor_loop_flicker (모니터 반복 영상 깜빡임)"
+      ],
+      "SFX": [
+        "calculator_keys (계산기 두드리는 소리)",
+        "pen_scratch (장부 필기)"
+      ],
+      "Music": "건조한 사무소 앰비언트 [bgm_ep03_office]",
+      "GameplayEntry": "사무소 문 열기",
+      "GameplayExit": "마태오가 모니터를 등진 구도에서 페이드",
+      "AnimationRequired": [
+        "type_calculator_write_ledger",
+        "shift_cigarette_mouth"
+      ],
+      "CinematicRequired": "false: 대화 씬, 모니터 컷만 연출",
+      "SaveFlags": [
+        "EP03_MATEO_NO_CONTRACT"
+      ],
+      "Prerequisites": [
+        "EP03_SC005"
+      ],
+      "NextScene": "EP03_SC007",
+      "RequiredAssets": [
+        "env:loc_mateo_office",
+        "char:char_mateo",
+        "prop:prop_calculator",
+        "prop:prop_ledger",
+        "prop:prop_unlit_cigarette",
+        "prop:prop_monitor_video",
+        "anim:type_calculator_write_ledger",
+        "anim:shift_cigarette_mouth",
+        "vfx:monitor_loop_flicker",
+        "sfx:calculator_keys",
+        "sfx:pen_scratch",
+        "bgm:bgm_ep03_office"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC007",
+      "NovelSource": "L2355-L2526 §6 따라온 사람",
+      "NovelSummary": "출격문 앞에 K2를 멘 경비복 남자가 서서 같이 가겠다고 한다. 카인이 총을 버리라고 하자 버릴 수 없다며, 쏜 게 자기 쪽이니 자기 때문에 시작됐다고 한다. 바닥에 다시 경첩을 그리던 아인에게 남자는 22년 동안 셔터를 내리고 올렸다며, 아래쪽 경첩이 하중을 다 받아 먼저 나가고 아래만 끊으면 자기 무게로 내려앉는다고, 그리고 '오른쪽 아래'라고 알려준다. 두 개를 다 끊어야 하면 성립하지 않던 작전이 성립하게 되자 아인이 '갑시다'라며 낫을 어깨에 걸치고, 세 사람이 안개 속으로 들어간다.",
+      "Location": "loc_gangnam_sortie_gate",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)",
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)"
+      ],
+      "StoryBeat": "조력자 합류 — 결정적 정보(오른쪽 아래 경첩)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "같이 갑니다.",
+          "Source": "L2365"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…저 때문에 시작됐잖아요.",
+          "Source": "L2391"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "경첩을 그리신 거라면, 위아래를 다 안 풀어도 분리가 됩니다.",
+          "Source": "L2445"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "자기 무게로 내려앉습니다.",
+          "Source": "L2479"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "오른쪽 아래요. 사람이 서는 쪽 기준으로.",
+          "Source": "L2499"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "갑시다.",
+          "Source": "L2505"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "경비복 남자에게서 셔터 경첩 정보를 얻고 출격한다",
+      "Interaction": [
+        "대화 진행",
+        "바닥 도식에서 아래쪽 원 짚기(정보 획득 연출)",
+        "출격문 통과"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "출격문 앞 젖은 콘크리트, 문 밖 안개",
+      "Props": [
+        "prop_k2_rifle",
+        "prop_floor_diagram",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "fog_outside_gate (출격문 밖 안개)"
+      ],
+      "SFX": [
+        "footsteps_wet (젖은 발걸음)"
+      ],
+      "Music": "결의를 누른 저음 행진 [bgm_ep03_sortie]",
+      "GameplayEntry": "출격문 앞 도착",
+      "GameplayExit": "세 사람이 안개로 들어가는 롱숏 → 광장으로 전환",
+      "AnimationRequired": [
+        "crouch_draw_on_floor",
+        "point_at_diagram",
+        "shoulder_scythe",
+        "walk_into_fog"
+      ],
+      "CinematicRequired": "true: 안개 속 출격 롱숏",
+      "SaveFlags": [
+        "EP03_OH_JEONGGIL_JOINED",
+        "EP03_LOWER_RIGHT_HINGE_INFO"
+      ],
+      "Prerequisites": [
+        "EP03_SC006"
+      ],
+      "NextScene": "EP03_SC008",
+      "RequiredAssets": [
+        "env:loc_gangnam_sortie_gate",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_k2_rifle",
+        "prop:prop_floor_diagram",
+        "prop:prop_scythe",
+        "anim:crouch_draw_on_floor",
+        "anim:point_at_diagram",
+        "anim:shoulder_scythe",
+        "anim:walk_into_fog",
+        "vfx:fog_outside_gate",
+        "sfx:footsteps_wet",
+        "bgm:bgm_ep03_sortie"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC008",
+      "NovelSource": "L2527-L2663 §7 지운다",
+      "NovelSummary": "광장은 어제 그대로다 — 부서진 진열대, 뒤집힌 매대, 패트롤어 잔해, 기운 은색 별 크리스마스 장식. 물 위에 어제 못 빠져나온 사람이 엎어져 있고, 목덜미가 척추를 따라 손바닥만큼 정확히 도려내져 있다. 아인은 카인에게 '나중에'라고 고개를 젓는다. 끼기기긱 소리와 함께 백화점 연결 통로 쪽에서 셔터를 세워 든 2.5미터 클레이브가 나타난다. 아인은 '감당 못 할 건 건드리지 마라'는 말을 지우고, 숨을 반쯤 들이켰다 내쉰 뒤 카인에게 '정면'을 지시한다. 카인은 어제 한 손으로도 못 밀었다고 하지만 대검을 고쳐 쥔다.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)",
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "재조우 — 시신의 목덜미, 보스 등장",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "카인.",
+          "Source": "L2623"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "정면.",
+          "Source": "L2641"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…어제 한 손으로도 못 밀었는데.",
+          "Source": "L2653"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "알아.",
+          "Source": "L2655"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…알면서 시켜?",
+          "Source": "L2657"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "응.",
+          "Source": "L2659"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "광장을 지나 시신을 확인하고 보스 조우에 대비한다",
+      "Interaction": [
+        "시신 조사(목덜미 상처)",
+        "카인에게 '나중에' 신호"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "",
+      "EnvironmentState": "무릎 높이 물, 어제 전투 잔해 그대로, 크리스마스 장식",
+      "Props": [
+        "prop_display_stand",
+        "prop_overturned_stall",
+        "prop_patroller_wreck",
+        "prop_christmas_decor",
+        "prop_victim_bodies",
+        "prop_shutter"
+      ],
+      "VFX": [
+        "water_surface_debris (물 위 부유물)",
+        "boss_silhouette_low_angle (로우 앵글 실루엣 등장)"
+      ],
+      "SFX": [
+        "metal_screech_approach (끼기기기긱— 접근음)",
+        "water_wade (물 헤치는 소리)"
+      ],
+      "Music": "긴장 고조, 금속성 드론 [bgm_boss_cleave_intro]",
+      "GameplayEntry": "안개를 지나 광장 진입",
+      "GameplayExit": "카인이 대검을 고쳐 쥐는 컷 → 보스전 시작",
+      "AnimationRequired": [
+        "wade_walk",
+        "inspect_corpse_standing",
+        "head_shake",
+        "grip_scythe",
+        "half_inhale_exhale",
+        "boss_walk_carry_shutter",
+        "grip_greatsword"
+      ],
+      "CinematicRequired": "true: 보스 등장 로우 앵글 연출",
+      "SaveFlags": [
+        "EP03_CORPSE_NAPE_SEEN",
+        "EP03_CLEAVE_REENCOUNTER"
+      ],
+      "Prerequisites": [
+        "EP03_SC007"
+      ],
+      "NextScene": "EP03_SC009",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cleave",
+        "prop:prop_display_stand",
+        "prop:prop_overturned_stall",
+        "prop:prop_patroller_wreck",
+        "prop:prop_christmas_decor",
+        "prop:prop_victim_bodies",
+        "prop:prop_shutter",
+        "anim:wade_walk",
+        "anim:inspect_corpse_standing",
+        "anim:head_shake",
+        "anim:grip_scythe",
+        "anim:half_inhale_exhale",
+        "anim:boss_walk_carry_shutter",
+        "anim:grip_greatsword",
+        "vfx:water_surface_debris",
+        "vfx:boss_silhouette_low_angle",
+        "sfx:metal_screech_approach",
+        "sfx:water_wade",
+        "bgm:bgm_boss_cleave_intro"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC009",
+      "NovelSource": "L2664-L2939 §8 밀린다",
+      "NovelSummary": "카인이 정면으로 셔터를 때리지만 셔터가 힘을 넓게 퍼뜨려 튕겨내고, 무릎 높이 물 아래 미끄러운 타일에서 발이 밀려 등이 기둥에 닿는다. 아인은 오른쪽으로 크게 돌지만 3미터 셔터가 몸통까지의 경로를 전부 막는다. 오정길이 K2 개머리판으로 뒤집힌 매대를 밀어와 '발 뒤에 대세요'라고 외치고, 발이 걸린 카인이 놈을 밀어낸다. 순간 놈이 셔터를 옆으로 빼 야구 배트처럼 휘둘러 카인을 진열대 세 개 너머로 날린다. 아인이 세 조건을 모두 맞춰 파고들지만 셔터가 궤도로 돌아와 칼날 중간이 철판에 닿고 물속으로 나가떨어진다 — 네 번째가 안 맞았다. 놈이 한 손으로 셔터를 쓰는 건 물러날 수 있기 때문이라는 것을 깨달은 아인이 처음으로 놈에게서 눈을 떼고 카인에게 '밀지 마. 버텨'라고 한다.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)",
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "보스전 1페이즈 — 미는 싸움의 실패와 '버텨'",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "이거 못 밀어!",
+          "Source": "L2742"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…발! 발 뒤에 대세요!",
+          "Source": "L2762"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "카인!",
+          "Source": "L2834"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…씨발, 저거 휘두르네.",
+          "Source": "L2890"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "밀지 마.",
+          "Source": "L2924"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "버텨.",
+          "Source": "L2938"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "셔터 방패의 약점을 찾는다 (거리·숨·반 박자를 맞춰도 셔터가 궤도에 들어오는 것을 확인)",
+      "Interaction": [
+        "거리 재기(낫 하나)",
+        "숨·반 박자 타이밍 입력",
+        "측면 우회 시도",
+        "파트너(카인) 정면 유지"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "P1",
+      "EnvironmentState": "무릎 높이 물, 물때 앉은 매끄러운 타일, 뒤집힌 매대가 카인 발 받침이 됨, 진열대 세 개 파손",
+      "Props": [
+        "prop_shutter",
+        "prop_greatsword",
+        "prop_scythe",
+        "prop_k2_rifle",
+        "prop_overturned_stall",
+        "prop_display_stand",
+        "prop_plaza_pillar"
+      ],
+      "VFX": [
+        "impact_shock_water (충돌 충격파·물보라)",
+        "water_wall_splash (벽까지 솟는 물)",
+        "scythe_blade_block_spark (칼날이 철판에 막히는 불꽃)"
+      ],
+      "SFX": [
+        "shutter_heavy_impact (콰아앙— 셔터 충돌)",
+        "back_hit_pillar (쿵 — 기둥 충돌)",
+        "scythe_tick_metal (틱— 칼날이 철판에 닿는 소리)"
+      ],
+      "Music": "무겁고 압박적인 보스 테마 [bgm_boss_cleave_p1]",
+      "GameplayEntry": "SC008 컷에서 즉시 전투 전환",
+      "GameplayExit": "아인의 '버텨.' 대사 연출 후 SC010으로",
+      "AnimationRequired": [
+        "greatsword_charge_slam",
+        "slide_back_on_water",
+        "back_hit_pillar",
+        "circle_strafe_wade",
+        "push_object_with_rifle_butt",
+        "brace_foot_on_stall",
+        "boss_shutter_block",
+        "boss_shutter_bat_swing",
+        "knocked_flying",
+        "scythe_hook_attack",
+        "knocked_into_water",
+        "rise_using_sword_as_cane"
+      ],
+      "CinematicRequired": "true: 셔터 배트 스윙·'버텨' 지시 연출",
+      "SaveFlags": [
+        "EP03_CLEAVE_ONE_HAND_LEARNED",
+        "EP03_STALL_BRACE_PLACED"
+      ],
+      "Prerequisites": [
+        "EP03_SC008"
+      ],
+      "NextScene": "EP03_SC010",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cleave",
+        "prop:prop_shutter",
+        "prop:prop_greatsword",
+        "prop:prop_scythe",
+        "prop:prop_k2_rifle",
+        "prop:prop_overturned_stall",
+        "prop:prop_display_stand",
+        "prop:prop_plaza_pillar",
+        "anim:greatsword_charge_slam",
+        "anim:slide_back_on_water",
+        "anim:back_hit_pillar",
+        "anim:circle_strafe_wade",
+        "anim:push_object_with_rifle_butt",
+        "anim:brace_foot_on_stall",
+        "anim:boss_shutter_block",
+        "anim:boss_shutter_bat_swing",
+        "anim:knocked_flying",
+        "anim:scythe_hook_attack",
+        "anim:knocked_into_water",
+        "anim:rise_using_sword_as_cane",
+        "vfx:impact_shock_water",
+        "vfx:water_wall_splash",
+        "vfx:scythe_blade_block_spark",
+        "sfx:shutter_heavy_impact",
+        "sfx:back_hit_pillar",
+        "sfx:scythe_tick_metal",
+        "bgm:bgm_boss_cleave_p1"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC010",
+      "NovelSource": "L2940-L3103 §9 손을 뗀다",
+      "NovelSummary": "카인이 대검을 세로로 세워 셔터에 대고 밀지 않고 버틴다. 대검 날을 셔터 아래 모서리에 걸어 놔 놈이 셔터를 빼지 못하고, 어깨 관절에서 그드득 소리가 난다. 놈이 각도를 바꿔 지렛대처럼 셔터 아래를 들어 올리자 카인이 튕기고, 대검이 손에서 빠져 물속으로 가라앉는다(금 간 자리가 번쩍). 그 충격에 무너진 진열대 아래 오정길이 깔린다. 대검 자루에 손끝이 닿았던 카인은 손을 떼고, 부러진 오른손으로 진열대를 들어 올려 남자를 끌어내 벽 쪽으로 밀어 놓는다. 대검을 건지지 않고 '맨손으로 한다'고 하자 아인이 고개를 끄덕인다.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_kain: 대검 (62kg 티타늄, 금 간 상태)",
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "선택 — 무기 대신 사람 (카인의 낭만)",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_oh_jeonggil",
+        "char_cleave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "카인!",
+          "Source": "L3074"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…맨손으로 한다.",
+          "Source": "L3090"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "버티기 자세를 유지하고, 무너진 진열대 아래 사람을 구한다",
+      "Interaction": [
+        "버티기(가드 유지) 입력",
+        "물속 대검 vs 진열대 아래 사람 — 연출 선택(본문대로 구출 고정)",
+        "진열대 들어 올리기"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "P1",
+      "EnvironmentState": "진열대 붕괴, 대검이 물속에 가라앉음, 오정길 진열대 아래 깔림",
+      "Props": [
+        "prop_shutter",
+        "prop_greatsword",
+        "prop_display_stand",
+        "prop_overturned_stall",
+        "prop_k2_rifle"
+      ],
+      "VFX": [
+        "blade_flash_underwater (가라앉는 칼몸의 번쩍임)",
+        "pain_whiteout (시야가 하얘지는 통증 연출)"
+      ],
+      "SFX": [
+        "shoulder_joint_crack (그드득 — 어깨 관절음)",
+        "shutter_lever_bang (쾅!)",
+        "bone_grind (으드득 — 부러진 손)"
+      ],
+      "Music": "보스 테마 → 구출 순간 음소거에 가까운 전환 [bgm_boss_cleave_p1]",
+      "GameplayEntry": "SC009 '버텨' 직후",
+      "GameplayExit": "카인 맨손 선언, 아인 끄덕임",
+      "AnimationRequired": [
+        "brace_guard_vertical_sword",
+        "boss_shutter_lever_lift",
+        "knocked_sideways",
+        "drop_weapon_in_water",
+        "reach_underwater",
+        "lift_debris_rescue",
+        "drag_person_to_wall"
+      ],
+      "CinematicRequired": "true: 대검 대신 사람을 택하는 핵심 감정 연출",
+      "SaveFlags": [
+        "EP03_KAIN_SWORD_LOST",
+        "EP03_OH_JEONGGIL_RESCUED",
+        "EP03_KAIN_BAREHANDED"
+      ],
+      "Prerequisites": [
+        "EP03_SC009"
+      ],
+      "NextScene": "EP03_SC011",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:char_cleave",
+        "prop:prop_shutter",
+        "prop:prop_greatsword",
+        "prop:prop_display_stand",
+        "prop:prop_overturned_stall",
+        "prop:prop_k2_rifle",
+        "anim:brace_guard_vertical_sword",
+        "anim:boss_shutter_lever_lift",
+        "anim:knocked_sideways",
+        "anim:drop_weapon_in_water",
+        "anim:reach_underwater",
+        "anim:lift_debris_rescue",
+        "anim:drag_person_to_wall",
+        "vfx:blade_flash_underwater",
+        "vfx:pain_whiteout",
+        "sfx:shoulder_joint_crack",
+        "sfx:shutter_lever_bang",
+        "sfx:bone_grind",
+        "bgm:bgm_boss_cleave_p1"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC011",
+      "NovelSource": "L3104-L3193 §10 양손",
+      "NovelSummary": "카인이 맨손으로 셔터 아래쪽 모서리를 두 손으로 잡는다. 무기가 없으니 반사가 안 되고 그냥 받는다. 손바닥이 베인다. 몸을 낮추고 발을 뒤로 뻗자 오정길이 밀어 놓은 매대의 철제 다리(타일 틈에 걸림)에 발뒤꿈치가 걸린다. 놈이 밀어도, 셔터를 빼려 해도 카인이 안 밀리고 안 놓는다. 물러날 수 없게 되자 놈이 자세를 낮추고 셔터에 두 번째 손을 얹는다 — 양손.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "공략 성립 — 보스에게 양손을 강제",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_cleave"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "맨손으로 셔터 모서리를 붙잡고 버텨 보스가 양손을 쓰게 만든다",
+      "Interaction": [
+        "셔터 모서리 붙잡기",
+        "발 뒤로 뻗어 매대 다리 찾기",
+        "버티기 유지(밀림 게이지)"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "P1",
+      "EnvironmentState": "매대 철제 다리 하나가 타일 틈에 걸려 고정, 무릎 높이 물",
+      "Props": [
+        "prop_shutter",
+        "prop_overturned_stall"
+      ],
+      "VFX": [
+        "palm_cut_blood (손바닥 베임)"
+      ],
+      "SFX": [
+        "strain_grunt (버티는 신음)",
+        "metal_scrape (철판 긁힘)"
+      ],
+      "Music": "긴장 최고조로 쌓이는 빌드업 [bgm_boss_cleave_p1]",
+      "GameplayEntry": "SC010 직후",
+      "GameplayExit": "보스가 두 번째 손을 얹는 클로즈업",
+      "AnimationRequired": [
+        "grab_shutter_edge_barehanded",
+        "low_brace_stance",
+        "boss_two_hand_push"
+      ],
+      "CinematicRequired": "true: '양손이었다' 클로즈업",
+      "SaveFlags": [
+        "EP03_CLEAVE_TWO_HANDS"
+      ],
+      "Prerequisites": [
+        "EP03_SC010"
+      ],
+      "NextScene": "EP03_SC012",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_shutter",
+        "prop:prop_overturned_stall",
+        "anim:grab_shutter_edge_barehanded",
+        "anim:low_brace_stance",
+        "anim:boss_two_hand_push",
+        "vfx:palm_cut_blood",
+        "sfx:strain_grunt",
+        "sfx:metal_scrape",
+        "bgm:bgm_boss_cleave_p1"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC012",
+      "NovelSource": "L3194-L3269 §11 하나만",
+      "NovelSummary": "양손으로 밀려고 몸이 나오면서 셔터가 앞으로 기울고 뒤쪽 경첩 소켓 두 개(위쪽은 반쯤 접힘, 아래쪽은 갈라짐)가 드러난다. 아인은 오정길의 말을 떠올리고 오른쪽 아래를 노린다. 거리: 자루 172센티, 원까지 2미터~2미터 40의 띠, 소켓까지 2미터 20. 숨: 놈이 카인을 밀어내려 어깨가 말리고 축이 잡힌다. 반 박자: 세상이 늘어진다. 네 번째: 양손으로 쥐고 있어 셔터가 궤도 밖에 있다. 넷이 맞고, 낫이 원을 그려 걸고 당긴다 — 콰드득.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "클라이맥스 1 — 네 조건이 맞는 일격",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_cleave"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "오른쪽 아래 경첩 소켓을 네 조건(거리·숨·반 박자·셔터 궤도 밖)에 맞춰 끊는다",
+      "Interaction": [
+        "거리 띠(2.0~2.4m) 안에 서기",
+        "보스 흡기 타이밍 포착",
+        "반 박자 슬로 입력",
+        "오른쪽 아래 소켓 조준·당기기"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "P1",
+      "EnvironmentState": "셔터가 앞으로 기울어 뒷면 소켓 노출",
+      "Props": [
+        "prop_shutter",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "slow_motion_world (세상이 늘어지는 슬로 연출)",
+        "scythe_arc_trail (낫의 원 궤적)",
+        "socket_weakpoint_mark (소켓 약점 표시)"
+      ],
+      "SFX": [
+        "socket_tear (콰드득— 소켓 뜯김)",
+        "breath_inhale_boss (보스 흡기음)"
+      ],
+      "Music": "정점 직전 정적 → 한 박자 타격 [bgm_boss_cleave_climax]",
+      "GameplayEntry": "SC011 양손 컷 직후",
+      "GameplayExit": "소켓 절단 타격음과 함께 SC013",
+      "AnimationRequired": [
+        "scythe_low_grip_stance",
+        "scythe_hook_pull",
+        "boss_inhale_windup"
+      ],
+      "CinematicRequired": "true: 4단 조건 슬로 연출(개입 부분은 짧게)",
+      "SaveFlags": [
+        "EP03_SHUTTER_SOCKET_CUT"
+      ],
+      "Prerequisites": [
+        "EP03_SC011"
+      ],
+      "NextScene": "EP03_SC013",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_shutter",
+        "prop:prop_scythe",
+        "anim:scythe_low_grip_stance",
+        "anim:scythe_hook_pull",
+        "anim:boss_inhale_windup",
+        "vfx:slow_motion_world",
+        "vfx:scythe_arc_trail",
+        "vfx:socket_weakpoint_mark",
+        "sfx:socket_tear",
+        "sfx:breath_inhale_boss",
+        "bgm:bgm_boss_cleave_climax"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC013",
+      "NovelSource": "L3270-L3325 §12 매달린 것",
+      "NovelSummary": "소켓이 뜯겨 3미터 철판이 놈의 손에서 떨어지고 물기둥이 천장까지 솟았다 무너진다. 셔터 뒤쪽이 드러나고, 갈고리에 사람 여섯이 빨래처럼 나란히 등을 보이며 매달려 있다. 척추를 따라 도려낸 자리가 제각각(목덜미 아래 손바닥만큼 ~ 어깨뼈에서 허리까지)이고 뼈가 보이는 것도 있다. 아무도 말하지 않는다. 카인이 셔터에서 손을 떼자 갈린 손바닥에서 물이 붉게 번진다. 아인은 움직이지 않는다.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_cleave: 셔터 (3미터 철판, 뒷면 경첩 소켓 2개, 갈고리)"
+      ],
+      "StoryBeat": "대가 — 셔터 뒤에 매달린 여섯",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음 (연출)",
+      "Interaction": [],
+      "BossId": "boss_cleave",
+      "BossPhase": "",
+      "EnvironmentState": "셔터 낙하, 물기둥 후 수면 가라앉음, 셔터 뒷면 갈고리에 시신 여섯",
+      "Props": [
+        "prop_shutter",
+        "prop_victim_bodies"
+      ],
+      "VFX": [
+        "water_pillar_to_ceiling (천장까지 솟는 물기둥)",
+        "blood_in_water (물에 번지는 피)"
+      ],
+      "SFX": [
+        "shutter_fall_crash (콰앙—!! 셔터 낙하)",
+        "silence_drone (정적)"
+      ],
+      "Music": "음악 없음에 가까운 정적 [bgm_ep03_silence]",
+      "GameplayEntry": "SC012 타격 직후",
+      "GameplayExit": "아인이 움직이지 않는 정지 컷",
+      "AnimationRequired": [
+        "release_grip_look_away",
+        "stand_frozen"
+      ],
+      "CinematicRequired": "true: 시신 공개 연출 — 등급 표현 수위 조정 필요",
+      "SaveFlags": [
+        "EP03_SIX_HANGING_BODIES_SEEN",
+        "EP03_CLEAVE_SHIELD_LOST"
+      ],
+      "Prerequisites": [
+        "EP03_SC012"
+      ],
+      "NextScene": "EP03_SC014",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_shutter",
+        "prop:prop_victim_bodies",
+        "anim:release_grip_look_away",
+        "anim:stand_frozen",
+        "vfx:water_pillar_to_ceiling",
+        "vfx:blood_in_water",
+        "sfx:shutter_fall_crash",
+        "sfx:silence_drone",
+        "bgm:bgm_ep03_silence"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC014",
+      "NovelSource": "L3326-L3343 §13 선로 (붕괴)",
+      "NovelSummary": "방패를 잃은 클레이브가 처음으로 자세를 바꿔 장검을 양손으로 들고 광장 중앙 기둥을 벤다. 천장이 무너지고 바닥이 꺼져 물이 아래로 빨려 들어가며, 콘크리트 슬래브째 모든 것이 한 층 아래로 떨어진다.",
+      "Location": "loc_gangnam_underground_plaza",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_cleave: 장검"
+      ],
+      "StoryBeat": "페이즈 전환 — 기둥 절단과 붕괴",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "없음 (연출)",
+      "Interaction": [],
+      "BossId": "boss_cleave",
+      "BossPhase": "P2",
+      "EnvironmentState": "중앙 기둥 절단 → 천장 붕괴, 바닥 슬래브 함몰, 물이 아래층으로 빨려 들어감",
+      "Props": [
+        "prop_longsword",
+        "prop_plaza_pillar"
+      ],
+      "VFX": [
+        "pillar_cut_debris (기둥 절단 파편)",
+        "floor_collapse_dust (슬래브 붕괴 분진)",
+        "water_drain_vortex (빨려 들어가는 물)"
+      ],
+      "SFX": [
+        "pillar_cut_boom (콰아아앙—!!)",
+        "concrete_collapse (콘크리트 붕괴음)"
+      ],
+      "Music": "타악 강조 P2 전환 [bgm_boss_cleave_p2]",
+      "GameplayEntry": "SC013 정적 이후",
+      "GameplayExit": "낙하 컷 → 선로 착지",
+      "AnimationRequired": [
+        "boss_longsword_two_hand_cut",
+        "fall_with_floor_collapse"
+      ],
+      "CinematicRequired": "true: 레벨 붕괴 전환 연출",
+      "SaveFlags": [
+        "EP03_CLEAVE_P2",
+        "EP03_PLAZA_COLLAPSED"
+      ],
+      "Prerequisites": [
+        "EP03_SC013"
+      ],
+      "NextScene": "EP03_SC015",
+      "RequiredAssets": [
+        "env:loc_gangnam_underground_plaza",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_longsword",
+        "prop:prop_plaza_pillar",
+        "anim:boss_longsword_two_hand_cut",
+        "anim:fall_with_floor_collapse",
+        "vfx:pillar_cut_debris",
+        "vfx:floor_collapse_dust",
+        "vfx:water_drain_vortex",
+        "sfx:pillar_cut_boom",
+        "sfx:concrete_collapse",
+        "bgm:bgm_boss_cleave_p2"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC015",
+      "NovelSource": "L3344-L3405 §13 선로 (지하 2호선)",
+      "NovelSummary": "지하 2호선 침수 선로. 카인은 착지하며 무릎이 꺾이고 물이 가슴까지 찬다. 아인은 떨어지며 낫을 레일에 걸어 낙하를 늦춘다(자루 삐걱, 손바닥 갈림). 셔터 없이 선로 한복판에 내려선 클레이브의 전면이 열려 있고, 아인은 목 아래 왼쪽 — 어깨에서 몸통으로 힘이 넘어가는 자리를 본다. '목 아래 왼쪽' '끌게'. 카인이 맨손으로 장검 든 팔에 매달려 놓지 않고, 낫 하나 거리에서 아인의 낫이 원을 그려 걸린다 — 한 번이었다.",
+      "Location": "loc_line2_flooded_track",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)",
+        "char_cleave: 장검"
+      ],
+      "StoryBeat": "보스전 2페이즈 — 방패 없는 전면, 단 한 번의 일격",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_cleave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…목 아래 왼쪽.",
+          "Source": "L3370"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "끌게.",
+          "Source": "L3372"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "카인이 팔을 붙잡는 동안 목 아래 왼쪽을 낫으로 끊는다",
+      "Interaction": [
+        "낙하 중 레일에 낫 걸기(QTE)",
+        "약점(목 아래 왼쪽) 관측",
+        "낫 하나 거리 맞추기",
+        "일격"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "P2",
+      "EnvironmentState": "가슴 높이 물, 레일, 무너진 천장 틈",
+      "Props": [
+        "prop_scythe",
+        "prop_longsword",
+        "prop_rail"
+      ],
+      "VFX": [
+        "rail_sparks_hook (레일에 낫 걸 때 불똥)",
+        "slow_motion_world (세상이 늘어지는 슬로 연출)",
+        "scythe_arc_trail (낫의 원 궤적)"
+      ],
+      "SFX": [
+        "rail_creak (자루 삐걱)",
+        "final_crunch (콰직—)"
+      ],
+      "Music": "짧고 강한 P2 테마 [bgm_boss_cleave_p2]",
+      "GameplayEntry": "선로 착지 직후 조작 복귀",
+      "GameplayExit": "일격 후 SC016 결과 연출",
+      "AnimationRequired": [
+        "scythe_hook_rail_slow_fall",
+        "land_knee_buckle",
+        "grab_arm_hang",
+        "boss_arm_swing_drag",
+        "scythe_hook_attack"
+      ],
+      "CinematicRequired": "true: 낙하·일격 연출",
+      "SaveFlags": [
+        "EP03_BOSS_CLEAVE_DEFEATED"
+      ],
+      "Prerequisites": [
+        "EP03_SC014"
+      ],
+      "NextScene": "EP03_SC016",
+      "RequiredAssets": [
+        "env:loc_line2_flooded_track",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_scythe",
+        "prop:prop_longsword",
+        "prop:prop_rail",
+        "anim:scythe_hook_rail_slow_fall",
+        "anim:land_knee_buckle",
+        "anim:grab_arm_hang",
+        "anim:boss_arm_swing_drag",
+        "anim:scythe_hook_attack",
+        "vfx:rail_sparks_hook",
+        "vfx:slow_motion_world",
+        "vfx:scythe_arc_trail",
+        "sfx:rail_creak",
+        "sfx:final_crunch",
+        "bgm:bgm_boss_cleave_p2"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC016",
+      "NovelSource": "L3406-L3535 §14 B",
+      "NovelSummary": "클레이브가 무너지고 2.5미터 티타늄 아머가 선로 위로 쏟아진다. 단면에서 어른 주먹만 한 주황색 결정이 굴러 나오고 아인이 두 손으로 받는다(뜨겁다). 수트 흉부에서 '수도방위사령부… 순찰 일정… 다음 회수까지 —' 교신이 나오다 끊긴다. 위층에서 물과 함께 셔터에 매달려 있던 여섯이 떨어진다. 목의 금속 인식표는 B, A, B, A, B, A — C는 하나도 없다. 카인은 자기 목의 C를 내려다본다. 아인은 스승의 '감당 못 할 건 건드리지 마라'가 무슨 뜻이었는지 알게 된다 — C는 안 거둬간다. 아직 C인 인식표를 손으로 감싼다. 오늘까지는.",
+      "Location": "loc_line2_flooded_track",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_cleave: 2.5미터 티타늄 아머(수트)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)"
+      ],
+      "StoryBeat": "보상과 진실 — 주황 결정, '회수', B·A만 거둬간다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_cleave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "수도방위사령부… 순찰 일정… 다음 회수까지 —",
+          "Source": "L3426"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…회수?",
+          "Source": "L3432"
+        },
+        {
+          "Speaker": "char_ain_seuseung",
+          "Line": "몰라.",
+          "Source": "L3506"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT",
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "결정을 회수하고 시신의 인식표를 확인한다",
+      "Interaction": [
+        "주황색 결정 받기",
+        "인식표 여섯 개 차례로 확인",
+        "자기 인식표 감싸기"
+      ],
+      "BossId": "boss_cleave",
+      "BossPhase": "",
+      "EnvironmentState": "쓰러진 보스 잔해, 얕은 물가에 시신 여섯이 얼굴을 위로 흩어짐, 천장 틈에서 물이 쏟아짐",
+      "Props": [
+        "prop_orange_crystal",
+        "prop_dog_tags",
+        "prop_victim_bodies",
+        "prop_cleave_suit"
+      ],
+      "VFX": [
+        "crystal_glow_orange (뜨거운 주황색 결정 발광)",
+        "water_cascade_ceiling (천장 틈으로 쏟아지는 물)"
+      ],
+      "SFX": [
+        "boss_armor_collapse (아머가 쏟아지는 소리)",
+        "suit_beep (삐— 삐—)",
+        "radio_static (치지직 교신 잡음)"
+      ],
+      "Music": "차갑고 느린 진실 테마 [bgm_ep03_revelation]",
+      "GameplayEntry": "보스 격파 직후",
+      "GameplayExit": "아인이 C 인식표를 감싸는 컷",
+      "AnimationRequired": [
+        "boss_collapse",
+        "catch_object_two_hands",
+        "pick_up_dog_tag_shake_water",
+        "look_down_at_own_tag",
+        "clutch_tag"
+      ],
+      "CinematicRequired": "true: 교신·인식표 발견 핵심 연출",
+      "SaveFlags": [
+        "EP03_ORANGE_CRYSTAL_OBTAINED",
+        "EP03_SUDOBANG_TRANSMISSION_HEARD",
+        "EP03_TAGS_BA_NO_C"
+      ],
+      "Prerequisites": [
+        "EP03_SC015"
+      ],
+      "NextScene": "EP03_SC017",
+      "RequiredAssets": [
+        "env:loc_line2_flooded_track",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_cleave",
+        "prop:prop_orange_crystal",
+        "prop:prop_dog_tags",
+        "prop:prop_victim_bodies",
+        "prop:prop_cleave_suit",
+        "anim:boss_collapse",
+        "anim:catch_object_two_hands",
+        "anim:pick_up_dog_tag_shake_water",
+        "anim:look_down_at_own_tag",
+        "anim:clutch_tag",
+        "vfx:crystal_glow_orange",
+        "vfx:water_cascade_ceiling",
+        "sfx:boss_armor_collapse",
+        "sfx:suit_beep",
+        "sfx:radio_static",
+        "bgm:bgm_ep03_revelation"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC017",
+      "NovelSource": "L3536-L3557 §14 B (벙커 귀환 — 원고 중복 단락)",
+      "NovelSummary": "원고의 '14. B' 끝에 들어 있는 단락으로, 15절 첫머리(L3740-L3758)와 문장이 동일하다. 그날 밤 벙커로 돌아와 아인이 억제제 병을 내밀고, 두호가 두 손으로 받아 말도 못 한 채 인사도 없이 뛰어간다. 아인은 뒷모습을 보지 않고 마태오의 테이블 쪽에서 다음 의뢰서를 본다. 이어지는 '14. 오정길'은 다시 선로 장면이므로 이 단락의 배치(편집 잔존물인지)는 미확정.",
+      "Location": "loc_gangnam_bunker",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_duho"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_duho: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "(중복) 두호에게 억제제 전달",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_duho"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음 (중복 단락 — 게임 반영은 SC019 한 번만 권장)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커, 마태오 테이블 근처",
+      "Props": [
+        "prop_suppressant_bottle"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "원고 순서상 SC016 이후",
+      "GameplayExit": "SC018(선로)로 복귀 — 배치 TBD",
+      "AnimationRequired": [
+        "hand_over_object",
+        "child_run_off"
+      ],
+      "CinematicRequired": "false: 중복 단락 — SC019와 통합 권장",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP03_SC016"
+      ],
+      "NextScene": "EP03_SC018",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker",
+        "char:char_ain",
+        "char:char_duho",
+        "prop:prop_suppressant_bottle",
+        "anim:hand_over_object",
+        "anim:child_run_off"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC018",
+      "NovelSource": "L3558-L3737 §14 오정길",
+      "NovelSummary": "남자가 선로 한쪽에 앉아 있고, 총은 처음으로 손에서 놓여 옆에 있다. 그가 데려온 사람 중 둘이 진열대 아래에서 죽었다(카인이 하나는 끌어냈고 둘은 못 했다). 카인은 그 둘 옆에 다리가 접혀 주저앉고, 끝났다는 안도가 몸에 먼저 온 것을 알아차린다. 눈을 감겨주려 하지만 부러진 오른손도, 갈린 왼손도 말을 듣지 않아 두 번 시도하고 손을 내린다. 젖은 담배를 물고 라이터를 켜지만 불이 붙지 않아 주머니에 넣고, 무릎에 이마를 댄다. 아인은 남자에게 어제 그 사람과 안쪽 여섯도 목덜미가 파여 있었다며, 저건 지나가던 게 아니라 가지러 온 것이고 쏘지 않았어도 왔으니 그만 하라고 한다. 돌아서는 아인에게 남자가 '오정길입니다… 아무도 안 물어봐서요'라고 하고, 지워진 이름표를 단 그에게 아인은 돌아보지 않고 '아인이요'라고 답한다.",
+      "Location": "loc_line2_flooded_track",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_oh_jeonggil: 낡은 경비복(왼쪽 가슴 이름표, 글씨 지워짐)"
+      ],
+      "RequiredEquipment": [
+        "char_oh_jeonggil: K2 소총 (침수되어 발사 불가)"
+      ],
+      "StoryBeat": "씁쓸한 여운 — 죄책감의 해소와 이름",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "저건 지나가던 게 아니에요.",
+          "Source": "L3678"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "가지러 온 거예요.",
+          "Source": "L3682"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "쏘지 않았어도 왔어요.",
+          "Source": "L3692"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…오정길입니다.",
+          "Source": "L3704"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "아무도 안 물어봐서요.",
+          "Source": "L3714"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…아인이요.",
+          "Source": "L3726"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "오정길에게 걸어가 대화한다",
+      "Interaction": [
+        "오정길에게 다가가기",
+        "대화 진행",
+        "돌아서 걷기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "선로 한쪽, 시신 둘, 총은 바닥에 놓임",
+      "Props": [
+        "prop_k2_rifle",
+        "prop_victim_bodies",
+        "prop_kain_cigarette_lighter",
+        "prop_nameplate"
+      ],
+      "VFX": [
+        "lighter_spark_fail (불붙지 않는 라이터 불똥)"
+      ],
+      "SFX": [
+        "lighter_click (착— 착—)",
+        "water_ambient_track (선로 물 앰비언트)"
+      ],
+      "Music": "씁쓸한 피아노/현 여운 [bgm_ep03_aftermath]",
+      "GameplayEntry": "SC016 이후 선로",
+      "GameplayExit": "아인이 숨을 내쉬고 다시 걷는 컷",
+      "AnimationRequired": [
+        "legs_fold_sit",
+        "reach_close_eyes_fail",
+        "cigarette_lighter_fail",
+        "head_on_knees",
+        "walk_away_stop_exhale"
+      ],
+      "CinematicRequired": "true: 카인의 무언 감정 연출",
+      "SaveFlags": [
+        "EP03_OH_JEONGGIL_NAME_KNOWN",
+        "EP03_TWO_COMPANIONS_DEAD"
+      ],
+      "Prerequisites": [
+        "EP03_SC017"
+      ],
+      "NextScene": "EP03_SC019",
+      "RequiredAssets": [
+        "env:loc_line2_flooded_track",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "prop:prop_k2_rifle",
+        "prop:prop_victim_bodies",
+        "prop:prop_kain_cigarette_lighter",
+        "prop:prop_nameplate",
+        "anim:legs_fold_sit",
+        "anim:reach_close_eyes_fail",
+        "anim:cigarette_lighter_fail",
+        "anim:head_on_knees",
+        "anim:walk_away_stop_exhale",
+        "vfx:lighter_spark_fail",
+        "sfx:lighter_click",
+        "sfx:water_ambient_track",
+        "bgm:bgm_ep03_aftermath"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC019",
+      "NovelSource": "L3738-L3761 §15 두 개의 B (벙커 귀환)",
+      "NovelSummary": "그날 밤 벙커로 돌아온다. 아인이 억제제 병을 내밀자 두호가 두 손으로 받는다 — 병이 손보다 크다. 입만 몇 번 움직이다 인사도 없이 뛰어간다. 아인은 그 뒷모습을 보지 않고 이미 마태오의 테이블 쪽으로 돌아서 다음 의뢰서를 보고 있다.",
+      "Location": "loc_gangnam_bunker",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_duho"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_duho: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "짧은 감동 — 두호의 약",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_duho"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "억제제를 두호에게 건넨다",
+      "Interaction": [
+        "억제제 병 건네기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "벙커 내부, 밤",
+      "Props": [
+        "prop_suppressant_bottle"
+      ],
+      "VFX": [],
+      "SFX": [
+        "child_footsteps_run (뛰어가는 아이 발소리)"
+      ],
+      "Music": "짧고 따뜻한 모티프 [bgm_ep03_duho]",
+      "GameplayEntry": "선로에서 벙커 귀환 전환",
+      "GameplayExit": "아인이 의뢰서로 시선을 돌리는 컷",
+      "AnimationRequired": [
+        "hand_over_object",
+        "child_run_off"
+      ],
+      "CinematicRequired": "true: 짧은 감정 연출(아인은 뒷모습을 안 봄)",
+      "SaveFlags": [
+        "EP03_DUHO_SUPPRESSANT_DELIVERED"
+      ],
+      "Prerequisites": [
+        "EP03_SC018"
+      ],
+      "NextScene": "EP03_SC020",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker",
+        "char:char_ain",
+        "char:char_duho",
+        "prop:prop_suppressant_bottle",
+        "anim:hand_over_object",
+        "anim:child_run_off",
+        "sfx:child_footsteps_run",
+        "bgm:bgm_ep03_duho"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP03",
+      "SceneId": "EP03_SC020",
+      "NovelSource": "L3762-L3879 §15 두 개의 B (각인 평가소)",
+      "NovelSummary": "통로 끝 '각인 평가소'. 유진이 집행관급을 잡았다는 말에 재측정 대상이라며 발판 위로 올린다. 이틀 만에 오른 발판에서 청백색 스캔 빔이 척추를 따라 훑고, 지난번 C 구간 상단에서 멈췄던 수치가 B 경계선을 넘어간다. 유진은 옛 인식표를 서랍에 넣고 노트에 C → B를 적은 뒤 각인기로 새 B 인식표를 찍어 '축하드립니다'라며 건넨다. 카인도 B가 되어 '의뢰비 두 배다!'라며 크게 웃지만 아인은 웃지 않는다. 새 인식표를 목에 건 아인의 왼손 주머니에는 시신에서 뗀 B 인식표가 하나 더 있다. 두 개가 똑같이 생겼다. 아인은 꺼내 보지 않고 사무소 쪽으로 걸어간다.",
+      "Location": "loc_engraving_evaluation_office",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_yujin"
+      ],
+      "RequiredCostumes": [
+        "char_ain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_kain: TBD_CANON (EP03 본문에 의상 묘사 없음) + 목 인식표",
+        "char_yujin: TBD_CANON (의상 묘사 없음)"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫 (자루 172cm, 자루 끝에 천)"
+      ],
+      "StoryBeat": "승급 — 기쁨(카인)과 두 개의 B(아인)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_yujin"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_yujin",
+          "Line": "…집행관급을 잡으셨다고요.",
+          "Source": "L3772"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "그럼 재측정 대상입니다. 발판 위로.",
+          "Source": "L3776"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "목에 걸고 계신 것 주세요.",
+          "Source": "L3800"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "…축하드립니다.",
+          "Source": "L3824"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…들었냐? 의뢰비 두 배다!",
+          "Source": "L3840"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "재측정을 받고 B 인식표를 받는다",
+      "Interaction": [
+        "발판 위에 오르기",
+        "인식표 건네기",
+        "새 인식표 받기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "평가소 콘솔·홀로그램 수치 표시",
+      "Props": [
+        "prop_scan_platform",
+        "prop_engraver",
+        "prop_tablet",
+        "prop_notebook",
+        "prop_dog_tags",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "scan_beam_bluewhite (청백색 스캔 빔)",
+        "hologram_rank_gauge (C→B 경계 홀로그램 수치)"
+      ],
+      "SFX": [
+        "scan_whine (위이이잉—)",
+        "engrave_hiss (치익— 각인)"
+      ],
+      "Music": "밝은 듯 가라앉는 엔딩 테마 [bgm_ep03_rankup]",
+      "GameplayEntry": "벙커 통로 끝 평가소 진입",
+      "GameplayExit": "아인이 사무소 쪽으로 걸어가는 컷, 제3화 끝 → EP04",
+      "AnimationRequired": [
+        "step_on_scan_platform",
+        "hand_over_object",
+        "laugh_big",
+        "hang_tag_on_neck",
+        "hand_in_pocket",
+        "walk_away"
+      ],
+      "CinematicRequired": "true: 엔딩 — 주머니 속 B 인식표 연출",
+      "SaveFlags": [
+        "EP03_AIN_RANK_B",
+        "EP03_KAIN_RANK_B",
+        "EP03_AIN_KEEPS_VICTIM_B_TAG",
+        "EP03_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP03_SC019"
+      ],
+      "NextScene": "EP04_SC001",
+      "RequiredAssets": [
+        "env:loc_engraving_evaluation_office",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_yujin",
+        "prop:prop_scan_platform",
+        "prop:prop_engraver",
+        "prop:prop_tablet",
+        "prop:prop_notebook",
+        "prop:prop_dog_tags",
+        "prop:prop_scythe",
+        "anim:step_on_scan_platform",
+        "anim:hand_over_object",
+        "anim:laugh_big",
+        "anim:hang_tag_on_neck",
+        "anim:hand_in_pocket",
+        "anim:walk_away",
+        "vfx:scan_beam_bluewhite",
+        "vfx:hologram_rank_gauge",
+        "sfx:scan_whine",
+        "sfx:engrave_hiss",
+        "bgm:bgm_ep03_rankup"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_cleave",
+      "NameKo": "클레이브",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013",
+        "EP03_SC014",
+        "EP03_SC015",
+        "EP03_SC016"
+      ],
+      "NovelReasonForBattle": "전날 광장에서 벙커 쪽 누군가가 지나가던 클레이브에게 방아쇠를 당겨 놈이 돌아섰고(L2401), 패배 후 아인·카인이 셔터 경첩 공략을 세워 재도전한다. 재출격의 명시적 동기(의뢰 여부)는 본문에 없음 — 마태오: 의뢰서 아직 안 씀(L2321). 결과적으로 놈은 '지나가던 게 아니라 가지러 온 것'으로 드러난다(L3678-L3682).",
+      "ArenaLocationId": "loc_gangnam_underground_plaza",
+      "PhasesInNovel": [
+        "P1 (§8~§11, 광장): 3미터 셔터를 한 손으로 방패·둔기로 운용",
+        "전환 (§12~§13): 셔터 상실 → 장검 양손으로 광장 중앙 기둥을 베어 바닥 붕괴",
+        "P2 (§13, 지하 2호선 침수 선로): 방패 없이 장검 양손, 전면 개방"
+      ],
+      "PatternsInNovel": [
+        "셔터 정면 방어 — 힘을 넓게 퍼뜨려 공격을 되돌려줌(L2698-L2700)",
+        "밀리면 물러나며 각도 변경 — 한 손으로 충분(L2900)",
+        "셔터를 옆으로 빼 야구 배트처럼 한 손 스윙(L2822)",
+        "셔터를 낫의 궤도 안으로 되돌려 차단(L2850-L2854)",
+        "비스듬히 지렛대처럼 셔터 아래를 들어 올려 튕겨냄(L2994-L3002)",
+        "자세를 낮추고 양손으로 셔터 밀기(L3180-L3186)",
+        "장검 양손 — 광장 중앙 기둥 절단으로 천장·바닥 붕괴(L3330-L3342)",
+        "장검 든 팔 휘두르기(L3380)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "셔터 뒷면 경첩 소켓 2개 — 위쪽 반쯤 접힘, 아래쪽 갈라짐; 오른쪽 아래가 하중을 받아 먼저 나감(L2463-L2499, L3202-L3214)",
+        "목 아래 왼쪽 — 어깨에서 몸통으로 힘이 넘어가는 자리(L3366)",
+        "코어: 단면에서 어른 주먹만 한 주황색 결정(L3416)"
+      ],
+      "BreakCounterInNovel": [
+        "거리(낫 하나)·숨(흡기)·반 박자에 '네 번째 조건'(셔터가 궤도 밖)이 맞아야 걸림(L2065-L2087, L3222-L3256)",
+        "카인이 매대 다리에 발을 걸고 밀지 않고 버티면 놈이 물러날 수 없어 양손을 씀(L2906-L2938, L3170-L3190)",
+        "양손으로 밀면 셔터가 앞으로 기울어 뒤쪽 소켓 노출(L3196-L3198)",
+        "오른쪽 아래 소켓 절단 → 셔터가 자기 무게로 떨어짐(방패 파괴)(L3272-L3276)",
+        "P2: 카인이 장검 든 팔에 매달려 고정 → 목 아래 왼쪽 일격(L3376-L3398)"
+      ],
+      "EnvironmentInBattle": [
+        "무릎 높이 물, 물때 앉은 매끄러운 지하상가 타일 — 밀리면 미끄러짐",
+        "뒤집힌 매대 철제 다리 — 발 받침(타일 틈에 걸림)",
+        "진열대 — 부서지고 무너져 사람을 깔음",
+        "광장 중앙 기둥 — 절단 시 천장·바닥 붕괴",
+        "지하 2호선 선로: 가슴 높이 물, 레일(낙하 감속에 사용)"
+      ],
+      "Outcome": "목 아래 왼쪽 한 번의 일격으로 쓰러짐. 주황색 결정 회수, 수트에서 '수도방위사령부… 다음 회수까지' 교신. 셔터 뒤 시신 여섯(B·A 인식표). 아인·카인 C→B 승급.",
+      "Source": "L2571-L3428"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_gangnam_bunker_outer_passage",
+      "NameKo": "강남 벙커 외곽 통로",
+      "DescriptionKo": "배수로를 기어 나온 생존자들이 널브러진 벙커 외곽 통로. 젖은 바닥.",
+      "Scenes": [
+        "EP03_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_han_workshop",
+      "NameKo": "한 장인 작업장",
+      "DescriptionKo": "작업대(대검을 올리면 다리가 휘청)와 화로가 있는 단조 공간. 망치 소리가 벙커 통로 끝까지 울린다. 작업대 위에 코어 파편이 흩어져 있다.",
+      "Scenes": [
+        "EP03_SC003",
+        "EP03_SC004",
+        "EP03_SC005"
+      ]
+    },
+    {
+      "LocationId": "loc_mateo_office",
+      "NameKo": "마태오 사무소",
+      "DescriptionKo": "계산기와 장부가 있는 사무소. 오른쪽 아래 모니터에서 여자와 아이 둘, 케이크·촛불 영상이 반복 재생된다.",
+      "Scenes": [
+        "EP03_SC006"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_sortie_gate",
+      "NameKo": "강남역 지하상가 출격문",
+      "DescriptionKo": "벙커에서 지하상가로 나가는 출격문. 앞 바닥은 젖은 콘크리트이며 밖은 안개.",
+      "Scenes": [
+        "EP03_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_underground_plaza",
+      "NameKo": "강남역 지하상가 중앙 광장",
+      "DescriptionKo": "무릎 높이 물, 물때 앉은 지하상가 타일. 부서진 진열대, 뒤집힌 매대, 패트롤어 잔해, 기운 은색 별 크리스마스 장식, 중앙 기둥. 백화점 연결 통로 쪽에서 보스가 온다. 13절에서 기둥 절단으로 바닥이 꺼진다.",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013",
+        "EP03_SC014"
+      ]
+    },
+    {
+      "LocationId": "loc_line2_flooded_track",
+      "NameKo": "지하 2호선 침수 선로",
+      "DescriptionKo": "광장 바로 아래층의 침수 선로. 물이 가슴 높이(일부 얕은 자리 있음), 레일, 무너진 천장 틈으로 위층 물이 쏟아진다.",
+      "Scenes": [
+        "EP03_SC015",
+        "EP03_SC016",
+        "EP03_SC018"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_bunker",
+      "NameKo": "강남 벙커",
+      "DescriptionKo": "거점 내부 일반 공간. 마태오의 테이블(의뢰서)이 있다.",
+      "Scenes": [
+        "EP03_SC017",
+        "EP03_SC019"
+      ]
+    },
+    {
+      "LocationId": "loc_engraving_evaluation_office",
+      "NameKo": "각인 평가소",
+      "DescriptionKo": "벙커 통로 끝, 낡은 간판 「각인 평가소」. 스캔 발판, 청백색 스캔 빔, 홀로그램 수치, 각인기, 서랍, 노트.",
+      "Scenes": [
+        "EP03_SC020"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 낫 사용 각인자(C→B)",
+      "Scenes": [
+        "EP03_SC001",
+        "EP03_SC002",
+        "EP03_SC005",
+        "EP03_SC007",
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013",
+        "EP03_SC014",
+        "EP03_SC015",
+        "EP03_SC016",
+        "EP03_SC017",
+        "EP03_SC018",
+        "EP03_SC019",
+        "EP03_SC020"
+      ],
+      "StateChangesKo": [
+        "EP03_SC001: 오른손 손가락이 완전히 펴지지 않음(인대 늘어남 추정), 기존 부상(왼쪽 갈비뼈 실금·왼쪽 어깨·오른쪽 무릎) 누적",
+        "EP03_SC015: 낙하 중 낫을 레일에 걸어 손바닥이 갈림",
+        "EP03_SC016: 시신의 B 인식표 하나를 챙김(SC020에서 왼쪽 주머니에 있음이 드러남)",
+        "EP03_SC020: 인식표 C → B 승급 (옛 인식표는 유진이 서랍에 보관)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검 사용 각인자 파트너(C→B)",
+      "Scenes": [
+        "EP03_SC001",
+        "EP03_SC002",
+        "EP03_SC003",
+        "EP03_SC004",
+        "EP03_SC007",
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013",
+        "EP03_SC014",
+        "EP03_SC015",
+        "EP03_SC016",
+        "EP03_SC018",
+        "EP03_SC020"
+      ],
+      "StateChangesKo": [
+        "EP03_SC002: 오른손목이 반대 방향으로 꺾여 붓고 손가락 두 개 감각 없음(부러진 오른손)",
+        "EP03_SC004: 대검 재단조 — 금은 남고 선만 얇아짐",
+        "EP03_SC009: 셔터에 옆구리를 맞고 진열대 세 개를 부수며 날아감",
+        "EP03_SC010: 대검을 물속에 잃음(건지지 않음), 부러진 오른손으로 진열대를 들어 뼈가 어긋난 채 힘을 실음, 이후 맨손",
+        "EP03_SC011~SC013: 맨손으로 셔터를 받아 양 손바닥이 베이고 갈림(출혈)",
+        "EP03_SC020: 인식표 C → B 승급"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "벙커 경비복 남자(50대), 22년간 셔터를 여닫은 사람. 이름은 SC018에서 밝혀짐",
+      "Scenes": [
+        "EP03_SC001",
+        "EP03_SC007",
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC018"
+      ],
+      "StateChangesKo": [
+        "EP03_SC001: 침수된 K2를 쥔 손가락이 굳어 펴지지 않음",
+        "EP03_SC010: 무너진 진열대 아래 깔렸다가 카인이 구출",
+        "EP03_SC018: 처음으로 총을 손에서 놓음, 이름표 글씨는 지워져 있음"
+      ]
+    },
+    {
+      "CharacterId": "char_han_jangin",
+      "NameKo": "한 장인",
+      "RoleKo": "벙커의 대장장이(말이 없음)",
+      "Scenes": [
+        "EP03_SC003",
+        "EP03_SC004",
+        "EP03_SC005"
+      ],
+      "StateChangesKo": [
+        "EP03_SC005: 엄지손톱만 한 코어 파편을 한 번에 못 집고 두 번째에 집음(손 이상 징후)"
+      ]
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "사무소 운영자, 의뢰 중개",
+      "Scenes": [
+        "EP03_SC006"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "각인 평가소 담당",
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_duho",
+      "NameKo": "두호",
+      "RoleKo": "벙커의 아이(동생 약이 필요한 아이 — EP02)",
+      "Scenes": [
+        "EP03_SC017",
+        "EP03_SC019"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_cleave",
+      "NameKo": "클레이브",
+      "RoleKo": "보스 — 집행관급. 2.5미터 티타늄 아머, 셔터 방패와 장검",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013",
+        "EP03_SC014",
+        "EP03_SC015",
+        "EP03_SC016"
+      ],
+      "StateChangesKo": [
+        "EP03_SC013: 셔터(방패) 상실",
+        "EP03_SC014: 장검 양손 자세로 전환",
+        "EP03_SC016: 쓰러짐, 단면에서 주황색 결정 적출"
+      ]
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "언급만 — 각인자 코어가 산소 소모를 조절한다고 말한 적 있음 (SC001)",
+      "Scenes": [
+        "EP03_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_ain_seuseung",
+      "NameKo": "스승(아인의)",
+      "RoleKo": "언급·회상만 — '감당 못 할 건 건드리지 마라'",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC016"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "crawl_out_drain",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "배수로에서 기어 나옴(서술상 직전 동작)"
+    },
+    {
+      "Action": "sit_against_wall_exhausted",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 기대 앉아 어깨가 들썩임"
+    },
+    {
+      "Action": "look_at_own_hand",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC001",
+        "EP03_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "펴지지 않는/부은 손을 내려다봄"
+    },
+    {
+      "Action": "crouch_draw_on_floor",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC002",
+        "EP03_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "쪼그려 앉아 젖은 바닥에 손가락으로 그림"
+    },
+    {
+      "Action": "place_heavy_sword_on_bench",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "62kg 대검을 작업대에 쿵"
+    },
+    {
+      "Action": "inspect_blade_crack",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP03_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "손끝으로 금을 훑음"
+    },
+    {
+      "Action": "put_sword_in_forge",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP03_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": ""
+    },
+    {
+      "Action": "forge_hammering",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP03_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "깡깡 반복 단조 루프"
+    },
+    {
+      "Action": "lift_sword_eye_level",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": ""
+    },
+    {
+      "Action": "head_shake",
+      "Category": "gesture",
+      "Characters": [
+        "char_han_jangin",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC004",
+        "EP03_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "place_items_on_table",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "칩 올려놓기"
+    },
+    {
+      "Action": "push_items_across_table",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "칩 밀어 놓기 반복"
+    },
+    {
+      "Action": "reach_grab_miss",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP03_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "파편 집다 미끄러짐 → 두 번째에 집음"
+    },
+    {
+      "Action": "turn_away_look_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "type_calculator_write_ledger",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP03_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "왼손 계산기, 오른손 장부 동시"
+    },
+    {
+      "Action": "shift_cigarette_mouth",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP03_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 반대쪽 입꼬리로 옮김"
+    },
+    {
+      "Action": "point_at_diagram",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "아래쪽 원을 손가락으로 짚음"
+    },
+    {
+      "Action": "shoulder_scythe",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 어깨에 걸침"
+    },
+    {
+      "Action": "walk_into_fog",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "카인은 반보 뒤"
+    },
+    {
+      "Action": "wade_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "무릎 높이 물 보행"
+    },
+    {
+      "Action": "inspect_corpse_standing",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "몸을 돌리지 않고 내려다봄"
+    },
+    {
+      "Action": "grip_scythe",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫 고쳐 쥐기"
+    },
+    {
+      "Action": "half_inhale_exhale",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "숨을 반쯤 들이켰다 내쉼"
+    },
+    {
+      "Action": "boss_walk_carry_shutter",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "셔터를 세워 들고 걸어옴"
+    },
+    {
+      "Action": "grip_greatsword",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "greatsword_charge_slam",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "정면 돌진 강타"
+    },
+    {
+      "Action": "slide_back_on_water",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "물바닥에서 뼘 단위로 밀림"
+    },
+    {
+      "Action": "back_hit_pillar",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "circle_strafe_wade",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "오른쪽으로 크게 돌기"
+    },
+    {
+      "Action": "push_object_with_rifle_butt",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "K2 개머리판을 지렛대로 매대 밀기"
+    },
+    {
+      "Action": "brace_foot_on_stall",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "발뒤꿈치를 매대 다리에 걸기"
+    },
+    {
+      "Action": "boss_shutter_block",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "셔터로 정면 공격 반사/차단"
+    },
+    {
+      "Action": "boss_shutter_bat_swing",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "한 손으로 셔터를 야구 배트처럼 휘두름"
+    },
+    {
+      "Action": "knocked_flying",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "진열대 세 개를 부수며 날아감"
+    },
+    {
+      "Action": "scythe_hook_attack",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC009",
+        "EP03_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫으로 원을 그려 거는 공격"
+    },
+    {
+      "Action": "knocked_into_water",
+      "Category": "injury",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "rise_using_sword_as_cane",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 지팡이 삼아 일어남"
+    },
+    {
+      "Action": "brace_guard_vertical_sword",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검을 세로로 세워 버팀, 날을 셔터 모서리에 걸기"
+    },
+    {
+      "Action": "boss_shutter_lever_lift",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "비스듬히 지렛대처럼 셔터 아래를 들어 올림"
+    },
+    {
+      "Action": "knocked_sideways",
+      "Category": "injury",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "drop_weapon_in_water",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검이 손에서 빠져 가라앉음"
+    },
+    {
+      "Action": "reach_underwater",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "물속 대검 자루에 손끝이 닿음"
+    },
+    {
+      "Action": "lift_debris_rescue",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "부러진 오른손으로 진열대 들어 올리기"
+    },
+    {
+      "Action": "drag_person_to_wall",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP03_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "끌어내 벽 쪽으로 밀어 놓기"
+    },
+    {
+      "Action": "grab_shutter_edge_barehanded",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "셔터 아래 모서리를 양손으로 잡음"
+    },
+    {
+      "Action": "low_brace_stance",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무릎 굽히고 등 세우고 목 집어넣기"
+    },
+    {
+      "Action": "boss_two_hand_push",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "자세 낮추고 두 번째 손을 셔터에 얹음"
+    },
+    {
+      "Action": "scythe_low_grip_stance",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 낮게 쥠"
+    },
+    {
+      "Action": "scythe_hook_pull",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "걸고 당겨 소켓 뜯기"
+    },
+    {
+      "Action": "boss_inhale_windup",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "어깨 말리고 허리 비틀고 축 잡기(흡기)"
+    },
+    {
+      "Action": "release_grip_look_away",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "stand_frozen",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "boss_longsword_two_hand_cut",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검 양손으로 기둥 베기"
+    },
+    {
+      "Action": "fall_with_floor_collapse",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "슬래브째 한 층 낙하"
+    },
+    {
+      "Action": "scythe_hook_rail_slow_fall",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 레일에 걸어 낙하 감속"
+    },
+    {
+      "Action": "land_knee_buckle",
+      "Category": "traversal",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "grab_arm_hang",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "보스의 장검 든 팔에 매달림"
+    },
+    {
+      "Action": "boss_arm_swing_drag",
+      "Category": "boss",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "매달린 카인째 팔을 휘두름"
+    },
+    {
+      "Action": "boss_collapse",
+      "Category": "death",
+      "Characters": [
+        "char_cleave"
+      ],
+      "Scenes": [
+        "EP03_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "2.5m 아머가 선로 위로 쏟아짐"
+    },
+    {
+      "Action": "catch_object_two_hands",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "뜨거운 결정 받기"
+    },
+    {
+      "Action": "pick_up_dog_tag_shake_water",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": ""
+    },
+    {
+      "Action": "look_down_at_own_tag",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "clutch_tag",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "목 인식표를 손으로 감쌈"
+    },
+    {
+      "Action": "hand_over_object",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP03_SC017",
+        "EP03_SC019",
+        "EP03_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "child_run_off",
+      "Category": "locomotion",
+      "Characters": [
+        "char_duho"
+      ],
+      "Scenes": [
+        "EP03_SC017",
+        "EP03_SC019"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "legs_fold_sit",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC018"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "다리가 접혀 주저앉음"
+    },
+    {
+      "Action": "reach_close_eyes_fail",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "눈 감겨주려다 두 손 모두 안 됨"
+    },
+    {
+      "Action": "cigarette_lighter_fail",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "젖은 담배, 라이터 세 번 실패"
+    },
+    {
+      "Action": "head_on_knees",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC018"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "walk_away_stop_exhale",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC018"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "step_on_scan_platform",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "laugh_big",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "hang_tag_on_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "DonorLikely": false,
+      "NotesKo": ""
+    },
+    {
+      "Action": "hand_in_pocket",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "walk_away",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP03_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_k2_rifle",
+      "NameKo": "K2 소총(침수, 오정길)",
+      "Scenes": [
+        "EP03_SC001",
+        "EP03_SC007",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_floor_diagram",
+      "NameKo": "바닥 손가락 도식(셔터·경첩 원 두 개)",
+      "Scenes": [
+        "EP03_SC002",
+        "EP03_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_greatsword",
+      "NameKo": "카인의 대검(62kg 티타늄, 금 감)",
+      "Scenes": [
+        "EP03_SC003",
+        "EP03_SC004",
+        "EP03_SC009",
+        "EP03_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_workbench",
+      "NameKo": "작업대",
+      "Scenes": [
+        "EP03_SC003",
+        "EP03_SC004",
+        "EP03_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_forge",
+      "NameKo": "화로",
+      "Scenes": [
+        "EP03_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_nano_chips",
+      "NameKo": "나노 칩",
+      "Scenes": [
+        "EP03_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_core_fragments",
+      "NameKo": "코어 파편",
+      "Scenes": [
+        "EP03_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_calculator",
+      "NameKo": "계산기",
+      "Scenes": [
+        "EP03_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_ledger",
+      "NameKo": "장부",
+      "Scenes": [
+        "EP03_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_unlit_cigarette",
+      "NameKo": "불 안 붙인 담배(마태오)",
+      "Scenes": [
+        "EP03_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_monitor_video",
+      "NameKo": "모니터(가족·케이크 반복 영상)",
+      "Scenes": [
+        "EP03_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_scythe",
+      "NameKo": "아인의 낫(자루 172cm, 자루 끝 천)",
+      "Scenes": [
+        "EP03_SC007",
+        "EP03_SC009",
+        "EP03_SC012",
+        "EP03_SC015",
+        "EP03_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_display_stand",
+      "NameKo": "진열대",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_overturned_stall",
+      "NameKo": "뒤집힌 매대(철제 다리)",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_patroller_wreck",
+      "NameKo": "패트롤어 잔해",
+      "Scenes": [
+        "EP03_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_christmas_decor",
+      "NameKo": "크리스마스 장식(은색 별)",
+      "Scenes": [
+        "EP03_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_victim_bodies",
+      "NameKo": "목덜미·등이 도려내진 시신",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC013",
+        "EP03_SC016",
+        "EP03_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_shutter",
+      "NameKo": "셔터(3미터 철판, 뒷면 경첩 소켓 2개와 갈고리)",
+      "Scenes": [
+        "EP03_SC008",
+        "EP03_SC009",
+        "EP03_SC010",
+        "EP03_SC011",
+        "EP03_SC012",
+        "EP03_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_plaza_pillar",
+      "NameKo": "광장 중앙 기둥",
+      "Scenes": [
+        "EP03_SC009",
+        "EP03_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_longsword",
+      "NameKo": "클레이브의 장검",
+      "Scenes": [
+        "EP03_SC014",
+        "EP03_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_rail",
+      "NameKo": "선로 레일",
+      "Scenes": [
+        "EP03_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_orange_crystal",
+      "NameKo": "주황색 결정(어른 주먹만)",
+      "Scenes": [
+        "EP03_SC016"
+      ]
+    },
+    {
+      "PropId": "prop_dog_tags",
+      "NameKo": "금속 인식표(B/A/C)",
+      "Scenes": [
+        "EP03_SC016",
+        "EP03_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_cleave_suit",
+      "NameKo": "클레이브의 수트(흉부 신호음·교신)",
+      "Scenes": [
+        "EP03_SC016"
+      ]
+    },
+    {
+      "PropId": "prop_suppressant_bottle",
+      "NameKo": "억제제 병",
+      "Scenes": [
+        "EP03_SC017",
+        "EP03_SC019"
+      ]
+    },
+    {
+      "PropId": "prop_kain_cigarette_lighter",
+      "NameKo": "카인의 젖은 담배갑·라이터",
+      "Scenes": [
+        "EP03_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_nameplate",
+      "NameKo": "오정길의 이름표(글씨 지워짐)",
+      "Scenes": [
+        "EP03_SC018"
+      ]
+    },
+    {
+      "PropId": "prop_scan_platform",
+      "NameKo": "스캔 발판",
+      "Scenes": [
+        "EP03_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_engraver",
+      "NameKo": "각인기",
+      "Scenes": [
+        "EP03_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_tablet",
+      "NameKo": "유진의 태블릿",
+      "Scenes": [
+        "EP03_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_notebook",
+      "NameKo": "평가 노트",
+      "Scenes": [
+        "EP03_SC020"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP03_SC001",
+      "QuestionKo": "EP02 전투와 재전투 사이 경과 일수 불명확: 1절은 탈출 직후, 2절은 '어제', 3절 단조는 '다음 날' 완료, 그런데 7절은 '광장은 어제 그대로/어제 못 빠져나온 사람'. 각 씬의 시각(TimeOfDay)도 대부분 미기재."
+    },
+    {
+      "Scene": "EP03_SC001",
+      "QuestionKo": "아인·카인·한 장인·마태오·유진·두호의 EP03 의상 묘사 없음(전 씬 RequiredCostumes TBD)."
+    },
+    {
+      "Scene": "EP03_SC002",
+      "QuestionKo": "아인이 바닥에 경첩을 그리는 장소 미기재(벙커 외곽 통로인지 불명)."
+    },
+    {
+      "Scene": "EP03_SC002",
+      "QuestionKo": "'…한 점에 몰아넣는 건, 내가 해.'(L2149) 화자 표기 없음 — 문맥상 아인으로 처리."
+    },
+    {
+      "Scene": "EP03_SC006",
+      "QuestionKo": "마태오 사무소를 찾아가 '…예/네/알아요'라고 답하는 인물이 누구인지(아인/카인/둘 다) 미기재."
+    },
+    {
+      "Scene": "EP03_SC008",
+      "QuestionKo": "재출격의 명시적 동기(의뢰·보상 여부) 미기재 — 마태오는 의뢰서를 아직 안 썼다고만 함."
+    },
+    {
+      "Scene": "EP03_SC016",
+      "QuestionKo": "신호음·교신이 나온 '수트 흉부'가 누구의 수트인지(클레이브 잔해로 추정) 및 교신 화자 미기재."
+    },
+    {
+      "Scene": "EP03_SC017",
+      "QuestionKo": "L3536-L3554(벙커 귀환·두호) 단락이 '14. B' 안에 있고 15절 첫머리(L3740-L3758)와 동일. 이어지는 '14. 오정길'은 다시 선로 장면 — 편집 잔존 중복인지, 배치 순서가 어떻게 되는지 확정 필요."
+    },
+    {
+      "Scene": "EP03_SC018",
+      "QuestionKo": "'그가 데려온 사람 중 둘이 죽었다… 카인이 하나는 끌어냈고, 둘은 못 했다'(L3568) — 6절은 '세 사람이 안개 속으로'(L2521), 9절은 진열대 아래 오정길 한 명만 묘사. 동행자 수·신원 불명확."
+    },
+    {
+      "Scene": "EP03_SC018",
+      "QuestionKo": "집필 노트는 '남자는 죽는다(보상 없음)'(L3931)라고 하나 본문에서 오정길은 생존해 이름을 밝힘. 본문 기준으로 처리."
+    },
+    {
+      "Scene": "EP03_SC019",
+      "QuestionKo": "아인이 두호에게 준 억제제 병을 어디서 얻었는지 EP03 본문에 없음."
+    },
+    {
+      "Scene": "EP03_SC010",
+      "QuestionKo": "카인의 대검은 선로 위층 광장 물속에 남은 채 EP03이 끝남 — 회수 여부/시점 미기재."
+    },
+    {
+      "Scene": "EP03_SC018",
+      "QuestionKo": "집필 노트의 '카인이 챙긴 탄창'(L3942)은 본문에 등장하지 않음."
+    }
+  ]
+}

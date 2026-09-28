@@ -1,0 +1,2418 @@
+{
+  "EpisodeId": "EP27",
+  "TitleKo": "경고",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      14494,
+      14971
+    ]
+  },
+  "SummaryKo": "일행은 결정이 벽이 되어 가는 정비 갱도를 내려가 발사대 바로 아래 지하 공간에 닿는다. 노바 1호 귀환 캡슐 잔해를 골격으로 수백~수천의 코어가 쌓인 결정의 산 중심에 우주복 차림의 차한별이 박혀 있고, 아인이 이름을 부르자 산이 눈을 뜬다. 산의 말은 두 겹 — 수확을 반기는 위의 목소리(부르는 것)와 「오지 마라」라고 경고하는 차한별의 목소리다. 차한별은 일행이 싸워서 온 것이 아니라 관문마다 익을 만큼의 싸움으로 길러지며 배송되었다고 밝힌다. 사람이 배양기이고 등급은 송신 출력(C는 방 안, A는 산 너머, SS는 하늘까지)이며, 수거는 모자란 코어를 모아 발사대라는 증폭기로 쏘아 올리기 위한 자재 수집이었고, 다 익은 것은 제 발로 걸어온다는 것. 그러나 차한별은 걸어온 것도 걸어 나가는 것도 너희라고 말한다. 산이 일어나 강남 클레이브의 셔터, 골짜기의 공간 접힘, 무음의 사냥꾼의 소리 지우기를 팔로 재현하고, 이어 아인의 원을 수백 배로 키운 원의 팔이 나온다. 일행은 원의 안쪽으로 파고들고, 세라의 촉매가 바닥나 간다. 차한별이 안에서 팔을 반 박자씩 붙들며 「지금」을 외치고, 여섯이 된 협공 끝에 아인이 심장이 부풀어 결정이 가장 얇아지는 순간 단 한 번의 원으로 심장을 벤다. 산이 꺼지고 차한별은 「고맙다」와 함께 신호는 심장이 아니라는 경고를 끝맺지 못하고 꺼진다. 박동은 멎었지만 아인의 목덜미는 아직 뛰고, 세라는 넷의 그래프가 아직 자라며 이 싸움이 마지막 익힘이었다고 확인한다. 머리 위 탑이 노래하기 시작하고 일행은 갱도를 거슬러 뛴다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC001",
+      "NovelSource": "L14494-L14527 §1 갱도",
+      "NovelSummary": "갱도는 발사대의 뿌리로 내려간다. 내려갈수록 결정이 이끼처럼, 힘줄처럼, 마침내 벽 자체가 되고, 랜턴 빛이 벽에 스며 맥박처럼 번진다. 세라는 수치를 붙이지 않고 「숨 아껴」라고만 한다. 갱도 중간에 이 년 전 하늘에서 돌아온 화물을 끌어내린 견인 레일·절단 볼트 자국이 남아 있다. 레일 끝에서 탑의 뿌리가 박힌 지하 공간이 열리고, 그것이 있다.",
+      "Location": "loc_jeongbi_gangdo",
+      "TimeOfDay": "밤 (EP26 황혼에 진입, 지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "하강 — 화물이 지나간 길",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…숨 아껴.",
+          "Source": "L14514"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "갱도를 내려가 지하 공간에 도달한다",
+      "Interaction": [
+        "갱도 하강",
+        "견인 레일·절단 볼트 흔적 조사"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "결정이 자라 벽이 된 갱도, 랜턴 빛이 맥박처럼 번짐",
+      "Props": [
+        "prop_lantern",
+        "prop_gyeonin_rail"
+      ],
+      "VFX": [
+        "결정 벽 맥동 발광",
+        "목덜미 동조 발광"
+      ],
+      "SFX": [
+        "심장 박동(점점 크게)",
+        "발소리 반향"
+      ],
+      "Music": "하강 드론",
+      "GameplayEntry": "EP26 갱도 진입 직후",
+      "GameplayExit": "지하 공간 도달",
+      "AnimationRequired": [
+        "descend_walk_lantern"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_SHAFT_DESCENDED"
+      ],
+      "Prerequisites": [
+        "EP26_COMPLETE"
+      ],
+      "NextScene": "EP27_SC002",
+      "RequiredAssets": [
+        "env:loc_jeongbi_gangdo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_lantern",
+        "prop:prop_gyeonin_rail",
+        "anim:descend_walk_lantern",
+        "vfx:결정 벽 맥동 발광",
+        "vfx:목덜미 동조 발광",
+        "sfx:심장 박동(점점 크게)",
+        "sfx:발소리 반향",
+        "bgm:하강 드론"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC002",
+      "NovelSource": "L14528-L14547 §2 돌아온 것",
+      "NovelSummary": "지하 공간의 절반을 채운 결정의 산. 노바 1호 귀환 캡슐 잔해가 골격이고 찢긴 내열판과 좌석 프레임이 화석처럼 비치며, 수거되어 바쳐진 수백~수천의 코어가 층층이 맥동한다. 산의 중심 조종석 자리에 우주복 잔해를 두르고 결정과 반쯤 융합된, 얼굴만 온전한 사람 — 우주로 보낸 일곱 중 첫째가 박혀 있다. 아인이 「차한별」이라 부르자 산이 눈을 뜬다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [
+        "차한별: 우주복 잔해(결정 융합)"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "최종 보스 공개",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…차한별.",
+          "Source": "L14540"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "결정의 산과 대면한다",
+      "Interaction": [],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "산만 한 심장, 층층이 맥동하는 코어, 캡슐 잔해 골격",
+      "Props": [
+        "prop_gwihwan_capsule",
+        "prop_ujubok_jangyeon"
+      ],
+      "VFX": [
+        "코어 층 맥동",
+        "결정 속 캡슐 잔해 실루엣",
+        "눈 뜨는 발광"
+      ],
+      "SFX": [
+        "거대 심장 박동"
+      ],
+      "Music": "최종 보스 공개 테마",
+      "GameplayEntry": "지하 공간 진입",
+      "GameplayExit": "산이 눈을 뜨면 SC003",
+      "AnimationRequired": [
+        "look_up_awe",
+        "boss_mountain_eye_open"
+      ],
+      "CinematicRequired": "true: 최종 보스 공개 컷신",
+      "SaveFlags": [
+        "EP27_CHA_HANBYEOL_FOUND"
+      ],
+      "Prerequisites": [
+        "EP27_SC001"
+      ],
+      "NextScene": "EP27_SC003",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_gwihwan_capsule",
+        "prop:prop_ujubok_jangyeon",
+        "anim:look_up_awe",
+        "anim:boss_mountain_eye_open",
+        "vfx:코어 층 맥동",
+        "vfx:결정 속 캡슐 잔해 실루엣",
+        "vfx:눈 뜨는 발광",
+        "sfx:거대 심장 박동",
+        "bgm:최종 보스 공개 테마"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC003",
+      "NovelSource": "L14548-L14585 §3 두 목소리",
+      "NovelSummary": "말이 코어를 직접 두드리는 공명으로 온다. 위의 겹은 산 전체의 낮고 넓은 목소리로 「돌아왔구나. 잘 익은 것들이」라 반기고, 밑의 겹은 갈라진 사람의 목소리로 「오지 마라, 늦기 전에」라 한다. 이 년 전 강남 훈련장에서 첫 보스의 포효에 두 목소리를 들었던 아인이 이번엔 모두가 듣는 앞에서 목소리가 둘이라 말한다. 차한별의 겹은 난수 방송의 최초 발신원이 자신이었고 경고는 실패했다며, 너희는 싸워서 온 것이 아니라 길러지며 배송되었다고 말한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "경고 — 두 목소리",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_bureuneun_geot",
+          "Line": "돌아왔구나. 잘 익은 것들이.",
+          "Source": "L14554"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "오지…… 마라…… 늦기 전에……",
+          "Source": "L14562"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…목소리가, 둘이에요.",
+          "Source": "L14566"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "방송을…… 들었느냐……",
+          "Source": "L14574"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "너희는…… 싸워서 온 것이…… 아니다……",
+          "Source": "L14578"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "길러지며…… 배송된 것이다……",
+          "Source": "L14582"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "두 목소리를 듣는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "뼈로 듣는 공명",
+      "Props": [],
+      "VFX": [
+        "음성 공명 파동(두 겹 색 구분)"
+      ],
+      "SFX": [
+        "저음 공명(위)",
+        "갈라진 음성(밑)"
+      ],
+      "Music": "불협화 두 성부",
+      "GameplayEntry": "SC002 연속",
+      "GameplayExit": "「배송」 폭로 후 SC004",
+      "AnimationRequired": [
+        "boss_face_contort"
+      ],
+      "CinematicRequired": "true: 두 겹 음성 연출",
+      "SaveFlags": [
+        "EP27_TWO_VOICES_HEARD"
+      ],
+      "Prerequisites": [
+        "EP27_SC002"
+      ],
+      "NextScene": "EP27_SC004",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "anim:boss_face_contort",
+        "vfx:음성 공명 파동(두 겹 색 구분)",
+        "sfx:저음 공명(위)",
+        "sfx:갈라진 음성(밑)",
+        "bgm:불협화 두 성부"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC004",
+      "NovelSource": "L14586-L14619 §4 배송",
+      "NovelSummary": "그 말이 이 년을 한 줄로 꿴다. 강남의 클레이브, 여의도의 에이지스, 터널의 레비아탄, 골짜기의 그것 — 모두 죽을힘을 다하면 간신히 이길 강도였고, 관문은 충분히 익은 것만 통과시키는 체였다. 싸워서 뚫은 길이 아니라 먹이며 데려온 길. 카인은 「택배」냐고 평온하게 묻고 위의 목소리가 「그렇다」고 답한다. 세라가 무엇을 배송하느냐 묻자 밑의 목소리가 「모자라니까, 저것은 혼자 자라지 못한다」고 한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "진실 1 — 관문은 체였다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "우리가 택배라 이거지. 이 년 걸린.",
+          "Source": "L14600"
+        },
+        {
+          "Speaker": "char_bureuneun_geot",
+          "Line": "그렇다.",
+          "Source": "L14602"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…뭘 배송하는 건데.",
+          "Source": "L14606"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "모자라니까.",
+          "Source": "L14612"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "저것은…… 혼자 자라지 못한다……",
+          "Source": "L14616"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "진실을 듣는다",
+      "Interaction": [
+        "대화 진행",
+        "역대 관문 보스 회상 몽타주(제안)"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "정지된 대치",
+      "Props": [
+        "prop_kain_janggeom"
+      ],
+      "VFX": [
+        "회상 몽타주 필터"
+      ],
+      "SFX": [
+        "공명"
+      ],
+      "Music": "불협화 두 성부",
+      "GameplayEntry": "SC003 연속",
+      "GameplayExit": "SC005",
+      "AnimationRequired": [
+        "grip_sword_adjust"
+      ],
+      "CinematicRequired": "true: 강남·여의도·터널·골짜기 관문 회상 몽타주",
+      "SaveFlags": [
+        "EP27_TRUTH_DELIVERY"
+      ],
+      "Prerequisites": [
+        "EP27_SC003"
+      ],
+      "NextScene": "EP27_SC005",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_kain_janggeom",
+        "anim:grip_sword_adjust",
+        "vfx:회상 몽타주 필터",
+        "sfx:공명",
+        "bgm:불협화 두 성부"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC005",
+      "NovelSource": "L14620-L14647 §4-2 배양기",
+      "NovelSummary": "차한별의 겹이 관찰자의 언어로 신경계가 있어야 자라고 흙 없이 자라는 씨앗은 없다고 말한다. 세라가 사람이 배양기라는 것을 완성한다. 익을수록 멀리 간다 — 목의 것은 자라면 소리를 내어 C는 방 안까지, A는 산 너머까지 닿고, 아인이 묻자 SS는 하늘까지라고 답한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "진실 2 — 사람은 배양기, 등급은 도달 거리",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "흙 없이 자라는 씨앗은…… 없다……",
+          "Source": "L14626"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…사람이 배양기라는 거야.",
+          "Source": "L14630"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "C는 방 안까지…… A는 산 너머까지",
+          "Source": "L14638"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…SS는.",
+          "Source": "L14640"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "하늘까지.",
+          "Source": "L14644"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "진실을 듣는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "정지된 대치",
+      "Props": [],
+      "VFX": [
+        "목덜미 코어 발광"
+      ],
+      "SFX": [
+        "공명"
+      ],
+      "Music": "불협화 두 성부",
+      "GameplayEntry": "SC004 연속",
+      "GameplayExit": "SC006",
+      "AnimationRequired": [
+        "boss_face_contort"
+      ],
+      "CinematicRequired": "true: 대화 컷신",
+      "SaveFlags": [
+        "EP27_TRUTH_INCUBATOR"
+      ],
+      "Prerequisites": [
+        "EP27_SC004"
+      ],
+      "NextScene": "EP27_SC006",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "anim:boss_face_contort",
+        "vfx:목덜미 코어 발광",
+        "sfx:공명",
+        "bgm:불협화 두 성부"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC006",
+      "NovelSource": "L14648-L14679 §4-3 모으는 이유",
+      "NovelSummary": "등급의 정체는 실력도 성숙도만도 아닌 출력 — 목의 것은 처음부터 송신기였고 등급은 도달 거리였다. 류가 수거를 묻자, 모자란 것들을 모아 합친다, 하나로는 하늘에 못 닿지만 백 개면 닿는다는 답이 온다. 폐차장의 줄, 남태령의 분필, 인계 지점의 수레, 표본 보관실 캡슐 — 수거는 자재 수집이었다. 세라가 「발사대」라 하자 증폭기라는 답과 함께 모은 것을 하나로 묶어 쏘아 올린다는 말이 온다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "진실 3 — 수거는 자재 수집, 발사대는 증폭기",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…그럼 수거는.",
+          "Source": "L14658"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…발사대.",
+          "Source": "L14670"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "진실을 듣는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "정지된 대치",
+      "Props": [],
+      "VFX": [
+        "코어 층 맥동"
+      ],
+      "SFX": [
+        "공명"
+      ],
+      "Music": "불협화 두 성부",
+      "GameplayEntry": "SC005 연속",
+      "GameplayExit": "SC007",
+      "AnimationRequired": [],
+      "CinematicRequired": "true: 대화 컷신",
+      "SaveFlags": [
+        "EP27_TRUTH_AMPLIFIER"
+      ],
+      "Prerequisites": [
+        "EP27_SC005"
+      ],
+      "NextScene": "EP27_SC007",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "vfx:코어 층 맥동",
+        "sfx:공명",
+        "bgm:불협화 두 성부"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC007",
+      "NovelSource": "L14680-L14723 §4-4 걸어오게 하는 것",
+      "NovelSummary": "아인이 우리는 어떠냐고 묻자, 너희는 옮길 필요가 없고 다 익은 것은 제 발로 온다는 답이 온다. 익지 않은 것은 실어 날라야 했지만 다 익은 것은 이유와 문과 이길 만한 관문만 주면 걸어온다. 카인이 여기 온 이유가 우리가 정한 게 아니었다고 하자 밑의 목소리가 처음으로 크게 「아니다, 너희가 정했다」고 자르고, 걸어온 것도 걸어 나가는 것도 너희라고 한다. 위의 겹이 「그러니, 오라」로 덮고 산이 일어선다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "선택의 주체 — 걸어 나가는 것도 너희다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "그럼 우리는.",
+          "Source": "L14682"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "우리가 정한 게 아니었다는 거네.",
+          "Source": "L14702"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "아니다.",
+          "Source": "L14704"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "너희가…… 정했다……",
+          "Source": "L14708"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "걸어 나가는 것도…… 너희다……",
+          "Source": "L14714"
+        },
+        {
+          "Speaker": "char_bureuneun_geot",
+          "Line": "— 그러니, 오라.",
+          "Source": "L14718"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "진실을 듣고 전투를 맞는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "산이 일어섬",
+      "Props": [],
+      "VFX": [
+        "산 기동 발광"
+      ],
+      "SFX": [
+        "지진음",
+        "공명 최고조"
+      ],
+      "Music": "최종 보스전 인트로",
+      "GameplayEntry": "SC006 연속",
+      "GameplayExit": "산이 일어서면 전투 개시",
+      "AnimationRequired": [
+        "boss_mountain_rise"
+      ],
+      "CinematicRequired": "true: 산이 일어서는 컷신",
+      "SaveFlags": [
+        "EP27_CHOICE_IS_OURS"
+      ],
+      "Prerequisites": [
+        "EP27_SC006"
+      ],
+      "NextScene": "EP27_SC008",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "anim:boss_mountain_rise",
+        "vfx:산 기동 발광",
+        "sfx:지진음",
+        "sfx:공명 최고조",
+        "bgm:최종 보스전 인트로"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC008",
+      "NovelSource": "L14724-L14747 §5 개전",
+      "NovelSummary": "결정의 산이 형태를 바꿔 수백의 코어가 표면에 떠올라 빛나고 사면에서 팔이 자란다. 첫 팔은 강남 클레이브처럼 셔터를 방패로 세우고, 둘째 팔은 골짜기 하늘의 것처럼 공간의 주름을 접고, 셋째 팔은 무음의 사냥꾼처럼 소리를 지운다. 수거된 코어에 수거된 기술이 들어 있어, 이 산은 넘어온 모든 것을 순서대로 다시 꺼내 든다. 류가 복습이라며 이긴 방법도 전부 기억한다고 하고 다섯이 흩어진다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "이 년의 복습 시작",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…복습이네요.",
+          "Source": "L14738"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "전부 이겨 본 것들이에요.",
+          "Source": "L14742"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "이긴 방법도 전부 기억하고요.",
+          "Source": "L14742"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "재현된 역대 보스 기술 팔에 대응한다",
+      "Interaction": [
+        "산개",
+        "팔 패턴 식별(셔터/접힘/무음)"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P1",
+      "EnvironmentState": "코어가 눈처럼 빛나는 산, 사면의 팔들",
+      "Props": [
+        "prop_ssangdangeom"
+      ],
+      "VFX": [
+        "코어 부상 발광",
+        "셔터 방패",
+        "공간 접힘 왜곡",
+        "무음 장막"
+      ],
+      "SFX": [
+        "셔터 금속음",
+        "공간 접힘음",
+        "무음 구간(사운드 소거)"
+      ],
+      "Music": "최종 보스전 P1 — 역대 보스 모티프 메들리",
+      "GameplayEntry": "전투 개시",
+      "GameplayExit": "SC009 연속",
+      "AnimationRequired": [
+        "boss_arm_shutter_shield",
+        "boss_arm_space_fold",
+        "boss_arm_silence",
+        "draw_twin_daggers",
+        "party_scatter"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_FINAL_BATTLE_STARTED"
+      ],
+      "Prerequisites": [
+        "EP27_SC007"
+      ],
+      "NextScene": "EP27_SC009",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_ssangdangeom",
+        "anim:boss_arm_shutter_shield",
+        "anim:boss_arm_space_fold",
+        "anim:boss_arm_silence",
+        "anim:draw_twin_daggers",
+        "anim:party_scatter",
+        "vfx:코어 부상 발광",
+        "vfx:셔터 방패",
+        "vfx:공간 접힘 왜곡",
+        "vfx:무음 장막",
+        "sfx:셔터 금속음",
+        "sfx:공간 접힘음",
+        "sfx:무음 구간(사운드 소거)",
+        "bgm:최종 보스전 P1 — 역대 보스 모티프 메들리"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC009",
+      "NovelSource": "L14748-L14774 §6 복습",
+      "NovelSummary": "셔터 방패의 경첩을 카인의 장검이 꿰고, 무음의 장막 안에서 아인의 수신호가 넷의 자리를 가르며, 접히는 공간의 이음매를 임계 너머의 눈이 먼저 밟는다. 여덟 지역이 가르친 것이 한 전장에서 동시에 쓰이는 마지막 시험. 그러나 산의 중심이 열리며 아인의 원 — 원심으로 베고 끝자락에 힘을 싣는 궤적 — 을 수백 배로 키운 거대한 원의 팔이 나오고, 다섯이 그 원의 안쪽으로 몸을 던진다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "마지막 시험 — 수백 배의 아인",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "역대 패턴을 파훼하고 원의 팔 등장에 대응한다",
+      "Interaction": [
+        "셔터 경첩 소켓 공략(카인)",
+        "무음 구간 수신호 지휘",
+        "접힘 이음매 선행 밟기",
+        "거대 원 팔 등장 시 안쪽으로 회피"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P1",
+      "EnvironmentState": "역대 패턴 동시 전개 → 중심이 열리며 거대한 원의 팔",
+      "Props": [
+        "prop_kain_janggeom",
+        "prop_nat"
+      ],
+      "VFX": [
+        "경첩 파쇄",
+        "이음매 선 표시",
+        "거대 원 궤적"
+      ],
+      "SFX": [
+        "금속 파쇄",
+        "거대 참격 풍압"
+      ],
+      "Music": "최종 보스전 P1 → P2 전환(아인 테마 거대화)",
+      "GameplayEntry": "SC008 연속",
+      "GameplayExit": "원의 팔 등장 → P2",
+      "AnimationRequired": [
+        "socket_pierce_longsword",
+        "hand_signal_silence",
+        "step_on_fold_seam",
+        "boss_arm_giant_circle",
+        "dive_inside_circle"
+      ],
+      "CinematicRequired": "true: 원의 팔 등장 컷",
+      "SaveFlags": [
+        "EP27_CIRCLE_ARM_APPEARED"
+      ],
+      "Prerequisites": [
+        "EP27_SC008"
+      ],
+      "NextScene": "EP27_SC010",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_kain_janggeom",
+        "prop:prop_nat",
+        "anim:socket_pierce_longsword",
+        "anim:hand_signal_silence",
+        "anim:step_on_fold_seam",
+        "anim:boss_arm_giant_circle",
+        "anim:dive_inside_circle",
+        "vfx:경첩 파쇄",
+        "vfx:이음매 선 표시",
+        "vfx:거대 원 궤적",
+        "sfx:금속 파쇄",
+        "sfx:거대 참격 풍압",
+        "bgm:최종 보스전 P1 → P2 전환(아인 테마 거대화)"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC010",
+      "NovelSource": "L14775-L14794 §7 원의 안쪽",
+      "NovelSummary": "원은 바깥이 가장 빠르고 중심이 가장 느리다. 낫잡이의 규칙이 반대로 다섯을 살려, 거대한 원의 안쪽 — 궤적 중심 가까이 — 가 유일한 안전지대가 된다. 아인의 외침에 다섯이 산의 품으로 파고든다. 품 안에서는 산 표면에서 코어가 사출되고(아스널의 복습), 세라의 결계가 촉매를 물처럼 태우며 받아 가방이 눈에 띄게 가벼워진다. 잔량을 묻자 세라는 처음으로 수치를 거부한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "원의 안쪽이 안전지대",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "붙어! 원 안으로!",
+          "Source": "L14781"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "묻지 마!",
+          "Source": "L14789"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "거대한 원의 안쪽에 붙어 버틴다",
+      "Interaction": [
+        "원 궤적 중심부 유지(안전지대)",
+        "코어 사출 회피/결계로 흡수"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P2",
+      "EnvironmentState": "원 궤적 안쪽 안전지대, 코어 사출",
+      "Props": [
+        "prop_chokmae_gabang"
+      ],
+      "VFX": [
+        "코어 사출 탄",
+        "결계 파쇄·재전개",
+        "촉매 연소"
+      ],
+      "SFX": [
+        "사출음",
+        "결계 깨짐",
+        "병 따는 소리"
+      ],
+      "Music": "최종 보스전 P2",
+      "GameplayEntry": "원의 팔 등장 직후",
+      "GameplayExit": "SC011 연속",
+      "AnimationRequired": [
+        "dive_inside_circle",
+        "boss_core_eject",
+        "barrier_burn_catalyst"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_P2_INSIDE_CIRCLE"
+      ],
+      "Prerequisites": [
+        "EP27_SC009"
+      ],
+      "NextScene": "EP27_SC011",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_chokmae_gabang",
+        "anim:dive_inside_circle",
+        "anim:boss_core_eject",
+        "anim:barrier_burn_catalyst",
+        "vfx:코어 사출 탄",
+        "vfx:결계 파쇄·재전개",
+        "vfx:촉매 연소",
+        "sfx:사출음",
+        "sfx:결계 깨짐",
+        "sfx:병 따는 소리",
+        "bgm:최종 보스전 P2"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC011",
+      "NovelSource": "L14795-L14818 §8 지금",
+      "NovelSummary": "실마리는 적의 안에서 온다. 거대한 원의 팔이 세 번째 궤적을 그리려는 순간 중심의 얼굴이 일그러지며 팔이 반 박자 멎고, 밑의 목소리가 「지금」이라 한다. 류의 단검이 그 반 박자에 원의 팔꿈치 관절을 꿰고, 두 번째 정지에 카인의 장검이 사출구 하나를 부순다. 위의 목소리가 「조용히 해라」, 중심이 「싫다」로 맞서고, 차한별은 자신이 이 배의 선장이자 마지막 명령권자라 한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "내부의 협력자",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "지금……",
+          "Source": "L14801"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "지금……!",
+          "Source": "L14809"
+        },
+        {
+          "Speaker": "char_bureuneun_geot",
+          "Line": "조용히 해라,",
+          "Source": "L14813"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "싫다,",
+          "Source": "L14813"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "나는…… 선장이다…… 이 배의……",
+          "Source": "L14815"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "차한별의 「지금」 신호에 맞춰 반격한다",
+      "Interaction": [
+        "「지금」 음성 신호 = 반 박자 정지 창 → 공격 입력"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P2",
+      "EnvironmentState": "원의 팔 반 박자 정지",
+      "Props": [
+        "prop_ssangdangeom",
+        "prop_kain_janggeom"
+      ],
+      "VFX": [
+        "팔 정지 경련",
+        "관절 파쇄",
+        "사출구 파괴"
+      ],
+      "SFX": [
+        "「지금」 음성 큐",
+        "관절 파쇄음"
+      ],
+      "Music": "최종 보스전 P2 — 반격 모티프",
+      "GameplayEntry": "SC010 연속",
+      "GameplayExit": "SC012",
+      "AnimationRequired": [
+        "boss_arm_halt",
+        "dagger_joint_pierce",
+        "break_ejection_port",
+        "boss_face_contort"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_CAPTAIN_HOLDS"
+      ],
+      "Prerequisites": [
+        "EP27_SC010"
+      ],
+      "NextScene": "EP27_SC012",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_ssangdangeom",
+        "prop:prop_kain_janggeom",
+        "anim:boss_arm_halt",
+        "anim:dagger_joint_pierce",
+        "anim:break_ejection_port",
+        "anim:boss_face_contort",
+        "vfx:팔 정지 경련",
+        "vfx:관절 파쇄",
+        "vfx:사출구 파괴",
+        "sfx:「지금」 음성 큐",
+        "sfx:관절 파쇄음",
+        "bgm:최종 보스전 P2 — 반격 모티프"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC012",
+      "NovelSource": "L14819-L14836 §9 마지막 협공",
+      "NovelSummary": "밖의 다섯과 안의 하나, 여섯이 싸운다. 차한별의 정지가 박자를 만들면 다섯이 밟는다. 세라가 마지막 촉매 두 병으로 산의 표적 인식을 두 번 훔치고, 류가 봉인된 관절 틈을 넓히고, 카인이 중심으로 가는 길목의 팔 하나를 장검째 몸으로 문다(모루). 길이 열려 차한별의 가슴 — 산 전체의 심장 — 까지 여덟 걸음. 남은 팔 전부가 중심을 지키려 회수되며 아인 하나를 향해 떨어지고, 「오지 마라」와 「오라」가 한 소리로 겹친다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "여섯의 협공 — 여덟 걸음",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "오지 마라,",
+          "Source": "L14833"
+        },
+        {
+          "Speaker": "char_bureuneun_geot",
+          "Line": "오라,",
+          "Source": "L14833"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "심장까지 여덟 걸음의 길을 연다",
+      "Interaction": [
+        "동료 연계(표적 인식 교란·관절 확장·모루)",
+        "중심으로 돌진"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P3",
+      "EnvironmentState": "중심으로 가는 길, 모든 팔의 회수 낙하",
+      "Props": [
+        "prop_chokmae_gabang",
+        "prop_kain_janggeom"
+      ],
+      "VFX": [
+        "표적 교란 발광",
+        "팔 일제 낙하"
+      ],
+      "SFX": [
+        "「오지 마라/오라」 중첩 음성"
+      ],
+      "Music": "최종 보스전 P3",
+      "GameplayEntry": "SC011 연속",
+      "GameplayExit": "SC013",
+      "AnimationRequired": [
+        "steal_target_lock",
+        "dagger_joint_pierce",
+        "anvil_body_block",
+        "boss_all_arms_fall"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_PATH_TO_HEART_OPEN"
+      ],
+      "Prerequisites": [
+        "EP27_SC011"
+      ],
+      "NextScene": "EP27_SC013",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_chokmae_gabang",
+        "prop:prop_kain_janggeom",
+        "anim:steal_target_lock",
+        "anim:dagger_joint_pierce",
+        "anim:anvil_body_block",
+        "anim:boss_all_arms_fall",
+        "vfx:표적 교란 발광",
+        "vfx:팔 일제 낙하",
+        "sfx:「오지 마라/오라」 중첩 음성",
+        "bgm:최종 보스전 P3"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC013",
+      "NovelSource": "L14837-L14864 §10 한 번",
+      "NovelSummary": "아인은 멈추지 않는다. 떨어지는 궤적들이 선으로 서고, 그 사이 좁은 한 번뿐인 길이 있다. 사거리 — 여덟 걸음의 마지막 두 걸음. 타이밍 — 심장이 다음 박동으로 부풀어 결정이 가장 얇아지는 순간, 그것을 아는 선장이 「지금—!」을 외친다. 이 년 치의 원의 끝자락 4분의 1이 부풀어 오른 심장 정중앙에 떨어진다. 한 번이었고, 두 번은 필요 없었다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "낫",
+        "장검",
+        "쌍단검",
+        "촉매 가방·결계"
+      ],
+      "StoryBeat": "한 번 — 사거리와 타이밍",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_cha_hanbyeol",
+        "char_bureuneun_geot"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "지금—!",
+          "Source": "L14851"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "심장의 박동 순간에 단 한 번의 원을 떨어뜨린다",
+      "Interaction": [
+        "궤적 사이 경로 돌파",
+        "사거리(마지막 두 걸음) 진입",
+        "「지금—!」 큐에 맞춘 단일 타격"
+      ],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "P3",
+      "EnvironmentState": "부풀어 오르는 심장, 수렴하는 소리와 빛",
+      "Props": [
+        "prop_nat"
+      ],
+      "VFX": [
+        "궤적 선 시각화",
+        "심장 팽창·결정 박화",
+        "낫 끝자락 섬광"
+      ],
+      "SFX": [
+        "심장 박동",
+        "서걱"
+      ],
+      "Music": "최종 보스전 클라이맥스 → 정지",
+      "GameplayEntry": "SC012 연속",
+      "GameplayExit": "결정타 → BOSS_RESULT",
+      "AnimationRequired": [
+        "thread_the_gap_run",
+        "scythe_final_circle"
+      ],
+      "CinematicRequired": "true: 이 년 치 원 회상 몽타주와 결정타",
+      "SaveFlags": [
+        "EP27_HEART_STRUCK"
+      ],
+      "Prerequisites": [
+        "EP27_SC012"
+      ],
+      "NextScene": "EP27_SC014",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_cha_hanbyeol",
+        "char:char_bureuneun_geot",
+        "prop:prop_nat",
+        "anim:thread_the_gap_run",
+        "anim:scythe_final_circle",
+        "vfx:궤적 선 시각화",
+        "vfx:심장 팽창·결정 박화",
+        "vfx:낫 끝자락 섬광",
+        "sfx:심장 박동",
+        "sfx:서걱",
+        "bgm:최종 보스전 클라이맥스 → 정지"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC014",
+      "NovelSource": "L14865-L14900 §11 꺼지는 산",
+      "NovelSummary": "수백의 코어가 바깥쪽부터 등을 끄고 잠드는 집처럼 하나씩 꺼지고, 팔들이 무너져 사면이 되며, 위의 목소리는 사라졌다기보다 아주 먼 곳으로 물러난다. 빛을 조금 문 중심의 얼굴 앞에 아인이 서고, 한 겹이 된 목소리가 「고맙다」, 항해일지를 읽었느냐고 묻는다. 차한별은 미안하다는 말을 이 년 동안 연습했다며 마지막 경고 하나를 성공하게 해 달라고, 결정에 갇힌 손가락으로 위 — 지상의 탑 — 를 가리키며 「심장은 껐다, 그런데 신호는 심장이 아니다, 신호는……」에서 꺼진다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_cha_hanbyeol"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "마지막 경고 — 끝맺지 못한 문장",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_cha_hanbyeol"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "……고맙다.",
+          "Source": "L14875"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "항해일지는…… 읽었느냐……",
+          "Source": "L14879"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…읽었어요.",
+          "Source": "L14881"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "미안하다…… 는 말을……",
+          "Source": "L14883"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "심장은…… 껐다…… 그런데……",
+          "Source": "L14891"
+        },
+        {
+          "Speaker": "char_cha_hanbyeol",
+          "Line": "신호는……",
+          "Source": "L14893"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "차한별의 최후를 듣는다",
+      "Interaction": [],
+      "BossId": "boss_nano_nova_core",
+      "BossPhase": "",
+      "EnvironmentState": "꺼져 가는 코어, 무너진 팔, 빛을 조금 문 얼굴",
+      "Props": [
+        "prop_ujubok_jangyeon"
+      ],
+      "VFX": [
+        "코어 순차 소등",
+        "얼굴 잔광 소멸"
+      ],
+      "SFX": [
+        "잦아드는 공명",
+        "정적"
+      ],
+      "Music": "진혼 — 선장의 테마",
+      "GameplayEntry": "결정타 직후",
+      "GameplayExit": "빛이 꺼지면 SC015",
+      "AnimationRequired": [
+        "boss_cores_dim",
+        "finger_point_up"
+      ],
+      "CinematicRequired": "true: 차한별 최후 컷신",
+      "SaveFlags": [
+        "EP27_BOSS_NANO_NOVA_CORE_DEFEATED",
+        "EP27_CHA_HANBYEOL_DIED"
+      ],
+      "Prerequisites": [
+        "EP27_SC013"
+      ],
+      "NextScene": "EP27_SC015",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_cha_hanbyeol",
+        "prop:prop_ujubok_jangyeon",
+        "anim:boss_cores_dim",
+        "anim:finger_point_up",
+        "vfx:코어 순차 소등",
+        "vfx:얼굴 잔광 소멸",
+        "sfx:잦아드는 공명",
+        "sfx:정적",
+        "bgm:진혼 — 선장의 테마"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC015",
+      "NovelSource": "L14901-L14928 §12 멎지 않는 것",
+      "NovelSummary": "재난의 첫날부터 세계 밑바닥에 깔려 있던 거대한 박동이 멎고, 귀가 멍할 만큼 완전한 고요가 온다. 카인은 장검을 짚고 주저앉고, 류는 벽에 등을 붙이고 미끄러져 앉고, 세라는 빈 촉매 가방을 내려놓는다. 아인만 서서 듣는다 — 목덜미가 아직 뛰고 있다. 더 가늘고 높은, 탑의 뿌리를 타고 위에서 내려오는 박자. 지상의 발사대 쪽에서 웅웅거림이 시작되고, 아인은 심장은 껐는데 뭐가 켜졌다고 말한다.",
+      "Location": "loc_balsadae_jiha",
+      "TimeOfDay": "밤 (지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "멎지 않는 박동 — 반전의 예고",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…세라.",
+          "Source": "L14921"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "심장은 껐는데.",
+          "Source": "L14925"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "뭐가 켜졌어요.",
+          "Source": "L14925"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "고요 속에서 새 박자의 근원을 듣는다",
+      "Interaction": [
+        "청각 집중 — 위쪽 방향 식별"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "심장 없는 고요, 어둠 속 꺼진 산",
+      "Props": [
+        "prop_kain_janggeom",
+        "prop_chokmae_gabang"
+      ],
+      "VFX": [
+        "아인 목덜미만 미세 발광"
+      ],
+      "SFX": [
+        "완전한 정적",
+        "위에서 내려오는 가는 고음 박자",
+        "저음 웅웅거림 시작"
+      ],
+      "Music": "무음 → 불길한 고음 드론",
+      "GameplayEntry": "SC014 연속",
+      "GameplayExit": "SC016",
+      "AnimationRequired": [
+        "collapse_sit_exhausted",
+        "drop_bag",
+        "listen_look_up"
+      ],
+      "CinematicRequired": "true: 정적 연출",
+      "SaveFlags": [
+        "EP27_SOMETHING_TURNED_ON"
+      ],
+      "Prerequisites": [
+        "EP27_SC014"
+      ],
+      "NextScene": "EP27_SC016",
+      "RequiredAssets": [
+        "env:loc_balsadae_jiha",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_kain_janggeom",
+        "prop:prop_chokmae_gabang",
+        "anim:collapse_sit_exhausted",
+        "anim:drop_bag",
+        "anim:listen_look_up",
+        "vfx:아인 목덜미만 미세 발광",
+        "sfx:완전한 정적",
+        "sfx:위에서 내려오는 가는 고음 박자",
+        "sfx:저음 웅웅거림 시작",
+        "bgm:무음 → 불길한 고음 드론"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP27",
+      "SceneId": "EP27_SC016",
+      "NovelSource": "L14929-L14971 §13 신호는",
+      "NovelSummary": "세라가 계측기를 열고 삼 초 만에 냉정이 무너진다. 그래프가 넷 다 아직 자라고 있고, 이 싸움이 마지막 익힘이었다. 발사대는 로켓을 쏘는 탑이 아니라 다 익은 코어 네 개를 기다려 온 것 — 끝맺지 못한 문장의 다음 단어를 위의 웅웅거림이 발음한다. 세라는 등대에 불이 들어가기 전에 탑에서 멀어져야 한다며, 다섯이 갱도를 거슬러 뛰고 머리 위 탑이 노래하기 시작한다. (화 끝 및 최종화 예고 포함)",
+      "Location": "loc_jeongbi_gangdo",
+      "TimeOfDay": "밤 → 새벽 전 (지하, EP28 §1은 새벽)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "마지막 익힘 — 탑이 노래한다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…그래프가.",
+          "Source": "L14935"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "아직 자라고 있어. 넷 다.",
+          "Source": "L14939"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "마지막 익힘이었어.",
+          "Source": "L14939"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…나가야 해.",
+          "Source": "L14947"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "등대에 불이 들어가기 전에.",
+          "Source": "L14951"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_WALK",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "갱도를 거슬러 지상으로 뛴다",
+      "Interaction": [
+        "갱도 역주행 이동(전투 없음)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "어둠에 잠기는 죽은 산, 점점 커지는 탑의 노래",
+      "Props": [
+        "prop_sonmok_gyecheukgi"
+      ],
+      "VFX": [
+        "계측기 그래프 상승",
+        "목덜미 발광 강화"
+      ],
+      "SFX": [
+        "탑의 웅웅거림(점점 크게)",
+        "달리는 발소리"
+      ],
+      "Music": "긴박한 탈출 테마",
+      "GameplayEntry": "SC015 연속",
+      "GameplayExit": "지상 출구 → EP28",
+      "AnimationRequired": [
+        "open_wrist_gauge",
+        "run_escape"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP27_FINAL_RIPENING",
+        "EP27_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP27_SC015"
+      ],
+      "NextScene": "EP28_SC001",
+      "RequiredAssets": [
+        "env:loc_jeongbi_gangdo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_sonmok_gyecheukgi",
+        "anim:open_wrist_gauge",
+        "anim:run_escape",
+        "vfx:계측기 그래프 상승",
+        "vfx:목덜미 발광 강화",
+        "sfx:탑의 웅웅거림(점점 크게)",
+        "sfx:달리는 발소리",
+        "bgm:긴박한 탈출 테마"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_nano_nova_core",
+      "NameKo": "나노-노바 코어 (결정의 산·차한별)",
+      "Scenes": [
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC014"
+      ],
+      "NovelReasonForBattle": "노바 1호가 싣고 돌아온 「부르는 것」이 수거된 코어로 지은 결정의 산. 다 익은 코어(일행)를 발사대 증폭기로 쏘아 올리기 위해 「그러니, 오라」며 일어섬. 일행은 부름이 시작된 곳의 스위치/심장을 끄러 옴.",
+      "ArenaLocationId": "loc_balsadae_jiha",
+      "PhasesInNovel": [
+        "복습: 셔터 방패(강남 클레이브)·공간 접힘(골짜기 하늘의 것)·소리 지우기(무음의 사냥꾼) 팔 재현(§5~6)",
+        "원의 팔: 아인의 원을 수백 배로 키운 거대한 원 + 코어 사출 — 원의 안쪽이 안전지대(§6~7)",
+        "선장의 반란: 차한별이 안에서 팔을 반 박자씩 멎게 하며 「지금」 — 여섯의 협공, 모든 팔 회수 낙하, 심장 박동 순간 단일 타격(§8~10)"
+      ],
+      "PatternsInNovel": [
+        "셔터를 방패처럼 세움",
+        "공간의 주름을 접음",
+        "소리를 지움(무음 장막)",
+        "거대한 원 참격(바깥이 빠르고 중심이 느림)",
+        "표면 코어 사출(아스널의 복습)",
+        "남은 팔 전부를 회수해 중심을 지키며 접근자에게 일제 낙하"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "셔터 방패의 경첩 소켓",
+        "접힌 공간의 이음매",
+        "원의 팔 팔꿈치 관절",
+        "사출구",
+        "중심 — 차한별의 가슴(산 전체의 심장, 박동으로 부풀 때 결정이 가장 얇아짐)"
+      ],
+      "BreakCounterInNovel": [
+        "차한별의 내부 정지(반 박자) → 류가 팔꿈치 관절 관통, 카인이 사출구 파괴",
+        "세라가 촉매로 표적 인식을 두 번 훔침",
+        "카인의 모루(팔 하나를 몸으로 물어 고정)",
+        "사거리(여덟 걸음의 마지막 두 걸음) + 타이밍(심장 팽창 순간, 「지금—!」)에 단 한 번의 원"
+      ],
+      "EnvironmentInBattle": [
+        "발사대 바로 아래 지하 공간",
+        "노바 1호 귀환 캡슐 잔해 골격",
+        "원 궤적 안쪽 안전지대",
+        "결정 벽"
+      ],
+      "Outcome": "코어가 바깥부터 차례로 꺼지고 팔이 무너짐. 위의 목소리는 먼 곳으로 물러남. 차한별은 「신호는 심장이 아니다」 경고를 끝맺지 못하고 꺼짐. 박동은 멎었으나 지상의 탑이 켜짐.",
+      "Source": "L14528-L14897"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_jeongbi_gangdo",
+      "NameKo": "정비 갱도",
+      "DescriptionKo": "발사대 뿌리로 내려가는 갱도. 내려갈수록 콘크리트 위 결정이 이끼→힘줄→벽 자체로 자람. 랜턴 빛이 맥박처럼 번짐. 견인 레일·절단된 볼트·대형 화물을 끌어내린 자국.",
+      "Scenes": [
+        "EP27_SC001",
+        "EP27_SC016"
+      ]
+    },
+    {
+      "LocationId": "loc_balsadae_jiha",
+      "NameKo": "발사대 아래 지하 공간 (결정의 산)",
+      "DescriptionKo": "탑의 뿌리가 박힌 지하의 방. 공간 절반을 채운 결정의 산 — 노바 1호 귀환 캡슐 잔해가 골격, 찢긴 내열판·좌석 프레임, 층층이 맥동하는 수백의 코어. 중심의 조종석 자리에 차한별.",
+      "Scenes": [
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC014",
+        "EP27_SC015"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 두 목소리를 듣고, 단 한 번의 원으로 산의 심장을 벰",
+      "Scenes": [
+        "EP27_SC001",
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC014",
+        "EP27_SC015",
+        "EP27_SC016"
+      ],
+      "StateChangesKo": [
+        "EP27_SC013: 결정타(심장 정중앙에 낫 끝자락 1/4)",
+        "EP27_SC015: 박동이 멎은 뒤에도 목덜미가 위에서 오는 박자로 뜀"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검(「모루」). 셔터 방패 소켓·사출구 파괴·팔을 몸으로 물어 길을 엶",
+      "Scenes": [
+        "EP27_SC001",
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC015",
+        "EP27_SC016"
+      ],
+      "StateChangesKo": [
+        "EP27_SC015: 장검을 짚고 주저앉음"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "쌍단검. 원의 팔꿈치 관절을 꿰고 봉인된 관절 틈을 넓힘",
+      "Scenes": [
+        "EP27_SC001",
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC015",
+        "EP27_SC016"
+      ],
+      "StateChangesKo": [
+        "EP27_SC015: 벽에 등을 붙이고 미끄러져 앉음"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "결계·촉매. 촉매를 소진하며 사출을 받고 표적 인식을 훔침",
+      "Scenes": [
+        "EP27_SC001",
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC015",
+        "EP27_SC016"
+      ],
+      "StateChangesKo": [
+        "EP27_SC010: 촉매를 물처럼 태워 가방이 눈에 띄게 가벼워짐",
+        "EP27_SC012: 마지막 촉매 두 병 사용",
+        "EP27_SC015: 빈 촉매 가방을 내려놓음",
+        "EP27_SC016: 이 년 치의 냉정이 무너짐(목소리 떨림)"
+      ]
+    },
+    {
+      "CharacterId": "char_cha_hanbyeol",
+      "NameKo": "차한별",
+      "RoleKo": "노바 1호 선장, 우주로 보낸 일곱 중 첫째. 결정의 산 중심에 반쯤 융합된 「밑의 목소리」 — 경고자·내부 협력자",
+      "Scenes": [
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013",
+        "EP27_SC014"
+      ],
+      "StateChangesKo": [
+        "EP27_SC002: 우주복 잔해, 결정과 반쯤 융합, 얼굴만 온전",
+        "EP27_SC011: 안에서 팔을 반 박자씩 붙듦",
+        "EP27_SC014: 빛이 꺼짐(사망) — 마지막 경고를 끝맺지 못함"
+      ]
+    },
+    {
+      "CharacterId": "char_bureuneun_geot",
+      "NameKo": "부르는 것 (위의 목소리)",
+      "RoleKo": "산 전체가 내는 낮고 넓은 목소리. 수확을 반기며 「오라」고 부름",
+      "Scenes": [
+        "EP27_SC002",
+        "EP27_SC003",
+        "EP27_SC004",
+        "EP27_SC005",
+        "EP27_SC006",
+        "EP27_SC007",
+        "EP27_SC008",
+        "EP27_SC009",
+        "EP27_SC010",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC013"
+      ],
+      "StateChangesKo": [
+        "EP27_SC014: 사라졌다기보다 아주 먼 곳으로 물러남"
+      ]
+    },
+    {
+      "CharacterId": "char_seuseung",
+      "NameKo": "스승",
+      "RoleKo": "(언급) 「낫잡이를 잡으려면 낫잡이의 품으로」",
+      "Scenes": [
+        "EP27_SC010"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "descend_walk_lantern",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "랜턴을 들고 갱도를 내려감"
+    },
+    {
+      "Action": "look_up_awe",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "거대한 존재를 올려다봄"
+    },
+    {
+      "Action": "boss_mountain_eye_open",
+      "Category": "boss",
+      "Characters": [
+        "char_cha_hanbyeol"
+      ],
+      "Scenes": [
+        "EP27_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "산(과 중심의 얼굴)이 눈을 뜸"
+    },
+    {
+      "Action": "boss_face_contort",
+      "Category": "boss",
+      "Characters": [
+        "char_cha_hanbyeol"
+      ],
+      "Scenes": [
+        "EP27_SC003",
+        "EP27_SC005",
+        "EP27_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결정 속 온전한 얼굴이 고통/안간힘으로 일그러짐(표정 애니메이션)"
+    },
+    {
+      "Action": "grip_sword_adjust",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP27_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "장검을 고쳐 쥠"
+    },
+    {
+      "Action": "boss_mountain_rise",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결정의 산이 일어서며 코어가 떠오르고 사면에서 팔이 자람"
+    },
+    {
+      "Action": "boss_arm_shutter_shield",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "첫 팔: 셔터를 방패처럼 세움(강남 클레이브)"
+    },
+    {
+      "Action": "boss_arm_space_fold",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "둘째 팔: 공간의 주름을 접음(골짜기 하늘의 것)"
+    },
+    {
+      "Action": "boss_arm_silence",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "셋째 팔: 소리를 지움(무음의 사냥꾼)"
+    },
+    {
+      "Action": "draw_twin_daggers",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP27_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쌍단검을 뽑음"
+    },
+    {
+      "Action": "party_scatter",
+      "Category": "combat",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "흩어짐"
+    },
+    {
+      "Action": "socket_pierce_longsword",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP27_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검으로 경첩 소켓을 꿰음"
+    },
+    {
+      "Action": "hand_signal_silence",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP27_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "무음 장막 안에서 수신호로 자리를 가름"
+    },
+    {
+      "Action": "step_on_fold_seam",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP27_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "접힌 공간의 이음매를 먼저 밟음"
+    },
+    {
+      "Action": "boss_arm_giant_circle",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아인의 원을 수백 배로 키운 거대한 원의 팔"
+    },
+    {
+      "Action": "dive_inside_circle",
+      "Category": "combat",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC009",
+        "EP27_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원의 안쪽(궤적 중심)으로 파고듦"
+    },
+    {
+      "Action": "boss_core_eject",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "표면의 코어 사출(아스널의 복습)"
+    },
+    {
+      "Action": "barrier_burn_catalyst",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "촉매를 태워 결계 유지, 깨질 때마다 새 병을 땀"
+    },
+    {
+      "Action": "boss_arm_halt",
+      "Category": "boss",
+      "Characters": [
+        "char_cha_hanbyeol"
+      ],
+      "Scenes": [
+        "EP27_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "원의 팔이 반 박자 멎음(내부에서 붙듦)"
+    },
+    {
+      "Action": "dagger_joint_pierce",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP27_SC011",
+        "EP27_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "팔꿈치 관절을 단검으로 꿰음"
+    },
+    {
+      "Action": "break_ejection_port",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP27_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검으로 사출구 파괴"
+    },
+    {
+      "Action": "steal_target_lock",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "촉매로 산의 표적 인식을 훔침"
+    },
+    {
+      "Action": "anvil_body_block",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP27_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "「모루」 — 팔 하나를 장검째 몸으로 물어 버팀"
+    },
+    {
+      "Action": "boss_all_arms_fall",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "남은 팔 전부를 회수하며 아인 하나를 향해 떨어뜨림"
+    },
+    {
+      "Action": "thread_the_gap_run",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP27_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "떨어지는 궤적 사이의 한 번뿐인 길로 여덟 걸음 돌진"
+    },
+    {
+      "Action": "scythe_final_circle",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP27_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "부풀어 오른 심장 정중앙에 낫 끝자락 1/4 — 단 한 번"
+    },
+    {
+      "Action": "boss_cores_dim",
+      "Category": "boss",
+      "Characters": [
+        "char_bureuneun_geot"
+      ],
+      "Scenes": [
+        "EP27_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "코어가 바깥쪽부터 하나씩 꺼지고 팔이 무너져 사면이 됨"
+    },
+    {
+      "Action": "finger_point_up",
+      "Category": "gesture",
+      "Characters": [
+        "char_cha_hanbyeol"
+      ],
+      "Scenes": [
+        "EP27_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결정에 갇힌 손가락이 위(지상의 탑)를 가리킴"
+    },
+    {
+      "Action": "collapse_sit_exhausted",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain",
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP27_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "주저앉음 / 벽에 등을 붙이고 미끄러져 앉음"
+    },
+    {
+      "Action": "drop_bag",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "빈 촉매 가방을 내려놓음"
+    },
+    {
+      "Action": "listen_look_up",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP27_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "서서 듣다 천장 너머를 올려다봄"
+    },
+    {
+      "Action": "open_wrist_gauge",
+      "Category": "interaction",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "손목 계측기를 열고 닫음"
+    },
+    {
+      "Action": "run_escape",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP27_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "갱도를 거슬러 뜀"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_lantern",
+      "NameKo": "랜턴",
+      "Scenes": [
+        "EP27_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_gyeonin_rail",
+      "NameKo": "견인 레일·절단된 볼트",
+      "Scenes": [
+        "EP27_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_gwihwan_capsule",
+      "NameKo": "노바 1호 귀환 캡슐 잔해",
+      "Scenes": [
+        "EP27_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_ujubok_jangyeon",
+      "NameKo": "차한별의 우주복 잔해·명찰",
+      "Scenes": [
+        "EP27_SC002",
+        "EP27_SC014"
+      ]
+    },
+    {
+      "PropId": "prop_nat",
+      "NameKo": "아인의 낫",
+      "Scenes": [
+        "EP27_SC009",
+        "EP27_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_kain_janggeom",
+      "NameKo": "카인의 장검",
+      "Scenes": [
+        "EP27_SC004",
+        "EP27_SC009",
+        "EP27_SC011",
+        "EP27_SC012",
+        "EP27_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_ssangdangeom",
+      "NameKo": "류의 쌍단검",
+      "Scenes": [
+        "EP27_SC008",
+        "EP27_SC011"
+      ]
+    },
+    {
+      "PropId": "prop_chokmae_gabang",
+      "NameKo": "세라의 촉매 가방",
+      "Scenes": [
+        "EP27_SC010",
+        "EP27_SC012",
+        "EP27_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_sonmok_gyecheukgi",
+      "NameKo": "세라의 손목 계측기",
+      "Scenes": [
+        "EP27_SC016"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP27_SC001",
+      "QuestionKo": "§1 「다섯의 목덜미」 등 이 화 전반의 「다섯」 표기 — 동행은 넷(인원 불일치, EP24 TBD 참조)."
+    },
+    {
+      "Scene": "EP27_SC006",
+      "QuestionKo": "§4-3의 굵은 글씨 대사(「모자란 것들을…… 모아서……」, 「증폭기다.」 등)가 위/밑 어느 목소리인지 원고에 명시 없음 — 대사 화자 배정 TBD."
+    },
+    {
+      "Scene": "EP27_SC007",
+      "QuestionKo": "「너희는…… 옮길 필요가 없다……」 등 §4-4 전반부 굵은 글씨 대사의 화자(위/밑) 원고 미명시."
+    },
+    {
+      "Scene": "EP27_SC009",
+      "QuestionKo": "「신호 간격, 밝기의 관리, 걸어 내리는 낫, 이중의 고정, 감각기의 봉쇄」 등 나열된 기술이 각각 어떤 팔/패턴에 대응하는지 원고 미상세."
+    },
+    {
+      "Scene": "EP27_SC010",
+      "QuestionKo": "「잔량!」을 외친 인물이 원고에 명시되지 않음."
+    },
+    {
+      "Scene": "EP27_SC016",
+      "QuestionKo": "§13은 지하 공간에서 계측 후 갱도를 거슬러 뜀 — 장면 장소를 갱도(탈출 구간)로 배정. 계측 장면은 지하 공간(loc_balsadae_jiha)일 가능성. 또한 「넷 다」 그래프 vs 「다섯이 갱도를 거슬러 뛰었다」 인원 불일치."
+    },
+    {
+      "Scene": "EP27_SC008",
+      "QuestionKo": "최종 보스전에서 플레이어 조작 인물(아인 고정 vs 파티 전환)은 원고가 정하지 않음 — char_ain은 각색 제안. BossPhase P1~P3 구분도 원고 절 구분에 따른 제안."
+    }
+  ]
+}

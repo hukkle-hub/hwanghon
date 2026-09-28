@@ -1,0 +1,1992 @@
+{
+  "EpisodeId": "EP21",
+  "TitleKo": "제21화 — 배 속",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      12497,
+      12893
+    ]
+  },
+  "SummaryKo": "관문 안쪽 경사로를 내려간 일행은 지열로 전기가 살아 있고 붉은 안개가 아래로 흐르는 계룡 지하에 든다. 첫 층 정비창에서는 나노가 구동계를 점거한 장비들이 헛동작을 반복하고, 서 하사가 붙여 준 이름 없는 안내인이 도면을 안내한다. 장비 군단과의 교전에서 카인의 장검이 첫 실전을 치르고, 세라는 배수로 통로가 이 년 전에 뚫렸다고 알고 있어 의심을 산다. 주 격납고 한가운데에는 주포탑 여섯·부포탑 열둘의 나노 사출식 복합체 '아스널 오버로드'가 있다. 원형 탑엔 뒤가 없어 류의 우회가 무너지고, 엄폐물이 줄어들다 전탄 제압에 안내인이 휘말려 죽는다. 넷은 부포탑 하나를 파괴하고 퇴각한다. 그날 밤 안내인이 남긴 종이에서 사격 간격이 4·5·6초 세 종류뿐임을 읽은 아인은 밤새 나머지 간격을 세어, 탑 밑까지 스물세 걸음의 길과 '밑은 장검'이라는 해법을 찾는다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC001",
+      "NovelSource": "L12497-L12529 §1 산의 배 속",
+      "NovelSummary": "관문 안쪽, 차량 두 대 폭의 경사로가 세 번 꺾여 내려간다. 절반쯤 살아 있는 초록 유도등과 아무도 돌리지 않는 전기 — 세라가 묻지도 않았는데 '지열 자체 발전'이라고 너무 빨리 답해 류의 시선을 산다. 아래로는 발목 높이의 붉은 안개가 강처럼 흘러내린다.",
+      "Location": "loc_gyeryong_ramp",
+      "TimeOfDay": "새벽 돌입 직후(지하)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "하강 — 무언가가 깊은 곳에서 숨을 들이쉼",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "자체 발전이야. 지열.",
+          "Source": "L12518"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "경사로를 따라 내려간다",
+      "Interaction": [
+        "유도등 따라 이동"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "초록 점선 유도등, 기름 냄새, 발목 높이로 아래로 흐르는 붉은 안개",
+      "Props": [],
+      "VFX": [
+        "바닥을 흐르는 붉은 안개",
+        "초록 유도등 점선"
+      ],
+      "SFX": [
+        "깊은 곳의 들숨 같은 저음",
+        "발소리 반향"
+      ],
+      "Music": "지하 하강 앰비언트",
+      "GameplayEntry": "관문 진입 직후",
+      "GameplayExit": "첫 격납고 층 도착",
+      "AnimationRequired": [
+        "walk_downhill"
+      ],
+      "CinematicRequired": "false: 이동 파트",
+      "SaveFlags": [
+        "EP21_RAMP_DESCENDED"
+      ],
+      "Prerequisites": [
+        "EP20_SC015"
+      ],
+      "NextScene": "EP21_SC002",
+      "RequiredAssets": [
+        "env:loc_gyeryong_ramp",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "anim:walk_downhill",
+        "vfx:바닥을 흐르는 붉은 안개",
+        "vfx:초록 유도등 점선",
+        "sfx:깊은 곳의 들숨 같은 저음",
+        "sfx:발소리 반향",
+        "bgm:지하 하강 앰비언트"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC002",
+      "NovelSource": "L12530-L12549 §2 살아 있는 기지",
+      "NovelSummary": "첫 격납고 층은 정비창이다. 사람 없는 크레인·리프트·유압 절단기·다관절 암·무한궤도 운반차가 결정이 빛나는 관절로 헛동작을 반복한다. 세라는 기계엔 신경이 없으니 감염이 아니라 나노의 '점거'라고 설명한다.",
+      "Location": "loc_gyeryong_maintenance_depot",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "세계관 확장 — 기계를 점거한 나노",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…감염된 건가. 기계가.",
+          "Source": "L12538"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "기계엔 신경이 없어. 감염이 아니라 점거야.",
+          "Source": "L12542"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "놈들이 우리 대신 기계를 쓰는 거야.",
+          "Source": "L12546"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "움직이는 정비창을 관찰하며 통과 경로를 본다",
+      "Interaction": [
+        "헛도는 장비 관찰"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "천장 크레인, 정비 리프트, 공구 렉, 헛도는 장비들, 관절 틈새의 흐린 결정 빛",
+      "Props": [],
+      "VFX": [
+        "관절 틈새 결정 발광"
+      ],
+      "SFX": [
+        "유압 절단기 개폐음",
+        "궤도 헛도는 소리"
+      ],
+      "Music": "기계적 불안",
+      "GameplayEntry": "정비창 진입",
+      "GameplayExit": "안내인 소개로 전환",
+      "AnimationRequired": [],
+      "CinematicRequired": "true: 정비창 와이드 공개",
+      "SaveFlags": [
+        "EP21_DEPOT_SEEN"
+      ],
+      "Prerequisites": [
+        "EP21_SC001"
+      ],
+      "NextScene": "EP21_SC003",
+      "RequiredAssets": [
+        "env:loc_gyeryong_maintenance_depot",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "vfx:관절 틈새 결정 발광",
+        "sfx:유압 절단기 개폐음",
+        "sfx:궤도 헛도는 소리",
+        "bgm:기계적 불안"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC003",
+      "NovelSource": "L12550-L12575 §3 도면을 아는 사람",
+      "NovelSummary": "서 하사가 붙여 준 이름 밝히지 않는 안내인 — 마흔쯤, 작업복, 계급장 자리에 실밥 자국. 질의서를 냈다가 반려당하고 여기로 배치됐다가 여기서 하는 일을 보고 나왔다. 삼 년 근무로 도면을 머리에 넣고 있으며, 주 격납고까지만 안내할 수 있다고, 그 안쪽의 '그것'은 자기 때는 없었다고 말한다.",
+      "Location": "loc_gyeryong_maintenance_depot",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "안내인 소개",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…탈영입니까.",
+          "Source": "L12556"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "질의서를 냈습니다. 반려당했고요.",
+          "Source": "L12560"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "…여기서 뭘 하는지 봤으니까요.",
+          "Source": "L12564"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "주 격납고까지는 제가 안내합니다.",
+          "Source": "L12568"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "그때는 아직 저기 그게 없었으니까요.",
+          "Source": "L12572"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "안내인과 대화한다",
+      "Interaction": [
+        "안내인 대화"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "정비창(추정)",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "낮은 긴장",
+      "GameplayEntry": "안내인 대화",
+      "GameplayExit": "정비창 가로지르기 시작",
+      "AnimationRequired": [
+        "talk_idle"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP21_GUIDE_MET"
+      ],
+      "Prerequisites": [
+        "EP21_SC002"
+      ],
+      "NextScene": "EP21_SC004",
+      "RequiredAssets": [
+        "env:loc_gyeryong_maintenance_depot",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "anim:talk_idle",
+        "bgm:낮은 긴장"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC004",
+      "NovelSource": "L12576-L12593 §4 군단",
+      "NovelSummary": "절단기 박자의 골을 밟아 건너던 중 헛동작이 일제히 멎고 모든 관절이 다섯을 향한다. 다관절 암 낙하, 절단기 돌진, 공구 렉 뒤 용접기 — 공장의 어휘로 된 군단. 세라가 유압관을 노리라 지시하고, 류의 잔상이 두 관을 동시에 긋고, 카인의 장검이 첫 실전의 원으로 암 어깨를 꿰고, 아인이 진자 궤적을 거슬러 크레인 구동부를 끊는다. 반 시간 뒤 정비창이 조용해진다.",
+      "Location": "loc_gyeryong_maintenance_depot",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "비보스 전투 — 장검의 첫 실전",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "구동계를 노려.",
+          "Source": "L12584"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "관이 곧 핏줄이야.",
+          "Source": "L12584"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 점거된 정비 장비 군단을 돌파한다",
+      "Interaction": [
+        "절단기 박자의 골 밟기(연출)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "낙하하는 다관절 암, 넘어진 공구 렉, 용접기의 파란 불꽃, 진자처럼 흔들리는 크레인 훅",
+      "Props": [],
+      "VFX": [
+        "유압관 절단 분출",
+        "용접기 파란 불꽃",
+        "류의 두 겹 잔상"
+      ],
+      "SFX": [
+        "유압음",
+        "금속 충돌",
+        "크레인 훅 진자음"
+      ],
+      "Music": "기계 전투(비보스)",
+      "GameplayEntry": "장비들이 일제히 정지 후 돌아봄",
+      "GameplayExit": "정비창 정적(반 시간 후)",
+      "AnimationRequired": [
+        "afterimage_double_slash",
+        "longsword_thrust",
+        "scythe_climb_leap"
+      ],
+      "CinematicRequired": "true: 비보스 전투 연출",
+      "SaveFlags": [
+        "EP21_DEPOT_CLEARED"
+      ],
+      "Prerequisites": [
+        "EP21_SC003"
+      ],
+      "NextScene": "EP21_SC005",
+      "RequiredAssets": [
+        "env:loc_gyeryong_maintenance_depot",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "anim:afterimage_double_slash",
+        "anim:longsword_thrust",
+        "anim:scythe_climb_leap",
+        "vfx:유압관 절단 분출",
+        "vfx:용접기 파란 불꽃",
+        "vfx:류의 두 겹 잔상",
+        "sfx:유압음",
+        "sfx:금속 충돌",
+        "sfx:크레인 훅 진자음",
+        "bgm:기계 전투(비보스)"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC005",
+      "NovelSource": "L12594-L12625 §5 길을 되짚어보는 등",
+      "NovelSummary": "두 번째 층으로 가는 세 갈래 길목. 안내인이 오른쪽을 가리키기 전에 세라가 '이 년 전에 뚫렸다'며 배수 계통의 가운데 통로로 간다. 류가 어떻게 아느냐 묻자 세라는 '끝까지 보고 나서 물으라'고 했다며 지금이 그 중간이라 인정한다. 아인은 꺾일 때마다 반 박자 먼저 기우는 세라의 등을 본다.",
+      "Location": "loc_gyeryong_junction",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "세라의 과거 암시 — 길을 아는 사람",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_annaein",
+          "Line": "…거기 아닙니다.",
+          "Source": "L12600"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "거기 맞아.",
+          "Source": "L12604"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "이 년 전에 뚫렸어.",
+          "Source": "L12608"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…어떻게 알아.",
+          "Source": "L12614"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "끝까지 보고 나서 물으라고 했잖아.",
+          "Source": "L12616"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "이게 그 중간인가 보죠.",
+          "Source": "L12618"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "가운데 통로로 세라를 따라간다",
+      "Interaction": [
+        "갈림길 선택(원고상 가운데 통로 고정)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "삭아서 읽히지 않는 표지판, 세 갈래 통로",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "의심의 저음",
+      "GameplayEntry": "갈림길 도착",
+      "GameplayExit": "가운데 통로 진입",
+      "AnimationRequired": [
+        "walk_downhill"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP21_SERA_KNOWS_ROUTE"
+      ],
+      "Prerequisites": [
+        "EP21_SC004"
+      ],
+      "NextScene": "EP21_SC006",
+      "RequiredAssets": [
+        "env:loc_gyeryong_junction",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "anim:walk_downhill",
+        "bgm:의심의 저음"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC006",
+      "NovelSource": "L12626-L12662 §6 격납고",
+      "NovelSummary": "가운데 통로 끝, 축구장 몇 개 넓이에 십수 층 높이의 주 격납고. 죽은 장갑차·자주포·견인 트레일러가 도열한 한가운데 포탑과 장갑판·결정이 탑처럼 얹힌 10m 복합체가 있다. 안내인은 자기 때는 없었다 하고, 세라는 주포탑 여섯·부포탑 열둘의 나노 사출식이라 말한 뒤 '아스널 오버로드'라는 이름을 댄다. 꼭대기의 첫 포탑이 돌아간다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "보스 조우 — 아스널 오버로드",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_annaein",
+          "Line": "…저건 뭡니까.",
+          "Source": "L12638"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "제가 있을 때는 없었습니다.",
+          "Source": "L12642"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "주포탑 여섯. 부포탑 열둘. 전부 나노 사출식이야.",
+          "Source": "L12646"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…이름은 있나, 저런 것도.",
+          "Source": "L12648"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "…아스널 오버로드.",
+          "Source": "L12652"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "격납고에 진입해 보스를 확인한다",
+      "Interaction": [
+        "복합체 관찰"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "",
+      "EnvironmentState": "광대한 격납고, 초록 유도등 점선, 죽은 강철의 도열",
+      "Props": [],
+      "VFX": [
+        "보스 실루엣 공개",
+        "첫 포탑 선회"
+      ],
+      "SFX": [
+        "포탑 선회 기계음"
+      ],
+      "Music": "보스 등장 테마",
+      "GameplayEntry": "격납고 진입",
+      "GameplayExit": "첫 포탑이 일행을 향해 돔",
+      "AnimationRequired": [
+        "boss_turret_rotate"
+      ],
+      "CinematicRequired": "true: 보스 등장 연출(이름 공개)",
+      "SaveFlags": [
+        "EP21_ARSENAL_OVERLORD_ENCOUNTERED"
+      ],
+      "Prerequisites": [
+        "EP21_SC005"
+      ],
+      "NextScene": "EP21_SC007",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "anim:boss_turret_rotate",
+        "vfx:보스 실루엣 공개",
+        "vfx:첫 포탑 선회",
+        "sfx:포탑 선회 기계음",
+        "bgm:보스 등장 테마"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC007",
+      "NovelSource": "L12663-L12678 §7 열여덟 개의 눈",
+      "NovelSummary": "포탑 열여덟이 차례로 깨어나 조준한다. 엄폐물(죽은 장갑차)은 많지만 사출 속도보다 멀고 출구는 등 뒤 하나. 첫 사출이 콘크리트를 그릇처럼 파내지만, 아인이 공기음을 반 박자 먼저 들어 모두 흩어져 있다. 카인이 류에게 뒤로 돌 수 있느냐고 외친다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "보스전 개시(조우전)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "류! 뒤로 돌 수 있어?",
+          "Source": "L12675"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "첫 사출을 피하고 엄폐한다",
+      "Interaction": [
+        "사출 공기음 듣고 회피",
+        "장갑차 엄폐"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "죽은 장갑차 엄폐물, 출구 하나",
+      "Props": [
+        "prop_dead_apc"
+      ],
+      "VFX": [
+        "응집 나노 덩어리 사출 궤적",
+        "콘크리트 그릇형 파임"
+      ],
+      "SFX": [
+        "포탑 조준 기계음",
+        "사출 공기음"
+      ],
+      "Music": "보스전 긴장",
+      "GameplayEntry": "포탑 각성",
+      "GameplayExit": "류의 측면 기동 시작",
+      "AnimationRequired": [
+        "dodge_roll",
+        "take_cover",
+        "boss_turret_fire"
+      ],
+      "CinematicRequired": "false: 인게임 전투",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP21_SC006"
+      ],
+      "NextScene": "EP21_SC008",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "prop:prop_dead_apc",
+        "anim:dodge_roll",
+        "anim:take_cover",
+        "anim:boss_turret_fire",
+        "vfx:응집 나노 덩어리 사출 궤적",
+        "vfx:콘크리트 그릇형 파임",
+        "sfx:포탑 조준 기계음",
+        "sfx:사출 공기음",
+        "bgm:보스전 긴장"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC008",
+      "NovelSource": "L12679-L12712 §8 사각이 없다",
+      "NovelSummary": "류가 벽을 타고 탑의 배후로 돌지만 탑은 원형이라 뒤가 없다 — 어느 각도에서도 최소 셋이 그를 본다. 세 번째 사출에 왼쪽 어깨가 스쳐 그 자리의 옷이 사라지고, 류는 '뒤가 없다'고 처음 소리친다. 도는 것으로 살아온 그의 방식이 무너진다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "류의 오차 — 뒤가 없는 적",
+      "PlayerCharacter": "char_ryu",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…없어요!",
+          "Source": "L12695"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "뒤가 없다고요!",
+          "Source": "L12699"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "(류) 탑의 배후로 우회를 시도한다 — 실패가 정해진 시도",
+      "Interaction": [
+        "벽 타고 우회",
+        "사출 회피 2회"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "원형 탑, 서로 다른 방향을 보는 18포탑",
+      "Props": [
+        "prop_dead_apc"
+      ],
+      "VFX": [
+        "사출 스침에 옷이 사라지는 효과"
+      ],
+      "SFX": [
+        "사출 공기음",
+        "류의 외침"
+      ],
+      "Music": "보스전 긴장 고조",
+      "GameplayEntry": "류 우회 시작",
+      "GameplayExit": "류가 엄폐물 뒤로 굴러 들어감",
+      "AnimationRequired": [
+        "wall_run_flank",
+        "dodge_roll",
+        "take_cover"
+      ],
+      "CinematicRequired": "true: 류 내면 독백 인서트",
+      "SaveFlags": [
+        "EP21_RYU_NO_BLINDSPOT"
+      ],
+      "Prerequisites": [
+        "EP21_SC007"
+      ],
+      "NextScene": "EP21_SC009",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "prop:prop_dead_apc",
+        "anim:wall_run_flank",
+        "anim:dodge_roll",
+        "anim:take_cover",
+        "vfx:사출 스침에 옷이 사라지는 효과",
+        "sfx:사출 공기음",
+        "sfx:류의 외침",
+        "bgm:보스전 긴장 고조"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC009",
+      "NovelSource": "L12713-L12740 §9 좁아지는 방",
+      "NovelSummary": "죽은 장갑차는 사출 두 발 이상 못 견디고 엄폐물이 하나씩 사라진다. 세라의 결계가 두 번 사출을 비껴 흘리고 촉매는 반, 남은 결계는 두 번. 남은 엄폐물은 넷. 그 옆에서 안내인이 종이에 격납고 바닥과 포탑 위치를 그리고 점 옆에 사격 간격을 적으며 '재고 있다'고 한다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "소모전 — 안내인의 측정",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…촉매 반.",
+          "Source": "L12721"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "두 번.",
+          "Source": "L12725"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "…재고 있습니다.",
+          "Source": "L12733"
+        },
+        {
+          "Speaker": "char_annaein",
+          "Line": "쟤네 쏘는 간격이요.",
+          "Source": "L12737"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "엄폐물을 옮겨 가며 버틴다",
+      "Interaction": [
+        "엄폐물 이동",
+        "결계 사용(세라)"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "줄어드는 엄폐물(넷 남음)",
+      "Props": [
+        "prop_dead_apc",
+        "prop_guide_paper",
+        "prop_catalyst"
+      ],
+      "VFX": [
+        "세라 결계",
+        "장갑 파임→관통→소멸 3단계"
+      ],
+      "SFX": [
+        "결계 충돌음",
+        "연필 긁는 소리"
+      ],
+      "Music": "보스전 소모",
+      "GameplayEntry": "엄폐물 소모",
+      "GameplayExit": "포탑 전면 정지",
+      "AnimationRequired": [
+        "barrier_cast",
+        "take_cover",
+        "sketch_on_paper"
+      ],
+      "CinematicRequired": "false: 인게임 전투",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP21_SC008"
+      ],
+      "NextScene": "EP21_SC010",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "prop:prop_dead_apc",
+        "prop:prop_guide_paper",
+        "prop:prop_catalyst",
+        "anim:barrier_cast",
+        "anim:take_cover",
+        "anim:sketch_on_paper",
+        "vfx:세라 결계",
+        "vfx:장갑 파임→관통→소멸 3단계",
+        "sfx:결계 충돌음",
+        "sfx:연필 긁는 소리",
+        "bgm:보스전 소모"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC010",
+      "NovelSource": "L12741-L12762 §10 전탄 제압",
+      "NovelSummary": "열여덟 포탑이 전부 정지하고 격납고가 완전히 조용해진다. 아인의 귀만이 '전부 같은 데를 보고 있다'는 것을 알아 흩어지라 외치지만 늦는다. 열여덟 발이 일행이 모인 엄폐물 한 곳에 쏟아져 장갑차가 흔적 없이 사라진다. 카인이 아인을, 류가 세라를 끌어 굴러 살고, 세어 보니 넷이다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경",
+        "char_annaein: 작업복(전투복 상의 벗음), 계급장 자리 실밥 자국"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)",
+        "char_annaein: 연필, 종이"
+      ],
+      "StoryBeat": "전탄 제압 — 하나를 잃음",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…흩어져요!",
+          "Source": "L12751"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "전탄 제압 예고(완전 정적)를 알아차리고 흩어진다",
+      "Interaction": [
+        "정적 감지 → 회피"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "완전한 정적 → 18발 동시 착탄, 엄폐물 소멸",
+      "Props": [
+        "prop_dead_apc"
+      ],
+      "VFX": [
+        "18발 동시 집중 사출",
+        "엄폐물 소멸"
+      ],
+      "SFX": [
+        "완전한 정적",
+        "동시 사출 굉음"
+      ],
+      "Music": "정적 → 충격",
+      "GameplayEntry": "포탑 전면 정지",
+      "GameplayExit": "넷이 살아남음",
+      "AnimationRequired": [
+        "push_ally_away",
+        "drag_ally",
+        "dodge_roll"
+      ],
+      "CinematicRequired": "true: 전탄 제압 연출",
+      "SaveFlags": [
+        "EP21_FULL_BARRAGE_SEEN"
+      ],
+      "Prerequisites": [
+        "EP21_SC009"
+      ],
+      "NextScene": "EP21_SC011",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "char:char_annaein",
+        "prop:prop_dead_apc",
+        "anim:push_ally_away",
+        "anim:drag_ally",
+        "anim:dodge_roll",
+        "vfx:18발 동시 집중 사출",
+        "vfx:엄폐물 소멸",
+        "sfx:완전한 정적",
+        "sfx:동시 사출 굉음",
+        "bgm:정적 → 충격"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC011",
+      "NovelSource": "L12763-L12772 §10 전탄 제압",
+      "NovelSummary": "안내인은 앉아서 종이에 숫자를 적고 있었기에 늦었다. 그가 남긴 종이가 사출의 바람에 날려 격납고 바닥을 구르고, 아인이 그것을 줍는다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)"
+      ],
+      "StoryBeat": "동행자 사망 — 남은 종이",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 안내인의 종이를 줍는다",
+      "Interaction": [
+        "종이 줍기"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "바닥을 구르는 종이",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [
+        "바람에 구르는 종이"
+      ],
+      "SFX": [
+        "종이 구르는 소리"
+      ],
+      "Music": "애도의 정적",
+      "GameplayEntry": "안내인 부재 인지",
+      "GameplayExit": "아인이 종이를 쥠",
+      "AnimationRequired": [
+        "pick_up_item"
+      ],
+      "CinematicRequired": "true: 안내인 사망 암시(원고는 직접 묘사 없음)",
+      "SaveFlags": [
+        "EP21_GUIDE_DEAD",
+        "EP21_GUIDE_PAPER_ACQUIRED"
+      ],
+      "Prerequisites": [
+        "EP21_SC010"
+      ],
+      "NextScene": "EP21_SC012",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_guide_paper",
+        "anim:pick_up_item",
+        "vfx:바람에 구르는 종이",
+        "sfx:종이 구르는 소리",
+        "bgm:애도의 정적"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC012",
+      "NovelSource": "L12773-L12782 §11 하나",
+      "NovelSummary": "넷은 삼 분을 더 버티며 도망친다. 굴러가던 아인이 부포탑 하나의 급탄로를 낫으로 긋고, 그 포탑이 다음 사출에서 자기 안에서 터진다. 열여덟이 열일곱. 출구로 빠져나오는 동안 남은 포탑들은 조준만 할 뿐 쫓아오지 못한다.",
+      "Location": "loc_gyeryong_main_hangar",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)"
+      ],
+      "StoryBeat": "퇴각 중 부포탑 1기 파괴",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "출구로 퇴각하며 부포탑 급탄로를 벤다",
+      "Interaction": [
+        "구르며 급탄로 베기",
+        "출구 도달"
+      ],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "P1",
+      "EnvironmentState": "출구 하나, 조준을 유지하는 17포탑",
+      "Props": [],
+      "VFX": [
+        "부포탑 내부 폭발"
+      ],
+      "SFX": [
+        "급탄로 절단음",
+        "내부 폭발"
+      ],
+      "Music": "퇴각 추격",
+      "GameplayEntry": "전탄 제압 직후",
+      "GameplayExit": "출구 이탈",
+      "AnimationRequired": [
+        "roll_slash",
+        "sprint_escape"
+      ],
+      "CinematicRequired": "false: 인게임(퇴각)",
+      "SaveFlags": [
+        "EP21_SUB_TURRET_DESTROYED_1"
+      ],
+      "Prerequisites": [
+        "EP21_SC011"
+      ],
+      "NextScene": "EP21_SC013",
+      "RequiredAssets": [
+        "env:loc_gyeryong_main_hangar",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:roll_slash",
+        "anim:sprint_escape",
+        "vfx:부포탑 내부 폭발",
+        "sfx:급탄로 절단음",
+        "sfx:내부 폭발",
+        "bgm:퇴각 추격"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC013",
+      "NovelSource": "L12783-L12796 §11 하나",
+      "NovelSummary": "경사로를 반쯤 올라와 카인이 벽에 등을 붙이고 주저앉는다. 하나 잡았고 열일곱 남았다. 아무도 그 계산의 다음을 말하지 않는다.",
+      "Location": "loc_gyeryong_ramp",
+      "TimeOfDay": "돌입 당일(지하, 시각 미상)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)"
+      ],
+      "StoryBeat": "패배 결과 — 진입 실패",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [
+        "char_ain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…하나 잡았네.",
+          "Source": "L12785"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "(결과) 전투 결과 확인",
+      "Interaction": [],
+      "BossId": "boss_arsenal_overlord",
+      "BossPhase": "",
+      "EnvironmentState": "경사로 중간, 벽",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "패배 여운",
+      "GameplayEntry": "퇴각 완료",
+      "GameplayExit": "침묵",
+      "AnimationRequired": [
+        "slump_against_wall"
+      ],
+      "CinematicRequired": "true: 결과 연출",
+      "SaveFlags": [
+        "EP21_HANGAR_ENTRY_FAILED"
+      ],
+      "Prerequisites": [
+        "EP21_SC012"
+      ],
+      "NextScene": "EP21_SC014",
+      "RequiredAssets": [
+        "env:loc_gyeryong_ramp",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "anim:slump_against_wall",
+        "bgm:패배 여운"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC014",
+      "NovelSource": "L12797-L12838 §12 재고 있었습니다",
+      "NovelSummary": "그날 밤 경사로 중턱 정비실에 숨은 넷이 안내인의 종이를 편다. 사각형 하나와 점 열여덟, 그중 열한 개에 숫자. 아인이 그것이 사격 간격(초)임을 읽고, 류는 4·5·6 세 종류뿐인 규칙을 본다. 이름도 모르는 그의 마지막 일이 숫자를 세는 것이었다.",
+      "Location": "loc_gyeryong_ramp_workroom",
+      "TimeOfDay": "그날 밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "char_ryu: 후드",
+        "char_sera: 코트, 안경"
+      ],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)",
+        "char_sera: 촉매 병(결계)"
+      ],
+      "StoryBeat": "유산 해석 — 간격의 규칙",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…이거 뭐예요.",
+          "Source": "L12807"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…간격이에요.",
+          "Source": "L12813"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "쏘는 간격. 초예요.",
+          "Source": "L12817"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…규칙이 있네요.",
+          "Source": "L12823"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "세 종류밖에 없어요.",
+          "Source": "L12827"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "안내인의 종이를 해석한다",
+      "Interaction": [
+        "종이 펼치기",
+        "숫자 패턴 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "숨어든 정비실",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [
+        "종이 숫자 하이라이트(4/4/5/4/6/4…)"
+      ],
+      "SFX": [],
+      "Music": "애도와 결의",
+      "GameplayEntry": "정비실 은신",
+      "GameplayExit": "아인이 '재고 있습니다'를 떠올림",
+      "AnimationRequired": [
+        "unfold_paper"
+      ],
+      "CinematicRequired": "false: 조사 파트",
+      "SaveFlags": [
+        "EP21_INTERVAL_PATTERN_FOUND"
+      ],
+      "Prerequisites": [
+        "EP21_SC013"
+      ],
+      "NextScene": "EP21_SC015",
+      "RequiredAssets": [
+        "env:loc_gyeryong_ramp_workroom",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_sera",
+        "prop:prop_guide_paper",
+        "anim:unfold_paper",
+        "vfx:종이 숫자 하이라이트(4/4/5/4/6/4…)",
+        "bgm:애도와 결의"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP21",
+      "SceneId": "EP21_SC015",
+      "NovelSource": "L12839-L12893 §13 소리를 센다",
+      "NovelSummary": "아인은 자지 않고 경사로 중턱에서 밤새 격납고의 선회음 간격을 세어 적히지 않은 일곱 개를 채운다(여섯 시간). 새벽에 옆에 앉은 카인에게 탑 밑까지 스물세 걸음의 혼자 갈 길이 있다고 말하고, 밑은 자기가 아니라며 카인의 긴 장검을 본다.",
+      "Location": "loc_gyeryong_ramp",
+      "TimeOfDay": "밤~새벽",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "char_ain: 낫",
+        "char_kain: 새 장검(긴 장검)"
+      ],
+      "StoryBeat": "해법 발견 — 스물세 걸음, 밑은 장검",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…다 셌어?",
+          "Source": "L12851"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "길이 있어요.",
+          "Source": "L12859"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "탑 밑까지. 스물세 걸음.",
+          "Source": "L12863"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…혼자 갈 길이지.",
+          "Source": "L12867"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "근데 밑에 가서 뭘 하게. 저 장갑을 낫으로?",
+          "Source": "L12871"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "밑은 제가 아니에요.",
+          "Source": "L12873"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "격납고 선회음을 들으며 남은 간격 7개를 채운다",
+      "Interaction": [
+        "소리 간격 세기(청각 미니게임 제안)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "경사로 중턱, 멀리서 들리는 선회음",
+      "Props": [
+        "prop_guide_paper"
+      ],
+      "VFX": [],
+      "SFX": [
+        "원거리 포탑 선회음(주기)"
+      ],
+      "Music": "새벽의 결의",
+      "GameplayEntry": "밤, 아인 홀로",
+      "GameplayExit": "아인이 카인의 장검을 봄 → EP22",
+      "AnimationRequired": [
+        "sit_listen",
+        "unfold_paper"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP21_ALL_18_INTERVALS",
+        "EP21_PLAN_23_STEPS"
+      ],
+      "Prerequisites": [
+        "EP21_SC014"
+      ],
+      "NextScene": "EP22_SC001",
+      "RequiredAssets": [
+        "env:loc_gyeryong_ramp",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_guide_paper",
+        "anim:sit_listen",
+        "anim:unfold_paper",
+        "sfx:원거리 포탑 선회음(주기)",
+        "bgm:새벽의 결의"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_arsenal_overlord",
+      "NameKo": "아스널 오버로드",
+      "Scenes": [
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012",
+        "EP21_SC013"
+      ],
+      "NovelReasonForBattle": "계룡 지하 주 격납고 한가운데의 복합체. 세라가 이름을 대는 순간 포탑이 깨어나 일행을 조준·사출한다(격납고 출구는 등 뒤 하나).",
+      "ArenaLocationId": "loc_gyeryong_main_hangar",
+      "PhasesInNovel": [
+        "EP21 조우전(P1로 표기): 18포탑 순차 각성 → 사출 → 엄폐물 소모 → 전탄 제압 → 부포탑 1기 파괴 후 퇴각(진입 실패)"
+      ],
+      "PatternsInNovel": [
+        "응집 나노 덩어리 사출 — 콘크리트를 그릇처럼 파냄(L12671)",
+        "원형 탑: 18포탑이 서로 다른 방향, 어느 각도에서도 최소 3개가 조준 — 배후 사각 없음(L12689)",
+        "엄폐물(죽은 장갑차) 파괴: 1발 파임, 2발 관통, 3발 소멸(L12717)",
+        "전탄 제압: 전 포탑 정지·완전한 정적 후 18발을 한 지점에 동시 집중(L12745-L12755)",
+        "포탑별 사격 간격 4·5·6초 세 종류(안내인 종이, L12805-L12827)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "주포탑 6",
+        "부포탑 12",
+        "부포탑 급탄로 — 낫으로 그으면 다음 사출에서 자폭(L12777)",
+        "사격과 재장전 사이의 골(간격)"
+      ],
+      "BreakCounterInNovel": [
+        "부포탑 급탄로 절단 → 포탑 내부 폭발로 1기 파괴"
+      ],
+      "EnvironmentInBattle": [
+        "죽은 장갑차·자주포·견인 트레일러 엄폐물(소모성)",
+        "출구 하나(등 뒤)",
+        "초록 유도등 점선만의 어둠",
+        "탑은 이동하지 않고 추격하지 않음(L12781)"
+      ],
+      "Outcome": "진입 실패. 부포탑 1기 파괴(18→17), 안내인 사망, 넷이 퇴각.",
+      "Source": "L12626-L12796"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_gyeryong_ramp",
+      "NameKo": "계룡 지하 경사로",
+      "DescriptionKo": "차량 두 대 폭, 세 번 꺾여 내려가는 경사로. 초록 유도등, 바닥을 흐르는 붉은 안개.",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC013",
+        "EP21_SC015"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_maintenance_depot",
+      "NameKo": "정비창(첫 격납고 층)",
+      "DescriptionKo": "크레인·리프트·공구 렉. 나노가 점거한 장비들이 헛동작을 반복.",
+      "Scenes": [
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_junction",
+      "NameKo": "두 번째 층 세 갈래 길목",
+      "DescriptionKo": "표지판이 삭은 세 갈래. 가운데는 배수 계통(이 년 전에 뚫림).",
+      "Scenes": [
+        "EP21_SC005"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_main_hangar",
+      "NameKo": "주 격납고",
+      "DescriptionKo": "축구장 몇 개 넓이, 십수 층 높이. 죽은 장갑차·자주포·트레일러 도열, 중앙에 아스널 오버로드.",
+      "Scenes": [
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_gyeryong_ramp_workroom",
+      "NameKo": "경사로 중턱 정비실",
+      "DescriptionKo": "퇴각 후 밤을 숨어 지낸 작은 정비실.",
+      "Scenes": [
+        "EP21_SC014"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 청각으로 간격을 셈",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004",
+        "EP21_SC005",
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012",
+        "EP21_SC013",
+        "EP21_SC014",
+        "EP21_SC015"
+      ],
+      "StateChangesKo": [
+        "EP21_SC011: 안내인의 종이를 습득",
+        "EP21_SC015: 18개 간격을 모두 채움(목덜미는 내려갈수록 밝아짐)"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "장검 사용자",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004",
+        "EP21_SC005",
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012",
+        "EP21_SC013",
+        "EP21_SC014",
+        "EP21_SC015"
+      ],
+      "StateChangesKo": [
+        "EP21_SC004: 장검 첫 실전"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "우회·잔상 기동",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004",
+        "EP21_SC005",
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012",
+        "EP21_SC013",
+        "EP21_SC014"
+      ],
+      "StateChangesKo": [
+        "EP21_SC008: 왼쪽 어깨 스침, 그 자리 옷이 사라짐"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "결계·촉매",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004",
+        "EP21_SC005",
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011",
+        "EP21_SC012",
+        "EP21_SC013",
+        "EP21_SC014"
+      ],
+      "StateChangesKo": [
+        "EP21_SC004: 촉매 병 하나 소모",
+        "EP21_SC009: 촉매 반(결계 2회분) 남음"
+      ]
+    },
+    {
+      "CharacterId": "char_annaein",
+      "NameKo": "안내인(이름 미상)",
+      "RoleKo": "서 하사가 붙여 준 전(前) 계룡 근무자. 도면을 암기",
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC002",
+        "EP21_SC003",
+        "EP21_SC004",
+        "EP21_SC005",
+        "EP21_SC006",
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010",
+        "EP21_SC011"
+      ],
+      "StateChangesKo": [
+        "EP21_SC010: 전탄 제압에 휘말려 사망(종이만 남음)"
+      ]
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "안내인을 붙여 준 인물. 언급만",
+      "Scenes": [
+        "EP21_SC003"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "walk_downhill",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera",
+        "char_annaein"
+      ],
+      "Scenes": [
+        "EP21_SC001",
+        "EP21_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "경사로 하강 보행"
+    },
+    {
+      "Action": "talk_idle",
+      "Category": "gesture",
+      "Characters": [
+        "char_annaein"
+      ],
+      "Scenes": [
+        "EP21_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "대화 아이들"
+    },
+    {
+      "Action": "afterimage_double_slash",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP21_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "잔상 두 겹으로 두 곳 동시 베기"
+    },
+    {
+      "Action": "longsword_thrust",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP21_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "장검 리치로 관절 꿰기"
+    },
+    {
+      "Action": "scythe_climb_leap",
+      "Category": "traversal",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP21_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 걸어 세 번 도약해 크레인 구동부 절단"
+    },
+    {
+      "Action": "boss_turret_rotate",
+      "Category": "boss",
+      "Characters": [],
+      "Scenes": [
+        "EP21_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "포탑 선회·조준"
+    },
+    {
+      "Action": "boss_turret_fire",
+      "Category": "boss",
+      "Characters": [],
+      "Scenes": [
+        "EP21_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "나노 사출"
+    },
+    {
+      "Action": "dodge_roll",
+      "Category": "combat",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "회피 구르기"
+    },
+    {
+      "Action": "take_cover",
+      "Category": "combat",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "엄폐물에 등 붙이기"
+    },
+    {
+      "Action": "wall_run_flank",
+      "Category": "traversal",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP21_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "격납고 벽을 타고 우회"
+    },
+    {
+      "Action": "barrier_cast",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP21_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "결계 전개"
+    },
+    {
+      "Action": "sketch_on_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_annaein"
+      ],
+      "Scenes": [
+        "EP21_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "앉아서 연필로 그리기"
+    },
+    {
+      "Action": "push_ally_away",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP21_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "아인을 밀어냄"
+    },
+    {
+      "Action": "drag_ally",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP21_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "세라를 끌어당김"
+    },
+    {
+      "Action": "pick_up_item",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP21_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이 줍기"
+    },
+    {
+      "Action": "roll_slash",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP21_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "구르며 급탄로 베기"
+    },
+    {
+      "Action": "sprint_escape",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP21_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "출구로 질주"
+    },
+    {
+      "Action": "slump_against_wall",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP21_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "벽에 등 붙이고 주저앉기"
+    },
+    {
+      "Action": "unfold_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP21_SC014",
+        "EP21_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "종이 펼치기"
+    },
+    {
+      "Action": "sit_listen",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP21_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "앉아 귀 기울이기"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_dead_apc",
+      "NameKo": "죽은 장갑차(엄폐물)",
+      "Scenes": [
+        "EP21_SC007",
+        "EP21_SC008",
+        "EP21_SC009",
+        "EP21_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_guide_paper",
+      "NameKo": "안내인의 종이(격납고 도면·사격 간격)",
+      "Scenes": [
+        "EP21_SC009",
+        "EP21_SC011",
+        "EP21_SC014",
+        "EP21_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_catalyst",
+      "NameKo": "촉매(병)",
+      "Scenes": [
+        "EP21_SC009"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP21_SC003",
+      "QuestionKo": "안내인이 언제·어디서 일행에 합류했는지 원고에 없음(§3이 정비창 안에서의 소개인지도 불명). 이름은 끝까지 미공개."
+    },
+    {
+      "Scene": "EP21_SC004",
+      "QuestionKo": "non-boss combat in novel — game representation TBD (나노가 점거한 정비 장비 군단: 다관절 암·유압 절단기·용접기·크레인)."
+    },
+    {
+      "Scene": "EP21_SC001",
+      "QuestionKo": "세라가 지열 자체 발전·배수로 개통을 아는 이유(계룡에 와 본 적 있음)는 이 화에서 미해명."
+    },
+    {
+      "Scene": "EP21_SC006",
+      "QuestionKo": "아스널 오버로드의 기원(누가 조립했는지, 안내인 근무 이후 언제 생겼는지) 미공개."
+    },
+    {
+      "Scene": "EP21_SC010",
+      "QuestionKo": "안내인의 죽음은 직접 묘사되지 않고 '넷이었다'와 남은 종이로만 제시 — 시신 연출 여부 TBD."
+    },
+    {
+      "Scene": "EP21_SC007",
+      "QuestionKo": "EP21 조우전의 게임상 페이즈 구분(원고는 부위 파괴 페이즈를 EP22에서 전개) — 여기서는 P1로 임시 표기."
+    },
+    {
+      "Scene": "EP21_SC015",
+      "QuestionKo": "아인이 채운 나머지 7개 간격의 구체 수치는 원고에 없음."
+    }
+  ]
+}

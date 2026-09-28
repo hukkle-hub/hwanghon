@@ -1,0 +1,1980 @@
+{
+  "EpisodeId": "EP10",
+  "TitleKo": "제10화 — 지상의 것들",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      8237,
+      8660
+    ]
+  },
+  "SummaryKo": "닥터 진에게 억제제 열흘 치를 받은 아인은, 터널이 막혀 지상으로 우회하는 경로로 교신이 끊긴 남태령 중계소를 확인하러 카인·류·오정길과 출발한다. 멈춘 차들이 늘어선 국도에서 사람이 설치한 깡통 경보기를 류가 건드리고, 서로 신호를 주고받는 클레이브 두 기를 신호 간격 사이에 연속으로 쓰러뜨린다. 그 과정에서 카인의 대검 금은 한 마디 더 자란다. 그늘에서 나온 탈영병들이 쏘지 못하는 소총을 겨누지만, 인식표를 걸지 않는 류의 대답에 총구를 내린다. 선두의 남자(서 하사)는 현 중위의 행방을 묻고, 아인의 대답에 '수거'—각인 붙은 시신과 가끔은 산 사람을 가져가는 일—를 알려 준다. 중계소는 저항의 흔적 없이 비어 있었고, 교신 기록부에는 'B 이상 우선' 등급 명단 재송부 요청이 남아 있어 아인이 챙긴다. 서 하사는 사람이 본다며 불을 피우지 말라 경고하고, 폐주유소 야영지에서 넷은 같은 보폭으로 남하하는 스물의 행렬을 숨죽여 지켜본다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC001",
+      "NovelSource": "L8237-L8270 §1 획 (의무실)",
+      "NovelSummary": "닥터 진이 억제제 두 병의 빈 라벨에 획 끝이 아래로 꺾이는 글씨로 용량을 적어 열흘 치를 건넨다. 다음 것은 없을 수도 있다는 말에 아인은 병을 두 곳에 나눠 담는다.",
+      "Location": "loc_bunker_infirmary",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_dr_jin",
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "억제제 한정 — 닥터 진의 글씨(복선)",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_dr_jin",
+        "char_ain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "열흘 치입니다. 아껴 쓰세요.",
+          "Source": "L8261"
+        },
+        {
+          "Speaker": "char_dr_jin",
+          "Line": "…다음 건, 없을 수도 있습니다.",
+          "Source": "L8265"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 억제제 수령",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "의무실 약장",
+      "Props": [
+        "prop_suppressant_bottle"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 긁히는 소리"
+      ],
+      "Music": "조용한 불안",
+      "GameplayEntry": "약장 앞",
+      "GameplayExit": "병을 나눠 담음",
+      "AnimationRequired": [
+        "write_label",
+        "split_bottles"
+      ],
+      "CinematicRequired": "true: 라벨 글씨 클로즈업 (획 끝이 아래로 꺾임)",
+      "SaveFlags": [
+        "EP10_SUPPRESSANT_10DAYS"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP10_SC002",
+      "RequiredAssets": [
+        "env:loc_bunker_infirmary",
+        "char:char_dr_jin",
+        "char:char_ain",
+        "prop:prop_suppressant_bottle",
+        "anim:write_label",
+        "anim:split_bottles"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC002",
+      "NovelSource": "L8271-L8288 §1 획 (관제실 브리핑)",
+      "NovelSummary": "관제실 벽 지도에 터널을 크게 돌아가는 남태령 방면 경로선이 그려져 있다. 마태오가 열흘 전부터 교신이 끊긴 남태령 중계소 확인을 맡기고, 넷(아인·카인·류·오정길)이 편성된다.",
+      "Location": "loc_bunker_control_room",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "의뢰 — 사람이 없으면 기록하라",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "남태령 중계소. 열흘 전부터 교신 두절이다.",
+          "Source": "L8273"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "확인만 해라. 사람이 있으면 데려오고, 없으면—",
+          "Source": "L8277"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "…없으면, 기록해라.",
+          "Source": "L8281"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 의뢰 수령",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "관제실 벽 지도",
+      "Props": [
+        "prop_wall_map",
+        "prop_old_map",
+        "prop_oh_gun"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "브리핑",
+      "GameplayEntry": "관제실",
+      "GameplayExit": "편성 확정",
+      "AnimationRequired": [
+        "touch_gun_at_waist",
+        "fold_map_into_coat"
+      ],
+      "CinematicRequired": "false: 브리핑",
+      "SaveFlags": [
+        "EP10_MISSION_NAMTAERYEONG_RELAY"
+      ],
+      "Prerequisites": [
+        "EP10_SC001"
+      ],
+      "NextScene": "EP10_SC003",
+      "RequiredAssets": [
+        "env:loc_bunker_control_room",
+        "char:char_mateo",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_wall_map",
+        "prop:prop_old_map",
+        "prop:prop_oh_gun",
+        "anim:touch_gun_at_waist",
+        "anim:fold_map_into_coat"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC003",
+      "NovelSource": "L8289-L8322 §2 열흘",
+      "NovelSummary": "넷이 멈춘 차들이 줄지어 선 왕복 8차선 국도와 반쯤 내려간 요금소를 걸어서 지난다. 카인은 「예약 만석」 버스를 보고 중얼거린다. 지상의 소리는 스무 걸음 밖에서 죽고, 아인의 세계는 다시 스무 걸음이 된다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검"
+      ],
+      "StoryBeat": "지상 — 소리가 멀리 가지 못한다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…버스가 이렇게 많은데 전부 놀고 있네.",
+          "Source": "L8299"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…아니지. 시동도 안 걸리는데.",
+          "Source": "L8303"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "국도를 따라 남태령 방면으로 걷는다",
+      "Interaction": [
+        "도보 이동",
+        "(제안) 청각 인지 반경 축소 — 스무 걸음"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "차간 거리를 지킨 채 멈춘 차들, 반쯤 내려간 요금소 차단기, 하이패스 표지판, 얕게 흐르는 붉은 안개",
+      "Props": [
+        "prop_bus_reserved_sign",
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람",
+        "발소리"
+      ],
+      "Music": "황량한 지상 이동",
+      "GameplayEntry": "출발",
+      "GameplayExit": "오정길이 손을 듦",
+      "AnimationRequired": [
+        "walk_highway_group",
+        "rest_sword_on_shoulder"
+      ],
+      "CinematicRequired": "false: 이동 구간",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP10_SC002"
+      ],
+      "NextScene": "EP10_SC004",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_bus_reserved_sign",
+        "prop:prop_cracked_greatsword",
+        "anim:walk_highway_group",
+        "anim:rest_sword_on_shoulder"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC004",
+      "NovelSource": "L8323-L8356 §3 깡통",
+      "NovelSummary": "오정길이 가드레일 사이 무릎 높이의 낚싯줄 깡통 경보기를 발견하고, 사람이 묶은 것이라 판단한다. 류가 줄을 넘다 배낭 끈이 스쳐 깡통이 울리고, 두 방향에서 금속 관절음이 응답한다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_oh_jeonggil",
+        "char_ain",
+        "char_kain",
+        "char_ryu"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "사람의 흔적 — 그리고 실수",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_oh_jeonggil",
+        "char_kain",
+        "char_ryu"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…경보기입니다. 조잡하지만, 묶은 솜씨는 조잡하지 않습니다.",
+          "Source": "L8333"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "경보기를 살피고 줄을 넘는다",
+      "Interaction": [
+        "경보기(매듭) 조사",
+        "기우는 깡통 잡기 시도 (연출상 실패)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "무릎 높이 낚싯줄, 도로 양옆 건물의 빈 창문들",
+      "Props": [
+        "prop_can_alarm"
+      ],
+      "VFX": [],
+      "SFX": [
+        "딸그랑",
+        "두 방향의 금속 관절음"
+      ],
+      "Music": "경계",
+      "GameplayEntry": "오정길이 손을 들어 정지",
+      "GameplayExit": "클레이브 접근",
+      "AnimationRequired": [
+        "crouch_inspect_knot",
+        "step_over_wire",
+        "reach_catch_fail"
+      ],
+      "CinematicRequired": "true: 깡통 소리가 텅 빈 도로에 퍼짐",
+      "SaveFlags": [
+        "EP10_ALARM_TRIGGERED"
+      ],
+      "Prerequisites": [
+        "EP10_SC003"
+      ],
+      "NextScene": "EP10_SC005",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_oh_jeonggil",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "prop:prop_can_alarm",
+        "anim:crouch_inspect_knot",
+        "anim:step_over_wire",
+        "anim:reach_catch_fail"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC005",
+      "NovelSource": "L8357-L8396 §4 간격",
+      "NovelSummary": "클레이브 두 기가 순찰 보폭으로 들어온다. 아인은 두 기체가 여섯 걸음마다 신호를 주고받는 것을 듣고, 신호 사이에 끊어야 한다고 한다. 카인의 가드로 젖힌 첫 기체를 아인이 베고, 여섯이 되기 전에 류가 두 번째 기체의 무릎과 목을 끊는다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_clave"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 금 간 대검",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "시계와 싸운다 — 여섯 걸음",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_clave"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…신호를 주고받아요. 서로.",
+          "Source": "L8365"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "여섯 걸음마다 한 번. 그 사이에 끊어야 해요.",
+          "Source": "L8367"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "지금.",
+          "Source": "L8379"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 신호 간격 안에 두 기를 연속으로 무력화",
+      "Interaction": [
+        "(제안, TBD) 신호 카운트 표시"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도로 양끝에서 접근하는 2기, 가드레일, 반대편 그늘",
+      "Props": [
+        "prop_cracked_greatsword"
+      ],
+      "VFX": [
+        "(제안) 두 기체 간 신호 맥박"
+      ],
+      "SFX": [
+        "금속 관절음",
+        "짧고 규칙적인 신호음",
+        "서걱"
+      ],
+      "Music": "시간 압박 전투",
+      "GameplayEntry": "클레이브 등장",
+      "GameplayExit": "두 기 모두 무너짐",
+      "AnimationRequired": [
+        "clave_patrol_walk",
+        "kain_guard_deflect",
+        "scythe_circle_slash_neck",
+        "sprint_count_steps",
+        "ryu_twin_strike_knee_neck",
+        "clave_collapse"
+      ],
+      "CinematicRequired": "true: 신호 사이의 연속 제압",
+      "SaveFlags": [
+        "EP10_CLAVE_PAIR_DOWN"
+      ],
+      "Prerequisites": [
+        "EP10_SC004"
+      ],
+      "NextScene": "EP10_SC006",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_clave",
+        "prop:prop_cracked_greatsword",
+        "anim:clave_patrol_walk",
+        "anim:kain_guard_deflect",
+        "anim:scythe_circle_slash_neck",
+        "anim:sprint_count_steps",
+        "anim:ryu_twin_strike_knee_neck",
+        "anim:clave_collapse"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC006",
+      "NovelSource": "L8397-L8414 §5 금",
+      "NovelSummary": "정적이 돌아온다. 카인의 대검 날 위의 금이 가드 반동으로 한 마디 길어졌지만 카인은 모른다. 아인이 무너진 기체에서 아직 따뜻한 코어 파편을 회수하는데, 도로 양옆 그늘에서 사람들이 걸어 나온다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 금 간 대검"
+      ],
+      "StoryBeat": "자라는 금 — 그리고 사람들",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_kain",
+        "char_ain",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출)",
+      "Interaction": [
+        "(제안) 코어 파편 회수"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "정적, 무너진 기체",
+      "Props": [
+        "prop_cracked_greatsword",
+        "prop_core_fragment"
+      ],
+      "VFX": [
+        "대검의 금이 한 마디 길어짐 (클로즈업)"
+      ],
+      "SFX": [
+        "정적",
+        "그늘에서 나오는 발소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "교전 종료",
+      "GameplayExit": "사람들 등장",
+      "AnimationRequired": [
+        "rest_sword_on_shoulder",
+        "collect_core_fragment"
+      ],
+      "CinematicRequired": "true: 금 클로즈업",
+      "SaveFlags": [
+        "EP10_GREATSWORD_CRACK_GROWN",
+        "EP10_CORE_FRAGMENT_COLLECTED"
+      ],
+      "Prerequisites": [
+        "EP10_SC005"
+      ],
+      "NextScene": "EP10_SC007",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_talyeongbyeong",
+        "prop:prop_cracked_greatsword",
+        "prop:prop_core_fragment",
+        "anim:rest_sword_on_shoulder",
+        "anim:collect_core_fragment"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC007",
+      "NovelSource": "L8415-L8441 §6 총",
+      "NovelSummary": "군복과 사복이 섞인 마른 사람들이 쇠파이프·정글도·낡은 대검을 들고 나오고, 맨 앞 남자가 소총을 겨눈다. 카인이 그 총은 안 나간다고 말하지만, 겨눌 것이 그것뿐인 떨리는 총구는 내려오지 않는다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [
+        "탈영병들: 군복·사복 혼합"
+      ],
+      "RequiredEquipment": [
+        "서 하사: 소총(격발 불가)",
+        "탈영병들: 쇠파이프·정글도·낡은 대검"
+      ],
+      "StoryBeat": "대치 — 안 나가는 총",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_seo_hasa",
+        "char_talyeongbyeong",
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…그거, 안 나가는 거 알잖아.",
+          "Source": "L8425"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 대치",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도로, 총구가 올라옴",
+      "Props": [
+        "prop_deserter_rifle"
+      ],
+      "VFX": [],
+      "SFX": [
+        "총을 쥔 손의 떨림"
+      ],
+      "Music": "팽팽한 대치",
+      "GameplayEntry": "사람들 등장",
+      "GameplayExit": "총구 유지",
+      "AnimationRequired": [
+        "aim_rifle_trembling",
+        "half_step_forward"
+      ],
+      "CinematicRequired": "true: 떨리는 총구",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP10_SC006"
+      ],
+      "NextScene": "EP10_SC008",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_seo_hasa",
+        "char:char_talyeongbyeong",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_deserter_rifle",
+        "anim:aim_rifle_trembling",
+        "anim:half_step_forward"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC008",
+      "NovelSource": "L8442-L8473 §7 안 나가는 총",
+      "NovelSummary": "맨 앞의 사십 대 부사관 출신 남자가 소속과 인식표를 묻는다. 카인과 아인은 C를 보이지만 류의 목이 비어 있어 공기가 좁아진다. 류가 주머니의 인식표를 보이고 표시가 나서 안 건다고 하자, 남자는 이해하는 얼굴로 총구를 내린다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_seo_hasa",
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "표시 — 인식표 없는 각인자",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_seo_hasa",
+        "char_kain",
+        "char_ain",
+        "char_ryu",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…어디 소속이야.",
+          "Source": "L8444"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "인식표.",
+          "Source": "L8450"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…왜 안 걸어.",
+          "Source": "L8462"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…표시가 나잖아요.",
+          "Source": "L8464"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 대치 해소",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "쇠파이프들이 반 뼘씩 올라옴",
+      "Props": [
+        "prop_dogtag_c",
+        "prop_deserter_rifle"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "심문",
+      "GameplayExit": "총구가 내려감",
+      "AnimationRequired": [
+        "show_dogtag",
+        "lower_rifle"
+      ],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP10_DESERTERS_STANDDOWN"
+      ],
+      "Prerequisites": [
+        "EP10_SC007"
+      ],
+      "NextScene": "EP10_SC009",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_seo_hasa",
+        "char:char_kain",
+        "char:char_ain",
+        "char:char_ryu",
+        "char:char_talyeongbyeong",
+        "prop:prop_dogtag_c",
+        "prop:prop_deserter_rifle",
+        "anim:show_dogtag",
+        "anim:lower_rifle"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC009",
+      "NovelSource": "L8474-L8529 §8 중위님",
+      "NovelSummary": "남자가 터널 쪽에서 온 그들에게 현 중위를 못 봤냐고 묻는다. 아인은 터널 안의 군복을 물 밖에 눕혀 놨는데 돌아올 때는 없었다고 답한다. 남자는 '수거됐다'고 말하며, 각인 붙은 시신을, 가끔은 산 사람도 가져간다고, 그들은 밤에 오고 흔적이 없고 걸음이 전부 똑같다고 한다.",
+      "Location": "loc_namtaeryeong_national_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_talyeongbyeong"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "'수거'의 첫 증언",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_talyeongbyeong"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "혹시. 중위님을 못 봤습니까. 현 중위.",
+          "Source": "L8482"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…군복이, 있었어요. 터널 안에.",
+          "Source": "L8492"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…돌아올 때는, 없었어요.",
+          "Source": "L8500"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…수거됐습니다.",
+          "Source": "L8508"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "가져가는 겁니다. 각인 붙은 시신을.",
+          "Source": "L8514"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…가끔은, 산 사람도.",
+          "Source": "L8518"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 증언 청취",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "도로 위, 긴 침묵",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "침묵"
+      ],
+      "Music": "낮게 깔리는 비감",
+      "GameplayEntry": "남자가 목소리를 낮춤",
+      "GameplayExit": "'걸음이 전부 똑같다'",
+      "AnimationRequired": [
+        "shoulders_sink",
+        "jaw_clench"
+      ],
+      "CinematicRequired": "true: 탈영병들의 어깨가 내려앉는 컷",
+      "SaveFlags": [
+        "EP10_LEARNED_SUGEO"
+      ],
+      "Prerequisites": [
+        "EP10_SC008"
+      ],
+      "NextScene": "EP10_SC010",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_national_road",
+        "char:char_seo_hasa",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_talyeongbyeong",
+        "anim:shoulders_sink",
+        "anim:jaw_clench"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC010",
+      "NovelSource": "L8530-L8551 §9 중계소",
+      "NovelSummary": "남태령 고개 능선의 철탑 아래 중계소 문이 열려 있다. 내부는 의자·컵·담요까지 가지런하고, 싸운 흔적도 도망친 흔적도 없다. 아인은 먼지 위의 가지런한 발자국을 보고 줄 서서 걸어 나갔다고 판단한다.",
+      "Location": "loc_namtaeryeong_relay_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "저항 없는 소실",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_seo_hasa"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "…싸운 흔적이 없습니다.",
+          "Source": "L8540"
+        },
+        {
+          "Speaker": "TBD_CANON",
+          "Line": "도망친 흔적도 없네.",
+          "Source": "L8542"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…걸어 나갔어요. 줄 서서.",
+          "Source": "L8546"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "중계소 내부를 조사한다",
+      "Interaction": [
+        "열린 문 확인",
+        "가지런한 실내(의자·컵·담요) 조사",
+        "바닥 발자국 판독"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "부서지지 않고 열린 문, 가지런한 내부, 문을 향한 가지런한 발자국",
+      "Props": [
+        "prop_relay_tower"
+      ],
+      "VFX": [],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "섬뜩한 정적",
+      "GameplayEntry": "중계소 도착",
+      "GameplayExit": "발자국 판독",
+      "AnimationRequired": [
+        "inspect_footprints"
+      ],
+      "CinematicRequired": "false: 조사",
+      "SaveFlags": [
+        "EP10_RELAY_EMPTY"
+      ],
+      "Prerequisites": [
+        "EP10_SC009"
+      ],
+      "NextScene": "EP10_SC011",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_relay_station",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_seo_hasa",
+        "prop:prop_relay_tower",
+        "anim:inspect_footprints"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC011",
+      "NovelSource": "L8552-L8577 §10 명단",
+      "NovelSummary": "통신 책상의 교신 기록부는 마지막 기재가 문장 중간에서 끊겨 있고, 그 위 칸에 '등급 명단 재송부 바람. B 이상 우선.'이 남아 있다. 아인은 강남역 셔터 뒤 B·A 인식표의 시신들을 떠올리고, 서 하사의 얼굴에서 색이 빠진다. 아인은 기록부를 통째로 품에 넣는다.",
+      "Location": "loc_namtaeryeong_relay_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_seo_hasa"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "등급 명단 — 첫 증거",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_seo_hasa"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…나갑시다. 여기, 오래 있을 데가 아닙니다.",
+          "Source": "L8570"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION",
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "교신 기록부를 읽고 확보한다",
+      "Interaction": [
+        "교신 기록부 읽기",
+        "기록부 획득(찢지 않고 통째로)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "통신 책상, 문장 중간에서 끊긴 기재",
+      "Props": [
+        "prop_comm_logbook"
+      ],
+      "VFX": [
+        "(제안) 강남역 셔터 뒤 시신 회상 인서트"
+      ],
+      "SFX": [
+        "종이 넘기는 소리"
+      ],
+      "Music": "냉기",
+      "GameplayEntry": "통신 책상 앞",
+      "GameplayExit": "기록부를 품에 넣음",
+      "AnimationRequired": [
+        "read_logbook_long",
+        "tuck_logbook"
+      ],
+      "CinematicRequired": "true: 기록부 문구 클로즈업",
+      "SaveFlags": [
+        "EP10_LOGBOOK_TAKEN"
+      ],
+      "Prerequisites": [
+        "EP10_SC010"
+      ],
+      "NextScene": "EP10_SC012",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_relay_station",
+        "char:char_ain",
+        "char:char_seo_hasa",
+        "prop:prop_comm_logbook",
+        "anim:read_logbook_long",
+        "anim:tuck_logbook"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC012",
+      "NovelSource": "L8578-L8593 §11 불 피우지 마시오",
+      "NovelSummary": "나서는 길 문가에서 서 하사가 밤에 불을 피우지 말라고, 놈들이 아니라 사람이 본다고 말한다. '지상의 것들'의 뜻이 괴물에서 사람으로 바뀐다.",
+      "Location": "loc_namtaeryeong_relay_station",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "위협의 재정의 — 사람이 본다",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_seo_hasa",
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "밤에 불 피우지 마시오.",
+          "Source": "L8582"
+        },
+        {
+          "Speaker": "char_seo_hasa",
+          "Line": "…놈들이 무서워서가 아니라. 사람이 봅니다.",
+          "Source": "L8586"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "(연출) 경고",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "중계소 문가",
+      "Props": [],
+      "VFX": [],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "중계소를 나섬",
+      "GameplayExit": "경고 후 출발",
+      "AnimationRequired": [],
+      "CinematicRequired": "false: 대화",
+      "SaveFlags": [
+        "EP10_WARNING_NO_FIRE"
+      ],
+      "Prerequisites": [
+        "EP10_SC011"
+      ],
+      "NextScene": "EP10_SC013",
+      "RequiredAssets": [
+        "env:loc_namtaeryeong_relay_station",
+        "char:char_seo_hasa",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC013",
+      "NovelSource": "L8594-L8605 §12 스물 (야영)",
+      "NovelSummary": "고개 아래 폐주유소에서 넷은 불 없이 야영한다. 카인은 불빛 때문에 담배를 도로 넣고, 오정길은 어둠 속에서 쏘지 못하는 총을 소리 없이 손질한다.",
+      "Location": "loc_abandoned_gas_station",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "불 없는 밤",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 야영",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "불 없는 어둠",
+      "Props": [
+        "prop_cigarette",
+        "prop_oh_gun"
+      ],
+      "VFX": [],
+      "SFX": [
+        "총기 손질의 미세한 소리"
+      ],
+      "Music": "고요한 밤",
+      "GameplayEntry": "야영지 도착",
+      "GameplayExit": "잠듦",
+      "AnimationRequired": [
+        "sit_in_dark",
+        "put_cigarette_back",
+        "clean_gun_silently"
+      ],
+      "CinematicRequired": "false: 짧은 분위기 컷",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP10_SC012"
+      ],
+      "NextScene": "EP10_SC014",
+      "RequiredAssets": [
+        "env:loc_abandoned_gas_station",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_cigarette",
+        "prop:prop_oh_gun",
+        "anim:sit_in_dark",
+        "anim:put_cigarette_back",
+        "anim:clean_gun_silently"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC014",
+      "NovelSource": "L8606-L8627 §12 스물 (행렬)",
+      "NovelSummary": "아인이 도로 쪽 발소리에 깬다. 스무 개의 발소리가 전부 같은 보폭으로, 랜턴도 말소리도 없이 무언가를 나르며 능선 아래 도로를 한 줄로 남하한다. 깨어 있던 카인과 눈이 마주치고, 넷은 행렬이 사라질 때까지 숨소리조차 줄인다.",
+      "Location": "loc_abandoned_gas_station",
+      "TimeOfDay": "밤",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_bam_haengnyeol"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "훈련된 보폭 — 밤의 대열",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_bam_haengnyeol"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 들키지 않고 행렬을 흘려보낸다",
+      "Interaction": [
+        "(제안) 발소리 세기 — 스물, 같은 보폭",
+        "(제안) 움직이지 않고 숨죽이기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "능선 아래 어두운 도로, 한 줄로 남하하는 행렬",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "같은 보폭의 발소리 스물"
+      ],
+      "Music": "숨죽인 공포",
+      "GameplayEntry": "소리에 깸",
+      "GameplayExit": "행렬이 어둠 속으로 사라짐",
+      "AnimationRequired": [
+        "wake_and_count",
+        "procession_march",
+        "hold_breath_still"
+      ],
+      "CinematicRequired": "true: 밤 그 자체가 대열을 짠 듯한 행렬",
+      "SaveFlags": [
+        "EP10_SAW_PROCESSION_20"
+      ],
+      "Prerequisites": [
+        "EP10_SC013"
+      ],
+      "NextScene": "EP10_SC015",
+      "RequiredAssets": [
+        "env:loc_abandoned_gas_station",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_bam_haengnyeol",
+        "anim:wake_and_count",
+        "anim:procession_march",
+        "anim:hold_breath_still"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP10",
+      "SceneId": "EP10_SC015",
+      "NovelSource": "L8628-L8660 §13 남쪽",
+      "NovelSummary": "행렬이 사라진 뒤에도 아인은 남쪽을 오래 본다. 품의 교신 기록부, 등급 명단, 훈련된 보폭 — 조각들이 모두 남쪽을 가리킨다. 아인은 낫을 안고 눈을 감지 않은 채 아침을 기다린다. 다음 화 예고: 누가.",
+      "Location": "loc_abandoned_gas_station",
+      "TimeOfDay": "밤~새벽",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "조각들이 가리키는 방향 — 남쪽",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_ain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(연출) 에피소드 종료",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "남쪽 어둠",
+      "Props": [
+        "prop_comm_logbook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "고요"
+      ],
+      "Music": "엔딩 여운",
+      "GameplayEntry": "행렬 소멸",
+      "GameplayExit": "아침을 기다림 → EP11",
+      "AnimationRequired": [
+        "hug_scythe_wait"
+      ],
+      "CinematicRequired": "true: 엔딩 컷",
+      "SaveFlags": [
+        "EP10_COMPLETE"
+      ],
+      "Prerequisites": [
+        "EP10_SC014"
+      ],
+      "NextScene": "EP11_SC001",
+      "RequiredAssets": [
+        "env:loc_abandoned_gas_station",
+        "char:char_ain",
+        "prop:prop_comm_logbook",
+        "anim:hug_scythe_wait"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [],
+  "Locations": [
+    {
+      "LocationId": "loc_bunker_infirmary",
+      "NameKo": "벙커 의무실",
+      "DescriptionKo": "닥터 진의 약장이 있는 의무실.",
+      "Scenes": [
+        "EP10_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_bunker_control_room",
+      "NameKo": "관제실",
+      "DescriptionKo": "벽에 지도(남태령 방면 새 경로선)가 걸린 벙커 관제실.",
+      "Scenes": [
+        "EP10_SC002"
+      ]
+    },
+    {
+      "LocationId": "loc_namtaeryeong_national_road",
+      "NameKo": "남태령 방면 지상 국도",
+      "DescriptionKo": "지역⑤. 차간 거리를 지킨 채 멈춘 차들이 선 왕복 8차선, 반쯤 내려간 요금소 차단기, 하이패스 표지판, 얕은 붉은 안개. 가드레일 사이 깡통 경보기.",
+      "Scenes": [
+        "EP10_SC003",
+        "EP10_SC004",
+        "EP10_SC005",
+        "EP10_SC006",
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC009"
+      ]
+    },
+    {
+      "LocationId": "loc_namtaeryeong_relay_station",
+      "NameKo": "남태령 중계소",
+      "DescriptionKo": "남태령 고개 능선 위 철탑 아래 낮은 콘크리트 건물. 문이 열려 있고 내부는 가지런함.",
+      "Scenes": [
+        "EP10_SC010",
+        "EP10_SC011",
+        "EP10_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_abandoned_gas_station",
+      "NameKo": "고개 아래 폐주유소",
+      "DescriptionKo": "불 없이 야영한 폐주유소. 능선 아래 도로가 보임.",
+      "Scenes": [
+        "EP10_SC013",
+        "EP10_SC014",
+        "EP10_SC015"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "사신 용병단 C급 용병. 소리로 순찰 신호 간격을 읽음",
+      "Scenes": [
+        "EP10_SC001",
+        "EP10_SC002",
+        "EP10_SC003",
+        "EP10_SC004",
+        "EP10_SC005",
+        "EP10_SC006",
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC009",
+        "EP10_SC010",
+        "EP10_SC011",
+        "EP10_SC012",
+        "EP10_SC013",
+        "EP10_SC014",
+        "EP10_SC015"
+      ],
+      "StateChangesKo": [
+        "EP10_SC001: 억제제 열흘 치 두 병 수령 (옷 안쪽 주머니·배낭에 나눠 보관)",
+        "EP10_SC006: 클레이브 코어 파편 회수",
+        "EP10_SC011: 남태령 중계소 교신 기록부를 통째로 품에 넣음"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "사신 용병단 C급 용병. 가드 담당",
+      "Scenes": [
+        "EP10_SC002",
+        "EP10_SC003",
+        "EP10_SC004",
+        "EP10_SC005",
+        "EP10_SC006",
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC009",
+        "EP10_SC010",
+        "EP10_SC012",
+        "EP10_SC013",
+        "EP10_SC014"
+      ],
+      "StateChangesKo": [
+        "EP10_SC006: 가드 반동으로 대검의 금이 한 마디 길어짐 (본인은 모름)",
+        "EP10_SC013: 불빛 때문에 담배를 도로 넣음"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "지분 계약 용병 (C랭크, 인식표 미착용)",
+      "Scenes": [
+        "EP10_SC002",
+        "EP10_SC003",
+        "EP10_SC004",
+        "EP10_SC005",
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC010",
+        "EP10_SC012",
+        "EP10_SC013",
+        "EP10_SC014"
+      ],
+      "StateChangesKo": [
+        "EP10_SC004: 배낭 끈이 깡통 경보기를 건드림",
+        "EP10_SC008: 인식표를 꺼내 보인 뒤 다시 주머니에 넣음"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "지도와 경로 담당. 쏘지 못하는 총을 지님",
+      "Scenes": [
+        "EP10_SC002",
+        "EP10_SC003",
+        "EP10_SC004",
+        "EP10_SC007",
+        "EP10_SC010",
+        "EP10_SC012",
+        "EP10_SC013",
+        "EP10_SC014"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "벙커 관리관. 남태령 중계소 확인 의뢰",
+      "Scenes": [
+        "EP10_SC002"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_dr_jin",
+      "NameKo": "닥터 진",
+      "RoleKo": "벙커 의무실 의사. 억제제 처방 (획 끝이 아래로 꺾이는 글씨)",
+      "Scenes": [
+        "EP10_SC001"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_seo_hasa",
+      "NameKo": "서 하사",
+      "RoleKo": "탈영병 무리의 선두. 40대, 부사관 출신 (이름은 L8568에서 처음 명시)",
+      "Scenes": [
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC009",
+        "EP10_SC010",
+        "EP10_SC011",
+        "EP10_SC012"
+      ],
+      "StateChangesKo": [
+        "EP10_SC007~SC008: 소총을 겨눴다가 내림"
+      ]
+    },
+    {
+      "CharacterId": "char_talyeongbyeong",
+      "NameKo": "탈영병들",
+      "RoleKo": "군복·사복이 섞인 마른 사람들 (쇠파이프·정글도·낡은 대검)",
+      "Scenes": [
+        "EP10_SC006",
+        "EP10_SC007",
+        "EP10_SC008",
+        "EP10_SC009"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_clave",
+      "NameKo": "클레이브",
+      "RoleKo": "순찰형 집행관 2기 — 서로 신호를 주고받음 (보스 아님)",
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "StateChangesKo": [
+        "EP10_SC005: 2기 모두 무너짐 (1기: 목, 2기: 무릎과 목)"
+      ]
+    },
+    {
+      "CharacterId": "char_bam_haengnyeol",
+      "NameKo": "밤의 행렬",
+      "RoleKo": "훈련된 같은 보폭으로 남하하는 스물의 무리 (정체 미상)",
+      "Scenes": [
+        "EP10_SC014"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_hyeon_jungwi",
+      "NameKo": "현 중위",
+      "RoleKo": "탈영병들이 찾는 상관 — 언급만, 등장 없음",
+      "Scenes": [
+        "EP10_SC008"
+      ],
+      "StateChangesKo": []
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "write_label",
+      "Category": "interaction",
+      "Characters": [
+        "char_dr_jin"
+      ],
+      "Scenes": [
+        "EP10_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "빈 라벨에 용량·복용 간격을 적음"
+    },
+    {
+      "Action": "split_bottles",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "한 병은 옷 안쪽 주머니, 한 병은 배낭에"
+    },
+    {
+      "Action": "touch_gun_at_waist",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "허리춤의 총을 한 번 만짐"
+    },
+    {
+      "Action": "fold_map_into_coat",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낡은 지도를 접어 품에 넣음"
+    },
+    {
+      "Action": "walk_highway_group",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "넷의 도보 이동 (오정길 앞, 류 맨 뒤)"
+    },
+    {
+      "Action": "rest_sword_on_shoulder",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP10_SC003",
+        "EP10_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "금 간 대검을 어깨에 굄"
+    },
+    {
+      "Action": "crouch_inspect_knot",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쪼그려 앉아 매듭을 살핌"
+    },
+    {
+      "Action": "step_over_wire",
+      "Category": "traversal",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP10_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "줄을 넘다 배낭 끈이 스침"
+    },
+    {
+      "Action": "reach_catch_fail",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "기우는 깡통을 향해 손을 뻗지만 늦음"
+    },
+    {
+      "Action": "clave_patrol_walk",
+      "Category": "locomotion",
+      "Characters": [
+        "char_clave"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "순찰 보폭의 금속 관절 보행"
+    },
+    {
+      "Action": "kain_guard_deflect",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가드로 기체를 받아 젖힘"
+    },
+    {
+      "Action": "scythe_circle_slash_neck",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "젖혀진 목덜미로 낫이 원 — 끝자락 4분의 1"
+    },
+    {
+      "Action": "sprint_count_steps",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "신호 사이 여섯 걸음을 세며 질주"
+    },
+    {
+      "Action": "ryu_twin_strike_knee_neck",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "그늘에서 미끄러져 들어와 무릎과 목 동시 타격"
+    },
+    {
+      "Action": "clave_collapse",
+      "Category": "death",
+      "Characters": [
+        "char_clave"
+      ],
+      "Scenes": [
+        "EP10_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "소리 없이 무너짐"
+    },
+    {
+      "Action": "collect_core_fragment",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "코어 파편을 주머니에 넣음"
+    },
+    {
+      "Action": "aim_rifle_trembling",
+      "Category": "gesture",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP10_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "떨리는 손으로 총구를 겨눔"
+    },
+    {
+      "Action": "half_step_forward",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP10_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "반보 앞으로 나섬 (대검은 어깨에)"
+    },
+    {
+      "Action": "show_dogtag",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain",
+        "char_ain",
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP10_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "인식표를 들어 보임"
+    },
+    {
+      "Action": "lower_rifle",
+      "Category": "gesture",
+      "Characters": [
+        "char_seo_hasa"
+      ],
+      "Scenes": [
+        "EP10_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "총구를 내림"
+    },
+    {
+      "Action": "shoulders_sink",
+      "Category": "emotion",
+      "Characters": [
+        "char_talyeongbyeong"
+      ],
+      "Scenes": [
+        "EP10_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "어깨가 하나씩 내려앉음"
+    },
+    {
+      "Action": "jaw_clench",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아인의 왼쪽 턱 근육이 도드라졌다 풀림"
+    },
+    {
+      "Action": "inspect_footprints",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "바닥의 발자국을 봄"
+    },
+    {
+      "Action": "read_logbook_long",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "기록부를 오래 읽음"
+    },
+    {
+      "Action": "tuck_logbook",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC011"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "기록부를 통째로 품에 넣음"
+    },
+    {
+      "Action": "sit_in_dark",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "불 없이 어둠 속에 앉음"
+    },
+    {
+      "Action": "put_cigarette_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP10_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "담배를 꺼냈다가 도로 넣음"
+    },
+    {
+      "Action": "clean_gun_silently",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "어둠 속에서 소리 없이 총 손질"
+    },
+    {
+      "Action": "wake_and_count",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "소리에 깨어 입술만 움직여 셈"
+    },
+    {
+      "Action": "procession_march",
+      "Category": "locomotion",
+      "Characters": [
+        "char_bam_haengnyeol"
+      ],
+      "Scenes": [
+        "EP10_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "스물이 같은 보폭으로 무언가를 나르며 남하"
+    },
+    {
+      "Action": "hold_breath_still",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP10_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "숨소리조차 줄이고 움직이지 않음"
+    },
+    {
+      "Action": "hug_scythe_wait",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP10_SC015"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫을 끌어당겨 안고 눈을 뜬 채 아침을 기다림"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_suppressant_bottle",
+      "NameKo": "억제제 병 (닥터 진의 손글씨 라벨)",
+      "Scenes": [
+        "EP10_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_wall_map",
+      "NameKo": "관제실 벽 지도 (남태령 방면 경로선)",
+      "Scenes": [
+        "EP10_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_old_map",
+      "NameKo": "오정길의 낡은 지도",
+      "Scenes": [
+        "EP10_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_oh_gun",
+      "NameKo": "오정길의 총 (격발 불가)",
+      "Scenes": [
+        "EP10_SC002",
+        "EP10_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_cracked_greatsword",
+      "NameKo": "카인의 금 간 대검",
+      "Scenes": [
+        "EP10_SC003",
+        "EP10_SC005",
+        "EP10_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_bus_reserved_sign",
+      "NameKo": "고속버스 「예약 만석」 팻말",
+      "Scenes": [
+        "EP10_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_can_alarm",
+      "NameKo": "낚싯줄 깡통 경보기",
+      "Scenes": [
+        "EP10_SC004"
+      ]
+    },
+    {
+      "PropId": "prop_core_fragment",
+      "NameKo": "클레이브 코어 파편",
+      "Scenes": [
+        "EP10_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_deserter_rifle",
+      "NameKo": "탈영병의 소총 (격발 불가)",
+      "Scenes": [
+        "EP10_SC007",
+        "EP10_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_dogtag_c",
+      "NameKo": "C랭크 인식표",
+      "Scenes": [
+        "EP10_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_comm_logbook",
+      "NameKo": "중계소 교신 기록부 (등급 명단 재송부 요청)",
+      "Scenes": [
+        "EP10_SC011",
+        "EP10_SC015"
+      ]
+    },
+    {
+      "PropId": "prop_relay_tower",
+      "NameKo": "중계소 철탑",
+      "Scenes": [
+        "EP10_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "담배",
+      "Scenes": [
+        "EP10_SC013"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP10_SC001",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC002",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC003",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC004",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC005",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC005",
+      "QuestionKo": "non-boss combat in novel — game representation TBD (클레이브 2기와의 교전)"
+    },
+    {
+      "Scene": "EP10_SC006",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC007",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC008",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC008",
+      "QuestionKo": "'강남 벙커. 용병이다.'(L8448) 화자 미명시"
+    },
+    {
+      "Scene": "EP10_SC009",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC009",
+      "QuestionKo": "수거하는 자들의 정체는 이 화에서 미명시 (남자도 모름)"
+    },
+    {
+      "Scene": "EP10_SC010",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC010",
+      "QuestionKo": "대사의 화자가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC010",
+      "QuestionKo": "중계소 동행 인원 중 서 하사 외 탈영병 동행 여부 미명시(서 하사는 L8568에서 동석 확인)"
+    },
+    {
+      "Scene": "EP10_SC011",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC012",
+      "QuestionKo": "시간대(낮/밤)가 원고에 명시되지 않음"
+    },
+    {
+      "Scene": "EP10_SC014",
+      "QuestionKo": "행렬의 정체와 운반물의 형태 미명시"
+    },
+    {
+      "Scene": "EP10_SC005",
+      "QuestionKo": "에피소드 헤더의 결과 '무승부'가 무엇을 가리키는지(보스 부재) 게임 반영 방식 TBD"
+    }
+  ]
+}

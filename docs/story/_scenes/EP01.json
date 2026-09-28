@@ -1,0 +1,3087 @@
+{
+  "EpisodeId": "EP01",
+  "TitleKo": "황혼 아래 사신의 낫",
+  "NovelSource": {
+    "file": "황혼_1부_소설판_제01화_마감본.txt",
+    "lines": [
+      1,
+      681
+    ]
+  },
+  "SummaryKo": "서식 3-A와 【서】 콜드 오픈이 훈련용 허수아비의 각성과 '두 개의 목소리'를 먼저 보여 준 뒤, 여섯 시간 전으로 돌아가 총기가 통하지 않던 붕괴 문서를 제시한다. 황혼의 강남 폐빌딩 옥상에서 아인은 셔터 너머로 작은 손을 놓친 기억에 잠기고, 반보 뒤에 선 카인이 마태오의 호출을 전한다. 두 사람은 지하 3층 강남 벙커로 내려가고, 아인은 두 손으로 낫을 돌려주는 한 장인에게 낫값 칩을 건네지만 장인은 받지 않는다. 이 년간 무등록이던 아인은 각인 평가소에서 유진에게 C(상단, B 경계 바로 아래)를 받고 카인도 C를 받는다. 유진은 아무도 시키지 않은 손글씨 대장을 적고, 마태오는 잉크를 말없이 보탠다. 인력사무소에서 마태오는 강남역 지하상가 신호 상승을 알리고 호흡 테스트로 훈련용 허수아비를 치게 한다. 허수아비 속 문양이 폭발하며 3m 나노 강선체가 나타나고, 아인은 너무 붙어 실패하지만 카인의 되받아치기로 자세가 무너진 틈에 낫 하나 길이에서 이음매를 끊어 온전한 결정을 얻는다. 마태오는 두 사람을 용병단으로 합격시키고 허수아비값 30만 원을 첫 의뢰비에서 까겠다 하지만 장부에는 「손실」로 적는다. 두 사람은 C 인식표를 걸고 강남역 지하상가 출격문을 지나 붉은 안개 속으로 나선다.",
+  "ComparisonSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      47,
+      1131
+    ],
+    "NoteKo": "마감본이 최신 확정본으로 우선한다. 통합본 EP01은 비교용. 장면의 Dialogue Source 줄 번호는 마감본 기준."
+  },
+  "VersionDiffKo": [
+    "마감본에만: 첫머리 「각인 계측 대장 · 서식 3-A」(성명 아인/나이 26/거주 구역 강남 벙커/등급 C/최초 계측일 2030.05.11/변동 없음) — 마감본 L3-L5.",
+    "마감본에만: 【 서 】 콜드 오픈 — 훈련장에서 사슬이 끊어지고 허수아비가 일어서며, 두 개의 목소리에 아인의 손이 멈춤. '— 여섯 시간 전.'으로 본편 연결 (마감본 L7-L25).",
+    "통합본에만: 전편(1~7절)/후편(8~15절) 구분과 번호 절 제목(### 0.~15.), '제1화 끝'·다음 화 예고(통합본 L1122-L1130), v3.0→v4.0 변경 노트(L1132-L1163). 마감본은 ◇ 무번호 절이고 끝맺음·예고 없음.",
+    "옥상: 통합본은 '아인. 스물여섯.'으로 이름·나이를 명시(통합본 L104); 마감본은 '여자 하나'로 소개하고 나이는 서식 3-A에만 있음. 숫자 표기 '2년'(통합본) → '이 년'(마감본).",
+    "반보 뒤: 아인의 대답 — 통합본 '…알아. 그 피비린내 나는 지하로 내려갈 시간이라는 걸.'(L235) → 마감본 '…알아요.'(L129).",
+    "사람이 사는 곳: 마감본에만 — 나선 계단에서 황혼이 한 뼘씩 줄고 아래의 주황색만 남음(L137), 소리 하나가 빠지는 날(L141), 두 통의 양(L153), 겹쳐 붙은 벽보(L155), 배급 줄 뒤 꺾인 통로·쇠 두드리는 소리·'늘 두 번째로 가는 자리'(L157).",
+    "재촉: 마감본에만 — 검수 순서가 넉 달 전 낫을 처음 건네던 날과 같음(L167), 두 손으로 드는 이유를 둘 다 알지만 말하지 않음(L173), 미룸 문장 확장(L207).",
+    "이 년(통합본 '2년'): 마감본에만 — 이 년이 홀로그램 위 손가락 하나만큼의 거리로 환산(L257).",
+    "대장: 마감본에만 — 손으로 적지 않으면 이름이 어디에도 남지 않는 날이 온다는 유진의 인식(L325).",
+    "원: 마감본에만 — 훈련장 천장이 낮아 카인이 이 방에서만은 검을 눕혀 든다(L381).",
+    "짚단이 아니었다: 통합본 '카인, 물러나!'/'…어?'(L726-L728) → 마감본 '카인! 물러나!'/'…뭐?'(L419-L421); 마감본에만 — '이 년을 같이 다녔는데도… 아직 부르면 되묻는 사이'(L425), 신호음이 짐승의 목청이 낼 수 없는 종류(L453).",
+    "거리: 마감본에만 — 반 박자를 '세상에서 가장 짧고 가장 확실한 시간'(L469), 띠 안에서는 한 번도 진 적 없어 띠 밖을 몰랐다(L501).",
+    "되돌려주는 법: 마감본에만 — '되돌려 준 쪽에게만 열리는 시간'(L527).",
+    "끊는 법: 마감본에만 — 회색 가루가 아직 형체를 잡아 가는 중(L573).",
+    "손실: 마감본에만 — 마태오의 시선이 잔해·철사슬·매트 자국으로 옮겨 감(L613), 닳은 서류철 표지(L641). 통합본은 훈련장/사무소 사이 구분선(L1054).",
+    "출격: 통합본 아인 대사 '…가자, 카인. 두 번 다시 놓치는 손은 없어야 하니까.'(L1094) → 마감본은 오른손을 쥐었다 펴는 손짓(카인이 이 년 동안 보았으나 물어본 적 없음) 후 '…가요.'(L655-L661). 마감본에만 — 인식표 소리가 안개가 삼키기엔 작고 둘이 듣기엔 충분(L677)."
+  ],
+  "Scenes": [
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC001",
+      "NovelSource": "마감본.txt L1-L6 제목 · 「각인 계측 대장 · 서식 3-A」",
+      "NovelSummary": "화 제목 '제01화 황혼 아래 사신의 낫'. 계측 대장 서식 3-A 한 줄: 성명 아인 / 나이 26 / 거주 구역 강남 벙커 / 등급 C / 최초 계측일 2030.05.11 / 변동 없음.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON (문서 인서트; 최초 계측일 2030.05.11 기재)",
+      "Characters": [],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "오프닝 문서 — 아인을 '수치'로 먼저 소개",
+      "PlayerCharacter": "none",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "서식을 읽는다(비조작)",
+      "Interaction": [
+        "입력 시 다음으로"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "서식 문서 인서트",
+      "Props": [
+        "prop_ledger_form_3a"
+      ],
+      "VFX": [
+        "문서 인서트"
+      ],
+      "SFX": [],
+      "Music": "",
+      "GameplayEntry": "EP01 시작",
+      "GameplayExit": "【서】 콜드 오픈으로 컷",
+      "AnimationRequired": [],
+      "CinematicRequired": "true — 문서 타이틀 인서트",
+      "SaveFlags": [
+        "flag_ep01_started"
+      ],
+      "Prerequisites": [],
+      "NextScene": "EP01_SC002",
+      "RequiredAssets": [
+        "prop:prop_ledger_form_3a",
+        "vfx:doc_insert"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC002",
+      "NovelSource": "마감본.txt L7-L26 【 서 】",
+      "NovelSummary": "(콜드 오픈) 지하 훈련장. 목제 몸통을 여섯 바퀴 감고 있던 사슬이 안쪽에서 밀려 끊어지고, 이 년 동안 묶여 있던 사람 크기 표적(표면에 칼자국)이 몸을 세운다. 눈이 없던 자리에 붉은 것이 켜진다. 열 걸음 거리에서 낫을 든 아인은 그것이 낸 소리를 듣는 순간 손이 멈춘다 — 목소리가 두 개였다. 큰 것은 짐승의 것, 작은 것은 —. '— 여섯 시간 전.'",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (본편 기준 여섯 시간 뒤 시점)",
+      "Characters": [
+        "char_ain",
+        "char_training_heosuabi"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자"
+      ],
+      "StoryBeat": "플래시포워드 — 보스 각성과 '두 개의 목소리', 아인의 손이 처음 멈춤",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_training_heosuabi"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(콜드 오픈 연출)",
+      "Interaction": [],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "",
+      "EnvironmentState": "훈련장 조명이 사슬 진동에 흔들림, 콘크리트 바닥을 긁으며 튀는 사슬",
+      "Props": [
+        "prop_iron_chain",
+        "prop_training_scarecrow",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "사슬 끊김 파편",
+        "조명 흔들림",
+        "칼자국 사이로 켜지는 빛",
+        "눈 자리 붉은 빛"
+      ],
+      "SFX": [
+        "사슬 끊김·콘크리트 긁힘",
+        "이중 음성(큰 짐승 목소리+작은 목소리)"
+      ],
+      "Music": "정지·긴장(두 목소리에서 컷)",
+      "GameplayEntry": "서식 인서트 후",
+      "GameplayExit": "'— 여섯 시간 전' 자막 후 문서로",
+      "AnimationRequired": [
+        "boss_heosuabi_chain_break_rise",
+        "hand_freeze_midswing"
+      ],
+      "CinematicRequired": "true — 콜드 오픈 플래시포워드",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP01_SC001"
+      ],
+      "NextScene": "EP01_SC003",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_training_heosuabi",
+        "prop:prop_iron_chain",
+        "prop:prop_training_scarecrow",
+        "prop:prop_scythe",
+        "anim:boss_heosuabi_chain_break_rise",
+        "anim:hand_freeze_midswing",
+        "vfx:chain_snap",
+        "sfx:double_voice"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC003",
+      "NovelSource": "마감본.txt L27-L50 ◇ 남은 문서",
+      "NovelSummary": "국방부 상황보고 제3보(2030.03.04 05:20): 경기 남부 방어선 접촉 중단, 소화기 유효성 '불명'·무력화 0건, 유도 병기 오작동, 대응 방침 대기. 사단장 수신 공문 '소화기 사용 관련'은 '소화기 사용을 —'에서 끊기고 다음 장이 없다. 귀퉁이가 찢긴 종이의 손글씨: '탄약 안 아껴도 됨 / 어차피 안 죽음'.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON (문서 기재 2030.03.04 05:20)",
+      "Characters": [],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "총기 무용·인간 대응의 실패를 문서로 제시",
+      "PlayerCharacter": "none",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "문서 3장을 읽는다(비조작)",
+      "Interaction": [
+        "입력 시 다음 장"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "문서 인서트",
+      "Props": [
+        "prop_mnd_report_3",
+        "prop_order_small_arms",
+        "prop_handwritten_note"
+      ],
+      "VFX": [
+        "문서 인서트(종이 질감)"
+      ],
+      "SFX": [
+        "종이 넘김"
+      ],
+      "Music": "건조한 저음 앰비언트",
+      "GameplayEntry": "【서】 후 '여섯 시간 전'",
+      "GameplayExit": "손글씨 쪽지 후 옥상으로",
+      "AnimationRequired": [],
+      "CinematicRequired": "true — 문서 인서트",
+      "SaveFlags": [
+        "flag_ep01_prologue_docs_seen"
+      ],
+      "Prerequisites": [
+        "EP01_SC002"
+      ],
+      "NextScene": "EP01_SC004",
+      "RequiredAssets": [
+        "prop:prop_mnd_report_3",
+        "prop:prop_order_small_arms",
+        "prop:prop_handwritten_note",
+        "sfx:paper_turn"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC004",
+      "NovelSource": "마감본.txt L51-L70 ◇ 옥상",
+      "NovelSummary": "나노 입자로 이 년째 파랗지 않은 서울의 하늘, 보라와 핏빛의 황혼. 강남 폐빌딩 옥상, 무릎 높이 붉은 안개 위에 여자 하나(아인)가 서 있다: 잿빛으로 바랜 단발, 오른뺨의 사흘 된 피와 그을음, 옷 위로 비치는 스파인 코어가 심장 박동에 맞춰 명멸. 오른손의 낫(파이프 커터 개조, 자루 172cm) 끝자락 1/4 지점에서 코어와 같은 박자로 주황 입자가 고동친다. 아인이 눈을 감자 흰빛이 온다.",
+      "Location": "loc_gangnam_rooftop",
+      "TimeOfDay": "황혼",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자"
+      ],
+      "StoryBeat": "세계·주인공 소개 — 코어와 칼끝의 동기화(스위트 스폿 예고)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(도입 연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "무릎 높이 붉은 안개, 바람, 보라·핏빛 황혼",
+      "Props": [
+        "prop_scythe"
+      ],
+      "VFX": [
+        "붉은 안개",
+        "스파인 코어 심박 명멸",
+        "낫 끝자락 주황 입자",
+        "흰빛 페이드"
+      ],
+      "SFX": [
+        "바람",
+        "코어 맥동"
+      ],
+      "Music": "황량한 황혼 테마",
+      "GameplayEntry": "문서 인서트 후 컷",
+      "GameplayExit": "눈을 감자 흰빛 → 회상",
+      "AnimationRequired": [
+        "idle_stand_scythe",
+        "close_eyes"
+      ],
+      "CinematicRequired": "true — 캐릭터·세계 소개",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP01_SC003"
+      ],
+      "NextScene": "EP01_SC005",
+      "RequiredAssets": [
+        "env:loc_gangnam_rooftop",
+        "char:char_ain",
+        "prop:prop_scythe",
+        "anim:idle_stand_scythe",
+        "anim:close_eyes",
+        "vfx:red_fog",
+        "vfx:spine_core_pulse",
+        "vfx:scythe_tip_particles",
+        "bgm:twilight_theme"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC005",
+      "NovelSource": "마감본.txt L71-L84 ◇ 미끄러진 것 (회상)",
+      "NovelSummary": "셔터가 콘크리트 레일을 긁으며 내려오는 소리 — 기억 속에서 실제보다 훨씬 느려 매번 아직 시간이 있다는 착각이 든다. 맞잡았던 작은 손(손가락이 짧고 손톱 밑이 까맣다)이 미끄러진다: 아인이 다른 손을 잡으려고 잠깐 힘을 뺐기 때문. 하나를 더 잡으려다 쥐고 있던 하나를 놓쳤다. 좁아지는 틈, 마지막까지 보이던 것, 쿵.",
+      "Location": "TBD_CANON",
+      "TimeOfDay": "TBD_CANON (과거, 시점 미서술)",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "핵심 트라우마 — 놓친 작은 손",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "FLASHBACK"
+      ],
+      "PlayerGoal": "없음(회상 연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "흰빛 기억(눈을 뜨자 색이 돌아옴 — 무채색 암시), 닫히며 좁아지는 셔터 틈",
+      "Props": [],
+      "VFX": [
+        "흰빛 회상 필터",
+        "좁아지는 틈"
+      ],
+      "SFX": [
+        "셔터가 레일을 긁는 비명(슬로)",
+        "쿵"
+      ],
+      "Music": "정적 드론",
+      "GameplayEntry": "옥상에서 눈을 감음",
+      "GameplayExit": "'쿵' 후 눈을 뜸",
+      "AnimationRequired": [
+        "hand_slip_grip"
+      ],
+      "CinematicRequired": "true — 회상",
+      "SaveFlags": [
+        "flag_ep01_shutter_memory_seen"
+      ],
+      "Prerequisites": [
+        "EP01_SC004"
+      ],
+      "NextScene": "EP01_SC006",
+      "RequiredAssets": [
+        "char:char_ain",
+        "anim:hand_slip_grip",
+        "sfx:shutter_rail_scream_slow"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC006",
+      "NovelSource": "마감본.txt L85-L92 ◇ 미끄러진 것 (현재 복귀)",
+      "NovelSummary": "눈을 뜨자 색이 돌아온다. 낫 자루를 쥔 손에 힘줄이 도드라지고, 아인은 그 손을 한참 내려다본다. 이 년 동안 백 몇 마리를 끊었지만 전부 정찰대급 이하의 작은 것 — 이길 수 있는 것만, 안전한 거리에서, 한 번에. 그래도 그 손은 그날 그 크기만큼 비어 있다. 바람이 재를 날린다.",
+      "Location": "loc_gangnam_rooftop",
+      "TimeOfDay": "황혼",
+      "Characters": [
+        "char_ain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자"
+      ],
+      "StoryBeat": "아인의 원칙(작은 것만·한 번에)과 비어 있는 손",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "바람에 재가 날림",
+      "Props": [
+        "prop_scythe"
+      ],
+      "VFX": [
+        "색 복귀",
+        "날리는 재"
+      ],
+      "SFX": [
+        "바람"
+      ],
+      "Music": "황혼 테마(잔향)",
+      "GameplayEntry": "회상 종료",
+      "GameplayExit": "철문 소리",
+      "AnimationRequired": [
+        "look_at_hand_grip"
+      ],
+      "CinematicRequired": "true — 감정 잔상",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP01_SC005"
+      ],
+      "NextScene": "EP01_SC007",
+      "RequiredAssets": [
+        "env:loc_gangnam_rooftop",
+        "char:char_ain",
+        "prop:prop_scythe",
+        "anim:look_at_hand_grip"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC007",
+      "NovelSource": "마감본.txt L93-L132 ◇ 반보 뒤",
+      "NovelSummary": "옥상 철문이 열리고 역광 속 카인(32) 등장 — 왼쪽 눈썹에서 턱까지 사람이 낸 흉터, 190cm·62kg 티타늄 대검을 한 손으로 어깨에 굄. 그는 아인의 반보 뒤에 멈춘다(늘 그렇다, 누가 정한 적은 없다). 라이터로 담배에 불을 붙이고, 마태오 영감이 지하 인력사무소에서 부른다며 오늘 의뢰의 핏값이 두둑하다고(그만큼 죽기 좋다고) 전한다. 아인은 '…알아요.' 카인은 반쯤 태운 담배를 비벼 끄고 주워 주머니에 넣는다; 아인은 보지만 말하지 않는다.",
+      "Location": "loc_gangnam_rooftop",
+      "TimeOfDay": "황혼",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg",
+        "카인: 라이터, 담배"
+      ],
+      "StoryBeat": "듀오 소개 — 카인의 반보 뒤, 의뢰 호출",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "어이, 아인. 쓸데없는 감상에 젖어있을 시간 없다.",
+          "Source": "L117"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "마태오 영감이 지하 인력사무소에서 부른다.",
+          "Source": "L121"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "두둑하다는 건 그만큼 죽기 좋다는 뜻이지만.",
+          "Source": "L125"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…알아요.",
+          "Source": "L129"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "카인의 전갈을 듣는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "황혼 역광, 철문",
+      "Props": [
+        "prop_scythe",
+        "prop_greatsword",
+        "prop_lighter",
+        "prop_cigarette"
+      ],
+      "VFX": [
+        "역광 실루엣",
+        "담뱃불 붉은 점(황혼과 같은 색)"
+      ],
+      "SFX": [
+        "철문 끼이익",
+        "라이터 착"
+      ],
+      "Music": "",
+      "GameplayEntry": "철문 열림",
+      "GameplayExit": "지하로 내려감",
+      "AnimationRequired": [
+        "open_door",
+        "walk_stop_half_step_behind",
+        "carry_greatsword_shoulder_one_hand",
+        "light_cigarette",
+        "stub_out_cigarette_foot",
+        "pick_up_pocket"
+      ],
+      "CinematicRequired": "true — 카인 등장 샷",
+      "SaveFlags": [
+        "flag_ep01_kain_joined"
+      ],
+      "Prerequisites": [
+        "EP01_SC006"
+      ],
+      "NextScene": "EP01_SC008",
+      "RequiredAssets": [
+        "env:loc_gangnam_rooftop",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_scythe",
+        "prop:prop_greatsword",
+        "prop:prop_lighter",
+        "prop:prop_cigarette",
+        "anim:open_door",
+        "anim:walk_stop_half_step_behind",
+        "anim:carry_greatsword_shoulder_one_hand",
+        "anim:light_cigarette",
+        "anim:stub_out_cigarette_foot",
+        "anim:pick_up_pocket"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC008",
+      "NovelSource": "마감본.txt L133-L158 ◇ 사람이 사는 곳",
+      "NovelSummary": "끝없는 나선 계단 — 한 바퀴 돌 때마다 따라 내려오던 황혼이 한 뼘씩 줄어 마지막엔 아래의 주황색만 남는다. 지하 3층 강남 벙커(옛 지하상가-2호선 연결 통로, 서울 남부 마지막 대형 거점), 늙은 발전기로 조명이 명멸. 철문이 열리자 빨래·드럼통 불·아이들·싸움·웃음 소리 — 사람이 사는 곳. 다른 거점은 나흘이면 무너졌고 강남이 버틴 이유는 아무도 모른다(깊이, 고반장이 무너뜨린 진입로, 운). 배급 줄에서 수희가 '한 사람당 두 통'을 외친다. 실종자 벽보 벽을 아인은 보지 않고 지나치며, 그중 하나가 군복 차림이라는 것을 아직 모른다. 배급 줄 뒤 꺾인 통로 안쪽에서 쇠 두드리는 소리 — 이 년 동안 늘 두 번째로 가는 자리로 향한다.",
+      "Location": "loc_gangnam_bunker",
+      "TimeOfDay": "황혼 → 지하 (계단에서 황혼이 줄어듦 L137)",
+      "Characters": [
+        "char_ain",
+        "char_suhui"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자"
+      ],
+      "StoryBeat": "허브 소개 — 살아 있는 벙커, 복선(군복 벽보)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_suhui"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_suhui",
+          "Line": "한 사람당 두 통! 더는 없어요!",
+          "Source": "L151"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK"
+      ],
+      "PlayerGoal": "벙커를 가로질러 한 장인의 작업대로 이동",
+      "Interaction": [
+        "자유 이동(비전투)",
+        "배급 줄·실종자 벽보 관찰(선택)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "나선 계단 명멸 조명, 드럼통 불, 빨래, 뛰어다니는 아이들, 긴 배급 줄, 겹쳐 붙은 실종자 벽보",
+      "Props": [
+        "prop_missing_posters_wall",
+        "prop_drum_fire"
+      ],
+      "VFX": [
+        "계단 조명 명멸",
+        "황혼→아래 주황빛 전환"
+      ],
+      "SFX": [
+        "철문 끼기긱",
+        "빨래 터는 소리",
+        "불 타닥",
+        "아이들·싸움·웃음",
+        "쇠 두드리는 소리(원거리)"
+      ],
+      "Music": "생활 앰비언트",
+      "GameplayEntry": "옥상 철문 → 계단",
+      "GameplayExit": "꺾인 통로 안쪽 작업대 도착",
+      "AnimationRequired": [
+        "walk_stairs_down"
+      ],
+      "CinematicRequired": "false — 이동 구간(짧은 도입 컷 가능)",
+      "SaveFlags": [
+        "flag_ep01_bunker_entered"
+      ],
+      "Prerequisites": [
+        "EP01_SC007"
+      ],
+      "NextScene": "EP01_SC009",
+      "RequiredAssets": [
+        "env:loc_gangnam_bunker",
+        "char:char_ain",
+        "char:char_suhui",
+        "prop:prop_missing_posters_wall",
+        "prop:prop_drum_fire",
+        "anim:walk_stairs_down"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC009",
+      "NovelSource": "마감본.txt L159-L216 ◇ 재촉",
+      "NovelSummary": "한 장인(나이를 짐작하기 어려운 과묵한 남자)이 말없이 손을 내밀자 아인이 낫을 건넨다. 넉 달 전 처음 건네던 날과 똑같은 순서로 칼날·끝자락·자루 이음새·무게중심을 확인하고 고개를 끄덕여 돌려준다 — 두 손으로. 예전엔 62kg 대검도 한 손으로 들던 사람; 이유는 둘 다 알지만 입에 올리지 않는다(석 달쯤 전부터). 아인이 나노 칩을 올리면 장인이 밀어 놓고, 다시 올리고 다시 밀기. 장인이 먼저 시선을 돌리고 아인은 칩을 둔 채 돌아서며 한 번 돌아본다. 카인 '…저 양반은 언제 재촉을 좀 하나.' 넉 달 걸린 낫값은 이 년째 다 못 냈고, 무등록 용병은 마태오의 정식 의뢰를 못 받는다. 이제는 미룰 수 없다. 통로 끝 간판 「각인 평가소」.",
+      "Location": "loc_han_workbench",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_han_jangin",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "나노 칩 몇 개"
+      ],
+      "StoryBeat": "빚과 등록 동기 — 재촉하지 않는 장인, 두 손의 이상 징후",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_han_jangin",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…저 양반은 언제 재촉을 좀 하나.",
+          "Source": "L195"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "낫 점검을 받고 낫값(칩)을 치른다",
+      "Interaction": [
+        "낫 건네기",
+        "칩 올리기 — 장인이 되밀어냄(반복)",
+        "평가소 간판 쪽으로 이동"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "작업대, 쇠 두드리는 소리",
+      "Props": [
+        "prop_workbench",
+        "prop_scythe",
+        "prop_nano_chip",
+        "prop_sign_gakin"
+      ],
+      "VFX": [],
+      "SFX": [
+        "칩 달칵",
+        "쇠 두드리는 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "작업대 앞에 섬",
+      "GameplayExit": "「각인 평가소」 간판",
+      "AnimationRequired": [
+        "hand_out_request",
+        "inspect_blade",
+        "return_weapon_two_hands",
+        "place_push_chips",
+        "turn_look_back"
+      ],
+      "CinematicRequired": "true — 침묵 연기(두 손 반환 클로즈업)",
+      "SaveFlags": [
+        "flag_ep01_scythe_debt_unpaid",
+        "flag_ep01_han_two_hands_seen"
+      ],
+      "Prerequisites": [
+        "EP01_SC008"
+      ],
+      "NextScene": "EP01_SC010",
+      "RequiredAssets": [
+        "env:loc_han_workbench",
+        "char:char_ain",
+        "char:char_han_jangin",
+        "char:char_kain",
+        "prop:prop_workbench",
+        "prop:prop_scythe",
+        "prop:prop_nano_chip",
+        "prop:prop_sign_gakin",
+        "anim:hand_out_request",
+        "anim:inspect_blade",
+        "anim:return_weapon_two_hands",
+        "anim:place_push_chips",
+        "anim:turn_look_back"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC010",
+      "NovelSource": "마감본.txt L217-L300 ◇ 이 년",
+      "NovelSummary": "유진(서른 언저리, 짧게 묶은 머리, 벙커 유일의 등급 권한자)이 아인의 무등록 이 년을 확인한다. '이 년 동안 안 받고 버텼으면서 이제 와서요?' '…한 장인이 재촉을 안 해요.' 유진은 더 묻지 않고 '…발판 위로.' 등급(C→B→A→S→SS)은 계급이자 재산. 청백색 스캔 빔이 척추를 훑고 코어가 한 번 반응; 그래프 구석에서 붉은 것이 한 번 튀지만(노이즈) 둘 다 보지 못한다. 결과는 C 구간 상단, B 경계까지 손가락 하나. 각인기로 인식표에 C — '성장 가능성이 아주 유망하군요.' 카인도 C: '…이게 왜 C야.' '대검 무게는 등급에 반영되지 않습니다.' '다음 분.' 카인은 투덜대며 나간다.",
+      "Location": "loc_gakin_pyeonggaso",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_yujin",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)",
+        "유진: 짧게 묶은 머리"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg",
+        "금속 인식표(C) — 이 장면에서 획득"
+      ],
+      "StoryBeat": "등록 — C 상단(B 경계 바로 아래), 등급이 무엇을 세는지 아무도 모름",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_yujin",
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_yujin",
+          "Line": "…무등록이시네요.",
+          "Source": "L221"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "이 년 동안 안 받고 버텼으면서 이제 와서요?",
+          "Source": "L231"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…한 장인이 재촉을 안 해요.",
+          "Source": "L235"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "…성장 가능성이 '아주 유망'하군요.",
+          "Source": "L273"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…이게 왜 C야.",
+          "Source": "L285"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "대검 무게는 등급에 반영되지 않습니다.",
+          "Source": "L289"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "각인 등록 — 발판에 올라 스캔받고 인식표를 받는다",
+      "Interaction": [
+        "대화 진행",
+        "발판 위로 이동",
+        "스캔(비조작)",
+        "인식표 착용"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "태블릿, 콘솔, 홀로그램 수치(공명 주파수·결정 밀도·신경 결합률)",
+      "Props": [
+        "prop_tablet",
+        "prop_scan_platform",
+        "prop_gakin_machine",
+        "prop_dogtag_c",
+        "prop_scythe"
+      ],
+      "VFX": [
+        "청백색 스캔 빔(발밑→척추)",
+        "코어 한 번 밝아짐",
+        "홀로그램 그래프 붉은 노이즈 1회(눈에 띄지 않게)",
+        "갓 각인된 인식표 열기"
+      ],
+      "SFX": [
+        "스캔 위이이잉",
+        "각인 치익"
+      ],
+      "Music": "냉백 평가소 앰비언트",
+      "GameplayEntry": "평가소 입장",
+      "GameplayExit": "카인이 투덜대며 퇴장",
+      "AnimationRequired": [
+        "step_on_platform_scan",
+        "receive_wear_dogtag",
+        "walk_away_grumble"
+      ],
+      "CinematicRequired": "true — 스캔 연출",
+      "SaveFlags": [
+        "flag_ep01_ain_registered_C",
+        "flag_ep01_kain_registered_C"
+      ],
+      "Prerequisites": [
+        "EP01_SC009"
+      ],
+      "NextScene": "EP01_SC011",
+      "RequiredAssets": [
+        "env:loc_gakin_pyeonggaso",
+        "char:char_ain",
+        "char:char_yujin",
+        "char:char_kain",
+        "prop:prop_tablet",
+        "prop:prop_scan_platform",
+        "prop:prop_gakin_machine",
+        "prop:prop_dogtag_c",
+        "prop:prop_scythe",
+        "anim:step_on_platform_scan",
+        "anim:receive_wear_dogtag",
+        "anim:walk_away_grumble",
+        "vfx:scan_beam",
+        "vfx:hologram_red_noise"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC011",
+      "NovelSource": "마감본.txt L301-L306 ◇ 대장",
+      "NovelSummary": "두 사람이 나간 뒤 유진은 콘솔 아래 서랍에서 「각인 평가 대장」이라 적힌 낡은 대학 노트를 꺼내 홀로그램 수치를 손으로 옮겨 적는다(날짜·이름·공명 주파수·결정 밀도·등급). 시스템에 이미 저장되고, 시킨 사람도 없고, 잉크와 종이는 구하기 어렵다.",
+      "Location": "loc_gakin_pyeonggaso",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_yujin"
+      ],
+      "RequiredCostumes": [
+        "유진: 짧게 묶은 머리"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "아무도 시키지 않은 기록",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_yujin"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(주인공 부재 컷)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "서랍, 홀로그램",
+      "Props": [
+        "prop_ledger_notebook"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 긁는 소리"
+      ],
+      "Music": "",
+      "GameplayEntry": "두 사람 퇴장 후",
+      "GameplayExit": "마태오 방문 회상",
+      "AnimationRequired": [
+        "write_by_hand"
+      ],
+      "CinematicRequired": "true — 주인공 부재 장면",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP01_SC010"
+      ],
+      "NextScene": "EP01_SC012",
+      "RequiredAssets": [
+        "env:loc_gakin_pyeonggaso",
+        "char:char_yujin",
+        "prop:prop_ledger_notebook",
+        "anim:write_by_hand"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC012",
+      "NovelSource": "마감본.txt L307-L328 ◇ 대장 (회상: 잉크 → 현재)",
+      "NovelSummary": "(과거) 마태오가 불 안 붙인 담배로 노트를 가리키며 잉크값은 누가 대냐고 묻고, 유진은 자기가 칩 두 개/월을 댄다고 답한다. 마태오는 담배를 도로 물고 말없이 나가고, 다음 주 잉크가 하나 더 와 있다(누가 두었는지 적혀 있지 않음). (현재) 유진은 그날 것도 적는다 — 손으로 적지 않으면 그 이름이 어디에도 남지 않는 날이 온다는 것을 안다. 서랍에는 같은 노트가 일곱 권.",
+      "Location": "loc_gakin_pyeonggaso",
+      "TimeOfDay": "TBD_CANON (회상 시점 미상 → 현재)",
+      "Characters": [
+        "char_yujin",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "마태오: 거친 가죽 재킷"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "마태오의 말없는 배려, 일곱 권의 대장",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_yujin",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "그거 잉크값은 누가 대냐.",
+          "Source": "L309"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "…제가요.",
+          "Source": "L311"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "얼마 드는데.",
+          "Source": "L313"
+        },
+        {
+          "Speaker": "char_yujin",
+          "Line": "칩 두 개요. 한 달에.",
+          "Source": "L315"
+        }
+      ],
+      "GameMode": [
+        "FLASHBACK",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(연출)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "서랍 속 같은 노트 일곱 권",
+      "Props": [
+        "prop_ledger_notebook",
+        "prop_ink",
+        "prop_unlit_cigarette"
+      ],
+      "VFX": [],
+      "SFX": [],
+      "Music": "잔잔한 피아노/현(제안)",
+      "GameplayEntry": "대장 기록 중",
+      "GameplayExit": "일곱 권 노트 인서트",
+      "AnimationRequired": [
+        "point_with_cigarette",
+        "write_by_hand"
+      ],
+      "CinematicRequired": "true — 회상",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP01_SC011"
+      ],
+      "NextScene": "EP01_SC013",
+      "RequiredAssets": [
+        "env:loc_gakin_pyeonggaso",
+        "char:char_yujin",
+        "char:char_mateo",
+        "prop:prop_ledger_notebook",
+        "prop:prop_ink",
+        "prop:prop_unlit_cigarette",
+        "anim:point_with_cigarette",
+        "anim:write_by_hand"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC013",
+      "NovelSource": "마감본.txt L329-L378 ◇ 인력사무소",
+      "NovelSummary": "CRT 모니터가 한 벽을 채운 방(절반은 꺼짐; 서울 남부 구역도·신호 그래프·의뢰 목록). 오른쪽 아래 한 화면만 소리 없는 영상 — 여자가 웃고 아이 둘이 케이크 앞, 아이 하나가 촛불을 끄려 숙이는 데서 끊겨 처음부터 반복. 마태오(오십 대 중반, 거친 가죽 재킷)는 그 화면을 등지고 앉아 있다. C 보고에 '다들 C부터 시작해', 등록했으니 큰 게 열린다, B면 의뢰비 두 배(죽을 확률도 두 배). 홀로그램에서 강남역 지하상가 신호가 사흘째 치솟는다. 도장 찍기 전 호흡을 보겠다며 철사슬에 묶인 낡은 훈련용 짚단 허수아비를 가리킨다 — 발밑 흙 속의 미세한 문양을 아무도 보지 않는다. '가서 몸 좀 풀어.'",
+      "Location": "loc_mateo_office",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)",
+        "마태오: 거친 가죽 재킷"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg",
+        "금속 인식표(C) x2"
+      ],
+      "StoryBeat": "의뢰 허브 — 신호 상승, 호흡 테스트 지시, 문양 복선",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "왔냐. 등급은?",
+          "Source": "L347"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "다들 C부터 시작해.",
+          "Source": "L351"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "물론 죽을 확률도 두 배지.",
+          "Source": "L359"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "강남역 지하상가 신호가 사흘째 오르는 중이다.",
+          "Source": "L365"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "둘이 호흡이나 맞는지 봐야겠지.",
+          "Source": "L369"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "가서 몸 좀 풀어.",
+          "Source": "L377"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "마태오의 브리핑을 듣는다",
+      "Interaction": [
+        "대화 진행",
+        "CRT·홀로그램 관찰(선택)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "CRT 벽(무음 생일 영상 반복), 천장 아래 고인 권련 연기, 홀로그램 그래프 수직 상승",
+      "Props": [
+        "prop_crt_wall",
+        "prop_hologram_table",
+        "prop_armchair",
+        "prop_unlit_cigarette",
+        "prop_training_scarecrow",
+        "prop_iron_chain"
+      ],
+      "VFX": [
+        "CRT 점멸",
+        "홀로그램 그래프 급상승",
+        "허수아비 발밑 미세 문양(눈에 띄지 않게)"
+      ],
+      "SFX": [
+        "신호음 삐— 삐—"
+      ],
+      "Music": "",
+      "GameplayEntry": "사무소 입장",
+      "GameplayExit": "훈련장으로 이동",
+      "AnimationRequired": [
+        "armchair_turn",
+        "point_finger"
+      ],
+      "CinematicRequired": "false — 대화 씬",
+      "SaveFlags": [
+        "flag_ep01_mateo_briefing",
+        "flag_ep01_gangnam_signal_rising"
+      ],
+      "Prerequisites": [
+        "EP01_SC012"
+      ],
+      "NextScene": "EP01_SC014",
+      "RequiredAssets": [
+        "env:loc_mateo_office",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_mateo",
+        "prop:prop_crt_wall",
+        "prop:prop_hologram_table",
+        "prop:prop_armchair",
+        "prop:prop_unlit_cigarette",
+        "prop:prop_training_scarecrow",
+        "prop:prop_iron_chain",
+        "anim:armchair_turn",
+        "anim:point_finger"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC014",
+      "NovelSource": "마감본.txt L379-L414 ◇ 원",
+      "NovelSummary": "지하 훈련장(낡은 매트, 깨진 형광등, 낮은 천장 — 카인은 이 방에서만 검을 눕혀 든다). 카인이 대검을 양손으로 고쳐 쥐자 수트 관절 틈새로 주황 빛(아드레날린에 코어가 반응해 힘이 풀리는 대신 뇌가 탄다; 카인은 조절 못함). '머리통을 깨부숴주마!' 내려찍기로 짚단이 터지고, 파편 사이로 아인이 들어가 세 궤적(좌상→우하, 역방향, 세 번째에 끝자락 주황 잔상). 카인 '…셋 다 끝으로 걸었네.' '…난 매번 중간으로 들어가는데.' '…성가시게 됐군.'",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "두 무기의 거리 차이(끝자락 vs 중간) 제시",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "머리통을 깨부숴주마!",
+          "Source": "L387"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…셋 다 끝으로 걸었네.",
+          "Source": "L401"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…난 매번 중간으로 들어가는데.",
+          "Source": "L405"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…성가시게 됐군.",
+          "Source": "L413"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "훈련용 허수아비를 쳐서 호흡을 맞춘다(튜토리얼 제안: 기본 공격·끝자락 거리)",
+      "Interaction": [
+        "기본 공격 입력(튜토리얼 제안)",
+        "끝자락 적중 확인"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "낡은 매트, 깨진 형광등, 낮은 천장, 흩어진 짚",
+      "Props": [
+        "prop_training_scarecrow",
+        "prop_scythe",
+        "prop_greatsword"
+      ],
+      "VFX": [
+        "카인 수트 관절 틈새 주황 빛",
+        "짚단 폭산",
+        "낫 끝자락 주황 잔상 궤적"
+      ],
+      "SFX": [
+        "스릉",
+        "콰앙",
+        "콰직",
+        "슈악",
+        "위잉"
+      ],
+      "Music": "훈련 비트(가벼움)",
+      "GameplayEntry": "훈련장 입장",
+      "GameplayExit": "짚단 안쪽 붉은 빛",
+      "AnimationRequired": [
+        "greatsword_overhead_smash",
+        "scythe_three_arc_combo",
+        "flick_debris_off_blade",
+        "scratch_neck"
+      ],
+      "CinematicRequired": "false — 조작 가능 제안",
+      "SaveFlags": [
+        "flag_ep01_training_started"
+      ],
+      "Prerequisites": [
+        "EP01_SC013"
+      ],
+      "NextScene": "EP01_SC015",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_training_scarecrow",
+        "prop:prop_scythe",
+        "prop:prop_greatsword",
+        "anim:greatsword_overhead_smash",
+        "anim:scythe_three_arc_combo",
+        "anim:flick_debris_off_blade",
+        "anim:scratch_neck",
+        "vfx:kain_core_leak",
+        "vfx:scythe_tip_trail"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC015",
+      "NovelSource": "마감본.txt L415-L460 ◇ 짚단이 아니었다",
+      "NovelSummary": "갈라진 짚단 안쪽에서 붉은 빛 — 문양이 균열을 따라 번진다. '카인! 물러나!' '…뭐?' 반 박자 늦는다(이 년을 같이 다녔는데도 아직 부르면 되묻는 사이). 폭발 — 섬광, 검은 연기와 주황 파티클, 철사슬이 끊어져 튕기고 두 사람이 매트 위를 구른다. 아인의 왼쪽 갈비뼈에 어긋나는 감각. 연기 속 붉은 안광 두 점, 나노 강선이 근육처럼 뒤엉킨 3m·팔이 비정상적으로 긴 것. '격이 다르다' — 이 년 동안 피해 다닌 종류. 카인 '…30만 원짜리 짚단이 아닌데.' 입 없는 부위에서 '어설프다… 벌레 같은 인간놈들!' — 아인에겐 그 뒤로 짐승의 목청이 낼 수 없는 일정 간격의 신호음이 겹친다: '…방금, 목소리가 두 개였어.' 관측창 너머 마태오가 담배를 떨어뜨린다: '저건… 짚단이 아니야!'",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_mateo",
+        "char_training_heosuabi"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "보스 각성 — 격이 다른 적, 두 개의 목소리",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_mateo",
+        "char_training_heosuabi"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "카인! 물러나!",
+          "Source": "L419"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…30만 원짜리 짚단이 아닌데.",
+          "Source": "L447"
+        },
+        {
+          "Speaker": "char_training_heosuabi",
+          "Line": "어설프다… 벌레 같은 인간놈들!",
+          "Source": "L451"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…방금, 목소리가 두 개였어.",
+          "Source": "L455"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "저건… 짚단이 아니야!",
+          "Source": "L459"
+        }
+      ],
+      "GameMode": [
+        "BOSS_ENTRY"
+      ],
+      "PlayerGoal": "폭발에서 살아남아 대치",
+      "Interaction": [
+        "피격 후 기상(연출)"
+      ],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "",
+      "EnvironmentState": "섬광, 검은 연기, 주황 파티클, 끊긴 철사슬, 흩어진 짚단, 관측창",
+      "Props": [
+        "prop_training_scarecrow",
+        "prop_iron_chain"
+      ],
+      "VFX": [
+        "짚단 속 붉은 문양 발광·균열 확산",
+        "폭발 섬광",
+        "검은 연기+주황 파티클 폭포",
+        "붉은 안광 두 점",
+        "나노 강선 근육 형성"
+      ],
+      "SFX": [
+        "키이이이",
+        "콰아아아앙",
+        "사슬 차강",
+        "그드득",
+        "이중 음성+일정 간격 신호음"
+      ],
+      "Music": "보스 등장",
+      "GameplayEntry": "짚단 속 빛 발견",
+      "GameplayExit": "보스 대치 완료 → 전투 시작",
+      "AnimationRequired": [
+        "knockback_roll_on_mat",
+        "drop_cigarette"
+      ],
+      "CinematicRequired": "true — 보스 등장 컷신",
+      "SaveFlags": [
+        "flag_ep01_boss_awakened",
+        "flag_ep01_ain_rib_injured",
+        "flag_ep01_double_voice_heard"
+      ],
+      "Prerequisites": [
+        "EP01_SC014"
+      ],
+      "NextScene": "EP01_SC016",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_mateo",
+        "char:char_training_heosuabi",
+        "prop:prop_training_scarecrow",
+        "prop:prop_iron_chain",
+        "anim:knockback_roll_on_mat",
+        "anim:drop_cigarette",
+        "vfx:sigil_glow",
+        "vfx:boss_explosion",
+        "vfx:nano_wire_body",
+        "sfx:double_voice_signal",
+        "bgm:boss_intro"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC016",
+      "NovelSource": "마감본.txt L461-L510 ◇ 거리",
+      "NovelSummary": "놈이 양팔을 벌리고 회전을 시작한다(어깨 감김, 허리 비틀림, 발 고정) — 숨이 들어간다. 큰 걸 쓰기 직전의 반 박자를 각인자의 눈은 본다. 아인이 '지금—!' 정면으로 뛰어들지만 너무 깊이, 품 안까지 들어가 자루가 자기 몸에 걸리고 칼날이 '틱' 튕긴다. 되돌아온 팔꿈치에 어깨를 맞고 매트를 두 바퀴 구른다. '…거리. 너무 붙었어.' 낫은 원 — 반경이 없으면 완벽한 순간도 소용없다. 이 년 동안 좁은 띠 안에서만 싸워 띠 밖을 몰랐고, 오늘 처음 벗어났다. 회전이 풀리는 순간 카인이 '비켜!' 뛰어든다.",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_training_heosuabi"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "첫 시도 실패 — 거리(낫은 원)",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_training_heosuabi"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "지금—!",
+          "Source": "L473"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…거리. 너무 붙었어.",
+          "Source": "L493"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "비켜!",
+          "Source": "L509"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "예비동작(숨 들이킴)의 반 박자에 낫 하나 길이에서 공격 — 너무 붙으면 실패",
+      "Interaction": [
+        "예비동작 읽기",
+        "거리 조절(너무 가까우면 낫이 돌지 않음 — 튕김 판정)",
+        "피격 후 기상"
+      ],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "P1",
+      "EnvironmentState": "매트, 깨진 형광등, 잔여 연기",
+      "Props": [
+        "prop_scythe"
+      ],
+      "VFX": [
+        "예비동작 강조(숨 들이킴)",
+        "튕김 스파크"
+      ],
+      "SFX": [
+        "틱",
+        "쿵",
+        "부우웅"
+      ],
+      "Music": "보스전",
+      "GameplayEntry": "보스 대치",
+      "GameplayExit": "카인 난입",
+      "AnimationRequired": [
+        "boss_heosuabi_spin_windup",
+        "scythe_dash_jammed",
+        "boss_heosuabi_elbow_counter",
+        "knockback_roll_on_mat",
+        "get_up_hand_push"
+      ],
+      "CinematicRequired": "false — 전투(실패는 연출 고정 가능)",
+      "SaveFlags": [
+        "flag_ep01_distance_lesson"
+      ],
+      "Prerequisites": [
+        "EP01_SC015"
+      ],
+      "NextScene": "EP01_SC017",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_training_heosuabi",
+        "prop:prop_scythe",
+        "anim:boss_heosuabi_spin_windup",
+        "anim:scythe_dash_jammed",
+        "anim:boss_heosuabi_elbow_counter",
+        "anim:knockback_roll_on_mat",
+        "anim:get_up_hand_push",
+        "bgm:boss_battle_heosuabi"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC017",
+      "NovelSource": "마감본.txt L511-L530 ◇ 되돌려주는 법",
+      "NovelSummary": "카인이 아인 앞을 막고 대검을 바닥에 수직으로 꽂는다. 막는 게 아니다 — 부딪히는 찰나 코어 출력을 무기 표면에 얇게 펴 발라 상대 힘을 되돌린다(두 발·무기가 땅에, 반 호흡; 빠르면 맞고 늦으면 죽는다). 주황 충격파가 번지며 팔과 정면 충돌, 3m 몸통이 통째로 밀린다. '내 뒤로는… 못 지난다!' 놈의 자세가 무너진다 — 되돌려 준 쪽에게만 열리는, 길어야 숨 한 번의 시간.",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_training_heosuabi"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "다른 인물이 답의 조각 제공 — 되받아치기로 자세 붕괴",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_training_heosuabi"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "내 뒤로는… 못 지난다!",
+          "Source": "L523"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "카인의 되받아치기로 보스 자세를 무너뜨린다",
+      "Interaction": [
+        "가드 되받아치기(타이밍: 반 호흡) — 조작 주체 TBD_CANON",
+        "자세 붕괴 창(숨 한 번)"
+      ],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "P1",
+      "EnvironmentState": "대검에 파인 바닥",
+      "Props": [
+        "prop_greatsword"
+      ],
+      "VFX": [
+        "대검 표면 주황 충격파(얇게 번짐)",
+        "바닥 파임"
+      ],
+      "SFX": [
+        "쾅",
+        "콰창"
+      ],
+      "Music": "보스전",
+      "GameplayEntry": "카인 난입",
+      "GameplayExit": "자세 붕괴",
+      "AnimationRequired": [
+        "greatsword_plant_reflect",
+        "boss_pushed_stagger"
+      ],
+      "CinematicRequired": "false — 전투",
+      "SaveFlags": [
+        "flag_ep01_kain_reflect_seen"
+      ],
+      "Prerequisites": [
+        "EP01_SC016"
+      ],
+      "NextScene": "EP01_SC018",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_training_heosuabi",
+        "prop:prop_greatsword",
+        "anim:greatsword_plant_reflect",
+        "anim:boss_pushed_stagger",
+        "vfx:reflect_shockwave"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC018",
+      "NovelSource": "마감본.txt L531-L566 ◇ 끊는 법",
+      "NovelSummary": "아인이 일어서지만 뛰지 않는다. 놈과 자신 사이 — 딱 낫 하나 길이. 몸을 비틀며 솟구친다('이번엔—'). 코어가 척추를 타고 치솟고 세상이 늘어진다(채도 폭발, 소리 멀어짐, 궤적이 조각으로). 놈들의 몸엔 힘이 흐르는 길(어깨→팔꿈치→손끝)과 이음매가 있고, 이음매에선 나노 편대가 얇아진다 — 죽이는 게 아니라 끊는 것. 원의 가장 바깥, 끝자락이 이음매에 걸린다: '걸었다… 스위트 스폿!' 당기자 관절이 뜯겨 나가고, 단면에서 엄지손톱만 한 주황 결정이 굴러떨어진다. 낫 끝으로 받아 손바닥에 — 아직 따뜻하고 희미하게 뛴다.",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_training_heosuabi"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자"
+      ],
+      "StoryBeat": "검증과 승리 — 스위트 스폿, 부위 절단",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_training_heosuabi"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "이번엔—",
+          "Source": "L545"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "걸었다… 스위트 스폿!",
+          "Source": "L557"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "낫 하나 길이를 확보하고 끝자락으로 이음매를 걸어 당겨 끊는다",
+      "Interaction": [
+        "거리 판정(낫 하나 길이)",
+        "슬로 모션 중 이음매 조준",
+        "걸어 당기기 입력",
+        "결정 받기"
+      ],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "P1",
+      "EnvironmentState": "슬로 모션, 채도 상승",
+      "Props": [
+        "prop_scythe",
+        "prop_orange_crystal"
+      ],
+      "VFX": [
+        "코어 척추 상승 발광",
+        "시간 지연·채도 폭발",
+        "이음매 하이라이트",
+        "끝자락 주황 원 궤적",
+        "관절 절단",
+        "결정 맥동"
+      ],
+      "SFX": [
+        "소리 멀어짐",
+        "콰드득"
+      ],
+      "Music": "보스전 클라이맥스",
+      "GameplayEntry": "자세 붕괴 창",
+      "GameplayExit": "결정 획득",
+      "AnimationRequired": [
+        "scythe_twist_leap_hook_pull",
+        "boss_joint_torn",
+        "catch_crystal_blade_tip"
+      ],
+      "CinematicRequired": "true — 슬로 모션 결정타",
+      "SaveFlags": [
+        "flag_ep01_sweet_spot_first",
+        "item_orange_crystal_x1"
+      ],
+      "Prerequisites": [
+        "EP01_SC017"
+      ],
+      "NextScene": "EP01_SC019",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_training_heosuabi",
+        "prop:prop_scythe",
+        "prop:prop_orange_crystal",
+        "anim:scythe_twist_leap_hook_pull",
+        "anim:boss_joint_torn",
+        "anim:catch_crystal_blade_tip",
+        "vfx:time_dilation",
+        "vfx:joint_highlight",
+        "vfx:crystal_pulse"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC019",
+      "NovelSource": "마감본.txt L567-L604 ◇ 끊는 법 (결과 · 결정)",
+      "NovelSummary": "이음매 결정의 원리(편대가 힘을 배분하는 중계점이 굳은 것, 살아 있을 땐 몸속에 있어 안 보임). 카인이 짚단 잔해를 뒤적이며 '…또 가루야.' — 막 굳어 가는 회색 알갱이. 본체가 죽으면 편대가 무너지며 결정이 안에서 터져 회색 가루(굳으면 나노 칩, 돈은 됨)만 남는다; 부위를 먼저 끊으면 결정이 온전히 나온다. '…세게 쳤어.' '세게 안 치면 안 부서지는데.' 끊되 뭉개면 안 된다 — 대검은 안쪽까지 밀어 가루, 낫은 끝자락으로 걸어 당겨 결정을 남긴다. '…부위를 먼저 끊어야 나오는 거였나.' 결정을 주머니에. 장인이 요구하는 건 결정뿐. 왜 그렇게 되어 있는지는 아직 아무도 묻지 않았다.",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "승리 뒤 남은 것 — 결정 경제 규칙",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…또 가루야.",
+          "Source": "L571"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…세게 쳤어.",
+          "Source": "L583"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "세게 안 치면 안 부서지는데.",
+          "Source": "L587"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…부위를 먼저 끊어야 나오는 거였나.",
+          "Source": "L597"
+        }
+      ],
+      "GameMode": [
+        "BOSS_RESULT"
+      ],
+      "PlayerGoal": "결정 획득 확인, '부위 먼저 끊기 → 온전한 결정' 규칙 학습",
+      "Interaction": [
+        "결정 수납",
+        "잔해 조사(회색 가루)"
+      ],
+      "BossId": "boss_training_heosuabi",
+      "BossPhase": "",
+      "EnvironmentState": "짚단 잔해, 회색 가루",
+      "Props": [
+        "prop_orange_crystal",
+        "prop_grey_powder"
+      ],
+      "VFX": [
+        "회색 가루가 굳어 가는 입자"
+      ],
+      "SFX": [],
+      "Music": "전투 후 잔향",
+      "GameplayEntry": "결정 획득",
+      "GameplayExit": "관측창 문 열림",
+      "AnimationRequired": [
+        "dig_through_debris",
+        "pick_up_pocket"
+      ],
+      "CinematicRequired": "false — 결과 화면/대화",
+      "SaveFlags": [
+        "flag_ep01_boss_heosuabi_cleared",
+        "flag_ep01_crystal_rule_learned"
+      ],
+      "Prerequisites": [
+        "EP01_SC018"
+      ],
+      "NextScene": "EP01_SC020",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_orange_crystal",
+        "prop:prop_grey_powder",
+        "anim:dig_through_debris",
+        "anim:pick_up_pocket"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC020",
+      "NovelSource": "마감본.txt L605-L630 ◇ 손실 (훈련장)",
+      "NovelSummary": "관측창 문이 박차고 열린다. 마태오 '…합격이다. 신입들. 아니— 용병단.' 짚단 잔해·끊어진 철사슬·매트의 팬 자국으로 시선이 옮겨 가며 표정이 바뀐다: '저 훈련용 허수아비, 30만 원짜리다. 첫 의뢰비에서 깐다.' 그 말만 하고 돌아선다. 카인 '…아니, 저게 갑자기 괴물이 된 게.' '…내 탓입니까?' '치라고 해서 친 건데.' — 아무도 대답하지 않는다.",
+      "Location": "loc_heosuabi_training_ground",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON)",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)",
+        "마태오: 거친 가죽 재킷"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg"
+      ],
+      "StoryBeat": "합격과 카인 개그 — 30만 원 공제",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_mateo"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_mateo",
+          "Line": "…합격이다. 신입들. 아니— 용병단.",
+          "Source": "L609"
+        },
+        {
+          "Speaker": "char_mateo",
+          "Line": "저 훈련용 허수아비, 30만 원짜리다.",
+          "Source": "L615"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…아니, 저게 갑자기 괴물이 된 게.",
+          "Source": "L621"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…내 탓입니까?",
+          "Source": "L625"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "치라고 해서 친 건데.",
+          "Source": "L629"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "합격 판정을 듣는다",
+      "Interaction": [
+        "대화 진행"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "짚단 잔해, 끊어진 철사슬, 매트에 팬 자국",
+      "Props": [
+        "prop_training_scarecrow",
+        "prop_iron_chain"
+      ],
+      "VFX": [],
+      "SFX": [
+        "문 박차는 소리"
+      ],
+      "Music": "가벼운 코믹 스팅",
+      "GameplayEntry": "전투 결과 후",
+      "GameplayExit": "마태오 사무소로",
+      "AnimationRequired": [
+        "kick_door_open",
+        "mouth_agape_stare"
+      ],
+      "CinematicRequired": "true — 짧은 컷신",
+      "SaveFlags": [
+        "flag_ep01_passed_mercenary_unit",
+        "flag_ep01_debt_300000_announced"
+      ],
+      "Prerequisites": [
+        "EP01_SC019"
+      ],
+      "NextScene": "EP01_SC021",
+      "RequiredAssets": [
+        "env:loc_heosuabi_training_ground",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_mateo",
+        "prop:prop_training_scarecrow",
+        "prop:prop_iron_chain",
+        "anim:kick_door_open",
+        "anim:mouth_agape_stare"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC021",
+      "NovelSource": "마감본.txt L631-L642 ◇ 손실 (사무소 장부)",
+      "NovelSummary": "사무소로 돌아온 마태오가 낡은 서류철 장부(날짜·항목·금액)에 오늘 날짜와 「훈련 기재 파손 — 300,000」을 적는다. 그 칸은 「손실」. 받을 사람 칸은 비어 있다. 서류철을 덮어 서랍에 넣는다 — 표지가 닳아 모서리가 둥근, 같은 서류철 이 년치.",
+      "Location": "loc_mateo_office",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_mateo"
+      ],
+      "RequiredCostumes": [
+        "마태오: 거친 가죽 재킷"
+      ],
+      "RequiredEquipment": [],
+      "StoryBeat": "손실을 누가 떠안는가 — 마태오의 숨은 태도",
+      "PlayerCharacter": "none",
+      "NPCs": [
+        "char_mateo"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "없음(주인공 부재 컷)",
+      "Interaction": [],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "책상, 서랍 속 이 년치 서류철",
+      "Props": [
+        "prop_mateo_ledger"
+      ],
+      "VFX": [],
+      "SFX": [
+        "펜 긁는 소리",
+        "서랍 닫힘"
+      ],
+      "Music": "",
+      "GameplayEntry": "훈련장 장면 후",
+      "GameplayExit": "출격문으로 컷",
+      "AnimationRequired": [
+        "write_by_hand"
+      ],
+      "CinematicRequired": "true — 주인공 부재 장면",
+      "SaveFlags": [
+        "flag_ep01_mateo_loss_ledger"
+      ],
+      "Prerequisites": [
+        "EP01_SC020"
+      ],
+      "NextScene": "EP01_SC022",
+      "RequiredAssets": [
+        "env:loc_mateo_office",
+        "char:char_mateo",
+        "prop:prop_mateo_ledger",
+        "anim:write_by_hand"
+      ],
+      "CanonStatus": "CANON"
+    },
+    {
+      "EpisodeId": "EP01",
+      "SceneId": "EP01_SC022",
+      "NovelSource": "마감본.txt L643-L681 ◇ 출격",
+      "NovelSummary": "「강남역 지하상가 출격문」 거대한 철문이 찌그러지는 소리와 함께 올라가고 붉은 안개가 밀려든다. 아인은 낫을 어깨에 걸친다; 코어가 한 번 밝게 뛰고, 어깨는 욱신, 갈비뼈는 금이 간 것 같다. 철문 앞에서 오른손(낫자루를 쥐는 손)을 쥐었다 폈다 다시 쥔다 — 카인은 이 년 동안 몇 번 본 손짓(나가서 무언가를 잡을 일이 있을 때만)이지만 물어본 적이 없다. '…가요.' 카인 '오냐. 놈들 머리통을 깨부수러 가자고!' '…30만 원어치는 더 부숴야겠어.' 두 사람이 안개 속으로, 카인은 반보 뒤. 인식표 두 개가 짤랑 — 각각 갓 눌러 박은 C.",
+      "Location": "loc_sortie_gate",
+      "TimeOfDay": "TBD_CANON (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [
+        "아인: 잿빛으로 바랜 단발(원래 검은 머리), 오른뺨 사흘 된 피·그을음, 옷 위로 비치는 스파인 코어 (의상 형태는 원고 미서술 — TBD_CANON) / 어깨 욱신·갈비뼈 금 간 듯",
+        "카인: 왼쪽 눈썹~턱 흉터 (의상은 '수트'로만 언급 — L383)"
+      ],
+      "RequiredEquipment": [
+        "낫 — 공업용 고주파 파이프 커터 개조, 자루 172cm, 초승달 칼날, 끝자락 1/4 지점 주황 입자",
+        "티타늄 고밀도 대검 — 190cm, 62kg",
+        "금속 인식표(C) x2"
+      ],
+      "StoryBeat": "출격 — 손짓의 복선, 반보 뒤, C",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…가요.",
+          "Source": "L661"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "오냐. 놈들 머리통을 깨부수러 가자고!",
+          "Source": "L667"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…30만 원어치는 더 부숴야겠어.",
+          "Source": "L671"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC",
+        "TRANSITION"
+      ],
+      "PlayerGoal": "출격문을 지나 안개 속으로",
+      "Interaction": [
+        "전진 입력(제안)"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "올라가는 철문, 밀려드는 붉은 안개",
+      "Props": [
+        "prop_sortie_gate",
+        "prop_scythe",
+        "prop_greatsword",
+        "prop_dogtag_c"
+      ],
+      "VFX": [
+        "붉은 안개 유입",
+        "코어 한 번 밝게 뜀"
+      ],
+      "SFX": [
+        "철문 쿠우우웅",
+        "인식표 짤랑"
+      ],
+      "Music": "출격 테마",
+      "GameplayEntry": "출격문 앞",
+      "GameplayExit": "안개 속 진입 → EP02",
+      "AnimationRequired": [
+        "scythe_rest_on_shoulder",
+        "hand_grip_open_close",
+        "walk_into_fog"
+      ],
+      "CinematicRequired": "true — 엔딩 컷",
+      "SaveFlags": [
+        "flag_ep01_complete",
+        "flag_ep01_sortie"
+      ],
+      "Prerequisites": [
+        "EP01_SC021"
+      ],
+      "NextScene": "EP02_SC001",
+      "RequiredAssets": [
+        "env:loc_sortie_gate",
+        "char:char_ain",
+        "char:char_kain",
+        "prop:prop_sortie_gate",
+        "prop:prop_scythe",
+        "prop:prop_greatsword",
+        "prop:prop_dogtag_c",
+        "anim:scythe_rest_on_shoulder",
+        "anim:hand_grip_open_close",
+        "anim:walk_into_fog",
+        "bgm:sortie_theme"
+      ],
+      "CanonStatus": "CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_training_heosuabi",
+      "NameKo": "훈련용 짚단 허수아비(각성체)",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC015",
+        "EP01_SC016",
+        "EP01_SC017",
+        "EP01_SC018",
+        "EP01_SC019"
+      ],
+      "NovelReasonForBattle": "마태오가 도장 찍기 전 두 사람의 호흡을 보려고 훈련용 허수아비를 치게 했고, 카인과 아인의 타격 후 짚단 안쪽의 문양이 폭발하며 3m 나노 강선체가 나타났다.",
+      "ArenaLocationId": "loc_heosuabi_training_ground",
+      "PhasesInNovel": [
+        "각성: 짚단 안쪽 문양 발광→폭발, 철사슬 끊김, 두 개의 목소리 (마감본 L417-L459; 【서】 L9-L23)",
+        "회전 공격 예비동작 — 아인이 너무 붙어 실패, 팔꿈치 반격 (L463-L509)",
+        "카인 되받아치기로 자세 붕괴 — 숨 한 번의 창 (L513-L529)",
+        "낫 하나 길이에서 이음매 절단, 결정 이탈 (L533-L565)"
+      ],
+      "PatternsInNovel": [
+        "양팔을 벌린 회전 공격 — 어깨 뒤로 감기고 허리 비틀림, 발 고정, 숨 들이킴 후 반 박자 뒤 발동 (L463-L469, L505)",
+        "품 안에 들어온 대상에게 팔꿈치 반격 (L485-L487)",
+        "입 없는 부위에서 이중 음성(짐승 목소리+일정 간격 신호음) (L449-L455)"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "힘이 흐르는 길(어깨→팔꿈치→손끝)의 이음매 — 나노 편대가 얇아짐 (L551)",
+        "이음매 속 주황 결정(힘 배분 중계점) — 부위를 먼저 끊으면 온전히 나옴 (L565-L581)",
+        "관절 — 끝자락으로 걸어 당기면 뜯겨 나감 (L555-L563)"
+      ],
+      "BreakCounterInNovel": [
+        "카인: 대검 수직 꽂기 + 코어 출력 표면 도포로 힘 되돌리기 → 3m 몸통 밀림, 자세 붕괴(숨 한 번) (L513-L527)",
+        "큰 공격 직전 숨 들이키는 반 박자 — 각인자의 눈으로 보임 (L469)",
+        "너무 가까우면 낫이 돌지 않아 튕김, 너무 멀면 닿지 않음 — 낫 하나 길이 (L479-L501, L541)"
+      ],
+      "EnvironmentInBattle": [
+        "낡은 매트, 깨진 형광등, 낮은 천장 (L381)",
+        "검은 연기·주황 파티클·끊긴 철사슬 (L433)",
+        "관측창(마태오 관전) (L457)",
+        "짚단 잔해"
+      ],
+      "Outcome": "관절이 뜯겨 나가며 온전한 주황 결정 1개를 아인이 회수. 본체는 회색 가루로 붕괴(카인이 잔해에서 발견; 최종 타격 장면은 서술되지 않음). 마태오가 '용병단' 합격 판정, 허수아비값 30만 원은 장부에 「손실」로 기록.",
+      "Source": "마감본.txt L7-L25, L373-L641 (통합본 L642-L1074)"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_heosuabi_training_ground",
+      "NameKo": "지하 훈련장",
+      "DescriptionKo": "낡은 매트와 깨진 형광등, 낮은 천장(대검을 세우면 끝이 닿음). 관측창이 있다. 콘크리트 바닥.",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC014",
+        "EP01_SC015",
+        "EP01_SC016",
+        "EP01_SC017",
+        "EP01_SC018",
+        "EP01_SC019",
+        "EP01_SC020"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_rooftop",
+      "NameKo": "강남 폐빌딩 옥상",
+      "DescriptionKo": "무릎 높이 붉은 안개, 보라·핏빛 황혼, 철문.",
+      "Scenes": [
+        "EP01_SC004",
+        "EP01_SC006",
+        "EP01_SC007"
+      ]
+    },
+    {
+      "LocationId": "loc_gangnam_bunker",
+      "NameKo": "강남 벙커 (지하 3층)",
+      "DescriptionKo": "옛 지하상가-지하철 2호선 연결 통로. 서울 남부 마지막 대형 거점. 나선 계단, 명멸 조명, 드럼통 불, 배급 줄, 실종자 벽보 벽.",
+      "Scenes": [
+        "EP01_SC008"
+      ]
+    },
+    {
+      "LocationId": "loc_han_workbench",
+      "NameKo": "한 장인의 작업대",
+      "DescriptionKo": "벙커 배급 줄 뒤 꺾인 안쪽 통로 한쪽. 쇠 두드리는 소리.",
+      "Scenes": [
+        "EP01_SC009"
+      ]
+    },
+    {
+      "LocationId": "loc_gakin_pyeonggaso",
+      "NameKo": "각인 평가소",
+      "DescriptionKo": "통로 끝 낡은 간판. 태블릿, 콘솔, 홀로그램, 발판, 각인기, 대장 노트 서랍.",
+      "Scenes": [
+        "EP01_SC010",
+        "EP01_SC011",
+        "EP01_SC012"
+      ]
+    },
+    {
+      "LocationId": "loc_mateo_office",
+      "NameKo": "지하 인력사무소",
+      "DescriptionKo": "CRT 모니터가 한 벽을 채운 방(절반 꺼짐), 홀로그램 테이블, 암체어, 천장 아래 고인 권련 연기. 장부 서랍.",
+      "Scenes": [
+        "EP01_SC013",
+        "EP01_SC021"
+      ]
+    },
+    {
+      "LocationId": "loc_sortie_gate",
+      "NameKo": "강남역 지하상가 출격문",
+      "DescriptionKo": "거대한 철문. 문 너머 붉은 안개.",
+      "Scenes": [
+        "EP01_SC022"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 26세(서식 3-A), 스파인 코어 각인자, 낫 사용. 이 화에서 무등록 이 년 끝에 C 등록",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC004",
+        "EP01_SC005",
+        "EP01_SC006",
+        "EP01_SC007",
+        "EP01_SC008",
+        "EP01_SC009",
+        "EP01_SC010",
+        "EP01_SC013",
+        "EP01_SC014",
+        "EP01_SC015",
+        "EP01_SC016",
+        "EP01_SC017",
+        "EP01_SC018",
+        "EP01_SC019",
+        "EP01_SC020",
+        "EP01_SC022"
+      ],
+      "StateChangesKo": [
+        "EP01_SC010 금속 인식표 C를 목에 검",
+        "EP01_SC015 폭발 충격 — 왼쪽 갈비뼈에서 어긋나는 감각",
+        "EP01_SC016 팔꿈치에 어깨 정통 피격, 매트 두 바퀴 구름",
+        "EP01_SC018 온전한 주황 결정 1개 획득(EP01_SC019 주머니에 넣음)",
+        "EP01_SC022 어깨 욱신·갈비뼈 금 간 듯한 상태로 출격"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "아인의 동료. 32세, 티타늄 대검 사용, 늘 아인의 반보 뒤",
+      "Scenes": [
+        "EP01_SC007",
+        "EP01_SC009",
+        "EP01_SC010",
+        "EP01_SC013",
+        "EP01_SC014",
+        "EP01_SC015",
+        "EP01_SC016",
+        "EP01_SC017",
+        "EP01_SC019",
+        "EP01_SC020",
+        "EP01_SC022"
+      ],
+      "StateChangesKo": [
+        "EP01_SC007 반쯤 태운 담배를 비벼 끄고 주워 주머니에 넣음",
+        "EP01_SC010 금속 인식표 C를 목에 검",
+        "EP01_SC014 대검을 쥘 때 수트 관절 틈새로 주황 빛(코어 반응)",
+        "EP01_SC015 폭발 충격파에 매트 위를 구름",
+        "EP01_SC020 허수아비값 30만 원 첫 의뢰비 공제 통보"
+      ]
+    },
+    {
+      "CharacterId": "char_han_jangin",
+      "NameKo": "한 장인",
+      "RoleKo": "벙커 대장장이. 아인의 낫 제작자(낫값 이 년째 미납, 재촉하지 않음)",
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "StateChangesKo": [
+        "EP01_SC009 낫을 두 손으로 돌려줌 — 석 달쯤 전부터(예전엔 62kg 대검도 한 손)"
+      ]
+    },
+    {
+      "CharacterId": "char_yujin",
+      "NameKo": "유진",
+      "RoleKo": "각인 평가소 평가관. 서른 언저리, 벙커 유일의 등급 권한자. 손글씨 대장을 적음",
+      "Scenes": [
+        "EP01_SC010",
+        "EP01_SC011",
+        "EP01_SC012"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_mateo",
+      "NameKo": "마태오",
+      "RoleKo": "용병 인력사무소 운영자. 오십 대 중반, 불 안 붙인 담배",
+      "Scenes": [
+        "EP01_SC012",
+        "EP01_SC013",
+        "EP01_SC015",
+        "EP01_SC020",
+        "EP01_SC021"
+      ],
+      "StateChangesKo": [
+        "EP01_SC015 물고 있던 담배를 떨어뜨림"
+      ]
+    },
+    {
+      "CharacterId": "char_suhui",
+      "NameKo": "수희",
+      "RoleKo": "벙커 배급 줄 담당",
+      "Scenes": [
+        "EP01_SC008"
+      ],
+      "StateChangesKo": []
+    },
+    {
+      "CharacterId": "char_training_heosuabi",
+      "NameKo": "훈련용 짚단 허수아비(각성체)",
+      "RoleKo": "EP01 보스. 철사슬에 묶인 훈련용 허수아비 속 문양이 폭발하며 나타난 3m 나노 강선체 (고유 명칭 원고 미서술)",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC015",
+        "EP01_SC016",
+        "EP01_SC017",
+        "EP01_SC018"
+      ],
+      "StateChangesKo": [
+        "EP01_SC002/SC015 사슬을 끊고 3m 나노 강선체로 일어섬",
+        "EP01_SC018 관절(이음매)이 뜯겨 나가고 주황 결정 이탈",
+        "EP01_SC019 본체 붕괴 — 회색 가루(최종 타격 서술 없음)"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "boss_heosuabi_chain_break_rise",
+      "Category": "boss",
+      "Characters": [
+        "char_training_heosuabi"
+      ],
+      "Scenes": [
+        "EP01_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "사슬이 안쪽에서 밀려 끊어지고 몸을 세움(【서】)"
+    },
+    {
+      "Action": "hand_freeze_midswing",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC002"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫이 올라가다 멈춤 — 두 개의 목소리를 들은 순간"
+    },
+    {
+      "Action": "idle_stand_scythe",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫을 든 채 서 있기(바람에 머리 흩날림)"
+    },
+    {
+      "Action": "close_eyes",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "hand_slip_grip",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "회상 — 맞잡은 작은 손이 미끄러짐(얼굴 없는 손 인서트)"
+    },
+    {
+      "Action": "look_at_hand_grip",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "낫 자루 쥔 손에 힘, 한참 내려다봄"
+    },
+    {
+      "Action": "open_door",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "walk_stop_half_step_behind",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "아인의 반보 뒤에서 멈춤 — 반복 모티프"
+    },
+    {
+      "Action": "carry_greatsword_shoulder_one_hand",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "62kg 대검을 한 손으로 어깨에 굄"
+    },
+    {
+      "Action": "light_cigarette",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "stub_out_cigarette_foot",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "반쯤 태운 담배를 발로 비벼 끔"
+    },
+    {
+      "Action": "pick_up_pocket",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain",
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC007",
+        "EP01_SC019"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "주워서/꺼내서 주머니에 넣음"
+    },
+    {
+      "Action": "walk_stairs_down",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC008"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "나선 계단 하강"
+    },
+    {
+      "Action": "hand_out_request",
+      "Category": "gesture",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "말없이 손을 내밀어 물건을 달라는 뜻"
+    },
+    {
+      "Action": "inspect_blade",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "칼날 눈높이, 끝자락 훑기, 이음새 흔들기, 무게중심 손바닥"
+    },
+    {
+      "Action": "return_weapon_two_hands",
+      "Category": "interaction",
+      "Characters": [
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "두 손으로 낫을 돌려줌 — 이상 징후"
+    },
+    {
+      "Action": "place_push_chips",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_han_jangin"
+      ],
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "칩을 올리고 되밀기를 반복"
+    },
+    {
+      "Action": "turn_look_back",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC009"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "step_on_platform_scan",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "발판에 올라서 스캔 빔을 받음"
+    },
+    {
+      "Action": "receive_wear_dogtag",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "인식표를 받아 목에 검"
+    },
+    {
+      "Action": "walk_away_grumble",
+      "Category": "locomotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC010"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "write_by_hand",
+      "Category": "interaction",
+      "Characters": [
+        "char_yujin",
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC011",
+        "EP01_SC012",
+        "EP01_SC021"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "노트/장부에 손으로 적기"
+    },
+    {
+      "Action": "point_with_cigarette",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "불 안 붙인 담배로 가리키기"
+    },
+    {
+      "Action": "armchair_turn",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "point_finger",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC013"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "greatsword_overhead_smash",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "양손으로 고쳐 쥐고 튀어 나가 내려찍기"
+    },
+    {
+      "Action": "scythe_three_arc_combo",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "좌상→우하, 역방향, 세 번째 궤적 끝자락 잔상"
+    },
+    {
+      "Action": "flick_debris_off_blade",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC014"
+      ],
+      "DonorLikely": false,
+      "NotesKo": ""
+    },
+    {
+      "Action": "scratch_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC014"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "knockback_roll_on_mat",
+      "Category": "injury",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC015",
+        "EP01_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "폭발 충격파/피격으로 매트 위를 구름"
+    },
+    {
+      "Action": "drop_cigarette",
+      "Category": "gesture",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC015"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "boss_heosuabi_spin_windup",
+      "Category": "boss",
+      "Characters": [
+        "char_training_heosuabi"
+      ],
+      "Scenes": [
+        "EP01_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "양팔 벌림, 어깨 감김, 허리 비틀림, 숨 들이킴"
+    },
+    {
+      "Action": "boss_heosuabi_elbow_counter",
+      "Category": "boss",
+      "Characters": [
+        "char_training_heosuabi"
+      ],
+      "Scenes": [
+        "EP01_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "품 안에 들어온 대상에게 팔꿈치"
+    },
+    {
+      "Action": "scythe_dash_jammed",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC016"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "너무 깊이 들어가 자루가 몸에 걸리고 칼날이 튕김"
+    },
+    {
+      "Action": "get_up_hand_push",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC016"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "greatsword_plant_reflect",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC017"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "대검 수직 꽂기 + 코어 출력 표면 도포로 힘 되돌리기"
+    },
+    {
+      "Action": "boss_pushed_stagger",
+      "Category": "boss",
+      "Characters": [
+        "char_training_heosuabi"
+      ],
+      "Scenes": [
+        "EP01_SC017"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "되돌아간 힘에 몸통이 밀리고 자세 붕괴"
+    },
+    {
+      "Action": "scythe_twist_leap_hook_pull",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫 하나 길이에서 멈춤→몸 비틀며 솟구침→끝자락으로 이음매 걸어 당김(슬로)"
+    },
+    {
+      "Action": "boss_joint_torn",
+      "Category": "boss",
+      "Characters": [
+        "char_training_heosuabi"
+      ],
+      "Scenes": [
+        "EP01_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "관절 뜯겨 나감, 결정 굴러떨어짐"
+    },
+    {
+      "Action": "catch_crystal_blade_tip",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC018"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫 끝으로 툭 건드려 손바닥에 받음"
+    },
+    {
+      "Action": "dig_through_debris",
+      "Category": "interaction",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC019"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "kick_door_open",
+      "Category": "interaction",
+      "Characters": [
+        "char_mateo"
+      ],
+      "Scenes": [
+        "EP01_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "mouth_agape_stare",
+      "Category": "emotion",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC020"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "hand_grip_open_close",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC022"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "오른손을 쥐었다 펴고 다시 쥠 — 나가서 무언가를 잡을 일이 있을 때만(마감본)"
+    },
+    {
+      "Action": "scythe_rest_on_shoulder",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP01_SC022"
+      ],
+      "DonorLikely": true,
+      "NotesKo": ""
+    },
+    {
+      "Action": "walk_into_fog",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP01_SC022"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "카인은 반보 뒤 유지"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_ledger_form_3a",
+      "NameKo": "각인 계측 대장 · 서식 3-A",
+      "Scenes": [
+        "EP01_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_iron_chain",
+      "NameKo": "철사슬(허수아비 결박)",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC013",
+        "EP01_SC015",
+        "EP01_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_training_scarecrow",
+      "NameKo": "훈련용 짚단 허수아비",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC013",
+        "EP01_SC014",
+        "EP01_SC015",
+        "EP01_SC020"
+      ]
+    },
+    {
+      "PropId": "prop_mnd_report_3",
+      "NameKo": "국방부 상황보고 제3보",
+      "Scenes": [
+        "EP01_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_order_small_arms",
+      "NameKo": "사단장 수신 공문 '소화기 사용 관련'(미완)",
+      "Scenes": [
+        "EP01_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_handwritten_note",
+      "NameKo": "손글씨 쪽지 '탄약 안 아껴도 됨 / 어차피 안 죽음'",
+      "Scenes": [
+        "EP01_SC003"
+      ]
+    },
+    {
+      "PropId": "prop_scythe",
+      "NameKo": "아인의 낫",
+      "Scenes": [
+        "EP01_SC002",
+        "EP01_SC004",
+        "EP01_SC006",
+        "EP01_SC007",
+        "EP01_SC009",
+        "EP01_SC010",
+        "EP01_SC014",
+        "EP01_SC016",
+        "EP01_SC018",
+        "EP01_SC022"
+      ]
+    },
+    {
+      "PropId": "prop_greatsword",
+      "NameKo": "카인의 티타늄 대검",
+      "Scenes": [
+        "EP01_SC007",
+        "EP01_SC014",
+        "EP01_SC017",
+        "EP01_SC022"
+      ]
+    },
+    {
+      "PropId": "prop_lighter",
+      "NameKo": "라이터",
+      "Scenes": [
+        "EP01_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_cigarette",
+      "NameKo": "담배",
+      "Scenes": [
+        "EP01_SC007"
+      ]
+    },
+    {
+      "PropId": "prop_missing_posters_wall",
+      "NameKo": "실종자 벽보 벽",
+      "Scenes": [
+        "EP01_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_drum_fire",
+      "NameKo": "드럼통 불",
+      "Scenes": [
+        "EP01_SC008"
+      ]
+    },
+    {
+      "PropId": "prop_workbench",
+      "NameKo": "한 장인의 작업대",
+      "Scenes": [
+        "EP01_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_nano_chip",
+      "NameKo": "나노 칩",
+      "Scenes": [
+        "EP01_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_sign_gakin",
+      "NameKo": "간판 「각인 평가소」",
+      "Scenes": [
+        "EP01_SC009"
+      ]
+    },
+    {
+      "PropId": "prop_tablet",
+      "NameKo": "유진의 태블릿",
+      "Scenes": [
+        "EP01_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_scan_platform",
+      "NameKo": "스캔 발판",
+      "Scenes": [
+        "EP01_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_gakin_machine",
+      "NameKo": "각인기",
+      "Scenes": [
+        "EP01_SC010"
+      ]
+    },
+    {
+      "PropId": "prop_dogtag_c",
+      "NameKo": "금속 인식표(C)",
+      "Scenes": [
+        "EP01_SC010",
+        "EP01_SC022"
+      ]
+    },
+    {
+      "PropId": "prop_ledger_notebook",
+      "NameKo": "「각인 평가 대장」 대학 노트(일곱 권)",
+      "Scenes": [
+        "EP01_SC011",
+        "EP01_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_ink",
+      "NameKo": "잉크",
+      "Scenes": [
+        "EP01_SC012"
+      ]
+    },
+    {
+      "PropId": "prop_unlit_cigarette",
+      "NameKo": "마태오의 불 안 붙인 담배",
+      "Scenes": [
+        "EP01_SC012",
+        "EP01_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_crt_wall",
+      "NameKo": "CRT 모니터 벽(무음 생일 영상 반복 화면 포함)",
+      "Scenes": [
+        "EP01_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_hologram_table",
+      "NameKo": "홀로그램 테이블(강남역 지하상가 신호 그래프)",
+      "Scenes": [
+        "EP01_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_armchair",
+      "NameKo": "마태오의 암체어",
+      "Scenes": [
+        "EP01_SC013"
+      ]
+    },
+    {
+      "PropId": "prop_orange_crystal",
+      "NameKo": "주황 결정(엄지손톱만 한)",
+      "Scenes": [
+        "EP01_SC018",
+        "EP01_SC019"
+      ]
+    },
+    {
+      "PropId": "prop_grey_powder",
+      "NameKo": "회색 가루(굳으면 나노 칩)",
+      "Scenes": [
+        "EP01_SC019"
+      ]
+    },
+    {
+      "PropId": "prop_mateo_ledger",
+      "NameKo": "마태오의 장부 서류철(「손실」 칸)",
+      "Scenes": [
+        "EP01_SC021"
+      ]
+    },
+    {
+      "PropId": "prop_sortie_gate",
+      "NameKo": "출격문 철문",
+      "Scenes": [
+        "EP01_SC022"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP01_SC001",
+      "QuestionKo": "[판본 충돌] 서식 3-A '최초 계측일 2030.05.11 / 등급 C / 변동 없음' vs 본문 '이 년 무등록 끝에 오늘 첫 등록'(L227-L231)·서울 하늘 '이 년째'(L55)·국방부 문서 2030.03.04 — 오늘 날짜가 2030.05.11인지, 연표가 어떻게 맞는지 불명."
+    },
+    {
+      "Scene": "EP01_SC002",
+      "QuestionKo": "[판본 충돌] 【서】의 허수아비는 '목제 몸통/사람 크기의 목제 표적, 표면에 칼자국'(L11-L15)인데 본문은 '짚단 허수아비, 짚이 삐져나오고 나무 뼈대'(L373) — 재질·외형 기준 확정 필요."
+    },
+    {
+      "Scene": "EP01_SC002",
+      "QuestionKo": "[판본 충돌/연출] 【서】는 각성 순간 아인이 '열 걸음 거리'에서 낫을 들고 있다가 소리에 손이 멈춘다고 하나, 본문(L415-L459)은 짚단을 벤 직후 근접 상태에서 폭발 충격파로 매트를 구른다 — 거리·순서 정합 방식 TBD."
+    },
+    {
+      "Scene": "EP01_SC002",
+      "QuestionKo": "두 번째(작은) 목소리·일정 간격 신호음의 정체 — 원고가 의도적으로 끊음."
+    },
+    {
+      "Scene": "EP01_SC005",
+      "QuestionKo": "놓친 작은 손의 주인과 셔터 사건의 장소·시점 — 원고가 밝히지 않음(의도적 미해결)."
+    },
+    {
+      "Scene": "EP01_SC008",
+      "QuestionKo": "벙커 입장~배급 줄 구간에서 카인의 동행 여부가 서술되지 않음(재촉 장면에서는 '뒤에서' 등장)."
+    },
+    {
+      "Scene": "EP01_SC008",
+      "QuestionKo": "실종자 벽보 중 군복 차림 인물의 정체 — 복선, 미해결."
+    },
+    {
+      "Scene": "EP01_SC009",
+      "QuestionKo": "한 장인이 석 달 전부터 두 손으로 드는 이유 — '둘 다 알지만 말하지 않음'(L173), 원고 미서술."
+    },
+    {
+      "Scene": "EP01_SC012",
+      "QuestionKo": "잉크를 두고 간 사람 — '적혀 있지 않았다'(L319), 마태오로 암시만."
+    },
+    {
+      "Scene": "EP01_SC013",
+      "QuestionKo": "허수아비 위치: 사무소 '방 구석'(L371-L373)을 가리키는데 호흡 테스트는 '지하 훈련장'(L381), 【서】는 '이 년 동안 그 자리에 묶여 있던 것' — 사무소와 훈련장의 공간 관계(관측창) 미서술."
+    },
+    {
+      "Scene": "EP01_SC013",
+      "QuestionKo": "CRT 무음 생일 영상 속 여자·아이들의 정체 — 미서술."
+    },
+    {
+      "Scene": "EP01_SC015",
+      "QuestionKo": "보스 고유 명칭 — 원고는 '훈련용 짚단 허수아비'/'놈'으로만 지칭. 허수아비 발밑 문양의 정체도 미서술."
+    },
+    {
+      "Scene": "EP01_SC016",
+      "QuestionKo": "BossPhase P1~P3 구분은 원고에 없음 — 전 전투 장면을 P1로 두고 PhasesInNovel에 서술 비트만 기록."
+    },
+    {
+      "Scene": "EP01_SC017",
+      "QuestionKo": "되받아치기(카인) 장면에서 플레이어가 카인을 조작하는지, 아인 조작 중 동료 연계인지 — 원고가 정하지 않음(게임 설계 결정)."
+    },
+    {
+      "Scene": "EP01_SC019",
+      "QuestionKo": "본체를 최종으로 죽인 타격이 서술되지 않음 — 카인이 '세게 쳤다'는 대화(L583-L587)와 회색 가루로만 암시."
+    },
+    {
+      "Scene": "EP01_SC004",
+      "QuestionKo": "아인·카인의 의상 형태(상의·하의·장갑 등)가 원고에 서술되지 않음(카인은 '수트'로만 언급 L383)."
+    },
+    {
+      "Scene": "EP01_SC001",
+      "QuestionKo": "장소가 원고에 서술되지 않음: 서식 문서 인서트 — 배경 공간 없음"
+    },
+    {
+      "Scene": "EP01_SC001",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (문서 인서트; 최초 계측일 2030.05.11 기재)"
+    },
+    {
+      "Scene": "EP01_SC002",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (본편 기준 여섯 시간 뒤 시점)"
+    },
+    {
+      "Scene": "EP01_SC003",
+      "QuestionKo": "장소가 원고에 서술되지 않음: 문서 인서트 — 배경 공간 없음"
+    },
+    {
+      "Scene": "EP01_SC003",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (문서 기재 2030.03.04 05:20)"
+    },
+    {
+      "Scene": "EP01_SC005",
+      "QuestionKo": "장소가 원고에 서술되지 않음: 셔터 기억의 장소(원고가 의도적으로 밝히지 않음)"
+    },
+    {
+      "Scene": "EP01_SC005",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (과거, 시점 미서술)"
+    },
+    {
+      "Scene": "EP01_SC009",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC010",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC011",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC012",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (회상 시점 미상 → 현재)"
+    },
+    {
+      "Scene": "EP01_SC013",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC014",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC015",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC016",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC017",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC018",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC019",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC020",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC021",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    },
+    {
+      "Scene": "EP01_SC022",
+      "QuestionKo": "시각(TimeOfDay)이 원고에 명시되지 않음 (지하 실내; 옥상 장면과 같은 날, 【서】 시점 '여섯 시간 전' 이후)"
+    }
+  ]
+}

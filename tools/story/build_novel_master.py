@@ -27,6 +27,28 @@ FIELDS = ["EpisodeId", "SceneId", "NovelSource", "NovelSummary", "Location", "Ti
           "RequiredEquipment", "StoryBeat", "PlayerCharacter", "NPCs", "Dialogue", "GameMode", "PlayerGoal", "Interaction",
           "BossId", "BossPhase", "EnvironmentState", "Props", "VFX", "SFX", "Music", "GameplayEntry", "GameplayExit",
           "AnimationRequired", "CinematicRequired", "SaveFlags", "Prerequisites", "NextScene", "RequiredAssets", "CanonStatus"]
+# Canonical boss table: novel boss -> design sheet (UEIntroProject Content/Twilight/UI/BossArt) and the UEIntroProject
+# boss catalog id (HwanghonBossData.cpp). Agents named some bosses differently per episode; aliases fold them.
+CANON_BOSSES = [
+    ("boss_training_heosuabi", "훈련용 짚단 허수아비", "T_BossArt_Scarecrow.png", "TestBoss", []),
+    ("boss_clave", "클레이브", "T_BossArt_Clave.png", "Cleave", ["boss_cleave"]),
+    ("boss_celestial", "셀레스티얼", "T_BossArt_Celestial.png", "Celestial", []),
+    ("boss_aegis_07", "에이지스-07", "T_BossArt_Aegis07.png", "Aegis07", []),
+    ("boss_leviathan", "레비아탄 (원문 EP27 L14590 «터널의 레비아탄», 시트 «레비아탄 나노»)", "T_BossArt_Leviathan.png", "LeviathanNano",
+     ["boss_hangang_tunnel_creature", "boss_hangang_tunnel_nom"]),
+    ("boss_subject_09", "실험체 09호", "T_BossArt_Subject09.png", "Subject09", ["boss_silheomche_09"]),
+    ("boss_shadow_fang", "섀도우 팽", "T_BossArt_ShadowFang.png", "ShadowFang", []),
+    ("boss_arsenal_overlord", "아스널 오버로드", "T_BossArt_Arsenal.png", "ArsenalOverlord", []),
+    ("boss_general_park", "박 준장", "T_BossArt_GeneralPark.png", "GeneralPark", ["boss_bak_junjang"]),
+    ("boss_minister_jeong", "정 장관", "", "MinisterJeong", ["boss_jeong_janggwan"]),
+    ("boss_nano_nova_core", "나노-노바 코어", "", "NanoNovaCore", []),
+    ("boss_amplifier_tower", "발사대 탑 (증폭기)", "", "NanoNovaCore phase 2 «증폭 탑 앵커» (TBD_CANON: 별도 보스?)", ["boss_balsadae_tap"]),
+]
+DESIGN_ONLY = [("아이언 워든", "T_BossArt_IronWarden.png", "IronWarden"), ("이 중장", "T_BossArt_GeneralLee.png", "GeneralLee")]
+BOSS_ALIAS = {a: c[0] for c in CANON_BOSSES for a in [c[0]] + c[4]}
+BOSS_INFO = {c[0]: c for c in CANON_BOSSES}
+
+
 MODES = {"STORY_CINEMATIC", "STORY_WALK", "STORY_DIALOGUE", "INVESTIGATION", "TRANSITION", "BOSS_ENTRY", "BOSS_BATTLE",
          "BOSS_RESULT", "FLASHBACK", "ANIMATION_ONLY"}
 
@@ -87,8 +109,11 @@ def merge(eps):
             e["Scenes"] += c.get("Scenes", [])
             e["StateChanges"] += c.get("StateChangesKo", [])
         for b in ep.get("Bosses", []):
-            key = norm_ko(b.get("NameKo")) or b.get("BossId")
-            e = bosses.setdefault(key, {"BossId": b.get("BossId"), "NameKo": b.get("NameKo"), "Episodes": [], "Entries": []})
+            key = BOSS_ALIAS.get(b.get("BossId"), b.get("BossId"))
+            info = BOSS_INFO.get(key)
+            e = bosses.setdefault(key, {"BossId": key, "NameKo": info[1] if info else b.get("NameKo"),
+                                        "DesignSheet": info[2] if info else "", "UEIntroCatalog": info[3] if info else "",
+                                        "Episodes": [], "Entries": []})
             e["Episodes"].append(eid)
             e["Entries"].append(dict(b, EpisodeId=eid))
         for a in ep.get("AnimationRequirements", []):
@@ -146,7 +171,9 @@ def write_md(eps, m):
                      ", ".join(b.get("NameKo", "") for b in ep.get("Bosses", [])) or "—",
                      ep.get("NovelSource", {}).get("lines", "")) for ep in eps],
                    ["EP", "제목", "장면", "보스", "원문 줄"]), "",
-             "## 2. 보스", "",
+             "## 2. 보스 (디자인 시트 대조 포함 — 시트: UEIntroProject `Content/Twilight/UI/BossArt`)", "",
+             table([(b["NameKo"], b["DesignSheet"] or "**시트 없음**", b["UEIntroCatalog"]) for b in m["bosses"].values()]
+                   + [(n + " (**1부 원문 등장 없음**)", f, c) for n, f, c in DESIGN_ONLY], ["보스", "디자인 시트", "UEIntroProject 카탈로그"]), "",
              table([(b["NameKo"], b["BossId"], ", ".join(sorted(set(b["Episodes"]))),
                      "; ".join((x.get("NovelReasonForBattle") or "")[:80] for x in b["Entries"]),
                      ", ".join(sorted({s for x in b["Entries"] for s in x.get("Scenes", [])}))[:120])
@@ -226,7 +253,10 @@ def write_dungeons(m):
                                             "EnvironmentalMechanics", "BossEntryCinematic", "PhaseTransitionCinematics",
                                             "BossDeathCinematic", "PostBattleScene", "AnimationAssets", "AudioAssets",
                                             "VFXAssets", "RequiredStoryFlags")], ["필드", "값"])]
-        with open(os.path.join(OUT_DUNGEONS, f"{b['BossId']}_DUNGEON_SPEC.md"), "w", encoding="utf-8") as f:
+        path = os.path.join(OUT_DUNGEONS, f"{b['BossId']}_DUNGEON_SPEC.md")
+        if os.path.exists(path) and "<!-- MANUAL -->" in open(path, encoding="utf-8").read():
+            continue   # a hand-written spec (episode in production) is never overwritten
+        with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(body) + "\n")
 
 
@@ -240,7 +270,8 @@ def main():
     m = merge(eps)
     master = {"schema": "hwanghon.novel_game_master.v1", "novel": NOVEL,
               "episodes": [{k: v for k, v in ep.items() if k != "Scenes"} | {"SceneIds": [s["SceneId"] for s in ep.get("Scenes", [])]} for ep in eps],
-              "scenes": [s for ep in eps for s in ep.get("Scenes", [])],
+              "scenes": [dict(s, BossId=BOSS_ALIAS.get(s.get("BossId"), s.get("BossId"))) for ep in eps for s in ep.get("Scenes", [])],
+              "design_only_bosses": [{"NameKo": n, "DesignSheet": f, "UEIntroCatalog": c, "CanonStatus": "TBD_CANON — 1부 원문 등장 없음"} for n, f, c in DESIGN_ONLY],
               "bosses": list(m["bosses"].values()), "locations": list(m["locations"].values()),
               "characters": list(m["characters"].values()), "animations": list(m["animations"].values()),
               "props": list(m["props"].values()), "tbd_canon": m["tbd"], "check_errors": errors}

@@ -1,0 +1,1826 @@
+{
+  "EpisodeId": "EP16",
+  "TitleKo": "밝은 쪽",
+  "NovelSource": {
+    "file": "제1부_통합본_EP01-28.md",
+    "lines": [
+      10645,
+      10944
+    ]
+  },
+  "SummaryKo": "남쪽으로 내려가는 길에 코어가 도려내진 집행관 사체들이 이어지고, 오정길의 깡통 실험으로 소리가 거리에 따라 죽는 땅임이 드러난다. 인계 지점 추정 1호인 물류창고 앞마당에서 일행은 군조차 우회하는 '괴물을 먹는 괴물'의 영역에 들어섰음을 알고, 아인의 코어는 남하 이후 가장 밝게 뛴다. 수풀 그늘에서 눈도 귀도 없는 검은 것이 기습하고, 놈은 칼이 아니라 공격 직전 켜지는 목의 빛을 읽어 모든 반격을 피한다. 아인은 마지막 억제제를 전부 마셔 코어를 끄고, 조준은 카인에게 옮겨 간다. 각인이 없어 감지되지 않는 오정길이 파편 미끼로 감각기를 둘로 찢고, 어두운 아인이 반 박자에 옆구리를 베어 첫 유효타를 낸다. 그러나 상처는 얕아 '밝으면 읽히고 어두우면 얕다'는 방정식이 남고, 광폭해진 놈에 카인의 대검 금이 넓어진다. 능선 위 세라가 마지막 촉매로 빛기둥을 켜 조준을 빼앗고, 봉쇄는 한 번뿐이라며 넷이 다 있으면 이길 수 있다고 말한 순간 놈이 세라를 향해 도약한다.",
+  "Scenes": [
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC001",
+      "NovelSource": "L10659-L10678 §1 소리의 등고선",
+      "NovelSummary": "남행 길가에 목덜미 코어가 같은 단면으로 도려내진 집행관 사체가 셋 있다. 오정길이 깡통을 세우고 스무 걸음 밖에서 돌을 던져 맞히자 소리가 없고, 다섯 걸음 앞에서는 반쯤 들린다. 소리가 오다가 죽으며, 죽는 깊이가 깊어지는 쪽에 놈이 있다고 아인이 엄지로 길 끝을 겨눈다. 카인은 이렇게 조용한 건 이사 첫날 밤 이후 처음이라 중얼거린다.",
+      "Location": "loc_south_road",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "무음 지대 진입 — 사냥당하는 쪽은 괴물",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "…소리가 안 나는 게 아닙니다.",
+          "Source": "L10667"
+        },
+        {
+          "Speaker": "char_oh_jeonggil",
+          "Line": "나는데, 오다가 죽습니다.",
+          "Source": "L10667"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "죽는 깊이가 깊어지는 쪽에 — 놈이 있어요.",
+          "Source": "L10669"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "…이렇게 조용한 건 이사 첫날 밤 이후 처음이네.",
+          "Source": "L10673"
+        }
+      ],
+      "GameMode": [
+        "STORY_WALK",
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "집행관 사체를 조사하고 깡통 실험으로 소리가 죽는 방향을 찾는다",
+      "Interaction": [
+        "사체 조사",
+        "깡통 소리 실험(거리별 소리 감쇠)",
+        "엄지 거리 재기"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "소리가 거리에 따라 감쇠해 사라지는 길, 코어 도려낸 집행관 사체 셋",
+      "Props": [
+        "prop_executioner_corpses",
+        "prop_empty_can"
+      ],
+      "VFX": [
+        "소리 감쇠 시각화(물속 같은 왜곡)"
+      ],
+      "SFX": [
+        "먹먹하게 반쯤만 오는 깡통 소리"
+      ],
+      "Music": "무음 — 음악 거의 없음",
+      "GameplayEntry": "남행 보행 중 사체 발견",
+      "GameplayExit": "카인의 중얼거림 후 이동",
+      "AnimationRequired": [
+        "walk_group",
+        "stack_can_throw_stone",
+        "thumb_measure"
+      ],
+      "CinematicRequired": "false — 보행·조사",
+      "SaveFlags": [
+        "EP16_silent_zone_entered"
+      ],
+      "Prerequisites": [
+        "EP15_SC013"
+      ],
+      "NextScene": "EP16_SC002",
+      "RequiredAssets": [
+        "env:loc_south_road",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_executioner_corpses",
+        "prop:prop_empty_can",
+        "anim:walk_group",
+        "anim:stack_can_throw_stone",
+        "anim:thumb_measure",
+        "vfx:소리 감쇠 시각화(물속 같은 왜곡)",
+        "sfx:먹먹하게 반쯤만 오는 깡통 소리",
+        "bgm:무음 — 음악 거의 없음"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC002",
+      "NovelSource": "L10679-L10696 §2 괴물을 먹는 괴물",
+      "NovelSummary": "인계 지점 추정 1호인 낡은 물류창고 앞마당은 전장이었다. 뒤집힌 수레, 속이 빈 방호복, 코어가 도려내진 호위 집행관 두 기. 오정길이 이 구역을 크게 우회하도록 수정된 여덟 달 전 경로도를 줍는다. 군도 여길 못 들어온다는 류의 말에 아인은 괴물을 먹는 괴물이라 답하고, 그 목덜미에서 코어가 남하 이후 가장 밝게 뛴다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "판이 완성됨 — 밝기를 사냥하는 것의 영역에 가장 밝은 코어",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ryu",
+          "Line": "…군도 여길 못 들어오는 거예요.",
+          "Source": "L10685"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…괴물을 먹는 괴물이에요.",
+          "Source": "L10689"
+        }
+      ],
+      "GameMode": [
+        "INVESTIGATION"
+      ],
+      "PlayerGoal": "물류창고 앞마당의 잔해를 조사한다",
+      "Interaction": [
+        "경로도 줍기",
+        "잔해 조사"
+      ],
+      "BossId": "",
+      "BossPhase": "",
+      "EnvironmentState": "뒤집힌 수레, 빈 방호복, 코어 도려낸 집행관 두 기",
+      "Props": [
+        "prop_overturned_cart",
+        "prop_empty_hazmat_suits",
+        "prop_executioner_corpses",
+        "prop_revised_route_map"
+      ],
+      "VFX": [
+        "아인의 목덜미 코어 강한 맥동"
+      ],
+      "SFX": [
+        "코어 맥동음(주관음)"
+      ],
+      "Music": "긴장 — 저음 드론",
+      "GameplayEntry": "앞마당 도착",
+      "GameplayExit": "코어 맥동 클로즈업",
+      "AnimationRequired": [
+        "pick_up_paper",
+        "core_pulse_glow"
+      ],
+      "CinematicRequired": "true — 코어가 가장 밝게 뛰는 클로즈업",
+      "SaveFlags": [
+        "EP16_route_map_found"
+      ],
+      "Prerequisites": [
+        "EP16_SC001"
+      ],
+      "NextScene": "EP16_SC003",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "prop:prop_overturned_cart",
+        "prop:prop_empty_hazmat_suits",
+        "prop:prop_executioner_corpses",
+        "prop:prop_revised_route_map",
+        "anim:pick_up_paper",
+        "anim:core_pulse_glow",
+        "vfx:아인의 목덜미 코어 강한 맥동",
+        "sfx:코어 맥동음(주관음)",
+        "bgm:긴장 — 저음 드론"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC003",
+      "NovelSource": "L10697-L10716 §3 개전",
+      "NovelSummary": "류의 눈이 수풀 그늘의 움직임을 잡지만 외침은 닿지 않고, 류가 몸을 날려 아인을 민다. 아인이 있던 자리를 검은 것이 관통해 아스팔트에 매끄러운 절단흔을 남긴다. 낮고 길고 이음매 없는 검은 것, 눈도 귀도 없이 꽃잎처럼 벌어진 감각기가 아인의 목에 켜진 빛을 향한다. 예비 동작 없는 돌진을 아인이 받아넘기고 즉시 반격하지만 낫은 허공을 가른다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "보스 개전 — 눈 없는 것이 빛을 본다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_ENTRY",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "기습을 피하고 첫 돌진을 받아넘긴다",
+      "Interaction": [
+        "회피(류의 밀침)",
+        "받아넘기기",
+        "반격"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P1",
+      "EnvironmentState": "수풀 그늘, 아스팔트 절단흔, 무음",
+      "Props": [],
+      "VFX": [
+        "무성의 불꽃",
+        "그늘에 녹는 검은 윤곽",
+        "감각기 정렬"
+      ],
+      "SFX": [
+        "(무음) 소리 제거 연출"
+      ],
+      "Music": "보스 — 무음 긴장",
+      "GameplayEntry": "류의 시선 → 기습",
+      "GameplayExit": "첫 반격이 허공",
+      "AnimationRequired": [
+        "dive_push_ally",
+        "boss_shadow_dash",
+        "boss_sensor_bloom_orient",
+        "scythe_parry",
+        "scythe_circle_whiff"
+      ],
+      "CinematicRequired": "true — 보스 첫 등장(윤곽이 반쯤 드러남)",
+      "SaveFlags": [
+        "EP16_shadow_fang_encountered"
+      ],
+      "Prerequisites": [
+        "EP16_SC002"
+      ],
+      "NextScene": "EP16_SC004",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "anim:dive_push_ally",
+        "anim:boss_shadow_dash",
+        "anim:boss_sensor_bloom_orient",
+        "anim:scythe_parry",
+        "anim:scythe_circle_whiff",
+        "vfx:무성의 불꽃",
+        "vfx:그늘에 녹는 검은 윤곽",
+        "vfx:감각기 정렬",
+        "sfx:(무음) 소리 제거 연출",
+        "bgm:보스 — 무음 긴장"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC004",
+      "NovelSource": "L10717-L10734 §4 읽는 것",
+      "NovelSummary": "두 번째, 세 번째 반격도, 류의 쌍단검도 허공이다. 놈은 칼이 출발하기 전에 이미 다른 곳에 있다. 아인이 멈추고 관찰해, 낫을 드는 순간 목덜미 코어가 출력 발화로 밝아지고 그와 동시에 감각기가 먼저 움직인다는 것을 알아낸다. 놈은 칼이 아니라 빛을 읽는다. 이 년 동안 넷을 살려 온 힘이 여기서는 위치를 알려주는 봉화였다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "규칙 발견 — 빛을 읽는다",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…읽어요.",
+          "Source": "L10725"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "칼이 아니라 — 빛을.",
+          "Source": "L10729"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "휘두르기 전에, 목이 먼저 켜져요.",
+          "Source": "L10729"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "공격이 전부 회피되는 원인을 관찰로 알아낸다",
+      "Interaction": [
+        "공격 시도",
+        "관찰(코어 발화 ↔ 감각기 반응)"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P1",
+      "EnvironmentState": "무음 전장",
+      "Props": [],
+      "VFX": [
+        "공격 시 목덜미 코어 발화",
+        "감각기 선반응"
+      ],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "보스 — 무음 긴장",
+      "GameplayEntry": "연속 반격",
+      "GameplayExit": "'읽어요' 발견",
+      "AnimationRequired": [
+        "scythe_circle_whiff",
+        "twin_dagger_whiff",
+        "boss_pre_evade",
+        "core_pulse_glow"
+      ],
+      "CinematicRequired": "false — 인게임 발견",
+      "SaveFlags": [
+        "EP16_fang_reads_light"
+      ],
+      "Prerequisites": [
+        "EP16_SC003"
+      ],
+      "NextScene": "EP16_SC005",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "anim:scythe_circle_whiff",
+        "anim:twin_dagger_whiff",
+        "anim:boss_pre_evade",
+        "anim:core_pulse_glow",
+        "vfx:공격 시 목덜미 코어 발화",
+        "vfx:감각기 선반응",
+        "sfx:(무음)",
+        "bgm:보스 — 무음 긴장"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC005",
+      "NovelSource": "L10735-L10754 §5 소등",
+      "NovelSummary": "공세가 가장 밝은 아인에게 집중되고, 세 번째 받아넘김에 낫자루가 밀린다. 아인은 카인의 가드 뒤로 반 박자를 벌어 마지막 억제제, 반쯤 남은 병을 병째 전부 마신다. 빈 병이 굴러가며 라벨의 손글씨가 마지막으로 빛을 받는다. 코어가 어두워지자 감각기가 길을 잃고 헤매다, 다음으로 밝은 카인에게 재정렬한다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)"
+      ],
+      "StoryBeat": "소등 — 남겨서 내일을 사는 것과 써서 오늘을 사는 것",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE",
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "가드 뒤로 빠져 억제제를 마셔 코어를 끈다",
+      "Interaction": [
+        "억제제 사용(소모품 전량)"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P1",
+      "EnvironmentState": "빈 병이 무성의 바닥을 구름",
+      "Props": [
+        "prop_last_inhibitor"
+      ],
+      "VFX": [
+        "코어 소등",
+        "감각기 헤맴"
+      ],
+      "SFX": [
+        "(무음) 병 구르는 연출"
+      ],
+      "Music": "결단 — 한 음",
+      "GameplayEntry": "아인에게 공세 집중",
+      "GameplayExit": "감각기가 카인에게 재정렬",
+      "AnimationRequired": [
+        "scythe_parry",
+        "arm_tremor_block",
+        "drink_vial_whole",
+        "core_dim",
+        "boss_sensor_bloom_orient"
+      ],
+      "CinematicRequired": "true — 마지막 억제제 소비와 소등",
+      "SaveFlags": [
+        "EP16_last_inhibitor_used",
+        "EP16_ain_core_dimmed"
+      ],
+      "Prerequisites": [
+        "EP16_SC004"
+      ],
+      "NextScene": "EP16_SC006",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:boss_shadow_fang",
+        "prop:prop_last_inhibitor",
+        "anim:scythe_parry",
+        "anim:arm_tremor_block",
+        "anim:drink_vial_whole",
+        "anim:core_dim",
+        "anim:boss_sensor_bloom_orient",
+        "vfx:코어 소등",
+        "vfx:감각기 헤맴",
+        "sfx:(무음) 병 구르는 연출",
+        "bgm:결단 — 한 음"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC006",
+      "NovelSource": "L10755-L10779 §6 투명한 자",
+      "NovelSummary": "놈이 카인을 치고 금 간 날이 진동으로 운다. 오정길은 감각기가 한 번도 자신을 향한 적이 없음을 깨닫는다. 각인 없는 목이 이 전장에서는 유일한 자유였다. 그는 떨리는 다리로 놈의 세 걸음 옆을 걸어 지나가 뒤편 열린 자리에 파편 주머니를 흩뿌리고, 흐린 빛의 군집에 감각기의 절반이 갈라져 조준이 둘로 찢어진다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 대검(금 간 날, 거치형 가드)"
+      ],
+      "StoryBeat": "오정길의 없음이 자유가 되다",
+      "PlayerCharacter": "char_oh_jeonggil",
+      "NPCs": [
+        "char_kain"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "(오정길 조작 제안) 감지되지 않는 몸으로 놈 곁을 지나 파편 미끼를 뿌린다",
+      "Interaction": [
+        "은밀 이동(감지 불가)",
+        "파편 주머니 살포"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P2",
+      "EnvironmentState": "놈 뒤편 열린 자리에 흐린 빛 파편 군집",
+      "Props": [
+        "prop_core_fragment_pouch"
+      ],
+      "VFX": [
+        "흩어진 파편의 군집 발광",
+        "감각기 절반 분리"
+      ],
+      "SFX": [
+        "대검 진동(체감)"
+      ],
+      "Music": "잠입 — 떨리는 현",
+      "GameplayEntry": "카인이 공격을 받는 동안 오정길로 전환",
+      "GameplayExit": "조준이 둘로 찢어짐",
+      "AnimationRequired": [
+        "greatsword_mounted_guard",
+        "touch_own_neck",
+        "trembling_walk_through",
+        "scatter_pouch",
+        "boss_sensor_bloom_orient"
+      ],
+      "CinematicRequired": "false — 인게임 잠입 구간",
+      "SaveFlags": [
+        "EP16_ohjeonggil_decoy"
+      ],
+      "Prerequisites": [
+        "EP16_SC005"
+      ],
+      "NextScene": "EP16_SC007",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_kain",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "prop:prop_core_fragment_pouch",
+        "anim:greatsword_mounted_guard",
+        "anim:touch_own_neck",
+        "anim:trembling_walk_through",
+        "anim:scatter_pouch",
+        "anim:boss_sensor_bloom_orient",
+        "vfx:흩어진 파편의 군집 발광",
+        "vfx:감각기 절반 분리",
+        "sfx:대검 진동(체감)",
+        "bgm:잠입 — 떨리는 현"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC007",
+      "NovelSource": "L10780-L10795 §7 다시 짜인 판",
+      "NovelSummary": "갈라진 조준의 틈에 아인이 수신호를 올리고, 류가 반대편 그늘로 미끄러져 카인 정면·류 배후·아인 측면의 진형이 다시 선다. 어두워진 아인은 놈의 세계에 존재하지 않는다. 소리도 빛도 없이 눈과 감만으로 원을 그리며 접근하고, 놈이 파편 미끼를 후려치는 공격에 전념한 반 박자가 온다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "진형 재구성 — 보이지 않는 사신",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "수신호로 진형을 잡고 어두운 채 측면으로 접근한다",
+      "Interaction": [
+        "수신호",
+        "은밀 접근"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P2",
+      "EnvironmentState": "파편 미끼 더미",
+      "Props": [],
+      "VFX": [
+        "어두운 아인 실루엣"
+      ],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "잠입 — 고조",
+      "GameplayEntry": "조준 분산 직후",
+      "GameplayExit": "미끼를 후려치는 반 박자",
+      "AnimationRequired": [
+        "hand_signal",
+        "stealth_slide",
+        "circle_approach_dark",
+        "boss_strike_decoy"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP16_SC006"
+      ],
+      "NextScene": "EP16_SC008",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "anim:hand_signal",
+        "anim:stealth_slide",
+        "anim:circle_approach_dark",
+        "anim:boss_strike_decoy",
+        "vfx:어두운 아인 실루엣",
+        "sfx:(무음)",
+        "bgm:잠입 — 고조"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC008",
+      "NovelSource": "L10796-L10815 §8 닿는다",
+      "NovelSummary": "아인의 낫이 원을 그리고 끝자락 4분의 1이 놈의 옆구리에 닿는다. 검은 표피가 소리 없이 갈라지고 흐린 빛의 속살이 드러나며, 놈이 처음으로 꺾여 물러나고 감각기가 경련한다. 카인과 류가 저것도 베인다고 말하고, 넷의 얼굴에 처음으로 절망이 아닌 표정이 떠오른다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검"
+      ],
+      "StoryBeat": "첫 유효타",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_kain",
+          "Line": "…베였다. 저거.",
+          "Source": "L10806"
+        },
+        {
+          "Speaker": "char_ryu",
+          "Line": "…베이네요. 베여요, 저것도.",
+          "Source": "L10810"
+        }
+      ],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "반 박자에 옆구리를 벤다",
+      "Interaction": [
+        "타이밍 원 베기"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P2",
+      "EnvironmentState": "무음 전장",
+      "Props": [],
+      "VFX": [
+        "검은 표피 절개, 흐린 빛 속살"
+      ],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "희망 — 짧은 상승",
+      "GameplayEntry": "공격 기회 반 박자",
+      "GameplayExit": "놈 후퇴",
+      "AnimationRequired": [
+        "scythe_circle_slash",
+        "boss_recoil_spasm"
+      ],
+      "CinematicRequired": "true — 첫 유효타 슬로",
+      "SaveFlags": [
+        "EP16_first_valid_hit"
+      ],
+      "Prerequisites": [
+        "EP16_SC007"
+      ],
+      "NextScene": "EP16_SC009",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "anim:scythe_circle_slash",
+        "anim:boss_recoil_spasm",
+        "vfx:검은 표피 절개, 흐린 빛 속살",
+        "sfx:(무음)",
+        "bgm:희망 — 짧은 상승"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC009",
+      "NovelSource": "L10816-L10833 §9 방정식",
+      "NovelSummary": "상처는 얕아 속살 앞에서 멈춰 있다. 아인은 어두운 채로는 출력이 껍질까지라고 말한다. 밝으면 읽히고 어두우면 얕다 — 베려면 켜져야 하고 켜지면 벨 수 없다. 풀 수 없는 식이 아니라 변수가 하나 모자란 식이며, 필요한 것은 밝기를 밖에서 다루는 손이었고 넷 중 누구의 것도 아니었다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [],
+      "StoryBeat": "딜레마 정식화 — 모자란 변수",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_ain",
+          "Line": "…얕아요. 출력이 — 어두운 채로는, 껍질까지예요.",
+          "Source": "L10822"
+        }
+      ],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(입력 없음) 방정식 정리",
+      "Interaction": [],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P2",
+      "EnvironmentState": "무음 전장",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "사유 — 정적",
+      "GameplayEntry": "유효타 직후",
+      "GameplayExit": "놈의 광폭화",
+      "AnimationRequired": [
+        "core_dim"
+      ],
+      "CinematicRequired": "true — 핵심 규칙 설명",
+      "SaveFlags": [
+        "EP16_light_equation"
+      ],
+      "Prerequisites": [
+        "EP16_SC008"
+      ],
+      "NextScene": "EP16_SC010",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:boss_shadow_fang",
+        "anim:core_dim",
+        "sfx:(무음)",
+        "bgm:사유 — 정적"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC010",
+      "NovelSource": "L10834-L10843 §10 한계",
+      "NovelSummary": "상처 입은 놈이 광폭해져 공세가 배로 빨라진다. 카인의 가드가 연속으로 울고, 뿌리까지 닿아 있던 금이 진동 속에서 하얗게 곤두서며 넓어진다. 카인은 이를 물고 버틴다. 날이 언제까지 버틸지는 날만 알고 있다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_kain"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "카인: 대검(금 간 날, 거치형 가드)"
+      ],
+      "StoryBeat": "한계 — 금이 넓어진다",
+      "PlayerCharacter": "char_kain",
+      "NPCs": [],
+      "Dialogue": [],
+      "GameMode": [
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "(카인) 광폭화한 연타를 가드로 버틴다",
+      "Interaction": [
+        "가드 유지"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P3",
+      "EnvironmentState": "무음 전장",
+      "Props": [],
+      "VFX": [
+        "대검의 금이 하얗게 곤두섬"
+      ],
+      "SFX": [
+        "가드 진동(체감)"
+      ],
+      "Music": "압박 — 가속",
+      "GameplayEntry": "광폭화 개시",
+      "GameplayExit": "'그 순간이었다' — 컷 전환",
+      "AnimationRequired": [
+        "boss_frenzy_barrage",
+        "greatsword_mounted_guard"
+      ],
+      "CinematicRequired": "false",
+      "SaveFlags": [
+        "EP16_kain_blade_crack_widened"
+      ],
+      "Prerequisites": [
+        "EP16_SC009"
+      ],
+      "NextScene": "EP16_SC011",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_kain",
+        "char:boss_shadow_fang",
+        "anim:boss_frenzy_barrage",
+        "anim:greatsword_mounted_guard",
+        "vfx:대검의 금이 하얗게 곤두섬",
+        "sfx:가드 진동(체감)",
+        "bgm:압박 — 가속"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC011",
+      "NovelSource": "L10844-L10857 §11 빛 도둑",
+      "NovelSummary": "전장 밖 폐허 능선에서 넷의 것을 합친 것보다 밝은 정제된 빛기둥이 폭발하듯 켜진다. 놈의 감각기가 통째로 그쪽으로 젖혀지며 조준이 증발한다. 능선 위에 봉을 짚은 세라가 서 있고, 청색 회로가 손목에서 어깨까지 타오르며 발치에 빈 촉매 용기 세 개가 굴러 있다. 빛기둥은 촉매가 정확히 다 타서 잦아든다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "세라: 청색 회로 문신(손목~어깨까지 발광)"
+      ],
+      "RequiredEquipment": [
+        "세라: 봉"
+      ],
+      "StoryBeat": "세라의 개입 — 빛 도둑",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [],
+      "GameMode": [
+        "STORY_CINEMATIC"
+      ],
+      "PlayerGoal": "(입력 없음) 세라의 빛기둥 연출",
+      "Interaction": [],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P3",
+      "EnvironmentState": "전장 밖 폐허 능선의 빛기둥, 빈 촉매 용기 세 개",
+      "Props": [
+        "prop_empty_catalyst_canisters"
+      ],
+      "VFX": [
+        "정제된 코어 광 빛기둥",
+        "청색 회로 문신 발광(손목~어깨)"
+      ],
+      "SFX": [
+        "(무음) 빛 폭발"
+      ],
+      "Music": "반전 — 빛",
+      "GameplayEntry": "카인의 한계 순간",
+      "GameplayExit": "빛기둥 소멸",
+      "AnimationRequired": [
+        "sera_light_pillar",
+        "boss_sensor_snap_away"
+      ],
+      "CinematicRequired": "true — 세라 등장 연출",
+      "SaveFlags": [
+        "EP16_sera_catalyst_depleted"
+      ],
+      "Prerequisites": [
+        "EP16_SC010"
+      ],
+      "NextScene": "EP16_SC012",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_shadow_fang",
+        "prop:prop_empty_catalyst_canisters",
+        "anim:sera_light_pillar",
+        "anim:boss_sensor_snap_away",
+        "vfx:정제된 코어 광 빛기둥",
+        "vfx:청색 회로 문신 발광(손목~어깨)",
+        "sfx:(무음) 빛 폭발",
+        "bgm:반전 — 빛"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC012",
+      "NovelSource": "L10858-L10887 §12 빈칸",
+      "NovelSummary": "세라가 능선을 내려오며 판교에서처럼 전장을 채점하는 눈으로 훑는다. 어두워져서 닿는 데까지는 갔다고 평하고, 왜 어두워졌냐고 묻는다. 밝으면 읽히고 어두우면 얕다는 아인의 답에, 그건 답이 아니라 다른 문제라고 말한다. 아인의 엄지가 반사적으로 올라가다 멈춘다. 판교에서부터 한 달을 같이 걸었지만 저 여자가 어디까지 아는지는 재어지지 않는다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_sera"
+      ],
+      "RequiredCostumes": [],
+      "RequiredEquipment": [
+        "세라: 봉"
+      ],
+      "StoryBeat": "빈칸 — 재어지지 않는 사람",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "…어두워져서 닿는 데까지는 갔네.",
+          "Source": "L10864"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "근데 왜 어두워졌어.",
+          "Source": "L10868"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…밝으면 읽혀요.",
+          "Source": "L10870"
+        },
+        {
+          "Speaker": "char_ain",
+          "Line": "…얕아요.",
+          "Source": "L10874"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "그럼 그건 답이 아니라",
+          "Source": "L10880"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE"
+      ],
+      "PlayerGoal": "세라와 짧게 대화한다",
+      "Interaction": [
+        "대화"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P3",
+      "EnvironmentState": "조준을 잃은 놈, 무음 전장",
+      "Props": [],
+      "VFX": [],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "냉정한 긴장",
+      "GameplayEntry": "세라 하산",
+      "GameplayExit": "아인의 엄지가 멈춤",
+      "AnimationRequired": [
+        "walk_down_slope",
+        "regrip_staff",
+        "thumb_measure_abort"
+      ],
+      "CinematicRequired": "false — 대화 장면",
+      "SaveFlags": [],
+      "Prerequisites": [
+        "EP16_SC011"
+      ],
+      "NextScene": "EP16_SC013",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_sera",
+        "char:boss_shadow_fang",
+        "anim:walk_down_slope",
+        "anim:regrip_staff",
+        "anim:thumb_measure_abort",
+        "sfx:(무음)",
+        "bgm:냉정한 긴장"
+      ],
+      "CanonStatus": "TBD_CANON"
+    },
+    {
+      "EpisodeId": "EP16",
+      "SceneId": "EP16_SC013",
+      "NovelSource": "L10888-L10930 §13 변수",
+      "NovelSummary": "놈이 상처 입고 학습해 더 낮게 웅크린 채 돌아온다. 세라는 표피 경화 3할, 감각기 대역폭 절반 소모, 반나절 안에 아물 상처라 수치를 읊는다. 촉매는 방금 빛기둥이 전부였고 봉쇄는 한 번 남았으니, 판교처럼 여덟 번이 아니라 한 번으로 되는 방법을 지금 찾아야 한다. 봉 끝 격발기가 충전되고, 세라는 넷이 다 있으면 이길 수 있다고 말한다. 놈이 새로 켜진 가장 밝은 빛, 세라를 향해 도약한다.",
+      "Location": "loc_logistics_warehouse_yard",
+      "TimeOfDay": "TBD_CANON",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "RequiredCostumes": [
+        "세라: 청색 회로 문신(손목~어깨까지 발광)"
+      ],
+      "RequiredEquipment": [
+        "아인: 낫",
+        "카인: 대검(금 간 날, 거치형 가드)",
+        "류: 쌍단검",
+        "세라: 봉(격발기)"
+      ],
+      "StoryBeat": "변수 — 넷이 다 있으면",
+      "PlayerCharacter": "char_ain",
+      "NPCs": [
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil",
+        "char_sera"
+      ],
+      "Dialogue": [
+        {
+          "Speaker": "char_sera",
+          "Line": "표피 경화 3할. 감각기 대역폭 절반 소모.",
+          "Source": "L10894"
+        },
+        {
+          "Speaker": "char_kain",
+          "Line": "그럼 반나절 안에 다시 오자는 거야?",
+          "Source": "L10896"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "오늘 끝내야지. 촉매 다 썼거든.",
+          "Source": "L10900"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "봉쇄 한 번 남았어.",
+          "Source": "L10908"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "잘 들어. 한 번만 말할 거니까.",
+          "Source": "L10920"
+        },
+        {
+          "Speaker": "char_sera",
+          "Line": "넷이 다 있으면.",
+          "Source": "L10924"
+        }
+      ],
+      "GameMode": [
+        "STORY_DIALOGUE",
+        "BOSS_BATTLE"
+      ],
+      "PlayerGoal": "작전 조건을 듣고 재교전에 대비한다",
+      "Interaction": [
+        "대화",
+        "봉쇄 잔량 1 표시"
+      ],
+      "BossId": "boss_shadow_fang",
+      "BossPhase": "P3",
+      "EnvironmentState": "놈 재정렬, 세라가 가장 밝은 빛",
+      "Props": [],
+      "VFX": [
+        "격발기 충전 — 회로 맥박",
+        "감각기 재정렬"
+      ],
+      "SFX": [
+        "(무음)"
+      ],
+      "Music": "클리프행어",
+      "GameplayEntry": "놈 복귀",
+      "GameplayExit": "놈이 세라에게 도약 — EP17로 이어짐",
+      "AnimationRequired": [
+        "boss_crouch_low",
+        "staff_charge",
+        "boss_leap"
+      ],
+      "CinematicRequired": "true — 클리프행어 엔딩",
+      "SaveFlags": [
+        "EP16_seal_one_left"
+      ],
+      "Prerequisites": [
+        "EP16_SC012"
+      ],
+      "NextScene": "EP17_SC001",
+      "RequiredAssets": [
+        "env:loc_logistics_warehouse_yard",
+        "char:char_ain",
+        "char:char_kain",
+        "char:char_ryu",
+        "char:char_oh_jeonggil",
+        "char:char_sera",
+        "char:boss_shadow_fang",
+        "anim:boss_crouch_low",
+        "anim:staff_charge",
+        "anim:boss_leap",
+        "vfx:격발기 충전 — 회로 맥박",
+        "vfx:감각기 재정렬",
+        "sfx:(무음)",
+        "bgm:클리프행어"
+      ],
+      "CanonStatus": "TBD_CANON"
+    }
+  ],
+  "Bosses": [
+    {
+      "BossId": "boss_shadow_fang",
+      "NameKo": "섀도우 팽 (괴물을 먹는 괴물)",
+      "Scenes": [
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC005",
+        "EP16_SC006",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC010",
+        "EP16_SC011",
+        "EP16_SC012",
+        "EP16_SC013"
+      ],
+      "NovelReasonForBattle": "인계 지점 추정 1호를 조사하던 중, 밝기를 사냥하는 것의 영역 한가운데에서 가장 밝은 코어를 지닌 아인을 노려 수풀 그늘에서 기습",
+      "ArenaLocationId": "loc_logistics_warehouse_yard",
+      "PhasesInNovel": [
+        "개전: 예비 동작 없는 무음 돌진 — 류가 아인을 밀어 관통을 피함, 첫 받아넘김",
+        "읽기: 코어가 켜지는 순간(출력 발화)을 읽고 모든 반격을 칼이 출발하기 전에 회피",
+        "소등: 아인이 마지막 억제제로 코어를 끄자 조준을 잃고 다음으로 밝은 카인에게 재정렬",
+        "분산: 오정길이 뿌린 파편 미끼로 감각기 절반이 갈라짐 → 진형 재구성",
+        "첫 유효타: 미끼를 후려치는 반 박자에 어두운 아인의 낫이 옆구리 표피를 가름(얕음)",
+        "광폭화: 공세가 배로 빨라짐 — 카인의 가드 금이 넓어짐",
+        "세라의 빛기둥에 조준이 증발했다가 복귀 — 상처 입고 학습해 더 낮게 웅크림, 세라에게 도약"
+      ],
+      "PatternsInNovel": [
+        "예비 동작이 그늘에 녹은, 시작이 보이지 않는 무음 돌진(아스팔트에 매끄러운 절단흔)",
+        "칼이 아니라 목의 빛을 읽고 공격 전에 이미 다른 곳에 있음",
+        "가장 밝은 대상에게 공세 집중",
+        "주변 소리를 삼킴 — 소리가 오다가 죽음",
+        "상처 후 광폭화(공세 두 배)",
+        "가장 밝은 빛을 향한 도약"
+      ],
+      "PartsOrWeakpointsInNovel": [
+        "머리 자리의 꽃잎처럼 벌어지는 감각기(눈·귀 없음)",
+        "이음매 없는 검은 표피 — 그 아래 흐린 빛의 속살(옆구리)"
+      ],
+      "BreakCounterInNovel": [
+        "코어를 어둡게 하면 감각기가 길을 잃음(억제제)",
+        "각인 없는 오정길은 인지되지 않음 — 코어 파편을 흩어 감각기 조준을 둘로 찢음",
+        "공격에 전념한 반 박자 — 한 곳에만 존재하는 유일한 시간",
+        "더 밝은 광원(세라의 빛기둥)에 감각기가 통째로 젖혀짐",
+        "제약: 어두운 채로는 출력이 부족해 표피까지만 벰('밝으면 읽히고, 어두우면 얕다')"
+      ],
+      "EnvironmentInBattle": [
+        "무음 지대 — 경고가 소리가 아니라 몸으로 전달됨, 수신호로 소통",
+        "수풀 그늘(은신·기습)",
+        "뒤집힌 수레·빈 방호복·코어 도려내진 집행관 사체",
+        "전장 밖 폐허 능선(세라의 빛기둥 위치)"
+      ],
+      "Outcome": "전투 지속 — 첫 유효타(얕은 옆구리 상처, 세라 판단 반나절 안에 아묾). 아인의 억제제·세라의 촉매 고갈, 봉쇄 1회 남음. 놈이 세라를 향해 도약하며 화가 끝남",
+      "Source": "L10697-L10926"
+    }
+  ],
+  "Locations": [
+    {
+      "LocationId": "loc_south_road",
+      "NameKo": "남쪽으로 내려가는 길",
+      "DescriptionKo": "목덜미 코어가 도려내진 집행관 사체들이 길가에 놓인 남행로. 소리가 거리에 따라 '오다가 죽는' 무음 지대의 가장자리.",
+      "Scenes": [
+        "EP16_SC001"
+      ]
+    },
+    {
+      "LocationId": "loc_logistics_warehouse_yard",
+      "NameKo": "인계 지점 추정 1호 — 낡은 물류창고 앞마당 (무음의 전장)",
+      "DescriptionKo": "뒤집힌 수레, 속이 빈 방호복, 코어가 도려내진 호위 집행관 두 기. 수풀 그늘과 아스팔트. 소리가 죽는 땅이며 군도 우회하는 구역. 전장 밖에 폐허 능선이 있음. EP17에서는 '이 골짜기'로 불림.",
+      "Scenes": [
+        "EP16_SC002",
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC005",
+        "EP16_SC006",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC010",
+        "EP16_SC011",
+        "EP16_SC012",
+        "EP16_SC013"
+      ]
+    }
+  ],
+  "Characters": [
+    {
+      "CharacterId": "char_ain",
+      "NameKo": "아인",
+      "RoleKo": "주인공. 낫을 쓰는 각인자, 소리로 거리를 재던 자",
+      "Scenes": [
+        "EP16_SC001",
+        "EP16_SC002",
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC005",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC011",
+        "EP16_SC012",
+        "EP16_SC013"
+      ],
+      "StateChangesKo": [
+        "EP16_SC002: 목덜미 코어가 남하 이후 가장 밝게 뜀",
+        "EP16_SC005: 마지막 억제제(반쯤 남은 병)를 전부 마셔 코어가 어두워짐 — 이후 어두운 상태로 교전",
+        "EP16_SC001: 엄지를 세워 눈으로 거리를 재는 손짓이 버릇이 되어 감"
+      ]
+    },
+    {
+      "CharacterId": "char_kain",
+      "NameKo": "카인",
+      "RoleKo": "대검을 쓰는 모루. 도망칠 수 없는 다리",
+      "Scenes": [
+        "EP16_SC001",
+        "EP16_SC002",
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC005",
+        "EP16_SC006",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC010",
+        "EP16_SC011",
+        "EP16_SC013"
+      ],
+      "StateChangesKo": [
+        "EP16_SC006: 금 간 대검의 거치형 가드로 놈의 공격을 받음",
+        "EP16_SC010: 광폭화한 공세에 뿌리까지 닿은 금이 넓어짐"
+      ]
+    },
+    {
+      "CharacterId": "char_ryu",
+      "NameKo": "류",
+      "RoleKo": "쌍단검을 쓰는 동료. 잠들지 않는 자의 눈",
+      "Scenes": [
+        "EP16_SC001",
+        "EP16_SC002",
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC011",
+        "EP16_SC013"
+      ],
+      "StateChangesKo": [
+        "EP16_SC003: 몸을 날려 아인을 밀어 첫 관통을 피하게 함"
+      ]
+    },
+    {
+      "CharacterId": "char_oh_jeonggil",
+      "NameKo": "오정길",
+      "RoleKo": "각인 없는 동행자. 감각기에 잡히지 않는 '투명한 자'",
+      "Scenes": [
+        "EP16_SC001",
+        "EP16_SC002",
+        "EP16_SC003",
+        "EP16_SC004",
+        "EP16_SC006",
+        "EP16_SC007",
+        "EP16_SC008",
+        "EP16_SC009",
+        "EP16_SC011",
+        "EP16_SC013"
+      ],
+      "StateChangesKo": [
+        "EP16_SC006: 파편 주머니를 놈의 뒤편에 흩뿌려 미끼로 사용(소모)"
+      ]
+    },
+    {
+      "CharacterId": "char_sera",
+      "NameKo": "세라",
+      "RoleKo": "봉과 촉매를 쓰는 동행자",
+      "Scenes": [
+        "EP16_SC011",
+        "EP16_SC012",
+        "EP16_SC013"
+      ],
+      "StateChangesKo": [
+        "EP16_SC011: 촉매 용기 세 개를 비워 빛기둥을 켬 — 촉매 고갈",
+        "EP16_SC013: 봉쇄 1회만 남음, 격발기 충전 — 놈의 표적이 됨"
+      ]
+    }
+  ],
+  "AnimationRequirements": [
+    {
+      "Action": "stack_can_throw_stone",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "깡통을 돌 위에 세우고 물러나 돌을 던짐"
+    },
+    {
+      "Action": "thumb_measure",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC001"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "엄지를 세워 거리를 눈으로 잼(아인 고유 손짓)"
+    },
+    {
+      "Action": "walk_group",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain",
+        "char_kain",
+        "char_ryu",
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC001"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "남행 보행"
+    },
+    {
+      "Action": "pick_up_paper",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC002"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "잔해 사이에서 경로도를 집음"
+    },
+    {
+      "Action": "core_pulse_glow",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC002",
+        "EP16_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목덜미 코어가 밝게 뜀(발광 연출)"
+    },
+    {
+      "Action": "dive_push_ally",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP16_SC003"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "외침이 닿지 않자 몸을 날려 아인을 밀침"
+    },
+    {
+      "Action": "boss_shadow_dash",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC003"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "그늘에 녹은 예비 동작 없는 무음 돌진·관통"
+    },
+    {
+      "Action": "boss_sensor_bloom_orient",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC003",
+        "EP16_SC005",
+        "EP16_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "꽃잎형 감각기가 벌어졌다 오므라들며 표적을 향해 정렬/헤맴"
+    },
+    {
+      "Action": "scythe_parry",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC003",
+        "EP16_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "낫으로 받아넘김(불꽃만 튀는 무성의 격돌)"
+    },
+    {
+      "Action": "scythe_circle_whiff",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC003",
+        "EP16_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "반격의 원 베기가 허공을 가름"
+    },
+    {
+      "Action": "twin_dagger_whiff",
+      "Category": "combat",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP16_SC004"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "쌍단검이 허공을 가름"
+    },
+    {
+      "Action": "boss_pre_evade",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC004"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "칼이 출발하기 전 이미 다른 곳으로 이동"
+    },
+    {
+      "Action": "arm_tremor_block",
+      "Category": "injury",
+      "Characters": [
+        "char_ain",
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP16_SC005"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "받다 밀려 팔이 저릿하게 떨림"
+    },
+    {
+      "Action": "drink_vial_whole",
+      "Category": "interaction",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC005"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가드 뒤에서 병째 전부 들이켜고 빈 병을 떨어뜨림"
+    },
+    {
+      "Action": "core_dim",
+      "Category": "emotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC005",
+        "EP16_SC009"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "목덜미 코어가 어두워짐"
+    },
+    {
+      "Action": "greatsword_mounted_guard",
+      "Category": "combat",
+      "Characters": [
+        "char_kain"
+      ],
+      "Scenes": [
+        "EP16_SC006",
+        "EP16_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "거치형 가드로 공격을 받음, 진동이 두 팔로 전달"
+    },
+    {
+      "Action": "touch_own_neck",
+      "Category": "gesture",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC006"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "제 목덜미에 손을 댐"
+    },
+    {
+      "Action": "trembling_walk_through",
+      "Category": "locomotion",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "떨리는 다리로 뛰지 않고 전장을 걸어 지나감"
+    },
+    {
+      "Action": "scatter_pouch",
+      "Category": "interaction",
+      "Characters": [
+        "char_oh_jeonggil"
+      ],
+      "Scenes": [
+        "EP16_SC006"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "파편 주머니를 흩뿌림"
+    },
+    {
+      "Action": "hand_signal",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "엄지·방향·손가락 둘 수신호"
+    },
+    {
+      "Action": "stealth_slide",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ryu"
+      ],
+      "Scenes": [
+        "EP16_SC007"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "반대편 그늘로 미끄러져 이동"
+    },
+    {
+      "Action": "circle_approach_dark",
+      "Category": "locomotion",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "빛을 끈 채 원을 그리며 접근"
+    },
+    {
+      "Action": "boss_strike_decoy",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC007"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "파편 미끼를 후려침(공격에 전념한 반 박자)"
+    },
+    {
+      "Action": "scythe_circle_slash",
+      "Category": "combat",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "끝자락 4분의 1로 가르는 원 베기"
+    },
+    {
+      "Action": "boss_recoil_spasm",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC008"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "처음으로 꺾이며 물러남, 감각기 경련"
+    },
+    {
+      "Action": "boss_frenzy_barrage",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC010"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "광폭화 — 공세 배속 연타"
+    },
+    {
+      "Action": "sera_light_pillar",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP16_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "봉을 지면에 짚고 청색 회로를 태워 정제된 빛기둥을 켬"
+    },
+    {
+      "Action": "boss_sensor_snap_away",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC011"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "감각기가 통째로 한쪽으로 젖혀짐"
+    },
+    {
+      "Action": "walk_down_slope",
+      "Category": "locomotion",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP16_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "능선을 걸어 내려옴"
+    },
+    {
+      "Action": "regrip_staff",
+      "Category": "gesture",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP16_SC012"
+      ],
+      "DonorLikely": true,
+      "NotesKo": "봉을 고쳐 쥠"
+    },
+    {
+      "Action": "thumb_measure_abort",
+      "Category": "gesture",
+      "Characters": [
+        "char_ain"
+      ],
+      "Scenes": [
+        "EP16_SC012"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "엄지가 올라가다 멈춤"
+    },
+    {
+      "Action": "boss_crouch_low",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "상처 입고 더 낮게 웅크림"
+    },
+    {
+      "Action": "staff_charge",
+      "Category": "combat",
+      "Characters": [
+        "char_sera"
+      ],
+      "Scenes": [
+        "EP16_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "봉 끝 격발기 충전 — 회로가 손목에서 팔로 맥박"
+    },
+    {
+      "Action": "boss_leap",
+      "Category": "boss",
+      "Characters": [
+        "boss_shadow_fang"
+      ],
+      "Scenes": [
+        "EP16_SC013"
+      ],
+      "DonorLikely": false,
+      "NotesKo": "가장 밝은 빛을 향해 도약"
+    }
+  ],
+  "Props": [
+    {
+      "PropId": "prop_executioner_corpses",
+      "NameKo": "목덜미 코어가 도려내진 집행관 사체",
+      "Scenes": [
+        "EP16_SC001",
+        "EP16_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_empty_can",
+      "NameKo": "오정길의 빈 깡통(소리 실험)",
+      "Scenes": [
+        "EP16_SC001"
+      ]
+    },
+    {
+      "PropId": "prop_revised_route_map",
+      "NameKo": "물에 불었다 마른 경로도 — 이 구역을 크게 우회하도록 수정, 여덟 달 전 날짜",
+      "Scenes": [
+        "EP16_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_overturned_cart",
+      "NameKo": "뒤집힌 수레",
+      "Scenes": [
+        "EP16_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_empty_hazmat_suits",
+      "NameKo": "속이 빈 방호복",
+      "Scenes": [
+        "EP16_SC002"
+      ]
+    },
+    {
+      "PropId": "prop_last_inhibitor",
+      "NameKo": "마지막 억제제 (반쯤 남은 병, 라벨에 손글씨)",
+      "Scenes": [
+        "EP16_SC005"
+      ]
+    },
+    {
+      "PropId": "prop_core_fragment_pouch",
+      "NameKo": "오정길의 파편 주머니",
+      "Scenes": [
+        "EP16_SC006"
+      ]
+    },
+    {
+      "PropId": "prop_empty_catalyst_canisters",
+      "NameKo": "세라 발치의 빈 촉매 용기 세 개",
+      "Scenes": [
+        "EP16_SC011"
+      ]
+    }
+  ],
+  "TBD_CANON": [
+    {
+      "Scene": "EP16_SC001",
+      "QuestionKo": "EP16 전체의 시간대 미기재 (해당: EP16_SC001, EP16_SC002, EP16_SC003, EP16_SC004, EP16_SC005, EP16_SC006, EP16_SC007, EP16_SC008, EP16_SC009, EP16_SC010, EP16_SC011, EP16_SC012, EP16_SC013). EP17 §8은 같은 전투를 '이 밤'이라 부름"
+    },
+    {
+      "Scene": "EP16_SC001",
+      "QuestionKo": "EP15에서 합류한 세라가 §1~§10 동안 일행('넷')과 떨어져 있던 이유·위치 미기재"
+    },
+    {
+      "Scene": "EP16_SC003",
+      "QuestionKo": "보스 명칭이 EP16에는 없고 EP17 §3에서 '섀도우 팽'으로 처음 호명됨. 전장이 물류창고 앞마당인지 인근 골짜기인지(EP17은 '이 골짜기') 불명확"
+    },
+    {
+      "Scene": "EP16_SC005",
+      "QuestionKo": "'마지막 억제제, 반쯤 남은 병, 라벨의 손글씨' — 닥터 진의 약으로 보이나 EP15 세라의 라벨 없는 병 3개·민경의 시약 2병과의 재고 관계 미정리(EP17 §12는 세라 병을 '세 병 중 마지막'이라 하면서 '두 병 남았어'라고도 함)"
+    },
+    {
+      "Scene": "EP16_SC012",
+      "QuestionKo": "'판교에서부터 한 달을 같이 걸었다' — 판교 이후 한 달간의 여정이 원고에 없음"
+    },
+    {
+      "Scene": "EP16_SC006",
+      "QuestionKo": "오정길 조작 구간은 게임 제안(원고는 3인칭 서술) — 플레이어 캐릭터 전환 여부 확정 필요"
+    }
+  ]
+}
