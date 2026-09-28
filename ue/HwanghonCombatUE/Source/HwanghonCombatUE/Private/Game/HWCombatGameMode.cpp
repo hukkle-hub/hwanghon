@@ -9,12 +9,14 @@
 #include "Combat/HWCombatComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/GameInstance.h"
+#include "UI/HWCombatHUD.h"
 
 #include "Kismet/GameplayStatics.h"
 
 AHWCombatGameMode::AHWCombatGameMode()
 {
     DefaultPawnClass = AHWAinCharacter::StaticClass();
+    HUDClass = AHWCombatHUD::StaticClass();
 }
 
 void AHWCombatGameMode::BeginPlay()

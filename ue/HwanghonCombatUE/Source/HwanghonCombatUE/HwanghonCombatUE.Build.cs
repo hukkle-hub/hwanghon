@@ -12,7 +12,10 @@ public class HwanghonCombatUE : ModuleRules
             "CoreUObject",
             "Engine",
             "InputCore",
-            "EnhancedInput"
+            "EnhancedInput",
+            "UMG",
+            "Slate",
+            "SlateCore"
         });
 
         PrivateDependencyModuleNames.Add("Json");
