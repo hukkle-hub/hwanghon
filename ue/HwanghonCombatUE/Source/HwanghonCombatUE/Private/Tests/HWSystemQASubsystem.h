@@ -95,6 +95,7 @@ private:
     bool bCanonSpinShot = false;
     int32 SeverShots = 0;
     int32 RecoverStage = 0;
+    int32 StoryBattleSeen = -1;
 
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()

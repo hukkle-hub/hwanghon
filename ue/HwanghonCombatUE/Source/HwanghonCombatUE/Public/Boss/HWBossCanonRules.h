@@ -7,6 +7,7 @@
 
 class AHWBossCharacter;
 class AHWAinCharacter;
+class FJsonObject;
 
 // What a player hit does to a boss that follows its novel (docs/design/138).
 enum class EHWCanonHit : uint8
@@ -32,6 +33,13 @@ public:
     // true: the beat is taken by the story (e.g. a rebound) and does not hit.
     virtual bool InterceptBeat(AHWBossCharacter& Boss, const FHWBossBeatSpec& Beat) { return false; }
 
+    // The fight's script from Content/Data/story_episodes.json (battle "script"); hand-written rules ignore it.
+    virtual void Configure(const TSharedPtr<FJsonObject>& Script) {}
+
+    // The story director holds the fight while the cinema camera hands over, then lets it go (doc 150 §6).
+    void SetLive(bool bInLive) { bLive = bInLive; }
+    bool IsLive() const { return bLive; }
+
     // Who is in the fight (the story director spawns them from Content/Data/story_episodes.json).
     virtual void SetupCast(AHWAinCharacter* InAin, const TMap<FName, AActor*>& InCast);
 
@@ -53,6 +61,7 @@ protected:
     TWeakObjectPtr<AHWAinCharacter> CastAin;
     TMap<FName, TWeakObjectPtr<AActor>> CastMembers;
     float Elapsed = 0.f;
+    bool bLive = true;
 };
 
 // EP01 훈련용 짚단 허수아비 (마감본 L461-L566, docs/dungeons/boss_training_heosuabi_DUNGEON_SPEC.md).

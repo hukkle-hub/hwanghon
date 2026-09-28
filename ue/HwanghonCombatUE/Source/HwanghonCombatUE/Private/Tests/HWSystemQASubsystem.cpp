@@ -2177,6 +2177,13 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
         StoryKeyTime = 0.f;
         StoryShots = 0;
         Note(TEXT("story ") + Key);
+        if (P == EHWStoryPhase::Battle && D->GetCurrentBattle() != StoryBattleSeen)
+        {
+            // an episode can hold several fights (EP03: plaza then track; EP17: five)
+            StoryBattleSeen = D->GetCurrentBattle();
+            RecoverStage = 0;
+            SeverShots = 0;
+        }
     }
     StoryKeyTime += Dt;
 
@@ -2234,6 +2241,12 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     {
         // The fight's own canonical play (UHWBossCanonRules::QAStep); a note starting FAIL ends the run.
         AHWAinCharacter* Player = Cast<AHWAinCharacter>(GetPC() ? GetPC()->GetPawn() : nullptr);
+        // The canon play checks the fight's grammar, not Ain's survival: long fights (EP14 regen 30/35/40 s)
+        // keep her standing unless the retry path is under test.
+        if (Player && !bStoryAinDied && Player->GetCombat() && Player->GetCombat()->GetHealth() < Player->GetCombat()->GetMaxHealth() * 0.5f)
+        {
+            Player->GetCombat()->Heal(Player->GetCombat()->GetMaxHealth());
+        }
         if (D->GetRules() && D->GetBoss() && Player && !D->GetBoss()->IsDead())
         {
             TArray<FString> QANotes, QAShots;
@@ -2305,7 +2318,7 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     {
         Finish(true, TEXT("story show done"));
     }
-    if (Elapsed > 400.f)
+    if (Elapsed > 240.f + 6.f * D->GetSegments().Num() + 150.f * D->GetBattles().Num())
     {
         Finish(false, TEXT("story show timeout at ") + Key);
     }

@@ -127,4 +127,8 @@ struct FHWBossPatternSpec
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float LungeDuration = 0.f;
+
+    // The novel's name for the move (shown as the tell); Id then only picks the stand-in body clip.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString DisplayName;
 };

@@ -20,7 +20,7 @@
           "prefix": "",
           "recover": "crystal",
           "crystal_scale": 0.035,
-          "recover_line": "…아직 따뜻했다",
+          "recover_line": "아직 따뜻했고, 손안에서 희미하게 뛰고 있었다.",
           "layers": {
             "pre": [
               "DL_Story_PreBattle"
@@ -34,7 +34,7 @@
           },
           "callouts": {
             "deflect": "…거리. 너무 붙었어.",
-            "too_far": "너무 멀면 닿지 않는다",
+            "too_far": "너무 멀면 닿지 않고, 너무 가까우면 돌지 않는다.",
             "intercept": "비켜!",
             "rebound": "내 뒤로는… 못 지난다!",
             "sever": "걸었다… 스위트 스폿!"
@@ -42,6 +42,3833 @@
         }
       ],
       "next_world": "/Game/Hwanghon/Story/EP02/EP02_World"
+    },
+    "EP02": {
+      "battles": [
+        {
+          "first_scene": "EP02_SC014",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "클레이브",
+          "boss_scale": 1.3,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "retreat",
+          "src": "L1774-L1936",
+          "script": {
+            "guard": "deflect",
+            "end_after_s": 60,
+            "patterns": [
+              {
+                "ko": "셔터 밀어내기",
+                "clip": "Charge",
+                "src": "L1854-L1868",
+                "lunge_cm": 240,
+                "tell": 0.8,
+                "damage": 1800
+              },
+              {
+                "ko": "장검 내려찍기",
+                "clip": "Slam",
+                "src": "L1908",
+                "tell": 1.2,
+                "damage": 3200,
+                "range": 300
+              }
+            ],
+            "steps": [
+              {
+                "id": "pass",
+                "src": "L1800-L1852",
+                "callout": "벌레 같은 생존자들이여… 황혼의 종말을 맞아라.",
+                "advance_after_s": 4
+              },
+              {
+                "id": "front",
+                "src": "L1854-L1904",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 10
+              },
+              {
+                "id": "slam",
+                "src": "L1908-L1936",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "marker:B1_Exit",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 5,
+                "advance_beat": "retreat",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "step_pass": "벌레 같은 생존자들이여… 황혼의 종말을 맞아라."
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "지하상가 광장",
+              "배수로 격자(퇴로)"
+            ],
+            "destroy": [
+              {
+                "what": "바닥 균열",
+                "src": "L1908",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP02/EP02_World",
+      "next_world": "/Game/Hwanghon/Story/EP03/EP03_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gangnam_central_plaza"
+      ]
+    },
+    "EP03": {
+      "battles": [
+        {
+          "first_scene": "EP03_SC009",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "클레이브",
+          "boss_scale": 1.3,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "phase",
+          "src": "L2672-L3346",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "셔터 밀어내기",
+                "clip": "Charge",
+                "src": "L2672-L2700",
+                "lunge_cm": 240,
+                "tell": 0.8,
+                "damage": 1800
+              },
+              {
+                "ko": "배트 스윙",
+                "clip": "Spin",
+                "src": "L2804-L2830",
+                "tell": 1.1,
+                "damage": 2600,
+                "range": 280
+              }
+            ],
+            "steps": [
+              {
+                "id": "hinge",
+                "src": "L2463-L2499",
+                "callout": "아래쪽이 먼저 나가요",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "side_r",
+                    "dist": 420
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "brace",
+                "src": "L2894-L3006",
+                "callout": "밀지 마. 버텨.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 160
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "side_r",
+                    "dist": 420
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "barehand",
+                "src": "L3090-L3276",
+                "callout": "…맨손으로 한다.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 150
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 3.0,
+                "needs": 1,
+                "decisive_beat": "socket_cut",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "step_hinge": "아래쪽이 먼저 나가요",
+            "step_brace": "밀지 마. 버텨.",
+            "step_barehand": "…맨손으로 한다."
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "지하 광장",
+              "매대(발판)",
+              "진열대",
+              "중앙 기둥"
+            ],
+            "destroy": [
+              {
+                "what": "진열대 3개",
+                "src": "L2830",
+                "when": "fight"
+              },
+              {
+                "what": "중앙 기둥·천장",
+                "src": "L3326-L3346",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP03_SC015",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "클레이브",
+          "boss_scale": 1.3,
+          "party": [
+            "kain"
+          ],
+          "result": "kill",
+          "src": "L3346-L3418",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "장검 양손 베기",
+                "clip": "Slam",
+                "src": "L3326-L3346",
+                "tell": 1.0,
+                "damage": 3000,
+                "range": 300
+              }
+            ],
+            "steps": [
+              {
+                "id": "grab",
+                "src": "L3364-L3398",
+                "callout": "목 아래 왼쪽",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "grab",
+                    "dist": 110
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 3.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "step_grab": "목 아래 왼쪽"
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "2호선 침수 선로",
+              "레일"
+            ],
+            "water_cm": 30
+          },
+          "recover": "crystal",
+          "crystal_scale": 0.08,
+          "recover_line": "아인이 그것을 두 손으로 받았다. 뜨거웠다.",
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP03/EP03_World",
+      "next_world": "/Game/Hwanghon/Story/EP04/EP04_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gangnam_underground_plaza",
+        "loc_line2_flooded_track"
+      ]
+    },
+    "EP04": {
+      "battles": [
+        {
+          "first_scene": "EP04_SC010",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "셀레스티얼",
+          "boss_scale": 2.0,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "retreat",
+          "src": "L4400-L4546",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "난간 급강하",
+                "clip": "Charge",
+                "src": "L4406-L4410",
+                "lunge_cm": 500,
+                "tell": 0.6,
+                "damage": 2200
+              },
+              {
+                "ko": "급강하 할퀴기",
+                "clip": "HookCombo",
+                "src": "L4476-L4484",
+                "tell": 0.7,
+                "damage": 2600
+              }
+            ],
+            "steps": [
+              {
+                "id": "circle",
+                "src": "L4400-L4402",
+                "advance_after_s": 5
+              },
+              {
+                "id": "rail",
+                "src": "L4406-L4494",
+                "callout": "…난간을 부수고 있어. 왜? 떨어뜨리려고.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 12
+              },
+              {
+                "id": "wire",
+                "src": "L4540-L4546",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 4,
+                "advance_beat": "retreat",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "retreat": "놈은 거기 산다.",
+            "step_rail": "…난간을 부수고 있어. 왜? 떨어뜨리려고."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "반파된 전망대",
+              "사랑의 자물쇠",
+              "40m 낙하 지점(붉은 안개)"
+            ],
+            "destroy": [
+              {
+                "what": "전망대 난간 2구간",
+                "src": "L4406-L4410, L4488-L4494",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP04/EP04_World",
+      "next_world": "/Game/Hwanghon/Story/EP05/EP05_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_namsan_observatory",
+        "loc_namsan_stairs"
+      ]
+    },
+    "EP05": {
+      "battles": [
+        {
+          "first_scene": "EP05_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "케이블카 드로퍼",
+          "boss_scale": 0.9,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "retreat",
+          "src": "L5047-L5102",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "천장 낙하",
+                "clip": "Slam",
+                "src": "L5047-L5067",
+                "tell": 0.25,
+                "damage": 2400,
+                "range": 260
+              }
+            ],
+            "steps": [
+              {
+                "id": "drop",
+                "src": "L5013-L5067",
+                "callout": "…발톱이 넷이야.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 220
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 10,
+                "advance_beat": "retreat",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "retreat": "여긴 위가 열려 있어요. 아래로 내려가요.",
+            "step_drop": "…발톱이 넷이야."
+          },
+          "arena": {
+            "kind": "indoor",
+            "features": [
+              "옛 식당·기념품점 잔해",
+              "깨진 유리",
+              "천장 배관(낙하 경로)"
+            ],
+            "destroy": [
+              {
+                "what": "천장 배관·바닥 일부",
+                "src": "L5017-L5025",
+                "when": "fight"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP05_SC011",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "케이블카 드로퍼",
+          "boss_scale": 0.9,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "win",
+          "src": "L5394-L5428",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "천장 낙하",
+                "clip": "Slam",
+                "src": "L5394-L5428",
+                "tell": 0.25,
+                "damage": 2400,
+                "range": 260
+              }
+            ],
+            "steps": [
+              {
+                "id": "k3",
+                "src": "L5394-L5428",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 240
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "open": "pattern:천장 낙하",
+                "open_s": 2.5,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "한 바퀴가 다 돌았다."
+          },
+          "arena": {
+            "kind": "indoor",
+            "features": [
+              "계단참",
+              "드로퍼 넷"
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP05/EP05_World",
+      "next_world": "/Game/Hwanghon/Story/EP06/EP06_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_namsan_tower_lower"
+      ]
+    },
+    "EP06": {
+      "battles": [
+        {
+          "first_scene": "EP06_SC008",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "에이지스-07",
+          "boss_scale": 2.0,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "retreat",
+          "src": "L6215-L6444",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "포문 개방",
+                "clip": "Slam",
+                "src": "L6307-L6331",
+                "tell": 1.1,
+                "damage": 2800,
+                "range": 320
+              },
+              {
+                "ko": "다리 휩쓸기",
+                "clip": "Spin",
+                "src": "L6367-L6371",
+                "tell": 0.4,
+                "damage": 2200,
+                "range": 300
+              }
+            ],
+            "steps": [
+              {
+                "id": "barrier",
+                "src": "L6247-L6301",
+                "callout": "셔터는 보였다. 이건 안 보인다.",
+                "moves": [
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "cannon",
+                "src": "L6305-L6334",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "fog",
+                "src": "L6335-L6374",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 300
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "spark",
+                "src": "L6375-L6429",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 300
+                  }
+                ],
+                "open": "after:1.5",
+                "open_s": 2.5,
+                "open_beat": "now",
+                "needs": 1,
+                "decisive_beat": "leg_cut",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "now": "…지금.",
+            "leg_cut": "빠져요!",
+            "step_barrier": "셔터는 보였다. 이건 안 보인다."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "fog": "dense",
+            "features": [
+              "빌딩 협곡",
+              "젖은 아스팔트",
+              "LED 광고판"
+            ],
+            "destroy": [
+              {
+                "what": "다리 1개",
+                "src": "L6417-L6421",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP06/EP06_World",
+      "next_world": "/Game/Hwanghon/Story/EP07/EP07_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_yeouido_fog_canyon"
+      ]
+    },
+    "EP07": {
+      "battles": [
+        {
+          "first_scene": "EP07_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "에이지스-07",
+          "boss_scale": 2.0,
+          "party": [
+            "kain",
+            "ojeonggil"
+          ],
+          "result": "phase",
+          "src": "L6802-L6890",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "포문 개방",
+                "clip": "Slam",
+                "src": "L6802-L6863",
+                "tell": 1.1,
+                "damage": 2800,
+                "range": 320
+              },
+              {
+                "ko": "측면 회전",
+                "clip": "Spin",
+                "src": "L6866-L6888",
+                "tell": 0.6,
+                "damage": 2200,
+                "range": 300
+              }
+            ],
+            "steps": [
+              {
+                "id": "bias",
+                "src": "L6802-L6863",
+                "callout": "아니요. 이번엔 치세요.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "flank",
+                "src": "L6864-L6890",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  }
+                ],
+                "advance_after_s": 6,
+                "advance_beat": "short",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "short": "셋이 필요했다. 둘밖에 없었다.",
+            "step_bias": "아니요. 이번엔 치세요."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "fog": "light",
+            "features": [
+              "빌딩 협곡",
+              "LED 광고판"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP07_SC008",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "에이지스-07",
+          "boss_scale": 2.0,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "win",
+          "src": "L6991-L7099",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "포문 개방",
+                "clip": "Slam",
+                "src": "L6991-L7052",
+                "tell": 1.1,
+                "damage": 2800,
+                "range": 320
+              }
+            ],
+            "steps": [
+              {
+                "id": "three",
+                "src": "L6903",
+                "callout": "…셋이면 되겠네.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "stab",
+                "src": "L7029-L7097",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "back",
+                    "dist": 140
+                  }
+                ],
+                "open": "ready",
+                "opener": "ryu",
+                "open_s": 3.0,
+                "open_beat": "barrier_off",
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "barrier_off": "꺼졌어요!",
+            "decisive": "4미터짜리가 무너졌다.",
+            "step_three": "…셋이면 되겠네."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "fog": "light",
+            "features": [
+              "빌딩 협곡"
+            ],
+            "destroy": [
+              {
+                "what": "에이지스-07 전신 붕괴",
+                "src": "L7097-L7111",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP07/EP07_World",
+      "next_world": "/Game/Hwanghon/Story/EP08/EP08_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_yeouido_fog_canyon"
+      ]
+    },
+    "EP08": {
+      "battles": [
+        {
+          "first_scene": "EP08_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "레비아탄",
+          "boss_scale": 2.2,
+          "party": [
+            "kain",
+            "ryu",
+            "kang"
+          ],
+          "result": "retreat",
+          "src": "L7446-L7531",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "측면 돌진",
+                "clip": "Charge",
+                "src": "L7448-L7468",
+                "lunge_cm": 420,
+                "tell": 0.5,
+                "damage": 2400
+              },
+              {
+                "ko": "흡입",
+                "clip": "GroundWave",
+                "src": "L7482-L7490",
+                "tell": 0.9,
+                "damage": 1800,
+                "range": 420
+              }
+            ],
+            "steps": [
+              {
+                "id": "side",
+                "src": "L7446-L7479",
+                "callout": "방향이 안 잡혀요.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "kang",
+                    "to": "side_r",
+                    "dist": 320
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "suction",
+                "src": "L7480-L7490",
+                "callout": "흡입이에요!",
+                "advance_after_s": 6
+              },
+              {
+                "id": "still",
+                "src": "L7492-L7531",
+                "advance_after_s": 4,
+                "advance_beat": "out",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "out": "…나가야 해요. 지금요. 잠복했어요.",
+            "step_side": "방향이 안 잡혀요.",
+            "step_suction": "흡입이에요!"
+          },
+          "arena": {
+            "kind": "water",
+            "water_cm": 110,
+            "features": [
+              "수몰 터널",
+              "윈치 케이블",
+              "벽 이음매"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP08_SC007",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "현 중위",
+          "boss_scale": 1.0,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "kill",
+          "src": "L7537-L7561",
+          "script": {
+            "guard": "cut",
+            "walk_in_cm": 260,
+            "patterns": [],
+            "steps": [
+              {
+                "id": "walk",
+                "src": "L7545-L7559",
+                "callout": "…현.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 500
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "side_r",
+                    "dist": 520
+                  }
+                ],
+                "open": "after:2",
+                "open_s": 3.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "한 번이었다.",
+            "step_walk": "…현."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "터널 입구 물가",
+              "헤드램프"
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP08_SC010",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "레비아탄",
+          "boss_scale": 2.2,
+          "party": [
+            "kain",
+            "ryu"
+          ],
+          "result": "retreat",
+          "src": "L7635-L7723",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "아가미 펼침",
+                "clip": "Spin",
+                "src": "L7679-L7691",
+                "tell": 0.8,
+                "damage": 2000,
+                "range": 280
+              },
+              {
+                "ko": "측면 돌진",
+                "clip": "Charge",
+                "src": "L7649-L7658",
+                "lunge_cm": 380,
+                "tell": 0.6,
+                "damage": 2400
+              }
+            ],
+            "steps": [
+              {
+                "id": "float",
+                "src": "L7635-L7658",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 280
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "gill",
+                "src": "L7661-L7693",
+                "callout": "아가미입니다!",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  }
+                ],
+                "open": "pattern:아가미 펼침",
+                "opener": "kain",
+                "open_s": 2.5,
+                "needs": 1,
+                "decisive_beat": "gill_cut",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "gill_cut": "아니요. 근데 하나 뜯었어요.",
+            "step_gill": "아가미입니다!"
+          },
+          "arena": {
+            "kind": "water",
+            "water_cm": 110,
+            "features": [
+              "수몰 터널",
+              "부유물"
+            ]
+          },
+          "prefix": "B3_",
+          "layers": {
+            "pre": [
+              "DL_B3_Pre"
+            ],
+            "fight": [
+              "DL_B3_Fight"
+            ],
+            "after": [
+              "DL_B3_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP08/EP08_World",
+      "next_world": "/Game/Hwanghon/Story/EP09/EP09_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_hangang_flooded_tunnel",
+        "loc_hangang_tunnel_entrance"
+      ]
+    },
+    "EP09": {
+      "battles": [
+        {
+          "first_scene": "EP09_SC010",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "레비아탄",
+          "boss_scale": 2.2,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "contained",
+          "src": "L7940-L8125",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "해일 역류",
+                "clip": "Charge",
+                "src": "L8039-L8063",
+                "lunge_cm": 420,
+                "tell": 0.8,
+                "damage": 2000
+              }
+            ],
+            "steps": [
+              {
+                "id": "lure",
+                "src": "L7940-L7973",
+                "callout": "…미끼가 제일 편해. 생각을 안 해도 되거든.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 260
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "marker:B1_InnerPins",
+                    "dist": 175
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "marker:B1_Exit",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "inner",
+                "src": "L7974-L8034",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 260
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "marker:B1_InnerPins",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 5,
+                "advance_beat": "inner_gate"
+              },
+              {
+                "id": "surge",
+                "src": "L8035-L8066",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "marker:B1_Exit",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 5
+              },
+              {
+                "id": "outer",
+                "src": "L8067-L8109",
+                "callout": "아인의 눈은 감기지 않았다. 뜬 채로.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "marker:B1_Exit",
+                    "dist": 175
+                  }
+                ],
+                "open": "after:1",
+                "open_s": 3.0,
+                "needs": 1,
+                "decisive_beat": "gate_cut",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "inner_gate": "한 번이면 대기. 두 번이면 낙하.",
+            "gate_cut": "낫이 못 한 것을 문이 했다.",
+            "step_lure": "…미끼가 제일 편해. 생각을 안 해도 되거든.",
+            "step_outer": "아인의 눈은 감기지 않았다. 뜬 채로."
+          },
+          "arena": {
+            "kind": "water",
+            "water_cm": 130,
+            "features": [
+              "내측·외측 차수문",
+              "고정핀",
+              "벽 배관(신호)"
+            ],
+            "destroy": [
+              {
+                "what": "내측 차수문 낙하",
+                "src": "L8025-L8031",
+                "when": "fight"
+              },
+              {
+                "what": "외측 차수문 낙하",
+                "src": "L8099-L8113",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP09/EP09_World",
+      "next_world": "/Game/Hwanghon/Story/EP10/EP10_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_hangang_flooded_tunnel",
+        "loc_hangang_tunnel_outer_machine_room",
+        "loc_hangang_tunnel_inner_machine_room"
+      ]
+    },
+    "EP10": {
+      "battles": [
+        {
+          "first_scene": "EP10_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "클레이브 두 기",
+          "boss_scale": 1.3,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "win",
+          "src": "L8357-L8407",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "정면 돌진",
+                "clip": "Charge",
+                "src": "L8381",
+                "lunge_cm": 300,
+                "tell": 0.7,
+                "damage": 2600
+              }
+            ],
+            "steps": [
+              {
+                "id": "signal",
+                "src": "L8365-L8369",
+                "callout": "여섯 걸음마다 한 번. 그 사이에 끊어야 해요.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 360
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "first",
+                "src": "L8379-L8385",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 360
+                  }
+                ],
+                "open": "pattern:정면 돌진",
+                "opener": "kain",
+                "open_s": 2.5,
+                "needs": 1,
+                "decisive_beat": "first_down",
+                "then": "next"
+              },
+              {
+                "id": "second",
+                "src": "L8389-L8393",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "back",
+                    "dist": 120
+                  }
+                ],
+                "advance_after_s": 3,
+                "advance_beat": "ryu_finish",
+                "advance_then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "first_down": "지금.",
+            "step_signal": "여섯 걸음마다 한 번. 그 사이에 끊어야 해요."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "8차선 도로",
+              "정차된 차량",
+              "가드레일",
+              "건물 그늘"
+            ]
+          },
+          "recover": "crystal",
+          "crystal_scale": 0.03,
+          "recover_line": "부위를 부순 자리에서만 나오는, 아직 따뜻한 조각이었다.",
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP10/EP10_World",
+      "next_world": "/Game/Hwanghon/Story/EP11/EP11_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_namtaeryeong_national_road"
+      ]
+    },
+    "EP11": {
+      "battles": [
+        {
+          "first_scene": "EP11_SC009",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "클레이브",
+          "boss_scale": 1.3,
+          "party": [
+            "kain",
+            "ryu"
+          ],
+          "result": "win",
+          "src": "L8854-L8878",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "수직 강타",
+                "clip": "Slam",
+                "src": "L8862-L8868",
+                "tell": 0.35,
+                "damage": 3400,
+                "range": 300
+              }
+            ],
+            "steps": [
+              {
+                "id": "hold",
+                "src": "L8862-L8870",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 165
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 320
+                  }
+                ],
+                "open": "pattern:수직 강타",
+                "opener": "kain",
+                "open_s": 3.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "retreat_order": "…계속해."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "폐차장 공터",
+              "잔해 더미"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP11/EP11_World",
+      "next_world": "/Game/Hwanghon/Story/EP12/EP12_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_scrapyard_lot"
+      ]
+    },
+    "EP12": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP12/EP12_World",
+      "next_world": "/Game/Hwanghon/Story/EP13/EP13_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP13": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP13/EP13_World",
+      "next_world": "/Game/Hwanghon/Story/EP14/EP14_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP14": {
+      "battles": [
+        {
+          "first_scene": "EP14_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "실험체 09호",
+          "boss_scale": 1.2,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil",
+            "minkyung"
+          ],
+          "result": "phase",
+          "src": "L9844-L9895",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "휘감기",
+                "clip": "HookCombo",
+                "src": "L9844-L9895",
+                "tell": 0.8,
+                "damage": 2000
+              }
+            ],
+            "steps": [
+              {
+                "id": "cut1",
+                "src": "L9844-L9895",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 300
+                  }
+                ],
+                "open": "after:1.5",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "core_cut",
+                "then": "next"
+              },
+              {
+                "id": "regen1",
+                "src": "L9844-L9895",
+                "advance_after_s": 30,
+                "advance_beat": "regen",
+                "advance_then": "next"
+              },
+              {
+                "id": "cut2",
+                "src": "L9844-L9895",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 300
+                  }
+                ],
+                "open": "after:1.5",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "core_cut",
+                "then": "next"
+              },
+              {
+                "id": "regen2",
+                "src": "L9844-L9895",
+                "advance_after_s": 35,
+                "advance_beat": "regen",
+                "advance_then": "next"
+              },
+              {
+                "id": "cut3",
+                "src": "L9844-L9895",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 300
+                  }
+                ],
+                "open": "after:1.5",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "core_cut",
+                "then": "next"
+              },
+              {
+                "id": "regen3",
+                "src": "L9844-L9895",
+                "advance_after_s": 40,
+                "advance_beat": "regen",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {},
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "폭 2인분 계단",
+              "콘크리트 봉인 파손부",
+              "난간"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP14_SC007",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "실험체 09호",
+          "boss_scale": 1.2,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil",
+            "minkyung"
+          ],
+          "result": "contained",
+          "src": "L9935-L10126",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "벌어져 감싸기",
+                "clip": "HookCombo",
+                "src": "L9985-L10005",
+                "tell": 0.9,
+                "damage": 2400
+              },
+              {
+                "ko": "잘린 팔 휘감기",
+                "clip": "Charge",
+                "src": "L9963-L9971",
+                "lunge_cm": 260,
+                "tell": 0.4,
+                "damage": 1600
+              }
+            ],
+            "steps": [
+              {
+                "id": "split",
+                "src": "L9935-L9955",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 280
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "stair",
+                "src": "L9957-L10005",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "front",
+                    "dist": 190
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "fix",
+                "src": "L10005-L10072",
+                "callout": "굳은 데는 안 붙어요!",
+                "open": "after:1",
+                "open_s": 3.0,
+                "needs": 0,
+                "then": "end",
+                "advance_after_s": 6,
+                "advance_beat": "sealed",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "sealed": "두 번 칠게요.",
+            "step_fix": "굳은 데는 안 붙어요!"
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "계단 병목",
+              "고정액 병"
+            ],
+            "destroy": [
+              {
+                "what": "계단 이음매 고정액 봉쇄",
+                "src": "L10005-L10021",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP14/EP14_World",
+      "next_world": "/Game/Hwanghon/Story/EP15/EP15_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_pangyo_lab_b2",
+        "loc_pangyo_lab_b3",
+        "loc_pangyo_research_complex"
+      ]
+    },
+    "EP15": {
+      "battles": [
+        {
+          "first_scene": "EP15_SC004",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "실험체 09호",
+          "boss_scale": 1.4,
+          "party": [
+            "kain",
+            "ryu",
+            "sera",
+            "ojeonggil"
+          ],
+          "result": "win",
+          "src": "L10275-L10469",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "벌어져 감싸기",
+                "clip": "HookCombo",
+                "src": "L10333-L10352",
+                "tell": 0.9,
+                "damage": 2400
+              },
+              {
+                "ko": "무기 억류",
+                "clip": "Slam",
+                "src": "L10291-L10297",
+                "tell": 0.8,
+                "damage": 2000
+              }
+            ],
+            "steps": [
+              {
+                "id": "grip",
+                "src": "L10275-L10309",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 250
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "hold",
+                "src": "L10313-L10352",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "side_r",
+                    "dist": 300
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "sera",
+                "src": "L10355-L10371",
+                "callout": "…잘라도 안 죽는 걸, 왜 계속 자르고 있어.",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "seal1",
+                "src": "L10380-L10469",
+                "callout": "신호를 막으면 코어가 있어도 못 찾아.",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal2",
+                "src": "L10380-L10469",
+                "callout": "삼 초 안에 끊어.",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal3",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal4",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal5",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal6",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal7",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "next"
+              },
+              {
+                "id": "seal8",
+                "src": "L10380-L10469",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 300
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  }
+                ],
+                "open": "ready",
+                "opener": "sera",
+                "open_s": 3.0,
+                "needs": 2,
+                "decisive_beat": "set",
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "step_sera": "…잘라도 안 죽는 걸, 왜 계속 자르고 있어.",
+            "step_seal1": "신호를 막으면 코어가 있어도 못 찾아.",
+            "step_seal2": "삼 초 안에 끊어."
+          },
+          "arena": {
+            "kind": "indoor",
+            "features": [
+              "1층 로비",
+              "파티션",
+              "유리창"
+            ],
+            "destroy": [
+              {
+                "what": "로비 파티션",
+                "src": "L10315",
+                "when": "fight"
+              },
+              {
+                "what": "로비 유리창",
+                "src": "L10355",
+                "when": "fight"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP15/EP15_World",
+      "next_world": "/Game/Hwanghon/Story/EP16/EP16_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_pangyo_lab_b3",
+        "loc_pangyo_lab_lobby"
+      ]
+    },
+    "EP16": {
+      "battles": [
+        {
+          "first_scene": "EP16_SC003",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "섀도우 팽",
+          "boss_scale": 1.5,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "phase",
+          "src": "L10697-L10830",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "무음 돌진",
+                "clip": "Charge",
+                "src": "L10697-L10715",
+                "lunge_cm": 600,
+                "tell": 0.15,
+                "damage": 2600
+              },
+              {
+                "ko": "가장 밝은 쪽",
+                "clip": "HookCombo",
+                "src": "L10735-L10771",
+                "tell": 0.5,
+                "damage": 2200
+              }
+            ],
+            "steps": [
+              {
+                "id": "ambush",
+                "src": "L10697-L10715",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "front",
+                    "dist": 150
+                  }
+                ],
+                "advance_after_s": 5
+              },
+              {
+                "id": "read",
+                "src": "L10717-L10731",
+                "callout": "칼이 아니라 — 빛을. 휘두르기 전에, 목이 먼저 켜져요.",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "dim",
+                "src": "L10735-L10771",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "decoy",
+                "src": "L10780-L10830",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  },
+                  {
+                    "who": "ojeonggil",
+                    "to": "side_r",
+                    "dist": 260
+                  }
+                ],
+                "open": "ready",
+                "opener": "ojeonggil",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "shallow",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "shallow": "…베였다. 저거.",
+            "step_read": "칼이 아니라 — 빛을. 휘두르기 전에, 목이 먼저 켜져요."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "silent": true,
+            "features": [
+              "무음 지대",
+              "수풀 그늘",
+              "뒤집힌 수레·빈 방호복",
+              "폐허 능선"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP16_SC010",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "섀도우 팽",
+          "boss_scale": 1.5,
+          "party": [
+            "kain",
+            "ryu",
+            "ojeonggil"
+          ],
+          "result": "phase",
+          "src": "L10834-L10843",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "광폭 연타",
+                "clip": "HookCombo",
+                "src": "L10834-L10843",
+                "tell": 0.3,
+                "damage": 2200
+              }
+            ],
+            "steps": [
+              {
+                "id": "rage",
+                "src": "L10834-L10843",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 260
+                  }
+                ],
+                "advance_after_s": 9,
+                "advance_beat": "light_pillar",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {},
+          "arena": {
+            "kind": "outdoor",
+            "silent": true,
+            "features": [
+              "무음 지대"
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP16/EP16_World",
+      "next_world": "/Game/Hwanghon/Story/EP17/EP17_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_logistics_warehouse_yard"
+      ]
+    },
+    "EP17": {
+      "battles": [
+        {
+          "first_scene": "EP17_SC001",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "섀도우 팽",
+          "boss_scale": 1.5,
+          "party": [
+            "kain",
+            "ryu",
+            "sera",
+            "ojeonggil"
+          ],
+          "result": "phase",
+          "src": "L10959-L11000",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "무음 돌진",
+                "clip": "Charge",
+                "src": "L10959-L10978",
+                "lunge_cm": 500,
+                "tell": 0.2,
+                "damage": 2600
+              }
+            ],
+            "steps": [
+              {
+                "id": "barrier",
+                "src": "L10959-L10978",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 180
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "formula",
+                "src": "L10979-L10997",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "back",
+                    "dist": 130
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "open": "ready",
+                "opener": "ryu",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "deep_cut",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "deep_cut": "네 사람. 네 개의 조건. 하나의 반 박자. 공식은, 성립했다."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "silent": true,
+            "features": [
+              "무음 지대",
+              "골짜기"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP17_SC004",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "섀도우 팽",
+          "boss_scale": 1.5,
+          "party": [
+            "kain",
+            "ryu",
+            "sera",
+            "ojeonggil"
+          ],
+          "result": "kill",
+          "src": "L11025-L11042",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "난투",
+                "clip": "HookCombo",
+                "src": "L11025-L11039",
+                "tell": 0.5,
+                "damage": 2200
+              }
+            ],
+            "steps": [
+              {
+                "id": "third",
+                "src": "L11025-L11039",
+                "open": "after:1.5",
+                "open_s": 2.5,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {},
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "골짜기",
+              "소리가 돌아온 전장"
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP17_SC005",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "셀레스티얼",
+          "boss_scale": 2.2,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "phase",
+          "src": "L11043-L11072",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "공간 접기 급강하",
+                "clip": "Charge",
+                "src": "L11057-L11065",
+                "lunge_cm": 600,
+                "tell": 0.4,
+                "damage": 2800
+              }
+            ],
+            "steps": [
+              {
+                "id": "low",
+                "src": "L11043-L11065",
+                "callout": "오늘이 아니면 못 잡아. 원래는 너희 넷으론 평생 못 잡았어. — 하늘이잖아.",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 280
+                  },
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "open": "pattern:공간 접기 급강하",
+                "opener": "sera",
+                "open_s": 2.5,
+                "needs": 1,
+                "decisive_beat": "wing_hook",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "step_low": "오늘이 아니면 못 잡아. 원래는 너희 넷으론 평생 못 잡았어. — 하늘이잖아."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "골짜기 바닥과 벽",
+              "고도 상한 15m"
+            ]
+          },
+          "prefix": "B3_",
+          "layers": {
+            "pre": [
+              "DL_B3_Pre"
+            ],
+            "fight": [
+              "DL_B3_Fight"
+            ],
+            "after": [
+              "DL_B3_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP17_SC007",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "셀레스티얼",
+          "boss_scale": 2.6,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "phase",
+          "src": "L11102-L11115",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "세 방향 강하",
+                "clip": "Spin",
+                "src": "L11102-L11113",
+                "tell": 0.4,
+                "damage": 2600,
+                "range": 360
+              }
+            ],
+            "steps": [
+              {
+                "id": "triple",
+                "src": "L11102-L11115",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 260
+                  },
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 190
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 260
+                  }
+                ],
+                "advance_after_s": 8,
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {},
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "골짜기 벽(등을 지고 몰림)"
+            ]
+          },
+          "prefix": "B4_",
+          "layers": {
+            "pre": [
+              "DL_B4_Pre"
+            ],
+            "fight": [
+              "DL_B4_Fight"
+            ],
+            "after": [
+              "DL_B4_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP17_SC009",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "셀레스티얼",
+          "boss_scale": 2.6,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "kill",
+          "src": "L11146-L11193",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "유인 강하",
+                "clip": "Slam",
+                "src": "L11166-L11180",
+                "tell": 0.9,
+                "damage": 3000,
+                "range": 320
+              }
+            ],
+            "steps": [
+              {
+                "id": "decoy",
+                "src": "L11146-L11190",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side_r",
+                    "dist": 320
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 300
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 2.5,
+                "open_beat": "anvil",
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "하늘의 왕이, 땅에서 죽었다."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "골짜기"
+            ],
+            "destroy": [
+              {
+                "what": "카인의 대검(완전 파단)",
+                "src": "L11172-L11180",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B5_",
+          "layers": {
+            "pre": [
+              "DL_B5_Pre"
+            ],
+            "fight": [
+              "DL_B5_Fight"
+            ],
+            "after": [
+              "DL_B5_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP17/EP17_World",
+      "next_world": "/Game/Hwanghon/Story/EP18/EP18_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_logistics_warehouse_yard"
+      ]
+    },
+    "EP18": {
+      "battles": [
+        {
+          "first_scene": "EP18_SC009",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "군 표식 집행관",
+          "boss_scale": 1.1,
+          "party": [
+            "duho",
+            "duna"
+          ],
+          "result": "defend",
+          "src": "L11438-L11483",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "내려치기",
+                "clip": "Slam",
+                "src": "L11460-L11482",
+                "tell": 0.9,
+                "damage": 3000,
+                "range": 280
+              }
+            ],
+            "steps": [
+              {
+                "id": "vent",
+                "src": "L11438-L11460",
+                "moves": [
+                  {
+                    "who": "duho",
+                    "to": "side_r",
+                    "dist": 300
+                  },
+                  {
+                    "who": "duna",
+                    "to": "side",
+                    "dist": 220
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "executioner",
+                "src": "L11460-L11483",
+                "moves": [
+                  {
+                    "who": "duna",
+                    "to": "side",
+                    "dist": 220
+                  }
+                ],
+                "open": "pattern:내려치기",
+                "opener": "duna",
+                "open_s": 1.5,
+                "open_beat": "freeze",
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "freeze": "집행관의 일격이 — 멈췄다."
+          },
+          "arena": {
+            "kind": "indoor",
+            "features": [
+              "저천장",
+              "배관",
+              "셔터",
+              "아이들 구역"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP18/EP18_World",
+      "next_world": "/Game/Hwanghon/Story/EP19/EP19_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gangnam_bunker_children_ward"
+      ]
+    },
+    "EP19": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP19/EP19_World",
+      "next_world": "/Game/Hwanghon/Story/EP20/EP20_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP20": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP20/EP20_World",
+      "next_world": "/Game/Hwanghon/Story/EP21/EP21_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP21": {
+      "battles": [
+        {
+          "first_scene": "EP21_SC007",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "아스널 오버로드",
+          "boss_scale": 3.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera",
+            "guide"
+          ],
+          "result": "retreat",
+          "src": "L12663-L12759",
+          "script": {
+            "guard": "cut",
+            "band": [
+              200,
+              300
+            ],
+            "walk_in_cm": 100000,
+            "patterns": [
+              {
+                "ko": "사출",
+                "clip": "GroundWave",
+                "src": "L12669-L12671",
+                "tell": 0.5,
+                "damage": 2200,
+                "range": 900
+              },
+              {
+                "ko": "전탄 제압",
+                "clip": "Spin",
+                "src": "L12743-L12759",
+                "tell": 1.4,
+                "damage": 3000,
+                "range": 900
+              }
+            ],
+            "steps": [
+              {
+                "id": "burst",
+                "src": "L12652-L12671",
+                "callout": "…아스널 오버로드.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "marker:B1_Cover",
+                    "dist": 175
+                  },
+                  {
+                    "who": "sera",
+                    "to": "marker:B1_Cover",
+                    "dist": 175
+                  },
+                  {
+                    "who": "guide",
+                    "to": "marker:B1_Exit",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "flank",
+                "src": "L12685-L12699",
+                "callout": "뒤가 없다고요!",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "back",
+                    "dist": 420
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "barrage",
+                "src": "L12743-L12759",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "marker:B1_Cover",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 5,
+                "advance_beat": "barrage",
+                "advance_then": "end"
+              }
+            ]
+          },
+          "callouts": {
+            "barrage": "…흩어져요!",
+            "step_burst": "…아스널 오버로드.",
+            "step_flank": "뒤가 없다고요!"
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "주 격납고",
+              "장갑차·자주포 엄폐물",
+              "출구 1개",
+              "유도등"
+            ],
+            "destroy": [
+              {
+                "what": "엄폐물(장갑차) 소멸",
+                "src": "L12717",
+                "when": "fight"
+              },
+              {
+                "what": "콘크리트 그릇형 파임",
+                "src": "L12671",
+                "when": "fight"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        },
+        {
+          "first_scene": "EP21_SC012",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "아스널 오버로드",
+          "boss_scale": 3.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "retreat",
+          "src": "L12777-L12796",
+          "script": {
+            "guard": "cut",
+            "band": [
+              200,
+              300
+            ],
+            "walk_in_cm": 100000,
+            "patterns": [
+              {
+                "ko": "사출",
+                "clip": "GroundWave",
+                "src": "L12669-L12671",
+                "tell": 0.5,
+                "damage": 2200,
+                "range": 900
+              }
+            ],
+            "steps": [
+              {
+                "id": "feed",
+                "src": "L12777",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "marker:B2_Exit",
+                    "dist": 175
+                  },
+                  {
+                    "who": "sera",
+                    "to": "marker:B2_Exit",
+                    "dist": 175
+                  }
+                ],
+                "open": "after:2",
+                "open_s": 3.0,
+                "needs": 1,
+                "decisive_beat": "feed_line",
+                "then": "end"
+              }
+            ]
+          },
+          "callouts": {},
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "부포탑",
+              "급탄로",
+              "출구"
+            ],
+            "destroy": [
+              {
+                "what": "부포탑 내부 폭발",
+                "src": "L12777",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B2_",
+          "layers": {
+            "pre": [
+              "DL_B2_Pre"
+            ],
+            "fight": [
+              "DL_B2_Fight"
+            ],
+            "after": [
+              "DL_B2_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP21/EP21_World",
+      "next_world": "/Game/Hwanghon/Story/EP22/EP22_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gyeryong_main_hangar",
+        "loc_gyeryong_ramp"
+      ]
+    },
+    "EP22": {
+      "battles": [
+        {
+          "first_scene": "EP22_SC004",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "아스널 오버로드",
+          "boss_scale": 3.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "win",
+          "src": "L12939-L13191",
+          "script": {
+            "guard": "cut",
+            "band": [
+              200,
+              300
+            ],
+            "walk_in_cm": 100000,
+            "patterns": [
+              {
+                "ko": "일제 꺾임",
+                "clip": "Slam",
+                "src": "L13035-L13043",
+                "tell": 1.0,
+                "damage": 2600,
+                "range": 320
+              },
+              {
+                "ko": "사출",
+                "clip": "GroundWave",
+                "src": "L12939-L13078",
+                "tell": 0.5,
+                "damage": 2200,
+                "range": 900,
+                "min": 400
+              }
+            ],
+            "steps": [
+              {
+                "id": "joint1",
+                "src": "L12939-L13167",
+                "callout": "관절.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_1",
+                "then": "next"
+              },
+              {
+                "id": "joint2",
+                "src": "L12939-L13167",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_2",
+                "then": "next"
+              },
+              {
+                "id": "joint3",
+                "src": "L12939-L13167",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_3",
+                "then": "next"
+              },
+              {
+                "id": "joint4",
+                "src": "L12939-L13167",
+                "callout": "삼 초면 돼요!",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_4",
+                "then": "next"
+              },
+              {
+                "id": "joint5",
+                "src": "L12939-L13167",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_5",
+                "then": "next"
+              },
+              {
+                "id": "joint6",
+                "src": "L12939-L13167",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "open": "pattern:일제 꺾임",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "joint_6",
+                "then": "next"
+              },
+              {
+                "id": "core",
+                "src": "L13169-L13191",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 2.5,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "서걱.",
+            "step_joint1": "관절.",
+            "step_joint4": "삼 초면 돼요!"
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "주 격납고",
+              "주포탑 선회 관절 6",
+              "코어(7m)"
+            ],
+            "destroy": [
+              {
+                "what": "천장 콘크리트 낙하",
+                "src": "L13173",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP22/EP22_World",
+      "next_world": "/Game/Hwanghon/Story/EP23/EP23_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gyeryong_main_hangar",
+        "loc_gyeryong_sterile_corridor"
+      ]
+    },
+    "EP23": {
+      "battles": [
+        {
+          "first_scene": "EP23_SC001",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "박 준장",
+          "boss_scale": 1.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "win",
+          "src": "L13322-L13373",
+          "script": {
+            "guard": "deflect",
+            "patterns": [
+              {
+                "ko": "카운터",
+                "clip": "HookCombo",
+                "src": "L13326-L13347",
+                "tell": 0.4,
+                "damage": 2600
+              }
+            ],
+            "steps": [
+              {
+                "id": "read",
+                "src": "L13322-L13347",
+                "callout": "각인자를 잡으라고 지은 몸이야.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side",
+                    "dist": 240
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "dark",
+                "src": "L13344-L13362",
+                "callout": "골짜기 반대로 해요. — 저를 꺼 주세요.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  },
+                  {
+                    "who": "sera",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "decisive_beat": "shallow",
+                "then": "next"
+              },
+              {
+                "id": "relit",
+                "src": "L13362-L13364",
+                "open": "after:0.5",
+                "open_s": 2.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "두 번 치지 않는다 — 스승의 원칙이었다. 아인은 오늘 두 번 쳤다.",
+            "step_read": "각인자를 잡으라고 지은 몸이야.",
+            "step_dark": "골짜기 반대로 해요. — 저를 꺼 주세요."
+          },
+          "arena": {
+            "kind": "indoor",
+            "features": [
+              "소독약 냄새 복도",
+              "관측창"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP23/EP23_World",
+      "next_world": "/Game/Hwanghon/Story/EP24/EP24_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_gyeryong_sterile_corridor"
+      ]
+    },
+    "EP24": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP24/EP24_World",
+      "next_world": "/Game/Hwanghon/Story/EP25/EP25_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP25": {
+      "battles": [],
+      "world": "/Game/Hwanghon/Story/EP25/EP25_World",
+      "next_world": "/Game/Hwanghon/Story/EP26/EP26_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": []
+    },
+    "EP26": {
+      "battles": [
+        {
+          "first_scene": "EP26_SC002",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "정 장관",
+          "boss_scale": 1.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "kill",
+          "src": "L14271-L14419",
+          "script": {
+            "guard": "cut",
+            "patterns": [
+              {
+                "ko": "군도 원",
+                "clip": "Spin",
+                "src": "L14340-L14344",
+                "tell": 0.9,
+                "damage": 2600,
+                "range": 280
+              }
+            ],
+            "steps": [
+              {
+                "id": "command",
+                "src": "L14271-L14293",
+                "callout": "현 시각부로. 전 구역. 경계 태세 격상.",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 360
+                  },
+                  {
+                    "who": "kain",
+                    "to": "behind",
+                    "dist": 175
+                  }
+                ],
+                "advance_after_s": 6
+              },
+              {
+                "id": "fake",
+                "src": "L14306-L14322",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 360
+                  }
+                ],
+                "advance_after_s": 5,
+                "advance_beat": "fake"
+              },
+              {
+                "id": "memorize",
+                "src": "L14376-L14408",
+                "callout": "세 합만 받아 주세요. 놈의 원을 외울게요.",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 170
+                  }
+                ],
+                "open": "pattern:군도 원",
+                "open_on": 4,
+                "opener": "kain",
+                "open_s": 2.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "decisive": "…미안—",
+            "fake": "가짜 명령을 내리지!",
+            "step_command": "현 시각부로. 전 구역. 경계 태세 격상.",
+            "step_memorize": "세 합만 받아 주세요. 놈의 원을 외울게요."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "features": [
+              "발사장 활주로",
+              "의장대 도열",
+              "점거 차량"
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP26/EP26_World",
+      "next_world": "/Game/Hwanghon/Story/EP27/EP27_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_balsajang_doro"
+      ]
+    },
+    "EP27": {
+      "battles": [
+        {
+          "first_scene": "EP27_SC008",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "나노-노바 코어",
+          "boss_scale": 3.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "kill",
+          "src": "L14724-L14875",
+          "script": {
+            "guard": "deflect",
+            "band": [
+              200,
+              300
+            ],
+            "walk_in_cm": 100000,
+            "patterns": [
+              {
+                "ko": "셔터 팔",
+                "clip": "Charge",
+                "src": "L14730",
+                "lunge_cm": 200,
+                "tell": 0.8,
+                "damage": 2200
+              },
+              {
+                "ko": "거대한 원",
+                "clip": "Spin",
+                "src": "L14760-L14785",
+                "tell": 1.0,
+                "damage": 3000,
+                "range": 420
+              },
+              {
+                "ko": "코어 사출",
+                "clip": "GroundWave",
+                "src": "L14785",
+                "tell": 0.6,
+                "damage": 2400,
+                "range": 800
+              }
+            ],
+            "steps": [
+              {
+                "id": "arms",
+                "src": "L14724-L14794",
+                "callout": "오지…… 마라…… 늦기 전에……",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 240
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 380
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 380
+                  }
+                ],
+                "advance_after_s": 8
+              },
+              {
+                "id": "circle",
+                "src": "L14795-L14800",
+                "advance_after_s": 5
+              },
+              {
+                "id": "stop1",
+                "src": "L14801-L14807",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 240
+                  }
+                ],
+                "advance_after_s": 3,
+                "advance_beat": "ryu_elbow"
+              },
+              {
+                "id": "stop2",
+                "src": "L14809-L14811",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 240
+                  }
+                ],
+                "advance_after_s": 3,
+                "advance_beat": "kain_port"
+              },
+              {
+                "id": "converge",
+                "src": "L14819-L14833",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 230
+                  },
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  },
+                  {
+                    "who": "ryu",
+                    "to": "side_r",
+                    "dist": 260
+                  }
+                ],
+                "advance_after_s": 5
+              },
+              {
+                "id": "bloom",
+                "src": "L14847-L14861",
+                "open": "after:1",
+                "open_s": 2.0,
+                "open_beat": "now",
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "guarded": "틱—",
+            "ryu_elbow": "지금……",
+            "kain_port": "지금……",
+            "now": "지금—!",
+            "decisive": "서걱. 한 번이었다. 두 번은 필요 없었다.",
+            "step_arms": "오지…… 마라…… 늦기 전에……"
+          },
+          "arena": {
+            "kind": "underground",
+            "features": [
+              "결정 산(수백 코어)",
+              "캡슐 잔해",
+              "견인 레일"
+            ],
+            "destroy": [
+              {
+                "what": "결정 산의 팔 붕괴",
+                "src": "L14869",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP27/EP27_World",
+      "next_world": "/Game/Hwanghon/Story/EP28/EP28_World",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_balsadae_jiha"
+      ]
+    },
+    "EP28": {
+      "battles": [
+        {
+          "first_scene": "EP28_SC002",
+          "rules": "HWScriptedCanonRules",
+          "boss_ko": "발사대 탑",
+          "boss_scale": 4.0,
+          "party": [
+            "kain",
+            "ryu",
+            "sera"
+          ],
+          "result": "destroyed",
+          "src": "L15008-L15043",
+          "script": {
+            "guard": "cut",
+            "band": [
+              200,
+              300
+            ],
+            "walk_in_cm": 100000,
+            "patterns": [],
+            "steps": [
+              {
+                "id": "sockets",
+                "src": "L15010-L15018",
+                "callout": "주각 둘을 같은 쪽에서 끊으면 자중으로 넘어가.",
+                "moves": [
+                  {
+                    "who": "ryu",
+                    "to": "back",
+                    "dist": 300
+                  }
+                ],
+                "advance_after_s": 5
+              },
+              {
+                "id": "mark",
+                "src": "L15018",
+                "moves": [
+                  {
+                    "who": "sera",
+                    "to": "side",
+                    "dist": 320
+                  }
+                ],
+                "advance_after_s": 4
+              },
+              {
+                "id": "anvil",
+                "src": "L15020-L15022",
+                "moves": [
+                  {
+                    "who": "kain",
+                    "to": "front",
+                    "dist": 260
+                  }
+                ],
+                "open": "ready",
+                "opener": "kain",
+                "open_s": 3.0,
+                "open_beat": "anvil",
+                "needs": 1,
+                "decisive_beat": "leg1",
+                "then": "next"
+              },
+              {
+                "id": "leg2",
+                "src": "L15024-L15032",
+                "open": "after:1",
+                "open_s": 3.0,
+                "needs": 1,
+                "then": "kill"
+              }
+            ]
+          },
+          "callouts": {
+            "anvil": "모루.",
+            "decisive": "한 번. 두 번은 필요 없었다.",
+            "step_sockets": "주각 둘을 같은 쪽에서 끊으면 자중으로 넘어가."
+          },
+          "arena": {
+            "kind": "outdoor",
+            "sea": true,
+            "features": [
+              "발사대 탑",
+              "주각 4개",
+              "트러스",
+              "케이블 다발",
+              "바다"
+            ],
+            "destroy": [
+              {
+                "what": "탑 전체 바다로 붕괴",
+                "src": "L15038-L15042",
+                "when": "after"
+              }
+            ]
+          },
+          "prefix": "B1_",
+          "layers": {
+            "pre": [
+              "DL_B1_Pre"
+            ],
+            "fight": [
+              "DL_B1_Fight"
+            ],
+            "after": [
+              "DL_B1_After"
+            ]
+          }
+        }
+      ],
+      "world": "/Game/Hwanghon/Story/EP28/EP28_World",
+      "next_world": "",
+      "card_camera": "CAM_Entry_Wide",
+      "arena_locations": [
+        "loc_goheung_balsajang",
+        "loc_balsadae_tap",
+        "loc_bangpaje"
+      ]
     }
   }
 }

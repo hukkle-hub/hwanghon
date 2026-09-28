@@ -210,6 +210,8 @@ bool AHWStoryDirector::LoadEpisodeConfig(TMap<FName, int32>& OutBattleByScene)
             B.LayersFight = Names(*LayerSpec, TEXT("fight"));
             B.LayersAfter = Names(*LayerSpec, TEXT("after"));
         }
+        const TSharedPtr<FJsonObject>* ScriptObj = nullptr;
+        if (O->TryGetObjectField(TEXT("script"), ScriptObj)) B.Script = *ScriptObj;
         OutBattleByScene.Add(B.FirstScene, Battles.Num() - 1);
     }
     return true;
@@ -661,6 +663,8 @@ void AHWStoryDirector::BeginBattle(bool bFromCinema)
         TMap<FName, AActor*> Cast_;
         for (const auto& Pair : PartyActors) Cast_.Add(Pair.Key, Pair.Value.Get());
         Rules->SetupCast(Ain, Cast_);
+        if (B.Script.IsValid()) Rules->Configure(B.Script);
+        Rules->SetLive(!bFromCinema);   // held through the handoff blend (EnterBattleControl lets it go)
         Rules->OnCanonBeat.AddDynamic(this, &AHWStoryDirector::HandleCanonBeat);
         Rules->RegisterComponent();
     }
@@ -709,6 +713,7 @@ void AHWStoryDirector::EnterBattleControl()
         HandoffCamera = nullptr;
     }
     SetPlayerControl(true);
+    if (Rules) Rules->SetLive(true);
     if (AHWStoryHUD* HUD = GetStoryHUD())
     {
         HUD->GetOverlay()->HideAll();
@@ -923,7 +928,7 @@ bool AHWStoryDirector::TryRecoverCrystal()
     const float Distance = FVector::Dist2D(Ain->GetActorLocation(), Crystal->GetActorLocation());
     if (Distance > CrystalReachCm)
     {
-        Callout(TEXT("…닿지 않는다"));
+        Callout(TEXT("낫 하나 길이."));   // 제1부 통합본 L2067
         Emit(TEXT("crystal_too_far"));
         return false;
     }
@@ -934,7 +939,7 @@ bool AHWStoryDirector::TryRecoverCrystal()
     Ain->OnLocalInteract.Remove(InteractHandle);
     const FHWStoryBattle* Cur = Battles.IsValidIndex(CurrentBattle) ? &Battles[CurrentBattle] : nullptr;
     if (AHWStoryHUD* HUD = GetStoryHUD()) HUD->GetOverlay()->SetPrompt(FText::GetEmpty(), nullptr);
-    Callout(Cur && !Cur->RecoverLine.IsEmpty() ? Cur->RecoverLine.ToString() : FString(TEXT("…아직 따뜻했다")));
+    if (Cur && !Cur->RecoverLine.IsEmpty()) Callout(Cur->RecoverLine.ToString());   // the text's own line, or none
     Emit(TEXT("crystal_recovered"));
     return true;
 }

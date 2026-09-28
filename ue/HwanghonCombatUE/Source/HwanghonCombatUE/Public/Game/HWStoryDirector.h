@@ -82,6 +82,7 @@ struct FHWStoryBattle
     int32 SegmentIndex = INDEX_NONE;
     int32 EntryIndex = INDEX_NONE;
     int32 ResultIndex = INDEX_NONE;
+    TSharedPtr<class FJsonObject> Script;   // the fight's steps for UHWScriptedCanonRules
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWStoryEvent, FName, Event, FName, SceneId);

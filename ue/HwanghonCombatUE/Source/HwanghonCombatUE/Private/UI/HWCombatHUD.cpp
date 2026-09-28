@@ -226,7 +226,7 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
         {
             if (State == EHWBossState::Tell)
             {
-                BossTell->SetText(FText::FromString(TEXT("예고 · ") + PatternName(Boss->GetCurrentPatternId())));
+                BossTell->SetText(FText::FromString(TEXT("예고 · ") + (Boss->GetCurrentPattern().DisplayName.IsEmpty() ? PatternName(Boss->GetCurrentPatternId()) : Boss->GetCurrentPattern().DisplayName)));
                 BossTell->SetColorAndOpacity(FSlateColor(C(EHWUIColorToken::TextPrimary)));
             }
             else if (State == EHWBossState::Stagger || State == EHWBossState::Break)
