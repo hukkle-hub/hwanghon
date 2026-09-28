@@ -121,8 +121,17 @@ void AHWAinCharacter::Tick(float DeltaSeconds)
 
     const bool bLocked = LockOn->IsLocked() && LockOn->GetTarget();
     LockFraming = FMath::FInterpTo(LockFraming, bLocked ? 1.f : 0.f, DeltaSeconds, FramingBlendSpeed);
-    CameraBoom->TargetArmLength = FMath::Lerp(FreeArmLength, LockedArmLength, LockFraming);
-    CameraBoom->SocketOffset = FMath::Lerp(FreeSocketOffset, LockedSocketOffset, LockFraming);
+    float WantSize = 1.f;
+    if (bLocked)
+    {
+        FVector Origin, Extent;
+        LockOn->GetTarget()->GetActorBounds(true, Origin, Extent);
+        WantSize = FMath::Clamp(Extent.Z * 2.f / FramingReferenceHeightCm, 1.f, 4.f);
+    }
+    TargetSize = FMath::FInterpTo(TargetSize, WantSize, DeltaSeconds, FramingBlendSpeed * 0.5f);
+    const float Big = (TargetSize - 1.f) * LockFraming;
+    CameraBoom->TargetArmLength = FMath::Lerp(FreeArmLength, LockedArmLength, LockFraming) + BigTargetArmPerSize * Big;
+    CameraBoom->SocketOffset = FMath::Lerp(FreeSocketOffset, LockedSocketOffset, LockFraming) + FVector(0.f, 0.f, BigTargetRisePerSize * Big);
     FollowCamera->SetRelativeRotation(FRotator(0.f, LockedCameraYaw * LockFraming, 0.f));
 }
 

@@ -111,7 +111,13 @@ protected:
     UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FreeArmLength = 240.f;
     UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") FVector FreeSocketOffset = FVector(0.f, 55.f, 30.f);
     UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FramingBlendSpeed = 4.f;
+    // Big bodies (Arsenal, the tower: 3-4x) swallowed the locked camera (doc 150 §7): the camera backs off and rises
+    // with the target's height over this reference (the 3 m training boss).
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FramingReferenceHeightCm = 320.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float BigTargetArmPerSize = 260.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float BigTargetRisePerSize = 90.f;
     float LockFraming = 0.f;
+    float TargetSize = 1.f;
 
 private:
     UPROPERTY(VisibleAnywhere)
