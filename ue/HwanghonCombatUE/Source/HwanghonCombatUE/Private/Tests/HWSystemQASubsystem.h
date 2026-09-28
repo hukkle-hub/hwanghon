@@ -78,6 +78,11 @@ private:
     float ArenaShotDelay = 0.f;
     FString ArenaPendingTag;
     void TickStoryShow(float Dt);
+    void TickStyleShow(float Dt);
+    TArray<TWeakObjectPtr<class APostProcessVolume>> StyleVolumes;
+    int32 StyleShot = -1;
+    float StyleDelay = 0.f;
+    FString StylePending;
     TWeakObjectPtr<class AHWStoryDirector> StoryDirector;
     FString StoryKey;
     float StoryKeyTime = 0.f;

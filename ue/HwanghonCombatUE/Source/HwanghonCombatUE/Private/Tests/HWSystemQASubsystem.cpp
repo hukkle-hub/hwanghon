@@ -51,6 +51,7 @@
 #include "Animation/SkeletalMeshActor.h"
 #include "WorldPartition/DataLayer/DataLayerManager.h"
 #include "Game/HWStoryDirector.h"
+#include "Engine/PostProcessVolume.h"
 #include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -373,6 +374,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
     else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
     else if (Mode == TEXT("storyshow")) TickStoryShow(Dt);
+    else if (Mode == TEXT("styleshow")) TickStyleShow(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -2326,5 +2328,65 @@ void UHWSystemQASubsystem::TickCanonFight(AHWStoryDirector* D, float Dt)
         break;
     default:
         break;
+    }
+}
+
+// ---------------------------------------------------------------- style frames (-HWQA=styleshow, doc 139)
+// One camera (tag STYLE_CAM), the raw frame, then each look (PostProcessVolume tagged STYLE_<n>_<name>) alone.
+void UHWSystemQASubsystem::TickStyleShow(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    if (!World) return;
+    APlayerController* PC = GetPC();
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f || !PC) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        PC->ConsoleCommand(TEXT("DisableAllScreenMessages"));
+        for (TActorIterator<APostProcessVolume> It(World); It; ++It)
+        {
+            if (It->Tags.Num() > 0 && It->Tags[0].ToString().StartsWith(TEXT("STYLE_")) && It->Tags[0] != TEXT("STYLE_BASE"))
+            {
+                StyleVolumes.Add(*It);
+                It->bEnabled = false;
+            }
+        }
+        StyleVolumes.Sort([](const TWeakObjectPtr<APostProcessVolume>& A, const TWeakObjectPtr<APostProcessVolume>& B)
+        {
+            return A->Tags[0].LexicalLess(B->Tags[0]);
+        });
+        for (TActorIterator<ACameraActor> It(World); It; ++It)
+        {
+            if (It->Tags.Contains(TEXT("STYLE_CAM"))) PC->SetViewTargetWithBlend(*It, 0.f);
+        }
+        for (TActorIterator<APawn> It(World); It; ++It) It->SetActorHiddenInGame(true);
+        Note(FString::Printf(TEXT("style show: %d looks"), StyleVolumes.Num()));
+        return;
+    }
+    ShowTime = World->GetTimeSeconds() - ShowStart;
+    const float Settle = 10.f, Per = 3.f;   // shaders compile on first use
+    if (ShowTime < Settle) return;
+    const int32 K = FMath::FloorToInt((ShowTime - Settle) / Per);
+    if (K > StyleVolumes.Num())
+    {
+        Finish(true, TEXT("style show done"));
+        return;
+    }
+    if (K != StyleShot)
+    {
+        StyleShot = K;
+        for (int32 I = 0; I < StyleVolumes.Num(); ++I)
+        {
+            if (StyleVolumes[I].IsValid()) StyleVolumes[I]->bEnabled = (I == K - 1);
+        }
+        StylePending = K == 0 ? FString(TEXT("STYLE_0_Raw")) : StyleVolumes[K - 1]->Tags[0].ToString();
+        StyleDelay = 1.8f;
+    }
+    if (StyleDelay > 0.f)
+    {
+        StyleDelay -= Dt;
+        if (StyleDelay <= 0.f) Shot(StylePending);
     }
 }
