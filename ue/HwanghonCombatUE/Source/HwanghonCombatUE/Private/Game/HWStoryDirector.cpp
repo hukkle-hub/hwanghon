@@ -266,8 +266,21 @@ void AHWStoryDirector::Tick(float DeltaSeconds)
                 UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)), true, TEXT("HWStoryStart=Battle"));
                 break;
             }
-            SetPlayerControl(false);
             if (Ain && Ain->GetLockOn()) Ain->GetLockOn()->ClearTarget();
+            if (Crystal && !bCrystalRecovered)
+            {
+                BeginRecover();
+                break;
+            }
+            SetPlayerControl(false);
+            StartSegment(ResultIndex != INDEX_NONE ? ResultIndex : BattleIndex + 1);
+        }
+        break;
+    case EHWStoryPhase::Recover:
+        if (bCrystalRecovered && PhaseElapsed >= 1.4f)
+        {
+            SetPlayerControl(false);
+            if (AHWStoryHUD* HUD = GetStoryHUD()) HUD->GetOverlay()->SetPrompt(FText::GetEmpty(), nullptr);
             StartSegment(ResultIndex != INDEX_NONE ? ResultIndex : BattleIndex + 1);
         }
         break;
@@ -627,6 +640,51 @@ void AHWStoryDirector::TickSever()
         SeverPost = nullptr;
         SeverRealStart = -1.0;
     }
+}
+
+void AHWStoryDirector::BeginRecover()
+{
+    Phase = EHWStoryPhase::Recover;
+    PhaseElapsed = 0.f;
+    SetPlayerControl(true);   // she walks to it
+    if (Ain)
+    {
+        Ain->OnLocalInteract.Remove(InteractHandle);
+        InteractHandle = Ain->OnLocalInteract.AddWeakLambda(this, [this]() { TryRecoverCrystal(); });
+    }
+    if (AHWStoryHUD* HUD = GetStoryHUD())
+    {
+        HUD->GetOverlay()->SetPrompt(NSLOCTEXT("HWStory", "TakeCrystal", "결정 — 낫 끝으로 건드려 받는다  [G]"),
+            [this]() { TryRecoverCrystal(); });
+    }
+    Emit(TEXT("recover"));
+}
+
+bool AHWStoryDirector::TryRecoverCrystal()
+{
+    if (Phase != EHWStoryPhase::Recover || bCrystalRecovered || !Crystal || !Ain) return false;
+    const float Distance = FVector::Dist2D(Ain->GetActorLocation(), Crystal->GetActorLocation());
+    if (Distance > CrystalReachCm)
+    {
+        if (AHWStoryHUD* HUD = GetStoryHUD())
+        {
+            if (UHWCombatHUDWidget* Combat = HUD->GetCombatWidget()) Combat->ShowCallout(TEXT("…닿지 않는다"));
+        }
+        Emit(TEXT("crystal_too_far"));
+        return false;
+    }
+    bCrystalRecovered = true;
+    PhaseElapsed = 0.f;
+    Crystal->Destroy();
+    Crystal = nullptr;
+    Ain->OnLocalInteract.Remove(InteractHandle);
+    if (AHWStoryHUD* HUD = GetStoryHUD())
+    {
+        HUD->GetOverlay()->SetPrompt(FText::GetEmpty(), nullptr);
+        if (UHWCombatHUDWidget* Combat = HUD->GetCombatWidget()) Combat->ShowCallout(TEXT("…아직 따뜻했다"));   // L565
+    }
+    Emit(TEXT("crystal_recovered"));
+    return true;
 }
 
 void AHWStoryDirector::HandleBossDied(AHWBossCharacter* DeadBoss)

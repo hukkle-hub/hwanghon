@@ -94,6 +94,7 @@ private:
     float CanonStageTime = 0.f;
     bool bCanonSpinShot = false;
     int32 SeverShots = 0;
+    int32 RecoverStage = 0;
     void TickCanonFight(class AHWStoryDirector* D, float Dt);
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()

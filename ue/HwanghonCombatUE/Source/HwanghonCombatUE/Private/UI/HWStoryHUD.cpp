@@ -2,6 +2,7 @@
 
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
+#include "Components/Button.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
@@ -46,6 +47,10 @@ void UHWStoryOverlayWidget::Build(UCanvasPanel* Root)
     SkipButton = SecondaryAction(NSLOCTEXT("HWStory", "Skip", "건너뛰기  ▶▶"), [this]() { if (OnSkip) OnSkip(); });
     Place(Root, SkipButton, FAnchors(1.f, 0.94f), FMargin(-X, 0.f, 0.f, 0.f), FVector2D(1.f, 0.5f), true);
 
+    PromptText = Text(WidgetTree, FText::GetEmpty(), EHWUITextToken::Body, EHWUIColorToken::TextPrimary, EHWUIWeight::Medium);
+    PromptButton = TapGhost(PromptText, [this]() { if (PromptTap) PromptTap(); }, FMargin(22.f, 12.f));
+    Place(Root, PromptButton, FAnchors(0.5f, 0.72f), FMargin(0), FVector2D(0.5f, 0.5f), true);
+
     EndTitle = Text(WidgetTree, FText::GetEmpty(), EHWUITextToken::PageTitle, EHWUIColorToken::TextPrimary, EHWUIWeight::Bold);
     Place(Root, EndTitle, FAnchors(0.5f, 0.5f), FMargin(0), FVector2D(0.5f, 0.5f), true);
 
@@ -72,7 +77,9 @@ void UHWStoryOverlayWidget::Apply()
     Caption->SetText(CaptionValue);
     Progress->SetText(ProgressValue);
     EndTitle->SetText(CaptionValue);
-    SetVisibility(Mode == EMode::Hidden ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
+    PromptText->SetText(PromptValue);
+    PromptButton->SetVisibility(PromptValue.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+    SetVisibility(Mode == EMode::Hidden && PromptValue.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::SelfHitTestInvisible);
 }
 
 void UHWStoryOverlayWidget::ShowCinema(const FText& InCaption)
@@ -108,6 +115,13 @@ void UHWStoryOverlayWidget::ShowEnd(const FText& Title)
 void UHWStoryOverlayWidget::HideAll()
 {
     Mode = EMode::Hidden;
+    Apply();
+}
+
+void UHWStoryOverlayWidget::SetPrompt(const FText& Value, TFunction<void()> OnTap)
+{
+    PromptValue = Value;
+    PromptTap = MoveTemp(OnTap);
     Apply();
 }
 

@@ -418,7 +418,7 @@ void AHWAinCharacter::RevivePressed()
 
 
 void AHWAinCharacter::ReviveReleased(){ if (NetworkBridge) NetworkBridge->EndRevive(); }
-void AHWAinCharacter::InteractPressed(){ if (NetworkBridge) NetworkBridge->SendInteract(); }
+void AHWAinCharacter::InteractPressed(){ if (NetworkBridge) NetworkBridge->SendInteract(); OnLocalInteract.Broadcast(); }
 void AHWAinCharacter::GuardPressed(){ if (NetworkBridge) NetworkBridge->SetGuard(true); }
 void AHWAinCharacter::GuardReleased(){ if (NetworkBridge) NetworkBridge->SetGuard(false); }
 void AHWAinCharacter::OpeningPressed(){ if (NetworkBridge) NetworkBridge->SendOpening(); }

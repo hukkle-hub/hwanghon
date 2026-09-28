@@ -14,6 +14,8 @@ class UHWCharacterKitComponent;
 class UHWCoopLifeComponent;
 class UHWNetworkCombatBridgeComponent;
 
+DECLARE_MULTICAST_DELEGATE(FHWLocalInteract);
+
 UCLASS()
 class HWANGHONCOMBATUE_API AHWAinCharacter : public ACharacter
 {
@@ -29,6 +31,9 @@ public:
 
     UFUNCTION(BlueprintPure)
     UHWCombatComponent* GetCombat() const { return Combat; }
+
+    // Interact pressed on this machine (story pickups such as the EP01 crystal). Online raids use the bridge.
+    FHWLocalInteract OnLocalInteract;
 
     UFUNCTION(BlueprintPure)
     UHWLockOnComponent* GetLockOn() const { return LockOn; }

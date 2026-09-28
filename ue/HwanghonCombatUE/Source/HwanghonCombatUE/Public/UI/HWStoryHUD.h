@@ -26,6 +26,8 @@ public:
     void ShowEnd(const FText& Title);
     void HideAll();
     void SetProgress(const FText& Value);
+    // A one-line action prompt above the bottom edge; tapping it runs OnTap. Empty text hides it.
+    void SetPrompt(const FText& Text, TFunction<void()> OnTap);
 
 protected:
     virtual void Build(UCanvasPanel* Root) override;
@@ -49,6 +51,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> Progress;
     UPROPERTY(Transient) TObjectPtr<UWidget> SkipButton;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> EndTitle;
+    UPROPERTY(Transient) TObjectPtr<UWidget> PromptButton;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> PromptText;
+    FText PromptValue;
+    TFunction<void()> PromptTap;
 };
 
 UCLASS()

@@ -2167,7 +2167,7 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     }
     AHWStoryDirector* D = StoryDirector.Get();
     const FHWStorySegment* Seg = D->GetCurrentSegment();
-    static const TCHAR* PhaseNames[] = { TEXT("idle"), TEXT("cine"), TEXT("handoff"), TEXT("battle"), TEXT("over"), TEXT("finished") };
+    static const TCHAR* PhaseNames[] = { TEXT("idle"), TEXT("cine"), TEXT("handoff"), TEXT("battle"), TEXT("over"), TEXT("finished"), TEXT("recover") };
     const EHWStoryPhase P = D->GetPhase();
     const FString Key = FString::Printf(TEXT("%02d_%s_%s"), D->GetSegmentIndex(), Seg ? *Seg->SceneId.ToString() : TEXT("-"), PhaseNames[(int32)P]);
     if (Key != StoryKey)
@@ -2245,6 +2245,41 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
             Note(FString::Printf(TEXT("sever slow: dilation %.2f crystal %s"), World->GetWorldSettings()->TimeDilation,
                 D->GetCrystal() ? *D->GetCrystal()->GetActorLocation().ToCompactString() : TEXT("none")));
             ++SeverShots;
+        }
+    }
+    // L565 crystal: from far it must refuse, from one scythe length it must take (doc 143).
+    if (P == EHWStoryPhase::Recover)
+    {
+        AHWAinCharacter* Ain = Cast<AHWAinCharacter>(GetPC() ? GetPC()->GetPawn() : nullptr);
+        AStaticMeshActor* Crystal = D->GetCrystal();
+        if (Ain && Crystal && StoryKeyTime >= 0.8f && RecoverStage == 0)
+        {
+            RecoverStage = 1;
+            const FVector C = Crystal->GetActorLocation();
+            Ain->SetActorLocation(FVector(C.X - 450.f, C.Y, Ain->GetActorLocation().Z));
+            const bool bFar = D->TryRecoverCrystal();
+            Note(FString::Printf(TEXT("recover from 450 cm: %s (must refuse)"), bFar ? TEXT("took") : TEXT("refused")));
+            if (bFar) { Finish(false, TEXT("crystal taken from 4.5 m")); return; }
+            Shot(TEXT("canon_5_recover_prompt"), true);
+        }
+        else if (Ain && Crystal && StoryKeyTime >= 1.6f && RecoverStage == 1)
+        {
+            RecoverStage = 2;
+            const FVector C = Crystal->GetActorLocation();
+            Ain->SetActorLocationAndRotation(FVector(C.X - 150.f, C.Y, Ain->GetActorLocation().Z), FRotator::ZeroRotator);
+            // the real input path: the Interact action (G) through the player controller
+            if (APlayerController* PC = GetPC())
+            {
+                PC->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::G, IE_Pressed, 1.f));
+                PC->InputKey(FInputKeyEventArgs::CreateSimulated(EKeys::G, IE_Released, 0.f));
+            }
+        }
+        else if (RecoverStage == 2 && StoryKeyTime >= 1.9f)   // input is processed on the next frame
+        {
+            Note(FString::Printf(TEXT("recover from 150 cm via G (Interact): crystal %s"), D->GetCrystal() ? TEXT("still there") : TEXT("taken")));
+            if (D->GetCrystal()) { Finish(false, TEXT("crystal not taken within reach")); return; }
+            RecoverStage = 3;
+            Shot(TEXT("canon_6_recovered"), true);
         }
     }
     // Boss mode has no animation after the fight either: the combat HUD result is the end.

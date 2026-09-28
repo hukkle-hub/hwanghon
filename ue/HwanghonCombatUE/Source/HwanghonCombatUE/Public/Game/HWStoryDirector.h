@@ -26,7 +26,8 @@ enum class EHWStoryPhase : uint8
     Handoff,     // the last cinema frame blends into the gameplay camera
     Battle,
     BattleOver,
-    Finished
+    Finished,
+    Recover      // after the fight: walk to the crystal and take it (L565) — story mode only
 };
 
 // One scene of the episode, in novel order (docs/story/_scenes/EPxx.json -> Content/Data/novel_game_master.json).
@@ -76,6 +77,12 @@ public:
     UFUNCTION(BlueprintCallable, Category="Hwanghon|Story")
     void SkipCurrent();
 
+    // L565: "아인이 낫 끝으로 툭 건드려 손바닥에 받았다" — within one scythe length of the crystal.
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Story")
+    bool TryRecoverCrystal();
+
+    static constexpr float CrystalReachCm = 200.f;
+
     UFUNCTION(BlueprintPure, Category="Hwanghon|Story")
     bool IsStoryMode() const { return bStoryMode; }
 
@@ -108,6 +115,7 @@ private:
     void EnterBattleControl();
     void FinishEpisode();
     void WriteEpisodeFlags();
+    void BeginRecover();
 
     enum class EArenaState : uint8 { PreBattle, Fight, After };
     void SetArenaState(EArenaState State);
@@ -141,6 +149,8 @@ private:
     UPROPERTY(Transient) TObjectPtr<class APostProcessVolume> SeverPost;
     UPROPERTY(Transient) TObjectPtr<class AStaticMeshActor> Crystal;
     double SeverRealStart = -1.0;
+    bool bCrystalRecovered = false;
+    FDelegateHandle InteractHandle;
 
     FText EpisodeTitle;
     int32 SegmentIndex = -1;
