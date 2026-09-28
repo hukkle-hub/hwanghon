@@ -3,6 +3,7 @@
 #include "Network/HWRaidHazardProxy.h"
 #include "Network/HWRaidExpeditionProxy.h"
 #include "Character/HWAinCharacter.h"
+#include "Animation/HWPlayerPresentationComponent.h"
 #include "Boss/HWBossCharacter.h"
 #include "Combat/HWCombatComponent.h"
 #include "System/HWBossPartTarget.h"
@@ -53,6 +54,14 @@ void AHWRaidWorldBridge::ReconcileLocal(const FHWRaidNetPlayer& P,float Dt)
     const FVector T=ServerToWorld(P.X,P.Y,LocalPlayer->GetActorLocation().Z),C=LocalPlayer->GetActorLocation();
     LocalPlayer->SetActorLocation(FVector::Dist2D(C,T)>LocalSnapDistanceCm?T:FMath::VInterpTo(C,T,Dt,9.f),false);
     LocalPlayer->SetSystemCharacterId(P.Character);
+    // Kit skills are server actions (no local combat action): show the clip the server started.
+    const bool bNewAction=!P.ActionClip.IsNone()&&(P.ActionClip!=LastLocalClip||P.ActionElapsed+0.02f<LastLocalElapsed);
+    LastLocalClip=P.ActionClip;LastLocalElapsed=P.ActionElapsed;
+    if(bNewAction&&LocalPlayer->GetPresentation())
+    {
+        const FString Clip=P.ActionClip.ToString();
+        if(Clip.StartsWith(TEXT("skill"))||Clip.StartsWith(TEXT("ult"))||Clip.StartsWith(TEXT("exec")))LocalPlayer->GetPresentation()->PlayServerClip(P.ActionClip);
+    }
     LocalPlayer->GetCombat()->ApplyAuthoritativeVitals(P.Hp,P.MaxHp,P.Stamina,P.bDead||P.DownTime>0.f);
 }
 void AHWRaidWorldBridge::ReconcileBoss(const FHWRaidNetBoss& B,FName RaidState,float Dt)
@@ -113,7 +122,7 @@ void AHWRaidWorldBridge::ReconcileRemote(float Dt)
     {
         if(P.Id.IsEmpty()||P.Id==LocalId)continue;Seen.Add(P.Id);AHWRaidRemoteAvatar* A=RemotePlayers.FindRef(P.Id);
         if(!IsValid(A)){A=GetWorld()->SpawnActor<AHWRaidRemoteAvatar>(AHWRaidRemoteAvatar::StaticClass(),ServerToWorld(P.X,P.Y),FRotator::ZeroRotator);if(A)RemotePlayers.Add(P.Id,A);}
-        if(A)A->ApplySnapshot(P.Id,P.Character,ServerToWorld(P.X,P.Y,A->GetActorLocation().Z),P.Aim,P.Hp,P.MaxHp,P.bDead,Dt);
+        if(A){A->ApplySnapshot(P.Id,P.Character,ServerToWorld(P.X,P.Y,A->GetActorLocation().Z),P.Aim,P.Hp,P.MaxHp,P.bDead,Dt);A->ApplyAction(P.ActionClip,P.ActionElapsed,P.ActionDuration,P.Hp<=0.f&&!P.bDead);}
     }
     TArray<FString> R;for(const auto& P:RemotePlayers)if(!Seen.Contains(P.Key)){if(IsValid(P.Value))P.Value->Destroy();R.Add(P.Key);}for(const FString& Id:R)RemotePlayers.Remove(Id);
 }

@@ -38,6 +38,8 @@ private:
     UPROPERTY(Transient) TMap<FName,TObjectPtr<class AHWRaidHazardProxy>> HazardProxies;
     UPROPERTY(Transient) TMap<FName,TObjectPtr<class AHWRaidExpeditionNodeProxy>> ExpeditionNodeProxies;
     UPROPERTY(Transient) TObjectPtr<class AHWRaidGateProxy> GateProxy;
+    FName LastLocalClip=NAME_None;
+    float LastLocalElapsed=0.f;
 
     FHWRaidNetSnapshot Latest;
     bool bHasSnapshot=false;

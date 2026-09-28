@@ -67,6 +67,9 @@ private:
     void TickLocal(float Dt);
     void LocalSummary(const struct FHWSystemDungeonDefinition& Def);
     void TickNet(float Dt);
+    void TickShowcase(float Dt);
+    void Shot(const FString& Name);
+    void MeasureBody(const FString& Label, AActor* Actor);
     void TickRaid(float Dt);
     void RaidExplore(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me);
     void RaidFight(const FHWRaidNetSnapshot& R, const FHWRaidNetPlayer& Me, float Dt);
@@ -177,6 +180,22 @@ private:
     TSet<FString> HazardPhasesSeen;
     TSet<FString> PartsBrokenNet;
     TMap<FString, float> HpAtDown;
+
+    // Showcase (-HWQA=showcase): body/motion review shots with RHI
+    TArray<TPair<float, TFunction<void()>>> ShowSteps;
+    TArray<TWeakObjectPtr<AActor>> ShowAvatars;
+    TWeakObjectPtr<AActor> ShowCamera;
+    float ShowTime = -1.f;
+    double ShowStart = 0.0;
+    float WalkFrom = -1.f;
+    TArray<FVector> WalkStart;
+    FString PendingShot;
+    float PendingShotTimer = 0.f;
+    float ShotEveryTimer = 0.f;
+    int32 SkillShots = 0;
+    int32 ShowStep = 0;
+    FString ShotDir;
+    TArray<TSharedPtr<FJsonValue>> BodySamples;
 
     // Grid (server level rows) for explore pathing
     int32 GridW = 0;

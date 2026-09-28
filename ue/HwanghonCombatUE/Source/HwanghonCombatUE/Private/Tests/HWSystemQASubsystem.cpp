@@ -39,6 +39,15 @@
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/HWPlayerPresentationComponent.h"
+#include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "UnrealClient.h"
+#include "Engine/DirectionalLight.h"
+#include "Components/LightComponent.h"
 
 namespace
 {
@@ -171,6 +180,7 @@ void UHWSystemQASubsystem::Flush()
     Report->SetArrayField(TEXT("timeline"), Timeline);
     Report->SetArrayField(TEXT("log"), Lines);
     Report->SetArrayField(TEXT("telegraphs"), TelegraphLog);
+    if (BodySamples.Num() > 0) Report->SetArrayField(TEXT("body"), BodySamples);
     TSharedPtr<FJsonObject> C = MakeShared<FJsonObject>();
     for (const TPair<FString, int32>& Pair : Counters) C->SetNumberField(Pair.Key, Pair.Value);
     Report->SetObjectField(TEXT("counters"), C);
@@ -349,6 +359,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("writev2")) TickWriteV2();
     else if (Mode == TEXT("local")) TickLocal(Dt);
     else if (Mode == TEXT("net")) TickNet(Dt);
+    else if (Mode == TEXT("showcase")) TickShowcase(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -516,6 +527,14 @@ void UHWSystemQASubsystem::TickLocal(float Dt)
 
     AHWDungeonDirector* Director = GM->GetEncounterDungeon();
     if (!Director) { Finish(false, TEXT("No dungeon director (launch with ?HWDungeon=<id>)")); return; }
+    if (ShotDir.IsEmpty()) ShotDir = Param(TEXT("HWQAShots="));
+    if (!PendingShot.IsEmpty() && (PendingShotTimer -= Dt) <= 0.f) { Shot(PendingShot); MeasureBody(PendingShot, Pawn); PendingShot.Reset(); }
+    const float ShotEvery = FCString::Atof(*Param(TEXT("HWQAShotEvery=")));
+    if (!ShotDir.IsEmpty() && ShotEvery > 0.f && (ShotEveryTimer += Dt) >= ShotEvery)
+    {
+        ShotEveryTimer = 0.f;
+        Shot(FString::Printf(TEXT("play_%03d_tick"), FMath::RoundToInt(Elapsed)));
+    }
     const FHWSystemDungeonDefinition Def = UHWSystemRulesLibrary::DungeonDefinition(LocalDungeonId.IsNone() ? FName(TEXT("d01")) : LocalDungeonId);
     const EHWSystemDungeonState State = Director->GetDungeonState();
     const int32 Room = Director->GetCurrentRoomIndex();
@@ -780,6 +799,12 @@ void UHWSystemQASubsystem::TickLocal(float Dt)
             else if (AHWBossPartTarget* PT = Cast<AHWBossPartTarget>(Target)) PendingHpBefore = PT->GetBoss() ? PT->GetBoss()->GetHealth() : 0.f;
             Tap(Actions[Slot]);
             ++SkillAttempts[Slot];
+            if (!ShotDir.IsEmpty() && SkillShots < 12)
+            {
+                ++SkillShots;
+                PendingShot = FString::Printf(TEXT("play_%03d_%s"), FMath::RoundToInt(Elapsed), *Actions[Slot].ToString());
+                PendingShotTimer = 0.3f;
+            }
             PendingSlot = Slot;
             PendingTimer = 0.f;
             SkillTimer = 0.6f;
@@ -1510,4 +1535,215 @@ void UHWSystemQASubsystem::RaidFight(const FHWRaidNetSnapshot& R, const FHWRaidN
     }
     Tap(TEXT("Attack"));
     ActionTimer = 0.12f;
+}
+
+// ---------------------------------------------------------------- showcase (motion review)
+
+void UHWSystemQASubsystem::Shot(const FString& Name)
+{
+    if (ShotDir.IsEmpty()) return;
+    FScreenshotRequest::RequestScreenshot(FPaths::Combine(ShotDir, Name + TEXT(".png")), false, false);
+    Note(TEXT("shot ") + Name);
+}
+
+void UHWSystemQASubsystem::MeasureBody(const FString& Label, AActor* Actor)
+{
+    ACharacter* Character = Cast<ACharacter>(Actor);
+    USkeletalMeshComponent* Mesh = Character ? Character->GetMesh() : nullptr;
+    if (!Mesh) return;
+    TSharedPtr<FJsonObject> O = MakeShared<FJsonObject>();
+    O->SetStringField(TEXT("label"), Label);
+    O->SetStringField(TEXT("actor"), Actor->GetName());
+    O->SetArrayField(TEXT("loc"), { Num(FMath::RoundToFloat(Actor->GetActorLocation().X)), Num(FMath::RoundToFloat(Actor->GetActorLocation().Y)) });
+    O->SetNumberField(TEXT("speed"), FMath::RoundToFloat(Actor->GetVelocity().Size2D()));
+    O->SetStringField(TEXT("mesh"), Mesh->GetSkeletalMeshAsset() ? Mesh->GetSkeletalMeshAsset()->GetName() : TEXT("-"));
+    UAnimInstance* Anim = Mesh->GetAnimInstance();
+    O->SetStringField(TEXT("anim"), Anim ? Anim->GetClass()->GetName() : TEXT("-"));
+    O->SetBoolField(TEXT("montage"), Anim && Anim->Montage_IsPlaying(nullptr));
+    O->SetBoolField(TEXT("upper_body"), Anim && Anim->IsSlotActive(TEXT("UpperBody")));
+    O->SetBoolField(TEXT("full_body"), Anim && Anim->IsSlotActive(TEXT("FullBody")));
+    // Bone positions in the actor frame (cm): what the body is actually doing.
+    const FTransform ActorT = Actor->GetActorTransform();
+    const TCHAR* Bones[] = { TEXT("pelvis"), TEXT("head"), TEXT("hand_r"), TEXT("weapon_r"), TEXT("hand_l"), TEXT("foot_l") };
+    for (const TCHAR* Bone : Bones)
+    {
+        if (Mesh->GetBoneIndex(Bone) == INDEX_NONE) continue;
+        const FVector L = ActorT.InverseTransformPosition(Mesh->GetBoneLocation(Bone));
+        TArray<TSharedPtr<FJsonValue>> V = { Num(FMath::RoundToFloat(L.X)), Num(FMath::RoundToFloat(L.Y)), Num(FMath::RoundToFloat(L.Z)) };
+        O->SetArrayField(Bone, V);
+    }
+    BodySamples.Add(MakeShared<FJsonValueObject>(O));
+}
+
+void UHWSystemQASubsystem::TickShowcase(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    AHWAinCharacter* Pawn = GetPawn();
+    if (!World || !Pawn)
+    {
+        if (Elapsed > 90.f) Finish(false, TEXT("No pawn for showcase"));
+        return;
+    }
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        RecordIdentity(Pawn, ExpectCharacter.IsNone() ? FName(TEXT("ain")) : ExpectCharacter, false);
+
+        // The boss would walk in and swing: park it out of shot for a body/motion review.
+        for (TActorIterator<AHWBossCharacter> It(World); It; ++It)
+        {
+            It->SetActorTickEnabled(false);
+            It->SetActorHiddenInGame(true);
+            It->SetActorLocation(FVector(4000.f, 4000.f, 200.f));
+        }
+        const FVector P = Pawn->GetActorLocation();
+        Pawn->SetActorRotation(FRotator::ZeroRotator);
+        if (APlayerController* PC = GetPC())
+        {
+            PC->SetControlRotation(FRotator::ZeroRotator);
+            Pawn->DisableInput(PC);
+        }
+
+        // The other characters as remote avatars (the path the online raid uses).
+        const FName Others[4] = { TEXT("ain"), TEXT("kain"), TEXT("ryu"), TEXT("sera") };
+        int32 Slot = 1;
+        for (const FName& Id : Others)
+        {
+            if (Id == Pawn->GetSystemCharacterId()) continue;
+            const FVector Where = P + FVector(0.f, 170.f * Slot++, 0.f);
+            if (AHWRaidRemoteAvatar* A = World->SpawnActor<AHWRaidRemoteAvatar>(AHWRaidRemoteAvatar::StaticClass(), Where, FRotator::ZeroRotator))
+            {
+                A->ApplySnapshot(Id.ToString(), Id, Where, 0.f, 1000.f, 1000.f, false, 0.016f);
+                ShowAvatars.Add(A);
+            }
+        }
+        // Key light from the camera side (front shots look along -X): faces lit, shoulders not blown out.
+        if (ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), P, FRotator(-28.f, 200.f, 0.f)))
+        {
+            Sun->GetLightComponent()->SetIntensity(2.2f);
+        }
+        ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), P, FRotator::ZeroRotator);
+        if (Cam)
+        {
+            Cam->GetCameraComponent()->SetFieldOfView(50.f);
+            Cam->GetCameraComponent()->bConstrainAspectRatio = false;
+            ShowCamera = Cam;
+            if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        }
+        auto Front = [this, P]()
+        {
+            if (AActor* C = ShowCamera.Get())
+            {
+                const FVector Center = P + FVector(0.f, 255.f, 0.f);
+                const FVector From = Center + FVector(900.f, 0.f, 60.f);
+                C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+            }
+        };
+        auto ShowOthers = [this](bool bShow) { for (auto& A : ShowAvatars) if (AActor* Av = A.Get()) Av->SetActorHiddenInGame(!bShow); };
+        auto Side = [this, P, ShowOthers]()
+        {
+            ShowOthers(false);   // the avatars stand behind the player from this side
+            if (AActor* C = ShowCamera.Get())
+            {
+                const FVector Center = P + FVector(40.f, 0.f, 0.f);
+                const FVector From = Center + FVector(0.f, -430.f, 30.f);
+                C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+            }
+        };
+        UHWPlayerPresentationComponent* Pres = Pawn->GetPresentation();
+        float T = 0.f;
+        auto At = [this](float When, TFunction<void()> Fn) { ShowSteps.Add(TPair<float, TFunction<void()>>(When, MoveTemp(Fn))); };
+        // Warm-up: the Countess AnimBP plays its LevelStart intro and shaders compile on first sight.
+        At(T += 0.2f, Front);
+        At(T += 4.0f, [this, Pawn]() {
+            Shot(TEXT("01_lineup_front"));
+            MeasureBody(TEXT("idle"), Pawn);
+            for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_idle"), A.Get()); });
+        At(T += 0.2f, Side);
+        At(T += 0.8f, [this, Pawn]() { Shot(TEXT("02_idle_side")); MeasureBody(TEXT("idle_side"), Pawn); });
+        const EHWAbilitySlot Slots[5] = { EHWAbilitySlot::Skill1, EHWAbilitySlot::Skill2, EHWAbilitySlot::Skill3, EHWAbilitySlot::Skill4, EHWAbilitySlot::Ultimate };
+        for (int32 I = 0; I < 5; ++I)
+        {
+            const EHWAbilitySlot S = Slots[I];
+            const FString Name = I < 4 ? FString::Printf(TEXT("skill%d"), I + 1) : FString(TEXT("ult"));
+            At(T += 0.8f, [this, Pres, S, Name]() {
+                const bool bOk = Pres && Pres->PlayAbility(S);
+                Note(FString::Printf(TEXT("play %s -> %d"), *Name, bOk ? 1 : 0)); });
+            TArray<float> Offsets;
+            if (I < 4) Offsets = { 0.15f, 0.40f, 0.75f };
+            else Offsets = { 0.45f, 1.1f, 1.8f, 2.6f };
+            for (int32 K = 0; K < Offsets.Num(); ++K)
+            {
+                const FString Tag = FString::Printf(TEXT("1%d_%s_%c_%03d"), I, *Name, TCHAR('a' + K), FMath::RoundToInt(Offsets[K] * 100.f));
+                At(T + Offsets[K], [this, Pawn, Tag]() { Shot(Tag); MeasureBody(Tag, Pawn); });
+            }
+            T += Offsets.Last() + 0.4f;
+        }
+        // Real input: Q -> kit -> OnAbilityActivated -> presentation (no direct call).
+        At(T += 1.0f, [this, Pawn]() {
+            if (APlayerController* PC = GetPC()) Pawn->EnableInput(PC);
+            if (Pawn->GetLockOn() && !Pawn->GetLockOn()->IsLocked()) Pawn->GetLockOn()->ToggleLockOn();
+            Tap(TEXT("Skill1")); });
+        At(T += 0.35f, [this, Pawn]() {
+            UHWPlayerPresentationComponent* P2 = Pawn->GetPresentation();
+            const float Cd = Pawn->GetCharacterKit()->GetSkill1Cooldown();
+            Gate(TEXT("key_skill_motion"), Cd > 0.f && P2 && P2->GetOneShotMontage() != nullptr,
+                FString::Printf(TEXT("Q -> skill1 cooldown %.2f, one-shot montage %s"), Cd,
+                    P2 && P2->GetOneShotMontage() ? TEXT("playing") : TEXT("none")));
+            Shot(TEXT("20_key_skill1"));
+            MeasureBody(TEXT("key_skill1"), Pawn); });
+        // Remote avatars follow server clips.
+        At(T += 1.2f, [Front, ShowOthers]() { ShowOthers(true); Front(); });
+        At(T += 0.1f, [this]() {
+            const FName Clips[3] = { TEXT("skill3"), TEXT("skill1"), TEXT("ult") };
+            const float Durs[3] = { 1.f, 0.9f, 3.f };
+            for (int32 I = 0; I < ShowAvatars.Num(); ++I)
+            {
+                if (AHWRaidRemoteAvatar* A = Cast<AHWRaidRemoteAvatar>(ShowAvatars[I].Get())) A->ApplyAction(Clips[I % 3], 0.f, Durs[I % 3], false);
+            } });
+        At(T += 0.35f, [this]() { Shot(TEXT("30_avatars_clips_a")); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_clip_a"), A.Get()); });
+        At(T += 0.45f, [this]() { Shot(TEXT("31_avatars_clips_b")); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_clip_b"), A.Get()); });
+        // Replicated movement -> AnimBP locomotion (velocity fed from snapshots).
+        At(T += 1.2f, [this]() { WalkFrom = ShowTime; });
+        At(T += 1.0f, [this]() { Shot(TEXT("32_avatars_moving")); for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_moving"), A.Get()); WalkFrom = -1.f; });
+        // Down: online hp 0 for the pawn, downed flag for avatars.
+        At(T += 1.5f, [this, Pawn, Side]() {
+            Side();
+            Pawn->GetCombat()->ApplyAuthoritativeVitals(0.f, Pawn->GetCombat()->GetMaxHealth(), 0.f, true);
+            for (auto& A : ShowAvatars) if (AHWRaidRemoteAvatar* R = Cast<AHWRaidRemoteAvatar>(A.Get())) R->ApplyAction(NAME_None, 0.f, 0.f, true); });
+        At(T += 0.7f, [this, Pawn]() { Shot(TEXT("40_downed_side")); MeasureBody(TEXT("downed_a"), Pawn); });
+        At(T += 0.2f, [Front, ShowOthers]() { ShowOthers(true); Front(); });
+        At(T += 1.0f, [this, Pawn]() {
+            Shot(TEXT("41_downed_b"));
+            MeasureBody(TEXT("downed_b"), Pawn);
+            for (auto& A : ShowAvatars) MeasureBody(TEXT("avatar_downed"), A.Get()); });
+        At(T += 0.8f, [this]() { Finish(true, TEXT("showcase done")); });
+        return;
+    }
+    const float PrevShow = ShowTime;
+    ShowTime = World->GetTimeSeconds() - ShowStart;   // world time: frames are slow while shaders compile
+    if (WalkFrom >= 0.f)
+    {
+        // Snapshots walking the avatars toward the camera at 350 cm/s (server-style position updates).
+        // Like the server: the snapshot position runs ahead at a fixed speed from where the walk began.
+        const float StepDt = FMath::Max(0.001f, ShowTime - PrevShow);
+        for (int32 I = 0; I < ShowAvatars.Num(); ++I)
+        {
+            if (AHWRaidRemoteAvatar* R = Cast<AHWRaidRemoteAvatar>(ShowAvatars[I].Get()))
+            {
+                if (WalkStart.Num() <= I) WalkStart.Add(R->GetActorLocation());
+                const FVector To = WalkStart[I] + FVector(350.f * (ShowTime - WalkFrom), 0.f, 0.f);
+                R->ApplySnapshot(R->GetPlayerId(), R->GetCharacterId(), To, 0.f, 1000.f, 1000.f, false, StepDt);
+            }
+        }
+    }
+    while (ShowStep < ShowSteps.Num() && ShowTime >= ShowSteps[ShowStep].Key)
+    {
+        ShowSteps[ShowStep].Value();
+        ++ShowStep;
+        if (bFinished) return;
+    }
 }

@@ -5,6 +5,7 @@
 #include "Animation/AnimSequenceBase.h"
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
+#include "System/HWCharacterKitComponent.h"
 #include "GameFramework/Character.h"
 
 UHWPlayerPresentationComponent::UHWPlayerPresentationComponent()
@@ -30,6 +31,72 @@ void UHWPlayerPresentationComponent::BeginPlay()
         Combat->OnActionStarted.AddDynamic(this, &UHWPlayerPresentationComponent::HandleActionStarted);
         Combat->OnActionEnded.AddDynamic(this, &UHWPlayerPresentationComponent::HandleActionEnded);
     }
+    if (UHWCharacterKitComponent* Kit = Character->FindComponentByClass<UHWCharacterKitComponent>())
+    {
+        Kit->OnAbilityActivated.AddDynamic(this, &UHWPlayerPresentationComponent::HandleAbilityActivated);
+    }
+}
+
+void UHWPlayerPresentationComponent::HandleAbilityActivated(FName CharacterId, EHWAbilitySlot Slot, float Multiplier)
+{
+    PlayAbility(Slot);
+}
+
+bool UHWPlayerPresentationComponent::PlayAbility(EHWAbilitySlot Slot)
+{
+    return AnimationSet && PlayOneShot(AnimationSet->GetAbilityBinding(Slot));
+}
+
+bool UHWPlayerPresentationComponent::PlayServerClip(FName Clip)
+{
+    return AnimationSet && PlayOneShot(AnimationSet->GetServerClipBinding(Clip));
+}
+
+bool UHWPlayerPresentationComponent::PlayOneShot(const FHWSequenceBinding* Binding)
+{
+    if (!AnimInstance || !Binding || !Binding->Sequence || (Combat && Combat->IsDead()))
+    {
+        return false;
+    }
+    // A kit ability is not a combat action: plain rate, on top of whatever the combat clock drives.
+    if (ActiveMontage && ActiveAction == EHWActionType::None)
+    {
+        StopActive(Binding->BlendIn);
+    }
+    OneShotMontage = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+        Binding->Sequence, Binding->SlotName, Binding->BlendIn, Binding->BlendOut, 1.f, 1, -1.f, 0.f);
+    return OneShotMontage != nullptr;
+}
+
+void UHWPlayerPresentationComponent::UpdateLifePose()
+{
+    const bool bDead = Combat && Combat->IsDead();
+    if (bDead == bWasDead || !AnimInstance)
+    {
+        bWasDead = bDead;
+        return;
+    }
+    bWasDead = bDead;
+    if (bDead && AnimationSet)
+    {
+        // Online hp 0 / co-op bleed-out is "downed" (revivable); a solo death uses the death clip.
+        const FHWSequenceBinding& Pose = AnimationSet->Downed.Sequence ? AnimationSet->Downed : AnimationSet->Death;
+        if (Pose.Sequence)
+        {
+            StateMontage = AnimInstance->PlaySlotAnimationAsDynamicMontage(
+                Pose.Sequence, Pose.SlotName, Pose.BlendIn, Pose.BlendOut, 1.f, Pose.bLoop ? 999 : 1, -1.f, 0.f);
+            if (StateMontage && !Pose.bLoop)
+            {
+                // Hold the last frame: the body stays on the ground until revived.
+                StateMontage->bEnableAutoBlendOut = false;
+            }
+        }
+    }
+    else if (!bDead && StateMontage)
+    {
+        AnimInstance->Montage_Stop(0.25f, StateMontage);
+        StateMontage = nullptr;
+    }
 }
 
 void UHWPlayerPresentationComponent::TickComponent(
@@ -38,6 +105,7 @@ void UHWPlayerPresentationComponent::TickComponent(
     FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    UpdateLifePose();
 
     if (Combat && Combat->IsDead())
     {

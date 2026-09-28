@@ -62,7 +62,17 @@ SOURCES = {
             ("Counter", COUNTESS + "/Animations/Primary_Attack_Fast_V1", 0.167),    # fast cut, 0.6 s ~ combat 0.56 s
         ],
         "extra": [("Jump", COUNTESS + "/Animations/Jump_Start"), ("Hit", COUNTESS + "/Animations/Hitreact_Fwd"),
-                  ("Stagger", COUNTESS + "/Animations/Knock_Bwd")],
+                  ("Stagger", COUNTESS + "/Animations/Knock_Bwd"),
+                  # SYSTEM CORE kit / life (doc 128 §2: chosen from stick-figure sheets and measured):
+                  # Skill1 lunge strike, Skill2 dash thrust (dodge-type skills), Skill3 spinning slash
+                  # (shoulder line turns 296 deg; Ability_RMB spins 720 deg but is already Smash),
+                  # Skill4 cast (buffs), Ultimate leap-flip-slam 3.17 s.
+                  ("Skill1", COUNTESS + "/Animations/Ability_Q"), ("Skill2", COUNTESS + "/Animations/Ability_E"),
+                  ("Skill3", COUNTESS + "/Animations/Primary_Attack_B_Slow"), ("Skill4", COUNTESS + "/Animations/Cast"),
+                  ("Ultimate", COUNTESS + "/Animations/Ability_Ultimate"),
+                  # The pack has no lying-down clip: Death floats up (pelvis 113 -> 179 cm) and Knock_* are
+                  # airborne (feet 30-60 cm up). Stun keeps the feet on the floor, bent double (head 115 cm).
+                  ("Downed", COUNTESS + "/Animations/Stun_Loop", True), ("Death", COUNTESS + "/Animations/Stun_Start")],
     },
 }
 
@@ -197,10 +207,12 @@ def build_animation_set(source: str):
         bindings[key] = binding(seq, norm, slot)
         report.append(f"{key}: {src.rsplit('/', 1)[-1]} len={length:.3f}s contact={contact:.4f}s norm={norm:.3f}")
 
-    for key, path in spec["extra"]:
+    for entry in spec["extra"]:
+        key, path, loop = (entry + (False,))[:3]
         seq = unreal.load_asset(path)
         if seq:
             bindings[key] = binding(seq, 0.5, slot)
+            bindings[key].set_editor_property("loop", loop)   # bLoop
 
     da_path = f"{OUT}/DA_Ain_Graybox"
     if unreal.EditorAssetLibrary.does_asset_exist(da_path):
@@ -230,25 +242,14 @@ def configure_level(anim_set, source: str):
     gm = unreal.load_class(None, "/Script/HwanghonCombatUE.HWCombatGameMode")
     ws.set_editor_property("default_game_mode", gm)
 
+    # No placed player pawn: an auto-possessed Ain here overrode the character selection (SYSTEM CORE).
+    # The GameMode spawns the selected class; it wears its body and this motion set from
+    # UHWCharacterVisualSettings in Config/DefaultGame.ini (doc 128).
     ain_cls = unreal.load_class(None, "/Script/HwanghonCombatUE.HWAinCharacter")
     for a in eas.get_all_level_actors():
-        if a.get_class() == ain_cls:
+        if unreal.MathLibrary.class_is_child_of(a.get_class(), ain_cls):
             eas.destroy_actor(a)
-
-    ain = eas.spawn_actor_from_class(ain_cls, unreal.Vector(-450.0, 0.0, 96.0), unreal.Rotator(0.0, 0.0, 0.0))
-    ain.set_actor_label("Ain_Graybox")
-    ain.set_editor_property("auto_possess_player", unreal.AutoReceiveInput.PLAYER0)
-
-    mesh = ain.get_editor_property("mesh")
-    mesh.set_skeletal_mesh_asset(unreal.load_asset(spec["mesh"]))
-    body_abp = unreal.load_asset(spec["abp"])
-    mesh.set_editor_property("animation_mode", unreal.AnimationMode.ANIMATION_BLUEPRINT)
-    mesh.set_editor_property("anim_class", body_abp.generated_class())
     abp = unreal.load_asset(MANNY + "/Anims/Unarmed/ABP_Unarmed")   # boss stand-in
-    mesh.set_editor_property("relative_location", unreal.Vector(0.0, 0.0, -92.0))
-    mesh.set_editor_property("relative_rotation", unreal.Rotator(roll=0.0, pitch=0.0, yaw=-90.0))
-
-    ain.get_presentation().set_editor_property("animation_set", anim_set)
 
     # The C++ boss is a bare capsule (no visible mesh). Give the placed boss a
     # stand-in body so captures show where it is and which way it faces.
@@ -275,7 +276,7 @@ def configure_level(anim_set, source: str):
     cam.root_component.set_mobility(unreal.ComponentMobility.MOVABLE)
 
     les.save_current_level()
-    log(f"level saved: GameMode={gm.get_name()} pawn={ain.get_actor_label()}")
+    log(f"level saved: GameMode={gm.get_name()} (player pawn spawned by class)")
 
 
 def main():

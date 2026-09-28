@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
 #include "Combat/HWCombatTypes.h"
+#include "System/HWSystemTypes.h"
 #include "HWAnimationSetAsset.generated.h"
 
 class UAnimSequenceBase;
@@ -86,6 +87,30 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Ain")
     FHWSequenceBinding Stagger;
 
+    // SYSTEM CORE kit (one-shots, not on the combat clock). Online they follow the server clip
+    // (skill1..4 / ult); offline they follow UHWCharacterKitComponent::OnAbilityActivated.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Kit")
+    FHWSequenceBinding Skill1;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Kit")
+    FHWSequenceBinding Skill2;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Kit")
+    FHWSequenceBinding Skill3;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Kit")
+    FHWSequenceBinding Skill4;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Kit")
+    FHWSequenceBinding Ultimate;
+
+    // Down (co-op bleed-out, online hp 0) and final death.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Life")
+    FHWSequenceBinding Downed;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Life")
+    FHWSequenceBinding Death;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss")
     TMap<FName, FHWBossPatternAnimationBinding> BossPatterns;
 
@@ -108,6 +133,9 @@ public:
     FHWSequenceBinding BossBreakReaction;
 
     const FHWSequenceBinding* GetPlayerBinding(EHWActionType Action) const;
+    const FHWSequenceBinding* GetAbilityBinding(EHWAbilitySlot Slot) const;
+    /** Server raid clip name (attack/smash/counter/skill1..4/ult/exec/dodge/jump) -> binding. */
+    const FHWSequenceBinding* GetServerClipBinding(FName Clip, int32 ComboIndex = 0) const;
     const FHWBossPatternAnimationBinding* GetBossPatternBinding(FName PatternId) const;
     const FHWSequenceBinding* GetBossReactionBinding(EHWAttackTier Tier) const;
 };

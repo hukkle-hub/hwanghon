@@ -1,4 +1,7 @@
 #include "Boss/HWBossCharacter.h"
+#include "Animation/HWCharacterVisualSettings.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Character/HWAinCharacter.h"
 #include "Animation/HWBossPresentationComponent.h"
 #include "Combat/HWCombatComponent.h"
@@ -27,6 +30,11 @@ AHWBossCharacter::AHWBossCharacter()
 
 void AHWBossCharacter::BeginPlay()
 {
+    // Spawned from code (dungeon director, online raid): wear the configured stand-in body.
+    if (GetMesh() && !GetMesh()->GetSkeletalMeshAsset())
+    {
+        UHWCharacterVisualSettings::ApplyTo(TEXT("boss"), GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+    }
     Super::BeginPlay();
 
     RuntimeTuning = NewObject<UHWCombatTuningAsset>(this, TEXT("BossRuntimeTuning"));

@@ -4,6 +4,7 @@
 #include "Components/ActorComponent.h"
 #include "Combat/HWCombatTypes.h"
 #include "Animation/HWAnimationSetAsset.h"
+#include "System/HWSystemTypes.h"
 #include "HWPlayerPresentationComponent.generated.h"
 
 class UAnimInstance;
@@ -42,7 +43,27 @@ public:
     UFUNCTION(BlueprintPure)
     float GetActiveSourceNormalized() const;
 
+    /** Kit ability one-shot (skill 1-4 / ultimate). Presentation only. */
+    UFUNCTION(BlueprintCallable)
+    bool PlayAbility(EHWAbilitySlot Slot);
+
+    /** Online: the raid server started this clip for us (skill1..4, ult, exec). */
+    UFUNCTION(BlueprintCallable)
+    bool PlayServerClip(FName Clip);
+
+    UFUNCTION(BlueprintPure)
+    UAnimMontage* GetOneShotMontage() const { return OneShotMontage; }
+
+    UFUNCTION(BlueprintPure)
+    UAnimMontage* GetStateMontage() const { return StateMontage; }
+
 private:
+    UFUNCTION()
+    void HandleAbilityActivated(FName CharacterId, EHWAbilitySlot Slot, float Multiplier);
+
+    bool PlayOneShot(const FHWSequenceBinding* Binding);
+    void UpdateLifePose();
+
     UFUNCTION()
     void HandleActionStarted(EHWActionType Action);
 
@@ -67,6 +88,15 @@ private:
 
     UPROPERTY(Transient)
     TObjectPtr<UAnimMontage> ActiveMontage;
+
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimMontage> OneShotMontage;
+
+    // Downed / death loop; not touched by the combat-action path (which stops ActiveMontage on death).
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimMontage> StateMontage;
+
+    bool bWasDead = false;
 
     FHWSequenceBinding ActiveBinding;
     EHWActionType ActiveAction = EHWActionType::None;

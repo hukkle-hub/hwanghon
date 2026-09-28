@@ -1,4 +1,6 @@
 #include "System/HWDungeonEnemy.h"
+#include "Animation/HWCharacterVisualSettings.h"
+#include "Components/SkeletalMeshComponent.h"
 
 #include "System/HWCoopCombatSubsystem.h"
 #include "System/HWDungeonDirector.h"
@@ -22,6 +24,10 @@ AHWDungeonEnemy::AHWDungeonEnemy()
 
 void AHWDungeonEnemy::BeginPlay()
 {
+    if (GetMesh() && !GetMesh()->GetSkeletalMeshAsset())
+    {
+        UHWCharacterVisualSettings::ApplyTo(TEXT("enemy"), GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+    }
     Super::BeginPlay();
     UpdateTarget();
 }

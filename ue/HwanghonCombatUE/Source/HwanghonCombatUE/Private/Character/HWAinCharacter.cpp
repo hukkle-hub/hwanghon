@@ -2,6 +2,9 @@
 #include "Combat/HWCombatComponent.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Animation/HWPlayerPresentationComponent.h"
+#include "Animation/HWCharacterVisualSettings.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "System/HWCombatTargetInterface.h"
 #include "Network/HWNetworkCombatBridgeComponent.h"
 #include "System/HWCoopCombatSubsystem.h"
@@ -58,6 +61,17 @@ AHWAinCharacter::AHWAinCharacter()
 
 void AHWAinCharacter::BeginPlay()
 {
+    // A pawn spawned from code (GameMode sortie, online raid) has no body yet: wear the configured
+    // one before the components (presentation reads the anim instance) begin play.
+    if (GetMesh() && !GetMesh()->GetSkeletalMeshAsset())
+    {
+        UHWAnimationSetAsset* Set = UHWCharacterVisualSettings::ApplyTo(
+            SystemCharacterId, GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+        if (Set && Presentation && !Presentation->AnimationSet)
+        {
+            Presentation->AnimationSet = Set;
+        }
+    }
     Super::BeginPlay();
 
     Combat->OnActionStarted.AddDynamic(this, &AHWAinCharacter::HandleActionStarted);
