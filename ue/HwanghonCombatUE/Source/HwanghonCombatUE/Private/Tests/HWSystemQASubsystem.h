@@ -71,6 +71,12 @@ private:
     void TickShowcase(float Dt);
     void TickBossShow(float Dt);
     void TickClipReview(float Dt);
+    void TickArenaShow(float Dt);
+    TArray<TWeakObjectPtr<class ACameraActor>> ArenaCameras;
+    int32 ArenaState = -1;
+    int32 ArenaShot = -1;
+    float ArenaShotDelay = 0.f;
+    FString ArenaPendingTag;
     TArray<TWeakObjectPtr<AActor>> ReviewActors;
     UPROPERTY()
     TArray<TObjectPtr<class UAnimSequenceBase>> ReviewClips;

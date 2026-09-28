@@ -42,12 +42,15 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/HWPlayerPresentationComponent.h"
 #include "Camera/CameraActor.h"
+#include "Engine/StaticMeshActor.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/HWBossPresentationComponent.h"
 #include "Animation/HWAnimationSetAsset.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/SkeletalMeshActor.h"
+#include "WorldPartition/DataLayer/DataLayerManager.h"
+#include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UnrealClient.h"
@@ -367,6 +370,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("showcase")) TickShowcase(Dt);
     else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
     else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
+    else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -2041,5 +2045,96 @@ void UHWSystemQASubsystem::TickClipReview(float Dt)
                 MeasureBody(FString::Printf(TEXT("%s %s"), *Tag, *ReviewClips[I]->GetName()), A);
             }
         }
+    }
+}
+
+// ---------------------------------------------------------------- arena show (-HWQA=arenashow, doc 136)
+// Story boss arena review: for each phase state the runtime Data Layers are switched (same world the game and
+// the cinematics use), then every placed CineCamera (tagged CAM_*) and a roof-off overview are shot.
+void UHWSystemQASubsystem::TickArenaShow(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    if (!World) return;
+    UDataLayerManager* Layers = UDataLayerManager::GetDataLayerManager(World);
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        for (TActorIterator<ACameraActor> It(World); It; ++It)
+        {
+            for (const FName& Tag : It->Tags)
+            {
+                if (Tag.ToString().StartsWith(TEXT("CAM_"))) ArenaCameras.Add(*It);
+            }
+        }
+        ArenaCameras.Sort([](const TWeakObjectPtr<ACameraActor>& A, const TWeakObjectPtr<ACameraActor>& B)
+        {
+            return A->Tags[0].LexicalLess(B->Tags[0]);
+        });
+        if (ACameraActor* Top = World->SpawnActor<ACameraActor>(FVector(0.f, 150.f, 2300.f), FRotator(-90.f, 0.f, 0.f)))
+        {
+            Top->Tags.Add(TEXT("TOP_Overview"));
+            Top->GetCameraComponent()->SetFieldOfView(60.f);
+            Top->GetCameraComponent()->bConstrainAspectRatio = false;
+            ArenaCameras.Insert(Top, 0);
+        }
+        for (TActorIterator<APawn> It(World); It; ++It) It->SetActorHiddenInGame(true);   // default pawn sphere too
+        Note(FString::Printf(TEXT("arena show: %d cameras, data layers %s"), ArenaCameras.Num(), Layers ? TEXT("yes") : TEXT("none")));
+        return;
+    }
+    ShowTime = World->GetTimeSeconds() - ShowStart;
+    // Phase states from the spec: PreBattle -> Phase1 (after the blast) -> Aftermath.
+    static const TCHAR* StateNames[] = { TEXT("0_prebattle"), TEXT("1_phase1"), TEXT("2_aftermath") };
+    static const TCHAR* StateLayer[] = { TEXT("DL_Story_PreBattle"), TEXT("DL_Phase1"), TEXT("DL_Aftermath") };
+    constexpr int32 NumStates = 3;
+    const float PerShot = 0.5f, Settle = 2.5f;
+    const float PerState = Settle + PerShot * ArenaCameras.Num();
+    const int32 S = FMath::FloorToInt((ShowTime - 3.f) / PerState);
+    if (ShowTime < 3.f) return;   // shaders
+    if (S >= NumStates)
+    {
+        Finish(true, TEXT("arena show done"));
+        return;
+    }
+    if (ArenaState != S)
+    {
+        ArenaState = S;
+        ArenaShot = -1;
+        if (Layers)
+        {
+            Layers->ForEachDataLayerInstance([&](UDataLayerInstance* I)
+            {
+                const FString Name = I->GetDataLayerShortName();
+                const bool bOn = Name == TEXT("DL_Arena_Base") || Name == TEXT("DL_Cinematic") || Name == StateLayer[S];
+                Layers->SetDataLayerInstanceRuntimeState(I, bOn ? EDataLayerRuntimeState::Activated : EDataLayerRuntimeState::Unloaded);
+                return true;
+            });
+        }
+        // Roof off for the overview only while it is the current shot (see below).
+        Note(FString(TEXT("arena state ")) + StateNames[S]);
+    }
+    const float Into = ShowTime - 3.f - S * PerState - Settle;
+    const int32 K = Into < 0.f ? -1 : FMath::FloorToInt(Into / PerShot);
+    if (K >= 0 && K < ArenaCameras.Num() && K != ArenaShot)
+    {
+        ArenaShot = K;
+        ACameraActor* Cam = ArenaCameras[K].Get();
+        if (!Cam) return;
+        const bool bTop = Cam->Tags.Contains(TEXT("TOP_Overview"));
+        for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+        {
+            const FString Label = It->GetActorNameOrLabel();
+            if (Label.Contains(TEXT("Ceiling")) || Label.Contains(TEXT("Tube"))) It->SetActorHiddenInGame(bTop);
+        }
+        if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        ArenaPendingTag = FString::Printf(TEXT("%s__%s"), StateNames[S], *Cam->Tags[0].ToString());
+        ArenaShotDelay = 0.2f;   // one frame at the new view before capturing
+    }
+    if (ArenaShotDelay > 0.f)
+    {
+        ArenaShotDelay -= Dt;
+        if (ArenaShotDelay <= 0.f) Shot(ArenaPendingTag);
     }
 }
