@@ -74,6 +74,7 @@ namespace
 
             Boss->DispatchBeginPlay();
             Player->DispatchBeginPlay();
+            Player->GetCombat()->UseNeutralCharacterModifiers();
             Observer->Boss = Boss;
             Boss->OnBossDied.AddDynamic(Observer.Get(), &UHWBossLifecycleTestObserver::HandleDeath);
             Boss->OnBossStateChanged.AddDynamic(Observer.Get(), &UHWBossLifecycleTestObserver::HandleState);

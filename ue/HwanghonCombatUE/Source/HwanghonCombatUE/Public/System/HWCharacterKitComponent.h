@@ -18,6 +18,17 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
     EHWAbilitySlot, Slot,
     float, Multiplier);
 
+
+struct FHWPendingAbilityHit
+{
+    float AtSeconds = 0.f;
+    float DamageMultiplier = 1.f;
+    EHWAttackTier Tier = EHWAttackTier::Finisher;
+    bool bAoe = false;
+    float PartDamageMultiplier = 1.f;
+    float ExtraPosture = 0.f;
+};
+
 UCLASS(ClassGroup=(Hwanghon), meta=(BlueprintSpawnableComponent))
 class HWANGHONCOMBATUE_API UHWCharacterKitComponent : public UActorComponent
 {
@@ -85,6 +96,21 @@ private:
     void HandleContact(EHWActionType Action, EHWAttackTier Tier, float Damage);
 
     bool Activate(EHWAbilitySlot Slot);
+    void QueueAbilityHits(
+        EHWAbilitySlot Slot,
+        const FHWCharacterSystemProfile& Profile,
+        float AbilityMultiplier,
+        EHWAttackTier DefaultTier);
+    void QueueHit(
+        float SourceAtSeconds,
+        float DamageMultiplier,
+        EHWAttackTier Tier,
+        bool bAoe = false,
+        float PartDamageMultiplier = 1.f,
+        float ExtraPosture = 0.f);
+    void TickPendingHits(float DeltaTime);
+    void ResolvePendingHit(const FHWPendingAbilityHit& Hit);
+    bool ApplyHitToTarget(AActor* Target, const FHWPendingAbilityHit& Hit);
     void GrantCombatGauge(EHWAttackTier Tier);
     float ResolveBaseDamage() const;
     void BroadcastGauge();
@@ -105,4 +131,6 @@ private:
     float Skill3CooldownRemaining = 0.f;
     float Skill4CooldownRemaining = 0.f;
     float UltimateCooldownRemaining = 0.f;
+    float PendingAbilityElapsed = 0.f;
+    TArray<FHWPendingAbilityHit> PendingHits;
 };

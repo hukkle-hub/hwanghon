@@ -75,7 +75,32 @@ public:
     void SetNetworkAuthoritative(bool bEnabled);
 
     UFUNCTION(BlueprintCallable)
-    void ApplyAuthoritativeSnapshot(float NewHealth, float NewMaxHealth, float NewPosture, FName StateName, bool bRaidClear);
+    void ApplyAuthoritativeSnapshot(
+        float NewHealth,
+        float NewMaxHealth,
+        float NewPosture,
+        FName StateName,
+        FName PatternId,
+        bool bPatternCounterable,
+        float StateProgress,
+        bool bRaidClear);
+
+    UFUNCTION(BlueprintPure)
+    float GetMaxHealth() const
+    {
+        return AuthoritativeMaxHealth;   // server value online, ConfigureSystemHealth locally
+    }
+
+    UFUNCTION(BlueprintPure)
+    float GetPosture() const { return AuthoritativePosture; }
+
+    UFUNCTION(BlueprintPure)
+    bool IsCurrentPatternCounterable() const
+    {
+        return bNetworkAuthoritative
+            ? bAuthoritativePatternCounterable
+            : CurrentPattern.bCounterable;
+    }
 
     virtual bool ReceiveSystemHit_Implementation(
         float Damage,
@@ -143,4 +168,8 @@ private:
     float HitStopRemaining = 0.f;
     float SystemBreakDuration = 1.45f;
     bool bNetworkAuthoritative = false;
+    float AuthoritativeMaxHealth = 280000.f;
+    float AuthoritativePosture = 0.f;
+    float AuthoritativeStateProgress = 0.f;
+    bool bAuthoritativePatternCounterable = false;
 };

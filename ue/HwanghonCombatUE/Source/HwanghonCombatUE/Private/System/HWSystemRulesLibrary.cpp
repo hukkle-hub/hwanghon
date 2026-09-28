@@ -8,6 +8,13 @@ FHWCharacterSystemProfile UHWSystemRulesLibrary::CharacterProfile(FName Characte
     if (CharacterId == TEXT("ain"))
     {
         P.Role = EHWSystemRole::Damage;
+        P.BaseHealth = 24450.f;
+        P.BaseAttack = 2980.f;
+        P.BaseDefense = 1780.f;
+        P.CritChancePercent = 18.2f;
+        P.CritDamagePercent = 142.6f;
+        P.AttackSpeedPercent = 112.5f;
+        P.MoveSpeedPercent = 105.f;
         P.Skill1Cooldown = 6.f;
         P.Skill2Cooldown = 8.f;
         P.Skill3Cooldown = 12.f;
@@ -27,6 +34,13 @@ FHWCharacterSystemProfile UHWSystemRulesLibrary::CharacterProfile(FName Characte
     else if (CharacterId == TEXT("kain"))
     {
         P.Role = EHWSystemRole::Bruiser;
+        P.BaseHealth = 38200.f;
+        P.BaseAttack = 3410.f;
+        P.BaseDefense = 2960.f;
+        P.CritChancePercent = 9.4f;
+        P.CritDamagePercent = 118.f;
+        P.AttackSpeedPercent = 96.f;
+        P.MoveSpeedPercent = 98.f;
         P.Skill1Cooldown = 7.f;
         P.Skill2Cooldown = 12.f;
         P.Skill3Cooldown = 13.f;
@@ -46,6 +60,13 @@ FHWCharacterSystemProfile UHWSystemRulesLibrary::CharacterProfile(FName Characte
     else if (CharacterId == TEXT("ryu"))
     {
         P.Role = EHWSystemRole::Breaker;
+        P.BaseHealth = 21800.f;
+        P.BaseAttack = 2640.f;
+        P.BaseDefense = 1520.f;
+        P.CritChancePercent = 22.6f;
+        P.CritDamagePercent = 151.f;
+        P.AttackSpeedPercent = 124.f;
+        P.MoveSpeedPercent = 112.f;
         P.Skill1Cooldown = 5.f;
         P.Skill2Cooldown = 7.f;
         P.Skill3Cooldown = 11.f;
@@ -65,6 +86,13 @@ FHWCharacterSystemProfile UHWSystemRulesLibrary::CharacterProfile(FName Characte
     else if (CharacterId == TEXT("sera"))
     {
         P.Role = EHWSystemRole::Support;
+        P.BaseHealth = 19600.f;
+        P.BaseAttack = 1480.f;
+        P.BaseDefense = 1610.f;
+        P.CritChancePercent = 6.f;
+        P.CritDamagePercent = 110.f;
+        P.AttackSpeedPercent = 100.f;
+        P.MoveSpeedPercent = 104.f;
         P.Skill1Cooldown = 6.f;
         P.Skill2Cooldown = 9.f;
         P.Skill3Cooldown = 12.f;

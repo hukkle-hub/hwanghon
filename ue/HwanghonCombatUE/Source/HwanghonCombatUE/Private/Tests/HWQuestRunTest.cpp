@@ -271,6 +271,7 @@ bool FHWGameModeQuestOutcomeTest::RunTest(const FString& Parameters)
         AHWCombatGameMode* Mode = F.World->SpawnActor<AHWCombatGameMode>();
         if (!TestNotNull(TEXT("Player"), Player) || !TestNotNull(TEXT("Boss"), Boss) || !TestNotNull(TEXT("GameMode"), Mode)) { return false; }
         Player->DispatchBeginPlay();
+        Player->GetCombat()->UseNeutralCharacterModifiers();
         Boss->DispatchBeginPlay();
         FHWQuestRunTestAccess::BindMode(*Mode, *F.Runs, Player, Boss);
         TStrongObjectPtr<UHWQuestRunTestObserver> Observer(NewObject<UHWQuestRunTestObserver>());

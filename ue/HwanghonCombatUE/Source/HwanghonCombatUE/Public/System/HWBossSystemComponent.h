@@ -43,6 +43,9 @@ public:
     UFUNCTION(BlueprintCallable)
     bool DamagePart(FName PartId, float Damage);
 
+    UFUNCTION(BlueprintCallable)
+    void AddExternalPosture(float Amount, FVector SourceLocation);
+
     UFUNCTION(BlueprintPure)
     int32 GetPhase() const { return Phase; }
 

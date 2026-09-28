@@ -70,7 +70,25 @@ void AHWRaidWorldBridge::ReconcileBoss(const FHWRaidNetBoss& B,FName RaidState,f
     const FVector T=ServerToWorld(B.X,B.Y,BossActor->GetActorLocation().Z),C=BossActor->GetActorLocation();
     BossActor->SetActorLocation(FVector::Dist2D(C,T)>450.f?T:FMath::VInterpTo(C,T,Dt,10.f),false);
     BossActor->SetActorRotation(FMath::RInterpTo(BossActor->GetActorRotation(),FRotator(0.f,FMath::RadiansToDegrees(B.Aim),0.f),Dt,12.f));
-    BossActor->ApplyAuthoritativeSnapshot(B.Hp,B.MaxHp,B.Posture,B.State,RaidState==TEXT("clear"));
+    float StateProgress = 0.f;
+    if (B.State == TEXT("telegraph"))
+    {
+        StateProgress = FMath::Clamp(B.TelegraphProgress, 0.f, 1.f);
+    }
+    else if (B.State == TEXT("recover") && B.RecoveryDuration > KINDA_SMALL_NUMBER)
+    {
+        StateProgress = FMath::Clamp(
+            1.f - B.RecoveryRemaining / B.RecoveryDuration, 0.f, 1.f);
+    }
+    else if (B.State == TEXT("link"))
+    {
+        StateProgress = 0.5f;
+    }
+
+    BossActor->ApplyAuthoritativeSnapshot(
+        B.Hp, B.MaxHp, B.Posture, B.State,
+        FName(*B.PatternName), B.bPatternCounterable, StateProgress,
+        RaidState == TEXT("clear"));
 
     TSet<FName> Seen;
     for(TActorIterator<AHWBossPartTarget> It(GetWorld());It;++It)

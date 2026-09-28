@@ -100,6 +100,27 @@ struct FHWCharacterSystemProfile
     EHWSystemRole Role = EHWSystemRole::Damage;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float BaseHealth = 24450.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float BaseAttack = 2980.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float BaseDefense = 1780.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float CritChancePercent = 18.2f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float CritDamagePercent = 142.6f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float AttackSpeedPercent = 112.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float MoveSpeedPercent = 105.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float MaxUniqueGauge = 100.f;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)

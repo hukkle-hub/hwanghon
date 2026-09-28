@@ -28,10 +28,21 @@ public:
     FName GetPartId() const { return PartId; }
 
     UFUNCTION(BlueprintPure)
+    class AHWBossCharacter* GetBossCharacter() const { return Boss; }
+
+    UFUNCTION(BlueprintPure)
     class AHWBossCharacter* GetBoss() const { return Boss; }
 
     UFUNCTION(BlueprintCallable)
     void SetAuthoritativeBroken(bool bInBroken);
+
+    UFUNCTION(BlueprintCallable)
+    bool ReceiveWeightedSystemHit(
+        float Damage,
+        EHWAttackTier Tier,
+        FVector SourceLocation,
+        AActor* InstigatorActor,
+        float PartDamageMultiplier);
 
     virtual bool ReceiveSystemHit_Implementation(
         float Damage,

@@ -285,7 +285,12 @@ void UHWRaidNetworkSubsystem::ParseRoomState()
         {
             Raid.Boss.X=(float)ReadNumber(B,TEXT("x"));Raid.Boss.Y=(float)ReadNumber(B,TEXT("y"));Raid.Boss.Aim=(float)ReadNumber(B,TEXT("aim"));
             Raid.Boss.Hp=(float)ReadNumber(B,TEXT("hp"));Raid.Boss.MaxHp=(float)ReadNumber(B,TEXT("maxHp"));Raid.Boss.Posture=(float)ReadNumber(B,TEXT("posture"));
-            Raid.Boss.State=Name(B,TEXT("state"));Raid.Boss.Windup=(float)ReadNumber(B,TEXT("windup"));Raid.Boss.bExecutable=ReadBool(B,TEXT("executable"));B->TryGetStringField(TEXT("name"),Raid.Boss.Name);
+            Raid.Boss.State=Name(B,TEXT("state"));
+            Raid.Boss.TelegraphProgress=(float)ReadNumber(B,TEXT("windup"));
+            Raid.Boss.RecoveryRemaining=(float)ReadNumber(B,TEXT("recovery"));
+            Raid.Boss.RecoveryDuration=(float)ReadNumber(B,TEXT("recoveryDur"));
+            Raid.Boss.LinkRemaining=(float)ReadNumber(B,TEXT("linkT"));
+            Raid.Boss.bExecutable=ReadBool(B,TEXT("executable"));B->TryGetStringField(TEXT("name"),Raid.Boss.Name);
             if(auto Ptn=Obj(B,TEXT("pattern"))){Ptn->TryGetStringField(TEXT("name"),Raid.Boss.PatternName);Raid.Boss.bPatternCounterable=ReadBool(Ptn,TEXT("counterable"));}
             if(auto Parts=Arr(B,TEXT("parts")))for(const auto& V:*Parts)
             {

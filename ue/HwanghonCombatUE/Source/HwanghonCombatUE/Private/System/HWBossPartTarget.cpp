@@ -42,12 +42,24 @@ bool AHWBossPartTarget::ReceiveSystemHit_Implementation(
     FVector SourceLocation,
     AActor* InstigatorActor)
 {
-    if (bBroken || !Boss || Boss->IsDead() || Damage <= 0.f)
-        return false;
+    return ReceiveWeightedSystemHit(
+        Damage, Tier, SourceLocation, InstigatorActor, 1.f);
+}
+
+bool AHWBossPartTarget::ReceiveWeightedSystemHit(
+    float Damage,
+    EHWAttackTier Tier,
+    FVector SourceLocation,
+    AActor* InstigatorActor,
+    float PartDamageMultiplier)
+{
+    if (bBroken || !Boss || Boss->IsDead() || Damage <= 0.f) return false;
 
     if (UHWBossSystemComponent* System = Boss->GetBossSystem())
     {
-        const bool bJustBroken = System->DamagePart(PartId, Damage);
+        const bool bJustBroken = System->DamagePart(
+            PartId,
+            Damage * FMath::Max(0.f, PartDamageMultiplier));
         if (bJustBroken)
         {
             bBroken = true;
@@ -56,11 +68,7 @@ bool AHWBossPartTarget::ReceiveSystemHit_Implementation(
         }
     }
 
-    Boss->ReceivePlayerHit(
-        Damage * DamageToBossScale,
-        Tier,
-        SourceLocation);
-
+    Boss->ReceivePlayerHit(Damage * DamageToBossScale, Tier, SourceLocation);
     return true;
 }
 

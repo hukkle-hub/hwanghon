@@ -105,7 +105,11 @@ struct FHWRaidNetBoss
     UPROPERTY(BlueprintReadOnly) FName State = NAME_None;
     UPROPERTY(BlueprintReadOnly) FString Name;
     UPROPERTY(BlueprintReadOnly) FString PatternName;
-    UPROPERTY(BlueprintReadOnly) float Windup = 0.f;
+    // `windup` from the server is normalized telegraph progress, not seconds.
+    UPROPERTY(BlueprintReadOnly) float TelegraphProgress = 0.f;
+    UPROPERTY(BlueprintReadOnly) float RecoveryRemaining = 0.f;
+    UPROPERTY(BlueprintReadOnly) float RecoveryDuration = 0.f;
+    UPROPERTY(BlueprintReadOnly) float LinkRemaining = 0.f;
     UPROPERTY(BlueprintReadOnly) bool bPatternCounterable = false;
     UPROPERTY(BlueprintReadOnly) bool bExecutable = false;
     UPROPERTY(BlueprintReadOnly) TArray<FHWRaidNetBossPart> Parts;

@@ -128,6 +128,13 @@ void UHWBossSystemComponent::NotifyHit(
     AddPosture(TierPosture(Tier), SourceLocation);
 }
 
+void UHWBossSystemComponent::AddExternalPosture(
+    float Amount,
+    FVector SourceLocation)
+{
+    AddPosture(FMath::Max(0.f, Amount), SourceLocation);
+}
+
 float UHWBossSystemComponent::TierPosture(EHWAttackTier Tier) const
 {
     switch (Tier)

@@ -14,7 +14,12 @@ void UHWCombatComponent::BeginPlay()
 {
     Super::BeginPlay();
 
-    if (!Tuning)
+    if (Tuning)
+    {
+        // Each pawn owns a runtime copy; per-character damage/HP edits must not leak.
+        Tuning = DuplicateObject<UHWCombatTuningAsset>(Tuning, this);
+    }
+    else
     {
         Tuning = NewObject<UHWCombatTuningAsset>(this, TEXT("RuntimeCombatTuning"));
     }
@@ -52,7 +57,12 @@ void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     const FHWActionSpec& Spec = Tuning->GetActionSpec(CurrentAction);
     const EHWActionType ActionAtFrameStart = CurrentAction;
 
-    ActionElapsed += DeltaTime;
+    const float ActionClockScale =
+        (IsAttackAction(CurrentAction)
+            || CurrentAction == EHWActionType::Smash
+            || CurrentAction == EHWActionType::Counter)
+        ? AttackSpeedMultiplier : 1.f;
+    ActionElapsed += DeltaTime * ActionClockScale;
 
     // Defensive actions can interrupt earlier than combo chaining.
     if (IsAttackAction(CurrentAction)
@@ -68,7 +78,8 @@ void UHWCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     if (!bContactFired && Spec.HitAt >= 0.f && ActionElapsed >= Spec.HitAt)
     {
         bContactFired = true;
-        OnContact.Broadcast(CurrentAction, Spec.Tier, Spec.Damage);
+        const float OutgoingDamage = ResolveOutgoingDamage(Spec.Damage);
+        OnContact.Broadcast(CurrentAction, Spec.Tier, OutgoingDamage);
         if (bDead)
         {
             return;
@@ -149,7 +160,13 @@ bool UHWCombatComponent::ApplyIncomingDamage(float Damage, EHWAttackTier Tier)
         return false;
     }
 
-    const float AppliedDamage = FMath::Max(0.f, Damage) * (1.f - FMath::Clamp(DamageReductionFraction, 0.f, 0.90f));
+    const float DefenseReduction = FMath::Min(
+        0.25f,
+        Defense / FMath::Max(1.f, Defense + 5000.f));
+    const float AppliedDamage =
+        FMath::Max(0.f, Damage)
+        * (1.f - DefenseReduction)
+        * (1.f - FMath::Clamp(DamageReductionFraction, 0.f, 0.90f));
     Health = FMath::Max(0.f, Health - AppliedDamage);
     const bool bLethal = Health <= 0.f;
     const EHWActionType Interrupted = CurrentAction;
@@ -289,6 +306,43 @@ bool UHWCombatComponent::RequestSystemDodge(float StaminaCost)
     bContactFired = true;
     OnActionStarted.Broadcast(CurrentAction);
     return true;
+}
+
+float UHWCombatComponent::ResolveOutgoingDamage(float BaseDamage)
+{
+    const bool bCritical =
+        bGuaranteedCritical
+        || FMath::FRand() < FMath::Clamp(CritChance, 0.f, 1.f);
+    bGuaranteedCritical = false;
+    return FMath::Max(0.f, BaseDamage)
+        * (bCritical ? CritDamageMultiplier : 1.f);
+}
+
+void UHWCombatComponent::ConfigureCharacterStats(
+    float NewMaxHealth,
+    float NewBaseAttack,
+    float NewDefense,
+    float NewCritChancePercent,
+    float NewCritDamagePercent,
+    float NewAttackSpeedPercent)
+{
+    if (!Tuning || bDead) return;
+
+    BaseAttack = FMath::Max(1.f, NewBaseAttack);
+    Defense = FMath::Max(0.f, NewDefense);
+    CritChance = FMath::Clamp(NewCritChancePercent / 100.f, 0.f, 1.f);
+    CritDamageMultiplier = FMath::Max(1.f, NewCritDamagePercent / 100.f);
+    AttackSpeedMultiplier =
+        FMath::Clamp(NewAttackSpeedPercent / 100.f, 0.70f, 1.40f);
+
+    Tuning->MaxHealth = FMath::Max(1.f, NewMaxHealth);
+    Health = Tuning->MaxHealth;
+
+    // Existing Ain graybox ratios, scaled from each character's sheet ATK.
+    Tuning->Attack1.Damage = BaseAttack * 0.386f;
+    Tuning->Attack2.Damage = BaseAttack * 0.419f;
+    Tuning->Attack3.Damage = BaseAttack * 0.537f;
+    Tuning->Smash.Damage = BaseAttack * 0.872f;
 }
 
 void UHWCombatComponent::ApplyHitStop(float Seconds)

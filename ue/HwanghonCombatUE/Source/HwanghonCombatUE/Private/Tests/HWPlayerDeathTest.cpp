@@ -57,6 +57,7 @@ namespace
             }
             Player->DispatchBeginPlay();
             Combat = Player->GetCombat();
+            Combat->UseNeutralCharacterModifiers();
             Observer->Combat = Combat;
             Combat->OnDied.AddDynamic(Observer.Get(), &UHWPlayerDeathTestObserver::HandleDeath);
             Combat->OnDamaged.AddDynamic(Observer.Get(), &UHWPlayerDeathTestObserver::HandleDamage);

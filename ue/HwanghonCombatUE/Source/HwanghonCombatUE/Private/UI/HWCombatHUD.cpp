@@ -63,7 +63,7 @@ void UHWCombatHUDWidget::BindActors()
         Boss = Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(this, AHWBossCharacter::StaticClass()));
         if (Boss.IsValid())
         {
-            BossMaxHealth = FMath::Max(1.f, Boss->GetHealth());
+            BossMaxHealth = FMath::Max(1.f, Boss->GetMaxHealth());
             Boss->OnBossReaction.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossReaction);
             Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossState);
         }
@@ -217,7 +217,8 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
 
     if (Boss.IsValid() && BossBar)
     {
-        BossBar->SetPercent(Boss->GetHealth() / FMath::Max(1.f, BossMaxHealth));
+        BossMaxHealth = FMath::Max(1.f, Boss->GetMaxHealth());
+        BossBar->SetPercent(Boss->GetHealth() / BossMaxHealth);
         const EHWBossState State = Boss->GetBossState();
         TellElapsed += InDeltaTime;
         if (BossTell)

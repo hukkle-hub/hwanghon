@@ -450,6 +450,11 @@ bool AHWBossCharacter::TryCountered(const FHWBossBeatSpec& Beat)
 
 float AHWBossCharacter::GetBossStateNormalized() const
 {
+    if (bNetworkAuthoritative)
+    {
+        return FMath::Clamp(AuthoritativeStateProgress, 0.f, 1.f);
+    }
+
     float Duration = 1.f;
 
     switch (State)
@@ -509,6 +514,8 @@ void AHWBossCharacter::ConfigureSystemHealth(float NewMaxHealth)
 {
     if (IsDead()) return;
     Health = FMath::Max(1.f, NewMaxHealth);
+    AuthoritativeMaxHealth = Health;   // local encounters scale the boss too; the HUD reads GetMaxHealth
+
 }
 
 void AHWBossCharacter::EnterSystemBreak(float Duration, FVector SourceLocation)
@@ -540,10 +547,25 @@ void AHWBossCharacter::SetNetworkAuthoritative(bool bEnabled)
     if (BossSystem) BossSystem->SetComponentTickEnabled(!bEnabled);
 }
 
-void AHWBossCharacter::ApplyAuthoritativeSnapshot(float NewHealth,float NewMaxHealth,float NewPosture,FName StateName,bool bRaidClear)
+void AHWBossCharacter::ApplyAuthoritativeSnapshot(
+    float NewHealth,
+    float NewMaxHealth,
+    float NewPosture,
+    FName StateName,
+    FName PatternId,
+    bool bPatternCounterable,
+    float StateProgress,
+    bool bRaidClear)
 {
-    bNetworkAuthoritative=true;
-    Health=FMath::Max(0.f,NewHealth);
+    bNetworkAuthoritative = true;
+    Health = FMath::Max(0.f, NewHealth);
+    AuthoritativeMaxHealth = FMath::Max(1.f, NewMaxHealth);
+    AuthoritativePosture = FMath::Max(0.f, NewPosture);
+    AuthoritativeStateProgress = FMath::Clamp(StateProgress, 0.f, 1.f);
+    bAuthoritativePatternCounterable = bPatternCounterable;
+    const FName PreviousPattern = CurrentPattern.Id;
+    CurrentPattern.Id = PatternId;
+    CurrentPattern.bCounterable = bPatternCounterable;
     EHWBossState NewState=State;
     if (bRaidClear || Health<=0.f) NewState=EHWBossState::Dead;
     else if (StateName==TEXT("idle")) NewState=EHWBossState::Idle;
@@ -552,7 +574,7 @@ void AHWBossCharacter::ApplyAuthoritativeSnapshot(float NewHealth,float NewMaxHe
     else if (StateName==TEXT("recover")) NewState=EHWBossState::Recover;
     else if (StateName==TEXT("stagger")) NewState=EHWBossState::Stagger;
     else if (StateName==TEXT("downed")) NewState=EHWBossState::Break;
-    if (NewState!=State)
+    if (NewState != State || PreviousPattern != PatternId)
     {
         State=NewState;StateElapsed=0.f;
         OnBossStateChanged.Broadcast(State,CurrentPattern.Id);

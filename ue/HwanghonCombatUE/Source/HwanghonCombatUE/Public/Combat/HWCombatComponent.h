@@ -82,6 +82,41 @@ public:
     UFUNCTION(BlueprintCallable)
     bool RequestSystemDodge(float StaminaCost);
 
+    UFUNCTION(BlueprintCallable)
+    void ConfigureCharacterStats(
+        float NewMaxHealth,
+        float NewBaseAttack,
+        float NewDefense,
+        float NewCritChancePercent,
+        float NewCritDamagePercent,
+        float NewAttackSpeedPercent);
+
+    UFUNCTION(BlueprintCallable)
+    void ArmGuaranteedCritical() { bGuaranteedCritical = true; }
+
+    // No DEF cut, crit or attack-speed clock; HP and tuning damage stay. Lifecycle tests measure raw
+    // tuning numbers (Health + 100 is lethal, contact at HitAt); the sheet has its own identity test.
+    void UseNeutralCharacterModifiers()
+    {
+        Defense = 0.f;
+        CritChance = 0.f;
+        CritDamageMultiplier = 1.f;
+        AttackSpeedMultiplier = 1.f;
+        bGuaranteedCritical = false;
+    }
+
+    UFUNCTION(BlueprintCallable)
+    float ResolveOutgoingDamage(float BaseDamage);
+
+    UFUNCTION(BlueprintPure)
+    float GetBaseAttack() const { return BaseAttack; }
+
+    UFUNCTION(BlueprintPure)
+    float GetDefense() const { return Defense; }
+
+    UFUNCTION(BlueprintPure)
+    float GetAttackSpeedMultiplier() const { return AttackSpeedMultiplier; }
+
     UFUNCTION(BlueprintPure)
     bool IsInvulnerable() const;
 
@@ -140,5 +175,13 @@ private:
     float StaminaRegenBlocked = 0.f;
     float DamageReductionRemaining = 0.f;
     float DamageReductionFraction = 0.f;
+    // Neutral until the character kit applies its sheet (ConfigureCharacterStats): tests, bots and
+    // unconfigured pawns keep the tuning numbers exactly (no DEF cut, no random crit).
+    float BaseAttack = 0.f;
+    float Defense = 0.f;
+    float CritChance = 0.f;
+    float CritDamageMultiplier = 1.f;
+    float AttackSpeedMultiplier = 1.f;
+    bool bGuaranteedCritical = false;
     bool bDead = false;
 };

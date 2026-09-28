@@ -1,0 +1,23 @@
+{
+  "name": "HWANGHON_SYSTEM_CORE_V2_4_DELTA",
+  "base_verified_sha": "c6f3f2d9445292723222ab2ba68efe62b635acd5",
+  "requires": "SYSTEM CORE v2.3 current main",
+  "contracts": [
+    "one player = one character",
+    "no combat character switching",
+    "server authoritative online combat",
+    "preserve current death/quest lifecycle"
+  ],
+  "files": [
+    "CLAUDE_APPLY_SYSTEM_CORE_V2_4_DELTA.md",
+    "README_SYSTEM_CORE_V2_4_DELTA_KR.md",
+    "tests/system-core-v2-4-delta.test.mjs",
+    "tests/system-core-v2-4-server.test.cjs",
+    "tools/ue/__pycache__/apply-system-core-v2-4.cpython-313.pyc",
+    "tools/ue/__pycache__/preflight-system-core-v2-4.cpython-313.pyc",
+    "tools/ue/apply-system-core-v2-4.py",
+    "tools/ue/integrate-system-core-v2-4.ps1",
+    "tools/ue/preflight-system-core-v2-4.py",
+    "ue/HwanghonCombatUE/Source/HwanghonCombatUE/Private/Tests/HWSystemCharacterIdentityTest.cpp"
+  ]
+}
