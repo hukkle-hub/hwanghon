@@ -3,6 +3,8 @@
 #include "Animation/HWAnimationSetAsset.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Character/HWAinCharacter.h"
 #include "Animation/HWBossPresentationComponent.h"
 #include "Combat/HWCombatComponent.h"
@@ -652,4 +654,32 @@ void AHWBossCharacter::ApplyAuthoritativeSnapshot(
         Tags.Remove(TEXT("LockOnTarget"));
         SetActorEnableCollision(false);
     }
+}
+
+void AHWBossCharacter::WearBody(FName VisualId)
+{
+    UHWAnimationSetAsset* Set = UHWCharacterVisualSettings::ApplyTo(VisualId, GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+    if (Set && Presentation)
+    {
+        Presentation->AnimationSet = Set;
+    }
+    const float Scale = GetActorScale3D().Z;
+    if (GetMesh() && Scale > KINDA_SMALL_NUMBER)
+    {
+        GetMesh()->SetRelativeScale3D(GetMesh()->GetRelativeScale3D() / Scale);
+    }
+}
+
+void AHWBossCharacter::WearStaticBody(UStaticMesh* Body)
+{
+    if (!Body) return;
+    UStaticMeshComponent* Rigid = NewObject<UStaticMeshComponent>(this, TEXT("StaticBody"));
+    Rigid->SetStaticMesh(Body);
+    Rigid->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Rigid->SetupAttachment(GetCapsuleComponent());
+    Rigid->RegisterComponent();
+    const float Scale = FMath::Max(KINDA_SMALL_NUMBER, GetActorScale3D().Z);
+    Rigid->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()), FRotator(0.f, -90.f, 0.f));
+    Rigid->SetRelativeScale3D(FVector(1.f / Scale));
+    if (GetMesh()) GetMesh()->SetVisibility(false, true);   // the stand-in skeleton keeps the clock, not the look
 }

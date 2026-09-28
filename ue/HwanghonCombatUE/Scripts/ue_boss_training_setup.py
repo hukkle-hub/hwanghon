@@ -18,6 +18,7 @@ import unreal
 OUT = "/Game/Animation/Boss"
 CLIPS = "/Game/Bosses/Training/boss_anim/SkeletalMeshes/boss_anim"
 lib = unreal.EditorAssetLibrary
+CLIPS_PREFIX = [CLIPS]   # build() points this at another body's clips (Part 1 bosses share the skeleton, doc 151)
 
 # clip -> contact 0..1 (web hitFrac; slam/kick/scythe/charge measured, see the docstring)
 HIT = {"atk_hookR": 0.54, "atk_hookL": 0.54, "atk_charge": 0.22, "atk_slam": 0.31, "atk_spin": 0.49,
@@ -44,7 +45,7 @@ def log(msg):
 
 
 def clip(name):
-    path = CLIPS + name
+    path = CLIPS_PREFIX[0] + name
     seq = unreal.load_asset(path)
     if not seq:
         raise RuntimeError(f"missing clip {path}")
@@ -89,11 +90,13 @@ def ground_offsets(names):
     return out
 
 
-def main():
+def build(clips_prefix=CLIPS, name="DA_Boss_Training"):
+    """Animation set for a body on the training boss skeleton: clips named <clips_prefix><clip>."""
+    CLIPS_PREFIX[0] = clips_prefix
     lib.make_directory(OUT)
-    path = f"{OUT}/DA_Boss_Training"
+    path = f"{OUT}/{name}"
     da = unreal.load_asset(path) if lib.does_asset_exist(path) else unreal.AssetToolsHelpers.get_asset_tools().create_asset(
-        "DA_Boss_Training", OUT, unreal.HWAnimationSetAsset, unreal.DataAssetFactory())
+        name, OUT, unreal.HWAnimationSetAsset, unreal.DataAssetFactory())
     patterns = {k: pattern(v) for k, v in LOCAL.items()}
     # FName keys are case-insensitive: online "spin"/"slam"/"charge" ARE the local Spin/Slam/Charge keys.
     # Keep the local multi-beat binding there (an online beat uses its first contact).
@@ -111,6 +114,8 @@ def main():
     da.set_editor_property("clip_ground_offset_cm", ground_offsets(used))
     lib.save_loaded_asset(da)
     log(f"wrote {path}: {len(patterns)} patterns")
+    return path
 
 
-main()
+if __name__ == "__main__":
+    build()

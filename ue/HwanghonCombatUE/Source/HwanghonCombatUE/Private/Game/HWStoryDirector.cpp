@@ -14,6 +14,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Dom/JsonObject.h"
 #include "Engine/PostProcessVolume.h"
+#include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "Game/HWStoryNpc.h"
@@ -192,6 +193,9 @@ bool AHWStoryDirector::LoadEpisodeConfig(TMap<FName, int32>& OutBattleByScene)
         if (O->TryGetBoolField(TEXT("spawn_boss"), bSpawn)) B.bSpawnBoss = bSpawn;
         B.Party = Names(O, TEXT("party"));
         O->TryGetStringField(TEXT("prefix"), B.Prefix);
+        FString BodyId, StaticPath;
+        if (O->TryGetStringField(TEXT("body"), BodyId)) B.Body = FName(*BodyId);
+        if (O->TryGetStringField(TEXT("body_static"), StaticPath)) B.StaticBody = FSoftObjectPath(StaticPath);
         FString Recover;
         if (O->TryGetStringField(TEXT("recover"), Recover)) B.Recover = FName(*Recover);
         double CScale = 0.035;
@@ -650,6 +654,14 @@ void AHWStoryDirector::BeginBattle(bool bFromCinema)
         if (Boss)
         {
             Boss->SetActorScale3D(FVector(B.BossScale));
+            if (!B.Body.IsNone())
+            {
+                Boss->WearBody(B.Body);
+            }
+            else if (UStaticMesh* Rigid = Cast<UStaticMesh>(B.StaticBody.TryLoad()))
+            {
+                Boss->WearStaticBody(Rigid);
+            }
             Boss->OnBossDied.AddUniqueDynamic(this, &AHWStoryDirector::HandleBossDied);
             Boss->SpawnDefaultController();   // the rules may walk it in
         }

@@ -65,6 +65,9 @@ struct FHWStoryBattle
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FText BossName;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) float BossScale = 1.f;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) bool bSpawnBoss = true;
+    // The novel's body (docs/design/151): a rigged visual id, or a static mesh path. None: the stand-in.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FName Body;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly) FSoftObjectPath StaticBody;
     // Who is in the fight besides Ain: kain / ryu / sera (AI companions) and story NPCs (ojeonggil ...).
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly) TArray<FName> Party;
     // Marker tags: <Prefix>BossSpawn, <Prefix>AinStart, <Prefix><Member>Start (EP01 has no prefix).

@@ -136,6 +136,12 @@ public:
     // Novel rules (UHWBossCanonRules on this boss) start their own pattern, e.g. the elbow that answers a deflect.
     void StartCanonPattern(const FHWBossPatternSpec& Pattern) { BeginPattern(Pattern); }
 
+    // Story fights wear the novel's body (docs/design/151). Bodies are authored at their true height, so the
+    // actor's fight scale (capsule, reach) is undone on the body. Rigged: a HWCharacterVisualSettings id sharing the
+    // training boss skeleton and clips. Rigid: a static mesh for bodies no human skeleton fits (spider, serpent, tower).
+    void WearBody(FName VisualId);
+    void WearStaticBody(class UStaticMesh* Body);
+
     UFUNCTION(BlueprintPure)
     EHWAttackTier GetLastReactionTier() const { return LastReactionTier; }
 
