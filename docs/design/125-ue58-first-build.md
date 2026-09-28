@@ -102,6 +102,8 @@
 
 ## 5. 애니메이션 — 임시 원본(Manny) · 몽타주 · 접점 노티파이
 
+> **갱신(같은 날): 원본을 Paragon: Countess 로 교체했다 → 문서 127.** 아래는 Manny 임시 원본 기록이다. `HW_ANIM_SOURCE=manny` 로 다시 만들 수 있다.
+
 Paragon 은 Fab 에서 받아 «프로젝트에 추가» 해야 한다. 이는 Epic 런처(데스크톱 앱) 로그인과 클릭이 필요한 일이라, 이 세션에서는 할 수 없었다.
 
 디렉터 결정으로 UE 5.8 에 들어 있는 ThirdPerson 템플릿 Manny 공격 클립으로 **통로를 먼저 완성**했다. 모든 에셋은 `Scripts/ue_graybox_anim_setup.py` 가 만든다(.uasset 은 커밋하지 않는다).

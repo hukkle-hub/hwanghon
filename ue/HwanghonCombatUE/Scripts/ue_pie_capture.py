@@ -157,6 +157,7 @@ def drive(world, t):
         "src_norm": round(pres.get_active_source_normalized(), 4),
         "src_seq": pres.get_active_sequence().get_name() if pres.get_active_sequence() else "",
         "counter_active": combat.is_counter_active(), "invuln": combat.is_invulnerable(),
+        "montage": anim_state(pawn),
     }
 
 
@@ -184,6 +185,15 @@ def side_camera(world, pl, bl, dist):
     loc = unreal.Vector(mid.x + px * back, mid.y + py * back, 170.0)
     look = unreal.Vector(mid.x, mid.y, 105.0)
     cam.set_actor_location_and_rotation(loc, unreal.MathLibrary.find_look_at_rotation(loc, look), False, True)
+
+
+def anim_state(pawn):
+    """Whether the body is actually playing the presentation montage (slot must be in the AnimBP output)."""
+    ai = pawn.get_editor_property("mesh").get_anim_instance()
+    if not ai:
+        return "no-anim-instance"
+    slots = [s for s in ("FullBody", "UpperBody", "DefaultSlot") if ai.is_slot_active(s)]
+    return ("playing:" + "+".join(slots)) if ai.montage_is_playing(None) else "-"
 
 
 def finish():
