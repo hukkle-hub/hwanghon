@@ -67,7 +67,34 @@ void UHWSystemQASubsystem::TickShelterTour(float Dt)
             TourTime = 0.f;
         }
         const int32 K = FlickerStep - 1;
-        if (K >= 2) { Finish(true, FString::Printf(TEXT("shelter tour done, %d shots + flicker pair"), TourSpots.Num())); return; }
+        if (K >= 2)
+        {
+            // then every NPC stand-in body from the front at 2.6 m (docs/design/161: mannequins until the character pipeline)
+            Flicker->QAHoldCycle = -1.f;
+            TArray<AActor*> Bodies;
+            for (TActorIterator<AActor> It(World); It; ++It) if (It->Tags.Contains(TEXT("HW_NPCBody"))) Bodies.Add(*It);
+            Bodies.Sort([](const AActor& A, const AActor& B) { return A.GetName() < B.GetName(); });
+            const int32 B = K - 2;
+            if (B >= Bodies.Num())
+            {
+                Finish(Bodies.Num() > 0, FString::Printf(TEXT("shelter tour done, %d shots + flicker pair + %d NPC bodies"), TourSpots.Num(), Bodies.Num()));
+                return;
+            }
+            AActor* Body = Bodies[B];
+            const FVector Fwd = FRotator(0.f, Body->GetActorRotation().Yaw + 90.f, 0.f).Vector();   // the mannequin's front is its +Y
+            const FVector Eye = Body->GetActorLocation() + Fwd * 260.f + FVector(0, 0, 150.f);
+            if (APlayerCameraManager* M = PC->PlayerCameraManager) if (AActor* V = M->GetViewTarget())
+                V->SetActorLocationAndRotation(Eye, (Body->GetActorLocation() + FVector(0, 0, 110.f) - Eye).Rotation());
+            if (TourTime > 1.5f)
+            {
+                FString Id;
+                for (const FName& T : Body->Tags) if (T.ToString().StartsWith(TEXT("NPC_"))) Id = T.ToString();
+                Shot(TEXT("npc_") + Id.RightChop(4), false);
+                ++FlickerStep;
+                TourTime = 0.f;
+            }
+            return;
+        }
         Flicker->QAHoldCycle = Holds[K];
         // steady: let the eye settle; dip: shoot at once - a real dip lasts a tenth of a second, the eye never adapts to it
         if (TourTime > (K == 0 ? 2.5f : 0.15f))

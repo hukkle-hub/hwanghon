@@ -218,6 +218,28 @@ NPC_STATION = {"Matteo": "PartyOffice", "Yujin": "RankAssessment", "HanJangin": 
                "Duho": "RequestBoard", "DrJin": "MedicalBay", "Suhui": "RationKitchen"}
 
 
+# stand-in bodies until the character pipeline is decided (director 2026-09-29 «npc는 대충 세워놓고 나중에 할 때 같이»):
+# the UE mannequins in the idle loop. Male/female from the design sheets (docs/story/source/design/npc) and the novel
+# (오정길 «그는» L7412); 두호 is «아이» (L1548) - his height is not in the text: 0.75 is a placeholder (TBD_CANON).
+NPC_BODY = {"Matteo": ("Manny", 1.0), "HanJangin": ("Manny", 1.0), "DrJin": ("Manny", 1.0), "OJeonggil": ("Manny", 1.0),
+            "Duho": ("Manny", 0.75), "Yujin": ("Quinn", 1.0), "Suhui": ("Quinn", 1.0)}
+
+
+def npc_body(npc_id, x, y, yaw):
+    kind, scale = NPC_BODY[npc_id]
+    mesh = unreal.load_asset(f"/Game/Characters/Mannequins/Meshes/SKM_{kind}_Simple")
+    idle = unreal.load_asset("/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle")
+    a = eas.spawn_actor_from_class(unreal.SkeletalMeshActor, unreal.Vector(x, y, 0), unreal.Rotator(roll=0, pitch=0, yaw=yaw - 90))
+    a.set_actor_scale3d(unreal.Vector(scale, scale, scale))
+    c = a.skeletal_mesh_component
+    c.set_skeletal_mesh_asset(mesh)   # the mannequin's front is +Y: -90 turns it to the NPC's forward
+    c.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    c.override_animation_data(idle, True, True, 0.0, 1.0)
+    mark(a, f"HH_NPCBody_{npc_id}")
+    a.tags = [unreal.Name(TAG), unreal.Name("HW_NPCBody"), unreal.Name(f"NPC_{npc_id}")]   # the tour shoots each one
+    return a
+
+
 def npc(npc_id, x, y, yaw):
     cls = unreal.load_class(None, "/Script/HwanghonShelter.HHShelterNPC")
     a = eas.spawn_actor_from_class(cls, unreal.Vector(x, y, 0), unreal.Rotator(roll=0, pitch=0, yaw=yaw))
@@ -227,6 +249,11 @@ def npc(npc_id, x, y, yaw):
     if lib.does_asset_exist(tex):
         a.set_editor_property("portrait_texture", unreal.load_asset(tex))
     hide_text(a)
+    # the plugin's grey proxy cylinder: its BeginPlay turns it visible when no VisualActorClass is set, but it never
+    # touches hidden-in-game - the stand-in body stood inside it
+    for c in a.get_components_by_class(unreal.StaticMeshComponent):
+        c.set_editor_property("hidden_in_game", True)
+    npc_body(npc_id, x, y, yaw)
     return mark(a, f"HH_NPC_{npc_id}")
 
 
@@ -598,8 +625,8 @@ def build_places(F, side_frames):
         box(f"Medical_Curtain{k}", g, 150 + (k % 2) * 6, 300 + k * 55, 30, 3, 50, 180, "cloth_c", collide=False, dyaw=(k % 2) * 14 - 7)
     x, y = g.at(-300, 200)
     station("MedicalBay", 6, x, y, face_yaw(g, -300, 200, 0, 400))
-    x, y = g.at(150, 330)
-    npc("DrJin", x, y, face_yaw(g, 150, 330, 0, 0))
+    x, y = g.at(40, 300)   # in the aisle beside the curtain (at a=150 he stood inside it)
+    npc("DrJin", x, y, face_yaw(g, 40, 300, 0, 0))
     f, L = F["Emergency"], ARMS["Emergency"]["L"]
     for k in range(18):   # the ladder up the shaft
         box(f"Emergency_Rung{k}", f, 0, L + 470, 20 + k * 45, 60, 6, 4, "rust", collide=False)
