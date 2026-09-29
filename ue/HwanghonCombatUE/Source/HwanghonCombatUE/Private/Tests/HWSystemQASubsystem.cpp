@@ -3,6 +3,11 @@
 #include "Boss/HWBossCharacter.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
+#include "HHHubSubsystem.h"
+#include "HHShelterStation.h"
+#include "HHShelterNPC.h"
+#include "GameFramework/PlayerStart.h"
+#include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "Character/HWHeadSteadyMeshComponent.h"
 #include "Combat/HWCombatComponent.h"
 #include "Game/HWCombatGameMode.h"
@@ -379,6 +384,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("storyshow")) TickStoryShow(Dt);
     else if (Mode == TEXT("styleshow")) TickStyleShow(Dt);
     else if (Mode == TEXT("neckprobe")) TickNeckProbe(Dt);
+    else if (Mode == TEXT("sheltershow")) TickShelterShow(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -2495,5 +2501,254 @@ void UHWSystemQASubsystem::TickNeckProbe(float Dt)
         Shot(FString::Printf(TEXT("neck_pitch_%+03.0f"), P), false);
         NeckTime = 0.f;
         ++NeckStep;
+    }
+}
+
+// ---------------------------------------------------------------- shelter hub (-HWQA=sheltershow, doc 152)
+// 1. Reachability: a 50 cm grid flooded from the PlayerStart with Ain-sized capsule sweeps - every NPC and station
+//    must be reachable on foot (the v1 blockout had an upper floor with no way up; v2's rooms turn walls to the core).
+// 2. Each NPC in turn: Ain faces it -> focus, F -> the novel's first line, F through every line -> closes,
+//    E -> its station's menu, Escape -> closed. Shots of prompt / dialogue / menu.
+void UHWSystemQASubsystem::TickShelterShow(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    APlayerController* PC = GetPC();
+    ACharacter* Ain = PC ? Cast<ACharacter>(PC->GetPawn()) : nullptr;
+    UHHHubSubsystem* Hub = World ? World->GetSubsystem<UHHHubSubsystem>() : nullptr;
+    if ((!Ain || !Hub) && Elapsed > 15.f) { Finish(false, Ain ? TEXT("shelter: no hub subsystem") : TEXT("shelter: no pawn - Ain did not spawn")); return; }
+    if (!Ain || !Hub || Elapsed < 3.f) return;
+    TArray<AHHShelterNPC*> Npcs;
+    for (TActorIterator<AHHShelterNPC> It(World); It; ++It) if (!It->IsHidden()) Npcs.Add(*It);
+    Npcs.Sort([](const AHHShelterNPC& A, const AHHShelterNPC& B) { return A.NPCId.LexicalLess(B.NPCId); });
+    auto Key = [&](const FKey& K)
+    {
+        PC->InputKey(FInputKeyEventArgs::CreateSimulated(K, IE_Pressed, 1.f));
+        PC->InputKey(FInputKeyEventArgs::CreateSimulated(K, IE_Released, 0.f));
+    };
+    if (ShelterStep == -1)
+    {
+        ShotDir = Param(TEXT("HWQAShots="));
+        Shot(TEXT("00_hub_start"), true);
+        // ---- reachability flood
+        FVector Start = Ain->GetActorLocation();
+        for (TActorIterator<APlayerStart> It(World); It; ++It) { Start = It->GetActorLocation(); break; }
+        const float GridCm = 100.f, Min = -3200.f, Max = 3200.f;
+        const double T0 = FPlatformTime::Seconds();
+        Note(TEXT("shelter reach: flood start"));
+        const int32 N = FMath::CeilToInt((Max - Min) / GridCm);
+        TArray<uint8> Seen;
+        Seen.Init(0, N * N);
+        FCollisionQueryParams Q(TEXT("ShelterReach"), false);
+        for (TActorIterator<APawn> It(World); It; ++It) Q.AddIgnoredActor(*It);
+        for (TActorIterator<AHHShelterNPC> It(World); It; ++It) Q.AddIgnoredActor(*It);
+        const FCollisionShape Capsule = FCollisionShape::MakeCapsule(34.f, 60.f);
+        auto Pos = [&](int32 X, int32 Y) { return FVector(Min + (X + 0.5f) * GridCm, Min + (Y + 0.5f) * GridCm, 100.f); };
+        auto Floor = [&](const FVector& P)
+        {
+            FHitResult H;
+            return World->LineTraceSingleByChannel(H, P + FVector(0, 0, 60), P - FVector(0, 0, 200), ECC_Visibility, Q)
+                && H.ImpactPoint.Z > -40.f && H.ImpactPoint.Z < 40.f
+                && !World->OverlapBlockingTestByChannel(P, FQuat::Identity, ECC_Pawn, Capsule, Q);   // blocking only: station volumes overlap pawns
+        };
+        TArray<FIntPoint> Open;
+        const FIntPoint S0(FMath::Clamp(FMath::FloorToInt((Start.X - Min) / GridCm), 0, N - 1), FMath::Clamp(FMath::FloorToInt((Start.Y - Min) / GridCm), 0, N - 1));
+        if (Floor(Pos(S0.X, S0.Y))) { Open.Add(S0); Seen[S0.Y * N + S0.X] = 1; }
+        int32 Reached = 0;
+        const FIntPoint Dirs[4] = { FIntPoint(1, 0), FIntPoint(-1, 0), FIntPoint(0, 1), FIntPoint(0, -1) };
+        while (Open.Num() && Reached < 20000)
+        {
+            const FIntPoint C = Open.Pop(EAllowShrinking::No);
+            ++Reached;
+            for (const FIntPoint& D : Dirs)
+            {
+                const FIntPoint Nb = C + D;
+                if (Nb.X < 0 || Nb.Y < 0 || Nb.X >= N || Nb.Y >= N || Seen[Nb.Y * N + Nb.X]) continue;
+                const FVector A = Pos(C.X, C.Y), B = Pos(Nb.X, Nb.Y);
+                if (!Floor(B) || World->SweepTestByChannel(A, B, FQuat::Identity, ECC_Pawn, Capsule, Q)) continue;
+                Seen[Nb.Y * N + Nb.X] = 1;
+                Open.Add(Nb);
+            }
+        }
+        auto Reachable = [&](const FVector& P, float Within)
+        {
+            const int32 R = FMath::CeilToInt(Within / GridCm);
+            const int32 CX = FMath::FloorToInt((P.X - Min) / GridCm), CY = FMath::FloorToInt((P.Y - Min) / GridCm);
+            for (int32 Y = CY - R; Y <= CY + R; ++Y)
+            {
+                for (int32 X = CX - R; X <= CX + R; ++X)
+                {
+                    if (X >= 0 && Y >= 0 && X < N && Y < N && Seen[Y * N + X] && FVector::Dist2D(Pos(X, Y), P) <= Within) return true;
+                }
+            }
+            return false;
+        };
+        {
+            // plan view for review: reached green, floor not reached grey, NPC red, station yellow (PPM, +Y up)
+            FString Ppm = FString::Printf(TEXT("P3\n%d %d\n255\n"), N, N);
+            TSet<int32> NpcCells, StationCells;
+            for (TActorIterator<AHHShelterNPC> It(World); It; ++It) { const FVector P = It->GetActorLocation(); NpcCells.Add(FMath::FloorToInt((P.Y - Min) / GridCm) * N + FMath::FloorToInt((P.X - Min) / GridCm)); }
+            for (TActorIterator<AHHShelterStation> It(World); It; ++It) { const FVector P = It->GetActorLocation(); StationCells.Add(FMath::FloorToInt((P.Y - Min) / GridCm) * N + FMath::FloorToInt((P.X - Min) / GridCm)); }
+            for (int32 Y = N - 1; Y >= 0; --Y)
+            {
+                for (int32 X = 0; X < N; ++X)
+                {
+                    const int32 I = Y * N + X;
+                    const TCHAR* C = NpcCells.Contains(I) ? TEXT("255 40 40 ") : StationCells.Contains(I) ? TEXT("255 220 0 ")
+                        : Seen[I] ? TEXT("40 200 80 ") : Floor(Pos(X, Y)) ? TEXT("110 110 110 ") : TEXT("0 0 0 ");
+                    Ppm += C;
+                }
+                Ppm += TEXT("\n");
+            }
+            FFileHelper::SaveStringToFile(Ppm, *FPaths::Combine(ShotDir, TEXT("reach_map.ppm")));
+        }
+        Note(FString::Printf(TEXT("shelter reach: %d cells (%.0f m2) from the PlayerStart (%.2f, %.2f) in %.1f s"), Reached, Reached * GridCm * GridCm / 10000.f, Start.X, Start.Y, FPlatformTime::Seconds() - T0));
+        for (AHHShelterNPC* Npc : Npcs)
+        {
+            const bool bOk = Reachable(Npc->GetActorLocation(), 200.f);
+            Note(FString::Printf(TEXT("shelter reach NPC %s (%s): %s"), *Npc->NPCId.ToString(), *Npc->DisplayName.ToString(), bOk ? TEXT("ok") : TEXT("FAIL: not reachable on foot")));
+            if (!bOk) ++ShelterFails;
+        }
+        for (TActorIterator<AHHShelterStation> It(World); It; ++It)
+        {
+            const bool bOk = Reachable(It->GetActorLocation(), 250.f);
+            Note(FString::Printf(TEXT("shelter reach station %02d %s: %s"), It->StationNumber, *It->StationId.ToString(), bOk ? TEXT("ok") : TEXT("FAIL: not reachable on foot")));
+            if (!bOk) ++ShelterFails;
+        }
+        ShelterStep = 0;
+        ShelterPhase = 0;
+        ShelterTime = 0.f;
+        return;
+    }
+    if (ShelterStep >= Npcs.Num())
+    {
+        // ---- the phone: the same hub by touch (tap = talk/next, hold = station, top-right = close)
+        ShelterTime += Dt;
+        AHHShelterNPC* T = Npcs.Num() ? Npcs[0] : nullptr;
+        int32 W = 0, H = 0;
+        PC->GetViewportSize(W, H);
+        const FTouchId Finger(IPlatformInputDeviceMapper::Get().GetDefaultInputDevice(), ETouchIndex::Touch1);
+        auto Touch = [&](ETouchType::Type Type, const FVector2D& At) { PC->InputTouch(Finger, Type, At, 1.f, FPlatformTime::Cycles64()); };
+        const FVector2D Middle(W * 0.5f, H * 0.4f), Corner(W * 0.95f, H * 0.05f);
+        auto TFail = [&](const TCHAR* What) { Note(FString::Printf(TEXT("shelter touch: FAIL %s"), What)); ++ShelterFails; };
+        switch (ShelterPhase)
+        {
+        case 0:
+            if (!T) { Finish(ShelterFails == 0, TEXT("shelter show done (no NPC for touch)")); return; }
+            {
+                const FVector At = T->GetActorLocation();
+                const FVector Stand = At + T->GetActorForwardVector().GetSafeNormal2D() * 180.f + FVector(0, 0, Ain->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 5.f);
+                const float Yaw = (At - Stand).Rotation().Yaw;
+                Ain->SetActorLocationAndRotation(Stand, FRotator(0.f, Yaw, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
+                PC->SetControlRotation(FRotator(-12.f, Yaw, 0.f));
+            }
+            ShelterPhase = 1; ShelterTime = 0.f;
+            break;
+        case 1:   // tap
+            if (ShelterTime < 1.0f) break;
+            Touch(ETouchType::Began, Middle);
+            ShelterPhase = 2; ShelterTime = 0.f;
+            break;
+        case 2:
+            if (ShelterTime < 0.1f) break;
+            Touch(ETouchType::Ended, Middle);
+            ShelterPhase = 3; ShelterTime = 0.f;
+            break;
+        case 3:
+            if (ShelterTime < 0.4f) break;
+            Note(FString::Printf(TEXT("shelter touch: tap -> dialogue %s"), Hub->GetActiveNPC() == T ? TEXT("ok") : TEXT("FAIL")));
+            if (Hub->GetActiveNPC() != T) TFail(TEXT("tap did not talk"));
+            Shot(TEXT("touch_1_tap_dialogue"), true);
+            Touch(ETouchType::Began, Middle);   // hold
+            ShelterPhase = 4; ShelterTime = 0.f;
+            break;
+        case 4:
+            if (ShelterTime < 0.8f) break;
+            Touch(ETouchType::Ended, Middle);
+            ShelterPhase = 5; ShelterTime = 0.f;
+            break;
+        case 5:
+            if (ShelterTime < 0.4f) break;
+            {
+                const bool bOk = Hub->GetActiveStation() && Hub->GetActiveStation()->StationId == T->BoundStationId;
+                Note(FString::Printf(TEXT("shelter touch: hold -> station %s"), bOk ? TEXT("ok") : TEXT("FAIL")));
+                if (!bOk) TFail(TEXT("hold did not open the station"));
+            }
+            Shot(TEXT("touch_2_hold_station"), true);
+            Touch(ETouchType::Began, Corner);
+            ShelterPhase = 6; ShelterTime = 0.f;
+            break;
+        case 6:
+            if (ShelterTime < 0.1f) break;
+            Touch(ETouchType::Ended, Corner);
+            ShelterPhase = 7; ShelterTime = 0.f;
+            break;
+        case 7:
+            if (ShelterTime < 0.4f) break;
+            {
+                const bool bOk = !Hub->GetActiveStation() && !Hub->GetActiveNPC();
+                Note(FString::Printf(TEXT("shelter touch: top-right -> closed %s"), bOk ? TEXT("ok") : TEXT("FAIL")));
+                if (!bOk) TFail(TEXT("the corner did not close"));
+            }
+            Finish(ShelterFails == 0, FString::Printf(TEXT("shelter show done, %d fails"), ShelterFails));
+            return;
+        }
+        return;
+    }
+    AHHShelterNPC* Npc = Npcs[ShelterStep];
+    ShelterTime += Dt;
+    const FString Tag = FString::Printf(TEXT("%d_%s"), ShelterStep + 1, *Npc->NPCId.ToString());
+    auto Fail = [&](const FString& What) { Note(FString::Printf(TEXT("shelter %s: FAIL %s"), *Tag, *What)); ++ShelterFails; };
+    switch (ShelterPhase)
+    {
+    case 0:   // 1.8 m in front of the NPC, facing it
+    {
+        const FVector At = Npc->GetActorLocation();
+        const FVector Fwd = Npc->GetActorForwardVector().GetSafeNormal2D();
+        const FVector Stand = At + Fwd * 180.f + FVector(0, 0, Ain->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + 5.f);
+        const float Yaw = (At - Stand).Rotation().Yaw;
+        Ain->SetActorLocationAndRotation(Stand, FRotator(0.f, Yaw, 0.f), false, nullptr, ETeleportType::TeleportPhysics);
+        PC->SetControlRotation(FRotator(-12.f, Yaw, 0.f));
+        ShelterPhase = 1;
+        ShelterTime = 0.f;
+        break;
+    }
+    case 1:
+        if (ShelterTime < 1.0f) break;
+        if (Hub->GetFocusedNPC() != Npc) Fail(FString::Printf(TEXT("focus is %s"), Hub->GetFocusedNPC() ? *Hub->GetFocusedNPC()->NPCId.ToString() : TEXT("none")));
+        Shot(Tag + TEXT("_1_prompt"), true);
+        Key(EKeys::F);
+        ShelterPhase = 2;
+        ShelterTime = 0.f;
+        break;
+    case 2:   // the dialogue, line by line
+        if (ShelterTime < 0.35f) break;
+        if (Hub->GetActiveNPC() != Npc) { Fail(TEXT("F did not open the dialogue")); ShelterPhase = 4; break; }
+        Note(FString::Printf(TEXT("shelter %s line %d/%d: %s"), *Tag, Npc->GetDialogueIndex() + 1, Npc->GetDialogueCount(), *Npc->GetCurrentDialogueText().ToString()));
+        if (Npc->GetDialogueIndex() == 0) Shot(Tag + TEXT("_2_dialogue"), true);
+        if (Npc->GetDialogueIndex() + 1 >= Npc->GetDialogueCount()) ShelterPhase = 3;
+        Key(EKeys::F);
+        ShelterTime = 0.f;
+        break;
+    case 3:
+        if (ShelterTime < 0.35f) break;
+        if (Hub->GetActiveNPC()) Fail(TEXT("the last line did not close the dialogue"));
+        Key(EKeys::E);
+        ShelterPhase = 4;
+        ShelterTime = 0.f;
+        break;
+    case 4:
+        if (ShelterTime < 0.35f) break;
+        if (!Hub->GetActiveStation() || Hub->GetActiveStation()->StationId != Npc->BoundStationId) Fail(TEXT("E did not open the NPC's station"));
+        else Shot(Tag + TEXT("_3_station"), true);
+        Key(EKeys::Escape);
+        ShelterPhase = 5;
+        ShelterTime = 0.f;
+        break;
+    case 5:
+        if (ShelterTime < 0.3f) break;
+        if (Hub->GetActiveStation() || Hub->GetActiveNPC()) Fail(TEXT("Escape did not close"));
+        ++ShelterStep;
+        ShelterPhase = 0;
+        break;
     }
 }

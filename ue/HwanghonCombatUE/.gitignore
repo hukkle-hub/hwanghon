@@ -11,3 +11,6 @@
 
 # Third-party VRM importer (MIT, github.com/ruyo/VRM4U) — installed locally for the anime-look test (docs/design/140), not committed.
 /Plugins/VRM4U/
+# project plugins build their own binaries
+/Plugins/*/Binaries/
+/Plugins/*/Intermediate/

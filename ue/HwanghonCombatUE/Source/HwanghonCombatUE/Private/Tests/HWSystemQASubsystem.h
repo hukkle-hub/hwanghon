@@ -98,6 +98,12 @@ private:
     int32 StoryBattleSeen = -1;
     // neckprobe: head lean at forced camera pitches
     void TickNeckProbe(float Dt);
+    // sheltershow: the 7 stations of the Gangnam shelter hub (docs/design/152)
+    void TickShelterShow(float Dt);
+    int32 ShelterStep = -1;
+    float ShelterTime = 0.f;
+    int32 ShelterPhase = 0;
+    int32 ShelterFails = 0;
     int32 NeckStep = -1;
     float NeckTime = 0.f;
 

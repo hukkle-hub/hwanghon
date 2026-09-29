@@ -1,0 +1,131 @@
+{
+  "schema": "hwanghon-shelter-npcs-v1",
+  "novel": "docs/story/source/제1부_통합본_EP01-28.md",
+  "npcs": {
+    "Matteo": {
+      "name": "마태오",
+      "role": "인력사무소",
+      "src_role": "L223 «지하 인력사무소»",
+      "portrait": "matteo",
+      "lines": [
+        {
+          "text": "그거 잉크값은 누가 대냐.",
+          "src": "L541"
+        },
+        {
+          "text": "얼마 드는데.",
+          "src": "L545"
+        },
+        {
+          "text": "…적어.",
+          "src": "L11678"
+        }
+      ]
+    },
+    "Yujin": {
+      "name": "유진",
+      "role": "등급 측정",
+      "src_role": "L391-L509",
+      "portrait": "yujin",
+      "lines": [
+        {
+          "text": "…무등록이시네요.",
+          "src": "L399"
+        },
+        {
+          "text": "…발판 위로.",
+          "src": "L425"
+        },
+        {
+          "text": "대검 무게는 등급에 반영되지 않습니다.",
+          "src": "L505"
+        },
+        {
+          "text": "다음 분.",
+          "src": "L509"
+        }
+      ]
+    },
+    "HanJangin": {
+      "name": "한",
+      "role": "장인",
+      "src_role": "L297 «한 장인. … 하루 종일 쇠를 두드린다.»",
+      "portrait": "hanjangin",
+      "alive_flag": "SF_NPC_HanJanginAlive",
+      "lines": [
+        {
+          "text": "지구 쇠라서 그래. 이 쇠에 한번 물린 상처는 지구 쇠로는 안 물러. — 이걸로 치면 다르지.",
+          "src": "L11550"
+        }
+      ]
+    },
+    "OJeonggil": {
+      "name": "오정길",
+      "role": "길잡이",
+      "src_role": "EP02-EP10",
+      "portrait": null,
+      "lines": [
+        {
+          "text": "케이블 길이가 팔십입니다. 그 이상은 못 당깁니다.",
+          "src": "L7412"
+        },
+        {
+          "text": "…경보기입니다. 조잡하지만, 묶은 솜씨는 조잡하지 않습니다.",
+          "src": "L8333"
+        },
+        {
+          "text": "저는 각인자가 아니라서.",
+          "src": "L4732"
+        }
+      ]
+    },
+    "Duho": {
+      "name": "두호",
+      "role": "두나의 오빠",
+      "src_role": "L1544-L1550",
+      "portrait": null,
+      "lines": [
+        {
+          "text": "…동생 약이요. 여덟 살이요. 두나요.",
+          "src": "L1550"
+        },
+        {
+          "text": "아무도 안 믿었던 얘긴데.",
+          "src": "L9357"
+        },
+        {
+          "text": "…정말 왔네.",
+          "src": "L11592"
+        }
+      ]
+    },
+    "DrJin": {
+      "name": "닥터 진",
+      "role": "의무실",
+      "src_role": "L1311, L8265, L9706",
+      "portrait": "drjin",
+      "lines": [
+        {
+          "text": "…다음 건, 없을 수도 있습니다.",
+          "src": "L8265"
+        },
+        {
+          "text": "지금 있는 걸로는 넉 달입니다. 그 안에 이 중에 세 개만 구하면 여섯 달이 되고, 여섯 개면 일 년이 됩니다.",
+          "src": "L9706"
+        }
+      ]
+    },
+    "Suhui": {
+      "name": "수희",
+      "role": "배급",
+      "src_role": "L277",
+      "portrait": "suhui",
+      "lines": [
+        {
+          "text": "한 사람당 두 통! 더는 없어요! 어제 두 통 받아 간 사람은 오늘 한 통!",
+          "src": "L279"
+        }
+      ]
+    }
+  }
+}

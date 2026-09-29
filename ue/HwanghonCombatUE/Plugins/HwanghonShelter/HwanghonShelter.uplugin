@@ -1,0 +1,17 @@
+{
+  "FileVersion": 3,
+  "Version": 2,
+  "VersionName": "2.0",
+  "FriendlyName": "Hwanghon Shelter Hub",
+  "Description": "Gangnam B-1 shelter hub: dungeon-like blockout, station NPCs, dialogue, station services, design-asset auto binding.",
+  "Category": "Hwanghon",
+  "CreatedBy": "OpenAI",
+  "CanContainContent": true,
+  "Modules": [
+    {
+      "Name": "HwanghonShelter",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}
