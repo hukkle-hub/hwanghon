@@ -147,21 +147,20 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
         if (Want.IsEmpty()) Want = bLeader ? TEXT("ain") : TEXT("kain");
         int32 Slot = 0;
         for (int32 i = 0; i < 4; ++i) if (Want == Heroes[i]) Slot = i;
-        // v7 front end (doc 158): the title's 입장 plate -> the camera pulls back -> the hero cards -> 선택
-        // (layout: AHHCharacterSelectHUD::DrawTitle / DrawCharacterSelect)
+        // v9 front end (docs 158/159): the title's 입장 plate -> the camera pulls back -> one hero on the stand, ‹ › to change
+        // -> 선택 (layout: AHHCharacterSelectHUD::DrawTitle / DrawCharacterSelect)
         const float S = FMath::Min(W / 1920.f, H / 1080.f);
-        const FVector2D Enter(W * 0.5f, H * 0.555f + 30 * S);
-        const float CW = 330 * S, CH = 154 * S, Gap = 22 * S;
-        const float X0 = (W - (4 * CW + 3 * Gap)) * 0.5f, Y0 = H - 320 * S;
-        const FVector2D Card(X0 + Slot * (CW + Gap) + CW / 2, Y0 + CH / 2);
-        const FVector2D Confirm(W * 0.5f, H - 112 * S + 31 * S);
+        const float CX = W * 0.5f, BaseY = H - 215 * S;
+        const FVector2D Enter(CX, H * 0.555f + 30 * S);
+        const FVector2D Next(CX + 250 * S, BaseY + 25 * S);
+        const FVector2D Confirm(CX, H - 55 * S);
         UHHOnlineFlowSubsystem* Flow = GetGameInstance()->GetSubsystem<UHHOnlineFlowSubsystem>();
         AHHFrontEndCinematicDirector* Director = nullptr;
         for (TActorIterator<AHHFrontEndCinematicDirector> It(World); It; ++It) { Director = *It; break; }
         switch (OnlinePhase)
         {
         case 0: if (OnlineTime > 2.0f) { Shot(TEXT("02a_title"), true); OnlineTouch(ETouchType::Began, Enter); OnlinePhase = 1; } break;
-        case 1: OnlineTouch(ETouchType::Ended, Enter); OnlinePhase = 2; OnlineMark = OnlineTime; break;
+        case 1: OnlineTouch(ETouchType::Ended, Enter); OnlinePhase = 2; OnlineMark = OnlineTime; OnlineSteps = 0; break;
         case 2:
             if (OnlineTime - OnlineMark < 2.0f) break;   // the reveal is 1.55 s
             {
@@ -169,22 +168,28 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
                 Gate(TEXT("entry_reveal"), bOk, FString::Printf(TEXT("입장 -> director stage %d"), Director ? (int32)Director->Stage : -1));
                 if (!bOk) { Finish(false, TEXT("title 입장 reveal")); return; }
             }
-            OnlineTouch(ETouchType::Began, Card);
             OnlinePhase = 3;
+            OnlineMark = OnlineTime;
             break;
-        case 3: OnlineTouch(ETouchType::Ended, Card); OnlinePhase = 4; OnlineMark = OnlineTime; break;
-        case 4:
-            if (OnlineTime - OnlineMark < 0.4f) break;
+        case 3:   // ‹ › : ain is first, Slot presses of › reach the wanted hero
+            if (OnlineTime - OnlineMark < 0.3f) break;
+            if (OnlineSteps < Slot) { OnlineTouch(ETouchType::Began, Next); OnlinePhase = 4; }
+            else OnlinePhase = 5;
+            OnlineMark = OnlineTime;
+            break;
+        case 4: OnlineTouch(ETouchType::Ended, Next); ++OnlineSteps; OnlinePhase = 3; OnlineMark = OnlineTime; break;
+        case 5:
+            if (OnlineTime - OnlineMark < 0.8f) break;
             {
                 const bool bOk = Flow && Flow->SelectedCharacterId == FName(*Want);
-                Gate(TEXT("select_touch"), bOk, FString::Printf(TEXT("touched %s -> selected %s"), *Want, Flow ? *Flow->SelectedCharacterId.ToString() : TEXT("-")));
-                if (!bOk) { Finish(false, TEXT("character card touch")); return; }
+                Gate(TEXT("select_touch"), bOk, FString::Printf(TEXT("› x%d for %s -> selected %s"), Slot, *Want, Flow ? *Flow->SelectedCharacterId.ToString() : TEXT("-")));
+                if (!bOk) { Finish(false, TEXT("character select")); return; }
             }
             Shot(TEXT("02_select"), true);
             OnlineTouch(ETouchType::Began, Confirm);
-            OnlinePhase = 5;
+            OnlinePhase = 6;
             break;
-        case 5: OnlineTouch(ETouchType::Ended, Confirm); OnlinePhase = 6; break;
+        case 6: OnlineTouch(ETouchType::Ended, Confirm); OnlinePhase = 7; break;
         default: break;
         }
         Timeout(40.f, TEXT("shelter_travel"));

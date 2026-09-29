@@ -15,26 +15,21 @@ class HWANGHONSHELTER_API AHHShelterHUD : public AHUD
 public:
     virtual void DrawHUD() override;
 
+    // Prototype values. Replace with real character ViewModel/state in project integration.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hwanghon|HUD")
-    FString PlayerName = TEXT("아인");
+    float HealthRatio = 1.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hwanghon|HUD")
-    int32 PlayerLevel = 32;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hwanghon|HUD")
-    float HealthRatio = 0.86f;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hwanghon|HUD")
-    float ResourceRatio = 0.80f;
+    float ResourceRatio = 1.0f;
 
 private:
     void DrawPanel(float X, float Y, float W, float H, const FLinearColor& Color) const;
     void DrawBar(float X, float Y, float W, float H, float Ratio, const FLinearColor& Fill, const FLinearColor& Back) const;
-    void DrawPlayerSummary(float Scale);
-    void DrawQuestRail(float Scale);
-    void DrawSkillBar(float Scale);
-    void DrawMiniMap(float Scale);
-    void DrawPartyPanel(float Scale);
+
+    void DrawMinimalStatus(float Scale);
+    void DrawReturnHint(float Scale);
+    void DrawPartyCompact(float Scale);
+
     void DrawStationPrompt(AHHShelterStation* Station, float Scale);
     void DrawStationMenu(AHHShelterStation* Station, float Scale);
     void DrawNPCPrompt(AHHShelterNPC* NPC, float Scale);

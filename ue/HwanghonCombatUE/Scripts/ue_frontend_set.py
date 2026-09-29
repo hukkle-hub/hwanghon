@@ -7,7 +7,7 @@ materials (MI_HW_B1_*, Scripts/ue_shelter_materials.py) and Hi3D props; the CCTV
 
   title     (-400, 0, 160) FOV 50, pitch -8 - the concept's framing: CCTV wall left, steel wall right, the table and
                                               its plan across the bottom, the corridor in the middle
-  selection (-1250, 0, 205) FOV 72          - pulled back past the four heroes who stood behind the title camera
+  selection (-1130, 0, 150) FOV 55          - pulled back; the stand (v9) shows one hero at (-700, 0) - ‹ › to change
   (v7 baseline was 34 -> 58 on a proxy set; the concept is a wide shot, so the title starts wider here)
   connect   (-40, PLAN_Y, 395) pitch -86 FOV 74 - down on the plan: the route 외부 통로 -> 코어 -> 인력사무소 draws
 
@@ -383,24 +383,38 @@ def build_room(feeds, plan_mat):
         light(f"FE_Ceil_Lamp_{k}", x, 0, CEIL - 70, 30.0, 850, WARM, ceil=CEIL)
 
 
-def build_heroes():
-    """The four in front of the table, facing the selection camera; each with a key light the HUD turns up when chosen
-    (AHHCharacterSelectHUD::UpdateHeroLights, tag HH_HeroLight_<id>)."""
-    idle = unreal.load_asset(IDLE)
-    for k, (hid, path) in enumerate(HEROES.items()):
-        y = (-330, -120, 120, 330)[k]
-        x = -700   # behind the title camera: the pull-back discovers them
-        sk = unreal.load_asset(path)
-        a = eas.spawn_actor_from_class(unreal.SkeletalMeshActor, unreal.Vector(x, y, 0), unreal.Rotator(roll=0, pitch=0, yaw=180 - 90))
-        comp = a.skeletal_mesh_component
-        comp.set_skinned_asset_and_update(sk)
-        if idle:
-            comp.set_animation_mode(unreal.AnimationMode.ANIMATION_SINGLE_NODE)
-            comp.set_editor_property("animation_data", unreal.SingleAnimationPlayData(anim_to_play=idle, saved_looping=True, saved_playing=True))
-        mark(a, f"FE_Hero_{hid}")
-        a.tags = [unreal.Name(TAG), unreal.Name(f"HH_Hero_{hid}")]
-        light(f"FE_HeroLight_{hid}", x - 160, y, 330, 25.0, 520, (1.0, 0.8, 0.6), fixture=False, cls=unreal.SpotLight,
-              rot=unreal.Rotator(roll=0, pitch=-62, yaw=0), tags=(f"HH_HeroLight_{hid}",))
+ANIM = "/Game/ParagonCountess/Characters/Heroes/Countess/Animations/"
+# v9 (docs 159): one hero on the stand, the project's own clips for the three beats - reuse before new montages.
+# Picked by the v9 motion language: 아인 controlled (walks in, stops; weapon-ready), 카인 the heaviest (lands; the most
+# static idle), 류 the quickest (the same entrance faster, a quicker idle), 세라 the steadiest (a still idle; weapon-ready).
+BEATS = {
+    "ain":  dict(intro=("Jog_Fwd_Stop", 1.0), idle=("Idle_Relaxed", 1.0), confirm=("Ability_Q_target_transition", 1.0)),
+    "kain": dict(intro=("Respawn", 0.9), idle=("Idle_Straight", 0.8), confirm=("Ability_E_target_transition", 0.85)),
+    "ryu":  dict(intro=("Jog_Fwd_Stop", 1.45), idle=("Idle_Relaxed", 1.3), confirm=("Ability_R_target_transition", 1.2)),
+    "sera": dict(intro=("Jog_Fwd_Stop", 0.9), idle=("Idle_Pose", 1.0), confirm=("Ability_E_target_transition", 0.9)),   # Cast raised the arm high - v9 «마법사/성녀식 포즈 금지»
+}
+STAND_X = -700.0
+
+
+def build_stand():
+    """AHHCharacterSelectStand (v9) where the four stood: hidden through the title, it shows the chosen hero when the
+    pull-back ends. Key and rim light on it."""
+    cls = unreal.load_class(None, "/Script/HwanghonShelter.HHCharacterSelectStand")
+    st = eas.spawn_actor_from_class(cls, unreal.Vector(STAND_X, 0, 0), unreal.Rotator(roll=0, pitch=0, yaw=180))
+    mark(st, "FE_Stand")
+    for hid, path in HEROES.items():
+        body = unreal.HHSelectionBody()
+        body.set_editor_property("mesh", unreal.load_asset(path))
+        for beat in ("intro", "idle", "confirm"):
+            clip, rate = BEATS[hid][beat]
+            body.set_editor_property(beat, unreal.load_asset(ANIM + clip))
+            body.set_editor_property(f"{beat}_rate", rate)
+        st.set_editor_property(f"{hid}_body", body)
+    light("FE_Stand_Key", STAND_X - 230, -120, 300, 260.0, 700, (1.0, 0.82, 0.62), fixture=False, cls=unreal.SpotLight,
+          rot=unreal.Rotator(roll=0, pitch=-40, yaw=25))
+    light("FE_Stand_Rim", STAND_X + 220, 90, 260, 180.0, 600, (1.0, 0.6, 0.3), fixture=False, cls=unreal.SpotLight,
+          rot=unreal.Rotator(roll=0, pitch=-35, yaw=200))
+    return st
 
 
 def build_director():
@@ -410,9 +424,9 @@ def build_director():
     d.set_editor_property("title_location", unreal.Vector(-400, 0, 160))
     d.set_editor_property("title_rotation", unreal.Rotator(roll=0, pitch=-8, yaw=0))
     d.set_editor_property("title_fov", 50.0)
-    d.set_editor_property("selection_location", unreal.Vector(-1250, 0, 205))
-    d.set_editor_property("selection_rotation", unreal.Rotator(roll=0, pitch=-4, yaw=0))
-    d.set_editor_property("selection_fov", 72.0)
+    d.set_editor_property("selection_location", unreal.Vector(STAND_X - 430, 0, 150))   # the hero fills ~3/4 of the height
+    d.set_editor_property("selection_rotation", unreal.Rotator(roll=0, pitch=-12, yaw=0))   # the hero in the upper 3/4, the name below the feet
+    d.set_editor_property("selection_fov", 55.0)
     d.set_editor_property("connect_location", unreal.Vector(-40, PLAN_Y, 395))   # under the 440 ceiling (the first try sat on its roof)
     d.set_editor_property("connect_rotation", unreal.Rotator(roll=0, pitch=-86, yaw=0))
     d.set_editor_property("connect_fov", 74.0)
@@ -452,7 +466,7 @@ def main():
     for a in old:
         eas.destroy_actor(a)
     build_room(feeds, plan_mat)
-    build_heroes()
+    build_stand()
     build_director()
     build_post()
     les.save_current_level()

@@ -1,5 +1,5 @@
 #include "HHDungeonOnlineGameMode.h"
-#include "HHShelterHUD.h"
+#include "HHDungeonHUD.h"
 #include "HHShelterOnlinePlayerController.h"
 #include "HHShelterOnlinePlayerState.h"
 
@@ -20,7 +20,7 @@ AHHDungeonOnlineGameMode::AHHDungeonOnlineGameMode()
 {
     PlayerControllerClass = AHHShelterOnlinePlayerController::StaticClass();
     PlayerStateClass = AHHShelterOnlinePlayerState::StaticClass();
-    HUDClass = AHHShelterHUD::StaticClass();
+    HUDClass = AHHDungeonHUD::StaticClass();
 
     bStartPlayersAsSpectators = true;
 }

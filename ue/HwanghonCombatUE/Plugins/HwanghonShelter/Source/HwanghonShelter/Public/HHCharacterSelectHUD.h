@@ -1,10 +1,11 @@
-﻿#pragma once
+#pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
 #include "HHCharacterSelectHUD.generated.h"
 
 class AHHFrontEndCinematicDirector;
+class AHHCharacterSelectStand;
 
 UENUM()
 enum class EHHFrontEndScreen : uint8
@@ -31,28 +32,20 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<AHHFrontEndCinematicDirector> Director;
 
+    UPROPERTY(Transient)
+    TObjectPtr<AHHCharacterSelectStand> CharacterStand;
+
     void DrawTitle(float S);
     void DrawCharacterSelect(float S);
     void DrawConnecting(float S);
 
-    void DrawCharacterCard(
-        const TCHAR* Id,
-        const TCHAR* KoreanName,
-        const TCHAR* RoleLabel,
-        const FLinearColor& Accent,
-        float X, float Y, float W, float H,
-        bool bSelected);
-
     void StartEntryReveal();
-    void UpdateHeroLights(FName Selected);
+    void ConfirmSelection();
+    void SelectRelative(int32 Delta);
+    void SyncStandFromFlow();
 
     UPROPERTY(Transient)
     TObjectPtr<class UTexture2D> Logo;
-
-    FName LitHero = TEXT("__none__");
-    float HeroLightOn = 400.f;   // candela
-    float HeroLightOff = 25.f;
-    void ConfirmSelection();
 
     UFUNCTION()
     void HandleRevealFinished();

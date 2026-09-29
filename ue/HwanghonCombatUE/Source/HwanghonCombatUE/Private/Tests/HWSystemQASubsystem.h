@@ -108,6 +108,7 @@ private:
     // -HWQA=frontend (docs/design/158): title -> 입장 reveal -> character select -> connect camera, shots on the timeline
     void TickFrontEnd(float Dt);
     int32 FrontStep = 0;
+    int32 OnlineSteps = 0;   // onlineloop: › presses done on the character stand
     float FrontTime = 0.f;
     int32 ShelterStep = -1;
     float ShelterTime = 0.f;
