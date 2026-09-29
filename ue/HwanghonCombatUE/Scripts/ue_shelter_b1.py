@@ -48,7 +48,7 @@ BAND_H = 150.0      # steel wainscot on the inside of every wall
 CRT_GLASS = (0.0, 45.0, 17.0, 70.0, 48.0)   # the 70 cm model: glass 70 x 48, 45 cm in front of its centre
 WARM = (1.0, 0.72, 0.45)
 COOL = (0.62, 0.76, 1.0)
-COUNT = {"actors": 0, "lights": 0}
+COUNT = {"actors": 0, "lights": 0, "flicker": 0}
 
 # ------------------------------------------------------------------ materials (Scripts/ue_shelter_materials.py)
 MAT_DIR = "/Game/Hwanghon/Shelter/Materials"
@@ -136,9 +136,11 @@ def sign(label, f, a, b, z, key, width, height, facing=-1):
     return box(label, g, aa, bb, z, width, 4, height, f"sign_{key}", collide=False)
 
 
-def light(label, x, y, z, intensity=5000.0, radius=900.0, color=WARM, ceil=None, fixture="cage", shadows=False):
+def light(label, x, y, z, intensity=5000.0, radius=900.0, color=WARM, ceil=None, fixture="cage", shadows=False,
+          flicker=False):
     """A point light (candela = intensity x 0.05) and, unless fixture is None, the lamp that makes it: a cable from the
-    ceiling, a steel shade, an emissive bulb (산업용 조명 - the sheet's cage lamps)."""
+    ceiling, a steel shade, an emissive bulb (산업용 조명 - the sheet's cage lamps). flicker: tagged HW_Flicker, so
+    UHWLampFlickerSubsystem dips it at a steady interval (통합본 L253 «조명이 일정 간격으로 명멸했다. 발전기가 늙었다»)."""
     a = eas.spawn_actor_from_class(unreal.PointLight, unreal.Vector(x, y, z), unreal.Rotator(roll=0, pitch=0, yaw=0))
     c = a.point_light_component
     c.set_mobility(unreal.ComponentMobility.MOVABLE)
@@ -147,6 +149,9 @@ def light(label, x, y, z, intensity=5000.0, radius=900.0, color=WARM, ceil=None,
     c.set_editor_property("light_color", unreal.LinearColor(*color, 1).to_color(True))
     c.set_editor_property("cast_shadows", shadows)
     mark(a, label)
+    if flicker:
+        a.tags = [unreal.Name(TAG), unreal.Name("HW_Flicker")]
+        COUNT["flicker"] += 1
     COUNT["lights"] += 1
     if fixture and ceil:
         _mesh(CYL, unreal.Vector(x, y, (z + 30 + ceil) / 2), unreal.Rotator(roll=0, pitch=0, yaw=0),
@@ -438,7 +443,7 @@ def build_arm(name, arm):
     for k in range(max(1, int(L // 600))):
         b = min(300 + 600 * k, L - 100)
         x, y = f.at(0, b)
-        light(f"{name}_Corr_Light_{k}", x, y, H - 90, 2500, 750, ceil=H - 28)
+        light(f"{name}_Corr_Light_{k}", x, y, H - 90, 2500, 750, ceil=H - 28, flicker=True)   # the passages, not the rooms
     room = arm.get("room")
     if room:
         rw, rd, rh = room
@@ -623,7 +628,27 @@ def build_places(F, side_frames):
         box(f"External_Rubble{k}", f, -W / 2 + 38, L - 450 - k * 60, 0, 45, 50, 35, "concrete", dyaw=17 * k)
     for k in range(3):
         x, y = f.at(0, 400 + k * 700)
-        light(f"External_Light_{k}", x, y, 360, 1600 if k < 2 else 700, 700, color=(0.9, 0.95, 1.0), ceil=432)
+        light(f"External_Light_{k}", x, y, 360, 1600 if k < 2 else 700, 700, color=(0.9, 0.95, 1.0), ceil=432, flicker=True)
+    # the sheet's main passage: a steel stair up the wall beside the way in to a landing and a shut door (sheet «메인 통로»,
+    # left of the B-1 door as the sheet looks in). Clear of the town-start spots (L-1100) and the gate walk.
+    sa = W / 2 - 55
+    N = 8   # 8 x 24 cm: landing at 1.92 m, so the door (2.0 m) clears the 4.6 m ceiling's pipes - 10 steps ran it into them
+    for k in range(N):
+        box(f"External_Stair{k}", f, sa, 220 + k * 50, 0, 110, 50, 24 * (k + 1), "steel")
+    lb = 220 + (N - 1) * 50 + 25 + 125   # landing centre: it starts where the top step ends (no gap)
+    box("External_Landing", f, sa, lb, 24 * N - 14, 110, 250, 14, "steel")
+    top = 24 * N + 110   # rail height on the landing; on the stair the rail runs 110 cm over each step
+    for k, bb in enumerate((lb - 85, lb + 85)):   # stanchions: floor through the landing up to its rail
+        box(f"External_LandingPost{k}", f, sa - 50, bb, 0, 8, 8, top, "rust", collide=False)
+    for k in range(N):   # a post standing on each step (the first build had them 20 cm in the air)
+        box(f"External_StairRail{k}", f, sa - 58, 220 + k * 50, 24 * (k + 1), 4, 4, 110, "rust", collide=False)
+    run = (N - 1) * 50
+    box("External_StairHandrail", f, sa - 58, 220 + run / 2, 24 * (N + 1) / 2 + 110 - 2.5, 5, run / math.cos(math.radians(25.6)), 5,
+        "rust", collide=False, pitch=25.6)
+    b0, b1 = 220 + run, lb + 125   # from the top step's post to the landing's end
+    box("External_LandingRail", f, sa - 58, (b0 + b1) / 2, top - 5, 5, b1 - b0, 5, "rust", collide=False)
+    box("External_LandingDoor", f, W / 2 - 6, lb + 25, 24 * N, 6, 110, 200, "dark", collide=False)   # in front of its frame
+    box("External_LandingDoorFrame", f, W / 2 - 2, lb + 25, 24 * N, 6, 130, 212, "hazard", collide=False)
 
     # ---- B-2 link: people sleep along the corridor; sealed at the end (sheet 05 «B-2»)
     f, L = F["B2Link"], ARMS["B2Link"]["L"]
@@ -825,6 +850,7 @@ def main():
     fe, Le = F["External"], ARMS["External"]["L"]
     view("01_External_ToGate", fe, 0, 600, 0, Le)
     view("02_External_Inward", fe, 0, Le - 900, 0, 0)
+    view("02b_External_Stair", fe, -(ARMS["External"]["W"] / 2 - 50), 330, ARMS["External"]["W"] / 2 - 55, 700, z=160, pitch=6)   # the main-passage stair and its door
     view("03_Core_FromSW", Frame(0, 0, 225), 0, R - 150, 0, -R, z=190)
     view("04_Core_FromNE", Frame(0, 0, 45), 0, R - 150, 0, -R, z=190)
     for name, key in (("05_Manpower", "Manpower"), ("06_Matteo", "Matteo"), ("07_Training", "Training"), ("08_Rank", "Rank"), ("09_Supply", "Supply")):
@@ -872,7 +898,7 @@ def main():
     ws.set_editor_property("force_no_precomputed_lighting", True)
     ws.set_editor_property("default_game_mode", unreal.load_class(None, "/Script/HwanghonCombatUE.HWShelterGameMode"))
     les.save_current_level()
-    unreal.log(f"[HWShelterB1] built {COUNT['actors']} actors ({COUNT['lights']} lights), saved {MAP}")
+    unreal.log(f"[HWShelterB1] built {COUNT['actors']} actors ({COUNT['lights']} lights, {COUNT['flicker']} flicker), saved {MAP}")
 
 
 main()

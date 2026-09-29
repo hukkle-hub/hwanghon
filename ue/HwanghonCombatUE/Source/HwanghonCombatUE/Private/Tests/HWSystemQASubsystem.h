@@ -105,6 +105,10 @@ private:
     TArray<TWeakObjectPtr<AActor>> TourSpots;
     int32 TourStep = -1;
     float TourTime = 0.f;
+    // lamp flicker (UHWLampFlickerSubsystem): lamp-samples seen dimmed over the tour, then a held steady/dip pair of shots
+    int64 FlickerSamples = 0;
+    int64 FlickerDimmed = 0;
+    int32 FlickerStep = 0;
     // -HWQA=frontend (docs/design/158): title -> 입장 reveal -> character select -> connect camera, shots on the timeline
     void TickFrontEnd(float Dt);
     int32 FrontStep = 0;
