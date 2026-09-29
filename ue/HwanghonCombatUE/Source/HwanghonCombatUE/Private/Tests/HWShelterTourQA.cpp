@@ -5,6 +5,7 @@
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "Engine/GameInstance.h"
+#include "Engine/StaticMeshActor.h"
 #include "Engine/TargetPoint.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
@@ -48,6 +49,14 @@ void UHWSystemQASubsystem::TickShelterTour(float Dt)
         }
         Cam->SetActorLocationAndRotation(Spot->GetActorLocation(), Spot->GetActorRotation());
         PC->SetViewTarget(Cam.Get());
+        // overview spots: lift the lid - hide what hangs above 3.3 m (ceilings, girders, pipes, lamps); show it again after
+        const bool bTop = Spot->Tags.Contains(TEXT("HW_ViewTop"));
+        for (TActorIterator<AStaticMeshActor> It(World); It; ++It)
+        {
+            FVector O, E;
+            It->GetActorBounds(false, O, E);
+            if (O.Z - E.Z > 330.f) It->SetActorHiddenInGame(bTop);
+        }
     }
     if (TourTime > 2.5f)   // eye adaptation settles
     {

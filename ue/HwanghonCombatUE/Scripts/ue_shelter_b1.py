@@ -72,10 +72,18 @@ def mark(a, label):
     return a
 
 
+# UE is left-handed: seen from above with +X to the right, +Y points DOWN. The layout below is written like the sheet's
+# map (+Y = up = north); MIRROR turns it into the world so the plan seen from above matches the sheet (and the room
+# interiors keep their own left/right). The first build had it mirrored - the top-down shot showed it.
+MIRROR = True
+
+
 class Frame:
     """Local frame: origin o, u = forward (out of the core), v = across (to the right looking out), yaw of u."""
 
-    def __init__(self, ox, oy, yaw):
+    def __init__(self, ox, oy, yaw, world=False):
+        if MIRROR and not world:
+            oy, yaw = -oy, -yaw
         self.o = (ox, oy)
         self.yaw = yaw
         r = math.radians(yaw)
@@ -87,7 +95,7 @@ class Frame:
 
     def sub(self, a, b, dyaw=0.0):
         x, y = self.at(a, b)
-        return Frame(x, y, self.yaw + dyaw)
+        return Frame(x, y, self.yaw + dyaw, world=True)
 
 
 def _mesh(mesh, loc, rot, scale, m, collide, label, shadow=True):
@@ -282,7 +290,7 @@ def crate(label, f, a, b, z=0, s=110, h=None, dyaw=0):
 
 
 def drum(label, x, y, fire=False):
-    if not hero("drum", label, Frame(x, y, (x * 7 + y * 3) % 360), 0, 0):
+    if not hero("drum", label, Frame(x, y, (x * 7 + y * 3) % 360, world=True), 0, 0):
         vcyl(label, x, y, 0, 30, 90, "rust")
         for zz in (20, 68):
             vcyl(label + f"_Rib{zz}", x, y, zz, 31.5, 4, "steel", collide=False)
@@ -599,7 +607,7 @@ def build_places(F, side_frames):
     W = ARMS["External"]["W"]
     gx, gy = f.at(0, L - 60)
     gate_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHDeploymentGate")
-    gate = eas.spawn_actor_from_class(gate_cls, unreal.Vector(gx, gy, 0), unreal.Rotator(roll=0, pitch=0, yaw=ARMS["External"]["angle"] + 90))
+    gate = eas.spawn_actor_from_class(gate_cls, unreal.Vector(gx, gy, 0), unreal.Rotator(roll=0, pitch=0, yaw=f.yaw + 90))
     mark(gate, "HH_DeploymentGate")
     sign("External_GateSign", f.sub(0, 0, 0), 0, L - 12, 330, "gate", 260, 70)
     for e in (-1, 1):   # hazard posts either side of the shutter
@@ -658,7 +666,7 @@ def build_places(F, side_frames):
 def bundle(label, x0, y0, x1, y1, z, radii=(12, 8, 5), hanger_ceiling=None, m=("rust", "steel", "dark")):
     """A bundle of parallel pipes from (x0, y0) to (x1, y1) at height z, hung from the ceiling every 3 m."""
     L = math.hypot(x1 - x0, y1 - y0)
-    fr = Frame(x0, y0, math.degrees(math.atan2(y1 - y0, x1 - x0)))
+    fr = Frame(x0, y0, math.degrees(math.atan2(y1 - y0, x1 - x0)), world=True)
     off = 0.0
     for k, r in enumerate(radii):
         hbar(f"{label}_P{k}", fr, off, 0, L, z - (k % 2) * 6, r, m[k % len(m)])
@@ -682,7 +690,7 @@ def panel(label, f, a, b, z, face=-1, top=CORE_H):
 
 
 def lantern(label, x, y, z):
-    box(label, Frame(x, y, 0), 0, 0, z, 16, 16, 24, "lamp", collide=False)
+    box(label, Frame(x, y, 0, world=True), 0, 0, z, 16, 16, 24, "lamp", collide=False)
 
 
 def dress_density(F, side_frames):
@@ -776,7 +784,7 @@ def dress_density(F, side_frames):
     for k in range(2):
         x, y = g.at(-150 + k * 300, 640)
         vcyl(f"Medical_IV{k}", x, y, 0, 2, 180, "steel", collide=False)
-        box(f"Medical_IVBag{k}", Frame(x, y, 0), 0, 0, 165, 10, 5, 16, "cloth_c", collide=False)
+        box(f"Medical_IVBag{k}", Frame(x, y, 0, world=True), 0, 0, 165, 10, 5, 16, "cloth_c", collide=False)
     f, L = F["External"], ARMS["External"]["L"]
     W = ARMS["External"]["W"]
     hbar("External_FallenPipe", f.sub(-W / 2 + 70, L - 1500, 8), 0, 0, 380, 14, 13, "rust")
@@ -827,6 +835,11 @@ def main():
     view("11_B2Link", fb, 0, 200, 0, Lb)
     view("12_Core_High", Frame(0, 0, 250), 0, R - 200, 0, 0, z=430, pitch=-22)
     view("13_Core_ToVault", Frame(0, 0, 225), 0, -200, 0, R, z=180, pitch=2)
+    # overviews: the tour hides everything that hangs above 3.3 m (ceilings, girders, pipes) for the spots tagged HW_ViewTop
+    for name, (x, y, z, yaw, pitch) in (("00_Top", (0, 0, 6800, -90, -90)), ("00b_Bird", (-3400, 3900, 3600, -52, -38))):
+        t = eas.spawn_actor_from_class(unreal.TargetPoint, unreal.Vector(x, y, z), unreal.Rotator(roll=0, pitch=pitch, yaw=yaw))
+        t.tags = [unreal.Name(TAG), unreal.Name("HW_View"), unreal.Name("HW_ViewTop"), unreal.Name(f"View_{name}")]
+        t.set_actor_label(f"HW_View_{name}")
     c = Frame(0, 0, 202.5)
     view("14_Workbench", c, -60, R - 470, 0, R - 120, z=165, pitch=-14)
     fm, Lm = F["Matteo"], ARMS["Matteo"]["L"]

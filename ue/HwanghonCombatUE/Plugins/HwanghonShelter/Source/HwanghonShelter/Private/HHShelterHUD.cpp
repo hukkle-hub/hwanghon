@@ -134,8 +134,8 @@ void AHHShelterHUD::DrawMiniMap(float S)
     const float Span = FMath::Max3((float)Size.X, (float)Size.Y, 1000.f);
     const FVector2D C = Bounds.GetCenter();
     const float MX = X + W * 0.5f, MY = Y + 20 * S + (H - 26 * S) * 0.5f, K = FMath::Min(W - 24 * S, H - 40 * S) / Span;
-    // world +X east -> right, +Y north -> up
-    auto Map = [&](const FVector& L) { return FVector2D(MX + (L.X - C.X) * K, MY - (L.Y - C.Y) * K); };
+    // a true top view: UE is left-handed, seen from above +X is right and +Y is DOWN (drawing +Y up mirrored the map)
+    auto Map = [&](const FVector& L) { return FVector2D(MX + (L.X - C.X) * K, MY + (L.Y - C.Y) * K); };
     DrawPanel(MX - 9 * S, MY - 9 * S, 18 * S, 18 * S, FLinearColor(0.25f, 0.25f, 0.24f, 0.9f));   // the core
     for (AHHShelterStation* St : Stations)
     {
