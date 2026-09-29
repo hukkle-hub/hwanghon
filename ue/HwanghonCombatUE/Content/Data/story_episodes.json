@@ -49,6 +49,12 @@
       "kind": "static",
       "src": "코어 7 m L13171-L13189"
     },
+    "나노-노바 코어": {
+      "id": "nano_nova_core",
+      "height": 8.9,
+      "kind": "built",
+      "src": "L14532-L14869 (tools/3d/build_nano_nova.py, doc 156)"
+    },
     "발사대 탑": {
       "id": "amplifier_tower",
       "height": 16.0,
@@ -3802,6 +3808,7 @@
           },
           "arena": {
             "kind": "underground",
+            "ceiling_cm": 2600,
             "features": [
               "결정 산(수백 코어)",
               "캡슐 잔해",
@@ -3815,6 +3822,7 @@
               }
             ]
           },
+          "body": "boss_nano_nova_core",
           "prefix": "B1_",
           "layers": {
             "pre": [

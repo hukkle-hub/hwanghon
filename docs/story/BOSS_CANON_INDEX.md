@@ -22,11 +22,15 @@
 | 8 | 아스널 오버로드 | `boss_arsenal_overlord` | EP21 계룡 주 격납고(부포탑 1 기 파괴·퇴각) · EP22 같은 곳(격파) | 진입 실패 → 격파 | `arsenal_overlord.jpg` · 부포탑 후보 `arsenal_subturret_candidate.jpg` | Arsenal | ArsenalOverlord |
 | 9 | 박 준장(문지기) | `boss_general_park` | EP22 소독약 냄새 복도(소개) · EP23 각인 표본 보관실(격파) | 격파(경례) | **없음** | GeneralPark | GeneralPark |
 | 10 | 정 장관(정 장관이었던 것) | `boss_minister_jeong` | EP25 발사장(등장) · EP26 발사장 도로·활주로(격파) | 격파(부동자세) | 후보 `minister_jeong_candidate.jpg` — **TBD_CANON**. 원문은 군도·의장대 지휘, 시트에 군도 없음 | **없음** | MinisterJeong |
-| 11 | 나노-노바 코어(결정의 산·차한별) | `boss_nano_nova_core` | EP27 발사대 아래 지하(격파) | 코어 소등, 위의 목소리 물러남 | **없음** | **없음** | NanoNovaCore |
-| 12 | 발사대 탑(증폭기) | `boss_amplifier_tower` | EP28 고흥 발사장 지상(파괴) — 원문 «이 년의 마지막 적은, 괴물이 아니라 탑이었다» | 넘어감, 노래 끊김 | `amplifier_tower.jpg` | **없음** | NanoNovaCore 2 페이즈 «증폭 탑 앵커» — **TBD_CANON**(별도 보스인지) |
+| 11 | 나노-노바 코어(결정의 산·차한별) | `boss_nano_nova_core` | EP27 발사대 아래 지하(격파) | 코어 소등, 위의 목소리 물러남 | **없음** — 원문으로 새로 그린다(docs/design/156) | NanoNovaCore — **탑 그림이다(아래)** | NanoNovaCore |
+| 12 | 발사대 탑(증폭기) | `boss_amplifier_tower` | EP28 고흥 발사장 지상(파괴) — 원문 «이 년의 마지막 적은, 괴물이 아니라 탑이었다» | 넘어감, 노래 끊김 | `amplifier_tower.jpg` | NanoNovaCore 그림(같은 탑) | NanoNovaCore 2 페이즈 «증폭 탑 앵커» → **별도 보스로 확정(2026-09-29)** |
 
 - 통합본 머리말의 «보스 11체»와 12 체가 맞지 않는다.
-  - 허수아비를 튜토리얼로 빼거나, 탑을 나노-노바 코어의 2 페이즈로 보면 11 이다(TBD_CANON).
+  - 허수아비를 튜토리얼로 빼면 11 이다(TBD_CANON).
+- **나노-노바 코어 ≠ 증폭 탑 (디렉터 결정 2026-09-29 «나눠서 하자. 문맥에 맞게 만들어»).**
+  UEIntroProject(GPT 킷 v3.0 §19.14)는 EP27·EP28 을 한 보스로 합쳐 탑 그림(`T_BossArt_NanoNovaCore` = `amplifier_tower.jpg` 와 같은 디자인)에
+  나노-노바 이름을 붙였다. 원문대로 둘로 나눈다 — 탑 그림은 EP28 증폭 탑, EP27 나노-노바는 원문의 «결정의 산»으로 새로 디자인한다.
+  GPT 설계의 «링 노드 동시 차단»은 탑전으로, «심장이 멎어도 신호가 남는다»는 EP27 끝 → EP28 시작 연결로 옮긴다.
   - 디렉터 지시(«소설 속 모든 보스는 전투»)에 따라 **던전은 12 개 보스 모두 만든다.**
 
 ## 2. 시트는 있는데 1부 원문에 없는 것

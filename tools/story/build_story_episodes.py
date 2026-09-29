@@ -609,7 +609,8 @@ EPISODES = {
     # ------------------------------------------------------------------ EP27 나노-노바 코어 (doc 149)
     "EP27": {"battles": [
         battle("EP27_SC008", "나노-노바 코어", ["kain", "ryu", "sera"], result="kill", scale=3.0, src="L14724-L14875",
-               arena={"kind": "underground", "features": ["결정 산(수백 코어)", "캡슐 잔해", "견인 레일"],
+               # ceiling: «지하 공간의 절반을 채운 결정의 산»(L14532) - the built mountain is 9 m and its arms reach 15 m up
+               arena={"kind": "underground", "ceiling_cm": 2600, "features": ["결정 산(수백 코어)", "캡슐 잔해", "견인 레일"],
                       "destroy": [{"what": "결정 산의 팔 붕괴", "src": "L14869", "when": "after"}]},
                callouts={"guarded": SHIELD, "ryu_elbow": "지금……", "kain_port": "지금……", "now": "지금—!",
                          "decisive": "서걱. 한 번이었다. 두 번은 필요 없었다."},   # L14801-L14811, L14857
@@ -666,6 +667,7 @@ BODIES = {
     "실험체 09호": dict(id="subject_09", height=2.4, kind="rig", src="TBD_CANON"),
     "섀도우 팽": dict(id="shadow_fang", height=2.6, kind="rig", src="TBD_CANON"),
     "아스널 오버로드": dict(id="arsenal_overlord", height=8.0, kind="static", src="코어 7 m L13171-L13189"),
+    "나노-노바 코어": dict(id="nano_nova_core", height=8.9, kind="built", src="L14532-L14869 (tools/3d/build_nano_nova.py, doc 156)"),
     "발사대 탑": dict(id="amplifier_tower", height=16.0, kind="static", src="TBD_CANON"),
     "정 장관": dict(id="minister_jeong_candidate", height=1.8, kind="rig", src="TBD_CANON"),
 }

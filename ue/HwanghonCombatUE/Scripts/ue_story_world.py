@@ -128,7 +128,7 @@ def shell(p, cx, kind, sx, sy, spec):
         "Grass" if ("수풀" in feats or "골짜기" in feats) else "Ground")
     box(f"{p}Floor", CUBE, (cx, 0, -50), (sx / 100 + 20, sy / 100 + 20, 1), M(floor_mat))
     if kind in ("indoor", "underground", "water"):
-        h = {"indoor": 400, "underground": 900, "water": 600}[kind]
+        h = spec.get("ceiling_cm") or {"indoor": 400, "underground": 900, "water": 600}[kind]
         wall = "Concrete" if kind != "indoor" else "Wall"
         for side in (-1, 1):
             box(f"{p}Wall_Y{side}", CUBE, (cx, side * (hy + 50), h / 2), (sx / 100, 1, h / 100), M(wall))
@@ -179,7 +179,7 @@ def shell(p, cx, kind, sx, sy, spec):
     if "LED" in feats or "빌딩" in feats:
         for k in range(3):
             box(f"{p}LED_{k}", CUBE, (cx - hx * 0.6 + k * hx * 0.6, hy * 1.05, 950), (6, 0.2, 3), M("Glass"))
-    if "결정 산" in feats:
+    if "결정 산" in feats and not spec.get("_body"):   # the built body IS the mountain (doc 156)
         box(f"{p}CrystalMountain", SPHERE, (cx + hx * 0.35, 0, 200), (14, 14, 9), M("Crystal"))
     if "탑" in feats:
         for k, (i, j) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
@@ -210,7 +210,7 @@ def build_battle(ep, i, b):
     scale = b.get("boss_scale", 1.0)
     sx, sy = arena_size(kind, scale)
     cx = i * SPACING
-    shell(p, cx, kind, sx, sy, spec)
+    shell(p, cx, kind, sx, sy, dict(spec, _body=bool(b.get("body") or b.get("body_static"))))
     boss_x = cx + 300 + 180 * max(0.0, scale - 1.0)
     marker(f"{p}BossSpawn", (boss_x, 0, 5), 180)
     marker(f"{p}AinStart", (cx - 350, 0, 5), 0)
