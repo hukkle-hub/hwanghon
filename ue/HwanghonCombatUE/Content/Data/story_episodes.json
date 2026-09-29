@@ -202,6 +202,7 @@
               }
             ]
           },
+          "body": "boss_clave",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -345,6 +346,7 @@
               }
             ]
           },
+          "body": "boss_clave",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -414,6 +416,7 @@
           "recover": "crystal",
           "crystal_scale": 0.08,
           "recover_line": "아인이 그것을 두 손으로 받았다. 뜨거웠다.",
+          "body": "boss_clave",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -527,6 +530,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/celestial_static/StaticMeshes/celestial_static.celestial_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -818,6 +822,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/aegis_07_static/StaticMeshes/aegis_07_static.aegis_07_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -920,6 +925,7 @@
               "LED 광고판"
             ]
           },
+          "body_static": "/Game/Bosses/Part1/aegis_07_static/StaticMeshes/aegis_07_static.aegis_07_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1025,6 +1031,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/aegis_07_static/StaticMeshes/aegis_07_static.aegis_07_static",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -1133,6 +1140,7 @@
               "벽 이음매"
             ]
           },
+          "body_static": "/Game/Bosses/Part1/leviathan_static/StaticMeshes/leviathan_static.leviathan_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1296,6 +1304,7 @@
               "부유물"
             ]
           },
+          "body_static": "/Game/Bosses/Part1/leviathan_static/StaticMeshes/leviathan_static.leviathan_static",
           "prefix": "B3_",
           "layers": {
             "pre": [
@@ -1444,6 +1453,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/leviathan_static/StaticMeshes/leviathan_static.leviathan_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1572,6 +1582,7 @@
           "recover": "crystal",
           "crystal_scale": 0.03,
           "recover_line": "부위를 부순 자리에서만 나오는, 아직 따뜻한 조각이었다.",
+          "body": "boss_clave",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1653,6 +1664,7 @@
               "잔해 더미"
             ]
           },
+          "body": "boss_clave",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1810,6 +1822,7 @@
               "난간"
             ]
           },
+          "body": "boss_subject_09",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -1922,6 +1935,7 @@
               }
             ]
           },
+          "body": "boss_subject_09",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -2231,6 +2245,7 @@
               }
             ]
           },
+          "body": "boss_subject_09",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -2367,6 +2382,7 @@
               "폐허 능선"
             ]
           },
+          "body": "boss_shadow_fang",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -2433,6 +2449,7 @@
               "무음 지대"
             ]
           },
+          "body": "boss_shadow_fang",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -2539,6 +2556,7 @@
               "골짜기"
             ]
           },
+          "body": "boss_shadow_fang",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -2595,6 +2613,7 @@
               "소리가 돌아온 전장"
             ]
           },
+          "body": "boss_shadow_fang",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -2668,6 +2687,7 @@
               "고도 상한 15m"
             ]
           },
+          "body_static": "/Game/Bosses/Part1/celestial_static/StaticMeshes/celestial_static.celestial_static",
           "prefix": "B3_",
           "layers": {
             "pre": [
@@ -2738,6 +2758,7 @@
               "골짜기 벽(등을 지고 몰림)"
             ]
           },
+          "body_static": "/Game/Bosses/Part1/celestial_static/StaticMeshes/celestial_static.celestial_static",
           "prefix": "B4_",
           "layers": {
             "pre": [
@@ -2821,6 +2842,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/celestial_static/StaticMeshes/celestial_static.celestial_static",
           "prefix": "B5_",
           "layers": {
             "pre": [
@@ -3070,6 +3092,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/arsenal_overlord_static/StaticMeshes/arsenal_overlord_static.arsenal_overlord_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -3152,6 +3175,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/arsenal_overlord_static/StaticMeshes/arsenal_overlord_static.arsenal_overlord_static",
           "prefix": "B2_",
           "layers": {
             "pre": [
@@ -3372,6 +3396,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/arsenal_overlord_static/StaticMeshes/arsenal_overlord_static.arsenal_overlord_static",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -3610,6 +3635,7 @@
               "점거 차량"
             ]
           },
+          "body": "boss_minister_jeong_candidate",
           "prefix": "B1_",
           "layers": {
             "pre": [
@@ -3909,6 +3935,7 @@
               }
             ]
           },
+          "body_static": "/Game/Bosses/Part1/amplifier_tower_static/StaticMeshes/amplifier_tower_static.amplifier_tower_static",
           "prefix": "B1_",
           "layers": {
             "pre": [

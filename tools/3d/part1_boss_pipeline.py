@@ -21,7 +21,11 @@ UE = r"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd
 UPROJECT = os.path.join(ROOT, "ue", "HwanghonCombatUE", "HwanghonCombatUE.uproject")
 INI = os.path.join(ROOT, "ue", "HwanghonCombatUE", "Config", "DefaultGame.ini")
 EPISODES = os.path.join(ROOT, "ue", "HwanghonCombatUE", "Content", "Data", "story_episodes.json")
-HOLD = {"clave": "mixamorig:LeftHand"}   # the shutter rides the left hand (L1774-L1796)
+HOLD = {"clave": "mixamorig:LeftHand"}   # the shutter in his left hand (L1774-L1796), cut loose from the coat it was welded to
+# Hi3D bodies are sculpted with arms welded to the coat and legs inside a skirt: the brawler template clips are played with
+# arms at rest, legs x0.3 and spine x0.3-ish (x0.25) - measured p99.9 edge stretch Clave idle x19 -> x1.8, hookR x31 -> x5.5,
+# Shadow Fang slam x22 -> x2.7 (doc 151 §2.2)
+MOTION = ["--arms=0", "--legs=0.3", "--spine=0.25"]
 
 
 def run(cmd, **kw):
@@ -60,7 +64,7 @@ def main():
     static = body["kind"] == "static"
     out = os.path.join(ROOT, "art", "3d", "part1", f"{bid}_static.glb" if static else f"{bid}.glb")
     os.makedirs(os.path.dirname(out), exist_ok=True)
-    extra = ["--static"] if static else ([f"--hold={HOLD[bid]}"] if bid in HOLD else [])
+    extra = ["--static"] if static else (MOTION + ([f"--hold={HOLD[bid]}", "--hold-box"] if bid in HOLD else []))
     run([BLENDER, "-b", "--python-exit-code", "1", "-P", os.path.join(ROOT, "tools", "3d", "rig_boss_template.py"), "--",
          keep, str(body["height"]), out] + extra)
     if not static:

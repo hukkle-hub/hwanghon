@@ -18,3 +18,6 @@ __pycache__/
 .recruit-shots/
 .admin-shots/
 node_modules
+
+# Hi3D raw results (~60 MB each) - kept locally; the rigged/decimated bodies in art/3d/part1 are committed (doc 151)
+art/3d/src/part1_hi3d/
