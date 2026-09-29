@@ -2,6 +2,9 @@
 #include "HHHubSubsystem.h"
 #include "HHShelterStation.h"
 #include "HHShelterNPC.h"
+#include "HHShelterOnlinePlayerState.h"
+#include "HHShelterOnlinePlayerController.h"
+#include "GameFramework/GameStateBase.h"
 
 #include "Engine/Canvas.h"
 #include "CanvasItem.h"
@@ -32,6 +35,7 @@ void AHHShelterHUD::DrawHUD()
     DrawQuestRail(Scale);
     DrawSkillBar(Scale);
     DrawMiniMap(Scale);
+    DrawPartyPanel(Scale);
 
     UHHHubSubsystem* Hub = GetWorld() ? GetWorld()->GetSubsystem<UHHHubSubsystem>() : nullptr;
     if (!Hub) return;
@@ -71,10 +75,25 @@ void AHHShelterHUD::DrawQuestRail(float S)
 {
     const float W=360*S,H=170*S,X=Canvas->SizeX-W-26*S,Y=128*S;
     DrawPanel(X,Y,W,H,FLinearColor(0.008f,0.01f,0.012f,0.76f));
-    DrawText(TEXT("◆  다시, 지하에서"),FLinearColor(0.94f,0.48f,0.12f,1),X+18*S,Y+15*S,nullptr,0.95f*S,false);
-    DrawText(TEXT("□ 거점 NPC와 대화하기"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+55*S,nullptr,0.72f*S,false);
-    DrawText(TEXT("□ 등급측정소에서 상태 확인"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+84*S,nullptr,0.72f*S,false);
-    DrawText(TEXT("□ 의뢰소에서 새 의뢰 확인"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+113*S,nullptr,0.72f*S,false);
+
+    AHHShelterOnlinePlayerState* PS = GetOwningPlayerController()
+        ? GetOwningPlayerController()->GetPlayerState<AHHShelterOnlinePlayerState>()
+        : nullptr;
+
+    if (PS && PS->ShelterSpawnPoint == TEXT("ManpowerOfficeReturn"))
+    {
+        DrawText(TEXT("◆  귀환 · 인력사무소"),FLinearColor(0.94f,0.48f,0.12f,1),X+18*S,Y+15*S,nullptr,0.95f*S,false);
+        DrawText(TEXT("□ 마태오에게 결과 보고 / 정산"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+55*S,nullptr,0.72f*S,false);
+        DrawText(TEXT("□ 장비 손상 · 치료 상태 확인"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+84*S,nullptr,0.72f*S,false);
+        DrawText(TEXT("□ 다음 의뢰 / 파티 재정비"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+113*S,nullptr,0.72f*S,false);
+    }
+    else
+    {
+        DrawText(TEXT("◆  강남 B-1 쉘터"),FLinearColor(0.94f,0.48f,0.12f,1),X+18*S,Y+15*S,nullptr,0.95f*S,false);
+        DrawText(TEXT("□ 거점 NPC와 대화하기"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+55*S,nullptr,0.72f*S,false);
+        DrawText(TEXT("□ 등급측정소에서 상태 확인"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+84*S,nullptr,0.72f*S,false);
+        DrawText(TEXT("□ 의뢰소에서 새 의뢰 확인"),FLinearColor(0.86f,0.86f,0.83f,1),X+20*S,Y+113*S,nullptr,0.72f*S,false);
+    }
 }
 
 void AHHShelterHUD::DrawSkillBar(float S)
@@ -182,4 +201,64 @@ void AHHShelterHUD::DrawStationMenu(AHHShelterStation* Station,float S)
         IY+=52*S;
     }
     DrawText(TEXT("ESC  닫기"),FLinearColor(0.55f,0.57f,0.59f,1),X+W-110*S,Y+H-30*S,nullptr,0.6f*S,false);
+}
+
+
+void AHHShelterHUD::DrawPartyPanel(float S)
+{
+    if (!Canvas || !GetWorld()) return;
+
+    APlayerController* PC = GetOwningPlayerController();
+    AHHShelterOnlinePlayerState* LocalPS = PC ? PC->GetPlayerState<AHHShelterOnlinePlayerState>() : nullptr;
+    AGameStateBase* GS = GetWorld()->GetGameState();
+    if (!LocalPS || !GS) return;
+
+    const float W = 310*S;
+    const float X = Canvas->SizeX - W - 26*S;
+    const float Y = 320*S;
+
+    if (LocalPS->PartyId.IsEmpty())
+    {
+        DrawPanel(X,Y,W,92*S,FLinearColor(0.008f,0.01f,0.013f,0.74f));
+        DrawText(TEXT("PARTY"),FLinearColor(0.7f,0.7f,0.68f,1),X+16*S,Y+12*S,nullptr,0.62f*S,false);
+        DrawText(TEXT("P 파티 생성   I 바라본 유저 초대"),FLinearColor(0.78f,0.78f,0.76f,1),X+16*S,Y+43*S,nullptr,0.58f*S,false);
+
+        if (LocalPS->HasPendingInvite())
+        {
+            DrawText(FString::Printf(TEXT("%s 초대  Y 수락 / N 거절"), *LocalPS->PendingInviteLeaderName),
+                FLinearColor(0.95f,0.58f,0.17f,1),X+16*S,Y+67*S,nullptr,0.56f*S,false);
+        }
+        return;
+    }
+
+    TArray<AHHShelterOnlinePlayerState*> Members;
+    for (APlayerState* BasePS : GS->PlayerArray)
+    {
+        if (AHHShelterOnlinePlayerState* PS = Cast<AHHShelterOnlinePlayerState>(BasePS))
+        {
+            if (PS->PartyId == LocalPS->PartyId) Members.Add(PS);
+        }
+    }
+
+    const float H = (92.f + Members.Num()*34.f)*S;
+    DrawPanel(X,Y,W,H,FLinearColor(0.008f,0.01f,0.013f,0.82f));
+    DrawText(FString::Printf(TEXT("PARTY  %d/4"),Members.Num()),FLinearColor::White,X+16*S,Y+12*S,nullptr,0.68f*S,false);
+
+    float RowY = Y + 42*S;
+    for (AHHShelterOnlinePlayerState* PS : Members)
+    {
+        const FString Flag = PS->bPartyLeader ? TEXT("◆") : TEXT("·");
+        const FString Ready = PS->bPartyReady ? TEXT("READY") : TEXT("WAIT");
+        const FLinearColor ReadyColor = PS->bPartyReady
+            ? FLinearColor(0.35f,0.82f,0.42f,1)
+            : FLinearColor(0.58f,0.58f,0.58f,1);
+
+        DrawText(FString::Printf(TEXT("%s %s  [%s]"),*Flag,*PS->GetPlayerName(),*PS->SelectedCharacterId.ToString().ToUpper()),
+            FLinearColor(0.88f,0.88f,0.85f,1),X+16*S,RowY,nullptr,0.58f*S,false);
+        DrawText(Ready,ReadyColor,X+W-76*S,RowY,nullptr,0.52f*S,false);
+        RowY += 34*S;
+    }
+
+    DrawText(LocalPS->bPartyLeader ? TEXT("R 준비  I 초대  G 출정  L 나가기") : TEXT("R 준비  L 나가기"),
+        FLinearColor(0.55f,0.57f,0.60f,1),X+16*S,Y+H-27*S,nullptr,0.53f*S,false);
 }

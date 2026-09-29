@@ -1,4 +1,4 @@
-"""Gangnam bunker B-1 hub (docs/design/152) from the director's HwanghonShelter plugin v2 blockout.
+"""Gangnam bunker B-1 hub / starting town (docs/design/152, 154) from the director's HwanghonShelter plugin blockout (v6).
 
 1. NPC portraits (art/ui/npc/*_portrait.png, cropped from the design sheets) -> /Game/Hwanghon/UI/NPC/T_<Id>_Portrait
 2. /Game/Hwanghon/Maps/Hub/L_GangnamBunker_B1: the plugin's own builder
@@ -61,7 +61,14 @@ world_name = unreal.EditorLevelLibrary.get_editor_world().get_path_name()
 if not world_name.startswith(MAP):
     raise RuntimeError(f"refusing to build into {world_name}")
 
-exec(open(BUILDER, encoding="utf-8").read(), {"__name__": "__main__"})
+# earlier builds (plugin v2) tagged their actors differently: clear them, the v6 builder only clears its own
+stale = [x for x in eas.get_all_level_actors() if "HH_SHELTER_V2" in [str(t) for t in x.tags]]
+if stale:
+    eas.destroy_actors(stale)
+    unreal.log(f"[HWShelter] removed {len(stale)} v2 actors")
+ns = {"__name__": "__main__"}
+exec(open(BUILDER, encoding="utf-8").read(), ns)
+TAG = ns["TAG"]
 
 # ---- walkthrough fixes for the v2 layout (doc 152 §3) - measured with the sheltershow reach map:
 # the central core is a closed room (its walls cut every corridor but the south), corridor ends stop short of the
@@ -75,14 +82,14 @@ FIX_TAG = unreal.Name("HW_WALKTHROUGH_FIX")
 def slab(label, cx, cy, cz, sx, sy, sz):
     a = eas.spawn_actor_from_object(CUBE, unreal.Vector(cx, cy, cz), unreal.Rotator(roll=0, pitch=0, yaw=0))
     a.set_actor_label(label)
-    a.tags = [unreal.Name("HH_SHELTER_V2"), FIX_TAG]
+    a.tags = [unreal.Name(TAG), FIX_TAG]
     a.set_actor_scale3d(unreal.Vector(sx / 100.0, sy / 100.0, sz / 100.0))
     return a
 
 
 def walls():
     return [a for a in eas.get_all_level_actors()
-            if isinstance(a, unreal.StaticMeshActor) and "HH_SHELTER_V2" in [str(t) for t in a.tags]
+            if isinstance(a, unreal.StaticMeshActor) and TAG in [str(t) for t in a.tags]
             and any(k in a.get_actor_label() for k in WALL_KEYS)]
 
 

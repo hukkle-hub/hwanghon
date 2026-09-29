@@ -30,7 +30,7 @@ v4·v5 패키지를 실제 프로젝트(`hukkle-hub/hwanghon`, `ue/HwanghonComba
 
 | # | 어디 | 문제 | 고칠 것 |
 |---|---|---|---|
-| 1 | `HHDungeonOnlineGameMode` (부모 `AGameModeBase`, `RestartPlayer` 재정의 없음) | 쉘터와 달리 던전은 **PostLogin 에서 기본 폰이 먼저 스폰**되고, 입장권 검증(비동기)이 끝난 뒤 다시 `RestartPlayer`. 무효 입장권 클라도 킥 전까지 던전 안에서 움직인다 | 쉘터와 같게: `RestartPlayer` 재정의로 `bAdmissionValidated` 전에는 스폰 안 함 |
+| 1 | ~~던전 선스폰~~ | v6 확인: 던전도 `bStartPlayersAsSpectators=true` — 입장권 전에는 관전자. **문제 없음**(v5 판단 정정) | — |
 | 2 | `gateway.mjs:223` `/v1/match/dungeon` | 공개 — 누구나 파티를 만들어 던전을 잡고 입장권을 찍어낼 수 있다 | 쉘터 서버만 부른다(`HHShelterOnlineGameMode.cpp:552`) → `requireInternal` |
 | 3 | `gateway.mjs:311` `/v1/match/return-shelter` (**v5 신규**) | 공개 — 누구나 임의 party/leader/members 로 **쉘터 입장권을 발급**받는다(파티장 위조) | 던전 서버만 부른다(`HHDungeonOnlineGameMode.cpp:205`) → `requireInternal` |
 | 4 | `gateway.mjs:5`, `HHShelterOnlineGameMode.cpp:670`, `HHDungeonOnlineGameMode.cpp:276`, `ServerScripts/*`, `README` | 기본 비밀 `change-me` | 비밀이 없으면 **기동 거부**. 스크립트는 환경변수만 |
@@ -82,3 +82,25 @@ NPC 기본 대사는 21줄 중 19줄이 원문에 없는 창작이다. **대사�
 ## 9. 좋았던 점 (유지)
 
 파티 RPC 서버 권한(생성·초대·수락·준비·나가기·4인 제한), 입장권 1회용·만료·인스턴스 한정, v5 쉘터 입장 보류, 셔터 대기구역 전원 확인 후 출정, 매치메이커 입력 검증, 하트비트.
+
+## 10. v6 를 실제로 돌려 보고 찾은 것 (2026-09-29, 문서 154) — 반영 부탁
+
+전용 서버 2 + 클라 2 로 한 바퀴를 돌렸다. 아래는 **이쪽에서 고쳐서** 통과시켰다. 원본에 반영해 주면 다음 판에서 다시 안 고쳐도 된다.
+
+| # | 파일 | 증상 | 원인 | 고친 것 |
+|---|---|---|---|---|
+| 1 | `HHShelterStation.cpp` `OnConstruction`, `HHShelterNPC.cpp`(NamePlate), `HHDeploymentGate.cpp`(StatusText) | **쉘터 전용 서버가 기동 즉시 크래시** | 전용 서버는 TextRender/Light 컴포넌트를 로드하지 않아 널 | 널 확인 |
+| 2 | `HHShelterOnlineGameMode::RestartPlayer` | **접속한 모든 플레이어가 못 움직임** | 빙의 뒤 `Pawn->SetReplicates(true)` — UE 5.8 은 RemoteRole 을 SimulatedProxy 로 재설정(엔진 `AActor::SetReplicates`) | 그 줄 삭제(`APawn::PossessedBy` 가 이미 함) |
+| 3 | `AHHShelterOnlineGameMode` | 던전 귀환자가 인력사무소가 아니라 **마을 입구**에 | 로그인 때(입장권 전) 고른 `StartSpot` 을 재사용 | `ShouldSpawnAtStartSpot` → false |
+| 4 | `HHOnlineFlowSubsystem::LoadOrCreateClientAccountId` | 같은 PC 의 클라 둘이 **같은 계정** | 파일 하나 | `-HHClientProfile=` 이면 프로필별 파일 |
+| 5 | `HHCharacterSelectHUD::BeginPlay` | PC 에서 카드 **클릭 무반응** | `bEnableClickEvents` 없음 | 켬 |
+| 6 | 컴파일(UE 5.8) | 오류 7 | `Engine/GameSession.h`→`GameFramework/GameSession.h`, `Engine/GameStateBase.h`→`GameFramework/…`, `GetGameState()`→`GetGameState<AGameStateBase>()`, JSON 키 `FString(Pair.Key)`, 매개변수 `Role`·지역변수 `Pawn` 이 멤버를 가림 | 수정 |
+| 7 | 폐기 API | `Pawn->NetUpdateFrequency = …` 등 직접 대입 | 5.5+ 폐기 | `SetNetUpdateFrequency` / `SetMinNetUpdateFrequency` / `SetNetCullDistanceSquared` |
+| 8 | `ServerDevCompleteDungeon` | 파티장이면 누구나 던전을 즉시 완료 | 개발 훅이 상용에도 열림 | 서버 `-AllowDevComplete` 일 때만 |
+| 9 | 매치메이커 | §3 의 2·3·4·5 | — | 서버 전용 엔드포인트에 `requireInternal`, 비밀 없으면 기동 거부, 서버→매치메이커 호출에 `X-Instance-Secret` |
+
+설계 확인 요청:
+- `pickShelter` 가 가장 한가한 쉘터로 **분산**한다 → 빈 쉘터 2대면 함께 들어온 두 사람이 다른 마을에. 마을은 «채워서 모으기»(소프트 상한까지)가 자연스럽다.
+- 끊긴 쉘터가 목록에서 빠지기까지 `STALE_MS` 15 s — 그 사이 귀환하면 죽은 서버로 보낸다. 귀환 접속 실패 시 재배정 경로가 없다.
+- 엔진이 `-InstanceId=` 를 자기 인자로 읽어 «Invalid InstanceId» 경고 — `-HHInstanceId=` 같은 고유 이름 권장.
+- 휴대폰: 파티(P/I/Y/N/R/L)·출정(G)에 터치 버튼, 프롬프트 «F» → «탭».

@@ -1,4 +1,7 @@
-"""황혼 강남 벙커 B-1 허브 생성기 v2 (UE 5.8)
+"""황혼 강남 벙커 B-1 시작 마을 생성기 v6 (UE 5.8)
+
+HwanghonCombatUE: unreal.Rotator positional args are (roll, pitch, yaw) - the delivered "Rotator(0, yaw, 0)"
+stood corridors upright and NPCs on their heads (doc 152). Keyword form here.
 
 기준:
 - 기존 'EP01 벙커 기지 디자인 시트'의 중앙 코어 + 분기 통로 구조.
@@ -21,11 +24,7 @@ NPC Blueprint 또는 디자인시트 Texture가 /Game 안에 존재하면 이름
 
 import unreal
 
-# NOTE (HwanghonCombatUE, doc 152): unreal.Rotator(a, b, c) is (roll, pitch, yaw) positionally - every
-# "Rotator(0, yaw, 0)" here pitched corridors upright (a wall across the PlayerStart) and stood NPCs on their heads.
-# Keyword form below.
-
-TAG = "HH_SHELTER_V2"
+TAG = "HH_SHELTER_V6"
 CUBE = unreal.load_asset("/Engine/BasicShapes/Cube.Cube")
 CYLINDER = unreal.load_asset("/Engine/BasicShapes/Cylinder.Cylinder")
 actor_sub = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
@@ -41,7 +40,7 @@ def clear_previous():
     old = [a for a in actor_sub.get_all_level_actors() if TAG in [str(x) for x in a.tags]]
     if old:
         actor_sub.destroy_actors(old)
-        unreal.log(f"[HH Shelter v2] removed {len(old)} actors")
+        unreal.log(f"[HH Shelter v6] removed {len(old)} actors")
 
 
 def cube(label, location, size_cm, yaw=0.0):
@@ -187,17 +186,17 @@ def npc(npc_id, location, yaw):
     if bp_cls:
         try:
             a.set_editor_property("visual_actor_class", bp_cls)
-            unreal.log(f"[HH Shelter v2] {npc_id} visual -> {bp_path}")
+            unreal.log(f"[HH Shelter v6] {npc_id} visual -> {bp_path}")
         except Exception as exc:
-            unreal.log_warning(f"[HH Shelter v2] could not bind BP for {npc_id}: {exc}")
+            unreal.log_warning(f"[HH Shelter v6] could not bind BP for {npc_id}: {exc}")
 
     tex, tex_path = find_texture(aliases)
     if tex:
         try:
             a.set_editor_property("portrait_texture", tex)
-            unreal.log(f"[HH Shelter v2] {npc_id} portrait -> {tex_path}")
+            unreal.log(f"[HH Shelter v6] {npc_id} portrait -> {tex_path}")
         except Exception as exc:
-            unreal.log_warning(f"[HH Shelter v2] could not bind portrait for {npc_id}: {exc}")
+            unreal.log_warning(f"[HH Shelter v6] could not bind portrait for {npc_id}: {exc}")
 
     try: a.rerun_construction_scripts()
     except Exception: pass
@@ -250,7 +249,13 @@ def build():
 
     # External / deployment corridor from design sheet.
     corridor("HH_Corr_External",(0,-1750,0),(0,-2750,0),330,310)
-    cube("HH_RollupShutter",(0,-2860,145),(650,34,290))
+    gate_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHDeploymentGate")
+    if gate_cls:
+        gate = actor_sub.spawn_actor_from_class(gate_cls, unreal.Vector(0,-2860,0), unreal.Rotator())
+        mark(gate, "HH_DeploymentGate")
+    else:
+        unreal.log_warning("[HH Shelter v6] HHDeploymentGate class missing; spawning proxy shutter")
+        cube("HH_RollupShutter",(0,-2860,145),(650,34,290))
     cube("HH_ShutterTopHousing",(0,-2860,310),(690,70,90))
 
     # Bunker-to-bunker connector, blocked for later expansion.
@@ -327,9 +332,36 @@ def build():
     ]:
         light(label,loc,900,500,col)
 
-    # ===== PLAYER + MANAGER =====
-    ps = actor_sub.spawn_actor_from_class(unreal.PlayerStart, unreal.Vector(0,-650,90), unreal.Rotator(roll=0, pitch=0, yaw=90))
-    mark(ps,"HH_PlayerStart")
+    # ===== PLAYER STARTS + MANAGER =====
+    # First login: the shelter itself is the starting town.
+    town_start = actor_sub.spawn_actor_from_class(
+        unreal.PlayerStart,
+        unreal.Vector(0,-650,90),
+        unreal.Rotator(roll=0, pitch=0, yaw=90)
+    )
+    mark(town_start,"HH_PlayerStart_TownStart")
+    try:
+        town_start.set_editor_property("player_start_tag", unreal.Name("HH_TownStart"))
+    except Exception:
+        unreal.log_warning("[HH Shelter v6] could not set HH_TownStart tag")
+
+    # Dungeon completion/retreat returns directly to the manpower office.
+    return_start = actor_sub.spawn_actor_from_class(
+        unreal.PlayerStart,
+        unreal.Vector(0,1320,90),
+        unreal.Rotator(roll=0, pitch=0, yaw=90)
+    )
+    mark(return_start,"HH_PlayerStart_ManpowerOfficeReturn")
+    try:
+        return_start.set_editor_property("player_start_tag", unreal.Name("HH_ManpowerOffice_Return"))
+    except Exception:
+        unreal.log_warning("[HH Shelter v6] could not set HH_ManpowerOffice_Return tag")
+
+    # Compact arrival/decontamination strip at the manpower-office approach.
+    cube("HH_ReturnArrival_Pad",(0,1320,2),(260,180,8))
+    cube("HH_ReturnArrival_LeftPost",(-155,1320,110),(22,22,220))
+    cube("HH_ReturnArrival_RightPost",(155,1320,110),(22,22,220))
+    cube("HH_ReturnArrival_Header",(0,1320,225),(330,22,22))
 
     mgr_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHShelterHubManager")
     if not mgr_cls:
@@ -337,16 +369,18 @@ def build():
     mark(actor_sub.spawn_actor_from_class(mgr_cls, unreal.Vector(0,0,0), unreal.Rotator()), "HH_HubManager")
 
     try:
-        gm_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHShelterDemoGameMode")
+        gm_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHShelterOnlineGameMode")
+        if not gm_cls:
+            gm_cls = unreal.load_class(None, "/Script/HwanghonShelter.HHShelterDemoGameMode")
         world = unreal.EditorLevelLibrary.get_editor_world()
         if gm_cls and world:
             world.get_world_settings().set_editor_property("default_game_mode", gm_cls)
     except Exception as exc:
-        unreal.log_warning(f"[HH Shelter v2] GameMode assignment skipped: {exc}")
+        unreal.log_warning(f"[HH Shelter v6] GameMode assignment skipped: {exc}")
 
-    unreal.log("[HH Shelter v2] COMPLETE")
-    unreal.log("[HH Shelter v2] F/Enter dialogue · E station service · ESC close")
-    unreal.log("[HH Shelter v2] If imported NPC BP/portrait names matched, they were bound automatically.")
+    unreal.log("[HH Shelter v6] COMPLETE")
+    unreal.log("[HH Shelter v6] F/Enter dialogue · E station service · ESC close")
+    unreal.log("[HH Shelter v6] If imported NPC BP/portrait names matched, they were bound automatically.")
 
 
 build()

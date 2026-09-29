@@ -11,7 +11,11 @@ public class HwanghonShelter : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
-            "InputCore"
+            "InputCore",
+            "Http",
+            "Json",
+            "JsonUtilities",
+            "NetCore"
         });
     }
 }

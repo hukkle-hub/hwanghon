@@ -99,12 +99,19 @@ void AHHShelterStation::OnConstruction(const FTransform& Transform)
     Super::OnConstruction(Transform);
     ApplyDefaultsFromId();
 
-    InteractionVolume->SetBoxExtent(InteractionExtent);
-    NumberText->SetText(FText::AsNumber(StationNumber));
-    NameText->SetText(FText::Format(FText::FromString(TEXT("{0}\n{1}")), DisplayName, EnglishName));
-    NumberText->SetTextRenderColor(AccentColor.ToFColor(true));
-    NameText->SetTextRenderColor(FColor(225, 225, 220));
-    AccentLight->SetLightColor(AccentColor);
+    // HwanghonCombatUE: text/light components are not loaded on a dedicated server (null -> crash)
+    if (InteractionVolume) InteractionVolume->SetBoxExtent(InteractionExtent);
+    if (NumberText)
+    {
+        NumberText->SetText(FText::AsNumber(StationNumber));
+        NumberText->SetTextRenderColor(AccentColor.ToFColor(true));
+    }
+    if (NameText)
+    {
+        NameText->SetText(FText::Format(FText::FromString(TEXT("{0}\n{1}")), DisplayName, EnglishName));
+        NameText->SetTextRenderColor(FColor(225, 225, 220));
+    }
+    if (AccentLight) AccentLight->SetLightColor(AccentColor);
 }
 
 void AHHShelterStation::BeginPlay()

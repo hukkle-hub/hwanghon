@@ -159,8 +159,11 @@ void AHHShelterNPC::ApplyProfileDefaults()
 void AHHShelterNPC::RefreshEditorVisuals()
 {
     InteractionVolume->SetSphereRadius(InteractionRadius);
-    NamePlate->SetText(FText::Format(FText::FromString(TEXT("{0}\n{1}")), DisplayName, RoleName));
-    NamePlate->SetTextRenderColor(AccentColor.ToFColor(true));
+    if (NamePlate)   // HwanghonCombatUE: text/light components are not loaded on a dedicated server (null -> crash)
+    {
+        NamePlate->SetText(FText::Format(FText::FromString(TEXT("{0}\n{1}")), DisplayName, RoleName));
+        NamePlate->SetTextRenderColor(AccentColor.ToFColor(true));
+    }
 }
 
 void AHHShelterNPC::OnConstruction(const FTransform& Transform)

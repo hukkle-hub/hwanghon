@@ -20,6 +20,5 @@ public:
     int32 GetCanonNPCCount() const { return CanonNPCs; }
 
 private:
-    void ApplyCanonNPCs();
     int32 CanonNPCs = 0;
 };

@@ -18,6 +18,6 @@ public class HwanghonCombatUE : ModuleRules
             "SlateCore"
         });
 
-        PrivateDependencyModuleNames.AddRange(new string[] { "Json", "WebSockets", "LevelSequence", "MovieScene", "HwanghonShelter", "ApplicationCore" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Json", "WebSockets", "LevelSequence", "MovieScene", "HwanghonShelter", "ApplicationCore", "HTTP" });
     }
 }

@@ -104,6 +104,19 @@ private:
     float ShelterTime = 0.f;
     int32 ShelterPhase = 0;
     int32 ShelterFails = 0;
+    // onlineloop: loading -> character select -> shelter server -> party -> gate -> dungeon server -> back to the
+    // manpower office, two real clients (docs/design/154). Implemented in HWOnlineLoopQA.cpp.
+    void TickOnlineLoop(float Dt);
+    void OnlineTouch(int32 Type, const FVector2D& At);
+    FString OnlineWorld;
+    int32 OnlinePhase = 0;
+    float OnlineTime = 0.f;
+    float OnlineMark = 0.f;
+    int32 OnlineFails = 0;
+    int32 OnlineShelterVisits = 0;
+    FString OnlinePartyId;
+    bool bOnlineWasLeader = false;
+    bool bOnlineSent = false;
     int32 NeckStep = -1;
     float NeckTime = 0.f;
 

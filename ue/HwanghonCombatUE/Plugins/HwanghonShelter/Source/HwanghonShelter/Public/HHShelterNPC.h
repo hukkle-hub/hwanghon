@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "UObject/SoftObjectPtr.h"   // UE 5.8: was Engine/SoftObjectPtr.h (does not exist) - doc 152
+#include "UObject/SoftObjectPtr.h"   // UE 5.8: Engine/SoftObjectPtr.h does not exist (HwanghonCombatUE doc 152)
 #include "HHShelterNPC.generated.h"
 
 class USceneComponent;

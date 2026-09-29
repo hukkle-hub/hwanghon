@@ -34,6 +34,7 @@ private:
     void DrawQuestRail(float Scale);
     void DrawSkillBar(float Scale);
     void DrawMiniMap(float Scale);
+    void DrawPartyPanel(float Scale);
     void DrawStationPrompt(AHHShelterStation* Station, float Scale);
     void DrawStationMenu(AHHShelterStation* Station, float Scale);
     void DrawNPCPrompt(AHHShelterNPC* NPC, float Scale);
