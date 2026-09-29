@@ -44,6 +44,8 @@ CORE_H = 700.0
 FACE = 2 * R * math.tan(math.radians(22.5))   # 745
 DOOR_H = 380.0
 BAND_H = 150.0      # steel wainscot on the inside of every wall
+# where the lit/dead glass sits on the Hi3D CRT model (across, forward from the back, height, width, height) - measured
+CRT_GLASS = (0.0, 45.0, 17.0, 70.0, 48.0)   # the 70 cm model: glass 70 x 48, 45 cm in front of its centre
 WARM = (1.0, 0.72, 0.45)
 COOL = (0.62, 0.76, 1.0)
 COUNT = {"actors": 0, "lights": 0}
@@ -237,6 +239,42 @@ def view(name, f, a, b, ta, tb, z=170.0, pitch=-4.0):
     return t
 
 
+# ------------------------------------------------------------------ Hi3D hero props (Scripts/ue_shelter_props.py)
+PROP_DIR = "/Game/Hwanghon/Shelter/Props"
+# yaw that turns each model's own front to +u of the frame it is placed in (measured from the preview renders)
+# every model's front is its GLB's -Y (Blender preview), which UE imports as +Y - the boss bodies turn -90 for the same
+# reason (DefaultGame.ini MeshYaw=-90)
+PROP_YAW = {"armchair": -90.0, "recorder": -90.0, "workbench": -90.0, "crt": -90.0, "drum": -90.0, "vault": -90.0}
+_props = {}
+
+
+def prop_mesh(pid):
+    if pid not in _props:
+        folder = f"{PROP_DIR}/{pid}"
+        mesh = None
+        if lib.does_directory_exist(folder):
+            for path in lib.list_assets(folder, recursive=True, include_folder=False):
+                a = unreal.load_asset(path)
+                if isinstance(a, unreal.StaticMesh):
+                    mesh = a
+                    break
+        _props[pid] = mesh
+    return _props[pid]
+
+
+def hero(pid, label, f, a, b, z=0.0, face=0.0, collide=True):
+    """The Hi3D prop pid at (a, b) in f, its front turned to f's u + face degrees. None if it is not imported yet
+    (the caller then builds its graybox stand-in)."""
+    mesh = prop_mesh(pid)
+    if not mesh:
+        return None
+    x, y = f.at(a, b)
+    act = eas.spawn_actor_from_object(mesh, unreal.Vector(x, y, z), unreal.Rotator(roll=0, pitch=0, yaw=f.yaw + face + PROP_YAW[pid]))
+    if not collide:
+        act.static_mesh_component.set_collision_enabled(unreal.CollisionEnabled.NO_COLLISION)
+    return mark(act, label)
+
+
 # ------------------------------------------------------------------ props (graybox-kit, material-dressed)
 def crate(label, f, a, b, z=0, s=110, h=None, dyaw=0):
     box(label, f, a, b, z, s, s, h or s, "wood", dyaw=dyaw)
@@ -244,9 +282,10 @@ def crate(label, f, a, b, z=0, s=110, h=None, dyaw=0):
 
 
 def drum(label, x, y, fire=False):
-    vcyl(label, x, y, 0, 30, 90, "rust")
-    for zz in (20, 68):
-        vcyl(label + f"_Rib{zz}", x, y, zz, 31.5, 4, "steel", collide=False)
+    if not hero("drum", label, Frame(x, y, (x * 7 + y * 3) % 360), 0, 0):
+        vcyl(label, x, y, 0, 30, 90, "rust")
+        for zz in (20, 68):
+            vcyl(label + f"_Rib{zz}", x, y, zz, 31.5, 4, "steel", collide=False)
     if fire:   # 드럼통에 지핀 불 (L261)
         vcyl(label + "_Embers", x, y, 86, 26, 5, "lamp", collide=False)
         light(label + "_Glow", x, y, 150, 3000, 650, color=(1.0, 0.45, 0.14), fixture=None)
@@ -458,15 +497,22 @@ def build_places(F, side_frames):
             live = (r * 7 + k) % 2 == 0
             loop = (r == 0 and k == 6)
             a, zz = -390 + k * 130, 80 + r * 95
-            box(f"Matteo_CRT_{r}_{k}", f, a, L + 745, zz, 115, 70, 88, "dark", collide=False)
-            box(f"Matteo_CRT_{r}_{k}_Glass", f, a, L + 708, zz + 10, 92, 3, 68, "lamp" if loop else ("screen" if live else "dark"), collide=False)
+            if hero("crt", f"Matteo_CRT_{r}_{k}", f, a, L + 745, zz, face=180, collide=False):   # screens face into the room
+                box(f"Matteo_CRT_{r}_{k}_Glass", f, a + CRT_GLASS[0], L + 745 - CRT_GLASS[1], zz + CRT_GLASS[2], CRT_GLASS[3], 2, CRT_GLASS[4],
+                    "lamp" if loop else ("screen" if live else "dark"), collide=False)
+            else:
+                box(f"Matteo_CRT_{r}_{k}", f, a, L + 745, zz, 115, 70, 88, "dark", collide=False)
+                box(f"Matteo_CRT_{r}_{k}_Glass", f, a, L + 708, zz + 10, 92, 3, 68, "lamp" if loop else ("screen" if live else "dark"), collide=False)
     box("Matteo_Desk", f, 0, L + 560, 0, 520, 110, 78, "wood")
-    box("Matteo_Armchair_Seat", f, 0, L + 420, 0, 90, 85, 45, "canvas")
-    box("Matteo_Armchair_Back", f, 0, L + 460, 45, 90, 18, 70, "canvas")
-    for e in (-1, 1):
-        box(f"Matteo_Armchair_Arm{e}", f, e * 50, L + 420, 45, 12, 80, 25, "canvas", collide=False)
-    box("Matteo_Recorder", f, 380, L + 200, 0, 90, 70, 120, "steel")
-    vcyl("Matteo_Recorder_Roll", *f.at(380, L + 200), 122, 18, 25, "canvas", collide=False)
+    # his back to the screens (L596 «마태오는 그 화면을 등지고 앉아 있었다»): the chair faces the door
+    if not hero("armchair", "Matteo_Armchair", f, 0, L + 420, face=180):
+        box("Matteo_Armchair_Seat", f, 0, L + 420, 0, 90, 85, 45, "canvas")
+        box("Matteo_Armchair_Back", f, 0, L + 460, 45, 90, 18, 70, "canvas")
+        for e in (-1, 1):
+            box(f"Matteo_Armchair_Arm{e}", f, e * 50, L + 420, 45, 12, 80, 25, "canvas", collide=False)
+    if not hero("recorder", "Matteo_Recorder", f, 380, L + 200, face=90):   # its paper faces the room
+        box("Matteo_Recorder", f, 380, L + 200, 0, 90, 70, 120, "steel")
+        vcyl("Matteo_Recorder_Roll", *f.at(380, L + 200), 122, 18, 25, "canvas", collide=False)
     box("Matteo_Map", f, -498, L + 400, 110, 6, 420, 200, "paper", collide=False)
     light("Matteo_ScreenGlow", *f.at(0, L + 600), 180, 1200, 700, color=(0.55, 1.0, 0.7), fixture=None)
 
@@ -585,9 +631,10 @@ def build_places(F, side_frames):
     # ---- core: Han's workbench on the way in from the gate (L295 «통로 한쪽에 작업대»), drum fires, tables,
     # laundry, crates; the drawings on the wall (L6632 «벙커 통로 벽에 도면이 붙어 있었다»)
     c = Frame(0, 0, 202.5)
-    box("Core_HanWorkbench", c, 0, R - 120, 0, 260, 90, 90, "steel")
-    box("Core_HanWorkbenchTop", c, 0, R - 120, 90, 270, 100, 6, "wood")
-    vcyl("Core_HanAnvil", *c.at(-150, R - 260), 0, 25, 70, "rust")
+    if not hero("workbench", "Core_HanWorkbench", c, 0, R - 120, face=180):   # its front faces the hall
+        box("Core_HanWorkbench", c, 0, R - 120, 0, 260, 90, 90, "steel")
+        box("Core_HanWorkbenchTop", c, 0, R - 120, 90, 270, 100, 6, "wood")
+        vcyl("Core_HanAnvil", *c.at(-150, R - 260), 0, 25, 70, "rust")
     x, y = c.at(0, R - 300)
     station("Crafting", 3, x, y, face_yaw(c, 0, R - 300, 0, 0))
     x, y = c.at(160, R - 190)
@@ -666,13 +713,15 @@ def dress_density(F, side_frames):
         if z < 5:
             continue
         box(f"Core_VaultRing{k}", f, a, -10, z - 25, 100, 34, 50, "steel", collide=False, roll=-math.degrees(t))
-    x, y = f.at(-300, -250)
-    _mesh(CYL, unreal.Vector(x, y, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(4.8, 4.8, 0.42), "steel", True, "Core_VaultLeaf")
-    for k, (r, th, m) in enumerate(((110, 0.5, "dark"), (40, 0.9, "rust"))):
-        x2, y2 = f.at(-300 + 25 + th * 10, -250)
-        _mesh(CYL, unreal.Vector(x2, y2, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(r / 50.0, r / 50.0, th * 0.2), m, False, f"Core_VaultWheel{k}")
-    for k in range(4):   # the wheel's spokes
-        box(f"Core_VaultSpoke{k}", f, -300 + 32, -250, 245, 6, 200, 10, "rust", collide=False, pitch=45 * k)
+    # the leaf swung open into the hall, hinged at the wall (sheet hero: the round B-1 door)
+    if not hero("vault", "Core_VaultLeaf", f, -300, -250, face=90):   # hinges (model left) to the wall
+        x, y = f.at(-300, -250)
+        _mesh(CYL, unreal.Vector(x, y, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(4.8, 4.8, 0.42), "steel", True, "Core_VaultLeaf")
+        for k, (r, th, m) in enumerate(((110, 0.5, "dark"), (40, 0.9, "rust"))):
+            x2, y2 = f.at(-300 + 25 + th * 10, -250)
+            _mesh(CYL, unreal.Vector(x2, y2, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(r / 50.0, r / 50.0, th * 0.2), m, False, f"Core_VaultWheel{k}")
+        for k in range(4):   # the wheel's spokes
+            box(f"Core_VaultSpoke{k}", f, -300 + 32, -250, 245, 6, 200, 10, "rust", collide=False, pitch=45 * k)
     # the map (sheet: a whole wall of it by the big table)
     mf = Frame(0, 0, 157.5)
     box("Core_MapBoard", mf, 0, R - 70, 110, 360, 6, 220, "sign_map", collide=False)
@@ -778,6 +827,10 @@ def main():
     view("11_B2Link", fb, 0, 200, 0, Lb)
     view("12_Core_High", Frame(0, 0, 250), 0, R - 200, 0, 0, z=430, pitch=-22)
     view("13_Core_ToVault", Frame(0, 0, 225), 0, -200, 0, R, z=180, pitch=2)
+    c = Frame(0, 0, 202.5)
+    view("14_Workbench", c, -60, R - 470, 0, R - 120, z=165, pitch=-14)
+    fm, Lm = F["Matteo"], ARMS["Matteo"]["L"]
+    view("15_Matteo_Close", fm, -200, Lm + 150, 150, Lm + 450, z=160, pitch=-10)
 
     mgr = eas.spawn_actor_from_class(unreal.load_class(None, "/Script/HwanghonShelter.HHShelterHubManager"), unreal.Vector(0, 0, 0), unreal.Rotator(roll=0, pitch=0, yaw=0))
     mark(mgr, "HH_HubManager")
