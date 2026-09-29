@@ -242,18 +242,25 @@ AActor* AHHShelterOnlineGameMode::ChoosePlayerStart_Implementation(AController* 
         : FName(TEXT("HH_TownStart"));
 
     APlayerStart* FallbackStart = nullptr;
+    APlayerStart* Crowded = nullptr;
 
+    // HwanghonCombatUE: a party arrives together - the first free start with the tag, not always the first one
+    // (two returns on one start stacked the second body on the first, then on the counter)
     for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
     {
         APlayerStart* Start = *It;
         if (!FallbackStart) FallbackStart = Start;
-
-        if (Start->PlayerStartTag == DesiredTag)
+        if (Start->PlayerStartTag != DesiredTag) continue;
+        bool bTaken = false;
+        for (TActorIterator<APawn> P(GetWorld()); P; ++P)
         {
-            return Start;
+            if (FVector::Dist2D(P->GetActorLocation(), Start->GetActorLocation()) < 90.f) { bTaken = true; break; }
         }
+        if (!bTaken) return Start;
+        if (!Crowded) Crowded = Start;
     }
 
+    if (Crowded) return Crowded;
     return FallbackStart ? FallbackStart : Super::ChoosePlayerStart_Implementation(Player);
 }
 

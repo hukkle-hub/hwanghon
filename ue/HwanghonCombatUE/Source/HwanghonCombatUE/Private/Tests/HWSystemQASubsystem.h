@@ -100,6 +100,11 @@ private:
     void TickNeckProbe(float Dt);
     // sheltershow: the 7 stations of the Gangnam shelter hub (docs/design/152)
     void TickShelterShow(float Dt);
+    // sheltertour: every HW_View camera spot of the shelter map (Scripts/ue_shelter_b1.py), one shot each, no HUD
+    void TickShelterTour(float Dt);
+    TArray<TWeakObjectPtr<AActor>> TourSpots;
+    int32 TourStep = -1;
+    float TourTime = 0.f;
     int32 ShelterStep = -1;
     float ShelterTime = 0.f;
     int32 ShelterPhase = 0;

@@ -1,4 +1,6 @@
 #include "HHShelterHUD.h"
+#include "EngineUtils.h"
+#include "HHShelterStation.h"
 #include "HHHubSubsystem.h"
 #include "HHShelterStation.h"
 #include "HHShelterNPC.h"
@@ -117,14 +119,34 @@ void AHHShelterHUD::DrawMiniMap(float S)
     DrawPanel(X,Y,W,H,FLinearColor(0.01f,0.012f,0.015f,0.78f));
     DrawText(TEXT("강남 벙커 B-1"),FLinearColor(0.85f,0.85f,0.82f,1),X+10*S,Y+9*S,nullptr,0.62f*S,false);
 
-    // Dungeon-like central core + seven branches.
-    DrawPanel(X+82*S,Y+62*S,24*S,24*S,FLinearColor(0.25f,0.25f,0.24f,0.9f));
-    const TCHAR* Labels[7]={TEXT("01"),TEXT("02"),TEXT("03"),TEXT("04"),TEXT("05"),TEXT("06"),TEXT("07")};
-    const FVector2D P[7]={{78,28},{23,49},{133,49},{21,94},{135,94},{36,120},{121,120}};
-    for(int32 i=0;i<7;i++)
+    // HwanghonCombatUE: the stations where they really are (any layout), and you - not a fixed drawing of seven boxes
+    TArray<AHHShelterStation*> Stations;
+    FBox2D Bounds(ForceInit);
+    for (TActorIterator<AHHShelterStation> It(GetWorld()); It; ++It)
     {
-        DrawPanel(X+P[i].X*S,Y+P[i].Y*S,30*S,19*S,FLinearColor(0.11f,0.12f,0.13f,0.9f));
-        DrawText(Labels[i],FLinearColor::White,X+(P[i].X+5)*S,Y+(P[i].Y+1)*S,nullptr,0.48f*S,false);
+        Stations.Add(*It);
+        Bounds += FVector2D(It->GetActorLocation());
+    }
+    APawn* Me = GetOwningPawn();
+    if (Me) Bounds += FVector2D(Me->GetActorLocation());
+    if (Stations.IsEmpty() || !Bounds.bIsValid) return;
+    const FVector2D Size = Bounds.GetSize();
+    const float Span = FMath::Max3((float)Size.X, (float)Size.Y, 1000.f);
+    const FVector2D C = Bounds.GetCenter();
+    const float MX = X + W * 0.5f, MY = Y + 20 * S + (H - 26 * S) * 0.5f, K = FMath::Min(W - 24 * S, H - 40 * S) / Span;
+    // world +X east -> right, +Y north -> up
+    auto Map = [&](const FVector& L) { return FVector2D(MX + (L.X - C.X) * K, MY - (L.Y - C.Y) * K); };
+    DrawPanel(MX - 9 * S, MY - 9 * S, 18 * S, 18 * S, FLinearColor(0.25f, 0.25f, 0.24f, 0.9f));   // the core
+    for (AHHShelterStation* St : Stations)
+    {
+        const FVector2D P = Map(St->GetActorLocation());
+        DrawPanel(P.X - 11 * S, P.Y - 7 * S, 22 * S, 14 * S, FLinearColor(0.11f, 0.12f, 0.13f, 0.95f));
+        DrawText(FString::Printf(TEXT("%02d"), St->StationNumber), FLinearColor::White, P.X - 8 * S, P.Y - 7 * S, nullptr, 0.42f * S, false);
+    }
+    if (Me)
+    {
+        const FVector2D P = Map(Me->GetActorLocation());
+        DrawPanel(P.X - 3 * S, P.Y - 3 * S, 6 * S, 6 * S, FLinearColor(0.94f, 0.48f, 0.12f, 1));
     }
 }
 

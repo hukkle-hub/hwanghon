@@ -183,9 +183,16 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
             if (!(Body && Me && Me->bAdmissionValidated)) { Timeout(40.f, bReturn ? TEXT("return_admission") : TEXT("shelter_admission")); return; }
             if (OnlineTime < 1.5f) return;   // let the camera settle
             const FName Tag = bReturn ? FName(TEXT("HH_ManpowerOffice_Return")) : FName(TEXT("HH_TownStart"));
-            APlayerStart* Start = StartTagged(World, Tag);
-            const float D = Start ? FVector::Dist2D(Start->GetActorLocation(), Body->GetActorLocation()) : -1.f;
-            const bool bAt = Start && D < 250.f;
+            // the nearest start with the tag (a party has one each)
+            APlayerStart* Start = nullptr;
+            float D = -1.f;
+            for (TActorIterator<APlayerStart> It(World); It; ++It)
+            {
+                if (It->PlayerStartTag != Tag) continue;
+                const float Dk = FVector::Dist2D(It->GetActorLocation(), Body->GetActorLocation());
+                if (!Start || Dk < D) { Start = *It; D = Dk; }
+            }
+            const bool bAt = Start && D < 60.f;   // on its own start, not shoved aside
             Gate(bReturn ? TEXT("return_spawn_manpower_office") : TEXT("first_spawn_town_start"), bAt,
                 FString::Printf(TEXT("%s at %.0f cm, spawn point %s, instance %s"), *Tag.ToString(), D, *Me->ShelterSpawnPoint.ToString(), *Me->OriginShelterInstanceId));
             if (!bAt) ++OnlineFails;
@@ -270,7 +277,7 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
             AHHDeploymentGate* GateActor = nullptr;
             for (TActorIterator<AHHDeploymentGate> It(World); It; ++It) GateActor = *It;
             if (!GateActor) { Fail(TEXT("gate_exists"), TEXT("no AHHDeploymentGate in the shelter")); return; }
-            const FVector Volume = GateActor->GetActorTransform().TransformPosition(FVector(bLeader ? -120.f : 120.f, 440.f, 0.f));
+            const FVector Volume = GateActor->GetActorTransform().TransformPosition(FVector(bLeader ? -80.f : 80.f, 440.f, 0.f));
             const FVector To = Volume - Body->GetActorLocation();
             const FVector Pending = Body->GetPendingMovementInputVector();
             if (To.Size2D() > 60.f) Body->AddMovementInput(To.GetSafeNormal2D(), 1.f);
