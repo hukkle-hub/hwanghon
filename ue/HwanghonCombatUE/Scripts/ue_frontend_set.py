@@ -383,15 +383,23 @@ def build_room(feeds, plan_mat):
         light(f"FE_Ceil_Lamp_{k}", x, 0, CEIL - 70, 30.0, 850, WARM, ceil=CEIL)
 
 
+# The heroes' own bodies (doc 160: Hi3D from the design art, rigged on the web game's clip sets - Scripts/ue_hero_bodies_setup.py)
+# with their own clips for the three beats; the Paragon Countess set stays as the fallback when they are not imported.
+HERO_DIR = "/Game/Heroes"
+# v9 motion language: 아인 controlled (walks in; lifts the scythe to guard), 카인 the heaviest (slow walk; the most static
+# idle; guard), 류 the quickest (quick walk in; counter - the daggers cross), 세라 the steadiest (walk; guard-up with the rod).
+HERO_BEATS = {
+    "ain":  dict(intro=("walk", 0.9), idle=("idle", 1.0), confirm=("guardUp", 1.0)),
+    "kain": dict(intro=("walk", 0.7), idle=("idle", 0.8), confirm=("guard", 0.85)),
+    "ryu":  dict(intro=("walk", 1.3), idle=("idle", 1.2), confirm=("counter", 1.2)),
+    "sera": dict(intro=("walk", 0.9), idle=("idle", 0.9), confirm=("guardUp", 0.9)),
+}
 ANIM = "/Game/ParagonCountess/Characters/Heroes/Countess/Animations/"
-# v9 (docs 159): one hero on the stand, the project's own clips for the three beats - reuse before new montages.
-# Picked by the v9 motion language: 아인 controlled (walks in, stops; weapon-ready), 카인 the heaviest (lands; the most
-# static idle), 류 the quickest (the same entrance faster, a quicker idle), 세라 the steadiest (a still idle; weapon-ready).
-BEATS = {
+BEATS = {   # fallback: the Countess skins (doc 159)
     "ain":  dict(intro=("Jog_Fwd_Stop", 1.0), idle=("Idle_Relaxed", 1.0), confirm=("Ability_Q_target_transition", 1.0)),
     "kain": dict(intro=("Respawn", 0.9), idle=("Idle_Straight", 0.8), confirm=("Ability_E_target_transition", 0.85)),
     "ryu":  dict(intro=("Jog_Fwd_Stop", 1.45), idle=("Idle_Relaxed", 1.3), confirm=("Ability_R_target_transition", 1.2)),
-    "sera": dict(intro=("Jog_Fwd_Stop", 0.9), idle=("Idle_Pose", 1.0), confirm=("Ability_E_target_transition", 0.9)),   # Cast raised the arm high - v9 «마법사/성녀식 포즈 금지»
+    "sera": dict(intro=("Jog_Fwd_Stop", 0.9), idle=("Idle_Pose", 1.0), confirm=("Ability_E_target_transition", 0.9)),
 }
 STAND_X = -700.0
 
@@ -404,15 +412,25 @@ def build_stand():
     mark(st, "FE_Stand")
     for hid, path in HEROES.items():
         body = unreal.HHSelectionBody()
-        body.set_editor_property("mesh", unreal.load_asset(path))
-        for beat in ("intro", "idle", "confirm"):
-            clip, rate = BEATS[hid][beat]
-            body.set_editor_property(beat, unreal.load_asset(ANIM + clip))
-            body.set_editor_property(f"{beat}_rate", rate)
+        own = f"{HERO_DIR}/{hid}/SkeletalMeshes/{hid}"
+        if lib.does_asset_exist(own):
+            body.set_editor_property("mesh", unreal.load_asset(own))
+            for beat in ("intro", "idle", "confirm"):
+                clip, rate = HERO_BEATS[hid][beat]
+                body.set_editor_property(beat, unreal.load_asset(f"{own}{clip}"))
+                body.set_editor_property(f"{beat}_rate", rate)
+            log(f"stand {hid}: own body {own}")
+        else:
+            body.set_editor_property("mesh", unreal.load_asset(path))
+            for beat in ("intro", "idle", "confirm"):
+                clip, rate = BEATS[hid][beat]
+                body.set_editor_property(beat, unreal.load_asset(ANIM + clip))
+                body.set_editor_property(f"{beat}_rate", rate)
+            log(f"stand {hid}: Countess fallback")
         st.set_editor_property(f"{hid}_body", body)
-    light("FE_Stand_Key", STAND_X - 230, -120, 300, 260.0, 700, (1.0, 0.82, 0.62), fixture=False, cls=unreal.SpotLight,
+    light("FE_Stand_Key", STAND_X - 230, -120, 300, 140.0, 700, (1.0, 0.82, 0.62), fixture=False, cls=unreal.SpotLight,
           rot=unreal.Rotator(roll=0, pitch=-40, yaw=25))
-    light("FE_Stand_Rim", STAND_X + 220, 90, 260, 180.0, 600, (1.0, 0.6, 0.3), fixture=False, cls=unreal.SpotLight,
+    light("FE_Stand_Rim", STAND_X + 220, 90, 260, 150.0, 600, (1.0, 0.6, 0.3), fixture=False, cls=unreal.SpotLight,
           rot=unreal.Rotator(roll=0, pitch=-35, yaw=200))
     return st
 

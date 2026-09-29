@@ -18,7 +18,9 @@ HOLD_BOX = '--hold-box' in argv   # the held piece is welded to the body: find i
 argv = [a for a in argv if not a.startswith('--')]
 SRC, HEIGHT, OUT = argv[0], float(argv[1]), argv[2]
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-TEMPLATE = os.path.join(ROOT, 'art', '3d', 'boss_anim.glb')
+# HW_RIG_TEMPLATE: another mixamorig template with its own clips - the heroes use their web-game clip sets
+# (art/3d/<hero>_anim.glb, 29 clips each, doc 160); its height comes from its own body mesh
+TEMPLATE = os.environ.get('HW_RIG_TEMPLATE') or os.path.join(ROOT, 'art', '3d', 'boss_anim.glb')
 MAX_TRIS = int(os.environ.get('MAX_TRIS', '60000'))
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -93,8 +95,12 @@ new = [o for o in bpy.data.objects if o not in before]
 arm = next(o for o in new if o.type == 'ARMATURE')
 for o in new:
     if o.type == 'MESH':
+        if os.environ.get('HW_RIG_TEMPLATE'):
+            t_pts = [o.matrix_world @ Vector(c) for c in o.bound_box]
+            T_H = max(globals().get('T_H', 0.0), max(p.z for p in t_pts) - min(p.z for p in t_pts))
         bpy.data.objects.remove(o)   # the scarecrow's own body (and its helper sphere)
-t_mn, t_mx = Vector((0, 0, 0)), Vector((0, 0, 2.72))   # template body height (art/3d/boss_anim.glb)
+t_mn, t_mx = Vector((0, 0, 0)), Vector((0, 0, globals().get('T_H') or 2.72))   # template body height (boss_anim.glb: 2.72)
+print(f'[rig] template {os.path.basename(TEMPLATE)} height {t_mx.z:.3f}')
 k = HEIGHT / (t_mx.z - t_mn.z)
 select([arm])
 arm.scale = (arm.scale.x * k, arm.scale.y * k, arm.scale.z * k)
