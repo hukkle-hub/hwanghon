@@ -4,6 +4,7 @@
 #include "HHShelterOnlinePlayerState.h"
 
 #include "Engine/Engine.h"
+#include "Camera/PlayerCameraManager.h"
 #include "Engine/World.h"
 #include "GameFramework/Pawn.h"
 #include "InputCoreTypes.h"
@@ -13,6 +14,25 @@
 AHHShelterOnlinePlayerController::AHHShelterOnlinePlayerController()
 {
     bReplicates = true;
+}
+
+
+void AHHShelterOnlinePlayerController::BeginPlayingState()
+{
+    Super::BeginPlayingState();
+
+    if (IsLocalController() && PlayerCameraManager)
+    {
+        // Native travel lands softly in the shelter/dungeon instead of hard-cutting from the front end.
+        PlayerCameraManager->StartCameraFade(
+            1.f,
+            0.f,
+            0.38f,
+            FLinearColor::Black,
+            false,
+            false
+        );
+    }
 }
 
 void AHHShelterOnlinePlayerController::SetupInputComponent()

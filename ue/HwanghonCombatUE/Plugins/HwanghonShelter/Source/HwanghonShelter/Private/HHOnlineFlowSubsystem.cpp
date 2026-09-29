@@ -103,6 +103,38 @@ void UHHOnlineFlowSubsystem::TravelDirectToShelter(
     PlayerController->ClientTravel(BuildTravelUrl(Address, JoinToken), TRAVEL_Absolute);
 }
 
+
+void UHHOnlineFlowSubsystem::SetTravelDeferred(bool bDeferred)
+{
+    bDeferTravel = bDeferred;
+    if (!bDeferred)
+    {
+        ReleaseDeferredTravel();
+    }
+}
+
+void UHHOnlineFlowSubsystem::ReleaseDeferredTravel()
+{
+    bDeferTravel = false;
+
+    if (!PendingTravelPlayer.IsValid()
+        || PendingTravelAddress.IsEmpty()
+        || PendingTravelToken.IsEmpty())
+    {
+        return;
+    }
+
+    APlayerController* PC = PendingTravelPlayer.Get();
+    const FString Address = PendingTravelAddress;
+    const FString Token = PendingTravelToken;
+
+    PendingTravelPlayer.Reset();
+    PendingTravelAddress.Empty();
+    PendingTravelToken.Empty();
+
+    TravelDirectToShelter(PC, Address, Token);
+}
+
 void UHHOnlineFlowSubsystem::RequestShelterAndTravel(APlayerController* PlayerController)
 {
     if (bMatchmaking || !PlayerController) return;
@@ -188,6 +220,14 @@ void UHHOnlineFlowSubsystem::HandleMatchResponse(
         || !Root->TryGetStringField(TEXT("joinToken"), JoinToken) || JoinToken.IsEmpty())
     {
         OnMatchmakingFailed.Broadcast(TEXT("서버 주소 또는 입장권이 없습니다."));
+        return;
+    }
+
+    if (bDeferTravel)
+    {
+        PendingTravelPlayer = PlayerController.Get();
+        PendingTravelAddress = Address;
+        PendingTravelToken = JoinToken;
         return;
     }
 

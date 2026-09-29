@@ -68,8 +68,22 @@ public:
         const FString& Address,
         const FString& JoinToken);
 
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Online")
+    void SetTravelDeferred(bool bDeferred);
+
+    UFUNCTION(BlueprintCallable, Category="Hwanghon|Online")
+    void ReleaseDeferredTravel();
+
+    UFUNCTION(BlueprintPure, Category="Hwanghon|Online")
+    bool HasPendingTravel() const { return !PendingTravelAddress.IsEmpty() && !PendingTravelToken.IsEmpty(); }
+
 private:
     TSharedPtr<IHttpRequest, ESPMode::ThreadSafe> ActiveRequest;
+
+    bool bDeferTravel = false;
+    FString PendingTravelAddress;
+    FString PendingTravelToken;
+    TWeakObjectPtr<APlayerController> PendingTravelPlayer;
 
     FString BuildTravelUrl(const FString& Address, const FString& JoinToken) const;
     FString LoadOrCreateClientAccountId();

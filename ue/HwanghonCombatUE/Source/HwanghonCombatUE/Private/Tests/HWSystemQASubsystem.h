@@ -105,6 +105,10 @@ private:
     TArray<TWeakObjectPtr<AActor>> TourSpots;
     int32 TourStep = -1;
     float TourTime = 0.f;
+    // -HWQA=frontend (docs/design/158): title -> 입장 reveal -> character select -> connect camera, shots on the timeline
+    void TickFrontEnd(float Dt);
+    int32 FrontStep = 0;
+    float FrontTime = 0.f;
     int32 ShelterStep = -1;
     float ShelterTime = 0.f;
     int32 ShelterPhase = 0;

@@ -387,6 +387,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("sheltershow")) TickShelterShow(Dt);
     else if (Mode == TEXT("onlineloop")) TickOnlineLoop(Dt);
     else if (Mode == TEXT("sheltertour")) TickShelterTour(Dt);
+    else if (Mode == TEXT("frontend")) TickFrontEnd(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;

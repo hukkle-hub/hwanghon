@@ -15,6 +15,7 @@ public:
     AHHShelterOnlinePlayerController();
 
     virtual void SetupInputComponent() override;
+    virtual void BeginPlayingState() override;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hwanghon|Party")
     FName DefaultMissionId = TEXT("GangnamStation_B2");

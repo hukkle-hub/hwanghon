@@ -25,6 +25,7 @@
 #include "GenericPlatform/GenericPlatformInputDeviceMapper.h"
 #include "HHDeploymentGate.h"
 #include "HHOnlineFlowSubsystem.h"
+#include "HHFrontEndCinematicDirector.h"
 #include "HHShelterNPC.h"
 #include "HHShelterOnlinePlayerController.h"
 #include "HHShelterOnlinePlayerState.h"
@@ -146,17 +147,33 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
         if (Want.IsEmpty()) Want = bLeader ? TEXT("ain") : TEXT("kain");
         int32 Slot = 0;
         for (int32 i = 0; i < 4; ++i) if (Want == Heroes[i]) Slot = i;
-        const float S = FMath::Min(W / 1920.f, H / 1080.f), CW = 400 * S, CH = 520 * S, Gap = 24 * S;
-        const float StartX = (W - (4 * CW + 3 * Gap)) * 0.5f, Y0 = 255 * S;
-        const FVector2D Card(StartX + Slot * (CW + Gap) + CW / 2, Y0 + CH / 2);
-        const float BW = 410 * S, BH = 76 * S;
-        const FVector2D Confirm(W - BW - 86 * S + BW / 2, H - BH - 60 * S + BH / 2);
+        // v7 front end (doc 158): the title's 입장 plate -> the camera pulls back -> the hero cards -> 선택
+        // (layout: AHHCharacterSelectHUD::DrawTitle / DrawCharacterSelect)
+        const float S = FMath::Min(W / 1920.f, H / 1080.f);
+        const FVector2D Enter(W * 0.5f, H * 0.555f + 30 * S);
+        const float CW = 330 * S, CH = 154 * S, Gap = 22 * S;
+        const float X0 = (W - (4 * CW + 3 * Gap)) * 0.5f, Y0 = H - 320 * S;
+        const FVector2D Card(X0 + Slot * (CW + Gap) + CW / 2, Y0 + CH / 2);
+        const FVector2D Confirm(W * 0.5f, H - 112 * S + 31 * S);
         UHHOnlineFlowSubsystem* Flow = GetGameInstance()->GetSubsystem<UHHOnlineFlowSubsystem>();
+        AHHFrontEndCinematicDirector* Director = nullptr;
+        for (TActorIterator<AHHFrontEndCinematicDirector> It(World); It; ++It) { Director = *It; break; }
         switch (OnlinePhase)
         {
-        case 0: if (OnlineTime > 1.5f) { OnlineTouch(ETouchType::Began, Card); OnlinePhase = 1; } break;
-        case 1: OnlineTouch(ETouchType::Ended, Card); OnlinePhase = 2; OnlineMark = OnlineTime; break;
+        case 0: if (OnlineTime > 2.0f) { Shot(TEXT("02a_title"), true); OnlineTouch(ETouchType::Began, Enter); OnlinePhase = 1; } break;
+        case 1: OnlineTouch(ETouchType::Ended, Enter); OnlinePhase = 2; OnlineMark = OnlineTime; break;
         case 2:
+            if (OnlineTime - OnlineMark < 2.0f) break;   // the reveal is 1.55 s
+            {
+                const bool bOk = Director && Director->Stage == EHHFrontEndCameraStage::Selection;
+                Gate(TEXT("entry_reveal"), bOk, FString::Printf(TEXT("입장 -> director stage %d"), Director ? (int32)Director->Stage : -1));
+                if (!bOk) { Finish(false, TEXT("title 입장 reveal")); return; }
+            }
+            OnlineTouch(ETouchType::Began, Card);
+            OnlinePhase = 3;
+            break;
+        case 3: OnlineTouch(ETouchType::Ended, Card); OnlinePhase = 4; OnlineMark = OnlineTime; break;
+        case 4:
             if (OnlineTime - OnlineMark < 0.4f) break;
             {
                 const bool bOk = Flow && Flow->SelectedCharacterId == FName(*Want);
@@ -165,9 +182,9 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
             }
             Shot(TEXT("02_select"), true);
             OnlineTouch(ETouchType::Began, Confirm);
-            OnlinePhase = 3;
+            OnlinePhase = 5;
             break;
-        case 3: OnlineTouch(ETouchType::Ended, Confirm); OnlinePhase = 4; break;
+        case 5: OnlineTouch(ETouchType::Ended, Confirm); OnlinePhase = 6; break;
         default: break;
         }
         Timeout(40.f, TEXT("shelter_travel"));
