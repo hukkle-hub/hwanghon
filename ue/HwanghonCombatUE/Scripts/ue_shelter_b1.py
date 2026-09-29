@@ -148,7 +148,7 @@ def light(label, x, y, z, intensity=5000.0, radius=900.0, color=WARM, ceil=None,
     return a
 
 
-def wall_with_openings(label, f, b, span, height, openings, m="concrete", thick=T, bands=(), frames=()):
+def wall_with_openings(label, f, b, span, height, openings, m="concrete", thick=T, bands=(), frames=(), band_h=BAND_H):
     """A wall across frame f at forward distance b, from a=-span/2..span/2, with openings [(a_centre, width, top)].
     bands: sides (-1 = the -u face, +1 = the +u face) that get the steel wainscot; frames: sides that get door frames."""
     cuts = sorted(openings)
@@ -158,7 +158,7 @@ def wall_with_openings(label, f, b, span, height, openings, m="concrete", thick=
         if x1 - x0 > 2:
             box(f"{label}_{i}", f, (x0 + x1) / 2, b, 0, x1 - x0, thick, height, m)
             for s in bands:
-                box(f"{label}_{i}_Band{s:+d}", f, (x0 + x1) / 2, b + s * (thick / 2 + 2), 0, x1 - x0 - 2, 4, BAND_H, "steel", collide=False)
+                box(f"{label}_{i}_Band{s:+d}", f, (x0 + x1) / 2, b + s * (thick / 2 + 2), 0, x1 - x0 - 2, 4, band_h, "steel", collide=False)
         if w and top < height:
             box(f"{label}_{i}_Lintel", f, ac, b, top, w, thick, height - top, m)
         if w and ac < span / 2:
@@ -359,7 +359,7 @@ def build_core():
         f = Frame(R * math.cos(math.radians(ang)), R * math.sin(math.radians(ang)), ang)
         name, arm = by_angle.get(ang, (None, None))
         openings = [(0, arm["W"], arm["H"])] if arm else []
-        wall_with_openings(f"Core_Face{ang:03d}", f, T / 2, FACE + 40, CORE_H, openings, "concrete", bands=(-1,), frames=(-1,))
+        wall_with_openings(f"Core_Face{ang:03d}", f, T / 2, FACE + 40, CORE_H, openings, "concrete", bands=(-1,), frames=(-1,), band_h=420)
         # a pipe run along every face, high up (the sheet's hall is full of them)
         g = f.sub(0, -20, -90)   # g.u runs along the face
         hbar(f"Core_Face{ang:03d}_Pipe", g, 0, -FACE / 2 - 20, FACE / 2 + 20, CORE_H - 90, 14, "rust")
@@ -593,7 +593,7 @@ def build_places(F, side_frames):
     x, y = c.at(160, R - 190)
     npc("HanJangin", x, y, face_yaw(c, 160, R - 190, 0, 0))
     light("Core_HanLamp", *c.at(0, R - 140), 260, 1200, 500, ceil=CORE_H - 34)
-    drum("Core_DrumA", *Frame(0, 0, 250).at(0, 520), fire=True)
+    drum("Core_DrumA", *Frame(0, 0, 262).at(0, 560), fire=True)
     drum("Core_DrumB", *Frame(0, 0, 20).at(0, 480), fire=True)
     t = Frame(0, 0, 112.5)
     table("Core_Table", t, 0, R - 230, 360, 110)
@@ -601,11 +601,140 @@ def build_places(F, side_frames):
     bench("Core_BenchB", t, 0, R - 130, 320)
     box("Core_Drawings", Frame(0, 0, 67.5), 0, R - 60, 150, 320, 6, 190, "paper", collide=False)
     laundry("Core_Laundry", Frame(0, 0, 0), -300, -600, 600, 330)
-    for k, ang in enumerate((157.5, 292.5, 337.5)):
+    for k, ang in enumerate((22.5, 292.5, 337.5)):
         cf = Frame(0, 0, ang)
         crate(f"Core_Crate{k}a", cf, 0, R - 110, 0, 110)
         crate(f"Core_Crate{k}b", cf, 30, R - 110, 110, 90, dyaw=20)
         crate(f"Core_Crate{k}c", cf, -120, R - 150, 0, 90, dyaw=-15)
+
+
+def bundle(label, x0, y0, x1, y1, z, radii=(12, 8, 5), hanger_ceiling=None, m=("rust", "steel", "dark")):
+    """A bundle of parallel pipes from (x0, y0) to (x1, y1) at height z, hung from the ceiling every 3 m."""
+    L = math.hypot(x1 - x0, y1 - y0)
+    fr = Frame(x0, y0, math.degrees(math.atan2(y1 - y0, x1 - x0)))
+    off = 0.0
+    for k, r in enumerate(radii):
+        hbar(f"{label}_P{k}", fr, off, 0, L, z - (k % 2) * 6, r, m[k % len(m)])
+        off += r * 2 + 6
+    if hanger_ceiling:
+        b = 150.0
+        while b < L:
+            box(f"{label}_Hanger{int(b)}", fr, off / 2 - radii[0], b, z + radii[0], 4, 4, hanger_ceiling - z - radii[0], "steel", collide=False)
+            box(f"{label}_Strap{int(b)}", fr, off / 2 - radii[0], b, z - radii[0] - 4, off + 10, 5, 4, "steel", collide=False)
+            b += 300.0
+
+
+def panel(label, f, a, b, z, face=-1, top=CORE_H):
+    """An electrical box on a wall with indicator lights and a conduit to the ceiling (the sheet's wall clutter)."""
+    box(label, f, a, b + face * 12, z, 50, 22, 70, "steel", collide=False)
+    for k, m in enumerate(("led_red", "led_green", "led_green")):
+        x, y = f.at(a - 14 + k * 14, b + face * 24)
+        _mesh(SPHERE, unreal.Vector(x, y, z + 55), unreal.Rotator(roll=0, pitch=0, yaw=0), unreal.Vector(0.035, 0.035, 0.035), m, False, f"{label}_Led{k}", shadow=False)
+    x, y = f.at(a + 18, b + face * 12)
+    vcyl(label + "_Conduit", x, y, z + 70, 3, top - z - 110, "dark", collide=False)
+
+
+def lantern(label, x, y, z):
+    box(label, Frame(x, y, 0), 0, 0, z, 16, 16, 24, "lamp", collide=False)
+
+
+def dress_density(F, side_frames):
+    # ---- the hall: pipe bundles across the ceiling, steel to 4.2 m, pipes down every corner, electrical boxes,
+    # the painted floor circle, the B-1 vault door standing open, the map
+    zc = CORE_H - 34
+    for k, d in enumerate((-260, 260)):
+        bundle(f"Core_BundleEW{k}", -R + 40, d, R - 40, d, zc - 70, (13, 9, 6, 4), zc)
+        bundle(f"Core_BundleNS{k}", d, -R + 40, d, R - 40, zc - 110, (11, 7, 5), zc)
+    bundle("Core_BundleDiag", -560, -560, 560, 560, zc - 150, (16, 10), zc)
+    for k in range(8):
+        a = math.radians(22.5 + 45 * k)
+        d = R / math.cos(math.radians(22.5)) - 45
+        vcyl(f"Core_Downpipe{k}a", d * math.cos(a), d * math.sin(a), 0, 11, CORE_H, "rust", collide=False)
+        d2 = d - 28
+        vcyl(f"Core_Downpipe{k}b", d2 * math.cos(a) + 18 * math.sin(a), d2 * math.sin(a) - 18 * math.cos(a), 0, 6, CORE_H, "steel", collide=False)
+    by_angle = {arm["angle"]: arm for arm in ARMS.values()}
+    for i in range(8):
+        ang = i * 45
+        f = Frame(R * math.cos(math.radians(ang)), R * math.sin(math.radians(ang)), ang)
+        panel(f"Core_Panel{ang:03d}", f, -(by_angle[ang]["W"] / 2 + 95), 0, 130 + (i % 3) * 25)
+    box("Core_FloorEmblem", Frame(0, 0, 22.5), 0, 0, 0.2, 900, 900, 0.6, "sign_emblem", collide=False)
+    # B-1: a round vault door, swung open into the hall beside the way in from the outer passage (sheet hero «B-1»)
+    f = Frame(R * math.cos(math.radians(225)), R * math.sin(math.radians(225)), 225)
+    for k in range(20):
+        t = 2 * math.pi * k / 20
+        a, z = 300 * math.cos(t), 290 + 300 * math.sin(t)
+        if z < 5:
+            continue
+        box(f"Core_VaultRing{k}", f, a, -10, z - 25, 100, 34, 50, "steel", collide=False, roll=-math.degrees(t))
+    x, y = f.at(-300, -250)
+    _mesh(CYL, unreal.Vector(x, y, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(4.8, 4.8, 0.42), "steel", True, "Core_VaultLeaf")
+    for k, (r, th, m) in enumerate(((110, 0.5, "dark"), (40, 0.9, "rust"))):
+        x2, y2 = f.at(-300 + 25 + th * 10, -250)
+        _mesh(CYL, unreal.Vector(x2, y2, 250), unreal.Rotator(roll=90, pitch=0, yaw=f.yaw), unreal.Vector(r / 50.0, r / 50.0, th * 0.2), m, False, f"Core_VaultWheel{k}")
+    for k in range(4):   # the wheel's spokes
+        box(f"Core_VaultSpoke{k}", f, -300 + 32, -250, 245, 6, 200, 10, "rust", collide=False, pitch=45 * k)
+    # the map (sheet: a whole wall of it by the big table)
+    mf = Frame(0, 0, 157.5)
+    box("Core_MapBoard", mf, 0, R - 70, 110, 360, 6, 220, "sign_map", collide=False)
+    for e in (-1, 1):
+        box(f"Core_MapLeg{e}", mf, e * 170, R - 66, 0, 8, 8, 330, "steel", collide=False)
+    # life in the hall
+    vcyl("Core_WaterTank", *Frame(0, 0, 67.5).at(-230, R - 140), 0, 70, 210, "steel")
+    for k in range(4):
+        vcyl(f"Core_GasBottle{k}", *Frame(0, 0, 292.5).at(-120 + k * 30, R - 260 - (k % 2) * 28), 0, 13, 120, "hazard" if k % 2 else "steel", collide=False)
+    box("Core_Tarp", Frame(0, 0, 337.5), 110, R - 280, 0, 180, 140, 90, "canvas")
+    lantern("Core_TableLantern", *Frame(0, 0, 112.5).at(-60, R - 230), 78)
+    # ---- walkway lines in every corridor (worn yellow paint along both edges); long corridors get more
+    for name, arm in ARMS.items():
+        f, L, W = F[name], arm["L"], arm["W"]
+        for e in (-1, 1):
+            box(f"{name}_PaintLine{e:+d}", f, e * (W / 2 - 28), L / 2, 0.2, 8, L - 20, 0.6, "paint_yellow", collide=False)
+        if L >= 1000:
+            x0, y0 = f.at(-40, 50)
+            x1, y1 = f.at(-40, L - 50)
+            bundle(f"{name}_Bundle", x0, y0, x1, y1, arm["H"] - 70, (9, 6, 4), arm["H"] - 28)
+            for k in range(int(L // 800)):
+                panel(f"{name}_Panel{k}", f.sub(W / 2, 400 + k * 800, -90), 0, 0, 130, face=-1, top=arm["H"])
+
+    # ---- rooms
+    f, L = F["Manpower"], ARMS["Manpower"]["L"]
+    for k in range(5):
+        box(f"Manpower_Papers{k}", f, -300 + k * 150, L + 520, 106, 30, 22, 4 + (k * 3) % 9, "paper", collide=False, dyaw=k * 11)
+    for k in range(3):
+        box(f"Manpower_Chair{k}", f, -200 + k * 200, L + 330, 0, 45, 45, 45, "wood")
+    lantern("Manpower_CounterLantern", *f.at(280, L + 520), 106)
+    f, L = F["Matteo"], ARMS["Matteo"]["L"]
+    box("Matteo_Ashtray", f, 120, L + 560, 78, 14, 14, 4, "steel", collide=False)
+    vcyl("Matteo_Bottle", *f.at(-160, L + 560), 78, 4, 26, "dark", collide=False)
+    f, L = F["Training"], ARMS["Training"]["L"]
+    rw, rd, rh = ARMS["Training"]["room"]
+    for k in range(3):   # heavy bags hanging on chains
+        x, y = f.at(-rw / 2 + 160, L + 300 + k * 350)
+        vcyl(f"Training_Bag{k}", x, y, 60, 28, 120, "canvas")
+        vcyl(f"Training_Chain{k}", x, y, 180, 2, rh - 208, "dark", collide=False)
+    for k in range(5):
+        vcyl(f"Training_Weight{k}", *f.at(rw / 2 - 160, L + 1150 + (k % 2) * 40), k * 9, 22, 9, "dark", collide=False)
+    f, L = F["Rank"], ARMS["Rank"]["L"]
+    bench("Rank_QueueBench", f.sub(-120, 150, 90), 0, 0, 220)
+    f, L = F["Supply"], ARMS["Supply"]["L"]
+    for k in range(4):
+        box(f"Supply_Sack{k}", f, -560 + (k % 2) * 60, L + 700 + (k // 2) * 90, 0, 55, 80, 35, "canvas", dyaw=k * 23)
+    for k in range(3):
+        drum(f"Supply_Barrel{k}", *f.at(560 - (k % 2) * 60, L + 150 + k * 70))
+    lantern("Supply_CounterLantern", *f.at(-300, L + 480), 105)
+    g = side_frames["Emergency"]
+    shelf("Medical_Shelf", g, -350, 740, 220, 45, 200)
+    for k in range(2):
+        x, y = g.at(-150 + k * 300, 640)
+        vcyl(f"Medical_IV{k}", x, y, 0, 2, 180, "steel", collide=False)
+        box(f"Medical_IVBag{k}", Frame(x, y, 0), 0, 0, 165, 10, 5, 16, "cloth_c", collide=False)
+    f, L = F["External"], ARMS["External"]["L"]
+    W = ARMS["External"]["W"]
+    hbar("External_FallenPipe", f.sub(-W / 2 + 70, L - 1500, 8), 0, 0, 380, 14, 13, "rust")
+    for k in range(3):   # puddles (sheet 04: a wet, broken passage) - flat glossy ellipses
+        x, y = f.at((k - 1) * 90, 600 + k * 520)
+        _mesh(CYL, unreal.Vector(x, y, 0.3), unreal.Rotator(roll=0, pitch=0, yaw=f.yaw + k * 35), unreal.Vector((150 + k * 40) / 100.0, (90 + k * 20) / 100.0, 0.005),
+              "water", False, f"External_Puddle{k}", shadow=False)
 
 
 def main():
@@ -633,6 +762,7 @@ def main():
             side_frames[name] = g
     F = arm_frames()
     build_places(F, side_frames)
+    dress_density(F, side_frames)
 
     # QA camera spots, ordered like a walk in from the gate (novel order: gate, posters, ration, Han, Yujin, Matteo)
     fe, Le = F["External"], ARMS["External"]["L"]
@@ -646,7 +776,8 @@ def main():
     view("10_Medical", side_frames["Emergency"], -350, 100, 200, 700)
     fb, Lb = F["B2Link"], ARMS["B2Link"]["L"]
     view("11_B2Link", fb, 0, 200, 0, Lb)
-    view("12_Core_High", Frame(0, 0, 250), 0, R - 200, 0, 0, z=560, pitch=-28)
+    view("12_Core_High", Frame(0, 0, 250), 0, R - 200, 0, 0, z=430, pitch=-22)
+    view("13_Core_ToVault", Frame(0, 0, 225), 0, -200, 0, R, z=180, pitch=2)
 
     mgr = eas.spawn_actor_from_class(unreal.load_class(None, "/Script/HwanghonShelter.HHShelterHubManager"), unreal.Vector(0, 0, 0), unreal.Rotator(roll=0, pitch=0, yaw=0))
     mark(mgr, "HH_HubManager")

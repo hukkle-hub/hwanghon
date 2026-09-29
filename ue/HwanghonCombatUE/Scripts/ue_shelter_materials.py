@@ -194,6 +194,11 @@ SURFACES = {
     "cloth_a":  ("canvas", 80, (0.62, 0.78, 1.05), 1.0, None, 0.4),   # laundry: faded blue, red, grey
     "cloth_b":  ("canvas", 80, (1.25, 0.55, 0.45), 1.0, None, 0.4),
     "cloth_c":  ("canvas", 80, (0.85, 0.85, 0.85), 1.0, None, 0.4),
+    "paint_yellow": ("paint", 120, (0.95, 0.72, 0.12), 1.0, None, 0.5),   # walkway lines, markings
+    "paint_white":  ("paint", 120, (0.85, 0.84, 0.80), 1.0, None, 0.5),
+    "water":    ("steel", 200, (0.16, 0.16, 0.17), 0.18, None, 0.0),   # standing water: a darker, glossy stain
+    "led_red":   ("canvas", 50, (1, 0.2, 0.15), 1.0, (30, 3, 2, 1), 0.0),     # panel indicator lights
+    "led_green": ("canvas", 50, (0.3, 1, 0.4), 1.0, (3, 22, 6, 1), 0.0),
 }
 
 

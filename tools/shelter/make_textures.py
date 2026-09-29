@@ -288,7 +288,70 @@ def signs(w=1024, h=256):
     print('signs', len(SIGNS))
 
 
+def paint(n=512):
+    """Worn solid paint (tinted per use: walkway lines, markings) - chips show the concrete."""
+    chip = smooth(noise(n, 1.2, 6) * 0.7 + noise(n, 0.8, 40) * 0.3, 0.58, 0.63)
+    c = rgb((0.8, 0.8, 0.78)) * (0.85 + 0.2 * noise(n, 1.5, 4)[..., None])
+    c = lerp3(c, rgb((0.12, 0.115, 0.11)), chip)
+    save('paint', c, -0.2 * chip, 0.55 + 0.35 * chip)
+
+
+def emblem(n=1024):
+    """The floor marking in the core (sheet: a painted circle in the hall floor) - rings and eight spokes (the octagon),
+    worn by feet. No logo is invented."""
+    y, x = np.mgrid[0:n, 0:n]
+    r = np.hypot(x - n / 2, y - n / 2) / (n / 2)
+    t = np.arctan2(y - n / 2, x - n / 2)
+    ink = ((np.abs(r - 0.92) < 0.025) | (np.abs(r - 0.78) < 0.012) | (np.abs(r - 0.35) < 0.02)).astype(float)
+    spokes = (np.abs(np.sin(4 * t)) < 0.035) & (r > 0.36) & (r < 0.78)
+    ink = np.maximum(ink, spokes.astype(float))
+    ink *= smooth(noise(n, 1.1, 6), 0.42, 0.58) * (1 - 0.7 * smooth(noise(n, 2, 1, 5), 0.5, 0.75))   # worn by feet
+    base = rgb((0.11, 0.107, 0.10)) * (0.8 + 0.35 * noise(n, 2.2, 1, 10)[..., None])
+    c = base * (1 - ink[..., None]) + rgb((0.36, 0.33, 0.26)) * ink[..., None]   # old paint, dimmed by dirt
+    lin = np.clip(c, 0, 1)
+    srgb = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(lin, 1 / 2.4) - 0.055)
+    Image.fromarray((srgb * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, 'T_HW_B1_sign_emblem_C.png'))
+    print('emblem')
+
+
+def hand_map(w=1024, h=640):
+    """A hand-drawn district map on the wall (sheet: the map wall; L576 «서울 남부 구역도») - river band, roads,
+    grid squares, red marks. Drawn, not surveyed: no real streets are claimed."""
+    from PIL import ImageDraw
+    r = np.random.default_rng(576)
+    paper = rgb((0.55, 0.51, 0.42)) * (0.75 + 0.35 * noise(max(w, h), 2, 1, 10)[:h, :w, None])
+    img = Image.fromarray((np.clip(paper, 0, 1) ** (1 / 2.2) * 255).astype(np.uint8))
+    d = ImageDraw.Draw(img)
+    xs = np.linspace(0, w, 40)
+    ys = h * 0.22 + 40 * np.sin(xs / 140) + 25 * np.sin(xs / 57)
+    d.line(list(zip(xs, ys)), fill=(70, 88, 96), width=46)          # the river
+    for k in range(22):                                                # roads
+        x0, y0 = r.uniform(0, w), r.uniform(h * 0.3, h)
+        pts = [(x0, y0)]
+        for _ in range(6):
+            x0 += r.uniform(-160, 160)
+            y0 += r.uniform(-90, 90)
+            pts.append((x0, y0))
+        d.line(pts, fill=(60, 52, 40), width=int(r.integers(2, 5)))
+    for gx in range(0, w, 128):                                        # grid
+        d.line([(gx, 0), (gx, h)], fill=(110, 100, 80), width=1)
+    for gy in range(0, h, 128):
+        d.line([(0, gy), (w, gy)], fill=(110, 100, 80), width=1)
+    for k in range(14):                                                # red marks and crosses
+        x0, y0 = r.uniform(40, w - 40), r.uniform(h * 0.3, h - 40)
+        if k % 3:
+            d.ellipse([x0 - 16, y0 - 16, x0 + 16, y0 + 16], outline=(150, 30, 20), width=4)
+        else:
+            d.line([(x0 - 14, y0 - 14), (x0 + 14, y0 + 14)], fill=(150, 30, 20), width=5)
+            d.line([(x0 - 14, y0 + 14), (x0 + 14, y0 - 14)], fill=(150, 30, 20), width=5)
+    img.save(os.path.join(OUT, 'T_HW_B1_sign_map_C.png'))
+    print('map')
+
+
 if __name__ == '__main__':
+    paint()
+    emblem()
+    hand_map()
     signs()
     concrete()
     floor()
