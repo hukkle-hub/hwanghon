@@ -468,6 +468,18 @@ void AHWAinCharacter::SetSystemCharacterId(FName CharacterId)
     if (CharacterKit) CharacterKit->ConfigureCharacter(SystemCharacterId);
 }
 
+void AHWAinCharacter::PressAbility(int32 Slot)
+{
+    switch (Slot)
+    {
+    case 0: Skill1Pressed(); break;
+    case 1: Skill2Pressed(); break;
+    case 2: Skill3Pressed(); break;
+    case 3: Skill4Pressed(); break;
+    default: UltimatePressed(); break;
+    }
+}
+
 void AHWAinCharacter::Skill1Pressed()
 {
     if (NetworkBridge && NetworkBridge->SendSkill1()) return;

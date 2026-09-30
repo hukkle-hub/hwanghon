@@ -1,4 +1,5 @@
 #include "UI/HWCombatHUD.h"
+#include "System/HWCharacterKitComponent.h"
 
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -70,11 +71,12 @@ void UHWCombatHUDWidget::BindActors()
     }
 }
 
-UWidget* UHWCombatHUDWidget::RoundButton(const FText& Label, float Size, TFunction<void()> OnTap, bool bMain)
+UWidget* UHWCombatHUDWidget::RoundButton(const FText& Label, float Size, TFunction<void()> OnTap, bool bMain, UTextBlock** OutText)
 {
     UTextBlock* Text_ = Text(WidgetTree, Label, bMain ? EHWUITextToken::SectionTitle : EHWUITextToken::Caption,
         EHWUIColorToken::TextPrimary, bMain ? EHWUIWeight::Bold : EHWUIWeight::Medium);
     Text_->SetJustification(ETextJustify::Center);
+    if (OutText) *OutText = Text_;
     UButton* Button = Tap(Text_, MoveTemp(OnTap),
         Circle(C(EHWUIColorToken::BackgroundDeep, 0.55f), C(EHWUIColorToken::Line, 0.9f), 1.5f),
         Circle(C(EHWUIColorToken::PanelStrong, 0.7f), C(EHWUIColorToken::TextSecondary), 1.5f),
@@ -163,7 +165,19 @@ void UHWCombatHUDWidget::Build(UCanvasPanel* Root)
     Put(RoundButton(NSLOCTEXT("HWUI", "Dodge", "회피"), 88.f, [Combat]() { if (UHWCombatComponent* Cb = Combat()) { Cb->RequestDodge(); } }), 36.f, 160.f, 88.f);
     Put(RoundButton(NSLOCTEXT("HWUI", "Jump", "점프"), 72.f, [Combat]() { if (UHWCombatComponent* Cb = Combat()) { Cb->RequestJump(); } }), 262.f, 0.f, 72.f);
     Put(RoundButton(NSLOCTEXT("HWUI", "Lock", "락온"), 64.f, [this]() { if (Player.IsValid() && Player->GetLockOn()) { Player->GetLockOn()->ToggleLockOn(); } }), 0.f, 268.f, 64.f);
-    Place(Root, Actions, FAnchors(1.f, 1.f), FMargin(-X, -(Bottom + 24.f), 420.f, 360.f), FVector2D(1.f, 1.f));
+    // Skills 1-4 and the ultimate (docs/design/169): an arc above and left of the attack button, thumb-reachable,
+    // clear of smash/counter/dodge/jump/lock. Labels are the hero's skill names; cooling shows the seconds left.
+    const FVector3f SkillSpots[5] = { { 262.f, 96.f, 76.f }, { 246.f, 196.f, 76.f }, { 150.f, 226.f, 76.f }, { 68.f, 262.f, 76.f }, { 360.f, 190.f, 92.f } };
+    SkillTexts.Reset();
+    for (int32 I = 0; I < 5; ++I)
+    {
+        UTextBlock* Label = nullptr;
+        Put(RoundButton(FText::FromString(I < 4 ? FString::FromInt(I + 1) : TEXT("궁극")), SkillSpots[I].Z,
+            [this, I]() { if (Player.IsValid()) { Player->PressAbility(I); } }, false, &Label),
+            SkillSpots[I].X, SkillSpots[I].Y, SkillSpots[I].Z);
+        SkillTexts.Add(Label);
+    }
+    Place(Root, Actions, FAnchors(1.f, 1.f), FMargin(-X, -(Bottom + 24.f), 470.f, 360.f), FVector2D(1.f, 1.f));
 
     // Lock-on / tell mark: a small ring beside the target, nothing else.
     UBorder* Mark = Panel(WidgetTree, Circle(FLinearColor::Transparent, C(EHWUIColorToken::TextPrimary, 0.85f), 2.f), FMargin(0));
@@ -258,6 +272,8 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
                 bEndVictory = false;
             }
         }
+
+        UpdateSkillButtons();
 
         // Mark sits beside the target, only while locked.
         UHWLockOnComponent* LockOn = Player->GetLockOn();
@@ -368,5 +384,31 @@ void AHWCombatHUD::BeginPlay()
     if (Widget)
     {
         Widget->AddToViewport(0);
+    }
+}
+
+void UHWCombatHUDWidget::UpdateSkillButtons()
+{
+    // The web kit's names (js/dungeons.js SKILLS), short enough for a thumb button.
+    static const TMap<FName, TArray<FString>> Names = {
+        { TEXT("ain"),  { TEXT("베기"), TEXT("걸음"), TEXT("회전"), TEXT("결의"), TEXT("황혼") } },
+        { TEXT("kain"), { TEXT("내려침"), TEXT("철벽"), TEXT("회전"), TEXT("강타"), TEXT("모루") } },
+        { TEXT("ryu"),  { TEXT("난무"), TEXT("도약"), TEXT("폭풍"), TEXT("표식"), TEXT("붉은그림자") } },
+        { TEXT("sera"), { TEXT("시약"), TEXT("안개"), TEXT("연쇄"), TEXT("결계"), TEXT("촉매") } },
+    };
+    if (!Player.IsValid() || SkillTexts.Num() < 5) return;
+    const TArray<FString>* Row = Names.Find(Player->GetSystemCharacterId());
+    const UHWCharacterKitComponent* Kit = Player->GetCharacterKit();
+    const float Left[5] = {
+        Kit ? Kit->GetSkill1Cooldown() : 0.f, Kit ? Kit->GetSkill2Cooldown() : 0.f, Kit ? Kit->GetSkill3Cooldown() : 0.f,
+        Kit ? Kit->GetSkill4Cooldown() : 0.f, Kit ? Kit->GetUltimateCooldown() : 0.f };
+    for (int32 I = 0; I < 5; ++I)
+    {
+        UTextBlock* T = SkillTexts[I];
+        if (!T) continue;
+        const FString Name = Row ? (*Row)[I] : (I < 4 ? FString::FromInt(I + 1) : FString(TEXT("궁극")));
+        const bool bCooling = Left[I] > 0.05f;
+        T->SetText(FText::FromString(bCooling ? FString::Printf(TEXT("%s\n%d"), *Name, FMath::CeilToInt(Left[I])) : Name));
+        T->SetRenderOpacity(bCooling ? 0.45f : 1.f);
     }
 }

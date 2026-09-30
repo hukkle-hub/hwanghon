@@ -50,7 +50,7 @@ private:
     void Flash(const FString& Word);
     void BindActors();
     void ShowResult(bool bVictory);
-    UWidget* RoundButton(const FText& Label, float Size, TFunction<void()> OnTap, bool bMain = false);
+    UWidget* RoundButton(const FText& Label, float Size, TFunction<void()> OnTap, bool bMain = false, class UTextBlock** OutText = nullptr);
 
     TWeakObjectPtr<AHWAinCharacter> Player;
     TWeakObjectPtr<AHWBossCharacter> Boss;
@@ -63,6 +63,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<UProgressBar> PartyHp;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> HpText;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> CenterWord;
+    // skill 1-4 + ultimate labels (name, and the seconds left while cooling down)
+    UPROPERTY(Transient) TArray<TObjectPtr<UTextBlock>> SkillTexts;
+    FName SkillLabelsFor = NAME_None;
+    void UpdateSkillButtons();
     UPROPERTY(Transient) TObjectPtr<UWidget> LockMark;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanelSlot> LockSlot;
     UPROPERTY(Transient) TObjectPtr<UCanvasPanel> ResultLayer;

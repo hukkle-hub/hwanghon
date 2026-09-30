@@ -46,6 +46,9 @@ public:
     UFUNCTION(BlueprintPure)
     UHWCharacterKitComponent* GetCharacterKit() const { return CharacterKit; }
 
+    /** Touch skill buttons (docs/design/169): 0..3 = skill 1..4, 4 = ultimate - the same calls the keys make. */
+    void PressAbility(int32 Slot);
+
     UFUNCTION(BlueprintPure)
     UHWCoopLifeComponent* GetCoopLife() const { return CoopLife; }
 
