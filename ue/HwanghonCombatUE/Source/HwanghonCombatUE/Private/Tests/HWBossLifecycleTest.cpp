@@ -282,7 +282,10 @@ bool FHWBossIntroHoldTest::RunTest(const FString& Parameters)
     Boss.ReceivePlayerHit(5000.f, EHWAttackTier::Smash, FVector(100.f, 0.f, 0.f));
     TestTrue(TEXT("released boss takes damage"), Boss.GetHealth() < Before);
 
-    for (const TCHAR* Id : { TEXT("TUTORIAL_SCARECROW"), TEXT("CLAVE_GANGNAM") })
+    // every novel boss (docs/design/163) - v10's Ironwarden and General Lee are not in Part 1 and have no intro here
+    for (const TCHAR* Id : { TEXT("TUTORIAL_SCARECROW"), TEXT("CLAVE_GANGNAM"), TEXT("CELESTIAL_NAMSAN"), TEXT("AEGIS07_SDC"),
+             TEXT("LEVIATHAN_HANRIVER"), TEXT("EXPERIMENT09_PANGYO"), TEXT("SHADOWFANG_GWANAK"), TEXT("ARSENAL_GYERYONG"),
+             TEXT("PARK_GYERYONG"), TEXT("MINISTERJEONG_GOHEUNG"), TEXT("NANONOVA_GOHEUNG"), TEXT("AMPLIFIER_TOWER_GOHEUNG") })
     {
         const FHHBossIntroTimingProfile P = HHBossIntroProfiles::Resolve(Id);
         const float Total = P.PlayerEntryHold + P.SilhouetteHold + P.ScaleRevealHold + P.SignatureHold + P.HandbackHold;
@@ -292,6 +295,11 @@ bool FHWBossIntroHoldTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("scarecrow: still until it wakes, spin wind-up"), Scarecrow.bStillUntilSignature && !Scarecrow.bApproach && Scarecrow.SignaturePattern == TEXT("Spin"));
     const AHWBossCharacter::FIntroChoreo Clave = AHWBossCharacter::IntroChoreoFor(TEXT("CLAVE_GANGNAM"));
     TestTrue(TEXT("clave: walks in, sets the shutter (charge wind-up)"), Clave.bApproach && Clave.SignaturePattern == TEXT("Charge"));
+    // the tower has no attack in the novel (EP28 L15010); the turret does not walk; Jeong walks in like Clave
+    TestTrue(TEXT("tower: no wind-up"), AHWBossCharacter::IntroChoreoFor(TEXT("AMPLIFIER_TOWER_GOHEUNG")).SignaturePattern.IsNone());
+    TestFalse(TEXT("arsenal: fixed"), AHWBossCharacter::IntroChoreoFor(TEXT("ARSENAL_GYERYONG")).bApproach);
+    TestTrue(TEXT("jeong: walks in, sabre circle"), AHWBossCharacter::IntroChoreoFor(TEXT("MINISTERJEONG_GOHEUNG")).bApproach
+        && AHWBossCharacter::IntroChoreoFor(TEXT("MINISTERJEONG_GOHEUNG")).SignaturePattern == TEXT("Spin"));
     TestTrue(TEXT("unknown boss: no choreography"), AHWBossCharacter::IntroChoreoFor(TEXT("NOBODY")).SignaturePattern.IsNone());
     return true;
 }

@@ -204,6 +204,7 @@ private:
     UPROPERTY(Transient) TObjectPtr<class APostProcessVolume> SeverPost;
     UPROPERTY(Transient) TObjectPtr<class AStaticMeshActor> Crystal;
     UPROPERTY(Transient) TObjectPtr<class AHHBossIntroDirector> IntroDirector;
+    TSet<int32> IntroSeen;   // battles whose intro already played: a retry gets the short version (docs/design/163)
     double SeverRealStart = -1.0;
     bool bCrystalRecovered = false;
     FDelegateHandle InteractHandle;

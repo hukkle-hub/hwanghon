@@ -77,5 +77,10 @@ FHHBossIntroTimingProfile HHBossIntroProfiles::Resolve(FName BossId)
     if (Id == TEXT("NANONOVA_GOHEUNG"))
         return Make(0.44f,0.74f,1.02f,1.34f,0.44f,0.24f);
 
+    // 12b. 발사대 탑(증폭기) — EP28 고흥 발사장 지상. 원문과 디렉터 결정(2026-09-29 «나눠서 하자»)으로 나노-노바와 별개 보스
+    //      (황혼 docs/design/163). 움직이지 않는 탑: 동작 대신 높이를 읽는 시간이 길다.
+    if (Id == TEXT("AMPLIFIER_TOWER_GOHEUNG"))
+        return Make(0.40f,0.70f,1.10f,1.00f,0.40f,0.24f);
+
     return FHHBossIntroTimingProfile();
 }

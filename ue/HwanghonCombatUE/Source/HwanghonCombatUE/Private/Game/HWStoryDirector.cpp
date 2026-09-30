@@ -1126,8 +1126,11 @@ bool AHWStoryDirector::StartBossIntro(const FHWStoryBattle& B, bool bFromCinema)
     IntroDirector->OnIntroFinished.AddUniqueDynamic(this, &AHWStoryDirector::HandleBossIntroFinished);
     // A retry, or a boss met before (EP03's two Clave fights): the short version - same beats, shorter holds.
     // After a boss-entry Level Sequence (EP01 SC015 shows the awakening for 9.5 s) the entrance is not told twice at length.
+    // A retry is a battle whose intro already played - not "no cinema before it": EP23 opens on its fight (SC001).
     const bool bAfterEntrySequence = bFromCinema && Segments.IsValidIndex(SegmentIndex - 1) && !Segments[SegmentIndex - 1].Sequence.IsNull();
-    const bool bShort = !bFromCinema || bAfterEntrySequence || IntroDirector->Tags.Contains(TEXT("HW_IntroShort"));
+    const bool bRetry = IntroSeen.Contains(CurrentBattle);
+    IntroSeen.Add(CurrentBattle);
+    const bool bShort = bRetry || bAfterEntrySequence || IntroDirector->Tags.Contains(TEXT("HW_IntroShort"));
     Emit(bShort ? TEXT("bossintro_short") : TEXT("bossintro"));
     IntroDirector->StartBossIntro(bShort);
     return true;

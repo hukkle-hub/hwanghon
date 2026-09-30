@@ -81,9 +81,10 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
         // «어둠 속에서 실루엣이 나왔다» (EP02): the approach beats walk it in; nothing else runs while held
         if (IntroChoreo.bApproach && IntroBeat < EHHBossIntroBeat::SignatureMotion)
         {
-            if (const APawn* P = UGameplayStatics::GetPlayerPawn(this, 0))
+            const APawn* P = UGameplayStatics::GetPlayerPawn(this, 0);
+            if (P && FVector::Dist2D(P->GetActorLocation(), GetActorLocation()) > 450.f)   // never walks into her face
             {
-                AddMovementInput((P->GetActorLocation() - GetActorLocation()).GetSafeNormal2D(), 0.5f);
+                AddMovementInput((P->GetActorLocation() - GetActorLocation()).GetSafeNormal2D(), IntroChoreo.ApproachInput);
             }
         }
         return;
@@ -717,6 +718,52 @@ AHWBossCharacter::FIntroChoreo AHWBossCharacter::IntroChoreoFor(FName BossId)
         C.bApproach = true;
         C.SignaturePattern = TEXT("Charge");
     }
+    // Bosses 02-12 (docs/design/163): the wind-up of each fight's first pattern in story_episodes.json. The static bodies
+    // (Celestial, Aegis-07, Leviathan, Arsenal, the tower) hide the stand-in skeleton, so for them the shots carry it.
+    else if (Id == TEXT("CELESTIAL_NAMSAN"))
+    {
+        C.SignaturePattern = TEXT("Charge");       // 난간 급강하 (EP04 L4406)
+    }
+    else if (Id == TEXT("AEGIS07_SDC"))
+    {
+        C.bStillUntilSignature = true;             // «놈이 정지했다. 그리고 아무것도 안 했다» (EP06 L6241)
+        C.SignaturePattern = TEXT("Slam");         // 포문 개방 (L6309)
+    }
+    else if (Id == TEXT("LEVIATHAN_HANRIVER"))
+    {
+        C.SignaturePattern = TEXT("Charge");       // 측면 돌진 (EP08 L7458)
+    }
+    else if (Id == TEXT("EXPERIMENT09_PANGYO"))
+    {
+        C.bStillUntilSignature = true;             // a grey mass until «그것이 몸을 세웠다» (EP14 L9820)
+        C.SignaturePattern = TEXT("HookCombo");    // 휘감기: «가슴에서부터 양옆으로 몸통이 갈라졌고» (L9985)
+    }
+    else if (Id == TEXT("SHADOWFANG_GWANAK"))
+    {
+        C.bStillUntilSignature = true;             // in the bush shade; «예비 동작이 그늘에 녹아» (EP16 L10707)
+        C.SignaturePattern = TEXT("Charge");       // 무음 돌진
+    }
+    else if (Id == TEXT("ARSENAL_GYERYONG"))
+    {
+        C.SignaturePattern = TEXT("GroundWave");   // 사출 (EP21 L12669) - a turret, it does not walk
+    }
+    else if (Id == TEXT("PARK_GYERYONG"))
+    {
+        C.bStillUntilSignature = true;             // «문을 등진 채 부동자세로» (EP22 L13247)
+        C.SignaturePattern = TEXT("HookCombo");    // 카운터: «팔을 세워 기다리고 있었다» (EP23 L13326)
+    }
+    else if (Id == TEXT("MINISTERJEONG_GOHEUNG"))
+    {
+        C.bApproach = true;                        // «열린 길의 저편에서, 무언가가 걸어오고 있었다» (EP25 L14222)
+        C.ApproachInput = 0.22f;                   // «서두르지 않는, 지휘하는 자 특유의 속도» (L14226): at 0.5 he came 3.4 m
+        C.SignaturePattern = TEXT("Spin");         // 군도 원 (EP26 L14285-L14342)
+    }
+    else if (Id == TEXT("NANONOVA_GOHEUNG"))
+    {
+        C.bStillUntilSignature = true;             // a mountain until «산이, 눈을 떴다» (EP27 L14544)
+        C.SignaturePattern = TEXT("Charge");       // 셔터 팔: «첫 번째 팔이 셔터를 방패처럼 세웠다» (L14730)
+    }
+    // AMPLIFIER_TOWER_GOHEUNG: no attack in the novel (EP28 L15010 «벨 곳이 없었다») - no choreography.
     return C;
 }
 

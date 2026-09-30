@@ -2802,7 +2802,9 @@ void UHWSystemQASubsystem::TickStoryIntro(AHWStoryDirector& D, float Dt)
             bIntroBeatShot = false;
         }
         // each beat's last frame: what its anchor frames (and, for the signature, the wind-up at its furthest)
-        if (!bIntroBeatShot && ID->bIntroPlaying && ID->GetBeatRemaining() <= Dt * 2.f)   // one or two frames before the cut, whichever ticks first
+        // one or two frames before the cut, whichever ticks first - in the director's clock, which takes at most 1/30 s a
+        // frame: a hitch (EP16's first beat) has a long real Dt but the beat still has frames left (docs/design/163)
+        if (!bIntroBeatShot && ID->bIntroPlaying && ID->GetBeatRemaining() <= FMath::Min(Dt, 1.f / 30.f) * 2.f)
         {
             bIntroBeatShot = true;
             IntroShot(D, Beat);

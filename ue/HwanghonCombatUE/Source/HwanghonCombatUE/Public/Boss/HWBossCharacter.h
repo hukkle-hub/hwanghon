@@ -157,6 +157,7 @@ public:
     {
         bool bStillUntilSignature = false;   // a body that does not move until it wakes (EP01 scarecrow)
         bool bApproach = false;              // walks in toward the player through the first beats (Clave)
+        float ApproachInput = 0.5f;          // walk strength (Jeong «서두르지 않는» walks slower); stops 4.5 m from the player
         FName SignaturePattern;              // SignatureMotion: this fight pattern's wind-up, stopped before contact
     };
     static FIntroChoreo IntroChoreoFor(FName BossId);
