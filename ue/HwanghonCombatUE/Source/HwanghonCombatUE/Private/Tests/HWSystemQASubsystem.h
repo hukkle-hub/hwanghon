@@ -129,6 +129,21 @@ private:
     int32 FlickerStep = 0;
     // -HWQA=frontend (docs/design/158): title -> 입장 reveal -> character select -> connect camera, shots on the timeline
     void TickFrontEnd(float Dt);
+    // -HWQA=fxgallery (docs/design/167): each particle system of -HWQAFxList= fired in the EP01 room, shot over time
+    void TickFxGallery(float Dt);
+    TArray<FString> FxList;
+    int32 FxIndex = -1;
+    float FxTime = 0.f;
+    int32 FxShots = 0;
+    FVector FxSpot = FVector::ZeroVector;
+    TWeakObjectPtr<class UParticleSystemComponent> FxComp;
+    TWeakObjectPtr<class ACameraActor> FxCamera;
+    // -HWQAFxShots with storyshow: shots through each boss state the first times it comes (doc 167)
+    FString FxStateKey;
+    float FxStateTime = 0.f;
+    int32 FxStateShots = 0;
+    int32 FxShotSeq = 0;
+    TMap<FString, int32> FxShotCount;
     int32 FrontStep = 0;
     int32 OnlineSteps = 0;   // onlineloop: › presses done on the character stand
     float FrontTime = 0.f;

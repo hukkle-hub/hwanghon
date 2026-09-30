@@ -2,6 +2,7 @@
 
 #include "AssetRegistry/IAssetRegistry.h"
 #include "Boss/HWBossCanonRules.h"
+#include "Boss/HWBossFxComponent.h"
 #include "Boss/HWBossCharacter.h"
 #include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
@@ -693,6 +694,13 @@ void AHWStoryDirector::BeginBattle(bool bFromCinema)
         Rules->SetLive(!bFromCinema);   // held through the handoff blend (EnterBattleControl lets it go)
         Rules->OnCanonBeat.AddDynamic(this, &AHWStoryDirector::HandleCanonBeat);
         Rules->RegisterComponent();
+        if (Boss && Rules->IsA<UHWHeosuabiRules>())
+        {
+            // EP01 effect layer (docs/design/167); the other bosses get theirs after the four heroes' skills
+            UHWBossFxComponent* Fx = NewObject<UHWBossFxComponent>(Boss, TEXT("BossFx"));
+            Fx->RegisterComponent();
+            Fx->Bind(Boss, Rules);
+        }
     }
     else if (!B.RulesClass.IsEmpty())
     {

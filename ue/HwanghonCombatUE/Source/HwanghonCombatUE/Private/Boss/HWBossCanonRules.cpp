@@ -1,4 +1,6 @@
 #include "Boss/HWBossCanonRules.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 #include "Boss/HWBossCharacter.h"
 #include "Character/HWAinCharacter.h"
@@ -175,6 +177,13 @@ bool UHWHeosuabiRules::InterceptBeat(AHWBossCharacter& Boss, const FHWBossBeatSp
 {
     if (Boss.GetCurrentPatternId() != TEXT("Spin") || !IsKainInPosition(Boss))
     {
+        return false;
+    }
+    // QA (-HWQAFreeSpin, doc 167): let the first spin run whole once, to see its effects, before Kain takes one back
+    static int32 QAFreeBeats = FParse::Param(FCommandLine::Get(), TEXT("HWQAFreeSpin")) ? 3 : 0;
+    if (QAFreeBeats > 0)
+    {
+        --QAFreeBeats;
         return false;
     }
     // L515-L529: not a wall — a trampoline. The force goes back; the posture breaks for one breath.

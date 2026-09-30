@@ -52,6 +52,10 @@
 #include "Animation/HWPlayerPresentationComponent.h"
 #include "Camera/CameraActor.h"
 #include "Engine/StaticMeshActor.h"
+#include "Engine/StaticMesh.h"
+#include "LevelSequenceActor.h"
+#include "LevelSequencePlayer.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "GameFramework/WorldSettings.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -62,6 +66,7 @@
 #include "WorldPartition/DataLayer/DataLayerManager.h"
 #include "Game/HWStoryDirector.h"
 #include "Boss/HWBossCanonRules.h"
+#include "Boss/HWBossFxComponent.h"
 #include "Engine/PostProcessVolume.h"
 #include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "Components/CapsuleComponent.h"
@@ -69,6 +74,8 @@
 #include "UnrealClient.h"
 #include "Engine/DirectionalLight.h"
 #include "Components/LightComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 
 namespace
 {
@@ -391,6 +398,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("onlineloop")) TickOnlineLoop(Dt);
     else if (Mode == TEXT("sheltertour")) TickShelterTour(Dt);
     else if (Mode == TEXT("frontend")) TickFrontEnd(Dt);
+    else if (Mode == TEXT("fxgallery")) TickFxGallery(Dt);
     else Finish(false, TEXT("Unknown -HWQA mode: ") + Mode);
 
     FlushTimer += Dt;
@@ -2277,6 +2285,27 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
             for (const FString& Sh : QAShots) Shot(Sh, true);
         }
     }
+    // The effect layer (doc 167): each boss state shot through its first appearances, UI off.
+    if (P == EHWStoryPhase::Battle && D->GetBoss() && FParse::Param(FCommandLine::Get(), TEXT("HWQAFxShots")))
+    {
+        AHWBossCharacter* Bo = D->GetBoss();
+        static const TCHAR* StateNames[] = { TEXT("idle"), TEXT("tell"), TEXT("strike"), TEXT("recover"), TEXT("hit"), TEXT("break"), TEXT("dead") };
+        const int32 SI = (int32)Bo->GetBossState();
+        const FString SK = FString::Printf(TEXT("%s_%s"), *Bo->GetCurrentPatternId().ToString(), SI < 7 ? StateNames[SI] : TEXT("s"));
+        if (SK != FxStateKey) { FxStateKey = SK; FxStateTime = 0.f; FxStateShots = 0; }
+        FxStateTime += Dt;
+        static const float FxT[] = { 0.05f, 0.15f, 0.35f, 0.8f, 1.2f };
+        int32& Count = FxShotCount.FindOrAdd(SK);
+        if (Count < 10 && FxStateShots < 5 && FxStateTime >= FxT[FxStateShots])
+        {
+            const UHWBossFxComponent* Fx = Bo->FindComponentByClass<UHWBossFxComponent>();
+            const FString Name = FString::Printf(TEXT("fx_%03d_%s_%.2f"), FxShotSeq++, *SK, FxStateTime);
+            Shot(Name, false);
+            Note(Name + TEXT(" ") + (Fx ? Fx->Describe() : FString(TEXT("no fx layer"))));
+            ++FxStateShots;
+            ++Count;
+        }
+    }
     // L545-L567: the sever slows the world; shoot it (twice, real time) and check the crystal fell out of the cut.
     if (D->IsSeverSlowing() && SeverShots < 2)
     {
@@ -2968,4 +2997,129 @@ void UHWSystemQASubsystem::ReportBossView()
     ViewSamples = ViewAllIn = ViewNoneIn = ViewAnyOccluded = ViewMostOccluded = 0;
     ViewHeightSum = 0.f;
     ViewBlockers.Reset();
+}
+
+// ---------------------------------------------------------------- fx gallery (-HWQA=fxgallery, doc 167)
+// Look before choosing: every candidate particle system fired on the EP01 room floor under the room's own light,
+// shot at the same moments, so the boss's effects are picked from pictures and not from names.
+void UHWSystemQASubsystem::TickFxGallery(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    APlayerController* PC = GetPC();
+    if (!World || !PC || !PC->GetPawn()) return;
+    if (FxIndex < 0)
+    {
+        if (Elapsed < 3.f) return;   // let the room stream in
+        ShotDir = Param(TEXT("HWQAShots="));
+        FString Text;
+        FFileHelper::LoadFileToString(Text, *Param(TEXT("HWQAFxList=")));
+        Text.ParseIntoArrayLines(FxList);
+        FxList.RemoveAll([](const FString& L) { return L.TrimStartAndEnd().IsEmpty() || L.StartsWith(TEXT("#")); });
+        for (TActorIterator<AActor> It(World); It; ++It)
+        {
+            if (Cast<ACharacter>(*It) || Cast<AHWStoryDirector>(*It))
+            {
+                It->SetActorHiddenInGame(true);
+                It->SetActorTickEnabled(false);
+            }
+        }
+        APawn* Pawn = PC->GetPawn();
+        const FVector Fwd = Pawn->GetActorForwardVector().GetSafeNormal2D();
+        FHitResult Hit;
+        const FVector From = Pawn->GetActorLocation() + Fwd * 200.f - FVector::CrossProduct(FVector::UpVector, Fwd) * 260.f;   // beside the training prop
+        FxSpot = World->LineTraceSingleByChannel(Hit, From + FVector(0, 0, 200), From - FVector(0, 0, 800), ECC_Visibility)
+            ? Hit.ImpactPoint : From - FVector(0, 0, 90);
+        // a dark stage: additive effects vanish on the white grey-box walls, and the exposure is locked so a bright
+        // burst does not re-expose the frame between shots
+        const FVector Side = FVector::CrossProduct(FVector::UpVector, Fwd);
+        auto Block = [&](const FVector& At, const FVector& Scale)
+        {
+            FActorSpawnParameters SP;
+            SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            AStaticMeshActor* B = World->SpawnActor<AStaticMeshActor>(At, Fwd.Rotation(), SP);
+            Note(FString::Printf(TEXT("fx block %s at %s"), B ? *B->GetName() : TEXT("FAILED"), *At.ToCompactString()));
+            if (!B) return;
+            B->SetMobility(EComponentMobility::Movable);
+            B->GetStaticMeshComponent()->SetStaticMesh(LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube")));
+            B->SetActorScale3D(Scale);
+            if (UMaterialInterface* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial")))
+            {
+                UMaterialInstanceDynamic* M = UMaterialInstanceDynamic::Create(Base, B);
+                M->SetVectorParameterValue(TEXT("Color"), FLinearColor(0.018f, 0.016f, 0.014f));
+                B->GetStaticMeshComponent()->SetMaterial(0, M);
+            }
+        };
+        Block(FxSpot + Fwd * 320.f + FVector(0, 0, 300), FVector(0.1f, 16.f, 7.f));
+        Block(FxSpot + FVector(0, 0, 9), FVector(12.f, 16.f, 0.02f));
+        APostProcessVolume* Post = World->SpawnActor<APostProcessVolume>();
+        Post->bUnbound = true;
+        Post->Priority = 1000.f;
+        Post->Settings.bOverride_AutoExposureMinBrightness = true;
+        Post->Settings.bOverride_AutoExposureMaxBrightness = true;
+        Post->Settings.AutoExposureMinBrightness = 1.f;
+        Post->Settings.AutoExposureMaxBrightness = 1.f;
+        FxSpot.Z += 12.f;
+        const FVector Cam = FxSpot - Fwd * 520.f + FVector(0, 0, 210);
+        ACameraActor* Camera = World->SpawnActor<ACameraActor>(Cam, (FxSpot + FVector(0, 0, 110) - Cam).Rotation());
+        Camera->GetCameraComponent()->SetFieldOfView(70.f);
+        PC->SetViewTargetWithBlend(Camera, 0.f);
+        FxCamera = Camera;
+        Note(FString::Printf(TEXT("fx spot %s cam %s pawn %s"), *FxSpot.ToCompactString(), *Cam.ToCompactString(), *Pawn->GetActorLocation().ToCompactString()));
+        FxIndex = 0;
+        FxTime = 0.f;
+        FxShots = 0;
+        Note(FString::Printf(TEXT("fx gallery: %d systems"), FxList.Num()));
+    }
+    // the EP01 story sequence runs with its own camera cuts: stop it and keep the gallery camera
+    for (TActorIterator<ALevelSequenceActor> It(World); It; ++It)
+    {
+        if (ULevelSequencePlayer* Player = It->GetSequencePlayer())
+        {
+            if (Player->IsPlaying()) Player->Stop();
+        }
+    }
+    if (FxCamera.IsValid() && PC->GetViewTarget() != FxCamera.Get())
+    {
+        Note(FString::Printf(TEXT("fx view target was %s"), PC->GetViewTarget() ? *PC->GetViewTarget()->GetName() : TEXT("-")));
+        PC->SetViewTarget(FxCamera.Get());
+    }
+    if (FxShots == 0 && FxTime == 0.f && PC->PlayerCameraManager)
+    {
+        Note(FString::Printf(TEXT("fx camera now %s"), *PC->PlayerCameraManager->GetCameraLocation().ToCompactString()));
+    }
+    if (FxIndex >= FxList.Num())
+    {
+        Finish(true, TEXT("fx gallery done"));
+        return;
+    }
+    const FString FxPath = FxList[FxIndex].TrimStartAndEnd();
+    if (FxTime == 0.f)
+    {
+        UParticleSystem* PS = LoadObject<UParticleSystem>(nullptr, *FxPath);
+        FxComp = PS ? UGameplayStatics::SpawnEmitterAtLocation(World, PS, FxSpot, FRotator::ZeroRotator, FVector(1.f), false) : nullptr;
+        if (FxComp.IsValid() && FxPath.Contains(TEXT("Trail")))
+        {
+            FxComp->SetWorldLocation(FxSpot + FVector(150.f, 0.f, 150.f));   // trails only draw while they move
+        }
+        Note(FString::Printf(TEXT("fx %d %s %s"), FxIndex, *FxPath, FxComp.IsValid() ? TEXT("spawned") : TEXT("MISSING")));
+    }
+    FxTime += Dt;
+    if (FxComp.IsValid() && FxPath.Contains(TEXT("Trail")))
+    {
+        const float A = FxTime * 9.f;   // one and a half turns a second, the spin's own pace
+        FxComp->SetWorldLocation(FxSpot + FVector(FMath::Cos(A) * 150.f, FMath::Sin(A) * 150.f, 150.f));
+    }
+    static const float Times[] = { 0.04f, 0.12f, 0.3f, 0.7f, 1.4f };
+    if (FxShots < 5 && FxTime >= Times[FxShots])
+    {
+        Shot(FString::Printf(TEXT("fx_%03d_%d"), FxIndex, FxShots), false);
+        ++FxShots;
+    }
+    if (FxTime >= 2.3f)
+    {
+        if (FxComp.IsValid()) FxComp->DestroyComponent();
+        ++FxIndex;
+        FxTime = 0.f;
+        FxShots = 0;
+    }
 }
