@@ -95,6 +95,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWStoryEvent, FName, Event, FName,
 // then the camera leaves the cinema and settles behind Ain, and the fight is played by the novel's rules.
 // After it the story goes on; at the end the episode's SaveFlags are written and the next episode opens.
 // Boss mode (?HWStory=0) plays the same arena with no animation at all.
+class AStaticMeshActor;
+
 UCLASS()
 class HWANGHONCOMBATUE_API AHWStoryDirector : public AActor
 {

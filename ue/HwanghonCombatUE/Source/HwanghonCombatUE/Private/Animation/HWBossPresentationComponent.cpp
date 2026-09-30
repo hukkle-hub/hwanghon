@@ -384,8 +384,10 @@ void UHWBossPresentationComponent::GroundBody(float DeltaTime)
         }
         const UCapsuleComponent* Capsule = Boss->GetCapsuleComponent();
         const float Floor = Boss->GetActorLocation().Z - (Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f);
-        const float Error = Lowest - (Floor + 3.f);
-        LyingDrop = FMath::Max(0.f, LyingDrop + Error * FMath::Min(1.f, DeltaTime * 12.f));
+        // Both ways: the old "down" floated (lower it), the Mixamo knock-down (docs/design/168) sinks the pelvis
+        // 30 cm under the mat (lift it). 12 cm: a bone is the middle of a straw limb, not its underside.
+        const float Error = Lowest - (Floor + 12.f);
+        LyingDrop = FMath::Max(-80.f, LyingDrop + Error * FMath::Min(1.f, DeltaTime * 12.f));
     }
     else
     {

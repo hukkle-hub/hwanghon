@@ -50,16 +50,14 @@ void AHHCharacterSelectHUD::BeginPlay()
 
     if (GetWorld())
     {
-        for (TActorIterator<AHHFrontEndCinematicDirector> It(GetWorld()); It; ++It)
+        if (TActorIterator<AHHFrontEndCinematicDirector> It(GetWorld()); It)
         {
             Director = *It;
-            break;
         }
 
-        for (TActorIterator<AHHCharacterSelectStand> It(GetWorld()); It; ++It)
+        if (TActorIterator<AHHCharacterSelectStand> It(GetWorld()); It)
         {
             CharacterStand = *It;
-            break;
         }
     }
 

@@ -527,11 +527,8 @@ bool AHHShelterOnlineGameMode::CollectPartyMembers(FHHPartyRuntime& Party, TArra
 AHHDeploymentGate* AHHShelterOnlineGameMode::FindDeploymentGate() const
 {
     if (!GetWorld()) return nullptr;
-    for (TActorIterator<AHHDeploymentGate> It(GetWorld()); It; ++It)
-    {
-        return *It;
-    }
-    return nullptr;
+    TActorIterator<AHHDeploymentGate> It(GetWorld());
+    return It ? *It : nullptr;
 }
 
 void AHHShelterOnlineGameMode::RequestDungeonForParty(AHHShelterOnlinePlayerController* Requester, FName MissionId)

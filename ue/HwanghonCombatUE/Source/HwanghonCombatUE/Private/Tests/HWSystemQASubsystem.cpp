@@ -2570,7 +2570,7 @@ void UHWSystemQASubsystem::TickShelterShow(float Dt)
         Shot(TEXT("00_hub_start"), true);
         // ---- reachability flood
         FVector Start = Ain->GetActorLocation();
-        for (TActorIterator<APlayerStart> It(World); It; ++It) { Start = It->GetActorLocation(); break; }
+        if (TActorIterator<APlayerStart> It(World); It) { Start = It->GetActorLocation(); }
         const float GridCm = 100.f, Min = -3200.f, Max = 3200.f;
         const double T0 = FPlatformTime::Seconds();
         Note(TEXT("shelter reach: flood start"));

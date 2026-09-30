@@ -156,7 +156,7 @@ void UHWSystemQASubsystem::TickOnlineLoop(float Dt)
         const FVector2D Confirm(CX, H - 55 * S);
         UHHOnlineFlowSubsystem* Flow = GetGameInstance()->GetSubsystem<UHHOnlineFlowSubsystem>();
         AHHFrontEndCinematicDirector* Director = nullptr;
-        for (TActorIterator<AHHFrontEndCinematicDirector> It(World); It; ++It) { Director = *It; break; }
+        if (TActorIterator<AHHFrontEndCinematicDirector> It(World); It) { Director = *It; }
         switch (OnlinePhase)
         {
         case 0: if (OnlineTime > 2.0f) { Shot(TEXT("02a_title"), true); OnlineTouch(ETouchType::Began, Enter); OnlinePhase = 1; } break;

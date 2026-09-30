@@ -2,6 +2,7 @@
 
 #include "Boss/HWBossCharacter.h"
 #include "Boss/HWBossCanonRules.h"
+#include "System/HWBossSystemComponent.h"
 #include "Character/HWAinCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PointLightComponent.h"
@@ -83,6 +84,10 @@ void UHWBossFxComponent::Bind(AHWBossCharacter* InBoss, UHWBossCanonRules* Rules
     Seam = MakeLight(TEXT("HWFxSeam"), ElbowR, SeamOrange, 160.f);
     InBoss->OnBossStateChanged.AddUniqueDynamic(this, &UHWBossFxComponent::HandleState);
     if (Rules) Rules->OnCanonBeat.AddUniqueDynamic(this, &UHWBossFxComponent::HandleCanonBeat);
+    if (UHWBossSystemComponent* System = InBoss->GetBossSystem())
+    {
+        System->OnPartBroken.AddUniqueDynamic(this, &UHWBossFxComponent::HandlePartBroken);
+    }
     for (int32 I = 0; I < 2; ++I) PrevFootZ[I] = Bone(FootBones[I]).Z;
 }
 
@@ -213,6 +218,27 @@ void UHWBossFxComponent::HandleCanonBeat(FName Beat)
     }
 }
 
+namespace
+{
+    // where each breakable part sits on the Mixamo body (head sack, chest plate, the left leg's straw)
+    FName PartBone(FName PartId)
+    {
+        if (PartId == TEXT("head")) return TEXT("mixamorig_Head");
+        if (PartId == TEXT("armor")) return TEXT("mixamorig_Spine2");
+        return TEXT("mixamorig_LeftLeg");
+    }
+}
+
+void UHWBossFxComponent::HandlePartBroken(FName PartId)
+{
+    // MH: a broken part shows it - the moment is loud (chips, a fiery crack), then the part stays visibly wrecked
+    const FVector At = Bone(PartBone(PartId));
+    Fire(TEXT("elbow_hit"), At, 0.7f);
+    Fire(TEXT("rubble"), At, 0.5f);
+    Fire(TEXT("deflect"), At, 0.9f);
+    Broken.Add(PartId);
+}
+
 void UHWBossFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -285,6 +311,21 @@ void UHWBossFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
             }
             ++NextBeat;
         }
+    }
+
+    // ---- broken parts keep leaking (docs/design/166 tabs 5-7)
+    LeakClock += DeltaTime;
+    if (Broken.Num() > 0 && LeakClock >= 0.8f && !B->IsDead())
+    {
+        LeakClock = 0.f;
+        for (const FName& Part : Broken)
+        {
+            Fire(TEXT("feet_set"), Bone(PartBone(Part)), Part == TEXT("armor") ? 0.35f : 0.25f);
+        }
+    }
+    if (Glyph && Broken.Contains(TEXT("armor")) && Glyph->Intensity < 20.f)
+    {
+        Glyph->SetIntensity(20.f + 10.f * FMath::Sin(Clock * TWO_PI * 0.5f));   // the exposed core breathes
     }
 
     // ---- residue that burns out late

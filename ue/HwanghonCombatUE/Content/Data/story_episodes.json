@@ -80,6 +80,7 @@
         {
           "first_scene": "EP01_SC016",
           "rules": "HWHeosuabiRules",
+          "body": "boss_scarecrow",
           "boss_ko": "훈련용 짚단 허수아비",
           "boss_scale": 1.0,
           "party": [

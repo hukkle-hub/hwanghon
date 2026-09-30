@@ -42,6 +42,9 @@ private:
     UFUNCTION()
     void HandleCanonBeat(FName Beat);
 
+    UFUNCTION()
+    void HandlePartBroken(FName PartId);
+
     UParticleSystemComponent* Fire(const TCHAR* Key, const FVector& At, float Scale = 1.f);
     UParticleSystemComponent* FireAttached(const TCHAR* Key, FName Bone, float Scale = 1.f);
     FVector Bone(FName Name) const;
@@ -77,5 +80,8 @@ private:
     bool bBreath = false;
     float Clock = 0.f;
     float StepCooldown[2] = { 0.f, 0.f };
+    // part break (docs/design/166 tabs 5-7): what is broken keeps leaking - embers from the joint, sparks from the core
+    TSet<FName> Broken;
+    float LeakClock = 0.f;
     float PrevFootZ[2] = { 0.f, 0.f };
 };

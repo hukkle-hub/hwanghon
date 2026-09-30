@@ -57,7 +57,7 @@ int32 HWShelterCanon::Apply(UWorld* World)
             Npc->PortraitTexture = TSoftObjectPtr<UTexture2D>(FSoftObjectPath(
                 FString::Printf(TEXT("/Game/Hwanghon/UI/NPC/T_%s_Portrait.T_%s_Portrait"), *Npc->NPCId.ToString(), *Npc->NPCId.ToString())));
         }
-        Npc->RerunConstructionScripts();   // name plate
+        Npc->OnConstruction(Npc->GetActorTransform());   // name plate (RerunConstructionScripts is editor-only)
         ++CanonNPCs;
     }
     UE_LOG(LogTemp, Display, TEXT("[HWShelter] %d NPCs speak the novel's lines"), CanonNPCs);

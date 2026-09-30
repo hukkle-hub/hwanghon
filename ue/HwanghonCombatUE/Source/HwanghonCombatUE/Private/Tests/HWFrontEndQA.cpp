@@ -22,9 +22,9 @@ void UHWSystemQASubsystem::TickFrontEnd(float Dt)
     if (ShotDir.IsEmpty()) FParse::Value(FCommandLine::Get(), TEXT("HWQAShots="), ShotDir);
     AHUD* Hud = PC->GetHUD();
     AHHFrontEndCinematicDirector* Director = nullptr;
-    for (TActorIterator<AHHFrontEndCinematicDirector> It(World); It; ++It) { Director = *It; break; }
+    if (TActorIterator<AHHFrontEndCinematicDirector> It(World); It) { Director = *It; }
     AHHCharacterSelectStand* Stand = nullptr;
-    for (TActorIterator<AHHCharacterSelectStand> It(World); It; ++It) { Stand = *It; break; }
+    if (TActorIterator<AHHCharacterSelectStand> It(World); It) { Stand = *It; }
     FrontTime += Dt;
     static const TCHAR* Heroes[4] = { TEXT("ain"), TEXT("kain"), TEXT("ryu"), TEXT("sera") };
     // steps 5.. : per hero (k = 0..3) an intro shot, an idle shot, then › to the next
