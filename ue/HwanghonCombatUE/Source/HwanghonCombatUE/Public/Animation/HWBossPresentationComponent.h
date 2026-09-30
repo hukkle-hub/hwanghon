@@ -107,6 +107,7 @@ private:
     float MeshBaseZ = 0.f;
     float ClipGroundCm = 0.f;
     float LyingDrop = 0.f;
+    float StandLift = 0.f;   // toes kept on the floor while standing (docs/design/165)
     // Death collapses into a ragdoll (docs/design/165): the down/lie/death clips of the scarecrow ended propped 60 cm
     // off the floor with an arm or a leg in the air - measured from the clip data, not guessed.
     bool bRagdoll = false;

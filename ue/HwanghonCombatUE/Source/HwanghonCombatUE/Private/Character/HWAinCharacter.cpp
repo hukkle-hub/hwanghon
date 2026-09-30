@@ -1,4 +1,6 @@
 #include "Character/HWAinCharacter.h"
+#include "GameFramework/PlayerInput.h"
+#include "GameFramework/PlayerController.h"
 #include "Character/HWHeadSteadyMeshComponent.h"
 #include "Combat/HWCombatComponent.h"
 #include "Camera/HWLockOnComponent.h"
@@ -85,6 +87,21 @@ void AHWAinCharacter::BeginPlay()
     Combat->OnActionEnded.AddDynamic(this, &AHWAinCharacter::HandleActionEnded);
     Combat->OnContact.AddDynamic(this, &AHWAinCharacter::HandleContact);
     CharacterKit->ConfigureCharacter(SystemCharacterId);
+    if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+        if (PC->PlayerInput)
+        {
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookYaw"), EKeys::MouseX, 1.f));
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookYaw"), EKeys::Gamepad_RightX, 2.5f));
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookPitch"), EKeys::MouseY, -1.f));
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookPitch"), EKeys::Gamepad_RightY, -2.5f));
+        }
+        if (PC->PlayerCameraManager)
+        {
+            PC->PlayerCameraManager->ViewPitchMin = -70.f;   // look up at a 16 m tower, down over a ledge
+            PC->PlayerCameraManager->ViewPitchMax = 55.f;
+        }
+    }
     if (UHWCoopCombatSubsystem* Coop = GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>())
     {
         Coop->RegisterCombatant(this, SystemCharacterId);
@@ -135,6 +152,81 @@ void AHWAinCharacter::Tick(float DeltaSeconds)
     CameraBoom->TargetArmLength = FMath::Lerp(FreeArmLength, LockedArmLength, LockFraming) + BigTargetArmPerSize * Big;
     CameraBoom->SocketOffset = FMath::Lerp(FreeSocketOffset, LockedSocketOffset, LockFraming) + FVector(0.f, 0.f, BigTargetRisePerSize * Big);
     FollowCamera->SetRelativeRotation(FRotator(0.f, LockedCameraYaw * LockFraming, 0.f));
+
+    // The whole boss in frame (docs/design/165): QA saw the 2.5 m Clave whole in only 11 % of a fight - the arm was
+    // 2 m behind Ain. The distance that fits the body's height (with a 30 % margin) in the vertical field of view;
+    // if the camera is closer than that, the arm grows by the difference.
+    static const bool bNoFraming = FParse::Param(FCommandLine::Get(), TEXT("HWNoFraming"));   // before/after QA
+    float WantFit = 0.f;
+    if (bLocked && !bNoFraming)
+    {
+        FVector O, E;
+        LockOn->GetTarget()->GetActorBounds(true, O, E);
+        const float VFov = 2.f * FMath::Atan(FMath::Tan(FMath::DegreesToRadians(FollowCamera->FieldOfView * 0.5f)) * 9.f / 16.f);
+        const float Need = 2.f * E.Z * 1.3f / (2.f * FMath::Tan(VFov * 0.5f));
+        const float Have = FVector::Dist2D(GetActorLocation(), O) + CameraBoom->TargetArmLength;
+        WantFit = FMath::Clamp(Need - Have, 0.f, 650.f);
+    }
+    FitExtraArm = FMath::FInterpTo(FitExtraArm, WantFit, DeltaSeconds, 3.f);
+    CameraBoom->TargetArmLength += FitExtraArm * LockFraming;
+
+    // Ain herself in front of the boss (close fights: EP16's shadow fang behind her back): slide the camera further
+    // over her shoulder until the line to the boss's centre clears her body.
+    float WantSide = 0.f;
+    if (bLocked && !bNoFraming)
+    {
+        FVector O, E;
+        LockOn->GetTarget()->GetActorBounds(true, O, E);
+        // on screen, not by a trace against her mesh (that never hit): Ain's column overlapping the boss's centre
+        bool bSelfBlocks = false;
+        if (const APlayerController* PC = Cast<APlayerController>(GetController()))
+        {
+            int32 W = 0, H = 0;
+            PC->GetViewportSize(W, H);
+            FVector2D Me, It;
+            if (W > 0 && PC->ProjectWorldLocationToScreen(GetActorLocation(), Me, true)
+                && PC->ProjectWorldLocationToScreen(O, It, true))
+            {
+                bSelfBlocks = FMath::Abs(Me.X - It.X) < W * (SideShift > 1.f ? SelfOcclusionScreenFrac * 1.7f : SelfOcclusionScreenFrac);   // hysteresis
+            }
+        }
+        WantSide = bSelfBlocks ? SelfOcclusionSideCm : 0.f;
+    }
+    SideShift = FMath::FInterpTo(SideShift, WantSide, DeltaSeconds, WantSide > SideShift ? 6.f : 1.5f);
+    CameraBoom->SocketOffset.Y += SideShift * LockFraming;
+
+    // Allies between the camera and the boss step out of the picture while they block it (then come back 0.3 s after).
+    const float Now = GetWorld()->GetTimeSeconds();
+    if (bLocked && !bNoFraming)
+    {
+        AActor* T = LockOn->GetTarget();
+        FVector O, E;
+        T->GetActorBounds(true, O, E);
+        const FVector Cam = FollowCamera->GetComponentLocation();
+        FCollisionObjectQueryParams Obj(ECC_Pawn);
+        FCollisionQueryParams Q(TEXT("HWAllyOcclusion"), false, this);
+        Q.AddIgnoredActor(T);
+        for (const FVector& Aim : { O, O + FVector(0, 0, E.Z * 0.7f), O - FVector(0, 0, E.Z * 0.7f) })
+        {
+            TArray<FHitResult> Hits;
+            GetWorld()->LineTraceMultiByObjectType(Hits, Cam, Aim, Obj, Q);
+            for (const FHitResult& H : Hits)
+            {
+                AActor* A = H.GetActor();
+                if (A && A != this && A != T && !A->IsAttachedTo(T) && Cast<APawn>(A))
+                {
+                    OccludingAllies.FindOrAdd(A) = Now;
+                }
+            }
+        }
+    }
+    for (auto It = OccludingAllies.CreateIterator(); It; ++It)
+    {
+        AActor* A = It.Key().Get();
+        const bool bBlocking = A && Now - It.Value() < 0.3f;
+        if (A) A->SetActorHiddenInGame(bBlocking);
+        if (!bBlocking) It.RemoveCurrent();
+    }
 }
 
 void AHWAinCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -143,6 +235,12 @@ void AHWAinCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
     PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &AHWAinCharacter::MoveForward);
     PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &AHWAinCharacter::MoveRight);
+    // Free camera, Blade & Soul style (docs/design/165): yaw and pitch under the player's hand, lock-on only assists.
+    PlayerInputComponent->BindAxis(TEXT("HWLookYaw"), this, &AHWAinCharacter::LookYaw);
+    PlayerInputComponent->BindAxis(TEXT("HWLookPitch"), this, &AHWAinCharacter::LookPitch);
+    PlayerInputComponent->BindTouch(IE_Pressed, this, &AHWAinCharacter::LookTouchPressed);
+    PlayerInputComponent->BindTouch(IE_Repeat, this, &AHWAinCharacter::LookTouchMoved);
+    PlayerInputComponent->BindTouch(IE_Released, this, &AHWAinCharacter::LookTouchReleased);
 
     PlayerInputComponent->BindAction(TEXT("Attack"), IE_Pressed, this, &AHWAinCharacter::AttackPressed);
     PlayerInputComponent->BindAction(TEXT("Smash"), IE_Pressed, this, &AHWAinCharacter::SmashPressed);
@@ -434,3 +532,70 @@ void AHWAinCharacter::GuardPressed(){ if (NetworkBridge) NetworkBridge->SetGuard
 void AHWAinCharacter::GuardReleased(){ if (NetworkBridge) NetworkBridge->SetGuard(false); }
 void AHWAinCharacter::OpeningPressed(){ if (NetworkBridge) NetworkBridge->SendOpening(); }
 void AHWAinCharacter::ExecutePressed(){ if (NetworkBridge) NetworkBridge->SendExecute(); }
+
+
+// ------------------------------------------------------------------ free camera (docs/design/165)
+static bool HWMouseLooking(const APlayerController* PC)
+{
+    // with the cursor shown the mouse also clicks the HUD: turn the view while the right button is held
+    return !PC || !PC->bShowMouseCursor || PC->IsInputKeyDown(EKeys::RightMouseButton);
+}
+
+void AHWAinCharacter::LookYaw(float Value)
+{
+    if (Value == 0.f) return;
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!HWMouseLooking(PC) && !PC->IsInputKeyDown(EKeys::Gamepad_RightX)) return;
+    AddControllerYawInput(Value);
+    LastManualLook = GetWorld()->GetTimeSeconds();
+}
+
+void AHWAinCharacter::LookPitch(float Value)
+{
+    if (Value == 0.f) return;
+    const APlayerController* PC = Cast<APlayerController>(GetController());
+    if (!HWMouseLooking(PC) && !PC->IsInputKeyDown(EKeys::Gamepad_RightY)) return;
+    AddControllerPitchInput(Value);
+    LastManualLook = GetWorld()->GetTimeSeconds();
+}
+
+bool AHWAinCharacter::IsLookZone(const FVector& Screen) const
+{
+    // the phone's thumbs: the move stick lives bottom-left, the action buttons bottom-right - drags elsewhere turn it
+    int32 W = 0, H = 0;
+    if (const APlayerController* PC = Cast<APlayerController>(GetController())) PC->GetViewportSize(W, H);
+    if (W <= 0 || H <= 0) return false;
+    const float X = Screen.X / W, Y = Screen.Y / H;
+    if (X < 0.35f && Y > 0.45f) return false;
+    if (X > 0.62f && Y > 0.42f) return false;
+    return Y > 0.08f;   // not the top bars
+}
+
+void AHWAinCharacter::LookTouchPressed(ETouchIndex::Type Finger, FVector Location)
+{
+    if (LookFinger == -1 && IsLookZone(Location))
+    {
+        LookFinger = (int32)Finger;
+        LookTouchLast = FVector2D(Location);
+    }
+}
+
+void AHWAinCharacter::LookTouchMoved(ETouchIndex::Type Finger, FVector Location)
+{
+    if ((int32)Finger != LookFinger) return;
+    const FVector2D D = FVector2D(Location) - LookTouchLast;
+    LookTouchLast = FVector2D(Location);
+    AddControllerYawInput(D.X * TouchLookDegPerPx);
+    AddControllerPitchInput(-D.Y * TouchLookDegPerPx);
+    LastManualLook = GetWorld()->GetTimeSeconds();
+}
+
+void AHWAinCharacter::LookTouchReleased(ETouchIndex::Type Finger, FVector Location)
+{
+    if ((int32)Finger == LookFinger) LookFinger = -1;
+}
+
+float AHWAinCharacter::SecondsSinceManualLook() const
+{
+    return GetWorld() ? GetWorld()->GetTimeSeconds() - LastManualLook : 1e9f;
+}

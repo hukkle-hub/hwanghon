@@ -390,9 +390,29 @@ void UHWBossPresentationComponent::GroundBody(float DeltaTime)
     else
     {
         LyingDrop = FMath::FInterpTo(LyingDrop, 0.f, DeltaTime, 6.f);
+        // Standing: the toes are never under the floor (docs/design/165 - QA measured Shadow Fang's feet 37 cm into
+        // the ground, Clave's 36 cm in some moves). Below: lift at once. Above: settle back slowly, so a jump stays one.
+        float Toe = TNumericLimits<float>::Max();
+        for (int32 I = 0; I < BodyMesh->GetNumBones(); ++I)
+        {
+            const FName N = BodyMesh->GetBoneName(I);
+            const FString S = N.ToString().ToLower();
+            if (S.Contains(TEXT("toe")) || S.Contains(TEXT("foot")) || S.Contains(TEXT("ball")))
+            {
+                Toe = FMath::Min(Toe, BodyMesh->GetBoneLocation(N).Z);
+            }
+        }
+        if (Toe < TNumericLimits<float>::Max())
+        {
+            const UCapsuleComponent* Capsule = Boss->GetCapsuleComponent();
+            const float Floor = Boss->GetActorLocation().Z - (Capsule ? Capsule->GetScaledCapsuleHalfHeight() : 0.f);
+            const float Under = (Floor + 2.f) - (Toe - StandLift);   // how far the unlifted toe would be under
+            const float Want = FMath::Max(0.f, Under);
+            StandLift = Want > StandLift ? Want : FMath::FInterpTo(StandLift, Want, DeltaTime, 2.f);
+        }
     }
     FVector L = BodyMesh->GetRelativeLocation();
-    L.Z = MeshBaseZ - ClipGroundCm * Scale - LyingDrop;
+    L.Z = MeshBaseZ - ClipGroundCm * Scale - LyingDrop + StandLift;
     BodyMesh->SetRelativeLocation(L);
 }
 

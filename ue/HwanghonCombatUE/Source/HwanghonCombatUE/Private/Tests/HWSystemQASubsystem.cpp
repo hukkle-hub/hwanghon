@@ -2202,6 +2202,8 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     StoryKeyTime += Dt;
     TickStoryIntro(*D, Dt);
     if (bFinished) return;
+    if (P == EHWStoryPhase::Battle) SampleBossView(*D, Dt);
+    else if (ViewSamples > 0) ReportBossView();
 
     TArray<float> Times;
     switch (P)
@@ -2846,4 +2848,124 @@ void UHWSystemQASubsystem::IntroShot(AHWStoryDirector& D, int32 Beat)
     Note(FString::Printf(TEXT("shot %s cam=(%.0f,%.0f,%.0f) fov=%.0f boss=(%.0f,%.0f) dist=%.0f%s"), *Name, V.Location.X, V.Location.Y,
         V.Location.Z, V.FOV, B ? B->GetActorLocation().X : 0.f, B ? B->GetActorLocation().Y : 0.f,
         B ? FVector::Dist(V.Location, B->GetActorLocation()) : 0.f, *Where));
+}
+
+
+// ------------------------------------------------------------------ can the player see what the boss does (docs/design/165)
+// Every 0.5 s of a fight: the boss's head, hands, feet and pelvis projected into the view; in frame or not, and
+// whether a line from the camera to each is blocked (and by what). Motion that cannot be seen cannot be read.
+void UHWSystemQASubsystem::SampleBossView(AHWStoryDirector& D, float Dt)
+{
+    ViewSampleT += Dt;
+    if (ViewSampleT < 0.5f) return;
+    ViewSampleT = 0.f;
+    AHWBossCharacter* B = D.GetBoss();
+    APlayerController* PC = GetPC();
+    if (!B || !PC || !PC->PlayerCameraManager || B->IsDead()) return;
+    // the body: the largest visible skeletal mesh (the first one found was sometimes a prop's skeleton - EP02 read
+    // 14 % whole-body while the shots showed Clave whole)
+    USkeletalMeshComponent* M = nullptr;
+    float Tallest = 0.f;
+    for (UActorComponent* C : B->GetComponents())
+    {
+        USkeletalMeshComponent* S = Cast<USkeletalMeshComponent>(C);
+        if (S && S->IsVisible() && S->GetNumBones() > 8 && S->Bounds.BoxExtent.Z > Tallest) { M = S; Tallest = S->Bounds.BoxExtent.Z; }
+    }
+    if (!M) return;
+    TArray<FName> Bones;
+    for (int32 I = 0; I < M->GetNumBones(); ++I)
+    {
+        const FString N = M->GetBoneName(I).ToString().ToLower();
+        if ((N.Contains(TEXT("head")) || N.Contains(TEXT("hand")) || N.Contains(TEXT("foot")) || N.Contains(TEXT("hips")) || N.Contains(TEXT("pelvis"))
+             || N.EndsWith(TEXT("spine1")) || N.EndsWith(TEXT("spine_02")) || N.EndsWith(TEXT("chest")))   // the torso: Ain stood in front of it
+            && !N.Contains(TEXT("end")) && !N.Contains(TEXT("slot")) && !N.Contains(TEXT("toe")) && !N.Contains(TEXT("index")) && !N.Contains(TEXT("thumb")))
+        {
+            Bones.Add(M->GetBoneName(I));
+        }
+    }
+    int32 SX = 0, SY = 0;
+    PC->GetViewportSize(SX, SY);
+    if (SX <= 0 || Bones.IsEmpty()) return;
+    const FVector Cam = PC->PlayerCameraManager->GetCameraLocation();
+    int32 In = 0, Occ = 0;
+    float Top = 1e9f, Bottom = -1e9f;
+    FCollisionQueryParams Q(TEXT("HWBossView"), true, B);
+    for (const FName& Bone : Bones)
+    {
+        const FVector W = M->GetBoneLocation(Bone);
+        FVector2D S;
+        if (PC->ProjectWorldLocationToScreen(W, S, true) && S.X >= 0 && S.X <= SX && S.Y >= 0 && S.Y <= SY)
+        {
+            ++In;
+            Top = FMath::Min(Top, S.Y);
+            Bottom = FMath::Max(Bottom, S.Y);
+        }
+        else
+        {
+            const FString Side = !PC->ProjectWorldLocationToScreen(W, S, true) ? TEXT("behind") : S.Y < 0 ? TEXT("above") : S.Y > SY ? TEXT("below") : S.X < 0 ? TEXT("left") : TEXT("right");
+            ViewOffFrame.FindOrAdd(Bone.ToString().Replace(TEXT("mixamorig_"), TEXT("")) + TEXT(":") + Side)++;
+        }
+        // walls and props (visibility) and bodies (pawns) - the first pass saw no ally ever in the way: character
+        // meshes do not block the visibility channel. Hidden actors (allies stepped out of the picture) do not count.
+        TArray<FHitResult> Hits;
+        FCollisionObjectQueryParams Obj;
+        Obj.AddObjectTypesToQuery(ECC_Pawn);
+        Obj.AddObjectTypesToQuery(ECC_WorldStatic);
+        Obj.AddObjectTypesToQuery(ECC_WorldDynamic);
+        GetWorld()->LineTraceMultiByObjectType(Hits, Cam, W, Obj, Q);
+        for (const FHitResult& H : Hits)
+        {
+            AActor* A = H.GetActor();
+            if (!A || A == B || A->IsAttachedTo(B) || A->IsHidden()) continue;   // Ain in the way counts too
+            // what the eye sees: meshes, not capsules; and not the floor the foot stands on (a hit next to the bone)
+            if (Cast<UCapsuleComponent>(H.GetComponent()) || FVector::Dist(H.ImpactPoint, W) < 20.f) continue;
+            ++Occ;
+            FString Who = A->GetClass()->GetName();
+#if WITH_EDITOR
+            if (Cast<AStaticMeshActor>(A)) Who = A->GetActorLabel();   // which prop: floor, block, cart...
+#endif
+            ViewBlockers.FindOrAdd(Who + TEXT("/") + (H.GetComponent() ? H.GetComponent()->GetName() : FString()) + FString::Printf(TEXT("@%s"), *Bone.ToString().Replace(TEXT("mixamorig_"), TEXT(""))))++;
+            break;
+        }
+    }
+    // feet against the ground right under them: a foot below the floor surface is a body sunk into the arena
+    for (const FName& Bone : Bones)
+    {
+        if (!Bone.ToString().ToLower().Contains(TEXT("foot"))) continue;
+        const FVector W = M->GetBoneLocation(Bone);
+        FHitResult G;
+        FCollisionObjectQueryParams Ground(ECC_WorldStatic);
+        if (GetWorld()->LineTraceSingleByObjectType(G, W + FVector(0, 0, 250.f), W - FVector(0, 0, 400.f), Ground, Q))
+        {
+            const float Sink = G.ImpactPoint.Z - W.Z;   // > 0: the bone is under the floor
+            ViewFootSinkMax = FMath::Max(ViewFootSinkMax, Sink);
+            ViewFootSinkSum += Sink;
+            ++ViewFootSamples;
+        }
+    }
+    ++ViewSamples;
+    if (In == Bones.Num()) ++ViewAllIn;
+    if (In == 0) ++ViewNoneIn;
+    if (Occ > 0) ++ViewAnyOccluded;
+    if (Occ * 2 >= Bones.Num()) ++ViewMostOccluded;
+    if (In > 0) ViewHeightSum += (Bottom - Top) / SY;
+}
+
+void UHWSystemQASubsystem::ReportBossView()
+{
+    const float N = FMath::Max(1, ViewSamples);
+    FString Blockers;
+    for (const auto& KV : ViewBlockers) Blockers += FString::Printf(TEXT(" %s=%d"), *KV.Key, KV.Value);
+    Blockers += FString::Printf(TEXT(" | foot bone vs floor: mean %.0f cm, worst %.0f cm (+ = under the floor)"),
+        ViewFootSamples ? ViewFootSinkSum / ViewFootSamples : 0.f, ViewFootSinkMax);
+    ViewFootSinkSum = 0.f; ViewFootSinkMax = -1e9f; ViewFootSamples = 0;
+    Blockers += TEXT(" | off frame:");
+    for (const auto& KV : ViewOffFrame) Blockers += FString::Printf(TEXT(" %s=%d"), *KV.Key, KV.Value);
+    ViewOffFrame.Reset();
+    Note(FString::Printf(TEXT("boss view: %d samples | whole body in frame %.0f%% | none in frame %.0f%% | any part hidden %.0f%% | half hidden %.0f%% | body height %.0f%% of screen |%s"),
+        ViewSamples, 100.f * ViewAllIn / N, 100.f * ViewNoneIn / N, 100.f * ViewAnyOccluded / N, 100.f * ViewMostOccluded / N,
+        100.f * ViewHeightSum / N, *Blockers));
+    ViewSamples = ViewAllIn = ViewNoneIn = ViewAnyOccluded = ViewMostOccluded = 0;
+    ViewHeightSum = 0.f;
+    ViewBlockers.Reset();
 }

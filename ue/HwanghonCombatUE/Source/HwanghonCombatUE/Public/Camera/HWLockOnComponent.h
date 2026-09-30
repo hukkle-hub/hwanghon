@@ -45,6 +45,9 @@ public:
     /** Inside this 2D distance (cm) the target direction is unstable (bodies overlap), so yaw is held. */
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="LockOn|Comfort")
     float OverlapHoldDistanceCm = 180.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float ManualLookGraceSeconds = 1.2f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FrameBottom = 0.90f;   // screen fraction the feet stay above
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float FrameTop = 0.06f;      // and the head below
 
 private:
     // Parts of a boss are reached with CycleTarget; a fresh lock prefers the body/enemy.

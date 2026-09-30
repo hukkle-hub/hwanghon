@@ -98,6 +98,15 @@ private:
     int32 StoryBattleSeen = -1;
     // v10 boss intro (docs/design/162): beats seen, their shots, the held checks, and the length of the intro
     void TickStoryIntro(class AHWStoryDirector& D, float Dt);
+    void SampleBossView(class AHWStoryDirector& D, float Dt);
+    void ReportBossView();
+    float ViewSampleT = 0.f;
+    int32 ViewSamples = 0, ViewAllIn = 0, ViewNoneIn = 0, ViewAnyOccluded = 0, ViewMostOccluded = 0;
+    float ViewHeightSum = 0.f;
+    TMap<FString, int32> ViewBlockers;
+    TMap<FString, int32> ViewOffFrame;
+    float ViewFootSinkSum = 0.f, ViewFootSinkMax = -1e9f;
+    int32 ViewFootSamples = 0;
     void IntroShot(class AHWStoryDirector& D, int32 Beat);
     int32 IntroBeatSeen = -1;
     int32 IntroBeats = 0;

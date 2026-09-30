@@ -22,6 +22,8 @@ class HWANGHONCOMBATUE_API AHWAinCharacter : public ACharacter
     GENERATED_BODY()
 
 public:
+    /** Seconds since the player last turned the camera (the lock-on stays out of the way meanwhile). */
+    float SecondsSinceManualLook() const;
     AHWAinCharacter();
 
     virtual void BeginPlay() override;
@@ -74,6 +76,12 @@ protected:
     void CombatJumpPressed();
     void CounterPressed();
     void LockOnPressed();
+    void LookYaw(float Value);
+    void LookPitch(float Value);
+    void LookTouchPressed(ETouchIndex::Type Finger, FVector Location);
+    void LookTouchMoved(ETouchIndex::Type Finger, FVector Location);
+    void LookTouchReleased(ETouchIndex::Type Finger, FVector Location);
+    bool IsLookZone(const FVector& Screen) const;
     void CycleTargetPressed();
     void SaveAuditPressed();
     void GraphicsLowPressed();
@@ -118,6 +126,15 @@ protected:
     UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float BigTargetRisePerSize = 90.f;
     float LockFraming = 0.f;
     float TargetSize = 1.f;
+    float FitExtraArm = 0.f;
+    float LastManualLook = -100.f;
+    int32 LookFinger = -1;
+    FVector2D LookTouchLast = FVector2D::ZeroVector;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float TouchLookDegPerPx = 0.18f;
+    float SideShift = 0.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float SelfOcclusionSideCm = 150.f;
+    UPROPERTY(EditAnywhere, Category="Hwanghon|Camera") float SelfOcclusionScreenFrac = 0.12f;
+    TMap<TWeakObjectPtr<AActor>, float> OccludingAllies;
 
 private:
     UPROPERTY(VisibleAnywhere)
