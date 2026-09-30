@@ -96,6 +96,15 @@ private:
     int32 SeverShots = 0;
     int32 RecoverStage = 0;
     int32 StoryBattleSeen = -1;
+    // v10 boss intro (docs/design/162): beats seen, their shots, the held checks, and the length of the intro
+    void TickStoryIntro(class AHWStoryDirector& D, float Dt);
+    void IntroShot(class AHWStoryDirector& D, int32 Beat);
+    int32 IntroBeatSeen = -1;
+    int32 IntroBeats = 0;
+    float IntroTime = 0.f;
+    bool bIntroChecked = false;
+    bool bIntroBeatShot = false;
+    bool bIntroAfterChecked = true;
     // neckprobe: head lean at forced camera pitches
     void TickNeckProbe(float Dt);
     // sheltershow: the 7 stations of the Gangnam shelter hub (docs/design/152)

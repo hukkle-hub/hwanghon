@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "Combat/HWCombatTypes.h"
 #include "System/HWCombatTargetInterface.h"
+#include "HHBossPresentationInterface.h"
 #include "HWBossCharacter.generated.h"
 
 class AHWBossCharacter;
@@ -18,7 +19,7 @@ class UHWBossPresentationComponent;
 class UHWBossSystemComponent;
 
 UCLASS()
-class HWANGHONCOMBATUE_API AHWBossCharacter : public ACharacter, public IHWCombatTargetInterface
+class HWANGHONCOMBATUE_API AHWBossCharacter : public ACharacter, public IHWCombatTargetInterface, public IHHBossPresentationInterface
 {
     GENERATED_BODY()
 
@@ -142,6 +143,24 @@ public:
     void WearBody(FName VisualId);
     void WearStaticBody(class UStaticMesh* Body);
 
+    // Boss intro (v10 AHHBossIntroDirector, docs/design/162): held = no AI, no damage taken, no enrage clock -
+    // the body only does what the intro beats ask of it. The story director holds it before the intro and lets go after.
+    void SetIntroHold(bool bHold);
+    bool IsIntroHeld() const { return bIntroHold; }
+
+    virtual void HH_BossIntroBegin_Implementation(FName BossId) override;
+    virtual void HH_BossIntroBeat_Implementation(FName BossId, EHHBossIntroBeat Beat) override;
+    virtual void HH_BossIntroEnd_Implementation(FName BossId) override;
+
+    // What each boss does in its intro beats - the novel's entrance, told with the fight's own clips.
+    struct FIntroChoreo
+    {
+        bool bStillUntilSignature = false;   // a body that does not move until it wakes (EP01 scarecrow)
+        bool bApproach = false;              // walks in toward the player through the first beats (Clave)
+        FName SignaturePattern;              // SignatureMotion: this fight pattern's wind-up, stopped before contact
+    };
+    static FIntroChoreo IntroChoreoFor(FName BossId);
+
     UFUNCTION(BlueprintPure)
     EHWAttackTier GetLastReactionTier() const { return LastReactionTier; }
 
@@ -192,6 +211,9 @@ private:
     float HitStopRemaining = 0.f;
     float SystemBreakDuration = 1.45f;
     bool bNetworkAuthoritative = false;
+    bool bIntroHold = false;
+    FIntroChoreo IntroChoreo;
+    EHHBossIntroBeat IntroBeat = EHHBossIntroBeat::PlayerEntry;
     float AuthoritativeMaxHealth = 280000.f;
     float AuthoritativePosture = 0.f;
     float AuthoritativeStateProgress = 0.f;

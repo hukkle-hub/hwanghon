@@ -103,7 +103,7 @@ FHWBossPatternSpec UHWHeosuabiRules::Elbow()
 
 bool UHWHeosuabiRules::ChoosePattern(AHWBossCharacter& Boss, FHWBossPatternSpec& Out)
 {
-    if (!Ain.IsValid()) return false;
+    if (!Ain.IsValid() || !IsLive()) return false;
     if (bElbowAnswer)
     {
         bElbowAnswer = false;
@@ -188,7 +188,7 @@ void UHWHeosuabiRules::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
     AHWBossCharacter* Boss = Cast<AHWBossCharacter>(GetOwner());
-    if (!Boss || Boss->IsDead() || !Ain.IsValid()) return;
+    if (!Boss || Boss->IsDead() || !Ain.IsValid() || !IsLive()) return;   // held through the handoff / intro
 
     // Far away the body walks in; the spin and the elbow are its only answers.
     if (Boss->GetBossState() == EHWBossState::Idle)

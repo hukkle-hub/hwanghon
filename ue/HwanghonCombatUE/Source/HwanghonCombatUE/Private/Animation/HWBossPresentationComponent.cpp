@@ -380,6 +380,14 @@ void UHWBossPresentationComponent::TickSingleNodePose(float DeltaTime)
     }
     DeathTime = 0.f;
 
+    if (IntroClip)
+    {
+        IntroElapsed += DeltaTime;
+        const float A = IntroSeconds > 0.f ? FMath::Clamp(IntroElapsed / IntroSeconds, 0.f, 1.f) : 1.f;
+        ShowClip(IntroClip, FMath::InterpEaseOut(0.f, IntroTo, A, 2.f) * Len(IntroClip), false);
+        return;
+    }
+
     const EHWBossState State = Boss->GetBossState();
     const float Phase = FMath::Clamp(Boss->GetPresentationStatePhase(), 0.f, 1.f);
 
@@ -483,4 +491,24 @@ UAnimSequenceBase* UHWBossPresentationComponent::PatternClipAt(
         OutTime = FMath::Clamp(Contact(K) + (T - At(K)), 0.f, Len(Seq));
     }
     return Seq;
+}
+
+void UHWBossPresentationComponent::SetIntroStill()
+{
+    IntroClip = AnimationSet ? AnimationSet->BossIdle.Sequence.Get() : nullptr;
+    IntroTo = 0.f;
+    IntroSeconds = 1.f;
+    IntroElapsed = 0.f;
+}
+
+void UHWBossPresentationComponent::SetIntroWindup(FName PatternId, float Seconds)
+{
+    const FHWBossPatternAnimationBinding* P = AnimationSet ? AnimationSet->GetBossPatternBinding(PatternId) : nullptr;
+    UAnimSequenceBase* Clip = P && P->BeatSequences.Num() > 0 ? P->BeatSequences[0].Get() : (P ? P->Strike.Sequence.Get() : nullptr);
+    if (!Clip) { IntroClip = nullptr; return; }
+    const float Contact = P->SourceBeatNormalized.Num() > 0 ? P->SourceBeatNormalized[0] : P->Strike.SourceContactNormalized;
+    IntroClip = Clip;
+    IntroTo = FMath::Max(0.f, Contact * 0.85f);   // the wind-up only: it never lands in the intro
+    IntroSeconds = FMath::Max(0.1f, Seconds * 0.8f);
+    IntroElapsed = 0.f;
 }

@@ -76,6 +76,19 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
         return;
     }
 
+    if (bIntroHold)
+    {
+        // «어둠 속에서 실루엣이 나왔다» (EP02): the approach beats walk it in; nothing else runs while held
+        if (IntroChoreo.bApproach && IntroBeat < EHHBossIntroBeat::SignatureMotion)
+        {
+            if (const APawn* P = UGameplayStatics::GetPlayerPawn(this, 0))
+            {
+                AddMovementInput((P->GetActorLocation() - GetActorLocation()).GetSafeNormal2D(), 0.5f);
+            }
+        }
+        return;
+    }
+
     if (UHWCoopCombatSubsystem* Coop =
         GetWorld() ? GetWorld()->GetSubsystem<UHWCoopCombatSubsystem>() : nullptr)
     {
@@ -187,7 +200,7 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
 
 void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVector SourceLocation)
 {
-    if (IsDead() || bNetworkAuthoritative)
+    if (IsDead() || bNetworkAuthoritative || bIntroHold)
     {
         return;
     }
@@ -556,7 +569,7 @@ bool AHWBossCharacter::ReceiveSystemHit_Implementation(
     FVector SourceLocation,
     AActor* InstigatorActor)
 {
-    if (IsDead()) return false;
+    if (IsDead() || bIntroHold) return false;
     ReceivePlayerHit(Damage, Tier, SourceLocation);
     return true;
 }
@@ -682,4 +695,79 @@ void AHWBossCharacter::WearStaticBody(UStaticMesh* Body)
     Rigid->SetRelativeLocationAndRotation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()), FRotator(0.f, -90.f, 0.f));
     Rigid->SetRelativeScale3D(FVector(1.f / Scale));
     if (GetMesh()) GetMesh()->SetVisibility(false, true);   // the stand-in skeleton keeps the clock, not the look
+}
+
+// ------------------------------------------------------------------ boss intro (docs/design/162)
+
+AHWBossCharacter::FIntroChoreo AHWBossCharacter::IntroChoreoFor(FName BossId)
+{
+    FIntroChoreo C;
+    const FString Id = BossId.ToString();
+    if (Id == TEXT("TUTORIAL_SCARECROW"))
+    {
+        // EP01 L9-L15 «이 년 동안 그 자리에 묶여 있던 것» - a target that does not move, then «허수아비가 몸을 세웠다»:
+        // the stance its spin comes from (the fight's own first answer)
+        C.bStillUntilSignature = true;
+        C.SignaturePattern = TEXT("Spin");
+    }
+    else if (Id == TEXT("CLAVE_GANGNAM"))
+    {
+        // EP02 «어둠 속에서 실루엣이 나왔다 ... 걸을 때마다 셔터 아래쪽이 바닥을 긁었다 ... 그리고 놈이 멈췄다»:
+        // walks in, stops, and sets the shutter as it does before «셔터 밀어내기» (the Charge pattern)
+        C.bApproach = true;
+        C.SignaturePattern = TEXT("Charge");
+    }
+    return C;
+}
+
+void AHWBossCharacter::SetIntroHold(bool bHold)
+{
+    bIntroHold = bHold;
+    if (bHold)
+    {
+        CancelPendingAttack();
+        State = EHWBossState::Idle;
+        StateElapsed = 0.f;
+        IdleElapsed = 0.f;
+        if (BossSystem) BossSystem->SetComponentTickEnabled(false);   // the enrage clock starts with the fight
+    }
+    else
+    {
+        if (BossSystem) BossSystem->SetComponentTickEnabled(true);
+        if (Presentation) Presentation->ClearIntroPose();
+        GetCharacterMovement()->StopMovementImmediately();
+    }
+}
+
+void AHWBossCharacter::HH_BossIntroBegin_Implementation(FName BossId)
+{
+    IntroChoreo = IntroChoreoFor(BossId);
+    IntroBeat = EHHBossIntroBeat::PlayerEntry;
+    if (HasAuthority()) SetIntroHold(true);
+    if (Presentation && IntroChoreo.bStillUntilSignature) Presentation->SetIntroStill();
+}
+
+void AHWBossCharacter::HH_BossIntroBeat_Implementation(FName BossId, EHHBossIntroBeat Beat)
+{
+    IntroBeat = Beat;
+    if (!Presentation) return;
+    if (Beat == EHHBossIntroBeat::SignatureMotion)
+    {
+        GetCharacterMovement()->StopMovementImmediately();
+        if (!IntroChoreo.SignaturePattern.IsNone())
+        {
+            Presentation->SetIntroWindup(IntroChoreo.SignaturePattern, HHBossIntroProfiles::Resolve(BossId).SignatureHold);
+        }
+    }
+    else if (Beat == EHHBossIntroBeat::Handback)
+    {
+        Presentation->ClearIntroPose();   // back to its idle: the first ready stance under the player camera
+    }
+}
+
+void AHWBossCharacter::HH_BossIntroEnd_Implementation(FName BossId)
+{
+    if (Presentation) Presentation->ClearIntroPose();
+    GetCharacterMovement()->StopMovementImmediately();
+    // the hold itself is let go by whoever starts the fight (AHWStoryDirector), on the server
 }

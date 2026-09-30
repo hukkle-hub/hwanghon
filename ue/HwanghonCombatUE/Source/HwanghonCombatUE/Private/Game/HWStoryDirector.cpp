@@ -18,6 +18,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "Game/HWStoryNpc.h"
+#include "HHBossIntroDirector.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/PlayerController.h"
@@ -349,8 +350,8 @@ void AHWStoryDirector::Tick(float DeltaSeconds)
 
     const FHWStoryBattle* Cur = Battles.IsValidIndex(CurrentBattle) ? &Battles[CurrentBattle] : nullptr;
     // Data Layer cells stream in a frame or more after activation: keep the stand-in hidden once the fight owns the arena.
-    if (Phase == EHWStoryPhase::Handoff || Phase == EHWStoryPhase::Battle || Phase == EHWStoryPhase::BattleOver
-        || (Phase == EHWStoryPhase::Cinematic && Cur && SegmentIndex == Cur->ResultIndex))
+    if (Phase == EHWStoryPhase::Handoff || Phase == EHWStoryPhase::BossIntro || Phase == EHWStoryPhase::Battle
+        || Phase == EHWStoryPhase::BattleOver || (Phase == EHWStoryPhase::Cinematic && Cur && SegmentIndex == Cur->ResultIndex))
     {
         SetStandInsHidden(true);
     }
@@ -379,6 +380,14 @@ void AHWStoryDirector::Tick(float DeltaSeconds)
         if (PhaseElapsed >= HandoffBlendSeconds)
         {
             EnterBattleControl();
+        }
+        break;
+    case EHWStoryPhase::BossIntro:
+        if (PhaseElapsed >= BossIntroTimeoutSeconds)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[HWStory] boss intro did not finish in %.0f s - cut"), BossIntroTimeoutSeconds);
+            if (IntroDirector && IntroDirector->bIntroPlaying) IntroDirector->ForceFinishBossIntro();
+            else HandleBossIntroFinished(NAME_None);
         }
         break;
     case EHWStoryPhase::BattleOver:
@@ -620,6 +629,11 @@ void AHWStoryDirector::SkipCurrent()
         Emit(TEXT("skip"));
         EndSegment();
     }
+    else if (Phase == EHWStoryPhase::BossIntro && PhaseElapsed > 0.15f && IntroDirector)
+    {
+        Emit(TEXT("skip"));
+        IntroDirector->ForceFinishBossIntro();
+    }
 }
 
 void AHWStoryDirector::BeginBattle(bool bFromCinema)
@@ -699,6 +713,10 @@ void AHWStoryDirector::BeginBattle(bool bFromCinema)
         {
             if (!Lock->IsLocked()) Lock->ToggleLockOn();
         }
+    }
+    if (StartBossIntro(B, bFromCinema))
+    {
+        return;   // the intro hands the camera back and starts the fight (HandleBossIntroFinished)
     }
     if (PC && Ain)
     {
@@ -1085,4 +1103,44 @@ void AHWStoryDirector::Emit(FName Event)
     const FName Scene = Segments.IsValidIndex(SegmentIndex) ? Segments[SegmentIndex].SceneId : NAME_None;
     UE_LOG(LogTemp, Display, TEXT("[HWStory] %s %s"), *Event.ToString(), *Scene.ToString());
     OnStoryEvent.Broadcast(Event, Scene);
+}
+
+bool AHWStoryDirector::StartBossIntro(const FHWStoryBattle& B, bool bFromCinema)
+{
+    IntroDirector = Cast<AHHBossIntroDirector>(FindTagged(FName(*(B.Prefix + TEXT("BossIntro")))));
+    if (!IntroDirector || !Boss) return false;
+
+    // The fight waits: rules not live, boss held (HH_BossIntroBegin), Ain's hands off, the combat HUD away -
+    // v10: no title card, no bars; the place and the body say who this is, the HUD names it after the handback.
+    Phase = EHWStoryPhase::BossIntro;
+    PhaseElapsed = 0.f;
+    if (Rules) Rules->SetLive(false);
+    Boss->SetIntroHold(true);
+    SetPlayerControl(false);
+    if (AHWStoryHUD* HUD = GetStoryHUD())
+    {
+        HUD->GetOverlay()->HideAll();
+        HUD->SetCombatVisible(false);
+    }
+    IntroDirector->BossActor = Boss;
+    IntroDirector->OnIntroFinished.AddUniqueDynamic(this, &AHWStoryDirector::HandleBossIntroFinished);
+    // A retry, or a boss met before (EP03's two Clave fights): the short version - same beats, shorter holds.
+    // After a boss-entry Level Sequence (EP01 SC015 shows the awakening for 9.5 s) the entrance is not told twice at length.
+    const bool bAfterEntrySequence = bFromCinema && Segments.IsValidIndex(SegmentIndex - 1) && !Segments[SegmentIndex - 1].Sequence.IsNull();
+    const bool bShort = !bFromCinema || bAfterEntrySequence || IntroDirector->Tags.Contains(TEXT("HW_IntroShort"));
+    Emit(bShort ? TEXT("bossintro_short") : TEXT("bossintro"));
+    IntroDirector->StartBossIntro(bShort);
+    return true;
+}
+
+void AHWStoryDirector::HandleBossIntroFinished(FName IntroBossId)
+{
+    if (Phase != EHWStoryPhase::BossIntro) return;
+    if (IntroDirector) IntroDirector->OnIntroFinished.RemoveDynamic(this, &AHWStoryDirector::HandleBossIntroFinished);
+    if (Boss) Boss->SetIntroHold(false);
+    if (APlayerController* PC = GetWorld()->GetFirstPlayerController())
+    {
+        if (Ain && PC->GetViewTarget() != Ain) PC->SetViewTarget(Ain);   // cut or timed out: the director did not hand back
+    }
+    EnterBattleControl();
 }

@@ -28,7 +28,8 @@ enum class EHWStoryPhase : uint8
     Battle,
     BattleOver,
     Finished,
-    Recover      // after the fight: walk to the crystal and take it (EP01 L565) — story mode only
+    Recover,     // after the fight: walk to the crystal and take it (EP01 L565) — story mode only
+    BossIntro    // v10 boss intro (docs/design/162): five camera beats in the arena, boss held, then the fight
 };
 
 // One scene of the episode, in novel order (docs/story/_scenes/EPxx.json -> Content/Data/novel_game_master.json).
@@ -140,6 +141,9 @@ public:
     AHWAinCharacter* GetKain() const;
     AStaticMeshActor* GetCrystal() const { return Crystal; }
     bool IsSeverSlowing() const { return SeverRealStart >= 0.0; }
+    class AHHBossIntroDirector* GetIntroDirector() const { return IntroDirector; }
+    // Longest an intro may hold the fight before it is cut (a broken anchor set must never lock the player).
+    static constexpr float BossIntroTimeoutSeconds = 12.f;
     int32 GetCurrentBattle() const { return CurrentBattle; }
 
     // QA: shorter novel cards and no travel at the end.
@@ -183,6 +187,9 @@ private:
     UFUNCTION() void HandleCanonBeat(FName Beat);
     UFUNCTION() void HandleBossDied(AHWBossCharacter* DeadBoss);
     UFUNCTION() void HandlePlayerDied();
+    // The arena's v10 intro (an AHHBossIntroDirector tagged <Prefix>BossIntro): true when it started.
+    bool StartBossIntro(const FHWStoryBattle& B, bool bFromCinema);
+    UFUNCTION() void HandleBossIntroFinished(FName IntroBossId);
 
     UPROPERTY(Transient) TArray<FHWStorySegment> Segments;
     UPROPERTY(Transient) TArray<FHWStoryBattle> Battles;
@@ -196,6 +203,7 @@ private:
     UPROPERTY(Transient) TMap<FName, TObjectPtr<AActor>> PartyActors;
     UPROPERTY(Transient) TObjectPtr<class APostProcessVolume> SeverPost;
     UPROPERTY(Transient) TObjectPtr<class AStaticMeshActor> Crystal;
+    UPROPERTY(Transient) TObjectPtr<class AHHBossIntroDirector> IntroDirector;
     double SeverRealStart = -1.0;
     bool bCrystalRecovered = false;
     FDelegateHandle InteractHandle;

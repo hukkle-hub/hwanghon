@@ -37,6 +37,13 @@ public:
     UAnimSequenceBase* GetShownClip() const { return ShownClip; }
     float GetShownTime() const { return ShownTime; }
 
+    // Boss intro (docs/design/162). Still: the idle's first frame, held. Windup: the pattern's first clip from its start
+    // to just before its contact, over Seconds, then held there. Clear: back to the state clips.
+    void SetIntroStill();
+    void SetIntroWindup(FName PatternId, float Seconds);
+    void ClearIntroPose() { IntroClip = nullptr; }
+    bool HasIntroPose() const { return IntroClip != nullptr; }
+
 private:
     UFUNCTION()
     void HandleBossStateChanged(EHWBossState NewState, FName PatternId);
@@ -102,5 +109,10 @@ private:
     float LyingDrop = 0.f;
     UPROPERTY(Transient)
     TObjectPtr<UAnimSequenceBase> ShownClip;
+    UPROPERTY(Transient)
+    TObjectPtr<UAnimSequenceBase> IntroClip;
+    float IntroTo = 0.f;         // normalized end of the intro clip
+    float IntroSeconds = 1.f;
+    float IntroElapsed = 0.f;
     float ShownTime = 0.f;
 };

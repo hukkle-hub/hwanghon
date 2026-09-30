@@ -1,6 +1,9 @@
 #include "Tests/HWSystemQASubsystem.h"
 
 #include "Boss/HWBossCharacter.h"
+#include "HHBossIntroDirector.h"
+#include "UI/HWStoryHUD.h"
+#include "UI/HWCombatHUD.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
 #include "HHHubSubsystem.h"
@@ -2179,7 +2182,7 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
     }
     AHWStoryDirector* D = StoryDirector.Get();
     const FHWStorySegment* Seg = D->GetCurrentSegment();
-    static const TCHAR* PhaseNames[] = { TEXT("idle"), TEXT("cine"), TEXT("handoff"), TEXT("battle"), TEXT("over"), TEXT("finished"), TEXT("recover") };
+    static const TCHAR* PhaseNames[] = { TEXT("idle"), TEXT("cine"), TEXT("handoff"), TEXT("battle"), TEXT("over"), TEXT("finished"), TEXT("recover"), TEXT("intro") };
     const EHWStoryPhase P = D->GetPhase();
     const FString Key = FString::Printf(TEXT("%02d_%s_%s"), D->GetSegmentIndex(), Seg ? *Seg->SceneId.ToString() : TEXT("-"), PhaseNames[(int32)P]);
     if (Key != StoryKey)
@@ -2197,6 +2200,8 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
         }
     }
     StoryKeyTime += Dt;
+    TickStoryIntro(*D, Dt);
+    if (bFinished) return;
 
     TArray<float> Times;
     switch (P)
@@ -2754,4 +2759,89 @@ void UHWSystemQASubsystem::TickShelterShow(float Dt)
         ShelterPhase = 0;
         break;
     }
+}
+
+// v10 boss intro (docs/design/162): a shot per beat; while it plays the boss is held and takes no damage, the combat HUD
+// is away and Ain has no input; after it the fight is live again. Any of these wrong ends the run.
+void UHWSystemQASubsystem::TickStoryIntro(AHWStoryDirector& D, float Dt)
+{
+    AHHBossIntroDirector* ID = D.GetIntroDirector();
+    AHWBossCharacter* B = D.GetBoss();
+    AHWStoryHUD* HUD = GetPC() ? Cast<AHWStoryHUD>(GetPC()->GetHUD()) : nullptr;
+    APawn* Pawn = GetPC() ? GetPC()->GetPawn() : nullptr;
+    const bool bCombatShown = HUD && HUD->GetCombatWidget() && HUD->GetCombatWidget()->IsVisible();
+    if (D.GetPhase() == EHWStoryPhase::BossIntro && ID)
+    {
+        if (!bIntroChecked)
+        {
+            bIntroChecked = true;
+            bIntroAfterChecked = false;
+            IntroBeats = 0;
+            IntroBeatSeen = -1;
+            IntroTime = 0.f;
+            const float Before = B ? B->GetHealth() : 0.f;
+            if (B) B->ReceivePlayerHit(5000.f, EHWAttackTier::Smash, B->GetActorLocation() + FVector(100, 0, 0));
+            const bool bHeld = B && B->IsIntroHeld();
+            const bool bNoDamage = B && FMath::IsNearlyEqual(B->GetHealth(), Before);
+            const bool bNoInput = Pawn && !Pawn->InputEnabled();
+            Note(FString::Printf(TEXT("intro %s: held=%d no_damage=%d hud_hidden=%d input_off=%d"), *ID->BossId.ToString(),
+                bHeld, bNoDamage, !bCombatShown, bNoInput));
+            if (!bHeld || !bNoDamage || bCombatShown || !bNoInput) { Finish(false, TEXT("FAIL boss intro did not hold the fight")); return; }
+        }
+        IntroTime += Dt;
+        const int32 Beat = (int32)ID->CurrentBeat;
+        if (Beat != IntroBeatSeen && ID->bIntroPlaying)
+        {
+            if (IntroBeatSeen >= 0 && !bIntroBeatShot)
+            {
+                Note(FString::Printf(TEXT("intro beat %d ended between frames - shot at the cut"), IntroBeatSeen));
+                IntroShot(D, IntroBeatSeen);
+            }
+            IntroBeatSeen = Beat;
+            ++IntroBeats;
+            bIntroBeatShot = false;
+        }
+        // each beat's last frame: what its anchor frames (and, for the signature, the wind-up at its furthest)
+        if (!bIntroBeatShot && ID->bIntroPlaying && ID->GetBeatRemaining() <= Dt * 2.f)   // one or two frames before the cut, whichever ticks first
+        {
+            bIntroBeatShot = true;
+            IntroShot(D, Beat);
+        }
+        return;
+    }
+    if (!bIntroAfterChecked && D.GetPhase() == EHWStoryPhase::Battle)
+    {
+        IntroBeatSeen = -1;
+        bIntroAfterChecked = true;
+        bIntroChecked = false;
+        const bool bLive = B && !B->IsIntroHeld();
+        const bool bInput = Pawn && Pawn->InputEnabled();
+        const bool bOnPawn = GetPC() && GetPC()->GetViewTarget() == Pawn;
+        Note(FString::Printf(TEXT("intro done: %d beats in %.2f s, boss_live=%d hud=%d input=%d camera_on_ain=%d"),
+            IntroBeats, IntroTime, bLive, bCombatShown, bInput, bOnPawn));
+        if (IntroBeats != 5 || !bLive || !bCombatShown || !bInput)
+        {
+            Finish(false, TEXT("FAIL boss intro did not hand the fight back"));
+        }
+    }
+}
+
+void UHWSystemQASubsystem::IntroShot(AHWStoryDirector& D, int32 Beat)
+{
+    static const TCHAR* Names[] = { TEXT("1_PlayerEntry"), TEXT("2_Silhouette"), TEXT("3_ScaleReveal"), TEXT("4_Signature"), TEXT("5_Handback") };
+    const FString Name = FString::Printf(TEXT("intro_%d_%s"), D.GetCurrentBattle(), Names[FMath::Clamp(Beat, 0, 4)]);
+    Shot(Name, true);
+    APlayerController* PC = GetPC();
+    AHWBossCharacter* B = D.GetBoss();
+    if (!PC || !PC->PlayerCameraManager) return;
+    const FMinimalViewInfo& V = PC->PlayerCameraManager->GetCameraCacheView();
+    FString Where;
+    FVector2D S;
+    int32 SX = 0, SY = 0;
+    PC->GetViewportSize(SX, SY);
+    if (B && SX > 0 && PC->ProjectWorldLocationToScreen(B->GetActorLocation(), S, true))
+        Where = FString::Printf(TEXT(" boss_center=(%.2f,%.2f)"), S.X / SX, S.Y / SY);
+    Note(FString::Printf(TEXT("shot %s cam=(%.0f,%.0f,%.0f) fov=%.0f boss=(%.0f,%.0f) dist=%.0f%s"), *Name, V.Location.X, V.Location.Y,
+        V.Location.Z, V.FOV, B ? B->GetActorLocation().X : 0.f, B ? B->GetActorLocation().Y : 0.f,
+        B ? FVector::Dist(V.Location, B->GetActorLocation()) : 0.f, *Where));
 }

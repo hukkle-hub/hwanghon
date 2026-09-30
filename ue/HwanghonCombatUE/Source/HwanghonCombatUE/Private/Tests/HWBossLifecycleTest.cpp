@@ -10,6 +10,8 @@
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "UObject/StrongObjectPtr.h"
+#include "HHBossIntroTypes.h"
+#include "System/HWBossSystemComponent.h"
 
 // Keep deterministic pattern setup out of the gameplay API.
 struct FHWBossLifecycleTestAccess
@@ -243,6 +245,54 @@ bool FHWBossReentrantDeathTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("No second queued damage callback"), Fixture.Observer->PlayerDamageCount, 1);
         TestEqual(TEXT("Death during strike emitted once"), Fixture.Observer->DeathCount, 1);
     }
+    return true;
+}
+
+
+// v10 boss intro (docs/design/162): while the intro holds the boss it takes no damage, its attack in progress is dropped
+// and its enrage clock stops; let go, it is an ordinary boss again. The intros stay short (v10: about 2-4 s) and each
+// pilot boss has its novel choreography.
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(
+    FHWBossIntroHoldTest,
+    "Hwanghon.Combat.BossIntroHold",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FHWBossIntroHoldTest::RunTest(const FString& Parameters)
+{
+    FHWBossTestWorld Fixture;
+    if (!TestNotNull(TEXT("Transient boss"), Fixture.Boss) || !TestNotNull(TEXT("Transient player"), Fixture.Player))
+    {
+        return false;
+    }
+    AHWBossCharacter& Boss = *Fixture.Boss;
+    FHWBossLifecycleTestAccess::BeginStrike(Boss, *Fixture.Player, MakeTwoBeatPattern(false));
+    TestTrue(TEXT("mid-attack before the intro"), Boss.GetBossState() == EHWBossState::Strike);
+
+    IHHBossPresentationInterface::Execute_HH_BossIntroBegin(&Boss, TEXT("CLAVE_GANGNAM"));
+    TestTrue(TEXT("intro begin holds the boss"), Boss.IsIntroHeld());
+    TestTrue(TEXT("the attack in progress is dropped"), Boss.GetBossState() == EHWBossState::Idle);
+    TestFalse(TEXT("enrage clock stopped"), Boss.GetBossSystem() && Boss.GetBossSystem()->IsComponentTickEnabled());
+    const float Before = Boss.GetHealth();
+    Boss.ReceivePlayerHit(5000.f, EHWAttackTier::Smash, FVector(100.f, 0.f, 0.f));
+    TestEqual(TEXT("held boss takes no damage"), Boss.GetHealth(), Before);
+
+    Boss.SetIntroHold(false);
+    TestFalse(TEXT("let go"), Boss.IsIntroHeld());
+    TestTrue(TEXT("enrage clock runs again"), !Boss.GetBossSystem() || Boss.GetBossSystem()->IsComponentTickEnabled());
+    Boss.ReceivePlayerHit(5000.f, EHWAttackTier::Smash, FVector(100.f, 0.f, 0.f));
+    TestTrue(TEXT("released boss takes damage"), Boss.GetHealth() < Before);
+
+    for (const TCHAR* Id : { TEXT("TUTORIAL_SCARECROW"), TEXT("CLAVE_GANGNAM") })
+    {
+        const FHHBossIntroTimingProfile P = HHBossIntroProfiles::Resolve(Id);
+        const float Total = P.PlayerEntryHold + P.SilhouetteHold + P.ScaleRevealHold + P.SignatureHold + P.HandbackHold;
+        TestTrue(FString::Printf(TEXT("%s intro %.2f s is about 2-4 s"), Id, Total), Total >= 1.8f && Total <= 4.f);
+    }
+    const AHWBossCharacter::FIntroChoreo Scarecrow = AHWBossCharacter::IntroChoreoFor(TEXT("TUTORIAL_SCARECROW"));
+    TestTrue(TEXT("scarecrow: still until it wakes, spin wind-up"), Scarecrow.bStillUntilSignature && !Scarecrow.bApproach && Scarecrow.SignaturePattern == TEXT("Spin"));
+    const AHWBossCharacter::FIntroChoreo Clave = AHWBossCharacter::IntroChoreoFor(TEXT("CLAVE_GANGNAM"));
+    TestTrue(TEXT("clave: walks in, sets the shutter (charge wind-up)"), Clave.bApproach && Clave.SignaturePattern == TEXT("Charge"));
+    TestTrue(TEXT("unknown boss: no choreography"), AHWBossCharacter::IntroChoreoFor(TEXT("NOBODY")).SignaturePattern.IsNone());
     return true;
 }
 
