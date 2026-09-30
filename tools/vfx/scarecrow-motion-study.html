@@ -1,0 +1,744 @@
+<title>허수아비 모션 스터디</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one wide stage like a VFX review monitor; tabs above it, the timeline strip under it, the layer order sheet last.
+   Single dark look on purpose: glows and embers only read on a dark ground. */
+:root{
+  --ground:#12110e; --panel:#1b1914; --raise:#24211b; --line:#39332a; --ink:#ede5d3; --dim:#a79c86;
+  --straw:#c9a55c; --tell:#e3432f; --hit:#fff0d2; --core:#ff8a1f; --kain:#8ec3ff;
+  --f-disp:"Nanum Myeongjo","Batang",serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ground)}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 12px/1.4 var(--f-body);letter-spacing:.08em;color:var(--straw)}
+h1{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f-disp);margin:0;text-wrap:balance}
+.lede{color:var(--dim);max-width:68ch;margin:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:500 14px/1.2 var(--f-body);color:var(--dim);background:transparent;border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer}
+.tabs button:hover{color:var(--ink);border-color:#5a5042}
+.tabs button[aria-selected="true"]{color:var(--ground);background:var(--straw);border-color:var(--straw)}
+.tabs button:focus-visible,.ctrl :focus-visible,.chips button:focus-visible{outline:2px solid var(--core);outline-offset:2px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.stage-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.stage-head h2{font:700 19px/1.3 var(--f-disp);margin:0}
+.stage-head .src{font:12px/1.5 var(--f-mono);color:var(--dim)}
+.canvas-box{position:relative;aspect-ratio:16/9;max-width:100%;background:#0d0c0a}
+canvas#cv{width:100%;height:100%;display:block}
+.now{position:absolute;left:12px;top:10px;font:600 13px/1.3 var(--f-body);color:var(--ink);background:rgba(18,17,14,.72);padding:5px 9px;border-radius:3px;max-width:70%}
+.now small{display:block;font:400 12px/1.45 var(--f-body);color:var(--dim)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px;border-top:1px solid var(--line)}
+.ctrl button{font:600 13px/1 var(--f-body);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer;min-height:36px}
+.ctrl button:hover{border-color:#5a5042}
+.ctrl label{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.ctrl select{background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:6px 8px;font:13px var(--f-body)}
+.time{font:600 13px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink);margin-left:auto}
+.tl{padding:0 16px 14px;display:grid;gap:8px}
+.bar{position:relative;height:14px;border-radius:2px;overflow:hidden;background:var(--raise)}
+.bar i{position:absolute;top:0;bottom:0;border-right:1px solid var(--panel)}
+.k-idle{background:#3b362d}.k-tell{background:#8e2a1f}.k-hit{background:#e8d9bb}.k-rec{background:#57503f}.k-win{background:#b8661a}.k-post{background:#5d4a8a}.k-brk{background:#a4412b}
+.head{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--hit);box-shadow:0 0 6px var(--hit)}
+input[type=range]{width:100%;accent-color:var(--core)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12px/1.2 var(--f-body);background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:6px 8px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.chips button b{font:600 11px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.chips button.on{border-color:var(--core);color:var(--ink)}
+.sheet{display:grid;gap:10px}
+.sheet h3{font:700 17px/1.3 var(--f-disp);margin:0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--f-body);letter-spacing:.04em;color:var(--dim);background:var(--panel)}
+td:nth-child(2){font:13px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--straw)}
+td:nth-child(4){color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:14px;height:8px;border-radius:1px;display:inline-block}
+.foot{color:var(--dim);font-size:13px;max-width:80ch;display:grid;gap:6px}
+.foot code{font:12px var(--f-mono);color:var(--ink)}
+@media (max-width:560px){.now{max-width:88%;font-size:12px}.time{margin-left:0}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">황혼 EP01 · 훈련용 짚단 허수아비(각성체) · 3 m</div>
+    <h1>허수아비 모션 스터디</h1>
+    <p class="lede">UE에 넣기 전에 기술마다 동작·이펙트·타이밍을 여기서 정합니다. 시간은 전부 게임 코드의 실제 값입니다(예고·타격·회복 길이, 타격 시점, 반경). 탭을 보고 «승인» 또는 고칠 점을 말해 주시면, 승인된 것만 엔진으로 옮깁니다.</p>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <section class="stage">
+    <div class="stage-head"><h2 id="title"></h2><div class="src" id="src"></div></div>
+    <div class="canvas-box"><canvas id="cv" aria-label="모션 스터디 무대"></canvas><div class="now" id="now"></div></div>
+    <div class="ctrl">
+      <button id="replay" type="button">처음부터</button>
+      <button id="play" type="button">일시정지</button>
+      <label for="speed">속도 <select id="speed"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label>
+      <label for="loop"><input type="checkbox" id="loop" checked> 반복</label>
+      <label for="ghost" id="ghostWrap" hidden><input type="checkbox" id="ghost" checked> 파괴 전 동작 겹쳐 보기</label>
+      <label for="variant" id="variantWrap" hidden>부위 <select id="variant"><option value="leg">다리</option><option value="arm">팔</option></select></label>
+      <span class="time" id="time">0.00 / 0.00 s</span>
+    </div>
+    <div class="tl">
+      <div class="bar" id="bar"></div>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="시간">
+      <div class="chips" id="chips"></div>
+      <div class="legend">
+        <span><i class="k-tell"></i>예고</span><span><i class="k-hit"></i>타격</span><span><i class="k-rec"></i>회복·반격 기회</span><span><i class="k-win"></i>숨 한 번(파고들 창)</span><span><i class="k-post"></i>슬로</span><span><i class="k-brk"></i>파괴</span><span><i class="k-idle"></i>대기·이동</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h3>레이어 주문서</h3>
+    <div class="tbl"><table><thead><tr><th>레이어</th><th>시점 (s)</th><th>화면에 보이는 것</th><th>UE 구현 · 재료</th></tr></thead><tbody id="layers"></tbody></table></div>
+  </section>
+
+  <div class="foot">
+    <p>방법: 기술마다 «컨셉 → 2D 타이밍 → 승인 → 엔진». 한 기술을 여러 층으로 쌓습니다(몸 동작 + 몸의 머티리얼 + 입자 + 화면 + 소리). 부서지는 부위는 처음부터 따로 떨어지는 메시로 둡니다. 근거는 <code>docs/design/166</code>.</p>
+    <p>수치 출처: <code>HWBossCanonRules.cpp</code> Spin 1.3/0.55/0.9 s·타격 0.12/0.29/0.46·반경 260 cm, Elbow 0.28/0.3/0.8 s, 숨 한 번 2.0 s, 낫 하나 길이 150–240 cm · <code>HWStoryDirector.cpp</code> 절단 0.25배속 1.2 s · <code>HWBossSystemComponent.cpp</code> 부위 head 90 / armor 135 / limb 115.</p>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ---------- math ---------- */
+const R=Math.PI/180, TAU=Math.PI*2;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const E={lin:u=>u,io:u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,out:u=>1-Math.pow(1-u,3),in:u=>u*u*u,
+  back:u=>{const c=1.7;return 1+(c+1)*Math.pow(u-1,3)+c*Math.pow(u-1,2)}};
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s], dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const len=a=>Math.hypot(a[0],a[1],a[2]), norm=a=>{const l=len(a)||1;return [a[0]/l,a[1]/l,a[2]/l]};
+const rotY=(v,a)=>{const c=Math.cos(a),s=Math.sin(a);return [v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c]};
+const rotX=(v,a)=>{const c=Math.cos(a),s=Math.sin(a);return [v[0],v[1]*c-v[2]*s,v[1]*s+v[2]*c]};
+const vl=(a,b,u)=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+function rng(seed){let s=seed>>>0;return()=>{s=s+0x6D2B79F5>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+const seg01=(t,a,b)=>cl((t-a)/(b-a));
+
+/* ---------- poses ---------- */
+const BASE={x:0,z:0,yaw:0,twist:0,lean:0,side:0,nod:0,tilt:0,air:0,
+  aL:{abd:16,fwd:4,bend:14},aR:{abd:16,fwd:4,bend:14},
+  lL:{fwd:0,spr:5,bend:4},lR:{fwd:0,spr:5,bend:4}};
+function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object")merge(a[k]||(a[k]={}),b[k]);else a[k]=b[k]}return a}
+const P=(...o)=>o.reduce((a,b)=>merge(a,b),structuredClone(BASE));
+function mix(a,b,u){if(typeof a==="number")return lerp(a,b===undefined?a:b,u);const o={};for(const k in a)o[k]=mix(a[k],b===undefined?undefined:b[k],u);return o}
+function track(keys,t){if(t<=keys[0].t)return keys[0].p;for(let i=1;i<keys.length;i++){const k=keys[i];if(t<=k.t){const a=keys[i-1];return mix(a.p,k.p,E[k.e||"io"]((t-a.t)/(k.t-a.t)))}}return keys[keys.length-1].p}
+const bossIdle=(x,yaw=-90,o={})=>P({x,yaw,lean:6,aL:{abd:18,fwd:6,bend:22},aR:{abd:18,fwd:6,bend:22},lL:{fwd:7,spr:9,bend:12},lR:{fwd:-5,spr:9,bend:9}},o);
+function walkPose(base,ph,amp,limp){
+  const p=structuredClone(base),s=Math.sin(ph),c=Math.cos(ph);
+  p.lL.fwd=base.lL.fwd+s*amp*(limp?.45:1); p.lR.fwd=base.lR.fwd-s*amp;
+  p.lL.bend=8+Math.max(0,c)*34*(limp?.35:1)+(limp&&s<0?16*-s:0); p.lR.bend=8+Math.max(0,-c)*34;
+  p.aL.fwd=base.aL.fwd-s*amp*.45; p.aR.fwd=base.aR.fwd+s*amp*.45;
+  if(limp){p.side=base.side-11*Math.max(0,-s);p.lean=base.lean+7+4*Math.max(0,-s)}
+  return p;
+}
+
+/* ---------- forward kinematics (cm, y up, body faces +z locally) ---------- */
+function fk(p,S){
+  const tw=p.twist*R,le=p.lean*R,si=p.side*R;
+  const up=norm([Math.sin(si),Math.cos(le)*Math.cos(si),Math.sin(le)]);
+  const L={hips:[0,0,0]};
+  L.chest=mul(up,95*S); L.neck=mul(up,108*S);
+  L.head=add(L.neck,mul(norm(add(up,[p.tilt*R*.9,0,p.nod*R*.9])),26*S));
+  const fT=rotY([0,0,1],tw), sh=rotY([44*S,0,0],tw);
+  const arm=(sg,a,n)=>{const s=add(L.chest,mul(sh,sg));let d=[sg*Math.sin(a.abd*R),-Math.cos(a.abd*R),0];
+    d=rotY(rotY(d,-sg*a.fwd*R),tw);const e=add(s,mul(d,70*S));let b=sub(fT,mul(d,dot(fT,d)));
+    if(len(b)<.25)b=sub([0,1,0],mul(d,d[1]));b=norm(b);
+    const f=norm(add(mul(d,Math.cos(a.bend*R)),mul(b,Math.sin(a.bend*R))));
+    L["sh"+n]=s;L["el"+n]=e;L["ha"+n]=add(e,mul(f,66*S))};
+  arm(1,p.aL,"L");arm(-1,p.aR,"R");
+  const leg=(sg,l,n)=>{const h=[sg*20*S,0,0];const d=norm([sg*Math.sin(l.spr*R),-Math.cos(l.fwd*R),Math.sin(l.fwd*R)]);
+    const k=add(h,mul(d,78*S));L["hp"+n]=h;L["kn"+n]=k;L["ft"+n]=add(k,mul(rotX(d,l.bend*R),78*S))};
+  leg(1,p.lL,"L");leg(-1,p.lR,"R");
+  const yaw=p.yaw*R, lift=-Math.min(L.ftL[1],L.ftR[1])+8*S+(p.air||0);
+  const W={S,fwd:rotY(fT,yaw)};
+  for(const k in L){const v=rotY(L[k],yaw);W[k]=[v[0]+p.x,v[1]+lift,v[2]+p.z]}
+  return W;
+}
+const JOINTS=["hips","chest","neck","head","shL","elL","haL","shR","elR","haR","hpL","knL","ftL","hpR","knR","ftR"];
+function tipJoints(W,a,dir,pivot){ // fall over in the vertical plane of dir, around pivot
+  const o={...W};
+  for(const k of JOINTS){const r=sub(W[k],pivot);const h=r[0]*dir[0]+r[2]*dir[2];const y=r[1];
+    const h2=h*Math.cos(a)+y*Math.sin(a), y2=-h*Math.sin(a)+y*Math.cos(a);
+    o[k]=[pivot[0]+dir[0]*h2+(r[0]-dir[0]*h),pivot[1]+Math.max(y2,6-pivot[1]),pivot[2]+dir[2]*h2+(r[2]-dir[2]*h)]}
+  return o;
+}
+function rollJoints(W,a,dir){ // tumble about the hips, kept above the floor
+  const piv=W.hips;const o=tipJoints(W,a,dir,piv);let m=1e9;for(const k of JOINTS)m=Math.min(m,o[k][1]);
+  const lift=Math.max(0,10-m);for(const k of JOINTS)o[k]=[o[k][0],o[k][1]+lift,o[k][2]];return o;
+}
+
+/* ---------- view ---------- */
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+const off=document.createElement("canvas"), g2=off.getContext("2d");
+let VW=0,VH=0,SC=1,CX=0,GY=0,DPR=1;
+const VY=34*R;
+function pj(v){const r=rotY(v,VY);return [CX+r[0]*SC,GY-r[1]*SC+r[2]*SC*.3,r[2]]}
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);const b=cv.getBoundingClientRect();
+  VW=Math.max(320,Math.round(b.width*DPR));VH=Math.round(VW*9/16);cv.width=off.width=VW;cv.height=off.height=VH;
+  SC=VW/800;CX=VW*.5;GY=VH*.87}
+
+/* ---------- drawing primitives (on g2) ---------- */
+let C=g2;
+const line=(a,b)=>{C.beginPath();C.moveTo(a[0],a[1]);C.lineTo(b[0],b[1]);C.stroke()};
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`};
+function mixHex(h1,h2,u){const a=parseInt(h1.slice(1),16),b=parseInt(h2.slice(1),16);const c=(s)=>Math.round(lerp(a>>s&255,b>>s&255,u));return `rgb(${c(16)},${c(8)},${c(0)})`}
+function floor(){
+  const g=C.createLinearGradient(0,0,0,VH);g.addColorStop(0,"#0b0a08");g.addColorStop(.46,"#15130f");g.addColorStop(.47,"#1c1914");g.addColorStop(1,"#241f18");
+  C.fillStyle=g;C.fillRect(0,0,VW,VH);
+  C.strokeStyle="rgba(210,190,150,.06)";C.lineWidth=1;
+  for(let x=-700;x<=700;x+=100)line(pj([x,0,-420]),pj([x,0,420]));
+  for(let z=-400;z<=400;z+=100)line(pj([-700,0,z]),pj([700,0,z]));
+  // flickering tube light on the low ceiling (EP01: 깨진 형광등)
+  C.fillStyle="rgba(220,235,255,.05)";C.fillRect(0,0,VW,VH*.06);
+}
+function ringPts(c,r,y=1,n=72,a0=0,a1=TAU){const o=[];for(let i=0;i<=n;i++){const a=lerp(a0,a1,i/n);o.push(pj([c[0]+Math.cos(a)*r,y,c[2]+Math.sin(a)*r]))}return o}
+function poly(pts,close){C.beginPath();pts.forEach((p,i)=>i?C.lineTo(p[0],p[1]):C.moveTo(p[0],p[1]));if(close)C.closePath()}
+function ring(c,r,col,w,a,dash){if(a<=0)return;C.save();C.globalAlpha=a;C.strokeStyle=col;C.lineWidth=w*SC;if(dash)C.setLineDash([10*SC,8*SC]);poly(ringPts(c,r),true);C.stroke();C.restore()}
+function disk(c,r,col,a){if(a<=0)return;C.save();C.globalAlpha=a;C.fillStyle=col;poly(ringPts(c,r),true);C.fill();C.restore()}
+function glowDot(p,r,col,a){if(a<=0)return;const q=pj(p);C.save();C.globalAlpha=a;const g=C.createRadialGradient(q[0],q[1],0,q[0],q[1],r*SC);g.addColorStop(0,col);g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.beginPath();C.arc(q[0],q[1],r*SC,0,TAU);C.fill();C.restore()}
+function pool(c,r,col,a){if(a<=0)return;C.save();C.globalAlpha=a;C.globalCompositeOperation="lighter";const q=pj([c[0],1,c[2]]);C.translate(q[0],q[1]);C.scale(1,.3/Math.cos(0)*1);const g=C.createRadialGradient(0,0,0,0,0,r*SC);g.addColorStop(0,col);g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.beginPath();C.arc(0,0,r*SC,0,TAU);C.fill();C.restore()}
+function text(s,x,y,size,col,a=1,align="left"){if(a<=0)return;C.save();C.globalAlpha=a;C.fillStyle=col;C.font=`800 ${size*SC}px ${getComputedStyle(document.documentElement).getPropertyValue("--f-disp")}`;C.textAlign=align;C.shadowColor="rgba(0,0,0,.8)";C.shadowBlur=8*SC;C.fillText(s,x*VW,y*VH);C.restore()}
+function vignette(a,col="0,0,0"){if(a<=0)return;const g=C.createRadialGradient(VW/2,VH*.52,VH*.25,VW/2,VH*.5,VW*.62);g.addColorStop(0,`rgba(${col},0)`);g.addColorStop(1,`rgba(${col},${a})`);C.fillStyle=g;C.fillRect(0,0,VW,VH)}
+
+/* straw limb: fibres + a dark nano-wire core */
+const ST={base:"#9c7838",light:"#d8b86c",dark:"#5d4521"};
+function strawSeg(a,b,w,id,o){
+  const ash=o.ash||0, base=mixHex(ST.base,"#6f6b64",ash), lt=mixHex(ST.light,"#8f8a82",ash), dk=mixHex(ST.dark,"#4b4843",ash);
+  C.lineCap="round";C.strokeStyle=base;C.lineWidth=w;line(a,b);
+  const r=rng(id*977+13),dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,n=Math.max(5,w/2.2|0);
+  C.lineWidth=Math.max(1,w*.07);
+  for(let i=0;i<n;i++){const off=(r()-.5)*w*.95,s0=r()*.35-.15,s1=.7+r()*.45,j=(r()-.5)*w*.25;
+    C.strokeStyle=r()<.55?lt:dk;C.beginPath();C.moveTo(a[0]+dx*s0+nx*off,a[1]+dy*s0+ny*off);C.lineTo(a[0]+dx*s1+nx*(off+j),a[1]+dy*s1+ny*(off+j));C.stroke()}
+  C.strokeStyle="#1d1b18";C.lineWidth=Math.max(1.2,w*.08);line(a,b);
+}
+function wireSeg(a,b,w,id){ // stripped limb: a twisted bundle of nano-wire
+  const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
+  for(let i=0;i<6;i++){C.strokeStyle=i%2?"#8d9399":"#5b6066";C.lineWidth=Math.max(1,w*.09);C.beginPath();
+    for(let k=0;k<=10;k++){const u=k/10,o=Math.sin(u*9+i*1.1)*w*.28*(1-.4*Math.abs(u-.5));const x=a[0]+dx*u+nx*o,y=a[1]+dy*u+ny*o;k?C.lineTo(x,y):C.moveTo(x,y)}C.stroke()}
+}
+function ghostSeg(a,b,w){C.save();C.strokeStyle="rgba(236,228,210,.28)";C.lineWidth=Math.max(1,w*.12);C.setLineDash([4,4]);line(a,b);C.restore()}
+
+/* the scarecrow */
+function drawBoss(W,o={}){
+  let J=W;
+  if(o.tip)J=tipJoints(W,o.tip,o.tipDir||[1,0,0],[(W.ftL[0]+W.ftR[0])/2,0,(W.ftL[2]+W.ftR[2])/2]);
+  const Q={};for(const k of JOINTS)Q[k]=pj(J[k]);
+  const S=W.S, px=cm=>cm*S*SC, ghost=o.ghost;
+  C.save();C.globalAlpha=o.alpha===undefined?1:o.alpha;
+  const hipW=(n)=>pj(add(J.hips,mul(sub(J["hp"+n],J.hips),1.7)));
+  const items=[];
+  const segOf=(a,b,w,id,kind)=>items.push({z:(Q[a][2]+Q[b][2])/2,f:()=>{
+    if(ghost)return ghostSeg(Q[a],Q[b],px(w));
+    if(kind==="wire")return wireSeg(Q[a],Q[b],px(w),id);
+    strawSeg(Q[a],Q[b],px(w),id,o)}});
+  const hideF=o.hide||{};
+  segOf("hpL","knL",31,1,o.wireLeg==="L"?"wire":0);segOf("knL","ftL",25,2,o.wireLeg==="L"?"wire":0);
+  segOf("hpR","knR",31,3,o.wireLeg==="R"?"wire":0);segOf("knR","ftR",25,4,o.wireLeg==="R"?"wire":0);
+  segOf("shL","elL",27,5);if(!hideF.foreL)segOf("elL","haL",22,6);
+  segOf("shR","elR",27,7);if(!hideF.foreR)segOf("elR","haR",22,8);
+  items.push({z:Q.chest[2]-1,f:()=>{ // torso
+    const a=Q.shL,b=Q.shR,c=hipW("R"),d=hipW("L");
+    if(ghost){C.save();C.strokeStyle="rgba(236,228,210,.28)";C.setLineDash([4,4]);poly([a,b,c,d],true);C.stroke();C.restore();return}
+    C.fillStyle=mixHex(ST.base,"#6f6b64",o.ash||0);poly([a,b,c,d],true);C.fill();
+    strawSeg(pj(vl(J.hips,J.chest,-.05)),pj(vl(J.hips,J.chest,1.05)),px(68),9,o);
+    // skirt of straw at the waist
+    const r=rng(77);C.lineWidth=Math.max(1,px(2));
+    for(let i=0;i<22;i++){const u=i/21,s=[lerp(d[0],c[0],u),lerp(d[1],c[1],u)];C.strokeStyle=r()<.5?mixHex(ST.light,"#8f8a82",o.ash||0):mixHex(ST.dark,"#4b4843",o.ash||0);
+      C.beginPath();C.moveTo(s[0],s[1]);C.lineTo(s[0]+(r()-.5)*px(10),s[1]+px(22+r()*16));C.stroke()}
+    if(!o.armorBroken){ // rope bindings and the rusted plate
+      C.strokeStyle="#4a2f1a";C.lineWidth=px(4);
+      for(const u of [.35,.62]){const p1=[lerp(d[0],a[0],u),lerp(d[1],a[1],u)],p2=[lerp(c[0],b[0],u),lerp(c[1],b[1],u)];line(p1,p2)}
+      const m=pj(vl(J.hips,J.chest,.78)),w=px(26);C.fillStyle="#5a4636";C.strokeStyle="#2c221a";C.lineWidth=px(2);
+      C.beginPath();C.moveTo(m[0]-w,m[1]-w*.6);C.lineTo(m[0]+w,m[1]-w*.7);C.lineTo(m[0]+w*.8,m[1]+w*.7);C.lineTo(m[0]-w*.9,m[1]+w*.6);C.closePath();C.fill();C.stroke();
+    }else{ // exposed core
+      const m=pj(vl(J.hips,J.chest,.78)),pu=o.corePulse||0;
+      C.strokeStyle="#7d848a";C.lineWidth=px(1.5);for(let i=-2;i<=2;i++){line([m[0]+i*px(8),m[1]-px(22)],[m[0]+i*px(6),m[1]+px(22)])}
+      C.save();C.globalCompositeOperation="lighter";const g=C.createRadialGradient(m[0],m[1],0,m[0],m[1],px(34+pu*14));g.addColorStop(0,`rgba(255,120,60,${.85})`);g.addColorStop(.35,`rgba(227,67,47,${.5+pu*.3})`);g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.beginPath();C.arc(m[0],m[1],px(40+pu*14),0,TAU);C.fill();C.restore();
+    }
+  }});
+  items.push({z:Q.head[2],f:()=>drawHead(J,Q,o,px)});
+  items.sort((a,b)=>a.z-b.z).forEach(i=>i.f());
+  if(!ghost){
+    // glyph path shoulder -> elbow -> fingertip (the road the force runs along, EP01 L551)
+    const gl=o.glyph||{};
+    for(const n of ["L","R"]){const f=gl[n]===undefined?gl.f:gl[n];const a=gl.a||0;if(!f||a<=0)continue;
+      const pts=[Q["sh"+n],Q["el"+n]];if(!(hideF["fore"+n]))pts.push(Q["ha"+n]);
+      const from=gl.from||0;drawPartial(pts,from,f,"#e3432f",a,px(3.2))}
+    if(gl.elbow){const q=Q[gl.elbow];C.save();C.globalCompositeOperation="lighter";const g=C.createRadialGradient(q[0],q[1],0,q[0],q[1],px(26));g.addColorStop(0,`rgba(255,90,60,${gl.elbowA})`);g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.beginPath();C.arc(q[0],q[1],px(26),0,TAU);C.fill();C.restore()}
+    if(o.seams>0){for(const k of ["shR","elR"]){const q=Q[k];C.save();C.strokeStyle=`rgba(255,150,50,${o.seams})`;C.shadowColor="#ff8a1f";C.shadowBlur=px(10);C.lineWidth=px(1.6);C.beginPath();C.ellipse(q[0],q[1],px(12),px(7),.6,0,TAU);C.stroke();C.restore()}}
+  }
+  C.restore();
+  return J;
+}
+function drawPartial(pts,f0,f1,col,a,w){
+  const L=[];let T=0;for(let i=1;i<pts.length;i++){const l=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);L.push(l);T+=l}
+  const s0=f0*T,s1=f1*T;let acc=0;C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(col,a);C.shadowColor=col;C.shadowBlur=w*5;C.lineWidth=w;C.lineCap="round";C.beginPath();let started=false;
+  for(let i=1;i<pts.length;i++){const p=pts[i-1],q=pts[i],l=L[i-1];const u0=cl((s0-acc)/l),u1=cl((s1-acc)/l);
+    if(u1>u0){const A=[lerp(p[0],q[0],u0),lerp(p[1],q[1],u0)],B=[lerp(p[0],q[0],u1),lerp(p[1],q[1],u1)];if(!started){C.moveTo(A[0],A[1]);started=true}C.lineTo(B[0],B[1])}acc+=l}
+  C.stroke();if(a>.85){C.shadowBlur=0;C.strokeStyle=`rgba(255,240,220,${(a-.85)*4})`;C.lineWidth=w*.35;C.stroke()}C.restore();
+}
+function drawHead(J,Q,o,px){
+  const h=Q.head,r=px(31),ash=o.ash||0;
+  if(o.ghost){C.save();C.strokeStyle="rgba(236,228,210,.28)";C.setLineDash([4,4]);C.beginPath();C.arc(h[0],h[1],r,0,TAU);C.stroke();C.restore();return}
+  C.save();
+  if(o.headBroken){ // wire skull showing through the torn sack
+    C.strokeStyle="#8d9399";C.lineWidth=px(1.4);C.beginPath();C.arc(h[0],h[1],r*.86,0,TAU);C.stroke();
+    for(let i=0;i<3;i++){C.beginPath();C.ellipse(h[0],h[1],r*.86*(.3+i*.3),r*.86,0,0,TAU);C.stroke()}
+    C.beginPath();C.arc(h[0],h[1],r,Math.PI*.35,Math.PI*1.45);C.lineTo(h[0]-r*.1,h[1]-r*.2);C.lineTo(h[0]+r*.15,h[1]+r*.1);C.closePath();C.clip();
+  }
+  const g=C.createRadialGradient(h[0]-r*.3,h[1]-r*.3,r*.1,h[0],h[1],r);g.addColorStop(0,mixHex("#b89456","#8a857d",ash));g.addColorStop(1,mixHex("#6e5328","#55524c",ash));
+  C.fillStyle=g;C.beginPath();C.arc(h[0],h[1],r,0,TAU);C.fill();
+  C.strokeStyle="rgba(40,28,14,.55)";C.lineWidth=px(1);for(let i=-3;i<=3;i++){line([h[0]+i*r*.25,h[1]-r*.95],[h[0]+i*r*.25,h[1]+r*.95])}
+  C.strokeStyle="#2b1d10";C.lineWidth=px(1.6);line([h[0]-r*.5,h[1]+r*.45],[h[0]+r*.5,h[1]+r*.45]);
+  C.restore();
+  // eyes: glyph red; forward on the face
+  const f=J.fwd,side=norm([f[2],0,-f[0]]),hp=J.head;const ea=o.eyes===undefined?.7:o.eyes;
+  const face=dot(rotY(f,VY),[0,0,1]);
+  if(face>-.2){for(const sg of (o.headBroken?[1]:[1,-1])){const e=add(add(hp,mul(f,22*J.S)),add(mul(side,sg*10*J.S),[0,4*J.S,0]));const q=pj(e);
+    C.save();C.globalCompositeOperation="lighter";const gg=C.createRadialGradient(q[0],q[1],0,q[0],q[1],px(9));gg.addColorStop(0,`rgba(255,200,170,${ea})`);gg.addColorStop(.3,`rgba(227,67,47,${ea})`);gg.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=gg;C.beginPath();C.arc(q[0],q[1],px(9),0,TAU);C.fill();C.restore()}}
+}
+
+/* people: Ain (scythe) and Kain (greatsword) */
+function drawHuman(W,o){
+  let J=W;if(o.roll)J=rollJoints(W,o.roll,o.rollDir||[-1,0,0]);
+  const Q={};for(const k of JOINTS)Q[k]=pj(J[k]);const S=W.S,px=cm=>cm*S*SC;
+  const items=[];const sg=(a,b,w,col)=>items.push({z:(Q[a][2]+Q[b][2])/2,f:()=>{C.strokeStyle=col;C.lineWidth=px(w);C.lineCap="round";line(Q[a],Q[b])}});
+  const c1=o.col,c2=o.col2;
+  sg("hpL","knL",20,c2);sg("knL","ftL",16,c2);sg("hpR","knR",20,c2);sg("knR","ftR",16,c2);
+  sg("hips","chest",36,c1);sg("shL","shR",22,c1);sg("shL","elL",14,c1);sg("elL","haL",12,c1);sg("shR","elR",14,c1);sg("elR","haR",12,c1);
+  items.push({z:Q.head[2],f:()=>{C.fillStyle=o.hair||c1;C.beginPath();C.arc(Q.head[0],Q.head[1],px(19),0,TAU);C.fill()}});
+  items.sort((a,b)=>a.z-b.z).forEach(i=>i.f());
+  if(o.weapon==="scythe"){
+    const dir=o.wdir?o.wdir(J):norm(sub(J.haR,J.elR));const base=sub(J.haR,mul(dir,50));const tip=add(J.haR,mul(dir,150));
+    const bl=o.bladeDir||norm([dir[2]||.01,0,-dir[0]]);const p0=pj(base),p1=pj(tip),b1=pj(add(add(tip,mul(bl,70)),mul(dir,-26)));
+    C.strokeStyle="#3c3a37";C.lineWidth=px(4);line(p0,p1);
+    C.strokeStyle="#c9ced4";C.lineWidth=px(5);C.beginPath();C.moveTo(p1[0],p1[1]);C.quadraticCurveTo((p1[0]+b1[0])/2+px(8),(p1[1]+b1[1])/2-px(14),b1[0],b1[1]);C.stroke();
+    J.tip=add(add(tip,mul(bl,60)),mul(dir,-18));
+  }
+  if(o.weapon==="sword"){
+    const dir=o.wdir?o.wdir(J):norm(sub(J.haR,J.elR));const a=pj(sub(J.haR,mul(dir,20))),b=pj(add(J.haR,mul(dir,165)));
+    C.strokeStyle="#2e3238";C.lineWidth=px(16);line(a,b);C.strokeStyle="#a9b3bf";C.lineWidth=px(10);line(a,b);
+    if(o.coat>0){C.save();C.globalCompositeOperation="lighter";C.strokeStyle=`rgba(142,195,255,${o.coat})`;C.shadowColor="#8ec3ff";C.shadowBlur=px(26)*o.coat;C.lineWidth=px(14);line(a,b);C.restore()}
+    J.swordTip=add(J.haR,mul(dir,165));
+  }
+  return J;
+}
+const AIN={col:"#56606b",col2:"#3a4149",hair:"#1d1f22",weapon:"scythe"};
+const KAIN={col:"#3d4d63",col2:"#2a3444",hair:"#141619",weapon:"sword"};
+const ainPose=(x,o={})=>P({x,z:40,yaw:90,lean:4,aL:{abd:20,fwd:40,bend:50},aR:{abd:24,fwd:30,bend:60},lL:{fwd:10,spr:8,bend:10},lR:{fwd:-8,spr:8,bend:8}},o);
+
+/* ---------- particles: pure functions of time, so scrubbing is exact ---------- */
+function burst(t,e){
+  const age0=t-e.t0;if(age0<0||age0>e.life*1.1+(e.dl||0))return;const r=rng(e.seed);
+  for(let i=0;i<e.n;i++){const a=r()*TAU,el=(e.el??.7)+(r()-.5)*(e.spr??1.4),sp=e.sp*(.35+r()*.9),dl=r()*(e.dl||0),lf=e.life*(.5+r()*.6),rot=r()*TAU,rs=(r()-.5)*18,k0=r();
+    const age=age0-dl;if(age<0||age>lf)continue;
+    let v=[Math.cos(a)*Math.cos(el)*sp,Math.sin(el)*sp,Math.sin(a)*Math.cos(el)*sp];if(e.dir)v=add(v,mul(e.dir,e.dsp||0));
+    const at=e.at;let p=[at[0]+v[0]*age,at[1]+v[1]*age-.5*(e.g??900)*age*age,at[2]+v[2]*age];
+    if(p[1]<2){p[1]=2}
+    part(e.kind,p,v,age,age/lf,rot+rs*age,e,k0)}
+}
+function part(kind,p,v,age,k,rot,e,k0){
+  const q=pj(p);const a=1-k;
+  if(kind==="straw"){const l=(8+k0*10)*SC;C.strokeStyle=k0<.5?hexA("#d8b86c",a):hexA(e.col||"#9c7838",a);C.lineWidth=Math.max(1,1.6*SC);line([q[0]-Math.cos(rot)*l,q[1]-Math.sin(rot)*l],[q[0]+Math.cos(rot)*l,q[1]+Math.sin(rot)*l]);return}
+  if(kind==="ember"){const fl=.6+.4*Math.sin(age*40+k0*9);C.save();C.globalCompositeOperation="lighter";C.fillStyle=`rgba(255,${120+k0*80|0},40,${a*fl})`;C.beginPath();C.arc(q[0],q[1],(1.2+k0*1.8)*SC*1.4,0,TAU);C.fill();C.restore();return}
+  if(kind==="spark"){const b=pj(sub(p,mul(v,.025)));C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(e.col||"#fff0d2",a);C.lineWidth=Math.max(1,1.8*SC);line(b,q);C.restore();return}
+  if(kind==="dust"){C.fillStyle=hexA(e.col||"#8a8274",.22*a);C.beginPath();C.arc(q[0],q[1],(10+age*70*(e.grow||1))*SC,0,TAU);C.fill();return}
+  if(kind==="ash"){C.fillStyle=hexA("#8b877f",.8*a);C.fillRect(q[0],q[1],2*SC+1,2*SC+1);return}
+  if(kind==="rope"){C.strokeStyle=hexA("#4a2f1a",a);C.lineWidth=4*SC;const l=16*SC;line([q[0]-Math.cos(rot)*l,q[1]-Math.sin(rot)*l],[q[0]+Math.cos(rot)*l,q[1]+Math.sin(rot)*l]);return}
+  if(kind==="plate"){C.save();C.translate(q[0],q[1]);C.rotate(rot);C.fillStyle=hexA(e.col||"#5a4636",Math.min(1,a*2));C.fillRect(-12*SC,-7*SC,24*SC,14*SC);C.restore();return}
+}
+function inhale(t,e){ // fibres drawn in toward the chest: the breath
+  const age0=t-e.t0;if(age0<0||age0>e.life)return;const r=rng(e.seed);
+  for(let i=0;i<e.n;i++){const a=r()*TAU,el=(r()-.3)*1.2,rad=e.R*(.6+r()*.6),dl=r()*e.life*.5,rot=r()*TAU;const age=age0-dl;if(age<0)continue;
+    const u=E.in(cl(age/(e.life-dl)));const st=add(e.at(t),[Math.cos(a)*Math.cos(el)*rad,Math.sin(el)*rad,Math.sin(a)*Math.cos(el)*rad]);
+    const p=vl(st,e.at(t),u);const q=pj(p);C.strokeStyle=hexA("#d8b86c",Math.min(1,u*2)*(1-u*.6));C.lineWidth=Math.max(1,1.4*SC);
+    const l=(6+u*8)*SC;line([q[0]-Math.cos(rot)*l,q[1]-Math.sin(rot)*l],[q[0]+Math.cos(rot)*l,q[1]+Math.sin(rot)*l])}
+}
+function trail(at,g,span,n,w,edge,core,alpha){ // ribbon from where a point has been in the last `span` game-seconds
+  if(alpha<=0)return;const pts=[];for(let i=0;i<=n;i++)pts.push(pj(at(g-span*i/n)));
+  C.save();C.globalCompositeOperation="lighter";C.lineCap="round";
+  for(let i=1;i<pts.length;i++){const u=1-i/n;C.strokeStyle=hexA(edge,alpha*u*.8);C.lineWidth=w*SC*(.3+u);line(pts[i-1],pts[i])}
+  for(let i=1;i<pts.length;i++){const u=1-i/n;C.strokeStyle=hexA(core,alpha*u);C.lineWidth=w*SC*.3*(.3+u);line(pts[i-1],pts[i])}
+  C.restore();
+}
+function starBurst(p,r,a,col="#fff0d2"){if(a<=0)return;const q=pj(p);C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(col,a);C.lineWidth=2*SC;for(let i=0;i<10;i++){const an=i/10*TAU+.3;const r0=r*.25*SC,r1=r*SC*(i%2?.6:1);line([q[0]+Math.cos(an)*r0,q[1]+Math.sin(an)*r0],[q[0]+Math.cos(an)*r1,q[1]+Math.sin(an)*r1])}C.restore();glowDot(p,r*.8,hexA(col,.9),a)}
+function shakeAt(t,list){let x=0,y=0;for(const s of list){const u=(t-s.t)/s.d;if(u<0||u>1)continue;const m=s.a*(1-u)*(1-u);x+=Math.sin(t*93+s.t*7)*m;y+=Math.cos(t*71+s.t*3)*m}return [x,y]}
+// hit-stop / slow motion: real time -> game time
+function warp(t,segs){let g=0,last=0;for(const s of segs){if(t<=s.t0)break;g+=s.t0-last;const e=Math.min(t,s.t1);g+=(e-s.t0)*s.k;last=s.t1;if(t<s.t1)return g}return g+Math.max(0,t-last)}
+
+/* ---------- concepts ---------- */
+const BX=130; // the scarecrow's spot
+const WIND={twist:-62,lean:3,aL:{abd:86,fwd:-50,bend:12},aR:{abd:86,fwd:38,bend:12},lL:{fwd:12,spr:17,bend:26},lR:{fwd:-12,spr:17,bend:26}};
+const SPREAD=(yaw,tw=0)=>({yaw,twist:tw,lean:0,aL:{abd:94,fwd:0,bend:6},aR:{abd:94,fwd:0,bend:6},lL:{fwd:10,spr:16,bend:24},lR:{fwd:-10,spr:16,bend:24}});
+
+const spinKeys=(x0,t0)=>[
+  {t:t0+0,p:bossIdle(x0)},
+  {t:t0+.80,p:bossIdle(x0,-90,WIND)},
+  {t:t0+1.05,p:bossIdle(x0,-90,{...WIND,lean:-5,nod:-8})},
+  {t:t0+1.30,p:bossIdle(x0,-90,{...WIND,lean:-6,nod:-8})},
+  {t:t0+1.42,p:bossIdle(x0,-90,SPREAD(80,-15)),e:"in"},
+  {t:t0+1.59,p:bossIdle(x0,-90,SPREAD(320,-5)),e:"lin"},
+  {t:t0+1.76,p:bossIdle(x0,-90,SPREAD(540,5)),e:"lin"},
+  {t:t0+1.85,p:bossIdle(x0,-90,SPREAD(630,22)),e:"out"},
+  {t:t0+2.25,p:bossIdle(x0,630,{twist:6,lean:14,aL:{abd:48,fwd:10,bend:20},aR:{abd:48,fwd:10,bend:20},lL:{fwd:12,spr:14,bend:34},lR:{fwd:-10,spr:14,bend:30}}),e:"out"},
+  {t:t0+2.75,p:bossIdle(x0,630)}];
+
+const CONCEPTS=[
+{id:"A",tab:"회전 · 숨 예고",title:"회전 공격 — 숨 한 번 먼저",src:"EP01 L463–L469 · L505 «부우웅»",dur:3.3,rest:1.18,
+ phases:[{t:0,n:"감기",k:"tell",d:"어깨가 뒤로 감기고 허리가 비틀린다. 문양이 어깨에서 손끝으로 차오른다."},
+  {t:.8,n:"발 고정",k:"tell",d:"두 발이 박힌다. 바닥에 반경 260 cm 원이 뜬다 — 이 안이 회전 범위."},
+  {t:1.05,n:"숨 (반 박자)",k:"tell",d:"자세는 멈췄고 힘은 아직 안 나왔다. 짚이 몸으로 빨려 들고 소리가 빠진다. 각인자의 눈에 보이는 반 박자."},
+  {t:1.3,n:"발동 · 3타",k:"hit",d:"«부우웅». 두 바퀴, 타격 1.42 · 1.59 · 1.76 s. 흰 심에 붉은 가장자리의 궤적."},
+  {t:1.85,n:"회복",k:"rec",d:"팔이 처지고 짚과 불티가 가라앉는다. 0.9 s — 여기가 반격 기회."},
+  {t:2.75,n:"대기",k:"idle",d:"다시 대기."}],
+ layers:[["몸 동작","0.00–1.30","어깨 뒤로 감기 → 허리 비틀림 → 발 고정 → 가슴을 들어 숨","Mixamo 회전 공격을 바탕으로 교정. 마지막 0.25 s는 포즈를 멈춘다(숨)"],
+  ["몸의 문양","0.00–1.05","어깨 → 팔꿈치 → 손끝 순서로 붉은 문양이 찬다(힘이 흐르는 길)","MI_Scarecrow 발광 파라미터 GlyphFill 0→1, 팔 UV를 따라 채우는 마스크"],
+  ["바닥 예고","0.80–1.30","반경 260 cm 붉은 원. 숨 동안 바깥에서 안으로 차고, 다 차면 발동","데칼 + Fill 파라미터 (Easy Shockwaves 링 재색)"],
+  ["숨","1.05–1.30","짚이 몸으로 빨려 들고 소리가 빠지고 화면 가장자리가 어두워진다","Niagara 흡입(점 인력), 오디오 덕킹, 비네트 0.35. 이중 음성(짐승 + 신호음)이 여기서 끊긴다"],
+  ["궤적","1.30–1.95","양손의 리본 궤적. 타격마다 화면 흔들림 5 px","Niagara 리본(손 소켓), 카메라 셰이크"],
+  ["파편","1.42 · 1.59 · 1.76","손끝에서 짚이 터지고 바닥을 긁는 불티","Realistic Starter VFX 불티·먼지 재색"],
+  ["소리","0.00–1.85","강선 «그드득» 감기 → 숨에서 무음 → «부우웅» 3회","Whoosh 팩 + 강선 긁힘"],
+  ["회복","1.85–2.75","문양이 식고(0.15) 짚이 가라앉는다","GlyphFill 1→0.15"]],
+ draw(t){
+  const keys=this._k||(this._k=spinKeys(BX,0));const at=g=>fk(track(keys,g),1);const W=at(t);
+  const ainX=BX-330,center=[BX,0,0];
+  // floor telegraph
+  const tA=cl((t-.8)/.2)*(t<1.3?1:cl(1-(t-1.3)/.2));ring(center,260,"#e3432f",2.2,.55*tA,true);
+  if(t>1.05&&t<1.3){const u=(t-1.05)/.25;disk(center,260,"rgba(227,67,47,.10)",1);ring(center,260-200*(1-u),"#e3432f",3,.7);disk(center,260,"rgba(227,67,47,.18)",u)}
+  if(t>=1.3&&t<1.5)ring(center,260,"#fff0d2",4,1-(t-1.3)/.2);
+  // bodies
+  const ain=fk(ainPose(ainX),.57);
+  const glyphF=cl(t/1.0), glyphA=t<1.05?.3+.5*(t/1.05):t<1.3?.8+.2*Math.sin((t-1.05)*40):t<1.85?1:Math.max(.15,1-(t-1.85)/.6);
+  const eyes=t<1.05?.6:t<1.85?1:.6;
+  const bz=pj(W.hips)[2],az=pj(ain.hips)[2];
+  const drawA=()=>drawHuman(ain,AIN),drawB=()=>drawBoss(W,{glyph:{f:glyphF,a:glyphA},eyes});
+  if(az<bz){drawA();drawB()}else{drawB();drawA()}
+  // breath
+  inhale(t,{t0:1.02,life:.3,n:46,R:190,seed:5,at:()=>W.chest});
+  // strike trails & bursts
+  if(t>1.3&&t<2.05){const al=t<1.85?1:1-(t-1.85)/.2;trail(g=>at(g).haL,t,.1,14,20,"#e3432f","#fff0d2",al);trail(g=>at(g).haR,t,.1,14,20,"#e3432f","#fff0d2",al)}
+  for(const [i,b] of [1.42,1.59,1.76].entries()){const Wb=at(b);const h=i%2?Wb.haR:Wb.haL;
+    burst(t,{t0:b,n:26,at:h,sp:520,el:.3,g:500,life:.9,kind:"straw",seed:11+i});
+    const fl=add(center,mul(norm([h[0]-BX,0,h[2]]),250));burst(t,{t0:b,n:18,at:[fl[0],4,fl[2]],sp:420,el:.5,spr:.8,g:900,life:.45,kind:"spark",seed:31+i});
+    burst(t,{t0:b,n:6,at:[fl[0],6,fl[2]],sp:60,el:.2,g:0,life:.8,kind:"dust",seed:41+i})}
+  burst(t,{t0:1.9,n:30,at:W.chest,sp:90,el:1,g:-40,life:1.4,kind:"ember",seed:51,dl:.4});
+  // screen
+  vignette(t>1.05&&t<1.3?.55:.25);
+  if(t>1.05&&t<1.3)text("숨",.5,.2,42,"#e3432f",Math.sin((t-1.05)/.25*Math.PI),"center");
+  if(t>1.3&&t<1.9)text("부우웅",.5,.2,34,"#fff0d2",1-(t-1.3)/.6,"center");
+  return {shake:shakeAt(t,[{t:1.42,a:5,d:.18},{t:1.59,a:5,d:.18},{t:1.76,a:6,d:.2}])};
+ }},
+
+{id:"B",tab:"팔꿈치 반격",title:"팔꿈치 반격 — 너무 붙으면",src:"EP01 L477–L489 «틱—»",dur:2.3,rest:.74,
+ phases:[{t:0,n:"아인의 베기",k:"idle",d:"아인이 품 안(150 cm 이내)에서 벤다. 낫이 돌 공간이 없다."},
+  {t:.25,n:"«틱—» 튕김",k:"brk",d:"날이 안쪽에 걸려 튕긴다. 노란 불똥 한 점, 피해 0."},
+  {t:.35,n:"예고 0.28 s",k:"tell",d:"팔꿈치 하나에만 붉은 빛. 온몸이 아니라 한 점 — 짧은 기술이라는 신호."},
+  {t:.63,n:"타격",k:"hit",d:"0.73 s 충격. 흰 섬광, 히트스톱 0.06 s, 흔들림 9 px."},
+  {t:.93,n:"회복 0.8 s",k:"rec",d:"아인은 매트 위를 두 바퀴 구른다(넉다운)."},
+  {t:1.73,n:"대기",k:"idle",d:""}],
+ layers:[["튕김","0.25","너무 붙으면 낫이 돌지 않는다. «틱—» 노란 불똥 한 점","기존 deflect 비트에 Niagara 불똥 + 금속음"],
+  ["예고","0.35–0.63","0.28 s. 팔꿈치에만 붉은 빛이 모인다","GlyphFill의 팔꿈치 마스크만 켠다"],
+  ["타격","0.73","팔꿈치 충격 섬광, 방사 불똥, 히트스톱 0.06 s, 흔들림 9 px","Low End Impacts + 카메라 셰이크"],
+  ["넉다운","0.73–1.50","아인이 두 바퀴 구르고 닿을 때마다 먼지","Smash 등급 넉다운 몽타주 + 먼지 버스트"],
+  ["회복","0.93–1.73","0.8 s","—"]],
+ draw(t0){
+  const t=warp(t0,[{t0:.73,t1:.79,k:0}]);
+  const keys=this._k||(this._k=[
+    {t:0,p:bossIdle(BX)},{t:.35,p:bossIdle(BX)},
+    {t:.63,p:bossIdle(BX,-90,{twist:-38,lean:-4,aR:{abd:62,fwd:-70,bend:125},aL:{abd:30,fwd:20,bend:40},lL:{fwd:8,spr:10,bend:16},lR:{fwd:-14,spr:10,bend:18}})},
+    {t:.73,p:bossIdle(BX-25,-90,{twist:42,lean:14,aR:{abd:70,fwd:70,bend:130},aL:{abd:28,fwd:-20,bend:40},lL:{fwd:4,spr:10,bend:20},lR:{fwd:24,spr:10,bend:22}}),e:"in"},
+    {t:.93,p:bossIdle(BX-30,-90,{twist:30,lean:12,aR:{abd:60,fwd:50,bend:110},lR:{fwd:20,spr:10,bend:20}})},
+    {t:1.73,p:bossIdle(BX)}]);
+  const W=fk(track(keys,t),1);
+  const ak=this._a||(this._a=[
+    {t:0,p:ainPose(BX-110,{twist:-40,aR:{abd:100,fwd:-50,bend:30},aL:{abd:60,fwd:20,bend:60}})},
+    {t:.25,p:ainPose(BX-110,{twist:30,aR:{abd:90,fwd:60,bend:20},aL:{abd:50,fwd:50,bend:40}}),e:"in"},
+    {t:.4,p:ainPose(BX-118,{twist:0,aR:{abd:80,fwd:10,bend:40}}),e:"out"},
+    {t:.73,p:ainPose(BX-118,{twist:0,aR:{abd:70,fwd:20,bend:40}})}]);
+  let A=fk(track(ak,t),.57),roll=0;
+  if(t>.73){const u=cl((t-.73)/.77);const x=BX-118-260*E.out(u);const cur=P(ainPose(x),{lL:{fwd:60,bend:110},lR:{fwd:60,bend:110},aL:{abd:30,fwd:60,bend:120},aR:{abd:30,fwd:60,bend:120},lean:30});
+    A=fk(cur,.57);A=Object.fromEntries(Object.entries(A).map(([k,v])=>Array.isArray(v)&&v.length===3&&JOINTS.includes(k)?[k,[v[0],v[1]+Math.abs(Math.sin(u*TAU))*28*(1-u),v[2]]]:[k,v]));roll=-u*TAU*2;
+    if(t>1.5){const u2=cl((t-1.5)/.6);A=fk(mix(cur,ainPose(x,{lean:28,lL:{fwd:40,bend:90},lR:{fwd:-10,bend:100},aR:{abd:40,fwd:30,bend:50}}),E.io(u2)),.57);roll=0}}
+  const elbowA=t<.35?0:t<.63?(t-.35)/.28:t<.8?1:Math.max(0,1-(t-.8)/.3);
+  drawBoss(W,{glyph:{a:0,elbow:"elR",elbowA},eyes:.7});
+  drawHuman(A,{...AIN,roll,rollDir:[-1,0,0]});
+  // deflect
+  const cp=[BX-58,178,20];starBurst(cp,26,t>.25&&t<.4?1-(t-.25)/.15:0,"#ffd76a");
+  burst(t,{t0:.25,n:14,at:cp,sp:380,el:.4,g:700,life:.35,kind:"spark",col:"#ffd76a",seed:7});
+  if(t>.25&&t<.6)text("틱—",.34,.28,30,"#ffd76a",1-(t-.25)/.35);
+  // impact
+  const ip=W.elR;starBurst(ip,46,t>.73&&t<.95?1-(t-.73)/.22:0);
+  burst(t,{t0:.73,n:22,at:ip,sp:600,el:.2,g:600,life:.4,kind:"spark",seed:9});
+  for(const [i,tc] of [.95,1.2,1.45].entries()){const x=BX-118-260*E.out(cl((tc-.73)/.77));burst(t,{t0:tc,n:7,at:[x,6,40],sp:70,el:.25,g:0,life:.9,kind:"dust",seed:60+i})}
+  vignette(.25);
+  return {shake:shakeAt(t0,[{t:.73,a:9,d:.22}]),freeze:t0>.73&&t0<.79};
+ }},
+
+{id:"C",tab:"카인 되받아치기 · 숨 한 번",title:"카인이 힘을 되돌린다 — 숨 한 번의 창",src:"EP01 L507–L529 «비켜!»",dur:4.0,rest:1.4,
+ phases:[{t:0,n:"회전 감기",k:"tell",d:"같은 회전 예고. 아인은 밴드 안(230 cm)."},
+  {t:.6,n:"«비켜!»",k:"idle",d:"카인이 회전 앞(보스에서 175 cm), 아인 쪽으로 들어온다."},
+  {t:.85,n:"대검 꽂기 · 코어 도포",k:"tell",d:"대검을 수직으로 꽂고 표면에 코어 출력을 덮는다. 벽이 아니라 트램펄린."},
+  {t:1.27,n:"되받아치기",k:"hit",d:"첫 타격이 대검에 닿는 순간 힘이 되돌아간다. 푸른 충격 링, 히트스톱 0.08 s."},
+  {t:1.35,n:"숨 한 번 (2.0 s)",k:"win",d:"3 m 몸통이 1 m 밀려 자세가 무너진다. 문양이 손끝부터 꺼지고, 이음매가 주황으로 맥동한다 — 여길 끊는다."},
+  {t:3.35,n:"회복",k:"rec",d:"자세를 되찾는다."}],
+ layers:[["진입","0.60–0.85","«비켜!» 카인이 회전 앞(175 cm)으로 들어온다","기존 TickKain 위치 그대로"],
+  ["코어 도포","0.85–1.27","꽂은 대검 표면에 푸른 흰 막","대검 머티리얼 Coat 파라미터 + 약한 발광"],
+  ["되받아치기","1.27","푸른 충격 링 + 세로 섬광, 푸른 불똥, 히트스톱 0.08 s","Easy Shockwaves 링(푸른색) + Low End Impacts"],
+  ["자세 붕괴","1.27–1.60","몸통이 1 m 밀리고 문양이 손끝 → 어깨 순으로 꺼진다","루트 밀림 + GlyphFill 1→0 역순. 눈빛 0.2"],
+  ["약점 표시","1.55–3.35","어깨·팔꿈치 이음매가 가는 주황 빛으로 맥동. 위쪽에 창 막대","GlyphSeam 파라미터 + 작은 주황 입자. HUD 창 막대는 선택"],
+  ["회복","3.35–4.00","자세 복귀","—"]],
+ draw(t0){
+  const t=warp(t0,[{t0:1.27,t1:1.35,k:0}]);
+  const brk=bossIdle(BX+110,-90,{lean:18,side:9,nod:24,tilt:-10,aL:{abd:12,fwd:-4,bend:6},aR:{abd:14,fwd:-6,bend:6},lL:{fwd:14,spr:14,bend:30},lR:{fwd:-14,spr:14,bend:34}});
+  const keys=this._k||(this._k=[
+    {t:0,p:bossIdle(BX)},{t:.6,p:bossIdle(BX,-90,WIND)},{t:.9,p:bossIdle(BX,-90,{...WIND,lean:-6,nod:-8})},{t:1.15,p:bossIdle(BX,-90,{...WIND,lean:-6,nod:-8})},
+    {t:1.27,p:bossIdle(BX,-90,SPREAD(30,-15)),e:"in"},
+    {t:1.6,p:bossIdle(BX+110,-90,{yaw:-60,lean:-24,twist:30,aL:{abd:125,fwd:-35,bend:10},aR:{abd:125,fwd:-35,bend:10},lL:{fwd:24,spr:20,bend:30},lR:{fwd:-4,spr:20,bend:24}}),e:"out"},
+    {t:2.1,p:brk},{t:3.35,p:mix(brk,bossIdle(BX+110),.1)},{t:4,p:bossIdle(BX+110)}]);
+  let p=track(keys,t);if(t>2.1&&t<3.35){p=structuredClone(p);p.side+=3*Math.sin(t*5);p.nod+=4*Math.sin(t*3.3)}
+  const W=fk(p,1);
+  const kx=BX-175;
+  const kk=this._c||(this._c=[{t:0,p:P({x:BX-460,z:-70,yaw:90})},{t:.6,p:P({x:BX-460,z:-70,yaw:90})},
+    {t:.85,p:P({x:kx,z:-30,yaw:90,lean:18,aR:{abd:30,fwd:60,bend:60},aL:{abd:30,fwd:60,bend:60},lL:{fwd:30,spr:14,bend:40},lR:{fwd:-20,spr:14,bend:20}}),e:"out"},
+    {t:1.0,p:P({x:kx,z:-30,yaw:90,lean:22,aR:{abd:20,fwd:75,bend:20},aL:{abd:20,fwd:75,bend:20},lL:{fwd:34,spr:20,bend:56},lR:{fwd:-30,spr:20,bend:30}})},
+    {t:1.27,p:P({x:kx,z:-30,yaw:90,lean:22,aR:{abd:20,fwd:75,bend:20},aL:{abd:20,fwd:75,bend:20},lL:{fwd:34,spr:20,bend:56},lR:{fwd:-30,spr:20,bend:30}})},
+    {t:1.45,p:P({x:kx-25,z:-30,yaw:90,lean:10,aR:{abd:20,fwd:70,bend:30},aL:{abd:20,fwd:70,bend:30},lL:{fwd:30,spr:20,bend:50},lR:{fwd:-34,spr:20,bend:30}})},
+    {t:2.2,p:P({x:kx-25,z:-30,yaw:90,lean:8})},{t:2.8,p:P({x:kx-40,z:-150,yaw:90})}]);
+  let kp=track(kk,t);if(t>.6&&t<.85)kp=walkPose(kp,t*26,28,false);
+  const K=fk(kp,.63);
+  const A=fk(ainPose(BX-100,{z:70}),.57);
+  const glyphF=t<1.27?cl(t/.9):1, from=t<1.3?0:cl((t-1.3)/.3);
+  const glyphA=t<.9?.3+.5*t/.9:t<1.15?.9:1;
+  const seams=t>1.55&&t<3.35?.55+.45*Math.sin(t*9):0;
+  const coat=t<.85?0:t<1.27?.35+.4*(t-.85)/.42:t<1.4?1:Math.max(.25,1-(t-1.4)*.5);
+  const swordDir=()=>[0,-1,0];
+  drawBoss(W,{glyph:{f:t<1.3?glyphF:1-from,a:t<1.3?glyphA:(from<1?1:0)},eyes:t<1.3?.9:.2+.2*(1-cl((t-1.3)/.3)),seams});
+  drawHuman(A,AIN);
+  drawHuman(K,{...KAIN,coat,wdir:t>.85&&t<2.2?swordDir:null});
+  // rebound
+  const hit=[kx+20,150,-30];
+  if(t>=1.27){const u=(t-1.27)/.5;ring([kx,0,-30],40+u*420,"#8ec3ff",5*(1-u),1-u)}
+  starBurst(hit,60,t>1.27&&t<1.5?1-(t-1.27)/.23:0,"#cfe6ff");
+  burst(t,{t0:1.27,n:34,at:hit,sp:650,el:.3,g:500,life:.5,kind:"spark",col:"#bfe0ff",seed:3});
+  burst(t,{t0:1.27,n:40,at:W.haL,sp:420,el:.5,g:500,life:1.2,kind:"straw",seed:4});
+  burst(t,{t0:1.55,n:24,at:W.elR,sp:40,el:1.2,g:-60,life:1.6,kind:"ember",seed:6,dl:1.6});
+  // the window
+  if(t>1.35&&t<3.35){const u=(t-1.35)/2;C.fillStyle="rgba(0,0,0,.45)";C.fillRect(VW*.3,VH*.17,VW*.4,10*SC);C.fillStyle="#ff8a1f";C.fillRect(VW*.3,VH*.17,VW*.4*(1-u),10*SC);
+    text("숨 한 번  "+(2*(1-u)).toFixed(1)+" s",.5,.16,15,"#ffb46a",1,"center")}
+  if(t>.6&&t<1.05)text("비켜!",.3,.22,30,"#8ec3ff",1-(t-.6)/.45);
+  vignette(.25);
+  return {shake:shakeAt(t0,[{t:1.27,a:10,d:.3}])};
+ }},
+
+{id:"D",tab:"절단 · 결정 이탈",title:"절단 — 죽이는 게 아니라 끊는다",src:"EP01 L533–L581 · 결말: 회색 가루",dur:3.7,rest:1.05,
+ phases:[{t:0,n:"숨 한 번 안",k:"win",d:"자세가 무너진 상태. 이음매가 맥동한다."},
+  {t:.1,n:"낫 하나 길이로",k:"idle",d:"230 cm — 너무 가까우면 튕기고, 너무 멀면 닿지 않는다."},
+  {t:.6,n:"슬로 0.25×",k:"post",d:"채도 1.45 · 대비 1.15 · 색수차 2.5가 0.15 s에 올라온다."},
+  {t:.84,n:"절단",k:"hit",d:"날 바깥쪽이 팔꿈치 이음매를 끊는다. 팔뚝이 따로 날아가고 강선이 튄다. 주황 결정이 빠진다."},
+  {t:1.8,n:"정상 속도",k:"rec",d:"결정이 바닥에 빛 웅덩이를 만든다."},
+  {t:2.05,n:"붕괴",k:"brk",d:"래그돌로 쓰러진 뒤 회색 가루가 된다."}],
+ layers:[["접근","0.00–0.45","숨 한 번 안에 낫 하나 길이(230 cm)로 들어간다","기존 밴드 판정 150–240 cm"],
+  ["슬로","0.60–1.80 (실시간)","시간 0.25배, 채도 1.45 · 대비 1.15 · 색수차 2.5. 0.15 s에 올라오고 0.2 s에 빠진다","기존 BeginSever / TickSever 그대로"],
+  ["궤적이 부서짐","0.84–1.60","낫 궤적 리본이 절단 순간 조각으로 흩어진다","Niagara 리본 → 조각 스프라이트로 전환"],
+  ["절단","0.84","팔꿈치 아래가 따로 떨어져 날아가고, 끊긴 강선이 튄다","팔뚝을 처음부터 별도 메시로 둔다(영상의 방식). 물리 조각 + 강선 입자"],
+  ["결정","0.84–","엄지만 한 주황 결정이 빠져 바닥에 빛 웅덩이","기존 DropCrystal. 큐브 → 결정 메시, 빛은 그대로"],
+  ["붕괴","2.05–3.70","쓰러지고, 회색으로 식고, 가루로 흩어진다","StartRagdoll + 디졸브 머티리얼 + 재 입자"]],
+ draw(t0){
+  const t=warp(t0,[{t0:.6,t1:1.8,k:.25}]);
+  const brk=bossIdle(BX,-90,{lean:18,side:9,nod:24,tilt:-10,aL:{abd:12,fwd:-4,bend:6},aR:{abd:20,fwd:10,bend:8},lL:{fwd:14,spr:14,bend:30},lR:{fwd:-14,spr:14,bend:34}});
+  const cutG=.66;
+  let bp=structuredClone(brk);bp.side+=3*Math.sin(t*5);
+  if(t>cutG)bp=mix(bp,bossIdle(BX,-90,{lean:-10,side:-6,nod:-10,aL:{abd:40,fwd:-10,bend:20},aR:{abd:70,fwd:-30,bend:0},lL:{fwd:20,spr:16,bend:30},lR:{fwd:-6,spr:16,bend:30}}),E.out(cl((t-cutG)/.3)));
+  const W=fk(bp,1);
+  const ak=this._a||(this._a=[{t:0,p:ainPose(BX-300,{z:30})},{t:.45,p:ainPose(BX-232,{z:30})},
+    {t:.6,p:ainPose(BX-232,{z:30,twist:-55,lean:8,aR:{abd:110,fwd:-80,bend:20},aL:{abd:80,fwd:-40,bend:50},lL:{fwd:20,spr:14,bend:30},lR:{fwd:-20,spr:14,bend:20}})},
+    {t:.78,p:ainPose(BX-226,{z:30,twist:60,lean:14,aR:{abd:95,fwd:85,bend:10},aL:{abd:70,fwd:60,bend:30},lL:{fwd:26,spr:14,bend:34},lR:{fwd:-24,spr:14,bend:20}}),e:"lin"},
+    {t:1.2,p:ainPose(BX-226,{z:30,twist:70,lean:10,aR:{abd:80,fwd:95,bend:10},aL:{abd:60,fwd:60,bend:30},lL:{fwd:24,spr:14,bend:30},lR:{fwd:-22,spr:14,bend:20}})},
+    {t:2.4,p:ainPose(BX-226,{z:30,lean:8,nod:18})}]);
+  let ap=track(ak,t);if(t<.45)ap=walkPose(ap,t*22,24,false);
+  const ainAt=g=>{const Wa=fk(track(ak,g),.57);const d=norm(sub(Wa.haR,Wa.elR));const bl=norm([d[2]||.01,0,-d[0]]);return add(add(add(Wa.haR,mul(d,150)),mul(bl,60)),mul(d,-18))};
+  const Wc=this._wc||(this._wc=fk(mix(brk,brk,0),1));
+  // collapse
+  const tip=t0<2.05?0:E.in(cl((t0-2.05)/.55))*1.5, ash=cl((t0-2.6)/.5), alpha=1-cl((t0-3.1)/.5);
+  drawBoss(W,{hide:t>cutG?{foreR:true}:{},glyph:{a:0},eyes:t>cutG?.1:.25,seams:t<cutG?.6+.4*Math.sin(t0*9):0,tip,tipDir:[1,0,0],ash,alpha});
+  // the severed forearm, its own object
+  if(t>cutG){const a=t-cutG;const e0=Wc.elR,h0=Wc.haR;const v=[160,300,70];const o=[a*v[0],a*v[1]-.5*980*a*a,a*v[2]];
+    let e1=add(e0,o),ang=a*9,dl=sub(h0,e0);dl=[dl[0]*Math.cos(ang)-dl[1]*Math.sin(ang),dl[0]*Math.sin(ang)+dl[1]*Math.cos(ang),dl[2]];let h1=add(e1,dl);
+    const lo=Math.min(e1[1],h1[1]);if(lo<8){const f=8-lo;e1[1]+=f;h1[1]+=f}
+    strawSeg(pj(e1),pj(h1),22*SC,8,{ash:cl((t0-2.6)/.5)});
+    if(a<.45)for(let i=0;i<5;i++){const q=pj(W.elR),w=(1-a/.45);C.strokeStyle=hexA("#aab0b6",w);C.lineWidth=1.2*SC;C.beginPath();C.moveTo(q[0],q[1]);C.quadraticCurveTo(q[0]+Math.sin(a*30+i)*30*SC,q[1]-20*SC,q[0]+(i-2)*14*SC+Math.cos(a*25+i)*20*SC,q[1]+(10+i*6)*SC);C.stroke()}}
+  drawHuman(fk(ap,.57),AIN);
+  // scythe trail: whole until the cut, then it breaks into pieces
+  if(t>.6&&t<1.6){const pts=[];for(let i=0;i<=16;i++)pts.push(pj(ainAt(Math.min(t,.78)-.14*i/16)));
+    const broke=t>cutG,age=t-cutG,al=t<.78?1:Math.max(0,1-(t-.78)/.8);C.save();C.globalCompositeOperation="lighter";const r=rng(99);
+    for(let i=1;i<pts.length;i++){const u=1-i/16;let dx=0,dy=0;if(broke){dx=(r()-.5)*age*160*SC;dy=(r()-.2)*age*120*SC}
+      if(broke&&i%2)continue;C.strokeStyle=`rgba(255,244,225,${al*u})`;C.lineWidth=16*SC*(.3+u);line([pts[i-1][0]+dx,pts[i-1][1]+dy],[pts[i][0]+dx,pts[i][1]+dy])}C.restore()}
+  burst(t,{t0:cutG,n:40,at:Wc.elR,sp:380,el:.5,g:500,life:1.3,kind:"straw",seed:21});
+  burst(t,{t0:cutG,n:22,at:Wc.elR,sp:420,el:.4,g:700,life:.6,kind:"spark",col:"#ffb46a",seed:22});
+  starBurst(Wc.elR,50,t>cutG&&t<cutG+.12?1-(t-cutG)/.12:0,"#fff4e1");
+  // the crystal
+  if(t>cutG){const a=t-cutG;let c=add(Wc.elR,[-90*a,260*a-.5*980*a*a,40*a]);const land=a>.75;if(c[1]<6){c[1]=6}
+    if(land){const b=Math.max(0,Math.sin((a-.75)*8)*18*Math.exp(-(a-.75)*6));c=[Wc.elR[0]-90*.75-20*(a-.75),6+b,Wc.elR[2]+30]}
+    pool([c[0],0,c[2]],120,"rgba(255,138,31,.55)",Math.min(1,a*1.5));
+    glowDot(c,26,"rgba(255,160,60,.9)",1);const q=pj(c);C.save();C.translate(q[0],q[1]);C.rotate(a*4);C.fillStyle="#ff8a1f";C.beginPath();C.moveTo(0,-7*SC);C.lineTo(5*SC,0);C.lineTo(0,7*SC);C.lineTo(-5*SC,0);C.closePath();C.fill();C.restore()}
+  // ash
+  if(t0>2.6){for(const k of ["chest","head","elL","knL","knR","hips"]){const J=tipJoints(W,tip,[1,0,0],[(W.ftL[0]+W.ftR[0])/2,0,(W.ftL[2]+W.ftR[2])/2]);burst(t0,{t0:2.6,n:28,at:J[k],sp:50,el:.4,g:120,life:1.2,kind:"ash",seed:k.length*31+k.charCodeAt(0),dl:.5})}}
+  if(t0>.84&&t0<1.9)text("끊는 것이다.",.5,.2,30,"#fff4e1",Math.min(1,(t0-.84)*4)*(1-cl((t0-1.6)/.3)),"center");
+  vignette(.25);
+  const pw=t0<.6?0:t0<.75?(t0-.6)/.15:t0<1.6?1:Math.max(0,1-(t0-1.6)/.2);
+  return {post:pw?{sat:1+.45*pw,con:1+.15*pw,fringe:2.5*pw}:null,shake:shakeAt(t0,[{t:.84,a:6,d:.4}])};
+ }},
+
+{id:"E",tab:"부위파괴 · 머리",title:"머리 파괴 — 휘청이는 대기",src:"부위 head (체력 90)",dur:5.0,rest:2.2,part:true,
+ phases:[{t:0,n:"대기",k:"idle",d:"파괴 전 대기."},{t:.3,n:"파괴",k:"brk",d:"자루가 찢겨 짚이 터지고, 한쪽 눈 문양이 꺼진다. 강선 머리뼈가 드러난다."},
+  {t:.35,n:"휘청",k:"rec",d:"뒤로 젖혀지며 한 발 물러선다."},{t:1.3,n:"바뀐 대기",k:"idle",d:"좌우로 휘청이고 가끔 헛디딘다. 고개가 처졌다. 점선이 파괴 전 대기."}],
+ layers:[["파괴 순간","0.30","자루가 찢기며 짚이 터지고 한쪽 눈이 꺼진다. 강선 머리뼈","머리 자루를 별도 메시로 두고 숨김 + 강선 머리 메시 표시"],
+  ["휘청","0.35–1.20","뒤로 젖혀지며 한 발 물러선다","Mixamo Stagger 계열"],
+  ["바뀐 대기","1.30–","좌우 휘청(0.55 Hz), 2 s마다 헛디딤, 고개 처짐","Injured Idle 계열로 대기 클립 교체"],
+  ["바뀐 규칙","—","예고 1.3배로 길어짐, 몸 돌리는 속도 0.6배","TellDuration × 1.3, 회전 속도 × 0.6"]],
+ draw(t){
+  const ghost=document.getElementById("ghost").checked;const broken=t>=.3;
+  let p=bossIdle(BX);
+  if(t>=.3&&t<1.3){const u=(t-.3)/1;p=mix(bossIdle(BX,-90,{lean:-20,nod:-30,side:-8,x:BX+30,lL:{fwd:24,spr:12,bend:20},aL:{abd:40,fwd:-10,bend:20},aR:{abd:40,fwd:-10,bend:20}}),bossIdle(BX+20,-90,{tilt:-12,nod:20}),E.io(cl(u*1.4)))}
+  if(t>=1.3){const s=Math.sin((t-1.3)*TAU*.55),st=Math.max(0,Math.sin((t-1.3)*Math.PI*.5))**8;
+    p=bossIdle(BX+20,-90,{side:7*s,tilt:-12+5*s,nod:20+4*Math.sin(t*2.1),lean:8,lL:{spr:9+14*st,bend:12+10*st},aL:{abd:24+6*s},aR:{abd:24-6*s}})}
+  if(ghost&&broken)drawBoss(fk(bossIdle(BX),1),{ghost:true});
+  const W=fk(p,1);drawBoss(W,{headBroken:broken,eyes:.8});
+  drawHuman(fk(ainPose(BX-300),.57),AIN);
+  const W0=fk(bossIdle(BX),1);
+  burst(t,{t0:.3,n:60,at:W0.head,sp:480,el:.6,g:600,life:1.4,kind:"straw",seed:71});
+  burst(t,{t0:.3,n:8,at:W0.head,sp:300,el:.6,g:900,life:1.2,kind:"plate",col:"#8a6a3c",seed:72});
+  starBurst(W0.head,40,t>.3&&t<.45?1-(t-.3)/.15:0);
+  vignette(.25);return {shake:shakeAt(t,[{t:.3,a:7,d:.25}])};
+ }},
+
+{id:"F",tab:"부위파괴 · 갑주",title:"갑주 파괴 — 드러난 코어",src:"부위 armor (체력 135)",dur:5.0,rest:2.0,part:true,
+ phases:[{t:0,n:"대기",k:"idle",d:"밧줄로 묶은 가슴판."},{t:.3,n:"파괴",k:"brk",d:"밧줄이 끊겨 튀고 가슴판이 떨어진다."},
+  {t:.35,n:"움찔",k:"rec",d:"가슴을 감싸며 웅크린다."},{t:1.3,n:"바뀐 대기",k:"idle",d:"웅크린 채 가슴 코어가 숨 쉬듯 맥동, 0.8 s마다 불티가 샌다. 한 팔로 가슴을 가린다."}],
+ layers:[["파괴 순간","0.30","밧줄이 끊겨 튀고 가슴판이 떨어져 튄다","밧줄·판을 별도 메시로 → 물리 조각"],
+  ["노출된 코어","0.30–","가슴의 붉은 코어가 드러나 맥동, 0.8 s마다 불티","코어 발광 머티리얼 + Realistic Starter VFX 불티"],
+  ["바뀐 대기","1.30–","웅크린 자세, 한 팔이 가슴 앞","대기 위에 포즈 오프셋 레이어"],
+  ["바뀐 규칙","—","가슴 피해 1.5배","부위 판정 배율"]],
+ draw(t){
+  const ghost=document.getElementById("ghost").checked;const broken=t>=.3;
+  let p=bossIdle(BX);const hunched=bossIdle(BX,-90,{lean:16,nod:12,aL:{abd:30,fwd:70,bend:90},aR:{abd:22,fwd:10,bend:30},lL:{bend:20},lR:{bend:18}});
+  if(t>=.3)p=mix(bossIdle(BX+10,-90,{lean:26,nod:20,aL:{abd:40,fwd:80,bend:100},aR:{abd:40,fwd:60,bend:90}}),hunched,E.io(cl((t-.3)/1)));
+  if(t>=1.3){p=structuredClone(hunched);p.lean+=3*Math.sin((t-1.3)*TAU*.5)}
+  if(ghost&&broken)drawBoss(fk(bossIdle(BX),1),{ghost:true});
+  const W=fk(p,1);drawBoss(W,{armorBroken:broken,corePulse:.5+.5*Math.sin((t-.3)*TAU*.5),eyes:.8});
+  drawHuman(fk(ainPose(BX-300),.57),AIN);
+  const W0=fk(bossIdle(BX),1),ch=vl(W0.hips,W0.chest,.7);
+  burst(t,{t0:.3,n:6,at:ch,sp:420,el:.5,g:900,life:1.3,kind:"rope",seed:81});
+  burst(t,{t0:.3,n:3,at:ch,sp:260,el:.3,g:900,life:1.6,kind:"plate",seed:82});
+  burst(t,{t0:.3,n:26,at:ch,sp:480,el:.4,g:700,life:.5,kind:"spark",seed:83});
+  for(let i=0;i<5;i++){const tt=1.3+i*.8;burst(t,{t0:tt,n:10,at:vl(W.hips,W.chest,.78),sp:120,el:.8,g:-30,life:1.1,kind:"ember",seed:90+i})}
+  starBurst(ch,40,t>.3&&t<.45?1-(t-.3)/.15:0);
+  vignette(.25);return {shake:shakeAt(t,[{t:.3,a:7,d:.25}])};
+ }},
+
+{id:"G",tab:"부위파괴 · 팔다리",title:"팔다리 파괴 — 절뚝임과 한 팔",src:"부위 limb (체력 115) · 팔/다리 분리 제안",dur:5.4,rest:2.6,part:true,variant:true,
+ phases:[{t:0,n:"대기",k:"idle",d:""},{t:.3,n:"파괴",k:"brk",d:"다리: 짚이 불티로 타 떨어지고 강선 다리만 남는다. / 팔: 팔꿈치가 꺾여 팔뚝이 늘어진다."},
+  {t:.35,n:"무릎 꿇음",k:"rec",d:"한쪽이 주저앉는다."},{t:1.3,n:"바뀐 동작",k:"idle",d:"다리: 절뚝 걸음, 속도 0.6배(점선 = 파괴 전 걸음, 같은 시간). / 팔: 한 팔 반 바퀴 회전, 늘어진 팔이 휘둘린다."}],
+ layers:[["파괴 순간 (다리)","0.30","왼 다리 짚이 불티로 타서 떨어지고 강선만 남는다","다리 짚 메시 숨김 + M5 Fire 불티"],
+  ["절뚝 걸음","1.30–","왼발 보폭 45 %, 디딜 때 몸이 기운다. 속도 0.6배","Mixamo Limping / Injured Walk"],
+  ["파괴 순간 (팔)","0.30","오른 팔꿈치가 꺾여 팔뚝이 늘어진다","팔뚝 물리 진자(Physical Animation)"],
+  ["한 팔 공격","1.30–","회전이 한 팔 반 바퀴로 줄고, 늘어진 팔은 휘둘린다","Spin 변형 패턴, 판정 반경 축소"],
+  ["제안","—","지금 코드의 부위는 head · armor · limb 셋. limb를 팔 · 다리로 나누자","HWBossSystemComponent AddPart"]],
+ draw(t){
+  const ghost=document.getElementById("ghost").checked, v=document.getElementById("variant").value, broken=t>=.3;
+  const A=fk(ainPose(BX-330),.57);
+  if(v==="leg"){
+    let p=bossIdle(BX+120);
+    if(t>=.3&&t<1.3)p=mix(bossIdle(BX+120,-90,{lean:24,lL:{fwd:40,bend:80},aL:{abd:40,fwd:40,bend:60}}),bossIdle(BX+120,-90,{lean:10}),E.io(cl((t-.3)/1)));
+    if(t>=1.3){const tw=t-1.3;p=walkPose(bossIdle(BX+120-50*tw),tw*TAU*.55,26,true);
+      if(ghost){const gp=walkPose(bossIdle(BX+120-85*tw),tw*TAU*.9,30,false);drawBoss(fk(gp,1),{ghost:true})}}
+    const W=fk(p,1);drawBoss(W,{wireLeg:broken?"L":null,eyes:.8});
+    const W0=fk(bossIdle(BX+120),1);
+    burst(t,{t0:.3,n:50,at:W0.knL,sp:300,el:.5,g:600,life:1.3,kind:"straw",seed:101});
+    burst(t,{t0:.3,n:40,at:W0.knL,sp:80,el:1,g:-50,life:1.8,kind:"ember",seed:102,dl:.6});
+    if(t>1.3)burst(t,{t0:1.3,n:30,at:W.knL,sp:30,el:1.2,g:-40,life:1.2,kind:"ember",seed:103,dl:3.6});
+  }else{
+    const flail=g=>({abd:10+10*Math.sin(g*6),fwd:25*Math.sin(g*4.5+1),bend:4});
+    let p=bossIdle(BX);
+    if(t>=.3&&t<1.3)p=mix(bossIdle(BX,-90,{lean:14,side:10,aR:{abd:30,fwd:0,bend:0}}),bossIdle(BX,-90,{side:6}),E.io(cl((t-.3)/1)));
+    const k=[{t:1.3,p:bossIdle(BX,-90,{side:6})},{t:2.3,p:bossIdle(BX,-90,{side:4,twist:-50,lean:2,aL:{abd:88,fwd:-50,bend:12},lL:{fwd:12,spr:16,bend:24},lR:{fwd:-12,spr:16,bend:24}})},
+      {t:2.7,p:bossIdle(BX,-90,{yaw:110,twist:15,aL:{abd:92,fwd:0,bend:6},lL:{fwd:10,spr:16,bend:24},lR:{fwd:-10,spr:16,bend:24}}),e:"in"},
+      {t:3.4,p:bossIdle(BX,-90,{yaw:0,lean:12,aL:{abd:40}})},{t:4.2,p:bossIdle(BX,-90,{side:6})}];
+    if(t>=1.3)p=track(k,t);
+    p=structuredClone(p);if(broken)p.aR=flail(t);
+    if(ghost&&broken&&t>1.3)drawBoss(fk(track(this._sk||(this._sk=spinKeys(BX,1.3)),t),1),{ghost:true});
+    const W=fk(p,1);drawBoss(W,{eyes:.8,glyph:{L:t>1.3&&t<3?cl((t-1.3)/.9):0,R:0,a:.9}});
+    if(t>2.3&&t<2.95)trail(g=>{let q=track(k,g);return fk(q,1).haL},t,.1,14,20,"#e3432f","#fff0d2",t<2.7?1:1-(t-2.7)/.25);
+    const W0=fk(bossIdle(BX),1);
+    burst(t,{t0:.3,n:40,at:W0.elR,sp:360,el:.5,g:600,life:1.2,kind:"straw",seed:111});
+    starBurst(W0.elR,36,t>.3&&t<.45?1-(t-.3)/.15:0);
+  }
+  drawHuman(A,AIN);
+  vignette(.25);return {shake:shakeAt(t,[{t:.3,a:7,d:.25}])};
+ }}
+];
+
+/* ---------- UI ---------- */
+const $=id=>document.getElementById(id);
+let cur=CONCEPTS[0],T=0,playing=true,last=0;
+const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function buildTabs(){const nav=$("tabs");CONCEPTS.forEach(c=>{const b=document.createElement("button");b.type="button";b.role="tab";b.textContent=c.tab;b.id="tab-"+c.id;b.onclick=()=>select(c.id,true);nav.appendChild(b)})}
+function select(id,user){
+  cur=CONCEPTS.find(c=>c.id===id)||CONCEPTS[0];
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",b.id==="tab-"+cur.id?"true":"false"));
+  $("title").textContent=cur.title;$("src").textContent=cur.src;
+  $("ghostWrap").hidden=!cur.part;$("variantWrap").hidden=!cur.variant;
+  const bar=$("bar");bar.replaceChildren();cur.phases.forEach((p,i)=>{const e=(cur.phases[i+1]||{t:cur.dur}).t;const s=document.createElement("i");s.className="k-"+p.k;s.style.left=(p.t/cur.dur*100)+"%";s.style.width=((e-p.t)/cur.dur*100)+"%";s.title=p.n;bar.appendChild(s)});
+  const hd=document.createElement("span");hd.className="head";hd.id="head";bar.appendChild(hd);
+  const ch=$("chips");ch.replaceChildren();cur.phases.forEach(p=>{const b=document.createElement("button");b.type="button";b.innerHTML="";const bb=document.createElement("b");bb.textContent=p.t.toFixed(2);b.append(bb,document.createTextNode(p.n));b.onclick=()=>{T=p.t+.001;setPlaying(false)};ch.appendChild(b)});
+  const tb=$("layers");tb.replaceChildren();cur.layers.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});
+  T=user?0:cur.rest;if(user)setPlaying(!reduce);
+  try{history.replaceState(null,"","#"+cur.id)}catch(e){}
+  try{localStorage.setItem("hw-ms-tab",cur.id)}catch(e){}
+}
+function setPlaying(v){playing=v;$("play").textContent=v?"일시정지":"재생"}
+$("play").onclick=()=>{if(!playing&&T>=cur.dur-.001)T=0;setPlaying(!playing)};
+$("replay").onclick=()=>{T=0;setPlaying(true)};
+$("scrub").oninput=e=>{T=e.target.value/1000*cur.dur;setPlaying(false)};
+$("variant").onchange=()=>{T=0;setPlaying(true)};
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000||0);last=now;
+  if(playing){T+=dt*parseFloat($("speed").value);if(T>cur.dur){if($("loop").checked)T=0;else{T=cur.dur;setPlaying(false)}}}
+  render();requestAnimationFrame(frame);
+}
+function render(){
+  if(!VW)resize();
+  C=g2;C.setTransform(1,0,0,1,0,0);C.globalAlpha=1;C.globalCompositeOperation="source-over";
+  floor();
+  const out=cur.draw(T)||{};
+  ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#0d0c0a";ctx.fillRect(0,0,VW,VH);
+  const sh=out.shake||[0,0];const po=out.post;
+  ctx.save();ctx.translate(sh[0]*SC,sh[1]*SC);
+  ctx.filter=po?`saturate(${po.sat}) contrast(${po.con})`:"none";ctx.drawImage(off,0,0);ctx.filter="none";
+  if(po&&po.fringe>0){const k=po.fringe*2*SC;ctx.globalAlpha=.28;ctx.globalCompositeOperation="screen";
+    ctx.filter="sepia(1) saturate(8) hue-rotate(-45deg)";ctx.drawImage(off,k,0);ctx.filter="sepia(1) saturate(8) hue-rotate(160deg)";ctx.drawImage(off,-k,0);ctx.filter="none"}
+  ctx.restore();
+  // readouts
+  $("time").textContent=`${T.toFixed(2)} / ${cur.dur.toFixed(2)} s`;$("scrub").value=Math.round(T/cur.dur*1000);
+  const hd=$("head");if(hd)hd.style.left=`calc(${T/cur.dur*100}% - 1px)`;
+  let ph=cur.phases[0];for(const p of cur.phases)if(T>=p.t)ph=p;
+  const now=$("now");if(now.dataset.k!==cur.id+ph.n){now.dataset.k=cur.id+ph.n;now.replaceChildren();now.append(document.createTextNode(ph.n));if(ph.d){const s=document.createElement("small");s.textContent=ph.d;now.append(s)}}
+  document.querySelectorAll("#chips button").forEach((b,i)=>b.classList.toggle("on",cur.phases[i]===ph));
+}
+window.addEventListener("resize",()=>{resize()});
+buildTabs();
+let start="A";try{start=localStorage.getItem("hw-ms-tab")||"A"}catch(e){}
+if(/^#[A-G]$/.test(location.hash))start=location.hash.slice(1);
+select(start,false);setPlaying(!reduce);
+resize();render();requestAnimationFrame(t=>{last=t;frame(t)});
+</script>
