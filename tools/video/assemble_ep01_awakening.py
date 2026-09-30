@@ -3,7 +3,7 @@ novel's lines as subtitles at the order sheet's times, and keep the clips' own s
 
   python tools/video/assemble_ep01_awakening.py [--dir art/video/ep01_awakening] [--out <mp4>]
 
-Each clip is trimmed to 8 s and scaled to 1920x1080. Missing clips are skipped (their lines too), so a partial set
+Each clip is cut to KEEP[clip] and scaled to 1920x1080. Missing clips are skipped (their lines too), so a partial set
 can be looked at. Subtitles: 원문 대사만 (마감본 EP01), nothing invented (doc 163 §4).
 """
 import argparse
@@ -14,8 +14,10 @@ import sys
 import imageio_ffmpeg
 
 FF = imageio_ffmpeg.get_ffmpeg_exe()
-CLIP_S = 8.0
 ORDER = "ABCDE"
+# (start s, length s) kept from each generated clip. Veo gives 10 s; the tail of A shows the dummy whole again
+# (Gemini/Veo 2026-09-30), so A ends at its burst.
+KEEP = {"A": (0.0, 6.6), "B": (0.0, 7.0), "C": (0.0, 8.0), "D": (0.0, 8.0), "E": (0.0, 8.0)}
 # (clip, start s within the clip, end s, speaker, line) - 마감본 EP01 L393, L409, L427-L429
 LINES = [
     ("A", 2.3, 4.6, "카인", "머리통을 깨부숴주마!"),
@@ -45,7 +47,10 @@ def main():
     if not clips:
         sys.exit(f"no clips in {a.dir} (A.mp4 … E.mp4)")
     out = a.out or os.path.join(a.dir, "ep01_awakening.mp4")
-    offset = {k: i * CLIP_S for i, (k, _) in enumerate(clips)}
+    offset, t = {}, 0.0
+    for k, _ in clips:
+        offset[k] = t
+        t += KEEP[k][1]
 
     ass = os.path.join(a.dir, "subs.ass")
     with open(ass, "w", encoding="utf-8") as f:
@@ -54,20 +59,22 @@ def main():
                 "Style: Line,Malgun Gothic,54,&H00F0F0F0,&H00101010,&H80000000,0,1,3,1,2,70\n\n[Events]\n"
                 "Format: Layer, Start, End, Style, Text\n")
         for k, s, e, who, text in LINES:
-            if k in offset:
+            if k in offset and s < KEEP[k][1]:
                 f.write(f"Dialogue: 0,{ass_time(offset[k] + s)},{ass_time(offset[k] + e)},Line,{text}\n")
 
     cmd = [FF, "-y", "-hide_banner", "-loglevel", "error"]
-    for _, p in clips:
-        cmd += ["-t", str(CLIP_S), "-i", p]
+    for k, p in clips:
+        ss, ln = KEEP[k]
+        cmd += ["-ss", str(ss), "-t", str(ln), "-i", p]
     parts = []
-    for i, (_, p) in enumerate(clips):
+    for i, (k, p) in enumerate(clips):
+        ln = KEEP[k][1]
         parts.append(f"[{i}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,"
-                     f"setsar=1,fps=24,trim=0:{CLIP_S},setpts=PTS-STARTPTS[v{i}]")
+                     f"setsar=1,fps=24,trim=0:{ln},setpts=PTS-STARTPTS[v{i}]")
         if has_audio(p):
-            parts.append(f"[{i}:a]aresample=48000,atrim=0:{CLIP_S},apad=whole_dur={CLIP_S},asetpts=PTS-STARTPTS[a{i}]")
+            parts.append(f"[{i}:a]aresample=48000,atrim=0:{ln},apad=whole_dur={ln},asetpts=PTS-STARTPTS[a{i}]")
         else:
-            parts.append(f"anullsrc=r=48000:cl=stereo,atrim=0:{CLIP_S}[a{i}]")
+            parts.append(f"anullsrc=r=48000:cl=stereo,atrim=0:{ln}[a{i}]")
     n = len(clips)
     parts.append("".join(f"[v{i}][a{i}]" for i in range(n)) + f"concat=n={n}:v=1:a=1[vc][ac]")
     sub = ass.replace("\\", "/").replace(":", "\\:")
@@ -75,7 +82,7 @@ def main():
     cmd += ["-filter_complex", ";".join(parts), "-map", "[vo]", "-map", "[ac]",
             "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k", out]
     subprocess.run(cmd, check=True)
-    print(f"{out}: {n} clips, {n * CLIP_S:.0f} s")
+    print(f"{out}: {n} clips, {t:.1f} s")
 
 
 if __name__ == "__main__":
