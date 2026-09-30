@@ -273,7 +273,7 @@ void UHWHeosuabiRules::QAStep(AHWBossCharacter& Boss, AHWAinCharacter& Player, f
     switch (QAStage)
     {
     case 0:
-        if (QATime >= 3.f && (S == EHWBossState::Idle || S == EHWBossState::Tell || S == EHWBossState::Recover))
+        if (QATime >= 3.f && !Boss.IsIntroHeld() && (S == EHWBossState::Idle || S == EHWBossState::Tell || S == EHWBossState::Recover))
         {
             PlaceAin(110.f);
             Player.GetCombat()->RequestAttack();

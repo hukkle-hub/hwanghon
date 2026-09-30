@@ -752,6 +752,10 @@ void AHWStoryDirector::EnterBattleControl()
     }
     SetPlayerControl(true);
     if (Rules) Rules->SetLive(true);
+    if (Boss && Rules && Rules->IsA<UHWHeosuabiRules>())
+    {
+        Boss->PlayRoar();   // EP01 L449-L455: the awakening, two voices from where there is no mouth (docs/design/168)
+    }
     if (AHWStoryHUD* HUD = GetStoryHUD())
     {
         HUD->GetOverlay()->HideAll();

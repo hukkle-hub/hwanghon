@@ -56,6 +56,9 @@ da.set_editor_property("boss_walk", bind("MX_Mutant_Walking", True))
 da.set_editor_property("boss_break_reaction", bind("MX_Knocked_Down"))
 da.set_editor_property("boss_smash_reaction", bind("MX_Standing_React_Large_From_Front"))
 da.set_editor_property("boss_stagger_reaction", bind("MX_Standing_React_Large_From_Front"))
+da.set_editor_property("boss_injured_idle", bind("MX_Injured_Idle", True))
+da.set_editor_property("boss_injured_walk", bind("MX_Injured_Walk", True))
+da.set_editor_property("boss_roar", bind("MX_Mutant_Roaring"))
 
 # floating clips are lowered to the idle's ground, as the training set does
 ground = base.lowest_toe(mx("MX_Mutant_Breathing_Idle"))

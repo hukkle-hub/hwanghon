@@ -146,6 +146,9 @@ public:
     // Boss intro (v10 AHHBossIntroDirector, docs/design/162): held = no AI, no damage taken, no enrage clock -
     // the body only does what the intro beats ask of it. The story director holds it before the intro and lets go after.
     void SetIntroHold(bool bHold);
+
+    /** The awakening roar at the start of the fight (docs/design/168): held, effects on the body, then let go. */
+    void PlayRoar();
     bool IsIntroHeld() const { return bIntroHold; }
 
     virtual void HH_BossIntroBegin_Implementation(FName BossId) override;
@@ -213,6 +216,7 @@ private:
     float SystemBreakDuration = 1.45f;
     bool bNetworkAuthoritative = false;
     bool bIntroHold = false;
+    float RoarRemaining = 0.f;
     FIntroChoreo IntroChoreo;
     EHHBossIntroBeat IntroBeat = EHHBossIntroBeat::PlayerEntry;
     float AuthoritativeMaxHealth = 280000.f;

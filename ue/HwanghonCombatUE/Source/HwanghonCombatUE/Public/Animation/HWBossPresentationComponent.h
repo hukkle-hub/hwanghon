@@ -44,6 +44,9 @@ public:
     void ClearIntroPose() { IntroClip = nullptr; }
     bool HasIntroPose() const { return IntroClip != nullptr; }
 
+    /** The fight-opening roar (AnimationSet BossRoar), once; returns its length or 0 if the set has none. */
+    float PlayRoar();
+
 private:
     UFUNCTION()
     void HandleBossStateChanged(EHWBossState NewState, FName PatternId);
@@ -57,6 +60,7 @@ private:
         const FHWSequenceBinding& Binding);
 
     void PlayReactionBinding(const FHWSequenceBinding& Binding);
+
     void SyncStateToBossClock();
 
     // Body without an AnimBP (the training boss): scrub its clips on the boss clock.

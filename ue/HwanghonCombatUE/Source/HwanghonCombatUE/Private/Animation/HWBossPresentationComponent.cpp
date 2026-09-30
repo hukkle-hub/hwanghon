@@ -1,4 +1,5 @@
 #include "Animation/HWBossPresentationComponent.h"
+#include "System/HWBossSystemComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "Animation/AnimInstance.h"
@@ -511,10 +512,21 @@ void UHWBossPresentationComponent::TickSingleNodePose(float DeltaTime)
     }
     // Base: idle or walk by ground speed (the walk clip is paced to about 200 cm/s).
     const float Speed = Boss->GetVelocity().Size2D();
-    UAnimSequenceBase* Base = Speed > 30.f && AnimationSet->BossWalk.Sequence ? AnimationSet->BossWalk.Sequence.Get() : AnimationSet->BossIdle.Sequence.Get();
+    // limb broken: limp (Injured Walk / Idle) instead of the heavy walk
+    bool bLimp = false;
+    if (const UHWBossSystemComponent* System = Boss->GetBossSystem())
+    {
+        for (const FHWBossPartRuntime& Part : System->GetParts())
+        {
+            bLimp |= Part.Id == TEXT("limb") && Part.bBroken;
+        }
+    }
+    UAnimSequenceBase* Walk = bLimp && AnimationSet->BossInjuredWalk.Sequence ? AnimationSet->BossInjuredWalk.Sequence.Get() : AnimationSet->BossWalk.Sequence.Get();
+    UAnimSequenceBase* Idle = bLimp && AnimationSet->BossInjuredIdle.Sequence ? AnimationSet->BossInjuredIdle.Sequence.Get() : AnimationSet->BossIdle.Sequence.Get();
+    UAnimSequenceBase* Base = Speed > 30.f && Walk ? Walk : Idle;
     if (Base)
     {
-        BaseTime += DeltaTime * (Base == AnimationSet->BossWalk.Sequence ? FMath::Clamp(Speed / 200.f, 0.5f, 2.f) : 1.f);
+        BaseTime += DeltaTime * (Base == Walk ? FMath::Clamp(Speed / 200.f, 0.5f, 2.f) : 1.f);
         ShowClip(Base, FMath::Fmod(BaseTime, Len(Base)), true);
     }
 }
@@ -575,6 +587,15 @@ UAnimSequenceBase* UHWBossPresentationComponent::PatternClipAt(
         OutTime = FMath::Clamp(Contact(K) + (T - At(K)), 0.f, Len(Seq));
     }
     return Seq;
+}
+
+float UHWBossPresentationComponent::PlayRoar()
+{
+    UAnimSequenceBase* Roar = AnimationSet ? AnimationSet->BossRoar.Sequence.Get() : nullptr;
+    if (!Roar) return 0.f;
+    ReactionSequence = Roar;
+    ReactionTime = 0.f;
+    return Roar->GetPlayLength();
 }
 
 void UHWBossPresentationComponent::SetIntroStill()

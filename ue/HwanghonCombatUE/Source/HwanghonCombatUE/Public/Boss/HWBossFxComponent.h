@@ -32,6 +32,9 @@ public:
     virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
+    /** The awakening roar: the glyph flares over the whole body at the roar's peak, dust rings off the mat. */
+    void Roar();
+
     /** QA: what the layer is doing now (glow, live emitters) for the capture log. */
     FString Describe() const;
 
@@ -83,5 +86,6 @@ private:
     // part break (docs/design/166 tabs 5-7): what is broken keeps leaking - embers from the joint, sparks from the core
     TSet<FName> Broken;
     float LeakClock = 0.f;
+    float RoarStart = -1.f;
     float PrevFootZ[2] = { 0.f, 0.f };
 };

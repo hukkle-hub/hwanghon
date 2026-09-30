@@ -155,6 +155,17 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
     FHWSequenceBinding BossDeath;
 
+    // Limb broken (docs/design/166 tab 7, 168): the body limps - these replace idle/walk once the "limb" part breaks.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossInjuredIdle;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossInjuredWalk;
+
+    // Played once when the fight begins (EP01: the awakening, two voices); the body is held while it roars.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")
+    FHWSequenceBinding BossRoar;
+
     // Mesh-space cm a clip stands above the idle ground (clips moved from other rigs float, doc 132);
     // the single-node body is lowered by this while the clip plays.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Boss|Base")

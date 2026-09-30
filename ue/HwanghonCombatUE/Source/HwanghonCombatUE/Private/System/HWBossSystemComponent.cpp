@@ -5,6 +5,7 @@
 #include "System/HWBossPartTarget.h"
 #include "System/HWDungeonDirector.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 
 UHWBossSystemComponent::UHWBossSystemComponent()
@@ -205,6 +206,10 @@ bool UHWBossSystemComponent::DamagePart(FName PartId, float Damage)
         if (PartId == TEXT("armor"))
         {
             Posture = FMath::Min(MaxPosture, Posture + MaxPosture * 0.30f);
+        }
+        if (PartId == TEXT("limb") && Boss && Boss->GetCharacterMovement())
+        {
+            Boss->GetCharacterMovement()->MaxWalkSpeed *= 0.6f;   // the limp (docs/design/166 tab 7)
         }
         return true;
     }

@@ -191,6 +191,15 @@ void UHWBossFxComponent::HandleState(EHWBossState NewState, FName PatternId)
     }
 }
 
+void UHWBossFxComponent::Roar()
+{
+    // Mutant Roaring peaks at ~1.3 s (arms thrown back): dust and chips off the mat then, the glyph flares with it
+    RoarStart = Clock + 1.2f;
+    Pending.Add({ RoarStart, TEXT("dust"), Feet() + FVector(0, 0, 4), 1.1f });
+    Pending.Add({ RoarStart, TEXT("slam_dust"), Feet() + FVector(0, 0, 4), 0.9f });
+    Pending.Add({ RoarStart + 0.1f, TEXT("feet_set"), Bone(Chest), 0.8f });
+}
+
 void UHWBossFxComponent::HandleCanonBeat(FName Beat)
 {
     if (Beat == TEXT("deflect"))
@@ -277,6 +286,11 @@ void UHWBossFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
     else if (State == EHWBossState::Recover)
     {
         Glow = FMath::Max(0.f, 90.f * (1.f - StateTime / 0.6f));
+    }
+    if (RoarStart > 0.f && Clock >= RoarStart - 0.4f && Clock < RoarStart + 1.8f)
+    {
+        const float U = (Clock - (RoarStart - 0.4f)) / 2.2f;
+        Glow = FMath::Max(Glow, 110.f * FMath::Sin(U * PI));   // swells into the roar, fades with it
     }
     if (Skin)
     {

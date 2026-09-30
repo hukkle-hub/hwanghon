@@ -2306,6 +2306,27 @@ void UHWSystemQASubsystem::TickStoryShow(float Dt)
             ++Count;
         }
     }
+    // -HWQABreakLimb (doc 168): break the limb early in the fight, then shoot the limp walk and idle.
+    if (P == EHWStoryPhase::Battle && D->GetBoss() && D->GetBoss()->GetBossSystem() && FParse::Param(FCommandLine::Get(), TEXT("HWQABreakLimb")))
+    {
+        static float LimpTime = -1.f;
+        static int32 LimpShots = 0;
+        if (LimpTime < 0.f && StoryKeyTime > 1.f)
+        {
+            LimpTime = 0.f;
+            D->GetBoss()->GetBossSystem()->DamagePart(TEXT("limb"), 1.0e6f);
+            Note(TEXT("QA breaks the limb"));
+        }
+        else if (LimpTime >= 0.f && LimpShots < 8)
+        {
+            LimpTime += Dt;
+            if (LimpTime >= 0.6f * (LimpShots + 1))
+            {
+                Shot(FString::Printf(TEXT("limp_%d"), LimpShots++), false);
+                Note(FString::Printf(TEXT("limp shot: boss speed %.0f"), D->GetBoss()->GetVelocity().Size2D()));
+            }
+        }
+    }
     // L545-L567: the sever slows the world; shoot it (twice, real time) and check the crystal fell out of the cut.
     if (D->IsSeverSlowing() && SeverShots < 2)
     {

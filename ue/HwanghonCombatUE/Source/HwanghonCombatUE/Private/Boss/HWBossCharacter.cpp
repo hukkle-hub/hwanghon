@@ -12,6 +12,7 @@
 #include "System/HWCoopCombatSubsystem.h"
 #include "System/HWBossSystemComponent.h"
 #include "Boss/HWBossCanonRules.h"
+#include "Boss/HWBossFxComponent.h"
 
 #include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
@@ -76,6 +77,12 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
         return;
     }
 
+    if (RoarRemaining > 0.f)
+    {
+        RoarRemaining -= DeltaSeconds;
+        if (RoarRemaining <= 0.f) SetIntroHold(false);
+        return;
+    }
     if (bIntroHold)
     {
         // «어둠 속에서 실루엣이 나왔다» (EP02): the approach beats walk it in; nothing else runs while held
@@ -765,6 +772,15 @@ AHWBossCharacter::FIntroChoreo AHWBossCharacter::IntroChoreoFor(FName BossId)
     }
     // AMPLIFIER_TOWER_GOHEUNG: no attack in the novel (EP28 L15010 «벨 곳이 없었다») - no choreography.
     return C;
+}
+
+void AHWBossCharacter::PlayRoar()
+{
+    const float Seconds = Presentation ? Presentation->PlayRoar() : 0.f;
+    if (Seconds <= 0.f) return;
+    SetIntroHold(true);
+    RoarRemaining = FMath::Min(Seconds, 3.2f);   // the roar's peak and the arms coming down; the tail is idle
+    if (UHWBossFxComponent* Fx = FindComponentByClass<UHWBossFxComponent>()) Fx->Roar();
 }
 
 void AHWBossCharacter::SetIntroHold(bool bHold)
