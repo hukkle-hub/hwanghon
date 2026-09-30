@@ -1,7 +1,7 @@
 """Face gallery of every MetaHuman Creator preset (docs/design/164): pick the base face for a hero by looking, not by
 its name (Aoi turned out to be an older man, 2026-09-30).
 
-  UnrealEditor.exe <uproject> -ExecCmds="py Scripts/mh_preset_gallery.py" -HWMHShots=<dir> [-HWMHWait=90]
+  UnrealEditor.exe <uproject> -ExecCmds="py Scripts/mh_preset_gallery.py" -HWMHShots=<dir> -HWMHBatch=<first>:<count> [-HWMHWait=90]
 Writes <dir>/preset_<Name>.png (face, front) and quits. Copies go to /Game/Heroes/_presets (safe to delete).
 """
 import os
@@ -30,6 +30,10 @@ def arg(name, default=None):
 out = arg("HWMHShots")
 os.makedirs(out, exist_ok=True)
 names = sorted({str(a).split(".")[-1] for a in lib.list_assets(SRC, recursive=False)})
+# five at a time: all 29 in one editor ran the PC out of memory (2026-09-30)
+b0, bn = (int(v) for v in arg("HWMHBatch", "0:5").split(":"))
+names = names[b0:b0 + bn]
+log(f"batch {b0}:{bn} -> {names}")
 aes = unreal.get_editor_subsystem(unreal.AssetEditorSubsystem)
 actors = []
 for i, n in enumerate(names):

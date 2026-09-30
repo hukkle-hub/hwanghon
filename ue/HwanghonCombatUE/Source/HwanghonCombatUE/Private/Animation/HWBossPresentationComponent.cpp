@@ -1,4 +1,5 @@
 #include "Animation/HWBossPresentationComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
@@ -329,9 +330,48 @@ void UHWBossPresentationComponent::TickSingleNode(float DeltaTime)
     GroundBody(DeltaTime);
 }
 
+void UHWBossPresentationComponent::StartRagdoll()
+{
+    bRagdoll = true;
+    // Die() turns the whole actor's collision off; the body needs the world to land on. The capsule stays out.
+    Boss->SetActorEnableCollision(true);
+    if (UCapsuleComponent* Capsule = Boss->GetCapsuleComponent())
+    {
+        Capsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+    if (UAnimSingleNodeInstance* Node = BodyMesh->GetSingleNodeInstance())
+    {
+        Node->SetPlaying(false);   // the pose it died in is where the fall starts
+    }
+    BodyMesh->SetCollisionProfileName(TEXT("Ragdoll"));
+    BodyMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    BodyMesh->SetAllBodiesSimulatePhysics(true);
+    BodyMesh->SetSimulatePhysics(true);
+    BodyMesh->WakeAllRigidBodies();
+    BodyMesh->bBlendPhysics = true;
+    // a 3 m body of wire and straw drops heavily: damped limbs (no doll flailing), a little extra down on the pelvis
+    for (FBodyInstance* BI : BodyMesh->Bodies)
+    {
+        if (!BI) continue;
+        BI->LinearDamping = 0.35f;
+        BI->AngularDamping = 2.5f;
+        BI->UpdateDampingProperties();
+    }
+    RagdollStart = GetWorld()->GetTimeSeconds();
+    bRagdollLogged = false;
+    // it falls away from the blow: push from the player's side, at the chest, gently (a 3 m body, not a flung doll)
+    if (const APawn* P = UGameplayStatics::GetPlayerPawn(this, 0))
+    {
+        FVector Away = (Boss->GetActorLocation() - P->GetActorLocation()).GetSafeNormal2D();
+        BodyMesh->AddImpulseToAllBodiesBelow(Away * 180.f + FVector(0, 0, -40.f), NAME_None, true, true);
+    }
+    const FName Pelvis = BodyMesh->GetBoneName(0);
+    BodyMesh->AddImpulse(FVector(0, 0, -250.f), Pelvis, true);
+}
+
 void UHWBossPresentationComponent::GroundBody(float DeltaTime)
 {
-    if (!BodyMesh || !IsValid(Boss)) return;
+    if (!BodyMesh || !IsValid(Boss) || bRagdoll) return;
     const EHWBossState State = Boss->GetBossState();
     const float Scale = BodyMesh->GetRelativeScale3D().Z;
     if (State == EHWBossState::Dead || State == EHWBossState::Break)
@@ -363,6 +403,28 @@ void UHWBossPresentationComponent::TickSingleNodePose(float DeltaTime)
 
     if (Boss->IsDead())
     {
+        if (!bRagdoll && BodyMesh && BodyMesh->GetPhysicsAsset())
+        {
+            StartRagdoll();
+        }
+        if (bRagdoll)
+        {
+            // measured, not eyeballed (docs/design/165): how the body lies 3 s after the fall
+            if (!bRagdollLogged && GetWorld()->GetTimeSeconds() - RagdollStart > 3.f)
+            {
+                bRagdollLogged = true;
+                float Low = TNumericLimits<float>::Max(), High = -Low;
+                for (int32 I = 0; I < BodyMesh->GetNumBones(); ++I)
+                {
+                    const float Z = BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(I)).Z;
+                    Low = FMath::Min(Low, Z);
+                    High = FMath::Max(High, Z);
+                }
+                const float Hips = BodyMesh->GetBoneLocation(BodyMesh->GetBoneName(0)).Z - Low;
+                UE_LOG(LogTemp, Display, TEXT("[HWRagdoll] 3s after the fall: pelvis %.0f cm, highest bone %.0f cm above the lowest"), Hips, High - Low);
+            }
+            return;
+        }
         // Killed while already down (the EP01 sever lands inside the break): stay down — play the down clip on
         // to its end instead of a death clip that starts from standing (doc 141).
         if (DownedClip)

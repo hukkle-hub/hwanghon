@@ -87,7 +87,7 @@ def rect_light(label, loc, intensity, temp, w, h, rot_=rot(pitch=-90), tint=(1, 
     c.set_editor_property("source_width", w)
     c.set_editor_property("source_height", h)
     c.set_editor_property("attenuation_radius", 1400.0)
-    c.set_editor_property("light_color", unreal.Color(int(255 * tint[0]), int(255 * tint[1]), int(255 * tint[2]), 255))
+    c.set_editor_property("light_color", unreal.Color(r=int(255 * tint[0]), g=int(255 * tint[1]), b=int(255 * tint[2]), a=255))
     a.set_actor_label(label)
     return a
 
@@ -195,7 +195,9 @@ def lights():
     s.set_editor_property("override_auto_exposure_method", True)
     s.set_editor_property("auto_exposure_method", unreal.AutoExposureMethod.AEM_MANUAL)
     s.set_editor_property("override_auto_exposure_bias", True)
-    s.set_editor_property("auto_exposure_bias", 8.5)   # higher is darker here (EV100)
+    s.set_editor_property("auto_exposure_bias", 6.0)   # manual EV: in the render higher was BRIGHTER (8.5, 10.5 washed out)
+    s.set_editor_property("override_bloom_intensity", True)
+    s.set_editor_property("bloom_intensity", 0.35)
     s.set_editor_property("override_vignette_intensity", True)
     s.set_editor_property("vignette_intensity", 0.55)
     s.set_editor_property("override_film_grain_intensity", True)

@@ -107,6 +107,12 @@ private:
     float MeshBaseZ = 0.f;
     float ClipGroundCm = 0.f;
     float LyingDrop = 0.f;
+    // Death collapses into a ragdoll (docs/design/165): the down/lie/death clips of the scarecrow ended propped 60 cm
+    // off the floor with an arm or a leg in the air - measured from the clip data, not guessed.
+    bool bRagdoll = false;
+    bool bRagdollLogged = false;
+    float RagdollStart = 0.f;
+    void StartRagdoll();
     UPROPERTY(Transient)
     TObjectPtr<UAnimSequenceBase> ShownClip;
     UPROPERTY(Transient)
