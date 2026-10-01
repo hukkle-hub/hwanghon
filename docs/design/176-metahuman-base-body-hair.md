@@ -56,3 +56,24 @@
    - 지금 클립(Mixamo·Kimodo·Paragon)을 MH 뼈대로 리타깃한다. 같은 IK 리타깃 경로다.
    - 무기 소켓은 MH의 hand_r에 맞춘다.
 4. 그다음 장비(문서 175 의상 시안 → Chaos Outfit)로 넘어간다.
+
+## 5. 2차 (2026-10-01 저녁) — 디렉터 영상 9개 학습
+
+| 영상 | 핵심 |
+|---|---|
+| Na0n «블렌더로 메타휴먼 쉽게» | 메타휴먼 머리를 Blender로 내보내 **직접 스컬프트** → 다시 넣는다(Identity 트래커의 보간 회피) |
+| Lost Realm «단일 이미지로 커스텀 MH (5.7+)» | **이미지 → 3D 얼굴(AI) → Blender 정리 → Identity → 마커 추적 → 솔브 → 캐릭터에 Conform** |
+| 슈의3D노트 «Mesh to MetaHuman» | 만든 얼굴 메시 → Identity → 솔브(5.6+ 갱신판 있음) |
+| 언리얼 토이리 «Meshy AI + 언리얼» | Meshy로 얼굴 → Maya 정리 → MH Creator 솔브 → Mixamo 바디 → **MetaTailor 의상 자동 피팅** |
+| TUF «커스텀 MH 헤어» | MH 얼굴을 Blender로 → 두피 UV → 헤어 커브 그룸 → Alembic → UE 그룸 + 바인딩 |
+| GoodGood / Digiform | MH ↔ Blender 왕복(Poly Hammer DNA 애드온, 그룸 익스포터) |
+| 슈의3D노트 «커스텀 의상» | Marvelous 옷 → Blender 바인딩 → MH |
+| 언리얼방만득 part 6 | MH 애니메이션 리타깃·수정 |
+
+**공통 방식**: 디자인과 같은 얼굴 메시를 먼저 만들고(AI 이미지→3D 또는 스컬프트) → MetaHuman에 맞춘다(Identity 솔브 / Conform). 헤어는 프리셋 그룸, 또는 Blender 커브 그룸 → Alembic. 의상은 Marvelous/MetaTailor/Blender 바인딩.
+
+### 우리 쪽 시도
+- 머리색: 빌드된 그룸 재질 `hairMelanin`·`hairRedness`로 바꾼다 → 아인 검은 단발 성공. 세라 은발(melanin 0)은 긴 머리 그룸이 사라진다(원인 조사 중).
+- 아인 얼굴: Hi3D 아인(디자인과 거의 같은 얼굴)에서 피부만 잘라(`tools/3d/extract_face.py`, 머리카락·스카프는 텍스처 밝기로 제거) → `conform_to_target_meshes`(HEAD_ONLY) **성공 반환**, 그러나 몸 전체가 얼굴 조각 크기로 줄었다. 부분 얼굴 + 축척 정렬의 결과.
+  - 추적(랜드마크)은 0개: 캡처에 텍스처가 빠져 회색 판으로 찍혔다 → 알베도 PNG를 따로 내보내게 고쳤다.
+- 결론: Conform/Identity는 **머리 전체(대머리) 메시**를 원한다. Hi3D 영웅은 머리카락이 녹아 붙어 있어서 그대로는 안 된다.

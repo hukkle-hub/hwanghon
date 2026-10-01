@@ -27,10 +27,10 @@ BROWS = "/MetaHumanCharacter/Optional/Grooms/Bindings/Eyebrows"
 LASH = "/MetaHumanCharacter/Optional/Grooms/Bindings/Eyelashes"
 # candidates (preset survey: Aoi is a male body, MF -0.59) - one bob each to compare faces; Sera long straight
 HEROES = {
-    "Aera": {"preset": "Aera", "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine"},
-    "Tuya": {"preset": "Tuya", "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine"},
-    "Jelena": {"preset": "Jelena", "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine"},
-    "Ada": {"preset": "Ada", "height": 0, "hair": "WI_Hair_L_Straight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine"},
+    "Ain": {"preset": "Aera", "existing": True, "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine",
+            "hair_params": {"hairmelanin": 1.0, "hairredness": 0.05, "desat": 0.0}},
+    "Sera": {"preset": "Tuya", "height": 172.0, "hair": "WI_Hair_L_Straight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine",
+             "hair_params": {"hairmelanin": 0.0, "hairredness": 0.0}, "skin_uv": (0.3, 0.35)},
 }
 state = {"chars": {}, "actors": {}}
 
@@ -40,25 +40,37 @@ try:
     log("presets", [a.split("/")[-1].split(".")[0] for a in eal.list_assets(PRESETS, recursive=False)])
     for name, spec in HEROES.items():
         dst = f"/Game/Heroes/MH_{name}"
-        if eal.does_asset_exist(dst):
-            eal.delete_asset(dst)
-        char = eal.duplicate_asset(f"{PRESETS}/{spec['preset']}", dst)
+        if spec.get("existing") and eal.does_asset_exist(dst):
+            char = unreal.load_asset(dst)     # keep the conformed face (conform.py)
+        else:
+            if eal.does_asset_exist(dst):
+                eal.delete_asset(dst)
+            char = eal.duplicate_asset(f"{PRESETS}/{spec['preset']}", dst)
         log(name, "dup", char)
         ok = sub.try_add_object_to_edit(char)
         log(name, "edit", ok)
         cons = sub.get_body_constraints(char)
         log(name, "constraints", [(str(c.name), round(c.target_measurement, 1)) for c in cons][:40])
-        for c in cons:
-            if str(c.name).lower() in ("height", "stature"):
-                c.is_active = True
-                c.target_measurement = spec["height"]
-        if os.environ.get("MH_HEIGHT") == "1":   # off: setting constraints re-fit the preset into a masculine default body
+        # every measurement held at the preset's own value, only the height moved: activating height alone let the
+        # rest fall back to the parametric default (a masculine body)
+        if spec.get("height"):
+            for c in cons:
+                # all held: height could not move (173 stayed 173); only height alone: a masculine default body.
+                # hold the shape axes (sex, fat, muscle) and the girths, free the lengths so the height can move
+                nm = str(c.name).lower()
+                c.is_active = nm in ("height", "masculine/feminine", "fat", "muscularity", "chest", "waist", "hip", "underbust", "bust span")
+                if nm == "height":
+                    c.target_measurement = spec["height"]
             sub.set_body_constraints(char, cons)
             sub.commit_body_state(char)
+            log(name, "height now", [round(c.target_measurement, 1) for c in sub.get_body_constraints(char) if str(c.name) == "Height"])
         # underwear on (top and bottom): the base for every outfit
         skin = char.get_editor_property("skin_settings")
         props = skin.get_editor_property("skin")
         props.set_editor_property("show_top_underwear", True)
+        if spec.get("skin_uv"):
+            props.set_editor_property("u", spec["skin_uv"][0])
+            props.set_editor_property("v", spec["skin_uv"][1])
         skin.set_editor_property("skin", props)
         sub.commit_skin_settings(char, skin)
         # grooms from the wardrobe
@@ -68,6 +80,7 @@ try:
         for slot, item in (("Hair", f"{HAIR}/{spec['hair']}"), ("Eyebrows", f"{BROWS}/{spec['brows']}"), ("Eyelashes", f"{LASH}/{spec['lash']}")):
             wi = unreal.load_asset(item)
             key = coll.try_add_item_from_wardrobe_item(slot, wi)
+            spec.setdefault("_keys", {})[slot] = key
             log(name, "add", slot, item.split("/")[-1], key)
             if key is not None:
                 try:
@@ -133,7 +146,41 @@ try:
                 log(name, "TEXTURE ERROR", traceback.format_exc())
             log(name, "can build", sub.can_build_meta_human(char))
             sub.build_meta_human(char, bp)
-            eal.save_directory(f"/Game/Heroes/Built/{name}", only_if_is_dirty=False, recursive=True)
+            # hair colour: the groom item's instance parameters - filled only after assemble_for_preview (Epic docs)
+            sub.assemble_for_preview(char)
+            changed = False
+            paths = inst.get_instance_parameter_item_paths()
+            log(name, "param item paths", [str(pth) for pth in paths][:20])
+            for pth in paths:
+                params = inst.get_instance_parameters(pth)
+                log(name, "  path params", str(pth)[:120], [(str(pp.name), str(pp.type)) for pp in params][:30])
+                log(name, "hair params after build", [(str(pp.name), str(pp.type)) for pp in params])
+                for pp in params:
+                    for key, val in spec.get("hair_params", {}).items():
+                        if key in str(pp.name).lower() and str(pp.type).endswith("FLOAT"):
+                            pp.set_float(val)
+                            changed = True
+                            log(name, "  hair", pp.name, val)
+            if changed:
+                sub.build_meta_human(char, bp)
+                log(name, "rebuilt with hair colour")
+            # hair colour on the built groom materials (the Creator's instance parameters are empty from a script)
+            L = unreal.MaterialEditingLibrary
+            for a in eal.list_assets(f"/Game/Heroes/Built/{name}/MH_{name}/Grooms", recursive=True):
+                mi = unreal.load_asset(a)
+                if not isinstance(mi, unreal.MaterialInstanceConstant) or "_Hair" not in a.split("/")[-1]:
+                    continue
+                par = mi.get_editor_property("parent")
+                names = [str(x) for x in L.get_scalar_parameter_names(par)] if par else []
+                if "Hair_M" in a or "Hair_L" in a or "Hair_S" in a:
+                    log(name, "hair MI", a.split("/")[-1].split(".")[0], "parent", par.get_name() if par else None, names[:60])
+                for key, val in spec.get("hair_params", {}).items():
+                    for pn in names:
+                        if pn.lower() == key or pn.lower().replace(" ", "") == key:
+                            L.set_material_instance_scalar_parameter_value(mi, pn, val)
+                            log(name, "  set", a.split("/")[-1].split(".")[0], pn, val)
+                eal.save_loaded_asset(mi)
+            eal.save_directory("/Game/Heroes/Built", only_if_is_dirty=False, recursive=True)
             log(name, "built:", [a.split(".")[0] for a in eal.list_assets(f"/Game/Heroes/Built/{name}", recursive=True)][:40])
         except Exception:
             log(name, "BUILD ERROR", traceback.format_exc())
@@ -182,12 +229,14 @@ except Exception:
     log("ERROR scene", traceback.format_exc())
 
 ticks = {"n": 0, "queue": list(cams.items()) if 'cams' in dir() else []}
+# a second round much later: a changed hair material recompiles its shaders and the long groom stays invisible till then
+ticks["late"] = [(k + "_late", c) for k, c in ticks["queue"]]
 
 
 def on_tick(dt):
     ticks["n"] += 1
     n = ticks["n"]
-    if n < 240:          # let shaders, grooms and textures settle
+    if n < 1500:          # let shaders, grooms and textures settle
         return
     if ticks["queue"] and n % 40 == 0:
         key, cam = ticks["queue"].pop(0)
@@ -203,7 +252,10 @@ def on_tick(dt):
         cc.capture_scene()
         unreal.RenderingLibrary.export_render_target(world, rt, SHOTS, f"{key}.png")
         log("shot", key)
-    if not ticks["queue"] and n > 240 + 40 * 18:
+    if not ticks["queue"] and ticks.get("late") and n > 3000:
+        ticks["queue"] = ticks.pop("late")
+        return
+    if not ticks["queue"] and "late" not in ticks and n > 3000 + 40 * 10:
         log("done")
         unreal.unregister_slate_post_tick_callback(handle)
         unreal.SystemLibrary.quit_editor()
