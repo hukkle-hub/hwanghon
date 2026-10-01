@@ -27,10 +27,10 @@ BROWS = "/MetaHumanCharacter/Optional/Grooms/Bindings/Eyebrows"
 LASH = "/MetaHumanCharacter/Optional/Grooms/Bindings/Eyelashes"
 # candidates (preset survey: Aoi is a male body, MF -0.59) - one bob each to compare faces; Sera long straight
 HEROES = {
-    "Ain": {"preset": "Aera", "existing": True, "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine",
+    "Ain": {"preset": "Aera", "existing": True, "height": 0, "hair": "WI_Hair_M_BobStraight", "brows": "WI_Eyebrows_M_Thick", "lash": "WI_Eyelashes_S_Fine",
             "hair_params": {"hairmelanin": 1.0, "hairredness": 0.05, "desat": 0.0}},
-    "Sera": {"preset": "Tuya", "height": 172.0, "hair": "WI_Hair_L_Straight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine",
-             "hair_params": {"hairmelanin": 0.0, "hairredness": 0.0}, "skin_uv": (0.3, 0.35)},
+    "Sera": {"preset": "Tuya", "existing": True, "height": 0, "hair": "WI_Hair_L_Straight", "brows": "WI_Eyebrows_M_Fine", "lash": "WI_Eyelashes_S_Fine",
+             "hair_params": {"hairmelanin": 0.2, "hairredness": 0.0}, "skin_uv": (0.3, 0.35)},
 }
 state = {"chars": {}, "actors": {}}
 

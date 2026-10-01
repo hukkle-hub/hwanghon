@@ -27,3 +27,6 @@ art/shelter/tex/
 # Hi3D raw results (~60 MB each) and full-size inputs - kept locally (docs/design/155)
 art/shelter/props/src/
 ue/HwanghonCombatUE/Config/Android/
+
+# Hi3D raw bald busts (45-55 MB) stay local; the repo keeps the cut/decimated heads (tools/3d/prep_head.py)
+art/3d/heads/*_bald_bust.glb

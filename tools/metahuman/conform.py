@@ -11,7 +11,7 @@ import traceback
 import unreal
 
 NAME = os.environ.get("MH_NAME", "Ain")
-FBX = os.environ.get("MH_FACE", "C:/w/mhlab/ain_face.fbx")
+FBX = os.environ.get("MH_FACE", f"C:/w/mhlab/{NAME.lower()}_head.glb")
 LOG = "C:/w/mhlab/conform_log.txt"
 SHOT = "C:/w/mhlab/conform"
 os.makedirs(SHOT, exist_ok=True)
@@ -28,28 +28,28 @@ sub = unreal.get_editor_subsystem(unreal.MetaHumanCharacterEditorSubsystem)
 state = {}
 try:
     unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).new_level("/Game/ConformEmpty%d" % (os.getpid() % 10000))
-    unreal.SystemLibrary.execute_console_command(None, "Interchange.FeatureFlags.Import.FBX False")
-    ui = unreal.FbxImportUI()
-    ui.set_editor_property("import_mesh", True)
-    ui.set_editor_property("import_as_skeletal", False)
-    ui.set_editor_property("import_materials", True)
-    ui.set_editor_property("import_textures", True)
-    ui.set_editor_property("mesh_type_to_import", unreal.FBXImportType.FBXIT_STATIC_MESH)
-    sd = ui.get_editor_property("static_mesh_import_data")
-    sd.set_editor_property("combine_meshes", True)
+    # GLB through Interchange: the base colour texture comes with it (the tracker needs the painted face)
     t = unreal.AssetImportTask()
-    for k, v in (("filename", FBX), ("destination_path", "/Game/Conform"), ("destination_name", f"SM_{NAME}_Face"),
-                 ("automated", True), ("save", True), ("replace_existing", True), ("options", ui)):
+    for k, v in (("filename", FBX), ("destination_path", f"/Game/Conform/{NAME}"), ("automated", True),
+                 ("save", True), ("replace_existing", True)):
         t.set_editor_property(k, v)
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([t])
-    sm = unreal.load_asset(f"/Game/Conform/SM_{NAME}_Face")
+    sms = [x for x in eal.list_assets(f"/Game/Conform/{NAME}", recursive=True) if isinstance(unreal.load_asset(x), unreal.StaticMesh)]
+    log("imported", sms)
+    sm = unreal.load_asset(sms[0])
     b = sm.get_bounds()
     log("face mesh", sm, "origin", b.origin, "extent", b.box_extent)
     actor = unreal.EditorLevelLibrary.spawn_actor_from_object(sm, unreal.Vector(0, 0, 0), unreal.Rotator(pitch=0, yaw=0, roll=0))
     unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.SkyLight, unreal.Vector(0, 0, 300), unreal.Rotator(pitch=0, yaw=0, roll=0))
     unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight, unreal.Vector(0, 0, 300), unreal.Rotator(pitch=-30, yaw=60, roll=0))
     state.update(sm=sm, center=b.origin, size=max(b.box_extent.x, b.box_extent.y, b.box_extent.z) * 2.0)
-    char = unreal.load_asset(f"/Game/Heroes/MH_{NAME}")
+    # start from the preset again: a failed conform leaves the character scaled (Ain 90 m, Sera 35 cm)
+    PRESET = {"Ain": "Aera", "Sera": "Tuya"}[NAME]
+    dst = f"/Game/Heroes/MH_{NAME}"
+    if eal.does_asset_exist(dst):
+        eal.delete_asset(dst)
+    char = eal.duplicate_asset(f"/MetaHumanCharacter/Optional/Presets/{PRESET}", dst)
+    state["crown"] = {"Ain": 173.2, "Sera": 162.8}[NAME]
     log("character", char, "edit", sub.try_add_object_to_edit(char))
     state["char"] = char
 except Exception:
@@ -84,7 +84,7 @@ def track(side):
     png, raw = f"{SHOT}/{side}.png", f"{SHOT}/{side}.bgra"
     # the capture comes out flipped vertically (seen in the lab sheets): flip back before tracking
     subprocess.run(["python", "-c", (
-        "from PIL import Image, ImageOps;import sys;im=ImageOps.flip(Image.open(sys.argv[1]).convert('RGB')).resize((%d,%d));"
+        "from PIL import Image, ImageOps;import sys;im=Image.open(sys.argv[1]).convert('RGB').resize((%d,%d));"
         "im.save(sys.argv[1].replace('.png','_up.png'));"
         "open(sys.argv[2],'wb').write(bytes(x for r,g,b in im.getdata() for x in (b,g,r,255)))") % (RES, RES), png, raw], check=True)
     data = open(raw, "rb").read()
@@ -118,7 +118,7 @@ def on_tick(dt):
                 cnt = sum(1 for _ in lm.items()) if lm else 0
                 r["lm"] = lm
                 log("track", side, "curves", cnt, list(lm.keys())[:12] if lm else None)
-                if cnt > best_n:
+                if cnt > best_n or (cnt == best_n and side == "posY"):
                     best, best_n = side, cnt
             log("front side", best, best_n)
             ticks["best"] = best
@@ -128,6 +128,15 @@ def on_tick(dt):
             loc, rot = r["view"]
             char, sm = state["char"], state["sm"]
             verts, tris = sub.get_mesh_data_for_conforming(sm)
+            # put the target where the character's head already is (both face +Y): crown at the character's height.
+            # Left at the floor, the solver scaled the whole body to reach it.
+            top = max(v.z for v in verts)
+            dz = state["crown"] - top
+            moved = unreal.Array(unreal.Vector3f)
+            for v in verts:
+                moved.append(unreal.Vector3f(v.x, v.y, v.z + dz))
+            verts = moved
+            log("target moved up", round(dz, 1))
             log("mesh data", len(verts), len(tris) // 3)
             p = unreal.ConformTargetParams()
             tm = p.get_editor_property("conform_target_mesh")
@@ -137,9 +146,16 @@ def on_tick(dt):
             p.set_editor_property("conform_target_mesh", tm)
             chk = p.get_editor_property("conform_target_mesh")
             log("target check", chk.get_editor_property("target_parts_type"), len(chk.get_editor_property("head_vertices")), len(chk.get_editor_property("head_vertex_indices")))
-            if r.get("lm"):
+            if os.environ.get("MH_TRACK", "1") == "1" and r.get("lm"):
                 p.set_editor_property("curve_tracking_points", r["lm"])
             vi = p.get_editor_property("camera_view_info")
+            loc = unreal.Vector(loc.x, loc.y, loc.z + dz)      # the camera moves up with the target
+            try:
+                cur = p.get_editor_property("image_size")
+                log("image_size type", type(cur).__name__, cur)
+                p.set_editor_property("image_size", type(cur)(RES, RES))
+            except Exception as e:  # noqa: BLE001
+                log("image_size err", e)
             vi.set_editor_property("location", loc)
             vi.set_editor_property("rotation", rot)
             vi.set_editor_property("fov", FOV)
@@ -147,7 +163,7 @@ def on_tick(dt):
             p.set_editor_property("camera_view_info", vi)
             key = unreal.MetaHumanCharacterTargetMeshKey()
             key.set_editor_property("head_mesh", sm)
-            ok_align = sub.align_to_target_meshes(char, key, p)
+            ok_align = sub.align_to_target_meshes(char, key, p) if os.environ.get("MH_ALIGN") == "1" else "skipped"
             ok = sub.conform_to_target_meshes(char, key, p)
             log("align", ok_align, "conform", ok)
             sub.commit_face_state(char)
