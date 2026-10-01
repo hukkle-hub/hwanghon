@@ -41,16 +41,26 @@ xbot_skel = next((unreal.load_asset(a) for a in lib.list_assets(XBOT, recursive=
 for d in (CLIPS, OUT):
     if lib.does_directory_exist(d):
         lib.delete_directory(d)
+KIMODO_SRC = os.path.normpath(os.path.join(SRC, "..", "kimodo"))
+# Kimodo text-to-motion takes (docs/design/172), already on the X Bot rig: they replace these slots unless HW_KIMODO=0
+KIMODO = {} if os.environ.get("HW_KIMODO") == "0" else {"kain_R": "kmd_kain_R", "ain_1": "kmd_ain_1", "ryu_1": "kmd_ryu_1"}
 tasks = []
-for f in sorted(os.listdir(SRC)):
+sources = [(SRC, f) for f in sorted(os.listdir(SRC))]
+sources += [(KIMODO_SRC, f) for f in sorted(os.listdir(KIMODO_SRC))] if os.path.isdir(KIMODO_SRC) else []
+for folder, f in sources:
     if not (f.startswith("hw_") and f.lower().endswith(".fbx")):
         continue
     ui = unreal.FbxImportUI()
     for k, v in (("import_mesh", False), ("import_animations", True), ("import_as_skeletal", True), ("import_materials", False),
                  ("import_textures", False), ("skeleton", xbot_skel), ("mesh_type_to_import", unreal.FBXImportType.FBXIT_ANIMATION)):
         ui.set_editor_property(k, v)
+    if folder == KIMODO_SRC:
+        # Blender-made FBX (tools/3d/kimodo_to_xbot.py): UE drops the armature node's 90 deg X turn for a skeleton rooted
+        # at the hips - the take came in lying down (feet at -8 cm, hips at 0). Measured: roll +90 matches Blender exactly.
+        ui.get_editor_property("anim_sequence_import_data").set_editor_property(
+            "import_rotation", unreal.Rotator(roll=90.0, pitch=0.0, yaw=0.0))
     t = unreal.AssetImportTask()
-    for k, v in (("filename", os.path.join(SRC, f)), ("destination_path", CLIPS), ("destination_name", "X_" + f[:-4]),
+    for k, v in (("filename", os.path.join(folder, f)), ("destination_path", CLIPS), ("destination_name", "X_" + f[:-4]),
                  ("automated", True), ("save", True), ("replace_existing", True), ("options", ui)):
         t.set_editor_property(k, v)
     tasks.append(t)
@@ -160,7 +170,9 @@ for hero in ("ain", "kain", "ryu", "sera"):
     da = unreal.load_asset(set_path)
     rows = {}
     for slot, prop in SLOTS.items():
-        seq = unreal.load_asset(f"{OUT}/MX_{hero}_{slot}")
+        name = f"{OUT}/MX_{KIMODO.get(f'{hero}_{slot}', f'{hero}_{slot}')}"
+        # the Kimodo FBX carries the X Bot mesh (bind pose, docs/design/172 §3): UE names its animation <name>_Anim
+        seq = unreal.load_asset(name) or unreal.load_asset(name + "_Anim")
         if not seq:
             report["notes"].append(f"missing MX_{hero}_{slot}")
             continue
@@ -171,7 +183,7 @@ for hero in ("ain", "kain", "ryu", "sera"):
         c = CONTACT_OVERRIDE.get(f"{hero}_{slot}", c)
         b.set_editor_property("source_contact_normalized", MELEE_DEFAULT if is_move else c)
         da.set_editor_property(prop, b)
-        rows[slot] = {"clip": clips[hero][slot], "len": ln, "contact": c, "reach_cm": reach, "lowest_foot": low}
+        rows[slot] = {"clip": ("kimodo " + KIMODO[f"{hero}_{slot}"]) if f"{hero}_{slot}" in KIMODO else clips[hero][slot], "len": ln, "contact": c, "reach_cm": reach, "lowest_foot": low}
     lib.save_loaded_asset(da)
     report[hero] = rows
 

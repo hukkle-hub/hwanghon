@@ -15,6 +15,7 @@ import bpy
 from mathutils import Matrix, Quaternion, Vector
 
 argv = sys.argv[sys.argv.index("--") + 1:]
+WITH_MESH = os.environ.get("KMD_MESH", "0") == "1"   # armature only: UE ignores import_rotation for a file with a mesh
 BVH, OUT = argv[0], argv[1]
 XBOT = argv[2] if len(argv) > 2 else os.path.join(os.path.dirname(__file__), "..", "..", "art", "anim", "mixamo_heroes", "_XBot_TPose_skin.fbx")
 
@@ -68,7 +69,11 @@ ang = round(ang / (math.pi / 2)) * (math.pi / 2)
 src.matrix_world = Matrix.Rotation(ang, 4, "Z") @ src.matrix_world
 bpy.context.view_layer.update()
 
-ratio = rest_world(tgt, prefix + "Hips").translation.z / max(1e-6, rest_world(src, "Hips").translation.z)
+# scale by leg length (hips over ankle), not hips height: the X Bot's ankle sits higher, and the hips ratio sank
+# every take ~20 cm into the floor (lowest foot -9..-13 cm against +12 cm for the Mixamo clips)
+src_ank = rest_world(src, "LeftFoot").translation.z
+tgt_ank = rest_world(tgt, prefix + "LeftFoot").translation.z
+ratio = (rest_world(tgt, prefix + "Hips").translation.z - tgt_ank) / max(1e-6, rest_world(src, "Hips").translation.z - src_ank)
 src_rest = {s: rest_world(src, s).to_quaternion() for s, _ in pairs}
 tgt_rest = {t: rest_world(tgt, t).to_quaternion() for _, t in pairs}
 tgt_obj_q = tgt.matrix_world.to_quaternion()
@@ -86,7 +91,7 @@ for f in range(f0, f1 + 1):
         pb = tgt.pose.bones[t]
         m = (tgt_obj_q.inverted() @ q_world).to_matrix().to_4x4()
         if t == prefix + "Hips":
-            w = sw.translation * ratio
+            w = Vector((sw.translation.x * ratio, sw.translation.y * ratio, tgt_ank + (sw.translation.z - src_ank) * ratio))
             m.translation = tgt.matrix_world.inverted() @ w
         else:
             m.translation = pb.matrix.translation
@@ -101,13 +106,15 @@ bpy.data.objects.remove(src, do_unlink=True)
 tgt.name = "Armature"
 bpy.ops.object.select_all(action="DESELECT")
 tgt.select_set(True)
-# with the skinned mesh: without a skin cluster there is no bind pose and a re-import takes the export frame's pose
-# as the rest pose (the arms came back twisted in the comparison renders)
+# armature only (UE path). Without a skin cluster there is no bind pose, so a Blender re-import takes the export frame's
+# pose as the rest pose - the comparison render copies world matrices and does not depend on it (xbot_clip_render.py)
 for ch in tgt.children:
-    ch.select_set(True)
+    ch.select_set(WITH_MESH)
 bpy.context.view_layer.objects.active = tgt
 os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
-bpy.ops.export_scene.fbx(filepath=os.path.abspath(OUT), use_selection=True, object_types={"ARMATURE", "MESH"},
+bpy.ops.export_scene.fbx(filepath=os.path.abspath(OUT), use_selection=True, object_types={"ARMATURE", "MESH"} if WITH_MESH else {"ARMATURE"},
                          bake_anim=True, bake_anim_use_all_actions=False, bake_anim_use_nla_strips=False,
                          add_leaf_bones=False, primary_bone_axis="Y", secondary_bone_axis="X")
+# UE: import these with import_rotation roll +90 (Scripts/ue_mixamo_heroes.py) - the armature node carries Blender's
+# 90 deg X turn and UE drops it for a skeleton rooted at the hips: no export axis option changed that (doc 172 §3)
 print(f"KIMODO_TO_XBOT frames {f0}-{f1} pairs {len(pairs)} missing {missing} ratio {ratio:.3f} turn {math.degrees(ang):.0f}")

@@ -2,6 +2,11 @@
 
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
+#include "Character/HWImpactFx.h"
+#include "Boss/HWBossCharacter.h"
+#include "Engine/SkeletalMesh.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "System/HWBossPartTarget.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -240,7 +245,7 @@ void UHWHeroFxComponent::StartTrails(float MaxSeconds)
             // the pack's trail is Countess red; the hero's arc is drawn in the hero's colour
             for (int32 E = 0; E < FMath::Max(1, (*PS)->Emitters.Num()); ++E) C->SetMaterial(E, TrailMat);
         }
-        C->BeginTrails(Side == 0 ? BaseR : BaseL, Side == 0 ? TipR : TipL, ETrailWidthMode_FromCentre, 1.f);
+        C->BeginTrails(Side == 0 ? BaseR : BaseL, Side == 0 ? TipR : TipL, ETrailWidthMode_FromCentre, 0.5f);   // thin (doc 174): full width read as a soft crescent
         Trails.Add(C);
     }
     TrailEndAt = WorldTime() + MaxSeconds;
@@ -303,6 +308,22 @@ void UHWHeroFxComponent::Buff(float Seconds)
     BuffLeft = BuffTotal = Seconds;
 }
 
+bool UHWHeroFxComponent::IsStraw(const AActor* Landed) const
+{
+    // the struck material answers the hit (doc 173 2.4): the training/scarecrow bodies are straw, the rest armour
+    const AHWBossCharacter* Boss = Cast<AHWBossCharacter>(Landed);
+    if (const AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Landed)) Boss = Part->GetBossCharacter();
+    const USkeletalMesh* M = Boss && Boss->GetMesh() ? Boss->GetMesh()->GetSkeletalMeshAsset() : nullptr;
+    const FString N = M ? M->GetName() : FString();
+    return N.Contains(TEXT("Training")) || N.Contains(TEXT("Scarecrow")) || N.Contains(TEXT("XBot"));
+}
+
+void UHWHeroFxComponent::CameraPush(float Factor, float Seconds)
+{
+    CamFactor = Factor;
+    CamUntil = WorldTime() + Seconds;
+}
+
 void UHWHeroFxComponent::HandleAbility(FName CharacterId, EHWAbilitySlot Slot, float Multiplier)
 {
     if (!Hero.IsValid() || Systems.IsEmpty()) return;
@@ -355,6 +376,26 @@ void UHWHeroFxComponent::HandleAbility(FName CharacterId, EHWAbilitySlot Slot, f
         return;
     }
     StartTrails(Slot == EHWAbilitySlot::Ultimate ? 3.f : 2.2f);
+
+    const UHWCharacterKitComponent::FAbilityClock Clock = UHWCharacterKitComponent::AbilityClock(Id, Slot);
+    if (Slot == EHWAbilitySlot::Skill3)
+    {
+        // a spin: thin ring arcs turn around the feet until the last tick (doc 173 scene 2)
+        const float LastFrac = Id == TEXT("ain") ? 0.80f : Id == TEXT("kain") ? 0.60f : 0.74f;
+        const float Radius = Id == TEXT("kain") ? 330.f : Id == TEXT("ain") ? 300.f : 270.f;
+        if (AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld()))
+        {
+            Fx->Rings(Hero.Get(), HeroColor(), Radius, UHWCharacterKitComponent::AbilityTimeOf(LastFrac, Clock) + 0.3f, Feet.Z + 2.f);
+        }
+    }
+    if (Id == TEXT("ryu") && (Slot == EHWAbilitySlot::Skill1 || Slot == EHWAbilitySlot::Ultimate))
+    {
+        // the flurry is one stream of sparks from the first contact to the last hit (doc 173 scene 10)
+        const float First = UHWCharacterKitComponent::FirstContactSeconds(Id, Slot);
+        ShowerFrom = WorldTime() + FMath::Max(0.f, First - 0.05f);
+        ShowerUntil = WorldTime() + First + 2.5f;   // closed on the last hit
+        if (Slot == EHWAbilitySlot::Ultimate) CameraPush(0.8f, First + 1.2f);
+    }
 }
 
 void UHWHeroFxComponent::HandleHit(const FHWPendingAbilityHit& Hit, AActor* Landed, EHWAbilitySlot Slot)
@@ -363,6 +404,10 @@ void UHWHeroFxComponent::HandleHit(const FHWPendingAbilityHit& Hit, AActor* Land
     const FVector Me = Hero->GetActorLocation();
     const FVector Feet = Me - FVector(0.f, 0.f, Hero->GetCapsuleComponent()->GetScaledCapsuleHalfHeight());
     const bool bBig = Hit.Tier == EHWAttackTier::Smash || Slot == EHWAbilitySlot::Ultimate;
+    AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld());
+    const FVector Fwd = Hero->GetActorForwardVector();
+    const FLinearColor Spark(1.f, 0.55f, 0.16f);
+    const FLinearColor Dust(0.5f, 0.43f, 0.32f);
     if (Landed)
     {
         // on the target's near side, at the blade's height
@@ -372,24 +417,58 @@ void UHWHeroFxComponent::HandleHit(const FHWPendingAbilityHit& Hit, AActor* Land
         if (const ACharacter* C = Cast<ACharacter>(Landed)) Radius = C->GetCapsuleComponent()->GetScaledCapsuleRadius();
         FVector At = T + Dir * Radius * 0.8f;
         At.Z = Id == TEXT("sera") ? T.Z : FMath::Clamp(Socket(TipR).Z, Feet.Z + 40.f, Feet.Z + 220.f);
-        Fire(TEXT("impact"), At, bBig ? 1.8f : 1.1f);
-        if (bBig || Hit.Tier == EHWAttackTier::Finisher) Fire(TEXT("xslash"), At, bBig ? 1.3f : 0.8f, Dir.Rotation());
-        Flash(At, bBig ? 16000.f : 7000.f, bBig ? 0.3f : 0.16f, bBig ? 600.f : 360.f);
+        if (Fx)
+        {
+            // doc 173: line sparks + a one-frame lens streak, and the struck material's own answer - not a soft glow
+            const FVector Away = (-Dir + FVector(0.f, 0.f, 0.35f)).GetSafeNormal();
+            Fx->LensStreak(At, FLinearColor(1.f, 0.85f, 0.65f), bBig ? 340.f : 210.f);
+            if (IsStraw(Landed))
+            {
+                Fx->Debris(At, bBig ? 16 : 9, bBig ? 620.f : 480.f, true, Feet.Z);
+                Fx->Puff(At, bBig ? 3 : 2, Dust, bBig ? 90.f : 65.f, 0.6f);
+                Fx->Sparks(At, Away, bBig ? 10 : 6, Spark, 900.f, 55.f);
+            }
+            else
+            {
+                Fx->Sparks(At, Away, bBig ? 30 : 18, Spark, 1150.f, 60.f);
+            }
+            Fx->Sparks(At, Away, bBig ? 8 : 5, HeroColor(), 800.f, 40.f, 0.3f, 300.f);   // a little of the skill's colour
+            if (bBig) Fx->Needles(At, 18, Spark, 950.f, 0.25f, 0.4f);                     // the ring of streaks (scene 7)
+        }
+        if (Slot == EHWAbilitySlot::Ultimate && Id != TEXT("sera")) Fire(TEXT("xslash"), At, 1.1f, Dir.Rotation());
+        Flash(At, bBig ? 12000.f : 6000.f, bBig ? 0.25f : 0.14f, bBig ? 520.f : 340.f);
         ++Counts[2];
     }
     if (Hit.bAoe && Id != TEXT("sera"))
     {
-        // a spin rings the floor around the hero whether it caught anything or not
-        Fire(TEXT("ring"), Feet + FVector(0, 0, 4.f), bBig ? 0.9f : 0.6f);
-        if (bBig) Fire(TEXT("burst"), Feet + Hero->GetActorForwardVector() * 120.f, 1.2f);
-        Flash(Feet + FVector(0, 0, 60.f), 7000.f, 0.25f, 480.f);
+        // a spin tick: needles shot out flat around the hero, chips off the floor (scene 3)
+        if (Fx)
+        {
+            Fx->Needles(Feet + FVector(0.f, 0.f, 55.f), bBig ? 26 : 16, HeroColor(), 1300.f, 0.2f, 0.12f);
+            for (int32 K = 0; K < 3; ++K)
+            {
+                const float A = FMath::FRand() * 2.f * PI;
+                Fx->Debris(Feet + FVector(FMath::Cos(A), FMath::Sin(A), 0.f) * 160.f + FVector(0, 0, 5.f), 2, 380.f, false, Feet.Z);
+            }
+            Fx->Puff(Feet + FVector(0, 0, 10.f), 2, Dust, 80.f, 0.5f, 90.f, 20.f);
+        }
+        if (bBig) Fire(TEXT("burst"), Feet + Fwd * 120.f, 1.0f);
+        Flash(Feet + FVector(0, 0, 60.f), 5000.f, 0.22f, 420.f);
         ++Counts[3];
     }
-    else if (bBig && Id != TEXT("sera") && Hit.bLast)
+    const bool bSlam = (Id == TEXT("kain") && (Slot == EHWAbilitySlot::Skill1 || Slot == EHWAbilitySlot::Ultimate) && Hit.bLast)
+        || (Id == TEXT("ain") && Slot == EHWAbilitySlot::Ultimate);
+    if (bSlam && Fx)
     {
-        Fire(TEXT("burst"), Feet + Hero->GetActorForwardVector() * 140.f, 1.2f);
-        Fire(TEXT("dust"), Feet + Hero->GetActorForwardVector() * 140.f, 0.5f);
+        // the blade meets the floor: cracks, rock chips, dust; for Ain's dusk the embers stay (scenes 8, 12)
+        const FVector G = Feet + Fwd * 140.f + FVector(0, 0, 4.f);
+        Fx->Crack(G, Slot == EHWAbilitySlot::Ultimate ? 190.f : 130.f, 2.6f);
+        Fx->Debris(G, Slot == EHWAbilitySlot::Ultimate ? 16 : 10, 650.f, false, Feet.Z);
+        Fx->Puff(G, 4, Dust, 110.f, 0.7f, 120.f, 35.f);
+        if (Id == TEXT("ain")) Fx->Embers(G, 16, FLinearColor(1.f, 0.42f, 0.08f), 120.f, 2.6f);
+        CameraPush(1.15f, 0.6f);   // pull back: the launch reads from further off (scene 8)
     }
+    if (Hit.bLast && ShowerUntil > 0.f) ShowerUntil = FMath::Min(ShowerUntil, WorldTime() + 0.08f);
     if (Hit.bLast) EndTrails(0.18f);
 }
 
@@ -420,6 +499,28 @@ void UHWHeroFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
         TrailEndAt = -1.f;
     }
 
+    if (ShowerFrom > 0.f && Now >= ShowerFrom)
+    {
+        if (Now > ShowerUntil) { ShowerFrom = ShowerUntil = -1.f; }
+        else if (AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld()))
+        {
+            AActor* T = Hero->GetLockOn() ? Hero->GetLockOn()->GetTarget() : nullptr;
+            const FVector Me = Hero->GetActorLocation();
+            FVector At = T ? T->GetActorLocation() + (Me - T->GetActorLocation()).GetSafeNormal2D() * 60.f : Socket(TipR);
+            At.Z = Socket(TipR).Z;
+            ShowerAcc += DeltaTime * 55.f;   // 55 sparks a second: one stream instead of separate flashes
+            const int32 N = FMath::FloorToInt(ShowerAcc);
+            ShowerAcc -= N;
+            if (N > 0) Fx->Sparks(At, ((Me - At).GetSafeNormal2D() + FVector(0, 0, 0.5f)).GetSafeNormal(), N, FLinearColor(1.f, 0.5f, 0.15f), 1000.f, 70.f);
+        }
+    }
+    if (USpringArmComponent* Boom = Hero->FindComponentByClass<USpringArmComponent>())
+    {
+        if (CamBase < 0.f) CamBase = Boom->TargetArmLength;
+        const float Want = CamBase * (Now < CamUntil ? CamFactor : 1.f);
+        Boom->TargetArmLength = FMath::FInterpTo(Boom->TargetArmLength, Want, DeltaTime, 8.f);
+    }
+
     for (int32 I = Launches.Num() - 1; I >= 0; --I)
     {
         if (Now < Launches[I].At) continue;
@@ -437,9 +538,15 @@ void UHWHeroFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
         if (O.Light) O.Light->SetWorldLocation(P);
         if (A >= 1.f)
         {
-            // the vial breaks: a burst where it lands (a pool on the floor for the AoE ones)
-            Fire(TEXT("burst"), O.To, O.bAoe ? 1.3f : 0.8f);
-            if (O.bAoe) Fire(TEXT("dust"), O.To - FVector(0, 0, 6.f), 0.45f);
+            // the vial breaks: shards and a mist that hangs half a second, cold embers left for the AoE (scene 9)
+            if (AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld()))
+            {
+                const FLinearColor Mist(0.72f, 0.86f, 1.f);
+                Fx->Needles(O.To, O.bAoe ? 22 : 14, FLinearColor(0.75f, 0.9f, 1.f), 900.f, 0.22f, 0.5f);
+                Fx->Puff(O.To, O.bAoe ? 6 : 3, Mist, O.bAoe ? 150.f : 90.f, 0.65f, 110.f, 25.f);
+                Fx->LensStreak(O.To, Mist, O.bAoe ? 260.f : 180.f);
+                if (O.bAoe) Fx->Embers(O.To - FVector(0, 0, 8.f), 12, HeroColor(), 110.f, 2.f);
+            }
             Flash(O.To + FVector(0, 0, 40.f), O.bAoe ? 12000.f : 7000.f, 0.35f, O.bAoe ? 600.f : 380.f);
             if (O.Mesh) { OrbParts.Remove(O.Mesh); O.Mesh->DestroyComponent(); }
             if (O.Light) { OrbParts.Remove(O.Light); O.Light->DestroyComponent(); }
@@ -464,5 +571,6 @@ FString UHWHeroFxComponent::Describe() const
     for (const UPointLightComponent* P : Lights) L += FString::Printf(TEXT("%s%.0f"), L.IsEmpty() ? TEXT("") : TEXT("/"), P ? P->Intensity : -1.f);
     return FString::Printf(TEXT("hero=%s tell=%d trail=%d hit=%d ring=%d orb=%d live_trails=%d orbs=%d buff=%.2f tip=%.0f lights=%s fades=%d"),
         *Id.ToString(), Counts[0], Counts[1], Counts[2], Counts[3], Counts[4], Trails.Num(), Orbs.Num(), BuffLeft,
-        Tip ? Tip->Intensity : 0.f, *L, Fades.Num());
+        Tip ? Tip->Intensity : 0.f, *L, Fades.Num())
+        + TEXT(" | ") + (AHWImpactFx::Get(GetWorld()) ? AHWImpactFx::Get(GetWorld())->Describe() : FString());
 }

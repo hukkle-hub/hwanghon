@@ -123,5 +123,11 @@ private:
     TArray<FLaunch> Launches;
 
     int32 Counts[5] = {};                        // QA: what fired - tell, trail, hit, ring, orb
+
+    // docs/design/174 (Crimson Desert study): continuous sparks between Ryu's first and last hit, camera push/pull
+    float ShowerFrom = -1.f, ShowerUntil = -1.f, ShowerAcc = 0.f;
+    float CamBase = -1.f, CamFactor = 1.f, CamUntil = -1.f;
+    void CameraPush(float Factor, float Seconds);
+    bool IsStraw(const AActor* Landed) const;
     float WorldTime() const;
 };

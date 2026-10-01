@@ -28,6 +28,7 @@ sc.world = bpy.data.worlds.new("w")
 sc.world.color = (0.05, 0.05, 0.06)
 bpy.ops.import_scene.fbx(filepath=os.path.abspath(XBOT), automatic_bone_orientation=False, ignore_leaf_bones=True)
 rig = next(o for o in sc.objects if o.type == "ARMATURE")
+rig.animation_data_clear()   # the skin file's own T-pose action re-posed the rig at render time
 bpy.ops.mesh.primitive_plane_add(size=8, location=(0, 0, 0))
 cam_data = bpy.data.cameras.new("cam")
 cam = bpy.data.objects.new("cam", cam_data)
@@ -41,18 +42,22 @@ for label, path in CLIPS:
     bpy.ops.import_scene.fbx(filepath=os.path.abspath(path), automatic_bone_orientation=False, ignore_leaf_bones=True)
     act = next(a for a in bpy.data.actions if a not in before)
     keep = {rig, cam} | set(rig.children) | {o for o in sc.objects if o.type == "MESH" and o.name.startswith("Plane")}
+    src = next(o for o in sc.objects if o.type == "ARMATURE" and o is not rig)
     for o in list(sc.objects):
-        if o not in keep:   # the clip's own armature (and its mesh, when it carries one)
+        if o not in keep and o is not src:   # the clip's mesh, when it carries one
             bpy.data.objects.remove(o, do_unlink=True)
-    rig.animation_data_create()
-    rig.animation_data.action = act
-    if hasattr(rig.animation_data, "action_slot") and act.slots:
-        rig.animation_data.action_slot = act.slots[0]
+    src.hide_render = True
+    # copy each bone's world matrix: a file without a bind pose re-imports with the wrong rest pose, so the action
+    # cannot be put on the skinned rig as local deltas - the world transforms are still right (docs/design/172 §3)
+    order = sorted([b.name for b in rig.data.bones if b.name in src.pose.bones], key=lambda n: len(rig.data.bones[n].parent_recursive))
     f0, f1 = act.frame_range
     row = []
     for k in range(N):
         f = int(round(f0 + (f1 - f0) * k / (N - 1)))
         sc.frame_set(f)
+        for name in order:
+            rig.pose.bones[name].matrix = rig.matrix_world.inverted() @ src.matrix_world @ src.pose.bones[name].matrix
+            bpy.context.view_layer.update()
         hips = rig.matrix_world @ rig.pose.bones["mixamorig_Hips"].head
         target = Vector((hips.x, hips.y, 0.9))
         cam.location = target + Vector((1.7, -2.1, 0.35))
@@ -62,6 +67,7 @@ for label, path in CLIPS:
         bpy.ops.render.render(write_still=True)
         row.append((p, f / 30.0))
     frames.append((label, row))
+    bpy.data.objects.remove(src, do_unlink=True)
 
 # sheet (Blender's image API, no PIL in its Python)
 import numpy as np  # noqa: E402
