@@ -1,0 +1,31 @@
+{
+ "_note": "Mixamo X Bot clips for the 4 heroes' skills (docs/design/170). slot: 1-4 skills, R ultimate. inplace: walk-type clips only. sera 1/3 replaced after the bone sheet: Throw Object picked it off the floor, Throw Grenade was thrown lying down.",
+ "ain": {
+  "1": "Great Sword Slash",
+  "2": "Standing Dodge Backward",
+  "3": "Great Sword High Spin Attack",
+  "4": "Great Sword Blocking",
+  "R": "Great Sword Jump Attack"
+ },
+ "kain": {
+  "1": "Great Sword Attack",
+  "2": "Standing Block",
+  "3": "Standing Melee Attack 360 High",
+  "4": "Standing Melee Attack Downward",
+  "R": "Standing Melee Combo Attack Ver. 2"
+ },
+ "ryu": {
+  "1": "Standing Melee Combo Attack Ver. 1",
+  "2": "Aerial Evade",
+  "3": "Standing Melee Attack 360 Low",
+  "4": "Standing 1H Magic Attack 01",
+  "R": "Stabbing"
+ },
+ "sera": {
+  "1": "Throw",
+  "2": "Standing Dodge Right",
+  "3": "Toss Grenade",
+  "4": "Magic Heal",
+  "R": "Standing 2H Magic Area Attack 01"
+ }
+}
