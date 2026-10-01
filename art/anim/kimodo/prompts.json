@@ -1,0 +1,13 @@
+{
+ "_note": "Kimodo text-to-motion takes for skills where the Mixamo stock clip was weak (docs/design/172). 3 seeds each; the chosen take is copied to art/anim/kimodo/<id>.fbx.",
+ "ain_4": {"why": "Mixamo Great Sword Blocking is nearly static", "duration": 2.5,
+           "prompt": "A person braces in a wide stance and raises a two-handed sword horizontally above the head to block a heavy strike, then shoves it away."},
+ "ain_1": {"why": "Mixamo Great Sword Slash is 3.53 s", "duration": 1.8,
+           "prompt": "A person swings a large two-handed weapon in a wide horizontal arc from right to left while stepping forward."},
+ "kain_R": {"why": "the anvil finisher should read as one huge overhead slam", "duration": 2.5,
+            "prompt": "A person raises a heavy two-handed hammer high above the head and slams it down onto the ground with great force."},
+ "ryu_1": {"why": "Mixamo combo is 4.67 s", "duration": 2.0,
+           "prompt": "A person performs a fast flurry of slashes with two daggers while stepping forward."},
+ "sera_1": {"why": "a quicker throw than Mixamo Throw", "duration": 1.5,
+            "prompt": "A person quickly throws a small object overhand at a target in front of them."}
+}
