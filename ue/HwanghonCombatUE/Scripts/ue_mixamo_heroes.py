@@ -115,6 +115,16 @@ for p in lib.list_assets(CLIPS, recursive=False, include_folder=False):
         datas.append(a)
 out = unreal.IKRetargetBatchOperation.duplicate_and_retarget(
     datas, xbot_mesh, unreal.load_asset(COUNTESS), rtg, "X_hw_", "MX_", "", "", OUT, False, False, True)
+# Paragon clips carry a float curve mask_geo = 1; the Countess AnimBP reads it to let the montage drive the legs too.
+# Without it the retargeted skills played on the upper body only and the legs stayed in the combat idle.
+L = unreal.AnimationLibrary
+for p in lib.list_assets(OUT, recursive=False, include_folder=False):
+    seq = unreal.load_asset(p)
+    if isinstance(seq, unreal.AnimSequence):
+        if "mask_geo" not in [str(c) for c in L.get_animation_curve_names(seq, unreal.RawCurveTrackTypes.RCT_FLOAT)]:
+            L.add_curve(seq, "mask_geo", unreal.RawCurveTrackTypes.RCT_FLOAT)
+        L.add_float_curve_key(seq, "mask_geo", 0.0, 1.0)
+        lib.save_loaded_asset(seq)
 lib.save_directory(OUT)
 report["retargeted"] = len(out or [])
 

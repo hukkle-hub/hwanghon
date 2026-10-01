@@ -19,5 +19,11 @@ public class HwanghonCombatUE : ModuleRules
         });
 
         PrivateDependencyModuleNames.AddRange(new string[] { "Json", "WebSockets", "LevelSequence", "MovieScene", "HwanghonShelter", "ApplicationCore", "HTTP" });
+
+        // editor-only tools driven from Python (UHWEditorAnimTools: insert a full-body slot into an AnimBP, doc 170)
+        if (Target.bBuildEditor)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AnimGraph", "BlueprintGraph", "Kismet" });
+        }
     }
 }

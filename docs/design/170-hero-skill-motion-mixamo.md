@@ -51,8 +51,23 @@ X Bot(문서 168 파이프라인) → Countess 뼈대(`IK_Countess_Auto`) → `/
 - **한계**: Countess 애니 블루프린트가 스킬을 상체(UpperBody) 슬롯으로만 재생해서, 다리는 전투 대기 자세 그대로다. 회전·도약의 하체 동작이 빠진다.
   - 다음 작업: 전신 슬롯을 받는 레이어를 연결한다. 전에 FullBody 슬롯을 시도했을 때는 몸에 보이지 않았다(메모리·문서 127).
 
+## 4.5 전신 슬롯 (같은 날)
+
+- 원인을 찾았다.
+  - Countess 애니 블루프린트는 몽타주를 상체(UpperBody, 척추부터)에만 섞는다. 원본 클립에서 다리가 움직여 보인 건 골반 이동 때문이었다.
+  - `mask_geo` 커브를 넣어도 다리는 그대로였다. 그 커브는 스위치가 아니다.
+- 해결:
+  - `ABP_Hero_Countess` = 원본의 복사본에 **출력 직전 DefaultSlot 노드**를 끼웠다.
+  - 그래프 편집은 Python으로 안 된다 → 에디터 전용 C++ `UHWEditorAnimTools::InsertOutputSlot`(Build.cs에서 에디터 빌드에만 UnrealEd·AnimGraph 의존)
+  - 스크립트: `Scripts/ue_hero_fullbody_abp.py`
+- 영웅 스킬 5개는 DefaultSlot(전신)으로 재생하고, 평타는 UpperBody로 남겼다(이동 중 공격).
+- 네 영웅이 이 애니 블루프린트를 쓴다(`DefaultGame.ini` AnimClass).
+- 확인
+  - showcase 4명 `ok=1`, 스킬마다 하체가 다르다(베기 넓은 자세, 걸음 발끝 후퇴, 류 폭풍 뻗은 다리, 세라 투척 스텝).
+  - `system-core-qa local` 전 게이트 통과(스킬 5/4/4/4회)
+- 주의: `ue_mixamo_heroes.py`를 다시 돌리면 세트의 슬롯이 UpperBody로 돌아간다 → 이어서 `ue_hero_fullbody_abp.py`를 돌린다.
+
 ## 5. 다음
 
 - 스킬 이펙트(콘티의 층): 예고 섬광, 무기 끝 궤적, 타격 섬광, 광역 고리, 세라 발사체, 버프 오버레이
-- 전신 슬롯
 - 문서 169의 결정 세 가지는 디렉터 결정 뒤 반영한다.
