@@ -70,6 +70,7 @@ private:
     void TickNet(float Dt);
     void TickShowcase(float Dt);
     void TickBossShow(float Dt);
+    void TickSkillFx(float Dt);
     void TickClipReview(float Dt);
     void TickArenaShow(float Dt);
     TArray<TWeakObjectPtr<class ACameraActor>> ArenaCameras;

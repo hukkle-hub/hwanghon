@@ -1,0 +1,27 @@
+# hero skill FX candidates (docs/design/171)
+/Game/ParagonCountess/FX/Particles/Abilities/BladeSiphon/FX/p_Countess_BladeSiphon_HitFX.p_Countess_BladeSiphon_HitFX
+/Game/ParagonCountess/FX/Particles/Abilities/BladeSiphon/FX/P_Countess_BladeSiphon_RingFX.P_Countess_BladeSiphon_RingFX
+/Game/ParagonCountess/FX/Particles/Abilities/BladeSiphon/FX/P_Countess_BladeSiphon_Trails.P_Countess_BladeSiphon_Trails
+/Game/ParagonCountess/FX/Particles/Abilities/BladeSiphon/FX/P_Countess_SiphonOneShot.P_Countess_SiphonOneShot
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/P_Countess_BlinkStrike_HitFX.P_Countess_BlinkStrike_HitFX
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/p_Countess_BlinkStrikeFlash.p_Countess_BlinkStrikeFlash
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/p_Countess_ShadowCloneBurst.p_Countess_ShadowCloneBurst
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/P_Countess_TeleportArrive.P_Countess_TeleportArrive
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/P_Countess_TeleportBegin.P_Countess_TeleportBegin
+/Game/ParagonCountess/FX/Particles/Abilities/BlinkStrike/FX/p_Countess_XSlash.p_Countess_XSlash
+/Game/ParagonCountess/FX/Particles/Abilities/Primary/FX/p_CountessImpact.p_CountessImpact
+/Game/ParagonCountess/FX/Particles/Abilities/Primary/FX/p_SmokeyBlade.p_SmokeyBlade
+/Game/ParagonCountess/FX/Particles/Abilities/RollingDark/FX/P_Countess_RD_CastBurst.P_Countess_RD_CastBurst
+/Game/ParagonCountess/FX/Particles/Abilities/RollingDark/FX/p_RollingDark_ImpactFX.p_RollingDark_ImpactFX
+/Game/ParagonCountess/FX/Particles/Abilities/Ultimate/FX/p_CountessUlt_CastFX.p_CountessUlt_CastFX
+/Game/ParagonCountess/FX/Particles/Abilities/Ultimate/FX/p_CountessUlt_GroundImpactFX.p_CountessUlt_GroundImpactFX
+/Game/ParagonCountess/FX/Particles/Abilities/Ultimate/FX/p_CountessUlt_SlashFX.p_CountessUlt_SlashFX
+/Game/ParagonCountess/FX/Particles/Abilities/Ultimate/FX/p_CountessUltImpact.p_CountessUltImpact
+/Game/ParagonCountess/FX/Particles/p_CountessMeleeTrail.p_CountessMeleeTrail
+/Game/ParagonSevarog/FX/Particles/Abilities/Primary/FX/P_SevarogTrails.P_SevarogTrails
+/Game/ParagonSevarog/FX/Particles/Abilities/SoulSiphon/FX/P_SiphonImpact.P_SiphonImpact
+/Game/ParagonSevarog/FX/Particles/Abilities/Subjugate/FX/P_Sevarog_Subjugate_Blast.P_Sevarog_Subjugate_Blast
+/Game/ParagonSevarog/FX/Particles/Abilities/Ultimate/FX/P_UltMeshArc_Expanding.P_UltMeshArc_Expanding
+/Game/ParagonSevarog/FX/Particles/Abilities/SoulStackPassive/FX/P_ShadowTrails.P_ShadowTrails
+/Game/ParagonGrux/FX/Particles/Abilities/Primary/FX/P_MeleeTrails_Strong.P_MeleeTrails_Strong
+/Game/ParagonGrux/FX/Particles/Skins/Grux_Beetle_Magma/P_Grux_Magma_Whirlwind_WpFX.P_Grux_Magma_Whirlwind_WpFX

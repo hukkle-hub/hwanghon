@@ -13,6 +13,7 @@ class UHWPlayerPresentationComponent;
 class UHWCharacterKitComponent;
 class UHWCoopLifeComponent;
 class UHWNetworkCombatBridgeComponent;
+class UHWHeroFxComponent;
 
 DECLARE_MULTICAST_DELEGATE(FHWLocalInteract);
 
@@ -45,6 +46,7 @@ public:
 
     UFUNCTION(BlueprintPure)
     UHWCharacterKitComponent* GetCharacterKit() const { return CharacterKit; }
+    UHWHeroFxComponent* GetHeroFx() const { return HeroFx; }
 
     /** Touch skill buttons (docs/design/169): 0..3 = skill 1..4, 4 = ultimate - the same calls the keys make. */
     void PressAbility(int32 Slot);
@@ -157,6 +159,9 @@ private:
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWCharacterKitComponent> CharacterKit;
+
+    UPROPERTY(VisibleAnywhere)
+    TObjectPtr<UHWHeroFxComponent> HeroFx;   // skill effects (docs/design/171)
 
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWCoopLifeComponent> CoopLife;

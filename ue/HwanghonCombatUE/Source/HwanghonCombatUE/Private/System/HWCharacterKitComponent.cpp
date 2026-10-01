@@ -17,6 +17,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "System/HWBossSystemComponent.h"
 #include "System/HWBossPartTarget.h"
+#include "Misc/ScopeExit.h"
 
 UHWCharacterKitComponent::UHWCharacterKitComponent()
 {
@@ -272,6 +273,7 @@ void UHWCharacterKitComponent::QueueHit(
     Hit.DamageMultiplier = DamageMultiplier;
     Hit.Tier = Tier;
     Hit.bAoe = bAoe;
+    Hit.bFresh = true;
     Hit.PartDamageMultiplier = FMath::Max(0.f, PartDamageMultiplier);
     Hit.ExtraPosture = FMath::Max(0.f, ExtraPosture);
     PendingHits.Add(Hit);
@@ -312,6 +314,14 @@ float UHWCharacterKitComponent::AbilityTimeOf(float Fraction, const FAbilityCloc
     return F <= C ? Clock.Hit * F / C : Clock.Hit + (Clock.Dur - Clock.Hit) * (F - C) / (1.f - C);
 }
 
+void UHWCharacterKitComponent::QAReady()
+{
+    Skill1CooldownRemaining = Skill2CooldownRemaining = Skill3CooldownRemaining = Skill4CooldownRemaining = 0.f;
+    UltimateCooldownRemaining = 0.f;
+    UltimateGauge = 100.f;
+    BroadcastGauge();
+}
+
 float UHWCharacterKitComponent::FirstContactSeconds(FName Char, EHWAbilitySlot Slot)
 {
     static const TMap<FName, TArray<float>> First = {
@@ -335,6 +345,20 @@ void UHWCharacterKitComponent::QueueAbilityHits(
 {
     if (AbilityMultiplier <= 0.f) return;
     if (PendingHits.IsEmpty()) PendingAbilityElapsed = 0.f;
+    ON_SCOPE_EXIT
+    {
+        // tag this activation's hits with the slot and mark the last one (the effect layer closes the trail on it)
+        int32 LastIdx = INDEX_NONE;
+        for (int32 I = 0; I < PendingHits.Num(); ++I)
+        {
+            FHWPendingAbilityHit& H = PendingHits[I];
+            if (!H.bFresh) continue;
+            H.bFresh = false;
+            H.Slot = Slot;
+            if (LastIdx == INDEX_NONE || H.AtSeconds > PendingHits[LastIdx].AtSeconds) LastIdx = I;
+        }
+        if (LastIdx != INDEX_NONE) PendingHits[LastIdx].bLast = true;
+    };
     const FAbilityClock Clock = AbilityClock(CharacterId, Slot);
     auto T = [&Clock](float F) { return AbilityTimeOf(F, Clock); };
 
@@ -467,12 +491,16 @@ void UHWCharacterKitComponent::ResolvePendingHit(const FHWPendingAbilityHit& Hit
     if (!Hit.bAoe)
     {
         // a skill swung at nothing does not land (it used to hit the lock-on target from anywhere)
+        AActor* Landed = nullptr;
         if (Locked && InReach(Locked, Hit))
         {
-            if (ApplyHitToTarget(Locked, Hit)) LandHitStop(Locked, Hit);
+            if (ApplyHitToTarget(Locked, Hit)) { LandHitStop(Locked, Hit); Landed = Locked; }
         }
+        OnAbilityHitResolved.Broadcast(Hit, Landed, Hit.Slot);
         return;
     }
+    AActor* LandedAoe = nullptr;
+    ON_SCOPE_EXIT { OnAbilityHitResolved.Broadcast(Hit, LandedAoe, Hit.Slot); };
 
     TSet<AHWBossCharacter*> DamagedBosses;
     if (Locked)
@@ -480,6 +508,7 @@ void UHWCharacterKitComponent::ResolvePendingHit(const FHWPendingAbilityHit& Hit
         if (InReach(Locked, Hit) && ApplyHitToTarget(Locked, Hit))
         {
             LandHitStop(Locked, Hit);
+            LandedAoe = Locked;
             if (AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Locked))
                 if (AHWBossCharacter* Boss = Part->GetBossCharacter()) DamagedBosses.Add(Boss);
             if (AHWBossCharacter* Boss = Cast<AHWBossCharacter>(Locked)) DamagedBosses.Add(Boss);
@@ -501,7 +530,11 @@ void UHWCharacterKitComponent::ResolvePendingHit(const FHWPendingAbilityHit& Hit
         else BossOwner = Cast<AHWBossCharacter>(Actor);
         if (BossOwner && DamagedBosses.Contains(BossOwner)) continue;
 
-        if (ApplyHitToTarget(Actor, Hit) && BossOwner) DamagedBosses.Add(BossOwner);
+        if (ApplyHitToTarget(Actor, Hit))
+        {
+            if (!LandedAoe) LandedAoe = Actor;
+            if (BossOwner) DamagedBosses.Add(BossOwner);
+        }
     }
 }
 

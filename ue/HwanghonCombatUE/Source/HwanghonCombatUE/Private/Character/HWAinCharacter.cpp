@@ -13,6 +13,7 @@
 #include "System/HWCoopCombatSubsystem.h"
 #include "System/HWCoopLifeComponent.h"
 #include "System/HWCharacterKitComponent.h"
+#include "Character/HWHeroFxComponent.h"
 #include "Boss/HWBossCharacter.h"
 #include "Audit/HWCombatAuditActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -64,6 +65,7 @@ AHWAinCharacter::AHWAinCharacter()
     LockOn = CreateDefaultSubobject<UHWLockOnComponent>(TEXT("LockOn"));
     Presentation = CreateDefaultSubobject<UHWPlayerPresentationComponent>(TEXT("Presentation"));
     CharacterKit = CreateDefaultSubobject<UHWCharacterKitComponent>(TEXT("CharacterKit"));
+    HeroFx = CreateDefaultSubobject<UHWHeroFxComponent>(TEXT("HeroFx"));
     CoopLife = CreateDefaultSubobject<UHWCoopLifeComponent>(TEXT("CoopLife"));
     NetworkBridge = CreateDefaultSubobject<UHWNetworkCombatBridgeComponent>(TEXT("NetworkBridge"));
 }
@@ -87,6 +89,7 @@ void AHWAinCharacter::BeginPlay()
     Combat->OnActionEnded.AddDynamic(this, &AHWAinCharacter::HandleActionEnded);
     Combat->OnContact.AddDynamic(this, &AHWAinCharacter::HandleContact);
     CharacterKit->ConfigureCharacter(SystemCharacterId);
+    HeroFx->Bind(this, CharacterKit);
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         if (PC->PlayerInput)

@@ -19,6 +19,11 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
     float, Multiplier);
 
 
+struct FHWPendingAbilityHit;
+
+/** A skill hit's moment came (docs/design/171): Landed is the actor it struck, null when it swung at nothing. */
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FHWKitHitResolved, const FHWPendingAbilityHit& /*Hit*/, AActor* /*Landed*/, EHWAbilitySlot /*Slot*/);
+
 struct FHWPendingAbilityHit
 {
     float AtSeconds = 0.f;
@@ -27,6 +32,9 @@ struct FHWPendingAbilityHit
     bool bAoe = false;
     float PartDamageMultiplier = 1.f;
     float ExtraPosture = 0.f;
+    EHWAbilitySlot Slot = EHWAbilitySlot::Skill1;
+    bool bLast = false;   // the slot's final hit: the effect layer closes the weapon trail on it
+    bool bFresh = false;  // queued by the activation being tagged
 };
 
 UCLASS(ClassGroup=(Hwanghon), meta=(BlueprintSpawnableComponent))
@@ -48,6 +56,9 @@ public:
 
     UPROPERTY(BlueprintAssignable)
     FHWKitAbilitySignature OnAbilityActivated;
+
+    /** Skill hits as they resolve, landed or not - the effect layer (UHWHeroFxComponent) draws on them. */
+    FHWKitHitResolved OnAbilityHitResolved;
 
     // The web's skill clock (doc 169): seconds of the first contact of a slot for a hero, -1 when it has none.
     struct FAbilityClock { float Hit; float Dur; float ClipHit = 0.5f; };
@@ -81,6 +92,9 @@ public:
 
     UFUNCTION(BlueprintPure)
     float GetUltimateCooldown() const { return UltimateCooldownRemaining; }
+
+    /** QA (-HWQA=skillfx): every slot ready - cooldowns cleared, ultimate gauge full. */
+    void QAReady();
 
     UFUNCTION(BlueprintCallable)
     bool RequestSkill1();

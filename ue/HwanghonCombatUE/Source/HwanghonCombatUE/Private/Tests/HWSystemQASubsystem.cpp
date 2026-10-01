@@ -6,6 +6,7 @@
 #include "UI/HWCombatHUD.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
+#include "Character/HWHeroFxComponent.h"
 #include "HHHubSubsystem.h"
 #include "HHShelterStation.h"
 #include "HHShelterNPC.h"
@@ -70,6 +71,7 @@
 #include "Engine/PostProcessVolume.h"
 #include "WorldPartition/DataLayer/DataLayerInstance.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UnrealClient.h"
 #include "Engine/DirectionalLight.h"
@@ -389,6 +391,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("net")) TickNet(Dt);
     else if (Mode == TEXT("showcase")) TickShowcase(Dt);
     else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
+    else if (Mode == TEXT("skillfx")) TickSkillFx(Dt);
     else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
     else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
     else if (Mode == TEXT("storyshow")) TickStoryShow(Dt);
@@ -1802,6 +1805,97 @@ void UHWSystemQASubsystem::TickShowcase(float Dt)
             }
         }
     }
+    while (ShowStep < ShowSteps.Num() && ShowTime >= ShowSteps[ShowStep].Key)
+    {
+        ShowSteps[ShowStep].Value();
+        ++ShowStep;
+        if (bFinished) return;
+    }
+}
+
+// ---------------------------------------------------------------- skill fx (-HWQA=skillfx, doc 171)
+// The selected hero uses its five skills through the kit (real activation, real hits) on a frozen boss, shot from
+// a three-quarter view at the start (tell), just before and after the first contact, and late (trail end, buff).
+void UHWSystemQASubsystem::TickSkillFx(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    AHWAinCharacter* Pawn = GetPawn();
+    AHWBossCharacter* Boss = World ? Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(World, AHWBossCharacter::StaticClass())) : nullptr;
+    if (!World || !Pawn || !Boss)
+    {
+        if (Elapsed > 90.f) Finish(false, TEXT("No pawn/boss for skill fx"));
+        return;
+    }
+    if (ShowTime < 0.f)
+    {
+        if (Elapsed < 2.f) return;
+        ShowTime = 0.f;
+        ShowStart = World->GetTimeSeconds();
+        ShotDir = Param(TEXT("HWQAShots="));
+        RecordIdentity(Pawn, ExpectCharacter.IsNone() ? FName(TEXT("ain")) : ExpectCharacter, false);
+
+        // the target stands still in reach (2 m beyond its capsule) so every skill can land
+        const FVector P = Pawn->GetActorLocation();
+        Pawn->SetActorRotation(FRotator::ZeroRotator);
+        const float R = Boss->GetCapsuleComponent()->GetScaledCapsuleRadius();
+        Boss->SetActorLocation(FVector(P.X + 200.f + R, P.Y, Boss->GetActorLocation().Z));
+        Boss->SetActorRotation(FRotator(0.f, 180.f, 0.f));
+        Boss->SetActorTickEnabled(false);
+        if (UCharacterMovementComponent* M = Boss->GetCharacterMovement()) M->DisableMovement();
+        if (APlayerController* PC = GetPC())
+        {
+            PC->SetControlRotation(FRotator::ZeroRotator);
+            Pawn->DisableInput(PC);
+        }
+        if (Pawn->GetLockOn() && !Pawn->GetLockOn()->IsLocked()) Pawn->GetLockOn()->ToggleLockOn();
+        if (ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), P, FRotator::ZeroRotator))
+        {
+            Cam->GetCameraComponent()->SetFieldOfView(55.f);
+            Cam->GetCameraComponent()->bConstrainAspectRatio = false;
+            ShowCamera = Cam;
+            const FVector Center = P + FVector(130.f, 0.f, 20.f);
+            const FVector From = Center + FVector(-260.f, -560.f, 120.f);
+            Cam->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+            if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        }
+        const FName Id = Pawn->GetSystemCharacterId();
+        float T = 4.f;   // warm-up: intro anim, shader compile
+        auto At = [this](float When, TFunction<void()> Fn) { ShowSteps.Add(TPair<float, TFunction<void()>>(When, MoveTemp(Fn))); };
+        auto Fx = [Pawn]() { return Pawn->GetHeroFx() ? Pawn->GetHeroFx()->Describe() : FString(TEXT("no fx")); };
+        At(T, [this]() { Shot(TEXT("00_ready")); });
+        const EHWAbilitySlot Slots[5] = { EHWAbilitySlot::Skill1, EHWAbilitySlot::Skill2, EHWAbilitySlot::Skill3, EHWAbilitySlot::Skill4, EHWAbilitySlot::Ultimate };
+        for (int32 I = 0; I < 5; ++I)
+        {
+            const FString Name = I < 4 ? FString::Printf(TEXT("skill%d"), I + 1) : FString(TEXT("ult"));
+            At(T += 0.6f, [Pawn, P]() {
+                // back on the mark and fresh: dodges move the capsule, stamina and cooldowns run out
+                Pawn->SetActorLocation(P);
+                Pawn->SetActorRotation(FRotator::ZeroRotator);
+                Pawn->GetCombat()->ApplyAuthoritativeVitals(Pawn->GetCombat()->GetMaxHealth(), Pawn->GetCombat()->GetMaxHealth(), 100.f, false);
+                Pawn->GetCharacterKit()->QAReady(); });
+            At(T += 0.4f, [this, Pawn, I, Name, Fx]() {
+                const float Cd0 = I == 4 ? Pawn->GetCharacterKit()->GetUltimateCooldown() : 0.f;
+                Pawn->PressAbility(I);
+                Note(FString::Printf(TEXT("press %s cd0 %.1f -> %s"), *Name, Cd0, *Fx())); });
+            const float C = UHWCharacterKitComponent::FirstContactSeconds(Id, Slots[I]);
+            const float Flight = Id == TEXT("sera") && C > 0.f ? (I == 0 ? 0.28f : I == 2 ? 0.26f : 0.36f) : 0.f;
+            TArray<float> Offsets = { 0.06f };
+            if (C > 0.f) Offsets.Append({ C * 0.6f, C + Flight * 0.5f, C + Flight + 0.04f, C + Flight + 0.25f });
+            else Offsets.Append({ 0.2f, 0.5f, 1.2f });
+            for (int32 K = 0; K < Offsets.Num(); ++K)
+            {
+                const FString Tag = FString::Printf(TEXT("1%d_%s_%c_%03d"), I, *Name, TCHAR('a' + K), FMath::RoundToInt(Offsets[K] * 100.f));
+                At(T + Offsets[K], [this, Tag, Fx]() { Shot(Tag); Note(Tag + TEXT(" ") + Fx()); });
+            }
+            T += Offsets.Last() + 1.2f;
+        }
+        At(T += 0.5f, [this, Fx]() {
+            const FString D = Fx();
+            Gate(TEXT("skill_fx_fired"), !D.Contains(TEXT("tell=0")) && !D.Contains(TEXT("no fx")), D);
+            Finish(true, TEXT("skill fx done")); });
+        return;
+    }
+    ShowTime = World->GetTimeSeconds() - ShowStart;
     while (ShowStep < ShowSteps.Num() && ShowTime >= ShowSteps[ShowStep].Key)
     {
         ShowSteps[ShowStep].Value();
