@@ -1,0 +1,382 @@
+<title>황혼 4인 스킬 콘티</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: the same review-monitor stage as the scarecrow study; hero tabs, then skill chips, stage, timeline, order sheet.
+   Single dark look on purpose: trails and glints only read on a dark ground. Each hero carries one accent. */
+:root{
+  --ground:#111013; --panel:#1a191d; --raise:#232228; --line:#37353d; --ink:#ecebf0; --dim:#a19eab;
+  --ain:#ff8a1f; --kain:#e8c48c; --ryu:#ff4a57; --sera:#6ab8ff; --hit:#fff3dc; --tell:#e3432f;
+  --f-disp:"Nanum Myeongjo","Batang",serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ground)}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--f-body);margin:0}
+.wrap>*{min-width:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:18px}
+.eyebrow{font:600 12px/1.4 var(--f-body);letter-spacing:.08em;color:var(--dim)}
+h1{font:800 clamp(28px,4.4vw,42px)/1.15 var(--f-disp);margin:0;text-wrap:balance}
+.lede{color:var(--dim);max-width:70ch;margin:0}
+.heroes{display:flex;flex-wrap:wrap;gap:8px}
+.heroes button{display:grid;gap:2px;text-align:left;font:600 15px/1.2 var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--c);padding:10px 14px;border-radius:3px;cursor:pointer;min-width:150px}
+.heroes button small{font:400 12px var(--f-body);color:var(--dim)}
+.heroes button[aria-selected="true"]{background:var(--raise);border-color:var(--c)}
+.skills{display:flex;flex-wrap:wrap;gap:6px}
+.skills button{font:500 13px/1.2 var(--f-body);color:var(--dim);background:transparent;border:1px solid var(--line);padding:8px 11px;border-radius:3px;cursor:pointer;display:flex;gap:7px;align-items:center}
+.skills button b{font:600 12px var(--f-mono);color:var(--ink)}
+.skills button[aria-selected="true"]{color:var(--ground);background:var(--c);border-color:var(--c)}
+.skills button[aria-selected="true"] b{color:var(--ground)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--c,#fff);outline-offset:2px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.stage-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.stage-head h2{font:700 19px/1.3 var(--f-disp);margin:0}
+.stage-head .src{font:12px/1.5 var(--f-mono);color:var(--dim)}
+.canvas-box{position:relative;aspect-ratio:16/9;max-width:100%;background:#0c0b0e}
+canvas#cv{width:100%;height:100%;display:block}
+.now{position:absolute;left:12px;top:10px;font:600 13px/1.3 var(--f-body);background:rgba(17,16,19,.74);padding:5px 9px;border-radius:3px;max-width:72%}
+.now small{display:block;font:400 12px/1.45 var(--f-body);color:var(--dim)}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px;border-top:1px solid var(--line)}
+.ctrl button{font:600 13px/1 var(--f-body);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer;min-height:36px}
+.ctrl label{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.ctrl select{background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:6px 8px;font:13px var(--f-body)}
+.time{font:600 13px var(--f-mono);font-variant-numeric:tabular-nums;margin-left:auto}
+.tl{padding:0 16px 14px;display:grid;gap:8px}
+.bar{position:relative;height:14px;border-radius:2px;overflow:hidden;background:var(--raise)}
+.bar i{position:absolute;top:0;bottom:0;border-right:1px solid var(--panel)}
+.k-tell{background:#6d2a22}.k-hit{background:#efe2c8}.k-rec{background:#4b4855}.k-move{background:#3b5d7d}.k-buff{background:#6a5a2a}.k-fly{background:#2f6b57}
+.head{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--hit);box-shadow:0 0 6px var(--hit)}
+input[type=range]{width:100%;accent-color:var(--c,#ff8a1f)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:14px;height:8px;border-radius:1px;display:inline-block}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px;display:grid;gap:6px;min-width:0}
+.card h3{font:700 15px/1.3 var(--f-body);margin:0}
+.card p{margin:0;color:var(--dim);font-size:14px}
+.card .rec{color:var(--ink)}
+.card .tag{font:600 11px var(--f-mono);letter-spacing:.06em;color:var(--c,#ff8a1f)}
+.sheet h3{font:700 17px/1.3 var(--f-disp);margin:0 0 8px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--f-body);color:var(--dim);background:var(--panel)}
+td:nth-child(2){font:13px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--c,#ff8a1f)}
+td:nth-child(4){color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.foot{color:var(--dim);font-size:13px;max-width:82ch}
+.foot code{font:12px var(--f-mono);color:var(--ink)}
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:6px">
+    <div class="eyebrow">황혼 · 4인 캐릭터 스킬 · 콘티 v1 (2026-10-01)</div>
+    <h1>4인 스킬 콘티</h1>
+    <p class="lede">20개 스킬의 동작·이펙트·타이밍입니다. 시간은 웹 게임 규칙 그대로입니다(스킬 타격 0.42/1.00 s, 아인 전용 박자, 무기 리듬 카인 1.2배·류 0.82배·세라 1.06배, 다단 타격 비율). 이펙트는 몬스터헌터식 층으로 쌓았습니다: 예고 섬광 → 궤적 → 타격 섬광 → 잔향. 스킬을 고르고 «승인» 또는 고칠 점을 말씀해 주세요. 아래 «결정이 필요한 것» 세 가지는 소설과 게임 데이터가 어긋나는 곳입니다.</p>
+  </header>
+
+  <nav class="heroes" id="heroes" role="tablist"></nav>
+  <nav class="skills" id="skills" role="tablist"></nav>
+
+  <section class="stage">
+    <div class="stage-head"><h2 id="title"></h2><div class="src" id="src"></div></div>
+    <div class="canvas-box"><canvas id="cv" aria-label="스킬 무대"></canvas><div class="now" id="now"></div></div>
+    <div class="ctrl">
+      <button id="replay" type="button">처음부터</button>
+      <button id="play" type="button">일시정지</button>
+      <label for="speed">속도 <select id="speed"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option></select></label>
+      <label for="loop"><input type="checkbox" id="loop" checked> 반복</label>
+      <span class="time" id="time">0.00 / 0.00 s</span>
+    </div>
+    <div class="tl">
+      <div class="bar" id="bar"></div>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="시간">
+      <div class="legend"><span><i class="k-tell"></i>준비·예고</span><span><i class="k-hit"></i>타격</span><span><i class="k-rec"></i>회수</span><span><i class="k-move"></i>이동·회피</span><span><i class="k-buff"></i>버프</span><span><i class="k-fly"></i>투척 비행</span></div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h3>레이어 주문서</h3>
+    <div class="tbl"><table><thead><tr><th>레이어</th><th>시점 (s)</th><th>화면에 보이는 것</th><th>UE 구현 · 재료</th></tr></thead><tbody id="layers"></tbody></table></div>
+  </section>
+
+  <section style="display:grid;gap:10px">
+    <h3 style="font:700 17px/1.3 var(--f-disp);margin:0">결정이 필요한 것</h3>
+    <div class="grid2" id="decisions"></div>
+  </section>
+
+  <p class="foot">근거: <code>js/dungeons.js</code> SKILLS(173–204)·RULES(45–75, 135–140) · 소설 신호: 아인 거리 띠·낫끝 «달콤한 점»(EP01 L461–566), 카인 대검 꽂고 되받아치기(EP01 L511–530), 류 한 박자에 두 점(EP07 L6991–7052), 세라 봉·봉인 그물·돔(EP15 L10333–10413, EP17 L10959–10978) · UE 현황과 빠진 것은 <code>docs/design/169</code>.</p>
+</div>
+
+<script>
+"use strict";
+const R=Math.PI/180,TAU=Math.PI*2;
+const cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)),lerp=(a,b,u)=>a+(b-a)*u;
+const E={io:u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2,out:u=>1-Math.pow(1-u,3),in:u=>u*u*u,lin:u=>u};
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],len=a=>Math.hypot(a[0],a[1],a[2]),norm=a=>{const l=len(a)||1;return[a[0]/l,a[1]/l,a[2]/l]};
+const rotY=(v,a)=>{const c=Math.cos(a),s=Math.sin(a);return[v[0]*c+v[2]*s,v[1],-v[0]*s+v[2]*c]};
+const rotX=(v,a)=>{const c=Math.cos(a),s=Math.sin(a);return[v[0],v[1]*c-v[2]*s,v[1]*s+v[2]*c]};
+const vl=(a,b,u)=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+function rng(seed){let s=seed>>>0;return()=>{s=s+0x6D2B79F5>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+
+/* ---------- pose + FK (from the scarecrow study) ---------- */
+const BASE={x:0,z:0,yaw:90,twist:0,lean:0,side:0,nod:0,tilt:0,air:0,aL:{abd:20,fwd:30,bend:50},aR:{abd:22,fwd:30,bend:55},lL:{fwd:12,spr:8,bend:12},lR:{fwd:-10,spr:8,bend:10}};
+function merge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object")merge(a[k]||(a[k]={}),b[k]);else a[k]=b[k]}return a}
+const P=(...o)=>o.reduce((a,b)=>merge(a,b),structuredClone(BASE));
+function mix(a,b,u){if(typeof a==="number")return lerp(a,b===undefined?a:b,u);const o={};for(const k in a)o[k]=mix(a[k],b===undefined?undefined:b[k],u);return o}
+function track(keys,t){if(t<=keys[0].t)return keys[0].p;for(let i=1;i<keys.length;i++){const k=keys[i];if(t<=k.t){const a=keys[i-1];return mix(a.p,k.p,E[k.e||"io"]((t-a.t)/(k.t-a.t)))}}return keys[keys.length-1].p}
+function fk(p,S){
+  const tw=p.twist*R,le=p.lean*R,si=p.side*R,up=norm([Math.sin(si),Math.cos(le)*Math.cos(si),Math.sin(le)]),L={hips:[0,0,0]};
+  L.chest=mul(up,95*S);L.neck=mul(up,108*S);L.head=add(L.neck,mul(norm(add(up,[p.tilt*R*.9,0,p.nod*R*.9])),26*S));
+  const fT=rotY([0,0,1],tw),sh=rotY([44*S,0,0],tw);
+  const arm=(sg,a,n)=>{const s=add(L.chest,mul(sh,sg));let d=[sg*Math.sin(a.abd*R),-Math.cos(a.abd*R),0];d=rotY(rotY(d,-sg*a.fwd*R),tw);
+    const e=add(s,mul(d,70*S));let b=sub(fT,mul(d,dot(fT,d)));if(len(b)<.25)b=sub([0,1,0],mul(d,d[1]));b=norm(b);
+    L["sh"+n]=s;L["el"+n]=e;L["ha"+n]=add(e,mul(norm(add(mul(d,Math.cos(a.bend*R)),mul(b,Math.sin(a.bend*R)))),66*S))};
+  arm(1,p.aL,"L");arm(-1,p.aR,"R");
+  const leg=(sg,l,n)=>{const h=[sg*20*S,0,0],d=norm([sg*Math.sin(l.spr*R),-Math.cos(l.fwd*R),Math.sin(l.fwd*R)]),k=add(h,mul(d,78*S));
+    L["hp"+n]=h;L["kn"+n]=k;L["ft"+n]=add(k,mul(rotX(d,l.bend*R),78*S))};
+  leg(1,p.lL,"L");leg(-1,p.lR,"R");
+  const yaw=p.yaw*R,lift=-Math.min(L.ftL[1],L.ftR[1])+8*S+(p.air||0),W={S,fwd:rotY(fT,yaw),yaw};
+  for(const k in L){const v=rotY(L[k],yaw);W[k]=[v[0]+p.x,v[1]+lift,v[2]+p.z]}return W;
+}
+
+/* ---------- view ---------- */
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),off=document.createElement("canvas"),g2=off.getContext("2d");
+let VW=0,VH=0,SC=1,CX=0,GY=0;const VY=26*R;let C=g2;
+function pj(v){const r=rotY(v,VY);return[CX+r[0]*SC,GY-r[1]*SC+r[2]*SC*.3,r[2]]}
+function resize(){const d=Math.min(2,devicePixelRatio||1),b=cv.getBoundingClientRect();VW=Math.max(320,Math.round(b.width*d));VH=Math.round(VW*9/16);cv.width=off.width=VW;cv.height=off.height=VH;SC=VW/760;CX=VW*.44;GY=VH*.86}
+const line=(a,b)=>{C.beginPath();C.moveTo(a[0],a[1]);C.lineTo(b[0],b[1]);C.stroke()};
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return`rgba(${n>>16&255},${n>>8&255},${n&255},${a})`};
+function floor(){const g=C.createLinearGradient(0,0,0,VH);g.addColorStop(0,"#09080b");g.addColorStop(.5,"#131217");g.addColorStop(.51,"#18171d");g.addColorStop(1,"#211f27");C.fillStyle=g;C.fillRect(0,0,VW,VH);
+  C.strokeStyle="rgba(200,195,220,.05)";C.lineWidth=1;for(let x=-500;x<=700;x+=100)line(pj([x,0,-300]),pj([x,0,300]));for(let z=-300;z<=300;z+=100)line(pj([-500,0,z]),pj([700,0,z]))}
+function ringPts(c,r,y=1,n=64){const o=[];for(let i=0;i<=n;i++){const a=i/n*TAU;o.push(pj([c[0]+Math.cos(a)*r,y,c[2]+Math.sin(a)*r]))}return o}
+function poly(p,cz){C.beginPath();p.forEach((q,i)=>i?C.lineTo(q[0],q[1]):C.moveTo(q[0],q[1]));if(cz)C.closePath()}
+function ring(c,r,col,w,a,dash){if(a<=0)return;C.save();C.globalAlpha=a;C.strokeStyle=col;C.lineWidth=w*SC;if(dash)C.setLineDash([8*SC,7*SC]);poly(ringPts(c,r),true);C.stroke();C.restore()}
+function disk(c,r,col,a){if(a<=0)return;C.save();C.globalAlpha=a;C.fillStyle=col;poly(ringPts(c,r),true);C.fill();C.restore()}
+function glow(p,r,col,a){if(a<=0)return;const q=pj(p);C.save();C.globalCompositeOperation="lighter";C.globalAlpha=a;const g=C.createRadialGradient(q[0],q[1],0,q[0],q[1],r*SC);g.addColorStop(0,col);g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.beginPath();C.arc(q[0],q[1],r*SC,0,TAU);C.fill();C.restore()}
+function star(p,r,a,col){if(a<=0)return;const q=pj(p);C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(col,a);C.lineWidth=2*SC;for(let i=0;i<10;i++){const an=i/10*TAU+.3,r0=r*.2*SC,r1=r*SC*(i%2?.55:1);line([q[0]+Math.cos(an)*r0,q[1]+Math.sin(an)*r0],[q[0]+Math.cos(an)*r1,q[1]+Math.sin(an)*r1])}C.restore();glow(p,r*.8,hexA(col,.9),a)}
+function text(s,x,y,size,col,a=1){if(a<=0)return;C.save();C.globalAlpha=a;C.fillStyle=col;C.font=`800 ${size*SC}px "Nanum Myeongjo",serif`;C.textAlign="center";C.shadowColor="#000";C.shadowBlur=8*SC;C.fillText(s,x*VW,y*VH);C.restore()}
+function vignette(a){const g=C.createRadialGradient(VW/2,VH*.52,VH*.25,VW/2,VH*.5,VW*.62);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(1,`rgba(0,0,0,${a})`);C.fillStyle=g;C.fillRect(0,0,VW,VH)}
+function burst(t,e){const age0=t-e.t0;if(age0<0||age0>e.life*1.2)return;const r=rng(e.seed);
+  for(let i=0;i<e.n;i++){const a=r()*TAU,el=(e.el??.6)+(r()-.5)*(e.spr??1.4),sp=e.sp*(.35+r()*.9),lf=e.life*(.5+r()*.6),k0=r();const age=age0;if(age>lf)continue;
+    const v=[Math.cos(a)*Math.cos(el)*sp,Math.sin(el)*sp,Math.sin(a)*Math.cos(el)*sp],p=[e.at[0]+v[0]*age,Math.max(2,e.at[1]+v[1]*age-.5*(e.g??900)*age*age),e.at[2]+v[2]*age],q=pj(p),k=age/lf;
+    if(e.kind==="spark"){const b=pj(sub(p,mul(v,.025)));C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(e.col,1-k);C.lineWidth=Math.max(1,1.8*SC);line(b,q);C.restore()}
+    else if(e.kind==="ember"){C.save();C.globalCompositeOperation="lighter";C.fillStyle=hexA(e.col,(1-k)*(.6+.4*Math.sin(age*40+k0*9)));C.beginPath();C.arc(q[0],q[1],(1.2+k0*2)*SC*1.4,0,TAU);C.fill();C.restore()}
+    else if(e.kind==="dust"){C.fillStyle=hexA(e.col||"#8a8274",.2*(1-k));C.beginPath();C.arc(q[0],q[1],(8+age*70)*SC,0,TAU);C.fill()}
+    else if(e.kind==="straw"){const l=(7+k0*9)*SC,rot=k0*9+age*9;C.strokeStyle=hexA("#d8b86c",1-k);C.lineWidth=Math.max(1,1.5*SC);line([q[0]-Math.cos(rot)*l,q[1]-Math.sin(rot)*l],[q[0]+Math.cos(rot)*l,q[1]+Math.sin(rot)*l])}}}
+function trail(at,t,span,n,w,edge,core,alpha){if(alpha<=0)return;const pts=[];for(let i=0;i<=n;i++)pts.push(pj(at(t-span*i/n)));
+  C.save();C.globalCompositeOperation="lighter";C.lineCap="butt";C.lineJoin="round";
+  for(let i=1;i<pts.length;i++){const u=1-i/n;C.strokeStyle=hexA(edge,alpha*u*.85);C.lineWidth=w*SC*(.25+u);line(pts[i-1],pts[i])}
+  for(let i=1;i<pts.length;i++){const u=1-i/n;C.strokeStyle=hexA(core,alpha*u);C.lineWidth=w*SC*.28*(.25+u);line(pts[i-1],pts[i])}C.restore()}
+
+/* the hero + weapon */
+const HERO={ain:{col:"#7a8290",col2:"#4d545f",hair:"#e8e2ee",acc:"#ff8a1f",S:.57,wep:"scythe"},kain:{col:"#62728a",col2:"#435066",hair:"#17181b",acc:"#e8c48c",S:.64,wep:"greatsword"},
+            ryu:{col:"#7a5560",col2:"#4d363d",hair:"#1a1416",acc:"#ff4a57",S:.58,wep:"daggers"},sera:{col:"#6b7d96",col2:"#46556a",hair:"#dfe6ee",acc:"#6ab8ff",S:.56,wep:"staff"}};
+function weaponTip(W,wep){const d=norm(sub(W.haR,W.elR));
+  if(wep==="scythe"){const bl=norm([d[2]||.01,0,-d[0]]);return add(add(add(W.haR,mul(d,150)),mul(bl,60)),mul(d,-18))}
+  if(wep==="greatsword")return add(W.haR,mul(d,150));
+  if(wep==="daggers")return add(W.haR,mul(d,38));
+  return add(W.haR,mul(d,70));}
+function weaponTipL(W){const d=norm(sub(W.haL,W.elL));return add(W.haL,mul(d,38))}
+function drawHero(W,h,o={}){
+  const Q={};for(const k of["hips","chest","head","shL","elL","haL","shR","elR","haR","hpL","knL","ftL","hpR","knR","ftR"])Q[k]=pj(W[k]);
+  const px=cm=>cm*W.S*SC;C.save();C.globalAlpha=o.alpha??1;
+  const segs=[["hpL","knL",20,h.col2],["knL","ftL",16,h.col2],["hpR","knR",20,h.col2],["knR","ftR",16,h.col2],["hips","chest",34,h.col],["shL","shR",22,h.col],["shL","elL",14,h.col],["elL","haL",12,h.col],["shR","elR",14,h.col],["elR","haR",12,h.col]];
+  segs.map(s=>({z:(Q[s[0]][2]+Q[s[1]][2])/2,s})).sort((a,b)=>a.z-b.z).forEach(({s})=>{C.strokeStyle=o.ghost?hexA(h.acc,.35):s[3];C.lineWidth=px(s[2]);C.lineCap="round";line(Q[s[0]],Q[s[1]])});
+  C.fillStyle=o.ghost?hexA(h.acc,.35):h.hair;C.beginPath();C.arc(Q.head[0],Q.head[1],px(18),0,TAU);C.fill();
+  if(!o.ghost&&o.aura>0){C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(h.acc,o.aura*.7);C.shadowColor=h.acc;C.shadowBlur=px(30);C.lineWidth=px(4);segs.forEach(s=>line(Q[s[0]],Q[s[1]]));C.restore()}
+  // weapon
+  const d=norm(sub(W.haR,W.elR));
+  if(h.wep==="scythe"){const base=pj(sub(W.haR,mul(d,50))),tip=pj(add(W.haR,mul(d,150))),bl=norm([d[2]||.01,0,-d[0]]),b1=pj(add(add(add(W.haR,mul(d,150)),mul(bl,70)),mul(d,-26)));
+    C.strokeStyle="#2f2d2b";C.lineWidth=px(5);line(base,tip);C.strokeStyle=o.edge?h.acc:"#c9ced4";C.lineWidth=px(6);C.beginPath();C.moveTo(tip[0],tip[1]);C.quadraticCurveTo((tip[0]+b1[0])/2+px(8),(tip[1]+b1[1])/2-px(14),b1[0],b1[1]);C.stroke()}
+  if(h.wep==="greatsword"){const a=pj(sub(W.haR,mul(d,25))),b=pj(add(W.haR,mul(d,150)));C.strokeStyle="#24282e";C.lineWidth=px(18);line(a,b);C.strokeStyle=o.edge?"#ffe2b0":"#aeb7c2";C.lineWidth=px(11);line(a,b)}
+  if(h.wep==="daggers"){for(const n of["R","L"]){const dd=norm(sub(W["ha"+n],W["el"+n]));C.strokeStyle=o.edge?h.acc:"#c3c8cf";C.lineWidth=px(5);line(pj(W["ha"+n]),pj(add(W["ha"+n],mul(dd,40))))}}
+  if(h.wep==="staff"){const a=pj(sub(W.haR,mul(d,50))),b=pj(add(W.haR,mul(d,70)));C.strokeStyle="#2b313a";C.lineWidth=px(6);line(a,b);C.save();C.globalCompositeOperation="lighter";C.strokeStyle=hexA(h.acc,.8);C.lineWidth=px(2);line(a,b);C.restore()}
+  C.restore();
+}
+/* the training dummy: straw post, it takes the hits */
+const DUMMY=[250,0,0];
+function drawDummy(hitA,lean=0){const b=pj(DUMMY),h=190*SC;C.save();C.translate(b[0],b[1]);C.rotate(lean*R);
+  C.fillStyle="#6e5530";C.fillRect(-4*SC,-h,8*SC,h);C.fillStyle="#a8823f";C.fillRect(-24*SC,-h*.9,48*SC,h*.55);C.fillRect(-60*SC,-h*.78,120*SC,12*SC);
+  C.fillStyle="#8c6c36";C.beginPath();C.arc(0,-h*.97,20*SC,0,TAU);C.fill();
+  if(hitA>0){C.globalCompositeOperation="lighter";C.fillStyle=`rgba(255,240,220,${hitA*.5})`;C.fillRect(-24*SC,-h*.9,48*SC,h*.55)}C.restore()}
+
+/* ---------- timing: the web's rules ---------- */
+const RHY={ain:1,kain:1.2,ryu:.82,sera:1.06}, STOP={ain:1,kain:1.28,ryu:.74,sera:.86};
+const RULE={skill:{hit:.42,dur:1.0,clipHit:.5},ult:{hit:.55,dur:1.2,clipHit:.5}};
+const AINP={slash:{hit:.58,dur:1.32},spin:{hit:.64,dur:1.42},twilight:{hit:.96,dur:1.95}};
+function timing(hero,sk){const base=sk.ult?RULE.ult:RULE.skill,o=hero==="ain"?AINP[sk.id]:null,r=RHY[hero];
+  return {hit:(o?o.hit:base.hit)*r,dur:(o?o.dur:base.dur)*r,clipHit:base.clipHit}}
+function timeOf(f,T){return f<=T.clipHit?f/T.clipHit*T.hit:T.hit+(f-T.clipHit)/(1-T.clipHit)*(T.dur-T.hit)}
+
+/* ---------- skills: data from js/dungeons.js SKILLS, motion archetypes ---------- */
+const SK={
+ ain:[{id:"slash",n:"낫 베기",k:"1",m:2.2,cd:6,arch:"sweep",hits:[[.24,1]],d:"좁은 전방의 선택 부위를 정밀하게 걸어 벤다",canon:"EP01 L531–566: 낫 하나 길이에서 날 바깥쪽이 이음매를 건다. 거리 띠 밖이면 «틱—»"},
+      {id:"step",n:"그림자 걸음",k:"2",cd:8,arch:"dodge",d:"즉시 회피 + 다음 공격 치명타 확정",canon:"소설에 없음 (게임 창작)"},
+      {id:"spin",n:"피의 회전",k:"3",m:1.2,cd:12,arch:"spin",hits:[[.55,.55],[.80,.45]],aoe:true,d:"넓은 전방을 두 번 벤다 (회전 2접점)",canon:"EP05 L5394–5467: 첫 «완전한 원» — 낫이 몸을 한 바퀴 돈다"},
+      {id:"resolve",n:"결의",k:"4",cd:15,arch:"buff",buffDur:2,d:"2초간 받는 피해 50% 감소",canon:"소설에 없음 (게임 창작)"},
+      {id:"twilight",n:"낫의 황혼",k:"R",m:6,ult:true,arch:"leap",hits:[[.22,1]],d:"궁극기. 강타 + 출혈 3중첩",canon:"EP27–28: 마지막이자 가장 큰 원"}],
+ kain:[{id:"cleave",n:"대검 내려치기",k:"1",m:2.6,cd:7,arch:"overhead",hits:[[.73,1]],d:"선택 부위에 묵직한 일격 · 부위 파괴 ×1.5",canon:"EP01 L379–414: 머리 위에서 내려찍는 대검"},
+      {id:"brace",n:"철벽",k:"2",cd:12,arch:"brace",buffDur:3,d:"3초간 받는 피해 60% 감소",canon:"EP01 L511–530: 대검을 수직으로 꽂고 힘을 되돌린다 «내 뒤로는… 못 지난다!»"},
+      {id:"whirl",n:"강철 회전",k:"3",m:1.4,cd:13,arch:"spin",hits:[[.38,.55],[.60,.45]],aoe:true,d:"모든 부위를 두 번 벤다",canon:"EP02 L1618–1707: 넓게 쓸어 물의 벽이 선다"},
+      {id:"stomp",n:"지면 강타",k:"4",m:1.8,cd:10,arch:"stomp",hits:[[.33,1]],d:"자세 피해 큰 일격 (자세 +30)",canon:"EP02 L1832–1907: 돌진해 내려찍기"},
+      {id:"anvil",n:"모루의 심판",k:"R",m:5.5,ult:true,arch:"uppercut",hits:[[.22,.35],[.89,.65]],d:"궁극기. 올려치고 내려찍는 2타 — 두 번째가 본타",canon:"«모루» — 받아서 고정한다"}],
+ ryu:[{id:"fan",n:"쌍날 난무",k:"1",m:2,cd:5,arch:"stabs",hits:[[.37,.3],[.47,.3],[.65,.4]],d:"선택 부위에 빠른 3연속 베기",canon:"EP07 L6991–7052: 두 날, 두 점, 같은 박자"},
+      {id:"shadow",n:"그림자 도약",k:"2",cd:7,arch:"dodge",d:"즉시 회피 + 다음 공격 치명타 확정",canon:"EP21·22·26: 두 겹 잔상"},
+      {id:"storm",n:"칼날 폭풍",k:"3",m:1.1,cd:11,arch:"spin",hits:[[.41,.3],[.61,.35],[.74,.35]],aoe:true,d:"돌며 모든 부위를 세 번 벤다",canon:"EP09 L8014–8034: 두 핀을 교차로 끊는다"},
+      {id:"mark",n:"표식",k:"4",cd:14,arch:"buff",buffDur:2,d:"2초간 받는 피해 40% 감소 (이름과 효과가 어긋남)",canon:"EP10 L8357–8396: 무릎과 목 — 두 점을 표시하고 동시에"},
+      {id:"redshadow",n:"붉은 그림자",k:"R",m:5.2,ult:true,arch:"stabs",hits:[[.30,.15],[.38,.15],[.46,.2],[.57,.2],[.68,.3]],d:"궁극기. 5연속 찌르기 + 출혈 3중첩",canon:"잔상 두 겹이 함께 찌른다"}],
+ sera:[{id:"vial",n:"부식 시약",k:"1",m:1.9,cd:6,arch:"throw",at:.29,flight:.28,blasts:[[0,1]],vcol:"#7dff6a",d:"시약을 던져 맞은 자리에서 터진다",canon:"EP15 L10333–10379: 창밖으로 던진 캐니스터가 푸른 그물이 된다"},
+      {id:"mist",n:"정제 안개",k:"2",cd:9,arch:"dodge",d:"누른 방향 회피 + 다음 공격 치명타 확정",canon:"소설에 없음 (게임 창작)"},
+      {id:"burst",n:"연쇄 폭발",k:"3",m:1.3,cd:12,arch:"throw",at:.20,flight:.26,blasts:[[0,.5],[.2,.5]],aoe:true,vcol:"#ffa640",d:"던진 병이 두 번 연달아 터진다",canon:"—"},
+      {id:"ward",n:"회복 결계",k:"4",cd:15,arch:"ward",buffDur:3,d:"체력 15% 회복 + 3초간 받는 피해 50% 감소",canon:"EP17 L10959–10978: 3초 돔 결계"},
+      {id:"catalyst",n:"촉매 폭발",k:"R",m:5,ult:true,arch:"throw",at:.22,flight:.36,blasts:[[0,1]],vcol:"#c77dff",big:true,d:"궁극기. 큰 병 대형 폭발 + 출혈 2중첩",canon:"EP16 L10844–10857: 빛기둥"}]
+};
+const NAMES={ain:"아인",kain:"카인",ryu:"류",sera:"세라"},WEP={ain:"대형 낫 · 1.86 m",kain:"대검 · 무겁게",ryu:"쌍단검 · 빠르게",sera:"봉 + 시약 · 투척"};
+
+/* build a concept (phases, draw function, layer rows) for one skill */
+function build(hero,sk){
+  const h=HERO[hero],acc=h.acc,T=timing(hero,sk),stop=STOP[hero];
+  const HX=-10, ready=P({x:HX}); let dur,phases=[],hitsT=[],keys,rows=[],extra={};
+  const hitsFor=()=> (sk.hits||[]).map(([f,w])=>({t:timeOf(f,T),w}));
+  const tail=.45;
+  switch(sk.arch){
+  case "sweep": case "overhead": case "leap": case "uppercut": case "stomp":{
+    hitsT=hitsFor();dur=T.dur;const H=hitsT[0].t;
+    const wind=sk.arch==="overhead"||sk.arch==="stomp"?{twist:-25,lean:-8,aR:{abd:150,fwd:-10,bend:30},aL:{abd:140,fwd:0,bend:40},lL:{fwd:20,bend:30},lR:{fwd:-18,bend:20}}
+              :sk.arch==="uppercut"?{twist:-20,lean:18,aR:{abd:30,fwd:-40,bend:10},aL:{abd:30,fwd:-30,bend:30},lL:{fwd:28,bend:44},lR:{fwd:-22,bend:30}}
+              :{twist:-70,lean:-4,aR:{abd:110,fwd:-80,bend:20},aL:{abd:80,fwd:-40,bend:50},lL:{fwd:20,spr:14,bend:30},lR:{fwd:-20,spr:14,bend:22}};
+    const strike=sk.arch==="overhead"||sk.arch==="stomp"?{x:HX+60,twist:10,lean:28,aR:{abd:40,fwd:85,bend:5},aL:{abd:40,fwd:80,bend:15},lL:{fwd:34,bend:40},lR:{fwd:-26,bend:24}}
+              :sk.arch==="uppercut"?{x:HX+40,twist:10,lean:-12,aR:{abd:170,fwd:40,bend:5},aL:{abd:160,fwd:40,bend:10}}
+              :{x:HX+50,twist:65,lean:14,aR:{abd:95,fwd:90,bend:10},aL:{abd:70,fwd:60,bend:30},lL:{fwd:26,spr:14,bend:34},lR:{fwd:-24,spr:14,bend:20}};
+    keys=[{t:0,p:ready},{t:H*.78,p:P(wind,{x:HX-10})},{t:H,p:P(strike),e:"in"},{t:Math.min(dur,H+.25),p:P(strike,{lean:strike.lean+6})},{t:dur,p:ready}];
+    if(sk.arch==="leap"){keys=[{t:0,p:ready},{t:H*.55,p:P(wind,{x:HX-20,air:0})},{t:H*.85,p:P(wind,{x:HX+40,air:80,twist:-90})},{t:H,p:P(strike,{x:HX+80,air:0}),e:"in"},{t:dur,p:P({x:HX+80})}]}
+    if(sk.arch==="stomp"){keys=[{t:0,p:ready},{t:H*.7,p:P(wind,{x:HX+20,air:45})},{t:H,p:P(strike,{x:HX+50,air:0}),e:"in"},{t:dur,p:P({x:HX+50})}]}
+    if(sk.arch==="uppercut"&&hitsT[1]){const H2=hitsT[1].t;keys=[{t:0,p:ready},{t:H*.8,p:P(wind)},{t:H,p:P(strike),e:"in"},{t:H2*.8,p:P(strike,{air:70,twist:-10})},{t:H2,p:P({x:HX+70,twist:10,lean:30,aR:{abd:40,fwd:85,bend:5},aL:{abd:40,fwd:80,bend:15},lL:{fwd:34,bend:40},lR:{fwd:-26,bend:24}}),e:"in"},{t:dur,p:P({x:HX+70})}]}
+    phases=[{t:0,n:"준비",k:"tell",d:"무기를 감아올린다. 날끝에 예고 섬광(0.42×타격 시점부터)."},...hitsT.map((x,i)=>({t:x.t,n:hitsT.length>1?`${i+1}타`:"타격",k:"hit",d:`비중 ${Math.round(x.w*100)}% · 히트스톱 ${(0.13*stop).toFixed(2)} s · 무기 리듬 ×${RHY[hero]}`})),{t:hitsT[hitsT.length-1].t+.12,n:"회수",k:"rec",d:"몸이 따라 나가고 대기로 돌아온다."}];
+    break;}
+  case "spin":{
+    hitsT=hitsFor();dur=T.dur;const H=hitsT[0].t,last=hitsT[hitsT.length-1].t;
+    const out=(yaw,tw)=>P({x:HX+30,yaw,twist:tw,lean:6,aR:{abd:92,fwd:10,bend:6},aL:{abd:92,fwd:10,bend:6},lL:{fwd:10,spr:16,bend:24},lR:{fwd:-10,spr:16,bend:24}});
+    keys=[{t:0,p:ready},{t:H*.7,p:P({x:HX,twist:-70,lean:4,aR:{abd:95,fwd:-60,bend:10},aL:{abd:90,fwd:-50,bend:12},lL:{fwd:14,spr:16,bend:28},lR:{fwd:-14,spr:16,bend:28}})},...hitsT.map((x,i)=>({t:x.t,p:out(90+360*(i+1)/hitsT.length*1.0+(i===hitsT.length-1?0:0),5),e:i?"lin":"in"})),{t:Math.min(dur,last+.2),p:out(450,20),e:"out"},{t:dur,p:P({x:HX+30,yaw:450})}];
+    phases=[{t:0,n:"감기",k:"tell",d:"몸을 반대로 감는다. 발밑에 범위 원."},...hitsT.map((x,i)=>({t:x.t,n:`${i+1}타`,k:"hit",d:`비중 ${Math.round(x.w*100)}%`})),{t:last+.12,n:"회수",k:"rec",d:"원심력에 한 발 밀린다."}];
+    extra.ring=true;break;}
+  case "stabs":{
+    hitsT=hitsFor();dur=T.dur;
+    keys=[{t:0,p:ready},{t:hitsT[0].t*.75,p:P({x:HX-10,lean:14,twist:-20,aR:{abd:40,fwd:10,bend:110},aL:{abd:40,fwd:20,bend:100},lL:{fwd:24,bend:40},lR:{fwd:-18,bend:30}})}];
+    hitsT.forEach((x,i)=>{const R_=i%2===0;keys.push({t:x.t,p:P({x:HX+30+i*14,lean:20,twist:R_?25:-25,aR:{abd:R_?60:40,fwd:R_?92:30,bend:R_?5:100},aL:{abd:R_?40:60,fwd:R_?30:92,bend:R_?100:5},lL:{fwd:30,bend:40},lR:{fwd:-24,bend:30}}),e:"in"})});
+    keys.push({t:dur,p:P({x:HX+30+hitsT.length*14})});
+    phases=[{t:0,n:"파고듦",k:"tell",d:"낮게 붙는다. 두 날에 붉은 섬광."},...hitsT.map((x,i)=>({t:x.t,n:`${i+1}타`,k:"hit",d:`비중 ${Math.round(x.w*100)}% · ${i%2?"왼":"오른"}날`})),{t:hitsT[hitsT.length-1].t+.1,n:"회수",k:"rec",d:""}];
+    extra.after=true;break;}
+  case "dodge":{
+    dur=.62*RHY[hero];
+    keys=[{t:0,p:ready},{t:.08,p:P({x:HX,lean:-10,lL:{fwd:20,bend:40},lR:{fwd:-10,bend:40}})},{t:.34,p:P({x:HX-160,z:hero==="sera"?-90:0,lean:18,air:hero==="ryu"?40:0,lL:{fwd:-20,bend:60},lR:{fwd:30,bend:50}}),e:"out"},{t:dur,p:P({x:HX-170,z:hero==="sera"?-90:0})}];
+    phases=[{t:0,n:"회피",k:"move",d:"무적 0.30 s. 떠난 자리에 잔상이 남는다."},{t:.34,n:"착지",k:"rec",d:"다음 공격 치명타 확정 — 무기에 표시가 켜진다."}];
+    extra.after=true;extra.crit=true;break;}
+  case "buff": case "brace": case "ward":{
+    dur=.7*RHY[hero]+sk.buffDur*.35;
+    const pose=sk.arch==="brace"?P({lean:12,aR:{abd:10,fwd:70,bend:10},aL:{abd:10,fwd:70,bend:10},lL:{fwd:30,spr:18,bend:50},lR:{fwd:-26,spr:18,bend:30}})
+             :sk.arch==="ward"?P({lean:-6,aR:{abd:170,fwd:20,bend:5},aL:{abd:40,fwd:40,bend:60}})
+             :P({lean:4,twist:-10,aR:{abd:30,fwd:60,bend:80},aL:{abd:40,fwd:50,bend:90},lL:{fwd:18,spr:14,bend:24},lR:{fwd:-14,spr:14,bend:20}});
+    keys=[{t:0,p:ready},{t:.3,p:pose,e:"out"},{t:dur-.2,p:pose},{t:dur,p:ready}];
+    phases=[{t:0,n:"발동",k:"buff",d:`${sk.buffDur} s 버프. 몸 윤곽에 ${NAMES[hero]}의 색.`},{t:.3,n:"유지",k:"buff",d:sk.d},{t:dur-.2,n:"해제",k:"rec",d:""}];
+    break;}
+  case "throw":{
+    const rel=timeOf(sk.at,T),fly=sk.flight;dur=Math.max(T.dur,rel+fly+(sk.blasts.at(-1)[0])+.5);
+    keys=[{t:0,p:ready},{t:rel*.8,p:P({twist:-45,lean:-8,aR:{abd:150,fwd:-40,bend:60},aL:{abd:50,fwd:40,bend:40}})},{t:rel,p:P({twist:30,lean:14,aR:{abd:120,fwd:80,bend:10},aL:{abd:30,fwd:-10,bend:30}}),e:"in"},{t:rel+.35,p:ready}];
+    extra.rel=rel;extra.fly=fly;extra.blasts=sk.blasts.map(([o,w])=>({t:rel+fly+o,w}));hitsT=extra.blasts;
+    phases=[{t:0,n:"잡기",k:"tell",d:"병을 뽑아 든다. 병 색이 곧 효과."},{t:rel,n:"투척",k:"fly",d:`비행 ${fly.toFixed(2)} s — 포물선과 병의 빛.`},...extra.blasts.map((b,i)=>({t:b.t,n:extra.blasts.length>1?`${i+1}폭발`:"폭발",k:"hit",d:`비중 ${Math.round(b.w*100)}%`})),{t:extra.blasts.at(-1).t+.15,n:"여운",k:"rec",d:"잔불·안개가 남는다."}];
+    break;}
+  }
+  dur+=tail;
+  const at=t=>fk(track(keys,t),h.S);
+  const hitTimes=hitsT.map(x=>x.t);
+  const H0=hitTimes[0]??(extra.rel||.3);
+  const draw=(t0)=>{
+    // hitstop: freeze briefly at each hit
+    let t=t0,hs=.13*stop*.6;for(const ht of hitTimes){if(t0>ht&&t0<ht+hs)t=ht;else if(t0>=ht+hs)t-=hs}
+    const W=at(t),tip=weaponTip(W,h.wep);
+    // telegraph: floor range + edge glint from 0.42 x hit
+    const tellA=hitTimes.length?cl((t-.42*H0)/(H0*.58))*(t<H0?1:0):0;
+    if(extra.ring||sk.aoe){ring([W.hips[0],0,W.hips[2]],sk.arch==="spin"?230:160,acc,2,.5*tellA+(t>H0&&t<H0+.3?.6*(1-(t-H0)/.3):0),true)}
+    // body
+    drawDummy(hitTimes.some(x=>t>=x&&t<x+.12)?1:0,hitTimes.reduce((a,x)=>a+(t>=x?Math.max(0,6*(1-(t-x)/.5)):0),0));
+    if(extra.after&&t>0){for(const k of[.06,.12,.18]){if(t-k>0){drawHero(at(t-k),h,{ghost:true,alpha:.5*(1-k/.2)})}}}
+    const aura=sk.arch==="buff"||sk.arch==="brace"||sk.arch==="ward"?cl(t/.3)*(t<dur-tail-.2?1:cl(1-(t-(dur-tail-.2))/.3)):0;
+    drawHero(W,h,{edge:tellA>.5||hitTimes.some(x=>t>=x-.05&&t<x+.1),aura:aura+(extra.crit&&t>.34?.4:0)});
+    if(tellA>0)glow(tip,18,hexA(acc,.9),tellA*(.6+.4*Math.sin(t*40)));
+    // trail through the active part
+    if(hitTimes.length&&!extra.rel){const a0=H0*.85,a1=hitTimes.at(-1)+.14;if(t>a0&&t<a1+.2){const al=t<a1?1:1-(t-a1)/.2;
+      trail(g=>weaponTip(at(g),h.wep),t,sk.arch==="spin"?.12:.07,28,sk.ult?24:16,acc,"#fff4e4",al);
+      if(h.wep==="daggers")trail(g=>weaponTipL(at(g)),t,.08,10,12,acc,"#fff4e4",al)}}
+    // impacts
+    hitTimes.forEach((ht,i)=>{const p=[DUMMY[0]-20,110+(i%3)*25,0];const a=t>=ht&&t<ht+.18?1-(t-ht)/.18:0;
+      if(!extra.rel){star(p,sk.ult?60:38,a,acc);burst(t,{t0:ht,n:sk.ult?30:16,at:p,sp:500,el:.3,g:600,life:.4,kind:"spark",col:acc,seed:i*7+3});burst(t,{t0:ht,n:10,at:p,sp:260,el:.5,g:600,life:.9,kind:"straw",seed:i*11+5})}});
+    if(sk.arch==="stomp"||sk.id==="anvil"){const ht=hitTimes.at(-1);if(t>ht){const u=(t-ht)/.5;ring([W.hips[0]+60,0,W.hips[2]],40+u*260,acc,5*(1-u),1-u);burst(t,{t0:ht,n:8,at:[W.hips[0]+60,6,W.hips[2]],sp:80,el:.2,g:0,life:.9,kind:"dust",seed:9})}}
+    if(sk.id==="brace"){const a=aura;ring([W.hips[0]+30,0,W.hips[2]],70,acc,3,a*.8);glow(add(W.haR,[30,-60,0]),50,hexA(acc,.5),a)}
+    if(sk.arch==="ward"){const a=aura;disk([W.hips[0],0,W.hips[2]],170,hexA(acc,.10),a);ring([W.hips[0],0,W.hips[2]],170,acc,2,a*.8);
+      for(let i=0;i<6;i++){const an=i/6*TAU+t;glow([W.hips[0]+Math.cos(an)*170,60+40*Math.sin(t*3+i),W.hips[2]+Math.sin(an)*170],14,hexA(acc,.8),a)}}
+    if(sk.id==="mark"){const a=aura;for(const [p,k] of [[[DUMMY[0]-10,70,0],0],[[DUMMY[0]-10,165,0],1]]){ring(p,26,acc,2,a);glow(p,20,hexA(acc,.7),a*(.6+.4*Math.sin(t*9+k)))}}
+    if(extra.crit&&t>.34){glow(tip,14,hexA(acc,.9),.7+.3*Math.sin(t*20))}
+    // thrown vial
+    if(extra.rel){const s=pj(W.haR);const f0=extra.rel,f1=extra.rel+extra.fly;
+      if(t>=f0&&t<f1){const u=(t-f0)/extra.fly,st=W.haR,en=[DUMMY[0]-10,120,0];const p=[lerp(st[0],en[0],u),lerp(st[1],en[1],u)+Math.sin(u*Math.PI)*90,lerp(st[2],en[2],u)];
+        glow(p,sk.big?30:18,hexA(sk.vcol,.95),1);const pp=[lerp(st[0],en[0],u-.08),lerp(st[1],en[1],u-.08)+Math.sin((u-.08)*Math.PI)*90,lerp(st[2],en[2],u-.08)];trail(()=>pp,0,0,1,6,sk.vcol,"#ffffff",.6)}
+      else if(t<f0&&t>f0*.5)glow(W.haR,14,hexA(sk.vcol,.9),1);
+      extra.blasts.forEach((b,i)=>{const p=[DUMMY[0]-10,120,0],a=t>=b.t&&t<b.t+.25?1-(t-b.t)/.25:0;star(p,sk.big?90:50,a,sk.vcol);
+        burst(t,{t0:b.t,n:sk.big?40:20,at:p,sp:520,el:.5,g:400,life:.7,kind:"spark",col:sk.vcol,seed:20+i});burst(t,{t0:b.t,n:14,at:[p[0],10,0],sp:60,el:.2,g:-30,life:1.6,kind:"ember",col:sk.vcol,seed:30+i});
+        if(sk.big&&t>b.t){const u=(t-b.t)/.8;if(u<1){C.save();C.globalCompositeOperation="lighter";const q=pj([p[0],0,0]);const g=C.createLinearGradient(q[0],q[1],q[0],q[1]-VH*.8);g.addColorStop(0,hexA(sk.vcol,.6*(1-u)));g.addColorStop(1,"rgba(0,0,0,0)");C.fillStyle=g;C.fillRect(q[0]-40*SC,q[1]-VH*.8,80*SC,VH*.8);C.restore()}}})}
+    if(sk.ult&&hitTimes.length){const ht=hitTimes.at(-1);const a=t>ht&&t<ht+.5?1-(t-ht)/.5:0;vignette(.25+.35*a)}else vignette(.25);
+    if(sk.ult&&t<H0&&t>H0*.4)text(sk.n,.5,.2,30,acc,Math.sin((t-H0*.4)/(H0*.6)*Math.PI));
+  };
+  // order sheet rows
+  const hs=hitTimes.map(x=>x.toFixed(2)).join(" · ");
+  rows.push(["몸 동작",`0.00–${(dur-tail).toFixed(2)}`,({sweep:"몸을 감고 낫을 크게 휘둘러 건다",overhead:"대검을 머리 위로 들고 체중을 실어 내려찍는다",leap:"도약해 원을 그리며 내려벤다",uppercut:"올려치고 떠올라 내려찍는다",stomp:"뛰어올라 지면을 내려친다",spin:"반대로 감았다가 한 바퀴 돈다",stabs:"낮게 붙어 좌우 날을 번갈아 찌른다",dodge:"순간 이탈, 착지 뒤 반격 자세",buff:"자세를 낮추고 숨을 고른다",brace:"대검을 앞에 세워 버틴다",ward:"봉을 들어 결계를 편다",throw:"병을 들어 올렸다가 던진다"})[sk.arch],`Mixamo ${({ain:"Great Sword",kain:"Great Sword",ryu:"Sword&Shield/ninja",sera:"Magic/Throw"})[hero]} 팩 → Countess 뼈대 리타깃(허수아비와 같은 파이프라인)`]);
+  if(hitTimes.length&&!extra.rel)rows.push(["예고 섬광",`${(.42*H0).toFixed(2)}–${H0.toFixed(2)}`,`날끝에 ${NAMES[hero]}의 색 섬광. 큰 기술은 발밑 범위 원`,"점광원 + 날끝 소켓 파티클"]);
+  if(hitTimes.length&&!extra.rel)rows.push(["궤적",`${(H0*.85).toFixed(2)}–${(hitTimes.at(-1)+.14).toFixed(2)}`,"흰 심 + 색 가장자리 리본. 궁극기는 더 굵게","무기 끝 소켓 리본 (Niagara 또는 AnimTrail)"]);
+  if(hitTimes.length)rows.push(["타격",hs,`섬광 + 불똥 + 짚 부스러기, 히트스톱 ${(0.13*stop).toFixed(2)} s(무기 리듬 ×${stop})`,"Paragon Countess/Grux 타격 파티클 재색 · 지금 UE 스킬엔 히트스톱 없음 → 추가"]);
+  if(extra.rel)rows.push(["투척",`${extra.rel.toFixed(2)}–${(extra.rel+extra.fly).toFixed(2)}`,"병이 포물선으로 날아간다. 병 색 = 효과","발사체 액터 (지금 UE는 지연 타격만 있음)"]);
+  if(sk.arch==="dodge")rows.push(["잔상","0.00–0.34","떠난 자리에 색 잔상 3겹","포즈 스냅샷 메시 페이드"]);
+  if(sk.buffDur)rows.push(["버프",`0.30–${(dur-tail).toFixed(2)}`,sk.d,"오버레이 재질(허수아비 문양 방식) + 바닥 링"]);
+  rows.push(["소리","—",{ain:"낫 바람소리 → 긁는 금속",kain:"무거운 쇳소리, 바닥 울림",ryu:"짧은 칼바람 연타",sera:"유리병 · 부글거림 · 폭발"}[hero],"Whoosh · Low End Impacts 팩"]);
+  return {hero,sk,dur,phases,draw,rows,title:`${NAMES[hero]} · ${sk.k} ${sk.n}`,src:`${sk.canon} · 배율 ${sk.m??"—"} · 쿨 ${sk.cd??"—"} s`};
+}
+
+const DECISIONS=[
+ {tag:"결정 1 · 세라 무기",h:"세라는 봉인가, 시약병인가",p:"소설: 금속 봉 + 촉매 — 봉인 그물·돔·빛기둥 (EP15–17). 게임: 시약병 투척. UE 몸: 파란 회로 봉 1.1 m.",rec:"권장: 봉을 무기로 든다. 병 투척(1·3·궁극)은 유지하되 «봉 끝에서 쏘는 캐니스터»로 보이게 하고, 2번 «정제 안개»를 소설의 «봉인 그물»(3 s 묶기)로 바꾼다."},
+ {tag:"결정 2 · 류 표식",h:"«표식»이 방어 버프로 되어 있다",p:"게임: 2 s 받는 피해 40% 감소. 소설: 무릎과 목 — 두 점을 표시하고 같은 박자에 찌른다 (EP07·EP10).",rec:"권장: 보스 두 부위에 표식 → 다음 공격이 두 점을 동시에 친다(두 부위 피해). 이름과 소설에 맞는다."},
+ {tag:"결정 3 · 소설 신호를 스킬로",h:"아인의 거리 띠, 카인의 되받아치기",p:"IP 바이블 §8.5는 이 신호들을 핵심 입력으로 원한다. 지금은 EP01 스토리 규칙에만 있다.",rec:"권장: 아인 1번 «낫 베기» = 거리 띠 판정(낫 하나 길이면 날끝 «달콤한 점» 치명 + 주황 궤적, 너무 가까우면 «틱—» 튕김). 카인 2번 «철벽» = 대검을 꽂고 다음 타격을 되돌린다(EP01 되받아치기)."}
+];
+
+/* ---------- UI ---------- */
+const $=id=>document.getElementById(id);
+let hero="ain",skI=0,cur=null,T=0,playing=true,last=0;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function heroTabs(){const nav=$("heroes");nav.replaceChildren();for(const k of Object.keys(SK)){const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.style.setProperty("--c",HERO[k].acc);
+  b.setAttribute("aria-selected",k===hero?"true":"false");const n=document.createElement("span");n.textContent=NAMES[k];const s=document.createElement("small");s.textContent=WEP[k];b.append(n,s);b.onclick=()=>{hero=k;skI=0;heroTabs();select(true)};nav.appendChild(b)}}
+function select(user){
+  document.documentElement.style.setProperty("--c",HERO[hero].acc);
+  const nav=$("skills");nav.replaceChildren();SK[hero].forEach((s,i)=>{const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.setAttribute("aria-selected",i===skI?"true":"false");
+    const k=document.createElement("b");k.textContent=s.k;b.append(k,document.createTextNode(s.n));b.onclick=()=>{skI=i;select(true)};nav.appendChild(b)});
+  cur=build(hero,SK[hero][skI]);$("title").textContent=cur.title;$("src").textContent=cur.src;
+  const bar=$("bar");bar.replaceChildren();cur.phases.forEach((p,i)=>{const e=(cur.phases[i+1]||{t:cur.dur}).t,s=document.createElement("i");s.className="k-"+p.k;s.style.left=(p.t/cur.dur*100)+"%";s.style.width=(Math.max(0,e-p.t)/cur.dur*100)+"%";bar.appendChild(s)});
+  const hd=document.createElement("span");hd.className="head";hd.id="head";bar.appendChild(hd);
+  const tb=$("layers");tb.replaceChildren();cur.rows.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});
+  const ht=cur.phases.find(p=>p.k==="hit");T=user?0:(ht?ht.t+.02:cur.dur*.4);if(user)setPlaying(!reduce);
+  try{history.replaceState(null,"","#"+hero+skI)}catch(e){}
+}
+function setPlaying(v){playing=v;$("play").textContent=v?"일시정지":"재생"}
+$("play").onclick=()=>{if(!playing&&T>=cur.dur-.001)T=0;setPlaying(!playing)};
+$("replay").onclick=()=>{T=0;setPlaying(true)};
+$("scrub").oninput=e=>{T=e.target.value/1000*cur.dur;setPlaying(false)};
+function render(){if(!VW)resize();C=g2;C.setTransform(1,0,0,1,0,0);C.globalAlpha=1;C.globalCompositeOperation="source-over";floor();cur.draw(T);
+  ctx.setTransform(1,0,0,1,0,0);ctx.drawImage(off,0,0);
+  $("time").textContent=`${T.toFixed(2)} / ${cur.dur.toFixed(2)} s`;$("scrub").value=Math.round(T/cur.dur*1000);const hd=$("head");if(hd)hd.style.left=`calc(${T/cur.dur*100}% - 1px)`;
+  let ph=cur.phases[0];for(const p of cur.phases)if(T>=p.t)ph=p;const now=$("now");const key=cur.title+ph.n;if(now.dataset.k!==key){now.dataset.k=key;now.replaceChildren(document.createTextNode(ph.n));if(ph.d){const s=document.createElement("small");s.textContent=ph.d;now.append(s)}}}
+function frame(n){const dt=Math.min(.05,(n-last)/1000||0);last=n;if(playing){T+=dt*parseFloat($("speed").value);if(T>cur.dur){if($("loop").checked)T=0;else{T=cur.dur;setPlaying(false)}}}render();requestAnimationFrame(frame)}
+addEventListener("resize",resize);
+const dec=$("decisions");DECISIONS.forEach(d=>{const c=document.createElement("div");c.className="card";const g=document.createElement("div");g.className="tag";g.textContent=d.tag;const h=document.createElement("h3");h.textContent=d.h;const p=document.createElement("p");p.textContent=d.p;const r=document.createElement("p");r.className="rec";r.textContent=d.rec;c.append(g,h,p,r);dec.appendChild(c)});
+const m=/^#(ain|kain|ryu|sera)([0-4])$/.exec(location.hash);if(m){hero=m[1];skI=+m[2]}
+heroTabs();select(false);setPlaying(!reduce);resize();render();requestAnimationFrame(t=>{last=t;frame(t)});
+</script>
