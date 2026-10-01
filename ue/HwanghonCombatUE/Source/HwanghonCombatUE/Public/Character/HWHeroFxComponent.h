@@ -129,5 +129,6 @@ private:
     float CamBase = -1.f, CamFactor = 1.f, CamUntil = -1.f;
     void CameraPush(float Factor, float Seconds);
     bool IsStraw(const AActor* Landed) const;
+    UStaticMeshComponent* WeaponComp(bool bLeft) const;
     float WorldTime() const;
 };

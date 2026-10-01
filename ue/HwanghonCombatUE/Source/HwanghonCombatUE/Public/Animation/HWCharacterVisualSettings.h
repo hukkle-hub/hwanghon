@@ -7,6 +7,7 @@
 class UAnimInstance;
 class USkeletalMesh;
 class USkeletalMeshComponent;
+class UStaticMesh;
 class UHWAnimationSetAsset;
 
 /** Body + motion set of one playable character (ain/kain/ryu/sera), or the "boss"/"enemy" stand-ins. Presentation only. */
@@ -35,6 +36,27 @@ struct FHWCharacterVisual
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float MeshScale = 1.f;
+
+    // The hero's own weapon (docs/design/175) on the hand bones; the body's built-in blades are hidden.
+    // A weapon mesh stands along +Z with its tip up; Grip is how far up its Z axis the hand closes (cm).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TSoftObjectPtr<UStaticMesh> WeaponR;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TSoftObjectPtr<UStaticMesh> WeaponL;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float GripR = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float GripL = 0.f;
+
+    /** Turn about the blade axis (deg): which way the edge faces. */
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float WeaponTwist = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float WeaponScale = 1.f;
 };
 
 /**
@@ -55,6 +77,9 @@ public:
 
     /** Puts the configured body/anim class on Mesh. Returns the motion set (may be null). */
     static UHWAnimationSetAsset* ApplyTo(FName CharacterId, USkeletalMeshComponent* Mesh, float CapsuleHalfHeight);
+
+    /** Puts the configured weapons in the hands (hiding the body's own blades). Called by ApplyTo. */
+    static void ApplyWeapons(const FHWCharacterVisual& Visual, USkeletalMeshComponent* Mesh);
 
     /**
      * Downed/dead body lies down by ragdoll (no pack has a lying clip, doc 130). Off re-attaches the mesh to

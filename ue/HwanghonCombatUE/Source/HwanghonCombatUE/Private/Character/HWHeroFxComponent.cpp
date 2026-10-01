@@ -131,6 +131,17 @@ bool UHWHeroFxComponent::IsSlotDodge(EHWAbilitySlot Slot) const
 
 FVector UHWHeroFxComponent::Socket(FName Name) const
 {
+    // the hero's own weapon (doc 175) carries the blade sockets; the body's sit on hidden bones
+    if (Hero.IsValid() && (Name == TipR || Name == BaseR || Name == TipL || Name == BaseL))
+    {
+        const bool bLeft = Name == TipL || Name == BaseL;
+        if (const UStaticMeshComponent* W = WeaponComp(bLeft))
+        {
+            const FName S = (Name == TipR || Name == TipL) ? FName(TEXT("TrailTip")) : FName(TEXT("TrailBase"));
+            if (W->DoesSocketExist(S)) return W->GetSocketLocation(S);
+            return W->Bounds.Origin + W->GetComponentQuat().GetUpVector() * W->Bounds.BoxExtent.Size() * 0.5f;
+        }
+    }
     if (!Hero.IsValid()) return FVector::ZeroVector;
     USkeletalMeshComponent* Mesh = Hero->GetMesh();
     return Mesh && Mesh->DoesSocketExist(Name) ? Mesh->GetSocketLocation(Name) : Hero->GetActorLocation();
@@ -237,7 +248,11 @@ void UHWHeroFxComponent::StartTrails(float MaxSeconds)
     const bool bBoth = Id == TEXT("ryu");
     for (int32 Side = 0; Side < (bBoth ? 2 : 1); ++Side)
     {
-        UParticleSystemComponent* C = UGameplayStatics::SpawnEmitterAttached(*PS, Hero->GetMesh(), NAME_None,
+        // on the hero's weapon when it has trail sockets (doc 175), else the body's blade sockets
+        UStaticMeshComponent* W = WeaponComp(Side == 1);
+        const bool bOnWeapon = W && W->DoesSocketExist(TEXT("TrailTip"));
+        USceneComponent* Parent = bOnWeapon ? static_cast<USceneComponent*>(W) : static_cast<USceneComponent*>(Hero->GetMesh());
+        UParticleSystemComponent* C = UGameplayStatics::SpawnEmitterAttached(*PS, Parent, NAME_None,
             FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, false);
         if (!C) continue;
         if (TrailMat)
@@ -245,7 +260,8 @@ void UHWHeroFxComponent::StartTrails(float MaxSeconds)
             // the pack's trail is Countess red; the hero's arc is drawn in the hero's colour
             for (int32 E = 0; E < FMath::Max(1, (*PS)->Emitters.Num()); ++E) C->SetMaterial(E, TrailMat);
         }
-        C->BeginTrails(Side == 0 ? BaseR : BaseL, Side == 0 ? TipR : TipL, ETrailWidthMode_FromCentre, 0.5f);   // thin (doc 174): full width read as a soft crescent
+        if (bOnWeapon) C->BeginTrails(TEXT("TrailBase"), TEXT("TrailTip"), ETrailWidthMode_FromCentre, 0.5f);
+        else C->BeginTrails(Side == 0 ? BaseR : BaseL, Side == 0 ? TipR : TipL, ETrailWidthMode_FromCentre, 0.5f);   // thin (doc 174): full width read as a soft crescent
         Trails.Add(C);
     }
     TrailEndAt = WorldTime() + MaxSeconds;
@@ -306,6 +322,17 @@ void UHWHeroFxComponent::Buff(float Seconds)
     Skin->SetVectorParameterValue(TEXT("Color"), HeroColor());
     Hero->GetMesh()->SetOverlayMaterial(Skin);
     BuffLeft = BuffTotal = Seconds;
+}
+
+UStaticMeshComponent* UHWHeroFxComponent::WeaponComp(bool bLeft) const
+{
+    if (!Hero.IsValid() || !Hero->GetMesh()) return nullptr;
+    const FName Want(bLeft ? TEXT("HWWeaponL") : TEXT("HWWeaponR"));
+    for (USceneComponent* C : Hero->GetMesh()->GetAttachChildren())
+    {
+        if (C && C->GetFName() == Want) return Cast<UStaticMeshComponent>(C);
+    }
+    return nullptr;
 }
 
 bool UHWHeroFxComponent::IsStraw(const AActor* Landed) const
@@ -480,6 +507,7 @@ void UHWHeroFxComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 
     // the tell's glint: up in 0.05 s, gone by 0.3 s
     TipAge += DeltaTime;
+    if (Tip) Tip->SetWorldLocation(Socket(TipR));
     const float TipK = TipAge < 0.05f ? TipAge / 0.05f : FMath::Max(0.f, 1.f - (TipAge - 0.05f) / 0.25f);
     Tip->SetIntensity(TipK * 8000.f);
 

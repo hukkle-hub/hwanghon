@@ -1,4 +1,6 @@
 #include "Animation/HWCharacterVisualSettings.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 
 #include "Animation/AnimInstance.h"
 #include "Animation/HWAnimationSetAsset.h"
@@ -105,5 +107,69 @@ UHWAnimationSetAsset* UHWCharacterVisualSettings::ApplyTo(
         Mesh->SetAnimationMode(EAnimationMode::AnimationSingleNode);
     }
     Mesh->SetVisibility(true, true);
+    ApplyWeapons(*Visual, Mesh);
     return Visual->AnimationSet.LoadSynchronous();
+}
+
+void UHWCharacterVisualSettings::ApplyWeapons(const FHWCharacterVisual& Visual, USkeletalMeshComponent* Mesh)
+{
+    if (!Mesh || (Visual.WeaponR.IsNull() && Visual.WeaponL.IsNull())) return;
+    AActor* Owner = Mesh->GetOwner();
+    // the Countess body carries its twin blades on weapon_r / weapon_l: hidden, our weapon takes the hand
+    const FName Bones[2] = { TEXT("weapon_r"), TEXT("weapon_l") };
+    const TSoftObjectPtr<UStaticMesh>* Weapons[2] = { &Visual.WeaponR, &Visual.WeaponL };
+    const float Grips[2] = { Visual.GripR, Visual.GripL };
+    for (int32 Side = 0; Side < 2; ++Side)
+    {
+        if (Mesh->GetBoneIndex(Bones[Side]) == INDEX_NONE) continue;
+        Mesh->HideBoneByName(Bones[Side], PBO_None);
+        UStaticMesh* W = Weapons[Side]->LoadSynchronous();
+        const FName Name(Side == 0 ? TEXT("HWWeaponR") : TEXT("HWWeaponL"));
+        UStaticMeshComponent* C = nullptr;
+        for (USceneComponent* Child : Mesh->GetAttachChildren())
+        {
+            if (Child && Child->GetFName() == Name) C = Cast<UStaticMeshComponent>(Child);
+        }
+        if (!W)
+        {
+            if (C) C->SetStaticMesh(nullptr);
+            continue;
+        }
+        if (!C)
+        {
+            C = NewObject<UStaticMeshComponent>(Owner ? static_cast<UObject*>(Owner) : static_cast<UObject*>(Mesh), Name);
+            C->SetupAttachment(Mesh, Bones[Side]);
+            C->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            C->SetGenerateOverlapEvents(false);
+            C->RegisterComponent();
+        }
+        C->SetStaticMesh(W);
+        // a hidden bone has zero scale and so would its children: hang the weapon on the parent (the hand) with
+        // weapon_r's reference offset instead
+        // always the hand: on some skins weapon_r hangs off an IK bone that the motion never moves (Kain's sword
+        // floated a metre off). The offset is weapon_r relative to the hand in the reference pose.
+        const FReferenceSkeleton& Ref = Mesh->GetSkeletalMeshAsset()->GetRefSkeleton();
+        auto ComponentSpace = [&Ref](int32 Idx)
+        {
+            FTransform T = FTransform::Identity;
+            for (; Idx != INDEX_NONE; Idx = Ref.GetParentIndex(Idx)) T = T * Ref.GetRefBonePose()[Idx];
+            return T;
+        };
+        const FName Hand(Side == 0 ? TEXT("hand_r") : TEXT("hand_l"));
+        const int32 BoneIdx = Ref.FindBoneIndex(Bones[Side]);
+        const int32 HandIdx = Ref.FindBoneIndex(Hand);
+        const FName Parent = HandIdx != INDEX_NONE ? Hand : Bones[Side];
+        const FTransform BoneLocal = (BoneIdx != INDEX_NONE && HandIdx != INDEX_NONE)
+            ? ComponentSpace(BoneIdx).GetRelativeTransform(ComponentSpace(HandIdx)) : FTransform::Identity;
+        C->AttachToComponent(Mesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, Parent);
+        // the blades run along -Y of weapon_r and +Y of weapon_l (FX_WeaponTip_R/L): the mesh's +Z goes there,
+        // turned about that axis by Twist, and slid so the grip sits in the hand
+        // (the rotation is found, not assumed: a roll of +90 sent the grip the wrong way and Kain's sword hung
+        // 1.4 m off the hand, the hand closing past the blade's tip)
+        const FVector Axis = Side == 0 ? FVector(0.f, -1.f, 0.f) : FVector(0.f, 1.f, 0.f);
+        const FQuat Q = FQuat(Axis, FMath::DegreesToRadians(Visual.WeaponTwist)) * FQuat::FindBetweenNormals(FVector::UpVector, Axis);
+        const float S = FMath::Max(0.01f, Visual.WeaponScale);
+        const FTransform InBone(Q, -Q.RotateVector(FVector(0.f, 0.f, Grips[Side] * S)), FVector(S));
+        C->SetRelativeTransform(InBone * FTransform(BoneLocal.GetRotation(), BoneLocal.GetLocation()));
+    }
 }
