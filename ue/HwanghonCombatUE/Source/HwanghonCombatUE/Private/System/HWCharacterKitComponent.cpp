@@ -1,4 +1,6 @@
 #include "System/HWCharacterKitComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GameFramework/Character.h"
 
 #include "System/HWSystemRulesLibrary.h"
 #include "Character/HWAinCharacter.h"
@@ -277,6 +279,54 @@ void UHWCharacterKitComponent::QueueHit(
     { return A.AtSeconds < B.AtSeconds; });
 }
 
+// The web's skill clock (js/dungeons.js RULES 45-75 and rhythm 135-140; js/skill-events.js timeOf, doc 89/169):
+// hits are clip fractions remapped around clipHit -> hitAt, on per-hero rhythm. UE used the fractions as seconds,
+// so Ain's slash landed at 0.24 s instead of 0.58 s and drifted from the server.
+UHWCharacterKitComponent::FAbilityClock UHWCharacterKitComponent::AbilityClock(FName Char, EHWAbilitySlot Slot)
+{
+    const bool bUlt = Slot == EHWAbilitySlot::Ultimate;
+    float Hit = bUlt ? 0.55f : 0.42f, Dur = bUlt ? 1.20f : 1.00f;
+    if (Char == TEXT("ain"))
+    {
+        if (Slot == EHWAbilitySlot::Skill1) { Hit = 0.58f; Dur = 1.32f; }
+        else if (Slot == EHWAbilitySlot::Skill3) { Hit = 0.64f; Dur = 1.42f; }
+        else if (bUlt) { Hit = 0.96f; Dur = 1.95f; }
+    }
+    const float Rhythm = Char == TEXT("kain") ? 1.2f : Char == TEXT("ryu") ? 0.82f : Char == TEXT("sera") ? 1.06f : 1.f;
+    // the clip's own contact fraction (js/dungeons.js clipContactsByChar); 0.5 where the web has none
+    static const TMap<FName, TArray<float>> ClipHit = {
+        { TEXT("ain"),  { 0.24f, 0.23f, 0.5f, 0.5f, 0.5f } },
+        { TEXT("kain"), { 0.73f, 0.18f, 0.38f, 0.33f, 0.5f } },
+        { TEXT("ryu"),  { 0.65f, 0.5f, 0.65f, 0.5f, 0.46f } },
+        { TEXT("sera"), { 0.29f, 0.5f, 0.20f, 0.5f, 0.5f } },
+    };
+    const int32 I = Slot == EHWAbilitySlot::Skill1 ? 0 : Slot == EHWAbilitySlot::Skill2 ? 1 : Slot == EHWAbilitySlot::Skill3 ? 2
+        : Slot == EHWAbilitySlot::Skill4 ? 3 : 4;
+    const TArray<float>* Row = ClipHit.Find(Char);
+    return { Hit * Rhythm, Dur * Rhythm, Row ? (*Row)[I] : 0.5f };
+}
+
+float UHWCharacterKitComponent::AbilityTimeOf(float Fraction, const FAbilityClock& Clock)
+{
+    const float C = FMath::Clamp(Clock.ClipHit, 0.01f, 0.99f), F = FMath::Clamp(Fraction, 0.f, 1.f);
+    return F <= C ? Clock.Hit * F / C : Clock.Hit + (Clock.Dur - Clock.Hit) * (F - C) / (1.f - C);
+}
+
+float UHWCharacterKitComponent::FirstContactSeconds(FName Char, EHWAbilitySlot Slot)
+{
+    static const TMap<FName, TArray<float>> First = {
+        { TEXT("ain"),  { 0.24f, -1.f, 0.55f, -1.f, 0.22f } },
+        { TEXT("kain"), { 0.73f, -1.f, 0.38f, 0.33f, 0.22f } },
+        { TEXT("ryu"),  { 0.37f, -1.f, 0.41f, -1.f, 0.30f } },
+        { TEXT("sera"), { 0.29f, -1.f, 0.20f, -1.f, 0.22f } },   // release, not the blast
+    };
+    const TArray<float>* Row = First.Find(Char);
+    const int32 I = Slot == EHWAbilitySlot::Skill1 ? 0 : Slot == EHWAbilitySlot::Skill2 ? 1 : Slot == EHWAbilitySlot::Skill3 ? 2
+        : Slot == EHWAbilitySlot::Skill4 ? 3 : 4;
+    if (!Row || (*Row)[I] < 0.f) return -1.f;
+    return AbilityTimeOf((*Row)[I], AbilityClock(Char, Slot));
+}
+
 void UHWCharacterKitComponent::QueueAbilityHits(
     EHWAbilitySlot Slot,
     const FHWCharacterSystemProfile& Profile,
@@ -285,18 +335,20 @@ void UHWCharacterKitComponent::QueueAbilityHits(
 {
     if (AbilityMultiplier <= 0.f) return;
     if (PendingHits.IsEmpty()) PendingAbilityElapsed = 0.f;
+    const FAbilityClock Clock = AbilityClock(CharacterId, Slot);
+    auto T = [&Clock](float F) { return AbilityTimeOf(F, Clock); };
 
     if (Slot == EHWAbilitySlot::Skill1)
     {
-        if (CharacterId == TEXT("ain")) QueueHit(0.24f, AbilityMultiplier, DefaultTier);
-        else if (CharacterId == TEXT("kain")) QueueHit(0.73f, AbilityMultiplier, EHWAttackTier::Smash, false, 1.5f);
+        if (CharacterId == TEXT("ain")) QueueHit(T(0.24f), AbilityMultiplier, DefaultTier);
+        else if (CharacterId == TEXT("kain")) QueueHit(T(0.73f), AbilityMultiplier, EHWAttackTier::Smash, false, 1.5f);
         else if (CharacterId == TEXT("ryu"))
         {
-            QueueHit(0.37f, AbilityMultiplier * 0.30f, DefaultTier);
-            QueueHit(0.47f, AbilityMultiplier * 0.30f, DefaultTier);
-            QueueHit(0.65f, AbilityMultiplier * 0.40f, DefaultTier);
+            QueueHit(T(0.37f), AbilityMultiplier * 0.30f, DefaultTier);
+            QueueHit(T(0.47f), AbilityMultiplier * 0.30f, DefaultTier);
+            QueueHit(T(0.65f), AbilityMultiplier * 0.40f, DefaultTier);
         }
-        else if (CharacterId == TEXT("sera")) QueueHit(0.57f, AbilityMultiplier, DefaultTier);
+        else if (CharacterId == TEXT("sera")) QueueHit(T(0.29f) + 0.28f, AbilityMultiplier, DefaultTier);   // throw: release + flight
         return;
     }
 
@@ -304,51 +356,51 @@ void UHWCharacterKitComponent::QueueAbilityHits(
     {
         if (CharacterId == TEXT("ain"))
         {
-            QueueHit(0.55f, AbilityMultiplier * 0.55f, DefaultTier, true);
-            QueueHit(0.80f, AbilityMultiplier * 0.45f, DefaultTier, true);
+            QueueHit(T(0.55f), AbilityMultiplier * 0.55f, DefaultTier, true);
+            QueueHit(T(0.80f), AbilityMultiplier * 0.45f, DefaultTier, true);
         }
         else if (CharacterId == TEXT("kain"))
         {
-            QueueHit(0.38f, AbilityMultiplier * 0.55f, DefaultTier, true);
-            QueueHit(0.60f, AbilityMultiplier * 0.45f, DefaultTier, true);
+            QueueHit(T(0.38f), AbilityMultiplier * 0.55f, DefaultTier, true);
+            QueueHit(T(0.60f), AbilityMultiplier * 0.45f, DefaultTier, true);
         }
         else if (CharacterId == TEXT("ryu"))
         {
-            QueueHit(0.41f, AbilityMultiplier * 0.30f, DefaultTier, true);
-            QueueHit(0.61f, AbilityMultiplier * 0.35f, DefaultTier, true);
-            QueueHit(0.74f, AbilityMultiplier * 0.35f, DefaultTier, true);
+            QueueHit(T(0.41f), AbilityMultiplier * 0.30f, DefaultTier, true);
+            QueueHit(T(0.61f), AbilityMultiplier * 0.35f, DefaultTier, true);
+            QueueHit(T(0.74f), AbilityMultiplier * 0.35f, DefaultTier, true);
         }
         else if (CharacterId == TEXT("sera"))
         {
-            QueueHit(0.46f, AbilityMultiplier * 0.50f, DefaultTier, true);
-            QueueHit(0.66f, AbilityMultiplier * 0.50f, DefaultTier, true);
+            QueueHit(T(0.20f) + 0.26f, AbilityMultiplier * 0.50f, DefaultTier, true);
+            QueueHit(T(0.20f) + 0.26f + 0.2f, AbilityMultiplier * 0.50f, DefaultTier, true);
         }
         return;
     }
 
     if (Slot == EHWAbilitySlot::Skill4 && CharacterId == TEXT("kain"))
     {
-        QueueHit(0.33f, AbilityMultiplier, EHWAttackTier::Light, false, 1.f, 24.f);
+        QueueHit(T(0.33f), AbilityMultiplier, EHWAttackTier::Light, false, 1.f, 30.f);   // web posture 30
         return;
     }
 
     if (Slot == EHWAbilitySlot::Ultimate)
     {
-        if (CharacterId == TEXT("ain")) QueueHit(0.22f, AbilityMultiplier, EHWAttackTier::Smash);
+        if (CharacterId == TEXT("ain")) QueueHit(T(0.22f), AbilityMultiplier, EHWAttackTier::Smash);
         else if (CharacterId == TEXT("kain"))
         {
-            QueueHit(0.22f, AbilityMultiplier * 0.35f, EHWAttackTier::Smash);
-            QueueHit(0.89f, AbilityMultiplier * 0.65f, EHWAttackTier::Smash);
+            QueueHit(T(0.22f), AbilityMultiplier * 0.35f, EHWAttackTier::Smash);
+            QueueHit(T(0.89f), AbilityMultiplier * 0.65f, EHWAttackTier::Smash);
         }
         else if (CharacterId == TEXT("ryu"))
         {
-            QueueHit(0.30f, AbilityMultiplier * 0.15f, EHWAttackTier::Finisher);
-            QueueHit(0.38f, AbilityMultiplier * 0.15f, EHWAttackTier::Finisher);
-            QueueHit(0.46f, AbilityMultiplier * 0.20f, EHWAttackTier::Finisher);
-            QueueHit(0.57f, AbilityMultiplier * 0.20f, EHWAttackTier::Finisher);
-            QueueHit(0.68f, AbilityMultiplier * 0.30f, EHWAttackTier::Smash);
+            QueueHit(T(0.30f), AbilityMultiplier * 0.15f, EHWAttackTier::Finisher);
+            QueueHit(T(0.38f), AbilityMultiplier * 0.15f, EHWAttackTier::Finisher);
+            QueueHit(T(0.46f), AbilityMultiplier * 0.20f, EHWAttackTier::Finisher);
+            QueueHit(T(0.57f), AbilityMultiplier * 0.20f, EHWAttackTier::Finisher);
+            QueueHit(T(0.68f), AbilityMultiplier * 0.30f, EHWAttackTier::Smash);
         }
-        else if (CharacterId == TEXT("sera")) QueueHit(0.58f, AbilityMultiplier, EHWAttackTier::Smash, true);
+        else if (CharacterId == TEXT("sera")) QueueHit(T(0.22f) + 0.36f, AbilityMultiplier, EHWAttackTier::Smash, true);
     }
 }
 
@@ -414,15 +466,20 @@ void UHWCharacterKitComponent::ResolvePendingHit(const FHWPendingAbilityHit& Hit
 
     if (!Hit.bAoe)
     {
-        ApplyHitToTarget(Locked, Hit);
+        // a skill swung at nothing does not land (it used to hit the lock-on target from anywhere)
+        if (Locked && InReach(Locked, Hit))
+        {
+            if (ApplyHitToTarget(Locked, Hit)) LandHitStop(Locked, Hit);
+        }
         return;
     }
 
     TSet<AHWBossCharacter*> DamagedBosses;
     if (Locked)
     {
-        if (ApplyHitToTarget(Locked, Hit))
+        if (InReach(Locked, Hit) && ApplyHitToTarget(Locked, Hit))
         {
+            LandHitStop(Locked, Hit);
             if (AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Locked))
                 if (AHWBossCharacter* Boss = Part->GetBossCharacter()) DamagedBosses.Add(Boss);
             if (AHWBossCharacter* Boss = Cast<AHWBossCharacter>(Locked)) DamagedBosses.Add(Boss);
@@ -431,7 +488,7 @@ void UHWCharacterKitComponent::ResolvePendingHit(const FHWPendingAbilityHit& Hit
 
     TArray<AActor*> Candidates;
     UGameplayStatics::GetAllActorsWithTag(this, TEXT("LockOnTarget"), Candidates);
-    constexpr float AoeRadiusCm = 650.f;
+    const float AoeRadiusCm = SkillReachCm(true);   // was 650: a spin hit what stood 6.5 m away
 
     for (AActor* Actor : Candidates)
     {
@@ -494,4 +551,47 @@ void UHWCharacterKitComponent::GrantCombatGauge(EHWAttackTier Tier)
 void UHWCharacterKitComponent::BroadcastGauge()
 {
     OnGaugeChanged.Broadcast(CharacterId, UniqueGauge, UltimateGauge);
+}
+
+float UHWCharacterKitComponent::SkillReachCm(bool bAoe) const
+{
+    // weapon reach (web: Ain's scythe 1.86 m; basic attacks 260/300 cm here); Sera throws
+    if (CharacterId == TEXT("sera")) return bAoe ? 420.f : 1200.f;
+    if (bAoe) return CharacterId == TEXT("kain") ? 380.f : 340.f;
+    return CharacterId == TEXT("kain") ? 330.f : CharacterId == TEXT("ryu") ? 250.f : 310.f;
+}
+
+bool UHWCharacterKitComponent::InReach(AActor* Target, const FHWPendingAbilityHit& Hit) const
+{
+    if (!Target || !OwnerCharacter) return false;
+    AActor* Body = Target;
+    if (AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Target))
+    {
+        if (AHWBossCharacter* Boss = Part->GetBossCharacter()) Body = Boss;
+    }
+    float Radius = 0.f;
+    if (const ACharacter* Char = Cast<ACharacter>(Body))
+    {
+        if (Char->GetCapsuleComponent()) Radius = Char->GetCapsuleComponent()->GetScaledCapsuleRadius();
+    }
+    const FVector To = Body->GetActorLocation() - OwnerCharacter->GetActorLocation();
+    if (To.Size2D() - Radius > SkillReachCm(Hit.bAoe)) return false;
+    if (Hit.bAoe || CharacterId == TEXT("sera")) return true;
+    // in front: within 75 degrees of where the body faces
+    return FVector::DotProduct(OwnerCharacter->GetActorForwardVector().GetSafeNormal2D(), To.GetSafeNormal2D()) > FMath::Cos(FMath::DegreesToRadians(75.f));
+}
+
+void UHWCharacterKitComponent::LandHitStop(AActor* Target, const FHWPendingAbilityHit& Hit)
+{
+    // skills had none (basic attacks do: 0.09 / 0.13 / 0.21 s); weapon rhythm stop from the web (doc 169)
+    const float Rhythm = CharacterId == TEXT("kain") ? 1.28f : CharacterId == TEXT("ryu") ? 0.74f : CharacterId == TEXT("sera") ? 0.86f : 1.f;
+    const float Base = Hit.Tier == EHWAttackTier::Smash ? 0.18f : Hit.Tier == EHWAttackTier::Finisher ? 0.13f : 0.10f;
+    const float Seconds = Base * Rhythm;
+    if (Combat) Combat->ApplyHitStop(Seconds);
+    AHWBossCharacter* Boss = Cast<AHWBossCharacter>(Target);
+    if (!Boss)
+    {
+        if (AHWBossPartTarget* Part = Cast<AHWBossPartTarget>(Target)) Boss = Part->GetBossCharacter();
+    }
+    if (Boss) Boss->ApplyHitStop(Seconds);
 }

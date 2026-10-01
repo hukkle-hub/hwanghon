@@ -42,7 +42,16 @@ void UHWPlayerPresentationComponent::BeginPlay()
 
 void UHWPlayerPresentationComponent::HandleAbilityActivated(FName CharacterId, EHWAbilitySlot Slot, float Multiplier)
 {
-    PlayAbility(Slot);
+    // play the clip so its contact frame lands when the kit's hit lands (doc 169)
+    const FHWSequenceBinding* Binding = AnimationSet ? AnimationSet->GetAbilityBinding(Slot) : nullptr;
+    const float Contact = UHWCharacterKitComponent::FirstContactSeconds(CharacterId, Slot);
+    float Rate = 1.f;
+    if (Binding && Binding->Sequence && Contact > 0.05f)
+    {
+        const float Speed = Combat ? FMath::Max(0.01f, Combat->GetAttackSpeedMultiplier()) : 1.f;
+        Rate = FMath::Clamp(Binding->SourceContactNormalized * Binding->Sequence->GetPlayLength() / Contact * Speed, 0.5f, 2.5f);
+    }
+    PlayOneShot(Binding, Rate);
 }
 
 bool UHWPlayerPresentationComponent::PlayAbility(EHWAbilitySlot Slot)
@@ -55,7 +64,7 @@ bool UHWPlayerPresentationComponent::PlayServerClip(FName Clip)
     return AnimationSet && PlayOneShot(AnimationSet->GetServerClipBinding(Clip));
 }
 
-bool UHWPlayerPresentationComponent::PlayOneShot(const FHWSequenceBinding* Binding)
+bool UHWPlayerPresentationComponent::PlayOneShot(const FHWSequenceBinding* Binding, float Rate)
 {
     if (!AnimInstance || !Binding || !Binding->Sequence || (Combat && Combat->IsDead()))
     {
@@ -67,7 +76,7 @@ bool UHWPlayerPresentationComponent::PlayOneShot(const FHWSequenceBinding* Bindi
         StopActive(Binding->BlendIn);
     }
     OneShotMontage = AnimInstance->PlaySlotAnimationAsDynamicMontage(
-        Binding->Sequence, Binding->SlotName, Binding->BlendIn, Binding->BlendOut, 1.f, 1, -1.f, 0.f);
+        Binding->Sequence, Binding->SlotName, Binding->BlendIn, Binding->BlendOut, Rate, 1, -1.f, 0.f);
     return OneShotMontage != nullptr;
 }
 

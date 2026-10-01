@@ -61,7 +61,7 @@ private:
     UFUNCTION()
     void HandleAbilityActivated(FName CharacterId, EHWAbilitySlot Slot, float Multiplier);
 
-    bool PlayOneShot(const FHWSequenceBinding* Binding);
+    bool PlayOneShot(const FHWSequenceBinding* Binding, float Rate = 1.f);
     void UpdateLifePose();
 
     UFUNCTION()

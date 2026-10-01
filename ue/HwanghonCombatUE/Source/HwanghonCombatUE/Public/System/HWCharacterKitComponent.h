@@ -49,6 +49,12 @@ public:
     UPROPERTY(BlueprintAssignable)
     FHWKitAbilitySignature OnAbilityActivated;
 
+    // The web's skill clock (doc 169): seconds of the first contact of a slot for a hero, -1 when it has none.
+    struct FAbilityClock { float Hit; float Dur; float ClipHit = 0.5f; };
+    static FAbilityClock AbilityClock(FName Char, EHWAbilitySlot Slot);
+    static float AbilityTimeOf(float Fraction, const FAbilityClock& Clock);
+    static float FirstContactSeconds(FName Char, EHWAbilitySlot Slot);
+
     UFUNCTION(BlueprintCallable)
     void ConfigureCharacter(FName InCharacterId);
 
@@ -133,4 +139,9 @@ private:
     float UltimateCooldownRemaining = 0.f;
     float PendingAbilityElapsed = 0.f;
     TArray<FHWPendingAbilityHit> PendingHits;
+
+private:
+    float SkillReachCm(bool bAoe) const;
+    bool InReach(AActor* Target, const struct FHWPendingAbilityHit& Hit) const;
+    void LandHitStop(AActor* Target, const struct FHWPendingAbilityHit& Hit);
 };

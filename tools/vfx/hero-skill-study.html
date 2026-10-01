@@ -206,8 +206,9 @@ function drawDummy(hitA,lean=0){const b=pj(DUMMY),h=190*SC;C.save();C.translate(
 const RHY={ain:1,kain:1.2,ryu:.82,sera:1.06}, STOP={ain:1,kain:1.28,ryu:.74,sera:.86};
 const RULE={skill:{hit:.42,dur:1.0,clipHit:.5},ult:{hit:.55,dur:1.2,clipHit:.5}};
 const AINP={slash:{hit:.58,dur:1.32},spin:{hit:.64,dur:1.42},twilight:{hit:.96,dur:1.95}};
+const CLIPHIT={ain:{slash:.24},kain:{cleave:.73,whirl:.38,stomp:.33},ryu:{redshadow:.46,storm:.65,fan:.65},sera:{vial:.29,burst:.20}};   /* js/dungeons.js clipContactsByChar */
 function timing(hero,sk){const base=sk.ult?RULE.ult:RULE.skill,o=hero==="ain"?AINP[sk.id]:null,r=RHY[hero];
-  return {hit:(o?o.hit:base.hit)*r,dur:(o?o.dur:base.dur)*r,clipHit:base.clipHit}}
+  return {hit:(o?o.hit:base.hit)*r,dur:(o?o.dur:base.dur)*r,clipHit:(CLIPHIT[hero]||{})[sk.id]??base.clipHit}}
 function timeOf(f,T){return f<=T.clipHit?f/T.clipHit*T.hit:T.hit+(f-T.clipHit)/(1-T.clipHit)*(T.dur-T.hit)}
 
 /* ---------- skills: data from js/dungeons.js SKILLS, motion archetypes ---------- */
