@@ -2,10 +2,13 @@
 
 #include "Animation/HWRetargetAnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/LODSyncComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Components/StaticMeshComponent.h"
 #include "Dom/JsonObject.h"
 #include "Engine/SkeletalMesh.h"
+#include "StaticMeshResources.h"
+#include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/World.h"
 #include "GameFramework/Character.h"
 #include "GroomAsset.h"
@@ -72,10 +75,13 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
     E->TryGetStringField(TEXT("retargeter"), RetargeterPath);
     E->TryGetStringField(TEXT("hair_mobile"), HairMobilePath);
     // phones draw no hair strands (r.HairStrands.Strands 0): the same curves as ribbons (tools/metahuman/groom_to_mesh.py)
+    // the phone look (ribbon hair, outfit/body/face from LOD1): phones always; -HWMobileHair previews it on PC
 #if PLATFORM_ANDROID || PLATFORM_IOS
+    const bool bPhoneLook = true;
     const bool bStrands = FParse::Param(FCommandLine::Get(), TEXT("HWStrandHair"));
 #else
-    const bool bStrands = !FParse::Param(FCommandLine::Get(), TEXT("HWMobileHair"));
+    const bool bPhoneLook = FParse::Param(FCommandLine::Get(), TEXT("HWMobileHair"));
+    const bool bStrands = !bPhoneLook;
 #endif
     UClass* BP = LoadClass<AActor>(nullptr, *BlueprintPath);
     UIKRetargeter* Retargeter = LoadObject<UIKRetargeter>(nullptr, *RetargeterPath);
@@ -167,9 +173,18 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
     CombatBody->SetVisibility(false, false);   // its children (the weapon) stay
     Body->AddTickPrerequisiteComponent(CombatBody);
 
+    // phones: never the densest LOD (face 19k verts at LOD0, doc 177 §4; outfit 506k triangles at LOD0, doc 184 §7)
+    ULODSyncComponent* Sync = bPhoneLook ? MH->FindComponentByClass<ULODSyncComponent>() : nullptr;
+    if (Sync)
+    {
+        double MinLod = 1.0;
+        E->TryGetNumberField(TEXT("mobile_min_lod"), MinLod);
+        Sync->MinLOD = static_cast<int32>(MinLod);
+    }
     Worn = MH;
     WornId = CharacterId;
     RegripIn = 3;
+    DiagIn = 120;
     SetComponentTickEnabled(true);
     UE_LOG(LogTemp, Display, TEXT("[HWMetaHuman] %s wears %s"), *CharacterId.ToString(), *MH->GetName());
     return true;
@@ -178,8 +193,15 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
 void UHWHeroMetaHumanComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-    if (RegripIn < 0 || --RegripIn > 0) return;
-    SetComponentTickEnabled(false);
+    // what the MetaHuman costs, once, two seconds in (LODs settled): per mesh the drawn LOD, its triangles, sections
+    if (DiagIn > 0 && --DiagIn == 0) LogRenderCost();
+    if (RegripIn < 0 || --RegripIn > 0)
+    {
+        if (DiagIn <= 0 && RegripIn < 0) SetComponentTickEnabled(false);
+        return;
+    }
+    RegripIn = -1;
+    if (DiagIn <= 0) SetComponentTickEnabled(false);
     // The weapons hang on the hidden combat body's hands (HWCharacterVisualSettings::ApplyWeapons). Move each onto the
     // MetaHuman's hand of the same side: same orientation, same offset from the hand, now that both bodies hold the
     // same retargeted pose - otherwise the grip sits where the (bigger) combat body's hand is.
@@ -201,6 +223,44 @@ void UHWHeroMetaHumanComponent::TickComponent(float DeltaTime, ELevelTick TickTy
         C->AttachToComponent(Body, FAttachmentTransformRules::KeepWorldTransform, Hand);
         C->SetWorldTransform(W);
     }
+}
+
+void UHWHeroMetaHumanComponent::LogRenderCost() const
+{
+    AActor* MH = Worn.Get();
+    if (!MH) return;
+    TArray<UMeshComponent*> Meshes;
+    MH->GetComponents(Meshes);
+    int32 Total = 0;
+    for (UMeshComponent* M : Meshes)
+    {
+        if (!M || !M->IsVisible()) continue;
+        int32 Tris = 0, Sections = 0, Lod = -1;
+        if (USkinnedMeshComponent* Sk = Cast<USkinnedMeshComponent>(M))
+        {
+            const FSkeletalMeshRenderData* RD = Sk->GetSkinnedAsset() ? Sk->GetSkinnedAsset()->GetResourceForRendering() : nullptr;
+            Lod = Sk->GetPredictedLODLevel();
+            if (RD && RD->LODRenderData.IsValidIndex(Lod))
+            {
+                Tris = RD->LODRenderData[Lod].GetTotalFaces();
+                Sections = RD->LODRenderData[Lod].RenderSections.Num();
+            }
+        }
+        else if (UStaticMeshComponent* St = Cast<UStaticMeshComponent>(M))
+        {
+            if (St->GetStaticMesh() && St->GetStaticMesh()->GetRenderData())
+            {
+                Lod = 0;
+                Tris = St->GetStaticMesh()->GetRenderData()->LODResources[0].GetNumTriangles();
+                Sections = St->GetStaticMesh()->GetRenderData()->LODResources[0].Sections.Num();
+            }
+        }
+        else continue;
+        Total += Tris;
+        UE_LOG(LogTemp, Display, TEXT("[HWMetaHuman] cost %s %s lod %d tris %d sections %d mat %s"), *WornId.ToString(), *M->GetName(),
+            Lod, Tris, Sections, M->GetMaterial(0) ? *M->GetMaterial(0)->GetName() : TEXT("-"));
+    }
+    UE_LOG(LogTemp, Display, TEXT("[HWMetaHuman] cost %s total tris %d"), *WornId.ToString(), Total);
 }
 
 void UHWHeroMetaHumanComponent::TakeOff()

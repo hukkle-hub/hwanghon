@@ -33,8 +33,10 @@ public:
 
 private:
     void TakeOff();
+    void LogRenderCost() const;
 
     TWeakObjectPtr<AActor> Worn;
     FName WornId = NAME_None;
     int32 RegripIn = -1;   // frames until the weapons move onto the MetaHuman's hands
+    int32 DiagIn = -1;     // frames until the one-off render cost log
 };
