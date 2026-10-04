@@ -31,6 +31,8 @@ public:
 
     void ChooseStory();
     void ChooseShelter();
+    // a Part 1 boss dungeon without reward (docs/design/181 §10): the combat map with ?HWDungeon=<id>
+    void ChooseBossTrial(FName DungeonId);
 
     // what was chosen last ("story" / "shelter"), for QA
     FName LastChoice;

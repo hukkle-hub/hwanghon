@@ -60,12 +60,29 @@ void AHWLoadingHUD::DrawHUD()
         DrawText(Cards[i].Sub, FLinearColor(0.72f, 0.74f, 0.76f, 1), X + 50 * S, Y + 210 * S, nullptr, 0.95f * S, false);
         AddHitBox(FVector2D(X, Y), FVector2D(W, H), Cards[i].Box, true, 10);
     }
+
+    // boss trials under the cards (docs/design/181 §10): the three Part 1 bosses with their designed skills, kept
+    // between the two touch sticks, each button 100 px tall (thumb size on the tablet)
+    struct FBoss { FName Box; const TCHAR* Name; };
+    const FBoss Bosses[] = { {TEXT("BOSS_shadow_fang"), TEXT("섀도우 팽")}, {TEXT("BOSS_subject_09"), TEXT("실험체 09호")}, {TEXT("BOSS_clave"), TEXT("클레이브")} };
+    const float BW = 300 * S, BH = 100 * S, BGap = 24 * S;
+    const float BY = Y + H + 46 * S, BX0 = (Canvas->SizeX - 3 * BW - 2 * BGap) / 2;
+    DrawText(TEXT("보스전 시험 · 보상 없음"), FLinearColor(0.72f, 0.74f, 0.76f, 1), BX0, BY - 34 * S, nullptr, 0.9f * S, false);
+    for (int32 i = 0; i < 3; ++i)
+    {
+        const float X = BX0 + i * (BW + BGap);
+        HWPanel(Canvas, X, BY, BW, BH, FLinearColor(0.03f, 0.034f, 0.04f, 0.94f));
+        HWPanel(Canvas, X, BY + BH - 4 * S, BW, 4 * S, FLinearColor(0.6f, 0.45f, 0.95f, 1));
+        DrawText(Bosses[i].Name, FLinearColor::White, X + 36 * S, BY + 30 * S, nullptr, 1.2f * S, false);
+        AddHitBox(FVector2D(X, BY), FVector2D(BW, BH), Bosses[i].Box, true, 10);
+    }
 }
 
 void AHWLoadingHUD::NotifyHitBoxClick(FName BoxName)
 {
     if (BoxName == TEXT("STORY")) ChooseStory();
     else if (BoxName == TEXT("SHELTER")) ChooseShelter();
+    else if (BoxName.ToString().StartsWith(TEXT("BOSS_"))) ChooseBossTrial(FName(*(TEXT("boss_") + BoxName.ToString().RightChop(5))));
 }
 
 void AHWLoadingHUD::ChooseStory()
@@ -73,6 +90,13 @@ void AHWLoadingHUD::ChooseStory()
     LastChoice = TEXT("story");
     UE_LOG(LogTemp, Display, TEXT("[HWFlow] loading -> story %s"), *StoryMap);
     UGameplayStatics::OpenLevel(this, FName(*StoryMap));
+}
+
+void AHWLoadingHUD::ChooseBossTrial(FName DungeonId)
+{
+    LastChoice = DungeonId;
+    UE_LOG(LogTemp, Display, TEXT("[HWFlow] loading -> boss trial %s"), *DungeonId.ToString());
+    UGameplayStatics::OpenLevel(this, TEXT("Seohan_Combat_VS01"), true, TEXT("HWDungeon=") + DungeonId.ToString());
 }
 
 void AHWLoadingHUD::ChooseShelter()
