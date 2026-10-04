@@ -1,0 +1,23 @@
+{
+ "_doc": "Heroes' MetaHumans over the combat body (docs/design/184). Assets migrated from the MetaHuman lab by tools/metahuman/export_heroes_to_game.py; retargeter by Scripts/ue_metahuman_retarget.py.",
+ "ain": {
+  "blueprint": "/Game/Heroes/Built/Ain/MH_Ain/BP_MH_Ain.BP_MH_Ain_C",
+  "outfit": "/Game/Outfit/Ain/ain_v108m.ain_v108m",
+  "groom": "/Game/GroomCustom/Ain/ain_groom.ain_groom",
+  "groom_material": "/Game/GroomCustom/Ain/MI_Ain_GroomCustom.MI_Ain_GroomCustom",
+  "hide_grooms": [
+   "Hair"
+  ],
+  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH"
+ },
+ "sera": {
+  "blueprint": "/Game/Heroes/Built/Sera/MH_Sera/BP_MH_Sera.BP_MH_Sera_C",
+  "outfit": "/Game/Outfit/Sera/sera_v108m.sera_v108m",
+  "groom": "/Game/GroomCustom/Sera/sera_groom.sera_groom",
+  "groom_material": "/Game/GroomCustom/Sera/MI_Sera_GroomCustom.MI_Sera_GroomCustom",
+  "hide_grooms": [
+   "Hair"
+  ],
+  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH"
+ }
+}

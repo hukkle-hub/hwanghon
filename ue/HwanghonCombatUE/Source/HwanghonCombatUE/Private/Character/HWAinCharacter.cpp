@@ -1,4 +1,5 @@
 #include "Character/HWAinCharacter.h"
+#include "Character/HWHeroMetaHumanComponent.h"
 #include "GameFramework/PlayerInput.h"
 #include "GameFramework/PlayerController.h"
 #include "Character/HWHeadSteadyMeshComponent.h"
@@ -65,6 +66,7 @@ AHWAinCharacter::AHWAinCharacter()
     LockOn = CreateDefaultSubobject<UHWLockOnComponent>(TEXT("LockOn"));
     Presentation = CreateDefaultSubobject<UHWPlayerPresentationComponent>(TEXT("Presentation"));
     CharacterKit = CreateDefaultSubobject<UHWCharacterKitComponent>(TEXT("CharacterKit"));
+    MetaHuman = CreateDefaultSubobject<UHWHeroMetaHumanComponent>(TEXT("MetaHuman"));
     HeroFx = CreateDefaultSubobject<UHWHeroFxComponent>(TEXT("HeroFx"));
     CoopLife = CreateDefaultSubobject<UHWCoopLifeComponent>(TEXT("CoopLife"));
     NetworkBridge = CreateDefaultSubobject<UHWNetworkCombatBridgeComponent>(TEXT("NetworkBridge"));
@@ -90,6 +92,7 @@ void AHWAinCharacter::BeginPlay()
     Combat->OnContact.AddDynamic(this, &AHWAinCharacter::HandleContact);
     CharacterKit->ConfigureCharacter(SystemCharacterId);
     HeroFx->Bind(this, CharacterKit);
+    MetaHuman->Wear(SystemCharacterId);
     if (APlayerController* PC = Cast<APlayerController>(GetController()))
     {
         if (PC->PlayerInput)

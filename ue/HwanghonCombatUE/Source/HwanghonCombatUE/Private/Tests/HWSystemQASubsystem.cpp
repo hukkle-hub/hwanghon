@@ -2176,9 +2176,20 @@ void UHWSystemQASubsystem::TickBossSkill(float Dt)
         const FVector Side = FVector::CrossProduct(Line.GetSafeNormal(), FVector::UpVector);
         // follows half the lift and looks down from 3 m: the floor, not the black sky, is behind the dark body
         const FVector Center = (Boss->GetActorLocation() * 0.6f + Pawn->GetActorLocation() * 0.4f) + FVector(0.f, 0.f, 100.f + 0.5f * Boss->GetPatternLiftCm());
-        const FVector From = Center + Side * 1000.f + FVector(0.f, 0.f, 300.f);
-        C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
-        if (AActor* L = BossShowLight.Get()) L->SetActorRotation(FRotator(-35.f, (Center - From).Rotation().Yaw + 25.f, 0.f));
+        FVector From = Center + Side * 1000.f + FVector(0.f, 0.f, 300.f);
+        if (Param(TEXT("HWQAHeroCam=")) == TEXT("1"))
+        {
+            // the hero close, three-quarters from the front (the MetaHuman check, docs/design/184)
+            const FVector HeroC = Pawn->GetActorLocation() + FVector(0.f, 0.f, 40.f);
+            From = HeroC + (Side * 0.8f + Line.GetSafeNormal() * 0.6f).GetSafeNormal() * 330.f + FVector(0.f, 0.f, 25.f);
+            C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, HeroC));
+            if (AActor* L = BossShowLight.Get()) L->SetActorRotation(FRotator(-35.f, (HeroC - From).Rotation().Yaw + 25.f, 0.f));
+        }
+        else
+        {
+            C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+            if (AActor* L = BossShowLight.Get()) L->SetActorRotation(FRotator(-35.f, (Center - From).Rotation().Yaw + 25.f, 0.f));
+        }
     }
     const double Now = World->GetTimeSeconds();
     if (SkillStage == 1)

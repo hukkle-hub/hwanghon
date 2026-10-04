@@ -160,6 +160,10 @@ private:
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWCharacterKitComponent> CharacterKit;
 
+    // The hero's MetaHuman over the combat body (docs/design/184)
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Hwanghon", meta=(AllowPrivateAccess="true"))
+    TObjectPtr<class UHWHeroMetaHumanComponent> MetaHuman;
+
     UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWHeroFxComponent> HeroFx;   // skill effects (docs/design/171)
 
