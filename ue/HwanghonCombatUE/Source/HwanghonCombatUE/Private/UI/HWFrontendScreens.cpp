@@ -352,6 +352,15 @@ void UHWOfficeQuestScreen::Build(UCanvasPanel* Root)
         Body->AddChild(Facts);
         AddV(Detail, Body, FMargin(0), true);
 
+        // boss trials (docs/design/181 §10): the three Part 1 bosses with their designed skills, no reward
+        UHorizontalBox* Trials = HBox(WidgetTree);
+        AddH(Trials, Text(WidgetTree, NSLOCTEXT("HWUI", "BossTrial", "보스전 시험"), EHWUITextToken::Caption, EHWUIColorToken::TextSecondary), FMargin(0.f, 0.f, 12.f, 0.f))
+            ->SetVerticalAlignment(VAlign_Center);
+        AddH(Trials, SecondaryAction(NSLOCTEXT("HWUI", "TrialShadowFang", "섀도우 팽"), [F]() { if (F) { F->SortieBossTrial(TEXT("boss_shadow_fang")); } }), FMargin(0.f, 0.f, 8.f, 0.f));
+        AddH(Trials, SecondaryAction(NSLOCTEXT("HWUI", "TrialSubject09", "실험체 09호"), [F]() { if (F) { F->SortieBossTrial(TEXT("boss_subject_09")); } }), FMargin(0.f, 0.f, 8.f, 0.f));
+        AddH(Trials, SecondaryAction(NSLOCTEXT("HWUI", "TrialClave", "클레이브"), [F]() { if (F) { F->SortieBossTrial(TEXT("boss_clave")); } }));
+        AddV(Detail, Trials, FMargin(0.f, 14.f, 0.f, 0.f));
+
         UHorizontalBox* Actions = HBox(WidgetTree);
         AddH(Actions, SecondaryAction(NSLOCTEXT("HWUI", "TrainingNoReward", "훈련장 · 보상 없음"), [F]() { if (F) { F->Sortie(NAME_None); } }))
             ->SetVerticalAlignment(VAlign_Bottom);

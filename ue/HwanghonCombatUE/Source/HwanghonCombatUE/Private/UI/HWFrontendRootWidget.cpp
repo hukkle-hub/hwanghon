@@ -465,6 +465,16 @@ void UHWFrontendRootWidget::Sortie(FName QuestId)
     PendingTravel = 1.6f;
 }
 
+void UHWFrontendRootWidget::SortieBossTrial(FName DungeonId)
+{
+    if (UHWQuestRunSubsystem* Runs = RunSystem())
+    {
+        Runs->ResetRun();   // no quest ticket: the run records nothing (HWCombatGameMode, ?HWDungeon=)
+    }
+    PendingDungeon = DungeonId;
+    PendingTravel = 0.6f;
+}
+
 void UHWFrontendRootWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
@@ -499,7 +509,9 @@ void UHWFrontendRootWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
         PendingTravel -= InDeltaTime;
         if (PendingTravel <= 0.f)
         {
-            UGameplayStatics::OpenLevel(this, TrainingMap);
+            const FString Options = PendingDungeon.IsNone() ? FString() : TEXT("HWDungeon=") + PendingDungeon.ToString();
+            PendingDungeon = NAME_None;
+            UGameplayStatics::OpenLevel(this, TrainingMap, true, Options);
         }
     }
 }

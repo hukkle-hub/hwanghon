@@ -62,6 +62,9 @@ public:
     UFUNCTION(BlueprintCallable, Category="Hwanghon|UI")
     void Sortie(FName QuestId);
 
+    // A boss dungeon without reward (docs/design/181 §10): the training map opened with ?HWDungeon=<id>.
+    void SortieBossTrial(FName DungeonId);
+
     UFUNCTION(BlueprintCallable, Category="Hwanghon|UI")
     bool SelectCharacter(FName CharacterId);
 
@@ -106,4 +109,5 @@ private:
     float OverlayT = 1.f;
     float ToastRemaining = 0.f;
     float PendingTravel = -1.f;
+    FName PendingDungeon = NAME_None;
 };
