@@ -76,3 +76,8 @@
   - 5초마다 로그에 남긴다: `[HWPerf] 맵 fps frame(worst) game render gpu`.
   - 태블릿은 실행 옵션을 못 받으므로(Android 16) 게임 안에 넣었다. `adb logcat -s UE`에서 HWPerf를 찾는다.
 - PC: 메타휴먼 아인 + 섀도우 팽 112 fps(8.9 ms, GPU 3.2 ms).
+- 태블릿(Galaxy Tab S11 Ultra, 세라 + 섀도우 팽 던전, `HWPerf`): **60 fps 고정, GPU 15.1 ms**, 게임 스레드 3–8 ms, 렌더 스레드 2–5 ms.
+  - 한도 16.7 ms에 여유가 1.5 ms뿐이다. 실험 프로젝트에서 잰 4인 파티 9.4 ms보다 무겁다(보스, 이펙트, 세라 리본 머리 97k 삼각형).
+  - 줄일 후보: 세라 리본 수 절반, 휴대폰에서 메타휴먼 LOD 한 단계 낮추기.
+- 전투 화면 왼쪽 위 영웅 이름이 늘 «아인»이었다. 실제로 하는 영웅 이름이 나오게 고쳤다.
+- 태블릿 화면: `art/concept/metahuman/tablet_sera.jpg`(첫 화면에서 세라 선택 → 보스 던전의 메타휴먼 세라).

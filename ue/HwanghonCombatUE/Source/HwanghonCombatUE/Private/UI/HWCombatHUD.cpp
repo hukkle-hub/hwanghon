@@ -124,7 +124,16 @@ void UHWCombatHUDWidget::Build(UCanvasPanel* Root)
     UHorizontalBox* Party = HBox(WidgetTree);
     AddH(Party, Sized(WidgetTree, Fit(WidgetTree, Art(TEXT("face-ain")), true), 48.f, 48.f), FMargin(0.f, 0.f, 12.f, 0.f));
     UVerticalBox* PartyNames = VBox(WidgetTree);
-    AddV(PartyNames, Text(WidgetTree, NSLOCTEXT("HWUI", "Ain", "아인"), EHWUITextToken::Caption, EHWUIColorToken::TextPrimary, EHWUIWeight::Medium));
+    // the hero actually played (the start screen's chooser, docs/design/184), not always Ain
+    FText HeroName = NSLOCTEXT("HWUI", "Ain", "아인");
+    if (const AHWAinCharacter* Hero = Cast<AHWAinCharacter>(GetOwningPlayerPawn()))
+    {
+        const FName Id = Hero->GetSystemCharacterId();
+        if (Id == TEXT("sera")) HeroName = NSLOCTEXT("HWUI", "Sera", "세라");
+        else if (Id == TEXT("kain")) HeroName = NSLOCTEXT("HWUI", "Kain", "카인");
+        else if (Id == TEXT("ryu")) HeroName = NSLOCTEXT("HWUI", "Ryu", "류");
+    }
+    AddV(PartyNames, Text(WidgetTree, HeroName, EHWUITextToken::Caption, EHWUIColorToken::TextPrimary, EHWUIWeight::Medium));
     UProgressBar* PartyProgress = nullptr;
     AddV(PartyNames, Bar(WidgetTree, 1.f, C(EHWUIColorToken::TextPrimary), 132.f, 4.f, &PartyProgress), FMargin(0.f, 6.f, 0.f, 0.f));
     PartyHp = PartyProgress;
