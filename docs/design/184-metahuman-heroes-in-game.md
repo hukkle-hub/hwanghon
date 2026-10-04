@@ -48,3 +48,18 @@
 - 무기 손잡이를 메타휴먼 손에 맞추기(지금은 숨은 몸의 손 기준).
 - 표정과 날카로운 눈매(문서 177 남은 것), 천 시뮬레이션.
 - 카인과 류는 아직 메타휴먼이 없다.
+
+## 5. 태블릿 머리
+
+- 첫 태블릿 빌드에서 메타휴먼 아인은 의상까지 나왔지만 **대머리**였다(`art/concept/metahuman/tablet_mh_r1.jpg`).
+  - 안드로이드는 가닥 머리를 그리지 않는다(`r.HairStrands.Strands 0`).
+  - 실험 프로젝트의 태블릿 측정(문서 177 §5) 때는 메타휴먼 기본 머리(카드)여서 보였다.
+- `tools/metahuman/groom_to_mesh.py`
+  - 그룸과 **같은 가닥**(Alembic)에서 3,000가닥을 골라 얇은 띠로 만든다.
+  - 띠 폭은 뿌리 7 mm에서 끝 20 %까지 줄고, 가닥 방향과 머리 중심에서 바깥 방향에 수직으로 눕는다.
+  - 삼각형 수: 아인 16,500, 세라 97,300(긴 머리).
+- `Scripts/ue_hair_mobile.py`: `/Game/HairMobile/<Name>`로 가져오고 양면 머리색 재질(아인 검정, 세라 은색)을 입힌다.
+  - 그룸과 같은 자리에 오는지 범위로 확인했다(중심 차이 약 2 cm).
+- `hero_metahumans.json` `hair_mobile`: 안드로이드와 iOS에서는 이 메시를 그룸 대신 머리 뼈에 붙인다.
+  - PC에서 미리 보기: `-HWMobileHair`. 휴대폰에서 가닥을 시험하려면 `-HWStrandHair`.
+- PC 미리 보기: `art/concept/metahuman/mobile_hair_pc_preview.jpg`.

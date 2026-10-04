@@ -8,7 +8,8 @@
   "hide_grooms": [
    "Hair"
   ],
-  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH"
+  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH",
+  "hair_mobile": "/Game/HairMobile/Ain/SM_ain_hair_mobile.SM_ain_hair_mobile"
  },
  "sera": {
   "blueprint": "/Game/Heroes/Built/Sera/MH_Sera/BP_MH_Sera.BP_MH_Sera_C",
@@ -18,6 +19,7 @@
   "hide_grooms": [
    "Hair"
   ],
-  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH"
+  "retargeter": "/Game/Animation/Retarget/RTG_Countess_To_MH.RTG_Countess_To_MH",
+  "hair_mobile": "/Game/HairMobile/Sera/SM_sera_hair_mobile.SM_sera_hair_mobile"
  }
 }

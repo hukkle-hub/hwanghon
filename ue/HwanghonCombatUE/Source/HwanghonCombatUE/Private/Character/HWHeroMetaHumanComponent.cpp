@@ -2,6 +2,8 @@
 
 #include "Animation/HWRetargetAnimInstance.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Components/StaticMeshComponent.h"
 #include "Dom/JsonObject.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/World.h"
@@ -60,12 +62,19 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
     const TSharedPtr<FJsonObject> E = HeroEntry(CharacterId);
     if (!CombatBody || !E) return false;
 
-    FString BlueprintPath, OutfitPath, GroomPath, GroomMatPath, RetargeterPath;
+    FString BlueprintPath, OutfitPath, GroomPath, GroomMatPath, RetargeterPath, HairMobilePath;
     E->TryGetStringField(TEXT("blueprint"), BlueprintPath);
     E->TryGetStringField(TEXT("outfit"), OutfitPath);
     E->TryGetStringField(TEXT("groom"), GroomPath);
     E->TryGetStringField(TEXT("groom_material"), GroomMatPath);
     E->TryGetStringField(TEXT("retargeter"), RetargeterPath);
+    E->TryGetStringField(TEXT("hair_mobile"), HairMobilePath);
+    // phones draw no hair strands (r.HairStrands.Strands 0): the same curves as ribbons (tools/metahuman/groom_to_mesh.py)
+#if PLATFORM_ANDROID || PLATFORM_IOS
+    const bool bStrands = FParse::Param(FCommandLine::Get(), TEXT("HWStrandHair"));
+#else
+    const bool bStrands = !FParse::Param(FCommandLine::Get(), TEXT("HWMobileHair"));
+#endif
     UClass* BP = LoadClass<AActor>(nullptr, *BlueprintPath);
     UIKRetargeter* Retargeter = LoadObject<UIKRetargeter>(nullptr, *RetargeterPath);
     if (!BP || !Retargeter)
@@ -92,7 +101,21 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
 
     // the strand hair first, while the face is still in its reference pose: authored in the character's space, it is
     // carried by the head bone from where it sits now (lab_build.py does the same in the editor)
-    if (UGroomAsset* Groom = GroomPath.IsEmpty() ? nullptr : LoadObject<UGroomAsset>(nullptr, *GroomPath))
+    UStaticMesh* HairMesh = (!bStrands && !HairMobilePath.IsEmpty()) ? LoadObject<UStaticMesh>(nullptr, *HairMobilePath) : nullptr;
+    if (HairMesh)
+    {
+        UStaticMeshComponent* Hair = NewObject<UStaticMeshComponent>(MH, TEXT("DesignHairMesh"));
+        Hair->SetupAttachment(MH->GetRootComponent());
+        Hair->SetStaticMesh(HairMesh);
+        Hair->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Hair->RegisterComponent();
+        if (Face)
+        {
+            Face->RefreshBoneTransforms();
+            Hair->AttachToComponent(Face, FAttachmentTransformRules::KeepWorldTransform, TEXT("head"));
+        }
+    }
+    else if (UGroomAsset* Groom = GroomPath.IsEmpty() ? nullptr : LoadObject<UGroomAsset>(nullptr, *GroomPath))
     {
         UGroomComponent* Hair = NewObject<UGroomComponent>(MH, TEXT("DesignHair"));
         Hair->SetupAttachment(MH->GetRootComponent());
