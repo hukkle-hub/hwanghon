@@ -66,6 +66,10 @@ void UHWCombatHUDWidget::BindActors()
         if (Boss.IsValid())
         {
             BossMaxHealth = FMath::Max(1.f, Boss->GetMaxHealth());
+            if (BossNameValue.IsEmpty() && !Boss->GetBodyDisplayName().IsEmpty())
+            {
+                SetBossName(Boss->GetBodyDisplayName());   // a boss dungeon's body (story fights set theirs)
+            }
             Boss->OnBossReaction.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossReaction);
             Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossState);
             Boss->OnBossParried.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossParried);

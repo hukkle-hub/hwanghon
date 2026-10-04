@@ -1,5 +1,10 @@
 {
  "_doc": "Designed boss skills beyond the novel's moves (docs/design/181 §8). Each entry is a fight-script pattern (HWScriptedCanonRules::ParseMove); anim = the baked body clip (tools/3d/rig_boss_template.py HW_RIG_TAKES) whose time 0 is the tell's start. counter/parry_stagger: docs/design/183 (parried beats build posture and do not heal; the dive must be dodged).",
+ "_names": {
+  "shadow_fang": "섀도우 팽",
+  "subject_09": "실험체 09호",
+  "clave": "클레이브"
+ },
  "shadow_fang": [
   {
    "ko": "그림자 난무",

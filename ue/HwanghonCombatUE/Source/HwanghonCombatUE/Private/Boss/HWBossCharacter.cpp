@@ -840,8 +840,15 @@ int32 AHWBossCharacter::LoadDesignedSkills(FName VisualId)
     {
         return 0;
     }
+    const FString Key = VisualId.ToString().Replace(TEXT("boss_"), TEXT(""));
+    const TSharedPtr<FJsonObject>* Names = nullptr;
+    FString Name;
+    if (Root->TryGetObjectField(TEXT("_names"), Names) && (*Names)->TryGetStringField(Key, Name))
+    {
+        BodyDisplayName = FText::FromString(Name);
+    }
     const TArray<TSharedPtr<FJsonValue>>* List = nullptr;
-    if (!Root->TryGetArrayField(VisualId.ToString().Replace(TEXT("boss_"), TEXT("")), List)) return 0;
+    if (!Root->TryGetArrayField(Key, List)) return 0;
     int32 N = 0;
     for (const TSharedPtr<FJsonValue>& V : *List)
     {

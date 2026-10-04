@@ -201,6 +201,9 @@ public:
     // How often the designed skills were chosen in this fight (QA, docs/design/181 §10).
     int32 GetDesignedSkillUses() const { return DesignedSkillUses; }
     int32 GetDesignedSkillCount() const { return DesignedRangeCm.Num(); }
+
+    // The novel's name of the worn body (boss_skills.json "_names"), empty for the stand-in boss.
+    const FText& GetBodyDisplayName() const { return BodyDisplayName; }
     void WearStaticBody(class UStaticMesh* Body);
 
     // Boss intro (v10 AHHBossIntroDirector, docs/design/162): held = no AI, no damage taken, no enrage clock -
@@ -290,6 +293,7 @@ private:
     TMap<FName, FVector2D> DesignedRangeCm;   // designed skill id -> (min, max) distance to the target
     FName LastPatternId = NAME_None;
     int32 DesignedSkillUses = 0;
+    FText BodyDisplayName;
     bool bBlinkDone = false;
     void TickBlink();
     int32 RiposteCount = 0;
