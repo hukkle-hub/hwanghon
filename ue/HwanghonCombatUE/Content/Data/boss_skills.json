@@ -126,6 +126,80 @@
    },
    "counter": true,
    "parry_stagger": false
+  },
+  {
+   "ko": "그림자 개화",
+   "clip": "ShadowBloom",
+   "src": "docs/design/181 §2·§11 (말레니아 2단계), tools/vfx/shadowfang-motion-study.html bloom",
+   "tell": 1.0,
+   "strike": 5.4,
+   "recovery": 0.8,
+   "damage": 350,
+   "range": 760,
+   "min": 0,
+   "max": 3000,
+   "phase": 2,
+   "phase_opener": true,
+   "danger_cue": true,
+   "danger_lead": 1.6,
+   "lift": [
+    [
+     0,
+     0
+    ],
+    [
+     1.0,
+     0
+    ],
+    [
+     1.6,
+     600
+    ],
+    [
+     3.2,
+     620
+    ],
+    [
+     3.4,
+     0
+    ],
+    [
+     6.4,
+     0
+    ]
+   ],
+   "beats": [
+    {
+     "at": 2.4,
+     "damage": 3800,
+     "range": 800,
+     "big": true
+    },
+    {
+     "at": 2.9,
+     "damage": 350,
+     "range": 760
+    },
+    {
+     "at": 3.5,
+     "damage": 350,
+     "range": 760
+    },
+    {
+     "at": 4.1,
+     "damage": 350,
+     "range": 760
+    },
+    {
+     "at": 4.7,
+     "damage": 350,
+     "range": 760
+    }
+   ],
+   "anim": {
+    "clip": "atk_sfbloom",
+    "length_s": 6.4
+   }
   }
  ],
  "subject_09": [
@@ -164,6 +238,57 @@
    "anim": {
     "clip": "atk_s09frenzy",
     "length_s": 4.0
+   }
+  },
+  {
+   "ko": "방전 폭우",
+   "clip": "S09Storm",
+   "src": "docs/design/181 §2·§11 (날씨 변환), tools/vfx/boss_skill_animatic.py s09_storm",
+   "tell": 1.6,
+   "strike": 3.2,
+   "recovery": 0.4,
+   "damage": 2600,
+   "range": 99999,
+   "min": 0,
+   "max": 99999,
+   "phase": 2,
+   "phase_opener": true,
+   "target_lead": 1.2,
+   "beats": [
+    {
+     "at": 1.2,
+     "at_target": true,
+     "radius": 140
+    },
+    {
+     "at": 1.55,
+     "at_target": true,
+     "radius": 140
+    },
+    {
+     "at": 1.9,
+     "at_target": true,
+     "radius": 140
+    },
+    {
+     "at": 2.25,
+     "at_target": true,
+     "radius": 140
+    },
+    {
+     "at": 2.6,
+     "at_target": true,
+     "radius": 140
+    },
+    {
+     "at": 2.95,
+     "at_target": true,
+     "radius": 140
+    }
+   ],
+   "anim": {
+    "clip": "atk_s09storm",
+    "length_s": 5.2
    }
   }
  ],
@@ -221,6 +346,44 @@
     "length_s": 4.0
    },
    "danger_cue": true
+  },
+  {
+   "ko": "셔터 폭풍",
+   "clip": "ClaveStorm",
+   "src": "docs/design/181 §2·§11 (라다안 2단계, 안전 지대 2곳이 돌아감)",
+   "tell": 1.2,
+   "strike": 2.8,
+   "recovery": 1.2,
+   "damage": 2800,
+   "range": 1300,
+   "min": 0,
+   "max": 99999,
+   "phase": 2,
+   "phase_opener": true,
+   "beats": [
+    {
+     "at": 0.4,
+     "safe_deg": 70,
+     "safe_at": 0,
+     "big": true
+    },
+    {
+     "at": 1.4,
+     "safe_deg": 70,
+     "safe_at": 60,
+     "big": true
+    },
+    {
+     "at": 2.4,
+     "safe_deg": 70,
+     "safe_at": 120,
+     "big": true
+    }
+   ],
+   "anim": {
+    "clip": "atk_clavestorm",
+    "length_s": 5.2
+   }
   }
  ]
 }

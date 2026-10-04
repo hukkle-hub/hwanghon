@@ -113,6 +113,10 @@ void UHWScriptedCanonRules::ParseMove(const TSharedPtr<FJsonObject>& P, FHWCanon
             Each.RangeCm = Num(BO, TEXT("range"), B.RangeCm);
             Each.bBig = BO && BO->HasTypedField<EJson::Boolean>(TEXT("big")) && BO->GetBoolField(TEXT("big"));
             Each.MinRangeCm = Num(BO, TEXT("min_range"), 0.f);
+            Each.bAtTarget = BO && BO->HasTypedField<EJson::Boolean>(TEXT("at_target")) && BO->GetBoolField(TEXT("at_target"));
+            Each.SpotRadiusCm = Num(BO, TEXT("radius"), 140.f);
+            Each.SafeDeg = Num(BO, TEXT("safe_deg"), 0.f);
+            Each.SafeAtDeg = Num(BO, TEXT("safe_at"), 0.f);
         }
     }
     else
@@ -135,6 +139,10 @@ void UHWScriptedCanonRules::ParseMove(const TSharedPtr<FJsonObject>& P, FHWCanon
     }
     if (P->HasTypedField<EJson::Boolean>(TEXT("parry_stagger"))) M.Spec.bCounterStaggers = P->GetBoolField(TEXT("parry_stagger"));
     M.Spec.bDangerCue = P->HasTypedField<EJson::Boolean>(TEXT("danger_cue")) && P->GetBoolField(TEXT("danger_cue"));
+    M.Spec.DangerLead = Num(P, TEXT("danger_lead"), 0.5f);
+    M.Spec.TargetLead = Num(P, TEXT("target_lead"), 1.2f);
+    M.Spec.MinPhase = FMath::Max(1, static_cast<int32>(Num(P, TEXT("phase"), 1.f)));
+    M.Spec.bPhaseOpener = P->HasTypedField<EJson::Boolean>(TEXT("phase_opener")) && P->GetBoolField(TEXT("phase_opener"));
     // "blink": [vanish at, reappear at, cm behind the target] (seconds from the tell's start)
     const TArray<TSharedPtr<FJsonValue>>* Blink = nullptr;
     if (P->TryGetArrayField(TEXT("blink"), Blink) && Blink->Num() == 3)

@@ -58,7 +58,11 @@ void AHWBossCharacter::BeginPlay()
 
     RuntimeTuning = NewObject<UHWCombatTuningAsset>(this, TEXT("BossRuntimeTuning"));
     TargetPlayer = Cast<AHWAinCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
-    if (BossSystem) BossSystem->InitializeBoss(Health);
+    if (BossSystem)
+    {
+        BossSystem->InitializeBoss(Health);
+        BossSystem->OnPhaseChanged.AddUniqueDynamic(this, &AHWBossCharacter::HandlePhaseChanged);
+    }
 
     if (IsDead())
     {
@@ -147,6 +151,7 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
 
     TickLunge(DeltaSeconds);
     TickBlink();
+    TickBeatSpots();
 
     const float SystemSpeed =
         BossSystem && (State == EHWBossState::Tell
@@ -350,6 +355,9 @@ void AHWBossCharacter::BeginPattern(const FHWBossPatternSpec& Pattern)
 
     CurrentPattern = Pattern;
     bBlinkDone = false;
+    BeatSpots.Reset();
+    PatternForward = TargetPlayer ? (TargetPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal2D() : GetActorForwardVector();
+    if (PatternForward.IsNearlyZero()) PatternForward = GetActorForwardVector();
     State = EHWBossState::Tell;
     StateElapsed = 0.f;
     NextBeatIndex = 0;
@@ -446,10 +454,21 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
         return;
     }
 
-    const float Distance = FVector::Dist2D(GetActorLocation(), TargetPlayer->GetActorLocation());
-    if (Distance > Beat.RangeCm || Distance < Beat.MinRangeCm)
+    if (Beat.bAtTarget)
     {
-        return;
+        FVector Spot;
+        if (!GetBeatSpot(BeatIndex, Spot) || FVector::Dist2D(Spot, TargetPlayer->GetActorLocation()) > Beat.SpotRadiusCm)
+        {
+            return;   // stepped out of the marked circle
+        }
+    }
+    else
+    {
+        const float Distance = FVector::Dist2D(GetActorLocation(), TargetPlayer->GetActorLocation());
+        if (Distance > Beat.RangeCm || Distance < Beat.MinRangeCm || IsInSafeSlice(Beat, TargetPlayer->GetActorLocation()))
+        {
+            return;
+        }
     }
 
     const bool bLanded = PlayerCombat->ApplyIncomingDamage(Beat.Damage * (BossSystem ? BossSystem->GetOutgoingDamageScale() : 1.f),
@@ -482,6 +501,24 @@ bool AHWBossCharacter::IsBlinkHidden() const
 {
     const float T = GetPatternTime();
     return CurrentPattern.BlinkAt >= 0.f && T >= CurrentPattern.BlinkHideAt && T < CurrentPattern.BlinkAt;
+}
+
+void AHWBossCharacter::TickBeatSpots()
+{
+    if (!TargetPlayer) return;
+    const float T = GetPatternTime();
+    if (T < 0.f) return;
+    for (int32 K = 0; K < CurrentPattern.Beats.Num(); ++K)
+    {
+        const FHWBossBeatSpec& B = CurrentPattern.Beats[K];
+        const float Hit = CurrentPattern.TellDuration + B.At;
+        if (!B.bAtTarget || BeatSpots.Contains(K) || T < Hit - CurrentPattern.TargetLead) continue;
+        // where the target stands now, a little off so standing still is not quite safe either
+        const FVector2D J = FMath::RandPointInCircle(B.SpotRadiusCm * 0.4f);
+        const FVector At = TargetPlayer->GetActorLocation() + FVector(J.X, J.Y, 0.f);
+        BeatSpots.Add(K, At);
+        OnBossSpotMarked.Broadcast(K, At, B.SpotRadiusCm, Hit - T);
+    }
 }
 
 void AHWBossCharacter::TickBlink()
@@ -553,6 +590,16 @@ void AHWBossCharacter::ChooseNextPattern()
     {
         return;
     }
+    if (RuntimeTuning->BossPatterns.IsValidIndex(PendingOpener))
+    {
+        // a new phase opens with its move (docs/design/181 §11)
+        const int32 Opener = PendingOpener;
+        PendingOpener = INDEX_NONE;
+        LastPatternId = RuntimeTuning->BossPatterns[Opener].Id;
+        ++DesignedSkillUses;
+        BeginPattern(RuntimeTuning->BossPatterns[Opener]);
+        return;
+    }
 
     const float Distance = FVector::Dist2D(GetActorLocation(), TargetPlayer->GetActorLocation());
 
@@ -563,6 +610,11 @@ void AHWBossCharacter::ChooseNextPattern()
         const int32 SystemPhase = BossSystem ? BossSystem->GetPhase() : 1;
 
         if (SystemPhase == 1 && Pattern.Id == "GroundWave")
+        {
+            continue;
+        }
+
+        if (Pattern.MinPhase > SystemPhase || Pattern.bPhaseOpener)
         {
             continue;
         }
@@ -828,6 +880,20 @@ void AHWBossCharacter::WearBody(FName VisualId)
         GetMesh()->SetRelativeScale3D(GetMesh()->GetRelativeScale3D() / Scale);
     }
     LoadDesignedSkills(VisualId);
+}
+
+void AHWBossCharacter::HandlePhaseChanged(int32 NewPhase)
+{
+    if (!RuntimeTuning || IsDead()) return;
+    for (int32 I = 0; I < RuntimeTuning->BossPatterns.Num(); ++I)
+    {
+        const FHWBossPatternSpec& P = RuntimeTuning->BossPatterns[I];
+        if (P.bPhaseOpener && P.MinPhase == NewPhase)
+        {
+            PendingOpener = I;
+            return;
+        }
+    }
 }
 
 int32 AHWBossCharacter::LoadDesignedSkills(FName VisualId)

@@ -33,6 +33,7 @@ void UHWBossSkillFxComponent::BeginPlay()
     Boss->OnBossRiposte.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleRiposte);
     Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleState);
     Boss->OnBossBeat.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleBeat);
+    Boss->OnBossSpotMarked.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleSpot);
 }
 
 float UHWBossSkillFxComponent::FloorZ() const
@@ -102,6 +103,34 @@ void UHWBossSkillFxComponent::HandleState(EHWBossState NewState, FName PatternId
     bWatchLanding = P && P->GetShownLiftCm() > 50.f;   // broken in the air: it will hit the floor
 }
 
+void UHWBossSkillFxComponent::HandleSpot(int32 BeatIndex, FVector Spot, float RadiusCm, float Seconds)
+{
+    // the lightning's circle (animatic s09_storm: pale blue, 1.2 s): embers on its edge for as long as it waits
+    AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld());
+    if (!Fx) return;
+    ++NSpot;
+    const FLinearColor Volt(0.62f, 0.78f, 1.f);
+    const float Z = FloorZ() + 3.f;
+    // the turning ring arcs need an actor to turn around: a bare anchor at the spot, gone when the bolt has landed
+    FActorSpawnParameters SP;
+    SP.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    if (AActor* Anchor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass(), FTransform(FVector(Spot.X, Spot.Y, Z)), SP))
+    {
+        USceneComponent* Root = NewObject<USceneComponent>(Anchor, TEXT("Root"));
+        Anchor->SetRootComponent(Root);
+        Root->RegisterComponent();
+        Anchor->SetActorLocation(FVector(Spot.X, Spot.Y, Z));
+        Anchor->SetLifeSpan(Seconds + 0.6f);
+        Fx->Rings(Anchor, Volt, RadiusCm, Seconds + 0.05f, Z);
+    }
+    for (int32 I = 0; I < 20; ++I)
+    {
+        const float A = 2.f * PI * I / 20.f;
+        Fx->Embers(FVector(Spot.X + RadiusCm * FMath::Cos(A), Spot.Y + RadiusCm * FMath::Sin(A), Z), 2, Volt, 16.f, Seconds + 0.1f);
+    }
+    Fx->Embers(FVector(Spot.X, Spot.Y, Z), 6, Volt, RadiusCm * 0.6f, Seconds + 0.1f);
+}
+
 void UHWBossSkillFxComponent::HandleBeat(FName PatternId, int32 BeatIndex)
 {
     // a beat that reaches out from an inner edge is a blast on the ground out in front (the Clave's chain): draw it
@@ -112,6 +141,77 @@ void UHWBossSkillFxComponent::HandleBeat(FName PatternId, int32 BeatIndex)
     AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld());
     if (!Fx) return;
     const FLinearColor Fire(1.f, 0.48f, 0.14f);
+    const FLinearColor Shade(0.36f, 0.24f, 0.62f);   // Shadow Fang's violet
+    if (B.SafeDeg > 0.f)
+    {
+        // the whole floor goes up but the two safe slices: blasts on a polar grid outside them
+        ++NBlast;
+        const FVector O(Boss->GetActorLocation().X, Boss->GetActorLocation().Y, FloorZ() + 15.f);
+        for (float R = 250.f; R <= B.RangeCm; R += 250.f)
+        {
+            for (float D = 0.f; D < 360.f; D += 30.f)
+            {
+                const float A = FMath::DegreesToRadians(D + FMath::FRandRange(-8.f, 8.f));
+                const FVector P = O + FVector(R * FMath::Cos(A), R * FMath::Sin(A), 0.f);
+                if (Boss->IsInSafeSlice(B, P)) continue;
+                Fx->Puff(P, 1, Fire, 110.f, 0.5f, 40.f, 90.f);
+                if (FMath::RandBool()) Fx->Sparks(P, FVector::UpVector, 5, Fire, 700.f, 50.f, 0.3f, 980.f, 2.f);
+            }
+        }
+        Fx->Crack(O, 260.f, 2.f);
+        ScreenFlash(Fire, 0.2f, 0.08f);
+        Shake(0.3f, 10.f);
+        return;
+    }
+    FVector Spot;
+    if (B.bAtTarget && Boss->GetBeatSpot(BeatIndex, Spot))
+    {
+        // the bolt: a white-blue streak down from the sky onto the spot, needles and a crack where it lands
+        ++NBolt;
+        const FLinearColor Bolt(0.85f, 0.92f, 1.f);
+        const FVector G(Spot.X, Spot.Y, FloorZ() + 10.f);
+        Fx->Sparks(G + FVector(0.f, 0.f, 1400.f), -FVector::UpVector, 26, Bolt, 9000.f, 3.f, 0.14f, 0.f, 7.f);
+        Fx->Needles(G, 22, Bolt, 1100.f, 0.2f, 0.15f);
+        Fx->LensStreak(G + FVector(0.f, 0.f, 120.f), Bolt, 900.f);
+        Fx->Puff(G, 5, FLinearColor(0.5f, 0.55f, 0.65f), 90.f, 0.5f, 60.f, 80.f);
+        Fx->Crack(G, B.SpotRadiusCm, 1.8f);
+        ScreenFlash(Bolt, 0.18f, 0.05f);
+        Shake(0.12f, 6.f);
+        return;
+    }
+    if (S.LiftKeys.Num() > 0 && S.bDangerCue && B.MinRangeCm <= 0.f)
+    {
+        // an aerial move's ground blows (the bloom, motion study tab 3): the burst opens petals over its whole reach,
+        // the pool ticks leave sparks lying in it
+        const FVector C(Boss->GetActorLocation().X, Boss->GetActorLocation().Y, FloorZ() + 15.f);
+        if (B.bBig)
+        {
+            ++NBlast;
+            for (int32 Ring = 1; Ring <= 3; ++Ring)
+            {
+                const float R = B.RangeCm * Ring / 3.f;
+                for (int32 I = 0; I < 6 * Ring; ++I)
+                {
+                    const float A = 2.f * PI * (I + 0.5f * Ring) / (6 * Ring);
+                    Fx->Puff(C + FVector(R * FMath::Cos(A), R * FMath::Sin(A), 0.f), 2, Dust, 140.f, 0.9f, 60.f, 50.f);
+                }
+            }
+            Fx->Needles(C + FVector(0.f, 0.f, 60.f), 40, Shade, 1600.f, 0.3f, 0.05f);
+            Fx->LensStreak(C + FVector(0.f, 0.f, 120.f), Shade, 1400.f);
+            Fx->Crack(C, 320.f, 3.5f);
+            ScreenFlash(Shade, 0.35f, 0.1f);
+            Shake(0.35f, 12.f);
+        }
+        else
+        {
+            for (int32 I = 0; I < 5; ++I)
+            {
+                const FVector2D D = FMath::RandPointInCircle(B.RangeCm * 0.9f);
+                Fx->Embers(C + FVector(D.X, D.Y, -10.f), 2, Shade, 30.f, 0.7f);
+            }
+        }
+        return;
+    }
     if (B.MinRangeCm > 0.f)
     {
         ++NBlast;
@@ -164,11 +264,39 @@ void UHWBossSkillFxComponent::TickDanger()
     for (int32 K = 0; K < S.Beats.Num(); ++K)
     {
         const FHWBossBeatSpec& B = S.Beats[K];
+        if (B.bAtTarget) continue;   // marks its own circle (HandleSpot)
+        if (B.SafeDeg > 0.f)
+        {
+            // the shutter storm: 0.8 s before, the two safe slices are laid out in teal embers, the arena edge in
+            // red-orange arcs (the whole floor else is the blast)
+            const float Hit = S.TellDuration + B.At;
+            if (T < Hit - 0.8f || DangerFired.Contains(K * 4 + 3)) continue;
+            DangerFired.Add(K * 4 + 3);
+            ++NDanger;
+            const FLinearColor Safe(0.25f, 0.95f, 0.8f);
+            const FVector O(Boss->GetActorLocation().X, Boss->GetActorLocation().Y, FloorZ() + 3.f);
+            const float Base = FMath::RadiansToDegrees(FMath::Atan2(Boss->GetPatternForward().Y, Boss->GetPatternForward().X));
+            for (const float Ctr : { B.SafeAtDeg, B.SafeAtDeg + 180.f })
+            {
+                for (const float Edge : { -0.5f, 0.f, 0.5f })
+                {
+                    const float A = FMath::DegreesToRadians(Base + Ctr + Edge * B.SafeDeg);
+                    for (float R = 200.f; R <= B.RangeCm; R += 120.f)
+                    {
+                        Fx->Embers(O + FVector(R * FMath::Cos(A), R * FMath::Sin(A), 0.f), Edge == 0.f ? 1 : 2, Safe, 14.f, 0.95f);
+                    }
+                }
+            }
+            Fx->Rings(Boss, Danger, B.RangeCm, 0.85f, FloorZ() + 4.f);
+            const FVector Chest = ChestPoint();
+            Fx->LensStreak(Chest, Danger, 520.f);
+            continue;
+        }
         const bool bShut = !B.bCounterable || !S.bCounterable;
         if (!bShut || !(S.bDangerCue || S.bCounterable)) continue;
         if (K > 0 && !(S.Beats[K - 1].bCounterable && S.bCounterable)) continue;   // one cue per run of shut beats
         const float Hit = S.TellDuration + B.At;
-        const float Cues[3] = { Hit - 0.85f, Hit - 0.63f, Hit - 0.5f };
+        const float Cues[3] = { Hit - 0.85f, Hit - 0.63f, Hit - FMath::Max(0.5f, S.DangerLead) };
         for (int32 C = 0; C < 3; ++C)
         {
             if (T < Cues[C] || DangerFired.Contains(K * 4 + C)) continue;
@@ -282,5 +410,5 @@ void UHWBossSkillFxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 FString UHWBossSkillFxComponent::Describe() const
 {
-    return FString::Printf(TEXT("skillfx parry %d break %d land %d riposte %d danger %d blast %d smoke %d"), NParry, NBreak, NLand, NRiposte, NDanger, NBlast, NSmoke);
+    return FString::Printf(TEXT("skillfx parry %d break %d land %d riposte %d danger %d blast %d smoke %d spot %d bolt %d"), NParry, NBreak, NLand, NRiposte, NDanger, NBlast, NSmoke, NSpot, NBolt);
 }

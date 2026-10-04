@@ -2199,6 +2199,22 @@ void UHWSystemQASubsystem::TickBossSkill(float Dt)
     if (SkillStage == 2)
     {
         const float T = static_cast<float>(Now - SkillStartedAt);
+        // -HWQAMove=1: keep stepping 2.6 m the same way out of each marked circle 0.4 s before it lands (at-target beats)
+        if (Param(TEXT("HWQAMove=")) == TEXT("1"))
+        {
+            const float BossT = Boss->GetPatternTime();
+            for (int32 K = 0; K < SkillSpec.Beats.Num(); ++K)
+            {
+                const FHWBossBeatSpec& B = SkillSpec.Beats[K];
+                FVector Spot;
+                if (!B.bAtTarget || SkillDodged.Contains(K) || !Boss->GetBeatSpot(K, Spot)) continue;
+                if (BossT < SkillSpec.TellDuration + B.At - 0.4f) continue;
+                SkillDodged.Add(K);
+                const FVector Side(0.f, 260.f, 0.f);   // keep running one way: the older circles stay behind
+                Pawn->SetActorLocation(Pawn->GetActorLocation() + Side, true);
+                Note(FString::Printf(TEXT("dodge beat %d t=%.2f"), K, T));
+            }
+        }
         // -HWQAParry=1 (docs/design/183): counter 0.10 s before every parriable beat; on a posture break step in front
         // and swing once (the riposte)
         if (Param(TEXT("HWQAParry=")) == TEXT("1"))

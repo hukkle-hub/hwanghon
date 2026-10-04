@@ -15,6 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharact
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossParriedSignature, FName, PatternId, int32, BeatIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossRiposteSignature, float, Damage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossBeatSignature, FName, PatternId, int32, BeatIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FHWBossSpotSignature, int32, BeatIndex, FVector, Spot, float, RadiusCm, float, Seconds);
 
 class UHWCombatTuningAsset;
 class AHWAinCharacter;
@@ -53,6 +54,35 @@ public:
     // Every beat as it lands (before parry/range is judged): the move's own FX (the Clave's walking blasts).
     UPROPERTY(BlueprintAssignable, Category="Boss")
     FHWBossBeatSignature OnBossBeat;
+
+    // An at-target beat chose its spot (Seconds until it lands): the warning circle.
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossSpotSignature OnBossSpotMarked;
+
+    // The boss's facing when the current move began: safe slices are measured from it.
+    FVector GetPatternForward() const { return PatternForward; }
+
+    // Is Where inside one of the beat's two safe slices (or the beat has none)?
+    bool IsInSafeSlice(const FHWBossBeatSpec& Beat, const FVector& Where) const
+    {
+        if (Beat.SafeDeg <= 0.f) return false;
+        FVector To = Where - GetActorLocation();
+        To.Z = 0.f;
+        if (To.IsNearlyZero()) return false;
+        const float A = FMath::RadiansToDegrees(FMath::Atan2(To.Y, To.X) - FMath::Atan2(PatternForward.Y, PatternForward.X));
+        for (const float C : { Beat.SafeAtDeg, Beat.SafeAtDeg + 180.f })
+        {
+            if (FMath::Abs(FMath::FindDeltaAngleDegrees(A, C)) <= Beat.SafeDeg * 0.5f) return true;
+        }
+        return false;
+    }
+
+    bool GetBeatSpot(int32 BeatIndex, FVector& OutSpot) const
+    {
+        const FVector* S = BeatSpots.Find(BeatIndex);
+        if (S) OutSpot = *S;
+        return S != nullptr;
+    }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Riposte")
     float RiposteDamageScale = 5.f;
@@ -198,6 +228,10 @@ public:
     // generic pattern pool; story fights pick from their own script and are unaffected. Returns how many joined.
     int32 LoadDesignedSkills(FName VisualId);
 
+    // QA: start the phase that opens with a designed move now (as if the health threshold was crossed).
+    UFUNCTION(BlueprintCallable)
+    void HandlePhaseChanged(int32 NewPhase);
+
     // How often the designed skills were chosen in this fight (QA, docs/design/181 §10).
     int32 GetDesignedSkillUses() const { return DesignedSkillUses; }
     int32 GetDesignedSkillCount() const { return DesignedRangeCm.Num(); }
@@ -293,9 +327,13 @@ private:
     TMap<FName, FVector2D> DesignedRangeCm;   // designed skill id -> (min, max) distance to the target
     FName LastPatternId = NAME_None;
     int32 DesignedSkillUses = 0;
+    int32 PendingOpener = INDEX_NONE;   // RuntimeTuning->BossPatterns index of a phase opener waiting for idle
     FText BodyDisplayName;
     bool bBlinkDone = false;
     void TickBlink();
+    TMap<int32, FVector> BeatSpots;
+    FVector PatternForward = FVector::ForwardVector;
+    void TickBeatSpots();
     int32 RiposteCount = 0;
     bool bRiposteTaken = false;
 };

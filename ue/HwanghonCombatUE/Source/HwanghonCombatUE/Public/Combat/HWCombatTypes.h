@@ -97,6 +97,22 @@ struct FHWBossBeatSpec
     // (the Clave's chain of blasts walking out, docs/design/181 §9).
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float MinRangeCm = 0.f;
+
+    // Lands where the target stood TargetLead seconds before (Subject 09's lightning, docs/design/181 §11): the spot is
+    // marked then, the beat hits within SpotRadiusCm of it, wherever the boss is.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    bool bAtTarget = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float SpotRadiusCm = 140.f;
+
+    // Arena-wide blast with two opposite safe slices SafeDeg wide, centred SafeAtDeg (and +180) from the boss's facing
+    // at the start of the move (the Clave's shutter storm, docs/design/181 §11). 0 = no safe slices.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float SafeDeg = 0.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float SafeAtDeg = 0.f;
 };
 
 USTRUCT(BlueprintType)
@@ -170,4 +186,21 @@ struct FHWBossPatternSpec
     // on its shut beats anyway; a move with no parriable beat shows it only when it says so (designed skills).
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     bool bDangerCue = false;
+
+    // Seconds before a cued beat the red-orange floor ring appears (the bloom's 8 m circle fills for 1.6 s).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float DangerLead = 0.5f;
+
+    // Lowest boss phase (UHWBossSystemComponent: 2 below 70 % health, 3 below 40 %) the move is used in.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    int32 MinPhase = 1;
+
+    // How long before an at-target beat its spot is chosen and marked.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    float TargetLead = 1.2f;
+
+    // The move that opens phase MinPhase: used at once when the phase begins, and not picked at random
+    // (Malenia's bloom, Radahn's meteor: docs/design/181 §11).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    bool bPhaseOpener = false;
 };

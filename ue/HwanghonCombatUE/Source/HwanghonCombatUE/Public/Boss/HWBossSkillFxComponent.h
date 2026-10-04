@@ -45,6 +45,9 @@ private:
     UFUNCTION()
     void HandleBeat(FName PatternId, int32 BeatIndex);
 
+    UFUNCTION()
+    void HandleSpot(int32 BeatIndex, FVector Spot, float RadiusCm, float Seconds);
+
     void Shake(float Seconds, float AmplitudeCm);
     void ScreenFlash(const FLinearColor& Color, float Alpha, float Seconds);
     void TickDanger();
@@ -71,5 +74,5 @@ private:
     TSet<int32> DangerFired;   // beat * 4 + cue (0, 1 = chest flashes, 2 = ring)
 
     bool bWasBlinkHidden = false;
-    int32 NParry = 0, NBreak = 0, NLand = 0, NRiposte = 0, NDanger = 0, NBlast = 0, NSmoke = 0;
+    int32 NParry = 0, NBreak = 0, NLand = 0, NRiposte = 0, NDanger = 0, NBlast = 0, NSmoke = 0, NSpot = 0, NBolt = 0;
 };

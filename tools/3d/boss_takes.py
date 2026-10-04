@@ -58,7 +58,43 @@ def _clave_shut():
     return "atk_claveshut", 4.0, s, over
 
 
-SKILLS = {"sf_flurry": _flurry, "s09_frenzy": _s09_frenzy, "clave_shut": _clave_shut}
+def _bloom():
+    """«그림자 개화» 6.4 s, phase 2 opener (motion study tab 3): tear 1.0 s, rise to 6 m 0.6 s, hang 1.6 s, dive 0.2 s,
+    burst, pool (tools/vfx/shadowfang_animatic.py bloom)."""
+    s = [("sf_rise", 0.0, 1.0, (0.0, 0.35)), ("sf_rise", 1.0, 0.6, (0.35, 0.6)),
+         ("sf_flurry", 1.6, 1.6, (0.0, 0.2)), ("sf_dive", 3.2, 3.2, (0.3, 1.0))]
+    return "atk_sfbloom", 6.4, s, None
+
+
+def _s09_storm():
+    """실험체 09호 «방전 폭우» 5.2 s, phase 2 opener: hunch, then arched back with both arms to the sky while the circles
+    are marked and the bolts fall (tools/vfx/boss_skill_animatic.py s09_storm)."""
+    s = [("s09_roar", 0.0, 2.2, (0.0, 0.7)), ("s09_roar", 2.2, 3.0, (0.7, 1.0))]
+    return "atk_s09storm", 5.2, s, None
+
+
+def _clave_storm():
+    """클레이브 «셔터 폭풍» 5.2 s, phase 2 opener: the shutter raised overhead (1.2 s), then three crashes at 1.6 / 2.6 /
+    3.6 s, raised again between them; each crash blows the arena but two turning safe slices (docs/design/181 §11)."""
+    s = [("clave_tele", 0.0, 1.6, (0.0, 0.55))]
+    for k, t in enumerate((1.6, 2.6, 3.6)):
+        s.append(("clave_tele", t, 0.15, (0.55, 0.7)))
+        if k < 2:
+            s.append(("clave_tele", t + 0.15, 0.85, (0.4, 0.55)))
+    s.append(("clave_tele", 3.75, 1.45, (0.7, 1.0)))
+    up = ((0.15, 0.1, 1), (0.05, 0.1, 1), (1, 0, 0.1))
+    down = ((0.15, -0.75, -0.65), (0.05, -0.7, -0.7), (0, 1, 0.35))
+    keys = {1.0: up, 1.45: up}
+    for t in (1.6, 2.6, 3.6):
+        keys[t] = down
+        if t < 3.6:
+            keys[round(t + 0.7, 2)] = up
+            keys[round(t + 0.85, 2)] = up
+    keys[4.4] = down
+    return "atk_clavestorm", 5.2, s, (keys, [(0, 0), (0.8, 1), (4.6, 1), (5.2, 0)])
+
+
+SKILLS = {"sf_flurry": _flurry, "sf_bloom": _bloom, "s09_storm": _s09_storm, "clave_storm": _clave_storm, "s09_frenzy": _s09_frenzy, "clave_shut": _clave_shut}
 
 
 def _overlay(arm, poses, ramp):

@@ -195,6 +195,7 @@ private:
     float SkillBossHpPeak = 0.f;
     int32 SkillPawnHits = 0;
     FName HeroBeforeQA = NAME_None;
+    TSet<int32> SkillDodged;
     int32 SkillNextParryBeat = 0;
     double SkillBreakAt = -1.0;
     bool bSkillRiposteSwung = false;
