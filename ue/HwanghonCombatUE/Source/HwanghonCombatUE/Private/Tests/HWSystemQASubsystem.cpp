@@ -1,6 +1,8 @@
 #include "Tests/HWSystemQASubsystem.h"
 
 #include "Boss/HWBossCharacter.h"
+#include "Boss/HWScriptedCanonRules.h"
+#include "Boss/HWBossSkillFxComponent.h"
 #include "HHBossIntroDirector.h"
 #include "UI/HWStoryHUD.h"
 #include "UI/HWCombatHUD.h"
@@ -145,6 +147,16 @@ void UHWSystemQASubsystem::Initialize(FSubsystemCollectionBase& Collection)
     NextCharacter = FName(*Param(TEXT("HWQASelect=")));
     bCheckOnly = FParse::Param(FCommandLine::Get(), TEXT("HWQACheckOnly"));
     LocalDungeonId = FName(*Param(TEXT("HWQADungeon=")));
+    // -HWQAHero=ain: play this hero for the run (the pawn class comes from the saved selection); put the player's own
+    // choice back when the run finishes
+    if (!Param(TEXT("HWQAHero=")).IsEmpty())
+    {
+        if (UHWProfileSubsystem* Profile = GetGameInstance()->GetSubsystem<UHWProfileSubsystem>())
+        {
+            HeroBeforeQA = Profile->GetSelectedCharacter();
+            Profile->SelectCharacter(FName(*Param(TEXT("HWQAHero="))));
+        }
+    }
     Role = Param(TEXT("HWQARole="));
     Index = FCString::Atoi(*Param(TEXT("HWQAIndex=")));
     Players = FMath::Max(1, FCString::Atoi(*Param(TEXT("HWQAPlayers="))));
@@ -223,6 +235,11 @@ void UHWSystemQASubsystem::Flush()
 
 void UHWSystemQASubsystem::Finish(bool bOk, const FString& Why)
 {
+    if (!HeroBeforeQA.IsNone())
+    {
+        if (UHWProfileSubsystem* Profile = GetGameInstance()->GetSubsystem<UHWProfileSubsystem>()) Profile->SelectCharacter(HeroBeforeQA);
+        HeroBeforeQA = NAME_None;
+    }
     if (bFinished) return;
     ReleaseAll();
     Report->SetBoolField(TEXT("ok"), bOk);
@@ -391,6 +408,7 @@ void UHWSystemQASubsystem::Tick(float DeltaTime)
     else if (Mode == TEXT("net")) TickNet(Dt);
     else if (Mode == TEXT("showcase")) TickShowcase(Dt);
     else if (Mode == TEXT("bossshow")) TickBossShow(Dt);
+    else if (Mode == TEXT("bossskill")) TickBossSkill(Dt);
     else if (Mode == TEXT("skillfx")) TickSkillFx(Dt);
     else if (Mode == TEXT("clipreview")) TickClipReview(Dt);
     else if (Mode == TEXT("arenashow")) TickArenaShow(Dt);
@@ -531,8 +549,23 @@ void UHWSystemQASubsystem::LocalSummary(const FHWSystemDungeonDefinition& Def)
         bCombat |= R.Type == EHWRoomType::Combat; bElite |= R.Type == EHWRoomType::Elite;
         bObjective |= R.Type == EHWRoomType::Objective; bBoss |= R.Type == EHWRoomType::Boss;
     }
-    Gate(TEXT("dungeon_rooms"), bCombat && bElite && bObjective && bBoss && ElitesSeen > 0 && ObjectivesTouched > 0,
-        FString::Join(RoomOrder, TEXT(" > ")) + FString::Printf(TEXT(" | elites %d, objectives %d"), ElitesSeen, ObjectivesTouched));
+    if (!Def.BossBody.IsNone())
+    {
+        // a boss dungeon (docs/design/181 §10) is the arena alone: the body worn, its designed skills used
+        AHWBossCharacter* B = Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(GetGameInstance()->GetWorld(), AHWBossCharacter::StaticClass()));
+        TArray<AActor*> All;
+        UGameplayStatics::GetAllActorsOfClass(GetGameInstance()->GetWorld(), AHWBossCharacter::StaticClass(), All);
+        Gate(TEXT("dungeon_rooms"), bBoss && Def.Rooms.Num() == 1 && All.Num() == 1,
+            FString::Join(RoomOrder, TEXT(" > ")) + FString::Printf(TEXT(" | bosses in the world %d"), All.Num()));
+        Gate(TEXT("designed_skills"), B && B->GetDesignedSkillCount() > 0 && B->GetDesignedSkillUses() > 0,
+            FString::Printf(TEXT("body %s, designed skills %d, used %d"), *Def.BossBody.ToString(),
+                B ? B->GetDesignedSkillCount() : 0, B ? B->GetDesignedSkillUses() : 0));
+    }
+    else
+    {
+        Gate(TEXT("dungeon_rooms"), bCombat && bElite && bObjective && bBoss && ElitesSeen > 0 && ObjectivesTouched > 0,
+            FString::Join(RoomOrder, TEXT(" > ")) + FString::Printf(TEXT(" | elites %d, objectives %d"), ElitesSeen, ObjectivesTouched));
+    }
     Gate(TEXT("boss_phases"), MaxPhase >= 3, FString::Printf(TEXT("max phase %d"), MaxPhase));
     Gate(TEXT("boss_break"), BreakCount > 0, FString::Printf(TEXT("breaks %d"), BreakCount));
     Gate(TEXT("part_lock_break"), bPartLocked && BrokenParts.Num() > 0,
@@ -2054,6 +2087,203 @@ void UHWSystemQASubsystem::TickBossShow(float Dt)
         if (T > 4.5f) Once(TEXT("92_death_end"));
         if (T > 5.f) Finish(Done == 5, FString::Printf(TEXT("boss show: patterns %d/5"), Done));
     }
+}
+
+// ---------------------------------------------------------------- boss skill (-HWQA=bossskill, docs/design/181 §8)
+// One designed skill (Content/Data/boss_skills.json) on its body, against a pawn that cannot die, with the game clock
+// slowed (-HWQADilation, default 0.25) so every -HWQAStep seconds of the move is one side shot (f000.png ...). Logs the
+// lift and both health bars per shot; passes when beats landed and the boss healed by them.
+//   -HWQA=bossskill -HWQABody=boss_shadow_fang -HWQASkill=ShadowFlurry -HWQAShots=<dir>
+void UHWSystemQASubsystem::TickBossSkill(float Dt)
+{
+    UWorld* World = GetGameInstance()->GetWorld();
+    AHWAinCharacter* Pawn = GetPawn();
+    AHWBossCharacter* Boss = World ? Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(World, AHWBossCharacter::StaticClass())) : nullptr;
+    if (!World || !Pawn || !Boss || !Pawn->GetCombat())
+    {
+        if (Elapsed > 90.f) Finish(false, TEXT("No pawn/boss for boss skill"));
+        return;
+    }
+    const float StepArg = FCString::Atof(*Param(TEXT("HWQAStep=")));
+    const float Step = StepArg > 0.f ? FMath::Max(0.02f, StepArg) : 0.1f;
+    if (SkillStage == 0)
+    {
+        if (Elapsed < 2.f) return;
+        const FString Body = Param(TEXT("HWQABody=")).IsEmpty() ? FString(TEXT("boss_shadow_fang")) : Param(TEXT("HWQABody="));
+        const FString Want = Param(TEXT("HWQASkill="));
+        FString Text;
+        TSharedPtr<FJsonObject> Root;
+        if (!FFileHelper::LoadFileToString(Text, *FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/boss_skills.json")))
+            || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root)
+        {
+            Finish(false, TEXT("boss_skills.json unreadable"));
+            return;
+        }
+        const TArray<TSharedPtr<FJsonValue>>* List = nullptr;
+        if (!Root->TryGetArrayField(Body.Replace(TEXT("boss_"), TEXT("")), List))
+        {
+            Finish(false, TEXT("no skills for ") + Body);
+            return;
+        }
+        bool bFound = false;
+        for (const TSharedPtr<FJsonValue>& V : *List)
+        {
+            FHWCanonMove M;
+            UHWScriptedCanonRules::ParseMove(V->AsObject(), M);
+            if (Want.IsEmpty() || M.Spec.Id == FName(*Want))
+            {
+                SkillSpec = M.Spec;
+                bFound = true;
+                break;
+            }
+        }
+        if (!bFound)
+        {
+            Finish(false, TEXT("no skill ") + Want);
+            return;
+        }
+        ShotDir = Param(TEXT("HWQAShots="));
+        Boss->WearBody(FName(*Body));
+        Pawn->GetCombat()->ConfigureCharacterStats(1.0e8f, 1.f, 0.f, 0.f, 100.f, 100.f);   // the target never dies
+        if (APlayerController* PC = GetPC()) Pawn->DisableInput(PC);
+        Boss->SetActorLocation(Pawn->GetActorLocation() + FVector(320.f, 0.f, 0.f));
+        Boss->ReceivePlayerHit(Boss->GetHealth() * 0.4f, EHWAttackTier::Light, Pawn->GetActorLocation());   // room to heal
+        if (ADirectionalLight* Sun = World->SpawnActor<ADirectionalLight>(ADirectionalLight::StaticClass(), Pawn->GetActorLocation(), FRotator(-35.f, 120.f, 0.f)))
+        {
+            Sun->GetLightComponent()->SetIntensity(3.f);
+            BossShowLight = Sun;
+        }
+        if (ACameraActor* Cam = World->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), Pawn->GetActorLocation(), FRotator::ZeroRotator))
+        {
+            Cam->GetCameraComponent()->SetFieldOfView(55.f);
+            Cam->GetCameraComponent()->bConstrainAspectRatio = false;
+            ShowCamera = Cam;
+            if (APlayerController* PC = GetPC()) PC->SetViewTargetWithBlend(Cam, 0.f);
+        }
+        Pawn->GetCombat()->OnDamaged.AddUniqueDynamic(this, &UHWSystemQASubsystem::HandleSkillPawnDamaged);
+        Note(FString::Printf(TEXT("skill %s (%s): tell %.2f strike %.2f recovery %.2f beats %d heal %.3f lift keys %d"),
+            *SkillSpec.Id.ToString(), *SkillSpec.DisplayName, SkillSpec.TellDuration, SkillSpec.StrikeDuration,
+            SkillSpec.RecoveryDuration, SkillSpec.Beats.Num(), SkillSpec.HealPerHitFraction, SkillSpec.LiftKeys.Num()));
+        SkillStage = 1;
+        ShowStart = World->GetTimeSeconds();
+        return;
+    }
+    // Side camera, wide and high enough for the rise.
+    if (AActor* C = ShowCamera.Get())
+    {
+        FVector Line = Pawn->GetActorLocation() - Boss->GetActorLocation();
+        Line.Z = 0.f;
+        const FVector Side = FVector::CrossProduct(Line.GetSafeNormal(), FVector::UpVector);
+        // follows half the lift and looks down from 3 m: the floor, not the black sky, is behind the dark body
+        const FVector Center = (Boss->GetActorLocation() * 0.6f + Pawn->GetActorLocation() * 0.4f) + FVector(0.f, 0.f, 100.f + 0.5f * Boss->GetPatternLiftCm());
+        const FVector From = Center + Side * 1000.f + FVector(0.f, 0.f, 300.f);
+        C->SetActorLocationAndRotation(From, UKismetMathLibrary::FindLookAtRotation(From, Center));
+        if (AActor* L = BossShowLight.Get()) L->SetActorRotation(FRotator(-35.f, (Center - From).Rotation().Yaw + 25.f, 0.f));
+    }
+    const double Now = World->GetTimeSeconds();
+    if (SkillStage == 1)
+    {
+        // warm-up (shaders, the hit reaction), then start the skill from idle
+        if (Now - ShowStart < 4.0 || Boss->GetBossState() != EHWBossState::Idle) return;
+        const float Dil = FCString::Atof(*Param(TEXT("HWQADilation=")));
+        UGameplayStatics::SetGlobalTimeDilation(World, Dil > 0.f ? Dil : 0.25f);
+        SkillBossHpBefore = SkillBossHpPeak = Boss->GetHealth();
+        SkillPawnHits = 0;
+        Boss->StartCanonPattern(SkillSpec);
+        SkillStartedAt = Now;
+        SkillNextShot = 0.f;
+        SkillStage = 2;
+        Note(FString::Printf(TEXT("skill start boss hp %.0f / %.0f"), SkillBossHpBefore, Boss->GetMaxHealth()));
+        return;
+    }
+    if (SkillStage == 2)
+    {
+        const float T = static_cast<float>(Now - SkillStartedAt);
+        // -HWQAParry=1 (docs/design/183): counter 0.10 s before every parriable beat; on a posture break step in front
+        // and swing once (the riposte)
+        if (Param(TEXT("HWQAParry=")) == TEXT("1"))
+        {
+            const FHWBossPatternSpec& Spec = SkillSpec;
+            // on the boss's own clock: every parry's hitstop holds it back, a player reads the body, not a timetable
+            const float BossT = Boss->GetBossState() == EHWBossState::Strike
+                ? Spec.TellDuration + Boss->GetBossStateNormalized() * Spec.StrikeDuration
+                : (Boss->GetBossState() == EHWBossState::Tell ? Boss->GetBossStateNormalized() * Spec.TellDuration : -1.f);
+            while (BossT >= 0.f && SkillNextParryBeat < Spec.Beats.Num() && BossT >= Spec.TellDuration + Spec.Beats[SkillNextParryBeat].At - 0.08f)
+            {
+                if (Spec.Beats[SkillNextParryBeat].bCounterable && Boss->GetBossState() == EHWBossState::Strike)
+                {
+                    const bool bPressed = Pawn->GetCombat()->RequestCounter();
+                    Note(FString::Printf(TEXT("parry press beat %d t=%.2f %s (action %d, elapsed %.2f, parries %d, hits %d)"), SkillNextParryBeat, T,
+                        bPressed ? TEXT("ok") : TEXT("busy"), (int32)Pawn->GetCombat()->GetCurrentAction(), Pawn->GetCombat()->GetActionElapsed(),
+                        Boss->GetParryCount(), SkillPawnHits));
+                }
+                ++SkillNextParryBeat;
+            }
+            if (Boss->GetBossState() == EHWBossState::Break && SkillBreakAt < 0.0)
+            {
+                SkillBreakAt = Now;
+                SkillBossHpAtBreak = Boss->GetHealth();
+                Note(FString::Printf(TEXT("BREAK t=%.2f parries %d"), T, Boss->GetParryCount()));
+                const FVector Front = Boss->GetActorLocation() + Boss->GetActorForwardVector() * 230.f;
+                Pawn->SetActorLocation(FVector(Front.X, Front.Y, Pawn->GetActorLocation().Z));
+                Pawn->SetActorRotation((Boss->GetActorLocation() - Pawn->GetActorLocation()).GetSafeNormal2D().Rotation());
+                // player blows land on the lock-on target only (AHWAinCharacter::HandleContact)
+                if (Pawn->GetLockOn() && !Pawn->GetLockOn()->IsLocked()) Pawn->GetLockOn()->ToggleLockOn();
+            }
+            if (SkillBreakAt >= 0.0 && !bSkillRiposteSwung && Now - SkillBreakAt > 0.5 && Boss->GetBossState() == EHWBossState::Break
+                && Pawn->GetCombat()->RequestAttack())
+            {
+                bSkillRiposteSwung = true;
+                Note(FString::Printf(TEXT("riposte swing t=%.2f"), T));
+            }
+        }
+        SkillBossHpPeak = FMath::Max(SkillBossHpPeak, Boss->GetHealth());
+        // with -HWQAParry the frames after the 4th and 8th parry are taken with the HUD (posture bar, docs/design/183)
+        const int32 Parries = Boss->GetParryCount();
+        const bool bUiShot = Param(TEXT("HWQAParry=")) == TEXT("1") && (Parries == 4 || Parries == 8) && !BossShotsTaken.Contains(FString::Printf(TEXT("ui_parry%d"), Parries));
+        if (bUiShot)
+        {
+            const FString UiTag = FString::Printf(TEXT("ui_parry%d"), Parries);
+            BossShotsTaken.Add(UiTag);
+            Shot(UiTag, true);
+        }
+        else if (T >= SkillNextShot)
+        {
+            const FString Tag = FString::Printf(TEXT("f%03d"), SkillShotIndex++);
+            Shot(Tag);
+            const UHWBossPresentationComponent* Pres = Boss->FindComponentByClass<UHWBossPresentationComponent>();
+            const FVector Rel = Boss->GetActorLocation() - Pawn->GetActorLocation();
+            Note(FString::Printf(TEXT("%s t=%.2f state %d lift %.0f boss hp %.0f pawn hits %d at %+.0f,%+.0f clip %s %.3f"), *Tag, T,
+                (int32)Boss->GetBossState(), Boss->GetPatternLiftCm(), Boss->GetHealth(), SkillPawnHits, Rel.X, Rel.Y,
+                Pres && Pres->GetShownClip() ? *Pres->GetShownClip()->GetName() : TEXT("-"), Pres ? Pres->GetShownTime() : -1.f));
+            SkillNextShot += Step;
+        }
+        const float Total = SkillSpec.TellDuration + SkillSpec.StrikeDuration + SkillSpec.RecoveryDuration;
+        const bool bParry = Param(TEXT("HWQAParry=")) == TEXT("1");
+        if ((T > Total + 0.3f && Boss->GetBossState() == EHWBossState::Idle) || T > Total + 8.f)
+        {
+            UGameplayStatics::SetGlobalTimeDilation(World, 1.f);
+            const float Healed = SkillBossHpPeak - SkillBossHpBefore;
+            if (bParry)
+            {
+                Note(FString::Printf(TEXT("parry summary: parries %d, ripostes %d, riposte damage %.0f, pawn hits %d, healed %.0f"),
+                    Boss->GetParryCount(), Boss->GetRiposteCount(), SkillBreakAt >= 0.0 ? SkillBossHpAtBreak - Boss->GetHealth() : 0.f,
+                    SkillPawnHits, Healed));
+            }
+            const bool bOk = bParry ? (Boss->GetParryCount() > 0 && Boss->GetRiposteCount() > 0)
+                : (SkillPawnHits > 0 && (SkillSpec.HealPerHitFraction <= 0.f || Healed > 0.f));
+            if (const UHWBossSkillFxComponent* SF = Boss->FindComponentByClass<UHWBossSkillFxComponent>()) Note(SF->Describe());
+            Finish(bOk, FString::Printf(TEXT("boss skill %s: pawn hits %d/%d, boss healed %.0f (%.2f%% of max), shots %d"),
+                *SkillSpec.Id.ToString(), SkillPawnHits, SkillSpec.Beats.Num(), Healed,
+                100.f * Healed / FMath::Max(1.f, Boss->GetMaxHealth()), SkillShotIndex));
+            SkillStage = 3;
+        }
+    }
+}
+
+void UHWSystemQASubsystem::HandleSkillPawnDamaged(float Damage, EHWAttackTier Tier)
+{
+    ++SkillPawnHits;
 }
 
 // ---------------------------------------------------------------- clip review (-HWQA=clipreview, doc 133)

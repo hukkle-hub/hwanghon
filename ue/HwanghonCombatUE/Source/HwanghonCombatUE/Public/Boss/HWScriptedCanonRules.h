@@ -60,6 +60,9 @@ public:
     virtual bool InterceptBeat(AHWBossCharacter& Boss, const FHWBossBeatSpec& Beat) override;
     virtual void QAStep(AHWBossCharacter& Boss, AHWAinCharacter& Player, float Dt, TArray<FString>& Notes, TArray<FString>& Shots) override;
 
+    // One "patterns" entry of a fight script (also Content/Data/boss_skills.json, docs/design/181 §8).
+    static void ParseMove(const TSharedPtr<FJsonObject>& P, FHWCanonMove& M);
+
     int32 GetStepIndex() const { return StepIndex; }
     bool IsOpen() const { return OpenRemaining > 0.f; }
     int32 GetStepCount() const { return Steps.Num(); }

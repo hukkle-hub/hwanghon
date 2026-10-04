@@ -231,4 +231,9 @@ struct FHWSystemDungeonDefinition
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     float EnrageSeconds = 180.f;
+
+    // The boss room's body (a HWCharacterVisualSettings id such as boss_shadow_fang): it brings its designed
+    // skills (Content/Data/boss_skills.json, docs/design/181 §10). None = the stand-in training boss.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FName BossBody = NAME_None;
 };

@@ -310,6 +310,10 @@ void AHWDungeonDirector::SpawnFallbackRoom(const FHWSystemDungeonRoom& Room)
 
         if (Boss)
         {
+            if (!Definition.BossBody.IsNone())
+            {
+                Boss->WearBody(Definition.BossBody);   // and its designed skills (AHWBossCharacter::WearBody)
+            }
             Boss->OnBossDied.AddDynamic(
                 this,
                 &AHWDungeonDirector::HandleSpawnedBossDied);

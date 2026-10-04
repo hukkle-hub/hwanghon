@@ -145,6 +145,13 @@ bool UHWCombatComponent::RequestJump()
 
 bool UHWCombatComponent::RequestCounter()
 {
+    // A counter that just parried may start the next one at once: chains of fast beats are answered beat for beat
+    // (docs/design/183 §3). A whiffed counter still has to play out.
+    if (!bDead && CurrentAction == EHWActionType::Counter && bCounterLanded)
+    {
+        InterruptInto(EHWActionType::Counter);
+        return CurrentAction == EHWActionType::Counter;
+    }
     if (bDead || CurrentAction != EHWActionType::None)
     {
         return false;
@@ -448,6 +455,7 @@ bool UHWCombatComponent::StartAction(EHWActionType Action)
     CurrentAction = Action;
     ActionElapsed = 0.f;
     bContactFired = false;
+    bCounterLanded = false;
     OnActionStarted.Broadcast(Action);
     return true;
 }

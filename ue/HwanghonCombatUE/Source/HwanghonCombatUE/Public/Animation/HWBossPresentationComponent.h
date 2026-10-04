@@ -35,6 +35,9 @@ public:
 
     // Single-node body: the clip and time last shown (motion review).
     UAnimSequenceBase* GetShownClip() const { return ShownClip; }
+
+    // Height the body is drawn at over its floor for a leaving-the-ground move (falls, not snaps, when broken).
+    float GetShownLiftCm() const { return LiftShown; }
     float GetShownTime() const { return ShownTime; }
 
     // Boss intro (docs/design/162). Still: the idle's first frame, held. Windup: the pattern's first clip from its start
@@ -112,6 +115,9 @@ private:
     float ClipGroundCm = 0.f;
     float LyingDrop = 0.f;
     float StandLift = 0.f;   // toes kept on the floor while standing (docs/design/165)
+    float LiftShown = 0.f;      // body height of a leaving-the-ground move, as shown (docs/design/181 §8)
+    float LiftFallSpeed = 0.f;
+    bool bBlinkHidden = false;
     // Death collapses into a ragdoll (docs/design/165): the down/lie/death clips of the scarecrow ended propped 60 cm
     // off the floor with an arm or a leg in the air - measured from the clip data, not guessed.
     bool bRagdoll = false;

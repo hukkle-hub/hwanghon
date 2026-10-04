@@ -1,0 +1,6 @@
+# doc 177 §15: Sera's brows lower (painted 30 px down) and upper lids 1.8 mm down, eyeballs rigid
+$env:LOWER_FACE_K = '1.04'; $env:UPPER_LID_DROP = '1.8'
+& "C:\Program Files\Blender Foundation\Blender 5.2\blender.exe" -b -P C:\w\hwanghon\tools\metahuman\wrap_template.py -- C:/w/mhlab/template_Archetype.fbx C:/w/mhlab/sera2_head.glb C:/w/mhlab/sera_wrapped_jaw.fbx C:/w/mhlab/sera_wrap_jaw_preview.png 2>$null | Select-String "^WRAP (lower|upper|out)"
+$env:UPPER_LID_DROP = '0'
+$env:MH_FACE_BC = 'C:/w/mhlab/tex_Sera_BC_brows.png'
+& C:\w\mhlab\jaw_chain.ps1 -Name Sera -Hair WI_Hair_L_Straight -HairParams "Melanin=0,Whiteness=1,Redness=0" -IrisTint "0.85,0.88,0.9" -IrisSat "0.3" -Brow "" -BrowParams "" -Cap "0" -Darken "0"

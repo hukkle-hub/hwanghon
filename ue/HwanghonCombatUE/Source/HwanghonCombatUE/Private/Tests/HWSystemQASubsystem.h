@@ -70,6 +70,9 @@ private:
     void TickNet(float Dt);
     void TickShowcase(float Dt);
     void TickBossShow(float Dt);
+    void TickBossSkill(float Dt);
+    UFUNCTION()
+    void HandleSkillPawnDamaged(float Damage, EHWAttackTier Tier);
     void TickSkillFx(float Dt);
     void TickClipReview(float Dt);
     void TickArenaShow(float Dt);
@@ -182,6 +185,20 @@ private:
     bool BossShowPhasePush = false;
     float BossShowMovedAt = -100.f;
     TWeakObjectPtr<AActor> BossShowLight;
+    // -HWQA=bossskill (docs/design/181 §8): one designed skill from boss_skills.json, frame by frame
+    FHWBossPatternSpec SkillSpec;
+    int32 SkillStage = 0;
+    double SkillStartedAt = 0.0;
+    float SkillNextShot = 0.f;
+    int32 SkillShotIndex = 0;
+    float SkillBossHpBefore = 0.f;
+    float SkillBossHpPeak = 0.f;
+    int32 SkillPawnHits = 0;
+    FName HeroBeforeQA = NAME_None;
+    int32 SkillNextParryBeat = 0;
+    double SkillBreakAt = -1.0;
+    bool bSkillRiposteSwung = false;
+    float SkillBossHpAtBreak = 0.f;
     void Shot(const FString& Name, bool bShowUI = false);
     void MeasureBody(const FString& Label, AActor* Actor);
     void TickRaid(float Dt);

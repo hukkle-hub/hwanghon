@@ -126,6 +126,9 @@ public:
     UFUNCTION(BlueprintPure)
     bool IsCounterActive() const;
 
+    // The boss parried into this counter (AHWBossCharacter::TryCountered): RequestCounter may chain the next one.
+    void NotifyCounterLanded() { bCounterLanded = true; }
+
     UFUNCTION(BlueprintPure)
     EHWActionType GetCurrentAction() const { return CurrentAction; }
 
@@ -166,6 +169,7 @@ private:
     EHWActionType QueuedAction = EHWActionType::None;
 
     float ActionElapsed = 0.f;
+    bool bCounterLanded = false;
     bool bContactFired = false;
     float HitStopRemaining = 0.f;
     float DodgeCooldownRemaining = 0.f;

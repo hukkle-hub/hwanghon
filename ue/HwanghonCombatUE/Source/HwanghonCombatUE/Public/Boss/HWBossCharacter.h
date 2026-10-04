@@ -12,6 +12,9 @@ class AHWBossCharacter;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossStateChangedSignature, EHWBossState, NewState, FName, PatternId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossReactionSignature, EHWAttackTier, Tier, FVector, WorldDirection);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharacter*, Boss);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossParriedSignature, FName, PatternId, int32, BeatIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossRiposteSignature, float, Damage);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossBeatSignature, FName, PatternId, int32, BeatIndex);
 
 class UHWCombatTuningAsset;
 class AHWAinCharacter;
@@ -38,6 +41,43 @@ public:
     // Broadcast exactly once, after damage, pending attacks and movement are disabled.
     UPROPERTY(BlueprintAssignable, Category="Boss")
     FHWBossDiedSignature OnBossDied;
+
+    // A beat was parried (docs/design/183): the combo may go on (bCounterStaggers false) - spark/flinch FX hook.
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossParriedSignature OnBossParried;
+
+    // The one heavy blow on a broken (posture) boss from its front: Elden Ring's riposte (docs/design/183).
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossRiposteSignature OnBossRiposte;
+
+    // Every beat as it lands (before parry/range is judged): the move's own FX (the Clave's walking blasts).
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossBeatSignature OnBossBeat;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Riposte")
+    float RiposteDamageScale = 5.f;
+
+    // Posture per parried beat of a chain that goes on (of 100): 12 -> about nine parries break the boss, a single
+    // parry that ends the move still gives the Counter tier's 28 (docs/design/183 §3).
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Riposte")
+    float ChainParryPosture = 12.f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Riposte")
+    float RiposteReachCm = 380.f;
+
+    // After the riposte the boss gets up this many seconds later (the break is cut short).
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Riposte")
+    float RiposteRecoverSeconds = 1.2f;
+
+    UFUNCTION(BlueprintPure)
+    int32 GetParryCount() const { return ParryCount; }
+
+    // A blow from Source now would be the riposte: broken, not yet taken, Source in front within reach.
+    UFUNCTION(BlueprintPure)
+    bool CanRiposteFrom(FVector Source) const;
+
+    UFUNCTION(BlueprintPure)
+    int32 GetRiposteCount() const { return RiposteCount; }
 
     UFUNCTION(BlueprintCallable)
     void ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVector SourceLocation);
@@ -134,6 +174,18 @@ public:
 
     const FHWBossPatternSpec& GetCurrentPattern() const { return CurrentPattern; }
 
+    // Height of the body over the floor for the current move (FHWBossPatternSpec::LiftKeys), world cm.
+    UFUNCTION(BlueprintPure)
+    float GetPatternLiftCm() const;
+
+    // Seconds since the current move's tell began (-1 outside a move).
+    UFUNCTION(BlueprintPure)
+    float GetPatternTime() const;
+
+    // Between a blink's vanish and reappear: the body is not drawn (FHWBossPatternSpec::BlinkHideAt).
+    UFUNCTION(BlueprintPure)
+    bool IsBlinkHidden() const;
+
     // Novel rules (UHWBossCanonRules on this boss) start their own pattern, e.g. the elbow that answers a deflect.
     void StartCanonPattern(const FHWBossPatternSpec& Pattern) { BeginPattern(Pattern); }
 
@@ -141,6 +193,14 @@ public:
     // actor's fight scale (capsule, reach) is undone on the body. Rigged: a HWCharacterVisualSettings id sharing the
     // training boss skeleton and clips. Rigid: a static mesh for bodies no human skeleton fits (spider, serpent, tower).
     void WearBody(FName VisualId);
+
+    // Designed skills of a body (Content/Data/boss_skills.json, key = the body id without "boss_") join the
+    // generic pattern pool; story fights pick from their own script and are unaffected. Returns how many joined.
+    int32 LoadDesignedSkills(FName VisualId);
+
+    // How often the designed skills were chosen in this fight (QA, docs/design/181 §10).
+    int32 GetDesignedSkillUses() const { return DesignedSkillUses; }
+    int32 GetDesignedSkillCount() const { return DesignedRangeCm.Num(); }
     void WearStaticBody(class UStaticMesh* Body);
 
     // Boss intro (v10 AHHBossIntroDirector, docs/design/162): held = no AI, no damage taken, no enrage clock -
@@ -194,6 +254,9 @@ private:
     TObjectPtr<UHWBossSystemComponent> BossSystem;
 
     UPROPERTY(VisibleAnywhere)
+    TObjectPtr<class UHWBossSkillFxComponent> SkillFx;
+
+    UPROPERTY(VisibleAnywhere)
     TObjectPtr<UHWCombatTuningAsset> RuntimeTuning;
 
     UPROPERTY(Transient)
@@ -223,4 +286,12 @@ private:
     float AuthoritativePosture = 0.f;
     float AuthoritativeStateProgress = 0.f;
     bool bAuthoritativePatternCounterable = false;
+    int32 ParryCount = 0;
+    TMap<FName, FVector2D> DesignedRangeCm;   // designed skill id -> (min, max) distance to the target
+    FName LastPatternId = NAME_None;
+    int32 DesignedSkillUses = 0;
+    bool bBlinkDone = false;
+    void TickBlink();
+    int32 RiposteCount = 0;
+    bool bRiposteTaken = false;
 };

@@ -1,0 +1,2 @@
+& C:\w\mhlab\jaw_chain.ps1 -Name Ain -Hair WI_Hair_M_SideSweptFringe -HairParams "Melanin=1,Redness=0.05" -IrisTint "1.0,0.15,0.1" -IrisSat "3.0" -Brow "" -BrowParams "" -Cap "1" -Darken "1"
+& C:\w\mhlab\jaw_chain.ps1 -Name Sera -Hair WI_Hair_L_Straight -HairParams "Melanin=0,Whiteness=1,Redness=0" -IrisTint "0.85,0.88,0.9" -IrisSat "0.3" -Brow "" -BrowParams "" -Cap "1" -Darken "0" -CapColor "0.42,0.41,0.40"

@@ -4,6 +4,7 @@
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
 #include "Boss/HWBossCharacter.h"
+#include "System/HWBossSystemComponent.h"
 #include "Camera/HWLockOnComponent.h"
 #include "Character/HWAinCharacter.h"
 #include "Combat/HWCombatComponent.h"
@@ -67,6 +68,8 @@ void UHWCombatHUDWidget::BindActors()
             BossMaxHealth = FMath::Max(1.f, Boss->GetMaxHealth());
             Boss->OnBossReaction.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossReaction);
             Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossState);
+            Boss->OnBossParried.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossParried);
+            Boss->OnBossRiposte.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossRiposte);
         }
     }
 }
@@ -106,6 +109,9 @@ void UHWCombatHUDWidget::Build(UCanvasPanel* Root)
     UProgressBar* BossProgress = nullptr;
     AddV(BossBox, Bar(WidgetTree, 1.f, C(EHWUIColorToken::Danger), 880.f, 8.f, &BossProgress));
     BossBar = BossProgress;
+    UProgressBar* PostureProgress = nullptr;
+    AddV(BossBox, Bar(WidgetTree, 0.f, C(EHWUIColorToken::Gold), 880.f, 3.f, &PostureProgress), FMargin(0.f, 3.f, 0.f, 0.f));
+    BossPostureBar = PostureProgress;
     BossBox->SetVisibility(ESlateVisibility::HitTestInvisible);
     Place(Root, Sized(WidgetTree, BossBox, 880.f, 0.f), FAnchors(0.5f, 0.f), FMargin(0.f, Top + 14.f, 880.f, 0.f), FVector2D(0.5f, 0.f), true);
 
@@ -203,7 +209,7 @@ void UHWCombatHUDWidget::Flash(const FString& Word)
     if (CenterWord)
     {
         CenterWord->SetText(FText::FromString(Word));
-        CenterWord->SetColorAndOpacity(FSlateColor(Word == TEXT("BREAK") ? C(EHWUIColorToken::Danger) : C(EHWUIColorToken::Gold)));
+        CenterWord->SetColorAndOpacity(FSlateColor(Word == TEXT("무너짐") ? C(EHWUIColorToken::Danger) : C(EHWUIColorToken::Gold)));
         CenterWord->SetVisibility(ESlateVisibility::HitTestInvisible);
     }
 }
@@ -212,8 +218,18 @@ void UHWCombatHUDWidget::HandleBossReaction(EHWAttackTier Tier, FVector WorldDir
 {
     if (Tier == EHWAttackTier::Counter)
     {
-        Flash(TEXT("COUNTER"));
+        Flash(TEXT("반격"));
     }
+}
+
+void UHWCombatHUDWidget::HandleBossParried(FName PatternId, int32 BeatIndex)
+{
+    Flash(TEXT("반격"));   // a chain parry does not stagger, so no reaction carries the word (docs/design/183)
+}
+
+void UHWCombatHUDWidget::HandleBossRiposte(float Damage)
+{
+    Flash(TEXT("치명 일격"));
 }
 
 void UHWCombatHUDWidget::HandleBossState(EHWBossState NewState, FName PatternId)
@@ -221,7 +237,7 @@ void UHWCombatHUDWidget::HandleBossState(EHWBossState NewState, FName PatternId)
     TellElapsed = 0.f;
     if (NewState == EHWBossState::Break)
     {
-        Flash(TEXT("BREAK"));
+        Flash(TEXT("무너짐"));   // the game speaks Korean (director rule)
     }
 }
 
@@ -234,6 +250,15 @@ void UHWCombatHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTi
     {
         BossMaxHealth = FMath::Max(1.f, Boss->GetMaxHealth());
         BossBar->SetPercent(Boss->GetHealth() / BossMaxHealth);
+        if (BossPostureBar)
+        {
+            // local fights keep posture in the boss system; online the server snapshot (GetPosture) carries it
+            const UHWBossSystemComponent* Sys = Boss->GetBossSystem();
+            const float P = Sys && Sys->GetMaxPosture() > 0.f ? Sys->GetPosture() / Sys->GetMaxPosture() : Boss->GetPosture() / 100.f;
+            BossPostureBar->SetPercent(FMath::Clamp(P, 0.f, 1.f));
+            // nearly full: blink, so a parry that would break it reads before it lands
+            BossPostureBar->SetRenderOpacity(P >= 0.8f && P < 1.f ? 0.55f + 0.45f * FMath::Abs(FMath::Sin(TellElapsed * 9.f)) : 1.f);
+        }
         const EHWBossState State = Boss->GetBossState();
         TellElapsed += InDeltaTime;
         if (BossTell)

@@ -3,6 +3,9 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Animation/AnimSequenceBase.h"
+#include "Boss/HWBossCharacter.h"
+#include "Camera/HWLockOnComponent.h"
+#include "Character/HWAinCharacter.h"
 #include "Combat/HWCombatComponent.h"
 #include "Combat/HWCombatTuningAsset.h"
 #include "System/HWCharacterKitComponent.h"
@@ -186,6 +189,17 @@ void UHWPlayerPresentationComponent::HandleActionStarted(EHWActionType Action)
     }
 
     const FHWSequenceBinding* Binding = AnimationSet->GetPlayerBinding(Action);
+    // the attack that lands on a broken boss from its front is the riposte: its own clip (docs/design/183 §3)
+    if ((Action == EHWActionType::Attack1 || Action == EHWActionType::Attack2 || Action == EHWActionType::Attack3)
+        && AnimationSet->Riposte.Sequence)
+    {
+        const AHWAinCharacter* Hero = Cast<AHWAinCharacter>(GetOwner());
+        const AHWBossCharacter* Target = Hero && Hero->GetLockOn() ? Cast<AHWBossCharacter>(Hero->GetLockOn()->GetTarget()) : nullptr;
+        if (Target && Target->CanRiposteFrom(Hero->GetActorLocation()))
+        {
+            Binding = &AnimationSet->Riposte;
+        }
+    }
     if (!Binding || !Binding->Sequence)
     {
         ActiveAction = Action;

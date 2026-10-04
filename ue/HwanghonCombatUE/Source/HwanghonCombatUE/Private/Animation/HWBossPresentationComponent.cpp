@@ -373,6 +373,13 @@ void UHWBossPresentationComponent::StartRagdoll()
 void UHWBossPresentationComponent::GroundBody(float DeltaTime)
 {
     if (!BodyMesh || !IsValid(Boss) || bRagdoll) return;
+    // a blink (the Clave's teleport) leaves nothing to see between vanish and reappear
+    const bool bHide = Boss->IsBlinkHidden();
+    if (bHide != bBlinkHidden)
+    {
+        bBlinkHidden = bHide;
+        BodyMesh->SetHiddenInGame(bHide, true);
+    }
     const EHWBossState State = Boss->GetBossState();
     const float Scale = BodyMesh->GetRelativeScale3D().Z;
     if (State == EHWBossState::Dead || State == EHWBossState::Break)
@@ -415,7 +422,13 @@ void UHWBossPresentationComponent::GroundBody(float DeltaTime)
         }
     }
     FVector L = BodyMesh->GetRelativeLocation();
-    L.Z = MeshBaseZ - ClipGroundCm * Scale - LyingDrop + StandLift;
+    // a move that leaves the ground (Shadow Fang's rise/dive) lifts the body; the actor scale multiplies relative offsets
+    const float ActorZ = FMath::Max(0.01f, Boss->GetActorScale3D().Z);
+    // up at once (the keys are the rise); down no faster than a fall - a parry that breaks the boss mid-air drops it
+    const float LiftWant = Boss->GetPatternLiftCm();
+    LiftFallSpeed = LiftWant >= LiftShown ? 0.f : LiftFallSpeed + 1800.f * DeltaTime;
+    LiftShown = LiftWant >= LiftShown ? LiftWant : FMath::Max(LiftWant, LiftShown - FMath::Max(LiftFallSpeed, 1300.f) * DeltaTime);
+    L.Z = MeshBaseZ - ClipGroundCm * Scale - LyingDrop + StandLift + LiftShown / ActorZ;
     BodyMesh->SetRelativeLocation(L);
 }
 

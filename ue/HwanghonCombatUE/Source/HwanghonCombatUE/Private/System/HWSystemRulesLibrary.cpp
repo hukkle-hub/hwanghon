@@ -159,6 +159,14 @@ FHWSystemDungeonDefinition UHWSystemRulesLibrary::DungeonDefinition(FName Dungeo
         Add(TEXT("relay_elite"), EHWRoomType::Elite, 2, 1, true);
         Add(TEXT("relay_core"), EHWRoomType::Boss, 0, 0, true);
     }
+    else if (DungeonId.ToString().StartsWith(TEXT("boss_")))
+    {
+        // a boss dungeon (docs/dungeons/<id>_DUNGEON_SPEC.md: story -> entry -> arena -> battle, no trash rooms):
+        // one arena, the novel's body with its designed skills (docs/design/181 §10)
+        D.ReviveTokens = 3;
+        D.BossBody = DungeonId;
+        Add(TEXT("arena"), EHWRoomType::Boss, 0, 0, true);
+    }
     else
     {
         D.ReviveTokens = 2;

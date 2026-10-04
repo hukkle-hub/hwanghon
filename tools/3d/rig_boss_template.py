@@ -374,6 +374,13 @@ mod = body.modifiers.new('Armature', 'ARMATURE')
 mod.object = arm
 print(f'[rig] {len(bones)} bones weighted, {len(bpy.data.actions)} clips, skeleton x{k:.3f}')
 
+# ---- 3.5 designed skills (docs/design/181 §8): Kimodo takes baked into one clip each, not damped (their own motion)
+if os.environ.get('HW_RIG_TAKES'):
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+    import boss_takes
+    for key in os.environ['HW_RIG_TAKES'].split(','):
+        boss_takes.bake(arm, key.strip())
+
 # ---- 4. export: mesh + skeleton + every clip
 select([arm, body], arm)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', use_selection=True, **JPEG, export_animations=True,

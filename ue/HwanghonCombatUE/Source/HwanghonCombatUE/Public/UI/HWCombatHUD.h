@@ -46,6 +46,10 @@ private:
 
     UFUNCTION()
     void HandleBossState(EHWBossState NewState, FName PatternId);
+    UFUNCTION()
+    void HandleBossParried(FName PatternId, int32 BeatIndex);
+    UFUNCTION()
+    void HandleBossRiposte(float Damage);
 
     void Flash(const FString& Word);
     void BindActors();
@@ -57,6 +61,8 @@ private:
 
     UPROPERTY(Transient) TObjectPtr<UTextBlock> BossNameText;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> BossBar;
+    // posture under the health bar: parries fill it, full = the boss breaks (docs/design/183)
+    UPROPERTY(Transient) TObjectPtr<UProgressBar> BossPostureBar;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> BossTell;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> HpBar;
     UPROPERTY(Transient) TObjectPtr<UProgressBar> StBar;

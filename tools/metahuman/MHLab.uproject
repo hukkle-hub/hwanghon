@@ -4,11 +4,54 @@
 	"Category": "",
 	"Description": "MetaHuman feasibility lab for Hwanghon hero bodies (docs/design/176) - kept apart from the game project",
 	"Plugins": [
-		{ "Name": "MetaHumanCharacter", "Enabled": true },
-		{ "Name": "MetaHuman", "Enabled": true },
-		{ "Name": "HairStrands", "Enabled": true },
-		{ "Name": "ChaosOutfitAsset", "Enabled": true },
-		{ "Name": "PythonScriptPlugin", "Enabled": true },
-		{ "Name": "EditorScriptingUtilities", "Enabled": true }
+		{
+			"Name": "MetaHumanCharacter",
+			"Enabled": true
+		},
+		{
+			"Name": "MetaHuman",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "HairStrands",
+			"Enabled": true
+		},
+		{
+			"Name": "ChaosOutfitAsset",
+			"Enabled": true
+		},
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "EditorScriptingUtilities",
+			"Enabled": true
+		},
+		{
+			"Name": "RigLogic",
+			"Enabled": true
+		},
+		{
+			"Name": "DNACalib",
+			"Enabled": true
+		}
+	],
+	"Modules": [
+		{
+			"Name": "MHLab",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "MHLabTools",
+			"Type": "Editor",
+			"LoadingPhase": "Default"
+		}
 	]
 }

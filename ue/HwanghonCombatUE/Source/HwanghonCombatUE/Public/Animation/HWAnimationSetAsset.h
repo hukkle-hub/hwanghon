@@ -87,6 +87,10 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Ain")
     FHWSequenceBinding Counter;
 
+    // The blow on a broken boss from its front (docs/design/183 §3): plays instead of the attack that lands it.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Ain")
+    FHWSequenceBinding Riposte;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Ain")
     FHWSequenceBinding Hit;
 

@@ -1,0 +1,285 @@
+<title>섀도우 팽 모션 스터디</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: same review-monitor layout as the scarecrow study (tools/vfx/scarecrow-motion-study.html): tabs, one wide
+   stage, timeline strip, then the layer order sheet. One dark look on purpose: the boss is shadow and violet light. */
+:root{
+  --ground:#0f0e13; --panel:#17151d; --raise:#211e29; --line:#353042; --ink:#ebe6f2; --dim:#a39cb3;
+  --violet:#9b7bff; --tell:#d6457a; --hit:#f3eeff; --heal:#6fe0b0; --ain:#e8463a;
+  --f-disp:"Nanum Myeongjo","Batang",serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ground)}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 12px/1.4 var(--f-body);letter-spacing:.08em;color:var(--violet)}
+h1{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f-disp);margin:0;text-wrap:balance}
+.lede{color:var(--dim);max-width:68ch;margin:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:500 14px/1.2 var(--f-body);color:var(--dim);background:transparent;border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer}
+.tabs button:hover{color:var(--ink);border-color:#5b5370}
+.tabs button[aria-selected="true"]{color:var(--ground);background:var(--violet);border-color:var(--violet)}
+.tabs button:focus-visible,.ctrl :focus-visible,.chips button:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.stage-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.stage-head h2{font:700 19px/1.3 var(--f-disp);margin:0}
+.stage-head .src{font:12px/1.5 var(--f-mono);color:var(--dim)}
+.canvas-box{position:relative;aspect-ratio:16/9;max-width:100%;background:#09080c}
+canvas#cv{width:100%;height:100%;display:block}
+.now{position:absolute;left:12px;top:10px;font:600 13px/1.3 var(--f-body);color:var(--ink);background:rgba(15,14,19,.75);padding:5px 9px;border-radius:3px;max-width:70%}
+.now small{display:block;font:400 12px/1.45 var(--f-body);color:var(--dim)}
+.hp{position:absolute;right:12px;top:10px;width:min(38%,260px);font:600 11px/1.3 var(--f-body);color:var(--dim);display:grid;gap:4px}
+.hp div{height:8px;background:#2a2533;border-radius:2px;overflow:hidden}
+.hp i{display:block;height:100%;background:linear-gradient(90deg,#6b3fd9,var(--violet))}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px;border-top:1px solid var(--line)}
+.ctrl button{font:600 13px/1 var(--f-body);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer;min-height:36px}
+.ctrl label{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px}
+.ctrl select{background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:6px 8px;font:13px var(--f-body)}
+.time{font:600 13px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink);margin-left:auto}
+.tl{padding:0 16px 14px;display:grid;gap:8px}
+.bar{position:relative;height:14px;border-radius:2px;overflow:hidden;background:var(--raise)}
+.bar i{position:absolute;top:0;bottom:0;border-right:1px solid var(--panel)}
+.k-idle{background:#3a3546}.k-tell{background:#8e2a55}.k-hit{background:#e9e2f7}.k-rec{background:#4f4862}.k-win{background:#2f8a64}.k-post{background:#5d4a8a}.k-rise{background:#6b3fd9}
+.headm{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--hit);box-shadow:0 0 6px var(--hit)}
+input[type=range]{width:100%;accent-color:var(--violet)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12px/1.2 var(--f-body);background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:6px 8px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.chips button b{font:600 11px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.chips button.on{border-color:var(--violet);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:14px;height:8px;border-radius:1px;display:inline-block}
+.sheet{display:grid;gap:10px}
+.sheet h3{font:700 17px/1.3 var(--f-disp);margin:0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--f-body);letter-spacing:.04em;color:var(--dim);background:var(--panel)}
+td:nth-child(1){font:13px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--violet)}
+td:nth-child(4){color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.rules{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.rules div{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-width:0}
+.rules b{display:block;font:700 15px/1.3 var(--f-disp);margin-bottom:4px}
+.rules p{margin:0;color:var(--dim);font-size:13px}
+.foot{color:var(--dim);font-size:13px;max-width:80ch;display:grid;gap:6px}
+@media (max-width:560px){.now{max-width:60%;font-size:12px}.time{margin-left:0}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">황혼 EP16·17 · 무음 전장 · 섀도우 팽 (사람 뼈대, 약 2.6 m)</div>
+    <h1>섀도우 팽 모션 스터디</h1>
+    <p class="lede">UE에 넣기 전에 보스 스킬 세 개의 동작·이펙트·타이밍을 여기서 정합니다. 참고는 소울류 최강 보스들(공중 난격·지연 찌르기·2단계 개화)이고, 우리 보스의 규칙(무음 지대: 소리 예고가 없다)에 맞게 바꿨습니다. 탭마다 «승인» 또는 고칠 점을 말해 주시면 승인된 것만 엔진으로 옮깁니다.</p>
+  </header>
+
+  <section class="rules" aria-label="보스 고유 규칙">
+    <div><b>무음 예고</b><p>무음 지대라 소리 예고가 없습니다. 모든 공격은 가슴의 보랏빛 균열이 밝아지는 것으로만 예고합니다.</p></div>
+    <div><b>흡혈 실</b><p>보스의 공격이 맞을 때마다 보랏빛 실이 보스로 돌아가 체력이 1.5 %씩 찹니다. 막거나 피하는 것이 곧 공략입니다.</p></div>
+    <div><b>2단계 개화</b><p>체력 50 %에서 공중으로 떠올라 아레나 가운데로 내리꽂고, 그림자 꽃이 터집니다. 이후 촉수가 두 배.</p></div>
+  </section>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <section class="stage" aria-label="재생 화면">
+    <div class="stage-head"><h2 id="sname"></h2><span class="src" id="ssrc"></span></div>
+    <div class="canvas-box">
+      <canvas id="cv" width="1280" height="720" aria-label="스킬 미리보기"></canvas>
+      <div class="now" id="now"></div>
+      <div class="hp"><span id="hpl">섀도우 팽 100 %</span><div><i id="hpb" style="width:100%"></i></div></div>
+    </div>
+    <div class="ctrl">
+      <button type="button" id="play">일시정지</button>
+      <button type="button" id="restart">처음부터</button>
+      <label for="speed">속도 <select id="speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label>
+      <label for="hitme"><input type="checkbox" id="hitme"> 아인이 맞는 경우 보기</label>
+      <span class="time" id="time">0.00 / 0.00 s</span>
+    </div>
+    <div class="tl">
+      <div class="bar" id="bar"><span class="headm" id="headm"></span></div>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="시간 이동">
+      <div class="chips" id="chips"></div>
+      <div class="legend"><span><i class="k-tell"></i>예고</span><span><i class="k-rise"></i>떠오름</span><span><i class="k-hit"></i>타격</span><span><i class="k-rec"></i>숨</span><span><i class="k-win"></i>공격 기회</span><span><i class="k-post"></i>잔류 장판</span><span><i class="k-idle"></i>대기</span></div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h3>레이어 순서표</h3>
+    <div class="tbl"><table><thead><tr><th>시간(s)</th><th>레이어</th><th>내용</th><th>UE 구현</th></tr></thead><tbody id="layers"></tbody></table></div>
+  </section>
+
+  <div class="foot">
+    <p>시간은 처음 정하는 값입니다(코드에는 아직 없음). 승인되면 이 표 그대로 보스 스킬 데이터와 나이아가라 이펙트로 옮기고, 같은 시각에 UE 장면 캡처로 맞춰 봅니다.</p>
+    <p>참고: 문서 181(소울류 보스 TOP3), 문서 145 §3(섀도우 팽 원문), 문서 18(예고·지연타·연계).</p>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+// skills: phases (t start, name, kind, desc), events used by the renderer, layer sheet rows
+const SK=[
+{id:"flurry",name:"그림자 난무",src:"공중 3세트 난격 · 맞으면 흡혈 · 참고: 말레니아 «물새 난무»",dur:6.6,
+ phases:[{t:0,n:"감기",k:"tell",d:"몸을 웅크리고 촉수를 몸 쪽으로 감는다. 가슴 균열이 보랏빛으로 차오른다(유일한 예고)."},
+  {t:.9,n:"떠오름",k:"rise",d:"촉수로 바닥을 쳐 2.4 m 떠오른다. 공중 정점에서 0.15초 멈춤."},
+  {t:1.25,n:"1세트 5타",k:"hit",d:"촉수 베기 5타(0.14초 간격). 반경 4 m 앞쪽 120°."},
+  {t:1.95,n:"숨",k:"rec",d:"공중에서 몸을 다시 감는다. 다음 세트 방향으로 틀어진다."},
+  {t:2.55,n:"2세트 5타",k:"hit",d:"같은 5타, 반대 방향에서."},
+  {t:3.25,n:"숨",k:"rec",d:"가장 긴 숨처럼 보이지만 다음이 가장 빠르다."},
+  {t:3.85,n:"3세트 7타",k:"hit",d:"7타를 0.12초 간격으로 몰아친다."},
+  {t:4.75,n:"내리꽂기",k:"hit",d:"공중에서 그대로 내리꽂는다. 반경 4 m 충격파."},
+  {t:5.0,n:"착지 경직",k:"win",d:"촉수가 바닥에 박혀 1.4초 움직이지 못한다. 공격 기회."},
+  {t:6.4,n:"복귀",k:"idle",d:""}],
+ hits:(()=>{const a=[];for(let i=0;i<5;i++)a.push(1.25+i*.14);for(let i=0;i<5;i++)a.push(2.55+i*.14);for(let i=0;i<7;i++)a.push(3.85+i*.12);a.push(4.75);return a})(),
+ layers:[["0.00–0.90","예고 · 가슴 균열","보랏빛 균열이 0→100 % 밝아짐, 촉수 수축","머티리얼 Emissive 커브 + 촉수 본 블렌드"],
+  ["0.90–1.25","떠오름 · 바닥 충격","촉수가 바닥을 친 자리에 검은 먼지 고리","나이아가라 GroundRing(검정·보라)"],
+  ["1.25–4.67","난격 · 촉수 궤적","타마다 보라 테두리의 검은 궤적, 세트마다 방향 반전","리본 트레일(촉수 끝 소켓) + 히트스톱 0.04 s"],
+  ["타격 시","흡혈 실","맞은 자리에서 보스 가슴으로 보랏빛 실, 보스 체력 +1.5 %","빔 이펙트 + 게임플레이 이펙트(회복)"],
+  ["4.75","내리꽂기 충격파","반경 4 m 링, 화면 흔들림 0.25 s","GroundRing + CameraShake"],
+  ["5.00–6.40","경직 표시","촉수 박힌 자리 균열이 꺼져 가는 빛","Emissive 페이드, 약점 하이라이트"]]},
+{id:"thrust",name:"무음 찌르기",src:"오래 멈췄다 한 번에 9 m · 참고: 지연 타격",dur:3.0,
+ phases:[{t:0,n:"웅크림",k:"tell",d:"촉수를 등 뒤로 모아 창처럼 꼰다. 1.25초 동안 완전히 멈춘다 — 무음이라 소리도 없다."},
+  {t:1.25,n:"찌르기",k:"hit",d:"0.12초 만에 9 m 직선 돌진. 폭 1.6 m."},
+  {t:1.37,n:"미끄러짐",k:"rec",d:"관성으로 1.5 m 더 미끄러진다."},
+  {t:1.77,n:"빈틈",k:"win",d:"촉수가 풀리며 1초 무방비."},
+  {t:2.77,n:"복귀",k:"idle",d:""}],
+ hits:[1.25],
+ layers:[["0.00–1.25","예고 · 직선 그림자","바닥에 9 m 길이의 옅은 그림자 길이 점점 짙어짐(0→60 %)","데칼 머티리얼 Opacity 커브"],
+  ["0.00–1.25","가슴 균열","천천히 밝아지다 1.1 s에 번쩍(타이밍 신호)","Emissive 커브"],
+  ["1.25–1.37","돌진 잔상","보스 실루엣 잔상 4장, 보라 테두리","고스트 트레일 머티리얼"],
+  ["1.25","타격","맞으면 흡혈 실 + 넉백 3 m","GE 회복 + 넉백"]]},
+{id:"bloom",name:"그림자 개화 (2단계 진입)",src:"체력 50 % · 공중 → 내리꽂기 → 꽃 폭발 · 참고: 말레니아 2단계",dur:6.4,
+ phases:[{t:0,n:"찢김",k:"tell",d:"체력 50 %. 보스가 비명 없이(무음) 몸을 젖히고 등에서 촉수가 두 배로 돋는다. 아레나 조명이 어두워진다."},
+  {t:1.0,n:"상승",k:"rise",d:"6 m 높이로 떠오른다."},
+  {t:1.6,n:"공중 정지",k:"tell",d:"1.6초 매달린다. 아레나 가운데 반경 8 m 원이 검게 차오른다. 원 밖이 안전 지대."},
+  {t:3.2,n:"내리꽂기",k:"hit",d:"0.2초 만에 가운데로 내리꽂는다."},
+  {t:3.4,n:"개화 폭발",k:"hit",d:"그림자 꽃잎이 0→8 m로 0.5초에 퍼진다. 원 안은 큰 피해."},
+  {t:3.9,n:"잔류 장판",k:"post",d:"원 안에 2.5초 그림자 웅덩이(초당 피해)."},
+  {t:6.4,n:"2단계",k:"idle",d:""}],
+ hits:[3.2,3.4],
+ layers:[["0.00–1.00","변신","등에서 촉수 추가 돋음, 가슴 균열 최대 밝기","모프 + 추가 메시 표시, Emissive"],
+  ["0.00–6.40","아레나 조명","전역 조명 −40 %, 보랏빛 안개","PostProcess 볼륨 블렌드"],
+  ["1.60–3.20","예고 원","반경 8 m 원이 바깥에서 안으로 검게 차오름","데칼 + 링 테두리(보라)"],
+  ["3.40–3.90","꽃잎 폭발","검은 꽃잎 리본 24장이 퍼지고 보라 불티","나이아가라 메시 파티클 + 불티"],
+  ["3.90–6.40","잔류 웅덩이","검은 액체 웅덩이, 가장자리에서 꽃잎이 흩날림","데칼 + DoT 볼륨"]]}
+];
+let cur=SK[0],T=0,playing=true,last=performance.now(),speed=1;
+const cv=$("cv"),g=cv.getContext("2d");
+function build(){
+  const tabs=$("tabs");tabs.replaceChildren();
+  SK.forEach(s=>{const b=document.createElement("button");b.type="button";b.role="tab";b.textContent=s.name;b.setAttribute("aria-selected",s===cur);b.onclick=()=>{cur=s;T=0;try{localStorage.setItem("sf-tab",s.id)}catch(e){};build()};tabs.appendChild(b)});
+  $("sname").textContent=cur.name;$("ssrc").textContent=cur.src;
+  const bar=$("bar");[...bar.querySelectorAll("i")].forEach(e=>e.remove());
+  cur.phases.forEach((p,i)=>{const e=(cur.phases[i+1]||{t:cur.dur}).t;const s=document.createElement("i");s.className="k-"+p.k;s.style.left=(p.t/cur.dur*100)+"%";s.style.width=((e-p.t)/cur.dur*100)+"%";s.title=p.n;bar.insertBefore(s,$("headm"))});
+  const ch=$("chips");ch.replaceChildren();cur.phases.forEach(p=>{const b=document.createElement("button");b.type="button";const bb=document.createElement("b");bb.textContent=p.t.toFixed(2);b.append(bb,document.createTextNode(p.n));b.onclick=()=>{T=p.t+.001;setPlaying(false)};ch.appendChild(b)});
+  const tb=$("layers");tb.replaceChildren();cur.layers.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});
+}
+function setPlaying(v){playing=v;$("play").textContent=v?"일시정지":"재생"}
+$("play").onclick=()=>setPlaying(!playing);$("restart").onclick=()=>{T=0;setPlaying(true)};
+$("speed").onchange=e=>speed=+e.target.value;
+$("scrub").oninput=e=>{T=e.target.value/1000*cur.dur;setPlaying(false)};
+try{const s=localStorage.getItem("sf-tab");const f=SK.find(x=>x.id===s);if(f)cur=f}catch(e){}
+if(matchMedia("(prefers-reduced-motion: reduce)").matches)speed=.5;
+// world: side view, x in metres (-10..10), ground at y=0, 1 m = 52 px
+const W=1280,H=720,GY=560,PX=52,X0=W/2;
+const wx=x=>X0+x*PX, wy=y=>GY-y*PX;
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2, cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function phaseAt(t){let p=cur.phases[0];for(const q of cur.phases)if(t>=q.t)p=q;return p}
+function bossState(t){
+  // returns {x,y,crouch,glow,tend(0..2 count factor),dir}
+  const s={x:-2,y:0,crouch:0,glow:.25,tend:1,dir:1,lunge:0};
+  if(cur.id==="flurry"){
+    s.glow=.25+.75*cl(t/.9);s.crouch=cl(t/.9)*(t<.9?1:0);
+    if(t>=.9&&t<1.25)s.y=2.4*ease((t-.9)/.35);
+    if(t>=1.25&&t<4.75)s.y=2.4+.15*Math.sin(t*9);
+    if(t>=4.75&&t<5.0)s.y=2.4*(1-ease((t-4.75)/.25));
+    if(t>=5.0&&t<6.4){s.crouch=.7;s.glow=.25*(1-(t-5)/1.4)}
+    s.dir=(t>=2.55&&t<3.25)?-1:1; s.x=-1.2;
+  }else if(cur.id==="thrust"){
+    s.crouch=t<1.25?cl(t/.4):0;s.glow=t<1.25?(.2+.6*cl(t/1.25)+(t>1.1&&t<1.25?.6:0)):.3;
+    s.x=-5;if(t>=1.25)s.x=-5+9*ease(cl((t-1.25)/.12))+1.5*ease(cl((t-1.37)/.4));
+    s.lunge=t>=1.25&&t<1.77?1:0;
+  }else{
+    s.x=0;s.tend=1+cl(t/1);s.glow=t<1?.4+.6*cl(t):1;
+    if(t>=1&&t<1.6)s.y=6*ease((t-1)/.6);if(t>=1.6&&t<3.2)s.y=6+.2*Math.sin(t*5);
+    if(t>=3.2&&t<3.4)s.y=6*(1-ease((t-3.2)/.2));if(t>=3.4)s.crouch=.4;
+  }
+  return s;
+}
+function drawBoss(s,t){
+  const bx=wx(s.x),by=wy(s.y);const h=2.6*PX*(1-.25*s.crouch);
+  g.save();g.translate(bx,by);g.scale(s.dir,1);
+  // tendrils
+  const n=Math.round(10*s.tend);
+  for(let i=0;i<n;i++){
+    const a=(i/n)*Math.PI*1.2-Math.PI*.1, len=(1.2+.6*Math.sin(i*1.7))*PX*(1-.4*s.crouch);
+    const sx=(i%2?18:-18)*(.5+i/n), sy=-h*(.35+.4*(i%5)/5);
+    g.strokeStyle=i%3?"#3b3450":"#5a4a86";g.lineWidth=6-3*(i/n);g.beginPath();g.moveTo(sx,sy);
+    const sw=Math.sin(t*3+i)*12;
+    g.bezierCurveTo(sx+Math.cos(a)*len*.4+sw,sy+len*.2,sx+Math.cos(a)*len*.8-sw,sy+len*.6,sx+Math.cos(a)*len,sy+len*.9);g.stroke();
+  }
+  // body
+  g.fillStyle="#1c1925";g.strokeStyle="rgba(155,123,255,.55)";g.lineWidth=1.5;
+  g.beginPath();g.moveTo(-22,0);g.lineTo(-30,-h*.45);g.lineTo(-34,-h*.78);g.lineTo(-16,-h*.92);g.quadraticCurveTo(0,-h*1.06,16,-h*.92);g.lineTo(34,-h*.78);g.lineTo(30,-h*.45);g.lineTo(22,0);g.closePath();g.fill();g.stroke();
+  // hood eye + chest crack glow
+  const gl=s.glow;g.shadowColor="#9b7bff";g.shadowBlur=24*gl;
+  g.fillStyle=`rgba(190,170,255,${.4+.6*gl})`;g.fillRect(4,-h*.9,10,3);
+  g.strokeStyle=`rgba(170,140,255,${.25+.75*gl})`;g.lineWidth=2+2*gl;g.beginPath();g.moveTo(0,-h*.72);g.lineTo(-4,-h*.6);g.lineTo(3,-h*.5);g.lineTo(-2,-h*.38);g.moveTo(0,-h*.62);g.lineTo(10,-h*.57);g.stroke();
+  g.restore();
+}
+function drawAin(x,t,hitT){
+  const px=wx(x),py=wy(0);const k=hitT>=0?cl(1-hitT/.3):0;
+  g.save();g.translate(px+k*8,py);
+  g.fillStyle="#2a2228";g.beginPath();g.ellipse(0,-1.7*PX*.5,10,1.7*PX*.5,0,0,Math.PI*2);g.fill();
+  g.fillStyle="#d8c9c2";g.beginPath();g.arc(0,-1.68*PX,9,0,Math.PI*2);g.fill();
+  g.fillStyle="#0c0b0e";g.beginPath();g.arc(0,-1.72*PX,10,Math.PI,0);g.fill();
+  g.fillStyle="#e8463a";g.fillRect(-3,-1.7*PX,6,2);
+  if(k>0){g.strokeStyle=`rgba(255,240,240,${k})`;g.lineWidth=2;g.beginPath();g.arc(0,-1*PX,22+20*(1-k),0,Math.PI*2);g.stroke()}
+  g.fillStyle="#a39cb3";g.font="600 13px IBM Plex Sans KR, sans-serif";g.textAlign="center";g.fillText("아인",0,40);
+  g.restore();
+}
+let hp=1;
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(playing){T+=dt*speed;if(T>cur.dur){T=0;hp=1}}
+  const t=T,ph=phaseAt(t),s=bossState(t);
+  // background
+  const dim=cur.id==="bloom"?cl(t/1)*.45:0;
+  g.fillStyle="#0b0a0f";g.fillRect(0,0,W,H);
+  const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,`rgba(40,32,62,${.6-dim})`);grd.addColorStop(1,"rgba(8,7,11,1)");g.fillStyle=grd;g.fillRect(0,0,W,H);
+  g.strokeStyle="#2a2533";g.lineWidth=2;g.beginPath();g.moveTo(0,GY);g.lineTo(W,GY);g.stroke();
+  g.fillStyle="#6d6680";g.font="12px JetBrains Mono, monospace";g.textAlign="center";
+  for(let m=-10;m<=10;m+=2){g.fillRect(wx(m)-1,GY,2,6);g.fillText(m+" m",wx(m),GY+22)}
+  // telegraphs
+  if(cur.id==="thrust"&&t<1.25){const a=.6*cl(t/1.25);g.fillStyle=`rgba(80,40,140,${a})`;g.fillRect(wx(-5),GY-6,9*PX,12)}
+  if(cur.id==="bloom"&&t>=1.6&&t<3.4){const k=cl((t-1.6)/1.6);g.fillStyle=`rgba(30,10,50,${.25+.5*k})`;g.fillRect(wx(-8),GY-5,16*PX,10);g.fillStyle="rgba(155,123,255,.9)";g.fillRect(wx(-8)-2,GY-14,4,28);g.fillRect(wx(8)-2,GY-14,4,28);
+    g.fillStyle="#cfc6e6";g.font="600 13px IBM Plex Sans KR, sans-serif";g.fillText("안전 지대 →",wx(9.2),GY-24)}
+  if(cur.id==="bloom"&&t>=3.4){const k=cl((t-3.4)/.5),r=8*k;if(t<3.9){for(let i=0;i<24;i++){const a=i/24*Math.PI;const rx=wx(Math.cos(a)*r),ry=wy(Math.sin(a)*r*.5);g.fillStyle=`rgba(20,12,30,${1-k*.4})`;g.beginPath();g.ellipse(rx,ry,14,6,a,0,Math.PI*2);g.fill();g.fillStyle=`rgba(155,123,255,${.8*(1-k)})`;g.fillRect(rx-2,ry-2,4,4)}}
+    if(t>=3.9){g.fillStyle="rgba(25,12,40,.85)";g.fillRect(wx(-8),GY-4,16*PX,8)}}
+  // flurry arcs
+  if(cur.id==="flurry"||cur.id==="thrust"){for(const h of cur.hits){const d=t-h;if(d>=0&&d<.18){const k=d/.18;const cx=wx(s.x+(cur.id==="thrust"?0:1.6*s.dir)),cy=wy(s.y+1.4);g.strokeStyle=`rgba(155,123,255,${1-k})`;g.lineWidth=10*(1-k);g.beginPath();const a0=(h*37%2)*Math.PI*.3;g.arc(cx,cy,(cur.id==="thrust"?.8:2.2)*PX,a0-.9+k,a0+.9+k);g.stroke();g.strokeStyle=`rgba(10,8,14,${1-k})`;g.lineWidth=4*(1-k);g.stroke()}}}
+  if(cur.id==="thrust"&&s.lunge){for(let i=1;i<=4;i++){g.globalAlpha=.18*(5-i)/4;drawBoss({...s,x:s.x-i*.9},t);}g.globalAlpha=1}
+  if(cur.id==="flurry"&&t>=4.75&&t<5.05){const k=(t-4.75)/.3;g.strokeStyle=`rgba(155,123,255,${1-k})`;g.lineWidth=4;g.beginPath();g.ellipse(wx(s.x),GY,4*PX*k,18*k,0,0,Math.PI*2);g.stroke()}
+  drawBoss(s,t);
+  // Ain + heal threads
+  const ainX=cur.id==="thrust"?3:(cur.id==="bloom"?(t<2?2:9.4):2.2);
+  const hitMe=$("hitme").checked;let lastHit=-1;
+  if(hitMe)for(const h of cur.hits){if(t>=h&&(cur.id!=="bloom"||ainX<8))lastHit=h}
+  drawAin(ainX,t,lastHit>=0?t-lastHit:-1);
+  if(hitMe&&lastHit>=0&&t-lastHit<.45){const k=(t-lastHit)/.45;const ax=wx(ainX),ay=wy(1),bx=wx(s.x),by=wy(s.y+1.7);g.strokeStyle=`rgba(111,224,176,${1-k})`;g.lineWidth=2;g.beginPath();g.moveTo(ax,ay);g.quadraticCurveTo((ax+bx)/2,Math.min(ay,by)-60,ax+(bx-ax)*k,ay+(by-ay)*k);g.stroke()}
+  // boss hp (heals when Ain is hit)
+  const nh=hitMe?cur.hits.filter(h=>t>=h&&(cur.id!=="bloom"||ainX<8)).length:0;const base=cur.id==="bloom"?.5:.72;const v=Math.min(1,base+nh*.015);
+  $("hpb").style.width=(v*100)+"%";$("hpl").textContent=`섀도우 팽 ${(v*100).toFixed(1)} %`+(nh?`  (+${(nh*1.5).toFixed(1)} 흡혈)`:"");
+  // HUD
+  $("now").innerHTML="";const nb=document.createElement("span");nb.textContent=ph.n;const sm=document.createElement("small");sm.textContent=ph.d;$("now").append(nb,sm);
+  $("time").textContent=`${t.toFixed(2)} / ${cur.dur.toFixed(2)} s`;
+  $("headm").style.left=(t/cur.dur*100)+"%";if(playing)$("scrub").value=t/cur.dur*1000;
+  document.querySelectorAll("#chips button").forEach((b,i)=>b.classList.toggle("on",cur.phases[i]===ph));
+  requestAnimationFrame(frame);
+}
+build();requestAnimationFrame(frame);
+</script>

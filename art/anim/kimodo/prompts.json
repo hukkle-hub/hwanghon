@@ -1,13 +1,83 @@
 {
  "_note": "Kimodo text-to-motion takes for skills where the Mixamo stock clip was weak (docs/design/172). 3 seeds each; the chosen take is copied to art/anim/kimodo/<id>.fbx.",
- "ain_4": {"why": "Mixamo Great Sword Blocking is nearly static", "duration": 2.5,
-           "prompt": "A person braces in a wide stance and raises a two-handed sword horizontally above the head to block a heavy strike, then shoves it away."},
- "ain_1": {"why": "Mixamo Great Sword Slash is 3.53 s", "duration": 1.8,
-           "prompt": "A person swings a large two-handed weapon in a wide horizontal arc from right to left while stepping forward."},
- "kain_R": {"why": "the anvil finisher should read as one huge overhead slam", "duration": 2.5,
-            "prompt": "A person raises a heavy two-handed hammer high above the head and slams it down onto the ground with great force."},
- "ryu_1": {"why": "Mixamo combo is 4.67 s", "duration": 2.0,
-           "prompt": "A person performs a fast flurry of slashes with two daggers while stepping forward."},
- "sera_1": {"why": "a quicker throw than Mixamo Throw", "duration": 1.5,
-            "prompt": "A person quickly throws a small object overhand at a target in front of them."}
+ "ain_4": {
+  "why": "Mixamo Great Sword Blocking is nearly static",
+  "duration": 2.5,
+  "prompt": "A person braces in a wide stance and raises a two-handed sword horizontally above the head to block a heavy strike, then shoves it away."
+ },
+ "ain_1": {
+  "why": "Mixamo Great Sword Slash is 3.53 s",
+  "duration": 1.8,
+  "prompt": "A person swings a large two-handed weapon in a wide horizontal arc from right to left while stepping forward."
+ },
+ "kain_R": {
+  "why": "the anvil finisher should read as one huge overhead slam",
+  "duration": 2.5,
+  "prompt": "A person raises a heavy two-handed hammer high above the head and slams it down onto the ground with great force."
+ },
+ "ryu_1": {
+  "why": "Mixamo combo is 4.67 s",
+  "duration": 2.0,
+  "prompt": "A person performs a fast flurry of slashes with two daggers while stepping forward."
+ },
+ "sera_1": {
+  "why": "a quicker throw than Mixamo Throw",
+  "duration": 1.5,
+  "prompt": "A person quickly throws a small object overhand at a target in front of them."
+ },
+ "kain_leap": {
+  "why": "doc 178: Guts-style leap slam (Kain skill 4) - windup, jump, hang, crash down",
+  "duration": 2.6,
+  "prompt": "A person crouches low, leaps high into the air while raising a huge two-handed sword over the head, then falls and smashes it down into the ground with enormous force, landing in a deep crouch."
+ },
+ "kain_sweep": {
+  "why": "doc 178: Kain skill 3 - one huge spinning sweep",
+  "duration": 2.2,
+  "prompt": "A person twists the torso far back holding a huge heavy two-handed sword, then spins a full circle sweeping the blade horizontally around the body, and staggers to a stop."
+ },
+ "sf_rise": {
+  "why": "doc 181: Shadow Fang flurry - coil and spring up",
+  "duration": 1.4,
+  "prompt": "A creature crouches very low with arms pulled in, then springs straight up into the air with arms spread wide."
+ },
+ "sf_flurry": {
+  "why": "doc 181: Shadow Fang flurry - airborne rapid slashes",
+  "duration": 2.0,
+  "prompt": "A person slashes wildly and very fast with both arms clawing left and right in rapid alternating strikes, leaning forward aggressively."
+ },
+ "sf_dive": {
+  "why": "doc 181: Shadow Fang flurry - dive and stuck",
+  "duration": 2.2,
+  "prompt": "A person dives down from above and slams both hands into the ground, then stays hunched over, stuck and panting."
+ },
+ "sf_thrust": {
+  "why": "doc 181: Shadow Fang silent thrust - frozen coil, explosive lunge",
+  "duration": 2.4,
+  "prompt": "A person crouches completely still with one arm pulled far back like a drawn spear, then explodes forward in a long lunging thrust, stabbing straight ahead with the arm fully extended, and slides to a stop off balance."
+ },
+ "s09_combo": {
+  "why": "doc 181: Subject 09 rhythm-breaking frenzy combo (Orphan of Kos)",
+  "duration": 3.0,
+  "prompt": "A person attacks in a wild frenzy: two quick swings, a sudden pause, then three fast heavy swings with irregular timing, lurching and stumbling forward between strikes."
+ },
+ "s09_roar": {
+  "why": "doc 181: Subject 09 phase-2 storm call",
+  "duration": 2.5,
+  "prompt": "A person hunches over, then rears up with both arms thrown wide to the sky and screams, body shaking."
+ },
+ "clave_tele": {
+  "why": "doc 181: Clave delayed overhead strike after teleport (Radahn)",
+  "duration": 2.6,
+  "prompt": "A person raises a heavy weapon slowly high over the head with both hands and holds it there, frozen, then brings it crashing straight down very hard."
+ },
+ "ain_parry": {
+  "why": "counter (parry) motion: the Graybox block is a static guard (docs/design/183 §5)",
+  "duration": 1.2,
+  "prompt": "A person holding a long two-handed polearm quickly raises it diagonally in front of the body to deflect a strike coming from above, the weapon is knocked back slightly, then the person returns to a ready stance."
+ },
+ "ain_riposte": {
+  "why": "riposte on a broken boss: step in, weapon high, drive it down into the fallen enemy (docs/design/183 §3)",
+  "duration": 1.8,
+  "prompt": "A person steps forward, lifts a long two-handed weapon high above the head, then drives it straight down hard into an enemy lying on the ground in front, and holds the pose for a moment."
+ }
 }

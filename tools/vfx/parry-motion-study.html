@@ -1,0 +1,345 @@
+<title>반격 모션 스터디</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: the same review monitor as the Shadow Fang study (tools/vfx/shadowfang-motion-study.html): tabs, one wide
+   stage with HUD, timeline strip, then the layer sheet. Dark on purpose: violet = parriable, red-orange = must dodge. */
+:root{
+  --ground:#0f0e13; --panel:#17151d; --raise:#211e29; --line:#353042; --ink:#ebe6f2; --dim:#a39cb3;
+  --violet:#9b7bff; --danger:#ff5a2a; --spark:#fff4dc; --ain:#e8463a; --posture:#e9b949;
+  --f-disp:"Nanum Myeongjo","Batang",serif;
+  --f-body:"IBM Plex Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html{background:var(--ground)}
+body{background:var(--ground);color:var(--ink);font:15px/1.6 var(--f-body);margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:28px 56px;display:grid;gap:20px}
+header{display:grid;gap:6px}
+.eyebrow{font:600 12px/1.4 var(--f-body);letter-spacing:.08em;color:var(--violet)}
+h1{font:800 clamp(28px,4.4vw,44px)/1.15 var(--f-disp);margin:0;text-wrap:balance}
+.lede{color:var(--dim);max-width:70ch;margin:0}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{font:500 14px/1.2 var(--f-body);color:var(--dim);background:transparent;border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer;min-height:40px}
+.tabs button:hover{color:var(--ink);border-color:#5b5370}
+.tabs button[aria-selected="true"]{color:var(--ground);background:var(--violet);border-color:var(--violet)}
+.tabs button:focus-visible,.ctrl :focus-visible,.chips button:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.stage-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.stage-head h2{font:700 19px/1.3 var(--f-disp);margin:0}
+.stage-head .src{font:12px/1.5 var(--f-mono);color:var(--dim)}
+.canvas-box{position:relative;aspect-ratio:16/9;max-width:100%;background:#09080c}
+canvas#cv{width:100%;height:100%;display:block}
+.now{position:absolute;left:12px;top:10px;font:600 13px/1.3 var(--f-body);color:var(--ink);background:rgba(15,14,19,.78);padding:5px 9px;border-radius:3px;max-width:60%}
+.now small{display:block;font:400 12px/1.45 var(--f-body);color:var(--dim)}
+.hud{position:absolute;right:12px;top:10px;width:min(40%,280px);font:600 11px/1.3 var(--f-body);color:var(--dim);display:grid;gap:4px}
+.hud div{height:8px;background:#2a2533;border-radius:2px;overflow:hidden}
+.hud i{display:block;height:100%}
+#hpb{background:linear-gradient(90deg,#6b3fd9,var(--violet))}
+#psb{background:linear-gradient(90deg,#a87b1c,var(--posture))}
+.ctrl{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:12px 16px;border-top:1px solid var(--line)}
+.ctrl button{font:600 13px/1 var(--f-body);background:var(--raise);color:var(--ink);border:1px solid var(--line);padding:9px 12px;border-radius:3px;cursor:pointer;min-height:40px}
+.ctrl label{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px;min-height:40px}
+.ctrl select{background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:3px;padding:6px 8px;font:13px var(--f-body);min-height:34px}
+.time{font:600 13px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink);margin-left:auto}
+.tl{padding:0 16px 14px;display:grid;gap:8px}
+.bar{position:relative;height:14px;border-radius:2px;overflow:hidden;background:var(--raise)}
+.bar i{position:absolute;top:0;bottom:0;border-right:1px solid var(--panel)}
+.k-idle{background:#3a3546}.k-tell{background:#5d4a8a}.k-danger{background:#9a3a1c}.k-hit{background:#e9e2f7}.k-parry{background:#e9b949}.k-stop{background:#fff4dc}.k-fall{background:#6b3fd9}.k-win{background:#2f8a64}.k-rec{background:#4f4862}
+.headm{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fff;box-shadow:0 0 6px #fff}
+input[type=range]{width:100%;accent-color:var(--violet)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12px/1.2 var(--f-body);background:transparent;color:var(--dim);border:1px solid var(--line);border-radius:2px;padding:6px 8px;cursor:pointer;display:flex;gap:6px;align-items:center;min-height:32px}
+.chips button b{font:600 11px var(--f-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.chips button.on{border-color:var(--violet);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:14px;height:8px;border-radius:1px;display:inline-block}
+.sheet{display:grid;gap:10px}
+.sheet h3{font:700 17px/1.3 var(--f-disp);margin:0}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line)}
+th{font:600 12px var(--f-body);letter-spacing:.04em;color:var(--dim);background:var(--panel)}
+td:nth-child(1){font:13px var(--f-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--violet)}
+td:nth-child(4){color:var(--dim)}
+tr:last-child td{border-bottom:0}
+.rules{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.rules div{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:12px 14px;min-width:0}
+.rules b{display:block;font:700 15px/1.3 var(--f-disp);margin-bottom:4px}
+.rules p{margin:0;color:var(--dim);font-size:13px}
+.foot{color:var(--dim);font-size:13px;max-width:80ch;display:grid;gap:6px}
+@media (max-width:560px){.now{max-width:55%;font-size:12px}.time{margin-left:0}.hud{width:42%}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">황혼 · 보스전 반격 체계 · 섀도우 팽에서 먼저 (문서 183)</div>
+    <h1>반격 모션 스터디</h1>
+    <p class="lede">게임에는 반격 규칙이 이미 들어가 있습니다(연속 반격, 자세 무너짐, 치명 일격). 여기서는 <b>보이는 것과 박자</b>를 정합니다: 불꽃, 멈춤, 밀림, 무너질 때 섬광, 치명 일격 클로즈업, 피해야 하는 타의 예고. 탭마다 «승인» 또는 고칠 점을 말해 주시면 승인된 것만 엔진으로 옮깁니다.</p>
+  </header>
+
+  <section class="rules" aria-label="반격 규칙">
+    <div><b>받을 수 있는 타 = 보라</b><p>섀도우 팽의 예고는 가슴 균열의 보랏빛입니다. 보라로 예고한 타는 반격할 수 있습니다.</p></div>
+    <div><b>피해야 하는 타 = 붉은 주황</b><p>균열이 붉은 주황으로 두 번 깜빡이고 바닥에 같은 색 원이 생기면 반격이 안 됩니다. 굴러서 피합니다.</p></div>
+    <div><b>쌓이면 무너진다</b><p>반격 한 번에 자세 12. 아홉 번이면 무너집니다. 공중에서 무너지면 떨어져 눕고, 정면에서 치명 일격(×5).</p></div>
+  </section>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <section class="stage" aria-label="재생 화면">
+    <div class="stage-head"><h2 id="sname"></h2><span class="src" id="ssrc"></span></div>
+    <div class="canvas-box">
+      <canvas id="cv" width="1280" height="720" aria-label="반격 미리보기"></canvas>
+      <div class="now" id="now"></div>
+      <div class="hud"><span id="hpl">섀도우 팽</span><div><i id="hpb" style="width:72%"></i></div><span id="psl">자세</span><div><i id="psb" style="width:0%"></i></div></div>
+    </div>
+    <div class="ctrl">
+      <button type="button" id="play">일시정지</button>
+      <button type="button" id="restart">처음부터</button>
+      <label for="speed">속도 <select id="speed"><option value="1">1×</option><option value="0.5">0.5×</option><option value="0.25">0.25×</option></select></label>
+      <label for="fail"><input type="checkbox" id="fail"> <span id="faillbl">실패하면</span></label>
+      <span class="time" id="time">0.00 / 0.00 s</span>
+    </div>
+    <div class="tl">
+      <div class="bar" id="bar"><span class="headm" id="headm"></span></div>
+      <input type="range" id="scrub" min="0" max="1000" value="0" aria-label="시간 이동">
+      <div class="chips" id="chips"></div>
+      <div class="legend"><span><i class="k-tell"></i>예고(받을 수 있음)</span><span><i class="k-danger"></i>예고(피해야 함)</span><span><i class="k-parry"></i>반격 입력</span><span><i class="k-stop"></i>멈춤</span><span><i class="k-fall"></i>무너짐·낙하</span><span><i class="k-win"></i>공격 기회</span><span><i class="k-rec"></i>회복</span></div>
+    </div>
+  </section>
+
+  <section class="sheet">
+    <h3>레이어 순서표</h3>
+    <div class="tbl"><table><thead><tr><th>시간(s)</th><th>레이어</th><th>내용</th><th>UE 구현</th></tr></thead><tbody id="layers"></tbody></table></div>
+  </section>
+
+  <div class="foot">
+    <p>규칙 수치(반격 창 0.25 s, 이어 누르기, 자세 12, 치명 일격 ×5와 0.32 s 멈춤, 1.2 s 뒤 일어남)는 이미 게임에 들어가 있고 자동 시험으로 확인했습니다(문서 183 §4). 이 페이지의 이펙트·카메라·소리는 아직 게임에 없습니다.</p>
+    <p>참고: 엘든 링 «미켈라단» 단검 패리(문서 183 §1), 세키로의 연속 튕겨내기, 문서 178 §4(마무리 전 무기 클로즈업).</p>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const SK=[
+{id:"one",name:"반격 한 번",src:"0.25 s 창 · 불꽃 · 0.12 s 멈춤 · 보스 밀림",dur:2.4,fail:"늦게 누르면",
+ phases:[{t:0,n:"대기",k:"idle",d:"섀도우 팽이 아인 앞 2 m에 떠 있다."},
+  {t:.3,n:"예고",k:"tell",d:"가슴 균열이 보랏빛으로 차오르고 촉수를 뒤로 감는다. 보라 = 받을 수 있다."},
+  {t:.78,n:"반격 입력",k:"parry",d:"아인이 낫을 세워 든다. 받는 창 0.25 s(0.78–1.03)."},
+  {t:.9,n:"맞부딪침",k:"stop",d:"촉수가 낫에 걸린다. 흰 금빛 불꽃 + 양쪽 0.12 s 멈춤 + 화면 흔들림 0.08 s."},
+  {t:1.02,n:"밀림",k:"rec",d:"보스 몸이 0.3 m 뒤로 젖혀진다. 자세 +12. 흡혈 없음."},
+  {t:1.4,n:"다음 타로",k:"tell",d:"연타는 끊기지 않는다. 다음 타 예고가 바로 이어진다."}],
+ beats:[.9], press:[.78],
+ layers:[["0.30–0.90","예고","가슴 균열 보랏빛 0→100 %","Emissive 커브(예고 시간에 맞춤)"],
+  ["0.90","반격 불꽃","흰 심지 + 금빛 테두리 별 모양 8갈래, 0.18 s에 사라짐. 촉수 끝과 낫날이 만나는 점","나이아가라 버스트(OnBossParried 위치 = 무기 소켓)"],
+  ["0.90–1.02","멈춤","보스와 아인 둘 다 0.12 s 정지(이미 들어감). 화면 흔들림 0.08 s 작게","ApplyHitStop + CameraShake(작게)"],
+  ["0.90","소리","쇠 부딪히는 짧은 «챙». 연속일수록 반음씩 높아진다","사운드 큐(피치 = 연속 횟수)"],
+  ["1.02–1.40","밀림","보스 0.3 m 뒤로 젖혀짐(가산 자세), 자세 막대 +12","가산 리액션 + 자세 UI"]]},
+{id:"chain",name:"연속 반격 → 무너짐",src:"5+4타를 한 타씩 · 9번째에 무너짐 · 공중에서 낙하",dur:4.4,fail:"세 번째를 놓치면",
+ phases:[{t:0,n:"공중 연타",k:"tell",d:"2.4 m 높이에서 0.14 s 간격 연타. 받을 때마다 다음 반격을 바로 누를 수 있다."},
+  {t:.4,n:"1세트 5타",k:"parry",d:"한 타씩 받는다. 불꽃이 좌우로 번갈아 튄다. 소리가 반음씩 오른다."},
+  {t:1.1,n:"숨",k:"rec",d:"보스가 다시 감는다. 자세 막대 60 %."},
+  {t:1.4,n:"2세트 4타",k:"parry",d:"자세가 차오르며 막대가 금빛으로 깜빡인다."},
+  {t:1.82,n:"무너짐",k:"stop",d:"9번째 반격: 화면 흰 섬광 0.06 s(40 %) + 멈춤 0.2 s + 화면 흔들림 0.25 s. 가슴 균열이 꺼진다."},
+  {t:2.08,n:"낙하",k:"fall",d:"공중에서 떨어진다(중력 가속, 0.42 s)."},
+  {t:2.5,n:"착지 충격",k:"fall",d:"검은 먼지 고리 4 m, 파편."},
+  {t:2.6,n:"공격 기회",k:"win",d:"보스가 엎어져 있다. 정면에 금빛 표식(치명 일격 가능)."}],
+ beats:[.4,.54,.68,.82,.96,1.4,1.54,1.68,1.82], press:[.3,.44,.58,.72,.86,1.3,1.44,1.58,1.72],
+ layers:[["0.40–1.82","연속 불꽃","타마다 불꽃 하나. 좌우 번갈아, 연속 횟수만큼 조금씩 커짐(1.0→1.4배)","OnBossParried(BeatIndex)로 크기·방향"],
+  ["0.40–1.82","자세 막대","보스 체력 아래 금빛 막대. 80 % 넘으면 깜빡임","UMG(GetPosture/GetMaxPosture)"],
+  ["1.82","무너짐 섬광","화면 전체 흰빛 0.06 s(밝기 40 %), 보스 가슴 균열 꺼짐, 멈춤 0.2 s","포스트프로세스 플래시 + Emissive 0"],
+  ["2.08–2.50","낙하","2.4 m에서 떨어짐(이미 들어감: 떨어지는 속도로 내려옴)","LiftShown 낙하"],
+  ["2.50","착지 충격","검은 먼지 고리 반경 4 m, 파편 10개, 흔들림 0.15 s","GroundRing(섀도우 팽 무늬) + CameraShake"],
+  ["2.60–","치명 일격 표식","보스 정면 바닥에 금빛 마름모. 3.8 m 안에 들어오면 밝아짐","데칼 + 거리 판정(RiposteReachCm)"]]},
+{id:"riposte",name:"치명 일격",src:"정면 3.8 m · 클로즈업 0.6 s · ×5 · 0.32 s 멈춤",dur:3.6,fail:"뒤에서 치면",
+ phases:[{t:0,n:"다가감",k:"win",d:"엎어진 보스 정면으로 다가간다. 표식이 밝아진다."},
+  {t:.4,n:"치켜듦",k:"tell",d:"카메라가 아인 어깨 뒤로 다가가 1.8배 확대(0.25 s). 낫을 높이 든다."},
+  {t:.65,n:"일격",k:"stop",d:"내려찍기. 붉은 섬광 1프레임 + 멈춤 0.32 s + 큰 흔들림. 피해 ×5."},
+  {t:.97,n:"피해 표시",k:"hit",d:"큰 숫자, 보스 체력이 한 덩어리 줄어든다(0.6 s에 걸쳐)."},
+  {t:1.6,n:"멀어짐",k:"rec",d:"카메라가 원래 거리로 돌아온다(0.4 s)."},
+  {t:1.85,n:"일어남",k:"rec",d:"치명 일격 1.2 s 뒤 보스가 일어난다. 자세 0부터 다시."}],
+ beats:[.65], press:[],
+ layers:[["0.40–0.65","클로즈업","카메라가 아인 어깨 뒤로 1.8배, 보스 얼굴(후드)이 화면 가운데","OnBossRiposte → 카메라 블렌드(시네 카메라 or 스프링암 거리)"],
+  ["0.65","붉은 섬광","화면 테두리 붉은빛 1프레임, 낫 궤적 붉은 띠","포스트프로세스 + 무기 리본"],
+  ["0.65–0.97","멈춤","0.32 s 둘 다 정지(이미 들어감), 큰 흔들림","ApplyHitStop + CameraShake(크게)"],
+  ["0.97–1.60","피해","×5 피해 숫자 크게(금빛), 체력 막대 덩어리 감소","데미지 위젯(치명 일격 전용 스타일)"],
+  ["0.65","소리","무거운 «쿵» + 낮은 울림, 직후 0.3 s 무음(무음 지대 규칙과 어울림)","사운드 큐 + 오디오 덕킹"]]},
+{id:"danger",name:"반격 불가 예고",src:"붉은 주황 두 번 깜빡 + 바닥 원 4 m · 피해야 하는 내리꽂기",dur:2.8,fail:"반격을 누르면",
+ phases:[{t:0,n:"공중",k:"idle",d:"3세트 끝, 보스가 공중에 떠 있다."},
+  {t:.2,n:"위험 예고",k:"danger",d:"가슴 균열이 붉은 주황으로 두 번 깜빡인다(0.2, 0.42 s). 보라가 아니다 = 받을 수 없다."},
+  {t:.55,n:"바닥 원",k:"danger",d:"떨어질 자리에 반경 4 m 붉은 주황 원이 바깥에서 안으로 찬다."},
+  {t:.85,n:"구르기",k:"parry",d:"아인이 원 밖으로 구른다(무적 시간)."},
+  {t:1.05,n:"내리꽂기",k:"stop",d:"0.2 s 만에 내리꽂힘. 원 안은 큰 피해(3000)."},
+  {t:1.3,n:"경직",k:"win",d:"촉수가 바닥에 박혀 1.4 s. 이때가 공격 기회."}],
+ beats:[1.05], press:[],
+ layers:[["0.20, 0.42","위험 깜빡임","가슴 균열 색이 보라 → 붉은 주황, 0.1 s씩 두 번","Emissive 색 파라미터(타별 bCounterable false면 위험색)"],
+  ["0.55–1.05","바닥 원","반경 4 m, 바깥에서 안으로 차오름, 테두리 붉은 주황","데칼 머티리얼(Opacity 커브)"],
+  ["1.05","충격","붉은 주황 고리 + 검은 먼지, 흔들림 0.25 s","GroundRing + CameraShake"],
+  ["1.05","반격하면","불꽃 없이 그대로 맞는다. 아인 날아감(3 m)","bCounterable false(이미 들어감)"]]}
+];
+let cur=SK[0],T=0,playing=true,last=performance.now(),speed=1;
+const cv=$("cv"),g=cv.getContext("2d");
+function build(){
+  const tabs=$("tabs");tabs.replaceChildren();
+  SK.forEach(s=>{const b=document.createElement("button");b.type="button";b.setAttribute("role","tab");b.textContent=s.name;b.setAttribute("aria-selected",s===cur);b.onclick=()=>{cur=s;T=0;try{localStorage.setItem("parry-tab",s.id)}catch(e){};build()};tabs.appendChild(b)});
+  $("sname").textContent=cur.name;$("ssrc").textContent=cur.src;$("faillbl").textContent=cur.fail;
+  const bar=$("bar");[...bar.querySelectorAll("i")].forEach(e=>e.remove());
+  cur.phases.forEach((p,i)=>{const e=(cur.phases[i+1]||{t:cur.dur}).t;const s=document.createElement("i");s.className="k-"+p.k;s.style.left=(p.t/cur.dur*100)+"%";s.style.width=((e-p.t)/cur.dur*100)+"%";s.title=p.n;bar.insertBefore(s,$("headm"))});
+  const ch=$("chips");ch.replaceChildren();cur.phases.forEach(p=>{const b=document.createElement("button");b.type="button";const bb=document.createElement("b");bb.textContent=p.t.toFixed(2);b.append(bb,document.createTextNode(p.n));b.onclick=()=>{T=p.t+.001;setPlaying(false)};ch.appendChild(b)});
+  const tb=$("layers");tb.replaceChildren();cur.layers.forEach(r=>{const tr=document.createElement("tr");r.forEach(c=>{const td=document.createElement("td");td.textContent=c;tr.appendChild(td)});tb.appendChild(tr)});
+}
+function setPlaying(v){playing=v;$("play").textContent=v?"일시정지":"재생"}
+$("play").onclick=()=>setPlaying(!playing);$("restart").onclick=()=>{T=0;setPlaying(true)};
+$("speed").onchange=e=>speed=+e.target.value;
+$("scrub").oninput=e=>{T=e.target.value/1000*cur.dur;setPlaying(false)};
+try{const s=localStorage.getItem("parry-tab");const f=SK.find(x=>x.id===s);if(f)cur=f}catch(e){}
+if(matchMedia("(prefers-reduced-motion: reduce)").matches)speed=.5;
+
+const W=1280,H=720,GY=560,PX=60,X0=W/2;
+const wx=x=>X0+x*PX, wy=y=>GY-y*PX;
+const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2, cl=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+function phaseAt(t){let p=cur.phases[0];for(const q of cur.phases)if(t>=q.t)p=q;return p}
+const fail=()=>$("fail").checked;
+// parried beats under the current toggle (chain: the third press is missed -> that beat lands, the chain restarts)
+function parried(i){if(!fail())return true;if(cur.id==="one")return false;if(cur.id==="chain")return i!==2;return false}
+
+function world(t){
+  const s={bx:-.8,by:2.2,boss:{glow:.3,danger:0,lean:0,lying:0,crouch:0,dir:-1},ain:{x:1.6,pose:"idle",roll:0,hitT:-1,fly:0},
+    shake:0,flash:0,flashCol:"255,255,255",zoom:1,zx:0,zy:1.2,posture:0,hp:.72,dmg:null,sparks:[],ring:null,mark:0};
+  if(cur.id==="one"){
+    s.by=2.0;s.boss.glow=.3+.7*cl((t-.3)/.6)*(t<1.02?1:0);s.boss.crouch=cl((t-.3)/.6)*(t<.9?1:0);
+    const ok=parried(0);
+    if(t>=.78&&t<1.3)s.ain.pose="guard";
+    if(ok){if(t>=.9&&t<1.02){s.shake=.08*cl(1-(t-.9)/.08)}
+      if(t>=.9)s.sparks.push({x:.4,y:1.5,age:t-.9,scale:1});
+      if(t>=1.02)s.boss.lean=Math.sin(cl((t-1.02)/.38)*Math.PI)*.3;
+      s.posture=t>=.9?.12:0;
+      if(t>=1.4){s.boss.glow=.3+.6*cl((t-1.4)/.6)}
+    }else{if(t>=1.0)s.ain.hitT=t-1.0;s.hp=t>=1.0?.735:.72;s.ain.pose=t>=.92&&t<1.0?"guard":(t>=1.0?"hit":s.ain.pose)}
+    if(!ok&&t<.92)s.ain.pose=t>=.92?"guard":"idle";
+  }else if(cur.id==="chain"){
+    s.by=2.4+.08*Math.sin(t*9);let n=0,streak=0,lastP=-9,hits=0;
+    cur.beats.forEach((b,i)=>{if(t>=b){if(parried(i)){n++;streak++;s.sparks.push({x:.3,y:1.6,age:t-b,scale:1+.05*streak,flip:i%2});lastP=b}else{streak=0;hits++;s.ain.hitT=t-b}}});
+    s.posture=Math.min(1,n*.12);s.hp=.72+hits*.015;
+    s.ain.pose=cur.press.some((p,i)=>t>=p&&t<cur.beats[i]+.12&&parried(i))?"guard":"idle";
+    if(s.ain.hitT>=0&&s.ain.hitT<.3)s.ain.pose="hit";
+    s.boss.glow=.6+.4*Math.sin(t*20)*.2;
+    const broke=n>=9?cur.beats[8]:(fail()&&n>=8?null:null);
+    if(broke!==null&&t>=1.82){
+      const k=t-1.82;s.boss.glow=Math.max(0,.9-k*4);
+      if(k<.06){s.flash=.4}if(k<.25)s.shake=.25*(1-k/.25);
+      if(t>=2.08){const f=cl((t-2.08)/.42);s.by=2.4*(1-f*f);s.boss.lying=cl((t-2.08)/.5)}
+      if(t>=2.5){s.by=0;s.ring={x:s.bx,age:t-2.5,col:"40,32,60"};if(t<2.65)s.shake=.15}
+      if(t>=2.6)s.mark=cl((t-2.6)/.3);
+    }
+    if(fail()){s.posture=Math.min(1,n*.12)} // eight parries: not broken, the set ends
+  }else if(cur.id==="riposte"){
+    s.by=0;s.boss.lying=1;s.boss.glow=0;s.posture=0;s.mark=t<.65?1:0;
+    const behind=fail();
+    const ax0=3.6,ax1=behind?-3.0:1.5;
+    s.ain.x=t<.4?ax0+(ax1-ax0)*ease(t/.4):ax1;if(behind&&t<.4)s.ain.x=ax0-6*ease(t/.4);
+    if(t>=.4&&t<.65)s.ain.pose="raise";if(t>=.65&&t<1.2)s.ain.pose="strike";
+    const z=behind?0:(t<.4?0:(t<.65?ease((t-.4)/.25):(t<1.6?1:1-ease(cl((t-1.6)/.4)))));
+    s.zoom=1+.8*z;s.zx=(s.bx+s.ain.x)/2*z;s.zy=.7+.3*(1-z);
+    if(!behind){if(t>=.65&&t<.69){s.flash=.55;s.flashCol="230,40,30"}if(t>=.65&&t<.97)s.shake=.3;
+      if(t>=.97){s.dmg={v:"12,450",age:t-.97,big:true}}s.hp=.72-.1*cl((t-.97)/.6)}
+    else{if(t>=.65){s.dmg={v:"2,490",age:t-.65,big:false}}s.hp=.72-.02*cl((t-.65)/.3)}
+    if(t>=1.85){const u=cl((t-1.85)/.75);s.boss.lying=1-u}
+  }else{
+    s.by=t<1.05?2.4:0;if(t>=.85&&t<1.05)s.by=2.4*(1-ease((t-.85)/.2));
+    s.boss.glow=.3;const fl=(a)=>t>=a&&t<a+.1;s.boss.danger=(fl(.2)||fl(.42))?1:(t>=.55&&t<1.05?.6:0);
+    if(t>=.55&&t<1.05)s.ring={x:s.bx,age:-1,fill:cl((t-.55)/.5),col:"255,90,42"};
+    if(t>=1.05&&t<1.6)s.ring={x:s.bx,age:t-1.05,col:"255,90,42"};
+    if(t>=1.05&&t<1.3)s.shake=.25*(1-(t-1.05)/.25);
+    const press=fail();
+    if(!press){if(t>=.85){s.ain.x=1.6+3.4*ease(cl((t-.85)/.35));s.ain.roll=t<1.2?1:0}}
+    else{if(t>=.85&&t<1.05)s.ain.pose="guard";if(t>=1.05){s.ain.hitT=t-1.05;s.ain.fly=ease(cl((t-1.05)/.5))*3;s.hp=.735}}
+    if(t>=1.3){s.boss.crouch=.7}
+  }
+  return s;
+}
+function drawBoss(s,t){
+  const b=s.boss;const bx=wx(s.bx),by=wy(s.by);const h=2.6*PX*(1-.25*b.crouch);
+  g.save();g.translate(bx,by);
+  if(b.lying>0){g.translate(-b.lying*1.3*PX,0);g.rotate(b.lying*Math.PI/2);g.translate(0,-b.lying*10)}   // face down, head toward Ain (the riposte side)
+  g.rotate(b.lean*.6);
+  const n=10;
+  for(let i=0;i<n;i++){
+    const a=(i/n)*Math.PI*1.2-Math.PI*.1, len=(1.2+.6*Math.sin(i*1.7))*PX*(1-.4*b.crouch);
+    const sx=(i%2?18:-18)*(.5+i/n), sy=-h*(.35+.4*(i%5)/5);
+    g.strokeStyle=i%3?"#3b3450":"#5a4a86";g.lineWidth=6-3*(i/n);g.beginPath();g.moveTo(sx,sy);
+    const sw=Math.sin(t*3+i)*12;
+    g.bezierCurveTo(sx+Math.cos(a)*len*.4+sw,sy+len*.2,sx+Math.cos(a)*len*.8-sw,sy+len*.6,sx+Math.cos(a)*len,sy+len*.9);g.stroke();
+  }
+  g.fillStyle="#1c1925";g.strokeStyle="rgba(155,123,255,.5)";g.lineWidth=1.5;
+  g.beginPath();g.moveTo(-22,0);g.lineTo(-30,-h*.45);g.lineTo(-34,-h*.78);g.lineTo(-16,-h*.92);g.quadraticCurveTo(0,-h*1.06,16,-h*.92);g.lineTo(34,-h*.78);g.lineTo(30,-h*.45);g.lineTo(22,0);g.closePath();g.fill();g.stroke();
+  const col=b.danger>0?`255,${Math.round(90+40*(1-b.danger))},42`:"170,140,255";const gl=Math.max(b.glow,b.danger);
+  g.shadowColor=b.danger>0?"#ff5a2a":"#9b7bff";g.shadowBlur=26*gl;
+  g.fillStyle=`rgba(${col},${.35+.65*gl})`;g.fillRect(4,-h*.9,10,3);
+  g.strokeStyle=`rgba(${col},${.2+.8*gl})`;g.lineWidth=2+3*gl;g.beginPath();g.moveTo(0,-h*.72);g.lineTo(-4,-h*.6);g.lineTo(3,-h*.5);g.lineTo(-2,-h*.38);g.moveTo(0,-h*.62);g.lineTo(10,-h*.57);g.stroke();
+  g.restore();
+}
+function drawAin(s,t){
+  const a=s.ain;const px=wx(a.x+a.fly),py=wy(0);const k=a.hitT>=0?cl(1-a.hitT/.3):0;
+  g.save();g.translate(px+k*10,py);
+  if(a.roll){g.translate(0,-18);g.rotate(t*18);g.fillStyle="#2a2228";g.beginPath();g.arc(0,0,22,0,Math.PI*2);g.fill();g.fillStyle="#e8463a";g.fillRect(-3,-22,6,4);g.restore();return}
+  if(a.fly>0)g.rotate(a.fly*.25);
+  g.fillStyle="#2a2228";g.beginPath();g.ellipse(0,-1.7*PX*.5,11,1.7*PX*.5,0,0,Math.PI*2);g.fill();
+  g.fillStyle="#d8c9c2";g.beginPath();g.arc(0,-1.68*PX,9,0,Math.PI*2);g.fill();
+  g.fillStyle="#0c0b0e";g.beginPath();g.arc(0,-1.72*PX,10,Math.PI,0);g.fill();
+  g.fillStyle="#e8463a";g.fillRect(-7,-1.7*PX,5,2);
+  // scythe: pole + blade, by pose
+  const ang={idle:.9,guard:-.35,raise:.55,strike:-1.95,hit:1.2}[a.pose]??.9;   // radians from upright; negative leans toward the boss (left)
+  g.save();g.translate(-4,-1.15*PX);g.rotate(ang);
+  g.strokeStyle="#5b4a3f";g.lineWidth=4;g.beginPath();g.moveTo(0,22);g.lineTo(0,-70);g.stroke();
+  g.fillStyle="#c9c3cf";g.beginPath();g.moveTo(0,-70);g.quadraticCurveTo(-46,-74,-58,-42);g.quadraticCurveTo(-36,-60,0,-58);g.closePath();g.fill();
+  g.restore();
+  if(a.pose==="strike"&&cur.id==="riposte"){g.strokeStyle="rgba(230,40,30,.7)";g.lineWidth=10;g.beginPath();g.arc(-4,-1.15*PX,78,-1.0,-3.3,true);g.stroke()}
+  if(k>0){g.strokeStyle=`rgba(255,240,240,${k})`;g.lineWidth=2;g.beginPath();g.arc(0,-1*PX,22+20*(1-k),0,Math.PI*2);g.stroke()}
+  g.fillStyle="#a39cb3";g.font="600 13px IBM Plex Sans KR, sans-serif";g.textAlign="center";g.fillText("아인",0,40);
+  g.restore();
+}
+function drawSpark(sp,s){
+  if(sp.age<0||sp.age>.22)return;const k=sp.age/.22;const x=wx(s.ain.x+(-1+(sp.flip?.25:0)))+0,y=wy(sp.y+(sp.flip?.25:0));
+  const r=(18+46*k)*sp.scale;
+  g.save();g.translate(x,y);g.globalCompositeOperation="lighter";
+  for(let i=0;i<8;i++){const a=i/8*Math.PI*2+(sp.flip?.2:0);const L=r*(i%2?.6:1);g.strokeStyle=`rgba(255,${200+40*(1-k)},120,${1-k})`;g.lineWidth=(i%2?2:4)*(1-k)+1;g.beginPath();g.moveTo(Math.cos(a)*r*.15,Math.sin(a)*r*.15);g.lineTo(Math.cos(a)*L,Math.sin(a)*L);g.stroke()}
+  const gr=g.createRadialGradient(0,0,0,0,0,r*.6);gr.addColorStop(0,`rgba(255,250,235,${1-k})`);gr.addColorStop(1,"rgba(255,200,120,0)");g.fillStyle=gr;g.beginPath();g.arc(0,0,r*.6,0,Math.PI*2);g.fill();
+  g.restore();
+}
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(playing){T+=dt*speed;if(T>cur.dur)T=0}
+  const t=T,ph=phaseAt(t),s=world(t);
+  g.setTransform(1,0,0,1,0,0);
+  g.fillStyle="#0b0a0f";g.fillRect(0,0,W,H);
+  const shx=s.shake?(Math.sin(t*173)*14*s.shake):0, shy=s.shake?(Math.cos(t*151)*10*s.shake):0;
+  // camera: zoom about a world point (identity at zoom 1, so the close-up blends in)
+  const fx=wx(s.zx),fy=wy(s.zy);
+  g.setTransform(s.zoom,0,0,s.zoom,shx+(1-s.zoom)*fx,shy+(1-s.zoom)*fy);
+  const grd=g.createLinearGradient(0,0,0,H);grd.addColorStop(0,"rgba(40,32,62,.6)");grd.addColorStop(1,"rgba(8,7,11,1)");g.fillStyle=grd;g.fillRect(-200,-200,W+400,H+400);
+  g.strokeStyle="#2a2533";g.lineWidth=2;g.beginPath();g.moveTo(-200,GY);g.lineTo(W+200,GY);g.stroke();
+  g.fillStyle="#6d6680";g.font="12px JetBrains Mono, monospace";g.textAlign="center";
+  for(let m=-8;m<=8;m+=2){g.fillRect(wx(m)-1,GY,2,6);g.fillText(m+" m",wx(m),GY+22)}
+  if(s.ring){const r=s.ring;if(r.age<0){g.fillStyle=`rgba(${r.col},${.18+.35*r.fill})`;const R=4*PX;g.beginPath();g.ellipse(wx(r.x),GY,R,16,0,0,Math.PI*2);g.fill();g.strokeStyle=`rgba(${r.col},.9)`;g.lineWidth=3;g.stroke();g.fillStyle=`rgba(${r.col},.55)`;g.beginPath();g.ellipse(wx(r.x),GY,R*(1-r.fill),16*(1-r.fill),0,0,Math.PI*2);g.fillStyle="rgba(11,10,15,.6)";g.fill()}
+    else{const k=cl(r.age/.35);g.strokeStyle=`rgba(${r.col},${1-k})`;g.lineWidth=5;g.beginPath();g.ellipse(wx(r.x),GY,4*PX*(.3+.7*k),20*(.3+.7*k),0,0,Math.PI*2);g.stroke()}}
+  if(s.mark>0){g.save();g.translate(wx(s.bx+1.2),GY);g.fillStyle=`rgba(233,185,73,${.35+.5*s.mark})`;g.beginPath();g.moveTo(0,-10);g.lineTo(26,0);g.lineTo(0,10);g.lineTo(-26,0);g.closePath();g.fill();g.restore()}
+  drawBoss(s,t);
+  drawAin(s,t);
+  for(const sp of s.sparks)drawSpark(sp,s);
+  if(s.dmg){const d=s.dmg;const y=wy(1.6)-d.age*60;g.save();g.globalAlpha=cl(1.4-d.age);g.font=`800 ${d.big?44:22}px IBM Plex Sans KR, sans-serif`;g.textAlign="center";g.lineWidth=5;g.strokeStyle="#000";g.fillStyle=d.big?"#f4c84a":"#d8d2e2";g.strokeText(d.v,wx(s.bx),y);g.fillText(d.v,wx(s.bx),y);if(d.big){g.font="700 15px IBM Plex Sans KR, sans-serif";g.fillStyle="#f4c84a";g.fillText("치명 일격",wx(s.bx),y+24)}g.restore()}
+  g.setTransform(1,0,0,1,0,0);
+  if(s.flash){g.fillStyle=`rgba(${s.flashCol},${s.flash})`;if(s.flashCol==="255,255,255")g.fillRect(0,0,W,H);else{g.lineWidth=60;g.strokeStyle=`rgba(${s.flashCol},${s.flash})`;g.strokeRect(0,0,W,H)}}
+  if(s.zoom>1.02){g.fillStyle="rgba(0,0,0,.85)";const bh=46*(s.zoom-1)/.8;g.fillRect(0,0,W,bh);g.fillRect(0,H-bh,W,bh)}
+  $("hpb").style.width=(s.hp*100)+"%";$("hpl").textContent=`섀도우 팽 ${(s.hp*100).toFixed(1)} %`;
+  $("psb").style.width=(s.posture*100)+"%";$("psl").textContent=`자세 ${Math.round(s.posture*100)} / 100`+(s.posture>=1?"  무너짐":"");
+  $("psb").style.opacity=s.posture>=.8&&s.posture<1?(.5+.5*Math.sin(t*30)):1;
+  $("now").replaceChildren();const nb=document.createElement("span");nb.textContent=ph.n;const sm=document.createElement("small");sm.textContent=ph.d;$("now").append(nb,sm);
+  $("time").textContent=`${t.toFixed(2)} / ${cur.dur.toFixed(2)} s`;
+  $("headm").style.left=(t/cur.dur*100)+"%";if(playing)$("scrub").value=t/cur.dur*1000;
+  document.querySelectorAll("#chips button").forEach((b,i)=>b.classList.toggle("on",cur.phases[i]===ph));
+  requestAnimationFrame(frame);
+}
+build();requestAnimationFrame(frame);
+</script>

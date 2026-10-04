@@ -1,4 +1,5 @@
 #include "Game/HWCombatGameMode.h"
+#include "System/HWSystemRulesLibrary.h"
 #include "Boss/HWBossCharacter.h"
 #include "Character/HWAinCharacter.h"
 #include "System/HWPlayableCharacterVariants.h"
@@ -90,6 +91,14 @@ void AHWCombatGameMode::BeginPlay()
 
     if (!bOnlineRaid && !LocalDungeonId.IsNone())
     {
+        // a boss dungeon brings its own body (docs/design/181 §10): the map's placed stand-in boss would be a second
+        // boss in the arena (QA: the scarecrow fought next to Shadow Fang)
+        if (!UHWSystemRulesLibrary::DungeonDefinition(LocalDungeonId).BossBody.IsNone())
+        {
+            TArray<AActor*> Placed;
+            UGameplayStatics::GetAllActorsOfClass(this, AHWBossCharacter::StaticClass(), Placed);
+            for (AActor* A : Placed) A->Destroy();
+        }
         EncounterDungeon = Cast<AHWDungeonDirector>(
             UGameplayStatics::GetActorOfClass(this, AHWDungeonDirector::StaticClass()));
 

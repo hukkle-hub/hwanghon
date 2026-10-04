@@ -1,4 +1,11 @@
 #include "Boss/HWBossCharacter.h"
+#include "Boss/HWBossSkillFxComponent.h"
+#include "Boss/HWScriptedCanonRules.h"
+#include "Dom/JsonObject.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "Animation/HWCharacterVisualSettings.h"
 #include "Animation/HWAnimationSetAsset.h"
 #include "Components/CapsuleComponent.h"
@@ -33,6 +40,7 @@ AHWBossCharacter::AHWBossCharacter()
     Tags.Add(TEXT("LockOnTarget"));
     Presentation = CreateDefaultSubobject<UHWBossPresentationComponent>(TEXT("Presentation"));
     BossSystem = CreateDefaultSubobject<UHWBossSystemComponent>(TEXT("BossSystem"));
+    SkillFx = CreateDefaultSubobject<UHWBossSkillFxComponent>(TEXT("SkillFx"));
 }
 
 void AHWBossCharacter::BeginPlay()
@@ -138,6 +146,7 @@ void AHWBossCharacter::Tick(float DeltaSeconds)
     }
 
     TickLunge(DeltaSeconds);
+    TickBlink();
 
     const float SystemSpeed =
         BossSystem && (State == EHWBossState::Tell
@@ -221,6 +230,23 @@ void AHWBossCharacter::ReceivePlayerHit(float Damage, EHWAttackTier Tier, FVecto
         if (Canon == EHWCanonHit::Swallow || IsDead())
         {
             return;
+        }
+    }
+
+    if (Damage > 0.f && Tier != EHWAttackTier::Break && Tier != EHWAttackTier::Counter && CanRiposteFrom(SourceLocation))
+    {
+        // Riposte (docs/design/183 §3): the first blow on a broken boss from its front lands x RiposteDamageScale
+        // with a long shared hitstop, and the boss gets up soon after.
+        {
+            bRiposteTaken = true;
+            ++RiposteCount;
+            Damage *= RiposteDamageScale;
+            Tier = EHWAttackTier::Finisher;
+            constexpr float RiposteHitStop = 0.32f;
+            ApplyHitStop(RiposteHitStop);
+            if (TargetPlayer && TargetPlayer->GetCombat()) TargetPlayer->GetCombat()->ApplyHitStop(RiposteHitStop);
+            StateElapsed = FMath::Max(StateElapsed, SystemBreakDuration - RiposteRecoverSeconds);
+            OnBossRiposte.Broadcast(Damage);
         }
     }
 
@@ -323,6 +349,7 @@ void AHWBossCharacter::BeginPattern(const FHWBossPatternSpec& Pattern)
     }
 
     CurrentPattern = Pattern;
+    bBlinkDone = false;
     State = EHWBossState::Tell;
     StateElapsed = 0.f;
     NextBeatIndex = 0;
@@ -392,6 +419,8 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
 
     // A Blueprint beat callback may interrupt this attack and invalidate its storage.
     const FHWBossBeatSpec Beat = CurrentPattern.Beats[BeatIndex];
+    OnBossBeat.Broadcast(CurrentPattern.Id, BeatIndex);
+    if (State != EHWBossState::Strike || !CurrentPattern.Beats.IsValidIndex(BeatIndex)) return;
     BP_OnBossBeat(CurrentPattern.Id, BeatIndex);
 
     if (State != EHWBossState::Strike || !TargetPlayer || TryCountered(Beat))
@@ -418,12 +447,95 @@ void AHWBossCharacter::ResolveBeat(int32 BeatIndex)
     }
 
     const float Distance = FVector::Dist2D(GetActorLocation(), TargetPlayer->GetActorLocation());
-    if (Distance > Beat.RangeCm)
+    if (Distance > Beat.RangeCm || Distance < Beat.MinRangeCm)
     {
         return;
     }
 
-    PlayerCombat->ApplyIncomingDamage(Beat.Damage * (BossSystem ? BossSystem->GetOutgoingDamageScale() : 1.f), CurrentPattern.bBig ? EHWAttackTier::Smash : EHWAttackTier::Light);
+    const bool bLanded = PlayerCombat->ApplyIncomingDamage(Beat.Damage * (BossSystem ? BossSystem->GetOutgoingDamageScale() : 1.f),
+        CurrentPattern.bBig || Beat.bBig ? EHWAttackTier::Smash : EHWAttackTier::Light);
+    if (bLanded && CurrentPattern.HealPerHitFraction > 0.f && !IsDead() && !bNetworkAuthoritative)
+    {
+        // Shadow Fang drinks on every landed blow (docs/design/181 §2): the server owns health online.
+        Health = FMath::Min(GetMaxHealth(), Health + GetMaxHealth() * CurrentPattern.HealPerHitFraction);
+    }
+}
+
+bool AHWBossCharacter::CanRiposteFrom(FVector Source) const
+{
+    if (State != EHWBossState::Break || bRiposteTaken) return false;
+    FVector To = Source - GetActorLocation();
+    To.Z = 0.f;
+    return To.Size() <= RiposteReachCm && FVector::DotProduct(GetActorForwardVector(), To.GetSafeNormal()) > 0.25f;
+}
+
+float AHWBossCharacter::GetPatternTime() const
+{
+    if (State != EHWBossState::Tell && State != EHWBossState::Strike && State != EHWBossState::Recover) return -1.f;
+    float T = StateElapsed;
+    if (State != EHWBossState::Tell) T += CurrentPattern.TellDuration;
+    if (State == EHWBossState::Recover) T += CurrentPattern.StrikeDuration;
+    return T;
+}
+
+bool AHWBossCharacter::IsBlinkHidden() const
+{
+    const float T = GetPatternTime();
+    return CurrentPattern.BlinkAt >= 0.f && T >= CurrentPattern.BlinkHideAt && T < CurrentPattern.BlinkAt;
+}
+
+void AHWBossCharacter::TickBlink()
+{
+    if (CurrentPattern.BlinkAt < 0.f || bBlinkDone || !TargetPlayer) return;
+    const float T = GetPatternTime();
+    if (T < CurrentPattern.BlinkAt) return;
+    bBlinkDone = true;
+    // behind the target = on the far side of it from where we stood, facing it
+    FVector Away = TargetPlayer->GetActorLocation() - GetActorLocation();
+    Away.Z = 0.f;
+    Away = Away.GetSafeNormal();
+    if (Away.IsNearlyZero()) Away = -TargetPlayer->GetActorForwardVector();
+    // the spot needs a floor under it (a wall, a ledge, the arena edge): otherwise reappear in front instead
+    auto HasFloor = [this](const FVector& P)
+    {
+        FHitResult Hit;
+        FCollisionQueryParams Q(SCENE_QUERY_STAT(HWBossBlink), false, this);
+        Q.AddIgnoredActor(TargetPlayer);
+        const float Half = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 100.f;
+        return GetWorld()->LineTraceSingleByChannel(Hit, P + FVector(0.f, 0.f, 50.f), P - FVector(0.f, 0.f, Half + 150.f), ECC_Visibility, Q);
+    };
+    FVector To = TargetPlayer->GetActorLocation() + Away * CurrentPattern.BlinkBehindCm;
+    To.Z = GetActorLocation().Z;
+    if (!HasFloor(To))
+    {
+        Away = -Away;
+        To = TargetPlayer->GetActorLocation() + Away * CurrentPattern.BlinkBehindCm;
+        To.Z = GetActorLocation().Z;
+    }
+    SetActorLocation(To, false, nullptr, ETeleportType::TeleportPhysics);
+    SetActorRotation((-Away).Rotation());
+}
+
+float AHWBossCharacter::GetPatternLiftCm() const
+{
+    const TArray<FVector2D>& K = CurrentPattern.LiftKeys;
+    if (K.IsEmpty() || (State != EHWBossState::Tell && State != EHWBossState::Strike && State != EHWBossState::Recover))
+    {
+        return 0.f;
+    }
+    float T = StateElapsed;
+    if (State != EHWBossState::Tell) T += CurrentPattern.TellDuration;
+    if (State == EHWBossState::Recover) T += CurrentPattern.StrikeDuration;
+    if (T <= K[0].X) return K[0].Y;
+    for (int32 I = 1; I < K.Num(); ++I)
+    {
+        if (T <= K[I].X)
+        {
+            const float U = (T - K[I - 1].X) / FMath::Max(0.001f, K[I].X - K[I - 1].X);
+            return FMath::Lerp(K[I - 1].Y, K[I].Y, U);
+        }
+    }
+    return K.Last().Y;
 }
 
 void AHWBossCharacter::ChooseNextPattern()
@@ -460,6 +572,17 @@ void AHWBossCharacter::ChooseNextPattern()
             continue;
         }
 
+        // designed skills (docs/design/181 §10): their own reach, never twice in a row, twice as likely as a
+        // stand-in move (the body's signature)
+        if (const FVector2D* Range = DesignedRangeCm.Find(Pattern.Id))
+        {
+            if (Distance < Range->X || Distance > Range->Y || Pattern.Id == LastPatternId)
+            {
+                continue;
+            }
+            Candidates.Add(Index);
+        }
+
         if ((Pattern.Id == "HookCombo" || Pattern.Id == "Spin") && Distance > 500.f)
         {
             continue;
@@ -474,6 +597,8 @@ void AHWBossCharacter::ChooseNextPattern()
     }
 
     const int32 Choice = Candidates[FMath::RandRange(0, Candidates.Num() - 1)];
+    LastPatternId = RuntimeTuning->BossPatterns[Choice].Id;
+    if (DesignedRangeCm.Contains(LastPatternId)) ++DesignedSkillUses;
     BeginPattern(RuntimeTuning->BossPatterns[Choice]);
 }
 
@@ -502,6 +627,18 @@ bool AHWBossCharacter::TryCountered(const FHWBossBeatSpec& Beat)
         return false;
     }
 
+    ++ParryCount;
+    PlayerCombat->NotifyCounterLanded();
+    OnBossParried.Broadcast(CurrentPattern.Id, NextBeatIndex - 1);
+    if (!CurrentPattern.bCounterStaggers && BossSystem)
+    {
+        // the chain goes on: posture and a short shared hitstop only (docs/design/183 §3)
+        BossSystem->AddExternalPosture(ChainParryPosture, TargetPlayer->GetActorLocation());
+        constexpr float ChainParryHitStop = 0.12f;
+        ApplyHitStop(ChainParryHitStop);
+        PlayerCombat->ApplyHitStop(ChainParryHitStop);
+        return true;
+    }
     ReceivePlayerHit(0.f, EHWAttackTier::Counter, TargetPlayer->GetActorLocation());
     constexpr float CounterHitStop = 0.21f;
     ApplyHitStop(CounterHitStop);
@@ -598,6 +735,7 @@ void AHWBossCharacter::EnterSystemBreak(float Duration, FVector SourceLocation)
     State = EHWBossState::Break;
     StateElapsed = 0.f;
     SystemBreakDuration = FMath::Max(0.5f, Duration);
+    bRiposteTaken = false;
 
     FVector ReactionDirection = GetActorLocation() - SourceLocation;
     ReactionDirection.Z = 0.f;
@@ -689,6 +827,32 @@ void AHWBossCharacter::WearBody(FName VisualId)
     {
         GetMesh()->SetRelativeScale3D(GetMesh()->GetRelativeScale3D() / Scale);
     }
+    LoadDesignedSkills(VisualId);
+}
+
+int32 AHWBossCharacter::LoadDesignedSkills(FName VisualId)
+{
+    if (!RuntimeTuning) return 0;
+    FString Text;
+    TSharedPtr<FJsonObject> Root;
+    if (!FFileHelper::LoadFileToString(Text, *FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/boss_skills.json")))
+        || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text), Root) || !Root)
+    {
+        return 0;
+    }
+    const TArray<TSharedPtr<FJsonValue>>* List = nullptr;
+    if (!Root->TryGetArrayField(VisualId.ToString().Replace(TEXT("boss_"), TEXT("")), List)) return 0;
+    int32 N = 0;
+    for (const TSharedPtr<FJsonValue>& V : *List)
+    {
+        FHWCanonMove M;
+        UHWScriptedCanonRules::ParseMove(V->AsObject(), M);
+        if (M.Spec.Id.IsNone() || DesignedRangeCm.Contains(M.Spec.Id)) continue;
+        RuntimeTuning->BossPatterns.Add(M.Spec);
+        DesignedRangeCm.Add(M.Spec.Id, FVector2D(M.MinCm, M.MaxCm));
+        ++N;
+    }
+    return N;
 }
 
 void AHWBossCharacter::WearStaticBody(UStaticMesh* Body)

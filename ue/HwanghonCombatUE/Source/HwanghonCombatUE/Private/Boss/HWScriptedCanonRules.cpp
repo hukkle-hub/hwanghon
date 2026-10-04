@@ -45,24 +45,7 @@ void UHWScriptedCanonRules::Configure(const TSharedPtr<FJsonObject>& Script)
     {
         for (const TSharedPtr<FJsonValue>& V : *List)
         {
-            const TSharedPtr<FJsonObject> P = V->AsObject();
-            FHWCanonMove& M = Moves.AddDefaulted_GetRef();
-            M.Spec.Id = FName(*Str(P, TEXT("clip"), TEXT("HookCombo")));
-            M.Spec.DisplayName = Str(P, TEXT("ko"));
-            M.Spec.TellDuration = Num(P, TEXT("tell"), 0.9f);
-            M.Spec.StrikeDuration = Num(P, TEXT("strike"), 0.4f);
-            M.Spec.RecoveryDuration = Num(P, TEXT("recovery"), 0.9f);
-            M.Spec.bCounterable = false;
-            M.Spec.bBig = P->HasTypedField<EJson::Boolean>(TEXT("big")) && P->GetBoolField(TEXT("big"));
-            M.Spec.LungeDistanceCm = Num(P, TEXT("lunge_cm"), 0.f);
-            M.Spec.LungeDuration = M.Spec.LungeDistanceCm > 0.f ? Num(P, TEXT("lunge_s"), 0.3f) : 0.f;
-            FHWBossBeatSpec B;
-            B.At = Num(P, TEXT("hit_at"), 0.12f);
-            B.Damage = Num(P, TEXT("damage"), 2500.f);
-            B.RangeCm = Num(P, TEXT("range"), 260.f);
-            M.Spec.Beats.Add(B);
-            M.MinCm = Num(P, TEXT("min"), 0.f);
-            M.MaxCm = Num(P, TEXT("max"), 99999.f);
+            ParseMove(V->AsObject(), Moves.AddDefaulted_GetRef());
         }
     }
     if (Script->TryGetArrayField(TEXT("steps"), List))
@@ -98,6 +81,82 @@ void UHWScriptedCanonRules::Configure(const TSharedPtr<FJsonObject>& Script)
         }
     }
     EnterStep(0);
+}
+
+void UHWScriptedCanonRules::ParseMove(const TSharedPtr<FJsonObject>& P, FHWCanonMove& M)
+{
+    if (!P) return;
+    M.Spec.Id = FName(*Str(P, TEXT("clip"), TEXT("HookCombo")));
+    M.Spec.DisplayName = Str(P, TEXT("ko"));
+    M.Spec.TellDuration = Num(P, TEXT("tell"), 0.9f);
+    M.Spec.StrikeDuration = Num(P, TEXT("strike"), 0.4f);
+    M.Spec.RecoveryDuration = Num(P, TEXT("recovery"), 0.9f);
+    M.Spec.bCounterable = false;
+    M.Spec.bBig = P->HasTypedField<EJson::Boolean>(TEXT("big")) && P->GetBoolField(TEXT("big"));
+    M.Spec.LungeDistanceCm = Num(P, TEXT("lunge_cm"), 0.f);
+    M.Spec.LungeDuration = M.Spec.LungeDistanceCm > 0.f ? Num(P, TEXT("lunge_s"), 0.3f) : 0.f;
+    FHWBossBeatSpec B;
+    B.At = Num(P, TEXT("hit_at"), 0.12f);
+    B.Damage = Num(P, TEXT("damage"), 2500.f);
+    B.RangeCm = Num(P, TEXT("range"), 260.f);
+    // Multi-hit moves (docs/design/181 §8): "beats":[{"at","damage","range","big"}], missing fields take the
+    // move's own damage/range. Without it the move is the one beat at hit_at.
+    const TArray<TSharedPtr<FJsonValue>>* BeatsJson = nullptr;
+    if (P->TryGetArrayField(TEXT("beats"), BeatsJson) && BeatsJson->Num() > 0)
+    {
+        for (const TSharedPtr<FJsonValue>& BV : *BeatsJson)
+        {
+            const TSharedPtr<FJsonObject> BO = BV->AsObject();
+            FHWBossBeatSpec& Each = M.Spec.Beats.Add_GetRef(B);
+            Each.At = Num(BO, TEXT("at"), B.At);
+            Each.Damage = Num(BO, TEXT("damage"), B.Damage);
+            Each.RangeCm = Num(BO, TEXT("range"), B.RangeCm);
+            Each.bBig = BO && BO->HasTypedField<EJson::Boolean>(TEXT("big")) && BO->GetBoolField(TEXT("big"));
+            Each.MinRangeCm = Num(BO, TEXT("min_range"), 0.f);
+        }
+    }
+    else
+    {
+        M.Spec.Beats.Add(B);
+    }
+    M.Spec.HealPerHitFraction = Num(P, TEXT("heal_pct"), 0.f) / 100.f;
+    // Parry (docs/design/183): "counter": true opens every beat to the counter (a beat's own "counter": false keeps
+    // it shut); "parry_stagger": false keeps the combo going after a parry. Story moves stay unparried unless they say so.
+    if (P->HasTypedField<EJson::Boolean>(TEXT("counter")) && P->GetBoolField(TEXT("counter")))
+    {
+        M.Spec.bCounterable = true;
+        const TArray<TSharedPtr<FJsonValue>>* Again = nullptr;
+        const bool bPerBeat = P->TryGetArrayField(TEXT("beats"), Again);
+        for (int32 I = 0; I < M.Spec.Beats.Num(); ++I)
+        {
+            const TSharedPtr<FJsonObject> BO = bPerBeat && Again->IsValidIndex(I) ? (*Again)[I]->AsObject() : nullptr;
+            M.Spec.Beats[I].bCounterable = !(BO && BO->HasTypedField<EJson::Boolean>(TEXT("counter")) && !BO->GetBoolField(TEXT("counter")));
+        }
+    }
+    if (P->HasTypedField<EJson::Boolean>(TEXT("parry_stagger"))) M.Spec.bCounterStaggers = P->GetBoolField(TEXT("parry_stagger"));
+    M.Spec.bDangerCue = P->HasTypedField<EJson::Boolean>(TEXT("danger_cue")) && P->GetBoolField(TEXT("danger_cue"));
+    // "blink": [vanish at, reappear at, cm behind the target] (seconds from the tell's start)
+    const TArray<TSharedPtr<FJsonValue>>* Blink = nullptr;
+    if (P->TryGetArrayField(TEXT("blink"), Blink) && Blink->Num() == 3)
+    {
+        M.Spec.BlinkHideAt = (*Blink)[0]->AsNumber();
+        M.Spec.BlinkAt = (*Blink)[1]->AsNumber();
+        M.Spec.BlinkBehindCm = (*Blink)[2]->AsNumber();
+    }
+    const TArray<TSharedPtr<FJsonValue>>* Lift = nullptr;
+    if (P->TryGetArrayField(TEXT("lift"), Lift))
+    {
+        for (const TSharedPtr<FJsonValue>& LV : *Lift)
+        {
+            const TArray<TSharedPtr<FJsonValue>>& Pair = LV->AsArray();
+            if (Pair.Num() == 2)
+            {
+                M.Spec.LiftKeys.Add(FVector2D(Pair[0]->AsNumber(), Pair[1]->AsNumber()));
+            }
+        }
+    }
+    M.MinCm = Num(P, TEXT("min"), 0.f);
+    M.MaxCm = Num(P, TEXT("max"), 99999.f);
 }
 
 void UHWScriptedCanonRules::EnterStep(int32 Index)
