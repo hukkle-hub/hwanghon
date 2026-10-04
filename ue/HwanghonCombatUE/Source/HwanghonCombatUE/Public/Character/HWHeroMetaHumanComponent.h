@@ -29,10 +29,12 @@ public:
     AActor* GetMetaHumanActor() const { return Worn.Get(); }
 
     virtual void EndPlay(const EEndPlayReason::Type Reason) override;
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
     void TakeOff();
 
     TWeakObjectPtr<AActor> Worn;
     FName WornId = NAME_None;
+    int32 RegripIn = -1;   // frames until the weapons move onto the MetaHuman's hands
 };

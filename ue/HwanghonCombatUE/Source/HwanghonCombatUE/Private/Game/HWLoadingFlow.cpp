@@ -1,4 +1,5 @@
 #include "Game/HWLoadingFlow.h"
+#include "Progression/HWProfileSubsystem.h"
 
 #include "CanvasItem.h"
 #include "Engine/Canvas.h"
@@ -61,6 +62,25 @@ void AHWLoadingHUD::DrawHUD()
         AddHitBox(FVector2D(X, Y), FVector2D(W, H), Cards[i].Box, true, 10);
     }
 
+    // the hero the boss trials (and the story) play, above the cards (docs/design/184): the saved selection
+    {
+        struct FHero { FName Id; const TCHAR* Name; };
+        const FHero Heroes[] = { {TEXT("ain"), TEXT("아인")}, {TEXT("sera"), TEXT("세라")}, {TEXT("kain"), TEXT("카인")}, {TEXT("ryu"), TEXT("류")} };
+        const UHWProfileSubsystem* Profile = GetGameInstance() ? GetGameInstance()->GetSubsystem<UHWProfileSubsystem>() : nullptr;
+        const FName Current = Profile ? Profile->GetSelectedCharacter() : FName(TEXT("ain"));
+        const float HW = 190 * S, HH = 84 * S, HGap = 18 * S;
+        const float HY = Y - HH - 40 * S, HX0 = (Canvas->SizeX - 4 * HW - 3 * HGap) / 2;
+        for (int32 i = 0; i < 4; ++i)
+        {
+            const float X = HX0 + i * (HW + HGap);
+            const bool bOn = Heroes[i].Id == Current;
+            HWPanel(Canvas, X, HY, HW, HH, bOn ? FLinearColor(0.18f, 0.12f, 0.06f, 0.96f) : FLinearColor(0.03f, 0.034f, 0.04f, 0.94f));
+            if (bOn) HWPanel(Canvas, X, HY + HH - 5 * S, HW, 5 * S, FLinearColor(0.94f, 0.62f, 0.2f, 1));
+            DrawText(Heroes[i].Name, bOn ? FLinearColor::White : FLinearColor(0.7f, 0.72f, 0.74f, 1), X + 34 * S, HY + 22 * S, nullptr, 1.15f * S, false);
+            AddHitBox(FVector2D(X, HY), FVector2D(HW, HH), FName(*(TEXT("HERO_") + Heroes[i].Id.ToString())), true, 10);
+        }
+    }
+
     // boss trials under the cards (docs/design/181 §10): the three Part 1 bosses with their designed skills, kept
     // between the two touch sticks, each button 100 px tall (thumb size on the tablet)
     struct FBoss { FName Box; const TCHAR* Name; };
@@ -83,6 +103,13 @@ void AHWLoadingHUD::NotifyHitBoxClick(FName BoxName)
     if (BoxName == TEXT("STORY")) ChooseStory();
     else if (BoxName == TEXT("SHELTER")) ChooseShelter();
     else if (BoxName.ToString().StartsWith(TEXT("BOSS_"))) ChooseBossTrial(FName(*(TEXT("boss_") + BoxName.ToString().RightChop(5))));
+    else if (BoxName.ToString().StartsWith(TEXT("HERO_")))
+    {
+        if (UHWProfileSubsystem* Profile = GetGameInstance() ? GetGameInstance()->GetSubsystem<UHWProfileSubsystem>() : nullptr)
+        {
+            Profile->SelectCharacter(FName(*BoxName.ToString().RightChop(5)));
+        }
+    }
 }
 
 void AHWLoadingHUD::ChooseStory()

@@ -63,3 +63,16 @@
 - `hero_metahumans.json` `hair_mobile`: 안드로이드와 iOS에서는 이 메시를 그룸 대신 머리 뼈에 붙인다.
   - PC에서 미리 보기: `-HWMobileHair`. 휴대폰에서 가닥을 시험하려면 `-HWStrandHair`.
 - PC 미리 보기: `art/concept/metahuman/mobile_hair_pc_preview.jpg`.
+
+## 6. 무기, 영웅 고르기, 프레임 기록
+
+- 무기
+  - 처음에는 숨은 전투 몸의 손 소켓에 붙어 있었다. 몸이 더 커서 손잡이가 메타휴먼 손에서 떨어져 보였다.
+  - 지금은 입힌 지 3프레임 뒤(두 몸이 같은 자세일 때) 메타휴먼의 같은 쪽 `hand_r`/`hand_l`로 옮긴다. 방향과 손에서 떨어진 거리는 그대로 둔다.
+  - 메타휴먼을 벗기면 원래 손으로 돌아간다.
+  - 결과: `art/concept/metahuman/game_mh_grip.jpg`.
+- 첫 화면(L_Loading)에 **영웅 고르기 줄**(아인, 세라, 카인, 류)을 더했다. 저장된 선택이 바뀌고 보스전 시험과 이야기에 그 영웅이 나온다. 태블릿에서 바로 바꿔 볼 수 있다.
+- `UHWPerfLogSubsystem`(배포 빌드 제외)
+  - 5초마다 로그에 남긴다: `[HWPerf] 맵 fps frame(worst) game render gpu`.
+  - 태블릿은 실행 옵션을 못 받으므로(Android 16) 게임 안에 넣었다. `adb logcat -s UE`에서 HWPerf를 찾는다.
+- PC: 메타휴먼 아인 + 섀도우 팽 112 fps(8.9 ms, GPU 3.2 ms).

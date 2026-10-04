@@ -48,7 +48,9 @@ namespace
 
 UHWHeroMetaHumanComponent::UHWHeroMetaHumanComponent()
 {
-    PrimaryComponentTick.bCanEverTick = false;
+    PrimaryComponentTick.bCanEverTick = true;
+    PrimaryComponentTick.bStartWithTickEnabled = false;
+    PrimaryComponentTick.TickGroup = TG_PostUpdateWork;
 }
 
 bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
@@ -167,12 +169,56 @@ bool UHWHeroMetaHumanComponent::Wear(FName CharacterId)
 
     Worn = MH;
     WornId = CharacterId;
+    RegripIn = 3;
+    SetComponentTickEnabled(true);
     UE_LOG(LogTemp, Display, TEXT("[HWMetaHuman] %s wears %s"), *CharacterId.ToString(), *MH->GetName());
     return true;
 }
 
+void UHWHeroMetaHumanComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    if (RegripIn < 0 || --RegripIn > 0) return;
+    SetComponentTickEnabled(false);
+    // The weapons hang on the hidden combat body's hands (HWCharacterVisualSettings::ApplyWeapons). Move each onto the
+    // MetaHuman's hand of the same side: same orientation, same offset from the hand, now that both bodies hold the
+    // same retargeted pose - otherwise the grip sits where the (bigger) combat body's hand is.
+    ACharacter* Hero = Cast<ACharacter>(GetOwner());
+    USkeletalMeshComponent* CombatBody = Hero ? Hero->GetMesh() : nullptr;
+    USkeletalMeshComponent* Body = Worn.IsValid() ? NamedMesh(Worn.Get(), TEXT("Body")) : nullptr;
+    if (!CombatBody || !Body) return;
+    TArray<USceneComponent*> Children = CombatBody->GetAttachChildren();
+    for (USceneComponent* C : Children)
+    {
+        if (!C) continue;
+        const FName N = C->GetFName();
+        const bool bRight = N == TEXT("HWWeaponR"), bLeft = N == TEXT("HWWeaponL");
+        if (!bRight && !bLeft) continue;
+        const FName Hand = bRight ? TEXT("hand_r") : TEXT("hand_l");
+        if (Body->GetBoneIndex(Hand) == INDEX_NONE || CombatBody->GetBoneIndex(Hand) == INDEX_NONE) continue;
+        FTransform W = C->GetComponentTransform();
+        W.AddToTranslation(Body->GetBoneLocation(Hand) - CombatBody->GetBoneLocation(Hand));
+        C->AttachToComponent(Body, FAttachmentTransformRules::KeepWorldTransform, Hand);
+        C->SetWorldTransform(W);
+    }
+}
+
 void UHWHeroMetaHumanComponent::TakeOff()
 {
+    // the weapons back onto the combat body's hands before the MetaHuman goes (ApplyWeapons finds them there again)
+    if (ACharacter* Owner = Cast<ACharacter>(GetOwner()))
+    {
+        TArray<UStaticMeshComponent*> Statics;
+        Owner->GetComponents(Statics);
+        for (UStaticMeshComponent* C : Statics)
+        {
+            const bool bRight = C && C->GetFName() == TEXT("HWWeaponR");
+            if (C && Owner->GetMesh() && (bRight || C->GetFName() == TEXT("HWWeaponL")) && C->GetAttachParent() != Owner->GetMesh())
+            {
+                C->AttachToComponent(Owner->GetMesh(), FAttachmentTransformRules::KeepWorldTransform, bRight ? TEXT("hand_r") : TEXT("hand_l"));
+            }
+        }
+    }
     if (AActor* MH = Worn.Get())
     {
         MH->Destroy();
