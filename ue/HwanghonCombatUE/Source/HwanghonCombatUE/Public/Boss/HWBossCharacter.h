@@ -247,6 +247,8 @@ public:
 
     // The novel's name of the worn body (boss_skills.json "_names"), empty for the stand-in boss.
     const FText& GetBodyDisplayName() const { return BodyDisplayName; }
+    // Where the novel fights it (boss_skills.json "_places", docs/dungeons/<id>_DUNGEON_SPEC.md ArenaLocation).
+    const FText& GetBodyPlace() const { return BodyPlace; }
     void WearStaticBody(class UStaticMesh* Body);
 
     // Boss intro (v10 AHHBossIntroDirector, docs/design/162): held = no AI, no damage taken, no enrage clock -
@@ -338,6 +340,7 @@ private:
     int32 DesignedSkillUses = 0;
     int32 PendingOpener = INDEX_NONE;   // RuntimeTuning->BossPatterns index of a phase opener waiting for idle
     FText BodyDisplayName;
+    FText BodyPlace;
     bool bBlinkDone = false;
     void TickBlink();
     TMap<int32, FVector> BeatSpots;

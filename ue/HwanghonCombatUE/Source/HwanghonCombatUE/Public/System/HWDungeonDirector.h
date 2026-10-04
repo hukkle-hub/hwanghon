@@ -145,4 +145,5 @@ private:
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<AActor>> FallbackActors;
+    bool bBossIntroPlayed = false;
 };

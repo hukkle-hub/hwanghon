@@ -918,6 +918,12 @@ int32 AHWBossCharacter::LoadDesignedSkills(FName VisualId)
     {
         BodyDisplayName = FText::FromString(Name);
     }
+    const TSharedPtr<FJsonObject>* Places = nullptr;
+    FString Place;
+    if (Root->TryGetObjectField(TEXT("_places"), Places) && (*Places)->TryGetStringField(Key, Place))
+    {
+        BodyPlace = FText::FromString(Place);
+    }
     const TArray<TSharedPtr<FJsonValue>>* List = nullptr;
     if (!Root->TryGetArrayField(Key, List)) return 0;
     int32 N = 0;

@@ -1,4 +1,5 @@
 #include "System/HWDungeonDirector.h"
+#include "Game/HWBossDungeonIntro.h"
 
 #include "System/HWSystemRulesLibrary.h"
 #include "System/HWCoopCombatSubsystem.h"
@@ -313,6 +314,9 @@ void AHWDungeonDirector::SpawnFallbackRoom(const FHWSystemDungeonRoom& Room)
             if (!Definition.BossBody.IsNone())
             {
                 Boss->WearBody(Definition.BossBody);   // and its designed skills (AHWBossCharacter::WearBody)
+                // the boss entrance (docs/design/181 §13): the full one the first time, the name on a retry
+                AHWBossDungeonIntro::Play(Boss, Boss->GetBodyDisplayName(), Boss->GetBodyPlace(), bBossIntroPlayed);
+                bBossIntroPlayed = true;
             }
             Boss->OnBossDied.AddDynamic(
                 this,

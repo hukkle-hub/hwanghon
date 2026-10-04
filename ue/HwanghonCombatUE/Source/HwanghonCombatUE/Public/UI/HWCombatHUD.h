@@ -95,6 +95,9 @@ class HWANGHONCOMBATUE_API AHWCombatHUD : public AHUD
 {
     GENERATED_BODY()
 
+public:
+    UHWCombatHUDWidget* GetHUDWidget() const { return Widget; }
+
 protected:
     virtual void BeginPlay() override;
 

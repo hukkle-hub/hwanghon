@@ -5,6 +5,11 @@
   "subject_09": "실험체 09호",
   "clave": "클레이브"
  },
+ "_places": {
+  "shadow_fang": "물류 창고 야적장",
+  "subject_09": "판교 연구소 지하 3층",
+  "clave": "강남 중앙 광장"
+ },
  "shadow_fang": [
   {
    "ko": "그림자 난무",
