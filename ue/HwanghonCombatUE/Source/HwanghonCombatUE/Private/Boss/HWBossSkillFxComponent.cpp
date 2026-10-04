@@ -34,6 +34,7 @@ void UHWBossSkillFxComponent::BeginPlay()
     Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleState);
     Boss->OnBossBeat.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleBeat);
     Boss->OnBossSpotMarked.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandleSpot);
+    Boss->OnBossPhaseIntro.AddUniqueDynamic(this, &UHWBossSkillFxComponent::HandlePhaseIntro);
 }
 
 float UHWBossSkillFxComponent::FloorZ() const
@@ -101,6 +102,24 @@ void UHWBossSkillFxComponent::HandleState(EHWBossState NewState, FName PatternId
     Shake(0.25f, 9.f);
     const UHWBossPresentationComponent* P = Boss->FindComponentByClass<UHWBossPresentationComponent>();
     bWatchLanding = P && P->GetShownLiftCm() > 50.f;   // broken in the air: it will hit the floor
+}
+
+void UHWBossSkillFxComponent::HandlePhaseIntro(int32 Phase)
+{
+    // the turn (doc 181 §12): a dark pulse from the chest, a long shake and the camera closing in for the roar
+    ++NPhase;
+    if (AHWImpactFx* Fx = AHWImpactFx::Get(GetWorld()))
+    {
+        const FVector Chest = ChestPoint();
+        const FLinearColor Deep(0.55f, 0.12f, 0.1f);
+        Fx->LensStreak(Chest, Deep, 1400.f);
+        Fx->Needles(Chest, 36, Deep, 1300.f, 0.35f, 0.1f);
+        Fx->Puff(FVector(Chest.X, Chest.Y, FloorZ() + 20.f), 12, Dust, 160.f, 1.2f, 260.f, 40.f);
+        Fx->Crack(FVector(Chest.X, Chest.Y, FloorZ() + 5.f), 260.f, 3.f);
+    }
+    ScreenFlash(FLinearColor(0.02f, 0.f, 0.f), 0.55f, 0.6f);
+    Shake(1.0f, 7.f);
+    ZoomLeft = 1.2f;
 }
 
 void UHWBossSkillFxComponent::HandleSpot(int32 BeatIndex, FVector Spot, float RadiusCm, float Seconds)
@@ -410,5 +429,5 @@ void UHWBossSkillFxComponent::TickComponent(float DeltaTime, ELevelTick TickType
 
 FString UHWBossSkillFxComponent::Describe() const
 {
-    return FString::Printf(TEXT("skillfx parry %d break %d land %d riposte %d danger %d blast %d smoke %d spot %d bolt %d"), NParry, NBreak, NLand, NRiposte, NDanger, NBlast, NSmoke, NSpot, NBolt);
+    return FString::Printf(TEXT("skillfx parry %d break %d land %d riposte %d danger %d blast %d smoke %d spot %d bolt %d phase %d"), NParry, NBreak, NLand, NRiposte, NDanger, NBlast, NSmoke, NSpot, NBolt, NPhase);
 }

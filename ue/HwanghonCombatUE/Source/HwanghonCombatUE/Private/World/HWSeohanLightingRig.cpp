@@ -79,6 +79,26 @@ void AHWSeohanLightingRig::Tick(float DeltaSeconds)
     {
         ResolveCombatActors();
     }
+    if (!Boss || !IsValid(Boss))
+    {
+        // a dungeon boss is spawned after the rig: keep looking for it
+        Boss = Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(this, AHWBossCharacter::StaticClass()));
+        bBoundPhase = false;
+    }
+    if (Boss && !bBoundPhase)
+    {
+        Boss->OnBossPhaseIntro.AddUniqueDynamic(this, &AHWSeohanLightingRig::HandleBossPhaseIntro);
+        bBoundPhase = true;
+    }
+    if (!FMath::IsNearlyEqual(Dim, DimTarget, 0.001f))
+    {
+        // over 1.2 s: the fill and key sink, the red accent swells (the arena turns with the boss)
+        Dim = FMath::FInterpConstantTo(Dim, DimTarget, DeltaSeconds, 1.f / 1.2f);
+        FillSky->SetIntensity(0.55f * (1.f - 0.5f * Dim));
+        WarmKey->SetIntensity(9000.f * (1.f - 0.45f * Dim));
+        CoolRim->SetIntensity(5200.f * (1.f - 0.3f * Dim));
+        RedAccent->SetIntensity(1600.f * (1.f + 1.2f * Dim));
+    }
 
     if (ContactLightRemaining > 0.f)
     {
@@ -102,6 +122,11 @@ void AHWSeohanLightingRig::Tick(float DeltaSeconds)
     {
         ContactLight->SetIntensity(0.f);
     }
+}
+
+void AHWSeohanLightingRig::HandleBossPhaseIntro(int32 Phase)
+{
+    DimTarget = FMath::Clamp((Phase - 1) * 0.7f, 0.f, 1.f);
 }
 
 void AHWSeohanLightingRig::ResolveCombatActors()

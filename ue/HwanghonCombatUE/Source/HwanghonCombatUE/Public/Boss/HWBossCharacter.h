@@ -15,6 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharact
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossParriedSignature, FName, PatternId, int32, BeatIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossRiposteSignature, float, Damage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossBeatSignature, FName, PatternId, int32, BeatIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossPhaseIntroSignature, int32, Phase);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FHWBossSpotSignature, int32, BeatIndex, FVector, Spot, float, RadiusCm, float, Seconds);
 
 class UHWCombatTuningAsset;
@@ -54,6 +55,14 @@ public:
     // Every beat as it lands (before parry/range is judged): the move's own FX (the Clave's walking blasts).
     UPROPERTY(BlueprintAssignable, Category="Boss")
     FHWBossBeatSignature OnBossBeat;
+
+    // A phase that opens with a designed move begins (docs/design/181 §12): the boss holds and roars, the arena
+    // darkens, the camera closes in; the opener follows.
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossPhaseIntroSignature OnBossPhaseIntro;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Boss|Phase")
+    float PhaseIntroSeconds = 1.4f;
 
     // An at-target beat chose its spot (Seconds until it lands): the warning circle.
     UPROPERTY(BlueprintAssignable, Category="Boss")

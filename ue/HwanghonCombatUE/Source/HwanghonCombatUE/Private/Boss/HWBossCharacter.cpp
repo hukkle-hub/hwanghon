@@ -891,6 +891,11 @@ void AHWBossCharacter::HandlePhaseChanged(int32 NewPhase)
         if (P.bPhaseOpener && P.MinPhase == NewPhase)
         {
             PendingOpener = I;
+            // hold and roar first (the roar clip when the body has one), then the opener from idle
+            const float Roar = Presentation ? Presentation->PlayRoar() : 0.f;
+            SetIntroHold(true);
+            RoarRemaining = FMath::Max(PhaseIntroSeconds, FMath::Min(Roar, 3.2f));
+            OnBossPhaseIntro.Broadcast(NewPhase);
             return;
         }
     }

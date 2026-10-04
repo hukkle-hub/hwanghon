@@ -50,6 +50,8 @@ private:
     void HandleBossParried(FName PatternId, int32 BeatIndex);
     UFUNCTION()
     void HandleBossRiposte(float Damage);
+    UFUNCTION()
+    void HandleBossPhaseIntro(int32 Phase);
 
     void Flash(const FString& Word);
     void BindActors();

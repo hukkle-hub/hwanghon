@@ -31,6 +31,13 @@ private:
 
     void TriggerContactLight(EHWAttackTier Tier);
 
+    // a boss phase that opens with a designed move darkens the arena for good (docs/design/181 §12)
+    UFUNCTION()
+    void HandleBossPhaseIntro(int32 Phase);
+    float DimTarget = 0.f;
+    float Dim = 0.f;
+    bool bBoundPhase = false;
+
     UPROPERTY()
     TObjectPtr<USceneComponent> SceneRoot;
 

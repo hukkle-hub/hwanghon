@@ -74,6 +74,7 @@ void UHWCombatHUDWidget::BindActors()
             Boss->OnBossStateChanged.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossState);
             Boss->OnBossParried.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossParried);
             Boss->OnBossRiposte.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossRiposte);
+            Boss->OnBossPhaseIntro.AddUniqueDynamic(this, &UHWCombatHUDWidget::HandleBossPhaseIntro);
         }
     }
 }
@@ -229,6 +230,11 @@ void UHWCombatHUDWidget::HandleBossReaction(EHWAttackTier Tier, FVector WorldDir
 void UHWCombatHUDWidget::HandleBossParried(FName PatternId, int32 BeatIndex)
 {
     Flash(TEXT("반격"));   // a chain parry does not stagger, so no reaction carries the word (docs/design/183)
+}
+
+void UHWCombatHUDWidget::HandleBossPhaseIntro(int32 Phase)
+{
+    Flash(FString::Printf(TEXT("%d단계"), Phase));
 }
 
 void UHWCombatHUDWidget::HandleBossRiposte(float Damage)
