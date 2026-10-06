@@ -130,6 +130,14 @@ const blobTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=
 /* 물에 잠긴 곳(던전): 그림자 대신 발 둘레 물결 — 물이 허리까지라 발밑은 안 보인다 */
 const rippleTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); for(const [r,a] of [[58,.55],[44,.35],[30,.2]]){ g.strokeStyle='rgba(190,235,245,'+a+')'; g.lineWidth=3; g.beginPath(); g.arc(64,64,r,0,Math.PI*2); g.stroke(); } return new THREE.CanvasTexture(c); })();
 const FLOOR=meta.water?meta.water.y:0;
+/* 물면: 구운 그림에는 물이 없다(바닥 높이 0) — 여기서 반투명하게 그려 물 밑 다리가 비쳐 보이게 한다.
+   깊이 시험을 켜 두면 물면보다 아래 있는 다리만 물빛을 덮어쓰고, 위는 그대로 (docs/design/185 §6.6) */
+let waterMesh=null;
+if(meta.water){ const wt=(()=>{ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); g.fillStyle='#1a3a42'; g.fillRect(0,0,256,256);
+    for(let i=0;i<70;i++){ g.strokeStyle='rgba(150,220,230,'+(0.05+Math.random()*0.12)+')'; g.lineWidth=1+Math.random()*2; g.beginPath(); const x=Math.random()*256, y=Math.random()*256, r=8+Math.random()*30; g.ellipse(x,y,r,r*0.45,0,0,Math.PI*2); g.stroke(); }
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(160,160); t.colorSpace=THREE.SRGBColorSpace; return t; })();
+  waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({ map:wt, transparent:true, opacity:0.5, depthWrite:false }));
+  waterMesh.rotation.x=-Math.PI/2; waterMesh.position.y=meta.water.y; waterMesh.renderOrder=2; scene.add(waterMesh); }
 /* ---------- 영웅 ---------- */
 const loader=new GLTFLoader();
 if(LOD){ const raw=loader.load.bind(loader); loader.load=(u,...a)=>raw(String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/,'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/,'art/3d/lod/$1_anim.glb'),...a); }
@@ -296,7 +304,7 @@ function tagPos(h){ v3.set(h.root.position.x, 2.05, h.root.position.z).project(c
 function tagAt(el,x,y,z){ v3.set(x,y,z).project(cam); const on=v3.x>-1.2&&v3.x<1.2&&v3.y>-1.2&&v3.y<1.2; el.style.display=on?'':'none'; if(on){ el.style.left=((v3.x+1)/2*innerWidth)+'px'; el.style.top=((1-v3.y)/2*innerHeight)+'px'; } }
 /* 문 가까이 → 이동 단추 · 보스 구역 안 → 경고 · 던전 형광등 «3초 켜짐. 1초 꺼짐» (원작 EP02) */
 const darkEl=document.getElementById('dark'); let flickT=0, zoneT=0;
-function zones(dt){ zoneT+=dt; const p=me.root.position;
+function zones(dt){ zoneT+=dt; const p=me.root.position; if(waterMesh){ waterMesh.material.map.offset.set(zoneT*0.004, zoneT*0.0025); waterMesh.position.x=p.x; waterMesh.position.z=p.z; waterMesh.material.map.offset.x+=p.x/7.5; waterMesh.material.map.offset.y-=p.z/7.5; }
   gateFx.forEach((f,i)=>{ const s=1+Math.sin(zoneT*2.4+i)*0.04; f.ring.scale.set(s,s,1); f.beam.material.opacity=0.09+Math.sin(zoneT*3+i)*0.03; });
   let g=null, gd=1e9; for(const x of meta.gates){ const d=Math.hypot(x.x-p.x,x.z-p.z); if(d<x.r+0.8&&d<gd){ g=x; gd=d; } }
   if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }
@@ -319,7 +327,7 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+(LOD?' · LOD':'')+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
-window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
+window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, map, scene, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
   gates:gateFx, bosses, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
   teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };
 tick();

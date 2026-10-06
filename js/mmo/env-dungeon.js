@@ -40,11 +40,10 @@ export function build(THREE, scene, osm) {
   const shapeOf = pts => new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])));
   function flat(pts, mat, y) { const g = new THREE.ShapeGeometry(shapeOf(pts)); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, g.attributes.position.getX(i) / 2.4, g.attributes.position.getY(i) / 2.4);
     const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
-  const floorM = new THREE.MeshStandardMaterial({ map: terrazzo, roughness: 0.4, metalness: 0.1 });
+  const floorM = new THREE.MeshStandardMaterial({ map: terrazzo, roughness: 0.18, metalness: 0.15, color: 0x8a9a9c });   /* 젖은 바닥 */
   flat(mall, floorM, 0); flat(corridor, floorM, 0.001);
-  /* 물: 허리 높이. 탁한 청록, 반사가 있고 바닥이 희미하게 비친다 */
-  const waterM = new THREE.MeshStandardMaterial({ color: 0x1c3a40, roughness: 0.08, metalness: 0.35, transparent: true, opacity: 0.72 });
-  flat(mall, waterM, WATER); flat(corridor, waterM, WATER + 0.001);
+  /* 물(0.9 m)은 굽지 않는다 — 첫 판은 물면을 높이 그림에 구워 넣어 인물의 무릎 아래가 «땅에 박힌» 듯 잘렸다(디렉터 지적).
+     부츠·각반도 장비라 보여야 한다. 게임(mmo.html)이 map.json water.y 높이에 반투명 물면을 따로 그린다 — 물 밑 다리가 비쳐 보인다 */
 
   /* ---------- 벽: 윤곽을 따라 2 m 조각. 카메라 쪽을 보는 벽은 1 m 로 잘라 안이 보이게 ---------- */
   const wallTex = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#3e3c40'; g.fillRect(0, 0, w, h); g.fillStyle = '#2a2a2e'; g.fillRect(0, h - 20, w, 20); g.fillStyle = 'rgba(90,120,110,.35)'; g.fillRect(0, h * 0.62, w, 6); });
@@ -170,7 +169,7 @@ export function build(THREE, scene, osm) {
   const fallen = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.25, 3.0), new THREE.MeshStandardMaterial({ color: 0x4a4c54, roughness: 0.5, metalness: 0.5 })); const fq = FROM(s5 + (s5 < 0 ? -2 : 2), tc + 1.5); fallen.position.set(fq[0], 1.6, fq[1]); fallen.rotation.set(0.1, stairAng, 0.35); fallen.castShadow = true; scene.add(fallen);
   const daylight = new THREE.PointLight(0xc89ad8, 14, 14, 1.4); const dq = FROM(s5 + (s5 < 0 ? -3 : 3), tc); daylight.position.set(dq[0], 4, dq[1]); scene.add(daylight); lights.push({ x: dq[0], y: 4, z: dq[1], color: '#c89ad8', intensity: 14, distance: 14 });
   const upP = FROM(s5 + (s5 < 0 ? 5 : -5), tc);
-  const gateRing = new THREE.Mesh(new THREE.RingGeometry(2.9, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); gateRing.rotation.x = -Math.PI / 2; gateRing.position.set(upP[0], WATER + 0.02, upP[1]); scene.add(gateRing);
+  const gateRing = new THREE.Mesh(new THREE.RingGeometry(2.9, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); gateRing.rotation.x = -Math.PI / 2; gateRing.position.set(upP[0], 0.03, upP[1]); scene.add(gateRing);
   /* 2호선 승강장 쪽 — 지금은 셔터로 막힘 (EP03 «2호선 침수 선로», 다음 층) */
   const b2P = [sdP[0] + Math.cos(-sdAng) * 10.5, sdP[1] + Math.sin(-sdAng) * 10.5]; const b2 = new THREE.Mesh(new THREE.PlaneGeometry(4, 2.8), shutterM); b2.position.set(b2P[0], 1.4, b2P[1]); b2.rotation.y = sdAng + Math.PI; scene.add(b2);
 

@@ -283,8 +283,14 @@ export function build(THREE, scene, osm, opt = {}) {
   const warnTex = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#b8241e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#fff'; g.font = '900 52px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('통제구역', w / 2, h / 2 + 2); });
   const inAnyBuilding = p => builtW.some(b => inPoly(p, b.pts));
   const gatesW = [];
+  /* 문은 «맨바닥» 에 — 카메라 시선으로 그 자리를 덮는 것이 없어야 한다. 첫 판은 5번 출구 문이 무너진 지붕 밑(보이는 면 2.0 m)이라
+     문에 서면 인물이 지붕에 가려졌다 (tests/map-height.test.cjs). 시선(D) 방향으로 쏘아 맨 처음 닿는 면이 바닥인 가장 가까운 점 */
+  const ray = new THREE.Raycaster(), Dv = new THREE.Vector3(0, -Math.sin(PITCH), -Math.cos(PITCH));
+  const bareAt = p => { scene.updateMatrixWorld(true); ray.set(new THREE.Vector3(p[0], 0, p[1]).addScaledVector(Dv, -120), Dv); const hit = ray.intersectObjects(scene.children, true).find(h => h.object.visible && !h.object.isLight); return !hit || hit.point.y < 0.12; };
+  function clearSpot(st0) { for (const r of [0, 2, 3, 4, 5, 6, 7, 8]) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, st = [st0[0] + Math.cos(a) * r, st0[1] + Math.sin(a) * r];
+      if (st[1] < walk.t0 + 2 || st[1] > walk.t1 - 2) continue; const ok = [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]].every(([ds, dt]) => bareAt(FROM(st[0] + ds, st[1] + dt))); if (ok) return st; } return st0; }
   for (const g of CFG.gates || []) { let st;
-    if (g.at.exit) { const e = exitsW.find(x => x.ref === g.at.exit); if (!e) continue; st = ST(e.p); }
+    if (g.at.exit) { const e = exitsW.find(x => x.ref === g.at.exit); if (!e) continue; st = clearSpot(ST(e.p)); }
     else { const sEnd = walk[g.at.end], tt = g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t; st = [sEnd + (g.at.end === 's1' ? -3 : 3), tt]; }
     const p = FROM(st[0], st[1]); gatesW.push({ id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 3.2, to: g.to, label: g.label, kind: g.kind || 'zone', st }); }
   function barrier(s, t, ang, sign) { const p = FROM(s, t); const gr = new THREE.Group();
