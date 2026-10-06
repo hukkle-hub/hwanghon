@@ -25,3 +25,23 @@ test('all original WAV files are stereo PCM with valid lengths',()=>{
  assert.equal(Object.keys(manifest).length,12);
  for(const [name,m]of Object.entries(manifest)){const b=fs.readFileSync('art/audio/'+name+'.wav');assert.equal(b.toString('ascii',0,4),'RIFF');assert.equal(b.readUInt16LE(22),2);assert.equal(b.readUInt32LE(24),24000);assert.equal((b.length-44)/96000,m.seconds);}
 });
+test('MMO opts into the combat-only pack and starts preloading it before the first attack',()=>{
+ const html=fs.readFileSync('mmo.html','utf8'),src=fs.readFileSync('js/sfx.js','utf8');
+ assert.match(html,/<script src="js\/sfx\.js" data-pack="combat"><\/script>/);
+ assert.match(src,/combatPack\?\['swing','hit','hit_heavy','counter','counter_perfect','brk','roll','tele'\]/);
+ assert.match(src,/if\(combatPack\)preload\(\)/);
+ assert.match(html,/if\(REDUCED\) shakeT=0;\s*else if\(shakeT>0\)/,'reduced-motion globally suppresses camera shake');
+ assert.match(html,/if\(o\.mixer&&\(!o\.fx\|\|o\.alive\|\|o\.dieT>0\|\|o\.fx\.tailT>0\)\)\{if\(o\.fx\)prepareBossMotion\(o,bossNow\(\)\);o\.mixer\.update\(dt\);\}/,'dead Clave mixer sleeps after its visual tail while live poses seek before evaluation');
+});
+test('first pointer attack queues until the suspended audio context resumes',async()=>{
+ const listeners={},sources=[],param=()=>({value:0,cancelScheduledValues(){},setValueAtTime(){},setTargetAtTime(){},exponentialRampToValueAtTime(){}});
+ const node=()=>({gain:param(),frequency:param(),Q:param(),playbackRate:param(),connect(){},disconnect(){},start(){this.started=true;},stop(){this.stopped=true;}});
+ class AC{constructor(){this.currentTime=1;this.state='suspended';this.destination={};this.sampleRate=24000;}createGain(){return node();}createBiquadFilter(){return node();}createDynamicsCompressor(){return Object.fromEntries(['threshold','knee','ratio','attack','release'].map(k=>[k,param()]).concat([['connect',()=>{}]]));}createBufferSource(){const n=node();sources.push(n);return n;}decodeAudioData(){return Promise.resolve({duration:.2});}resume(){this.state='running';return Promise.resolve();}}
+ const document={hidden:false,currentScript:{src:'http://localhost/js/sfx.js',dataset:{pack:'combat'}},addEventListener(k,v){listeners[k]=v;},removeEventListener(){}};
+ const window={AudioContext:AC,addEventListener(){}};
+ vm.runInNewContext(fs.readFileSync('js/sfx.js','utf8'),{window,document,URL,Promise,fetch:async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(2)}),setTimeout,setInterval,Date,Math});
+ const a=window.TW_SFX;a.play('swing');
+ assert.equal(a.diagnostics().queued,1);assert.equal(sources.length,0);
+ await new Promise(r=>setImmediate(r));
+ assert.equal(a.diagnostics().context,'running');assert.equal(a.diagnostics().queued,0);assert.equal(sources.length,1);assert.ok(sources[0].started);
+});

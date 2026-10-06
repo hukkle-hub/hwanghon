@@ -14,12 +14,12 @@ test('한 번만 굽고 돌려 쓴다 — 자리마다 WebGL 맥락을 열지 �
  assert.equal(n,1,'렌더러는 한 곳에서만 만든다');
 });
 
-test('열쇠에 캐릭터·장착·염색이 모두 들어간다',()=>{
+test('열쇠에 캐릭터·장착·강화·염색이 모두 들어간다',()=>{
  /* 하나라도 빠지면 옷을 갈아입어도 옛 초상이 남는다 */
  const m=SRC.match(/function stateKey\(mode\)\{[\s\S]*?\n\}/);
  assert.ok(m,'stateKey 가 있다');
  assert.match(m[0],/mode/); assert.match(m[0],/G\.char\(\)/);
- assert.match(m[0],/s\.equipped/); assert.match(m[0],/s\.dye/);
+ assert.match(m[0],/s\.equipped/); assert.match(m[0],/s\.enh/); assert.match(m[0],/s\.dye/);
 });
 
 test('방어구가 다 올 때까지 기다린다 — 후드를 써도 초상이 그대로였던 버그',()=>{

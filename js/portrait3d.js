@@ -3,7 +3,7 @@
 
    왜 한 번만 굽나: 로비·프로필·파티 카드가 같은 그림을 쓴다. 자리마다 캔버스를
    띄우면 안드로이드에서 WebGL 맥락이 네 개가 된다. 한 번 굽고 dataURL 로 돌려
-   쓰고, 장비가 바뀌었을 때만 다시 굽는다(열쇠 = 캐릭터 + 장착 + 염색).
+   쓰고, 장비가 바뀌었을 때만 다시 굽는다(열쇠 = 캐릭터 + 장착 + 강화 + 염색).
 
    남의 초상은 바꾸지 않는다 — 서버가 다른 사람의 장비를 내려 주지 않아
    «반영된 척» 을 할 수 없다. 원화 그대로 둔다. */
@@ -19,7 +19,7 @@ const KEY='tw:portrait';
 function stateKey(mode){
   const G=window.TW_GEAR; if(!G) return null;
   const s=G.state();
-  try{ return JSON.stringify([mode||'face', G.char(), s.equipped, s.dye||{}]); }catch(e){ return null; }
+  try{ return JSON.stringify([mode||'face', G.char(), s.equipped, s.enh||{}, s.dye||{}]); }catch(e){ return null; }
 }
 
 /* 저장은 모양(face/body)마다 한 장씩만 — 열쇠가 바뀌면 그 모양의 옛 그림은 버린다.
@@ -116,7 +116,7 @@ function bake(char, mode){
           const once=()=>{ if(settled) return; settled=true; clearTimeout(timer); finish(); };
           mgr.onLoad=()=>{ if(!attached) return; clearTimeout(timer); timer=setTimeout(once,90); };
           try{ window.TW_HAIR && TW_HAIR.sync(model, eq); /* 머리 장비 = 머리카락 가림 */
-          TW_LOOKS.attach(THREE, loader, model, eq, { charId:char, baseOf, tintOf, mixOf }); }
+          TW_LOOKS.attach(THREE, loader, model, eq, { charId:char, baseOf, tintOf, mixOf, enhOf:id=>G.enhOf(id) }); }
           catch(e){ once(); }
           attached=true;
           /* 이미 다 받아 둔 조각뿐이면 onLoad 가 안 올 수도 있다 */

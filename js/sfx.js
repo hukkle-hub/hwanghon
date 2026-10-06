@@ -1,6 +1,7 @@
 /* 황혼 — organic audio sample pack v2 (legacy synthesis below is inactive)
    TW_SFX.unlock() 은 첫 터치/키 입력에서 자동. TW_SFX.play(name) · TW_SFX.ambient(on) · TW_SFX.enabled */
 (function(){
+  var combatPack=!!(document.currentScript&&document.currentScript.dataset&&document.currentScript.dataset.pack==='combat');
   var ctx=null, master=null, amb=null, enabled=true, volume=0.7;
   function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; var compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-8;compressor.knee.value=8;compressor.ratio.value=12;compressor.attack.value=.003;compressor.release.value=.2;master.connect(compressor);compressor.connect(ctx.destination); return ctx; }
   function unlock(){ var c=ac(); if(!c) return; if(c.state==='suspended') c.resume(); }
@@ -36,13 +37,13 @@
     play:function(name, a){ if(!enabled||!ac()) return; try{ SFX[name] && SFX[name](a); }catch(e){} } };
   ['pointerdown','keydown','touchstart'].forEach(function(ev){ document.addEventListener(ev, unlock, { passive:true }); });
   /* Organic sample pack. Missing samples stay silent; rejected synth is never used. */
-  var buffers={}, loading=null, bed=null, desired='off', active=[], lastSound={};
-  var originalUnlock=unlock;
+  var buffers={}, loading=null, bed=null, desired='off', active=[], pending=[], lastSound={};
   var audioBase=new URL('../art/audio/',document.currentScript.src);
   function preload(){
     if(loading)return loading;
     var c=ac();if(!c)return Promise.resolve();
-    loading=Promise.all(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){
+    var names=combatPack?['swing','hit','hit_heavy','counter','counter_perfect','brk','roll','tele']:['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'];
+    loading=Promise.all(names.map(function(name){
       return fetch(new URL(name+'.wav?v=organic2',audioBase)).then(function(r){if(!r.ok)throw Error(r.status);return r.arrayBuffer();})
         .then(function(data){return c.decodeAudioData(data);}).then(function(b){buffers[name]=b;})
         .catch(function(){/* Missing samples remain silent: never restore rejected synth sounds. */});
@@ -60,18 +61,16 @@
   /* 연출 감독: 배경음을 잠깐 눌렀다 돌려놓는다(받아친 순간 «뚝») — depth 0..1, ms */
   api.duck=function(depth,ms){ if(!bed||!ctx) return; var g=bed.g.gain, t=ctx.currentTime, base=desired==='boss'?.15:.1; g.cancelScheduledValues(t); g.setTargetAtTime(base*(1-Math.max(0,Math.min(1,depth))),t,.012); g.setTargetAtTime(base,t+(ms||200)/1000,.12); };
   api.scene=function(name){desired=['explore','boss'].indexOf(name)>=0?name:'off';syncBed();};
-  api.diagnostics=function(){return {loaded:Object.keys(buffers).length,context:ctx?ctx.state:'locked',scene:bed?bed.name:'off',voices:active.length};};
+  api.diagnostics=function(){return {loaded:Object.keys(buffers).length,context:ctx?ctx.state:'locked',scene:bed?bed.name:'off',voices:active.length,queued:pending.length};};
   api.ambient=function(on){api.scene(on?'explore':'off');};
-  api.unlock=function(){originalUnlock();if(ctx)Promise.resolve(ctx.resume()).then(function(){preload();syncBed();}).catch(function(){});};
-  ['pointerdown','keydown','touchstart'].forEach(function(ev){document.removeEventListener(ev,unlock);document.addEventListener(ev,api.unlock,{passive:true});});
-  api.play=function(name,a){
-    if(!enabled||document.hidden)return;
+  function sampleKey(name,a){
     var detail=a&&typeof a==='object'?a:null,heavy=detail?!!detail.heavy:!!a;
     var key=name==='hit'&&heavy?'hit_heavy':name==='counter'&&a?'counter_perfect':name;
     var aliases={down:'brk',ult:'execute',hurt:a?'counter':'hit',guard:'counter',gate:'phase',chains:'brk',ui:'roll',clear:'counter_perfect'};
-    key=aliases[key]||key;
-    if(!buffers[key]||!ctx||ctx.state!=='running'){return;}
-    var t=ctx.currentTime;if(t-(lastSound[key]||-10)<.045)return;lastSound[key]=t;
+    return aliases[key]||key;
+  }
+  function playLoaded(name,a,key){
+    var detail=a&&typeof a==='object'?a:null,t=ctx.currentTime;if(t-(lastSound[key]||-10)<.045)return;lastSound[key]=t;
     if(active.length>=12){try{active.shift().stop();}catch(e){}}
     var s=ctx.createBufferSource(),g=ctx.createGain();s.buffer=buffers[key];
     var tier=detail&&detail.tier||'light',tg={light:.40,crit:.46,finish:.52,smash:.58,counter:.62}[tier]||.48;
@@ -88,9 +87,30 @@
     }else s.connect(g);g.connect(master);active.push(s);
     s.onended=function(){active=active.filter(function(x){return x!==s;});s.disconnect();if(filter)filter.disconnect();g.disconnect();};s.start();
     if(bed){var deep=name==='hit'&&(tier==='smash'||tier==='counter');bed.g.gain.cancelScheduledValues(t);bed.g.gain.setTargetAtTime(deep?.022:.035,t,.02);bed.g.gain.setTargetAtTime(desired==='boss'?.15:.1,t+(deep?.36:.3),.3);}
+  }
+  function flushPending(){
+    if(!ctx||ctx.state!=='running'||!pending.length)return;
+    var now=Date.now(),q=pending;pending=[];
+    q.forEach(function(p){if(now-p.at<=800&&buffers[p.key])playLoaded(p.name,p.a,p.key);});
+  }
+  api.unlock=function(){
+    var c=ac();if(!c)return Promise.resolve(false);
+    return Promise.resolve(c.state==='running'?true:c.resume()).then(function(){return preload();}).then(function(){syncBed();flushPending();return c.state==='running';}).catch(function(){return false;});
+  };
+  ['pointerdown','keydown','touchstart'].forEach(function(ev){document.removeEventListener(ev,unlock);document.addEventListener(ev,api.unlock,{passive:true});});
+  api.play=function(name,a){
+    if(!enabled||document.hidden)return;
+    var key=sampleKey(name,a);
+    if(!buffers[key]||!ctx||ctx.state!=='running'){
+      pending.push({name:name,a:a,key:key,at:Date.now()});if(pending.length>6)pending.shift();
+      api.unlock();return;
+    }
+    playLoaded(name,a,key);
   };
   Object.defineProperty(api,'enabled',{get:function(){return enabled;},set:function(v){enabled=!!v;if(master)master.gain.value=enabled?volume:0;syncBed();}});
   document.addEventListener('visibilitychange',function(){syncBed();if(ctx){if(document.hidden)ctx.suspend();else if(enabled)ctx.resume().then(syncBed).catch(function(){});}});
   window.addEventListener('pagehide',function(){desired='off';stopBed();});
   window.TW_SFX=api;
+  /* MMO 전투 화면은 첫 공격 전에 작은 팩만 받아 둔다. 재생은 여전히 첫 입력 뒤 resume 될 때까지 막힌다. */
+  if(combatPack)preload();
 })();

@@ -42,7 +42,7 @@ const frames = async (page, n) => { const f0 = await page.evaluate(() => __MMO.f
 /* 손님 위치를 화면과 서버 양쪽에서 옮긴다 (출발점에서 걸어가는 대신) */
 async function put(page, x, z, yaw) {
   const id = await page.evaluate(([x, z, yaw]) => { __MMO.teleport(x, z, yaw); return __MMO.net.profile.id; }, [x, z, yaw]);
-  const p = app.field.players.get(id); p.x = x; p.z = z; p.at = Date.now();
+  const p = app.field.players.get(id); p.x = x; p.z = z; p.at = Date.now(); p.invulnUntil=Date.now()+1e9;   /* 이 시나리오는 드롭 흐름용 — 보스 반격 장면은 clave-motion-scenario 가 따로 찍는다 */
 }
 const shot = async (page, name) => { await page.screenshot({path:path.join(OUT, name + (M ? '-' + M : '') + '.png')}); console.log('찍음', name); };
 
@@ -61,7 +61,7 @@ await frames(B, 24);
 
 /* A 가 때린다 — 공격 단추(J). 피해는 서버가 굴려 돌려준다 */
 /* 공격 동작 중(≈0.75초) 누른 키는 무시된다 — 동작이 끝난 뒤에 누르고, 마지막 숫자가 떠 있는 동안(0.9초) 찍는다 */
-const swing = async () => { await A.waitForFunction(() => __MMO.me.busy <= 0, null, {timeout:240000}); await A.keyboard.press('KeyJ'); };
+const swing = async () => { const x=o.x-2,z=o.z;await put(A,x,z,Math.atan2(o.x-x,o.z-z));await frames(A,1);await A.waitForFunction(() => __MMO.me.busy <= 0, null, {timeout:240000}); await A.keyboard.press('KeyJ'); };
 for (let i = 0; i < 4; i++) { await swing(); await frames(A, 4); }
 await swing(); await frames(A, 5);
 const hp1 = o.hp / o.max;
