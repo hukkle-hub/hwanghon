@@ -135,13 +135,13 @@ const FLOOR=meta.water?meta.water.y:0;
    깊이 시험을 켜 두면 물면보다 아래 있는 다리만 물빛을 덮어쓰고, 위는 그대로 (docs/design/185 §6.6) */
 let waterMesh=null;
 if(meta.water){ const wt=(()=>{ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); g.fillStyle='#1a3a42'; g.fillRect(0,0,256,256);
-    for(let i=0;i<70;i++){ g.strokeStyle='rgba(150,220,230,'+(0.05+Math.random()*0.12)+')'; g.lineWidth=1+Math.random()*2; g.beginPath(); const x=Math.random()*256, y=Math.random()*256, r=8+Math.random()*30; g.ellipse(x,y,r,r*0.45,0,0,Math.PI*2); g.stroke(); }
+    for(let i=0;i<70;i++){ g.strokeStyle='rgba(150,220,230,'+(0.05+Math.random()*0.12)+')'; g.lineWidth=1+Math.random()*2; const x0=Math.random()*256, y0=Math.random()*256, r=8+Math.random()*30; for(const ox of [-256,0,256]) for(const oy of [-256,0,256]){ g.beginPath(); g.ellipse(x0+ox,y0+oy,r,r*0.45,0,0,Math.PI*2); g.stroke(); } }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(160,160); t.colorSpace=THREE.SRGBColorSpace; return t; })();
   waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({ map:wt, transparent:true, opacity:0.5, depthWrite:false }));
   waterMesh.rotation.x=-Math.PI/2; waterMesh.position.y=meta.water.y; waterMesh.renderOrder=2; scene.add(waterMesh); }
 /* 안개 (여의도 «가시거리 스무 걸음») — 무릎 높이 반투명 층. 물과 같은 원리: 그 아래 다리만 뿌옇게 */
 let mistMesh=null;
-if(meta.mist){ const mt=(()=>{ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); for(let i=0;i<46;i++){ const x=Math.random()*256, y=Math.random()*256, r=30+Math.random()*70, gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba(220,210,230,.5)'); gr.addColorStop(1,'rgba(220,210,230,0)'); g.fillStyle=gr; g.fillRect(0,0,256,256); }
+if(meta.mist){ const mt=(()=>{ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); /* 이음매 없이: 덩어리를 가장자리 너머 여덟 칸에도 같이 그린다 — 첫 판은 반복 경계에 곧은 선이 보였다 */ for(let i=0;i<46;i++){ const x0=Math.random()*256, y0=Math.random()*256, r=30+Math.random()*70; for(const ox of [-256,0,256]) for(const oy of [-256,0,256]){ const x=x0+ox, y=y0+oy, gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba(220,210,230,.5)'); gr.addColorStop(1,'rgba(220,210,230,0)'); g.fillStyle=gr; g.fillRect(0,0,256,256); } }
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(60,60); t.colorSpace=THREE.SRGBColorSpace; return t; })();
   mistMesh=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({ map:mt, transparent:true, opacity:meta.mist.opacity||0.4, depthWrite:false }));
   mistMesh.rotation.x=-Math.PI/2; mistMesh.position.y=meta.mist.y||0.7; mistMesh.renderOrder=3; scene.add(mistMesh); }
