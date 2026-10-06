@@ -6,6 +6,8 @@
    좌표: 실내는 길 좌표 (s, t) — s 화면 대각선 오른쪽 위 +, t 화면 위(먼 쪽) + , 단위 m.
    원작 줄 번호(L…)는 docs/story/source/제1부_통합본_EP01-28.md */
 
+import { AUTO } from './zones-auto.js';
+
 const M = 'art/3d/part1/';
 export const ZONES = {
   /* ================= 1. 강남 벙커 (허브 · 안전지대) — 문서 152·155, 원작 L251~L660 ================= */
@@ -249,5 +251,7 @@ export const ZONES = {
         { id: 'base', s: [150, 180], t: [-12, 18], h: 16, light: 'red', props: [ { k: 'tower', d: 7 } ] } ] } },
 };
 
-/* 필드 존은 존마다 따로 (env-field 설정) — 다음 단계에서 채운다 */
+/* 전국 지역 — tools/2d/new-zone.mjs 가 찍어 낸 것 (docs/design/192 §7). 같은 id 가 위에 있으면 손으로 다듬은 위쪽이 이긴다 */
+for (const [id, z] of Object.entries(AUTO)) ZONES[id] ??= z;
+
 export const zoneIds = Object.keys(ZONES);

@@ -1,0 +1,111 @@
+// 지역 찍어 내기 — 좌표 하나로 필드 하나 (docs/design/192 §2.5, §7)
+//   node tools/2d/new-zone.mjs <지역 id…>          (js/mmo/regions.js 의 id)
+//   1) OSM 원본이 없으면 받는다 (osm-fetch, 1.4 km 네모)  2) osm-extract AXIS=auto — 원점 둘레 가장 큰 길이 축
+//   3) 땅을 5 m 격자로 나눠 물·건물·숲·모래·풀을 센다 (게임이 그리는 것과 같은 규칙: 해안선 오른쪽 = 바다, 강은 폭)
+//   4) 걷는 띠(400 × 240 m)를 «물이 없고, 길이 가운데쯤, 카메라 쪽으로 넓게» 고른다. 해안이면 바다를 먼 쪽(화면 위)에
+//   5) 띠를 셋으로 나눠 하위 구역 — 이름은 그 안의 OSM 공원·해변·숲 이름, 없으면 큰길 이름 + 땅 종류. 거점은 가운데가 마을(안전)
+//   6) js/mmo/zones-auto.js 에 쓴다 → 굽기: node tools/2d/bake-map.mjs <id> (뒤처리: recompress-webp · repack-depth · tile-hashes · bake-overview)
+// 손으로 고칠 게 있으면 zones-auto.js 가 아니라 원작 지역처럼 zones.js 로 옮겨 다듬는다(같은 id 면 zones.js 가 이긴다).
+import fs from 'node:fs'; import path from 'node:path'; import { execFileSync } from 'node:child_process';
+import { REGIONS, levelOf } from '../../js/mmo/regions.js';
+const OSM_CACHE = process.env.OSM_CACHE || '/tmp/hwanghon-osm', OUT = 'js/mmo/zones-auto.js';
+const SCREEN_ANG = 28 * Math.PI / 180, DIR = [Math.cos(SCREEN_ANG), -Math.sin(SCREEN_ANG)], SIDE = [-Math.sin(SCREEN_ANG), -Math.cos(SCREEN_ANG)];
+const ST = ([x, z]) => [x * DIR[0] + z * DIR[1], x * SIDE[0] + z * SIDE[1]], FROM = (s, t) => [s * DIR[0] + t * SIDE[0], s * DIR[1] + t * SIDE[1]];
+const rotP = r => { const c = Math.cos(r), s = Math.sin(r); return ([x, z]) => [x * c - z * s, x * s + z * c]; };
+const inPoly = ([x, z], P) => { let o = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) o = !o; } return o; };
+const bbox = P => P.reduce((b, [x, z]) => [Math.min(b[0], x), Math.min(b[1], z), Math.max(b[2], x), Math.max(b[3], z)], [1e9, 1e9, -1e9, -1e9]);
+const segD = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
+const hash = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 90000 + 10000;
+
+/* 땅 종류별 꾸미기·몬스터 계열 (가안 — 몬스터 표가 생기면 바꾼다) */
+const LOOK = {
+  city: { ground: 'paver', dress: { urban: true, logs: false, patches: ['concrete', 'sand', 'asphalt'] }, trees: { density: 0.3, inBand: 0.08, pine: 0.1 }, boundary: 'urban', ruin: [5, 11] },
+  coast: { ground: 'paver', dress: { urban: true, logs: false, patches: ['sand', 'concrete', 'grass'] }, trees: { density: 0.4, inBand: 0.08, pine: 0.7 }, boundary: 'urban', ruin: [4.5, 9] },
+  mountain: { ground: 'forest', dress: { patches: ['forest', 'sand', 'grass'] }, trees: { density: 0.85, inBand: 0.15, pine: 0.7 }, boundary: 'fence', ruin: [4.5, 8] },
+  rural: { ground: 'grass', dress: { patches: ['grass', 'sand', 'forest'] }, trees: { density: 0.6, inBand: 0.12, pine: 0.4 }, boundary: 'fence', ruin: [4.5, 8] },
+};
+const lookOf = r => LOOK[{ hub: 'city', city: 'city', historic: 'city', industrial: 'city', coast: 'coast', island: 'coast', mountain: 'mountain', river: 'rural', rural: 'rural' }[r.kind] || 'city'];
+const CLASS_NAME = { beach: '모래사장', forest: '숲 가장자리', park: '공원 터', city: '무너진 상가', open: '빈터', water: '물가' };
+const MOBS = { beach: '갯가 감염체 (가안)', forest: '탈영병 (가안)', park: '광장의 감염체 (가안)', city: '감염체 무리 (가안)', open: '들개 무리 (가안)', water: '갯가 감염체 (가안)' };
+
+function plan(region) {
+  const id = region.id, src = path.join(OSM_CACHE, id);
+  if (!fs.existsSync(src) || !fs.readdirSync(src).some(f => f.startsWith('osm-r'))) {
+    const dl = 700 / 110540, dn = 700 / (111320 * Math.cos(region.lat * Math.PI / 180));
+    execFileSync('node', ['tools/2d/osm-fetch.mjs', src, (region.lat - dl).toFixed(5), (region.lat + dl).toFixed(5), (region.lon - dn).toFixed(5), (region.lon + dn).toFixed(5), '2'], { stdio: 'inherit' }); }
+  console.log(execFileSync('node', ['tools/2d/osm-extract.mjs', src, id], { env: { ...process.env, ORIGIN: region.lat + ',' + region.lon, AXIS: 'auto' } }).toString().trim().split('\n').slice(0, 3).join('\n'));
+  const osm = JSON.parse(fs.readFileSync(path.join('maps', '2d', id, 'osm.json'), 'utf8'));
+
+  /* 물: 물 다각형 · 강 띠 · 해안선 오른쪽 2 km (env-lib lines 와 같은 규칙) */
+  const water = osm.areas.filter(a => /^water$|reservoir|basin|riverbank/.test(a.kind)).map(a => a.poly), rivers = [];
+  for (const l of osm.lines) { if (l.tunnel || l.layer < 0) continue;
+    if (l.kind === 'coastline') { const a0 = l.line[0], a1 = l.line.at(-1), dx = a1[0] - a0[0], dz = a1[1] - a0[1], L0 = Math.hypot(dx, dz) || 1, rx = -dz / L0 * 2000, rz = dx / L0 * 2000;
+      /* OSM 좌표는 z 가 남쪽 + 라서 env-lib 의 «오른쪽» 과 같은 식을 그대로 쓴다 */ water.push([...l.line, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]); }
+    else if (/^water:(river|canal|stream|ditch|drain)/.test(l.kind)) { const w = l.width || (/river|canal/.test(l.kind) ? 18 : 3); if (w > 4) rivers.push({ line: l.line, w: w / 2 }); } }
+  const P = (list, kind) => list.map(poly => ({ poly, bb: bbox(poly), kind }));
+  const polys = [...P(water, 'water'), ...P(osm.buildings.filter(b => !b.under).map(b => b.poly), 'city'),
+    ...P(osm.areas.filter(a => /wood|forest|military|scrub/.test(a.kind)).map(a => a.poly), 'forest'), ...P(osm.areas.filter(a => /beach|sand/.test(a.kind)).map(a => a.poly), 'beach'),
+    ...P(osm.areas.filter(a => /park|grass|meadow|garden|pitch|village_green|recreation|golf|farmland|orchard/.test(a.kind)).map(a => a.poly), 'park')];
+  const ORDER = ['water', 'city', 'beach', 'forest', 'park'];
+  const classify = p => { for (const k of ORDER) { if (k === 'water' && rivers.some(r => r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < r.w))) return 'water';
+      for (const o of polys) if (o.kind === k && p[0] >= o.bb[0] && p[0] <= o.bb[2] && p[1] >= o.bb[1] && p[1] <= o.bb[3] && inPoly(p, o.poly)) return k; } return 'open'; };
+
+  /* 먼 쪽: 해안이면 바다 쪽, 아니면 기본(남쪽) — frameOf 의 두 후보 중 그 점이 t > 0 이 되는 쪽 */
+  let far = [0, 1];
+  { const sea = []; for (let x = -600; x <= 600; x += 40) for (let z = -600; z <= 600; z += 40) if (classify([x, z]) === 'water') sea.push([x, z]);
+    if (sea.length > 20) far = [sea.reduce((a, p) => a + p[0], 0) / sea.length, sea.reduce((a, p) => a + p[1], 0) / sea.length]; }
+  let rot = 0; for (const cand of [-SCREEN_ANG - osm.axis, Math.PI - SCREEN_ANG - osm.axis]) { const w = rotP(cand)(far); if (w[0] * SIDE[0] + w[1] * SIDE[1] > 0) { rot = cand; break; } }
+  const toOsm = rotP(-rot), G = 5, R0 = 380, N = R0 * 2 / G + 1, grid = new Array(N * N);
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) grid[i * N + j] = classify(toOsm(FROM(-R0 + i * G, -R0 + j * G)));
+  const cls = (s, t) => grid[Math.round((s + R0) / G) * N + Math.round((t + R0) / G)];
+  const stats = (s0, s1, t0, t1) => { const c = { water: 0, city: 0, beach: 0, forest: 0, park: 0, open: 0 }; let n = 0; for (let s = s0; s <= s1; s += G) for (let t = t0; t <= t1; t += G) { c[cls(s, t)]++; n++; } for (const k in c) c[k] /= n; return c; };
+
+  /* 걷는 띠: 400 × 240 m. 물 0 에 가깝게, 길(t=0)을 품고, 카메라 쪽으로 — 해안은 띠 바로 위(먼 쪽)에 바다가 보이면 덤 */
+  const SL = 400, TL = 240; let best = null;
+  for (let sc = -100; sc <= 100; sc += 20) for (let t0 = -340; t0 <= 100; t0 += 10) { const t1 = t0 + TL, s0 = sc - SL / 2, s1 = sc + SL / 2;
+    const c = stats(s0, s1, t0, t1), view = stats(s0, s1, t1, Math.min(t1 + 60, R0)).water;
+    const score = -10 * c.water - 1.5 * Math.max(0, c.city - 0.3) + (t0 < 0 && t1 > 0 ? 0.4 : 0) - 0.002 * Math.abs(t1 - 40) - 0.001 * Math.abs(sc) + (far[0] || far[1] !== 1 ? 0.5 * view : 0);
+    if (!best || score > best.score) best = { score, s0, s1, t0, t1, c }; }
+  const walk = { s0: best.s0, s1: best.s1, t0: best.t0, t1: best.t1 }, c = best.c;
+  /* 출발점: 길 위(t = 0)가 띠 안이면 거기, 아니면 띠 가운데 — 건물·물이 아닌 가장 가까운 칸 */
+  const sc = (walk.s0 + walk.s1) / 2, want = [sc, walk.t0 < 0 && walk.t1 > 0 ? 0 : (walk.t0 + walk.t1) / 2]; let spawn = null;
+  for (let r = 0; r < 80 && !spawn; r += G) for (let a = 0; a < 16 && !spawn; a++) { const s = want[0] + Math.cos(a / 16 * Math.PI * 2) * r, t = want[1] + Math.sin(a / 16 * Math.PI * 2) * r; if (/open|park|beach/.test(cls(s, t)) && /open|park|beach/.test(cls(s + 3, t)) && /open|park|beach/.test(cls(s, t + 3))) spawn = [Math.round(s), Math.round(t)]; }
+  spawn = spawn || want;
+
+  /* 하위 구역: 띠를 s 로 셋 — 가운데(출발점 쪽)가 쉬움, 양 끝이 어려움. 거점은 가운데가 마을(안전) */
+  const lv = levelOf(region) || levelOf({ ...region, kind: 'city' }), thirds = [0, 1, 2].map(k => [walk.s0 + (walk.s1 - walk.s0) * k / 3, walk.s0 + (walk.s1 - walk.s0) * (k + 1) / 3].map(Math.round));
+  const named = osm.areas.filter(a => a.name && /park|beach|wood|forest|garden|square|recreation|water|sand|scrub|nature_reserve/.test(a.kind)), roadsNamed = osm.roads.filter(r => r.name && /trunk|primary|secondary|tertiary/.test(r.kind));
+  const nameOf = (s0, s1, t0, t1, k, used) => { const cnt = new Map();
+    for (let s = s0; s <= s1; s += 10) for (let t = t0; t <= t1; t += 10) { const p = toOsm(FROM(s, t)); for (const a of named) if (inPoly(p, a.poly)) cnt.set(a.name, (cnt.get(a.name) || 0) + 1);
+      for (const r of roadsNamed) if (r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < 8)) cnt.set('@' + r.name, (cnt.get('@' + r.name) || 0) + 0.4); }
+    const pick = [...cnt.entries()].filter(([n]) => !used.has(n)).sort((a, b) => b[1] - a[1])[0];
+    if (!pick) return CLASS_NAME[k]; used.add(pick[0]); return pick[0].startsWith('@') ? pick[0].slice(1) + ' ' + CLASS_NAME[k] : pick[0] + ' 터'; };
+  const used = new Set(), hunts = [], hub = region.kind === 'hub';
+  const order = [1, 0, 2];   /* 가운데 → 서 → 동 순으로 위험이 커진다 */
+  order.forEach((k, rank) => { const [s0, s1] = thirds[k], st = stats(s0, s1, walk.t0, walk.t1), dom = Object.entries(st).filter(([n]) => n !== 'water').sort((a, b) => b[1] - a[1])[0][0];
+    if (hub && rank === 0) { hunts.push({ id: 'town', name: region.name + ' 마을', kind: 'rest', s: [s0, s1], t: [walk.t0, walk.t1] }); return; }
+    const span = lv[1] - lv[0], a = lv[0] + Math.round(span * (rank / 3)), b = Math.min(lv[1], a + Math.max(2, Math.round(span / 2)));
+    hunts.push({ id: ['mid', 'west', 'east'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, dom, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[dom], danger: rank + 1 }); });
+  if (!hub) hunts.push({ id: 'rest', name: '길잡이 쉼터', kind: 'rest', st: spawn, r: 12 });
+
+  const L = lookOf(region), tall = osm.buildings.some(b => (b.height || (b.levels || 0) * 3.6) > 45), lampsOn = walk.t0 < 0 && walk.t1 > 0;
+  const ground = L.ground === 'paver' && c.city < 0.08 ? (c.beach > 0.1 ? 'sand' : 'grass') : L.ground;
+  const zone = { title: region.name, kind: 'field', env: 'field', osm: id, px: 90, auto: true, rules: { mark: true, escape: true }, restart: { zone: id }, hunts,
+    field: { seed: hash(id), tc: 0, cutT: walk.t0, walk, farSide: { osm: far.map(v => Math.round(v)) }, spawn: { st: spawn }, ground, curtain: tall, extentH: 40, ruin: { h: L.ruin },
+      dress: L.dress, sky: { hemiI: 3.0 }, trees: L.trees, cars: { gap: 0.6, trucks: 0.08 }, crystals: 16, lampStep: 30, ...(lampsOn ? { lampT: 3 } : { lamps: false }),
+      boundary: { style: L.boundary, closed: { s0: '통제구역 — 안개', s1: '통제구역 — 안개' } } } };
+  console.log(`${id}: 띠 s ${walk.s0}~${walk.s1} · t ${walk.t0}~${walk.t1} · 물 ${(c.water * 100).toFixed(1)}% 건물 ${(c.city * 100).toFixed(0)}% 숲 ${(c.forest * 100).toFixed(0)}% 모래 ${(c.beach * 100).toFixed(0)}% 풀 ${(c.park * 100).toFixed(0)}% · 먼 쪽 ${far.map(v => v.toFixed(0))} · 출발 ${spawn}`);
+  for (const h of hunts) console.log('   ', h.kind === 'rest' ? '쉼' : '사냥', h.name, h.lv ? 'Lv ' + h.lv.join('~') : '', h.mobs || '');
+  return zone;
+}
+
+const ids = process.argv.slice(2); if (!ids.length) { console.error('사용: node tools/2d/new-zone.mjs <지역 id…>  (js/mmo/regions.js)'); process.exit(1); }
+const prev = fs.existsSync(OUT) ? (await import(path.resolve(OUT) + '?' + Date.now())).AUTO : {};
+for (const id of ids) { const r = REGIONS.find(x => x.id === id); if (!r) { console.error('지역 표에 없다:', id); process.exit(1); } prev[id] = plan(r); }
+fs.writeFileSync(OUT, `/* 자동으로 찍어 낸 지역 — tools/2d/new-zone.mjs 가 쓴다. 손으로 고치지 말고 다시 돌리거나 zones.js 로 옮긴다 (docs/design/192 §7)
+   좌표·이름은 js/mmo/regions.js, 땅은 OSM(© OpenStreetMap contributors, ODbL). zones.js 가 같은 id 를 가지면 그쪽이 이긴다. */
+export const AUTO = {
+${Object.entries(prev).map(([k, v]) => '  ' + JSON.stringify(k) + ': ' + JSON.stringify(v) + ',').join('\n')}
+};
+`);
+console.log('→', OUT, Object.keys(prev).join(', '));

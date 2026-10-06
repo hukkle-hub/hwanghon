@@ -4,6 +4,8 @@
    zone: 이미 구운 지역 id (js/mmo/zones.js) — 없으면 아직 계획. 레벨은 강남에서의 거리로(문서 187 «장소가 곧 난이도»).
    좌표는 OSM 을 받을 중심(대개 큰길 위). 원작 동선 지역은 원작 레벨(문서 185 §3)을 따른다. */
 
+import { AUTO } from './zones-auto.js';
+
 export const ORIGIN = { lat: 37.4979, lon: 127.0276 };   /* 강남역 — 강남 벙커 */
 
 export const REGIONS = [
@@ -56,6 +58,8 @@ export const REGIONS = [
   { id: 'seogwipo', name: '서귀포 항', kind: 'coast', lat: 33.2470, lon: 126.5610 },
   { id: 'ulleung', name: '울릉도 도동항', kind: 'island', lat: 37.4840, lon: 130.9060 },
 ];
+/* 찍어 낸 지역(zones-auto.js)은 같은 id 로 이어 붙는다 */
+for (const r of REGIONS) if (!r.zone && AUTO[r.id]) r.zone = r.id;
 
 /* 강남에서의 직선거리(km) */
 export function distKm(r, o = ORIGIN) { const R = 6371, d = Math.PI / 180, a = Math.sin((r.lat - o.lat) * d / 2) ** 2 + Math.cos(r.lat * d) * Math.cos(o.lat * d) * Math.sin((r.lon - o.lon) * d / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(a)); }
