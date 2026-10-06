@@ -105,10 +105,31 @@ export const ZONES = {
         { id: 'mechOut', s: [340, 356], t: [-20, -8], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 } ] } ] } },
 
   /* ================= 6. 남태령 · 국도 (필드 전용) ================= */
-  namtae: { title: '남태령 · 국도', kind: 'field', env: 'field', osm: 'namtae', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* «왕복 8차선… 차간 거리를 지킨 채» · «요금소의 차단기… 하이패스 표지판» (원작 디테일 — 이 구간 실제 요금소는 없다) · 가드레일 낚싯줄 깡통 경보 (L8291~L8329)
+     능선 위 철탑 + 낮은 콘크리트 건물(중계소 L8530) · 고개 아래 폐주유소(L8594) · 과천 쪽 폐차장(L8751)
+     OSM: ORIGIN=37.4640,126.9890 AXIS=과천대로 · +s = 북쪽(사당·강남), −s = 남쪽(과천·판교), 과천대로 t ≈ 55~100 로 굽는다 */
+  namtae: { title: '남태령 · 국도', kind: 'field', env: 'field', osm: 'namtae', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 8291, tc: 75, cutT: 60, walk: { s0: -220, s1: 300, t0: 28, t1: 122 }, ground: 'forest', extentH: 26,
+      trees: { density: 0.8, inBand: 0.08, pine: 0.45, dead: 0.15 }, cars: { gap: 0.4, trucks: 0.14 }, crystals: 12, lampStep: 40, lampT: 32,
+      boundary: { style: 'fence', closed: { s0: '과천 · 판교 방면', s1: '사당 · 강남 방면' } },
+      gates: [ { id: 'north', at: { end: 's1', t: 85 }, to: { zone: 'gangnam', gate: 'south' }, label: '강남 방면 · 사당', kind: 'zone' },
+               { id: 'south', at: { end: 's0', t: 85 }, to: { zone: 'pangyo', gate: 'north' }, label: '판교 방면 · 과천', kind: 'zone' },
+               { id: 'tunnel', at: { st: [-40, 112] }, to: { zone: 'hangang_tunnel', gate: 'out' }, label: '침수 터널 입구', kind: 'dungeon' } ],
+      props: [ { k: 'toll', at: { st: [90, 78] }, w: 36 }, { k: 'relay', at: { st: [160, 132] }, h: 42 }, { k: 'gas', at: { st: [-150, 112] } },
+               { k: 'scrap', at: { st: [-170, 40] }, r: 26, n: 28 }, { k: 'maw', at: { st: [-40, 122] }, label: '배수 터널' },
+               { k: 'guardrail', at: { st: [40, 36] }, len: 480 }, { k: 'guardrail', at: { st: [40, 116] }, len: 480 } ] } },
 
   /* ================= 7. 판교 연구단지 (필드) · 연구소 지하 (던전) ================= */
-  pangyo: { title: '판교 연구단지', kind: 'field', env: 'field', osm: 'pangyo', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* «건물이 온전했다… 화단의 나무가 인도를 덮고… 정리하고 떠난 자리» (L9550~L9554). 봉인 건물 = 세 번째 건물, 유리문에 «지하 3층 봉인» A4 (L9572)
+     OSM: ORIGIN=37.4010,127.1080 AXIS=판교역로 · 먼 쪽 = 남쪽(연구동) → farSide osm [0,-1] 로 뒤집는다 (판교역로 t ≈ −149) */
+  pangyo: { title: '판교 연구단지', kind: 'field', env: 'field', osm: 'pangyo', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 9550, farSide: { osm: [0, -1] }, tc: -149, cutT: -149, walk: { s0: -300, s1: 300, t0: -178, t1: -110 }, ground: 'paver', curtain: true, extentH: 30,
+      sky: { hemiI: 3.2 }, trees: { density: 0.85, inBand: 0.12, pine: 0.15, leaves: [0x2c3a26, 0x3a4a2a, 0x34402a, 0x4a3e2c] }, cars: { gap: 0.7 }, crystals: 10, lampStep: 28, lampT: -175,
+      boundary: { style: 'urban', closed: { s0: '남태령 방면', s1: '남쪽 국도 방면' } },
+      gates: [ { id: 'north', at: { end: 's0', t: -144 }, to: { zone: 'namtae', gate: 'south' }, label: '남태령 방면', kind: 'zone' },
+               { id: 'lab', at: { st: [-29, -128] }, to: { zone: 'pangyo_lab', gate: 'out' }, label: '봉인 건물 · 연구소 지하', kind: 'dungeon' },
+               { id: 'south', at: { end: 's1', t: -144 }, to: { zone: 'southroad', gate: 'north' }, label: '남쪽 국도 · 물류창고 방면', kind: 'zone' } ],
+      props: [ { k: 'sign', at: { gate: 'lab', ds: 4.5, dt: 0 }, text: '내부 인원 전원 대피 완료. 지하 3층 봉인.', y: 1.6, w: 6, bg: '#e8e4d8', edge: '#8a8070', fg: '#2a2a2a' } ] } },
   /* «지하 3층 봉인» (L9572). 로비 파티션·유리를 미는 나무(EP15), B2 시약 창고, B3 «폭 2인분» 계단 병목 (147 §4~5) */
   pangyo_lab: { title: '판교 연구소 지하', kind: 'dungeon', env: 'indoor', px: 100, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'lobby', u: 0.2, v: 0.5 },
@@ -123,10 +144,30 @@ export const ZONES = {
         { id: 'b3', s: [70, 100], t: [-13, 13], h: 5, light: 'green', props: [ { k: 'consoles', rows: [0.85] }, { k: 'debris', n: 8 }, { k: 'scratches', n: 2 } ] } ] } },
 
   /* ================= 8. 남행 국도 · 골짜기 (필드) ================= */
-  southroad: { title: '남행 국도 · 골짜기', kind: 'field', env: 'field', osm: 'southroad', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* 남행 길가에 코어가 도려내진 집행관 사체, 무음 지대 (L10659~L10667) · «인계 지점 추정 1호는 낡은 물류창고였고, 그 앞마당은 전장» — 뒤집힌 수레, 속 빈 방호복 (L10681)
+     골짜기: 다섯이 «골짜기 벽을 등지고» (L11112) — 셀레스티얼 격파. 원작에 지명이 없어 판교 남쪽 경부축 물류 골짜기 중 용인 양지(중부대로)를 골랐다
+     OSM: ORIGIN=37.2350,127.2875 AXIS=중부대로 (중부대로 t ≈ 175) */
+  southroad: { title: '남행 국도 · 골짜기', kind: 'field', env: 'field', osm: 'southroad', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 10681, tc: 175, walk: { s0: -300, s1: 300, t0: 138, t1: 222 }, ground: 'forest', extentH: 22,
+      sky: { hemiI: 3.2, sunAlt: 12 }, trees: { density: 0.8, inBand: 0.08, pine: 0.4, dead: 0.3 }, cars: { gap: 0.6, trucks: 0.35 }, crystals: 14, lampStep: 36, lampT: 141,
+      boundary: { style: 'fence', closed: { s0: '판교 방면', s1: '계룡 방면 · 직선 백사십 킬로' } },
+      gates: [ { id: 'north', at: { end: 's0', t: 178 }, to: { zone: 'pangyo', gate: 'south' }, label: '판교 방면', kind: 'zone' },
+               { id: 'south', at: { end: 's1', t: 178 }, to: { zone: 'gyeryong', gate: 'north' }, label: '계룡 방면', kind: 'zone' } ],
+      bosses: [ { id: 'shadowfang', name: '섀도우 팽', title: '소리가 오다가 죽는다', at: { st: [-120, 200] }, r: 20, model: M + 'shadow_fang.glb', h: 1.6, place: '물류창고 앞마당', canon: 'EP16 물류창고 앞마당' },
+                { id: 'celestial2', name: '셀레스티얼', title: '날개 넷 · 격파', at: { st: [200, 190] }, r: 20, model: M + 'celestial_static.glb', h: 5.4, fly: 3.4, place: '골짜기', canon: 'EP17 골짜기' } ],
+      props: [ { k: 'warehouse', at: { st: [-120, 240] }, w: 70, d: 30, h: 13, label: '물류센터 · 인계 지점 1호' } ] } },
 
   /* ================= 9. 계룡 (필드: 외곽 능선) · 산 속 격납고 (던전) — 실재 시설은 그리지 않는다 ================= */
-  gyeryong: { title: '계룡 · 외곽 능선', kind: 'field', env: 'field', osm: 'gyeryong', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* «능선 아래로 분지… 군의 심장이던 땅» · 질서 있는 불빛, 초소, 철책선 (L12416~L12420) · «산 밑동을 파고든 거대한 아가리», 남태령과 같은 스텐실 (L12462~L12468)
+     OSM: ORIGIN=36.2680,127.2135 (계룡시 서쪽 산자락 도곡로 — 실재 군 시설이 아닌 곳). 철책·관문은 원작 창작이다 */
+  gyeryong: { title: '계룡 · 외곽 능선', kind: 'field', env: 'field', osm: 'gyeryong', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 12416, tc: 20, walk: { s0: -230, s1: 230, t0: -30, t1: 100 }, ground: 'forest', extentH: 26,
+      sky: { hemiI: 3.6, sunAlt: 13, sunI: 4.6 }, trees: { density: 0.9, inBand: 0.1, pine: 0.55, dead: 0.2 }, crystals: 10, lampStep: 60, lampT: -26,
+      boundary: { style: 'fence', closed: { s0: '고흥 방면 · 남해', s1: '남행 국도 방면' } },
+      gates: [ { id: 'north', at: { end: 's1', t: 25 }, to: { zone: 'southroad', gate: 'south' }, label: '남행 국도 방면', kind: 'zone' },
+               { id: 'south', at: { end: 's0', t: 25 }, to: { zone: 'goheung', gate: 'north' }, label: '고흥 방면 · 남해', kind: 'zone' },
+               { id: 'base', at: { st: [60, 84] }, to: { zone: 'gyeryong_base', gate: 'out' }, label: '관문 · 산 속 격납고', kind: 'dungeon' } ],
+      props: [ { k: 'milfence', at: { st: [-70, 90] }, len: 270 }, { k: 'milfence', at: { st: [170, 90] }, len: 110 }, { k: 'maw', at: { st: [60, 96] }, label: '제03수거대' } ] } },
   /* «산 밑동을 파고든 거대한 아가리» → 경사로(차 두 대 폭, 세 번 꺾임, 유도등 초록 점선) → 정비창 → 주 격납고(축구장 몇 개, 십수 층) · 소독약 복도 · 표본 보관실 (L12462~L13402) */
   gyeryong_base: { title: '계룡 · 산 속 격납고', kind: 'dungeon', env: 'indoor', px: 80, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'mouth', u: 0.3, v: 0.5 },
@@ -145,7 +186,20 @@ export const ZONES = {
         { id: 'specimen', s: [350, 380], t: [-11, 19], h: 9, floor: 'tile', light: 'green', props: [ { k: 'capsules', n: 14 }, { k: 'table', u: 0.5, v: 0.5 } ] } ] } },
 
   /* ================= 10. 고흥 발사장 (필드) · 발사대 갱도 (던전) ================= */
-  goheung: { title: '고흥 발사장', kind: 'field', env: 'field', osm: 'goheung', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* «반도의 끝… 우주센터의 흰 구조물들, 조립동의 거대한 상자… 바다를 등지고 선 발사대의 탑» (L14048~L14058) · 외곽 철책과 초소, 의장대, 점거 차량의 열 (L14070~L14086)
+     OSM: ORIGIN=34.4318,127.5350 (나로우주센터 발사대) — 실측은 성기다(건물 31, 업무용 길). 원작 이름은 «고흥»·«노바 1호» 뿐 («나로» 라고 쓰지 않는다)
+     +t = 남쪽(바다), s0 쪽 끝 = 서쪽 해안 */
+  goheung: { title: '고흥 발사장', kind: 'field', env: 'field', osm: 'goheung', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 14048, tc: 0, walk: { s0: -240, s1: 150, t0: -45, t1: 115 }, ground: 'concrete', extentH: 40,
+      sky: { hemiI: 3.0, sunAlt: 10 }, trees: { density: 0.55, inBand: 0.04, pine: 0.6 }, cars: { gap: 0.5, kinds: ['service', 'track'], trucks: 0.3 }, crystals: 14, lampStep: 34, lampT: -46,
+      boundary: { style: 'urban', closed: { s0: '해안 — 방파제', s1: '계룡 방면 · 국도' } },
+      gates: [ { id: 'north', at: { end: 's1', t: 40 }, to: { zone: 'gyeryong', gate: 'south' }, label: '계룡 방면 · 국도', kind: 'zone' },
+               { id: 'pad', at: { st: [-96, -34] }, to: { zone: 'goheung_pad', gate: 'out' }, label: '발사 통제동 · 정비 갱도', kind: 'dungeon' } ],
+      bosses: [ { id: 'jeong', name: '정 장관', title: '의장대의 주인', at: { st: [40, 30] }, r: 22, model: M + 'minister_jeong_candidate.glb', h: 1.9, place: '발사장 도로', canon: 'EP26 발사장 도로·활주로' } ],
+      props: [ { k: 'launch', at: { st: [-126, 0] }, h: 60 }, { k: 'milfence', at: { st: [-50, 112] }, len: 380 },
+               { k: 'warehouse', at: { st: [-10, 96] }, w: 70, d: 34, h: 32, color: 0xe8e8ea, label: '조립동' }, { k: 'warehouse', at: { st: [90, 60] }, w: 30, d: 20, h: 12, color: 0xd8d8dc, label: '발사 통제동' },
+               { k: 'scrap', at: { st: [120, 0] }, r: 26, n: 12 }, { k: 'crystals', at: { st: [-150, 40] }, n: 10, r: 14, h: 0.9 },
+               { k: 'sign', at: { gate: 'pad', ds: 5, dt: 0 }, text: '노바 1호 · 발사 통제동', y: 2.2, w: 5, bg: '#e8e8ea', edge: '#3a4a6a', fg: '#1a2a4a' } ] } },
   /* 정비 갱도 → 발사대 지하 방 «결정 산이 곧 보스» → 발사대 탑 기저 (주각 4, 트러스) · 발사 통제동 관제실 «의자는 이 년 전의 각도» (L14096~L15043) */
   goheung_pad: { title: '고흥 · 발사대 갱도', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'control', u: 0.3, v: 0.4 },

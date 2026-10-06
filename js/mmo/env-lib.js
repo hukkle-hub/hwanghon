@@ -118,6 +118,10 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
       if (w > 4) ctx.blockers.push({ line: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), w: w / 2, water: true }); }
     else if (/^aero:(runway|taxiway)/.test(l.kind)) { const w = l.width || (/runway/.test(l.kind) ? 45 : 18); scene.add(new THREE.Mesh(ribbon(THREE, pts, w, 0.02), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 10; d < L; d += 60) { const s = new THREE.Mesh(new THREE.PlaneGeometry(30, 0.9), markM); s.rotation.x = -Math.PI / 2; s.rotation.z = -Math.atan2(dz, dx); s.position.set(a[0] + dx / L * d, 0.03, a[1] + dz / L * d); scene.add(s); } } }
+    else if (l.kind === 'coastline') { /* 해안선: OSM 은 길 방향의 왼쪽이 땅 — 오른쪽으로 2 km 밀어 바다 다각형을 닫는다 */
+      const a0 = pts[0], a1 = pts.at(-1), dx = a1[0] - a0[0], dz = a1[1] - a0[1], L0 = Math.hypot(dx, dz) || 1, rx = -dz / L0 * 2000, rz = dx / L0 * 2000;
+      const poly = [...pts, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]; flatPoly(ctx, poly, waterM, 0.012);
+      ctx.blockers.push({ poly: poly.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true }); }
     else if (/^man:(pier|breakwater|groyne|dyke)/.test(l.kind)) { scene.add(new THREE.Mesh(ribbon(THREE, pts, 8, 0.6), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 0; d < L; d += 2.2) for (const side of [-1, 1]) { const t4 = new THREE.Mesh(tetraG, tetraM); t4.position.set(a[0] + dx / L * d - dz / L * 5.5 * side, 0.6, a[1] + dz / L * d + dx / L * 5.5 * side); t4.rotation.set(R() * 3, R() * 3, R() * 3); t4.castShadow = true; scene.add(t4); } } } }
   return n; }
@@ -232,7 +236,8 @@ export function lamps(ctx, spots, o = {}) { const { THREE, scene } = ctx; const 
 
 /* ---------- 큰 글자 판 (간판·표지) ---------- */
 export function board(ctx, p, text, o = {}) { const { THREE, scene } = ctx; const tex = canvasTex(THREE, 512, 128, (g, w, h) => { g.fillStyle = o.bg || '#14161c'; g.fillRect(0, 0, w, h); g.strokeStyle = o.edge || '#d8b030'; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10);
-    g.fillStyle = o.fg || '#ffe8b0'; g.font = '900 ' + (o.font || 50) + 'px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + 3); });
+    g.fillStyle = o.fg || '#ffe8b0'; let f = o.font || 50; const font = () => { g.font = '900 ' + f + 'px "Noto Sans KR",sans-serif'; }; font(); while (g.measureText(text).width > w - 34 && f > 14) { f -= 2; font(); }   /* 긴 글은 판에 맞게 줄인다 (판교 안내문이 잘렸다) */
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, w / 2, h / 2 + 3); });
   const m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); m.color.setScalar(o.bright ?? 1.2); const pl = new THREE.Mesh(new THREE.PlaneGeometry(o.w || 5, (o.w || 5) / 4), m);
   pl.position.set(p[0], o.y ?? 4, p[1]); pl.rotation.y = o.rot ?? 0; scene.add(pl); return pl; }
 

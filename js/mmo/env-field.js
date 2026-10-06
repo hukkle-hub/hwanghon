@@ -46,7 +46,7 @@ export function build(THREE, scene, osm, zone) {
         for (let k = 0; k < st; k++) box(4.4, 1.3, 1.8, new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.05 + R() * 0.05, 0.4, 0.2 + R() * 0.12), roughness: 0.9, metalness: 0.3 }), q[0], 0.65 + k * 1.3, q[1], R() * 3, k === 0); }
       const bus = box(11, 3, 2.5, new THREE.MeshStandardMaterial({ color: 0x3a5a3a, roughness: 0.9 }), p[0] + (o.r || 24) * 0.4, 1.5, p[1], A + 0.3); bus.rotation.z = 0.05; },
     /* 물류창고 + 앞마당 (섀도우 팽 L10681) — 뒤집힌 수레, 속 빈 방호복 */
-    warehouse(p, o) { const w = o.w || 60, d = o.d || 30, h = o.h || 12; box(w, h, d, new THREE.MeshStandardMaterial({ color: 0x8a8c90, roughness: 0.6, metalness: 0.4 }), p[0], h / 2, p[1], A);
+    warehouse(p, o) { const w = o.w || 60, d = o.d || 30, h = o.h || 12; box(w, h, d, new THREE.MeshStandardMaterial({ color: o.color ?? 0x8a8c90, roughness: 0.6, metalness: 0.4 }), p[0], h / 2, p[1], A);
       for (let k = -w / 2 + 5; k < w / 2 - 3; k += 8) { const q = [p[0] + Math.cos(-A) * k + Math.sin(A) * (-d / 2 - 0.1) * 0, p[1] + Math.sin(-A) * k]; const front = [q[0] - Math.sin(A) * 0 + Math.cos(A + Math.PI / 2) * 0, q[1]]; }
       L.board(ctx, [p[0] - Math.sin(A) * 0, p[1] + d / 2 * Math.cos(A) + 0.3], o.label || '물류센터', { y: h - 2, w: 10, bg: '#1a1a1e', edge: '#d8d8d0', fg: '#e8e8e0' });
       for (let i = 0; i < 6; i++) { const q = [p[0] + (R() - .5) * w * 0.8, p[1] + d * 0.5 + 4 + R() * 14]; if (L.isClear(ctx, q)) continue; box(1.6, 0.8, 1.0, rust, q[0], 0.4, q[1], R() * 3); }
@@ -78,7 +78,7 @@ export function build(THREE, scene, osm, zone) {
     /* 가드레일 (남태령 «가드레일 사이 무릎 높이에 낚싯줄과 깡통» L8329) */
     guardrail(p, o) { const len = o.len || 200, ang = A + (o.across ? Math.PI / 2 : 0), dx = Math.cos(-ang), dz = Math.sin(-ang); for (let k = -len / 2; k < len / 2; k += 4) { const q = [p[0] + dx * k, p[1] + dz * k]; if (L.isClear(ctx, q, -3)) continue; box(4, 0.35, 0.12, steel, q[0] + dx * 2, 0.75, q[1] + dz * 2, ang, false); const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, 0.12), steel); post.position.set(q[0], 0.4, q[1]); scene.add(post); } },
   };
-  for (const pr of F.props || []) { const f = PROPS[pr.k]; if (!f) { console.warn('[env-field] 모르는 소품', pr.k); continue; } f(pos(pr.at), pr); }
+  for (const pr of F.props || []) { if (pr.at.gate) continue; const f = PROPS[pr.k]; if (!f) { console.warn('[env-field] 모르는 소품', pr.k); continue; } f(pos(pr.at), pr); }
 
   /* ---------- 숲·결정·차·가로등 ---------- */
   const tf = F.trees || {};
@@ -92,6 +92,8 @@ export function build(THREE, scene, osm, zone) {
   /* ---------- 문 · 보스 · 경계 ---------- */
   const gates = (F.gates || []).map(g => { const st = L.bareSpot(ctx, stOf(g.at)), p = FROM(st[0], st[1]); return { id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 3.2, to: g.to, label: g.label, kind: g.kind || 'zone', st }; });
   for (const g of gates) if (g.kind === 'zone') L.gateRing(ctx, [g.x, g.z], g.r);
+  /* 문에 붙는 소품(안내문 등) — 문은 맨바닥 자리를 찾아 움직이므로 문 자리를 기준으로 (판교 봉인 안내문이 건물 안에 묻혔다) */
+  for (const pr of F.props || []) { if (!pr.at.gate) continue; const g = gates.find(x => x.id === pr.at.gate); if (!g) continue; PROPS[pr.k](FROM(g.st[0] + (pr.at.ds || 0), g.st[1] + (pr.at.dt || 0)), pr); }
   const nb = L.boundary(ctx, { style: F.boundary?.style || 'urban', closed: F.boundary?.closed, gaps: gates.filter(g => g.st[0] < walk.s0 + 6 || g.st[0] > walk.s1 - 6).map(g => [g.st[0] < walk.s0 + 6 ? walk.s0 : walk.s1, g.st[1]]),
     skip: p => L.inBuilding(built, p) || ar.waters.some(w => L.inPoly(p, w)) });
   /* 보스 자리도 맨바닥에 — 여의도 첫 굽기는 에이지스 자리가 멈춘 차 위(0.86 m)였다 (tests/map-height) */
