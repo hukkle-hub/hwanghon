@@ -34,7 +34,7 @@ export const REGIONS = [
   { id: 'chuncheon', name: '춘천 소양강', kind: 'river', lat: 37.8840, lon: 127.7280 },
   { id: 'seorak', name: '설악산', kind: 'mountain', lat: 38.1720, lon: 128.4880 },
   { id: 'sokcho', name: '속초 해변', kind: 'coast', lat: 38.1910, lon: 128.6020 },
-  { id: 'gyeongpo', name: '강릉 경포', kind: 'coast', lat: 37.7970, lon: 128.9080 },
+  { id: 'gyeongpo', name: '강릉 경포', kind: 'coast', lat: 37.8030, lon: 128.9100, axis: '해안로' },   /* 해수욕장 앞 해안로 (처음 좌표는 경포호 한가운데였다) */
   { id: 'daegwallyeong', name: '대관령', kind: 'rural', lat: 37.6880, lon: 128.7520 },
   { id: 'chungju', name: '충주호', kind: 'river', lat: 36.9930, lon: 127.9880 },
   { id: 'cheongju', name: '청주 성안길', kind: 'city', lat: 36.6360, lon: 127.4890 },

@@ -7,7 +7,9 @@ const [OUT, a0, a1, o0, o1, N = '3'] = process.argv.slice(2); if (!o1) { console
 const EP = 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', n = +N; fs.mkdirSync(OUT, { recursive: true });
 /* 땅 쓰임·자연·물길 등은 한 질의로 묶으면 504 — 종류마다 따로 (2026-10-06, 여의도에서 7칸 실패) */
 /* 묶음은 문장마다 범위를 붙인다 — «(a;b;)(범위)» 는 Overpass 문법이 아니라서 묶음 질의가 늘 실패했다 */
-const KINDS = { r: ['way["highway"]'], b: ['way["building"]'], l: ['way["landuse"]'], n: ['way["natural"]'], e: ['way["leisure"]', 'way["amenity"="parking"]'], w: ['way["waterway"]'], t: ['way["railway"]', 'way["aerialway"]'], m: ['way["aeroway"]', 'way["man_made"]'] };
+const KINDS = { r: ['way["highway"]'], b: ['way["building"]'], l: ['way["landuse"]'], n: ['way["natural"]'], e: ['way["leisure"]', 'way["amenity"="parking"]'], w: ['way["waterway"]'], t: ['way["railway"]', 'way["aerialway"]'], m: ['way["aeroway"]', 'way["man_made"]'],
+  /* 큰 호수·숲·해변은 웨이가 아니라 관계(멀티폴리곤)다 — 빠지면 호수 위를 걷는다(경포호, 2026-10-06) */
+  p: ['relation["natural"~"^(water|wood|beach|sand|scrub|wetland)$"]', 'relation["landuse"~"^(forest|reservoir|basin)$"]', 'relation["leisure"="park"]', 'relation["waterway"="riverbank"]'] };
 const Q = (parts, bb) => `[out:json][timeout:60];(${parts.map(p => p + bb + ';').join('')});out geom;`;
 const jobs = [];
 for (let i = 0; i < n; i++) for (let k = 0; k < n; k++) { const la0 = +a0 + (a1 - a0) * i / n, la1 = +a0 + (a1 - a0) * (i + 1) / n, lo0 = +o0 + (o1 - o0) * k / n, lo1 = +o0 + (o1 - o0) * (k + 1) / n;

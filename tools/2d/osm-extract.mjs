@@ -43,6 +43,12 @@ const axis=0.5*Math.atan2(2*sxz, sxx-szz);   /* x 축에서 잰 각 (rad) */
 const levels=t=>{ const h=parseFloat(t.height), l=parseFloat(t['building:levels']); return { height:Number.isFinite(h)?h:null, levels:Number.isFinite(l)?l:null }; };
 const out={ zone:ZONE, license:'© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)', origin, axis:+axis.toFixed(5), fetched:new Date().toISOString().slice(0,10),
   buildings:[], roads:[], exits:[], pois:[], trees:[], crossings:[], signals:[], areas:[], aerialways:[], stations:[], lines:[] };
+/* 관계(멀티폴리곤): 바깥(outer) 웨이들을 끝점끼리 이어 고리로 — 섬(inner)은 버린다 */
+const rings=rel=>{ const segs=(rel.members||[]).filter(m=>m.type==='way'&&m.role!=='inner'&&m.geometry&&m.geometry.length>1).map(m=>m.geometry.map(P)), out=[], same=(a,b)=>Math.abs(a[0]-b[0])<0.05&&Math.abs(a[1]-b[1])<0.05;
+  while(segs.length){ let r=segs.shift().slice(); for(let k=0;k<5000&&!same(r[0],r.at(-1));k++){ const i=segs.findIndex(g=>same(g[0],r.at(-1))||same(g.at(-1),r.at(-1))); if(i<0) break; const g=segs.splice(i,1)[0]; r=r.concat(same(g[0],r.at(-1))?g.slice(1):g.slice().reverse().slice(1)); }
+    if(r.length>3) out.push(r); } return out; };
+for(const e of all){ if(e.type!=='relation') continue; const t=e.tags||{}, kind=t.natural||t.landuse||t.leisure||(t.waterway==='riverbank'?'water':null); if(!kind) continue;
+  for(const poly of rings(e)) out.areas.push({ id:e.id, poly, kind, name:t.name||null, rel:true }); }
 for(const e of all){ const t=e.tags||{};
   if(e.type==='way'&&e.geometry&&t.building&&e.geometry.length>=4){ out.buildings.push({ id:e.id, poly:e.geometry.map(P), ...levels(t), kind:t.building, name:t.name||null, under:t.layer&&+t.layer<0||t.location==='underground'||/지하/.test(t.name||'') }); continue; }
   if(e.type==='way'&&e.geometry&&t.highway){ out.roads.push({ id:e.id, line:e.geometry.map(P), kind:t.highway, name:t.name||null, lanes:+t.lanes||null, width:parseFloat(t.width)||null, oneway:t.oneway==='yes', layer:+t.layer||0, bridge:!!t.bridge, tunnel:!!t.tunnel, area:t.area==='yes' }); continue; }
