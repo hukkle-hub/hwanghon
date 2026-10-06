@@ -58,7 +58,7 @@ function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTi
   for(let y=0;y<DT;y++){ img.data.set(px.subarray((DT-1-y)*DT*4,(DT-y)*DT*4), y*DT*4); }
   g2.putImageData(img,0,0); const depth=cv.toDataURL('image/png');
   return { i, j, u0:o.u0, v0:o.v0, color, depth }; }
-function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, license:env.license }; }
+function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, gates:env.gates||[], bosses:env.bosses||[], flicker:env.flicker||null, water:env.water||null, kind:env.kind||'field', title:env.title||'', license:env.license }; }
 /* 미리보기: 굽기 전에 한 장면만 게임 카메라로 (길 좌표 s, t · 화면 높이 viewH m) */
 function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Math.sin(a), z=-s*Math.sin(a)-t*Math.cos(a), g=new THREE.Vector3(x,0,z);
   renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-viewH*w/h/2,viewH*w/h/2,viewH/2,-viewH/2,NEAR,FAR); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L); pc.lookAt(g); pc.updateMatrixWorld(true);

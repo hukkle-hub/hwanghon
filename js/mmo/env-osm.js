@@ -13,24 +13,32 @@
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 (문서 185 §6.1) */
 /* 지역별: 길 양쪽 인도에 마주 선 출구 쌍(OSM 실측 확인) — 도로 중심선을 잡는 데 쓴다 */
-const CONFIG = { gangnam: { exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']] } };
+/* 지역 설정 (docs/design/185 §6.5·§6.6)
+   farSide: 화면 위(먼 쪽)에 둘 실측 지점 · exitPairs: 길 양쪽 인도에 마주 선 출구(중심선) · walk: 걷는 띠(없으면 계산)
+   gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
+   closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
+export const CONFIG = {
+  gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
+    gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
+             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 소월로', kind: 'zone' } ],
+    closed: { s0: '통제구역 — 양재 방면', s1: '통제구역 — 신논현 방면' }, start: 'exit7' } };
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
 export function build(THREE, scene, osm, opt = {}) {
-  const R = rng(20261006), lights = [], blockers = [];
+  const R = rng(20261006), lights = [], blockers = [], CFG = Object.assign({}, CONFIG[osm.zone] || {}, opt);
   /* ---------- 좌표: OSM 로컬(x 동, z 남) → 회전해 강남대로 축을 화면 대각선 DIR 로, 동쪽(1~6번 출구, 5번 출구 쪽)을 화면 위(먼 쪽)로 ---------- */
   const DIR = new THREE.Vector2(Math.cos(SCREEN_ANG), -Math.sin(SCREEN_ANG)), SIDE = new THREE.Vector2(-Math.sin(SCREEN_ANG), -Math.cos(SCREEN_ANG));
   let rot = 0;
   for (const cand of [-SCREEN_ANG - osm.axis, Math.PI - SCREEN_ANG - osm.axis]) {
-    const c = Math.cos(cand), s = Math.sin(cand), [ex, ez] = osm.exits.find(e => e.ref === '5')?.p || [80, 300];
+    const fs = CFG.farSide || {}, c = Math.cos(cand), s = Math.sin(cand), [ex, ez] = fs.exit ? (osm.exits.find(e => e.ref === fs.exit)?.p || [0, 1]) : (fs.osm || [0, 1]);
     const wx = ex * c - ez * s, wz = ex * s + ez * c;            /* Ry 와 같은 방향의 2D 회전 (x,z) */
     const t = wx * SIDE.x + wz * SIDE.y; if (t > 0) { rot = cand; break; } }
   const ST = ([x, z]) => [x * DIR.x + z * DIR.y, x * SIDE.x + z * SIDE.y];   /* 월드 → 길 좌표 (s 길 따라, t 건너 +가 먼 쪽) */
   const FROM = (s, t) => [s * DIR.x + t * SIDE.x, s * DIR.y + t * SIDE.y];   /* 길 좌표 → 월드 */
   /* 도로 중심선 보정: 원점은 강남대로 한쪽 차로 위라 띠가 한쪽으로 7~15 m 치우쳤다(2번 출구가 t = −3 m, 차도 한가운데).
      길 양쪽 인도에 마주 선 출구 쌍의 가운데가 중심선이다 — 그 점들이 s 를 따라 평평해지도록 회전을 조금 더 돌리고, 띠를 그 가운데에 둔다 */
-  const PAIRS = (opt.exitPairs || CONFIG[osm.zone]?.exitPairs || []).map(([a, b]) => [osm.exits.find(e => e.ref === a), osm.exits.find(e => e.ref === b)]).filter(([a, b]) => a && b);
+  const PAIRS = (CFG.exitPairs || []).map(([a, b]) => [osm.exits.find(e => e.ref === a), osm.exits.find(e => e.ref === b)]).filter(([a, b]) => a && b);
   const rotAt = r => { const c = Math.cos(r), s = Math.sin(r); return ([x, z]) => [x * c - z * s, x * s + z * c]; };
   const mids = r => PAIRS.map(([a, b]) => { const A = ST(rotAt(r)(a.p)), B = ST(rotAt(r)(b.p)); return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2]; });
   let tc = 0;
@@ -40,8 +48,8 @@ export function build(THREE, scene, osm, opt = {}) {
   const W = ([x, z]) => [x * cr - z * sr, x * sr + z * cr];                 /* OSM → 월드 */
   const V3 = (p, y = 0) => new THREE.Vector3(p[0], y, p[1]);
   /* 걷는 띠: 사거리 북쪽 55 m 부터 5번 출구 남쪽 18 m 까지, 강남대로 양쪽 인도까지 (t ±30 m) */
-  const s5 = ST(W(osm.exits.find(e => e.ref === '5')?.p || [80, 300]))[0];
-  const walk = Object.assign(s5 > 0 ? { s0: -55, s1: Math.round(s5 + 18), t0: Math.round(tc - 30), t1: Math.round(tc + 30) } : { s0: Math.round(s5 - 18), s1: 55, t0: Math.round(tc - 30), t1: Math.round(tc + 30) }, opt.walk || {});
+  const s5 = ST(W(osm.exits.find(e => e.ref === (CFG.farSide?.exit || '5'))?.p || [80, 300]))[0];
+  const walk = CFG.walk ? { ...CFG.walk } : Object.assign(s5 > 0 ? { s0: -55, s1: Math.round(s5 + 18), t0: Math.round(tc - 30), t1: Math.round(tc + 30) } : { s0: Math.round(s5 - 18), s1: 55, t0: Math.round(tc - 30), t1: Math.round(tc + 30) }, opt.walk || {});
 
   /* ---------- 하늘·노을 (원작 «보라와 핏빛이 뒤엉킨 황혼») ---------- */
   const sky = { top: '#2a1838', horizon: '#7a2a3a', fog: '#3a2238' };
@@ -259,12 +267,44 @@ export function build(THREE, scene, osm, opt = {}) {
   function inPoly(p, poly) { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; } return inside; }
 
   /* ---------- 출발점: 사거리 동쪽 인도(12번 출구 앞) ---------- */
+  /* ---------- 경계: 걷는 띠 가장자리에서 건물이 막지 않는 곳은 전부 통제선으로 막는다 (디렉터 «못 들어가는 경계를 확실히») ----------
+     콘크리트 방호벽 + 철망 + 붉은 띠 + «통제구역» 판. 문(gate) 자리만 비운다. 실제 막는 것은 띠 클램프 — 이건 «보이는» 경계다 */
+  const jerseyM = new THREE.MeshStandardMaterial({ color: 0x9a9690, roughness: 0.85 }), fenceM = new THREE.MeshStandardMaterial({ color: 0x5a5c62, roughness: 0.4, metalness: 0.7, transparent: true, opacity: 0.55, side: THREE.DoubleSide });
+  const tapeM = new THREE.MeshStandardMaterial({ color: 0xc8302a, roughness: 0.6, emissive: 0x3a0806 });
+  const jGeo = new THREE.BoxGeometry(2.0, 0.85, 0.5), fGeo = new THREE.PlaneGeometry(2.0, 1.4), postGeo = new THREE.CylinderGeometry(0.04, 0.04, 2.3, 6), tGeo = new THREE.BoxGeometry(2.0, 0.08, 0.02);
+  const warnTex = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#b8241e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#fff'; g.font = '900 52px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('통제구역', w / 2, h / 2 + 2); });
+  const inAnyBuilding = p => builtW.some(b => inPoly(p, b.pts));
+  const gatesW = [];
+  for (const g of CFG.gates || []) { let st;
+    if (g.at.exit) { const e = exitsW.find(x => x.ref === g.at.exit); if (!e) continue; st = ST(e.p); }
+    else { const sEnd = walk[g.at.end], tt = g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t; st = [sEnd + (g.at.end === 's1' ? -3 : 3), tt]; }
+    const p = FROM(st[0], st[1]); gatesW.push({ id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 3.2, to: g.to, label: g.label, kind: g.kind || 'zone', st }); }
+  function barrier(s, t, ang, sign) { const p = FROM(s, t); const gr = new THREE.Group();
+    const j = new THREE.Mesh(jGeo, jerseyM); j.position.y = 0.425; gr.add(j);
+    const f = new THREE.Mesh(fGeo, fenceM); f.position.y = 1.55; gr.add(f); const tp = new THREE.Mesh(tGeo, tapeM); tp.position.y = 1.2; gr.add(tp); const tp2 = tp.clone(); tp2.position.y = 2.1; gr.add(tp2);
+    for (const x of [-1, 1]) { const po = new THREE.Mesh(postGeo, poleM); po.position.set(x, 1.15, 0); gr.add(po); }
+    if (sign) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 0.7), new THREE.MeshBasicMaterial({ map: warnTex })); sg.position.set(0, 1.5, 0.27); gr.add(sg); const sg2 = sg.clone(); sg2.rotation.y = Math.PI; sg2.position.z = -0.27; gr.add(sg2); }
+    gr.position.set(p[0], 0, p[1]); gr.rotation.y = ang; gr.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(gr); }
+  const nearGate = (s, t) => gatesW.some(g => g.kind === 'zone' && Math.hypot(g.st[0] - s, g.st[1] - t) < 5);
+  let barriers = 0;
+  /* 띠 양옆 (t0, t1) — 길 방향으로 */
+  for (const t of [walk.t0 - 0.6, walk.t1 + 0.6]) for (let s = walk.s0; s <= walk.s1; s += 2.05) { if (inAnyBuilding(FROM(s, t))) continue; barrier(s, t, SCREEN_ANG, (barriers % 9) === 0); barriers++; }
+  /* 띠 양끝 (s0, s1) — 길을 가로질러. 문 자리는 비운다 */
+  for (const [end, ds] of [['s0', -0.6], ['s1', 0.6]]) for (let t = walk.t0; t <= walk.t1; t += 2.05) { const s = walk[end] + ds; if (inAnyBuilding(FROM(s, t)) || nearGate(walk[end], t)) continue; barrier(s, t, SCREEN_ANG + Math.PI / 2, (barriers % 5) === 0); barriers++; }
+  /* 끝 통제선 큰 판: «통제구역 — ○○ 방면» */
+  for (const end of ['s0', 's1']) { const txt = CFG.closed?.[end]; if (!txt) continue; const tex = canvasTex(512, 128, (g, w, h) => { g.fillStyle = '#1a1a1e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d83a2a'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#ffd8c0'; g.font = '900 46px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 2); });
+    const tq = walk.t0 + (walk.t1 - walk.t0) * 0.28, p = FROM(walk[end] + (end === 's1' ? 1.2 : -1.2), tq), m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); m.color.setScalar(1.3);
+    const pl = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.5), m); pl.position.set(p[0], 3.0, p[1]); pl.rotation.y = SCREEN_ANG + Math.PI / 2 + (end === 's1' ? Math.PI : 0); scene.add(pl); }
+  /* 문 자리 표시(굽는 그림에 들어가는 바닥 표식) — 반짝이는 링은 게임이 그 위에 띄운다 */
+  for (const g of gatesW) { if (g.kind !== 'zone') continue; const m = new THREE.Mesh(new THREE.RingGeometry(g.r - 0.25, g.r, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(g.x, 0.05, g.z); scene.add(m); }
+  console.info('[env-osm] 통제선', barriers, '문', gatesW.map(g => g.id).join(','));
+
   /* 출발점: 강남대로 인도에 있는 출구 중 사거리에 가장 가까운 것 옆 (12번은 테헤란로 쪽이라 걷는 띠 밖이었다) */
   const onWalk = exitsW.map(e => ({ e, st: ST(e.p) })).filter(o => o.st[1] > walk.t0 && o.st[1] < walk.t1 && o.st[0] > walk.s0 && o.st[0] < walk.s1).sort((a, c) => Math.abs(a.st[0]) - Math.abs(c.st[0]));
   const near0 = onWalk[0] || { st: [0, 0] }, spawnP = FROM(near0.st[0] + (near0.st[0] > 0 ? -4 : 4), near0.st[1] - Math.sign(near0.st[1] || 1) * 3);
   /* 그림이 덮어야 하는 곳: 걷는 띠 전부 + 먼 쪽 벽 높이 24 m 까지 (그 위는 그림 밖) */
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 24, p[1]]); }
   console.info('[env-osm] 건물', builtW.length, '차', cars, '결정', crystals, '간판 빛', signsLit, '출구', exitsW.length);
-  return { lights, blockers, spawn: { x: spawnP[0], z: spawnP[1] }, road: { ang: SCREEN_ANG }, walk, extentPts, sun: { dir: [sunDir.x, sunDir.y, sunDir.z], color: '#ff8a50' }, sky,
+  return { lights, blockers, gates: gatesW.map(({ st, ...g }) => g), spawn: { x: spawnP[0], z: spawnP[1] }, road: { ang: SCREEN_ANG }, walk, extentPts, sun: { dir: [sunDir.x, sunDir.y, sunDir.z], color: '#ff8a50' }, sky,
     exits: exitsW.map(e => ({ ref: e.ref, x: +e.p[0].toFixed(2), z: +e.p[1].toFixed(2) })), license: osm.license, sunLight: sun };
 }
