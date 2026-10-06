@@ -43,7 +43,9 @@ const cam=new THREE.OrthographicCamera(-T/2,T/2,T/2,-T/2,NEAR,FAR); cam.up.copy(
    깊이 = 땅 깊이 − 높이 / sin(내려다보는 각) 으로 정확히 되살아난다(js/mmo/map2d.js). 땅은 전부 0 이라 압축이 잘 된다. */
 const HMAX=1310.7;   /* 16비트 한 칸 = 2 cm — 가려짐에는 충분하고 벽의 높이 기울기가 덜 시끄러워 압축이 잘 된다 */
 const depthMat=new THREE.ShaderMaterial({ side:THREE.DoubleSide,
-  vertexShader:'varying float vY; void main(){ vec4 w=modelMatrix*vec4(position,1.0); vY=w.y; gl_Position=projectionMatrix*viewMatrix*w; }',
+  /* 인스턴스(나무·바위·덤불·결정)는 instanceMatrix 를 곱해야 제자리 — 빠뜨려서 모든 인스턴스가 원점(0,0)에 겹쳐 «보이지 않는 1.7 m 덩이» 가 굽혔고,
+     제자리의 나무·바위는 높이가 없었다 (해운대 출발점에서 발견, docs/design/192 §9) */
+  vertexShader:'varying float vY; void main(){ vec4 p=vec4(position,1.0);\n#ifdef USE_INSTANCING\n p=instanceMatrix*p;\n#endif\n vec4 w=modelMatrix*p; vY=w.y; gl_Position=projectionMatrix*viewMatrix*w; }',
   fragmentShader:`uniform float hmax; varying float vY; void main(){ float t=clamp(vY/hmax,0.0,65534.0/65535.0); float v=floor(t*65535.0+0.5); gl_FragColor=vec4(floor(v/256.0)/255.0, mod(v,256.0)/255.0, 0.0, 1.0); }`,
   uniforms:{ hmax:{value:HMAX} } });
 /* 깊이는 절반 해상도 — 가려짐 판정에는 충분하고, 16비트 아래 바이트가 시끄러워 원본 크기면 색 그림보다 컸다(150 KB 대 18 KB) */
@@ -84,7 +86,7 @@ function overview(px){ const W=env.walk, A=env.road.ang, FR=(s,t)=>new THREE.Vec
   const ex=renderer.toneMappingExposure; if(!sun) renderer.toneMappingExposure=ex*2.6;   /* 실내는 지도로 읽기엔 어둡다 — 미니맵만 밝게 */
   renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/webp',0.7); renderer.setSize(TILE,TILE); renderer.toneMappingExposure=ex;
   return { url, u0:+u0.toFixed(2), u1:+u1.toFixed(2), v0:+v0.toFixed(2), v1:+v1.toFixed(2), w, h }; }
-window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE };
+window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE, at:(i,j)=>LIST.indexOf(j*cols+i) };   /* at: 격자 (i,j) → tile() 번호 (한 장만 다시 굽거나 볼 때) */
 </script>
 </body>
 </html>

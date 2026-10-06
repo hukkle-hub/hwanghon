@@ -13,7 +13,7 @@ test('자동 지역: 지역 표에 있고, 구운 맵의 출발점이 걷는 띠
  for(const id of Object.keys(AUTO)){ assert.ok(REGIONS.find(r=>r.id===id&&r.zone===id),id+' 가 지역 표(regions.js)와 이어지지 않았다');
   const F=path.join(MAPS,id,'map.json'); if(!fs.existsSync(F)) continue; const m=JSON.parse(fs.readFileSync(F,'utf8')), p=[m.spawn.x,m.spawn.z], [s,t]=st(m,...p), w=m.walk; n++;
   assert.ok(s>w.s0&&s<w.s1&&t>w.t0&&t<w.t1,id+' 출발점이 띠 밖');
-  for(const [dx,dz] of [[0,0],[2,0],[-2,0],[0,2],[0,-2]]){ const b=blocked(m,[p[0]+dx,p[1]+dz]); assert.ok(!b,id+' 출발점 둘레가 막혔다 '+JSON.stringify(b).slice(0,80)); } }
+  for(const [dx,dz] of [[0,0],[2,0],[-2,0],[0,2],[0,-2]]){ const b=blocked(m,[p[0]+dx,p[1]+dz]); assert.ok(!b,id+' 출발점 둘레가 막혔다 '+String(JSON.stringify(b)).slice(0,80)); } }
  assert.ok(n>=1,'구운 자동 지역 '+n);
 });
 test('자동 지역: 하위 구역 — 위험할수록 레벨이 높고, 쉼터(거점은 마을)가 하나 있다',async()=>{
