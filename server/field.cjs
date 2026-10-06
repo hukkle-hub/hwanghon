@@ -13,6 +13,12 @@ const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 �
 const DODGE_TIME=520, DODGE_GAP=780, RESPAWN_TIME=5000, RESPAWN_GUARD=2000;
 const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 */
 const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);               /* 보스 몸 반지름 + 무기 길이 (대략) */
+/* 공개 칭호는 «그냥 참가»가 아니라 해당 보스 기여도 1위 처치 기록이다. 희귀한 증표가 되도록 단계가 듬성듬성 열린다. */
+const BOSS_TITLES={ clave:[[50,'강남의 철문'],[10,'셔터를 멈춘 자'],[1,'클레이브 토벌자']] };
+function prestigeTitle(rows=[]){
+ for(const r of rows){ const tiers=BOSS_TITLES[r.boss],n=Number(r.n)||0;if(!tiers)continue;
+  const i=tiers.findIndex(t=>n>=t[0]);if(i>=0)return {boss:r.boss,text:tiers[i][1],tier:tiers.length-i}; }
+ return null; }
 function loadZone(id){ try{ const m=JSON.parse(fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json'),'utf8')); return { id, walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)),
   bosses:(m.bosses||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.x)&&Number.isFinite(b.z)) }; }catch{ return null; } }
 const ZONE_IDS=()=>{ try{ return fs.readdirSync(path.join(ROOT,'maps','2d')).filter(d=>/^[a-z0-9_]{1,24}$/.test(d)&&fs.existsSync(path.join(ROOT,'maps','2d',d,'map.json'))); }catch{ return []; } };
@@ -21,12 +27,17 @@ const num=(v,lo,hi)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):null;
 class Field{
  /* store: 보스 상태·처치 기록 저장 (없으면 메모리만) · emit: 서버 전체 알림 (출현·처치·전설 획득) */
  constructor({ store=null, emit=()=>{}, rng=Math.random, timeScale=Number(process.env.BOSS_TIME_SCALE)||1 }={}){
-  this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.lootSerial=0;
+  this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.titleCache=new Map(); this.lootSerial=0;
   this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale; }
  zone(id){ if(typeof id!=='string'||!/^[a-z0-9_]{1,24}$/.test(id)) return null; if(!this.zones.has(id)){ const z=loadZone(id); if(!z) return null; this.zones.set(id,z); } return this.zones.get(id); }
  /* 길 좌표 (s, t) — js/mmo/env-gangnam.js 의 DIR·SIDE 와 같다 */
  clamp(z,p){ const c=Math.cos(z.ang),s=Math.sin(z.ang); let a=p.x*c-p.z*s, t=-p.x*s-p.z*c; a=Math.min(z.walk.s1,Math.max(z.walk.s0,a)); t=Math.min(z.walk.t1,Math.max(z.walk.t0,t)); p.x=a*c-t*s; p.z=-a*s-t*c; }
- info(profile, look){ return { name:profile.name, character:profile.character||'ain', eq:{...(profile.equipment||{})}, look }; }
+ title(id){ if(this.titleCache.has(id))return this.titleCache.get(id);let title=null;try{title=prestigeTitle(this.store?.bossTitles(id)||[]);}catch{}if(this.titleCache.size>=2048)this.titleCache.delete(this.titleCache.keys().next().value);this.titleCache.set(id,title);return title; }
+ info(profile, look){ const eq={...(profile.equipment||{})},enh={};
+  /* 가방 전체/내구도/재산은 공개하지 않는다. 지금 몸에 걸친 슬롯의 강화 단계만 보낸다. */
+  for(const [slot,item] of Object.entries(eq)){ const n=profile.gear?.[item]?.enh;if(Number.isInteger(n))enh[slot]=Math.max(0,Math.min(10,n)); }
+  const title=this.title(profile.id);
+  return { name:profile.name, character:profile.character||'ain', eq, enh, look, ...(title?{title}:{}) }; }
  /* gate: 다른 지역의 문으로 넘어왔을 때 도착할 문 id (map.json gates) — 없거나 모르는 id 면 지역 출발점 */
  join(id, profile, zoneId, look, gate){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); const now=Date.now();this.leave(id,now);const prior=this.life.get(id);this.life.delete(id);
   const at=(typeof gate==='string'&&z.gates.find(g=>g.id===gate))||z.spawn;
@@ -40,7 +51,8 @@ class Field{
  leave(id,now=Date.now()){ const p=this.players.get(id);if(p)this.life.set(id,{hp:p.hp,maxHp:p.maxHp,dead:p.dead,respawnAt:p.respawnAt,invulnUntil:p.invulnUntil,expires:now+30000});this.players.delete(id); }
  /* 외형이 바뀌었을 때(장비·외형 프리셋) — 보이는 사람들에게 다시 보낸다 */
  relook(id, profile, look){ const p=this.players.get(id); if(!p) return; const l=Number.isInteger(look)&&look>=0&&look<=3?look:p.info.look,old=p.maxHp;
-  p.maxHp=Math.max(1,Math.round(profile.stats?.hp||p.maxHp));p.hp=p.dead?0:Math.max(1,Math.round(p.maxHp*p.hp/Math.max(1,old)));p.defense=Math.max(0,profile.stats?.defense||0);p.info=this.info(profile,l); p.ver++; }
+  p.maxHp=Math.max(1,Math.round(profile.stats?.hp||p.maxHp));p.hp=p.dead?0:Math.max(1,Math.round(p.maxHp*p.hp/Math.max(1,old)));p.defense=Math.max(0,profile.stats?.defense||0);
+  const next=this.info(profile,l),changed=JSON.stringify(next)!==JSON.stringify(p.info);p.info=next;if(changed)p.ver++;return changed; }
  move(id, msg, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.'); if(p.dead)return p; const z=this.zones.get(p.zone);
   const x=num(msg.x,-1e4,1e4), zz=num(msg.z,-1e4,1e4); if(x===null||zz===null) return p;
   /* 속도 검사: 지난 갱신 뒤 시간 × 최대 속도 + 0.6 m 를 넘으면 그 거리까지만 */
@@ -51,14 +63,16 @@ class Field{
   if(next==='dodgeB'&&p.anim!=='dodgeB'&&now>=p.dodgeReady){ p.dodgeUntil=now+DODGE_TIME; p.dodgeReady=now+DODGE_GAP; }
   p.anim=next; return p; }
  /* 받는 사람 r 에게: 관심 반경 안 다른 사람들의 [id, x, z, yaw, 동작 번호] + 처음 보거나 바뀐 사람의 고정 정보 */
- view(r){ const out=[], infos={}; const seen=new Set();
+ view(r,commit=true){ const out=[], infos={};
   for(const p of this.players.values()){ if(p===r||p.zone!==r.zone) continue; if((p.x-r.x)**2+(p.z-r.z)**2>AOI*AOI) continue;
-   seen.add(p.id); out.push([p.id, +p.x.toFixed(2), +p.z.toFixed(2), +p.yaw.toFixed(2), ANIMS.indexOf(p.anim)]);
-   if(r.known.get(p.id)!==p.ver){ infos[p.id]=p.info; r.known.set(p.id,p.ver); } }
-  for(const id of [...r.known.keys()]) if(!seen.has(id)) r.known.delete(id);   /* 반경 밖으로 나가면 다음에 다시 정보를 보낸다 */
+   out.push([p.id, +p.x.toFixed(2), +p.z.toFixed(2), +p.yaw.toFixed(2), ANIMS.indexOf(p.anim)]);
+   if(r.known.get(p.id)!==p.ver) infos[p.id]=p.info; }
+  if(commit)this.commitView(r,out);
   const bv=this.bosses.size?this.bossView(r):null;
   return { type:'field', you:[+r.x.toFixed(2), +r.z.toFixed(2)], self:this.selfView(r), hurt:r.hurt,
    players:out, infos, ...(bv&&(bv.bosses.length||bv.loot.length)?bv:{}) }; }
+ /* 소켓 전송이 실제 성공한 뒤에만 고정 정보를 «전달함»으로 기록한다. backpressure로 버리면 다음 틱에 다시 싣는다. */
+ commitView(r,out){const seen=new Set(out.map(x=>x[0]));for(const id of seen){const p=this.players.get(id);if(p)r.known.set(id,p.ver);}for(const id of [...r.known.keys()])if(!seen.has(id))r.known.delete(id);}
  /* ---------- 필드 보스 (docs/design/188) — 공유 세계: 지역마다 주기마다 한 마리, 모두가 노린다 ---------- */
  initBosses(now=Date.now()){
   const saved=new Map((this.store?this.store.bossStates():[]).map(r=>[r.id,r]));
@@ -117,7 +131,7 @@ class Field{
   for(const [n,item] of drops.entries()){ const k='L'+(++this.lootSerial), a=a0+n/drops.length*Math.PI*2, r=2+this.rng()*1.2;
    this.loot.set(k,{ id:k, item, zone:o.zone, x:o.x+Math.cos(a)*r, z:o.z+Math.sin(a)*r, owner:top&&top.id, ownerUntil:now+LOOT_PRIORITY, expires:now+LOOT_LIFE, boss:o.id }); }
   o.nextAt=CY.nextSpawn(o.cycle, now, { rng:this.rng, dead:true });
-  let changed=[]; if(this.store){ this.store.bossSave(o.id,o.zone,'wait',o.nextAt,now); changed=this.store.bossKill(o.id,o.zone,now,ranking,drops,T.MATERIAL); }
+  let changed=[]; if(this.store){ this.store.bossSave(o.id,o.zone,'wait',o.nextAt,now); changed=this.store.bossKill(o.id,o.zone,now,ranking,drops,T.MATERIAL);if(top){this.titleCache.delete(top.id);if(!changed.includes(top.id))changed.push(top.id);} }
   this.emit({ type:'announce', kind:'bossDown', zone:o.zone, boss:o.id, name:o.name, top:top&&top.name, players:ranking.length,
    drops:drops.map(i=>{ const d=itemOf(i); return { item:i, name:d&&d.name, rarity:d&&d.rarity }; }), changed });
   return { ranking, drops }; }
@@ -139,11 +153,12 @@ class Field{
   return { bossNow:now, bosses:bs, bossActs, loot }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
-  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, self:this.selfView(p), ...this.bossView(p) }; }
+  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), ...this.bossView(p) }; }
   if(msg.type==='fieldHit'){ return typeof msg.boss==='string'?this.hit(id, msg, profile):null; }
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
-  if(msg.type==='fieldLook'){ this.relook(id, profile, msg.look); return null; }
+  /* 옛 데모 클라이언트 호환용 무응답. 온라인 외형은 장착 장비만 권위로 삼아 반복 재생성 공격을 막는다. */
+  if(msg.type==='fieldLook')return null;
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }
   throw Error('알 수 없는 필드 요청입니다.'); }
 }
-module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf };
+module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };

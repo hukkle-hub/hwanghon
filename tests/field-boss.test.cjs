@@ -50,8 +50,11 @@ test('필드 보스: 때가 되면 서고 알림 → 닿는 거리에서만 맞�
  pa.x=o.x+reachOf(o)-0.2; pa.z=o.z; pb.x=o.x; pb.z=o.z+1;
  const h=f.hit(a,{boss:'clave'},store.public(a),1e9); assert.ok(h&&h.dmg>0,'맞는다'); assert.equal(h.crit,true);
  assert.equal(f.hit(a,{boss:'clave'},store.public(a),1e9+HIT_GAP-1),null,'너무 빠른 연타는 버린다');
- assert.deepEqual(f.bossView(pb).bosses.find(x=>x[0]==='clave'),['clave',1],'살아 있다는 것만 — 체력은 보내지 않는다');
- assert.equal('hp' in h||'max' in h,false,'때린 사람에게도 남은 체력을 알려 주지 않는다');
+ const bossView=f.bossView(pb),claveRow=bossView.bosses.find(x=>x[0]==='clave'),claveAct=bossView.bossActs.find(x=>x.id==='clave');
+ assert.deepEqual(Object.keys(bossView).sort(),['bossActs','bossNow','bosses','loot'],'보스 스냅숏 허용 필드만');
+ assert.deepEqual(claveRow,['clave',1],'살아 있다는 것만 — 체력은 보내지 않는다');
+ assert.deepEqual(Object.keys(claveAct).sort(),['counterClose','counterOpen','endsAt','id','motion','seq','skill','startedAt','x','yaw','z'],'보스 동작에도 체력 필드 없음');
+ assert.deepEqual(Object.keys(h).sort(),['boss','counter','crit','dmg','down','type'],'타격 응답 허용 필드만 — 체력·비율 없음');
  /* b 가 조금, a 가 대부분 */
  f.hit(b,{boss:'clave'},store.public(b),1e9+1); let t=1e9+HIT_GAP; while(o.alive){ f.hit(a,{boss:'clave'},store.public(a),t); t+=HIT_GAP; }
  const down=events.find(e=>e.kind==='bossDown'); assert.ok(down,'처치 알림'); assert.equal(down.top,store.public(a).name);
@@ -90,7 +93,20 @@ test('필드 보스: 실제 소켓 — fieldJoined 에 보스 상태, 때리면 
  sendj({type:'fieldJoin',zone:'namsan_tower'}); const j=await wait(m=>m.type==='fieldJoined'); assert.deepEqual(j.bosses.find(b=>b[0]==='dropper'),['dropper',1],'살아 있음 (체력 없음)');
  sendj({type:'fieldMove',x:o.x+0.5,z:o.z,anim:'idle'}); await wait(m=>m.type==='field');
  const pl=app.field.players.get(hello.profile.id); pl.x=o.x+0.5; pl.z=o.z;   /* 출발점에서 보스까지 걸어가는 대신 */
- sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true); assert.equal(hit.hp,undefined,'체력은 보내지 않는다');
+ sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true);assert.deepEqual(Object.keys(hit).sort(),['boss','counter','crit','dmg','down','type'],'체력·최대 체력·비율이 들어올 자리가 없다');
  const down=await wait(m=>m.type==='announce'&&m.kind==='bossDown'); assert.equal(down.top,'보스사냥'); assert.equal(down.changed,undefined,'내부 목록은 보내지 않는다');
  const prof=await wait(m=>m.type==='profile'&&m.profile.items.m_heart>0); assert.ok(prof,'재료가 프로필로 온다');
+});
+
+test('클레이브 1위 처치 칭호는 캐시를 비우고 본인 fieldInfo·주변 infos에 즉시 전파된다',async t=>{
+ const store=new Store(null),app=createPartyServer({store}),addr=await app.listen(0,'127.0.0.1'),url='ws://127.0.0.1:'+addr.port+'/party-socket';t.after(()=>app.close());
+ async function client(name){const socket=new WebSocket(url),got=[];socket.on('message',b=>got.push(JSON.parse(b)));t.after(()=>socket.close());
+  const wait=async(fn,ms=3000)=>{const t0=Date.now();while(Date.now()-t0<ms){const m=got.find(fn);if(m){got.splice(got.indexOf(m),1);return m;}await new Promise(r=>setTimeout(r,20));}throw Error(name+' timeout');};
+  await once(socket,'open');const send=m=>socket.send(JSON.stringify(m));send({type:'hello',name});const hello=await wait(m=>m.type==='welcome');send({type:'character',name,character:'kain'});await wait(m=>m.type==='profile');return {socket,wait,send,id:hello.profile.id};}
+ const a=await client('칭호검사'),b=await client('칭호관찰');const o=app.field.bosses.get('clave');o.max=o.hp=1;app.field.spawnBoss(o);
+ a.send({type:'fieldJoin',zone:'gangnam_b1'});await a.wait(m=>m.type==='fieldJoined');b.send({type:'fieldJoin',zone:'gangnam_b1'});await b.wait(m=>m.type==='fieldJoined');
+ await b.wait(m=>m.type==='field'&&m.infos&&m.infos[a.id]);const pa=app.field.players.get(a.id),pb=app.field.players.get(b.id);pa.x=o.x+.5;pa.z=o.z;pb.x=o.x+1;pb.z=o.z;
+ a.send({type:'fieldHit',boss:'clave'});await a.wait(m=>m.type==='bossHit'&&m.down);const self=await a.wait(m=>m.type==='fieldInfo'&&m.info.title);
+ assert.deepEqual(self.info.title,{boss:'clave',text:'클레이브 토벌자',tier:1});
+ const peer=await b.wait(m=>m.type==='field'&&m.infos&&m.infos[a.id]&&m.infos[a.id].title);assert.deepEqual(peer.infos[a.id].title,self.info.title);
 });

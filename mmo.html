@@ -27,6 +27,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .b.s{width:52px;height:52px}
 .gear{position:absolute;right:calc(14px + env(safe-area-inset-right));top:58px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,18,.6);font-size:12px;border-radius:4px}
 .tag{position:absolute;transform:translate(-50%,-100%);text-align:center;font-size:11px;font-weight:700;white-space:nowrap;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}
+.tag .title{display:block;margin-bottom:1px;color:#ffb071;font-size:9px;font-weight:700;letter-spacing:.06em;text-shadow:0 0 7px rgba(255,55,24,.8),0 1px 2px #000}.tag .title[data-tier="3"]{color:#fff0dc;text-shadow:0 0 9px #ff3a20,0 1px 2px #000}
 .tag .hp{width:54px;height:4px;margin:2px auto 0;background:#20222a;border:1px solid #000}.tag .hp i{display:block;height:100%;background:#d03838}
 .tag.me .hp i{background:#40c060}
 #dbg{position:absolute;left:calc(12px + env(safe-area-inset-left));top:56px;font:11px/1.5 monospace;color:#9fd8e8;background:rgba(0,0,0,.45);padding:4px 6px;display:none}
@@ -169,6 +170,10 @@ const loader=new GLTFLoader();
 if(LOD){ const raw=loader.load.bind(loader); loader.load=(u,...a)=>raw(String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/,'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/,'art/3d/lod/$1_anim.glb'),...a); }
 const load=u=>new Promise((ok,no)=>loader.load(u,ok,undefined,no));
 const NAMES={ ain:'아인', kain:'카인', ryu:'류', sera:'세라' };
+const safe=t=>String(t==null?'':t).replace(/[<>&]/g,c=>c==='<'?'&lt;':c==='>'?'&gt;':'&amp;');
+function slotEnh(profile){ const out={};for(const [sl,id] of Object.entries(profile&&profile.equipment||{})){const n=profile&&profile.gear&&profile.gear[id]&&profile.gear[id].enh;if(Number.isInteger(n))out[sl]=Math.max(0,Math.min(10,n));}return out; }
+/* 온라인 외형은 서버 장착 장비가 권위다. 옛 데모 프리셋(look)은 키에 넣지 않는다 — 반복 패킷으로 같은 GLB를 다시 만들 수 없다. */
+const lookKey=(eq,enh)=>JSON.stringify([eq||{},enh||{}]);
 /* 영웅별 기본 장비 + 갈아입을 세트 (장비가 그대로 보이는지 — 문서 185 §4.1) */
 const WEAPON={ ain:'w_marsh_scythe', kain:'w_kain_greatsword', ryu:'w_ryu_twinfang', sera:'w_sera_reagent' };
 const SETS=[ {}, { chest:'a_reed_cuirass', legs:'a_black_greaves', gloves:'a_steel_gauntlet', boots:'a_ranger_boots' },
@@ -176,7 +181,10 @@ const SETS=[ {}, { chest:'a_reed_cuirass', legs:'a_black_greaves', gloves:'a_ste
   { head:'a_ward_mask', chest:'a_ward_coat', legs:'a_ward_greaves', gloves:'a_ward_gloves', boots:'a_ward_boots' } ];
 const START_SET={ ain:1, kain:2, ryu:3, sera:0 };
 const heroes=[];
-function dress(h, k){ h.set=k; const eq=Object.assign({ main:WEAPON[h.id] }, SETS[k]||{}, h.eqNet||{}); window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id }); }
+function heroTag(h){ const t=h.title&&typeof h.title==='object'?h.title:null,title=t&&t.text?'<span class="title" data-tier="'+(+t.tier||1)+'">◆ '+safe(t.text)+'</span>':'';
+  h.tag.innerHTML=title+(h.me?'':'<span style="color:#9fd8e8">'+(h.net?safe(NAMES[h.id]):'[황혼]')+'</span> ')+safe(h.name||NAMES[h.id])+'<div class="hp"><i style="width:'+(h.me?86:h.net?100:60+Math.random()*40|0)+'%"></i></div>'; }
+function dress(h, k){ h.set=k; const eq=h.eqNet?Object.assign({main:WEAPON[h.id]},h.eqNet):Object.assign({main:WEAPON[h.id]},SETS[k]||{}),enh=h.enhNet;
+  window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id, enhOf:(id,sl)=>enh?(enh[sl]||0):(window.TW_GEAR&&TW_GEAR.enhOf?TW_GEAR.enhOf(id):0) }); }
 /* 영웅 GLB 는 영웅마다 한 번만 받고, 사람마다 뼈대째 복제한다 — 같은 영웅이 여럿이어도 내려받기 1번 */
 const gltfs={};
 function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; })); }
@@ -187,11 +195,11 @@ async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=
   ['attack1','dodgeB'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
   act.idle.play(); mixer.setTime(Math.random()*2);
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),meta.water?new THREE.MeshBasicMaterial({map:rippleTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0.55}):new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
-  const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); const label=String(o.name||NAMES[id]).replace(/[<>&]/g,'');
-  tag.innerHTML=(me?'':'<span style="color:#9fd8e8">'+(o.net?NAMES[id]:'[황혼]')+'</span> ')+label+'<div class="hp"><i style="width:'+(me?86:o.net?100:60+Math.random()*40|0)+'%"></i></div>'; document.getElementById('hud').appendChild(tag);
-  const h={ id, root, mixer, act, cur:'idle', blob, tag, me, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, target:null };
+  const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); document.getElementById('hud').appendChild(tag);
+  const h={ id, root, mixer, act, cur:'idle', blob, tag, me, name:o.name||NAMES[id], title:o.title||null, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, enhNet:o.enh||null, lookKey:lookKey(o.eq,o.enh), target:null };
+  heroTag(h);
   dress(h, o.look!=null?o.look:START_SET[id]); heroes.push(h); return h; }
-function removeHero(h){ const i=heroes.indexOf(h); if(i<0) return; scene.remove(h.root); scene.remove(h.blob); h.tag.remove(); heroes.splice(i,1); }
+function removeHero(h){ const i=heroes.indexOf(h); if(i<0) return;window.TW_LOOKS&&TW_LOOKS.detach&&TW_LOOKS.detach(h.root);h.mixer.stopAllAction();h.mixer.uncacheRoot(h.root);scene.remove(h.root);scene.remove(h.blob);h.blob.geometry.dispose();h.blob.material.dispose();h.tag.remove();heroes.splice(i,1); }
 function play(h, n, fade=0.18){ if(h.cur===n||!h.act[n]) return; const a=h.act[n], b=h.act[h.cur]; a.reset().play(); if(b) a.crossFadeFrom(b,fade,false); h.cur=n; }
 /* ---------- 걷기: 길 좌표 띠 + 상자 충돌 ---------- */
 const ANG=meta.road.ang, ca=Math.cos(ANG), sa=Math.sin(ANG);
@@ -230,10 +238,12 @@ stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercan
 addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null,selfDead=false;
+function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name;me.name=name;if(key!==me.lookKey){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed)heroTag(me);}
+function applySelfInfo(info){if(!me)return;me.title=info&&info.title||null;heroTag(me);}
 function attack(){ if(!me||selfDead||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8; if(typeof hitBoss==='function') hitBoss(); }
 function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7;
   if(net){const p=me.root.position;net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:'dodgeB'});} }
-function nextSet(){ if(!me) return; dress(me,(me.set+1)%SETS.length); net&&net.send({type:'fieldLook',look:me.set}); }
+function nextSet(){ if(!me||me.eqNet) return; dress(me,(me.set+1)%SETS.length); }
 document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
 const dbg=document.getElementById('dbg'); let dbgOn=DEBUG; function toggleDbg(){ dbgOn=!dbgOn; dbg.style.display=dbgOn?'block':'none'; } dbg.style.display=dbgOn?'block':'none';
 /* ---------- 온라인: 파티 서버의 필드 방 (server/field.cjs, 문서 185 §6.4) ---------- */
@@ -253,7 +263,8 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
     if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); return; }
     if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
     if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; toBoss(m); resolve(net); return; }
-    if(m.type==='profile'&&net){ net.profile=m.profile; return; }
+    if(m.type==='profile'&&net){net.profile=m.profile;applySelfProfile(m.profile);return;}
+    if(m.type==='fieldInfo'&&net){net.selfInfo=m.info;applySelfInfo(m.info);return;}
     if(m.type==='field'){ onField(m); if(m.bosses||m.loot||m.self||m.hurt) toBoss(m); return; }
     if(m.type==='announce'||m.type==='bossHit'||m.type==='fieldLooted'){ toBoss(m); return; }
     if(m.type==='error'){ console.warn('[field]', m.message); if(net&&/주울|줍|가진 장비|1위가 먼저|가까이/.test(m.message)) toBoss({type:'lootError',message:m.message}); } };
@@ -262,12 +273,13 @@ const infos={};
 function onField(m){ Object.assign(infos, m.infos||{}); const live=new Set();
   if(me&&m.you){const dx=m.you[0]-me.root.position.x,dz=m.you[1]-me.root.position.z,d=Math.hypot(dx,dz);if(d>3){me.root.position.x=m.you[0];me.root.position.z=m.you[1];}else if(d>.25){me.root.position.x+=dx*.22;me.root.position.z+=dz*.22;}}
   for(const [id,x,z,yaw,ai] of m.players){ live.add(id); let r=remotes.get(id); const info=infos[id];
-    if(!r){ if(!info) continue; r={ loading:true, target:[x,z,yaw,ANIMS[ai]||'idle'], ver:info };
-      remotes.set(id,r); const eq={}; for(const k of ['main','sub','off']) if(info.eq&&info.eq[k]) eq[k]=info.eq[k];
-      hero(info.character, x, z, false, { net:true, name:info.name, look:info.look, eq }).then(h=>{ if(remotes.get(id)!==r){ removeHero(h); return; } Object.assign(h,{ target:r.target, ver:r.ver }); remotes.set(id,h); });
+    if(!r){ if(!info) continue; r={ loading:true, target:[x,z,yaw,ANIMS[ai]||'idle'], ver:info, info };
+      remotes.set(id,r); const eq={...(info.eq||{})};
+      hero(info.character, x, z, false, { net:true, name:info.name, look:info.look, eq, enh:{...(info.enh||{})}, title:info.title }).then(h=>{ if(remotes.get(id)!==r){ removeHero(h); return; } const latest=r.info||info;Object.assign(h,{ target:r.target, ver:latest });if(latest!==info){const eq2={...(latest.eq||{})},enh2={...(latest.enh||{})},key=lookKey(eq2,enh2),visual=key!==h.lookKey;h.eqNet=eq2;h.enhNet=enh2;h.title=latest.title||null;h.name=latest.name||h.name;h.lookKey=key;heroTag(h);if(visual)dress(h,latest.look);}remotes.set(id,h); });
       continue; }
     r.target=[x,z,yaw,ANIMS[ai]||'idle'];
-    if(m.infos&&m.infos[id]&&!r.loading&&m.infos[id]!==r.ver){ r.ver=m.infos[id]; r.eqNet={ main:m.infos[id].eq&&m.infos[id].eq.main }; dress(r, m.infos[id].look); } }
+    if(m.infos&&m.infos[id]&&r.loading){r.info=m.infos[id];r.ver=r.info;continue;}
+    if(m.infos&&m.infos[id]&&m.infos[id]!==r.ver){ const ni=m.infos[id],eq={...(ni.eq||{})},enh={...(ni.enh||{})},key=lookKey(eq,enh),visual=key!==r.lookKey;r.ver=ni;r.eqNet=eq;r.enhNet=enh;r.title=ni.title||null;r.name=ni.name||r.name;r.lookKey=key;heroTag(r);if(visual)dress(r,ni.look); } }
   for(const [id,r] of remotes) if(!live.has(id)){ remotes.delete(id); if(!r.loading) removeHero(r); }
   netEl.textContent='온라인 · 근처 '+remotes.size+'명'; }
 function follow2(h, dt){ const t=h.target; if(!t) return; const dx=t[0]-h.root.position.x, dz=t[1]-h.root.position.z, d=Math.hypot(dx,dz);
@@ -281,7 +293,9 @@ if(ONLINE){ netEl.textContent='접속 중…'; try{ await connectNet(); netEl.te
 /* ---------- 출발 ---------- */
 const arriveAt=ARRIVE&&meta.gates.find(g=>g.id===ARRIVE);
 const MY=net?net.profile.character:ME, sp=net?{ x:net.joined.x, z:net.joined.z }:arriveAt?{ x:arriveAt.x, z:arriveAt.z }:meta.spawn;
-me=await hero(MY, sp.x, sp.z, true, { name:net?net.profile.name:NAMES[MY] });
+me=await hero(MY, sp.x, sp.z, true, { name:net?net.profile.name:NAMES[MY], look:net&&net.joined.info&&net.joined.info.look, eq:net?{...(net.profile.equipment||{})}:null, enh:net?slotEnh(net.profile):null, title:net&&net.joined.info&&net.joined.info.title });
+if(net){applySelfProfile(net.profile);applySelfInfo(net.selfInfo||net.joined.info);}
+document.getElementById('gearBtn').hidden=!!net;
 document.getElementById('who').textContent=(net?net.profile.name:NAMES[MY])+' · Lv 8'; document.getElementById('face').style.backgroundImage='url(art/face-'+MY+'.webp)';
 /* 혼자일 때만 화면 안 AI 셋 (온라인이면 실제 사람만) */
 if(!net){ const others=['ain','kain','ryu','sera'].filter(c=>c!==MY), offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];

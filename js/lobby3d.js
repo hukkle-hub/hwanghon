@@ -101,7 +101,7 @@ function start(canvas){
     const tintOf=id=>G.tintOf?G.tintOf(id):null;
     const mixOf=id=>(G.dyeOf&&G.dyeOf(id))?0.75:null;
     try{ window.TW_HAIR && TW_HAIR.sync(model, eq);       /* 머리 장비 = 머리카락 가림 */
-    TW_LOOKS.attach(THREE, loader, model, eq, { charId:CHAR, baseOf, tintOf, mixOf,
+    TW_LOOKS.attach(THREE, loader, model, eq, { charId:CHAR, baseOf, tintOf, mixOf, enhOf:id=>G.enhOf(id),
       onMain:wr=>{ const t=tintOf(eq.main); if(t){ const mx=mixOf(eq.main)??0.55;
         wr.traverse(o=>{ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(t),mx); } }); } } });
     }catch(e){ console.warn('lobby equip', e); }

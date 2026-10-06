@@ -45,7 +45,9 @@ function createPartyServer(options={}){
  function refreshGuild(id){const g=store.guild(id);if(g)for(const m of g.members)sendGuild(m.id);}
  function sendHistory(id){const ws=sessions.get(id);if(!ws)return;const g=store.guild(id),r=current(id);send(ws,{type:'chatHistory',messages:[...history('world'),...history('guild:'+g?.id),...history('party:'+r?.code),...history('whisper:'+id)].filter(m=>!store.blocked(id,m.player)).sort((a,b)=>(a.created||0)-(b.created||0))});}
  function enterOffice(id){const ws=sessions.get(id);if(!ws)return;send(ws,board());sendGuild(id);sendHistory(id);}
- function profileUpdate(profile){const ws=sessions.get(profile.id);if(ws)send(ws,{type:'profile',profile});}
+ function profileUpdate(profile){
+  /* 장착·강화·보스 1위 칭호가 바뀌면 필드의 자기 모습과 주변 사람에게도 같은 외형 정보가 간다. */
+  const changed=field.relook(profile.id,profile);const ws=sessions.get(profile.id);if(ws){send(ws,{type:'profile',profile});const p=field.players.get(profile.id);if(p&&changed)send(ws,{type:'fieldInfo',info:p.info});}}
  function leave(id,voluntary=false){const room=current(id);if(!room)return;if(voluntary&&room.raid)room.raid.withdrawn.add(id);room.members.delete(id);memberships.delete(id);room.raid?.disconnect(id);chooseLeader(room);if(!room.members.size&&room.raid?.result?.rewardStatus==='pending')return;if(!room.members.size){if(room.raid&&!room.training)store.db.prepare("UPDATE expeditions SET state='abandoned' WHERE id=? AND state='active'").run(room.raid.id);rooms.delete(room.code);histories.delete('party:'+room.code);}else broadcast(room);}
  function join(room,profile){if(room.minPower&&room.leader!==profile.id&&POWER(profile.stats)<room.minPower)throw Error('이 파티는 전투력 '+room.minPower.toLocaleString()+' 이상만 참가할 수 있습니다.');if(room.training)throw Error('개인 훈련에는 참가할 수 없습니다.');if(!store.canEnter(profile.id,room.level))throw Error('선행 의뢰 보수를 수령해 지역을 해금하세요.');if(room.raid)throw Error('출격 중인 방은 새로 참가할 수 없습니다.');if(room.members.size>=4)throw Error('파티가 가득 찼습니다.');if(current(profile.id))throw Error('현재 파티에서 먼저 나가 주세요.');room.members.set(profile.id,{id:profile.id,name:profile.name,character:profile.character||'ain',ready:false,connected:true});memberships.set(profile.id,room.code);broadcast(room);sendHistory(profile.id);sendBoard();}
  function attach(ws,result){
@@ -56,7 +58,7 @@ function createPartyServer(options={}){
   send(ws,{type:'welcome',protocol:2,ephemeral:process.env.EPHEMERAL_STORAGE==='1',token,profile,recoveryCode:result.recoveryCode,room:room?.code||null});
   enterOffice(profile.id);refreshGuild(profile.id);if(profile.characterCreated)rpg.update(profile.id);if(room)broadcast(room);sendBoard();
  }
- function requireOffice(id){if(current(id)?.raid)throw Error('인력사무소에서 이용할 수 있습니다.');}
+ function requireOffice(id){if(current(id)?.raid)throw Error('인력사무소에서 이용할 수 있습니다.');if(field.players.has(id))throw Error('필드에서 나온 뒤 인력사무소를 이용하세요.');}
  function unready(id){const r=current(id);if(r&&!r.raid){r.members.get(id).ready=false;broadcast(r);}}
  async function account(ws,msg){
   const upgrade=msg.mode==='register'&&ws.playerId;
@@ -114,7 +116,7 @@ function createPartyServer(options={}){
    if(msg.type==='buy'){if(typeof msg.listing!=='string')throw Error('물품을 선택하세요.');for(const p of store.buy(id,msg.listing))profileUpdate(p);}
    if(msg.type==='cancelSale'){if(typeof msg.listing!=='string')throw Error('물품을 선택하세요.');profileUpdate(store.cancel(id,msg.listing));}
    if(msg.type==='purchase')profileUpdate(store.purchase(id,msg.item,msg.quantity));
-   if(msg.type==='equip'){profileUpdate(store.equip(id,msg.item));unready(id);field.relook(id,store.public(id));}
+   if(msg.type==='equip'){profileUpdate(store.equip(id,msg.item));unready(id);}
    rpg.update(id);send(ws,{type:'market',listings:store.market()});return;
   }
   /* 모집 목록 새로 고침 (시트 03 필터 바) — 방 생성·합류·퇴장 때 자동으로도 나가지만
@@ -144,7 +146,7 @@ function createPartyServer(options={}){
   ws.on('close',()=>{connections.delete(ws);if(closing)return;if(!ws.playerId||sessions.get(ws.playerId)!==ws)return;sessions.delete(ws.playerId);field.leave(ws.playerId);const room=current(ws.playerId);if(room){const m=room.members.get(ws.playerId);m.connected=false;m.ready=false;m.disconnectedAt=Date.now();room.raid?.disconnect(ws.playerId);chooseLeader(room);broadcast(room);}refreshGuild(ws.playerId);sendBoard();});
  });
  let prev=performance.now(),acc=0,broadcastAcc=0,fieldAcc=0,bossAcc=0;field.initBosses();
- const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}fieldAcc+=dt;bossAcc+=dt;if(bossAcc>=.05){bossAcc=0;field.tickBosses(Date.now());}if(fieldAcc>=.1){fieldAcc=0;for(const p of field.players.values()){const peer=sessions.get(p.id);if(peer)send(peer,field.view(p));}}},10);
+ const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}fieldAcc+=dt;bossAcc+=dt;if(bossAcc>=.05){bossAcc=0;field.tickBosses(Date.now());}if(fieldAcc>=.1){fieldAcc=0;for(const p of field.players.values()){const peer=sessions.get(p.id);if(peer){const snapshot=field.view(p,false);if(send(peer,snapshot))field.commitView(p,snapshot.players);}}}},10);
  const heartbeat=setInterval(()=>{const now=Date.now();for(const ws of connections){if(ws.playerId&&store.sanction(ws.playerId).ban_until>now){ws.close(4003,'Account restricted');continue;}if(!ws.alive||now>ws.authDeadline)ws.terminate();else{ws.alive=false;ws.ping();}}for(const room of [...rooms.values()])for(const m of [...room.members.values()])if(!m.connected&&now-m.disconnectedAt>90000)leave(m.id);for(const room of [...rooms.values()])if(!room.members.size&&room.raid?.result?.rewardStatus==='saved'){rooms.delete(room.code);histories.delete('party:'+room.code);}sendBoard();},5000);
  timer.unref();heartbeat.unref();
  let backupTask=Promise.resolve();const backupTimer=store.directory&&setInterval(()=>{backupTask=store.backupData(process.env.BACKUP_DIR||path.join(store.directory,'backups')).catch(e=>console.error('백업 실패:',e.message));},Number(process.env.BACKUP_INTERVAL_MS||3600000));backupTimer?.unref();

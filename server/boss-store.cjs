@@ -6,7 +6,8 @@ const methods={
  initBoss(){ if(this.bossReady) return; this.db.exec(`
   CREATE TABLE IF NOT EXISTS field_bosses(id TEXT PRIMARY KEY,zone TEXT NOT NULL,state TEXT NOT NULL,next_at INTEGER NOT NULL,updated INTEGER NOT NULL);
   CREATE TABLE IF NOT EXISTS boss_kills(id INTEGER PRIMARY KEY,boss TEXT NOT NULL,zone TEXT NOT NULL,at INTEGER NOT NULL,top TEXT,top_name TEXT,players INTEGER NOT NULL,drops TEXT NOT NULL);
-  CREATE INDEX IF NOT EXISTS boss_kills_boss ON boss_kills(boss,at);`); this.bossReady=true; },
+  CREATE INDEX IF NOT EXISTS boss_kills_boss ON boss_kills(boss,at);
+  CREATE INDEX IF NOT EXISTS boss_kills_top ON boss_kills(top,boss);`); this.bossReady=true; },
  bossStates(){ this.initBoss(); return this.statement('SELECT * FROM field_bosses').all(); },
  bossSave(id, zone, state, nextAt, now=Date.now()){ this.initBoss();
   this.statement('INSERT INTO field_bosses(id,zone,state,next_at,updated) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET zone=excluded.zone,state=excluded.state,next_at=excluded.next_at,updated=excluded.updated').run(id,zone,state,Math.floor(nextAt),now); },

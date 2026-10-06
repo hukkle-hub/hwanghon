@@ -26,7 +26,8 @@
   /* FIT-END */
   var SLOT_OF={ a_hood:'head', a_reed_cuirass:'chest', a_black_greaves:'legs', a_steel_gauntlet:'gloves', a_ranger_boots:'boots', acc_charm:'acc', acc_blood_ring:'acc', acc_band:'acc',
     a_sluice_helm:'head', a_sluice_cuirass:'chest', a_sluice_greaves:'legs', a_sluice_gauntlet:'gloves', a_sluice_boots:'boots',
-    a_ward_mask:'head', a_ward_coat:'chest', a_ward_greaves:'legs', a_ward_gloves:'gloves', a_ward_boots:'boots' };
+    a_ward_mask:'head', a_ward_coat:'chest', a_ward_greaves:'legs', a_ward_gloves:'gloves', a_ward_boots:'boots',
+    a_clave_helm:'head', a_clave_cuirass:'chest', a_clave_gauntlet:'gloves', a_clave_greaves:'legs' };
   /* hand2: 두 손 잡기 때 왼손 주먹 자리 = 오른손에서 칼날 쪽으로 [최소, 최대] m (docs/design/95).
      오른손(0.75)은 폼멜(0.56~0.68) 바로 위라 폼멜 쪽엔 7 cm 뿐 — 왼손은 칼날 쪽. 최소 = 주먹 폭 11 cm, 최대 = 코등이 − 5 cm.
      잰 값: 대검 손잡이 0.69~1.00 · 코등이 1.02 / 고철 ~1.10 · 1.12 / 분쇄 ~1.04 · 1.06 */
@@ -34,6 +35,9 @@
   /* 카인 하위·상위 대검(docs/design/82): 모루의 대검과 같은 규약 — 1.6 m, 자루 끝 0.55, 손 0.75 */
   WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75, hand2:[0.11,0.30] };
   WEAPON.w_kain_crusher={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75, hand2:[0.11,0.24] };
+  /* 클레이브 전리품: 모바일 LOD까지 검증된 대검을 바탕으로 재질·붉은 코어를 따로 입힌다. 셔터 방패는 Spine2 뒤 절차형 실루엣. */
+  WEAPON.w_clave_blade={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75, hand2:[0.11,0.24], special:'claveBlade' };
+  WEAPON.x_clave_shutter={ build:buildClaveShutter, bone:'Spine2', pos:[0,0.07,-0.16], rot:[0,0,0], scale:0.70, special:'claveShutter' };
   WEAPON.w_ryu_dagger={ glb:'art/3d/gear/w_ash_dirk.glb', grip:0.10 };
   /* 시약병은 목(반지름 2.7 cm, 0.16~0.18 m)을 쥔다 — 던지는 손. 바닥(0.05)을 쥐면 반지름 6.7 cm 몸통이 손을 삼켰다(docs/design/93) */
   WEAPON.w_sera_flask={ glb:'art/3d/gear/w_sera_flask.glb', grip:0.17 };
@@ -43,7 +47,8 @@
   /* 세라 하위·상위 시약: 전용 모델(docs/design/82). 흐린 시약병 0.22 m · 정제 촉매 0.26 m */
   WEAPON.w_sera_vial={ glb:'art/3d/gear/w_sera_vial.glb', grip:0.19 };
   WEAPON.w_sera_reagent={ glb:'art/3d/gear/w_sera_reagent.glb', grip:0.12 };
-  var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0] };
+  var MAT={ leather:['leather',0xd0a878,0.8,0.05], olive:['olive',0xc8d0a0,0.85,0], black:['steel',0x484a54,0.5,0.7], steel:['steel',0xe0e4ea,0.35,0.9], cloth:['cloth',0xa8a2b0,1.0,0], brass:[null,0xc09a48,0.4,0.9], bone:[null,0xb0a488,0.7,0], red:[null,0x8a2420,0.5,0.2], copper:[null,0xb86a38,0.4,0.9], darkleather:['leather',0x8a6a50,0.85,0.05], reed:['cloth',0xd8c890,0.9,0],
+    claveDark:['steel',0x414750,0.32,0.92], claveGlow:[null,0x661710,0.25,0.65,0xff321e,1.35] };
   /* 조각: [뼈, 종류, 크기, 위치, 회전, 재질, 옵션] — 크기/위치 m, 회전 rad. 뼈 로컬: 몸통·머리 z=앞 / 팔·다리 y=뼈 방향(아래) z=뒤
      몸 치수(뷰어 측정): 머리 r≈0.12(머리카락 포함 ≈0.16) · 가슴 앞 z 0.16 · 정강이 r≈0.06 · 팔뚝 r≈0.04 · 발 길이 0.22
      shell = 구 껍질 [r, phiStart, phiLength, thetaLength] (phi: π/2 = 앞) / cylPart = [r위, r아래, 높이, thetaStart, thetaLength] (theta 0 = 앞) */
@@ -78,9 +83,20 @@
     acc_blood_ring:[ ['LeftHand','glb','art/3d/gear/acc_blood_ring.glb',[0.012,0.06,0],[0,0,0],1] ],
     acc_band:[ ['LeftHand','glb','art/3d/gear/acc_band.glb',[0.012,0.06,0],[0,0,0],1] ]
   };
+  /* 클레이브 세트는 수문지기 판금의 검증된 핏을 재사용하되, 세로 슬릿·셔터 가로살을 더해 한눈에 다른 전리품으로 읽히게 한다. */
+  ARMOR.a_clave_helm=[ ['Head','glb','art/3d/gear/a_sluice_helm.glb',[0,0.02,0],[0,0,0],1],
+    ['Head','box',[0.022,0.21,0.018],[0,0.025,0.172],[0,0,0],'claveGlow'] ];
+  ARMOR.a_clave_cuirass=[ ['Spine1','glb','art/3d/gear/a_sluice_cuirass.glb',[0,0.05,0.02],[0,0,0],1],
+    ['Spine1','box',[0.29,0.018,0.018],[0,0.045,0.185],[0,0,0],'claveGlow'],
+    ['Spine1','box',[0.25,0.014,0.016],[0,0.105,0.19],[0,0,0],'claveGlow'],
+    ['Spine1','box',[0.20,0.012,0.014],[0,0.158,0.185],[0,0,0],'claveGlow'] ];
+  ARMOR.a_clave_gauntlet=[ ['RightForeArm','glb','art/3d/gear/a_sluice_gauntlet.glb',[0,0.15,0],[Math.PI,0,0],1], ['LeftForeArm','glb','art/3d/gear/a_sluice_gauntlet.glb',[0,0.15,0],[Math.PI,0,0],[-1,1,1]],
+    ['RightForeArm','box',[0.022,0.115,0.008],[0,0.15,-0.071],[0,0,0],'claveGlow'], ['LeftForeArm','box',[0.022,0.115,0.008],[0,0.15,-0.071],[0,0,0],'claveGlow'] ];
+  ARMOR.a_clave_greaves=[ ['RightLeg','glb','art/3d/gear/a_sluice_greaves.glb',[0,0.17,0],[Math.PI,0,0],1.02], ['LeftLeg','glb','art/3d/gear/a_sluice_greaves.glb',[0,0.17,0],[Math.PI,0,0],[-1.02,1.02,1.02]],
+    ['RightLeg','box',[0.024,0.145,0.008],[0,0.18,-0.078],[0,0,0],'claveGlow'], ['LeftLeg','box',[0.024,0.145,0.008],[0,0.18,-0.078],[0,0,0],'claveGlow'] ];
   var texCache={};
-  function tex(THREE, name){ if(!name) return null; var k=name; if(texCache[k]) return texCache[k]; var t=new THREE.TextureLoader().load('art/3d/tex/'+name+'.png'); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(2,2); texCache[k]=t; return t; }
-  function material(THREE, key, tint, mix){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ map:tex(THREE, m[0]), color:m[1], roughness:m[2], metalness:m[3], side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), mix==null?0.5:mix); return mt; }
+  function tex(THREE, name){ if(!name) return null; var k=name; if(texCache[k]) return texCache[k]; var t=new THREE.TextureLoader().load('art/3d/tex/'+name+'.png'); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(2,2);t.userData=t.userData||{};t.userData.lookShared=true; texCache[k]=t; return t; }
+  function material(THREE, key, tint, mix){ var m=MAT[key]||MAT.leather; var mt=new THREE.MeshStandardMaterial({ map:tex(THREE, m[0]), color:m[1], roughness:m[2], metalness:m[3], emissive:m[4]||0, emissiveIntensity:m[5]||0, side:THREE.DoubleSide }); if(tint) mt.color.lerp(new THREE.Color(tint), mix==null?0.5:mix); return mt; }
   function geometry(THREE, kind, s, o){ o=o||{};
     switch(kind){
       case 'box': return new THREE.BoxGeometry(s[0],s[1],s[2]);
@@ -93,6 +109,42 @@
       case 'lathe': { var pts=s.map(function(p){ return new THREE.Vector2(p[0],p[1]); }); var open=o.open||0; var g3=new THREE.LatheGeometry(pts, 28, open/2, Math.PI*2-open); g3.rotateY(-Math.PI/2); return g3; }
     }
     return new THREE.BoxGeometry(0.05,0.05,0.05);
+  }
+  function buildClaveShutter(THREE, enh){
+    var g=new THREE.Group(), dark=material(THREE,'claveDark'), edge=material(THREE,'black'), hot=material(THREE,'claveGlow');
+    hot.emissiveIntensity=1.15+Math.max(0,(enh||0)-6)*0.16;
+    function box(size,pos,mat){ var m=new THREE.Mesh(new THREE.BoxGeometry(size[0],size[1],size[2]),mat);m.position.set(pos[0],pos[1],pos[2]);m.castShadow=true;g.add(m);return m; }
+    function instancedBoxes(rows,mat){var geo=new THREE.BoxGeometry(1,1,1),m=new THREE.InstancedMesh(geo,mat,rows.length),d=new THREE.Object3D();for(var j=0;j<rows.length;j++){d.position.set(rows[j][1][0],rows[j][1][1],rows[j][1][2]);d.scale.set(rows[j][0][0],rows[j][0][1],rows[j][0][2]);d.updateMatrix();m.setMatrixAt(j,d.matrix);}m.instanceMatrix.needsUpdate=true;m.castShadow=true;g.add(m);return m;}
+    /* 통판이 아니라 실제 셔터처럼 틈을 둔다 — 몸과 갑옷이 보이면서 후면 실루엣은 크게 달라진다. */
+    var slats=[];for(var i=0;i<9;i++)slats.push([[0.72,0.076,0.065],[0,-0.48+i*0.12,0.045]]);instancedBoxes(slats,dark);
+    instancedBoxes([[[0.058,1.16,0.11],[-0.39,0,0]],[[0.058,1.16,0.11],[0.39,0,0]]],edge);
+    box([0.026,1.05,0.03],[0,0,0.095],hot);
+    var roller=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,0.84,18),edge);roller.rotation.z=Math.PI/2;roller.position.set(0,0.63,0);roller.castShadow=true;g.add(roller);
+    var crest=new THREE.Mesh(new THREE.OctahedronGeometry(0.085,0),hot);crest.scale.set(1,1.35,0.38);crest.position.set(0,0.16,0.13);g.add(crest);
+    g.userData.claveShutter=true;return g;
+  }
+  function cloneMats(mesh, fn){ var many=Array.isArray(mesh.material),src=many?mesh.material:[mesh.material],out=src.map(function(m){var c=m.clone();fn(c);return c;});mesh.material=many?out:out[0]; }
+  function styleClave(THREE, root, enh){ var e=Math.max(0,Math.min(10,enh||0)),ember=0.05+(e>=7?0.07:e*.004);
+    root.traverse(function(o){if(!o.isMesh)return;cloneMats(o,function(m){if(m.color)m.color.lerp(new THREE.Color(0x25282e),0.42);if('metalness'in m)m.metalness=Math.max(0.78,m.metalness||0);if('roughness'in m)m.roughness=Math.min(0.38,m.roughness==null?0.38:m.roughness);if(m.emissive){m.emissive.set(0x5a0a05);m.emissiveIntensity=ember;}});}); }
+  function addClaveBladeCore(THREE, wr, enh){ var e=Math.max(0,Math.min(10,enh||0)),mat=new THREE.MeshBasicMaterial({color:e>=10?0xffe2c0:0xff3b22,transparent:true,opacity:e>=9?0.82:0.62,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+    var core=new THREE.Mesh(new THREE.BoxGeometry(0.028,0.74,0.035),mat);core.position.set(0,0.45,0.045);core.userData.claveCore=true;wr.add(core);
+    core.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;mat.opacity=(e>=9?0.72:0.54)+Math.sin(t)*0.10;}; }
+  function tierOf(n){return n>=10?3:n>=9?2:n>=7?1:0;}
+  function addPrestigeAura(THREE, model, equipped, enhOf){
+    var clave=function(id){return /^([awx])_clave_/.test(id||'');},ids=[],max=0;
+    Object.keys(equipped).forEach(function(sl){var id=equipped[sl];if(!clave(id))return;ids.push(id);max=Math.max(max,Number(enhOf(id,sl))||0);});
+    var full=['head','chest','gloves','legs'].every(function(sl){return /^a_clave_/.test(equipped[sl]||'');}),shutter=equipped.off==='x_clave_shutter',tier=tierOf(max);
+    if(!full&&!shutter&&!tier)return null;
+    var g=new THREE.Group();g.userData.lookAura=true;g.userData.prestige={boss:'clave',tier:tier,full:full,shutter:shutter};model.add(g);
+    var col=tier>=3?0xffead8:tier>=2?0xff3b24:0xd6652f,crestMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:tier?0.72:0.38,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+    /* 바닥 고리는 공격 예고와 겹친다. 광휘의 중심은 등/가슴 높이에 붙인 작은 반응로 문장으로 바꾼다. */
+    var crest=new THREE.Mesh(new THREE.OctahedronGeometry(0.045+tier*0.012,0),crestMat);crest.scale.set(1,1.55,0.5);crest.position.set(0,1.12,-0.34);g.add(crest);
+    crest.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;crest.rotation.y=t*0.35;crestMat.opacity=(tier?0.58:0.30)+(Math.sin(t)+1)*(tier?0.10:0.05);};
+    var n=tier>=3?12:tier>=2?9:tier?6:full||shutter?4:0;
+    if(n){var pos=new Float32Array(n*3);for(var i=0;i<n;i++){var a=i/n*Math.PI*2;pos[i*3]=Math.cos(a)*(0.22+(i%3)*0.055);pos[i*3+1]=0.28+(i*0.37)%1.35;pos[i*3+2]=Math.sin(a)*(0.22+(i%3)*0.055);}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+      var pm=new THREE.PointsMaterial({color:col,size:tier>=3?0.072:0.048,transparent:true,opacity:tier?0.82:0.48,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true,toneMapped:false}),pts=new THREE.Points(geo,pm);g.add(pts);
+      pts.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.001;pts.rotation.y=t*(tier>=2?0.7:0.38);pts.position.y=Math.sin(t*2.2)*0.035;pm.opacity=(tier?0.67:0.4)+Math.sin(t*3.1)*0.13;}; }
+    return g;
   }
   /* 다시 리깅한 캐릭터(tools/3d/rerig-meshy.mjs, docs/design/77)는 관절이 옮겨졌다. 장비 자리는 옛 관절에 맞춰
      잡은 값이라, glb 가 뼈마다 남긴 «옛 관절 자리»(rerigAnchor, 뼈 로컬)에 빈 노드를 두고 거기에 붙인다 —
@@ -150,7 +202,7 @@
     MODEL.traverse(function(o){ if(!body&&o.isSkinnedMesh&&o.skeleton) body=o; }); if(!body) return null;
     var holder=new THREE.Group(); holder.userData.look=id; holder.userData.garment=true; body.parent.add(holder);
     var bodies=[]; MODEL.traverse(function(o){ if(o.isSkinnedMesh&&o.skeleton===body.skeleton) bodies.push(o); });
-    LOADER.load(p[2].replace('{char}', charId||'ain'), function(w){ if(!holder.parent) return;
+    LOADER.load(p[2].replace('{char}', charId||'ain'), function(w){ if(!holder.parent){disposeLook(w.scene);return;}
       var names=body.skeleton.bones.map(function(b){ return b.name.replace(/^mixamorig:?/,''); });
       w.scene.traverse(function(o){ if(!o.isMesh) return; var G=o.geometry, J=(o.userData.joints)||[], si=G.attributes.skinIndex; if(!si) return;
         var map=J.map(function(n){ var i=names.indexOf(n); return i<0?0:i; });
@@ -167,8 +219,12 @@
     var g=new THREE.BufferGeometry(); Object.keys(g0.attributes).forEach(function(k){ g.setAttribute(k, g0.attributes[k]); }); g.morphAttributes=g0.morphAttributes;
     g.setIndex(keep); g0.groups.forEach(function(gr){ g.addGroup(gr.start, gr.count, gr.materialIndex); }); g.boundingSphere=g0.boundingSphere; g.boundingBox=g0.boundingBox;
     m.userData._origGeo=g0; m.geometry=g; }
-  function restoreBodies(model){ model.traverse(function(o){ if(o.isSkinnedMesh&&o.userData._origGeo){ o.geometry.dispose&&o.geometry.setIndex&&0; o.geometry=o.userData._origGeo; delete o.userData._origGeo; } }); }
-  function buildArmor(THREE, id, bones, tint, charId, mix){ mix=mix==null?0.35:mix; var spec=ARMOR[id]; if(!spec) return []; var made=[]; var slot=SLOT_OF[id];
+  function restoreBodies(model){ model.traverse(function(o){ if(o.isSkinnedMesh&&o.userData._origGeo){var cut=o.geometry,orig=o.userData._origGeo;o.geometry=orig;delete o.userData._origGeo;if(cut&&cut!==orig&&cut.dispose)cut.dispose();} }); }
+  /* GLTF 장비와 절차형 광휘는 attach 때마다 새 객체다. 떼기만 하면 모바일 GPU 버퍼가 남으므로,
+     몸/공용 텍스처는 건드리지 않고 외형 루트가 소유한 기하·재질·GLTF 텍스처만 한 번씩 버린다. */
+  function disposeLook(root){if(!root||!root.traverse)return;var gs=new Set(),ms=new Set(),ts=new Set();root.traverse(function(o){if(o.geometry&&o.geometry.dispose)gs.add(o.geometry);var a=Array.isArray(o.material)?o.material:[o.material];a.forEach(function(m){if(!m||!m.dispose)return;ms.add(m);Object.keys(m).forEach(function(k){var t=m[k];if(t&&t.isTexture&&!(t.userData&&t.userData.lookShared)&&t.dispose)ts.add(t);});});});gs.forEach(function(g){g.dispose();});ms.forEach(function(m){m.dispose();});ts.forEach(function(t){t.dispose();});}
+  function dropLook(o){if(!o)return;o.parent&&o.parent.remove(o);disposeLook(o);}
+  function buildArmor(THREE, id, bones, tint, charId, mix, enh){ mix=mix==null?0.35:mix; var spec=ARMOR[id]; if(!spec) return []; var made=[]; var slot=SLOT_OF[id];
     spec.forEach(function(p){ if(p[1]==='garment'){ var gh=buildGarment(THREE, id, p, tint, charId, mix==null?0.35:mix); if(gh) made.push(gh); return; }
       var bone=bones[p[0]]; if(!bone) return; var k=fitScale(bone), ft=fitPiece(charId, slot, p[0], p[3]), q=ft[0], r=ft[1], o6=p[1]==='glb'&&p[6]||{};
       /* 발바닥 기울기 차(ft[2])는 쓰지 않는다 — 발 조각을 발 뼈에 옮기면 각 캐릭터 발 각도를 이미 따른다.
@@ -181,31 +237,39 @@
         if(via){ var B0=bindOf(bone), B1=bindOf(via); if(B0&&B1){ g.updateMatrix(); B1.invert().multiply(B0).multiply(g.matrix).decompose(g.position,g.quaternion,g.scale); host=via; } }
         host.add(g); made.push(g);
         var mirrored=Array.isArray(sc)&&(sc[0]*sc[1]*sc[2]<0);
-        if(LOADER) LOADER.load(p[2], function(w){ w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false;
-          if(mirrored){ o.material=o.material.clone(); o.material.side=THREE.DoubleSide; } if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mix); } } }); g.add(w.scene); }); return; }
-      var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint,mix)); mesh.castShadow=true; mesh.position.set(q[0]*k,q[1]*k,q[2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.set(k*r[0],k*r[1],k*r[2]); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
+        if(LOADER) LOADER.load(p[2], function(w){ if(!g.parent){disposeLook(w.scene);return;}w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false;
+          if(mirrored){ o.material=o.material.clone(); o.material.side=THREE.DoubleSide; } if(tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mix); } } });if(/^a_clave_/.test(id))styleClave(THREE,w.scene,enh);g.add(w.scene); }); return; }
+      var mesh=new THREE.Mesh(geometry(THREE,p[1],p[2],p[6]), material(THREE,p[5],tint,mix));if(p[5]==='claveGlow')mesh.material.emissiveIntensity=1.05+tierOf(enh||0)*0.28;mesh.castShadow=true; mesh.position.set(q[0]*k,q[1]*k,q[2]*k); mesh.rotation.set(p[4][0],p[4][1],p[4][2]); mesh.scale.set(k*r[0],k*r[1],k*r[2]); mesh.userData.look=id; bone.add(mesh); made.push(mesh); });
     return made; }
   var THREE=null, LOADER=null, MODEL=null;
-  /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id) → hex|null, lookOf(id), baseOf(id) } */
-  function attach(T, loader, model, equipped, opts){ THREE=T; LOADER=loader; MODEL=model; opts=opts||{}; var bones=bonesOf(model), out={ pieces:[], weapons:{} };
-    var baseOf=opts.baseOf||function(id){ return id; };
-    /* 섞는 세기 — 제작품 색조는 «살짝»(기본값), 염색은 «확실히»(외형 화면이 0.75 를 준다) */
-    var mixOf=opts.mixOf||function(){ return null; };
-    /* 이전 조각 제거 (옷은 몸 메시 옆에 붙어 있다) */ var gone=[]; model.traverse(function(o){ if(o.userData&&o.userData.garment) gone.push(o); }); gone.forEach(function(o){ o.parent&&o.parent.remove(o); }); restoreBodies(model);
-    Object.keys(bones).forEach(function(k){ var b=bones[k]; for(var i=b.children.length-1;i>=0;i--){ var c=b.children[i]; if(c.userData&&c.userData.look) b.remove(c); } });
-    var mainId=equipped.main, mainBase=baseOf(mainId), spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe, slot=bones.RightHandSlot||bones.RightHand;
-    if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension') spec=WEAPON.w_red_tension;
-    // Explicit local QA skin. No inventory/stat/save mutation, no override for other characters.
-    if(opts.charId==='ain' && typeof location!=='undefined' && ['localhost','127.0.0.1'].includes(location.hostname) && new URLSearchParams(location.search).get('gearPreview')==='red_tension') spec=WEAPON.w_red_tension;
-    if(DUAL[mainBase]&&bones.LeftHandSlot){ var osp=WEAPON[mainBase]; loader.load(osp.glb, function(w){ var g2=new THREE.Group(); g2.userData.look='offhand'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(osp.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(osp.tint), osp.mix||0.5); } } }); w.scene.position.set(0,-(osp.grip||0.1),0); g2.add(w.scene); bones.LeftHandSlot.add(g2); g2.scale.setScalar(fitScale(bones.LeftHandSlot)); out.weapons.offhand=g2; }); }
-    if(slot){ loader.load(spec.glb, function(w){ var wr=new THREE.Group(); wr.userData.look=mainId||'main'; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; if(spec.tint){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(spec.tint), spec.mix||0.5); } } }); var prepared=opts.prepareMain&&opts.prepareMain(w.scene,spec); if(prepared)wr.add(prepared);else{w.scene.position.set(0,-(spec.grip||0.75),0);wr.add(w.scene);} slot.add(wr); wr.scale.setScalar(fitScale(slot)); slot.userData.hand2=spec.hand2||null; out.weapons.main=wr; opts.onMain&&opts.onMain(wr, w); }, undefined, function(){ opts.onMainFail&&opts.onMainFail(); }); }
-    else opts.onMainFail&&opts.onMainFail();
-    ['sub','off'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var sp=WEAPON[baseOf(id)]; if(!sp||!sp.bone||!bones[sp.bone]) return; var bone=bones[sp.bone];
-      loader.load(sp.glb, function(w){ var g=new THREE.Group(); g.userData.look=id; w.scene.traverse(function(o){ if(o.isMesh){ o.castShadow=true; o.frustumCulled=false; } }); g.add(w.scene); var k=fitScale(bone); g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k); g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]); g.scale.setScalar(k*(sp.scale||1)); var tint=opts.tintOf&&opts.tintOf(id); if(tint){ var mx=mixOf(id); mx=mx==null?0.55:mx; w.scene.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.color.lerp(new THREE.Color(tint),mx); } }); } bone.add(g); out.weapons[sl]=g; }); });
-    ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){ var id=equipped[sl]; if(!id) return; var tint=opts.tintOf&&opts.tintOf(id); out.pieces=out.pieces.concat(buildArmor(THREE, baseOf(id), bones, tint, opts.charId, mixOf(id))); });
-    return out; }
+  function clearLooks(model,bones){var gone=[];model.traverse(function(o){if(o.userData&&o.userData.garment)gone.push(o);});gone.forEach(dropLook);restoreBodies(model);
+    var rootChildren=model.children||[];for(var ri=rootChildren.length-1;ri>=0;ri--)if(rootChildren[ri].userData&&rootChildren[ri].userData.lookAura)dropLook(rootChildren[ri]);
+    Object.keys(bones||{}).forEach(function(k){var b=bones[k];for(var i=b.children.length-1;i>=0;i--){var c=b.children[i];if(c.userData&&c.userData.look)dropLook(c);}});}
+  function detach(model){if(!model)return;model.userData=model.userData||{};model.userData._lookRev=(model.userData._lookRev||0)+1;clearLooks(model,bonesOf(model));}
+  /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id), baseOf(id), enhOf(id,slot) } */
+  function attach(T, loader, model, equipped, opts){ THREE=T; LOADER=loader; MODEL=model; opts=opts||{};equipped=Object.assign({},equipped||{});
+    var preview=false,previewEnh=0;
+    if(typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)){var qp=new URLSearchParams(location.search);preview=qp.get('gearPreview')==='clave'&&opts.charId==='kain';previewEnh=Math.max(0,Math.min(10,Number(qp.get('enh'))||0));}
+    /* 로컬 QA 전용 — 저장·소유권·스탯을 건드리지 않고 한 프레임에서 세트 핏만 본다. */
+    if(preview)equipped=Object.assign({},equipped,{main:'w_clave_blade',off:'x_clave_shutter',head:'a_clave_helm',chest:'a_clave_cuirass',gloves:'a_clave_gauntlet',legs:'a_clave_greaves'});
+    model.userData=model.userData||{};var bones=bonesOf(model),out={pieces:[],weapons:{}},rev=(model.userData._lookRev||0)+1;model.userData._lookRev=rev;
+    var alive=function(){return model.userData._lookRev===rev;},baseOf=opts.baseOf||function(id){return id;},mixOf=opts.mixOf||function(){return null;};
+    var enhOf=function(id,sl){return preview&&/^([awx])_clave_/.test(id||'')?previewEnh:(opts.enhOf?opts.enhOf(id,sl):0)||0;};
+    /* 이전 조각 제거 (옷은 몸 메시 옆에 붙어 있다) */ clearLooks(model,bones);
+    function prepScene(scene,sp,id,enh){scene.traverse(function(o){if(o.isMesh){o.castShadow=true;o.frustumCulled=false;if(sp.tint)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(sp.tint),sp.mix||0.5);});}});if(sp.special==='claveBlade')styleClave(THREE,scene,enh);}
+    var mainId=equipped.main,mainBase=baseOf(mainId),spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe,slot=bones.RightHandSlot||bones.RightHand,mainEnh=enhOf(mainId,'main');
+    if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension')spec=WEAPON.w_red_tension;
+    if(opts.charId==='ain'&&typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('gearPreview')==='red_tension')spec=WEAPON.w_red_tension;
+    if(DUAL[mainBase]&&bones.LeftHandSlot){var osp=WEAPON[mainBase];loader.load(osp.glb,function(w){if(!alive()){disposeLook(w.scene);return;}var g2=new THREE.Group();g2.userData.look='offhand';prepScene(w.scene,osp,mainId,mainEnh);w.scene.position.set(0,-(osp.grip||0.1),0);g2.add(w.scene);bones.LeftHandSlot.add(g2);g2.scale.setScalar(fitScale(bones.LeftHandSlot));out.weapons.offhand=g2;});}
+    function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else{scene.position.set(0,-(spec.grip||0.75),0);wr.add(scene);}if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=spec.hand2||null;out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
+    if(slot){if(spec.build){var ms=spec.build(THREE,mainEnh);mountMain(ms,{scene:ms,animations:[]});}else loader.load(spec.glb,function(w){mountMain(w.scene,w);},undefined,function(){if(alive())opts.onMainFail&&opts.onMainFail();});}else opts.onMainFail&&opts.onMainFail();
+    ['sub','off'].forEach(function(sl){var id=equipped[sl];if(!id)return;var sp=WEAPON[baseOf(id)];if(!sp||!sp.bone||!bones[sp.bone])return;var bone=bones[sp.bone],enh=enhOf(id,sl);
+      function mountOff(scene){if(!alive()){disposeLook(scene);return;}var g=new THREE.Group();g.userData.look=id;prepScene(scene,sp,id,enh);g.add(scene);var k=fitScale(bone);g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k);g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]);g.scale.setScalar(k*(sp.scale||1));var tint=opts.tintOf&&opts.tintOf(id);if(tint){var mx=mixOf(id);mx=mx==null?0.55:mx;scene.traverse(function(o){if(o.isMesh)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(tint),mx);});});}bone.add(g);out.weapons[sl]=g;}
+      if(sp.build)mountOff(sp.build(THREE,enh));else loader.load(sp.glb,function(w){mountOff(w.scene);});});
+    ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){var id=equipped[sl];if(!id)return;var tint=opts.tintOf&&opts.tintOf(id);out.pieces=out.pieces.concat(buildArmor(THREE,baseOf(id),bones,tint,opts.charId,mixOf(id),enhOf(id,sl)));});
+    out.aura=addPrestigeAura(THREE,model,equipped,enhOf);return out; }
   /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
   function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
   function palm(T, hand){ THREE=THREE||T; return palmOf(hand); }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, attach:attach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
 })();
