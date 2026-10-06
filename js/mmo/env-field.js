@@ -5,6 +5,8 @@ import * as L from './env-lib.js';
 import { frameOf } from './env-osm.js';
 export const PITCH = L.PITCH;
 
+const segDist = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
+
 export function build(THREE, scene, osm, zone) {
   const F = zone.field || {}, R = L.rng(F.seed || 20261010), lights = [], blockers = [], clear = [];
   const fr = frameOf(THREE, osm, { farSide: F.farSide || {} }), { ST, FROM, W } = fr, tc = F.tc ?? 0;
@@ -86,13 +88,15 @@ export function build(THREE, scene, osm, zone) {
 
   /* ---------- 숲·결정·차·가로등 ---------- */
   const tf = F.trees || {};
+  /* 바다(해안선 다각형)·강 띠도 물이다 — ar.waters 는 OSM 물 다각형뿐이라 해운대 첫 미리보기에서 바다 위에 나무가 줄지어 섰다 */
+  const wet = p => blockers.some(b => b.water && (b.poly ? L.inPoly(p, b.poly) : b.line && b.line.some((q, i) => i && segDist(p, b.line[i - 1], q) < b.w)));
   /* 넓은 필드: 나무를 숲과 빈터로 뭉친다 (고르게 뿌리면 어디나 같아 보인다) */
   const grove = F.dress ? L.noise2(L.rng((F.seed || 1) + 77), 55) : null;
   if (tf.density) { const spots = L.treeSpots(ctx, { s0: walk.s0 - 40, s1: walk.s1 + 40, t0: walk.t0 - 30, t1: walk.t1 + 34 }, { density: tf.density, step: tf.step,
-      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && (!inBand(p, 1) || R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1)) && (!tf.only || tf.only(p, ctx)) });
+      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) && (!inBand(p, 1) || R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1)) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
   if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => reserve.some(([q, r]) => Math.hypot(p[0] - q[0], p[1] - q[1]) < r) });
-  if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) });
+  if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) });
     console.log('[env-field] 땅 꾸미기', JSON.stringify(st)); }
   if (F.crystals) { const spots = []; for (let i = 0; i < F.crystals * 3 && spots.length < F.crystals; i++) { const p = FROM(walk.s0 + R() * (walk.s1 - walk.s0), walk.t0 + R() * (walk.t1 - walk.t0)); if (L.isClear(ctx, p) || L.inBuilding(built, p) || blockers.some(b => b.poly && L.inPoly(p, b.poly))) continue; spots.push(p); } L.crystals(ctx, spots, { h: F.crystalH || 0.55 }); }
   if (F.lamps !== false) { const spots = []; for (let s = walk.s0 + 8; s < walk.s1 - 8; s += F.lampStep || 26) { const p = FROM(s, (F.lampT ?? walk.t0 + 2)); if (!L.inBuilding(built, p)) spots.push(p); } L.lamps(ctx, spots); }

@@ -103,18 +103,24 @@ function plan(region) {
   /* 하위 구역: 띠를 s 로 셋 — 가운데(출발점 쪽)가 쉬움, 양 끝이 어려움. 거점은 가운데가 마을(안전) */
   const lv = levelOf(region) || levelOf({ ...region, kind: 'city' }), thirds = [0, 1, 2].map(k => [walk.s0 + (walk.s1 - walk.s0) * k / 3, walk.s0 + (walk.s1 - walk.s0) * (k + 1) / 3].map(Math.round));
   const named = osm.areas.filter(a => a.name && /park|beach|wood|forest|garden|square|recreation|water|sand|scrub|nature_reserve/.test(a.kind)), roadsNamed = osm.roads.filter(r => r.name && /trunk|primary|secondary|tertiary/.test(r.kind));
-  const nameOf = (s0, s1, t0, t1, k, used) => { const cnt = new Map();
-    for (let s = s0; s <= s1; s += 10) for (let t = t0; t <= t1; t += 10) { const p = toOsm(FROM(s, t)); for (const a of named) if (inPoly(p, a.poly)) cnt.set(a.name, (cnt.get(a.name) || 0) + 1);
-      for (const r of roadsNamed) if (r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < 8)) cnt.set('@' + r.name, (cnt.get('@' + r.name) || 0) + 0.4); }
-    const pick = [...cnt.entries()].filter(([n]) => !used.has(n)).sort((a, b) => b[1] - a[1])[0];
-    if (!pick) return CLASS_NAME[k]; used.add(pick[0]); return pick[0].startsWith('@') ? pick[0].slice(1) + ' ' + CLASS_NAME[k] : pick[0] + ' 터'; };
+  /* 이름: ① 아직 안 쓴 공원·해변·숲 이름 ② 이미 쓴 이름이 이 구역도 덮으면 «○○ 동쪽» (실제 방위) ③ 큰길 이름 + 땅 종류 («○○번길» 골목은 빼고) ④ 땅 종류 */
+  const compass = (sMid, tMid) => { const c0 = toOsm(FROM((walk.s0 + walk.s1) / 2, (walk.t0 + walk.t1) / 2)), c1 = toOsm(FROM(sMid, tMid)), dx = c1[0] - c0[0], dz = c1[1] - c0[1];
+    return Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? '동쪽' : '서쪽') : (dz > 0 ? '남쪽' : '북쪽'); };
+  const nameOf = (s0, s1, t0, t1, k, used) => { const cnt = new Map(); let n = 0;
+    for (let s = s0; s <= s1; s += 10) for (let t = t0; t <= t1; t += 10) { n++; const p = toOsm(FROM(s, t)); for (const a of named) if (inPoly(p, a.poly)) cnt.set(a.name, (cnt.get(a.name) || 0) + 1);
+      for (const r of roadsNamed) if (!/번길$/.test(r.name) && r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < 8)) cnt.set('@' + r.name, (cnt.get('@' + r.name) || 0) + 0.4); }
+    const all = [...cnt.entries()].sort((a, b) => b[1] - a[1]), area = all.filter(([m]) => !m.startsWith('@'));
+    const fresh = area.find(([m]) => !used.has(m)); if (fresh) { used.add(fresh[0]); return fresh[0] + ' 터'; }
+    const again = area.find(([, v]) => v > n * 0.2); if (again) return again[0] + ' ' + compass((s0 + s1) / 2, (t0 + t1) / 2);
+    const road = all.find(([m]) => m.startsWith('@') && !used.has(m)); if (road) { used.add(road[0]); return road[0].slice(1) + ' ' + CLASS_NAME[k]; }
+    return CLASS_NAME[k]; };
   const used = new Set(), hunts = [], hub = region.kind === 'hub';
-  const order = [1, 0, 2];   /* 가운데 → 서 → 동 순으로 위험이 커진다 */
+  const order = [1, 0, 2];   /* 가운데 → 왼쪽(s 작은 쪽) → 오른쪽 순으로 위험이 커진다 */
   order.forEach((k, rank) => { const [s0, s1] = thirds[k], st = stats(s0, s1, walk.t0, walk.t1), dom = Object.entries(st).filter(([n]) => n !== 'water').sort((a, b) => b[1] - a[1])[0][0];
     if (hub && rank === 0) { hunts.push({ id: 'town', name: region.name + ' 마을', kind: 'rest', s: [s0, s1], t: [walk.t0, walk.t1] }); return; }
     const span = lv[1] - lv[0], a = lv[0] + Math.round(span * (rank / 3)), b = Math.min(lv[1], a + Math.max(2, Math.round(span / 2)));
     const k2 = dom === 'open' && lookOf(region).dress.urban ? 'street' : dom;   /* 도시의 «빈 땅» 은 길이다 */
-    hunts.push({ id: ['mid', 'west', 'east'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, k2, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[k2], danger: rank + 1 }); });
+    hunts.push({ id: ['mid', 'left', 'right'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, k2, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[k2], danger: rank + 1 }); });
   if (!hub) hunts.push({ id: 'rest', name: '길잡이 쉼터', kind: 'rest', st: spawn, r: 12 });
 
   const L = lookOf(region), tall = osm.buildings.some(b => (b.height || (b.levels || 0) * 3.6) > 45), lampsOn = walk.t0 < 0 && walk.t1 > 0;
