@@ -33,6 +33,8 @@ export function frameOf(THREE, osm, CFG) {
   for (const cand of [-SCREEN_ANG - osm.axis, Math.PI - SCREEN_ANG - osm.axis]) {
     const fs = CFG.farSide || {}, c = Math.cos(cand), s = Math.sin(cand), [ex, ez] = fs.exit ? (osm.exits.find(e => e.ref === fs.exit)?.p || [0, 1]) : (fs.osm || [0, 1]);
     const wx = ex * c - ez * s, wz = ex * s + ez * c;            /* Ry 와 같은 방향의 2D 회전 (x,z) */
+    /* sPos: 이 점이 길 앞쪽(s > 0, 화면 오른쪽 위)에 오게 — 산으로 오르는 지역(남산)은 «위로 올라가는» 쪽이 앞이다 */
+    if (fs.sPos) { const [px, pz] = fs.sPos, sx = px * c - pz * s, sz = px * s + pz * c; if (sx * DIR.x + sz * DIR.y > 0) { rot = cand; break; } continue; }
     const t = wx * SIDE.x + wz * SIDE.y; if (t > 0) { rot = cand; break; } }
   const ST = ([x, z]) => [x * DIR.x + z * DIR.y, x * SIDE.x + z * SIDE.y];   /* 월드 → 길 좌표 (s 길 따라, t 건너 +가 먼 쪽) */
   const FROM = (s, t) => [s * DIR.x + t * SIDE.x, s * DIR.y + t * SIDE.y];   /* 길 좌표 → 월드 */

@@ -73,25 +73,45 @@ export function build(THREE, scene, osm) {
     if (mode === 'beer') { const chars = ['생', '맥', '주'], xs = [w / 2 - 62, w / 2, w / 2 + 62]; chars.forEach((c, i) => { const on = i === 2; g.shadowColor = col; g.shadowBlur = on ? 18 : 0; g.fillStyle = on ? col : '#3a2a2a'; g.fillText(c, xs[i], h / 2 + 2); }); return; }
     g.shadowColor = col; g.shadowBlur = 14; g.fillStyle = col; g.fillText(txt, w / 2, h / 2 + 2); }));
   const plazaC = FROM(0, tc), PLAZA_R = 19;   /* 중앙 광장: 사거리 바로 밑 */
-  let shops = 0, lurkers = [];
-  for (let i = 0; i < walls.length; i += 2) { const w = walls[i]; const a = [w.m[0] - w.n[0] * 2.4, w.m[1] - w.n[1] * 2.4];
-    if (Math.hypot(a[0] - plazaC[0], a[1] - plazaC[1]) < PLAZA_R + 4) continue; if (!inside([w.m[0] - w.n[0] * 4.6, w.m[1] - w.n[1] * 4.6])) continue;
-    const g = new THREE.Group(), ang = -Math.atan2(w.dir[1], w.dir[0]), width = 3.9;
+  let shops = 0, lurkers = [], signLights = 0;
+  /* 가게 한 칸: c 중심, face = 통로 쪽(밖) 단위 법선. 로컬 +z 가 통로, -z 가 뒷벽. low = 카메라 쪽을 보는 가게(벽을 1 m 로) */
+  function shop(c, face, low) {
+    const g = new THREE.Group(), width = 3.9, hh = low ? 1.0 : 2.9;
     const fl = new THREE.Mesh(new THREE.BoxGeometry(width, 0.06, 4.4), shopFloorM); fl.position.set(0, 0.03, 0); g.add(fl);
-    for (const sx of [-width / 2, width / 2]) { const pw = new THREE.Mesh(new THREE.BoxGeometry(0.2, w.cut ? 1.0 : 2.9, 4.4), wallM); pw.position.set(sx, (w.cut ? 1.0 : 2.9) / 2, 0); g.add(pw); }
-    const r = R(), front = -2.2;   /* 가게 앞면(통로 쪽) — 로컬 -z 가 안쪽(벽), +z 가 통로 */
-    if (r < 0.3) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(width, w.cut ? 1.0 : 2.7), shutterM); sh.position.set(0, (w.cut ? 1.0 : 2.7) / 2, 2.2); g.add(sh); }
-    else { const gl = new THREE.Mesh(new THREE.BoxGeometry(width, w.cut ? 1.0 : 2.6, 0.06), glassM); gl.position.set(0, (w.cut ? 1.0 : 2.6) / 2, 2.2); g.add(gl);
+    for (const sx of [-width / 2, width / 2]) { const pw = new THREE.Mesh(new THREE.BoxGeometry(0.2, hh, 4.4), wallM); pw.position.set(sx, hh / 2, 0); g.add(pw); }
+    const back = new THREE.Mesh(new THREE.BoxGeometry(width, low ? 1.0 : 3.4, 0.2), wallM); back.position.set(0, (low ? 1.0 : 3.4) / 2, -2.2); g.add(back);
+    const r = R();
+    if (r < 0.3) { const sh = new THREE.Mesh(new THREE.PlaneGeometry(width, low ? 1.0 : 2.7), shutterM); sh.position.set(0, (low ? 1.0 : 2.7) / 2, 2.2); g.add(sh); }
+    else { const gl = new THREE.Mesh(new THREE.BoxGeometry(width, low ? 1.0 : 2.6, 0.06), glassM); gl.position.set(0, (low ? 1.0 : 2.6) / 2, 2.2); g.add(gl);
       for (let k = 0; k < 2; k++) { const s2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.4, 0.5), shelfM); s2.position.set(-0.9 + k * 1.8, 0.7, -1.4); g.add(s2); }
       if (r > 0.82) { /* 쇼윈도 리퍼 자리 — 유리 뒤 웅크린 그림자 (원작 «유리 뒤에서 지나가는 것을 기다린다») */
         const lk = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.7, 4, 8), lurkM); lk.position.set(0, 0.9, 1.2); lk.rotation.z = 0.5; g.add(lk); lurkers.push(1); } }
-    if (!w.cut) { const [txt, col] = SIGNS[(R() * SIGNS.length) | 0], lit = R() < 0.4, beer = shops === 6;
+    if (!low) { const [txt, col] = SIGNS[(R() * SIGNS.length) | 0], lit = R() < 0.4, beer = shops === 6;
       const m = new THREE.MeshBasicMaterial({ map: signT(beer ? '생맥주' : txt, beer ? '#ffb040' : col, beer ? 'beer' : ''), toneMapped: false }); m.color.setScalar(lit || beer ? 1.5 : 0.25);
       const sg = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.8), m); sg.position.set(0, 3.0, 2.25); g.add(sg);
-      if ((lit || beer) && lights.length < 26) { const lp = [w.m[0] - w.n[0] * 5.5, w.m[1] - w.n[1] * 5.5]; const L = new THREE.PointLight(new THREE.Color(beer ? '#ffb040' : col), 5, 7, 1.8); L.position.set(lp[0], 2.6, lp[1]); scene.add(L); lights.push({ x: lp[0], y: 2.6, z: lp[1], color: beer ? '#ffb040' : col, intensity: 5, distance: 7 }); } }
-    const c = [w.m[0] - w.n[0] * 2.4, w.m[1] - w.n[1] * 2.4]; g.position.set(c[0], 0, c[1]); g.rotation.y = ang + Math.PI;   /* 로컬 +z 가 통로(안쪽 법선 -n) */
+      if (lit || beer) { const lp = [c[0] + face[0] * 3.3, c[1] + face[1] * 3.3], hex = beer ? '#ffb040' : col; const L = new THREE.PointLight(new THREE.Color(hex), 7, 8, 1.6); L.position.set(lp[0], 2.6, lp[1]); scene.add(L); signLights++;
+        lights.push({ x: lp[0], y: 2.6, z: lp[1], color: hex, intensity: 5, distance: 7 }); } }
+    const rot = Math.atan2(face[0], face[1]); g.position.set(c[0], 0, c[1]); g.rotation.y = rot;
     g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); shops++;
-    blockers.push({ x: c[0], z: c[1], hw: width / 2, hd: 2.25, rot: g.rotation.y }); }
+    blockers.push({ x: c[0], z: c[1], hw: width / 2, hd: 2.25, rot }); }
+  /* 벽을 따라 늘어선 가게 */
+  for (let i = 0; i < walls.length; i += 2) { const w = walls[i]; const c = [w.m[0] - w.n[0] * 2.4, w.m[1] - w.n[1] * 2.4];
+    if (Math.hypot(c[0] - plazaC[0], c[1] - plazaC[1]) < PLAZA_R + 4) continue; if (!inside([w.m[0] - w.n[0] * 4.6, w.m[1] - w.n[1] * 4.6])) continue;
+    shop(c, [-w.n[0], -w.n[1]], w.cut); }
+  /* 가운데 섬: 상가 안쪽은 «등을 맞댄 가게 두 줄» 섬이 바둑판으로 놓이고 그 사이가 골목이다.
+     큰 통로 둘 — 강남대로 밑(t = tc, 폭 8 m) · 테헤란로 밑(s = 0, 폭 8 m) — 은 비운다. 섬 8 × 9 m, 골목 5 m */
+  const sDir = [Math.cos(SCREEN_ANG), -Math.sin(SCREEN_ANG)], tDir = [-Math.sin(SCREEN_ANG), -Math.cos(SCREEN_ANG)];
+  const edgeDist = p => { let d = 1e9; for (let i = 0; i < mall.length; i++) { const a = mall[i], b = mall[(i + 1) % mall.length], dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1;
+    const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); d = Math.min(d, Math.hypot(p[0] - a[0] - u * dx, p[1] - a[1] - u * dz)); } return d; };
+  const islands = [], IS = 13, IT = 14;
+  for (let a = -8; a <= 8; a++) for (let b = -8; b <= 8; b++) { if (!a || !b) continue;
+    const sc = Math.sign(a) * (8 + (Math.abs(a) - 1) * IS), tcc = tc + Math.sign(b) * (8.5 + (Math.abs(b) - 1) * IT);
+    const corners = [[-4, -4.5], [4, -4.5], [4, 4.5], [-4, 4.5], [0, 0]].map(([ds, dt]) => FROM(sc + ds, tcc + dt));
+    if (!corners.every(p => inPoly(p, mall) && edgeDist(p) > 5.6)) continue;
+    const ctr = FROM(sc, tcc); if (Math.hypot(ctr[0] - plazaC[0], ctr[1] - plazaC[1]) < PLAZA_R + 8) continue;
+    islands.push({ s: sc, t: tcc });
+    for (const side of [-1, 1]) for (const ds of [-2, 2]) { const face = [tDir[0] * side, tDir[1] * side]; shop(FROM(sc + ds, tcc + side * 2.25), face, face[1] > 0.35); } }
+  const inIsland = p => { const [s, t] = ST(p); return islands.some(I => Math.abs(s - I.s) < 4.6 && Math.abs(t - I.t) < 5.1); };
 
   /* ---------- 기둥 · 벽의 세 줄 긁힘 · 형광등 빛웅덩이 ---------- */
   const pillarM = new THREE.MeshStandardMaterial({ color: 0x5a5854, roughness: 0.7 });
@@ -99,11 +119,17 @@ export function build(THREE, scene, osm) {
   const scratchM = new THREE.MeshBasicMaterial({ map: scratchTex, transparent: true, depthWrite: false });
   for (let i = 5; i < walls.length; i += 23) { const w = walls[i]; if (w.cut) continue; for (const dy of [0, 0.06]) { const sc = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), scratchM); sc.position.set(w.m[0] - w.n[0] * 0.02, 1.7 + dy, w.m[1] - w.n[1] * 0.02); sc.rotation.y = Math.atan2(-w.n[0], -w.n[1]); scene.add(sc); } }
   let fluo = 0;
-  for (let s = cS0 + 6; s < cS1; s += 16) { const p = FROM(s, tc); if (lights.length >= 34) break; const L = new THREE.PointLight(0xdff4ff, 12, 13, 1.6); L.position.set(p[0], 3.2, p[1]); scene.add(L); lights.push({ x: p[0], y: 3.2, z: p[1], color: '#dff4ff', intensity: 12, distance: 13 }); fluo++;
-    for (const side of [-1, 1]) { const q = FROM(s + 8, tc + side * 2.6); if (!inside(q)) continue; const pl = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.4, 0.7), pillarM); pl.position.set(q[0], 1.7, q[1]); pl.castShadow = true; scene.add(pl); blockers.push({ x: q[0], z: q[1], hw: 0.35, hd: 0.35, rot: 0 }); } }
+  const fluoAt = p => { const L = new THREE.PointLight(0xdff4ff, 16, 15, 1.4); L.position.set(p[0], 3.2, p[1]); scene.add(L); lights.push({ x: p[0], y: 3.2, z: p[1], color: '#dff4ff', intensity: 12, distance: 13 }); fluo++;
+    const tube = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.14), new THREE.MeshBasicMaterial({ color: 0xeaf8ff, toneMapped: false })); tube.position.set(p[0], 3.3, p[1]); tube.rotation.y = SCREEN_ANG; scene.add(tube); };
+  for (let s = cS0 + 6; s < cS1; s += 14) { fluoAt(FROM(s, tc));
+    for (const side of [-1, 1]) { const q = FROM(s + 7, tc + side * 2.6); if (!inside(q)) continue; const pl = new THREE.Mesh(new THREE.BoxGeometry(0.7, 3.4, 0.7), pillarM); pl.position.set(q[0], 1.7, q[1]); pl.castShadow = true; scene.add(pl); blockers.push({ x: q[0], z: q[1], hw: 0.35, hd: 0.35, rot: 0 }); } }
+  /* 상가 안: 골목 교차점·큰 통로마다 형광등 (광장은 따로) */
+  const lanes = (step, first) => { const v = [0]; for (let k = 0; k < 8; k++) v.push(first + k * step, -(first + k * step)); return v; };
+  for (const sq of lanes(IS, 14.5)) for (const dt of lanes(IT, 15.5)) { const p = FROM(sq, tc + dt);
+    if (!inPoly(p, mall) || edgeDist(p) < 4.8 || inIsland(p) || Math.hypot(p[0] - plazaC[0], p[1] - plazaC[1]) < PLAZA_R + 2) continue; fluoAt(p); }
 
   /* ---------- 중앙 광장: 2층 높이로 튼 공간, 크리스마스 장식, 뒤집힌 진열대, 생존자 바리케이드 ---------- */
-  const voidM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.9 });
+  const voidM = new THREE.MeshStandardMaterial({ map: terrazzo, color: 0x8a8890, roughness: 0.6 });
   const ring = new THREE.Mesh(new THREE.RingGeometry(PLAZA_R, PLAZA_R + 0.5, 64), new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 0.6 })); ring.rotation.x = -Math.PI / 2; ring.position.set(plazaC[0], 0.01, plazaC[1]); scene.add(ring);
   /* 위층 난간 — 광장 둘레 반원(먼 쪽)만, 카메라 쪽은 비운다 */
   for (let k = 0; k < 40; k++) { const a = Math.PI * (k / 39) + Math.PI, x = plazaC[0] + Math.cos(a) * (PLAZA_R + 1.5), z = plazaC[1] + Math.sin(a) * (PLAZA_R + 1.5);
@@ -146,17 +172,17 @@ export function build(THREE, scene, osm) {
 
   /* ---------- 빛: 지하는 어둡다 ---------- */
   scene.background = new THREE.Color(0x040406);
-  scene.add(new THREE.HemisphereLight(0x8aa0b0, 0x101010, 0.9));
-  const key = new THREE.DirectionalLight(0xbfd8e8, 0.5); key.position.set(-3, 10, 4); scene.add(key);
+  scene.add(new THREE.HemisphereLight(0x9ab0c0, 0x1a1816, 2.2));
+  const key = new THREE.DirectionalLight(0xbfd8e8, 1.1); key.position.set(-3, 10, 4); scene.add(key);
 
   /* ---------- 지역 메타 ---------- */
   const allSt = [...mall, ...corridor].map(ST), s0 = Math.min(...allSt.map(p => p[0])) - 1, s1 = Math.max(...allSt.map(p => p[0])) + 1, t0 = Math.min(...allSt.map(p => p[1])) - 1, t1 = Math.max(...allSt.map(p => p[1])) + 1;
   const extentPts = []; for (let s = s0; s <= s1; s += 3) for (let t = t0; t <= t1; t += 3) { const p = FROM(s, t); if (!inside(p) && !inside(FROM(s + 3, t)) && !inside(FROM(s, t + 3))) continue; extentPts.push([p[0], 0, p[1]], [p[0], 8, p[1]]); }
-  console.info('[env-dungeon] 가게', shops, '쇼윈도 리퍼', lurkers.length, '벽', walls.length, '형광등', fluo, '빛', lights.length);
+  console.info('[env-dungeon] 가게', shops, '섬', islands.length, '쇼윈도 리퍼', lurkers.length, '벽', walls.length, '형광등', fluo, '빛', lights.length);
   return { kind: 'dungeon', title: '강남역 지하상가 B1', lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 },
     spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
     flicker: { on: 3, off: 1 },   /* 원작 «3초 켜짐. 1초 꺼짐» */
     gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' } ],
-    bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, model: 'art/3d/part1/clave.glb', scale: 1.15, canon: 'EP02 §10 중앙 광장' } ],
+    bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, model: 'art/3d/part1/clave.glb', h: 3.2, canon: 'EP02 §10 중앙 광장' } ],
     exits: [], license: osm.license };
 }

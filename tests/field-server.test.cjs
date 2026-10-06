@@ -31,3 +31,9 @@ test('필드: 순간이동은 최대 속도로 잘리고, 걷는 띠 밖으로 �
  f.move('a',{x:p.x,z:p.z,anim:'춤'},p.at+100);assert.equal(p.anim,'idle','모르는 동작은 대기로');
  q.x=p.x+AOI+5;q.z=p.z;assert.equal(f.view(p).players.length,0,'반경 밖');q.x=p.x+3;assert.equal(f.view(p).players.length,1,'반경 안');
 });
+test('필드: 다른 지역의 문으로 넘어오면 그 문 앞에 선다 (모르는 문이면 출발점)',()=>{
+ const {Field}=require('../server/field.cjs');const f=new Field(),prof={name:'x',character:'ain'};
+ const z=f.zone('gangnam'),g=z.gates.find(x=>x.id==='exit5');assert.ok(g,'강남 맵에 5번 출구 문');
+ const p=f.join('a',prof,'gangnam',0,'exit5');assert.ok(Math.hypot(p.x-g.x,p.z-g.z)<2,'문 앞 '+Math.hypot(p.x-g.x,p.z-g.z).toFixed(2));
+ const q=f.join('b',prof,'gangnam',0,'../없는문');assert.ok(Math.hypot(q.x-z.spawn.x,q.z-z.spawn.z)<2,'출발점');
+});

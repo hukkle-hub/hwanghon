@@ -30,6 +30,17 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .tag .hp{width:54px;height:4px;margin:2px auto 0;background:#20222a;border:1px solid #000}.tag .hp i{display:block;height:100%;background:#d03838}
 .tag.me .hp i{background:#40c060}
 #dbg{position:absolute;left:calc(12px + env(safe-area-inset-left));top:56px;font:11px/1.5 monospace;color:#9fd8e8;background:rgba(0,0,0,.45);padding:4px 6px;display:none}
+.gatebtn{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:64px;min-width:220px;padding:0 22px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(64,216,255,.75);background:rgba(6,18,26,.82);color:#bff2ff;font-size:14px;font-weight:700;letter-spacing:.04em;border-radius:6px;box-shadow:0 0 18px rgba(64,216,255,.25)}
+.gatebtn.dg{border-color:rgba(255,96,64,.8);color:#ffd2c4;background:rgba(26,8,6,.85);box-shadow:0 0 18px rgba(255,80,48,.3)}
+.gatebtn small{display:block;font-size:10px;font-weight:500;opacity:.7;letter-spacing:.1em}
+#boss{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;color:#ffb0a0;font-size:11px;letter-spacing:.3em;text-shadow:0 0 8px #000}
+#boss b{display:block;font-size:20px;letter-spacing:.12em;color:#fff;text-shadow:0 0 12px #a51c1c,0 1px 2px #000}
+#boss .hp{width:260px;height:7px;margin:5px auto 0;background:#1b1012;border:1px solid #5a1c1c}#boss .hp i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7a1414,#ff4a3a)}
+#vig{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(120,8,8,.55) 100%)}
+#dark{position:fixed;inset:0;pointer-events:none;background:#000;opacity:0}
+#toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
+.tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
+.tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
 #load{position:fixed;inset:0;display:grid;place-items:center;background:#05060a;color:#c9a45e;letter-spacing:.3em;font-size:13px}
 </style>
 </head>
@@ -37,15 +48,19 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 <canvas id="c"></canvas>
 <div class="hud" id="hud">
   <div class="top"><div class="face" id="face"></div><div><b id="who">아인 · Lv 8</b><div class="bars"><div class="bar"><i id="hpb" style="width:86%"></i></div><div class="bar st"><i style="width:64%"></i></div></div></div></div>
-  <div class="zone"><span id="place">강남대로 · 강남역</span><b>위험 B</b><span id="net" style="display:block;margin-top:2px;color:#c9a45e">오프라인</span></div>
+  <div class="zone"><span id="place">강남대로 · 강남역</span><b id="risk">위험 B</b><span id="net" style="display:block;margin-top:2px;color:#c9a45e">오프라인</span></div>
   <div id="dbg"></div>
   <div id="osm" style="position:absolute;left:calc(8px + env(safe-area-inset-left));bottom:4px;font-size:9px;color:rgba(255,255,255,.45)">지도 데이터 © OpenStreetMap contributors</div>
   <div class="gear hit" id="gearBtn">장비 바꾸기</div>
+  <div id="boss" hidden></div>
+  <div id="toast" hidden></div>
+  <div id="gate" class="gatebtn hit" hidden></div>
   <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
   <div class="btns hit"><div class="b atk" id="atk">공격</div>
     <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div><div class="b s" style="right:88px;bottom:62px">1</div>
     <div class="b s" style="right:44px;bottom:100px">2</div><div class="b s" style="right:-6px;bottom:108px">3</div></div>
 </div>
+<div id="dark"></div><div id="vig"></div>
 <div id="load">강남대로로 나가는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/save.js"></script>
@@ -75,6 +90,9 @@ const scene=new THREE.Scene();
 /* 지역: 실제 공간 맵(OSM 실측, 문서 185 §6.5). ?zone=<id> */
 const ZONE=/^[a-z0-9_-]{1,24}$/.test(q.get('zone')||'')?q.get('zone'):'gangnam';
 const meta=await (await fetch('maps/2d/'+ZONE+'/map.json')).json();
+meta.gates=meta.gates||[]; meta.bosses=meta.bosses||[]; const DUNGEON=meta.kind==='dungeon';
+document.getElementById('load').textContent=(meta.title||'강남대로')+' — 들어가는 중…';
+document.getElementById('risk').textContent=DUNGEON?'위험 A · 던전':'위험 B';
 scene.background=new THREE.Color(meta.sky?meta.sky.fog:0x05060a);
 const {R,U,D}=basis(THREE, meta.pitch), T=meta.tile/meta.pxPerM;
 const MAP={ u0:meta.u0, u1:meta.u0+meta.cols*T, v0:meta.v1-meta.rows*T, v1:meta.v1 };
@@ -95,9 +113,10 @@ function follow(p){ /* 그림 범위 밖이 보이지 않게 그림 좌표에서
 const map=await createMap(THREE, scene, meta, 'maps/2d/'+ZONE+'/', cam);
 /* ---------- 캐릭터 빛: 맵에 구운 빛과 같은 자리 ---------- */
 /* 맵에 구운 빛과 맞춘다: 황혼 하늘빛 + 낮게 깔린 노을(해 방향은 맵 굽기가 정한 것) */
-scene.add(meta.sky?new THREE.HemisphereLight(0xb08ac0,0x3a2428,1.6):new THREE.HemisphereLight(0x5a6488,0x140c10,0.9));
-const key=new THREE.DirectionalLight(meta.sun?meta.sun.color:0xfff0e0,meta.sun?3.2:2.4); if(meta.sun) key.position.set(meta.sun.dir[0]*10,Math.max(4,meta.sun.dir[1]*10),meta.sun.dir[2]*10); else key.position.set(-4,9,6); scene.add(key);
-if(meta.sun){ const front=new THREE.DirectionalLight(0xffe8d8,1.4); front.position.set(-3,9,8); scene.add(front); }   /* 노을이 등 뒤일 때도 얼굴이 보이게 */
+/* 던전(지하): 형광등 아래 — 차고 어둡게. 구운 맵(env-dungeon)의 반구광 0x9ab0c0/0x1a1816 과 같은 색 */
+scene.add(DUNGEON?new THREE.HemisphereLight(0x9ab0c0,0x1a1816,1.3):meta.sky?new THREE.HemisphereLight(0xb08ac0,0x3a2428,1.6):new THREE.HemisphereLight(0x5a6488,0x140c10,0.9));
+const key=new THREE.DirectionalLight(meta.sun?meta.sun.color:0xfff0e0,DUNGEON?1.8:meta.sun?3.2:2.4); if(meta.sun) key.position.set(meta.sun.dir[0]*10,Math.max(4,meta.sun.dir[1]*10),meta.sun.dir[2]*10); else key.position.set(-4,9,6); scene.add(key);
+if(meta.sun){ const front=new THREE.DirectionalLight(DUNGEON?0xdff4ff:0xffe8d8,DUNGEON?0.9:1.4); front.position.set(-3,9,8); scene.add(front); }   /* 노을이 등 뒤일 때도 얼굴이 보이게 */
 const rimR=new THREE.DirectionalLight(0xff3a3a,2.6); rimR.position.set(6,4,-6); scene.add(rimR);
 const rimC=new THREE.DirectionalLight(0x40d8ff,2.0); rimC.position.set(-6,4,-5); scene.add(rimC);
 /* 간판·가로등 빛 — 개수가 바뀌면 셰이더를 다시 짜므로 4개를 두고 가까운 것으로 옮긴다 */
@@ -106,6 +125,9 @@ function nearLights(p){ const s=meta.lights.map(l=>[l,(l.x-p.x)**2+(l.z-p.z)**2]
   near.forEach((L,i)=>{ const l=s[i][0]; L.position.set(l.x,l.y,l.z); L.color.set(l.color); L.intensity=l.intensity*0.8; L.distance=l.distance; }); }
 /* ---------- 발밑 그림자 (맵은 그림이라 실시간 그림자가 없다) ---------- */
 const blobTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(0,0,0,.75)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
+/* 물에 잠긴 곳(던전): 그림자 대신 발 둘레 물결 — 물이 허리까지라 발밑은 안 보인다 */
+const rippleTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); for(const [r,a] of [[58,.55],[44,.35],[30,.2]]){ g.strokeStyle='rgba(190,235,245,'+a+')'; g.lineWidth=3; g.beginPath(); g.arc(64,64,r,0,Math.PI*2); g.stroke(); } return new THREE.CanvasTexture(c); })();
+const FLOOR=meta.water?meta.water.y:0;
 /* ---------- 영웅 ---------- */
 const loader=new GLTFLoader();
 if(LOD){ const raw=loader.load.bind(loader); loader.load=(u,...a)=>raw(String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/,'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/,'art/3d/lod/$1_anim.glb'),...a); }
@@ -128,7 +150,7 @@ async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=
   for(const n of ['idle','run','walk','attack1','dodgeB']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
   ['attack1','dodgeB'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
   act.idle.play(); mixer.setTime(Math.random()*2);
-  const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
+  const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),meta.water?new THREE.MeshBasicMaterial({map:rippleTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0.55}):new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
   const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); const label=String(o.name||NAMES[id]).replace(/[<>&]/g,'');
   tag.innerHTML=(me?'':'<span style="color:#9fd8e8">'+(o.net?NAMES[id]:'[황혼]')+'</span> ')+label+'<div class="hp"><i style="width:'+(me?86:o.net?100:60+Math.random()*40|0)+'%"></i></div>'; document.getElementById('hud').appendChild(tag);
   const h={ id, root, mixer, act, cur:'idle', blob, tag, me, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, target:null };
@@ -185,8 +207,8 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
   const named=()=>{ const n=(store.get('tw:party-name')||'요원')+(tries?String(Math.random()*9000+1000|0):''); tries++; send({type:'character',name:n.replace(/[^\p{L}\p{N}_]/gu,'').slice(0,16)||'요원'+(Math.random()*9000+1000|0),character:ME}); };
   ws.onopen=()=>send({type:'hello',token:store.get(tokenKey),name:store.get('tw:party-name')||'요원'});
   ws.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch{ return; }
-    if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:ZONE,look:START_SET[profile.character]}); else named(); return; }
-    if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,look:START_SET[profile.character]}); return; }
+    if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); else named(); return; }
+    if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); return; }
     if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
     if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; resolve(net); return; }
     if(m.type==='field'){ onField(m); return; }
@@ -208,14 +230,47 @@ function follow2(h, dt){ const t=h.target; if(!t) return; const dx=t[0]-h.root.p
   let dy=t[2]-h.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); h.yaw+=dy*Math.min(1,dt*12); h.root.rotation.y=h.yaw;
   if(t[3]==='attack1'||t[3]==='dodgeB'){ if(h.cur!==t[3]) play(h,t[3],0.08); } else play(h, t[3]); }
 const ONLINE=q.get('online')==='1'||q.has('server');
+/* 다른 지역의 문으로 넘어왔다 (?gate=<문 id>) — 그 문 앞에서 시작 */
+const ARRIVE=(meta.gates.find(g=>g.id===q.get('gate'))||{}).id||null;
 if(ONLINE){ netEl.textContent='접속 중…'; try{ await connectNet(); netEl.textContent='온라인 · 근처 0명'; }catch(e){ netEl.textContent='오프라인 — '+e.message; } }
 /* ---------- 출발 ---------- */
-const MY=net?net.profile.character:ME, sp=net?{ x:net.joined.x, z:net.joined.z }:meta.spawn;
+const arriveAt=ARRIVE&&meta.gates.find(g=>g.id===ARRIVE);
+const MY=net?net.profile.character:ME, sp=net?{ x:net.joined.x, z:net.joined.z }:arriveAt?{ x:arriveAt.x, z:arriveAt.z }:meta.spawn;
 me=await hero(MY, sp.x, sp.z, true, { name:net?net.profile.name:NAMES[MY] });
 document.getElementById('who').textContent=(net?net.profile.name:NAMES[MY])+' · Lv 8'; document.getElementById('face').style.backgroundImage='url(art/face-'+MY+'.webp)';
 /* 혼자일 때만 화면 안 AI 셋 (온라인이면 실제 사람만) */
 if(!net){ const others=['ain','kain','ryu','sera'].filter(c=>c!==MY), offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];
   await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false))); }
+/* ---------- 문: 다른 지역으로 (리니지 «글루디오 던전» 입구처럼 필드에 서 있는 문) ---------- */
+const glowTex=(()=>{ const c=document.createElement('canvas'); c.width=4; c.height=128; const g=c.getContext('2d'); const gr=g.createLinearGradient(0,0,0,128); gr.addColorStop(0,'rgba(255,255,255,0)'); gr.addColorStop(1,'rgba(255,255,255,1)'); g.fillStyle=gr; g.fillRect(0,0,4,128); return new THREE.CanvasTexture(c); })();
+const gateFx=meta.gates.map(g=>{ const dg=g.kind==='dungeon', col=dg?0xff5a3a:0x40d8ff, grp=new THREE.Group(); grp.position.set(g.x,FLOOR,g.z);
+  const ringM=new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.85, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false });
+  const ring=new THREE.Mesh(new THREE.RingGeometry(g.r-0.25,g.r,64),ringM); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
+  const inner=new THREE.Mesh(new THREE.CircleGeometry(g.r-0.25,48),new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.12, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); inner.rotation.x=-Math.PI/2; inner.position.y=0.04; grp.add(inner);
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(g.r*0.92,g.r,5,48,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.32, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false })); beam.position.y=2.5; grp.add(beam);
+  scene.add(grp); const tag=document.createElement('div'); tag.className='tag gt'+(dg?' dg':''); tag.textContent=(dg?'⚔ ':'➜ ')+g.label; document.getElementById('hud').appendChild(tag);
+  return { g, grp, ring, beam, tag }; });
+const gateBtn=document.getElementById('gate'), toastEl=document.getElementById('toast'); let gateNear=null, toastT=0;
+function toast(t){ toastEl.textContent=t; toastEl.hidden=false; toastT=2.5; }
+async function goGate(g){ if(!g||!g.to) return; const to=g.to;
+  try{ const r=await fetch('maps/2d/'+to.zone+'/map.json',{method:'HEAD'}); if(!r.ok) throw 0; }catch{ toast('아직 열리지 않은 지역입니다 — '+g.label); return; }
+  const nq=new URLSearchParams(); for(const k of ['char','zoom','debug','lod','online','server']) if(q.has(k)) nq.set(k,q.get(k)); if(net) nq.set('char',MY);
+  nq.set('zone',to.zone); if(to.gate) nq.set('gate',to.gate); try{ net&&net.send({type:'fieldLeave'}); }catch{}
+  document.body.insertAdjacentHTML('beforeend','<div id="load">'+String(g.label).replace(/[<>&]/g,'')+' — 이동 중…</div>'); location.replace('mmo.html?'+nq); }
+gateBtn.addEventListener('pointerdown',()=>goGate(gateNear));
+addEventListener('keydown',e=>{ if((e.code==='KeyE'||e.code==='Enter')&&gateNear) goGate(gateNear); });
+/* ---------- 보스 구역: 들어서면 이름표·경고 테두리 (전투는 다음 단계 — 지금은 자리와 위협만) ---------- */
+const bossEl=document.getElementById('boss'), vig=document.getElementById('vig');
+const bosses=meta.bosses.map(b=>{ const o={ b, root:null, mixer:null, tag:null };
+  load(b.model).then(gl=>{ const root=gl.scene; root.traverse(m=>{ if(m.isMesh){ m.frustumCulled=false; } });
+    const box=new THREE.Box3().setFromObject(root), h=box.max.y-box.min.y||1, k=b.h?b.h/h:(b.scale||1); root.scale.setScalar(k);
+    box.setFromObject(root);   /* 발을 바닥에, 가운데를 보스 자리에 — 보스가 바닥에 파묻혔던 일(CLAUDE.md §1) */
+    const grp=new THREE.Group(); grp.position.set(b.x,b.fly||0,b.z);   /* fly: 하늘에 떠 있는 보스(셀레스티얼 «내려오지 않는다») */ root.position.set(root.position.x-(box.min.x+box.max.x)/2,root.position.y-box.min.y,root.position.z-(box.min.z+box.max.z)/2); grp.add(root); scene.add(grp); o.root=grp;
+    if(b.fly){ const sh=new THREE.Mesh(new THREE.PlaneGeometry(5,5),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false,opacity:0.8})); sh.rotation.x=-Math.PI/2; sh.position.set(b.x,FLOOR+0.04,b.z); scene.add(sh); }   /* 떠 있는 보스 — 땅에 그림자만 */ o.h=box.max.y-box.min.y;
+    if(gl.animations.length){ o.mixer=new THREE.AnimationMixer(root); const c=gl.animations.find(a=>/idle/i.test(a.name))||gl.animations[0]; o.mixer.clipAction(c).play(); }
+    o.tag=document.createElement('div'); o.tag.className='tag bs'; o.tag.innerHTML=String(b.name).replace(/[<>&]/g,'')+'<small>'+String(b.title||'').replace(/[<>&]/g,'')+'</small><div class="hp" style="width:90px"><i style="width:100%"></i></div>'; document.getElementById('hud').appendChild(o.tag);
+  }).catch(e=>console.warn('[boss]',b.id,e)); return o; });
+let inBoss=null;
 await new Promise(r=>setTimeout(r,1500));   /* 장비 GLB 가 붙을 시간 */
 follow(me.root.position); for(let k=0;k<5;k++) await map.update(cam);   /* 첫 화면 타일을 다 받은 뒤에 연다 */
 document.getElementById('load').remove();
@@ -224,7 +279,9 @@ const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, am
 const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0, placeT=0;
 /* 지금 어디쯤인가 — 가장 가까운 실제 출구 */
 const placeEl=document.getElementById('place');
-function place(){ if(!meta.exits||!meta.exits.length) return; const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
+function place(){ const p0=me.root.position;
+  if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); placeEl.textContent=(meta.title||'')+' · '+(d<b.r?'중앙 광장':'중앙 광장까지 '+Math.round(d)+' m'); return; }
+  if(!meta.exits||!meta.exits.length){ placeEl.textContent=meta.title||''; return; } const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
   if(h.busy>0){ h.busy-=dt; if(h.busy<=0) play(h, m>0.05?'run':'idle'); return; }
   if(m>0.05){ const k=Math.min(1,m), sp2=speed*(k<0.55?0.45:1); h.root.position.x+=dx/m*sp2*k*dt; h.root.position.z+=dz/m*sp2*k*dt; collide(h.root.position);
@@ -234,19 +291,34 @@ function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
 function wander(h, dt){ if(h.goal){ const dx=h.goal[0]-h.root.position.x, dz=h.goal[1]-h.root.position.z; if(Math.hypot(dx,dz)<0.4){ h.goal=null; h.wait=1+Math.random()*3; step(h,0,0,dt,0); } else step(h,dx,dz,dt,3.6); return; }
   h.wait-=dt; step(h,0,0,dt,0); if(h.wait<=0){ const [s,t]=toRoad(me.root.position.x, me.root.position.z); const g=fromRoad(s+(Math.random()-.5)*12, Math.max(meta.walk.t0+1,Math.min(meta.walk.t1-1,t+(Math.random()-.5)*8))); h.goal=g; } }
 function tagPos(h){ v3.set(h.root.position.x, 2.05, h.root.position.z).project(cam); h.tag.style.left=((v3.x+1)/2*innerWidth)+'px'; h.tag.style.top=((1-v3.y)/2*innerHeight)+'px'; }
+function tagAt(el,x,y,z){ v3.set(x,y,z).project(cam); const on=v3.x>-1.2&&v3.x<1.2&&v3.y>-1.2&&v3.y<1.2; el.style.display=on?'':'none'; if(on){ el.style.left=((v3.x+1)/2*innerWidth)+'px'; el.style.top=((1-v3.y)/2*innerHeight)+'px'; } }
+/* 문 가까이 → 이동 단추 · 보스 구역 안 → 경고 · 던전 형광등 «3초 켜짐. 1초 꺼짐» (원작 EP02) */
+const darkEl=document.getElementById('dark'); let flickT=0, zoneT=0;
+function zones(dt){ zoneT+=dt; const p=me.root.position;
+  gateFx.forEach((f,i)=>{ const s=1+Math.sin(zoneT*2.4+i)*0.04; f.ring.scale.set(s,s,1); f.beam.material.opacity=0.24+Math.sin(zoneT*3+i)*0.08; });
+  let g=null, gd=1e9; for(const x of meta.gates){ const d=Math.hypot(x.x-p.x,x.z-p.z); if(d<x.r+0.8&&d<gd){ g=x; gd=d; } }
+  if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }
+  let b=null; for(const o of bosses){ const d=Math.hypot(o.b.x-p.x,o.b.z-p.z); if(d<o.b.r) b=o;
+    if(o.mixer) o.mixer.update(dt); if(o.root&&o.b.fly) o.root.position.y=o.b.fly+Math.sin(zoneT*1.3)*0.5; if(o.root&&d<o.b.r*2){ const yaw=Math.atan2(p.x-o.b.x,p.z-o.b.z); let dy=yaw-o.root.rotation.y; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); o.root.rotation.y+=dy*Math.min(1,dt*1.5); } }
+  if(b!==inBoss){ inBoss=b; bossEl.hidden=!b; vig.style.opacity=b?1:0; if(b) bossEl.innerHTML='보스 구역<b>'+String(b.b.name).replace(/[<>&]/g,'')+'</b>'+String(b.b.title||'').replace(/[<>&]/g,'')+'<div class="hp"><i></i></div>'; }
+  if(toastT>0){ toastT-=dt; if(toastT<=0) toastEl.hidden=true; }
+  if(meta.flicker){ flickT=(flickT+dt)%(meta.flicker.on+meta.flicker.off); const off=flickT>meta.flicker.on, stutter=flickT<0.18&&flickT>0.08;
+    darkEl.style.opacity=off?0.58:stutter?0.35:0; near.forEach(L=>{ if(off) L.intensity*=0.25; }); } }
 function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   let ix=input.x+(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0), iy=input.y+(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, ix, -iy, dt, 4.8);
-  heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,0.03,h.root.position.z); });
+  heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
   nearLights(me.root.position); follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
+  zones(dt);
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
-  heroes.forEach(tagPos);
+  heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); bosses.forEach(o=>{ if(o.tag) tagAt(o.tag,o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.b.z); });
   if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);
   fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+(LOD?' · LOD':'')+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
 window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
+  gates:gateFx, bosses, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
   teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };
 tick();
 </script>

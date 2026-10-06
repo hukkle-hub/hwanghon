@@ -8,7 +8,7 @@ const ROOT=path.resolve(__dirname,'..');
 const ANIMS=['idle','run','walk','attack1','dodgeB'];
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
-function loadZone(id){ try{ const m=JSON.parse(fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json'),'utf8')); return { id, walk:m.walk, ang:m.road.ang, spawn:m.spawn }; }catch{ return null; } }
+function loadZone(id){ try{ const m=JSON.parse(fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json'),'utf8')); return { id, walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)) }; }catch{ return null; } }
 const num=(v,lo,hi)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):null;
 class Field{
  constructor(){ this.zones=new Map(); this.players=new Map(); }
@@ -16,8 +16,10 @@ class Field{
  /* 길 좌표 (s, t) — js/mmo/env-gangnam.js 의 DIR·SIDE 와 같다 */
  clamp(z,p){ const c=Math.cos(z.ang),s=Math.sin(z.ang); let a=p.x*c-p.z*s, t=-p.x*s-p.z*c; a=Math.min(z.walk.s1,Math.max(z.walk.s0,a)); t=Math.min(z.walk.t1,Math.max(z.walk.t0,t)); p.x=a*c-t*s; p.z=-a*s-t*c; }
  info(profile, look){ return { name:profile.name, character:profile.character||'ain', eq:{...(profile.equipment||{})}, look }; }
- join(id, profile, zoneId, look){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); this.leave(id);
-  const p={ id, zone:z.id, x:z.spawn.x+(Math.random()-.5)*2, z:z.spawn.z+(Math.random()-.5)*2, yaw:0, anim:'idle', at:Date.now(), info:this.info(profile, Number.isInteger(look)&&look>=0&&look<=3?look:0), ver:1, known:new Map() };
+ /* gate: 다른 지역의 문으로 넘어왔을 때 도착할 문 id (map.json gates) — 없거나 모르는 id 면 지역 출발점 */
+ join(id, profile, zoneId, look, gate){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); this.leave(id);
+  const at=(typeof gate==='string'&&z.gates.find(g=>g.id===gate))||z.spawn;
+  const p={ id, zone:z.id, x:at.x+(Math.random()-.5)*2, z:at.z+(Math.random()-.5)*2, yaw:0, anim:'idle', at:Date.now(), info:this.info(profile, Number.isInteger(look)&&look>=0&&look<=3?look:0), ver:1, known:new Map() };
   this.clamp(z,p); this.players.set(id,p); return p; }
  leave(id){ this.players.delete(id); }
  /* 외형이 바뀌었을 때(장비·외형 프리셋) — 보이는 사람들에게 다시 보낸다 */
@@ -38,7 +40,7 @@ class Field{
   return { type:'field', you:[+r.x.toFixed(2), +r.z.toFixed(2)], players:out, infos }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
-  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS }; }
+  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS }; }
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
   if(msg.type==='fieldLook'){ this.relook(id, profile, msg.look); return null; }
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }

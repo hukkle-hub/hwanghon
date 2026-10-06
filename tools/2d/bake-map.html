@@ -25,7 +25,7 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1
 const scene=new THREE.Scene();
 /* 실제 공간: maps/2d/<zone>/osm.json (tools/2d/osm-extract.mjs) */
 /* 지역 → 원본 장면 생성기. 던전은 땅 위 지역의 OSM 을 같이 쓴다(같은 좌표틀) */
-const ENVS={ gangnam_b1:{ env:'./js/mmo/env-dungeon.js', osm:'gangnam' } };
+const ENVS={ gangnam_b1:{ env:'./js/mmo/env-dungeon.js', osm:'gangnam' }, namsan:{ env:'./js/mmo/env-namsan.js', osm:'namsan' } };
 const E=ENVS[ZONE]||{ env:'./js/mmo/env-osm.js', osm:ZONE };
 const osm=await (await fetch('maps/2d/'+E.osm+'/osm.json')).json();
 const { build }=await import(E.env);
