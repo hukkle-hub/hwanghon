@@ -36,7 +36,7 @@ export const ZONES = {
         { id: 'vault', s: [-42, -30], t: [-12, 0], h: 6, light: 'red', props: [ { k: 'vault', u: 0.5, side: 'far' }, { k: 'sign', text: '강남역 지하상가 출격문', u: 0.5, y: 5.4, w: 6 } ] } ] } },
 
   /* ================= 2. 강남대로 (필드) · 지하상가 B1 · 2호선 B2 ================= */
-  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 120,   /* 넓힌 판은 90 으로 굽는 중 — 굽고 나서 90 */ rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
   gangnam_b1: { title: '강남역 지하상가 B1', kind: 'dungeon', env: 'dungeon', osm: 'gangnam', px: 120, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' } },
   /* 2호선 침수 선로 — 광장 바로 밑, 수위 가슴 (L3344~L3350). 클레이브 마무리 (EP03) */
   gangnam_b2: { title: '2호선 침수 선로', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
@@ -52,7 +52,7 @@ export const ZONES = {
         { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] } ] } ] } },
 
   /* ================= 3. 남산 (필드) · 남산타워 하부 ================= */
-  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 120,   /* 넓힌 판은 90 으로 굽는 중 */ rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
   /* 타워 하부 — 옛 식당·기념품점, 깨진 유리, 습기로 부푼 벽지, 네 줄 긁힘 (L4995~L5025). 지하 3층 «국방부» 철문 → 통신실 (L5103~) */
   namsan_tower: { title: '남산타워 하부', kind: 'dungeon', env: 'indoor', px: 100, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'entry', u: 0.5, v: 0.4 },
