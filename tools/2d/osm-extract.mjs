@@ -26,13 +26,19 @@ let sxx=0,szz=0,sxz=0; for(const [x,z] of pts){ sxx+=x*x; szz+=z*z; sxz+=x*z; }
 const axis=0.5*Math.atan2(2*sxz, sxx-szz);   /* x 축에서 잰 각 (rad) */
 const levels=t=>{ const h=parseFloat(t.height), l=parseFloat(t['building:levels']); return { height:Number.isFinite(h)?h:null, levels:Number.isFinite(l)?l:null }; };
 const out={ zone:ZONE, license:'© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)', origin, axis:+axis.toFixed(5), fetched:new Date().toISOString().slice(0,10),
-  buildings:[], roads:[], exits:[], pois:[], trees:[], crossings:[], signals:[], areas:[], aerialways:[], stations:[] };
+  buildings:[], roads:[], exits:[], pois:[], trees:[], crossings:[], signals:[], areas:[], aerialways:[], stations:[], lines:[] };
 for(const e of all){ const t=e.tags||{};
   if(e.type==='way'&&e.geometry&&t.building&&e.geometry.length>=4){ out.buildings.push({ id:e.id, poly:e.geometry.map(P), ...levels(t), kind:t.building, name:t.name||null, under:t.layer&&+t.layer<0||t.location==='underground'||/지하/.test(t.name||'') }); continue; }
   if(e.type==='way'&&e.geometry&&t.highway){ out.roads.push({ id:e.id, line:e.geometry.map(P), kind:t.highway, name:t.name||null, lanes:+t.lanes||null, width:parseFloat(t.width)||null, oneway:t.oneway==='yes', layer:+t.layer||0, bridge:!!t.bridge, tunnel:!!t.tunnel, area:t.area==='yes' }); continue; }
   if(e.type==='way'&&e.geometry&&t.aerialway){ if(t.aerialway==='station') out.stations.push({ id:e.id, poly:e.geometry.map(P), name:t.name||null }); else out.aerialways.push({ id:e.id, line:e.geometry.map(P), kind:t.aerialway, name:t.name||null }); continue; }
+  /* 선: 철길·물길·해안선·활주로·방파제 (넓이가 없는 웨이) */
+  const closed=e.geometry&&e.geometry.length>3&&e.geometry[0].lat===e.geometry.at(-1).lat&&e.geometry[0].lon===e.geometry.at(-1).lon;
+  if(e.type==='way'&&e.geometry&&(t.railway||t.waterway&&t.waterway!=='riverbank'||t.natural==='coastline'||t.aeroway&&!closed||t.man_made&&/pier|breakwater|groyne|dyke|embankment/.test(t.man_made)&&!closed)){
+    out.lines.push({ id:e.id, line:e.geometry.map(P), kind:t.railway?'rail:'+t.railway:t.waterway?'water:'+t.waterway:t.natural==='coastline'?'coastline':t.aeroway?'aero:'+t.aeroway:'man:'+t.man_made, width:parseFloat(t.width)||null, tunnel:!!t.tunnel, bridge:!!t.bridge, layer:+t.layer||0, name:t.name||null }); continue; }
+  if(e.type==='way'&&e.geometry&&(t.aeroway||t.man_made||t.waterway==='riverbank')&&closed){ out.areas.push({ id:e.id, poly:e.geometry.map(P), kind:t.aeroway?'aero:'+t.aeroway:t.man_made?'man:'+t.man_made:'water', name:t.name||null }); continue; }
   if(e.type==='way'&&e.geometry&&(t.landuse||t.leisure||t.natural||t.amenity==='parking')){ out.areas.push({ id:e.id, poly:e.geometry.map(P), kind:t.landuse||t.leisure||t.natural||t.amenity, name:t.name||null }); continue; }
   if(e.type==='node'&&t.aerialway==='station'){ out.stations.push({ p:P(e), name:t.name||null }); continue; }
+  if(e.type==='node'&&t.railway==='station'){ out.stations.push({ p:P(e), name:t.name||null, kind:'rail' }); continue; }
   if(e.type==='node'&&t.railway==='subway_entrance'){ out.exits.push({ ref:t.ref||null, p:P(e), name:t.description||t.name||null }); continue; }
   if(e.type==='node'&&t.natural==='tree'){ out.trees.push(P(e)); continue; }
   if(e.type==='node'&&t.highway==='crossing'){ out.crossings.push(P(e)); continue; }
