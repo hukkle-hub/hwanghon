@@ -5,7 +5,8 @@
 import { execFile } from 'node:child_process'; import fs from 'node:fs'; import path from 'node:path';
 const [OUT, a0, a1, o0, o1, N = '3'] = process.argv.slice(2); if (!o1) { console.error('사용: <출력> <위도0> <위도1> <경도0> <경도1> [칸]'); process.exit(1); }
 const EP = 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', n = +N; fs.mkdirSync(OUT, { recursive: true });
-const KINDS = { r: 'way["highway"]', b: 'way["building"]', a: '(way["landuse"];way["natural"];way["leisure"];way["waterway"];way["railway"];way["aeroway"];way["man_made"];way["aerialway"];way["amenity"="parking"];)' };
+/* 땅 쓰임·자연·물길 등은 한 질의로 묶으면 504 — 종류마다 따로 (2026-10-06, 여의도에서 7칸 실패) */
+const KINDS = { r: 'way["highway"]', b: 'way["building"]', l: 'way["landuse"]', n: 'way["natural"]', e: '(way["leisure"];way["amenity"="parking"];)', w: 'way["waterway"]', t: '(way["railway"];way["aerialway"];)', m: '(way["aeroway"];way["man_made"];)' };
 const jobs = [];
 for (let i = 0; i < n; i++) for (let k = 0; k < n; k++) { const la0 = +a0 + (a1 - a0) * i / n, la1 = +a0 + (a1 - a0) * (i + 1) / n, lo0 = +o0 + (o1 - o0) * k / n, lo1 = +o0 + (o1 - o0) * (k + 1) / n;
   for (const [key, q] of Object.entries(KINDS)) jobs.push({ file: path.join(OUT, `osm-${key}${i}${k}.json`), q: `[out:json][timeout:60];${q}(${la0.toFixed(5)},${lo0.toFixed(5)},${la1.toFixed(5)},${lo1.toFixed(5)});out geom;` }); }

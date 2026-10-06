@@ -17,7 +17,8 @@
 import * as THREE from './vendor/three/three.module.js';
 import { PITCH } from './js/mmo/env-osm.js';
 import { basis } from './js/mmo/map2d.js';
-const q=new URLSearchParams(location.search), ZONE=q.get('zone')||'gangnam', PX=+(q.get('px')||120), TILE=+(q.get('tile')||1024), L=200, NEAR=0.1, FAR=400;
+import { ZONES } from './js/mmo/zones.js';
+const q=new URLSearchParams(location.search), ZONE=q.get('zone')||'gangnam', Z=ZONES[ZONE]||{ env:'osm', osm:ZONE }, PX=+(q.get('px')||Z.px||120), TILE=+(q.get('tile')||1024), L=200, NEAR=0.1, FAR=400;
 await document.fonts.load('900 96px "Noto Sans KR"').catch(()=>{});
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(1); renderer.setSize(TILE,TILE); renderer.outputColorSpace=THREE.SRGBColorSpace;
@@ -25,11 +26,11 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1
 const scene=new THREE.Scene();
 /* 실제 공간: maps/2d/<zone>/osm.json (tools/2d/osm-extract.mjs) */
 /* 지역 → 원본 장면 생성기. 던전은 땅 위 지역의 OSM 을 같이 쓴다(같은 좌표틀) */
-const ENVS={ gangnam_b1:{ env:'./js/mmo/env-dungeon.js', osm:'gangnam' }, namsan:{ env:'./js/mmo/env-namsan.js', osm:'namsan' } };
-const E=ENVS[ZONE]||{ env:'./js/mmo/env-osm.js', osm:ZONE };
-const osm=await (await fetch('maps/2d/'+E.osm+'/osm.json')).json();
-const { build }=await import(E.env);
-const env=build(THREE, scene, osm);
+/* 지역 표(js/mmo/zones.js)의 env → 장면 빌더. 실내 던전(indoor)은 OSM 이 없다 */
+const ENV_FILE={ osm:'./js/mmo/env-osm.js', dungeon:'./js/mmo/env-dungeon.js', namsan:'./js/mmo/env-namsan.js', indoor:'./js/mmo/env-indoor.js', field:'./js/mmo/env-field.js' };
+const osm=Z.osm?await (await fetch('maps/2d/'+Z.osm+'/osm.json')).json():null;
+const { build }=await import(ENV_FILE[Z.env]||ENV_FILE.osm);
+const env=build(THREE, scene, osm, { id:ZONE, ...Z });
 const {R,U,D}=basis(THREE, PITCH), T=TILE/PX;
 /* 덮을 범위 → 타일 격자. 빈 타일(걷는 띠·먼 쪽 벽에 닿지 않는 것)은 굽지 않는다 — 대각선 띠라 사각 격자의 절반 이상이 빈다 */
 const P=env.extentPts.map(([x,y,z])=>{ const p=new THREE.Vector3(x,y,z); return [p.dot(R), p.dot(U)]; });
@@ -62,7 +63,7 @@ function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTi
   for(let y=0;y<DT;y++){ img.data.set(px.subarray((DT-1-y)*DT*4,(DT-y)*DT*4), y*DT*4); }
   g2.putImageData(img,0,0); const depth=cv.toDataURL('image/png');
   return { i, j, u0:o.u0, v0:o.v0, color, depth }; }
-function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, gates:env.gates||[], bosses:env.bosses||[], flicker:env.flicker||null, water:env.water||null, kind:env.kind||'field', title:env.title||'', license:env.license }; }
+function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, gates:env.gates||[], bosses:env.bosses||[], flicker:env.flicker||null, water:env.water||null, kind:env.kind||Z.kind||'field', title:env.title||Z.title||'', license:env.license||'', areas:env.areas||[], rules:env.rules||Z.rules||{}, restart:env.restart||Z.restart||null }; }
 /* 미리보기: 굽기 전에 한 장면만 게임 카메라로 (길 좌표 s, t · 화면 높이 viewH m) */
 function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Math.sin(a), z=-s*Math.sin(a)-t*Math.cos(a), g=new THREE.Vector3(x,0,z);
   renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-viewH*w/h/2,viewH*w/h/2,viewH/2,-viewH/2,NEAR,FAR); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L); pc.lookAt(g); pc.updateMatrixWorld(true);
