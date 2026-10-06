@@ -28,6 +28,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .gear{position:absolute;right:calc(14px + env(safe-area-inset-right));top:58px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,18,.6);font-size:12px;border-radius:4px}
 .tag{position:absolute;transform:translate(-50%,-100%);text-align:center;font-size:11px;font-weight:700;white-space:nowrap;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}
 .tag .title{display:block;margin-bottom:1px;color:#ffb071;font-size:9px;font-weight:700;letter-spacing:.06em;text-shadow:0 0 7px rgba(255,55,24,.8),0 1px 2px #000}.tag .title[data-tier="3"]{color:#fff0dc;text-shadow:0 0 9px #ff3a20,0 1px 2px #000}
+.tag .prestige{display:inline-block;margin-left:4px;padding:0 3px;border:1px solid rgba(220,110,45,.7);border-radius:2px;color:#ffad62;background:rgba(30,10,5,.82);font-size:8px;line-height:11px;letter-spacing:.03em;text-shadow:0 0 5px rgba(255,90,35,.7),0 1px 2px #000;vertical-align:1px}.tag .prestige[data-tier="2"]{border-color:#e83b27;color:#ff725c;text-shadow:0 0 7px #c21c12,0 1px 2px #000}.tag .prestige[data-tier="3"]{border-color:#ffe4c4;color:#fff5e8;background:rgba(72,12,8,.88);text-shadow:0 0 8px #ff3b24,0 1px 2px #000}
 .tag .hp{width:54px;height:4px;margin:2px auto 0;background:#20222a;border:1px solid #000}.tag .hp i{display:block;height:100%;background:#d03838}
 .tag.me .hp i{background:#40c060}
 #dbg{position:absolute;left:calc(12px + env(safe-area-inset-left));top:56px;font:11px/1.5 monospace;color:#9fd8e8;background:rgba(0,0,0,.45);padding:4px 6px;display:none}
@@ -183,8 +184,8 @@ const SETS=[ {}, { chest:'a_reed_cuirass', legs:'a_black_greaves', gloves:'a_ste
   { head:'a_ward_mask', chest:'a_ward_coat', legs:'a_ward_greaves', gloves:'a_ward_gloves', boots:'a_ward_boots' } ];
 const START_SET={ ain:1, kain:2, ryu:3, sera:0 };
 const heroes=[];
-function heroTag(h){ const t=h.title&&typeof h.title==='object'?h.title:null,title=t&&t.text?'<span class="title" data-tier="'+(+t.tier||1)+'">◆ '+safe(t.text)+'</span>':'';
-  h.tag.innerHTML=title+(h.me?'':'<span style="color:#9fd8e8">'+(h.net?safe(NAMES[h.id]):'[황혼]')+'</span> ')+safe(h.name||NAMES[h.id])+'<div class="hp"><i style="width:'+(h.me?86:h.net?100:60+Math.random()*40|0)+'%"></i></div>'; }
+function heroTag(h){ const t=h.title&&typeof h.title==='object'?h.title:null,title=t&&t.text?'<span class="title" data-tier="'+(+t.tier||1)+'">◆ '+safe(t.text)+'</span>':'',p=window.TW_LOOKS&&TW_LOOKS.prestigeBadge?TW_LOOKS.prestigeBadge(h.eqNet,h.enhNet):null,prestige=p?'<span class="prestige" data-boss="clave" data-tier="'+p.tier+'" aria-label="클레이브 장비 +'+p.enh+'">≡ '+safe(p.label)+'</span>':'';
+  h.tag.innerHTML=title+(h.me?'':'<span style="color:#9fd8e8">'+(h.net?safe(NAMES[h.id]):'[황혼]')+'</span> ')+safe(h.name||NAMES[h.id])+prestige+'<div class="hp"><i style="width:'+(h.me?86:h.net?100:60+Math.random()*40|0)+'%"></i></div>'; }
 function dress(h, k){ h.set=k; const eq=h.eqNet?Object.assign({main:WEAPON[h.id]},h.eqNet):Object.assign({main:WEAPON[h.id]},SETS[k]||{}),enh=h.enhNet;
   window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id, reduced:REDUCED, enhOf:(id,sl)=>enh?(enh[sl]||0):(window.TW_GEAR&&TW_GEAR.enhOf?TW_GEAR.enhOf(id):0) }); }
 /* 영웅 GLB 는 영웅마다 한 번만 받고, 사람마다 뼈대째 복제한다 — 같은 영웅이 여럿이어도 내려받기 1번 */
@@ -240,7 +241,7 @@ stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercan
 addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null,selfDead=false;
-function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name;me.name=name;if(key!==me.lookKey){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed)heroTag(me);}
+function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name,visual=key!==me.lookKey;me.name=name;if(visual){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed||visual)heroTag(me);}
 function applySelfInfo(info){if(!me)return;me.title=info&&info.title||null;heroTag(me);}
 function attack(){ if(!me||selfDead||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8;window.TW_SFX?.play('swing'); if(typeof hitBoss==='function') hitBoss(); }
 function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7;

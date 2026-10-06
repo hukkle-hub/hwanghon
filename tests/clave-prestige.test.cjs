@@ -29,6 +29,17 @@ test('강화 광휘는 직교 카메라에서 보이는 고정 픽셀로 +0·+7�
  assert.doesNotMatch(block,/PointLight|RingGeometry/,'장비 과시는 공격 예고용 바닥 고리·점광원을 만들지 않는다');
 });
 
+test('이름 옆 명예 표식은 장착한 클레이브 장비 +7부터 숫자로 위계를 공개한다',()=>{
+ const L=looks(),badge=(id,enh)=>L.prestigeBadge({main:id},{main:enh});
+ assert.equal(L.prestigeBadge({},{}),null);assert.equal(badge('w_kain_greatsword',10),null,'일반 +10은 클레이브 명예가 아니다');
+ assert.equal(badge('w_clave_blade',0),null);assert.equal(badge('w_clave_blade',6),null);
+ for(const [enh,tier] of [[7,1],[8,1],[9,2],[10,3]])assert.deepEqual(badge('w_clave_blade',enh),{boss:'clave',tier,enh,label:'클레이브 +'+enh});
+ const mixed=L.prestigeBadge({main:'w_clave_blade',off:'x_clave_shutter',head:'a_sluice_helm'},{main:7,off:9,head:10});assert.equal(mixed.enh,9,'일반 장비 강화값은 섞지 않는다');
+ const h=fs.readFileSync(path.join(ROOT,'mmo.html'),'utf8');assert.match(h,/prestigeBadge\(h\.eqNet,h\.enhNet\)/);assert.match(h,/class="prestige" data-boss="clave" data-tier=/);assert.match(h,/aria-label="클레이브 장비 \+/);
+ assert.match(h,/if\(renamed\|\|visual\)heroTag\(me\)/,'본인 장비·강화가 바뀌어도 표식을 즉시 갱신');
+ const css=h.slice(h.indexOf('.tag .prestige{'),h.indexOf('.tag .hp{'));assert.doesNotMatch(css,/animation|transition|keyframes/,'명예 표식은 전투 중 움직이지 않는다');
+});
+
 test('감소 모션은 명예 장비 색·수량을 남기고 회전·부유·펄스만 고정한다',()=>{
  const src=fs.readFileSync(path.join(ROOT,'js/looks.js'),'utf8'),mmo=fs.readFileSync(path.join(ROOT,'mmo.html'),'utf8');
  assert.match(src,/if\(reduced\)mat\.opacity=[^;]+;else core\.onBeforeRender=/,'장검 코어 펄스 고정');

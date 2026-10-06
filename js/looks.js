@@ -133,6 +133,10 @@
   /* PointsMaterial.size 는 화면 픽셀이다. 예전 0.048/0.072는 직교 카메라에서 1px도 안 되어 +10도 보이지 않았다. */
   var PRESTIGE_SPARKS=[[4,1.2,0xd6652f,0.48],[6,1.6,0xd6652f,0.74],[9,2.0,0xff3b24,0.78],[12,2.6,0xffead8,0.82]];
   function prestigeSpec(enh,source){var tier=tierOf(Math.max(0,Math.min(10,Number(enh)||0)));if(!source&&!tier)return null;var p=PRESTIGE_SPARKS[tier];return {tier:tier,count:p[0],size:p[1],color:p[2],opacity:p[3]};}
+  function prestigeBadge(equipped,enhBySlot){equipped=equipped||{};enhBySlot=enhBySlot||{};var max=0;
+    Object.keys(equipped).forEach(function(sl){if(/^([awx])_clave_/.test(equipped[sl]||''))max=Math.max(max,Math.max(0,Math.min(10,Number(enhBySlot[sl])||0)));});
+    var full=['head','chest','gloves','legs'].every(function(sl){return /^a_clave_/.test(equipped[sl]||'');}),shutter=equipped.off==='x_clave_shutter',spec=prestigeSpec(max,full||shutter);
+    return spec&&spec.tier?{boss:'clave',tier:spec.tier,enh:max,label:'클레이브 +'+max}:null; }
   function addPrestigeAura(THREE, model, equipped, enhOf, reduced){
     var clave=function(id){return /^([awx])_clave_/.test(id||'');},ids=[],max=0;
     Object.keys(equipped).forEach(function(sl){var id=equipped[sl];if(!clave(id))return;ids.push(id);max=Math.max(max,Number(enhOf(id,sl))||0);});
@@ -275,5 +279,5 @@
   /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
   function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
   function palm(T, hand){ THREE=THREE||T; return palmOf(hand); }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, PRESTIGE_SPARKS:PRESTIGE_SPARKS, prestigeSpec:prestigeSpec, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, PRESTIGE_SPARKS:PRESTIGE_SPARKS, prestigeSpec:prestigeSpec, prestigeBadge:prestigeBadge, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
 })();
