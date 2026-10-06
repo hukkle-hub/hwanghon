@@ -70,6 +70,30 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 #mini i.gt{border-radius:1px;background:#40b8e8}#mini i.gt.dg{background:#ff6040}
 #mini span{position:absolute;transform:translate(-50%,-50%);font-size:11px;color:#f0e2d0;text-shadow:0 0 4px #000,0 1px 2px #000;white-space:nowrap;display:none;pointer-events:none}
 #mini.big span{display:block}#mini span.d2{color:#ffb070}#mini span.d3{color:#ff6a50}#mini span.rest{color:#9fe0b0}
+/* 전국 지도 (docs/design/192) — 실제 지형 음영 위의 지역. 만든 곳 금색 · 계획 흐림 · 지금 하늘색. 누르면 길잡이 빠른 이동 */
+.gear.wm{top:100px}
+#world{position:fixed;inset:0;z-index:20;background:rgba(6,8,12,.94);display:flex;align-items:center;justify-content:center}
+#world[hidden]{display:none}
+#world .wmap{position:relative;height:min(92vh,calc(96vw * var(--ar)));aspect-ratio:var(--ar0);background:center/100% 100% no-repeat}
+#world .wx{position:absolute;right:calc(14px + env(safe-area-inset-right));top:10px;min-width:64px;min-height:44px;padding:0 14px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.3);background:rgba(10,12,18,.8);color:#eee;font-size:14px;border-radius:6px}
+#world .wt{position:absolute;left:calc(14px + env(safe-area-inset-left));top:12px;color:#f0e2d0;font-size:15px;font-weight:800;letter-spacing:.1em;text-shadow:0 1px 3px #000}
+#world .wt small{display:block;font-size:10px;font-weight:500;letter-spacing:.04em;opacity:.7;margin-top:2px}
+#world .rg{position:absolute;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;background:#55534e;border:1px solid #000;cursor:pointer}
+#world .rg.built{background:#ffcf40;width:13px;height:13px;box-shadow:0 0 8px rgba(255,200,60,.7)}
+#world .rg.hub{border-radius:2px}
+#world .rg.here{background:#5fe0ff;box-shadow:0 0 12px #5fe0ff}
+#world .rg::after{content:'';position:absolute;inset:-14px}   /* 손가락으로 누르기 쉽게 */
+#world .rn{position:absolute;font-size:11px;color:#bbb;white-space:nowrap;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;line-height:1.15}
+#world .rn.built{color:#ffe9b0;font-weight:700;font-size:12px}#world .rn small{opacity:.75;margin-left:3px;font-weight:500}
+#world .rn.off{display:none}
+#world .rg.clu{width:18px;height:18px;background:#ffcf40;border:2px solid #2a1c04;box-shadow:0 0 10px rgba(255,200,60,.8);color:#2a1c04;font:800 10px/14px sans-serif;text-align:center}
+#world .rg.clu.here{background:#5fe0ff}
+#world .wgo{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:56px;min-width:240px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(240,176,64,.85);background:rgba(26,18,4,.92);color:#ffe6b8;font-size:14px;font-weight:700;border-radius:8px}
+#world .wgo[hidden]{display:none}
+#world .wgo .wz{min-height:48px;min-width:64px;padding:0 10px;border:1px solid rgba(240,176,64,.6);background:rgba(60,40,8,.9);color:#ffe6b8;font:700 13px sans-serif;border-radius:6px}
+#world .wgo .wz.here{border-color:#5fe0ff;color:#bff3ff}
+#world .wgo.multi{flex-wrap:wrap;padding:8px;gap:6px;max-width:calc(100vw - 28px)}
+@media (orientation:landscape){ #world .wt{max-width:calc(50vw - 46vh - 24px)} #world .wgo{left:auto;right:calc(14px + env(safe-area-inset-right));transform:none;min-width:0;max-width:calc(50vw - 46vh - 28px);flex-direction:column;align-items:stretch;text-align:center} #world .wgo.multi{max-width:calc(50vw - 46vh - 28px)} }
 #toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
 .tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
 .tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
@@ -84,6 +108,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
   <div id="dbg"></div>
   <div id="osm" style="position:absolute;left:calc(8px + env(safe-area-inset-left));bottom:4px;font-size:9px;color:rgba(255,255,255,.45)">지도 데이터 © OpenStreetMap contributors</div>
   <div class="gear hit" id="gearBtn">장비 바꾸기</div>
+  <div class="gear wm hit" id="worldBtn">전국 지도</div>
   <div id="boss" hidden></div>
   <div id="death" hidden><b>전투 불능</b><span></span><small style="display:block;margin-top:5px">출발점에서 다시 일어납니다</small></div>
   <div id="toast" hidden></div>
@@ -97,7 +122,8 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
     <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div><div class="b s" style="right:88px;bottom:62px">1</div>
     <div class="b s" style="right:44px;bottom:100px">2</div><div class="b s" style="right:-6px;bottom:108px">3</div></div>
 </div>
-<div id="dark"></div><div id="vig"></div><div id="hurtfx"></div>
+<div id="dark"></div><div id="vig"></div>
+<div id="world" hidden><div class="wt">황혼의 한국<small>금색 = 갈 수 있는 곳 · 흐림 = 아직 · 누르면 길잡이 빠른 이동</small></div><div class="wmap" id="wmap"></div><div class="wx hit" id="wclose">닫기</div><div class="wgo hit" id="wgo" hidden></div></div><div id="hurtfx"></div>
 <div id="load">강남대로로 나가는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/save.js"></script>
@@ -118,6 +144,7 @@ import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
 import { createBloom } from './js/bloom.js';
 import { basis, createMap } from './js/mmo/map2d.js';
 import { ZONES } from './js/mmo/zones.js';
+import { REGIONS, levelOf } from './js/mmo/regions.js';
 import { CLAVE_MOTIONS,claveCounterActive,setupBossMotion,applyBossAction,prepareBossMotion,updateBossMotion,bossHitReact,bossCounterBurst,hideBossMotion } from './js/mmo/boss-motion.js';
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const MOBILE=matchMedia('(pointer:coarse)').matches, REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -345,6 +372,43 @@ async function goGate(g){ if(!g||!g.to) return; const to=g.to;
   nq.set('zone',to.zone); if(to.gate) nq.set('gate',to.gate); try{ net&&net.send({type:'fieldLeave'}); }catch{}
   document.body.insertAdjacentHTML('beforeend','<div id="load">'+String(g.label).replace(/[<>&]/g,'')+' — 이동 중…</div>'); location.replace('mmo.html?'+nq); }
 gateBtn.addEventListener('pointerdown',()=>goGate(gateNear));
+/* ---------- 전국 지도 · 길잡이 빠른 이동 (docs/design/192) ---------- */
+const worldEl=document.getElementById('world'), wmap=document.getElementById('wmap'), wgo=document.getElementById('wgo'); let WM=null, wPick=null;
+const here=REGIONS.find(r=>r.zone===ZONE)||REGIONS.find(r=>ZONES[ZONE]&&ZONES[ZONE].kind==='dungeon'&&r.zone&&ZONE.startsWith(r.zone));
+function travel(zone){ const nq=new URLSearchParams(); for(const k of ['char','zoom','debug','lod','online','server']) if(q.has(k)) nq.set(k,q.get(k)); if(net) nq.set('char',MY);
+  nq.set('zone',zone); try{ net&&net.send({type:'fieldLeave'}); }catch{} document.body.insertAdjacentHTML('beforeend','<div id="load">길잡이와 함께 이동 중…</div>'); location.replace('mmo.html?'+nq); }
+/* 서울 원작 동선(강남·남산·여의도·남태령·판교)은 전국 지도에서 손톱만 하다 — 하나의 «서울» 점으로 묶고, 누르면 다섯 곳을 고른다 */
+const wName=(r,lv)=>r.name+(lv?'<small>Lv '+lv[0]+'~'+lv[1]+'</small>':(r.kind==='hub'?'<small>거점</small>':''));
+function wPickShow(list){ wgo.hidden=false; wgo.dataset.go=''; wgo.classList.toggle('multi',list.length>1);
+  if(list.length>1){ wgo.innerHTML=''; for(const r of list){ const lv=levelOf(r), bt=document.createElement('button'); bt.className='wz'+(r===here?' here':''); bt.innerHTML=r.name+(lv?' · Lv '+lv[0]:''); bt.addEventListener('pointerdown',e=>{ e.stopPropagation(); if(r!==here) travel(r.zone); }); wgo.appendChild(bt); } return; }
+  const r=list[0], built=!!(r.zone&&ZONES[r.zone]), lv=levelOf(r); wPick=r;
+  wgo.innerHTML=built?(r===here?'지금 여기 — '+r.name:'➜ 길잡이와 이동 · '+r.name):r.name+(lv?' · Lv '+lv[0]+'~'+lv[1]:'')+' — 아직 열리지 않은 곳'; wgo.dataset.go=built&&r!==here?r.zone:''; }
+/* 이름표 겹침 피하기: 만든 곳 → 거점 → 계획 순으로 오른쪽·왼쪽·위·아래 중 빈 자리에, 자리가 없으면 이름을 숨긴다(점은 남아 누를 수 있다) */
+function wLayout(){ if(worldEl.hidden) return; const W=wmap.getBoundingClientRect(), taken=[...wmap.querySelectorAll('.rg')].map(d=>{ const b=d.getBoundingClientRect(); return [b.left-2,b.top-2,b.right+2,b.bottom+2]; });
+  const hit=(q)=>taken.some(t=>q[0]<t[2]&&q[2]>t[0]&&q[1]<t[3]&&q[3]>t[1]);
+  const labels=[...wmap.querySelectorAll('.rn')].sort((p,q)=>q.dataset.pri-p.dataset.pri);
+  for(const n of labels){ n.classList.remove('off'); n.style.transform='none'; const x=W.left+parseFloat(n.style.left)/100*W.width, y=W.top+parseFloat(n.style.top)/100*W.height, w=n.offsetWidth, h=n.offsetHeight, g=9;
+    const opts=[]; for(const k of n.dataset.pri>1?[1,2.4,4]:[1,2.2]) opts.push([g*k,-h/2],[-g*k-w,-h/2],[-w/2,-g*k-h+3],[-w/2,g*k-3],[g*k*.7,-h-g*k*.5],[g*k*.7,g*k*.5],[-g*k*.7-w,-h-g*k*.5],[-g*k*.7-w,g*k*.5]); let ok=null;
+    for(const [dx,dy] of opts){ const q=[x+dx,y+dy,x+dx+w,y+dy+h]; if(q[0]<W.left-40||q[2]>W.right+40||q[1]<W.top||q[3]>W.bottom) continue; if(!hit(q)){ ok=[dx,dy,q]; break; } }
+    if(!ok){ n.classList.add('off'); continue; } n.style.transform='translate('+ok[0]+'px,'+ok[1]+'px)'; taken.push(ok[2]); } }
+addEventListener('resize',()=>requestAnimationFrame(wLayout));
+async function openWorld(){ if(!WM){ WM=await (await fetch('maps/world/korea.json')).json(); wmap.style.backgroundImage='url(maps/world/'+WM.file+')'; wmap.style.setProperty('--ar0',WM.w+'/'+WM.h); worldEl.style.setProperty('--ar',(WM.h/WM.w).toFixed(4));
+    const P=(lat,lon)=>{ const n=2**WM.z*256, s=Math.sin(lat*Math.PI/180); return [((lon+180)/360*n-WM.px0)/WM.w*100, ((0.5-Math.log((1+s)/(1-s))/(4*Math.PI))*n-WM.py0)/WM.h*100]; };
+    const SEOUL=REGIONS.filter(r=>r.story&&r.lat>37.3), dot=(cls,x,y,html)=>{ const d=document.createElement('div'); d.className='rg'+cls; d.style.left=x+'%'; d.style.top=y+'%'; if(html) d.textContent=html; wmap.appendChild(d); return d; };
+    const label=(html,x,y,cls,pri)=>{ const n=document.createElement('div'); n.className='rn'+cls; n.style.left=x+'%'; n.style.top=y+'%'; n.dataset.pri=pri; n.innerHTML=html; wmap.appendChild(n); };
+    for(const r of REGIONS){ if(SEOUL.includes(r)) continue; const built=!!(r.zone&&ZONES[r.zone]), [x,y]=P(r.lat,r.lon), lv=levelOf(r);
+      const d=dot((built?' built':'')+(r.kind==='hub'?' hub':'')+(r===here?' here':''),x,y);
+      label(built?wName(r,lv):r.name,x,y,built?' built':'',built?3:r.kind==='hub'?2:1);
+      d.addEventListener('pointerdown',e=>{ e.stopPropagation(); wPickShow([r]); }); }
+    const cx=SEOUL.reduce((a,r)=>a+r.lat,0)/SEOUL.length, cy=SEOUL.reduce((a,r)=>a+r.lon,0)/SEOUL.length, [x,y]=P(cx,cy);
+    const c=dot(' clu'+(SEOUL.includes(here)?' here':''),x,y,String(SEOUL.length)); label('서울<small>Lv 1~40 · 원작</small>',x,y,' built',4);
+    c.addEventListener('pointerdown',e=>{ e.stopPropagation(); wPickShow(SEOUL); }); }
+  worldEl.hidden=false; requestAnimationFrame(wLayout); }
+document.getElementById('worldBtn').addEventListener('pointerdown',openWorld);
+document.getElementById('wclose').addEventListener('pointerdown',()=>{ worldEl.hidden=true; wgo.hidden=true; });
+worldEl.addEventListener('pointerdown',e=>{ if(e.target===worldEl||e.target===wmap) wgo.hidden=true; });
+wgo.addEventListener('pointerdown',()=>{ if(wgo.dataset.go) travel(wgo.dataset.go); });
+window.__WORLD={ open:openWorld, travel, pick:n=>wPickShow(n==='서울'?REGIONS.filter(r=>r.story&&r.lat>37.3):REGIONS.filter(r=>r.name.startsWith(n))) };
 addEventListener('keydown',e=>{ if((e.code==='KeyE'||e.code==='Enter')&&gateNear) goGate(gateNear); });
 /* ---------- 보스 구역: 들어서면 이름표·경고 테두리 (전투는 다음 단계 — 지금은 자리와 위협만) ---------- */
 const bossEl=document.getElementById('boss'), vig=document.getElementById('vig');
