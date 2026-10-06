@@ -137,9 +137,13 @@ export function build(THREE, scene, osm) {
     const slab = new THREE.Mesh(new THREE.BoxGeometry(3.1, 0.35, 3.0), voidM); slab.position.set(x + Math.cos(a) * 1.6, 4.9, z + Math.sin(a) * 1.6); slab.rotation.y = -a + Math.PI / 2; slab.castShadow = true; scene.add(slab); }
   /* 크리스마스 장식 — 2년 전 12월에 걸린 그대로 */
   const bulbCols = [0xff3a3a, 0x40ff80, 0xffd040, 0x4aa0ff, 0xff6ad0];
-  for (let k = 0; k < 7; k++) { const a0 = Math.PI * 2 * k / 7, a1 = a0 + Math.PI * 0.85, p0 = [plazaC[0] + Math.cos(a0) * PLAZA_R, plazaC[1] + Math.sin(a0) * PLAZA_R], p1 = [plazaC[0] + Math.cos(a1) * PLAZA_R, plazaC[1] + Math.sin(a1) * PLAZA_R];
-    for (let u = 0; u <= 1.0001; u += 0.04) { const x = p0[0] + (p1[0] - p0[0]) * u, z = p0[1] + (p1[1] - p0[1]) * u, y = 7.2 - Math.sin(Math.PI * u) * 2.2;
-      const b = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), new THREE.MeshBasicMaterial({ color: bulbCols[(k + Math.round(u * 25)) % 5], toneMapped: false })); b.position.set(x, y, z); scene.add(b); } }
+  /* 위에서 보면 전구가 바닥에 흩뿌린 색종이처럼 보였다(게임 화면 확인) — 줄(전선)을 같이 그리고 전구는 작고 성기게 */
+  const wireM = new THREE.MeshBasicMaterial({ color: 0x1a1a1a });
+  for (let k = 0; k < 5; k++) { const a0 = Math.PI * 2 * k / 5 + 0.3, a1 = a0 + Math.PI * 0.8, p0 = [plazaC[0] + Math.cos(a0) * PLAZA_R, plazaC[1] + Math.sin(a0) * PLAZA_R], p1 = [plazaC[0] + Math.cos(a1) * PLAZA_R, plazaC[1] + Math.sin(a1) * PLAZA_R];
+    const wp = []; for (let u = 0; u <= 1.0001; u += 0.02) wp.push(new THREE.Vector3(p0[0] + (p1[0] - p0[0]) * u, 7.2 - Math.sin(Math.PI * u) * 2.2, p0[1] + (p1[1] - p0[1]) * u));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(wp), 60, 0.025, 4), wireM));
+    for (let u = 0.03; u <= 0.98; u += 0.065) { const x = p0[0] + (p1[0] - p0[0]) * u, z = p0[1] + (p1[1] - p0[1]) * u, y = 7.1 - Math.sin(Math.PI * u) * 2.2;
+      const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ color: bulbCols[(k + Math.round(u * 15)) % 5], toneMapped: false })); b.position.set(x, y, z); scene.add(b); } }
   const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), new THREE.MeshBasicMaterial({ color: 0xffd860, toneMapped: false })); star.position.set(plazaC[0], 7.8, plazaC[1]); scene.add(star);
   { const L = new THREE.PointLight(0xffd8a0, 18, 26, 1.4); L.position.set(plazaC[0], 6.5, plazaC[1]); scene.add(L); lights.push({ x: plazaC[0], y: 6.5, z: plazaC[1], color: '#ffd8a0', intensity: 18, distance: 26 }); }
   /* 뒤집힌 진열대 (원작 «진열대가 통째로 날아갔다») */
