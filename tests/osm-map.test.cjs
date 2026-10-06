@@ -17,5 +17,7 @@ test('구운 맵: 높이 규약, 타일 파일이 다 있고, 걷는 띠가 5번
  const st=([x,z])=>{const a=m.road.ang;return [x*Math.cos(a)-z*Math.sin(a),-x*Math.sin(a)-z*Math.cos(a)];},inWalk=([s,t],pad=0)=>s>=m.walk.s0-pad&&s<=m.walk.s1+pad&&t>=m.walk.t0-pad&&t<=m.walk.t1+pad;
  const e5=m.exits.find(e=>e.ref==='5');assert.ok(inWalk(st([e5.x,e5.z]),3),'5번 출구가 걷는 띠 안(또는 3 m 이내)');
  assert.ok(inWalk(st([m.spawn.x,m.spawn.z])),'출발점이 걷는 띠 안');
+ /* 띠가 강남대로 가운데에 있다: 길 양쪽 인도의 출구가 둘 다 띠 안. 첫 판은 원점이 한쪽 차로 위라 7·6·5번이 띠 밖이었다 */
+ for(const ref of ['2','7','3','6','4','5']){const e=m.exits.find(x=>x.ref===ref);assert.ok(inWalk(st([e.x,e.z]),3),ref+'번 출구 '+st([e.x,e.z]).map(v=>v.toFixed(1)));}
  assert.ok(m.blockers.some(b=>b.poly&&b.poly.length>=3),'건물 윤곽 충돌');
 });

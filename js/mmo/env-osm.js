@@ -12,6 +12,8 @@
    build(THREE, scene, osm) → { lights, blockers, spawn, road, walk, extent, sun, sky, license } */
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 (문서 185 §6.1) */
+/* 지역별: 길 양쪽 인도에 마주 선 출구 쌍(OSM 실측 확인) — 도로 중심선을 잡는 데 쓴다 */
+const CONFIG = { gangnam: { exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']] } };
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
@@ -24,14 +26,22 @@ export function build(THREE, scene, osm, opt = {}) {
     const c = Math.cos(cand), s = Math.sin(cand), [ex, ez] = osm.exits.find(e => e.ref === '5')?.p || [80, 300];
     const wx = ex * c - ez * s, wz = ex * s + ez * c;            /* Ry 와 같은 방향의 2D 회전 (x,z) */
     const t = wx * SIDE.x + wz * SIDE.y; if (t > 0) { rot = cand; break; } }
-  const cr = Math.cos(rot), sr = Math.sin(rot);
-  const W = ([x, z]) => [x * cr - z * sr, x * sr + z * cr];                 /* OSM → 월드 */
   const ST = ([x, z]) => [x * DIR.x + z * DIR.y, x * SIDE.x + z * SIDE.y];   /* 월드 → 길 좌표 (s 길 따라, t 건너 +가 먼 쪽) */
   const FROM = (s, t) => [s * DIR.x + t * SIDE.x, s * DIR.y + t * SIDE.y];   /* 길 좌표 → 월드 */
+  /* 도로 중심선 보정: 원점은 강남대로 한쪽 차로 위라 띠가 한쪽으로 7~15 m 치우쳤다(2번 출구가 t = −3 m, 차도 한가운데).
+     길 양쪽 인도에 마주 선 출구 쌍의 가운데가 중심선이다 — 그 점들이 s 를 따라 평평해지도록 회전을 조금 더 돌리고, 띠를 그 가운데에 둔다 */
+  const PAIRS = (opt.exitPairs || CONFIG[osm.zone]?.exitPairs || []).map(([a, b]) => [osm.exits.find(e => e.ref === a), osm.exits.find(e => e.ref === b)]).filter(([a, b]) => a && b);
+  const rotAt = r => { const c = Math.cos(r), s = Math.sin(r); return ([x, z]) => [x * c - z * s, x * s + z * c]; };
+  const mids = r => PAIRS.map(([a, b]) => { const A = ST(rotAt(r)(a.p)), B = ST(rotAt(r)(b.p)); return [(A[0] + B[0]) / 2, (A[1] + B[1]) / 2]; });
+  let tc = 0;
+  if (PAIRS.length >= 2) { let best = null; for (let d = -0.2; d <= 0.2; d += 0.0005) { const m = mids(rot + d), mt = m.reduce((a, p) => a + p[1], 0) / m.length, v = m.reduce((a, p) => a + (p[1] - mt) ** 2, 0); if (!best || v < best.v) best = { v, d, mt }; }
+    rot += best.d; tc = best.mt; console.info('[env-osm] 중심선 보정', (best.d * 180 / Math.PI).toFixed(2) + '°', '중심 t', tc.toFixed(1), 'm · 잔차', Math.sqrt(best.v / PAIRS.length).toFixed(1), 'm'); }
+  const cr = Math.cos(rot), sr = Math.sin(rot);
+  const W = ([x, z]) => [x * cr - z * sr, x * sr + z * cr];                 /* OSM → 월드 */
   const V3 = (p, y = 0) => new THREE.Vector3(p[0], y, p[1]);
   /* 걷는 띠: 사거리 북쪽 55 m 부터 5번 출구 남쪽 18 m 까지, 강남대로 양쪽 인도까지 (t ±30 m) */
   const s5 = ST(W(osm.exits.find(e => e.ref === '5')?.p || [80, 300]))[0];
-  const walk = Object.assign(s5 > 0 ? { s0: -55, s1: Math.round(s5 + 18), t0: -30, t1: 30 } : { s0: Math.round(s5 - 18), s1: 55, t0: -30, t1: 30 }, opt.walk || {});
+  const walk = Object.assign(s5 > 0 ? { s0: -55, s1: Math.round(s5 + 18), t0: Math.round(tc - 30), t1: Math.round(tc + 30) } : { s0: Math.round(s5 - 18), s1: 55, t0: Math.round(tc - 30), t1: Math.round(tc + 30) }, opt.walk || {});
 
   /* ---------- 하늘·노을 (원작 «보라와 핏빛이 뒤엉킨 황혼») ---------- */
   const sky = { top: '#2a1838', horizon: '#7a2a3a', fog: '#3a2238' };
@@ -120,7 +130,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const pts = b.poly.map(W); if (pts.length > 2 && pts[0][0] === pts.at(-1)[0] && pts[0][1] === pts.at(-1)[1]) pts.pop(); if (pts.length < 3) continue;
     const area = footprintArea(pts); let h = b.height || (b.levels ? b.levels * 3.6 : (area > 900 ? 22 + R() * 20 : area > 300 ? 12 + R() * 12 : 7 + R() * 7));
     const cst = pts.reduce((a, p) => { const st = ST(p); return [a[0] + st[0] / pts.length, a[1] + st[1] / pts.length]; }, [0, 0]);
-    const near = cst[1] < 0, full = h; if (near) h = Math.min(h, 4.2);   /* 잘라 낸 건물: 1층 높이 */
+    const near = cst[1] < tc, full = h;   /* 도로 중심선보다 가까운 쪽 */ if (near) h = Math.min(h, 4.2);   /* 잘라 낸 건물: 1층 높이 */
     const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
@@ -206,7 +216,7 @@ export function build(THREE, scene, osm, opt = {}) {
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 6) continue; const ux = dx / L, uz = dz / L, dir = Math.atan2(dz, dx);
       for (let ln = 0; ln < lanes; ln++) { const off = -rw.width / 2 + (ln + 0.5) * rw.width / lanes;
         for (let d = 4 + R() * 6; d < L - 4; d += (k === 'busway' ? 34 : 6.4) + (R() < 0.55 ? 10 + R() * 26 : R() * 1.5)) {   /* 절반쯤 비워 사이로 걸어 다닐 틈 */
-          const cx = a[0] + ux * d - uz * off, cz = a[1] + uz * d + ux * off, [cs, ct] = ST([cx, cz]); if (cs < walk.s0 - 30 || cs > walk.s1 + 30 || Math.abs(ct) > 60) continue;
+          const cx = a[0] + ux * d - uz * off, cz = a[1] + uz * d + ux * off, [cs, ct] = ST([cx, cz]); if (cs < walk.s0 - 30 || cs > walk.s1 + 30 || Math.abs(ct - tc) > 60) continue;
           if (exitsW.some(e => Math.hypot(e.p[0] - cx, e.p[1] - cz) < 5)) continue;
           /* «사람들은 마지막까지 신호를 지켰다» — 횡단보도 위에는 서지 않는다 */
           if (xings.some(x => Math.hypot(x[0] - cx, x[1] - cz) < 7)) continue;
@@ -235,7 +245,7 @@ export function build(THREE, scene, osm, opt = {}) {
   for (const rw of roadsW) { if (!['primary', 'primary_link'].includes(rw.r.kind)) continue;
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 4) continue; const ux = dx / L, uz = dz / L;
       for (let d = 2; d < L; d += 8) for (const side of [-1, 1]) { const off = side * (rw.width / 2 + 1.6), x = a[0] + ux * d - uz * off, z = a[1] + uz * d + ux * off, [s, t] = ST([x, z]);
-        if (s < walk.s0 - 20 || s > walk.s1 + 20 || Math.abs(t) > 45) continue; if (exitsW.some(e => Math.hypot(e.p[0] - x, e.p[1] - z) < 4)) continue;
+        if (s < walk.s0 - 20 || s > walk.s1 + 20 || Math.abs(t - tc) > 45) continue; if (exitsW.some(e => Math.hypot(e.p[0] - x, e.p[1] - z) < 4)) continue;
         if (blockers.some(bl => bl.poly && inPoly([x, z], bl.poly))) continue;
         if (R() < 0.5) { cluster(x, z, 0.55, 4 + (R() * 3 | 0)); crystals++; if (crystals % 3 === 0) { const L2 = new THREE.PointLight(0xff7a20, 7, 7, 1.8); L2.position.set(x, 0.8, z); scene.add(L2); lights.push({ x, y: 0.8, z, color: '#ff7a20', intensity: 5, distance: 6 }); } }
         else { const tr = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 3.2, 6), trunkM); tr.position.set(x, 1.6, z); tr.castShadow = true; scene.add(tr);
@@ -248,7 +258,9 @@ export function build(THREE, scene, osm, opt = {}) {
   function inPoly(p, poly) { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; } return inside; }
 
   /* ---------- 출발점: 사거리 동쪽 인도(12번 출구 앞) ---------- */
-  const e12 = exitsW.find(e => e.ref === '12') || exitsW[0]; const [s12, t12] = ST(e12.p); const spawnP = FROM(s12 + 4, Math.min(walk.t1 - 2, t12 - 4));
+  /* 출발점: 강남대로 인도에 있는 출구 중 사거리에 가장 가까운 것 옆 (12번은 테헤란로 쪽이라 걷는 띠 밖이었다) */
+  const onWalk = exitsW.map(e => ({ e, st: ST(e.p) })).filter(o => o.st[1] > walk.t0 && o.st[1] < walk.t1 && o.st[0] > walk.s0 && o.st[0] < walk.s1).sort((a, c) => Math.abs(a.st[0]) - Math.abs(c.st[0]));
+  const near0 = onWalk[0] || { st: [0, 0] }, spawnP = FROM(near0.st[0] + (near0.st[0] > 0 ? -4 : 4), near0.st[1] - Math.sign(near0.st[1] || 1) * 3);
   /* 그림이 덮어야 하는 곳: 걷는 띠 전부 + 먼 쪽 벽 높이 24 m 까지 (그 위는 그림 밖) */
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 24, p[1]]); }
   console.info('[env-osm] 건물', builtW.length, '차', cars, '결정', crystals, '간판 빛', signsLit, '출구', exitsW.length);
