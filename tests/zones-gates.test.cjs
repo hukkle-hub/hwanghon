@@ -33,3 +33,11 @@ test('던전: 물 높이·형광등 깜빡임·보스 구역(클레이브)이 �
 test('보스 구역은 문과 겹치지 않는다 (들어오자마자 보스 구역이면 안 된다)',()=>{
  for(const z of zones){const m=meta(z);for(const b of m.bosses||[])for(const g of m.gates||[]) assert.ok(Math.hypot(b.x-g.x,b.z-g.z)>b.r+g.r+5,z+': '+b.id+' ↔ '+g.id);}
 });
+test('지역 표(js/mmo/zones.js)와 구운 맵이 맞다 — 표에 없는 맵 없음, 문 짝·보스가 표와 같다',async()=>{
+ const {ZONES}=await import('../js/mmo/zones.js');
+ for(const z of zones){ assert.ok(ZONES[z],'표에 없는 맵 '+z); const m=meta(z),Z=ZONES[z];
+  assert.ok(m.pxPerM===Z.px,z+' 해상도 '+m.pxPerM+' ≠ 표 '+Z.px);
+  if(Z.env==='indoor'||Z.env==='field'){ const ids=(Z.gates||Z.field?.gates||[]).map(g=>g.id).sort(); assert.deepEqual((m.gates||[]).map(g=>g.id).sort(),ids,z+' 문'); }
+  for(const b of m.bosses||[]) if(b.model) assert.ok(fs.existsSync(path.join(ROOT,b.model)),z+' 보스 모델 '+b.model); }
+ for(const [id,Z] of Object.entries(ZONES)) if(Z.restart) assert.ok(ZONES[Z.restart.zone],id+' 되돌아갈 곳 '+Z.restart.zone);
+});

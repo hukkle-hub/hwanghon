@@ -90,7 +90,7 @@ renderer.setPixelRatio(Math.min(2,devicePixelRatio)); renderer.setSize(innerWidt
 renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
 const scene=new THREE.Scene();
 /* 지역: 실제 공간 맵(OSM 실측, 문서 185 §6.5). ?zone=<id> */
-const ZONE=/^[a-z0-9_-]{1,24}$/.test(q.get('zone')||'')?q.get('zone'):'gangnam';
+const ZONE=/^[a-z0-9_-]{1,24}$/.test(q.get('zone')||'')?q.get('zone'):'bunker';   /* 처음엔 허브(강남 벙커) — 리니지 마을처럼 출격문으로 나간다 */
 const meta=await (await fetch('maps/2d/'+ZONE+'/map.json')).json();
 meta.gates=meta.gates||[]; meta.bosses=meta.bosses||[]; const DUNGEON=meta.kind==='dungeon';
 document.getElementById('load').textContent=(meta.title||'강남대로')+' — 들어가는 중…';
