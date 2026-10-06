@@ -36,7 +36,7 @@ export const ZONES = {
         { id: 'vault', s: [-42, -30], t: [-12, 0], h: 6, light: 'red', props: [ { k: 'vault', u: 0.5, side: 'far' }, { k: 'sign', text: '강남역 지하상가 출격문', u: 0.5, y: 5.4, w: 6 } ] } ] } },
 
   /* ================= 2. 강남대로 (필드) · 지하상가 B1 · 2호선 B2 ================= */
-  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 120,   /* 넓힌 판은 90 으로 굽는 중 — 굽고 나서 90 */ rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
     /* 하위 구역 (문서 190 §4) — 길 좌표 s·t. 사각형 {s:[a,b], t:[c,d]} 또는 원 {st:[s,t], r} · kind 'hunt'(기본)·'rest' · danger 1~3 */
     hunts: [ { id: 'avenue', name: '대로 한복판', s: [-310, 55], t: [-12, 43], lv: [1, 4], mobs: '쇼윈도 리퍼' },
              { id: 'blocks', name: '무너진 이면 블록', s: [-310, 55], t: [-177, -12], lv: [4, 8], mobs: '쇼윈도 리퍼 · 감염체', danger: 2 },
@@ -57,7 +57,7 @@ export const ZONES = {
         { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] } ] } ] } },
 
   /* ================= 3. 남산 (필드) · 남산타워 하부 ================= */
-  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 120,   /* 넓힌 판은 90 으로 굽는 중 */ rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 120, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
     hunts: [ { id: 'cable', name: '케이블카 길', s: [-45, 732], t: [-20, 20], lv: [10, 13], mobs: '케이블카 드로퍼' },
              { id: 'slopeN', name: '북쪽 숲 비탈', s: [-45, 732], t: [20, 70], lv: [12, 16], mobs: '(가안)', danger: 2 },
              { id: 'slopeS', name: '남쪽 숲 비탈', s: [-45, 732], t: [-80, -20], lv: [12, 16], mobs: '(가안)', danger: 2 } ],

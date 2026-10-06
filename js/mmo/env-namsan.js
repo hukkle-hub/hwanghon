@@ -87,6 +87,8 @@ export function build(THREE, scene, osm) {
       if (i % 4 === 0) for (const side of [-1, 1]) { const q = [a[0] - dz / L * 1.9 * side, a[1] + dx / L * 1.9 * side]; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6), stepEdgeM); post.position.set(q[0], 0.45, q[1]); scene.add(post); } } }
   /* 문·출발점 둘레는 비운다 — 첫 판은 남쪽 문 원 안에 나무가 서 있었다(게임 화면 확인) */
   { const g0 = FROM(walk.s0 + 3, 0), sp0 = FROM(walk.s0 + 9, -3); clear.push({ pts: [g0, g0], r: 6 }, { pts: [sp0, sp0], r: 5 }); }
+  /* 타워 문 · 공동구 문 자리도 미리 비운다 (아래 «문» 과 같은 자리) — 넓힌 판에서 타워 문에 바위가 섰다 */
+  { const gt = FROM(sT + 14, -16), gy = FROM(walk.s0 + 14, 16); clear.push({ pts: [gt, gt], r: 10 }, { pts: [gy, gy], r: 10 }); }   /* 6 m 로는 짙어진 숲의 갓(4.7 m)이 55° 시선으로 문 자리까지 드리웠다 */
   const nearClear = (p, pad = 0) => clear.some(c => { for (let i = 1; i < c.pts.length; i++) { const a = c.pts[i - 1], b = c.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;
     const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)); if (Math.hypot(p[0] - a[0] - u * vx, p[1] - a[1] - u * vz) < c.r + pad) return true; } return false; });
 
