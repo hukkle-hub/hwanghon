@@ -57,7 +57,7 @@ export const ZONES = {
         { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] } ] } ] } },
 
   /* ================= 3. 남산 (필드) · 남산타워 하부 ================= */
-  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 120, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
     hunts: [ { id: 'cable', name: '케이블카 길', s: [-45, 732], t: [-20, 20], lv: [10, 13], mobs: '케이블카 드로퍼' },
              { id: 'slopeN', name: '북쪽 숲 비탈', s: [-45, 732], t: [20, 70], lv: [12, 16], mobs: '(가안)', danger: 2 },
              { id: 'slopeS', name: '남쪽 숲 비탈', s: [-45, 732], t: [-80, -20], lv: [12, 16], mobs: '(가안)', danger: 2 } ],

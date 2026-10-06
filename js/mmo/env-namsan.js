@@ -134,7 +134,7 @@ export function build(THREE, scene, osm) {
   const rebar = new THREE.MeshStandardMaterial({ color: 0x3a2a24, roughness: 0.6, metalness: 0.7 }); for (let k = 0; k < 10; k++) { const rb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2 + R() * 2, 4), rebar); rb.position.set(tower[0] + (R() - .5) * 5, 39.5, tower[1] + (R() - .5) * 5); rb.rotation.set((R() - .5) * 0.8, 0, (R() - .5) * 0.8); scene.add(rb); }
   /* 무너진 전망대 조각: 굽은 원판 덩어리가 광장에 박혔다 */
   for (let k = 0; k < 3; k++) { const a = 0.6 + k * 2.1, p = [tower[0] + Math.cos(a) * 15, tower[1] + Math.sin(a) * 15]; const ring = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 1.2, 16, 1, true, 0, 0.9), darkConc); ring.material.side = THREE.DoubleSide; ring.position.set(p[0] - Math.cos(a) * 5.5, 0.4, p[1] - Math.sin(a) * 5.5); ring.rotation.set(0.9, a, 0.35); ring.castShadow = true; scene.add(ring); blockers.push({ x: p[0], z: p[1], hw: 2.6, hd: 1.6, rot: a }); }
-  for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 14 + R() * 10, p = [tower[0] + Math.cos(a) * r, tower[1] + Math.sin(a) * r]; if (!inBand(p, -3)) continue;
+  for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 14 + R() * 10, p = [tower[0] + Math.cos(a) * r, tower[1] + Math.sin(a) * r]; if (!inBand(p, -3) || nearClear(p)) continue;   /* 문 자리는 피한다 — 넓힌 판에서 덩이가 타워 문 위에 떨어졌다 */
     const ch = new THREE.Mesh(new THREE.BoxGeometry(3 + R() * 3, 1 + R() * 1.4, 2 + R() * 2), R() < 0.5 ? concM : darkConc); ch.position.set(p[0], 0.5, p[1]); ch.rotation.set(R() - .5, R() * 3, R() - .5); ch.castShadow = true; scene.add(ch);
     blockers.push({ x: p[0], z: p[1], hw: 2, hd: 1.4, rot: ch.rotation.y }); }
   /* 광장 바닥 + 둘레 난간 (먼 쪽 반원만) — 자물쇠 수백 개 */
