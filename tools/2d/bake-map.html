@@ -81,7 +81,8 @@ function overview(px){ const W=env.walk, A=env.road.ang, FR=(s,t)=>new THREE.Vec
   const w=px||1400, h=Math.round(w*(v1-v0)/(u1-u0)), uc=(u0+u1)/2, vc=(v0+v1)/2, k=-(R.y*uc+U.y*vc)/D.y, g=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,k);
   renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-(u1-u0)/2,(u1-u0)/2,(v1-v0)/2,-(v1-v0)/2,NEAR,FAR*3); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L*2); pc.lookAt(g); pc.updateMatrixWorld(true);
   if(sun){ sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,400); const sc=sun.shadow.camera, r=Math.max(u1-u0,v1-v0)*0.75; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=1200; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld(); }
-  renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/webp',0.7); renderer.setSize(TILE,TILE);
+  const ex=renderer.toneMappingExposure; if(!sun) renderer.toneMappingExposure=ex*2.6;   /* 실내는 지도로 읽기엔 어둡다 — 미니맵만 밝게 */
+  renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/webp',0.7); renderer.setSize(TILE,TILE); renderer.toneMappingExposure=ex;
   return { url, u0:+u0.toFixed(2), u1:+u1.toFixed(2), v0:+v0.toFixed(2), v1:+v1.toFixed(2), w, h }; }
 window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE };
 </script>
