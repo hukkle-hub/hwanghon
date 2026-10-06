@@ -95,10 +95,16 @@ function plan(region) {
     if (process.env.DEBUG && sc === 0 && t0 % 40 === 0) console.log("  띠 t", t0, t1, "점수", score.toFixed(2), Object.entries(c).map(([k, v]) => k + " " + (v * 100).toFixed(0)).join(" "));
     if (!best || score > best.score) best = { score, s0, s1, t0, t1, c }; }
   const walk = { s0: best.s0, s1: best.s1, t0: best.t0, t1: best.t1 }, c = best.c;
-  /* 출발점: 길 위(t = 0)가 띠 안이면 거기, 아니면 띠 가운데 — 건물·물이 아닌 가장 가까운 칸 */
+  /* 출발점: 띠 가운데 길가 — 차도 위가 아니고(대전 첫 굽기: 10차선 교차로 한가운데라 화면이 빈 아스팔트뿐), 도시면 20 m 안에 건물이 있는 칸.
+     물·건물이 아니고 둘레 3 m 도 걸을 수 있어야 한다 */
+  const carRoads = osm.roads.filter(r => !r.tunnel && !r.area && /trunk|primary|secondary|tertiary|unclassified|residential|living_street|service/.test(r.kind)).map(r => ({ line: r.line, hw: r.width ? r.width / 2 : r.lanes ? r.lanes * 1.75 : /trunk|primary/.test(r.kind) ? 9 : /secondary|tertiary/.test(r.kind) ? 6 : 3.5 }));
+  const onRoad = (s, t) => { const p = toOsm(FROM(s, t)); return carRoads.some(r => r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < r.hw + 1)); };
+  const urban = lookOf(region).dress.urban, nearB = (s, t) => { for (let ds = -20; ds <= 20; ds += G) for (let dt = -20; dt <= 20; dt += G) if (/city|big/.test(cls(s + ds, t + dt))) return true; return false; };
   const sc = (walk.s0 + walk.s1) / 2, want = [sc, walk.t0 < 0 && walk.t1 > 0 ? 0 : (walk.t0 + walk.t1) / 2]; let spawn = null;
-  for (let r = 0; r < 80 && !spawn; r += G) for (let a = 0; a < 16 && !spawn; a++) { const s = want[0] + Math.cos(a / 16 * Math.PI * 2) * r, t = want[1] + Math.sin(a / 16 * Math.PI * 2) * r; if (/open|park|beach/.test(cls(s, t)) && /open|park|beach/.test(cls(s + 3, t)) && /open|park|beach/.test(cls(s, t + 3))) spawn = [Math.round(s), Math.round(t)]; }
-  spawn = spawn || want;
+  const okAt = (s, t) => s > walk.s0 + 10 && s < walk.s1 - 10 && t > walk.t0 + 10 && t < walk.t1 - 10 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([ds, dt]) => /open|park|beach/.test(cls(s + ds, t + dt))) && !onRoad(s, t);
+  for (const strict of [true, false]) for (let r = 0; r < 120 && !spawn; r += G) for (let a = 0; a < 24 && !spawn; a++) { const s = want[0] + Math.cos(a / 24 * Math.PI * 2) * r, t = want[1] + Math.sin(a / 24 * Math.PI * 2) * r; if (okAt(s, t) && (!strict || !urban || nearB(s, t))) spawn = [Math.round(s), Math.round(t)]; }
+  if (!spawn) console.warn("  ! 출발점 후보 없음 — 띠 가운데로", want); spawn = spawn || want;
+  if (process.env.DEBUG) { let n = 0, road = 0, cl = 0; for (let s = walk.s0; s < walk.s1; s += 10) for (let t = walk.t0; t < walk.t1; t += 10) { n++; if (onRoad(s, t)) road++; if (/open|park|beach/.test(cls(s, t))) cl++; } console.log("  칸", n, "차도", road, "걸을 수 있는 땅", cl); }
 
   /* 하위 구역: 띠를 s 로 셋 — 가운데(출발점 쪽)가 쉬움, 양 끝이 어려움. 거점은 가운데가 마을(안전) */
   const lv = levelOf(region) || levelOf({ ...region, kind: 'city' }), thirds = [0, 1, 2].map(k => [walk.s0 + (walk.s1 - walk.s0) * k / 3, walk.s0 + (walk.s1 - walk.s0) * (k + 1) / 3].map(Math.round));
