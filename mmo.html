@@ -37,7 +37,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 <canvas id="c"></canvas>
 <div class="hud" id="hud">
   <div class="top"><div class="face" id="face"></div><div><b id="who">아인 · Lv 8</b><div class="bars"><div class="bar"><i id="hpb" style="width:86%"></i></div><div class="bar st"><i style="width:64%"></i></div></div></div></div>
-  <div class="zone">강남대로 · 지하상가 5번 출구<b>위험 B</b></div>
+  <div class="zone">강남대로 · 지하상가 5번 출구<b>위험 B</b><span id="net" style="display:block;margin-top:2px;color:#c9a45e">오프라인</span></div>
   <div id="dbg"></div>
   <div class="gear hit" id="gearBtn">장비 바꾸기</div>
   <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
@@ -57,9 +57,10 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 <script type="module">
 /* 황혼 2D 맵 MMORPG 시제품 (docs/design/185 §6, 디렉터 2026-10-06 «LoL 와일드리프트를 MMORPG 로»)
    맵 = 구운 2D 그림(색 + 깊이) · 캐릭터 = 실시간 3D(장비가 입은 그대로) · 카메라 = 고정 내려다보기 55°, 회전 없음.
-   ?char=ain|kain|ryu|sera · ?zoom=1 · ?debug=1 */
+   ?char=ain|kain|ryu|sera · ?zoom=1 · ?debug=1 · ?online=1 (이 페이지를 서빙한 파티 서버) · ?server=<주소> (GitHub Pages 에서 파티 서버로) */
 import * as THREE from './vendor/three/three.module.js';
 import { GLTFLoader } from './vendor/three/GLTFLoader.js';
+import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
 import { createBloom } from './js/bloom.js';
 import { basis, createMap } from './js/mmo/map2d.js';
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
@@ -110,17 +111,22 @@ const SETS=[ {}, { chest:'a_reed_cuirass', legs:'a_black_greaves', gloves:'a_ste
   { head:'a_ward_mask', chest:'a_ward_coat', legs:'a_ward_greaves', gloves:'a_ward_gloves', boots:'a_ward_boots' } ];
 const START_SET={ ain:1, kain:2, ryu:3, sera:0 };
 const heroes=[];
-function dress(h, k){ h.set=k; const eq=Object.assign({ main:WEAPON[h.id] }, SETS[k]); window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id }); }
-async function hero(id, x, z, me){ const g=await load('art/3d/'+id+'_anim.glb'); if(window.TW_POSE) TW_POSE.repair(THREE,g); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,g.scene);
-  const root=g.scene; root.position.set(x,0,z); scene.add(root); root.traverse(o=>{ if(o.isMesh) o.frustumCulled=false; });
+function dress(h, k){ h.set=k; const eq=Object.assign({ main:WEAPON[h.id] }, SETS[k]||{}, h.eqNet||{}); window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id }); }
+/* 영웅 GLB 는 영웅마다 한 번만 받고, 사람마다 뼈대째 복제한다 — 같은 영웅이 여럿이어도 내려받기 1번 */
+const gltfs={};
+function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; })); }
+async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=SkeletonUtils.clone(g.scene); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,root);
+  root.position.set(x,0,z); scene.add(root); root.traverse(o2=>{ if(o2.isMesh) o2.frustumCulled=false; });
   const mixer=new THREE.AnimationMixer(root), clip=n=>g.animations.find(a=>a.name===n), act={};
   for(const n of ['idle','run','walk','attack1','dodgeB']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
   ['attack1','dodgeB'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
   act.idle.play(); mixer.setTime(Math.random()*2);
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
-  const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); tag.innerHTML=(me?'':'<span style="color:#9fd8e8">[황혼]</span> ')+NAMES[id]+'<div class="hp"><i style="width:'+(me?86:60+Math.random()*40|0)+'%"></i></div>'; document.getElementById('hud').appendChild(tag);
-  const h={ id, root, mixer, act, cur:'idle', blob, tag, me, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0 };
-  dress(h, START_SET[id]); heroes.push(h); return h; }
+  const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); const label=String(o.name||NAMES[id]).replace(/[<>&]/g,'');
+  tag.innerHTML=(me?'':'<span style="color:#9fd8e8">'+(o.net?NAMES[id]:'[황혼]')+'</span> ')+label+'<div class="hp"><i style="width:'+(me?86:o.net?100:60+Math.random()*40|0)+'%"></i></div>'; document.getElementById('hud').appendChild(tag);
+  const h={ id, root, mixer, act, cur:'idle', blob, tag, me, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, target:null };
+  dress(h, o.look!=null?o.look:START_SET[id]); heroes.push(h); return h; }
+function removeHero(h){ const i=heroes.indexOf(h); if(i<0) return; scene.remove(h.root); scene.remove(h.blob); h.tag.remove(); heroes.splice(i,1); }
 function play(h, n, fade=0.18){ if(h.cur===n||!h.act[n]) return; const a=h.act[n], b=h.act[h.cur]; a.reset().play(); if(b) a.crossFadeFrom(b,fade,false); h.cur=n; }
 /* ---------- 걷기: 길 좌표 띠 + 상자 충돌 ---------- */
 const ANG=meta.road.ang, ca=Math.cos(ANG), sa=Math.sin(ANG);
@@ -147,21 +153,56 @@ addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null;
 function attack(){ if(!me||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8; }
 function dodge(){ if(!me||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; }
-function nextSet(){ if(me) dress(me,(me.set+1)%SETS.length); }
+function nextSet(){ if(!me) return; dress(me,(me.set+1)%SETS.length); net&&net.send({type:'fieldLook',look:me.set}); }
 document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
 const dbg=document.getElementById('dbg'); let dbgOn=DEBUG; function toggleDbg(){ dbgOn=!dbgOn; dbg.style.display=dbgOn?'block':'none'; } dbg.style.display=dbgOn?'block':'none';
-/* ---------- 출발: 나 + 다른 플레이어 셋 ---------- */
-const sp=meta.spawn;
-me=await hero(ME, sp.x, sp.z, true);
-document.getElementById('who').textContent=NAMES[ME]+' · Lv 8'; document.getElementById('face').style.backgroundImage='url(art/face-'+ME+'.webp)';
-const others=['ain','kain','ryu','sera'].filter(c=>c!==ME);
-const offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];
-await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false)));
+/* ---------- 온라인: 파티 서버의 필드 방 (server/field.cjs, 문서 185 §6.4) ---------- */
+const netEl=document.getElementById('net'); const remotes=new Map(); let net=null, ANIMS=['idle','run','walk','attack1','dodgeB'];
+function partyServer(){ const v=q.get('server')||''; if(!v) return { host:location.host, secure:location.protocol==='https:' };
+  try{ const u=new URL(/^(https?|wss?):\/\//.test(v)?v.replace(/^ws/,'http'):'https://'+v); return { host:u.host, secure:u.protocol==='https:' }; }catch{ return null; } }
+function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServer(); if(!sv) return reject(Error('서버 주소 오류'));
+  const tokenKey='tw:party-token:'+sv.host, store={ get:k=>{ try{ return localStorage.getItem(k); }catch{ return null; } }, set:(k,v)=>{ try{ localStorage.setItem(k,v); }catch{} } };
+  const ws=new WebSocket((sv.secure?'wss:':'ws:')+'//'+sv.host+'/party-socket'); let profile=null, tries=0; const timer=setTimeout(()=>{ reject(Error('접속 시간 초과')); try{ ws.close(); }catch{} },15000);
+  const send=m=>{ if(ws.readyState===1) ws.send(JSON.stringify(m)); };
+  const named=()=>{ const n=(store.get('tw:party-name')||'요원')+(tries?String(Math.random()*9000+1000|0):''); tries++; send({type:'character',name:n.replace(/[^\p{L}\p{N}_]/gu,'').slice(0,16)||'요원'+(Math.random()*9000+1000|0),character:ME}); };
+  ws.onopen=()=>send({type:'hello',token:store.get(tokenKey),name:store.get('tw:party-name')||'요원'});
+  ws.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch{ return; }
+    if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:'gangnam',look:START_SET[profile.character]}); else named(); return; }
+    if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:'gangnam',look:START_SET[profile.character]}); return; }
+    if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
+    if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; resolve(net); return; }
+    if(m.type==='field'){ onField(m); return; }
+    if(m.type==='error') console.warn('[field]', m.message); };
+  ws.onclose=()=>{ clearTimeout(timer); if(net){ net=null; remotes.forEach(removeHero); remotes.clear(); netEl.textContent='연결 끊김 — 혼자'; } else reject(Error('접속 실패')); }; }); }
+const infos={};
+function onField(m){ Object.assign(infos, m.infos||{}); const live=new Set();
+  for(const [id,x,z,yaw,ai] of m.players){ live.add(id); let r=remotes.get(id); const info=infos[id];
+    if(!r){ if(!info) continue; r={ loading:true, target:[x,z,yaw,ANIMS[ai]||'idle'], ver:info };
+      remotes.set(id,r); const eq={}; for(const k of ['main','sub','off']) if(info.eq&&info.eq[k]) eq[k]=info.eq[k];
+      hero(info.character, x, z, false, { net:true, name:info.name, look:info.look, eq }).then(h=>{ if(remotes.get(id)!==r){ removeHero(h); return; } Object.assign(h,{ target:r.target, ver:r.ver }); remotes.set(id,h); });
+      continue; }
+    r.target=[x,z,yaw,ANIMS[ai]||'idle'];
+    if(m.infos&&m.infos[id]&&!r.loading&&m.infos[id]!==r.ver){ r.ver=m.infos[id]; r.eqNet={ main:m.infos[id].eq&&m.infos[id].eq.main }; dress(r, m.infos[id].look); } }
+  for(const [id,r] of remotes) if(!live.has(id)){ remotes.delete(id); if(!r.loading) removeHero(r); }
+  netEl.textContent='온라인 · 근처 '+remotes.size+'명'; }
+function follow2(h, dt){ const t=h.target; if(!t) return; const dx=t[0]-h.root.position.x, dz=t[1]-h.root.position.z, d=Math.hypot(dx,dz);
+  if(d>6){ h.root.position.x=t[0]; h.root.position.z=t[1]; } else { const k=Math.min(1,dt*10); h.root.position.x+=dx*k; h.root.position.z+=dz*k; }
+  let dy=t[2]-h.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); h.yaw+=dy*Math.min(1,dt*12); h.root.rotation.y=h.yaw;
+  if(t[3]==='attack1'||t[3]==='dodgeB'){ if(h.cur!==t[3]) play(h,t[3],0.08); } else play(h, t[3]); }
+const ONLINE=q.get('online')==='1'||q.has('server');
+if(ONLINE){ netEl.textContent='접속 중…'; try{ await connectNet(); netEl.textContent='온라인 · 근처 0명'; }catch(e){ netEl.textContent='오프라인 — '+e.message; } }
+/* ---------- 출발 ---------- */
+const MY=net?net.profile.character:ME, sp=net?{ x:net.joined.x, z:net.joined.z }:meta.spawn;
+me=await hero(MY, sp.x, sp.z, true, { name:net?net.profile.name:NAMES[MY] });
+document.getElementById('who').textContent=(net?net.profile.name:NAMES[MY])+' · Lv 8'; document.getElementById('face').style.backgroundImage='url(art/face-'+MY+'.webp)';
+/* 혼자일 때만 화면 안 AI 셋 (온라인이면 실제 사람만) */
+if(!net){ const others=['ain','kain','ryu','sera'].filter(c=>c!==MY), offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];
+  await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false))); }
 await new Promise(r=>setTimeout(r,1500));   /* 장비 GLB 가 붙을 시간 */
 document.getElementById('load').remove();
 const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, amount:MOBILE?0.75:0.85, samples:4 });
 /* ---------- 루프 ---------- */
-const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0;
+const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0;
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
   if(h.busy>0){ h.busy-=dt; if(h.busy<=0) play(h, m>0.05?'run':'idle'); return; }
   if(m>0.05){ const k=Math.min(1,m), sp2=speed*(k<0.55?0.45:1); h.root.position.x+=dx/m*sp2*k*dt; h.root.position.z+=dz/m*sp2*k*dt; collide(h.root.position);
@@ -175,15 +216,16 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   let ix=input.x+(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0), iy=input.y+(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, ix, -iy, dt, 4.8);
-  heroes.forEach(h=>{ if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,0.03,h.root.position.z); });
+  heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,0.03,h.root.position.z); });
   nearLights(me.root.position); follow(me.root.position);
+  if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
   heroes.forEach(tagPos);
   if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);
   fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+(LOD?' · LOD':'')+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
 window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
-  teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta };
+  teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };
 tick();
 </script>
 </body>

@@ -2,10 +2,10 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {WebSocketServer,WebSocket}=require('ws'),{Store}=require('./store.cjs'),{Raid}=require('./raid.cjs'),C=require('./content.cjs');
 const WIRE=require('../js/party-wire.js');
 const ROOT=path.resolve(__dirname,'..');
-const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs');
+const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs');
 function createPartyServer(options={}){
  const store=options.store||new Store(options.dataDir||process.env.DATA_DIR||path.join(ROOT,'.party-data'));
- const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const stats={bytesSent:0,messagesSent:0,droppedSteps:0,backpressure:0};
+ const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field();   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) */const stats={bytesSent:0,messagesSent:0,droppedSteps:0,backpressure:0};
  const maxRooms=options.maxRooms||Number(process.env.MAX_ROOMS||32),maxPlayers=options.maxPlayers||Number(process.env.MAX_PLAYERS||100),maxConnections=options.maxConnections||maxPlayers+32;
  const send=(socket,message)=>{if(socket.readyState!==WebSocket.OPEN)return;if(socket.bufferedAmount>256*1024){stats.backpressure++;return;}const payload=typeof message==='string'?message:JSON.stringify(message);socket.send(payload);stats.bytesSent+=Buffer.byteLength(payload);stats.messagesSent++;return true;};
  const server=http.createServer((req,res)=>{
@@ -78,9 +78,10 @@ function createPartyServer(options={}){
   if(msg.type==='account'){await account(ws,msg);return;}
   if(msg.type==='hello'){if(ws.playerId)throw Error('이미 접속했습니다.');if(sessions.size>=maxPlayers&&!msg.token)throw Error('서버가 가득 찼습니다.');attach(ws,store.login(msg.token,msg.name));return;}
   const id=ws.playerId;if(!id||sessions.get(id)!==ws)throw Error('먼저 접속해 주세요.');const room=current(id);store.checkBan(id);
-  if(msg.type==='logout'){store.revoke(id);leave(id,true);sessions.delete(id);send(ws,{type:'loggedOut'});ws.close(1000,'Logout');sendBoard();return;}
+  if(msg.type==='logout'){field.leave(id);store.revoke(id);leave(id,true);sessions.delete(id);send(ws,{type:'loggedOut'});ws.close(1000,'Logout');sendBoard();return;}
   if(msg.type==='character'){const p=store.chooseName(id,msg.name,msg.character);profileUpdate(p);enterOffice(id);rpg.update(id);sendBoard();return;}
   if(!store.public(id).characterCreated)throw Error('먼저 캐릭터 이름을 정하세요.');
+  if(msg.type.startsWith('field')){const reply=field.command(id,msg,store.public(id),!!room?.raid);if(reply)send(ws,reply);return;}
   if(await rpg.command(ws,msg))return;
   if(['guildCreate','guildJoin','guildLeave'].includes(msg.type)){
    if(!store.public(id).account)throw Error('길드 이용 전 계정을 등록하세요.');
@@ -110,7 +111,7 @@ function createPartyServer(options={}){
    if(msg.type==='buy'){if(typeof msg.listing!=='string')throw Error('물품을 선택하세요.');for(const p of store.buy(id,msg.listing))profileUpdate(p);}
    if(msg.type==='cancelSale'){if(typeof msg.listing!=='string')throw Error('물품을 선택하세요.');profileUpdate(store.cancel(id,msg.listing));}
    if(msg.type==='purchase')profileUpdate(store.purchase(id,msg.item,msg.quantity));
-   if(msg.type==='equip'){profileUpdate(store.equip(id,msg.item));unready(id);}
+   if(msg.type==='equip'){profileUpdate(store.equip(id,msg.item));unready(id);field.relook(id,store.public(id));}
    rpg.update(id);send(ws,{type:'market',listings:store.market()});return;
   }
   /* 모집 목록 새로 고침 (시트 03 필터 바) — 방 생성·합류·퇴장 때 자동으로도 나가지만
@@ -137,14 +138,14 @@ function createPartyServer(options={}){
   connections.add(ws);ws.alive=true;ws.authDeadline=Date.now()+20000;ws.lastSeq=0;ws.bucket=120;ws.bucketAt=Date.now();ws.queue=Promise.resolve();ws.queued=0;
   ws.on('pong',()=>ws.alive=true);ws.on('error',()=>{});
   ws.on('message',bytes=>{const now=Date.now();ws.bucket=Math.min(120,ws.bucket+(now-ws.bucketAt)*.08);ws.bucketAt=now;if(ws.bucket<1||ws.queued>=64){ws.close(4008,'Rate limit');return;}ws.bucket--;ws.queued++;ws.queue=ws.queue.then(async()=>{if(ws.readyState!==WebSocket.OPEN)return;try{await command(ws,JSON.parse(bytes.toString()));}catch(e){send(ws,{type:'error',message:e instanceof SyntaxError?'잘못된 메시지입니다.':e.message});}}).finally(()=>ws.queued--);});
-  ws.on('close',()=>{connections.delete(ws);if(closing)return;if(!ws.playerId||sessions.get(ws.playerId)!==ws)return;sessions.delete(ws.playerId);const room=current(ws.playerId);if(room){const m=room.members.get(ws.playerId);m.connected=false;m.ready=false;m.disconnectedAt=Date.now();room.raid?.disconnect(ws.playerId);chooseLeader(room);broadcast(room);}refreshGuild(ws.playerId);sendBoard();});
+  ws.on('close',()=>{connections.delete(ws);if(closing)return;if(!ws.playerId||sessions.get(ws.playerId)!==ws)return;sessions.delete(ws.playerId);field.leave(ws.playerId);const room=current(ws.playerId);if(room){const m=room.members.get(ws.playerId);m.connected=false;m.ready=false;m.disconnectedAt=Date.now();room.raid?.disconnect(ws.playerId);chooseLeader(room);broadcast(room);}refreshGuild(ws.playerId);sendBoard();});
  });
- let prev=performance.now(),acc=0,broadcastAcc=0;
- const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}},10);
+ let prev=performance.now(),acc=0,broadcastAcc=0,fieldAcc=0;
+ const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}fieldAcc+=dt;if(fieldAcc>=.1){fieldAcc=0;for(const p of field.players.values()){const peer=sessions.get(p.id);if(peer)send(peer,field.view(p));}}},10);
  const heartbeat=setInterval(()=>{const now=Date.now();for(const ws of connections){if(ws.playerId&&store.sanction(ws.playerId).ban_until>now){ws.close(4003,'Account restricted');continue;}if(!ws.alive||now>ws.authDeadline)ws.terminate();else{ws.alive=false;ws.ping();}}for(const room of [...rooms.values()])for(const m of [...room.members.values()])if(!m.connected&&now-m.disconnectedAt>90000)leave(m.id);for(const room of [...rooms.values()])if(!room.members.size&&room.raid?.result?.rewardStatus==='saved'){rooms.delete(room.code);histories.delete('party:'+room.code);}sendBoard();},5000);
  timer.unref();heartbeat.unref();
  let backupTask=Promise.resolve();const backupTimer=store.directory&&setInterval(()=>{backupTask=store.backupData(process.env.BACKUP_DIR||path.join(store.directory,'backups')).catch(e=>console.error('백업 실패:',e.message));},Number(process.env.BACKUP_INTERVAL_MS||3600000));backupTimer?.unref();
- return {server,rooms,store,sessions,stats,listen:(port=Number(process.env.PORT||8787),host=process.env.HOST||'0.0.0.0')=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,host,()=>{server.removeListener('error',reject);resolve(server.address());});}),close:()=>new Promise(resolve=>{closing=true;clearInterval(timer);clearInterval(heartbeat);if(backupTimer)clearInterval(backupTimer);for(const ws of connections)ws.terminate();wss.close();server.close(()=>{backupTask.finally(()=>{store.close();resolve();});});})};
+ return {server,rooms,store,sessions,stats,field,listen:(port=Number(process.env.PORT||8787),host=process.env.HOST||'0.0.0.0')=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(port,host,()=>{server.removeListener('error',reject);resolve(server.address());});}),close:()=>new Promise(resolve=>{closing=true;clearInterval(timer);clearInterval(heartbeat);if(backupTimer)clearInterval(backupTimer);for(const ws of connections)ws.terminate();wss.close();server.close(()=>{backupTask.finally(()=>{store.close();resolve();});});})};
 }
 if(require.main===module){const app=createPartyServer();app.listen().then(a=>{console.log(`황혼 쉘터·인력사무소: http://localhost:${a.port}/party.html`);for(const n of Object.values(os.networkInterfaces()).flat())if(n.family==='IPv4'&&!n.internal)console.log(`같은 Wi-Fi: http://${n.address}:${a.port}/party.html`);}).catch(e=>{console.error(e.message);process.exitCode=1;});for(const s of ['SIGINT','SIGTERM'])process.once(s,()=>app.close().then(()=>process.exit(0)));}
 module.exports={createPartyServer};
