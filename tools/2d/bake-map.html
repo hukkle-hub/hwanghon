@@ -74,7 +74,16 @@ function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Mat
   renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-viewH*w/h/2,viewH*w/h/2,viewH/2,-viewH/2,NEAR,FAR); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L); pc.lookAt(g); pc.updateMatrixWorld(true);
   if(sun){ sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); } const sc=sun?sun.shadow.camera:new THREE.OrthographicCamera(), r=Math.max(viewH*w/h,viewH)*0.9; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); if(sun) sun.target.updateMatrixWorld();
   renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/png'); renderer.setSize(TILE,TILE); return url; }
-window.__BAKEMAP={ plan, tile, preview, count:LIST.length, total:cols*rows, scene, THREE };
+/* 미니맵 한 장: 걷는 띠 전체를 게임과 같은 각도로. 그림 좌표 u = p·R, v = p·U (게임 map2d 와 같다) → 미니맵 위치 */
+function overview(px){ const W=env.walk, A=env.road.ang, FR=(s,t)=>new THREE.Vector3(s*Math.cos(A)-t*Math.sin(A),0,-s*Math.sin(A)-t*Math.cos(A));
+  const cs=[[W.s0,W.t0],[W.s1,W.t0],[W.s1,W.t1],[W.s0,W.t1]].map(([s,t])=>FR(s,t)); const M=10;
+  const u0=Math.min(...cs.map(c=>c.dot(R)))-M, u1=Math.max(...cs.map(c=>c.dot(R)))+M, v0=Math.min(...cs.map(c=>c.dot(U)))-M, v1=Math.max(...cs.map(c=>c.dot(U)))+M;
+  const w=px||1400, h=Math.round(w*(v1-v0)/(u1-u0)), uc=(u0+u1)/2, vc=(v0+v1)/2, k=-(R.y*uc+U.y*vc)/D.y, g=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,k);
+  renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-(u1-u0)/2,(u1-u0)/2,(v1-v0)/2,-(v1-v0)/2,NEAR,FAR*3); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L*2); pc.lookAt(g); pc.updateMatrixWorld(true);
+  if(sun){ sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,400); const sc=sun.shadow.camera, r=Math.max(u1-u0,v1-v0)*0.75; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=1200; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld(); }
+  renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/webp',0.7); renderer.setSize(TILE,TILE);
+  return { url, u0:+u0.toFixed(2), u1:+u1.toFixed(2), v0:+v0.toFixed(2), v1:+v1.toFixed(2), w, h }; }
+window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE };
 </script>
 </body>
 </html>

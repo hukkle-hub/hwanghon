@@ -10,5 +10,5 @@ await p.goto('http://127.0.0.1:'+(process.env.HWANGHON_PORT||8777)+'/tools/2d/ba
 const plan=await p.evaluate(()=>__BAKEMAP.plan()); await b.close();
 for(const k of ['cols','rows','pxPerM','tile']) if(plan[k]!==old[k]) throw Error(k+' 가 다르다 ('+old[k]+' → '+plan[k]+') — 다시 구워야 한다');
 for(const k of ['u0','v1']) if(Math.abs(plan[k]-old[k])>1e-6) throw Error(k+' 가 다르다 — 다시 구워야 한다');
-const out={ ...plan, tiles:old.tiles }; fs.writeFileSync(F, JSON.stringify(out,null,1));
+const out={ ...plan, tiles:old.tiles, ...(old.overview?{ overview:old.overview }:{}) }; fs.writeFileSync(F, JSON.stringify(out,null,1));
 console.log(ID,'계획만 다시 —','막이',old.blockers.length,'→',plan.blockers.length);
