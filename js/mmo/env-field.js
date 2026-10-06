@@ -108,6 +108,8 @@ export function build(THREE, scene, osm, zone) {
   const bosses = (F.bosses || []).map(b => { const st = L.bareSpot(ctx, stOf(b.at)), p = FROM(st[0], st[1]); const { at, ...rest } = b; return { ...rest, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; });
   const spSt = F.spawn ? stOf(F.spawn) : (gates[0] ? [gates[0].st[0] + (gates[0].st[0] < (walk.s0 + walk.s1) / 2 ? 6 : -6), gates[0].st[1]] : [(walk.s0 + walk.s1) / 2, (walk.t0 + walk.t1) / 2]), sp = FROM(spSt[0], spSt[1]);
   const areasOut = [...gates.map(g => ({ kind: 'safe', circle: [g.x, g.z, 6] })), ...bosses.map(b => ({ kind: 'combat', circle: [b.x, b.z, b.r] }))];
+  /* 정체 구간: 트럭이 뭉쳐 벽이 된 곳은 지나갈 수 없다 — 그 뒤 칸이 통째로 가려졌다(남행 국도, tests/map-height). 그림은 그대로, 막이만 */
+  for (const j of F.jams || []) { const p = FROM(j.st[0], j.st[1]); blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: j.hw || 4.5, hd: j.hd || 4.5, rot: L.SCREEN_ANG }); }
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
   console.info('[env-field]', zone.id, '건물', built.length, '도로', roadsW.length, '선', nLines, '경계', nb, '문', gates.map(g => g.id).join(','), '막힘', blockers.length);
   return { kind: 'field', title: zone.title, lights, blockers, extentPts, road: { ang: L.SCREEN_ANG }, walk, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },

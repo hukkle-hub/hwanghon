@@ -38,7 +38,7 @@ export const ZONES = {
   /* ================= 2. 강남대로 (필드) · 지하상가 B1 · 2호선 B2 ================= */
   gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 120,   /* 넓힌 판은 90 으로 굽는 중 — 굽고 나서 90 */ rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
     /* 하위 구역 (문서 190 §4) — 길 좌표 s·t. 사각형 {s:[a,b], t:[c,d]} 또는 원 {st:[s,t], r} · kind 'hunt'(기본)·'rest' · danger 1~3 */
-    hunts: [ { id: 'avenue', name: '강남대로', s: [-310, 55], t: [-12, 43], lv: [1, 4], mobs: '쇼윈도 리퍼' },
+    hunts: [ { id: 'avenue', name: '대로 한복판', s: [-310, 55], t: [-12, 43], lv: [1, 4], mobs: '쇼윈도 리퍼' },
              { id: 'blocks', name: '무너진 이면 블록', s: [-310, 55], t: [-177, -12], lv: [4, 8], mobs: '쇼윈도 리퍼 · 감염체', danger: 2 },
              { id: 'cross', name: '강남역 사거리', st: [0, 15], r: 28, lv: [6, 10], mobs: '광장의 감염체', danger: 2 } ],
   },
@@ -177,7 +177,7 @@ export const ZONES = {
              { id: 'yard', name: '물류창고 앞마당', st: [-120, 205], r: 30, lv: [43, 45], mobs: '(가안)', danger: 3 },
              { id: 'valley', name: '골짜기 숲', s: [-300, 300], t: [-10, 140], lv: [41, 45], mobs: '(가안)', danger: 2 } ],
     /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
-    field: { seed: 10681, tc: 175, cutT: -10, walk: { s0: -300, s1: 300, t0: -10, t1: 222 }, ground: 'forest', extentH: 22, ruin: { h: [4.5, 9] }, dress: { logs: true },
+    field: { seed: 10681, tc: 175, cutT: -10, jams: [ { st: [-42, 180], hw: 5, hd: 5 } ], walk: { s0: -300, s1: 300, t0: -10, t1: 222 }, ground: 'forest', extentH: 22, ruin: { h: [4.5, 9] }, dress: { logs: true },
       sky: { hemiI: 3.2, sunAlt: 12 }, trees: { density: 0.8, inBand: 0.2, pine: 0.4, dead: 0.3 }, cars: { gap: 0.6, trucks: 0.35 }, crystals: 28, lampStep: 36, lampT: 141,
       boundary: { style: 'fence', closed: { s0: '판교 방면', s1: '계룡 방면 · 직선 백사십 킬로' } },
       gates: [ { id: 'north', at: { end: 's0', t: 178 }, to: { zone: 'pangyo', gate: 'south' }, label: '판교 방면', kind: 'zone' },

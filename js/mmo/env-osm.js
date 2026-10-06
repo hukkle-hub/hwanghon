@@ -240,6 +240,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const carCols = [0xd8d8dc, 0x1a1a1e, 0x8a8c94, 0x5a1418, 0x1c2a40, 0xe8e8ea, 0x2a2a2e, 0x6a6c72];
   const cabM = new THREE.MeshStandardMaterial({ color: 0x3a4658, roughness: 0.12, metalness: 0.4 });   /* 새까만 유리는 구멍처럼 보였다 — 노을을 받는 유리 */
   const xings = osm.crossings.map(W);
+  const endGateP = (CFG.gates || []).filter(g => g.at.end).map(g => FROM(walk[g.at.end] + (g.at.end === 's1' ? -3 : 3), g.at.t === 'road' ? tc : g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t));
   let cars = 0;
   for (const rw of roadsW) { const k = rw.r.kind; if (!['primary', 'primary_link', 'secondary', 'busway'].includes(k)) continue; const lanes = k === 'busway' ? 1 : (rw.r.lanes || 2);
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 6) continue; const ux = dx / L, uz = dz / L, dir = Math.atan2(dz, dx);
@@ -247,6 +248,7 @@ export function build(THREE, scene, osm, opt = {}) {
         for (let d = 4 + R() * 6; d < L - 4; d += (k === 'busway' ? 34 : 6.4) + (R() < 0.55 ? 10 + R() * 26 : R() * 1.5)) {   /* 절반쯤 비워 사이로 걸어 다닐 틈 */
           const cx = a[0] + ux * d - uz * off, cz = a[1] + uz * d + ux * off, [cs, ct] = ST([cx, cz]); if (cs < walk.s0 - 30 || cs > walk.s1 + 30 || Math.abs(ct - tc) > 60) continue;
           if (exitsW.some(e => Math.hypot(e.p[0] - cx, e.p[1] - cz) < 5)) continue;
+          if (endGateP.some(q => Math.hypot(q[0] - cx, q[1] - cz) < 7)) continue;   /* 끝 문 자리는 비운다 — 넓힌 판에서 문 고리 안에 차가 섰다 */
           /* «사람들은 마지막까지 신호를 지켰다» — 횡단보도 위에는 서지 않는다 */
           if (xings.some(x => Math.hypot(x[0] - cx, x[1] - cz) < 7)) continue;
           const g = new THREE.Group();
