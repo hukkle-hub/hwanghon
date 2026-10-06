@@ -31,7 +31,7 @@ test('MMO opts into the combat-only pack and starts preloading it before the fir
  assert.match(src,/combatPack\?\['swing','hit','hit_heavy','counter','counter_perfect','brk','roll','tele'\]/);
  assert.match(src,/if\(combatPack\)preload\(\)/);
  assert.match(html,/if\(REDUCED\) shakeT=0;\s*else if\(shakeT>0\)/,'reduced-motion globally suppresses camera shake');
- assert.match(html,/if\(o\.mixer&&\(!o\.fx\|\|o\.alive\|\|o\.dieT>0\|\|o\.fx\.tailT>0\)\)o\.mixer\.update\(dt\)/,'dead Clave mixer sleeps after its visual tail');
+ assert.match(html,/if\(o\.mixer&&\(!o\.fx\|\|o\.alive\|\|o\.dieT>0\|\|o\.fx\.tailT>0\)\)\{if\(o\.fx\)prepareBossMotion\(o,bossNow\(\)\);o\.mixer\.update\(dt\);\}/,'dead Clave mixer sleeps after its visual tail while live poses seek before evaluation');
 });
 test('first pointer attack queues until the suspended audio context resumes',async()=>{
  const listeners={},sources=[],param=()=>({value:0,cancelScheduledValues(){},setValueAtTime(){},setTargetAtTime(){},exponentialRampToValueAtTime(){}});

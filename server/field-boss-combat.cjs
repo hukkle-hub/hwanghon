@@ -5,8 +5,8 @@ const CLAVE_IDS=new Set(['clave','clave2']);
 /* 한 기술에 «기다렸다 치는 박자»는 하나뿐, 연계는 최대 3타, 반격은 마지막 타 직전만. */
 const SKILLS={
  shutter:{
-  clip:'atk_claveshut', duration:3400, tell:1500, charge:[1350,1850],
-  hits:[{ at:1720, shape:'line', range:7.2, width:2.2, damage:.22, knock:3.4 }]
+  clip:'atk_claveshut', duration:3400, tell:1500, charge:[1350,1850], travel:4.8,
+  hits:[{ at:1720, shape:'line', range:7.2, width:2.2, back:.5, damage:.22, knock:3.4 }]
  },
  storm:{
   clip:'atk_clavestorm', duration:4300, tell:1050,
@@ -55,7 +55,7 @@ function inShape(o,p,h){
  const dx=p.x-o.x,dz=p.z-o.z,fx=Math.sin(o.yaw||0),fz=Math.cos(o.yaw||0),sideX=fz,sideZ=-fx;
  if(h.shape==='circle') return dx*dx+dz*dz<=h.radius*h.radius;
  const f=dx*fx+dz*fz,s=dx*sideX+dz*sideZ;
- if(h.shape==='line') return f>=-.5&&f<=h.range&&Math.abs(s)<=h.width*.5;
+ if(h.shape==='line') return f>=-(h.back||0)&&f<=h.range&&Math.abs(s)<=h.width*.5;
  if(h.shape==='cone') return f>=0&&Math.hypot(dx,dz)<=h.range&&Math.abs(Math.atan2(s,f))<=h.angle*.5;
  return false;
 }
@@ -69,7 +69,7 @@ function skillTick(field,o,now){
  const elapsed=now-a.startedAt;
  /* 셔터 돌진은 예고 뒤 잠근 방향으로만 간다. 마지막 순간에 플레이어를 꺾어 따라가지 않는다. */
  if(a.skill==='shutter'){
-  const [s,e]=def.charge,k=Math.max(0,Math.min(1,(elapsed-s)/(e-s))),dist=4.8*k;
+  const [s,e]=def.charge,k=Math.max(0,Math.min(1,(elapsed-s)/(e-s))),dist=def.travel*k;
   o.x=a.fromX+Math.sin(o.yaw)*dist; o.z=a.fromZ+Math.cos(o.yaw)*dist;
  }
  while(a.hitIndex<def.hits.length&&elapsed>=def.hits[a.hitIndex].at){
