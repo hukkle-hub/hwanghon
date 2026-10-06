@@ -36,7 +36,7 @@ export const ZONES = {
         { id: 'vault', s: [-42, -30], t: [-12, 0], h: 6, light: 'red', props: [ { k: 'vault', u: 0.5, side: 'far' }, { k: 'sign', text: '강남역 지하상가 출격문', u: 0.5, y: 5.4, w: 6 } ] } ] } },
 
   /* ================= 2. 강남대로 (필드) · 지하상가 B1 · 2호선 B2 ================= */
-  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 120, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  gangnam: { title: '강남대로', kind: 'field', env: 'osm', osm: 'gangnam', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
   gangnam_b1: { title: '강남역 지하상가 B1', kind: 'dungeon', env: 'dungeon', osm: 'gangnam', px: 120, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' } },
   /* 2호선 침수 선로 — 광장 바로 밑, 수위 가슴 (L3344~L3350). 클레이브 마무리 (EP03) */
   gangnam_b2: { title: '2호선 침수 선로', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
@@ -52,7 +52,7 @@ export const ZONES = {
         { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] } ] } ] } },
 
   /* ================= 3. 남산 (필드) · 남산타워 하부 ================= */
-  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 120, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
   /* 타워 하부 — 옛 식당·기념품점, 깨진 유리, 습기로 부푼 벽지, 네 줄 긁힘 (L4995~L5025). 지하 3층 «국방부» 철문 → 통신실 (L5103~) */
   namsan_tower: { title: '남산타워 하부', kind: 'dungeon', env: 'indoor', px: 100, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'entry', u: 0.5, v: 0.4 },
@@ -83,9 +83,11 @@ export const ZONES = {
   /* 금융가 «빌딩 협곡» — 여의대로를 따라 먼 쪽에 IFC·파크원·콘래드가 벽처럼 선다. 안개 «가시거리 스무 걸음», 젖은 아스팔트, 3층 높이 LED 광고판 (L6012~L6030)
      OSM: ORIGIN=37.5250,126.9260 AXIS=여의대로 (여의대로 중심 t ≈ −150) */
   yeouido: { title: '여의도 금융가', kind: 'field', env: 'field', osm: 'yeouido', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 6012, tc: -150, walk: { s0: -320, s1: 320, t0: -186, t1: -106 }, ground: 'paver', curtain: true, extentH: 44,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
+    field: { seed: 6012, tc: -150, cutT: -330, walk: { s0: -320, s1: 320, t0: -330, t1: -106 }, ground: 'paver', curtain: true, extentH: 44, ruin: { h: [5, 11] },
+      dress: { urban: true, logs: false, patches: ['concrete', 'sand', 'asphalt'], bushColors: [0x2e3428, 0x3a3428, 0x2a2a26] },
       sky: { fog: '#3e3644', hemiI: 3.0, sunI: 3.2 },
-      trees: { density: 0.35, inBand: 0.05, pine: 0.1 }, cars: { gap: 0.6, trucks: 0.05 }, crystals: 16, lampStep: 30, lampT: -183,
+      trees: { density: 0.35, inBand: 0.1, pine: 0.1 }, cars: { gap: 0.6, trucks: 0.05 }, crystals: 30, lampStep: 30, lampT: -183,
       boundary: { style: 'urban', closed: { s0: '통제구역 — 안개', s1: '통제구역 — 안개' } },
       gates: [ { id: 'parking', at: { end: 's0', t: -150 }, to: { zone: 'yeouido_ug', gate: 'up' }, label: '지하주차장 · 공동구', kind: 'dungeon' } ],
       bosses: [ { id: 'aegis', name: '에이지스-07', title: '보이지 않는 벽', at: { st: [40, -150] }, r: 22, model: M + 'aegis_07_static.glb', h: 4, place: '빌딩 협곡', canon: 'EP06~07 여의도 빌딩 협곡' } ],
@@ -110,8 +112,9 @@ export const ZONES = {
      능선 위 철탑 + 낮은 콘크리트 건물(중계소 L8530) · 고개 아래 폐주유소(L8594) · 과천 쪽 폐차장(L8751)
      OSM: ORIGIN=37.4640,126.9890 AXIS=과천대로 · +s = 북쪽(사당·강남), −s = 남쪽(과천·판교), 과천대로 t ≈ 55~100 로 굽는다 */
   namtae: { title: '남태령 · 국도', kind: 'field', env: 'field', osm: 'namtae', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 8291, tc: 75, cutT: 60, walk: { s0: -220, s1: 300, t0: 28, t1: 122 }, ground: 'forest', extentH: 26,
-      trees: { density: 0.8, inBand: 0.08, pine: 0.45, dead: 0.15 }, cars: { gap: 0.4, trucks: 0.14 }, crystals: 12, lampStep: 40, lampT: 32,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게»): 띠 94 m → 250 m (카메라 쪽 −t 와 먼 쪽 +t 양쪽). 걷는 구역 안 건물은 무너진 저층, 가려진 인물은 실루엣(mmo.html) */
+    field: { seed: 8291, tc: 75, cutT: -60, walk: { s0: -220, s1: 300, t0: -60, t1: 190 }, ground: 'forest', extentH: 26, ruin: { h: [4.5, 9] }, dress: { logs: true },
+      trees: { density: 0.8, inBand: 0.22, pine: 0.45, dead: 0.15 }, cars: { gap: 0.4, trucks: 0.14 }, crystals: 12, lampStep: 40, lampT: 32,
       boundary: { style: 'fence', closed: { s0: '과천 · 판교 방면', s1: '사당 · 강남 방면' } },
       gates: [ { id: 'north', at: { end: 's1', t: 85 }, to: { zone: 'gangnam', gate: 'south' }, label: '강남 방면 · 사당', kind: 'zone' },
                { id: 'south', at: { end: 's0', t: 85 }, to: { zone: 'pangyo', gate: 'north' }, label: '판교 방면 · 과천', kind: 'zone' },
@@ -124,8 +127,10 @@ export const ZONES = {
   /* «건물이 온전했다… 화단의 나무가 인도를 덮고… 정리하고 떠난 자리» (L9550~L9554). 봉인 건물 = 세 번째 건물, 유리문에 «지하 3층 봉인» A4 (L9572)
      OSM: ORIGIN=37.4010,127.1080 AXIS=판교역로 · 먼 쪽 = 남쪽(연구동) → farSide osm [0,-1] 로 뒤집는다 (판교역로 t ≈ −149) */
   pangyo: { title: '판교 연구단지', kind: 'field', env: 'field', osm: 'pangyo', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 9550, farSide: { osm: [0, -1] }, tc: -149, cutT: -149, walk: { s0: -300, s1: 300, t0: -178, t1: -110 }, ground: 'paver', curtain: true, extentH: 30,
-      sky: { hemiI: 3.2 }, trees: { density: 0.85, inBand: 0.12, pine: 0.15, leaves: [0x2c3a26, 0x3a4a2a, 0x34402a, 0x4a3e2c] }, cars: { gap: 0.7 }, crystals: 10, lampStep: 28, lampT: -175,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
+    field: { seed: 9550, farSide: { osm: [0, -1] }, tc: -149, cutT: -320, walk: { s0: -300, s1: 300, t0: -320, t1: -110 }, ground: 'paver', curtain: true, extentH: 30, ruin: { h: [5, 10] },
+      dress: { urban: true, logs: false, patches: ['grass', 'concrete', 'forest'] },
+      sky: { hemiI: 3.2 }, trees: { density: 0.85, inBand: 0.2, pine: 0.15, leaves: [0x2c3a26, 0x3a4a2a, 0x34402a, 0x4a3e2c] }, cars: { gap: 0.7 }, crystals: 10, lampStep: 28, lampT: -175,
       boundary: { style: 'urban', closed: { s0: '남태령 방면', s1: '남쪽 국도 방면' } },
       gates: [ { id: 'north', at: { end: 's0', t: -144 }, to: { zone: 'namtae', gate: 'south' }, label: '남태령 방면', kind: 'zone' },
                { id: 'lab', at: { st: [-29, -128] }, to: { zone: 'pangyo_lab', gate: 'out' }, label: '봉인 건물 · 연구소 지하', kind: 'dungeon' },
@@ -149,8 +154,9 @@ export const ZONES = {
      골짜기: 다섯이 «골짜기 벽을 등지고» (L11112) — 셀레스티얼 격파. 원작에 지명이 없어 판교 남쪽 경부축 물류 골짜기 중 용인 양지(중부대로)를 골랐다
      OSM: ORIGIN=37.2350,127.2875 AXIS=중부대로 (중부대로 t ≈ 175) */
   southroad: { title: '남행 국도 · 골짜기', kind: 'field', env: 'field', osm: 'southroad', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 10681, tc: 175, walk: { s0: -300, s1: 300, t0: 138, t1: 222 }, ground: 'forest', extentH: 22,
-      sky: { hemiI: 3.2, sunAlt: 12 }, trees: { density: 0.8, inBand: 0.08, pine: 0.4, dead: 0.3 }, cars: { gap: 0.6, trucks: 0.35 }, crystals: 14, lampStep: 36, lampT: 141,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
+    field: { seed: 10681, tc: 175, cutT: -10, walk: { s0: -300, s1: 300, t0: -10, t1: 222 }, ground: 'forest', extentH: 22, ruin: { h: [4.5, 9] }, dress: { logs: true },
+      sky: { hemiI: 3.2, sunAlt: 12 }, trees: { density: 0.8, inBand: 0.2, pine: 0.4, dead: 0.3 }, cars: { gap: 0.6, trucks: 0.35 }, crystals: 28, lampStep: 36, lampT: 141,
       boundary: { style: 'fence', closed: { s0: '판교 방면', s1: '계룡 방면 · 직선 백사십 킬로' } },
       gates: [ { id: 'north', at: { end: 's0', t: 178 }, to: { zone: 'pangyo', gate: 'south' }, label: '판교 방면', kind: 'zone' },
                { id: 'south', at: { end: 's1', t: 178 }, to: { zone: 'gyeryong', gate: 'north' }, label: '계룡 방면', kind: 'zone' } ],
@@ -162,8 +168,9 @@ export const ZONES = {
   /* «능선 아래로 분지… 군의 심장이던 땅» · 질서 있는 불빛, 초소, 철책선 (L12416~L12420) · «산 밑동을 파고든 거대한 아가리», 남태령과 같은 스텐실 (L12462~L12468)
      OSM: ORIGIN=36.2680,127.2135 (계룡시 서쪽 산자락 도곡로 — 실재 군 시설이 아닌 곳). 철책·관문은 원작 창작이다 */
   gyeryong: { title: '계룡 · 외곽 능선', kind: 'field', env: 'field', osm: 'gyeryong', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 12416, tc: 20, walk: { s0: -230, s1: 230, t0: -30, t1: 100 }, ground: 'forest', extentH: 26,
-      sky: { hemiI: 3.6, sunAlt: 13, sunI: 4.6 }, trees: { density: 0.9, inBand: 0.1, pine: 0.55, dead: 0.2 }, crystals: 10, lampStep: 60, lampT: -26,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
+    field: { seed: 12416, tc: 20, cutT: -170, walk: { s0: -230, s1: 230, t0: -170, t1: 100 }, ground: 'forest', extentH: 26, ruin: { h: [4.5, 9] }, dress: { logs: true },
+      sky: { hemiI: 3.6, sunAlt: 13, sunI: 4.6 }, trees: { density: 0.9, inBand: 0.22, pine: 0.55, dead: 0.2 }, crystals: 22, lampStep: 60, lampT: -26,
       boundary: { style: 'fence', closed: { s0: '고흥 방면 · 남해', s1: '남행 국도 방면' } },
       gates: [ { id: 'north', at: { end: 's1', t: 25 }, to: { zone: 'southroad', gate: 'south' }, label: '남행 국도 방면', kind: 'zone' },
                { id: 'south', at: { end: 's0', t: 25 }, to: { zone: 'goheung', gate: 'north' }, label: '고흥 방면 · 남해', kind: 'zone' },
@@ -191,8 +198,10 @@ export const ZONES = {
      OSM: ORIGIN=34.4318,127.5350 (나로우주센터 발사대) — 실측은 성기다(건물 31, 업무용 길). 원작 이름은 «고흥»·«노바 1호» 뿐 («나로» 라고 쓰지 않는다)
      +t = 남쪽(바다), s0 쪽 끝 = 서쪽 해안 */
   goheung: { title: '고흥 발사장', kind: 'field', env: 'field', osm: 'goheung', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
-    field: { seed: 14048, tc: 0, walk: { s0: -240, s1: 150, t0: -45, t1: 115 }, ground: 'concrete', extentH: 40,
-      sky: { hemiI: 3.0, sunAlt: 10 }, trees: { density: 0.55, inBand: 0.04, pine: 0.6 }, cars: { gap: 0.5, kinds: ['service', 'track'], trucks: 0.3 }, crystals: 14, lampStep: 34, lampT: -46,
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게») — 카메라 쪽(화면 아래)으로 넓혀 먼 쪽 풍경은 그대로. 걷는 구역 안 건물은 무너진 저층 */
+    field: { seed: 14048, tc: 0, cutT: -190, walk: { s0: -240, s1: 150, t0: -190, t1: 115 }, ground: 'concrete', extentH: 40, ruin: { h: [5, 10] },
+      dress: { urban: true, logs: false, patches: ['sand', 'grass', 'concrete'] },
+      sky: { hemiI: 3.0, sunAlt: 10 }, trees: { density: 0.55, inBand: 0.1, pine: 0.6 }, cars: { gap: 0.5, kinds: ['service', 'track'], trucks: 0.3 }, crystals: 14, lampStep: 34, lampT: -46,
       boundary: { style: 'urban', closed: { s0: '해안 — 방파제', s1: '계룡 방면 · 국도' } },
       gates: [ { id: 'north', at: { end: 's1', t: 40 }, to: { zone: 'gyeryong', gate: 'south' }, label: '계룡 방면 · 국도', kind: 'zone' },
                { id: 'pad', at: { st: [-96, -34] }, to: { zone: 'goheung_pad', gate: 'out' }, label: '발사 통제동 · 정비 갱도', kind: 'dungeon' } ],

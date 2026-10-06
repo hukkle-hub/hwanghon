@@ -41,7 +41,7 @@ export async function createMap(THREE, scene, meta, base, camera) {
   function open(key) { const tl = index.get(key); if (!tl || live.has(key)) return null; const rec = { mesh: null, dead: false }; live.set(key, rec); inflight++;
     const v = tl.h ? '?v=' + tl.h : '';   /* 내용 해시 — 서비스워커가 배포를 넘어 캐시한다 (tools/2d/tile-hashes.mjs) */
     return Promise.all([load(base + tl.color + v), load(base + tl.depth + v)]).then(([c, d]) => { inflight--; if (rec.dead) { c.dispose(); d.dispose(); return; }
-      const q = new THREE.Mesh(geo, material(c, d)), uc = tl.u0 + T / 2, vc = tl.v0 - T / 2;
+      const q = new THREE.Mesh(geo, material(c, d)), uc = tl.u0 + T / 2, vc = tl.v0 - T / 2; q.renderOrder = -2;   /* 맵 먼저 → 가려진 인물 실루엣(−1) → 인물(0) */
       q.position.copy(R).multiplyScalar(uc).addScaledVector(U, vc).addScaledVector(D, -meta.L); q.quaternion.setFromRotationMatrix(M);
       q.renderOrder = -10; q.matrixAutoUpdate = false; q.updateMatrix(); group.add(q); rec.mesh = q; stats.loaded++; }, () => { inflight--; live.delete(key); }); }
   function close(key) { const rec = live.get(key); if (!rec) return; rec.dead = true; live.delete(key);
