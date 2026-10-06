@@ -25,9 +25,9 @@ export const CONFIG = {
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
-export function build(THREE, scene, osm, opt = {}) {
-  const R = rng(20261006), lights = [], blockers = [], CFG = Object.assign({}, CONFIG[osm.zone] || {}, opt);
-  /* ---------- 좌표: OSM 로컬(x 동, z 남) → 회전해 강남대로 축을 화면 대각선 DIR 로, 동쪽(1~6번 출구, 5번 출구 쪽)을 화면 위(먼 쪽)로 ---------- */
+/* 좌표틀: OSM 로컬(x 동, z 남) → 회전해 축 도로를 화면 대각선 DIR 로, farSide 를 화면 위(먼 쪽)로.
+   던전(js/mmo/env-dungeon.js)도 같은 틀을 써서 땅 위 거리와 땅 밑 상가가 같은 방향·같은 자리에 놓인다 */
+export function frameOf(THREE, osm, CFG) {
   const DIR = new THREE.Vector2(Math.cos(SCREEN_ANG), -Math.sin(SCREEN_ANG)), SIDE = new THREE.Vector2(-Math.sin(SCREEN_ANG), -Math.cos(SCREEN_ANG));
   let rot = 0;
   for (const cand of [-SCREEN_ANG - osm.axis, Math.PI - SCREEN_ANG - osm.axis]) {
@@ -46,6 +46,12 @@ export function build(THREE, scene, osm, opt = {}) {
     rot += best.d; tc = best.mt; console.info('[env-osm] 중심선 보정', (best.d * 180 / Math.PI).toFixed(2) + '°', '중심 t', tc.toFixed(1), 'm · 잔차', Math.sqrt(best.v / PAIRS.length).toFixed(1), 'm'); }
   const cr = Math.cos(rot), sr = Math.sin(rot);
   const W = ([x, z]) => [x * cr - z * sr, x * sr + z * cr];                 /* OSM → 월드 */
+  return { DIR, SIDE, ST, FROM, W, tc, rot };
+}
+
+export function build(THREE, scene, osm, opt = {}) {
+  const R = rng(20261006), lights = [], blockers = [], CFG = Object.assign({}, CONFIG[osm.zone] || {}, opt);
+  const { DIR, SIDE, ST, FROM, W, tc } = frameOf(THREE, osm, CFG);
   const V3 = (p, y = 0) => new THREE.Vector3(p[0], y, p[1]);
   /* 걷는 띠: 사거리 북쪽 55 m 부터 5번 출구 남쪽 18 m 까지, 강남대로 양쪽 인도까지 (t ±30 m) */
   const s5 = ST(W(osm.exits.find(e => e.ref === (CFG.farSide?.exit || '5'))?.p || [80, 300]))[0];

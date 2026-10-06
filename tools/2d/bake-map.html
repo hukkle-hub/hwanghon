@@ -15,7 +15,7 @@
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
-import { build, PITCH } from './js/mmo/env-osm.js';
+import { PITCH } from './js/mmo/env-osm.js';
 import { basis } from './js/mmo/map2d.js';
 const q=new URLSearchParams(location.search), ZONE=q.get('zone')||'gangnam', PX=+(q.get('px')||120), TILE=+(q.get('tile')||1024), L=200, NEAR=0.1, FAR=400;
 await document.fonts.load('900 96px "Noto Sans KR"').catch(()=>{});
@@ -24,7 +24,11 @@ renderer.setPixelRatio(1); renderer.setSize(TILE,TILE); renderer.outputColorSpac
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.7; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 /* 실제 공간: maps/2d/<zone>/osm.json (tools/2d/osm-extract.mjs) */
-const osm=await (await fetch('maps/2d/'+ZONE+'/osm.json')).json();
+/* 지역 → 원본 장면 생성기. 던전은 땅 위 지역의 OSM 을 같이 쓴다(같은 좌표틀) */
+const ENVS={ gangnam_b1:{ env:'./js/mmo/env-dungeon.js', osm:'gangnam' } };
+const E=ENVS[ZONE]||{ env:'./js/mmo/env-osm.js', osm:ZONE };
+const osm=await (await fetch('maps/2d/'+E.osm+'/osm.json')).json();
+const { build }=await import(E.env);
 const env=build(THREE, scene, osm);
 const {R,U,D}=basis(THREE, PITCH), T=TILE/PX;
 /* 덮을 범위 → 타일 격자. 빈 타일(걷는 띠·먼 쪽 벽에 닿지 않는 것)은 굽지 않는다 — 대각선 띠라 사각 격자의 절반 이상이 빈다 */
@@ -46,11 +50,11 @@ const DT=TILE/2, rt=new THREE.WebGLRenderTarget(DT,DT,{ minFilter:THREE.NearestF
 const cv=document.createElement('canvas'); cv.width=cv.height=DT; const g2=cv.getContext('2d'); const img=g2.createImageData(DT,DT), px=new Uint8Array(DT*DT*4);
 function aimTile(i,j){ const uc=U0+(i+0.5)*T, vc=V1-(j+0.5)*T; const c=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,-L);
   cam.position.copy(c); cam.lookAt(c.clone().add(D)); cam.updateMatrixWorld(true); return { u0:U0+i*T, v0:V1-j*T }; }
-const sunDir=new THREE.Vector3(...env.sun.dir), sun=env.sunLight;
+const sunDir=new THREE.Vector3(...env.sun.dir), sun=env.sunLight||null;   /* 던전은 해가 없다 */
 function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTile(i,j);
   /* 노을 그림자: 이 타일이 보는 땅 둘레만 그림자 지도로 — 해가 낮아 그림자가 길다 */
   const c=R.clone().multiplyScalar(U0+(i+0.5)*T).addScaledVector(U,V1-(j+0.5)*T), g=c.clone().addScaledVector(D, -c.y/D.y);
-  sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); const sc=sun.shadow.camera; sc.left=sc.bottom=-T*1.6; sc.right=sc.top=T*1.6; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld();
+  if(sun){ sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); const sc=sun.shadow.camera; sc.left=sc.bottom=-T*1.6; sc.right=sc.top=T*1.6; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld(); }
   scene.overrideMaterial=null; renderer.setRenderTarget(null); renderer.render(scene,cam); const color=renderer.domElement.toDataURL('image/webp',0.82);
   scene.overrideMaterial=depthMat; const bg=scene.background; scene.background=null; renderer.setRenderTarget(rt); renderer.setClearColor(new THREE.Color(1,1,0),1); renderer.clear(); renderer.render(scene,cam);
   renderer.readRenderTargetPixels(rt,0,0,DT,DT,px); renderer.setRenderTarget(null); scene.overrideMaterial=null; scene.background=bg; renderer.setClearColor(0x000000,1);
@@ -62,7 +66,7 @@ function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH,
 /* 미리보기: 굽기 전에 한 장면만 게임 카메라로 (길 좌표 s, t · 화면 높이 viewH m) */
 function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Math.sin(a), z=-s*Math.sin(a)-t*Math.cos(a), g=new THREE.Vector3(x,0,z);
   renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-viewH*w/h/2,viewH*w/h/2,viewH/2,-viewH/2,NEAR,FAR); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L); pc.lookAt(g); pc.updateMatrixWorld(true);
-  sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); const sc=sun.shadow.camera, r=Math.max(viewH*w/h,viewH)*0.9; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld();
+  if(sun){ sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); } const sc=sun?sun.shadow.camera:new THREE.OrthographicCamera(), r=Math.max(viewH*w/h,viewH)*0.9; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); if(sun) sun.target.updateMatrixWorld();
   renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/png'); renderer.setSize(TILE,TILE); return url; }
 window.__BAKEMAP={ plan, tile, preview, count:LIST.length, total:cols*rows, scene, THREE };
 </script>
