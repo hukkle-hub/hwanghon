@@ -1,7 +1,7 @@
 /* 필드 보스 — 주기 창 · 출현 · 서버가 굴리는 피해 · 처치 기록 · 바닥 드롭 · 재시작 복원 (docs/design/186 §3, 188) */
 const test=require('node:test'),assert=require('node:assert/strict'),{once}=require('node:events'),{WebSocket}=require('ws');
 const CY=require('../server/boss-cycle.cjs'),T=require('../server/boss-table.cjs'),C=require('../server/content.cjs');
-const {Field,HIT_GAP,LOOT_PRIORITY,reachOf}=require('../server/field.cjs'),{Store}=require('../server/store.cjs'),{createPartyServer}=require('../server/index.cjs');
+const {Field,HIT_GAP,LOOT_PRIORITY,BOSS_IMPACT_LIFE,reachOf}=require('../server/field.cjs'),{Store}=require('../server/store.cjs'),{createPartyServer}=require('../server/index.cjs');
 const H=36e5, M=6e4;
 const seq=(...v)=>{ let i=0; return ()=>v[i++%v.length]; };
 
@@ -46,15 +46,18 @@ test('필드 보스: 때가 되면 서고 알림 → 닿는 거리에서만 맞�
  f.tickBosses(o.nextAt); assert.equal(o.alive,true,'출현');
  assert.deepEqual(events.find(e=>e.boss==='clave'),{type:'announce',kind:'bossSpawn',zone:'gangnam_b1',boss:'clave',name:'클레이브',title:o.title,place:o.place});
  const pa=f.join(a,store.public(a),'gangnam_b1'), pb=f.join(b,store.public(b),'gangnam_b1');
- assert.equal(f.hit(a,{boss:'clave'},store.public(a),1e9),null,'멀리서는 안 맞는다');
+ assert.equal(f.hit(a,{boss:'clave'},store.public(a),1e9),null,'멀리서는 안 맞는다');assert.equal(o.impactSeq,0,'거절된 공격은 접촉 사건도 만들지 않는다');
  pa.x=o.x+reachOf(o)-0.2; pa.z=o.z; pb.x=o.x; pb.z=o.z+1;
  const h=f.hit(a,{boss:'clave'},store.public(a),1e9); assert.ok(h&&h.dmg>0,'맞는다'); assert.equal(h.crit,true);
  assert.equal(f.hit(a,{boss:'clave'},store.public(a),1e9+HIT_GAP-1),null,'너무 빠른 연타는 버린다');
- const bossView=f.bossView(pb),claveRow=bossView.bosses.find(x=>x[0]==='clave'),claveAct=bossView.bossActs.find(x=>x.id==='clave');
- assert.deepEqual(Object.keys(bossView).sort(),['bossActs','bossNow','bosses','loot'],'보스 스냅숏 허용 필드만');
+ const bossView=f.bossView(pb,1e9),claveRow=bossView.bosses.find(x=>x[0]==='clave'),claveAct=bossView.bossActs.find(x=>x.id==='clave');
+ assert.deepEqual(Object.keys(bossView).sort(),['bossActs','bossImpacts','bossNow','bosses','loot'],'보스 스냅숏 허용 필드만');
+ assert.equal(bossView.bossImpacts.length,1);assert.equal(bossView.bossImpacts[0].length,7,'접촉은 고정 배열');assert.equal(bossView.bossImpacts[0][0],'clave');assert.equal(bossView.bossImpacts[0][1],h.impact[0]);
+ assert.ok(!/(?:hp|maxHp|health|ratio|dmg)/i.test(JSON.stringify({bossImpacts:bossView.bossImpacts})),'공동 접촉에는 피해·체력 없음');
+ assert.equal(f.bossView(pb,1e9+BOSS_IMPACT_LIFE+1).bossImpacts.length,0,'짧은 수명이 지나면 접촉 사건을 보내지 않는다');
  assert.deepEqual(claveRow,['clave',1],'살아 있다는 것만 — 체력은 보내지 않는다');
  assert.deepEqual(Object.keys(claveAct).sort(),['counterClose','counterOpen','endsAt','id','motion','seq','skill','startedAt','x','yaw','z'],'보스 동작에도 체력 필드 없음');
- assert.deepEqual(Object.keys(h).sort(),['boss','counter','crit','dmg','down','type'],'타격 응답 허용 필드만 — 체력·비율 없음');
+ assert.deepEqual(Object.keys(h).sort(),['boss','counter','crit','dmg','down','impact','type'],'타격 응답 허용 필드만 — 체력·비율 없음');assert.equal(h.impact.length,4,'공격자 접촉은 순번·좌표·시각만');
  /* b 가 조금, a 가 대부분 */
  f.hit(b,{boss:'clave'},store.public(b),1e9+1); let t=1e9+HIT_GAP; while(o.alive){ f.hit(a,{boss:'clave'},store.public(a),t); t+=HIT_GAP; }
  const down=events.find(e=>e.kind==='bossDown'); assert.ok(down,'처치 알림'); assert.equal(down.top,store.public(a).name);
@@ -93,7 +96,7 @@ test('필드 보스: 실제 소켓 — fieldJoined 에 보스 상태, 때리면 
  sendj({type:'fieldJoin',zone:'namsan_tower'}); const j=await wait(m=>m.type==='fieldJoined'); assert.deepEqual(j.bosses.find(b=>b[0]==='dropper'),['dropper',1],'살아 있음 (체력 없음)');
  sendj({type:'fieldMove',x:o.x+0.5,z:o.z,anim:'idle'}); await wait(m=>m.type==='field');
  const pl=app.field.players.get(hello.profile.id); pl.x=o.x+0.5; pl.z=o.z;   /* 출발점에서 보스까지 걸어가는 대신 */
- sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true);assert.deepEqual(Object.keys(hit).sort(),['boss','counter','crit','dmg','down','type'],'체력·최대 체력·비율이 들어올 자리가 없다');
+ sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true);assert.deepEqual(Object.keys(hit).sort(),['boss','counter','crit','dmg','down','impact','type'],'체력·최대 체력·비율이 들어올 자리가 없다');assert.equal(hit.impact.length,4);
  const down=await wait(m=>m.type==='announce'&&m.kind==='bossDown'); assert.equal(down.top,'보스사냥'); assert.equal(down.changed,undefined,'내부 목록은 보내지 않는다');
  const prof=await wait(m=>m.type==='profile'&&m.profile.items.m_heart>0); assert.ok(prof,'재료가 프로필로 온다');
 });
@@ -101,12 +104,14 @@ test('필드 보스: 실제 소켓 — fieldJoined 에 보스 상태, 때리면 
 test('클레이브 1위 처치 칭호는 캐시를 비우고 본인 fieldInfo·주변 infos에 즉시 전파된다',async t=>{
  const store=new Store(null),app=createPartyServer({store}),addr=await app.listen(0,'127.0.0.1'),url='ws://127.0.0.1:'+addr.port+'/party-socket';t.after(()=>app.close());
  async function client(name){const socket=new WebSocket(url),got=[];socket.on('message',b=>got.push(JSON.parse(b)));t.after(()=>socket.close());
-  const wait=async(fn,ms=3000)=>{const t0=Date.now();while(Date.now()-t0<ms){const m=got.find(fn);if(m){got.splice(got.indexOf(m),1);return m;}await new Promise(r=>setTimeout(r,20));}throw Error(name+' timeout');};
-  await once(socket,'open');const send=m=>socket.send(JSON.stringify(m));send({type:'hello',name});const hello=await wait(m=>m.type==='welcome');send({type:'character',name,character:'kain'});await wait(m=>m.type==='profile');return {socket,wait,send,id:hello.profile.id};}
+  const wait=async(fn,ms=3000)=>{const t0=Date.now();while(Date.now()-t0<ms){const m=got.find(fn);if(m){got.splice(got.indexOf(m),1);return m;}await new Promise(r=>setTimeout(r,20));}throw Error(name+' timeout '+JSON.stringify(got.slice(-8).map(m=>({type:m.type,bossImpacts:m.bossImpacts}))));};
+  await once(socket,'open');const send=m=>socket.send(JSON.stringify(m));send({type:'hello',name});const hello=await wait(m=>m.type==='welcome');send({type:'character',name,character:'kain'});await wait(m=>m.type==='profile');return {socket,wait,send,id:hello.profile.id,got};}
  const a=await client('칭호검사'),b=await client('칭호관찰');const o=app.field.bosses.get('clave');o.max=o.hp=1;app.field.spawnBoss(o);
  a.send({type:'fieldJoin',zone:'gangnam_b1'});await a.wait(m=>m.type==='fieldJoined');b.send({type:'fieldJoin',zone:'gangnam_b1'});await b.wait(m=>m.type==='fieldJoined');
  await b.wait(m=>m.type==='field'&&m.infos&&m.infos[a.id]);const pa=app.field.players.get(a.id),pb=app.field.players.get(b.id);pa.x=o.x+.5;pa.z=o.z;pb.x=o.x+1;pb.z=o.z;
- a.send({type:'fieldHit',boss:'clave'});await a.wait(m=>m.type==='bossHit'&&m.down);const self=await a.wait(m=>m.type==='fieldInfo'&&m.info.title);
+ a.send({type:'fieldHit',boss:'clave'});const hit=await a.wait(m=>m.type==='bossHit'&&m.down);assert.equal(o.impacts.at(-1)?.seq,hit.impact[0],'서버 보스에 같은 접촉 순번 보존');assert.ok(Date.now()-o.impacts.at(-1).at<500);assert.ok(o.nextAt>Date.now(),'죽은 보스의 다음 출현은 미래');assert.ok(app.field.bossView(pb).bossImpacts.some(h=>h[1]===hit.impact[0]),'관찰자의 직접 스냅숏에 접촉 포함');
+ const seen=await b.wait(m=>m.type==='field'&&m.bossImpacts?.length);const shared=seen.bossImpacts.find(h=>h[0]==='clave');assert.ok(shared,'클레이브 접촉');assert.equal(shared[1],hit.impact[0],'공격자와 관찰자가 같은 순번');assert.equal(shared.length,7);assert.ok(!('dmg' in seen),'관찰자 필드 패킷에는 타인의 피해량이 없다');
+ const self=await a.wait(m=>m.type==='fieldInfo'&&m.info.title);
  assert.deepEqual(self.info.title,{boss:'clave',text:'클레이브 토벌자',tier:1});
- const peer=await b.wait(m=>m.type==='field'&&m.infos&&m.infos[a.id]&&m.infos[a.id].title);assert.deepEqual(peer.infos[a.id].title,self.info.title);
+ const peer=seen.infos?.[a.id]?.title?seen:await b.wait(m=>m.type==='field'&&m.infos&&m.infos[a.id]&&m.infos[a.id].title);assert.deepEqual(peer.infos[a.id].title,self.info.title);
 });

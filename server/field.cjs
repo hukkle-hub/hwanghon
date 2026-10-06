@@ -11,7 +11,7 @@ const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지�
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
 const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 최소 간격 (클라 공격 동작 ≈0.6초) */
 const DODGE_TIME=520, DODGE_GAP=780, RESPAWN_TIME=5000, RESPAWN_GUARD=2000;
-const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 */
+const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3, BOSS_IMPACT_LIFE=650;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 · 공동 접촉 사건 수명 */
 const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);               /* 보스 몸 반지름 + 무기 길이 (대략) */
 /* 공개 칭호는 «그냥 참가»가 아니라 해당 보스 기여도 1위 처치 기록이다. 희귀한 증표가 되도록 단계가 듬성듬성 열린다. */
 const BOSS_TITLES={ clave:[[50,'강남의 철문'],[10,'셔터를 멈춘 자'],[1,'클레이브 토벌자']] };
@@ -78,7 +78,7 @@ class Field{
   const saved=new Map((this.store?this.store.bossStates():[]).map(r=>[r.id,r]));
   for(const zid of ZONE_IDS()){ const z=this.zone(zid); if(!z) continue;
    for(const b of z.bosses){ if(this.bosses.has(b.id)) continue; const row=T.BOSSES[b.id]||T.DEFAULT, cycle=CY.norm(row.cycle,this.timeScale);
-    const o={ id:b.id, zone:zid, name:b.name, title:b.title||'', place:b.place||'', x:b.x, z:b.z, r:b.r||18, h:b.h||3, max:row.hp, hp:row.hp, cycle, drops:row.drops, alive:false, nextAt:0, dmg:new Map(), names:new Map(), last:new Map(), ver:0 };
+    const o={ id:b.id, zone:zid, name:b.name, title:b.title||'', place:b.place||'', x:b.x, z:b.z, r:b.r||18, h:b.h||3, max:row.hp, hp:row.hp, cycle, drops:row.drops, alive:false, nextAt:0, dmg:new Map(), names:new Map(), last:new Map(), ver:0, impactSeq:0, impacts:[] };
     const r=saved.get(b.id);
     /* 살아 있던 보스는 체력을 채워 다시 세운다(리니지도 재시작하면 처음부터). 기다리던 보스는 약속한 시각을 지킨다. */
     if(r&&r.state==='alive'){ o.alive=true; o.nextAt=0; }
@@ -93,7 +93,7 @@ class Field{
   for(const p of this.players.values()) if(p.dead&&now>=p.respawnAt) this.respawn(p,now);
   for(const [id,s] of this.life)if(now>=s.expires)this.life.delete(id);
   for(const [k,l] of this.loot) if(now>=l.expires) this.loot.delete(k); }
- spawnBoss(o, now=Date.now()){ o.alive=true; o.hp=o.max; o.nextAt=0; o.dmg.clear(); o.names.clear(); o.last.clear(); o.ver++;
+ spawnBoss(o, now=Date.now()){ o.alive=true; o.hp=o.max; o.nextAt=0; o.dmg.clear(); o.names.clear(); o.last.clear(); o.impacts.length=0;o.ver++;
   COMBAT.reset(o,now);
   this.store?.bossSave(o.id,o.zone,'alive',0,now);
   this.emit({ type:'announce', kind:'bossSpawn', zone:o.zone, boss:o.id, name:o.name, title:o.title, place:o.place }); return o; }
@@ -105,8 +105,12 @@ class Field{
   const counter=COMBAT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=this.rng()<(st.critChance||0);
   const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
+  /* 공동 전투에는 접촉만 공유한다. 피해량·공격력·보스 체력은 공격자 밖으로 내보내지 않는다 (문서 191). */
+  let dx=p.x-o.x,dz=p.z-o.z,dist=Math.hypot(dx,dz);if(dist<.001){dx=-Math.sin(o.yaw||0);dz=-Math.cos(o.yaw||0);dist=1;}
+  const edge=Math.max(.8,Math.min(1.55,(o.h||3)*.38)),impact={seq:++o.impactSeq,x:o.x+dx/dist*edge,z:o.z+dz/dist*edge,crit:!!crit,counter:!!counter,at:now};
+  o.impacts.push(impact);if(o.impacts.length>3)o.impacts.shift();   /* 한 10 Hz 틱 사이 사건도 최대 셋까지 보존 — 폭주 없이 반격/치명을 덮지 않는다. */
   if(o.hp<=0) this.killBoss(o, now);
-  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
+  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at] }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
  /* 보스 타격 판정. 회피 무적·피해·넉백·사망을 한 서버 시각에서 결정한다. */
  bossStrike(o,p,hit,now=Date.now()){
   if(p.dead)return null; const seq=++p.hurtSeq;
@@ -146,11 +150,12 @@ class Field{
   return { profile, item:l.item }; }
  /* 지역 안 보스 상태 [id, 살아 있나] + 서버 권위 동작 + 반경 안 바닥 장비 [id, 아이템, x, z, 내가 먼저인가]
     보스 체력은 보내지 않는다 — 디렉터 2026-10-06 «보스의 체력바는 안 나왔으면 좋겠어. 나오면 재미없지» (리니지처럼) */
- bossView(r, now=Date.now()){ const bs=[], bossActs=[], loot=[];
-  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o);if(a)bossActs.push(a); }
+ bossView(r, now=Date.now()){ const bs=[], bossActs=[], bossImpacts=[], loot=[];
+  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o);if(a)bossActs.push(a);
+   if((o.x-r.x)**2+(o.z-r.z)**2<=AOI*AOI)for(const h of o.impacts)if(now-h.at<=BOSS_IMPACT_LIFE)bossImpacts.push([o.id,h.seq,+h.x.toFixed(2),+h.z.toFixed(2),h.crit?1:0,h.counter?1:0,h.at]); }
   for(const l of this.loot.values()){ if(l.zone!==r.zone||(l.x-r.x)**2+(l.z-r.z)**2>AOI*AOI) continue;
    loot.push([l.id, l.item, +l.x.toFixed(2), +l.z.toFixed(2), (!l.owner||l.owner===r.id||now>=l.ownerUntil)?1:0]); }
-  return { bossNow:now, bosses:bs, bossActs, loot }; }
+  return { bossNow:now, bosses:bs, bossActs, bossImpacts, loot }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
   if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), ...this.bossView(p) }; }
@@ -161,4 +166,4 @@ class Field{
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }
   throw Error('알 수 없는 필드 요청입니다.'); }
 }
-module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };
+module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, BOSS_IMPACT_LIFE, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };

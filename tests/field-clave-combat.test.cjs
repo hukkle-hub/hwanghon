@@ -19,6 +19,16 @@ test('클레이브: 서버가 목표를 향해 무게 있게 걷고, 화면에�
  assert.deepEqual(v.bosses.find(x=>x[0]==='clave'),['clave',1]);
 });
 
+test('클레이브: 공동 접촉은 AOI 안에 최근 셋만 보내고 출현 때 묵은 사건을 지운다',()=>{
+ const {f,o}=setup(),players=[];for(let i=0;i<4;i++){const P=profile('타격'+i),p=f.join('h'+i,P,'gangnam_b1');p.x=o.x+1;p.z=o.z;players.push({p,P});}
+ const eye=f.join('eye',profile('관찰'),'gangnam_b1');eye.x=o.x+2;eye.z=o.z;
+ for(let i=0;i<players.length;i++)assert.ok(f.hit(players[i].p.id,{boss:o.id},players[i].P,2000+i));
+ assert.equal(o.impacts.length,3,'고정 크기 큐');const v=f.bossView(eye,2010);assert.equal(v.bossImpacts.length,3);assert.deepEqual(v.bossImpacts.map(h=>h[1]),o.impacts.map(h=>h.seq));
+ eye.x=o.x+100;assert.equal(f.bossView(eye,2010).bossImpacts.length,0,'관심 반경 밖에는 안 보낸다');const seq=o.impactSeq;
+ f.spawnBoss(o,2100);assert.equal(o.impacts.length,0,'재출현 때 묵은 접촉 제거');eye.x=o.x+2;assert.equal(f.bossView(eye,2100).bossImpacts.length,0);
+ players[0].p.x=o.x+1;players[0].p.z=o.z;const next=f.hit(players[0].p.id,{boss:o.id},players[0].P,2400);assert.ok(next.impact[0]>seq,'출현 뒤에도 순번은 단조 증가');
+});
+
 test('클레이브: 셔터 돌진은 먼저 예고하고, 서버 판정 순간 회피 중이면 피해가 없다',()=>{
  const {f,o,p}=setup();p.x=o.x;p.z=o.z+3;
  f.tickBosses(1700);assert.equal(o.combat.skill,'shutter');const start=o.combat.startedAt,hp=p.hp;

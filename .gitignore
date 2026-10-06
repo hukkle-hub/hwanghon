@@ -17,6 +17,9 @@ __pycache__/
 # tools/recruit-scenario.mjs 스크린샷
 .recruit-shots/
 .admin-shots/
+.clave-motion-shots/
+.clave-gear-shots/
+.clave-contact-*/
 node_modules
 
 # Hi3D raw results (~60 MB each) - kept locally; the rigged/decimated bodies in art/3d/part1 are committed (doc 151)
