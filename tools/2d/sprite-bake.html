@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<base href="../../"><!-- 장비 GLB 경로(art/3d/gear/…)가 저장소 루트 기준이다 -->
+<title>황혼 2D — 스프라이트 굽기</title>
+<style>html,body{margin:0;background:transparent}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<!-- 2D MMORPG(docs/design/185 §4.1·§6): 3D 캐릭터를 고정 쿼터뷰 정사영으로 찍어 8방향 스프라이트로 굽는다.
+     장비는 게임과 같은 js/looks.js 로 입힌다 — 3D 에서 입힌 장비가 그대로 2D 외형이 된다.
+     ?char=ain&size=256  ·  window.__BAKE.dress(equipped) → render(dir, clip, t, layer) → dataURL -->
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/looks.js"></script>
+<script src="js/hair.js"></script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+<script type="module">
+import * as THREE from './vendor/three/three.module.js';
+import { GLTFLoader } from './vendor/three/GLTFLoader.js';
+const q=new URLSearchParams(location.search), CHAR=q.get('char')||'ain', SIZE=+(q.get('size')||256);
+/* 쿼터뷰: 리니지·디아블로 계열 2:1 아이소메트릭에 가깝게 — 내려다보는 각 30°(타일 2:1 은 arctan(0.5)=26.6°, 인물이 너무 눌려 30° ) */
+const ELEV=+(q.get('elev')||30)*Math.PI/180;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(SIZE,SIZE); renderer.setClearColor(0x000000,0);
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.25;
+const scene=new THREE.Scene();
+/* 조명은 스프라이트에 구워진다 — 방향과 상관없이 «화면 기준» 으로 고정해야 8방향이 같은 빛을 받는다(카메라와 함께 돈다) */
+const rig=new THREE.Group(); scene.add(rig);
+scene.add(new THREE.HemisphereLight(0x8890a8,0x201818,0.75));
+const key=new THREE.DirectionalLight(0xfff0e0,2.4); key.position.set(-2,5,4); rig.add(key);
+/* 사이버펑크 림: 한쪽 붉게(팔레트 --c-red), 반대쪽 차갑게. 실루엣이 밤 배경에서 떨어진다 */
+const rimR=new THREE.DirectionalLight(0xff3a3a,3.2); rimR.position.set(4,2.5,-3); rig.add(rimR);
+const rimC=new THREE.DirectionalLight(0x40d8ff,2.2); rimC.position.set(-4,2,-2.5); rig.add(rimC);
+const cam=new THREE.OrthographicCamera(-1,1,1,-1,0.1,50);
+const loader=new GLTFLoader(); let root=null, gltf=null, mixer=null, H=1.7;
+function load(url){ return new Promise((ok,no)=>loader.load(url,ok,undefined,no)); }
+async function boot(){
+  gltf=await load('art/3d/'+CHAR+'_anim.glb'); root=gltf.scene; scene.add(root);
+  if(window.TW_POSE) TW_POSE.repair(THREE, gltf);
+  if(window.TW_MATFIX) TW_MATFIX.repair(THREE, gltf.scene);
+  root.traverse(o=>{ if(o.isMesh) o.frustumCulled=false; });
+  const b=new THREE.Box3().setFromObject(root); root.position.y-=b.min.y; H=b.max.y-b.min.y;
+  mixer=new THREE.AnimationMixer(root);
+}
+/* 레이어: 메시가 어느 장비에 속하는지. 조상 중 userData.look/garment 가 있으면 그 장비, 없으면 몸(머리카락 포함) */
+function layerOf(o){ for(let n=o;n;n=n.parent){ if(n.userData&&(n.userData.look||n.userData.garment)) return String(n.userData.look||n.userData.garment); } return 'body'; }
+function dress(equipped){ return new Promise(ok=>{ TW_GEAR&&TW_GEAR.setChar&&TW_GEAR.setChar(CHAR);
+  window.TW_HAIR&&TW_HAIR.sync(root, equipped);
+  const out=TW_LOOKS.attach(THREE, loader, root, equipped, { charId:CHAR });
+  /* GLB 조각은 비동기로 붙는다 — 메시 수가 멈출 때까지 기다린다 */
+  let last=-1, still=0; const t=setInterval(()=>{ let n=0; root.traverse(o=>{ if(o.isMesh){ n++; o.frustumCulled=false; } }); if(n===last){ if(++still>=4){ clearInterval(t); if(window.TW_MATFIX) TW_MATFIX.repair(THREE, root); ok(n); } } else { still=0; last=n; } },250); }); }
+function pose(clip, t){ mixer.stopAllAction(); const c=gltf.animations.find(a=>a.name===clip)||gltf.animations.find(a=>a.name==='idle'); const a=mixer.clipAction(c); a.reset().play(); mixer.setTime(Math.min(t, c.duration-1e-3)); root.updateMatrixWorld(true); return c.duration; }
+/* dir 0..7: 0 = 화면 아래(남)를 봄, 시계 방향 45° 씩. 카메라가 캐릭터 둘레를 돈다 */
+function aim(dir, frame){ const az=dir*Math.PI/4, R=10, half=frame/2;
+  cam.position.set(Math.sin(az)*Math.cos(ELEV)*R, H*0.5+Math.sin(ELEV)*R, Math.cos(az)*Math.cos(ELEV)*R);
+  cam.lookAt(0,H*0.5,0); cam.left=-half; cam.right=half; cam.top=half; cam.bottom=-half; cam.updateProjectionMatrix();
+  rig.quaternion.copy(cam.quaternion); }
+/* layer: 'all' 이면 전부, 아니면 그 레이어만 색을 쓰고 나머지는 깊이로만 그려 가린다 */
+function render(dir, clip, t, layer, frame){ pose(clip||'idle', t||0); aim(dir, frame||H*1.25);
+  const saved=[]; root.traverse(o=>{ if(!o.isMesh) return; const mine=!layer||layer==='all'||layerOf(o)===layer;
+    const ms=Array.isArray(o.material)?o.material:[o.material]; ms.forEach(m=>{ saved.push([m,m.colorWrite]); m.colorWrite=mine; }); o.renderOrder=mine?1:0; });
+  renderer.render(scene,cam); const url=renderer.domElement.toDataURL('image/png');
+  saved.forEach(([m,v])=>m.colorWrite=v); return url; }
+function layers(){ const s=new Set(); root.traverse(o=>{ if(o.isMesh) s.add(layerOf(o)); }); return [...s]; }
+function clips(){ return gltf.animations.map(a=>[a.name,+a.duration.toFixed(3)]); }
+window.__BAKE={ ready:boot().then(()=>true), dress, render, layers, clips, get H(){ return H; }, THREE };
+</script>
+</body>
+</html>
