@@ -15,6 +15,7 @@
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
 | (2026-10-06, 2D 맵 MMORPG 필드) | `server/field.cjs` + `server/index.cjs` — `fieldJoin`/`fieldMove`/`fieldLook`/`fieldLeave`, 초당 10번 `field` (관심 반경 28 m, 속도 7.5 m/s 제한). 지역 정보는 `maps/2d/<zone>/map.json` 을 읽는다. 시험 `tests/field-server.test.cjs`. 배포 전에는 GitHub Pages 의 `mmo.html?server=…` 가 «오프라인» 으로 뜬다 |
+| (2026-10-06, 지역 · 문) | `server/field.cjs` — `fieldJoin.gate`: 다른 지역의 문으로 넘어오면 그 지역 `map.json gates` 의 짝 문 앞에 세운다. 새 지역 `gangnam_b1`(던전)·`namsan` 은 저장소의 `maps/2d/*/map.json` 을 읽으므로 **재배포해야 서버가 안다** |
 
 ## 2. 배포 완료 (2026-09-20)
 
