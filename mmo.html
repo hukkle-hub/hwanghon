@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#05060a">
+<title>황혼 — 2D 맵 MMORPG 시제품</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'Noto Sans KR',sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%}
+.hud{position:fixed;inset:0;pointer-events:none;color:#e8dede}
+.hud .hit{pointer-events:auto}
+.top{position:absolute;left:calc(12px + env(safe-area-inset-left));top:8px;display:flex;gap:10px;align-items:center;font-size:12px}
+.face{width:40px;height:40px;border-radius:50%;border:2px solid #a51c1c;background:#1a1b1f center/cover}
+.bars{display:grid;gap:3px}.bar{width:150px;height:8px;background:#1b1d24;border:1px solid #3a2a2a}.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7a1414,#e03a3a)}
+.bar.st i{background:linear-gradient(90deg,#8a6a20,#e0c050)}
+.zone{position:absolute;right:calc(14px + env(safe-area-inset-right));top:8px;text-align:right;font-size:11px;letter-spacing:.12em;color:#9fd8e8}
+.zone b{display:block;font-size:15px;letter-spacing:.06em;color:#fff}
+#stick{position:absolute;left:0;bottom:0;width:45%;height:70%}
+.ring{position:absolute;width:112px;height:112px;margin:-56px 0 0 -56px;border-radius:50%;border:2px solid rgba(255,255,255,.2);background:rgba(10,12,18,.35);left:calc(86px + env(safe-area-inset-left));top:calc(100% - 80px)}
+.ring i{position:absolute;left:36px;top:36px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.28)}
+.btns{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:14px;width:200px;height:160px}
+.b{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.22);background:rgba(10,12,18,.5);display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.04em;color:#e8dede}
+.b:active{background:rgba(165,28,28,.45)}
+.b.atk{right:0;bottom:0;width:80px;height:80px;border-color:rgba(255,70,70,.65);color:#ff9a9a;font-size:13px}
+.b.s{width:52px;height:52px}
+.gear{position:absolute;right:calc(14px + env(safe-area-inset-right));top:58px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,18,.6);font-size:12px;border-radius:4px}
+.tag{position:absolute;transform:translate(-50%,-100%);text-align:center;font-size:11px;font-weight:700;white-space:nowrap;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}
+.tag .hp{width:54px;height:4px;margin:2px auto 0;background:#20222a;border:1px solid #000}.tag .hp i{display:block;height:100%;background:#d03838}
+.tag.me .hp i{background:#40c060}
+#dbg{position:absolute;left:calc(12px + env(safe-area-inset-left));top:56px;font:11px/1.5 monospace;color:#9fd8e8;background:rgba(0,0,0,.45);padding:4px 6px;display:none}
+#load{position:fixed;inset:0;display:grid;place-items:center;background:#05060a;color:#c9a45e;letter-spacing:.3em;font-size:13px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud" id="hud">
+  <div class="top"><div class="face" id="face"></div><div><b id="who">아인 · Lv 8</b><div class="bars"><div class="bar"><i id="hpb" style="width:86%"></i></div><div class="bar st"><i style="width:64%"></i></div></div></div></div>
+  <div class="zone">강남대로 · 지하상가 5번 출구<b>위험 B</b></div>
+  <div id="dbg"></div>
+  <div class="gear hit" id="gearBtn">장비 바꾸기</div>
+  <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
+  <div class="btns hit"><div class="b atk" id="atk">공격</div>
+    <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div><div class="b s" style="right:88px;bottom:62px">1</div>
+    <div class="b s" style="right:44px;bottom:100px">2</div><div class="b s" style="right:-6px;bottom:108px">3</div></div>
+</div>
+<div id="load">강남대로로 나가는 중…</div>
+<script src="js/items.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/looks.js"></script>
+<script src="js/hair.js"></script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+<script type="module">
+/* 황혼 2D 맵 MMORPG 시제품 (docs/design/185 §6, 디렉터 2026-10-06 «LoL 와일드리프트를 MMORPG 로»)
+   맵 = 구운 2D 그림(색 + 깊이) · 캐릭터 = 실시간 3D(장비가 입은 그대로) · 카메라 = 고정 내려다보기 55°, 회전 없음.
+   ?char=ain|kain|ryu|sera · ?zoom=1 · ?debug=1 */
+import * as THREE from './vendor/three/three.module.js';
+import { GLTFLoader } from './vendor/three/GLTFLoader.js';
+import { createBloom } from './js/bloom.js';
+import { basis, createMap } from './js/mmo/map2d.js';
+const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
+const MOBILE=matchMedia('(pointer:coarse)').matches;
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:!MOBILE,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(2,devicePixelRatio)); renderer.setSize(innerWidth,innerHeight,false);
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x05060a);
+const meta=await (await fetch('maps/2d/gangnam/map.json')).json();
+const {R,U,D}=basis(THREE, meta.pitch), T=meta.tile/meta.pxPerM;
+const MAP={ u0:meta.u0, u1:meta.u0+meta.cols*T, v0:meta.v1-meta.rows*T, v1:meta.v1 };
+/* ---------- 카메라 ---------- */
+const cam=new THREE.OrthographicCamera(-1,1,1,-1,1,400); cam.up.copy(U);
+const VIEW_H=5.6/ZOOM;     /* 화면 높이(그림 면 m). 55° 에서 1.7 m 인물이 그림 면 0.98 m → 화면 높이의 약 18% (와일드리프트 약 12%보다 크게 — 장비가 보여야 한다) */
+let viewW=VIEW_H;
+let viewH=VIEW_H;
+/* 짧은 변이 VIEW_H 를 덮는다 — 세로 화면에서 인물이 화면을 꽉 채우지 않게 */
+function resize(){ renderer.setSize(innerWidth,innerHeight,false); const a=innerWidth/innerHeight; if(a>=1){ viewH=VIEW_H; viewW=VIEW_H*a; } else { viewW=VIEW_H; viewH=VIEW_H/a; } cam.left=-viewW/2; cam.right=viewW/2; cam.top=viewH/2; cam.bottom=-viewH/2; cam.updateProjectionMatrix(); }
+resize(); addEventListener('resize',resize);
+function follow(p){ /* 그림 범위 밖이 보이지 않게 그림 좌표에서 자른다 */
+  let u=p.x*R.x+(p.y+0.9)*R.y+p.z*R.z, v=p.x*U.x+(p.y+0.9)*U.y+p.z*U.z;
+  u=Math.min(MAP.u1-viewW/2,Math.max(MAP.u0+viewW/2,u)); v=Math.min(MAP.v1-viewH/2,Math.max(MAP.v0+viewH/2,v));
+  cam.position.copy(R).multiplyScalar(u).addScaledVector(U,v).addScaledVector(D,-150); cam.lookAt(cam.position.clone().add(D)); cam.updateMatrixWorld(); }
+/* ---------- 2D 맵 ---------- */
+const map=await createMap(THREE, scene, meta, 'maps/2d/gangnam/', cam);
+/* ---------- 캐릭터 빛: 맵에 구운 빛과 같은 자리 ---------- */
+scene.add(new THREE.HemisphereLight(0x5a6488,0x140c10,0.9));
+const key=new THREE.DirectionalLight(0xfff0e0,2.4); key.position.set(-4,9,6); scene.add(key);
+const rimR=new THREE.DirectionalLight(0xff3a3a,2.6); rimR.position.set(6,4,-6); scene.add(rimR);
+const rimC=new THREE.DirectionalLight(0x40d8ff,2.0); rimC.position.set(-6,4,-5); scene.add(rimC);
+/* 간판·가로등 빛 — 개수가 바뀌면 셰이더를 다시 짜므로 4개를 두고 가까운 것으로 옮긴다 */
+const near=[0,1,2,3].map(()=>{ const L=new THREE.PointLight(0xffffff,0,8,1.6); scene.add(L); return L; });
+function nearLights(p){ const s=meta.lights.map(l=>[l,(l.x-p.x)**2+(l.z-p.z)**2]).sort((a,b)=>a[1]-b[1]);
+  near.forEach((L,i)=>{ const l=s[i][0]; L.position.set(l.x,l.y,l.z); L.color.set(l.color); L.intensity=l.intensity*0.8; L.distance=l.distance; }); }
+/* ---------- 발밑 그림자 (맵은 그림이라 실시간 그림자가 없다) ---------- */
+const blobTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,4,64,64,62); gr.addColorStop(0,'rgba(0,0,0,.75)'); gr.addColorStop(1,'rgba(0,0,0,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
+/* ---------- 영웅 ---------- */
+const loader=new GLTFLoader(); const load=u=>new Promise((ok,no)=>loader.load(u,ok,undefined,no));
+const NAMES={ ain:'아인', kain:'카인', ryu:'류', sera:'세라' };
+/* 영웅별 기본 장비 + 갈아입을 세트 (장비가 그대로 보이는지 — 문서 185 §4.1) */
+const WEAPON={ ain:'w_marsh_scythe', kain:'w_kain_greatsword', ryu:'w_ryu_twinfang', sera:'w_sera_reagent' };
+const SETS=[ {}, { chest:'a_reed_cuirass', legs:'a_black_greaves', gloves:'a_steel_gauntlet', boots:'a_ranger_boots' },
+  { head:'a_sluice_helm', chest:'a_sluice_cuirass', legs:'a_sluice_greaves', gloves:'a_sluice_gauntlet', boots:'a_sluice_boots' },
+  { head:'a_ward_mask', chest:'a_ward_coat', legs:'a_ward_greaves', gloves:'a_ward_gloves', boots:'a_ward_boots' } ];
+const START_SET={ ain:1, kain:2, ryu:3, sera:0 };
+const heroes=[];
+function dress(h, k){ h.set=k; const eq=Object.assign({ main:WEAPON[h.id] }, SETS[k]); window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id }); }
+async function hero(id, x, z, me){ const g=await load('art/3d/'+id+'_anim.glb'); if(window.TW_POSE) TW_POSE.repair(THREE,g); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,g.scene);
+  const root=g.scene; root.position.set(x,0,z); scene.add(root); root.traverse(o=>{ if(o.isMesh) o.frustumCulled=false; });
+  const mixer=new THREE.AnimationMixer(root), clip=n=>g.animations.find(a=>a.name===n), act={};
+  for(const n of ['idle','run','walk','attack1','dodgeB']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
+  ['attack1','dodgeB'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
+  act.idle.play(); mixer.setTime(Math.random()*2);
+  const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
+  const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); tag.innerHTML=(me?'':'<span style="color:#9fd8e8">[황혼]</span> ')+NAMES[id]+'<div class="hp"><i style="width:'+(me?86:60+Math.random()*40|0)+'%"></i></div>'; document.getElementById('hud').appendChild(tag);
+  const h={ id, root, mixer, act, cur:'idle', blob, tag, me, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0 };
+  dress(h, START_SET[id]); heroes.push(h); return h; }
+function play(h, n, fade=0.18){ if(h.cur===n||!h.act[n]) return; const a=h.act[n], b=h.act[h.cur]; a.reset().play(); if(b) a.crossFadeFrom(b,fade,false); h.cur=n; }
+/* ---------- 걷기: 길 좌표 띠 + 상자 충돌 ---------- */
+const ANG=meta.road.ang, ca=Math.cos(ANG), sa=Math.sin(ANG);
+function toRoad(x,z){ return [x*ca - z*sa, -x*sa - z*ca]; }           /* (s, t) — env-gangnam 의 DIR·SIDE 기준 */
+function fromRoad(s,t){ return [s*ca - t*sa, -s*sa - t*ca]; }
+function collide(p, r=0.35){ let [s,t]=toRoad(p.x,p.z); s=Math.min(meta.walk.s1,Math.max(meta.walk.s0,s)); t=Math.min(meta.walk.t1,Math.max(meta.walk.t0,t)); [p.x,p.z]=fromRoad(s,t);
+  for(const b of meta.blockers){ const c=Math.cos(b.rot), sn=Math.sin(b.rot), dx=p.x-b.x, dz=p.z-b.z;
+    /* 상자 로컬 = Ry(-rot)·(p-c) */ const lx=dx*c - dz*sn, lz=dx*sn + dz*c;
+    const qx=Math.max(-b.hw,Math.min(b.hw,lx)), qz=Math.max(-b.hd,Math.min(b.hd,lz)); let ex=lx-qx, ez=lz-qz, d=Math.hypot(ex,ez);
+    if(d>=r) continue;
+    if(d<1e-4){ /* 상자 안 — 가까운 면으로 밀어낸다 */ const ox=b.hw-Math.abs(lx), oz=b.hd-Math.abs(lz);
+      if(ox<oz){ ex=Math.sign(lx)||1; ez=0; d=-ox; } else { ex=0; ez=Math.sign(lz)||1; d=-oz; } }
+    const n=Math.hypot(ex,ez)||1, nx=ex/n, nz=ez/n, push=r-d;
+    p.x+=(nx*c + nz*sn)*push; p.z+=(-nx*sn + nz*c)*push; } }   /* Ry(rot) 로 되돌림 */
+/* ---------- 입력: 왼쪽 스틱 · WASD ---------- */
+const input={ x:0, y:0 }, keys={}; let stickId=null, sx=0, sy=0;
+const stick=document.getElementById('stick'), ring=document.getElementById('ring'), knob=document.getElementById('knob');
+stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerCapture(e.pointerId); const r=stick.getBoundingClientRect(); sx=e.clientX; sy=e.clientY; ring.style.left=(e.clientX-r.left)+'px'; ring.style.top=(e.clientY-r.top)+'px'; });
+stick.addEventListener('pointermove',e=>{ if(e.pointerId!==stickId) return; let dx=e.clientX-sx, dy=e.clientY-sy; const m=Math.hypot(dx,dy), lim=46; if(m>lim){ dx*=lim/m; dy*=lim/m; } knob.style.transform='translate('+dx+'px,'+dy+'px)'; input.x=dx/lim; input.y=-dy/lim; });
+const stickEnd=e=>{ if(e.pointerId!==stickId) return; stickId=null; input.x=input.y=0; knob.style.transform=''; };
+stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercancel',stickEnd);
+addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
+addEventListener('keyup',e=>{ keys[e.code]=false; });
+let me=null;
+function attack(){ if(!me||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8; }
+function dodge(){ if(!me||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; }
+function nextSet(){ if(me) dress(me,(me.set+1)%SETS.length); }
+document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
+const dbg=document.getElementById('dbg'); let dbgOn=DEBUG; function toggleDbg(){ dbgOn=!dbgOn; dbg.style.display=dbgOn?'block':'none'; } dbg.style.display=dbgOn?'block':'none';
+/* ---------- 출발: 나 + 다른 플레이어 셋 ---------- */
+const sp=meta.spawn;
+me=await hero(ME, sp.x, sp.z, true);
+document.getElementById('who').textContent=NAMES[ME]+' · Lv 8'; document.getElementById('face').style.backgroundImage='url(art/face-'+ME+'.webp)';
+const others=['ain','kain','ryu','sera'].filter(c=>c!==ME);
+const offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];
+await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false)));
+await new Promise(r=>setTimeout(r,1500));   /* 장비 GLB 가 붙을 시간 */
+document.getElementById('load').remove();
+const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, amount:MOBILE?0.75:0.85, samples:4 });
+/* ---------- 루프 ---------- */
+const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0;
+function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
+  if(h.busy>0){ h.busy-=dt; if(h.busy<=0) play(h, m>0.05?'run':'idle'); return; }
+  if(m>0.05){ const k=Math.min(1,m), sp2=speed*(k<0.55?0.45:1); h.root.position.x+=dx/m*sp2*k*dt; h.root.position.z+=dz/m*sp2*k*dt; collide(h.root.position);
+    const yaw=Math.atan2(dx,dz); let dy=yaw-h.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); h.yaw+=dy*Math.min(1,dt*14); h.root.rotation.y=h.yaw;
+    play(h, k<0.55&&h.act.walk?'walk':'run'); }
+  else play(h,'idle'); }
+function wander(h, dt){ if(h.goal){ const dx=h.goal[0]-h.root.position.x, dz=h.goal[1]-h.root.position.z; if(Math.hypot(dx,dz)<0.4){ h.goal=null; h.wait=1+Math.random()*3; step(h,0,0,dt,0); } else step(h,dx,dz,dt,3.6); return; }
+  h.wait-=dt; step(h,0,0,dt,0); if(h.wait<=0){ const [s,t]=toRoad(me.root.position.x, me.root.position.z); const g=fromRoad(s+(Math.random()-.5)*12, Math.max(meta.walk.t0+1,Math.min(meta.walk.t1-1,t+(Math.random()-.5)*8))); h.goal=g; } }
+function tagPos(h){ v3.set(h.root.position.x, 2.05, h.root.position.z).project(cam); h.tag.style.left=((v3.x+1)/2*innerWidth)+'px'; h.tag.style.top=((1-v3.y)/2*innerHeight)+'px'; }
+function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
+  let ix=input.x+(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0), iy=input.y+(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
+  step(me, ix, -iy, dt, 4.8);
+  heroes.forEach(h=>{ if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,0.03,h.root.position.z); });
+  nearLights(me.root.position); follow(me.root.position);
+  heroes.forEach(tagPos);
+  if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);
+  fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
+  requestAnimationFrame(tick); }
+renderer.info.autoReset=true;
+window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
+  teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta };
+tick();
+</script>
+</body>
+</html>

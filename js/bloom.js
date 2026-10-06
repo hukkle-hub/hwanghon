@@ -38,11 +38,12 @@ function pass(frag, uniforms){
 
 export function createBloom(renderer, opt){
   try{
-    const o = Object.assign({ div:4, threshold:0.62, soft:0.28, amount:0.85 }, opt||{});
+    const o = Object.assign({ div:4, threshold:0.62, soft:0.28, amount:0.85, samples:0 }, opt||{});
     const rtOpt = { minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
       format:THREE.RGBAFormat, type:THREE.UnsignedByteType, depthBuffer:true, stencilBuffer:false };
     const blurOpt = Object.assign({}, rtOpt, { depthBuffer:false });
-    const rtScene = new THREE.WebGLRenderTarget(2, 2, rtOpt);
+    /* samples: 블룸을 켜면 캔버스 안티에일리어싱이 안 먹는다 — 장면 타깃에 MSAA 를 건다(기본 0, 2D 맵 시제품이 4) */
+    const rtScene = new THREE.WebGLRenderTarget(2, 2, Object.assign({}, rtOpt, { samples:o.samples }));
     const rtA = new THREE.WebGLRenderTarget(2, 2, blurOpt);
     const rtB = new THREE.WebGLRenderTarget(2, 2, blurOpt);
     const bright = pass(BRIGHT, { tSrc:{value:null}, thr:{value:o.threshold}, soft:{value:o.soft} });

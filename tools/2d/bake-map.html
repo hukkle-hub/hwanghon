@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<base href="../../">
+<title>황혼 2D — 맵 굽기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@900&display=swap" rel="stylesheet">
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<!-- 2D 맵 굽기 (docs/design/185 §6): 원본 장면(js/mmo/env-gangnam.js)을 게임과 같은 고정 각도 정사영으로
+     타일마다 색(webp) + 깊이(png, 16비트를 R·G 에) 로 굽는다. 런타임은 js/mmo/map2d.js.
+     window.__BAKEMAP.plan() → tile(i) → { color, depth } -->
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+<script type="module">
+import * as THREE from './vendor/three/three.module.js';
+import { build, PITCH } from './js/mmo/env-gangnam.js';
+import { basis } from './js/mmo/map2d.js';
+const q=new URLSearchParams(location.search), PX=+(q.get('px')||144), TILE=+(q.get('tile')||1024), L=60, NEAR=0.1, FAR=120;
+await document.fonts.load('900 96px "Noto Sans KR"').catch(()=>{});
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.setSize(TILE,TILE); renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x05060a);
+const env=build(THREE, scene);
+const {R,U,D}=basis(THREE, PITCH), T=TILE/PX;
+/* 덮을 범위 → 타일 격자 */
+let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9; env.extent.forEach(([x,y,z])=>{ const p=new THREE.Vector3(x,y,z), u=p.dot(R), v=p.dot(U); u0=Math.min(u0,u); u1=Math.max(u1,u); v0=Math.min(v0,v); v1=Math.max(v1,v); });
+const cols=Math.ceil((u1-u0)/T), rows=Math.ceil((v1-v0)/T), U0=(u0+u1)/2-cols*T/2, V1=(v0+v1)/2+rows*T/2;
+const cam=new THREE.OrthographicCamera(-T/2,T/2,T/2,-T/2,NEAR,FAR); cam.up.copy(U);
+const depthMat=new THREE.ShaderMaterial({ side:THREE.DoubleSide,
+  vertexShader:'varying float vZ; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); vZ=-mv.z; gl_Position=projectionMatrix*mv; }',
+  fragmentShader:`uniform float n,f; varying float vZ; void main(){ float t=clamp((vZ-n)/(f-n),0.0,1.0); float v=floor(t*65535.0+0.5); gl_FragColor=vec4(floor(v/256.0)/255.0, mod(v,256.0)/255.0, 0.0, 1.0); }`,
+  uniforms:{ n:{value:NEAR}, f:{value:FAR} } });
+const rt=new THREE.WebGLRenderTarget(TILE,TILE,{ minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, samples:0 });
+const cv=document.createElement('canvas'); cv.width=cv.height=TILE; const g2=cv.getContext('2d'); const img=g2.createImageData(TILE,TILE), px=new Uint8Array(TILE*TILE*4);
+function aimTile(i,j){ const uc=U0+(i+0.5)*T, vc=V1-(j+0.5)*T; const c=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,-L);
+  cam.position.copy(c); cam.lookAt(c.clone().add(D)); cam.updateMatrixWorld(true); return { u0:U0+i*T, v0:V1-j*T }; }
+function tile(k){ const i=k%cols, j=Math.floor(k/cols); const o=aimTile(i,j);
+  scene.overrideMaterial=null; renderer.setRenderTarget(null); renderer.render(scene,cam); const color=renderer.domElement.toDataURL('image/webp',0.86);
+  scene.overrideMaterial=depthMat; const bg=scene.background; scene.background=null; renderer.setRenderTarget(rt); renderer.setClearColor(new THREE.Color(1,1,0),1); renderer.clear(); renderer.render(scene,cam);
+  renderer.readRenderTargetPixels(rt,0,0,TILE,TILE,px); renderer.setRenderTarget(null); scene.overrideMaterial=null; scene.background=bg; renderer.setClearColor(0x000000,1);
+  /* 렌더 타깃은 아래에서 위로 읽힌다 → 위아래 뒤집어 그림 좌표(위 = v 큼)로 */
+  for(let y=0;y<TILE;y++){ img.data.set(px.subarray((TILE-1-y)*TILE*4,(TILE-y)*TILE*4), y*TILE*4); }
+  g2.putImageData(img,0,0); const depth=cv.toDataURL('image/png');
+  return { i, j, u0:o.u0, v0:o.v0, color, depth }; }
+function plan(){ return { pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk }; }
+window.__BAKEMAP={ plan, tile, count:cols*rows };
+</script>
+</body>
+</html>
