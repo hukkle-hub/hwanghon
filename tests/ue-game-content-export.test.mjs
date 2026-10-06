@@ -47,7 +47,7 @@ test('UE game catalog preserves current world, items and all extended dungeon co
   assert.deepEqual(X.story.npcs, plain(W.TW_STORY.NPC));
   assert.deepEqual(Object.keys(X.dungeons), ['d01', 'd02', 'd03', 'd04', 'd05', 'd06', 'd07']);
   assert.equal(X.quests.length, 6);
-  assert.equal(X.items.catalog.length, 50);
+  assert.equal(X.items.catalog.length, 78);   // 50 + 필드 보스 고유 장비 28 (docs/design/188)
   assert.equal(X.story.chapters.length, 8);
   assert.equal(X.dungeons.d07.arena, 'ward');
   assert.ok(X.arenas.ward.stages.length > 0, 'dungeon-content extension must be loaded');

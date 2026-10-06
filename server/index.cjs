@@ -5,7 +5,9 @@ const ROOT=path.resolve(__dirname,'..');
 const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs');
 function createPartyServer(options={}){
  const store=options.store||new Store(options.dataDir||process.env.DATA_DIR||path.join(ROOT,'.party-data'));
- const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field();   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) */const stats={bytesSent:0,messagesSent:0,droppedSteps:0,backpressure:0};
+ const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field({store,emit:ev=>announce(ev)});   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) · 필드 보스 (188) */
+ /* 서버 전체 알림 — 보스 출현·처치·전설 획득은 모든 지역의 모두에게 (188 §5). 재료를 받은 사람은 프로필을 다시 보낸다 */
+ function announce(ev){const {changed,...msg}=ev;for(const ws of sessions.values())send(ws,msg);for(const pid of changed||[]){try{profileUpdate(store.public(pid));}catch{}}}const stats={bytesSent:0,messagesSent:0,droppedSteps:0,backpressure:0};
  const maxRooms=options.maxRooms||Number(process.env.MAX_ROOMS||32),maxPlayers=options.maxPlayers||Number(process.env.MAX_PLAYERS||100),maxConnections=options.maxConnections||maxPlayers+32;
  const send=(socket,message)=>{if(socket.readyState!==WebSocket.OPEN)return;if(socket.bufferedAmount>256*1024){stats.backpressure++;return;}const payload=typeof message==='string'?message:JSON.stringify(message);socket.send(payload);stats.bytesSent+=Buffer.byteLength(payload);stats.messagesSent++;return true;};
  const server=http.createServer((req,res)=>{
@@ -81,6 +83,7 @@ function createPartyServer(options={}){
   if(msg.type==='logout'){field.leave(id);store.revoke(id);leave(id,true);sessions.delete(id);send(ws,{type:'loggedOut'});ws.close(1000,'Logout');sendBoard();return;}
   if(msg.type==='character'){const p=store.chooseName(id,msg.name,msg.character);profileUpdate(p);enterOffice(id);rpg.update(id);sendBoard();return;}
   if(!store.public(id).characterCreated)throw Error('먼저 캐릭터 이름을 정하세요.');
+  if(msg.type==='fieldLoot'){if(typeof msg.loot!=='string')throw Error('주울 물품을 고르세요.');const r=field.pickup(id,msg.loot,store);profileUpdate(r.profile);rpg.update(id);send(ws,{type:'fieldLooted',item:r.item});return;}
   if(msg.type.startsWith('field')){const reply=field.command(id,msg,store.public(id),!!room?.raid);if(reply)send(ws,reply);return;}
   if(await rpg.command(ws,msg))return;
   if(['guildCreate','guildJoin','guildLeave'].includes(msg.type)){
@@ -140,8 +143,8 @@ function createPartyServer(options={}){
   ws.on('message',bytes=>{const now=Date.now();ws.bucket=Math.min(120,ws.bucket+(now-ws.bucketAt)*.08);ws.bucketAt=now;if(ws.bucket<1||ws.queued>=64){ws.close(4008,'Rate limit');return;}ws.bucket--;ws.queued++;ws.queue=ws.queue.then(async()=>{if(ws.readyState!==WebSocket.OPEN)return;try{await command(ws,JSON.parse(bytes.toString()));}catch(e){send(ws,{type:'error',message:e instanceof SyntaxError?'잘못된 메시지입니다.':e.message});}}).finally(()=>ws.queued--);});
   ws.on('close',()=>{connections.delete(ws);if(closing)return;if(!ws.playerId||sessions.get(ws.playerId)!==ws)return;sessions.delete(ws.playerId);field.leave(ws.playerId);const room=current(ws.playerId);if(room){const m=room.members.get(ws.playerId);m.connected=false;m.ready=false;m.disconnectedAt=Date.now();room.raid?.disconnect(ws.playerId);chooseLeader(room);broadcast(room);}refreshGuild(ws.playerId);sendBoard();});
  });
- let prev=performance.now(),acc=0,broadcastAcc=0,fieldAcc=0;
- const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}fieldAcc+=dt;if(fieldAcc>=.1){fieldAcc=0;for(const p of field.players.values()){const peer=sessions.get(p.id);if(peer)send(peer,field.view(p));}}},10);
+ let prev=performance.now(),acc=0,broadcastAcc=0,fieldAcc=0,bossAcc=0;field.initBosses();
+ const timer=setInterval(()=>{const now=performance.now(),elapsed=(now-prev)/1000,dt=Math.min(.1,elapsed);if(elapsed>.1)stats.droppedSteps+=Math.floor((elapsed-.1)/.01);prev=now;acc+=dt;broadcastAcc+=dt;while(acc>=.01){for(const room of rooms.values())room.raid?.tick(.01);acc-=.01;}if(broadcastAcc>=.05){broadcastAcc=0;for(const room of rooms.values())if(room.raid)broadcast(room);}fieldAcc+=dt;bossAcc+=dt;if(bossAcc>=1){bossAcc=0;field.tickBosses(Date.now());}if(fieldAcc>=.1){fieldAcc=0;for(const p of field.players.values()){const peer=sessions.get(p.id);if(peer)send(peer,field.view(p));}}},10);
  const heartbeat=setInterval(()=>{const now=Date.now();for(const ws of connections){if(ws.playerId&&store.sanction(ws.playerId).ban_until>now){ws.close(4003,'Account restricted');continue;}if(!ws.alive||now>ws.authDeadline)ws.terminate();else{ws.alive=false;ws.ping();}}for(const room of [...rooms.values()])for(const m of [...room.members.values()])if(!m.connected&&now-m.disconnectedAt>90000)leave(m.id);for(const room of [...rooms.values()])if(!room.members.size&&room.raid?.result?.rewardStatus==='saved'){rooms.delete(room.code);histories.delete('party:'+room.code);}sendBoard();},5000);
  timer.unref();heartbeat.unref();
  let backupTask=Promise.resolve();const backupTimer=store.directory&&setInterval(()=>{backupTask=store.backupData(process.env.BACKUP_DIR||path.join(store.directory,'backups')).catch(e=>console.error('백업 실패:',e.message));},Number(process.env.BACKUP_INTERVAL_MS||3600000));backupTimer?.unref();
