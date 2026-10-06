@@ -20,9 +20,10 @@ export function build(THREE, scene, osm, zone) {
   const ar = L.areas(ctx, osm, tex), nLines = L.lines(ctx, osm);
   const roadsW = L.roads(ctx, osm, tex);
   /* 미리 비울 곳: 문·출발점·보스 자리 (나무·차·결정이 서지 않게) */
-  for (const g of F.gates || []) { const p = FROM(...stOf(g.at)); clear.push({ pts: [p], r: 7 }); }
-  for (const b of F.bosses || []) { const p = FROM(...stOf(b.at)); clear.push({ pts: [p], r: Math.min(b.r || 16, 22) * 0.6 }); }
-  if (F.spawn) clear.push({ pts: [FROM(...stOf(F.spawn))], r: 5 });
+  const reserve = [];   /* 차도 피해야 하는 곳 (길 둘레 clear 와 따로 — 차는 길 위에 서야 하니까) */
+  for (const g of F.gates || []) { const p = FROM(...stOf(g.at)); clear.push({ pts: [p], r: 7 }); reserve.push([p, 8]); }
+  for (const b of F.bosses || []) { const p = FROM(...stOf(b.at)); clear.push({ pts: [p], r: Math.min(b.r || 16, 22) * 0.6 }); reserve.push([p, 8]); }
+  if (F.spawn) { const p = FROM(...stOf(F.spawn)); clear.push({ pts: [p], r: 5 }); reserve.push([p, 6]); }
   const built = L.buildings(ctx, osm, tex, { curtain: F.curtain, cutT: F.cutT ?? tc, maxH: F.maxH, skip: F.skipBuilding ? (pts, b) => F.skipBuilding(pts, b, ctx) : null });
 
   /* ---------- 존 고유 소품 (원작 장소) ---------- */
@@ -84,7 +85,7 @@ export function build(THREE, scene, osm, zone) {
   if (tf.density) { const spots = L.treeSpots(ctx, { s0: walk.s0 - 40, s1: walk.s1 + 40, t0: walk.t0 - 30, t1: walk.t1 + 34 }, { density: tf.density, step: tf.step,
       keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && (!inBand(p, 1) || R() < (tf.inBand ?? 0.14)) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
-  if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => L.isClear(ctx, p, -4) && false });
+  if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => reserve.some(([q, r]) => Math.hypot(p[0] - q[0], p[1] - q[1]) < r) });
   if (F.crystals) { const spots = []; for (let i = 0; i < F.crystals * 3 && spots.length < F.crystals; i++) { const p = FROM(walk.s0 + R() * (walk.s1 - walk.s0), walk.t0 + R() * (walk.t1 - walk.t0)); if (L.isClear(ctx, p) || L.inBuilding(built, p) || blockers.some(b => b.poly && L.inPoly(p, b.poly))) continue; spots.push(p); } L.crystals(ctx, spots, { h: F.crystalH || 0.55 }); }
   if (F.lamps !== false) { const spots = []; for (let s = walk.s0 + 8; s < walk.s1 - 8; s += F.lampStep || 26) { const p = FROM(s, (F.lampT ?? walk.t0 + 2)); if (!L.inBuilding(built, p)) spots.push(p); } L.lamps(ctx, spots); }
 
@@ -93,7 +94,8 @@ export function build(THREE, scene, osm, zone) {
   for (const g of gates) if (g.kind === 'zone') L.gateRing(ctx, [g.x, g.z], g.r);
   const nb = L.boundary(ctx, { style: F.boundary?.style || 'urban', closed: F.boundary?.closed, gaps: gates.filter(g => g.st[0] < walk.s0 + 6 || g.st[0] > walk.s1 - 6).map(g => [g.st[0] < walk.s0 + 6 ? walk.s0 : walk.s1, g.st[1]]),
     skip: p => L.inBuilding(built, p) || ar.waters.some(w => L.inPoly(p, w)) });
-  const bosses = (F.bosses || []).map(b => { const p = FROM(...stOf(b.at)); const { at, ...rest } = b; return { ...rest, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; });
+  /* 보스 자리도 맨바닥에 — 여의도 첫 굽기는 에이지스 자리가 멈춘 차 위(0.86 m)였다 (tests/map-height) */
+  const bosses = (F.bosses || []).map(b => { const st = L.bareSpot(ctx, stOf(b.at)), p = FROM(st[0], st[1]); const { at, ...rest } = b; return { ...rest, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; });
   const spSt = F.spawn ? stOf(F.spawn) : (gates[0] ? [gates[0].st[0] + (gates[0].st[0] < (walk.s0 + walk.s1) / 2 ? 6 : -6), gates[0].st[1]] : [(walk.s0 + walk.s1) / 2, (walk.t0 + walk.t1) / 2]), sp = FROM(spSt[0], spSt[1]);
   const areasOut = [...gates.map(g => ({ kind: 'safe', circle: [g.x, g.z, 6] })), ...bosses.map(b => ({ kind: 'combat', circle: [b.x, b.z, b.r] }))];
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
