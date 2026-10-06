@@ -8,6 +8,6 @@ await p.goto('http://127.0.0.1:'+(process.env.HWANGHON_PORT||8777)+'/mmo.html?'+
 await p.waitForFunction(()=>window.__MMO&&!document.getElementById('load'),{timeout:240000});
 if(AT){ const [s,t,yaw]=AT.split(',').map(Number); await p.evaluate(([s,t,yaw])=>{ const [x,z]=__MMO.fromRoad(s,t); __MMO.teleport(x,z,yaw); },[s,t,yaw]); }
 /* 헤드리스는 초당 1~2프레임 — 그려진 프레임을 센다 (CLAUDE.md §1) */
-const f0=await p.evaluate(()=>__MMO.frames); await p.waitForFunction(f=>__MMO.frames>=f+3,f0,{timeout:240000});
+const f0=await p.evaluate(()=>__MMO.frames); await p.waitForFunction(f=>__MMO.frames>=f+14,f0,{timeout:600000});   /* 타일 스트리밍·출구 표시가 따라올 때까지 */
 const info=await p.evaluate(()=>__MMO.info()); console.log(NAME,'콜',info.calls,'삼각형',info.triangles);
 await p.screenshot({path:'docs/img/185-'+NAME+'.png'}); await b.close(); console.log('-> docs/img/185-'+NAME+'.png');

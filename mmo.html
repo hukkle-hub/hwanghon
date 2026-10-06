@@ -79,7 +79,8 @@ scene.background=new THREE.Color(meta.sky?meta.sky.fog:0x05060a);
 const {R,U,D}=basis(THREE, meta.pitch), T=meta.tile/meta.pxPerM;
 const MAP={ u0:meta.u0, u1:meta.u0+meta.cols*T, v0:meta.v1-meta.rows*T, v1:meta.v1 };
 /* ---------- 카메라 ---------- */
-const cam=new THREE.OrthographicCamera(-1,1,1,-1,1,400); cam.up.copy(U);
+/* 카메라는 타일을 놓은 면(P·D = −L)보다 뒤에 있어야 한다 — 실제 공간 맵은 L=200 이라 150 m 에서는 타일이 카메라 뒤로 잘렸다 */
+const CAM_BACK=meta.L+150, cam=new THREE.OrthographicCamera(-1,1,1,-1,1,CAM_BACK+meta.far+100); cam.up.copy(U);
 const VIEW_H=5.6/ZOOM;     /* 화면 높이(그림 면 m). 55° 에서 1.7 m 인물이 그림 면 0.98 m → 화면 높이의 약 18% (와일드리프트 약 12%보다 크게 — 장비가 보여야 한다) */
 let viewW=VIEW_H;
 let viewH=VIEW_H;
@@ -89,7 +90,7 @@ resize(); addEventListener('resize',resize);
 function follow(p){ /* 그림 범위 밖이 보이지 않게 그림 좌표에서 자른다 */
   let u=p.x*R.x+(p.y+0.9)*R.y+p.z*R.z, v=p.x*U.x+(p.y+0.9)*U.y+p.z*U.z;
   u=Math.min(MAP.u1-viewW/2,Math.max(MAP.u0+viewW/2,u)); v=Math.min(MAP.v1-viewH/2,Math.max(MAP.v0+viewH/2,v));
-  cam.position.copy(R).multiplyScalar(u).addScaledVector(U,v).addScaledVector(D,-150); cam.lookAt(cam.position.clone().add(D)); cam.updateMatrixWorld(); }
+  cam.position.copy(R).multiplyScalar(u).addScaledVector(U,v).addScaledVector(D,-CAM_BACK); cam.lookAt(cam.position.clone().add(D)); cam.updateMatrixWorld(); }
 /* ---------- 2D 맵 ---------- */
 const map=await createMap(THREE, scene, meta, 'maps/2d/'+ZONE+'/', cam);
 /* ---------- 캐릭터 빛: 맵에 구운 빛과 같은 자리 ---------- */

@@ -61,9 +61,10 @@ export function build(THREE, scene, osm, opt = {}) {
     for (let i = 0; i < 10; i++) { g.beginPath(); let x = R() * w, y = R() * h; g.moveTo(x, y); for (let k = 0; k < 5; k++) { x += (R() - .5) * 90; y += (R() - .5) * 90; g.lineTo(x, y); } g.stroke(); } });
   asphalt.repeat.set(1 / 8, 1 / 8);
   /* 보도블록 — 서울 인도의 회색·적갈 블록 */
-  const paver = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#4a4648'; g.fillRect(0, 0, w, h);
-    for (let y = 0; y < h; y += 16) for (let x = (y / 16 % 2) * 16; x < w; x += 32) { const v = 62 + R() * 22 | 0; g.fillStyle = R() < 0.18 ? `rgb(${v + 30},${v - 8},${v - 12})` : `rgb(${v},${v - 2},${v})`; g.fillRect(x + 1, y + 1, 30, 14); } });
-  paver.repeat.set(1 / 4, 1 / 4);
+  /* 한 장 = 1.6 m — 블록 하나 20 × 10 cm (서울 보도). 첫 판은 4 m 라 블록이 사람 머리만 했다(휴대폰 세로 확인) */
+  const paver = canvasTex(256, 256, (g, w, h) => { g.fillStyle = '#4c484a'; g.fillRect(0, 0, w, h);
+    for (let y = 0; y < h; y += 16) for (let x = (y / 16 % 2) * 16; x < w; x += 32) { const v = 66 + R() * 12 | 0; g.fillStyle = R() < 0.1 ? `rgb(${v + 16},${v - 4},${v - 6})` : `rgb(${v},${v - 2},${v})`; g.fillRect(x + 1, y + 1, 30, 14); } });
+  paver.repeat.set(1 / 1.6, 1 / 1.6);
   /* 건물 외벽: 층 3.6 m × 창 1.8 m. 전기는 «몇몇» 만 — 불 켜진 창은 드물다 */
   const facades = [0, 1, 2, 3].map(k => canvasTex(256, 256, (g, w, h) => {
     const wall = ['#3a3a44', '#45424a', '#2e3440', '#4a4440'][k]; g.fillStyle = wall; g.fillRect(0, 0, w, h);
@@ -77,7 +78,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const cutMat = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });   /* 잘라 낸 건물 윗면 — 새까마면 구멍처럼 보인다 */
 
   /* ---------- 땅 ---------- */
-  const groundTex = paver.clone(); groundTex.repeat.set(1400 / 4, 1400 / 4);   /* 판 UV 는 0~1 — 4 m 마다 한 장 */
+  const groundTex = paver.clone(); groundTex.repeat.set(1400 / 1.6, 1400 / 1.6);   /* 판 UV 는 0~1 — 1.6 m 마다 한 장 */
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   /* 공원·녹지 */
