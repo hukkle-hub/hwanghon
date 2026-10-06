@@ -50,7 +50,8 @@ test('필드 보스: 때가 되면 서고 알림 → 닿는 거리에서만 맞�
  pa.x=o.x+reachOf(o)-0.2; pa.z=o.z; pb.x=o.x; pb.z=o.z+1;
  const h=f.hit(a,{boss:'clave'},store.public(a),1e9); assert.ok(h&&h.dmg>0,'맞는다'); assert.equal(h.crit,true);
  assert.equal(f.hit(a,{boss:'clave'},store.public(a),1e9+HIT_GAP-1),null,'너무 빠른 연타는 버린다');
- assert.equal(f.bossView(pb).bosses.find(x=>x[0]==='clave')[1],+(o.hp/o.max).toFixed(4),'남들도 체력을 본다');
+ assert.deepEqual(f.bossView(pb).bosses.find(x=>x[0]==='clave'),['clave',1],'살아 있다는 것만 — 체력은 보내지 않는다');
+ assert.equal('hp' in h||'max' in h,false,'때린 사람에게도 남은 체력을 알려 주지 않는다');
  /* b 가 조금, a 가 대부분 */
  f.hit(b,{boss:'clave'},store.public(b),1e9+1); let t=1e9+HIT_GAP; while(o.alive){ f.hit(a,{boss:'clave'},store.public(a),t); t+=HIT_GAP; }
  const down=events.find(e=>e.kind==='bossDown'); assert.ok(down,'처치 알림'); assert.equal(down.top,store.public(a).name);
@@ -86,10 +87,10 @@ test('필드 보스: 실제 소켓 — fieldJoined 에 보스 상태, 때리면 
  sendj({type:'hello',name:'시험'}); const hello=await wait(m=>m.type==='welcome'); sendj({type:'character',name:'보스사냥',character:'kain'}); await wait(m=>m.type==='profile');
  const o=app.field.bosses.get('dropper'); o.max=o.hp=1; app.field.spawnBoss(o);
  await wait(m=>m.type==='announce'&&m.kind==='bossSpawn'&&m.boss==='dropper');
- sendj({type:'fieldJoin',zone:'namsan_tower'}); const j=await wait(m=>m.type==='fieldJoined'); assert.deepEqual(j.bosses.find(b=>b[0]==='dropper').slice(2),[1],'살아 있음');
+ sendj({type:'fieldJoin',zone:'namsan_tower'}); const j=await wait(m=>m.type==='fieldJoined'); assert.deepEqual(j.bosses.find(b=>b[0]==='dropper'),['dropper',1],'살아 있음 (체력 없음)');
  sendj({type:'fieldMove',x:o.x+0.5,z:o.z,anim:'idle'}); await wait(m=>m.type==='field');
  const pl=app.field.players.get(hello.profile.id); pl.x=o.x+0.5; pl.z=o.z;   /* 출발점에서 보스까지 걸어가는 대신 */
- sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.hp,0);
+ sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true); assert.equal(hit.hp,undefined,'체력은 보내지 않는다');
  const down=await wait(m=>m.type==='announce'&&m.kind==='bossDown'); assert.equal(down.top,'보스사냥'); assert.equal(down.changed,undefined,'내부 목록은 보내지 않는다');
  const prof=await wait(m=>m.type==='profile'&&m.profile.items.m_heart>0); assert.ok(prof,'재료가 프로필로 온다');
 });

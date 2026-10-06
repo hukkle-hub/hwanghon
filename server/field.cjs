@@ -9,7 +9,6 @@ const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./
 const ANIMS=['idle','run','walk','attack1','dodgeB'];
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
-const BOSS_AOI=60;         /* m — 보스는 크다. 멀리서도 «살아 있다» 가 보여야 사람이 모인다 */
 const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 최소 간격 (클라 공격 동작 ≈0.6초) */
 const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 */
 const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);               /* 보스 몸 반지름 + 무기 길이 (대략) */
@@ -79,7 +78,7 @@ class Field{
   const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
   if(o.hp<=0) this.killBoss(o, now);
-  return { type:'bossHit', boss:o.id, dmg, crit, hp:o.hp, max:o.max }; }
+  return { type:'bossHit', boss:o.id, dmg, crit, down:!o.alive }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
  killBoss(o, now=Date.now()){ o.alive=false; o.hp=0; o.ver++;
   const total=[...o.dmg.values()].reduce((a,b)=>a+b,0)||1;
   const ranking=[...o.dmg].sort((a,b)=>b[1]-a[1]).map(([pid,d])=>({ id:pid, name:o.names.get(pid), dmg:d, share:d/total }));
@@ -102,10 +101,10 @@ class Field{
   const profile=store.bossLoot(id, l.item); this.loot.delete(lootId); const d=itemOf(l.item);
   if(d&&(d.rarity==='legend'||d.rarity==='myth')) this.emit({ type:'announce', kind:'loot', zone:l.zone, boss:l.boss, who:profile.name, item:l.item, name:d.name, rarity:d.rarity });
   return { profile, item:l.item }; }
- /* 지역 안 보스 상태 [id, 체력 비율, 살아 있나] + 반경 안 바닥 장비 [id, 아이템, x, z, 내가 먼저인가] */
+ /* 지역 안 보스 상태 [id, 살아 있나] + 반경 안 바닥 장비 [id, 아이템, x, z, 내가 먼저인가]
+    보스 체력은 보내지 않는다 — 디렉터 2026-10-06 «보스의 체력바는 안 나왔으면 좋겠어. 나오면 재미없지» (리니지처럼) */
  bossView(r, now=Date.now()){ const bs=[], loot=[];
-  for(const o of this.bosses.values()){ if(o.zone!==r.zone) continue; if(o.alive&&(o.x-r.x)**2+(o.z-r.z)**2>BOSS_AOI*BOSS_AOI){ bs.push([o.id,-1,1]); continue; }
-   bs.push([o.id, +(o.hp/o.max).toFixed(4), o.alive?1:0]); }
+  for(const o of this.bosses.values()) if(o.zone===r.zone) bs.push([o.id, o.alive?1:0]);
   for(const l of this.loot.values()){ if(l.zone!==r.zone||(l.x-r.x)**2+(l.z-r.z)**2>AOI*AOI) continue;
    loot.push([l.id, l.item, +l.x.toFixed(2), +l.z.toFixed(2), (!l.owner||l.owner===r.id||now>=l.ownerUntil)?1:0]); }
   return { bosses:bs, loot }; }
@@ -118,4 +117,4 @@ class Field{
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }
   throw Error('알 수 없는 필드 요청입니다.'); }
 }
-module.exports={ Field, ANIMS, MAX_SPEED, AOI, BOSS_AOI, HIT_GAP, LOOT_PRIORITY, reachOf };
+module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, reachOf };
