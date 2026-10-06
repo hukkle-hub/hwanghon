@@ -119,17 +119,22 @@ export function build(THREE, scene, osm) {
     const L = new THREE.PointLight(0xffd890, 10, 14, 1.5); L.position.set(q[0], 3.5, q[1] - 2); scene.add(L); lights.push({ x: q[0], y: 3.5, z: q[1] - 2, color: '#ffd890', intensity: 8, distance: 12 }); }
 
   /* ---------- 타워: 하부 원통 + 꺾인 기둥. 전망대는 무너져 광장에 흩어졌다 · 난간엔 사랑의 자물쇠 ---------- */
-  const concM = new THREE.MeshStandardMaterial({ color: 0xa8a4a0, roughness: 0.7 }), darkConc = new THREE.MeshStandardMaterial({ color: 0x5a5658, roughness: 0.8 });
+  const concM = new THREE.MeshStandardMaterial({ color: 0x6a686e, roughness: 0.75 }), darkConc = new THREE.MeshStandardMaterial({ color: 0x5a5658, roughness: 0.8 });
   const base = new THREE.Mesh(new THREE.CylinderGeometry(9, 10, 8, 40), concM); base.position.set(tower[0], 4, tower[1]); base.castShadow = base.receiveShadow = true; scene.add(base);
   blockers.push({ x: tower[0], z: tower[1], hw: 9.6, hd: 9.6, rot: 0 });
-  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.2, 46, 24), concM); shaft.position.set(tower[0], 8 + 23, tower[1]); shaft.castShadow = true; scene.add(shaft);
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.2, 30, 24), concM); shaft.position.set(tower[0], 8 + 15, tower[1]); shaft.castShadow = true; scene.add(shaft);
+  /* 꺾인 끝 — 기둥 위가 뜯겨 나갔다 (원작 «반파») */
+  for (let k = 0; k < 7; k++) { const a = k / 7 * Math.PI * 2, hh = 1 + R() * 3.5; const sh = new THREE.Mesh(new THREE.BoxGeometry(2.6, hh, 0.7), concM); sh.position.set(tower[0] + Math.cos(a) * 3.1, 38 + hh / 2, tower[1] + Math.sin(a) * 3.1); sh.rotation.set((R() - .5) * 0.4, -a + Math.PI / 2, (R() - .5) * 0.3); scene.add(sh); }
+  const rebar = new THREE.MeshStandardMaterial({ color: 0x3a2a24, roughness: 0.6, metalness: 0.7 }); for (let k = 0; k < 10; k++) { const rb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2 + R() * 2, 4), rebar); rb.position.set(tower[0] + (R() - .5) * 5, 39.5, tower[1] + (R() - .5) * 5); rb.rotation.set((R() - .5) * 0.8, 0, (R() - .5) * 0.8); scene.add(rb); }
+  /* 무너진 전망대 조각: 굽은 원판 덩어리가 광장에 박혔다 */
+  for (let k = 0; k < 3; k++) { const a = 0.6 + k * 2.1, p = [tower[0] + Math.cos(a) * 15, tower[1] + Math.sin(a) * 15]; const ring = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 1.2, 16, 1, true, 0, 0.9), darkConc); ring.material.side = THREE.DoubleSide; ring.position.set(p[0] - Math.cos(a) * 5.5, 0.4, p[1] - Math.sin(a) * 5.5); ring.rotation.set(0.9, a, 0.35); ring.castShadow = true; scene.add(ring); blockers.push({ x: p[0], z: p[1], hw: 2.6, hd: 1.6, rot: a }); }
   for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 14 + R() * 10, p = [tower[0] + Math.cos(a) * r, tower[1] + Math.sin(a) * r]; if (!inBand(p, -3)) continue;
     const ch = new THREE.Mesh(new THREE.BoxGeometry(3 + R() * 3, 1 + R() * 1.4, 2 + R() * 2), R() < 0.5 ? concM : darkConc); ch.position.set(p[0], 0.5, p[1]); ch.rotation.set(R() - .5, R() * 3, R() - .5); ch.castShadow = true; scene.add(ch);
     blockers.push({ x: p[0], z: p[1], hw: 2, hd: 1.4, rot: ch.rotation.y }); }
   /* 광장 바닥 + 둘레 난간 (먼 쪽 반원만) — 자물쇠 수백 개 */
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(26, 64), paverM); plaza.rotation.x = -Math.PI / 2; plaza.position.set(tower[0], 0.03, tower[1]); plaza.receiveShadow = true; scene.add(plaza); clear.push({ pts: [tower, tower], r: 27 });
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(23, 64), paverM); plaza.rotation.x = -Math.PI / 2; plaza.position.set(tower[0], 0.03, tower[1]); plaza.receiveShadow = true; scene.add(plaza); clear.push({ pts: [tower, tower], r: 24 });
   const railM = new THREE.MeshStandardMaterial({ color: 0x8a8c92, roughness: 0.3, metalness: 0.8 }), lockCols = [0xff3a5a, 0xffd040, 0x40c0ff, 0xff8ad0, 0x60ff90, 0xffffff];
-  for (let k = 0; k < 60; k++) { const a = Math.PI * 2 * k / 60, x = tower[0] + Math.cos(a) * 26, z = tower[1] + Math.sin(a) * 26; const [, tt] = ST([x, z]); if (tt < ST(tower)[1] - 4) continue;
+  for (let k = 0; k < 60; k++) { const a = Math.PI * 2 * k / 60, x = tower[0] + Math.cos(a) * 23, z = tower[1] + Math.sin(a) * 23; const [, tt] = ST([x, z]); if (tt < ST(tower)[1] - 4) continue;
     const r = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.08, 0.08), railM); r.position.set(x, 1.1, z); r.rotation.y = -a + Math.PI / 2; scene.add(r);
     const post = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.1, 6), railM); post.position.set(x, 0.55, z); scene.add(post);
     for (let j = 0; j < 9; j++) { const lk = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.12, 0.05), new THREE.MeshStandardMaterial({ color: lockCols[(R() * 6) | 0], roughness: 0.35, metalness: 0.6 })); const u = (R() - .5) * 2.6; lk.position.set(x - Math.sin(a) * u * -1, 0.6 + R() * 0.45, z + Math.cos(a) * u); lk.rotation.y = -a; scene.add(lk); } }
@@ -137,10 +142,12 @@ export function build(THREE, scene, osm) {
 
   /* ---------- 숲: 걷는 띠 안·밖 모두. 길·건물·광장은 비운다 ---------- */
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
-  const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3a2a, 0x4a2a24, 0x2c3426, 0x5a3424].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
   const trees = []; const S0 = walk.s0 - 40, S1 = walk.s1 + 30, T0 = walk.t0 - 26, T1 = walk.t1 + 30;
   for (let s = S0; s < S1; s += 3.4) for (let t = T0; t < T1; t += 3.4) { const p = FROM(s + (R() - .5) * 2.6, t + (R() - .5) * 2.6); if (R() < 0.12) continue;
-    if (nearClear(p) || inBuilding(p) || Math.hypot(p[0] - tower[0], p[1] - tower[1]) < 28) continue; trees.push(p); }
+    if (nearClear(p) || inBuilding(p) || Math.hypot(p[0] - tower[0], p[1] - tower[1]) < 25) continue;
+    /* 걷는 띠 안은 드문드문 — 나무 갓(4.7 m)이 인물을 가리면 안 된다. 띠 밖은 빽빽한 숲 벽이 곧 «못 가는 곳» 이다 */
+    if (inBand(p, 1) && R() > 0.14) continue; trees.push(p); }
   const nT = trees.length, trunks = new THREE.InstancedMesh(trunkG, trunkM, nT), canopy = leafMs.map(m => new THREE.InstancedMesh(R() < 2 ? canopyG : pineG, m, nT)), pines = new THREE.InstancedMesh(pineG, leafMs[2], nT);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), cnt = [0, 0, 0, 0]; let np = 0;
   trees.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(new THREE.Vector3(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), new THREE.Vector3(k, k, k)); trunks.setMatrixAt(i, mtx);
@@ -165,9 +172,8 @@ export function build(THREE, scene, osm) {
   for (const [end, ds] of [['s0', -0.5], ['s1', 0.5]]) for (let t = walk.t0; t <= walk.t1; t += 2.1) { if (end === 's0' && Math.abs(t) < 5) continue; fence(walk[end] + ds, t, SCREEN_ANG + Math.PI / 2, fences % 5 === 0); }
   /* 붉은 안개: 띠 밖 비탈에 깔린 띠 (먼 쪽·가까운 쪽·타워 너머 낭떠러지) */
   const fogM = new THREE.MeshBasicMaterial({ map: fogTex, transparent: true, depthWrite: false, toneMapped: false, opacity: 0.8 });
-  for (const [t0, t1] of [[walk.t1 + 6, walk.t1 + 30], [walk.t0 - 26, walk.t0 - 4]]) { const L = walk.s1 - walk.s0 + 80, c = FROM((walk.s0 + walk.s1) / 2, (t0 + t1) / 2);
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(L, t1 - t0), fogM.clone()); m.rotation.set(-Math.PI / 2, 0, SCREEN_ANG + (t0 < 0 ? Math.PI : 0)); m.position.set(c[0], 3.2, c[1]); m.material.opacity = 0.55; scene.add(m); }
-  { const c = FROM(walk.s1 + 14, 0); const m = new THREE.Mesh(new THREE.PlaneGeometry(26, walk.t1 - walk.t0 + 40), fogM.clone()); m.rotation.set(-Math.PI / 2, 0, SCREEN_ANG - Math.PI / 2); m.position.set(c[0], 2.4, c[1]); scene.add(m); }
+  for (const [t0, t1] of [[walk.t1 + 12, walk.t1 + 34], [walk.t0 - 26, walk.t0 - 6]]) { const L = walk.s1 - walk.s0 - 60, c = FROM((walk.s0 + walk.s1) / 2, (t0 + t1) / 2);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(L, t1 - t0), fogM.clone()); m.rotation.set(-Math.PI / 2, 0, SCREEN_ANG + (t0 < 0 ? Math.PI : 0)); m.position.set(c[0], 0.4, c[1]); m.material.opacity = 0.55; scene.add(m); }
   /* 끝 판: 타워 너머 «낭떠러지 — 붉은 안개» */
   const endTex = canvasTex(512, 128, (g, w, h) => { g.fillStyle = '#1a1a1e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#d83a2a'; g.lineWidth = 8; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#ffd8c0'; g.font = '900 44px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('낭떠러지 — 붉은 안개', w / 2, h / 2 + 2); });
   { const p = FROM(walk.s1 + 1.2, walk.t0 + 8), m = new THREE.MeshBasicMaterial({ map: endTex, toneMapped: false }); m.color.setScalar(1.3); const pl = new THREE.Mesh(new THREE.PlaneGeometry(6, 1.5), m); pl.position.set(p[0], 2.6, p[1]); pl.rotation.y = SCREEN_ANG + Math.PI / 2 + Math.PI; scene.add(pl); }
@@ -186,7 +192,7 @@ export function build(THREE, scene, osm) {
   const gates = [ { id: 'south', x: +gateS0[0].toFixed(2), z: +gateS0[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'north' }, label: '강남 방면 · 강남대로', kind: 'zone' } ];
   { const m = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(gateS0[0], 0.05, gateS0[1]); scene.add(m); }
   const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
-  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 22, model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 6.5, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];
+  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 6.5, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];
   const spawnP = FROM(walk.s0 + 9, -3);
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 14, p[1]]); }
   extentPts.push([tower[0], 40, tower[1]]);   /* 타워 기둥이 그림 안에 조금 더 */

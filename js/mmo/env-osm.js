@@ -20,7 +20,7 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
-             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 소월로', kind: 'zone' } ],
+             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 케이블카', kind: 'zone' } ],
     closed: { s0: '통제구역 — 양재 방면', s1: '통제구역 — 신논현 방면' }, start: 'exit7' } };
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }

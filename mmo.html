@@ -245,11 +245,11 @@ if(!net){ const others=['ain','kain','ryu','sera'].filter(c=>c!==MY), offs=[[2.4
   await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false))); }
 /* ---------- 문: 다른 지역으로 (리니지 «글루디오 던전» 입구처럼 필드에 서 있는 문) ---------- */
 const glowTex=(()=>{ const c=document.createElement('canvas'); c.width=4; c.height=128; const g=c.getContext('2d'); const gr=g.createLinearGradient(0,0,0,128); gr.addColorStop(0,'rgba(255,255,255,0)'); gr.addColorStop(1,'rgba(255,255,255,1)'); g.fillStyle=gr; g.fillRect(0,0,4,128); return new THREE.CanvasTexture(c); })();
-const gateFx=meta.gates.map(g=>{ const dg=g.kind==='dungeon', col=dg?0xff5a3a:0x40d8ff, grp=new THREE.Group(); grp.position.set(g.x,FLOOR,g.z);
-  const ringM=new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.85, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false });
-  const ring=new THREE.Mesh(new THREE.RingGeometry(g.r-0.25,g.r,64),ringM); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
-  const inner=new THREE.Mesh(new THREE.CircleGeometry(g.r-0.25,48),new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.12, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); inner.rotation.x=-Math.PI/2; inner.position.y=0.04; grp.add(inner);
-  const beam=new THREE.Mesh(new THREE.CylinderGeometry(g.r*0.92,g.r,5,48,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.32, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false })); beam.position.y=2.5; grp.add(beam);
+const gateFx=meta.gates.map(g=>{ const dg=g.kind==='dungeon', col=dg?0xc8402a:0x2a9ec8,   /* 블룸 문턱 아래로 — 첫 판은 빛기둥이 화면을 덮었다 */ grp=new THREE.Group(); grp.position.set(g.x,FLOOR,g.z);
+  const ringM=new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.7, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false });
+  const ring=new THREE.Mesh(new THREE.RingGeometry(g.r-0.12,g.r,64),ringM); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
+  const inner=new THREE.Mesh(new THREE.CircleGeometry(g.r-0.25,48),new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.05, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); inner.rotation.x=-Math.PI/2; inner.position.y=0.04; grp.add(inner);
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(g.r*0.92,g.r,5,48,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.1, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.FrontSide, toneMapped:false })); beam.position.y=2.5; grp.add(beam);
   scene.add(grp); const tag=document.createElement('div'); tag.className='tag gt'+(dg?' dg':''); tag.textContent=(dg?'⚔ ':'➜ ')+g.label; document.getElementById('hud').appendChild(tag);
   return { g, grp, ring, beam, tag }; });
 const gateBtn=document.getElementById('gate'), toastEl=document.getElementById('toast'); let gateNear=null, toastT=0;
@@ -297,7 +297,7 @@ function tagAt(el,x,y,z){ v3.set(x,y,z).project(cam); const on=v3.x>-1.2&&v3.x<1
 /* 문 가까이 → 이동 단추 · 보스 구역 안 → 경고 · 던전 형광등 «3초 켜짐. 1초 꺼짐» (원작 EP02) */
 const darkEl=document.getElementById('dark'); let flickT=0, zoneT=0;
 function zones(dt){ zoneT+=dt; const p=me.root.position;
-  gateFx.forEach((f,i)=>{ const s=1+Math.sin(zoneT*2.4+i)*0.04; f.ring.scale.set(s,s,1); f.beam.material.opacity=0.24+Math.sin(zoneT*3+i)*0.08; });
+  gateFx.forEach((f,i)=>{ const s=1+Math.sin(zoneT*2.4+i)*0.04; f.ring.scale.set(s,s,1); f.beam.material.opacity=0.09+Math.sin(zoneT*3+i)*0.03; });
   let g=null, gd=1e9; for(const x of meta.gates){ const d=Math.hypot(x.x-p.x,x.z-p.z); if(d<x.r+0.8&&d<gd){ g=x; gd=d; } }
   if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }
   let b=null; for(const o of bosses){ const d=Math.hypot(o.b.x-p.x,o.b.z-p.z); if(d<o.b.r) b=o;
