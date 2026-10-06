@@ -139,6 +139,12 @@ if(meta.water){ const wt=(()=>{ const c=document.createElement('canvas'); c.widt
     const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(160,160); t.colorSpace=THREE.SRGBColorSpace; return t; })();
   waterMesh=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({ map:wt, transparent:true, opacity:0.5, depthWrite:false }));
   waterMesh.rotation.x=-Math.PI/2; waterMesh.position.y=meta.water.y; waterMesh.renderOrder=2; scene.add(waterMesh); }
+/* 안개 (여의도 «가시거리 스무 걸음») — 무릎 높이 반투명 층. 물과 같은 원리: 그 아래 다리만 뿌옇게 */
+let mistMesh=null;
+if(meta.mist){ const mt=(()=>{ const c=document.createElement('canvas'); c.width=c.height=256; const g=c.getContext('2d'); for(let i=0;i<46;i++){ const x=Math.random()*256, y=Math.random()*256, r=30+Math.random()*70, gr=g.createRadialGradient(x,y,0,x,y,r); gr.addColorStop(0,'rgba(220,210,230,.5)'); gr.addColorStop(1,'rgba(220,210,230,0)'); g.fillStyle=gr; g.fillRect(0,0,256,256); }
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(60,60); t.colorSpace=THREE.SRGBColorSpace; return t; })();
+  mistMesh=new THREE.Mesh(new THREE.PlaneGeometry(1200,1200),new THREE.MeshBasicMaterial({ map:mt, transparent:true, opacity:meta.mist.opacity||0.4, depthWrite:false }));
+  mistMesh.rotation.x=-Math.PI/2; mistMesh.position.y=meta.mist.y||0.7; mistMesh.renderOrder=3; scene.add(mistMesh); }
 /* ---------- 영웅 ---------- */
 const loader=new GLTFLoader();
 if(LOD){ const raw=loader.load.bind(loader); loader.load=(u,...a)=>raw(String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/,'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/,'art/3d/lod/$1_anim.glb'),...a); }
@@ -310,7 +316,7 @@ function tagPos(h){ v3.set(h.root.position.x, 2.05, h.root.position.z).project(c
 function tagAt(el,x,y,z){ v3.set(x,y,z).project(cam); const on=v3.x>-1.2&&v3.x<1.2&&v3.y>-1.2&&v3.y<1.2; el.style.display=on?'':'none'; if(on){ el.style.left=((v3.x+1)/2*innerWidth)+'px'; el.style.top=((1-v3.y)/2*innerHeight)+'px'; } }
 /* 문 가까이 → 이동 단추 · 보스 구역 안 → 경고 · 던전 형광등 «3초 켜짐. 1초 꺼짐» (원작 EP02) */
 const darkEl=document.getElementById('dark'); let flickT=0, zoneT=0;
-function zones(dt){ zoneT+=dt; const p=me.root.position; if(waterMesh){ waterMesh.material.map.offset.set(zoneT*0.004, zoneT*0.0025); waterMesh.position.x=p.x; waterMesh.position.z=p.z; waterMesh.material.map.offset.x+=p.x/7.5; waterMesh.material.map.offset.y-=p.z/7.5; }
+function zones(dt){ zoneT+=dt; const p=me.root.position; if(mistMesh){ mistMesh.position.x=p.x; mistMesh.position.z=p.z; mistMesh.material.map.offset.set(p.x/20+zoneT*0.006, -p.z/20+zoneT*0.002); } if(waterMesh){ waterMesh.material.map.offset.set(zoneT*0.004, zoneT*0.0025); waterMesh.position.x=p.x; waterMesh.position.z=p.z; waterMesh.material.map.offset.x+=p.x/7.5; waterMesh.material.map.offset.y-=p.z/7.5; }
   gateFx.forEach((f,i)=>{ const s=1+Math.sin(zoneT*2.4+i)*0.04; f.ring.scale.set(s,s,1); f.beam.material.opacity=0.09+Math.sin(zoneT*3+i)*0.03; });
   let g=null, gd=1e9; for(const x of meta.gates){ const d=Math.hypot(x.x-p.x,x.z-p.z); if(d<x.r+0.8&&d<gd){ g=x; gd=d; } }
   if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }

@@ -99,5 +99,5 @@ export function build(THREE, scene, osm, zone) {
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
   console.info('[env-field]', zone.id, '건물', built.length, '도로', roadsW.length, '선', nLines, '경계', nb, '문', gates.map(g => g.id).join(','), '막힘', blockers.length);
   return { kind: 'field', title: zone.title, lights, blockers, extentPts, road: { ang: L.SCREEN_ANG }, walk, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
-    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null };
+    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null, mist: F.mist || null };
 }

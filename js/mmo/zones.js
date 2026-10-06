@@ -79,7 +79,17 @@ export const ZONES = {
         { id: 'duct2', s: [132, 200], t: [-2, 2], lightStep: 12, props: [ { k: 'pipes', n: 3 } ] },
         { id: 'b3', s: [200, 252], t: [-18, 18], h: 3.4, light: 'fluo', lightStep: 10, props: [ { k: 'pillars', step: 8 }, { k: 'parking', cars: 0.45 }, { k: 'sign', text: 'B3', u: 0.1, color: '#ffd23a', w: 2 } ] },
         { id: 'ramp', s: [252, 276], t: [6, 14], floor: 'asphalt', light: 'fluo', props: [ { k: 'sign', text: 'B2 · B1 출구 ↗', u: 0.5, color: '#40d880', w: 4 } ] } ] } },
-  yeouido: { title: '여의도 금융가', kind: 'field', env: 'field', osm: 'yeouido', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' } },
+  /* 금융가 «빌딩 협곡» — 여의대로를 따라 먼 쪽에 IFC·파크원·콘래드가 벽처럼 선다. 안개 «가시거리 스무 걸음», 젖은 아스팔트, 3층 높이 LED 광고판 (L6012~L6030)
+     OSM: ORIGIN=37.5250,126.9260 AXIS=여의대로 (여의대로 중심 t ≈ −150) */
+  yeouido: { title: '여의도 금융가', kind: 'field', env: 'field', osm: 'yeouido', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
+    field: { seed: 6012, tc: -150, walk: { s0: -320, s1: 320, t0: -186, t1: -106 }, ground: 'paver', curtain: true, extentH: 44,
+      sky: { fog: '#3e3644', hemiI: 3.0, sunI: 3.2 },
+      trees: { density: 0.35, inBand: 0.05, pine: 0.1 }, cars: { gap: 0.6, trucks: 0.05 }, crystals: 16, lampStep: 30, lampT: -183,
+      boundary: { style: 'urban', closed: { s0: '통제구역 — 안개', s1: '통제구역 — 안개' } },
+      gates: [ { id: 'parking', at: { end: 's0', t: -150 }, to: { zone: 'yeouido_ug', gate: 'up' }, label: '지하주차장 · 공동구', kind: 'dungeon' } ],
+      bosses: [ { id: 'aegis', name: '에이지스-07', title: '보이지 않는 벽', at: { st: [40, -150] }, r: 22, model: M + 'aegis_07_static.glb', h: 4, place: '빌딩 협곡', canon: 'EP06~07 여의도 빌딩 협곡' } ],
+      mist: { y: 0.7, opacity: 0.38 },   /* 안개는 굽지 않는다(그림이 통째로 뿌옇고 판 이음매가 보였다) — 게임이 무릎 높이에 그린다 (EP07 «안개가 무릎 위로 트이고» L6732) */
+      props: [ { k: 'led', at: { st: [-150, -112] }, text: '여의도' }, { k: 'led', at: { st: [190, -112] }, text: 'IFC' } ] } },
 
   /* ================= 5. 한강 침수 터널 (던전) — 입구 300 m부터 수몰, 600 m 차수문 3-B (L7376~L8109) ================= */
   hangang_tunnel: { title: '한강 침수 터널', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },

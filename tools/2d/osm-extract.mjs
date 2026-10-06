@@ -22,7 +22,9 @@ const P=g=>[+((g.lon-origin.lon)*KX).toFixed(2), +(-(g.lat-origin.lat)*KZ).toFix
 const AX=process.env.AXIS||'강남대로';
 const axisWays=AX==='aerialway'?all.filter(e=>e.type==='way'&&e.tags&&/cable_car|gondola/.test(e.tags.aerialway||'')&&e.geometry):ways(AX);
 const pts=axisWays.flatMap(w=>w.geometry.map(P)).filter(([x,z])=>Math.hypot(x,z)<(AX==='aerialway'?1000:300));
-let sxx=0,szz=0,sxz=0; for(const [x,z] of pts){ sxx+=x*x; szz+=z*z; sxz+=x*z; }
+/* 평균을 빼고 잰다 — 원점이 길 위가 아니면(여의도: IFC) 축이 엉뚱하게 나왔다 */
+const mx=pts.reduce((a,p)=>a+p[0],0)/(pts.length||1), mz=pts.reduce((a,p)=>a+p[1],0)/(pts.length||1);
+let sxx=0,szz=0,sxz=0; for(const [x0,z0] of pts){ const x=x0-mx, z=z0-mz; sxx+=x*x; szz+=z*z; sxz+=x*z; }
 const axis=0.5*Math.atan2(2*sxz, sxx-szz);   /* x 축에서 잰 각 (rad) */
 const levels=t=>{ const h=parseFloat(t.height), l=parseFloat(t['building:levels']); return { height:Number.isFinite(h)?h:null, levels:Number.isFinite(l)?l:null }; };
 const out={ zone:ZONE, license:'© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)', origin, axis:+axis.toFixed(5), fetched:new Date().toISOString().slice(0,10),
