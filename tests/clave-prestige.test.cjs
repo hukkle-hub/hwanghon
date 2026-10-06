@@ -15,6 +15,36 @@ test('셔터 가로살과 레일은 인스턴싱해 모바일 원격 인원만�
  assert.match(block,/new THREE\.InstancedMesh/);assert.match(block,/instancedBoxes\(slats,dark\)/);assert.equal((block.match(/for\(var i=0;i<9;i\).*box\(/g)||[]).length,0);
 });
 
+test('강화 광휘는 직교 카메라에서 보이는 고정 픽셀로 +0·+7·+9·+10 위계를 만든다',()=>{
+ const L=looks(),expected=[
+  [0,{tier:0,count:4,size:1.2,color:0xd6652f,opacity:.48}],
+  [7,{tier:1,count:6,size:1.6,color:0xd6652f,opacity:.74}],
+  [9,{tier:2,count:9,size:2,color:0xff3b24,opacity:.78}],
+  [10,{tier:3,count:12,size:2.6,color:0xffead8,opacity:.82}]
+ ];
+ for(const [enh,spec] of expected)assert.deepEqual(L.prestigeSpec(enh,true),spec,'+'+enh);
+ assert.equal(L.prestigeSpec(0,false),null,'세트·셔터·+7 없는 일반 장비에는 광휘 없음');
+ const src=fs.readFileSync(path.join(ROOT,'js/looks.js'),'utf8'),block=src.slice(src.indexOf('function addPrestigeAura'),src.indexOf('/* 다시 리깅한 캐릭터'));
+ assert.match(block,/size:spec\.size/);assert.match(block,/sizeAttenuation:false/);assert.equal((block.match(/new THREE\.Points\(/g)||[]).length,1,'불티 전체는 한 draw call');
+ assert.doesNotMatch(block,/PointLight|RingGeometry/,'장비 과시는 공격 예고용 바닥 고리·점광원을 만들지 않는다');
+});
+
+test('감소 모션은 명예 장비 색·수량을 남기고 회전·부유·펄스만 고정한다',()=>{
+ const src=fs.readFileSync(path.join(ROOT,'js/looks.js'),'utf8'),mmo=fs.readFileSync(path.join(ROOT,'mmo.html'),'utf8');
+ assert.match(src,/if\(reduced\)mat\.opacity=[^;]+;else core\.onBeforeRender=/,'장검 코어 펄스 고정');
+ assert.match(src,/if\(reduced\)crestMat\.opacity=[^;]+;else crest\.onBeforeRender=/,'등 문장 회전·펄스 고정');
+ assert.match(src,/if\(!reduced\)pts\.onBeforeRender=/,'불티 회전·부유 고정');
+ assert.match(mmo,/reduced:REDUCED/,'MMO 사용자 선호를 외형 모듈로 전달');
+ assert.match(mmo,/if\(!REDUCED\)\{L\.gem\.rotation/,'바닥 전리품 결정도 감소 모션에서 고정');
+});
+
+test('바닥 전리품 반복 스냅숏은 새 색·DOM을 만들지 않고 제거할 때 GPU 자원을 해제한다',()=>{
+ const h=fs.readFileSync(path.join(ROOT,'mmo.html'),'utf8'),add=h.slice(h.indexOf('function lootAdd'),h.indexOf('function onBossMsg'));
+ assert.match(add,/if\(!L\)\{ const d=[^\n]+new THREE\.Color/,'색·geometry는 최초 등장에만 생성');
+ assert.match(add,/if\(L\.mine!==mine\)/,'우선권이 바뀔 때만 이름표를 다시 쓴다');
+ assert.match(add,/L\.grp\.traverse\([^\n]+geometry\?\.dispose\(\)[^\n]+material[^\n]+dispose/,'제거 시 geometry/material 해제');
+});
+
 test('장비 교체·AOI 이탈은 외형 전용 GPU 자원을 해제하고 늦은 로드도 버린다',()=>{
  const src=fs.readFileSync(path.join(ROOT,'js/looks.js'),'utf8'),mmo=fs.readFileSync(path.join(ROOT,'mmo.html'),'utf8');
  assert.match(src,/function disposeLook\(/);assert.match(src,/g\.dispose\(\)/);assert.match(src,/m\.dispose\(\)/);assert.match(src,/t\.dispose\(\)/);

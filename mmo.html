@@ -186,7 +186,7 @@ const heroes=[];
 function heroTag(h){ const t=h.title&&typeof h.title==='object'?h.title:null,title=t&&t.text?'<span class="title" data-tier="'+(+t.tier||1)+'">◆ '+safe(t.text)+'</span>':'';
   h.tag.innerHTML=title+(h.me?'':'<span style="color:#9fd8e8">'+(h.net?safe(NAMES[h.id]):'[황혼]')+'</span> ')+safe(h.name||NAMES[h.id])+'<div class="hp"><i style="width:'+(h.me?86:h.net?100:60+Math.random()*40|0)+'%"></i></div>'; }
 function dress(h, k){ h.set=k; const eq=h.eqNet?Object.assign({main:WEAPON[h.id]},h.eqNet):Object.assign({main:WEAPON[h.id]},SETS[k]||{}),enh=h.enhNet;
-  window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id, enhOf:(id,sl)=>enh?(enh[sl]||0):(window.TW_GEAR&&TW_GEAR.enhOf?TW_GEAR.enhOf(id):0) }); }
+  window.TW_HAIR&&TW_HAIR.sync(h.root, eq); TW_LOOKS.attach(THREE, loader, h.root, eq, { charId:h.id, reduced:REDUCED, enhOf:(id,sl)=>enh?(enh[sl]||0):(window.TW_GEAR&&TW_GEAR.enhOf?TW_GEAR.enhOf(id):0) }); }
 /* 영웅 GLB 는 영웅마다 한 번만 받고, 사람마다 뼈대째 복제한다 — 같은 영웅이 여럿이어도 내려받기 1번 */
 const gltfs={};
 function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; })); }
@@ -335,7 +335,7 @@ const bosses=meta.bosses.map(b=>{ const o={ b, root:null, model:null, mixer:null
   }).catch(e=>console.warn('[boss]',b.id,e)); return o; });
 let inBoss=null, inBossK='';
 /* ---------- 필드 보스: 주기 출현 · 피해 · 쓰러짐 · 바닥 장비 (server/field.cjs · docs/design/188) ----------
-   온라인: 서버가 알려 주는 대로(살아 있나, 체력 비율). 혼자: 늘 서 있고, 쓰러지면 30초 뒤 다시 선다(드롭 없음). */
+   온라인: 서버가 살아 있는지만 알려 준다(체력·비율 비공개). 혼자: 늘 서 있고, 쓰러지면 30초 뒤 다시 선다(드롭 없음). */
 const IT=window.TW_ITEMS, RAR=IT.RARITY, esc=t=>String(t==null?'':t).replace(/[<>&]/g,'');
 const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);   /* 서버와 같다 */
 const annEl=document.getElementById('ann'), lootBtn=document.getElementById('lootbtn');
@@ -378,16 +378,16 @@ function hitBoss(){ const o=nearBoss(); if(!o) return;
   const crit=Math.random()<0.18, n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1));o.local-=n;if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit});if(o.local<=0)o.local=300000; }
 /* 바닥 장비: 등급 색 빛기둥 + 돌아가는 결정 + 이름표 (디아블로식 «멀리서도 뭔가 떨어졌다») */
 const loots=new Map();
-function lootAdd([id,item,x,z,mine]){ let L=loots.get(id); const d=IT.get(item)||{name:item,rarity:'hero'}, col=new THREE.Color((RAR[d.rarity]||RAR.hero).color);
-  if(!L){ const grp=new THREE.Group(); grp.position.set(x,FLOOR,z);
+function lootAdd([id,item,x,z,mine]){ let L=loots.get(id);
+  if(!L){ const d=IT.get(item)||{name:item,rarity:'hero'},col=new THREE.Color((RAR[d.rarity]||RAR.hero).color),grp=new THREE.Group(); grp.position.set(x,FLOOR,z);
     const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.2,d.rarity==='myth'?7:d.rarity==='legend'?6:4,16,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false }));
     beam.position.y=beam.geometry.parameters.height/2; grp.add(beam);
     const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.14),new THREE.MeshBasicMaterial({ color:col })); gem.position.y=0.5; grp.add(gem);
     const ring=new THREE.Mesh(new THREE.RingGeometry(0.3,0.36,32),new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.7, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false })); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
     scene.add(grp); const tag=document.createElement('div'); tag.className='tag loot'; tag.style.color=(RAR[d.rarity]||RAR.hero).color; document.getElementById('hud').appendChild(tag);
-    L={ id, item, d, grp, beam, gem, tag, x, z }; loots.set(id,L); }
-  L.mine=mine; L.tag.innerHTML=esc(d.name)+'<small>'+esc((RAR[d.rarity]||{}).name||'')+(mine?'':' · 1위가 먼저')+'</small>'; L.beam.material.opacity=mine?0.5:0.22; L.seen=true; }
-function lootDel(L){ scene.remove(L.grp); L.tag.remove(); loots.delete(L.id); }
+    L={ id, item, d, grp, beam, gem, tag, x, z, mine:null }; loots.set(id,L); }
+  if(L.mine!==mine){L.mine=mine;L.tag.innerHTML=esc(L.d.name)+'<small>'+esc((RAR[L.d.rarity]||{}).name||'')+(mine?'':' · 1위가 먼저')+'</small>';L.beam.material.opacity=mine?0.5:0.22;}L.seen=true; }
+function lootDel(L){ scene.remove(L.grp);L.grp.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});L.tag.remove();loots.delete(L.id); }
 function onBossMsg(m){
   if(m.type==='fieldJoined'||m.type==='field'){
     syncBossClock(m.bossNow);
@@ -419,7 +419,7 @@ function bossFrame(dt){
   if(selfDead&&selfState){deathCount.textContent=Math.max(0,Math.ceil((selfState.respawnAt-bossNow())/1000))+'초';deathEl.hidden=false;}
   hurtT=Math.max(0,hurtT-dt);hurtEl.style.opacity=hurtT>0?Math.min(1,hurtT*3):0;
   const p=me.root.position; let ln=null, ld=1e9;
-  loots.forEach(L=>{ L.gem.rotation.y+=dt*2; L.gem.position.y=0.5+Math.sin(zoneT*3)*0.06; tagAt(L.tag,L.x,FLOOR+1.1,L.z); const d=Math.hypot(L.x-p.x,L.z-p.z); if(d<3.5&&d<ld){ ln=L; ld=d; } });
+  loots.forEach(L=>{ if(!REDUCED){L.gem.rotation.y+=dt*2;L.gem.position.y=0.5+Math.sin(zoneT*3)*0.06;}else{L.gem.rotation.y=0;L.gem.position.y=0.5;}tagAt(L.tag,L.x,FLOOR+1.1,L.z); const d=Math.hypot(L.x-p.x,L.z-p.z); if(d<3.5&&d<ld){ ln=L; ld=d; } });
   if(ln!==lootNear){ lootNear=ln; lootBtn.hidden=!ln; if(ln) lootBtn.innerHTML='<span>줍기<small style="color:'+(RAR[ln.d.rarity]||{}).color+'">'+esc(ln.d.name)+'</small></span>'; } }
 function pickLoot(){ if(lootNear&&net) net.send({type:'fieldLoot',loot:lootNear.id}); }
 lootBtn.addEventListener('pointerdown',pickLoot); addEventListener('keydown',e=>{ if(e.code==='KeyF') pickLoot(); });

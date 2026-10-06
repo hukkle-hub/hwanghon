@@ -126,24 +126,27 @@
   function cloneMats(mesh, fn){ var many=Array.isArray(mesh.material),src=many?mesh.material:[mesh.material],out=src.map(function(m){var c=m.clone();fn(c);return c;});mesh.material=many?out:out[0]; }
   function styleClave(THREE, root, enh){ var e=Math.max(0,Math.min(10,enh||0)),ember=0.05+(e>=7?0.07:e*.004);
     root.traverse(function(o){if(!o.isMesh)return;cloneMats(o,function(m){if(m.color)m.color.lerp(new THREE.Color(0x25282e),0.42);if('metalness'in m)m.metalness=Math.max(0.78,m.metalness||0);if('roughness'in m)m.roughness=Math.min(0.38,m.roughness==null?0.38:m.roughness);if(m.emissive){m.emissive.set(0x5a0a05);m.emissiveIntensity=ember;}});}); }
-  function addClaveBladeCore(THREE, wr, enh){ var e=Math.max(0,Math.min(10,enh||0)),mat=new THREE.MeshBasicMaterial({color:e>=10?0xffe2c0:0xff3b22,transparent:true,opacity:e>=9?0.82:0.62,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+  function addClaveBladeCore(THREE, wr, enh, reduced){ var e=Math.max(0,Math.min(10,enh||0)),mat=new THREE.MeshBasicMaterial({color:e>=10?0xffe2c0:0xff3b22,transparent:true,opacity:e>=9?0.82:0.62,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
     var core=new THREE.Mesh(new THREE.BoxGeometry(0.028,0.74,0.035),mat);core.position.set(0,0.45,0.045);core.userData.claveCore=true;wr.add(core);
-    core.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;mat.opacity=(e>=9?0.72:0.54)+Math.sin(t)*0.10;}; }
+    if(reduced)mat.opacity=e>=9?0.77:0.59;else core.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;mat.opacity=(e>=9?0.72:0.54)+Math.sin(t)*0.10;}; }
   function tierOf(n){return n>=10?3:n>=9?2:n>=7?1:0;}
-  function addPrestigeAura(THREE, model, equipped, enhOf){
+  /* PointsMaterial.size 는 화면 픽셀이다. 예전 0.048/0.072는 직교 카메라에서 1px도 안 되어 +10도 보이지 않았다. */
+  var PRESTIGE_SPARKS=[[4,1.2,0xd6652f,0.48],[6,1.6,0xd6652f,0.74],[9,2.0,0xff3b24,0.78],[12,2.6,0xffead8,0.82]];
+  function prestigeSpec(enh,source){var tier=tierOf(Math.max(0,Math.min(10,Number(enh)||0)));if(!source&&!tier)return null;var p=PRESTIGE_SPARKS[tier];return {tier:tier,count:p[0],size:p[1],color:p[2],opacity:p[3]};}
+  function addPrestigeAura(THREE, model, equipped, enhOf, reduced){
     var clave=function(id){return /^([awx])_clave_/.test(id||'');},ids=[],max=0;
     Object.keys(equipped).forEach(function(sl){var id=equipped[sl];if(!clave(id))return;ids.push(id);max=Math.max(max,Number(enhOf(id,sl))||0);});
-    var full=['head','chest','gloves','legs'].every(function(sl){return /^a_clave_/.test(equipped[sl]||'');}),shutter=equipped.off==='x_clave_shutter',tier=tierOf(max);
-    if(!full&&!shutter&&!tier)return null;
-    var g=new THREE.Group();g.userData.lookAura=true;g.userData.prestige={boss:'clave',tier:tier,full:full,shutter:shutter};model.add(g);
-    var col=tier>=3?0xffead8:tier>=2?0xff3b24:0xd6652f,crestMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:tier?0.72:0.38,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
+    var full=['head','chest','gloves','legs'].every(function(sl){return /^a_clave_/.test(equipped[sl]||'');}),shutter=equipped.off==='x_clave_shutter',spec=prestigeSpec(max,full||shutter);
+    if(!spec)return null;var tier=spec.tier,col=spec.color;
+    var g=new THREE.Group();g.userData.lookAura=true;g.userData.prestige={boss:'clave',tier:tier,full:full,shutter:shutter,sparks:spec.count,sparkSize:spec.size,reduced:!!reduced};model.add(g);
+    var crestMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:tier?0.72:0.38,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false});
     /* 바닥 고리는 공격 예고와 겹친다. 광휘의 중심은 등/가슴 높이에 붙인 작은 반응로 문장으로 바꾼다. */
     var crest=new THREE.Mesh(new THREE.OctahedronGeometry(0.045+tier*0.012,0),crestMat);crest.scale.set(1,1.55,0.5);crest.position.set(0,1.12,-0.34);g.add(crest);
-    crest.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;crest.rotation.y=t*0.35;crestMat.opacity=(tier?0.58:0.30)+(Math.sin(t)+1)*(tier?0.10:0.05);};
-    var n=tier>=3?12:tier>=2?9:tier?6:full||shutter?4:0;
+    if(reduced)crestMat.opacity=tier?0.68:0.35;else crest.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.004;crest.rotation.y=t*0.35;crestMat.opacity=(tier?0.58:0.30)+(Math.sin(t)+1)*(tier?0.10:0.05);};
+    var n=spec.count;
     if(n){var pos=new Float32Array(n*3);for(var i=0;i<n;i++){var a=i/n*Math.PI*2;pos[i*3]=Math.cos(a)*(0.22+(i%3)*0.055);pos[i*3+1]=0.28+(i*0.37)%1.35;pos[i*3+2]=Math.sin(a)*(0.22+(i%3)*0.055);}var geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
-      var pm=new THREE.PointsMaterial({color:col,size:tier>=3?0.072:0.048,transparent:true,opacity:tier?0.82:0.48,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true,toneMapped:false}),pts=new THREE.Points(geo,pm);g.add(pts);
-      pts.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.001;pts.rotation.y=t*(tier>=2?0.7:0.38);pts.position.y=Math.sin(t*2.2)*0.035;pm.opacity=(tier?0.67:0.4)+Math.sin(t*3.1)*0.13;}; }
+      var pm=new THREE.PointsMaterial({color:col,size:spec.size,transparent:true,opacity:spec.opacity,blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:false,toneMapped:false}),pts=new THREE.Points(geo,pm);g.add(pts);
+      if(!reduced)pts.onBeforeRender=function(){var t=(typeof performance!=='undefined'?performance.now():Date.now())*.001;pts.rotation.y=t*(tier>=2?0.7:0.38);pts.position.y=Math.sin(t*2.2)*0.035;pm.opacity=(tier?0.67:0.4)+Math.sin(t*3.1)*0.13;}; }
     return g;
   }
   /* 다시 리깅한 캐릭터(tools/3d/rerig-meshy.mjs, docs/design/77)는 관절이 옮겨졌다. 장비 자리는 옛 관절에 맞춰
@@ -256,20 +259,21 @@
     var alive=function(){return model.userData._lookRev===rev;},baseOf=opts.baseOf||function(id){return id;},mixOf=opts.mixOf||function(){return null;};
     var enhOf=function(id,sl){return preview&&/^([awx])_clave_/.test(id||'')?previewEnh:(opts.enhOf?opts.enhOf(id,sl):0)||0;};
     /* 이전 조각 제거 (옷은 몸 메시 옆에 붙어 있다) */ clearLooks(model,bones);
+    var reduced=opts.reduced==null&&typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)').matches:!!opts.reduced;
     function prepScene(scene,sp,id,enh){scene.traverse(function(o){if(o.isMesh){o.castShadow=true;o.frustumCulled=false;if(sp.tint)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(sp.tint),sp.mix||0.5);});}});if(sp.special==='claveBlade')styleClave(THREE,scene,enh);}
     var mainId=equipped.main,mainBase=baseOf(mainId),spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe,slot=bones.RightHandSlot||bones.RightHand,mainEnh=enhOf(mainId,'main');
     if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension')spec=WEAPON.w_red_tension;
     if(opts.charId==='ain'&&typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('gearPreview')==='red_tension')spec=WEAPON.w_red_tension;
     if(DUAL[mainBase]&&bones.LeftHandSlot){var osp=WEAPON[mainBase];loader.load(osp.glb,function(w){if(!alive()){disposeLook(w.scene);return;}var g2=new THREE.Group();g2.userData.look='offhand';prepScene(w.scene,osp,mainId,mainEnh);w.scene.position.set(0,-(osp.grip||0.1),0);g2.add(w.scene);bones.LeftHandSlot.add(g2);g2.scale.setScalar(fitScale(bones.LeftHandSlot));out.weapons.offhand=g2;});}
-    function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else{scene.position.set(0,-(spec.grip||0.75),0);wr.add(scene);}if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=spec.hand2||null;out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
+    function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else{scene.position.set(0,-(spec.grip||0.75),0);wr.add(scene);}if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh,reduced);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=spec.hand2||null;out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
     if(slot){if(spec.build){var ms=spec.build(THREE,mainEnh);mountMain(ms,{scene:ms,animations:[]});}else loader.load(spec.glb,function(w){mountMain(w.scene,w);},undefined,function(){if(alive())opts.onMainFail&&opts.onMainFail();});}else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){var id=equipped[sl];if(!id)return;var sp=WEAPON[baseOf(id)];if(!sp||!sp.bone||!bones[sp.bone])return;var bone=bones[sp.bone],enh=enhOf(id,sl);
       function mountOff(scene){if(!alive()){disposeLook(scene);return;}var g=new THREE.Group();g.userData.look=id;prepScene(scene,sp,id,enh);g.add(scene);var k=fitScale(bone);g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k);g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]);g.scale.setScalar(k*(sp.scale||1));var tint=opts.tintOf&&opts.tintOf(id);if(tint){var mx=mixOf(id);mx=mx==null?0.55:mx;scene.traverse(function(o){if(o.isMesh)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(tint),mx);});});}bone.add(g);out.weapons[sl]=g;}
       if(sp.build)mountOff(sp.build(THREE,enh));else loader.load(sp.glb,function(w){mountOff(w.scene);});});
     ['head','chest','legs','gloves','boots','acc','acc2'].forEach(function(sl){var id=equipped[sl];if(!id)return;var tint=opts.tintOf&&opts.tintOf(id);out.pieces=out.pieces.concat(buildArmor(THREE,baseOf(id),bones,tint,opts.charId,mixOf(id),enhOf(id,sl)));});
-    out.aura=addPrestigeAura(THREE,model,equipped,enhOf);return out; }
+    out.aura=addPrestigeAura(THREE,model,equipped,enhOf,reduced);return out; }
   /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
   function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
   function palm(T, hand){ THREE=THREE||T; return palmOf(hand); }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, PRESTIGE_SPARKS:PRESTIGE_SPARKS, prestigeSpec:prestigeSpec, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
 })();
