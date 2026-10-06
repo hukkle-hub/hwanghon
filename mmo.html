@@ -282,7 +282,7 @@ const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fps
 /* 지금 어디쯤인가 — 가장 가까운 실제 출구 */
 const placeEl=document.getElementById('place');
 function place(){ const p0=me.root.position;
-  if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); placeEl.textContent=(meta.title||'')+' · '+(d<b.r?'중앙 광장':'중앙 광장까지 '+Math.round(d)+' m'); return; }
+  if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); const pl=b.place||'보스 구역'; placeEl.textContent=(meta.title||'')+' · '+(d<b.r?pl:pl+'까지 '+Math.round(d)+' m'); return; }
   if(!meta.exits||!meta.exits.length){ placeEl.textContent=meta.title||''; return; } const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
   if(h.busy>0){ h.busy-=dt; if(h.busy<=0) play(h, m>0.05?'run':'idle'); return; }

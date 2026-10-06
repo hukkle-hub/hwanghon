@@ -83,6 +83,8 @@ export function build(THREE, scene, osm) {
     for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
       if (i % 9 < 3) for (let d = 0.2; d < L; d += 0.5) { const st = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.06, 0.14), stepEdgeM); st.position.set(a[0] + dx / L * d, 0.05, a[1] + dz / L * d); st.rotation.y = -Math.atan2(dz, dx) + Math.PI / 2; scene.add(st); }
       if (i % 4 === 0) for (const side of [-1, 1]) { const q = [a[0] - dz / L * 1.9 * side, a[1] + dx / L * 1.9 * side]; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6), stepEdgeM); post.position.set(q[0], 0.45, q[1]); scene.add(post); } } }
+  /* 문·출발점 둘레는 비운다 — 첫 판은 남쪽 문 원 안에 나무가 서 있었다(게임 화면 확인) */
+  { const g0 = FROM(walk.s0 + 3, 0), sp0 = FROM(walk.s0 + 9, -3); clear.push({ pts: [g0, g0], r: 6 }, { pts: [sp0, sp0], r: 5 }); }
   const nearClear = (p, pad = 0) => clear.some(c => { for (let i = 1; i < c.pts.length; i++) { const a = c.pts[i - 1], b = c.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;
     const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)); if (Math.hypot(p[0] - a[0] - u * vx, p[1] - a[1] - u * vz) < c.r + pad) return true; } return false; });
 
@@ -192,7 +194,7 @@ export function build(THREE, scene, osm) {
   const gates = [ { id: 'south', x: +gateS0[0].toFixed(2), z: +gateS0[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'north' }, label: '강남 방면 · 강남대로', kind: 'zone' } ];
   { const m = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(gateS0[0], 0.05, gateS0[1]); scene.add(m); }
   const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
-  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 6.5, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];
+  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, place: '타워 광장', model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 6.5, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];
   const spawnP = FROM(walk.s0 + 9, -3);
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 14, p[1]]); }
   extentPts.push([tower[0], 40, tower[1]]);   /* 타워 기둥이 그림 안에 조금 더 */

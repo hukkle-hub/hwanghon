@@ -187,6 +187,6 @@ export function build(THREE, scene, osm) {
     spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
     flicker: { on: 3, off: 1 },   /* 원작 «3초 켜짐. 1초 꺼짐» */
     gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' } ],
-    bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, model: 'art/3d/part1/clave.glb', h: 3.2, canon: 'EP02 §10 중앙 광장' } ],
+    bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, place: '중앙 광장', model: 'art/3d/part1/clave.glb', h: 3.2, canon: 'EP02 §10 중앙 광장' } ],
     exits: [], license: osm.license };
 }
