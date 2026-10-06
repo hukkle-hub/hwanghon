@@ -51,6 +51,11 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .tag.loot{font-size:12px;letter-spacing:.04em}.tag.loot small{display:block;font-size:9px;opacity:.75;font-weight:500}
 .gatebtn.loot{border-color:rgba(240,176,64,.85);color:#ffe6b8;background:rgba(26,18,4,.86);box-shadow:0 0 18px rgba(240,170,60,.3);bottom:calc(90px + env(safe-area-inset-bottom))}
 @media (orientation:portrait){ .gatebtn.loot{bottom:calc(270px + env(safe-area-inset-bottom))} }
+/* 사냥터 하위 구역 이름 (docs/design/190 §4 — 리니지처럼 들어서면 가운데에 지역 이름) */
+#areaName{position:absolute;left:50%;top:63%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;color:#f0e2d0;text-shadow:0 0 10px #000,0 1px 2px #000;white-space:nowrap}
+#areaName b{display:block;font-size:22px;letter-spacing:.12em;font-weight:800}#areaName small{display:block;font-size:11px;letter-spacing:.08em;opacity:.8;margin-top:2px}
+#areaName.d2 b{color:#ffb070}#areaName.d3 b{color:#ff6a50}#areaName.rest b{color:#9fe0b0}
+@media (max-height:500px){ #areaName b{font-size:18px} }
 #toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
 .tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
 .tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
@@ -67,6 +72,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
   <div class="gear hit" id="gearBtn">장비 바꾸기</div>
   <div id="boss" hidden></div>
   <div id="toast" hidden></div>
+  <div id="areaName"></div>
   <div id="gate" class="gatebtn hit" hidden></div>
   <div id="lootbtn" class="gatebtn loot hit" hidden></div>
   <div id="ann"></div>
@@ -397,7 +403,20 @@ const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, am
 const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0, placeT=0;
 /* 지금 어디쯤인가 — 가장 가까운 실제 출구 */
 const placeEl=document.getElementById('place');
-function place(){ const p0=me.root.position;
+/* 하위 구역: 원이 사각형보다 먼저(좁은 곳이 넓은 곳 안에 있다) */
+const AREAS=(meta.areas||[]).filter(a=>a.kind==='hunt'||a.kind==='rest').sort((a,b)=>(a.circle?0:1)-(b.circle?0:1));
+const inPolyXZ=(x,z,poly)=>{ let inside=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const a=poly[i], b=poly[j]; if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0]) inside=!inside; } return inside; };
+const areaAt=p=>AREAS.find(a=>a.circle?Math.hypot(p.x-a.circle[0],p.z-a.circle[1])<a.circle[2]:inPolyXZ(p.x,p.z,a.poly))||null;
+const areaEl=document.getElementById('areaName'); let curArea=undefined, areaT=0;
+const RISK=['위험 B','위험 B','위험 A','위험 S'];
+function areaCheck(){ const a=areaAt(me.root.position); if(a===curArea) return; const first=curArea===undefined; curArea=a;
+  if(!a){ document.getElementById('risk').textContent=meta.rules&&meta.rules.safe?'안전 지대':DUNGEON?'위험 A · 던전':'위험 B'; return; }
+  document.getElementById('risk').textContent=a.kind==='rest'?'안전 지대':RISK[a.danger||1];
+  areaEl.className=a.kind==='rest'?'rest':'d'+(a.danger||1);
+  areaEl.innerHTML='<b>'+String(a.name).replace(/[<>&]/g,'')+'</b><small>'+(a.kind==='rest'?'쉬어 가는 곳':(a.lv?'Lv '+a.lv[0]+'~'+a.lv[1]:'')+(a.mobs&&a.mobs!=='(가안)'?' · '+String(a.mobs).replace(/[<>&]/g,''):''))+'</small>';
+  areaT=first?3.5:3; }
+function areaFrame(dt){ if(areaT>0){ areaT-=dt; areaEl.style.opacity=Math.max(0,Math.min(1,areaT/0.8,(3.6-areaT)/0.4)); } else areaEl.style.opacity=0; }
+function place(){ const p0=me.root.position; areaCheck(); if(curArea){ placeEl.textContent=(meta.title||'')+' · '+curArea.name; return; }
   if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); const pl=b.place||'보스 구역'; placeEl.textContent=(meta.title||'')+' · '+(d<b.r?pl:pl+'까지 '+Math.round(d)+' m'); return; }
   if(!meta.exits||!meta.exits.length){ placeEl.textContent=meta.title||''; return; } const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
@@ -430,7 +449,7 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
   if(frames%20===1) heroes.forEach(silSync);   /* 장비 GLB 는 늦게 붙는다 — 가끔 다시 훑는다 */
   nearLights(me.root.position); follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
-  zones(dt); bossFrame(dt);
+  zones(dt); bossFrame(dt); areaFrame(dt);
   if(shakeT>0){ shakeT=Math.max(0,shakeT-dt); const a=shakeT*0.35; cam.position.x+=(Math.random()-.5)*a; cam.position.z+=(Math.random()-.5)*a; }
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
   heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); bosses.forEach(o=>{ if(o.tag){ if(o===inBoss||!o.alive) o.tag.style.display='none'; else tagAt(o.tag,o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.b.z); } });
