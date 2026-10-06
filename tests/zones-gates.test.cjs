@@ -41,3 +41,8 @@ test('지역 표(js/mmo/zones.js)와 구운 맵이 맞다 — 표에 없는 맵 
   for(const b of m.bosses||[]) if(b.model) assert.ok(fs.existsSync(path.join(ROOT,b.model)),z+' 보스 모델 '+b.model); }
  for(const [id,Z] of Object.entries(ZONES)) if(Z.restart) assert.ok(ZONES[Z.restart.zone],id+' 되돌아갈 곳 '+Z.restart.zone);
 });
+test('타일 해시: map.json 의 h 가 실제 파일 내용과 맞다 (서비스워커가 해시로 캐시한다 — 틀리면 옛 그림이 남는다)',()=>{
+ const crypto=require('node:crypto');
+ for(const z of zones){ const m=meta(z); for(const t of m.tiles){ assert.ok(t.h,z+' '+t.color+' 해시 없음 — node tools/2d/tile-hashes.mjs '+z);
+  const h=crypto.createHash('sha1'); h.update(fs.readFileSync(path.join(MAPS,z,t.color))); h.update(fs.readFileSync(path.join(MAPS,z,t.depth))); assert.equal(t.h,h.digest('hex').slice(0,10),z+' '+t.color+' 해시가 옛것 — 다시 구웠으면 tile-hashes 를 돌려라'); } }
+});

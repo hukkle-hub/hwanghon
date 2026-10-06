@@ -39,7 +39,8 @@ export async function createMap(THREE, scene, meta, base, camera) {
       uniforms: { colorMap: { value: color }, depthMap: { value: depth }, bakeNear: { value: meta.near }, bakeFar: { value: meta.far }, camNear: { value: camera.near }, camFar: { value: camera.far },
         hmax: { value: meta.hmax || 250 }, sinP: { value: Math.sin(meta.pitch) }, heightMode: { value: meta.depthMode === 'height' ? 1 : 0 } } }); }
   function open(key) { const tl = index.get(key); if (!tl || live.has(key)) return null; const rec = { mesh: null, dead: false }; live.set(key, rec); inflight++;
-    return Promise.all([load(base + tl.color), load(base + tl.depth)]).then(([c, d]) => { inflight--; if (rec.dead) { c.dispose(); d.dispose(); return; }
+    const v = tl.h ? '?v=' + tl.h : '';   /* 내용 해시 — 서비스워커가 배포를 넘어 캐시한다 (tools/2d/tile-hashes.mjs) */
+    return Promise.all([load(base + tl.color + v), load(base + tl.depth + v)]).then(([c, d]) => { inflight--; if (rec.dead) { c.dispose(); d.dispose(); return; }
       const q = new THREE.Mesh(geo, material(c, d)), uc = tl.u0 + T / 2, vc = tl.v0 - T / 2;
       q.position.copy(R).multiplyScalar(uc).addScaledVector(U, vc).addScaledVector(D, -meta.L); q.quaternion.setFromRotationMatrix(M);
       q.renderOrder = -10; q.matrixAutoUpdate = false; q.updateMatrix(); group.add(q); rec.mesh = q; stats.loaded++; }, () => { inflight--; live.delete(key); }); }
