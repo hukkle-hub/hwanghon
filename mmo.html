@@ -30,7 +30,9 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .tag .hp{width:54px;height:4px;margin:2px auto 0;background:#20222a;border:1px solid #000}.tag .hp i{display:block;height:100%;background:#d03838}
 .tag.me .hp i{background:#40c060}
 #dbg{position:absolute;left:calc(12px + env(safe-area-inset-left));top:56px;font:11px/1.5 monospace;color:#9fd8e8;background:rgba(0,0,0,.45);padding:4px 6px;display:none}
-.gatebtn{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:64px;min-width:220px;padding:0 22px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(64,216,255,.75);background:rgba(6,18,26,.82);color:#bff2ff;font-size:14px;font-weight:700;letter-spacing:.04em;border-radius:6px;box-shadow:0 0 18px rgba(64,216,255,.25)}
+.gatebtn{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:64px;min-width:220px;padding:0 22px;box-sizing:border-box;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(64,216,255,.75);background:rgba(6,18,26,.82);color:#bff2ff;font-size:14px;font-weight:700;letter-spacing:.04em;border-radius:6px;box-shadow:0 0 18px rgba(64,216,255,.25)}
+.gatebtn:not([hidden]){display:flex}   /* [hidden] 을 이기지 않게 (CLAUDE.md §1) */
+@media (orientation:portrait){ .gatebtn{bottom:calc(196px + env(safe-area-inset-bottom))} }   /* 세로: 스틱·공격 단추 위로 */
 .gatebtn.dg{border-color:rgba(255,96,64,.8);color:#ffd2c4;background:rgba(26,8,6,.85);box-shadow:0 0 18px rgba(255,80,48,.3)}
 .gatebtn small{display:block;font-size:10px;font-weight:500;opacity:.7;letter-spacing:.1em}
 #boss{position:absolute;left:50%;top:10px;transform:translateX(-50%);text-align:center;color:#ffb0a0;font-size:11px;letter-spacing:.3em;text-shadow:0 0 8px #000}
