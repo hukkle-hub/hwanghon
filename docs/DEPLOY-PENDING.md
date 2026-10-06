@@ -3,8 +3,8 @@
 > **2026-10-06 — 대기 없음.** 아래 목록은 모두 배포됐다 (GPT 가 눌렀다).
 > 남은 것은 **환경변수 하나** 뿐이다 (§3).
 
-정적 사이트(GitHub Pages)는 `main` 푸시마다 자동으로 나간다. **파티 서버는
-`render.yaml` 에 `autoDeployTrigger: "off"` 라서 손으로 눌러야 한다.**
+정적 사이트(GitHub Pages)와 파티 서버는 `main` 푸시마다 자동으로 나간다.
+파티 서버의 `render.yaml` 은 `autoDeployTrigger: "commit"` 으로 맞춰져 있다.
 `server/` 를 고칠 때마다 이 파일에 한 줄을 남기고, 배포되면 §2 로 옮긴다.
 
 - 대상: `hwanghon-party` (Render · Singapore · free)
