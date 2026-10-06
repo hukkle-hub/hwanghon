@@ -28,11 +28,13 @@ if(AX==='auto'){ const RANK={trunk:5,primary:4.5,secondary:3.5,tertiary:2.5,uncl
     if(len>0) score.set(key,(score.get(key)||0)+len*RANK[k]*(t.highway.endsWith('_link')?0.3:1)); }
   const best=[...score.entries()].sort((a,b)=>b[1]-a[1]); if(!best.length){ console.error('원점 둘레에 길이 없다'); process.exit(1); }
   AX=best[0][0]; console.log('축 후보',best.slice(0,4).map(([k,v])=>k+' '+v.toFixed(0)).join(' · '));
-  /* 원점을 길 위로 */
+}
+const axisWays=AX.startsWith('#')?all.filter(e=>'#'+e.id===AX):AX==='aerialway'?all.filter(e=>e.type==='way'&&e.tags&&/cable_car|gondola/.test(e.tags.aerialway||'')&&e.geometry):ways(AX);
+/* 원점을 축 길 위로 (AXIS=auto 이거나 SNAP=1) — 띠 가운데 = 길 가운데 */
+if(process.env.AXIS==='auto'||process.env.SNAP){
   const W0=AX.startsWith('#')?all.filter(e=>'#'+e.id===AX):ways(AX); let near=null;
   for(const w of W0){ const g=w.geometry; for(let i=1;i<g.length;i++){ const a=P(g[i-1]), b=P(g[i]), dx=b[0]-a[0], dz=b[1]-a[1], L2=dx*dx+dz*dz||1, u=Math.max(0,Math.min(1,-(a[0]*dx+a[1]*dz)/L2)), q=[a[0]+dx*u,a[1]+dz*u], d=Math.hypot(...q); if(!near||d<near.d) near={d,q}; } }
-  if(near&&near.d<150){ origin={ lat:origin.lat-near.q[1]/KZ, lon:origin.lon+near.q[0]/KX }; console.log('원점을 길 위로',near.d.toFixed(0)+' m'); } }
-const axisWays=AX.startsWith('#')?all.filter(e=>'#'+e.id===AX):AX==='aerialway'?all.filter(e=>e.type==='way'&&e.tags&&/cable_car|gondola/.test(e.tags.aerialway||'')&&e.geometry):ways(AX);
+  if(near&&near.d<(process.env.AXIS==='auto'?150:300)){ origin={ lat:origin.lat-near.q[1]/KZ, lon:origin.lon+near.q[0]/KX }; console.log('원점을 길 위로',near.d.toFixed(0)+' m'); } }
 const pts=axisWays.flatMap(w=>w.geometry.map(P)).filter(([x,z])=>Math.hypot(x,z)<(AX==='aerialway'?1000:300));
 /* 평균을 빼고 잰다 — 원점이 길 위가 아니면(여의도: IFC) 축이 엉뚱하게 나왔다 */
 const mx=pts.reduce((a,p)=>a+p[0],0)/(pts.length||1), mz=pts.reduce((a,p)=>a+p[1],0)/(pts.length||1);

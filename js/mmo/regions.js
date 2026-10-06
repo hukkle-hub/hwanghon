@@ -2,7 +2,7 @@
    연속 세계 대신 실제 좌표에 흩어진 지역. 지역 «안» 은 1:1 실측, 지역 «사이» 는 지도 화면의 빠른 이동(길잡이 오정길).
    kind: hub(거점·안전) · city · coast · mountain · river · rural · industrial · island · historic
    zone: 이미 구운 지역 id (js/mmo/zones.js) — 없으면 아직 계획. 레벨은 강남에서의 거리로(문서 187 «장소가 곧 난이도»).
-   좌표는 OSM 을 받을 중심(대개 큰길 위). 원작 동선 지역은 원작 레벨(문서 185 §3)을 따른다. */
+   좌표는 OSM 을 받을 중심(대개 큰길 위). axis: 축이 될 길 이름(없으면 둘레 가장 큰 길 — tools/2d/new-zone.mjs). 원작 동선 지역은 원작 레벨(문서 185 §3)을 따른다. */
 
 import { AUTO } from './zones-auto.js';
 
@@ -20,7 +20,7 @@ export const REGIONS = [
   { id: 'goheung', name: '고흥', kind: 'coast', lat: 34.4318, lon: 127.5350, zone: 'goheung', lv: [52, 60], story: true },
 
   /* ---- 거점 (리니지 마을처럼 안전 지대) ---- */
-  { id: 'daejeon', name: '대전역', kind: 'hub', lat: 36.3326, lon: 127.4344 },
+  { id: 'daejeon', name: '대전역', kind: 'hub', lat: 36.3326, lon: 127.4344, axis: '중앙로' },   /* 역 앞 광장에서 서쪽으로 뻗는 중앙로 (자동은 역에서 먼 대전로를 골랐다) */
   { id: 'daegu', name: '대구 동성로', kind: 'hub', lat: 35.8690, lon: 128.5958 },
   { id: 'busan', name: '부산역', kind: 'hub', lat: 35.1150, lon: 129.0422 },
   { id: 'gwangju', name: '광주 금남로', kind: 'hub', lat: 35.1466, lon: 126.9198 },

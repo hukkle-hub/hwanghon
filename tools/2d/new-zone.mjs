@@ -14,6 +14,7 @@ const ST = ([x, z]) => [x * DIR[0] + z * DIR[1], x * SIDE[0] + z * SIDE[1]], FRO
 const rotP = r => { const c = Math.cos(r), s = Math.sin(r); return ([x, z]) => [x * c - z * s, x * s + z * c]; };
 const inPoly = ([x, z], P) => { let o = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [xi, zi] = P[i], [xj, zj] = P[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) o = !o; } return o; };
 const bbox = P => P.reduce((b, [x, z]) => [Math.min(b[0], x), Math.min(b[1], z), Math.max(b[2], x), Math.max(b[3], z)], [1e9, 1e9, -1e9, -1e9]);
+const area = P => { let a = 0; for (let i = 0; i < P.length; i++) { const p = P[i], q = P[(i + 1) % P.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
 const segD = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
 const hash = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 90000 + 10000;
 
@@ -25,16 +26,41 @@ const LOOK = {
   rural: { ground: 'grass', dress: { patches: ['grass', 'sand', 'forest'] }, trees: { density: 0.6, inBand: 0.12, pine: 0.4 }, boundary: 'fence', ruin: [4.5, 8] },
 };
 const lookOf = r => LOOK[{ hub: 'city', city: 'city', historic: 'city', industrial: 'city', coast: 'coast', island: 'coast', mountain: 'mountain', river: 'rural', rural: 'rural' }[r.kind] || 'city'];
-const CLASS_NAME = { beach: '모래사장', forest: '숲 가장자리', park: '공원 터', city: '무너진 상가', open: '빈터', water: '물가' };
-const MOBS = { beach: '갯가 감염체 (가안)', forest: '탈영병 (가안)', park: '광장의 감염체 (가안)', city: '감염체 무리 (가안)', open: '들개 무리 (가안)', water: '갯가 감염체 (가안)' };
+const CLASS_NAME = { street: '폐허 거리', beach: '모래사장', forest: '숲 가장자리', park: '공원 터', city: '무너진 상가', open: '빈터', water: '물가' };
+const MOBS = { street: '감염체 무리 (가안)', beach: '갯가 감염체 (가안)', forest: '탈영병 (가안)', park: '광장의 감염체 (가안)', city: '감염체 무리 (가안)', open: '들개 무리 (가안)', water: '갯가 감염체 (가안)' };
+
+/* 빈 블록 채우기 — 지방 도시는 OSM 건물이 드물다(대전역 둘레 1.4 km 에 143채). 실측 건물이 20 m 안에 없는 길가에만
+   낮은 건물(2~5층)을 길과 나란히 세운다. 길·물·철길·공원·숲 위에는 세우지 않는다. 표시 gen: true (MSFS 의 «윤곽 없는 곳은 절차 생성» 과 같은 생각) */
+function fillBlocks(osm, seed) { let x = seed >>> 0; const R = () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+  const HW = { trunk: 11, primary: 10, secondary: 8, tertiary: 6.5, unclassified: 4.5, residential: 4, living_street: 3, service: 3, pedestrian: 4 };
+  const roads = osm.roads.filter(r => !r.tunnel && !r.area && (HW[r.kind.replace('_link', '')] || /footway|path|steps|cycleway/.test(r.kind))).map(r => ({ line: r.line, hw: r.width ? r.width / 2 : r.lanes ? r.lanes * 1.75 + 1 : HW[r.kind.replace('_link', '')] || 1.2, front: !!HW[r.kind.replace('_link', '')] && r.kind !== 'service' }));
+  const no = [...osm.areas.filter(a => /water|basin|reservoir|riverbank|park|grass|wood|forest|scrub|beach|sand|pitch|garden|parking|railway|cemetery|military|construction|man:|aero:/.test(a.kind)).map(a => ({ poly: a.poly, bb: bbox(a.poly) }))];
+  const lines = osm.lines.filter(l => !l.tunnel).map(l => ({ line: l.line, hw: /^rail/.test(l.kind) ? 5 : l.kind === 'coastline' ? 6 : (l.width || 10) / 2 + 2 }));
+  const CELL = 40, hashB = new Map(), key = (a, b) => a + ',' + b, add = (bb, v) => { for (let i = Math.floor(bb[0] / CELL); i <= Math.floor(bb[2] / CELL); i++) for (let j = Math.floor(bb[1] / CELL); j <= Math.floor(bb[3] / CELL); j++) { const k = key(i, j); if (!hashB.has(k)) hashB.set(k, []); hashB.get(k).push(v); } };
+  const near = (bb, pad) => { const out = new Set(); for (let i = Math.floor((bb[0] - pad) / CELL); i <= Math.floor((bb[2] + pad) / CELL); i++) for (let j = Math.floor((bb[1] - pad) / CELL); j <= Math.floor((bb[3] + pad) / CELL); j++) for (const v of hashB.get(key(i, j)) || []) out.add(v); return out; };
+  for (const b of osm.buildings) { const bb = bbox(b.poly); add(bb, { bb, real: true }); }
+  const clearOf = (p, list) => list.every(r => r.line.every((q, i) => !i || segD(p, r.line[i - 1], q) > r.hw + 1.2));
+  let n = 0;
+  for (const r of roads) { if (!r.front) continue; const g = r.line;
+    for (let i = 1; i < g.length; i++) { const a = g[i - 1], b = g[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 8) continue; const ux = dx / L, uz = dz / L;
+      for (const side of [-1, 1]) for (let d = 4 + R() * 6; d < L - 4; d += 0) { const w = 8 + R() * 10, dep = 8 + R() * 9, set = r.hw + 2 + R() * 2.5, cd = d + w / 2;
+        const cx = a[0] + ux * cd - uz * side * (set + dep / 2), cz = a[1] + uz * cd + ux * side * (set + dep / 2); d += w + 1.5 + R() * 4;
+        if (Math.abs(cx) > 660 || Math.abs(cz) > 660) continue;
+        const poly = [[-w / 2, -dep / 2], [w / 2, -dep / 2], [w / 2, dep / 2], [-w / 2, dep / 2]].map(([u, v]) => [+(cx + ux * u - uz * side * v).toFixed(2), +(cz + uz * u + ux * side * v).toFixed(2)]), bb = bbox(poly);
+        const hits = near(bb, 20); if ([...hits].some(h => h.real || (bb[0] < h.bb[2] + 1.5 && bb[2] > h.bb[0] - 1.5 && bb[1] < h.bb[3] + 1.5 && bb[3] > h.bb[1] - 1.5))) continue;
+        const pts = [[cx, cz], ...poly]; if (!pts.every(p => clearOf(p, roads) && clearOf(p, lines))) continue;
+        if (no.some(o => pts.some(p => p[0] >= o.bb[0] && p[0] <= o.bb[2] && p[1] >= o.bb[1] && p[1] <= o.bb[3] && inPoly(p, o.poly)))) continue;
+        osm.buildings.push({ id: 9e9 + n, poly: [...poly, poly[0]], height: null, levels: 2 + Math.floor(R() * 4), kind: 'yes', name: null, under: false, gen: true }); add(bb, { bb, real: false }); n++; } } }
+  return n; }
 
 function plan(region) {
   const id = region.id, src = path.join(OSM_CACHE, id);
   if (!fs.existsSync(src) || !fs.readdirSync(src).some(f => f.startsWith('osm-r'))) {
     const dl = 700 / 110540, dn = 700 / (111320 * Math.cos(region.lat * Math.PI / 180));
     execFileSync('node', ['tools/2d/osm-fetch.mjs', src, (region.lat - dl).toFixed(5), (region.lat + dl).toFixed(5), (region.lon - dn).toFixed(5), (region.lon + dn).toFixed(5), '2'], { stdio: 'inherit' }); }
-  console.log(execFileSync('node', ['tools/2d/osm-extract.mjs', src, id], { env: { ...process.env, ORIGIN: region.lat + ',' + region.lon, AXIS: 'auto' } }).toString().trim().split('\n').slice(0, 3).join('\n'));
+  console.log(execFileSync('node', ['tools/2d/osm-extract.mjs', src, id], { env: { ...process.env, ORIGIN: region.lat + ',' + region.lon, AXIS: region.axis || 'auto', SNAP: '1' } }).toString().trim().split('\n').slice(0, 3).join('\n'));
   const osm = JSON.parse(fs.readFileSync(path.join('maps', '2d', id, 'osm.json'), 'utf8'));
+  if (lookOf(region).dress.urban) { const n = fillBlocks(osm, hash(id)); fs.writeFileSync(path.join('maps', '2d', id, 'osm.json'), JSON.stringify(osm)); console.log('빈 블록 채움', n, '채 (실측', osm.buildings.length - n, '채)'); }
 
   /* 물: 물 다각형 · 강 띠 · 해안선 오른쪽 2 km (env-lib lines 와 같은 규칙) */
   const water = osm.areas.filter(a => /^water$|reservoir|basin|riverbank/.test(a.kind)).map(a => a.poly), rivers = [];
@@ -43,10 +69,10 @@ function plan(region) {
       /* OSM 좌표는 z 가 남쪽 + 라서 env-lib 의 «오른쪽» 과 같은 식을 그대로 쓴다 */ water.push([...l.line, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]); }
     else if (/^water:(river|canal|stream|ditch|drain)/.test(l.kind)) { const w = l.width || (/river|canal/.test(l.kind) ? 18 : 3); if (w > 4) rivers.push({ line: l.line, w: w / 2 }); } }
   const P = (list, kind) => list.map(poly => ({ poly, bb: bbox(poly), kind }));
-  const polys = [...P(water, 'water'), ...P(osm.buildings.filter(b => !b.under).map(b => b.poly), 'city'),
+  const polys = [...P(water, 'water'), ...P(osm.buildings.filter(b => !b.under && area(b.poly) > 2500).map(b => b.poly), 'big'), ...P(osm.buildings.filter(b => !b.under && area(b.poly) <= 2500).map(b => b.poly), 'city'),
     ...P(osm.areas.filter(a => /wood|forest|military|scrub/.test(a.kind)).map(a => a.poly), 'forest'), ...P(osm.areas.filter(a => /beach|sand/.test(a.kind)).map(a => a.poly), 'beach'),
     ...P(osm.areas.filter(a => /park|grass|meadow|garden|pitch|village_green|recreation|golf|farmland|orchard/.test(a.kind)).map(a => a.poly), 'park')];
-  const ORDER = ['water', 'city', 'beach', 'forest', 'park'];
+  const ORDER = ['water', 'big', 'city', 'beach', 'forest', 'park'];
   const classify = p => { for (const k of ORDER) { if (k === 'water' && rivers.some(r => r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < r.w))) return 'water';
       for (const o of polys) if (o.kind === k && p[0] >= o.bb[0] && p[0] <= o.bb[2] && p[1] >= o.bb[1] && p[1] <= o.bb[3] && inPoly(p, o.poly)) return k; } return 'open'; };
 
@@ -58,13 +84,15 @@ function plan(region) {
   const toOsm = rotP(-rot), G = 5, R0 = 380, N = R0 * 2 / G + 1, grid = new Array(N * N);
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) grid[i * N + j] = classify(toOsm(FROM(-R0 + i * G, -R0 + j * G)));
   const cls = (s, t) => grid[Math.round((s + R0) / G) * N + Math.round((t + R0) / G)];
-  const stats = (s0, s1, t0, t1) => { const c = { water: 0, city: 0, beach: 0, forest: 0, park: 0, open: 0 }; let n = 0; for (let s = s0; s <= s1; s += G) for (let t = t0; t <= t1; t += G) { c[cls(s, t)]++; n++; } for (const k in c) c[k] /= n; return c; };
+  const stats = (s0, s1, t0, t1) => { const c = { water: 0, big: 0, city: 0, beach: 0, forest: 0, park: 0, open: 0 }; let n = 0; for (let s = s0; s <= s1; s += G) for (let t = t0; t <= t1; t += G) { c[cls(s, t)]++; n++; } for (const k in c) c[k] /= n; c.city += c.big; return c; };
 
   /* 걷는 띠: 400 × 240 m. 물 0 에 가깝게, 길(t=0)을 품고, 카메라 쪽으로 — 해안은 띠 바로 위(먼 쪽)에 바다가 보이면 덤 */
   const SL = 400, TL = 240; let best = null;
-  for (let sc = -100; sc <= 100; sc += 20) for (let t0 = -340; t0 <= 100; t0 += 10) { const t1 = t0 + TL, s0 = sc - SL / 2, s1 = sc + SL / 2;
+  const mustRoad = lookOf(region).ground === 'paver';   /* 도시·마을은 띠가 큰길을 품는다 — 길이 마을의 등뼈 */
+  for (let sc = -200; sc <= 200; sc += 20) for (let t0 = -340; t0 <= 100; t0 += 10) { const t1 = t0 + TL, s0 = sc - SL / 2, s1 = sc + SL / 2; if (mustRoad && !(t0 <= -30 && t1 >= 30)) continue;
     const c = stats(s0, s1, t0, t1), view = stats(s0, s1, t1, Math.min(t1 + 60, R0)).water;
-    const score = -10 * c.water - 1.5 * Math.max(0, c.city - 0.3) + (t0 < 0 && t1 > 0 ? 0.4 : 0) - 0.002 * Math.abs(t1 - 40) - 0.001 * Math.abs(sc) + (far[0] || far[1] !== 1 ? 0.5 * view : 0);
+    const score = -10 * c.water - 6 * c.big - 2 * Math.max(0, c.city - 0.2) + (t0 < 0 && t1 > 0 ? 0.4 : 0) - 0.002 * Math.abs(t1 - 40) - 0.0005 * Math.abs(sc) + (far[0] || far[1] !== 1 ? 0.5 * view : 0);
+    if (process.env.DEBUG && sc === 0 && t0 % 40 === 0) console.log("  띠 t", t0, t1, "점수", score.toFixed(2), Object.entries(c).map(([k, v]) => k + " " + (v * 100).toFixed(0)).join(" "));
     if (!best || score > best.score) best = { score, s0, s1, t0, t1, c }; }
   const walk = { s0: best.s0, s1: best.s1, t0: best.t0, t1: best.t1 }, c = best.c;
   /* 출발점: 길 위(t = 0)가 띠 안이면 거기, 아니면 띠 가운데 — 건물·물이 아닌 가장 가까운 칸 */
@@ -85,7 +113,8 @@ function plan(region) {
   order.forEach((k, rank) => { const [s0, s1] = thirds[k], st = stats(s0, s1, walk.t0, walk.t1), dom = Object.entries(st).filter(([n]) => n !== 'water').sort((a, b) => b[1] - a[1])[0][0];
     if (hub && rank === 0) { hunts.push({ id: 'town', name: region.name + ' 마을', kind: 'rest', s: [s0, s1], t: [walk.t0, walk.t1] }); return; }
     const span = lv[1] - lv[0], a = lv[0] + Math.round(span * (rank / 3)), b = Math.min(lv[1], a + Math.max(2, Math.round(span / 2)));
-    hunts.push({ id: ['mid', 'west', 'east'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, dom, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[dom], danger: rank + 1 }); });
+    const k2 = dom === 'open' && lookOf(region).dress.urban ? 'street' : dom;   /* 도시의 «빈 땅» 은 길이다 */
+    hunts.push({ id: ['mid', 'west', 'east'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, k2, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[k2], danger: rank + 1 }); });
   if (!hub) hunts.push({ id: 'rest', name: '길잡이 쉼터', kind: 'rest', st: spawn, r: 12 });
 
   const L = lookOf(region), tall = osm.buildings.some(b => (b.height || (b.levels || 0) * 3.6) > 45), lampsOn = walk.t0 < 0 && walk.t1 > 0;
@@ -94,7 +123,7 @@ function plan(region) {
     field: { seed: hash(id), tc: 0, cutT: walk.t0, walk, farSide: { osm: far.map(v => Math.round(v)) }, spawn: { st: spawn }, ground, curtain: tall, extentH: 40, ruin: { h: L.ruin },
       dress: L.dress, sky: { hemiI: 3.0 }, trees: L.trees, cars: { gap: 0.6, trucks: 0.08 }, crystals: 16, lampStep: 30, ...(lampsOn ? { lampT: 3 } : { lamps: false }),
       boundary: { style: L.boundary, closed: { s0: '통제구역 — 안개', s1: '통제구역 — 안개' } } } };
-  console.log(`${id}: 띠 s ${walk.s0}~${walk.s1} · t ${walk.t0}~${walk.t1} · 물 ${(c.water * 100).toFixed(1)}% 건물 ${(c.city * 100).toFixed(0)}% 숲 ${(c.forest * 100).toFixed(0)}% 모래 ${(c.beach * 100).toFixed(0)}% 풀 ${(c.park * 100).toFixed(0)}% · 먼 쪽 ${far.map(v => v.toFixed(0))} · 출발 ${spawn}`);
+  console.log(`${id}: 띠 s ${walk.s0}~${walk.s1} · t ${walk.t0}~${walk.t1} · 물 ${(c.water * 100).toFixed(1)}% 건물 ${(c.city * 100).toFixed(0)}% (큰 건물 ${(c.big * 100).toFixed(0)}%) 숲 ${(c.forest * 100).toFixed(0)}% 모래 ${(c.beach * 100).toFixed(0)}% 풀 ${(c.park * 100).toFixed(0)}% · 먼 쪽 ${far.map(v => v.toFixed(0))} · 출발 ${spawn}`);
   for (const h of hunts) console.log('   ', h.kind === 'rest' ? '쉼' : '사냥', h.name, h.lv ? 'Lv ' + h.lv.join('~') : '', h.mobs || '');
   return zone;
 }

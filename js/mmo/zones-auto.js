@@ -1,3 +1,5 @@
-/* 자동으로 찍어 낸 지역 — tools/2d/new-zone.mjs 가 쓴다 (docs/design/192 §7) */
+/* 자동으로 찍어 낸 지역 — tools/2d/new-zone.mjs 가 쓴다. 손으로 고치지 말고 다시 돌리거나 zones.js 로 옮긴다 (docs/design/192 §7)
+   좌표·이름은 js/mmo/regions.js, 땅은 OSM(© OpenStreetMap contributors, ODbL). zones.js 가 같은 id 를 가지면 그쪽이 이긴다. */
 export const AUTO = {
+  "daejeon": {"title":"대전역","kind":"field","env":"field","osm":"daejeon","px":90,"auto":true,"rules":{"mark":true,"escape":true},"restart":{"zone":"daejeon"},"hunts":[{"id":"town","name":"대전역 마을","kind":"rest","s":[133,267],"t":[-30,210]},{"id":"west","name":"대전역지하차도 폐허 거리","s":[0,133],"t":[-30,210],"lv":[23,26],"mobs":"감염체 무리 (가안)","danger":2},{"id":"east","name":"중앙로 폐허 거리","s":[267,400],"t":[-30,210],"lv":[24,26],"mobs":"감염체 무리 (가안)","danger":3}],"field":{"seed":97067,"tc":0,"cutT":-30,"walk":{"s0":0,"s1":400,"t0":-30,"t1":210},"farSide":{"osm":[-2,174]},"spawn":{"st":[200,0]},"ground":"paver","curtain":true,"extentH":40,"ruin":{"h":[5,11]},"dress":{"urban":true,"logs":false,"patches":["concrete","sand","asphalt"]},"sky":{"hemiI":3},"trees":{"density":0.3,"inBand":0.08,"pine":0.1},"cars":{"gap":0.6,"trucks":0.08},"crystals":16,"lampStep":30,"lampT":3,"boundary":{"style":"urban","closed":{"s0":"통제구역 — 안개","s1":"통제구역 — 안개"}}}},
 };
