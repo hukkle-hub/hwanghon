@@ -37,8 +37,9 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 <canvas id="c"></canvas>
 <div class="hud" id="hud">
   <div class="top"><div class="face" id="face"></div><div><b id="who">아인 · Lv 8</b><div class="bars"><div class="bar"><i id="hpb" style="width:86%"></i></div><div class="bar st"><i style="width:64%"></i></div></div></div></div>
-  <div class="zone">강남대로 · 지하상가 5번 출구<b>위험 B</b><span id="net" style="display:block;margin-top:2px;color:#c9a45e">오프라인</span></div>
+  <div class="zone"><span id="place">강남대로 · 강남역</span><b>위험 B</b><span id="net" style="display:block;margin-top:2px;color:#c9a45e">오프라인</span></div>
   <div id="dbg"></div>
+  <div id="osm" style="position:absolute;left:calc(8px + env(safe-area-inset-left));bottom:4px;font-size:9px;color:rgba(255,255,255,.45)">지도 데이터 © OpenStreetMap contributors</div>
   <div class="gear hit" id="gearBtn">장비 바꾸기</div>
   <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
   <div class="btns hit"><div class="b atk" id="atk">공격</div>
@@ -70,8 +71,11 @@ const LOD=q.has('lod')?q.get('lod')==='1':MOBILE;
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:!MOBILE,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(2,devicePixelRatio)); renderer.setSize(innerWidth,innerHeight,false);
 renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x05060a);
-const meta=await (await fetch('maps/2d/gangnam/map.json')).json();
+const scene=new THREE.Scene();
+/* 지역: 실제 공간 맵(OSM 실측, 문서 185 §6.5). ?zone=<id> */
+const ZONE=/^[a-z0-9_-]{1,24}$/.test(q.get('zone')||'')?q.get('zone'):'gangnam';
+const meta=await (await fetch('maps/2d/'+ZONE+'/map.json')).json();
+scene.background=new THREE.Color(meta.sky?meta.sky.fog:0x05060a);
 const {R,U,D}=basis(THREE, meta.pitch), T=meta.tile/meta.pxPerM;
 const MAP={ u0:meta.u0, u1:meta.u0+meta.cols*T, v0:meta.v1-meta.rows*T, v1:meta.v1 };
 /* ---------- 카메라 ---------- */
@@ -87,10 +91,12 @@ function follow(p){ /* 그림 범위 밖이 보이지 않게 그림 좌표에서
   u=Math.min(MAP.u1-viewW/2,Math.max(MAP.u0+viewW/2,u)); v=Math.min(MAP.v1-viewH/2,Math.max(MAP.v0+viewH/2,v));
   cam.position.copy(R).multiplyScalar(u).addScaledVector(U,v).addScaledVector(D,-150); cam.lookAt(cam.position.clone().add(D)); cam.updateMatrixWorld(); }
 /* ---------- 2D 맵 ---------- */
-const map=await createMap(THREE, scene, meta, 'maps/2d/gangnam/', cam);
+const map=await createMap(THREE, scene, meta, 'maps/2d/'+ZONE+'/', cam);
 /* ---------- 캐릭터 빛: 맵에 구운 빛과 같은 자리 ---------- */
-scene.add(new THREE.HemisphereLight(0x5a6488,0x140c10,0.9));
-const key=new THREE.DirectionalLight(0xfff0e0,2.4); key.position.set(-4,9,6); scene.add(key);
+/* 맵에 구운 빛과 맞춘다: 황혼 하늘빛 + 낮게 깔린 노을(해 방향은 맵 굽기가 정한 것) */
+scene.add(meta.sky?new THREE.HemisphereLight(0xb08ac0,0x3a2428,1.6):new THREE.HemisphereLight(0x5a6488,0x140c10,0.9));
+const key=new THREE.DirectionalLight(meta.sun?meta.sun.color:0xfff0e0,meta.sun?3.2:2.4); if(meta.sun) key.position.set(meta.sun.dir[0]*10,Math.max(4,meta.sun.dir[1]*10),meta.sun.dir[2]*10); else key.position.set(-4,9,6); scene.add(key);
+if(meta.sun){ const front=new THREE.DirectionalLight(0xffe8d8,1.4); front.position.set(-3,9,8); scene.add(front); }   /* 노을이 등 뒤일 때도 얼굴이 보이게 */
 const rimR=new THREE.DirectionalLight(0xff3a3a,2.6); rimR.position.set(6,4,-6); scene.add(rimR);
 const rimC=new THREE.DirectionalLight(0x40d8ff,2.0); rimC.position.set(-6,4,-5); scene.add(rimC);
 /* 간판·가로등 빛 — 개수가 바뀌면 셰이더를 다시 짜므로 4개를 두고 가까운 것으로 옮긴다 */
@@ -132,8 +138,19 @@ function play(h, n, fade=0.18){ if(h.cur===n||!h.act[n]) return; const a=h.act[n
 const ANG=meta.road.ang, ca=Math.cos(ANG), sa=Math.sin(ANG);
 function toRoad(x,z){ return [x*ca - z*sa, -x*sa - z*ca]; }           /* (s, t) — env-gangnam 의 DIR·SIDE 기준 */
 function fromRoad(s,t){ return [s*ca - t*sa, -s*sa - t*ca]; }
+/* 실측 건물 윤곽(다각형) — 안이면 가장 가까운 변 밖으로, 밖이라도 반지름 안이면 밀어낸다 */
+function polyPush(p, poly, r){ let inside=false, best=1e9, bx=0, bz=0;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const a=poly[i], b=poly[j];
+    if((a[1]>p.z)!==(b[1]>p.z) && p.x<(b[0]-a[0])*(p.z-a[1])/(b[1]-a[1])+a[0]) inside=!inside;
+    const vx=b[0]-a[0], vz=b[1]-a[1], L2=vx*vx+vz*vz||1, u=Math.max(0,Math.min(1,((p.x-a[0])*vx+(p.z-a[1])*vz)/L2)), qx=a[0]+vx*u, qz=a[1]+vz*u, d=(p.x-qx)**2+(p.z-qz)**2;
+    if(d<best){ best=d; bx=qx; bz=qz; } }
+  const d=Math.sqrt(best); if(!inside&&d>=r) return; let nx=p.x-bx, nz=p.z-bz; const n=Math.hypot(nx,nz)||1; nx/=n; nz/=n; if(inside){ nx=-nx; nz=-nz; }
+  const push=inside?d+r:r-d; p.x+=nx*push; p.z+=nz*push; }
 function collide(p, r=0.35){ let [s,t]=toRoad(p.x,p.z); s=Math.min(meta.walk.s1,Math.max(meta.walk.s0,s)); t=Math.min(meta.walk.t1,Math.max(meta.walk.t0,t)); [p.x,p.z]=fromRoad(s,t);
-  for(const b of meta.blockers){ const c=Math.cos(b.rot), sn=Math.sin(b.rot), dx=p.x-b.x, dz=p.z-b.z;
+  for(const b of meta.blockers){ if(b.poly){ const bb=b.bb||(b.bb=b.poly.reduce((a,q)=>[Math.min(a[0],q[0]),Math.min(a[1],q[1]),Math.max(a[2],q[0]),Math.max(a[3],q[1])],[1e9,1e9,-1e9,-1e9]));
+      if(p.x<bb[0]-r||p.x>bb[2]+r||p.z<bb[1]-r||p.z>bb[3]+r) continue; polyPush(p,b.poly,r); continue; }
+    if((p.x-b.x)**2+(p.z-b.z)**2>(Math.max(b.hw,b.hd)+r+0.5)**2) continue;
+    const c=Math.cos(b.rot), sn=Math.sin(b.rot), dx=p.x-b.x, dz=p.z-b.z;
     /* 상자 로컬 = Ry(-rot)·(p-c) */ const lx=dx*c - dz*sn, lz=dx*sn + dz*c;
     const qx=Math.max(-b.hw,Math.min(b.hw,lx)), qz=Math.max(-b.hd,Math.min(b.hd,lz)); let ex=lx-qx, ez=lz-qz, d=Math.hypot(ex,ez);
     if(d>=r) continue;
@@ -167,8 +184,8 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
   const named=()=>{ const n=(store.get('tw:party-name')||'요원')+(tries?String(Math.random()*9000+1000|0):''); tries++; send({type:'character',name:n.replace(/[^\p{L}\p{N}_]/gu,'').slice(0,16)||'요원'+(Math.random()*9000+1000|0),character:ME}); };
   ws.onopen=()=>send({type:'hello',token:store.get(tokenKey),name:store.get('tw:party-name')||'요원'});
   ws.onmessage=e=>{ let m; try{ m=JSON.parse(e.data); }catch{ return; }
-    if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:'gangnam',look:START_SET[profile.character]}); else named(); return; }
-    if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:'gangnam',look:START_SET[profile.character]}); return; }
+    if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:ZONE,look:START_SET[profile.character]}); else named(); return; }
+    if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,look:START_SET[profile.character]}); return; }
     if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
     if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; resolve(net); return; }
     if(m.type==='field'){ onField(m); return; }
@@ -199,10 +216,14 @@ document.getElementById('who').textContent=(net?net.profile.name:NAMES[MY])+' ·
 if(!net){ const others=['ain','kain','ryu','sera'].filter(c=>c!==MY), offs=[[2.4,-1.2],[-2.2,1.6],[3.6,2.4]];
   await Promise.all(others.map((c,i)=>hero(c, sp.x+offs[i][0], sp.z+offs[i][1], false))); }
 await new Promise(r=>setTimeout(r,1500));   /* 장비 GLB 가 붙을 시간 */
+follow(me.root.position); for(let k=0;k<5;k++) await map.update(cam);   /* 첫 화면 타일을 다 받은 뒤에 연다 */
 document.getElementById('load').remove();
 const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, amount:MOBILE?0.75:0.85, samples:4 });
 /* ---------- 루프 ---------- */
-const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0;
+const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0, placeT=0;
+/* 지금 어디쯤인가 — 가장 가까운 실제 출구 */
+const placeEl=document.getElementById('place');
+function place(){ if(!meta.exits||!meta.exits.length) return; const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
   if(h.busy>0){ h.busy-=dt; if(h.busy<=0) play(h, m>0.05?'run':'idle'); return; }
   if(m>0.05){ const k=Math.min(1,m), sp2=speed*(k<0.55?0.45:1); h.root.position.x+=dx/m*sp2*k*dt; h.root.position.z+=dz/m*sp2*k*dt; collide(h.root.position);
@@ -217,7 +238,7 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, ix, -iy, dt, 4.8);
   heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,0.03,h.root.position.z); });
-  nearLights(me.root.position); follow(me.root.position);
+  nearLights(me.root.position); follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
   heroes.forEach(tagPos);
   if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);

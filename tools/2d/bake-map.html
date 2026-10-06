@@ -15,38 +15,56 @@
 <script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
 <script type="module">
 import * as THREE from './vendor/three/three.module.js';
-import { build, PITCH } from './js/mmo/env-gangnam.js';
+import { build, PITCH } from './js/mmo/env-osm.js';
 import { basis } from './js/mmo/map2d.js';
-const q=new URLSearchParams(location.search), PX=+(q.get('px')||144), TILE=+(q.get('tile')||1024), L=60, NEAR=0.1, FAR=120;
+const q=new URLSearchParams(location.search), ZONE=q.get('zone')||'gangnam', PX=+(q.get('px')||120), TILE=+(q.get('tile')||1024), L=200, NEAR=0.1, FAR=400;
 await document.fonts.load('900 96px "Noto Sans KR"').catch(()=>{});
 const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,preserveDrawingBuffer:true});
 renderer.setPixelRatio(1); renderer.setSize(TILE,TILE); renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.35;
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x05060a);
-const env=build(THREE, scene);
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.7; renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+/* 실제 공간: maps/2d/<zone>/osm.json (tools/2d/osm-extract.mjs) */
+const osm=await (await fetch('maps/2d/'+ZONE+'/osm.json')).json();
+const env=build(THREE, scene, osm);
 const {R,U,D}=basis(THREE, PITCH), T=TILE/PX;
-/* 덮을 범위 → 타일 격자 */
-let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9; env.extent.forEach(([x,y,z])=>{ const p=new THREE.Vector3(x,y,z), u=p.dot(R), v=p.dot(U); u0=Math.min(u0,u); u1=Math.max(u1,u); v0=Math.min(v0,v); v1=Math.max(v1,v); });
+/* 덮을 범위 → 타일 격자. 빈 타일(걷는 띠·먼 쪽 벽에 닿지 않는 것)은 굽지 않는다 — 대각선 띠라 사각 격자의 절반 이상이 빈다 */
+const P=env.extentPts.map(([x,y,z])=>{ const p=new THREE.Vector3(x,y,z); return [p.dot(R), p.dot(U)]; });
+let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9; P.forEach(([u,v])=>{ u0=Math.min(u0,u); u1=Math.max(u1,u); v0=Math.min(v0,v); v1=Math.max(v1,v); });
 const cols=Math.ceil((u1-u0)/T), rows=Math.ceil((v1-v0)/T), U0=(u0+u1)/2-cols*T/2, V1=(v0+v1)/2+rows*T/2;
+const need=new Set(); P.forEach(([u,v])=>{ const i=Math.floor((u-U0)/T), j=Math.floor((V1-v)/T); for(let di=-1;di<=1;di++) for(let dj=-1;dj<=1;dj++){ const ii=i+di, jj=j+dj; if(ii>=0&&jj>=0&&ii<cols&&jj<rows) need.add(jj*cols+ii); } });
+const LIST=[...need].sort((a,b)=>a-b);
 const cam=new THREE.OrthographicCamera(-T/2,T/2,T/2,-T/2,NEAR,FAR); cam.up.copy(U);
+/* 깊이 대신 «보이는 면의 높이(m)» 를 굽는다. 고정 각도 정사영에서 땅에 닿는 깊이는 화면 줄마다 정해져 있어서
+   깊이 = 땅 깊이 − 높이 / sin(내려다보는 각) 으로 정확히 되살아난다(js/mmo/map2d.js). 땅은 전부 0 이라 압축이 잘 된다. */
+const HMAX=1310.7;   /* 16비트 한 칸 = 2 cm — 가려짐에는 충분하고 벽의 높이 기울기가 덜 시끄러워 압축이 잘 된다 */
 const depthMat=new THREE.ShaderMaterial({ side:THREE.DoubleSide,
-  vertexShader:'varying float vZ; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.0); vZ=-mv.z; gl_Position=projectionMatrix*mv; }',
-  fragmentShader:`uniform float n,f; varying float vZ; void main(){ float t=clamp((vZ-n)/(f-n),0.0,1.0); float v=floor(t*65535.0+0.5); gl_FragColor=vec4(floor(v/256.0)/255.0, mod(v,256.0)/255.0, 0.0, 1.0); }`,
-  uniforms:{ n:{value:NEAR}, f:{value:FAR} } });
-const rt=new THREE.WebGLRenderTarget(TILE,TILE,{ minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, samples:0 });
-const cv=document.createElement('canvas'); cv.width=cv.height=TILE; const g2=cv.getContext('2d'); const img=g2.createImageData(TILE,TILE), px=new Uint8Array(TILE*TILE*4);
+  vertexShader:'varying float vY; void main(){ vec4 w=modelMatrix*vec4(position,1.0); vY=w.y; gl_Position=projectionMatrix*viewMatrix*w; }',
+  fragmentShader:`uniform float hmax; varying float vY; void main(){ float t=clamp(vY/hmax,0.0,65534.0/65535.0); float v=floor(t*65535.0+0.5); gl_FragColor=vec4(floor(v/256.0)/255.0, mod(v,256.0)/255.0, 0.0, 1.0); }`,
+  uniforms:{ hmax:{value:HMAX} } });
+/* 깊이는 절반 해상도 — 가려짐 판정에는 충분하고, 16비트 아래 바이트가 시끄러워 원본 크기면 색 그림보다 컸다(150 KB 대 18 KB) */
+const DT=TILE/2, rt=new THREE.WebGLRenderTarget(DT,DT,{ minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, samples:0 });
+const cv=document.createElement('canvas'); cv.width=cv.height=DT; const g2=cv.getContext('2d'); const img=g2.createImageData(DT,DT), px=new Uint8Array(DT*DT*4);
 function aimTile(i,j){ const uc=U0+(i+0.5)*T, vc=V1-(j+0.5)*T; const c=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,-L);
   cam.position.copy(c); cam.lookAt(c.clone().add(D)); cam.updateMatrixWorld(true); return { u0:U0+i*T, v0:V1-j*T }; }
-function tile(k){ const i=k%cols, j=Math.floor(k/cols); const o=aimTile(i,j);
-  scene.overrideMaterial=null; renderer.setRenderTarget(null); renderer.render(scene,cam); const color=renderer.domElement.toDataURL('image/webp',0.86);
+const sunDir=new THREE.Vector3(...env.sun.dir), sun=env.sunLight;
+function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTile(i,j);
+  /* 노을 그림자: 이 타일이 보는 땅 둘레만 그림자 지도로 — 해가 낮아 그림자가 길다 */
+  const c=R.clone().multiplyScalar(U0+(i+0.5)*T).addScaledVector(U,V1-(j+0.5)*T), g=c.clone().addScaledVector(D, -c.y/D.y);
+  sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); const sc=sun.shadow.camera; sc.left=sc.bottom=-T*1.6; sc.right=sc.top=T*1.6; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld();
+  scene.overrideMaterial=null; renderer.setRenderTarget(null); renderer.render(scene,cam); const color=renderer.domElement.toDataURL('image/webp',0.82);
   scene.overrideMaterial=depthMat; const bg=scene.background; scene.background=null; renderer.setRenderTarget(rt); renderer.setClearColor(new THREE.Color(1,1,0),1); renderer.clear(); renderer.render(scene,cam);
-  renderer.readRenderTargetPixels(rt,0,0,TILE,TILE,px); renderer.setRenderTarget(null); scene.overrideMaterial=null; scene.background=bg; renderer.setClearColor(0x000000,1);
+  renderer.readRenderTargetPixels(rt,0,0,DT,DT,px); renderer.setRenderTarget(null); scene.overrideMaterial=null; scene.background=bg; renderer.setClearColor(0x000000,1);
   /* 렌더 타깃은 아래에서 위로 읽힌다 → 위아래 뒤집어 그림 좌표(위 = v 큼)로 */
-  for(let y=0;y<TILE;y++){ img.data.set(px.subarray((TILE-1-y)*TILE*4,(TILE-y)*TILE*4), y*TILE*4); }
+  for(let y=0;y<DT;y++){ img.data.set(px.subarray((DT-1-y)*DT*4,(DT-y)*DT*4), y*DT*4); }
   g2.putImageData(img,0,0); const depth=cv.toDataURL('image/png');
   return { i, j, u0:o.u0, v0:o.v0, color, depth }; }
-function plan(){ return { pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk }; }
-window.__BAKEMAP={ plan, tile, count:cols*rows };
+function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, license:env.license }; }
+/* 미리보기: 굽기 전에 한 장면만 게임 카메라로 (길 좌표 s, t · 화면 높이 viewH m) */
+function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Math.sin(a), z=-s*Math.sin(a)-t*Math.cos(a), g=new THREE.Vector3(x,0,z);
+  renderer.setSize(w,h); const pc=new THREE.OrthographicCamera(-viewH*w/h/2,viewH*w/h/2,viewH/2,-viewH/2,NEAR,FAR); pc.up.copy(U); pc.position.copy(g).addScaledVector(D,-L); pc.lookAt(g); pc.updateMatrixWorld(true);
+  sun.target.position.copy(g); sun.position.copy(g).addScaledVector(sunDir,160); const sc=sun.shadow.camera, r=Math.max(viewH*w/h,viewH)*0.9; sc.left=sc.bottom=-r; sc.right=sc.top=r; sc.near=1; sc.far=400; sc.updateProjectionMatrix(); sun.target.updateMatrixWorld();
+  renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/png'); renderer.setSize(TILE,TILE); return url; }
+window.__BAKEMAP={ plan, tile, preview, count:LIST.length, total:cols*rows, scene, THREE };
 </script>
 </body>
 </html>
