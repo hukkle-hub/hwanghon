@@ -191,7 +191,10 @@ export function build(THREE, scene, osm) {
     if (R() < 0.6) { const q = FROM(s + 5, 6 + R() * 10); if (!nearClear(q, -1) && !inBuilding(q)) for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(crysGeo, crysM); const k = 0.5 + R() * 0.7; m.scale.set(1 + R(), k, 1 + R()); m.position.set(q[0] + (R() - .5) * 0.8, k * 0.6, q[1] + (R() - .5) * 0.8); m.rotation.set((R() - .5) * 0.7, R() * 3, (R() - .5) * 0.7); scene.add(m); } } }
 
   /* ---------- 문 · 보스 · 출발점 ---------- */
-  const gates = [ { id: 'south', x: +gateS0[0].toFixed(2), z: +gateS0[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'north' }, label: '강남 방면 · 강남대로', kind: 'zone' } ];
+  const gTower = FROM(sT + 14, -16), gYeo = FROM(walk.s0 + 14, 16);   /* 타워 뒤편 하부 출입구(보스 구역 밖) · 하부역 옆 공동구 입구 (원작 «여의도 지하 공동구 계통도» L5940) */
+  const gates = [ { id: 'south', x: +gateS0[0].toFixed(2), z: +gateS0[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'north' }, label: '강남 방면 · 강남대로', kind: 'zone' },
+    { id: 'tower', x: +gTower[0].toFixed(2), z: +gTower[1].toFixed(2), r: 2.6, to: { zone: 'namsan_tower', gate: 'out' }, label: '남산타워 하부', kind: 'dungeon' },
+    { id: 'yeouido', x: +gYeo[0].toFixed(2), z: +gYeo[1].toFixed(2), r: 2.6, to: { zone: 'yeouido_ug', gate: 'namsan' }, label: '공동구 입구 · 여의도 방면', kind: 'dungeon' } ];
   { const m = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(gateS0[0], 0.05, gateS0[1]); scene.add(m); }
   const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
   const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, place: '타워 광장', model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 3.2, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];

@@ -20,8 +20,11 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
-             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 케이블카', kind: 'zone' } ],
-    closed: { s0: '통제구역 — 양재 방면', s1: '통제구역 — 신논현 방면' }, start: 'exit7' } };
+             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 케이블카', kind: 'zone' },
+             /* 강남 벙커 출격문 — 벙커는 강남역 바로 밑 B3 (원작 L251), 출격문을 나서면 강남대로 (L1080) */
+             { id: 'bunker', at: { exit: '7' }, to: { zone: 'bunker', gate: 'out' }, label: '강남 벙커 · 출격문', kind: 'zone' },
+             { id: 'south', at: { end: 's0', t: 'center' }, to: { zone: 'namtae', gate: 'north' }, label: '남태령 방면 · 양재', kind: 'zone' } ],
+    closed: { s0: '남태령 방면 — 양재', s1: '남산 방면 — 신논현' }, start: 'exit7' } };
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 

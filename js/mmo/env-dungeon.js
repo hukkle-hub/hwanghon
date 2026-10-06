@@ -185,7 +185,9 @@ export function build(THREE, scene, osm) {
   return { kind: 'dungeon', title: '강남역 지하상가 B1', lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 },
     spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
     flicker: { on: 3, off: 1 },   /* 원작 «3초 켜짐. 1초 꺼짐» */
-    gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' } ],
+    gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' },
+             /* 2호선 승강장으로 — 스크린도어 너머 셔터 앞 (원작 «광장 바로 밑» L3344). 보스 구역(19 m) 밖이 되게 승강장 쪽으로 */
+             (() => { const g = FROM(PLAZA_R + 5.5, tc + 10.5); return { id: 'b2', x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: 2.6, to: { zone: 'gangnam_b2', gate: 'up' }, label: '2호선 침수 선로 · B2', kind: 'zone' }; })() ],
     bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, place: '중앙 광장', model: 'art/3d/part1/clave.glb', h: 3.2, canon: 'EP02 §10 중앙 광장' } ],
     exits: [], license: osm.license };
 }

@@ -218,7 +218,7 @@ export function bareSpot(ctx, st0, o = {}) { const { THREE, scene, FROM, walk } 
   scene.updateMatrixWorld(true); const objs = scene.children.filter(c => !c.isLight);
   const bare = p => { ray.set(new THREE.Vector3(p[0], 0, p[1]).addScaledVector(Dv, -150), Dv); const hit = ray.intersectObjects(objs, true).find(h => h.object.visible && !h.object.isLight); return !hit || hit.point.y < 0.12; };
   for (const r of [0, 2, 3, 4, 5, 6, 8, 10]) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, st = [st0[0] + Math.cos(a) * r, st0[1] + Math.sin(a) * r];
-    if (st[1] < walk.t0 + 2 || st[1] > walk.t1 - 2 || st[0] < walk.s0 + 1 || st[0] > walk.s1 - 1) continue;
+    if (st[1] < walk.t0 + 2 || st[1] > walk.t1 - 2 || st[0] < walk.s0 + 1 || st[0] > walk.s1 - 1) continue; if (o.ok && !o.ok(st)) continue;
     if ([[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]].every(([ds, dt]) => bare(FROM(st[0] + ds, st[1] + dt)))) return st; }
   return st0; }
 export function gateRing(ctx, p, r = 3.2, color = 0x40d8ff) { const { THREE, scene } = ctx; const m = new THREE.Mesh(new THREE.RingGeometry(r - 0.25, r, 48), new THREE.MeshBasicMaterial({ color, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(p[0], 0.05, p[1]); scene.add(m); }

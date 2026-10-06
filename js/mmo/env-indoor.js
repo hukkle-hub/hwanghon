@@ -6,7 +6,7 @@
      water: 0.6 (게임이 그리는 물면 높이 — 굽지 않는다, 인물이 묻히면 안 된다 · tests/map-height.test.cjs)
      theme: { wall, floor, fog, hemi, flicker }
      gates · bosses · spawn: 방 id 와 그 안 (u, v) 비율(0~1) 로 찍는다 */
-import { PITCH, SCREEN_ANG, rng, canvasTex, inPoly } from './env-lib.js';
+import { PITCH, SCREEN_ANG, rng, canvasTex, inPoly, bareSpot } from './env-lib.js';
 export { PITCH };
 
 export function build(THREE, scene, osm, zone) {
@@ -137,10 +137,13 @@ export function build(THREE, scene, osm, zone) {
   for (const r of rooms) for (const pr of r.props || []) { const f = PROPS[pr.k]; if (f) f(r, pr); else console.warn('[env-indoor] 모르는 소품', pr.k); }
 
   /* ---------- 문 · 보스 · 출발점 ---------- */
-  const gates = (zone.gates || []).map(g => { const p = at(g.room, g.u ?? 0.5, g.v ?? 0.5); return { id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 2.6, to: g.to, label: g.label, kind: g.kind || 'zone' }; });
+  /* 문·출발점은 «맨바닥» 에 — 기둥·잔해 뒤면 인물이 가려진다 (tests/map-height.test.cjs 가 한강 터널 출발점 4.8 m 를 찾았다) */
+  const wb = { s0: Math.min(...rooms.map(r => r.s0)), s1: Math.max(...rooms.map(r => r.s1)), t0: Math.min(...rooms.map(r => r.t0)), t1: Math.max(...rooms.map(r => r.t1)) };
+  const bare = (id, u, v) => { const r = roomById(id), st0 = [r.s0 + (r.s1 - r.s0) * u, r.t0 + (r.t1 - r.t0) * v], st = bareSpot({ THREE, scene, FROM, walk: { s0: wb.s0 - 2, s1: wb.s1 + 2, t0: wb.t0 - 3, t1: wb.t1 + 3 } }, st0, { ok: q => inRoom(q[0], q[1], -1.4) }); return FROM(st[0], st[1]); };
+  const gates = (zone.gates || []).map(g => { const p = bare(g.room, g.u ?? 0.5, g.v ?? 0.5); return { id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 2.6, to: g.to, label: g.label, kind: g.kind || 'zone' }; });
   for (const g of gates) { const m = new THREE.Mesh(new THREE.RingGeometry(g.r - 0.22, g.r, 48), new THREE.MeshBasicMaterial({ color: g.kind === 'dungeon' ? 0xff5a3a : 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(g.x, 0.03, g.z); scene.add(m); }
   const bosses = (zone.bosses || []).map(b => { const p = at(b.room, b.u ?? 0.5, b.v ?? 0.5), r = roomById(b.room); return { ...b, room: undefined, u: undefined, v: undefined, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: b.r || Math.min(r.s1 - r.s0, r.t1 - r.t0) / 2 }; });
-  const sp = zone.spawn ? at(zone.spawn.room, zone.spawn.u ?? 0.5, zone.spawn.v ?? 0.5) : [gates[0].x, gates[0].z + 3];
+  const sp = zone.spawn ? bare(zone.spawn.room, zone.spawn.u ?? 0.5, zone.spawn.v ?? 0.5) : [gates[0].x, gates[0].z + 3];
   /* 안전 구역: 허브(rules.safe) 는 전부, 아니면 문 둘레 */
   const areas = zone.rules?.safe ? [{ kind: 'safe', all: true }] : gates.map(g => ({ kind: 'safe', circle: [g.x, g.z, 6] }));
   for (const b of bosses) areas.push({ kind: 'combat', circle: [b.x, b.z, b.r] });
