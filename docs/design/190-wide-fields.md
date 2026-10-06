@@ -77,7 +77,22 @@ MMO 구역 설계 일반론(Bakharev «World Design & Level Architecture»):
 
 `map.json areas[]` 에 `{ kind:'hunt', name, mobs, lv }` 를 넣어 서버 출현 표(L1J `spawnlist` 처럼, 문서 186 §4)가 읽게 한다.
 
-## 5. 출처
+## 5. 만든 것 — 하위 구역 · 미니맵
+
+**하위 구역** — 지역 표(`js/mmo/zones.js`) 필드마다 `hunts`: 길 좌표 사각형 `{s:[a,b], t:[c,d]}` 또는 원 `{st, r}`,
+`kind` hunt(기본)·rest, `lv`, `mobs`, `danger` 1~3. 굽기(`bake-map.html`)가 `map.json areas` 로 옮긴다 — 그림이 아니라서
+`tools/2d/replan-map.mjs` 로 다시 굽지 않고 넣을 수 있다. 게임은 들어서는 순간 가운데(인물 아래)에 «폐주유소 터 · Lv 33~35 · 클레이브 둘»,
+오른쪽 위 위험도는 구역마다(위험 B·A·S, 쉬는 곳은 안전 지대).
+
+![하위 구역 이름 — 휴대폰 가로 «폐주유소 터» · 세로 «능선 숲»](../img/190-area-names.jpg)
+
+**미니맵** — `tools/2d/bake-overview.mjs <zone…>` 이 걷는 띠 전체를 게임과 같은 각도로 한 장(`overview.webp`, 1400 px, 필드 ~90 KB·실내 ~25 KB).
+그림 좌표가 맵 타일과 같은 틀(u = x, v = −z·sin 55°)이라 내 자리를 바로 찍는다. 왼쪽 위 작은 지도 → 누르면(또는 M) 크게, 구역 이름이 보인다.
+실내는 미니맵만 노출을 2.6배로(그대로는 지도로 읽기에 어둡다).
+
+![미니맵 — 작게 / 크게(구역 이름)](../img/190-minimap.jpg)
+
+## 6. 출처
 
 - [리니지 클래식 인벤 — 필드 사냥터 안내](https://www.inven.co.kr/board/lineageclassic/6497/47)
 - [리니지 플포 — 필드 사냥터 추천](https://www.playforum.net/news/curationView.html?idxno=634150)
