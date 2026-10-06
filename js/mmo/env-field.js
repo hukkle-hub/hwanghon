@@ -24,7 +24,8 @@ export function build(THREE, scene, osm, zone) {
   for (const g of F.gates || []) { const p = FROM(...stOf(g.at)); clear.push({ pts: [p], r: 7 }); reserve.push([p, 8]); }
   for (const b of F.bosses || []) { const p = FROM(...stOf(b.at)); clear.push({ pts: [p], r: Math.min(b.r || 16, 22) * 0.6 }); reserve.push([p, 8]); }
   if (F.spawn) { const p = FROM(...stOf(F.spawn)); clear.push({ pts: [p], r: 5 }); reserve.push([p, 6]); }
-  const built = L.buildings(ctx, osm, tex, { curtain: F.curtain, cutT: F.cutT ?? tc, maxH: F.maxH, skip: F.skipBuilding ? (pts, b) => F.skipBuilding(pts, b, ctx) : null });
+  const built = L.buildings(ctx, osm, tex, { curtain: F.curtain, cutT: F.cutT ?? tc, maxH: F.maxH,
+    ruin: F.ruin ? cst => cst[1] > walk.t0 - 4 && cst[1] < walk.t1 + 4 && cst[0] > walk.s0 - 4 && cst[0] < walk.s1 + 4 : null, ruinH: (F.ruin && F.ruin.h) || [4.5, 9], skip: F.skipBuilding ? (pts, b) => F.skipBuilding(pts, b, ctx) : null });
 
   /* ---------- 존 고유 소품 (원작 장소) ---------- */
   const steel = new THREE.MeshStandardMaterial({ color: 0x6a6e74, roughness: 0.4, metalness: 0.7 }), conc = new THREE.MeshStandardMaterial({ color: 0x7a7672, roughness: 0.85 }), rust = new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 0.8, metalness: 0.4 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: 1 });
@@ -60,6 +61,8 @@ export function build(THREE, scene, osm, zone) {
       for (const k of [-len / 3, len / 3]) { const q = [p[0] + dx * k + dz * 4, p[1] + dz * k - dx * 4]; box(3, 3, 3, conc, q[0], 1.5, q[1], ang); box(3.6, 0.3, 3.6, dark, q[0], 3.15, q[1], ang, false); const lamp = new THREE.PointLight(0xffe0a0, 8, 12, 1.5); lamp.position.set(q[0], 3.8, q[1]); scene.add(lamp); lights.push({ x: q[0], y: 3.8, z: q[1], color: '#ffe0a0', intensity: 6, distance: 10 }); } },
     /* 산 밑동의 아가리 (계룡 관문 L12462) — 바위 벽 + 검은 입 + 스텐실 */
     maw(p, o) { const rock = new THREE.MeshStandardMaterial({ color: 0x4a4440, roughness: 1, flatShading: true }); for (let i = 0; i < 14; i++) { const q = [p[0] + (i - 7) * 3.2, p[1] - 6 - R() * 3]; const r = new THREE.Mesh(new THREE.DodecahedronGeometry(3 + R() * 3, 0), rock); r.position.set(q[0], 3 + R() * 4, q[1]); r.castShadow = true; scene.add(r); blockers.push({ x: +q[0].toFixed(2), z: +q[1].toFixed(2), hw: 2.6, hd: 2.6, rot: 0 }); }
+      /* 둔덕 뒤는 산비탈 — 걷는 곳이 아니다. 넓힌 남태령에서 둔덕(최고 13 m) 뒤 칸들이 통째로 가려졌다(tests/map-height) */
+      blockers.push({ x: +p[0].toFixed(2), z: +(p[1] - 17).toFixed(2), hw: 25, hd: 11, rot: 0 });
       const mouth = new THREE.Mesh(new THREE.PlaneGeometry(14, 8), new THREE.MeshBasicMaterial({ color: 0x020203 })); mouth.position.set(p[0], 4, p[1] - 3.2); scene.add(mouth); const arch = new THREE.Mesh(new THREE.TorusGeometry(7.2, 0.6, 6, 16, Math.PI), conc); arch.position.set(p[0], 0.5, p[1] - 3.0); scene.add(arch);
       L.board(ctx, [p[0], p[1] - 3.1], o.label || '제03수거대', { y: 9, w: 6, bg: '#1a1a1e', edge: '#d8d8d0', fg: '#d8d8d0', rot: 0 }); for (const dx of [-5, 5]) { const g = new THREE.PointLight(0x60ff9a, 6, 9, 1.6); g.position.set(p[0] + dx, 1.5, p[1] - 1); scene.add(g); lights.push({ x: p[0] + dx, y: 1.5, z: p[1] - 1, color: '#60ff9a', intensity: 5, distance: 8 }); } },
     /* 발사대 탑 (고흥 «바다를 등지고 선 발사대의 탑» L14058) — 탑은 그림 범위 위로 넘어간다 */
@@ -83,10 +86,14 @@ export function build(THREE, scene, osm, zone) {
 
   /* ---------- 숲·결정·차·가로등 ---------- */
   const tf = F.trees || {};
+  /* 넓은 필드: 나무를 숲과 빈터로 뭉친다 (고르게 뿌리면 어디나 같아 보인다) */
+  const grove = F.dress ? L.noise2(L.rng((F.seed || 1) + 77), 55) : null;
   if (tf.density) { const spots = L.treeSpots(ctx, { s0: walk.s0 - 40, s1: walk.s1 + 40, t0: walk.t0 - 30, t1: walk.t1 + 34 }, { density: tf.density, step: tf.step,
-      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && (!inBand(p, 1) || R() < (tf.inBand ?? 0.14)) && (!tf.only || tf.only(p, ctx)) });
+      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && (!inBand(p, 1) || R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1)) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
   if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => reserve.some(([q, r]) => Math.hypot(p[0] - q[0], p[1] - q[1]) < r) });
+  if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) });
+    console.log('[env-field] 땅 꾸미기', JSON.stringify(st)); }
   if (F.crystals) { const spots = []; for (let i = 0; i < F.crystals * 3 && spots.length < F.crystals; i++) { const p = FROM(walk.s0 + R() * (walk.s1 - walk.s0), walk.t0 + R() * (walk.t1 - walk.t0)); if (L.isClear(ctx, p) || L.inBuilding(built, p) || blockers.some(b => b.poly && L.inPoly(p, b.poly))) continue; spots.push(p); } L.crystals(ctx, spots, { h: F.crystalH || 0.55 }); }
   if (F.lamps !== false) { const spots = []; for (let s = walk.s0 + 8; s < walk.s1 - 8; s += F.lampStep || 26) { const p = FROM(s, (F.lampT ?? walk.t0 + 2)); if (!L.inBuilding(built, p)) spots.push(p); } L.lamps(ctx, spots); }
 
@@ -101,6 +108,8 @@ export function build(THREE, scene, osm, zone) {
   const bosses = (F.bosses || []).map(b => { const st = L.bareSpot(ctx, stOf(b.at)), p = FROM(st[0], st[1]); const { at, ...rest } = b; return { ...rest, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; });
   const spSt = F.spawn ? stOf(F.spawn) : (gates[0] ? [gates[0].st[0] + (gates[0].st[0] < (walk.s0 + walk.s1) / 2 ? 6 : -6), gates[0].st[1]] : [(walk.s0 + walk.s1) / 2, (walk.t0 + walk.t1) / 2]), sp = FROM(spSt[0], spSt[1]);
   const areasOut = [...gates.map(g => ({ kind: 'safe', circle: [g.x, g.z, 6] })), ...bosses.map(b => ({ kind: 'combat', circle: [b.x, b.z, b.r] }))];
+  /* 정체 구간: 트럭이 뭉쳐 벽이 된 곳은 지나갈 수 없다 — 그 뒤 칸이 통째로 가려졌다(남행 국도, tests/map-height). 그림은 그대로, 막이만 */
+  for (const j of F.jams || []) { const p = FROM(j.st[0], j.st[1]); blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: j.hw || 4.5, hd: j.hd || 4.5, rot: L.SCREEN_ANG }); }
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
   console.info('[env-field]', zone.id, '건물', built.length, '도로', roadsW.length, '선', nLines, '경계', nb, '문', gates.map(g => g.id).join(','), '막힘', blockers.length);
   return { kind: 'field', title: zone.title, lights, blockers, extentPts, road: { ang: L.SCREEN_ANG }, walk, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },

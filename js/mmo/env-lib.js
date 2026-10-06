@@ -93,12 +93,14 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 /* ---------- 땅 쓰임: 풀밭·물·모래·주차장·공항 포장 ---------- */
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
-    water: new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }) };
+    water: new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
     if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); }
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);
     else if (/beach|sand|bare_rock|scree/.test(k)) flatPoly(ctx, pts, M.sand, 0.008);
-    else if (/parking|aero:apron|aero:runway|aero:taxiway|man:pier|man:breakwater|industrial|railway|construction|military/.test(k)) flatPoly(ctx, pts, M.conc, 0.006); }
+    else if (/military/.test(k)) flatPoly(ctx, pts, M.forest, 0.006);   /* 실재 군 시설은 그리지 않는다 — 모양이 드러나지 않게 숲 바닥으로 (남태령 넓히기에서 콘크리트 판이 통째로 드러났다) */
+    else if (/farmland|orchard|vineyard/.test(k)) flatPoly(ctx, pts, M.grass, 0.006);
+    else if (/parking|aero:apron|aero:runway|aero:taxiway|man:pier|man:breakwater|industrial|railway|construction/.test(k)) flatPoly(ctx, pts, M.conc, 0.006); }
   /* 물은 못 들어간다 — 띠 안에 걸치면 막는다 */
   for (const w of waters) if (near(ctx, w, 2)) ctx.blockers.push({ poly: w.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true });
   return { waters }; }
@@ -135,11 +137,13 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
   for (const b of osm.buildings) { if (b.under) continue; const pts = unclose(b.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, o.pad ?? 50)) continue;
     const ar = area(pts); let h = b.height || (b.levels ? b.levels * 3.6 : (ar > 900 ? 22 + R() * 20 : ar > 300 ? 12 + R() * 12 : 7 + R() * 7)); h = Math.min(h, o.maxH || 260);
     const cst = pts.reduce((a, p) => { const st = ST(p); return [a[0] + st[0] / pts.length, a[1] + st[1] / pts.length]; }, [0, 0]), full = h, nearSide = cst[1] < (o.cutT ?? tc); if (nearSide) h = Math.min(h, 4.2);
+    /* 넓은 필드: 걷는 구역 안 건물은 «무너진 저층» — 원작의 폐허 서울. 고층이 그대로면 그 뒤가 통째로 가려진다(55° 에서 높이 × 0.7 m) */
+    const ruined = !nearSide && o.ruin && o.ruin(cst); if (ruined) h = Math.min(h, o.ruinH[0] + R() * (o.ruinH[1] - o.ruinH[0]));
     if (o.skip && o.skip(pts, b)) continue;
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
-    const mesh = new THREE.Mesh(geo, [nearSide ? cutM : roofM, tall ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
-    ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
+    const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+    ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
   return out; }
 export const inBuilding = (built, p) => built.some(b => inPoly(p, b.pts));
 
@@ -245,3 +249,43 @@ export function board(ctx, p, text, o = {}) { const { THREE, scene } = ctx; cons
 export function extent(ctx, o = {}) { const { FROM, walk } = ctx, out = []; const H = o.h ?? 18;
   for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); out.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) out.push([p[0], H, p[1]]); }
   return out; }
+
+/* ---------- 넓은 필드 땅 꾸미기 (디렉터 2026-10-06 «필드를 넓게») ----------
+   띠를 넓히면 빈 바닥이 넓게 드러난다 — 흙·풀·낙엽 얼룩, 바위·덤불·쓰러진 통나무, (도시) 잔해 더미·드럼통·폐타이어.
+   덤불은 1 m 아래라 인물을 가리지 않는다. 큰 바위·통나무·잔해는 막는다. 값잡음(noise2)으로 뭉치게 — 고르게 뿌리면 벽지 같다. */
+export function noise2(R, cell = 40) { const g = new Map(), v = (i, j) => { const k = i + ',' + j; if (!g.has(k)) g.set(k, R()); return g.get(k); };
+  const sm = t => t * t * (3 - 2 * t);
+  return (x, z) => { const fx = x / cell, fz = z / cell, i = Math.floor(fx), j = Math.floor(fz), u = sm(fx - i), w = sm(fz - j);
+    return (v(i, j) * (1 - u) + v(i + 1, j) * u) * (1 - w) + (v(i, j + 1) * (1 - u) + v(i + 1, j + 1) * u) * w; }; }
+export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM } = ctx, keep = o.keep || (() => true), N = noise2(R, o.cell || 36);
+  const A = (region.s1 - region.s0) * (region.t1 - region.t0), pick = n => { const out = []; for (let i = 0; i < n * 4 && out.length < n; i++) { const p = FROM(region.s0 + R() * (region.s1 - region.s0), region.t0 + R() * (region.t1 - region.t0)); if (!keep(p) || isClear(ctx, p, 0.5)) continue; out.push(p); } return out; };
+  const stat = {};
+  /* 1) 얼룩 — 낙엽·흙·풀. 모양이 둥글면 티가 나서 꼭짓점마다 반지름을 흔든다 */
+  const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }));
+  let np = 0; for (const p of pick(Math.round(A / (o.patchEvery || 700)))) { const r = 3 + R() * 10, n = 9, pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (0.6 + R() * 0.6); pts.push([p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr]); }
+    flatPoly(ctx, pts, patchM[(R() * patchM.length) | 0], 0.003 + R() * 0.002); np++; } stat.patches = np;
+  const inst = (geo, mats, spots, place) => { const per = mats.map(() => []); spots.forEach(p => per[(R() * mats.length) | 0].push(p));
+    per.forEach((ps, k) => { if (!ps.length) return; const m = new THREE.InstancedMesh(geo, mats[k], ps.length), mtx = new THREE.Matrix4(); ps.forEach((p, i) => { place(p, mtx); m.setMatrixAt(i, mtx); }); m.castShadow = true; m.receiveShadow = true; scene.add(m); }); return spots.length; };
+  const q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z);
+  /* 2) 바위 — 뭉친 곳에 많이. 큰 것만 막는다 */
+  const rockG = new THREE.DodecahedronGeometry(1, 0), rockM = (o.rockColors || (o.urban ? [0x6a6662, 0x5a5856, 0x4c4a48] : [0x5a4a3e, 0x6a5a4a, 0x4a3e36])).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, flatShading: true }));
+  const rocks = pick(Math.round(A / (o.rockEvery || 160))).filter(p => R() < 0.25 + N(p[0], p[1]) * 1.2);
+  stat.rocks = inst(rockG, rockM, rocks, (p, mtx) => { const k = 0.35 + Math.pow(R(), 2.2) * 1.5; mtx.compose(V(p[0], k * 0.25, p[1]), q4.setFromEuler(e.set(R() * 0.6, R() * 6, R() * 0.6)), V(k * (0.8 + R() * 0.6), k * (0.45 + R() * 0.35), k * (0.8 + R() * 0.6)));
+    if (k > 0.9) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: k * 0.8, hd: k * 0.8, rot: 0 }); });
+  /* 3) 덤불 — 무릎 높이(인물을 가리지 않는다) */
+  const bushG = new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const bushes = pick(Math.round(A / (o.bushEvery || 45))).filter(p => R() < 0.2 + N(p[0] + 500, p[1]) * 1.3);
+  stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
+  /* 4) 쓰러진 통나무 (숲) */
+  if (o.logs !== false) { const logG = new THREE.CylinderGeometry(0.22, 0.3, 1, 7), logM = [new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1 })];
+    stat.logs = inst(logG, logM, pick(Math.round(A / (o.logEvery || 600))), (p, mtx) => { const len = 2 + R() * 3, ry = R() * Math.PI; mtx.compose(V(p[0], 0.25, p[1]), q4.setFromEuler(e.set(0, ry, Math.PI / 2, 'YXZ')), V(1, len, 1));
+      ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: len / 2, hd: 0.3, rot: ry }); }); }
+  /* 5) 도시 잔해 — 콘크리트 덩이 더미 · 드럼통 · 폐타이어 */
+  if (o.urban) { const chunkG = new THREE.BoxGeometry(1, 1, 1), chunkM = [0x6a6662, 0x5a5652, 0x4a4442].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 }));
+    const piles = pick(Math.round(A / (o.pileEvery || 500))), chunks = []; for (const p of piles) { const n = 5 + (R() * 8 | 0), r = 1.2 + R() * 1.6; for (let i = 0; i < n; i++) chunks.push([p[0] + (R() - .5) * r * 2, p[1] + (R() - .5) * r * 2]); ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: r * 0.7, hd: r * 0.7, rot: 0 }); }
+    stat.rubble = inst(chunkG, chunkM, chunks, (p, mtx) => { const k = 0.3 + R() * 0.9; mtx.compose(V(p[0], k * 0.35, p[1]), q4.setFromEuler(e.set(R(), R() * 6, R())), V(k * (1 + R()), k * (0.5 + R() * 0.6), k * (0.8 + R()))); });
+    const drumG = new THREE.CylinderGeometry(0.3, 0.3, 0.9, 10), drumM = [0x6a3a22, 0x2a4a5a, 0x5a5a2a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.6, metalness: 0.5 }));
+    stat.drums = inst(drumG, drumM, pick(Math.round(A / (o.drumEvery || 900))), (p, mtx) => { const fall = R() < 0.3; mtx.compose(V(p[0], fall ? 0.3 : 0.45, p[1]), q4.setFromEuler(e.set(fall ? Math.PI / 2 : 0, R() * 6, 0)), V(1, 1, 1)); });
+    const tireG = new THREE.TorusGeometry(0.34, 0.13, 6, 12), tireM = [new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.9 })];
+    stat.tires = inst(tireG, tireM, pick(Math.round(A / (o.tireEvery || 900))), (p, mtx) => { mtx.compose(V(p[0], 0.13, p[1]), q4.setFromEuler(e.set(Math.PI / 2, 0, R() * 6)), V(1, 1, 1)); }); }
+  return stat; }

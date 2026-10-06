@@ -57,6 +57,19 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .tag.loot{font-size:12px;letter-spacing:.04em}.tag.loot small{display:block;font-size:9px;opacity:.75;font-weight:500}
 .gatebtn.loot{border-color:rgba(240,176,64,.85);color:#ffe6b8;background:rgba(26,18,4,.86);box-shadow:0 0 18px rgba(240,170,60,.3);bottom:calc(90px + env(safe-area-inset-bottom))}
 @media (orientation:portrait){ .gatebtn.loot{bottom:calc(270px + env(safe-area-inset-bottom))} }
+/* 사냥터 하위 구역 이름 (docs/design/190 §4 — 리니지처럼 들어서면 가운데에 지역 이름) */
+#areaName{position:absolute;left:50%;top:63%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;color:#f0e2d0;text-shadow:0 0 10px #000,0 1px 2px #000;white-space:nowrap}
+#areaName b{display:block;font-size:22px;letter-spacing:.12em;font-weight:800}#areaName small{display:block;font-size:11px;letter-spacing:.08em;opacity:.8;margin-top:2px}
+#areaName.d2 b{color:#ffb070}#areaName.d3 b{color:#ff6a50}#areaName.rest b{color:#9fe0b0}
+@media (max-height:500px){ #areaName b{font-size:18px} }
+/* 미니맵 (docs/design/190 §5) — 넓은 필드에서 내 자리·문·사람. 누르면 크게(구역 이름) */
+#mini{position:absolute;left:calc(12px + env(safe-area-inset-left));top:58px;width:132px;border:1px solid rgba(201,164,94,.55);background:#140c10 center/100% 100% no-repeat;box-shadow:0 0 8px rgba(0,0,0,.6);overflow:hidden;cursor:pointer}
+#mini.big{left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,calc(78vh * var(--ar)));z-index:6}
+#mini i{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ffb070;pointer-events:none}
+#mini i.me{width:8px;height:8px;margin:-4px 0 0 -4px;background:#5fe0ff;box-shadow:0 0 6px #5fe0ff;z-index:2}
+#mini i.gt{border-radius:1px;background:#40b8e8}#mini i.gt.dg{background:#ff6040}
+#mini span{position:absolute;transform:translate(-50%,-50%);font-size:11px;color:#f0e2d0;text-shadow:0 0 4px #000,0 1px 2px #000;white-space:nowrap;display:none;pointer-events:none}
+#mini.big span{display:block}#mini span.d2{color:#ffb070}#mini span.d3{color:#ff6a50}#mini span.rest{color:#9fe0b0}
 #toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
 .tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
 .tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
@@ -74,6 +87,8 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
   <div id="boss" hidden></div>
   <div id="death" hidden><b>전투 불능</b><span></span><small style="display:block;margin-top:5px">출발점에서 다시 일어납니다</small></div>
   <div id="toast" hidden></div>
+  <div id="areaName"></div>
+  <div id="mini" class="hit" hidden></div>
   <div id="gate" class="gatebtn hit" hidden></div>
   <div id="lootbtn" class="gatebtn loot hit" hidden></div>
   <div id="ann"></div>
@@ -202,6 +217,16 @@ async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=
   const h={ id, root, mixer, act, cur:'idle', blob, tag, me, name:o.name||NAMES[id], title:o.title||null, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, enhNet:o.enh||null, lookKey:lookKey(o.eq,o.enh), target:null };
   heroTag(h);
   dress(h, o.look!=null?o.look:START_SET[id]); heroes.push(h); return h; }
+/* ---------- 가려진 인물 실루엣 (넓은 필드: 건물·나무 뒤로 걸어가도 내가 어디 있는지 보인다) ----------
+   맵 타일(renderOrder −2) 다음, 인물(0) 앞에 «맵보다 뒤에 있을 때만» 그리는 복제본(−1)을 그린다.
+   보이는 부분은 곧이어 그려지는 인물이 덮고, 가려진 부분에만 윤곽이 남는다. 같은 뼈대를 쓰므로 동작을 그대로 따라간다. */
+const SIL={ me:new THREE.MeshBasicMaterial({ color:0x3a86b0, depthFunc:THREE.GreaterDepth, depthWrite:false, blending:THREE.AdditiveBlending, toneMapped:false }),
+  other:new THREE.MeshBasicMaterial({ color:0x6a4a3a, depthFunc:THREE.GreaterDepth, depthWrite:false, blending:THREE.AdditiveBlending, toneMapped:false }) };
+function silSync(h){ const mat=h.me?SIL.me:SIL.other; h.sil=h.sil||[];
+  h.root.traverse(m=>{ if(!m.isMesh||m.userData.silOf||m.userData.sil) return; let s;
+    if(m.isSkinnedMesh){ s=new THREE.SkinnedMesh(m.geometry,mat); s.bind(m.skeleton,m.bindMatrix); s.bindMode=m.bindMode; } else s=new THREE.Mesh(m.geometry,mat);
+    s.position.copy(m.position); s.quaternion.copy(m.quaternion); s.scale.copy(m.scale); s.renderOrder=-1; s.frustumCulled=false; s.userData.silOf=m; m.userData.sil=s; m.parent.add(s); h.sil.push([m,s]); });
+  for(const [m,s] of h.sil){ let v=m.visible, p=m.parent; while(v&&p&&p!==h.root){ v=p.visible; p=p.parent; } s.visible=v; } }
 function removeHero(h){ const i=heroes.indexOf(h); if(i<0) return;window.TW_LOOKS&&TW_LOOKS.detach&&TW_LOOKS.detach(h.root);h.mixer.stopAllAction();h.mixer.uncacheRoot(h.root);scene.remove(h.root);scene.remove(h.blob);h.blob.geometry.dispose();h.blob.material.dispose();h.tag.remove();heroes.splice(i,1); }
 function play(h, n, fade=0.18){ if(h.cur===n||!h.act[n]) return; const a=h.act[n], b=h.act[h.cur]; a.reset().play(); if(b) a.crossFadeFrom(b,fade,false); h.cur=n; }
 /* ---------- 걷기: 길 좌표 띠 + 상자 충돌 ---------- */
@@ -238,7 +263,7 @@ stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerC
 stick.addEventListener('pointermove',e=>{ if(e.pointerId!==stickId) return; let dx=e.clientX-sx, dy=e.clientY-sy; const m=Math.hypot(dx,dy), lim=46; if(m>lim){ dx*=lim/m; dy*=lim/m; } knob.style.transform='translate('+dx+'px,'+dy+'px)'; input.x=dx/lim; input.y=-dy/lim; });
 const stickEnd=e=>{ if(e.pointerId!==stickId) return; stickId=null; input.x=input.y=0; knob.style.transform=''; };
 stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercancel',stickEnd);
-addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
+addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyM'){ const mm=document.getElementById('mini'); if(!mm.hidden) mm.classList.toggle('big'); } if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null,selfDead=false;
 function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name,visual=key!==me.lookKey;me.name=name;if(visual){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed||visual)heroTag(me);}
@@ -433,7 +458,32 @@ const bloom=createBloom(renderer,{ div:MOBILE?4:2, threshold:0.72, soft:0.28, am
 const clock=new THREE.Clock(), v3=new THREE.Vector3(); let frames=0, fpsT=0, fpsN=0, fps=0, sendT=0, placeT=0;
 /* 지금 어디쯤인가 — 가장 가까운 실제 출구 */
 const placeEl=document.getElementById('place');
-function place(){ const p0=me.root.position;
+/* 하위 구역: 원이 사각형보다 먼저(좁은 곳이 넓은 곳 안에 있다) */
+const AREAS=(meta.areas||[]).filter(a=>a.kind==='hunt'||a.kind==='rest').sort((a,b)=>(a.circle?0:1)-(b.circle?0:1));
+const inPolyXZ=(x,z,poly)=>{ let inside=false; for(let i=0,j=poly.length-1;i<poly.length;j=i++){ const a=poly[i], b=poly[j]; if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0]) inside=!inside; } return inside; };
+const areaAt=p=>AREAS.find(a=>a.circle?Math.hypot(p.x-a.circle[0],p.z-a.circle[1])<a.circle[2]:inPolyXZ(p.x,p.z,a.poly))||null;
+const areaEl=document.getElementById('areaName'); let curArea=undefined, areaT=0;
+const RISK=['위험 B','위험 B','위험 A','위험 S'];
+function areaCheck(){ const a=areaAt(me.root.position); if(a===curArea) return; const first=curArea===undefined; curArea=a;
+  if(!a){ document.getElementById('risk').textContent=meta.rules&&meta.rules.safe?'안전 지대':DUNGEON?'위험 A · 던전':'위험 B'; return; }
+  document.getElementById('risk').textContent=a.kind==='rest'?'안전 지대':RISK[a.danger||1];
+  areaEl.className=a.kind==='rest'?'rest':'d'+(a.danger||1);
+  areaEl.innerHTML='<b>'+String(a.name).replace(/[<>&]/g,'')+'</b><small>'+(a.kind==='rest'?'쉬어 가는 곳':(a.lv?'Lv '+a.lv[0]+'~'+a.lv[1]:'')+(a.mobs&&a.mobs!=='(가안)'?' · '+String(a.mobs).replace(/[<>&]/g,''):''))+'</small>';
+  areaT=first?3.5:3; }
+/* 미니맵: 그림 좌표 u = x, v = −z·sin(내려다보는 각) (땅 위) — 맵 타일과 같은 틀 */
+const miniEl=document.getElementById('mini'), OV=meta.overview; let miniMe=null; const miniOthers=[];
+const miniPos=(x,z)=>{ const u=x, v=-z*Math.sin(meta.pitch); return [ (u-OV.u0)/(OV.u1-OV.u0)*100, (OV.v1-v)/(OV.v1-OV.v0)*100 ]; };
+if(OV){ miniEl.hidden=false; miniEl.style.backgroundImage='url(maps/2d/'+ZONE+'/'+OV.file+(OV.h?'?v='+OV.w+'x'+OV.h:'')+')'; miniEl.style.aspectRatio=OV.w+'/'+OV.h; miniEl.style.setProperty('--ar',(OV.w/OV.h).toFixed(3));
+  const dot=(cls,x,z)=>{ const d=document.createElement('i'); d.className=cls; const [a,b]=miniPos(x,z); d.style.left=a+'%'; d.style.top=b+'%'; miniEl.appendChild(d); return d; };
+  for(const g of meta.gates) dot('gt'+(g.kind==='dungeon'?' dg':''),g.x,g.z);
+  for(const a of AREAS){ let x,z; if(a.circle){ x=a.circle[0]; z=a.circle[1]; } else { x=a.poly.reduce((q,p)=>q+p[0],0)/a.poly.length; z=a.poly.reduce((q,p)=>q+p[1],0)/a.poly.length; }
+    const sp=document.createElement('span'); sp.className=a.kind==='rest'?'rest':'d'+(a.danger||1); sp.textContent=a.name; const [l,t]=miniPos(x,z); sp.style.left=l+'%'; sp.style.top=t+'%'; miniEl.appendChild(sp); }
+  miniMe=dot('me',0,0); miniEl.addEventListener('pointerdown',e=>{ e.stopPropagation(); miniEl.classList.toggle('big'); }); }
+function miniFrame(){ if(!miniMe) return; const p=me.root.position, [a,b]=miniPos(p.x,p.z); miniMe.style.left=a+'%'; miniMe.style.top=b+'%';
+  let k=0; for(const h of heroes){ if(h===me) continue; if(!miniOthers[k]){ const d=document.createElement('i'); miniEl.appendChild(d); miniOthers[k]=d; } const [x,y]=miniPos(h.root.position.x,h.root.position.z); miniOthers[k].style.left=x+'%'; miniOthers[k].style.top=y+'%'; miniOthers[k].style.display=''; k++; }
+  for(;k<miniOthers.length;k++) miniOthers[k].style.display='none'; }
+function areaFrame(dt){ if(areaT>0){ areaT-=dt; areaEl.style.opacity=Math.max(0,Math.min(1,areaT/0.8,(3.6-areaT)/0.4)); } else areaEl.style.opacity=0; }
+function place(){ const p0=me.root.position; areaCheck(); if(curArea){ placeEl.textContent=(meta.title||'')+' · '+curArea.name; return; }
   if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); const pl=b.place||'보스 구역'; placeEl.textContent=(meta.title||'')+' · '+(d<b.r?pl:pl+'까지 '+Math.round(d)+' m'); return; }
   if(!meta.exits||!meta.exits.length){ placeEl.textContent=meta.title||''; return; } const p=me.root.position; let best=null; for(const e of meta.exits){ const d=Math.hypot(e.x-p.x,e.z-p.z); if(!best||d<best.d) best={d,ref:e.ref}; } placeEl.textContent='강남대로 · 강남역 '+best.ref+'번 출구 '+Math.round(best.d)+' m'; }
 function step(h, dx, dz, dt, speed){ const m=Math.hypot(dx,dz);
@@ -467,8 +517,9 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, selfDead?0:ix, selfDead?0:-iy, dt, 4.8);
   heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
+  if(frames%20===1) heroes.forEach(silSync);   /* 장비 GLB 는 늦게 붙는다 — 가끔 다시 훑는다 */
   nearLights(me.root.position); if(innerHeight>innerWidth&&inBoss?.alive&&inBoss.root)follow(portraitBossFocus(me.root.position,inBoss.root.position,v3));else follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
-  zones(dt); bossFrame(dt);
+  zones(dt); bossFrame(dt); areaFrame(dt); if(frames%3===0) miniFrame();
   if(REDUCED) shakeT=0;
   else if(shakeT>0){ shakeT=Math.max(0,shakeT-dt); const a=shakeT*0.35; cam.position.x+=(Math.random()-.5)*a; cam.position.z+=(Math.random()-.5)*a; }
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }

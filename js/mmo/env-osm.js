@@ -17,14 +17,17 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    farSide: 화면 위(먼 쪽)에 둘 실측 지점 · exitPairs: 길 양쪽 인도에 마주 선 출구(중심선) · walk: 걷는 띠(없으면 계산)
    gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
+import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
-             { id: 'north', at: { end: 's1', t: 'center' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 케이블카', kind: 'zone' },
+             { id: 'north', at: { end: 's1', t: 'road' }, to: { zone: 'namsan', gate: 'south' }, label: '남산 방면 · 케이블카', kind: 'zone' },
              /* 강남 벙커 출격문 — 벙커는 강남역 바로 밑 B3 (원작 L251), 출격문을 나서면 강남대로 (L1080) */
              { id: 'bunker', at: { exit: '7' }, to: { zone: 'bunker', gate: 'out' }, label: '강남 벙커 · 출격문', kind: 'zone' },
-             { id: 'south', at: { end: 's0', t: 'center' }, to: { zone: 'namtae', gate: 'north' }, label: '남태령 방면 · 양재', kind: 'zone' } ],
-    closed: { s0: '남태령 방면 — 양재', s1: '남산 방면 — 신논현' }, start: 'exit7' } };
+             { id: 'south', at: { end: 's0', t: 'road' }, to: { zone: 'namtae', gate: 'north' }, label: '남태령 방면 · 양재', kind: 'zone' } ],
+    closed: { s0: '남태령 방면 — 양재', s1: '남산 방면 — 신논현' }, start: 'exit7',
+    /* 넓게 (디렉터 2026-10-06 «필드를 넓게»): 강남대로 띠 60 m → 카메라 쪽(이미 1층 높이로 잘린 블록) 으로 160 m 더. 먼 쪽 고층 벽은 그대로 */
+    wide: { dt0: -160 }, dress: { urban: true, logs: false, patches: ['concrete', 'sand', 'asphalt'], bushColors: [0x2e3428, 0x3a3428, 0x2a2a26] } } };
 
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
@@ -61,6 +64,7 @@ export function build(THREE, scene, osm, opt = {}) {
   /* 걷는 띠: 사거리 북쪽 55 m 부터 5번 출구 남쪽 18 m 까지, 강남대로 양쪽 인도까지 (t ±30 m) */
   const s5 = ST(W(osm.exits.find(e => e.ref === (CFG.farSide?.exit || '5'))?.p || [80, 300]))[0];
   const walk = CFG.walk ? { ...CFG.walk } : Object.assign(s5 > 0 ? { s0: -55, s1: Math.round(s5 + 18), t0: Math.round(tc - 30), t1: Math.round(tc + 30) } : { s0: Math.round(s5 - 18), s1: 55, t0: Math.round(tc - 30), t1: Math.round(tc + 30) }, opt.walk || {});
+  if (CFG.wide) { walk.t0 = Math.round(walk.t0 + (CFG.wide.dt0 || 0)); walk.t1 = Math.round(walk.t1 + (CFG.wide.dt1 || 0)); }
 
   /* ---------- 하늘·노을 (원작 «보라와 핏빛이 뒤엉킨 황혼») ---------- */
   const sky = { top: '#2a1838', horizon: '#7a2a3a', fog: '#3a2238' };
@@ -151,10 +155,15 @@ export function build(THREE, scene, osm, opt = {}) {
     const area = footprintArea(pts); let h = b.height || (b.levels ? b.levels * 3.6 : (area > 900 ? 22 + R() * 20 : area > 300 ? 12 + R() * 12 : 7 + R() * 7));
     const cst = pts.reduce((a, p) => { const st = ST(p); return [a[0] + st[0] / pts.length, a[1] + st[1] / pts.length]; }, [0, 0]);
     const near = cst[1] < tc, full = h;   /* 도로 중심선보다 가까운 쪽 */ if (near) h = Math.min(h, 4.2);   /* 잘라 낸 건물: 1층 높이 */
+    if (near && CFG.wide && cst[1] < tc - 34) h = Math.min(full, 2.6 + R() * 3.2);   /* 넓힌 블록 — 높이를 흔들어 무너진 동네처럼 (한 높이면 판자 같다) */
     const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); builtW.push({ pts, h, full, near, cst, id: b.id }); }
+  if (CFG.dress && CFG.wide) {   /* 넓힌 블록 땅 꾸미기 — 길·건물 위는 피한다 */
+    const inB = p => builtW.some(b => L.inPoly(p, b.pts)), onRoad = p => { const n = nearestRoad(p); return n && n.d < n.rw.width / 2 + 1.5; };
+    const dctx = { THREE, scene, R, FROM, clear: [], blockers }, st = L.dress(dctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: tc - 32 }, L.textures(dctx), { ...CFG.dress, keep: p => !inB(p) && !onRoad(p) });
+    console.log('[env-osm] 땅 꾸미기', JSON.stringify(st)); }
 
   /* ---------- 간판: 상가(POI) 업종 → 가까운 건물 길 쪽 벽. 전기가 들어오는 건 «몇몇» ---------- */
   const SIGN = { 'shop:convenience': ['편의점', '#4cff9a'], 'amenity:pharmacy': ['약국', '#4cff9a'], 'amenity:cafe': ['카페', '#ffd23a'], 'amenity:restaurant': ['식당', '#ff8a3a'], 'amenity:fast_food': ['분식', '#ff8a3a'],
@@ -231,6 +240,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const carCols = [0xd8d8dc, 0x1a1a1e, 0x8a8c94, 0x5a1418, 0x1c2a40, 0xe8e8ea, 0x2a2a2e, 0x6a6c72];
   const cabM = new THREE.MeshStandardMaterial({ color: 0x3a4658, roughness: 0.12, metalness: 0.4 });   /* 새까만 유리는 구멍처럼 보였다 — 노을을 받는 유리 */
   const xings = osm.crossings.map(W);
+  const endGateP = (CFG.gates || []).filter(g => g.at.end).map(g => FROM(walk[g.at.end] + (g.at.end === 's1' ? -3 : 3), g.at.t === 'road' ? tc : g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t));
   let cars = 0;
   for (const rw of roadsW) { const k = rw.r.kind; if (!['primary', 'primary_link', 'secondary', 'busway'].includes(k)) continue; const lanes = k === 'busway' ? 1 : (rw.r.lanes || 2);
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 6) continue; const ux = dx / L, uz = dz / L, dir = Math.atan2(dz, dx);
@@ -238,6 +248,7 @@ export function build(THREE, scene, osm, opt = {}) {
         for (let d = 4 + R() * 6; d < L - 4; d += (k === 'busway' ? 34 : 6.4) + (R() < 0.55 ? 10 + R() * 26 : R() * 1.5)) {   /* 절반쯤 비워 사이로 걸어 다닐 틈 */
           const cx = a[0] + ux * d - uz * off, cz = a[1] + uz * d + ux * off, [cs, ct] = ST([cx, cz]); if (cs < walk.s0 - 30 || cs > walk.s1 + 30 || Math.abs(ct - tc) > 60) continue;
           if (exitsW.some(e => Math.hypot(e.p[0] - cx, e.p[1] - cz) < 5)) continue;
+          if (endGateP.some(q => Math.hypot(q[0] - cx, q[1] - cz) < 7)) continue;   /* 끝 문 자리는 비운다 — 넓힌 판에서 문 고리 안에 차가 섰다 */
           /* «사람들은 마지막까지 신호를 지켰다» — 횡단보도 위에는 서지 않는다 */
           if (xings.some(x => Math.hypot(x[0] - cx, x[1] - cz) < 7)) continue;
           const g = new THREE.Group();
@@ -294,7 +305,7 @@ export function build(THREE, scene, osm, opt = {}) {
       if (st[1] < walk.t0 + 2 || st[1] > walk.t1 - 2) continue; const ok = [[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]].every(([ds, dt]) => bareAt(FROM(st[0] + ds, st[1] + dt))); if (ok) return st; } return st0; }
   for (const g of CFG.gates || []) { let st;
     if (g.at.exit) { const e = exitsW.find(x => x.ref === g.at.exit); if (!e) continue; st = clearSpot(ST(e.p)); }
-    else { const sEnd = walk[g.at.end], tt = g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t; st = [sEnd + (g.at.end === 's1' ? -3 : 3), tt]; }
+    else { const sEnd = walk[g.at.end], tt = g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t === 'road' ? tc : g.at.t; st = [sEnd + (g.at.end === 's1' ? -3 : 3), tt]; }
     const p = FROM(st[0], st[1]); gatesW.push({ id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 3.2, to: g.to, label: g.label, kind: g.kind || 'zone', st }); }
   function barrier(s, t, ang, sign) { const p = FROM(s, t); const gr = new THREE.Group();
     const j = new THREE.Mesh(jGeo, jerseyM); j.position.y = 0.425; gr.add(j);

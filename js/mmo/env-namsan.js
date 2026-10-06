@@ -8,6 +8,7 @@
      «남산타워 하부 — 깨진 유리, 넘어진 테이블» · 케이블카 드로퍼(천장에서 떨어지는 넷)
    build(THREE, scene, osm) → map.json 재료 (bake-map.html) */
 import { frameOf } from './env-osm.js';
+import * as L from './env-lib.js';
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -23,7 +24,8 @@ export function build(THREE, scene, osm) {
   const upper = osm.stations.filter(s => s.p).map(s => ({ ...s, w: W(s.p) })).sort((a, b) => ST(b.w)[0] - ST(a.w)[0])[0];
   const sUp = upper ? ST(upper.w)[0] : sT * 0.8;
   /* 걷는 띠: 하부역 뒤 45 m 부터 타워 광장 끝까지, 케이블카 선 양옆 24 m */
-  const walk = { s0: -45, s1: Math.round(sT + 28), t0: -24, t1: 24 };
+  /* 넓게 (디렉터 2026-10-06 «필드를 넓게»): 케이블카 선 양옆 24 m → 숲 비탈로 −80 ~ +70 m. 가려진 인물은 실루엣(mmo.html) */
+  const walk = { s0: -45, s1: Math.round(sT + 28), t0: -80, t1: 70 };
   const inPoly = (p, poly) => { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) inside = !inside; } return inside; };
   const inBand = (p, pad = 0) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
 
@@ -85,6 +87,8 @@ export function build(THREE, scene, osm) {
       if (i % 4 === 0) for (const side of [-1, 1]) { const q = [a[0] - dz / L * 1.9 * side, a[1] + dx / L * 1.9 * side]; const post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 6), stepEdgeM); post.position.set(q[0], 0.45, q[1]); scene.add(post); } } }
   /* 문·출발점 둘레는 비운다 — 첫 판은 남쪽 문 원 안에 나무가 서 있었다(게임 화면 확인) */
   { const g0 = FROM(walk.s0 + 3, 0), sp0 = FROM(walk.s0 + 9, -3); clear.push({ pts: [g0, g0], r: 6 }, { pts: [sp0, sp0], r: 5 }); }
+  /* 타워 문 · 공동구 문 자리도 미리 비운다 (아래 «문» 과 같은 자리) — 넓힌 판에서 타워 문에 바위가 섰다 */
+  { const gt = FROM(sT + 14, -16), gy = FROM(walk.s0 + 14, 16); clear.push({ pts: [gt, gt], r: 10 }, { pts: [gy, gy], r: 10 }); }   /* 6 m 로는 짙어진 숲의 갓(4.7 m)이 55° 시선으로 문 자리까지 드리웠다 */
   const nearClear = (p, pad = 0) => clear.some(c => { for (let i = 1; i < c.pts.length; i++) { const a = c.pts[i - 1], b = c.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;
     const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)); if (Math.hypot(p[0] - a[0] - u * vx, p[1] - a[1] - u * vz) < c.r + pad) return true; } return false; });
 
@@ -130,7 +134,7 @@ export function build(THREE, scene, osm) {
   const rebar = new THREE.MeshStandardMaterial({ color: 0x3a2a24, roughness: 0.6, metalness: 0.7 }); for (let k = 0; k < 10; k++) { const rb = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2 + R() * 2, 4), rebar); rb.position.set(tower[0] + (R() - .5) * 5, 39.5, tower[1] + (R() - .5) * 5); rb.rotation.set((R() - .5) * 0.8, 0, (R() - .5) * 0.8); scene.add(rb); }
   /* 무너진 전망대 조각: 굽은 원판 덩어리가 광장에 박혔다 */
   for (let k = 0; k < 3; k++) { const a = 0.6 + k * 2.1, p = [tower[0] + Math.cos(a) * 15, tower[1] + Math.sin(a) * 15]; const ring = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 1.2, 16, 1, true, 0, 0.9), darkConc); ring.material.side = THREE.DoubleSide; ring.position.set(p[0] - Math.cos(a) * 5.5, 0.4, p[1] - Math.sin(a) * 5.5); ring.rotation.set(0.9, a, 0.35); ring.castShadow = true; scene.add(ring); blockers.push({ x: p[0], z: p[1], hw: 2.6, hd: 1.6, rot: a }); }
-  for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 14 + R() * 10, p = [tower[0] + Math.cos(a) * r, tower[1] + Math.sin(a) * r]; if (!inBand(p, -3)) continue;
+  for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 14 + R() * 10, p = [tower[0] + Math.cos(a) * r, tower[1] + Math.sin(a) * r]; if (!inBand(p, -3) || nearClear(p)) continue;   /* 문 자리는 피한다 — 넓힌 판에서 덩이가 타워 문 위에 떨어졌다 */
     const ch = new THREE.Mesh(new THREE.BoxGeometry(3 + R() * 3, 1 + R() * 1.4, 2 + R() * 2), R() < 0.5 ? concM : darkConc); ch.position.set(p[0], 0.5, p[1]); ch.rotation.set(R() - .5, R() * 3, R() - .5); ch.castShadow = true; scene.add(ch);
     blockers.push({ x: p[0], z: p[1], hw: 2, hd: 1.4, rot: ch.rotation.y }); }
   /* 광장 바닥 + 둘레 난간 (먼 쪽 반원만) — 자물쇠 수백 개 */
@@ -145,11 +149,12 @@ export function build(THREE, scene, osm) {
   /* ---------- 숲: 걷는 띠 안·밖 모두. 길·건물·광장은 비운다 ---------- */
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
   const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const grove = L.noise2(L.rng(20261018), 55);
   const trees = []; const S0 = walk.s0 - 40, S1 = walk.s1 + 30, T0 = walk.t0 - 26, T1 = walk.t1 + 30;
   for (let s = S0; s < S1; s += 3.4) for (let t = T0; t < T1; t += 3.4) { const p = FROM(s + (R() - .5) * 2.6, t + (R() - .5) * 2.6); if (R() < 0.12) continue;
     if (nearClear(p) || inBuilding(p) || Math.hypot(p[0] - tower[0], p[1] - tower[1]) < 25) continue;
     /* 걷는 띠 안은 드문드문 — 나무 갓(4.7 m)이 인물을 가리면 안 된다. 띠 밖은 빽빽한 숲 벽이 곧 «못 가는 곳» 이다 */
-    if (inBand(p, 1) && R() > 0.14) continue; trees.push(p); }
+    if (inBand(p, 1) && R() > 0.24 * Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7))) continue; trees.push(p); }   /* 띠 안은 숲과 빈터로 뭉친다 */
   const nT = trees.length, trunks = new THREE.InstancedMesh(trunkG, trunkM, nT), canopy = leafMs.map(m => new THREE.InstancedMesh(R() < 2 ? canopyG : pineG, m, nT)), pines = new THREE.InstancedMesh(pineG, leafMs[2], nT);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), cnt = [0, 0, 0, 0]; let np = 0;
   trees.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(new THREE.Vector3(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), new THREE.Vector3(k, k, k)); trunks.setMatrixAt(i, mtx);
@@ -158,6 +163,8 @@ export function build(THREE, scene, osm) {
     if (inBand(p, 1)) blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.3, hd: 0.3, rot: 0 }); });
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
+  { const dctx = { THREE, scene, R, FROM, clear, blockers }, st = L.dress(dctx, walk, L.textures(dctx), { logs: true, keep: p => !inBuilding(p) && !nearClear(p) && Math.hypot(p[0] - tower[0], p[1] - tower[1]) > 25 });
+    console.log('[env-namsan] 땅 꾸미기', JSON.stringify(st)); }
 
   /* ---------- 경계: 띠 양옆은 나무 난간 + «출입금지» + 그 밖은 붉은 안개 비탈 (원작 «40 m 아래는 붉은 안개») ---------- */
   const woodM = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.9 }), ropeM = new THREE.MeshStandardMaterial({ color: 0xc8302a, roughness: 0.6, emissive: 0x2a0604 });
