@@ -4,7 +4,7 @@
    맵은 평평하게 굽는다(인물은 늘 y = 0). 산비탈은 숲·옹벽·계단으로만 보여 준다.
    원작 EP04~05 (docs/design/145):
      «반파된 남산타워 전망대 … 난간에 사랑의 자물쇠 수백 개» · «40 m 아래는 붉은 안개로 바닥이 안 보임»
-     «놈이 케이블카 와이어에 내려앉으며» · 셀레스티얼 — 선회·정찰, 내려오지 않는다(첫 조우는 후퇴)
+     «놈이 케이블카 와이어에 내려앉으며» · 셀레스티얼 — 선회·정찰, 내려오지 않는다 (원작은 첫 조우에서 퇴각 — 게임에선 공유 필드 보스, 퇴각은 퀘스트 연출)
      «남산타워 하부 — 깨진 유리, 넘어진 테이블» · 케이블카 드로퍼(천장에서 떨어지는 넷)
    build(THREE, scene, osm) → map.json 재료 (bake-map.html) */
 import { frameOf } from './env-osm.js';
@@ -197,7 +197,7 @@ export function build(THREE, scene, osm) {
     { id: 'yeouido', x: +gYeo[0].toFixed(2), z: +gYeo[1].toFixed(2), r: 2.6, to: { zone: 'yeouido_ug', gate: 'namsan' }, label: '공동구 입구 · 여의도 방면', kind: 'dungeon' } ];
   { const m = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(gateS0[0], 0.05, gateS0[1]); scene.add(m); }
   const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
-  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, place: '타워 광장', model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 3.2, canon: 'EP04 남산타워 전망대 — 첫 조우는 후퇴' } ];
+  const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, place: '타워 광장', model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 3.2, canon: 'EP04 남산타워 전망대' } ];
   const spawnP = FROM(walk.s0 + 9, -3);
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 14, p[1]]); }
   extentPts.push([tower[0], 40, tower[1]]);   /* 타워 기둥이 그림 안에 조금 더 */
