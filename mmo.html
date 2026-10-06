@@ -40,6 +40,17 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 #boss .hp{width:200px;height:5px;margin:3px auto 0;background:#1b1012;border:1px solid #5a1c1c}#boss .hp i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7a1414,#ff4a3a)}
 #vig{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .6s;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(120,8,8,.55) 100%)}
 #dark{position:fixed;inset:0;pointer-events:none;background:#000;opacity:0}
+/* 필드 보스 (docs/design/188) — 서버 전체 알림 · 피해 숫자 · 바닥 장비 빛기둥 · 줍기 단추 */
+#ann{position:absolute;left:50%;top:44px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:5}
+#ann div{padding:6px 16px;background:linear-gradient(90deg,rgba(20,4,4,0),rgba(20,4,4,.86) 18%,rgba(20,4,4,.86) 82%,rgba(20,4,4,0));color:#f2dcd6;font-size:13px;letter-spacing:.04em;white-space:nowrap;text-shadow:0 1px 2px #000;transition:opacity .6s}
+#ann div b{color:#ff6a50;margin:0 4px}#ann div.legend b{color:#f0b040}#ann div.myth b{color:#ff4030;text-shadow:0 0 10px #ff2010}
+#ann div.big{font-size:16px;padding:8px 22px;border-top:1px solid rgba(255,90,60,.5);border-bottom:1px solid rgba(255,90,60,.5)}
+@media (max-height:500px){ #ann{top:34px;gap:2px} #ann div{font-size:11px;padding:4px 12px} #ann div.big{font-size:13px;padding:5px 16px} }   /* 휴대폰 가로 — 세 줄이 이름표를 덮었다 */
+.dmg{position:absolute;transform:translate(-50%,-100%);font-weight:800;font-size:15px;color:#ffe2c8;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;white-space:nowrap}
+.dmg.crit{font-size:21px;color:#ffcf40;text-shadow:0 0 8px #ff6010,0 1px 2px #000}
+.tag.loot{font-size:12px;letter-spacing:.04em}.tag.loot small{display:block;font-size:9px;opacity:.75;font-weight:500}
+.gatebtn.loot{border-color:rgba(240,176,64,.85);color:#ffe6b8;background:rgba(26,18,4,.86);box-shadow:0 0 18px rgba(240,170,60,.3);bottom:calc(90px + env(safe-area-inset-bottom))}
+@media (orientation:portrait){ .gatebtn.loot{bottom:calc(270px + env(safe-area-inset-bottom))} }
 #toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
 .tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
 .tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
@@ -57,6 +68,8 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
   <div id="boss" hidden></div>
   <div id="toast" hidden></div>
   <div id="gate" class="gatebtn hit" hidden></div>
+  <div id="lootbtn" class="gatebtn loot hit" hidden></div>
+  <div id="ann"></div>
   <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
   <div class="btns hit"><div class="b atk" id="atk">공격</div>
     <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div><div class="b s" style="right:88px;bottom:62px">1</div>
@@ -81,6 +94,7 @@ import { GLTFLoader } from './vendor/three/GLTFLoader.js';
 import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
 import { createBloom } from './js/bloom.js';
 import { basis, createMap } from './js/mmo/map2d.js';
+import { ZONES } from './js/mmo/zones.js';
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const MOBILE=matchMedia('(pointer:coarse)').matches;
 /* 휴대폰은 가벼운 모델(art/3d/lod, tools/2d/make-lod.mjs — 삼각형 약 1/4, 텍스처 512 webp). ?lod=0|1 로 강제 */
@@ -211,13 +225,15 @@ stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercan
 addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null;
-function attack(){ if(!me||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8; }
+function attack(){ if(!me||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8; if(typeof hitBoss==='function') hitBoss(); }
 function dodge(){ if(!me||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; }
 function nextSet(){ if(!me) return; dress(me,(me.set+1)%SETS.length); net&&net.send({type:'fieldLook',look:me.set}); }
 document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
 const dbg=document.getElementById('dbg'); let dbgOn=DEBUG; function toggleDbg(){ dbgOn=!dbgOn; dbg.style.display=dbgOn?'block':'none'; } dbg.style.display=dbgOn?'block':'none';
 /* ---------- 온라인: 파티 서버의 필드 방 (server/field.cjs, 문서 185 §6.4) ---------- */
 const netEl=document.getElementById('net'); const remotes=new Map(); let net=null, ANIMS=['idle','run','walk','attack1','dodgeB'];
+/* 보스 메시지는 보스가 만들어지기 전에 올 수 있다 — 그때까지 모아 둔다 */
+let bossNet=null; const bossPend=[]; const toBoss=m=>{ if(bossNet) bossNet(m); else bossPend.push(m); };
 function partyServer(){ const v=q.get('server')||''; if(!v) return { host:location.host, secure:location.protocol==='https:' };
   try{ const u=new URL(/^(https?|wss?):\/\//.test(v)?v.replace(/^ws/,'http'):'https://'+v); return { host:u.host, secure:u.protocol==='https:' }; }catch{ return null; } }
 function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServer(); if(!sv) return reject(Error('서버 주소 오류'));
@@ -230,9 +246,11 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
     if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); else named(); return; }
     if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); return; }
     if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
-    if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; resolve(net); return; }
-    if(m.type==='field'){ onField(m); return; }
-    if(m.type==='error') console.warn('[field]', m.message); };
+    if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; toBoss(m); resolve(net); return; }
+    if(m.type==='profile'&&net){ net.profile=m.profile; return; }
+    if(m.type==='field'){ onField(m); if(m.bosses||m.loot) toBoss(m); return; }
+    if(m.type==='announce'||m.type==='bossHit'||m.type==='fieldLooted'){ toBoss(m); return; }
+    if(m.type==='error'){ console.warn('[field]', m.message); if(net&&/주울|줍|가진 장비|1위가 먼저|가까이/.test(m.message)) toBoss({type:'lootError',message:m.message}); } };
   ws.onclose=()=>{ clearTimeout(timer); if(net){ net=null; remotes.forEach(removeHero); remotes.clear(); netEl.textContent='연결 끊김 — 혼자'; } else reject(Error('접속 실패')); }; }); }
 const infos={};
 function onField(m){ Object.assign(infos, m.infos||{}); const live=new Set();
@@ -290,9 +308,77 @@ const bosses=meta.bosses.map(b=>{ const o={ b, root:null, mixer:null, tag:null }
     const grp=new THREE.Group(); grp.position.set(b.x,b.fly||0,b.z);   /* fly: 하늘에 떠 있는 보스(셀레스티얼 «내려오지 않는다») */ root.position.set(root.position.x-(box.min.x+box.max.x)/2,root.position.y-box.min.y,root.position.z-(box.min.z+box.max.z)/2); grp.add(root); scene.add(grp); o.root=grp;
     if(b.fly){ const sh=new THREE.Mesh(new THREE.PlaneGeometry(5,5),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false,opacity:0.8})); sh.rotation.x=-Math.PI/2; sh.position.set(b.x,FLOOR+0.04,b.z); scene.add(sh); }   /* 떠 있는 보스 — 땅에 그림자만 */ o.h=box.max.y-box.min.y;
     if(gl.animations.length){ o.mixer=new THREE.AnimationMixer(root); const c=gl.animations.find(a=>/idle/i.test(a.name))||gl.animations[0]; o.mixer.clipAction(c).play(); }
-    bossTag(o);
+    bossTag(o); if(o.alive!==undefined) bossVis(o);   /* 모델이 늦게 오면 «아직 안 나온 보스» 가 보였다 (출현 전 샷에 몸이 찍혔다) */
   }).catch(e=>console.warn('[boss]',b.id,e)); return o; });
-let inBoss=null;
+let inBoss=null, inBossK='';
+/* ---------- 필드 보스: 주기 출현 · 피해 · 쓰러짐 · 바닥 장비 (server/field.cjs · docs/design/188) ----------
+   온라인: 서버가 알려 주는 대로(살아 있나, 체력 비율). 혼자: 늘 서 있고, 쓰러지면 30초 뒤 다시 선다(드롭 없음). */
+const IT=window.TW_ITEMS, RAR=IT.RARITY, esc=t=>String(t==null?'':t).replace(/[<>&]/g,'');
+const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);   /* 서버와 같다 */
+const annEl=document.getElementById('ann'), lootBtn=document.getElementById('lootbtn');
+let shakeT=0, lootNear=null;
+/* 알림은 게임 시간으로 지운다 — 벽시계면 느린 기기(헤드리스 초당 1~2프레임)에서 보기도 전에 사라진다 (CLAUDE.md §1) */
+const anns=[]; function announce(html, cls='', life=6){ const d=document.createElement('div'); d.className=cls; d.innerHTML=html; annEl.prepend(d); anns.push({ el:d, t:life });
+  while(annEl.children.length>3){ const x=annEl.lastChild; x.remove(); const i=anns.findIndex(a=>a.el===x); if(i>=0) anns.splice(i,1); } }
+const zoneTitle=z=>(ZONES[z]&&ZONES[z].title)||z;
+bosses.forEach(o=>{ o.alive=!net; o.hp=1; o.local=300000; o.spawnT=0; o.dieT=0; o.respawn=0; });
+function bossVis(o){ if(o.root) o.root.visible=o.alive||o.dieT>0; if(o.tag) o.tag.dataset.dead=o.alive?'':'1'; }
+function setHp(o, r){ if(r<0) return; o.hp=r; const i=o.tag&&o.tag.querySelector('.hp i'); if(i) i.style.width=(r*100).toFixed(1)+'%'; if(o===inBoss){ const j=bossEl.querySelector('.hp i'); if(j) j.style.width=(r*100).toFixed(1)+'%'; } }
+/* 출현: 땅에서 솟고, 붉은 고리가 퍼지고, 가까우면 화면이 한 번 흔들린다 */
+const spawnRing=new THREE.Mesh(new THREE.RingGeometry(0.94,1,96),new THREE.MeshBasicMaterial({ color:0xff3020, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); spawnRing.rotation.x=-Math.PI/2; spawnRing.position.y=FLOOR+0.06; scene.add(spawnRing); let ringT=0;
+function bossSpawn(o, fx=true){ o.alive=true; o.dieT=0; setHp(o,1); bossVis(o); if(!fx) return; o.spawnT=1.4; ringT=1.2; spawnRing.position.x=o.b.x; spawnRing.position.z=o.b.z;
+  const p=me.root.position; if(Math.hypot(p.x-o.b.x,p.z-o.b.z)<45) shakeT=0.6; }
+function bossDie(o){ o.alive=false; o.dieT=1.2; setHp(o,0); if(!net) o.respawn=30; }
+/* 피해 숫자 — 보스 머리 위로 떠오른다 */
+const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);
+  const p=me.root.position, k=Math.min(0.45,1.2/Math.max(0.1,Math.hypot(p.x-o.b.x,p.z-o.b.z)));
+  dmgs.push({ el:d, x:o.b.x+(p.x-o.b.x)*k+(Math.random()-.5)*0.8, y:(o.b.fly||0)+1.5, z:o.b.z+(p.z-o.b.z)*k, t:0 }); }   /* 보스와 나 사이 허리 높이 — 큰 보스의 머리 위는 화면 위로 잘린다(재 보니 y=26px) */
+function nearBoss(){ const p=me.root.position; let best=null, bd=1e9; for(const o of bosses){ if(!o.alive) continue; const d=Math.hypot(o.b.x-p.x,o.b.z-p.z); if(d<=reachOf(o.b)&&d<bd){ best=o; bd=d; } } return best; }
+function hitBoss(){ const o=nearBoss(); if(!o) return;
+  const yaw=Math.atan2(o.b.x-me.root.position.x,o.b.z-me.root.position.z); me.yaw=yaw; me.root.rotation.y=yaw;   /* 보스 쪽으로 몸을 돌린다 */
+  if(net){ net.send({type:'fieldHit',boss:o.b.id}); return; }
+  const crit=Math.random()<0.18, n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)); dmgNum(o,n,crit); o.local-=n; setHp(o,Math.max(0,o.local/300000)); if(o.local<=0){ bossDie(o); o.local=300000; } }
+/* 바닥 장비: 등급 색 빛기둥 + 돌아가는 결정 + 이름표 (디아블로식 «멀리서도 뭔가 떨어졌다») */
+const loots=new Map();
+function lootAdd([id,item,x,z,mine]){ let L=loots.get(id); const d=IT.get(item)||{name:item,rarity:'hero'}, col=new THREE.Color((RAR[d.rarity]||RAR.hero).color);
+  if(!L){ const grp=new THREE.Group(); grp.position.set(x,FLOOR,z);
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.2,d.rarity==='myth'?7:d.rarity==='legend'?6:4,16,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false }));
+    beam.position.y=beam.geometry.parameters.height/2; grp.add(beam);
+    const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.14),new THREE.MeshBasicMaterial({ color:col })); gem.position.y=0.5; grp.add(gem);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(0.3,0.36,32),new THREE.MeshBasicMaterial({ color:col, transparent:true, opacity:0.7, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false })); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
+    scene.add(grp); const tag=document.createElement('div'); tag.className='tag loot'; tag.style.color=(RAR[d.rarity]||RAR.hero).color; document.getElementById('hud').appendChild(tag);
+    L={ id, item, d, grp, beam, gem, tag, x, z }; loots.set(id,L); }
+  L.mine=mine; L.tag.innerHTML=esc(d.name)+'<small>'+esc((RAR[d.rarity]||{}).name||'')+(mine?'':' · 1위가 먼저')+'</small>'; L.beam.material.opacity=mine?0.5:0.22; L.seen=true; }
+function lootDel(L){ scene.remove(L.grp); L.tag.remove(); loots.delete(L.id); }
+function onBossMsg(m){
+  if(m.type==='fieldJoined'||m.type==='field'){
+    for(const [id,r,alive] of m.bosses||[]){ const o=bosses.find(x=>x.b.id===id); if(!o) continue;
+      if(alive&&!o.alive) bossSpawn(o, m.type==='field'); else if(!alive&&o.alive) bossDie(o); if(alive) setHp(o,r); }
+    if(m.loot){ loots.forEach(L=>L.seen=false); m.loot.forEach(lootAdd); loots.forEach(L=>{ if(!L.seen) lootDel(L); }); }
+    return; }
+  if(m.type==='bossHit'){ const o=bosses.find(x=>x.b.id===m.boss); if(o){ dmgNum(o,m.dmg,m.crit); setHp(o,m.hp/m.max); } return; }
+  if(m.type==='fieldLooted'){ const d=IT.get(m.item)||{name:m.item}; toast(d.name+' 획득'); return; }
+  if(m.type==='lootError'){ toast(m.message); return; }
+  if(m.type==='announce'){ const here=m.zone===ZONE;
+    if(m.kind==='bossSpawn') announce('⚠ 필드 보스 출현<b>'+esc(m.name)+'</b>'+esc(zoneTitle(m.zone))+' · '+esc(m.place), 'big', here?7:5);
+    if(m.kind==='bossDown'){ const drops=(m.drops||[]).map(d=>'<b class="'+esc(d.rarity)+'" style="color:'+((RAR[d.rarity]||{}).color||'#fff')+'">'+esc(d.name)+'</b>').join(' ');
+      announce(esc(m.name)+' 처치<b>'+esc(m.top||'')+'</b>'+((m.players||1)>1?'외 '+(m.players-1)+'명':'혼자')+(drops?' · 드롭 '+drops:''), '', 7); }
+    if(m.kind==='loot') announce('<b>'+esc(m.who)+'</b>님이 '+esc(m.name)+'('+esc((RAR[m.rarity]||{}).name||'')+') 획득 — '+esc(zoneTitle(m.zone)), m.rarity, 9);
+    return; } }
+function bossFrame(dt){
+  for(const o of bosses){ if(!o.root) continue;
+    if(o.spawnT>0){ o.spawnT=Math.max(0,o.spawnT-dt); const k=1-o.spawnT/1.4, e=1-Math.pow(1-k,3); o.root.scale.setScalar(0.55+0.45*e); o.root.position.y=(o.b.fly||0)-(1-e)*1.2; }
+    else if(o.dieT>0){ o.dieT=Math.max(0,o.dieT-dt); const k=o.dieT/1.2; o.root.scale.setScalar(0.4+0.6*k); o.root.position.y=(o.b.fly||0)-(1-k)*1.5; if(o.dieT===0){ o.root.scale.setScalar(1); bossVis(o); } }
+    if(o.respawn>0){ o.respawn-=dt; if(o.respawn<=0){ o.respawn=0; bossSpawn(o); announce('⚠ 필드 보스 출현<b>'+esc(o.b.name)+'</b>'+esc(o.b.place||''),'big',5); } } }
+  if(ringT>0){ ringT=Math.max(0,ringT-dt); const k=1-ringT/1.2; spawnRing.scale.setScalar(1.5+k*8); spawnRing.material.opacity=(1-k)*0.6; }
+  for(let i=anns.length-1;i>=0;i--){ const A=anns[i]; A.t-=dt; if(A.t<0.6) A.el.style.opacity=Math.max(0,A.t/0.6); if(A.t<=0){ A.el.remove(); anns.splice(i,1); } }
+  for(let i=dmgs.length-1;i>=0;i--){ const D=dmgs[i]; D.t+=dt; tagAt(D.el,D.x,D.y+D.t*1.6,D.z); D.el.style.opacity=Math.min(1,(0.9-D.t)*3); if(D.t>0.9){ D.el.remove(); dmgs.splice(i,1); } }
+  const p=me.root.position; let ln=null, ld=1e9;
+  loots.forEach(L=>{ L.gem.rotation.y+=dt*2; L.gem.position.y=0.5+Math.sin(zoneT*3)*0.06; tagAt(L.tag,L.x,FLOOR+1.1,L.z); const d=Math.hypot(L.x-p.x,L.z-p.z); if(d<3.5&&d<ld){ ln=L; ld=d; } });
+  if(ln!==lootNear){ lootNear=ln; lootBtn.hidden=!ln; if(ln) lootBtn.innerHTML='<span>줍기<small style="color:'+(RAR[ln.d.rarity]||{}).color+'">'+esc(ln.d.name)+'</small></span>'; } }
+function pickLoot(){ if(lootNear&&net) net.send({type:'fieldLoot',loot:lootNear.id}); }
+lootBtn.addEventListener('pointerdown',pickLoot); addEventListener('keydown',e=>{ if(e.code==='KeyF') pickLoot(); });
+bossNet=onBossMsg; bossPend.splice(0).forEach(onBossMsg); bosses.forEach(bossVis);
 await new Promise(r=>setTimeout(r,1500));   /* 장비 GLB 가 붙을 시간 */
 follow(me.root.position); for(let k=0;k<5;k++) await map.update(cam);   /* 첫 화면 타일을 다 받은 뒤에 연다 */
 document.getElementById('load').remove();
@@ -322,7 +408,8 @@ function zones(dt){ zoneT+=dt; const p=me.root.position; if(mistMesh){ mistMesh.
   if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }
   let b=null; for(const o of bosses){ const d=Math.hypot(o.b.x-p.x,o.b.z-p.z); if(d<o.b.r) b=o;
     if(o.mixer) o.mixer.update(dt); if(o.root&&o.b.fly) o.root.position.y=o.b.fly+Math.sin(zoneT*1.3)*0.5; if(o.root&&d<o.b.r*2){ const yaw=Math.atan2(p.x-o.b.x,p.z-o.b.z); let dy=yaw-o.root.rotation.y; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); o.root.rotation.y+=dy*Math.min(1,dt*1.5); } }
-  if(b!==inBoss){ inBoss=b; bossEl.hidden=!b; vig.style.opacity=b?1:0; if(b) bossEl.innerHTML='보스 구역<b>'+String(b.b.name).replace(/[<>&]/g,'')+'</b>'+String(b.b.title||'').replace(/[<>&]/g,'')+'<div class="hp"><i></i></div>'; }
+  const bk=b?b.b.id+(b.alive?1:0):'';
+  if(bk!==inBossK){ inBossK=bk; inBoss=b; bossEl.hidden=!b; vig.style.opacity=b&&b.alive?1:0; if(b) bossEl.innerHTML=b.alive?'보스 구역<b>'+esc(b.b.name)+'</b>'+esc(b.b.title)+'<div class="hp"><i style="width:'+(b.hp*100).toFixed(1)+'%"></i></div>':'보스 구역<b style="color:#bbb;text-shadow:none">'+esc(b.b.name)+'</b>지금은 없다 · 주기마다 나타난다'; }
   if(toastT>0){ toastT-=dt; if(toastT<=0) toastEl.hidden=true; }
   if(meta.flicker){ flickT=(flickT+dt)%(meta.flicker.on+meta.flicker.off); const off=flickT>meta.flicker.on, stutter=flickT<0.18&&flickT>0.08;
     darkEl.style.opacity=off?0.58:stutter?0.35:0; near.forEach(L=>{ if(off) L.intensity*=0.25; }); } }
@@ -332,15 +419,16 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   step(me, ix, -iy, dt, 4.8);
   heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
   nearLights(me.root.position); follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
-  zones(dt);
+  zones(dt); bossFrame(dt);
+  if(shakeT>0){ shakeT=Math.max(0,shakeT-dt); const a=shakeT*0.35; cam.position.x+=(Math.random()-.5)*a; cam.position.z+=(Math.random()-.5)*a; }
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
-  heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); bosses.forEach(o=>{ if(o.tag){ if(o===inBoss) o.tag.style.display='none'; else tagAt(o.tag,o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.b.z); } });
+  heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); bosses.forEach(o=>{ if(o.tag){ if(o===inBoss||!o.alive) o.tag.style.display='none'; else tagAt(o.tag,o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.b.z); } });
   if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);
   fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+(LOD?' · LOD':'')+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
 window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, map, scene, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
-  gates:gateFx, bosses, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
+  gates:gateFx, bosses, loots, bossMsg:m=>onBossMsg(m), hitBoss, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
   teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };
 tick();
 </script>

@@ -16,6 +16,7 @@
 |---|---|
 | (2026-10-06, 2D 맵 MMORPG 필드) | `server/field.cjs` + `server/index.cjs` — `fieldJoin`/`fieldMove`/`fieldLook`/`fieldLeave`, 초당 10번 `field` (관심 반경 28 m, 속도 7.5 m/s 제한). 지역 정보는 `maps/2d/<zone>/map.json` 을 읽는다. 시험 `tests/field-server.test.cjs`. 배포 전에는 GitHub Pages 의 `mmo.html?server=…` 가 «오프라인» 으로 뜬다 |
 | (2026-10-06, 지역 · 문) | `server/field.cjs` — `fieldJoin.gate`: 다른 지역의 문으로 넘어오면 그 지역 `map.json gates` 의 짝 문 앞에 세운다. 새 지역 `gangnam_b1`(던전)·`namsan` 은 저장소의 `maps/2d/*/map.json` 을 읽으므로 **재배포해야 서버가 안다** |
+| (2026-10-06, 필드 보스) | `server/boss-cycle.cjs` · `boss-table.cjs` · `boss-store.cjs` 새 파일, `server/field.cjs` · `index.cjs` · `store.cjs` · `rpg-store.cjs`. 리니지식 주기 창 출현, `fieldHit`(피해는 서버가 굴림) · `fieldLoot`(바닥 드롭, 1위 10초 먼저), 서버 전체 `announce`(출현·처치·전설 획득), DB 표 `field_bosses` · `boss_kills`. 보스 장비는 상점에서 뺐다. 시험 `tests/field-boss.test.cjs`. **§5 의 지속 디스크가 없으면 재시작 때 보스 시각·처치 기록·얻은 장비가 지워진다** |
 
 ## 2. 배포 완료 (2026-09-20)
 
@@ -48,3 +49,33 @@ ADMIN_IDS = <플레이어 id>          # 쉼표로 여러 명
 **재배포·재시작하면 계정·캐릭터·길드가 초기화된다.** 무료 플랜을 그렇게 잡아
 둔 것이고, 유지하려면 디스크를 붙이고 `EPHEMERAL_STORAGE` 를 지워야 한다
 (`docs/DEPLOY.md` §2).
+
+## 5. 지속 저장 — 보스·장비가 남으려면 (디렉터 승인 후, 2026-10-06)
+
+저장은 이미 DB(SQLite, `world.sqlite`)다. 지워지는 이유는 DB 가 아니라 **디스크**다(`/tmp`).
+Supabase 등으로 옮길 필요 없이, 지워지지 않는 디스크에 같은 파일을 두면 된다(코드 변경 없음).
+
+Render `hwanghon-party` 에서:
+
+1. 요금제 **Starter** 이상 (무료는 디스크를 못 붙이고, 15분 유휴면 잠들어 보스 주기가 멈춘다)
+2. **Disks** → Add disk: 이름 `world`, Mount path `/var/data`, 1 GB
+3. Environment: `DATA_DIR=/var/data`, `EPHEMERAL_STORAGE` **지우기**
+4. (선택) Settings → **Auto-Deploy: On** — main 에 올리면 서버도 바로 나간다
+5. 확인: 재배포 후 `/healthz` 200, 그리고 한 번 더 재시작해도 계정이 남는지
+
+`render.yaml` 로 맞출 때의 모양 (요금이 붙으므로 승인 전에는 고치지 않는다):
+
+```yaml
+    plan: starter
+    autoDeployTrigger: commit
+    disk:
+      name: world
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: DATA_DIR
+        value: /var/data
+      # EPHEMERAL_STORAGE 줄은 지운다
+```
+
+백업은 서버가 한 시간마다 `DATA_DIR/backups` 에 남긴다(`BACKUP_INTERVAL_MS`). 같은 디스크라서, 디스크째 잃는 경우를 막으려면 가끔 `npm run backup` 결과를 밖으로 옮긴다.

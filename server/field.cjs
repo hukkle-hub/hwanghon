@@ -86,7 +86,8 @@ class Field{
   /* 드롭: 묶음마다 확률 → 맞으면 그 묶음에서 하나. 바닥(보스 자리 둘레)에 떨어지고 1위가 10초 먼저 */
   const drops=[]; for(const g of o.drops) if(g.pick.length&&this.rng()<g.rate) drops.push(g.pick[Math.floor(this.rng()*g.pick.length)]);
   const top=ranking[0]||null;
-  for(const item of drops){ const k='L'+(++this.lootSerial), a=this.rng()*Math.PI*2, r=1+this.rng()*1.5;
+  const a0=this.rng()*Math.PI*2;   /* 고르게 흩는다 — 붙어 떨어지면 이름표가 겹치고 엉뚱한 걸 줍는다 */
+  for(const [n,item] of drops.entries()){ const k='L'+(++this.lootSerial), a=a0+n/drops.length*Math.PI*2, r=2+this.rng()*1.2;
    this.loot.set(k,{ id:k, item, zone:o.zone, x:o.x+Math.cos(a)*r, z:o.z+Math.sin(a)*r, owner:top&&top.id, ownerUntil:now+LOOT_PRIORITY, expires:now+LOOT_LIFE, boss:o.id }); }
   o.nextAt=CY.nextSpawn(o.cycle, now, { rng:this.rng, dead:true });
   let changed=[]; if(this.store){ this.store.bossSave(o.id,o.zone,'wait',o.nextAt,now); changed=this.store.bossKill(o.id,o.zone,now,ranking,drops,T.MATERIAL); }
