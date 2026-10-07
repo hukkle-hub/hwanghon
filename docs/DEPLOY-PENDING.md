@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-07 — 필드 스킬 1~4(누르고 공격)·온라인 기본 배포 완료 — Render commit `5317380`, 실제 WebSocket 으로 스킬·재사용 대기 확인** (§2).
+> **2026-10-07 — 필드 가방·상점·회복약·거점 기본 보스 점령 배포 완료 — Render commit `1fa5909`, 실제 WebSocket 으로 확인** (§2).
+> 이전: 필드 스킬 1~4(누르고 공격)·온라인 기본 배포 완료 — Render commit `5317380`, 실제 WebSocket 으로 스킬·재사용 대기 확인** (§2).
 > 이전: 클레이브 v6(적응형 AI·4.2 m·셔터 부위파괴) — Render commit `2399367`.
 > 이전: **클레이브 명예 장비·공개 칭호·강화 명예 표식, 타격 접점·보행·서버 시각 안무, 강화 광휘 가시성·수명 배포 완료** (§2). Render 자동 배포도 실제 main 푸시로 확인했다.
 > 남은 것: 환경변수 `ADMIN_IDS` (§3) · **지속 디스크 (§5, 디렉터 승인 필요)**.
@@ -16,9 +17,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이번 푸시) | 필드 가방 `fieldBag`/`fieldShop` (`server/field-bag.cjs`) · 안전 지대·회복약·거점 기본 보스 점령 (`field.cjs` `hubOwner`/`setHub`/`safeAt`/`potion`, `fieldJoined.hub`) — 문서 198. 서버가 `js/mmo/safe-zones.js` 를 읽는다 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
+
+최신 필드 가방 검증 (Claude): main `1fa5909d` → Render `/healthz` commit `1fa5909`, Pages build `1fa5909` (09:03 UTC — CDN 이 10분 캐시라 처음엔 옛 값). 실제 WebSocket(Render): 손님 → `fieldJoin haeundae` `hub:null`(거점 아님) → `fieldShop` 32종 · `safe:true`(출발점 쉼터) · 회복약 120 G → `fieldBag use c_potion` «HP 가 가득 찼습니다.»(약 안 씀) → `fieldBag buy c_potion` «골드가 부족합니다.» → `fieldJoin daejeon` `hub:{kind:'boss'}`(거점 = 보스 점령).
 
 최신 필드 스킬·온라인 기본 검증 (Claude): main `53173805` → Render `/healthz` commit `5317380` (08:14 UTC), Pages build `5317380` (08:15). 실제 WebSocket(Render): fieldJoin gangnam_b1 → `fieldSkill 3`(결의) `{ok:true, name:'결의'}` → 0.4초 뒤 같은 스킬 `{ok:false}`(서버 재사용 대기). `npm test` 752 중 749 통과 · 실패 0. (이 컨테이너의 헤드리스 브라우저는 프록시 인증서를 믿지 않아 Pages 화면을 직접 열지 못했다 — 화면은 로컬 파티 서버로 검수)
 
