@@ -31,7 +31,7 @@ export const REGIONS = [
   /* ---- 전국 필드 ---- */
   { id: 'wolmido', name: '인천 월미도', kind: 'coast', lat: 37.4753, lon: 126.5959 },
   { id: 'suwon', name: '수원 화성', kind: 'historic', lat: 37.2820, lon: 127.0140 },
-  { id: 'chuncheon', name: '춘천 소양강', kind: 'river', lat: 37.8840, lon: 127.7280 },
+  { id: 'chuncheon', name: '춘천 소양강', kind: 'river', lat: 37.8935, lon: 127.7255 },   /* 소양강 처녀상 · 스카이워크 앞 (처음 좌표는 강이 안 보이는 시내였다) */
   { id: 'seorak', name: '설악산', kind: 'mountain', lat: 38.1720, lon: 128.4880 },
   { id: 'sokcho', name: '속초 해변', kind: 'coast', lat: 38.1910, lon: 128.6020 },
   { id: 'gyeongpo', name: '강릉 경포', kind: 'coast', lat: 37.8030, lon: 128.9100, axis: '해안로' },   /* 해수욕장 앞 해안로 (처음 좌표는 경포호 한가운데였다) */

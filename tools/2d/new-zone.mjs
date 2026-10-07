@@ -8,7 +8,10 @@
 // 손으로 고칠 게 있으면 zones-auto.js 가 아니라 원작 지역처럼 zones.js 로 옮겨 다듬는다(같은 id 면 zones.js 가 이긴다).
 import fs from 'node:fs'; import path from 'node:path'; import { execFileSync } from 'node:child_process';
 import { REGIONS, levelOf } from '../../js/mmo/regions.js';
-const OSM_CACHE = process.env.OSM_CACHE || '/tmp/hwanghon-osm', OUT = 'js/mmo/zones-auto.js';
+const OSM_CACHE = process.env.OSM_CACHE || '/tmp/hwanghon-osm', AUTO_F = 'js/mmo/zones-auto.js', PENDING_F = 'js/mmo/zones-pending.js';
+/* PENDING=1 — 만들기만 하고 굽기 전: 게임이 읽지 않는 zones-pending.js 에 쓴다(전국 지도에 «갈 수 있는 곳» 으로 뜨지 않게, 시험이 «안 구운 지역» 으로 깨지지 않게).
+   굽기 직전에 --promote <id…> 로 zones-auto.js 로 옮긴다 */
+const OUT = process.env.PENDING ? PENDING_F : AUTO_F;
 const SCREEN_ANG = 28 * Math.PI / 180, DIR = [Math.cos(SCREEN_ANG), -Math.sin(SCREEN_ANG)], SIDE = [-Math.sin(SCREEN_ANG), -Math.cos(SCREEN_ANG)];
 const ST = ([x, z]) => [x * DIR[0] + z * DIR[1], x * SIDE[0] + z * SIDE[1]], FROM = (s, t) => [s * DIR[0] + t * SIDE[0], s * DIR[1] + t * SIDE[1]];
 const rotP = r => { const c = Math.cos(r), s = Math.sin(r); return ([x, z]) => [x * c - z * s, x * s + z * c]; };
@@ -108,7 +111,8 @@ function plan(region) {
 
   /* 하위 구역: 띠를 s 로 셋 — 가운데(출발점 쪽)가 쉬움, 양 끝이 어려움. 거점은 가운데가 마을(안전) */
   const lv = levelOf(region) || levelOf({ ...region, kind: 'city' }), thirds = [0, 1, 2].map(k => [walk.s0 + (walk.s1 - walk.s0) * k / 3, walk.s0 + (walk.s1 - walk.s0) * (k + 1) / 3].map(Math.round));
-  const named = osm.areas.filter(a => a.name && /park|beach|wood|forest|garden|square|recreation|water|sand|scrub|nature_reserve/.test(a.kind)), roadsNamed = osm.roads.filter(r => r.name && /trunk|primary|secondary|tertiary/.test(r.kind));
+  const odd = n => /_|청사|시청|구청|민원|주차|학교|아파트|지하차도|터널|고가|육교|램프/.test(n);   /* 관청·시설 이름, 지하차도·고가는 구역 이름으로 어색하다 (제주시청_민원실, 충장지하차도) */
+  const named = osm.areas.filter(a => a.name && !odd(a.name) && /park|beach|wood|forest|garden|square|recreation|water|sand|scrub|nature_reserve/.test(a.kind)), roadsNamed = osm.roads.filter(r => r.name && !odd(r.name) && /trunk|primary|secondary|tertiary/.test(r.kind));
   /* 이름: ① 아직 안 쓴 공원·해변·숲 이름 ② 이미 쓴 이름이 이 구역도 덮으면 «○○ 동쪽» (실제 방위) ③ 큰길 이름 + 땅 종류 («○○번길» 골목은 빼고) ④ 땅 종류 */
   const compass = (sMid, tMid) => { const c0 = toOsm(FROM((walk.s0 + walk.s1) / 2, (walk.t0 + walk.t1) / 2)), c1 = toOsm(FROM(sMid, tMid)), dx = c1[0] - c0[0], dz = c1[1] - c0[1];
     return Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? '동쪽' : '서쪽') : (dz > 0 ? '남쪽' : '북쪽'); };
@@ -119,11 +123,11 @@ function plan(region) {
     const fresh = area.find(([m]) => !used.has(m)); if (fresh) { used.add(fresh[0]); return fresh[0] + ' 터'; }
     const again = area.find(([, v]) => v > n * 0.2); if (again) return again[0] + ' ' + compass((s0 + s1) / 2, (t0 + t1) / 2);
     const road = all.find(([m]) => m.startsWith('@') && !used.has(m)); if (road) { used.add(road[0]); return road[0].slice(1) + ' ' + CLASS_NAME[k]; }
-    return CLASS_NAME[k]; };
+    const g = CLASS_NAME[k]; if (!used.has(g)) { used.add(g); return g; } return g + ' ' + compass((s0 + s1) / 2, (t0 + t1) / 2); };   /* 같은 이름이 둘이면 실제 방위를 붙인다 (수원·목포 «폐허 거리» 셋) */
   const used = new Set(), hunts = [], hub = region.kind === 'hub';
   const order = [1, 0, 2];   /* 가운데 → 왼쪽(s 작은 쪽) → 오른쪽 순으로 위험이 커진다 */
   order.forEach((k, rank) => { const [s0, s1] = thirds[k], st = stats(s0, s1, walk.t0, walk.t1), dom = Object.entries(st).filter(([n]) => n !== 'water').sort((a, b) => b[1] - a[1])[0][0];
-    if (hub && rank === 0) { hunts.push({ id: 'town', name: region.name + ' 마을', kind: 'rest', s: [s0, s1], t: [walk.t0, walk.t1] }); return; }
+    if (hub && rank === 0) { hunts.push({ id: 'town', name: /마을$/.test(region.name) ? region.name : region.name + ' 마을', kind: 'rest', s: [s0, s1], t: [walk.t0, walk.t1] }); return; }
     const span = lv[1] - lv[0], a = lv[0] + Math.round(span * (rank / 3)), b = Math.min(lv[1], a + Math.max(2, Math.round(span / 2)));
     const k2 = dom === 'open' && lookOf(region).dress.urban ? 'street' : dom;   /* 도시의 «빈 땅» 은 길이다 */
     hunts.push({ id: ['mid', 'left', 'right'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, k2, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[k2], danger: rank + 1 }); });
@@ -140,13 +144,20 @@ function plan(region) {
   return zone;
 }
 
-const ids = process.argv.slice(2); if (!ids.length) { console.error('사용: node tools/2d/new-zone.mjs <지역 id…>  (js/mmo/regions.js)'); process.exit(1); }
-const prev = fs.existsSync(OUT) ? (await import(path.resolve(OUT) + '?' + Date.now())).AUTO : {};
-for (const id of ids) { const r = REGIONS.find(x => x.id === id); if (!r) { console.error('지역 표에 없다:', id); process.exit(1); } prev[id] = plan(r); }
-fs.writeFileSync(OUT, `/* 자동으로 찍어 낸 지역 — tools/2d/new-zone.mjs 가 쓴다. 손으로 고치지 말고 다시 돌리거나 zones.js 로 옮긴다 (docs/design/192 §7)
+const load = async f => fs.existsSync(f) ? (await import(path.resolve(f) + '?' + Date.now())).AUTO : {};
+const write = (f, obj, note) => fs.writeFileSync(f, `/* ${note} — tools/2d/new-zone.mjs 가 쓴다. 손으로 고치지 말고 다시 돌리거나 zones.js 로 옮긴다 (docs/design/192 §7)
    좌표·이름은 js/mmo/regions.js, 땅은 OSM(© OpenStreetMap contributors, ODbL). zones.js 가 같은 id 를 가지면 그쪽이 이긴다. */
 export const AUTO = {
-${Object.entries(prev).map(([k, v]) => '  ' + JSON.stringify(k) + ': ' + JSON.stringify(v) + ',').join('\n')}
+${Object.entries(obj).map(([k, v]) => '  ' + JSON.stringify(k) + ': ' + JSON.stringify(v) + ',').join('\n')}
 };
 `);
+const NOTE = { [AUTO_F]: '자동으로 찍어 낸 지역 (구운 것)', [PENDING_F]: '찍어 냈지만 아직 안 구운 지역 — 게임은 읽지 않는다' };
+const args = process.argv.slice(2);
+if (args[0] === '--promote') { const pend = await load(PENDING_F), auto = await load(AUTO_F);
+  for (const id of args.slice(1)) { if (!pend[id]) { console.error('대기 목록에 없다:', id); process.exit(1); } auto[id] = pend[id]; delete pend[id]; }
+  write(AUTO_F, auto, NOTE[AUTO_F]); write(PENDING_F, pend, NOTE[PENDING_F]); console.log('→ 굽기 목록으로', args.slice(1).join(', '), '· 남은 대기', Object.keys(pend).join(', ') || '없음'); process.exit(0); }
+const ids = args; if (!ids.length) { console.error('사용: node tools/2d/new-zone.mjs <지역 id…>  (PENDING=1 이면 대기 목록) · --promote <id…>'); process.exit(1); }
+const prev = await load(OUT);
+for (const id of ids) { const r = REGIONS.find(x => x.id === id); if (!r) { console.error('지역 표에 없다:', id); process.exit(1); } prev[id] = plan(r); }
+write(OUT, prev, NOTE[OUT]);
 console.log('→', OUT, Object.keys(prev).join(', '));
