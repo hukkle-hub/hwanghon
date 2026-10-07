@@ -238,6 +238,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetRoomSignature, FHWPartyNetSnap
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetRaidSignature, FHWRaidNetSnapshot, Raid);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetRaidEventSignature, FHWRaidNetEvent, Event);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetErrorSignature, FString, Error);
+// The node server's view after a report (docs/design/201 §6): its state (stable/fallen/...) and the steward guild (empty = none).
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWNetNodeSignature, FString, NodeState, FString, StewardGuild);
 
 UCLASS()
 class HWANGHONCOMBATUE_API UHWRaidNetworkSubsystem : public UGameInstanceSubsystem
@@ -255,6 +257,7 @@ public:
     UPROPERTY(BlueprintAssignable) FHWNetRaidSignature OnRaidSnapshot;
     UPROPERTY(BlueprintAssignable) FHWNetRaidEventSignature OnRaidEvent;
     UPROPERTY(BlueprintAssignable) FHWNetErrorSignature OnNetworkError;
+    UPROPERTY(BlueprintAssignable) FHWNetNodeSignature OnNodeReply;
 
     UFUNCTION(BlueprintCallable) bool Connect(const FString& ServerBaseUrl, const FString& SessionToken, const FString& DisplayName);
     UFUNCTION(BlueprintCallable) void Disconnect();
@@ -277,6 +280,9 @@ public:
     UFUNCTION(BlueprintCallable) bool RetryRaid();
     UFUNCTION(BlueprintCallable) bool ReturnToLobby();
 
+    // A node defence's result: the director's {"node":..,"outcome":..,"contrib":{..}} goes out as
+    // {type:'node', action:'report', node, report} (server/node-store.cjs nodeReport). The reply comes back as OnNodeReply.
+    UFUNCTION(BlueprintCallable) bool SendNodeReport(const FString& ReportJson);
     UFUNCTION(BlueprintCallable) bool SendMove(float X, float Y);
     UFUNCTION(BlueprintCallable) bool SendTarget(FName PartId);
     UFUNCTION(BlueprintCallable) bool SendAttack();

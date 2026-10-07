@@ -131,6 +131,20 @@ void UHWRaidNetworkSubsystem::SendHello()
     if(!Token.IsEmpty())O->SetStringField(TEXT("token"),Token);
     if(!DisplayName.IsEmpty())O->SetStringField(TEXT("name"),DisplayName);SendObject(O);
 }
+bool UHWRaidNetworkSubsystem::SendNodeReport(const FString& ReportJson)
+{
+    TSharedPtr<FJsonObject> NodeReport;
+    auto ReportReader = TJsonReaderFactory<>::Create(ReportJson);
+    if (!FJsonSerializer::Deserialize(ReportReader, NodeReport) || !NodeReport.IsValid()) return false;
+    FString NodeId;
+    if (!NodeReport->TryGetStringField(TEXT("node"), NodeId)) return false;
+    auto O = MakeShared<FJsonObject>();
+    O->SetStringField(TEXT("type"), TEXT("node"));
+    O->SetStringField(TEXT("action"), TEXT("report"));
+    O->SetStringField(TEXT("node"), NodeId);
+    O->SetObjectField(TEXT("report"), NodeReport);
+    return SendObject(O);
+}
 bool UHWRaidNetworkSubsystem::SendSimple(const TCHAR* T){auto O=MakeShared<FJsonObject>();O->SetStringField(TEXT("type"),T);return SendObject(O);}
 bool UHWRaidNetworkSubsystem::SendIntent(const TCHAR* T){if(!IsRaidActive())return false;auto O=MakeShared<FJsonObject>();O->SetStringField(TEXT("type"),T);O->SetNumberField(TEXT("seq"),++Sequence);return SendObject(O);}
 
@@ -208,6 +222,18 @@ void UHWRaidNetworkSubsystem::HandleMessage(const FString& M)
     FString T;if(!R->TryGetStringField(TEXT("type"),T))return;
     if(T==TEXT("welcome")){R->TryGetStringField(TEXT("token"),Token);if(auto P=Obj(R,TEXT("profile")))ParseProfile(P);OnWelcome.Broadcast(PlayerId,Token);if(!Profile.bCharacterCreated&&!PendingCharacterName.IsEmpty()&&!PendingCharacterId.IsNone())CreateCharacter(PendingCharacterName,PendingCharacterId);return;}
     if(T==TEXT("profile")){if(auto P=Obj(R,TEXT("profile")))ParseProfile(P);return;}
+    if(T==TEXT("node"))
+    {
+        // the node's view after a report: {node:{state, steward:{name}|null, ...}}
+        if(auto NodeView=Obj(R,TEXT("node")))
+        {
+            FString NodeState,StewardName;
+            NodeView->TryGetStringField(TEXT("state"),NodeState);
+            if(auto StewardObj=Obj(NodeView,TEXT("steward")))StewardObj->TryGetStringField(TEXT("name"),StewardName);
+            OnNodeReply.Broadcast(NodeState,StewardName);
+        }
+        return;
+    }
     if(T==TEXT("state")){AcceptFullState(R);return;}
     if(T==TEXT("patch")){if(auto P=Obj(R,TEXT("patch")))AcceptPatch(P);return;}
     if(T==TEXT("left")){WireState.Reset();Room=FHWPartyNetSnapshot();OnRoomStateChanged.Broadcast(Room);return;}

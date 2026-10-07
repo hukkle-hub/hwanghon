@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
+#include "Engine/GameInstance.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,6 +16,7 @@
 #include "Node/HWBossCoreComponent.h"
 #include "Node/HWNodeEnemy.h"
 #include "Node/HWNodeFacility.h"
+#include "Network/HWRaidNetworkSubsystem.h"
 #include "Node/HWNodeNpc.h"
 #include "System/HWBossSystemComponent.h"
 
@@ -583,6 +585,22 @@ void AHWNodeDirector::FinishRun(const TCHAR* ReportOutcome)
     const FString Json = FString::Printf(TEXT("{\"node\":\"%s\",\"outcome\":\"%s\",\"contrib\":{%s}}"), *Config->NodeId.ToString(), ReportOutcome, *Contrib);
     FFileHelper::SaveStringToFile(Json, *FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("HWNode"), TEXT("last_report.json")));
     UE_LOG(LogTemp, Display, TEXT("[HWNode] report %s"), *Json);
+
+    // online (-HWServer= / the raid socket is up): send it; the server's view comes back as HandleNodeReply
+    UGameInstance* GameInstance = GetGameInstance();
+    UHWRaidNetworkSubsystem* Net = GameInstance ? GameInstance->GetSubsystem<UHWRaidNetworkSubsystem>() : nullptr;
+    if (Net && Net->IsConnected())
+    {
+        Net->OnNodeReply.AddUniqueDynamic(this, &AHWNodeDirector::HandleNodeReply);
+        Notice = Net->SendNodeReport(Json) ? TEXT("Report sent to the node server") : TEXT("Report could not be sent (saved locally)");
+        NoticeFor = 5.f;
+    }
+}
+
+void AHWNodeDirector::HandleNodeReply(FString ServerNodeState, FString ServerSteward)
+{
+    Notice = FString::Printf(TEXT("Node server: %s - steward %s"), *ServerNodeState, ServerSteward.IsEmpty() ? TEXT("none yet") : *ServerSteward);
+    NoticeFor = 8.f;
 }
 
 void AHWNodeDirector::HandleInteract()

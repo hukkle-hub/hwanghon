@@ -110,6 +110,10 @@ private:
     UFUNCTION()
     void HandleCoreExtracted();
 
+    // The node server answered the run's report (UHWRaidNetworkSubsystem::OnNodeReply)
+    UFUNCTION()
+    void HandleNodeReply(FString ServerNodeState, FString ServerSteward);
+
     void HandleInteract();
     void HandleExecute();
     void HandlePing();
