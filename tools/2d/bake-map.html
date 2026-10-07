@@ -86,7 +86,7 @@ function overview(px){ const W=env.walk, A=env.road.ang, FR=(s,t)=>new THREE.Vec
   const ex=renderer.toneMappingExposure; if(!sun) renderer.toneMappingExposure=ex*2.6;   /* 실내는 지도로 읽기엔 어둡다 — 미니맵만 밝게 */
   renderer.setRenderTarget(null); renderer.render(scene,pc); const url=renderer.domElement.toDataURL('image/webp',0.7); renderer.setSize(TILE,TILE); renderer.toneMappingExposure=ex;
   return { url, u0:+u0.toFixed(2), u1:+u1.toFixed(2), v0:+v0.toFixed(2), v1:+v1.toFixed(2), w, h }; }
-window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE, at:(i,j)=>LIST.indexOf(j*cols+i) };   /* at: 격자 (i,j) → tile() 번호 (한 장만 다시 굽거나 볼 때) */
+window.__BAKEMAP={ plan, tile, preview, overview, count:LIST.length, total:cols*rows, scene, THREE, at:(i,j)=>LIST.indexOf(j*cols+i), info:n=>{ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); return { i, j, u0:U0+i*T, v0:V1-j*T }; } };   /* at: 격자 (i,j) → tile() 번호 (한 장만 다시 굽거나 볼 때) */
 </script>
 </body>
 </html>
