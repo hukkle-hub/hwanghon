@@ -130,8 +130,11 @@
   - 대장 임명: 길드장만.
   - 보급: 보급대장, 주기당 12까지. 배정한 만큼 «보급» 공헌이 쌓인다.
 - **판 결과 보고:** held / fallen / retaken / retake_failed. 한 사람이 1분에 한 번만 보낼 수 있고,
-  항목별 최대치에서 잘린다. UE 는 판이 끝나면 `Saved/HWNode/last_report.json` 을 이 형식으로 쓴다.
-  아직 서버로 보내지는 않는다 — 온라인 연결은 다음 단계다.
+  항목별 최대치에서 잘린다. UE 는 판이 끝나면 `Saved/HWNode/last_report.json` 을 이 형식으로 쓰고,
+  접속 중(`-HWServer=`)이면 `UHWRaidNetworkSubsystem::SendNodeReport` 로 보낸다. 서버 답(상태·관리 길드)은
+  화면 알림으로 뜬다. UE 쪽 형식 문자열이 바뀌면 `tests/node-store.test.cjs` 가 깬다.
+- **이번 주기 순위:** `nodeView.standings` 는 관리권과 같은 셈으로 낸 이번 주기 길드 순위(상위 5)다.
+  이번 주기 1위가 다음 주기 관리 길드가 된다. 쉘터 카드는 3위까지와 결정까지 남은 날을 보여 준다.
 
 **쉘터 «거점 관리» 카드** (`shelter.html` · `js/shelter.js`):
 
