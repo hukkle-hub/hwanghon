@@ -156,7 +156,7 @@ export function build(THREE, scene, osm) {
   const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
   /* 나무 갓은 55° 에서 그 뒤(월드 −z) 0~10 m 를 가린다 — 깊이 굽기를 고치자(문서 192 §9) 남쪽 문이 갓 밑(8.2 m)이었다.
      문·출발점·보스의 카메라 쪽 0~11 m 에는 나무를 두지 않고, 띠 안 나무는 서로 10 m 넘게 (env-field 와 같은 규칙) */
-  const keepOut = [gateS0, spawnP, gTower, gYeo, bossP], shades = p => keepOut.some(q => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11);
+  const keepOut = [gateS0, spawnP, gTower, gYeo, bossP], shades = p => keepOut.some(q => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11) || (t => t > walk.t0 - 7 && t < walk.t0 + 1)(ST(p)[1]);   /* 띠 가까운 쪽 바로 바깥 7 m 도 (남산 t −76 가장자리 칸) */
   const bandTrees = [], spaced = p => { if (bandTrees.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 10)) return false; bandTrees.push(p); return true; };
   const trees = []; const S0 = walk.s0 - 40, S1 = walk.s1 + 30, T0 = walk.t0 - 26, T1 = walk.t1 + 30;
   for (let s = S0; s < S1; s += 3.4) for (let t = T0; t < T1; t += 3.4) { const p = FROM(s + (R() - .5) * 2.6, t + (R() - .5) * 2.6); if (R() < 0.12) continue;
