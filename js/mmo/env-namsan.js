@@ -150,11 +150,20 @@ export function build(THREE, scene, osm) {
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
   const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
   const grove = L.noise2(L.rng(20261018), 55);
+  /* 문·출발점·보스 자리 (아래에서 쓴다 — 나무가 피하도록 먼저 정한다) */
+  const gateS0 = FROM(walk.s0 + 3, 0), spawnP = FROM(walk.s0 + 9, -3);
+  const gTower = FROM(sT + 14, -16), gYeo = FROM(walk.s0 + 14, 16);   /* 타워 뒤편 하부 출입구(보스 구역 밖) · 하부역 옆 공동구 입구 (원작 «여의도 지하 공동구 계통도» L5940) */
+  const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
+  /* 나무 갓은 55° 에서 그 뒤(월드 −z) 0~10 m 를 가린다 — 깊이 굽기를 고치자(문서 192 §9) 남쪽 문이 갓 밑(8.2 m)이었다.
+     문·출발점·보스의 카메라 쪽 0~11 m 에는 나무를 두지 않고, 띠 안 나무는 서로 10 m 넘게 (env-field 와 같은 규칙) */
+  const keepOut = [gateS0, spawnP, gTower, gYeo, bossP], shades = p => keepOut.some(q => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11);
+  const bandTrees = [], spaced = p => { if (bandTrees.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 10)) return false; bandTrees.push(p); return true; };
   const trees = []; const S0 = walk.s0 - 40, S1 = walk.s1 + 30, T0 = walk.t0 - 26, T1 = walk.t1 + 30;
   for (let s = S0; s < S1; s += 3.4) for (let t = T0; t < T1; t += 3.4) { const p = FROM(s + (R() - .5) * 2.6, t + (R() - .5) * 2.6); if (R() < 0.12) continue;
     if (nearClear(p) || inBuilding(p) || Math.hypot(p[0] - tower[0], p[1] - tower[1]) < 25) continue;
     /* 걷는 띠 안은 드문드문 — 나무 갓(4.7 m)이 인물을 가리면 안 된다. 띠 밖은 빽빽한 숲 벽이 곧 «못 가는 곳» 이다 */
-    if (inBand(p, 1) && R() > 0.24 * Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7))) continue; trees.push(p); }   /* 띠 안은 숲과 빈터로 뭉친다 */
+    if (shades(p)) continue;
+    if (inBand(p, 1) && (R() > 0.24 * Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) || !spaced(p))) continue; trees.push(p); }   /* 띠 안은 숲과 빈터로 뭉친다 */
   const nT = trees.length, trunks = new THREE.InstancedMesh(trunkG, trunkM, nT), canopy = leafMs.map(m => new THREE.InstancedMesh(R() < 2 ? canopyG : pineG, m, nT)), pines = new THREE.InstancedMesh(pineG, leafMs[2], nT);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), cnt = [0, 0, 0, 0]; let np = 0;
   trees.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(new THREE.Vector3(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), new THREE.Vector3(k, k, k)); trunks.setMatrixAt(i, mtx);
@@ -176,7 +185,6 @@ export function build(THREE, scene, osm) {
     for (const y of [0.55, 1.05]) { const rl = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.08, 0.08), y > 1 ? woodM : ropeM); rl.position.y = y; g.add(rl); }
     if (sign) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.5), new THREE.MeshBasicMaterial({ map: noTex })); sg.position.set(0, 0.8, 0.09); g.add(sg); const sg2 = sg.clone(); sg2.rotation.y = Math.PI; sg2.position.z = -0.09; g.add(sg2); }
     g.position.set(p[0], 0, p[1]); g.rotation.y = ang; g.traverse(o => { if (o.isMesh) o.castShadow = true; }); scene.add(g); fences++; }
-  const gateS0 = FROM(walk.s0 + 3, 0);
   for (const t of [walk.t0 - 0.5, walk.t1 + 0.5]) for (let s = walk.s0; s <= walk.s1; s += 2.1) fence(s, t, SCREEN_ANG, fences % 11 === 0);
   for (const [end, ds] of [['s0', -0.5], ['s1', 0.5]]) for (let t = walk.t0; t <= walk.t1; t += 2.1) { if (end === 's0' && Math.abs(t) < 5) continue; fence(walk[end] + ds, t, SCREEN_ANG + Math.PI / 2, fences % 5 === 0); }
   /* 붉은 안개: 띠 밖 비탈에 깔린 띠 (먼 쪽·가까운 쪽·타워 너머 낭떠러지) */
@@ -198,14 +206,12 @@ export function build(THREE, scene, osm) {
     if (R() < 0.6) { const q = FROM(s + 5, 6 + R() * 10); if (!nearClear(q, -1) && !inBuilding(q)) for (let i = 0; i < 5; i++) { const m = new THREE.Mesh(crysGeo, crysM); const k = 0.5 + R() * 0.7; m.scale.set(1 + R(), k, 1 + R()); m.position.set(q[0] + (R() - .5) * 0.8, k * 0.6, q[1] + (R() - .5) * 0.8); m.rotation.set((R() - .5) * 0.7, R() * 3, (R() - .5) * 0.7); scene.add(m); } } }
 
   /* ---------- 문 · 보스 · 출발점 ---------- */
-  const gTower = FROM(sT + 14, -16), gYeo = FROM(walk.s0 + 14, 16);   /* 타워 뒤편 하부 출입구(보스 구역 밖) · 하부역 옆 공동구 입구 (원작 «여의도 지하 공동구 계통도» L5940) */
   const gates = [ { id: 'south', x: +gateS0[0].toFixed(2), z: +gateS0[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'north' }, label: '강남 방면 · 강남대로', kind: 'zone' },
     { id: 'tower', x: +gTower[0].toFixed(2), z: +gTower[1].toFixed(2), r: 2.6, to: { zone: 'namsan_tower', gate: 'out' }, label: '남산타워 하부', kind: 'dungeon' },
     { id: 'yeouido', x: +gYeo[0].toFixed(2), z: +gYeo[1].toFixed(2), r: 2.6, to: { zone: 'yeouido_ug', gate: 'namsan' }, label: '공동구 입구 · 여의도 방면', kind: 'dungeon' } ];
   { const m = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(gateS0[0], 0.05, gateS0[1]); scene.add(m); }
-  const bossP = FROM(sT - 20, ST(tower)[1] - 4);   /* 타워 앞 광장 — 하늘에 떠 있다 */
   const bosses = [ { id: 'celestial', name: '셀레스티얼', title: '내려오지 않는 놈', x: +bossP[0].toFixed(2), z: +bossP[1].toFixed(2), r: 20, place: '타워 광장', model: 'art/3d/part1/celestial_static.glb', h: 4.6, fly: 3.2, canon: 'EP04 남산타워 전망대' } ];
-  const spawnP = FROM(walk.s0 + 9, -3);
+
   const extentPts = []; for (let s = walk.s0 - 8; s <= walk.s1 + 8; s += 4) for (let t = walk.t0 - 8; t <= walk.t1 + 10; t += 4) { const p = FROM(s, t); extentPts.push([p[0], 0, p[1]]); if (t > walk.t1 - 2) extentPts.push([p[0], 14, p[1]]); }
   extentPts.push([tower[0], 40, tower[1]]);   /* 타워 기둥이 그림 안에 조금 더 */
   console.info('[env-namsan] 나무', nT, '건물', builtW.length, '난간', fences, '가로등', lamps, '타워 s', sT.toFixed(0), '상부역 s', sUp.toFixed(0));
