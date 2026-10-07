@@ -597,4 +597,278 @@ inline bool ValidPolicies(const EPolicy* Picks, int Count, int Budget = PolicyBu
     return Spent <= Budget;
 }
 
+// ---------------------------------------------------------------- strategy: policies, prep, turrets, supplies (docs/design/201 §2)
+
+// What the steward guild's policy picks do in play. Never all at once (PolicyBudget): the guild chooses.
+struct FPolicyEffects
+{
+    float GateHealthScale = 1.f;       // GateReinforce
+    float GeneratorHealthScale = 1.f;  // GeneratorReinforce (turrets too)
+    bool bNpcsArmed = false;           // ArmNpcs: the guard shoots, NPCs take more punishment
+    float PrepBonusSeconds = 0.f;      // Scouting
+    bool bWavePreview = false;         // Scouting: the next wave is known before it comes
+    float MedicalHealScale = 1.f;      // MedicalStock
+    int ExtraPotions = 0;              // MedicalStock
+    float ReservePowerSeconds = 0.f;   // ReservePower: a dead generator keeps emergency power this long
+};
+
+inline FPolicyEffects PolicyEffects(const EPolicy* Picks, int Count)
+{
+    FPolicyEffects E;
+    for (int I = 0; I < Count; ++I)
+    {
+        switch (Picks[I])
+        {
+        case EPolicy::GateReinforce: E.GateHealthScale = 1.5f; break;
+        case EPolicy::GeneratorReinforce: E.GeneratorHealthScale = 1.5f; break;
+        case EPolicy::ArmNpcs: E.bNpcsArmed = true; break;
+        case EPolicy::Scouting: E.PrepBonusSeconds = 20.f; E.bWavePreview = true; break;
+        case EPolicy::MedicalStock: E.MedicalHealScale = 1.6f; E.ExtraPotions = 3; break;
+        case EPolicy::ReservePower: E.ReservePowerSeconds = 90.f; break;
+        default: break;
+        }
+    }
+    return E;
+}
+
+// Power the base actually has: a destroyed generator still gives emergency power (1) while the reserve lasts.
+inline int EffectivePower(float GeneratorFraction, float ReserveLeftSeconds)
+{
+    const int P = GeneratorPower(GeneratorFraction);
+    return P == 0 && ReserveLeftSeconds > 0.f ? 1 : P;
+}
+
+// Automatic turrets run on the generator: full, dimmed, emergency, dark.
+constexpr float TurretBaseDps = 320.f;
+constexpr float TurretRangeCm = 1500.f;
+inline float TurretDps(int Power)
+{
+    return Power >= 3 ? TurretBaseDps : Power == 2 ? TurretBaseDps * 0.6f : Power == 1 ? TurretBaseDps * 0.25f : 0.f;
+}
+
+// Supplies (보급): the supply captain's pool for the next defence.
+enum class ESupplyUse : unsigned char { Barricade, TurretRepair, Potions, Count };
+inline int SupplyCost(ESupplyUse Use)
+{
+    switch (Use)
+    {
+    case ESupplyUse::Barricade: return 3;
+    case ESupplyUse::TurretRepair: return 2;
+    case ESupplyUse::Potions: return 1;
+    default: return 99;
+    }
+}
+
+struct FSupplyPool
+{
+    int Points = 0;
+    bool Spend(ESupplyUse Use)
+    {
+        const int Cost = SupplyCost(Use);
+        if (Points < Cost) return false;
+        Points -= Cost;
+        return true;
+    }
+};
+
+// ---------------------------------------------------------------- NPC roles (docs/design/201 §3)
+
+// Each NPC carries one node function; losing them loses the function, not just a vendor.
+enum class ENpcRole : unsigned char { Technician, Medic, Scout, Operator, Guard, Count };
+constexpr int NpcRoleCount = static_cast<int>(ENpcRole::Count);
+
+inline float NpcMaxHealth(ENpcRole Role, bool bArmed)
+{
+    const float Base = Role == ENpcRole::Guard ? 6000.f : 3000.f;
+    return bArmed ? Base * 1.5f : Base;
+}
+
+// Normal -> Injured -> Missing (dragged to the holding spot) ; Missing -> Rescued (by a player) -> Normal after recovery.
+struct FNpcLife
+{
+    ENpcState State = ENpcState::Normal;
+    float Health = 3000.f;
+    float MaxHealth = 3000.f;
+    float RecoverLeft = 0.f;
+
+    bool IsTargetable() const { return State == ENpcState::Normal || State == ENpcState::Injured || State == ENpcState::Rescued; }
+
+    // Returns true when the state changed.
+    bool ApplyDamage(float Amount)
+    {
+        if (!IsTargetable() || Amount <= 0.f) return false;
+        Health -= Amount;
+        if (Health > 0.f) return false;
+        if (State == ENpcState::Missing) return false;
+        State = State == ENpcState::Normal ? ENpcState::Injured : ENpcState::Missing;
+        Health = State == ENpcState::Injured ? MaxHealth * 0.5f : 0.f;
+        return true;
+    }
+
+    bool Rescue()
+    {
+        if (State != ENpcState::Missing) return false;
+        State = ENpcState::Rescued;
+        Health = MaxHealth * 0.5f;
+        RecoverLeft = 60.f;
+        return true;
+    }
+
+    // A rescued NPC is back to normal after a minute (between waves the medic can speed it - later).
+    bool Tick(float DeltaSeconds)
+    {
+        if (State != ENpcState::Rescued) return false;
+        RecoverLeft -= DeltaSeconds;
+        if (RecoverLeft > 0.f) return false;
+        State = ENpcState::Normal;
+        Health = MaxHealth;
+        return true;
+    }
+};
+
+// Function of a role in a state: 1 full, 0.5 half, 0 lost.
+inline float NpcFunction(ENpcState State)
+{
+    switch (State)
+    {
+    case ENpcState::Normal: return 1.f;
+    case ENpcState::Injured: return 0.5f;
+    case ENpcState::Rescued: return 0.6f;
+    case ENpcState::Missing: return 0.f;
+    }
+    return 0.f;
+}
+
+struct FNpcEffects
+{
+    float RepairScale = 1.f;          // technician
+    float MedicalHealPerSecond = 0.f; // fraction of max health at the medical bay (medic)
+    float PrepBonusSeconds = 0.f;     // scout
+    bool bWavePreview = false;        // scout
+    bool bRescueSignals = true;       // operator (on top of comms + power)
+    float GuardDps = 0.f;             // guard, armed by policy
+};
+
+inline FNpcEffects NpcEffects(const ENpcState* States, const FPolicyEffects& Policy)
+{
+    FNpcEffects E;
+    const auto F = [States](ENpcRole R) { return NpcFunction(States[static_cast<int>(R)]); };
+    E.RepairScale = TechnicianRepairScale(States[static_cast<int>(ENpcRole::Technician)]);
+    E.MedicalHealPerSecond = 0.08f * F(ENpcRole::Medic) * Policy.MedicalHealScale;
+    E.PrepBonusSeconds = 10.f * F(ENpcRole::Scout);
+    E.bWavePreview = F(ENpcRole::Scout) > 0.f || Policy.bWavePreview;
+    E.bRescueSignals = F(ENpcRole::Operator) > 0.f;
+    E.GuardDps = Policy.bNpcsArmed ? 150.f * (F(ENpcRole::Guard) >= 1.f ? 1.f : 0.f) : 0.f;
+    return E;
+}
+
+// Preparation before an invasion: base 20 s, the scout and the scouting policy buy more.
+inline float PrepSeconds(const FNpcEffects& Npc, const FPolicyEffects& Policy)
+{
+    return 20.f + Npc.PrepBonusSeconds + Policy.PrepBonusSeconds;
+}
+
+// A technician sent to a facility repairs it while standing there (an order, not a menu).
+inline float TechnicianRepairPerSecond(ENpcState State) { return 400.f * TechnicianRepairScale(State); }
+
+// ---------------------------------------------------------------- guild roles and command (docs/design/201 §4)
+
+enum class EGuildRole : unsigned char { Member, CraftCaptain, SupplyCaptain, CombatCaptain, Vice, Leader };
+enum class EGuildPerm : unsigned char { Ping, Rally, OrderNpc, AllocateSupply, InvestFacility, SelectPolicy, AssignRoles };
+
+// Roles are real powers (hand-off §14): the combat captain pings and rallies, the supply captain allocates, the craft
+// captain invests in facilities and orders the technician; policy belongs to the leader and the vice.
+inline bool HasPermission(EGuildRole Role, EGuildPerm Perm)
+{
+    switch (Role)
+    {
+    case EGuildRole::Leader: return true;
+    case EGuildRole::Vice: return Perm != EGuildPerm::AssignRoles;
+    case EGuildRole::CombatCaptain: return Perm == EGuildPerm::Ping || Perm == EGuildPerm::Rally || Perm == EGuildPerm::OrderNpc;
+    case EGuildRole::SupplyCaptain: return Perm == EGuildPerm::AllocateSupply;
+    case EGuildRole::CraftCaptain: return Perm == EGuildPerm::InvestFacility || Perm == EGuildPerm::OrderNpc;
+    default: return false;
+    }
+}
+
+// A ping credits its author with command contribution for kills near it soon after.
+constexpr float PingLifeSeconds = 15.f;
+constexpr float PingRadiusCm = 800.f;
+inline bool PingCredits(float PingAgeSeconds, float DistanceCm)
+{
+    return PingAgeSeconds >= 0.f && PingAgeSeconds <= PingLifeSeconds && DistanceCm <= PingRadiusCm;
+}
+
+// Kill contribution by role: the elite and the breaker matter more than a straggler.
+inline float KillWeight(EEnemyRole Role)
+{
+    switch (Role)
+    {
+    case EEnemyRole::Runner: return 1.2f;
+    case EEnemyRole::Breaker: return 2.f;
+    case EEnemyRole::Stalker: return 1.5f;
+    case EEnemyRole::ArmoredElite: return 5.f;
+    default: return 1.f;
+    }
+}
+
+// Defence contribution: a kill close to a standing facility (or NPC) is a kill that defended something.
+constexpr float DefenseRadiusCm = 1500.f;
+inline float DefenseCredit(EEnemyRole Role, float DistanceToDefendedCm)
+{
+    return DistanceToDefendedCm >= 0.f && DistanceToDefendedCm <= DefenseRadiusCm ? KillWeight(Role) : 0.f;
+}
+
+// ---------------------------------------------------------------- guild war: objectives, not a deathmatch (docs/design/201 §5)
+
+enum class EWarObjective : unsigned char { Generator, CommsPoint, CoreCarry, CommanderEscort, FacilityDestroy, Count };
+
+inline bool ValidWarTeams(int TeamA, int TeamB) { return TeamA == TeamB && (TeamA == 8 || TeamA == 12); }
+
+struct FWarMatch
+{
+    int Score[2] = { 0, 0 };
+    float HoldCarry[2] = { 0.f, 0.f };  // fractional hold points
+    float Clock = 0.f;
+    float TimeLimit = 900.f;            // 15 minutes
+    int ScoreToWin = 1000;
+    int KillsCounted[2] = { 0, 0 };     // kept for stats - kills never score
+
+    // Points held (generator, comms point) score one point per second each.
+    void TickHolds(float DeltaSeconds, int HeldByA, int HeldByB)
+    {
+        Clock += DeltaSeconds;
+        HoldCarry[0] += DeltaSeconds * static_cast<float>(HeldByA);
+        HoldCarry[1] += DeltaSeconds * static_cast<float>(HeldByB);
+        for (int T = 0; T < 2; ++T)
+        {
+            const int Whole = static_cast<int>(HoldCarry[T]);
+            Score[T] += Whole;
+            HoldCarry[T] -= static_cast<float>(Whole);
+        }
+    }
+
+    void Objective(int Team, EWarObjective O)
+    {
+        if (Team < 0 || Team > 1) return;
+        switch (O)
+        {
+        case EWarObjective::CoreCarry: Score[Team] += 150; break;
+        case EWarObjective::CommanderEscort: Score[Team] += 200; break;
+        case EWarObjective::FacilityDestroy: Score[Team] += 100; break;
+        default: break;
+        }
+    }
+
+    void Kill(int Team) { if (Team == 0 || Team == 1) ++KillsCounted[Team]; }
+
+    // -1 still going, 0/1 the winner, 2 a draw at the bell.
+    int Result() const
+    {
+        if (Score[0] >= ScoreToWin || Score[1] >= ScoreToWin) return Score[0] >= Score[1] ? (Score[0] == Score[1] ? 2 : 0) : 1;
+        if (Clock < TimeLimit) return -1;
+        return Score[0] == Score[1] ? 2 : Score[0] > Score[1] ? 0 : 1;
+    }
+};
+
 }  // namespace HWNodeRules

@@ -252,6 +252,92 @@ static void Contribution()
     CHECK(!ValidPolicies(All, 6));
 }
 
+
+static void Strategy()
+{
+    const EPolicy Picks[2] = { EPolicy::Scouting, EPolicy::ReservePower };
+    const FPolicyEffects P = PolicyEffects(Picks, 2);
+    CHECK(P.bWavePreview && Near(P.PrepBonusSeconds, 20.f) && Near(P.ReservePowerSeconds, 90.f));
+    CHECK(Near(P.GateHealthScale, 1.f) && !P.bNpcsArmed);
+    const EPolicy Gate[1] = { EPolicy::GateReinforce };
+    CHECK(Near(PolicyEffects(Gate, 1).GateHealthScale, 1.5f));
+
+    // a dead generator: emergency power while the reserve lasts, then dark; turrets follow the power
+    CHECK(EffectivePower(0.f, 30.f) == 1 && EffectivePower(0.f, 0.f) == 0 && EffectivePower(0.9f, 0.f) == 3);
+    CHECK(TurretDps(3) > TurretDps(2) && TurretDps(2) > TurretDps(1) && TurretDps(1) > 0.f && Near(TurretDps(0), 0.f));
+
+    FSupplyPool S{ 5 };
+    CHECK(S.Spend(ESupplyUse::Barricade) && S.Points == 2);
+    CHECK(!S.Spend(ESupplyUse::Barricade) && S.Points == 2);  // not enough left
+    CHECK(S.Spend(ESupplyUse::TurretRepair) && S.Points == 0);
+}
+
+static void NpcRoles()
+{
+    // life: two beatings to go missing; rescued comes back to normal after a minute
+    FNpcLife L{ ENpcState::Normal, 1000.f, 1000.f, 0.f };
+    CHECK(!L.ApplyDamage(600.f));
+    CHECK(L.ApplyDamage(600.f) && L.State == ENpcState::Injured && Near(L.Health, 500.f));
+    CHECK(L.ApplyDamage(600.f) && L.State == ENpcState::Missing);
+    CHECK(!L.IsTargetable() && !L.ApplyDamage(600.f));
+    CHECK(L.Rescue() && L.State == ENpcState::Rescued && !L.Rescue());
+    CHECK(!L.Tick(30.f) && L.Tick(31.f) && L.State == ENpcState::Normal);
+
+    // the roster runs the node: lose the scout, lose the forecast; lose the operator, lose rescue signals
+    ENpcState All[NpcRoleCount] = { ENpcState::Normal, ENpcState::Normal, ENpcState::Normal, ENpcState::Normal, ENpcState::Normal };
+    const FPolicyEffects None{};
+    const FNpcEffects Full = NpcEffects(All, None);
+    CHECK(Full.bWavePreview && Full.bRescueSignals && Full.MedicalHealPerSecond > 0.f && Near(Full.GuardDps, 0.f));
+    CHECK(PrepSeconds(Full, None) > 20.f);
+    All[static_cast<int>(ENpcRole::Scout)] = ENpcState::Missing;
+    All[static_cast<int>(ENpcRole::Operator)] = ENpcState::Missing;
+    All[static_cast<int>(ENpcRole::Medic)] = ENpcState::Injured;
+    const FNpcEffects Hurt = NpcEffects(All, None);
+    CHECK(!Hurt.bWavePreview && !Hurt.bRescueSignals && Near(Hurt.MedicalHealPerSecond, Full.MedicalHealPerSecond * 0.5f));
+    CHECK(Near(PrepSeconds(Hurt, None), 20.f));
+    // scouting policy keeps the preview without the scout; armed guards shoot
+    const EPolicy Arm[2] = { EPolicy::Scouting, EPolicy::ArmNpcs };
+    const FNpcEffects Policy = NpcEffects(All, PolicyEffects(Arm, 2));
+    CHECK(Policy.bWavePreview && Policy.GuardDps > 0.f);
+    CHECK(NpcMaxHealth(ENpcRole::Guard, true) > NpcMaxHealth(ENpcRole::Guard, false));
+    CHECK(TechnicianRepairPerSecond(ENpcState::Normal) > TechnicianRepairPerSecond(ENpcState::Injured));
+}
+
+static void GuildCommand()
+{
+    CHECK(HasPermission(EGuildRole::Leader, EGuildPerm::AssignRoles));
+    CHECK(!HasPermission(EGuildRole::Vice, EGuildPerm::AssignRoles) && HasPermission(EGuildRole::Vice, EGuildPerm::SelectPolicy));
+    CHECK(HasPermission(EGuildRole::CombatCaptain, EGuildPerm::Rally) && !HasPermission(EGuildRole::CombatCaptain, EGuildPerm::SelectPolicy));
+    CHECK(HasPermission(EGuildRole::SupplyCaptain, EGuildPerm::AllocateSupply) && !HasPermission(EGuildRole::SupplyCaptain, EGuildPerm::Ping));
+    CHECK(HasPermission(EGuildRole::CraftCaptain, EGuildPerm::InvestFacility) && HasPermission(EGuildRole::CraftCaptain, EGuildPerm::OrderNpc));
+    CHECK(!HasPermission(EGuildRole::Member, EGuildPerm::Ping));
+    CHECK(PingCredits(10.f, 500.f) && !PingCredits(16.f, 500.f) && !PingCredits(5.f, 900.f));
+    CHECK(KillWeight(EEnemyRole::ArmoredElite) > KillWeight(EEnemyRole::Breaker) && KillWeight(EEnemyRole::Breaker) > KillWeight(EEnemyRole::Normal));
+    CHECK(Near(DefenseCredit(EEnemyRole::Breaker, 900.f), 2.f) && Near(DefenseCredit(EEnemyRole::Breaker, 1600.f), 0.f) && Near(DefenseCredit(EEnemyRole::Normal, -1.f), 0.f));
+}
+
+static void GuildWar()
+{
+    CHECK(ValidWarTeams(8, 8) && ValidWarTeams(12, 12) && !ValidWarTeams(8, 12) && !ValidWarTeams(20, 20));
+    // kills alone never win; holding objectives does
+    FWarMatch M;
+    for (int I = 0; I < 500; ++I) M.Kill(0);
+    M.TickHolds(100.f, 0, 2);
+    CHECK(M.Score[0] == 0 && M.Score[1] == 200 && M.Result() == -1);
+    M.Objective(0, EWarObjective::CoreCarry);
+    M.Objective(0, EWarObjective::CommanderEscort);
+    CHECK(M.Score[0] == 350);
+    M.TickHolds(400.f, 1, 2);   // B reaches 1000 first
+    CHECK(M.Score[1] >= 1000 && M.Result() == 1);
+    FWarMatch T;
+    T.TickHolds(900.f, 1, 1);
+    CHECK(T.Result() == 2);     // equal at the bell
+    FWarMatch Half;
+    Half.TickHolds(0.5f, 1, 0);
+    Half.TickHolds(0.5f, 1, 0);
+    CHECK(Half.Score[0] == 1);  // fractional seconds add up
+}
+
 int main()
 {
     CounterGrades();
@@ -263,6 +349,10 @@ int main()
     Waves();
     Npcs();
     Contribution();
+    Strategy();
+    NpcRoles();
+    GuildCommand();
+    GuildWar();
     if (Failures) { std::printf("%d check(s) failed\n", Failures); return 1; }
     std::printf("node rules: all checks passed\n");
     return 0;

@@ -9,11 +9,14 @@
     return { f: [Math.cos(p) * Math.cos(y), Math.cos(p) * Math.sin(y), Math.sin(p)], r: [-Math.sin(y), Math.cos(y), 0], u: [-Math.sin(p) * Math.cos(y), -Math.sin(p) * Math.sin(y), Math.cos(p)] }; };
   function blocks(n) {
     const out = [];
-    for (const p of n.pads) { const a = pt(n, p.at); out.push({ kind: 'pad', center: [a[0], a[1], a[2] - SLAB / 2], half: [p.half[0], p.half[1], SLAB / 2], yaw: 0, pitch: 0 }); }
+    for (const p of n.pads) { const a = pt(n, p.at); out.push({ kind: 'pad', pkind: p.kind || 'pad', center: [a[0], a[1], a[2] - SLAB / 2], half: [p.half[0], p.half[1], SLAB / 2], yaw: 0, pitch: 0 }); }
     for (const r of n.roads) { const A = r.from, B = r.to, d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], run = Math.hypot(d[0], d[1]), len = Math.hypot(run, d[2]);
       const pitch = Math.atan2(d[2], run) * 180 / Math.PI, yaw = Math.atan2(d[1], d[0]) * 180 / Math.PI, { u } = axes(pitch, yaw);
-      out.push({ kind: r.kind === 'flank' ? 'flank' : 'road', center: [(A[0] + B[0]) / 2 - u[0] * SLAB / 2, (A[1] + B[1]) / 2 - u[1] * SLAB / 2, (A[2] + B[2]) / 2 - u[2] * SLAB / 2], half: [len / 2 + 40, r.half_width, SLAB / 2], yaw, pitch }); }
-    for (const w of n.walls) out.push({ kind: 'wall', center: [(w.x0 + w.x1) / 2, w.y, w.floor + w.height / 2], half: [Math.abs(w.x1 - w.x0) / 2, w.half_depth || 50, w.height / 2], yaw: 0, pitch: 0 });
+      out.push({ kind: r.kind && r.kind !== 'road' ? 'flank' : 'road', rkind: r.kind || 'road', center: [(A[0] + B[0]) / 2 - u[0] * SLAB / 2, (A[1] + B[1]) / 2 - u[1] * SLAB / 2, (A[2] + B[2]) / 2 - u[2] * SLAB / 2], half: [len / 2 + 40, r.half_width, SLAB / 2], yaw, pitch }); }
+    /* 벽: x0..x1 at y (동서로 긴 벽) 또는 y0..y1 at x (남북). kind: wall(기본)·building·cover(낮은 엄폐) */
+    for (const w of n.walls) { const d = w.half_depth || 50, k = w.kind || 'wall';
+      if (w.y0 != null) out.push({ kind: 'wall', wkind: k, center: [w.x, (w.y0 + w.y1) / 2, w.floor + w.height / 2], half: [d, Math.abs(w.y1 - w.y0) / 2, w.height / 2], yaw: 0, pitch: 0 });
+      else out.push({ kind: 'wall', wkind: k, center: [(w.x0 + w.x1) / 2, w.y, w.floor + w.height / 2], half: [Math.abs(w.x1 - w.x0) / 2, d, w.height / 2], yaw: 0, pitch: 0 }); }
     for (const f of n.facilities) { const a = pt(n, f.at); out.push({ kind: 'facility', id: f.id, fkind: f.kind, center: [a[0], a[1], a[2] + f.half[2]], half: f.half, yaw: 0, pitch: 0 }); }
     return out;
   }
