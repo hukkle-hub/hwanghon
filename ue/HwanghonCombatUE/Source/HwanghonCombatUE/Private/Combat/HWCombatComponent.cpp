@@ -376,6 +376,11 @@ bool UHWCombatComponent::IsCounterActive() const
     return !bDead && Tuning && CurrentAction == EHWActionType::Counter && ActionElapsed <= Tuning->CounterWindow;
 }
 
+bool UHWCombatComponent::IsPerfectCounterActive() const
+{
+    return IsCounterActive() && ActionElapsed <= Tuning->PerfectCounterWindow;
+}
+
 float UHWCombatComponent::GetActionNormalized() const
 {
     if (CurrentAction == EHWActionType::None || !Tuning)

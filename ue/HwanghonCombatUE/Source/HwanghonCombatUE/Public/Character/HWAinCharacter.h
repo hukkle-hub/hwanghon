@@ -16,6 +16,7 @@ class UHWNetworkCombatBridgeComponent;
 class UHWHeroFxComponent;
 
 DECLARE_MULTICAST_DELEGATE(FHWLocalInteract);
+DECLARE_MULTICAST_DELEGATE(FHWLocalExecute);
 
 UCLASS()
 class HWANGHONCOMBATUE_API AHWAinCharacter : public ACharacter
@@ -37,6 +38,9 @@ public:
 
     // Interact pressed on this machine (story pickups such as the EP01 crystal). Online raids use the bridge.
     FHWLocalInteract OnLocalInteract;
+
+    // Execute pressed offline (online it goes to the server): the node boss's core extraction listens (docs/design/200 §6).
+    FHWLocalExecute OnLocalExecute;
 
     UFUNCTION(BlueprintPure)
     UHWLockOnComponent* GetLockOn() const { return LockOn; }
@@ -105,6 +109,7 @@ protected:
     void GuardReleased();
     void OpeningPressed();
     void ExecutePressed();
+    AActor* FindFrontTarget(float Range) const;
 
     UFUNCTION()
     void HandleActionStarted(EHWActionType Action);

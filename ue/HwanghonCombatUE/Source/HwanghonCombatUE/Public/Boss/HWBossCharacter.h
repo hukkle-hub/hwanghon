@@ -13,6 +13,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossStateChangedSignature, EHWBo
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossReactionSignature, EHWAttackTier, Tier, FVector, WorldDirection);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossDiedSignature, AHWBossCharacter*, Boss);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossParriedSignature, FName, PatternId, int32, BeatIndex);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossCounterGradedSignature, bool, bPerfect);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossRiposteSignature, float, Damage);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWBossBeatSignature, FName, PatternId, int32, BeatIndex);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWBossPhaseIntroSignature, int32, Phase);
@@ -47,6 +48,11 @@ public:
     // A beat was parried (docs/design/183): the combo may go on (bCounterStaggers false) - spark/flinch FX hook.
     UPROPERTY(BlueprintAssignable, Category="Boss")
     FHWBossParriedSignature OnBossParried;
+
+    // Every landed counter, graded (docs/design/200 §3): perfect = inside UHWCombatTuningAsset::PerfectCounterWindow.
+    // The counter itself plays out as before; the arm core (UHWBossCoreComponent) strips more armour on a perfect one.
+    UPROPERTY(BlueprintAssignable, Category="Boss")
+    FHWBossCounterGradedSignature OnBossCounterGraded;
 
     // The one heavy blow on a broken (posture) boss from its front: Elden Ring's riposte (docs/design/183).
     UPROPERTY(BlueprintAssignable, Category="Boss")

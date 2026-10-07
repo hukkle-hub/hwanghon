@@ -101,6 +101,10 @@ void AHWAinCharacter::BeginPlay()
             PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookYaw"), EKeys::Gamepad_RightX, 2.5f));
             PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookPitch"), EKeys::MouseY, -1.f));
             PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("HWLookPitch"), EKeys::Gamepad_RightY, -2.5f));
+            // P0 phone movement (docs/design/200 §1): the engine's on-screen joystick and a pad's left stick send
+            // Gamepad_LeftX/Y, which nothing read - DefaultInput.ini maps W/A/S/D only.
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("MoveForward"), EKeys::Gamepad_LeftY, 1.f));
+            PC->PlayerInput->AddAxisMapping(FInputAxisKeyMapping(TEXT("MoveRight"), EKeys::Gamepad_LeftX, 1.f));
         }
         if (PC->PlayerCameraManager)
         {
@@ -376,14 +380,18 @@ void AHWAinCharacter::HandleContact(EHWActionType Action, EHWAttackTier Tier, fl
 
     if (NetworkBridge && NetworkBridge->IsAuthoritativeRaid()) return;
 
+    const float Range = Action == EHWActionType::Smash ? 300.f : 260.f;
     AActor* Target = LockOn->GetTarget();
-    if (!Target || !Target->GetClass()->ImplementsInterface(UHWCombatTargetInterface::StaticClass()))
+    if (!Target || !Target->GetClass()->ImplementsInterface(UHWCombatTargetInterface::StaticClass())
+        || FVector::Dist2D(GetActorLocation(), Target->GetActorLocation()) > Range)
     {
-        return;
+        // Not locked on (or the lock is out of reach): the nearest living body in front. Without this a crowd fight
+        // (node waves, docs/design/200) could not be played at all - every swing without a lock hit nothing.
+        Target = FindFrontTarget(Range);
+        if (!Target) return;
     }
 
     const float Distance = FVector::Dist2D(GetActorLocation(), Target->GetActorLocation());
-    const float Range = Action == EHWActionType::Smash ? 300.f : 260.f;
     if (Distance <= Range)
     {
         const bool bHit = IHWCombatTargetInterface::Execute_ReceiveSystemHit(
@@ -406,6 +414,29 @@ void AHWAinCharacter::HandleContact(EHWActionType Action, EHWAttackTier Tier, fl
     }
 }
 
+
+AActor* AHWAinCharacter::FindFrontTarget(float Range) const
+{
+    TArray<AActor*> Candidates;
+    UGameplayStatics::GetAllActorsWithTag(this, TEXT("LockOnTarget"), Candidates);
+    const FVector Here = GetActorLocation();
+    const FVector Forward = GetActorForwardVector().GetSafeNormal2D();
+    AActor* Best = nullptr;
+    float BestDistance = Range;
+    for (AActor* Candidate : Candidates)
+    {
+        // bodies only (boss part spheres stay lock-on targets); alive; within reach and the front half-circle
+        if (!Candidate || Candidate == this || !Cast<ACharacter>(Candidate)
+            || !Candidate->GetClass()->ImplementsInterface(UHWCombatTargetInterface::StaticClass())
+            || IHWCombatTargetInterface::Execute_IsSystemTargetDead(Candidate)) continue;
+        const FVector To = Candidate->GetActorLocation() - Here;
+        const float Distance = FVector(To.X, To.Y, 0.f).Size();
+        if (Distance > BestDistance || FVector::DotProduct(To.GetSafeNormal2D(), Forward) < 0.f) continue;
+        Best = Candidate;
+        BestDistance = Distance;
+    }
+    return Best;
+}
 
 void AHWAinCharacter::SaveAuditPressed()
 {
@@ -549,7 +580,7 @@ void AHWAinCharacter::InteractPressed(){ if (NetworkBridge) NetworkBridge->SendI
 void AHWAinCharacter::GuardPressed(){ if (NetworkBridge) NetworkBridge->SetGuard(true); }
 void AHWAinCharacter::GuardReleased(){ if (NetworkBridge) NetworkBridge->SetGuard(false); }
 void AHWAinCharacter::OpeningPressed(){ if (NetworkBridge) NetworkBridge->SendOpening(); }
-void AHWAinCharacter::ExecutePressed(){ if (NetworkBridge) NetworkBridge->SendExecute(); }
+void AHWAinCharacter::ExecutePressed(){ if (NetworkBridge) NetworkBridge->SendExecute(); OnLocalExecute.Broadcast(); }
 
 
 // ------------------------------------------------------------------ free camera (docs/design/165)

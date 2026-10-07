@@ -680,8 +680,10 @@ bool AHWBossCharacter::TryCountered(const FHWBossBeatSpec& Beat)
     }
 
     ++ParryCount;
+    const bool bPerfectCounter = PlayerCombat->IsPerfectCounterActive();   // read before anything changes the action
     PlayerCombat->NotifyCounterLanded();
     OnBossParried.Broadcast(CurrentPattern.Id, NextBeatIndex - 1);
+    OnBossCounterGraded.Broadcast(bPerfectCounter);
     if (!CurrentPattern.bCounterStaggers && BossSystem)
     {
         // the chain goes on: posture and a short shared hitstop only (docs/design/183 §3)

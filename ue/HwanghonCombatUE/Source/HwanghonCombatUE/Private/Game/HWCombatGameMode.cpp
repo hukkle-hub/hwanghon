@@ -14,6 +14,7 @@
 #include "Network/HWRaidNetworkSubsystem.h"
 #include "System/HWCoopCombatSubsystem.h"
 #include "System/HWDungeonDirector.h"
+#include "Node/HWNodeDirector.h"
 #include "System/HWCoopLifeComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/GameInstance.h"
@@ -89,7 +90,27 @@ void AHWCombatGameMode::BeginPlay()
         bCanRecordVictory = false;
     }
 
-    if (!bOnlineRaid && !LocalDungeonId.IsNone())
+    // An outpost run (docs/design/200): ?HWNode=namsan_n01 on any combat map. The node builds its own graybox,
+    // facilities, waves and boss and handles the player's death and return - the arena, the stand-in boss and the
+    // dungeon flow below stay out. Development/QA only for now: it never credits progression.
+    bool bNodeRun = false;
+    const FString NodeOption = UGameplayStatics::ParseOption(OptionsString, TEXT("HWNode"));
+    if (!bOnlineRaid && !NodeOption.IsEmpty())
+    {
+        AHWNodeDirector* Node = GetWorld()->SpawnActorDeferred<AHWNodeDirector>(AHWNodeDirector::StaticClass(), FTransform::Identity);
+        if (Node && Node->ConfigureNode(FName(*NodeOption)))
+        {
+            UGameplayStatics::FinishSpawningActor(Node, FTransform::Identity);
+            bNodeRun = true;
+            bCanRecordVictory = false;
+        }
+        else if (Node)
+        {
+            Node->Destroy();
+        }
+    }
+
+    if (!bOnlineRaid && !bNodeRun && !LocalDungeonId.IsNone())
     {
         // a boss dungeon brings its own body (docs/design/181 §10): the map's placed stand-in boss would be a second
         // boss in the arena (QA: the scarecrow fought next to Shadow Fang)
@@ -123,13 +144,13 @@ void AHWCombatGameMode::BeginPlay()
         }
     }
 
-    if (!bOnlineRaid && !UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
+    if (!bOnlineRaid && !bNodeRun && !UGameplayStatics::GetActorOfClass(this, AHWGrayboxArena::StaticClass()))
     {
         GetWorld()->SpawnActor<AHWGrayboxArena>(AHWGrayboxArena::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator);
     }
 
     ACharacter* Player = UGameplayStatics::GetPlayerCharacter(this, 0);
-    if (Player)
+    if (Player && !bNodeRun)   // a node places the player itself and brings them back after a death
     {
         Player->SetActorLocation(FVector(-450.f, 0.f, 96.f));
         Player->SetActorRotation(FRotator(0.f, 0.f, 0.f));
@@ -142,7 +163,7 @@ void AHWCombatGameMode::BeginPlay()
     }
 
     AHWBossCharacter* Boss = Cast<AHWBossCharacter>(UGameplayStatics::GetActorOfClass(this, AHWBossCharacter::StaticClass()));
-    if (!Boss && !EncounterDungeon)
+    if (!Boss && !EncounterDungeon && !bNodeRun)
     {
         Boss = GetWorld()->SpawnActor<AHWBossCharacter>(
             AHWBossCharacter::StaticClass(),

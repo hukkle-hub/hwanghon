@@ -126,6 +126,11 @@ public:
     UFUNCTION(BlueprintPure)
     bool IsCounterActive() const;
 
+    // Inside the first PerfectCounterWindow (0.10 s) of the counter: a perfect counter (docs/design/200 §3).
+    // Same grading as HWNodeRules::GradeCounter; the boss core and the armoured elite read it.
+    UFUNCTION(BlueprintPure)
+    bool IsPerfectCounterActive() const;
+
     // The boss parried into this counter (AHWBossCharacter::TryCountered): RequestCounter may chain the next one.
     void NotifyCounterLanded() { bCounterLanded = true; }
 
