@@ -84,11 +84,7 @@ void AHWNodeDirector::BeginPlay()
     Machine.SetThreat(0.7f);   // the forecast saw it coming: Alert, then the invasion
     SetState(Machine.State);
 
-    if (AHWAinCharacter* Player = GetPlayer())
-    {
-        Player->SetActorLocation(Config->PlayerStart + FVector(0.f, 0.f, 100.f));
-        Player->SetActorRotation(FRotator(0.f, -90.f, 0.f));   // facing south, down the road the enemies come up
-    }
+    // the player is placed on the first tick it exists (the pawn may not be spawned yet here) - TickPlayer
 }
 
 void AHWNodeDirector::BuildGraybox()
@@ -218,19 +214,19 @@ void AHWNodeDirector::StartInvasion()
 void AHWNodeDirector::SpawnWave(int32 WaveIndex)
 {
     const HWNodeRules::FWaveSpec Spec = HWNodeRules::PrototypeAWave(WaveIndex);
-    for (int32 Role = 0; Role < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++Role)
+    for (int32 RoleIndex = 0; RoleIndex < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++RoleIndex)
     {
-        for (int32 N = 0; N < Spec.Count[Role]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(Role), SpawnSerial++);
+        for (int32 N = 0; N < Spec.Count[RoleIndex]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(RoleIndex), SpawnSerial++);
     }
 }
 
-void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole Role, int32 Serial)
+void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
 {
     if (Config->SpawnPoints.Num() == 0) return;
     // runners alternate the two flank trails; everyone else takes the road through the gate
-    const bool bRunner = Role == EHWNodeEnemyRole::Runner;
-    const TArray<FVector>& Route = !bRunner ? Config->MainRoute : (Serial % 2 == 0 ? Config->WestRoute : Config->EastRoute);
-    const FVector Base = bRunner && Route.Num() > 0 ? Route[0] : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
+    const bool bRunner = EnemyRole == EHWNodeEnemyRole::Runner;
+    const TArray<FVector>& EnemyRoute = !bRunner ? Config->MainRoute : (Serial % 2 == 0 ? Config->WestRoute : Config->EastRoute);
+    const FVector Base = bRunner && EnemyRoute.Num() > 0 ? EnemyRoute[0] : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
     const float Angle = Serial * 2.39996f;   // golden-angle scatter so a wave does not stack on one point
     const FVector At = Base + FVector(FMath::Cos(Angle) * 160.f, FMath::Sin(Angle) * 160.f, 110.f);
 
@@ -242,7 +238,7 @@ void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole Role, int32 Serial)
         Waves.EnemyDied(Waves.Now());   // never arrived: do not hold the wave
         return;
     }
-    Enemy->Configure(this, Role, Route, 1.f);
+    Enemy->Configure(this, EnemyRole, EnemyRoute, 1.f);
     Enemy->OnEnemyDied.AddUniqueDynamic(this, &AHWNodeDirector::HandleEnemyDied);
     Enemies.Add(Enemy);
 }
@@ -324,6 +320,7 @@ void AHWNodeDirector::HandleInteract()
 
 void AHWNodeDirector::RestartRun()
 {
+    if (!Config) return;
     for (AHWNodeEnemy* E : TArray<TObjectPtr<AHWNodeEnemy>>(Enemies)) if (E) E->Discard();
     Enemies.Reset();
     if (Boss) Boss->Destroy();
@@ -370,6 +367,12 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
 {
     AHWAinCharacter* Player = GetPlayer();
     if (!Player || !Player->GetCombat()) return;
+    if (!bPlayerPlaced)
+    {
+        Player->SetActorLocation(Config->PlayerStart + FVector(0.f, 0.f, 100.f));
+        Player->SetActorRotation(FRotator(0.f, -90.f, 0.f));   // facing south, down the road the enemies come up
+        bPlayerPlaced = true;
+    }
     if (!bInteractBound)
     {
         Player->OnLocalInteract.AddUObject(this, &AHWNodeDirector::HandleInteract);

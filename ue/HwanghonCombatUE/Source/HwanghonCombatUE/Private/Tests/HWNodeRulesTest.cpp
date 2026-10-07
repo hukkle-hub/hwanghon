@@ -112,7 +112,7 @@ bool FHWNodeNamsanConfigTest::RunTest(const FString& Parameters)
     const FHWNodeBlock& Road = C->Blocks[7];
     const FRotator Rot(Road.Pitch, Road.Yaw, 0.f);
     const FVector Top = Road.Center + Rot.RotateVector(FVector::UpVector) * Road.HalfExtent.Z;
-    TestTrue(TEXT("road top runs between its ends"), FMath::IsNearlyEqual(Top.Z, (-2150.f + -1250.f) * 0.5f, 2.f));
+    TestTrue(TEXT("road top runs between its ends"), FMath::IsNearlyEqual(Top.Z, -1700.0, 2.0));
     return true;
 }
 

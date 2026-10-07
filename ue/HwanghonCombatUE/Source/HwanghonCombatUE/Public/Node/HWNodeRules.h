@@ -481,10 +481,10 @@ struct FWaveRunner
         return NextWave++;
     }
 
-    void EnemyDied(float Now)
+    void EnemyDied(float NowSeconds)
     {
         if (Alive > 0) --Alive;
-        if (Alive == 0) ClearedAt = Now;
+        if (Alive == 0) ClearedAt = NowSeconds;
     }
 
     float Now() const { return Clock; }

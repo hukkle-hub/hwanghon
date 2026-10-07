@@ -68,7 +68,7 @@ private:
     void BuildGraybox();
     void SpawnFacilities();
     void SpawnWave(int32 WaveIndex);
-    void SpawnEnemy(EHWNodeEnemyRole Role, int32 Serial);
+    void SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial);
     void SpawnBoss();
     void SetState(HWNodeRules::ENodeState NewState);
     void TickPlayer(float DeltaSeconds);
@@ -82,7 +82,7 @@ private:
     void HandleFacilityDestroyed(AHWNodeFacility* Facility);
 
     UFUNCTION()
-    void HandleBossDied(AHWBossCharacter* Boss);
+    void HandleBossDied(AHWBossCharacter* DeadBoss);
 
     UFUNCTION()
     void HandleCoreExposed();
@@ -131,5 +131,6 @@ private:
     bool bLastCounterPerfect = false;
     bool bBossPhase = false;
     bool bInteractBound = false;
+    bool bPlayerPlaced = false;
     FString Outcome;
 };

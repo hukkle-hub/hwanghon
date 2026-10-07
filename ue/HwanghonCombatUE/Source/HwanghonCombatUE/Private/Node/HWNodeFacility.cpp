@@ -91,11 +91,11 @@ float AHWNodeFacility::DistanceToSurface2D(const FVector& Point) const
 
 void AHWNodeFacility::Refresh()
 {
-    static const TCHAR* Names[] = { TEXT("GATE"), TEXT("GENERATOR"), TEXT("COMMS") };
+    static const TCHAR* FacilityNames[] = { TEXT("GATE"), TEXT("GENERATOR"), TEXT("COMMS") };
     const float F = Rules.Fraction();
-    FString Text = FString::Printf(TEXT("%s %d%%"), Names[static_cast<int32>(Kind)], FMath::RoundToInt(F * 100.f));
+    FString Text = FString::Printf(TEXT("%s %d%%"), FacilityNames[static_cast<int32>(Kind)], FMath::RoundToInt(F * 100.f));
     if (Kind == EHWNodeFacilityKind::Generator) Text += FString::Printf(TEXT("  PWR %d"), GetPower());
-    if (Rules.IsDestroyed()) Text = FString::Printf(TEXT("%s DESTROYED"), Names[static_cast<int32>(Kind)]);
+    if (Rules.IsDestroyed()) Text = FString::Printf(TEXT("%s DESTROYED"), FacilityNames[static_cast<int32>(Kind)]);
     Label->SetText(FText::FromString(Text));
 
     // gate amber, generator blue, comms red; darker as it breaks

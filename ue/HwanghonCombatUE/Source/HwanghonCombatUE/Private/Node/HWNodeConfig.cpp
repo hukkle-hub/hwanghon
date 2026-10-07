@@ -5,6 +5,7 @@
 #include "Dom/JsonValue.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "UObject/Package.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 
@@ -24,31 +25,31 @@ namespace HWNodeConfigLocal
 
     bool ReadVector(const TSharedPtr<FJsonValue>& Value, FVector& Out)
     {
-        const TArray<TSharedPtr<FJsonValue>>* Arr = nullptr;
-        if (!Value.IsValid() || !Value->TryGetArray(Arr) || Arr->Num() < 3) return false;
-        Out = FVector((*Arr)[0]->AsNumber(), (*Arr)[1]->AsNumber(), (*Arr)[2]->AsNumber());
+        const TArray<TSharedPtr<FJsonValue>>* JsonArr = nullptr;
+        if (!Value.IsValid() || !Value->TryGetArray(JsonArr) || JsonArr->Num() < 3) return false;
+        Out = FVector((*JsonArr)[0]->AsNumber(), (*JsonArr)[1]->AsNumber(), (*JsonArr)[2]->AsNumber());
         return true;
     }
 
     // "at": an anchor name or an [x, y, z] point
-    bool ReadPoint(const TSharedPtr<FJsonObject>& Obj, const TCHAR* Field, const TMap<FName, FVector>& Anchors, FVector& Out)
+    bool ReadPoint(const TSharedPtr<FJsonObject>& JsonObj, const TCHAR* FieldName, const TMap<FName, FVector>& Anchors, FVector& Out)
     {
-        FString Name;
-        if (Obj->TryGetStringField(Field, Name))
+        FString AnchorName;
+        if (JsonObj->TryGetStringField(FieldName, AnchorName))
         {
-            const FVector* Found = Anchors.Find(FName(*Name));
+            const FVector* Found = Anchors.Find(FName(*AnchorName));
             if (!Found) return false;
             Out = *Found;
             return true;
         }
-        return ReadVector(Obj->TryGetField(Field), Out);
+        return ReadVector(JsonObj->TryGetField(FieldName), Out);
     }
 
-    void ReadPoints(const TSharedPtr<FJsonObject>& Obj, const TCHAR* Field, TArray<FVector>& Out)
+    void ReadPoints(const TSharedPtr<FJsonObject>& JsonObj, const TCHAR* FieldName, TArray<FVector>& Out)
     {
-        const TArray<TSharedPtr<FJsonValue>>* Arr = nullptr;
-        if (!Obj.IsValid() || !Obj->TryGetArrayField(Field, Arr)) return;
-        for (const TSharedPtr<FJsonValue>& V : *Arr)
+        const TArray<TSharedPtr<FJsonValue>>* JsonArr = nullptr;
+        if (!JsonObj.IsValid() || !JsonObj->TryGetArrayField(FieldName, JsonArr)) return;
+        for (const TSharedPtr<FJsonValue>& V : *JsonArr)
         {
             FVector P;
             if (ReadVector(V, P)) Out.Add(P);
@@ -101,7 +102,7 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
         return nullptr;
     }
 
-    UHWNodeConfig* C = NewObject<UHWNodeConfig>(Outer ? Outer : GetTransientPackage());
+    UHWNodeConfig* C = NewObject<UHWNodeConfig>(Outer ? Outer : static_cast<UObject*>(GetTransientPackage()));
     C->NodeId = Id;
     Root->TryGetStringField(TEXT("name"), C->DisplayName);
 
@@ -115,10 +116,10 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
         }
     }
 
-    const TArray<TSharedPtr<FJsonValue>>* Arr = nullptr;
-    if (Root->TryGetArrayField(TEXT("pads"), Arr))
+    const TArray<TSharedPtr<FJsonValue>>* JsonArr = nullptr;
+    if (Root->TryGetArrayField(TEXT("pads"), JsonArr))
     {
-        for (const TSharedPtr<FJsonValue>& V : *Arr)
+        for (const TSharedPtr<FJsonValue>& V : *JsonArr)
         {
             const TSharedPtr<FJsonObject> O = V->AsObject();
             FVector At;
@@ -129,9 +130,9 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
             }
         }
     }
-    if (Root->TryGetArrayField(TEXT("roads"), Arr))
+    if (Root->TryGetArrayField(TEXT("roads"), JsonArr))
     {
-        for (const TSharedPtr<FJsonValue>& V : *Arr)
+        for (const TSharedPtr<FJsonValue>& V : *JsonArr)
         {
             const TSharedPtr<FJsonObject> O = V->AsObject();
             FVector A, B;
@@ -143,9 +144,9 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
             }
         }
     }
-    if (Root->TryGetArrayField(TEXT("walls"), Arr))
+    if (Root->TryGetArrayField(TEXT("walls"), JsonArr))
     {
-        for (const TSharedPtr<FJsonValue>& V : *Arr)
+        for (const TSharedPtr<FJsonValue>& V : *JsonArr)
         {
             const TSharedPtr<FJsonObject> O = V->AsObject();
             if (!O.IsValid()) continue;
@@ -160,9 +161,9 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
             C->Blocks.Add(W);
         }
     }
-    if (Root->TryGetArrayField(TEXT("facilities"), Arr))
+    if (Root->TryGetArrayField(TEXT("facilities"), JsonArr))
     {
-        for (const TSharedPtr<FJsonValue>& V : *Arr)
+        for (const TSharedPtr<FJsonValue>& V : *JsonArr)
         {
             const TSharedPtr<FJsonObject> O = V->AsObject();
             FHWNodeFacilityDef F;
@@ -191,10 +192,10 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
         ReadPoints(*RoutesJson, TEXT("generator"), C->GeneratorRoute);
         ReadPoints(*RoutesJson, TEXT("comms"), C->CommsRoute);
     }
-    double Number = 0.0;
-    if (Root->TryGetNumberField(TEXT("comms_hold_radius"), Number)) C->CommsHoldRadius = Number;
-    if (Root->TryGetNumberField(TEXT("comms_hold_to_fall"), Number)) C->CommsHoldToFall = Number;
-    if (Root->TryGetNumberField(TEXT("fall_z"), Number)) C->FallZ = Number;
+    double NumberValue = 0.0;
+    if (Root->TryGetNumberField(TEXT("comms_hold_radius"), NumberValue)) C->CommsHoldRadius = NumberValue;
+    if (Root->TryGetNumberField(TEXT("comms_hold_to_fall"), NumberValue)) C->CommsHoldToFall = NumberValue;
+    if (Root->TryGetNumberField(TEXT("fall_z"), NumberValue)) C->FallZ = NumberValue;
 
     if (C->Facilities.Num() == 0 || C->SpawnPoints.Num() == 0 || C->MainRoute.Num() == 0)
     {

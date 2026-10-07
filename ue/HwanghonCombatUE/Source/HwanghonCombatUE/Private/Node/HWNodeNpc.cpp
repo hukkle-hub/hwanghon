@@ -66,7 +66,7 @@ bool AHWNodeNpc::Rescue()
 
 void AHWNodeNpc::Refresh()
 {
-    static const TCHAR* Names[] = { TEXT("TECH OK"), TEXT("TECH INJURED"), TEXT("TECH MISSING"), TEXT("TECH RESCUED") };
-    Tag->SetText(FText::FromString(Names[static_cast<int32>(State)]));
+    static const TCHAR* StateNames[] = { TEXT("TECH OK"), TEXT("TECH INJURED"), TEXT("TECH MISSING"), TEXT("TECH RESCUED") };
+    Tag->SetText(FText::FromString(StateNames[static_cast<int32>(State)]));
     Tag->SetTextRenderColor(State == HWNodeRules::ENpcState::Normal ? FColor(120, 230, 150) : FColor(255, 170, 80));
 }
