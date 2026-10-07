@@ -45,6 +45,7 @@ public:
 
     UFUNCTION(BlueprintPure)
     bool IsDeadEnemy() const { return bDead; }
+    HWNodeRules::ETargetKind GetTargetKind() const { return TargetKind; }
 
     // Killed by the player (false = discarded: fell off, or the run was reset).
     UFUNCTION(BlueprintPure)
@@ -65,6 +66,8 @@ private:
     void Strike();
     void Die(bool bByPlayer);
     FVector GoalPoint() const;
+    bool IsDirectApproach(const FVector& Here) const;   // the gate or a player close enough to walk straight at
+    bool HasWaypoint(const FVector& Here) const;
     float ReachTo(HWNodeRules::ETargetKind Kind) const;
 
     UPROPERTY(Transient)
@@ -81,7 +84,7 @@ private:
     HWNodeRules::FEliteArmor Armor;
     HWNodeRules::ETargetKind TargetKind = HWNodeRules::ETargetKind::None;
     TArray<FVector> Route;      // spawn -> plaza
-    TArray<FVector> Extension;  // plaza -> generator / comms, chosen by the target
+    TArray<FVector> Extension;  // the route graph's shortest path to the target's route end (UHWNodeConfig::PathBetween)
     int32 RouteIndex = 0;
     int32 ExtensionIndex = 0;
     EPhase Phase = EPhase::Move;

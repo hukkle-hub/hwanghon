@@ -295,6 +295,22 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
         }
     }
 
+    // "links": [[a, b], ...] - walkable joins between routes (tests/ue-node-config.test.cjs walks each one)
+    TArray<TPair<FVector, FVector>> GraphLinks;
+    const TArray<TSharedPtr<FJsonValue>>* LinksJson = nullptr;
+    if (Root->TryGetArrayField(TEXT("links"), LinksJson))
+    {
+        for (const TSharedPtr<FJsonValue>& LinkValue : *LinksJson)
+        {
+            const TArray<TSharedPtr<FJsonValue>>* LinkEnds = nullptr;
+            if (!LinkValue.IsValid() || !LinkValue->TryGetArray(LinkEnds)) continue;
+            TArray<FVector> EndPoints;
+            ReadPointList(*LinkEnds, EndPoints);
+            if (EndPoints.Num() == 2) GraphLinks.Add(TPair<FVector, FVector>(EndPoints[0], EndPoints[1]));
+        }
+    }
+    C->BuildGraph(GraphLinks);
+
     double NumberValue = 0.0;
     if (Root->TryGetNumberField(TEXT("comms_hold_radius"), NumberValue)) C->CommsHoldRadius = NumberValue;
     if (Root->TryGetNumberField(TEXT("comms_hold_to_fall"), NumberValue)) C->CommsHoldToFall = NumberValue;
@@ -308,4 +324,108 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
     }
     UE_LOG(LogTemp, Display, TEXT("[HWNode] %s: %d blocks, %d facilities, %d NPCs, %d routes"), *Id.ToString(), C->Blocks.Num(), C->Facilities.Num(), C->Npcs.Num(), C->Routes.Num());
     return C;
+}
+
+namespace HWNodeConfigLocal
+{
+    // The node at P (within 1 cm), added when new
+    int32 GraphNodeAt(TArray<FVector>& GraphPoints, TArray<TArray<int32>>& GraphAdjacency, const FVector& P)
+    {
+        for (int32 I = 0; I < GraphPoints.Num(); ++I)
+        {
+            const FVector& Q = GraphPoints[I];
+            if (FMath::Abs(Q.X - P.X) < 1.0 && FMath::Abs(Q.Y - P.Y) < 1.0 && FMath::Abs(Q.Z - P.Z) < 1.0) return I;
+        }
+        GraphAdjacency.AddDefaulted();
+        return GraphPoints.Add(P);
+    }
+
+    void GraphJoin(TArray<TArray<int32>>& GraphAdjacency, int32 A, int32 B)
+    {
+        if (A == B || GraphAdjacency[A].Contains(B)) return;
+        GraphAdjacency[A].Add(B);
+        GraphAdjacency[B].Add(A);
+    }
+}
+
+void UHWNodeConfig::BuildGraph(const TArray<TPair<FVector, FVector>>& ExtraLinks)
+{
+    using namespace HWNodeConfigLocal;
+    GraphNodes.Reset();
+    GraphEdges.Reset();
+    for (const TPair<FName, FHWNodeRoute>& Pair : Routes)
+    {
+        const TArray<FVector>& RoutePoints = Pair.Value.Points;
+        int32 Previous = RoutePoints.Num() > 0 ? GraphNodeAt(GraphNodes, GraphEdges, RoutePoints[0]) : INDEX_NONE;
+        for (int32 I = 1; I < RoutePoints.Num(); ++I)
+        {
+            const int32 Current = GraphNodeAt(GraphNodes, GraphEdges, RoutePoints[I]);
+            GraphJoin(GraphEdges, Previous, Current);
+            Previous = Current;
+        }
+    }
+    for (const TPair<FVector, FVector>& Link : ExtraLinks)
+    {
+        const int32 A = GraphNodeAt(GraphNodes, GraphEdges, Link.Key);
+        const int32 B = GraphNodeAt(GraphNodes, GraphEdges, Link.Value);
+        GraphJoin(GraphEdges, A, B);
+    }
+}
+
+int32 UHWNodeConfig::NearestGraphNode(const FVector& At) const
+{
+    // height counts three times: never pick a node on another level just above or below
+    int32 Best = INDEX_NONE;
+    double BestCost = 0.0;
+    for (int32 I = 0; I < GraphNodes.Num(); ++I)
+    {
+        const double Cost = FVector::Dist2D(GraphNodes[I], At) + 3.0 * FMath::Abs(GraphNodes[I].Z - At.Z);
+        if (Best == INDEX_NONE || Cost < BestCost)
+        {
+            Best = I;
+            BestCost = Cost;
+        }
+    }
+    return Best;
+}
+
+TArray<FVector> UHWNodeConfig::PathBetween(const FVector& From, const FVector& To) const
+{
+    TArray<FVector> Result;
+    const int32 Start = NearestGraphNode(From);
+    const int32 Goal = NearestGraphNode(To);
+    if (Start == INDEX_NONE || Goal == INDEX_NONE) return Result;
+
+    // Dijkstra: the graph is a few dozen nodes, a plain O(n^2) scan is plenty
+    const int32 Count = GraphNodes.Num();
+    const double Unreached = TNumericLimits<double>::Max();
+    TArray<double> Dist;
+    Dist.Init(Unreached, Count);
+    TArray<int32> Prev;
+    Prev.Init(INDEX_NONE, Count);
+    TArray<bool> Settled;
+    Settled.Init(false, Count);
+    Dist[Start] = 0.0;
+    for (;;)
+    {
+        int32 U = INDEX_NONE;
+        for (int32 I = 0; I < Count; ++I)
+        {
+            if (!Settled[I] && Dist[I] < Unreached && (U == INDEX_NONE || Dist[I] < Dist[U])) U = I;
+        }
+        if (U == INDEX_NONE || U == Goal) break;
+        Settled[U] = true;
+        for (const int32 V : GraphEdges[U])
+        {
+            const double Through = Dist[U] + FVector::Dist(GraphNodes[U], GraphNodes[V]);
+            if (Through < Dist[V])
+            {
+                Dist[V] = Through;
+                Prev[V] = U;
+            }
+        }
+    }
+    if (Dist[Goal] >= Unreached) return Result;
+    for (int32 V = Goal; V != INDEX_NONE; V = Prev[V]) Result.Insert(GraphNodes[V], 0);
+    return Result;
 }

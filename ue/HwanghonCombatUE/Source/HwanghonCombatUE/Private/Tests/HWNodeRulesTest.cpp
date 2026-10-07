@@ -149,6 +149,16 @@ bool FHWNodeNamsanConfigTest::RunTest(const FString& Parameters)
     const FRotator Rot(Road.Pitch, Road.Yaw, 0.f);
     const FVector Top = Road.Center + Rot.RotateVector(FVector::UpVector) * Road.HalfExtent.Z;
     TestTrue(TEXT("road top runs between its ends"), FMath::IsNearlyEqual(Top.Z, -1700.0, 2.0));
+
+    // the route graph (docs/design/201 §9): one piece, and from a south spawn to the generator and the comms centre
+    TestTrue(TEXT("route graph built"), C->GraphNodes.Num() >= 40 && C->GraphEdges.Num() == C->GraphNodes.Num());
+    TestTrue(TEXT("south spawns"), C->SpawnPoints.Num() > 0);
+    for (const TCHAR* Target : { TEXT("generator"), TEXT("comms") })
+    {
+        if (C->SpawnPoints.Num() == 0 || C->Route(Target).Num() == 0) break;
+        const TArray<FVector> GraphPath = C->PathBetween(C->SpawnPoints[0], C->Route(Target).Last());
+        TestTrue(FString::Printf(TEXT("graph path spawn -> %s"), Target), GraphPath.Num() >= 3 && GraphPath.Last().Equals(C->Route(Target).Last(), 1.0));
+    }
     return true;
 }
 

@@ -66,3 +66,13 @@ test('남산 N-01: 시설·NPC 길 끝이 목표에 닿고, 역할별 길·NPC �
  for(const [role,r] of Object.entries(N.role_routes)) for(const k of [].concat(r)) assert.ok(N.routes[k],role+' 의 길 '+k+' 이 없다');
  assert.equal(N.facilities.filter(f=>f.kind==='turret').length,4,'포탑 넷');
 });
+test('남산 N-01: 길 그래프 — 잇는 구간(links)이 걸을 수 있고, 모든 적 시작점에서 모든 목표(발전기·통신·NPC)로 길이 있다',()=>{
+ const GR=require('../tools/ue/node-graph.js'), g=GR.build(N);
+ for(const [a,b] of N.links){ const bad=legOk(G.pt(N,a),G.pt(N,b)); assert.equal(bad,null,'link '+a+' → '+b+': '+bad); }
+ /* 하나로 이어져 있다 — 떨어진 섬이 있으면 그 길로 간 적은 목표를 바꿀 수 없다 */
+ const seen=new Set([0]), stack=[0]; while(stack.length){ const u=stack.pop(); for(const v of g.adj[u]) if(!seen.has(v)){ seen.add(v); stack.push(v); } }
+ assert.equal(seen.size,g.nodes.length,'길 그래프가 '+(g.nodes.length-seen.size)+'개 마디만큼 끊겨 있다');
+ const goals=[['발전기',N.routes.generator.at(-1)],['통신',N.routes.comms.at(-1)],...N.npcs.map(n=>['NPC '+n.id,N.routes[n.route].at(-1)])];
+ for(const s of [...N.spawns,...N.north_spawns]) for(const [name,to] of goals){ const p=GR.path(g,s,to); assert.ok(p.length>=2,s+' → '+name+' 길이 없다');
+  const end=p.at(-1); assert.ok(Math.hypot(end[0]-to[0],end[1]-to[1])<1,name+' 끝점이 다르다'); }
+});

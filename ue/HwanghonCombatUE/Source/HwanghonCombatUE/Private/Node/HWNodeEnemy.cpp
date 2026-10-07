@@ -13,6 +13,9 @@
 
 namespace HWNodeEnemyLocal
 {
+    // Within this the gate or a player is walked at straight; farther, the route and the graph path lead (docs/design/201 §9)
+    constexpr float DirectApproachCm = 1500.f;
+
     // Telegraph before each blow: long enough to read and counter (the elite's is the clearest).
     float WindupFor(EHWNodeEnemyRole Role)
     {
@@ -121,8 +124,12 @@ void AHWNodeEnemy::Tick(float DeltaSeconds)
         if (Phase == EPhase::Windup)
         {
             Strike();
-            Phase = EPhase::Recover;
-            PhaseLeft = 0.35f;
+            // a countered blow left it staggered (1.0 s, the elite 1.4 s): keep that, do not overwrite it with recovery
+            if (Phase == EPhase::Windup)
+            {
+                Phase = EPhase::Recover;
+                PhaseLeft = 0.35f;
+            }
             return;
         }
         Phase = EPhase::Move;
@@ -145,8 +152,9 @@ void AHWNodeEnemy::Think()
     const HWNodeRules::FTargetView View = Director->BuildView(Here, bFlanked);
     HWNodeRules::ETargetKind Next = HWNodeRules::ChooseTarget(static_cast<HWNodeRules::EEnemyRole>(Role), View);
 
-    // a target north of the standing gate is reached through the gate (HWNodeRules::BlockedByGate)
-    if (Next != HWNodeRules::ETargetKind::None && Next != HWNodeRules::ETargetKind::Gate && Next != HWNodeRules::ETargetKind::Player)
+    // a target north of the standing gate is reached through the gate (HWNodeRules::BlockedByGate) - a player too:
+    // a player standing just inside the gate used to pin the infected against it, neither hitting him nor the gate
+    if (Next != HWNodeRules::ETargetKind::None && Next != HWNodeRules::ETargetKind::Gate)
     {
         const FVector Goal = Director->TargetPoint(Next, Here);
         if (HWNodeRules::BlockedByGate(Here.Y, Goal.Y, Director->GateLineY(), Director->IsGateStanding(),
@@ -155,10 +163,18 @@ void AHWNodeEnemy::Think()
             Next = HWNodeRules::ETargetKind::Gate;
         }
     }
+    // a new target: the graph path from where this enemy's own route ends (or from here, once it is walked)
     if (Next != TargetKind)
     {
         TargetKind = Next;
-        Extension = Director->ExtensionFor(Next, Here);
+        Extension = Director->ExtensionFor(Next, RouteIndex < Route.Num() ? Route.Last() : Here);
+        ExtensionIndex = 0;
+    }
+    // path walked but the target is still far (the NPC it was after was taken, another one is wanted): path again
+    else if (TargetKind != HWNodeRules::ETargetKind::None && RouteIndex >= Route.Num() && ExtensionIndex >= Extension.Num()
+        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here)) > HWNodeEnemyLocal::DirectApproachCm)
+    {
+        Extension = Director->ExtensionFor(TargetKind, Here);
         ExtensionIndex = 0;
     }
 
@@ -189,10 +205,22 @@ float AHWNodeEnemy::ReachTo(HWNodeRules::ETargetKind Kind) const
     }
 }
 
+// Straight at the gate or a player only from close by: from the spawn it walked off the ramp's edge (node-sim.cjs)
+bool AHWNodeEnemy::IsDirectApproach(const FVector& Here) const
+{
+    return (TargetKind == HWNodeRules::ETargetKind::Player || TargetKind == HWNodeRules::ETargetKind::Gate)
+        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here)) <= HWNodeEnemyLocal::DirectApproachCm;
+}
+
+bool AHWNodeEnemy::HasWaypoint(const FVector& Here) const
+{
+    return !IsDirectApproach(Here) && (RouteIndex < Route.Num() || ExtensionIndex < Extension.Num());
+}
+
 FVector AHWNodeEnemy::GoalPoint() const
 {
     const FVector Here = GetActorLocation();
-    if (TargetKind == HWNodeRules::ETargetKind::Player || TargetKind == HWNodeRules::ETargetKind::Gate) return Director->TargetPoint(TargetKind, Here);
+    if (IsDirectApproach(Here)) return Director->TargetPoint(TargetKind, Here);
     if (RouteIndex < Route.Num()) return Route[RouteIndex];
     if (ExtensionIndex < Extension.Num()) return Extension[ExtensionIndex];
     return TargetKind == HWNodeRules::ETargetKind::None ? Here : Director->TargetPoint(TargetKind, Here);
@@ -252,13 +280,15 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
         }
     }
 
-    // walk the route: the next waypoint, then the extension to the target, then the target itself
+    // walk the route: the next waypoint, then the extension to the target, then the target itself.
+    // The 220 cm "arrived" radius is for waypoints only: applied to the gate (reach 140) or a player (170) it parked
+    // the enemy just out of reach for good (found by tools/ue/node-sim.cjs, docs/design/201 §9).
     const FVector Goal = GoalPoint();
     const FVector To = Goal - Here;
-    if (FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(220.f))
+    if (HasWaypoint(Here) && FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(220.f))
     {
         if (RouteIndex < Route.Num()) ++RouteIndex;
-        else if (ExtensionIndex < Extension.Num()) ++ExtensionIndex;
+        else ++ExtensionIndex;
         return;
     }
     AddMovementInput(To.GetSafeNormal2D(), 1.f);

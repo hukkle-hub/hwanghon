@@ -33,3 +33,4 @@ ue/HwanghonCombatUE/Config/Android/
 
 # Hi3D raw bald busts (45-55 MB) stay local; the repo keeps the cut/decimated heads (tools/3d/prep_head.py)
 art/3d/heads/*_bald_bust.glb
+.node-sim/

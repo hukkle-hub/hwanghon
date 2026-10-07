@@ -1,45 +1,2272 @@
 {
-  "doc": "거점 규칙 공용 시험 벡터 — UE(HWNodeRules.h)와 서버(server/node-rules.cjs)가 같은 답을 내야 한다 (docs/design/201).",
-  "grade": [[0.0, "perfect"], [0.1, "perfect"], [0.11, "normal"], [0.25, "normal"], [0.26, "none"], [-0.01, "none"]],
-  "occupation": [[0, "initial"], [1.99, "initial"], [2, "basic"], [5.9, "basic"], [6, "elite_up"], [11.9, "elite_up"], [12, "fortress"], [23.9, "fortress"], [24, "infection_core"], [100, "infection_core"]],
-  "policies": [
-    { "picks": ["gate_reinforce", "medical_stock"], "valid": true },
-    { "picks": ["gate_reinforce", "generator_reinforce"], "valid": true },
-    { "picks": ["gate_reinforce", "generator_reinforce", "scouting"], "valid": false },
-    { "picks": ["scouting", "scouting"], "valid": false },
-    { "picks": ["arm_npcs", "scouting", "medical_stock"], "valid": true },
-    { "picks": ["arm_npcs", "scouting", "medical_stock", "reserve_power"], "valid": false },
-    { "picks": [], "valid": true }
+ "doc": "거점 규칙 공용 시험 벡터 — UE(HWNodeRules.h)와 서버(server/node-rules.cjs)가 같은 답을 내야 한다 (docs/design/201).",
+ "grade": [
+  [
+   0,
+   "perfect"
   ],
-  "permissions": {
-    "leader": ["ping", "rally", "order_npc", "allocate_supply", "invest_facility", "select_policy", "assign_roles"],
-    "vice": ["ping", "rally", "order_npc", "allocate_supply", "invest_facility", "select_policy"],
-    "combat": ["ping", "rally", "order_npc"],
-    "supply": ["allocate_supply"],
-    "craft": ["invest_facility", "order_npc"],
-    "member": []
-  },
-  "contribution": {
-    "players": [
-      { "boss": 900000, "kill": 6 },
-      { "defense": 4000, "repair": 300, "npc_rescue": 2, "kill": 4, "boss": 200000 },
-      { "kill": 3 },
-      { "supply": 12, "command": 5 }
-    ],
-    "scores": [200, 428.889, 50, 160]
-  },
-  "steward": [
-    { "scores": [200, 428.889, 50, 160], "guild_of": [0, 1, 1, 0], "guilds": 2, "expect": 1 },
-    { "scores": [100, 100], "guild_of": [0, 1], "guilds": 2, "expect": 0 },
-    { "scores": [0, 0], "guild_of": [0, 1], "guilds": 2, "expect": -1 },
-    { "scores": [50, 70], "guild_of": [-1, 1], "guilds": 2, "expect": 1 }
+  [
+   0.1,
+   "perfect"
   ],
-  "machine": [
-    { "steps": [["threat", 0.4], ["threat", 0.7], ["invade"], ["threat", 0], ["held"], ["recover", 0.6], ["recover", 0.6]],
-      "expect": ["uneasy", "alert", "invasion", "invasion", "recovering", "recovering", "stable"] },
-    { "steps": [["invade"], ["tick", 15, false, true], ["tick", 1, false, false], ["tick", 19, false, true], ["tick", 1, false, true]],
-      "expect": ["invasion", "invasion", "invasion", "invasion", "fallen"] },
-    { "steps": [["invade"], ["tick", 0.1, true, false], ["retake"], ["occupy", 1.9], ["occupy", 0.2], ["retake"], ["retake_end", false], ["retake"], ["retake_end", true], ["invade"]],
-      "expect": ["invasion", "fallen", "fallen", "fallen", "retakeable", "retaking", "retakeable", "retaking", "recovering", "recovering"] }
+  [
+   0.11,
+   "normal"
+  ],
+  [
+   0.25,
+   "normal"
+  ],
+  [
+   0.26,
+   "none"
+  ],
+  [
+   -0.01,
+   "none"
   ]
+ ],
+ "occupation": [
+  [
+   0,
+   "initial"
+  ],
+  [
+   1.99,
+   "initial"
+  ],
+  [
+   2,
+   "basic"
+  ],
+  [
+   5.9,
+   "basic"
+  ],
+  [
+   6,
+   "elite_up"
+  ],
+  [
+   11.9,
+   "elite_up"
+  ],
+  [
+   12,
+   "fortress"
+  ],
+  [
+   23.9,
+   "fortress"
+  ],
+  [
+   24,
+   "infection_core"
+  ],
+  [
+   100,
+   "infection_core"
+  ]
+ ],
+ "policies": [
+  {
+   "picks": [
+    "gate_reinforce",
+    "medical_stock"
+   ],
+   "valid": true
+  },
+  {
+   "picks": [
+    "gate_reinforce",
+    "generator_reinforce"
+   ],
+   "valid": true
+  },
+  {
+   "picks": [
+    "gate_reinforce",
+    "generator_reinforce",
+    "scouting"
+   ],
+   "valid": false
+  },
+  {
+   "picks": [
+    "scouting",
+    "scouting"
+   ],
+   "valid": false
+  },
+  {
+   "picks": [
+    "arm_npcs",
+    "scouting",
+    "medical_stock"
+   ],
+   "valid": true
+  },
+  {
+   "picks": [
+    "arm_npcs",
+    "scouting",
+    "medical_stock",
+    "reserve_power"
+   ],
+   "valid": false
+  },
+  {
+   "picks": [],
+   "valid": true
+  }
+ ],
+ "permissions": {
+  "leader": [
+   "ping",
+   "rally",
+   "order_npc",
+   "allocate_supply",
+   "invest_facility",
+   "select_policy",
+   "assign_roles"
+  ],
+  "vice": [
+   "ping",
+   "rally",
+   "order_npc",
+   "allocate_supply",
+   "invest_facility",
+   "select_policy"
+  ],
+  "combat": [
+   "ping",
+   "rally",
+   "order_npc"
+  ],
+  "supply": [
+   "allocate_supply"
+  ],
+  "craft": [
+   "invest_facility",
+   "order_npc"
+  ],
+  "member": []
+ },
+ "contribution": {
+  "players": [
+   {
+    "boss": 900000,
+    "kill": 6
+   },
+   {
+    "defense": 4000,
+    "repair": 300,
+    "npc_rescue": 2,
+    "kill": 4,
+    "boss": 200000
+   },
+   {
+    "kill": 3
+   },
+   {
+    "supply": 12,
+    "command": 5
+   }
+  ],
+  "scores": [
+   200,
+   428.889,
+   50,
+   160
+  ]
+ },
+ "steward": [
+  {
+   "scores": [
+    200,
+    428.889,
+    50,
+    160
+   ],
+   "guild_of": [
+    0,
+    1,
+    1,
+    0
+   ],
+   "guilds": 2,
+   "expect": 1
+  },
+  {
+   "scores": [
+    100,
+    100
+   ],
+   "guild_of": [
+    0,
+    1
+   ],
+   "guilds": 2,
+   "expect": 0
+  },
+  {
+   "scores": [
+    0,
+    0
+   ],
+   "guild_of": [
+    0,
+    1
+   ],
+   "guilds": 2,
+   "expect": -1
+  },
+  {
+   "scores": [
+    50,
+    70
+   ],
+   "guild_of": [
+    -1,
+    1
+   ],
+   "guilds": 2,
+   "expect": 1
+  }
+ ],
+ "machine": [
+  {
+   "steps": [
+    [
+     "threat",
+     0.4
+    ],
+    [
+     "threat",
+     0.7
+    ],
+    [
+     "invade"
+    ],
+    [
+     "threat",
+     0
+    ],
+    [
+     "held"
+    ],
+    [
+     "recover",
+     0.6
+    ],
+    [
+     "recover",
+     0.6
+    ]
+   ],
+   "expect": [
+    "uneasy",
+    "alert",
+    "invasion",
+    "invasion",
+    "recovering",
+    "recovering",
+    "stable"
+   ]
+  },
+  {
+   "steps": [
+    [
+     "invade"
+    ],
+    [
+     "tick",
+     15,
+     false,
+     true
+    ],
+    [
+     "tick",
+     1,
+     false,
+     false
+    ],
+    [
+     "tick",
+     19,
+     false,
+     true
+    ],
+    [
+     "tick",
+     1,
+     false,
+     true
+    ]
+   ],
+   "expect": [
+    "invasion",
+    "invasion",
+    "invasion",
+    "invasion",
+    "fallen"
+   ]
+  },
+  {
+   "steps": [
+    [
+     "invade"
+    ],
+    [
+     "tick",
+     0.1,
+     true,
+     false
+    ],
+    [
+     "retake"
+    ],
+    [
+     "occupy",
+     1.9
+    ],
+    [
+     "occupy",
+     0.2
+    ],
+    [
+     "retake"
+    ],
+    [
+     "retake_end",
+     false
+    ],
+    [
+     "retake"
+    ],
+    [
+     "retake_end",
+     true
+    ],
+    [
+     "invade"
+    ]
+   ],
+   "expect": [
+    "invasion",
+    "fallen",
+    "fallen",
+    "fallen",
+    "retakeable",
+    "retaking",
+    "retakeable",
+    "retaking",
+    "recovering",
+    "recovering"
+   ]
+  }
+ ],
+ "combat": {
+  "doc": "tools/ue/node-combat-rules.cjs ↔ HWNodeRules.h — 역할 수치·목표 선택·정문 차단·웨이브·전력·NPC",
+  "stats": {
+   "normal": {
+    "health": 5500,
+    "damage": 850,
+    "facilityDamage": 300,
+    "speed": 285,
+    "attackCooldown": 1.35,
+    "armorScale": 1
+   },
+   "runner": {
+    "health": 3200,
+    "damage": 600,
+    "facilityDamage": 180,
+    "speed": 520,
+    "attackCooldown": 1.1,
+    "armorScale": 1
+   },
+   "breaker": {
+    "health": 7000,
+    "damage": 700,
+    "facilityDamage": 900,
+    "speed": 240,
+    "attackCooldown": 1.8,
+    "armorScale": 1
+   },
+   "stalker": {
+    "health": 4200,
+    "damage": 800,
+    "facilityDamage": 200,
+    "speed": 380,
+    "attackCooldown": 1.3,
+    "armorScale": 1
+   },
+   "armored_elite": {
+    "health": 26000,
+    "damage": 1500,
+    "facilityDamage": 1400,
+    "speed": 230,
+    "attackCooldown": 2.4,
+    "armorScale": 0.25
+   }
+  },
+  "target": [
+   {
+    "role": "normal",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "generator"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "generator"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "generator"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "runner",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   }
+  ],
+  "gate": [
+   {
+    "args": [
+     -9000,
+     -5000,
+     -9700,
+     true,
+     "normal",
+     false
+    ],
+    "expect": false
+   },
+   {
+    "args": [
+     -9800,
+     -5000,
+     -9700,
+     true,
+     "normal",
+     false
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     -9800,
+     -5000,
+     -9700,
+     false,
+     "normal",
+     false
+    ],
+    "expect": false
+   },
+   {
+    "args": [
+     -9800,
+     -5000,
+     -9700,
+     true,
+     "runner",
+     true
+    ],
+    "expect": false
+   },
+   {
+    "args": [
+     -9800,
+     -5000,
+     -9700,
+     true,
+     "runner",
+     false
+    ],
+    "expect": true
+   },
+   {
+    "args": [
+     -9800,
+     -9900,
+     -9700,
+     true,
+     "breaker",
+     false
+    ],
+    "expect": false
+   }
+  ],
+  "waves": {
+   "sizes": [
+    6,
+    8,
+    7,
+    5
+   ],
+   "runs": [
+    {
+     "kill_steps": [],
+     "spawned": [
+      [
+       0,
+       0,
+       0.5
+      ],
+      [
+       1,
+       109,
+       55
+      ],
+      [
+       2,
+       229,
+       115
+      ],
+      [
+       3,
+       349,
+       175
+      ]
+     ],
+     "done": false
+    },
+    {
+     "kill_steps": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      120,
+      121,
+      122,
+      123,
+      124
+     ],
+     "spawned": [
+      [
+       0,
+       0,
+       0.5
+      ],
+      [
+       1,
+       31,
+       55
+      ],
+      [
+       2,
+       63,
+       115
+      ],
+      [
+       3,
+       102,
+       175
+      ]
+     ],
+     "done": true
+    }
+   ]
+  },
+  "power": [
+   {
+    "f": 1,
+    "reserve": 0,
+    "power": 3,
+    "dps": 320
+   },
+   {
+    "f": 0.7,
+    "reserve": 0,
+    "power": 3,
+    "dps": 320
+   },
+   {
+    "f": 0.66,
+    "reserve": 0,
+    "power": 2,
+    "dps": 192
+   },
+   {
+    "f": 0.5,
+    "reserve": 0,
+    "power": 2,
+    "dps": 192
+   },
+   {
+    "f": 0.33,
+    "reserve": 0,
+    "power": 1,
+    "dps": 80
+   },
+   {
+    "f": 0.1,
+    "reserve": 0,
+    "power": 1,
+    "dps": 80
+   },
+   {
+    "f": 0,
+    "reserve": 0,
+    "power": 0,
+    "dps": 0
+   },
+   {
+    "f": 0,
+    "reserve": 30,
+    "power": 1,
+    "dps": 80
+   },
+   {
+    "f": 0.2,
+    "reserve": 30,
+    "power": 1,
+    "dps": 80
+   }
+  ],
+  "npc": [
+   {
+    "states": {},
+    "policies": [],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {},
+    "policies": [
+     "arm_npcs",
+     "scouting"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 50
+    }
+   },
+   {
+    "states": {},
+    "policies": [
+     "medical_stock"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.128,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {},
+    "policies": [
+     "arm_npcs"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "technician": "injured",
+     "scout": "missing"
+    },
+    "policies": [],
+    "expect": {
+     "repairScale": 0.5,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 0,
+     "wavePreview": false,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 20
+    }
+   },
+   {
+    "states": {
+     "technician": "injured",
+     "scout": "missing"
+    },
+    "policies": [
+     "arm_npcs",
+     "scouting"
+    ],
+    "expect": {
+     "repairScale": 0.5,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 0,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 40
+    }
+   },
+   {
+    "states": {
+     "technician": "injured",
+     "scout": "missing"
+    },
+    "policies": [
+     "medical_stock"
+    ],
+    "expect": {
+     "repairScale": 0.5,
+     "medicalHealPerSecond": 0.128,
+     "prepBonusSeconds": 0,
+     "wavePreview": false,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 20
+    }
+   },
+   {
+    "states": {
+     "technician": "injured",
+     "scout": "missing"
+    },
+    "policies": [
+     "arm_npcs"
+    ],
+    "expect": {
+     "repairScale": 0.5,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 0,
+     "wavePreview": false,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 20
+    }
+   },
+   {
+    "states": {
+     "medic": "rescued",
+     "operator": "missing",
+     "guard": "injured"
+    },
+    "policies": [],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.048,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": false,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "medic": "rescued",
+     "operator": "missing",
+     "guard": "injured"
+    },
+    "policies": [
+     "arm_npcs",
+     "scouting"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.048,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": false,
+     "guardDps": 0,
+     "prepSeconds": 50
+    }
+   },
+   {
+    "states": {
+     "medic": "rescued",
+     "operator": "missing",
+     "guard": "injured"
+    },
+    "policies": [
+     "medical_stock"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.07680000000000001,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": false,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "medic": "rescued",
+     "operator": "missing",
+     "guard": "injured"
+    },
+    "policies": [
+     "arm_npcs"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.048,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": false,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "guard": "normal"
+    },
+    "policies": [],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "guard": "normal"
+    },
+    "policies": [
+     "arm_npcs",
+     "scouting"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 50
+    }
+   },
+   {
+    "states": {
+     "guard": "normal"
+    },
+    "policies": [
+     "medical_stock"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.128,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 0,
+     "prepSeconds": 30
+    }
+   },
+   {
+    "states": {
+     "guard": "normal"
+    },
+    "policies": [
+     "arm_npcs"
+    ],
+    "expect": {
+     "repairScale": 1,
+     "medicalHealPerSecond": 0.08,
+     "prepBonusSeconds": 10,
+     "wavePreview": true,
+     "rescueSignals": true,
+     "guardDps": 150,
+     "prepSeconds": 30
+    }
+   }
+  ],
+  "life": {
+   "max": 3000,
+   "seq": [
+    [
+     "dmg",
+     2000
+    ],
+    [
+     "dmg",
+     1500
+    ],
+    [
+     "dmg",
+     1000
+    ],
+    [
+     "dmg",
+     600
+    ],
+    [
+     "dmg",
+     100
+    ],
+    [
+     "rescue"
+    ],
+    [
+     "tick",
+     30
+    ],
+    [
+     "dmg",
+     1600
+    ],
+    [
+     "tick",
+     40
+    ]
+   ],
+   "expect": [
+    [
+     false,
+     "normal",
+     1000
+    ],
+    [
+     true,
+     "injured",
+     1500
+    ],
+    [
+     false,
+     "injured",
+     500
+    ],
+    [
+     true,
+     "missing",
+     0
+    ],
+    [
+     false,
+     "missing",
+     0
+    ],
+    [
+     true,
+     "rescued",
+     1500
+    ],
+    [
+     false,
+     "rescued",
+     1500
+    ],
+    [
+     true,
+     "missing",
+     0
+    ],
+    [
+     false,
+     "missing",
+     0
+    ]
+   ]
+  },
+  "npc_health": [
+   {
+    "role": "technician",
+    "armed": false,
+    "expect": 3000
+   },
+   {
+    "role": "guard",
+    "armed": false,
+    "expect": 6000
+   },
+   {
+    "role": "guard",
+    "armed": true,
+    "expect": 9000
+   },
+   {
+    "role": "medic",
+    "armed": true,
+    "expect": 4500
+   }
+  ]
+ }
 }

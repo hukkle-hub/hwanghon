@@ -338,14 +338,25 @@ FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVecto
 TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From) const
 {
     if (!Config) return {};
-    if (Kind == HWNodeRules::ETargetKind::Generator) return Config->Route(TEXT("generator"));
-    if (Kind == HWNodeRules::ETargetKind::Comms) return Config->Route(TEXT("comms"));
+    // the target's route (generator, comms, or the route to the NPC it is after) gives the end point; the route graph
+    // gives the way there from wherever the enemy is (UHWNodeConfig::PathBetween, docs/design/201 §9)
+    // An NPC is followed to where it is now, not to its home route's end - a technician sent to the gate had a runner
+    // circling the generator building for good (tools/ue/node-sim.cjs).
     if (Kind == HWNodeRules::ETargetKind::Npc)
     {
-        // the route to the NPC it is after (medical, comms tower, generator ...)
-        if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) return Config->Route(Npc->GetRoute());
+        const AHWNodeNpc* Npc = NearestTargetableNpc(From);
+        if (!Npc) return {};
+        TArray<FVector> ToNpc = Config->PathBetween(From, Npc->GetActorLocation());
+        return ToNpc.Num() > 0 ? ToNpc : Config->Route(Npc->GetRoute());
     }
-    return {};
+    FName TargetRoute = NAME_None;
+    if (Kind == HWNodeRules::ETargetKind::Generator) TargetRoute = FName(TEXT("generator"));
+    else if (Kind == HWNodeRules::ETargetKind::Comms) TargetRoute = FName(TEXT("comms"));
+    if (TargetRoute.IsNone()) return {};
+    const TArray<FVector>& Plain = Config->Route(TargetRoute);
+    if (Plain.Num() == 0) return {};
+    TArray<FVector> GraphPath = Config->PathBetween(From, Plain.Last());
+    return GraphPath.Num() > 0 ? GraphPath : Plain;   // a node file without a connected graph: the plain route as before
 }
 
 TArray<FVector> AHWNodeDirector::PathFromTechnicianTo(EHWNodeFacilityKind Kind) const
@@ -742,7 +753,10 @@ bool AHWNodeDirector::EnemyOnComms() const
     if (!Comms) return false;
     for (const AHWNodeEnemy* E : Enemies)
     {
-        if (E && !E->IsDeadEnemy() && Comms->DistanceToSurface2D(E->GetActorLocation()) <= Config->CommsHoldRadius) return true;
+        // only an enemy that came for the comms centre holds it - not one fighting the operator next door or passing by
+        // (with armed NPCs the operator's longer fight used to hand over the node in two minutes: tools/ue/node-sim.cjs)
+        if (E && !E->IsDeadEnemy() && E->GetTargetKind() == HWNodeRules::ETargetKind::Comms
+            && Comms->DistanceToSurface2D(E->GetActorLocation()) <= Config->CommsHoldRadius) return true;
     }
     return false;
 }
