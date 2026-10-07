@@ -5,8 +5,8 @@
    걷는 띠·출발점은 맵 굽기 결과(maps/2d/<zone>/map.json)를 그대로 읽는다 — 한 곳에서만 정한다. */
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
-const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs');
-const ANIMS=['idle','run','walk','attack1','dodgeB'];
+const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),RS=require('./rpg-skills.cjs');
+const ANIMS=['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4'];   /* 스킬 1~4 — 다른 사람에게도 동작이 보이게 */
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
 const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 최소 간격 (클라 공격 동작 ≈0.6초) */
@@ -97,13 +97,13 @@ class Field{
   COMBAT.reset(o,now);
   this.store?.bossSave(o.id,o.zone,'alive',0,now);
   this.emit({ type:'announce', kind:'bossSpawn', zone:o.zone, boss:o.id, name:o.name, title:o.title, place:o.place }); return o; }
- hit(id, msg, profile, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.');
+ hit(id, msg, profile, now=Date.now(), opt={}){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.');
   const o=this.bosses.get(msg.boss); if(!o||o.zone!==p.zone) throw Error('보스를 찾을 수 없습니다.'); if(!o.alive||p.dead) return null;
   if(Math.hypot(p.x-o.x,p.z-o.z)>reachOf(o)+0.5) return null;                 /* 닿지 않는 거리 — 조용히 버린다(지연 탓일 수 있다) */
-  if(now-(o.last.get(id)||0)<HIT_GAP) return null; o.last.set(id,now);
+  if(!opt.skill&&now-(o.last.get(id)||0)<HIT_GAP) return null; o.last.set(id,now);   /* 스킬 타격은 재사용 대기가 따로 막는다 */
   /* 피해는 서버가 굴린다 (클라가 보낸 숫자는 믿지 않는다) — 기본 공격력 + 무기 공격력 × 0.6, ±10%, 치명타 */
-  const counter=COMBAT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=this.rng()<(st.critChance||0);
-  const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)));
+  const counter=COMBAT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=!!p.critNext||this.rng()<(st.critChance||0); p.critNext=false;   /* critNext: 그림자 걸음류 스킬 — 다음 공격 치명타 확정 */
+  const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)*(opt.mult||1)));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
   const part=o.hp>0?COMBAT.damageShutter(o,p,profile,dmg,counter,now):null;
   /* 공동 전투에는 접촉만 공유한다. 피해량·공격력·보스 체력은 공격자 밖으로 내보내지 않는다 (문서 191). */
@@ -113,11 +113,23 @@ class Field{
   if(part?.broken)this.emit({type:'announce',kind:'bossPartBreak',zone:o.zone,boss:o.id,name:o.name,part:'shutter'});
   if(o.hp<=0) this.killBoss(o, now);
   return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, part:part&&part.changed?[part.state,part.broken?1:0]:null, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at] }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
+ /* 캐릭터 스킬 1~4 (디렉터: «스킬을 누르고 공격을 누르면 그 스킬이 나간다» — 고르는 건 화면, 결과는 서버).
+    수치는 솔로와 같은 표(js/dungeons.js SKILLS + 스킬 성장 rpg-skills.resolve). 재사용 대기는 서버가 센다.
+    종류: mult>0 → 보스 타격(배율) · dodge → 회피 무적(+critNext: 다음 공격 치명타) · buff.reduce → 그 시간 동안 받는 피해 감소 */
+ skill(id, msg, profile, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.'); if(p.dead) return null;
+  const i=msg.skill|0, def=(RS.resolve(profile).skills||[])[i]; if(!def||i<0||i>3) return null;
+  p.skillReady=p.skillReady||[0,0,0,0]; if(now<p.skillReady[i]) return { type:'skillUsed', skill:i, ok:false, ready:p.skillReady[i] };
+  p.skillReady[i]=now+Math.round((def.cd||6)*1000); p.anim='skill'+(i+1);
+  if(def.dodge){ p.dodgeUntil=now+DODGE_TIME; if(def.critNext) p.critNext=true; }
+  if(def.buff&&def.buff.reduce){ p.buffUntil=now+Math.round((def.buff.dur||2)*1000); p.buffReduce=Math.max(0,Math.min(.8,def.buff.reduce)); }
+  let hit=null; if(def.mult>0&&typeof msg.boss==='string'){ try{ hit=this.hit(id,{boss:msg.boss},profile,now,{mult:def.mult,skill:true}); }catch{ hit=null; } }
+  const used={ skill:i, ok:true, ready:p.skillReady[i], name:def.name };
+  return hit?{ ...hit, ...used }:{ type:'skillUsed', ...used }; }
  /* 보스 타격 판정. 회피 무적·피해·넉백·사망을 한 서버 시각에서 결정한다. */
  bossStrike(o,p,hit,now=Date.now()){
   if(p.dead)return null; const seq=++p.hurtSeq;
   if(now<p.invulnUntil||now<p.dodgeUntil){ p.hurt=[seq,0,o.id,hit.skill,'evade',hit.beat,now];if(now>=p.invulnUntil&&now<p.dodgeUntil)COMBAT.notePlayerResult(o,p.id,true); return {evade:true}; }
-  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1,amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul*(1-reduce)));
+  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1,buffMul=now<(p.buffUntil||0)?1-(p.buffReduce||0):1,amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul*buffMul*(1-reduce)));   /* buffMul: 결의·철벽류 스킬 */
   p.hp=Math.max(0,p.hp-amount);
   if(hit.knock){ let dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz); if(d<.01){dx=Math.sin(o.yaw||0);dz=Math.cos(o.yaw||0);d=1;}
    p.x+=dx/d*hit.knock;p.z+=dz/d*hit.knock;this.clamp(this.zones.get(p.zone),p); }
@@ -162,6 +174,7 @@ class Field{
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
   if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), ...this.bossView(p) }; }
   if(msg.type==='fieldHit'){ return typeof msg.boss==='string'?this.hit(id, msg, profile):null; }
+  if(msg.type==='fieldSkill'){ return this.skill(id, msg, profile); }
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
   /* 옛 데모 클라이언트 호환용 무응답. 온라인 외형은 장착 장비만 권위로 삼아 반복 재생성 공격을 막는다. */
   if(msg.type==='fieldLook')return null;

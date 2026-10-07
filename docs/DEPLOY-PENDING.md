@@ -15,7 +15,7 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| pending (Claude, 2026-10-07) | 필드 스킬 1~4 `fieldSkill` — 디렉터 «스킬을 누르고 공격을 누르면 그 스킬이 나간다». 배율·재사용 대기·회피(+다음 치명타)·받는 피해 감소를 서버가 정한다(`server/field.cjs` skill, 표는 `rpg-skills.resolve`). 다른 사람에게 보이게 동작 이름 `skill1~4` 허용. 시험 `tests/field-skills.test.cjs` |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
 

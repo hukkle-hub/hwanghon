@@ -25,7 +25,7 @@ const browser=await chromium.launch({...(browserPath&&{executablePath:browserPat
 page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url().replace(base,''));});page.on('requestfailed',r=>errors.push('요청 실패 '+(r.failure()?.errorText||'')+' '+r.url().replace(base,'').slice(0,100)));   /* 어느 주소가 실패했는지 남긴다 (Claude 적용 검수 2026-10-07) */
 // Offline QA may substitute a locally installed Korean font for the external stylesheet.
 if(process.env.QA_FONT){const font=fs.readFileSync(process.env.QA_FONT);await page.route('https://fonts.googleapis.com/**',r=>r.fulfill({contentType:'text/css',body:`@font-face{font-family:'Noto Sans KR';font-weight:100 900;src:url(data:font/otf;base64,${font.toString('base64')})}` }));}
-await page.goto(base+'/mmo.html?zone=gangnam_b1&char=kain'+(M||process.env.QA_LOD==='1'?'&lod=1':''));
+await page.goto(base+'/mmo.html?zone=gangnam_b1&char=kain&offline=1'+(M||process.env.QA_LOD==='1'?'&lod=1':''));
 await page.waitForFunction(()=>{if(!window.__MMO)return false;const b=window.__MMO.bosses?.find(x=>x.b.id==='clave');return window.__MMO.frames>3&&b?.root&&b?.fx&&b?.actions?.walk&&b?.actions?.atk_claveshut;},null,{timeout:240000});
 const frames=async n=>{const f=await page.evaluate(()=>__MMO.frames);await page.waitForFunction(x=>__MMO.frames>=x,f+n,{timeout:240000});};
 await page.evaluate(()=>{const b=__MMO.bosses.find(x=>x.b.id==='clave');__MMO.teleport(b.b.x-3.15,b.b.z,Math.PI/2);});await frames(8);

@@ -25,6 +25,12 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 .b:active{background:rgba(165,28,28,.45)}
 .b.atk{right:0;bottom:0;width:80px;height:80px;border-color:rgba(255,70,70,.65);color:#ff9a9a;font-size:13px}
 .b.s{width:52px;height:52px}
+/* 스킬 1~4: 누르면 «장전»(금색) → 공격을 누르면 그 스킬이 나간다 (디렉터 2026-10-07) */
+.b.sk{flex-direction:column;gap:0;line-height:1}.b.sk b{font-size:15px}.b.sk em{font-style:normal;font-size:9px;letter-spacing:-.02em;opacity:.8;max-width:50px;white-space:nowrap;overflow:hidden;margin-top:2px}
+.b.sk.armed{border-color:#ffcf40;color:#ffe9a8;box-shadow:0 0 0 2px rgba(255,207,64,.35),0 0 14px rgba(255,190,60,.55);background:rgba(60,42,8,.72)}
+.b.sk .cd{position:absolute;inset:0;border-radius:50%;background:conic-gradient(rgba(6,8,12,.78) calc(var(--p,0)*360deg),transparent 0);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:14px;font-weight:700;color:#fff}
+.b.sk .cd[hidden]{display:none}
+.b.atk.armed{border-color:#ffcf40;color:#ffe9a8;font-size:12px;box-shadow:0 0 16px rgba(255,190,60,.5)}
 .gear{position:absolute;right:calc(14px + env(safe-area-inset-right));top:58px;padding:8px 12px;border:1px solid rgba(255,255,255,.22);background:rgba(10,12,18,.6);font-size:12px;border-radius:4px}
 .tag{position:absolute;transform:translate(-50%,-100%);text-align:center;font-size:11px;font-weight:700;white-space:nowrap;text-shadow:0 1px 2px #000,0 0 4px #000;pointer-events:none}
 .tag .title{display:block;margin-bottom:1px;color:#ffb071;font-size:9px;font-weight:700;letter-spacing:.06em;text-shadow:0 0 7px rgba(255,55,24,.8),0 1px 2px #000}.tag .title[data-tier="3"]{color:#fff0dc;text-shadow:0 0 9px #ff3a20,0 1px 2px #000}
@@ -121,13 +127,17 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
   <div id="ann"></div>
   <div id="stick" class="hit"><div class="ring" id="ring"><i id="knob"></i></div></div>
   <div class="btns hit"><div class="b atk" id="atk">공격</div>
-    <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div><div class="b s" style="right:88px;bottom:62px">1</div>
-    <div class="b s" style="right:44px;bottom:100px">2</div><div class="b s" style="right:-6px;bottom:108px">3</div></div>
+    <div class="b s" style="right:96px;bottom:2px" id="dodge">회피</div>
+    <div class="b s sk" style="right:92px;bottom:58px" data-skill="0"><b>1</b><em></em><i class="cd" hidden></i></div>
+    <div class="b s sk" style="right:66px;bottom:112px" data-skill="1"><b>2</b><em></em><i class="cd" hidden></i></div>
+    <div class="b s sk" style="right:14px;bottom:150px" data-skill="2"><b>3</b><em></em><i class="cd" hidden></i></div>
+    <div class="b s sk" style="right:-10px;bottom:90px" data-skill="3"><b>4</b><em></em><i class="cd" hidden></i></div></div>
 </div>
 <div id="dark"></div><div id="vig"></div>
 <div id="world" hidden><div class="wt">황혼의 한국<small>금색 = 갈 수 있는 곳 · 흐림 = 아직 · 누르면 길잡이 빠른 이동</small></div><div class="wmap" id="wmap"></div><div class="wx hit" id="wclose">닫기</div><div class="wgo hit" id="wgo" hidden></div></div><div id="hurtfx"></div>
 <div id="load">강남대로로 나가는 중…</div>
 <script src="js/items.js"></script>
+<script src="js/dungeons.js"></script>
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/looks.js"></script>
@@ -149,6 +159,9 @@ import { ZONES } from './js/mmo/zones.js';
 import { REGIONS, levelOf } from './js/mmo/regions.js';
 import { CLAVE_MOTIONS,claveCounterActive,setupBossMotion,applyBossAction,prepareBossMotion,updateBossMotion,bossHitReact,bossCounterBurst,hideBossMotion } from './js/mmo/boss-motion.js';
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
+const PARTY_DEFAULT='hwanghon-party.onrender.com';
+/* 맵을 받는 동안 파티 서버를 미리 깨운다 — 잠든 Render 는 첫 요청에 30초쯤 걸린다 */
+if(q.get('online')!=='0'&&!q.has('offline')&&!q.get('server')&&/\.github\.io$/.test(location.hostname)) fetch('https://'+PARTY_DEFAULT+'/healthz',{ mode:'no-cors', cache:'no-store' }).catch(()=>{});
 const MOBILE=matchMedia('(pointer:coarse)').matches, REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* 휴대폰은 가벼운 모델(art/3d/lod, tools/2d/make-lod.mjs — 삼각형 약 1/4, 텍스처 512 webp). ?lod=0|1 로 강제 */
 const LOD=q.has('lod')?q.get('lod')==='1':MOBILE;
@@ -238,8 +251,8 @@ function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb
 async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=SkeletonUtils.clone(g.scene); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,root);
   root.position.set(x,0,z); scene.add(root); root.traverse(o2=>{ if(o2.isMesh) o2.frustumCulled=false; });
   const mixer=new THREE.AnimationMixer(root), clip=n=>g.animations.find(a=>a.name===n), act={};
-  for(const n of ['idle','run','walk','attack1','dodgeB']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
-  ['attack1','dodgeB'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
+  for(const n of ['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
+  ['attack1','dodgeB','skill1','skill2','skill3','skill4'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
   act.idle.play(); mixer.setTime(Math.random()*2);
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),meta.water?new THREE.MeshBasicMaterial({map:rippleTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0.55}):new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
   const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); document.getElementById('hud').appendChild(tag);
@@ -292,12 +305,12 @@ stick.addEventListener('pointerdown',e=>{ stickId=e.pointerId; stick.setPointerC
 stick.addEventListener('pointermove',e=>{ if(e.pointerId!==stickId) return; let dx=e.clientX-sx, dy=e.clientY-sy; const m=Math.hypot(dx,dy), lim=46; if(m>lim){ dx*=lim/m; dy*=lim/m; } knob.style.transform='translate('+dx+'px,'+dy+'px)'; input.x=dx/lim; input.y=-dy/lim; });
 const stickEnd=e=>{ if(e.pointerId!==stickId) return; stickId=null; input.x=input.y=0; knob.style.transform=''; };
 stick.addEventListener('pointerup',stickEnd); stick.addEventListener('pointercancel',stickEnd);
-addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyM'){ const mm=document.getElementById('mini'); if(!mm.hidden) mm.classList.toggle('big'); } if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
+addEventListener('keydown',e=>{ keys[e.code]=true; if(e.code==='KeyM'){ const mm=document.getElementById('mini'); if(!mm.hidden) mm.classList.toggle('big'); } if(e.code==='KeyJ'||e.code==='Space') attack(); if(e.code==='KeyK') dodge(); { const d=/^Digit([1-4])$/.exec(e.code); if(d) armSkill(+d[1]-1); } if(e.code==='KeyG') nextSet(); if(e.code==='Backquote') toggleDbg(); });
 addEventListener('keyup',e=>{ keys[e.code]=false; });
 let me=null,selfDead=false;
 function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name,visual=key!==me.lookKey;me.name=name;if(visual){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed||visual)heroTag(me);}
 function applySelfInfo(info){if(!me)return;me.title=info&&info.title||null;heroTag(me);}
-function attack(){ if(!me||selfDead||me.busy>0) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8;window.TW_SFX?.play('swing'); if(typeof hitBoss==='function') hitBoss(); }
+function attack(){ if(!me||selfDead||me.busy>0) return; if(skArmed!=null&&castSkill(skArmed)) return; play(me,'attack1',0.08); me.busy=me.act.attack1.getClip().duration*0.8;window.TW_SFX?.play('swing'); if(typeof hitBoss==='function') hitBoss(); }
 function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7;
   if(net){const p=me.root.position;net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:'dodgeB'});} }
 function nextSet(){ if(!me||me.eqNet) return; dress(me,(me.set+1)%SETS.length); }
@@ -307,11 +320,12 @@ const dbg=document.getElementById('dbg'); let dbgOn=DEBUG; function toggleDbg(){
 const netEl=document.getElementById('net'); const remotes=new Map(); let net=null, ANIMS=['idle','run','walk','attack1','dodgeB'];
 /* 보스 메시지는 보스가 만들어지기 전에 올 수 있다 — 그때까지 모아 둔다 */
 let bossNet=null; const bossPend=[]; const toBoss=m=>{ if(bossNet) bossNet(m); else bossPend.push(m); };
-function partyServer(){ const v=q.get('server')||''; if(!v) return { host:location.host, secure:location.protocol==='https:' };
+function partyServer(){ const v=q.get('server')||''; if(!v) return /\.github\.io$/.test(location.hostname)?{ host:PARTY_DEFAULT, secure:true }:{ host:location.host, secure:location.protocol==='https:' };   /* Pages 사본은 Render 파티 서버로 */
   try{ const u=new URL(/^(https?|wss?):\/\//.test(v)?v.replace(/^ws/,'http'):'https://'+v); return { host:u.host, secure:u.protocol==='https:' }; }catch{ return null; } }
 function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServer(); if(!sv) return reject(Error('서버 주소 오류'));
   const tokenKey='tw:party-token:'+sv.host, store={ get:k=>{ try{ return localStorage.getItem(k); }catch{ return null; } }, set:(k,v)=>{ try{ localStorage.setItem(k,v); }catch{} } };
-  const ws=new WebSocket((sv.secure?'wss:':'ws:')+'//'+sv.host+'/party-socket'); let profile=null, tries=0; const timer=setTimeout(()=>{ reject(Error('접속 시간 초과')); try{ ws.close(); }catch{} },15000);
+  const ws=new WebSocket((sv.secure?'wss:':'ws:')+'//'+sv.host+'/party-socket'); let profile=null, tries=0; const slow=/onrender\.com$/.test(sv.host), timer=setTimeout(()=>{ reject(Error('접속 시간 초과')); try{ ws.close(); }catch{} },slow?35000:15000);   /* Render 무료는 잠들어 있으면 깨는 데 30초쯤 */
+  const wakeMsg=slow&&setTimeout(()=>{ const L=document.getElementById('load'); if(L) L.textContent='서버를 깨우는 중… (처음엔 30초쯤)'; },3500);
   const send=m=>{ if(ws.readyState===1) ws.send(JSON.stringify(m)); };
   const named=()=>{ const n=(store.get('tw:party-name')||'요원')+(tries?String(Math.random()*9000+1000|0):''); tries++; send({type:'character',name:n.replace(/[^\p{L}\p{N}_]/gu,'').slice(0,16)||'요원'+(Math.random()*9000+1000|0),character:ME}); };
   ws.onopen=()=>send({type:'hello',token:store.get(tokenKey),name:store.get('tw:party-name')||'요원'});
@@ -319,11 +333,12 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
     if(m.type==='welcome'){ store.set(tokenKey,m.token); profile=m.profile; if(profile.characterCreated) send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); else named(); return; }
     if(m.type==='profile'&&profile&&!profile.characterCreated&&m.profile.characterCreated){ profile=m.profile; send({type:'fieldJoin',zone:ZONE,gate:ARRIVE||undefined,look:START_SET[profile.character]}); return; }
     if(m.type==='error'&&profile&&!profile.characterCreated&&/이름|이미/.test(m.message)&&tries<5){ named(); return; }
-    if(m.type==='fieldJoined'){ clearTimeout(timer); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; toBoss(m); resolve(net); return; }
+    if(m.type==='fieldJoined'){ clearTimeout(timer); clearTimeout(wakeMsg); ANIMS=m.anims||ANIMS; net={ ws, send, profile, joined:m }; toBoss(m); resolve(net); return; }
     if(m.type==='profile'&&net){net.profile=m.profile;applySelfProfile(m.profile);return;}
     if(m.type==='fieldInfo'&&net){net.selfInfo=m.info;applySelfInfo(m.info);return;}
     if(m.type==='field'){ onField(m); if(m.bosses||m.loot||m.self||m.hurt) toBoss(m); return; }
     if(m.type==='announce'||m.type==='bossHit'||m.type==='fieldLooted'){ toBoss(m); return; }
+    if(m.type==='skillUsed'){ if(!m.ok) toast((m.name||'스킬')+' — 아직 다시 쓸 수 없다'); return; }   /* 스킬 1~4 — 서버가 재사용 대기를 센다 */
     if(m.type==='hubState'){ hubSet(m); return; }   /* 거점 점령 (문서 192 §8) — 서버는 GPT 몫 */
     if(m.type==='hubStates'&&Array.isArray(m.list)){ m.list.forEach(hubSet); return; }
     if(m.type==='error'){ console.warn('[field]', m.message); if(net&&/주울|줍|가진 장비|1위가 먼저|가까이/.test(m.message)) toBoss({type:'lootError',message:m.message}); } };
@@ -345,13 +360,32 @@ function follow2(h, dt){ const t=h.target; if(!t) return; const dx=t[0]-h.root.p
   if(d>6){ h.root.position.x=t[0]; h.root.position.z=t[1]; } else { const k=Math.min(1,dt*10); h.root.position.x+=dx*k; h.root.position.z+=dz*k; }
   let dy=t[2]-h.yaw; dy=Math.atan2(Math.sin(dy),Math.cos(dy)); h.yaw+=dy*Math.min(1,dt*12); h.root.rotation.y=h.yaw;
   if(t[3]==='attack1'||t[3]==='dodgeB'){ if(h.cur!==t[3]) play(h,t[3],0.08); } else play(h, t[3]); }
-const ONLINE=q.get('online')==='1'||q.has('server');
+const ONLINE=q.get('online')!=='0'&&!q.has('offline');   /* 온라인이 기본 (디렉터 2026-10-07: 오프라인에선 보스 AI 가 안 돌아 «가만히 서 있다») — ?offline=1 · ?online=0 이면 혼자 */
 /* 다른 지역의 문으로 넘어왔다 (?gate=<문 id>) — 그 문 앞에서 시작 */
 const ARRIVE=(meta.gates.find(g=>g.id===q.get('gate'))||{}).id||null;
 if(ONLINE){ netEl.textContent='접속 중…'; try{ await connectNet(); netEl.textContent='온라인 · 근처 0명'; }catch(e){ netEl.textContent='오프라인 — '+e.message; } }
 /* ---------- 출발 ---------- */
 const arriveAt=ARRIVE&&meta.gates.find(g=>g.id===ARRIVE);
 const MY=net?net.profile.character:ME, sp=net?{ x:net.joined.x, z:net.joined.z }:arriveAt?{ x:arriveAt.x, z:arriveAt.z }:meta.spawn;
+/* ---------- 스킬 1~4 — 디렉터: «스킬을 누르고 공격버튼을 누르면 그 스킬이 나간다» ----------
+   수치는 솔로와 같은 표(js/dungeons.js SKILLS). 온라인이면 서버가 배율·재사용 대기·회피·피해 감소를 정한다(server/field.cjs skill). */
+const SKDEF=(window.TW_DUNGEONS&&TW_DUNGEONS.SKILLS&&(TW_DUNGEONS.SKILLS[MY]||TW_DUNGEONS.SKILLS.ain))||[];
+let skArmed=null, skCritNext=false, skBuffT=0; const skReady=[0,0,0,0], skEls=[...document.querySelectorAll('.b.sk')], atkEl=document.getElementById('atk');
+skEls.forEach((el,i)=>{ const d=SKDEF[i]; if(!d){ el.hidden=true; return; } el.querySelector('em').textContent=d.name; el.title=d.name+' — '+d.desc; el.addEventListener('pointerdown',e=>{ e.stopPropagation(); armSkill(i); }); });
+function skRender(){ skEls.forEach((el,i)=>el.classList.toggle('armed',skArmed===i)); const d=SKDEF[skArmed]; atkEl.textContent=d?d.name:'공격'; atkEl.classList.toggle('armed',!!d); }
+function armSkill(i){ const d=SKDEF[i]; if(!d||!me||selfDead) return; const left=(skReady[i]-performance.now())/1000; if(left>0){ toast(d.name+' — '+Math.ceil(left)+'초 뒤'); return; }
+  skArmed=skArmed===i?null:i; skRender(); }
+function castSkill(i){ const d=SKDEF[i], clip='skill'+(i+1); if(!d||!me.act[clip]) return false; skArmed=null; skRender();
+  play(me,clip,0.06); me.busy=me.act[clip].getClip().duration*0.75; skReady[i]=performance.now()+d.cd*1000;
+  window.TW_SFX?.play(d.dodge?'dodge':d.buff?'guard':'swing'); toast(d.name);
+  if(d.mult>0){ if(hitBoss({ i, mult:d.mult, hits:d.ev&&d.ev.hits })===false&&net) net.send({type:'fieldSkill',skill:i}); }   /* 보스가 멀면 허공 — 재사용 대기는 그래도 돈다 */
+  else { if(net) net.send({type:'fieldSkill',skill:i}); if(d.critNext) skCritNext=true; if(d.buff) skBuffT=d.buff.dur||2; }
+  return true; }
+function skFrame(){ const now=performance.now(); skEls.forEach((el,i)=>{ const d=SKDEF[i]; if(!d) return; const c=el.querySelector('.cd'), left=(skReady[i]-now)/1000;
+  if(left>0){ c.hidden=false; c.textContent=Math.ceil(left); c.style.setProperty('--p',Math.min(1,left/d.cd)); } else if(!c.hidden) c.hidden=true; }); }
+let skRing=null; function skBuffFx(dt){ if(skBuffT<=0&&!skRing) return; if(!skRing){ skRing=new THREE.Mesh(new THREE.RingGeometry(0.62,0.72,48),new THREE.MeshBasicMaterial({ color:0xffcf40, transparent:true, opacity:0.8, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); skRing.rotation.x=-Math.PI/2; scene.add(skRing); }
+  skBuffT=Math.max(0,skBuffT-dt); skRing.visible=skBuffT>0&&!!me; if(skRing.visible){ skRing.position.set(me.root.position.x,FLOOR+0.06,me.root.position.z); skRing.material.opacity=0.45+0.35*Math.sin(performance.now()/120); } }   /* 결의·철벽류 — 받는 피해 감소 동안 발밑 금빛 고리 */
+window.__SKILLS={ arm:armSkill, cast:castSkill, get armed(){ return skArmed; }, defs:SKDEF };
 me=await hero(MY, sp.x, sp.z, true, { name:net?net.profile.name:NAMES[MY], look:net&&net.joined.info&&net.joined.info.look, eq:net?{...(net.profile.equipment||{})}:null, enh:net?slotEnh(net.profile):null, title:net&&net.joined.info&&net.joined.info.title });
 if(net){applySelfProfile(net.profile);applySelfInfo(net.selfInfo||net.joined.info);}
 document.getElementById('gearBtn').hidden=!!net;
@@ -494,10 +528,12 @@ function selfPacket(m){
  if(kind==='dead'){deathEl.hidden=false;announce('클레이브에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}
 }
 function nearBoss(){ const p=me.root.position; let best=null, bd=1e9; for(const o of bosses){ if(!o.alive) continue; const x=o.root?.position.x??o.b.x,z=o.root?.position.z??o.b.z,d=Math.hypot(x-p.x,z-p.z); if(d<=reachOf(o.b)&&d<bd){ best=o; bd=d; } } return best; }
-function hitBoss(){ const o=nearBoss(); if(!o) return;
+function hitBoss(sk){ const o=nearBoss(); if(!o) return false;
   const x=o.root?.position.x??o.b.x,z=o.root?.position.z??o.b.z,yaw=Math.atan2(x-me.root.position.x,z-me.root.position.z); me.yaw=yaw; me.root.rotation.y=yaw;   /* 보스 쪽으로 몸을 돌린다 */
-  if(net){ net.send({type:'fieldHit',boss:o.b.id}); return; }
-  const crit=Math.random()<0.18, n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1));o.local-=n;if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit});if(o.local<=0)o.local=300000; }
+  if(net){ net.send(sk?{type:'fieldSkill',skill:sk.i,boss:o.b.id}:{type:'fieldHit',boss:o.b.id}); return; }
+  /* 오프라인: 스킬 배율 · 회피 스킬 뒤 치명타 확정 · 여러 접점(피의 회전 2타)은 숫자도 나눠서 */
+  const crit=skCritNext||Math.random()<0.18; skCritNext=false; const mult=sk?sk.mult:1, hits=sk&&sk.hits&&sk.hits.length>1?sk.hits:[[0,1]];
+  hits.forEach(([,w],k)=>setTimeout(()=>{ if(!o.alive) return; const n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)*mult*w);o.local-=n;if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit});if(o.local<=0)o.local=300000; },k*220)); }
 /* 바닥 장비: 등급 색 빛기둥 + 돌아가는 결정 + 이름표 (디아블로식 «멀리서도 뭔가 떨어졌다») */
 const loots=new Map();
 function lootAdd([id,item,x,z,mine]){ let L=loots.get(id);
@@ -611,7 +647,7 @@ function zones(dt){ zoneT+=dt; const p=me.root.position; if(mistMesh){ mistMesh.
   if(toastT>0){ toastT-=dt; if(toastT<=0) toastEl.hidden=true; }
   if(meta.flicker){ flickT=(flickT+dt)%(meta.flicker.on+meta.flicker.off); const off=flickT>meta.flicker.on, stutter=flickT<0.18&&flickT>0.08,now=bossNow();let threat=false,counterCue=false;for(const o of bosses)if(o.alive&&o.netAct){if(o.netAct.motion==='stagger'){threat=counterCue=true;}else if(o.netAct.motion==='skill'){threat=true;const cueNow=Number.isFinite(o.poseElapsed)?o.netAct.startedAt+o.poseElapsed:now;if(claveCounterActive(o.netAct,cueNow))counterCue=true;}}
     const requested=off?.58:stutter?.35:0,cap=counterCue?.12:threat?.28:.58,lightFloor=counterCue?.8:threat?.55:.25;darkEl.style.opacity=Math.min(requested,cap);near.forEach(L=>{ if(off) L.intensity*=lightFloor; }); } }
-function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
+function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++; if(frames%4===0) skFrame(); skBuffFx(dt);
   let ix=input.x+(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0), iy=input.y+(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, selfDead?0:ix, selfDead?0:-iy, dt, 4.8);
