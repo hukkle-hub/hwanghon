@@ -97,8 +97,11 @@ export function build(THREE, scene, osm, zone) {
   const bandTrees = [], spaced = p => { if (bandTrees.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 10)) return false; bandTrees.push(p); return true; };
   /* 띠 가까운 쪽(카메라 쪽, t0) 바로 바깥 7 m 도 비운다 — 그 나무 갓이 띠 가장자리 칸을 덮었다(판교 s −96 t −316) */
   const shades = p => reserve.some(([q]) => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11) || (t => t > walk.t0 - 7 && t < walk.t0 + 1)(ST(p)[1]);
+  /* 띠 안 나무 바로 뒤(화면 위, 월드 −z) 14 m 안에 건물이 있으면 두지 않는다 — 갓이 가리는 0~10 m 가 건물 벽에 끼인 좁은 칸이라
+     하나만 덮어도 칸의 70% 를 넘었다(여의도 s −176 t −110). 난수는 그대로 쓰고(R() 다음에 거른다) 거른 나무만 빠진다 */
+  const wedged = p => { for (let k = 2; k <= 14; k += 1.5) if (L.inBuilding(built, [p[0], p[1] - k])) return true; return false; };
   if (tf.density) { const spots = L.treeSpots(ctx, { s0: walk.s0 - 40, s1: walk.s1 + 40, t0: walk.t0 - 30, t1: walk.t1 + 34 }, { density: tf.density, step: tf.step,
-      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) && !shades(p) && (!inBand(p, 1) || (R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1) && spaced(p))) && (!tf.only || tf.only(p, ctx)) });
+      keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) && !shades(p) && (!inBand(p, 1) || (R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1) && !wedged(p) && spaced(p))) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
   if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => reserve.some(([q, r]) => Math.hypot(p[0] - q[0], p[1] - q[1]) < r) });
   if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) });

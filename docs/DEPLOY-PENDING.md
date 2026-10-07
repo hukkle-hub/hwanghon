@@ -17,7 +17,7 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| `cfa9cedb6` 외 (이번 main 푸시) | **거점 서버** `server/node-store.cjs` 새로 · `server/node-rules.cjs` 새로 · `server/index.cjs` 에 `{type:'node'}` 한 줄(200ms 간격). 표 3개 `node_state`·`node_contrib`·`node_runs` 는 처음 쓸 때 만든다(`CREATE IF NOT EXISTS`). 쉘터 «거점 관리» 카드가 이걸 쓴다 — Render 반영 전엔 카드가 «불러오는 중…» 에 머문다. 문서 201 §6 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
 
