@@ -181,6 +181,29 @@ void AHWNodeDirector::BuildGraybox()
         }
         GrayboxParts.Add(Part);
     }
+
+    // flat floor marks (no collision) where G does something: the shelter (blue), the medical bay (green), the holding spot (white)
+    const auto AddMark = [this, Cube, &Index](const FVector& At, const FLinearColor& MarkColor)
+    {
+        if (At.IsZero()) return;
+        UStaticMeshComponent* Mark = NewObject<UStaticMeshComponent>(this, *FString::Printf(TEXT("Graybox_%d"), Index++));
+        Mark->SetStaticMesh(Cube);
+        Mark->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Mark->SetupAttachment(SceneRoot);
+        Mark->SetWorldLocation(At + FVector(0.f, 0.f, 3.f));
+        Mark->SetWorldScale3D(FVector(3.f, 3.f, 0.04f));   // 3 m square, 4 cm thick
+        Mark->RegisterComponent();
+        if (UMaterialInterface* BaseMaterial = Mark->GetMaterial(0))
+        {
+            UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+            Mat->SetVectorParameterValue(TEXT("Color"), MarkColor);
+            Mark->SetMaterial(0, Mat);
+        }
+        GrayboxParts.Add(Mark);
+    };
+    AddMark(Config->ShelterPoint, FLinearColor(0.25f, 0.75f, 1.f));
+    AddMark(Config->MedicalBay, FLinearColor(0.25f, 0.9f, 0.5f));
+    AddMark(Config->HoldingSpot, FLinearColor(0.9f, 0.9f, 0.9f));
 }
 
 void AHWNodeDirector::SpawnFacilities()
@@ -1010,6 +1033,7 @@ void AHWNodeDirector::DrawHud() const
     {
         Show(FString::Printf(TEXT("PREPARE %.0fs - supplies %d (barricade %d at a forest-trail slot: G)   technician orders: G next to them"),
             PrepLeft, Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade)), FColor(255, 170, 90));
+        if (!Config->ShelterPoint.IsZero()) Show(TEXT("Evacuate the NPCs under the central turrets: G at the shelter point (they leave their posts)"), FColor(120, 200, 255));
         Show(NpcFx.bWavePreview ? FString::Printf(TEXT("Scout report - first wave: %s"), *WavePreview(0)) : FString(TEXT("No scout report (scout lost, no scouting policy)")), FColor(170, 220, 255));
     }
     if (Machine.State == HWNodeRules::ENodeState::Invasion)
