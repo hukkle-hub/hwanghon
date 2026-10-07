@@ -215,17 +215,17 @@ public:
     // Pads, ramps and walls become Blocks with the same maths as tools/ue/node-graybox.js. Null if unreadable.
     static UHWNodeConfig* LoadFromJson(FName Id, UObject* Outer);
 
-    FVector Anchor(FName Name) const
+    FVector Anchor(FName Key) const
     {
-        const FVector* Found = Anchors.Find(Name);
+        const FVector* Found = Anchors.Find(Key);
         return Found ? *Found : FVector::ZeroVector;
     }
 
     // Empty when the route does not exist.
-    const TArray<FVector>& Route(FName Name) const
+    const TArray<FVector>& Route(FName Key) const
     {
         static const TArray<FVector> Empty;
-        const FHWNodeRoute* Found = Routes.Find(Name);
+        const FHWNodeRoute* Found = Routes.Find(Key);
         return Found ? Found->Points : Empty;
     }
 

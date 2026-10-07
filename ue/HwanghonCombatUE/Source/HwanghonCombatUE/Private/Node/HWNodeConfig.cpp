@@ -114,33 +114,33 @@ namespace HWNodeConfigLocal
         return true;
     }
 
-    bool FacilityKind(const FString& Name, EHWNodeFacilityKind& Out)
+    bool FacilityKind(const FString& Key, EHWNodeFacilityKind& Out)
     {
-        if (Name == TEXT("gate")) { Out = EHWNodeFacilityKind::Gate; return true; }
-        if (Name == TEXT("generator")) { Out = EHWNodeFacilityKind::Generator; return true; }
-        if (Name == TEXT("comms")) { Out = EHWNodeFacilityKind::Comms; return true; }
-        if (Name == TEXT("turret")) { Out = EHWNodeFacilityKind::Turret; return true; }
-        if (Name == TEXT("barricade")) { Out = EHWNodeFacilityKind::Barricade; return true; }
+        if (Key == TEXT("gate")) { Out = EHWNodeFacilityKind::Gate; return true; }
+        if (Key == TEXT("generator")) { Out = EHWNodeFacilityKind::Generator; return true; }
+        if (Key == TEXT("comms")) { Out = EHWNodeFacilityKind::Comms; return true; }
+        if (Key == TEXT("turret")) { Out = EHWNodeFacilityKind::Turret; return true; }
+        if (Key == TEXT("barricade")) { Out = EHWNodeFacilityKind::Barricade; return true; }
         return false;
     }
 
-    bool NpcRole(const FString& Name, EHWNodeNpcRole& Out)
+    bool NpcRole(const FString& Key, EHWNodeNpcRole& Out)
     {
-        if (Name == TEXT("technician")) { Out = EHWNodeNpcRole::Technician; return true; }
-        if (Name == TEXT("medic")) { Out = EHWNodeNpcRole::Medic; return true; }
-        if (Name == TEXT("scout")) { Out = EHWNodeNpcRole::Scout; return true; }
-        if (Name == TEXT("operator")) { Out = EHWNodeNpcRole::Operator; return true; }
-        if (Name == TEXT("guard")) { Out = EHWNodeNpcRole::Guard; return true; }
+        if (Key == TEXT("technician")) { Out = EHWNodeNpcRole::Technician; return true; }
+        if (Key == TEXT("medic")) { Out = EHWNodeNpcRole::Medic; return true; }
+        if (Key == TEXT("scout")) { Out = EHWNodeNpcRole::Scout; return true; }
+        if (Key == TEXT("operator")) { Out = EHWNodeNpcRole::Operator; return true; }
+        if (Key == TEXT("guard")) { Out = EHWNodeNpcRole::Guard; return true; }
         return false;
     }
 
-    bool EnemyRoleNamed(const FString& Name, EHWNodeEnemyRole& Out)
+    bool EnemyRoleNamed(const FString& Key, EHWNodeEnemyRole& Out)
     {
-        if (Name == TEXT("normal")) { Out = EHWNodeEnemyRole::Normal; return true; }
-        if (Name == TEXT("runner")) { Out = EHWNodeEnemyRole::Runner; return true; }
-        if (Name == TEXT("breaker")) { Out = EHWNodeEnemyRole::Breaker; return true; }
-        if (Name == TEXT("stalker")) { Out = EHWNodeEnemyRole::Stalker; return true; }
-        if (Name == TEXT("armored_elite")) { Out = EHWNodeEnemyRole::ArmoredElite; return true; }
+        if (Key == TEXT("normal")) { Out = EHWNodeEnemyRole::Normal; return true; }
+        if (Key == TEXT("runner")) { Out = EHWNodeEnemyRole::Runner; return true; }
+        if (Key == TEXT("breaker")) { Out = EHWNodeEnemyRole::Breaker; return true; }
+        if (Key == TEXT("stalker")) { Out = EHWNodeEnemyRole::Stalker; return true; }
+        if (Key == TEXT("armored_elite")) { Out = EHWNodeEnemyRole::ArmoredElite; return true; }
         return false;
     }
 

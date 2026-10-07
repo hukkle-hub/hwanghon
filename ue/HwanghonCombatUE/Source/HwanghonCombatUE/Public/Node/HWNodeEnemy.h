@@ -49,6 +49,7 @@ public:
     // Killed by the player (false = discarded: fell off, or the run was reset).
     UFUNCTION(BlueprintPure)
     bool WasKilled() const { return bKilled; }
+    bool WasKilledByPlayer() const { return bKilled && bLastHitByPlayer; }
 
     virtual bool ReceiveSystemHit_Implementation(float Damage, EHWAttackTier Tier, FVector SourceLocation, AActor* InstigatorActor) override;
     virtual bool IsSystemTargetDead_Implementation() const override { return bDead; }

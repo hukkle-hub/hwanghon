@@ -74,12 +74,12 @@ namespace HWNodeDirectorLocal
         }
     }
 
-    bool PolicyNamed(const FString& Name, HWNodeRules::EPolicy& Out)
+    bool PolicyNamed(const FString& Key, HWNodeRules::EPolicy& Out)
     {
         static const TCHAR* PolicyKeys[] = { TEXT("gate_reinforce"), TEXT("generator_reinforce"), TEXT("arm_npcs"), TEXT("scouting"), TEXT("medical_stock"), TEXT("reserve_power") };
         for (int32 I = 0; I < 6; ++I)
         {
-            if (Name == PolicyKeys[I]) { Out = static_cast<HWNodeRules::EPolicy>(I); return true; }
+            if (Key == PolicyKeys[I]) { Out = static_cast<HWNodeRules::EPolicy>(I); return true; }
         }
         return false;
     }
@@ -444,6 +444,7 @@ void AHWNodeDirector::HandleEnemyDied(AHWNodeEnemy* Enemy)
 {
     Enemies.Remove(Enemy);
     if (Enemy && Enemy->WasKilled()) ++Kills;
+    if (Enemy && Enemy->WasKilledByPlayer()) ++PlayerKills;   // turret and guard kills are the node's, not yours
     Waves.EnemyDied(Waves.Now());
 }
 
@@ -716,7 +717,8 @@ void AHWNodeDirector::RestartRun()
     Waves = HWNodeRules::FWaveRunner();
     Ledger = HWNodeRules::FContribution();
     Pings.Reset();
-    Kills = Counters = PerfectCounters = 0;
+    Kills = PlayerKills = Counters = PerfectCounters = 0;
+    ShotAccumulators.Reset();   // the old guard and turrets are gone
     ReserveLeft = 0.f;
     bReserveUsed = false;
     bReported = false;
@@ -755,12 +757,12 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
         Player->SetActorRotation(FRotator(0.f, -90.f, 0.f));   // facing south, down the road the enemies come up
         bPlayerPlaced = true;
     }
-    if (!bInputBound)
+    if (InputBoundTo.Get() != Player)   // bind again if the pawn was replaced, not just revived
     {
         Player->OnLocalInteract.AddUObject(this, &AHWNodeDirector::HandleInteract);
         Player->OnLocalExecute.AddUObject(this, &AHWNodeDirector::HandleExecute);
         Player->OnLocalOpening.AddUObject(this, &AHWNodeDirector::HandlePing);
-        bInputBound = true;
+        InputBoundTo = Player;
     }
 
     // fell off the graybox: back to the start, no death
@@ -949,7 +951,7 @@ void AHWNodeDirector::DrawHud() const
                     Boss ? 100.f * Boss->GetHealth() / FMath::Max(1.f, Boss->GetMaxHealth()) : 0.f,
                     BossCore ? 100.f * BossCore->GetCoreArmorFraction() : 100.f,
                     BossCore && BossCore->CanFinish() ? TEXT("   FINISH: hit = kill / Execute (V) = extract") : TEXT(""))
-                : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills, *Next),
+                : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d (you %d)%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills, PlayerKills, *Next),
             FColor::White);
         if (Machine.CommsHeldSeconds > 0.f) Show(FString::Printf(TEXT("ENEMY ON COMMS  %.0f / %.0fs"), Machine.CommsHeldSeconds, Machine.CommsHoldToFall), FColor::Red);
         if (BossCore && BossCore->GetExtractionProgress() > 0.f) Show(FString::Printf(TEXT("EXTRACTING  %.0f%%  - do not get hit"), 100.f * BossCore->GetExtractionProgress()), FColor(255, 80, 60));

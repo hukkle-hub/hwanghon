@@ -155,6 +155,7 @@ private:
     };
     TArray<FPing> Pings;
     TMap<TWeakObjectPtr<AActor>, float> ShotAccumulators;
+    TWeakObjectPtr<AHWAinCharacter> InputBoundTo;
 
     float Clock = 0.f;
     float PrepLeft = 0.f;
@@ -164,13 +165,13 @@ private:
     float LastBossHealth = -1.f;
     float NoticeFor = 0.f;
     int32 Kills = 0;
+    int32 PlayerKills = 0;
     int32 Counters = 0;
     int32 PerfectCounters = 0;
     int32 SpawnSerial = 0;
     int32 PlayerDeaths = 0;
     bool bLastCounterPerfect = false;
     bool bBossPhase = false;
-    bool bInputBound = false;
     bool bPlayerPlaced = false;
     bool bReserveUsed = false;
     bool bReported = false;
