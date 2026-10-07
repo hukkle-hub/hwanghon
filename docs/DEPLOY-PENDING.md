@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-07 — 필드 가방·상점·회복약·거점 기본 보스 점령 배포 완료 — Render commit `1fa5909`, 실제 WebSocket 으로 확인** (§2).
+> **2026-10-07 — 거점 서버(남산 N-01 상태·관리권·정책·보급·대장 임명·이번 주기 순위) 배포 완료 — Render commit `3296626`, 실제 WebSocket 으로 확인** (§2).
+> 이전: 필드 가방·상점·회복약·거점 기본 보스 점령 — Render commit `1fa5909`.
 > 이전: 필드 스킬 1~4(누르고 공격)·온라인 기본 배포 완료 — Render commit `5317380`, 실제 WebSocket 으로 스킬·재사용 대기 확인** (§2).
 > 이전: 클레이브 v6(적응형 AI·4.2 m·셔터 부위파괴) — Render commit `2399367`.
 > 이전: **클레이브 명예 장비·공개 칭호·강화 명예 표식, 타격 접점·보행·서버 시각 안무, 강화 광휘 가시성·수명 배포 완료** (§2). Render 자동 배포도 실제 main 푸시로 확인했다.
@@ -17,9 +18,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| `cfa9cedb6` 외 (이번 main 푸시) | **거점 서버** `server/node-store.cjs` 새로 · `server/node-rules.cjs` 새로 · `server/index.cjs` 에 `{type:'node'}` 한 줄(200ms 간격). 표 3개 `node_state`·`node_contrib`·`node_runs` 는 처음 쓸 때 만든다(`CREATE IF NOT EXISTS`). 쉘터 «거점 관리» 카드가 이걸 쓴다 — Render 반영 전엔 카드가 «불러오는 중…» 에 머문다. 문서 201 §6 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
+
+최신 거점 서버 검증 (Claude): main `32966261` → Pages build `3296626`, Render `/healthz` commit `3296626` (15:36 UTC, 푸시 뒤 약 8분). 실제 WebSocket(Render): 손님 → 캐릭터 → `{type:'node',action:'info',node:'namsan_n01'}` → `state stable · tier initial · steward null · standings [] · period 2961 · services 정상` → 길드 없는 계정의 `policy` 는 «관리 길드만 정책을 고를 수 있습니다.» 로 거절. `npm test` 801 중 798 통과 · 실패 0. 여의도 다시 굽기(빈 땅 0, 가려진 칸 0) 같이 나감.
 
 최신 필드 가방 검증 (Claude): main `1fa5909d` → Render `/healthz` commit `1fa5909`, Pages build `1fa5909` (09:03 UTC — CDN 이 10분 캐시라 처음엔 옛 값). 실제 WebSocket(Render): 손님 → `fieldJoin haeundae` `hub:null`(거점 아님) → `fieldShop` 32종 · `safe:true`(출발점 쉼터) · 회복약 120 G → `fieldBag use c_potion` «HP 가 가득 찼습니다.»(약 안 씀) → `fieldBag buy c_potion` «골드가 부족합니다.» → `fieldJoin daejeon` `hub:{kind:'boss'}`(거점 = 보스 점령).
 
