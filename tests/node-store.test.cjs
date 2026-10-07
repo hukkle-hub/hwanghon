@@ -57,3 +57,16 @@ test('정책: 관리 길드의 길드장·부길드장만, 예산 10 안에서 �
  assert.equal(store.nodeView(N,t,solo).me,undefined,'길드 없는 사람도 거점은 본다 (관리권 ≠ 소유권)');
  const cmd=NODE.command(store,a,{type:'node',action:'info',node:N},t); assert.equal(cmd.type,'node'); assert.equal(cmd.node.me.role,'leader');
 });
+test('UE 판 결과 모양 그대로 — HWNodeDirector::FinishRun 의 형식 문자열을 읽어 만든 JSON 을 서버가 받는다',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const src=fs.readFileSync(path.join(__dirname,'..','ue','HwanghonCombatUE','Source','HwanghonCombatUE','Private','Node','HWNodeDirector.cpp'),'utf8');
+ /* 형식: {\"node\":\"%s\",\"outcome\":\"%s\",\"contrib\":{%s}} 와 항목 열쇠 7개 — UE 쪽 이름이 바뀌면 여기서 깨진다 */
+ const keys=[...src.match(/static const TCHAR\* Keys\[\] = \{([^}]*)\}/)[1].matchAll(/TEXT\("([a-z_]+)"\)/g)].map(m=>m[1]);
+ assert.deepEqual(keys,['kill','defense','repair','npc_rescue','boss','supply','command']);
+ const fmt=src.match(/TEXT\("(\{\\"node\\":[^)]*)"\), \*Config->NodeId/)[1].replace(/\\"/g,'"');
+ const contrib=keys.map((k,i)=>'"'+k+'":'+(i+1).toFixed(2)).join(','), json=fmt.replace('%s',N).replace('%s','held').replace('%s',contrib);
+ const report=JSON.parse(json), {store,a}=world();
+ const r=NODE.command(store,a,{type:'node',action:'report',node:report.node,report},50*W);
+ assert.equal(r.type,'node'); assert.equal(r.node.state,'stable');
+ assert.equal(store.db.prepare('SELECT amount FROM node_contrib WHERE player=? AND category=?').get(a,'command').amount,7);
+});
