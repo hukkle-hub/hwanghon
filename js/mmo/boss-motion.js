@@ -87,6 +87,15 @@ function hitBurst(fx,at,n=12,power=1,color=0xff7938){
  fx.hitPoints.visible=true;fx.hitPoints.geometry.attributes.position.needsUpdate=true;fx.hitPoints.geometry.attributes.color.needsUpdate=true;fx.tailT=Math.max(fx.tailT||0,.4);
 }
 
+export function brokenShutterGeometry(mesh){
+ const g=mesh?.geometry,idx=g?.index,pos=g?.attributes?.position;if(!g||!idx||!pos)return null;const comp=(i,a)=>a===0?pos.getX(i):a===1?pos.getY(i):pos.getZ(i);const n=idx.count/3,axisSpan=[0,0,0],lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity],cent=[];
+ for(let i=0;i<pos.count;i++)for(let a=0;a<3;a++){const v=comp(i,a);if(v<lo[a])lo[a]=v;if(v>hi[a])hi[a]=v;}for(let a=0;a<3;a++)axisSpan[a]=hi[a]-lo[a];const axis=axisSpan[1]>=axisSpan[0]&&axisSpan[1]>=axisSpan[2]?1:axisSpan[0]>=axisSpan[2]?0:2;
+ for(let t=0;t<n;t++){const ia=idx.getX(t*3),ib=idx.getX(t*3+1),ic=idx.getX(t*3+2),c=(comp(ia,axis)+comp(ib,axis)+comp(ic,axis))/3;cent.push([c,ia,ib,ic]);}const sorted=cent.map(x=>x[0]).sort((a,b)=>a-b),cut=sorted[Math.max(0,Math.min(sorted.length-1,Math.floor(sorted.length*.55)))],keep=[];for(const t of cent)if(t[0]<=cut)keep.push(t[1],t[2],t[3]);if(keep.length<9||keep.length>=idx.count)return null;const out=g.clone(),A=pos.count>65535?Uint32Array:Uint16Array;out.setIndex(new THREE.BufferAttribute(new A(keep),1));out.computeBoundingBox();out.computeBoundingSphere();return out;
+}
+function findHeldPart(model){let out=model.getObjectByName('Boss_HeldPart');if(out?.isMesh)return out;out=null;model.traverse(x=>{if(!out&&x.isMesh&&x.name==='Boss_HeldPart')out=x;});return out;}
+function isolateHeldMaterial(mesh){if(!mesh)return[];if(Array.isArray(mesh.material))mesh.material=mesh.material.map(m=>m.clone());else if(mesh.material)mesh.material=mesh.material.clone();const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];return mats.filter(Boolean).map(m=>({m,color:m.color?.clone?.()||null,emissive:m.emissive?.clone?.()||null,intensity:Number(m.emissiveIntensity)||0}));}
+function tintHeldPart(fx,state){for(const b of fx.shutterBase||[]){const m=b.m;if(b.color&&m.color)m.color.copy(b.color);if(b.emissive&&m.emissive)m.emissive.copy(b.emissive);if('emissiveIntensity'in m)m.emissiveIntensity=b.intensity;if(state===1){if(m.emissive){m.emissive.setHex(0x6f1600);m.emissiveIntensity=Math.max(1.25,b.intensity);}else if(m.color)m.color.setHex(0x8b3924);}else if(state===2&&m.emissive){m.emissive.setHex(0x321008);m.emissiveIntensity=Math.max(.55,b.intensity);}}}
+
 export function setupBossMotion(o,gl,model,scene,floor=0){
  if(!CLAVE.has(o.b.id))return null;o.model=model;o.actions={};o.motionClip='';
  o.mixer=o.mixer||new THREE.AnimationMixer(model);
@@ -116,16 +125,24 @@ export function setupBossMotion(o,gl,model,scene,floor=0){
  const hitCore=new THREE.Mesh(new THREE.IcosahedronGeometry(.18,1),new THREE.MeshBasicMaterial({color:0xffa35a,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,toneMapped:false}));hitCore.visible=false;hitCore.renderOrder=8;scene.add(hitCore);
  const glow=new THREE.PointLight(0xff3218,0,7,1.8);glow.visible=false;scene.add(glow);
  const idleBones={head:rigNode(model,'Head'),spine:rigNode(model,'Spine2')||rigNode(model,'Spine1')||rigNode(model,'Spine'),arm:rigNode(model,'LeftArm'),forearm:rigNode(model,'LeftForeArm')};
- const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const overlayPose=Object.values(idleBones).filter(Boolean).map(bone=>({bone,base:bone.quaternion.clone(),dirty:false}));
+ const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches,shutter=findHeldPart(model),shutterBase=isolateHeldMaterial(shutter),shutterIntact=shutter?.geometry||null,shutterBroken=shutter?brokenShutterGeometry(shutter):null;
  o.fx={scene,floor,warning,warningGeometries,warnMat,warningOutline,warningOutlines,warnLineMat,warnSeq:-1,warnBeat:-1,points,pos,vel,life,count,next:0,sparkLive:0,dust,dustPos,dustVel,dustLife,dustCount,dustNext:0,dustLive:0,
   hitPoints,hitPos,hitVel,hitLife,hitCol,hitCount,hitNext:0,hitLive:0,hitCore,hitCoreT:0,hitCoreDur:.12,hitCoreScale:1,trail,trailPos,trailCount:0,hand,feet,glow,ringGeometry,ringPool,ringActive:0,firedMask:0,lastStep:-1,walkPhase:null,impact:0,impactEvent:false,lastImpactSeq:0,lastImpactAt:0,hitT:0,hitDur:.12,hitPower:0,hitSide:0,hitFront:1,tailT:0,
-  hips,hipsBase:hips&&hips.position.clone(),overlay,overlayList,idleBones,idleCue:{breath:0,turn:0,brace:0,pulse:0,guard:0},idleBlend:0,reduced,counterLit:false,frameResult:{step:false,impact:false}};
+  hips,hipsBase:hips&&hips.position.clone(),overlay,overlayList,idleBones,overlayPose,idleCue:{breath:0,turn:0,brace:0,pulse:0,guard:0},idleBlend:0,reduced,counterLit:false,shutter,shutterBase,shutterIntact,shutterBroken,shutterState:0,breakChunk:null,frameResult:{step:false,impact:false}};
  o.baseModel={x:model.position.x,y:model.position.y,z:model.position.z,rx:model.rotation.x,rz:model.rotation.z};play(o,'idle');if(!o.netAct){const now=Date.now();o.netAct={id:o.b.id,x:o.root?.position.x??o.b.x,z:o.root?.position.z??o.b.z,yaw:o.root?.rotation.y||0,motion:'idle',skill:'',seq:-1,startedAt:now,endsAt:now+780,counterOpen:0,counterClose:0};}
  return o.fx;
 }
 
+
+function applyShutterState(o,state){const fx=o?.fx;if(!fx)return;state=Math.max(0,Math.min(2,Number(state)||0));const old=fx.shutterState;if(state===old)return;let center=null,size=null;if(state===2&&old<2&&fx.shutter){const b=new THREE.Box3().setFromObject(fx.shutter);center=b.getCenter(new THREE.Vector3());size=b.getSize(new THREE.Vector3());}
+ fx.shutterState=state;tintHeldPart(fx,state);if(fx.shutter){if(state===2&&fx.shutterBroken)fx.shutter.geometry=fx.shutterBroken;else if(state<2&&fx.shutterIntact)fx.shutter.geometry=fx.shutterIntact;}
+ if(state===1&&old===0){fx.hand.getWorldPosition(TMP);hitBurst(fx,TMP,16,1.05,0xffa04a);addRing(fx,o.root.position.x,o.root.position.z,1.7,0xff8b42,.34);}
+ if(state===2&&old<2){const at=center||fx.hand.getWorldPosition(new THREE.Vector3());hitBurst(fx,at,42,1.8,0xffd090);addRing(fx,o.root.position.x,o.root.position.z,4.2,0xffd090,.62);if(size){if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();}const m=new THREE.Mesh(new THREE.BoxGeometry(Math.max(.35,size.x*.72),Math.max(.55,size.y*.42),Math.max(.14,size.z*.72)),new THREE.MeshStandardMaterial({color:0x453b36,metalness:.86,roughness:.46}));m.position.copy(at);m.rotation.set(.25,o.root.rotation.y+.45,.18);fx.scene.add(m);fx.breakChunk={m,vel:new THREE.Vector3(1.1,2.2,-.8).applyAxisAngle(AXIS_Y,o.root.rotation.y),life:2.8};}fx.tailT=Math.max(fx.tailT,2.8);}
+}
+
 export function applyBossAction(o,a,now=Date.now()){
- o.netAct=a;if(!o.fx||!o.root)return;const changed=o.motionSeq!==a.seq||o.motionState!==a.motion,elapsed=Math.max(0,now-a.startedAt);
+ o.netAct=a;if(!o.fx||!o.root)return;if(Number.isInteger(a.part))applyShutterState(o,a.part);const changed=o.motionSeq!==a.seq||o.motionState!==a.motion,elapsed=Math.max(0,now-a.startedAt);
  if(a.motion==='skill'&&a.skill==='shutter'){const travel=claveShutterTravel(elapsed);o.homeSkillX=a.x-Math.sin(a.yaw)*travel;o.homeSkillZ=a.z-Math.cos(a.yaw)*travel;}else if(changed){o.homeSkillX=a.x;o.homeSkillZ=a.z;}
   if(changed){o.motionSeq=a.seq;o.motionState=a.motion;o.fx.firedMask=0;o.fx.warnSeq=-1;o.fx.warnBeat=-1;if(a.motion==='walk'||a.motion==='return'){o.fx.lastStep=-1;o.fx.walkPhase=null;}
   if(a.motion==='skill')play(o,CLAVE_MOTIONS[a.skill]?.clip||'idle',CLAVE_MOTIONS[a.skill]?.duration||0,elapsed,.09);
@@ -137,6 +154,9 @@ export function applyBossAction(o,a,now=Date.now()){
 
 /* mixer.update 전에 호출한다. 탭 복귀·저FPS여도 몸의 접점이 서버 시계보다 뒤처지지 않는다. */
 export function prepareBossMotion(o,now=Date.now()){
+ // Paused mixer tracks skip writing unchanged values. Undo our previous overlay
+ // before mixer evaluation so repeated frames cannot twist the arm cumulatively.
+ for(const p of o?.fx?.overlayPose||[])if(p.dirty){p.bone.quaternion.copy(p.base);p.dirty=false;}
  const a=o?.netAct,fx=o?.fx;if(!a||!fx)return false;if(Number.isFinite(o.poseElapsed))now=a.startedAt+o.poseElapsed;const elapsed=Math.max(0,now-a.startedAt);
  if(a.motion==='idle'){const action=o.actions?.idle;if(!action)return false;action.paused=true;action.time=fx.reduced?action.getClip().duration*.58:claveIdleClipTime(elapsed,action.getClip().duration);return true;}
  if(a.motion!=='skill')return false;const def=CLAVE_MOTIONS[a.skill],action=o.actions?.[def?.clip];if(!def||!action)return false;action.paused=true;action.time=claveSkillClipTime(a.skill,elapsed,action.getClip().duration);return true;
@@ -183,7 +203,8 @@ export function updateBossMotion(o,dt,now=Date.now()){
   const follow=walk||fx.hitT>0?1:Math.min(1,dt*8);o.model.position.y+=(targetY-o.model.position.y)*(walk?1:Math.min(1,dt*7));o.model.rotation.x+=(rx-o.model.rotation.x)*follow;o.model.rotation.z+=(rz-o.model.rotation.z)*follow;}
  /* 클립의 큰 루트 이동은 서버 위치와 겹치므로 수평을 잠근다. idle/slam의 과한 부유만 감쇠한다. */
  if(fx.hips&&fx.hipsBase){fx.hips.position.x=fx.hipsBase.x;fx.hips.position.z=fx.hipsBase.z;const hipScale=idle?.35:skill&&a.skill==='slam'?.2:1;fx.hips.position.y=fx.hipsBase.y+(fx.hips.position.y-fx.hipsBase.y)*hipScale;}
- /* mixer가 매 프레임 원본 자세를 다시 쓰고 난 뒤 더하므로 고정 포즈에서도 누적되지 않는다. */
+ /* 다음 mixer 평가 전에 되돌릴 원본 자세를 저장한다. */
+ for(const p of fx.overlayPose||[]){p.base.copy(p.bone.quaternion);p.dirty=true;}
  if(fx.idleBlend&&!fx.reduced){const c=fx.idleCue,b=fx.idleBlend,arm=b,B=fx.idleBones;
   if(B.spine)B.spine.quaternion.multiply(ROT.setFromAxisAngle(AXIS_Z,(c.breath*.009-c.guard*.004)*b));
   if(B.head)B.head.quaternion.multiply(ROT.setFromAxisAngle(AXIS_Y,c.turn*.035*b));
@@ -197,7 +218,9 @@ export function updateBossMotion(o,dt,now=Date.now()){
  }
  warning(o,elapsed,now);
  if(skill){const def=CLAVE_MOTIONS[a.skill];for(let i=0;i<(def?.hits.length||0);i++){const h=def.hits[i],bit=1<<i;if(elapsed>=h.at&&!(fx.firedMask&bit)){fx.firedMask|=bit;if(elapsed-h.at<420){fx.hand.getWorldPosition(TMP);if(!fx.reduced)burst(fx,TMP,20,1.15);addRing(fx,a.x,a.z,h.radius||h.range||4,0xffa052,.36);fx.impact=.28;fx.impactEvent=true;}}}}
- const impacted=fx.impactEvent;fx.impactEvent=false;fx.impact=Math.max(0,fx.impact-dt);updateParticles(fx,dt,striking,!!o.alive,counter);updateRings(fx,dt);fx.tailT=Math.max(0,fx.tailT-dt);fx.frameResult.step=stepped;fx.frameResult.impact=impacted;return fx.frameResult;
+ const impacted=fx.impactEvent;fx.impactEvent=false;fx.impact=Math.max(0,fx.impact-dt);updateParticles(fx,dt,striking,!!o.alive,counter);updateRings(fx,dt);
+ if(fx.breakChunk){const b=fx.breakChunk;b.life-=dt;b.vel.y-=7.5*dt;b.m.position.addScaledVector(b.vel,dt);b.m.rotation.x+=dt*2.6;b.m.rotation.z+=dt*2;if(b.m.position.y<fx.floor+.15){b.m.position.y=fx.floor+.15;b.vel.y=Math.abs(b.vel.y)*.18;b.vel.x*=.72;b.vel.z*=.72;}if(b.life<=0){fx.scene.remove(b.m);b.m.geometry.dispose();b.m.material.dispose();fx.breakChunk=null;}}
+ fx.tailT=Math.max(0,fx.tailT-dt);fx.frameResult.step=stepped;fx.frameResult.impact=impacted;return fx.frameResult;
 }
 
 export function bossHitReact(o,h={}){const fx=o?.fx;if(!fx)return false;const seq=Number(h.seq)||0,at=Number(h.at)||0,newEpoch=seq&&seq<=fx.lastImpactSeq&&at>fx.lastImpactAt+1000;if(seq&&seq<=fx.lastImpactSeq&&!newEpoch)return false;if(seq){fx.lastImpactSeq=seq;fx.lastImpactAt=at||Date.now();}
@@ -206,5 +229,5 @@ export function bossHitReact(o,h={}){const fx=o?.fx;if(!fx)return false;const se
  TMP.set(bx+dx/dist*reach,y,bz+dz/dist*reach);hitBurst(fx,TMP,counter?30:crit?22:12,counter?1.4:crit?1.15:.82,counter?0x77e8ff:crit?0xffd36a:0xff7938);fx.hitCore.position.copy(TMP);fx.hitCore.material.color.setHex(counter?0xc8f7ff:crit?0xffe39a:0xffa35a);fx.hitCoreScale=counter?2.1:crit?1.65:1;fx.hitCore.scale.setScalar(fx.hitCoreScale);fx.hitCoreDur=counter?.18:crit?.15:.11;fx.hitCoreT=fx.hitCoreDur;fx.hitCore.material.opacity=.96;fx.hitCore.visible=true;fx.tailT=Math.max(fx.tailT,fx.hitCoreDur);
  const ang=Math.atan2(x-o.root.position.x,z-o.root.position.z)-o.root.rotation.y;fx.hitSide=Math.sin(ang);fx.hitFront=Math.cos(ang);fx.hitDur=counter?.2:crit?.18:.12;fx.hitT=fx.hitDur;fx.hitPower=counter?.09:crit?.065:.038;return true;}
 export function bossCounterBurst(o){if(!o.fx)return;o.fx.hand.getWorldPosition(TMP);if(!o.fx.reduced)burst(o.fx,TMP,34,1.45);addRing(o.fx,o.root.position.x,o.root.position.z,4.5,0x68e5ff,.65);}
-export function hideBossMotion(o){const fx=o.fx;if(!fx)return;fx.warning.visible=fx.warningOutline.visible=false;fx.glow.intensity=0;fx.glow.visible=false;fx.trail.material.opacity=0;fx.trail.visible=false;fx.trailCount=0;fx.trail.geometry.setDrawRange(0,0);fx.pos.fill(-999);fx.life.fill(0);fx.sparkLive=0;fx.dustPos.fill(-999);fx.dustLife.fill(0);fx.dustLive=0;fx.hitPos.fill(-999);fx.hitLife.fill(0);fx.hitLive=0;fx.hitCoreT=0;fx.hitCore.visible=false;fx.points.visible=fx.dust.visible=fx.hitPoints.visible=false;fx.points.geometry.attributes.position.needsUpdate=true;fx.dust.geometry.attributes.position.needsUpdate=true;fx.hitPoints.geometry.attributes.position.needsUpdate=true;fx.hitT=0;fx.tailT=0;fx.idleBlend=0;fx.firedMask=0;fx.warnSeq=fx.warnBeat=-1;fx.counterLit=false;o.motionSeq=Number.NaN;o.motionState='';for(const name in o.actions)o.actions[name].stop();o.motionClip='';for(let i=0;i<fx.ringPool.length;i++){fx.ringPool[i].active=false;fx.ringPool[i].m.visible=false;}fx.ringActive=0;}
-export function disposeBossMotion(o){const fx=o.fx;if(!fx)return;for(const x of [fx.warning,fx.warningOutline,fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail,fx.glow])fx.scene.remove(x);for(let i=0;i<fx.ringPool.length;i++){fx.scene.remove(fx.ringPool[i].m);fx.ringPool[i].m.material.dispose();}fx.ringGeometry.dispose();for(const skill in fx.warningGeometries)for(let i=0;i<fx.warningGeometries[skill].length;i++){fx.warningGeometries[skill][i].dispose();fx.warningOutlines[skill][i].dispose();}fx.warnMat.dispose();fx.warnLineMat.dispose();for(const x of [fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail]){x.geometry.dispose();x.material.dispose();}if(o.mixer){o.mixer.stopAllAction();if(o.model)o.mixer.uncacheRoot(o.model);}o.actions={};o.mixer=null;o.fx=null;}
+export function hideBossMotion(o){const fx=o.fx;if(!fx)return;if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();fx.breakChunk=null;}fx.warning.visible=fx.warningOutline.visible=false;fx.glow.intensity=0;fx.glow.visible=false;fx.trail.material.opacity=0;fx.trail.visible=false;fx.trailCount=0;fx.trail.geometry.setDrawRange(0,0);fx.pos.fill(-999);fx.life.fill(0);fx.sparkLive=0;fx.dustPos.fill(-999);fx.dustLife.fill(0);fx.dustLive=0;fx.hitPos.fill(-999);fx.hitLife.fill(0);fx.hitLive=0;fx.hitCoreT=0;fx.hitCore.visible=false;fx.points.visible=fx.dust.visible=fx.hitPoints.visible=false;fx.points.geometry.attributes.position.needsUpdate=true;fx.dust.geometry.attributes.position.needsUpdate=true;fx.hitPoints.geometry.attributes.position.needsUpdate=true;fx.hitT=0;fx.tailT=0;fx.idleBlend=0;fx.firedMask=0;fx.warnSeq=fx.warnBeat=-1;fx.counterLit=false;o.motionSeq=Number.NaN;o.motionState='';for(const name in o.actions)o.actions[name].stop();o.motionClip='';for(let i=0;i<fx.ringPool.length;i++){fx.ringPool[i].active=false;fx.ringPool[i].m.visible=false;}fx.ringActive=0;}
+export function disposeBossMotion(o){const fx=o.fx;if(!fx)return;if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();}if(fx.shutterBroken)fx.shutterBroken.dispose();for(const b of fx.shutterBase||[])b.m.dispose();for(const x of [fx.warning,fx.warningOutline,fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail,fx.glow])fx.scene.remove(x);for(let i=0;i<fx.ringPool.length;i++){fx.scene.remove(fx.ringPool[i].m);fx.ringPool[i].m.material.dispose();}fx.ringGeometry.dispose();for(const skill in fx.warningGeometries)for(let i=0;i<fx.warningGeometries[skill].length;i++){fx.warningGeometries[skill][i].dispose();fx.warningOutlines[skill][i].dispose();}fx.warnMat.dispose();fx.warnLineMat.dispose();for(const x of [fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail]){x.geometry.dispose();x.material.dispose();}if(o.mixer){o.mixer.stopAllAction();if(o.model)o.mixer.uncacheRoot(o.model);}o.actions={};o.mixer=null;o.fx=null;}

@@ -372,6 +372,26 @@ else:
 body.parent = arm
 mod = body.modifiers.new('Armature', 'ARMATURE')
 mod.object = arm
+held_obj = None
+if HOLD and held.any():
+    # §2.2에서 경계를 이미 잘라 둔 셔터 정점을 진짜 별도 SkinnedMesh로 분리한다.
+    # 런타임은 Boss_HeldPart만 반쪽 geometry로 바꿔 실루엣 파괴를 만든다.
+    select([body], body)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for v in body.data.vertices:
+        v.select = bool(v.index < len(held) and held[v.index])
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.separate(type='SELECTED')
+    bpy.ops.object.mode_set(mode='OBJECT')
+    parts = [o for o in bpy.context.selected_objects if o.type == 'MESH' and o is not body]
+    if parts:
+        held_obj = max(parts, key=lambda o: len(o.data.vertices))
+        held_obj.name = 'Boss_HeldPart'
+        held_obj.parent = arm
+        for mm in held_obj.modifiers:
+            if mm.type == 'ARMATURE':
+                mm.object = arm
+        print(f'[rig] held mesh -> Boss_HeldPart ({len(held_obj.data.vertices)} vertices)')
 print(f'[rig] {len(bones)} bones weighted, {len(bpy.data.actions)} clips, skeleton x{k:.3f}')
 
 # ---- 3.5 designed skills (docs/design/181 §8): Kimodo takes baked into one clip each, not damped (their own motion)
@@ -382,7 +402,8 @@ if os.environ.get('HW_RIG_TAKES'):
         boss_takes.bake(arm, key.strip())
 
 # ---- 4. export: mesh + skeleton + every clip
-select([arm, body], arm)
+export_objs = [arm, body] + ([held_obj] if held_obj else [])
+select(export_objs, arm)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', use_selection=True, **JPEG, export_animations=True,
                           export_animation_mode='ACTIONS', export_skins=True)
 print('[rig] ->', OUT)

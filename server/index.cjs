@@ -12,7 +12,7 @@ function createPartyServer(options={}){
  const send=(socket,message)=>{if(socket.readyState!==WebSocket.OPEN)return;if(socket.bufferedAmount>256*1024){stats.backpressure++;return;}const payload=typeof message==='string'?message:JSON.stringify(message);socket.send(payload);stats.bytesSent+=Buffer.byteLength(payload);stats.messagesSent++;return true;};
  const server=http.createServer((req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});return res.end(JSON.stringify({ok:!closing,protocol:2,rooms:rooms.size,online:sessions.size,capacity:maxPlayers}));}
+  if(req.url==='/healthz'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});return res.end(JSON.stringify({ok:!closing,protocol:2,rooms:rooms.size,online:sessions.size,capacity:maxPlayers,commit:String(process.env.RENDER_GIT_COMMIT||'').slice(0,7)}));}   /* commit: Render 가 넣어 주는 배포 커밋 — healthz 200 만으로는 새 코드인지 알 수 없다 (클레이브 v6 적용 2026-10-07) */
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
   let name;try{name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}catch{res.writeHead(400);return res.end();}
   if(name==='/')name='/party.html';

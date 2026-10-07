@@ -56,8 +56,8 @@ test('필드 보스: 때가 되면 서고 알림 → 닿는 거리에서만 맞�
  assert.ok(!/(?:hp|maxHp|health|ratio|dmg)/i.test(JSON.stringify({bossImpacts:bossView.bossImpacts})),'공동 접촉에는 피해·체력 없음');
  assert.equal(f.bossView(pb,1e9+BOSS_IMPACT_LIFE+1).bossImpacts.length,0,'짧은 수명이 지나면 접촉 사건을 보내지 않는다');
  assert.deepEqual(claveRow,['clave',1],'살아 있다는 것만 — 체력은 보내지 않는다');
- assert.deepEqual(Object.keys(claveAct).sort(),['counterClose','counterOpen','endsAt','id','motion','seq','skill','startedAt','x','yaw','z'],'보스 동작에도 체력 필드 없음');
- assert.deepEqual(Object.keys(h).sort(),['boss','counter','crit','dmg','down','impact','type'],'타격 응답 허용 필드만 — 체력·비율 없음');assert.equal(h.impact.length,4,'공격자 접촉은 순번·좌표·시각만');
+ assert.deepEqual(Object.keys(claveAct).sort(),['counterClose','counterOpen','endsAt','id','motion','part','seq','skill','startedAt','x','yaw','z'],'보스 동작에도 체력 필드 없음');
+ assert.deepEqual(Object.keys(h).sort(),['boss','counter','crit','dmg','down','impact','part','type'],'타격 응답 허용 필드만 — 체력·비율 없음');assert.equal(h.impact.length,4,'공격자 접촉은 순번·좌표·시각만');
  /* b 가 조금, a 가 대부분 */
  f.hit(b,{boss:'clave'},store.public(b),1e9+1); let t=1e9+HIT_GAP; while(o.alive){ f.hit(a,{boss:'clave'},store.public(a),t); t+=HIT_GAP; }
  const down=events.find(e=>e.kind==='bossDown'); assert.ok(down,'처치 알림'); assert.equal(down.top,store.public(a).name);
@@ -96,7 +96,7 @@ test('필드 보스: 실제 소켓 — fieldJoined 에 보스 상태, 때리면 
  sendj({type:'fieldJoin',zone:'namsan_tower'}); const j=await wait(m=>m.type==='fieldJoined'); assert.deepEqual(j.bosses.find(b=>b[0]==='dropper'),['dropper',1],'살아 있음 (체력 없음)');
  sendj({type:'fieldMove',x:o.x+0.5,z:o.z,anim:'idle'}); await wait(m=>m.type==='field');
  const pl=app.field.players.get(hello.profile.id); pl.x=o.x+0.5; pl.z=o.z;   /* 출발점에서 보스까지 걸어가는 대신 */
- sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true);assert.deepEqual(Object.keys(hit).sort(),['boss','counter','crit','dmg','down','impact','type'],'체력·최대 체력·비율이 들어올 자리가 없다');assert.equal(hit.impact.length,4);
+ sendj({type:'fieldHit',boss:'dropper'}); const hit=await wait(m=>m.type==='bossHit'); assert.equal(hit.down,true);assert.deepEqual(Object.keys(hit).sort(),['boss','counter','crit','dmg','down','impact','part','type'],'체력·최대 체력·비율이 들어올 자리가 없다');assert.equal(hit.impact.length,4);
  const down=await wait(m=>m.type==='announce'&&m.kind==='bossDown'); assert.equal(down.top,'보스사냥'); assert.equal(down.changed,undefined,'내부 목록은 보내지 않는다');
  const prof=await wait(m=>m.type==='profile'&&m.profile.items.m_heart>0); assert.ok(prof,'재료가 프로필로 온다');
 });

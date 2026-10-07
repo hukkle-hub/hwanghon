@@ -7675,6 +7675,7 @@
    "place": "중앙 광장",
    "model": "art/3d/part1/clave.glb",
    "h": 3.2,
+   "visualH": 4.2,
    "canon": "EP02 §10 중앙 광장"
   }
  ],

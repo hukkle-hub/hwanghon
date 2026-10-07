@@ -105,22 +105,24 @@ class Field{
   const counter=COMBAT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=this.rng()<(st.critChance||0);
   const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
+  const part=o.hp>0?COMBAT.damageShutter(o,p,profile,dmg,counter,now):null;
   /* 공동 전투에는 접촉만 공유한다. 피해량·공격력·보스 체력은 공격자 밖으로 내보내지 않는다 (문서 191). */
   let dx=p.x-o.x,dz=p.z-o.z,dist=Math.hypot(dx,dz);if(dist<.001){dx=-Math.sin(o.yaw||0);dz=-Math.cos(o.yaw||0);dist=1;}
   const edge=Math.max(.8,Math.min(1.55,(o.h||3)*.38)),impact={seq:++o.impactSeq,x:o.x+dx/dist*edge,z:o.z+dz/dist*edge,crit:!!crit,counter:!!counter,at:now};
   o.impacts.push(impact);if(o.impacts.length>3)o.impacts.shift();   /* 한 10 Hz 틱 사이 사건도 최대 셋까지 보존 — 폭주 없이 반격/치명을 덮지 않는다. */
+  if(part?.broken)this.emit({type:'announce',kind:'bossPartBreak',zone:o.zone,boss:o.id,name:o.name,part:'shutter'});
   if(o.hp<=0) this.killBoss(o, now);
-  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at] }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
+  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, part:part&&part.changed?[part.state,part.broken?1:0]:null, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at] }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
  /* 보스 타격 판정. 회피 무적·피해·넉백·사망을 한 서버 시각에서 결정한다. */
  bossStrike(o,p,hit,now=Date.now()){
   if(p.dead)return null; const seq=++p.hurtSeq;
-  if(now<p.invulnUntil||now<p.dodgeUntil){ p.hurt=[seq,0,o.id,hit.skill,'evade',hit.beat,now]; return {evade:true}; }
-  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),amount=Math.max(1,Math.round(p.maxHp*hit.damage*(1-reduce)));
+  if(now<p.invulnUntil||now<p.dodgeUntil){ p.hurt=[seq,0,o.id,hit.skill,'evade',hit.beat,now];if(now>=p.invulnUntil&&now<p.dodgeUntil)COMBAT.notePlayerResult(o,p.id,true); return {evade:true}; }
+  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1,amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul*(1-reduce)));
   p.hp=Math.max(0,p.hp-amount);
   if(hit.knock){ let dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz); if(d<.01){dx=Math.sin(o.yaw||0);dz=Math.cos(o.yaw||0);d=1;}
    p.x+=dx/d*hit.knock;p.z+=dz/d*hit.knock;this.clamp(this.zones.get(p.zone),p); }
   const kind=p.hp<=0?'dead':'hit'; if(p.hp<=0){p.dead=true;p.respawnAt=now+RESPAWN_TIME;p.anim='idle';}
-  p.hurt=[seq,amount,o.id,hit.skill,kind,hit.beat,now]; return {amount,dead:p.dead}; }
+  p.hurt=[seq,amount,o.id,hit.skill,kind,hit.beat,now];COMBAT.notePlayerResult(o,p.id,false); return {amount,dead:p.dead}; }
  respawn(p,now=Date.now()){ const z=this.zones.get(p.zone),at=z&&z.spawn;if(!z||!at)return;
   p.x=at.x;p.z=at.z;p.yaw=0;p.anim='idle';p.hp=p.maxHp;p.dead=false;p.respawnAt=0;p.invulnUntil=now+RESPAWN_GUARD;p.dodgeUntil=0;
   p.hurt=[++p.hurtSeq,0,'','','respawn',0,now]; }

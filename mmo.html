@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#05060a">
 <title>황혼 — 2D 맵 MMORPG 시제품</title>
@@ -447,7 +447,7 @@ function bossTag(o){ const b=o.b; o.tag=document.createElement('div'); o.tag.cla
 const bosses=meta.bosses.map(b=>{ const o={ b, root:null, model:null, mixer:null, tag:null, netAct:null };
   if(!b.model){ bossTag(o); return o; }   /* 모델이 아직 없는 보스(박 준장·케이블카 드로퍼 …) — 자리와 이름표만 */
   load(b.model).then(gl=>{ const root=gl.scene; root.traverse(m=>{ if(m.isMesh){ m.frustumCulled=false; } });
-    const box=new THREE.Box3().setFromObject(root), h=box.max.y-box.min.y||1, k=b.h?b.h/h:(b.scale||1); root.scale.setScalar(k);
+    const box=new THREE.Box3().setFromObject(root), h=box.max.y-box.min.y||1, displayH=b.visualH||b.h, k=displayH?displayH/h:(b.scale||1); root.scale.setScalar(k);
     box.setFromObject(root);   /* 발을 바닥에, 가운데를 보스 자리에 — 보스가 바닥에 파묻혔던 일(CLAUDE.md §1) */
     const grp=new THREE.Group(); grp.position.set(b.x,b.fly||0,b.z);   /* fly: 하늘에 떠 있는 보스(셀레스티얼 «내려오지 않는다») */ root.position.set(root.position.x-(box.min.x+box.max.x)/2,root.position.y-box.min.y,root.position.z-(box.min.z+box.max.z)/2); grp.add(root); scene.add(grp); o.root=grp; o.model=root;
     if(b.fly){ const sh=new THREE.Mesh(new THREE.PlaneGeometry(5,5),new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false,opacity:0.8})); sh.rotation.x=-Math.PI/2; sh.position.set(b.x,FLOOR+0.04,b.z); scene.add(sh); }   /* 떠 있는 보스 — 땅에 그림자만 */ o.h=box.max.y-box.min.y;
@@ -479,7 +479,8 @@ function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);
 /* 피해 숫자 — 보스 머리 위로 떠오른다 */
 const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);
   const p=me.root.position,bx=o.root?.position.x??o.b.x,bz=o.root?.position.z??o.b.z,k=Math.min(0.45,1.2/Math.max(0.1,Math.hypot(p.x-bx,p.z-bz)));
-  dmgs.push({ el:d, x:bx+(p.x-bx)*k+(Math.random()-.5)*0.8, y:(o.b.fly||0)+1.5, z:bz+(p.z-bz)*k, t:0 }); }   /* 보스와 나 사이 허리 높이 — 큰 보스의 머리 위는 화면 위로 잘린다(재 보니 y=26px) */
+  const hitY=Math.min(2.1,Math.max(1.4,(o.h||o.b.visualH||o.b.h||3)*.46));
+  dmgs.push({ el:d, x:bx+(p.x-bx)*k+(Math.random()-.5)*0.8, y:(o.b.fly||0)+hitY, z:bz+(p.z-bz)*k, t:0 }); }   /* 시각 크기를 키워도 숫자는 가슴 아래에 — 머리 위는 화면 밖으로 잘리므로 높이를 2.1m에서 제한 */
 function sharedBossImpact(o,h){if(!o)return false;const stale=Number.isFinite(h.at)&&bossNow()-h.at>800;if(!o.fx){if(!document.hidden&&!stale&&/^clave2?$/.test(o.b.id)&&Number.isFinite(h.at))o.pendingImpact=h;return false;}if(document.hidden||stale){bossHitReact(o,{...h,silent:true});return false;}if(!bossHitReact(o,h))return false;const counter=!!h.counter,crit=!!h.crit;
   const d=Math.hypot((o.root?.position.x??o.b.x)-me.root.position.x,(o.root?.position.z??o.b.z)-me.root.position.z);if(d<14)window.TW_SFX?.play(counter?'counter':'hit',counter||{heavy:crit,material:'metal',tier:crit?'crit':'light'});if(counter){bossCounterBurst(o);if(!REDUCED&&d<12)try{navigator.vibrate?.([18,24,18]);}catch{}}
   if(!REDUCED&&d<12)shakeT=Math.max(shakeT,counter?.35:crit?.11:.055);return true;}
@@ -526,6 +527,7 @@ function onBossMsg(m){
     if(m.kind==='bossSpawn') announce('⚠ 필드 보스 출현<b>'+esc(m.name)+'</b>'+esc(zoneTitle(m.zone))+' · '+esc(m.place), 'big', here?7:5);
     if(m.kind==='bossDown'){ const drops=(m.drops||[]).map(d=>'<b class="'+esc(d.rarity)+'" style="color:'+((RAR[d.rarity]||{}).color||'#fff')+'">'+esc(d.name)+'</b>').join(' ');
       announce(esc(m.name)+' 처치<b>'+esc(m.top||'')+'</b>'+((m.players||1)>1?'외 '+(m.players-1)+'명':'혼자')+(drops?' · 드롭 '+drops:''), '', 7); }
+    if(m.kind==='bossPartBreak'){announce('⚙ '+esc(m.name)+'<b>셔터 파괴</b>공격 방식이 바뀝니다','big',5);if(here){window.TW_SFX?.play('brk');if(!REDUCED)shakeT=Math.max(shakeT,.48);}}
     if(m.kind==='loot') announce('<b>'+esc(m.who)+'</b>님이 '+esc(m.name)+'('+esc((RAR[m.rarity]||{}).name||'')+') 획득 — '+esc(zoneTitle(m.zone)), m.rarity, 9);
     return; } }
 function bossFrame(dt){
@@ -593,7 +595,7 @@ function wander(h, dt){ if(h.goal){ const dx=h.goal[0]-h.root.position.x, dz=h.g
   h.wait-=dt; step(h,0,0,dt,0); if(h.wait<=0){ const [s,t]=toRoad(me.root.position.x, me.root.position.z); const g=fromRoad(s+(Math.random()-.5)*12, Math.max(meta.walk.t0+1,Math.min(meta.walk.t1-1,t+(Math.random()-.5)*8))); h.goal=g; } }
 function tagPos(h){ v3.set(h.root.position.x, 2.05, h.root.position.z).project(cam); h.tag.style.left=((v3.x+1)/2*innerWidth)+'px'; h.tag.style.top=((1-v3.y)/2*innerHeight)+'px'; }
 function tagAt(el,x,y,z){ v3.set(x,y,z).project(cam); const on=v3.x>-1.2&&v3.x<1.2&&v3.y>-1.2&&v3.y<1.2; el.style.display=on?'':'none'; if(on){ el.style.left=((v3.x+1)/2*innerWidth)+'px'; el.style.top=((1-v3.y)/2*innerHeight)+'px'; } }
-/* 세로 보스전: 가까우면 둘의 중간, 멀면 플레이어가 화면 안전영역 안에 남는 만큼만 보스 쪽으로 본다. */
+/* 보스전: 가까우면 둘의 중간, 멀면 플레이어 안전영역을 지키며 보스 쪽으로 본다. */
 function portraitBossFocus(player,boss,out){const dx=boss.x-player.x,dz=boss.z-player.z,sx=Math.abs(dx*R.x+dz*R.z),sy=Math.abs(dx*U.x+dz*U.z),safeX=Math.max(.5,viewW*.5-1.05),safeY=Math.max(.7,viewH*.5-1.65);let k=.5;if(sx>.001)k=Math.min(k,safeX/sx);if(sy>.001)k=Math.min(k,safeY/sy);return out.copy(player).lerp(boss,Math.max(0,k));}
 /* 문 가까이 → 이동 단추 · 보스 구역 안 → 경고 · 던전 형광등 «3초 켜짐. 1초 꺼짐» (원작 EP02) */
 const darkEl=document.getElementById('dark'); let flickT=0, zoneT=0;
@@ -615,7 +617,7 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   step(me, selfDead?0:ix, selfDead?0:-iy, dt, 4.8);
   heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
   if(frames%20===1) heroes.forEach(silSync);   /* 장비 GLB 는 늦게 붙는다 — 가끔 다시 훑는다 */
-  nearLights(me.root.position); if(innerHeight>innerWidth&&inBoss?.alive&&inBoss.root)follow(portraitBossFocus(me.root.position,inBoss.root.position,v3));else follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
+  nearLights(me.root.position); if(inBoss?.alive&&inBoss.root)follow(portraitBossFocus(me.root.position,inBoss.root.position,v3));else follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
   zones(dt); bossFrame(dt); areaFrame(dt); if(frames%3===0) miniFrame();
   if(REDUCED) shakeT=0;
   else if(shakeT>0){ shakeT=Math.max(0,shakeT-dt); const a=shakeT*0.35; cam.position.x+=(Math.random()-.5)*a; cam.position.z+=(Math.random()-.5)*a; }

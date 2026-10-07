@@ -26,6 +26,8 @@ HOLD = {"clave": "mixamorig:LeftHand"}   # the shutter in his left hand (L1774-L
 # arms at rest, legs x0.3 and spine x0.3-ish (x0.25) - measured p99.9 edge stretch Clave idle x19 -> x1.8, hookR x31 -> x5.5,
 # Shadow Fang slam x22 -> x2.7 (doc 151 §2.2)
 MOTION = ["--arms=0", "--legs=0.3", "--spine=0.25"]
+# Rebuilding a rigged body must not drop the boss-specific baked skills already used by the game.
+DESIGNED_TAKES = {"clave": "clave_shut,clave_storm"}
 
 
 def run(cmd, **kw):
@@ -65,8 +67,11 @@ def main():
     out = os.path.join(ROOT, "art", "3d", "part1", f"{bid}_static.glb" if static else f"{bid}.glb")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     extra = ["--static"] if static else (MOTION + ([f"--hold={HOLD[bid]}", "--hold-box"] if bid in HOLD else []))
+    rig_env = dict(os.environ)
+    if bid in DESIGNED_TAKES:
+        rig_env["HW_RIG_TAKES"] = DESIGNED_TAKES[bid]
     run([BLENDER, "-b", "--python-exit-code", "1", "-P", os.path.join(ROOT, "tools", "3d", "rig_boss_template.py"), "--",
-         keep, str(body["height"]), out] + extra)
+         keep, str(body["height"]), out] + extra, env=rig_env)
     if not static:
         review = os.path.join(ROOT, "art", "review", "part1")
         os.makedirs(review, exist_ok=True)

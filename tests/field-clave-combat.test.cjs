@@ -30,7 +30,7 @@ test('클레이브: 공동 접촉은 AOI 안에 최근 셋만 보내고 출현 �
 });
 
 test('클레이브: 셔터 돌진은 먼저 예고하고, 서버 판정 순간 회피 중이면 피해가 없다',()=>{
- const {f,o,p}=setup();p.x=o.x;p.z=o.z+3;
+ const {f,o,p}=setup();p.x=o.x;p.z=o.z+3;o.combat.pattern=0;
  f.tickBosses(1700);assert.equal(o.combat.skill,'shutter');const start=o.combat.startedAt,hp=p.hp;
  const hitAt=COMBAT.SKILLS.shutter.hits[0].at;f.tickBosses(start+hitAt-1);assert.equal(p.hp,hp,'예고 중에는 피해 없음');
  p.dodgeUntil=start+hitAt+120;f.tickBosses(start+hitAt);
@@ -63,4 +63,32 @@ test('필드 생명: 새로고침·지역 이동으로 즉시 회복하지 않�
  f.relook(q.id,{...P,stats:{...P.stats,hp:30000,defense:3200}},0);assert.equal(q.maxHp,30000);assert.equal(q.defense,3200);assert.ok(Math.abs(q.hp/q.maxHp-.4)<.01);
  q.dead=true;q.hp=0;f.loot.set('Lx',{id:'Lx',item:'w_clave_blade',zone:q.zone,x:q.x,z:q.z,owner:null,ownerUntil:0,expires:1e15,boss:'clave'});
  assert.throws(()=>f.pickup(q.id,'Lx',null),/전투 불능/);
+});
+
+
+test('클레이브 AI: 체력은 서버 내부 3페이즈에만 쓰고 화면에는 페이즈·체력을 노출하지 않는다',()=>{
+ const {f,o,p}=setup();
+ for(const [ratio,phase] of [[1,1],[.70,2],[.36,2],[.35,3],[.1,3]]){o.hp=Math.round(o.max*ratio);assert.equal(COMBAT.phaseOf(o),phase);}
+ const a=f.bossView(p,2000).bossActs.find(x=>x.id==='clave');assert.equal('phase' in a,false);assert.equal('hp' in a,false);assert.equal('max' in a,false);
+});
+
+test('클레이브 AI: 2·3페이즈는 먼 거리에서 셔터로 압박하고 같은 기술 반복을 억제한다',()=>{
+ const {f,o,p}=setup();o.hp=o.max*.55;p.x=o.x;p.z=o.z+6;o.combat.endsAt=0;
+ f.tickBosses(1700);assert.equal(o.combat.skill,'shutter','6m에서는 유효 사거리 기술만 고른다');
+ COMBAT.reset(o,6000);o.hp=o.max*.55;o.combat.history=['shutter'];p.x=o.x;p.z=o.z+3.8;
+ const w=COMBAT.skillWeights(o,p);assert.ok(w.shutter<w.storm,'대안이 있으면 직전 기술 가중치를 크게 낮춘다');
+});
+
+test('클레이브 AI: 연속 회피를 읽으면 다음 선택에서 다단 폭풍 압박이 강해진다',()=>{
+ const {o,p}=setup();p.x=o.x;p.z=o.z+3;o.hp=o.max*.2;o.combat.target=p.id;const before=COMBAT.skillWeights(o,p).storm;
+ COMBAT.notePlayerResult(o,p.id,true);COMBAT.notePlayerResult(o,p.id,true);
+ assert.ok(COMBAT.skillWeights(o,p).storm>before);
+ COMBAT.notePlayerResult(o,p.id,false);assert.equal(o.combat.evadeStreak,1,'맞으면 회피 읽기가 한 단계 식는다');
+});
+
+test('클레이브 AI: 3페이즈 페이크는 첫 판정 전에 끊고 다른 기술로 바뀐다',()=>{
+ const {f,o,p}=setup();o.hp=o.max*.2;p.x=o.x;p.z=o.z+3.5;o.combat.endsAt=0;
+ let r=[.5,0,.2],i=0;f.rng=()=>r[i++]??.2;
+ f.tickBosses(1700);const fake=o.combat.skill,start=o.combat.startedAt;assert.ok(o.combat.feintTo,'낮은 확률 페이크 예약');
+ f.tickBosses(start+721);assert.equal(o.combat.state,'skill');assert.notEqual(o.combat.skill,fake);assert.equal(o.combat.hitIndex,0,'가짜 예고는 피해 판정 전에 취소');
 });
