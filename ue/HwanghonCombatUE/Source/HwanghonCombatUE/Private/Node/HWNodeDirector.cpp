@@ -99,7 +99,7 @@ namespace HWNodeDirectorLocal
     constexpr float RespawnSeconds = 5.f;
     constexpr float RepairPerSecond = 900.f;    // facility HP per second while recovering, x technician scale
     constexpr float RecoverPerSecond = 0.05f;   // 20 s to Stable with the technician well
-    constexpr float ShotEvery = 0.25f;
+    constexpr float ShotEvery = 0.25f;          // turrets and the guard land their damage in quarter-second blows
 
     // hwnode-run/1 keys (tools/ue/node-sim.cjs uses the same strings)
     const TCHAR* NpcStateKey(HWNodeRules::ENpcState S)
@@ -138,7 +138,7 @@ namespace HWNodeDirectorLocal
         case HWNodeRules::ETargetKind::Comms: return TEXT('c');
         default: return TEXT('n');
         }
-    }          // turrets and the guard land their damage in quarter-second blows
+    }
     constexpr float InteractReach = 500.f;
     constexpr int32 HudKey = 920000;
 }
@@ -1051,7 +1051,7 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
             if (InvasionClock >= NextFrameAt)
             {
                 RecordFrame();
-                NextFrameAt += 1.f;
+                NextFrameAt = FMath::FloorToFloat(InvasionClock) + 1.f;   // after a hitch: next whole second, no bunched frames
             }
         }
         const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
@@ -1277,4 +1277,6 @@ void AHWNodeDirector::WriteRunLog(const TCHAR* RunResult)
     FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("last_run.json")));
     FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("runs"), FString::Printf(TEXT("run_%s.json"), *FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")))));
     UE_LOG(LogTemp, Display, TEXT("[HWNode] run log written (%s, %.0f s, %d frames) - compare: node tools/ue/node-compare.mjs <file>"), RunResult, InvasionClock, RunFrames.Num());
+    // the log covers what the simulator plays (up to held or fallen): stop here so the boss phase cannot overwrite it
+    InvasionClock = -1.f;
 }
