@@ -32,7 +32,7 @@ for(const zone of fs.readdirSync(MAPS).filter(z=>fs.existsSync(path.join(MAPS,z,
 const inPoly=(p,poly)=>{let s=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])s=!s;}return s;};
 for(const zone of fs.readdirSync(MAPS).filter(z=>fs.existsSync(path.join(MAPS,z,'map.json')))){
  const m=JSON.parse(fs.readFileSync(path.join(MAPS,zone,'map.json'),'utf8')); if(m.kind!=='field'||m.depthMode!=='height') continue;
- test('가려지는 자리: '+zone+' — 걸을 수 있는 8 × 8 m 칸이 «대부분 가려진» 곳이 없다 (지붕·차양)',()=>{
+ test('가려지는 자리: '+zone+' — 걸을 수 있는 곳에 땅이 다 그려졌고, 8 × 8 m 칸이 «대부분 가려진» 곳이 없다 (지붕·차양)',()=>{
   const a=m.road.ang,FROM=(s,t)=>[s*Math.cos(a)-t*Math.sin(a),-s*Math.sin(a)-t*Math.cos(a)];
   const blocked=([x,z])=>m.blockers.some(b=>{ if(b.poly) return inPoly([x,z],b.poly); if(b.line) return false; const c=Math.cos(b.rot||0),sn=Math.sin(b.rot||0),dx=x-b.x,dz=z-b.z,lx=dx*c-dz*sn,lz=dx*sn+dz*c; return Math.abs(lx)<b.hw+0.3&&Math.abs(lz)<b.hd+0.3; });
   const G=2, ns=Math.floor((m.walk.s1-m.walk.s0)/G), nt=Math.floor((m.walk.t1-m.walk.t0)/G), cell=new Int8Array(ns*nt).fill(-1);   /* -1 못 걷는 곳 · 0 보임 · 1 가려짐 */
@@ -41,7 +41,10 @@ for(const zone of fs.readdirSync(MAPS).filter(z=>fs.existsSync(path.join(MAPS,z,
   const bigs=m.blockers.filter(b=>!b.poly&&!b.line&&b.hw>=4&&b.hd>=4);   /* 큰 상자(남산타워 기단 등)도 «건물» */
   const inBig=([x,z])=>bigs.some(b=>{ const c=Math.cos(b.rot||0),sn=Math.sin(b.rot||0),dx=x-b.x,dz=z-b.z,lx=dx*c-dz*sn,lz=dx*sn+dz*c; return Math.abs(lx)<b.hw&&Math.abs(lz)<b.hd; });
   const behindSolid=p=>{ for(let k=0.5;k<=24;k+=0.5){ const q=[p[0],p[1]+k]; if(polys.some(b=>inPoly(q,b.poly))||inBig(q)) return true; } return false; };
-  for(let i=0;i<ns;i++) for(let j=0;j<nt;j++){ const p=FROM(m.walk.s0+(i+0.5)*G,m.walk.t0+(j+0.5)*G); if(blocked(p)) continue; const h=heightAt(zone,m,p[0],p[1]); if(h===null||h>1000) continue; cell[i*nt+j]=h>1.8&&!behindSolid(p)?1:0; }
+  /* 걸을 수 있는데 땅이 안 그려진 칸(빈 하늘·타일 없음) — 굽기 카메라가 원점 평면 기준이라 원점에서 먼 띠 구석(부산·대전 s354~ t204~)이 NEAR/FAR 밖으로 잘렸다 */
+  const voids=[];
+  for(let i=0;i<ns;i++) for(let j=0;j<nt;j++){ const p=FROM(m.walk.s0+(i+0.5)*G,m.walk.t0+(j+0.5)*G); if(blocked(p)) continue; const h=heightAt(zone,m,p[0],p[1]); if(h===null||h>1000){ voids.push('s'+(m.walk.s0+(i+0.5)*G).toFixed(0)+' t'+(m.walk.t0+(j+0.5)*G).toFixed(0)); continue; } cell[i*nt+j]=h>1.8&&!behindSolid(p)?1:0; }
+  assert.equal(voids.length,0,zone+' 걸을 수 있는데 땅이 안 그려진 칸 '+voids.length+'곳: '+voids.slice(0,12).join(', '));
   const bad=[]; for(let i=0;i+4<=ns;i+=2) for(let j=0;j+4<=nt;j+=2){ let w=0,hd=0; for(let a2=0;a2<4;a2++) for(let b2=0;b2<4;b2++){ const v=cell[(i+a2)*nt+j+b2]; if(v>=0){ w++; if(v===1) hd++; } }
     if(w>=8&&hd/w>0.7) bad.push('s'+(m.walk.s0+i*G+4).toFixed(0)+' t'+(m.walk.t0+j*G+4).toFixed(0)); }
   assert.equal(bad.length,0,zone+' 대부분 가려진 칸 '+bad.length+'곳: '+bad.slice(0,20).join(', '));

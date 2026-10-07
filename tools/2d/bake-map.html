@@ -52,7 +52,8 @@ const depthMat=new THREE.ShaderMaterial({ side:THREE.DoubleSide,
 /* 깊이는 절반 해상도 — 가려짐 판정에는 충분하고, 16비트 아래 바이트가 시끄러워 원본 크기면 색 그림보다 컸다(150 KB 대 18 KB) */
 const DT=TILE/2, rt=new THREE.WebGLRenderTarget(DT,DT,{ minFilter:THREE.NearestFilter, magFilter:THREE.NearestFilter, samples:0 });
 const cv=document.createElement('canvas'); cv.width=cv.height=DT; const g2=cv.getContext('2d'); const img=g2.createImageData(DT,DT), px=new Uint8Array(DT*DT*4);
-function aimTile(i,j){ const uc=U0+(i+0.5)*T, vc=V1-(j+0.5)*T; const c=R.clone().multiplyScalar(uc).addScaledVector(U,vc).addScaledVector(D,-L);
+/* 카메라는 «타일 가운데 밑 땅» 에서 L 만큼 뒤 — 원점 평면에서 재면 원점에서 먼 지역(부산 띠 구석, 시선 방향 깊이 −203 m)이 NEAR/FAR(±200 m) 밖으로 잘려 땅이 빈 하늘로 구워졌다 */
+function aimTile(i,j){ const uc=U0+(i+0.5)*T, vc=V1-(j+0.5)*T; const c=R.clone().multiplyScalar(uc).addScaledVector(U,vc); c.addScaledVector(D,-c.y/D.y-L);
   cam.position.copy(c); cam.lookAt(c.clone().add(D)); cam.updateMatrixWorld(true); return { u0:U0+i*T, v0:V1-j*T }; }
 const sunDir=new THREE.Vector3(...env.sun.dir), sun=env.sunLight||null;   /* 던전은 해가 없다 */
 function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTile(i,j);

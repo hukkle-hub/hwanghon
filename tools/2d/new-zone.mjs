@@ -104,7 +104,9 @@ function plan(region) {
   const onRoad = (s, t) => { const p = toOsm(FROM(s, t)); return carRoads.some(r => r.line.some((q, i) => i && segD(p, r.line[i - 1], q) < r.hw + 1)); };
   const urban = lookOf(region).dress.urban, nearB = (s, t) => { for (let ds = -20; ds <= 20; ds += G) for (let dt = -20; dt <= 20; dt += G) if (/city|big/.test(cls(s + ds, t + dt))) return true; return false; };
   const sc = (walk.s0 + walk.s1) / 2, want = [sc, walk.t0 < 0 && walk.t1 > 0 ? 0 : (walk.t0 + walk.t1) / 2]; let spawn = null;
-  const okAt = (s, t) => s > walk.s0 + 10 && s < walk.s1 - 10 && t > walk.t0 + 10 && t < walk.t1 - 10 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([ds, dt]) => /open|park|beach/.test(cls(s + ds, t + dt))) && !onRoad(s, t);
+  /* 5 m 분류 칸만 보면 작은 건물이 칸 사이에 숨는다 (전주 첫 굽기: 출발점 1.7 m 옆 한옥 — 시험 «둘레 2 m» 실패). 실제 건물 윤곽까지 3.5 m 띄운다 */
+  const bClear = (s, t) => { const p = toOsm(FROM(s, t)); return !osm.buildings.some(b => !b.under && (inPoly(p, b.poly) || b.poly.some((q, i) => i && segD(p, b.poly[i - 1], q) < 3.5))); };
+  const okAt = (s, t) => s > walk.s0 + 10 && s < walk.s1 - 10 && t > walk.t0 + 10 && t < walk.t1 - 10 && [[0, 0], [3, 0], [-3, 0], [0, 3], [0, -3]].every(([ds, dt]) => /open|park|beach/.test(cls(s + ds, t + dt))) && !onRoad(s, t) && bClear(s, t);
   for (const strict of [true, false]) for (let r = 0; r < 120 && !spawn; r += G) for (let a = 0; a < 24 && !spawn; a++) { const s = want[0] + Math.cos(a / 24 * Math.PI * 2) * r, t = want[1] + Math.sin(a / 24 * Math.PI * 2) * r; if (okAt(s, t) && (!strict || !urban || nearB(s, t))) spawn = [Math.round(s), Math.round(t)]; }
   if (!spawn) console.warn("  ! 출발점 후보 없음 — 띠 가운데로", want); spawn = spawn || want;
   if (process.env.DEBUG) { let n = 0, road = 0, cl = 0; for (let s = walk.s0; s < walk.s1; s += 10) for (let t = walk.t0; t < walk.t1; t += 10) { n++; if (onRoad(s, t)) road++; if (/open|park|beach/.test(cls(s, t))) cl++; } console.log("  칸", n, "차도", road, "걸을 수 있는 땅", cl); }
