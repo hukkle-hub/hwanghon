@@ -5,11 +5,12 @@
    걷는 띠·출발점은 맵 굽기 결과(maps/2d/<zone>/map.json)를 그대로 읽는다 — 한 곳에서만 정한다. */
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
-const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),RS=require('./rpg-skills.cjs');
+const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
 const ANIMS=['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4'];   /* 스킬 1~4 — 다른 사람에게도 동작이 보이게 */
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
 const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 최소 간격 (클라 공격 동작 ≈0.6초) */
+const POTION_HEAL=.35, POTION_GAP=1000;   /* 회복약 «HP 35% 회복» (js/items.js c_potion) */
 const DODGE_TIME=520, DODGE_GAP=780, RESPAWN_TIME=5000, RESPAWN_GUARD=2000;
 const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3, BOSS_IMPACT_LIFE=650;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 · 공동 접촉 사건 수명 */
 const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);               /* 보스 몸 반지름 + 무기 길이 (대략) */
@@ -20,7 +21,8 @@ function prestigeTitle(rows=[]){
   const i=tiers.findIndex(t=>n>=t[0]);if(i>=0)return {boss:r.boss,text:tiers[i][1],tier:tiers.length-i}; }
  return null; }
 function loadZone(id){ try{ const m=JSON.parse(fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json'),'utf8')); return { id, walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)),
-  bosses:(m.bosses||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.x)&&Number.isFinite(b.z)) }; }catch{ return null; } }
+  bosses:(m.bosses||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.x)&&Number.isFinite(b.z)),
+  areas:(m.areas||[]).filter(a=>a&&(a.kind==='rest'||a.kind==='siege')&&(Array.isArray(a.circle)||Array.isArray(a.poly))) }; }catch{ return null; } }   /* 안전 지대(마을·쉼터)·거점 판정 — js/mmo/safe-zones.js */
 const ZONE_IDS=()=>{ try{ return fs.readdirSync(path.join(ROOT,'maps','2d')).filter(d=>/^[a-z0-9_]{1,24}$/.test(d)&&fs.existsSync(path.join(ROOT,'maps','2d',d,'map.json'))); }catch{ return []; } };
 const itemOf=id=>C.equipment.find(i=>i.id===id);
 const num=(v,lo,hi)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):null;
@@ -28,8 +30,17 @@ class Field{
  /* store: 보스 상태·처치 기록 저장 (없으면 메모리만) · emit: 서버 전체 알림 (출현·처치·전설 획득) */
  constructor({ store=null, emit=()=>{}, rng=Math.random, timeScale=Number(process.env.BOSS_TIME_SCALE)||1 }={}){
   this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.titleCache=new Map(); this.lootSerial=0;
+  this.hubs=new Map();   /* 거점 주인 (zone → {kind:'guild',name}) — 없으면 보스가 차지 (문서 197·198). 점령전은 GPT 몫: setHub 로 바꾼다 */
   this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale; }
  zone(id){ if(typeof id!=='string'||!/^[a-z0-9_]{1,24}$/.test(id)) return null; if(!this.zones.has(id)){ const z=loadZone(id); if(!z) return null; this.zones.set(id,z); } return this.zones.get(id); }
+ hubOwner(zoneId){ const z=this.zone(zoneId); return z&&SAFE.isHub(z.areas)?(this.hubs.get(z.id)||SAFE.BOSS_OWNER):null; }
+ setHub(zoneId, owner){ if(owner&&owner.kind==='guild')this.hubs.set(zoneId,{kind:'guild',name:String(owner.name||'').slice(0,24)});else this.hubs.delete(zoneId); return this.hubOwner(zoneId); }
+ /* 지금 서 있는 곳이 안전 지대(마을·쉼터)인가 — 상점·판매·창고는 여기서만 */
+ safeAt(id){ const p=this.players.get(id); if(!p) return null; const z=this.zones.get(p.zone); return z?SAFE.safeArea(z.areas,p.x,p.z,this.hubOwner(p.zone)):null; }
+ /* 회복약: 최대 HP 의 35% (C.consumables c_potion) · 1초에 한 번 · 쓰러졌거나 가득 차면 안 쓴다(아깝게 버리지 않게) */
+ canPotion(id, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.'); if(p.dead) throw Error('쓰러진 상태입니다.');
+  if(now<(p.potionReady||0)) throw Error('회복약은 잠시 뒤에 다시 쓸 수 있습니다.'); if(p.hp>=p.maxHp) throw Error('HP 가 가득 찼습니다.'); return p; }
+ potion(id, now=Date.now()){ const p=this.canPotion(id,now), heal=Math.round(p.maxHp*POTION_HEAL); p.hp=Math.min(p.maxHp,p.hp+heal); p.potionReady=now+POTION_GAP; return { heal, self:this.selfView(p) }; }
  /* 길 좌표 (s, t) — js/mmo/env-gangnam.js 의 DIR·SIDE 와 같다 */
  clamp(z,p){ const c=Math.cos(z.ang),s=Math.sin(z.ang); let a=p.x*c-p.z*s, t=-p.x*s-p.z*c; a=Math.min(z.walk.s1,Math.max(z.walk.s0,a)); t=Math.min(z.walk.t1,Math.max(z.walk.t0,t)); p.x=a*c-t*s; p.z=-a*s-t*c; }
  title(id){ if(this.titleCache.has(id))return this.titleCache.get(id);let title=null;try{title=prestigeTitle(this.store?.bossTitles(id)||[]);}catch{}if(this.titleCache.size>=2048)this.titleCache.delete(this.titleCache.keys().next().value);this.titleCache.set(id,title);return title; }
@@ -172,7 +183,7 @@ class Field{
   return { bossNow:now, bosses:bs, bossActs, bossImpacts, loot }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
-  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), ...this.bossView(p) }; }
+  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), ...this.bossView(p) }; }
   if(msg.type==='fieldHit'){ return typeof msg.boss==='string'?this.hit(id, msg, profile):null; }
   if(msg.type==='fieldSkill'){ return this.skill(id, msg, profile); }
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
@@ -181,4 +192,4 @@ class Field{
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }
   throw Error('알 수 없는 필드 요청입니다.'); }
 }
-module.exports={ Field, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, BOSS_IMPACT_LIFE, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };
+module.exports={ Field, POTION_HEAL, POTION_GAP, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, BOSS_IMPACT_LIFE, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };

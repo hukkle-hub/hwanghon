@@ -2,7 +2,7 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {WebSocketServer,WebSocket}=require('ws'),{Store}=require('./store.cjs'),{Raid}=require('./raid.cjs'),C=require('./content.cjs');
 const WIRE=require('../js/party-wire.js');
 const ROOT=path.resolve(__dirname,'..');
-const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs');
+const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs'),BAG=require('./field-bag.cjs');
 function createPartyServer(options={}){
  const store=options.store||new Store(options.dataDir||process.env.DATA_DIR||path.join(ROOT,'.party-data'));
  const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field({store,emit:ev=>announce(ev)});   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) · 필드 보스 (188) */
@@ -86,6 +86,9 @@ function createPartyServer(options={}){
   if(msg.type==='character'){const p=store.chooseName(id,msg.name,msg.character);profileUpdate(p);enterOffice(id);rpg.update(id);sendBoard();return;}
   if(!store.public(id).characterCreated)throw Error('먼저 캐릭터 이름을 정하세요.');
   if(msg.type==='fieldLoot'){if(typeof msg.loot!=='string')throw Error('주울 물품을 고르세요.');const r=field.pickup(id,msg.loot,store);profileUpdate(r.profile);rpg.update(id);send(ws,{type:'fieldLooted',item:r.item});return;}
+  /* 필드 가방·상점 (문서 198) — 장착·해제·회복약은 어디서나, 구매·판매·창고는 마을·쉼터 안에서만 */
+  if(msg.type==='fieldShop'){send(ws,{type:'fieldShop',items:BAG.fieldShop(store,id),safe:!!field.safeAt(id)});return;}
+  if(msg.type==='fieldBag'){if(Date.now()-(ws.lastEconomy||0)<250)throw Error('처리 중입니다. 잠시 후 다시 시도하세요.');ws.lastEconomy=Date.now();const r=BAG.bag(store,field,id,msg);profileUpdate(r.profile);rpg.update(id);send(ws,{type:'fieldBagDone',op:msg.op,result:r.result||{}});return;}
   if(msg.type.startsWith('field')){const reply=field.command(id,msg,store.public(id),!!room?.raid);if(reply)send(ws,reply);return;}
   if(await rpg.command(ws,msg))return;
   if(['guildCreate','guildJoin','guildLeave'].includes(msg.type)){

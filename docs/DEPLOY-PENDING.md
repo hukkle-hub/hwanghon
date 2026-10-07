@@ -16,7 +16,7 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| (이번 푸시) | 필드 가방 `fieldBag`/`fieldShop` (`server/field-bag.cjs`) · 안전 지대·회복약·거점 기본 보스 점령 (`field.cjs` `hubOwner`/`setHub`/`safeAt`/`potion`, `fieldJoined.hub`) — 문서 198. 서버가 `js/mmo/safe-zones.js` 를 읽는다 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
 
