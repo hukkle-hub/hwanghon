@@ -35,6 +35,9 @@ const past = Date.now() - NODE.WEEK;
 store.nodeReport(mate.id, N, {outcome:'held', contrib:{defense:420, repair:260, npc_rescue:2, kill:6}}, past);
 store.nodeReport(lead.id, N, {outcome:'held', contrib:{command:12, kill:9}}, past + 1);
 store.nodeReport(rival.id, N, {outcome:'held', contrib:{boss:1500000, kill:4}}, past + 2);
+/* 이번 주기: 새벽단이 앞서 간다 (카드의 «이번 주기» 순위) */
+store.nodeReport(rival.id, N, {outcome:'held', contrib:{defense:300, repair:200, kill:8}}, Date.now() - 120e3);
+store.nodeReport(mate.id, N, {outcome:'held', contrib:{kill:5}}, Date.now() - 60e3);
 
 const {createPartyServer} = require('./server/index.cjs');
 const app = createPartyServer({store});

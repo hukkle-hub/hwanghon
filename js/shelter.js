@@ -55,6 +55,9 @@
     $('nd-kv').innerHTML=
       '<span>관리 길드</span><span>'+(n.steward?esc(n.steward.name):'없음 — 지난 주기 공헌이 없었다')+'</span>'+
       '<span>정책</span><span>'+(pols.length?esc(pols.join(' · ')):'없음')+'</span>'+
+      '<span>이번 주기</span><span>'+(n.standings&&n.standings.length?n.standings.slice(0,3).map(function(g,i){ var mine=me&&me.guild===g.guild;
+        return (mine?'<b class="t-gold">':'')+(i+1)+'. '+esc(g.name)+' '+g.score+(mine?'</b>':''); }).join(' · '):'공헌 없음')+
+        ' <small class="t-faint">· '+Math.max(0,Math.ceil((n.nextPeriodAt-Date.now())/86400000))+'일 뒤 결정</small></span>'+
       '<span>보급</span><span>'+n.supply+' / 12</span>'+
       '<span>정보</span><span>지도 '+Math.round(n.services.mapIntel*100)+'% · 구조신호 '+(n.services.rescueSignals?'켜짐':'꺼짐')+' · 침공 예보 '+(n.services.invasionForecast?'켜짐':'꺼짐')+'</span>'+
       (n.state==='fallen'||n.state==='retakeable'?'<span>탈환</span><span>난이도 ×'+n.difficulty+' · 보상 ×'+n.reward+(n.extraElites?' · 엘리트 +'+n.extraElites:'')+'</span>':'')+
@@ -71,7 +74,7 @@
     }
     $('nd-supply').hidden=!can('allocate_supply');
     $('nd-sup').textContent='이번 주기 '+n.supply+' / 12 · 바리케이드 하나 = 3'; $('nd-sgo').disabled=n.supply+3>12;
-    $('nd-note').textContent=me&&me.steward?'관리권은 소유권이 아닙니다 — 정책·보급을 정할 뿐, 누구의 사용도 막지 못합니다.':
+    $('nd-note').textContent=me&&me.steward?'관리권 ≠ 소유권 — 정책·보급만 정하고, 누구도 막지 못합니다.':
       '관리 길드는 지난 주기의 공헌(처치·방어·수리·구조·보스·보급·지휘)으로 정해집니다. 돈 입찰은 없습니다.';
   }
   /* node 명령은 서버가 200ms 간격으로만 받는다 — 접속 직후 «welcome» 과 «guild» 가 거의 같이 와서 조회 두 번이

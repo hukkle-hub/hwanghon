@@ -374,12 +374,13 @@ void UHWNodeConfig::BuildGraph(const TArray<TPair<FVector, FVector>>& ExtraLinks
 
 int32 UHWNodeConfig::NearestGraphNode(const FVector& At) const
 {
-    // height counts three times: never pick a node on another level just above or below
+    // height counts three times: never pick a node on another level just above or below. The first 150 cm do not count:
+    // a body's location is its capsule centre, ~90 cm above the floor-top nodes (tools/ue/node-graph.js does the same)
     int32 Best = INDEX_NONE;
     double BestCost = 0.0;
     for (int32 I = 0; I < GraphNodes.Num(); ++I)
     {
-        const double Cost = FVector::Dist2D(GraphNodes[I], At) + 3.0 * FMath::Abs(GraphNodes[I].Z - At.Z);
+        const double Cost = FVector::Dist2D(GraphNodes[I], At) + 3.0 * FMath::Max(0.0, FMath::Abs(GraphNodes[I].Z - At.Z) - 150.0);
         if (Best == INDEX_NONE || Cost < BestCost)
         {
             Best = I;

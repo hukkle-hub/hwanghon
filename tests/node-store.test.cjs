@@ -70,3 +70,12 @@ test('UE 판 결과 모양 그대로 — HWNodeDirector::FinishRun 의 형식 �
  assert.equal(r.type,'node'); assert.equal(r.node.state,'stable');
  assert.equal(store.db.prepare('SELECT amount FROM node_contrib WHERE player=? AND category=?').get(a,'command').amount,7);
 });
+test('이번 주기 순위 — 관리권과 같은 셈이라, 이번 주기 1위가 다음 주기 관리 길드가 된다',()=>{
+ const {store,a,a2,b,b2}=world(), p=60*W;
+ store.nodeReport(a,N,{outcome:'held',contrib:{boss:900000,kill:6}},p+1e3);
+ store.nodeReport(b,N,{outcome:'held',contrib:{defense:400,repair:300,npc_rescue:2,kill:4}},p+2e3);
+ store.nodeReport(b2,N,{outcome:'held',contrib:{command:5}},p+3e3);
+ const st=store.nodeView(N,p+4e3).standings; assert.deepEqual(st.map(x=>x.name),['새벽단','황혼단']); assert.ok(st[0].score>st[1].score);
+ assert.equal(store.nodeView(N,p+W+1e3).steward.name,st[0].name,'이번 주기 1위 = 다음 주기 관리 길드');
+ assert.deepEqual(store.nodeView(N,p+W+2e3).standings,[],'새 주기는 빈 순위에서 시작');
+});

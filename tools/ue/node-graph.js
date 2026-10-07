@@ -13,9 +13,9 @@
     for (const [a, b] of n.links || []) link(id(pt(n, a)), id(pt(n, b)));
     return { nodes, adj };
   }
-  /* 가장 가까운 마디 — 높이 차이는 세 배로 친다 (다른 층의 마디를 고르지 않게) */
+  /* 가장 가까운 마디 — 높이 차이는 세 배로 친다 (다른 층의 마디를 고르지 않게). 150 cm 까지는 무시: 몸(캡슐 중심)은 바닥보다 ~90 cm 위다 */
   function nearest(g, p) { let best = -1, bd = Infinity;
-    for (let i = 0; i < g.nodes.length; i++) { const q = g.nodes[i], d = Math.hypot(q[0] - p[0], q[1] - p[1]) + 3 * Math.abs(q[2] - p[2]); if (d < bd) { bd = d; best = i; } }
+    for (let i = 0; i < g.nodes.length; i++) { const q = g.nodes[i], d = Math.hypot(q[0] - p[0], q[1] - p[1]) + 3 * Math.max(0, Math.abs(q[2] - p[2]) - 150); if (d < bd) { bd = d; best = i; } }
     return best; }
   const cost = (g, a, b) => { const p = g.nodes[a], q = g.nodes[b]; return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
   /* from 근처 마디 → to 근처 마디의 최단 경로 (점 목록). 못 가면 [] */

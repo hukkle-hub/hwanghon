@@ -39,13 +39,19 @@ const methods={
    else this.statement('INSERT INTO guild_roles VALUES(?,?,?) ON CONFLICT(player) DO UPDATE SET guild=excluded.guild,role=excluded.role').run(target,g.id,role);
    this.audit(id,'guildAssign',target,{role}); return this.guildRoleOf(target); }); },
  /* 지난 주기의 공헌으로 이번 주기 관리 길드를 정한다 (주기가 바뀐 뒤 처음 볼 때 한 번) */
- nodeStewardship(id,n,now){ const period=periodOf(now); if(n.stewardPeriod===period) return false;
-  const rows=this.statement('SELECT player,guild,category,amount FROM node_contrib WHERE period=? AND node=?').all(period-1,id);
+ /* 한 주기의 길드별 공헌 — 사람마다 점수(항목별 1등 대비)를 매기고 길드로 더한다. 관리권과 쉘터 «이번 주기 순위» 가 같은 셈 */
+ nodePeriodScores(id,period){ const rows=this.statement('SELECT player,guild,category,amount FROM node_contrib WHERE period=? AND node=?').all(period,id);
   const byPlayer=new Map(); for(const r of rows){ const p=byPlayer.get(r.player)||{guild:r.guild,raw:{}}; p.raw[r.category]=(p.raw[r.category]||0)+r.amount; byPlayer.set(r.player,p); }
   const players=[...byPlayer.values()], all=players.map(p=>p.raw), scores=players.map(p=>R.contributionScore(p.raw,all));
   /* 길드 순서 = 등록 순서 (동점이면 먼저 만든 길드) */
   const guilds=this.statement('SELECT id,name FROM guilds ORDER BY rowid').all(), index=new Map(guilds.map((g,i)=>[g.id,i]));
-  const winner=R.stewardGuild(scores,players.map(p=>index.has(p.guild)?index.get(p.guild):-1),guilds.length);
+  return { guilds, scores, guildOf:players.map(p=>index.has(p.guild)?index.get(p.guild):-1) }; },
+ nodeStandings(id,period,limit=5){ const {guilds,scores,guildOf}=this.nodePeriodScores(id,period), sum=new Map();
+  scores.forEach((sc,i)=>{ if(guildOf[i]>=0) sum.set(guildOf[i],(sum.get(guildOf[i])||0)+sc); });
+  return [...sum].sort((a,b)=>b[1]-a[1]||a[0]-b[0]).slice(0,limit).map(([g,sc])=>({ guild:guilds[g].id, name:guilds[g].name, score:Math.round(sc) })); },
+ nodeStewardship(id,n,now){ const period=periodOf(now); if(n.stewardPeriod===period) return false;
+  const {guilds,scores,guildOf}=this.nodePeriodScores(id,period-1);
+  const winner=R.stewardGuild(scores,guildOf,guilds.length);
   const next=winner>=0?{guild:guilds[winner].id,name:guilds[winner].name}:null;
   if((next&&next.guild)!==(n.steward&&n.steward.guild)) n.policies=[];   // 새 관리 길드가 정책을 다시 고른다
   n.steward=next; n.stewardPeriod=period; return true; },
@@ -54,7 +60,7 @@ const methods={
   return { id, state:n.state, occupiedHours:+hours.toFixed(3), tier, retakeIn:n.state==='fallen'?Math.max(0,2-hours):0,
    difficulty:R.DIFFICULTY[tier], reward:R.REWARD[tier], extraElites:R.EXTRA_ELITES[tier],
    steward:n.steward, policies:n.policies, effects:R.policyEffects(n.policies), supply:n.supplyPeriod===periodOf(now)?n.supply:0,
-   services:R.nodeServices(n.state), period:periodOf(now), nextPeriodAt:(periodOf(now)+1)*WEEK,
+   services:R.nodeServices(n.state), period:periodOf(now), nextPeriodAt:(periodOf(now)+1)*WEEK, standings:this.nodeStandings(id,periodOf(now)),
    ...(me?{ me:{ ...me, steward:!!(n.steward&&n.steward.guild===me.guild),
      can:R.PERMS.filter(p=>R.hasPermission(me.role,p)&&(n.steward&&n.steward.guild===me.guild||p==='ping'||p==='rally')) } }:{}) }; },
  /* 판 결과 — held(방어 성공)·fallen(함락)·retaken(탈환)·retake_failed. 공헌은 이번 주기 장부에 */
