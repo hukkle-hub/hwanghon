@@ -437,8 +437,14 @@ TArray<FVector> AHWNodeDirector::PathFromTechnicianTo(EHWNodeFacilityKind Kind) 
     else if (Kind == EHWNodeFacilityKind::Comms) Path.Append(Config->Route(TEXT("comms")));
     else
     {
-        // south: back down the main road to just inside the gate
+        // south: back down the main road to just inside the gate - and up to its inner face: the road's waypoint stops
+        // 440 cm short, outside the 220 cm repair reach, so an ordered technician never repaired (node-campaign.cjs)
         for (int32 I = Main.Num() - 1; I >= 1; --I) Path.Add(Main[I]);
+        if (const AHWNodeFacility* Gate = GetFacility(EHWNodeFacilityKind::Gate))
+        {
+            const FVector GateAt = Gate->GetActorLocation();
+            Path.Add(FVector(GateAt.X, GateAt.Y + Gate->GetHalfExtent().Y + 80.f, Path.Num() > 0 ? Path.Last().Z : GateAt.Z));
+        }
     }
     return Path;
 }
@@ -554,19 +560,15 @@ void AHWNodeDirector::ReportCounter(bool bPerfect)
     LastCounterShownFor = 1.2f;
 }
 
-void AHWNodeDirector::ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer)
+void AHWNodeDirector::ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer, bool bWasAttacking)
 {
     if (!bByPlayer) return;   // turrets and the guard are the node's, not the player's
     const HWNodeRules::EEnemyRole R = static_cast<HWNodeRules::EEnemyRole>(EnemyRole);
     Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Kill)] += HWNodeRules::KillWeight(R);
-    float Distance = -1.f;
-    NearestStanding(At, Distance);
-    if (const AHWNodeNpc* Npc = NearestTargetableNpc(At))
-    {
-        const float NpcDistance = FVector::Dist2D(At, Npc->GetActorLocation());
-        Distance = Distance < 0.f ? NpcDistance : FMath::Min(Distance, NpcDistance);
-    }
-    Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Defense)] += HWNodeRules::DefenseCredit(R, Distance);
+    // defence = stopping an attack on the node (a facility, a barricade, a turret or an NPC), wherever it is caught.
+    // It was «a kill within 15 m of a standing facility»: a virtual-guild campaign (tools/ue/node-campaign.cjs) showed that
+    // paid guilds for letting enemies reach the base and starved the ones that stopped them out on the road.
+    Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Defense)] += HWNodeRules::DefenseCredit(R, bWasAttacking ? 0.f : -1.f);
     for (const FPing& P : Pings)
     {
         if (HWNodeRules::PingCredits(Clock - P.Born, FVector::Dist2D(At, P.At)))

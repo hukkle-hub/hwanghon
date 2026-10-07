@@ -170,7 +170,9 @@ void AHWNodeNpc::Tick(float DeltaSeconds)
     }
     if (OrderIndex >= OrderPath.Num()) return;
     const FVector To = OrderPath[OrderIndex] - Here;
-    if (FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(180.f))
+    // the last waypoint is the work spot: walk right up to it (180 cm left the technician outside its repair reach)
+    const float Arrive = OrderIndex == OrderPath.Num() - 1 ? 60.f : 180.f;
+    if (FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(Arrive))
     {
         ++OrderIndex;
         return;

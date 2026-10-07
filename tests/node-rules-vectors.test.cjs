@@ -32,6 +32,7 @@ test('전투 규칙(JS): 역할 수치·목표 선택·정문 차단·웨이브�
  for(const c of K.npc){ const pe=R.policyEffects(c.policies), e=C.npcEffects(c.states,pe); for(const [k,v] of Object.entries(c.expect)) assert.ok(typeof v==='boolean'?e[k]===v||k==='prepSeconds':near(k==='prepSeconds'?C.prepSeconds(e,pe):e[k],v),k+' '+JSON.stringify(c)); }
  const L=C.npcLife(K.life.max); K.life.seq.forEach(([op,a],i)=>{ const r=op==='dmg'?L.applyDamage(a):op==='rescue'?L.rescue():L.tick(a); assert.deepEqual([r,L.state,Math.round(L.health)],K.life.expect[i],'life '+i); });
  for(const c of K.npc_health) assert.equal(C.npcMaxHealth(c.role,c.armed),c.expect);
+ for(const [r,w] of K.credit.kill) assert.equal(C.killWeight(r),w); for(const [r,d,w] of K.credit.defense) assert.equal(C.defenseCredit(r,d),w); for(const [a2,d,ok] of K.credit.ping) assert.equal(C.pingCredits(a2,d),ok);
 });
 /* 같은 벡터 → C++ 시험 소스 */
 function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:'Invasion',recovering:'Recovering',fallen:'Fallen',retakeable:'Retakeable',retaking:'Retaking'};
@@ -73,6 +74,9 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  L.push(`{ FNpcLife N; N.MaxHealth=${f(K.life.max)}; N.Health=N.MaxHealth;`); K.life.seq.forEach(([op,a],i)=>{ const [r,s,h]=K.life.expect[i];
   L.push(`{ const bool R=${op==='dmg'?`N.ApplyDamage(${f(a)})`:op==='rescue'?'N.Rescue()':`N.Tick(${f(a)})`}; CHECK(R==${r}&&N.State==ENpcState::${NS[s]}&&std::fabs(N.Health-${f(h)})<0.6f,"life ${i}"); }`); }); L.push('}');
  K.npc_health.forEach((c,i)=>L.push(`CHECK(std::fabs(NpcMaxHealth(ENpcRole::${NR[c.role]},${c.armed})-${f(c.expect)})<0.01f,"npc health ${i}");`));
+ K.credit.kill.forEach(([r,w],i)=>L.push(`CHECK(std::fabs(KillWeight(EEnemyRole::${RL[r]})-${f(w)})<0.001f,"kill weight ${i}");`));
+ K.credit.defense.forEach(([r,d,w],i)=>L.push(`CHECK(std::fabs(DefenseCredit(EEnemyRole::${RL[r]},${f(d)})-${f(w)})<0.001f,"defense ${i}");`));
+ K.credit.ping.forEach(([a2,d,ok],i)=>L.push(`CHECK(PingCredits(${f(a2)},${f(d)})==${ok},"ping ${i}");`));
  L.push('if(Fails){ std::printf("%d failed\\n",Fails); return 1; } std::printf("vectors ok\\n"); return 0; }');
  return L.join('\n'); }
 const has=c=>{ try{ execFileSync(c,['--version'],{stdio:'ignore'}); return true; }catch{ return false; } };

@@ -70,7 +70,8 @@ public:
 
     // ---- the contribution ledger (HWNodeRules::EContribution)
     void ReportCounter(bool bPerfect);
-    void ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer);
+    // bWasAttacking: the enemy was going for a facility, a barricade, a turret or an NPC - stopping that is «defence»
+    void ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer, bool bWasAttacking);
     void ReportRepair(float Amount);
     void ReportNpcHurt(AHWNodeNpc* Npc);
 

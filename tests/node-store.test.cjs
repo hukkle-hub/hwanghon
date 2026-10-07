@@ -79,3 +79,22 @@ test('이번 주기 순위 — 관리권과 같은 셈이라, 이번 주기 1위
  assert.equal(store.nodeView(N,p+W+1e3).steward.name,st[0].name,'이번 주기 1위 = 다음 주기 관리 길드');
  assert.deepEqual(store.nodeView(N,p+W+2e3).standings,[],'새 주기는 빈 순위에서 시작');
 });
+test('파티: 같은 판의 파티원 넷이 각자 «함락»·«탈환» 을 보고해도 받는다 (10분 안) — 상태는 첫 보고만 바꾼다',()=>{
+ const {store,a,a2,b,b2}=world(), t0=70*W;
+ store.nodeReport(a,N,{outcome:'fallen',contrib:{kill:3}},t0);
+ for(const [p,dt] of [[a2,30e3],[b,60e3],[b2,9*60e3]]) assert.equal(store.nodeReport(p,N,{outcome:'fallen',contrib:{kill:2}},t0+dt).state,'fallen');
+ assert.ok(store.nodeView(N,t0+1e3).occupiedHours<0.01,'함락 시각은 첫 보고 그대로');
+ assert.throws(()=>store.nodeReport(a2,N,{outcome:'fallen'},t0+11*60e3),/이미 함락된/,'10분 뒤엔 다른 판');
+ const t1=t0+3*H; store.nodeReport(b,N,{outcome:'retaken',contrib:{kill:5}},t1);
+ assert.equal(store.nodeReport(b2,N,{outcome:'retaken',contrib:{kill:4}},t1+90e3).state,'stable','탈환 파티원');
+ assert.equal(store.db.prepare("SELECT count(*) n FROM node_runs WHERE outcome='retaken'").get().n,2);
+});
+test('관리권은 길드 단위 항목 몫 — 처치만 한 6명 길드보다 수리·보급·처치를 한 2명 길드 (한 사람이 맡는 일도 센다)',()=>{
+ const {store,a,a2,b,b2}=world(), p=80*W, code=store.guild(a).code;
+ const more=[1,2,3,4].map(i=>{ const g=store.guest('대원'+i); store.chooseName(g.profile.id,'대원A'+i,'ain'); store.joinGuild(g.profile.id,code); return g.profile.id; });
+ [a,a2,...more].forEach((id,i)=>store.nodeReport(id,N,{outcome:'held',contrib:{kill:20}},p+1e3+i*1e3));
+ store.nodeReport(b,N,{outcome:'held',contrib:{repair:500,supply:12}},p+20e3);
+ store.nodeReport(b2,N,{outcome:'held',contrib:{kill:20}},p+21e3);
+ const st=store.nodeView(N,p+30e3).standings; assert.deepEqual(st.map(x=>x.name),['새벽단','황혼단'],JSON.stringify(st));
+ assert.equal(store.nodeView(N,p+W+1e3).steward.name,'새벽단');
+});

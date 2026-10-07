@@ -33,6 +33,12 @@ function addRecovery(m,a){ if(m.state!=='recovering') return false; m.recover+=a
 /* 공헌도 — 항목마다 이번 판 1등 대비 0..100, 가중 합 */
 function contributionScore(mine,all){ let total=0; for(const c of CATEGORIES){ const best=Math.max(0,...all.map(a=>a[c]||0)); if(best>0) total+=WEIGHT[c]*100*(mine[c]||0)/best; } return total; }
 function stewardGuild(scores,guildOf,guildCount){ let best=-1,bestSum=0; for(let g=0;g<guildCount;g++){ let sum=0; for(let i=0;i<scores.length;i++) if(guildOf[i]===g) sum+=scores[i]; if(sum>bestSum){ bestSum=sum; best=g; } } return best; }
+/* 관리권 점수 — 길드 단위 항목 몫: 항목마다 «그 항목 1등 길드 대비 %» × 가중치를 더한다.
+   사람 단위로 매겨 더하던 것은 한 사람이 맡는 일(수리=기술자 명령, 보급=바리케이드)이 길드에 아무리 커도 100점에 묶이고,
+   모두가 하는 처치만 인원수만큼 쌓였다 (가상 길드 캠페인 tools/ue/node-campaign.cjs, 문서 201 §8).
+   guildRaw: [{kill, defense, ...}, ...] (길드 순서 = 등록 순) → 점수 배열 */
+function guildContributionScores(guildRaw){ const best={}; for(const c of CATEGORIES) best[c]=Math.max(0,...guildRaw.map(g=>g[c]||0));
+ return guildRaw.map(g=>CATEGORIES.reduce((a,c)=>a+(best[c]>0?WEIGHT[c]*100*(g[c]||0)/best[c]:0),0)); }
 function validPolicies(picks,budget=POLICY_BUDGET){ if(!Array.isArray(picks)) return false; const seen=new Set(); let spent=0;
  for(const p of picks){ if(!POLICIES.includes(p)||seen.has(p)) return false; seen.add(p); spent+=POLICY_COST[p]; } return spent<=budget; }
 function policyEffects(picks){ const e={gateHealthScale:1,generatorHealthScale:1,npcsArmed:false,prepBonusSeconds:0,wavePreview:false,medicalHealScale:1,extraPotions:0,reservePowerSeconds:0};
@@ -48,4 +54,4 @@ function nodeServices(state,commsFraction=1,power=3){ if(state==='fallen'||state
 
 module.exports={ STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
  gradeCounter,occupationTier,machine,setThreat,startInvasion,defenceHeld,tickInvasion,tickOccupation,startRetake,retakeEnded,addRecovery,
- contributionScore,stewardGuild,validPolicies,policyEffects,hasPermission,nodeServices };
+ contributionScore,stewardGuild,guildContributionScores,validPolicies,policyEffects,hasPermission,nodeServices };

@@ -372,7 +372,12 @@ void AHWNodeEnemy::Die(bool bByPlayer)
     GetCharacterMovement()->DisableMovement();
     SetActorEnableCollision(false);
     bKilled = bByPlayer;
-    if (bByPlayer && Director) Director->ReportKill(Role, GetActorLocation(), bLastHitByPlayer);
+    if (bByPlayer && Director)
+    {
+        const bool bWasAttacking = Override.IsValid() || TargetKind == HWNodeRules::ETargetKind::Gate || TargetKind == HWNodeRules::ETargetKind::Generator
+            || TargetKind == HWNodeRules::ETargetKind::Comms || TargetKind == HWNodeRules::ETargetKind::Npc;
+        Director->ReportKill(Role, GetActorLocation(), bLastHitByPlayer, bWasAttacking);
+    }
     OnEnemyDied.Broadcast(this);   // a discarded one still leaves the wave
     SetLifeSpan(bByPlayer ? 1.5f : 0.1f);
 }

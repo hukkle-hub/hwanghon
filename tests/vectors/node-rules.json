@@ -2267,6 +2267,84 @@
     "armed": true,
     "expect": 4500
    }
-  ]
+  ],
+  "credit": {
+   "kill": [
+    [
+     "normal",
+     1
+    ],
+    [
+     "runner",
+     1.2
+    ],
+    [
+     "breaker",
+     2
+    ],
+    [
+     "stalker",
+     1.5
+    ],
+    [
+     "armored_elite",
+     5
+    ]
+   ],
+   "defense": [
+    [
+     "normal",
+     0,
+     1
+    ],
+    [
+     "breaker",
+     1499,
+     2
+    ],
+    [
+     "armored_elite",
+     1500,
+     5
+    ],
+    [
+     "runner",
+     1501,
+     0
+    ],
+    [
+     "stalker",
+     -1,
+     0
+    ]
+   ],
+   "ping": [
+    [
+     0,
+     0,
+     true
+    ],
+    [
+     15,
+     800,
+     true
+    ],
+    [
+     15.1,
+     0,
+     false
+    ],
+    [
+     3,
+     801,
+     false
+    ],
+    [
+     -1,
+     10,
+     false
+    ]
+   ]
+  }
  }
 }

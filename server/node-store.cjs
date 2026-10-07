@@ -7,6 +7,7 @@ const fs=require('node:fs'),path=require('node:path');
 const R=require('./node-rules.cjs');
 const WEEK=7*24*3600e3, HOUR=3600e3;
 const REPORT_GAP=60e3;   // 한 사람이 같은 거점에 판 결과를 보내는 최소 간격
+const PARTY_WINDOW=10*60e3;   // 같은 판의 파티원 보고: 첫 보고가 상태를 바꾸고, 10분 안의 같은 결과는 공헌만 쌓는다
 const CAPS={kill:200,defense:500,repair:500,npc_rescue:5,boss:2e6,supply:50,command:100};   // 한 판에 말이 되는 최대치
 const SUPPLY_CAP=12;
 const DATA=path.join(__dirname,'..','ue','HwanghonCombatUE','Content','Data');
@@ -45,13 +46,16 @@ const methods={
   const players=[...byPlayer.values()], all=players.map(p=>p.raw), scores=players.map(p=>R.contributionScore(p.raw,all));
   /* 길드 순서 = 등록 순서 (동점이면 먼저 만든 길드) */
   const guilds=this.statement('SELECT id,name FROM guilds ORDER BY rowid').all(), index=new Map(guilds.map((g,i)=>[g.id,i]));
-  return { guilds, scores, guildOf:players.map(p=>index.has(p.guild)?index.get(p.guild):-1) }; },
- nodeStandings(id,period,limit=5){ const {guilds,scores,guildOf}=this.nodePeriodScores(id,period), sum=new Map();
-  scores.forEach((sc,i)=>{ if(guildOf[i]>=0) sum.set(guildOf[i],(sum.get(guildOf[i])||0)+sc); });
-  return [...sum].sort((a,b)=>b[1]-a[1]||a[0]-b[0]).slice(0,limit).map(([g,sc])=>({ guild:guilds[g].id, name:guilds[g].name, score:Math.round(sc) })); },
+  /* 길드 단위 항목 몫 (R.guildContributionScores) — 길드 없는 사람의 공헌은 관리권에 들어가지 않는다 */
+  const guildOf=players.map(p=>index.has(p.guild)?index.get(p.guild):-1), raw=guilds.map(()=>({})), active=guilds.map(()=>false);
+  players.forEach((p,i)=>{ const g=guildOf[i]; if(g<0) return; active[g]=true; for(const [c,v] of Object.entries(p.raw)) raw[g][c]=(raw[g][c]||0)+v; });
+  const gscores=R.guildContributionScores(raw);
+  return { guilds, scores, guildOf, raw, active, gscores }; },
+ nodeStandings(id,period,limit=5){ const {guilds,active,gscores}=this.nodePeriodScores(id,period);
+  return guilds.map((g,i)=>[i,gscores[i]]).filter(([i,sc])=>active[i]&&sc>0).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).slice(0,limit).map(([g,sc])=>({ guild:guilds[g].id, name:guilds[g].name, score:Math.round(sc) })); },
  nodeStewardship(id,n,now){ const period=periodOf(now); if(n.stewardPeriod===period) return false;
-  const {guilds,scores,guildOf}=this.nodePeriodScores(id,period-1);
-  const winner=R.stewardGuild(scores,guildOf,guilds.length);
+  const {guilds,active,gscores}=this.nodePeriodScores(id,period-1);
+  let winner=-1; gscores.forEach((sc,i)=>{ if(active[i]&&sc>0&&(winner<0||sc>gscores[winner])) winner=i; });   // 동점이면 먼저 만든 길드
   const next=winner>=0?{guild:guilds[winner].id,name:guilds[winner].name}:null;
   if((next&&next.guild)!==(n.steward&&n.steward.guild)) n.policies=[];   // 새 관리 길드가 정책을 다시 고른다
   n.steward=next; n.stewardPeriod=period; return true; },
@@ -72,9 +76,13 @@ const methods={
    const last=this.statement('SELECT at FROM node_runs WHERE player=? AND node=? ORDER BY at DESC LIMIT 1').get(id,node);
    if(last&&now-last.at<REPORT_GAP) throw Error('잠시 후 다시 보내세요.');
    const n=this.nodeLoad(node); this.nodeStewardship(node,n,now); const hours=this.nodeOccupation(n,now);
-   if(outcome==='held'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('지금은 방어전이 아닙니다.'); n.state='stable'; }
-   if(outcome==='fallen'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('이미 함락된 거점입니다.'); n.state='fallen'; n.fallenAt=now; }
-   if(outcome==='retaken'){ if(n.state!=='retakeable'&&n.state!=='retaking') throw Error(n.state==='fallen'?'함락 2시간 뒤부터 탈환할 수 있습니다.':'탈환할 거점이 아닙니다.'); n.state='stable'; n.fallenAt=0; }
+   /* 파티원 둘째부터: 첫 사람이 이미 «함락»·«탈환» 으로 바꿔 놓아 거절되던 것 (가상 길드 캠페인에서 드러났다) */
+   const partyMate=n.lastOutcome&&n.lastOutcome.outcome===outcome&&now-n.lastOutcome.at>=0&&now-n.lastOutcome.at<=PARTY_WINDOW&&outcome!=='held';
+   if(partyMate){}
+   else if(outcome==='held'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('지금은 방어전이 아닙니다.'); n.state='stable'; }
+   else if(outcome==='fallen'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('이미 함락된 거점입니다.'); n.state='fallen'; n.fallenAt=now; }
+   else if(outcome==='retaken'){ if(n.state!=='retakeable'&&n.state!=='retaking') throw Error(n.state==='fallen'?'함락 2시간 뒤부터 탈환할 수 있습니다.':'탈환할 거점이 아닙니다.'); n.state='stable'; n.fallenAt=0; }
+   if(!partyMate) n.lastOutcome={outcome,at:now};
    const g=this.guild(id), period=periodOf(now);
    for(const [k,v] of Object.entries(contrib)) if(v>0) this.statement('INSERT INTO node_contrib(period,node,player,guild,category,amount) VALUES(?,?,?,?,?,?) ON CONFLICT(period,node,player,category) DO UPDATE SET amount=amount+excluded.amount,guild=excluded.guild').run(period,node,id,g?g.id:null,k,v);
    this.statement('INSERT INTO node_runs(node,player,outcome,at,report) VALUES(?,?,?,?,?)').run(node,id,outcome,now,JSON.stringify({contrib,hours:+hours.toFixed(3)}));
@@ -104,4 +112,4 @@ function command(store,id,msg,now=Date.now()){ const node=typeof msg.node==='str
  if(msg.action==='role'){ if(typeof msg.target!=='string') throw Error('길드원을 선택하세요.'); return { type:'guildRole', target:msg.target, role:store.guildAssign(id,msg.target,msg.role) }; }
  throw Error('지원하지 않는 거점 요청입니다.'); }
 function install(Store){ Object.assign(Store.prototype,methods); }
-module.exports={ install, command, WEEK, HOUR, REPORT_GAP, CAPS, SUPPLY_CAP, knownNode, periodOf };
+module.exports={ install, command, WEEK, HOUR, REPORT_GAP, PARTY_WINDOW, CAPS, SUPPLY_CAP, knownNode, periodOf };

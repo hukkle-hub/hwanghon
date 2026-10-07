@@ -26,6 +26,8 @@ const CAPSULE_HALF = 88, BODY_R = 40, DIRECT = 1500;   // DirectApproachCm
 function simulate(N, o = {}) {
   const opt = { policies: [], barricades: [], tech: null, player: { dps: 1000, counter: 0.35 }, dt: 0.1, maxTime: 400, frameEvery: 1, seed: 7, ...o };
   const rand = rng(opt.seed), pe = R.policyEffects(opt.policies), bs = H.blocks(N);
+  const diff = Math.max(0.1, opt.difficulty || 1);   // 탈환전 난이도 (AHWNodeEnemy::Configure 의 Difficulty — 체력·피해 배율)
+  const partyN = (opt.party || (opt.player ? [1] : [])).length, hpScale = 1 + (opt.partyScale || 0) * Math.max(0, partyN - 1);   // 인원 보정 (문서 201 §8 — 값은 캠페인으로 고른다)
   const walls = bs.filter(b => b.kind === 'wall').map(b => ({ c: b.center, h: b.half, wkind: b.wkind }));
   const P = v => H.pt(N, v);
   const events = [], frames = [], log = (t, kind, text, id = null, to = null) => events.push({ t: +t.toFixed(1), kind, id, to, text });   /* id·to: UE 기록(hwnode-run/1)과 견주는 구조 필드 */
@@ -75,14 +77,29 @@ function simulate(N, o = {}) {
   if (opt.tech) { const tech = npcs.find(n => n.role === 'technician'), main = N.routes.main.map(P), path = [...N.routes[tech.route].map(P)].reverse();
     if (main.length) path.push(main[main.length - 1]);
     if (opt.tech === 'generator') path.push(...N.routes.generator.map(P)); else if (opt.tech === 'comms') path.push(...N.routes.comms.map(P));
-    else for (let i = main.length - 1; i >= 1; i--) path.push(main[i]);
+    else { for (let i = main.length - 1; i >= 1; i--) path.push(main[i]);
+      const gt = fac.find(f => f.kind === 'gate'); if (gt) path.push([gt.c[0], gt.c[1] + gt.h[1] + 80, path[path.length - 1][2]]); }   /* 정문 안쪽 면까지 (수리 사거리 220) */
     tech.order = { kind: opt.tech, path, i: 0 }; }
   /* 대피 명령: 경비·기술자만 빼고 대피 자리로 (자리마다 조금씩 비켜 선다). 대가 — 의무실·정찰탑·통신센터의 기능 (시뮬엔 플레이어 회복·예보가 없어 «안전» 쪽만 잰다) */
   if (opt.evacuate && N.shelter_point) npcs.filter(n => n.role !== 'guard' && n.role !== 'technician').forEach((n, i) => { const c = P(N.shelter_point); n.evac = [c[0] + (i - 1.5) * 220, c[1] + 150, c[2]]; });
 
-  /* ── 플레이어 ── */
-  const pl = opt.player ? { ...place(P(N.player_start)), hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: 0, kills: 0, rescues: 0, counters: 0, hitsTaken: 0 } : null;
-  const playerAlive = () => pl && pl.deadFor < 0;
+  /* ── 플레이어 (파티) ── opt.party = [{ name, job, guildRole, dps, counter }] · opt.player 는 혼자 하는 판(정문 수비)
+     job: gate(정문·시설을 치는 적) · escort(NPC 를 노리는 적) · rescue(포로 구조 먼저) · generator(발전기·통신)
+     guildRole: leader·vice·combat·supply·craft·member — 핑(지휘)·바리케이드(보급)·기술자 수리(수리) 공헌이 직책을 따른다 */
+  const party = opt.party || (opt.player ? [{ name: 'player', job: 'gate', guildRole: 'leader', ...opt.player }] : []);
+  const blankLedger = () => Object.fromEntries(R.CATEGORIES.map(c => [c, 0]));
+  const pls = party.map((q, i) => { const sp = P(N.player_start), b = place(party.length > 1 ? [sp[0] + (i % 4 - 1.5) * 160, sp[1] - Math.floor(i / 4) * 160, sp[2]] : sp);   /* 혼자면 출발점 그대로 */
+    return { ...q, job: q.job || 'gate', guildRole: q.guildRole || 'member', counter: q.counter ?? 0.35, ...b, hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: i * 0.05,
+      kills: 0, rescues: 0, counters: 0, hitsTaken: 0, dealt: 0, ledger: blankLedger(), lastPing: -99 }; });
+  const pl = pls[0] || null;
+  const alive = q => q && q.deadFor < 0;
+  const playerAlive = () => pls.some(alive);
+  const nearestPlayer = from => { let best = null, bd = Infinity; for (const q of pls) if (alive(q)) { const d = d2(from, q.p); if (d < bd) { bd = d; best = q; } } return best; };
+  const can = (q, perm) => R.hasPermission(q.guildRole, perm);
+  const pings = [];
+  /* 준비 단계의 공헌 (UE 감독과 같은 셈): 바리케이드 = 지은 사람 보급 +3, 기술자 명령 = 명령한 사람의 수리 */
+  const builder = pls.find(q => can(q, 'invest_facility') || can(q, 'allocate_supply')), orderer = pls.find(q => can(q, 'order_npc'));
+  if (builder) builder.ledger.supply += 3 * opt.barricades.length;
 
   /* ── 적 ── */
   const enemies = []; let serial = 0;
@@ -91,13 +108,13 @@ function simulate(N, o = {}) {
   function spawn(role) { const s = serial++, rr = N.role_routes[role], name = Array.isArray(rr) ? rr[s % rr.length] : rr || 'main', route = (N.routes[name] || []).map(P);
     const base = role === 'runner' && route.length ? route[0] : P(N.spawns[s % N.spawns.length]), ang = s * 2.39996;
     const st = C.roleStats(role), b = place([base[0] + Math.cos(ang) * 160, base[1] + Math.sin(ang) * 160, base[2]]);
-    enemies.push({ id: s, role, st, ...b, hp: st.health, max: st.health, route, ri: 0, ext: [], ei: 0, tk: 'none', ov: null, phase: 'move', left: 0, cd: 0, think: 0,
+    enemies.push({ id: s, role, st, ...b, hp: st.health * diff * hpScale, max: st.health * diff * hpScale, route, ri: 0, ext: [], ei: 0, tk: 'none', ov: null, phase: 'move', left: 0, cd: 0, think: 0,
       flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p] }); }
-  const view = (from, flanked) => ({ player: playerAlive() ? d2(from, pl.p) : -1,
+  const view = (from, flanked) => ({ player: (q => q ? d2(from, q.p) : -1)(nearestPlayer(from)),
     gate: standing(gate) ? surf(gate, from) : -1, generator: standing(facility('generator')) ? surf(facility('generator'), from) : -1,
     comms: standing(facility('comms')) ? surf(facility('comms'), from) : -1, npc: (n => n ? d2(from, n.p) : -1)(nearestNpc(from)), flanked });
   function targetPoint(k, from) {
-    if (k === 'player' && pl) return pl.p;
+    if (k === 'player') { const q = nearestPlayer(from); return q ? q.p : from; }
     if (k === 'npc') { const n = nearestNpc(from); return n ? n.p : from; }
     const f = facility(k); if (f) return [Math.max(f.c[0] - f.h[0], Math.min(f.c[0] + f.h[0], from[0])), Math.max(f.c[1] - f.h[1], Math.min(f.c[1] + f.h[1], from[1])), from[2]];
     return from; }
@@ -122,8 +139,16 @@ function simulate(N, o = {}) {
     if (f.hp <= 0) { f.hp = 0; log(t, 'facility', f.id + ' 무너짐', f.id, 'destroyed');
       if (f.kind === 'generator' && !reserveUsed) { reserveLeft = pe.reservePowerSeconds; reserveUsed = true; } } }
   const dealt = { player: 0, turret: 0, guard: 0 };
-  function hurtEnemy(e, amount, byPlayer, t, who = byPlayer ? 'player' : e.killer) { if (e.dead) return; e.byPlayer = byPlayer; const d = Math.min(e.hp, amount * e.armor.damageScale(e.st.armorScale)); dealt[who] = (dealt[who] || 0) + d; e.hp -= d;
-    if (e.hp <= 0) { e.dead = true; e.hp = 0; e.diedAt = t; if (byPlayer && pl) pl.kills++; e.killer = byPlayer ? 'player' : e.killer || 'node'; waves.enemyDied(waves.clock); } }
+  /* 처치 공헌 (AHWNodeDirector::ReportKill): 처치 가중 · 공격 중이던 적이면 방어 · 핑 15초·8 m 안이면 핑 찍은 사람의 지휘 */
+  function creditKill(q, e, t) {
+    const w = C.killWeight(e.role); q.ledger.kill += w; q.kills++;
+    /* 방어 = 거점을 공격하던 적(시설·바리케이드·포탑·NPC)을 막음 — 어디서 잡든 (UE ReportKill bWasAttacking) */
+    const attacking = !!e.ov || ['gate', 'generator', 'comms', 'npc'].includes(e.tk);
+    q.ledger.defense += C.defenseCredit(e.role, attacking ? 0 : -1);
+    const pg = pings.find(g => C.pingCredits(t - g.t, d2(e.p, g.at))); if (pg) pg.by.ledger.command += 1;
+  }
+  function hurtEnemy(e, amount, byPlayer, t, who = byPlayer ? 'player' : e.killer, by = null) { if (e.dead) return; e.byPlayer = byPlayer; const d = Math.min(e.hp, amount * e.armor.damageScale(e.st.armorScale)); dealt[who] = (dealt[who] || 0) + d; e.hp -= d; if (by) by.dealt += d;
+    if (e.hp <= 0) { e.dead = true; e.hp = 0; e.diedAt = t; if (byPlayer && by) creditKill(by, e, t); e.killer = byPlayer ? 'player' : e.killer || 'node'; waves.enemyDied(waves.clock); } }
   function npcHurt(n, amount, t) { const before = n.life.state; if (!n.life.applyDamage(amount)) return;
     log(t, 'npc', n.role + ' ' + before + ' → ' + n.life.state, n.role, n.life.state);
     if (n.life.state === 'missing') { n.order = null; Object.assign(n, place(P(N.holding_spot))); } }
@@ -141,12 +166,12 @@ function simulate(N, o = {}) {
   }
   function strike(e, t) {
     e.cd = e.st.attackCooldown;
-    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage, t); return; }
-    if (e.tk === 'player') { if (!playerAlive() || d2(e.p, pl.p) > reach(e, 'player') + 60) return;
-      if (rand() < opt.player.counter) { const perfect = rand() < 0.4; e.armor.onCountered(perfect ? 'perfect' : 'normal'); e.phase = 'stagger'; e.left = e.role === 'armored_elite' ? 1.4 : 1.0; pl.counters++; return; }
-      pl.hp -= e.st.damage; pl.hitsTaken++; if (pl.hp <= 0) { pl.hp = 0; pl.deadFor = 0; pl.deaths++; log(t, 'player', '플레이어 쓰러짐', 'player', 'dead'); } return; }
+    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage * diff, t); return; }
+    if (e.tk === 'player') { const q = nearestPlayer(e.p); if (!q || d2(e.p, q.p) > reach(e, 'player') + 60) return;
+      if (rand() < q.counter) { const perfect = rand() < 0.4; e.armor.onCountered(perfect ? 'perfect' : 'normal'); e.phase = 'stagger'; e.left = e.role === 'armored_elite' ? 1.4 : 1.0; q.counters++; return; }
+      q.hp -= e.st.damage * diff; q.hitsTaken++; if (q.hp <= 0) { q.hp = 0; q.deadFor = 0; q.deaths++; log(t, 'player', (pls.length > 1 ? q.name + ' ' : '플레이어 ') + '쓰러짐', pls.length > 1 ? q.name : 'player', 'dead'); } return; }
     if (e.tk === 'npc') { const n = nearestNpc(e.p); if (n && d2(e.p, n.p) <= reach(e, 'npc') + 60) npcHurt(n, e.st.damage, t); return; }
-    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage, t);
+    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage * diff, t);
   }
   function tickEnemy(e, dt, t) {
     e.armor.tick(dt); e.cd = Math.max(0, e.cd - dt);
@@ -194,33 +219,46 @@ function simulate(N, o = {}) {
     while (body.wi < body.way.length && d2(body.p, body.way[body.wi]) < 150) body.wi++;
     const g = body.wi < body.way.length ? body.way[body.wi] : to; step(body, dirTo(body.p, g), dist);
   }
-  /* ── 플레이어 자동 조종: 시설·NPC 를 치는 적 > 철갑 > 가까운 적. 웨이브 사이엔 포로 구조 ── */
-  function tickPlayer(dt, t) {
-    if (!pl) return;
-    if (pl.deadFor >= 0) { pl.deadFor += dt; if (pl.deadFor >= PLAYER.respawn) { Object.assign(pl, place(P(N.player_start))); pl.hp = PLAYER.health; pl.deadFor = -1; } return; }
-    pl.think -= dt;
-    if (pl.think <= 0) { pl.think = 0.5; let best = null, bs2 = Infinity;
-      for (const e of enemies) { if (e.dead) continue; let s = d2(pl.p, e.p);
-        if (e.tk !== 'player' && e.tk !== 'none' || e.ov) s -= 1500; if (e.role === 'armored_elite') s -= 500; if (e.stuck > 6) s += 4000;
-        if (s < bs2) { bs2 = s; best = e; } }
-      pl.target = best; }
+  /* ── 플레이어 자동 조종 (직책별) ──
+     gate: 시설·NPC 를 치는 적 > 철갑 > 가까운 적 · escort: NPC 를 노리는 적, 할 일 없으면 위험한 NPC 곁 · rescue: 포로가 있으면 먼저 구조
+     generator: 발전기·통신을 노리는 적, 할 일 없으면 발전기 곁. 핑 권한이 있으면 붙은 적 위에 15초마다 핑 (지휘 공헌) */
+  const HOME = { gate: P(N.player_start), escort: N.shelter_point ? P(N.shelter_point) : P(N.player_start), rescue: N.shelter_point ? P(N.shelter_point) : P(N.player_start),
+    generator: N.routes.generator ? P(N.routes.generator[N.routes.generator.length - 1]) : P(N.player_start) };
+  const genF = () => facility('generator');
+  function score(q, e) { let s2 = d2(q.p, e.p);
+    if (q.job === 'gate') { if (e.tk !== 'player' && e.tk !== 'none' || e.ov) s2 -= 1500; if (e.role === 'armored_elite') s2 -= 500; }
+    else if (q.job === 'escort' || q.job === 'rescue') { if (e.tk === 'npc') s2 -= 4000; else { const n = nearestNpc(e.p); if (n && d2(n.p, e.p) < 1500) s2 -= 1500; else s2 += 2500; } }
+    else if (q.job === 'generator') { const g = genF(); if (e.tk === 'generator' || e.tk === 'comms') s2 -= 4000; else if (g && surf(g, e.p) < 2500) s2 -= 1500; else s2 += 2500; }
+    if (e.stuck > 6) s2 += 4000; return s2; }
+  function tickOne(q, dt, t) {
+    if (q.deadFor >= 0) { q.deadFor += dt; if (q.deadFor >= PLAYER.respawn) { Object.assign(q, place(P(N.player_start))); q.hp = PLAYER.health; q.deadFor = -1; q.way = null; } return; }
+    q.think -= dt;
+    if (q.think <= 0) { q.think = 0.5; let best = null, bs2 = Infinity;
+      for (const e of enemies) { if (e.dead) continue; const s2 = score(q, e); if (s2 < bs2) { bs2 = s2; best = e; } }
+      q.target = best && (q.job === 'gate' || bs2 < 6000) ? best : null; }
     const captive = npcs.find(n => n.life.state === 'missing');
-    if (!pl.target && captive) { const hs = P(N.holding_spot);
-      if (d2(pl.p, hs) < 300) { captive.life.rescue(); Object.assign(captive, place(captive.home)); pl.rescues++; log(t, 'npc', captive.role + ' 구조', captive.role, 'rescued'); }
-      else walkTo(pl, hs, PLAYER.speed * dt); return; }
-    const e = pl.target; if (!e || e.dead) return;
-    if (d2(pl.p, e.p) <= PLAYER.reach) { pl.acc += opt.player.dps * dt; if (pl.acc >= opt.player.dps * 0.5) { hurtEnemy(e, pl.acc, true, t); pl.acc = 0; } return; }
-    walkTo(pl, e.p, PLAYER.speed * dt);
+    if (captive && (q.job === 'rescue' || !q.target)) { const hs = P(N.holding_spot);
+      if (d2(q.p, hs) < 300) { captive.life.rescue(); Object.assign(captive, place(captive.home)); q.rescues++; q.ledger.npc_rescue += 1; log(t, 'npc', captive.role + ' 구조', captive.role, 'rescued'); }
+      else walkTo(q, hs, PLAYER.speed * dt); return; }
+    const e = q.target;
+    if (!e || e.dead) { if (q.job !== 'gate') { let home = HOME[q.job];
+        if (q.job !== 'generator') { let risk = null, rd = Infinity; for (const n of npcs) if (n.life.targetable()) for (const x of enemies) if (!x.dead) { const d = d2(n.p, x.p); if (d < rd) { rd = d; risk = n; } } if (risk) home = risk.p; }
+        if (d2(q.p, home) > 250) walkTo(q, home, PLAYER.speed * dt); } return; }
+    if (d2(q.p, e.p) <= PLAYER.reach) {
+      if (can(q, 'ping') && t - q.lastPing >= C.PING_LIFE) { pings.push({ at: [...q.p], t, by: q }); q.lastPing = t; }
+      q.acc += q.dps * dt; if (q.acc >= q.dps * 0.5) { hurtEnemy(e, q.acc, true, t, 'player', q); q.acc = 0; } return; }
+    walkTo(q, e.p, PLAYER.speed * dt);
   }
+  function tickPlayer(dt, t) { for (const q of pls) tickOne(q, dt, t); }
 
   /* ── NPC: 회복·기술자 ── */
   function tickNpcs(dt, t) {
     for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복', n.role, 'normal');
       if (n.evac && n.life.state !== 'missing' && !(n.role === 'technician' && n.order) && d2(n.p, n.evac) > 150) walkTo(n, n.evac, 420 * dt); }
     const tech = npcs.find(n => n.role === 'technician'); if (!tech || !tech.order || tech.life.state === 'missing') return;
-    const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp < f.max) { const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; } return; }
+    const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp < f.max) { const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; if (orderer) orderer.ledger.repair += (f.hp - was) / 100; } return; }
     const o = tech.order; if (o.i >= o.path.length) return; const g = o.path[o.i];
-    if (d2(tech.p, g) < 180) { o.i++; return; } step(tech, dirTo(tech.p, g), 420 * dt);
+    if (d2(tech.p, g) < (o.i === o.path.length - 1 ? 60 : 180)) { o.i++; return; } step(tech, dirTo(tech.p, g), 420 * dt);   /* 마지막 = 일할 자리: 바짝 붙는다 */
   }
 
   /* ── 한 판 ── */
@@ -240,17 +278,20 @@ function simulate(N, o = {}) {
     if (t >= nextFrame) { nextFrame += opt.frameEvery;
       frames.push({ t: +t.toFixed(1), power, e: enemies.filter(e => !e.dead).map(e => [Math.round(e.p[0]), Math.round(e.p[1]), C.ROLES.indexOf(e.role), +(e.hp / e.max).toFixed(2), e.tk[0], e.stuck > 6 ? 1 : 0]),
         f: fac.map(f => +(f.hp / f.max).toFixed(3)), n: npcs.map(n => [Math.round(n.p[0]), Math.round(n.p[1]), n.life.state[0]]),
-        p: pl ? [Math.round(pl.p[0]), Math.round(pl.p[1]), +(pl.hp / PLAYER.health).toFixed(2), pl.deadFor >= 0 ? 1 : 0] : null }); }
+        p: pl ? [Math.round(pl.p[0]), Math.round(pl.p[1]), +(pl.hp / PLAYER.health).toFixed(2), pl.deadFor >= 0 ? 1 : 0] : null,
+        ...(pls.length > 1 ? { ps: pls.map(q => [Math.round(q.p[0]), Math.round(q.p[1]), +(q.hp / PLAYER.health).toFixed(2), q.deadFor >= 0 ? 1 : 0]) } : {}) }); }
   }
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
     dealt: Object.fromEntries(Object.entries(dealt).map(([k, v]) => [k, Math.round(v)])), spawned: enemies.length, alive: enemies.length - dead.length, stuck: stuck.map(e => e.role + '@' + Math.round(e.p[0]) + ',' + Math.round(e.p[1]) + ' →' + e.tk),
-    npcs: npcStates(), player: pl ? { deaths: pl.deaths, counters: pl.counters, hitsTaken: pl.hitsTaken, rescues: pl.rescues } : null,
+    npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
+    party: pls.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps, deaths: q.deaths, kills: q.kills, rescues: q.rescues, dealt: Math.round(q.dealt),
+      ledger: Object.fromEntries(Object.entries(q.ledger).map(([k, v]) => [k, +v.toFixed(2)])) })), difficulty: diff,
     repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0),
     events, frames, facilities: fac.map(f => ({ id: f.id, kind: f.kind, c: f.c, h: f.h })), npcIds: npcs.map(n => n.role) };
 }

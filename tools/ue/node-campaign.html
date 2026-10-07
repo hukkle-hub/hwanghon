@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>Node Campaign</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@font-face{font-family:QA;src:url(../../ue/HwanghonCombatUE/Assets/Fonts/NotoSansKR-Bold.ttf)}
+:root{--bg:#0d0f12;--tx:#e8e2d4;--dim:#9a9486;--line:#2a2e35}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#0d0f12;--tx:#e8e2d4;--dim:#9a9486}}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.5 "Noto Sans KR",QA,sans-serif}
+main{padding:14px 16px;max-width:1300px}
+h1{font-size:17px;margin:0 0 4px} .sub{color:var(--dim);margin-bottom:10px}
+svg text{fill:var(--tx);font-family:"Noto Sans KR",QA,sans-serif}
+.weeks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-top:12px}
+.wk{border:1px solid var(--line);padding:8px 10px} .wk b{color:#ffd890}
+.bar{height:10px;background:#3a3f4a;margin:2px 0 6px;position:relative} .bar i{position:absolute;left:0;top:0;bottom:0;background:#c9a45e}
+</style></head><body><main>
+<h1 id="ttl">가상 길드 캠페인 — 남산 N-01</h1><div class="sub" id="sub"></div>
+<svg id="tl"></svg>
+<div class="weeks" id="weeks"></div>
+</main>
+<script>
+/* tools/ue/node-campaign.cjs --json 결과를 그린다. ?data=경로 */
+const q=new URLSearchParams(location.search);
+const COL={held:'#7ad47a',fallen:'#e05040',retaken:'#5aa0ff',retake_failed:'#ffa040',wait:'#666'}, KO={held:'막음',fallen:'함락',retaken:'탈환',retake_failed:'탈환 실패',wait:'기다림'};
+const SCOL={stable:'#2f5a3a',uneasy:'#2f5a3a',alert:'#2f5a3a',fallen:'#7a2a26',retakeable:'#7a4a1e',retaking:'#7a4a1e'};
+(async()=>{
+ const C=await (await fetch(q.get('data'))).json();
+ const days=Math.max(...C.runs.map(r=>r.day))+1, G=C.guilds, W=Math.min(1260,innerWidth-32), L=90, dayW=(W-L-10)/days, rowH=26, top=34, H=top+rowH*G.length+60;
+ const svg=document.getElementById('tl'); svg.setAttribute('width',W); svg.setAttribute('height',H);
+ const el=(n,a,t)=>{ const e=document.createElementNS('http://www.w3.org/2000/svg',n); for(const k in a) e.setAttribute(k,a[k]); if(t!=null) e.textContent=t; svg.appendChild(e); return e; };
+ /* 거점 상태 띠 (시간 = 시작부터 몇 시간) */
+ const X=h=>L+h/24*dayW, end=days*24;
+ C.states.forEach((s,i)=>{ const h1=i+1<C.states.length?C.states[i+1].t:end; el('rect',{x:X(s.t),y:8,width:Math.max(1,X(h1)-X(s.t)),height:14,fill:SCOL[s.state]||'#333'}); });
+ el('text',{x:4,y:19,'font-size':11},'거점 상태');
+ for(let d=0;d<=days;d++){ el('line',{x1:X(d*24),x2:X(d*24),y1:top-4,y2:top+rowH*G.length,stroke:d%7===0?'#777':'#2a2e35'}); if(d<days&&d%7===0) el('text',{x:X(d*24)+3,y:top+rowH*G.length+16,'font-size':11},(d/7+1)+'주차'); }
+ G.forEach((g,gi)=>{ const y=top+gi*rowH+rowH/2; el('text',{x:4,y:y+4,'font-size':12},g.name+' · '+g.style);
+  for(const r of C.runs.filter(r=>r.guild===g.name)){ const x=X(r.day*24+r.hour), k=r.kind==='wait'?'wait':r.result;
+   if(k==='held') el('circle',{cx:x,cy:y,r:4.5,fill:COL[k]});
+   else if(k==='fallen') el('path',{d:`M${x-5} ${y-5}L${x+5} ${y+5}M${x+5} ${y-5}L${x-5} ${y+5}`,stroke:COL[k],'stroke-width':2.5});
+   else if(k==='retaken') el('path',{d:`M${x} ${y-6}L${x+6} ${y+5}L${x-6} ${y+5}Z`,fill:COL[k]});
+   else if(k==='retake_failed') el('path',{d:`M${x} ${y-6}L${x+6} ${y+5}L${x-6} ${y+5}Z`,fill:'none',stroke:COL[k],'stroke-width':2});
+   else el('circle',{cx:x,cy:y,r:3.5,fill:'none',stroke:COL.wait}); } });
+ const ly=top+rowH*G.length+38; let lx=L;
+ for(const [k,t] of Object.entries(KO)){ el('rect',{x:lx,y:ly-9,width:10,height:10,fill:COL[k]}); el('text',{x:lx+14,y:ly,'font-size':11},t); lx+=80; }
+ el('rect',{x:lx+10,y:ly-9,width:10,height:10,fill:SCOL.fallen}); el('text',{x:lx+24,y:ly,'font-size':11},'함락 중'); el('rect',{x:lx+80,y:ly-9,width:10,height:10,fill:SCOL.retakeable}); el('text',{x:lx+94,y:ly,'font-size':11},'탈환 가능');
+ /* 주차별 */
+ const cnt=k=>C.runs.filter(r=>(r.kind==='wait'?'wait':r.result)===k).length;
+ document.getElementById('sub').textContent=`${days}일 · 길드 ${G.length} · 인원 보정 k=${C.partyScale} · 막음 ${cnt('held')} · 함락 ${cnt('fallen')} · 탈환 ${cnt('retaken')} · 탈환 실패 ${cnt('retake_failed')} · 기다림 ${cnt('wait')} · 끝: 관리 길드 ${C.end.steward?C.end.steward.name:'없음'}`;
+ const wk=document.getElementById('weeks');
+ const blocks=[...C.weeks.map(w=>({title:`${w.week}주차 — 관리 길드 <b>${w.steward||'없음'}</b>`,body:`정책 ${w.policies} · 보급 ${w.supply}`,st:w.lastStandings,cap:'지난 주기 순위'})),{title:'캠페인 끝 — 다음 관리 길드 <b>'+(C.end.steward?C.end.steward.name:'없음')+'</b>',body:'',st:C.end.lastStandings,cap:'마지막 주기 순위'}];
+ for(const b of blocks){ const max=Math.max(1,...(b.st||[]).map(s=>s.score)); const d=document.createElement('div'); d.className='wk';
+  d.innerHTML=`<div>${b.title}</div><div style="color:var(--dim)">${b.body}</div><div style="margin-top:4px;color:var(--dim)">${b.cap}</div>`+(b.st||[]).map(s=>`<div>${s.name} ${s.score}</div><div class="bar"><i style="width:${100*s.score/max}%"></i></div>`).join('');
+  wk.appendChild(d); }
+ await document.fonts.ready; document.body.dataset.ready='1';
+})();
+</script></body></html>

@@ -100,6 +100,13 @@ function npcEffects(states, policy) {
 const prepSeconds = (npc, policy) => 20 + npc.prepBonusSeconds + policy.prepBonusSeconds;
 const technicianRepairPerSecond = s => 400 * technicianRepairScale(s);
 
-module.exports = { ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
+/* 공헌 (HWNodeRules::KillWeight · DefenseCredit · PingCredits) */
+const KILL_WEIGHT = { normal: 1, runner: 1.2, breaker: 2, stalker: 1.5, armored_elite: 5 };
+const killWeight = r => KILL_WEIGHT[r] ?? 1;
+const DEFENSE_RADIUS = 1500, PING_LIFE = 15, PING_RADIUS = 800;
+const defenseCredit = (r, d) => d >= 0 && d <= DEFENSE_RADIUS ? killWeight(r) : 0;
+const pingCredits = (age, d) => age >= 0 && age <= PING_LIFE && d <= PING_RADIUS;
+
+module.exports = { killWeight, defenseCredit, pingCredits, DEFENSE_RADIUS, PING_LIFE, PING_RADIUS, ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
   generatorPower, effectivePower, TURRET_BASE_DPS, TURRET_RANGE, turretDps, eliteArmor,
   npcMaxHealth, npcFunction, technicianRepairScale, npcLife, npcEffects, prepSeconds, technicianRepairPerSecond };
