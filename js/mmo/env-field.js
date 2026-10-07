@@ -95,7 +95,8 @@ export function build(THREE, scene, osm, zone) {
   /* 나무 갓(높이 3.8~9.7 m)은 55° 에서 그 뒤(화면 위, 월드 −z) 0~10 m 땅을 가린다. 깊이 굽기가 인스턴스를 빠뜨려 몰랐다가(문서 192 §9) 고치고 나니
      띠 안 숲 덩이가 걷는 칸을 통째로 덮고(남태령 57칸) 출발점이 갓 밑(6.4 m)이었다 → 띠 안 나무는 서로 10 m 넘게, 출발점·문·보스의 카메라 쪽 0~11 m 에는 나무를 두지 않는다 */
   const bandTrees = [], spaced = p => { if (bandTrees.some(q => Math.hypot(p[0] - q[0], p[1] - q[1]) < 10)) return false; bandTrees.push(p); return true; };
-  const shades = p => reserve.some(([q]) => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11);
+  /* 띠 가까운 쪽(카메라 쪽, t0) 바로 바깥 7 m 도 비운다 — 그 나무 갓이 띠 가장자리 칸을 덮었다(판교 s −96 t −316) */
+  const shades = p => reserve.some(([q]) => Math.abs(p[0] - q[0]) < 6 && p[1] - q[1] > -3 && p[1] - q[1] < 11) || (t => t > walk.t0 - 7 && t < walk.t0 + 1)(ST(p)[1]);
   if (tf.density) { const spots = L.treeSpots(ctx, { s0: walk.s0 - 40, s1: walk.s1 + 40, t0: walk.t0 - 30, t1: walk.t1 + 34 }, { density: tf.density, step: tf.step,
       keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) && !shades(p) && (!inBand(p, 1) || (R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1) && spaced(p))) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
