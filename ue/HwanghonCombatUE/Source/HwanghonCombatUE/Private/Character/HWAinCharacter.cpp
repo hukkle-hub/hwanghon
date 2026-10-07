@@ -579,7 +579,7 @@ void AHWAinCharacter::ReviveReleased(){ if (NetworkBridge) NetworkBridge->EndRev
 void AHWAinCharacter::InteractPressed(){ if (NetworkBridge) NetworkBridge->SendInteract(); OnLocalInteract.Broadcast(); }
 void AHWAinCharacter::GuardPressed(){ if (NetworkBridge) NetworkBridge->SetGuard(true); }
 void AHWAinCharacter::GuardReleased(){ if (NetworkBridge) NetworkBridge->SetGuard(false); }
-void AHWAinCharacter::OpeningPressed(){ if (NetworkBridge) NetworkBridge->SendOpening(); }
+void AHWAinCharacter::OpeningPressed(){ if (NetworkBridge) NetworkBridge->SendOpening(); OnLocalOpening.Broadcast(); }
 void AHWAinCharacter::ExecutePressed(){ if (NetworkBridge) NetworkBridge->SendExecute(); OnLocalExecute.Broadcast(); }
 
 

@@ -16,10 +16,14 @@ class UStaticMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNodeStateSignature, EHWNodeState, NewState);
 
-// Runs one outpost (docs/design/200): builds the graybox from a UHWNodeConfig, places the facilities and the
-// technician, drives the node state machine and the waves (HWNodeRules), respawns the player, and hands the
-// last stand to the node's human boss with an arm core (UHWBossCoreComponent). Opened with ?HWNode=<id> on any
-// combat map (AHWCombatGameMode), e.g.  -game ...  ?HWNode=namsan_n01
+// Runs one outpost (docs/design/200, 201): builds the graybox from a UHWNodeConfig, places facilities, turrets and
+// the five NPCs, runs preparation (barricades, technician orders, policies, supplies) and the invasion (waves,
+// turrets on generator power, armed guard, medic), the node's human boss with an arm core, the fall and the retake
+// clock, and keeps the run's contribution ledger for the guild's stewardship (server/node-store.cjs).
+// Opened with ?HWNode=<id> on any combat map (AHWCombatGameMode). Other options:
+//   ?HWPolicies=gate_reinforce,scouting   the steward's picks (checked against the budget)
+//   ?HWSupply=6                           supply points for this defence
+//   ?HWGuildRole=leader|vice|combat|supply|craft|member   the local player's guild role (permissions)
 // Nothing here is Namsan-specific: another node is another Content/Data/node_<id>.json.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWNodeDirector : public AActor
@@ -32,14 +36,14 @@ public:
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaSeconds) override;
 
-    // Loads Content/Data/node_<id>.json. Call before BeginPlay (the game mode does).
-    bool ConfigureNode(FName NodeId);
+    // Loads Content/Data/node_<id>.json and reads the HW* options. Call before BeginPlay (the game mode does).
+    bool ConfigureNode(FName NodeId, const FString& Options);
 
-    // Starts the invasion now (the prototype starts it a few seconds after the player arrives).
+    // Ends preparation and starts the invasion now.
     UFUNCTION(BlueprintCallable)
     void StartInvasion();
 
-    // Clears enemies and boss, repairs everything and starts again from Stable.
+    // Clears enemies and boss, repairs everything and starts again from preparation.
     UFUNCTION(BlueprintCallable)
     void RestartRun();
 
@@ -52,28 +56,44 @@ public:
     UFUNCTION(BlueprintPure)
     UHWNodeConfig* GetConfig() const { return Config; }
 
-    // ---- what the enemies ask (AHWNodeEnemy)
+    // ---- what the enemies and NPCs ask
     HWNodeRules::FTargetView BuildView(const FVector& From, bool bFlanked) const;
     FVector TargetPoint(HWNodeRules::ETargetKind Kind, const FVector& From) const;
-    const TArray<FVector>& ExtensionFor(HWNodeRules::ETargetKind Kind) const;
+    TArray<FVector> ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From) const;
     bool IsGateStanding() const;
     float GateLineY() const;
     AHWNodeFacility* GetFacility(EHWNodeFacilityKind Kind) const;
-    AHWNodeNpc* GetTechnician() const { return Technician; }
+    AHWNodeFacility* BarricadeOnPath(const FVector& From, const FVector& To) const;
+    AHWNodeFacility* TurretNear(const FVector& At, float Radius) const;
+    AHWNodeNpc* NearestTargetableNpc(const FVector& From) const;
     AHWAinCharacter* GetPlayer() const;
 
+    // ---- the contribution ledger (HWNodeRules::EContribution)
     void ReportCounter(bool bPerfect);
+    void ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer);
+    void ReportRepair(float Amount);
+    void ReportNpcHurt(AHWNodeNpc* Npc);
 
 private:
     void BuildGraybox();
     void SpawnFacilities();
+    void SpawnNpcs();
     void SpawnWave(int32 WaveIndex);
     void SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial);
     void SpawnBoss();
+    void BeginPreparation();
     void SetState(HWNodeRules::ENodeState NewState);
     void TickPlayer(float DeltaSeconds);
+    void TickDefences(float DeltaSeconds);
+    void FinishRun(const TCHAR* ReportOutcome);
     void DrawHud() const;
     bool EnemyOnComms() const;
+    bool Can(HWNodeRules::EGuildPerm Perm) const { return HWNodeRules::HasPermission(GuildRole, Perm); }
+    HWNodeRules::FNpcEffects CurrentNpcEffects() const;
+    AHWNodeNpc* FindNpc(EHWNodeNpcRole NpcRole) const;
+    AHWNodeFacility* NearestStanding(const FVector& At, float& OutDistance) const;
+    TArray<FVector> PathFromTechnicianTo(EHWNodeFacilityKind Kind) const;
+    FString WavePreview(int32 WaveIndex) const;
 
     UFUNCTION()
     void HandleEnemyDied(AHWNodeEnemy* Enemy);
@@ -90,8 +110,9 @@ private:
     UFUNCTION()
     void HandleCoreExtracted();
 
-    UFUNCTION()
     void HandleInteract();
+    void HandleExecute();
+    void HandlePing();
 
     UPROPERTY(EditAnywhere, Category="Node")
     TObjectPtr<UHWNodeConfig> Config;
@@ -103,13 +124,13 @@ private:
     TArray<TObjectPtr<UStaticMeshComponent>> GrayboxParts;
 
     UPROPERTY(Transient)
-    TArray<TObjectPtr<AHWNodeFacility>> Facilities;
+    TArray<TObjectPtr<AHWNodeFacility>> Facilities;   // gate, generator, comms, turrets, built barricades
 
     UPROPERTY(Transient)
     TArray<TObjectPtr<AHWNodeEnemy>> Enemies;
 
     UPROPERTY(Transient)
-    TObjectPtr<AHWNodeNpc> Technician;
+    TArray<TObjectPtr<AHWNodeNpc>> Npcs;
 
     UPROPERTY(Transient)
     TObjectPtr<AHWBossCharacter> Boss;
@@ -119,10 +140,29 @@ private:
 
     HWNodeRules::FNodeStateMachine Machine;
     HWNodeRules::FWaveRunner Waves;
-    float StartDelay = 6.f;
+    HWNodeRules::FPolicyEffects Policy;
+    HWNodeRules::FSupplyPool Supply;
+    HWNodeRules::FContribution Ledger;
+    HWNodeRules::EGuildRole GuildRole = HWNodeRules::EGuildRole::Leader;
+    TArray<HWNodeRules::EPolicy> Policies;
+    FString PolicyNote;
+    int32 SupplyStart = 6;
+
+    struct FPing
+    {
+        FVector At = FVector::ZeroVector;
+        float Born = 0.f;
+    };
+    TArray<FPing> Pings;
+    TMap<TWeakObjectPtr<AActor>, float> ShotAccumulators;
+
+    float Clock = 0.f;
+    float PrepLeft = 0.f;
+    float ReserveLeft = 0.f;
     float PlayerDeadFor = -1.f;
-    float RepairPool = 0.f;
     float LastCounterShownFor = 0.f;
+    float LastBossHealth = -1.f;
+    float NoticeFor = 0.f;
     int32 Kills = 0;
     int32 Counters = 0;
     int32 PerfectCounters = 0;
@@ -130,7 +170,10 @@ private:
     int32 PlayerDeaths = 0;
     bool bLastCounterPerfect = false;
     bool bBossPhase = false;
-    bool bInteractBound = false;
+    bool bInputBound = false;
     bool bPlayerPlaced = false;
+    bool bReserveUsed = false;
+    bool bReported = false;
     FString Outcome;
+    FString Notice;
 };

@@ -2,14 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Node/HWNodeConfig.h"
 #include "Node/HWNodeRules.h"
 #include "HWNodeNpc.generated.h"
 
+class AHWNodeDirector;
 class UTextRenderComponent;
 
-// A node NPC that is part of the node, not a shop (docs/design/200 §7). The technician's state sets how fast the
-// node is repaired: Normal -> Injured (hurt by stalkers) -> Missing (hurt again) ; Rescued -> back to Normal later.
-// Dummy body: the "enemy" mannequin in a different scale until the real cast exists.
+// A node NPC that is part of the node, not a shop (docs/design/201 §3). Each role carries one function:
+// technician = repairs (and goes where ordered), medic = heals at the medical bay, scout = forecast and prep time,
+// operator = rescue signals, guard = shoots at the gate when the steward armed the NPCs.
+// Normal -> Injured -> Missing: a missing NPC is dragged to the holding spot and must be rescued there.
+// Dummy body: the "enemy" mannequin until the real cast exists.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWNodeNpc : public ACharacter
 {
@@ -19,23 +23,46 @@ public:
     AHWNodeNpc();
 
     virtual void BeginPlay() override;
+    virtual void Tick(float DeltaSeconds) override;
 
-    void ApplyEnemyDamage(float Amount);
+    void Configure(AHWNodeDirector* InDirector, const FHWNodeNpcDef& Def, bool bArmed);
 
-    // Player interaction near a missing technician brings them back (Rescued).
+    // Returns true when the NPC went down a state (injured, or taken).
+    bool ApplyEnemyDamage(float Amount);
+
+    // A player at the holding spot frees them: back home, recovering.
     bool Rescue();
 
-    HWNodeRules::ENpcState GetState() const { return State; }
-    bool IsTargetable() const { return State == HWNodeRules::ENpcState::Normal || State == HWNodeRules::ENpcState::Injured; }
-    float RepairScale() const { return HWNodeRules::TechnicianRepairScale(State); }
+    // Technician only: walk this path (waypoints) to the facility and repair it there. Empty path = come home.
+    void OrderTo(const TArray<FVector>& Path, EHWNodeFacilityKind Facility);
+    void ClearOrder();
+
+    EHWNodeNpcRole GetRole() const { return Role; }
+    FName GetNpcId() const { return NpcId; }
+    FName GetRoute() const { return RouteName; }
+    HWNodeRules::ENpcState GetState() const { return Life.State; }
+    bool IsTargetable() const { return Life.IsTargetable(); }
+    bool IsCaptive() const { return Life.State == HWNodeRules::ENpcState::Missing; }
+    bool HasOrder() const { return bOrdered; }
+    EHWNodeFacilityKind GetOrderFacility() const { return OrderFacility; }
+    FVector GetHome() const { return Home; }
 
 private:
     void Refresh();
 
+    UPROPERTY(Transient)
+    TObjectPtr<AHWNodeDirector> Director;
+
     UPROPERTY()
     TObjectPtr<UTextRenderComponent> Tag;
 
-    HWNodeRules::ENpcState State = HWNodeRules::ENpcState::Normal;
-    float Health = 3000.f;
-    float MaxHealth = 3000.f;
+    EHWNodeNpcRole Role = EHWNodeNpcRole::Technician;
+    FName NpcId;
+    FName RouteName;
+    FVector Home = FVector::ZeroVector;
+    HWNodeRules::FNpcLife Life;
+    TArray<FVector> OrderPath;
+    int32 OrderIndex = 0;
+    EHWNodeFacilityKind OrderFacility = EHWNodeFacilityKind::Gate;
+    bool bOrdered = false;
 };

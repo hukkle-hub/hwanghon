@@ -49,6 +49,14 @@ test('남산 N-01: 정문이 정면 길을 막고 정문 줄 전체가 벽+정�
  let open=0; for(const [x,y] of ring){ const toward=[g[0],g[1],g[2]], from=[x,y,g[2]]; if(!bw.some(w=>G.crosses(w,from,toward))) open++; }
  assert.ok(open>=4&&open<=14,'발전동 문 틈 '+open+'/72 방향 — 벽이 없거나(많음) 문이 없다(0)');
 });
+test('남산 N-01: 바리케이드 자리가 숲길 위에 있고 질주형 우회로를 막는다 (보급으로 세우면 질주형이 부숴야 지나간다)',()=>{
+ assert.equal(N.barricade_slots.length,2);
+ for(const [slot,route] of [[N.barricade_slots[0],'west'],[N.barricade_slots[1],'east']]){ assert.ok(onFloor(slot.at),slot.id+' 이 바닥 위가 아니다');
+  const box={center:[slot.at[0],slot.at[1],slot.at[2]+slot.half[2]],half:slot.half}, r=N.routes[route];
+  assert.ok(r.slice(1).some((p,i)=>G.crosses(box,r[i],p)),slot.id+' 이 '+route+' 우회로를 막지 않는다');
+  assert.ok(!N.routes.main.slice(1).some((p,i)=>G.crosses(box,N.routes.main[i],p)),slot.id+' 이 정면 길을 막는다'); }
+ assert.ok(N.supply_default>=3,'기본 보급으로 바리케이드 하나는 세울 수 있어야');
+});
 test('남산 N-01: 시설·NPC 길 끝이 목표에 닿고, 역할별 길·NPC 길이 실제로 있다',()=>{
  const reach=(f,p)=>{ const a=G.pt(N,f.at); return Math.max(0,Math.abs(p[0]-a[0])-f.half[0])+Math.max(0,Math.abs(p[1]-a[1])-f.half[1]); };
  assert.ok(reach(N.facilities.find(f=>f.kind==='generator'),N.routes.generator.at(-1))<=260,'발전기 길 끝이 너무 멀다');

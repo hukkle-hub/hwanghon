@@ -4,16 +4,19 @@
 #include "Engine/DataAsset.h"
 #include "HWNodeConfig.generated.h"
 
-// Outpost (node) data (docs/design/200). Namsan N-01 is the first data set, not a special case: Yongsan, Seoul
-// Station and the Han river nodes are new configs on the same classes. The rules live in Node/HWNodeRules.h.
+// Outpost (node) data (docs/design/200, 201). Namsan N-01 is the first data set, not a special case: Yongsan, Seoul
+// Station and the Han river nodes are new Content/Data/node_<id>.json files on the same classes.
+// The rules live in Node/HWNodeRules.h.
 
-// Same order as HWNodeRules::EFacility / EEnemyRole / ENodeState (checked by static_assert in HWNodeConfig.cpp).
+// Same order as HWNodeRules::EFacility / EEnemyRole / ENodeState / ENpcRole (static_assert in HWNodeConfig.cpp).
 UENUM(BlueprintType)
 enum class EHWNodeFacilityKind : uint8
 {
     Gate,
     Generator,
-    Comms
+    Comms,
+    Turret,
+    Barricade
 };
 
 UENUM(BlueprintType)
@@ -37,6 +40,16 @@ enum class EHWNodeState : uint8
     Fallen,
     Retakeable,
     Retaking
+};
+
+UENUM(BlueprintType)
+enum class EHWNodeNpcRole : uint8
+{
+    Technician,
+    Medic,
+    Scout,
+    Operator,
+    Guard
 };
 
 // A graybox cube: centre, half size (cm), yaw and pitch (degrees). Top of a floor block = Center.Z + HalfExtent.Z.
@@ -83,6 +96,45 @@ struct FHWNodeFacilityDef
     float MaxHealth = 30000.f;
 };
 
+USTRUCT(BlueprintType)
+struct FHWNodeNpcDef
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FName Id = NAME_None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    EHWNodeNpcRole Role = EHWNodeNpcRole::Technician;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FVector Location = FVector::ZeroVector;
+
+    // Route (in Routes) from the plaza to this NPC: how the enemies that hunt NPCs get there.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FName Route = NAME_None;
+};
+
+// A waypoint list (floor tops). Wrapped because a UPROPERTY map cannot hold a TArray directly.
+USTRUCT(BlueprintType)
+struct FHWNodeRoute
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TArray<FVector> Points;
+};
+
+USTRUCT(BlueprintType)
+struct FHWNodeRouteChoice
+{
+    GENERATED_BODY()
+
+    // One is picked per enemy, alternating (the runners split between the two flank trails).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TArray<FName> Routes;
+};
+
 UCLASS(BlueprintType)
 class HWANGHONCOMBATUE_API UHWNodeConfig : public UPrimaryDataAsset
 {
@@ -102,14 +154,27 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Graybox")
     TArray<FHWNodeBlock> Blocks;
 
+    // Gate, generator, comms centre and turrets.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Facilities")
     TArray<FHWNodeFacilityDef> Facilities;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Play")
-    FVector PlayerStart = FVector::ZeroVector;
+    // Barricades are built here during preparation with supplies (kind Barricade).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Facilities")
+    TArray<FHWNodeFacilityDef> BarricadeSlots;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|NPC")
+    TArray<FHWNodeNpcDef> Npcs;
+
+    // Where a missing NPC is held - the player rescues them there.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|NPC")
+    FVector HoldingSpot = FVector::ZeroVector;
+
+    // The medic heals a player standing here.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|NPC")
+    FVector MedicalBay = FVector::ZeroVector;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Play")
-    FVector TechnicianStart = FVector::ZeroVector;
+    FVector PlayerStart = FVector::ZeroVector;
 
     // Where the boss of the node stands when the last wave falls (Z = floor top).
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Play")
@@ -118,22 +183,21 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
     TArray<FVector> SpawnPoints;
 
-    // Waypoint routes (floor tops). The graybox is pads joined by ramps, so enemies walk these, not straight lines.
-    // Main/West/East run from the checkpoint to the plaza; runners take a flank route round the gate wall.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
-    TArray<FVector> MainRoute;
+    TArray<FVector> NorthSpawnPoints;
 
+    // Waypoint routes by name: main/west/east/west_loop/east_forest/north run from the outside to the plaza or a
+    // target; generator/comms/medical/comms_tower/gate run from the plaza to a facility or NPC.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
-    TArray<FVector> WestRoute;
+    TMap<FName, FHWNodeRoute> Routes;
 
+    // Which route each role walks from its spawn.
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
-    TArray<FVector> EastRoute;
+    TMap<EHWNodeEnemyRole, FHWNodeRouteChoice> RoleRoutes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
-    TArray<FVector> GeneratorRoute;  // plaza -> generator
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Waves")
-    TArray<FVector> CommsRoute;      // plaza -> comms centre
+    // Supply points for the next defence when no guild has allocated any (?HWSupply= overrides).
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Rules")
+    int32 DefaultSupply = 6;
 
     // Enemies inside this radius of the comms centre count as holding it (HWNodeRules CommsHoldToFall).
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Rules")
@@ -146,15 +210,31 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Play")
     float FallZ = -3200.f;
 
-    // Content/Data/node_<id>.json -> config (docs/design/200). The same file drives the host-side walkability test
+    // Content/Data/node_<id>.json -> config. The same file drives the host-side walkability test
     // (tests/ue-node-config.test.cjs) and the preview page (tools/ue/node-graybox.html), so the three never drift.
-    // Pads, ramps and walls become Blocks here with the same maths as tools/ue/node-graybox.js. Null if unreadable.
+    // Pads, ramps and walls become Blocks with the same maths as tools/ue/node-graybox.js. Null if unreadable.
     static UHWNodeConfig* LoadFromJson(FName Id, UObject* Outer);
 
     FVector Anchor(FName Name) const
     {
         const FVector* Found = Anchors.Find(Name);
         return Found ? *Found : FVector::ZeroVector;
+    }
+
+    // Empty when the route does not exist.
+    const TArray<FVector>& Route(FName Name) const
+    {
+        static const TArray<FVector> Empty;
+        const FHWNodeRoute* Found = Routes.Find(Name);
+        return Found ? Found->Points : Empty;
+    }
+
+    // The route a new enemy of this role walks; Serial alternates between choices.
+    FName RouteForRole(EHWNodeEnemyRole EnemyRole, int32 Serial) const
+    {
+        const FHWNodeRouteChoice* Choice = RoleRoutes.Find(EnemyRole);
+        if (!Choice || Choice->Routes.Num() == 0) return TEXT("main");
+        return Choice->Routes[Serial % Choice->Routes.Num()];
     }
 
     const FHWNodeFacilityDef* FindFacility(EHWNodeFacilityKind Kind) const

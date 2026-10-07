@@ -102,6 +102,11 @@
     { "id": "operator", "role": "operator", "at": [100, 5250, 720], "route": "comms" },
     { "id": "guard", "role": "guard", "at": [500, -9350, -1250], "route": "gate" }
   ],
+  "barricade_slots": [
+    { "id": "barricade_west", "at": [-3400, -9700, -1310], "half": [380, 60, 120], "hp": 9000 },
+    { "id": "barricade_east", "at": [3400, -9700, -1310], "half": [380, 60, 120], "hp": 9000 }
+  ],
+  "supply_default": 6,
   "holding_spot": [-5600, -900, -250],
   "medical_bay": [-4800, 3400, 220],
   "player_start": [0, -9300, -1250],

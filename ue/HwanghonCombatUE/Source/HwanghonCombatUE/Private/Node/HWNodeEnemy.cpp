@@ -158,8 +158,21 @@ void AHWNodeEnemy::Think()
     if (Next != TargetKind)
     {
         TargetKind = Next;
-        Extension = Director->ExtensionFor(Next);
+        Extension = Director->ExtensionFor(Next, Here);
         ExtensionIndex = 0;
+    }
+
+    // a built barricade across the next leg is broken first (the flank trails); a turret close by draws the
+    // infected that are not busy with a player (docs/design/201 §2)
+    Override = nullptr;
+    if (TargetKind != HWNodeRules::ETargetKind::Player)
+    {
+        Override = Director->BarricadeOnPath(Here, GoalPoint());
+    }
+    if (!Override.IsValid() && (Role == EHWNodeEnemyRole::Normal || Role == EHWNodeEnemyRole::ArmoredElite)
+        && (View.Player < 0.f || View.Player > 600.f))
+    {
+        Override = Director->TurretNear(Here, 380.f);
     }
 }
 
@@ -188,6 +201,30 @@ FVector AHWNodeEnemy::GoalPoint() const
 void AHWNodeEnemy::StepMove(float DeltaSeconds)
 {
     const FVector Here = GetActorLocation();
+
+    if (AHWNodeFacility* Blocker = Override.Get())
+    {
+        if (Blocker->IsDestroyed())
+        {
+            Override = nullptr;
+        }
+        else
+        {
+            if (Blocker->DistanceToSurface2D(Here) <= 140.f)
+            {
+                if (Cooldown <= 0.f)
+                {
+                    Phase = EPhase::Windup;
+                    PhaseLeft = HWNodeEnemyLocal::WindupFor(Role);
+                }
+                return;
+            }
+            const FVector C = Blocker->GetActorLocation(), H = Blocker->GetHalfExtent();
+            const FVector Face(FMath::Clamp(Here.X, C.X - H.X, C.X + H.X), FMath::Clamp(Here.Y, C.Y - H.Y, C.Y + H.Y), Here.Z);
+            AddMovementInput((Face - Here).GetSafeNormal2D(), 1.f);
+            return;
+        }
+    }
 
     // in reach of the target: wind up a blow
     if (TargetKind != HWNodeRules::ETargetKind::None)
@@ -231,6 +268,11 @@ void AHWNodeEnemy::Strike()
 {
     Cooldown = Stats.AttackCooldown;
     const FVector Here = GetActorLocation();
+    if (AHWNodeFacility* Blocker = Override.Get())
+    {
+        if (!Blocker->IsDestroyed() && Blocker->DistanceToSurface2D(Here) <= 200.f) Blocker->ApplyEnemyDamage(Stats.FacilityDamage * DamageScale);
+        return;
+    }
     if (TargetKind == HWNodeRules::ETargetKind::Player)
     {
         AHWAinCharacter* Player = Director->GetPlayer();
@@ -255,9 +297,9 @@ void AHWNodeEnemy::Strike()
     }
     if (TargetKind == HWNodeRules::ETargetKind::Npc)
     {
-        if (AHWNodeNpc* Npc = Director->GetTechnician())
+        if (AHWNodeNpc* Npc = Director->NearestTargetableNpc(Here))
         {
-            if (FVector::Dist2D(Here, Npc->GetActorLocation()) <= ReachTo(TargetKind) + 60.f) Npc->ApplyEnemyDamage(Stats.Damage);
+            if (FVector::Dist2D(Here, Npc->GetActorLocation()) <= ReachTo(TargetKind) + 60.f && Npc->ApplyEnemyDamage(Stats.Damage)) Director->ReportNpcHurt(Npc);
         }
         return;
     }
@@ -271,6 +313,7 @@ void AHWNodeEnemy::Strike()
 bool AHWNodeEnemy::ReceiveSystemHit_Implementation(float InDamage, EHWAttackTier Tier, FVector SourceLocation, AActor* InstigatorActor)
 {
     if (bDead || InDamage <= 0.f) return false;
+    bLastHitByPlayer = Cast<APawn>(InstigatorActor) != nullptr && Cast<APawn>(InstigatorActor)->IsPlayerControlled();
     float Multiplier = 1.f;
     if (Tier == EHWAttackTier::Smash) Multiplier = 1.12f;
     if (Tier == EHWAttackTier::Counter) Multiplier = 1.18f;
@@ -297,6 +340,7 @@ void AHWNodeEnemy::Die(bool bByPlayer)
     GetCharacterMovement()->DisableMovement();
     SetActorEnableCollision(false);
     bKilled = bByPlayer;
+    if (bByPlayer && Director) Director->ReportKill(Role, GetActorLocation(), bLastHitByPlayer);
     OnEnemyDied.Broadcast(this);   // a discarded one still leaves the wave
     SetLifeSpan(bByPlayer ? 1.5f : 0.1f);
 }

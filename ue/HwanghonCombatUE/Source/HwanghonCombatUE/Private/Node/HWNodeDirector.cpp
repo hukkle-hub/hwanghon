@@ -4,11 +4,14 @@
 #include "Character/HWAinCharacter.h"
 #include "Combat/HWCombatComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Node/HWBossCoreComponent.h"
 #include "Node/HWNodeEnemy.h"
 #include "Node/HWNodeFacility.h"
@@ -23,7 +26,7 @@ namespace HWNodeDirectorLocal
         {
         case HWNodeRules::ENodeState::Stable: return TEXT("STABLE");
         case HWNodeRules::ENodeState::Uneasy: return TEXT("UNEASY");
-        case HWNodeRules::ENodeState::Alert: return TEXT("ALERT");
+        case HWNodeRules::ENodeState::Alert: return TEXT("ALERT - PREPARE");
         case HWNodeRules::ENodeState::Invasion: return TEXT("INVASION");
         case HWNodeRules::ENodeState::Recovering: return TEXT("RECOVERING");
         case HWNodeRules::ENodeState::Fallen: return TEXT("FALLEN");
@@ -46,10 +49,57 @@ namespace HWNodeDirectorLocal
         return TEXT("?");
     }
 
+    const TCHAR* NpcStateShort(HWNodeRules::ENpcState S)
+    {
+        switch (S)
+        {
+        case HWNodeRules::ENpcState::Normal: return TEXT("ok");
+        case HWNodeRules::ENpcState::Injured: return TEXT("hurt");
+        case HWNodeRules::ENpcState::Missing: return TEXT("TAKEN");
+        case HWNodeRules::ENpcState::Rescued: return TEXT("back");
+        }
+        return TEXT("?");
+    }
+
+    const TCHAR* GuildRoleName(HWNodeRules::EGuildRole R)
+    {
+        switch (R)
+        {
+        case HWNodeRules::EGuildRole::Leader: return TEXT("leader");
+        case HWNodeRules::EGuildRole::Vice: return TEXT("vice");
+        case HWNodeRules::EGuildRole::CombatCaptain: return TEXT("combat captain");
+        case HWNodeRules::EGuildRole::SupplyCaptain: return TEXT("supply captain");
+        case HWNodeRules::EGuildRole::CraftCaptain: return TEXT("craft captain");
+        default: return TEXT("member");
+        }
+    }
+
+    bool PolicyNamed(const FString& Name, HWNodeRules::EPolicy& Out)
+    {
+        static const TCHAR* PolicyKeys[] = { TEXT("gate_reinforce"), TEXT("generator_reinforce"), TEXT("arm_npcs"), TEXT("scouting"), TEXT("medical_stock"), TEXT("reserve_power") };
+        for (int32 I = 0; I < 6; ++I)
+        {
+            if (Name == PolicyKeys[I]) { Out = static_cast<HWNodeRules::EPolicy>(I); return true; }
+        }
+        return false;
+    }
+
+    bool SegmentHitsBox2D(const FVector& A, const FVector& B, const FVector& Center, const FVector& Half)
+    {
+        for (int32 K = 0; K <= 40; ++K)
+        {
+            const FVector P = FMath::Lerp(A, B, K / 40.f);
+            if (FMath::Abs(P.X - Center.X) <= Half.X + 40.f && FMath::Abs(P.Y - Center.Y) <= Half.Y + 40.f && FMath::Abs(P.Z - Center.Z) <= Half.Z + 200.f) return true;
+        }
+        return false;
+    }
+
     constexpr float RespawnSeconds = 5.f;
     constexpr float RepairPerSecond = 900.f;    // facility HP per second while recovering, x technician scale
     constexpr float RecoverPerSecond = 0.05f;   // 20 s to Stable with the technician well
-    constexpr int32 HudKey = 920000;            // on-screen message keys (one per line)
+    constexpr float ShotEvery = 0.25f;          // turrets and the guard land their damage in quarter-second blows
+    constexpr float InteractReach = 500.f;
+    constexpr int32 HudKey = 920000;
 }
 
 AHWNodeDirector::AHWNodeDirector()
@@ -59,10 +109,37 @@ AHWNodeDirector::AHWNodeDirector()
     RootComponent = SceneRoot;
 }
 
-bool AHWNodeDirector::ConfigureNode(FName NodeId)
+bool AHWNodeDirector::ConfigureNode(FName NodeId, const FString& Options)
 {
     Config = UHWNodeConfig::LoadFromJson(NodeId, this);
-    return Config != nullptr;
+    if (!Config) return false;
+
+    // the local player's guild role (permissions) - the server decides it online (server/node-store.cjs guildRoleOf)
+    const FString RoleOption = UGameplayStatics::ParseOption(Options, TEXT("HWGuildRole"));
+    if (RoleOption == TEXT("vice")) GuildRole = HWNodeRules::EGuildRole::Vice;
+    else if (RoleOption == TEXT("combat")) GuildRole = HWNodeRules::EGuildRole::CombatCaptain;
+    else if (RoleOption == TEXT("supply")) GuildRole = HWNodeRules::EGuildRole::SupplyCaptain;
+    else if (RoleOption == TEXT("craft")) GuildRole = HWNodeRules::EGuildRole::CraftCaptain;
+    else if (RoleOption == TEXT("member")) GuildRole = HWNodeRules::EGuildRole::Member;
+
+    // the steward's policy picks: within the budget, or none
+    TArray<FString> PolicyNames;
+    UGameplayStatics::ParseOption(Options, TEXT("HWPolicies")).ParseIntoArray(PolicyNames, TEXT(","));
+    for (const FString& PolicyName : PolicyNames)
+    {
+        HWNodeRules::EPolicy P;
+        if (HWNodeDirectorLocal::PolicyNamed(PolicyName.TrimStartAndEnd(), P)) Policies.Add(P);
+    }
+    if (!HWNodeRules::ValidPolicies(Policies.GetData(), Policies.Num()))
+    {
+        PolicyNote = FString::Printf(TEXT("policies over budget %d or repeated - none applied"), HWNodeRules::PolicyBudget);
+        Policies.Reset();
+    }
+    Policy = HWNodeRules::PolicyEffects(Policies.GetData(), Policies.Num());
+
+    const FString SupplyOption = UGameplayStatics::ParseOption(Options, TEXT("HWSupply"));
+    SupplyStart = SupplyOption.IsEmpty() ? Config->DefaultSupply : FMath::Clamp(FCString::Atoi(*SupplyOption), 0, 30);
+    return true;
 }
 
 void AHWNodeDirector::BeginPlay()
@@ -75,16 +152,9 @@ void AHWNodeDirector::BeginPlay()
     }
     BuildGraybox();
     SpawnFacilities();
-
-    FActorSpawnParameters Params;
-    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-    Technician = GetWorld()->SpawnActor<AHWNodeNpc>(AHWNodeNpc::StaticClass(), Config->TechnicianStart + FVector(0.f, 0.f, 100.f), FRotator(0.f, -90.f, 0.f), Params);
-
+    SpawnNpcs();
     Machine.CommsHoldToFall = Config->CommsHoldToFall;
-    Machine.SetThreat(0.7f);   // the forecast saw it coming: Alert, then the invasion
-    SetState(Machine.State);
-
-    // the player is placed on the first tick it exists (the pawn may not be spawned yet here) - TickPlayer
+    BeginPreparation();
 }
 
 void AHWNodeDirector::BuildGraybox()
@@ -101,9 +171,9 @@ void AHWNodeDirector::BuildGraybox()
         Part->SetWorldLocationAndRotation(B.Center, FRotator(B.Pitch, B.Yaw, 0.f));
         Part->SetWorldScale3D(B.HalfExtent / 50.f);   // engine cube is 100 cm
         Part->RegisterComponent();
-        if (UMaterialInterface* Base = Part->GetMaterial(0))
+        if (UMaterialInterface* BaseMaterial = Part->GetMaterial(0))
         {
-            UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(Base, this);
+            UMaterialInstanceDynamic* Mat = UMaterialInstanceDynamic::Create(BaseMaterial, this);
             Mat->SetVectorParameterValue(TEXT("Color"), B.Color);
             Part->SetMaterial(0, Mat);
         }
@@ -113,13 +183,29 @@ void AHWNodeDirector::BuildGraybox()
 
 void AHWNodeDirector::SpawnFacilities()
 {
-    for (const FHWNodeFacilityDef& Def : Config->Facilities)
+    for (FHWNodeFacilityDef Def : Config->Facilities)
     {
+        // the steward's reinforcement policies
+        if (Def.Kind == EHWNodeFacilityKind::Gate) Def.MaxHealth *= Policy.GateHealthScale;
+        if (Def.Kind == EHWNodeFacilityKind::Generator || Def.Kind == EHWNodeFacilityKind::Turret) Def.MaxHealth *= Policy.GeneratorHealthScale;
         AHWNodeFacility* F = GetWorld()->SpawnActor<AHWNodeFacility>(AHWNodeFacility::StaticClass(), Def.Location, FRotator::ZeroRotator);
         if (!F) continue;
         F->Configure(Def);
         F->OnFacilityDestroyed.AddUniqueDynamic(this, &AHWNodeDirector::HandleFacilityDestroyed);
         Facilities.Add(F);
+    }
+}
+
+void AHWNodeDirector::SpawnNpcs()
+{
+    FActorSpawnParameters Params;
+    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+    for (const FHWNodeNpcDef& Def : Config->Npcs)
+    {
+        AHWNodeNpc* Npc = GetWorld()->SpawnActor<AHWNodeNpc>(AHWNodeNpc::StaticClass(), Def.Location + FVector(0.f, 0.f, 100.f), FRotator(0.f, -90.f, 0.f), Params);
+        if (!Npc) continue;
+        Npc->Configure(this, Def, Policy.bNpcsArmed);
+        Npcs.Add(Npc);
     }
 }
 
@@ -135,6 +221,60 @@ AHWNodeFacility* AHWNodeDirector::GetFacility(EHWNodeFacilityKind Kind) const
         if (F && F->GetKind() == Kind) return F;
     }
     return nullptr;
+}
+
+AHWNodeNpc* AHWNodeDirector::FindNpc(EHWNodeNpcRole NpcRole) const
+{
+    for (AHWNodeNpc* Npc : Npcs)
+    {
+        if (Npc && Npc->GetRole() == NpcRole) return Npc;
+    }
+    return nullptr;
+}
+
+AHWNodeNpc* AHWNodeDirector::NearestTargetableNpc(const FVector& From) const
+{
+    AHWNodeNpc* Best = nullptr;
+    float BestDistance = TNumericLimits<float>::Max();
+    for (AHWNodeNpc* Npc : Npcs)
+    {
+        if (!Npc || !Npc->IsTargetable()) continue;
+        const float D = FVector::Dist2D(From, Npc->GetActorLocation());
+        if (D < BestDistance) { BestDistance = D; Best = Npc; }
+    }
+    return Best;
+}
+
+AHWNodeFacility* AHWNodeDirector::BarricadeOnPath(const FVector& From, const FVector& To) const
+{
+    for (AHWNodeFacility* F : Facilities)
+    {
+        if (F && F->GetKind() == EHWNodeFacilityKind::Barricade && !F->IsDestroyed()
+            && HWNodeDirectorLocal::SegmentHitsBox2D(From, To, F->GetActorLocation(), F->GetHalfExtent())) return F;
+    }
+    return nullptr;
+}
+
+AHWNodeFacility* AHWNodeDirector::TurretNear(const FVector& At, float Radius) const
+{
+    for (AHWNodeFacility* F : Facilities)
+    {
+        if (F && F->GetKind() == EHWNodeFacilityKind::Turret && !F->IsDestroyed() && F->DistanceToSurface2D(At) <= Radius) return F;
+    }
+    return nullptr;
+}
+
+AHWNodeFacility* AHWNodeDirector::NearestStanding(const FVector& At, float& OutDistance) const
+{
+    AHWNodeFacility* Best = nullptr;
+    OutDistance = -1.f;
+    for (AHWNodeFacility* F : Facilities)
+    {
+        if (!F || F->IsDestroyed()) continue;
+        const float D = F->DistanceToSurface2D(At);
+        if (!Best || D < OutDistance) { Best = F; OutDistance = D; }
+    }
+    return Best;
 }
 
 bool AHWNodeDirector::IsGateStanding() const
@@ -165,7 +305,7 @@ HWNodeRules::FTargetView AHWNodeDirector::BuildView(const FVector& From, bool bF
     V.Gate = Distance(EHWNodeFacilityKind::Gate);
     V.Generator = Distance(EHWNodeFacilityKind::Generator);
     V.Comms = Distance(EHWNodeFacilityKind::Comms);
-    if (Technician && Technician->IsTargetable()) V.Npc = FVector::Dist2D(From, Technician->GetActorLocation());
+    if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) V.Npc = FVector::Dist2D(From, Npc->GetActorLocation());
     return V;
 }
 
@@ -177,7 +317,7 @@ FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVecto
         if (const AHWAinCharacter* Player = GetPlayer()) return Player->GetActorLocation();
         break;
     case HWNodeRules::ETargetKind::Npc:
-        if (Technician) return Technician->GetActorLocation();
+        if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) return Npc->GetActorLocation();
         break;
     case HWNodeRules::ETargetKind::Gate:
     case HWNodeRules::ETargetKind::Generator:
@@ -195,19 +335,76 @@ FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVecto
     return From;
 }
 
-const TArray<FVector>& AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind) const
+TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From) const
 {
-    static const TArray<FVector> None;
-    if (!Config) return None;
-    if (Kind == HWNodeRules::ETargetKind::Generator || Kind == HWNodeRules::ETargetKind::Npc) return Config->GeneratorRoute;
-    if (Kind == HWNodeRules::ETargetKind::Comms) return Config->CommsRoute;
-    return None;
+    if (!Config) return {};
+    if (Kind == HWNodeRules::ETargetKind::Generator) return Config->Route(TEXT("generator"));
+    if (Kind == HWNodeRules::ETargetKind::Comms) return Config->Route(TEXT("comms"));
+    if (Kind == HWNodeRules::ETargetKind::Npc)
+    {
+        // the route to the NPC it is after (medical, comms tower, generator ...)
+        if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) return Config->Route(Npc->GetRoute());
+    }
+    return {};
+}
+
+TArray<FVector> AHWNodeDirector::PathFromTechnicianTo(EHWNodeFacilityKind Kind) const
+{
+    // home (generator) -> plaza, then out along the facility's route. Routes run plaza-outwards, so reverse the first.
+    TArray<FVector> Path;
+    const AHWNodeNpc* Tech = FindNpc(EHWNodeNpcRole::Technician);
+    if (!Tech || !Config) return Path;
+    const TArray<FVector>& HomeRoute = Config->Route(Tech->GetRoute());
+    for (int32 I = HomeRoute.Num() - 1; I >= 0; --I) Path.Add(HomeRoute[I]);
+    const TArray<FVector>& Main = Config->Route(TEXT("main"));
+    if (Main.Num() > 0) Path.Add(Main.Last());   // the plaza
+    if (Kind == EHWNodeFacilityKind::Generator) Path.Append(Config->Route(TEXT("generator")));
+    else if (Kind == EHWNodeFacilityKind::Comms) Path.Append(Config->Route(TEXT("comms")));
+    else
+    {
+        // south: back down the main road to just inside the gate
+        for (int32 I = Main.Num() - 1; I >= 1; --I) Path.Add(Main[I]);
+    }
+    return Path;
+}
+
+FString AHWNodeDirector::WavePreview(int32 WaveIndex) const
+{
+    if (WaveIndex >= HWNodeRules::PrototypeAWaveCount) return TEXT("the Relay (boss)");
+    static const TCHAR* RoleNames[] = { TEXT("infected"), TEXT("runner"), TEXT("breaker"), TEXT("stalker"), TEXT("ARMORED") };
+    const HWNodeRules::FWaveSpec W = HWNodeRules::PrototypeAWave(WaveIndex);
+    FString Text;
+    for (int32 I = 0; I < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++I)
+    {
+        if (W.Count[I] > 0) Text += FString::Printf(TEXT("%s%s x%d"), Text.IsEmpty() ? TEXT("") : TEXT(", "), RoleNames[I], W.Count[I]);
+    }
+    return Text;
+}
+
+HWNodeRules::FNpcEffects AHWNodeDirector::CurrentNpcEffects() const
+{
+    HWNodeRules::ENpcState States[HWNodeRules::NpcRoleCount];
+    for (int32 I = 0; I < HWNodeRules::NpcRoleCount; ++I)
+    {
+        const AHWNodeNpc* Npc = FindNpc(static_cast<EHWNodeNpcRole>(I));
+        States[I] = Npc ? Npc->GetState() : HWNodeRules::ENpcState::Missing;
+    }
+    return HWNodeRules::NpcEffects(States, Policy);
+}
+
+void AHWNodeDirector::BeginPreparation()
+{
+    Machine.SetThreat(0.7f);   // the forecast saw it coming: Alert
+    Supply.Points = SupplyStart;
+    PrepLeft = HWNodeRules::PrepSeconds(CurrentNpcEffects(), Policy);
+    SetState(Machine.State);
 }
 
 void AHWNodeDirector::StartInvasion()
 {
     if (!Config || !Machine.StartInvasion()) return;
     Waves = HWNodeRules::FWaveRunner();
+    PrepLeft = 0.f;
     SetState(Machine.State);
 }
 
@@ -223,10 +420,10 @@ void AHWNodeDirector::SpawnWave(int32 WaveIndex)
 void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
 {
     if (Config->SpawnPoints.Num() == 0) return;
-    // runners alternate the two flank trails; everyone else takes the road through the gate
-    const bool bRunner = EnemyRole == EHWNodeEnemyRole::Runner;
-    const TArray<FVector>& EnemyRoute = !bRunner ? Config->MainRoute : (Serial % 2 == 0 ? Config->WestRoute : Config->EastRoute);
-    const FVector Base = bRunner && EnemyRoute.Num() > 0 ? EnemyRoute[0] : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
+    const TArray<FVector>& EnemyRoute = Config->Route(Config->RouteForRole(EnemyRole, Serial));
+    // flank routes start on their own trail; the rest at the checkpoint spawns
+    const bool bOwnStart = EnemyRole == EHWNodeEnemyRole::Runner && EnemyRoute.Num() > 0;
+    const FVector Base = bOwnStart ? EnemyRoute[0] : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
     const float Angle = Serial * 2.39996f;   // golden-angle scatter so a wave does not stack on one point
     const FVector At = Base + FVector(FMath::Cos(Angle) * 160.f, FMath::Sin(Angle) * 160.f, 110.f);
 
@@ -253,8 +450,19 @@ void AHWNodeDirector::HandleEnemyDied(AHWNodeEnemy* Enemy)
 void AHWNodeDirector::HandleFacilityDestroyed(AHWNodeFacility* Facility)
 {
     if (!Facility) return;
-    if (Facility->GetKind() == EHWNodeFacilityKind::Gate) Outcome = TEXT("The south gate is down - hold the central barrier");
-    if (Facility->GetKind() == EHWNodeFacilityKind::Generator) Outcome = TEXT("Generator lost - lights, turrets and the forecast are out");
+    if (Facility->GetKind() == EHWNodeFacilityKind::Gate) Notice = TEXT("The south gate is down - hold the central barrier");
+    if (Facility->GetKind() == EHWNodeFacilityKind::Barricade) Notice = TEXT("A barricade on the forest trail broke");
+    if (Facility->GetKind() == EHWNodeFacilityKind::Turret) Notice = TEXT("A turret is down");
+    if (Facility->GetKind() == EHWNodeFacilityKind::Generator)
+    {
+        Notice = Policy.ReservePowerSeconds > 0.f ? TEXT("Generator lost - reserve power for 90 s") : TEXT("Generator lost - turrets, lights and the forecast are out");
+        if (!bReserveUsed)
+        {
+            ReserveLeft = Policy.ReservePowerSeconds;
+            bReserveUsed = true;
+        }
+    }
+    NoticeFor = 5.f;
 }
 
 void AHWNodeDirector::ReportCounter(bool bPerfect)
@@ -263,6 +471,43 @@ void AHWNodeDirector::ReportCounter(bool bPerfect)
     if (bPerfect) ++PerfectCounters;
     bLastCounterPerfect = bPerfect;
     LastCounterShownFor = 1.2f;
+}
+
+void AHWNodeDirector::ReportKill(EHWNodeEnemyRole EnemyRole, const FVector& At, bool bByPlayer)
+{
+    if (!bByPlayer) return;   // turrets and the guard are the node's, not the player's
+    const HWNodeRules::EEnemyRole R = static_cast<HWNodeRules::EEnemyRole>(EnemyRole);
+    Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Kill)] += HWNodeRules::KillWeight(R);
+    float Distance = -1.f;
+    NearestStanding(At, Distance);
+    if (const AHWNodeNpc* Npc = NearestTargetableNpc(At))
+    {
+        const float NpcDistance = FVector::Dist2D(At, Npc->GetActorLocation());
+        Distance = Distance < 0.f ? NpcDistance : FMath::Min(Distance, NpcDistance);
+    }
+    Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Defense)] += HWNodeRules::DefenseCredit(R, Distance);
+    for (const FPing& P : Pings)
+    {
+        if (HWNodeRules::PingCredits(Clock - P.Born, FVector::Dist2D(At, P.At)))
+        {
+            Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Command)] += 1.f;
+            break;
+        }
+    }
+}
+
+void AHWNodeDirector::ReportRepair(float Amount)
+{
+    // the technician repairs on the player's order: the order-giver's contribution (per 100 HP)
+    Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Repair)] += Amount / 100.f;
+}
+
+void AHWNodeDirector::ReportNpcHurt(AHWNodeNpc* Npc)
+{
+    if (!Npc) return;
+    Notice = Npc->IsCaptive() ? FString::Printf(TEXT("%s was taken to the holding spot - rescue them (G there)"), *Npc->GetNpcId().ToString())
+                              : FString::Printf(TEXT("%s is injured"), *Npc->GetNpcId().ToString());
+    NoticeFor = 5.f;
 }
 
 void AHWNodeDirector::SpawnBoss()
@@ -283,17 +528,21 @@ void AHWNodeDirector::SpawnBoss()
     BossCore->OnCoreExposed.AddUniqueDynamic(this, &AHWNodeDirector::HandleCoreExposed);
     BossCore->OnCoreExtracted.AddUniqueDynamic(this, &AHWNodeDirector::HandleCoreExtracted);
     Boss->OnBossDied.AddUniqueDynamic(this, &AHWNodeDirector::HandleBossDied);
-    Outcome = TEXT("The Relay comes through the central barrier");
+    LastBossHealth = Boss->GetHealth();
+    Notice = TEXT("The Relay comes through the central barrier");
+    NoticeFor = 5.f;
 }
 
 void AHWNodeDirector::HandleCoreExposed()
 {
-    Outcome = TEXT("Arm armour broken - the core is out (finish at 10%: hit to kill, or Execute to extract)");
+    Notice = TEXT("Arm armour broken - the core is out (at 10%: hit to kill, or Execute to extract)");
+    NoticeFor = 6.f;
 }
 
 void AHWNodeDirector::HandleCoreExtracted()
 {
-    Outcome = TEXT("Core extracted");
+    Notice = TEXT("Core extracted");
+    NoticeFor = 5.f;
 }
 
 void AHWNodeDirector::HandleBossDied(AHWBossCharacter* DeadBoss)
@@ -303,19 +552,137 @@ void AHWNodeDirector::HandleBossDied(AHWBossCharacter* DeadBoss)
     {
         Outcome = bExtracted ? TEXT("Defence held - the Relay's core extracted") : TEXT("Defence held - the Relay is dead");
         SetState(Machine.State);
+        FinishRun(TEXT("held"));
     }
+}
+
+void AHWNodeDirector::FinishRun(const TCHAR* ReportOutcome)
+{
+    if (bReported) return;
+    bReported = true;
+    // the run's report for the node server ({type:'node', action:'report'} - server/node-store.cjs nodeReport).
+    // Written to Saved/HWNode/last_report.json until the client sends it over the raid socket.
+    static const TCHAR* Keys[] = { TEXT("kill"), TEXT("defense"), TEXT("repair"), TEXT("npc_rescue"), TEXT("boss"), TEXT("supply"), TEXT("command") };
+    FString Contrib;
+    for (int32 I = 0; I < HWNodeRules::ContributionCount; ++I)
+    {
+        Contrib += FString::Printf(TEXT("%s\"%s\":%.2f"), I ? TEXT(",") : TEXT(""), Keys[I], Ledger.Raw[I]);
+    }
+    const FString Json = FString::Printf(TEXT("{\"node\":\"%s\",\"outcome\":\"%s\",\"contrib\":{%s}}"), *Config->NodeId.ToString(), ReportOutcome, *Contrib);
+    FFileHelper::SaveStringToFile(Json, *FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("HWNode"), TEXT("last_report.json")));
+    UE_LOG(LogTemp, Display, TEXT("[HWNode] report %s"), *Json);
 }
 
 void AHWNodeDirector::HandleInteract()
 {
-    // after the run: Interact starts it again; a missing technician is rescued by walking to them and interacting
+    AHWAinCharacter* Player = GetPlayer();
+    if (!Player || !Config) return;
+    const FVector Here = Player->GetActorLocation();
+
+    // 1) captives at the holding spot: free them
+    if (FVector::Dist2D(Here, Config->HoldingSpot) < HWNodeDirectorLocal::InteractReach)
+    {
+        int32 Freed = 0;
+        for (AHWNodeNpc* Npc : Npcs) if (Npc && Npc->IsCaptive() && Npc->Rescue()) ++Freed;
+        if (Freed > 0)
+        {
+            Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::NpcRescue)] += static_cast<float>(Freed);
+            Notice = FString::Printf(TEXT("Rescued %d - they head home to recover"), Freed);
+            NoticeFor = 4.f;
+            return;
+        }
+    }
+
+    // 2) preparation: build a barricade on a slot (supplies, a captain's call)
+    if (Machine.State == HWNodeRules::ENodeState::Alert)
+    {
+        for (const FHWNodeFacilityDef& Slot : Config->BarricadeSlots)
+        {
+            if (FVector::Dist2D(Here, Slot.Location) > HWNodeDirectorLocal::InteractReach) continue;
+            bool bBuilt = false;
+            for (AHWNodeFacility* F : Facilities) bBuilt |= F && F->GetKind() == EHWNodeFacilityKind::Barricade && FVector::Dist2D(F->GetActorLocation(), Slot.Location) < 50.f;
+            if (bBuilt) continue;
+            if (!Can(HWNodeRules::EGuildPerm::InvestFacility) && !Can(HWNodeRules::EGuildPerm::AllocateSupply))
+            {
+                Notice = TEXT("Only the craft or supply captain (or the leaders) can build here");
+            }
+            else if (!Supply.Spend(HWNodeRules::ESupplyUse::Barricade))
+            {
+                Notice = FString::Printf(TEXT("Not enough supplies (a barricade costs %d)"), HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade));
+            }
+            else if (AHWNodeFacility* F = GetWorld()->SpawnActor<AHWNodeFacility>(AHWNodeFacility::StaticClass(), Slot.Location, FRotator::ZeroRotator))
+            {
+                F->Configure(Slot);
+                F->OnFacilityDestroyed.AddUniqueDynamic(this, &AHWNodeDirector::HandleFacilityDestroyed);
+                Facilities.Add(F);
+                Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Supply)] += static_cast<float>(HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade));
+                Notice = TEXT("Barricade up on the forest trail");
+            }
+            NoticeFor = 4.f;
+            return;
+        }
+    }
+
+    // 3) the technician: cycle the repair order (gate -> generator -> comms -> stay home)
+    if (AHWNodeNpc* Tech = FindNpc(EHWNodeNpcRole::Technician))
+    {
+        if (FVector::Dist2D(Here, Tech->GetActorLocation()) < HWNodeDirectorLocal::InteractReach && Tech->IsTargetable())
+        {
+            if (!Can(HWNodeRules::EGuildPerm::OrderNpc))
+            {
+                Notice = TEXT("Only a captain or the leaders can give the technician orders");
+            }
+            else if (!Tech->HasOrder())
+            {
+                Tech->OrderTo(PathFromTechnicianTo(EHWNodeFacilityKind::Gate), EHWNodeFacilityKind::Gate);
+            }
+            else if (Tech->GetOrderFacility() == EHWNodeFacilityKind::Gate)
+            {
+                Tech->OrderTo(PathFromTechnicianTo(EHWNodeFacilityKind::Generator), EHWNodeFacilityKind::Generator);
+            }
+            else if (Tech->GetOrderFacility() == EHWNodeFacilityKind::Generator)
+            {
+                Tech->OrderTo(PathFromTechnicianTo(EHWNodeFacilityKind::Comms), EHWNodeFacilityKind::Comms);
+            }
+            else
+            {
+                Tech->ClearOrder();
+                Tech->SetActorLocation(Tech->GetHome() + FVector(0.f, 0.f, 100.f));
+            }
+            NoticeFor = 3.f;
+            return;
+        }
+    }
+
+    // 4) after a run: again
     if (Machine.State == HWNodeRules::ENodeState::Stable || Machine.State == HWNodeRules::ENodeState::Fallen
         || Machine.State == HWNodeRules::ENodeState::Retakeable)
     {
         RestartRun();
+    }
+}
+
+void AHWNodeDirector::HandleExecute()
+{
+    if (BossCore && GetPlayer()) BossCore->TryBeginExtraction(GetPlayer());
+}
+
+void AHWNodeDirector::HandlePing()
+{
+    const AHWAinCharacter* Player = GetPlayer();
+    if (!Player) return;
+    if (!Can(HWNodeRules::EGuildPerm::Ping))
+    {
+        Notice = TEXT("Rally pings are the combat captain's (or the leaders')");
+        NoticeFor = 3.f;
         return;
     }
-    if (Technician && GetPlayer() && FVector::Dist2D(Technician->GetActorLocation(), GetPlayer()->GetActorLocation()) < 400.f) Technician->Rescue();
+    FPing P;
+    P.At = Player->GetActorLocation();
+    P.Born = Clock;
+    Pings.Add(P);
+    Notice = TEXT("RALLY - kills here in the next 15 s count as command");
+    NoticeFor = 3.f;
 }
 
 void AHWNodeDirector::RestartRun()
@@ -327,19 +694,34 @@ void AHWNodeDirector::RestartRun()
     Boss = nullptr;
     BossCore = nullptr;
     bBossPhase = false;
-    for (AHWNodeFacility* F : Facilities) if (F) F->RepairBy(1e9f);
-    if (Technician) Technician->Destroy();
-    FActorSpawnParameters Params;
-    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-    Technician = GetWorld()->SpawnActor<AHWNodeNpc>(AHWNodeNpc::StaticClass(), Config->TechnicianStart + FVector(0.f, 0.f, 100.f), FRotator(0.f, -90.f, 0.f), Params);
+    // built barricades go; everything else is repaired
+    for (AHWNodeFacility* F : TArray<TObjectPtr<AHWNodeFacility>>(Facilities))
+    {
+        if (!F) continue;
+        if (F->GetKind() == EHWNodeFacilityKind::Barricade)
+        {
+            Facilities.Remove(F);
+            F->Destroy();
+        }
+        else
+        {
+            F->RepairBy(1e9f);
+        }
+    }
+    for (AHWNodeNpc* Npc : Npcs) if (Npc) Npc->Destroy();
+    Npcs.Reset();
+    SpawnNpcs();
     Machine = HWNodeRules::FNodeStateMachine();
     Machine.CommsHoldToFall = Config->CommsHoldToFall;
-    Machine.SetThreat(0.7f);
     Waves = HWNodeRules::FWaveRunner();
-    StartDelay = 6.f;
+    Ledger = HWNodeRules::FContribution();
+    Pings.Reset();
     Kills = Counters = PerfectCounters = 0;
+    ReserveLeft = 0.f;
+    bReserveUsed = false;
+    bReported = false;
     Outcome.Reset();
-    SetState(Machine.State);
+    BeginPreparation();
     if (AHWAinCharacter* Player = GetPlayer())
     {
         if (Player->GetCombat() && Player->GetCombat()->IsDead()) Player->GetCombat()->Revive(1.f);
@@ -373,20 +755,22 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
         Player->SetActorRotation(FRotator(0.f, -90.f, 0.f));   // facing south, down the road the enemies come up
         bPlayerPlaced = true;
     }
-    if (!bInteractBound)
+    if (!bInputBound)
     {
         Player->OnLocalInteract.AddUObject(this, &AHWNodeDirector::HandleInteract);
-        Player->OnLocalExecute.AddWeakLambda(this, [this]()
-        {
-            if (BossCore && GetPlayer()) BossCore->TryBeginExtraction(GetPlayer());
-        });
-        bInteractBound = true;
+        Player->OnLocalExecute.AddUObject(this, &AHWNodeDirector::HandleExecute);
+        Player->OnLocalOpening.AddUObject(this, &AHWNodeDirector::HandlePing);
+        bInputBound = true;
     }
 
     // fell off the graybox: back to the start, no death
-    if (Player->GetActorLocation().Z < Config->FallZ)
+    if (Player->GetActorLocation().Z < Config->FallZ) Player->SetActorLocation(Config->PlayerStart + FVector(0.f, 0.f, 100.f));
+
+    // the medic heals a player at the medical bay (HWNodeRules::NpcEffects)
+    const HWNodeRules::FNpcEffects NpcFx = CurrentNpcEffects();
+    if (!Player->GetCombat()->IsDead() && NpcFx.MedicalHealPerSecond > 0.f && FVector::Dist2D(Player->GetActorLocation(), Config->MedicalBay) < 300.f)
     {
-        Player->SetActorLocation(Config->PlayerStart + FVector(0.f, 0.f, 100.f));
+        Player->GetCombat()->Heal(Player->GetCombat()->GetMaxHealth() * NpcFx.MedicalHealPerSecond * DeltaSeconds);
     }
 
     // death -> back at the gate after a few seconds, full health (P0 death / return)
@@ -408,16 +792,67 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
     {
         PlayerDeadFor = -1.f;
     }
+
+    // boss damage dealt (only the player hits the boss) -> boss contribution
+    if (Boss && !Boss->IsDead() && LastBossHealth >= 0.f)
+    {
+        const float BossHealthNow = Boss->GetHealth();
+        if (BossHealthNow < LastBossHealth) Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Boss)] += LastBossHealth - BossHealthNow;
+        LastBossHealth = BossHealthNow;
+    }
+}
+
+void AHWNodeDirector::TickDefences(float DeltaSeconds)
+{
+    // turrets on generator power (with reserve), and the armed guard: nearest enemy in range, quarter-second blows
+    const AHWNodeFacility* Gen = GetFacility(EHWNodeFacilityKind::Generator);
+    ReserveLeft = FMath::Max(0.f, ReserveLeft - DeltaSeconds);
+    const int32 Power = HWNodeRules::EffectivePower(Gen ? Gen->GetHealthFraction() : 0.f, ReserveLeft);
+    const float TurretDps = HWNodeRules::TurretDps(Power);
+    const HWNodeRules::FNpcEffects NpcFx = CurrentNpcEffects();
+
+    struct FShooter { AActor* From; float Dps; float Range; };
+    TArray<FShooter> Shooters;
+    for (AHWNodeFacility* F : Facilities)
+    {
+        if (F && F->GetKind() == EHWNodeFacilityKind::Turret && !F->IsDestroyed() && TurretDps > 0.f) Shooters.Add({ F, TurretDps, HWNodeRules::TurretRangeCm });
+    }
+    if (AHWNodeNpc* Guard = FindNpc(EHWNodeNpcRole::Guard))
+    {
+        if (NpcFx.GuardDps > 0.f && Guard->IsTargetable()) Shooters.Add({ Guard, NpcFx.GuardDps, 1200.f });
+    }
+    for (const FShooter& S : Shooters)
+    {
+        AHWNodeEnemy* Target = nullptr;
+        float Best = S.Range;
+        for (AHWNodeEnemy* E : Enemies)
+        {
+            if (!E || E->IsDeadEnemy() || FMath::Abs(E->GetActorLocation().Z - S.From->GetActorLocation().Z) > 700.f) continue;
+            const float D = FVector::Dist2D(E->GetActorLocation(), S.From->GetActorLocation());
+            if (D < Best) { Best = D; Target = E; }
+        }
+        if (!Target) continue;
+        float& Acc = ShotAccumulators.FindOrAdd(S.From);
+        Acc += S.Dps * DeltaSeconds;
+        if (Acc < S.Dps * HWNodeDirectorLocal::ShotEvery) continue;
+        IHWCombatTargetInterface::Execute_ReceiveSystemHit(Target, Acc, EHWAttackTier::Light, S.From->GetActorLocation(), S.From);
+        Acc = 0.f;
+#if ENABLE_DRAW_DEBUG
+        DrawDebugLine(GetWorld(), S.From->GetActorLocation() + FVector(0.f, 0.f, 100.f), Target->GetActorLocation(), FColor(255, 120, 220), false, 0.08f, 0, 3.f);
+#endif
+    }
 }
 
 void AHWNodeDirector::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     if (!Config) return;
+    Clock += DeltaSeconds;
+    NoticeFor = FMath::Max(0.f, NoticeFor - DeltaSeconds);
+    LastCounterShownFor = FMath::Max(0.f, LastCounterShownFor - DeltaSeconds);
+    Pings.RemoveAll([this](const FPing& P) { return Clock - P.Born > HWNodeRules::PingLifeSeconds; });
 
     TickPlayer(DeltaSeconds);
-    LastCounterShownFor = FMath::Max(0.f, LastCounterShownFor - DeltaSeconds);
-
     for (AHWNodeEnemy* E : TArray<TObjectPtr<AHWNodeEnemy>>(Enemies))
     {
         if (E && !E->IsDeadEnemy() && E->GetActorLocation().Z < Config->FallZ) E->Discard();
@@ -428,15 +863,16 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
     case HWNodeRules::ENodeState::Alert:
     case HWNodeRules::ENodeState::Uneasy:
     case HWNodeRules::ENodeState::Stable:
-        if (StartDelay > 0.f)
+        if (PrepLeft > 0.f)
         {
-            StartDelay -= DeltaSeconds;
-            if (StartDelay <= 0.f && Outcome.IsEmpty()) StartInvasion();
+            PrepLeft -= DeltaSeconds;
+            if (PrepLeft <= 0.f && Outcome.IsEmpty()) StartInvasion();
         }
         break;
 
     case HWNodeRules::ENodeState::Invasion:
     {
+        TickDefences(DeltaSeconds);
         if (!bBossPhase)
         {
             const int32 Wave = Waves.Tick(DeltaSeconds);
@@ -446,8 +882,9 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
         const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
         if (Machine.TickInvasion(DeltaSeconds, Comms && Comms->IsDestroyed(), EnemyOnComms()))
         {
-            Outcome = TEXT("Namsan has fallen - the map goes dark (Interact to try again)");
+            Outcome = TEXT("Namsan has fallen - the map goes dark (G to try again)");
             SetState(Machine.State);
+            FinishRun(TEXT("fallen"));
         }
         break;
     }
@@ -455,11 +892,11 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
     case HWNodeRules::ENodeState::Recovering:
     {
         // the technician sets the pace (HWNodeRules::TechnicianRepairScale)
-        const float Scale = Technician ? Technician->RepairScale() : HWNodeRules::TechnicianRepairScale(HWNodeRules::ENpcState::Missing);
+        const float Scale = CurrentNpcEffects().RepairScale;
         for (AHWNodeFacility* F : Facilities) if (F && F->GetHealthFraction() < 1.f) F->RepairBy(HWNodeDirectorLocal::RepairPerSecond * Scale * DeltaSeconds);
         if (Machine.AddRecovery(HWNodeDirectorLocal::RecoverPerSecond * Scale * DeltaSeconds))
         {
-            Outcome = TEXT("Namsan is stable again (Interact to run the defence again)");
+            Outcome = TEXT("Namsan is stable again (G to run the defence again)");
             SetState(Machine.State);
         }
         break;
@@ -487,44 +924,70 @@ void AHWNodeDirector::DrawHud() const
     const AHWNodeFacility* Gate = GetFacility(EHWNodeFacilityKind::Gate);
     const AHWNodeFacility* Gen = GetFacility(EHWNodeFacilityKind::Generator);
     const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
-    const int32 Power = Gen ? Gen->GetPower() : 0;
-    const HWNodeRules::FNodeServices S = HWNodeRules::NodeServices(Machine.State, Comms ? Comms->GetHealthFraction() : 0.f, Power);
+    const int32 Power = HWNodeRules::EffectivePower(Gen ? Gen->GetHealthFraction() : 0.f, ReserveLeft);
+    const HWNodeRules::FNpcEffects NpcFx = CurrentNpcEffects();
+    HWNodeRules::FNodeServices S = HWNodeRules::NodeServices(Machine.State, Comms ? Comms->GetHealthFraction() : 0.f, Power);
+    S.bRescueSignals = S.bRescueSignals && NpcFx.bRescueSignals;   // no operator, no rescue signals
     int32 Line = 0;
     const auto Show = [&Line](const FString& Text, const FColor& Color)
     {
         GEngine->AddOnScreenDebugMessage(HudKey + Line++, 0.f, Color, Text);
     };
 
-    Show(FString::Printf(TEXT("%s  [%s]"), *Config->DisplayName, StateName(Machine.State)), FColor(255, 210, 120));
+    Show(FString::Printf(TEXT("%s  [%s]   you: %s"), *Config->DisplayName, StateName(Machine.State), GuildRoleName(GuildRole)), FColor(255, 210, 120));
+    if (Machine.State == HWNodeRules::ENodeState::Alert && PrepLeft > 0.f)
+    {
+        Show(FString::Printf(TEXT("PREPARE %.0fs - supplies %d (barricade %d at a forest-trail slot: G)   technician orders: G next to them"),
+            PrepLeft, Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade)), FColor(255, 170, 90));
+        Show(NpcFx.bWavePreview ? FString::Printf(TEXT("Scout report - first wave: %s"), *WavePreview(0)) : FString(TEXT("No scout report (scout lost, no scouting policy)")), FColor(170, 220, 255));
+    }
     if (Machine.State == HWNodeRules::ENodeState::Invasion)
     {
+        const FString Next = NpcFx.bWavePreview && Waves.NextWave < Waves.WaveCount ? FString::Printf(TEXT("   next: %s"), *WavePreview(Waves.NextWave)) : FString();
         Show(bBossPhase
                 ? FString::Printf(TEXT("THE RELAY  %.0f%%   core armour %.0f%%%s"),
                     Boss ? 100.f * Boss->GetHealth() / FMath::Max(1.f, Boss->GetMaxHealth()) : 0.f,
                     BossCore ? 100.f * BossCore->GetCoreArmorFraction() : 100.f,
-                    BossCore && BossCore->CanFinish() ? TEXT("   FINISH: hit = kill / Execute = extract") : TEXT(""))
-                : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills),
+                    BossCore && BossCore->CanFinish() ? TEXT("   FINISH: hit = kill / Execute (V) = extract") : TEXT(""))
+                : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills, *Next),
             FColor::White);
         if (Machine.CommsHeldSeconds > 0.f) Show(FString::Printf(TEXT("ENEMY ON COMMS  %.0f / %.0fs"), Machine.CommsHeldSeconds, Machine.CommsHoldToFall), FColor::Red);
         if (BossCore && BossCore->GetExtractionProgress() > 0.f) Show(FString::Printf(TEXT("EXTRACTING  %.0f%%  - do not get hit"), 100.f * BossCore->GetExtractionProgress()), FColor(255, 80, 60));
     }
     if (Machine.State == HWNodeRules::ENodeState::Fallen || Machine.State == HWNodeRules::ENodeState::Retakeable)
     {
-        Show(FString::Printf(TEXT("Occupied %.2fh - %s"), Machine.OccupiedHours, TierName(Machine.Tier())), FColor(255, 120, 120));
+        Show(FString::Printf(TEXT("Occupied %.2fh - %s (difficulty x%.2f, reward x%.2f)"), Machine.OccupiedHours, TierName(Machine.Tier()),
+            HWNodeRules::OccupationDifficulty(Machine.Tier()), HWNodeRules::OccupationReward(Machine.Tier())), FColor(255, 120, 120));
     }
-    if (StartDelay > 0.f && Machine.State == HWNodeRules::ENodeState::Alert) Show(FString::Printf(TEXT("Invasion in %.0fs - hold the south gate"), StartDelay), FColor(255, 160, 80));
-    Show(FString::Printf(TEXT("Gate %.0f%%   Generator %.0f%% (power %d)   Comms %.0f%%   Tech %s"),
-        Gate ? 100.f * Gate->GetHealthFraction() : 0.f, Gen ? 100.f * Gen->GetHealthFraction() : 0.f, Power,
-        Comms ? 100.f * Comms->GetHealthFraction() : 0.f,
-        !Technician ? TEXT("-") : Technician->GetState() == HWNodeRules::ENpcState::Normal ? TEXT("ok") :
-        Technician->GetState() == HWNodeRules::ENpcState::Injured ? TEXT("injured") :
-        Technician->GetState() == HWNodeRules::ENpcState::Missing ? TEXT("MISSING") : TEXT("rescued")), FColor(180, 220, 255));
-    Show(FString::Printf(TEXT("Map intel %.0f%%   event detection %.0f%%   rescue signals %s   forecast %s"),
-        100.f * S.MapIntel, 100.f * S.EventDetection, S.bRescueSignals ? TEXT("on") : TEXT("OFF"), S.bInvasionForecast ? TEXT("on") : TEXT("OFF")), FColor(150, 200, 150));
-    Show(FString::Printf(TEXT("Counters %d (perfect %d)   deaths %d"), Counters, PerfectCounters, PlayerDeaths), FColor(200, 200, 200));
+    int32 Turrets = 0;
+    for (const AHWNodeFacility* F : Facilities) Turrets += F && F->GetKind() == EHWNodeFacilityKind::Turret && !F->IsDestroyed() ? 1 : 0;
+    const FString Reserve = ReserveLeft > 0.f ? FString::Printf(TEXT(", reserve %.0fs"), ReserveLeft) : FString();
+    Show(FString::Printf(TEXT("Gate %.0f%%   Generator %.0f%% (power %d%s)   Comms %.0f%%   turrets %d (%.0f dps each)"),
+        Gate ? 100.f * Gate->GetHealthFraction() : 0.f, Gen ? 100.f * Gen->GetHealthFraction() : 0.f, Power, *Reserve,
+        Comms ? 100.f * Comms->GetHealthFraction() : 0.f, Turrets, HWNodeRules::TurretDps(Power)), FColor(180, 220, 255));
+    FString Roster;
+    for (const AHWNodeNpc* N : Npcs)
+    {
+        if (N) Roster += FString::Printf(TEXT("%s %s   "), *N->GetNpcId().ToString(), NpcStateShort(N->GetState()));
+    }
+    Show(Roster, FColor(140, 230, 160));
+    Show(FString::Printf(TEXT("Map intel %.0f%%   detection %.0f%%   rescue signals %s   forecast %s   medic %.0f%%/s"),
+        100.f * S.MapIntel, 100.f * S.EventDetection, S.bRescueSignals ? TEXT("on") : TEXT("OFF"), S.bInvasionForecast ? TEXT("on") : TEXT("OFF"),
+        100.f * NpcFx.MedicalHealPerSecond), FColor(150, 200, 150));
+    {
+        FString Picks;
+        static const TCHAR* PolicyLabels[] = { TEXT("gate+"), TEXT("generator+"), TEXT("armed NPCs"), TEXT("scouting"), TEXT("medical"), TEXT("reserve power") };
+        for (const HWNodeRules::EPolicy P : Policies) Picks += FString::Printf(TEXT("%s "), PolicyLabels[static_cast<int32>(P)]);
+        if (Picks.IsEmpty()) Picks = TEXT("none ");
+        const FString Note = PolicyNote.IsEmpty() ? FString() : FString::Printf(TEXT("(%s)"), *PolicyNote);
+        Show(FString::Printf(TEXT("Policies: %s%s"), *Picks, *Note), FColor(200, 190, 255));
+    }
+    Show(FString::Printf(TEXT("Contribution  kill %.1f  defense %.1f  repair %.1f  rescue %.0f  boss %.0f  supply %.0f  command %.0f   |  counters %d (perfect %d)  deaths %d"),
+        Ledger.Raw[0], Ledger.Raw[1], Ledger.Raw[2], Ledger.Raw[3], Ledger.Raw[4], Ledger.Raw[5], Ledger.Raw[6], Counters, PerfectCounters, PlayerDeaths), FColor(200, 200, 200));
     if (LastCounterShownFor > 0.f) Show(bLastCounterPerfect ? TEXT("PERFECT COUNTER") : TEXT("COUNTER"), bLastCounterPerfect ? FColor(255, 230, 80) : FColor(200, 200, 255));
     if (PlayerDeadFor >= 0.f) Show(FString::Printf(TEXT("Down - back at the gate in %.0fs"), FMath::Max(0.f, RespawnSeconds - PlayerDeadFor)), FColor::Red);
+    if (NoticeFor > 0.f && !Notice.IsEmpty()) Show(Notice, FColor(255, 230, 170));
     if (!Outcome.IsEmpty()) Show(Outcome, FColor(255, 220, 160));
     // clear the lines this frame did not use
-    for (int32 Spare = Line; Spare < 14; ++Spare) GEngine->RemoveOnScreenDebugMessage(HudKey + Spare);
+    for (int32 Spare = Line; Spare < 18; ++Spare) GEngine->RemoveOnScreenDebugMessage(HudKey + Spare);
 }

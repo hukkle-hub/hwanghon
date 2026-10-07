@@ -98,7 +98,7 @@ void AHWCombatGameMode::BeginPlay()
     if (!bOnlineRaid && !NodeOption.IsEmpty())
     {
         AHWNodeDirector* Node = GetWorld()->SpawnActorDeferred<AHWNodeDirector>(AHWNodeDirector::StaticClass(), FTransform::Identity);
-        if (Node && Node->ConfigureNode(FName(*NodeOption)))
+        if (Node && Node->ConfigureNode(FName(*NodeOption), OptionsString))
         {
             UGameplayStatics::FinishSpawningActor(Node, FTransform::Identity);
             bNodeRun = true;

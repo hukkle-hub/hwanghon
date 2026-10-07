@@ -8,6 +8,7 @@
 #include "HWNodeEnemy.generated.h"
 
 class AHWNodeDirector;
+class AHWNodeFacility;
 class UTextRenderComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNodeEnemyDiedSignature, class AHWNodeEnemy*, Enemy);
@@ -68,6 +69,9 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<AHWNodeDirector> Director;
 
+    // A barricade in the way, or a turret shooting it: hit that first (overrides TargetKind).
+    TWeakObjectPtr<AHWNodeFacility> Override;
+
     UPROPERTY()
     TObjectPtr<UTextRenderComponent> Tag;
 
@@ -89,4 +93,5 @@ private:
     bool bFlanked = false;
     bool bDead = false;
     bool bKilled = false;
+    bool bLastHitByPlayer = false;   // turret and guard kills are not the player's contribution
 };

@@ -89,7 +89,7 @@ struct FCoreExtraction
 
 // ---------------------------------------------------------------- facilities (docs/design/200 §4)
 
-enum class EFacility : unsigned char { Gate, Generator, Comms, Count };
+enum class EFacility : unsigned char { Gate, Generator, Comms, Turret, Barricade, Count };
 
 struct FFacility
 {

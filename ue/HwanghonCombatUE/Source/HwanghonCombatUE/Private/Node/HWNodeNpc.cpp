@@ -4,19 +4,52 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/TextRenderComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Node/HWNodeDirector.h"
+#include "Node/HWNodeFacility.h"
+
+namespace HWNodeNpcLocal
+{
+    const TCHAR* RoleName(EHWNodeNpcRole R)
+    {
+        switch (R)
+        {
+        case EHWNodeNpcRole::Technician: return TEXT("TECH");
+        case EHWNodeNpcRole::Medic: return TEXT("MEDIC");
+        case EHWNodeNpcRole::Scout: return TEXT("SCOUT");
+        case EHWNodeNpcRole::Operator: return TEXT("OPERATOR");
+        case EHWNodeNpcRole::Guard: return TEXT("GUARD");
+        }
+        return TEXT("NPC");
+    }
+
+    const TCHAR* StateText(HWNodeRules::ENpcState S)
+    {
+        switch (S)
+        {
+        case HWNodeRules::ENpcState::Normal: return TEXT("");
+        case HWNodeRules::ENpcState::Injured: return TEXT(" (injured)");
+        case HWNodeRules::ENpcState::Missing: return TEXT(" CAPTIVE - rescue (G)");
+        case HWNodeRules::ENpcState::Rescued: return TEXT(" (recovering)");
+        }
+        return TEXT("");
+    }
+}
 
 AHWNodeNpc::AHWNodeNpc()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = true;
     GetCapsuleComponent()->InitCapsuleSize(40.f, 88.f);
-    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
+    GetCharacterMovement()->bOrientRotationToMovement = true;
+    GetCharacterMovement()->MaxWalkSpeed = 420.f;
+    AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;   // a controller, or AddMovementInput does nothing
 
     Tag = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Tag"));
     Tag->SetupAttachment(GetCapsuleComponent());
     Tag->SetRelativeLocation(FVector(0.f, 0.f, 130.f));
-    Tag->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
     Tag->SetHorizontalAlignment(EHTA_Center);
-    Tag->SetWorldSize(60.f);
+    Tag->SetWorldSize(52.f);
+    Tag->SetAbsolute(false, true, false);
 }
 
 void AHWNodeNpc::BeginPlay()
@@ -26,47 +59,102 @@ void AHWNodeNpc::BeginPlay()
         UHWCharacterVisualSettings::ApplyTo(TEXT("enemy"), GetMesh(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
     }
     Super::BeginPlay();
+    Tag->SetWorldRotation(FRotator(0.f, -90.f, 0.f));
     Refresh();
 }
 
-void AHWNodeNpc::ApplyEnemyDamage(float Amount)
+void AHWNodeNpc::Configure(AHWNodeDirector* InDirector, const FHWNodeNpcDef& Def, bool bArmed)
 {
-    if (!IsTargetable() || Amount <= 0.f) return;
-    Health -= Amount;
-    if (Health > 0.f)
-    {
-        Refresh();
-        return;
-    }
-    if (State == HWNodeRules::ENpcState::Normal)
-    {
-        State = HWNodeRules::ENpcState::Injured;   // down but here: repairs at half speed
-        Health = MaxHealth * 0.5f;
-    }
-    else
-    {
-        State = HWNodeRules::ENpcState::Missing;   // dragged off: advanced repairs stop until rescued
-        Health = 0.f;
-        SetActorHiddenInGame(true);
-        SetActorEnableCollision(false);
-    }
+    Director = InDirector;
+    Role = Def.Role;
+    NpcId = Def.Id;
+    RouteName = Def.Route;
+    Home = Def.Location;
+    Life = HWNodeRules::FNpcLife();
+    Life.MaxHealth = HWNodeRules::NpcMaxHealth(static_cast<HWNodeRules::ENpcRole>(Role), bArmed);
+    Life.Health = Life.MaxHealth;
+    SetActorScale3D(FVector(Role == EHWNodeNpcRole::Guard ? 1.05f : 0.92f));
     Refresh();
+}
+
+bool AHWNodeNpc::ApplyEnemyDamage(float Amount)
+{
+    const bool bChanged = Life.ApplyDamage(Amount);
+    if (bChanged && Life.State == HWNodeRules::ENpcState::Missing)
+    {
+        // taken: held at the holding spot until a player comes for them
+        ClearOrder();
+        GetCharacterMovement()->StopMovementImmediately();
+        if (Director && Director->GetConfig()) SetActorLocation(Director->GetConfig()->HoldingSpot + FVector(0.f, 0.f, 100.f), false, nullptr, ETeleportType::TeleportPhysics);
+    }
+    if (bChanged) Refresh();
+    return bChanged;
 }
 
 bool AHWNodeNpc::Rescue()
 {
-    if (State != HWNodeRules::ENpcState::Missing) return false;
-    State = HWNodeRules::ENpcState::Rescued;
-    Health = MaxHealth * 0.5f;
-    SetActorHiddenInGame(false);
-    SetActorEnableCollision(true);
+    if (!Life.Rescue()) return false;
+    SetActorLocation(Home + FVector(0.f, 0.f, 100.f), false, nullptr, ETeleportType::TeleportPhysics);
     Refresh();
     return true;
 }
 
+void AHWNodeNpc::OrderTo(const TArray<FVector>& Path, EHWNodeFacilityKind Facility)
+{
+    if (Role != EHWNodeNpcRole::Technician || !IsTargetable()) return;
+    OrderPath = Path;
+    OrderIndex = 0;
+    OrderFacility = Facility;
+    bOrdered = Path.Num() > 0;
+    Refresh();
+}
+
+void AHWNodeNpc::ClearOrder()
+{
+    bOrdered = false;
+    OrderPath.Reset();
+    OrderIndex = 0;
+    Refresh();
+}
+
+void AHWNodeNpc::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    if (Life.Tick(DeltaSeconds)) Refresh();
+    if (!bOrdered || !Director || IsCaptive()) return;
+
+    const FVector Here = GetActorLocation();
+    AHWNodeFacility* Target = Director->GetFacility(OrderFacility);
+    // at the facility: repair it (HWNodeRules::TechnicianRepairPerSecond - an injured technician is slower)
+    if (Target && Target->DistanceToSurface2D(Here) <= 220.f)
+    {
+        if (Target->GetHealthFraction() < 1.f)
+        {
+            const float Amount = HWNodeRules::TechnicianRepairPerSecond(Life.State) * DeltaSeconds;
+            Target->RepairBy(Amount);
+            Director->ReportRepair(Amount);
+        }
+        return;
+    }
+    if (OrderIndex >= OrderPath.Num()) return;
+    const FVector To = OrderPath[OrderIndex] - Here;
+    if (FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(180.f))
+    {
+        ++OrderIndex;
+        return;
+    }
+    AddMovementInput(To.GetSafeNormal2D(), 1.f);
+}
+
 void AHWNodeNpc::Refresh()
 {
-    static const TCHAR* StateNames[] = { TEXT("TECH OK"), TEXT("TECH INJURED"), TEXT("TECH MISSING"), TEXT("TECH RESCUED") };
-    Tag->SetText(FText::FromString(StateNames[static_cast<int32>(State)]));
-    Tag->SetTextRenderColor(State == HWNodeRules::ENpcState::Normal ? FColor(120, 230, 150) : FColor(255, 170, 80));
+    FString Text = FString(HWNodeNpcLocal::RoleName(Role)) + HWNodeNpcLocal::StateText(Life.State);
+    if (bOrdered)
+    {
+        static const TCHAR* OrderTargets[] = { TEXT("gate"), TEXT("generator"), TEXT("comms"), TEXT("turret"), TEXT("barricade") };
+        Text += FString::Printf(TEXT(" -> repair %s"), OrderTargets[static_cast<int32>(OrderFacility)]);
+    }
+    Tag->SetText(FText::FromString(Text));
+    Tag->SetTextRenderColor(Life.State == HWNodeRules::ENpcState::Normal ? FColor(120, 230, 150)
+        : Life.State == HWNodeRules::ENpcState::Missing ? FColor(255, 90, 90) : FColor(255, 170, 80));
 }

@@ -56,9 +56,9 @@ bool AHWNodeFacility::ApplyEnemyDamage(float Amount)
     OnFacilityDamaged.Broadcast(this);
     if (bDestroyedNow)
     {
-        if (Kind == EHWNodeFacilityKind::Gate)
+        if (Kind == EHWNodeFacilityKind::Gate || Kind == EHWNodeFacilityKind::Barricade)
         {
-            // the broken gate no longer holds the road: it sinks to a low rubble line
+            // the broken gate (or barricade) no longer holds the road: it sinks to a low rubble line
             SetActorEnableCollision(false);
             Body->SetWorldScale3D(FVector(HalfExtent.X / 50.f, HalfExtent.Y / 50.f, 0.15f));
             SetActorLocation(GetActorLocation() - FVector(0.f, 0.f, HalfExtent.Z - 8.f));
@@ -72,7 +72,7 @@ void AHWNodeFacility::RepairBy(float Amount)
 {
     const bool bWasDestroyed = Rules.IsDestroyed();
     Rules.Repair(Amount);
-    if (bWasDestroyed && !Rules.IsDestroyed() && Kind == EHWNodeFacilityKind::Gate)
+    if (bWasDestroyed && !Rules.IsDestroyed() && (Kind == EHWNodeFacilityKind::Gate || Kind == EHWNodeFacilityKind::Barricade))
     {
         Body->SetWorldScale3D(HalfExtent / 50.f);
         SetActorLocation(GetActorLocation() + FVector(0.f, 0.f, HalfExtent.Z - 8.f));
@@ -91,7 +91,7 @@ float AHWNodeFacility::DistanceToSurface2D(const FVector& Point) const
 
 void AHWNodeFacility::Refresh()
 {
-    static const TCHAR* FacilityNames[] = { TEXT("GATE"), TEXT("GENERATOR"), TEXT("COMMS") };
+    static const TCHAR* FacilityNames[] = { TEXT("GATE"), TEXT("GENERATOR"), TEXT("COMMS"), TEXT("TURRET"), TEXT("BARRICADE") };
     const float F = Rules.Fraction();
     FString Text = FString::Printf(TEXT("%s %d%%"), FacilityNames[static_cast<int32>(Kind)], FMath::RoundToInt(F * 100.f));
     if (Kind == EHWNodeFacilityKind::Generator) Text += FString::Printf(TEXT("  PWR %d"), GetPower());
@@ -101,6 +101,8 @@ void AHWNodeFacility::Refresh()
     // gate amber, generator blue, comms red; darker as it breaks
     const FLinearColor Base =
         Kind == EHWNodeFacilityKind::Gate ? FLinearColor(0.88f, 0.62f, 0.25f) :
-        Kind == EHWNodeFacilityKind::Generator ? FLinearColor(0.25f, 0.62f, 0.88f) : FLinearColor(0.82f, 0.28f, 0.28f);
+        Kind == EHWNodeFacilityKind::Generator ? FLinearColor(0.25f, 0.62f, 0.88f) :
+        Kind == EHWNodeFacilityKind::Comms ? FLinearColor(0.82f, 0.28f, 0.28f) :
+        Kind == EHWNodeFacilityKind::Turret ? FLinearColor(0.88f, 0.38f, 0.75f) : FLinearColor(0.85f, 0.55f, 0.20f);
     if (Material) Material->SetVectorParameterValue(TEXT("Color"), Base * (0.25f + 0.75f * F));
 }

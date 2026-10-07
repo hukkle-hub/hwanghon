@@ -17,6 +17,7 @@ class UHWHeroFxComponent;
 
 DECLARE_MULTICAST_DELEGATE(FHWLocalInteract);
 DECLARE_MULTICAST_DELEGATE(FHWLocalExecute);
+DECLARE_MULTICAST_DELEGATE(FHWLocalOpening);
 
 UCLASS()
 class HWANGHONCOMBATUE_API AHWAinCharacter : public ACharacter
@@ -41,6 +42,9 @@ public:
 
     // Execute pressed offline (online it goes to the server): the node boss's core extraction listens (docs/design/200 §6).
     FHWLocalExecute OnLocalExecute;
+
+    // Opening (X) pressed offline: the node's rally ping for a combat captain (docs/design/201 §4).
+    FHWLocalOpening OnLocalOpening;
 
     UFUNCTION(BlueprintPure)
     UHWLockOnComponent* GetLockOn() const { return LockOn; }
