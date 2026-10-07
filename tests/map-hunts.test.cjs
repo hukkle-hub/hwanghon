@@ -7,7 +7,7 @@ const st=(m,x,z)=>{ const a=m.road.ang,c=Math.cos(a),s=Math.sin(a); return [x*c-
 test('하위 구역: 표의 hunts 가 map.json areas 에 있고, 가운데가 걷는 띠 안에 있다',async()=>{
  const {ZONES}=await zonesP; let n=0;
  for(const [id,z] of Object.entries(ZONES)){ if(!z.hunts) continue; const m=JSON.parse(fs.readFileSync(path.join(MAPS,id,'map.json'),'utf8'));
-  for(const h of z.hunts){ const a=(m.areas||[]).find(x=>x.id===h.id&&(x.kind==='hunt'||x.kind==='rest')); assert.ok(a,id+' '+h.id+' 가 구운 맵에 없다 — replan-map.mjs 를 돌려라'); assert.equal(a.name,h.name);
+  for(const h of z.hunts){ const a=(m.areas||[]).find(x=>x.id===h.id&&['hunt','rest','siege'].includes(x.kind)); assert.ok(a,id+' '+h.id+' 가 구운 맵에 없다 — node tools/2d/patch-areas.mjs '+id); assert.equal(a.name,h.name);
    const [cx,cz]=a.circle?a.circle:[a.poly.reduce((q,p)=>q+p[0],0)/4,a.poly.reduce((q,p)=>q+p[1],0)/4], [s,t]=st(m,cx,cz), w=m.walk;
    assert.ok(s>w.s0-1&&s<w.s1+1&&t>w.t0-1&&t<w.t1+1,id+' '+h.id+' 가운데 (s '+s.toFixed(0)+', t '+t.toFixed(0)+') 가 걷는 띠 밖'); n++; } }
  assert.ok(n>=20,'구역 '+n);

@@ -18,8 +18,20 @@ test('자동 지역: 지역 표에 있고, 구운 맵의 출발점이 걷는 띠
 });
 test('자동 지역: 하위 구역 — 위험할수록 레벨이 높고, 쉼터(거점은 마을)가 하나 있다',async()=>{
  const {AUTO}=await autoP;
- for(const [id,z] of Object.entries(AUTO)){ const hunt=z.hunts.filter(h=>h.kind!=='rest').sort((a,b)=>a.danger-b.danger), rest=z.hunts.filter(h=>h.kind==='rest');
+ for(const [id,z] of Object.entries(AUTO)){ const hunt=z.hunts.filter(h=>(h.kind||'hunt')==='hunt').sort((a,b)=>a.danger-b.danger), rest=z.hunts.filter(h=>h.kind==='rest');
   assert.equal(rest.length,1,id+' 쉼터 '+rest.length); assert.ok(hunt.length>=2,id+' 사냥 구역 '+hunt.length);
   for(let i=1;i<hunt.length;i++) assert.ok(hunt[i].lv[0]>=hunt[i-1].lv[0],id+' '+hunt[i].name+' 가 더 위험한데 레벨이 낮다');
   assert.equal(new Set(z.hunts.map(h=>h.name)).size,z.hunts.length,id+' 구역 이름이 겹친다'); }
+});
+
+test('자동 거점: 점령 지점(siege)이 하나 — 마을 안, 출발점에서 10 m 넘게, 구운 맵에서는 막이 밖 (문서 192 §8)',async()=>{
+ const {AUTO}=await autoP, {REGIONS}=await regionsP; let n=0;
+ for(const [id,z] of Object.entries(AUTO)){ const r=REGIONS.find(x=>x.id===id); if(!r||r.kind!=='hub') continue; n++;
+  const sg=z.hunts.filter(h=>h.kind==='siege'), town=z.hunts.find(h=>h.id==='town'); assert.equal(sg.length,1,id+' 점령 지점 '+sg.length); assert.ok(town,id+' 마을 구역');
+  const [s,t]=sg[0].st; assert.ok(s>=town.s[0]&&s<=town.s[1]&&t>=town.t[0]&&t<=town.t[1],id+' 점령 지점이 마을 밖');
+  const sp=z.field.spawn.st; assert.ok(Math.hypot(s-sp[0],t-sp[1])>10,id+' 점령 지점이 출발점에 붙었다');
+  const F=path.join(MAPS,id,'map.json'); if(!fs.existsSync(F)) continue; const m=JSON.parse(fs.readFileSync(F,'utf8')), a=(m.areas||[]).find(x=>x.kind==='siege');
+  assert.ok(a,id+' 구운 맵에 점령 지점이 없다 — node tools/2d/patch-areas.mjs '+id);
+  for(const [dx,dz] of [[0,0],[2,0],[-2,0],[0,2],[0,-2]]){ const b=blocked(m,[a.circle[0]+dx,a.circle[1]+dz]); assert.ok(!b,id+' 점령 지점이 막혔다 '+String(JSON.stringify(b)).slice(0,80)); } }
+ assert.ok(n>=1,'자동 거점 '+n);
 });

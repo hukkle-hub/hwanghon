@@ -86,6 +86,8 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 #world .rn{position:absolute;font-size:11px;color:#bbb;white-space:nowrap;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;line-height:1.15}
 #world .rn.built{color:#ffe9b0;font-weight:700;font-size:12px}#world .rn small{opacity:.75;margin-left:3px;font-weight:500}
 #world .rn.off{display:none}
+#world .rn em.own{display:block;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.04em}#world .rn em.own.boss{color:#ff7a60}#world .rn em.own.guild{color:#7fe0c0}
+.tag.gt.siege{color:#c8f0e0}.tag.gt.siege.boss{color:#ffb0a0}
 #world .rg.clu{width:18px;height:18px;background:#ffcf40;border:2px solid #2a1c04;box-shadow:0 0 10px rgba(255,200,60,.8);color:#2a1c04;font:800 10px/14px sans-serif;text-align:center}
 #world .rg.clu.here{background:#5fe0ff}
 #world .wgo{position:absolute;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);min-height:56px;min-width:240px;padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(240,176,64,.85);background:rgba(26,18,4,.92);color:#ffe6b8;font-size:14px;font-weight:700;border-radius:8px}
@@ -322,6 +324,8 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
     if(m.type==='fieldInfo'&&net){net.selfInfo=m.info;applySelfInfo(m.info);return;}
     if(m.type==='field'){ onField(m); if(m.bosses||m.loot||m.self||m.hurt) toBoss(m); return; }
     if(m.type==='announce'||m.type==='bossHit'||m.type==='fieldLooted'){ toBoss(m); return; }
+    if(m.type==='hubState'){ hubSet(m); return; }   /* 거점 점령 (문서 192 §8) — 서버는 GPT 몫 */
+    if(m.type==='hubStates'&&Array.isArray(m.list)){ m.list.forEach(hubSet); return; }
     if(m.type==='error'){ console.warn('[field]', m.message); if(net&&/주울|줍|가진 장비|1위가 먼저|가까이/.test(m.message)) toBoss({type:'lootError',message:m.message}); } };
   ws.onclose=()=>{ clearTimeout(timer); if(net){ net=null; remotes.forEach(removeHero); remotes.clear(); netEl.textContent='연결 끊김 — 혼자'; } else reject(Error('접속 실패')); }; }); }
 const infos={};
@@ -398,17 +402,44 @@ async function openWorld(){ if(!WM){ WM=await (await fetch('maps/world/korea.jso
     const label=(html,x,y,cls,pri)=>{ const n=document.createElement('div'); n.className='rn'+cls; n.style.left=x+'%'; n.style.top=y+'%'; n.dataset.pri=pri; n.innerHTML=html; wmap.appendChild(n); };
     for(const r of REGIONS){ if(SEOUL.includes(r)) continue; const built=!!(r.zone&&ZONES[r.zone]), [x,y]=P(r.lat,r.lon), lv=levelOf(r);
       const d=dot((built?' built':'')+(r.kind==='hub'?' hub':'')+(r===here?' here':''),x,y);
-      label(built?wName(r,lv):r.name,x,y,built?' built':'',built?3:r.kind==='hub'?2:1);
+      label((built?wName(r,lv):r.name)+(r.kind==='hub'&&r.id!=='gangnam'?'<em class="own" data-hub="'+r.zone+'"></em>':''),x,y,built?' built':'',built?3:r.kind==='hub'?2:1);
       d.addEventListener('pointerdown',e=>{ e.stopPropagation(); wPickShow([r]); }); }
     const cx=SEOUL.reduce((a,r)=>a+r.lat,0)/SEOUL.length, cy=SEOUL.reduce((a,r)=>a+r.lon,0)/SEOUL.length, [x,y]=P(cx,cy);
     const c=dot(' clu'+(SEOUL.includes(here)?' here':''),x,y,String(SEOUL.length)); label('서울<small>Lv 1~40 · 원작</small>',x,y,' built',4);
     c.addEventListener('pointerdown',e=>{ e.stopPropagation(); wPickShow(SEOUL); }); }
+  for(const e of wmap.querySelectorAll('em.own')){ const o=HUB_STATES[e.dataset.hub]; e.className='own'+(o?' '+o.kind:''); e.textContent=o?(o.kind==='boss'?'보스 점령':'['+o.name+']'):''; }
   worldEl.hidden=false; requestAnimationFrame(wLayout); }
 document.getElementById('worldBtn').addEventListener('pointerdown',openWorld);
 document.getElementById('wclose').addEventListener('pointerdown',()=>{ worldEl.hidden=true; wgo.hidden=true; });
 worldEl.addEventListener('pointerdown',e=>{ if(e.target===worldEl||e.target===wmap) wgo.hidden=true; });
 wgo.addEventListener('pointerdown',()=>{ if(wgo.dataset.go) travel(wgo.dataset.go); });
 window.__WORLD={ open:openWorld, travel, pick:n=>wPickShow(n==='서울'?REGIONS.filter(r=>r.story&&r.lat>37.3):REGIONS.filter(r=>r.name.startsWith(n))) };
+/* ---------- 거점 점령 (docs/design/192 §8) — 리니지의 성 대신 거점: 보스가 차지한 거점을 길드가 빼앗는다 ----------
+   서버(GPT 몫)가 {type:'hubState', zone, owner:{kind:'boss'|'guild', name}} 를 보내면 그대로 보이고, 안 보내면 지금처럼(마을 = 쉼터).
+   점령 지점은 map.json areas 의 kind 'siege' (마을 한가운데 맨땅 — tools/2d/new-zone.mjs). 미리보기: ?hub=boss · ?hub=guild:이름 */
+const HUB_STATES={}, HUB=here&&here.kind==='hub'&&here.zone===ZONE&&here.id!=='gangnam'?here:null, SIEGE=(meta.areas||[]).find(a=>a.kind==='siege')||null;
+let hubOwner=null, siegeFx=null;
+function flagTex(o){ const c=document.createElement('canvas'); c.width=256; c.height=150; const g=c.getContext('2d'), boss=o.kind==='boss';
+  g.fillStyle=boss?'#3a0c0c':'#0f2e2a'; g.fillRect(0,0,256,150); g.strokeStyle=boss?'#d8402a':'#e8b850'; g.lineWidth=8; g.strokeRect(4,4,248,142);
+  g.fillStyle=boss?'#ff8a70':'#ffe0a0'; g.textAlign='center'; g.textBaseline='middle'; g.font='900 40px "Noto Sans KR",sans-serif';
+  g.fillText(boss?'보스 점령':String(o.name).slice(0,6),128,boss?62:66); g.font='600 22px "Noto Sans KR",sans-serif'; g.fillStyle=boss?'#e0a090':'#c8e8d8'; g.fillText(boss?'되찾을 거점':'의 거점',128,boss?108:110);
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
+function hubApply(){ if(!HUB||!SIEGE) return; const [x,z,r]=SIEGE.circle;
+  if(!siegeFx){ const grp=new THREE.Group(); grp.position.set(x,FLOOR,z);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.08,2.8,8),new THREE.MeshStandardMaterial({color:0x2a2420,roughness:0.6,metalness:0.5})); pole.position.y=1.4; grp.add(pole);   /* 가로 화면은 땅 5.6 m 만 보인다 — 4.4 m 깃대는 곁에 서면 화면 위로 잘렸다 */
+    const flag=new THREE.Sprite(new THREE.SpriteMaterial({ transparent:true, toneMapped:false })); flag.center.set(0,0.5); flag.scale.set(1.6,0.94,1); flag.position.y=2.35; grp.add(flag);
+    const ringM=new THREE.MeshBasicMaterial({ transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide, toneMapped:false });
+    const ring=new THREE.Mesh(new THREE.RingGeometry(r-0.18,r,96),ringM); ring.rotation.x=-Math.PI/2; ring.position.y=0.05; grp.add(ring);
+    scene.add(grp); const tag=document.createElement('div'); tag.className='tag gt siege'; document.getElementById('hud').appendChild(tag); siegeFx={ grp, flag, ring, tag }; }
+  siegeFx.grp.visible=!!hubOwner; siegeFx.tag.style.display=hubOwner?'':'none'; if(!hubOwner) return;
+  if(siegeFx.flag.material.map) siegeFx.flag.material.map.dispose(); siegeFx.flag.material.map=flagTex(hubOwner); siegeFx.flag.material.needsUpdate=true;
+  siegeFx.ring.material.color.set(hubOwner.kind==='boss'?0xd8402a:0x3ac8a0); siegeFx.tag.classList.toggle('boss',hubOwner.kind==='boss');
+  siegeFx.tag.textContent=hubOwner.kind==='boss'?'⚑ 점령 지점 · 보스가 차지함':'⚑ 점령 지점 · ['+hubOwner.name+']';
+  try{ curArea=undefined; }catch{} }   /* 마을 이름표를 새 주인으로 다시 (처음 불릴 때는 아직 선언 전 — areaCheck 가 어차피 처음부터 그린다) */
+function hubSet(st){ if(!st||typeof st.zone!=='string') return; const o=st.owner&&(st.owner.kind==='boss'||st.owner.kind==='guild')?{ kind:st.owner.kind, name:String(st.owner.name||'').replace(/[<>&]/g,'').slice(0,16) }:null;
+  HUB_STATES[st.zone]=o; if(st.zone===ZONE){ hubOwner=o; hubApply(); } }
+{ const hq=q.get('hub'); if(HUB&&hq) hubSet({ zone:ZONE, owner:hq==='boss'?{kind:'boss',name:'거점의 주인'}:/^guild:/.test(hq)?{kind:'guild',name:decodeURIComponent(hq.slice(6))||'황혼'}:null }); }
+window.__HUB={ set:hubSet, get owner(){ return hubOwner; }, siege:SIEGE };
 addEventListener('keydown',e=>{ if((e.code==='KeyE'||e.code==='Enter')&&gateNear) goGate(gateNear); });
 /* ---------- 보스 구역: 들어서면 이름표·경고 테두리 (전투는 다음 단계 — 지금은 자리와 위협만) ---------- */
 const bossEl=document.getElementById('boss'), vig=document.getElementById('vig');
@@ -530,8 +561,10 @@ const areaEl=document.getElementById('areaName'); let curArea=undefined, areaT=0
 const RISK=['위험 B','위험 B','위험 A','위험 S'];
 function areaCheck(){ const a=areaAt(me.root.position); if(a===curArea) return; const first=curArea===undefined; curArea=a;
   if(!a){ document.getElementById('risk').textContent=meta.rules&&meta.rules.safe?'안전 지대':DUNGEON?'위험 A · 던전':'위험 B'; return; }
-  document.getElementById('risk').textContent=a.kind==='rest'?'안전 지대':RISK[a.danger||1];
-  areaEl.className=a.kind==='rest'?'rest':'d'+(a.danger||1);
+  const occ=a.id==='town'&&hubOwner&&hubOwner.kind==='boss', own=a.id==='town'&&hubOwner&&hubOwner.kind==='guild';   /* 거점: 보스가 차지하면 마을도 위험 */
+  document.getElementById('risk').textContent=occ?'위험 S · 보스 점령지':a.kind==='rest'?'안전 지대':RISK[a.danger||1];
+  areaEl.className=occ?'d3':a.kind==='rest'?'rest':'d'+(a.danger||1);
+  if(occ||own){ areaEl.innerHTML='<b>'+String(a.name).replace(/[<>&]/g,'')+'</b><small>'+(occ?'보스가 차지한 거점 — 되찾으면 길드의 안전 지대':'['+hubOwner.name+'] 의 거점 · 쉬어 가는 곳')+'</small>'; areaT=first?3.5:3; return; }
   areaEl.innerHTML='<b>'+String(a.name).replace(/[<>&]/g,'')+'</b><small>'+(a.kind==='rest'?'쉬어 가는 곳':(a.lv?'Lv '+a.lv[0]+'~'+a.lv[1]:'')+(a.mobs&&a.mobs!=='(가안)'?' · '+String(a.mobs).replace(/[<>&]/g,''):''))+'</small>';
   areaT=first?3.5:3; }
 /* 미니맵: 그림 좌표 u = x, v = −z·sin(내려다보는 각) (땅 위) — 맵 타일과 같은 틀 */
@@ -587,7 +620,7 @@ function tick(){ const dt=Math.min(clock.getDelta(),0.05); frames++;
   if(REDUCED) shakeT=0;
   else if(shakeT>0){ shakeT=Math.max(0,shakeT-dt); const a=shakeT*0.35; cam.position.x+=(Math.random()-.5)*a; cam.position.z+=(Math.random()-.5)*a; }
   if(net){ sendT+=dt; if(sendT>=0.1){ sendT=0; const p=me.root.position; net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:me.cur}); } }
-  heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); bosses.forEach(o=>{ if(o.tag){ if(o===inBoss||!o.alive)o.tag.style.display='none';else tagAt(o.tag,o.root?.position.x??o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.root?.position.z??o.b.z); } });
+  heroes.forEach(tagPos); gateFx.forEach(f=>tagAt(f.tag,f.g.x,FLOOR+3.2,f.g.z)); if(siegeFx&&hubOwner) tagAt(siegeFx.tag,SIEGE.circle[0],FLOOR+3.3,SIEGE.circle[1]); bosses.forEach(o=>{ if(o.tag){ if(o===inBoss||!o.alive)o.tag.style.display='none';else tagAt(o.tag,o.root?.position.x??o.b.x,(o.b.fly||0)+(o.h||3)+0.4,o.root?.position.z??o.b.z); } });
   if(bloom) bloom.render(scene,cam); else renderer.render(scene,cam);
   fpsT+=dt; fpsN++; if(fpsT>=1){ fps=fpsN/fpsT; fpsT=0; fpsN=0; if(dbgOn){ const i=renderer.info.render; dbg.textContent='fps '+fps.toFixed(0)+(LOD?' · LOD':'')+' · 콜 '+i.calls+' · 삼각형 '+(i.triangles/1000).toFixed(0)+'k · 픽셀비 '+renderer.getPixelRatio(); } }
   requestAnimationFrame(tick); }

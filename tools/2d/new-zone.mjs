@@ -132,6 +132,11 @@ function plan(region) {
     const k2 = dom === 'open' && lookOf(region).dress.urban ? 'street' : dom;   /* 도시의 «빈 땅» 은 길이다 */
     hunts.push({ id: ['mid', 'left', 'right'][rank], name: nameOf(s0, s1, walk.t0, walk.t1, k2, used), s: [s0, s1], t: [walk.t0, walk.t1], lv: [a, b], mobs: MOBS[k2], danger: rank + 1 }); });
   if (!hub) hunts.push({ id: 'rest', name: '길잡이 쉼터', kind: 'rest', st: spawn, r: 12 });
+  /* 거점 점령 지점 (문서 192 §8): 마을 한가운데 맨땅 — 차도 밖, 출발점에서 10 m 넘게(깃발과 겹치지 않게). 서버가 map.json 에서 읽어 거점 보스를 여기 세운다 */
+  if (hub) { const [m0, m1] = thirds[1], want2 = [(m0 + m1) / 2, (walk.t0 + walk.t1) / 2]; let siege = null;
+    for (let r = 0; r < 100 && !siege; r += G) for (let a = 0; a < 24 && !siege; a++) { const s = want2[0] + Math.cos(a / 24 * Math.PI * 2) * r, t = want2[1] + Math.sin(a / 24 * Math.PI * 2) * r;
+      if (s > m0 + 8 && s < m1 - 8 && okAt(s, t) && Math.hypot(s - spawn[0], t - spawn[1]) > 10 && [[6, 0], [-6, 0], [0, 6], [0, -6]].every(([ds, dt]) => /open|park|beach/.test(cls(s + ds, t + dt)))) siege = [Math.round(s), Math.round(t)]; }
+    if (siege) hunts.push({ id: 'siege', name: '점령 지점', kind: 'siege', st: siege, r: 10 }); else console.warn('  ! 점령 지점 자리를 못 찾았다'); }
 
   const L = lookOf(region), tall = osm.buildings.some(b => (b.height || (b.levels || 0) * 3.6) > 45), lampsOn = walk.t0 < 0 && walk.t1 > 0;
   const ground = L.ground === 'paver' && c.city < 0.08 ? (c.beach > 0.1 ? 'sand' : 'grass') : L.ground;
@@ -140,7 +145,7 @@ function plan(region) {
       dress: L.dress, sky: { hemiI: 3.0 }, trees: L.trees, cars: { gap: 0.6, trucks: 0.08 }, crystals: 16, lampStep: 30, ...(lampsOn ? { lampT: 3 } : { lamps: false }),
       boundary: { style: L.boundary, closed: { s0: '통제구역 — 안개', s1: '통제구역 — 안개' } } } };
   console.log(`${id}: 띠 s ${walk.s0}~${walk.s1} · t ${walk.t0}~${walk.t1} · 물 ${(c.water * 100).toFixed(1)}% 건물 ${(c.city * 100).toFixed(0)}% (큰 건물 ${(c.big * 100).toFixed(0)}%) 숲 ${(c.forest * 100).toFixed(0)}% 모래 ${(c.beach * 100).toFixed(0)}% 풀 ${(c.park * 100).toFixed(0)}% · 먼 쪽 ${far.map(v => v.toFixed(0))} · 출발 ${spawn}`);
-  for (const h of hunts) console.log('   ', h.kind === 'rest' ? '쉼' : '사냥', h.name, h.lv ? 'Lv ' + h.lv.join('~') : '', h.mobs || '');
+  for (const h of hunts) console.log('   ', h.kind === 'rest' ? '쉼' : h.kind === 'siege' ? '점령' : '사냥', h.name, h.lv ? 'Lv ' + h.lv.join('~') : '', h.mobs || '');
   return zone;
 }
 
