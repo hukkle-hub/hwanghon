@@ -256,6 +256,7 @@ UHWNodeConfig* UHWNodeConfig::LoadFromJson(FName Id, UObject* Outer)
 
     ReadVector(Root->TryGetField(TEXT("holding_spot")), C->HoldingSpot);
     ReadVector(Root->TryGetField(TEXT("medical_bay")), C->MedicalBay);
+    ReadVector(Root->TryGetField(TEXT("shelter_point")), C->ShelterPoint);
     ReadVector(Root->TryGetField(TEXT("player_start")), C->PlayerStart);
     ReadVector(Root->TryGetField(TEXT("boss_start")), C->BossStart);
     ReadPoints(Root, TEXT("spawns"), C->SpawnPoints);
@@ -428,5 +429,7 @@ TArray<FVector> UHWNodeConfig::PathBetween(const FVector& From, const FVector& T
     }
     if (Dist[Goal] >= Unreached) return Result;
     for (int32 V = Goal; V != INDEX_NONE; V = Prev[V]) Result.Insert(GraphNodes[V], 0);
+    // already between the first and the second node: skip the first (behind) - a re-path would walk back and forth
+    if (Result.Num() >= 2 && FVector::Dist2D(From, Result[1]) < FVector::Dist2D(Result[0], Result[1])) Result.RemoveAt(0);
     return Result;
 }

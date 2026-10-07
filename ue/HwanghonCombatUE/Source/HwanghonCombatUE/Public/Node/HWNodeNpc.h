@@ -37,6 +37,11 @@ public:
     void OrderTo(const TArray<FVector>& Path, EHWNodeFacilityKind Facility);
     void ClearOrder();
 
+    // Evacuation: walk this path to the shelter and stay there (off post: no function). ReturnHome undoes it.
+    void EvacuateTo(const TArray<FVector>& Path);
+    void ReturnHome();
+    bool IsEvacuated() const { return bEvacuated; }
+
     EHWNodeNpcRole GetRole() const { return Role; }
     FName GetNpcId() const { return NpcId; }
     FName GetRoute() const { return RouteName; }
@@ -65,4 +70,5 @@ private:
     int32 OrderIndex = 0;
     EHWNodeFacilityKind OrderFacility = EHWNodeFacilityKind::Gate;
     bool bOrdered = false;
+    bool bEvacuated = false;
 };

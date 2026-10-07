@@ -77,6 +77,8 @@ function simulate(N, o = {}) {
     if (opt.tech === 'generator') path.push(...N.routes.generator.map(P)); else if (opt.tech === 'comms') path.push(...N.routes.comms.map(P));
     else for (let i = main.length - 1; i >= 1; i--) path.push(main[i]);
     tech.order = { kind: opt.tech, path, i: 0 }; }
+  /* 대피 명령: 경비만 빼고 대피 자리로 (자리마다 조금씩 비켜 선다). 대가 — 의무실·정찰탑·통신센터의 기능 (시뮬엔 플레이어 회복·예보가 없어 «안전» 쪽만 잰다) */
+  if (opt.evacuate && N.shelter_point) npcs.filter(n => n.role !== 'guard').forEach((n, i) => { const c = P(N.shelter_point); n.evac = [c[0] + (i - 1.5) * 220, c[1] + 150, c[2]]; });
 
   /* ── 플레이어 ── */
   const pl = opt.player ? { ...place(P(N.player_start)), hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: 0, kills: 0, rescues: 0, counters: 0, hitsTaken: 0 } : null;
@@ -186,7 +188,9 @@ function simulate(N, o = {}) {
       if (fz == null || fz - foot > 45 || inSolid(x, y, fz)) return false; foot = fz; } return true; }
   function walkTo(body, to, dist) {
     body.repath = (body.repath || 0) - opt.dt;
-    if (body.repath <= 0 || !body.way) { body.repath = 1; body.way = clearLine(body.p, to) ? [] : GR.path(graph, body.p, to); body.wi = 0; }
+    if (body.repath <= 0 || !body.way) { body.repath = 1; body.way = clearLine(body.p, to) ? [] : GR.path(graph, body.p, to); body.wi = 0;
+      /* 벽에 미끄러져 첫 마디가 벽 너머면, 보이는 다음 마디부터 */
+      while (body.way.length >= 2 && !clearLine(body.p, body.way[0]) && clearLine(body.p, body.way[1])) body.way.shift(); }
     while (body.wi < body.way.length && d2(body.p, body.way[body.wi]) < 150) body.wi++;
     const g = body.wi < body.way.length ? body.way[body.wi] : to; step(body, dirTo(body.p, g), dist);
   }
@@ -211,7 +215,8 @@ function simulate(N, o = {}) {
 
   /* ── NPC: 회복·기술자 ── */
   function tickNpcs(dt, t) {
-    for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복'); }
+    for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복');
+      if (n.evac && n.life.state !== 'missing' && !(n.role === 'technician' && n.order) && d2(n.p, n.evac) > 150) walkTo(n, n.evac, 420 * dt); }
     const tech = npcs.find(n => n.role === 'technician'); if (!tech || !tech.order || tech.life.state === 'missing') return;
     const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp < f.max) { const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; } return; }
     const o = tech.order; if (o.i >= o.path.length) return; const g = o.path[o.i];
@@ -240,7 +245,7 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, player: opt.player },
+  return { evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, player: opt.player },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
@@ -269,4 +274,6 @@ if (require.main === module) {
   row('바리케이드 2 · DPS 1000', { barricades: ['barricade_west', 'barricade_east'], player: { dps: 1000, counter: 0.35 } });
   row('NPC무장+정찰 · DPS 1000', { policies: ['arm_npcs', 'scouting'], player: { dps: 1000, counter: 0.35 } });
   row('기술자→정문 · DPS 1000', { tech: 'gate', player: { dps: 1000, counter: 0.35 } });
+  row('NPC 대피 · DPS 1000', { evacuate: true, player: { dps: 1000, counter: 0.35 } });
+  row('NPC 대피+바리케이드 · DPS 1000', { evacuate: true, barricades: ['barricade_west', 'barricade_east'], player: { dps: 1000, counter: 0.35 } });
 }

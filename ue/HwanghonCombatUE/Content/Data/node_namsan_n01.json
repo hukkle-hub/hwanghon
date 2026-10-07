@@ -108,6 +108,8 @@
   ],
   "supply_default": 6,
   "holding_spot": [-5600, -900, -250],
+  "shelter_point_doc": "대피 명령(준비 단계)을 받은 NPC 가 모이는 곳 — 중앙 포탑 둘의 사거리 안. 대신 의무실·정찰탑·통신센터를 떠나 그 기능을 잃는다 (docs/design/201 §3)",
+  "shelter_point": [0, -5500, -650],
   "medical_bay": [-4800, 3400, 220],
   "player_start": [0, -9300, -1250],
   "technician_start": [4600, 1700, 150],

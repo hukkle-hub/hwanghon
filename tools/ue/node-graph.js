@@ -26,7 +26,11 @@
       if (u < 0 || u === t) break; done[u] = true;
       for (const v of g.adj[u]) { const d = dist[u] + cost(g, u, v); if (d < dist[v]) { dist[v] = d; prev[v] = u; } } }
     if (dist[t] === Infinity) return [];
-    const out = []; for (let v = t; v >= 0; v = prev[v]) out.unshift(g.nodes[v]); return out;
+    const out = []; for (let v = t; v >= 0; v = prev[v]) out.unshift(g.nodes[v]);
+    /* 이미 첫 마디와 둘째 마디 사이에 있으면 첫 마디(뒤쪽)는 건너뛴다 — 안 그러면 다시 짤 때마다 뒤로 갔다 앞으로 갔다 한다 */
+    const h2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    if (out.length >= 2 && h2(from, out[1]) < h2(out[0], out[1])) out.shift();
+    return out;
   }
   return { build, nearest, path };
 });

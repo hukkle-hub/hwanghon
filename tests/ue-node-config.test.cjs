@@ -25,7 +25,7 @@ function legsOf(name){ const r=N.routes[name], legs=r.slice(1).map((p,i)=>[r[i],
  return legs; }
 
 test('남산 N-01: 시작점·NPC 자리·포로 자리·의무실이 바닥 위',()=>{
- const spots=[['플레이어',N.player_start],['기술자 시작',N.technician_start],['보스',N.boss_start],['포로 자리',N.holding_spot],['의무실',N.medical_bay],
+ const spots=[['플레이어',N.player_start],['기술자 시작',N.technician_start],['보스',N.boss_start],['포로 자리',N.holding_spot],['의무실',N.medical_bay],['대피 자리',N.shelter_point],
   ...N.spawns.map((s,i)=>['남쪽 적 시작 '+i,s]),...N.north_spawns.map((s,i)=>['북쪽 적 시작 '+i,s]),...N.npcs.map(n=>['NPC '+n.id,n.at])];
  for(const [name,p] of spots) assert.ok(onFloor(p),name+' '+p+' 가 바닥 위가 아니다');
  for(const [name,p] of spots) for(const s of solids) assert.ok(!(Math.abs(p[0]-s.center[0])<s.half[0]&&Math.abs(p[1]-s.center[1])<s.half[1]),name+' 이 '+(s.id||s.wkind)+' 안에 있다');
@@ -65,6 +65,8 @@ test('남산 N-01: 시설·NPC 길 끝이 목표에 닿고, 역할별 길·NPC �
  for(const n of N.npcs){ const r=N.routes[n.route]; assert.ok(r,n.id+' 의 길 '+n.route+' 이 없다'); const e=r.at(-1); assert.ok(Math.hypot(e[0]-n.at[0],e[1]-n.at[1])<=450,n.id+' 길 끝이 '+Math.hypot(e[0]-n.at[0],e[1]-n.at[1]).toFixed(0)+' cm 떨어졌다'); }
  for(const [role,r] of Object.entries(N.role_routes)) for(const k of [].concat(r)) assert.ok(N.routes[k],role+' 의 길 '+k+' 이 없다');
  assert.equal(N.facilities.filter(f=>f.kind==='turret').length,4,'포탑 넷');
+ /* 대피 자리는 포탑 둘 이상의 사거리(15 m) 안 — 그래야 «기능을 버리고 안전» 이 말이 된다 */
+ const sp=N.shelter_point; assert.ok(N.facilities.filter(f=>f.kind==='turret'&&Math.hypot(G.pt(N,f.at)[0]-sp[0],G.pt(N,f.at)[1]-sp[1])<=1450).length>=2,'대피 자리가 포탑 둘의 사거리 밖');
 });
 test('남산 N-01: 길 그래프 — 잇는 구간(links)이 걸을 수 있고, 모든 적 시작점에서 모든 목표(발전기·통신·NPC)로 길이 있다',()=>{
  const GR=require('../tools/ue/node-graph.js'), g=GR.build(N);

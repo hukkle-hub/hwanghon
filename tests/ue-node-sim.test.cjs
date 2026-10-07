@@ -28,3 +28,8 @@ test('시뮬: 전략이 숫자를 바꾼다 — 정문 강화는 정문을, 바�
   assert.ok(at(bar, /→ missing/) - at(base, /→ missing/) >= 30, '바리케이드가 첫 NPC 포로를 30초도 못 늦춘다');
   const armed = run({ policies: ['arm_npcs'] }); assert.ok(armed.dealt.guard > 0, 'NPC 무장인데 경비가 안 쏜다');
 });
+test('시뮬: NPC 대피 명령은 포로를 줄인다 (기능을 버리고 안전 — 문서 201 §3)', () => {
+  const cnt = r => Object.values(r.npcs).filter(s => s === 'missing').length;
+  const base = cnt(run({})), evac = cnt(run({ evacuate: true }));
+  assert.ok(evac <= base - 2, '대피해도 포로가 ' + base + ' → ' + evac);
+});

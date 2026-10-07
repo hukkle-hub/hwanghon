@@ -84,6 +84,7 @@ bool AHWNodeNpc::ApplyEnemyDamage(float Amount)
     {
         // taken: held at the holding spot until a player comes for them
         ClearOrder();
+        bEvacuated = false;
         GetCharacterMovement()->StopMovementImmediately();
         if (Director && Director->GetConfig()) SetActorLocation(Director->GetConfig()->HoldingSpot + FVector(0.f, 0.f, 100.f), false, nullptr, ETeleportType::TeleportPhysics);
     }
@@ -94,6 +95,7 @@ bool AHWNodeNpc::ApplyEnemyDamage(float Amount)
 bool AHWNodeNpc::Rescue()
 {
     if (!Life.Rescue()) return false;
+    bEvacuated = false;
     SetActorLocation(Home + FVector(0.f, 0.f, 100.f), false, nullptr, ETeleportType::TeleportPhysics);
     Refresh();
     return true;
@@ -109,6 +111,26 @@ void AHWNodeNpc::OrderTo(const TArray<FVector>& Path, EHWNodeFacilityKind Facili
     Refresh();
 }
 
+void AHWNodeNpc::EvacuateTo(const TArray<FVector>& Path)
+{
+    if (!IsTargetable() || Path.Num() == 0) return;
+    bOrdered = false;
+    OrderPath = Path;
+    OrderIndex = 0;
+    bEvacuated = true;
+    Refresh();
+}
+
+void AHWNodeNpc::ReturnHome()
+{
+    if (!bEvacuated) return;
+    bEvacuated = false;
+    OrderPath.Reset();
+    OrderIndex = 0;
+    SetActorLocation(Home + FVector(0.f, 0.f, 100.f), false, nullptr, ETeleportType::TeleportPhysics);
+    Refresh();
+}
+
 void AHWNodeNpc::ClearOrder()
 {
     bOrdered = false;
@@ -121,6 +143,15 @@ void AHWNodeNpc::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     if (Life.Tick(DeltaSeconds)) Refresh();
+    if (bEvacuated && !IsCaptive())
+    {
+        // walk the shelter path, then stand
+        if (OrderIndex >= OrderPath.Num()) return;
+        const FVector ToShelter = OrderPath[OrderIndex] - GetActorLocation();
+        if (FVector(ToShelter.X, ToShelter.Y, 0.f).SizeSquared() < FMath::Square(150.f)) { ++OrderIndex; return; }
+        AddMovementInput(ToShelter.GetSafeNormal2D(), 1.f);
+        return;
+    }
     if (!bOrdered || !Director || IsCaptive()) return;
 
     const FVector Here = GetActorLocation();
@@ -149,6 +180,7 @@ void AHWNodeNpc::Tick(float DeltaSeconds)
 void AHWNodeNpc::Refresh()
 {
     FString Text = FString(HWNodeNpcLocal::RoleName(Role)) + HWNodeNpcLocal::StateText(Life.State);
+    if (bEvacuated) Text += TEXT(" (evacuated)");
     if (bOrdered)
     {
         static const TCHAR* OrderTargets[] = { TEXT("gate"), TEXT("generator"), TEXT("comms"), TEXT("turret"), TEXT("barricade") };

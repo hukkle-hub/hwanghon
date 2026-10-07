@@ -153,6 +153,7 @@ bool FHWNodeNamsanConfigTest::RunTest(const FString& Parameters)
     // the route graph (docs/design/201 §8): one piece, and from a south spawn to the generator and the comms centre
     TestTrue(TEXT("route graph built"), C->GraphNodes.Num() >= 40 && C->GraphEdges.Num() == C->GraphNodes.Num());
     TestTrue(TEXT("south spawns"), C->SpawnPoints.Num() > 0);
+    TestFalse(TEXT("shelter point for the evacuation order"), C->ShelterPoint.IsZero());
     for (const TCHAR* Target : { TEXT("generator"), TEXT("comms") })
     {
         if (C->SpawnPoints.Num() == 0 || C->Route(Target).Num() == 0) break;

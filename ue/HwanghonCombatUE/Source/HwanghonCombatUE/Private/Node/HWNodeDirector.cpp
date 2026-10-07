@@ -401,6 +401,9 @@ HWNodeRules::FNpcEffects AHWNodeDirector::CurrentNpcEffects() const
     {
         const AHWNodeNpc* Npc = FindNpc(static_cast<EHWNodeNpcRole>(I));
         States[I] = Npc ? Npc->GetState() : HWNodeRules::ENpcState::Missing;
+        // off post in the shelter: the medic, the scout and the operator lose their function (the technician and the
+        // guard are never evacuated)
+        if (Npc && Npc->IsEvacuated()) States[I] = HWNodeRules::ENpcState::Missing;
     }
     return HWNodeRules::NpcEffects(States, Policy);
 }
@@ -653,7 +656,41 @@ void AHWNodeDirector::HandleInteract()
         }
     }
 
-    // 3) the technician: cycle the repair order (gate -> generator -> comms -> stay home)
+    // 3) preparation, at the shelter point: evacuate the NPCs under turret cover (or send them back to their posts).
+    // Safety against function: the medic, scout and operator off post do nothing (docs/design/201 §3; node-sim.cjs:
+    // captives 4 -> 1). The technician on an order and the guard stay.
+    if (Machine.State == HWNodeRules::ENodeState::Alert && !Config->ShelterPoint.IsZero()
+        && FVector::Dist2D(Here, Config->ShelterPoint) < HWNodeDirectorLocal::InteractReach)
+    {
+        if (!Can(HWNodeRules::EGuildPerm::OrderNpc))
+        {
+            Notice = TEXT("Only a captain or the leaders can order an evacuation");
+        }
+        else
+        {
+            bool bAnyEvacuated = false;
+            for (const AHWNodeNpc* Npc : Npcs) bAnyEvacuated |= Npc && Npc->IsEvacuated();
+            int32 ShelterSlot = 0;
+            for (AHWNodeNpc* Npc : Npcs)
+            {
+                if (!Npc || Npc->GetRole() == EHWNodeNpcRole::Guard || Npc->HasOrder()) continue;
+                if (bAnyEvacuated)
+                {
+                    Npc->ReturnHome();
+                    continue;
+                }
+                const FVector Spot = Config->ShelterPoint + FVector((static_cast<float>(ShelterSlot++) - 1.5f) * 220.f, 150.f, 0.f);
+                TArray<FVector> ShelterPath = Config->PathBetween(Npc->GetActorLocation(), Spot);
+                ShelterPath.Add(Spot);
+                Npc->EvacuateTo(ShelterPath);
+            }
+            Notice = bAnyEvacuated ? TEXT("NPCs back to their posts") : TEXT("Evacuation: NPCs gather under the central turrets (off post - no medic, forecast or rescue signals)");
+        }
+        NoticeFor = 4.f;
+        return;
+    }
+
+    // 4) the technician: cycle the repair order (gate -> generator -> comms -> stay home)
     if (AHWNodeNpc* Tech = FindNpc(EHWNodeNpcRole::Technician))
     {
         if (FVector::Dist2D(Here, Tech->GetActorLocation()) < HWNodeDirectorLocal::InteractReach && Tech->IsTargetable())
@@ -684,7 +721,7 @@ void AHWNodeDirector::HandleInteract()
         }
     }
 
-    // 4) after a run: again
+    // 5) after a run: again
     if (Machine.State == HWNodeRules::ENodeState::Stable || Machine.State == HWNodeRules::ENodeState::Fallen
         || Machine.State == HWNodeRules::ENodeState::Retakeable)
     {

@@ -173,6 +173,11 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|NPC")
     FVector MedicalBay = FVector::ZeroVector;
 
+    // An evacuation order (preparation, G here) gathers the NPCs here under turret cover - and they leave their posts
+    // (medical bay, watchtower, comms) and with them their function (docs/design/201 §3). Zero = no evacuation.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|NPC")
+    FVector ShelterPoint = FVector::ZeroVector;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Node|Play")
     FVector PlayerStart = FVector::ZeroVector;
 
