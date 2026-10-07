@@ -125,6 +125,10 @@ html.mobile .setrow .sel{width:150px}
 /* 쉘터 (shelter.html) — 채팅 로그가 페인 높이를 먹게 한다 */
 html.mobile .sh__r>.panel:first-child{flex:1 1 auto;min-height:260px}
 html.mobile .chat__log{flex:1 1 auto;min-height:180px;overflow-y:auto}
+html.mobile .sh__mid{display:flex;flex-direction:column;gap:10px}   /* 명단 | 거점 → 위아래 */
+html.mobile .sh__mid>.panel>.panel__body{flex:none;max-height:none}
+html.mobile .nd-pol{min-height:44px;font-size:13px}
+html.mobile .nd-role{min-height:40px;font-size:13px}
 html.mobile .chan .tab{padding:10px 12px}
 html.mobile .gcrest{width:52px;height:52px}
 html.mobile .mrow .btn--sm,html.mobile .crow .btn--sm{flex:none}

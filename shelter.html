@@ -18,6 +18,10 @@
 .sh{display:grid;grid-template-columns:352px 1fr 396px;gap:13px;padding:13px 20px;flex:1;min-height:0}
 .sh__l{display:grid;grid-template-rows:auto auto 1fr;gap:12px;min-height:0}
 .sh__c{display:grid;grid-template-rows:auto 1fr auto;gap:12px;min-height:0}
+/* 명단 | 거점 — 명단 줄이 840px 나 비어 있어 거점 카드를 옆에 둔다 (좌측 352px 칸에서는 정책 칸이 스크롤 뒤로 숨었다) */
+.sh__mid{display:grid;grid-template-columns:1fr 372px;gap:12px;min-height:0}
+.sh__mid>.panel{min-height:0;display:flex;flex-direction:column}
+.sh__mid>.panel>.panel__body{flex:1;min-height:0}
 .sh__r{display:grid;grid-template-rows:1fr auto;gap:12px;min-height:0}
 
 /* 동료 · 차단 */
@@ -48,6 +52,20 @@
 .pres__dot{width:7px;height:7px;border-radius:50%;background:#5E6A6A;flex:none}
 .pres__dot.is-up{background:#79C07A;box-shadow:0 0 7px rgba(121,192,122,.7)}
 
+/* 거점 관리 (docs/design/201 §6) — 남산 N-01 상태·관리 길드·정책·보급 */
+.nd-state{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.nd-state b{font-size:15px;letter-spacing:.06em}
+.nd-state b.is-bad{color:#E58A7A}.nd-state b.is-ok{color:#8FD3A8}
+.nd-kv{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12px;margin-top:8px}
+.nd-kv span:nth-child(odd){color:var(--t-faint,#8a8478)}
+.nd-pols{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.nd-pol{display:flex;align-items:center;gap:6px;min-height:38px;padding:4px 8px;border:1px solid rgba(201,164,94,.25);border-radius:6px;font-size:12px;cursor:pointer}
+.nd-pol.is-on{border-color:rgba(201,164,94,.85);background:rgba(201,164,94,.12)}
+.nd-pol input{width:18px;height:18px;margin:0}
+.nd-pol small{margin-left:auto;color:#C9A45E}
+.nd-budget{font-size:12px;margin-top:6px}.nd-budget.is-bad{color:#E58A7A}
+.mrow2__t--c{color:#9FC7E8;border-color:rgba(159,199,232,.45)}
+.nd-role{min-height:32px;font-size:11px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:4px}
 /* 길드 카드 */
 .gcrest{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
 .gcrest__m{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);
@@ -264,13 +282,36 @@
         <img src="art/lobby-city.webp" alt="">
         <div class="shart__q">“돌아올 곳이 있는 자만이 다시 나선다.”</div>
       </div>
-      <section class="panel panel--framed">
-        <div class="panel__head"><span class="panel__title" id="sh-mtitle">길드 명단</span>
-          <span class="panel__meta" id="sh-count">—</span></div>
-        <div class="panel__body scroll" id="sh-members">
-          <div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>
-        </div>
-      </section>
+      <div class="sh__mid">
+        <section class="panel panel--framed">
+          <div class="panel__head"><span class="panel__title" id="sh-mtitle">길드 명단</span>
+            <span class="panel__meta" id="sh-count">—</span></div>
+          <div class="panel__body scroll" id="sh-members">
+            <div class="chat__empty">길드에 가입하면 동료 명단이 여기에 나타납니다.</div>
+          </div>
+        </section>
+
+        <!-- 거점 관리 (docs/design/201 §6): 관리권은 소유권이 아니다 — 누구나 보고, 관리 길드의 직책만 고친다 -->
+        <section class="panel panel--framed" id="nd-panel">
+          <div class="panel__head"><span class="panel__title">거점 · 남산 통신기지 N-01</span>
+            <span class="panel__meta" id="nd-period">—</span></div>
+          <div class="panel__body scroll" id="nd-body">
+            <div class="nd-state"><b id="nd-state">—</b><span class="xs t-faint" id="nd-tier"></span></div>
+            <div class="nd-kv" id="nd-kv"></div>
+            <div id="nd-policy" hidden>
+              <div class="label-ko mt3">방어 정책 — 예산 10 안에서</div>
+              <div class="nd-pols" id="nd-pols"></div>
+              <div class="nd-budget" id="nd-budget"></div>
+              <button type="button" class="btn btn--sm btn--primary mt2" id="nd-psave" style="width:100%">정책 확정</button>
+            </div>
+            <div id="nd-supply" hidden>
+              <div class="flex g2 mt3 ac"><span class="label-ko" style="margin:0;white-space:nowrap">보급 배정</span><span class="xs t-faint fill" id="nd-sup"></span>
+                <button type="button" class="btn btn--sm" id="nd-sgo" style="white-space:nowrap" title="바리케이드 하나 = 보급 3">보급 +3</button></div>
+            </div>
+            <div class="xs t-faint mt3" id="nd-note" style="line-height:1.7"></div>
+          </div>
+        </section>
+      </div>
       <a class="prepbar2" href="party.html">
         <svg class="prepbar2__ico"><use href="#i-sword"/></svg>
         <div class="fill"><div class="prepbar2__k">협동 출격</div>

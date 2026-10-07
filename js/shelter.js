@@ -30,10 +30,56 @@
   var socket,seq=0,connected=false,stopped=false,retry,profile=null,guild=null,room=null;
   var messages=[],channel='world',lastSent=0,capacity=100,contacts=[];
   var board=[],myApp=null;          /* 모집 중인 길드 목록 · 내가 낸 가입 신청 */
+  var node=null, picks=null;         /* 거점 남산 N-01 (server/node-store.cjs nodeView) · 고르는 중인 정책 */
 
   function state(text,bad){ var el=$('sh-state'); el.textContent=text||''; el.classList.toggle('is-bad',!!bad); }
   function send(msg){ if(!connected||!socket||socket.readyState!==1) return false;
     socket.send(JSON.stringify(Object.assign({},msg,{seq:++seq}))); return true; }
+
+
+  /* ── 거점 관리 (docs/design/201 §6) — 보는 건 누구나, 고치는 건 관리 길드의 직책만 (서버가 다시 검사한다) ── */
+  var POL=[['gate_reinforce','정문 강화',4],['generator_reinforce','발전기 강화',4],['arm_npcs','NPC 무장',3],
+           ['scouting','정찰 강화',3],['medical_stock','의료 비축',3],['reserve_power','예비 전력',4]];
+  var ND_STATE={stable:['안정','is-ok'],uneasy:['불안',''],alert:['경계',''],invasion:['침공','is-bad'],recovering:['복구',''],
+                fallen:['함락','is-bad'],retakeable:['탈환 가능','is-bad'],retaking:['탈환전','is-bad']};
+  var ND_TIER={initial:'점령 초기 · 탈환 불가',basic:'기본 탈환',elite_up:'엘리트 증가',fortress:'요새화',infection_core:'감염 핵심지'};
+  var ND_ROLE={leader:'길드장',vice:'부길드장',combat:'전투대장',supply:'보급대장',craft:'제작대장',member:'길드원'};
+  function renderNode(){
+    var n=node, st=n?ND_STATE[n.state]||[n.state,'']:['—',''];
+    $('nd-state').textContent=st[0]; $('nd-state').className=st[1];
+    $('nd-tier').textContent=n&&(n.state==='fallen'||n.state==='retakeable')?ND_TIER[n.tier]+' · 점령 '+n.occupiedHours.toFixed(1)+'시간'+(n.retakeIn>0?' · '+n.retakeIn.toFixed(1)+'시간 뒤 탈환 가능':''):'';
+    $('nd-period').textContent=n?'관리 주기 '+n.period:'—';
+    if(!n){ $('nd-kv').innerHTML=''; $('nd-policy').hidden=$('nd-supply').hidden=true; $('nd-note').textContent=connected?'불러오는 중…':'접속하면 보입니다.'; return; }
+    var me=n.me, can=function(p){ return !!(me&&me.can&&me.can.indexOf(p)>=0); };
+    var pols=(n.policies||[]).map(function(id){ var p=POL.filter(function(x){return x[0]===id;})[0]; return p?p[1]:id; });
+    $('nd-kv').innerHTML=
+      '<span>관리 길드</span><span>'+(n.steward?esc(n.steward.name):'없음 — 지난 주기 공헌이 없었다')+'</span>'+
+      '<span>정책</span><span>'+(pols.length?esc(pols.join(' · ')):'없음')+'</span>'+
+      '<span>보급</span><span>'+n.supply+' / 12</span>'+
+      '<span>정보</span><span>지도 '+Math.round(n.services.mapIntel*100)+'% · 구조신호 '+(n.services.rescueSignals?'켜짐':'꺼짐')+' · 침공 예보 '+(n.services.invasionForecast?'켜짐':'꺼짐')+'</span>'+
+      (n.state==='fallen'||n.state==='retakeable'?'<span>탈환</span><span>난이도 ×'+n.difficulty+' · 보상 ×'+n.reward+(n.extraElites?' · 엘리트 +'+n.extraElites:'')+'</span>':'')+
+      '<span>내 직책</span><span>'+(me?esc(me.name)+' '+ND_ROLE[me.role]+(me.steward?' · 관리 길드':' · 관리 길드 아님 (보기만)'):'길드 없음 (보기만)')+'</span>';
+    $('nd-policy').hidden=!can('select_policy');
+    if(can('select_policy')){
+      if(!picks) picks=(n.policies||[]).slice();
+      var cost=picks.reduce(function(a,id){ var p=POL.filter(function(x){return x[0]===id;})[0]; return a+(p?p[2]:0); },0);
+      $('nd-pols').innerHTML=POL.map(function(p){ var on=picks.indexOf(p[0])>=0;
+        return '<label class="nd-pol'+(on?' is-on':'')+'"><input type="checkbox" data-p="'+p[0]+'"'+(on?' checked':'')+'>'+p[1]+'<small>'+p[2]+'</small></label>'; }).join('');
+      $('nd-budget').textContent='예산 '+cost+' / 10'+(cost>10?' — 넘었습니다':'');
+      $('nd-budget').classList.toggle('is-bad',cost>10);
+      $('nd-psave').disabled=cost>10;
+    }
+    $('nd-supply').hidden=!can('allocate_supply');
+    $('nd-sup').textContent='이번 주기 '+n.supply+' / 12 · 바리케이드 하나 = 3'; $('nd-sgo').disabled=n.supply+3>12;
+    $('nd-note').textContent=me&&me.steward?'관리권은 소유권이 아닙니다 — 정책·보급을 정할 뿐, 누구의 사용도 막지 못합니다.':
+      '관리 길드는 지난 주기의 공헌(처치·방어·수리·구조·보스·보급·지휘)으로 정해집니다. 돈 입찰은 없습니다.';
+  }
+  /* node 명령은 서버가 200ms 간격으로만 받는다 — 접속 직후 «welcome» 과 «guild» 가 거의 같이 와서 조회 두 번이
+     부딪혀 «처리 중입니다» 가 떴다. 조회는 하나로 합치고, 모든 node 명령은 간격을 두고 보낸다. */
+  var ndLast=0, ndInfo=0;
+  function ndSend(msg){ var w=Math.max(0,240-(Date.now()-ndLast)); ndLast=Date.now()+w;
+    setTimeout(function(){ if(!send(msg)) state('접속한 뒤 이용할 수 있습니다.',true); },w); }
+  function refreshNode(){ clearTimeout(ndInfo); ndInfo=setTimeout(function(){ ndSend({type:'node',action:'info',node:'namsan_n01'}); },60); }
 
   /* ── 화면 ── */
   function pane(id){ ['sh-gate','sh-name','sh-nogu','sh-guild'].forEach(function(p){ $(p).hidden=p!==id; }); }
@@ -53,7 +99,8 @@
     var me=guild.members.filter(function(m){return m.id===profile.id;})[0];
     return me?me.role:'none';
   }
-  var ROLE={owner:'길드장',officer:'임원',member:''};
+  var ROLE={owner:'길드장',officer:'임원',member:'',combat:'전투대장',supply:'보급대장',craft:'제작대장'};
+  var CAPTAIN={combat:'전투대장',supply:'보급대장',craft:'제작대장'};
   function renderGuild(){
     renderGate();
     var list=$('sh-members');
@@ -97,7 +144,10 @@
       return '<div class="mrow2'+(m.online?' is-on':'')+'"><span class="mrow2__d"></span>'+
         '<span class="mrow2__n">'+esc(m.name)+'</span>'+
         (m.role==='owner'?'<span class="mrow2__t">길드장</span>':
-         m.role==='officer'?'<span class="mrow2__t mrow2__t--o">임원</span>':'')+
+         m.role==='officer'?'<span class="mrow2__t mrow2__t--o">임원</span>':
+         CAPTAIN[m.role]&&!boss?'<span class="mrow2__t mrow2__t--c">'+CAPTAIN[m.role]+'</span>':'')+   /* 길드장에게는 아래 선택 칸이 곧 표시 */
+        (boss&&!mine&&m.role!=='owner'&&m.role!=='officer'?'<select class="nd-role" data-cap="'+m.id+'" title="대장 임명 (길드장)">'+
+          ['member','combat','supply','craft'].map(function(r){ return '<option value="'+r+'"'+((m.role===r||(!CAPTAIN[m.role]&&r==='member'))?' selected':'')+'>'+(CAPTAIN[r]||'대장 없음')+'</option>'; }).join('')+'</select>':'')+
         (acts?'<span class="mrow2__a">'+acts+'</span>':'')+'</div>';
     }).join('');
   }
@@ -200,9 +250,13 @@
         renderProfile(); renderGuild(); renderChat(); presence(1);
         send({type:'rpg',action:'state'});          /* 동료·차단 목록 */
         setTimeout(refreshBoard,260);               /* 모집 목록 — rpg 명령은 120ms 간격 제한이 있다 */
+        setTimeout(refreshNode,520);                /* 거점 — node 명령은 200ms 간격 */
         return; }
       if(msg.type==='profile'){ profile=msg.profile; renderProfile(); renderGate(); return; }
-      if(msg.type==='guild'){ guild=msg.guild; if(guild) myApp=null; renderGuild(); return; }
+      if(msg.type==='guild'){ guild=msg.guild; if(guild) myApp=null; renderGuild(); setTimeout(refreshNode,320); return; }
+      if(msg.type==='node'){ node=msg.node; picks=null; renderNode(); return; }
+      if(msg.type==='guildRole'){ if(guild) guild.members.forEach(function(m){ if(m.id===msg.target) m.role=msg.role.role==='member'?'member':msg.role.role; });
+        renderGuild(); state('직책을 맡겼습니다.'); setTimeout(refreshNode,260); return; }
       if(msg.type==='guildBoard'){ board=msg.guilds||[]; myApp=msg.mine||null; renderGuild(); return; }
       if(msg.type==='board'){ capacity=msg.capacity||capacity; presence(msg.online||0); return; }
       if(msg.type==='chatHistory'){ messages=msg.messages||[]; renderChat(); return; }
@@ -226,6 +280,15 @@
     socket.addEventListener('error',function(){ if(!connected)
       state('파티 서버에 연결할 수 없습니다. 서버를 실행한 주소로 열거나 ?server=주소 를 붙이세요.',true); });
   }
+
+  /* ── 거점 조작 ── */
+  $('nd-pols').addEventListener('change',function(e){ var id=e.target&&e.target.dataset.p; if(!id||!picks) return;
+    picks=e.target.checked?picks.concat([id]):picks.filter(function(x){return x!==id;}); var keep=picks; renderNode(); picks=keep; });
+  $('nd-psave').onclick=function(){ ndSend({type:'node',action:'policy',node:'namsan_n01',picks:picks||[]}); };
+  $('nd-sgo').onclick=function(){ ndSend({type:'node',action:'supply',node:'namsan_n01',amount:3}); };
+  $('sh-members').addEventListener('change',function(e){ var t=e.target; if(!t||!t.dataset||!t.dataset.cap) return;
+    ndSend({type:'node',action:'role',target:t.dataset.cap,role:t.value}); });
+  window.__ND={ get node(){ return node; }, refresh:refreshNode, render:renderNode };
 
   /* ── 조작 ── */
   function account(mode){
