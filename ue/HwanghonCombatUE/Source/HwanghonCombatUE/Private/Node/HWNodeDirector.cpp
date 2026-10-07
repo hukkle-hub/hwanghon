@@ -99,7 +99,46 @@ namespace HWNodeDirectorLocal
     constexpr float RespawnSeconds = 5.f;
     constexpr float RepairPerSecond = 900.f;    // facility HP per second while recovering, x technician scale
     constexpr float RecoverPerSecond = 0.05f;   // 20 s to Stable with the technician well
-    constexpr float ShotEvery = 0.25f;          // turrets and the guard land their damage in quarter-second blows
+    constexpr float ShotEvery = 0.25f;
+
+    // hwnode-run/1 keys (tools/ue/node-sim.cjs uses the same strings)
+    const TCHAR* NpcStateKey(HWNodeRules::ENpcState S)
+    {
+        switch (S)
+        {
+        case HWNodeRules::ENpcState::Normal: return TEXT("normal");
+        case HWNodeRules::ENpcState::Injured: return TEXT("injured");
+        case HWNodeRules::ENpcState::Missing: return TEXT("missing");
+        case HWNodeRules::ENpcState::Rescued: return TEXT("rescued");
+        }
+        return TEXT("normal");
+    }
+
+    const TCHAR* FacilityKey(EHWNodeFacilityKind K)
+    {
+        switch (K)
+        {
+        case EHWNodeFacilityKind::Gate: return TEXT("gate");
+        case EHWNodeFacilityKind::Generator: return TEXT("generator");
+        case EHWNodeFacilityKind::Comms: return TEXT("comms");
+        case EHWNodeFacilityKind::Turret: return TEXT("turret");
+        case EHWNodeFacilityKind::Barricade: return TEXT("barricade");
+        }
+        return TEXT("gate");
+    }
+
+    // the simulator's e.tk[0]
+    TCHAR TargetKey(HWNodeRules::ETargetKind K)
+    {
+        switch (K)
+        {
+        case HWNodeRules::ETargetKind::Player: return TEXT('p');
+        case HWNodeRules::ETargetKind::Gate: return TEXT('g');
+        case HWNodeRules::ETargetKind::Generator: return TEXT('g');
+        case HWNodeRules::ETargetKind::Comms: return TEXT('c');
+        default: return TEXT('n');
+        }
+    }          // turrets and the guard land their damage in quarter-second blows
     constexpr float InteractReach = 500.f;
     constexpr int32 HudKey = 920000;
 }
@@ -444,6 +483,7 @@ void AHWNodeDirector::StartInvasion()
     if (!Config || !Machine.StartInvasion()) return;
     Waves = HWNodeRules::FWaveRunner();
     PrepLeft = 0.f;
+    BeginRunLog();
     SetState(Machine.State);
 }
 
@@ -490,6 +530,7 @@ void AHWNodeDirector::HandleEnemyDied(AHWNodeEnemy* Enemy)
 void AHWNodeDirector::HandleFacilityDestroyed(AHWNodeFacility* Facility)
 {
     if (!Facility) return;
+    RunEvent(TEXT("facility"), Facility->GetFacilityId().ToString(), TEXT("destroyed"));
     if (Facility->GetKind() == EHWNodeFacilityKind::Gate) Notice = TEXT("The south gate is down - hold the central barrier");
     if (Facility->GetKind() == EHWNodeFacilityKind::Barricade) Notice = TEXT("A barricade on the forest trail broke");
     if (Facility->GetKind() == EHWNodeFacilityKind::Turret) Notice = TEXT("A turret is down");
@@ -545,6 +586,7 @@ void AHWNodeDirector::ReportRepair(float Amount)
 void AHWNodeDirector::ReportNpcHurt(AHWNodeNpc* Npc)
 {
     if (!Npc) return;
+    RunEvent(TEXT("npc"), Npc->GetNpcId().ToString(), HWNodeDirectorLocal::NpcStateKey(Npc->GetState()));
     Notice = Npc->IsCaptive() ? FString::Printf(TEXT("%s was taken to the holding spot - rescue them (G there)"), *Npc->GetNpcId().ToString())
                               : FString::Printf(TEXT("%s is injured"), *Npc->GetNpcId().ToString());
     NoticeFor = 5.f;
@@ -651,7 +693,14 @@ void AHWNodeDirector::HandleInteract()
     if (FVector::Dist2D(Here, Config->HoldingSpot) < HWNodeDirectorLocal::InteractReach)
     {
         int32 Freed = 0;
-        for (AHWNodeNpc* Npc : Npcs) if (Npc && Npc->IsCaptive() && Npc->Rescue()) ++Freed;
+        for (AHWNodeNpc* Npc : Npcs)
+        {
+            if (Npc && Npc->IsCaptive() && Npc->Rescue())
+            {
+                ++Freed;
+                RunEvent(TEXT("npc"), Npc->GetNpcId().ToString(), TEXT("rescued"));
+            }
+        }
         if (Freed > 0)
         {
             Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::NpcRescue)] += static_cast<float>(Freed);
@@ -790,6 +839,7 @@ void AHWNodeDirector::HandlePing()
 void AHWNodeDirector::RestartRun()
 {
     if (!Config) return;
+    InvasionClock = -1.f;   // a new run, a new log
     for (AHWNodeEnemy* E : TArray<TObjectPtr<AHWNodeEnemy>>(Enemies)) if (E) E->Discard();
     Enemies.Reset();
     if (Boss) Boss->Destroy();
@@ -886,6 +936,7 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
         {
             PlayerDeadFor = 0.f;
             ++PlayerDeaths;
+            RunEvent(TEXT("player"), TEXT("player"), TEXT("dead"));
         }
         PlayerDeadFor += DeltaSeconds;
         if (PlayerDeadFor >= HWNodeDirectorLocal::RespawnSeconds && Player->GetCombat()->Revive(1.f))
@@ -982,14 +1033,34 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
         if (!bBossPhase)
         {
             const int32 Wave = Waves.Tick(DeltaSeconds);
-            if (Wave >= 0) SpawnWave(Wave);
-            if (Waves.Done()) SpawnBoss();
+            if (Wave >= 0)
+            {
+                RunEvent(TEXT("wave"), FString::FromInt(Wave + 1), TEXT("spawned"));
+                SpawnWave(Wave);
+            }
+            if (Waves.Done())
+            {
+                RunEvent(TEXT("state"), TEXT("node"), TEXT("held"));   // the simulator stops here: the waves are held
+                WriteRunLog(TEXT("held"));
+                SpawnBoss();
+            }
+        }
+        if (InvasionClock >= 0.f)
+        {
+            InvasionClock += DeltaSeconds;
+            if (InvasionClock >= NextFrameAt)
+            {
+                RecordFrame();
+                NextFrameAt += 1.f;
+            }
         }
         const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
         if (Machine.TickInvasion(DeltaSeconds, Comms && Comms->IsDestroyed(), EnemyOnComms()))
         {
             Outcome = TEXT("Namsan has fallen - the map goes dark (G to try again)");
             SetState(Machine.State);
+            RunEvent(TEXT("state"), TEXT("node"), TEXT("fallen"));
+            WriteRunLog(TEXT("fallen"));
             FinishRun(TEXT("fallen"));
         }
         break;
@@ -1097,4 +1168,113 @@ void AHWNodeDirector::DrawHud() const
     if (!Outcome.IsEmpty()) Show(Outcome, FColor(255, 220, 160));
     // clear the lines this frame did not use
     for (int32 Spare = Line; Spare < 18; ++Spare) GEngine->RemoveOnScreenDebugMessage(HudKey + Spare);
+}
+
+// ---------------------------------------------------------------- run log (hwnode-run/1, docs/design/201 §8)
+
+void AHWNodeDirector::BeginRunLog()
+{
+    RunEvents.Reset();
+    RunFrames.Reset();
+    InvasionClock = 0.f;
+    NextFrameAt = 0.f;
+    DealtByPlayer = DealtByTurret = DealtByGuard = 0.0;
+
+    // the options the simulator needs to play the same run: policies, barricades built, the technician's order, evacuation
+    static const TCHAR* PolicyKeys[] = { TEXT("gate_reinforce"), TEXT("generator_reinforce"), TEXT("arm_npcs"), TEXT("scouting"), TEXT("medical_stock"), TEXT("reserve_power") };
+    TArray<FString> PolicyList;
+    for (const HWNodeRules::EPolicy P : Policies) PolicyList.Add(FString::Printf(TEXT("\"%s\""), PolicyKeys[static_cast<int32>(P)]));
+    TArray<FString> BarricadeList;
+    for (const AHWNodeFacility* F : Facilities)
+    {
+        if (F && F->GetKind() == EHWNodeFacilityKind::Barricade) BarricadeList.Add(FString::Printf(TEXT("\"%s\""), *F->GetFacilityId().ToString()));
+    }
+    FString TechOrder = TEXT("null");
+    bool bAnyEvacuated = false;
+    for (const AHWNodeNpc* Npc : Npcs)
+    {
+        if (!Npc) continue;
+        bAnyEvacuated |= Npc->IsEvacuated();
+        if (Npc->GetRole() == EHWNodeNpcRole::Technician && Npc->HasOrder())
+        {
+            TechOrder = FString::Printf(TEXT("\"%s\""), HWNodeDirectorLocal::FacilityKey(Npc->GetOrderFacility()));
+        }
+    }
+    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d}"),
+        *FString::Join(PolicyList, TEXT(",")), *FString::Join(BarricadeList, TEXT(",")), *TechOrder, bAnyEvacuated ? TEXT("true") : TEXT("false"),
+        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points);
+}
+
+void AHWNodeDirector::RunEvent(const TCHAR* Kind, const FString& Id, const TCHAR* To)
+{
+    if (InvasionClock < 0.f) return;
+    RunEvents.Add(FString::Printf(TEXT("{\"t\":%.1f,\"kind\":\"%s\",\"id\":\"%s\",\"to\":\"%s\",\"text\":\"%s %s %s\"}"),
+        InvasionClock, Kind, *Id, To, Kind, *Id, To));
+}
+
+void AHWNodeDirector::ReportEnemyDamage(float Amount, const AActor* Source)
+{
+    if (InvasionClock < 0.f || Amount <= 0.f || !Source) return;
+    const APawn* Pawn = Cast<APawn>(Source);
+    if (Cast<AHWNodeNpc>(Source)) DealtByGuard += Amount;
+    else if (Cast<AHWNodeFacility>(Source)) DealtByTurret += Amount;
+    else if (Pawn && Pawn->IsPlayerControlled()) DealtByPlayer += Amount;
+}
+
+void AHWNodeDirector::RecordFrame()
+{
+    const AHWNodeFacility* Gen = GetFacility(EHWNodeFacilityKind::Generator);
+    const int32 Power = HWNodeRules::EffectivePower(Gen ? Gen->GetHealthFraction() : 0.f, ReserveLeft);
+    TArray<FString> EnemyList;
+    for (const AHWNodeEnemy* E : Enemies)
+    {
+        if (!E || E->IsDeadEnemy()) continue;
+        const FVector At = E->GetActorLocation();
+        EnemyList.Add(FString::Printf(TEXT("[%d,%d,%d,%.2f,\"%c\",0]"), FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y),
+            static_cast<int32>(E->GetRole()), E->GetHealthFraction(), HWNodeDirectorLocal::TargetKey(E->GetTargetKind())));
+    }
+    TArray<FString> FacilityList;
+    for (const AHWNodeFacility* F : Facilities) FacilityList.Add(FString::Printf(TEXT("%.3f"), F ? F->GetHealthFraction() : 0.f));
+    TArray<FString> NpcList;
+    for (const AHWNodeNpc* Npc : Npcs)
+    {
+        if (!Npc) continue;
+        const FVector At = Npc->GetActorLocation();
+        NpcList.Add(FString::Printf(TEXT("[%d,%d,\"%c\"]"), FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y), HWNodeDirectorLocal::NpcStateKey(Npc->GetState())[0]));
+    }
+    FString PlayerFrame = TEXT("null");
+    if (const AHWAinCharacter* Player = GetPlayer())
+    {
+        const UHWCombatComponent* Combat = Player->GetCombat();
+        const FVector At = Player->GetActorLocation();
+        const float HealthFraction = Combat && Combat->GetMaxHealth() > 0.f ? Combat->GetHealth() / Combat->GetMaxHealth() : 0.f;
+        PlayerFrame = FString::Printf(TEXT("[%d,%d,%.2f,%d]"), FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y), HealthFraction, Combat && Combat->IsDead() ? 1 : 0);
+    }
+    RunFrames.Add(FString::Printf(TEXT("{\"t\":%.1f,\"power\":%d,\"e\":[%s],\"f\":[%s],\"n\":[%s],\"p\":%s}"), InvasionClock, Power,
+        *FString::Join(EnemyList, TEXT(",")), *FString::Join(FacilityList, TEXT(",")), *FString::Join(NpcList, TEXT(",")), *PlayerFrame));
+}
+
+void AHWNodeDirector::WriteRunLog(const TCHAR* RunResult)
+{
+    if (InvasionClock < 0.f || !Config) return;
+    TArray<FString> FacilityList;
+    for (const AHWNodeFacility* F : Facilities)
+    {
+        if (!F) continue;
+        const FVector Center = F->GetActorLocation(), Half = F->GetHalfExtent();
+        FacilityList.Add(FString::Printf(TEXT("{\"id\":\"%s\",\"kind\":\"%s\",\"c\":[%.0f,%.0f,%.0f],\"h\":[%.0f,%.0f,%.0f]}"),
+            *F->GetFacilityId().ToString(), HWNodeDirectorLocal::FacilityKey(F->GetKind()), Center.X, Center.Y, Center.Z, Half.X, Half.Y, Half.Z));
+    }
+    TArray<FString> NpcIds;
+    for (const AHWNodeNpc* Npc : Npcs) if (Npc) NpcIds.Add(FString::Printf(TEXT("\"%s\""), *Npc->GetNpcId().ToString()));
+    const FString Json = FString::Printf(
+        TEXT("{\"format\":\"hwnode-run/1\",\"source\":\"ue\",\"node\":\"%s\",\"result\":\"%s\",\"t\":%.1f,\"opt\":%s,")
+        TEXT("\"dealt\":{\"player\":%.0f,\"turret\":%.0f,\"guard\":%.0f},\"player\":{\"deaths\":%d},")
+        TEXT("\"facilities\":[%s],\"npcIds\":[%s],\"events\":[%s],\"frames\":[%s]}"),
+        *Config->NodeId.ToString(), RunResult, InvasionClock, *RunOptions, DealtByPlayer, DealtByTurret, DealtByGuard, PlayerDeaths,
+        *FString::Join(FacilityList, TEXT(",")), *FString::Join(NpcIds, TEXT(",")), *FString::Join(RunEvents, TEXT(",")), *FString::Join(RunFrames, TEXT(",")));
+    const FString Dir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("HWNode"));
+    FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("last_run.json")));
+    FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("runs"), FString::Printf(TEXT("run_%s.json"), *FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S")))));
+    UE_LOG(LogTemp, Display, TEXT("[HWNode] run log written (%s, %.0f s, %d frames) - compare: node tools/ue/node-compare.mjs <file>"), RunResult, InvasionClock, RunFrames.Num());
 }

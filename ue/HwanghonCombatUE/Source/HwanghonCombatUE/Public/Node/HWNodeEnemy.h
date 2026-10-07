@@ -45,6 +45,7 @@ public:
 
     UFUNCTION(BlueprintPure)
     bool IsDeadEnemy() const { return bDead; }
+    float GetHealthFraction() const { return MaxHealth > 0.f ? Health / MaxHealth : 0.f; }
     HWNodeRules::ETargetKind GetTargetKind() const { return TargetKind; }
 
     // Killed by the player (false = discarded: fell off, or the run was reset).

@@ -28,7 +28,7 @@ function simulate(N, o = {}) {
   const rand = rng(opt.seed), pe = R.policyEffects(opt.policies), bs = H.blocks(N);
   const walls = bs.filter(b => b.kind === 'wall').map(b => ({ c: b.center, h: b.half, wkind: b.wkind }));
   const P = v => H.pt(N, v);
-  const events = [], frames = [], log = (t, kind, text) => events.push({ t: +t.toFixed(1), kind, text });
+  const events = [], frames = [], log = (t, kind, text, id = null, to = null) => events.push({ t: +t.toFixed(1), kind, id, to, text });   /* id·to: UE 기록(hwnode-run/1)과 견주는 구조 필드 */
 
   /* ── 시설 (AHWNodeFacility: 위치 = 바닥 + 반높이) ── */
   const fac = [];
@@ -119,13 +119,13 @@ function simulate(N, o = {}) {
     return e.tk === 'none' ? e.p : targetPoint(e.tk, e.p); }
 
   function damageFacility(f, amount, t) { if (!standing(f)) return; f.hp -= amount;
-    if (f.hp <= 0) { f.hp = 0; log(t, 'facility', f.id + ' 무너짐');
+    if (f.hp <= 0) { f.hp = 0; log(t, 'facility', f.id + ' 무너짐', f.id, 'destroyed');
       if (f.kind === 'generator' && !reserveUsed) { reserveLeft = pe.reservePowerSeconds; reserveUsed = true; } } }
   const dealt = { player: 0, turret: 0, guard: 0 };
   function hurtEnemy(e, amount, byPlayer, t, who = byPlayer ? 'player' : e.killer) { if (e.dead) return; e.byPlayer = byPlayer; const d = Math.min(e.hp, amount * e.armor.damageScale(e.st.armorScale)); dealt[who] = (dealt[who] || 0) + d; e.hp -= d;
     if (e.hp <= 0) { e.dead = true; e.hp = 0; e.diedAt = t; if (byPlayer && pl) pl.kills++; e.killer = byPlayer ? 'player' : e.killer || 'node'; waves.enemyDied(waves.clock); } }
   function npcHurt(n, amount, t) { const before = n.life.state; if (!n.life.applyDamage(amount)) return;
-    log(t, 'npc', n.role + ' ' + before + ' → ' + n.life.state);
+    log(t, 'npc', n.role + ' ' + before + ' → ' + n.life.state, n.role, n.life.state);
     if (n.life.state === 'missing') { n.order = null; Object.assign(n, place(P(N.holding_spot))); } }
 
   function think(e) {
@@ -144,7 +144,7 @@ function simulate(N, o = {}) {
     if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage, t); return; }
     if (e.tk === 'player') { if (!playerAlive() || d2(e.p, pl.p) > reach(e, 'player') + 60) return;
       if (rand() < opt.player.counter) { const perfect = rand() < 0.4; e.armor.onCountered(perfect ? 'perfect' : 'normal'); e.phase = 'stagger'; e.left = e.role === 'armored_elite' ? 1.4 : 1.0; pl.counters++; return; }
-      pl.hp -= e.st.damage; pl.hitsTaken++; if (pl.hp <= 0) { pl.hp = 0; pl.deadFor = 0; pl.deaths++; log(t, 'player', '플레이어 쓰러짐'); } return; }
+      pl.hp -= e.st.damage; pl.hitsTaken++; if (pl.hp <= 0) { pl.hp = 0; pl.deadFor = 0; pl.deaths++; log(t, 'player', '플레이어 쓰러짐', 'player', 'dead'); } return; }
     if (e.tk === 'npc') { const n = nearestNpc(e.p); if (n && d2(e.p, n.p) <= reach(e, 'npc') + 60) npcHurt(n, e.st.damage, t); return; }
     const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage, t);
   }
@@ -206,7 +206,7 @@ function simulate(N, o = {}) {
       pl.target = best; }
     const captive = npcs.find(n => n.life.state === 'missing');
     if (!pl.target && captive) { const hs = P(N.holding_spot);
-      if (d2(pl.p, hs) < 300) { captive.life.rescue(); Object.assign(captive, place(captive.home)); pl.rescues++; log(t, 'npc', captive.role + ' 구조'); }
+      if (d2(pl.p, hs) < 300) { captive.life.rescue(); Object.assign(captive, place(captive.home)); pl.rescues++; log(t, 'npc', captive.role + ' 구조', captive.role, 'rescued'); }
       else walkTo(pl, hs, PLAYER.speed * dt); return; }
     const e = pl.target; if (!e || e.dead) return;
     if (d2(pl.p, e.p) <= PLAYER.reach) { pl.acc += opt.player.dps * dt; if (pl.acc >= opt.player.dps * 0.5) { hurtEnemy(e, pl.acc, true, t); pl.acc = 0; } return; }
@@ -215,7 +215,7 @@ function simulate(N, o = {}) {
 
   /* ── NPC: 회복·기술자 ── */
   function tickNpcs(dt, t) {
-    for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복');
+    for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복', n.role, 'normal');
       if (n.evac && n.life.state !== 'missing' && !(n.role === 'technician' && n.order) && d2(n.p, n.evac) > 150) walkTo(n, n.evac, 420 * dt); }
     const tech = npcs.find(n => n.role === 'technician'); if (!tech || !tech.order || tech.life.state === 'missing') return;
     const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp < f.max) { const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; } return; }
@@ -229,14 +229,14 @@ function simulate(N, o = {}) {
   log(0, 'state', '준비 ' + prep + '초 (판은 침공부터 잰다)');
   while (t < opt.maxTime && !result) {
     const dt = opt.dt; t += dt;
-    const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r); log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')'); }
+    const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r); log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')', String(w + 1), 'spawned'); }
     tickPlayer(dt, t);
     for (const e of enemies) if (!e.dead) { tickEnemy(e, dt, t); if (d2(e.p, e.lastP) > 50) { e.lastP = [...e.p]; e.stuckSince = t; } e.stuck = t - Math.max(e.stuckSince ?? t, e.attackT ?? 0); }
     tickNpcs(dt, t);
     power = defences(dt, t);
     const comms = facility('comms'), onComms = enemies.some(e => !e.dead && e.tk === 'comms' && comms && surf(comms, e.p) <= (N.comms_hold_radius || 900));   // EnemyOnComms: 통신센터를 노리는 적만
-    if (R.tickInvasion(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', '함락 — ' + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거')); }
-    if (!result && waves.done()) { result = 'held'; log(t, 'state', '웨이브 4개 막음 → 보스 단계'); }
+    if (R.tickInvasion(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', '함락 — ' + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거'), 'node', 'fallen'); }
+    if (!result && waves.done()) { result = 'held'; log(t, 'state', '웨이브 4개 막음 → 보스 단계', 'node', 'held'); }
     if (t >= nextFrame) { nextFrame += opt.frameEvery;
       frames.push({ t: +t.toFixed(1), power, e: enemies.filter(e => !e.dead).map(e => [Math.round(e.p[0]), Math.round(e.p[1]), C.ROLES.indexOf(e.role), +(e.hp / e.max).toFixed(2), e.tk[0], e.stuck > 6 ? 1 : 0]),
         f: fac.map(f => +(f.hp / f.max).toFixed(3)), n: npcs.map(n => [Math.round(n.p[0]), Math.round(n.p[1]), n.life.state[0]]),
@@ -245,7 +245,7 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, player: opt.player },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },

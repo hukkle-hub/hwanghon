@@ -7,52 +7,65 @@
 @media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#0d0f12;--tx:#e8e2d4;--dim:#9a9486}}
 html,body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.5 "Noto Sans KR",QA,sans-serif}
 #wrap{display:flex;gap:10px;padding:10px;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:4px}
+.col h2{font-size:14px;margin:0;color:#ffd890}
 canvas{background:#15181d;border:1px solid #2a2e35;max-width:100%}
-#side{width:330px;font-size:12px}
-#side h1{font-size:15px;margin:0 0 6px}
-#ev div{color:var(--dim)} #ev div.now{color:var(--tx)}
+.side{width:330px;font-size:12px}
+.side h1{font-size:15px;margin:0 0 6px}
+.ev div{color:var(--dim)} .ev div.now{color:var(--tx)}
 .k{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 8px;vertical-align:-1px}
 </style></head><body>
-<div id="wrap"><canvas id="cv" width="600" height="980"></canvas><div id="side"><h1 id="ttl">—</h1><div id="sum"></div><div id="lg"></div><hr style="border-color:#2a2e35"><div id="ev"></div></div></div>
+<div id="wrap"></div>
 <script src="node-graybox.js"></script>
 <script>
-/* 거점 시뮬레이터 리플레이 — tools/ue/node-sim.cjs --json 결과를 위에서 그린다. ?data=경로&t=초&node=namsan_n01 */
+/* 거점 판 리플레이 — hwnode-run/1 (tools/ue/node-sim.cjs --json 또는 UE 의 Saved/HWNode/last_run.json) 을 위에서 그린다.
+   ?data=경로&t=초&node=namsan_n01   · ?cmp=경로 를 주면 두 판을 같은 시각에 나란히 (node-compare.mjs --shots) */
 const q=new URLSearchParams(location.search), H=window.HW_NODE;
 const ROLE_COL=['#d8d8d8','#78dcff','#ff9640','#c878ff','#ff4646'], ROLE_KO=['일반','질주','파괴자','추적자','철갑'];
 const FCOL={gate:'#c9a45e',generator:'#ffd84a',comms:'#5aa0ff',turret:'#e060c0',barricade:'#ffa040'};
-(async()=>{
- const N=await (await fetch('../../ue/HwanghonCombatUE/Content/Data/node_'+(q.get('node')||'namsan_n01')+'.json')).json();
- const S=await (await fetch(q.get('data'))).json();
- const T=+(q.get('t')||S.t), fr=S.frames.reduce((a,f)=>f.t<=T+1e-6?f:a,S.frames[0]);
- const cv=document.getElementById('cv'), g=cv.getContext('2d');
- /* 범위: x −7000..7000, y −15000..12500 */
- const X0=-6600,X1=6600,Y0=-15000,Y1=12500, sx=cv.width/(X1-X0), sy=cv.height/(Y1-Y0), s=Math.min(sx,sy);
+const el=(tag,cls,html)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; };
+const label=S=>S.source==='ue'?'UE (PIE)':'시뮬';
+function draw(N,S,T,W){
+ const fr=S.frames.reduce((a,f)=>f.t<=T+1e-6?f:a,S.frames[0]), col=el('div','col'); col.appendChild(el('h2','',label(S)+' · '+T.toFixed(0)+'초'));
+ const cv=el('canvas'); cv.width=W; cv.height=Math.round(W*980/600); col.appendChild(cv); const g=cv.getContext('2d');
+ const X0=-6600,X1=6600,Y0=-15000,Y1=12500, s=Math.min(cv.width/(X1-X0),cv.height/(Y1-Y0));
  const P=(x,y)=>[(x-X0)*s,(Y1-y)*s];
  const box=(c,h,fill,stroke)=>{ const [a,b]=P(c[0]-h[0],c[1]+h[1]); g.fillStyle=fill; g.fillRect(a,b,2*h[0]*s,2*h[1]*s); if(stroke){ g.strokeStyle=stroke; g.strokeRect(a,b,2*h[0]*s,2*h[1]*s);} };
  const bs=H.blocks(N);
- /* 바닥: 높이로 밝기 */
  for(const b of bs.filter(b=>b.kind==='pad'||b.kind==='road'||b.kind==='flank')){ const z=b.center[2], l=Math.round(40+Math.max(0,Math.min(1,(z+2200)/4000))*40);
   g.save(); const [cx,cy]=P(b.center[0],b.center[1]); g.translate(cx,cy); g.rotate(-b.yaw*Math.PI/180);
   g.fillStyle=b.kind==='flank'?`rgb(${l-8},${l+6},${l-10})`:`rgb(${l},${l},${l+4})`; g.fillRect(-b.half[0]*s*Math.cos(b.pitch*Math.PI/180),-b.half[1]*s,2*b.half[0]*s*Math.cos(b.pitch*Math.PI/180),2*b.half[1]*s); g.restore(); }
  for(const b of bs.filter(b=>b.kind==='wall')) box(b.center,b.half,b.wkind==='cover'?'#6a6250':b.wkind==='building'?'#3a3f4a':'#22252b');
- /* 길 */
- const line=(pts,col)=>{ g.strokeStyle=col; g.lineWidth=1; g.setLineDash([4,4]); g.beginPath(); pts.forEach((p,i)=>{ const [a,b]=P(...H.pt(N,p)); i?g.lineTo(a,b):g.moveTo(a,b); }); g.stroke(); g.setLineDash([]); };
+ const line=(pts,c)=>{ if(!pts) return; g.strokeStyle=c; g.lineWidth=1; g.setLineDash([4,4]); g.beginPath(); pts.forEach((p,i)=>{ const [a,b]=P(...H.pt(N,p)); i?g.lineTo(a,b):g.moveTo(a,b); }); g.stroke(); g.setLineDash([]); };
  line(N.routes.main,'#ffffff55'); line(N.routes.west,'#7fe07f55'); line(N.routes.east,'#7fe07f55'); line(N.routes.west_loop,'#c080ff55'); line(N.routes.east_forest,'#ff904055');
- /* 시설 + 체력 */
- S.facilities.forEach((f,i)=>{ const hp=fr.f[i]; box(f.c,f.h,hp>0?FCOL[f.kind]:'#444',hp>0?'#fff':'#777');
+ S.facilities.forEach((f,i)=>{ const hp=fr.f[i]??0; box(f.c,f.h,hp>0?FCOL[f.kind]:'#444',hp>0?'#fff':'#777');
   if(f.kind==='turret'&&hp>0){ const [a,b]=P(f.c[0],f.c[1]); g.strokeStyle=fr.power>0?'#e060c066':'#55555566'; g.beginPath(); g.arc(a,b,1500*s,0,7); g.stroke(); }
   const [a,b]=P(f.c[0]-Math.max(f.h[0],300),f.c[1]-f.h[1]-120); g.fillStyle='#000a'; g.fillRect(a,b,2*Math.max(f.h[0],300)*s,4); g.fillStyle=hp>0.5?'#7ad47a':hp>0.2?'#e0b040':'#e05040'; g.fillRect(a,b,2*Math.max(f.h[0],300)*s*hp,4); });
- /* NPC */
- const placed=[]; fr.n.forEach(([x,y,st],i)=>{ const dup=placed.filter(q=>Math.hypot(q[0]-x,q[1]-y)<500).length; placed.push([x,y]); const [a,b0]=P(x,y), b=b0+dup*12;   /* 포로 자리·대피 자리에 모이면 이름표를 쌓는다 */ g.fillStyle=st==='n'?'#40e080':st==='m'?'#ff3030':'#ffb040'; g.beginPath(); g.arc(a,b,5,0,7); g.fill(); g.fillStyle='#fff'; g.font='10px QA, sans-serif'; g.fillText(S.npcIds[i]+(st==='m'?' 포로':st==='i'?' 부상':''),a+7,b+3); });
- /* 적 */
+ /* NPC — 포로 자리·대피 자리에 모이면 이름표를 쌓는다 */
+ const placed=[]; fr.n.forEach(([x,y,st],i)=>{ const dup=placed.filter(p=>Math.hypot(p[0]-x,p[1]-y)<500).length; placed.push([x,y]); const [a,b0]=P(x,y), b=b0+dup*12;
+  g.fillStyle=st==='n'?'#40e080':st==='m'?'#ff3030':'#ffb040'; g.beginPath(); g.arc(a,b,5,0,7); g.fill(); g.fillStyle='#fff'; g.font='10px QA, sans-serif'; g.fillText(S.npcIds[i]+(st==='m'?' 포로':st==='i'?' 부상':''),a+7,b+3); });
  for(const [x,y,r,hp,tk,stuck] of fr.e){ const [a,b]=P(x,y), rad=r===4?7:r===2?6:4.5; g.fillStyle=ROLE_COL[r]; g.beginPath(); g.arc(a,b,rad,0,7); g.fill();
   if(stuck){ g.strokeStyle='#ff0'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+4,0,7); g.stroke(); g.lineWidth=1; } }
- /* 플레이어 */
  if(fr.p){ const [a,b]=P(fr.p[0],fr.p[1]); g.fillStyle=fr.p[3]?'#555':'#40a0ff'; g.beginPath(); g.moveTo(a,b-8); g.lineTo(a+7,b+6); g.lineTo(a-7,b+6); g.fill(); }
- const o=S.opt; document.getElementById('ttl').textContent=`${T.toFixed(0)}초 · ${S.result==='held'?'막음':S.result==='fallen'?'함락':'시간 끝'} (${S.t}s)`;
- document.getElementById('sum').innerHTML=`정책 ${o.policies.join(', ')||'없음'} · 바리케이드 ${o.barricades.length} · 기술자 ${o.tech||'—'}${S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:'없음'}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`;
- document.getElementById('lg').innerHTML=ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+'<br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)';
- document.getElementById('ev').innerHTML=S.events.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s ${e.text}</div>`).join('');
+ return {col,fr};
+}
+function side(S,T,fr,title){
+ const o=S.opt||{}, d=el('div','side');
+ d.appendChild(el('h1','',title||`${T.toFixed(0)}초 · ${S.result==='held'?'막음':S.result==='fallen'?'함락':'시간 끝'} (${S.t}s)`));
+ d.appendChild(el('div','',`정책 ${(o.policies||[]).join(', ')||'없음'} · 바리케이드 ${(o.barricades||[]).length} · 기술자 ${o.tech||'—'}${o.evacuate||S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:S.source==='ue'?'사람':'없음'}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`));
+ d.appendChild(el('div','',ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+'<br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)'));
+ d.appendChild(el('hr')); const ev=el('div','ev'); ev.innerHTML=S.events.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s ${e.text}</div>`).join(''); d.appendChild(ev);
+ return d;
+}
+(async()=>{
+ const N=await (await fetch('../../ue/HwanghonCombatUE/Content/Data/node_'+(q.get('node')||'namsan_n01')+'.json')).json();
+ const S=await (await fetch(q.get('data'))).json(), C=q.get('cmp')?await (await fetch(q.get('cmp'))).json():null;
+ const T=+(q.get('t')||S.t), wrap=document.getElementById('wrap');
+ if(!C){ const a=draw(N,S,T,600); a.col.querySelector('h2').remove(); wrap.appendChild(a.col); wrap.appendChild(side(S,T,a.fr)); }
+ else { const a=draw(N,S,T,440), b=draw(N,C,T,440); wrap.appendChild(a.col); wrap.appendChild(b.col);
+  const d=el('div','side'); d.appendChild(el('h1','',T.toFixed(0)+'초 — 왼쪽 '+label(S)+' · 오른쪽 '+label(C)));
+  const both=[...S.events.map(e=>({...e,w:label(S)})),...C.events.map(e=>({...e,w:label(C)}))].filter(e=>e.kind!=='player'&&e.id!=null).sort((x,y)=>x.t-y.t);
+  const ev=el('div','ev'); ev.innerHTML=both.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s [${e.w}] ${e.kind} ${e.id??''} → ${e.to??''}</div>`).join(''); d.appendChild(ev); wrap.appendChild(d); }
  await document.fonts.ready; document.body.dataset.ready='1';
 })();
 </script></body></html>

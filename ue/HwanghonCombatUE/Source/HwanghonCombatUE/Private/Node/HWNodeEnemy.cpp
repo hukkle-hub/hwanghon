@@ -347,7 +347,9 @@ bool AHWNodeEnemy::ReceiveSystemHit_Implementation(float InDamage, EHWAttackTier
     float Multiplier = 1.f;
     if (Tier == EHWAttackTier::Smash) Multiplier = 1.12f;
     if (Tier == EHWAttackTier::Counter) Multiplier = 1.18f;
-    Health -= InDamage * Multiplier * Armor.DamageScale(Stats.ArmorScale);
+    const float Applied = FMath::Min(Health, InDamage * Multiplier * Armor.DamageScale(Stats.ArmorScale));
+    Health -= Applied;
+    if (Director) Director->ReportEnemyDamage(Applied, InstigatorActor);   // the run log's damage by source (node-compare.mjs)
 
     // a heavy blow interrupts the light ones' wind-up; the elite only flinches when its armour is cracked
     const bool bCracked = Armor.DamageScale(Stats.ArmorScale) >= 1.f;

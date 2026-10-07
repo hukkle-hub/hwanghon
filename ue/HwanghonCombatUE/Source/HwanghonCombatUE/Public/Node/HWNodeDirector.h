@@ -74,6 +74,9 @@ public:
     void ReportRepair(float Amount);
     void ReportNpcHurt(AHWNodeNpc* Npc);
 
+    // Damage that actually landed on an enemy, by whom (player / turret / guard) - for the run log
+    void ReportEnemyDamage(float Amount, const AActor* Source);
+
 private:
     void BuildGraybox();
     void SpawnFacilities();
@@ -87,6 +90,14 @@ private:
     void TickDefences(float DeltaSeconds);
     void FinishRun(const TCHAR* ReportOutcome);
     void DrawHud() const;
+
+    // The run log (docs/design/201 §8): Saved/HWNode/last_run.json in the simulator's format (hwnode-run/1) -
+    // events with the simulator's kinds and ids, a frame a second, damage by source - so tools/ue/node-compare.mjs
+    // can put a PIE run next to tools/ue/node-sim.cjs under the same options.
+    void BeginRunLog();
+    void RunEvent(const TCHAR* Kind, const FString& Id, const TCHAR* To);
+    void RecordFrame();
+    void WriteRunLog(const TCHAR* RunResult);
     bool EnemyOnComms() const;
     bool Can(HWNodeRules::EGuildPerm Perm) const { return HWNodeRules::HasPermission(GuildRole, Perm); }
     HWNodeRules::FNpcEffects CurrentNpcEffects() const;
@@ -183,6 +194,15 @@ private:
     bool bReserveUsed = false;
     bool bReported = false;
     bool bReportPending = false;   // a report is out and its answer (or refusal) not in yet
+
+    TArray<FString> RunEvents;
+    TArray<FString> RunFrames;
+    FString RunOptions;
+    float InvasionClock = -1.f;    // seconds since the invasion began; -1 = no run being logged
+    float NextFrameAt = 0.f;
+    double DealtByPlayer = 0.0;
+    double DealtByTurret = 0.0;
+    double DealtByGuard = 0.0;
     FString Outcome;
     FString Notice;
 };

@@ -50,6 +50,7 @@ public:
     int32 GetPower() const { return Kind == EHWNodeFacilityKind::Generator ? HWNodeRules::GeneratorPower(Rules.Fraction()) : 3; }
 
     FVector GetHalfExtent() const { return HalfExtent; }
+    FName GetFacilityId() const { return FacilityId; }
 
     // Horizontal distance from a point to the box's surface (0 inside).
     float DistanceToSurface2D(const FVector& Point) const;
