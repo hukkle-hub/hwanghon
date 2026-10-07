@@ -65,4 +65,5 @@ class Store{
 }
 require('./rpg-store.cjs').install(Store);
 require('./boss-store.cjs').install(Store);
+require('./node-store.cjs').install(Store);
 module.exports={Store,cleanName};
