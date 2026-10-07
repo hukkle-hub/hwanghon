@@ -1,4 +1,4 @@
-/* 시뮬레이터 리플레이를 몇 시점 찍는다 (docs/design/201 §9).
+/* 시뮬레이터 리플레이를 몇 시점 찍는다 (docs/design/201 §8).
      node tools/ue/node-sim-shots.mjs <이름> '<opts JSON>' 30,90,180 [폴더]
    tools/serve.cjs 가 8777 에 떠 있어야 한다. */
 import {chromium} from '/opt/node22/lib/node_modules/playwright/index.mjs';

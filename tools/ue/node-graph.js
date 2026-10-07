@@ -1,4 +1,4 @@
-/* 거점 길 그래프 (docs/design/201 §9) — 모든 길(routes)의 점을 마디로, 이웃한 점과 links 를 변으로.
+/* 거점 길 그래프 (docs/design/201 §8) — 모든 길(routes)의 점을 마디로, 이웃한 점과 links 를 변으로.
    같은 점(1 cm 안)을 공유하는 길은 저절로 이어진다. 적이 목표를 바꾸면 «지금 자리에서 직선» 이 아니라 이 그래프의
    최단 경로로 간다 — 직선은 허공·벽을 지나 발전동 앞에서 적 19마리가 멈췄다 (tools/ue/node-sim.cjs).
    UE 쪽 같은 셈: UHWNodeConfig::PathBetween. 시험: tests/ue-node-config.test.cjs. */

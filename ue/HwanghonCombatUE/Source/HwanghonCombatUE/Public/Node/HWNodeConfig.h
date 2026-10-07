@@ -242,7 +242,7 @@ public:
         return Facilities.FindByPredicate([Kind](const FHWNodeFacilityDef& D) { return D.Kind == Kind; });
     }
 
-    // The route graph (docs/design/201 §9): every route point is a node, neighbouring points and the JSON "links" are
+    // The route graph (docs/design/201 §8): every route point is a node, neighbouring points and the JSON "links" are
     // edges, and routes that share a point join there. An enemy that changes target walks this graph's shortest path
     // instead of a straight line through walls and over drops. Same maths as tools/ue/node-graph.js.
     void BuildGraph(const TArray<TPair<FVector, FVector>>& ExtraLinks);

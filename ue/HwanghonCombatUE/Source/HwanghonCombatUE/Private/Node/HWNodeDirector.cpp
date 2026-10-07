@@ -339,7 +339,7 @@ TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, con
 {
     if (!Config) return {};
     // the target's route (generator, comms, or the route to the NPC it is after) gives the end point; the route graph
-    // gives the way there from wherever the enemy is (UHWNodeConfig::PathBetween, docs/design/201 §9)
+    // gives the way there from wherever the enemy is (UHWNodeConfig::PathBetween, docs/design/201 §8)
     // An NPC is followed to where it is now, not to its home route's end - a technician sent to the gate had a runner
     // circling the generator building for good (tools/ue/node-sim.cjs).
     if (Kind == HWNodeRules::ETargetKind::Npc)

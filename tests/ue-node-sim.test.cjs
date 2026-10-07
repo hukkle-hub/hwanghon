@@ -1,4 +1,4 @@
-/* 남산 N-01 방어전 시뮬레이터 난간 (docs/design/201 §9) — tools/ue/node-sim.cjs 로 4분 판을 헤드리스로 돌려,
+/* 남산 N-01 방어전 시뮬레이터 난간 (docs/design/201 §8) — tools/ue/node-sim.cjs 로 4분 판을 헤드리스로 돌려,
    UE 를 띄우기 전에 «적이 끼인다·포탑이 놀고 있다·정책이 아무 일도 안 한다» 를 잡는다.
    수치(누가 이기는가)는 디렉터가 정할 균형이라 넓게 잡았다. 여기서 보는 건 «말이 되는가». */
 const test = require('node:test'), assert = require('node:assert/strict');

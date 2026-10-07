@@ -1,4 +1,4 @@
-/* 거점 방어전 시뮬레이터 (docs/design/201 §9) — 언리얼 없이 «한 판» 을 돌려 본다.
+/* 거점 방어전 시뮬레이터 (docs/design/201 §8) — 언리얼 없이 «한 판» 을 돌려 본다.
    같은 맵(Content/Data/node_<id>.json, tools/ue/node-graybox.js 의 상자)과 같은 규칙(node-combat-rules.cjs ↔ HWNodeRules.h,
    벡터로 대조)을 쓰고, 적·포탑·NPC 의 판단은 AHWNodeEnemy / AHWNodeDirector 를 줄 단위로 옮겼다:
      - 적: 0.4초마다 Think (ChooseTarget → BlockedByGate → 길 위 바리케이드 → 380 안의 포탑), 예비 동작 → 타격 → 회복 0.35초

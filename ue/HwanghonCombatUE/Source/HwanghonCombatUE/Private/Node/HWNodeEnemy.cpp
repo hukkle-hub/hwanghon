@@ -13,7 +13,7 @@
 
 namespace HWNodeEnemyLocal
 {
-    // Within this the gate or a player is walked at straight; farther, the route and the graph path lead (docs/design/201 §9)
+    // Within this the gate or a player is walked at straight; farther, the route and the graph path lead (docs/design/201 §8)
     constexpr float DirectApproachCm = 1500.f;
 
     // Telegraph before each blow: long enough to read and counter (the elite's is the clearest).
@@ -282,7 +282,7 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
 
     // walk the route: the next waypoint, then the extension to the target, then the target itself.
     // The 220 cm "arrived" radius is for waypoints only: applied to the gate (reach 140) or a player (170) it parked
-    // the enemy just out of reach for good (found by tools/ue/node-sim.cjs, docs/design/201 §9).
+    // the enemy just out of reach for good (found by tools/ue/node-sim.cjs, docs/design/201 §8).
     const FVector Goal = GoalPoint();
     const FVector To = Goal - Here;
     if (HasWaypoint(Here) && FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(220.f))

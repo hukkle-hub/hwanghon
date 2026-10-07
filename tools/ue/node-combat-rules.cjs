@@ -1,4 +1,4 @@
-/* 거점 전투 규칙 — 시뮬레이터용 JS 판 (docs/design/201 §9).
+/* 거점 전투 규칙 — 시뮬레이터용 JS 판 (docs/design/201 §8).
    원본은 ue/HwanghonCombatUE/Source/HwanghonCombatUE/Public/Node/HWNodeRules.h. 서버가 쓰는 규칙은 server/node-rules.cjs,
    여기는 «판» 을 돌리는 데 필요한 것: 역할 수치·목표 선택·정문 차단·웨이브·전력과 포탑·NPC 상태.
    tests/vectors/node-rules.json 의 combat 벡터로 C++ 와 같은 답을 내는지 시험한다 (tests/node-rules-vectors.test.cjs). */
