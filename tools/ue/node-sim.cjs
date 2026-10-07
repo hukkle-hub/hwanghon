@@ -77,8 +77,8 @@ function simulate(N, o = {}) {
     if (opt.tech === 'generator') path.push(...N.routes.generator.map(P)); else if (opt.tech === 'comms') path.push(...N.routes.comms.map(P));
     else for (let i = main.length - 1; i >= 1; i--) path.push(main[i]);
     tech.order = { kind: opt.tech, path, i: 0 }; }
-  /* 대피 명령: 경비만 빼고 대피 자리로 (자리마다 조금씩 비켜 선다). 대가 — 의무실·정찰탑·통신센터의 기능 (시뮬엔 플레이어 회복·예보가 없어 «안전» 쪽만 잰다) */
-  if (opt.evacuate && N.shelter_point) npcs.filter(n => n.role !== 'guard').forEach((n, i) => { const c = P(N.shelter_point); n.evac = [c[0] + (i - 1.5) * 220, c[1] + 150, c[2]]; });
+  /* 대피 명령: 경비·기술자만 빼고 대피 자리로 (자리마다 조금씩 비켜 선다). 대가 — 의무실·정찰탑·통신센터의 기능 (시뮬엔 플레이어 회복·예보가 없어 «안전» 쪽만 잰다) */
+  if (opt.evacuate && N.shelter_point) npcs.filter(n => n.role !== 'guard' && n.role !== 'technician').forEach((n, i) => { const c = P(N.shelter_point); n.evac = [c[0] + (i - 1.5) * 220, c[1] + 150, c[2]]; });
 
   /* ── 플레이어 ── */
   const pl = opt.player ? { ...place(P(N.player_start)), hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: 0, kills: 0, rescues: 0, counters: 0, hitsTaken: 0 } : null;

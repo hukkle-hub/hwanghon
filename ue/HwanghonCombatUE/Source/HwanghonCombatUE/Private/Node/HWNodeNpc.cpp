@@ -108,6 +108,7 @@ void AHWNodeNpc::OrderTo(const TArray<FVector>& Path, EHWNodeFacilityKind Facili
     OrderIndex = 0;
     OrderFacility = Facility;
     bOrdered = Path.Num() > 0;
+    bEvacuated = false;   // an order brings it back on duty
     Refresh();
 }
 

@@ -618,14 +618,26 @@ void AHWNodeDirector::FinishRun(const TCHAR* ReportOutcome)
     if (Net && Net->IsConnected())
     {
         Net->OnNodeReply.AddUniqueDynamic(this, &AHWNodeDirector::HandleNodeReply);
-        Notice = Net->SendNodeReport(Json) ? TEXT("Report sent to the node server") : TEXT("Report could not be sent (saved locally)");
+        Net->OnNetworkError.AddUniqueDynamic(this, &AHWNodeDirector::HandleNetError);
+        bReportPending = Net->SendNodeReport(Json);
+        Notice = bReportPending ? TEXT("Report sent to the node server") : TEXT("Report could not be sent (saved locally)");
         NoticeFor = 5.f;
     }
 }
 
 void AHWNodeDirector::HandleNodeReply(FString ServerNodeState, FString ServerSteward)
 {
+    if (!bReportPending) return;   // a node reply to something else (info, policy, supply)
+    bReportPending = false;
     Notice = FString::Printf(TEXT("Node server: %s - steward %s"), *ServerNodeState, ServerSteward.IsEmpty() ? TEXT("none yet") : *ServerSteward);
+    NoticeFor = 8.f;
+}
+
+void AHWNodeDirector::HandleNetError(FString ServerError)
+{
+    if (!bReportPending) return;   // the server refused the report: say so (rate limit, not a defence now ...)
+    bReportPending = false;
+    Notice = FString::Printf(TEXT("Node server refused the report: %s (kept in Saved/HWNode)"), *ServerError);
     NoticeFor = 8.f;
 }
 
@@ -681,7 +693,7 @@ void AHWNodeDirector::HandleInteract()
 
     // 3) preparation, at the shelter point: evacuate the NPCs under turret cover (or send them back to their posts).
     // Safety against function: the medic, scout and operator off post do nothing (docs/design/201 §3; node-sim.cjs:
-    // captives 4 -> 1). The technician on an order and the guard stay.
+    // captives 4 -> 1). The technician (repairs, orders) and the guard stay.
     if (Machine.State == HWNodeRules::ENodeState::Alert && !Config->ShelterPoint.IsZero()
         && FVector::Dist2D(Here, Config->ShelterPoint) < HWNodeDirectorLocal::InteractReach)
     {
@@ -696,7 +708,7 @@ void AHWNodeDirector::HandleInteract()
             int32 ShelterSlot = 0;
             for (AHWNodeNpc* Npc : Npcs)
             {
-                if (!Npc || Npc->GetRole() == EHWNodeNpcRole::Guard || Npc->HasOrder()) continue;
+                if (!Npc || Npc->GetRole() == EHWNodeNpcRole::Guard || Npc->GetRole() == EHWNodeNpcRole::Technician) continue;
                 if (bAnyEvacuated)
                 {
                     Npc->ReturnHome();

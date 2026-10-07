@@ -114,6 +114,9 @@ private:
     UFUNCTION()
     void HandleNodeReply(FString ServerNodeState, FString ServerSteward);
 
+    UFUNCTION()
+    void HandleNetError(FString ServerError);
+
     void HandleInteract();
     void HandleExecute();
     void HandlePing();
@@ -179,6 +182,7 @@ private:
     bool bPlayerPlaced = false;
     bool bReserveUsed = false;
     bool bReported = false;
+    bool bReportPending = false;   // a report is out and its answer (or refusal) not in yet
     FString Outcome;
     FString Notice;
 };
