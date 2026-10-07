@@ -43,14 +43,14 @@ const FCOL={gate:'#c9a45e',generator:'#ffd84a',comms:'#5aa0ff',turret:'#e060c0',
   if(f.kind==='turret'&&hp>0){ const [a,b]=P(f.c[0],f.c[1]); g.strokeStyle=fr.power>0?'#e060c066':'#55555566'; g.beginPath(); g.arc(a,b,1500*s,0,7); g.stroke(); }
   const [a,b]=P(f.c[0]-Math.max(f.h[0],300),f.c[1]-f.h[1]-120); g.fillStyle='#000a'; g.fillRect(a,b,2*Math.max(f.h[0],300)*s,4); g.fillStyle=hp>0.5?'#7ad47a':hp>0.2?'#e0b040':'#e05040'; g.fillRect(a,b,2*Math.max(f.h[0],300)*s*hp,4); });
  /* NPC */
- const seen={}; fr.n.forEach(([x,y,st],i)=>{ const key=Math.round(x/200)+','+Math.round(y/200), dup=seen[key]=(seen[key]||0)+1; const [a,b0]=P(x,y), b=b0+(dup-1)*12;   /* 포로 자리에 모이면 이름표를 쌓는다 */ g.fillStyle=st==='n'?'#40e080':st==='m'?'#ff3030':'#ffb040'; g.beginPath(); g.arc(a,b,5,0,7); g.fill(); g.fillStyle='#fff'; g.font='10px QA, sans-serif'; g.fillText(S.npcIds[i]+(st==='m'?' 포로':st==='i'?' 부상':''),a+7,b+3); });
+ const placed=[]; fr.n.forEach(([x,y,st],i)=>{ const dup=placed.filter(q=>Math.hypot(q[0]-x,q[1]-y)<500).length; placed.push([x,y]); const [a,b0]=P(x,y), b=b0+dup*12;   /* 포로 자리·대피 자리에 모이면 이름표를 쌓는다 */ g.fillStyle=st==='n'?'#40e080':st==='m'?'#ff3030':'#ffb040'; g.beginPath(); g.arc(a,b,5,0,7); g.fill(); g.fillStyle='#fff'; g.font='10px QA, sans-serif'; g.fillText(S.npcIds[i]+(st==='m'?' 포로':st==='i'?' 부상':''),a+7,b+3); });
  /* 적 */
  for(const [x,y,r,hp,tk,stuck] of fr.e){ const [a,b]=P(x,y), rad=r===4?7:r===2?6:4.5; g.fillStyle=ROLE_COL[r]; g.beginPath(); g.arc(a,b,rad,0,7); g.fill();
   if(stuck){ g.strokeStyle='#ff0'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+4,0,7); g.stroke(); g.lineWidth=1; } }
  /* 플레이어 */
  if(fr.p){ const [a,b]=P(fr.p[0],fr.p[1]); g.fillStyle=fr.p[3]?'#555':'#40a0ff'; g.beginPath(); g.moveTo(a,b-8); g.lineTo(a+7,b+6); g.lineTo(a-7,b+6); g.fill(); }
  const o=S.opt; document.getElementById('ttl').textContent=`${T.toFixed(0)}초 · ${S.result==='held'?'막음':S.result==='fallen'?'함락':'시간 끝'} (${S.t}s)`;
- document.getElementById('sum').innerHTML=`정책 ${o.policies.join(', ')||'없음'} · 바리케이드 ${o.barricades.length} · 기술자 ${o.tech||'—'} · 플레이어 ${o.player?'DPS '+o.player.dps:'없음'}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`;
+ document.getElementById('sum').innerHTML=`정책 ${o.policies.join(', ')||'없음'} · 바리케이드 ${o.barricades.length} · 기술자 ${o.tech||'—'}${S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:'없음'}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`;
  document.getElementById('lg').innerHTML=ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+'<br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)';
  document.getElementById('ev').innerHTML=S.events.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s ${e.text}</div>`).join('');
  await document.fonts.ready; document.body.dataset.ready='1';
