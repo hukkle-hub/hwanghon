@@ -113,3 +113,12 @@ test('3D 필드 문: 가까이 가면 이동 단추 · 다음 지역 3D 로 · �
   assert.match(w, /gate: ARRIVE && ARRIVE\.id/); assert.match(net, /type: 'fieldJoin', zone, gate: gate \|\| undefined/);
   assert.match(w, /#gatebtn\{[^}]*min-height:64px/, '휴대폰 단추가 64 px 보다 작다');
 });
+
+test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(boss-motion) · 온라인이면 서버 생사·동작 · 타격 대상', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  assert.match(w, /if \(\/\^clave2\?\$\/\.test\(b\.id\)\) \{ setupBossMotion\(o, gl, r, scene, 0\)/, '클레이브 안무가 없다');
+  assert.match(w, /r\.position\.y - box\.min\.y/, '발을 바닥에 안 맞춘다 (보스가 묻혔던 일 — CLAUDE.md §1)');
+  assert.match(w, /if \(o\.fx\) prepareBossMotion\(o, bn\); o\.mixer\.update\(dt\);/, '서버 시각 자세 준비는 믹서 평가보다 먼저');
+  assert.match(w, /const f = fbs\.find\(x => x\.b\.id === a\.id\); if \(f && f\.fx\) applyBossAction\(f, a, sclock\.now\(\)\)/, '서버 보스 동작을 안 따른다');
+  assert.match(w, /for \(const o of net \? \[\.\.\.doms, \.\.\.fbs\] : doms\)/, '온라인에서 필드 보스를 못 때린다');
+});
