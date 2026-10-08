@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-07 — 거점 서버(남산 N-01 상태·관리권·정책·보급·대장 임명·이번 주기 순위) 배포 완료 — Render commit `3296626`, 실제 WebSocket 으로 확인** (§2).
+> **2026-10-08 — 탈환전 규칙 tickRetake — Render commit `0108a87` 확인.**
+> 이전: **2026-10-07 — 거점 서버(남산 N-01 상태·관리권·정책·보급·대장 임명·이번 주기 순위) 배포 완료 — Render commit `3296626`, 실제 WebSocket 으로 확인** (§2).
 > 이전: 필드 가방·상점·회복약·거점 기본 보스 점령 — Render commit `1fa5909`.
 > 이전: 필드 스킬 1~4(누르고 공격)·온라인 기본 배포 완료 — Render commit `5317380`, 실제 WebSocket 으로 스킬·재사용 대기 확인** (§2).
 > 이전: 클레이브 v6(적응형 AI·4.2 m·셔터 부위파괴) — Render commit `2399367`.
@@ -18,9 +19,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | `server/node-rules.cjs`: `tickRetake`(탈환 실패 → 탈환 가능) 추가 · `startRetake` 가 통신 점거 시간을 0 으로. 서버가 부르는 곳은 아직 없다(UE·시뮬 규칙과 벡터 맞춤) — 동작 변화 없음 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
+
+탈환전 규칙(`tickRetake`) (Claude): main `0108a87` → Pages build `0108a87`, Render `/healthz` commit `0108a87` (2026-10-08 02:58 UTC). 실제 WebSocket: `node info` → stable · initial · period 2962, 길드 없는 `policy` 거절. `npm test` 810 중 807 통과 · 실패 0.
 
 거점 파티원 보고·길드 단위 관리권 (Claude): main `0a5e946` → Render `/healthz` commit `0a5e946` (2026-10-07 22:26 UTC 확인), 실제 WebSocket `node info` 정상.
 
