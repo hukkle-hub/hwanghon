@@ -57,7 +57,7 @@ test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 �
 
 test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 보정층 — 아인 바인드·클립 교정(믹서 전) · 양손 쥠 리그 · 리그 순서', () => {
   const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), h = src.slice(src.indexOf('async function hero('), src.indexOf('function heroAnimate(') + 900);
-  assert.match(h, /if\(id==='ain'\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 교정이 없다');
+  assert.match(h, /if\(id==='ain'&&meshSwap\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 교정이 없다');
   assert.ok(h.indexOf('repairAinClips') < h.indexOf('new THREE.AnimationMixer(root)'), '클립 교정은 믹서보다 먼저 (이미 만든 액션은 옛 트랙을 붙든다)');
   assert.match(h, /clip=n=>anims\.find/, '믹서가 교정 전 클립을 쓴다');
   assert.match(h, /h\.rig=\(id==='ain'\?makeAinRigAdapter:makeRigAdapter\)\(root,root,slot,/, '양손 쥠 리그가 없다 — 낫을 지팡이처럼 든다');
@@ -128,4 +128,10 @@ test('3D 필드 하늘: 바깥만 장면 색(env.sky)으로 노을 돔 · 정적
   assert.match(w, /if \(env\.sky && env\.sky\.top && env\.sky\.horizon\)/, '실내(하늘 정보 없음)에도 하늘을 그린다');
   assert.match(w, /mergeStatic\(scene, \{ skip: o => o\.name === 'sky' \}\)/, '하늘 돔이 카메라 막이 상자가 된다');
   assert.match(w, /window\.__sky\.position\.copy\(cam\.position\)/, '하늘이 카메라를 안 따라간다 — 멀리 가면 돔 밖으로 나간다');
+});
+
+test('2D 필드 가벼운 모델(휴대폰 기본): 쥔 손 모프·아인 바인드 교정은 정식 모델에만 — 압축 꼭짓점에 걸면 뼈 번호가 깨져 그리기가 멈췄다', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8');
+  assert.match(src, /const handGrip=id!=='ain'&&!LOD\?gripHands\(root,id\):null;/, '가벼운 모델에 쥔 손 모프를 건다 — 카인·세라 근처에서 휴대폰 화면이 멈춘다');
+  assert.match(src, /if\(id==='ain'&&meshSwap\)\{ const fix=repairAinBind\(root\);/, '표식(meshSwap) 없는 모델에 옛 몸 재가중을 한다 — 없는 뼈 번호(−1)');
 });
