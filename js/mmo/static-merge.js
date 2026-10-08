@@ -17,7 +17,7 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
     if (o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) || !o.visible || o.children.length || (skip && skip(o))) { if (o.isInstancedMesh) camFromInstanced(o); return; }
     if (!o.material.onBeforeCompile || o.material.onBeforeCompile === THREE.Material.prototype.onBeforeCompile) { const k = sig(o.material), m0 = canon.get(k); if (!m0) canon.set(k, o.material); else if (m0 !== o.material) { o.material = m0; dedup++; } }
     const g = o.geometry; box.setFromObject(o);
-    if (box.max.y - box.min.y > camMinH && box.max.y > 1.4) camBoxes.push(box.clone());
+    if (box.max.y - box.min.y > camMinH && box.max.y > 1.4) { if (!g.boundingBox) g.computeBoundingBox(); camBoxes.push(obb(box, g.boundingBox, o.matrixWorld)); }
     if ((g.morphAttributes && Object.keys(g.morphAttributes).length) || Object.values(g.attributes).some(a => a.isInterleavedBufferAttribute)) return;
     box.getCenter(c);
     const key = [o.material.uuid, o.castShadow, o.receiveShadow, o.renderOrder, g.index ? 1 : 0, Object.keys(g.attributes).sort().join(','), Math.floor(c.x / cell), Math.floor(c.z / cell)].join('|');
@@ -25,7 +25,7 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
   });
   function camFromInstanced(o) {   /* 나무·바위 인스턴스: 하나하나 상자 (기하 상자 × 인스턴스 행렬) */
     const g = o.geometry; if (!g.boundingBox) g.computeBoundingBox(); const h = g.boundingBox.max.y - g.boundingBox.min.y; const m = new THREE.Matrix4();
-    for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); const b = g.boundingBox.clone().applyMatrix4(m).applyMatrix4(o.matrixWorld); if (b.max.y - b.min.y > camMinH && h > 0) camBoxes.push(b); } }
+    for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); const w = new THREE.Matrix4().multiplyMatrices(o.matrixWorld, m), b = g.boundingBox.clone().applyMatrix4(w); if (b.max.y - b.min.y > camMinH && h > 0) camBoxes.push(obb(b, g.boundingBox, w)); } }
   let merged = 0, removed = 0;
   for (const list of groups.values()) {
     if (list.length < 2) continue;
@@ -39,10 +39,15 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
   return { before, after, merged, removed, dedup, materials: canon.size, camBoxes };
 }
 
+/* 카메라 막이 상자: 세계 축 상자(빨리 거르기) + 물체 자신의 방향 상자. 축 상자만 쓰면 28° 돌아간 긴 벽의 상자가 실제보다 훨씬 커서
+   좁은 통로에서 카메라가 등에 붙었다 (2호선 침수 선로 1.7 m — 문서 206 §7) */
+function obb(world, local, mw) { return { aabb: world.clone(), local: local.clone(), mw: mw.clone(), inv: mw.clone().invert() }; }
 /* 카메라 당기기: 머리(at)에서 원하는 자리(want)까지 상자에 처음 닿는 거리. 없으면 Infinity */
 export function firstHit(boxes, at, want, pad = 0.25) {
   const dir = new THREE.Vector3().subVectors(want, at), len = dir.length(); if (len < 1e-4) return Infinity; dir.divideScalar(len);
-  const ray = new THREE.Ray(at, dir), p = new THREE.Vector3(); let best = Infinity;
-  for (const b of boxes) { if (b.containsPoint(at)) continue; if (ray.intersectBox(b, p)) { const d = p.distanceTo(at); if (d < best) best = d; } }
+  const ray = new THREE.Ray(at, dir), lr = new THREE.Ray(), p = new THREE.Vector3(); let best = Infinity;
+  for (const b of boxes) { const A = b.aabb || b; if (A.containsPoint(at) || !ray.intersectBox(A, p)) continue;
+    if (!b.local) { const d = p.distanceTo(at); if (d < best) best = d; continue; }
+    lr.copy(ray).applyMatrix4(b.inv); if (b.local.containsPoint(lr.origin) || !lr.intersectBox(b.local, p)) continue; p.applyMatrix4(b.mw); const d = p.distanceTo(at); if (d < best) best = d; }
   return best < len ? Math.max(0.6, best - pad) : Infinity;
 }

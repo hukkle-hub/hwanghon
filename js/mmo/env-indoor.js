@@ -47,14 +47,15 @@ export function build(THREE, scene, osm, zone) {
   for (const r of rooms) { const H = r.h || th.h || 3.6;
     const edges = [ { a: [r.s0, r.t0], b: [r.s1, r.t0], n: [0, -1] }, { a: [r.s1, r.t0], b: [r.s1, r.t1], n: [1, 0] }, { a: [r.s1, r.t1], b: [r.s0, r.t1], n: [0, 1] }, { a: [r.s0, r.t1], b: [r.s0, r.t0], n: [-1, 0] } ];
     for (const e of edges) { const L = Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]), k = Math.max(1, Math.round(L)); let run = null;
-      const nW = [e.n[0] * DIR[0] + e.n[1] * SIDE[0], e.n[0] * DIR[1] + e.n[1] * SIDE[1]], cut = nW[1] > 0.35, h = cut ? Math.min(1.0, H) : H;
+      const nW = [e.n[0] * DIR[0] + e.n[1] * SIDE[0], e.n[0] * DIR[1] + e.n[1] * SIDE[1]], cut = !zone.view3d && nW[1] > 0.35, h = cut ? Math.min(1.0, H) : H;   /* view3d(3D 필드, 문서 206): 카메라가 돌아가므로 자르지 않는다 */
       const flush = () => { if (!run) return; const [u0, u1] = run, sA = e.a[0] + (e.b[0] - e.a[0]) * u0, tA = e.a[1] + (e.b[1] - e.a[1]) * u0, sB = e.a[0] + (e.b[0] - e.a[0]) * u1, tB = e.a[1] + (e.b[1] - e.a[1]) * u1;
         const mid = FROM((sA + sB) / 2 + e.n[0] * 0.18, (tA + tB) / 2 + e.n[1] * 0.18), len = Math.hypot(sB - sA, tB - tA), along = e.n[0] === 0, rot = along ? SCREEN_ANG : SCREEN_ANG + Math.PI / 2;
         box(len + 0.05, h, 0.36, cut ? cutM : wallM, mid[0], h / 2, mid[1], rot); block(mid[0], mid[1], len / 2 + 0.03, 0.26, rot); wallN++; run = null; };
       for (let j = 0; j < k; j++) { const u0 = j / k, u1 = (j + 1) / k, um = (u0 + u1) / 2, s = e.a[0] + (e.b[0] - e.a[0]) * um, t = e.a[1] + (e.b[1] - e.a[1]) * um;
         const open = rooms.some(o => o !== r && s + e.n[0] * 0.6 > o.s0 && s + e.n[0] * 0.6 < o.s1 && t + e.n[1] * 0.6 > o.t0 && t + e.n[1] * 0.6 < o.t1);
         if (open) flush(); else run = run ? [run[0], u1] : [u0, u1]; }
-      flush(); } }
+      flush(); }
+    if (zone.view3d) { const c = FROM((r.s0 + r.s1) / 2, (r.t0 + r.t1) / 2), ce = new THREE.Mesh(new THREE.BoxGeometry(r.s1 - r.s0 + 0.4, 0.12, r.t1 - r.t0 + 0.4), cutM); ce.position.set(c[0], H + 0.06, c[1]); ce.rotation.y = SCREEN_ANG; ce.receiveShadow = true; scene.add(ce); } }   /* 천장 — 위에서 보는 굽기엔 없다 */
 
   /* ---------- 빛: 방마다 천장 등. light: 'fluo'(형광등) · 'red'(비상등) · 'warm'(드럼통 불·백열) · 'none' ---------- */
   const LCOL = { fluo: 0xdff4ff, red: 0xff3a2a, warm: 0xffa860, green: 0x60ff9a, blue: 0x60a8ff };

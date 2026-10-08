@@ -76,7 +76,7 @@ await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간�
 const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
-const env = build(THREE, scene, osm, { id: ZONE, ...Z });
+const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true });   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
@@ -140,7 +140,9 @@ for (const b of meta.bosses || []) if (b.ai === 'dominator') {
 }
 /* ---------- 3인칭 카메라 ---------- */
 const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
-const camS = { yaw: Math.PI + (env.road ? -env.road.ang : 0), pitch: 0.32, dist: MOBILE ? 6 : 5.2 };
+const INDOOR = (env.kind || Z.kind || meta.kind) !== 'field';   /* 던전·벙커: 천장이 있으니 가깝고 낮게 */
+if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }   /* 실내는 가까이서 어둡게 */
+const camS = { yaw: Math.PI + (env.road ? -env.road.ang : 0), pitch: INDOOR ? 0.2 : 0.32, dist: INDOOR ? 3.6 : MOBILE ? 6 : 5.2 };
 function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
 addEventListener('resize', resize);
 let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */

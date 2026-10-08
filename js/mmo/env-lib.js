@@ -105,6 +105,15 @@ export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   for (const w of waters) if (near(ctx, w, 2)) ctx.blockers.push({ poly: w.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true });
   return { waters }; }
 
+/* 해안선 막힘: 처음↔끝 현의 오른쪽으로 2 km 닫는 다각형은 해안선이 곶을 감아 돌면 땅을 덮는다 — 고흥(해안선 1,148 점, 현 5.9 km)은
+   걷는 띠 전체가 «바다 안» 이 되어 첫 걸음에 275 m 밀려났다 (3D 필드 전 지역 점검에서 발견, 문서 206 §7).
+   걷는 띠는 땅이다 → 닫은 바다가 띠의 절반 넘게 덮으면 틀린 것으로 보고, 해안선 바다 쪽(진행 방향 오른쪽) 150 m 띠로 막는다 */
+export const COAST_STRIP = 150;
+export function coastStrip(pts, w = COAST_STRIP) { const off = pts.map((p, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz) || 1; return [p[0] - dz / L * w, p[1] + dx / L * w]; }); return [...pts, ...off.reverse()]; }
+export function inPolyXZ(x, z, P) { let s = false; for (let a = 0, c = P.length - 1; a < P.length; c = a++) { const A = P[a], C = P[c]; if ((A[1] > z) !== (C[1] > z) && x < (C[0] - A[0]) * (z - A[1]) / (C[1] - A[1]) + A[0]) s = !s; } return s; }
+export function bandCover(FROM, walk, P) { let n = 0, k = 0; for (let i = 0; i <= 20; i++) for (let j = 0; j <= 12; j++) { const [x, z] = FROM(walk.s0 + (walk.s1 - walk.s0) * i / 20, walk.t0 + (walk.t1 - walk.t0) * j / 12); n++; if (inPolyXZ(x, z, P)) k++; } return k / n; }
+function coastBlock(ctx, pts, closed) { if (!ctx.FROM || !ctx.walk) return closed; return bandCover(ctx.FROM, ctx.walk, closed) > 0.5 ? coastStrip(pts) : closed; }
+
 /* ---------- 선: 철길(자갈·침목·레일), 강(폭), 활주로, 방파제(테트라포드) ---------- */
 export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
   const ballastM = new THREE.MeshStandardMaterial({ color: 0x4a4440, roughness: 1 }), railM = new THREE.MeshStandardMaterial({ color: 0x8a8a90, roughness: 0.3, metalness: 0.9 }), sleeperM = new THREE.MeshStandardMaterial({ color: 0x3a2e26, roughness: 0.9 });
@@ -123,7 +132,7 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
     else if (l.kind === 'coastline') { /* 해안선: OSM 은 길 방향의 왼쪽이 땅 — 오른쪽으로 2 km 밀어 바다 다각형을 닫는다 */
       const a0 = pts[0], a1 = pts.at(-1), dx = a1[0] - a0[0], dz = a1[1] - a0[1], L0 = Math.hypot(dx, dz) || 1, rx = -dz / L0 * 2000, rz = dx / L0 * 2000;
       const poly = [...pts, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]; flatPoly(ctx, poly, waterM, 0.012);
-      ctx.blockers.push({ poly: poly.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true }); }
+      ctx.blockers.push({ poly: coastBlock(ctx, pts, poly).map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true }); }
     else if (/^man:(pier|breakwater|groyne|dyke)/.test(l.kind)) { scene.add(new THREE.Mesh(ribbon(THREE, pts, 8, 0.6), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 0; d < L; d += 2.2) for (const side of [-1, 1]) { const t4 = new THREE.Mesh(tetraG, tetraM); t4.position.set(a[0] + dx / L * d - dz / L * 5.5 * side, 0.6, a[1] + dz / L * d + dx / L * 5.5 * side); t4.rotation.set(R() * 3, R() * 3, R() * 3); t4.castShadow = true; scene.add(t4); } } } }
   return n; }

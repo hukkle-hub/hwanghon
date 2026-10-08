@@ -15,7 +15,7 @@ export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
 
-export function build(THREE, scene, osm) {
+export function build(THREE, scene, osm, zone = {}) {
   const R = rng(20261007), lights = [], blockers = [];
   const { ST, FROM, W, tc } = frameOf(THREE, osm, FIELD.gangnam);
   const WATER = 0.9, WALL = 3.4;
@@ -42,6 +42,7 @@ export function build(THREE, scene, osm) {
     const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
   const floorM = new THREE.MeshStandardMaterial({ map: terrazzo, roughness: 0.18, metalness: 0.15, color: 0x8a9a9c });   /* 젖은 바닥 */
   flat(mall, floorM, 0); flat(corridor, floorM, 0.001);
+  if (zone.view3d) { const ceilM = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: 0.95, side: THREE.DoubleSide }); for (const pts of [mall, corridor]) flat(pts, ceilM, WALL); }   /* 천장 — 3D 필드에서만 */
   /* 물(0.9 m)은 굽지 않는다 — 첫 판은 물면을 높이 그림에 구워 넣어 인물의 무릎 아래가 «땅에 박힌» 듯 잘렸다(디렉터 지적).
      부츠·각반도 장비라 보여야 한다. 게임(mmo.html)이 map.json water.y 높이에 반투명 물면을 따로 그린다 — 물 밑 다리가 비쳐 보인다 */
 
@@ -54,7 +55,7 @@ export function build(THREE, scene, osm) {
       let nx = (b[1] - a[1]) / L, nz = -(b[0] - a[0]) / L; const mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2; if ((mx - cx) * nx + (mz - cz) * nz < 0) { nx = -nx; nz = -nz; }   /* 바깥 법선 */
       for (let j = 0; j < k; j++) { const u0 = j / k, u1 = (j + 1) / k, p0 = [a[0] + (b[0] - a[0]) * u0, a[1] + (b[1] - a[1]) * u0], p1 = [a[0] + (b[0] - a[0]) * u1, a[1] + (b[1] - a[1]) * u1];
         const m = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2]; if (other && inPoly([m[0] - nx * 0.3, m[1] - nz * 0.3], other) && inPoly([m[0] + nx * 0.6, m[1] + nz * 0.6], other)) continue;   /* 두 윤곽이 이어지는 곳은 벽 없음 */
-        const cut = nz > 0.35, h = cut ? 1.0 : WALL, seg = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+        const cut = !zone.view3d && nz > 0.35, h = cut ? 1.0 : WALL,   /* view3d(3D 필드, 문서 206): 자르지 않는다 */ seg = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
         const w = new THREE.Mesh(new THREE.BoxGeometry(seg + 0.05, h, 0.35), cut ? wallCutM : wallM); w.position.set(m[0] + nx * 0.17, h / 2, m[1] + nz * 0.17); w.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
         w.castShadow = true; w.receiveShadow = true; scene.add(w); walls.push({ m, n: [nx, nz], dir: [(p1[0] - p0[0]) / seg, (p1[1] - p0[1]) / seg], cut, seg });
         blockers.push({ x: m[0] + nx * 0.17, z: m[1] + nz * 0.17, hw: seg / 2 + 0.03, hd: 0.25, rot: w.rotation.y }); } } }
