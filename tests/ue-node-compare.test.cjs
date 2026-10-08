@@ -33,7 +33,7 @@ test('UE 판 기록: 형식 문자열 14개가 소스에 있고, 그대로 만�
   assert.deepEqual(ue.opt.barricades, ['barricade_west']); assert.equal(ue.frames.length, sim.frames.length);
   assert.equal(ue.frames[10].e.length, sim.frames[10].e.length);
   /* v04~v06: 등급 5 · PIE 일곱 항목 · 적마다 공진 단계(7번째 칸) */
-  assert.equal(ue.threatGrade, 5); assert.equal(ue.tier5.checks.length, 7); assert.deepEqual(ue.tier5.checks, sim.tier5.checks);
+  assert.equal(ue.threatGrade, 5); assert.equal(ue.tier5.checks.length, 8); assert.deepEqual(ue.tier5.checks, sim.tier5.checks);
   const f = ue.frames.find(fr => fr.e.some(e => e[6] > 0)); assert.ok(f, 'UE 기록에 공진 받은 적이 없다');
 });
 test('대조: 같은 판은 어긋남 0 · 정문이 60초 늦게 무너진 판은 짚는다 · 조건이 시뮬로 넘어간다', () => {

@@ -83,7 +83,7 @@ public:
     void ReportNpcHurt(AHWNodeNpc* Npc);
 
     // Damage that actually landed on an enemy, by whom (player / turret / guard) - for the run log
-    void ReportEnemyDamage(float Amount, const AActor* Source);
+    void ReportEnemyDamage(float Amount, const AActor* Source, const FVector& EnemyAt);
 
 private:
     void BuildGraybox();
@@ -200,6 +200,8 @@ private:
     float ResonanceLeft = 0.f;
     int32 ResonatingNow = 0;                       // invaders inside a living resonator's aura (HUD)
     int32 LivingResonators = 0;                    // at the last refresh: fewer now = one died (the PIE «comes off» proof)
+    HWNodeRules::EDefenseLine LineNow = HWNodeRules::EDefenseLine::MainGate;   // v07: where the battle is now
+    TWeakObjectPtr<AActor> GatePassFor;            // the player whose capsule ignores the gate (allies pass, doc 203 §9)
     bool bShowLabels = true;                       // ?HWLabels=0: the "T5 / ROLE / TARGET" labels off (phone frame check)
 
     struct FPing

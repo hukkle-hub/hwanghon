@@ -55,38 +55,55 @@ test('시뮬: 탈환전 — 점령 단계의 추가 철갑이 마지막 웨이�
 });
 test('시뮬: 판 안 보급 — 회복약(정책 무료분 먼저)은 쓰러짐을 줄이고, 포탑 수리는 수리·보급 권한자만 보급 2로 한다', () => {
   const weak = { dps: 600, counter: 0.35 }, none = run({ player: weak, supply: 0 }), some = run({ player: weak, supply: 12 });
-  assert.ok(some.player.deaths < none.player.deaths, '보급 12 인데 쓰러짐이 ' + none.player.deaths + ' → ' + some.player.deaths);
+  /* 성문 앞 전선(문서 203 §9)부터는 회복약으로 오래 버티면 판이 길어져 노출도 는다 — «쓰러짐 횟수» 는 지표가 아니다.
+     첫 쓰러짐이 늦어지고, 쓰러지기까지 맞는 횟수가 는다로 본다 */
+  const firstDown = r => (r.events.find(e => e.kind === 'player') || { t: Infinity }).t, perDeath = r => r.player.hitsTaken / Math.max(1, r.player.deaths);
+  assert.ok(firstDown(some) > firstDown(none) + 30, '보급 12 인데 첫 쓰러짐이 ' + firstDown(none) + ' → ' + firstDown(some));
+  assert.ok(perDeath(some) > perDeath(none) * 1.3, '쓰러짐당 맞은 횟수 ' + perDeath(none).toFixed(1) + ' → ' + perDeath(some).toFixed(1));
   assert.ok(some.supplyUsed.potionsSupply > 0 && some.supplyLeft === 12 - some.supplyUsed.potionsSupply, JSON.stringify(some.supplyUsed));
   const med = run({ player: weak, supply: 2, policies: ['medical_stock'] });
   assert.equal(med.supplyUsed.potionsFree, 3, '의료 비축 무료 회복약 3개를 먼저 써야 한다'); assert.ok(med.supplyUsed.potionsSupply <= 2);
   assert.deepEqual(run({ player: weak }).supplyUsed, { potionsFree: 0, potionsSupply: 0, turretRepairs: 0 }, '보급을 안 넘긴 옛 판이 바뀌었다');
   /* 포탑은 지금 배치에선 안 맞는다 — 노림 반경 손잡이를 넓혀 맞게 하고 본다. v04 웨이브에선 1100 이면 포탑이 245초에야 반이 깎여
-     그 전에 회복약이 보급 12를 다 쓴다 → 1500 (234초에 반, 보급이 남아 있다) */
-  const hit = run({ player: weak, supply: 12, turretAggro: 1500 }), member = run({ party: [{ name: 'm', guildRole: 'member', dps: 600 }], supply: 12, turretAggro: 1500 });
+     그 전에 회복약이 보급 12를 다 쓴다 → 1500 (234초에 반, 보급이 남아 있다).
+     성문 앞 전선(문서 203 §9)에선 적이 플레이어와 싸우느라 포탑이 거의 안 맞는다 — 수리 «규칙» 은 전선과 상관없으니 옛 벽 정문(wallGate)으로 본다 */
+  const hit = run({ player: weak, supply: 12, turretAggro: 1500, wallGate: true }), member = run({ party: [{ name: 'm', guildRole: 'member', dps: 600 }], supply: 12, turretAggro: 1500, wallGate: true });
   assert.ok(hit.supplyUsed.turretRepairs > 0, '포탑 수리를 안 했다'); assert.equal(hit.party[0].ledger.supply, 2 * hit.supplyUsed.turretRepairs, '포탑 수리 공헌 = 보급 2');
   assert.equal(member.supplyUsed.turretRepairs, 0, '권한 없는 길드원이 포탑을 고쳤다');
   /* 서울 제작(용산·구로)이 다 무너지면 수리량이 절반 (HWNodeRules::RegionEffects) — 수리 한 번당 HP 로 잰다 */
-  const broken = run({ player: weak, supply: 12, turretAggro: 1500, region: [1, 1, 0] }), per = r => r.turretRepairHp / r.supplyUsed.turretRepairs;
+  const broken = run({ player: weak, supply: 12, turretAggro: 1500, wallGate: true, region: [1, 1, 0] }), per = r => r.turretRepairHp / r.supplyUsed.turretRepairs;
   assert.ok(broken.supplyUsed.turretRepairs > 0 && per(broken) <= per(hit) * 0.55, '제작 0 인데 수리량 ' + Math.round(per(broken)) + ' / ' + Math.round(per(hit)));
 });
 /* GuildWorld v04~v06: 5급 6종 — PIE 판정(N01_PIE_Scenario_v06.json pass_conditions)을 시뮬에서 먼저 */
-test('시뮬: 5급 6종 PIE 증명 — 여섯 역할 스폰·전부 5급·파괴→발전기·추적→NPC·철갑→정문·공진 걸림/풀림 (기술자→정문 판)', () => {
+test('시뮬: 5급 6종 PIE 증명 — 여섯 역할·전부 5급·파괴→발전기·추적→NPC·철갑→정문·공진 걸림/풀림·정문 앞 전투 (2인, 기술자 없이)', () => {
   for (const seed of [7, 11, 23]) {
-    const r = run({ tech: 'gate', seed });
+    const r = S.simulate(N, { party: DUO, seed });
     assert.equal(r.threatGrade, 5);
     for (const c of r.tier5.checks) assert.ok(c.pass, '시드 ' + seed + ': FAIL ' + c.name);
     assert.ok(r.events.some(e => e.kind === 'aura' && e.to === 'on') && r.events.some(e => e.kind === 'aura' && e.to === 'off'), '공진 사건이 없다');
   }
-  /* 정문이 W3 에 무너지는 기본 판에선 철갑이 정문을 볼 일이 없다 — 판정이 그걸 FAIL 로 짚어야 한다 (거짓 PASS 금지) */
-  const base = run({});
-  assert.equal(base.tier5.checks.find(c => /Armored/.test(c.name)).pass, false);
+  /* 옛 «모두 막는 벽» 정문: 플레이어가 안에 갇혀 정문 앞 전투가 없고, 정문이 W3 에 무너져 철갑이 정문을 볼 일도 없다 — 판정이 FAIL 로 짚어야 한다 (거짓 PASS 금지) */
+  const wall = S.simulate(N, { party: DUO, wallGate: true });
+  assert.equal(wall.tier5.checks.find(c => /Armored/.test(c.name)).pass, false);
+  assert.equal(wall.tier5.checks.find(c => /MainGate/.test(c.name)).pass, false);
 });
 test('시뮬: 공진은 0.4초마다 다시 재고, 공진형이 죽으면 곁의 적 이동이 ×1.1 → ×1 로 돌아온다', () => {
-  const r = run({ tech: 'gate', debug: true }), res = r._enemies.find(e => e.role === 'resonator');
+  const r = S.simulate(N, { party: DUO, debug: true }), res = r._enemies.find(e => e.role === 'resonator');
   assert.ok(res && res.dead, '공진형이 안 죽었다'); 
   /* 공진형이 죽은 뒤 첫 프레임(1초 간격)에는 누구도 공진 받지 않는다 */
   const after = r.frames.find(f => f.t >= res.diedAt + 0.5);
   assert.ok(after && after.e.every(e => e[6] === 0), '공진형이 죽었는데 공진이 남았다 ' + JSON.stringify(after && after.e.filter(e => e[6])));
   const before = r.frames.filter(f => f.t < res.diedAt).some(f => f.e.some(e => e[6] === 1 && e[2] !== 5));
   assert.ok(before, '공진형이 살아 있을 때 공진 받은 적이 없다');
+});
+/* GuildWorld v07 + 디렉터 결정 A (문서 203 §9): 정문은 아군을 통과시키고 적만 막는다 — 인원이 정문 수명을 바꾼다 */
+test('시뮬: 성문 앞 전선 — 플레이어가 정문 밖에서 싸우고, 인원이 많을수록 정문이 오래 서며, 무너지면 방어선이 광장으로 물러난다', () => {
+  const gateDown = r => (r.events.find(e => e.kind === 'facility' && e.id === 'south_gate') || { t: Infinity }).t;
+  const none = run({ player: null }), solo = run({}), duo = S.simulate(N, { party: DUO }), wall = S.simulate(N, { party: DUO, wallGate: true });
+  assert.ok(gateDown(solo) > gateDown(none) + 30, '솔로가 정문을 30초도 못 늘린다 ' + gateDown(none) + ' → ' + gateDown(solo));
+  assert.ok(gateDown(duo) >= gateDown(solo), '2인이 솔로보다 정문을 빨리 잃는다');
+  assert.ok(gateDown(wall) < gateDown(duo), '벽 정문인데 정문이 더 오래 선다 — 통과가 안 먹혔다');
+  /* 정문이 무너진 판: v07 대로 방어선 사건이 남는다 */
+  assert.ok(solo.events.some(e => e.kind === 'line' && e.id === 'central_plaza'), '정문이 무너졌는데 방어선이 광장으로 안 물러났다');
+  assert.equal(none.line, 'comms_final', '발전기까지 무너진 판의 마지막 방어선');
 });

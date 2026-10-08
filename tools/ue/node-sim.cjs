@@ -53,8 +53,8 @@ function simulate(N, o = {}) {
   const gate = facility('gate'), gateY = gate ? gate.c[1] : -1e9;
 
   /* ── 땅과 벽 ── */
-  const floorAt = (x, y, z) => H.floorAt(bs, x, y, z);
-  /* passGate: 아군 통과 정문 실험 (opt.sally) — 플레이어는 서 있는 정문을 지나가고 적만 막힌다 (문서 203 §9) */
+  const floorAt = (x, y, z) => H.floorAt(bs, x, y, z), standAt = (x, y, foot) => H.standAt(bs, x, y, foot);   /* 걸음은 standAt (올라설 수 있는 가장 높은 면) */
+  /* passGate: 정문은 아군(플레이어)을 통과시키고 적만 막는다 — 성문 앞 전선 (문서 203 §9). opt.wallGate 면 옛 «모두 막는 벽» */
   function inSolid(x, y, footZ, passGate = false) {
     const z0 = footZ + 10, z1 = footZ + 2 * CAPSULE_HALF - 10;
     for (const w of walls) if (Math.abs(x - w.c[0]) < w.h[0] + BODY_R && Math.abs(y - w.c[1]) < w.h[1] + BODY_R && z1 > w.c[2] - w.h[2] && z0 < w.c[2] + w.h[2]) return true;
@@ -63,7 +63,7 @@ function simulate(N, o = {}) {
   }
   /* 한 걸음: 막히면 x·y 따로 미끄러진다. 발 높이(foot)를 들고 다닌다. 턱 45 cm 이상·땅 없음 = 막힘 */
   function step(body, dir, dist) {
-    const tryAt = (dx, dy) => { const x = body.p[0] + dx, y = body.p[1] + dy, fz = floorAt(x, y, body.foot);
+    const tryAt = (dx, dy) => { const x = body.p[0] + dx, y = body.p[1] + dy, fz = standAt(x, y, body.foot);
       if (fz == null || fz - body.foot > 45 || inSolid(x, y, fz, !!body.passGate)) return false; body.p = [x, y, fz + CAPSULE_HALF]; body.foot = fz; return true; };
     const dx = dir[0] * dist, dy = dir[1] * dist;
     if (tryAt(dx, dy)) return true;
@@ -100,7 +100,7 @@ function simulate(N, o = {}) {
   const blankLedger = () => Object.fromEntries(R.CATEGORIES.map(c => [c, 0]));
   const pls = party.map((q, i) => { const sp = P(N.player_start), b = place(party.length > 1 ? [sp[0] + (i % 4 - 1.5) * 160, sp[1] - Math.floor(i / 4) * 160, sp[2]] : sp);   /* 혼자면 출발점 그대로 */
     return { ...q, job: q.job || 'gate', guildRole: q.guildRole || 'member', counter: q.counter ?? 0.35, ...b, hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: i * 0.05,
-      kills: 0, rescues: 0, counters: 0, hitsTaken: 0, dealt: 0, ledger: blankLedger(), lastPing: -99, passGate: !!opt.sally }; });
+      kills: 0, rescues: 0, counters: 0, hitsTaken: 0, dealt: 0, ledger: blankLedger(), lastPing: -99, passGate: !opt.wallGate }; });
   const pl = pls[0] || null;
   const alive = q => q && q.deadFor < 0;
   const playerAlive = () => pls.some(alive);
@@ -118,11 +118,11 @@ function simulate(N, o = {}) {
   function spawn(role) { const s = serial++, rr = N.role_routes[role], name = Array.isArray(rr) ? rr[s % rr.length] : rr || 'main', route = (N.routes[name] || []).map(P);
     /* 측면 길: 길 입구 «뒤» 150 에서 60 만 흩는다 (AHWNodeDirector::SpawnEnemy) — 입구에서 160 을 흩으면 길섶으로 떨어진 질주형이
        경사로 옆면(발판보다 64 높다, 턱 45 초과)에 붙어 못 올라갔다 (W5 의 32번) */
-    const own = role === 'runner' && route.length, ang = s * 2.39996;
+    const own = C.goesRoundTheFlank(role) && route.length, ang = s * 2.39996;   /* 질주형·추적형은 측면 길 입구에서 */
     const back = own && route.length > 1 ? dirTo(route[1], route[0]) : [0, 0], base = own ? [route[0][0] + back[0] * 150, route[0][1] + back[1] * 150, route[0][2]] : P(N.spawns[s % N.spawns.length]);
     const sc = own ? 60 : 160, st = C.roleStats(role), b = place([base[0] + Math.cos(ang) * sc, base[1] + Math.sin(ang) * sc, base[2]]);
     enemies.push({ id: s, role, st, ...b, hp: st.health * diff * hpScale, max: st.health * diff * hpScale, route, ri: 0, ext: [], ei: 0, tk: 'none', ov: null, phase: 'move', left: 0, cd: 0, think: 0,
-      flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p], res: 0, blow: 0, attack: null, grade: C.THREAT_GRADE, archetype: C.ARCHETYPE[role] });
+      own: !!own, flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p], res: 0, blow: 0, attack: null, grade: C.THREAT_GRADE, archetype: C.ARCHETYPE[role] });
     proof.noteSpawn(role, C.THREAT_GRADE); }
   /* 공진형이 서 있을 자리: 3000 안의 무리(공진형 제외) 중심, 없으면 가장 가까운 무리 하나 — 그 뒤 350 (HWNodeRules::ResonatorHoldPoint) */
   function packOf(e) { let n = 0, sx = 0, sy = 0, near = null, nd = Infinity; const gs = standing(gate);
@@ -170,18 +170,20 @@ function simulate(N, o = {}) {
     q.ledger.defense += C.defenseCredit(e.role, attacking ? 0 : -1);
     const pg = pings.find(g => C.pingCredits(t - g.t, d2(e.p, g.at))); if (pg) pg.by.ledger.command += 1;
   }
-  function hurtEnemy(e, amount, byPlayer, t, who = byPlayer ? 'player' : e.killer, by = null) { if (e.dead) return; e.byPlayer = byPlayer; const d = Math.min(e.hp, amount * e.armor.damageScale(e.st.armorScale)); dealt[who] = (dealt[who] || 0) + d; e.hp -= d; if (by) by.dealt += d;
+  function hurtEnemy(e, amount, byPlayer, t, who = byPlayer ? 'player' : e.killer, by = null) { if (e.dead) return;
+    if (byPlayer) proof.noteDefenderHit(e.p[1], gateY, standing(gate));   /* v07: 정문 앞 전투 */ e.byPlayer = byPlayer; const d = Math.min(e.hp, amount * e.armor.damageScale(e.st.armorScale)); dealt[who] = (dealt[who] || 0) + d; e.hp -= d; if (by) by.dealt += d;
     if (e.hp <= 0) { e.dead = true; e.hp = 0; e.diedAt = t; if (byPlayer && by) creditKill(by, e, t); e.killer = byPlayer ? 'player' : e.killer || 'node'; waves.enemyDied(waves.clock); } }
   function npcHurt(n, amount, t) { const before = n.life.state; if (!n.life.applyDamage(amount)) return;
     log(t, 'npc', n.role + ' ' + before + ' → ' + n.life.state, n.role, n.life.state);
     if (n.life.state === 'missing') { n.order = null; Object.assign(n, place(P(N.holding_spot))); } }
 
   function think(e) {
-    if (e.role === 'runner' && !e.flanked && e.p[1] > gateY + 200) e.flanked = true;
+    if (C.goesRoundTheFlank(e.role) && !e.flanked && e.p[1] > gateY + 200) e.flanked = true;
     const v = view(e.p, e.flanked, e); let next = C.chooseTarget(e.role, v);
+    if (next !== e.raw) { e.raw = next; proof.noteTarget(e.role, next); }   /* 판정은 정문 차단 «전» 의 판단 (selects) — UE 와 같이 */
     if (next !== 'none' && next !== 'gate') { const g = targetPoint(next, e.p, e);
       if (C.blockedByGate(e.p[1], g[1], gateY, standing(gate), e.role, e.flanked)) next = 'gate'; }
-    if (next !== e.tk) { e.tk = next; proof.noteTarget(e.role, next); e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p, e.role); e.ei = 0; }
+    if (next !== e.tk) { e.tk = next; e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p, e.role); e.ei = 0; }
     else if (e.tk !== 'none' && e.ri >= e.route.length && e.ei >= e.ext.length && d2(e.p, targetPoint(e.tk, e.p, e)) > DIRECT) { e.ext = extensionFor(e.tk, e.p, e.role); e.ei = 0; }
     e.ov = null;
     if (e.tk !== 'player') e.ov = barricadeOnPath(e.p, goal(e));
@@ -217,7 +219,8 @@ function simulate(N, o = {}) {
       if (dist <= reach(e, e.tk)) { if (e.tk === 'ally') { e.attackT = t; return; } windup(); e.attackT = t; return; } }   /* 공진형: 무리 뒤 자리에 섰다 — 친 게 아니라 «머문다» (막힘 아님) */
     /* 220 cm «도착» 은 웨이포인트에만 — 정문(사거리 140)·플레이어(170)를 그 반경에서 멈추면 영원히 못 친다 (UE 에서 고친 버그) */
     const g = goal(e);
-    if (hasWaypoint(e) && d2(g, e.p) < 220) { if (e.ri < e.route.length) e.ri++; else e.ei++; return; }
+    /* 측면 길 입구(첫 지점)는 60 — 220 이면 축에서 비낀 채 꺾어 경사로 옆면(턱 64)에 붙는다 (UE AHWNodeEnemy::StepMove 와 같이) */
+    if (hasWaypoint(e) && d2(g, e.p) < (e.own && e.ri === 0 ? 60 : 220)) { if (e.ri < e.route.length) e.ri++; else e.ei++; return; }
     step(e, dirTo(e.p, g), e.st.speed * C.resonanceMove(e.res) * dt);
   }
   /* 공진 (AHWNodeDirector::RefreshResonance): 0.4초마다, 살아 있는 공진형 1800 안의 다른 감염체 — 중첩 1 */
@@ -246,7 +249,7 @@ function simulate(N, o = {}) {
 
   /* 사람은 길을 안다: 곧장 갈 수 있으면 곧장, 아니면 길 그래프로 (1초마다 다시 짠다) */
   function clearLine(a, b, passGate = false) { const L = d2(a, b), n = Math.max(1, Math.ceil(L / 100)); let foot = a[2] - CAPSULE_HALF;
-    for (let k = 1; k <= n; k++) { const x = a[0] + (b[0] - a[0]) * k / n, y = a[1] + (b[1] - a[1]) * k / n, fz = floorAt(x, y, foot);
+    for (let k = 1; k <= n; k++) { const x = a[0] + (b[0] - a[0]) * k / n, y = a[1] + (b[1] - a[1]) * k / n, fz = standAt(x, y, foot);
       if (fz == null || fz - foot > 45 || inSolid(x, y, fz, passGate)) return false; foot = fz; } return true; }
   function walkTo(body, to, dist) {
     body.repath = (body.repath || 0) - opt.dt;
@@ -318,7 +321,7 @@ function simulate(N, o = {}) {
   }
 
   /* ── 한 판 ── */
-  let t = 0, nextFrame = 0, result = null, power = 3;
+  let t = 0, nextFrame = 0, result = null, power = 3, line = 'main_gate';
   const prep = C.prepSeconds(fx(), pe);
   log(0, 'state', '준비 ' + prep + '초 (판은 침공부터 잰다)');
   while (t < opt.maxTime && !result) {
@@ -331,6 +334,8 @@ function simulate(N, o = {}) {
     for (const e of enemies) if (!e.dead) { tickEnemy(e, dt, t); if (d2(e.p, e.lastP) > 50) { e.lastP = [...e.p]; e.stuckSince = t; } e.stuck = t - Math.max(e.stuckSince ?? t, e.attackT ?? 0); }
     tickNpcs(dt, t);
     resonance(dt, t);
+    { const ln = C.defenseLine(standing(gate), standing(facility('generator')));   /* v07 방어선 이동 — UE RunEvent("line") 와 같이 */
+      if (ln !== line) { line = ln; log(t, 'line', ln === 'central_plaza' ? '방어선 → 중앙 광장' : ln === 'comms_final' ? '방어선 → 통신 최종선' : '방어선 → 정문', ln, 'line'); } }
     power = defences(dt, t);
     const comms = facility('comms'), onComms = enemies.some(e => !e.dead && e.tk === 'comms' && comms && surf(comms, e.p) <= (N.comms_hold_radius || 900));   // EnemyOnComms: 통신센터를 노리는 적만
     if ((opt.retake ? R.tickRetake : R.tickInvasion)(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', (opt.retake ? '탈환 실패 — ' : '함락 — ') + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거'), 'node', 'fallen'); }
@@ -344,11 +349,12 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, sally: !!opt.sally, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, wallGate: !!opt.wallGate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
     dealt: Object.fromEntries(Object.entries(dealt).map(([k, v]) => [k, Math.round(v)])), spawned: enemies.length, alive: enemies.length - dead.length, stuck: stuck.map(e => e.role + '@' + Math.round(e.p[0]) + ',' + Math.round(e.p[1]) + ' →' + e.tk),
+    line,
     facilityHits: Object.fromEntries(Object.entries(facHits).map(([k, v]) => [k, Math.round(v)])),
     threatGrade: C.THREAT_GRADE, tier5: { pass: proof.pass(), checks: proof.report() }, resonance: { seconds: +resLog.on.toFixed(1), maxAffected: resLog.maxAffected },
     npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), dodges: pls.reduce((a, q) => a + (q.dodges || 0), 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,

@@ -373,8 +373,21 @@ inline bool Has(float D) { return D >= 0.f; }
 constexpr float ResonatorSelfDefenceCm = 600.f;
 constexpr float ResonatorTrailCm = 350.f;
 
+// The defence line (GuildWorld v07 N01_DefenseFlow): the battle moves back as the node is pushed - the gate falls, the
+// line is the central plaza; the generator falls too, it is the comms centre's last stand. Read off what still stands.
+// (v07's own code only reaches CommsFinal when the comms are destroyed - the node is lost then, so here it is the
+// generator that marks it.) The gate lets the defenders through and stops the infected (doc 203 §9).
+enum class EDefenseLine : unsigned char { MainGate, CentralPlaza, CommsFinal };
+
+inline EDefenseLine DefenseLine(bool bGateStanding, bool bGeneratorStanding)
+{
+    if (bGateStanding) return EDefenseLine::MainGate;
+    return bGeneratorStanding ? EDefenseLine::CentralPlaza : EDefenseLine::CommsFinal;
+}
+
 inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
 {
+    const EDefenseLine Line = DefenseLine(Has(V.Gate), Has(V.Generator));
     const auto Facility = [&V](bool bGeneratorFirst) -> ETargetKind
     {
         // the breaker (v05): generator, then comms, then the gate - a facility north of a standing gate still meets
@@ -389,6 +402,9 @@ inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
     switch (Role)
     {
     case EEnemyRole::Normal:
+        // v07: at the plaza the walkers follow the defenders' line (any distance); at the gate and the last stand they
+        // take a player who is close and otherwise the facility
+        if (Line == EDefenseLine::CentralPlaza && Has(V.Player)) return ETargetKind::Player;
         if (Has(V.Player) && V.Player <= 900.f) return ETargetKind::Player;
         if (Facility(false) != ETargetKind::None) return Facility(false);
         return Has(V.Player) ? ETargetKind::Player : ETargetKind::None;
@@ -407,10 +423,14 @@ inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
         return Has(V.Player) ? ETargetKind::Player : ETargetKind::None;
     }
     case EEnemyRole::Stalker:
+        // v04 «out of sight», v07 «hunts NPCs whatever the line»: round the flank like a runner, then the NPC
+        if (!V.bFlanked) return ETargetKind::None;
         if (Has(V.Npc)) return ETargetKind::Npc;
         return Has(V.Player) ? ETargetKind::Player : ETargetKind::None;
     case EEnemyRole::ArmoredElite:
-        // shoves through the gate; turns on a player only when blocked face to face
+        // shoves through the gate; turns on a player only when blocked face to face. v07: through the gate it pushes the
+        // defenders' formation at the plaza, and the comms centre at the last stand
+        if (Line == EDefenseLine::CentralPlaza && Has(V.Player)) return ETargetKind::Player;
         if (Has(V.Player) && V.Player <= 250.f) return ETargetKind::Player;
         if (Has(V.Gate)) return ETargetKind::Gate;
         if (Has(V.Comms)) return ETargetKind::Comms;
@@ -426,11 +446,13 @@ inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
 }
 
 // The gate line is a wall (+Y = north, enemies come from the south): anyone south of it whose target is north of it
-// meets the gate first - except a Runner that has already gone round the flank.
+// meets the gate first - except a Runner or a Stalker that has already gone round the flank.
+inline bool GoesRoundTheFlank(EEnemyRole Role) { return Role == EEnemyRole::Runner || Role == EEnemyRole::Stalker; }
+
 inline bool BlockedByGate(float EnemyY, float TargetY, float GateY, bool bGateStanding, EEnemyRole Role, bool bFlanked)
 {
     if (!bGateStanding) return false;
-    if (Role == EEnemyRole::Runner && bFlanked) return false;
+    if (GoesRoundTheFlank(Role) && bFlanked) return false;
     return EnemyY < GateY && TargetY > GateY;
 }
 
@@ -572,7 +594,7 @@ inline float ArmoredWindupSeconds(EArmoredAttack A)
 
 // The PIE proof (GuildWorld v06 N01_PIE_Scenario_v06.json pass_conditions), kept by the authority during a run and
 // printed as PASS / FAIL lines at its end - the same checks in the simulator (tools/ue/node-sim.cjs).
-constexpr int Tier5CheckCount = 7;
+constexpr int Tier5CheckCount = 8;
 struct FTier5Evidence
 {
     bool Spawned[static_cast<int>(EEnemyRole::Count)] = {};
@@ -582,6 +604,7 @@ struct FTier5Evidence
     bool ArmoredOnGate = false;
     bool AuraApplied = false;    // a living grade-5 invader went from no resonance to resonance
     bool AuraReverted = false;   // ...and back, still alive, because a resonator died (not just walked out of the radius)
+    bool MainGateFight = false;  // v07: a defender hit an invader outside the standing gate (the battle is at the gate)
 
     void NoteSpawn(EEnemyRole Role, int Grade)
     {
@@ -600,13 +623,17 @@ struct FTier5Evidence
         if (Before == 0 && After > 0) AuraApplied = true;
         if (Before > 0 && After == 0 && bResonatorGone) AuraReverted = true;
     }
+    void NoteDefenderHit(float EnemyY, float GateY, bool bGateStanding)
+    {
+        if (bGateStanding && EnemyY < GateY) MainGateFight = true;
+    }
     bool AllSpawned() const
     {
         for (int I = 0; I < static_cast<int>(EEnemyRole::Count); ++I) if (!Spawned[I]) return false;
         return true;
     }
     // 0 all six roles spawn, 1 all grade 5, 2 breaker -> generator, 3 stalker -> NPC, 4 armoured -> gate,
-    // 5 the aura raises a neighbour, 6 the aura comes off again
+    // 5 the aura raises a neighbour, 6 the aura comes off again, 7 the defenders fight at the standing gate (v07)
     bool Check(int Index) const
     {
         switch (Index)
@@ -618,6 +645,7 @@ struct FTier5Evidence
         case 4: return ArmoredOnGate;
         case 5: return AuraApplied;
         case 6: return AuraReverted;
+        case 7: return MainGateFight;
         default: return false;
         }
     }
@@ -639,6 +667,7 @@ inline const char* Tier5CheckName(int Index)
     case 4: return "Armored selects Gate at least once";
     case 5: return "Resonator aura changes a nearby T5 monster multiplier";
     case 6: return "the multiplier returns once the Resonator is gone";
+    case 7: return "defenders fight at the MainGate before it falls";
     default: return "";
     }
 }

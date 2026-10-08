@@ -207,10 +207,16 @@ void AHWNodeEnemy::Tick(float DeltaSeconds)
 void AHWNodeEnemy::Think()
 {
     const FVector Here = GetActorLocation();
-    if (Role == EHWNodeEnemyRole::Runner && !bFlanked && Here.Y > Director->GateLineY() + 200.f) bFlanked = true;
+    if (HWNodeRules::GoesRoundTheFlank(RuleRole()) && !bFlanked && Here.Y > Director->GateLineY() + 200.f) bFlanked = true;
 
     const HWNodeRules::FTargetView View = Director->BuildView(Here, bFlanked, this);
     HWNodeRules::ETargetKind Next = HWNodeRules::ChooseTarget(RuleRole(), View);
+    // the PIE evidence counts what the role chose, before the gate is in the way ("Breaker selects Generator")
+    if (Next != RawTarget)
+    {
+        RawTarget = Next;
+        Director->ReportTargetChosen(this, Next);
+    }
 
     // a target north of the standing gate is reached through the gate (HWNodeRules::BlockedByGate) - a player too:
     // a player standing just inside the gate used to pin the infected against it, neither hitting him nor the gate
@@ -230,7 +236,6 @@ void AHWNodeEnemy::Think()
         Extension = Director->ExtensionFor(Next, RouteIndex < Route.Num() ? Route.Last() : Here, this);
         ExtensionIndex = 0;
         RefreshLabel();
-        Director->ReportTargetChosen(this, Next);   // the PIE evidence (v06): breaker on the generator, stalker on an NPC...
     }
     // path walked but the target is still far (the NPC it was after was taken, another one is wanted): path again
     else if (TargetKind != HWNodeRules::ETargetKind::None && RouteIndex >= Route.Num() && ExtensionIndex >= Extension.Num()
@@ -350,7 +355,10 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
     // the enemy just out of reach for good (found by tools/ue/node-sim.cjs, docs/design/201 §8).
     const FVector Goal = GoalPoint();
     const FVector To = Goal - Here;
-    if (HasWaypoint(Here) && FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(220.f))
+    // a flank trail's first point (runner, stalker) is reached at 60: at 220 they turned off the trail's axis into the
+    // ramp's side, 64 cm over the spawn pad, and stood there (node-sim.cjs)
+    const float Arrive = HWNodeRules::GoesRoundTheFlank(RuleRole()) && RouteIndex == 0 ? 60.f : 220.f;
+    if (HasWaypoint(Here) && FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(Arrive))
     {
         if (RouteIndex < Route.Num()) ++RouteIndex;
         else ++ExtensionIndex;
@@ -420,7 +428,7 @@ bool AHWNodeEnemy::ReceiveSystemHit_Implementation(float InDamage, EHWAttackTier
     if (Tier == EHWAttackTier::Counter) Multiplier = 1.18f;
     const float Applied = FMath::Min(Health, InDamage * Multiplier * Armor.DamageScale(Stats.ArmorScale));
     Health -= Applied;
-    if (Director) Director->ReportEnemyDamage(Applied, InstigatorActor);   // the run log's damage by source (node-compare.mjs)
+    if (Director) Director->ReportEnemyDamage(Applied, InstigatorActor, GetActorLocation());   // the run log's damage by source (node-compare.mjs)
 
     // a heavy blow interrupts the light ones' wind-up; the elite only flinches when its armour is cracked
     const bool bCracked = Armor.DamageScale(Stats.ArmorScale) >= 1.f;

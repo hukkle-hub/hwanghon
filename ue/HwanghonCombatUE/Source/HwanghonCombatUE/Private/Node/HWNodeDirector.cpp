@@ -3,6 +3,7 @@
 #include "Boss/HWBossCharacter.h"
 #include "Character/HWAinCharacter.h"
 #include "Combat/HWCombatComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
@@ -128,6 +129,17 @@ namespace HWNodeDirectorLocal
     }
 
     // the simulator's e.tk[0]
+    // the simulator's line ids (node-combat-rules.cjs defenseLine)
+    const TCHAR* LineKey(HWNodeRules::EDefenseLine L)
+    {
+        switch (L)
+        {
+        case HWNodeRules::EDefenseLine::CentralPlaza: return TEXT("central_plaza");
+        case HWNodeRules::EDefenseLine::CommsFinal: return TEXT("comms_final");
+        default: return TEXT("main_gate");
+        }
+    }
+
     TCHAR TargetKey(HWNodeRules::ETargetKind K)
     {
         switch (K)
@@ -646,7 +658,7 @@ void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
     if (Config->SpawnPoints.Num() == 0) return;
     const TArray<FVector>& EnemyRoute = Config->Route(Config->RouteForRole(EnemyRole, Serial));
     // flank routes start on their own trail; the rest at the checkpoint spawns
-    const bool bOwnStart = EnemyRole == EHWNodeEnemyRole::Runner && EnemyRoute.Num() > 0;
+    const bool bOwnStart = HWNodeRules::GoesRoundTheFlank(static_cast<HWNodeRules::EEnemyRole>(EnemyRole)) && EnemyRoute.Num() > 0;
     // a flank trail: 150 cm behind its start, scattered 60 - scattered 160 round the start itself, a runner landed beside
     // the trail and walked into the ramp's side (64 cm over the pad, above the 45 cm step) for good (node-sim.cjs, W5)
     const FVector Back = bOwnStart && EnemyRoute.Num() > 1 ? (EnemyRoute[0] - EnemyRoute[1]).GetSafeNormal2D() : FVector::ZeroVector;
@@ -1180,6 +1192,17 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
         Player->SetActorRotation(FRotator(0.f, -90.f, 0.f));   // facing south, down the road the enemies come up
         bPlayerPlaced = true;
     }
+    // the gate stops the infected, not the defenders (doc 203 §9, GuildWorld v07 «MainGate battle»): the player's capsule
+    // ignores it when moving, the enemies' capsules still hit it. Again if the pawn was replaced.
+    if (GatePassFor.Get() != Player)
+    {
+        if (AHWNodeFacility* Gate = GetFacility(EHWNodeFacilityKind::Gate))
+        {
+            Player->GetCapsuleComponent()->IgnoreActorWhenMoving(Gate, true);
+            Player->MoveIgnoreActorAdd(Gate);
+            GatePassFor = Player;
+        }
+    }
     if (InputBoundTo.Get() != Player)   // bind again if the pawn was replaced, not just revived
     {
         Player->OnLocalInteract.AddUObject(this, &AHWNodeDirector::HandleInteract);
@@ -1364,6 +1387,21 @@ void AHWNodeDirector::TickRun(float DeltaSeconds)
         RefreshResonance();
         ResonanceLeft = HWNodeRules::ResonanceRefreshSeconds;
     }
+    // v07: the battle moves back as the node is pushed (the enemies' choice follows from what stands - HWNodeRules::DefenseLine)
+    {
+        const AHWNodeFacility* Gen = GetFacility(EHWNodeFacilityKind::Generator);
+        const HWNodeRules::EDefenseLine NowLine = HWNodeRules::DefenseLine(IsGateStanding(), Gen && !Gen->IsDestroyed());
+        if (NowLine != LineNow)
+        {
+            LineNow = NowLine;
+            const TCHAR* Key = HWNodeDirectorLocal::LineKey(LineNow);
+            RunEvent(TEXT("line"), Key, TEXT("line"));
+            Notice = LineNow == HWNodeRules::EDefenseLine::CentralPlaza ? TEXT("DEFENCE LINE -> CENTRAL PLAZA: the gate is down, hold the plaza")
+                : LineNow == HWNodeRules::EDefenseLine::CommsFinal ? TEXT("DEFENCE LINE -> COMMS: last stand at the comms centre") : TEXT("DEFENCE LINE -> MAIN GATE");
+            NoticeFor = 5.f;
+            UE_LOG(LogTemp, Display, TEXT("[HWNode] defence line -> %s"), Key);
+        }
+    }
     if (!bBossPhase)
     {
         const int32 Wave = Waves.Tick(DeltaSeconds);
@@ -1451,7 +1489,7 @@ void AHWNodeDirector::DrawHud() const
             FColor(200, 230, 160));
         if (!bBossPhase)
         {
-            Show(FString::Printf(TEXT("ThreatGrade %d - all six roles%s"), HWNodeRules::NodeThreatGrade,
+            Show(FString::Printf(TEXT("Line: %s   ThreatGrade %d - all six roles%s"), HWNodeDirectorLocal::LineKey(LineNow), HWNodeRules::NodeThreatGrade,
                 ResonatingNow > 0 ? *FString::Printf(TEXT("   RESONANCE: %d strengthened (move x%.2f, attack x%.2f) - kill the resonator"), ResonatingNow,
                     HWNodeRules::ResonanceMoveScale, HWNodeRules::ResonanceAttackScale) : TEXT("")),
                 ResonatingNow > 0 ? FColor(255, 110, 190) : FColor(200, 200, 200));
@@ -1505,6 +1543,7 @@ void AHWNodeDirector::BeginRunLog()
     RunFrames.Reset();
     InvasionClock = 0.f;
     Tier5 = HWNodeRules::FTier5Evidence();
+    LineNow = HWNodeRules::EDefenseLine::MainGate;
     ResonanceLeft = 0.f;
     ResonatingNow = 0;
     LivingResonators = 0;
@@ -1546,10 +1585,11 @@ void AHWNodeDirector::RunEvent(const TCHAR* Kind, const FString& Id, const TCHAR
         InvasionClock, Kind, *Id, To, Kind, *Id, To));
 }
 
-void AHWNodeDirector::ReportEnemyDamage(float Amount, const AActor* Source)
+void AHWNodeDirector::ReportEnemyDamage(float Amount, const AActor* Source, const FVector& EnemyAt)
 {
     if (InvasionClock < 0.f || Amount <= 0.f || !Source) return;
     const APawn* Pawn = Cast<APawn>(Source);
+    if (Pawn && Pawn->IsPlayerControlled()) Tier5.NoteDefenderHit(EnemyAt.Y, GateLineY(), IsGateStanding());   // v07: the battle at the gate
     if (Cast<AHWNodeNpc>(Source)) DealtByGuard += Amount;
     else if (Cast<AHWNodeFacility>(Source)) DealtByTurret += Amount;
     else if (Pawn && Pawn->IsPlayerControlled()) DealtByPlayer += Amount;

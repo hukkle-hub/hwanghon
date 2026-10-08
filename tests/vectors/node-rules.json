@@ -1050,7 +1050,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1062,7 +1062,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1086,7 +1086,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1098,7 +1098,7 @@
      "npc": 600,
      "flanked": false
     },
-    "expect": "npc"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1158,7 +1158,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1170,7 +1170,7 @@
      "npc": 700,
      "flanked": false
     },
-    "expect": "npc"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1182,7 +1182,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1194,7 +1194,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1206,7 +1206,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1626,7 +1626,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1638,7 +1638,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1674,7 +1674,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "stalker",
@@ -1686,7 +1686,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "player"
+    "expect": "none"
    },
    {
     "role": "armored_elite",
@@ -2138,6 +2138,138 @@
      "flanked": false
     },
     "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 4000,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 4000,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 4000,
+     "gate": -1,
+     "generator": -1,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 4000,
+     "gate": -1,
+     "generator": -1,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": 600,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": 600,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "normal",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "generator"
+   },
+   {
+    "role": "armored_elite",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 500,
+     "gate": 400,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 500,
+     "gate": 400,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": 5000,
+     "flanked": true
+    },
+    "expect": "npc"
+   },
+   {
+    "role": "stalker",
+    "view": {
+     "player": 500,
+     "gate": 400,
+     "generator": 3000,
+     "comms": 6000,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "player"
    }
   ],
   "gate": [
@@ -2206,6 +2338,28 @@
      false
     ],
     "expect": false
+   },
+   {
+    "args": [
+     -12000,
+     2100,
+     -9800,
+     true,
+     "stalker",
+     true
+    ],
+    "expect": false
+   },
+   {
+    "args": [
+     -12000,
+     2100,
+     -9800,
+     true,
+     "stalker",
+     false
+    ],
+    "expect": true
    }
   ],
   "waves": {
@@ -2962,7 +3116,8 @@
     "Stalker selects NPC at least once",
     "Armored selects Gate at least once",
     "Resonator aura changes a nearby T5 monster multiplier",
-    "the multiplier returns once the Resonator is gone"
+    "the multiplier returns once the Resonator is gone",
+    "defenders fight at the MainGate before it falls"
    ],
    "resonance": {
     "radius": 1800,
@@ -3266,6 +3421,7 @@
       0,
       0,
       0,
+      0,
       0
      ],
      "pass": false
@@ -3306,6 +3462,7 @@
      "checks": [
       1,
       1,
+      0,
       0,
       0,
       0,
@@ -3381,9 +3538,10 @@
       1,
       1,
       1,
-      1
+      1,
+      0
      ],
-     "pass": true
+     "pass": false
     },
     {
      "ops": [
@@ -3446,6 +3604,7 @@
       0,
       1,
       1,
+      0,
       0
      ],
      "pass": false
@@ -3480,6 +3639,7 @@
       0,
       0,
       1,
+      0,
       0,
       0,
       0
@@ -3553,10 +3713,195 @@
       1,
       1,
       1,
+      0,
       0
      ],
      "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       5
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ],
+      [
+       "target",
+       "breaker",
+       "generator"
+      ],
+      [
+       "target",
+       "stalker",
+       "npc"
+      ],
+      [
+       "target",
+       "armored_elite",
+       "gate"
+      ],
+      [
+       "res",
+       0,
+       1,
+       false
+      ],
+      [
+       "res",
+       1,
+       0,
+       true
+      ],
+      [
+       "hit",
+       -9000,
+       -9800,
+       true
+      ],
+      [
+       "hit",
+       -10200,
+       -9800,
+       false
+      ]
+     ],
+     "checks": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+     ],
+     "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       5
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ],
+      [
+       "target",
+       "breaker",
+       "generator"
+      ],
+      [
+       "target",
+       "stalker",
+       "npc"
+      ],
+      [
+       "target",
+       "armored_elite",
+       "gate"
+      ],
+      [
+       "res",
+       0,
+       1,
+       false
+      ],
+      [
+       "res",
+       1,
+       0,
+       true
+      ],
+      [
+       "hit",
+       -10200,
+       -9800,
+       true
+      ]
+     ],
+     "checks": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "pass": true
     }
+   ],
+   "lines": [
+    [
+     true,
+     true,
+     "main_gate"
+    ],
+    [
+     true,
+     false,
+     "main_gate"
+    ],
+    [
+     false,
+     true,
+     "central_plaza"
+    ],
+    [
+     false,
+     false,
+     "comms_final"
+    ]
    ]
   }
  },

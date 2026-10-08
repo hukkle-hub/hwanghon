@@ -79,7 +79,10 @@ bool FHWNodeRolesAndWavesTest::RunTest(const FString& Parameters)
     V.Npc = 9000.f;
     TestTrue(TEXT("normal fights the nearby player"), ChooseTarget(EEnemyRole::Normal, V) == ETargetKind::Player);
     TestTrue(TEXT("breaker ignores the player for the generator"), ChooseTarget(EEnemyRole::Breaker, V) == ETargetKind::Generator);
-    TestTrue(TEXT("stalker hunts the technician"), ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Npc);
+    TestTrue(TEXT("stalker goes round the flank first"), ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::None);
+    V.bFlanked = true;
+    TestTrue(TEXT("stalker hunts the technician once round the flank"), ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Npc);
+    V.bFlanked = false;
     TestTrue(TEXT("elite goes for the gate"), ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Gate);
     TestTrue(TEXT("the gate is in the way"), BlockedByGate(-12000.f, 2100.f, -9800.f, true, EEnemyRole::Breaker, false));
 
@@ -92,6 +95,7 @@ bool FHWNodeRolesAndWavesTest::RunTest(const FString& Parameters)
     V.Player = 2000.f;
     TestTrue(TEXT("the resonator keeps behind the pack"), ChooseTarget(EEnemyRole::Resonator, V) == ETargetKind::Ally);
     TestEqual(TEXT("the aura never stacks"), ResonanceStacks(2), 1);
+    TestTrue(TEXT("gate down: the defence line falls back to the central plaza (v07)"), DefenseLine(false, true) == EDefenseLine::CentralPlaza);
     return true;
 }
 

@@ -22,11 +22,15 @@ const roleStats = r => STATS[r] || STATS.normal;
 /* HWNodeRules::ChooseTarget — 거리(cm), 음수 = 없음(무너짐·죽음) */
 const has = d => d != null && d >= 0;
 const RESONATOR_SELF_DEFENCE = 600, RESONATOR_TRAIL = 350, RESONATOR_PACK_RADIUS = 3000;
+/* 방어선 (v07 DefenseFlow — HWNodeRules::DefenseLine): 정문이 서 있으면 정문, 무너지면 중앙 광장, 발전기까지 무너지면 통신 최종선 */
+const defenseLine = (gate, generator) => gate ? 'main_gate' : generator ? 'central_plaza' : 'comms_final';
 function chooseTarget(role, v) {
+  const line = defenseLine(has(v.gate), has(v.generator));
   /* 파괴형 (v05): 발전기 → 통신 → 정문 */
   const facility = genFirst => genFirst && has(v.generator) ? 'generator' : genFirst && has(v.comms) ? 'comms' : has(v.gate) ? 'gate' : has(v.generator) ? 'generator' : has(v.comms) ? 'comms' : 'none';
   switch (role) {
     case 'normal':
+      if (line === 'central_plaza' && has(v.player)) return 'player';   /* v07: 광장에선 방어선(플레이어)을 따라 민다 */
       if (has(v.player) && v.player <= 900) return 'player';
       if (facility(false) !== 'none') return facility(false);
       return has(v.player) ? 'player' : 'none';
@@ -39,9 +43,11 @@ function chooseTarget(role, v) {
       return has(v.player) ? 'player' : 'none';
     case 'breaker': { const f = facility(true); return f !== 'none' ? f : has(v.player) ? 'player' : 'none'; }
     case 'stalker':
+      if (!v.flanked) return 'none';   /* v04 «시야 밖 우회» · v07 «방어선과 무관하게 NPC» — 질주형처럼 측면으로 돌아서 */
       if (has(v.npc)) return 'npc';
       return has(v.player) ? 'player' : 'none';
     case 'armored_elite':
+      if (line === 'central_plaza' && has(v.player)) return 'player';   /* v07: 정문 돌파 뒤엔 플레이어 진형을 민다 */
       if (has(v.player) && v.player <= 250) return 'player';
       if (has(v.gate)) return 'gate';
       if (has(v.comms)) return 'comms';
@@ -74,20 +80,22 @@ const armoredStaggerSeconds = (a, g) => a === 'heavy_charge' && g === 'perfect' 
 const armoredWindupSeconds = a => a === 'heavy_charge' ? 1.0 : a === 'overhead_crush' ? 1.2 : 0.8;
 /* PIE 증명 (v06 pass_conditions — HWNodeRules::FTier5Evidence 와 같은 일곱 항목) */
 const TIER5_CHECKS = ['all six roles spawn', 'all spawned monsters report ThreatGrade 5', 'Breaker selects Generator at least once', 'Stalker selects NPC at least once',
-  'Armored selects Gate at least once', 'Resonator aura changes a nearby T5 monster multiplier', 'the multiplier returns once the Resonator is gone'];
+  'Armored selects Gate at least once', 'Resonator aura changes a nearby T5 monster multiplier', 'the multiplier returns once the Resonator is gone', 'defenders fight at the MainGate before it falls'];
 function tier5Evidence() {
-  return { spawned: Object.fromEntries(ROLES.map(r => [r, false])), notGrade5: 0, breakerOnGenerator: false, stalkerOnNpc: false, armoredOnGate: false, auraApplied: false, auraReverted: false,
+  return { spawned: Object.fromEntries(ROLES.map(r => [r, false])), notGrade5: 0, breakerOnGenerator: false, stalkerOnNpc: false, armoredOnGate: false, auraApplied: false, auraReverted: false, mainGateFight: false,
+    noteDefenderHit(y, gateY, standing) { if (standing && y < gateY) this.mainGateFight = true; },
     noteSpawn(r, g) { this.spawned[r] = true; if (g !== THREAT_GRADE) this.notGrade5++; },
     noteTarget(r, k) { if (r === 'breaker' && k === 'generator') this.breakerOnGenerator = true; if (r === 'stalker' && k === 'npc') this.stalkerOnNpc = true; if (r === 'armored_elite' && k === 'gate') this.armoredOnGate = true; },
     noteResonance(b, a, gone) { if (b === 0 && a > 0) this.auraApplied = true; if (b > 0 && a === 0 && gone) this.auraReverted = true; },   /* gone: 살아 있는 공진형이 줄었다 (반경 밖으로 걸어 나간 건 아니다) */
     allSpawned() { return ROLES.every(r => this.spawned[r]); },
-    check(i) { return [this.allSpawned(), this.allSpawned() && this.notGrade5 === 0, this.breakerOnGenerator, this.stalkerOnNpc, this.armoredOnGate, this.auraApplied, this.auraReverted][i] ?? false; },
+    check(i) { return [this.allSpawned(), this.allSpawned() && this.notGrade5 === 0, this.breakerOnGenerator, this.stalkerOnNpc, this.armoredOnGate, this.auraApplied, this.auraReverted, this.mainGateFight][i] ?? false; },
     pass() { return TIER5_CHECKS.every((_, i) => this.check(i)); },
     report() { return TIER5_CHECKS.map((name, i) => ({ name, pass: this.check(i) })); } };
 }
+const goesRoundTheFlank = r => r === 'runner' || r === 'stalker';
 function blockedByGate(enemyY, targetY, gateY, gateStanding, role, flanked) {
   if (!gateStanding) return false;
-  if (role === 'runner' && flanked) return false;
+  if (goesRoundTheFlank(role) && flanked) return false;
   return enemyY < gateY && targetY > gateY;
 }
 
@@ -159,7 +167,7 @@ const SUPPLY_COST = { barricade: 3, turret_repair: 2, potion: 1 };
 const TURRET_REPAIR_FRACTION = 0.5, TURRET_REPAIR_BELOW = 0.5, POTION_HEAL_FRACTION = 0.4, POTION_USE_BELOW = 0.9;   // ~BELOW: 이 몫 이하일 때만 쓴다
 const potionSource = (freeLeft, points) => freeLeft > 0 ? 'free' : points >= SUPPLY_COST.potion ? 'supply' : 'none';
 
-module.exports = { TIER5_CHECKS, tier5Evidence, THREAT_GRADE, ARCHETYPE, RESONANCE, resonanceStacks, inResonance, resonanceMove, resonanceAttack, resonatorHoldPoint, RESONATOR_SELF_DEFENCE, RESONATOR_TRAIL, RESONATOR_PACK_RADIUS,
+module.exports = { goesRoundTheFlank, defenseLine, TIER5_CHECKS, tier5Evidence, THREAT_GRADE, ARCHETYPE, RESONANCE, resonanceStacks, inResonance, resonanceMove, resonanceAttack, resonatorHoldPoint, RESONATOR_SELF_DEFENCE, RESONATOR_TRAIL, RESONATOR_PACK_RADIUS,
   THINK, thinkSeconds, ARMORED_ATTACKS, armoredAttackAt, counterAllowed, armoredCrackGrade, ARMORED_PERFECT_POSTURE, armoredStaggerSeconds, armoredWindupSeconds, NPC_IMPORTANCE, NPC_DISTANCE_PENALTY, npcImportance, npcPickScore,
   SUPPLY_COST, TURRET_REPAIR_FRACTION, TURRET_REPAIR_BELOW, POTION_HEAL_FRACTION, POTION_USE_BELOW, potionSource, killWeight, defenseCredit, pingCredits, DEFENSE_RADIUS, PING_LIFE, PING_RADIUS, ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
   generatorPower, effectivePower, TURRET_BASE_DPS, TURRET_RANGE, turretDps, eliteArmor,

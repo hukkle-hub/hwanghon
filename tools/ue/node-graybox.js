@@ -32,8 +32,15 @@
   function floorAt(bs, x, y, z) { let best = null;
     for (const b of bs) { if (b.kind !== 'pad' && b.kind !== 'road' && b.kind !== 'flank') continue; const h = topAt(b, x, y); if (h != null && (best == null || Math.abs(h - z) < Math.abs(best - z))) best = h; }
     return best; }
+  /* 걸어가는 몸이 설 바닥: 발에서 step(턱 45 cm) 안으로 올라설 수 있는 «가장 높은» 면. floorAt(가장 가까운 면)으로 걸으면
+     경사로 시작점에서 발판(같은 높이)을 계속 골라 경사로 상자 «안» 을 걷다가 발판 끝 64 cm 턱에 영영 붙었다 — UE 캡슐은 경사면을 탄다.
+     올라설 면이 없으면 가장 낮은 면(턱이 높아 못 간다로 판정되게). 바닥이 없으면 null. */
+  function standAt(bs, x, y, foot, step = 45) { let up = null, low = null;
+    for (const b of bs) { if (b.kind !== 'pad' && b.kind !== 'road' && b.kind !== 'flank') continue; const h = topAt(b, x, y); if (h == null) continue;
+      if (h - foot <= step && (up == null || h > up)) up = h; if (low == null || h < low) low = h; }
+    return up != null ? up : low; }
   /* 선분이 상자(벽·시설)를 수평으로 지나는가 — 키 높이(바닥 +50 cm)에서 */
   function crosses(b, A, B) { for (let k = 0; k <= 100; k++) { const x = A[0] + (B[0] - A[0]) * k / 100, y = A[1] + (B[1] - A[1]) * k / 100, z = A[2] + (B[2] - A[2]) * k / 100 + 50;
       if (Math.abs(x - b.center[0]) < b.half[0] && Math.abs(y - b.center[1]) < b.half[1] && Math.abs(z - b.center[2]) < b.half[2]) return true; } return false; }
-  return { SLAB, blocks, topAt, floorAt, crosses, pt };
+  return { SLAB, blocks, topAt, floorAt, standAt, crosses, pt };
 });

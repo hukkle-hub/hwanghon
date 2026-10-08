@@ -141,16 +141,27 @@ static void Roles()
     V.Player = 500.f;
     CHECK(ChooseTarget(EEnemyRole::Normal, V) == ETargetKind::Player);
     CHECK(ChooseTarget(EEnemyRole::Breaker, V) == ETargetKind::Generator);  // facilities before the player beside it
-    CHECK(ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Npc);
+    CHECK(ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::None);  // round the flank first (v04/v07)
     CHECK(ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Gate);
     CHECK(ChooseTarget(EEnemyRole::Runner, V) == ETargetKind::None);  // still flanking
     V.bFlanked = true;
     CHECK(ChooseTarget(EEnemyRole::Runner, V) == ETargetKind::Npc);
+    CHECK(ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Npc);
+    CHECK(!BlockedByGate(-12000.f, 2100.f, -9800.f, true, EEnemyRole::Stalker, true));   // flanked: past the gate
     V.Player = 200.f;
     CHECK(ChooseTarget(EEnemyRole::Runner, V) == ETargetKind::Player);
     CHECK(ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Player);  // blocked face to face
     V.Player = 600.f; V.Gate = -1.f;
-    CHECK(ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Comms);  // gate down: on to the comms centre
+    // v07 defence lines: gate down = the central plaza, the walkers and the armoured push the defenders (any distance);
+    // the generator down too = the comms centre's last stand
+    CHECK(DefenseLine(true, true) == EDefenseLine::MainGate && DefenseLine(false, true) == EDefenseLine::CentralPlaza && DefenseLine(false, false) == EDefenseLine::CommsFinal);
+    V.Player = 4000.f;
+    CHECK(ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Player);
+    CHECK(ChooseTarget(EEnemyRole::Normal, V) == ETargetKind::Player);
+    V.Generator = -1.f;
+    CHECK(ChooseTarget(EEnemyRole::ArmoredElite, V) == ETargetKind::Comms);  // the last stand: the comms centre
+    CHECK(ChooseTarget(EEnemyRole::Normal, V) == ETargetKind::Comms);
+    V.Player = 600.f; V.Generator = 3000.f;
     V.Npc = -1.f;
     CHECK(ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Player);
 
@@ -187,6 +198,10 @@ static void Roles()
     E.NoteTarget(EEnemyRole::ArmoredElite, ETargetKind::Gate); E.NoteResonance(0, 1, false); E.NoteResonance(1, 0, false);
     CHECK(!E.Pass());   // walked out of the aura is not «the resonator is gone»
     E.NoteResonance(1, 0, true);
+    CHECK(!E.Pass());   // and the battle at the gate (v07)
+    E.NoteDefenderHit(-9000.f, -9800.f, true); CHECK(!E.Check(7));   // inside the gate: not the gate battle
+    E.NoteDefenderHit(-10200.f, -9800.f, false); CHECK(!E.Check(7));  // outside, but the gate was already down
+    E.NoteDefenderHit(-10200.f, -9800.f, true);
     CHECK(E.Pass());
 
     // elite armour: a quarter damage until countered; a perfect counter cracks it longer
