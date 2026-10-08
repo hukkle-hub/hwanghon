@@ -79,7 +79,7 @@ function tier5Evidence() {
   return { spawned: Object.fromEntries(ROLES.map(r => [r, false])), notGrade5: 0, breakerOnGenerator: false, stalkerOnNpc: false, armoredOnGate: false, auraApplied: false, auraReverted: false,
     noteSpawn(r, g) { this.spawned[r] = true; if (g !== THREAT_GRADE) this.notGrade5++; },
     noteTarget(r, k) { if (r === 'breaker' && k === 'generator') this.breakerOnGenerator = true; if (r === 'stalker' && k === 'npc') this.stalkerOnNpc = true; if (r === 'armored_elite' && k === 'gate') this.armoredOnGate = true; },
-    noteResonance(b, a) { if (b === 0 && a > 0) this.auraApplied = true; if (b > 0 && a === 0) this.auraReverted = true; },
+    noteResonance(b, a, gone) { if (b === 0 && a > 0) this.auraApplied = true; if (b > 0 && a === 0 && gone) this.auraReverted = true; },   /* gone: 살아 있는 공진형이 줄었다 (반경 밖으로 걸어 나간 건 아니다) */
     allSpawned() { return ROLES.every(r => this.spawned[r]); },
     check(i) { return [this.allSpawned(), this.allSpawned() && this.notGrade5 === 0, this.breakerOnGenerator, this.stalkerOnNpc, this.armoredOnGate, this.auraApplied, this.auraReverted][i] ?? false; },
     pass() { return TIER5_CHECKS.every((_, i) => this.check(i)); },

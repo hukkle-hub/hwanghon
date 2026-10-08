@@ -149,6 +149,8 @@ void AHWNodeEnemy::SetLabelVisible(bool bVisible)
 {
 #if !UE_BUILD_SHIPPING
     Tag->SetHiddenInGame(!bVisible);
+#else
+    (void)bVisible;
 #endif
 }
 
@@ -181,7 +183,8 @@ void AHWNodeEnemy::Tick(float DeltaSeconds)
         if (Phase == EPhase::Windup)
         {
             Strike();
-            // a countered blow left it staggered (1.0 s, the elite 1.4 s): keep that, do not overwrite it with recovery
+            // a countered blow left it staggered (1.0 s, the elite 1.4 s - 3.15 s off a perfect-countered charge): keep that,
+            // do not overwrite it with recovery
             if (Phase == EPhase::Windup)
             {
                 Phase = EPhase::Recover;

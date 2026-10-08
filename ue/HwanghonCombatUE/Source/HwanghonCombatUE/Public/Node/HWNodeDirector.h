@@ -73,7 +73,6 @@ public:
     AHWNodeFacility* GetFacility(EHWNodeFacilityKind Kind) const;
     AHWNodeFacility* BarricadeOnPath(const FVector& From, const FVector& To) const;
     AHWNodeFacility* TurretNear(const FVector& At, float Radius) const;
-    AHWNodeNpc* NearestTargetableNpc(const FVector& From) const;
     AHWAinCharacter* GetPlayer() const;
 
     // ---- the contribution ledger (HWNodeRules::EContribution)
@@ -200,6 +199,7 @@ private:
     HWNodeRules::FTier5Evidence Tier5;             // this run's PIE proof (v06): PASS / FAIL lines and the run log
     float ResonanceLeft = 0.f;
     int32 ResonatingNow = 0;                       // invaders inside a living resonator's aura (HUD)
+    int32 LivingResonators = 0;                    // at the last refresh: fewer now = one died (the PIE «comes off» proof)
     bool bShowLabels = true;                       // ?HWLabels=0: the "T5 / ROLE / TARGET" labels off (phone frame check)
 
     struct FPing

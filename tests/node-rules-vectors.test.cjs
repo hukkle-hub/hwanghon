@@ -53,7 +53,7 @@ test('전투 규칙(JS): 5급 — 공진(중첩 1)·철갑 세 공격·추적형
  for(const [a,g,crack,st] of T.armored.crack){ assert.equal(C.armoredCrackGrade(a,g),crack,a+' '+g); assert.ok(near(C.armoredStaggerSeconds(a,g),st)); }
  for(const [a,w] of T.armored.windup) assert.equal(C.armoredWindupSeconds(a),w);
  for(const [h,n,d,sc] of T.npc_pick) assert.ok(near(C.npcPickScore(h,n,d),sc),'pick '+h+' '+n);
- for(const ev of T.evidence){ const E=C.tier5Evidence(); for(const [op,a,b] of ev.ops){ if(op==='spawn')E.noteSpawn(a,b); if(op==='target')E.noteTarget(a,b); if(op==='res')E.noteResonance(a,b); }
+ for(const ev of T.evidence){ const E=C.tier5Evidence(); for(const [op,a,b,c] of ev.ops){ if(op==='spawn')E.noteSpawn(a,b); if(op==='target')E.noteTarget(a,b); if(op==='res')E.noteResonance(a,b,c); }
   assert.deepEqual(C.TIER5_CHECKS.map((_,i)=>E.check(i)?1:0),ev.checks,JSON.stringify(ev.ops)); assert.equal(E.pass(),ev.pass); }
 });
 /* 같은 벡터 → C++ 시험 소스 */
@@ -119,7 +119,7 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
   T.armored.crack.forEach(([a,g,c,st],i)=>L.push(`CHECK(ArmoredCrackGrade(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})==ECounterGrade::${G[c]}&&std::fabs(ArmoredStaggerSeconds(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})-${f(st)})<0.001f,"crack ${i}");`));
   T.armored.windup.forEach(([a,w])=>L.push(`CHECK(std::fabs(ArmoredWindupSeconds(EArmoredAttack::${AA[a]})-${f(w)})<0.0001f&&CounterAllowed(EArmoredAttack::${AA[a]})==${a!=='overhead_crush'},"windup ${a}");`));
   T.npc_pick.forEach(([h,n,d,sc],i)=>L.push(`CHECK(std::fabs(NpcPickScore(EEnemyRole::${RL[h]},ENpcRole::${NR[n]},${f(d)})-(${f(sc)}))<0.001f,"npc pick ${i}");`));
-  T.evidence.forEach((ev,i)=>{ L.push('{ FTier5Evidence E;'); for(const [op,a,b] of ev.ops) L.push(op==='spawn'?`E.NoteSpawn(EEnemyRole::${RL[a]},${b});`:op==='target'?`E.NoteTarget(EEnemyRole::${RL[a]},ETargetKind::${TK[b]});`:`E.NoteResonance(${a},${b});`);
+  T.evidence.forEach((ev,i)=>{ L.push('{ FTier5Evidence E;'); for(const [op,a,b,c] of ev.ops) L.push(op==='spawn'?`E.NoteSpawn(EEnemyRole::${RL[a]},${b});`:op==='target'?`E.NoteTarget(EEnemyRole::${RL[a]},ETargetKind::${TK[b]});`:`E.NoteResonance(${a},${b},${!!c});`);
    ev.checks.forEach((c,j)=>L.push(`CHECK(E.Check(${j})==${!!c},"evidence ${i}.${j}");`)); L.push(`CHECK(E.Pass()==${ev.pass},"evidence ${i} pass"); }`); }); }
  L.push('if(Fails){ std::printf("%d failed\\n",Fails); return 1; } std::printf("vectors ok\\n"); return 0; }');
  return L.join('\n'); }

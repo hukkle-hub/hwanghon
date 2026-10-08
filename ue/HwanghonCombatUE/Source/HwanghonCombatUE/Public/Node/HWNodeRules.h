@@ -581,7 +581,7 @@ struct FTier5Evidence
     bool StalkerOnNpc = false;
     bool ArmoredOnGate = false;
     bool AuraApplied = false;    // a living grade-5 invader went from no resonance to resonance
-    bool AuraReverted = false;   // ...and back, still alive (the resonator died or walked off)
+    bool AuraReverted = false;   // ...and back, still alive, because a resonator died (not just walked out of the radius)
 
     void NoteSpawn(EEnemyRole Role, int Grade)
     {
@@ -594,10 +594,11 @@ struct FTier5Evidence
         if (Role == EEnemyRole::Stalker && Kind == ETargetKind::Npc) StalkerOnNpc = true;
         if (Role == EEnemyRole::ArmoredElite && Kind == ETargetKind::Gate) ArmoredOnGate = true;
     }
-    void NoteResonance(int Before, int After)
+    // bResonatorGone: this refresh has fewer living resonators than the last one
+    void NoteResonance(int Before, int After, bool bResonatorGone)
     {
         if (Before == 0 && After > 0) AuraApplied = true;
-        if (Before > 0 && After == 0) AuraReverted = true;
+        if (Before > 0 && After == 0 && bResonatorGone) AuraReverted = true;
     }
     bool AllSpawned() const
     {

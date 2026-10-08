@@ -184,7 +184,9 @@ static void Roles()
     for (int R = 0; R < static_cast<int>(EEnemyRole::Count); ++R) E.NoteSpawn(static_cast<EEnemyRole>(R), 5);
     E.NoteTarget(EEnemyRole::Breaker, ETargetKind::Generator); E.NoteTarget(EEnemyRole::Stalker, ETargetKind::Npc);
     CHECK(E.Check(0) && E.Check(1) && E.Check(2) && E.Check(3) && !E.Check(4) && !E.Pass());
-    E.NoteTarget(EEnemyRole::ArmoredElite, ETargetKind::Gate); E.NoteResonance(0, 1); E.NoteResonance(1, 0);
+    E.NoteTarget(EEnemyRole::ArmoredElite, ETargetKind::Gate); E.NoteResonance(0, 1, false); E.NoteResonance(1, 0, false);
+    CHECK(!E.Pass());   // walked out of the aura is not «the resonator is gone»
+    E.NoteResonance(1, 0, true);
     CHECK(E.Pass());
 
     // elite armour: a quarter damage until countered; a perfect counter cracks it longer

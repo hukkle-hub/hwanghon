@@ -317,19 +317,6 @@ AHWNodeNpc* AHWNodeDirector::FindNpc(EHWNodeNpcRole NpcRole) const
     return nullptr;
 }
 
-AHWNodeNpc* AHWNodeDirector::NearestTargetableNpc(const FVector& From) const
-{
-    AHWNodeNpc* Best = nullptr;
-    float BestDistance = TNumericLimits<float>::Max();
-    for (AHWNodeNpc* Npc : Npcs)
-    {
-        if (!Npc || !Npc->IsTargetable()) continue;
-        const float D = FVector::Dist2D(From, Npc->GetActorLocation());
-        if (D < BestDistance) { BestDistance = D; Best = Npc; }
-    }
-    return Best;
-}
-
 AHWNodeNpc* AHWNodeDirector::PreferredNpc(const FVector& From, EHWNodeEnemyRole Hunter) const
 {
     const HWNodeRules::EEnemyRole R = static_cast<HWNodeRules::EEnemyRole>(Hunter);
@@ -353,9 +340,14 @@ bool AHWNodeDirector::ResonatorHold(const AHWNodeEnemy* Resonator, FVector& OutP
     int32 N = 0;
     const AHWNodeEnemy* Nearest = nullptr;
     float NearestD = TNumericLimits<float>::Max();
+    // a runner already round the flank, north of a standing gate, is not the pack it stands behind - counted, it pulled
+    // the hold point over the gate line and the resonator onto the gate (code review)
+    const bool bGate = IsGateStanding();
+    const float GateY = GateLineY();
     for (const AHWNodeEnemy* E : Enemies)
     {
         if (!E || E == Resonator || E->IsDeadEnemy() || E->GetRole() == EHWNodeEnemyRole::Resonator) continue;
+        if (bGate && (Here.Y < GateY) != (E->GetActorLocation().Y < GateY)) continue;
         const float D = FVector::Dist2D(Here, E->GetActorLocation());
         if (D < NearestD) { NearestD = D; Nearest = E; }
         if (D <= HWNodeRules::ResonatorPackRadiusCm) { Sum += E->GetActorLocation(); ++N; }
@@ -395,7 +387,7 @@ void AHWNodeDirector::RefreshResonance()
         }
         const int32 Before = E->GetResonance();
         E->SetResonance(InRange);
-        if (InvasionClock >= 0.f) Tier5.NoteResonance(Before, E->GetResonance());
+        if (InvasionClock >= 0.f) Tier5.NoteResonance(Before, E->GetResonance(), Resonators.Num() < LivingResonators);
         if (E->GetResonance() > 0) ++Affected;
     }
     if ((Affected > 0) != (ResonatingNow > 0))
@@ -405,6 +397,7 @@ void AHWNodeDirector::RefreshResonance()
             Affected, HWNodeRules::ResonanceMoveScale, HWNodeRules::ResonanceAttackScale);
     }
     ResonatingNow = Affected;
+    LivingResonators = Resonators.Num();
 }
 
 AHWNodeFacility* AHWNodeDirector::BarricadeOnPath(const FVector& From, const FVector& To) const
@@ -560,7 +553,7 @@ FString AHWNodeDirector::WavePreview(int32 WaveIndex) const
 {
     if (WaveIndex >= HWNodeRules::PrototypeAWaveCount) return TEXT("the Relay (boss)");
     static const TCHAR* RoleNames[] = { TEXT("walker"), TEXT("runner"), TEXT("breaker"), TEXT("stalker"), TEXT("ARMORED"), TEXT("RESONATOR") };
-    static_assert(UE_ARRAY_COUNT(RoleNames) == static_cast<int32>(HWNodeRules::EEnemyRole::Count), "a name per role");
+    static_assert(static_cast<int32>(UE_ARRAY_COUNT(RoleNames)) == static_cast<int32>(HWNodeRules::EEnemyRole::Count), "a name per role");
     const HWNodeRules::FWaveSpec W = HWNodeRules::PrototypeAWave(WaveIndex);
     FString Text;
     for (int32 I = 0; I < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++I)
@@ -1514,6 +1507,7 @@ void AHWNodeDirector::BeginRunLog()
     Tier5 = HWNodeRules::FTier5Evidence();
     ResonanceLeft = 0.f;
     ResonatingNow = 0;
+    LivingResonators = 0;
     NextFrameAt = 0.f;
     DealtByPlayer = DealtByTurret = DealtByGuard = 0.0;
 

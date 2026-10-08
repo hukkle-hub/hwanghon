@@ -3364,12 +3364,14 @@
       [
        "res",
        0,
-       1
+       1,
+       true
       ],
       [
        "res",
        1,
-       0
+       0,
+       true
       ]
      ],
      "checks": [
@@ -3433,7 +3435,8 @@
       [
        "res",
        0,
-       1
+       1,
+       true
       ]
      ],
      "checks": [
@@ -3462,12 +3465,14 @@
       [
        "res",
        1,
-       1
+       1,
+       true
       ],
       [
        "res",
        0,
-       0
+       0,
+       true
       ]
      ],
      "checks": [
@@ -3477,6 +3482,77 @@
       1,
       0,
       0,
+      0
+     ],
+     "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       5
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ],
+      [
+       "target",
+       "breaker",
+       "generator"
+      ],
+      [
+       "target",
+       "stalker",
+       "npc"
+      ],
+      [
+       "target",
+       "armored_elite",
+       "gate"
+      ],
+      [
+       "res",
+       0,
+       1,
+       false
+      ],
+      [
+       "res",
+       1,
+       0,
+       false
+      ]
+     ],
+     "checks": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
       0
      ],
      "pass": false

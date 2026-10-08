@@ -124,8 +124,9 @@ function simulate(N, o = {}) {
       flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p], res: 0, blow: 0, attack: null, grade: C.THREAT_GRADE, archetype: C.ARCHETYPE[role] });
     proof.noteSpawn(role, C.THREAT_GRADE); }
   /* 공진형이 서 있을 자리: 3000 안의 무리(공진형 제외) 중심, 없으면 가장 가까운 무리 하나 — 그 뒤 350 (HWNodeRules::ResonatorHoldPoint) */
-  function packOf(e) { let n = 0, sx = 0, sy = 0, near = null, nd = Infinity;
-    for (const x of enemies) { if (x.dead || x === e || x.role === 'resonator') continue; const d = d2(e.p, x.p); if (d < nd) { nd = d; near = x; } if (d <= C.RESONATOR_PACK_RADIUS) { n++; sx += x.p[0]; sy += x.p[1]; } }
+  function packOf(e) { let n = 0, sx = 0, sy = 0, near = null, nd = Infinity; const gs = standing(gate);
+    for (const x of enemies) { if (x.dead || x === e || x.role === 'resonator') continue;
+      if (gs && (e.p[1] < gateY) !== (x.p[1] < gateY)) continue;   /* 서 있는 정문 건너편(측면을 돈 질주형)은 무리가 아니다 — 끌려가 정문을 쳤다 (코드 리뷰) */ const d = d2(e.p, x.p); if (d < nd) { nd = d; near = x; } if (d <= C.RESONATOR_PACK_RADIUS) { n++; sx += x.p[0]; sy += x.p[1]; } }
     return n ? [sx / n, sy / n] : near ? [near.p[0], near.p[1]] : null; }
   function holdPoint(e) { const c = packOf(e); if (!c) return null; const h = C.resonatorHoldPoint(e.p, c); return [h[0], h[1], e.p[2]]; }
   const view = (from, flanked, e) => ({ player: (q => q ? d2(from, q.p) : -1)(nearestPlayer(from)),
@@ -218,10 +219,11 @@ function simulate(N, o = {}) {
     step(e, dirTo(e.p, g), e.st.speed * C.resonanceMove(e.res) * dt);
   }
   /* 공진 (AHWNodeDirector::RefreshResonance): 0.4초마다, 살아 있는 공진형 1800 안의 다른 감염체 — 중첩 1 */
-  let resLeft = 0, resOn = false; const resLog = { on: 0, maxAffected: 0 };
+  let resLeft = 0, resOn = false, livingRes = 0; const resLog = { on: 0, maxAffected: 0 };
   function resonance(dt, t) { resLeft -= dt; if (resLeft > 0) return; resLeft = C.RESONANCE.refresh;
     const rs = enemies.filter(x => !x.dead && x.role === 'resonator'); let affected = 0;
-    for (const e of enemies) { if (e.dead) continue; const n = rs.filter(r => r !== e && C.inResonance(e.role, d2(e.p, r.p))).length; const was = e.res; e.res = C.resonanceStacks(n); proof.noteResonance(was, e.res); if (e.res) affected++; }
+    for (const e of enemies) { if (e.dead) continue; const n = rs.filter(r => r !== e && C.inResonance(e.role, d2(e.p, r.p))).length; const was = e.res; e.res = C.resonanceStacks(n); proof.noteResonance(was, e.res, rs.length < livingRes); if (e.res) affected++; }
+    livingRes = rs.length;
     if (affected) resLog.on += C.RESONANCE.refresh; resLog.maxAffected = Math.max(resLog.maxAffected, affected);
     if (!!affected !== resOn) { resOn = !!affected; log(t, 'aura', resOn ? '공진 시작 (' + affected + ')' : '공진 해제', 'resonator', resOn ? 'on' : 'off'); } }
 
