@@ -364,6 +364,87 @@
     "recovering",
     "recovering"
    ]
+  },
+  {
+   "steps": [
+    [
+     "invade"
+    ],
+    [
+     "tick",
+     0.1,
+     true,
+     false
+    ],
+    [
+     "occupy",
+     3
+    ],
+    [
+     "retake"
+    ],
+    [
+     "retake_tick",
+     15,
+     false,
+     true
+    ],
+    [
+     "retake_tick",
+     1,
+     false,
+     false
+    ],
+    [
+     "retake_tick",
+     19,
+     false,
+     true
+    ],
+    [
+     "retake_tick",
+     1,
+     false,
+     true
+    ],
+    [
+     "retake"
+    ],
+    [
+     "retake_tick",
+     0.1,
+     true,
+     false
+    ],
+    [
+     "retake"
+    ],
+    [
+     "retake_tick",
+     5,
+     false,
+     false
+    ],
+    [
+     "retake_end",
+     true
+    ]
+   ],
+   "expect": [
+    "invasion",
+    "fallen",
+    "retakeable",
+    "retaking",
+    "retaking",
+    "retaking",
+    "retaking",
+    "retakeable",
+    "retaking",
+    "retakeable",
+    "retaking",
+    "retaking",
+    "recovering"
+   ]
   }
  ],
  "combat": {
@@ -2345,6 +2426,71 @@
      false
     ]
    ]
+  },
+  "supply": {
+   "cost": {
+    "barricade": 3,
+    "turret_repair": 2,
+    "potion": 1
+   },
+   "turret_repair_fraction": 0.5,
+   "potion_heal_fraction": 0.4,
+   "potion": [
+    [
+     3,
+     0,
+     "free"
+    ],
+    [
+     1,
+     5,
+     "free"
+    ],
+    [
+     0,
+     1,
+     "supply"
+    ],
+    [
+     0,
+     4,
+     "supply"
+    ],
+    [
+     0,
+     0,
+     "none"
+    ]
+   ],
+   "turret_repair_below": 0.5,
+   "potion_use_below": 0.9
   }
+ },
+ "tier_effects": {
+  "initial": [
+   1,
+   0,
+   0
+  ],
+  "basic": [
+   1,
+   1,
+   0
+  ],
+  "elite_up": [
+   1.3,
+   1.35,
+   1
+  ],
+  "fortress": [
+   1.65,
+   1.8,
+   2
+  ],
+  "infection_core": [
+   2.1,
+   2.4,
+   3
+  ]
  }
 }

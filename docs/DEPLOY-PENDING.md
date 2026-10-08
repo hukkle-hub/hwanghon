@@ -18,9 +18,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| (이 커밋) | `server/node-rules.cjs`: `tickRetake`(탈환 실패 → 탈환 가능) 추가 · `startRetake` 가 통신 점거 시간을 0 으로. 서버가 부르는 곳은 아직 없다(UE·시뮬 규칙과 벡터 맞춤) — 동작 변화 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
+
+거점 파티원 보고·길드 단위 관리권 (Claude): main `0a5e946` → Render `/healthz` commit `0a5e946` (2026-10-07 22:26 UTC 확인), 실제 WebSocket `node info` 정상.
 
 최신 거점 서버 검증 (Claude): main `32966261` → Pages build `3296626`, Render `/healthz` commit `3296626` (15:36 UTC, 푸시 뒤 약 8분). 실제 WebSocket(Render): 손님 → 캐릭터 → `{type:'node',action:'info',node:'namsan_n01'}` → `state stable · tier initial · steward null · standings [] · period 2961 · services 정상` → 길드 없는 계정의 `policy` 는 «관리 길드만 정책을 고를 수 있습니다.» 로 거절. `npm test` 801 중 798 통과 · 실패 0. 여의도 다시 굽기(빈 땅 0, 가려진 칸 0) 같이 나감.
 

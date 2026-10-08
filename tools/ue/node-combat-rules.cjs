@@ -107,6 +107,11 @@ const DEFENSE_RADIUS = 1500, PING_LIFE = 15, PING_RADIUS = 800;
 const defenseCredit = (r, d) => d >= 0 && d <= DEFENSE_RADIUS ? killWeight(r) : 0;
 const pingCredits = (age, d) => age >= 0 && age <= PING_LIFE && d <= PING_RADIUS;
 
-module.exports = { killWeight, defenseCredit, pingCredits, DEFENSE_RADIUS, PING_LIFE, PING_RADIUS, ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
+/* 보급 쓰임 (HWNodeRules::SupplyCost · TurretRepairFraction · PotionHealFraction · PotionSource) */
+const SUPPLY_COST = { barricade: 3, turret_repair: 2, potion: 1 };
+const TURRET_REPAIR_FRACTION = 0.5, TURRET_REPAIR_BELOW = 0.5, POTION_HEAL_FRACTION = 0.4, POTION_USE_BELOW = 0.9;   // ~BELOW: 이 몫 이하일 때만 쓴다
+const potionSource = (freeLeft, points) => freeLeft > 0 ? 'free' : points >= SUPPLY_COST.potion ? 'supply' : 'none';
+
+module.exports = { SUPPLY_COST, TURRET_REPAIR_FRACTION, TURRET_REPAIR_BELOW, POTION_HEAL_FRACTION, POTION_USE_BELOW, potionSource, killWeight, defenseCredit, pingCredits, DEFENSE_RADIUS, PING_LIFE, PING_RADIUS, ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
   generatorPower, effectivePower, TURRET_BASE_DPS, TURRET_RANGE, turretDps, eliteArmor,
   npcMaxHealth, npcFunction, technicianRepairScale, npcLife, npcEffects, prepSeconds, technicianRepairPerSecond };

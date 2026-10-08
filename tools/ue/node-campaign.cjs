@@ -7,7 +7,7 @@
    길드마다 성향이 다르다: 준비형(바리케이드·대피·기술자 명령) / 공격형(센 화력, 준비 없음) / 소규모(셋, 약함).
    매일 저녁 20·21·22시에 한 길드씩 들어간다. 출석은 사람마다 80% (씨앗 고정 난수). */
 const fs = require('fs'), path = require('path');
-const S = require('./node-sim.cjs'), R = require('../../server/node-rules.cjs');
+const S = require('./node-sim.cjs'), C = require('./node-combat-rules.cjs'), R = require('../../server/node-rules.cjs');
 const { Store } = require('../../server/store.cjs'), NODE = require('../../server/node-store.cjs');
 const N_ID = 'namsan_n01', H = NODE.HOUR, W = NODE.WEEK, DAY = 24 * H;
 
@@ -62,18 +62,24 @@ function campaign({ weeks = 3, startPeriod = 200, partyScale = 0, log = () => {}
       const canOrder = party.some(q => R.hasPermission(q.guildRole, 'order_npc'));
       const supplyPts = v.supply > 0 ? v.supply : (N.supply_default || 6);
       const barricades = g.prep.barricades && canBuild ? ['barricade_west', 'barricade_east'].slice(0, Math.min(2, Math.floor(supplyPts / 3))) : [];
-      const difficulty = kind === 'retake' ? v.difficulty : 1;
-      const r = S.simulate(N, { party, policies: v.policies, barricades, tech: g.prep.tech && canOrder ? g.prep.tech : null, evacuate: g.prep.evacuate && canOrder, difficulty, partyScale, seed: day * 31 + g.hour });
+      const difficulty = kind === 'retake' ? v.difficulty : 1, extraElites = kind === 'retake' ? v.extraElites : 0;
+      const supplyLeft = supplyPts - barricades.length * C.SUPPLY_COST.barricade;   /* 나머지는 판 안에서: 회복약 1 · 포탑 수리 2 (UE HandleInteract) */
+      /* 탈환전엔 시간 제한이 없다 (UE 도 없다) — 900초까지 본다 */
+      const r = S.simulate(N, { party, policies: v.policies, barricades, tech: g.prep.tech && canOrder ? g.prep.tech : null, evacuate: g.prep.evacuate && canOrder, difficulty, extraElites, retake: kind === 'retake',
+        supply: supplyLeft, partyScale, seed: day * 31 + g.hour, maxTime: 900 });
+      /* UE 판엔 시간 제한이 없다: 시뮬이 900초 안에 못 끝낸 판은 결과가 아니라 «막힌 판» 이다 — 보고하지 않고 센다
+         (전에는 400초 초과를 함락으로 셌다. 기술자가 무너진 정문을 되살리는 교착이 그렇게 «함락» 으로 숨어 있었다) */
+      if (r.result === 'timeout') { runs.push({ day, hour: g.hour, guild: g.name, kind, result: 'timeout', t: r.t, attendees: party.length, errors: [] }); log(`  ${day + 1}일 ${g.hour}시 ${g.name}: 시뮬 시간 초과 (${r.t}초) — 보고 안 함`); continue; }
       const outcome = kind === 'retake' ? (r.result === 'held' ? 'retaken' : 'retake_failed') : (r.result === 'held' ? 'held' : 'fallen');
       /* 파티원 각자 보고 (사람마다 1분 간격, 같은 판 10분 안) */
       const errs = [];
       present.forEach(({ i }, k) => { const q = r.party[k]; try { store.nodeReport(g.ids[i], N_ID, { outcome, contrib: q.ledger }, at + 6 * 60e3 + k * 61e3); } catch (e) { errs.push(q.name + ': ' + e.message); } });
       { const after = store.nodeView(N_ID, at + 15 * 60e3); if (after.state !== lastState) { states.push({ t: (at + 15 * 60e3 - t0) / H, state: after.state, tier: after.tier }); lastState = after.state; } }   /* 판 직후 상태 (밤사이 함락이 띠에 보이게) */
       const captives = Object.values(r.npcs).filter(s => s === 'missing').length;
-      runs.push({ day, hour: g.hour, guild: g.name, kind, difficulty, result: outcome, t: r.t, attendees: party.length, barricades: barricades.length, evacuate: g.prep.evacuate && canOrder, policies: v.policies, captives,
+      runs.push({ day, hour: g.hour, guild: g.name, kind, difficulty, extraElites, supply: supplyLeft, supplyUsed: r.supplyUsed, deaths: r.player ? r.player.deaths : 0, result: outcome, t: r.t, attendees: party.length, barricades: barricades.length, evacuate: g.prep.evacuate && canOrder, policies: v.policies, captives,
         gate: (r.events.find(e => e.id === 'south_gate' && e.to === 'destroyed') || {}).t ?? null, errors: errs });
-      log(`  ${day + 1}일 ${g.hour}시 ${g.name}(${party.length}명${kind === 'retake' ? ' · 탈환전 ×' + difficulty : ''}): ${({ held: '막음', fallen: '함락', retaken: '탈환', retake_failed: '탈환 실패' })[outcome]} ${r.t}초 · 포로 ${captives}`
-        + (barricades.length ? ' · 바리케이드 ' + barricades.length : '') + (errs.length ? ' · 보고 오류 ' + errs.join('; ') : ''));
+      log(`  ${day + 1}일 ${g.hour}시 ${g.name}(${party.length}명${kind === 'retake' ? ' · 탈환전 ×' + difficulty + (extraElites ? ' 철갑+' + extraElites : '') : ''}): ${({ held: '막음', fallen: '함락', retaken: '탈환', retake_failed: '탈환 실패' })[outcome]} ${r.t}초 · 포로 ${captives}`
+        + (barricades.length ? ' · 바리케이드 ' + barricades.length : '') + ` · 보급 ${supplyLeft}→${r.supplyLeft} (약 ${r.supplyUsed.potionsFree + r.supplyUsed.potionsSupply} · 포탑 ${r.supplyUsed.turretRepairs}) · 쓰러짐 ${r.player ? r.player.deaths : 0}` + (errs.length ? ' · 보고 오류 ' + errs.join('; ') : ''));
     }
   }
   const end = store.nodeView(N_ID, t0 + weeks * 7 * DAY + 1);
@@ -86,8 +92,8 @@ if (require.main === module) {
   const a = process.argv.slice(2), get = k => { const i = a.indexOf(k); return i >= 0 ? a[i + 1] : null; };
   const out = campaign({ weeks: +(get('--weeks') || 3), partyScale: +(get('--party-scale') || 0), log: s => console.log(s) });
   const by = {}; for (const r of out.runs) { const b = by[r.guild] = by[r.guild] || { runs: 0, held: 0, fallen: 0, retaken: 0, failed: 0, wait: 0 };
-    if (r.kind === 'wait') b.wait++; else { b.runs++; b[{ held: 'held', fallen: 'fallen', retaken: 'retaken', retake_failed: 'failed' }[r.result]]++; } }
-  console.log('\n── 길드별'); for (const [k, b] of Object.entries(by)) console.log(`  ${k}: 판 ${b.runs} · 막음 ${b.held} · 함락 ${b.fallen} · 탈환 ${b.retaken} · 탈환 실패 ${b.failed} · 기다림 ${b.wait}`);
+    if (r.kind === 'wait') b.wait++; else { b.runs++; const k = { held: 'held', fallen: 'fallen', retaken: 'retaken', retake_failed: 'failed', timeout: 'timeout' }[r.result]; b[k] = (b[k] || 0) + 1; } }
+  console.log('\n── 길드별'); for (const [k, b] of Object.entries(by)) console.log(`  ${k}: 판 ${b.runs} · 막음 ${b.held} · 함락 ${b.fallen} · 탈환 ${b.retaken} · 탈환 실패 ${b.failed} · 기다림 ${b.wait}${b.timeout ? ' · 시간 초과 ' + b.timeout : ''}`);
   console.log(`── 끝: 관리 길드 ${out.end.steward ? out.end.steward.name : '없음'} · 상태 ${out.end.state}`);
   const file = get('--json') || path.join(__dirname, '..', '..', '.node-sim', 'campaign.json');
   fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, JSON.stringify(out)); console.log('기록 ' + file);

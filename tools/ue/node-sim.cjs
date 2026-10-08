@@ -27,6 +27,10 @@ function simulate(N, o = {}) {
   const opt = { policies: [], barricades: [], tech: null, player: { dps: 1000, counter: 0.35 }, dt: 0.1, maxTime: 400, frameEvery: 1, seed: 7, ...o };
   const rand = rng(opt.seed), pe = R.policyEffects(opt.policies), bs = H.blocks(N);
   const diff = Math.max(0.1, opt.difficulty || 1);   // 탈환전 난이도 (AHWNodeEnemy::Configure 의 Difficulty — 체력·피해 배율)
+  const extraElites = Math.max(0, opt.extraElites | 0);   // 탈환전: 마지막 웨이브에 붙는 철갑 (HWNodeRules::OccupationExtraElites)
+  /* 보급 (판 시작 때 남은 점수 — UE 기록 opt.supply 와 같은 뜻, 바리케이드는 이미 뺀 값). 없으면(undefined) 보급을 안 쓰는 옛 판 */
+  const useSupply = opt.supply != null; let supply = useSupply ? Math.max(0, opt.supply | 0) : 0, freePotions = useSupply ? pe.extraPotions : 0;
+  const supplyUsed = { potionsFree: 0, potionsSupply: 0, turretRepairs: 0 };
   const partyN = (opt.party || (opt.player ? [1] : [])).length, hpScale = 1 + (opt.partyScale || 0) * Math.max(0, partyN - 1);   // 인원 보정 (문서 201 §8 — 값은 캠페인으로 고른다)
   const walls = bs.filter(b => b.kind === 'wall').map(b => ({ c: b.center, h: b.half, wkind: b.wkind }));
   const P = v => H.pt(N, v);
@@ -103,7 +107,7 @@ function simulate(N, o = {}) {
 
   /* ── 적 ── */
   const enemies = []; let serial = 0;
-  const waves = C.waveRunner(), m = R.machine({ commsHoldToFall: N.comms_hold_to_fall || 20 }); m.state = 'invasion';
+  const waves = C.waveRunner(), m = R.machine({ commsHoldToFall: N.comms_hold_to_fall || 20 }); m.state = opt.retake ? 'retaking' : 'invasion';
   let reserveLeft = 0, reserveUsed = false;
   function spawn(role) { const s = serial++, rr = N.role_routes[role], name = Array.isArray(rr) ? rr[s % rr.length] : rr || 'main', route = (N.routes[name] || []).map(P);
     const base = role === 'runner' && route.length ? route[0] : P(N.spawns[s % N.spawns.length]), ang = s * 2.39996;
@@ -162,7 +166,7 @@ function simulate(N, o = {}) {
     else if (e.tk !== 'none' && e.ri >= e.route.length && e.ei >= e.ext.length && d2(e.p, targetPoint(e.tk, e.p)) > DIRECT) { e.ext = extensionFor(e.tk, e.p); e.ei = 0; }
     e.ov = null;
     if (e.tk !== 'player') e.ov = barricadeOnPath(e.p, goal(e));
-    if (!e.ov && (e.role === 'normal' || e.role === 'armored_elite') && (v.player < 0 || v.player > 600)) e.ov = turretNear(e.p, 380);
+    if (!e.ov && (e.role === 'normal' || e.role === 'armored_elite') && (v.player < 0 || v.player > 600)) e.ov = turretNear(e.p, opt.turretAggro ?? 380);   /* UE AHWNodeEnemy::Think 380 — 손잡이 (지금 배치에선 포탑이 한 번도 안 맞는다, 문서 201 §8) */
   }
   function strike(e, t) {
     e.cd = e.st.attackCooldown;
@@ -230,8 +234,26 @@ function simulate(N, o = {}) {
     else if (q.job === 'escort' || q.job === 'rescue') { if (e.tk === 'npc') s2 -= 4000; else { const n = nearestNpc(e.p); if (n && d2(n.p, e.p) < 1500) s2 -= 1500; else s2 += 2500; } }
     else if (q.job === 'generator') { const g = genF(); if (e.tk === 'generator' || e.tk === 'comms') s2 -= 4000; else if (g && surf(g, e.p) < 2500) s2 -= 1500; else s2 += 2500; }
     if (e.stuck > 6) s2 += 4000; return s2; }
+  /* 보급 쓰임 (AHWNodeDirector::HandleInteract 4·6): 회복약은 체력 35% 아래에서 (정책 무료분 먼저, 그다음 보급 1),
+     포탑 수리는 수리·보급 권한자가 절반 아래로 내려간(또는 부서진) 포탑으로 가서 (보급 2, 절반 회복) */
+  const REACH_G = 500;
+  function drinkIfLow(q, t) {
+    if (!useSupply || q.hp >= PLAYER.health * 0.35) return;
+    const src = C.potionSource(freePotions, supply); if (src === 'none') return;
+    if (src === 'free') { freePotions--; supplyUsed.potionsFree++; } else { supply -= C.SUPPLY_COST.potion; supplyUsed.potionsSupply++; }
+    q.hp = Math.min(PLAYER.health, q.hp + PLAYER.health * C.POTION_HEAL_FRACTION); log(t, 'supply', (pls.length > 1 ? q.name + ' ' : '') + '회복약 (' + (src === 'free' ? '무료' : '보급') + ')', 'potion', src);
+  }
+  function repairTurret(q, dt, t) {
+    if (!useSupply || q !== builder || supply < C.SUPPLY_COST.turret_repair) return false;
+    const tr = fac.find(f => f.kind === 'turret' && f.hp <= f.max * C.TURRET_REPAIR_BELOW); if (!tr) return false;
+    if (surf(tr, q.p) > REACH_G - 50) { walkTo(q, tr.c, PLAYER.speed * dt); return true; }
+    supply -= C.SUPPLY_COST.turret_repair; supplyUsed.turretRepairs++; tr.hp = Math.min(tr.max, tr.hp + tr.max * C.TURRET_REPAIR_FRACTION);
+    q.ledger.supply += C.SUPPLY_COST.turret_repair; log(t, 'supply', tr.id + ' 수리 (보급 ' + C.SUPPLY_COST.turret_repair + ')', tr.id, 'turret_repair'); return true;
+  }
   function tickOne(q, dt, t) {
     if (q.deadFor >= 0) { q.deadFor += dt; if (q.deadFor >= PLAYER.respawn) { Object.assign(q, place(P(N.player_start))); q.hp = PLAYER.health; q.deadFor = -1; q.way = null; } return; }
+    drinkIfLow(q, t);
+    if (repairTurret(q, dt, t)) return;
     q.think -= dt;
     if (q.think <= 0) { q.think = 0.5; let best = null, bs2 = Infinity;
       for (const e of enemies) { if (e.dead) continue; const s2 = score(q, e); if (s2 < bs2) { bs2 = s2; best = e; } }
@@ -256,7 +278,7 @@ function simulate(N, o = {}) {
     for (const n of npcs) { if (n.life.tick(dt)) log(t, 'npc', n.role + ' 회복', n.role, 'normal');
       if (n.evac && n.life.state !== 'missing' && !(n.role === 'technician' && n.order) && d2(n.p, n.evac) > 150) walkTo(n, n.evac, 420 * dt); }
     const tech = npcs.find(n => n.role === 'technician'); if (!tech || !tech.order || tech.life.state === 'missing') return;
-    const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp < f.max) { const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; if (orderer) orderer.ledger.repair += (f.hp - was) / 100; } return; }
+    const f = facility(tech.order.kind); if (f && surf(f, tech.p) <= 220) { if (f.hp > 0 && f.hp < f.max) {   /* 서 있을 때만 — 무너진 정문을 1%씩 살리면 영영 안 무너진다 (UE HWNodeNpc 와 같이 고침) */ const was = f.hp; f.hp = Math.min(f.max, f.hp + C.technicianRepairPerSecond(tech.life.state) * dt); tech.repaired = (tech.repaired || 0) + f.hp - was; if (orderer) orderer.ledger.repair += (f.hp - was) / 100; } return; }
     const o = tech.order; if (o.i >= o.path.length) return; const g = o.path[o.i];
     if (d2(tech.p, g) < (o.i === o.path.length - 1 ? 60 : 180)) { o.i++; return; } step(tech, dirTo(tech.p, g), 420 * dt);   /* 마지막 = 일할 자리: 바짝 붙는다 */
   }
@@ -267,13 +289,15 @@ function simulate(N, o = {}) {
   log(0, 'state', '준비 ' + prep + '초 (판은 침공부터 잰다)');
   while (t < opt.maxTime && !result) {
     const dt = opt.dt; t += dt;
-    const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r); log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')', String(w + 1), 'spawned'); }
+    const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r);
+      if (w === C.WAVES.length - 1 && extraElites > 0) { waves.alive += extraElites; for (let k = 0; k < extraElites; k++) spawn('armored_elite'); }   /* AHWNodeDirector::SpawnWave */
+      log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')', String(w + 1), 'spawned'); }
     tickPlayer(dt, t);
     for (const e of enemies) if (!e.dead) { tickEnemy(e, dt, t); if (d2(e.p, e.lastP) > 50) { e.lastP = [...e.p]; e.stuckSince = t; } e.stuck = t - Math.max(e.stuckSince ?? t, e.attackT ?? 0); }
     tickNpcs(dt, t);
     power = defences(dt, t);
     const comms = facility('comms'), onComms = enemies.some(e => !e.dead && e.tk === 'comms' && comms && surf(comms, e.p) <= (N.comms_hold_radius || 900));   // EnemyOnComms: 통신센터를 노리는 적만
-    if (R.tickInvasion(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', '함락 — ' + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거'), 'node', 'fallen'); }
+    if ((opt.retake ? R.tickRetake : R.tickInvasion)(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', (opt.retake ? '탈환 실패 — ' : '함락 — ') + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거'), 'node', 'fallen'); }
     if (!result && waves.done()) { result = 'held'; log(t, 'state', '웨이브 4개 막음 → 보스 단계', 'node', 'held'); }
     if (t >= nextFrame) { nextFrame += opt.frameEvery;
       frames.push({ t: +t.toFixed(1), power, e: enemies.filter(e => !e.dead).map(e => [Math.round(e.p[0]), Math.round(e.p[1]), C.ROLES.indexOf(e.role), +(e.hp / e.max).toFixed(2), e.tk[0], e.stuck > 6 ? 1 : 0]),
@@ -284,7 +308,7 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
@@ -292,7 +316,7 @@ function simulate(N, o = {}) {
     npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
     party: pls.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps, deaths: q.deaths, kills: q.kills, rescues: q.rescues, dealt: Math.round(q.dealt),
       ledger: Object.fromEntries(Object.entries(q.ledger).map(([k, v]) => [k, +v.toFixed(2)])) })), difficulty: diff,
-    repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0),
+    repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0), supplyUsed, supplyLeft: supply, freePotionsLeft: freePotions,
     events, frames, facilities: fac.map(f => ({ id: f.id, kind: f.kind, c: f.c, h: f.h })), npcIds: npcs.map(n => n.role) };
 }
 

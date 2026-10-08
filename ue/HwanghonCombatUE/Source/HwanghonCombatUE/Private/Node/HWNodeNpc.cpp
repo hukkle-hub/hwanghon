@@ -157,10 +157,12 @@ void AHWNodeNpc::Tick(float DeltaSeconds)
 
     const FVector Here = GetActorLocation();
     AHWNodeFacility* Target = Director->GetFacility(OrderFacility);
-    // at the facility: repair it (HWNodeRules::TechnicianRepairPerSecond - an injured technician is slower)
+    // at the facility: repair it (HWNodeRules::TechnicianRepairPerSecond - an injured technician is slower).
+    // Only while it stands: a wrecked gate brought back at 1% every frame was a gate that never fell - the enemy hit it
+    // forever and the run never ended (tools/ue/node-campaign.cjs, a retake stuck for 900 s). Wrecked = Recovering's job.
     if (Target && Target->DistanceToSurface2D(Here) <= 220.f)
     {
-        if (Target->GetHealthFraction() < 1.f)
+        if (!Target->IsDestroyed() && Target->GetHealthFraction() < 1.f)
         {
             const float Amount = HWNodeRules::TechnicianRepairPerSecond(Life.State) * DeltaSeconds;
             Target->RepairBy(Amount);

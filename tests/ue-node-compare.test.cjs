@@ -15,7 +15,7 @@ function ueRun(sim, shift = {}) {
   /* 시뮬 판 하나를 UE 가 쓰는 형식 그대로 다시 쓴다 (사건 시각은 shift 로 옮겨 «다른 판» 을 만든다) */
   const [fPol, fBar, fTech, fOpt, fEv, fEnemy, fFac, fNpc, fPlayer, fFrame, fFacDef, fNpcId, fJson] = formats;
   const opt = printf(fOpt, (sim.opt.policies || []).map(p => printf(fPol, p)).join(','), (sim.opt.barricades || []).map(b => printf(fBar, b)).join(','),
-    sim.opt.tech ? printf(fTech, sim.opt.tech) : 'null', sim.opt.evacuate ? 'true' : 'false', 'leader', 6);
+    sim.opt.tech ? printf(fTech, sim.opt.tech) : 'null', sim.opt.evacuate ? 'true' : 'false', 'leader', sim.opt.supply ?? 0, sim.opt.retake ? 'true' : 'false', sim.opt.difficulty || 1, sim.opt.extraElites || 0);
   const ev = sim.events.filter(e => e.id != null).map(e => { const t = e.t + (shift[e.id + ' ' + e.to] || 0); return printf(fEv, t, e.kind, e.id, e.to, e.kind, e.id, e.to); });
   const frames = sim.frames.map(f => printf(fFrame, f.t, f.power, f.e.map(e => printf(fEnemy, e[0], e[1], e[2], e[3], e[4])).join(','),
     f.f.map(x => printf(fFac, x)).join(','), f.n.map(n => printf(fNpc, n[0], n[1], n[2])).join(','), f.p ? printf(fPlayer, f.p[0], f.p[1], f.p[2], f.p[3]) : 'null'));
@@ -41,4 +41,13 @@ test('대조: 같은 판은 어긋남 0 · 정문이 60초 늦게 무너진 판�
   const ue = JSON.parse(ueRun(S.simulate(N, { player: { dps: 1000, counter: 0.35 }, evacuate: true, policies: ['gate_reinforce'] })));
   const fit = K.simFor(ue, N, [600, 1000, 1600]);
   assert.equal(fit.run.opt.evacuate, true); assert.deepEqual(fit.run.opt.policies, ['gate_reinforce']); assert.equal(fit.dps, 1000, '플레이어 피해 몫으로 DPS 를 맞춘다');
+});
+test('대조: 탈환전·보급 조건도 시뮬로 넘어가고, 회복약 사건이 핵심 순간에 잡힌다', () => {
+  const sim = S.simulate(N, { player: { dps: 1000, counter: 0.35 }, retake: true, difficulty: 1.3, extraElites: 1, supply: 4, maxTime: 900 });
+  const ue = JSON.parse(ueRun(sim));
+  assert.equal(ue.opt.retake, true); assert.equal(ue.opt.difficulty, 1.3); assert.equal(ue.opt.extraElites, 1); assert.equal(ue.opt.supply, 4);
+  const fit = K.simFor(ue, N, [1000]);
+  assert.equal(fit.run.opt.retake, true); assert.equal(fit.run.opt.extraElites, 1); assert.equal(fit.run.opt.supply, 4); assert.equal(fit.run.spawned, sim.spawned);
+  assert.ok(sim.supplyUsed.potionsSupply > 0, '회복약을 안 썼다'); const same = K.compare(ue, fit.run);
+  assert.ok(same.rows.some(r => r.key === '첫 회복약'), K.table(same)); assert.equal(same.off, 0, K.table(same));
 });

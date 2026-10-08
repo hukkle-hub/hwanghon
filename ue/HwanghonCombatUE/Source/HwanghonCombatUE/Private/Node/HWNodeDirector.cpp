@@ -178,6 +178,11 @@ bool AHWNodeDirector::ConfigureNode(FName NodeId, const FString& Options)
     }
     Policy = HWNodeRules::PolicyEffects(Policies.GetData(), Policies.Num());
 
+    // a retake run: the node has been in the infected's hands for this many hours (docs/design/201 §2)
+    const FString RetakeOption = UGameplayStatics::ParseOption(Options, TEXT("HWRetake"));
+    // under two hours the node is not retakeable yet (OccupationTier Initial): start at two
+    if (!RetakeOption.IsEmpty()) RetakeHours = FMath::Max(2.f, FCString::Atof(*RetakeOption));
+
     const FString SupplyOption = UGameplayStatics::ParseOption(Options, TEXT("HWSupply"));
     SupplyStart = SupplyOption.IsEmpty() ? Config->DefaultSupply : FMath::Clamp(FCString::Atoi(*SupplyOption), 0, 30);
     return true;
@@ -478,9 +483,20 @@ HWNodeRules::FNpcEffects AHWNodeDirector::CurrentNpcEffects() const
 
 void AHWNodeDirector::BeginPreparation()
 {
-    Machine.SetThreat(0.7f);   // the forecast saw it coming: Alert
     Supply.Points = SupplyStart;
+    FreePotions = Policy.ExtraPotions;
     PrepLeft = HWNodeRules::PrepSeconds(CurrentNpcEffects(), Policy);
+    if (IsRetakeRun())
+    {
+        // occupied for RetakeHours: Retakeable once past two hours - prepare, then take it back
+        Machine.State = HWNodeRules::ENodeState::Fallen;
+        Machine.OccupiedHours = 0.f;
+        Machine.TickOccupation(RetakeHours);
+    }
+    else
+    {
+        Machine.SetThreat(0.7f);   // the forecast saw it coming: Alert
+    }
     SetState(Machine.State);
 }
 
@@ -489,6 +505,8 @@ void AHWNodeDirector::StartInvasion()
     if (!Config || !Machine.StartInvasion()) return;
     Waves = HWNodeRules::FWaveRunner();
     PrepLeft = 0.f;
+    RunDifficulty = 1.f;
+    RunExtraElites = 0;
     BeginRunLog();
     SetState(Machine.State);
 }
@@ -499,6 +517,12 @@ void AHWNodeDirector::SpawnWave(int32 WaveIndex)
     for (int32 RoleIndex = 0; RoleIndex < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++RoleIndex)
     {
         for (int32 N = 0; N < Spec.Count[RoleIndex]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(RoleIndex), SpawnSerial++);
+    }
+    // a retake's last wave carries the occupation tier's extra armoured elites (the wave runner counts them too)
+    if (WaveIndex == Waves.WaveCount - 1 && RunExtraElites > 0)
+    {
+        Waves.Alive += RunExtraElites;
+        for (int32 K = 0; K < RunExtraElites; ++K) SpawnEnemy(EHWNodeEnemyRole::ArmoredElite, SpawnSerial++);
     }
 }
 
@@ -520,7 +544,7 @@ void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
         Waves.EnemyDied(Waves.Now());   // never arrived: do not hold the wave
         return;
     }
-    Enemy->Configure(this, EnemyRole, EnemyRoute, 1.f);
+    Enemy->Configure(this, EnemyRole, EnemyRoute, RunDifficulty);
     Enemy->OnEnemyDied.AddUniqueDynamic(this, &AHWNodeDirector::HandleEnemyDied);
     Enemies.Add(Enemy);
 }
@@ -638,6 +662,12 @@ void AHWNodeDirector::HandleBossDied(AHWBossCharacter* DeadBoss)
         SetState(Machine.State);
         FinishRun(TEXT("held"));
     }
+    else if (Machine.RetakeEnded(true))
+    {
+        Outcome = bExtracted ? TEXT("Namsan retaken - the Relay's core extracted") : TEXT("Namsan retaken - the Relay is dead");
+        SetState(Machine.State);
+        FinishRun(TEXT("retaken"));
+    }
 }
 
 void AHWNodeDirector::FinishRun(const TCHAR* ReportOutcome)
@@ -713,7 +743,7 @@ void AHWNodeDirector::HandleInteract()
     }
 
     // 2) preparation: build a barricade on a slot (supplies, a captain's call)
-    if (Machine.State == HWNodeRules::ENodeState::Alert)
+    if (IsPreparing())
     {
         for (const FHWNodeFacilityDef& Slot : Config->BarricadeSlots)
         {
@@ -745,7 +775,7 @@ void AHWNodeDirector::HandleInteract()
     // 3) preparation, at the shelter point: evacuate the NPCs under turret cover (or send them back to their posts).
     // Safety against function: the medic, scout and operator off post do nothing (docs/design/201 §3; node-sim.cjs:
     // captives 4 -> 1). The technician (repairs, orders) and the guard stay.
-    if (Machine.State == HWNodeRules::ENodeState::Alert && !Config->ShelterPoint.IsZero()
+    if (IsPreparing() && !Config->ShelterPoint.IsZero()
         && FVector::Dist2D(Here, Config->ShelterPoint) < HWNodeDirectorLocal::InteractReach)
     {
         if (!Can(HWNodeRules::EGuildPerm::OrderNpc))
@@ -776,7 +806,42 @@ void AHWNodeDirector::HandleInteract()
         return;
     }
 
-    // 4) the technician: cycle the repair order (gate -> generator -> comms -> stay home)
+    // 4) during the run, next to a turret at half or less: repair it with supplies (a captain's call, like a barricade).
+    // A wrecked turret comes back up. Credited as supply, as the barricade is (docs/design/201 §4).
+    // Someone who cannot repair it (no permission, no supplies) but is hurt falls through to the technician and a potion.
+    const bool bInRun = Machine.State == HWNodeRules::ENodeState::Invasion || Machine.State == HWNodeRules::ENodeState::Retaking;
+    const UHWCombatComponent* PlayerCombat = Player->GetCombat();
+    const bool bHurt = PlayerCombat && !PlayerCombat->IsDead() && PlayerCombat->GetHealth() < PlayerCombat->GetMaxHealth() * HWNodeRules::PotionUseBelow;
+    if (bInRun)
+    {
+        const bool bMayRepair = Can(HWNodeRules::EGuildPerm::InvestFacility) || Can(HWNodeRules::EGuildPerm::AllocateSupply);
+        const bool bCanAfford = Supply.Points >= HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair);
+        for (AHWNodeFacility* Turret : Facilities)
+        {
+            if (!Turret || Turret->GetKind() != EHWNodeFacilityKind::Turret || Turret->GetHealthFraction() > HWNodeRules::TurretRepairBelow
+                || Turret->DistanceToSurface2D(Here) > HWNodeDirectorLocal::InteractReach) continue;
+            if ((!bMayRepair || !bCanAfford) && bHurt) break;
+            if (!bMayRepair)
+            {
+                Notice = TEXT("Only the craft or supply captain (or the leaders) can repair a turret");
+            }
+            else if (!Supply.Spend(HWNodeRules::ESupplyUse::TurretRepair))
+            {
+                Notice = FString::Printf(TEXT("Not enough supplies (a turret repair costs %d)"), HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair));
+            }
+            else
+            {
+                Turret->RepairBy(Turret->GetMaxHealth() * HWNodeRules::TurretRepairFraction);
+                Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Supply)] += static_cast<float>(HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair));
+                RunEvent(TEXT("supply"), Turret->GetFacilityId().ToString(), TEXT("turret_repair"));
+                Notice = FString::Printf(TEXT("Turret repaired (%.0f%%) - supplies %d"), Turret->GetHealthFraction() * 100.f, Supply.Points);
+            }
+            NoticeFor = 4.f;
+            return;
+        }
+    }
+
+    // 5) the technician: cycle the repair order (gate -> generator -> comms -> stay home)
     if (AHWNodeNpc* Tech = FindNpc(EHWNodeNpcRole::Technician))
     {
         if (FVector::Dist2D(Here, Tech->GetActorLocation()) < HWNodeDirectorLocal::InteractReach && Tech->IsTargetable())
@@ -807,9 +872,33 @@ void AHWNodeDirector::HandleInteract()
         }
     }
 
-    // 5) after a run: again
-    if (Machine.State == HWNodeRules::ENodeState::Stable || Machine.State == HWNodeRules::ENodeState::Fallen
-        || Machine.State == HWNodeRules::ENodeState::Retakeable)
+    // 6) during the run, anywhere else: a potion - the medical-stock policy's free ones first, then 1 supply each.
+    // Not credited: it keeps one player up, it is not spent on the node.
+    if (bInRun && bHurt)
+    {
+        if (UHWCombatComponent* Combat = Player->GetCombat())
+        {
+            const HWNodeRules::EPotionSource Source = HWNodeRules::PotionSource(FreePotions, Supply.Points);
+            if (Source == HWNodeRules::EPotionSource::None)
+            {
+                Notice = FString::Printf(TEXT("No potions left (one costs %d supply)"), HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Potions));
+            }
+            else
+            {
+                if (Source == HWNodeRules::EPotionSource::Free) --FreePotions;
+                else Supply.Spend(HWNodeRules::ESupplyUse::Potions);
+                Combat->Heal(Combat->GetMaxHealth() * HWNodeRules::PotionHealFraction);
+                RunEvent(TEXT("supply"), TEXT("potion"), Source == HWNodeRules::EPotionSource::Free ? TEXT("free") : TEXT("supply"));
+                Notice = FString::Printf(TEXT("Potion - free %d, supplies %d"), FreePotions, Supply.Points);
+            }
+            NoticeFor = 3.f;
+            return;
+        }
+    }
+
+    // 7) after a run: again (not while a retake run is still being prepared - the state is Retakeable then too)
+    if ((Machine.State == HWNodeRules::ENodeState::Stable || Machine.State == HWNodeRules::ENodeState::Fallen
+        || Machine.State == HWNodeRules::ENodeState::Retakeable) && !IsPreparing())
     {
         RestartRun();
     }
@@ -1030,43 +1119,9 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
         break;
 
     case HWNodeRules::ENodeState::Invasion:
-    {
-        TickDefences(DeltaSeconds);
-        if (!bBossPhase)
-        {
-            const int32 Wave = Waves.Tick(DeltaSeconds);
-            if (Wave >= 0)
-            {
-                RunEvent(TEXT("wave"), FString::FromInt(Wave + 1), TEXT("spawned"));
-                SpawnWave(Wave);
-            }
-            if (Waves.Done())
-            {
-                RunEvent(TEXT("state"), TEXT("node"), TEXT("held"));   // the simulator stops here: the waves are held
-                WriteRunLog(TEXT("held"));
-                SpawnBoss();
-            }
-        }
-        if (InvasionClock >= 0.f)
-        {
-            InvasionClock += DeltaSeconds;
-            if (InvasionClock >= NextFrameAt)
-            {
-                RecordFrame();
-                NextFrameAt = FMath::FloorToFloat(InvasionClock) + 1.f;   // after a hitch: next whole second, no bunched frames
-            }
-        }
-        const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
-        if (Machine.TickInvasion(DeltaSeconds, Comms && Comms->IsDestroyed(), EnemyOnComms()))
-        {
-            Outcome = TEXT("Namsan has fallen - the map goes dark (G to try again)");
-            SetState(Machine.State);
-            RunEvent(TEXT("state"), TEXT("node"), TEXT("fallen"));
-            WriteRunLog(TEXT("fallen"));
-            FinishRun(TEXT("fallen"));
-        }
+    case HWNodeRules::ENodeState::Retaking:
+        TickRun(DeltaSeconds);
         break;
-    }
 
     case HWNodeRules::ENodeState::Recovering:
     {
@@ -1075,7 +1130,7 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
         for (AHWNodeFacility* F : Facilities) if (F && F->GetHealthFraction() < 1.f) F->RepairBy(HWNodeDirectorLocal::RepairPerSecond * Scale * DeltaSeconds);
         if (Machine.AddRecovery(HWNodeDirectorLocal::RecoverPerSecond * Scale * DeltaSeconds))
         {
-            Outcome = TEXT("Namsan is stable again (G to run the defence again)");
+            Outcome = IsRetakeRun() ? TEXT("Namsan is stable again (G to run the retake again)") : TEXT("Namsan is stable again (G to run the defence again)");
             SetState(Machine.State);
         }
         break;
@@ -1083,16 +1138,85 @@ void AHWNodeDirector::Tick(float DeltaSeconds)
 
     case HWNodeRules::ENodeState::Fallen:
     case HWNodeRules::ENodeState::Retakeable:
-    case HWNodeRules::ENodeState::Retaking:
     {
         const HWNodeRules::ENodeState Before = Machine.State;
         Machine.TickOccupation(DeltaSeconds / 3600.f);
         if (Machine.State != Before) SetState(Machine.State);
+        // a retake run's preparation (?HWRetake=): the countdown, then the push in
+        if (IsPreparing())
+        {
+            PrepLeft -= DeltaSeconds;
+            if (PrepLeft <= 0.f && Outcome.IsEmpty()) StartRetakeRun();
+        }
         break;
     }
     }
 
     DrawHud();
+}
+
+bool AHWNodeDirector::IsPreparing() const
+{
+    if (PrepLeft <= 0.f) return false;
+    return Machine.State == HWNodeRules::ENodeState::Alert
+        || (IsRetakeRun() && Machine.State == HWNodeRules::ENodeState::Retakeable);
+}
+
+void AHWNodeDirector::StartRetakeRun()
+{
+    if (!Config || !Machine.StartRetake()) return;
+    // the occupiers fortified while the node was theirs: tougher enemies, armoured elites added to the last wave
+    const HWNodeRules::EOccupationTier Tier = HWNodeRules::OccupationTier(Machine.OccupiedHours);
+    RunDifficulty = HWNodeRules::OccupationDifficulty(Tier);
+    RunExtraElites = HWNodeRules::OccupationExtraElites(Tier);
+    Waves = HWNodeRules::FWaveRunner();
+    PrepLeft = 0.f;
+    BeginRunLog();
+    SetState(Machine.State);
+    Notice = FString::Printf(TEXT("RETAKE - occupied %.1f h: enemies x%.2f, +%d armoured elite(s) in the last wave"), Machine.OccupiedHours, RunDifficulty, RunExtraElites);
+    NoticeFor = 6.f;
+}
+
+void AHWNodeDirector::TickRun(float DeltaSeconds)
+{
+    TickDefences(DeltaSeconds);
+    if (!bBossPhase)
+    {
+        const int32 Wave = Waves.Tick(DeltaSeconds);
+        if (Wave >= 0)
+        {
+            RunEvent(TEXT("wave"), FString::FromInt(Wave + 1), TEXT("spawned"));
+            SpawnWave(Wave);
+        }
+        if (Waves.Done())
+        {
+            RunEvent(TEXT("state"), TEXT("node"), TEXT("held"));   // the simulator stops here: the waves are held
+            WriteRunLog(TEXT("held"));
+            SpawnBoss();
+        }
+    }
+    if (InvasionClock >= 0.f)
+    {
+        InvasionClock += DeltaSeconds;
+        if (InvasionClock >= NextFrameAt)
+        {
+            RecordFrame();
+            NextFrameAt = FMath::FloorToFloat(InvasionClock) + 1.f;   // after a hitch: next whole second, no bunched frames
+        }
+    }
+    // the comms centre destroyed or held: a defence falls, a retake fails (the node stays theirs).
+    // The run log keeps the simulator's words (held / fallen) so node-compare reads both runs alike.
+    const AHWNodeFacility* Comms = GetFacility(EHWNodeFacilityKind::Comms);
+    const bool bCommsDestroyed = Comms && Comms->IsDestroyed();
+    const bool bRetake = Machine.State == HWNodeRules::ENodeState::Retaking;
+    if (bRetake ? Machine.TickRetake(DeltaSeconds, bCommsDestroyed, EnemyOnComms()) : Machine.TickInvasion(DeltaSeconds, bCommsDestroyed, EnemyOnComms()))
+    {
+        Outcome = bRetake ? TEXT("Retake failed - the infected keep Namsan (G to try again)") : TEXT("Namsan has fallen - the map goes dark (G to try again)");
+        SetState(Machine.State);
+        RunEvent(TEXT("state"), TEXT("node"), TEXT("fallen"));
+        WriteRunLog(TEXT("fallen"));
+        FinishRun(bRetake ? TEXT("retake_failed") : TEXT("fallen"));
+    }
 }
 
 void AHWNodeDirector::DrawHud() const
@@ -1114,14 +1238,14 @@ void AHWNodeDirector::DrawHud() const
     };
 
     Show(FString::Printf(TEXT("%s  [%s]   you: %s"), *Config->DisplayName, StateName(Machine.State), GuildRoleName(GuildRole)), FColor(255, 210, 120));
-    if (Machine.State == HWNodeRules::ENodeState::Alert && PrepLeft > 0.f)
+    if (IsPreparing())
     {
         Show(FString::Printf(TEXT("PREPARE %.0fs - supplies %d (barricade %d at a forest-trail slot: G)   technician orders: G next to them"),
             PrepLeft, Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade)), FColor(255, 170, 90));
         if (!Config->ShelterPoint.IsZero()) Show(TEXT("Evacuate the NPCs under the central turrets: G at the shelter point (they leave their posts)"), FColor(120, 200, 255));
         Show(NpcFx.bWavePreview ? FString::Printf(TEXT("Scout report - first wave: %s"), *WavePreview(0)) : FString(TEXT("No scout report (scout lost, no scouting policy)")), FColor(170, 220, 255));
     }
-    if (Machine.State == HWNodeRules::ENodeState::Invasion)
+    if (Machine.State == HWNodeRules::ENodeState::Invasion || Machine.State == HWNodeRules::ENodeState::Retaking)
     {
         const FString Next = NpcFx.bWavePreview && Waves.NextWave < Waves.WaveCount ? FString::Printf(TEXT("   next: %s"), *WavePreview(Waves.NextWave)) : FString();
         Show(bBossPhase
@@ -1131,6 +1255,11 @@ void AHWNodeDirector::DrawHud() const
                     BossCore && BossCore->CanFinish() ? TEXT("   FINISH: hit = kill / Execute (V) = extract") : TEXT(""))
                 : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d (you %d)%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills, PlayerKills, *Next),
             FColor::White);
+        const FString RetakeNote = Machine.State == HWNodeRules::ENodeState::Retaking
+            ? FString::Printf(TEXT("   RETAKE x%.2f, +%d elite(s)"), RunDifficulty, RunExtraElites) : FString();
+        Show(FString::Printf(TEXT("Supplies %d  (G at a damaged turret: repair %d / G elsewhere when hurt: potion, %d free then %d supply)%s"),
+            Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair), FreePotions, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Potions), *RetakeNote),
+            FColor(200, 230, 160));
         if (Machine.CommsHeldSeconds > 0.f) Show(FString::Printf(TEXT("ENEMY ON COMMS  %.0f / %.0fs"), Machine.CommsHeldSeconds, Machine.CommsHoldToFall), FColor::Red);
         if (BossCore && BossCore->GetExtractionProgress() > 0.f) Show(FString::Printf(TEXT("EXTRACTING  %.0f%%  - do not get hit"), 100.f * BossCore->GetExtractionProgress()), FColor(255, 80, 60));
     }
@@ -1202,9 +1331,10 @@ void AHWNodeDirector::BeginRunLog()
             TechOrder = FString::Printf(TEXT("\"%s\""), HWNodeDirectorLocal::FacilityKey(Npc->GetOrderFacility()));
         }
     }
-    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d}"),
+    // supply = points left when the run starts (barricades already paid); retake runs carry the tier's difficulty and extra elites
+    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d,\"retake\":%s,\"difficulty\":%.2f,\"extraElites\":%d}"),
         *FString::Join(PolicyList, TEXT(",")), *FString::Join(BarricadeList, TEXT(",")), *TechOrder, bAnyEvacuated ? TEXT("true") : TEXT("false"),
-        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points);
+        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points, Machine.State == HWNodeRules::ENodeState::Retaking ? TEXT("true") : TEXT("false"), RunDifficulty, RunExtraElites);
 }
 
 void AHWNodeDirector::RunEvent(const TCHAR* Kind, const FString& Id, const TCHAR* To)

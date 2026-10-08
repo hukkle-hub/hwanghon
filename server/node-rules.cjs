@@ -25,8 +25,11 @@ function startInvasion(m){ if(!calm(m)) return false; m.state='invasion'; m.comm
 function defenceHeld(m){ if(m.state!=='invasion') return false; m.state='recovering'; m.recover=0; return true; }
 function tickInvasion(m,dt,commsDestroyed,enemyOnComms){ if(m.state!=='invasion') return false; m.commsHeld=enemyOnComms?m.commsHeld+dt:0;
  if(!commsDestroyed&&m.commsHeld<m.commsHoldToFall) return false; m.state='fallen'; m.occupiedHours=0; return true; }
+/* 탈환 실패 — 방어가 무너지는 것과 같은 조건, 거점은 점령된 채(retakeable) */
+function tickRetake(m,dt,commsDestroyed,enemyOnComms){ if(m.state!=='retaking') return false; m.commsHeld=enemyOnComms?m.commsHeld+dt:0;
+ if(!commsDestroyed&&m.commsHeld<m.commsHoldToFall) return false; m.commsHeld=0; m.state='retakeable'; return true; }
 function tickOccupation(m,hours){ if(m.state!=='fallen'&&m.state!=='retakeable'&&m.state!=='retaking') return; m.occupiedHours+=hours; if(m.state==='fallen'&&occupationTier(m.occupiedHours)!=='initial') m.state='retakeable'; }
-function startRetake(m){ if(m.state!=='retakeable') return false; m.state='retaking'; return true; }
+function startRetake(m){ if(m.state!=='retakeable') return false; m.state='retaking'; m.commsHeld=0; return true; }
 function retakeEnded(m,ok){ if(m.state!=='retaking') return false; m.state=ok?'recovering':'retakeable'; if(ok){ m.recover=0; m.occupiedHours=0; } return true; }
 function addRecovery(m,a){ if(m.state!=='recovering') return false; m.recover+=a; if(m.recover<1) return false; m.recover=1; m.state='stable'; setThreat(m,m.threat); return true; }
 
@@ -53,5 +56,5 @@ function nodeServices(state,commsFraction=1,power=3){ if(state==='fallen'||state
  return {mapIntel:0.35+0.65*c*ps,eventDetection:0.15+0.85*c*ps,rescueSignals:c>0&&power>=1,invasionForecast:c>0.5&&power>=2&&state!=='recovering'}; }
 
 module.exports={ STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
- gradeCounter,occupationTier,machine,setThreat,startInvasion,defenceHeld,tickInvasion,tickOccupation,startRetake,retakeEnded,addRecovery,
+ gradeCounter,occupationTier,machine,setThreat,startInvasion,defenceHeld,tickInvasion,tickRetake,tickOccupation,startRetake,retakeEnded,addRecovery,
  contributionScore,stewardGuild,guildContributionScores,validPolicies,policyEffects,hasPermission,nodeServices };

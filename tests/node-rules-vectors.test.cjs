@@ -6,6 +6,7 @@ const near=(a,b)=>Math.abs(a-b)<0.01;
 test('서버 규칙: 카운터 판정·점령 단계·정책·권한',()=>{
  for(const [e,g] of V.grade) assert.equal(R.gradeCounter(e),g,'grade '+e);
  for(const [h,t] of V.occupation) assert.equal(R.occupationTier(h),t,'tier '+h);
+ for(const [t,[d,rw,x]] of Object.entries(V.tier_effects)){ assert.equal(R.DIFFICULTY[t],d,'difficulty '+t); assert.equal(R.REWARD[t],rw,'reward '+t); assert.equal(R.EXTRA_ELITES[t],x,'elites '+t); }
  for(const p of V.policies) assert.equal(R.validPolicies(p.picks),p.valid,'policies '+p.picks);
  for(const role of R.ROLES) for(const perm of R.PERMS) assert.equal(R.hasPermission(role,perm),V.permissions[role].includes(perm),role+' '+perm);
 });
@@ -16,7 +17,7 @@ test('서버 규칙: 공헌도(보스 딜 1위가 1등이 아니다)·관리권'
 test('서버 규칙: 상태 기계 (안정→침공→방어/함락→점령→탈환→복구)',()=>{
  for(const c of V.machine){ const m=R.machine(); c.steps.forEach((st,i)=>{ const [op,...a]=st;
   if(op==='threat') R.setThreat(m,a[0]); if(op==='invade') R.startInvasion(m); if(op==='held') R.defenceHeld(m); if(op==='recover') R.addRecovery(m,a[0]);
-  if(op==='tick') R.tickInvasion(m,a[0],a[1],a[2]); if(op==='occupy') R.tickOccupation(m,a[0]); if(op==='retake') R.startRetake(m); if(op==='retake_end') R.retakeEnded(m,a[0]);
+  if(op==='tick') R.tickInvasion(m,a[0],a[1],a[2]); if(op==='occupy') R.tickOccupation(m,a[0]); if(op==='retake') R.startRetake(m); if(op==='retake_end') R.retakeEnded(m,a[0]); if(op==='retake_tick') R.tickRetake(m,a[0],a[1],a[2]);
   assert.equal(m.state,c.expect[i],'step '+i+' '+JSON.stringify(st)); }); }
 });
 /* 판을 돌리는 규칙 (시뮬레이터 tools/ue/node-sim.cjs 가 쓴다) */
@@ -32,6 +33,8 @@ test('전투 규칙(JS): 역할 수치·목표 선택·정문 차단·웨이브�
  for(const c of K.npc){ const pe=R.policyEffects(c.policies), e=C.npcEffects(c.states,pe); for(const [k,v] of Object.entries(c.expect)) assert.ok(typeof v==='boolean'?e[k]===v||k==='prepSeconds':near(k==='prepSeconds'?C.prepSeconds(e,pe):e[k],v),k+' '+JSON.stringify(c)); }
  const L=C.npcLife(K.life.max); K.life.seq.forEach(([op,a],i)=>{ const r=op==='dmg'?L.applyDamage(a):op==='rescue'?L.rescue():L.tick(a); assert.deepEqual([r,L.state,Math.round(L.health)],K.life.expect[i],'life '+i); });
  for(const c of K.npc_health) assert.equal(C.npcMaxHealth(c.role,c.armed),c.expect);
+ assert.deepEqual(C.SUPPLY_COST,K.supply.cost); assert.equal(C.TURRET_REPAIR_FRACTION,K.supply.turret_repair_fraction); assert.equal(C.POTION_HEAL_FRACTION,K.supply.potion_heal_fraction); assert.equal(C.TURRET_REPAIR_BELOW,K.supply.turret_repair_below); assert.equal(C.POTION_USE_BELOW,K.supply.potion_use_below);
+ for(const [fr,pts,src] of K.supply.potion) assert.equal(C.potionSource(fr,pts),src,'potion '+fr+' '+pts);
  for(const [r,w] of K.credit.kill) assert.equal(C.killWeight(r),w); for(const [r,d,w] of K.credit.defense) assert.equal(C.defenseCredit(r,d),w); for(const [a2,d,ok] of K.credit.ping) assert.equal(C.pingCredits(a2,d),ok);
 });
 /* 같은 벡터 → C++ 시험 소스 */
@@ -45,6 +48,7 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  L.push('#include "HWNodeRules.h"','#include <cstdio>','#include <cmath>','using namespace HWNodeRules;','static int Fails=0;','#define CHECK(c,msg) do{ if(!(c)){ std::printf("FAIL %s\\n", msg); ++Fails; } }while(0)','int main(){');
  V.grade.forEach(([e,g],i)=>L.push(`CHECK(GradeCounter(${f(e)},0.10f,0.25f)==ECounterGrade::${G[g]},"grade ${i}");`));
  V.occupation.forEach(([h,t],i)=>L.push(`CHECK(OccupationTier(${f(h)})==EOccupationTier::${T[t]},"tier ${i}");`));
+ for(const [t,[d,rw,x]] of Object.entries(V.tier_effects)) L.push(`CHECK(std::fabs(OccupationDifficulty(EOccupationTier::${T[t]})-${f(d)})<0.001f&&std::fabs(OccupationReward(EOccupationTier::${T[t]})-${f(rw)})<0.001f&&OccupationExtraElites(EOccupationTier::${T[t]})==${x},"tier effects ${t}");`);
  V.policies.forEach((p,i)=>L.push(`{ EPolicy A[8]={${p.picks.map(x=>'EPolicy::'+P[x]).join(',')||'EPolicy::GateReinforce'}}; CHECK(ValidPolicies(A,${p.picks.length})==${p.valid},"policies ${i}"); }`));
  for(const [role,perms] of Object.entries(V.permissions)) for(const pe of Object.keys(PE)) L.push(`CHECK(HasPermission(EGuildRole::${RO[role]},EGuildPerm::${PE[pe]})==${perms.includes(pe)},"perm ${role} ${pe}");`);
  L.push(`{ FContribution All[${V.contribution.players.length}];`);
@@ -54,7 +58,7 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  V.steward.forEach((s,i)=>L.push(`{ const float S[]={${s.scores.map(f).join(',')}}; const int G[]={${s.guild_of.join(',')}}; CHECK(StewardGuild(S,G,${s.scores.length},${s.guilds})==${s.expect},"steward ${i}"); }`));
  V.machine.forEach((c,ci)=>{ L.push('{ FNodeStateMachine M;'); c.steps.forEach((st,i)=>{ const [op,...a]=st;
   L.push(op==='threat'?`M.SetThreat(${f(a[0])});`:op==='invade'?'M.StartInvasion();':op==='held'?'M.DefenceHeld();':op==='recover'?`M.AddRecovery(${f(a[0])});`:
-   op==='tick'?`M.TickInvasion(${f(a[0])},${a[1]},${a[2]});`:op==='occupy'?`M.TickOccupation(${f(a[0])});`:op==='retake'?'M.StartRetake();':`M.RetakeEnded(${a[0]});`);
+   op==='tick'?`M.TickInvasion(${f(a[0])},${a[1]},${a[2]});`:op==='occupy'?`M.TickOccupation(${f(a[0])});`:op==='retake'?'M.StartRetake();':op==='retake_tick'?`M.TickRetake(${f(a[0])},${a[1]},${a[2]});`:`M.RetakeEnded(${a[0]});`);
   L.push(`CHECK(M.State==ENodeState::${E[c.expect[i]]},"machine ${ci} step ${i}");`); }); L.push('}'); });
  /* 전투 */
  const K=V.combat, RL={normal:'Normal',runner:'Runner',breaker:'Breaker',stalker:'Stalker',armored_elite:'ArmoredElite'};
@@ -74,6 +78,10 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  L.push(`{ FNpcLife N; N.MaxHealth=${f(K.life.max)}; N.Health=N.MaxHealth;`); K.life.seq.forEach(([op,a],i)=>{ const [r,s,h]=K.life.expect[i];
   L.push(`{ const bool R=${op==='dmg'?`N.ApplyDamage(${f(a)})`:op==='rescue'?'N.Rescue()':`N.Tick(${f(a)})`}; CHECK(R==${r}&&N.State==ENpcState::${NS[s]}&&std::fabs(N.Health-${f(h)})<0.6f,"life ${i}"); }`); }); L.push('}');
  K.npc_health.forEach((c,i)=>L.push(`CHECK(std::fabs(NpcMaxHealth(ENpcRole::${NR[c.role]},${c.armed})-${f(c.expect)})<0.01f,"npc health ${i}");`));
+ { const SU={barricade:'Barricade',turret_repair:'TurretRepair',potion:'Potions'}, PS={free:'Free',supply:'Supply',none:'None'};
+  for(const [u,c] of Object.entries(K.supply.cost)) L.push(`CHECK(SupplyCost(ESupplyUse::${SU[u]})==${c},"supply cost ${u}");`);
+  L.push(`CHECK(std::fabs(TurretRepairFraction-${f(K.supply.turret_repair_fraction)})<0.001f&&std::fabs(PotionHealFraction-${f(K.supply.potion_heal_fraction)})<0.001f&&std::fabs(TurretRepairBelow-${f(K.supply.turret_repair_below)})<0.001f&&std::fabs(PotionUseBelow-${f(K.supply.potion_use_below)})<0.001f,"supply fractions");`);
+  K.supply.potion.forEach(([fr,pts,src],i)=>L.push(`CHECK(PotionSource(${fr},${pts})==EPotionSource::${PS[src]},"potion ${i}");`)); }
  K.credit.kill.forEach(([r,w],i)=>L.push(`CHECK(std::fabs(KillWeight(EEnemyRole::${RL[r]})-${f(w)})<0.001f,"kill weight ${i}");`));
  K.credit.defense.forEach(([r,d,w],i)=>L.push(`CHECK(std::fabs(DefenseCredit(EEnemyRole::${RL[r]},${f(d)})-${f(w)})<0.001f,"defense ${i}");`));
  K.credit.ping.forEach(([a2,d,ok],i)=>L.push(`CHECK(PingCredits(${f(a2)},${f(d)})==${ok},"ping ${i}");`));

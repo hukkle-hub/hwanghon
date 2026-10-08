@@ -16,6 +16,7 @@ function moments(run) {
   for (const e of r.events) {
     if (e.kind === 'wave') first('웨이브 ' + e.id, e.t);
     if (e.kind === 'facility' && e.to === 'destroyed') first(e.id + ' 무너짐', e.t);
+    if (e.kind === 'supply') first(e.id === 'potion' ? '첫 회복약' : e.id + ' 수리', e.t);
     if (e.kind === 'npc' && (e.to === 'injured' || e.to === 'missing' || e.to === 'rescued')) first(e.id + ' ' + ({ injured: '부상', missing: '포로', rescued: '구조' })[e.to], e.t);
   }
   const deaths = r.events.filter(e => e.kind === 'player' && e.to === 'dead').length;
@@ -42,7 +43,8 @@ function compare(a, b) {
 
 /* UE 기록의 조건으로 시뮬을 돌린다. 플레이어 DPS 는 플레이어 피해 몫이 가장 가까운 값 */
 function simFor(ue, N = S.load(ue.node || 'namsan_n01'), dpsList = Array.from({ length: 24 }, (_, i) => 300 + i * 100)) {
-  const o = ue.opt || {}, base = { policies: o.policies || [], barricades: o.barricades || [], tech: o.tech || null, evacuate: !!o.evacuate };
+  const o = ue.opt || {}, base = { policies: o.policies || [], barricades: o.barricades || [], tech: o.tech || null, evacuate: !!o.evacuate,
+    retake: !!o.retake, difficulty: o.difficulty || 1, extraElites: o.extraElites || 0, supply: o.supply, maxTime: o.retake ? 900 : 400 };
   const target = share(trim(ue));
   if (!(ue.dealt && ue.dealt.player > 0)) return { run: S.simulate(N, { ...base, player: null }), dps: null };
   let best = null;

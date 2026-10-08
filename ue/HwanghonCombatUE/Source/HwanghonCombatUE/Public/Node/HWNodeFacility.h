@@ -45,6 +45,8 @@ public:
     UFUNCTION(BlueprintPure)
     bool IsDestroyed() const { return Rules.IsDestroyed(); }
 
+    float GetMaxHealth() const { return Rules.MaxHealth; }
+
     // 0..3 (HWNodeRules::GeneratorPower); 3 for anything that is not a generator.
     UFUNCTION(BlueprintPure)
     int32 GetPower() const { return Kind == EHWNodeFacilityKind::Generator ? HWNodeRules::GeneratorPower(Rules.Fraction()) : 3; }

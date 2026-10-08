@@ -51,8 +51,8 @@ function draw(N,S,T,W){
 }
 function side(S,T,fr,title){
  const o=S.opt||{}, d=el('div','side');
- d.appendChild(el('h1','',title||`${T.toFixed(0)}초 · ${S.result==='held'?'막음':S.result==='fallen'?'함락':'시간 끝'} (${S.t}s)`));
- d.appendChild(el('div','',`정책 ${(o.policies||[]).join(', ')||'없음'} · 바리케이드 ${(o.barricades||[]).length} · 기술자 ${o.tech||'—'}${o.evacuate||S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:S.source==='ue'?'사람':'없음'}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`));
+ d.appendChild(el('h1','',title||`${T.toFixed(0)}초 · ${S.result==='held'?(o.retake?'탈환 (웨이브 막음)':'막음'):S.result==='fallen'?(o.retake?'탈환 실패':'함락'):'시간 끝'} (${S.t}s)`));
+ d.appendChild(el('div','',`정책 ${(o.policies||[]).join(', ')||'없음'} · 바리케이드 ${(o.barricades||[]).length} · 기술자 ${o.tech||'—'}${o.evacuate||S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:S.source==='ue'?'사람':'없음'}${o.retake?` · <b style="color:#9fc4ff">탈환전 ×${o.difficulty} · 철갑 +${o.extraElites||0}</b>`:''}${o.supply!=null?` · 보급 ${o.supply}${S.supplyUsed?` (회복약 ${S.supplyUsed.potionsFree+S.supplyUsed.potionsSupply} · 포탑 수리 ${S.supplyUsed.turretRepairs} · 남음 ${S.supplyLeft})`:''}`:''}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`));
  d.appendChild(el('div','',ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+'<br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)'));
  d.appendChild(el('hr')); const ev=el('div','ev'); ev.innerHTML=S.events.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s ${e.text}</div>`).join(''); d.appendChild(ev);
  return d;

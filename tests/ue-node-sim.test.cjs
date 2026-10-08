@@ -33,3 +33,30 @@ test('시뮬: NPC 대피 명령은 포로를 줄인다 (기능을 버리고 안�
   const base = cnt(run({})), evac = cnt(run({ evacuate: true }));
   assert.ok(evac <= base - 2, '대피해도 포로가 ' + base + ' → ' + evac);
 });
+test('시뮬: 무너진 시설은 판 중에 다시 서지 않는다 — 기술자가 무너진 정문을 1%씩 살려 영영 안 끝나던 교착 (UE HWNodeNpc 와 같이 고침)', () => {
+  for (const [name, o] of [['기술자→정문', { tech: 'gate' }], ['기술자→정문 · 탈환 요새', { tech: 'gate', retake: true, difficulty: 1.65, extraElites: 2 }]]) {
+    const r = run({ ...o, maxTime: 900 }), downs = {};
+    for (const e of r.events) if (e.kind === 'facility' && e.to === 'destroyed') downs[e.id] = (downs[e.id] || 0) + 1;
+    for (const [id, n] of Object.entries(downs)) assert.equal(n, 1, name + ': ' + id + ' 가 ' + n + '번 무너졌다');
+    assert.notEqual(r.result, 'timeout', name + ': 판이 안 끝난다');
+  }
+});
+test('시뮬: 탈환전 — 점령 단계의 추가 철갑이 마지막 웨이브에 붙고, 통신센터를 잃으면 탈환 실패(fallen)', () => {
+  const base = run({}), ret = run({ retake: true, difficulty: 1.65, extraElites: 2, maxTime: 900 });
+  assert.equal(ret.spawned, base.spawned + 2, '추가 철갑 ' + (ret.spawned - base.spawned));
+  assert.equal(ret.opt.retake, true); assert.equal(ret.opt.extraElites, 2);
+  const lone = run({ player: null, retake: true, difficulty: 1.3, extraElites: 1 });
+  assert.equal(lone.result, 'fallen'); assert.ok(lone.events.some(e => /탈환 실패/.test(e.text)), '탈환 실패 사건이 없다');
+});
+test('시뮬: 판 안 보급 — 회복약(정책 무료분 먼저)은 쓰러짐을 줄이고, 포탑 수리는 수리·보급 권한자만 보급 2로 한다', () => {
+  const weak = { dps: 600, counter: 0.35 }, none = run({ player: weak, supply: 0 }), some = run({ player: weak, supply: 12 });
+  assert.ok(some.player.deaths < none.player.deaths, '보급 12 인데 쓰러짐이 ' + none.player.deaths + ' → ' + some.player.deaths);
+  assert.ok(some.supplyUsed.potionsSupply > 0 && some.supplyLeft === 12 - some.supplyUsed.potionsSupply, JSON.stringify(some.supplyUsed));
+  const med = run({ player: weak, supply: 2, policies: ['medical_stock'] });
+  assert.equal(med.supplyUsed.potionsFree, 3, '의료 비축 무료 회복약 3개를 먼저 써야 한다'); assert.ok(med.supplyUsed.potionsSupply <= 2);
+  assert.deepEqual(run({ player: weak }).supplyUsed, { potionsFree: 0, potionsSupply: 0, turretRepairs: 0 }, '보급을 안 넘긴 옛 판이 바뀌었다');
+  /* 포탑은 지금 배치에선 안 맞는다 — 노림 반경 손잡이를 넓혀 맞게 하고 본다 */
+  const hit = run({ player: weak, supply: 12, turretAggro: 1100 }), member = run({ party: [{ name: 'm', guildRole: 'member', dps: 600 }], supply: 12, turretAggro: 1100 });
+  assert.ok(hit.supplyUsed.turretRepairs > 0, '포탑 수리를 안 했다'); assert.equal(hit.party[0].ledger.supply, 2 * hit.supplyUsed.turretRepairs, '포탑 수리 공헌 = 보급 2');
+  assert.equal(member.supplyUsed.turretRepairs, 0, '권한 없는 길드원이 포탑을 고쳤다');
+});

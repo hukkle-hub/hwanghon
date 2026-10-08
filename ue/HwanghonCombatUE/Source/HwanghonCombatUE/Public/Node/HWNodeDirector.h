@@ -24,6 +24,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNodeStateSignature, EHWNodeState,
 //   ?HWPolicies=gate_reinforce,scouting   the steward's picks (checked against the budget)
 //   ?HWSupply=6                           supply points for this defence
 //   ?HWGuildRole=leader|vice|combat|supply|craft|member   the local player's guild role (permissions)
+//   ?HWRetake=13                          a retake run: the node has been occupied this many hours (tier: difficulty, extra elites)
 // Nothing here is Namsan-specific: another node is another Content/Data/node_<id>.json.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWNodeDirector : public AActor
@@ -86,6 +87,10 @@ private:
     void SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial);
     void SpawnBoss();
     void BeginPreparation();
+    void StartRetakeRun();
+    void TickRun(float DeltaSeconds);   // an invasion or a retake under way: defences, waves, the boss, the fall
+    bool IsRetakeRun() const { return RetakeHours >= 0.f; }
+    bool IsPreparing() const;
     void SetState(HWNodeRules::ENodeState NewState);
     void TickPlayer(float DeltaSeconds);
     void TickDefences(float DeltaSeconds);
@@ -166,6 +171,10 @@ private:
     TArray<HWNodeRules::EPolicy> Policies;
     FString PolicyNote;
     int32 SupplyStart = 6;
+    float RetakeHours = -1.f;      // ?HWRetake= (hours occupied); -1 = a defence
+    float RunDifficulty = 1.f;     // enemy health and damage (HWNodeRules::OccupationDifficulty on a retake)
+    int32 RunExtraElites = 0;      // armoured elites added to the last wave (HWNodeRules::OccupationExtraElites)
+    int32 FreePotions = 0;         // the medical-stock policy's potions, used before supplies
 
     struct FPing
     {

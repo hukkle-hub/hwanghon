@@ -237,6 +237,18 @@ struct FNodeStateMachine
         return true;
     }
 
+    // A retake fails the way a defence falls: the comms centre destroyed, or held by the enemy long enough -
+    // the node stays occupied (Retakeable). On the server its clock keeps running; in PIE G starts the same retake again.
+    bool TickRetake(float DeltaSeconds, bool bCommsDestroyed, bool bEnemyOnComms)
+    {
+        if (State != ENodeState::Retaking) return false;
+        CommsHeldSeconds = bEnemyOnComms ? CommsHeldSeconds + DeltaSeconds : 0.f;
+        if (!bCommsDestroyed && CommsHeldSeconds < CommsHoldToFall) return false;
+        CommsHeldSeconds = 0.f;
+        State = ENodeState::Retakeable;
+        return true;
+    }
+
     // Occupation clock (hours). Fallen opens to Retakeable after two hours; fortification keeps rising.
     void TickOccupation(float DeltaHours)
     {
@@ -249,6 +261,7 @@ struct FNodeStateMachine
     {
         if (State != ENodeState::Retakeable) return false;
         State = ENodeState::Retaking;
+        CommsHeldSeconds = 0.f;
         return true;
     }
 
@@ -670,6 +683,20 @@ struct FSupplyPool
         return true;
     }
 };
+
+// What the supplies buy during a run (docs/design/201 §4): a turret repair puts half its health back (a wrecked turret
+// comes back up), a potion heals 40% of the player's health. The medical-stock policy's potions go first, free.
+constexpr float TurretRepairFraction = 0.5f;
+constexpr float TurretRepairBelow = 0.5f;    // only a turret at or under half is worth 2 supplies (a 99% turret is not)
+constexpr float PotionHealFraction = 0.4f;
+constexpr float PotionUseBelow = 0.9f;       // a stray G at full-ish health does not burn a potion
+enum class EPotionSource : unsigned char { None, Free, Supply };
+inline EPotionSource PotionSource(int FreeLeft, int SupplyPoints)
+{
+    if (FreeLeft > 0) return EPotionSource::Free;
+    if (SupplyPoints >= SupplyCost(ESupplyUse::Potions)) return EPotionSource::Supply;
+    return EPotionSource::None;
+}
 
 // ---------------------------------------------------------------- NPC roles (docs/design/201 §3)
 

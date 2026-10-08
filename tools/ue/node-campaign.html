@@ -20,7 +20,7 @@ svg text{fill:var(--tx);font-family:"Noto Sans KR",QA,sans-serif}
 <script>
 /* tools/ue/node-campaign.cjs --json 결과를 그린다. ?data=경로 */
 const q=new URLSearchParams(location.search);
-const COL={held:'#7ad47a',fallen:'#e05040',retaken:'#5aa0ff',retake_failed:'#ffa040',wait:'#666'}, KO={held:'막음',fallen:'함락',retaken:'탈환',retake_failed:'탈환 실패',wait:'기다림'};
+const COL={held:'#7ad47a',fallen:'#e05040',retaken:'#5aa0ff',retake_failed:'#ffa040',wait:'#666',timeout:'#ff4dff'}, KO={held:'막음',fallen:'함락',retaken:'탈환',retake_failed:'탈환 실패',wait:'기다림',timeout:'시간 초과'};
 const SCOL={stable:'#2f5a3a',uneasy:'#2f5a3a',alert:'#2f5a3a',fallen:'#7a2a26',retakeable:'#7a4a1e',retaking:'#7a4a1e'};
 (async()=>{
  const C=await (await fetch(q.get('data'))).json();
@@ -38,13 +38,18 @@ const SCOL={stable:'#2f5a3a',uneasy:'#2f5a3a',alert:'#2f5a3a',fallen:'#7a2a26',r
    else if(k==='fallen') el('path',{d:`M${x-5} ${y-5}L${x+5} ${y+5}M${x+5} ${y-5}L${x-5} ${y+5}`,stroke:COL[k],'stroke-width':2.5});
    else if(k==='retaken') el('path',{d:`M${x} ${y-6}L${x+6} ${y+5}L${x-6} ${y+5}Z`,fill:COL[k]});
    else if(k==='retake_failed') el('path',{d:`M${x} ${y-6}L${x+6} ${y+5}L${x-6} ${y+5}Z`,fill:'none',stroke:COL[k],'stroke-width':2});
-   else el('circle',{cx:x,cy:y,r:3.5,fill:'none',stroke:COL.wait}); } });
+   else if(k==='timeout') el('rect',{x:x-5,y:y-5,width:10,height:10,fill:'none',stroke:COL.timeout,'stroke-width':2});
+   else el('circle',{cx:x,cy:y,r:3.5,fill:'none',stroke:COL.wait});
+   /* 판 안에서 쓴 회복약 수 (작은 숫자) · 탈환전 추가 철갑 */
+   const used=r.supplyUsed?r.supplyUsed.potionsFree+r.supplyUsed.potionsSupply:0;
+   if(used) el('text',{x:x+6,y:y-5,'font-size':9,fill:'#c8e6a0'},String(used));
+   if(r.extraElites) el('text',{x:x-4,y:y+15,'font-size':9,fill:'#9fc4ff'},'+'+r.extraElites); } });
  const ly=top+rowH*G.length+38; let lx=L;
- for(const [k,t] of Object.entries(KO)){ el('rect',{x:lx,y:ly-9,width:10,height:10,fill:COL[k]}); el('text',{x:lx+14,y:ly,'font-size':11},t); lx+=80; }
+ for(const [k,t] of Object.entries(KO)){ el('rect',{x:lx,y:ly-9,width:10,height:10,fill:COL[k]}); el('text',{x:lx+14,y:ly,'font-size':11},t); lx+=74; }
  el('rect',{x:lx+10,y:ly-9,width:10,height:10,fill:SCOL.fallen}); el('text',{x:lx+24,y:ly,'font-size':11},'함락 중'); el('rect',{x:lx+80,y:ly-9,width:10,height:10,fill:SCOL.retakeable}); el('text',{x:lx+94,y:ly,'font-size':11},'탈환 가능');
  /* 주차별 */
  const cnt=k=>C.runs.filter(r=>(r.kind==='wait'?'wait':r.result)===k).length;
- document.getElementById('sub').textContent=`${days}일 · 길드 ${G.length} · 인원 보정 k=${C.partyScale} · 막음 ${cnt('held')} · 함락 ${cnt('fallen')} · 탈환 ${cnt('retaken')} · 탈환 실패 ${cnt('retake_failed')} · 기다림 ${cnt('wait')} · 끝: 관리 길드 ${C.end.steward?C.end.steward.name:'없음'}`;
+ document.getElementById('sub').textContent=`${days}일 · 길드 ${G.length} · 인원 보정 k=${C.partyScale} · 막음 ${cnt('held')} · 함락 ${cnt('fallen')} · 탈환 ${cnt('retaken')} · 탈환 실패 ${cnt('retake_failed')} · 기다림 ${cnt('wait')}${cnt('timeout')?' · 시간 초과 '+cnt('timeout'):''} · 회복약 ${C.runs.reduce((a,r)=>a+(r.supplyUsed?r.supplyUsed.potionsFree+r.supplyUsed.potionsSupply:0),0)} · 포탑 수리 ${C.runs.reduce((a,r)=>a+(r.supplyUsed?r.supplyUsed.turretRepairs:0),0)} (녹색 숫자 = 그 판 회복약, 파란 +n = 탈환전 추가 철갑) · 끝: 관리 길드 ${C.end.steward?C.end.steward.name:'없음'}`;
  const wk=document.getElementById('weeks');
  const blocks=[...C.weeks.map(w=>({title:`${w.week}주차 — 관리 길드 <b>${w.steward||'없음'}</b>`,body:`정책 ${w.policies} · 보급 ${w.supply}`,st:w.lastStandings,cap:'지난 주기 순위'})),{title:'캠페인 끝 — 다음 관리 길드 <b>'+(C.end.steward?C.end.steward.name:'없음')+'</b>',body:'',st:C.end.lastStandings,cap:'마지막 주기 순위'}];
  for(const b of blocks){ const max=Math.max(1,...(b.st||[]).map(s=>s.score)); const d=document.createElement('div'); d.className='wk';
