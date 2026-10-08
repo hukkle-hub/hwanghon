@@ -26,7 +26,8 @@ enum class EHWNodeEnemyRole : uint8
     Runner,
     Breaker,
     Stalker,
-    ArmoredElite
+    ArmoredElite,
+    Resonator
 };
 
 UENUM(BlueprintType)

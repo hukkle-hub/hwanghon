@@ -1,0 +1,48 @@
+{
+  "scenario_id": "N01_TIER5_PIE_V06",
+  "max_duration_sec": 330,
+  "debug_label": "T5 / ROLE / TARGET",
+  "required_world_targets": [
+    {
+      "id": "PLAYER",
+      "type": "Player"
+    },
+    {
+      "id": "GATE",
+      "type": "Gate"
+    },
+    {
+      "id": "GENERATOR",
+      "type": "Generator"
+    },
+    {
+      "id": "COMMS",
+      "type": "Comms"
+    },
+    {
+      "id": "ENGINEER",
+      "type": "NPC",
+      "importance": 1.5
+    },
+    {
+      "id": "MEDIC",
+      "type": "NPC",
+      "importance": 1.35
+    },
+    {
+      "id": "CIVILIAN",
+      "type": "NPC",
+      "importance": 1.0
+    }
+  ],
+  "pass_conditions": [
+    "all six roles spawn",
+    "all spawned monsters report ThreatGrade 5",
+    "Breaker selects Generator at least once",
+    "Stalker selects NPC at least once",
+    "Armored selects Gate at least once",
+    "Resonator aura changes a nearby T5 monster multiplier",
+    "scenario finishes without crash",
+    "existing boss smoke test remains green"
+  ]
+}

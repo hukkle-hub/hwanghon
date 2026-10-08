@@ -1,0 +1,203 @@
+{
+  "reference_image": "References/황혼_남산_거점_5급_감염체_시안.png",
+  "monsters": [
+    {
+      "id": "T5_WALKER",
+      "grade": 5,
+      "role": "Walker",
+      "name": "5급 보행형",
+      "visual": "왼쪽 1열: 젖은 검은 정장, 사원증, 창백한 피부, 붉은 눈. 인간 실루엣 유지.",
+      "hp": 1000,
+      "move": 0.9,
+      "attack": 1.0,
+      "posture": 1.0,
+      "budget": 1.0,
+      "cap": 8,
+      "target": {
+        "Player": 1.0,
+        "Gate": 0.55,
+        "Generator": 0.15,
+        "Comms": 0.2,
+        "NPC": 0.25
+      },
+      "behavior": [
+        "집단 전진",
+        "근거리 2연타",
+        "전선 유지",
+        "플레이어가 없으면 Gate 압박"
+      ],
+      "target_search_radius_cm": 5000,
+      "target_reevaluate_sec": 0.7
+    },
+    {
+      "id": "T5_RUNNER",
+      "grade": 5,
+      "role": "Runner",
+      "name": "5급 질주형",
+      "visual": "왼쪽 2열: 검은 전투복/가죽, 여성형 인간 실루엣, 붉은 혈관 흔적. 날렵한 체형.",
+      "hp": 720,
+      "move": 1.45,
+      "attack": 0.9,
+      "posture": 0.75,
+      "budget": 1.15,
+      "cap": 5,
+      "target": {
+        "Player": 1.0,
+        "Gate": 0.1,
+        "Generator": 0.25,
+        "Comms": 0.2,
+        "NPC": 0.6
+      },
+      "behavior": [
+        "측면 우회",
+        "짧은 고속 돌진",
+        "후방 압박",
+        "한 대상 집착 시간 제한"
+      ],
+      "target_search_radius_cm": 6500,
+      "target_reevaluate_sec": 0.35
+    },
+    {
+      "id": "T5_BREAKER",
+      "grade": 5,
+      "role": "Breaker",
+      "name": "5급 파괴형",
+      "visual": "왼쪽 3열: 작업/전술 장비, 한쪽 팔 강화, 인간형 유지. 시설 파괴용 중량 장비 느낌.",
+      "hp": 1550,
+      "move": 0.78,
+      "attack": 1.25,
+      "posture": 1.35,
+      "budget": 1.6,
+      "cap": 3,
+      "target": {
+        "Player": 0.25,
+        "Gate": 0.8,
+        "Generator": 1.0,
+        "Comms": 0.9,
+        "NPC": 0.1
+      },
+      "behavior": [
+        "Generator 최우선",
+        "시설 강타",
+        "플레이어 도발에 쉽게 이탈하지 않음",
+        "시설 도달 시 공격 고정"
+      ],
+      "target_search_radius_cm": 7000,
+      "target_reevaluate_sec": 0.6
+    },
+    {
+      "id": "T5_STALKER",
+      "grade": 5,
+      "role": "Stalker",
+      "name": "5급 추적형",
+      "visual": "왼쪽 4열: 검은 코트/후드 계열, 여성형 인간 실루엣, 절제된 붉은 감염 흔적.",
+      "hp": 820,
+      "move": 1.18,
+      "attack": 1.05,
+      "posture": 0.85,
+      "budget": 1.35,
+      "cap": 3,
+      "target": {
+        "Player": 0.45,
+        "Gate": 0.05,
+        "Generator": 0.1,
+        "Comms": 0.15,
+        "NPC": 1.0
+      },
+      "behavior": [
+        "NPC 우선",
+        "시야 밖 우회",
+        "표적 변경 최소화",
+        "기술자/의무관 우선순위 보너스"
+      ],
+      "target_search_radius_cm": 8500,
+      "target_reevaluate_sec": 0.4
+    },
+    {
+      "id": "T5_ARMORED",
+      "grade": 5,
+      "role": "Armored",
+      "name": "5급 철갑형",
+      "visual": "왼쪽 5열: 감염된 진압 경찰, 검은 방호복과 방패, 붉은 균열. 괴수화 없이 사람 체격.",
+      "hp": 2200,
+      "move": 0.72,
+      "attack": 1.15,
+      "posture": 1.65,
+      "budget": 2.0,
+      "cap": 2,
+      "target": {
+        "Player": 0.8,
+        "Gate": 1.0,
+        "Generator": 0.3,
+        "Comms": 0.35,
+        "NPC": 0.15
+      },
+      "behavior": [
+        "방패 전진",
+        "정면 피해 경감",
+        "Gate 압박",
+        "퍼펙트 카운터 시 자세 피해 크게 받음"
+      ],
+      "target_search_radius_cm": 5200,
+      "target_reevaluate_sec": 0.65,
+      "armored": {
+        "front_damage_multiplier": 0.45,
+        "perfect_counter_posture_multiplier": 2.25,
+        "attacks": [
+          {
+            "id": "shield_bash",
+            "counter": "normal",
+            "purpose": "keep front line"
+          },
+          {
+            "id": "heavy_charge",
+            "counter": "perfect_reward",
+            "purpose": "break formation"
+          },
+          {
+            "id": "overhead_crush",
+            "counter": "unavailable",
+            "purpose": "force dodge"
+          }
+        ]
+      }
+    },
+    {
+      "id": "T5_RESONATOR",
+      "grade": 5,
+      "role": "Resonator",
+      "name": "5급 공진형",
+      "visual": "왼쪽 6열: 백발/은발, 고급스러운 검정·적색 의상, 뱀파이어 같은 귀족적 인간형. 과도한 괴물화 금지.",
+      "hp": 980,
+      "move": 0.92,
+      "attack": 0.75,
+      "posture": 0.9,
+      "budget": 1.8,
+      "cap": 1,
+      "target": {
+        "Player": 0.65,
+        "Gate": 0.1,
+        "Generator": 0.15,
+        "Comms": 0.25,
+        "NPC": 0.2
+      },
+      "aura": {
+        "radius_cm": 1800,
+        "move_speed_multiplier": 1.1,
+        "attack_multiplier": 1.12,
+        "stack_limit": 1,
+        "refresh_sec": 0.4,
+        "affects_grade": 5
+      },
+      "behavior": [
+        "후방 유지",
+        "반경 내 5급 감염체 강화",
+        "최우선 제거 대상",
+        "단독 등장보다 군집 지원"
+      ],
+      "target_search_radius_cm": 4500,
+      "target_reevaluate_sec": 0.8
+    }
+  ],
+  "version": "v05"
+}

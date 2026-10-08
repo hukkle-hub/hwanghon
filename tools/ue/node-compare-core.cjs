@@ -16,6 +16,7 @@ function moments(run) {
   for (const e of r.events) {
     if (e.kind === 'wave') first('웨이브 ' + e.id, e.t);
     if (e.kind === 'facility' && e.to === 'destroyed') first(e.id + ' 무너짐', e.t);
+    if (e.kind === 'aura') first(e.to === 'on' ? '공진 시작' : '공진 해제', e.t);   /* 공진형 오라 (문서 203 §2) */
     if (e.kind === 'supply') first(e.id === 'potion' ? '첫 회복약' : e.id + ' 수리', e.t);
     if (e.kind === 'npc' && (e.to === 'injured' || e.to === 'missing' || e.to === 'rescued')) first(e.id + ' ' + ({ injured: '부상', missing: '포로', rescued: '구조' })[e.to], e.t);
   }

@@ -17,7 +17,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWNodeEnemyCounteredSignature, cla
 // A node invader with a role (docs/design/200 §5): who it goes for comes from HWNodeRules::ChooseTarget, so the
 // roles feel different in play - the breaker walks past you to the generator, the runner goes round the wall.
 // Dummy body: the configured "enemy" mannequin, scaled per role. Its blows are telegraphed and can be countered;
-// the armoured elite takes a quarter damage until a counter cracks its armour.
+// the armoured elite takes a quarter damage until a counter cracks its armour, and cycles three blows (v05: shield
+// bash, heavy charge - the perfect counter pays - and an overhead crush that cannot be countered). All six roles are
+// threat grade 5 (GuildWorld v04); the label over the head reads "T5 / ROLE / TARGET" (v06, not in Shipping).
+// The resonator's aura is the director's (SetResonance): the enemy never decides its own buff.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWNodeEnemy
     : public ACharacter
@@ -45,6 +48,16 @@ public:
 
     UFUNCTION(BlueprintPure)
     bool IsDeadEnemy() const { return bDead; }
+
+    UFUNCTION(BlueprintPure)
+    int32 GetThreatGrade() const { return HWNodeRules::NodeThreatGrade; }
+
+    // The resonator's aura from the director (HWNodeRules::ResonanceStacks: 0 or 1): move and attack multipliers.
+    void SetResonance(int32 Stacks);
+    int32 GetResonance() const { return Resonance; }
+    float GetMoveSpeedNow() const;
+    float GetAttackScaleNow() const { return HWNodeRules::ResonanceAttack(Resonance); }
+    void SetLabelVisible(bool bVisible);
     float GetHealthFraction() const { return MaxHealth > 0.f ? Health / MaxHealth : 0.f; }
     HWNodeRules::ETargetKind GetTargetKind() const { return TargetKind; }
 
@@ -70,6 +83,10 @@ private:
     bool IsDirectApproach(const FVector& Here) const;   // the gate or a player close enough to walk straight at
     bool HasWaypoint(const FVector& Here) const;
     float ReachTo(HWNodeRules::ETargetKind Kind) const;
+    void RefreshLabel();
+    HWNodeRules::EEnemyRole RuleRole() const { return static_cast<HWNodeRules::EEnemyRole>(Role); }
+    bool IsArmored() const { return Role == EHWNodeEnemyRole::ArmoredElite; }
+    float WindupNow();   // starts a blow: the armoured picks its next attack
 
     UPROPERTY(Transient)
     TObjectPtr<AHWNodeDirector> Director;
@@ -99,4 +116,7 @@ private:
     bool bDead = false;
     bool bKilled = false;
     bool bLastHitByPlayer = false;   // turret and guard kills are not the player's contribution
+    int32 Resonance = 0;             // stacks from the director (cap 1)
+    int32 Blow = 0;                  // the armoured's attack cycle (HWNodeRules::ArmoredAttackAt)
+    HWNodeRules::EArmoredAttack Attack = HWNodeRules::EArmoredAttack::ShieldBash;   // the blow being wound up
 };

@@ -40,6 +40,22 @@ test('전투 규칙(JS): 역할 수치·목표 선택·정문 차단·웨이브�
  for(const [fr,pts,src] of K.supply.potion) assert.equal(C.potionSource(fr,pts),src,'potion '+fr+' '+pts);
  for(const [r,w] of K.credit.kill) assert.equal(C.killWeight(r),w); for(const [r,d,w] of K.credit.defense) assert.equal(C.defenseCredit(r,d),w); for(const [a2,d,ok] of K.credit.ping) assert.equal(C.pingCredits(a2,d),ok);
 });
+/* 5급 6종 (GuildWorld v04~v06): 등급·공진·철갑 세 공격·추적형 NPC 중요도·PIE 증거 */
+test('전투 규칙(JS): 5급 — 공진(중첩 1)·철갑 세 공격·추적형 NPC 중요도·역할별 재평가·PIE 증거',()=>{
+ const T=V.combat.tier5; assert.equal(C.THREAT_GRADE,T.grade); assert.deepEqual(C.ARCHETYPE,T.archetype); assert.deepEqual(C.TIER5_CHECKS,T.checks);
+ assert.deepEqual(C.ROLES,Object.keys(T.archetype),'역할 여섯, 같은 순서');
+ const R5=T.resonance; assert.equal(C.RESONANCE.radius,R5.radius); assert.equal(C.RESONANCE.move,R5.move); assert.equal(C.RESONANCE.attack,R5.attack); assert.equal(C.RESONANCE.refresh,R5.refresh);
+ for(const [n,k] of R5.stacks) assert.equal(C.resonanceStacks(n),k,'stacks '+n);
+ for(const [r,d,ok] of R5.in) assert.equal(C.inResonance(r,d),ok,'in '+r+' '+d);
+ for(const [a,b,h] of R5.hold){ const g=C.resonatorHoldPoint(a,b); assert.ok(near(g[0],h[0])&&near(g[1],h[1]),'hold '+a+' '+b); }
+ for(const [r,t] of T.think) assert.equal(C.thinkSeconds(r),t,'think '+r);
+ for(const [n,a] of T.armored.cycle) assert.equal(C.armoredAttackAt(n),a,'cycle '+n);
+ for(const [a,g,crack,st] of T.armored.crack){ assert.equal(C.armoredCrackGrade(a,g),crack,a+' '+g); assert.ok(near(C.armoredStaggerSeconds(a,g),st)); }
+ for(const [a,w] of T.armored.windup) assert.equal(C.armoredWindupSeconds(a),w);
+ for(const [h,n,d,sc] of T.npc_pick) assert.ok(near(C.npcPickScore(h,n,d),sc),'pick '+h+' '+n);
+ for(const ev of T.evidence){ const E=C.tier5Evidence(); for(const [op,a,b] of ev.ops){ if(op==='spawn')E.noteSpawn(a,b); if(op==='target')E.noteTarget(a,b); if(op==='res')E.noteResonance(a,b); }
+  assert.deepEqual(C.TIER5_CHECKS.map((_,i)=>E.check(i)?1:0),ev.checks,JSON.stringify(ev.ops)); assert.equal(E.pass(),ev.pass); }
+});
 /* 같은 벡터 → C++ 시험 소스 */
 function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:'Invasion',recovering:'Recovering',fallen:'Fallen',retakeable:'Retakeable',retaking:'Retaking'};
  const T={initial:'Initial',basic:'Basic',elite_up:'EliteUp',fortress:'Fortress',infection_core:'InfectionCore'}, G={perfect:'Perfect',normal:'Normal',none:'None'};
@@ -48,7 +64,7 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  const PE={ping:'Ping',rally:'Rally',order_npc:'OrderNpc',allocate_supply:'AllocateSupply',invest_facility:'InvestFacility',select_policy:'SelectPolicy',assign_roles:'AssignRoles'};
  const C={kill:'Kill',defense:'Defense',repair:'Repair',npc_rescue:'NpcRescue',boss:'Boss',supply:'Supply',command:'Command'};
  const f=x=>Number(x).toFixed(4)+'f', L=[];
- L.push('#include "HWNodeRules.h"','#include <cstdio>','#include <cmath>','using namespace HWNodeRules;','static int Fails=0;','#define CHECK(c,msg) do{ if(!(c)){ std::printf("FAIL %s\\n", msg); ++Fails; } }while(0)','int main(){');
+ L.push('#include "HWNodeRules.h"','#include <cstdio>','#include <cmath>','#include <string>','using namespace HWNodeRules;','static int Fails=0;','#define CHECK(c,msg) do{ if(!(c)){ std::printf("FAIL %s\\n", msg); ++Fails; } }while(0)','int main(){');
  V.grade.forEach(([e,g],i)=>L.push(`CHECK(GradeCounter(${f(e)},0.10f,0.25f)==ECounterGrade::${G[g]},"grade ${i}");`));
  V.occupation.forEach(([h,t],i)=>L.push(`CHECK(OccupationTier(${f(h)})==EOccupationTier::${T[t]},"tier ${i}");`));
  for(const [t,[d,rw,x]] of Object.entries(V.tier_effects)) L.push(`CHECK(std::fabs(OccupationDifficulty(EOccupationTier::${T[t]})-${f(d)})<0.001f&&std::fabs(OccupationReward(EOccupationTier::${T[t]})-${f(rw)})<0.001f&&OccupationExtraElites(EOccupationTier::${T[t]})==${x},"tier effects ${t}");`);
@@ -65,11 +81,11 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
    op==='tick'?`M.TickInvasion(${f(a[0])},${a[1]},${a[2]});`:op==='occupy'?`M.TickOccupation(${f(a[0])});`:op==='retake'?'M.StartRetake();':op==='retake_tick'?`M.TickRetake(${f(a[0])},${a[1]},${a[2]});`:`M.RetakeEnded(${a[0]});`);
   L.push(`CHECK(M.State==ENodeState::${E[c.expect[i]]},"machine ${ci} step ${i}");`); }); L.push('}'); });
  /* 전투 */
- const K=V.combat, RL={normal:'Normal',runner:'Runner',breaker:'Breaker',stalker:'Stalker',armored_elite:'ArmoredElite'};
- const TK={none:'None',player:'Player',gate:'Gate',generator:'Generator',comms:'Comms',npc:'Npc'}, NS={normal:'Normal',injured:'Injured',missing:'Missing',rescued:'Rescued'};
+ const K=V.combat, RL={normal:'Normal',runner:'Runner',breaker:'Breaker',stalker:'Stalker',armored_elite:'ArmoredElite',resonator:'Resonator'};
+ const TK={none:'None',player:'Player',gate:'Gate',generator:'Generator',comms:'Comms',npc:'Npc',ally:'Ally'}, NS={normal:'Normal',injured:'Injured',missing:'Missing',rescued:'Rescued'};
  const NR={technician:'Technician',medic:'Medic',scout:'Scout',operator:'Operator',guard:'Guard'};
  for(const [r,st] of Object.entries(K.stats)) L.push(`{ const FRoleStats S=RoleStats(EEnemyRole::${RL[r]}); CHECK(std::fabs(S.Health-${f(st.health)})<0.01f&&std::fabs(S.Damage-${f(st.damage)})<0.01f&&std::fabs(S.FacilityDamage-${f(st.facilityDamage)})<0.01f&&std::fabs(S.Speed-${f(st.speed)})<0.01f&&std::fabs(S.AttackCooldown-${f(st.attackCooldown)})<0.001f&&std::fabs(S.ArmorScale-${f(st.armorScale)})<0.001f,"stats ${r}"); }`);
- K.target.forEach((c,i)=>{ const v=c.view; L.push(`{ FTargetView W; W.Player=${f(v.player)}; W.Gate=${f(v.gate)}; W.Generator=${f(v.generator)}; W.Comms=${f(v.comms)}; W.Npc=${f(v.npc)}; W.bFlanked=${v.flanked}; CHECK(ChooseTarget(EEnemyRole::${RL[c.role]},W)==ETargetKind::${TK[c.expect]},"target ${i} ${c.role}"); }`); });
+ K.target.forEach((c,i)=>{ const v=c.view; L.push(`{ FTargetView W; W.Player=${f(v.player)}; W.Gate=${f(v.gate)}; W.Generator=${f(v.generator)}; W.Comms=${f(v.comms)}; W.Npc=${f(v.npc)}; W.Ally=${f(v.ally??-1)}; W.bFlanked=${v.flanked}; CHECK(ChooseTarget(EEnemyRole::${RL[c.role]},W)==ETargetKind::${TK[c.expect]},"target ${i} ${c.role}"); }`); });
  K.gate.forEach((c,i)=>{ const [ey,ty,gy,st,r,fl]=c.args; L.push(`CHECK(BlockedByGate(${f(ey)},${f(ty)},${f(gy)},${st},EEnemyRole::${RL[r]},${fl})==${c.expect},"gate ${i}");`); });
  K.waves.sizes.forEach((n,i)=>L.push(`CHECK(WaveSize(PrototypeAWave(${i}))==${n},"wave size ${i}");`));
  K.waves.runs.forEach((r,ri)=>{ L.push(`{ FWaveRunner W; int Got[16][2]; int N=0; const int Kill[]={${r.kill_steps.join(',')||'-1'}}; int KI=0; const int KN=${r.kill_steps.length};`,
@@ -89,6 +105,22 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  K.credit.kill.forEach(([r,w],i)=>L.push(`CHECK(std::fabs(KillWeight(EEnemyRole::${RL[r]})-${f(w)})<0.001f,"kill weight ${i}");`));
  K.credit.defense.forEach(([r,d,w],i)=>L.push(`CHECK(std::fabs(DefenseCredit(EEnemyRole::${RL[r]},${f(d)})-${f(w)})<0.001f,"defense ${i}");`));
  K.credit.ping.forEach(([a2,d,ok],i)=>L.push(`CHECK(PingCredits(${f(a2)},${f(d)})==${ok},"ping ${i}");`));
+ /* 5급 6종 */
+ { const T=K.tier5, AA={shield_bash:'ShieldBash',heavy_charge:'HeavyCharge',overhead_crush:'OverheadCrush'};
+  L.push(`CHECK(NodeThreatGrade==${T.grade},"threat grade");`, `CHECK(static_cast<int>(EEnemyRole::Count)==${Object.keys(T.archetype).length},"role count");`);
+  for(const [r,id] of Object.entries(T.archetype)) L.push(`CHECK(std::string(ArchetypeId(EEnemyRole::${RL[r]}))=="${id}","archetype ${r}");`);
+  T.checks.forEach((n,i)=>L.push(`CHECK(std::string(Tier5CheckName(${i}))=="${n}","check name ${i}");`)); L.push(`CHECK(Tier5CheckCount==${T.checks.length},"check count");`);
+  const R5=T.resonance; L.push(`CHECK(std::fabs(ResonanceRadiusCm-${f(R5.radius)})<0.01f&&std::fabs(ResonanceMoveScale-${f(R5.move)})<0.0001f&&std::fabs(ResonanceAttackScale-${f(R5.attack)})<0.0001f&&std::fabs(ResonanceRefreshSeconds-${f(R5.refresh)})<0.0001f,"resonance consts");`);
+  R5.stacks.forEach(([n,k],i)=>L.push(`CHECK(ResonanceStacks(${n})==${k}&&std::fabs(ResonanceMove(${n})-${f(k?R5.move:1)})<0.0001f&&std::fabs(ResonanceAttack(${n})-${f(k?R5.attack:1)})<0.0001f,"stacks ${i}");`));
+  R5.in.forEach(([r,d,ok],i)=>L.push(`CHECK(InResonance(EEnemyRole::${RL[r]},${f(d)})==${ok},"in resonance ${i}");`));
+  R5.hold.forEach(([a,b,h],i)=>L.push(`{ float X=0,Y=0; ResonatorHoldPoint(${f(a[0])},${f(a[1])},${f(b[0])},${f(b[1])},${f(Math.hypot(a[0]-b[0],a[1]-b[1]))},X,Y); CHECK(std::fabs(X-(${f(h[0])}))<0.01f&&std::fabs(Y-(${f(h[1])}))<0.01f,"hold ${i}"); }`));
+  T.think.forEach(([r,t])=>L.push(`CHECK(std::fabs(ThinkSeconds(EEnemyRole::${RL[r]})-${f(t)})<0.0001f,"think ${r}");`));
+  T.armored.cycle.forEach(([n,a])=>L.push(`CHECK(ArmoredAttackAt(${n})==EArmoredAttack::${AA[a]},"cycle ${n}");`));
+  T.armored.crack.forEach(([a,g,c,st],i)=>L.push(`CHECK(ArmoredCrackGrade(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})==ECounterGrade::${G[c]}&&std::fabs(ArmoredStaggerSeconds(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})-${f(st)})<0.001f,"crack ${i}");`));
+  T.armored.windup.forEach(([a,w])=>L.push(`CHECK(std::fabs(ArmoredWindupSeconds(EArmoredAttack::${AA[a]})-${f(w)})<0.0001f&&CounterAllowed(EArmoredAttack::${AA[a]})==${a!=='overhead_crush'},"windup ${a}");`));
+  T.npc_pick.forEach(([h,n,d,sc],i)=>L.push(`CHECK(std::fabs(NpcPickScore(EEnemyRole::${RL[h]},ENpcRole::${NR[n]},${f(d)})-(${f(sc)}))<0.001f,"npc pick ${i}");`));
+  T.evidence.forEach((ev,i)=>{ L.push('{ FTier5Evidence E;'); for(const [op,a,b] of ev.ops) L.push(op==='spawn'?`E.NoteSpawn(EEnemyRole::${RL[a]},${b});`:op==='target'?`E.NoteTarget(EEnemyRole::${RL[a]},ETargetKind::${TK[b]});`:`E.NoteResonance(${a},${b});`);
+   ev.checks.forEach((c,j)=>L.push(`CHECK(E.Check(${j})==${!!c},"evidence ${i}.${j}");`)); L.push(`CHECK(E.Pass()==${ev.pass},"evidence ${i} pass"); }`); }); }
  L.push('if(Fails){ std::printf("%d failed\\n",Fails); return 1; } std::printf("vectors ok\\n"); return 0; }');
  return L.join('\n'); }
 const has=c=>{ try{ execFileSync(c,['--version'],{stdio:'ignore'}); return true; }catch{ return false; } };

@@ -85,8 +85,13 @@ bool FHWNodeRolesAndWavesTest::RunTest(const FString& Parameters)
 
     int32 Total = 0;
     for (int32 I = 0; I < PrototypeAWaveCount; ++I) Total += WaveSize(PrototypeAWave(I));
-    TestEqual(TEXT("prototype A = 26 enemies"), Total, 26);
-    TestEqual(TEXT("last wave at 175 s"), PrototypeAWave(PrototypeAWaveCount - 1).StartAt, 175.f);
+    TestEqual(TEXT("prototype A (GuildWorld v04) = 36 grade-5 enemies"), Total, 36);
+    TestEqual(TEXT("last wave at 200 s"), PrototypeAWave(PrototypeAWaveCount - 1).StartAt, 200.f);
+    TestEqual(TEXT("every invader is threat grade 5"), NodeThreatGrade, 5);
+    V.Ally = 900.f;
+    V.Player = 2000.f;
+    TestTrue(TEXT("the resonator keeps behind the pack"), ChooseTarget(EEnemyRole::Resonator, V) == ETargetKind::Ally);
+    TestEqual(TEXT("the aura never stacks"), ResonanceStacks(2), 1);
     return true;
 }
 

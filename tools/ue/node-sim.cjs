@@ -78,6 +78,9 @@ function simulate(N, o = {}) {
     life: C.npcLife(C.npcMaxHealth(d.role, pe.npcsArmed)), order: null }; });
   const npcStates = () => Object.fromEntries(npcs.map(n => [n.role, n.life.state]));
   const nearestNpc = from => { let best = null, bd = Infinity; for (const n of npcs) if (n.life.targetable()) { const d = d2(from, n.p); if (d < bd) { bd = d; best = n; } } return best; };
+  /* 적이 노리는 NPC (AHWNodeDirector::PreferredNpc · HWNodeRules::NpcPickScore): 추적형은 기술자·의무관을 무겁게 */
+  const npcFor = (from, role) => { if (role !== 'stalker') return nearestNpc(from); let best = null, bs = -Infinity;
+    for (const n of npcs) if (n.life.targetable()) { const sc = C.npcPickScore(role, n.role, d2(from, n.p)); if (sc > bs) { bs = sc; best = n; } } return best; };
   const fx = () => C.npcEffects(npcStates(), pe);
   /* 기술자 명령 (PathFromTechnicianTo) */
   if (opt.tech) { const tech = npcs.find(n => n.role === 'technician'), main = N.routes.main.map(P), path = [...N.routes[tech.route].map(P)].reverse();
@@ -108,38 +111,49 @@ function simulate(N, o = {}) {
   if (builder) builder.ledger.supply += 3 * opt.barricades.length;
 
   /* ── 적 ── */
-  const enemies = []; let serial = 0;
+  const enemies = []; let serial = 0; const proof = C.tier5Evidence();   /* v06 PIE 판정과 같은 증거 */
   const waves = C.waveRunner(), m = R.machine({ commsHoldToFall: N.comms_hold_to_fall || 20 }); m.state = opt.retake ? 'retaking' : 'invasion';
   let reserveLeft = 0, reserveUsed = false;
   function spawn(role) { const s = serial++, rr = N.role_routes[role], name = Array.isArray(rr) ? rr[s % rr.length] : rr || 'main', route = (N.routes[name] || []).map(P);
-    const base = role === 'runner' && route.length ? route[0] : P(N.spawns[s % N.spawns.length]), ang = s * 2.39996;
-    const st = C.roleStats(role), b = place([base[0] + Math.cos(ang) * 160, base[1] + Math.sin(ang) * 160, base[2]]);
+    /* 측면 길: 길 입구 «뒤» 150 에서 60 만 흩는다 (AHWNodeDirector::SpawnEnemy) — 입구에서 160 을 흩으면 길섶으로 떨어진 질주형이
+       경사로 옆면(발판보다 64 높다, 턱 45 초과)에 붙어 못 올라갔다 (W5 의 32번) */
+    const own = role === 'runner' && route.length, ang = s * 2.39996;
+    const back = own && route.length > 1 ? dirTo(route[1], route[0]) : [0, 0], base = own ? [route[0][0] + back[0] * 150, route[0][1] + back[1] * 150, route[0][2]] : P(N.spawns[s % N.spawns.length]);
+    const sc = own ? 60 : 160, st = C.roleStats(role), b = place([base[0] + Math.cos(ang) * sc, base[1] + Math.sin(ang) * sc, base[2]]);
     enemies.push({ id: s, role, st, ...b, hp: st.health * diff * hpScale, max: st.health * diff * hpScale, route, ri: 0, ext: [], ei: 0, tk: 'none', ov: null, phase: 'move', left: 0, cd: 0, think: 0,
-      flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p] }); }
-  const view = (from, flanked) => ({ player: (q => q ? d2(from, q.p) : -1)(nearestPlayer(from)),
+      flanked: false, armor: C.eliteArmor(), dead: false, byPlayer: false, stuck: 0, lastP: [...b.p], res: 0, blow: 0, attack: null, grade: C.THREAT_GRADE, archetype: C.ARCHETYPE[role] });
+    proof.noteSpawn(role, C.THREAT_GRADE); }
+  /* 공진형이 서 있을 자리: 3000 안의 무리(공진형 제외) 중심, 없으면 가장 가까운 무리 하나 — 그 뒤 350 (HWNodeRules::ResonatorHoldPoint) */
+  function packOf(e) { let n = 0, sx = 0, sy = 0, near = null, nd = Infinity;
+    for (const x of enemies) { if (x.dead || x === e || x.role === 'resonator') continue; const d = d2(e.p, x.p); if (d < nd) { nd = d; near = x; } if (d <= C.RESONATOR_PACK_RADIUS) { n++; sx += x.p[0]; sy += x.p[1]; } }
+    return n ? [sx / n, sy / n] : near ? [near.p[0], near.p[1]] : null; }
+  function holdPoint(e) { const c = packOf(e); if (!c) return null; const h = C.resonatorHoldPoint(e.p, c); return [h[0], h[1], e.p[2]]; }
+  const view = (from, flanked, e) => ({ player: (q => q ? d2(from, q.p) : -1)(nearestPlayer(from)),
     gate: standing(gate) ? surf(gate, from) : -1, generator: standing(facility('generator')) ? surf(facility('generator'), from) : -1,
-    comms: standing(facility('comms')) ? surf(facility('comms'), from) : -1, npc: (n => n ? d2(from, n.p) : -1)(nearestNpc(from)), flanked });
-  function targetPoint(k, from) {
+    comms: standing(facility('comms')) ? surf(facility('comms'), from) : -1, npc: (n => n ? d2(from, n.p) : -1)(npcFor(from, e && e.role)),
+    ally: e && e.role === 'resonator' ? (h => h ? d2(from, h) : -1)(holdPoint(e)) : -1, flanked });
+  function targetPoint(k, from, e) {
     if (k === 'player') { const q = nearestPlayer(from); return q ? q.p : from; }
-    if (k === 'npc') { const n = nearestNpc(from); return n ? n.p : from; }
+    if (k === 'npc') { const n = npcFor(from, e && e.role); return n ? n.p : from; }
+    if (k === 'ally') { const h = e && holdPoint(e); return h || from; }
     const f = facility(k); if (f) return [Math.max(f.c[0] - f.h[0], Math.min(f.c[0] + f.h[0], from[0])), Math.max(f.c[1] - f.h[1], Math.min(f.c[1] + f.h[1], from[1])), from[2]];
     return from; }
   /* AHWNodeDirector::ExtensionFor — 목표의 길 끝까지 길 그래프의 최단 경로 (UHWNodeConfig::PathBetween) */
   const graph = GR.build(N);
-  function extensionFor(k, from) {
-    if (k === 'npc') { const n = nearestNpc(from); if (!n) return []; const p = GR.path(graph, from, n.p); return p.length ? p : (N.routes[n.route] || []).map(P); }   // NPC 는 지금 자리로
+  function extensionFor(k, from, role) {
+    if (k === 'npc') { const n = npcFor(from, role); if (!n) return []; const p = GR.path(graph, from, n.p); return p.length ? p : (N.routes[n.route] || []).map(P); }   // NPC 는 지금 자리로
     const name = k === 'generator' ? 'generator' : k === 'comms' ? 'comms' : null;
     const r = name && N.routes[name] ? N.routes[name].map(P) : []; if (!r.length) return [];
     const p = GR.path(graph, from, r[r.length - 1]); return p.length ? p : r; }
   const segHits = (a, b, f) => { for (let k = 0; k <= 40; k++) { const p = lerp(a, b, k / 40); if (Math.abs(p[0] - f.c[0]) <= f.h[0] + 40 && Math.abs(p[1] - f.c[1]) <= f.h[1] + 40 && Math.abs(p[2] - f.c[2]) <= f.h[2] + 200) return true; } return false; };
   const barricadeOnPath = (a, b) => fac.find(f => f.kind === 'barricade' && standing(f) && segHits(a, b, f)) || null;
   const turretNear = (at, r) => fac.find(f => f.kind === 'turret' && standing(f) && surf(f, at) <= r) || null;
-  const reach = (e, k) => k === 'player' ? (e.role === 'armored_elite' ? 230 : 170) : k === 'npc' ? 160 : (k === 'gate' || k === 'generator' || k === 'comms') ? 140 : 0;
-  const direct = e => (e.tk === 'player' || e.tk === 'gate') && d2(e.p, targetPoint(e.tk, e.p)) <= DIRECT;   // IsDirectApproach
+  const reach = (e, k) => k === 'player' ? (e.role === 'armored_elite' ? 230 : 170) : k === 'npc' ? 160 : (k === 'gate' || k === 'generator' || k === 'comms') ? 140 : k === 'ally' ? 80 : 0;
+  const direct = e => (e.tk === 'player' || e.tk === 'gate' || e.tk === 'ally') && d2(e.p, targetPoint(e.tk, e.p, e)) <= DIRECT;   // IsDirectApproach
   const hasWaypoint = e => !direct(e) && (e.ri < e.route.length || e.ei < e.ext.length);
-  function goal(e) { if (direct(e)) return targetPoint(e.tk, e.p);
+  function goal(e) { if (direct(e)) return targetPoint(e.tk, e.p, e);
     if (e.ri < e.route.length) return e.route[e.ri]; if (e.ei < e.ext.length) return e.ext[e.ei];
-    return e.tk === 'none' ? e.p : targetPoint(e.tk, e.p); }
+    return e.tk === 'none' ? e.p : targetPoint(e.tk, e.p, e); }
 
   function damageFacility(f, amount, t) { if (!standing(f)) return; f.hp -= amount;
     if (f.hp <= 0) { f.hp = 0; log(t, 'facility', f.id + ' 무너짐', f.id, 'destroyed');
@@ -161,42 +175,55 @@ function simulate(N, o = {}) {
 
   function think(e) {
     if (e.role === 'runner' && !e.flanked && e.p[1] > gateY + 200) e.flanked = true;
-    const v = view(e.p, e.flanked); let next = C.chooseTarget(e.role, v);
-    if (next !== 'none' && next !== 'gate') { const g = targetPoint(next, e.p);
+    const v = view(e.p, e.flanked, e); let next = C.chooseTarget(e.role, v);
+    if (next !== 'none' && next !== 'gate') { const g = targetPoint(next, e.p, e);
       if (C.blockedByGate(e.p[1], g[1], gateY, standing(gate), e.role, e.flanked)) next = 'gate'; }
-    if (next !== e.tk) { e.tk = next; e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p); e.ei = 0; }
-    else if (e.tk !== 'none' && e.ri >= e.route.length && e.ei >= e.ext.length && d2(e.p, targetPoint(e.tk, e.p)) > DIRECT) { e.ext = extensionFor(e.tk, e.p); e.ei = 0; }
+    if (next !== e.tk) { e.tk = next; proof.noteTarget(e.role, next); e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p, e.role); e.ei = 0; }
+    else if (e.tk !== 'none' && e.ri >= e.route.length && e.ei >= e.ext.length && d2(e.p, targetPoint(e.tk, e.p, e)) > DIRECT) { e.ext = extensionFor(e.tk, e.p, e.role); e.ei = 0; }
     e.ov = null;
     if (e.tk !== 'player') e.ov = barricadeOnPath(e.p, goal(e));
     if (!e.ov && (e.role === 'normal' || e.role === 'armored_elite') && (v.player < 0 || v.player > 600)) e.ov = turretNear(e.p, opt.turretAggro ?? 380);   /* UE AHWNodeEnemy::Think 380 — 손잡이 (지금 배치에선 포탑이 한 번도 안 맞는다, 문서 201 §8) */
   }
   function strike(e, t) {
     e.cd = e.st.attackCooldown;
-    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage * diff, t); return; }
+    const atk = C.resonanceAttack(e.res), blow = e.attack; e.attack = null; if (e.role === 'armored_elite') e.blow++;   /* 공진: 공격 ×1.12 · 철갑: 다음 공격으로 */
+    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage * diff * atk, t); return; }
     if (e.tk === 'player') { const q = nearestPlayer(e.p); if (!q || d2(e.p, q.p) > reach(e, 'player') + 60) return;
-      if (rand() < q.counter) { const perfect = rand() < 0.4; e.armor.onCountered(perfect ? 'perfect' : 'normal'); e.phase = 'stagger'; e.left = e.role === 'armored_elite' ? 1.4 : 1.0; q.counters++; return; }
-      q.hp -= e.st.damage * diff; q.hitsTaken++; if (q.hp <= 0) { q.hp = 0; q.deadFor = 0; q.deaths++; log(t, 'player', (pls.length > 1 ? q.name + ' ' : '플레이어 ') + '쓰러짐', pls.length > 1 ? q.name : 'player', 'dead'); } return; }
-    if (e.tk === 'npc') { const n = nearestNpc(e.p); if (n && d2(e.p, n.p) <= reach(e, 'npc') + 60) npcHurt(n, e.st.damage, t); return; }
-    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage * diff, t);
+      /* 철갑 내려찍기는 카운터가 안 된다 — 같은 손 실력(counter)으로 피한다고 친다 */
+      if (blow && !C.counterAllowed(blow)) { if (rand() < q.counter) { q.dodges = (q.dodges || 0) + 1; return; } }
+      else if (rand() < q.counter) { const perfect = rand() < 0.4, g = perfect ? 'perfect' : 'normal';
+        e.armor.onCountered(blow ? C.armoredCrackGrade(blow, g) : g); e.phase = 'stagger'; e.left = blow ? C.armoredStaggerSeconds(blow, g) : e.role === 'armored_elite' ? 1.4 : 1.0; q.counters++; return; }
+      q.hp -= e.st.damage * diff * atk; q.hitsTaken++; if (q.hp <= 0) { q.hp = 0; q.deadFor = 0; q.deaths++; log(t, 'player', (pls.length > 1 ? q.name + ' ' : '플레이어 ') + '쓰러짐', pls.length > 1 ? q.name : 'player', 'dead'); } return; }
+    if (e.tk === 'npc') { const n = npcFor(e.p, e.role); if (n && d2(e.p, n.p) <= reach(e, 'npc') + 60) npcHurt(n, e.st.damage * atk, t); return; }
+    if (e.tk === 'ally') return;
+    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage * diff * atk, t);
   }
   function tickEnemy(e, dt, t) {
     e.armor.tick(dt); e.cd = Math.max(0, e.cd - dt);
     if (e.phase !== 'move') { e.attackT = t; e.left -= dt; if (e.left > 0) return;
       if (e.phase === 'windup') { strike(e, t); if (e.phase === 'windup') { e.phase = 'recover'; e.left = 0.35; } return; }
       e.phase = 'move'; }
-    e.think -= dt; if (e.think <= 0) { think(e); e.think = 0.4; }
-    const windup = () => { if (e.cd <= 0) { e.phase = 'windup'; e.left = windupFor(e.role); } };
+    e.think -= dt; if (e.think <= 0) { think(e); e.think = C.thinkSeconds(e.role); }
+    const windup = () => { if (e.cd <= 0) { e.phase = 'windup';
+      if (e.role === 'armored_elite') { e.attack = C.armoredAttackAt(e.blow); e.left = C.armoredWindupSeconds(e.attack); } else e.left = windupFor(e.role); } };
     if (e.ov) { if (!standing(e.ov)) e.ov = null; else { if (surf(e.ov, e.p) <= 140) { windup(); e.attackT = t; return; }
       const f = e.ov, face = [Math.max(f.c[0] - f.h[0], Math.min(f.c[0] + f.h[0], e.p[0])), Math.max(f.c[1] - f.h[1], Math.min(f.c[1] + f.h[1], e.p[1]))];
-      step(e, dirTo(e.p, face), e.st.speed * dt); return; } }
+      step(e, dirTo(e.p, face), e.st.speed * C.resonanceMove(e.res) * dt); return; } }
     if (e.tk !== 'none') { const f = (e.tk === 'gate' || e.tk === 'generator' || e.tk === 'comms') ? facility(e.tk) : null;
-      const dist = f ? surf(f, e.p) : d2(e.p, targetPoint(e.tk, e.p));
-      if (dist <= reach(e, e.tk)) { windup(); e.attackT = t; return; } }
+      const dist = f ? surf(f, e.p) : d2(e.p, targetPoint(e.tk, e.p, e));
+      if (dist <= reach(e, e.tk)) { if (e.tk === 'ally') { e.attackT = t; return; } windup(); e.attackT = t; return; } }   /* 공진형: 무리 뒤 자리에 섰다 — 친 게 아니라 «머문다» (막힘 아님) */
     /* 220 cm «도착» 은 웨이포인트에만 — 정문(사거리 140)·플레이어(170)를 그 반경에서 멈추면 영원히 못 친다 (UE 에서 고친 버그) */
     const g = goal(e);
     if (hasWaypoint(e) && d2(g, e.p) < 220) { if (e.ri < e.route.length) e.ri++; else e.ei++; return; }
-    step(e, dirTo(e.p, g), e.st.speed * dt);
+    step(e, dirTo(e.p, g), e.st.speed * C.resonanceMove(e.res) * dt);
   }
+  /* 공진 (AHWNodeDirector::RefreshResonance): 0.4초마다, 살아 있는 공진형 1800 안의 다른 감염체 — 중첩 1 */
+  let resLeft = 0, resOn = false; const resLog = { on: 0, maxAffected: 0 };
+  function resonance(dt, t) { resLeft -= dt; if (resLeft > 0) return; resLeft = C.RESONANCE.refresh;
+    const rs = enemies.filter(x => !x.dead && x.role === 'resonator'); let affected = 0;
+    for (const e of enemies) { if (e.dead) continue; const n = rs.filter(r => r !== e && C.inResonance(e.role, d2(e.p, r.p))).length; const was = e.res; e.res = C.resonanceStacks(n); proof.noteResonance(was, e.res); if (e.res) affected++; }
+    if (affected) resLog.on += C.RESONANCE.refresh; resLog.maxAffected = Math.max(resLog.maxAffected, affected);
+    if (!!affected !== resOn) { resOn = !!affected; log(t, 'aura', resOn ? '공진 시작 (' + affected + ')' : '공진 해제', 'resonator', resOn ? 'on' : 'off'); } }
 
   /* ── 포탑 · 경비 (TickDefences) ── */
   const acc = new Map();
@@ -292,17 +319,19 @@ function simulate(N, o = {}) {
   while (t < opt.maxTime && !result) {
     const dt = opt.dt; t += dt;
     const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r);
+      log(t, 'spawn', C.WAVES[w].id + ' ' + C.ROLES.filter(r => C.WAVES[w].count[r]).map(r => C.ARCHETYPE[r] + '×' + C.WAVES[w].count[r]).join(' ') + ' ThreatGrade=' + C.THREAT_GRADE, C.WAVES[w].id, 'T' + C.THREAT_GRADE);
       if (w === C.WAVES.length - 1 && extraElites > 0) { waves.alive += extraElites; for (let k = 0; k < extraElites; k++) spawn('armored_elite'); }   /* AHWNodeDirector::SpawnWave */
       log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')', String(w + 1), 'spawned'); }
     tickPlayer(dt, t);
     for (const e of enemies) if (!e.dead) { tickEnemy(e, dt, t); if (d2(e.p, e.lastP) > 50) { e.lastP = [...e.p]; e.stuckSince = t; } e.stuck = t - Math.max(e.stuckSince ?? t, e.attackT ?? 0); }
     tickNpcs(dt, t);
+    resonance(dt, t);
     power = defences(dt, t);
     const comms = facility('comms'), onComms = enemies.some(e => !e.dead && e.tk === 'comms' && comms && surf(comms, e.p) <= (N.comms_hold_radius || 900));   // EnemyOnComms: 통신센터를 노리는 적만
     if ((opt.retake ? R.tickRetake : R.tickInvasion)(m, dt, comms && comms.hp <= 0, onComms)) { result = 'fallen'; log(t, 'state', (opt.retake ? '탈환 실패 — ' : '함락 — ') + (comms.hp <= 0 ? '통신센터 파괴' : '통신센터 20초 점거'), 'node', 'fallen'); }
-    if (!result && waves.done()) { result = 'held'; log(t, 'state', '웨이브 4개 막음 → 보스 단계', 'node', 'held'); }
+    if (!result && waves.done()) { result = 'held'; log(t, 'state', '웨이브 ' + C.WAVES.length + '개 막음 → 보스 단계', 'node', 'held'); }
     if (t >= nextFrame) { nextFrame += opt.frameEvery;
-      frames.push({ t: +t.toFixed(1), power, e: enemies.filter(e => !e.dead).map(e => [Math.round(e.p[0]), Math.round(e.p[1]), C.ROLES.indexOf(e.role), +(e.hp / e.max).toFixed(2), e.tk[0], e.stuck > 6 ? 1 : 0]),
+      frames.push({ t: +t.toFixed(1), power, e: enemies.filter(e => !e.dead).map(e => [Math.round(e.p[0]), Math.round(e.p[1]), C.ROLES.indexOf(e.role), +(e.hp / e.max).toFixed(2), e.tk === 'generator' ? 'e' : e.tk[0], e.stuck > 6 ? 1 : 0, e.res]),   /* e = 발전기 (g 는 정문) — UE TargetKey 와 같이 */
         f: fac.map(f => +(f.hp / f.max).toFixed(3)), n: npcs.map(n => [Math.round(n.p[0]), Math.round(n.p[1]), n.life.state[0]]),
         p: pl ? [Math.round(pl.p[0]), Math.round(pl.p[1]), +(pl.hp / PLAYER.health).toFixed(2), pl.deadFor >= 0 ? 1 : 0] : null,
         ...(pls.length > 1 ? { ps: pls.map(q => [Math.round(q.p[0]), Math.round(q.p[1]), +(q.hp / PLAYER.health).toFixed(2), q.deadFor >= 0 ? 1 : 0]) } : {}) }); }
@@ -315,7 +344,8 @@ function simulate(N, o = {}) {
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
     dealt: Object.fromEntries(Object.entries(dealt).map(([k, v]) => [k, Math.round(v)])), spawned: enemies.length, alive: enemies.length - dead.length, stuck: stuck.map(e => e.role + '@' + Math.round(e.p[0]) + ',' + Math.round(e.p[1]) + ' →' + e.tk),
-    npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
+    threatGrade: C.THREAT_GRADE, tier5: { pass: proof.pass(), checks: proof.report() }, resonance: { seconds: +resLog.on.toFixed(1), maxAffected: resLog.maxAffected },
+    npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), dodges: pls.reduce((a, q) => a + (q.dodges || 0), 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
     party: pls.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps, deaths: q.deaths, kills: q.kills, rescues: q.rescues, dealt: Math.round(q.dealt),
       ledger: Object.fromEntries(Object.entries(q.ledger).map(([k, v]) => [k, +v.toFixed(2)])) })), difficulty: diff,
     repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0), supplyUsed, turretRepairHp: Math.round(repairedTurretHp.v), supplyLeft: supply, freePotionsLeft: freePotions,

@@ -331,10 +331,29 @@ enum class EEnemyRole : unsigned char
     Breaker,       // 파괴자: facilities before players
     Stalker,       // 추적자: NPCs first
     ArmoredElite,  // 철갑 엘리트: breaks the gate; counters and part breaks matter
+    Resonator,     // 공진형: keeps behind the pack and strengthens it (GuildWorld v04, docs/design/203)
     Count
 };
 
-enum class ETargetKind : unsigned char { None, Player, Gate, Generator, Comms, Npc };
+// Every N-01 invader is threat grade 5 (GuildWorld v04 N01_Tier5): six roles, one grade - the roles differ, not the grade.
+constexpr int NodeThreatGrade = 5;
+
+// The package's archetype ids (N01_Tier5_Monsters_v04.json) for the HUD and the run log.
+inline const char* ArchetypeId(EEnemyRole Role)
+{
+    switch (Role)
+    {
+    case EEnemyRole::Runner: return "T5_RUNNER";
+    case EEnemyRole::Breaker: return "T5_BREAKER";
+    case EEnemyRole::Stalker: return "T5_STALKER";
+    case EEnemyRole::ArmoredElite: return "T5_ARMORED";
+    case EEnemyRole::Resonator: return "T5_RESONATOR";
+    default: return "T5_WALKER";
+    }
+}
+
+// Ally = the rear of the pack (the resonator's place); never attacked.
+enum class ETargetKind : unsigned char { None, Player, Gate, Generator, Comms, Npc, Ally };
 
 // Distances in cm; a negative distance = that target is gone (destroyed, dead or absent).
 struct FTargetView
@@ -344,16 +363,24 @@ struct FTargetView
     float Generator = -1.f;
     float Comms = -1.f;
     float Npc = -1.f;
+    float Ally = -1.f;      // nearest other living invader that is not a resonator (the pack)
     bool bFlanked = false;  // a Runner that reached its flank point
 };
 
 inline bool Has(float D) { return D >= 0.f; }
 
+// The resonator turns on a player this close; otherwise it holds this far behind the nearest of its pack.
+constexpr float ResonatorSelfDefenceCm = 600.f;
+constexpr float ResonatorTrailCm = 350.f;
+
 inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
 {
     const auto Facility = [&V](bool bGeneratorFirst) -> ETargetKind
     {
+        // the breaker (v05): generator, then comms, then the gate - a facility north of a standing gate still meets
+        // the gate first (BlockedByGate)
         if (bGeneratorFirst && Has(V.Generator)) return ETargetKind::Generator;
+        if (bGeneratorFirst && Has(V.Comms)) return ETargetKind::Comms;
         if (Has(V.Gate)) return ETargetKind::Gate;
         if (Has(V.Generator)) return ETargetKind::Generator;
         if (Has(V.Comms)) return ETargetKind::Comms;
@@ -388,6 +415,11 @@ inline ETargetKind ChooseTarget(EEnemyRole Role, const FTargetView& V)
         if (Has(V.Gate)) return ETargetKind::Gate;
         if (Has(V.Comms)) return ETargetKind::Comms;
         return Has(V.Player) ? ETargetKind::Player : ETargetKind::None;
+    case EEnemyRole::Resonator:
+        // behind the pack while there is one; strikes only a player who reaches it; alone it is just another walker
+        if (Has(V.Player) && V.Player <= ResonatorSelfDefenceCm) return ETargetKind::Player;
+        if (Has(V.Ally)) return ETargetKind::Ally;
+        return ChooseTarget(EEnemyRole::Normal, V);
     default:
         return ETargetKind::None;
     }
@@ -420,6 +452,8 @@ inline FRoleStats RoleStats(EEnemyRole Role)
     case EEnemyRole::Breaker: return { 7000.f, 700.f, 900.f, 240.f, 1.8f, 1.f };
     case EEnemyRole::Stalker: return { 4200.f, 800.f, 200.f, 380.f, 1.3f, 1.f };
     case EEnemyRole::ArmoredElite: return { 26000.f, 1500.f, 1400.f, 230.f, 2.4f, 0.25f };
+    // the package's ratios to the walker (hp 0.98, move 0.92/0.9, attack 0.75) on our walker's numbers
+    case EEnemyRole::Resonator: return { 5400.f, 640.f, 220.f, 290.f, 1.5f, 1.f };
     default: return { 5500.f, 850.f, 300.f, 285.f, 1.35f, 1.f };
     }
 }
@@ -441,24 +475,193 @@ struct FEliteArmor
     float DamageScale(float ArmorScale) const { return CrackedFor > 0.f ? 1.f : ArmorScale; }
 };
 
+// The resonator's aura (N01_Tier5_Monsters_v04.json): every other invader within the radius of a living resonator moves
+// and hits harder. Computed by the authority (the director / the simulator), never by the enemy itself; two resonators
+// do not stack - the cap is one.
+constexpr float ResonanceRadiusCm = 1800.f;
+constexpr float ResonanceMoveScale = 1.1f;
+constexpr float ResonanceAttackScale = 1.12f;
+constexpr int ResonanceStackCap = 1;
+
+inline int ResonanceStacks(int ResonatorsInRange)
+{
+    return ResonatorsInRange <= 0 ? 0 : (ResonatorsInRange < ResonanceStackCap ? ResonatorsInRange : ResonanceStackCap);
+}
+
+inline bool InResonance(EEnemyRole Role, float DistanceToResonatorCm)
+{
+    return Role != EEnemyRole::Resonator && DistanceToResonatorCm >= 0.f && DistanceToResonatorCm <= ResonanceRadiusCm;
+}
+
+inline float ResonanceMove(int Stacks) { return Stacks > 0 ? ResonanceMoveScale : 1.f; }
+inline float ResonanceAttack(int Stacks) { return Stacks > 0 ? ResonanceAttackScale : 1.f; }
+constexpr float ResonanceRefreshSeconds = 0.4f;   // a dead resonator's aura is gone within this
+
+// Where the resonator holds: ResonatorTrailCm behind the pack's centre, on its own side (2D, cm). Distance = the 2D
+// distance from the pack's centre to the resonator (the caller has a vector maths library; this header has none).
+inline void ResonatorHoldPoint(float SelfX, float SelfY, float PackX, float PackY, float Distance, float& OutX, float& OutY)
+{
+    const float Dx = SelfX - PackX, Dy = SelfY - PackY;
+    if (Distance < 1.f) { OutX = PackX; OutY = PackY - ResonatorTrailCm; return; }   // on top of it: behind = south (the spawn side)
+    const float K = ResonatorTrailCm / Distance;
+    OutX = PackX + Dx * K;
+    OutY = PackY + Dy * K;
+}
+constexpr float ResonatorPackRadiusCm = 3000.f;   // the pack = the others within this of the resonator (else the nearest one)
+
+// How often each role looks for a new target (N01_Tier5_Monsters_v05.json target_reevaluate_sec).
+inline float ThinkSeconds(EEnemyRole Role)
+{
+    switch (Role)
+    {
+    case EEnemyRole::Runner: return 0.35f;
+    case EEnemyRole::Breaker: return 0.6f;
+    case EEnemyRole::Stalker: return 0.4f;
+    case EEnemyRole::ArmoredElite: return 0.65f;
+    case EEnemyRole::Resonator: return 0.8f;
+    default: return 0.7f;
+    }
+}
+
+// The armoured's three blows (v05), in turn. The counter judgement itself is untouched (GradeCounter / the combat
+// component); only what a counter does to this blow is decided here.
+enum class EArmoredAttack : unsigned char
+{
+    ShieldBash,     // holds the line: any counter cracks the armour (the normal crack)
+    HeavyCharge,    // breaks formation: a perfect counter cracks it for the perfect time and staggers it 2.25x longer
+    OverheadCrush   // cannot be countered: dodge it
+};
+
+constexpr int ArmoredCycle = 4;
+inline EArmoredAttack ArmoredAttackAt(int Blow)
+{
+    switch (((Blow % ArmoredCycle) + ArmoredCycle) % ArmoredCycle)
+    {
+    case 1: return EArmoredAttack::HeavyCharge;
+    case 3: return EArmoredAttack::OverheadCrush;
+    default: return EArmoredAttack::ShieldBash;
+    }
+}
+
+inline bool CounterAllowed(EArmoredAttack A) { return A != EArmoredAttack::OverheadCrush; }
+
+// The crack a counter of this blow gives (FEliteArmor::OnCountered): only the charge pays the perfect counter.
+inline ECounterGrade ArmoredCrackGrade(EArmoredAttack A, ECounterGrade Grade)
+{
+    if (!CounterAllowed(A) || Grade == ECounterGrade::None) return ECounterGrade::None;
+    if (A == EArmoredAttack::HeavyCharge) return Grade;
+    return ECounterGrade::Normal;
+}
+
+constexpr float ArmoredPerfectPostureScale = 2.25f;
+inline float ArmoredStaggerSeconds(EArmoredAttack A, ECounterGrade Grade)
+{
+    const float Base = 1.4f;   // the elite's countered stagger (AHWNodeEnemy::Strike)
+    return A == EArmoredAttack::HeavyCharge && Grade == ECounterGrade::Perfect ? Base * ArmoredPerfectPostureScale : Base;
+}
+
+inline float ArmoredWindupSeconds(EArmoredAttack A)
+{
+    switch (A)
+    {
+    case EArmoredAttack::HeavyCharge: return 1.0f;
+    case EArmoredAttack::OverheadCrush: return 1.2f;   // long and readable: time to get out
+    default: return 0.8f;
+    }
+}
+
+// The PIE proof (GuildWorld v06 N01_PIE_Scenario_v06.json pass_conditions), kept by the authority during a run and
+// printed as PASS / FAIL lines at its end - the same checks in the simulator (tools/ue/node-sim.cjs).
+constexpr int Tier5CheckCount = 7;
+struct FTier5Evidence
+{
+    bool Spawned[static_cast<int>(EEnemyRole::Count)] = {};
+    int NotGrade5 = 0;
+    bool BreakerOnGenerator = false;
+    bool StalkerOnNpc = false;
+    bool ArmoredOnGate = false;
+    bool AuraApplied = false;    // a living grade-5 invader went from no resonance to resonance
+    bool AuraReverted = false;   // ...and back, still alive (the resonator died or walked off)
+
+    void NoteSpawn(EEnemyRole Role, int Grade)
+    {
+        Spawned[static_cast<int>(Role)] = true;
+        if (Grade != NodeThreatGrade) ++NotGrade5;
+    }
+    void NoteTarget(EEnemyRole Role, ETargetKind Kind)
+    {
+        if (Role == EEnemyRole::Breaker && Kind == ETargetKind::Generator) BreakerOnGenerator = true;
+        if (Role == EEnemyRole::Stalker && Kind == ETargetKind::Npc) StalkerOnNpc = true;
+        if (Role == EEnemyRole::ArmoredElite && Kind == ETargetKind::Gate) ArmoredOnGate = true;
+    }
+    void NoteResonance(int Before, int After)
+    {
+        if (Before == 0 && After > 0) AuraApplied = true;
+        if (Before > 0 && After == 0) AuraReverted = true;
+    }
+    bool AllSpawned() const
+    {
+        for (int I = 0; I < static_cast<int>(EEnemyRole::Count); ++I) if (!Spawned[I]) return false;
+        return true;
+    }
+    // 0 all six roles spawn, 1 all grade 5, 2 breaker -> generator, 3 stalker -> NPC, 4 armoured -> gate,
+    // 5 the aura raises a neighbour, 6 the aura comes off again
+    bool Check(int Index) const
+    {
+        switch (Index)
+        {
+        case 0: return AllSpawned();
+        case 1: return AllSpawned() && NotGrade5 == 0;
+        case 2: return BreakerOnGenerator;
+        case 3: return StalkerOnNpc;
+        case 4: return ArmoredOnGate;
+        case 5: return AuraApplied;
+        case 6: return AuraReverted;
+        default: return false;
+        }
+    }
+    bool Pass() const
+    {
+        for (int I = 0; I < Tier5CheckCount; ++I) if (!Check(I)) return false;
+        return true;
+    }
+};
+
+inline const char* Tier5CheckName(int Index)
+{
+    switch (Index)
+    {
+    case 0: return "all six roles spawn";
+    case 1: return "all spawned monsters report ThreatGrade 5";
+    case 2: return "Breaker selects Generator at least once";
+    case 3: return "Stalker selects NPC at least once";
+    case 4: return "Armored selects Gate at least once";
+    case 5: return "Resonator aura changes a nearby T5 monster multiplier";
+    case 6: return "the multiplier returns once the Resonator is gone";
+    default: return "";
+    }
+}
+
 struct FWaveSpec
 {
     int Count[static_cast<int>(EEnemyRole::Count)];
     float StartAt;  // seconds from the invasion start; a cleared wave pulls the next one forward
 };
 
-// Prototype A (docs/design/200 §5): about four minutes at the south gate.
-constexpr int PrototypeAWaveCount = 4;
+// Prototype A at the south gate, GuildWorld v04 (N01_Tier5_Waves_v04.json): five waves, all six grade-5 roles.
+// The package times count from 20 s before the first contact; ours count from the invasion start (W1 = 0 s).
+constexpr int PrototypeAWaveCount = 5;
 inline FWaveSpec PrototypeAWave(int Index)
 {
-    //                         Normal Runner Breaker Stalker Elite
+    //                         Walker Runner Breaker Stalker Armored Resonator
     switch (Index)
     {
-    case 0: return { { 4, 2, 0, 0, 0 }, 0.f };
-    case 1: return { { 5, 3, 0, 0, 0 }, 55.f };
-    case 2: return { { 6, 0, 1, 0, 0 }, 115.f };
-    case 3: return { { 4, 0, 0, 0, 1 }, 175.f };
-    default: return { { 0, 0, 0, 0, 0 }, 0.f };
+    case 0: return { { 4, 2, 0, 0, 0, 0 }, 0.f };     // W1 contact
+    case 1: return { { 4, 3, 0, 1, 0, 0 }, 45.f };    // W2 flank
+    case 2: return { { 4, 0, 2, 0, 0, 0 }, 95.f };    // W3 facility
+    case 3: return { { 5, 0, 0, 0, 1, 1 }, 150.f };   // W4 pressure
+    case 4: return { { 4, 2, 1, 1, 1, 0 }, 200.f };   // W5 breach
+    default: return { { 0, 0, 0, 0, 0, 0 }, 0.f };
     }
 }
 
@@ -753,6 +956,24 @@ inline float NpcMaxHealth(ENpcRole Role, bool bArmed)
     return bArmed ? Base * 1.5f : Base;
 }
 
+// Which NPC an invader goes for (v05 N01_AI_TargetScenarios): the stalker weighs the technician (1.5) and the medic
+// (1.35) over the rest (1.0), losing 0.08 per 10 m; everybody else takes the nearest. Higher score wins.
+inline float NpcImportance(ENpcRole Role)
+{
+    switch (Role)
+    {
+    case ENpcRole::Technician: return 1.5f;
+    case ENpcRole::Medic: return 1.35f;
+    default: return 1.f;
+    }
+}
+constexpr float NpcDistancePenaltyPer1000Cm = 0.08f;
+inline float NpcPickScore(EEnemyRole Hunter, ENpcRole Npc, float DistanceCm)
+{
+    if (Hunter == EEnemyRole::Stalker) return NpcImportance(Npc) - DistanceCm / 1000.f * NpcDistancePenaltyPer1000Cm;
+    return -DistanceCm;
+}
+
 // Normal -> Injured -> Missing (dragged to the holding spot) ; Missing -> Rescued (by a player) -> Normal after recovery.
 struct FNpcLife
 {
@@ -878,6 +1099,7 @@ inline float KillWeight(EEnemyRole Role)
     case EEnemyRole::Breaker: return 2.f;
     case EEnemyRole::Stalker: return 1.5f;
     case EEnemyRole::ArmoredElite: return 5.f;
+    case EEnemyRole::Resonator: return 2.f;   // the first to take down (the package): like the breaker
     default: return 1.f;
     }
 }

@@ -134,8 +134,9 @@ namespace HWNodeDirectorLocal
         {
         case HWNodeRules::ETargetKind::Player: return TEXT('p');
         case HWNodeRules::ETargetKind::Gate: return TEXT('g');
-        case HWNodeRules::ETargetKind::Generator: return TEXT('g');
+        case HWNodeRules::ETargetKind::Generator: return TEXT('e');   // gEnerator: the breaker's mark (v05 proof) - 'g' is the gate
         case HWNodeRules::ETargetKind::Comms: return TEXT('c');
+        case HWNodeRules::ETargetKind::Ally: return TEXT('a');   // the simulator's e.tk[0]: 'ally'
         default: return TEXT('n');
         }
     }
@@ -197,6 +198,9 @@ bool AHWNodeDirector::ConfigureNode(FName NodeId, const FString& Options)
     const FString SupplyOption = UGameplayStatics::ParseOption(Options, TEXT("HWSupply"));
     SupplyRequested = SupplyOption.IsEmpty() ? Config->DefaultSupply : FMath::Clamp(FCString::Atoi(*SupplyOption), 0, 30);
     SupplyStart = FMath::Min(SupplyRequested, RegionFx.SupplyCap);   // the server caps allocations the same way (Hangang)
+
+    // the "T5 / ROLE / TARGET" development labels (v06); ?HWLabels=0 for the phone frame-drop check
+    bShowLabels = UGameplayStatics::ParseOption(Options, TEXT("HWLabels")) != TEXT("0");
     return true;
 }
 
@@ -326,6 +330,83 @@ AHWNodeNpc* AHWNodeDirector::NearestTargetableNpc(const FVector& From) const
     return Best;
 }
 
+AHWNodeNpc* AHWNodeDirector::PreferredNpc(const FVector& From, EHWNodeEnemyRole Hunter) const
+{
+    const HWNodeRules::EEnemyRole R = static_cast<HWNodeRules::EEnemyRole>(Hunter);
+    AHWNodeNpc* Best = nullptr;
+    float BestScore = -TNumericLimits<float>::Max();
+    for (AHWNodeNpc* Npc : Npcs)
+    {
+        if (!Npc || !Npc->IsTargetable()) continue;
+        const float Score = HWNodeRules::NpcPickScore(R, static_cast<HWNodeRules::ENpcRole>(Npc->GetRole()), FVector::Dist2D(From, Npc->GetActorLocation()));
+        if (Score > BestScore) { BestScore = Score; Best = Npc; }
+    }
+    return Best;
+}
+
+bool AHWNodeDirector::ResonatorHold(const AHWNodeEnemy* Resonator, FVector& OutPoint) const
+{
+    if (!Resonator) return false;
+    const FVector Here = Resonator->GetActorLocation();
+    // the pack: the others (no resonators) within ResonatorPackRadiusCm - their centre; none that close: the nearest one
+    FVector Sum = FVector::ZeroVector;
+    int32 N = 0;
+    const AHWNodeEnemy* Nearest = nullptr;
+    float NearestD = TNumericLimits<float>::Max();
+    for (const AHWNodeEnemy* E : Enemies)
+    {
+        if (!E || E == Resonator || E->IsDeadEnemy() || E->GetRole() == EHWNodeEnemyRole::Resonator) continue;
+        const float D = FVector::Dist2D(Here, E->GetActorLocation());
+        if (D < NearestD) { NearestD = D; Nearest = E; }
+        if (D <= HWNodeRules::ResonatorPackRadiusCm) { Sum += E->GetActorLocation(); ++N; }
+    }
+    if (N == 0 && !Nearest) return false;
+    const FVector Pack = N > 0 ? Sum / N : Nearest->GetActorLocation();
+    float X = 0.f, Y = 0.f;
+    HWNodeRules::ResonatorHoldPoint(Here.X, Here.Y, Pack.X, Pack.Y, FVector::Dist2D(Here, Pack), X, Y);
+    OutPoint = FVector(X, Y, Here.Z);
+    return true;
+}
+
+void AHWNodeDirector::ReportTargetChosen(const AHWNodeEnemy* Enemy, HWNodeRules::ETargetKind Kind)
+{
+    if (!Enemy || InvasionClock < 0.f) return;
+    Tier5.NoteTarget(static_cast<HWNodeRules::EEnemyRole>(Enemy->GetRole()), Kind);
+}
+
+void AHWNodeDirector::RefreshResonance()
+{
+    // server-authoritative (v04/v05): the director counts living resonators within the radius of every other invader.
+    // Never more than one stack; the resonator itself and other resonators are not strengthened.
+    TArray<const AHWNodeEnemy*> Resonators;
+    for (const AHWNodeEnemy* E : Enemies)
+    {
+        if (E && !E->IsDeadEnemy() && E->GetRole() == EHWNodeEnemyRole::Resonator) Resonators.Add(E);
+    }
+    int32 Affected = 0;
+    for (AHWNodeEnemy* E : Enemies)
+    {
+        if (!E || E->IsDeadEnemy()) continue;
+        const HWNodeRules::EEnemyRole R = static_cast<HWNodeRules::EEnemyRole>(E->GetRole());
+        int32 InRange = 0;
+        for (const AHWNodeEnemy* Res : Resonators)
+        {
+            if (Res != E && HWNodeRules::InResonance(R, FVector::Dist2D(E->GetActorLocation(), Res->GetActorLocation()))) ++InRange;
+        }
+        const int32 Before = E->GetResonance();
+        E->SetResonance(InRange);
+        if (InvasionClock >= 0.f) Tier5.NoteResonance(Before, E->GetResonance());
+        if (E->GetResonance() > 0) ++Affected;
+    }
+    if ((Affected > 0) != (ResonatingNow > 0))
+    {
+        RunEvent(TEXT("aura"), TEXT("resonator"), Affected > 0 ? TEXT("on") : TEXT("off"));
+        UE_LOG(LogTemp, Display, TEXT("[HWNode] resonance %s (%d invaders x%.2f move, x%.2f attack)"), Affected > 0 ? TEXT("ON") : TEXT("OFF"),
+            Affected, HWNodeRules::ResonanceMoveScale, HWNodeRules::ResonanceAttackScale);
+    }
+    ResonatingNow = Affected;
+}
+
 AHWNodeFacility* AHWNodeDirector::BarricadeOnPath(const FVector& From, const FVector& To) const
 {
     for (AHWNodeFacility* F : Facilities)
@@ -370,7 +451,7 @@ float AHWNodeDirector::GateLineY() const
     return Gate ? Gate->GetActorLocation().Y : -1e9f;
 }
 
-HWNodeRules::FTargetView AHWNodeDirector::BuildView(const FVector& From, bool bFlanked) const
+HWNodeRules::FTargetView AHWNodeDirector::BuildView(const FVector& From, bool bFlanked, const AHWNodeEnemy* Self) const
 {
     HWNodeRules::FTargetView V;
     V.bFlanked = bFlanked;
@@ -386,11 +467,14 @@ HWNodeRules::FTargetView AHWNodeDirector::BuildView(const FVector& From, bool bF
     V.Gate = Distance(EHWNodeFacilityKind::Gate);
     V.Generator = Distance(EHWNodeFacilityKind::Generator);
     V.Comms = Distance(EHWNodeFacilityKind::Comms);
-    if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) V.Npc = FVector::Dist2D(From, Npc->GetActorLocation());
+    const EHWNodeEnemyRole Hunter = Self ? Self->GetRole() : EHWNodeEnemyRole::Normal;
+    if (const AHWNodeNpc* Npc = PreferredNpc(From, Hunter)) V.Npc = FVector::Dist2D(From, Npc->GetActorLocation());
+    FVector Hold;
+    if (Hunter == EHWNodeEnemyRole::Resonator && ResonatorHold(Self, Hold)) V.Ally = FVector::Dist2D(From, Hold);
     return V;
 }
 
-FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVector& From) const
+FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVector& From, const AHWNodeEnemy* Self) const
 {
     switch (Kind)
     {
@@ -398,8 +482,14 @@ FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVecto
         if (const AHWAinCharacter* Player = GetPlayer()) return Player->GetActorLocation();
         break;
     case HWNodeRules::ETargetKind::Npc:
-        if (const AHWNodeNpc* Npc = NearestTargetableNpc(From)) return Npc->GetActorLocation();
+        if (const AHWNodeNpc* Npc = PreferredNpc(From, Self ? Self->GetRole() : EHWNodeEnemyRole::Normal)) return Npc->GetActorLocation();
         break;
+    case HWNodeRules::ETargetKind::Ally:
+    {
+        FVector Hold;
+        if (ResonatorHold(Self, Hold)) return Hold;
+        break;
+    }
     case HWNodeRules::ETargetKind::Gate:
     case HWNodeRules::ETargetKind::Generator:
     case HWNodeRules::ETargetKind::Comms:
@@ -416,7 +506,7 @@ FVector AHWNodeDirector::TargetPoint(HWNodeRules::ETargetKind Kind, const FVecto
     return From;
 }
 
-TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From) const
+TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From, const AHWNodeEnemy* Self) const
 {
     if (!Config) return {};
     // the target's route (generator, comms, or the route to the NPC it is after) gives the end point; the route graph
@@ -425,7 +515,7 @@ TArray<FVector> AHWNodeDirector::ExtensionFor(HWNodeRules::ETargetKind Kind, con
     // circling the generator building for good (tools/ue/node-sim.cjs).
     if (Kind == HWNodeRules::ETargetKind::Npc)
     {
-        const AHWNodeNpc* Npc = NearestTargetableNpc(From);
+        const AHWNodeNpc* Npc = PreferredNpc(From, Self ? Self->GetRole() : EHWNodeEnemyRole::Normal);
         if (!Npc) return {};
         TArray<FVector> ToNpc = Config->PathBetween(From, Npc->GetActorLocation());
         return ToNpc.Num() > 0 ? ToNpc : Config->Route(Npc->GetRoute());
@@ -469,7 +559,8 @@ TArray<FVector> AHWNodeDirector::PathFromTechnicianTo(EHWNodeFacilityKind Kind) 
 FString AHWNodeDirector::WavePreview(int32 WaveIndex) const
 {
     if (WaveIndex >= HWNodeRules::PrototypeAWaveCount) return TEXT("the Relay (boss)");
-    static const TCHAR* RoleNames[] = { TEXT("infected"), TEXT("runner"), TEXT("breaker"), TEXT("stalker"), TEXT("ARMORED") };
+    static const TCHAR* RoleNames[] = { TEXT("walker"), TEXT("runner"), TEXT("breaker"), TEXT("stalker"), TEXT("ARMORED"), TEXT("RESONATOR") };
+    static_assert(UE_ARRAY_COUNT(RoleNames) == static_cast<int32>(HWNodeRules::EEnemyRole::Count), "a name per role");
     const HWNodeRules::FWaveSpec W = HWNodeRules::PrototypeAWave(WaveIndex);
     FString Text;
     for (int32 I = 0; I < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++I)
@@ -542,6 +633,13 @@ void AHWNodeDirector::SpawnWave(int32 WaveIndex)
     {
         for (int32 N = 0; N < Spec.Count[RoleIndex]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(RoleIndex), SpawnSerial++);
     }
+    // the package's evidence line (v04: «HUD/로그상 ThreatGrade=5»)
+    FString Line;
+    for (int32 RoleIndex = 0; RoleIndex < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++RoleIndex)
+    {
+        if (Spec.Count[RoleIndex] > 0) Line += FString::Printf(TEXT(" %s x%d"), ANSI_TO_TCHAR(HWNodeRules::ArchetypeId(static_cast<HWNodeRules::EEnemyRole>(RoleIndex))), Spec.Count[RoleIndex]);
+    }
+    UE_LOG(LogTemp, Display, TEXT("[HWNode] wave %d:%s ThreatGrade=%d"), WaveIndex + 1, *Line, HWNodeRules::NodeThreatGrade);
     // a retake's last wave carries the occupation tier's extra armoured elites (the wave runner counts them too)
     if (WaveIndex == Waves.WaveCount - 1 && RunExtraElites > 0)
     {
@@ -556,9 +654,13 @@ void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
     const TArray<FVector>& EnemyRoute = Config->Route(Config->RouteForRole(EnemyRole, Serial));
     // flank routes start on their own trail; the rest at the checkpoint spawns
     const bool bOwnStart = EnemyRole == EHWNodeEnemyRole::Runner && EnemyRoute.Num() > 0;
-    const FVector Base = bOwnStart ? EnemyRoute[0] : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
+    // a flank trail: 150 cm behind its start, scattered 60 - scattered 160 round the start itself, a runner landed beside
+    // the trail and walked into the ramp's side (64 cm over the pad, above the 45 cm step) for good (node-sim.cjs, W5)
+    const FVector Back = bOwnStart && EnemyRoute.Num() > 1 ? (EnemyRoute[0] - EnemyRoute[1]).GetSafeNormal2D() : FVector::ZeroVector;
+    const FVector Base = bOwnStart ? EnemyRoute[0] + Back * 150.f : Config->SpawnPoints[Serial % Config->SpawnPoints.Num()];
+    const float Scatter = bOwnStart ? 60.f : 160.f;
     const float Angle = Serial * 2.39996f;   // golden-angle scatter so a wave does not stack on one point
-    const FVector At = Base + FVector(FMath::Cos(Angle) * 160.f, FMath::Sin(Angle) * 160.f, 110.f);
+    const FVector At = Base + FVector(FMath::Cos(Angle) * Scatter, FMath::Sin(Angle) * Scatter, 110.f);
 
     FActorSpawnParameters Params;
     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
@@ -569,13 +671,17 @@ void AHWNodeDirector::SpawnEnemy(EHWNodeEnemyRole EnemyRole, int32 Serial)
         return;
     }
     Enemy->Configure(this, EnemyRole, EnemyRoute, RunDifficulty);
+    Enemy->SetLabelVisible(bShowLabels);
     Enemy->OnEnemyDied.AddUniqueDynamic(this, &AHWNodeDirector::HandleEnemyDied);
     Enemies.Add(Enemy);
+    Tier5.NoteSpawn(static_cast<HWNodeRules::EEnemyRole>(EnemyRole), Enemy->GetThreatGrade());
+    if (EnemyRole == EHWNodeEnemyRole::Resonator) ResonanceLeft = 0.f;   // its aura from the next tick
 }
 
 void AHWNodeDirector::HandleEnemyDied(AHWNodeEnemy* Enemy)
 {
     Enemies.Remove(Enemy);
+    if (Enemy && Enemy->GetRole() == EHWNodeEnemyRole::Resonator) ResonanceLeft = 0.f;   // its aura comes off now, not 0.4 s later
     if (Enemy && Enemy->WasKilled()) ++Kills;
     if (Enemy && Enemy->WasKilledByPlayer()) ++PlayerKills;   // turret and guard kills are the node's, not yours
     Waves.EnemyDied(Waves.Now());
@@ -1259,6 +1365,12 @@ void AHWNodeDirector::StartRetakeRun()
 void AHWNodeDirector::TickRun(float DeltaSeconds)
 {
     TickDefences(DeltaSeconds);
+    ResonanceLeft -= DeltaSeconds;
+    if (ResonanceLeft <= 0.f)
+    {
+        RefreshResonance();
+        ResonanceLeft = HWNodeRules::ResonanceRefreshSeconds;
+    }
     if (!bBossPhase)
     {
         const int32 Wave = Waves.Tick(DeltaSeconds);
@@ -1344,6 +1456,13 @@ void AHWNodeDirector::DrawHud() const
         Show(FString::Printf(TEXT("Supplies %d  (G at a damaged turret: repair %d / G elsewhere when hurt: potion, %d free then %d supply)%s"),
             Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair), FreePotions, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Potions), *RetakeNote),
             FColor(200, 230, 160));
+        if (!bBossPhase)
+        {
+            Show(FString::Printf(TEXT("ThreatGrade %d - all six roles%s"), HWNodeRules::NodeThreatGrade,
+                ResonatingNow > 0 ? *FString::Printf(TEXT("   RESONANCE: %d strengthened (move x%.2f, attack x%.2f) - kill the resonator"), ResonatingNow,
+                    HWNodeRules::ResonanceMoveScale, HWNodeRules::ResonanceAttackScale) : TEXT("")),
+                ResonatingNow > 0 ? FColor(255, 110, 190) : FColor(200, 200, 200));
+        }
         if (Machine.CommsHeldSeconds > 0.f) Show(FString::Printf(TEXT("ENEMY ON COMMS  %.0f / %.0fs"), Machine.CommsHeldSeconds, Machine.CommsHoldToFall), FColor::Red);
         if (BossCore && BossCore->GetExtractionProgress() > 0.f) Show(FString::Printf(TEXT("EXTRACTING  %.0f%%  - do not get hit"), 100.f * BossCore->GetExtractionProgress()), FColor(255, 80, 60));
     }
@@ -1392,6 +1511,9 @@ void AHWNodeDirector::BeginRunLog()
     RunEvents.Reset();
     RunFrames.Reset();
     InvasionClock = 0.f;
+    Tier5 = HWNodeRules::FTier5Evidence();
+    ResonanceLeft = 0.f;
+    ResonatingNow = 0;
     NextFrameAt = 0.f;
     DealtByPlayer = DealtByTurret = DealtByGuard = 0.0;
 
@@ -1448,8 +1570,8 @@ void AHWNodeDirector::RecordFrame()
     {
         if (!E || E->IsDeadEnemy()) continue;
         const FVector At = E->GetActorLocation();
-        EnemyList.Add(FString::Printf(TEXT("[%d,%d,%d,%.2f,\"%c\",0]"), FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y),
-            static_cast<int32>(E->GetRole()), E->GetHealthFraction(), HWNodeDirectorLocal::TargetKey(E->GetTargetKind())));
+        EnemyList.Add(FString::Printf(TEXT("[%d,%d,%d,%.2f,\"%c\",0,%d]"), FMath::RoundToInt(At.X), FMath::RoundToInt(At.Y),
+            static_cast<int32>(E->GetRole()), E->GetHealthFraction(), HWNodeDirectorLocal::TargetKey(E->GetTargetKind()), E->GetResonance()));
     }
     TArray<FString> FacilityList;
     for (const AHWNodeFacility* F : Facilities) FacilityList.Add(FString::Printf(TEXT("%.3f"), F ? F->GetHealthFraction() : 0.f));
@@ -1472,6 +1594,16 @@ void AHWNodeDirector::RecordFrame()
         *FString::Join(EnemyList, TEXT(",")), *FString::Join(FacilityList, TEXT(",")), *FString::Join(NpcList, TEXT(",")), *PlayerFrame));
 }
 
+// The v06 PIE scenario's verdict in the Output Log: one PASS / FAIL line per check (N01_PIE_Scenario_v06.json)
+void AHWNodeDirector::LogTier5Evidence(const TCHAR* RunResult) const
+{
+    for (int32 I = 0; I < HWNodeRules::Tier5CheckCount; ++I)
+    {
+        UE_LOG(LogTemp, Display, TEXT("[HWNode][N01_TIER5_PIE_V06] %s  %s"), Tier5.Check(I) ? TEXT("PASS") : TEXT("FAIL"), ANSI_TO_TCHAR(HWNodeRules::Tier5CheckName(I)));
+    }
+    UE_LOG(LogTemp, Display, TEXT("[HWNode][N01_TIER5_PIE_V06] %s - run %s (scenario finished without a crash)"), Tier5.Pass() ? TEXT("PASS") : TEXT("FAIL"), RunResult);
+}
+
 void AHWNodeDirector::WriteRunLog(const TCHAR* RunResult)
 {
     if (InvasionClock < 0.f || !Config) return;
@@ -1485,11 +1617,20 @@ void AHWNodeDirector::WriteRunLog(const TCHAR* RunResult)
     }
     TArray<FString> NpcIds;
     for (const AHWNodeNpc* Npc : Npcs) if (Npc) NpcIds.Add(FString::Printf(TEXT("\"%s\""), *Npc->GetNpcId().ToString()));
+    TArray<FString> Checks;
+    for (int32 I = 0; I < HWNodeRules::Tier5CheckCount; ++I)
+    {
+        Checks.Add(FString::Printf(TEXT("{\"name\":\"%s\",\"pass\":%s}"), ANSI_TO_TCHAR(HWNodeRules::Tier5CheckName(I)), Tier5.Check(I) ? TEXT("true") : TEXT("false")));
+    }
+    LogTier5Evidence(RunResult);
     const FString Json = FString::Printf(
         TEXT("{\"format\":\"hwnode-run/1\",\"source\":\"ue\",\"node\":\"%s\",\"result\":\"%s\",\"t\":%.1f,\"opt\":%s,")
+        TEXT("\"threatGrade\":%d,\"tier5\":{\"pass\":%s,\"checks\":[%s]},")
         TEXT("\"dealt\":{\"player\":%.0f,\"turret\":%.0f,\"guard\":%.0f},\"player\":{\"deaths\":%d},")
         TEXT("\"facilities\":[%s],\"npcIds\":[%s],\"events\":[%s],\"frames\":[%s]}"),
-        *Config->NodeId.ToString(), RunResult, InvasionClock, *RunOptions, DealtByPlayer, DealtByTurret, DealtByGuard, PlayerDeaths,
+        *Config->NodeId.ToString(), RunResult, InvasionClock, *RunOptions,
+        HWNodeRules::NodeThreatGrade, Tier5.Pass() ? TEXT("true") : TEXT("false"), *FString::Join(Checks, TEXT(",")),
+        DealtByPlayer, DealtByTurret, DealtByGuard, PlayerDeaths,
         *FString::Join(FacilityList, TEXT(",")), *FString::Join(NpcIds, TEXT(",")), *FString::Join(RunEvents, TEXT(",")), *FString::Join(RunFrames, TEXT(",")));
     const FString Dir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("HWNode"));
     FFileHelper::SaveStringToFile(Json, *FPaths::Combine(Dir, TEXT("last_run.json")));

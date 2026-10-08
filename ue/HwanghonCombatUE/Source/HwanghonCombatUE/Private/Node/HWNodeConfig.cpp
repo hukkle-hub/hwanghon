@@ -12,6 +12,8 @@
 static_assert(static_cast<int>(EHWNodeFacilityKind::Comms) == static_cast<int>(HWNodeRules::EFacility::Comms), "facility order");
 static_assert(static_cast<int>(EHWNodeFacilityKind::Barricade) == static_cast<int>(HWNodeRules::EFacility::Barricade), "facility order");
 static_assert(static_cast<int>(EHWNodeEnemyRole::ArmoredElite) == static_cast<int>(HWNodeRules::EEnemyRole::ArmoredElite), "role order");
+static_assert(static_cast<int>(EHWNodeEnemyRole::Resonator) == static_cast<int>(HWNodeRules::EEnemyRole::Resonator), "role order");
+static_assert(static_cast<int>(EHWNodeEnemyRole::Resonator) + 1 == static_cast<int>(HWNodeRules::EEnemyRole::Count), "role count");
 static_assert(static_cast<int>(EHWNodeState::Retaking) == static_cast<int>(HWNodeRules::ENodeState::Retaking), "state order");
 static_assert(static_cast<int>(EHWNodeNpcRole::Guard) == static_cast<int>(HWNodeRules::ENpcRole::Guard), "npc role order");
 
@@ -141,6 +143,7 @@ namespace HWNodeConfigLocal
         if (Key == TEXT("breaker")) { Out = EHWNodeEnemyRole::Breaker; return true; }
         if (Key == TEXT("stalker")) { Out = EHWNodeEnemyRole::Stalker; return true; }
         if (Key == TEXT("armored_elite")) { Out = EHWNodeEnemyRole::ArmoredElite; return true; }
+        if (Key == TEXT("resonator")) { Out = EHWNodeEnemyRole::Resonator; return true; }
         return false;
     }
 

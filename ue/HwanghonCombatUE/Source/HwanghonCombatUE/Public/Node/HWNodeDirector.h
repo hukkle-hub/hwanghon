@@ -60,9 +60,14 @@ public:
     UHWNodeConfig* GetConfig() const { return Config; }
 
     // ---- what the enemies and NPCs ask
-    HWNodeRules::FTargetView BuildView(const FVector& From, bool bFlanked) const;
-    FVector TargetPoint(HWNodeRules::ETargetKind Kind, const FVector& From) const;
-    TArray<FVector> ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From) const;
+    // Self (optional) = the asking enemy: its role picks the NPC (the stalker weighs the technician and the medic) and
+    // a resonator gets its place behind the pack (ETargetKind::Ally).
+    HWNodeRules::FTargetView BuildView(const FVector& From, bool bFlanked, const AHWNodeEnemy* Self = nullptr) const;
+    FVector TargetPoint(HWNodeRules::ETargetKind Kind, const FVector& From, const AHWNodeEnemy* Self = nullptr) const;
+    TArray<FVector> ExtensionFor(HWNodeRules::ETargetKind Kind, const FVector& From, const AHWNodeEnemy* Self = nullptr) const;
+    AHWNodeNpc* PreferredNpc(const FVector& From, EHWNodeEnemyRole Hunter) const;   // HWNodeRules::NpcPickScore
+    bool ResonatorHold(const AHWNodeEnemy* Resonator, FVector& OutPoint) const;     // HWNodeRules::ResonatorHoldPoint
+    void ReportTargetChosen(const AHWNodeEnemy* Enemy, HWNodeRules::ETargetKind Kind);   // the PIE evidence (v06)
     bool IsGateStanding() const;
     float GateLineY() const;
     AHWNodeFacility* GetFacility(EHWNodeFacilityKind Kind) const;
@@ -98,6 +103,8 @@ private:
     void TickDefences(float DeltaSeconds);
     void FinishRun(const TCHAR* ReportOutcome);
     void DrawHud() const;
+    void RefreshResonance();   // the resonator's aura, server-side, every HWNodeRules::ResonanceRefreshSeconds
+    void LogTier5Evidence(const TCHAR* RunResult) const;
 
     // The run log (docs/design/201 §8): Saved/HWNode/last_run.json in the simulator's format (hwnode-run/1) -
     // events with the simulator's kinds and ids, a frame a second, damage by source - so tools/ue/node-compare.mjs
@@ -190,6 +197,10 @@ private:
     float NextRegion[3] = { 1.f, 1.f, 1.f };       // a server answer that landed mid-run: used from the next preparation
     bool bNextRegion = false;
     float PendingOrderBonus = 0.f;                 // the report's guild-order bonus, shown with the reply
+    HWNodeRules::FTier5Evidence Tier5;             // this run's PIE proof (v06): PASS / FAIL lines and the run log
+    float ResonanceLeft = 0.f;
+    int32 ResonatingNow = 0;                       // invaders inside a living resonator's aura (HUD)
+    bool bShowLabels = true;                       // ?HWLabels=0: the "T5 / ROLE / TARGET" labels off (phone frame check)
 
     struct FPing
     {

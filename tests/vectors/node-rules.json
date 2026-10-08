@@ -448,7 +448,7 @@
   }
  ],
  "combat": {
-  "doc": "tools/ue/node-combat-rules.cjs ↔ HWNodeRules.h — 역할 수치·목표 선택·정문 차단·웨이브·전력·NPC",
+  "doc": "tools/ue/node-combat-rules.cjs ↔ HWNodeRules.h — 역할 수치·목표 선택·정문 차단·웨이브·전력·NPC · 5급 6종(공진·철갑 3공격·추적 NPC 중요도·PIE 증거, GuildWorld v04~v06)",
   "stats": {
    "normal": {
     "health": 5500,
@@ -489,6 +489,14 @@
     "speed": 230,
     "attackCooldown": 2.4,
     "armorScale": 0.25
+   },
+   "resonator": {
+    "health": 5400,
+    "damage": 640,
+    "facilityDamage": 220,
+    "speed": 290,
+    "attackCooldown": 1.5,
+    "armorScale": 1
    }
   },
   "target": [
@@ -958,7 +966,7 @@
      "npc": -1,
      "flanked": false
     },
-    "expect": "gate"
+    "expect": "comms"
    },
    {
     "role": "breaker",
@@ -1751,6 +1759,385 @@
      "flanked": false
     },
     "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 800,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 1000,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": 500,
+     "comms": 900,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "generator"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 600,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 400,
+     "gate": -1,
+     "generator": -1,
+     "comms": 200,
+     "npc": -1,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": 2000,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": 100,
+     "generator": -1,
+     "comms": 50,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 3000,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 700,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 240,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 300,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 100,
+     "gate": -1,
+     "generator": -1,
+     "comms": 100,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "none"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 899,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 901,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 299,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 301,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 500,
+     "flanked": true
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 249,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 251,
+     "gate": 100,
+     "generator": -1,
+     "comms": -1,
+     "npc": -1,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 2000,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": 900,
+     "flanked": false
+    },
+    "expect": "ally"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 500,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": 900,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 600,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": 900,
+     "flanked": false
+    },
+    "expect": "player"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 601,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": 900,
+     "flanked": false
+    },
+    "expect": "ally"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": 0,
+     "flanked": false
+    },
+    "expect": "ally"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": -1,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "resonator",
+    "view": {
+     "player": 2000,
+     "gate": 300,
+     "generator": 2000,
+     "comms": 5000,
+     "npc": -1,
+     "ally": -1,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 200,
+     "gate": 300,
+     "generator": -1,
+     "comms": 5000,
+     "npc": 100,
+     "flanked": false
+    },
+    "expect": "comms"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 200,
+     "gate": 300,
+     "generator": -1,
+     "comms": -1,
+     "npc": 100,
+     "flanked": false
+    },
+    "expect": "gate"
+   },
+   {
+    "role": "breaker",
+    "view": {
+     "player": 200,
+     "gate": -1,
+     "generator": -1,
+     "comms": -1,
+     "npc": 100,
+     "flanked": false
+    },
+    "expect": "player"
    }
   ],
   "gate": [
@@ -1825,8 +2212,9 @@
    "sizes": [
     6,
     8,
+    6,
     7,
-    5
+    9
    ],
    "runs": [
     {
@@ -1839,18 +2227,23 @@
       ],
       [
        1,
-       109,
-       55
+       89,
+       45
       ],
       [
        2,
-       229,
-       115
+       189,
+       95
       ],
       [
        3,
-       349,
-       175
+       299,
+       150
+      ],
+      [
+       4,
+       399,
+       200
       ]
      ],
      "done": false
@@ -1893,17 +2286,90 @@
       [
        1,
        31,
-       55
+       45
       ],
       [
        2,
        63,
-       115
+       95
       ],
       [
        3,
        102,
-       175
+       150
+      ],
+      [
+       4,
+       202,
+       200
+      ]
+     ],
+     "done": false
+    },
+    {
+     "kill_steps": [
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145
+     ],
+     "spawned": [
+      [
+       0,
+       0,
+       0.5
+      ],
+      [
+       1,
+       31,
+       45
+      ],
+      [
+       2,
+       64,
+       95
+      ],
+      [
+       3,
+       95,
+       150
+      ],
+      [
+       4,
+       127,
+       200
       ]
      ],
      "done": true
@@ -2370,6 +2836,10 @@
     [
      "armored_elite",
      5
+    ],
+    [
+     "resonator",
+     2
     ]
    ],
    "defense": [
@@ -2396,6 +2866,16 @@
     [
      "stalker",
      -1,
+     0
+    ],
+    [
+     "resonator",
+     1500,
+     2
+    ],
+    [
+     "resonator",
+     1501,
      0
     ]
    ],
@@ -2464,6 +2944,544 @@
    ],
    "turret_repair_below": 0.5,
    "potion_use_below": 0.9
+  },
+  "tier5": {
+   "grade": 5,
+   "archetype": {
+    "normal": "T5_WALKER",
+    "runner": "T5_RUNNER",
+    "breaker": "T5_BREAKER",
+    "stalker": "T5_STALKER",
+    "armored_elite": "T5_ARMORED",
+    "resonator": "T5_RESONATOR"
+   },
+   "checks": [
+    "all six roles spawn",
+    "all spawned monsters report ThreatGrade 5",
+    "Breaker selects Generator at least once",
+    "Stalker selects NPC at least once",
+    "Armored selects Gate at least once",
+    "Resonator aura changes a nearby T5 monster multiplier",
+    "the multiplier returns once the Resonator is gone"
+   ],
+   "resonance": {
+    "radius": 1800,
+    "move": 1.1,
+    "attack": 1.12,
+    "refresh": 0.4,
+    "stacks": [
+     [
+      0,
+      0
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      2,
+      1
+     ],
+     [
+      3,
+      1
+     ],
+     [
+      -1,
+      0
+     ]
+    ],
+    "in": [
+     [
+      "normal",
+      1800,
+      true
+     ],
+     [
+      "normal",
+      1801,
+      false
+     ],
+     [
+      "normal",
+      -1,
+      false
+     ],
+     [
+      "resonator",
+      10,
+      false
+     ],
+     [
+      "armored_elite",
+      0,
+      true
+     ],
+     [
+      "runner",
+      1799.9,
+      true
+     ]
+    ],
+    "hold": [
+     [
+      [
+       0,
+       0
+      ],
+      [
+       0,
+       500
+      ],
+      [
+       0,
+       150
+      ]
+     ],
+     [
+      [
+       100,
+       -400
+      ],
+      [
+       0,
+       0
+      ],
+      [
+       84.887,
+       -339.55
+      ]
+     ],
+     [
+      [
+       5,
+       5
+      ],
+      [
+       5,
+       5
+      ],
+      [
+       5,
+       -345
+      ]
+     ],
+     [
+      [
+       -300,
+       0
+      ],
+      [
+       300,
+       0
+      ],
+      [
+       -50,
+       0
+      ]
+     ]
+    ]
+   },
+   "think": [
+    [
+     "normal",
+     0.7
+    ],
+    [
+     "runner",
+     0.35
+    ],
+    [
+     "breaker",
+     0.6
+    ],
+    [
+     "stalker",
+     0.4
+    ],
+    [
+     "armored_elite",
+     0.65
+    ],
+    [
+     "resonator",
+     0.8
+    ]
+   ],
+   "armored": {
+    "cycle": [
+     [
+      0,
+      "shield_bash"
+     ],
+     [
+      1,
+      "heavy_charge"
+     ],
+     [
+      2,
+      "shield_bash"
+     ],
+     [
+      3,
+      "overhead_crush"
+     ],
+     [
+      4,
+      "shield_bash"
+     ],
+     [
+      5,
+      "heavy_charge"
+     ],
+     [
+      6,
+      "shield_bash"
+     ],
+     [
+      7,
+      "overhead_crush"
+     ],
+     [
+      -1,
+      "overhead_crush"
+     ]
+    ],
+    "crack": [
+     [
+      "shield_bash",
+      "none",
+      "none",
+      1.4
+     ],
+     [
+      "shield_bash",
+      "normal",
+      "normal",
+      1.4
+     ],
+     [
+      "shield_bash",
+      "perfect",
+      "normal",
+      1.4
+     ],
+     [
+      "heavy_charge",
+      "none",
+      "none",
+      1.4
+     ],
+     [
+      "heavy_charge",
+      "normal",
+      "normal",
+      1.4
+     ],
+     [
+      "heavy_charge",
+      "perfect",
+      "perfect",
+      3.15
+     ],
+     [
+      "overhead_crush",
+      "none",
+      "none",
+      1.4
+     ],
+     [
+      "overhead_crush",
+      "normal",
+      "none",
+      1.4
+     ],
+     [
+      "overhead_crush",
+      "perfect",
+      "none",
+      1.4
+     ]
+    ],
+    "windup": [
+     [
+      "shield_bash",
+      0.8
+     ],
+     [
+      "heavy_charge",
+      1
+     ],
+     [
+      "overhead_crush",
+      1.2
+     ]
+    ]
+   },
+   "npc_pick": [
+    [
+     "stalker",
+     "technician",
+     2600,
+     1.292
+    ],
+    [
+     "stalker",
+     "medic",
+     2600,
+     1.142
+    ],
+    [
+     "stalker",
+     "scout",
+     1200,
+     0.904
+    ],
+    [
+     "stalker",
+     "guard",
+     0,
+     1
+    ],
+    [
+     "runner",
+     "technician",
+     2600,
+     -2600
+    ],
+    [
+     "normal",
+     "medic",
+     100,
+     -100
+    ]
+   ],
+   "evidence": [
+    {
+     "ops": [],
+     "checks": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       5
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ]
+     ],
+     "checks": [
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       5
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ],
+      [
+       "target",
+       "breaker",
+       "generator"
+      ],
+      [
+       "target",
+       "stalker",
+       "npc"
+      ],
+      [
+       "target",
+       "armored_elite",
+       "gate"
+      ],
+      [
+       "res",
+       0,
+       1
+      ],
+      [
+       "res",
+       1,
+       0
+      ]
+     ],
+     "checks": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "pass": true
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "spawn",
+       "runner",
+       4
+      ],
+      [
+       "spawn",
+       "breaker",
+       5
+      ],
+      [
+       "spawn",
+       "stalker",
+       5
+      ],
+      [
+       "spawn",
+       "armored_elite",
+       5
+      ],
+      [
+       "spawn",
+       "resonator",
+       5
+      ],
+      [
+       "target",
+       "breaker",
+       "gate"
+      ],
+      [
+       "target",
+       "runner",
+       "npc"
+      ],
+      [
+       "target",
+       "armored_elite",
+       "gate"
+      ],
+      [
+       "res",
+       0,
+       1
+      ]
+     ],
+     "checks": [
+      1,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0
+     ],
+     "pass": false
+    },
+    {
+     "ops": [
+      [
+       "spawn",
+       "normal",
+       5
+      ],
+      [
+       "target",
+       "stalker",
+       "npc"
+      ],
+      [
+       "res",
+       1,
+       1
+      ],
+      [
+       "res",
+       0,
+       0
+      ]
+     ],
+     "checks": [
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0
+     ],
+     "pass": false
+    }
+   ]
   }
  },
  "tier_effects": {

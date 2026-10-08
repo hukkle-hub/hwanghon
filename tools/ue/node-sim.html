@@ -21,14 +21,18 @@ canvas{background:#15181d;border:1px solid #2a2e35;max-width:100%}
 /* 거점 판 리플레이 — hwnode-run/1 (tools/ue/node-sim.cjs --json 또는 UE 의 Saved/HWNode/last_run.json) 을 위에서 그린다.
    ?data=경로&t=초&node=namsan_n01   · ?cmp=경로 를 주면 두 판을 같은 시각에 나란히 (node-compare.mjs --shots) */
 const q=new URLSearchParams(location.search), H=window.HW_NODE;
-const ROLE_COL=['#d8d8d8','#78dcff','#ff9640','#c878ff','#ff4646'], ROLE_KO=['일반','질주','파괴자','추적자','철갑'];
+/* 5급 6종 (GuildWorld v04) — 역할 순서는 HWNodeRules::EEnemyRole */
+const ROLE_COL=['#d8d8d8','#78dcff','#ff9640','#c878ff','#ff4646','#ff6ebe'], ROLE_KO=['보행','질주','파괴','추적','철갑','공진'];
+const TK_KO={p:'플레이어',g:'정문',e:'발전기',c:'통신',n:'NPC',a:'무리 뒤'};
 const FCOL={gate:'#c9a45e',generator:'#ffd84a',comms:'#5aa0ff',turret:'#e060c0',barricade:'#ffa040'};
 const el=(tag,cls,html)=>{ const e=document.createElement(tag); if(cls) e.className=cls; if(html!=null) e.innerHTML=html; return e; };
 const label=S=>S.source==='ue'?'UE (PIE)':'시뮬';
 function draw(N,S,T,W){
  const fr=S.frames.reduce((a,f)=>f.t<=T+1e-6?f:a,S.frames[0]), col=el('div','col'); col.appendChild(el('h2','',label(S)+' · '+T.toFixed(0)+'초'));
  const cv=el('canvas'); cv.width=W; cv.height=Math.round(W*980/600); col.appendChild(cv); const g=cv.getContext('2d');
- const X0=-6600,X1=6600,Y0=-15000,Y1=12500, s=Math.min(cv.width/(X1-X0),cv.height/(Y1-Y0));
+ /* ?view=x0,y0,x1,y1 (cm) — 한 곳을 크게 (정문 앞 공진 등) */
+ const V=(q.get('view')||'').split(',').map(Number), zoom=V.length===4&&V.every(Number.isFinite);
+ const [X0,Y0,X1,Y1]=zoom?V:[-6600,-15000,6600,12500], s=Math.min(cv.width/(X1-X0),cv.height/(Y1-Y0));
  const P=(x,y)=>[(x-X0)*s,(Y1-y)*s];
  const box=(c,h,fill,stroke)=>{ const [a,b]=P(c[0]-h[0],c[1]+h[1]); g.fillStyle=fill; g.fillRect(a,b,2*h[0]*s,2*h[1]*s); if(stroke){ g.strokeStyle=stroke; g.strokeRect(a,b,2*h[0]*s,2*h[1]*s);} };
  const bs=H.blocks(N);
@@ -44,7 +48,11 @@ function draw(N,S,T,W){
  /* NPC — 포로 자리·대피 자리에 모이면 이름표를 쌓는다 */
  const placed=[]; fr.n.forEach(([x,y,st],i)=>{ const dup=placed.filter(p=>Math.hypot(p[0]-x,p[1]-y)<500).length; placed.push([x,y]); const [a,b0]=P(x,y), b=b0+dup*12;
   g.fillStyle=st==='n'?'#40e080':st==='m'?'#ff3030':'#ffb040'; g.beginPath(); g.arc(a,b,5,0,7); g.fill(); g.fillStyle='#fff'; g.font='10px QA, sans-serif'; g.fillText(S.npcIds[i]+(st==='m'?' 포로':st==='i'?' 부상':''),a+7,b+3); });
- for(const [x,y,r,hp,tk,stuck] of fr.e){ const [a,b]=P(x,y), rad=r===4?7:r===2?6:4.5; g.fillStyle=ROLE_COL[r]; g.beginPath(); g.arc(a,b,rad,0,7); g.fill();
+ /* 공진형의 18 m 오라 (서버 권위 — 판이 0.4초마다 잰다) */
+ for(const [x,y,r] of fr.e) if(r===5){ const [a,b]=P(x,y); g.fillStyle='#ff6ebe14'; g.strokeStyle='#ff6ebe99'; g.setLineDash([5,4]); g.beginPath(); g.arc(a,b,1800*s,0,7); g.fill(); g.stroke(); g.setLineDash([]); }
+ for(const [x,y,r,hp,tk,stuck,res] of fr.e){ const [a,b]=P(x,y), rad=r===4?7:r===2||r===5?6:4.5; g.fillStyle=ROLE_COL[r]; g.beginPath(); g.arc(a,b,rad,0,7); g.fill();
+  if(res){ g.strokeStyle='#ff6ebe'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+2.5,0,7); g.stroke(); g.lineWidth=1; }
+  if((r>=2||zoom)&&q.get('tags')!=='0'){ g.fillStyle=ROLE_COL[r]; g.font=(zoom?12:9)+'px QA, sans-serif'; g.fillText('T5 '+ROLE_KO[r]+'→'+(r===5&&tk==='a'?'무리 뒤':TK_KO[tk]||'—'),a+rad+2,b-3); }
   if(stuck){ g.strokeStyle='#ff0'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+4,0,7); g.stroke(); g.lineWidth=1; } }
  if(fr.p){ const [a,b]=P(fr.p[0],fr.p[1]); g.fillStyle=fr.p[3]?'#555':'#40a0ff'; g.beginPath(); g.moveTo(a,b-8); g.lineTo(a+7,b+6); g.lineTo(a-7,b+6); g.fill(); }
  return {col,fr};
@@ -52,8 +60,9 @@ function draw(N,S,T,W){
 function side(S,T,fr,title){
  const o=S.opt||{}, d=el('div','side');
  d.appendChild(el('h1','',title||`${T.toFixed(0)}초 · ${S.result==='held'?(o.retake?'탈환 (웨이브 막음)':'막음'):S.result==='fallen'?(o.retake?'탈환 실패':'함락'):'시간 끝'} (${S.t}s)`));
- d.appendChild(el('div','',`정책 ${(o.policies||[]).join(', ')||'없음'} · 바리케이드 ${(o.barricades||[]).length} · 기술자 ${o.tech||'—'}${o.evacuate||S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:S.source==='ue'?'사람':'없음'}${o.retake?` · <b style="color:#9fc4ff">탈환전 ×${o.difficulty} · 철갑 +${o.extraElites||0}</b>`:''}${o.supply!=null?` · 보급 ${o.supply}${S.supplyUsed?` (회복약 ${S.supplyUsed.potionsFree+S.supplyUsed.potionsSupply} · 포탑 수리 ${S.supplyUsed.turretRepairs} · 남음 ${S.supplyLeft})`:''}`:''}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length}`));
- d.appendChild(el('div','',ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+'<br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)'));
+ d.appendChild(el('div','',`정책 ${(o.policies||[]).join(', ')||'없음'} · 바리케이드 ${(o.barricades||[]).length} · 기술자 ${o.tech||'—'}${o.evacuate||S.evacuate?' · NPC 대피':''} · 플레이어 ${o.player?'DPS '+o.player.dps:S.source==='ue'?'사람':'없음'}${o.retake?` · <b style="color:#9fc4ff">탈환전 ×${o.difficulty} · 철갑 +${o.extraElites||0}</b>`:''}${o.supply!=null?` · 보급 ${o.supply}${S.supplyUsed?` (회복약 ${S.supplyUsed.potionsFree+S.supplyUsed.potionsSupply} · 포탑 수리 ${S.supplyUsed.turretRepairs} · 남음 ${S.supplyLeft})`:''}`:''}<br>전력 ${fr.power} · 살아 있는 적 ${fr.e.length} · 막힌 적 ${fr.e.filter(e=>e[5]).length} · <b style="color:#ff6ebe">공진 ${fr.e.filter(e=>e[6]).length}</b> (이동 ×1.1 · 공격 ×1.12)`));
+ d.appendChild(el('div','',ROLE_KO.map((k,i)=>`<span class="k" style="background:${ROLE_COL[i]}"></span>${k}`).join('')+' — 전부 <b>ThreatGrade 5</b><br><span class="k" style="background:#40a0ff"></span>플레이어<span class="k" style="background:#40e080"></span>NPC<span class="k" style="border:2px solid #ff6ebe"></span>공진 받음<span class="k" style="border:2px solid #ff0"></span>막힘(10초+)'));
+ if(S.tier5) d.appendChild(el('div','',`<b>PIE 판정 (v06)</b> ${S.tier5.pass?'<b style="color:#7ad47a">PASS</b>':'<b style="color:#e05040">FAIL</b>'}<br>`+S.tier5.checks.map(c=>`<span style="color:${c.pass?'#7ad47a':'#e05040'}">${c.pass?'PASS':'FAIL'}</span> ${c.name}`).join('<br>')));
  d.appendChild(el('hr')); const ev=el('div','ev'); ev.innerHTML=S.events.map(e=>`<div class="${e.t<=T?'now':''}">${e.t.toFixed(0)}s ${e.text}</div>`).join(''); d.appendChild(ev);
  return d;
 }

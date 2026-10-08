@@ -154,6 +154,39 @@ static void Roles()
     V.Npc = -1.f;
     CHECK(ChooseTarget(EEnemyRole::Stalker, V) == ETargetKind::Player);
 
+    // the resonator (v04/v05): behind the pack, a player only when close, a walker when alone
+    FTargetView Q;
+    Q.Player = 2000.f; Q.Gate = 300.f; Q.Ally = 900.f;
+    CHECK(ChooseTarget(EEnemyRole::Resonator, Q) == ETargetKind::Ally);
+    Q.Player = 500.f;
+    CHECK(ChooseTarget(EEnemyRole::Resonator, Q) == ETargetKind::Player);
+    Q.Player = 2000.f; Q.Ally = -1.f;
+    CHECK(ChooseTarget(EEnemyRole::Resonator, Q) == ETargetKind::Gate);
+    // the aura: one stack at most, never on a resonator, gone outside 18 m
+    CHECK(ResonanceStacks(0) == 0 && ResonanceStacks(1) == 1 && ResonanceStacks(3) == 1);
+    CHECK(InResonance(EEnemyRole::Normal, 1800.f) && !InResonance(EEnemyRole::Normal, 1801.f) && !InResonance(EEnemyRole::Resonator, 10.f));
+    CHECK(Near(ResonanceMove(1), 1.1f) && Near(ResonanceAttack(2), 1.12f) && Near(ResonanceMove(0), 1.f));
+    // the breaker (v05): generator, comms, gate
+    FTargetView B;
+    B.Player = 200.f; B.Gate = 300.f; B.Comms = 5000.f;
+    CHECK(ChooseTarget(EEnemyRole::Breaker, B) == ETargetKind::Comms);
+    // the stalker weighs the technician over a closer NPC (v05 scenario: 26 m vs 12 m)
+    CHECK(NpcPickScore(EEnemyRole::Stalker, ENpcRole::Technician, 2600.f) > NpcPickScore(EEnemyRole::Stalker, ENpcRole::Scout, 1200.f));
+    CHECK(NpcPickScore(EEnemyRole::Runner, ENpcRole::Technician, 2600.f) < NpcPickScore(EEnemyRole::Runner, ENpcRole::Scout, 1200.f));
+    // the armoured's crush cannot be countered; only the charge pays a perfect counter
+    CHECK(!CounterAllowed(ArmoredAttackAt(3)) && CounterAllowed(ArmoredAttackAt(0)) && ArmoredAttackAt(1) == EArmoredAttack::HeavyCharge);
+    CHECK(ArmoredCrackGrade(EArmoredAttack::ShieldBash, ECounterGrade::Perfect) == ECounterGrade::Normal);
+    CHECK(ArmoredCrackGrade(EArmoredAttack::HeavyCharge, ECounterGrade::Perfect) == ECounterGrade::Perfect);
+    CHECK(ArmoredCrackGrade(EArmoredAttack::OverheadCrush, ECounterGrade::Perfect) == ECounterGrade::None);
+    CHECK(Near(ArmoredStaggerSeconds(EArmoredAttack::HeavyCharge, ECounterGrade::Perfect), 1.4f * 2.25f));
+    // the PIE proof (v06)
+    FTier5Evidence E;
+    for (int R = 0; R < static_cast<int>(EEnemyRole::Count); ++R) E.NoteSpawn(static_cast<EEnemyRole>(R), 5);
+    E.NoteTarget(EEnemyRole::Breaker, ETargetKind::Generator); E.NoteTarget(EEnemyRole::Stalker, ETargetKind::Npc);
+    CHECK(E.Check(0) && E.Check(1) && E.Check(2) && E.Check(3) && !E.Check(4) && !E.Pass());
+    E.NoteTarget(EEnemyRole::ArmoredElite, ETargetKind::Gate); E.NoteResonance(0, 1); E.NoteResonance(1, 0);
+    CHECK(E.Pass());
+
     // elite armour: a quarter damage until countered; a perfect counter cracks it longer
     FEliteArmor A;
     const float Scale = RoleStats(EEnemyRole::ArmoredElite).ArmorScale;
@@ -173,22 +206,28 @@ static void Roles()
 
 static void Waves()
 {
-    // Prototype A: 4+2, 5+3, 6+1 breaker, elite+4 = 26 enemies, last wave at 175 s
+    // Prototype A, GuildWorld v04: 6 + 8 + 6 + 7 + 9 = 36 grade-5 invaders, all six roles, last wave at 200 s
     int Total = 0;
     for (int I = 0; I < PrototypeAWaveCount; ++I) Total += WaveSize(PrototypeAWave(I));
-    CHECK(Total == 26);
-    CHECK(PrototypeAWave(3).Count[static_cast<int>(EEnemyRole::ArmoredElite)] == 1);
-    CHECK(PrototypeAWave(2).Count[static_cast<int>(EEnemyRole::Breaker)] == 1);
+    CHECK(PrototypeAWaveCount == 5 && Total == 36);
+    CHECK(PrototypeAWave(3).Count[static_cast<int>(EEnemyRole::ArmoredElite)] == 1 && PrototypeAWave(3).Count[static_cast<int>(EEnemyRole::Resonator)] == 1);
+    CHECK(PrototypeAWave(2).Count[static_cast<int>(EEnemyRole::Breaker)] == 2);
+    for (int R = 0; R < static_cast<int>(EEnemyRole::Count); ++R)
+    {
+        int Seen = 0;
+        for (int I = 0; I < PrototypeAWaveCount; ++I) Seen += PrototypeAWave(I).Count[R];
+        CHECK(Seen > 0);   // every role appears
+    }
 
-    // on the clock: waves at 0 / 55 / 115 / 175 s if nobody clears them
+    // on the clock: waves at 0 / 45 / 95 / 150 / 200 s if nobody clears them
     FWaveRunner R;
-    int Spawned[4] = { -1, -1, -1, -1 };
+    int Spawned[5] = { -1, -1, -1, -1, -1 };
     for (int Step = 0; Step < 2400; ++Step)
     {
         const int W = R.Tick(0.1f);
         if (W >= 0) Spawned[W] = Step;
     }
-    CHECK(Spawned[0] == 0 && Spawned[1] >= 549 && Spawned[1] <= 551 && Spawned[3] >= 1749 && Spawned[3] <= 1751);
+    CHECK(Spawned[0] == 0 && Spawned[1] >= 449 && Spawned[1] <= 451 && Spawned[3] >= 1499 && Spawned[3] <= 1501 && Spawned[4] >= 1999 && Spawned[4] <= 2001);
     CHECK(R.AllWavesSpawned() && !R.Done());
 
     // a cleared wave pulls the next one forward after the 8 s breather
@@ -198,8 +237,8 @@ static void Waves()
     CHECK(Q.Alive == 0);
     int Pulled = -1;
     for (int Step = 0; Step < 100 && Pulled < 0; ++Step) Pulled = Q.Tick(0.1f) == 1 ? Step : -1;
-    CHECK(Pulled >= 78 && Pulled <= 81);  // ~8 s later, not at 55 s
-    CHECK(Near(Q.Now(), 55.f));  // the rest keep their spacing
+    CHECK(Pulled >= 78 && Pulled <= 81);  // ~8 s later, not at 45 s
+    CHECK(Near(Q.Now(), 45.f));  // the rest keep their spacing
 
     FWaveRunner E;
     E.Tick(0.1f);

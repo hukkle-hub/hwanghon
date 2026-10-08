@@ -1,0 +1,102 @@
+{
+  "node": "N01",
+  "version": "v04",
+  "rule": "all monsters are threat grade 5",
+  "waves": [
+    {
+      "id": "W1_CONTACT",
+      "time_sec": 20,
+      "lane": "SOUTH_MAIN",
+      "spawns": [
+        [
+          "T5_WALKER",
+          4
+        ],
+        [
+          "T5_RUNNER",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W2_FLANK",
+      "time_sec": 65,
+      "lane": "SOUTH_MAIN",
+      "spawns": [
+        [
+          "T5_WALKER",
+          4
+        ],
+        [
+          "T5_RUNNER",
+          3
+        ],
+        [
+          "T5_STALKER",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W3_FACILITY",
+      "time_sec": 115,
+      "lane": "SOUTH_MAIN",
+      "spawns": [
+        [
+          "T5_WALKER",
+          4
+        ],
+        [
+          "T5_BREAKER",
+          2
+        ]
+      ]
+    },
+    {
+      "id": "W4_PRESSURE",
+      "time_sec": 170,
+      "lane": "SOUTH_MAIN",
+      "spawns": [
+        [
+          "T5_WALKER",
+          5
+        ],
+        [
+          "T5_ARMORED",
+          1
+        ],
+        [
+          "T5_RESONATOR",
+          1
+        ]
+      ]
+    },
+    {
+      "id": "W5_BREACH",
+      "time_sec": 220,
+      "lane": "SOUTH_MAIN",
+      "spawns": [
+        [
+          "T5_ARMORED",
+          1
+        ],
+        [
+          "T5_BREAKER",
+          1
+        ],
+        [
+          "T5_STALKER",
+          1
+        ],
+        [
+          "T5_RUNNER",
+          2
+        ],
+        [
+          "T5_WALKER",
+          4
+        ]
+      ]
+    }
+  ]
+}

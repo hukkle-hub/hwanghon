@@ -36,6 +36,7 @@ namespace HWNodeEnemyLocal
         case EHWNodeEnemyRole::Breaker: return 1.15f;
         case EHWNodeEnemyRole::Stalker: return 0.95f;
         case EHWNodeEnemyRole::ArmoredElite: return 1.35f;
+        case EHWNodeEnemyRole::Resonator: return 1.05f;   // tall and upright: the aristocrat of the reference sheet
         default: return 1.f;
         }
     }
@@ -48,7 +49,8 @@ namespace HWNodeEnemyLocal
         case EHWNodeEnemyRole::Breaker: return TEXT("BREAKER");
         case EHWNodeEnemyRole::Stalker: return TEXT("STALKER");
         case EHWNodeEnemyRole::ArmoredElite: return TEXT("ARMORED");
-        default: return TEXT("INFECTED");
+        case EHWNodeEnemyRole::Resonator: return TEXT("RESONATOR");
+        default: return TEXT("WALKER");
         }
     }
 
@@ -60,7 +62,22 @@ namespace HWNodeEnemyLocal
         case EHWNodeEnemyRole::Breaker: return FColor(255, 150, 60);
         case EHWNodeEnemyRole::Stalker: return FColor(200, 120, 255);
         case EHWNodeEnemyRole::ArmoredElite: return FColor(255, 70, 70);
+        case EHWNodeEnemyRole::Resonator: return FColor(255, 110, 190);
         default: return FColor(220, 220, 220);
+        }
+    }
+
+    const TCHAR* TargetName(HWNodeRules::ETargetKind K)
+    {
+        switch (K)
+        {
+        case HWNodeRules::ETargetKind::Player: return TEXT("PLAYER");
+        case HWNodeRules::ETargetKind::Gate: return TEXT("GATE");
+        case HWNodeRules::ETargetKind::Generator: return TEXT("GENERATOR");
+        case HWNodeRules::ETargetKind::Comms: return TEXT("COMMS");
+        case HWNodeRules::ETargetKind::Npc: return TEXT("NPC");
+        case HWNodeRules::ETargetKind::Ally: return TEXT("PACK (rear)");
+        default: return TEXT("NONE");
         }
     }
 }
@@ -80,6 +97,9 @@ AHWNodeEnemy::AHWNodeEnemy()
     Tag->SetHorizontalAlignment(EHTA_Center);
     Tag->SetWorldSize(46.f);
     Tag->SetAbsolute(false, true, false);   // world rotation: stays readable while the body turns
+#if UE_BUILD_SHIPPING
+    Tag->SetHiddenInGame(true);   // a development label (v06): never in a shipped build
+#endif
 }
 
 void AHWNodeEnemy::BeginPlay()
@@ -102,11 +122,48 @@ void AHWNodeEnemy::Configure(AHWNodeDirector* InDirector, EHWNodeEnemyRole InRol
     DamageScale = FMath::Max(0.1f, Difficulty);
     MaxHealth = Stats.Health * DamageScale;
     Health = MaxHealth;
-    GetCharacterMovement()->MaxWalkSpeed = Stats.Speed;
+    Resonance = 0;
+    Blow = 0;
+    GetCharacterMovement()->MaxWalkSpeed = GetMoveSpeedNow();
     SetActorScale3D(FVector(HWNodeEnemyLocal::BodyScale(Role)));
-    Tag->SetText(FText::FromString(HWNodeEnemyLocal::RoleTag(Role)));
     Tag->SetTextRenderColor(HWNodeEnemyLocal::RoleColor(Role));
+    RefreshLabel();
     ThinkLeft = 0.f;
+}
+
+float AHWNodeEnemy::GetMoveSpeedNow() const
+{
+    return Stats.Speed * HWNodeRules::ResonanceMove(Resonance);
+}
+
+void AHWNodeEnemy::SetResonance(int32 Stacks)
+{
+    const int32 Clamped = HWNodeRules::ResonanceStacks(Stacks);
+    if (Clamped == Resonance) return;
+    Resonance = Clamped;
+    GetCharacterMovement()->MaxWalkSpeed = GetMoveSpeedNow();
+    RefreshLabel();
+}
+
+void AHWNodeEnemy::SetLabelVisible(bool bVisible)
+{
+#if !UE_BUILD_SHIPPING
+    Tag->SetHiddenInGame(!bVisible);
+#endif
+}
+
+// "T5 / BREAKER" over "TARGET: GENERATOR" (v06); a resonated one carries a mark
+void AHWNodeEnemy::RefreshLabel()
+{
+    Tag->SetText(FText::FromString(FString::Printf(TEXT("T%d / %s%s\nTARGET: %s"), HWNodeRules::NodeThreatGrade,
+        HWNodeEnemyLocal::RoleTag(Role), Resonance > 0 ? TEXT("  ~RES~") : TEXT(""), HWNodeEnemyLocal::TargetName(TargetKind))));
+}
+
+float AHWNodeEnemy::WindupNow()
+{
+    if (!IsArmored()) return HWNodeEnemyLocal::WindupFor(Role);
+    Attack = HWNodeRules::ArmoredAttackAt(Blow);
+    return HWNodeRules::ArmoredWindupSeconds(Attack);
 }
 
 void AHWNodeEnemy::Tick(float DeltaSeconds)
@@ -139,7 +196,7 @@ void AHWNodeEnemy::Tick(float DeltaSeconds)
     if (ThinkLeft <= 0.f)
     {
         Think();
-        ThinkLeft = 0.4f;
+        ThinkLeft = HWNodeRules::ThinkSeconds(RuleRole());   // per role (v05 target_reevaluate_sec)
     }
     StepMove(DeltaSeconds);
 }
@@ -149,14 +206,14 @@ void AHWNodeEnemy::Think()
     const FVector Here = GetActorLocation();
     if (Role == EHWNodeEnemyRole::Runner && !bFlanked && Here.Y > Director->GateLineY() + 200.f) bFlanked = true;
 
-    const HWNodeRules::FTargetView View = Director->BuildView(Here, bFlanked);
-    HWNodeRules::ETargetKind Next = HWNodeRules::ChooseTarget(static_cast<HWNodeRules::EEnemyRole>(Role), View);
+    const HWNodeRules::FTargetView View = Director->BuildView(Here, bFlanked, this);
+    HWNodeRules::ETargetKind Next = HWNodeRules::ChooseTarget(RuleRole(), View);
 
     // a target north of the standing gate is reached through the gate (HWNodeRules::BlockedByGate) - a player too:
     // a player standing just inside the gate used to pin the infected against it, neither hitting him nor the gate
     if (Next != HWNodeRules::ETargetKind::None && Next != HWNodeRules::ETargetKind::Gate)
     {
-        const FVector Goal = Director->TargetPoint(Next, Here);
+        const FVector Goal = Director->TargetPoint(Next, Here, this);
         if (HWNodeRules::BlockedByGate(Here.Y, Goal.Y, Director->GateLineY(), Director->IsGateStanding(),
                 static_cast<HWNodeRules::EEnemyRole>(Role), bFlanked))
         {
@@ -167,14 +224,16 @@ void AHWNodeEnemy::Think()
     if (Next != TargetKind)
     {
         TargetKind = Next;
-        Extension = Director->ExtensionFor(Next, RouteIndex < Route.Num() ? Route.Last() : Here);
+        Extension = Director->ExtensionFor(Next, RouteIndex < Route.Num() ? Route.Last() : Here, this);
         ExtensionIndex = 0;
+        RefreshLabel();
+        Director->ReportTargetChosen(this, Next);   // the PIE evidence (v06): breaker on the generator, stalker on an NPC...
     }
     // path walked but the target is still far (the NPC it was after was taken, another one is wanted): path again
     else if (TargetKind != HWNodeRules::ETargetKind::None && RouteIndex >= Route.Num() && ExtensionIndex >= Extension.Num()
-        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here)) > HWNodeEnemyLocal::DirectApproachCm)
+        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here, this)) > HWNodeEnemyLocal::DirectApproachCm)
     {
-        Extension = Director->ExtensionFor(TargetKind, Here);
+        Extension = Director->ExtensionFor(TargetKind, Here, this);
         ExtensionIndex = 0;
     }
 
@@ -201,6 +260,7 @@ float AHWNodeEnemy::ReachTo(HWNodeRules::ETargetKind Kind) const
     case HWNodeRules::ETargetKind::Gate:
     case HWNodeRules::ETargetKind::Generator:
     case HWNodeRules::ETargetKind::Comms: return 140.f;
+    case HWNodeRules::ETargetKind::Ally: return 80.f;   // the resonator's place behind the pack: arrived, it holds
     default: return 0.f;
     }
 }
@@ -208,8 +268,8 @@ float AHWNodeEnemy::ReachTo(HWNodeRules::ETargetKind Kind) const
 // Straight at the gate or a player only from close by: from the spawn it walked off the ramp's edge (node-sim.cjs)
 bool AHWNodeEnemy::IsDirectApproach(const FVector& Here) const
 {
-    return (TargetKind == HWNodeRules::ETargetKind::Player || TargetKind == HWNodeRules::ETargetKind::Gate)
-        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here)) <= HWNodeEnemyLocal::DirectApproachCm;
+    return (TargetKind == HWNodeRules::ETargetKind::Player || TargetKind == HWNodeRules::ETargetKind::Gate || TargetKind == HWNodeRules::ETargetKind::Ally)
+        && FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here, this)) <= HWNodeEnemyLocal::DirectApproachCm;
 }
 
 bool AHWNodeEnemy::HasWaypoint(const FVector& Here) const
@@ -220,10 +280,10 @@ bool AHWNodeEnemy::HasWaypoint(const FVector& Here) const
 FVector AHWNodeEnemy::GoalPoint() const
 {
     const FVector Here = GetActorLocation();
-    if (IsDirectApproach(Here)) return Director->TargetPoint(TargetKind, Here);
+    if (IsDirectApproach(Here)) return Director->TargetPoint(TargetKind, Here, this);
     if (RouteIndex < Route.Num()) return Route[RouteIndex];
     if (ExtensionIndex < Extension.Num()) return Extension[ExtensionIndex];
-    return TargetKind == HWNodeRules::ETargetKind::None ? Here : Director->TargetPoint(TargetKind, Here);
+    return TargetKind == HWNodeRules::ETargetKind::None ? Here : Director->TargetPoint(TargetKind, Here, this);
 }
 
 void AHWNodeEnemy::StepMove(float DeltaSeconds)
@@ -243,7 +303,7 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
                 if (Cooldown <= 0.f)
                 {
                     Phase = EPhase::Windup;
-                    PhaseLeft = HWNodeEnemyLocal::WindupFor(Role);
+                    PhaseLeft = WindupNow();
                 }
                 return;
             }
@@ -265,15 +325,17 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
         }
         else
         {
-            Distance = FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here));
+            Distance = FVector::Dist2D(Here, Director->TargetPoint(TargetKind, Here, this));
         }
         if (Distance <= ReachTo(TargetKind))
         {
+            // the resonator at its place behind the pack: it holds there, it does not strike its own
+            if (TargetKind == HWNodeRules::ETargetKind::Ally) return;
             if (Cooldown <= 0.f)
             {
                 Phase = EPhase::Windup;
-                PhaseLeft = HWNodeEnemyLocal::WindupFor(Role);
-                const FVector Face = (Director->TargetPoint(TargetKind, Here) - Here).GetSafeNormal2D();
+                PhaseLeft = WindupNow();
+                const FVector Face = (Director->TargetPoint(TargetKind, Here, this) - Here).GetSafeNormal2D();
                 if (!Face.IsNearlyZero()) SetActorRotation(Face.Rotation());
             }
             return;
@@ -298,9 +360,12 @@ void AHWNodeEnemy::Strike()
 {
     Cooldown = Stats.AttackCooldown;
     const FVector Here = GetActorLocation();
+    const float Hit = DamageScale * GetAttackScaleNow();   // difficulty x the resonator's aura
+    const HWNodeRules::EArmoredAttack ThisBlow = Attack;
+    if (IsArmored()) ++Blow;
     if (AHWNodeFacility* Blocker = Override.Get())
     {
-        if (!Blocker->IsDestroyed() && Blocker->DistanceToSurface2D(Here) <= 200.f) Blocker->ApplyEnemyDamage(Stats.FacilityDamage * DamageScale);
+        if (!Blocker->IsDestroyed() && Blocker->DistanceToSurface2D(Here) <= 200.f) Blocker->ApplyEnemyDamage(Stats.FacilityDamage * Hit);
         return;
     }
     if (TargetKind == HWNodeRules::ETargetKind::Player)
@@ -308,35 +373,38 @@ void AHWNodeEnemy::Strike()
         AHWAinCharacter* Player = Director->GetPlayer();
         UHWCombatComponent* Combat = Player ? Player->GetCombat() : nullptr;
         if (!Combat || Combat->IsDead() || FVector::Dist2D(Here, Player->GetActorLocation()) > ReachTo(TargetKind) + 60.f) return;
-        if (Combat->IsCounterActive())
+        // the overhead crush cannot be countered (v05): a raised counter does not stop it - only a dodge (the combat
+        // component's invulnerability) does. The counter judgement itself is the combat component's, untouched.
+        const bool bCounterable = !IsArmored() || HWNodeRules::CounterAllowed(ThisBlow);
+        if (bCounterable && Combat->IsCounterActive())
         {
-            // countered: no damage, a stagger, and the elite's armour cracks (longer on a perfect counter)
+            // countered: no damage, a stagger, and the elite's armour cracks (the perfect time only off the heavy charge)
             const bool bPerfect = Combat->IsPerfectCounterActive();
+            const HWNodeRules::ECounterGrade Grade = bPerfect ? HWNodeRules::ECounterGrade::Perfect : HWNodeRules::ECounterGrade::Normal;
             Combat->NotifyCounterLanded();
             Combat->ApplyHitStop(bPerfect ? 0.18f : 0.12f);
-            Armor.OnCountered(bPerfect ? HWNodeRules::ECounterGrade::Perfect : HWNodeRules::ECounterGrade::Normal);
+            Armor.OnCountered(IsArmored() ? HWNodeRules::ArmoredCrackGrade(ThisBlow, Grade) : Grade);
             Phase = EPhase::Stagger;
-            PhaseLeft = Role == EHWNodeEnemyRole::ArmoredElite ? 1.4f : 1.0f;
+            PhaseLeft = IsArmored() ? HWNodeRules::ArmoredStaggerSeconds(ThisBlow, Grade) : 1.0f;
             OnEnemyCountered.Broadcast(this, bPerfect);
             Director->ReportCounter(bPerfect);
             return;
         }
-        Combat->ApplyIncomingDamage(Stats.Damage * DamageScale,
-            Role == EHWNodeEnemyRole::ArmoredElite ? EHWAttackTier::Smash : EHWAttackTier::Light);
+        Combat->ApplyIncomingDamage(Stats.Damage * Hit, IsArmored() ? EHWAttackTier::Smash : EHWAttackTier::Light);
         return;
     }
     if (TargetKind == HWNodeRules::ETargetKind::Npc)
     {
-        if (AHWNodeNpc* Npc = Director->NearestTargetableNpc(Here))
+        if (AHWNodeNpc* Npc = Director->PreferredNpc(Here, Role))
         {
-            if (FVector::Dist2D(Here, Npc->GetActorLocation()) <= ReachTo(TargetKind) + 60.f && Npc->ApplyEnemyDamage(Stats.Damage)) Director->ReportNpcHurt(Npc);
+            if (FVector::Dist2D(Here, Npc->GetActorLocation()) <= ReachTo(TargetKind) + 60.f && Npc->ApplyEnemyDamage(Stats.Damage * GetAttackScaleNow())) Director->ReportNpcHurt(Npc);
         }
         return;
     }
     if (TargetKind == HWNodeRules::ETargetKind::Gate || TargetKind == HWNodeRules::ETargetKind::Generator || TargetKind == HWNodeRules::ETargetKind::Comms)
     {
         AHWNodeFacility* F = Director->GetFacility(static_cast<EHWNodeFacilityKind>(static_cast<uint8>(TargetKind) - static_cast<uint8>(HWNodeRules::ETargetKind::Gate)));
-        if (F && F->DistanceToSurface2D(Here) <= ReachTo(TargetKind) + 60.f) F->ApplyEnemyDamage(Stats.FacilityDamage * DamageScale);
+        if (F && F->DistanceToSurface2D(Here) <= ReachTo(TargetKind) + 60.f) F->ApplyEnemyDamage(Stats.FacilityDamage * Hit);
     }
 }
 
