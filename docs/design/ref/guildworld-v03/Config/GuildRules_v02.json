@@ -1,0 +1,39 @@
+{
+  "guild": {
+    "initial_members": 20,
+    "max_members": 50,
+    "max_alliance_guilds": 3,
+    "alliance_min_days": 7,
+    "rejoin_cooldown_hours": 48
+  },
+  "administration": {
+    "default_capacity": 80,
+    "max_capacity": 160,
+    "tier_costs": {
+      "1": 25,
+      "2": 40,
+      "3": 60
+    },
+    "regional_hub_limit_per_guild": 1,
+    "management_cycle_hours": 168
+  },
+  "contribution_weights": {
+    "combat": 1.0,
+    "defense": 1.25,
+    "repair": 1.35,
+    "rescue": 1.5,
+    "supply": 1.2,
+    "boss": 1.1,
+    "command": 0.8,
+    "craft": 1.0,
+    "diversity_bonus_if_4_categories": 1.1,
+    "command_score_cap_percent_of_noncommand": 10
+  },
+  "management_principles": [
+    "관리권은 소유권이 아니다",
+    "일반 유저의 거점 서비스 접근을 차단할 수 없다",
+    "임의 세금 징수 금지",
+    "PvP 결과만으로 거점을 강제 이전하지 않는다",
+    "방어·수리·구조·보급이 DPS와 동등 이상으로 평가된다"
+  ]
+}

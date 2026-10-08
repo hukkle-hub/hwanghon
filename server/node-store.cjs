@@ -54,9 +54,11 @@ const methods={
  nodeStandings(id,period,limit=5){ const {guilds,active,gscores}=this.nodePeriodScores(id,period);
   return guilds.map((g,i)=>[i,gscores[i]]).filter(([i,sc])=>active[i]&&sc>0).sort((a,b)=>b[1]-a[1]||a[0]-b[0]).slice(0,limit).map(([g,sc])=>({ guild:guilds[g].id, name:guilds[g].name, score:Math.round(sc) })); },
  nodeStewardship(id,n,now){ const period=periodOf(now); if(n.stewardPeriod===period) return false;
-  const {guilds,active,gscores}=this.nodePeriodScores(id,period-1);
-  let winner=-1; gscores.forEach((sc,i)=>{ if(active[i]&&sc>0&&(winner<0||sc>gscores[winner])) winner=i; });   // 동점이면 먼저 만든 길드
-  const next=winner>=0?{guild:guilds[winner].id,name:guilds[winner].name}:null;
+  /* 지역에 속한 거점(남산 = 서울 N01)은 지역이 한꺼번에 정한다 — 관리 용량·허브 제한 (server/region-store.cjs, 문서 202) */
+  let next=this.regionStewardOf(id,now);
+  if(next===undefined){ const {guilds,active,gscores}=this.nodePeriodScores(id,period-1);
+   let winner=-1; gscores.forEach((sc,i)=>{ if(active[i]&&sc>0&&(winner<0||sc>gscores[winner])) winner=i; });   // 동점이면 먼저 만든 길드
+   next=winner>=0?{guild:guilds[winner].id,name:guilds[winner].name}:null; }
   if((next&&next.guild)!==(n.steward&&n.steward.guild)) n.policies=[];   // 새 관리 길드가 정책을 다시 고른다
   n.steward=next; n.stewardPeriod=period; return true; },
  nodeView(id,now=Date.now(),viewer=null){ const n=this.nodeLoad(id); this.nodeStewardship(id,n,now); const hours=this.nodeOccupation(n,now); this.nodeSave(id,n,now);
@@ -82,7 +84,7 @@ const methods={
    else if(outcome==='held'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('지금은 방어전이 아닙니다.'); n.state='stable'; }
    else if(outcome==='fallen'){ if(!R.STATES.slice(0,4).includes(n.state)) throw Error('이미 함락된 거점입니다.'); n.state='fallen'; n.fallenAt=now; }
    else if(outcome==='retaken'){ if(n.state!=='retakeable'&&n.state!=='retaking') throw Error(n.state==='fallen'?'함락 2시간 뒤부터 탈환할 수 있습니다.':'탈환할 거점이 아닙니다.'); n.state='stable'; n.fallenAt=0; }
-   if(!partyMate) n.lastOutcome={outcome,at:now};
+   if(!partyMate){ n.lastOutcome={outcome,at:now}; this.regionNodeEvent(node,outcome,now); }   // 서울 전략망: 함락 = 점령, 탈환 = 복구, 방어 = 위협 −15
    const g=this.guild(id), period=periodOf(now);
    for(const [k,v] of Object.entries(contrib)) if(v>0) this.statement('INSERT INTO node_contrib(period,node,player,guild,category,amount) VALUES(?,?,?,?,?,?) ON CONFLICT(period,node,player,category) DO UPDATE SET amount=amount+excluded.amount,guild=excluded.guild').run(period,node,id,g?g.id:null,k,v);
    this.statement('INSERT INTO node_runs(node,player,outcome,at,report) VALUES(?,?,?,?,?)').run(node,id,outcome,now,JSON.stringify({contrib,hours:+hours.toFixed(3)}));
@@ -109,6 +111,11 @@ function command(store,id,msg,now=Date.now()){ const node=typeof msg.node==='str
  if(msg.action==='report') return { type:'node', node:store.nodeReport(id,node,msg.report,now) };
  if(msg.action==='policy') return { type:'node', node:store.nodePolicy(id,node,msg.picks,now) };
  if(msg.action==='supply') return { type:'node', node:store.nodeSupply(id,node,msg.amount,now) };
+ /* 지역 전략망·길드 전략 명령 (문서 202) */
+ const region=typeof msg.region==='string'?msg.region:'seoul';
+ if(msg.action==='region') return { type:'region', region:store.regionView(region,now,id) };
+ if(msg.action==='order') return { type:'region', region:store.regionOrder(id,region,msg.order,now) };
+ if(msg.action==='cancel'){ if(!Number.isSafeInteger(msg.order)) throw Error('명령을 확인하세요.'); return { type:'region', region:store.regionCancel(id,region,msg.order,now) }; }
  if(msg.action==='role'){ if(typeof msg.target!=='string') throw Error('길드원을 선택하세요.'); return { type:'guildRole', target:msg.target, role:store.guildAssign(id,msg.target,msg.role) }; }
  throw Error('지원하지 않는 거점 요청입니다.'); }
 function install(Store){ Object.assign(Store.prototype,methods); }

@@ -1,0 +1,20 @@
+--- contribution score ---
+N01 G_ALPHA 962.5
+N01 G_BRAVO 1597.2
+N02 G_ALPHA 625.0
+N02 G_CHARLIE 1360.7
+N03 G_BRAVO 1058.2
+N03 G_CHARLIE 366.0
+N05 G_CHARLIE 611.6
+N05 G_ALPHA 150.0
+
+--- management result ---
+N01 남산 통신기지 => G_BRAVO
+N02 서울역 피난거점 => G_CHARLIE
+N03 용산 정비기지 => G_BRAVO
+N05 청계 수자원실 => G_ALPHA
+
+--- guild capacity ---
+G_ALPHA 25/80 ['N05']
+G_BRAVO 80/80 ['N01', 'N03']
+G_CHARLIE 60/80 ['N02']

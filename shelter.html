@@ -66,6 +66,20 @@
 .nd-budget{font-size:12px;margin-top:6px}.nd-budget.is-bad{color:#E58A7A}
 .mrow2__t--c{color:#9FC7E8;border-color:rgba(159,199,232,.45)}
 .nd-role{min-height:32px;font-size:11px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:4px}
+/* 서울 전략망 (docs/design/202) */
+.rgw-head{display:flex;justify-content:space-between;align-items:baseline}
+.rgw-map{display:block;width:100%;max-width:440px;margin-left:auto;margin-right:auto;height:auto;margin-top:6px;border:1px solid rgba(201,164,94,.18);border-radius:6px;background:rgba(10,12,16,.45)}
+.rgw-map text{font-size:10px;fill:#cfc6b4;font-family:inherit}
+.rgw-map .rgw-hit{cursor:pointer}
+.rgw-svc{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 10px;margin-top:6px;font-size:11px}
+.rgw-svc i{display:block;height:4px;background:rgba(255,255,255,.1);margin-top:2px}
+.rgw-svc i b{display:block;height:100%;background:#8FD3A8}
+.rgw-svc i b.is-mid{background:#E0B060}.rgw-svc i b.is-bad{background:#E58A7A}
+.rgw-order{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:12px}
+.rgw-order .fill{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rgw-order button{margin-left:auto;flex:none}
+.rgw-types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
+.rgw-types button{min-height:36px;white-space:nowrap;padding-left:4px;padding-right:4px}
 /* 길드 카드 */
 .gcrest{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
 .gcrest__m{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);
@@ -309,6 +323,21 @@
                 <button type="button" class="btn btn--sm" id="nd-sgo" style="white-space:nowrap" title="바리케이드 하나 = 보급 3">보급 +3</button></div>
             </div>
             <div class="xs t-faint mt3" id="nd-note" style="line-height:1.7"></div>
+            <!-- 서울 전략망 (docs/design/202): 거점은 HP 가 아니라 서비스 — 남산이 무너지면 이웃이 흔들린다 -->
+            <div class="label-ko mt3 rgw-head"><span>서울 전략망</span><span class="xs" id="rgw-band"></span></div>
+            <svg class="rgw-map" id="rgw-map" viewBox="0 0 340 196" role="img" aria-label="서울 8거점"></svg>
+            <div class="rgw-svc" id="rgw-svc"></div>
+            <div class="xs mt2" id="rgw-crisis" hidden></div>
+            <div class="xs t-faint mt2" id="rgw-admin"></div>
+            <div id="rgw-cmd" hidden>
+              <div class="label-ko mt3">길드 전략 명령 <span class="xs t-faint">— 사람을 끌고 가지 않는다 · 집결 추천</span></div>
+              <div id="rgw-orders"></div>
+              <div id="rgw-issue" hidden>
+                <div class="xs t-faint mt2" id="rgw-pick">지도에서 거점을 누르세요</div>
+                <div class="rgw-types" id="rgw-types"></div>
+                <label class="xs flex g2 ac mt2 rgw-urgent" style="cursor:pointer"><input type="checkbox" id="rgw-urgent"> 긴급 (우선 5)</label>
+              </div>
+            </div>
           </div>
         </section>
       </div>

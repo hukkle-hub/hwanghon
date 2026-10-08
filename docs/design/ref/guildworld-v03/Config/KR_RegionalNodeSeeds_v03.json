@@ -1,0 +1,710 @@
+{
+  "version": "v0.3",
+  "principle": "실제 지리의 인지성을 유지하되 전투·길드 운영을 위해 압축/재구성한 게임용 전략 노드. 실존 시설의 정확한 구조나 보안정보를 재현하지 않음.",
+  "regions": [
+    {
+      "region_id": "SEOUL",
+      "display_name": "서울특별시",
+      "gameplay_identity": "정보·거래·중앙 생존망",
+      "nodes": [
+        {
+          "id": "N01",
+          "name": "남산 통신기지",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "N02",
+          "name": "서울역 피난거점",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "N03",
+          "name": "용산 정비기지",
+          "role": "Manufacturing",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "N04",
+          "name": "한강 검문선",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "N05",
+          "name": "청계 수자원실",
+          "role": "Resource",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "N06",
+          "name": "북악 관측소",
+          "role": "Recon",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        },
+        {
+          "id": "N07",
+          "name": "상암 방송중계소",
+          "role": "Intel",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "N08",
+          "name": "구로 산업창고지",
+          "role": "Manufacturing",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "BUSAN",
+      "display_name": "부산광역시",
+      "gameplay_identity": "항만·해상보급·남부 관문",
+      "nodes": [
+        {
+          "id": "BS01",
+          "name": "부산항 생존물류기지",
+          "role": "Port",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "BS02",
+          "name": "황령산 통신관측소",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "BS03",
+          "name": "낙동강 서부검문선",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "BS04",
+          "name": "강서 정비창",
+          "role": "Manufacturing",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "BS05",
+          "name": "동부 해안감시소",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "DAEGU",
+      "display_name": "대구광역시",
+      "gameplay_identity": "내륙 생산·교통 분기",
+      "nodes": [
+        {
+          "id": "DG01",
+          "name": "대구 중앙피난허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "DG02",
+          "name": "팔공산 광역중계소",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "DG03",
+          "name": "서대구 화물거점",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        },
+        {
+          "id": "DG04",
+          "name": "성서 산업정비지",
+          "role": "Manufacturing",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "INCHEON",
+      "display_name": "인천광역시",
+      "gameplay_identity": "서해 항만·공항권·수도권 물류",
+      "nodes": [
+        {
+          "id": "IC01",
+          "name": "인천항 서해물류기지",
+          "role": "Port",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "IC02",
+          "name": "송도 데이터중계소",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "IC03",
+          "name": "계양 북부관측선",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "IC04",
+          "name": "영종 보급집결지",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        }
+      ]
+    },
+    {
+      "region_id": "DAEJEON",
+      "display_name": "대전광역시",
+      "gameplay_identity": "연구·통신·국토 중앙 연결",
+      "nodes": [
+        {
+          "id": "DJ01",
+          "name": "대전 중앙연결허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "DJ02",
+          "name": "대덕 연구통신기지",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "DJ03",
+          "name": "대전역 수송거점",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "DJ04",
+          "name": "서부 정비보급창",
+          "role": "Manufacturing",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "ULSAN",
+      "display_name": "울산광역시",
+      "gameplay_identity": "에너지·중공업·동남권 생산",
+      "nodes": [
+        {
+          "id": "US01",
+          "name": "울산 산업에너지허브",
+          "role": "Energy",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "US02",
+          "name": "울산항 산업물류기지",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "US03",
+          "name": "태화강 검문선",
+          "role": "Logistics",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "US04",
+          "name": "동부 산업정비구역",
+          "role": "Manufacturing",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        }
+      ]
+    },
+    {
+      "region_id": "SEJONG",
+      "display_name": "세종특별자치시",
+      "gameplay_identity": "기록·행정 데이터·중부 지휘",
+      "nodes": [
+        {
+          "id": "SJ01",
+          "name": "세종 기록지휘허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "SJ02",
+          "name": "행정 데이터보존소",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "SJ03",
+          "name": "조치원 철도연결소",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        },
+        {
+          "id": "SJ04",
+          "name": "금강 생활자원기지",
+          "role": "Resource",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "GYEONGGI",
+      "display_name": "경기도",
+      "gameplay_identity": "수도권 외곽·대형 인구·다축 보급",
+      "nodes": [
+        {
+          "id": "GG01",
+          "name": "수원 남부지휘허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "GG02",
+          "name": "평택 남부물류기지",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "GG03",
+          "name": "파주 북부감시선",
+          "role": "Recon",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "GG04",
+          "name": "이천 광역창고지",
+          "role": "Resource",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "GG05",
+          "name": "용인 정비산업지",
+          "role": "Manufacturing",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        }
+      ]
+    },
+    {
+      "region_id": "GANGWON",
+      "display_name": "강원특별자치도",
+      "gameplay_identity": "산악·정찰·에너지·동부 방어선",
+      "nodes": [
+        {
+          "id": "GW01",
+          "name": "원주 동부연결허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "GW02",
+          "name": "춘천 북부통신소",
+          "role": "Intel",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "GW03",
+          "name": "강릉 동해보급항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "GW04",
+          "name": "태백 산악관측선",
+          "role": "Recon",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "GW05",
+          "name": "속초 북동해감시소",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "CHUNGBUK",
+      "display_name": "충청북도",
+      "gameplay_identity": "내륙 물류·산업·중앙 회랑",
+      "nodes": [
+        {
+          "id": "CB01",
+          "name": "청주 내륙물류허브",
+          "role": "Logistics",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "CB02",
+          "name": "충주 수자원에너지소",
+          "role": "Energy",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "CB03",
+          "name": "제천 철도연결소",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        },
+        {
+          "id": "CB04",
+          "name": "중부 산업보급창",
+          "role": "Manufacturing",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "CHUNGNAM",
+      "display_name": "충청남도",
+      "gameplay_identity": "서해 보급·산업·중부 서부 회랑",
+      "nodes": [
+        {
+          "id": "CN01",
+          "name": "천안 서부교통허브",
+          "role": "Transit",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "CN02",
+          "name": "당진 산업항만기지",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "CN03",
+          "name": "서산 서해감시소",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "CN04",
+          "name": "공주 내륙보급거점",
+          "role": "Logistics",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        }
+      ]
+    },
+    {
+      "region_id": "JEONBUK",
+      "display_name": "전북특별자치도",
+      "gameplay_identity": "식량·평야·서남권 보급",
+      "nodes": [
+        {
+          "id": "JB01",
+          "name": "전주 서남지휘허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "JB02",
+          "name": "군산 서해보급항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "JB03",
+          "name": "익산 철도물류기지",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "JB04",
+          "name": "김제 식량저장지",
+          "role": "Resource",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        }
+      ]
+    },
+    {
+      "region_id": "JG_SPECIAL",
+      "display_name": "전남광주통합특별시",
+      "gameplay_identity": "서남권 대도시·항만·도서·에너지",
+      "nodes": [
+        {
+          "id": "JG01",
+          "name": "광주 서남권지휘허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "JG02",
+          "name": "목포 서남해보급항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "JG03",
+          "name": "여수 에너지항만기지",
+          "role": "Energy",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "JG04",
+          "name": "순천 동부교통거점",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        },
+        {
+          "id": "JG05",
+          "name": "고흥 해안관측소",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "GYEONGBUK",
+      "display_name": "경상북도",
+      "gameplay_identity": "산악·산업·동해 회랑",
+      "nodes": [
+        {
+          "id": "GB01",
+          "name": "안동 북부내륙허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "GB02",
+          "name": "포항 동해산업항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "GB03",
+          "name": "구미 산업생산기지",
+          "role": "Manufacturing",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "GB04",
+          "name": "울진 동해감시소",
+          "role": "Recon",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        },
+        {
+          "id": "GB05",
+          "name": "문경 산악관문",
+          "role": "Transit",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.4
+        }
+      ]
+    },
+    {
+      "region_id": "GYEONGNAM",
+      "display_name": "경상남도",
+      "gameplay_identity": "조선·항만·남해 산업축",
+      "nodes": [
+        {
+          "id": "GN01",
+          "name": "창원 남해산업허브",
+          "role": "Manufacturing",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "GN02",
+          "name": "거제 조선정비기지",
+          "role": "Manufacturing",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "GN03",
+          "name": "진주 서부피난거점",
+          "role": "SafeHub",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "GN04",
+          "name": "통영 남해보급항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.5
+        },
+        {
+          "id": "GN05",
+          "name": "김해 동남물류거점",
+          "role": "Logistics",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "region_id": "JEJU",
+      "display_name": "제주특별자치도",
+      "gameplay_identity": "독립 해상권·희귀 자원·장거리 보급",
+      "nodes": [
+        {
+          "id": "JJ01",
+          "name": "제주시 해상고립허브",
+          "role": "SafeHub",
+          "tier": 3,
+          "admin_cost": 60,
+          "weight": 2.0
+        },
+        {
+          "id": "JJ02",
+          "name": "서귀포 남부보급항",
+          "role": "Port",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "JJ03",
+          "name": "한라산 중앙관측소",
+          "role": "Recon",
+          "tier": 2,
+          "admin_cost": 40,
+          "weight": 1.6
+        },
+        {
+          "id": "JJ04",
+          "name": "제주 북부수송거점",
+          "role": "Transit",
+          "tier": 1,
+          "admin_cost": 25,
+          "weight": 1.0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "campaign_id": "NC_CAPITAL_BLACKOUT_01",
+  "name": "수도권 통신 붕괴",
+  "required_success": 0.68,
+  "objectives": [
+    {
+      "id": "OBJ_N01",
+      "region": "SEOUL",
+      "node": "N01",
+      "weight": 1.5,
+      "description": "남산 통신기지 방어"
+    },
+    {
+      "id": "OBJ_N02",
+      "region": "SEOUL",
+      "node": "N02",
+      "weight": 1.7,
+      "description": "서울역 피난거점 유지"
+    },
+    {
+      "id": "OBJ_N04",
+      "region": "SEOUL",
+      "node": "N04",
+      "weight": 1.4,
+      "description": "한강 검문선 유지"
+    },
+    {
+      "id": "OBJ_INCHEON_SUPPLY",
+      "region": "INCHEON",
+      "node": "",
+      "weight": 1.2,
+      "description": "서해 보급 확보"
+    },
+    {
+      "id": "OBJ_GYEONGGI_BYPASS",
+      "region": "GYEONGGI",
+      "node": "",
+      "weight": 1.2,
+      "description": "경기 남부 우회 보급축 확보"
+    }
+  ],
+  "failure_effects": [
+    "SEOUL pressure +18",
+    "GYEONGGI pressure +8",
+    "서울권 구조신호 지연",
+    "다음 수도권 침공 준비시간 감소"
+  ],
+  "success_effects": [
+    "SEOUL pressure -20",
+    "수도권 통신 보정",
+    "길드 공동 제작 자원 해금"
+  ]
+}

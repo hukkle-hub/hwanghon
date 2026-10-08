@@ -19,7 +19,7 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| (이 커밋) | 서울 전략망(`server/region-rules.cjs` · `region-store.cjs`, 표 `region_state` · `guild_orders`): 8거점 운영 상태·위협 전파·압력, 다거점 관리권(관리 용량), 길드 전략 명령. `{type:'node', action:'region'|'order'|'cancel'}` — 남산 판 결과가 망을 움직인다 (문서 202) |
 
 ## 2. 배포 완료 (최신: 2026-10-07)
 

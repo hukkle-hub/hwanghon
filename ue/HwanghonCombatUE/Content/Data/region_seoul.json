@@ -1,0 +1,64 @@
+{
+  "id": "seoul",
+  "name": "서울",
+  "doc": "서울 전략망 (docs/design/202, GPT 패키지 Hwanghon_Korea_GuildWorld_v03 의 SEOUL_Nodes_v02 · SEOUL_StrategicNetwork_v03 · SEOUL_RegionalCrisis_v03 을 합침). 거점은 HP 가 아니라 서비스다. node = 전술 판이 있는 거점(Content/Data/node_<id>.json)",
+  "rules": {
+    "step_minutes": 30,
+    "max_threat_transfer": 12,
+    "spread_from": 55,
+    "spread_base": 50,
+    "degrade_at": 75,
+    "online_below": 55,
+    "threat_decay": 2,
+    "degraded_ratio": 0.55,
+    "recovering_ratio": 0.75,
+    "recover_start": 0.25,
+    "recover_per_step": 0.2,
+    "recover_threat_drop": 8,
+    "held_threat_drop": 15,
+    "pressure_occupied_scale": 12,
+    "pressure_occupied_max": 10,
+    "pressure_relief": 3,
+    "catch_up_steps": 96
+  },
+  "pressure_bands": [[0, "stable", "안정"], [30, "tension", "긴장"], [55, "invasion", "침공"], [75, "crisis", "위기"], [95, "collapsed", "붕괴"]],
+  "nodes": [
+    { "id": "N01", "node": "namsan_n01", "name": "남산 통신기지", "role": "intel", "tier": 2, "weight": 1.5, "at": [0.6, 0.54],
+      "effects": { "online": "침공 예보·월드 이벤트 탐지 정상", "degraded": "예보 지연·정확도 하락", "occupied": "서울 중심 정보망 차단" } },
+    { "id": "N02", "name": "서울역 피난거점", "role": "safe_hub", "tier": 3, "weight": 2.0, "at": [0.36, 0.4],
+      "effects": { "online": "대피·거래·파티 허브 정상", "degraded": "일부 서비스 혼잡", "occupied": "서울 중심 피난 기능 대폭 축소" } },
+    { "id": "N03", "name": "용산 정비기지", "role": "manufacturing", "tier": 2, "weight": 1.5, "at": [0.5, 0.74],
+      "effects": { "online": "고급 수리·제작 정상", "degraded": "제작 효율 저하", "occupied": "고급 수리·제작 제한" } },
+    { "id": "N04", "name": "한강 검문선", "role": "logistics", "tier": 2, "weight": 1.5, "at": [0.28, 0.88],
+      "effects": { "online": "남북 수송 정상", "degraded": "수송 지연", "occupied": "한강 횡단 전략 물류 차단" } },
+    { "id": "N05", "name": "청계 수자원실", "role": "resource", "tier": 1, "weight": 1.0, "at": [0.8, 0.3],
+      "effects": { "online": "정제·생활자원 정상", "degraded": "공급 감소", "occupied": "정제 공급 제한" } },
+    { "id": "N06", "name": "북악 관측소", "role": "recon", "tier": 2, "weight": 1.4, "at": [0.54, 0.05],
+      "effects": { "online": "북부 위협 탐지 정상", "degraded": "탐지 범위 감소", "occupied": "북부 침공 조기경보 상실" } },
+    { "id": "N07", "name": "상암 방송중계소", "role": "intel", "tier": 1, "weight": 1.0, "at": [0.04, 0.24],
+      "effects": { "online": "광역 경보·민간 통신 정상", "degraded": "경보 지연", "occupied": "서부 경보망 상실" } },
+    { "id": "N08", "name": "구로 산업창고지", "role": "manufacturing", "tier": 1, "weight": 1.0, "at": [0.06, 0.98],
+      "effects": { "online": "부품·소모품 공급 정상", "degraded": "생산량 감소", "occupied": "서울 서남부 부품 공급 단절" } }
+  ],
+  "links": [
+    { "a": "N01", "b": "N02", "transfer": 0.18, "throughput": 1.0 },
+    { "a": "N01", "b": "N06", "transfer": 0.16, "throughput": 0.8 },
+    { "a": "N01", "b": "N07", "transfer": 0.20, "throughput": 1.1 },
+    { "a": "N02", "b": "N03", "transfer": 0.18, "throughput": 1.2 },
+    { "a": "N02", "b": "N04", "transfer": 0.20, "throughput": 1.3 },
+    { "a": "N02", "b": "N05", "transfer": 0.15, "throughput": 0.8 },
+    { "a": "N03", "b": "N04", "transfer": 0.18, "throughput": 1.3 },
+    { "a": "N03", "b": "N08", "transfer": 0.20, "throughput": 1.2 },
+    { "a": "N05", "b": "N08", "transfer": 0.15, "throughput": 0.9 },
+    { "a": "N07", "b": "N04", "transfer": 0.16, "throughput": 1.0 }
+  ],
+  "crisis": {
+    "id": "SEOUL_CRISIS_01", "name": "서울 통신·물류 동시 붕괴", "pressure_min": 75, "min_troubled": 2,
+    "fronts": [
+      { "node": "N01", "task": "defend_or_retake", "squads": 3, "weight": 1.5 },
+      { "node": "N04", "task": "keep_logistics", "squads": 2, "weight": 1.4 },
+      { "node": "N02", "task": "evacuate", "squads": 2, "weight": 1.3 },
+      { "node": "N03", "task": "repair", "squads": 1, "weight": 0.9 }
+    ]
+  }
+}

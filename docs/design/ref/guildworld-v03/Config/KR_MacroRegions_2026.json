@@ -1,0 +1,85 @@
+{
+  "data_reference": "2026-07 이후 현행 행정구역을 참고한 게임용 MacroRegion. 게임 플레이 구역은 행정경계와 1:1 대응하지 않음.",
+  "regions": [
+    {
+      "region_id": "SEOUL",
+      "display_name": "서울특별시",
+      "gameplay_identity": "정보·거래·중앙 생존망"
+    },
+    {
+      "region_id": "BUSAN",
+      "display_name": "부산광역시",
+      "gameplay_identity": "항만·해상보급·남부 관문"
+    },
+    {
+      "region_id": "DAEGU",
+      "display_name": "대구광역시",
+      "gameplay_identity": "내륙 생산·교통 분기"
+    },
+    {
+      "region_id": "INCHEON",
+      "display_name": "인천광역시",
+      "gameplay_identity": "서해 항만·공항권·수도권 물류"
+    },
+    {
+      "region_id": "DAEJEON",
+      "display_name": "대전광역시",
+      "gameplay_identity": "연구·통신·국토 중앙 연결"
+    },
+    {
+      "region_id": "ULSAN",
+      "display_name": "울산광역시",
+      "gameplay_identity": "에너지·중공업·동남권 생산"
+    },
+    {
+      "region_id": "SEJONG",
+      "display_name": "세종특별자치시",
+      "gameplay_identity": "기록·행정 데이터·중부 지휘"
+    },
+    {
+      "region_id": "GYEONGGI",
+      "display_name": "경기도",
+      "gameplay_identity": "수도권 외곽·대형 인구·다축 보급"
+    },
+    {
+      "region_id": "GANGWON",
+      "display_name": "강원특별자치도",
+      "gameplay_identity": "산악·정찰·에너지·동부 방어선"
+    },
+    {
+      "region_id": "CHUNGBUK",
+      "display_name": "충청북도",
+      "gameplay_identity": "내륙 물류·산업·중앙 회랑"
+    },
+    {
+      "region_id": "CHUNGNAM",
+      "display_name": "충청남도",
+      "gameplay_identity": "서해 보급·산업·중부 서부 회랑"
+    },
+    {
+      "region_id": "JEONBUK",
+      "display_name": "전북특별자치도",
+      "gameplay_identity": "식량·평야·서남권 보급"
+    },
+    {
+      "region_id": "JG_SPECIAL",
+      "display_name": "전남광주통합특별시",
+      "gameplay_identity": "서남권 대도시·항만·도서·에너지"
+    },
+    {
+      "region_id": "GYEONGBUK",
+      "display_name": "경상북도",
+      "gameplay_identity": "산악·산업·동해 회랑"
+    },
+    {
+      "region_id": "GYEONGNAM",
+      "display_name": "경상남도",
+      "gameplay_identity": "조선·항만·남해 산업축"
+    },
+    {
+      "region_id": "JEJU",
+      "display_name": "제주특별자치도",
+      "gameplay_identity": "독립 해상권·희귀 자원·장거리 보급"
+    }
+  ]
+}

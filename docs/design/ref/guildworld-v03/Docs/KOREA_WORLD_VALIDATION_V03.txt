@@ -1,0 +1,20 @@
+regions 16 seeded 16 nodes 74
+unique_node_ids True
+unseeded []
+not_in_corridor []
+SEOUL nodes 8 hub 서울역 피난거점
+BUSAN nodes 5 hub 부산항 생존물류기지
+DAEGU nodes 4 hub 대구 중앙피난허브
+INCHEON nodes 4 hub 인천항 서해물류기지
+DAEJEON nodes 4 hub 대전 중앙연결허브
+ULSAN nodes 4 hub 울산 산업에너지허브
+SEJONG nodes 4 hub 세종 기록지휘허브
+GYEONGGI nodes 5 hub 수원 남부지휘허브
+GANGWON nodes 5 hub 원주 동부연결허브
+CHUNGBUK nodes 4 hub 청주 내륙물류허브
+CHUNGNAM nodes 4 hub 천안 서부교통허브
+JEONBUK nodes 4 hub 전주 서남지휘허브
+JG_SPECIAL nodes 5 hub 광주 서남권지휘허브
+GYEONGBUK nodes 5 hub 안동 북부내륙허브
+GYEONGNAM nodes 5 hub 창원 남해산업허브
+JEJU nodes 4 hub 제주시 해상고립허브

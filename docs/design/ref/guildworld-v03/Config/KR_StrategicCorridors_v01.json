@@ -1,0 +1,87 @@
+{
+  "corridors": [
+    {
+      "id": "CAPITAL_RING",
+      "regions": [
+        "SEOUL",
+        "INCHEON",
+        "GYEONGGI"
+      ],
+      "type": "road_rail",
+      "purpose": "수도권 순환 보급"
+    },
+    {
+      "id": "GYEONGBU_AXIS",
+      "regions": [
+        "SEOUL",
+        "GYEONGGI",
+        "CHUNGBUK",
+        "DAEJEON",
+        "DAEGU",
+        "GYEONGBUK",
+        "ULSAN",
+        "BUSAN",
+        "GYEONGNAM"
+      ],
+      "type": "road_rail",
+      "purpose": "국가 주간선"
+    },
+    {
+      "id": "HONAM_AXIS",
+      "regions": [
+        "DAEJEON",
+        "CHUNGNAM",
+        "JEONBUK",
+        "JG_SPECIAL"
+      ],
+      "type": "road_rail",
+      "purpose": "서남권 보급"
+    },
+    {
+      "id": "EASTERN_AXIS",
+      "regions": [
+        "GYEONGGI",
+        "GANGWON",
+        "GYEONGBUK",
+        "ULSAN",
+        "BUSAN"
+      ],
+      "type": "road",
+      "purpose": "동부 산악·해안 회랑"
+    },
+    {
+      "id": "WEST_COAST_AXIS",
+      "regions": [
+        "INCHEON",
+        "GYEONGGI",
+        "CHUNGNAM",
+        "JEONBUK",
+        "JG_SPECIAL"
+      ],
+      "type": "road_sea",
+      "purpose": "서해 물류"
+    },
+    {
+      "id": "SOUTH_SEA_AXIS",
+      "regions": [
+        "JG_SPECIAL",
+        "GYEONGNAM",
+        "BUSAN",
+        "JEJU"
+      ],
+      "type": "sea",
+      "purpose": "남해·제주 해상 보급"
+    },
+    {
+      "id": "CENTRAL_ADMIN_AXIS",
+      "regions": [
+        "CHUNGBUK",
+        "CHUNGNAM",
+        "SEJONG",
+        "DAEJEON"
+      ],
+      "type": "road",
+      "purpose": "중앙권 지휘 연결"
+    }
+  ]
+}

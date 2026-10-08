@@ -1,0 +1,119 @@
+{
+  "region_id": "SEOUL",
+  "nodes": [
+    {
+      "id": "N01",
+      "name": "남산 통신기지",
+      "role": "Intel",
+      "tier": 2,
+      "admin_cost": 40,
+      "weight": 1.5,
+      "function": "서울 중심 정보·침공 예보"
+    },
+    {
+      "id": "N02",
+      "name": "서울역 피난거점",
+      "role": "SafeHub",
+      "tier": 3,
+      "admin_cost": 60,
+      "weight": 2.0,
+      "function": "인구·거래·파티·대피 허브"
+    },
+    {
+      "id": "N03",
+      "name": "용산 정비기지",
+      "role": "Manufacturing",
+      "tier": 2,
+      "admin_cost": 40,
+      "weight": 1.5,
+      "function": "무기 수리·제작·장비 개조"
+    },
+    {
+      "id": "N04",
+      "name": "한강 검문선",
+      "role": "Logistics",
+      "tier": 2,
+      "admin_cost": 40,
+      "weight": 1.5,
+      "function": "남북 이동·수송"
+    },
+    {
+      "id": "N05",
+      "name": "청계 수자원실",
+      "role": "Resource",
+      "tier": 1,
+      "admin_cost": 25,
+      "weight": 1.0,
+      "function": "정제·생활 자원"
+    },
+    {
+      "id": "N06",
+      "name": "북악 관측소",
+      "role": "Recon",
+      "tier": 2,
+      "admin_cost": 40,
+      "weight": 1.4,
+      "function": "북부 정찰·위협 탐지"
+    },
+    {
+      "id": "N07",
+      "name": "상암 방송중계소",
+      "role": "Intel",
+      "tier": 1,
+      "admin_cost": 25,
+      "weight": 1.0,
+      "function": "광역 경보·민간 통신"
+    },
+    {
+      "id": "N08",
+      "name": "구로 산업창고지",
+      "role": "Manufacturing",
+      "tier": 1,
+      "admin_cost": 25,
+      "weight": 1.0,
+      "function": "부품·소모품 생산"
+    }
+  ],
+  "links": [
+    [
+      "N01",
+      "N02"
+    ],
+    [
+      "N01",
+      "N06"
+    ],
+    [
+      "N01",
+      "N07"
+    ],
+    [
+      "N02",
+      "N03"
+    ],
+    [
+      "N02",
+      "N04"
+    ],
+    [
+      "N02",
+      "N05"
+    ],
+    [
+      "N03",
+      "N04"
+    ],
+    [
+      "N03",
+      "N08"
+    ],
+    [
+      "N05",
+      "N08"
+    ],
+    [
+      "N07",
+      "N04"
+    ]
+  ]
+}

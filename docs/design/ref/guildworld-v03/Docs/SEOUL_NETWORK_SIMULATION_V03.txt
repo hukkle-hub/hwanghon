@@ -1,0 +1,12 @@
+N01 남산 함락 직후
+1 pressure 1.65 op 0.862 intel 0.4 N02 threat 7.0
+2 pressure 3.3 op 0.862 intel 0.4 N02 threat 14.0
+3 pressure 4.95 op 0.862 intel 0.4 N02 threat 21.0
+4 pressure 6.61 op 0.862 intel 0.4 N02 threat 28.0
+
+탈환 후 복구
+1 N01 Recovering recovery 0.45 intel 0.918
+2 N01 Recovering recovery 0.65 intel 0.948
+3 N01 Recovering recovery 0.85 intel 0.978
+4 N01 Online recovery 1 intel 1.0
+5 N01 Online recovery 1 intel 1.0

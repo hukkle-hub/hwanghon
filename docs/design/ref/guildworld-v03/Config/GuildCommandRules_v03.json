@@ -1,0 +1,14 @@
+{
+  "roles": {
+    "GuildMaster": ["Defend","Reinforce","Supply","Repair","Recon","Evacuate","PrepareRecapture"],
+    "ViceMaster": ["Defend","Reinforce","Supply","Repair","Recon","Evacuate","PrepareRecapture"],
+    "WarLeader": ["Defend","Reinforce","Recon","PrepareRecapture"],
+    "LogisticsLeader": ["Supply","Repair","Evacuate"],
+    "CraftLeader": ["Repair"],
+    "Member": []
+  },
+  "priority_range": [1,5],
+  "max_requested_squads_per_order": 8,
+  "resource_commitment_range": [0,100],
+  "note": "명령은 실제 플레이어를 강제 이동시키지 않는다. 추천·집결·공헌 보너스·전술 정보에만 사용한다."
+}

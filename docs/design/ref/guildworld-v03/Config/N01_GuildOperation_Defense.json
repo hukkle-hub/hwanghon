@@ -1,0 +1,57 @@
+{
+  "operation_id": "OP_N01_DEFENSE",
+  "node_id": "N01",
+  "name": "남산 N-01 대규모 방어작전",
+  "required_weighted_success": 0.7,
+  "fronts": [
+    {
+      "id": "GATE",
+      "name": "정문 주전선",
+      "type": "MainDefense",
+      "recommended_players": 6,
+      "weight": 1.4,
+      "objective": "Gate 붕괴 지연 + 철갑 개체 저지"
+    },
+    {
+      "id": "WEST",
+      "name": "서측 순환로",
+      "type": "FlankDefense",
+      "recommended_players": 4,
+      "weight": 1.0,
+      "objective": "대형 감염체 우회 차단"
+    },
+    {
+      "id": "EAST",
+      "name": "동측 숲길",
+      "type": "FlankDefense",
+      "recommended_players": 4,
+      "weight": 1.0,
+      "objective": "질주·추적 감염체 침투 차단"
+    },
+    {
+      "id": "POWER",
+      "name": "발전시설",
+      "type": "FacilityDefense",
+      "recommended_players": 4,
+      "weight": 1.3,
+      "objective": "Saboteur 저지 및 긴급 수리"
+    },
+    {
+      "id": "BOSS",
+      "name": "중계자 대응조",
+      "type": "BossHunt",
+      "recommended_players": 6,
+      "weight": 1.6,
+      "objective": "부분파괴·코어 적출 또는 사살"
+    },
+    {
+      "id": "EVAC",
+      "name": "민간인 대피",
+      "type": "CivilianEvacuation",
+      "recommended_players": 3,
+      "weight": 0.8,
+      "objective": "생활구역 위험도 억제"
+    }
+  ],
+  "scale_rule": "한 화면 50인 집결 금지. 여러 전선의 결과를 하나의 작전 상태로 합산해 대규모 전쟁 체감을 만든다."
+}

@@ -1,0 +1,15 @@
+{
+  "operation_id": "SEOUL_CRISIS_01",
+  "name": "서울 통신·물류 동시 붕괴",
+  "trigger": {"region_pressure_min": 75, "minimum_degraded_or_occupied_nodes": 2},
+  "duration_minutes": 35,
+  "simultaneous_fronts": [
+    {"node":"N01","task":"DEFEND_OR_RECAPTURE","recommended_squads":3,"strategic_weight":1.5},
+    {"node":"N04","task":"KEEP_LOGISTICS_OPEN","recommended_squads":2,"strategic_weight":1.4},
+    {"node":"N02","task":"EVACUATE_AND_STABILIZE","recommended_squads":2,"strategic_weight":1.3},
+    {"node":"N03","task":"REPAIR_MANUFACTURING","recommended_squads":1,"strategic_weight":0.9}
+  ],
+  "success": {"minimum_weighted_completion":0.70},
+  "failure_effect": {"region_pressure":12,"national_campaign_progress":0.20},
+  "success_effect": {"region_pressure":-18,"recovery_bonus_steps":1}
+}
