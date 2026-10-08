@@ -52,7 +52,7 @@ test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 �
   assert.equal(envs(src), envs(bake), '굽기와 다른 장면 빌더를 쓴다');
   assert.match(src, /for \(const L of pointData\) L\.parent\.remove\(L\)/, '점광 수십 개를 그대로 두면 실시간에서 셰이더가 터진다');
   assert.match(src, /new Animated\(heroAsset, scene, true, false, weaponAsset, ME\)/, '영웅이 양손 쥠 리그 없이 서면 낫을 지팡이처럼 든다');
-  assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,200}hero\.mixer\.update\(dt\); hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
+  assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,900}hero\.mixer\.update\(dt\); hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
 });
 
 test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 보정층 — 아인 바인드·클립 교정(믹서 전) · 양손 쥠 리그 · 리그 순서', () => {
@@ -63,4 +63,29 @@ test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 �
   assert.match(h, /h\.rig=\(id==='ain'\?makeAinRigAdapter:makeRigAdapter\)\(root,root,slot,/, '양손 쥠 리그가 없다 — 낫을 지팡이처럼 든다');
   assert.match(src, /h\.armBlend\?\.restore\(\); h\.rig\?\.restore\(\); h\.mixer\.update\(dt\);[\s\S]{0,400}h\.rig\?\.apply\(action/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
   assert.match(src, /heroAnimate\(h, h\.me\?dt\*feel\.rate\(h\):dt\)/);
+});
+
+test('3D 필드 지배형: 서버 AI 파일을 그대로 읽는다(브라우저 CommonJS 로더) · 회피·부활 값이 서버와 같다', async () => {
+  /* 로더를 node 에서: fetch·location 을 파일 읽기로 바꿔 끼운다 */
+  const saved = { fetch: globalThis.fetch, location: globalThis.location };
+  globalThis.location = { href: 'http://x/world3d.html' };
+  globalThis.fetch = async u => ({ text: async () => fs.readFileSync(path.join(ROOT, new URL(u).pathname), 'utf8') });
+  try {
+    const { loadCjs } = await import('../js/mmo/cjs-browser.js');
+    const DOM = await loadCjs('server/field-dominator.cjs');
+    const { createRequire } = await import('node:module'), real = createRequire(import.meta.url)('../server/field-dominator.cjs');
+    assert.deepEqual(DOM.SKILLS, real.SKILLS, '브라우저로 읽은 AI 가 서버 것과 다르다');
+    assert.equal(DOM.AGGRO, real.AGGRO); assert.equal(typeof DOM.tick, 'function');
+    /* 실제로 돌린다: 가까이 서 있으면 예고 뒤 바닥 타격이 bossStrike 로 온다 */
+    const P = { id: 'me', zone: 'z', x: 2, z: 0, dead: false }, hits = [], f = { players: new Map([['me', P]]), rng: () => 0.9, bossStrike: (o, p, h) => hits.push(h.skill) };
+    const o = { id: 't2_dominator_f', x: 0, z: 0, zone: 'z', alive: true, yaw: Math.PI / 2 }; DOM.setup(o, 0);
+    for (let t = 0; t < 4000; t += 50) DOM.tick(f, o, t);
+    assert.ok(hits.length >= 1 && hits[0] === 'rend', '가까이 있는데 안 때렸다 ' + hits);
+  } finally { globalThis.fetch = saved.fetch; globalThis.location = saved.location; }
+  const srv = fs.readFileSync(path.join(ROOT, 'server/field.cjs'), 'utf8'), w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  for (const k of ['DODGE_TIME', 'DODGE_GAP', 'RESPAWN_TIME', 'RESPAWN_GUARD']) {
+    const a = +(new RegExp(k + '=(\\d+)').exec(srv) || [])[1], b = +(new RegExp(k + ' = (\\d+)').exec(w) || [])[1];
+    assert.ok(a > 0 && a === b, k + ' 서버 ' + a + ' ≠ 3D 필드 ' + b); }
+  assert.match(w, /const DOM = await loadCjs\('server\/field-dominator\.cjs'\)/, 'AI 를 따로 쓰면 서버와 갈라진다');
+  assert.match(w, /if \(now < p\.invulnUntil \|\| now < p\.dodgeUntil\)[^\n]+return \{ evade: true \}/, '회피 무적 판정이 서버와 다르다');
 });
