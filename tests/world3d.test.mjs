@@ -1,0 +1,56 @@
+/* 3D 필드 (문서 206) — 굽기 원본 장면을 실시간으로 쓸 때 필요한 두 부품: 정적 합치기 · 걷기 충돌.
+   합치기는 «같은 재질 · 같은 칸» 끼리만, 카메라 막이 상자는 합치기 전에 모은다. 충돌은 2D 필드(mmo.html)와 같은 규칙. */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import * as THREE from '../vendor/three/three.module.js';
+const { mergeStatic, firstHit } = await import('../js/mmo/static-merge.js');
+const { createCollide } = await import('../js/mmo/field-collide.js');
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const boxAt = (scene, mat, x, z, h = 1) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1, h, 1), mat); m.position.set(x, h / 2, z); scene.add(m); return m; };
+
+test('정적 합치기: 같은 설정의 재질 · 같은 48 m 칸끼리 한 메시로, 칸이 다르면 따로 — 모양(정점 수)은 그대로', () => {
+  const s = new THREE.Scene(), a = new THREE.MeshStandardMaterial({ color: 0x806040 }), a2 = new THREE.MeshStandardMaterial({ color: 0x806040 }), b = new THREE.MeshStandardMaterial({ color: 0x204060 });
+  boxAt(s, a, 1, 1); boxAt(s, a2, 3, 1); boxAt(s, a, 5, 2);   /* 같은 값 재질 둘 → 하나로 */
+  boxAt(s, a, 100, 1);                                          /* 다른 칸 */
+  boxAt(s, b, 2, 2);                                            /* 다른 재질 혼자 */
+  const glass = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .3 }); boxAt(s, glass, 1, 5); boxAt(s, glass, 2, 5);
+  const verts = o => o.geometry.attributes.position.count; let v0 = 0; s.traverse(o => { if (o.isMesh) v0 += verts(o); });
+  const r = mergeStatic(s); let v1 = 0, meshes = []; s.traverse(o => { if (o.isMesh) { v1 += verts(o); meshes.push(o); } });
+  assert.equal(r.before, 7); assert.equal(meshes.length, 4, '같은 칸 같은 재질 3 → 1, 유리 2 → 1, 다른 칸 1, 다른 재질 1');
+  assert.equal(v1, v0, '합쳐도 정점 수는 같다');
+  const big = meshes.find(m => m.name === 'merged' && !m.material.transparent); big.geometry.computeBoundingBox();
+  assert.ok(Math.abs(big.geometry.boundingBox.max.x - 5.5) < 1e-6 && Math.abs(big.geometry.boundingBox.min.x - 0.5) < 1e-6, '월드 자리로 옮겨 합쳤다');
+  assert.ok(r.dedup >= 1, '같은 값 재질을 하나로');
+});
+
+test('카메라 막이: 높이 1.2 m 넘는 것만 모으고, 머리→카메라 사이에 있으면 그 앞까지 당긴다', () => {
+  const s = new THREE.Scene(), m = new THREE.MeshStandardMaterial();
+  boxAt(s, m, 0, -3, 6); boxAt(s, m, 4, 0, 0.4);   /* 벽 · 낮은 턱 */
+  const r = mergeStatic(s); assert.equal(r.camBoxes.length, 1, '낮은 턱은 카메라를 막지 않는다');
+  const head = new THREE.Vector3(0, 1.5, 0);
+  const d = firstHit(r.camBoxes, head, new THREE.Vector3(0, 2, -6)); assert.ok(d < 2.5 && d > 0.6, '벽 앞에서 멈춘다 ' + d);
+  assert.equal(firstHit(r.camBoxes, head, new THREE.Vector3(0, 2, 5)), Infinity, '반대쪽은 막힘 없음');
+});
+
+test('걷기 충돌: 띠 밖으로 못 나가고, 상자·건물 윤곽 안으로 못 들어간다 — 2D 필드와 같은 규칙(같은 함수 본문)', () => {
+  const C = createCollide({ road: { ang: 0.3 }, walk: { s0: -20, s1: 20, t0: -10, t1: 10 }, blockers: [{ x: 0, z: 0, hw: 2, hd: 1, rot: 0.4 }, { poly: [[8, -2], [12, -2], [12, 2], [8, 2]] }] });
+  for (let i = 0; i < 400; i++) { const p = { x: (Math.random() - .5) * 60, z: (Math.random() - .5) * 60 }; C.collide(p); const [s, t] = C.toRoad(p.x, p.z);
+    assert.ok(s >= -20 - 1e-6 && s <= 20 + 1e-6 && t >= -10 - 1e-6 && t <= 10 + 1e-6, '띠 밖');
+    assert.ok(!(p.x > 8.01 && p.x < 11.99 && p.z > -1.99 && p.z < 1.99), '건물 윤곽 안 ' + JSON.stringify(p)); }
+  const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), mod = fs.readFileSync(path.join(ROOT, 'js/mmo/field-collide.js'), 'utf8');
+  const body = s => s.slice(s.indexOf('function polyPush('), s.indexOf('/* Ry(rot) 로 되돌림 */')).replace(/\s+/g, '');
+  assert.equal(body(mod), body(src), '3D 필드의 충돌이 2D 필드(mmo.html)와 갈라졌다 — 한쪽만 고치면 같은 자리에서 다르게 막힌다');
+});
+
+test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 몇 개만 · 영웅은 레이드 아바타(양손 쥠)', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8'), bake = fs.readFileSync(path.join(ROOT, 'tools/2d/bake-map.html'), 'utf8');
+  const envs = s => (s.match(/const ENV_FILE=\s*\{[^}]+\}/) || s.match(/const ENV_FILE = \{[^}]+\}/))[0].replace(/\s+/g, '');
+  assert.equal(envs(src), envs(bake), '굽기와 다른 장면 빌더를 쓴다');
+  assert.match(src, /for \(const L of pointData\) L\.parent\.remove\(L\)/, '점광 수십 개를 그대로 두면 실시간에서 셰이더가 터진다');
+  assert.match(src, /new Animated\(heroAsset, scene, true, false, weaponAsset, ME\)/, '영웅이 양손 쥠 리그 없이 서면 낫을 지팡이처럼 든다');
+  assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,200}hero\.mixer\.update\(dt\); hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
+});

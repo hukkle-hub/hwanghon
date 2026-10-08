@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>황혼 3D 필드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500;900&display=swap" rel="stylesheet">
+<style>
+:root{ --ink:#f2e6d8; --dim:#b8a898; --gold:#e8b860; --panel:rgba(18,10,16,.62); }
+html,body{ margin:0; height:100%; background:#140c12; overflow:hidden; touch-action:none; font-family:'Noto Sans KR',sans-serif; color:var(--ink); }
+canvas{ display:block; width:100vw; height:100vh; }
+#hud{ position:fixed; inset:0; pointer-events:none; }
+#title{ position:absolute; top:max(12px,env(safe-area-inset-top)); left:16px; font-weight:900; font-size:20px; text-shadow:0 2px 6px #000; }
+#title small{ display:block; font-weight:500; font-size:12px; color:var(--dim); margin-top:2px; }
+#hint{ position:absolute; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); font-size:12px; color:var(--dim); background:var(--panel); padding:6px 12px; border-radius:14px; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; text-align:center; }
+#load{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px; background:#140c12; z-index:5; }
+#load[hidden]{ display:none; }
+#ring{ position:absolute; width:110px; height:110px; margin:-55px 0 0 -55px; border-radius:50%; border:2px solid rgba(232,184,96,.45); display:none; }
+#ring i{ position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(232,184,96,.5); }
+#osm{ position:absolute; right:12px; bottom:max(10px,env(safe-area-inset-bottom)); font-size:10px; color:var(--dim); opacity:.7; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · 마우스 끌기</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="load">3D 필드를 세우는 중…</div>
+<script src="js/items.js"></script>
+<script src="js/dungeons.js"></script>
+<script src="js/save.js"></script>
+<script src="js/gear.js"></script>
+<script src="js/looks.js"></script>
+<script src="js/hair.js"></script>
+<script src="js/pose-fix.js"></script>
+<script src="js/mat-fix.js"></script>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js" } }</script>
+<script type="module">
+/* 황혼 3D 필드 (문서 206) — 디렉터 2026-10-08 «맵을 좀 3d로 구현하고 뽑아보자».
+   구운 2D 맵의 «원본 장면»(js/mmo/env-*.js, OSM 실측 건물·도로·소품)을 그대로 실시간으로 세우고, 고정 55° 대신 3인칭 카메라로 걷는다.
+   같은 장면·같은 충돌(js/mmo/field-collide.js)·같은 영웅·장비·지배형 — 2D 필드(mmo.html)와 자리가 1:1 로 맞는다.
+   점광은 수십 개라 실시간에선 가까운 8개만 옮겨 쓴다 (mmo.html nearLights 와 같은 수법). 해 그림자는 내 둘레 60 m 만.
+   ?zone=<id> · ?char=ain|kain|ryu|sera · 검수: window.__W3D (hold · dtCap · view · teleport) */
+import * as THREE from './vendor/three/three.module.js';
+import { GLTFLoader } from './vendor/three/GLTFLoader.js';
+import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
+import { createBloom } from './js/bloom.js';
+import { ZONES } from './js/mmo/zones.js';
+import { createCollide } from './js/mmo/field-collide.js';
+import { mountAinScythe } from './js/ain-scythe-mount.js';
+import { setupDominator, updateDominator } from './js/mmo/dominator-motion.js';
+import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
+import { Animated } from './js/party-avatar.js';
+const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
+const ME = ['ain', 'kain', 'ryu', 'sera'].includes(q.get('char')) ? q.get('char') : 'ain';
+const MOBILE = matchMedia('(pointer:coarse)').matches, REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const Z = ZONES[ZONE] || { env: 'osm', osm: ZONE };
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: !MOBILE, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(MOBILE ? 1.5 : 2, devicePixelRatio)); renderer.setSize(innerWidth, innerHeight, false);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.55;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+/* ---------- 원본 장면 — 굽기(tools/2d/bake-map.html)와 같은 빌더 ---------- */
+const ENV_FILE = { osm: './js/mmo/env-osm.js', dungeon: './js/mmo/env-dungeon.js', namsan: './js/mmo/env-namsan.js', indoor: './js/mmo/env-indoor.js', field: './js/mmo/env-field.js' };
+await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간판 글씨가 캔버스에 구워진다 */
+const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
+const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
+const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
+const env = build(THREE, scene, osm, { id: ZONE, ...Z });
+document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
+if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
+const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
+scene.background = skyCol; scene.fog = new THREE.Fog(skyCol, 70, 230);   /* 굽기엔 없던 것 — 3인칭은 지평선까지 보인다. 먼 경계(잘린 블록·띠 끝)를 노을 안개로 덮는다 */
+/* 점광 정리: 장면의 점광을 빼고 데이터만 남긴다 → 가까운 8개만 */
+const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o); });
+for (const L of pointData) L.parent.remove(L);
+/* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
+const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene);
+const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
+function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
+  POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity; L.distance = l.distance; L.decay = l.decay; }); }
+const sun = env.sunLight || null, sunDir = env.sun ? new THREE.Vector3(...env.sun.dir) : new THREE.Vector3(0, 1, 0);
+if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -34; sc.right = sc.top = 34; sc.near = 1; sc.far = 400; sc.updateProjectionMatrix(); }
+scene.add(new THREE.DirectionalLight(0xffe8d8, 0.9).translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
+const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4 });
+/* ---------- 걷기: 같은 충돌 ---------- */
+const walkMeta = { road: env.road, walk: env.walk, blockers: env.blockers };
+const { collide } = createCollide(walkMeta);
+/* ---------- 영웅 ---------- */
+const loader = new GLTFLoader(), load = u => new Promise((ok, no) => loader.load(u, ok, undefined, no)), gltfs = {};
+function heroGltf(id) { return gltfs[id] || (gltfs[id] = load('art/3d/' + id + '_anim.glb').then(g => { if (window.TW_POSE) TW_POSE.repair(THREE, g); return g; })); }
+/* 온라인 레이드와 같은 아바타(js/party-avatar.js Animated): 아인 바인드·클립 교정 + 양손 쥠 리그 + 솔로와 같은 낫 장착.
+   처음엔 영웅 GLB 에 장비만 달았더니 낫을 지팡이처럼 끝을 잡고 왼손이 놀았다 (디렉터 지적 — 2D 필드 mmo.html 도 같은 문제) */
+const CHAR_ASSET = { ain: ['art/3d/ain_anim.glb', 'art/3d/ain_scythe_tex.glb'], kain: ['art/3d/kain_anim.glb', 'art/3d/gear/w_kain_greatsword.glb'], ryu: ['art/3d/ryu_anim.glb', 'art/3d/gear/w_ash_dirk.glb'], sera: ['art/3d/sera_anim.glb', 'art/3d/gear/w_sera_flask.glb'] };
+const [heroAsset, weaponAsset] = await Promise.all(CHAR_ASSET[ME].map(load));
+window.TW_POSE?.repair(THREE, heroAsset); window.TW_MATFIX?.repair(THREE, heroAsset.scene);
+const hero = new Animated(heroAsset, scene, true, false, weaponAsset, ME), root = hero.root;
+root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+const sp = env.spawn || meta.spawn; root.position.set(sp.x, 0, sp.z);
+const me = { id: ME, root, yaw: 0, hero, get weapon() { return hero.weapon; } };
+function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부분: 리그 되돌리기 → 믹서 → 양손 쥠 */
+  hero.armBlend?.restore(); hero.rig?.restore();
+  hero.play(moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false;
+  hero.mixer.update(dt); hero.rig?.apply(null, moving, false, dt, hero.current?.getClip().name, null); hero.armBlend?.apply(dt);
+  if (hero.blob) hero.blob.position.set(root.position.x, .035, root.position.z); }
+/* ---------- 2급 지배형 (문서 204) — 같은 자리, 같은 몸 ---------- */
+const doms = [];
+for (const b of meta.bosses || []) if (b.ai === 'dominator') {
+  const hid = (/art\/3d\/(\w+)_anim\.glb$/.exec(b.model) || [])[1]; if (!hid) continue;
+  heroGltf(hid).then(g => { const r = SkeletonUtils.clone(g.scene); if (window.TW_MATFIX) TW_MATFIX.repair(THREE, r); r.traverse(o => { if (o.isMesh) o.castShadow = true; });
+    const o = { b }; setupDominator(o, { scene: r, animations: g.animations }, scene, 0); o.root.rotation.y = Math.random() * 6.28; doms.push(o); });
+}
+/* ---------- 3인칭 카메라 ---------- */
+const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
+const camS = { yaw: Math.PI + (env.road ? -env.road.ang : 0), pitch: 0.32, dist: MOBILE ? 6 : 5.2 };
+function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
+addEventListener('resize', resize);
+let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */
+function placeCam(dt) {
+  if (photo) { cam.position.set(...photo.pos); cam.lookAt(...photo.at); return; }
+  const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * camS.dist, ty + Math.sin(camS.pitch) * camS.dist, tz + Math.cos(camS.yaw) * cp * camS.dist);
+  want.y = Math.max(0.4, want.y);
+  /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
+  const at = new THREE.Vector3(tx, ty, tz), hit = firstHit(MERGE.camBoxes, at, want);
+  if (hit < Infinity) want.sub(at).setLength(hit).add(at);
+  const k = dt > 0 ? 1 - Math.exp(-dt * (cam.position.distanceTo(at) > want.distanceTo(at) ? 30 : 8)) : 1;
+  cam.position.lerp(want, k); cam.lookAt(tx, ty, tz); }
+/* ---------- 입력: 왼쪽 반 = 이동 스틱 · 오른쪽 반 = 카메라 · 휠/핀치 = 거리 · WASD ---------- */
+const keys = {}, stick = { id: null, x: 0, y: 0, sx: 0, sy: 0 }, look = new Map(), ring = document.getElementById('ring');
+addEventListener('keydown', e => { keys[e.code] = true; }); addEventListener('keyup', e => { keys[e.code] = false; });
+const cv = renderer.domElement;
+cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId);
+  if (e.clientX < innerWidth * 0.45 && stick.id === null && e.pointerType !== 'mouse') { stick.id = e.pointerId; stick.sx = e.clientX; stick.sy = e.clientY; ring.style.display = 'block'; ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }
+  else look.set(e.pointerId, { x: e.clientX, y: e.clientY }); });
+cv.addEventListener('pointermove', e => {
+  if (e.pointerId === stick.id) { let dx = e.clientX - stick.sx, dy = e.clientY - stick.sy; const m = Math.hypot(dx, dy), lim = 50; if (m > lim) { dx *= lim / m; dy *= lim / m; } stick.x = dx / lim; stick.y = -dy / lim; ring.firstChild.style.transform = `translate(${dx}px,${dy}px)`; return; }
+  const p = look.get(e.pointerId); if (!p) return;
+  if (look.size === 2) { const [a, b] = [...look.values()], d0 = Math.hypot(a.x - b.x, a.y - b.y); p.x = e.clientX; p.y = e.clientY; const [c, d] = [...look.values()], d1 = Math.hypot(c.x - d.x, c.y - d.y); camS.dist = Math.min(14, Math.max(2.4, camS.dist * d0 / Math.max(1, d1))); return; }
+  camS.yaw -= (e.clientX - p.x) * 0.006; camS.pitch = Math.min(1.25, Math.max(-0.05, camS.pitch + (e.clientY - p.y) * 0.004)); p.x = e.clientX; p.y = e.clientY; });
+const up = e => { if (e.pointerId === stick.id) { stick.id = null; stick.x = stick.y = 0; ring.style.display = 'none'; ring.firstChild.style.transform = ''; } look.delete(e.pointerId); };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+cv.addEventListener('wheel', e => { camS.dist = Math.min(14, Math.max(2.4, camS.dist * (1 + Math.sign(e.deltaY) * 0.1))); e.preventDefault(); }, { passive: false });
+/* ---------- 돌리기 ---------- */
+const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
+function tick() {
+  const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++;
+  const ix = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+  const m = Math.min(1, Math.hypot(ix, iy));
+  if (m > 0.05 && !photo) {   /* 카메라 기준: 위 = 카메라가 보는 쪽 */
+    const fx = -Math.sin(camS.yaw), fz = -Math.cos(camS.yaw), rx = -fz, rz = fx, dx = rx * ix + fx * iy, dz = rz * ix + fz * iy, n = Math.hypot(dx, dz) || 1, speed = (m < 0.55 ? 2.2 : 4.8) * m;
+    root.position.x += dx / n * speed * dt; root.position.z += dz / n * speed * dt; collide(root.position);
+    const yaw = Math.atan2(dx, dz); let d = yaw - me.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); me.yaw += d * Math.min(1, dt * 14); root.rotation.y = me.yaw;
+    animate(true, m < 0.55, dt); } else animate(false, false, dt);
+  for (const o of doms) updateDominator(o, dt, Date.now());
+  lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
+  if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
+  placeCam(dt);
+  if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
+  requestAnimationFrame(tick); }
+document.getElementById('load').hidden = true;
+const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
+window.__W3D = { get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+  me, cam, camS, scene, renderer, env, meta, doms, info, nearLights,
+  teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
+  view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
+nearLights(root.position); placeCam(0); tick();
+</script>
+</body>
+</html>
