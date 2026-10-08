@@ -208,7 +208,8 @@ import { makeAinRigAdapter } from './js/ain-two-hand.js';
 import { repairAinBind, repairAinClips } from './js/ain-bind-repair.js';
 import { gripHands } from './js/hand-grip.js';
 import { createArmBlend } from './js/arm-blend.js';
-import { contactOf } from './js/mmo/field-feel.js';   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
+import { contactOf } from './js/mmo/field-feel.js';
+import { loadCjs } from './js/mmo/cjs-browser.js';   /* 혼자 연습 보스 AI — 서버 모듈 그대로 (문서 206 §12) */   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
 /* 맵을 받는 동안 파티 서버를 미리 깨운다 — 잠든 Render 는 첫 요청에 30초쯤 걸린다 */
@@ -379,7 +380,7 @@ let me=null,selfDead=false;
 function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name,visual=key!==me.lookKey;me.name=name;if(visual){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed||visual)heroTag(me);}
 function applySelfInfo(info){if(!me)return;me.title=info&&info.title||null;heroTag(me);}
 function attack(){ if(!me||selfDead||me.busy>0) return; if(skArmed!=null&&castSkill(skArmed)) return; play(me,'attack1',0.08); feel.swing(me,'attack1'); me.busy=me.act.attack1.getClip().duration*0.8;window.TW_SFX?.play('swing'); if(typeof hitBoss==='function') hitBoss(); }
-function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7;
+function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; if(!net) OFF.P.dodgeUntil=bossNow()+520;   /* 혼자 연습: 서버와 같은 회피 무적 0.52초 */
   if(net){const p=me.root.position;net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:'dodgeB'});} }
 function nextSet(){ if(!me||me.eqNet) return; dress(me,(me.set+1)%SETS.length); }
 document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
@@ -585,6 +586,27 @@ const spawnRing=new THREE.Mesh(new THREE.RingGeometry(0.94,1,96),new THREE.MeshB
 function bossSpawn(o, fx=true){ o.alive=true; o.dieT=0;if(net&&o.root){o.root.position.x=o.b.x;o.root.position.z=o.b.z;}if(o.fx&&!net&&!o.netAct){const now=bossNow();applyBossAction(o,{id:o.b.id,x:o.root.position.x,z:o.root.position.z,yaw:o.root.rotation.y,motion:'idle',skill:'',seq:(o.motionSeq||0)+1,startedAt:now,endsAt:now+780,counterOpen:0,counterClose:0},now);}setHp(o,1); bossVis(o); if(!fx) return; o.spawnT=1.4; ringT=1.2; spawnRing.position.x=o.b.x; spawnRing.position.z=o.b.z;
   const p=me.root.position; if(Math.hypot(p.x-o.b.x,p.z-o.b.z)<45) shakeT=0.6; }
 function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);hideDominator(o);setHp(o,0); if(!net) o.respawn=30; }
+/* ---------- 혼자 연습: 보스가 반격한다 (문서 206 §12) ----------
+   전엔 서버가 없으면 지배형·클레이브가 서 있기만 했다. 서버 전투 모듈(field-dominator · field-boss-combat)을 브라우저에서 그대로 돌리고,
+   결과는 온라인과 같은 통로로 그린다 — 내 피격은 selfPacket, 보스 동작은 applyDominatorAction / applyBossAction. 판정 규칙은 server/field.cjs bossStrike 와 같다(방어력·버프 빼고) */
+const OFF={ DOM:null, COMBAT:null, P:{ id:'me', zone:ZONE, x:0, z:0, hp:20000, maxHp:20000, dead:false, respawnAt:0, invulnUntil:0, dodgeUntil:0, hurtSeq:0 } };
+const offSelf=hurt=>{ const P=OFF.P; selfPacket({ self:{ hp:P.hp, maxHp:P.maxHp, dead:P.dead, respawnAt:P.respawnAt }, hurt }); };
+const offField={ players:new Map([['me',OFF.P]]), rng:Math.random,
+  bossStrike(o,p,hit,now){ if(p.dead) return null; const seq=++p.hurtSeq;
+    if(now<p.invulnUntil||now<p.dodgeUntil){ if(o.combat&&now>=p.invulnUntil) OFF.COMBAT.notePlayerResult(o,p.id,true); offSelf([seq,0,o.id,hit.skill,'evade',hit.beat,now]); return { evade:true }; }
+    const partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1, amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul)); p.hp=Math.max(0,p.hp-amount);
+    if(hit.knock){ let dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz); if(d<.01){dx=Math.sin(o.yaw||0);dz=Math.cos(o.yaw||0);d=1;} p.x+=dx/d*hit.knock; p.z+=dz/d*hit.knock; collide(p); if(me){ me.root.position.x=p.x; me.root.position.z=p.z; } }
+    const kind=p.hp<=0?'dead':'hit'; if(p.hp<=0){ p.dead=true; p.respawnAt=now+5000; } offSelf([seq,amount,o.id,hit.skill,kind,hit.beat,now]); if(o.combat) OFF.COMBAT.notePlayerResult(o,p.id,false); return { amount, dead:p.dead }; } };
+if(!net) Promise.all([loadCjs('server/field-dominator.cjs'),loadCjs('server/field-boss-combat.cjs')]).then(([D,C])=>{ OFF.DOM=D; OFF.COMBAT=C; const now=bossNow();
+  for(const o of bosses){ const b=o.b, ai={ id:b.id, zone:ZONE, x:b.x, z:b.z, yaw:0, h:b.h||3, alive:o.alive, hp:o.local, max:300000 };
+    if(b.ai==='dominator'){ D.setup(ai,now); o.ai=ai; } else if(C.enabled(ai)){ C.setup(ai,now); o.ai=ai; } } }).catch(e=>console.warn('[혼자 연습 AI]',e));
+function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
+  if(P.dead){ if(now>=P.respawnAt){ const s0=meta.spawn; me.root.position.x=s0.x; me.root.position.z=s0.z; P.hp=P.maxHp; P.dead=false; P.invulnUntil=now+2000; P.dodgeUntil=0; offSelf([++P.hurtSeq,0,'','','respawn',0,now]); } }
+  P.x=me.root.position.x; P.z=me.root.position.z;
+  for(const o of bosses){ const ai=o.ai; if(!ai) continue; const M=o.b.ai==='dominator'?OFF.DOM:OFF.COMBAT;
+    if(o.alive&&!ai.alive) M.reset(ai,now); ai.alive=o.alive; if(!o.alive) continue; ai.hp=Math.max(1,o.local);
+    M.tick(offField,ai,now); collide(ai,0.5); const v=M.view(ai); if(!v) continue;
+    if(o.b.ai==='dominator'){ if(o.dom) applyDominatorAction(o,v); else o.netAct=v; } else applyBossAction(o,v,now); } }
 /* 피해 숫자 — 보스 머리 위로 떠오른다 */
 const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);
   const p=me.root.position,bx=o.root?.position.x??o.b.x,bz=o.root?.position.z??o.b.z,k=Math.min(0.45,1.2/Math.max(0.1,Math.hypot(p.x-bx,p.z-bz)));
@@ -608,7 +630,10 @@ function hitBoss(sk){ const o=nearBoss(); if(!o) return false;
   if(net){ net.send(sk?{type:'fieldSkill',skill:sk.i,boss:o.b.id}:{type:'fieldHit',boss:o.b.id}); return; }
   /* 오프라인: 스킬 배율 · 회피 스킬 뒤 치명타 확정 · 여러 접점(피의 회전 2타)은 숫자도 나눠서 */
   const crit=skCritNext||Math.random()<0.18; skCritNext=false; const mult=sk?sk.mult:1, hits=sk&&sk.hits&&sk.hits.length>1?sk.hits:[[0,1]];
-  hits.forEach(([,w],k)=>feel.atContact(me,k,()=>{ if(!o.alive) return; const n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)*mult*w);o.local-=n;feel.impact(me,o,{crit,sound:!o.fx});if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit});if(o.local<=0)o.local=300000; })); }   /* 효과는 날이 닿는 프레임에 (게임 시간) — 누르는 순간이 아니다 */
+  hits.forEach(([,w],k)=>feel.atContact(me,k,()=>{ if(!o.alive) return; const ai=o.ai,now=bossNow(),counter=!!(ai&&ai.combat&&OFF.COMBAT&&OFF.COMBAT.tryCounter(ai,now));   /* 혼자 연습 클레이브: 서버 hit() 순서 — 반격창 → 피해(×1.65) → 셔터 */
+    const n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)*mult*w*(counter?1.65:1));o.local-=n;feel.impact(me,o,{crit,counter,sound:!o.fx});
+    const part=ai&&ai.combat&&o.local>0?OFF.COMBAT.damageShutter(ai,OFF.P,{character:MY},n,counter,now):null; if(counter) announce('맞대기<b>반격 성공</b>클레이브 경직','big',2.2); if(part&&part.broken){announce('⚙ '+esc(o.b.name)+'<b>셔터 파괴</b>공격 방식이 바뀝니다','big',5);window.TW_SFX?.play('brk');}
+    if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit,counter});if(o.local<=0)o.local=300000; })); }   /* 효과는 날이 닿는 프레임에 (게임 시간) — 누르는 순간이 아니다 */
 /* 바닥 장비: 등급 색 빛기둥 + 돌아가는 결정 + 이름표 (디아블로식 «멀리서도 뭔가 떨어졌다») */
 const loots=new Map();
 function lootAdd([id,item,x,z,mine]){ let L=loots.get(id);
@@ -643,6 +668,7 @@ function onBossMsg(m){
     if(m.kind==='loot') announce('<b>'+esc(m.who)+'</b>님이 '+esc(m.name)+'('+esc((RAR[m.rarity]||{}).name||'')+') 획득 — '+esc(zoneTitle(m.zone)), m.rarity, 9);
     return; } }
 function bossFrame(dt){
+  offTick();
   for(const o of bosses){ if(!o.root) continue;
     if(o.spawnT>0){ o.spawnT=Math.max(0,o.spawnT-dt); const k=1-o.spawnT/1.4, e=1-Math.pow(1-k,3); o.root.scale.setScalar(0.55+0.45*e); o.root.position.y=(o.b.fly||0)-(1-e)*1.2; }
     else if(o.dieT>0){ o.dieT=Math.max(0,o.dieT-dt); const k=o.dieT/1.2; o.root.scale.setScalar(0.4+0.6*k); o.root.position.y=(o.b.fly||0)-(1-k)*1.5; if(o.dieT===0){ o.root.scale.setScalar(1); bossVis(o); } }
@@ -805,7 +831,7 @@ function tick(){ const dt=hold?(clock.getDelta(),0):Math.min(clock.getDelta(),dt
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
 window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, map, scene, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
-  gates:gateFx, bosses, loots, bossMsg:m=>onBossMsg(m), hitBoss, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
+  gates:gateFx, bosses, OFF, dodge, loots, bossMsg:m=>onBossMsg(m), hitBoss, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
   bossAct(id,motion='idle',skill='',elapsed=0){const o=bosses.find(x=>x.b.id===id);if(!o||!o.root)return false;o.poseElapsed=null;const d=CLAVE_MOTIONS[skill],at=bossNow()-elapsed,a={id,x:o.root.position.x,z:o.root.position.z,yaw:o.root.rotation.y,motion,skill,seq:(o.motionSeq||0)+1,startedAt:at,endsAt:at+(d?.duration||2000),counterOpen:d?.counter?at+d.counter[0]:0,counterClose:d?.counter?at+d.counter[1]:0};o.alive=true;bossVis(o);applyBossAction(o,a,bossNow());return true;},
   bossPose(id,motion='idle',skill='',elapsed=0,clipTime=null){const o=bosses.find(x=>x.b.id===id);if(!o||!o.root)return false;o.poseElapsed=elapsed;this.bossAct(id,motion,skill,elapsed);o.poseElapsed=elapsed;const a=o.actions?.[o.motionClip];if(a){a.paused=true;if(Number.isFinite(clipTime))a.time=Math.min(a.getClip().duration*.999,Math.max(0,clipTime));}return true;},
   feel, get hold(){ return hold; }, set hold(v){ hold=!!v; }, set dtCap(v){ dtCap=Math.max(0.001,Math.min(0.05,+v||0.05)); }, teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };

@@ -213,7 +213,7 @@ function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (
       let dx = P.x - ai.x, dz = P.z - ai.z, d = Math.hypot(dx, dz); if (d < .001) { dx = -Math.sin(ai.yaw || 0); dz = -Math.cos(ai.yaw || 0); d = 1; } const edge = Math.max(.8, Math.min(1.55, (t.b.h || 3) * .38));
       bossHitReact(t, { seq: (t.impSeq = (t.impSeq || 0) + 1), x: ai.x + dx / d * edge, z: ai.z + dz / d * edge, crit, counter, at: gameNow });
       if (counter) { bossCounterBurst(t); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); }
-    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
+    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
 function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
   hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
@@ -283,6 +283,7 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
     if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now);
         if (COMBAT.enabled({ id: b.id })) { o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; COMBAT.setup(o.ai, gameNow); } }
       else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); } }
+    if (!o.ai) o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP };   /* 나머지 필드 보스: 서버에도 AI 가 없다 — 맞기만 한다 (2D 혼자 연습과 같은 30만) */
     fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
@@ -321,6 +322,7 @@ function tick() {
     const ev = updateDominator(o, dt * feel.rate(o), gameNow); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
   if (!net) for (const o of fbs) { const ai = o.ai; if (!ai) continue;   /* 혼자 연습 클레이브: 서버와 같은 틱 → 같은 view → 같은 안무 */
     if (!ai.alive) { if (gameNow >= o.respawnAt) { COMBAT.reset(ai, gameNow); ai.alive = true; ai.hp = ai.max; o.root.visible = true; } continue; }
+    if (!ai.combat) continue;
     COMBAT.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = COMBAT.view(ai); if (v) applyBossAction(o, v, gameNow); }
   { const bn = bossClock(); for (const o of fbs) { if (!o.root.visible && !(o.fx && o.fx.tailT > 0)) continue;
       if (o.mixer) { if (o.fx) prepareBossMotion(o, bn); o.mixer.update(dt); }

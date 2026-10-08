@@ -185,4 +185,20 @@ test('3D 필드 혼자 연습 클레이브: 서버 전투 모듈 그대로 — �
   assert.match(w, /COMBAT\.damageShutter\(ai, P, \{ character: ME \}, n, counter, gameNow\)/, '셔터 부위 파괴가 없다');
   assert.match(w, /if \(o\.combat\) COMBAT\.notePlayerResult\(o, p\.id, false\)/, '맞은 결과를 보스가 못 읽는다 (서버 bossStrike 와 다름)');
   assert.match(w, /net \? \[\.\.\.doms, \.\.\.fbs\] : \[\.\.\.doms, \.\.\.fbs\.filter\(f => f\.ai\)\]/, '혼자 연습에서 클레이브를 칠 수 없다');
+  assert.match(w, /if \(!o\.ai\) o\.ai = \{ id: b\.id, zone: ZONE, x: b\.x, z: b\.z, yaw: 0, h: b\.h \|\| 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP \};/, '나머지 필드 보스를 혼자 연습에서 칠 수 없다 (2D 필드는 된다)');
+  assert.match(w, /if \(t\.fx\) hideBossMotion\(t\); else if \(t\.dom\) hideDominator\(t\);/, 'AI 없는 필드 보스를 쓰러뜨리면 지배형 숨기기가 터진다');
+  assert.match(w, /if \(!ai\.combat\) continue;\n    COMBAT\.tick\(/, 'AI 없는 필드 보스까지 클레이브 틱을 돈다');
+});
+
+test('2D 필드 혼자 연습: 지배형·클레이브가 반격한다 — 서버 모듈 그대로, 결과는 온라인과 같은 통로(selfPacket · apply*Action)', () => {
+  const m = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8');
+  assert.match(m, /Promise\.all\(\[loadCjs\('server\/field-dominator\.cjs'\),loadCjs\('server\/field-boss-combat\.cjs'\)\]\)/, '혼자 연습 보스 AI 를 서버 모듈로 안 돌린다');
+  assert.match(m, /M\.tick\(offField,ai,now\); collide\(ai,0\.5\); const v=M\.view\(ai\);/, '혼자 연습에서 보스가 서 있기만 한다');
+  assert.match(m, /function bossFrame\(dt\)\{\n  offTick\(\);/, '프레임마다 혼자 연습 틱을 안 돈다');
+  assert.match(m, /offSelf\(\[seq,amount,o\.id,hit\.skill,kind,hit\.beat,now\]\)/, '내 피격이 온라인과 같은 hurt 묶음(selfPacket)으로 안 간다');
+  assert.match(m, /if\(!net\) OFF\.P\.dodgeUntil=bossNow\(\)\+520;/, '혼자 연습 회피 무적이 없다 (서버 DODGE_TIME 520)');
+  assert.match(m, /\*mult\*w\*\(counter\?1\.65:1\)/, '혼자 연습 반격 배율이 서버(1.65)와 다르다');
+  assert.match(m, /OFF\.COMBAT\.damageShutter\(ai,OFF\.P,\{character:MY\},n,counter,now\)/, '혼자 연습 셔터 파괴가 없다');
+  const srv = fs.readFileSync(path.join(ROOT, 'server/field.cjs'), 'utf8');
+  assert.match(srv, /DODGE_TIME=520/, '서버 회피 시간이 바뀌었다 — mmo.html 혼자 연습 값도 같이 바꿔라');
 });
