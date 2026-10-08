@@ -130,7 +130,9 @@ function simulate(N, o = {}) {
       if (gs && (e.p[1] < gateY) !== (x.p[1] < gateY)) continue;   /* 서 있는 정문 건너편(측면을 돈 질주형)은 무리가 아니다 — 끌려가 정문을 쳤다 (코드 리뷰) */ const d = d2(e.p, x.p); if (d < nd) { nd = d; near = x; } if (d <= C.RESONATOR_PACK_RADIUS) { n++; sx += x.p[0]; sy += x.p[1]; } }
     return n ? [sx / n, sy / n] : near ? [near.p[0], near.p[1]] : null; }
   function holdPoint(e) { const c = packOf(e); if (!c) return null; const h = C.resonatorHoldPoint(e.p, c); return [h[0], h[1], e.p[2]]; }
-  const view = (from, flanked, e) => ({ player: (q => q ? d2(from, q.p) : -1)(nearestPlayer(from)),
+  /* 서 있는 정문 안쪽에서 바깥 플레이어는 못 닿는다 — 쫓으면 정문 안쪽 면에 영영 붙었다 (UE BuildView 와 같이) */
+  const across = (from, q) => standing(gate) && from[1] > gateY && q.p[1] < gateY;
+  const view = (from, flanked, e) => ({ player: (q => q && !across(from, q) ? d2(from, q.p) : -1)(nearestPlayer(from)),
     gate: standing(gate) ? surf(gate, from) : -1, generator: standing(facility('generator')) ? surf(facility('generator'), from) : -1,
     comms: standing(facility('comms')) ? surf(facility('comms'), from) : -1, npc: (n => n ? d2(from, n.p) : -1)(npcFor(from, e && e.role)),
     ally: e && e.role === 'resonator' ? (h => h ? d2(from, h) : -1)(holdPoint(e)) : -1, flanked });
@@ -180,10 +182,11 @@ function simulate(N, o = {}) {
   function think(e) {
     if (C.goesRoundTheFlank(e.role) && !e.flanked && e.p[1] > gateY + 200) e.flanked = true;
     const v = view(e.p, e.flanked, e); let next = C.chooseTarget(e.role, v);
-    if (next !== e.raw) { e.raw = next; proof.noteTarget(e.role, next); }   /* 판정은 정문 차단 «전» 의 판단 (selects) — UE 와 같이 */
+    /* 측면 길이 없거나 다 걸은 측면 역할: «돌았다» 를 영영 기다리며 웨이브를 붙잡지 않게 돈 것처럼 고른다 — 정문 차단은 그대로 (UE Think 와 같이) */
+    if (next === 'none' && C.goesRoundTheFlank(e.role) && !e.flanked && e.ri >= e.route.length) next = C.chooseTarget(e.role, { ...v, flanked: true });
     if (next !== 'none' && next !== 'gate') { const g = targetPoint(next, e.p, e);
       if (C.blockedByGate(e.p[1], g[1], gateY, standing(gate), e.role, e.flanked)) next = 'gate'; }
-    if (next !== e.tk) { e.tk = next; e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p, e.role); e.ei = 0; }
+    if (next !== e.tk) { e.tk = next; proof.noteTarget(e.role, next);   /* 판정은 실제로 향하는 목표 — v07 대로 파괴형은 서 있는 정문을 친다 */ e.ext = extensionFor(next, e.ri < e.route.length ? e.route[e.route.length - 1] : e.p, e.role); e.ei = 0; }
     else if (e.tk !== 'none' && e.ri >= e.route.length && e.ei >= e.ext.length && d2(e.p, targetPoint(e.tk, e.p, e)) > DIRECT) { e.ext = extensionFor(e.tk, e.p, e.role); e.ei = 0; }
     e.ov = null;
     if (e.tk !== 'player') e.ov = barricadeOnPath(e.p, goal(e));
@@ -220,7 +223,8 @@ function simulate(N, o = {}) {
     /* 220 cm «도착» 은 웨이포인트에만 — 정문(사거리 140)·플레이어(170)를 그 반경에서 멈추면 영원히 못 친다 (UE 에서 고친 버그) */
     const g = goal(e);
     /* 측면 길 입구(첫 지점)는 60 — 220 이면 축에서 비낀 채 꺾어 경사로 옆면(턱 64)에 붙는다 (UE AHWNodeEnemy::StepMove 와 같이) */
-    if (hasWaypoint(e) && d2(g, e.p) < (e.own && e.ri === 0 ? 60 : 220)) { if (e.ri < e.route.length) e.ri++; else e.ei++; return; }
+    const entry = e.own && e.ri === 0 && e.route.length > 1 && !direct(e), past = entry && ((g[0] - e.p[0]) * (e.route[1][0] - e.route[0][0]) + (g[1] - e.p[1]) * (e.route[1][1] - e.route[0][1])) <= 0;
+    if (hasWaypoint(e) && (past || d2(g, e.p) < (entry ? 60 : 220))) { if (e.ri < e.route.length) e.ri++; else e.ei++; return; }
     step(e, dirTo(e.p, g), e.st.speed * C.resonanceMove(e.res) * dt);
   }
   /* 공진 (AHWNodeDirector::RefreshResonance): 0.4초마다, 살아 있는 공진형 1800 안의 다른 감염체 — 중첩 1 */

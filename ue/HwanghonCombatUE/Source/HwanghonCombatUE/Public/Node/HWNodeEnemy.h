@@ -101,7 +101,6 @@ private:
     HWNodeRules::FRoleStats Stats = HWNodeRules::RoleStats(HWNodeRules::EEnemyRole::Normal);
     HWNodeRules::FEliteArmor Armor;
     HWNodeRules::ETargetKind TargetKind = HWNodeRules::ETargetKind::None;
-    HWNodeRules::ETargetKind RawTarget = HWNodeRules::ETargetKind::None;   // the role's choice before BlockedByGate (PIE evidence)
     TArray<FVector> Route;      // spawn -> plaza
     TArray<FVector> Extension;  // the route graph's shortest path to the target's route end (UHWNodeConfig::PathBetween)
     int32 RouteIndex = 0;

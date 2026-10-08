@@ -75,12 +75,20 @@ test('시뮬: 판 안 보급 — 회복약(정책 무료분 먼저)은 쓰러짐
   assert.ok(broken.supplyUsed.turretRepairs > 0 && per(broken) <= per(hit) * 0.55, '제작 0 인데 수리량 ' + Math.round(per(broken)) + ' / ' + Math.round(per(hit)));
 });
 /* GuildWorld v04~v06: 5급 6종 — PIE 판정(N01_PIE_Scenario_v06.json pass_conditions)을 시뮬에서 먼저 */
-test('시뮬: 5급 6종 PIE 증명 — 여섯 역할·전부 5급·파괴→발전기·추적→NPC·철갑→정문·공진 걸림/풀림·정문 앞 전투 (2인, 기술자 없이)', () => {
+test('시뮬: 5급 6종 PIE 증명 — 여섯 역할·전부 5급·파괴→발전기·추적→NPC·철갑→정문·공진 걸림/풀림·정문 앞 전투 (솔로: 정문을 지키다 잃는 판, 기술자 없이)', () => {
+  /* 판정은 «실제로 향한 목표». v07 대로 파괴형은 서 있는 정문을 치니 «파괴→발전기» 는 정문이 무너지는 판에서만 나온다 */
   for (const seed of [7, 11, 23]) {
-    const r = S.simulate(N, { party: DUO, seed });
+    const r = run({ seed });
     assert.equal(r.threatGrade, 5);
     for (const c of r.tier5.checks) assert.ok(c.pass, '시드 ' + seed + ': FAIL ' + c.name);
     assert.ok(r.events.some(e => e.kind === 'aura' && e.to === 'on') && r.events.some(e => e.kind === 'aura' && e.to === 'off'), '공진 사건이 없다');
+  }
+  /* 2인이 정문을 끝까지 지킨 판: 파괴형은 정문만 쳤다 → «파괴→발전기» FAIL 이 맞다 (거짓 PASS 금지), 나머지는 PASS */
+  for (const seed of [7, 11]) {
+    const d = S.simulate(N, { party: DUO, seed });
+    assert.ok(!d.events.some(e => e.kind === 'facility' && e.id === 'south_gate'), '2인인데 정문이 무너졌다');
+    assert.equal(d.tier5.checks[2].pass, false, '정문이 서 있는데 파괴형이 발전기로 갔다고 한다');
+    for (const i of [0, 1, 3, 4, 7]) assert.ok(d.tier5.checks[i].pass, '2인 시드 ' + seed + ': FAIL ' + d.tier5.checks[i].name);
   }
   /* 옛 «모두 막는 벽» 정문: 플레이어가 안에 갇혀 정문 앞 전투가 없고, 정문이 W3 에 무너져 철갑이 정문을 볼 일도 없다 — 판정이 FAIL 로 짚어야 한다 (거짓 PASS 금지) */
   const wall = S.simulate(N, { party: DUO, wallGate: true });

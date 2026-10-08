@@ -128,7 +128,6 @@ namespace HWNodeDirectorLocal
         return TEXT("gate");
     }
 
-    // the simulator's e.tk[0]
     // the simulator's line ids (node-combat-rules.cjs defenseLine)
     const TCHAR* LineKey(HWNodeRules::EDefenseLine L)
     {
@@ -140,6 +139,7 @@ namespace HWNodeDirectorLocal
         }
     }
 
+    // the simulator's e.tk[0]
     TCHAR TargetKey(HWNodeRules::ETargetKind K)
     {
         switch (K)
@@ -462,7 +462,10 @@ HWNodeRules::FTargetView AHWNodeDirector::BuildView(const FVector& From, bool bF
     V.bFlanked = bFlanked;
     if (const AHWAinCharacter* Player = GetPlayer())
     {
-        if (Player->GetCombat() && !Player->GetCombat()->IsDead()) V.Player = FVector::Dist2D(From, Player->GetActorLocation());
+        // a player across the standing gate from the inside is out of reach: chasing him pinned the infected on the
+        // gate's inner face for good (the defenders fight outside now - doc 203 §9). From the outside, BlockedByGate.
+        const bool bAcrossFromInside = IsGateStanding() && From.Y > GateLineY() && Player->GetActorLocation().Y < GateLineY();
+        if (Player->GetCombat() && !Player->GetCombat()->IsDead() && !bAcrossFromInside) V.Player = FVector::Dist2D(From, Player->GetActorLocation());
     }
     const auto Distance = [this, &From](EHWNodeFacilityKind Kind)
     {
@@ -1198,8 +1201,7 @@ void AHWNodeDirector::TickPlayer(float DeltaSeconds)
     {
         if (AHWNodeFacility* Gate = GetFacility(EHWNodeFacilityKind::Gate))
         {
-            Player->GetCapsuleComponent()->IgnoreActorWhenMoving(Gate, true);
-            Player->MoveIgnoreActorAdd(Gate);
+            Player->MoveIgnoreActorAdd(Gate);   // = IgnoreActorWhenMoving on the root capsule; the movement sweeps honour it
             GatePassFor = Player;
         }
     }
@@ -1396,8 +1398,10 @@ void AHWNodeDirector::TickRun(float DeltaSeconds)
             LineNow = NowLine;
             const TCHAR* Key = HWNodeDirectorLocal::LineKey(LineNow);
             RunEvent(TEXT("line"), Key, TEXT("line"));
-            Notice = LineNow == HWNodeRules::EDefenseLine::CentralPlaza ? TEXT("DEFENCE LINE -> CENTRAL PLAZA: the gate is down, hold the plaza")
+            const TCHAR* LineText = LineNow == HWNodeRules::EDefenseLine::CentralPlaza ? TEXT("DEFENCE LINE -> CENTRAL PLAZA: hold the plaza")
                 : LineNow == HWNodeRules::EDefenseLine::CommsFinal ? TEXT("DEFENCE LINE -> COMMS: last stand at the comms centre") : TEXT("DEFENCE LINE -> MAIN GATE");
+            // after a facility notice of the same moment (generator lost - reserve power...), not over it
+            Notice = NoticeFor > 0.f && !Notice.IsEmpty() ? FString::Printf(TEXT("%s | %s"), *Notice, LineText) : FString(LineText);
             NoticeFor = 5.f;
             UE_LOG(LogTemp, Display, TEXT("[HWNode] defence line -> %s"), Key);
         }

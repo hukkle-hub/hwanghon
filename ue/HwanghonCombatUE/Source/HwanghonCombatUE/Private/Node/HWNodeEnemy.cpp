@@ -211,11 +211,13 @@ void AHWNodeEnemy::Think()
 
     const HWNodeRules::FTargetView View = Director->BuildView(Here, bFlanked, this);
     HWNodeRules::ETargetKind Next = HWNodeRules::ChooseTarget(RuleRole(), View);
-    // the PIE evidence counts what the role chose, before the gate is in the way ("Breaker selects Generator")
-    if (Next != RawTarget)
+    // a flank role with no flank trail left to walk (missing route, or spawned at the checkpoint) would wait for
+    // «flanked» for ever and hold the wave: choose as if round the flank - BlockedByGate still sends it at the gate
+    if (Next == HWNodeRules::ETargetKind::None && HWNodeRules::GoesRoundTheFlank(RuleRole()) && !bFlanked && RouteIndex >= Route.Num())
     {
-        RawTarget = Next;
-        Director->ReportTargetChosen(this, Next);
+        HWNodeRules::FTargetView Around = View;
+        Around.bFlanked = true;
+        Next = HWNodeRules::ChooseTarget(RuleRole(), Around);
     }
 
     // a target north of the standing gate is reached through the gate (HWNodeRules::BlockedByGate) - a player too:
@@ -224,7 +226,7 @@ void AHWNodeEnemy::Think()
     {
         const FVector Goal = Director->TargetPoint(Next, Here, this);
         if (HWNodeRules::BlockedByGate(Here.Y, Goal.Y, Director->GateLineY(), Director->IsGateStanding(),
-                static_cast<HWNodeRules::EEnemyRole>(Role), bFlanked))
+                RuleRole(), bFlanked))
         {
             Next = HWNodeRules::ETargetKind::Gate;
         }
@@ -236,6 +238,9 @@ void AHWNodeEnemy::Think()
         Extension = Director->ExtensionFor(Next, RouteIndex < Route.Num() ? Route.Last() : Here, this);
         ExtensionIndex = 0;
         RefreshLabel();
+        // the PIE evidence counts what it actually goes for: v07 keeps the breaker on the standing gate, so «Breaker
+        // selects Generator» needs a gate that fell - counting the choice before the gate made it pass on every spawn
+        Director->ReportTargetChosen(this, Next);
     }
     // path walked but the target is still far (the NPC it was after was taken, another one is wanted): path again
     else if (TargetKind != HWNodeRules::ETargetKind::None && RouteIndex >= Route.Num() && ExtensionIndex >= Extension.Num()
@@ -357,8 +362,11 @@ void AHWNodeEnemy::StepMove(float DeltaSeconds)
     const FVector To = Goal - Here;
     // a flank trail's first point (runner, stalker) is reached at 60: at 220 they turned off the trail's axis into the
     // ramp's side, 64 cm over the spawn pad, and stood there (node-sim.cjs)
-    const float Arrive = HWNodeRules::GoesRoundTheFlank(RuleRole()) && RouteIndex == 0 ? 60.f : 220.f;
-    if (HasWaypoint(Here) && FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(Arrive))
+    const bool bFlankEntry = HWNodeRules::GoesRoundTheFlank(RuleRole()) && RouteIndex == 0 && Route.Num() > 1 && !IsDirectApproach(Here);
+    const float Arrive = bFlankEntry ? 60.f : 220.f;
+    // at 1-2 fps (headless PIE) a 520 cm/s runner steps 200 cm a tick and can jump the 60 cm window: past it = reached
+    const bool bPassed = bFlankEntry && FVector::DotProduct(FVector(To.X, To.Y, 0.f), (Route[1] - Route[0]).GetSafeNormal2D()) <= 0.f;
+    if (HasWaypoint(Here) && (bPassed || FVector(To.X, To.Y, 0.f).SizeSquared() < FMath::Square(Arrive)))
     {
         if (RouteIndex < Route.Num()) ++RouteIndex;
         else ++ExtensionIndex;

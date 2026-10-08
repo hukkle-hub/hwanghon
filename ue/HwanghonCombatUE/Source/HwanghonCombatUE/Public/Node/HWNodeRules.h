@@ -364,7 +364,7 @@ struct FTargetView
     float Comms = -1.f;
     float Npc = -1.f;
     float Ally = -1.f;      // nearest other living invader that is not a resonator (the pack)
-    bool bFlanked = false;  // a Runner that reached its flank point
+    bool bFlanked = false;  // a Runner or a Stalker that went round the flank (north of the gate line)
 };
 
 inline bool Has(float D) { return D >= 0.f; }

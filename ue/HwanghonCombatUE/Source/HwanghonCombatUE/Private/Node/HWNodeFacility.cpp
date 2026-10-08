@@ -40,6 +40,9 @@ void AHWNodeFacility::Configure(const FHWNodeFacilityDef& Def)
     Label->SetRelativeLocation(FVector(0.f, 0.f, 50.f + 140.f / FMath::Max(1.f, HalfExtent.Z / 50.f)));
     Label->SetWorldRotation(FRotator(0.f, -90.f, 0.f));   // faces south, the way the enemies come
 
+    // the gate lets the defenders through (doc 203 §9): the camera must not snap in on it behind a player fighting outside
+    if (Kind == EHWNodeFacilityKind::Gate) Body->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
+
     if (UMaterialInterface* Base = Body->GetMaterial(0))
     {
         Material = UMaterialInstanceDynamic::Create(Base, this);
