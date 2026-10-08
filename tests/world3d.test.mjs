@@ -57,7 +57,7 @@ test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 �
 
 test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 보정층 — 아인 바인드·클립 교정(믹서 전) · 양손 쥠 리그 · 리그 순서', () => {
   const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), h = src.slice(src.indexOf('async function hero('), src.indexOf('function heroAnimate(') + 900);
-  assert.match(h, /if\(id==='ain'&&meshSwap\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 교정이 없다');
+  assert.match(h, /if\(id==='ain'\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 교정이 없다');
   assert.ok(h.indexOf('repairAinClips') < h.indexOf('new THREE.AnimationMixer(root)'), '클립 교정은 믹서보다 먼저 (이미 만든 액션은 옛 트랙을 붙든다)');
   assert.match(h, /clip=n=>anims\.find/, '믹서가 교정 전 클립을 쓴다');
   assert.match(h, /h\.rig=\(id==='ain'\?makeAinRigAdapter:makeRigAdapter\)\(root,root,slot,/, '양손 쥠 리그가 없다 — 낫을 지팡이처럼 든다');
@@ -130,8 +130,31 @@ test('3D 필드 하늘: 바깥만 장면 색(env.sky)으로 노을 돔 · 정적
   assert.match(w, /window\.__sky\.position\.copy\(cam\.position\)/, '하늘이 카메라를 안 따라간다 — 멀리 가면 돔 밖으로 나간다');
 });
 
-test('2D 필드 가벼운 모델(휴대폰 기본): 쥔 손 모프·아인 바인드 교정은 정식 모델에만 — 압축 꼭짓점에 걸면 뼈 번호가 깨져 그리기가 멈췄다', () => {
+test('2D 필드 가벼운 모델(휴대폰 기본)도 정식과 같은 쥠 층 — 끼워진 속성은 라이브러리가 떼어 내므로 LOD 로 건너뛰지 않는다', () => {
   const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8');
-  assert.match(src, /const handGrip=id!=='ain'&&!LOD\?gripHands\(root,id\):null;/, '가벼운 모델에 쥔 손 모프를 건다 — 카인·세라 근처에서 휴대폰 화면이 멈춘다');
-  assert.match(src, /if\(id==='ain'&&meshSwap\)\{ const fix=repairAinBind\(root\);/, '표식(meshSwap) 없는 모델에 옛 몸 재가중을 한다 — 없는 뼈 번호(−1)');
+  assert.match(src, /const handGrip=id!=='ain'\?gripHands\(root,id\):null;/, '쥔 손 모프가 빠졌다 — 칼을 손가락 펴고 든다');
+  assert.match(src, /if\(id==='ain'\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 바인드·클립 교정이 빠졌다 — 낫을 지팡이처럼 든다');
+});
+
+test('가벼운 모델(LOD)은 정점 속성이 한 버퍼에 끼워져(interleaved) 있다 — 손 모프·아인 바인드 교정이 먼저 떼어 내야 뼈 번호가 안 섞인다', async () => {
+  const { subdivideHands, separateAttributes } = await import('../js/hand-grip.js');
+  /* gltf-transform 이 쓰는 모양 그대로: 한 정점 = 위치(f32×3) + 뼈 번호(u16×4) + 무게(f32×4) 를 한 버퍼에. three 는 같은 버퍼 위에 형식별 보기를 만든다 */
+  const grid = new THREE.PlaneGeometry(0.06, 0.06, 2, 2), n = grid.attributes.position.count, STRIDE = 36, buf = new ArrayBuffer(n * STRIDE), f32 = new Float32Array(buf), u16 = new Uint16Array(buf);
+  for (let i = 0; i < n; i++) { f32.set([grid.attributes.position.getX(i), grid.attributes.position.getY(i), 0], i * 9); u16.set([2, 0, 0, 0], i * 18 + 6); f32.set([1, 0, 0, 0], i * 9 + 5); }
+  const G = new THREE.BufferGeometry(), fb = new THREE.InterleavedBuffer(f32, 9), ub = new THREE.InterleavedBuffer(u16, 18);
+  G.setAttribute('position', new THREE.InterleavedBufferAttribute(fb, 3, 0)); G.setAttribute('skinIndex', new THREE.InterleavedBufferAttribute(ub, 4, 6)); G.setAttribute('skinWeight', new THREE.InterleavedBufferAttribute(fb, 4, 5));
+  G.setIndex(grid.index.clone());
+  assert.equal(G.attributes.skinIndex.array.length, n * 18, '시험 전제: 끼워진 속성의 .array 는 버퍼 전체');
+  const out = subdivideHands(G, [{ bi: 2, M: new THREE.Matrix4(), K: new THREE.Vector3(0, -1, 0), f: new THREE.Vector3(0, 1, 0) }]);
+  const si = out.attributes.skinIndex; assert.ok(out.attributes.position.count > n, '손 영역이 안 나뉘었다 — 시험이 아무것도 안 잰다');
+  assert.equal(si.array.length, si.count * 4, '뼈 번호 배열 길이가 정점 수와 안 맞는다 — 버퍼 전체를 읽었다');
+  let bad = 0; for (let i = 0; i < si.count; i++) for (let k = 0; k < 4; k++) { const v = si.getComponent(i, k), w = out.attributes.skinWeight.getComponent(i, k); if (w > 0 && v !== 2) bad++; }
+  assert.equal(bad, 0, '나뉜 손의 뼈 번호가 다른 속성 값으로 섞였다 — 휴대폰 카인에서 없는 뼈를 가리켜 그리기가 멈췄다');
+  const H = separateAttributes(new THREE.BufferGeometry().setAttribute('skinIndex', new THREE.InterleavedBufferAttribute(ub, 4, 6)));
+  assert.deepEqual([...H.attributes.skinIndex.array.slice(0, 4)], [2, 0, 0, 0]); assert.equal(H.attributes.skinIndex.isInterleavedBufferAttribute, undefined);
+  for (const [f, re] of [['js/hand-grip.js', /separateAttributes\(G0\);   \/\/ 가벼운 모델/], ['js/ain-bind-repair.js', /mesh\.geometry=separateAttributes\(mesh\.geometry\.clone\(\)\)/]])
+    assert.match(fs.readFileSync(path.join(ROOT, f), 'utf8'), re, f + ' 가 끼워진 속성을 그대로 읽는다');
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  assert.match(w, /const LOD = q\.has\('lod'\) \? q\.get\('lod'\) === '1' : MOBILE;/, '3D 필드가 휴대폰에서 정식 모델(최대 7 MB)을 받는다');
+  assert.match(w, /loader\.load\(lodUrl\(u\)/, 'LOD 주소 바꾸기가 로더에 안 걸렸다');
 });

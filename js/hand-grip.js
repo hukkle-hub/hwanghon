@@ -125,8 +125,19 @@ function fingerShape(v,g,amount){
 /* 손가락 쪼개기 — 세라 손가락은 한 손 전체에 정점 45 개(손가락 하나 = 뿌리·끝 두 점)라 감으면 곧은 현(지붕 모양)이 됐다.
    손 영역(손 무게 ≥ .3, 뿌리 1 cm 아래부터)의 MAX_EDGE 보다 긴 모서리를 가운데서 나눈다.
    이웃 삼각형도 나뉜 모서리 수(1·2·3)대로 나눠 T 자 이음(틈)이 생기지 않는다. 속성은 평균, 스킨 무게는 합쳐 상위 4 개. */
+/* 끼워 넣은(interleaved) 정점 속성을 따로 떼어 낸다 — gltf-transform 이 쓴 가벼운 모델(art/3d/lod)은 위치·법선·뼈 번호가 한 버퍼에
+   섞여 있어 .array 가 «버퍼 전체» 다(카인 skinIndex: 정점 7,895 개에 길이 221,060). Array.from(at.array) 로 읽으면 다른 속성 값이 뼈 번호로 들어간다.
+   값은 그대로(정규화 표식도) — 같은 지오메트리를 나눠 쓰는 복제본에도 안전하다 */
+export function separateAttributes(G){
+  const sep=a=>{if(!a||!a.isInterleavedBufferAttribute)return a;const z=a.itemSize,d=a.data,src=d.array,out=new src.constructor(a.count*z);
+    for(let i=0;i<a.count;i++)for(let c=0;c<z;c++)out[i*z+c]=src[i*d.stride+a.offset+c];const b=new T.BufferAttribute(out,z,a.normalized);b.name=a.name;return b;};
+  for(const k of Object.keys(G.attributes)){const a=G.attributes[k];if(a.isInterleavedBufferAttribute)G.setAttribute(k,sep(a));}
+  for(const k of Object.keys(G.morphAttributes||{}))G.morphAttributes[k]=G.morphAttributes[k].map(sep);
+  return G;
+}
 const MAX_EDGE=.007;   // 손 뼈 로컬 m. 「근거 없음」 — 7 mm 면 7 cm 손가락이 10 마디, 렌더로 매끈함 확인
 export function subdivideHands(G0,regions,maxLen=MAX_EDGE,passes=5){
+  separateAttributes(G0);
   const names=Object.keys(G0.attributes),A={},size={};
   for(const k of names){const at=G0.attributes[k];size[k]=at.itemSize;A[k]=Array.from(at.array);}
   const MA={};for(const k of Object.keys(G0.morphAttributes||{}))MA[k]=(G0.morphAttributes[k]||[]).map(at=>Array.from(at.array));
@@ -200,6 +211,7 @@ export function buildHandGrip(model,charId){
   const targets=[];
   for(const m of meshes){
     const G0=m.geometry;if(!G0.attributes.skinIndex||!G0.index)continue;
+    separateAttributes(G0);   // 가벼운 모델(LOD)은 속성이 한 버퍼에 끼워져 있다 — 그대로 읽으면 뼈 번호가 섞여 없는 뼈를 가리켰다 (휴대폰 카인·세라, 2026-10-09 새벽)
     if(G0.morphAttributes.position&&G0.morphAttributes.position.length&&!G0.morphTargetsRelative)continue;   // 절대 모프와 섞지 않는다(지금 GLB 에는 없다)
     const regions=Object.keys(grips).map(side=>{const bi=m.skeleton.bones.indexOf(hands[side]);if(bi<0)return null;const g=grips[side];return {side,bi,M:handM(m,bi),K:V(...g.K),f:V(...g.f)};}).filter(Boolean);
     if(!regions.length)continue;

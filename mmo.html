@@ -304,11 +304,11 @@ function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb
 async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=SkeletonUtils.clone(g.scene); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,root);
   /* 무기 쥠 (디렉터 «무기도 제대로 못 잡고 있네»): 아인은 바인드·클립 교정 + 양손 쥠, 나머지는 쥔 손 모프 + 팔 리그 — 솔로(game3d)·레이드(party-avatar)와 같은 층.
      없으면 낫을 지팡이처럼 끝을 잡고 왼손이 논다. 교정은 믹서보다 먼저 (CLAUDE.md §1) */
-  /* 가벼운 모델(LOD, 휴대폰 기본)은 «새로 짠 몸» 표식(meshSwap)이 빠져 옛 몸 재가중 경로로 들어가 없는 뼈 번호(−1)를 써 넣었다 → 그리기에서 터짐 (2026-10-09 새벽 발견).
-     표식이 있는 정식 모델만 교정한다 — 양손 쥠 리그는 둘 다 건다 */
-  let anims=g.animations; const meshSwap=(()=>{ let s=false; root.traverse(m=>{ if(m.isSkinnedMesh&&m.userData.meshSwap) s=true; }); return s; })();
-  if(id==='ain'&&meshSwap){ const fix=repairAinBind(root); anims=repairAinClips(g.animations,fix); }
-  const handGrip=id!=='ain'&&!LOD?gripHands(root,id):null;   /* 쥔 손 모프는 정식 모델만 — 가벼운 모델(압축 꼭짓점)에 걸면 손을 잘게 나누다 뼈 번호가 깨져(65535) 휴대폰 그리기가 멈췄다 (2026-10-09 새벽) */
+  /* 가벼운 모델(LOD, 휴대폰 기본)은 정점 속성이 한 버퍼에 끼워져(interleaved) 있다 — 손 모프가 그걸 통째로 읽어 뼈 번호가 섞였고 휴대폰 카인·세라 그리기가 멈췄다.
+     이제 hand-grip · ain-bind-repair 가 먼저 떼어 낸다(separateAttributes) → 정식·가벼운 모델 모두 같은 층 (2026-10-09 새벽) */
+  let anims=g.animations;
+  if(id==='ain'){ const fix=repairAinBind(root); anims=repairAinClips(g.animations,fix); }
+  const handGrip=id!=='ain'?gripHands(root,id):null;
   root.position.set(x,0,z); scene.add(root); root.traverse(o2=>{ if(o2.isMesh) o2.frustumCulled=false; });
   const mixer=new THREE.AnimationMixer(root), clip=n=>anims.find(a=>a.name===n), act={};
   for(const n of ['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }

@@ -1,6 +1,7 @@
 import * as T from '../vendor/three/three.module.js';
 import {ainGripCenter,closeAinHandPoint,resolveAinGripSurface} from './ain-grip-shape.js';
 import {smoothClip} from './clip-smooth.js';
+import {separateAttributes} from './hand-grip.js';
 const V=(...v)=>new T.Vector3(...v);
 function distance(p,a,b){const d=b.clone().sub(a),t=T.MathUtils.clamp(p.clone().sub(a).dot(d)/d.lengthSq(),0,1);return p.distanceTo(a.clone().addScaledVector(d,t));}
 // Ain-specific measured landmarks, metres, in the existing mesh's bind space.
@@ -39,7 +40,7 @@ export function repairAinBind(model){
   if(!swap)mesh.skeleton.boneInverses=mesh.skeleton.bones.map(b=>b.matrixWorld.clone().premultiply(model.matrixWorld.clone().invert()).invert());
   // Grafted head (tools/3d/head-graft.py, docs/design/79): no arm/hand geometry — bind inverses only.
   if(new T.Box3().setFromBufferAttribute(mesh.geometry.attributes.position).min.y>1.3)continue;
-  mesh.geometry=mesh.geometry.clone();report.geometries.push(mesh.geometry);
+  mesh.geometry=separateAttributes(mesh.geometry.clone());report.geometries.push(mesh.geometry);   // 가벼운 모델(LOD)은 속성이 끼워져 있다 — p.array 가 버퍼 전체라 손 법선 모프가 어긋난다
   const g=mesh.geometry,p=g.attributes.position,si=g.attributes.skinIndex,sw=g.attributes.skinWeight;
   // Which vertices the grip may curl: old mesh = its measured box; new mesh = hand-bone weight (its hands sit
   // elsewhere, and the A-pose hand hangs beside the skirt, so a box would also catch cloth).
