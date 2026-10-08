@@ -167,6 +167,9 @@ for (const b of meta.bosses || []) if (b.ai === 'dominator') {
 const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
 const INDOOR = (env.kind || Z.kind || meta.kind) !== 'field';   /* 던전·벙커: 천장이 있으니 가깝고 낮게 */
 if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }   /* 실내는 가까이서 어둡게 */
+/* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
+   달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
+if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
 const camS = { yaw: Math.PI + (env.road ? -env.road.ang : 0), pitch: INDOOR ? 0.2 : 0.32, dist: INDOOR ? 3.6 : MOBILE ? 6 : 5.2 };
 function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
 addEventListener('resize', resize);

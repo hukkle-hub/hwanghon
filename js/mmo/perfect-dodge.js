@@ -14,7 +14,10 @@ export function isPerfect(pressAt, hitAt, online = false) {
 /* 지금 자세를 얼린 복제 — 뼈대만 복제하고 형상은 공유, 더하기 합성으로 사라진다 */
 export function ghostSnap(scene, model, color, opacity, life) {
   if (!model || !model.parent) return null;
-  const g = clone(model), src = [], dst = [];
+  /* clone 은 userData 를 JSON 으로 복사한다 — 2D 필드 영웅은 userData 에 장면 물체(sil 등)를 물고 있어 «순환 구조» 로 터졌다. 복제하는 동안만 비운다 */
+  const kept = []; model.traverse(o => { kept.push([o, o.userData]); o.userData = {}; });
+  let g; try { g = clone(model); } finally { for (const [o, u] of kept) o.userData = u; }
+  const src = [], dst = [];
   model.traverse(o => { if (o.isBone) src.push(o); }); g.traverse(o => { if (o.isBone) dst.push(o); });
   for (let i = 0; i < src.length && i < dst.length; i++) { dst[i].position.copy(src[i].position); dst[i].quaternion.copy(src[i].quaternion); dst[i].scale.copy(src[i].scale); }
   const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending });

@@ -216,3 +216,21 @@ test('필드 완벽 회피: 누른 뒤 0.14초 안(솔로 dodge.perfect 와 같�
   assert.match(w, /if \(kind === 'evade'\) evadeFx\(h\[6\], true\);/, '3D 필드 온라인: 완벽 회피가 없다');
   assert.match(w, /if \(now < p\.invulnUntil \|\| now < p\.dodgeUntil\) \{ evadeFx\(now, false\);/, '3D 필드 혼자 연습: 완벽 회피가 없다');
 });
+
+test('완벽 회피 잔상: 영웅 userData 에 순환 참조(2D 필드 sil)가 있어도 복제가 안 터지고 userData 는 그대로 돌아온다', async () => {
+  globalThis.requestAnimationFrame ??= () => 0;
+  const { ghostSnap } = await import('../js/mmo/perfect-dodge.js');
+  const scene = new THREE.Scene(), root = new THREE.Group(), bone = new THREE.Bone(), mesh = new THREE.SkinnedMesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());
+  root.add(bone); root.add(mesh); mesh.bind(new THREE.Skeleton([bone])); scene.add(root);
+  const sil = { object: null }; sil.object = { object: sil }; root.userData.sil = sil; mesh.userData.keep = 7;
+  const h = ghostSnap(scene, root, 0x7fb8ff, 0.4, 900);
+  assert.ok(h && scene.children.includes(h), '잔상이 장면에 안 들어갔다');
+  assert.equal(root.userData.sil, sil, '원본 userData 를 잃었다'); assert.equal(mesh.userData.keep, 7);
+});
+
+test('3D 필드 휴대폰: 카메라 먼 면 = 안개 끝 + 10 m (다 묻힌 것은 안 그린다) · 하늘 돔은 그 안으로', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  assert.match(w, /if \(MOBILE && q\.get\('far'\) !== '0'\) \{ cam\.far = scene\.fog\.far \+ 10; cam\.updateProjectionMatrix\(\); if \(window\.__sky\) window\.__sky\.scale\.setScalar\(\(cam\.far - 5\) \/ 480\); \}/, '휴대폰이 안개 밖 600 m 까지 그린다 (남태령 823 그리기)');
+  const i = w.indexOf("if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }"), j = w.indexOf('cam.far = scene.fog.far + 10');
+  assert.ok(i > 0 && j > i, '먼 면을 실내 안개(70 m)를 정하기 전에 잡았다');
+});
