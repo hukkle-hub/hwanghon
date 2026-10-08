@@ -104,7 +104,9 @@
     if(!me) return;
     var lead=me.role==='leader'||me.role==='vice';
     $('rgw-orders').innerHTML=me.orders.length?me.orders.map(function(o){ var mine=profile&&o.issuer===profile.id;
-      return '<div class="rgw-order"><b style="color:#C9A45E">'+o.priority+'</b><span class="fill">'+esc(o.name)+' · '+esc((by[o.node]||{name:o.node}).name)+' <small class="t-faint">'+esc(o.issuerName)+'</small></span>'+
+      /* 명령 보너스 (서버가 판 보고 때 다시 잰다): 걸린 지 3분 지난 명령의 거점에서 판하면 공헌 +10% — 지금 전술 판이 있는 곳만 */
+      var wait=Math.ceil((o.at+180000-Date.now())/60000), bonus=by[o.node]&&by[o.node].node?(wait>0?'<small class="t-faint"> · '+wait+'분 뒤 판 +10%</small>':'<small style="color:#8FD3A8"> · 판 +10%</small>'):'';
+      return '<div class="rgw-order"><b style="color:#C9A45E">'+o.priority+'</b><span class="fill">'+esc(o.name)+' · '+esc((by[o.node]||{name:o.node}).name)+bonus+' <small class="t-faint">'+esc(o.issuerName)+'</small></span>'+
         (mine||lead?'<button type="button" class="btn btn--sm" data-cancel="'+o.id+'">내리기</button>':'')+'</div>'; }).join(''):'<div class="xs t-faint">걸린 명령 없음</div>';
     $('rgw-issue').hidden=!me.canOrder.length;
     $('rgw-pick').textContent=rgPick?(by[rgPick].name+' — '+by[rgPick].effect):'지도에서 거점을 누르면 명령을 낼 수 있습니다 ('+ND_ROLE[me.role]+')';

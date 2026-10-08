@@ -83,6 +83,11 @@ await show(W);
 await W.screenshot({path: `${OUT}/rg-war${SUF}.png`});
 console.log('전투대장 측정', JSON.stringify(await measure(W)));
 
+/* 명령 보너스: 탈환 준비 명령을 4분 전으로 돌려 놓고(판 한 번 시간), 전투대장이 남산 탈환 판 결과를 보낸다 → 공헌 +10%, 망은 남산 «복구» */
+store.db.prepare("UPDATE guild_orders SET at=at-240000 WHERE type='prepare_retake'").run();
+const rep = store.nodeReport(war.id, N, {outcome:'retaken', contrib:{kill:10}}, Date.now());   // 점령 14시간 = 탈환 가능 → 탈환 판
+console.log('명령 보너스', JSON.stringify(rep.orderBonus), '| 장부 처치', store.db.prepare("SELECT amount FROM node_contrib WHERE player=? AND category='kill' ORDER BY period DESC LIMIT 1").get(war.id).amount);
+
 /* ── 길드원: 보기만 ── */
 const P = await mk(mem.token);
 await P.goto(BASE + '/shelter.html', {waitUntil:'networkidle'}); await wait(P, 1800); await pane(P, '명단');

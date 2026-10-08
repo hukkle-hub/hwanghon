@@ -47,6 +47,10 @@ const methods={
   else if(outcome==='retaken') G.setState(cfg,r,m.id,'recovering');
   else if(outcome==='held') G.addThreat(r,m.id,-cfg.rules.held_threat_drop);
   this.regionSave(m.region,r,now); },
+ /* 명령 보너스: 이 사람 길드의 명령이 이 전술 거점(지역의 그 거점)에 판 보고 3분 전부터 걸려 있었나 */
+ regionOrderBonus(player,nodeId,now){ const m=REGION_OF_NODE.get(nodeId), g=this.guild(player); if(!m||!g) return null; this.initRegion();
+  return this.statement('SELECT id,type FROM guild_orders WHERE guild=? AND region=? AND node=? AND period=? AND active=1 AND at<=? ORDER BY priority DESC,at LIMIT 1')
+   .get(g.id,m.region,m.id,periodOf(now),now-G.ORDER_LEAD)||null; },
  regionOrders(guild,region,now){ return this.statement('SELECT id,node,type,priority,squads,resource,issuer,at FROM guild_orders WHERE guild=? AND region=? AND period=? AND active=1 ORDER BY priority DESC,at')
   .all(guild,region,periodOf(now)).map(o=>({ ...o, name:G.ORDER_NAME[o.type], issuerName:(this.statement("SELECT json_extract(data,'$.name') AS name FROM profiles WHERE id=?").get(o.issuer)||{}).name||'' })); },
  regionView(id,now=Date.now(),viewer=null){ const { cfg, r }=this.regionLoad(id); this.regionAdvance(cfg,r,now);

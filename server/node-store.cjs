@@ -4,7 +4,7 @@
    (관리 길드도 다른 사람의 거점 사용을 막지 못한다 — 막는 기능 자체를 두지 않는다).
    지금 보고(nodeReport)는 클라이언트가 보낸 판 결과다(UE 혼자 하기 시제품). 서버가 판을 돌리게 되면 그 자리에서 부른다 — GPT 와 정할 것. */
 const fs=require('node:fs'),path=require('node:path');
-const R=require('./node-rules.cjs');
+const R=require('./node-rules.cjs'), REGION=require('./region-rules.cjs');
 const WEEK=7*24*3600e3, HOUR=3600e3;
 const REPORT_GAP=60e3;   // 한 사람이 같은 거점에 판 결과를 보내는 최소 간격
 const PARTY_WINDOW=10*60e3;   // 같은 판의 파티원 보고: 첫 보고가 상태를 바꾸고, 10분 안의 같은 결과는 공헌만 쌓는다
@@ -86,9 +86,11 @@ const methods={
    else if(outcome==='retaken'){ if(n.state!=='retakeable'&&n.state!=='retaking') throw Error(n.state==='fallen'?'함락 2시간 뒤부터 탈환할 수 있습니다.':'탈환할 거점이 아닙니다.'); n.state='stable'; n.fallenAt=0; }
    if(!partyMate){ n.lastOutcome={outcome,at:now}; this.regionNodeEvent(node,outcome,now); }   // 서울 전략망: 함락 = 점령, 탈환 = 복구, 방어 = 위협 −15
    const g=this.guild(id), period=periodOf(now);
+   /* 명령 보너스 — 우리 길드가 «여기로» 명령을 걸어 둔 거점에서 한 판이면 공헌 +10% (한 판 최대치로 자른 뒤에) */
+   const order=this.regionOrderBonus(id,node,now); if(order) for(const k of Object.keys(contrib)) contrib[k]*=1+REGION.ORDER_BONUS;
    for(const [k,v] of Object.entries(contrib)) if(v>0) this.statement('INSERT INTO node_contrib(period,node,player,guild,category,amount) VALUES(?,?,?,?,?,?) ON CONFLICT(period,node,player,category) DO UPDATE SET amount=amount+excluded.amount,guild=excluded.guild').run(period,node,id,g?g.id:null,k,v);
-   this.statement('INSERT INTO node_runs(node,player,outcome,at,report) VALUES(?,?,?,?,?)').run(node,id,outcome,now,JSON.stringify({contrib,hours:+hours.toFixed(3)}));
-   this.nodeSave(node,n,now); return this.nodeView(node,now,id); }); },
+   this.statement('INSERT INTO node_runs(node,player,outcome,at,report) VALUES(?,?,?,?,?)').run(node,id,outcome,now,JSON.stringify({contrib,hours:+hours.toFixed(3),...(order?{orderBonus:order.id}:{})}));
+   this.nodeSave(node,n,now); return { ...this.nodeView(node,now,id), orderBonus:order?{ order:order.id, type:order.type, bonus:REGION.ORDER_BONUS }:null }; }); },
  /* 관리 길드의 길드장·부길드장만, 예산 안에서 (전부는 못 고른다) */
  nodePolicy(id,node,picks,now=Date.now()){ return this.transaction(()=>{ const n=this.nodeLoad(node); this.nodeStewardship(node,n,now);
   const me=this.guildRoleOf(id); if(!me||!n.steward||n.steward.guild!==me.guild) throw Error('관리 길드만 정책을 고를 수 있습니다.');

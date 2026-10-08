@@ -81,8 +81,11 @@ const canOrder=(role,type)=>(ORDER_ROLES[role]||[]).includes(type);
 /* 취소: 낸 사람, 또는 길드장·부길드장 (패키지는 대장 누구나였다 — 제작대장이 전투대장의 명령을 지우게 두지 않았다) */
 const canCancel=(role,isIssuer)=>isIssuer||role==='leader'||role==='vice';
 const ORDER_LIMIT=8;   // 길드당 동시에 걸린 명령
+/* 명령 보너스 (디렉터 결정, 문서 202 §4): 자기 길드 명령이 걸린 거점에서 판을 하면 그 판 공헌 +10%. 명령 종류는 따지지 않고, 겹쳐도 한 번.
+   판 직전에 명령을 걸고 보고만 하는 것을 막으려고, 판 결과 보고보다 3분 넘게 먼저 걸린 명령만 센다 (한 판은 4분 이상) */
+const ORDER_BONUS=0.10, ORDER_LEAD=3*60e3;
 function cleanOrder(o){ return { priority:Math.max(1,Math.min(5,Math.round(+o.priority||3))), squads:Math.max(0,Math.min(8,Math.round(+o.squads||0))),
  resource:Math.max(0,Math.min(100,Math.round(+o.resource||0))) }; }
 
-module.exports={ OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
+module.exports={ OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, ORDER_BONUS, ORDER_LEAD, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
  serviceByRole, operationalRatio, pressureBand, crisis, assignStewards, adminUse, canOrder, canCancel, cleanOrder };

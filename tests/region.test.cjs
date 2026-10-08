@@ -103,3 +103,24 @@ test('서버: 전략 명령 — 직책대로 내고, 낸 사람·길드장만 �
  assert.equal(cmd(a,{action:'region'},t+NODE.WEEK).region.me.orders.length,0,'명령은 주기가 바뀌면 내려간다');
  assert.equal(cmd(a,{action:'region'},t+6300).region.me.admin.capacity,80);
 });
+test('명령 보너스: 우리 길드 명령이 걸린 거점에서 판하면 공헌 +10% — 다른 길드·막 건 명령·내린 명령·지난 주기는 아니다',()=>{
+ const {store,a,war,mem,b}=world(), t=80*NODE.WEEK, N='namsan_n01', cmd=(id,msg,at)=>NODE.command(store,id,{type:'node',...msg},at);
+ const amount=(p,c)=>(store.db.prepare('SELECT amount FROM node_contrib WHERE player=? AND category=?').get(p,c)||{}).amount||0;
+ const order=cmd(war,{action:'order',order:{node:'N01',type:'defend'}},t).region.me.orders[0];
+ /* 명령 1분 뒤 보고: 판 직전에 건 명령 → 보너스 없음 */
+ const early=store.nodeReport(mem,N,{outcome:'held',contrib:{kill:10}},t+60e3); assert.equal(early.orderBonus,null); assert.equal(amount(mem,'kill'),10);
+ /* 5분 뒤: 보너스 */
+ const r=store.nodeReport(war,N,{outcome:'held',contrib:{kill:10,defense:20}},t+5*60e3);
+ assert.deepEqual(r.orderBonus,{order:order.id,type:'defend',bonus:0.1}); assert.ok(Math.abs(amount(war,'kill')-11)<1e-9); assert.ok(Math.abs(amount(war,'defense')-22)<1e-9);
+ /* 다른 길드는 같은 거점에서 판해도 없음 */
+ assert.equal(store.nodeReport(b,N,{outcome:'held',contrib:{kill:10}},t+6*60e3).orderBonus,null); assert.equal(amount(b,'kill'),10);
+ /* 서울역(N02) 명령은 남산 판에 안 붙는다 */
+ const {store:s2,war:w2}=world(); NODE.command(s2,w2,{type:'node',action:'order',order:{node:'N02',type:'reinforce'}},t);
+ assert.equal(s2.nodeReport(w2,N,{outcome:'held',contrib:{kill:10}},t+10*60e3).orderBonus,null);
+ /* 내리면 끝 */
+ cmd(a,{action:'cancel',order:order.id},t+7*60e3); assert.equal(store.nodeReport(a,N,{outcome:'held',contrib:{kill:10}},t+9*60e3).orderBonus,null);
+ /* 지난 주기 명령은 이번 주기 판에 안 붙는다 */
+ cmd(war,{action:'order',order:{node:'N01',type:'defend'}},t+20*60e3);
+ assert.equal(store.nodeReport(war,N,{outcome:'held',contrib:{kill:1}},t+NODE.WEEK+60e3).orderBonus,null);
+ assert.ok(JSON.parse(store.db.prepare("SELECT report FROM node_runs WHERE player=? ORDER BY at LIMIT 1 OFFSET 0").get(war).report).orderBonus,'판 기록에 명령 보너스가 안 남았다');
+});
