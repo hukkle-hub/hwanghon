@@ -42,7 +42,7 @@ export function build(THREE, scene, osm, zone = {}) {
     const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
   const floorM = new THREE.MeshStandardMaterial({ map: terrazzo, roughness: 0.18, metalness: 0.15, color: 0x8a9a9c });   /* 젖은 바닥 */
   flat(mall, floorM, 0); flat(corridor, floorM, 0.001);
-  if (zone.view3d) { const ceilM = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: 0.95, side: THREE.DoubleSide }); for (const pts of [mall, corridor]) flat(pts, ceilM, WALL); }   /* 천장 — 3D 필드에서만 */
+  if (zone.view3d) { const ceilM = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: 0.95, side: THREE.DoubleSide }); for (const pts of [mall, corridor]) flat(pts, ceilM, WALL).userData.camBlock = true; }   /* 천장 — 3D 필드에서만 */
   /* 물(0.9 m)은 굽지 않는다 — 첫 판은 물면을 높이 그림에 구워 넣어 인물의 무릎 아래가 «땅에 박힌» 듯 잘렸다(디렉터 지적).
      부츠·각반도 장비라 보여야 한다. 게임(mmo.html)이 map.json water.y 높이에 반투명 물면을 따로 그린다 — 물 밑 다리가 비쳐 보인다 */
 

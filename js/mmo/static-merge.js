@@ -17,7 +17,8 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
     if (o.isSkinnedMesh || o.isInstancedMesh || Array.isArray(o.material) || !o.visible || o.children.length || (skip && skip(o))) { if (o.isInstancedMesh) camFromInstanced(o); return; }
     if (!o.material.onBeforeCompile || o.material.onBeforeCompile === THREE.Material.prototype.onBeforeCompile) { const k = sig(o.material), m0 = canon.get(k); if (!m0) canon.set(k, o.material); else if (m0 !== o.material) { o.material = m0; dedup++; } }
     const g = o.geometry; box.setFromObject(o);
-    if (box.max.y - box.min.y > camMinH && box.max.y > 1.4) { if (!g.boundingBox) g.computeBoundingBox(); camBoxes.push(obb(box, g.boundingBox, o.matrixWorld)); }
+    /* 천장(camBlock): 두께 0.12 m 라 «키 1.2 m 넘는 것» 에서 빠져, 높은 카메라가 천장 위로 나가 천장 윗면만 찍었다 (2호선 선로 — 문서 206 §10) */
+    if ((box.max.y - box.min.y > camMinH && box.max.y > 1.4) || o.userData.camBlock) { if (!g.boundingBox) g.computeBoundingBox(); camBoxes.push(obb(box, g.boundingBox, o.matrixWorld)); }
     if ((g.morphAttributes && Object.keys(g.morphAttributes).length) || Object.values(g.attributes).some(a => a.isInterleavedBufferAttribute)) return;
     box.getCenter(c);
     const key = [o.material.uuid, o.castShadow, o.receiveShadow, o.renderOrder, g.index ? 1 : 0, Object.keys(g.attributes).sort().join(','), Math.floor(c.x / cell), Math.floor(c.z / cell)].join('|');

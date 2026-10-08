@@ -55,7 +55,7 @@ export function build(THREE, scene, osm, zone) {
         const open = rooms.some(o => o !== r && s + e.n[0] * 0.6 > o.s0 && s + e.n[0] * 0.6 < o.s1 && t + e.n[1] * 0.6 > o.t0 && t + e.n[1] * 0.6 < o.t1);
         if (open) flush(); else run = run ? [run[0], u1] : [u0, u1]; }
       flush(); }
-    if (zone.view3d) { const c = FROM((r.s0 + r.s1) / 2, (r.t0 + r.t1) / 2), ce = new THREE.Mesh(new THREE.BoxGeometry(r.s1 - r.s0 + 0.4, 0.12, r.t1 - r.t0 + 0.4), cutM); ce.position.set(c[0], H + 0.06, c[1]); ce.rotation.y = SCREEN_ANG; ce.receiveShadow = true; scene.add(ce); } }   /* 천장 — 위에서 보는 굽기엔 없다 */
+    if (zone.view3d) { const c = FROM((r.s0 + r.s1) / 2, (r.t0 + r.t1) / 2), ce = new THREE.Mesh(new THREE.BoxGeometry(r.s1 - r.s0 + 0.4, 0.12, r.t1 - r.t0 + 0.4), cutM); ce.position.set(c[0], H + 0.06, c[1]); ce.rotation.y = SCREEN_ANG; ce.receiveShadow = true; ce.userData.camBlock = true; scene.add(ce); } }   /* 천장 — 위에서 보는 굽기엔 없다 */
 
   /* ---------- 빛: 방마다 천장 등. light: 'fluo'(형광등) · 'red'(비상등) · 'warm'(드럼통 불·백열) · 'none' ---------- */
   const LCOL = { fluo: 0xdff4ff, red: 0xff3a2a, warm: 0xffa860, green: 0x60ff9a, blue: 0x60a8ff };

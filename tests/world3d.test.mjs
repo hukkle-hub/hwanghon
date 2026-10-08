@@ -165,3 +165,13 @@ test('3D 필드 노바 방: 보스 둘레(반경 10 m) 결정은 무릎 높이 �
   /* 굽기(view3d 아님)는 그대로여야 한다: 난수 순서가 바뀌면 굽기 그림과 막이(map.json)가 어긋난다 */
   assert.match(src, /spot\(r, o\), p = FROM\(s, t\); let h = \(o\.h \|\| 1\.2\) \* \(0\.5 \+ R\(\)\);/, '결정 높이 난수 순서가 바뀌었다');
 });
+
+test('실내 천장은 카메라 막이 — 두께 0.12 m 라 «키 1.2 m 넘는 것» 에서 빠져 멀리 당긴 카메라가 천장 위로 나가 윗면만 찍었다', () => {
+  const scene = new THREE.Scene(), m = new THREE.Mesh(new THREE.BoxGeometry(20, 0.12, 20), new THREE.MeshStandardMaterial()); m.position.y = 5.06; m.userData.camBlock = true; scene.add(m);
+  const thin = new THREE.Mesh(new THREE.BoxGeometry(20, 0.12, 20), new THREE.MeshStandardMaterial({ color: 0x123456 })); thin.position.set(100, 5.06, 0); scene.add(thin);
+  const r = mergeStatic(scene);
+  assert.equal(r.camBoxes.length, 1, '천장(camBlock)이 막이가 아니다 — 또는 표시 없는 얇은 판까지 막이가 됐다');
+  const at = new THREE.Vector3(0, 1.45, 0), want = new THREE.Vector3(6, 8.2, 0), d = firstHit(r.camBoxes, at, want);
+  assert.ok(d < at.distanceTo(want) && at.clone().add(want.clone().sub(at).setLength(d)).y < 5, '카메라가 천장 위로 나간다');
+  for (const f of ['js/mmo/env-indoor.js', 'js/mmo/env-dungeon.js']) assert.match(fs.readFileSync(path.join(ROOT, f), 'utf8'), /userData\.camBlock = true/, f + ' 천장에 camBlock 표시가 없다');
+});
