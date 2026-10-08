@@ -268,5 +268,61 @@
   "mobilize_invasion_regions": 2,
   "active_crisis_regions": 2,
   "critical_collapsed_regions": 1
+ },
+ "spread": {
+  "from_pressure": 75,
+  "base": 50,
+  "rate": 0.2,
+  "cap": 12
+ },
+ "field": {
+  "alive_threat_per_step": 6,
+  "kill_threat_drop": 15
+ },
+ "field_zones": {
+  "namsan": [
+   "seoul",
+   "N01"
+  ],
+  "namsan_tower": [
+   "seoul",
+   "N01"
+  ],
+  "hangang_tunnel": [
+   "seoul",
+   "N04"
+  ],
+  "yeouido": [
+   "seoul",
+   "N07"
+  ],
+  "gangnam_b1": [
+   "seoul",
+   "N02"
+  ],
+  "gangnam_b2": [
+   "seoul",
+   "N02"
+  ],
+  "pangyo_lab": [
+   "gyeonggi",
+   "GG05"
+  ],
+  "southroad": [
+   "gyeonggi",
+   "GG02"
+  ],
+  "gyeryong_base": [
+   "chungnam",
+   "CN04"
+  ],
+  "goheung": [
+   "jg_special",
+   "JG05"
+  ],
+  "goheung_pad": [
+   "jg_special",
+   "JG05"
+  ]
  }
 }

@@ -34,7 +34,8 @@ store.nodeReport(lead.id, N, {outcome:'held', contrib:{defense:300, repair:200, 
 store.nationalView(Date.now() - 14 * NODE.HOUR - 60e3);   // 전국 권역을 그때부터 돌린다 (밀린 스텝)
 store.nodeReport(war.id, N, {outcome:'fallen', contrib:{kill:4}}, Date.now() - 14 * NODE.HOUR);
 /* 전국: 부산 항만(BS01)이 판 없이 «밖에서 들어온 위협»(침공 예보 같은 것)을 받아 흔들린다 — 망만으로는 점령이 안 나니 압력은 서울만 */
-{ const {cfg, r} = store.regionLoad('busan'); require('./server/region-rules.cjs').addThreat(r, 'BS01', 90); store.regionSave('busan', r, Date.now() - 14 * NODE.HOUR); }
+/* 필드 보스: 한강 침수 터널의 레비아탄이 6시간째 살아 있다 → 한강(N04) 위협이 오른다 */
+store.initBoss(); store.bossSave('leviathan', 'hangang_tunnel', 'alive', 0, Date.now() - 6 * NODE.HOUR);
 
 const {createPartyServer} = require('./server/index.cjs');
 const app = createPartyServer({store});

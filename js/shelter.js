@@ -101,6 +101,7 @@
     var hot=v.regions.filter(function(r){ return r.band.id!=='stable'; }).sort(function(a,b){ return b.pressure-a.pressure; });
     var bad=v.corridors.filter(function(c){ return c.status!=='open'; });
     $('krw-side').innerHTML=(hot.length?hot.slice(0,4).map(function(r){ return '<span style="color:'+KR_BAND[r.band.id]+'">●</span> '+esc(r.name)+' '+esc(r.band.name)+' '+Math.round(r.pressure); }).join('<br>'):'<span class="t-faint">16권역 모두 안정</span>')+
+      (v.field&&v.field.length?'<br><span style="color:#E58A7A">▲</span> 필드 보스 '+v.field.length+'마리가 거점을 위협 중':'')+
       '<br>'+(bad.length?bad.map(function(c){ return '회랑 '+esc(c.purpose)+' <b style="color:'+(c.status==='cut'?'#E58A7A':'#E0B060')+'">'+KR_COR[c.status][0]+'</b>'; }).join('<br>'):'<span class="t-faint">회랑 7개 모두 열림</span>');
   }
   function renderRegion(){
@@ -115,6 +116,8 @@
       if(n.threat>0) svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(rad+3+n.threat/30).toFixed(1)+'" fill="none" stroke="'+st[1]+'" stroke-opacity=".35" stroke-width="2"/>';
       svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+rad+'" fill="'+st[1]+'"'+(mine?' stroke="#C9A45E" stroke-width="3"':allied?' stroke="#9FC7E8" stroke-width="3" stroke-dasharray="3 2"':pick?' stroke="#fff" stroke-width="2"':'')+'/>';
       svg+='<text x="'+(p[0]+rad+4)+'" y="'+(p[1]+3.5)+'">'+esc(n.name.split(' ')[0])+(n.state!=='online'?' · '+st[0]:'')+'</text>';
+      /* 이 거점을 위협하는 필드 보스가 살아 있다 (잡으면 위협 −15) — 빨간 삼각형 */
+      if(n.fieldBoss&&n.fieldBoss.length) svg+='<path d="M'+(p[0]-rad-9)+' '+(p[1]+4)+'l5 -9l5 9z" fill="#E58A7A"><title>필드 보스 ('+esc(n.fieldBoss.join(', '))+') — 살아 있는 동안 위협 +6/30분, 잡으면 −15</title></path>';
       svg+='<circle class="rgw-hit" data-n="'+n.id+'" cx="'+p[0]+'" cy="'+p[1]+'" r="20" fill="transparent" stroke="none"><title>'+esc(n.name+' — '+st[0]+' · 위협 '+n.threat+' · '+n.effect+(n.steward?' · 관리 '+n.steward.name:''))+'</title></circle>'; });
     $('rgw-map').innerHTML=svg;
     $('rgw-band').innerHTML='압력 <b>'+Math.round(r.pressure)+'</b> '+esc(r.band.name)+' · 운영 '+Math.round(r.operational*100)+'%';

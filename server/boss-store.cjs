@@ -13,11 +13,14 @@ const methods={
   this.statement('INSERT INTO field_bosses(id,zone,state,next_at,updated) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET zone=excluded.zone,state=excluded.state,next_at=excluded.next_at,updated=excluded.updated').run(id,zone,state,Math.floor(nextAt),now); },
  /* 처치 기록 + 재료(기여도 5% 이상)를 한 트랜잭션으로. 반환: 바뀐 프로필들 */
  bossKill(boss, zone, at, ranking, drops, material){ this.initBoss();
-  return this.transaction(()=>{ const top=ranking[0]||null, changed=[];
+  const out=this.transaction(()=>{ const top=ranking[0]||null, changed=[];
    this.statement('INSERT INTO boss_kills(boss,zone,at,top,top_name,players,drops) VALUES(?,?,?,?,?,?,?)').run(boss,zone,at,top?top.id:null,top?top.name:null,ranking.length,JSON.stringify(drops));
    if(material) for(const r of ranking){ if(r.share<material.share) continue; let p; try{ p=this.get(r.id); }catch{ continue; }
     p.items={...p.items,[material.item]:(p.items[material.item]||0)+1}; this.put(p); changed.push(r.id); }
-   return changed; }); },
+   return changed; });
+  /* 전략 지도: 이 구역에 이어진 권역 거점의 위협이 내려간다 (docs/design/202 §8). 실패해도 처치는 그대로 */
+  try{ this.regionFieldKill?.(zone,at); }catch(e){ console.warn('[region] 필드 보스 처치 반영 실패',e.message); }
+  return out; },
  /* 바닥의 보스 장비 줍기 — 장비는 종류별 하나만(이미 있으면 못 줍는다 → 다른 사람이 주울 수 있다) */
  bossLoot(id, item){ const d=C.equipment.find(i=>i.id===item); if(!d||d.src!=='boss') throw Error('주울 수 없는 물품입니다.');
   return this.transaction(()=>{ const p=this.get(id); if((p.items[item]||0)+((p.vault||{})[item]||0)>0) throw Error('이미 가진 장비입니다.');

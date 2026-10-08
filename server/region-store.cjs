@@ -28,10 +28,40 @@ const methods={
  regionSync(cfg,r){ for(const n of cfg.nodes){ if(!n.node) continue; const t=this.nodeLoad(n.node).state, s=r.nodes[n.id];
   if(!CALM.includes(t)&&t!=='recovering'&&s.state!=='occupied') G.setState(cfg,r,n.id,'occupied');
   else if(CALM.includes(t)&&s.state==='occupied') G.setState(cfg,r,n.id,'recovering'); } },
- /* 밀린 30분 스텝을 돌린다 (한 번에 최대 catch_up_steps — 서버가 오래 꺼져 있었어도 한 번에 수천 걸음 돌지 않게) */
- regionAdvance(cfg,r,now){ const ms=cfg.rules.step_minutes*60e3; if(!r.lastStep) r.lastStep=Math.floor(now/ms)*ms;
-  const steps=Math.max(0,Math.floor((now-r.lastStep)/ms)); this.regionSync(cfg,r);
-  for(let i=0;i<Math.min(steps,cfg.rules.catch_up_steps);i++) G.step(cfg,r); r.lastStep+=steps*ms; return steps; },
+ /* 밀린 30분 스텝 — 16권역을 한 시계로 같이 돌린다 (권역 사이 번짐이 같은 걸음이어야 해서). 넘겨받은 r 은 돌린 뒤 값으로 채운다 */
+ regionAdvance(cfg,r,now){ const steps=this.koreaAdvance(now), fresh=this.regionLoad(cfg.id).r;
+  for(const k of Object.keys(r)) delete r[k]; Object.assign(r,fresh); return steps; },
+ /* 전국 시계 (문서 202 §8). 걸음마다: ① 살아 있는 필드 보스 → 그 거점 위협 ② 위기 권역 → 회랑 이웃 허브 위협 ③ 권역마다 망 한 걸음.
+    한 번에 최대 catch_up_steps. 시계보다 뒤처진 권역(전국 시계가 생기기 전 저장)은 먼저 혼자 따라온다 */
+ koreaAdvance(now){ this.initRegion(); const rules=regionCfg('seoul').rules, ms=rules.step_minutes*60e3, cap=rules.catch_up_steps;
+  const clock=this.statement("SELECT data FROM region_state WHERE id='_korea'").get(); let last=clock?JSON.parse(clock.data).lastStep:0;
+  if(!last) last=Math.floor(now/ms)*ms;
+  const steps=Math.max(0,Math.floor((now-last)/ms));
+  if(clock&&steps===0) return 0;
+  const all=KOREA.regions.map(m=>({ meta:m, ...this.regionLoad(m.id) }));
+  for(const x of all){ this.regionSync(x.cfg,x.r);
+   if(!x.r.lastStep) x.r.lastStep=last;
+   else if(x.r.lastStep<last){ const k=Math.min(cap,Math.floor((last-x.r.lastStep)/ms)); for(let i=0;i<k;i++) G.step(x.cfg,x.r); x.r.lastStep=last; } }
+  /* 필드 보스 (server/boss-store.cjs field_bosses) — 표가 아직 없으면 읽지 않는다(트랜잭션 안에서 표를 만들지 않게) */
+  const hasBoss=this.statement("SELECT 1 FROM sqlite_master WHERE type='table' AND name='field_bosses'").get();
+  const bosses=hasBoss?this.statement('SELECT id,zone,state,updated FROM field_bosses').all().filter(b=>b.state==='alive'&&KOREA.field_zones[b.zone]):[];
+  const byId=Object.fromEntries(all.map(x=>[x.meta.id,x])), n=Math.min(steps,cap);
+  for(let i=0;i<n;i++){ const at=last+(steps-n+i+1)*ms;
+   for(const b of bosses) if(b.updated<=at){ const [rid,node]=KOREA.field_zones[b.zone]; if(byId[rid]) G.addThreat(byId[rid].r,node,KOREA.field.alive_threat_per_step); }
+   const push=G.corridorPushes(KOREA,Object.fromEntries(all.map(x=>[x.meta.id,x.r.pressure])));
+   for(const [rid,amt] of Object.entries(push)) G.addThreat(byId[rid].r,byId[rid].meta.hub,amt);
+   for(const x of all) G.step(x.cfg,x.r); }
+  last+=steps*ms;
+  for(const x of all){ x.r.lastStep=last; this.regionSave(x.meta.id,x.r,now); }
+  this.statement("INSERT INTO region_state(id,data,updated) VALUES('_korea',?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,updated=excluded.updated").run(JSON.stringify({ lastStep:last }),now);
+  return steps; },
+ /* 지금 살아 있는 필드 보스 → 어느 권역 거점을 위협하나 (쉘터 표시용) */
+ fieldThreats(){ const has=this.statement("SELECT 1 FROM sqlite_master WHERE type='table' AND name='field_bosses'").get(); if(!has) return [];
+  return this.statement('SELECT id,zone,updated FROM field_bosses WHERE state=?').all('alive').filter(b=>KOREA.field_zones[b.zone])
+   .map(b=>{ const [region,node]=KOREA.field_zones[b.zone]; return { boss:b.id, zone:b.zone, region, node, since:b.updated }; }); },
+ /* 필드 보스를 잡았다 (server/boss-store.cjs bossKill 뒤에) → 그 구역의 거점 위협 −15 */
+ regionFieldKill(zone,at){ const z=KOREA.field_zones[zone]; if(!z) return; const [rid,node]=z;
+  const { cfg, r }=this.regionLoad(rid); this.regionAdvance(cfg,r,at); G.addThreat(r,node,-KOREA.field.kill_threat_drop); this.regionSave(rid,r,at); },
  /* 다거점 관리권: 지난 주기의 거점별 길드 점수(node-store 와 같은 셈) → 관리 용량·허브 제한 안에서 배정. 주기마다 한 번 */
  regionStewards(id,r,cfg,period){ if(r.stewardPeriod===period) return r.stewards;
   const cand=[];
@@ -68,15 +98,15 @@ const methods={
    list.push({ id:meta.id, name:meta.name, identity:meta.identity, at:meta.at, hubName:meta.hubName, pressure:+r.pressure.toFixed(1), band:G.pressureBand(cfg,r.pressure), operational:op,
     troubled:cfg.nodes.filter(n=>r.nodes[n.id].state!=='online').length, nodes:cfg.nodes.length }); }
   const st=G.nationalStatus(KOREA,regionCfg('seoul'),views);
-  return { regions:list, corridors:st.corridors, phase:st.phase, crisis:st.crisis, collapsed:st.collapsed }; },
+  return { regions:list, corridors:st.corridors, phase:st.phase, crisis:st.crisis, collapsed:st.collapsed, field:this.fieldThreats() }; },
  regionOrders(guild,region,now){ return this.statement('SELECT id,node,type,priority,squads,resource,issuer,at FROM guild_orders WHERE guild=? AND region=? AND period=? AND active=1 ORDER BY priority DESC,at')
   .all(guild,region,periodOf(now)).map(o=>({ ...o, name:G.ORDER_NAME[o.type], issuerName:(this.statement("SELECT json_extract(data,'$.name') AS name FROM profiles WHERE id=?").get(o.issuer)||{}).name||'' })); },
  regionView(id,now=Date.now(),viewer=null){ const { cfg, r }=this.regionLoad(id); this.regionAdvance(cfg,r,now);
   const stewards=this.regionStewards(id,r,cfg,periodOf(now)); this.regionSave(id,r,now);
-  const ms=cfg.rules.step_minutes*60e3, me=viewer?this.guildRoleOf(viewer):null, gStewards=Object.fromEntries(Object.entries(stewards).map(([k,v])=>[k,v.guild]));
+  const field=this.fieldThreats(), ms=cfg.rules.step_minutes*60e3, me=viewer?this.guildRoleOf(viewer):null, gStewards=Object.fromEntries(Object.entries(stewards).map(([k,v])=>[k,v.guild]));
   return { id, name:cfg.name, pressure:+r.pressure.toFixed(1), band:G.pressureBand(cfg,r.pressure), operational:G.operationalRatio(cfg,r), services:G.serviceByRole(cfg,r),
    crisis:G.crisis(cfg,r), stepMinutes:cfg.rules.step_minutes, nextStepAt:r.lastStep+ms, period:periodOf(now),
-   nodes:cfg.nodes.map(n=>{ const s=r.nodes[n.id]; return { id:n.id, node:n.node||null, name:n.name, role:n.role, tier:n.tier, at:n.at, state:s.state, threat:Math.round(s.threat),
+   nodes:cfg.nodes.map(n=>{ const s=r.nodes[n.id], fb=field.filter(f=>f.region===id&&f.node===n.id).map(f=>f.zone); return { id:n.id, fieldBoss:fb, node:n.node||null, name:n.name, role:n.role, tier:n.tier, at:n.at, state:s.state, threat:Math.round(s.threat),
     service:+G.serviceRatio(s,cfg.rules).toFixed(2), effect:n.effects[s.state==='recovering'?'degraded':s.state]||'', steward:stewards[n.id]||null }; }),
    links:cfg.links.map(l=>[l.a,l.b]),
    ...(me?{ me:{ ...me, admin:G.adminUse(cfg.nodes,gStewards,me.guild), canOrder:G.ORDER_TYPES.filter(t=>G.canOrder(me.role,t)), orders:this.regionOrders(me.guild,id,now),

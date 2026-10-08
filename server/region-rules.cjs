@@ -75,6 +75,12 @@ function nationalStatus(korea,bandsCfg,views){ const C=korea.campaign, band=id=>
  const phase=active&&collapsed.length>=C.critical_collapsed_regions?'critical':active?'active':(crisis.length>=C.mobilize_crisis_regions||invasion.length>=C.mobilize_invasion_regions)?'mobilization':'dormant';
  return { phase, crisis, collapsed, invasion, corridors }; }
 
+/* 권역 사이 번짐 (korea.json spread): 위기 권역 → 회랑의 바로 옆 권역 허브. pressures: { id: 압력 } → { id: 밀려오는 위협 } */
+function corridorPushes(korea,pressures){ const S=korea.spread, push={};
+ for(const c of korea.corridors) for(let i=0;i+1<c.regions.length;i++) for(const [a,b] of [[c.regions[i],c.regions[i+1]],[c.regions[i+1],c.regions[i]]]){
+  const p=pressures[a]; if(p==null||pressures[b]==null||p<S.from_pressure) continue; push[b]=(push[b]||0)+(p-S.base)*S.rate; }
+ for(const k of Object.keys(push)) push[k]=Math.min(S.cap,push[k]); return push; }
+
 /* ── 관리 용량 (GuildRules_v02): 길드마다 80, 거점 단계별 비용 25·40·60, 지역 허브(3단계)는 길드당 하나 ──
    한 길드가 서울의 핵심 거점을 다 가져가지 못하게. 점수가 높은 (거점, 길드) 짝부터 채우고, 용량·허브 제한에 걸리면 그 길드는 건너뛴다.
    candidates: [{node, guild, score}] · nodes: [{id, tier}] · capacity: guild → 용량 (없으면 기본) */
@@ -103,5 +109,5 @@ const ORDER_BONUS=0.10, ORDER_LEAD=3*60e3;
 function cleanOrder(o){ return { priority:Math.max(1,Math.min(5,Math.round(+o.priority||3))), squads:Math.max(0,Math.min(8,Math.round(+o.squads||0))),
  resource:Math.max(0,Math.min(100,Math.round(+o.resource||0))) }; }
 
-module.exports={ BAND_RANK, nationalStatus, OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, ORDER_BONUS, ORDER_LEAD, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
+module.exports={ BAND_RANK, nationalStatus, corridorPushes, OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, ORDER_BONUS, ORDER_LEAD, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
  serviceByRole, operationalRatio, pressureBand, crisis, assignStewards, adminUse, canOrder, canCancel, cleanOrder };

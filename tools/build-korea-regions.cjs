@@ -48,6 +48,16 @@ const korea = {
   corridors: corridors.map(c => ({ id: lower(c.id), regions: c.regions.map(lower), type: c.type, purpose: c.purpose })),
   /* 전국 작전 단계 — 시간 없이 지금 상태로만 정한다 (해결·쿨다운은 시간 축이라 나중) */
   campaign: { mobilize_crisis_regions: 1, mobilize_invasion_regions: 2, active_crisis_regions: 2, critical_collapsed_regions: 1 },
+  /* 권역 사이 번짐: 압력 75(위기) 이상인 권역이 회랑으로 이어진 이웃 권역의 허브에 «밖에서 들어온 위협» 을 (압력−50)×0.2 씩, 걸음당 12 까지.
+     압력은 점령에서만 오르므로(망만으로는 점령이 안 난다) 이 번짐은 스스로 굴러가지 않는다 */
+  spread: { from_pressure: 75, base: 50, rate: 0.2, cap: 12 },
+  /* 필드 보스 → 권역 거점: 보스가 살아 있는 동안 그 거점에 걸음당 위협 +6, 잡히면 −15 (필드 게임이 전략 지도를 움직인다) */
+  field: { alive_threat_per_step: 6, kill_threat_drop: 15 },
+  field_zones: {
+    namsan: ['seoul', 'N01'], namsan_tower: ['seoul', 'N01'], hangang_tunnel: ['seoul', 'N04'], yeouido: ['seoul', 'N07'],
+    gangnam_b1: ['seoul', 'N02'], gangnam_b2: ['seoul', 'N02'], pangyo_lab: ['gyeonggi', 'GG05'], southroad: ['gyeonggi', 'GG02'],
+    gyeryong_base: ['chungnam', 'CN04'], goheung: ['jg_special', 'JG05'], goheung_pad: ['jg_special', 'JG05'],
+  },
 };
 fs.writeFileSync(path.join(OUT, 'korea.json'), JSON.stringify(korea, null, 1) + '\n');
 console.log('권역 파일', written.length + 1, '(서울 손으로 + ' + written.length + ' 생성) · korea.json 권역', korea.regions.length, '회랑', korea.corridors.length);
