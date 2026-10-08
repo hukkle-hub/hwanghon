@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-08 — 서울 망 → 남산 판 · 전국 16권역 — Render commit `a3e7087` 확인.**
+> **2026-10-08 — 전국 시계·회랑 번짐·필드 보스 → 권역 — Render commit `6833c27` 확인.**
+> 이전: **2026-10-08 — 서울 망 → 남산 판 · 전국 16권역 — Render commit `a3e7087` 확인.**
 > 이전: **2026-10-08 — 동맹(최대 3길드) — Render commit `82f2257` 확인.**
 > 이전: **2026-10-08 — 명령 보너스 +10% — Render commit `1c380fe` 확인.**
 > 이전: **2026-10-08 — 공헌 점수 지휘 상한·다양성 보너스 — Render commit `40ba677` 확인.**
@@ -24,9 +25,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | 전국 시계(`region_state` 의 `_korea`)·권역 사이 번짐·필드 보스 → 권역 거점(`bossKill` 뒤에 `regionFieldKill`) — 문서 202 §8 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
+
+전국 시계·회랑 번짐·필드 보스 → 권역 (Claude): main `6833c27` → Render `/healthz` commit `6833c27`, Pages build `6833c27`. 실제 WebSocket `{action:'national'}` → 16권역 · 평시 · 회랑 7개 열림 · `field: []`(지금 살아 있는 필드 보스 없음). `npm test` 832 중 829 통과 · 실패 0.
 
 서울 망 → 남산 판 · 전국 16권역 (Claude): main `a3e7087` → Render `/healthz` commit `a3e7087`, Pages build `a3e7087`. 실제 WebSocket: `node info` 정상(답에 `region`), `{action:'national'}` → 16권역 · 평시 · 회랑 7개 열림. `npm test` 831 중 828 통과 · 실패 0.
 
