@@ -196,9 +196,23 @@ test('2D 필드 혼자 연습: 지배형·클레이브가 반격한다 — 서�
   assert.match(m, /M\.tick\(offField,ai,now\); collide\(ai,0\.5\); const v=M\.view\(ai\);/, '혼자 연습에서 보스가 서 있기만 한다');
   assert.match(m, /function bossFrame\(dt\)\{\n  offTick\(\);/, '프레임마다 혼자 연습 틱을 안 돈다');
   assert.match(m, /offSelf\(\[seq,amount,o\.id,hit\.skill,kind,hit\.beat,now\]\)/, '내 피격이 온라인과 같은 hurt 묶음(selfPacket)으로 안 간다');
-  assert.match(m, /if\(!net\) OFF\.P\.dodgeUntil=bossNow\(\)\+520;/, '혼자 연습 회피 무적이 없다 (서버 DODGE_TIME 520)');
+  assert.match(m, /me\.dodgeAt=bossNow\(\); if\(!net\) OFF\.P\.dodgeUntil=me\.dodgeAt\+520;/, '혼자 연습 회피 무적이 없다 (서버 DODGE_TIME 520)');
   assert.match(m, /\*mult\*w\*\(counter\?1\.65:1\)/, '혼자 연습 반격 배율이 서버(1.65)와 다르다');
   assert.match(m, /OFF\.COMBAT\.damageShutter\(ai,OFF\.P,\{character:MY\},n,counter,now\)/, '혼자 연습 셔터 파괴가 없다');
   const srv = fs.readFileSync(path.join(ROOT, 'server/field.cjs'), 'utf8');
   assert.match(srv, /DODGE_TIME=520/, '서버 회피 시간이 바뀌었다 — mmo.html 혼자 연습 값도 같이 바꿔라');
+});
+
+test('필드 완벽 회피: 누른 뒤 0.14초 안(솔로 dodge.perfect 와 같음)에 피한 것만 · 온라인은 전달 여유 · 2D·3D 둘 다 연결', async () => {
+  const { isPerfect, PERFECT_MS, NET_SLACK } = await import('../js/mmo/perfect-dodge.js');
+  const src = fs.readFileSync(path.join(ROOT, 'js/dungeons.js'), 'utf8'), solo = /dodge:\s*\{[^}]*perfect:([\d.]+)/.exec(src);
+  assert.ok(solo, '솔로 dodge.perfect 를 못 찾았다'); assert.equal(PERFECT_MS, Math.round(+solo[1] * 1000), '필드 완벽 회피 시간이 솔로와 다르다');
+  assert.equal(isPerfect(1000, 1100), true); assert.equal(isPerfect(1000, 1000 + PERFECT_MS + 1), false, '늦은 회피를 완벽으로 친다');
+  assert.equal(isPerfect(1000, 990), false, '맞은 뒤에 누른 회피를 완벽으로 친다'); assert.equal(isPerfect(undefined, 1000), false, '회피를 안 눌렀는데 완벽');
+  assert.equal(isPerfect(1000, 1000 + PERFECT_MS + NET_SLACK - 1, true), true, '온라인 전달 여유가 없다'); assert.equal(isPerfect(1000, 1000 + PERFECT_MS + NET_SLACK - 1, false), false);
+  const m = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  assert.match(m, /isPerfect\(me\.dodgeAt,h\[6\],!!net\)/, '2D 필드: 서버 hurt 시각(h[6])으로 완벽 회피를 안 가린다');
+  assert.match(m, /me\.dodgeAt=bossNow\(\)/, '2D 필드: 회피 누른 시각을 서버 시계로 안 잰다');
+  assert.match(w, /if \(kind === 'evade'\) evadeFx\(h\[6\], true\);/, '3D 필드 온라인: 완벽 회피가 없다');
+  assert.match(w, /if \(now < p\.invulnUntil \|\| now < p\.dodgeUntil\) \{ evadeFx\(now, false\);/, '3D 필드 혼자 연습: 완벽 회피가 없다');
 });

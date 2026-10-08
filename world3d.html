@@ -66,6 +66,7 @@ import { createCollide } from './js/mmo/field-collide.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
+import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
@@ -150,7 +151,7 @@ const DODGE_TIME = 520, DODGE_GAP = 780, RESPAWN_TIME = 5000, RESPAWN_GUARD = 20
 const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: false, respawnAt: 0, invulnUntil: 0, dodgeUntil: 0, dodgeReady: 0, hurtSeq: 0 };
 const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
-    if (now < p.invulnUntil || now < p.dodgeUntil) { floatAt('회피', 'evade', root.position, 1.9); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
+    if (now < p.invulnUntil || now < p.dodgeUntil) { evadeFx(now, false); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
     const amount = Math.max(1, Math.round(p.maxHp * hit.damage)); p.hp = Math.max(0, p.hp - amount);
     if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; }
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
@@ -214,8 +215,11 @@ function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (
       bossHitReact(t, { seq: (t.impSeq = (t.impSeq || 0) + 1), x: ai.x + dx / d * edge, z: ai.z + dz / d * edge, crit, counter, at: gameNow });
       if (counter) { bossCounterBurst(t); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); }
     if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
+/* 회피 결과 — 누른 직후(0.14초 안)에 피했으면 완벽 회피: 솔로와 같은 잔상·푸른 비네트 (문서 205 §4) */
+let pdN = 0;
+function evadeFx(at, online) { if (isPerfect(P.dodgeAt, at, online)) { floatAt('완벽 회피', 'evade', root.position, 2.1); perfectDodgeFx(scene, hero.model, { reduced: REDUCED }); pdN++; } else floatAt('회피', 'evade', root.position, 1.9); }
 function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
-  hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP;
+  hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP; P.dodgeAt = net ? sclock.now() : gameNow;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
 for (const [id, fn] of [['atk', attack], ['dodge', dodge]]) document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 /* 떠오르는 숫자 — 게임 시간으로 지운다 */
@@ -254,7 +258,7 @@ function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
   for (const a of m.bossActs || []) { const o = doms.find(x => x.b.id === a.id); if (o && a.ai === 'dominator') applyDominatorAction(o, a); else { const f = fbs.find(x => x.b.id === a.id); if (f && f.fx) applyBossAction(f, a, sclock.now()); } }
   if (m.self) { P.hp = m.self.hp; P.maxHp = Math.max(1, m.self.maxHp); if (!P.dead && m.self.dead) busy = 0; P.dead = !!m.self.dead; }
   const h = m.hurt; if (h && h[0] !== lastHurt) { lastHurt = h[0]; const amount = h[1], kind = h[4];
-    if (kind === 'evade') floatAt('회피', 'evade', root.position, 1.9);
+    if (kind === 'evade') evadeFx(h[6], true);
     else if (kind === 'respawn') toast('출발점에서 다시 일어섰습니다', 2.5);
     else if (amount > 0) { floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, kind === 'dead' ? .55 : .28); } } }
 function netMsg(m) {
@@ -337,7 +341,7 @@ function tick() {
   requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };

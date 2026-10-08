@@ -209,7 +209,8 @@ import { repairAinBind, repairAinClips } from './js/ain-bind-repair.js';
 import { gripHands } from './js/hand-grip.js';
 import { createArmBlend } from './js/arm-blend.js';
 import { contactOf } from './js/mmo/field-feel.js';
-import { loadCjs } from './js/mmo/cjs-browser.js';   /* 혼자 연습 보스 AI — 서버 모듈 그대로 (문서 206 §12) */   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
+import { loadCjs } from './js/mmo/cjs-browser.js';
+import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';   /* 완벽 회피 잔상 (문서 205 §4) */   /* 혼자 연습 보스 AI — 서버 모듈 그대로 (문서 206 §12) */   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
 /* 맵을 받는 동안 파티 서버를 미리 깨운다 — 잠든 Render 는 첫 요청에 30초쯤 걸린다 */
@@ -380,7 +381,7 @@ let me=null,selfDead=false;
 function applySelfProfile(profile){if(!me||!profile)return;const eq={...(profile.equipment||{})},enh=slotEnh(profile),key=lookKey(eq,enh),name=profile.name||me.name,renamed=name!==me.name,visual=key!==me.lookKey;me.name=name;if(visual){me.eqNet=eq;me.enhNet=enh;me.lookKey=key;dress(me,me.set);}if(renamed||visual)heroTag(me);}
 function applySelfInfo(info){if(!me)return;me.title=info&&info.title||null;heroTag(me);}
 function attack(){ if(!me||selfDead||me.busy>0) return; if(skArmed!=null&&castSkill(skArmed)) return; play(me,'attack1',0.08); feel.swing(me,'attack1'); me.busy=me.act.attack1.getClip().duration*0.8;window.TW_SFX?.play('swing'); if(typeof hitBoss==='function') hitBoss(); }
-function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; if(!net) OFF.P.dodgeUntil=bossNow()+520;   /* 혼자 연습: 서버와 같은 회피 무적 0.52초 */
+function dodge(){ if(!me||selfDead||me.busy>0||!me.act.dodgeB) return; play(me,'dodgeB',0.06); me.busy=me.act.dodgeB.getClip().duration*0.7; me.dodgeAt=bossNow(); if(!net) OFF.P.dodgeUntil=me.dodgeAt+520;   /* 혼자 연습: 서버와 같은 회피 무적 0.52초 */
   if(net){const p=me.root.position;net.send({type:'fieldMove',x:+p.x.toFixed(2),z:+p.z.toFixed(2),yaw:+me.yaw.toFixed(2),anim:'dodgeB'});} }
 function nextSet(){ if(!me||me.eqNet) return; dress(me,(me.set+1)%SETS.length); }
 document.getElementById('atk').addEventListener('pointerdown',attack); document.getElementById('dodge').addEventListener('pointerdown',dodge); document.getElementById('gearBtn').addEventListener('pointerdown',nextSet);
@@ -589,6 +590,7 @@ function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);
 /* ---------- 혼자 연습: 보스가 반격한다 (문서 206 §12) ----------
    전엔 서버가 없으면 지배형·클레이브가 서 있기만 했다. 서버 전투 모듈(field-dominator · field-boss-combat)을 브라우저에서 그대로 돌리고,
    결과는 온라인과 같은 통로로 그린다 — 내 피격은 selfPacket, 보스 동작은 applyDominatorAction / applyBossAction. 판정 규칙은 server/field.cjs bossStrike 와 같다(방어력·버프 빼고) */
+let pdN=0;   /* 완벽 회피 횟수 — 검수용 */
 const OFF={ DOM:null, COMBAT:null, P:{ id:'me', zone:ZONE, x:0, z:0, hp:20000, maxHp:20000, dead:false, respawnAt:0, invulnUntil:0, dodgeUntil:0, hurtSeq:0 } };
 const offSelf=hurt=>{ const P=OFF.P; selfPacket({ self:{ hp:P.hp, maxHp:P.maxHp, dead:P.dead, respawnAt:P.respawnAt }, hurt }); };
 const offField={ players:new Map([['me',OFF.P]]), rng:Math.random,
@@ -619,7 +621,7 @@ function selfFloat(text,kind){if(!me)return;const d=document.createElement('div'
 function selfPacket(m){
  if(m.self){selfState=m.self;selfDead=!!m.self.dead;hpBar.style.width=(100*Math.max(0,m.self.hp)/Math.max(1,m.self.maxHp)).toFixed(1)+'%';deathEl.hidden=!selfDead;if(selfDead&&me){me.busy=0;play(me,'idle',.06);}}
  const h=m.hurt;if(!h||h[0]===lastHurtSeq)return;lastHurtSeq=h[0];const amount=h[1],kind=h[4];
- if(kind==='evade'){selfFloat('회피','evade');return;}
+ if(kind==='evade'){if(me&&isPerfect(me.dodgeAt,h[6],!!net)){selfFloat('완벽 회피','evade');perfectDodgeFx(scene,me.root,{reduced:REDUCED});window.TW_SFX?.play('counter');pdN++;}else selfFloat('회피','evade');return;}   /* h[6]: 맞을 뻔한 서버 시각 */
  if(kind==='respawn'){deathEl.hidden=true;selfDead=false;toast('출발점에서 다시 일어섰습니다');return;}
  if(amount>0){selfFloat('−'+amount.toLocaleString('ko-KR'),'taken');hurtT=.42;shakeT=Math.max(shakeT,kind==='dead'?.55:.28);}
  if(kind==='dead'){deathEl.hidden=false;const by=bosses.find(x=>x.b.id===h[2]);announce(esc(by?by.b.name+(by.b.ai==='dominator'?' · '+(by.b.title||''):''):'보스')+'에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}
@@ -831,7 +833,7 @@ function tick(){ const dt=hold?(clock.getDelta(),0):Math.min(clock.getDelta(),dt
   requestAnimationFrame(tick); }
 renderer.info.autoReset=true;
 window.__MMO={ get frames(){ return frames; }, get me(){ return me; }, heroes, cam, renderer, map, scene, info(){ renderer.render(scene,cam); const i=renderer.info.render; return { calls:i.calls, triangles:i.triangles }; },
-  gates:gateFx, bosses, OFF, dodge, loots, bossMsg:m=>onBossMsg(m), hitBoss, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
+  gates:gateFx, bosses, OFF, dodge, get pdN(){ return pdN; }, loots, bossMsg:m=>onBossMsg(m), hitBoss, get gateNear(){ return gateNear; }, get inBoss(){ return inBoss; }, goGate,
   bossAct(id,motion='idle',skill='',elapsed=0){const o=bosses.find(x=>x.b.id===id);if(!o||!o.root)return false;o.poseElapsed=null;const d=CLAVE_MOTIONS[skill],at=bossNow()-elapsed,a={id,x:o.root.position.x,z:o.root.position.z,yaw:o.root.rotation.y,motion,skill,seq:(o.motionSeq||0)+1,startedAt:at,endsAt:at+(d?.duration||2000),counterOpen:d?.counter?at+d.counter[0]:0,counterClose:d?.counter?at+d.counter[1]:0};o.alive=true;bossVis(o);applyBossAction(o,a,bossNow());return true;},
   bossPose(id,motion='idle',skill='',elapsed=0,clipTime=null){const o=bosses.find(x=>x.b.id===id);if(!o||!o.root)return false;o.poseElapsed=elapsed;this.bossAct(id,motion,skill,elapsed);o.poseElapsed=elapsed;const a=o.actions?.[o.motionClip];if(a){a.paused=true;if(Number.isFinite(clipTime))a.time=Math.min(a.getClip().duration*.999,Math.max(0,clipTime));}return true;},
   feel, get hold(){ return hold; }, set hold(v){ hold=!!v; }, set dtCap(v){ dtCap=Math.max(0.001,Math.min(0.05,+v||0.05)); }, teleport(x,z,yaw){ me.root.position.set(x,0,z); if(yaw!=null){ me.yaw=yaw; me.root.rotation.y=yaw; } }, toRoad, fromRoad, set:nextSet, meta, get net(){ return net; }, remotes };
