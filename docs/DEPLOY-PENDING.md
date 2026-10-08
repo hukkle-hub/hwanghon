@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-08 — 탈환전 규칙 tickRetake — Render commit `0108a87` 확인.**
+> **2026-10-08 — 서울 전략망·관리 용량·길드 전략 명령 — Render commit `9433699` 확인.**
+> 이전: **2026-10-08 — 탈환전 규칙 tickRetake — Render commit `0108a87` 확인.**
 > 이전: **2026-10-07 — 거점 서버(남산 N-01 상태·관리권·정책·보급·대장 임명·이번 주기 순위) 배포 완료 — Render commit `3296626`, 실제 WebSocket 으로 확인** (§2).
 > 이전: 필드 가방·상점·회복약·거점 기본 보스 점령 — Render commit `1fa5909`.
 > 이전: 필드 스킬 1~4(누르고 공격)·온라인 기본 배포 완료 — Render commit `5317380`, 실제 WebSocket 으로 스킬·재사용 대기 확인** (§2).
@@ -19,9 +20,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | 서울 전략망(`server/region-rules.cjs` · `region-store.cjs`, 표 `region_state` · `guild_orders`): 8거점 운영 상태·위협 전파·압력, 다거점 관리권(관리 용량), 길드 전략 명령. `{type:'node', action:'region'|'order'|'cancel'}` — 남산 판 결과가 망을 움직인다 (문서 202) |
+| — | 없음 |
 
-## 2. 배포 완료 (최신: 2026-10-07)
+## 2. 배포 완료 (최신: 2026-10-08)
+
+서울 전략망·다거점 관리권·길드 전략 명령 (Claude): main `9433699` → Render `/healthz` commit `9433699`, Pages build `9433699` (04:09 UTC). 실제 WebSocket(Render): `{type:'node',action:'region'}` → 서울 8거점 전부 정상 · 압력 0 · 서비스 6종 100% → 길드 없는 계정의 `order` 는 «길드에 들어가야 명령을 낼 수 있습니다.» 로 거절. `npm test` 820 중 817 통과 · 실패 0.
 
 탈환전 규칙(`tickRetake`) (Claude): main `0108a87` → Pages build `0108a87`, Render `/healthz` commit `0108a87` (2026-10-08 02:58 UTC). 실제 WebSocket: `node info` → stable · initial · period 2962, 길드 없는 `policy` 거절. `npm test` 810 중 807 통과 · 실패 0.
 
