@@ -158,3 +158,10 @@ test('가벼운 모델(LOD)은 정점 속성이 한 버퍼에 끼워져(interlea
   assert.match(w, /const LOD = q\.has\('lod'\) \? q\.get\('lod'\) === '1' : MOBILE;/, '3D 필드가 휴대폰에서 정식 모델(최대 7 MB)을 받는다');
   assert.match(w, /loader\.load\(lodUrl\(u\)/, 'LOD 주소 바꾸기가 로더에 안 걸렸다');
 });
+
+test('3D 필드 노바 방: 보스 둘레(반경 10 m) 결정은 무릎 높이 — 위에서 보는 굽기와 달리 3D 에선 5 m 결정 숲이 보스를 가리고 카메라를 등에 붙였다', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'js/mmo/env-indoor.js'), 'utf8');
+  assert.match(src, /if \(zone\.view3d && o\.center && Math\.hypot\(s - \(r\.s0 \+ r\.s1\) \/ 2, t - \(r\.t0 \+ r\.t1\) \/ 2\) < \(o\.clear3d \|\| 10\)\) h = Math\.min\(h, 0\.9\);/, '보스 둘레 결정이 그대로 — 노바가 안 보인다');
+  /* 굽기(view3d 아님)는 그대로여야 한다: 난수 순서가 바뀌면 굽기 그림과 막이(map.json)가 어긋난다 */
+  assert.match(src, /spot\(r, o\), p = FROM\(s, t\); let h = \(o\.h \|\| 1\.2\) \* \(0\.5 \+ R\(\)\);/, '결정 높이 난수 순서가 바뀌었다');
+});
