@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-08 — 동맹(최대 3길드) — Render commit `82f2257` 확인.**
+> **2026-10-08 — 서울 망 → 남산 판 · 전국 16권역 — Render commit `a3e7087` 확인.**
+> 이전: **2026-10-08 — 동맹(최대 3길드) — Render commit `82f2257` 확인.**
 > 이전: **2026-10-08 — 명령 보너스 +10% — Render commit `1c380fe` 확인.**
 > 이전: **2026-10-08 — 공헌 점수 지휘 상한·다양성 보너스 — Render commit `40ba677` 확인.**
 > 이전: **2026-10-08 — 서울 전략망·관리 용량·길드 전략 명령 — Render commit `9433699` 확인.**
@@ -23,9 +24,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | 서울 망 → 남산 판(`regionEffects`, `nodeView.region`·`supplyCap`, 보급 배정 상한) · 전국 16권역(`korea.json`, `region_<id>.json` 15개, `{action:'national'}`) — 문서 202 §2.5·§8 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
+
+서울 망 → 남산 판 · 전국 16권역 (Claude): main `a3e7087` → Render `/healthz` commit `a3e7087`, Pages build `a3e7087`. 실제 WebSocket: `node info` 정상(답에 `region`), `{action:'national'}` → 16권역 · 평시 · 회랑 7개 열림. `npm test` 831 중 828 통과 · 실패 0.
 
 동맹 (Claude): main `82f2257` → Render `/healthz` commit `82f2257`, Pages build `82f2257`. 실제 WebSocket: 길드 없는 계정의 `ally create` 가 «길드에 들어가야 합니다.» 로 거절된 **뒤에도** `ally info` 가 정상(`alliance:null`) — 새 표가 첫 거절 요청에 지워지지 않는다. `npm test` 825 중 822 통과 · 실패 0.
 
