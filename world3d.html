@@ -28,6 +28,10 @@ canvas{ display:block; width:100vw; height:100vh; }
 .dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
 .dmg.crit{ color:#ffc060; font-size:22px; } .dmg.taken{ color:#ff6a5a; } .dmg.evade{ color:#9fd8e8; font-size:15px; }
 #net{ position:absolute; top:calc(max(12px,env(safe-area-inset-top)) + 72px); left:16px; font-size:11px; color:var(--dim); }
+#gatebtn{ position:absolute; left:50%; bottom:calc(max(14px,env(safe-area-inset-bottom)) + 150px); transform:translateX(-50%); pointer-events:auto; min-height:64px; padding:10px 22px; border-radius:14px; border:2px solid rgba(232,184,96,.8); background:rgba(30,14,20,.75); color:var(--ink); font:900 17px 'Noto Sans KR',sans-serif; text-align:center; touch-action:none; }
+#gatebtn small{ display:block; font-weight:500; font-size:12px; color:var(--dim); }
+#gatebtn.dg{ border-color:rgba(232,90,74,.85); }
+#gatebtn[hidden]{ display:none; }
 #toast{ position:absolute; top:22%; left:50%; transform:translateX(-50%); font-weight:900; font-size:17px; background:var(--panel); padding:8px 16px; border-radius:12px; text-align:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
 #toast[hidden]{ display:none; }
 .tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
@@ -36,7 +40,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="toast" hidden></div><div class="btn" id="dodge">회피</div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
@@ -111,7 +115,8 @@ const [heroAsset, weaponAsset] = await Promise.all(CHAR_ASSET[ME].map(load));
 window.TW_POSE?.repair(THREE, heroAsset); window.TW_MATFIX?.repair(THREE, heroAsset.scene);
 const hero = new Animated(heroAsset, scene, true, false, weaponAsset, ME), root = hero.root;
 root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-const sp = env.spawn || meta.spawn; root.position.set(sp.x, 0, sp.z);
+const GATES = env.gates || meta.gates || [], ARRIVE = GATES.find(g => g.id === q.get('gate')) || null;   /* 다른 지역 문으로 넘어왔으면 그 문 앞에서 */
+const sp = ARRIVE ? { x: ARRIVE.x, z: ARRIVE.z } : env.spawn || meta.spawn; root.position.set(sp.x, 0, sp.z);
 const me = { id: ME, root, yaw: 0, hero, get weapon() { return hero.weapon; } };
 let busy = 0, busyClip = null, atkSeq = 0;
 function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부분: 리그 되돌리기 → 믹서 → 양손 쥠. 공격 중엔 클립·경과·접점을 리그에 */
@@ -243,9 +248,19 @@ function netMsg(m) {
   if (m.type === 'announce' && m.kind === 'bossDown' && m.zone === ZONE) { toast(esc(m.name) + ' 처치 · ' + esc(m.top || ''), 4); return; }
   if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } } }
 if (ONLINE) { const L = document.getElementById('load'); L.textContent = '필드 방에 들어가는 중…';
-  try { net = await connectField({ q, zone: ZONE, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); netEl.textContent = '온라인 · 근처 0명'; }
+  try { net = await connectField({ q, zone: ZONE, gate: ARRIVE && ARRIVE.id, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); netEl.textContent = '온라인 · 근처 0명'; }
   catch (e) { netEl.textContent = '오프라인 — ' + e.message + ' · 혼자 연습'; } }
 else netEl.textContent = '혼자 연습 (?online=1 이면 서버 방)';
+/* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
+const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
+async function goGate(g) { if (!g || !g.to) return; const to = g.to;
+  try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); return; }
+  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
+  try { net && net.send({ type: 'fieldLeave' }); } catch {} location.search = nq.toString(); }
+gateBtn.addEventListener('pointerdown', e => { e.stopPropagation(); goGate(gateNear); });
+function gateTick() { const p = root.position; let g = null, gd = 1e9; for (const x of GATES) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < (x.r || 3) + 0.8 && d < gd) { g = x; gd = d; } }
+  if (g === gateNear) return; gateNear = g; gateBtn.hidden = !g; if (g) { const dg = g.kind === 'dungeon'; gateBtn.className = dg ? 'dg' : ''; gateBtn.innerHTML = (dg ? '⚔ 들어가기' : '➜ 이동') + '<small>' + esc(g.label) + '</small>'; } }
+addEventListener('keydown', e => { if (e.code === 'KeyE' || e.code === 'Enter') goGate(gateNear); });
 /* ---------- 돌리기 ---------- */
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
 function tick() {
@@ -266,6 +281,7 @@ function tick() {
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
+  if (frames % 6 === 0) gateTick();
   if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
@@ -281,7 +297,7 @@ function tick() {
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
 window.__W3D = { get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
-  me, cam, camS, scene, renderer, env, meta, doms, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
+  me, cam, camS, scene, renderer, env, meta, doms, GATES, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
 nearLights(root.position); placeCam(0); tick();

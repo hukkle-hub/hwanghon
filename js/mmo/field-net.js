@@ -8,7 +8,7 @@ export function partyServer(q, loc = location) {
   try { const u = new URL(/^(https?|wss?):\/\//.test(v) ? v.replace(/^ws/, 'http') : 'https://' + v); return { host: u.host, secure: u.protocol === 'https:' }; } catch { return null; }
 }
 /* onMessage(m) — 들어간 뒤 오는 모든 것(field · bossHit · announce · profile · error …). onStatus(text) — 기다리는 동안 보일 글 */
-export function connectField({ q, zone, char, look, onMessage, onStatus = () => {} }) {
+export function connectField({ q, zone, gate, char, look, onMessage, onStatus = () => {} }) {
   return new Promise((resolve, reject) => {
     const sv = partyServer(q); if (!sv) return reject(Error('서버 주소 오류'));
     const tokenKey = 'tw:party-token:' + sv.host, store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
@@ -17,7 +17,7 @@ export function connectField({ q, zone, char, look, onMessage, onStatus = () => 
     const wake = slow && setTimeout(() => onStatus('서버를 깨우는 중… (처음엔 30초쯤)'), 3500);
     const send = m => { if (ws.readyState === 1) ws.send(JSON.stringify(m)); };
     const named = () => { const n = (store.get('tw:party-name') || '요원') + (tries ? String(Math.random() * 9000 + 1000 | 0) : ''); tries++; send({ type: 'character', name: n.replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 16) || '요원' + (Math.random() * 9000 + 1000 | 0), character: char }); };
-    const join = () => send({ type: 'fieldJoin', zone, look });
+    const join = () => send({ type: 'fieldJoin', zone, gate: gate || undefined, look });   /* gate: 다른 지역 문으로 넘어왔으면 그 문 앞에서 (서버가 자리를 정한다) */
     ws.onopen = () => send({ type: 'hello', token: store.get(tokenKey), name: store.get('tw:party-name') || '요원' });
     ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch { return; }
       if (!net) {

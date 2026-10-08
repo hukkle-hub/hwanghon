@@ -104,3 +104,12 @@ test('3D 필드 온라인: 2D 필드와 같은 접속 규약·저장소 열쇠 �
   assert.match(w, /if \(net\) sendMove\('dodgeB'\)/, '온라인 회피를 서버에 안 알린다 — 무적이 안 열린다');
   assert.match(w, /if \(!net\) for \(const o of doms\)/, '온라인인데 브라우저 AI 가 돈다 — 서버 지배형과 두 개가 된다');
 });
+
+test('3D 필드 문: 가까이 가면 이동 단추 · 다음 지역 3D 로 · 도착은 그 문 앞 · 온라인이면 서버에 그 문으로 들어간다', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8'), net = fs.readFileSync(path.join(ROOT, 'js/mmo/field-net.js'), 'utf8');
+  assert.match(w, /ARRIVE = GATES\.find\(g => g\.id === q\.get\('gate'\)\)/, '넘어온 문을 안 읽는다');
+  assert.match(w, /const sp = ARRIVE \? \{ x: ARRIVE\.x, z: ARRIVE\.z \}/, '넘어온 문 앞에서 시작하지 않는다');
+  assert.match(w, /net && net\.send\(\{ type: 'fieldLeave' \}\)/, '떠날 때 방을 안 나간다 — 서버에 유령이 남는다');
+  assert.match(w, /gate: ARRIVE && ARRIVE\.id/); assert.match(net, /type: 'fieldJoin', zone, gate: gate \|\| undefined/);
+  assert.match(w, /#gatebtn\{[^}]*min-height:64px/, '휴대폰 단추가 64 px 보다 작다');
+});
