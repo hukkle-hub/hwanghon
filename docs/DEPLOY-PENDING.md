@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-08 — 공헌 점수 지휘 상한·다양성 보너스 — Render commit `40ba677` 확인.**
+> **2026-10-08 — 명령 보너스 +10% — Render commit `1c380fe` 확인.**
+> 이전: **2026-10-08 — 공헌 점수 지휘 상한·다양성 보너스 — Render commit `40ba677` 확인.**
 > 이전: **2026-10-08 — 서울 전략망·관리 용량·길드 전략 명령 — Render commit `9433699` 확인.**
 > 이전: **2026-10-08 — 탈환전 규칙 tickRetake — Render commit `0108a87` 확인.**
 > 이전: **2026-10-07 — 거점 서버(남산 N-01 상태·관리권·정책·보급·대장 임명·이번 주기 순위) 배포 완료 — Render commit `3296626`, 실제 WebSocket 으로 확인** (§2).
@@ -21,9 +22,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | 명령 보너스: 자기 길드 명령이 3분 넘게 걸린 거점에서 판 결과를 보내면 그 판 공헌 +10% (`nodeReport` 답에 `orderBonus`) — 문서 202 §4 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
+
+명령 보너스 +10% (Claude): main `1c380fe` → Render `/healthz` commit `1c380fe`, Pages build `1c380fe` (05:18 UTC). 실제 WebSocket `region` 정상, 길드 없는 `order` 거절. `npm test` 821 중 818 통과 · 실패 0.
 
 공헌 점수 지휘 상한·다양성 보너스 (Claude): main `40ba677` → Render `/healthz` commit `40ba677`, Pages build `40ba677` (05:02 UTC). 실제 WebSocket `node info` 정상, 길드 없는 `policy` 거절. `npm test` 820 중 817 통과 · 실패 0.
 
