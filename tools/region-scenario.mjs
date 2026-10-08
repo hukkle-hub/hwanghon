@@ -62,8 +62,8 @@ const show = (p) => p.evaluate(() => { const b = document.getElementById('nd-bod
   if (!document.documentElement.classList.contains('mobile')) b.scrollTop = h.offsetTop - b.offsetTop - 6; else h.scrollIntoView({block:'start'}); });
 const measure = (p) => p.evaluate(() => { const b = document.getElementById('nd-body'), m = document.getElementById('rgw-map').getBoundingClientRect();
   const els = [...document.querySelectorAll('#rgw-cmd button, #rgw-cmd input')].filter(e => e.offsetParent);
-  /* 체크박스는 줄(label) 전체가 눌리므로 줄 높이로 잰다 */
-  const small = els.map(e => (e.type === 'checkbox' ? e.parentElement : e).getBoundingClientRect()).filter(r => r.height < 36).length;
+  /* 체크박스는 줄(label), 입력칸은 테두리(.field) 전체가 눌리므로 그 높이로 잰다 */
+  const small = els.map(e => (e.type === 'checkbox' || e.parentElement.classList.contains('field') ? e.parentElement : e).getBoundingClientRect()).filter(r => r.height < 36).length;
   return {cardScroll: b.scrollHeight - b.clientHeight, pageX: document.documentElement.scrollWidth - innerWidth, mapW: Math.round(m.width), mapH: Math.round(m.height), smallControls: small, controls: els.length}; });
 
 /* ── 전투대장: 지도에서 남산 → 탈환 준비 (긴급) ── */
@@ -102,7 +102,24 @@ const before = (await L.$$('#rgw-orders button')).length;
 await L.click('#rgw-orders button[data-cancel]'); await wait(L, 800);
 console.log('길드장 내리기', before, '→', (await L.$$('#rgw-orders button')).length, '| 서버', store.regionView('seoul', Date.now(), lead.id).me.orders.length);
 console.log('길드장 측정', JSON.stringify(await measure(L)));
-for (const [k, p] of [['전투대장', W], ['길드원', P], ['길드장', L]])
+/* ── 동맹: 한별(황혼단)이 «서울 연합» 을 만들고 새벽단을 초대 → 새벽단 길드장 서리가 쉘터에서 수락 → 서로의 명령이 보인다 ── */
+const rival = await acc('rival', '서리'); store.createGuild(rival.id, '새벽단');
+await L.fill('#rgw-ally-name', '서울 연합'); await L.click('#rgw-ally-go'); await wait(L, 700);
+await L.fill('#rgw-ally-name', '새벽단'); await L.click('#rgw-ally-go'); await wait(L, 900);
+console.log('동맹 (길드장)', await text(L, '#rgw-ally'));
+store.regionOrder(rival.id, 'seoul', {node:'N04', type:'defend', priority:4});
+const A = await mk(rival.token);
+await A.goto(BASE + '/shelter.html', {waitUntil:'networkidle'}); await wait(A, 1800); await pane(A, '명단');
+console.log('받은 초대', await text(A, '#rgw-ally-inv'));
+await show(A); await A.click('#rgw-ally-inv button[data-ally-ok]'); await wait(A, 1000);
+console.log('수락 뒤 (새벽단)', await text(A, '#rgw-ally'), '| 보이는 명령', await text(A, '#rgw-orders'));
+await A.screenshot({path: `${OUT}/rg-ally${SUF}.png`});
+await L.evaluate(() => window.__ND.refresh()); await wait(L, 1200); await show(L);
+console.log('길드장 화면 명령', await text(L, '#rgw-orders'));
+await L.screenshot({path: `${OUT}/rg-leader${SUF}.png`});
+console.log('동맹 측정', JSON.stringify(await measure(A)), JSON.stringify(await A.evaluate(() => { const f = [...document.querySelectorAll('#rgw-ally-form .field, #rgw-ally-form button, #rgw-ally-inv button')].filter(e => e.offsetParent); return f.map(e => Math.round(e.getBoundingClientRect().height)); })));
+
+for (const [k, p] of [['전투대장', W], ['길드원', P], ['길드장', L], ['새벽단', A]])
   console.log('오류', k, p.errs.filter(e => !/version\.json|favicon|CERT_AUTHORITY|status of 404/.test(e)));
 console.log('스크린샷', OUT);
 await browser.close(); app.close(); process.exit(0);

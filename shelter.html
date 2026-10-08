@@ -80,6 +80,8 @@
 .rgw-order button{margin-left:auto;flex:none}
 .rgw-types{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px}
 .rgw-types button{min-height:36px;white-space:nowrap;padding-left:4px;padding-right:4px}
+.rgw-row{display:flex;gap:6px;align-items:center}.rgw-row .field{flex:1;min-width:0}.rgw-row button{flex:none;white-space:nowrap}
+.rgw-ally-g{color:#9FC7E8}
 /* 길드 카드 */
 .gcrest{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
 .gcrest__m{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);
@@ -337,6 +339,11 @@
                 <div class="rgw-types" id="rgw-types"></div>
                 <label class="xs flex g2 ac mt2 rgw-urgent" style="cursor:pointer"><input type="checkbox" id="rgw-urgent"> 긴급 (우선 5)</label>
               </div>
+              <!-- 동맹 (문서 202 §5): 최대 3길드 — 관리권은 합치지 않고, 서로의 명령·관리 거점을 본다 -->
+              <div class="label-ko mt3">동맹 <span class="xs t-faint">— 최대 3길드 · 작전을 나눠 맡는다 (관리권은 길드마다)</span></div>
+              <div class="xs" id="rgw-ally"></div>
+              <div class="rgw-row mt2" id="rgw-ally-form" hidden><div class="field fill"><input id="rgw-ally-name" maxlength="24" autocomplete="off"></div><button type="button" class="btn btn--sm" id="rgw-ally-go"></button></div>
+              <div id="rgw-ally-inv"></div>
             </div>
           </div>
         </section>

@@ -61,11 +61,16 @@ const methods={
    nodes:cfg.nodes.map(n=>{ const s=r.nodes[n.id]; return { id:n.id, node:n.node||null, name:n.name, role:n.role, tier:n.tier, at:n.at, state:s.state, threat:Math.round(s.threat),
     service:+G.serviceRatio(s,cfg.rules).toFixed(2), effect:n.effects[s.state==='recovering'?'degraded':s.state]||'', steward:stewards[n.id]||null }; }),
    links:cfg.links.map(l=>[l.a,l.b]),
-   ...(me?{ me:{ ...me, admin:G.adminUse(cfg.nodes,gStewards,me.guild), canOrder:G.ORDER_TYPES.filter(t=>G.canOrder(me.role,t)), orders:this.regionOrders(me.guild,id,now) } }:{}) }; },
+   ...(me?{ me:{ ...me, admin:G.adminUse(cfg.nodes,gStewards,me.guild), canOrder:G.ORDER_TYPES.filter(t=>G.canOrder(me.role,t)), orders:this.regionOrders(me.guild,id,now),
+    /* 동맹: 서로의 명령과 관리 거점을 본다 (관리권·용량·공헌은 합치지 않는다 — server/alliance-store.cjs) */
+    ...this.regionAllies(me.guild,id,now) } }:{}) }; },
+ regionAllies(guild,region,now){ const a=this.allianceOf(guild); if(!a) return { alliance:null, allyOrders:[] };
+  const others=a.guilds.filter(g=>g.id!==guild);
+  return { alliance:{ id:a.id, name:a.name, guilds:a.guilds }, allyOrders:others.flatMap(g=>this.regionOrders(g.id,region,now).map(o=>({ ...o, guild:g.id, guildName:g.name }))) }; },
  /* 전략 명령 — 직책대로. 관리 길드가 아니어도 자기 길드원에게는 낼 수 있다 (명령은 길드 안 추천일 뿐, 거점을 바꾸지 않는다) */
  regionOrder(id,region,o,now=Date.now()){ if(!o||typeof o!=='object') throw Error('명령을 확인하세요.');
   const cfg=regionCfg(region); if(!cfg.byId.has(o.node)) throw Error('거점을 확인하세요.'); if(!G.ORDER_TYPES.includes(o.type)) throw Error('명령 종류를 확인하세요.');
-  return this.transaction(()=>{ this.initRegion(); const me=this.guildRoleOf(id); if(!me) throw Error('길드에 들어가야 명령을 낼 수 있습니다.');
+  this.initRegion(); return this.transaction(()=>{ const me=this.guildRoleOf(id); if(!me) throw Error('길드에 들어가야 명령을 낼 수 있습니다.');
    if(!G.canOrder(me.role,o.type)) throw Error(G.ORDER_NAME[o.type]+' 명령은 이 직책이 낼 수 없습니다.');
    const n=this.statement('SELECT COUNT(*) c FROM guild_orders WHERE guild=? AND period=? AND active=1').get(me.guild,periodOf(now)).c;
    if(n>=G.ORDER_LIMIT) throw Error('걸린 명령이 '+G.ORDER_LIMIT+'개입니다. 하나를 내리고 다시 내세요.');
@@ -73,7 +78,7 @@ const methods={
    this.statement('INSERT INTO guild_orders(guild,region,node,type,priority,squads,resource,issuer,at,period,active) VALUES(?,?,?,?,?,?,?,?,?,?,1)')
     .run(me.guild,region,o.node,o.type,c.priority,c.squads,c.resource,id,now,periodOf(now));
    this.audit(id,'regionOrder',o.node,{type:o.type,...c}); return this.regionView(region,now,id); }); },
- regionCancel(id,region,orderId,now=Date.now()){ regionCfg(region); return this.transaction(()=>{ this.initRegion(); const me=this.guildRoleOf(id); if(!me) throw Error('길드에 들어가야 합니다.');
+ regionCancel(id,region,orderId,now=Date.now()){ regionCfg(region); this.initRegion(); return this.transaction(()=>{ const me=this.guildRoleOf(id); if(!me) throw Error('길드에 들어가야 합니다.');
   const o=this.statement('SELECT guild,issuer FROM guild_orders WHERE id=? AND active=1').get(orderId);
   if(!o||o.guild!==me.guild) throw Error('명령을 찾을 수 없습니다.'); if(!G.canCancel(me.role,o.issuer===id)) throw Error('낸 사람이나 길드장·부길드장만 내릴 수 있습니다.');
   this.statement('UPDATE guild_orders SET active=0 WHERE id=?').run(orderId); this.audit(id,'regionCancel',String(orderId),{}); return this.regionView(region,now,id); }); },

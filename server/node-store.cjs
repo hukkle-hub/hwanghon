@@ -74,7 +74,7 @@ const methods={
   const outcome=report.outcome; if(!['held','fallen','retaken','retake_failed'].includes(outcome)) throw Error('결과를 확인하세요.');
   const contrib={}; for(const [k,v] of Object.entries(report.contrib||{})){ if(!R.CATEGORIES.includes(k)) throw Error('공헌 항목을 확인하세요.');
    if(typeof v!=='number'||!Number.isFinite(v)||v<0) throw Error('공헌 값을 확인하세요.'); contrib[k]=Math.min(v,CAPS[k]); }
-  return this.transaction(()=>{ this.initNode();
+  this.initNode(); this.initRegion(); this.initAlliance(); return this.transaction(()=>{
    const last=this.statement('SELECT at FROM node_runs WHERE player=? AND node=? ORDER BY at DESC LIMIT 1').get(id,node);
    if(last&&now-last.at<REPORT_GAP) throw Error('잠시 후 다시 보내세요.');
    const n=this.nodeLoad(node); this.nodeStewardship(node,n,now); const hours=this.nodeOccupation(n,now);
@@ -118,6 +118,14 @@ function command(store,id,msg,now=Date.now()){ const node=typeof msg.node==='str
  if(msg.action==='region') return { type:'region', region:store.regionView(region,now,id) };
  if(msg.action==='order') return { type:'region', region:store.regionOrder(id,region,msg.order,now) };
  if(msg.action==='cancel'){ if(!Number.isSafeInteger(msg.order)) throw Error('명령을 확인하세요.'); return { type:'region', region:store.regionCancel(id,region,msg.order,now) }; }
+ /* 동맹 (길드장만 고친다) */
+ if(msg.action==='ally'){ const op=msg.op;
+  if(op==='info') return { type:'ally', ally:store.allyView(id) };
+  if(op==='create') return { type:'ally', ally:store.allyCreate(id,msg.name,now) };
+  if(op==='invite') return { type:'ally', ally:store.allyInvite(id,msg.guild,now) };
+  if(op==='accept'||op==='decline') return { type:'ally', ally:store.allyAnswer(id,msg.alliance,op==='accept',now) };
+  if(op==='leave') return { type:'ally', ally:store.allyLeave(id) };
+  throw Error('지원하지 않는 동맹 요청입니다.'); }
  if(msg.action==='role'){ if(typeof msg.target!=='string') throw Error('길드원을 선택하세요.'); return { type:'guildRole', target:msg.target, role:store.guildAssign(id,msg.target,msg.role) }; }
  throw Error('지원하지 않는 거점 요청입니다.'); }
 function install(Store){ Object.assign(Store.prototype,methods); }

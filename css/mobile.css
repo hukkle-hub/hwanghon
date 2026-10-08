@@ -132,6 +132,7 @@ html.mobile .nd-role{min-height:40px;font-size:13px}
 html.mobile .rgw-types button{min-height:44px;font-size:13px}
 html.mobile .rgw-order button{min-height:40px}
 html.mobile .rgw-urgent{min-height:44px}
+html.mobile .rgw-row .field,html.mobile .rgw-row button,html.mobile #rgw-ally-inv button{min-height:44px}
 html.mobile .rgw-urgent input{width:22px;height:22px}
 html.mobile .chan .tab{padding:10px 12px}
 html.mobile .gcrest{width:52px;height:52px}

@@ -81,16 +81,18 @@
   var RG_STATE={online:['정상','#8FD3A8'],degraded:['저하','#E0B060'],occupied:['점령','#E58A7A'],recovering:['복구','#9FC7E8']};
   var RG_ROLE=[['intel','정보'],['safe_hub','피난'],['logistics','물류'],['manufacturing','제작'],['recon','정찰'],['resource','자원']];
   var RG_ORDER={defend:'방어',reinforce:'증원',supply:'보급',repair:'수리',recon:'정찰',evacuate:'대피',prepare_retake:'탈환 준비'};
-  var region=null, rgPick=null;
+  var region=null, rgPick=null, ally=null;
   function renderRegion(){
     var r=region; if(!r){ $('rgw-map').innerHTML=''; $('rgw-svc').innerHTML=''; $('rgw-band').textContent=''; $('rgw-cmd').hidden=true; return; }
     var W=340,H=196,P=16, xy=function(n){ return [P+n.at[0]*(W-110), 14+n.at[1]*(H-28)]; }, by={}; r.nodes.forEach(function(n){ by[n.id]=n; });
     var me=r.me, svg='';
     r.links.forEach(function(l){ var a=xy(by[l[0]]), b=xy(by[l[1]]); svg+='<line x1="'+a[0]+'" y1="'+a[1]+'" x2="'+b[0]+'" y2="'+b[1]+'" stroke="rgba(201,164,94,.28)" stroke-width="1.5"/>'; });
-    r.nodes.forEach(function(n){ var p=xy(n), st=RG_STATE[n.state]||['?','#888'], mine=me&&n.steward&&n.steward.guild===me.guild, pick=rgPick===n.id;
+    var allyIds=me&&me.alliance?me.alliance.guilds.map(function(g){ return g.id; }):[];
+    r.nodes.forEach(function(n){ var p=xy(n), st=RG_STATE[n.state]||['?','#888'], mine=me&&n.steward&&n.steward.guild===me.guild, pick=rgPick===n.id,
+      allied=!mine&&n.steward&&allyIds.indexOf(n.steward.guild)>=0;
       var rad=n.tier===3?10:n.tier===2?8:6;
       if(n.threat>0) svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(rad+3+n.threat/30).toFixed(1)+'" fill="none" stroke="'+st[1]+'" stroke-opacity=".35" stroke-width="2"/>';
-      svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+rad+'" fill="'+st[1]+'"'+(mine?' stroke="#C9A45E" stroke-width="3"':pick?' stroke="#fff" stroke-width="2"':'')+'/>';
+      svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+rad+'" fill="'+st[1]+'"'+(mine?' stroke="#C9A45E" stroke-width="3"':allied?' stroke="#9FC7E8" stroke-width="3" stroke-dasharray="3 2"':pick?' stroke="#fff" stroke-width="2"':'')+'/>';
       svg+='<text x="'+(p[0]+rad+4)+'" y="'+(p[1]+3.5)+'">'+esc(n.name.split(' ')[0])+(n.state!=='online'?' · '+st[0]:'')+'</text>';
       svg+='<circle class="rgw-hit" data-n="'+n.id+'" cx="'+p[0]+'" cy="'+p[1]+'" r="20" fill="transparent" stroke="none"><title>'+esc(n.name+' — '+st[0]+' · 위협 '+n.threat+' · '+n.effect+(n.steward?' · 관리 '+n.steward.name:''))+'</title></circle>'; });
     $('rgw-map').innerHTML=svg;
@@ -108,10 +110,30 @@
       var wait=Math.ceil((o.at+180000-Date.now())/60000), bonus=by[o.node]&&by[o.node].node?(wait>0?'<small class="t-faint"> · '+wait+'분 뒤 판 +10%</small>':'<small style="color:#8FD3A8"> · 판 +10%</small>'):'';
       return '<div class="rgw-order"><b style="color:#C9A45E">'+o.priority+'</b><span class="fill">'+esc(o.name)+' · '+esc((by[o.node]||{name:o.node}).name)+bonus+' <small class="t-faint">'+esc(o.issuerName)+'</small></span>'+
         (mine||lead?'<button type="button" class="btn btn--sm" data-cancel="'+o.id+'">내리기</button>':'')+'</div>'; }).join(''):'<div class="xs t-faint">걸린 명령 없음</div>';
+    /* 동맹 길드의 명령 — 보기만 (내리기·보너스는 그 길드 것) */
+    $('rgw-orders').innerHTML+=(me.allyOrders||[]).map(function(o){ return '<div class="rgw-order"><b style="color:#9FC7E8">'+o.priority+'</b><span class="fill"><span class="rgw-ally-g">'+esc(o.guildName)+'</span> · '+esc(o.name)+' · '+esc((by[o.node]||{name:o.node}).name)+'</span></div>'; }).join('');
     $('rgw-issue').hidden=!me.canOrder.length;
     $('rgw-pick').textContent=rgPick?(by[rgPick].name+' — '+by[rgPick].effect):'지도에서 거점을 누르면 명령을 낼 수 있습니다 ('+ND_ROLE[me.role]+')';
     $('rgw-types').innerHTML=rgPick?me.canOrder.map(function(t){ return '<button type="button" class="btn btn--sm" data-order="'+t+'">'+RG_ORDER[t]+'</button>'; }).join(''):'';
   }
+  function renderAlly(){
+    var a=ally, al=a&&a.alliance, mineG=region&&region.me?region.me.guild:null;
+    $('rgw-ally').innerHTML=!a?'':al?'<b class="rgw-ally-g">'+esc(al.name)+'</b> · '+al.guilds.map(function(g){ return g.id===mineG?'<b>'+esc(g.name)+'</b>':esc(g.name); }).join(' · ')+' <small class="t-faint">('+al.guilds.length+'/'+a.max+')</small>'+
+      (a.sent&&a.sent.length?' <small class="t-faint">· 초대 보냄: '+a.sent.map(esc).join(', ')+'</small>':''):'<span class="t-faint">동맹 없음'+(a.leader?'':' — 길드장이 만들거나 받는다')+'</span>';
+    var canGrow=a&&a.leader&&(!al||al.guilds.length+(a.sent||[]).length<a.max);
+    $('rgw-ally-form').hidden=!canGrow;
+    if(canGrow){ $('rgw-ally-name').placeholder=al?'초대할 길드 이름':'새 동맹 이름 (2–24자)'; $('rgw-ally-go').textContent=al?'초대':'동맹 만들기'; }
+    $('rgw-ally-inv').innerHTML=(a&&a.invites||[]).map(function(i){ return '<div class="rgw-order"><span class="fill">초대 받음 · <b class="rgw-ally-g">'+esc(i.name)+'</b></span>'+
+      '<button type="button" class="btn btn--sm btn--primary" data-ally-ok="'+esc(i.id)+'">수락</button><button type="button" class="btn btn--sm" data-ally-no="'+esc(i.id)+'">거절</button></div>'; }).join('')+
+      (a&&a.leader&&al?'<button type="button" class="btn btn--sm mt2" id="rgw-ally-leave">우리 길드 동맹 탈퇴</button>':'');
+  }
+  function allySend(msg){ ndSend(msg); setTimeout(function(){ ndSend({type:'node',action:'region',region:'seoul'}); },10); }
+  $('rgw-ally-go').onclick=function(){ var v=$('rgw-ally-name').value.trim(); if(!v) return; var al=ally&&ally.alliance;
+    allySend(al?{type:'node',action:'ally',op:'invite',guild:v}:{type:'node',action:'ally',op:'create',name:v}); $('rgw-ally-name').value=''; };
+  $('rgw-ally-inv').addEventListener('click',function(e){ var d=e.target&&e.target.dataset||{};
+    if(d.allyOk) allySend({type:'node',action:'ally',op:'accept',alliance:d.allyOk});
+    else if(d.allyNo) allySend({type:'node',action:'ally',op:'decline',alliance:d.allyNo});
+    else if(e.target&&e.target.id==='rgw-ally-leave') allySend({type:'node',action:'ally',op:'leave'}); });
   $('rgw-map').addEventListener('click',function(e){ var id=e.target&&e.target.dataset&&e.target.dataset.n; if(!id) return; rgPick=rgPick===id?null:id; renderRegion(); });
   $('rgw-types').addEventListener('click',function(e){ var t=e.target&&e.target.dataset&&e.target.dataset.order; if(!t||!rgPick) return;
     ndSend({type:'node',action:'order',region:'seoul',order:{node:rgPick,type:t,priority:$('rgw-urgent').checked?5:3}}); });
@@ -123,7 +145,7 @@
   var ndLast=0, ndInfo=0;
   function ndSend(msg){ var w=Math.max(0,240-(Date.now()-ndLast)); ndLast=Date.now()+w;
     setTimeout(function(){ if(!send(msg)) state('접속한 뒤 이용할 수 있습니다.',true); },w); }
-  function refreshNode(){ clearTimeout(ndInfo); ndInfo=setTimeout(function(){ ndSend({type:'node',action:'info',node:'namsan_n01'}); ndSend({type:'node',action:'region',region:'seoul'}); },60); }
+  function refreshNode(){ clearTimeout(ndInfo); ndInfo=setTimeout(function(){ ndSend({type:'node',action:'info',node:'namsan_n01'}); ndSend({type:'node',action:'region',region:'seoul'}); ndSend({type:'node',action:'ally',op:'info'}); },60); }
 
   /* ── 화면 ── */
   function pane(id){ ['sh-gate','sh-name','sh-nogu','sh-guild'].forEach(function(p){ $(p).hidden=p!==id; }); }
@@ -299,7 +321,8 @@
       if(msg.type==='profile'){ profile=msg.profile; renderProfile(); renderGate(); return; }
       if(msg.type==='guild'){ guild=msg.guild; if(guild) myApp=null; renderGuild(); setTimeout(refreshNode,320); return; }
       if(msg.type==='node'){ node=msg.node; picks=null; renderNode(); return; }
-      if(msg.type==='region'){ region=msg.region; renderRegion(); return; }
+      if(msg.type==='region'){ region=msg.region; renderRegion(); renderAlly(); return; }
+      if(msg.type==='ally'){ ally=msg.ally; renderAlly(); return; }
       if(msg.type==='guildRole'){ if(guild) guild.members.forEach(function(m){ if(m.id===msg.target) m.role=msg.role.role==='member'?'member':msg.role.role; });
         renderGuild(); state('직책을 맡겼습니다.'); setTimeout(refreshNode,260); return; }
       if(msg.type==='guildBoard'){ board=msg.guilds||[]; myApp=msg.mine||null; renderGuild(); return; }
@@ -333,7 +356,7 @@
   $('nd-sgo').onclick=function(){ ndSend({type:'node',action:'supply',node:'namsan_n01',amount:3}); };
   $('sh-members').addEventListener('change',function(e){ var t=e.target; if(!t||!t.dataset||!t.dataset.cap) return;
     ndSend({type:'node',action:'role',target:t.dataset.cap,role:t.value}); });
-  window.__ND={ get node(){ return node; }, get region(){ return region; }, refresh:refreshNode, render:renderNode };
+  window.__ND={ get node(){ return node; }, get region(){ return region; }, get ally(){ return ally; }, refresh:refreshNode, render:renderNode };
 
   /* ── 조작 ── */
   function account(mode){
