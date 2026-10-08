@@ -1,5 +1,6 @@
 # Render 재배포 대기 (파티 서버)
 
+> **2026-10-08 — 남산 N01 5급 감염체 6종 (GuildWorld v04~v06) — Render·Pages `50d90a3` 확인. 서버 변경 없음 (UE·시뮬·시험·문서 203).**
 > **2026-10-08 — 전국 시계·회랑 번짐·필드 보스 → 권역 — Render commit `6833c27` 확인.**
 > 이전: **2026-10-08 — 서울 망 → 남산 판 · 전국 16권역 — Render commit `a3e7087` 확인.**
 > 이전: **2026-10-08 — 동맹(최대 3길드) — Render commit `82f2257` 확인.**
@@ -28,6 +29,8 @@
 | — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
+
+남산 N01 5급 감염체 6종 (Claude): main `50d90a3` → Render `/healthz` commit `50d90a3`, Pages build `50d90a3`. 서버 코드는 안 바뀜(거점 규칙은 UE `HWNodeRules.h` ↔ 시뮬 `node-combat-rules.cjs`). UE 컴파일·PIE 는 디렉터 PC 에서 — Output Log `[N01_TIER5_PIE_V06]`. `npm test` 832 통과 · 실패 0.
 
 전국 시계·회랑 번짐·필드 보스 → 권역 (Claude): main `6833c27` → Render `/healthz` commit `6833c27`, Pages build `6833c27`. 실제 WebSocket `{action:'national'}` → 16권역 · 평시 · 회랑 7개 열림 · `field: []`(지금 살아 있는 필드 보스 없음). `npm test` 832 중 829 통과 · 실패 0.
 
