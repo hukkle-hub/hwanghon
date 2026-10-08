@@ -54,3 +54,13 @@ test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 �
   assert.match(src, /new Animated\(heroAsset, scene, true, false, weaponAsset, ME\)/, '영웅이 양손 쥠 리그 없이 서면 낫을 지팡이처럼 든다');
   assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,200}hero\.mixer\.update\(dt\); hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
 });
+
+test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 보정층 — 아인 바인드·클립 교정(믹서 전) · 양손 쥠 리그 · 리그 순서', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), h = src.slice(src.indexOf('async function hero('), src.indexOf('function heroAnimate(') + 900);
+  assert.match(h, /if\(id==='ain'\)\{ const fix=repairAinBind\(root\); anims=repairAinClips\(g\.animations,fix\); \}/, '아인 교정이 없다');
+  assert.ok(h.indexOf('repairAinClips') < h.indexOf('new THREE.AnimationMixer(root)'), '클립 교정은 믹서보다 먼저 (이미 만든 액션은 옛 트랙을 붙든다)');
+  assert.match(h, /clip=n=>anims\.find/, '믹서가 교정 전 클립을 쓴다');
+  assert.match(h, /h\.rig=\(id==='ain'\?makeAinRigAdapter:makeRigAdapter\)\(root,root,slot,/, '양손 쥠 리그가 없다 — 낫을 지팡이처럼 든다');
+  assert.match(src, /h\.armBlend\?\.restore\(\); h\.rig\?\.restore\(\); h\.mixer\.update\(dt\);[\s\S]{0,400}h\.rig\?\.apply\(action/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
+  assert.match(src, /heroAnimate\(h, h\.me\?dt\*feel\.rate\(h\):dt\)/);
+});

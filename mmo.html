@@ -202,7 +202,13 @@ import { REGIONS, levelOf } from './js/mmo/regions.js';
 import { CLAVE_MOTIONS,claveCounterActive,setupBossMotion,applyBossAction,prepareBossMotion,updateBossMotion,bossHitReact,bossCounterBurst,hideBossMotion } from './js/mmo/boss-motion.js';
 import { setupDominator,applyDominatorAction,updateDominator,hideDominator,flinchDominator } from './js/mmo/dominator-motion.js';   /* 2급 지배형 (문서 204) */
 import { createFieldFeel } from './js/mmo/field-feel.js';
-import { mountAinScythe } from './js/ain-scythe-mount.js';   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
+import { mountAinScythe } from './js/ain-scythe-mount.js';
+import { makeRigAdapter } from './js/combat-motion.js';   /* 무기 쥠 — 솔로·레이드와 같은 보정층 (문서 206 §3) */
+import { makeAinRigAdapter } from './js/ain-two-hand.js';
+import { repairAinBind, repairAinClips } from './js/ain-bind-repair.js';
+import { gripHands } from './js/hand-grip.js';
+import { createArmBlend } from './js/arm-blend.js';
+import { contactOf } from './js/mmo/field-feel.js';   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
 /* 맵을 받는 동안 파티 서버를 미리 깨운다 — 잠든 Render 는 첫 요청에 30초쯤 걸린다 */
@@ -296,16 +302,28 @@ function dress(h, k){ h.set=k; const eq=h.eqNet?Object.assign({main:WEAPON[h.id]
 const gltfs={};
 function heroGltf(id){ return gltfs[id]||(gltfs[id]=load('art/3d/'+id+'_anim.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; })); }
 async function hero(id, x, z, me, o={}){ const g=await heroGltf(id); const root=SkeletonUtils.clone(g.scene); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,root);
+  /* 무기 쥠 (디렉터 «무기도 제대로 못 잡고 있네»): 아인은 바인드·클립 교정 + 양손 쥠, 나머지는 쥔 손 모프 + 팔 리그 — 솔로(game3d)·레이드(party-avatar)와 같은 층.
+     없으면 낫을 지팡이처럼 끝을 잡고 왼손이 논다. 교정은 믹서보다 먼저 (CLAUDE.md §1) */
+  let anims=g.animations; if(id==='ain'){ const fix=repairAinBind(root); anims=repairAinClips(g.animations,fix); }
+  const handGrip=id!=='ain'?gripHands(root,id):null;
   root.position.set(x,0,z); scene.add(root); root.traverse(o2=>{ if(o2.isMesh) o2.frustumCulled=false; });
-  const mixer=new THREE.AnimationMixer(root), clip=n=>g.animations.find(a=>a.name===n), act={};
+  const mixer=new THREE.AnimationMixer(root), clip=n=>anims.find(a=>a.name===n), act={};
   for(const n of ['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4']){ const c=clip(n); if(c) act[n]=mixer.clipAction(c); }
   ['attack1','dodgeB','skill1','skill2','skill3','skill4'].forEach(n=>{ if(act[n]){ act[n].setLoop(THREE.LoopOnce); act[n].clampWhenFinished=true; } });
   act.idle.play(); mixer.setTime(Math.random()*2);
   const blob=new THREE.Mesh(new THREE.PlaneGeometry(1.3,1.3),meta.water?new THREE.MeshBasicMaterial({map:rippleTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,opacity:0.55}):new THREE.MeshBasicMaterial({map:blobTex,transparent:true,depthWrite:false})); blob.rotation.x=-Math.PI/2; blob.renderOrder=1; scene.add(blob);
   const tag=document.createElement('div'); tag.className='tag'+(me?' me':''); document.getElementById('hud').appendChild(tag);
   const h={ id, root, mixer, act, cur:'idle', blob, tag, me, name:o.name||NAMES[id], title:o.title||null, vx:0, vz:0, yaw:0, busy:0, goal:null, wait:Math.random()*2, set:0, net:!!o.net, eqNet:o.eq||null, enhNet:o.enh||null, lookKey:lookKey(o.eq,o.enh), target:null };
+  let slot=null; root.traverse(b=>{ if(b.isBone&&/RightHandSlot/.test(b.name)) slot=b; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE,slot);   /* 장비(TW_LOOKS)가 무기를 다는 바로 그 자리 */
+  h.rig=(id==='ain'?makeAinRigAdapter:makeRigAdapter)(root,root,slot,{ twoHand:id==='kain', handGrip }); h.armBlend=id!=='ain'?createArmBlend(root):null;
   heroTag(h);
   dress(h, o.look!=null?o.look:START_SET[id]); heroes.push(h); return h; }
+/* 리그는 믹서 앞에서 되돌리고 뒤에서 건다. 공격·스킬 중엔 «지금 클립·경과·접점» 을 넘긴다 (리그가 접점 둘레에서 손을 날 쪽으로 맞춘다) */
+const ONESHOT=/^(attack\d|skill\d|dodgeB)$/;
+function heroAnimate(h, dt){ h.armBlend?.restore(); h.rig?.restore(); h.mixer.update(dt);
+  const a=ONESHOT.test(h.cur)&&h.act[h.cur]; let action=null;
+  if(a){ const dur=a.getClip().duration; action={ id:h.cur+(h.swing?.t??0), clip:h.cur, kind:h.cur==='attack1'?'light':'skill', elapsed:a.time, duration:dur, hitAt:contactOf(h.id,h.cur)*dur, combo:0 }; }
+  const moving=h.cur==='run'||h.cur==='walk'; h.rig?.apply(action, moving, false, dt, h.cur, null); h.armBlend?.apply(dt); }
 /* ---------- 가려진 인물 실루엣 (넓은 필드: 건물·나무 뒤로 걸어가도 내가 어디 있는지 보인다) ----------
    맵 타일(renderOrder −2) 다음, 인물(0) 앞에 «맵보다 뒤에 있을 때만» 그리는 복제본(−1)을 그린다.
    보이는 부분은 곧이어 그려지는 인물이 덮고, 가려진 부분에만 윤곽이 남는다. 같은 뼈대를 쓰므로 동작을 그대로 따라간다. */
@@ -771,7 +789,7 @@ function tick(){ const dt=hold?(clock.getDelta(),0):Math.min(clock.getDelta(),dt
   let ix=input.x+(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0), iy=input.y+(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
   /* 화면 오른쪽 = +x, 화면 위 = 월드 -z (카메라 방위 0) */
   step(me, selfDead?0:ix, selfDead?0:-iy, dt, 4.8);
-  heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); h.mixer.update(h.me?dt*feel.rate(h):dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
+  heroes.forEach(h=>{ if(h.net) follow2(h,dt); else if(!h.me) wander(h,dt); heroAnimate(h, h.me?dt*feel.rate(h):dt); h.blob.position.set(h.root.position.x,FLOOR+0.03,h.root.position.z); });
   if(frames%20===1) heroes.forEach(silSync);   /* 장비 GLB 는 늦게 붙는다 — 가끔 다시 훑는다 */
   nearLights(me.root.position); if(inBoss?.alive&&inBoss.root)follow(portraitBossFocus(me.root.position,inBoss.root.position,v3));else follow(me.root.position); map.update(cam); placeT-=dt; if(placeT<=0){ placeT=0.5; place(); }
   feel.tick(dt); zones(dt); bossFrame(dt); areaFrame(dt); if(frames%3===0) miniFrame();

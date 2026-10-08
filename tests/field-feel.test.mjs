@@ -62,5 +62,5 @@ test('필드 화면(mmo.html): 타격 효과를 접점 예약으로 — setTimeo
   assert.match(on, /feel\.atContact\(me,0,/, '온라인 타격 답이 접점까지 기다리지 않는다');
   assert.match(src, /feel\.swing\(me,'attack1'\)/); assert.match(src, /feel\.swing\(me,clip,/);
   assert.match(src, /prepareMain:\(model,spec\)=>h\.id==='ain'&&spec\.glb==='art\/3d\/ain_scythe_tex\.glb'\?mountAinScythe\(model\)/, '낫 날 표식이 없으면 궤적이 자루를 따른다');
-  assert.match(src, /h\.mixer\.update\(h\.me\?dt\*feel\.rate\(h\):dt\)/, '히트스톱이 내 동작에 안 걸린다');
+  assert.match(src, /heroAnimate\(h, h\.me\?dt\*feel\.rate\(h\):dt\)/, '히트스톱이 내 동작에 안 걸린다');   /* 리그 층(heroAnimate) 안에서 믹서를 돌린다 — 문서 206 §3 */
 });
