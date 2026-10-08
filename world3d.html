@@ -143,16 +143,18 @@ function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부�
    bossStrike 는 server/field.cjs 와 같은 규칙(회피 무적이면 0 · 최대 HP × 비율 · 밀려남 · 쓰러지면 5초 뒤 출발점) — 방어력·버프는 시험판에 없다.
    시계는 게임 시간(ms) — 헤드리스 검수(초당 1~2프레임)에서도 예고·타격 시각이 동작과 맞는다 */
 const DOM = await loadCjs('server/field-dominator.cjs');
+/* 클레이브(필드 보스) 전투도 서버 모듈 그대로 — 혼자 연습에서도 예고·연계·반격창·셔터 부위 파괴가 서버와 같다 (문서 206 §11) */
+const COMBAT = await loadCjs('server/field-boss-combat.cjs'), CLAVE_HP = 300000;   /* 연습 체력: 2D 필드 혼자 연습과 같은 30만 — 70%·35% 에서 2·3페이즈 */
 let gameNow = 1e6;
 const DODGE_TIME = 520, DODGE_GAP = 780, RESPAWN_TIME = 5000, RESPAWN_GUARD = 2000, DOM_RESPAWN = 30000;   /* server/field.cjs 와 같은 값 */
 const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: false, respawnAt: 0, invulnUntil: 0, dodgeUntil: 0, dodgeReady: 0, hurtSeq: 0 };
 const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
-    if (now < p.invulnUntil || now < p.dodgeUntil) { floatAt('회피', 'evade', root.position, 1.9); return { evade: true }; }
+    if (now < p.invulnUntil || now < p.dodgeUntil) { floatAt('회피', 'evade', root.position, 1.9); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
     const amount = Math.max(1, Math.round(p.maxHp * hit.damage)); p.hp = Math.max(0, p.hp - amount);
     if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; }
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
-    if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } return { amount, dead: p.dead }; } };
+    if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } if (o.combat) COMBAT.notePlayerResult(o, p.id, false); return { amount, dead: p.dead }; } };
 const doms = [], fbs = [];   /* fbs: 필드 보스(클레이브 등) — 아래 «필드 보스» 에서 채운다 */
 for (const b of meta.bosses || []) if (b.ai === 'dominator') {
   const hid = (/art\/3d\/(\w+)_anim\.glb$/.exec(b.model) || [])[1]; if (!hid) continue;
@@ -200,13 +202,18 @@ const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서�
 let dodgeT = 0, shakeT = 0, hurtT = 0;
 function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
   hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip);
-  let t = null, bd = 1e9; for (const o of net ? [...doms, ...fbs] : doms) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
+  let t = null, bd = 1e9; for (const o of net ? [...doms, ...fbs] : [...doms, ...fbs.filter(f => f.ai)]) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
   if (!t) return; me.yaw = Math.atan2(t.root.position.x - root.position.x, t.root.position.z - root.position.z); root.rotation.y = me.yaw;
   if (net) { net.send({ type: 'fieldHit', boss: t.b.id }); return; }   /* 온라인: 서버가 판정한다 — 답(bossHit)이 오면 접점 시각에 보인다 */
   const crit = Math.random() < 0.18;
-  feel.atContact(fh, 0, () => { if (!t.ai.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1)); t.ai.hp -= n; feel.impact(fh, t, { crit });
+  feel.atContact(fh, 0, () => { if (!t.ai.alive) return; const ai = t.ai, counter = ai.combat ? COMBAT.tryCounter(ai, gameNow) : false;   /* 반격: 서버 hit() 와 같은 순서 — 반격창 판정 → 피해(×1.65) → 셔터 */
+    const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * (counter ? 1.65 : 1)); ai.hp -= n; feel.impact(fh, t, { crit, counter, sound: !t.fx });
     floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', t.root.position, Math.min(2.1, (t.h || 2.2) * .6));
-    if (t.ai.hp <= 0) { t.ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
+    if (t.fx) { const part = ai.hp > 0 ? COMBAT.damageShutter(ai, P, { character: ME }, n, counter, gameNow) : null;
+      let dx = P.x - ai.x, dz = P.z - ai.z, d = Math.hypot(dx, dz); if (d < .001) { dx = -Math.sin(ai.yaw || 0); dz = -Math.cos(ai.yaw || 0); d = 1; } const edge = Math.max(.8, Math.min(1.55, (t.b.h || 3) * .38));
+      bossHitReact(t, { seq: (t.impSeq = (t.impSeq || 0) + 1), x: ai.x + dx / d * edge, z: ai.z + dz / d * edge, crit, counter, at: gameNow });
+      if (counter) { bossCounterBurst(t); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); }
+    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
 function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
   hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
@@ -260,20 +267,21 @@ function netMsg(m) {
       if (o.fx) { bossHitReact(o, { seq: im[0], x: im[1], z: im[2], crit: m.crit, counter: m.counter, at: im[3] }); if (m.counter) { bossCounterBurst(o); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } } }); return; }
   if (m.type === 'announce' && m.kind === 'bossSpawn' && m.zone === ZONE) { toast((/^t2_dominator/.test(m.boss) ? '⚠ 2급 지배형 출현 · ' + esc(m.title) : '⚠ 필드 보스 출현') + '<br><b>' + esc(m.name) + '</b> · ' + esc(m.place), 5); return; }
   if (m.type === 'announce' && m.kind === 'bossDown' && m.zone === ZONE) { toast(esc(m.name) + ' 처치 · ' + esc(m.top || ''), 4); return; }
-  if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } } }
+  if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } for (const o of fbs) o.root.visible = o.ai ? o.ai.alive : true; } }
 if (ONLINE) { const L = document.getElementById('load'); L.textContent = '필드 방에 들어가는 중…';
   try { net = await connectField({ q, zone: ZONE, gate: ARRIVE && ARRIVE.id, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); netEl.textContent = '온라인 · 근처 0명'; }
   catch (e) { netEl.textContent = '오프라인 — ' + e.message + ' · 혼자 연습'; } }
 else netEl.textContent = '혼자 연습 (?online=1 이면 서버 방)';
 /* ---------- 필드 보스 (클레이브 등, 문서 188·192) — 2D 필드와 같은 몸·같은 안무 ----------
-   온라인: 서버가 살아 있는지·동작을 보낸다 (클레이브는 서버 시각 안무 boss-motion.js). 혼자 연습: 대기 동작으로 서 있다 (싸움은 지배형만) */
+   온라인: 서버가 살아 있는지·동작을 보낸다 (클레이브는 서버 시각 안무 boss-motion.js). 혼자 연습: 클레이브는 브라우저에서 서버 전투 모듈(COMBAT)을 돌리고, 나머지는 대기 동작 */
 const bossClock = () => net ? sclock.now() : gameNow;
 for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
   load(b.model).then(gl => { const r = gl.scene; r.traverse(m => { if (m.isMesh) { m.frustumCulled = false; m.castShadow = true; } });
     const box = new THREE.Box3().setFromObject(r), h = box.max.y - box.min.y || 1, dh = b.visualH || b.h, k = dh ? dh / h : (b.scale || 1); r.scale.setScalar(k); box.setFromObject(r);
     const grp = new THREE.Group(); grp.position.set(b.x, b.fly || 0, b.z); r.position.set(r.position.x - (box.min.x + box.max.x) / 2, r.position.y - box.min.y, r.position.z - (box.min.z + box.max.z) / 2); grp.add(r); scene.add(grp);
     const o = { b, root: grp, model: r, h: box.max.y - box.min.y, netAlive: false }; if (net) grp.visible = false;   /* 온라인: 서버가 «살아 있다» 고 할 때만 */
-    if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now); }
+    if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now);
+        if (COMBAT.enabled({ id: b.id })) { o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; COMBAT.setup(o.ai, gameNow); } }
       else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); } }
     fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
@@ -311,6 +319,9 @@ function tick() {
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
     const ev = updateDominator(o, dt * feel.rate(o), gameNow); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
+  if (!net) for (const o of fbs) { const ai = o.ai; if (!ai) continue;   /* 혼자 연습 클레이브: 서버와 같은 틱 → 같은 view → 같은 안무 */
+    if (!ai.alive) { if (gameNow >= o.respawnAt) { COMBAT.reset(ai, gameNow); ai.alive = true; ai.hp = ai.max; o.root.visible = true; } continue; }
+    COMBAT.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = COMBAT.view(ai); if (v) applyBossAction(o, v, gameNow); }
   { const bn = bossClock(); for (const o of fbs) { if (!o.root.visible && !(o.fx && o.fx.tailT > 0)) continue;
       if (o.mixer) { if (o.fx) prepareBossMotion(o, bn); o.mixer.update(dt); }
       if (o.fx) { const ev = updateBossMotion(o, dt, bn) || {}; if (ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .14); } } }

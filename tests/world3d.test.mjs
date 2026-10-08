@@ -120,7 +120,7 @@ test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(bos
   assert.match(w, /r\.position\.y - box\.min\.y/, '발을 바닥에 안 맞춘다 (보스가 묻혔던 일 — CLAUDE.md §1)');
   assert.match(w, /if \(o\.fx\) prepareBossMotion\(o, bn\); o\.mixer\.update\(dt\);/, '서버 시각 자세 준비는 믹서 평가보다 먼저');
   assert.match(w, /const f = fbs\.find\(x => x\.b\.id === a\.id\); if \(f && f\.fx\) applyBossAction\(f, a, sclock\.now\(\)\)/, '서버 보스 동작을 안 따른다');
-  assert.match(w, /for \(const o of net \? \[\.\.\.doms, \.\.\.fbs\] : doms\)/, '온라인에서 필드 보스를 못 때린다');
+  assert.match(w, /for \(const o of net \? \[\.\.\.doms, \.\.\.fbs\] : \[\.\.\.doms, \.\.\.fbs\.filter\(f => f\.ai\)\]\)/, '온라인에서 필드 보스를 못 때린다');
 });
 
 test('3D 필드 하늘: 바깥만 장면 색(env.sky)으로 노을 돔 · 정적 합치기와 카메라 막이에서 뺀다', () => {
@@ -174,4 +174,15 @@ test('실내 천장은 카메라 막이 — 두께 0.12 m 라 «키 1.2 m 넘는
   const at = new THREE.Vector3(0, 1.45, 0), want = new THREE.Vector3(6, 8.2, 0), d = firstHit(r.camBoxes, at, want);
   assert.ok(d < at.distanceTo(want) && at.clone().add(want.clone().sub(at).setLength(d)).y < 5, '카메라가 천장 위로 나간다');
   for (const f of ['js/mmo/env-indoor.js', 'js/mmo/env-dungeon.js']) assert.match(fs.readFileSync(path.join(ROOT, f), 'utf8'), /userData\.camBlock = true/, f + ' 천장에 camBlock 표시가 없다');
+});
+
+test('3D 필드 혼자 연습 클레이브: 서버 전투 모듈 그대로 — 틱·view·반격창·셔터 · 맞은 결과(회피 읽기)', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  assert.match(w, /const COMBAT = await loadCjs\('server\/field-boss-combat\.cjs'\)/, '클레이브 AI 를 브라우저용으로 다시 쓰면 서버와 갈라진다');
+  assert.match(w, /COMBAT\.tick\(fieldLocal, ai, gameNow\); collide\(ai, 0\.5\); const v = COMBAT\.view\(ai\); if \(v\) applyBossAction\(o, v, gameNow\);/, '혼자 연습 클레이브가 서 있기만 한다');
+  assert.match(w, /counter = ai\.combat \? COMBAT\.tryCounter\(ai, gameNow\) : false/, '반격창 판정이 없다');
+  assert.match(w, /\* \(counter \? 1\.65 : 1\)/, '반격 배율이 서버(1.65)와 다르다');
+  assert.match(w, /COMBAT\.damageShutter\(ai, P, \{ character: ME \}, n, counter, gameNow\)/, '셔터 부위 파괴가 없다');
+  assert.match(w, /if \(o\.combat\) COMBAT\.notePlayerResult\(o, p\.id, false\)/, '맞은 결과를 보스가 못 읽는다 (서버 bossStrike 와 다름)');
+  assert.match(w, /net \? \[\.\.\.doms, \.\.\.fbs\] : \[\.\.\.doms, \.\.\.fbs\.filter\(f => f\.ai\)\]/, '혼자 연습에서 클레이브를 칠 수 없다');
 });
