@@ -90,12 +90,20 @@ const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true });   /* vie
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
-scene.background = skyCol; scene.fog = new THREE.Fog(skyCol, 70, 230);   /* 굽기엔 없던 것 — 3인칭은 지평선까지 보인다. 먼 경계(잘린 블록·띠 끝)를 노을 안개로 덮는다 */
+scene.background = skyCol; scene.fog = new THREE.Fog(skyCol, 70, 230);
+/* 하늘 돔 (바깥만) — 굽기는 내려다봐서 하늘이 필요 없었다. 3인칭은 늘 지평선이 보인다: 안개색(땅 끝) → 지평선 노을 → 위 보랏빛, 해 쪽으로 빛무리.
+   색은 장면이 정한 env.sky (top · horizon · fog) 그대로 */
+if (env.sky && env.sky.top && env.sky.horizon) { const sd = env.sun ? new THREE.Vector3(...env.sun.dir).normalize() : new THREE.Vector3(0, 0.2, 1);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(480, 32, 16), new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, toneMapped: false,
+    uniforms: { top: { value: new THREE.Color(env.sky.top) }, hor: { value: new THREE.Color(env.sky.horizon) }, fogc: { value: skyCol.clone() }, sun: { value: sd }, sunc: { value: new THREE.Color(env.sun && env.sun.color || '#ff8a50') } },
+    vertexShader: 'varying vec3 vd; void main(){ vd = normalize(position); vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w; }',
+    fragmentShader: 'uniform vec3 top, hor, fogc, sun, sunc; varying vec3 vd; void main(){ float y = vd.y; vec3 c = mix(fogc, hor, smoothstep(-0.02, 0.10, y)); c = mix(c, top, smoothstep(0.10, 0.55, y)); float a = max(dot(vd, sun), 0.0); c += sunc * (pow(a, 64.0) * 1.6 + pow(a, 6.0) * 0.28) * smoothstep(-0.05, 0.05, y); gl_FragColor = vec4(c, 1.0); }' }));
+  dome.frustumCulled = false; dome.renderOrder = -10; dome.name = 'sky'; scene.add(dome); window.__sky = dome; }   /* 굽기엔 없던 것 — 3인칭은 지평선까지 보인다. 먼 경계(잘린 블록·띠 끝)를 노을 안개로 덮는다 */
 /* 점광 정리: 장면의 점광을 빼고 데이터만 남긴다 → 가까운 8개만 */
 const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o); });
 for (const L of pointData) L.parent.remove(L);
 /* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
-const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene);
+const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
   POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity; L.distance = l.distance; L.decay = l.decay; }); }
@@ -307,7 +315,7 @@ function tick() {
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
-  placeCam(dt);
+  placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   requestAnimationFrame(tick); }
