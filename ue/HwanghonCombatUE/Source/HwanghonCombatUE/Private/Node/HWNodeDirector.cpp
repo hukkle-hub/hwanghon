@@ -183,8 +183,20 @@ bool AHWNodeDirector::ConfigureNode(FName NodeId, const FString& Options)
     // under two hours the node is not retakeable yet (OccupationTier Initial): start at two
     if (!RetakeOption.IsEmpty()) RetakeHours = FMath::Max(2.f, FCString::Atof(*RetakeOption));
 
+    // Seoul's strategic network reaches the run (docs/design/202 §2.5): logistics, recon, manufacturing service 0..1
+    const FString RegionOption = UGameplayStatics::ParseOption(Options, TEXT("HWRegion"));
+    bRegionFromOption = !RegionOption.IsEmpty();
+    if (bRegionFromOption)
+    {
+        TArray<FString> Parts;
+        RegionOption.ParseIntoArray(Parts, TEXT(","), true);
+        for (int32 K = 0; K < 3 && K < Parts.Num(); ++K) RegionServices[K] = FMath::Clamp(FCString::Atof(*Parts[K]), 0.f, 1.f);
+    }
+    RegionFx = HWNodeRules::RegionEffects(RegionServices[0], RegionServices[1], RegionServices[2]);   // online: RequestRegion replaces it
+
     const FString SupplyOption = UGameplayStatics::ParseOption(Options, TEXT("HWSupply"));
-    SupplyStart = SupplyOption.IsEmpty() ? Config->DefaultSupply : FMath::Clamp(FCString::Atoi(*SupplyOption), 0, 30);
+    SupplyRequested = SupplyOption.IsEmpty() ? Config->DefaultSupply : FMath::Clamp(FCString::Atoi(*SupplyOption), 0, 30);
+    SupplyStart = FMath::Min(SupplyRequested, RegionFx.SupplyCap);   // the server caps allocations the same way (Hangang)
     return true;
 }
 
@@ -483,9 +495,21 @@ HWNodeRules::FNpcEffects AHWNodeDirector::CurrentNpcEffects() const
 
 void AHWNodeDirector::BeginPreparation()
 {
+    // a server answer that came in during the last run takes effect now, before supplies and the countdown are set
+    if (bNextRegion)
+    {
+        bNextRegion = false;
+        RegionServices[0] = NextRegion[0];
+        RegionServices[1] = NextRegion[1];
+        RegionServices[2] = NextRegion[2];
+        RegionFx = HWNodeRules::RegionEffects(RegionServices[0], RegionServices[1], RegionServices[2]);
+        SupplyStart = FMath::Min(SupplyRequested, RegionFx.SupplyCap);
+    }
     Supply.Points = SupplyStart;
     FreePotions = Policy.ExtraPotions;
-    PrepLeft = HWNodeRules::PrepSeconds(CurrentNpcEffects(), Policy);
+    // recon (Bugak) lost = less warning; never under 5 s to build anything at all
+    PrepLeft = FMath::Max(5.f, HWNodeRules::PrepSeconds(CurrentNpcEffects(), Policy) + RegionFx.PrepDeltaSeconds);
+    RequestRegion();   // online: the server's Seoul network, before the run starts
     if (IsRetakeRun())
     {
         // occupied for RetakeHours: Retakeable once past two hours - prepare, then take it back
@@ -692,6 +716,7 @@ void AHWNodeDirector::FinishRun(const TCHAR* ReportOutcome)
     if (Net && Net->IsConnected())
     {
         Net->OnNodeReply.AddUniqueDynamic(this, &AHWNodeDirector::HandleNodeReply);
+        Net->OnNodeRegion.AddUniqueDynamic(this, &AHWNodeDirector::HandleNodeRegion);   // the reply's guild-order bonus (even with ?HWRegion=)
         Net->OnNetworkError.AddUniqueDynamic(this, &AHWNodeDirector::HandleNetError);
         bReportPending = Net->SendNodeReport(Json);
         Notice = bReportPending ? TEXT("Report sent to the node server") : TEXT("Report could not be sent (saved locally)");
@@ -703,8 +728,62 @@ void AHWNodeDirector::HandleNodeReply(FString ServerNodeState, FString ServerSte
 {
     if (!bReportPending) return;   // a node reply to something else (info, policy, supply)
     bReportPending = false;
-    Notice = FString::Printf(TEXT("Node server: %s - steward %s"), *ServerNodeState, ServerSteward.IsEmpty() ? TEXT("none yet") : *ServerSteward);
+    const FString BonusNote = PendingOrderBonus > 0.f ? FString::Printf(TEXT(" - guild order here: contribution +%.0f%%"), PendingOrderBonus * 100.f) : FString();
+    Notice = FString::Printf(TEXT("Node server: %s - steward %s%s"), *ServerNodeState, ServerSteward.IsEmpty() ? TEXT("none yet") : *ServerSteward, *BonusNote);
+    PendingOrderBonus = 0.f;
     NoticeFor = 8.f;
+}
+
+void AHWNodeDirector::RequestRegion()
+{
+    if (bRegionFromOption || !Config) return;
+    UGameInstance* GameInstance = GetGameInstance();
+    UHWRaidNetworkSubsystem* Net = GameInstance ? GameInstance->GetSubsystem<UHWRaidNetworkSubsystem>() : nullptr;
+    if (!Net || !Net->IsConnected()) return;
+    Net->OnNodeRegion.AddUniqueDynamic(this, &AHWNodeDirector::HandleNodeRegion);
+    Net->SendNodeInfo(Config->NodeId.ToString());
+}
+
+void AHWNodeDirector::ApplyRegion(float Logistics, float Recon, float Manufacturing)
+{
+    const float Next[3] = { FMath::Clamp(Logistics, 0.f, 1.f), FMath::Clamp(Recon, 0.f, 1.f), FMath::Clamp(Manufacturing, 0.f, 1.f) };
+    // a run under way keeps the services it started with (the run log's "region" says so): the answer waits for the next preparation
+    if (Machine.State == HWNodeRules::ENodeState::Invasion || Machine.State == HWNodeRules::ENodeState::Retaking)
+    {
+        for (int32 K = 0; K < 3; ++K) NextRegion[K] = Next[K];
+        bNextRegion = true;
+        return;
+    }
+    bNextRegion = false;   // a newer answer than anything queued mid-run
+    const float OldPrepDelta = RegionFx.PrepDeltaSeconds;
+    const int32 OldStart = SupplyStart;
+    for (int32 K = 0; K < 3; ++K) RegionServices[K] = Next[K];
+    RegionFx = HWNodeRules::RegionEffects(RegionServices[0], RegionServices[1], RegionServices[2]);
+    SupplyStart = FMath::Min(SupplyRequested, RegionFx.SupplyCap);   // recomputed from the request: a cap that rises gives it back
+    if (IsPreparing())
+    {
+        // move the countdown by the change only; never push a short countdown back up to the floor
+        const float Shift = RegionFx.PrepDeltaSeconds - OldPrepDelta;
+        if (!FMath::IsNearlyZero(Shift)) PrepLeft = FMath::Max(FMath::Min(PrepLeft, 5.f), PrepLeft + Shift);
+        // this preparation's supplies follow the cap too (barricades already built stay paid for)
+        Supply.Points = FMath::Max(0, Supply.Points + (SupplyStart - OldStart));
+    }
+}
+
+void AHWNodeDirector::HandleNodeRegion(float Logistics, float Recon, float Manufacturing, float OrderBonus)
+{
+    if (bReportPending) PendingOrderBonus = OrderBonus;   // a report's answer: HandleNodeReply shows it next
+    if (bRegionFromOption) return;
+    const bool bChanged = !FMath::IsNearlyEqual(Logistics, RegionServices[0]) || !FMath::IsNearlyEqual(Recon, RegionServices[1])
+        || !FMath::IsNearlyEqual(Manufacturing, RegionServices[2]);
+    ApplyRegion(Logistics, Recon, Manufacturing);
+    const bool bInRun = Machine.State == HWNodeRules::ENodeState::Invasion || Machine.State == HWNodeRules::ENodeState::Retaking;
+    if (bChanged && !bReportPending && !bInRun)   // mid-run the answer is queued (ApplyRegion): no notice with the old numbers
+    {
+        Notice = FString::Printf(TEXT("Seoul network (server): logistics %.0f%% - recon %.0f%% - manufacturing %.0f%%"),
+            RegionServices[0] * 100.f, RegionServices[1] * 100.f, RegionServices[2] * 100.f);
+        NoticeFor = 6.f;
+    }
 }
 
 void AHWNodeDirector::HandleNetError(FString ServerError)
@@ -831,7 +910,7 @@ void AHWNodeDirector::HandleInteract()
             }
             else
             {
-                Turret->RepairBy(Turret->GetMaxHealth() * HWNodeRules::TurretRepairFraction);
+                Turret->RepairBy(Turret->GetMaxHealth() * HWNodeRules::TurretRepairFraction * RegionFx.TurretRepairScale);   // manufacturing (Yongsan, Guro)
                 Ledger.Raw[static_cast<int32>(HWNodeRules::EContribution::Supply)] += static_cast<float>(HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::TurretRepair));
                 RunEvent(TEXT("supply"), Turret->GetFacilityId().ToString(), TEXT("turret_repair"));
                 Notice = FString::Printf(TEXT("Turret repaired (%.0f%%) - supplies %d"), Turret->GetHealthFraction() * 100.f, Supply.Points);
@@ -1243,6 +1322,11 @@ void AHWNodeDirector::DrawHud() const
         Show(FString::Printf(TEXT("PREPARE %.0fs - supplies %d (barricade %d at a forest-trail slot: G)   technician orders: G next to them"),
             PrepLeft, Supply.Points, HWNodeRules::SupplyCost(HWNodeRules::ESupplyUse::Barricade)), FColor(255, 170, 90));
         if (!Config->ShelterPoint.IsZero()) Show(TEXT("Evacuate the NPCs under the central turrets: G at the shelter point (they leave their posts)"), FColor(120, 200, 255));
+        if (RegionServices[0] < 1.f || RegionServices[1] < 1.f || RegionServices[2] < 1.f)
+        {
+            Show(FString::Printf(TEXT("Seoul network: logistics %.0f%% (supply cap %d) - recon %.0f%% (prep %+.1f s) - manufacturing %.0f%% (turret repair x%.2f)"),
+                RegionServices[0] * 100.f, RegionFx.SupplyCap, RegionServices[1] * 100.f, RegionFx.PrepDeltaSeconds, RegionServices[2] * 100.f, RegionFx.TurretRepairScale), FColor(230, 190, 120));
+        }
         Show(NpcFx.bWavePreview ? FString::Printf(TEXT("Scout report - first wave: %s"), *WavePreview(0)) : FString(TEXT("No scout report (scout lost, no scouting policy)")), FColor(170, 220, 255));
     }
     if (Machine.State == HWNodeRules::ENodeState::Invasion || Machine.State == HWNodeRules::ENodeState::Retaking)
@@ -1331,10 +1415,12 @@ void AHWNodeDirector::BeginRunLog()
             TechOrder = FString::Printf(TEXT("\"%s\""), HWNodeDirectorLocal::FacilityKey(Npc->GetOrderFacility()));
         }
     }
-    // supply = points left when the run starts (barricades already paid); retake runs carry the tier's difficulty and extra elites
-    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d,\"retake\":%s,\"difficulty\":%.2f,\"extraElites\":%d}"),
+    // supply = points left when the run starts (barricades already paid); retake runs carry the tier's difficulty and extra elites;
+    // region = Seoul's logistics, recon, manufacturing service (?HWRegion=)
+    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d,\"retake\":%s,\"difficulty\":%.2f,\"extraElites\":%d,\"region\":[%.3f,%.3f,%.3f]}"),
         *FString::Join(PolicyList, TEXT(",")), *FString::Join(BarricadeList, TEXT(",")), *TechOrder, bAnyEvacuated ? TEXT("true") : TEXT("false"),
-        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points, Machine.State == HWNodeRules::ENodeState::Retaking ? TEXT("true") : TEXT("false"), RunDifficulty, RunExtraElites);
+        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points, Machine.State == HWNodeRules::ENodeState::Retaking ? TEXT("true") : TEXT("false"), RunDifficulty, RunExtraElites,
+        RegionServices[0], RegionServices[1], RegionServices[2]);
 }
 
 void AHWNodeDirector::RunEvent(const TCHAR* Kind, const FString& Id, const TCHAR* To)

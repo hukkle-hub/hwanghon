@@ -240,6 +240,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetRaidEventSignature, FHWRaidNet
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNetErrorSignature, FString, Error);
 // The node server's view after a report (docs/design/201 §6): its state (stable/fallen/...) and the steward guild (empty = none).
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FHWNetNodeSignature, FString, NodeState, FString, StewardGuild);
+// Seoul's network as it reaches a node run (docs/design/202 §2.5): logistics, recon and manufacturing service (0..1), and the
+// guild-order bonus a report earned (0 = none). Broadcast just before OnNodeReply for the same server message.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FHWNetNodeRegionSignature, float, Logistics, float, Recon, float, Manufacturing, float, OrderBonus);
 
 UCLASS()
 class HWANGHONCOMBATUE_API UHWRaidNetworkSubsystem : public UGameInstanceSubsystem
@@ -258,6 +261,7 @@ public:
     UPROPERTY(BlueprintAssignable) FHWNetRaidEventSignature OnRaidEvent;
     UPROPERTY(BlueprintAssignable) FHWNetErrorSignature OnNetworkError;
     UPROPERTY(BlueprintAssignable) FHWNetNodeSignature OnNodeReply;
+    UPROPERTY(BlueprintAssignable) FHWNetNodeRegionSignature OnNodeRegion;
 
     UFUNCTION(BlueprintCallable) bool Connect(const FString& ServerBaseUrl, const FString& SessionToken, const FString& DisplayName);
     UFUNCTION(BlueprintCallable) void Disconnect();
@@ -283,6 +287,8 @@ public:
     // A node defence's result: the director's {"node":..,"outcome":..,"contrib":{..}} goes out as
     // {type:'node', action:'report', node, report} (server/node-store.cjs nodeReport). The reply comes back as OnNodeReply.
     UFUNCTION(BlueprintCallable) bool SendNodeReport(const FString& ReportJson);
+    // Asks for a node's view ({type:'node', action:'info', node}) - the answer comes back as OnNodeRegion, then OnNodeReply.
+    UFUNCTION(BlueprintCallable) bool SendNodeInfo(const FString& NodeId);
     UFUNCTION(BlueprintCallable) bool SendMove(float X, float Y);
     UFUNCTION(BlueprintCallable) bool SendTarget(FName PartId);
     UFUNCTION(BlueprintCallable) bool SendAttack();

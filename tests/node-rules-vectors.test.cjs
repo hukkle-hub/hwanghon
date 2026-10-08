@@ -11,6 +11,7 @@ test('서버 규칙: 카운터 판정·점령 단계·정책·권한',()=>{
  for(const role of R.ROLES) for(const perm of R.PERMS) assert.equal(R.hasPermission(role,perm),V.permissions[role].includes(perm),role+' '+perm);
 });
 test('서버 규칙: 공헌도(보스 딜 1위가 1등이 아니다)·관리권',()=>{
+ for(const [[l,r,m],[cap,prep,rep]] of V.region_effects.cases){ const e=R.regionEffects(l,r,m); assert.equal(e.supplyCap,cap,'supply cap '+[l,r,m]); assert.ok(near(e.prepDeltaSeconds,prep)&&near(e.turretRepairScale,rep),'region '+[l,r,m]); }
  for(const K of [V.contribution,V.contribution2]){ const P=K.players; P.forEach((p,i)=>assert.ok(near(R.contributionScore(p,P),K.scores[i]),'score '+i+' '+R.contributionScore(p,P))); }
  /* 길드 단위 셈도 같은 상한·보너스 (관리권이 쓰는 쪽) */
  assert.deepEqual(R.guildContributionScores(V.contribution2.players).map(x=>+x.toFixed(3)),V.contribution2.scores);
@@ -57,6 +58,7 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
   K.players.forEach((p,i)=>{ for(const [k,v] of Object.entries(p)) L.push(`All[${i}].Raw[static_cast<int>(EContribution::${C[k]})]=${f(v)};`); });
   K.scores.forEach((s,i)=>L.push(`CHECK(std::fabs(ContributionScore(All[${i}],All,${K.players.length})-${f(s)})<0.01f,"score ${ki}.${i}");`));
   L.push('}'); });
+ V.region_effects.cases.forEach(([[l,r,m],[cap,prep,rep]],i)=>L.push(`{ const FRegionEffects E=RegionEffects(${f(l)},${f(r)},${f(m)}); CHECK(E.SupplyCap==${cap}&&std::fabs(E.PrepDeltaSeconds-(${f(prep)}))<0.01f&&std::fabs(E.TurretRepairScale-${f(rep)})<0.001f,"region effects ${i}"); }`));
  V.steward.forEach((s,i)=>L.push(`{ const float S[]={${s.scores.map(f).join(',')}}; const int G[]={${s.guild_of.join(',')}}; CHECK(StewardGuild(S,G,${s.scores.length},${s.guilds})==${s.expect},"steward ${i}"); }`));
  V.machine.forEach((c,ci)=>{ L.push('{ FNodeStateMachine M;'); c.steps.forEach((st,i)=>{ const [op,...a]=st;
   L.push(op==='threat'?`M.SetThreat(${f(a[0])});`:op==='invade'?'M.StartInvasion();':op==='held'?'M.DefenceHeld();':op==='recover'?`M.AddRecovery(${f(a[0])});`:

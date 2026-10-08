@@ -59,6 +59,22 @@ function pressureBand(cfg,p){ let band=cfg.pressure_bands[0]; for(const b of cfg
 function crisis(cfg,r){ const c=cfg.crisis; if(!c) return null; const troubled=cfg.nodes.filter(n=>['degraded','occupied'].includes(r.nodes[n.id].state)).map(n=>n.id);
  return { id:c.id, name:c.name, active:r.pressure>=c.pressure_min&&troubled.length>=c.min_troubled, troubled, fronts:c.fronts }; }
 
+/* ── 전국 (docs/design/202 §8, korea.json) — 권역마다 망은 따로 돌고, 전국은 «지금 상태» 를 모아 본다 ──
+   회랑: 지나는 권역 중 하나라도 붕괴(압력 95+)이거나 허브가 점령이면 «단절», 운영 75% 미만이거나 침공(55+) 이상이면 «긴장», 아니면 «열림».
+   전국 작전 단계 (패키지 NATIONAL_CAMPAIGN_LOOP 의 앞 네 단계, 시간 없이 상태로만):
+     평시 → 동원(위기 권역 1 또는 침공 권역 2) → 진행(위기 권역 2) → 결정적(진행 중 붕괴 권역 1). 해결·쿨다운은 시간 축이라 나중.
+   views: { id: { pressure, operational, hubOccupied } } */
+const BAND_RANK={stable:0,tension:1,invasion:2,crisis:3,collapsed:4};
+function nationalStatus(korea,bandsCfg,views){ const C=korea.campaign, band=id=>pressureBand(bandsCfg,views[id].pressure).id;
+ const atLeast=(id,b)=>BAND_RANK[band(id)]>=BAND_RANK[b], ids=korea.regions.map(r=>r.id).filter(id=>views[id]);
+ const crisis=ids.filter(id=>atLeast(id,'crisis')), collapsed=ids.filter(id=>atLeast(id,'collapsed')), invasion=ids.filter(id=>atLeast(id,'invasion'));
+ const corridors=korea.corridors.map(c=>{ const rs=c.regions.filter(id=>views[id]);
+  const cut=rs.some(id=>atLeast(id,'collapsed')||views[id].hubOccupied), strained=rs.some(id=>views[id].operational<0.75||atLeast(id,'invasion'));
+  return { id:c.id, purpose:c.purpose, regions:c.regions, status:cut?'cut':strained?'strained':'open' }; });
+ const active=crisis.length>=C.active_crisis_regions;
+ const phase=active&&collapsed.length>=C.critical_collapsed_regions?'critical':active?'active':(crisis.length>=C.mobilize_crisis_regions||invasion.length>=C.mobilize_invasion_regions)?'mobilization':'dormant';
+ return { phase, crisis, collapsed, invasion, corridors }; }
+
 /* ── 관리 용량 (GuildRules_v02): 길드마다 80, 거점 단계별 비용 25·40·60, 지역 허브(3단계)는 길드당 하나 ──
    한 길드가 서울의 핵심 거점을 다 가져가지 못하게. 점수가 높은 (거점, 길드) 짝부터 채우고, 용량·허브 제한에 걸리면 그 길드는 건너뛴다.
    candidates: [{node, guild, score}] · nodes: [{id, tier}] · capacity: guild → 용량 (없으면 기본) */
@@ -87,5 +103,5 @@ const ORDER_BONUS=0.10, ORDER_LEAD=3*60e3;
 function cleanOrder(o){ return { priority:Math.max(1,Math.min(5,Math.round(+o.priority||3))), squads:Math.max(0,Math.min(8,Math.round(+o.squads||0))),
  resource:Math.max(0,Math.min(100,Math.round(+o.resource||0))) }; }
 
-module.exports={ OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, ORDER_BONUS, ORDER_LEAD, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
+module.exports={ BAND_RANK, nationalStatus, OP_STATES, ADMIN, ORDER_TYPES, ORDER_NAME, ORDER_ROLES, ORDER_LIMIT, ORDER_BONUS, ORDER_LEAD, loadRegion, knownRegion, initial, serviceRatio, setState, addThreat, step,
  serviceByRole, operationalRatio, pressureBand, crisis, assignStewards, adminUse, canOrder, canCancel, cleanOrder };

@@ -62,8 +62,8 @@ const methods={
   if((next&&next.guild)!==(n.steward&&n.steward.guild)) n.policies=[];   // 새 관리 길드가 정책을 다시 고른다
   n.steward=next; n.stewardPeriod=period; return true; },
  nodeView(id,now=Date.now(),viewer=null){ const n=this.nodeLoad(id); this.nodeStewardship(id,n,now); const hours=this.nodeOccupation(n,now); this.nodeSave(id,n,now);
-  const tier=R.occupationTier(hours), me=viewer?this.guildRoleOf(viewer):null;
-  return { id, state:n.state, occupiedHours:+hours.toFixed(3), tier, retakeIn:n.state==='fallen'?Math.max(0,2-hours):0,
+  const tier=R.occupationTier(hours), me=viewer?this.guildRoleOf(viewer):null, region=this.regionEffectsOf(id,now);
+  return { id, state:n.state, region, supplyCap:region?region.effects.supplyCap:SUPPLY_CAP, occupiedHours:+hours.toFixed(3), tier, retakeIn:n.state==='fallen'?Math.max(0,2-hours):0,
    difficulty:R.DIFFICULTY[tier], reward:R.REWARD[tier], extraElites:R.EXTRA_ELITES[tier],
    steward:n.steward, policies:n.policies, effects:R.policyEffects(n.policies), supply:n.supplyPeriod===periodOf(now)?n.supply:0,
    services:R.nodeServices(n.state), period:periodOf(now), nextPeriodAt:(periodOf(now)+1)*WEEK, standings:this.nodeStandings(id,periodOf(now)),
@@ -99,10 +99,12 @@ const methods={
   n.policies=[...picks]; this.nodeSave(node,n,now); this.audit(id,'nodePolicy',node,{picks}); return this.nodeView(node,now,id); }); },
  /* 보급대장이 다음 방어전 보급을 배정 (주기당 최대 SUPPLY_CAP). 배정한 만큼 «보급» 공헌 */
  nodeSupply(id,node,amount,now=Date.now()){ if(!Number.isInteger(amount)||amount<1||amount>SUPPLY_CAP) throw Error('보급량을 확인하세요.');
-  return this.transaction(()=>{ const n=this.nodeLoad(node); this.nodeStewardship(node,n,now); const me=this.guildRoleOf(id), period=periodOf(now);
+  this.initNode(); this.initRegion(); return this.transaction(()=>{ const n=this.nodeLoad(node); this.nodeStewardship(node,n,now); const me=this.guildRoleOf(id), period=periodOf(now);
    if(!me||!n.steward||n.steward.guild!==me.guild) throw Error('관리 길드만 보급을 배정합니다.');
    if(!R.hasPermission(me.role,'allocate_supply')) throw Error('보급대장 권한이 필요합니다.');
-   const cur=n.supplyPeriod===period?n.supply:0; if(cur+amount>SUPPLY_CAP) throw Error('이번 주기 보급은 '+SUPPLY_CAP+'까지입니다.');
+   /* 상한은 서울 물류(한강)를 따른다: 12 × (0.5 + 0.5 × 물류 서비스) — 한강이 점령되면 6 (문서 202 §2.5) */
+   const fx=this.regionEffectsOf(node,now), cap=fx?fx.effects.supplyCap:SUPPLY_CAP;
+   const cur=n.supplyPeriod===period?n.supply:0; if(cur+amount>cap) throw Error('이번 주기 보급은 '+cap+'까지입니다'+(cap<SUPPLY_CAP?' (서울 물류 '+Math.round(fx.services.logistics*100)+'%)':'')+'.');
    n.supply=cur+amount; n.supplyPeriod=period; this.nodeSave(node,n,now);
    this.statement('INSERT INTO node_contrib(period,node,player,guild,category,amount) VALUES(?,?,?,?,?,?) ON CONFLICT(period,node,player,category) DO UPDATE SET amount=amount+excluded.amount').run(period,node,id,me.guild,'supply',amount);
    return this.nodeView(node,now,id); }); },
@@ -116,6 +118,7 @@ function command(store,id,msg,now=Date.now()){ const node=typeof msg.node==='str
  /* 지역 전략망·길드 전략 명령 (문서 202) */
  const region=typeof msg.region==='string'?msg.region:'seoul';
  if(msg.action==='region') return { type:'region', region:store.regionView(region,now,id) };
+ if(msg.action==='national') return { type:'national', national:store.nationalView(now) };
  if(msg.action==='order') return { type:'region', region:store.regionOrder(id,region,msg.order,now) };
  if(msg.action==='cancel'){ if(!Number.isSafeInteger(msg.order)) throw Error('명령을 확인하세요.'); return { type:'region', region:store.regionCancel(id,region,msg.order,now) }; }
  /* 동맹 (길드장만 고친다) */

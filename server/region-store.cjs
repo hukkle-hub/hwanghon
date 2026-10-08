@@ -2,13 +2,15 @@
    서버가 권위다 (패키지 BACKEND_STATE_CONTRACT_V03): 클라이언트는 관리 길드·압력·공헌 합계를 정하지 못한다.
    망은 30분 논리 스텝으로 움직이고, 매 프레임이 아니라 «볼 때 밀린 만큼» 돌린다 (함락 시계와 같은 방식).
    전술 판이 있는 거점(남산 = namsan_n01)은 판 결과(server/node-store.cjs nodeReport)가 상태를 바꾼다. */
-const G=require('./region-rules.cjs');
+const G=require('./region-rules.cjs'), R=require('./node-rules.cjs');
 const WEEK=7*24*3600e3;
 const periodOf=now=>Math.floor(now/WEEK);
 const regions=new Map();
+const fs=require('node:fs'), path=require('node:path');
+const KOREA=JSON.parse(fs.readFileSync(path.join(__dirname,'..','ue','HwanghonCombatUE','Content','Data','korea.json'),'utf8'));
 const regionCfg=id=>{ if(!G.knownRegion(id)) throw Error('알 수 없는 지역입니다.'); if(!regions.has(id)) regions.set(id,G.loadRegion(id)); return regions.get(id); };
 /* 전술 거점 → 지역 (지금은 서울 하나) */
-const REGION_OF_NODE=new Map(); for(const rid of ['seoul']) for(const n of regionCfg(rid).nodes) if(n.node) REGION_OF_NODE.set(n.node,{ region:rid, id:n.id });
+const REGION_OF_NODE=new Map(); for(const rid of KOREA.regions.map(r=>r.id)) for(const n of regionCfg(rid).nodes) if(n.node) REGION_OF_NODE.set(n.node,{ region:rid, id:n.id });
 const CALM=['stable','uneasy','alert','invasion'];
 
 const methods={
@@ -37,6 +39,13 @@ const methods={
    gscores.forEach((sc,i)=>{ if(active[i]&&sc>0) cand.push({ node:n.id, guild:guilds[i].id, name:guilds[i].name, score:sc, rank:i }); }); }
   const { stewards }=G.assignStewards(cand,cfg.nodes), names=new Map(cand.map(c=>[c.guild,c.name]));
   r.stewards=Object.fromEntries(Object.entries(stewards).map(([node,guild])=>[node,{ guild, name:names.get(guild) }])); r.stewardPeriod=period; return r.stewards; },
+ /* node-store 가 부른다: 이 전술 거점이 속한 지역의 역할별 서비스 → 판 효과 (문서 202 §2.5). 지역 밖 거점이면 null */
+ regionEffectsOf(nodeId,now){ const m=REGION_OF_NODE.get(nodeId); if(!m) return null;
+  const { cfg, r }=this.regionLoad(m.region); this.regionAdvance(cfg,r,now); this.regionSave(m.region,r,now);
+  const sv=G.serviceByRole(cfg,r), s={ logistics:sv.logistics??1, recon:sv.recon??1, manufacturing:sv.manufacturing??1 };
+  const fx=R.regionEffects(s.logistics,s.recon,s.manufacturing);
+  /* UE 실행 옵션 (?HWRegion=물류,정찰,제작) — 온라인이면 UE 가 서버에서 직접 받는다 */
+  return { region:m.region, node:m.id, services:s, effects:fx, ueOption:'HWRegion='+[s.logistics,s.recon,s.manufacturing].map(v=>+v.toFixed(3)).join(',') }; },
  /* node-store 가 부른다: 이 전술 거점의 이번 주기 관리 길드 (지역에 속하지 않으면 undefined) */
  regionStewardOf(nodeId,now){ const m=REGION_OF_NODE.get(nodeId); if(!m) return undefined;
   const { cfg, r }=this.regionLoad(m.region), st=this.regionStewards(m.region,r,cfg,periodOf(now)); this.regionSave(m.region,r,now); return st[m.id]||null; },
@@ -51,6 +60,15 @@ const methods={
  regionOrderBonus(player,nodeId,now){ const m=REGION_OF_NODE.get(nodeId), g=this.guild(player); if(!m||!g) return null; this.initRegion();
   return this.statement('SELECT id,type FROM guild_orders WHERE guild=? AND region=? AND node=? AND period=? AND active=1 AND at<=? ORDER BY priority DESC,at LIMIT 1')
    .get(g.id,m.region,m.id,periodOf(now),now-G.ORDER_LEAD)||null; },
+ /* 전국 — 16권역을 밀린 만큼 돌리고 모은다 (권역끼리는 아직 서로 번지지 않는다, 문서 202 §8) */
+ nationalView(now=Date.now()){ const views={}, list=[];
+  for(const meta of KOREA.regions){ const { cfg, r }=this.regionLoad(meta.id); this.regionAdvance(cfg,r,now); this.regionSave(meta.id,r,now);
+   const op=G.operationalRatio(cfg,r), hub=r.nodes[meta.hub];
+   views[meta.id]={ pressure:r.pressure, operational:op, hubOccupied:!!hub&&hub.state==='occupied' };
+   list.push({ id:meta.id, name:meta.name, identity:meta.identity, at:meta.at, hubName:meta.hubName, pressure:+r.pressure.toFixed(1), band:G.pressureBand(cfg,r.pressure), operational:op,
+    troubled:cfg.nodes.filter(n=>r.nodes[n.id].state!=='online').length, nodes:cfg.nodes.length }); }
+  const st=G.nationalStatus(KOREA,regionCfg('seoul'),views);
+  return { regions:list, corridors:st.corridors, phase:st.phase, crisis:st.crisis, collapsed:st.collapsed }; },
  regionOrders(guild,region,now){ return this.statement('SELECT id,node,type,priority,squads,resource,issuer,at FROM guild_orders WHERE guild=? AND region=? AND period=? AND active=1 ORDER BY priority DESC,at')
   .all(guild,region,periodOf(now)).map(o=>({ ...o, name:G.ORDER_NAME[o.type], issuerName:(this.statement("SELECT json_extract(data,'$.name') AS name FROM profiles WHERE id=?").get(o.issuer)||{}).name||'' })); },
  regionView(id,now=Date.now(),viewer=null){ const { cfg, r }=this.regionLoad(id); this.regionAdvance(cfg,r,now);
@@ -84,4 +102,4 @@ const methods={
   this.statement('UPDATE guild_orders SET active=0 WHERE id=?').run(orderId); this.audit(id,'regionCancel',String(orderId),{}); return this.regionView(region,now,id); }); },
 };
 function install(Store){ Object.assign(Store.prototype,methods); }
-module.exports={ install, regionCfg, REGION_OF_NODE, periodOf };
+module.exports={ install, regionCfg, REGION_OF_NODE, KOREA, periodOf };

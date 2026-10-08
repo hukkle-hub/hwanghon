@@ -57,11 +57,16 @@ function policyEffects(picks){ const e={gateHealthScale:1,generatorHealthScale:1
 function hasPermission(role,perm){ switch(role){ case 'leader': return true; case 'vice': return perm!=='assign_roles';
  case 'combat': return perm==='ping'||perm==='rally'||perm==='order_npc'; case 'supply': return perm==='allocate_supply';
  case 'craft': return perm==='invest_facility'||perm==='order_npc'; default: return false; } }
+/* 지역이 판에 닿는다 (문서 202 §2.5, HWNodeRules::RegionEffects) — 서울 망의 역할별 서비스 s(0..1):
+   물류(한강) → 주기당 보급 상한 12×(0.5+0.5s) · 정찰(북악) → 준비 시간 −10×(1−s)초 · 제작(용산·구로) → 포탑 수리량 ×(0.5+0.5s). 첫 값 — PIE 대조로 고친다 */
+const SUPPLY_CAP_BASE=12;
+function regionEffects(logistics=1,recon=1,manufacturing=1){ const u=v=>Math.max(0,Math.min(1,+v)), L=u(logistics), Rc=u(recon), M=u(manufacturing);
+ return { supplyCap:Math.floor(SUPPLY_CAP_BASE*(0.5+0.5*L)+0.5), prepDeltaSeconds:-10*(1-Rc), turretRepairScale:0.5+0.5*M }; }
 /* 정보 거점 기능 — 함락되면 지도가 어두워진다 */
 function nodeServices(state,commsFraction=1,power=3){ if(state==='fallen'||state==='retakeable'||state==='retaking') return {mapIntel:0.35,eventDetection:0.15,rescueSignals:false,invasionForecast:false};
  const c=Math.max(0,Math.min(1,commsFraction)), ps=power>=3?1:power===2?0.75:power===1?0.45:0.2;
  return {mapIntel:0.35+0.65*c*ps,eventDetection:0.15+0.85*c*ps,rescueSignals:c>0&&power>=1,invasionForecast:c>0.5&&power>=2&&state!=='recovering'}; }
 
-module.exports={ COMMAND_CAP,DIVERSITY_MIN,DIVERSITY_BONUS,capAndBonus,STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
+module.exports={ SUPPLY_CAP_BASE,regionEffects,COMMAND_CAP,DIVERSITY_MIN,DIVERSITY_BONUS,capAndBonus,STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
  gradeCounter,occupationTier,machine,setThreat,startInvasion,defenceHeld,tickInvasion,tickRetake,tickOccupation,startRetake,retakeEnded,addRecovery,
  contributionScore,stewardGuild,guildContributionScores,validPolicies,policyEffects,hasPermission,nodeServices };

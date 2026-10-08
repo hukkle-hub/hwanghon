@@ -59,4 +59,7 @@ test('시뮬: 판 안 보급 — 회복약(정책 무료분 먼저)은 쓰러짐
   const hit = run({ player: weak, supply: 12, turretAggro: 1100 }), member = run({ party: [{ name: 'm', guildRole: 'member', dps: 600 }], supply: 12, turretAggro: 1100 });
   assert.ok(hit.supplyUsed.turretRepairs > 0, '포탑 수리를 안 했다'); assert.equal(hit.party[0].ledger.supply, 2 * hit.supplyUsed.turretRepairs, '포탑 수리 공헌 = 보급 2');
   assert.equal(member.supplyUsed.turretRepairs, 0, '권한 없는 길드원이 포탑을 고쳤다');
+  /* 서울 제작(용산·구로)이 다 무너지면 수리량이 절반 (HWNodeRules::RegionEffects) — 수리 한 번당 HP 로 잰다 */
+  const broken = run({ player: weak, supply: 12, turretAggro: 1100, region: [1, 1, 0] }), per = r => r.turretRepairHp / r.supplyUsed.turretRepairs;
+  assert.ok(broken.supplyUsed.turretRepairs > 0 && per(broken) <= per(hit) * 0.55, '제작 0 인데 수리량 ' + Math.round(per(broken)) + ' / ' + Math.round(per(hit)));
 });

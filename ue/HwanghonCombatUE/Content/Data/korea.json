@@ -1,0 +1,272 @@
+{
+ "doc": "대한민국 16권역 · 전략 회랑 · 전국 작전 (docs/design/202 §8). tools/build-korea-regions.cjs 가 만든다. 위치는 허브 도시의 대략 경위도를 0..1 로 (지도 표시용)",
+ "regions": [
+  {
+   "id": "seoul",
+   "name": "서울특별시",
+   "identity": "정보·거래·중앙 생존망",
+   "hub": "N02",
+   "hubName": "서울역 피난거점",
+   "at": [
+    0.229,
+    0.09
+   ]
+  },
+  {
+   "id": "busan",
+   "name": "부산광역시",
+   "identity": "항만·해상보급·남부 관문",
+   "hub": "BS01",
+   "hubName": "부산항 생존물류기지",
+   "at": [
+    0.847,
+    0.588
+   ]
+  },
+  {
+   "id": "daegu",
+   "name": "대구광역시",
+   "identity": "내륙 생산·교통 분기",
+   "hub": "DG01",
+   "hubName": "대구 중앙피난허브",
+   "at": [
+    0.706,
+    0.444
+   ]
+  },
+  {
+   "id": "incheon",
+   "name": "인천광역시",
+   "identity": "서해 항만·공항권·수도권 물류",
+   "hub": "IC01",
+   "hubName": "인천항 서해물류기지",
+   "at": [
+    0.124,
+    0.115
+   ]
+  },
+  {
+   "id": "daejeon",
+   "name": "대전광역시",
+   "identity": "연구·통신·국토 중앙 연결",
+   "hub": "DJ01",
+   "hubName": "대전 중앙연결허브",
+   "at": [
+    0.347,
+    0.344
+   ]
+  },
+  {
+   "id": "ulsan",
+   "name": "울산광역시",
+   "identity": "에너지·중공업·동남권 생산",
+   "hub": "US01",
+   "hubName": "울산 산업에너지허브",
+   "at": [
+    0.915,
+    0.513
+   ]
+  },
+  {
+   "id": "sejong",
+   "name": "세종특별자치시",
+   "identity": "기록·행정 데이터·중부 지휘",
+   "hub": "SJ01",
+   "hubName": "세종 기록지휘허브",
+   "at": [
+    0.321,
+    0.317
+   ]
+  },
+  {
+   "id": "gyeonggi",
+   "name": "경기도",
+   "identity": "수도권 외곽·대형 인구·다축 보급",
+   "hub": "GG01",
+   "hubName": "수원 남부지휘허브",
+   "at": [
+    0.244,
+    0.154
+   ]
+  },
+  {
+   "id": "gangwon",
+   "name": "강원특별자치도",
+   "identity": "산악·정찰·에너지·동부 방어선",
+   "hub": "GW01",
+   "hubName": "원주 동부연결허브",
+   "at": [
+    0.506,
+    0.137
+   ]
+  },
+  {
+   "id": "chungbuk",
+   "name": "충청북도",
+   "identity": "내륙 물류·산업·중앙 회랑",
+   "hub": "CB01",
+   "hubName": "청주 내륙물류허브",
+   "at": [
+    0.379,
+    0.283
+   ]
+  },
+  {
+   "id": "chungnam",
+   "name": "충청남도",
+   "identity": "서해 보급·산업·중부 서부 회랑",
+   "hub": "CN01",
+   "hubName": "천안 서부교통허브",
+   "at": [
+    0.279,
+    0.248
+   ]
+  },
+  {
+   "id": "jeonbuk",
+   "name": "전북특별자치도",
+   "identity": "식량·평야·서남권 보급",
+   "hub": "JB01",
+   "hubName": "전주 서남지휘허브",
+   "at": [
+    0.279,
+    0.454
+   ]
+  },
+  {
+   "id": "jg_special",
+   "name": "전남광주통합특별시",
+   "identity": "서남권 대도시·항만·도서·에너지",
+   "hub": "JG01",
+   "hubName": "광주 서남권지휘허브",
+   "at": [
+    0.191,
+    0.592
+   ]
+  },
+  {
+   "id": "gyeongbuk",
+   "name": "경상북도",
+   "identity": "산악·산업·동해 회랑",
+   "hub": "GB01",
+   "hubName": "안동 북부내륙허브",
+   "at": [
+    0.744,
+    0.298
+   ]
+  },
+  {
+   "id": "gyeongnam",
+   "name": "경상남도",
+   "identity": "조선·항만·남해 산업축",
+   "hub": "GN01",
+   "hubName": "창원 남해산업허브",
+   "at": [
+    0.729,
+    0.577
+   ]
+  },
+  {
+   "id": "jeju",
+   "name": "제주특별자치도",
+   "identity": "독립 해상권·희귀 자원·장거리 보급",
+   "hub": "JJ01",
+   "hubName": "제주시 해상고립허브",
+   "at": [
+    0.097,
+    0.938
+   ]
+  }
+ ],
+ "corridors": [
+  {
+   "id": "capital_ring",
+   "regions": [
+    "seoul",
+    "incheon",
+    "gyeonggi"
+   ],
+   "type": "road_rail",
+   "purpose": "수도권 순환 보급"
+  },
+  {
+   "id": "gyeongbu_axis",
+   "regions": [
+    "seoul",
+    "gyeonggi",
+    "chungbuk",
+    "daejeon",
+    "daegu",
+    "gyeongbuk",
+    "ulsan",
+    "busan",
+    "gyeongnam"
+   ],
+   "type": "road_rail",
+   "purpose": "국가 주간선"
+  },
+  {
+   "id": "honam_axis",
+   "regions": [
+    "daejeon",
+    "chungnam",
+    "jeonbuk",
+    "jg_special"
+   ],
+   "type": "road_rail",
+   "purpose": "서남권 보급"
+  },
+  {
+   "id": "eastern_axis",
+   "regions": [
+    "gyeonggi",
+    "gangwon",
+    "gyeongbuk",
+    "ulsan",
+    "busan"
+   ],
+   "type": "road",
+   "purpose": "동부 산악·해안 회랑"
+  },
+  {
+   "id": "west_coast_axis",
+   "regions": [
+    "incheon",
+    "gyeonggi",
+    "chungnam",
+    "jeonbuk",
+    "jg_special"
+   ],
+   "type": "road_sea",
+   "purpose": "서해 물류"
+  },
+  {
+   "id": "south_sea_axis",
+   "regions": [
+    "jg_special",
+    "gyeongnam",
+    "busan",
+    "jeju"
+   ],
+   "type": "sea",
+   "purpose": "남해·제주 해상 보급"
+  },
+  {
+   "id": "central_admin_axis",
+   "regions": [
+    "chungbuk",
+    "chungnam",
+    "sejong",
+    "daejeon"
+   ],
+   "type": "road",
+   "purpose": "중앙권 지휘 연결"
+  }
+ ],
+ "campaign": {
+  "mobilize_crisis_regions": 1,
+  "mobilize_invasion_regions": 2,
+  "active_crisis_regions": 2,
+  "critical_collapsed_regions": 1
+ }
+}

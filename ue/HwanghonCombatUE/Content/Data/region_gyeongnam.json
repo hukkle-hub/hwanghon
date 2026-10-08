@@ -1,0 +1,160 @@
+{
+ "id": "gyeongnam",
+ "name": "경상남도",
+ "identity": "조선·항만·남해 산업축",
+ "doc": "전국 권역 (docs/design/202 §8) — tools/build-korea-regions.cjs 가 GPT 패키지 시드에서 만든 파일. 손으로 고치지 말고 생성기를 고친다. 권역 안 연결은 허브 ↔ 각 거점(별 모양) 가정",
+ "rules": {
+  "step_minutes": 30,
+  "max_threat_transfer": 12,
+  "spread_from": 55,
+  "spread_base": 50,
+  "degrade_at": 75,
+  "online_below": 55,
+  "threat_decay": 2,
+  "degraded_ratio": 0.55,
+  "recovering_ratio": 0.75,
+  "recover_start": 0.25,
+  "recover_per_step": 0.2,
+  "recover_threat_drop": 8,
+  "held_threat_drop": 15,
+  "pressure_occupied_scale": 12,
+  "pressure_occupied_max": 10,
+  "pressure_relief": 3,
+  "catch_up_steps": 96
+ },
+ "pressure_bands": [
+  [
+   0,
+   "stable",
+   "안정"
+  ],
+  [
+   30,
+   "tension",
+   "긴장"
+  ],
+  [
+   55,
+   "invasion",
+   "침공"
+  ],
+  [
+   75,
+   "crisis",
+   "위기"
+  ],
+  [
+   95,
+   "collapsed",
+   "붕괴"
+  ]
+ ],
+ "nodes": [
+  {
+   "id": "GN01",
+   "name": "창원 남해산업허브",
+   "role": "manufacturing",
+   "tier": 3,
+   "weight": 2,
+   "at": [
+    0.5,
+    0.5
+   ],
+   "effects": {
+    "online": "수리·제작 정상",
+    "degraded": "제작 효율 저하",
+    "occupied": "수리·제작 제한"
+   }
+  },
+  {
+   "id": "GN02",
+   "name": "거제 조선정비기지",
+   "role": "manufacturing",
+   "tier": 2,
+   "weight": 1.6,
+   "at": [
+    0.5,
+    0.1
+   ],
+   "effects": {
+    "online": "수리·제작 정상",
+    "degraded": "제작 효율 저하",
+    "occupied": "수리·제작 제한"
+   }
+  },
+  {
+   "id": "GN03",
+   "name": "진주 서부피난거점",
+   "role": "safe_hub",
+   "tier": 2,
+   "weight": 1.5,
+   "at": [
+    0.88,
+    0.5
+   ],
+   "effects": {
+    "online": "대피·거래 허브 정상",
+    "degraded": "일부 서비스 혼잡",
+    "occupied": "피난 기능 대폭 축소"
+   }
+  },
+  {
+   "id": "GN04",
+   "name": "통영 남해보급항",
+   "role": "port",
+   "tier": 2,
+   "weight": 1.5,
+   "at": [
+    0.5,
+    0.9
+   ],
+   "effects": {
+    "online": "항만 정상",
+    "degraded": "하역 지연",
+    "occupied": "해상 보급 차단"
+   }
+  },
+  {
+   "id": "GN05",
+   "name": "김해 동남물류거점",
+   "role": "logistics",
+   "tier": 1,
+   "weight": 1,
+   "at": [
+    0.12,
+    0.5
+   ],
+   "effects": {
+    "online": "수송 정상",
+    "degraded": "수송 지연",
+    "occupied": "전략 물류 차단"
+   }
+  }
+ ],
+ "links": [
+  {
+   "a": "GN01",
+   "b": "GN02",
+   "transfer": 0.18,
+   "throughput": 1
+  },
+  {
+   "a": "GN01",
+   "b": "GN03",
+   "transfer": 0.18,
+   "throughput": 1
+  },
+  {
+   "a": "GN01",
+   "b": "GN04",
+   "transfer": 0.18,
+   "throughput": 1
+  },
+  {
+   "a": "GN01",
+   "b": "GN05",
+   "transfer": 0.18,
+   "throughput": 1
+  }
+ ]
+}

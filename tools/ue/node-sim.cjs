@@ -30,7 +30,9 @@ function simulate(N, o = {}) {
   const extraElites = Math.max(0, opt.extraElites | 0);   // 탈환전: 마지막 웨이브에 붙는 철갑 (HWNodeRules::OccupationExtraElites)
   /* 보급 (판 시작 때 남은 점수 — UE 기록 opt.supply 와 같은 뜻, 바리케이드는 이미 뺀 값). 없으면(undefined) 보급을 안 쓰는 옛 판 */
   const useSupply = opt.supply != null; let supply = useSupply ? Math.max(0, opt.supply | 0) : 0, freePotions = useSupply ? pe.extraPotions : 0;
-  const supplyUsed = { potionsFree: 0, potionsSupply: 0, turretRepairs: 0 };
+  const supplyUsed = { potionsFree: 0, potionsSupply: 0, turretRepairs: 0 }, repairedTurretHp = { v: 0 };
+  /* 서울 망 (?HWRegion= 물류·정찰·제작, 문서 202 §2.5): 판 안에선 제작 → 포탑 수리량만 (준비 시간은 시뮬이 침공부터 재고, 보급 상한은 서버가 배정에서 건다) */
+  const region = Array.isArray(opt.region) ? opt.region : [1, 1, 1], rfx = R.regionEffects(...region);
   const partyN = (opt.party || (opt.player ? [1] : [])).length, hpScale = 1 + (opt.partyScale || 0) * Math.max(0, partyN - 1);   // 인원 보정 (문서 201 §8 — 값은 캠페인으로 고른다)
   const walls = bs.filter(b => b.kind === 'wall').map(b => ({ c: b.center, h: b.half, wkind: b.wkind }));
   const P = v => H.pt(N, v);
@@ -247,7 +249,7 @@ function simulate(N, o = {}) {
     if (!useSupply || q !== builder || supply < C.SUPPLY_COST.turret_repair) return false;
     const tr = fac.find(f => f.kind === 'turret' && f.hp <= f.max * C.TURRET_REPAIR_BELOW); if (!tr) return false;
     if (surf(tr, q.p) > REACH_G - 50) { walkTo(q, tr.c, PLAYER.speed * dt); return true; }
-    supply -= C.SUPPLY_COST.turret_repair; supplyUsed.turretRepairs++; tr.hp = Math.min(tr.max, tr.hp + tr.max * C.TURRET_REPAIR_FRACTION);
+    supply -= C.SUPPLY_COST.turret_repair; supplyUsed.turretRepairs++; { const was = tr.hp; tr.hp = Math.min(tr.max, tr.hp + tr.max * C.TURRET_REPAIR_FRACTION * rfx.turretRepairScale); repairedTurretHp.v += tr.hp - was; }
     q.ledger.supply += C.SUPPLY_COST.turret_repair; log(t, 'supply', tr.id + ' 수리 (보급 ' + C.SUPPLY_COST.turret_repair + ')', tr.id, 'turret_repair'); return true;
   }
   function tickOne(q, dt, t) {
@@ -308,7 +310,7 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
@@ -316,7 +318,7 @@ function simulate(N, o = {}) {
     npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
     party: pls.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps, deaths: q.deaths, kills: q.kills, rescues: q.rescues, dealt: Math.round(q.dealt),
       ledger: Object.fromEntries(Object.entries(q.ledger).map(([k, v]) => [k, +v.toFixed(2)])) })), difficulty: diff,
-    repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0), supplyUsed, supplyLeft: supply, freePotionsLeft: freePotions,
+    repaired: Math.round(npcs.find(n => n.role === 'technician')?.repaired || 0), supplyUsed, turretRepairHp: Math.round(repairedTurretHp.v), supplyLeft: supply, freePotionsLeft: freePotions,
     events, frames, facilities: fac.map(f => ({ id: f.id, kind: f.kind, c: f.c, h: f.h })), npcIds: npcs.map(n => n.role) };
 }
 

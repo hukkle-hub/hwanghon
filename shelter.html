@@ -82,6 +82,9 @@
 .rgw-types button{min-height:36px;white-space:nowrap;padding-left:4px;padding-right:4px}
 .rgw-row{display:flex;gap:6px;align-items:center}.rgw-row .field{flex:1;min-width:0}.rgw-row button{flex:none;white-space:nowrap}
 .rgw-ally-g{color:#9FC7E8}
+.krw{display:flex;gap:10px;align-items:flex-start;margin-top:6px}
+.krw-map{flex:none;width:150px;height:160px;border:1px solid rgba(201,164,94,.18);border-radius:6px;background:rgba(10,12,16,.45)}
+.krw-side{flex:1;min-width:0;line-height:1.7}
 /* 길드 카드 */
 .gcrest{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line-soft)}
 .gcrest__m{width:46px;height:46px;flex:none;display:grid;place-items:center;border:1px solid var(--line-gold);
@@ -331,6 +334,9 @@
             <div class="rgw-svc" id="rgw-svc"></div>
             <div class="xs mt2" id="rgw-crisis" hidden></div>
             <div class="xs t-faint mt2" id="rgw-admin"></div>
+            <!-- 전국 16권역 (문서 202 §8): 권역 압력 · 전략 회랑 · 전국 작전 단계 -->
+            <div class="label-ko mt3 rgw-head"><span>전국 16권역</span><span class="xs" id="krw-phase"></span></div>
+            <div class="krw"><svg class="krw-map" id="krw-map" viewBox="0 0 150 160" role="img" aria-label="대한민국 16권역"></svg><div class="xs krw-side" id="krw-side"></div></div>
             <div id="rgw-cmd" hidden>
               <div class="label-ko mt3">길드 전략 명령 <span class="xs t-faint">— 집결 추천 · 명령 거점에서 판하면 공헌 +10%</span></div>
               <div id="rgw-orders"></div>

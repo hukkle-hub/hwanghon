@@ -717,6 +717,30 @@ inline EPotionSource PotionSource(int FreeLeft, int SupplyPoints)
     return EPotionSource::None;
 }
 
+// ---------------------------------------------------------------- the region reaches the run (docs/design/202 §2.5)
+// Seoul's strategic network (server/region-rules.cjs) is service, not HP: what the other nodes still provide changes a
+// Namsan run. s = that role's regional service, 0..1 (online 1, degraded 0.55, occupied 0, recovering 0.75..1).
+//   logistics     (Hangang N04)          -> supply cap per period   12 x (0.5 + 0.5 s)   6..12
+//   recon         (Bugak N06)            -> preparation seconds     -10 x (1 - s)        0..-10
+//   manufacturing (Yongsan N03, Guro N08) -> turret repair amount   x (0.5 + 0.5 s)
+// First guesses, to be tuned against PIE like everything else (the director's call).
+constexpr int SupplyCapBase = 12;
+struct FRegionEffects
+{
+    int SupplyCap = SupplyCapBase;
+    float PrepDeltaSeconds = 0.f;
+    float TurretRepairScale = 1.f;
+};
+inline FRegionEffects RegionEffects(float Logistics, float Recon, float Manufacturing)
+{
+    const auto Unit = [](float V) { return V < 0.f ? 0.f : V > 1.f ? 1.f : V; };
+    FRegionEffects E;
+    E.SupplyCap = static_cast<int>(static_cast<float>(SupplyCapBase) * (0.5f + 0.5f * Unit(Logistics)) + 0.5f);
+    E.PrepDeltaSeconds = -10.f * (1.f - Unit(Recon));
+    E.TurretRepairScale = 0.5f + 0.5f * Unit(Manufacturing);
+    return E;
+}
+
 // ---------------------------------------------------------------- NPC roles (docs/design/201 §3)
 
 // Each NPC carries one node function; losing them loses the function, not just a vendor.

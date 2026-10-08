@@ -31,7 +31,10 @@ store.guildAssign(lead.id, war.id, 'combat');
 const past = Date.now() - NODE.WEEK;
 store.nodeReport(lead.id, N, {outcome:'held', contrib:{defense:300, repair:200, kill:6}}, past);
 /* 14시간 전 함락 */
+store.nationalView(Date.now() - 14 * NODE.HOUR - 60e3);   // 전국 권역을 그때부터 돌린다 (밀린 스텝)
 store.nodeReport(war.id, N, {outcome:'fallen', contrib:{kill:4}}, Date.now() - 14 * NODE.HOUR);
+/* 전국: 부산 항만(BS01)이 판 없이 «밖에서 들어온 위협»(침공 예보 같은 것)을 받아 흔들린다 — 망만으로는 점령이 안 나니 압력은 서울만 */
+{ const {cfg, r} = store.regionLoad('busan'); require('./server/region-rules.cjs').addThreat(r, 'BS01', 90); store.regionSave('busan', r, Date.now() - 14 * NODE.HOUR); }
 
 const {createPartyServer} = require('./server/index.cjs');
 const app = createPartyServer({store});
@@ -71,6 +74,13 @@ const W = await mk(war.token);
 await W.goto(BASE + '/shelter.html', {waitUntil:'networkidle'}); await wait(W, 1800); await pane(W, '명단');
 console.log('전략망', await text(W, '#rgw-band'), '|', await text(W, '#rgw-svc'), '|', await text(W, '#rgw-admin'));
 console.log('서버 망', store.regionView('seoul').nodes.map(n => n.id + ':' + n.state + ' ' + n.threat).join(' '));
+/* 서울 망 → 남산 판: 북악(정찰)이 저하라 준비 시간이 줄어든 게 카드에 보여야 한다 */
+console.log('거점 카드 서울 망', await text(W, '#nd-kv'));
+console.log('전국', await text(W, '#krw-phase'), '|', await text(W, '#krw-side'));
+await W.evaluate(() => { const b = document.getElementById('nd-body'), h = document.getElementById('krw-map');
+  if (!document.documentElement.classList.contains('mobile')) b.scrollTop += h.getBoundingClientRect().top - b.getBoundingClientRect().top - 260; else h.scrollIntoView({block:'center'}); });
+await W.screenshot({path: `${OUT}/rg-national${SUF}.png`});
+await W.screenshot({path: `${OUT}/rg-card-top${SUF}.png`});
 await show(W);
 await W.click('#rgw-map .rgw-hit[data-n="N01"]', {force: true}); await wait(W, 300);
 console.log('고른 거점', await text(W, '#rgw-pick'), '| 낼 수 있는 명령', await W.$$eval('#rgw-types button', bs => bs.map(b => b.textContent)));

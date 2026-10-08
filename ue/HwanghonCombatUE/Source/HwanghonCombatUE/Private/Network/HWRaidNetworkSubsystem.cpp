@@ -145,6 +145,15 @@ bool UHWRaidNetworkSubsystem::SendNodeReport(const FString& ReportJson)
     O->SetObjectField(TEXT("report"), NodeReport);
     return SendObject(O);
 }
+bool UHWRaidNetworkSubsystem::SendNodeInfo(const FString& NodeId)
+{
+    if (NodeId.IsEmpty()) return false;
+    auto O = MakeShared<FJsonObject>();
+    O->SetStringField(TEXT("type"), TEXT("node"));
+    O->SetStringField(TEXT("action"), TEXT("info"));
+    O->SetStringField(TEXT("node"), NodeId);
+    return SendObject(O);
+}
 bool UHWRaidNetworkSubsystem::SendSimple(const TCHAR* T){auto O=MakeShared<FJsonObject>();O->SetStringField(TEXT("type"),T);return SendObject(O);}
 bool UHWRaidNetworkSubsystem::SendIntent(const TCHAR* T){if(!IsRaidActive())return false;auto O=MakeShared<FJsonObject>();O->SetStringField(TEXT("type"),T);O->SetNumberField(TEXT("seq"),++Sequence);return SendObject(O);}
 
@@ -230,6 +239,14 @@ void UHWRaidNetworkSubsystem::HandleMessage(const FString& M)
             FString NodeState,StewardName;
             NodeView->TryGetStringField(TEXT("state"),NodeState);
             if(auto StewardObj=Obj(NodeView,TEXT("steward")))StewardObj->TryGetStringField(TEXT("name"),StewardName);
+            // Seoul's services for this node (region.services) and a report's guild-order bonus (orderBonus.bonus), before the reply
+            if(auto RegionView=Obj(NodeView,TEXT("region")))
+            {
+                const TSharedPtr<FJsonObject> Services=Obj(RegionView,TEXT("services"));
+                const double OrderBonus=ReadNumber(Obj(NodeView,TEXT("orderBonus")),TEXT("bonus"),0.0);
+                OnNodeRegion.Broadcast(static_cast<float>(ReadNumber(Services,TEXT("logistics"),1.0)),static_cast<float>(ReadNumber(Services,TEXT("recon"),1.0)),
+                    static_cast<float>(ReadNumber(Services,TEXT("manufacturing"),1.0)),static_cast<float>(OrderBonus));
+            }
             OnNodeReply.Broadcast(NodeState,StewardName);
         }
         return;

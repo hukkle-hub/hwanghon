@@ -23,7 +23,7 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| — | 없음 |
+| (이 커밋) | 서울 망 → 남산 판(`regionEffects`, `nodeView.region`·`supplyCap`, 보급 배정 상한) · 전국 16권역(`korea.json`, `region_<id>.json` 15개, `{action:'national'}`) — 문서 202 §2.5·§8 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
 

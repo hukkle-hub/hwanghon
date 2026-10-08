@@ -25,6 +25,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHWNodeStateSignature, EHWNodeState,
 //   ?HWSupply=6                           supply points for this defence
 //   ?HWGuildRole=leader|vice|combat|supply|craft|member   the local player's guild role (permissions)
 //   ?HWRetake=13                          a retake run: the node has been occupied this many hours (tier: difficulty, extra elites)
+//   ?HWRegion=0.55,1,1                    Seoul's logistics, recon, manufacturing service (server nodeView region.ueOption):
+//                                         supply cap, preparation time, turret repair amount (HWNodeRules::RegionEffects)
 // Nothing here is Namsan-specific: another node is another Content/Data/node_<id>.json.
 UCLASS()
 class HWANGHONCOMBATUE_API AHWNodeDirector : public AActor
@@ -134,6 +136,12 @@ private:
     UFUNCTION()
     void HandleNetError(FString ServerError);
 
+    // Seoul's services from the node server (UHWRaidNetworkSubsystem::OnNodeRegion) - used when ?HWRegion= is not given
+    UFUNCTION()
+    void HandleNodeRegion(float Logistics, float Recon, float Manufacturing, float OrderBonus);
+    void RequestRegion();
+    void ApplyRegion(float Logistics, float Recon, float Manufacturing);
+
     void HandleInteract();
     void HandleExecute();
     void HandlePing();
@@ -175,6 +183,13 @@ private:
     float RunDifficulty = 1.f;     // enemy health and damage (HWNodeRules::OccupationDifficulty on a retake)
     int32 RunExtraElites = 0;      // armoured elites added to the last wave (HWNodeRules::OccupationExtraElites)
     int32 FreePotions = 0;         // the medical-stock policy's potions, used before supplies
+    float RegionServices[3] = { 1.f, 1.f, 1.f };   // ?HWRegion= logistics, recon, manufacturing (0..1)
+    HWNodeRules::FRegionEffects RegionFx;          // what those services do to this run
+    bool bRegionFromOption = false;                // ?HWRegion= given: the server's view does not override it
+    int32 SupplyRequested = 6;                     // ?HWSupply= (or the default) before the logistics cap
+    float NextRegion[3] = { 1.f, 1.f, 1.f };       // a server answer that landed mid-run: used from the next preparation
+    bool bNextRegion = false;
+    float PendingOrderBonus = 0.f;                 // the report's guild-order bonus, shown with the reply
 
     struct FPing
     {

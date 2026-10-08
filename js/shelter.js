@@ -58,7 +58,12 @@
       '<span>이번 주기</span><span>'+(n.standings&&n.standings.length?n.standings.slice(0,3).map(function(g,i){ var mine=me&&me.guild===g.guild;
         return (mine?'<b class="t-gold">':'')+(i+1)+'. '+esc(g.name)+' '+g.score+(mine?'</b>':''); }).join(' · '):'공헌 없음')+
         ' <small class="t-faint">· '+Math.max(0,Math.ceil((n.nextPeriodAt-Date.now())/86400000))+'일 뒤 결정</small></span>'+
-      '<span>보급</span><span>'+n.supply+' / 12</span>'+
+      '<span>보급</span><span>'+n.supply+' / '+(n.supplyCap||12)+'</span>'+
+      /* 서울 망이 이 판에 닿는 것 (문서 202 §2.5) — 다 정상이면 줄을 안 띄운다 */
+      (n.region&&(n.region.services.logistics<1||n.region.services.recon<1||n.region.services.manufacturing<1)?'<span>서울 망</span><span>'+
+        ['물류 '+Math.round(n.region.services.logistics*100)+'% → 보급 상한 '+n.region.effects.supplyCap,
+         '정찰 '+Math.round(n.region.services.recon*100)+'% → 준비 '+(n.region.effects.prepDeltaSeconds<0?n.region.effects.prepDeltaSeconds.toFixed(1)+'초':'그대로'),
+         '제작 '+Math.round(n.region.services.manufacturing*100)+'% → 포탑 수리 ×'+n.region.effects.turretRepairScale.toFixed(2)].join(' · ')+'</span>':'')+
       '<span>정보</span><span>지도 '+Math.round(n.services.mapIntel*100)+'% · 구조신호 '+(n.services.rescueSignals?'켜짐':'꺼짐')+' · 침공 예보 '+(n.services.invasionForecast?'켜짐':'꺼짐')+'</span>'+
       (n.state==='fallen'||n.state==='retakeable'?'<span>탈환</span><span>난이도 ×'+n.difficulty+' · 보상 ×'+n.reward+(n.extraElites?' · 엘리트 +'+n.extraElites:'')+'</span>':'')+
       '<span>내 직책</span><span>'+(me?esc(me.name)+' '+ND_ROLE[me.role]+(me.steward?' · 관리 길드':' · 관리 길드 아님 (보기만)'):'길드 없음 (보기만)')+'</span>';
@@ -73,7 +78,7 @@
       $('nd-psave').disabled=cost>10;
     }
     $('nd-supply').hidden=!can('allocate_supply');
-    $('nd-sup').textContent='이번 주기 '+n.supply+' / 12 · 바리케이드 하나 = 3'; $('nd-sgo').disabled=n.supply+3>12;
+    var cap=n.supplyCap||12; $('nd-sup').textContent='이번 주기 '+n.supply+' / '+cap+(cap<12?' (서울 물류)':'')+' · 바리케이드 하나 = 3'; $('nd-sgo').disabled=n.supply+3>cap;
     $('nd-note').textContent=me&&me.steward?'관리권 ≠ 소유권 — 정책·보급만 정하고, 누구도 막지 못합니다.':
       '관리 길드는 지난 주기의 공헌(처치·방어·수리·구조·보스·보급·지휘)으로 정해집니다. 돈 입찰은 없습니다.';
   }
@@ -81,7 +86,23 @@
   var RG_STATE={online:['정상','#8FD3A8'],degraded:['저하','#E0B060'],occupied:['점령','#E58A7A'],recovering:['복구','#9FC7E8']};
   var RG_ROLE=[['intel','정보'],['safe_hub','피난'],['logistics','물류'],['manufacturing','제작'],['recon','정찰'],['resource','자원']];
   var RG_ORDER={defend:'방어',reinforce:'증원',supply:'보급',repair:'수리',recon:'정찰',evacuate:'대피',prepare_retake:'탈환 준비'};
-  var region=null, rgPick=null, ally=null;
+  var region=null, rgPick=null, ally=null, national=null;
+  var KR_BAND={stable:'#8FD3A8',tension:'#C9D27A',invasion:'#E0B060',crisis:'#E58A7A',collapsed:'#B0443A'};
+  var KR_PHASE={dormant:['평시','t-faint'],mobilization:['동원','is-mid'],active:['전국 작전 진행','is-bad'],critical:['결정적 국면','is-bad']};
+  var KR_COR={open:['열림','rgba(143,211,168,.35)'],strained:['긴장','rgba(224,176,96,.8)'],cut:['단절','#E58A7A']};
+  function renderNational(){
+    var v=national; if(!v){ $('krw-map').innerHTML=''; $('krw-side').textContent=''; $('krw-phase').textContent=''; return; }
+    var by={}, svg='', xy=function(r){ return [8+r.at[0]*134, 6+r.at[1]*148]; }; v.regions.forEach(function(r){ by[r.id]=r; });
+    v.corridors.forEach(function(c){ var c2=KR_COR[c.status]||KR_COR.open, pts=c.regions.filter(function(id){ return by[id]; }).map(function(id){ return xy(by[id]).join(','); }).join(' ');
+      svg+='<polyline points="'+pts+'" fill="none" stroke="'+c2[1]+'" stroke-width="'+(c.status==='open'?1:2)+'"'+(c.status==='cut'?' stroke-dasharray="3 2"':'')+'/>'; });
+    v.regions.forEach(function(r){ var p=xy(r); svg+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(r.id==='seoul'?5:4)+'" fill="'+(KR_BAND[r.band.id]||'#888')+'"><title>'+esc(r.name+' — 압력 '+Math.round(r.pressure)+' '+r.band.name+' · 운영 '+Math.round(r.operational*100)+'% · '+r.identity)+'</title></circle>'; });
+    $('krw-map').innerHTML=svg;
+    var ph=KR_PHASE[v.phase]||[v.phase,'']; $('krw-phase').innerHTML='<b class="'+ph[1]+'">'+ph[0]+'</b>';
+    var hot=v.regions.filter(function(r){ return r.band.id!=='stable'; }).sort(function(a,b){ return b.pressure-a.pressure; });
+    var bad=v.corridors.filter(function(c){ return c.status!=='open'; });
+    $('krw-side').innerHTML=(hot.length?hot.slice(0,4).map(function(r){ return '<span style="color:'+KR_BAND[r.band.id]+'">●</span> '+esc(r.name)+' '+esc(r.band.name)+' '+Math.round(r.pressure); }).join('<br>'):'<span class="t-faint">16권역 모두 안정</span>')+
+      '<br>'+(bad.length?bad.map(function(c){ return '회랑 '+esc(c.purpose)+' <b style="color:'+(c.status==='cut'?'#E58A7A':'#E0B060')+'">'+KR_COR[c.status][0]+'</b>'; }).join('<br>'):'<span class="t-faint">회랑 7개 모두 열림</span>');
+  }
   function renderRegion(){
     var r=region; if(!r){ $('rgw-map').innerHTML=''; $('rgw-svc').innerHTML=''; $('rgw-band').textContent=''; $('rgw-cmd').hidden=true; return; }
     var W=340,H=196,P=16, xy=function(n){ return [P+n.at[0]*(W-110), 14+n.at[1]*(H-28)]; }, by={}; r.nodes.forEach(function(n){ by[n.id]=n; });
@@ -145,7 +166,7 @@
   var ndLast=0, ndInfo=0;
   function ndSend(msg){ var w=Math.max(0,240-(Date.now()-ndLast)); ndLast=Date.now()+w;
     setTimeout(function(){ if(!send(msg)) state('접속한 뒤 이용할 수 있습니다.',true); },w); }
-  function refreshNode(){ clearTimeout(ndInfo); ndInfo=setTimeout(function(){ ndSend({type:'node',action:'info',node:'namsan_n01'}); ndSend({type:'node',action:'region',region:'seoul'}); ndSend({type:'node',action:'ally',op:'info'}); },60); }
+  function refreshNode(){ clearTimeout(ndInfo); ndInfo=setTimeout(function(){ ndSend({type:'node',action:'info',node:'namsan_n01'}); ndSend({type:'node',action:'region',region:'seoul'}); ndSend({type:'node',action:'ally',op:'info'}); ndSend({type:'node',action:'national'}); },60); }
 
   /* ── 화면 ── */
   function pane(id){ ['sh-gate','sh-name','sh-nogu','sh-guild'].forEach(function(p){ $(p).hidden=p!==id; }); }
@@ -323,6 +344,7 @@
       if(msg.type==='node'){ node=msg.node; picks=null; renderNode(); return; }
       if(msg.type==='region'){ region=msg.region; renderRegion(); renderAlly(); return; }
       if(msg.type==='ally'){ ally=msg.ally; renderAlly(); return; }
+      if(msg.type==='national'){ national=msg.national; renderNational(); return; }
       if(msg.type==='guildRole'){ if(guild) guild.members.forEach(function(m){ if(m.id===msg.target) m.role=msg.role.role==='member'?'member':msg.role.role; });
         renderGuild(); state('직책을 맡겼습니다.'); setTimeout(refreshNode,260); return; }
       if(msg.type==='guildBoard'){ board=msg.guilds||[]; myApp=msg.mine||null; renderGuild(); return; }
@@ -356,7 +378,7 @@
   $('nd-sgo').onclick=function(){ ndSend({type:'node',action:'supply',node:'namsan_n01',amount:3}); };
   $('sh-members').addEventListener('change',function(e){ var t=e.target; if(!t||!t.dataset||!t.dataset.cap) return;
     ndSend({type:'node',action:'role',target:t.dataset.cap,role:t.value}); });
-  window.__ND={ get node(){ return node; }, get region(){ return region; }, get ally(){ return ally; }, refresh:refreshNode, render:renderNode };
+  window.__ND={ get node(){ return node; }, get region(){ return region; }, get ally(){ return ally; }, get national(){ return national; }, refresh:refreshNode, render:renderNode };
 
   /* ── 조작 ── */
   function account(mode){

@@ -124,3 +124,29 @@ test('명령 보너스: 우리 길드 명령이 걸린 거점에서 판하면 �
  assert.equal(store.nodeReport(war,N,{outcome:'held',contrib:{kill:1}},t+NODE.WEEK+60e3).orderBonus,null);
  assert.ok(JSON.parse(store.db.prepare("SELECT report FROM node_runs WHERE player=? ORDER BY at LIMIT 1 OFFSET 0").get(war).report).orderBonus,'판 기록에 명령 보너스가 안 남았다');
 });
+test('서울 망이 남산 판에 닿는다 — 한강 점령 = 보급 상한 6, 북악 저하 = 준비 −4.5초, 제작 저하 = 포탑 수리 ×0.78, UE 옵션',()=>{
+ const {store,a,sup}=world(), t=95*NODE.WEEK, N='namsan_n01';
+ /* 지난 주기 공헌 → 황혼단이 남산 관리 길드 (보급 배정 권한) */
+ store.nodeReport(a,N,{outcome:'held',contrib:{defense:100}},t-NODE.WEEK);
+ const v0=store.nodeView(N,t); assert.equal(v0.supplyCap,12); assert.equal(v0.region.ueOption,'HWRegion=1,1,1');
+ { const {cfg,r}=store.regionLoad('seoul'); G.setState(cfg,r,'N04','occupied'); G.setState(cfg,r,'N06','degraded'); G.setState(cfg,r,'N03','degraded'); r.lastStep=t; store.regionSave('seoul',r,t); }
+ const v=store.nodeView(N,t+1); assert.equal(v.supplyCap,6); assert.equal(v.region.services.logistics,0); assert.equal(v.region.effects.prepDeltaSeconds,-4.5);
+ assert.ok(Math.abs(v.region.effects.turretRepairScale-(0.5+0.5*(1.5*0.55+1)/2.5))<1e-9,'제작 '+v.region.effects.turretRepairScale);
+ assert.equal(v.region.ueOption,'HWRegion=0,0.55,'+((1.5*0.55+1)/2.5).toFixed(3).replace(/0+$/,''));
+ store.nodeSupply(sup,N,3,t+2); store.nodeSupply(sup,N,3,t+3);
+ assert.throws(()=>store.nodeSupply(sup,N,3,t+4),/6까지입니다 \(서울 물류 0%\)/);
+ /* 한강을 되찾으면(복구 → 정상) 상한이 돌아온다 */
+ { const {cfg,r}=store.regionLoad('seoul'); G.setState(cfg,r,'N04','online'); store.regionSave('seoul',r,t+5); }
+ store.nodeSupply(sup,N,3,t+6); assert.equal(store.nodeView(N,t+7).supply,9);
+});
+test('UE 계약: HWRaidNetworkSubsystem 이 읽는 키(region.services.물류·정찰·제작, orderBonus.bonus)를 서버 답이 그대로 준다',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const src=fs.readFileSync(path.join(__dirname,'..','ue','HwanghonCombatUE','Source','HwanghonCombatUE','Private','Network','HWRaidNetworkSubsystem.cpp'),'utf8');
+ for(const k of ['region','services','logistics','recon','manufacturing','orderBonus','bonus']) assert.ok(src.includes('TEXT("'+k+'")'),'UE 가 '+k+' 를 안 읽는다');
+ const {store,war}=world(), t=96*NODE.WEEK, N='namsan_n01';
+ NODE.command(store,war,{type:'node',action:'order',order:{node:'N01',type:'defend'}},t);
+ const info=NODE.command(store,war,{type:'node',action:'info',node:N},t+1000).node;
+ assert.deepEqual(Object.keys(info.region.services).sort(),['logistics','manufacturing','recon']);
+ const rep=NODE.command(store,war,{type:'node',action:'report',node:N,report:{outcome:'held',contrib:{kill:3}}},t+5*60e3).node;
+ assert.equal(rep.orderBonus.bonus,0.1); assert.ok(rep.region&&rep.region.services);
+});
