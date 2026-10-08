@@ -526,7 +526,9 @@ const bossEl=document.getElementById('boss'), vig=document.getElementById('vig')
 function bossTag(o){ const b=o.b; o.tag=document.createElement('div'); o.tag.className='tag bs'; o.tag.innerHTML=String(b.name).replace(/[<>&]/g,'')+'<small>'+String(b.title||'').replace(/[<>&]/g,'')+'</small>'; document.getElementById('hud').appendChild(o.tag); }   /* 체력 막대 없음 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
 const bosses=meta.bosses.map(b=>{ const o={ b, root:null, model:null, mixer:null, tag:null, netAct:null };
   if(!b.model){ bossTag(o); return o; }   /* 모델이 아직 없는 보스(박 준장·케이블카 드로퍼 …) — 자리와 이름표만 */
-  if(b.ai==='dominator'){ load(b.model).then(gl=>{ setupDominator(o,gl,scene,FLOOR); if(o.netAct) applyDominatorAction(o,o.netAct); bossTag(o); if(o.alive!==undefined) bossVis(o); }).catch(e=>console.warn('[dominator]',b.id,e)); return o; }
+  if(b.ai==='dominator'){ /* 영웅과 같은 보정막을 거친다 — 카인·아인 GLB 는 idle·run 에서 오른팔이 왼쪽으로 넘어가 «팔이 없어» 보였다 (디렉터 지적, 문서 33 §4) */
+   const hid=(/art\/3d\/(\w+)_anim\.glb$/.exec(b.model)||[])[1];
+   (hid?heroGltf(hid):load(b.model)).then(g=>{ const root=SkeletonUtils.clone(g.scene); if(window.TW_MATFIX) TW_MATFIX.repair(THREE,root); setupDominator(o,{scene:root,animations:g.animations},scene,FLOOR); if(o.netAct) applyDominatorAction(o,o.netAct); bossTag(o); if(o.alive!==undefined) bossVis(o); }).catch(e=>console.warn('[dominator]',b.id,e)); return o; }
   load(b.model).then(gl=>{ const root=gl.scene; root.traverse(m=>{ if(m.isMesh){ m.frustumCulled=false; } });
     const box=new THREE.Box3().setFromObject(root), h=box.max.y-box.min.y||1, displayH=b.visualH||b.h, k=displayH?displayH/h:(b.scale||1); root.scale.setScalar(k);
     box.setFromObject(root);   /* 발을 바닥에, 가운데를 보스 자리에 — 보스가 바닥에 파묻혔던 일(CLAUDE.md §1) */

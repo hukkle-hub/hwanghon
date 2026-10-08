@@ -45,3 +45,12 @@ test('2급 지배형 서버 전투: 다가가면 쫓아와 예고 뒤 베고(최
   assert.ok(Math.hypot(o.x - o.homeX, o.z - o.homeZ) < 1, '집으로 안 돌아갔다');
   assert.ok(DOM.view(o) && !('hp' in DOM.view(o)), '화면용 상태에 체력이 실렸다');
 });
+/* 몸은 영웅과 같은 보정막을 거친다 — 날 GLB 를 쓰면 카인·아인 idle·run 에서 오른팔이 왼쪽으로 넘어가 «팔이 없어» 보였다 (디렉터 지적, 문서 33 §4) */
+test('2급 지배형 화면: 임시 몸은 자세 교정(TW_POSE)·재질 교정(TW_MATFIX)을 거친 영웅 GLB 로 만든다', () => {
+  const src = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), at = src.indexOf("b.ai==='dominator'"), seg = src.slice(at, at + 900);
+  assert.ok(at > 0, '지배형 생성부가 없다');
+  assert.match(seg, /heroGltf\(/, '지배형이 자세 교정을 거치지 않은 GLB 를 쓴다');
+  assert.match(seg, /TW_MATFIX\.repair/, '지배형이 재질 교정을 거치지 않는다');
+  assert.match(src, /function heroGltf[^\n]*TW_POSE\.repair/, 'heroGltf 가 자세 교정을 안 한다');
+  for (const m of Object.values(FIELD_MONSTERS)) assert.match(m.body.model, /^art\/3d\/\w+_anim\.glb$/, '임시 몸이 영웅 GLB 가 아니면 보정막을 못 탄다: ' + m.body.model);
+});
