@@ -11,7 +11,9 @@ test('서버 규칙: 카운터 판정·점령 단계·정책·권한',()=>{
  for(const role of R.ROLES) for(const perm of R.PERMS) assert.equal(R.hasPermission(role,perm),V.permissions[role].includes(perm),role+' '+perm);
 });
 test('서버 규칙: 공헌도(보스 딜 1위가 1등이 아니다)·관리권',()=>{
- const P=V.contribution.players; P.forEach((p,i)=>assert.ok(near(R.contributionScore(p,P),V.contribution.scores[i]),'score '+i+' '+R.contributionScore(p,P)));
+ for(const K of [V.contribution,V.contribution2]){ const P=K.players; P.forEach((p,i)=>assert.ok(near(R.contributionScore(p,P),K.scores[i]),'score '+i+' '+R.contributionScore(p,P))); }
+ /* 길드 단위 셈도 같은 상한·보너스 (관리권이 쓰는 쪽) */
+ assert.deepEqual(R.guildContributionScores(V.contribution2.players).map(x=>+x.toFixed(3)),V.contribution2.scores);
  for(const s of V.steward) assert.equal(R.stewardGuild(s.scores,s.guild_of,s.guilds),s.expect);
 });
 test('서버 규칙: 상태 기계 (안정→침공→방어/함락→점령→탈환→복구)',()=>{
@@ -51,10 +53,10 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
  for(const [t,[d,rw,x]] of Object.entries(V.tier_effects)) L.push(`CHECK(std::fabs(OccupationDifficulty(EOccupationTier::${T[t]})-${f(d)})<0.001f&&std::fabs(OccupationReward(EOccupationTier::${T[t]})-${f(rw)})<0.001f&&OccupationExtraElites(EOccupationTier::${T[t]})==${x},"tier effects ${t}");`);
  V.policies.forEach((p,i)=>L.push(`{ EPolicy A[8]={${p.picks.map(x=>'EPolicy::'+P[x]).join(',')||'EPolicy::GateReinforce'}}; CHECK(ValidPolicies(A,${p.picks.length})==${p.valid},"policies ${i}"); }`));
  for(const [role,perms] of Object.entries(V.permissions)) for(const pe of Object.keys(PE)) L.push(`CHECK(HasPermission(EGuildRole::${RO[role]},EGuildPerm::${PE[pe]})==${perms.includes(pe)},"perm ${role} ${pe}");`);
- L.push(`{ FContribution All[${V.contribution.players.length}];`);
- V.contribution.players.forEach((p,i)=>{ for(const [k,v] of Object.entries(p)) L.push(`All[${i}].Raw[static_cast<int>(EContribution::${C[k]})]=${f(v)};`); });
- V.contribution.scores.forEach((s,i)=>L.push(`CHECK(std::fabs(ContributionScore(All[${i}],All,${V.contribution.players.length})-${f(s)})<0.01f,"score ${i}");`));
- L.push('}');
+ [V.contribution,V.contribution2].forEach((K,ki)=>{ L.push(`{ FContribution All[${K.players.length}];`);
+  K.players.forEach((p,i)=>{ for(const [k,v] of Object.entries(p)) L.push(`All[${i}].Raw[static_cast<int>(EContribution::${C[k]})]=${f(v)};`); });
+  K.scores.forEach((s,i)=>L.push(`CHECK(std::fabs(ContributionScore(All[${i}],All,${K.players.length})-${f(s)})<0.01f,"score ${ki}.${i}");`));
+  L.push('}'); });
  V.steward.forEach((s,i)=>L.push(`{ const float S[]={${s.scores.map(f).join(',')}}; const int G[]={${s.guild_of.join(',')}}; CHECK(StewardGuild(S,G,${s.scores.length},${s.guilds})==${s.expect},"steward ${i}"); }`));
  V.machine.forEach((c,ci)=>{ L.push('{ FNodeStateMachine M;'); c.steps.forEach((st,i)=>{ const [op,...a]=st;
   L.push(op==='threat'?`M.SetThreat(${f(a[0])});`:op==='invade'?'M.StartInvasion();':op==='held'?'M.DefenceHeld();':op==='recover'?`M.AddRecovery(${f(a[0])});`:

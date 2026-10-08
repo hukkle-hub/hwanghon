@@ -550,18 +550,37 @@ struct FContribution
     float Raw[ContributionCount] = {};
 };
 
-// Each category is scored against the best in that category this run (0..100), then weighted.
+// Command counts for at most 10% of the non-command score; 4+ categories with a real (> 0) contribution earn x1.1.
+// Only the cap and the bonus came from the GPT package (GuildRules_v02) - the weights stay ours (docs/design/202 §6).
+constexpr float CommandCap = 0.10f;
+constexpr int DiversityMin = 4;
+constexpr float DiversityBonus = 1.1f;
+inline float CapAndBonus(const float (&Terms)[ContributionCount], const FContribution& Raw)
+{
+    float NonCommand = 0.f;
+    int Kinds = 0;
+    for (int C = 0; C < ContributionCount; ++C)
+    {
+        if (C != static_cast<int>(EContribution::Command)) NonCommand += Terms[C];
+        if (Raw.Raw[C] > 0.f) ++Kinds;
+    }
+    const float Command = Terms[static_cast<int>(EContribution::Command)];
+    const float Capped = Command < NonCommand * CommandCap ? Command : NonCommand * CommandCap;
+    return (NonCommand + Capped) * (Kinds >= DiversityMin ? DiversityBonus : 1.f);
+}
+
+// Each category is scored against the best in that category this run (0..100), then weighted, then CapAndBonus.
 // So the top boss damage is worth at most 100 - one category among seven - and never wins alone.
 inline float ContributionScore(const FContribution& Mine, const FContribution* All, int Count)
 {
-    float Total = 0.f;
+    float Terms[ContributionCount] = {};
     for (int C = 0; C < ContributionCount; ++C)
     {
         float Best = 0.f;
         for (int I = 0; I < Count; ++I) if (All[I].Raw[C] > Best) Best = All[I].Raw[C];
-        if (Best > 0.f) Total += ContributionWeight(static_cast<EContribution>(C)) * 100.f * Mine.Raw[C] / Best;
+        if (Best > 0.f) Terms[C] = ContributionWeight(static_cast<EContribution>(C)) * 100.f * Mine.Raw[C] / Best;
     }
-    return Total;
+    return CapAndBonus(Terms, Mine);
 }
 
 // Stewardship (관리권) goes to the guild with the highest summed member score this period - never to a bid.

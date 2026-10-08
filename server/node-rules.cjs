@@ -33,15 +33,22 @@ function startRetake(m){ if(m.state!=='retakeable') return false; m.state='retak
 function retakeEnded(m,ok){ if(m.state!=='retaking') return false; m.state=ok?'recovering':'retakeable'; if(ok){ m.recover=0; m.occupiedHours=0; } return true; }
 function addRecovery(m,a){ if(m.state!=='recovering') return false; m.recover+=a; if(m.recover<1) return false; m.recover=1; m.state='stable'; setThreat(m,m.threat); return true; }
 
-/* 공헌도 — 항목마다 이번 판 1등 대비 0..100, 가중 합 */
-function contributionScore(mine,all){ let total=0; for(const c of CATEGORIES){ const best=Math.max(0,...all.map(a=>a[c]||0)); if(best>0) total+=WEIGHT[c]*100*(mine[c]||0)/best; } return total; }
+/* 지휘 상한·다양성 보너스 (GPT 패키지 GuildRules_v02 에서 이것만 가져왔다 — 가중치는 우리 것, 문서 202 §6):
+   지휘 점수는 비전투(지휘 아닌) 점수의 10% 까지만, 4종 이상에 실제로 기여(값 > 0)하면 ×1.1.
+   terms: 항목별 가중 점수, raw: 항목별 원래 값 (몇 종에 기여했나) */
+const COMMAND_CAP=0.10, DIVERSITY_MIN=4, DIVERSITY_BONUS=1.1;
+function capAndBonus(terms,raw){ let non=0; for(const c of CATEGORIES) if(c!=='command') non+=terms[c]||0;
+ const cmd=Math.min(terms.command||0,non*COMMAND_CAP), kinds=CATEGORIES.filter(c=>(raw[c]||0)>0).length;
+ return (non+cmd)*(kinds>=DIVERSITY_MIN?DIVERSITY_BONUS:1); }
+/* 공헌도 — 항목마다 이번 판 1등 대비 0..100, 가중 → 지휘 상한·다양성 보너스 */
+function contributionScore(mine,all){ const terms={}; for(const c of CATEGORIES){ const best=Math.max(0,...all.map(a=>a[c]||0)); terms[c]=best>0?WEIGHT[c]*100*(mine[c]||0)/best:0; } return capAndBonus(terms,mine); }
 function stewardGuild(scores,guildOf,guildCount){ let best=-1,bestSum=0; for(let g=0;g<guildCount;g++){ let sum=0; for(let i=0;i<scores.length;i++) if(guildOf[i]===g) sum+=scores[i]; if(sum>bestSum){ bestSum=sum; best=g; } } return best; }
 /* 관리권 점수 — 길드 단위 항목 몫: 항목마다 «그 항목 1등 길드 대비 %» × 가중치를 더한다.
    사람 단위로 매겨 더하던 것은 한 사람이 맡는 일(수리=기술자 명령, 보급=바리케이드)이 길드에 아무리 커도 100점에 묶이고,
    모두가 하는 처치만 인원수만큼 쌓였다 (가상 길드 캠페인 tools/ue/node-campaign.cjs, 문서 201 §8).
    guildRaw: [{kill, defense, ...}, ...] (길드 순서 = 등록 순) → 점수 배열 */
 function guildContributionScores(guildRaw){ const best={}; for(const c of CATEGORIES) best[c]=Math.max(0,...guildRaw.map(g=>g[c]||0));
- return guildRaw.map(g=>CATEGORIES.reduce((a,c)=>a+(best[c]>0?WEIGHT[c]*100*(g[c]||0)/best[c]:0),0)); }
+ return guildRaw.map(g=>capAndBonus(Object.fromEntries(CATEGORIES.map(c=>[c,best[c]>0?WEIGHT[c]*100*(g[c]||0)/best[c]:0])),g)); }
 function validPolicies(picks,budget=POLICY_BUDGET){ if(!Array.isArray(picks)) return false; const seen=new Set(); let spent=0;
  for(const p of picks){ if(!POLICIES.includes(p)||seen.has(p)) return false; seen.add(p); spent+=POLICY_COST[p]; } return spent<=budget; }
 function policyEffects(picks){ const e={gateHealthScale:1,generatorHealthScale:1,npcsArmed:false,prepBonusSeconds:0,wavePreview:false,medicalHealScale:1,extraPotions:0,reservePowerSeconds:0};
@@ -55,6 +62,6 @@ function nodeServices(state,commsFraction=1,power=3){ if(state==='fallen'||state
  const c=Math.max(0,Math.min(1,commsFraction)), ps=power>=3?1:power===2?0.75:power===1?0.45:0.2;
  return {mapIntel:0.35+0.65*c*ps,eventDetection:0.15+0.85*c*ps,rescueSignals:c>0&&power>=1,invasionForecast:c>0.5&&power>=2&&state!=='recovering'}; }
 
-module.exports={ STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
+module.exports={ COMMAND_CAP,DIVERSITY_MIN,DIVERSITY_BONUS,capAndBonus,STATES,TIERS,POLICIES,POLICY_COST,POLICY_BUDGET,CATEGORIES,WEIGHT,ROLES,PERMS,DIFFICULTY,REWARD,EXTRA_ELITES,
  gradeCounter,occupationTier,machine,setThreat,startInvasion,defenceHeld,tickInvasion,tickRetake,tickOccupation,startRetake,retakeEnded,addRecovery,
  contributionScore,stewardGuild,guildContributionScores,validPolicies,policyEffects,hasPermission,nodeServices };
