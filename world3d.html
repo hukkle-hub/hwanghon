@@ -27,12 +27,16 @@ canvas{ display:block; width:100vw; height:100vh; }
 #dodge{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px); }
 .dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
 .dmg.crit{ color:#ffc060; font-size:22px; } .dmg.taken{ color:#ff6a5a; } .dmg.evade{ color:#9fd8e8; font-size:15px; }
+#net{ position:absolute; top:calc(max(12px,env(safe-area-inset-top)) + 72px); left:16px; font-size:11px; color:var(--dim); }
+#toast{ position:absolute; top:22%; left:50%; transform:translateX(-50%); font-weight:900; font-size:17px; background:var(--panel); padding:8px 16px; border-radius:12px; text-align:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
+#toast[hidden]{ display:none; }
+.tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
 #osm{ position:absolute; right:12px; bottom:max(10px,env(safe-area-inset-bottom)); font-size:10px; color:var(--dim); opacity:.7; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div class="btn" id="dodge">회피</div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="toast" hidden></div><div class="btn" id="dodge">회피</div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
@@ -59,6 +63,7 @@ import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
+import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { Animated } from './js/party-avatar.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
@@ -178,14 +183,16 @@ const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서�
 let dodgeT = 0, shakeT = 0, hurtT = 0;
 function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
   hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip);
-  let t = null, bd = 1e9; for (const o of doms) { if (!o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
+  let t = null, bd = 1e9; for (const o of doms) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
   if (!t) return; me.yaw = Math.atan2(t.root.position.x - root.position.x, t.root.position.z - root.position.z); root.rotation.y = me.yaw;
+  if (net) { net.send({ type: 'fieldHit', boss: t.b.id }); return; }   /* 온라인: 서버가 판정한다 — 답(bossHit)이 오면 접점 시각에 보인다 */
   const crit = Math.random() < 0.18;
   feel.atContact(fh, 0, () => { if (!t.ai.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1)); t.ai.hp -= n; feel.impact(fh, t, { crit });
     floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', t.root.position, Math.min(2.1, (t.h || 2.2) * .6));
     if (t.ai.hp <= 0) { t.ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
 function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
-  hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP; }
+  hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP;
+  if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
 for (const [id, fn] of [['atk', attack], ['dodge', dodge]]) document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 /* 떠오르는 숫자 — 게임 시간으로 지운다 */
 const floats = [], dmgsEl = document.getElementById('dmgs'), v3 = new THREE.Vector3();
@@ -194,11 +201,56 @@ function floatTick(dt) { for (let i = floats.length - 1; i >= 0; i--) { const f 
   const on = v3.z < 1 && f.t < .95; f.el.style.display = on ? '' : 'none'; if (on) { f.el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; f.el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; f.el.style.opacity = Math.min(1, (0.95 - f.t) * 4); }
   if (f.t >= .95) { f.el.remove(); floats.splice(i, 1); } } }
 const hpEl = document.getElementById('hp'), deadEl = document.getElementById('dead'), hurtEl = document.getElementById('hurt');
+/* ---------- 온라인: 2D 필드와 같은 방 (문서 206 §8) ----------
+   Pages 에선 기본으로 붙는다 (?online=0 · ?offline=1 이면 혼자 연습). 붙으면 브라우저 AI 는 쉬고 서버가 보낸 지배형 동작을 서버 시계로 그린다 */
+const ONLINE = q.get('online') === '1' || (q.get('online') !== '0' && !q.has('offline') && /\.github\.io$/.test(location.hostname));
+const netEl = document.getElementById('net'), toastEl = document.getElementById('toast'); let net = null, lastField = null, fieldN = 0, toastT = 0, lastHurt = 0, sendT = 0, moveAnim = 'idle', ANIMS = ['idle', 'run', 'walk', 'attack1', 'dodgeB'], infos = {};
+const sclock = serverClock(), remotes = new Map(), charAssets = {};
+function toast(html, life = 3) { toastEl.innerHTML = html; toastEl.hidden = false; toastT = life; }
+function sendMove(anim) { if (!net) return; const p = root.position; net.send({ type: 'fieldMove', x: +p.x.toFixed(2), z: +p.z.toFixed(2), yaw: +me.yaw.toFixed(2), anim: anim || moveAnim }); }
+function charAsset(c) { return charAssets[c] || (charAssets[c] = Promise.all((CHAR_ASSET[c] || CHAR_ASSET.ain).map(load)).then(([h, w]) => { window.TW_POSE?.repair(THREE, h); window.TW_MATFIX?.repair(THREE, h.scene); return [h, w]; })); }
+const esc = t => String(t == null ? '' : t).replace(/[<>&]/g, '');
+function remoteSet(list) { const live = new Set();
+  for (const [id, x, z, yaw, ai] of list) { live.add(id); let r = remotes.get(id); const info = infos[id];
+    if (!r) { if (!info) continue; r = { target: [x, z, yaw, ANIMS[ai] || 'idle'], loading: true }; remotes.set(id, r);
+      charAsset(info.character).then(([h, w]) => { if (remotes.get(id) !== r) return; r.a = new Animated(h, scene, true, false, w, info.character); r.a.root.position.set(x, 0, z); r.loading = false;
+        r.tag = document.createElement('div'); r.tag.className = 'tag'; r.tag.textContent = info.name || ''; document.getElementById('hud').appendChild(r.tag); }); continue; }
+    r.target = [x, z, yaw, ANIMS[ai] || 'idle']; }
+  for (const [id, r] of remotes) if (!live.has(id)) { remotes.delete(id); if (r.a) r.a.dispose(scene); r.tag?.remove(); }
+  netEl.textContent = '온라인 · 근처 ' + remotes.size + '명'; }
+function remoteTick(dt) { for (const r of remotes.values()) { const a = r.a; if (!a) continue; const t = r.target, rp = a.root.position, dx = t[0] - rp.x, dz = t[1] - rp.z, d = Math.hypot(dx, dz);
+  if (d > 6) rp.set(t[0], 0, t[1]); else { const k = Math.min(1, dt * 10); rp.x += dx * k; rp.z += dz * k; }
+  let dy = t[2] - a.root.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.root.rotation.y += dy * Math.min(1, dt * 12);
+  a.armBlend?.restore(); a.rig?.restore(); a.play(t[3]); a.current.paused = false; a.mixer.update(dt); a.rig?.apply(null, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); a.armBlend?.apply(dt);
+  if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
+  if (r.tag) { v3.set(rp.x, 2.15, rp.z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; r.tag.style.display = on ? '' : 'none'; if (on) { r.tag.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; r.tag.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } } } }
+function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
+  for (const [id, alive] of m.bosses || []) { const o = doms.find(x => x.b.id === id); if (o) { if (o.netAlive && !alive) { hideDominator(o); floatAt('처치', 'crit', o.root.position, 1.6); } o.netAlive = !!alive; o.root.visible = !!alive; } }
+  for (const a of m.bossActs || []) { const o = doms.find(x => x.b.id === a.id); if (o && a.ai === 'dominator') applyDominatorAction(o, a); }
+  if (m.self) { P.hp = m.self.hp; P.maxHp = Math.max(1, m.self.maxHp); if (!P.dead && m.self.dead) busy = 0; P.dead = !!m.self.dead; }
+  const h = m.hurt; if (h && h[0] !== lastHurt) { lastHurt = h[0]; const amount = h[1], kind = h[4];
+    if (kind === 'evade') floatAt('회피', 'evade', root.position, 1.9);
+    else if (kind === 'respawn') toast('출발점에서 다시 일어섰습니다', 2.5);
+    else if (amount > 0) { floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, kind === 'dead' ? .55 : .28); } } }
+function netMsg(m) {
+  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); return; }
+  if (m.type === 'field') { lastField = m; fieldN++; Object.assign(infos, m.infos || {});
+    if (m.you) { const dx = m.you[0] - root.position.x, dz = m.you[1] - root.position.z, d = Math.hypot(dx, dz); if (d > 3) { root.position.x = m.you[0]; root.position.z = m.you[1]; } else if (d > .25) { root.position.x += dx * .22; root.position.z += dz * .22; } }   /* 서버 자리와 크게 어긋나면 맞춘다 (2D 필드와 같은 규칙) */
+    remoteSet(m.players || []); bossPacket(m); return; }
+  if (m.type === 'bossHit') { const o = doms.find(x => x.b.id === m.boss); if (!o) return;   /* 내 타격의 답 — 접점 시각에 한 덩어리로 (문서 205) */
+    feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', o.root.position, Math.min(2.1, (o.h || 2.2) * .6)); feel.impact(fh, o, { crit: m.crit, counter: m.counter }); }); return; }
+  if (m.type === 'announce' && m.kind === 'bossSpawn' && m.zone === ZONE) { toast((/^t2_dominator/.test(m.boss) ? '⚠ 2급 지배형 출현 · ' + esc(m.title) : '⚠ 필드 보스 출현') + '<br><b>' + esc(m.name) + '</b> · ' + esc(m.place), 5); return; }
+  if (m.type === 'announce' && m.kind === 'bossDown' && m.zone === ZONE) { toast(esc(m.name) + ' 처치 · ' + esc(m.top || ''), 4); return; }
+  if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } } }
+if (ONLINE) { const L = document.getElementById('load'); L.textContent = '필드 방에 들어가는 중…';
+  try { net = await connectField({ q, zone: ZONE, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); netEl.textContent = '온라인 · 근처 0명'; }
+  catch (e) { netEl.textContent = '오프라인 — ' + e.message + ' · 혼자 연습'; } }
+else netEl.textContent = '혼자 연습 (?online=1 이면 서버 방)';
 /* ---------- 돌리기 ---------- */
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
 function tick() {
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
-  if (P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
+  if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const ix = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
@@ -209,7 +261,12 @@ function tick() {
     const yaw = Math.atan2(dx, dz); let d = yaw - me.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); me.yaw += d * Math.min(1, dt * 14); root.rotation.y = me.yaw;
     animate(true, m < 0.55, adt); } else animate(false, false, adt);
   P.x = root.position.x; P.z = root.position.z;
-  for (const o of doms) { const ai = o.ai;
+  moveAnim = busy > 0 ? busyClip : P.dead ? 'idle' : m > 0.05 ? (m < 0.55 ? 'walk' : 'run') : 'idle';
+  if (net) { sendT += dt; if (sendT >= 0.1) { sendT = 0; sendMove(); }
+    for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
+    remoteTick(dt); }
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
+  if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
     const ev = updateDominator(o, dt * feel.rate(o), gameNow); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
@@ -224,7 +281,7 @@ function tick() {
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
 window.__W3D = { get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
-  me, cam, camS, scene, renderer, env, meta, doms, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; },
+  me, cam, camS, scene, renderer, env, meta, doms, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
 nearLights(root.position); placeCam(0); tick();

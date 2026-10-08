@@ -89,3 +89,18 @@ test('3D 필드 지배형: 서버 AI 파일을 그대로 읽는다(브라우저 
   assert.match(w, /const DOM = await loadCjs\('server\/field-dominator\.cjs'\)/, 'AI 를 따로 쓰면 서버와 갈라진다');
   assert.match(w, /if \(now < p\.invulnUntil \|\| now < p\.dodgeUntil\)[^\n]+return \{ evade: true \}/, '회피 무적 판정이 서버와 다르다');
 });
+
+test('3D 필드 온라인: 2D 필드와 같은 접속 규약·저장소 열쇠 · 서버 시계는 거꾸로 안 간다 · 타격은 서버로, 회피는 dodgeB', async () => {
+  const net = fs.readFileSync(path.join(ROOT, 'js/mmo/field-net.js'), 'utf8'), mmo = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
+  for (const key of ["'tw:party-token:'", "type: 'hello'", "type: 'fieldJoin'", "type: 'character'"]) {
+    assert.ok(net.includes(key), 'field-net 에 ' + key + ' 가 없다'); assert.ok(mmo.replace(/ /g, '').includes(key.replace(/ /g, '')), 'mmo.html 과 규약이 다르다: ' + key); }
+  assert.match(net, /PARTY_DEFAULT = 'hwanghon-party\.onrender\.com'/); assert.match(mmo, /PARTY_DEFAULT='hwanghon-party\.onrender\.com'/);
+  const { serverClock, partyServer } = await import('../js/mmo/field-net.js');
+  const c = serverClock(), real = Date.now; let t = 1000; Date.now = () => t;
+  try { c.sync(5000); const a = c.now(); c.sync(4000); t += 10; const b = c.now(); assert.ok(b >= a, '서버 시계가 거꾸로 갔다'); assert.equal(a, 5000, '가장 지연이 적은(큰) 표본을 고른다'); }
+  finally { Date.now = real; }
+  assert.deepEqual(partyServer(new URLSearchParams(''), { hostname: 'hukkle-hub.github.io', host: 'x', protocol: 'https:' }), { host: 'hwanghon-party.onrender.com', secure: true }, 'Pages 사본은 Render 파티 서버로');
+  assert.match(w, /if \(net\) \{ net\.send\(\{ type: 'fieldHit', boss: t\.b\.id \}\); return; \}/, '온라인 타격을 브라우저가 판정한다');
+  assert.match(w, /if \(net\) sendMove\('dodgeB'\)/, '온라인 회피를 서버에 안 알린다 — 무적이 안 열린다');
+  assert.match(w, /if \(!net\) for \(const o of doms\)/, '온라인인데 브라우저 AI 가 돈다 — 서버 지배형과 두 개가 된다');
+});
