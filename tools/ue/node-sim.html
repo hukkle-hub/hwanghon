@@ -54,7 +54,8 @@ function draw(N,S,T,W){
   if(res){ g.strokeStyle='#ff6ebe'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+2.5,0,7); g.stroke(); g.lineWidth=1; }
   if((r>=2||zoom)&&q.get('tags')!=='0'){ g.fillStyle=ROLE_COL[r]; g.font=(zoom?12:9)+'px QA, sans-serif'; g.fillText('T5 '+ROLE_KO[r]+'→'+(r===5&&tk==='a'?'무리 뒤':TK_KO[tk]||'—'),a+rad+2,b-3); }
   if(stuck){ g.strokeStyle='#ff0'; g.lineWidth=2; g.beginPath(); g.arc(a,b,rad+4,0,7); g.stroke(); g.lineWidth=1; } }
- if(fr.p){ const [a,b]=P(fr.p[0],fr.p[1]); g.fillStyle=fr.p[3]?'#555':'#40a0ff'; g.beginPath(); g.moveTo(a,b-8); g.lineTo(a+7,b+6); g.lineTo(a-7,b+6); g.fill(); }
+ /* 파티면 모두 (ps), 혼자면 p */
+ for(const pp of fr.ps||(fr.p?[fr.p]:[])){ const [a,b]=P(pp[0],pp[1]); g.fillStyle=pp[3]?'#555':'#40a0ff'; g.beginPath(); g.moveTo(a,b-8); g.lineTo(a+7,b+6); g.lineTo(a-7,b+6); g.fill(); }
  return {col,fr};
 }
 function side(S,T,fr,title){

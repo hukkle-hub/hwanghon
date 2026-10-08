@@ -54,16 +54,17 @@ function simulate(N, o = {}) {
 
   /* ── 땅과 벽 ── */
   const floorAt = (x, y, z) => H.floorAt(bs, x, y, z);
-  function inSolid(x, y, footZ) {
+  /* passGate: 아군 통과 정문 실험 (opt.sally) — 플레이어는 서 있는 정문을 지나가고 적만 막힌다 (문서 203 §9) */
+  function inSolid(x, y, footZ, passGate = false) {
     const z0 = footZ + 10, z1 = footZ + 2 * CAPSULE_HALF - 10;
     for (const w of walls) if (Math.abs(x - w.c[0]) < w.h[0] + BODY_R && Math.abs(y - w.c[1]) < w.h[1] + BODY_R && z1 > w.c[2] - w.h[2] && z0 < w.c[2] + w.h[2]) return true;
-    for (const f of fac) if (solidFac(f) && Math.abs(x - f.c[0]) < f.h[0] + BODY_R && Math.abs(y - f.c[1]) < f.h[1] + BODY_R && z1 > f.c[2] - f.h[2] && z0 < f.c[2] + f.h[2]) return true;
+    for (const f of fac) if (solidFac(f) && !(passGate && f.kind === 'gate') && Math.abs(x - f.c[0]) < f.h[0] + BODY_R && Math.abs(y - f.c[1]) < f.h[1] + BODY_R && z1 > f.c[2] - f.h[2] && z0 < f.c[2] + f.h[2]) return true;
     return false;
   }
   /* 한 걸음: 막히면 x·y 따로 미끄러진다. 발 높이(foot)를 들고 다닌다. 턱 45 cm 이상·땅 없음 = 막힘 */
   function step(body, dir, dist) {
     const tryAt = (dx, dy) => { const x = body.p[0] + dx, y = body.p[1] + dy, fz = floorAt(x, y, body.foot);
-      if (fz == null || fz - body.foot > 45 || inSolid(x, y, fz)) return false; body.p = [x, y, fz + CAPSULE_HALF]; body.foot = fz; return true; };
+      if (fz == null || fz - body.foot > 45 || inSolid(x, y, fz, !!body.passGate)) return false; body.p = [x, y, fz + CAPSULE_HALF]; body.foot = fz; return true; };
     const dx = dir[0] * dist, dy = dir[1] * dist;
     if (tryAt(dx, dy)) return true;
     if (Math.abs(dx) > 1e-3 && tryAt(dx, 0)) return true;
@@ -99,7 +100,7 @@ function simulate(N, o = {}) {
   const blankLedger = () => Object.fromEntries(R.CATEGORIES.map(c => [c, 0]));
   const pls = party.map((q, i) => { const sp = P(N.player_start), b = place(party.length > 1 ? [sp[0] + (i % 4 - 1.5) * 160, sp[1] - Math.floor(i / 4) * 160, sp[2]] : sp);   /* 혼자면 출발점 그대로 */
     return { ...q, job: q.job || 'gate', guildRole: q.guildRole || 'member', counter: q.counter ?? 0.35, ...b, hp: PLAYER.health, deadFor: -1, deaths: 0, acc: 0, target: null, think: i * 0.05,
-      kills: 0, rescues: 0, counters: 0, hitsTaken: 0, dealt: 0, ledger: blankLedger(), lastPing: -99 }; });
+      kills: 0, rescues: 0, counters: 0, hitsTaken: 0, dealt: 0, ledger: blankLedger(), lastPing: -99, passGate: !!opt.sally }; });
   const pl = pls[0] || null;
   const alive = q => q && q.deadFor < 0;
   const playerAlive = () => pls.some(alive);
@@ -156,7 +157,8 @@ function simulate(N, o = {}) {
     if (e.ri < e.route.length) return e.route[e.ri]; if (e.ei < e.ext.length) return e.ext[e.ei];
     return e.tk === 'none' ? e.p : targetPoint(e.tk, e.p, e); }
 
-  function damageFacility(f, amount, t) { if (!standing(f)) return; f.hp -= amount;
+  const facHits = {};   /* 시설이 누구에게 얼마나 맞았나 (정문을 누가 부수나 — 문서 203 §9) */
+  function damageFacility(f, amount, t, by) { if (!standing(f)) return; if (by) { const k = f.kind + ':' + by; facHits[k] = (facHits[k] || 0) + Math.min(amount, f.hp); } f.hp -= amount;
     if (f.hp <= 0) { f.hp = 0; log(t, 'facility', f.id + ' 무너짐', f.id, 'destroyed');
       if (f.kind === 'generator' && !reserveUsed) { reserveLeft = pe.reservePowerSeconds; reserveUsed = true; } } }
   const dealt = { player: 0, turret: 0, guard: 0 };
@@ -188,7 +190,7 @@ function simulate(N, o = {}) {
   function strike(e, t) {
     e.cd = e.st.attackCooldown;
     const atk = C.resonanceAttack(e.res), blow = e.attack; e.attack = null; if (e.role === 'armored_elite') e.blow++;   /* 공진: 공격 ×1.12 · 철갑: 다음 공격으로 */
-    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage * diff * atk, t); return; }
+    if (e.ov) { if (standing(e.ov) && surf(e.ov, e.p) <= 200) damageFacility(e.ov, e.st.facilityDamage * diff * atk, t, e.role); return; }
     if (e.tk === 'player') { const q = nearestPlayer(e.p); if (!q || d2(e.p, q.p) > reach(e, 'player') + 60) return;
       /* 철갑 내려찍기는 카운터가 안 된다 — 같은 손 실력(counter)으로 피한다고 친다 */
       if (blow && !C.counterAllowed(blow)) { if (rand() < q.counter) { q.dodges = (q.dodges || 0) + 1; return; } }
@@ -197,7 +199,7 @@ function simulate(N, o = {}) {
       q.hp -= e.st.damage * diff * atk; q.hitsTaken++; if (q.hp <= 0) { q.hp = 0; q.deadFor = 0; q.deaths++; log(t, 'player', (pls.length > 1 ? q.name + ' ' : '플레이어 ') + '쓰러짐', pls.length > 1 ? q.name : 'player', 'dead'); } return; }
     if (e.tk === 'npc') { const n = npcFor(e.p, e.role); if (n && d2(e.p, n.p) <= reach(e, 'npc') + 60) npcHurt(n, e.st.damage * atk, t); return; }
     if (e.tk === 'ally') return;
-    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage * diff * atk, t);
+    const f = facility(e.tk); if (f && surf(f, e.p) <= reach(e, e.tk) + 60) damageFacility(f, e.st.facilityDamage * diff * atk, t, e.role);
   }
   function tickEnemy(e, dt, t) {
     e.armor.tick(dt); e.cd = Math.max(0, e.cd - dt);
@@ -243,14 +245,15 @@ function simulate(N, o = {}) {
   }
 
   /* 사람은 길을 안다: 곧장 갈 수 있으면 곧장, 아니면 길 그래프로 (1초마다 다시 짠다) */
-  function clearLine(a, b) { const L = d2(a, b), n = Math.max(1, Math.ceil(L / 100)); let foot = a[2] - CAPSULE_HALF;
+  function clearLine(a, b, passGate = false) { const L = d2(a, b), n = Math.max(1, Math.ceil(L / 100)); let foot = a[2] - CAPSULE_HALF;
     for (let k = 1; k <= n; k++) { const x = a[0] + (b[0] - a[0]) * k / n, y = a[1] + (b[1] - a[1]) * k / n, fz = floorAt(x, y, foot);
-      if (fz == null || fz - foot > 45 || inSolid(x, y, fz)) return false; foot = fz; } return true; }
+      if (fz == null || fz - foot > 45 || inSolid(x, y, fz, passGate)) return false; foot = fz; } return true; }
   function walkTo(body, to, dist) {
     body.repath = (body.repath || 0) - opt.dt;
-    if (body.repath <= 0 || !body.way) { body.repath = 1; body.way = clearLine(body.p, to) ? [] : GR.path(graph, body.p, to); body.wi = 0;
+    const pg = !!body.passGate;
+    if (body.repath <= 0 || !body.way) { body.repath = 1; body.way = clearLine(body.p, to, pg) ? [] : GR.path(graph, body.p, to); body.wi = 0;
       /* 벽에 미끄러져 첫 마디가 벽 너머면, 보이는 다음 마디부터 */
-      while (body.way.length >= 2 && !clearLine(body.p, body.way[0]) && clearLine(body.p, body.way[1])) body.way.shift(); }
+      while (body.way.length >= 2 && !clearLine(body.p, body.way[0], pg) && clearLine(body.p, body.way[1], pg)) body.way.shift(); }
     while (body.wi < body.way.length && d2(body.p, body.way[body.wi]) < 150) body.wi++;
     const g = body.wi < body.way.length ? body.way[body.wi] : to; step(body, dirTo(body.p, g), dist);
   }
@@ -341,11 +344,12 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, sally: !!opt.sally, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },
     dealt: Object.fromEntries(Object.entries(dealt).map(([k, v]) => [k, Math.round(v)])), spawned: enemies.length, alive: enemies.length - dead.length, stuck: stuck.map(e => e.role + '@' + Math.round(e.p[0]) + ',' + Math.round(e.p[1]) + ' →' + e.tk),
+    facilityHits: Object.fromEntries(Object.entries(facHits).map(([k, v]) => [k, Math.round(v)])),
     threatGrade: C.THREAT_GRADE, tier5: { pass: proof.pass(), checks: proof.report() }, resonance: { seconds: +resLog.on.toFixed(1), maxAffected: resLog.maxAffected },
     npcs: npcStates(), player: pl ? { deaths: pls.reduce((a, q) => a + q.deaths, 0), counters: pls.reduce((a, q) => a + q.counters, 0), hitsTaken: pls.reduce((a, q) => a + q.hitsTaken, 0), dodges: pls.reduce((a, q) => a + (q.dodges || 0), 0), rescues: pls.reduce((a, q) => a + q.rescues, 0) } : null,
     party: pls.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps, deaths: q.deaths, kills: q.kills, rescues: q.rescues, dealt: Math.round(q.dealt),

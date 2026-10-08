@@ -1,0 +1,69 @@
+{
+  "version": "v07",
+  "node": "N01",
+  "state_flow": [
+    "Idle",
+    "Warning",
+    "Invasion",
+    "Recovery"
+  ],
+  "failure": "CommsDestroyed -> Occupied",
+  "defense_lines": [
+    "OuterCheckpoint",
+    "MainGate",
+    "CentralPlaza",
+    "CommsFinal"
+  ],
+  "facility_rules": {
+    "GateDestroyed": {
+      "result": "reroute",
+      "to": "CentralPlaza",
+      "defeat": false
+    },
+    "GeneratorDestroyed": {
+      "result": "support_lost",
+      "defeat": false
+    },
+    "CommsDestroyed": {
+      "result": "Occupied",
+      "defeat": true
+    }
+  },
+  "victory": {
+    "all_waves_spawned": true,
+    "active_enemy_count": 0,
+    "comms_alive": true
+  },
+  "role_reroute": {
+    "Walker": {
+      "MainGate": "Gate",
+      "CentralPlaza": "Player",
+      "CommsFinal": "Comms"
+    },
+    "Runner": {
+      "MainGate": "Player",
+      "CentralPlaza": "RearPlayer",
+      "CommsFinal": "Player"
+    },
+    "Breaker": {
+      "MainGate": "Gate",
+      "CentralPlaza": "Generator",
+      "CommsFinal": "Comms"
+    },
+    "Stalker": {
+      "MainGate": "NPC",
+      "CentralPlaza": "NPC",
+      "CommsFinal": "NPC"
+    },
+    "Armored": {
+      "MainGate": "Gate",
+      "CentralPlaza": "Player",
+      "CommsFinal": "Comms"
+    },
+    "Resonator": {
+      "MainGate": "RearOfGroup",
+      "CentralPlaza": "RearOfGroup",
+      "CommsFinal": "RearOfGroup"
+    }
+  }
+}
