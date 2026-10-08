@@ -1,6 +1,7 @@
 # Render 재배포 대기 (파티 서버)
 
-> **2026-10-08 — 명령 보너스 +10% — Render commit `1c380fe` 확인.**
+> **2026-10-08 — 동맹(최대 3길드) — Render commit `82f2257` 확인.**
+> 이전: **2026-10-08 — 명령 보너스 +10% — Render commit `1c380fe` 확인.**
 > 이전: **2026-10-08 — 공헌 점수 지휘 상한·다양성 보너스 — Render commit `40ba677` 확인.**
 > 이전: **2026-10-08 — 서울 전략망·관리 용량·길드 전략 명령 — Render commit `9433699` 확인.**
 > 이전: **2026-10-08 — 탈환전 규칙 tickRetake — Render commit `0108a87` 확인.**
@@ -22,9 +23,11 @@
 
 | 커밋 | 무엇이 바뀌었나 |
 |---|---|
-| (이 커밋) | 동맹(`server/alliance-store.cjs`, 표 `alliances` · `alliance_members` · `alliance_invites`): 최대 3길드, 길드장만, 서로의 명령·관리 거점을 봄. 표 만들기를 트랜잭션 밖으로 (첫 요청이 거절되면 새 표가 롤백으로 지워지던 것) — 문서 202 §4.5 |
+| — | 없음 |
 
 ## 2. 배포 완료 (최신: 2026-10-08)
+
+동맹 (Claude): main `82f2257` → Render `/healthz` commit `82f2257`, Pages build `82f2257`. 실제 WebSocket: 길드 없는 계정의 `ally create` 가 «길드에 들어가야 합니다.» 로 거절된 **뒤에도** `ally info` 가 정상(`alliance:null`) — 새 표가 첫 거절 요청에 지워지지 않는다. `npm test` 825 중 822 통과 · 실패 0.
 
 명령 보너스 +10% (Claude): main `1c380fe` → Render `/healthz` commit `1c380fe`, Pages build `1c380fe` (05:18 UTC). 실제 WebSocket `region` 정상, 길드 없는 `order` 거절. `npm test` 821 중 818 통과 · 실패 0.
 
