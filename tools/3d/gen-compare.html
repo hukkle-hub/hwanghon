@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>Generator Compare</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+@font-face{font-family:QA;src:url(../../ue/HwanghonCombatUE/Assets/Fonts/NotoSansKR-Bold.ttf)}
+:root{--bg:#101215;--tx:#e8e2d4;--dim:#9a9486;--line:#2a2e35}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:12px/1.5 "Noto Sans KR",QA,sans-serif}
+main{padding:12px 14px} h1{font-size:16px;margin:0 0 2px} .sub{color:var(--dim);margin-bottom:8px}
+.row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:start;margin-bottom:10px}
+.row h2{font-size:14px;margin:4px 0} canvas{display:block;border:1px solid var(--line)}
+table{border-collapse:collapse;margin-top:6px} td,th{border:1px solid var(--line);padding:3px 8px;text-align:right} th{color:var(--dim);font-weight:normal;text-align:left}
+td:first-child{text-align:left;color:var(--dim)}
+</style></head><body><main>
+<h1 id="ttl">생성기 비교</h1><div class="sub" id="sub"></div>
+<div class="row" id="refrow" hidden><h2>입력 (3면도)</h2><div id="refs" style="display:flex;gap:6px"></div></div>
+<div id="rows"></div>
+<table id="stats"></table>
+</main>
+<script type="importmap">{ "imports": { "three": "../../vendor/three/three.module.js" } }</script>
+<script type="module">
+/* 같은 3면도로 만든 두 결과를 같은 카메라·조명으로 나란히 (docs/design/04 · 2026-10 Hi3D ↔ Varco3D 비교).
+   ?a=…glb&b=…glb&la=Hi3D&lb=Varco3D&name=클레이브
+   각 모델은 키 2.0 으로 맞추고 발을 바닥에. 정면·옆·뒤·3/4 + 얼굴(위 18%)·손(팔 높이) 확대.
+   표: 삼각형·정점·재질·텍스처 크기·metalness/roughness(피부가 쇳덩이로 그려지는지 «읽는다» — CLAUDE.md §1)·뼈·클립. */
+import * as THREE from 'three';
+import { GLTFLoader } from '../../vendor/three/GLTFLoader.js';
+const q=new URLSearchParams(location.search), A=q.get('a'), B=q.get('b'), LA=q.get('la')||'A', LB=q.get('lb')||'B';
+/* ?ref=/art/3d/src/part1_views/clave → _front/_side/_back.png 를 맨 위에 (입력에 얼마나 맞나를 눈으로) */
+if(q.get('ref')){ const box=document.getElementById('refs'); document.getElementById('refrow').hidden=false;
+ for(const v of ['front','side','back']){ const im=new Image(); im.src=q.get('ref')+'_'+v+'.png'; im.style.cssText='height:220px;border:1px solid #2a2e35;background:#fff'; im.onerror=()=>im.remove(); box.appendChild(im); } }
+document.getElementById('ttl').textContent='생성기 비교 — '+(q.get('name')||'');
+const W=210, H=300, CW=W*6, renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(1); renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping;
+const pmrem=new THREE.PMREMGenerator(renderer);
+function scene(){ const s=new THREE.Scene(); s.background=new THREE.Color(0x1a1d22);
+ s.add(new THREE.HemisphereLight(0xdfe6ff,0x2a2520,1.1)); const k=new THREE.DirectionalLight(0xffffff,2.2); k.position.set(2,4,3); s.add(k);
+ const r=new THREE.DirectionalLight(0xbcd0ff,0.9); r.position.set(-3,2,-2); s.add(r);
+ const g=new THREE.Mesh(new THREE.CircleGeometry(1.4,48),new THREE.MeshStandardMaterial({color:0x2a2e35,roughness:1})); g.rotation.x=-Math.PI/2; s.add(g); return s; }
+async function load(url){ const g=await new GLTFLoader().loadAsync(url); const root=g.scene;
+ const box=new THREE.Box3().setFromObject(root), size=box.getSize(new THREE.Vector3()), k=2/size.y;
+ root.scale.setScalar(k); const b2=new THREE.Box3().setFromObject(root), c=b2.getCenter(new THREE.Vector3()); root.position.set(-c.x,-b2.min.y,-c.z);
+ /* 통계 */
+ let tris=0, verts=0; const mats=new Set(), tex=new Map(); let skinned=false;
+ root.traverse(o=>{ if(!o.isMesh) return; if(o.isSkinnedMesh) skinned=true; const gm=o.geometry; verts+=gm.attributes.position.count; tris+=(gm.index?gm.index.count:gm.attributes.position.count)/3;
+  for(const m of [].concat(o.material)){ mats.add(m); for(const key of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap']) if(m[key]&&m[key].image) tex.set(m[key].uuid,key+' '+m[key].image.width+'×'+m[key].image.height); } });
+ const ml=[...mats];
+ return { root, gltf:g, stats:{ tris:Math.round(tris), verts, mats:ml.length, tex:[...tex.values()], metal:ml.map(m=>m.metalness??'-'), rough:ml.map(m=>m.roughness??'-'),
+  metalMap:ml.some(m=>m.metalnessMap), bones:g.parser.json.skins?g.parser.json.nodes.length:0, skins:(g.parser.json.skins||[]).length, clips:g.animations.length,
+  raw:{ x:+size.x.toFixed(2), y:+size.y.toFixed(2), z:+size.z.toFixed(2) } } }; }
+/* 한 줄: 정면·옆·뒤·3/4·얼굴·손 */
+function shoot(m,label){ const s=scene(); s.add(m.root); const cv=document.createElement('canvas'); cv.width=CW; cv.height=H; const ctx=cv.getContext('2d');
+ renderer.setSize(W,H); const cam=new THREE.PerspectiveCamera(28,W/H,0.01,50);
+ const views=[[0,0,'정면'],[Math.PI/2,0,'옆'],[Math.PI,0,'뒤'],[Math.PI/4,0,'3/4']];
+ views.forEach(([a],i)=>{ cam.fov=28; cam.updateProjectionMatrix(); cam.position.set(Math.sin(a)*4.6,1.15,Math.cos(a)*4.6); cam.lookAt(0,1,0); renderer.render(s,cam); ctx.drawImage(renderer.domElement,i*W,0); });
+ /* 얼굴: 위 18% 를 크게 · 손: 팔 높이(키의 45~60%)를 3/4 에서 */
+ cam.fov=14; cam.updateProjectionMatrix(); cam.position.set(0.9,1.86,2.6); cam.lookAt(0,1.84,0); renderer.render(s,cam); ctx.drawImage(renderer.domElement,4*W,0);
+ cam.fov=22; cam.updateProjectionMatrix(); cam.position.set(2.4,1.1,2.4); cam.lookAt(0,1.05,0); renderer.render(s,cam); ctx.drawImage(renderer.domElement,5*W,0);
+ ctx.fillStyle='#e8e2d4'; ctx.font='bold 13px QA,sans-serif'; ['정면','옆','뒤','3/4','얼굴(위 18%)','팔·손'].forEach((t,i)=>ctx.fillText(t,i*W+6,16));
+ const row=document.createElement('div'); row.className='row'; row.innerHTML='<h2>'+label+'</h2>'; row.appendChild(cv); document.getElementById('rows').appendChild(row); }
+(async()=>{
+ const items=[]; if(A) items.push([LA,await load(A)]); if(B) items.push([LB,await load(B)]);
+ for(const [l,m] of items) shoot(m,l);
+ const rows=[['삼각형',s=>s.tris.toLocaleString()],['정점',s=>s.verts.toLocaleString()],['재질',s=>s.mats],['텍스처',s=>s.tex.join('<br>')||'없음'],
+  ['metalness',s=>s.metal.map(v=>typeof v==='number'?v.toFixed(2):v).join(', ')+(s.metalMap?' (+맵)':'')],['roughness',s=>s.rough.map(v=>typeof v==='number'?v.toFixed(2):v).join(', ')],
+  ['스킨 · 클립',s=>s.skins+' · '+s.clips],['원래 크기 (x·y·z)',s=>s.raw.x+' · '+s.raw.y+' · '+s.raw.z]];
+ document.getElementById('stats').innerHTML='<tr><th></th>'+items.map(([l])=>'<th>'+l+'</th>').join('')+'</tr>'+rows.map(([k,f])=>'<tr><td>'+k+'</td>'+items.map(([,m])=>'<td>'+f(m.stats)+'</td>').join('')+'</tr>').join('');
+ document.getElementById('sub').textContent='같은 입력(3면도) · 키 2.0 으로 맞춤 · 같은 카메라·조명 — '+items.map(([l])=>l).join(' ↔ ');
+ window.__CMP=items.map(([l,m])=>({label:l,...m.stats}));
+ await document.fonts.ready; document.body.dataset.ready='1';
+})().catch(e=>{ document.getElementById('sub').textContent='오류: '+e.message; document.body.dataset.ready='err'; });
+</script></body></html>
