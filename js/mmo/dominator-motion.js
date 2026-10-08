@@ -26,7 +26,7 @@ export function setupDominator(o, gl, scene, floor = 0) {
   root.scale.setScalar(k); box.setFromObject(root);
   root.position.set(root.position.x - (box.min.x + box.max.x) / 2, root.position.y - box.min.y, root.position.z - (box.min.z + box.max.z) / 2);   /* 발을 바닥에 */
   const grp = new THREE.Group(); grp.position.set(b.x, 0, b.z); grp.add(root); scene.add(grp);
-  o.root = grp; o.model = root; o.h = box.max.y - box.min.y; o.dom = { clip: '', seq: NaN };
+  o.root = grp; o.model = root; o.h = box.max.y - box.min.y; o.dom = { clip: '', seq: NaN, base: root.position.clone(), flinch: null };
   o.dmix = new THREE.AnimationMixer(root); o.dacts = {};
   for (const a of gl.animations) o.dacts[a.name] = o.dmix.clipAction(a);
   /* 바닥 예고: 원(파동)·부채꼴(베기) — 몸을 따라가되 몸과 같이 기울지 않게 장면에 따로 둔다 */
@@ -57,7 +57,18 @@ export function updateDominator(o, dt, now) {
       w.position.set(o.root.position.x, d.floor + .05, o.root.position.z); w.rotation.z = a.skill === 'dominate' ? 0 : o.root.rotation.y + Math.PI;   /* 눕힌 원판의 +Y 는 세계 −Z — 앞(sin yaw, cos yaw)으로 돌리려면 +π */
       w.material.opacity = .15 + .45 * p; w.scale.setScalar(a.skill === 'dominate' ? .35 + .65 * p : 1); } }
   }
-  o.dmix.update(dt);
+  o.dmix.update(dt); flinchTick(o, dt);
   return a && a.motion === 'skill' && now >= a.tell && now < a.tell + 120 ? { impact: true } : null;
+}
+/* 맞음 반응 (v11: 접점에 대상 반응이 같이 온다) — 몸만 맞은 방향으로 짧게 밀렸다 돌아온다. 자리(root)는 서버 것이라 건드리지 않는다 */
+export function flinchDominator(o, fromX, fromZ, strength = 1) {
+  const d = o.dom; if (!d || !o.root) return; const dx = o.root.position.x - fromX, dz = o.root.position.z - fromZ, n = Math.hypot(dx, dz) || 1;
+  d.flinch = { t: 0, dur: .2, x: dx / n, z: dz / n, amp: .14 * strength };
+}
+function flinchTick(o, dt) {
+  const d = o.dom, f = d.flinch; if (!f || !d.base) return; f.t += dt; const k = Math.min(1, f.t / f.dur), s = Math.sin(Math.PI * k) * f.amp * (1 - k * .5);
+  const c = Math.cos(o.root.rotation.y), sn = Math.sin(o.root.rotation.y);   /* 세계 방향 → 몸(root) 안 방향 = Ry(yaw) 의 역 */
+  o.model.position.set(d.base.x + (f.x * c - f.z * sn) * s, d.base.y, d.base.z + (f.x * sn + f.z * c) * s);
+  if (k >= 1) { d.flinch = null; o.model.position.copy(d.base); }
 }
 export function hideDominator(o) { const d = o.dom; if (!d) return; if (d.warn) d.warn.visible = false; o.netAct = null; d.seq = NaN; }
