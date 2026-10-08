@@ -15,7 +15,7 @@ function ueRun(sim, shift = {}) {
   /* 시뮬 판 하나를 UE 가 쓰는 형식 그대로 다시 쓴다 (사건 시각은 shift 로 옮겨 «다른 판» 을 만든다) */
   const [fPol, fBar, fTech, fOpt, fEv, fEnemy, fFac, fNpc, fPlayer, fFrame, fFacDef, fNpcId, fCheck, fJson] = formats;
   const opt = printf(fOpt, (sim.opt.policies || []).map(p => printf(fPol, p)).join(','), (sim.opt.barricades || []).map(b => printf(fBar, b)).join(','),
-    sim.opt.tech ? printf(fTech, sim.opt.tech) : 'null', sim.opt.evacuate ? 'true' : 'false', 'leader', sim.opt.supply ?? 0, sim.opt.retake ? 'true' : 'false', sim.opt.difficulty || 1, sim.opt.extraElites || 0, ...(sim.opt.region || [1, 1, 1]));
+    sim.opt.tech ? printf(fTech, sim.opt.tech) : 'null', sim.opt.evacuate ? 'true' : 'false', 'leader', sim.opt.supply ?? 0, sim.opt.retake ? 'true' : 'false', sim.opt.difficulty || 1, sim.opt.extraElites || 0, sim.opt.waveScale || 1, ...(sim.opt.region || [1, 1, 1]));
   const ev = sim.events.filter(e => e.id != null).map(e => { const t = e.t + (shift[e.id + ' ' + e.to] || 0); return printf(fEv, t, e.kind, e.id, e.to, e.kind, e.id, e.to); });
   const frames = sim.frames.map(f => printf(fFrame, f.t, f.power, f.e.map(e => printf(fEnemy, e[0], e[1], e[2], e[3], e[4], e[6] || 0)).join(','),
     f.f.map(x => printf(fFac, x)).join(','), f.n.map(n => printf(fNpc, n[0], n[1], n[2])).join(','), f.p ? printf(fPlayer, f.p[0], f.p[1], f.p[2], f.p[3]) : 'null'));

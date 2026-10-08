@@ -29,5 +29,7 @@ const BOSSES={
  jeong:      { hp: 2500000, cycle:{ period:'8h',  start:'3h',  end:'7h' },                  drops:drops('jeong') },
  nova:       { hp: 6000000, cycle:{ period:'24h', start:'18h', end:'23h', chance:0.7 }, tier:'myth', drops:drops('nova',5) },   /* 최종 신화 1% — 하루 한 번 안팎이라 */
 };
+/* 필드 몬스터(2급 지배형, 문서 204) — 같은 통로로 출현·피해·처치. 장비 드롭은 아직 없고 재료(심장 결정)만 기여도대로 */
+for(const [id,m] of Object.entries(require('./field-monsters.cjs').FIELD_MONSTERS)) BOSSES[id]={ hp:m.hp, cycle:m.cycle, tier:m.kind, drops:[] };
 const DEFAULT={ hp:1000000, cycle:{ period:'3h', start:'1h', end:'2h' }, drops:[] };
 module.exports={ BOSSES, DEFAULT, MATERIAL, drops };

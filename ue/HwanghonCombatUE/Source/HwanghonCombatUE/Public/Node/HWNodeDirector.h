@@ -186,7 +186,8 @@ private:
     FString PolicyNote;
     int32 SupplyStart = 6;
     float RetakeHours = -1.f;      // ?HWRetake= (hours occupied); -1 = a defence
-    float RunDifficulty = 1.f;     // enemy health and damage (HWNodeRules::OccupationDifficulty on a retake)
+    float RunDifficulty = 1.f;     // enemy health and damage (guild operation x OccupationDifficulty on a retake)
+    bool bGuildScale = true;       // ?HWGuildScale=0: one party's scale for testing alone (doc 203 §10)
     int32 RunExtraElites = 0;      // armoured elites added to the last wave (HWNodeRules::OccupationExtraElites)
     int32 FreePotions = 0;         // the medical-stock policy's potions, used before supplies
     float RegionServices[3] = { 1.f, 1.f, 1.f };   // ?HWRegion= logistics, recon, manufacturing (0..1)

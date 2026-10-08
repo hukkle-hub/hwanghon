@@ -113,7 +113,8 @@ function simulate(N, o = {}) {
 
   /* ── 적 ── */
   const enemies = []; let serial = 0; const proof = C.tier5Evidence();   /* v06 PIE 판정과 같은 증거 */
-  const waves = C.waveRunner(), m = R.machine({ commsHoldToFall: N.comms_hold_to_fall || 20 }); m.state = opt.retake ? 'retaking' : 'invasion';
+  const waveScale = Math.max(1, opt.waveScale | 0 || 1);   /* 길드 작전 배수: 웨이브 구성을 몇 벌 (문서 203 §10) */
+  const waves = C.waveRunner(waveScale), m = R.machine({ commsHoldToFall: N.comms_hold_to_fall || 20 }); m.state = opt.retake ? 'retaking' : 'invasion';
   let reserveLeft = 0, reserveUsed = false;
   function spawn(role) { const s = serial++, rr = N.role_routes[role], name = Array.isArray(rr) ? rr[s % rr.length] : rr || 'main', route = (N.routes[name] || []).map(P);
     /* 측면 길: 길 입구 «뒤» 150 에서 60 만 흩는다 (AHWNodeDirector::SpawnEnemy) — 입구에서 160 을 흩으면 길섶으로 떨어진 질주형이
@@ -330,7 +331,7 @@ function simulate(N, o = {}) {
   log(0, 'state', '준비 ' + prep + '초 (판은 침공부터 잰다)');
   while (t < opt.maxTime && !result) {
     const dt = opt.dt; t += dt;
-    const w = waves.tick(dt); if (w >= 0) { for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r);
+    const w = waves.tick(dt); if (w >= 0) { for (let rep = 0; rep < waveScale; rep++) for (const r of C.ROLES) for (let k = 0; k < C.WAVES[w].count[r]; k++) spawn(r);
       log(t, 'spawn', C.WAVES[w].id + ' ' + C.ROLES.filter(r => C.WAVES[w].count[r]).map(r => C.ARCHETYPE[r] + '×' + C.WAVES[w].count[r]).join(' ') + ' ThreatGrade=' + C.THREAT_GRADE, C.WAVES[w].id, 'T' + C.THREAT_GRADE);
       if (w === C.WAVES.length - 1 && extraElites > 0) { waves.alive += extraElites; for (let k = 0; k < extraElites; k++) spawn('armored_elite'); }   /* AHWNodeDirector::SpawnWave */
       log(t, 'wave', '웨이브 ' + (w + 1) + ' (' + C.waveSize(C.WAVES[w]) + ')', String(w + 1), 'spawned'); }
@@ -353,7 +354,7 @@ function simulate(N, o = {}) {
   if (!result) result = 'timeout';
   const dead = enemies.filter(e => e.dead), stuck = enemies.filter(e => !e.dead && e.stuck > 10);
   const hp = k => { const f = facility(k); return f ? Math.round(100 * f.hp / f.max) : null; };
-  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, wallGate: !!opt.wallGate, player: opt.player, difficulty: diff, extraElites, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
+  return { format: 'hwnode-run/1', source: 'sim', node: N.id, evacuate: !!opt.evacuate, ...(opt.debug ? { _enemies: enemies, _npcs: npcs } : {}), result, t: +t.toFixed(1), prep, opt: { policies: opt.policies, barricades: opt.barricades, tech: opt.tech, evacuate: !!opt.evacuate, wallGate: !!opt.wallGate, player: opt.player, difficulty: diff, extraElites, waveScale, retake: !!opt.retake, supply: useSupply ? opt.supply : undefined, region, partyScale: opt.partyScale || 0, party: opt.party ? opt.party.map(q => ({ name: q.name, job: q.job, guildRole: q.guildRole, dps: q.dps })) : undefined },
     gate: hp('gate'), generator: hp('generator'), comms: hp('comms'), turrets: fac.filter(f => f.kind === 'turret' && standing(f)).length,
     barricades: fac.filter(f => f.kind === 'barricade').map(f => f.id + ':' + Math.round(100 * f.hp / f.max)),
     kills: { player: dead.filter(e => e.killer === 'player').length, turret: dead.filter(e => e.killer === 'turret').length, guard: dead.filter(e => e.killer === 'guard').length },

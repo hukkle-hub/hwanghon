@@ -702,6 +702,12 @@ inline int WaveSize(const FWaveSpec& W)
     return N;
 }
 
+// A guild operation, not a party run (director 2026-10-08: «길드 기준으로 방어가능하게 … 터무니 없게 강해야지»): every wave
+// comes CountScale times over and every invader has GuildOperationHealthScale x health and damage. Measured in the
+// simulator (doc 203 §10): 8 and 12 defenders fall, 16 hold two runs in three, 20 (the guild's starting size) hold.
+constexpr float GuildOperationHealthScale = 3.f;
+constexpr int GuildOperationWaveScale = 5;
+
 // Drives the waves: start time or an early pull (the previous wave cleared, after a short breather).
 struct FWaveRunner
 {
@@ -711,6 +717,7 @@ struct FWaveRunner
     float ClearedAt = -1.f;
     float Breather = 8.f;
     int WaveCount = PrototypeAWaveCount;
+    int CountScale = 1;   // the wave's make-up spawned this many times (GuildOperationWaveScale in a guild operation)
 
     // Returns the wave index to spawn now, or -1.
     int Tick(float DeltaSeconds)
@@ -722,7 +729,7 @@ struct FWaveRunner
         const bool bPulled = NextWave > 0 && Alive == 0 && ClearedAt >= 0.f && Clock - ClearedAt >= Breather;
         if (!bDue && !bPulled) return -1;
         if (bPulled && !bDue) Clock = W.StartAt;  // later waves keep their spacing from the pulled one
-        Alive += WaveSize(W);
+        Alive += WaveSize(W) * CountScale;
         ClearedAt = -1.f;
         return NextWave++;
     }

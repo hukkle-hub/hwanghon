@@ -45,7 +45,7 @@ function compare(a, b) {
 /* UE 기록의 조건으로 시뮬을 돌린다. 플레이어 DPS 는 플레이어 피해 몫이 가장 가까운 값 */
 function simFor(ue, N = S.load(ue.node || 'namsan_n01'), dpsList = Array.from({ length: 24 }, (_, i) => 300 + i * 100)) {
   const o = ue.opt || {}, base = { policies: o.policies || [], barricades: o.barricades || [], tech: o.tech || null, evacuate: !!o.evacuate,
-    retake: !!o.retake, difficulty: o.difficulty || 1, extraElites: o.extraElites || 0, supply: o.supply, region: o.region, maxTime: o.retake ? 900 : 400 };
+    retake: !!o.retake, difficulty: o.difficulty || 1, extraElites: o.extraElites || 0, waveScale: o.waveScale || 1, supply: o.supply, region: o.region, maxTime: o.retake || (o.waveScale || 1) > 1 ? 900 : 400 };   /* waveScale: 길드 작전 (문서 203 §10) */
   const target = share(trim(ue));
   if (!(ue.dealt && ue.dealt.player > 0)) return { run: S.simulate(N, { ...base, player: null }), dps: null };
   let best = null;

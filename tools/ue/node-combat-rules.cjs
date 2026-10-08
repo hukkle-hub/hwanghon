@@ -108,12 +108,14 @@ const WAVES = [
   { id: 'W5_BREACH',   count: { normal: 4, runner: 2, breaker: 1, stalker: 1, armored_elite: 1, resonator: 0 }, startAt: 200 },
 ];
 const waveSize = w => ROLES.reduce((a, r) => a + w.count[r], 0);
-function waveRunner() {
-  return { nextWave: 0, alive: 0, clock: 0, clearedAt: -1, breather: 8, waveCount: WAVES.length,
+/* 길드 작전 (HWNodeRules::GuildOperationHealthScale · GuildOperationWaveScale — 문서 203 §10) */
+const GUILD_OPERATION = { health: 3, waves: 5 };
+function waveRunner(countScale = 1) {   /* countScale: 웨이브마다 같은 구성을 몇 벌 (길드 작전 배수 — HWNodeRules::FWaveRunner::CountScale) */
+  return { nextWave: 0, alive: 0, clock: 0, clearedAt: -1, breather: 8, waveCount: WAVES.length, countScale,
     tick(dt) { this.clock += dt; if (this.nextWave >= this.waveCount) return -1; const w = WAVES[this.nextWave];
       const due = this.clock >= w.startAt, pulled = this.nextWave > 0 && this.alive === 0 && this.clearedAt >= 0 && this.clock - this.clearedAt >= this.breather;
       if (!due && !pulled) return -1; if (pulled && !due) this.clock = w.startAt;
-      this.alive += waveSize(w); this.clearedAt = -1; return this.nextWave++; },
+      this.alive += waveSize(w) * this.countScale; this.clearedAt = -1; return this.nextWave++; },
     enemyDied(now) { if (this.alive > 0) this.alive--; if (this.alive === 0) this.clearedAt = now; },
     done() { return this.nextWave >= this.waveCount && this.alive === 0; } };
 }
@@ -167,7 +169,7 @@ const SUPPLY_COST = { barricade: 3, turret_repair: 2, potion: 1 };
 const TURRET_REPAIR_FRACTION = 0.5, TURRET_REPAIR_BELOW = 0.5, POTION_HEAL_FRACTION = 0.4, POTION_USE_BELOW = 0.9;   // ~BELOW: 이 몫 이하일 때만 쓴다
 const potionSource = (freeLeft, points) => freeLeft > 0 ? 'free' : points >= SUPPLY_COST.potion ? 'supply' : 'none';
 
-module.exports = { goesRoundTheFlank, defenseLine, TIER5_CHECKS, tier5Evidence, THREAT_GRADE, ARCHETYPE, RESONANCE, resonanceStacks, inResonance, resonanceMove, resonanceAttack, resonatorHoldPoint, RESONATOR_SELF_DEFENCE, RESONATOR_TRAIL, RESONATOR_PACK_RADIUS,
+module.exports = { GUILD_OPERATION, goesRoundTheFlank, defenseLine, TIER5_CHECKS, tier5Evidence, THREAT_GRADE, ARCHETYPE, RESONANCE, resonanceStacks, inResonance, resonanceMove, resonanceAttack, resonatorHoldPoint, RESONATOR_SELF_DEFENCE, RESONATOR_TRAIL, RESONATOR_PACK_RADIUS,
   THINK, thinkSeconds, ARMORED_ATTACKS, armoredAttackAt, counterAllowed, armoredCrackGrade, ARMORED_PERFECT_POSTURE, armoredStaggerSeconds, armoredWindupSeconds, NPC_IMPORTANCE, NPC_DISTANCE_PENALTY, npcImportance, npcPickScore,
   SUPPLY_COST, TURRET_REPAIR_FRACTION, TURRET_REPAIR_BELOW, POTION_HEAL_FRACTION, POTION_USE_BELOW, potionSource, killWeight, defenseCredit, pingCredits, DEFENSE_RADIUS, PING_LIFE, PING_RADIUS, ROLES, NPC_ROLES, STATS, roleStats, chooseTarget, blockedByGate, WAVES, waveSize, waveRunner,
   generatorPower, effectivePower, TURRET_BASE_DPS, TURRET_RANGE, turretDps, eliteArmor,

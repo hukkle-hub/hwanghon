@@ -53,6 +53,10 @@ test('전투 규칙(JS): 5급 — 공진(중첩 1)·철갑 세 공격·추적형
  for(const [a,g,crack,st] of T.armored.crack){ assert.equal(C.armoredCrackGrade(a,g),crack,a+' '+g); assert.ok(near(C.armoredStaggerSeconds(a,g),st)); }
  for(const [a,w] of T.armored.windup) assert.equal(C.armoredWindupSeconds(a),w);
  for(const [g,e,l] of T.lines) assert.equal(C.defenseLine(g,e),l,'line '+g+' '+e);
+ /* 길드 작전 (문서 203 §10): 웨이브 ×5 · 체력·피해 ×3 */
+ const GU=V.combat.guild; assert.deepEqual(C.GUILD_OPERATION,{health:GU.health,waves:GU.waves});
+ { const w=C.waveRunner(GU.run.count_scale), out=[], k=[...GU.run.kill_steps]; for(let i=0;i<500;i++){ const n=w.tick(0.5); if(n>=0) out.push([n,i,+w.clock.toFixed(2),w.alive]); while(k.length&&k[0]<=i){ k.shift(); w.enemyDied(w.clock); } }
+   assert.deepEqual(out,GU.run.spawned,'guild wave run'); assert.equal(w.done(),GU.run.done); }
  for(const [h,n,d,sc] of T.npc_pick) assert.ok(near(C.npcPickScore(h,n,d),sc),'pick '+h+' '+n);
  for(const ev of T.evidence){ const E=C.tier5Evidence(); for(const [op,a,b,c] of ev.ops){ if(op==='spawn')E.noteSpawn(a,b); if(op==='target')E.noteTarget(a,b); if(op==='res')E.noteResonance(a,b,c); if(op==='hit')E.noteDefenderHit(a,b,c); }
   assert.deepEqual(C.TIER5_CHECKS.map((_,i)=>E.check(i)?1:0),ev.checks,JSON.stringify(ev.ops)); assert.equal(E.pass(),ev.pass); }
@@ -119,6 +123,10 @@ function cpp(){ const E={stable:'Stable',uneasy:'Uneasy',alert:'Alert',invasion:
   T.armored.cycle.forEach(([n,a])=>L.push(`CHECK(ArmoredAttackAt(${n})==EArmoredAttack::${AA[a]},"cycle ${n}");`));
   T.armored.crack.forEach(([a,g,c,st],i)=>L.push(`CHECK(ArmoredCrackGrade(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})==ECounterGrade::${G[c]}&&std::fabs(ArmoredStaggerSeconds(EArmoredAttack::${AA[a]},ECounterGrade::${G[g]})-${f(st)})<0.001f,"crack ${i}");`));
   T.armored.windup.forEach(([a,w])=>L.push(`CHECK(std::fabs(ArmoredWindupSeconds(EArmoredAttack::${AA[a]})-${f(w)})<0.0001f&&CounterAllowed(EArmoredAttack::${AA[a]})==${a!=='overhead_crush'},"windup ${a}");`));
+  { const GU=K.guild; L.push(`CHECK(std::fabs(GuildOperationHealthScale-${f(GU.health)})<0.001f&&GuildOperationWaveScale==${GU.waves},"guild operation");`,
+    `{ FWaveRunner W; W.CountScale=${GU.run.count_scale}; int N=0; const int Kill[]={${GU.run.kill_steps.join(',')}}; int KI=0; const int KN=${GU.run.kill_steps.length}; int Got[16][3];`,
+    `for(int I=0;I<500;++I){ const int S=W.Tick(0.5f); if(S>=0&&N<16){ Got[N][0]=S; Got[N][1]=I; Got[N][2]=W.Alive; ++N; } while(KI<KN&&Kill[KI]<=I){ ++KI; W.EnemyDied(W.Now()); } }`,
+    `CHECK(N==${GU.run.spawned.length},"guild run count");`, ...GU.run.spawned.map(([s2,i,,a],j)=>`CHECK(N>${j}&&Got[${j}][0]==${s2}&&Got[${j}][1]==${i}&&Got[${j}][2]==${a},"guild run ${j}");`), `CHECK(W.Done()==${GU.run.done},"guild run done"); }`); }
   const DL={main_gate:'MainGate',central_plaza:'CentralPlaza',comms_final:'CommsFinal'};
   T.lines.forEach(([g,e,l],i)=>L.push(`CHECK(DefenseLine(${g},${e})==EDefenseLine::${DL[l]},"line ${i}");`));
   T.npc_pick.forEach(([h,n,d,sc],i)=>L.push(`CHECK(std::fabs(NpcPickScore(EEnemyRole::${RL[h]},ENpcRole::${NR[n]},${f(d)})-(${f(sc)}))<0.001f,"npc pick ${i}");`));

@@ -200,6 +200,7 @@ import { basis, createMap } from './js/mmo/map2d.js';
 import { ZONES } from './js/mmo/zones.js';
 import { REGIONS, levelOf } from './js/mmo/regions.js';
 import { CLAVE_MOTIONS,claveCounterActive,setupBossMotion,applyBossAction,prepareBossMotion,updateBossMotion,bossHitReact,bossCounterBurst,hideBossMotion } from './js/mmo/boss-motion.js';
+import { setupDominator,applyDominatorAction,updateDominator,hideDominator } from './js/mmo/dominator-motion.js';   /* 2급 지배형 (문서 204) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
 /* 맵을 받는 동안 파티 서버를 미리 깨운다 — 잠든 Render 는 첫 요청에 30초쯤 걸린다 */
@@ -525,6 +526,7 @@ const bossEl=document.getElementById('boss'), vig=document.getElementById('vig')
 function bossTag(o){ const b=o.b; o.tag=document.createElement('div'); o.tag.className='tag bs'; o.tag.innerHTML=String(b.name).replace(/[<>&]/g,'')+'<small>'+String(b.title||'').replace(/[<>&]/g,'')+'</small>'; document.getElementById('hud').appendChild(o.tag); }   /* 체력 막대 없음 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
 const bosses=meta.bosses.map(b=>{ const o={ b, root:null, model:null, mixer:null, tag:null, netAct:null };
   if(!b.model){ bossTag(o); return o; }   /* 모델이 아직 없는 보스(박 준장·케이블카 드로퍼 …) — 자리와 이름표만 */
+  if(b.ai==='dominator'){ load(b.model).then(gl=>{ setupDominator(o,gl,scene,FLOOR); if(o.netAct) applyDominatorAction(o,o.netAct); bossTag(o); if(o.alive!==undefined) bossVis(o); }).catch(e=>console.warn('[dominator]',b.id,e)); return o; }
   load(b.model).then(gl=>{ const root=gl.scene; root.traverse(m=>{ if(m.isMesh){ m.frustumCulled=false; } });
     const box=new THREE.Box3().setFromObject(root), h=box.max.y-box.min.y||1, displayH=b.visualH||b.h, k=displayH?displayH/h:(b.scale||1); root.scale.setScalar(k);
     box.setFromObject(root);   /* 발을 바닥에, 가운데를 보스 자리에 — 보스가 바닥에 파묻혔던 일(CLAUDE.md §1) */
@@ -554,7 +556,7 @@ function setHp(o, r){ o.hp=r; }   /* 화면에는 안 보인다 — 혼자일 �
 const spawnRing=new THREE.Mesh(new THREE.RingGeometry(0.94,1,96),new THREE.MeshBasicMaterial({ color:0xff3020, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false })); spawnRing.rotation.x=-Math.PI/2; spawnRing.position.y=FLOOR+0.06; scene.add(spawnRing); let ringT=0;
 function bossSpawn(o, fx=true){ o.alive=true; o.dieT=0;if(net&&o.root){o.root.position.x=o.b.x;o.root.position.z=o.b.z;}if(o.fx&&!net&&!o.netAct){const now=bossNow();applyBossAction(o,{id:o.b.id,x:o.root.position.x,z:o.root.position.z,yaw:o.root.rotation.y,motion:'idle',skill:'',seq:(o.motionSeq||0)+1,startedAt:now,endsAt:now+780,counterOpen:0,counterClose:0},now);}setHp(o,1); bossVis(o); if(!fx) return; o.spawnT=1.4; ringT=1.2; spawnRing.position.x=o.b.x; spawnRing.position.z=o.b.z;
   const p=me.root.position; if(Math.hypot(p.x-o.b.x,p.z-o.b.z)<45) shakeT=0.6; }
-function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);setHp(o,0); if(!net) o.respawn=30; }
+function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);hideDominator(o);setHp(o,0); if(!net) o.respawn=30; }
 /* 피해 숫자 — 보스 머리 위로 떠오른다 */
 const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);
   const p=me.root.position,bx=o.root?.position.x??o.b.x,bz=o.root?.position.z??o.b.z,k=Math.min(0.45,1.2/Math.max(0.1,Math.hypot(p.x-bx,p.z-bz)));
@@ -570,7 +572,7 @@ function selfPacket(m){
  if(kind==='evade'){selfFloat('회피','evade');return;}
  if(kind==='respawn'){deathEl.hidden=true;selfDead=false;toast('출발점에서 다시 일어섰습니다');return;}
  if(amount>0){selfFloat('−'+amount.toLocaleString('ko-KR'),'taken');hurtT=.42;shakeT=Math.max(shakeT,kind==='dead'?.55:.28);}
- if(kind==='dead'){deathEl.hidden=false;announce('클레이브에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}
+ if(kind==='dead'){deathEl.hidden=false;const by=bosses.find(x=>x.b.id===h[2]);announce(esc(by?by.b.name+(by.b.ai==='dominator'?' · '+(by.b.title||''):''):'보스')+'에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}
 }
 function nearBoss(){ const p=me.root.position; let best=null, bd=1e9; for(const o of bosses){ if(!o.alive) continue; const x=o.root?.position.x??o.b.x,z=o.root?.position.z??o.b.z,d=Math.hypot(x-p.x,z-p.z); if(d<=reachOf(o.b)&&d<bd){ best=o; bd=d; } } return best; }
 function hitBoss(sk){ const o=nearBoss(); if(!o) return false;
@@ -597,7 +599,7 @@ function onBossMsg(m){
     selfPacket(m);
     for(const [id,alive] of m.bosses||[]){ const o=bosses.find(x=>x.b.id===id); if(!o) continue;
       if(alive&&!o.alive) bossSpawn(o, m.type==='field'); else if(!alive&&o.alive) bossDie(o); }
-    for(const a of m.bossActs||[]){const o=bosses.find(x=>x.b.id===a.id);if(o)applyBossAction(o,a,bossNow());}
+    for(const a of m.bossActs||[]){const o=bosses.find(x=>x.b.id===a.id);if(o){if(a.ai==='dominator')applyDominatorAction(o,a);else applyBossAction(o,a,bossNow());}}
     for(const h of m.bossImpacts||[]){const o=bosses.find(x=>x.b.id===h[0]);if(o)sharedBossImpact(o,{seq:h[1],x:h[2],z:h[3],crit:!!h[4],counter:!!h[5],at:h[6]});}
     if(m.loot){ loots.forEach(L=>L.seen=false); m.loot.forEach(lootAdd); loots.forEach(L=>{ if(!L.seen) lootDel(L); }); }
     return; }
@@ -605,7 +607,7 @@ function onBossMsg(m){
   if(m.type==='fieldLooted'){ const d=IT.get(m.item)||{name:m.item}; toast(d.name+' 획득'); return; }
   if(m.type==='lootError'){ toast(m.message); return; }
   if(m.type==='announce'){ const here=m.zone===ZONE;
-    if(m.kind==='bossSpawn') announce('⚠ 필드 보스 출현<b>'+esc(m.name)+'</b>'+esc(zoneTitle(m.zone))+' · '+esc(m.place), 'big', here?7:5);
+    if(m.kind==='bossSpawn') announce((/^t2_dominator/.test(m.boss)?'⚠ 2급 지배형 출현 · '+esc(m.title||''):'⚠ 필드 보스 출현')+'<b>'+esc(m.name)+'</b>'+esc(zoneTitle(m.zone))+' · '+esc(m.place), 'big', here?7:5);
     if(m.kind==='bossDown'){ const drops=(m.drops||[]).map(d=>'<b class="'+esc(d.rarity)+'" style="color:'+((RAR[d.rarity]||{}).color||'#fff')+'">'+esc(d.name)+'</b>').join(' ');
       announce(esc(m.name)+' 처치<b>'+esc(m.top||'')+'</b>'+((m.players||1)>1?'외 '+(m.players-1)+'명':'혼자')+(drops?' · 드롭 '+drops:''), '', 7); }
     if(m.kind==='bossPartBreak'){announce('⚙ '+esc(m.name)+'<b>셔터 파괴</b>공격 방식이 바뀝니다','big',5);if(here){window.TW_SFX?.play('brk');if(!REDUCED)shakeT=Math.max(shakeT,.48);}}
@@ -616,6 +618,7 @@ function bossFrame(dt){
     if(o.spawnT>0){ o.spawnT=Math.max(0,o.spawnT-dt); const k=1-o.spawnT/1.4, e=1-Math.pow(1-k,3); o.root.scale.setScalar(0.55+0.45*e); o.root.position.y=(o.b.fly||0)-(1-e)*1.2; }
     else if(o.dieT>0){ o.dieT=Math.max(0,o.dieT-dt); const k=o.dieT/1.2; o.root.scale.setScalar(0.4+0.6*k); o.root.position.y=(o.b.fly||0)-(1-k)*1.5; if(o.dieT===0){ o.root.scale.setScalar(1); bossVis(o); } }
     if(o.respawn>0){ o.respawn-=dt; if(o.respawn<=0){ o.respawn=0; bossSpawn(o); announce('⚠ 필드 보스 출현<b>'+esc(o.b.name)+'</b>'+esc(o.b.place||''),'big',5); } }
+    if(o.dom&&(o.alive||o.dieT>0)){const ev=updateDominator(o,dt,bossNow());if(ev&&ev.impact&&o.alive){const d=Math.hypot(o.root.position.x-me.root.position.x,o.root.position.z-me.root.position.z);if(d<14){if(!REDUCED)shakeT=Math.max(shakeT,.16);window.TW_SFX?.play('brk');}}}
     if(o.fx&&(o.alive||o.dieT>0||o.fx.tailT>0)){const ev=updateBossMotion(o,dt,bossNow())||{},d=Math.hypot(o.root.position.x-me.root.position.x,o.root.position.z-me.root.position.z);if(!REDUCED&&o.alive&&ev.step&&d<9)shakeT=Math.max(shakeT,.018+(9-d)*.0025);if(o.alive&&ev.impact&&d<14){if(!REDUCED)shakeT=Math.max(shakeT,.14);window.TW_SFX?.play('brk');}} }
   if(ringT>0){ ringT=Math.max(0,ringT-dt); const k=1-ringT/1.2; spawnRing.scale.setScalar(1.5+k*8); spawnRing.material.opacity=(1-k)*0.6; }
   for(let i=anns.length-1;i>=0;i--){ const A=anns[i]; A.t-=dt; if(A.t<0.6) A.el.style.opacity=Math.max(0,A.t/0.6); if(A.t<=0){ A.el.remove(); anns.splice(i,1); } }
@@ -749,7 +752,7 @@ function zones(dt){ zoneT+=dt; const p=me.root.position; if(mistMesh){ mistMesh.
   if(g!==gateNear){ gateNear=g; gateBtn.hidden=!g; if(g){ const dg=g.kind==='dungeon'; gateBtn.className='gatebtn hit'+(dg?' dg':''); gateBtn.innerHTML='<span>'+(dg?'⚔ 들어가기':'➜ 이동')+'<small>'+String(g.label).replace(/[<>&]/g,'')+'</small></span>'; } }
   let b=null; for(const o of bosses){ const bx=o.root?.position.x??o.b.x,bz=o.root?.position.z??o.b.z,d=Math.hypot(bx-p.x,bz-p.z); if(d<o.b.r) b=o;
     if(o.mixer&&(!o.fx||o.alive||o.dieT>0||o.fx.tailT>0)){if(o.fx)prepareBossMotion(o,bossNow());o.mixer.update(dt);}if(o.root&&o.b.fly)o.root.position.y=o.b.fly+Math.sin(zoneT*1.3)*0.5;
-    if(o.root&&!o.fx&&d<o.b.r*2){const yaw=Math.atan2(p.x-bx,p.z-bz);let dy=yaw-o.root.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));o.root.rotation.y+=dy*Math.min(1,dt*1.5);} }
+    if(o.root&&!o.fx&&!o.dom&&d<o.b.r*2){const yaw=Math.atan2(p.x-bx,p.z-bz);let dy=yaw-o.root.rotation.y;dy=Math.atan2(Math.sin(dy),Math.cos(dy));o.root.rotation.y+=dy*Math.min(1,dt*1.5);} }
   const bk=b?b.b.id+(b.alive?1:0):'';
   if(bk!==inBossK){ inBossK=bk; inBoss=b; bossEl.hidden=!b; vig.style.opacity=b&&b.alive?1:0; if(b) bossEl.innerHTML=b.alive?'보스 구역<b>'+esc(b.b.name)+'</b>'+esc(b.b.title):'보스 구역<b style="color:#bbb;text-shadow:none">'+esc(b.b.name)+'</b>지금은 없다 · 주기마다 나타난다'; }
   if(toastT>0){ toastT-=dt; if(toastT<=0) toastEl.hidden=true; }

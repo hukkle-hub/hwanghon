@@ -5,7 +5,7 @@
    걷는 띠·출발점은 맵 굽기 결과(maps/2d/<zone>/map.json)를 그대로 읽는다 — 한 곳에서만 정한다. */
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
-const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
+const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),DOM=require('./field-dominator.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
 const ANIMS=['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4'];   /* 스킬 1~4 — 다른 사람에게도 동작이 보이게 */
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
@@ -95,17 +95,17 @@ class Field{
     if(r&&r.state==='alive'){ o.alive=true; o.nextAt=0; }
     else if(r&&r.state==='wait'&&r.next_at>now-cycle.period) o.nextAt=r.next_at;
     else { o.nextAt=CY.nextSpawn(cycle, now, { rng:this.rng }); this.store?.bossSave(o.id,o.zone,'wait',o.nextAt,now); }
-    COMBAT.setup(o,now); this.bosses.set(o.id,o); } }
+    COMBAT.setup(o,now); DOM.setup(o,now); this.bosses.set(o.id,o); } }   /* DOM: 2급 지배형 (문서 204) */
   return this.bosses; }
  /* 20 Hz 에서: 출현·클레이브 전투·사망 복귀·바닥 장비를 함께 갱신한다. */
  tickBosses(now=Date.now()){
   for(const o of this.bosses.values()) if(!o.alive&&o.nextAt&&now>=o.nextAt) this.spawnBoss(o, now);
-  for(const o of this.bosses.values()) COMBAT.tick(this,o,now);
+  for(const o of this.bosses.values()){ COMBAT.tick(this,o,now); DOM.tick(this,o,now); }
   for(const p of this.players.values()) if(p.dead&&now>=p.respawnAt) this.respawn(p,now);
   for(const [id,s] of this.life)if(now>=s.expires)this.life.delete(id);
   for(const [k,l] of this.loot) if(now>=l.expires) this.loot.delete(k); }
  spawnBoss(o, now=Date.now()){ o.alive=true; o.hp=o.max; o.nextAt=0; o.dmg.clear(); o.names.clear(); o.last.clear(); o.impacts.length=0;o.ver++;
-  COMBAT.reset(o,now);
+  COMBAT.reset(o,now); DOM.reset(o,now);
   this.store?.bossSave(o.id,o.zone,'alive',0,now);
   this.emit({ type:'announce', kind:'bossSpawn', zone:o.zone, boss:o.id, name:o.name, title:o.title, place:o.place }); return o; }
  hit(id, msg, profile, now=Date.now(), opt={}){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.');
@@ -176,7 +176,7 @@ class Field{
  /* 지역 안 보스 상태 [id, 살아 있나] + 서버 권위 동작 + 반경 안 바닥 장비 [id, 아이템, x, z, 내가 먼저인가]
     보스 체력은 보내지 않는다 — 디렉터 2026-10-06 «보스의 체력바는 안 나왔으면 좋겠어. 나오면 재미없지» (리니지처럼) */
  bossView(r, now=Date.now()){ const bs=[], bossActs=[], bossImpacts=[], loot=[];
-  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o);if(a)bossActs.push(a);
+  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o)||DOM.view(o);if(a)bossActs.push(a);
    if((o.x-r.x)**2+(o.z-r.z)**2<=AOI*AOI)for(const h of o.impacts)if(now-h.at<=BOSS_IMPACT_LIFE)bossImpacts.push([o.id,h.seq,+h.x.toFixed(2),+h.z.toFixed(2),h.crit?1:0,h.counter?1:0,h.at]); }
   for(const l of this.loot.values()){ if(l.zone!==r.zone||(l.x-r.x)**2+(l.z-r.z)**2>AOI*AOI) continue;
    loot.push([l.id, l.item, +l.x.toFixed(2), +l.z.toFixed(2), (!l.owner||l.owner===r.id||now>=l.ownerUntil)?1:0]); }

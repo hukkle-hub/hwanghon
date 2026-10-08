@@ -6474,7 +6474,62 @@
  },
  "exits": [],
  "gates": [],
- "bosses": [],
+ "bosses": [
+  {
+   "id": "t2_dominator_f",
+   "name": "2급 지배형",
+   "title": "가시관 (가안)",
+   "x": 37.6,
+   "z": 70.6,
+   "r": 16,
+   "place": "중정로 폐허 거리",
+   "model": "art/3d/sera_anim.glb",
+   "h": 2.25,
+   "visualH": 2.25,
+   "ai": "dominator",
+   "tint": 2755602,
+   "glow": 9043984,
+   "kind": "field_monster",
+   "grade": 2,
+   "canon": "2급 지배형 — 승인 시트 docs/design/ref/field-monsters-grade12/grade1-reference.png"
+  },
+  {
+   "id": "t2_dominator_silence",
+   "name": "2급 지배형",
+   "title": "침묵 (가안)",
+   "x": -83.3,
+   "z": 147.3,
+   "r": 16,
+   "place": "중앙로 폐허 거리",
+   "model": "art/3d/ryu_anim.glb",
+   "h": 2.2,
+   "visualH": 2.2,
+   "ai": "dominator",
+   "tint": 1837838,
+   "glow": 7995408,
+   "kind": "field_monster",
+   "grade": 2,
+   "canon": "2급 지배형 — 승인 시트 docs/design/ref/field-monsters-grade12/grade2-silence-reference.png"
+  },
+  {
+   "id": "t2_dominator_bloodflower",
+   "name": "2급 지배형",
+   "title": "혈화 (가안)",
+   "x": 140.4,
+   "z": 4,
+   "r": 16,
+   "place": "폐허 거리",
+   "model": "art/3d/kain_anim.glb",
+   "h": 2.35,
+   "visualH": 2.35,
+   "ai": "dominator",
+   "tint": 1706252,
+   "glow": 9043986,
+   "kind": "field_monster",
+   "grade": 2,
+   "canon": "2급 지배형 — 승인 시트 docs/design/ref/field-monsters-grade12/grade2-blood-flower-reference.png"
+  }
+ ],
  "flicker": null,
  "water": null,
  "kind": "field",
@@ -6489,7 +6544,7 @@
     78,
     81
    ],
-   "mobs": "감염체 무리 (가안)",
+   "mobs": "2급 지배형 · 감염체 무리 (가안)",
    "danger": 1,
    "poly": [
     [
@@ -6518,7 +6573,7 @@
     80,
     83
    ],
-   "mobs": "감염체 무리 (가안)",
+   "mobs": "2급 지배형 · 감염체 무리 (가안)",
    "danger": 2,
    "poly": [
     [
@@ -6547,7 +6602,7 @@
     81,
     83
    ],
-   "mobs": "감염체 무리 (가안)",
+   "mobs": "2급 지배형 · 감염체 무리 (가안)",
    "danger": 3,
    "poly": [
     [

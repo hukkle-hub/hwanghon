@@ -10011,7 +10011,44 @@
  },
  "exits": [],
  "gates": [],
- "bosses": [],
+ "bosses": [
+  {
+   "id": "t2_dominator_m",
+   "name": "2급 지배형",
+   "title": "흑의 (가안)",
+   "x": 96.3,
+   "z": 39.4,
+   "r": 16,
+   "place": "중앙로 폐허 거리",
+   "model": "art/3d/kain_anim.glb",
+   "h": 2.35,
+   "visualH": 2.35,
+   "ai": "dominator",
+   "tint": 1706510,
+   "glow": 7995408,
+   "kind": "field_monster",
+   "grade": 2,
+   "canon": "2급 지배형 — 승인 시트 docs/design/ref/field-monsters-grade12/grade2-reference.png"
+  },
+  {
+   "id": "t2_dominator_crimson",
+   "name": "2급 지배형",
+   "title": "붉은 검 (가안)",
+   "x": 339,
+   "z": -100.9,
+   "r": 16,
+   "place": "폐허 거리",
+   "model": "art/3d/sera_anim.glb",
+   "h": 2.2,
+   "visualH": 2.2,
+   "ai": "dominator",
+   "tint": 2492944,
+   "glow": 10092564,
+   "kind": "field_monster",
+   "grade": 2,
+   "canon": "2급 지배형 — 승인 시트 docs/design/ref/field-monsters-grade12/grade2-crimson-blade-reference.png"
+  }
+ ],
  "flicker": null,
  "water": null,
  "kind": "field",
@@ -10052,7 +10089,7 @@
     75,
     78
    ],
-   "mobs": "감염체 무리 (가안)",
+   "mobs": "2급 지배형 · 감염체 무리 (가안)",
    "danger": 2,
    "poly": [
     [
@@ -10081,7 +10118,7 @@
     76,
     78
    ],
-   "mobs": "감염체 무리 (가안)",
+   "mobs": "2급 지배형 · 감염체 무리 (가안)",
    "danger": 3,
    "poly": [
     [

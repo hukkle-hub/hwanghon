@@ -213,6 +213,8 @@ bool AHWNodeDirector::ConfigureNode(FName NodeId, const FString& Options)
 
     // the "T5 / ROLE / TARGET" development labels (v06); ?HWLabels=0 for the phone frame-drop check
     bShowLabels = UGameplayStatics::ParseOption(Options, TEXT("HWLabels")) != TEXT("0");
+    // a guild operation by default (x3 health and damage, every wave x5); ?HWGuildScale=0 to try the node alone
+    bGuildScale = UGameplayStatics::ParseOption(Options, TEXT("HWGuildScale")) != TEXT("0");
     return true;
 }
 
@@ -627,8 +629,9 @@ void AHWNodeDirector::StartInvasion()
 {
     if (!Config || !Machine.StartInvasion()) return;
     Waves = HWNodeRules::FWaveRunner();
+    Waves.CountScale = bGuildScale ? HWNodeRules::GuildOperationWaveScale : 1;
     PrepLeft = 0.f;
-    RunDifficulty = 1.f;
+    RunDifficulty = bGuildScale ? HWNodeRules::GuildOperationHealthScale : 1.f;
     RunExtraElites = 0;
     BeginRunLog();
     SetState(Machine.State);
@@ -637,9 +640,12 @@ void AHWNodeDirector::StartInvasion()
 void AHWNodeDirector::SpawnWave(int32 WaveIndex)
 {
     const HWNodeRules::FWaveSpec Spec = HWNodeRules::PrototypeAWave(WaveIndex);
-    for (int32 RoleIndex = 0; RoleIndex < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++RoleIndex)
+    for (int32 Copy = 0; Copy < Waves.CountScale; ++Copy)   // a guild operation: the make-up comes this many times over
     {
-        for (int32 N = 0; N < Spec.Count[RoleIndex]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(RoleIndex), SpawnSerial++);
+        for (int32 RoleIndex = 0; RoleIndex < static_cast<int32>(HWNodeRules::EEnemyRole::Count); ++RoleIndex)
+        {
+            for (int32 N = 0; N < Spec.Count[RoleIndex]; ++N) SpawnEnemy(static_cast<EHWNodeEnemyRole>(RoleIndex), SpawnSerial++);
+        }
     }
     // the package's evidence line (v04: «HUD/로그상 ThreatGrade=5»)
     FString Line;
@@ -647,7 +653,7 @@ void AHWNodeDirector::SpawnWave(int32 WaveIndex)
     {
         if (Spec.Count[RoleIndex] > 0) Line += FString::Printf(TEXT(" %s x%d"), ANSI_TO_TCHAR(HWNodeRules::ArchetypeId(static_cast<HWNodeRules::EEnemyRole>(RoleIndex))), Spec.Count[RoleIndex]);
     }
-    UE_LOG(LogTemp, Display, TEXT("[HWNode] wave %d:%s ThreatGrade=%d"), WaveIndex + 1, *Line, HWNodeRules::NodeThreatGrade);
+    UE_LOG(LogTemp, Display, TEXT("[HWNode] wave %d:%s x%d ThreatGrade=%d"), WaveIndex + 1, *Line, Waves.CountScale, HWNodeRules::NodeThreatGrade);
     // a retake's last wave carries the occupation tier's extra armoured elites (the wave runner counts them too)
     if (WaveIndex == Waves.WaveCount - 1 && RunExtraElites > 0)
     {
@@ -1370,9 +1376,10 @@ void AHWNodeDirector::StartRetakeRun()
     if (!Config || !Machine.StartRetake()) return;
     // the occupiers fortified while the node was theirs: tougher enemies, armoured elites added to the last wave
     const HWNodeRules::EOccupationTier Tier = HWNodeRules::OccupationTier(Machine.OccupiedHours);
-    RunDifficulty = HWNodeRules::OccupationDifficulty(Tier);
+    RunDifficulty = HWNodeRules::OccupationDifficulty(Tier) * (bGuildScale ? HWNodeRules::GuildOperationHealthScale : 1.f);
     RunExtraElites = HWNodeRules::OccupationExtraElites(Tier);
     Waves = HWNodeRules::FWaveRunner();
+    Waves.CountScale = bGuildScale ? HWNodeRules::GuildOperationWaveScale : 1;
     PrepLeft = 0.f;
     BeginRunLog();
     SetState(Machine.State);
@@ -1484,7 +1491,8 @@ void AHWNodeDirector::DrawHud() const
                     Boss ? 100.f * Boss->GetHealth() / FMath::Max(1.f, Boss->GetMaxHealth()) : 0.f,
                     BossCore ? 100.f * BossCore->GetCoreArmorFraction() : 100.f,
                     BossCore && BossCore->CanFinish() ? TEXT("   FINISH: hit = kill / Execute (V) = extract") : TEXT(""))
-                : FString::Printf(TEXT("Wave %d/%d   %.0fs   enemies %d   kills %d (you %d)%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount, Waves.Now(), Waves.Alive, Kills, PlayerKills, *Next),
+                : FString::Printf(TEXT("Wave %d/%d%s   %.0fs   enemies %d   kills %d (you %d)%s"), FMath::Min(Waves.NextWave, Waves.WaveCount), Waves.WaveCount,
+                    Waves.CountScale > 1 ? *FString::Printf(TEXT(" (GUILD OPERATION x%d, enemies x%.0f)"), Waves.CountScale, RunDifficulty) : TEXT(""), Waves.Now(), Waves.Alive, Kills, PlayerKills, *Next),
             FColor::White);
         const FString RetakeNote = Machine.State == HWNodeRules::ENodeState::Retaking
             ? FString::Printf(TEXT("   RETAKE x%.2f, +%d elite(s)"), RunDifficulty, RunExtraElites) : FString();
@@ -1576,9 +1584,9 @@ void AHWNodeDirector::BeginRunLog()
     }
     // supply = points left when the run starts (barricades already paid); retake runs carry the tier's difficulty and extra elites;
     // region = Seoul's logistics, recon, manufacturing service (?HWRegion=)
-    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d,\"retake\":%s,\"difficulty\":%.2f,\"extraElites\":%d,\"region\":[%.3f,%.3f,%.3f]}"),
+    RunOptions = FString::Printf(TEXT("{\"policies\":[%s],\"barricades\":[%s],\"tech\":%s,\"evacuate\":%s,\"guildRole\":\"%s\",\"supply\":%d,\"retake\":%s,\"difficulty\":%.2f,\"extraElites\":%d,\"waveScale\":%d,\"region\":[%.3f,%.3f,%.3f]}"),
         *FString::Join(PolicyList, TEXT(",")), *FString::Join(BarricadeList, TEXT(",")), *TechOrder, bAnyEvacuated ? TEXT("true") : TEXT("false"),
-        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points, Machine.State == HWNodeRules::ENodeState::Retaking ? TEXT("true") : TEXT("false"), RunDifficulty, RunExtraElites,
+        HWNodeDirectorLocal::GuildRoleName(GuildRole), Supply.Points, Machine.State == HWNodeRules::ENodeState::Retaking ? TEXT("true") : TEXT("false"), RunDifficulty, RunExtraElites, Waves.CountScale,
         RegionServices[0], RegionServices[1], RegionServices[2]);
 }
 

@@ -115,3 +115,15 @@ test('시뮬: 성문 앞 전선 — 플레이어가 정문 밖에서 싸우고, 
   assert.ok(solo.events.some(e => e.kind === 'line' && e.id === 'central_plaza'), '정문이 무너졌는데 방어선이 광장으로 안 물러났다');
   assert.equal(none.line, 'comms_final', '발전기까지 무너진 판의 마지막 방어선');
 });
+/* 디렉터 2026-10-08 «길드 기준으로 방어가능하게 … 터무니 없게 강해야지» (문서 203 §10): UE 기본은 길드 작전 —
+   웨이브 ×5 · 체력·피해 ×3. 8명은 무너지고 길드 초기 인원 20명이면 막는다 */
+test('시뮬: 길드 작전 — 8명은 함락, 20명은 막는다 (웨이브 ×5 · 체력·피해 ×3)', () => {
+  const C = require('../tools/ue/node-combat-rules.cjs'), G = C.GUILD_OPERATION;
+  const JOBS = ['gate', 'gate', 'escort', 'generator', 'gate', 'escort', 'rescue', 'gate', 'generator', 'escort'], ROLES = ['leader', 'vice', 'combat', 'supply', 'craft', 'member'];
+  const guild = n => Array.from({ length: n }, (_, i) => ({ name: 'G' + i, job: JOBS[i % JOBS.length], guildRole: ROLES[Math.min(i, 5)], dps: 1000, counter: 0.35 }));
+  const run8 = S.simulate(N, { party: guild(8), seed: 7, difficulty: G.health, waveScale: G.waves, maxTime: 900 });
+  const run20 = S.simulate(N, { party: guild(20), seed: 7, difficulty: G.health, waveScale: G.waves, maxTime: 900 });
+  assert.equal(run8.result, 'fallen', '8명이 길드 작전을 막았다 — 길드 기준이 아니다');
+  assert.equal(run20.result, 'held', '20명(길드 초기 인원)이 못 막았다');
+  assert.equal(run20.spawned, 36 * G.waves, '웨이브 ×' + G.waves + ' 이 아니다');
+});

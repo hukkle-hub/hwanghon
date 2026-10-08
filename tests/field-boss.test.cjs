@@ -27,7 +27,7 @@ test('보스 표: 맵의 보스마다 줄이 있고, 드롭은 그 보스의 장
  for(const o of f.bosses.values()){ assert.ok(T.BOSSES[o.id],'표에 '+o.id);
   for(const g of T.BOSSES[o.id].drops){ assert.ok(g.rate>0&&g.rate<1,o.id+' 확률 '+g.rate);
    for(const id of g.pick){ const d=C.equipment.find(i=>i.id===id); assert.ok(d,'아이템 '+id); assert.equal(d.src,'boss'); } } }
- assert.equal(f.bosses.size,13,'원작 보스 13자리');
+ const FM=require('../server/field-monsters.cjs').FIELD_MONSTERS; assert.equal([...f.bosses.keys()].filter(id=>!FM[id]).length,13,'원작 보스 13자리'); assert.equal(f.bosses.size,13+Object.keys(FM).length,'+ 필드 몬스터 (2급 지배형, 문서 204)');
  const clave=T.BOSSES.clave.drops; assert.equal(clave.find(g=>g.pick.includes('w_clave_blade')).rate,0.015,'전설 무기 1.5%');
  assert.equal(clave.find(g=>g.pick.includes('x_clave_shutter')).rate,0.002,'신화 0.2%');
  const s=new Store(null); for(const who of ['ain','kain','ryu','sera']) assert.ok(!s.shop(who).some(o=>C.equipment.find(i=>i.id===o.id)?.src==='boss'),who+' 상점에 보스 장비 없음');
