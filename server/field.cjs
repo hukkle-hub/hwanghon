@@ -41,7 +41,7 @@ class Field{
   this.hubs=new Map();   /* 거점 주인 (zone → {kind:'guild',name}) — 없으면 보스가 차지 (문서 197·198). 점령전은 GPT 몫: setHub 로 바꾼다 */
   this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale;
   this.clock=clock;this.mobStats=mobStats;this.mobRewards=mobRewards;this.onMobReward=onMobReward;
-  this.ecologies=new Map();this.mobStates=new Map();this.ecologyContexts=new Map();this.pendingMobRewards=new Map(); }
+  this.ecologies=new Map();this.mobStates=new Map();this.ecologyContexts=new Map();this.siegeContexts=new Map();this.pendingMobRewards=new Map(); }
  zone(id){ if(typeof id!=='string'||!/^[a-z0-9_]{1,24}$/.test(id)) return null; if(!this.zones.has(id)){ const z=loadZone(id); if(!z) return null; this.zones.set(id,z); } return this.zones.get(id); }
  hubOwner(zoneId){ const z=this.zone(zoneId); return z&&SAFE.isHub(z.areas)?(this.hubs.get(z.id)||SAFE.BOSS_OWNER):null; }
  setHub(zoneId, owner){ if(owner&&owner.kind==='guild')this.hubs.set(zoneId,{kind:'guild',name:String(owner.name||'').slice(0,24)});else this.hubs.delete(zoneId); return this.hubOwner(zoneId); }
@@ -112,6 +112,9 @@ class Field{
      live tick. Rebuild with tools/monsters/build-field-patrols.mjs before deploy. */
  }
  setEcologyContext(zoneId,{night=false,invasion=false}={}){this.ecologyContexts.set(zoneId,{night:!!night,invasion:!!invasion});}
+ /* Only a server-owned node event may supply actual NPC/facility objects.
+    Ordinary field maps have none; no fabricated destructible buildings. */
+ setSiegeContext(zoneId,context){if(context)this.siegeContexts.set(zoneId,context);else this.siegeContexts.delete(zoneId);}
  syncMobs(e,now){
   for(const m of e.mobs.values()){
    const old=this.mobStates.get(m.id);if(old?.generation===m.generation)continue;
@@ -126,7 +129,8 @@ class Field{
       HP and optional action sequence. Keep alive boolean and HP in slot 8. */
    return [m.id,m.catalogId,m.x,m.z,m.alive,m.anim,m.generation,
     m.alive&&s?.generation===m.generation?Math.ceil(100*s.hp/s.max):0,
-    s?.generation===m.generation?s.ai.seq:0];}); }
+    s?.generation===m.generation?s.ai.seq:0,
+    ...(s?.generation===m.generation&&s.ai.action?[{...s.ai.action}]:[])];}); }
  tickEcologies(now){
   let retry=2;for(const [key,r]of this.pendingMobRewards){if(retry<=0)break;if(now<r.nextAt)continue;
    retry--;this.rewardMob(r.id,r.m,r.s,now);}
@@ -139,10 +143,13 @@ class Field{
     safe:p=>!!SAFE.safeArea(e.zone.areas,p.x,p.z,e.owner)};
    /* Short-range chase search has its own bounded budget; patrol's approved
       8000/12000 search and map anchors are unchanged. Long blocked chase holds. */
+   e.resonanceCache=e.resonanceCache||{};MOB.refreshResonance(e.mobs,this.mobStates,now,e.resonanceCache);
+   const context={...(this.siegeContexts.get(zoneId)||{}),allies:[...e.mobs.values()]};
    for(const m of e.mobs.values()){const s=this.mobStates.get(m.id);
     for(const [pid,at]of s.last)if(now-at>60000)s.last.delete(pid);
-    const hit=MOB.tick(m,s.ai,s.stats,byZone.get(zoneId)||[],now,nav);
-    if(hit){const p=this.players.get(hit.target);if(p&&p.zone===zoneId)
+    const hit=MOB.tick(m,s.ai,s.stats,byZone.get(zoneId)||[],now,nav,context);
+    if(hit?.targetKind)this.siegeContexts.get(zoneId)?.strike?.(m,hit,now);
+    else if(hit){const p=this.players.get(hit.target);if(p&&p.zone===zoneId)
       this.bossStrike(m,p,{...hit,damage:hit.damage/p.maxHp,knock:0},now);} }
   } }
  hitMob(id,msg,profile,now=this.clock(),opt={}){
@@ -156,10 +163,11 @@ class Field{
   if(!opt.skill&&(now-(s.last.get(id)??-Infinity)<HIT_GAP||now-(p.mobHitAt??-Infinity)<HIT_GAP))return null;
   s.last.set(id,now);if(!opt.skill)p.mobHitAt=now;
   const st=profile.stats||{},w=itemOf(profile.equipment?.main),crit=!!p.critNext||this.rng()<(st.critChance||0);p.critNext=false;
-  const dmg=Math.max(1,Math.round(((st.atk||1000)+(w?.stats?.atk||0)*.6)*(.9+this.rng()*.2)*(crit?(st.critDamage||1.5):1)*(opt.mult||1)));
-  s.hp=Math.max(0,s.hp-dmg);MOB.stagger(s.ai,now);m.anim='hit';m.engaged=true;s.ai.target=id;
-  let reward=null;if(s.hp===0&&e.defeat(m.id,now))reward=this.rewardMob(id,m,s,now);
-  return {type:'mobHit',mob:m.id,catalogId:m.catalogId,generation:m.generation,dmg,crit,down:!m.alive,hp:Math.ceil(100*s.hp/s.max),reward}; }
+  const counter=MOB.tryCounter(m,s.ai,now);
+  const dmg=Math.max(1,Math.round(((st.atk||1000)+(w?.stats?.atk||0)*.6)*(.9+this.rng()*.2)*(crit?(st.critDamage||1.5):1)*(opt.mult||1)*MOB.damageScale(m.catalogId,s.ai,now)));
+  s.hp=Math.max(0,s.hp-dmg);if(!counter&&m.catalogId!=='G5_ARMORED'){MOB.stagger(s.ai,now);m.anim='hit';}m.engaged=true;s.ai.target=id;
+  let reward=null;if(s.hp===0&&e.defeat(m.id,now)){reward=this.rewardMob(id,m,s,now);MOB.refreshResonance(e.mobs,this.mobStates,now,e.resonanceCache||{});}
+  return {type:'mobHit',mob:m.id,catalogId:m.catalogId,generation:m.generation,dmg,crit,down:!m.alive,hp:Math.ceil(100*s.hp/s.max),reward,...(counter?{counter}:{})}; }
  rewardMob(id,m,s,now=this.clock()){
   if(s.rewarded)return null;
   /* Director's drop table / XP curve are pending. No fabricated economy. */
@@ -282,7 +290,7 @@ class Field{
   return { bossNow:now, bosses:bs, bossActs, bossImpacts, loot }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
-  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), mobs:this.mobView(p), ...this.bossView(p) }; }
+  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), mobs:this.mobView(p), mobNow:this.clock(), ...this.bossView(p) }; }
   if(msg.type==='fieldHit'){ if(typeof msg.mob==='string'&&typeof msg.boss!=='string')return this.hitMob(id,msg,profile);
     return typeof msg.boss==='string'&&typeof msg.mob!=='string'?this.hit(id, msg, profile):null; }
   if(msg.type==='fieldSkill'){ return this.skill(id, msg, profile); }

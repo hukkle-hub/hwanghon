@@ -105,6 +105,7 @@ import { setupDominator, updateDominator, applyDominatorAction, hideDominator, f
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
 import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js'; import { createPerfMeter } from './js/mmo/perf-meter.js'; import { createBagUI } from './js/mmo/field-bag-ui.js';
+import {bodyFor as n01BodyFor} from './js/mmo/n01-body-catalog.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -373,14 +374,16 @@ function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
 const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
 let ECO = null, MOBS = null, MP = null, netMobs = []; const mobHp = new Map();
 const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
-const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
+const n01CandidateCache=new Map(),n01CandidateMode=new URLSearchParams(location.search).get('n01Candidates')==='1';
+const mobSpeciesBody=id=>{const a=n01BodyFor(id,{review:n01CandidateMode,detail:new URLSearchParams(location.search).get('n01Detail')==='high'?'high':'mobile'});if(!a)return null;return {...a,load:()=>{if(!n01CandidateCache.has(id))n01CandidateCache.set(id,load(a.url));return n01CandidateCache.get(id);}};}; // 원본 색·얼굴·클립 보존, 영웅 포즈 보정 적용하지 않는다.
+const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, loadBodyFor:mobSpeciesBody,hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 function netMsg(m) {
   if (m.type === 'fieldJoined' || m.type === 'hubState') { const st = m.type === 'hubState' ? (m.zone === ZONE ? m : null) : (m.hub !== undefined ? { owner: m.hub } : null); if (st) hubOwner = st.owner || null; }   /* 거점 주인 — 길드가 빼앗기 전엔 마을도 상점이 닫힌다 */
   if (m.type !== 'field' && typeof BAG !== 'undefined' && BAG.onMessage(m)) return;   /* 가방이 없는 판(시험 조각)에서도 돈다 */
-  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
+  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs,m.mobNow); mobView(); } return; }
   if (m.type === 'field') { lastField = m; fieldN++; Object.assign(infos, m.infos || {});
     if (m.you) { const dx = m.you[0] - root.position.x, dz = m.you[1] - root.position.z, d = Math.hypot(dx, dz); if (d > 3) { root.position.x = m.you[0]; root.position.z = m.you[1]; } else if (d > .25) { root.position.x += dx * .22; root.position.z += dz * .22; } }   /* 서버 자리와 크게 어긋나면 맞춘다 (2D 필드와 같은 규칙) */
-    remoteSet(m.players || []); bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
+    remoteSet(m.players || []); bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs,m.mobNow); mobView(); } return; }
   if (m.type === 'profile' || m.type === 'fieldJoined') potShow(); if (m.type === 'profile' && m.profile) dressMe(m.profile);   /* 가방에서 장착·해제 → 서버가 profile 을 다시 보낸다 */
   if (m.type === 'fieldBagDone' && m.op === 'use') { floatAt('+' + Number((m.result || {}).heal || 0).toLocaleString('ko-KR'), 'heal', root.position, 2.0); potShow(); return; }
   if (m.type === 'error' && m.message) { toast(esc(m.message), 2); return; }
@@ -428,7 +431,7 @@ function hitMob(sk = null) { if (!MOBS || (!net && !ECO)) return false; const v 
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
 async function goGate(g) { if (!g || !g.to) return; const to = g.to;
   try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); return; }
-  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
+  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'n01Candidates', 'n01Detail']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
   try { net && net.send({ type: 'fieldLeave' }); } catch {} location.search = nq.toString(); }
 gateBtn.addEventListener('pointerdown', e => { e.stopPropagation(); goGate(gateNear); });
 function gateTick() { const p = root.position; let g = null, gd = 1e9; for (const x of GATES) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < (x.r || 3) + 0.8 && d < gd) { g = x; gd = d; } }
