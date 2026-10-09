@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import * as T from '../vendor/three/three.module.js';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {Animated} from '../js/party-avatar.js';
-import {fitHandGrip,gripHands} from '../js/hand-grip.js';
+import {fitHandGrip,gripHands,thumbWeight} from '../js/hand-grip.js';
 import {KAIN_GRIP_SOURCE_SHA256,kainGripReference} from '../js/kain-grip-reference.js';
 globalThis.window=globalThis;
 vm.runInThisContext(fs.readFileSync('js/looks.js','utf8'));
@@ -70,4 +70,27 @@ test('actual Animated field mounting: full and mobile grips agree through idle/r
   poses.push(metrics);h.dispose(scene);
  }
  for(let i=0;i<poses[0].length;i++)for(const side of ['right','left'])assert.ok(V().fromArray(poses[0][i][side]).distanceTo(V().fromArray(poses[1][i][side]))<.001,`${poses[0][i].clip} ${side}: LOD and source mounting/IK differ`);
+});
+test('Kain LOD calibrated fingers/thumb do not tear and stay finite',async(t)=>{
+ const g=await load('art/3d/lod/kain_anim.glb'),api=gripHands(g.scene,'kain');
+ let triangles=0;
+ for(const target of api.targets){
+  const G=target.mesh.geometry,P=G.attributes.position,I=G.index;triangles+=I.count/3;
+  for(const side of ['Right','Left']){
+   const D=G.morphAttributes.position[target.index[side]],region=target.regions.find(r=>r.side===side),grip=api.grips[side];
+   const local=(i,amount)=>V().fromBufferAttribute(P,i).addScaledVector(V().fromBufferAttribute(D,i),amount).applyMatrix4(region.M);
+   let fingerStretch=0,thumbStretch=0;
+   for(let k=0;k<I.count;k+=3){const ids=[I.getX(k),I.getX(k+1),I.getX(k+2)];
+    for(let j=0;j<3;j++){
+     const a=ids[j],b=ids[(j+1)%3],a0=local(a,0),b0=local(b,0),increase=local(a,1).distanceTo(local(b,1))-a0.distanceTo(b0);
+     if(thumbWeight(a0,grip)>0||thumbWeight(b0,grip)>0)thumbStretch=Math.max(thumbStretch,increase);else fingerStretch=Math.max(fingerStretch,increase);
+    }
+   }
+   assert.ok(fingerStretch<.008,`${side}: finger edge stretched ${fingerStretch} m`);
+   assert.ok(thumbStretch<.02,`${side}: thumb edge stretched ${thumbStretch} m`);
+   assert.ok(D.array.every(Number.isFinite));
+   t.diagnostic(`${side} max finger/thumbnail edge increase: ${fingerStretch.toFixed(6)} / ${thumbStretch.toFixed(6)} m`);
+  }
+ }
+ t.diagnostic(`LOD body runtime triangles including hand subdivision: ${triangles}`);
 });
