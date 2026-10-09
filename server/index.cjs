@@ -5,7 +5,8 @@ const ROOT=path.resolve(__dirname,'..');
 /* Explicit public allowlist for offline AI; never serve arbitrary server source,
    stores, account code or filesystem adapters. */
 const PUBLIC_MOB_MODULES=new Set(['/server/field-ecology.cjs','/server/field-ecology-route.cjs',
- '/server/field-mob-combat.cjs','/server/field-ecology-patrols.json']);
+ '/server/field-mob-combat.cjs','/server/field-ecology-patrols.json',
+ '/server/field-dominator.cjs','/server/field-monsters.cjs','/server/field-boss-combat.cjs']);
 const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs'),BAG=require('./field-bag.cjs'),NODE=require('./node-store.cjs');
 function createPartyServer(options={}){
  const store=options.store||new Store(options.dataDir||process.env.DATA_DIR||path.join(ROOT,'.party-data'));

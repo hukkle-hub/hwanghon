@@ -27,12 +27,17 @@ test('real websocket: field.mobs → mobHit/skill → profile inventory/XP updat
 });
 test('real HTTP and real browser CJS bridge load pure modules, but account/store/Field sources remain private',async t=>{
  const app=createPartyServer({store:new Store(null)});t.after(()=>app.close());const addr=await app.listen(0,'127.0.0.1'),base='http://127.0.0.1:'+addr.port;
- for(const name of ['field-ecology.cjs','field-ecology-route.cjs','field-mob-combat.cjs','field-ecology-patrols.json'])assert.equal((await fetch(base+'/server/'+name)).status,200);
+ for(const name of ['field-ecology.cjs','field-ecology-route.cjs','field-mob-combat.cjs','field-ecology-patrols.json','field-dominator.cjs','field-monsters.cjs','field-boss-combat.cjs'])assert.equal((await fetch(base+'/server/'+name)).status,200);
  for(const name of ['store.cjs','rpg-store.cjs','index.cjs','field.cjs'])assert.equal((await fetch(base+'/server/'+name)).status,404);
  const source=fs.readFileSync(require.resolve('../js/mmo/cjs-browser.js'),'utf8').replace('export function loadCjs','function loadCjs');
  const load=new Function('location','fetch',source+'\nreturn loadCjs;')({href:base+'/world3d.html'},fetch);
  const ai=await load('/server/field-mob-combat.cjs'),eco=await load('/server/field-ecology.cjs');
  assert.equal(ai.statsFor('G5_HOOKHAND').draft,true);assert.equal(typeof eco.Ecology,'function');
+ const dom=await load('/server/field-dominator.cjs'),boss=await load('/server/field-boss-combat.cjs');
+ assert.equal(typeof dom.tick,'function');assert.equal(typeof boss.tick,'function');
+ // Negative control: an omitted public dependency must break the real browser loader.
+ const blocked=new Function('location','fetch',source+'\nreturn loadCjs;')({href:base+'/world3d.html'},url=>String(url).endsWith('/field-monsters.cjs')?Promise.resolve({ok:false,status:404}):fetch(url));
+ await assert.rejects(blocked('/server/field-dominator.cjs'),/404/);
 });
 test('two actual sockets share generation/HP; observer sees a hit and the victim hurt identifies the same mob',async t=>{
  const app=createPartyServer({store:new Store(null)});t.after(()=>app.close());
