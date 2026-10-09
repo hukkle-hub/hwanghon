@@ -93,3 +93,9 @@
 - GPT 에게 넘겼던 일(docs/gpt/2026-10-09-zone-links-server.md)을 직접 넣었다: `server/field.cjs` `linkArrival` — map.json 문에 없는 길 문 id(상대 지역)면 world3d 와 같은 공식(띠 끝 ±3 · t → 막이 6 번 · 안쪽 5 m)으로 자리. map.json·생태·2D 무변경.
 - 시험 `tests/field-link-arrival.test.cjs`: 28 문 전부 «출발점 아님 · 띠 끝 16 m 안 · 띠 안 · 막이 안» (linkArrival 을 빼면 실패 확인).
 - **Render 재배포 전까지 온라인은 예전처럼 출발점** — 재배포는 GPT 몫(docs/gpt/2026-10-09-zone-links-deploy.md).
+
+## 17. 휴대폰 무게 재기 코스 (`?bench=1`)
+- 실제 기기는 여기서 못 잰다(헤드리스는 초당 1~2 프레임) → 디렉터가 폰에서 한 번에 재고 숫자를 보낼 수 있게.
+- `world3d.html?zone=<지역>&bench=1` — 황혼 고정(`?tod=` 로 바꿈) · 출발점 세 방향 · 사냥터 · 길 끝 문 앞을 장면마다 2초 예열 + 8초 재기(벽시계 — 기기가 실제로 그리는 프레임). 끝나면 카드: 평균 fps · 가장 낮은 1초 · 장면별 · 화면 크기 · 픽셀비 · GPU 이름 · 기기. «복사» 로 한 줄을 붙여 보내면 된다.
+- `js/mmo/bench.js` + 시험(예열을 세면 실패 확인). 약 50 초.
+- 예: `https://hukkle-hub.github.io/hwanghon/world3d.html?zone=gangnam&bench=1` · `…?zone=jeju&bench=1`.
