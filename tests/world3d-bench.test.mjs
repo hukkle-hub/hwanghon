@@ -18,3 +18,10 @@ test('world3d: ?bench=1 이면 코스 · 결과 카드(복사 · 다시) · 황�
   assert.match(W, /const BENCH = q\.get\('bench'\) === '1'/); assert.match(W, /BENCH\.tick\(performance\.now\(\)\)/); assert.match(W, /cp\.textContent = '복사'/);
   assert.match(W, /DAYC\.fixed = tOf\('dusk'\)/); assert.match(W, /#benchCard:not\(\[hidden\]\)/);
 });
+
+test('낮은 가로 화면(디렉터 폰 750×298): 스킬을 공격 왼쪽 두 줄로 — 위 끝이 바닥에서 182 px 아래 (미니맵과 안 겹침)', () => {
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), m = W.match(/@media \(orientation:landscape\) and \(max-height:360px\)\{([\s\S]*?)\n\}/); assert.ok(m, '낮은 가로 규칙');
+  const tops = [...m[1].matchAll(/#(sk\d|pot|dodge|atk)\{[^}]*bottom:calc\(max\(14px,env\(safe-area-inset-bottom\)\) \+ (\d+)px\)/g)].map(x => [x[1], +x[2] + (x[1] === 'atk' ? 84 : 64) + 14]);
+  assert.equal(tops.length, 7, '7 단추'); for (const [id, top] of tops) assert.ok(top <= 182, `${id} 위 끝 ${top}px — 298 화면에서 미니맵(아래 끝 ~106)에 닿는다`);
+  assert.match(W, /body #osm\{ right:auto; left:12px;/, '출처 규칙이 뒤의 #osm 에 덮이지 않게');
+});

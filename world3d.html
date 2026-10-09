@@ -55,6 +55,25 @@ canvas{ display:block; width:100vw; height:100vh; }
 #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 174px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 120px); }
 @media (orientation:portrait){ #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 288px); } }   /* 세로: 왼쪽 이동 자리와 안 겹치게 위로 쌓는다 */
 #dodge{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px); }
+/* 낮은 가로 화면 (문서 220 §18) — 디렉터 폰 브라우저 가로는 750×298(주소창). 스킬을 공격 «위로» 쌓으면 2 가 미니맵, 3 이 가방을 덮었다 →
+   공격 왼쪽으로 두 줄 묶음: [회피·1] [2·3] [4·회복약] — 위 끝이 바닥에서 182 px (298 화면에서 미니맵 아래 10 px) */
+@media (orientation:landscape) and (max-height:360px){
+  #atk{ bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
+  #dodge{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
+  #sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
+  #sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 170px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
+  #sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 170px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
+  #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 244px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
+  #pot{ right:calc(max(18px,env(safe-area-inset-right)) + 244px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
+}
+@media (orientation:portrait){   /* 세로: 체력 막대가 가방 단추를 8 px 덮었다 · 지도 출처는 아래 안내 띠와 겹쳐 미니맵 밑으로 */
+  #hpw{ width:min(180px, calc(100vw - 240px)); }
+  body #osm{ bottom:auto; top:calc(max(12px,env(safe-area-inset-top)) + 150px); right:12px; max-width:132px; text-align:right; line-height:1.3; }
+}
+@media (orientation:landscape) and (max-height:500px){   /* 조작 안내 띠는 왼쪽 아래 · 지도 출처는 그 밑 — 가운데 띠가 출처·스킬 묶음과 겹쳤다 */
+  #hint{ left:12px; transform:none; bottom:calc(max(10px,env(safe-area-inset-bottom)) + 16px); max-width:calc(100vw - 360px); font-size:11px; }
+  body #osm{ right:auto; left:12px; bottom:max(4px,env(safe-area-inset-bottom)); }
+}
 .dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
 .dmg.crit{ color:#ffc060; font-size:22px; } .dmg.taken{ color:#ff6a5a; } .dmg.evade{ color:#9fd8e8; font-size:15px; }
 #benchCard:not([hidden]){ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:60; width:min(92vw,560px); background:rgba(20,12,18,.94); border:2px solid #c9a45e; border-radius:14px; padding:16px 18px; color:#f0e2d0; font:15px/1.55 'Noto Sans KR',sans-serif; white-space:pre-wrap; display:block }
