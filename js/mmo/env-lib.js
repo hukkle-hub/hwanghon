@@ -399,7 +399,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
 
 /* ---------- 나무: 인스턴스로. 걷는 띠 안은 드문드문(갓이 인물을 가리면 안 된다) ---------- */
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;
-  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = VIEW3D ? lumpy(new THREE.IcosahedronGeometry(1.9, 0), 0.14, 14) : new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
+  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = VIEW3D ? crownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = VIEW3D ? pineGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
   const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
   const trunks = new THREE.InstancedMesh(trunkG, trunkM, n), canopy = leafMs.map(m => new THREE.InstancedMesh(canopyG, m, n)), pines = new THREE.InstancedMesh(pineG, leafMs[1], n);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z), cnt = leafMs.map(() => 0); let np = 0, nd = 0;
@@ -409,7 +409,19 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
     else { const c = (R() * leafMs.length) | 0; mtx.compose(V(p[0], 4.7 * k, p[1]), q4.setFromEuler(e.set(R(), R() * 6, R())), V(k * (1 + R() * 0.4), k * (0.8 + R() * 0.3), k * (1 + R() * 0.4))); canopy[c].setMatrixAt(cnt[c]++, mtx); }
     if (o.block && o.block(p)) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.3, hd: 0.3, rot: 0 }); });
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
+  if (VIEW3D) { const c = new THREE.Color();   /* 그루마다 색을 조금씩 (해시 — 장면 난수 R 은 그대로) · 바람 */
+    for (const m of [pines, ...canopy]) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.id, 3); m.setColorAt(i, c.setRGB(0.82 + u * 0.36, 0.86 + hashU(i, m.id, 4) * 0.28, 0.8 + hashU(i, m.id, 5) * 0.3)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; windify(m.material); } }
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); } return n; }
+/* 3D 나무 모양 (문서 220) — 장난감 같은 다면체 하나 대신: 활엽수는 울퉁불퉁한 덩어리 넷, 소나무는 3 층. 흔들림은 셰이더(바람) */
+function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.toNonIndexed(); });
+  const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
+function pineGeo(THREE) { const parts = [[1.7, 2.2, -1.2], [1.3, 1.9, 0.1], [0.85, 1.6, 1.25]].map(([r, h, y], i) => { const g = new THREE.ConeGeometry(r, h, 7); lumpy(g, 0.08, 50 + i, false); g.translate(0, y, 0); return g.toNonIndexed(); });
+  const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
+export const WIND = { value: 0 };   /* world3d 가 매 프레임 올린다 */
+function windify(m) { if (m.userData.wind) return; m.userData.wind = true;
+  m.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float sw = sin(uWind * 1.3 + ip.x * 0.31 + ip.z * 0.23) + 0.5 * sin(uWind * 2.7 + ip.x * 0.7); float k = max(transformed.y + 2.0, 0.0) * 0.035; transformed.x += sw * k; transformed.z += cos(uWind * 1.1 + ip.z * 0.27) * k * 0.6; }\n#endif'); };
+  m.customProgramCacheKey = () => 'wind'; }
 /* 나무 자리: 격자 + 흔들기. 길·건물·물·지정 원은 비운다 */
 export function treeSpots(ctx, region, o = {}) { const { R, FROM } = ctx, out = []; const step = o.step || 3.4;
   for (let s = region.s0; s < region.s1; s += step) for (let t = region.t0; t < region.t1; t += step) { const p = FROM(s + (R() - .5) * step * 0.8, t + (R() - .5) * step * 0.8);
@@ -456,8 +468,17 @@ export function boundary(ctx, o = {}) { const { THREE, scene, FROM, walk } = ctx
   const warn = T(256, 128, (g, w, h) => { g.fillStyle = '#b8241e'; g.fillRect(0, 0, w, h); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(6, 6, w - 12, h - 12); g.fillStyle = '#fff'; g.font = '900 52px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(word, w / 2, h / 2 + 2); });
   const jG = new THREE.BoxGeometry(2.0, 0.85, 0.5), fG = new THREE.PlaneGeometry(2.0, 1.4), pG = new THREE.CylinderGeometry(0.04, 0.04, 2.3, 6), tG = new THREE.BoxGeometry(2.0, 0.08, 0.02);
   let n = 0;
+  /* 3D 도시 경계 (문서 220) — 빨간 줄 울타리가 끝없이 반복되면 «게임 벽» 이다. 기운 방호벽 · 녹슨 공사장 가림막 · 모래주머니 · 잔해를 해시로 섞는다(장면 난수 R 안 씀) */
+  const V3 = VIEW3D && urban, conc3 = V3 && new THREE.MeshStandardMaterial({ color: 0x8e8a84, roughness: 0.9, map: gritTex(THREE) }), panelMs = V3 && [0x5a6a7a, 0x6a6e70, 0x4a5a52].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.7, metalness: 0.3, map: gritTex(THREE) })), bagM3 = V3 && new THREE.MeshStandardMaterial({ color: 0x7a6e56, roughness: 0.95 });
+  const panelG = V3 && (() => { const g = new THREE.BoxGeometry(2.04, 2.2, 0.06, 6, 1, 1), P = g.attributes.position; for (let i = 0; i < P.count; i++) P.setZ(i, P.getZ(i) + Math.sin(P.getX(i) * 9) * 0.03); g.computeVertexNormals(); g.translate(0, 1.1, 0); return g; })();   /* 골판 */
+  function piece3(g, s, t) { const u = hashU(Math.round(s * 7), Math.round(t * 7), 3), v = hashU(Math.round(s * 7), Math.round(t * 7), 4);
+    if (u < 0.45) { const j = new THREE.Mesh(jG, conc3); j.position.set((v - 0.5) * 0.3, 0.425 - (v < 0.2 ? 0.15 : 0), (v - 0.5) * 0.4); j.rotation.set(v < 0.2 ? 0.25 : 0, (v - 0.5) * 0.35, (u - 0.2) * 0.12); g.add(j); }   /* 방호벽 — 가끔 기울어 반쯤 묻힘 */
+    else if (u < 0.75) { const pn = new THREE.Mesh(panelG, panelMs[(v * 3) | 0]); pn.rotation.set((v - 0.5) * 0.12, 0, (u - 0.6) * 0.15); g.add(pn); }   /* 공사장 가림막 */
+    else if (u < 0.92) { for (let k = 0; k < 6; k++) { const b = new THREE.Mesh(lumpy(new THREE.BoxGeometry(0.62, 0.24, 0.36, 2, 1, 1), 0.04, k + Math.round(s * 13), false), bagM3); b.position.set(-0.65 + (k % 3) * 0.64 + (k > 2 ? 0.3 : 0), 0.12 + (k > 2 ? 0.24 : 0), 0); b.rotation.y = (hashU(k, Math.round(s), 5) - 0.5) * 0.3; g.add(b); } }   /* 모래주머니 */
+    else { const r = new THREE.Mesh(lumpy(new THREE.BoxGeometry(1.8, 0.7, 1.1, 2, 1, 2), 0.18, Math.round(s * 31 + t), false), conc3); r.position.y = 0.3; r.rotation.y = v * 3; g.add(r); } }   /* 잔해 */
   function piece(s, t, ang, sign) { const p = FROM(s, t); if (o.skip && o.skip(p)) return; const g = new THREE.Group();
-    if (urban) { const j = new THREE.Mesh(jG, jerseyM); j.position.y = 0.425; g.add(j); const f = new THREE.Mesh(fG, fenceM); f.position.y = 1.55; g.add(f);
+    if (V3) { piece3(g, s, t); sign = sign && hashU(Math.round(s), Math.round(t), 9) < 0.5; }
+    else if (urban) { const j = new THREE.Mesh(jG, jerseyM); j.position.y = 0.425; g.add(j); const f = new THREE.Mesh(fG, fenceM); f.position.y = 1.55; g.add(f);
       for (const y of [1.2, 2.1]) { const tp = new THREE.Mesh(tG, tapeM); tp.position.y = y; g.add(tp); } for (const x of [-1, 1]) { const po = new THREE.Mesh(pG, poleM); po.position.set(x, 1.15, 0); g.add(po); } }
     else { for (const x of [-1, 1]) { const po = new THREE.Mesh(new THREE.BoxGeometry(0.14, 1.2, 0.14), woodM); po.position.set(x, 0.6, 0); g.add(po); } for (const y of [0.55, 1.05]) { const rl = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.08, 0.08), y > 1 ? woodM : tapeM); rl.position.y = y; g.add(rl); } }
     if (sign) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(urban ? 1.4 : 1.0, urban ? 0.7 : 0.5), new THREE.MeshBasicMaterial({ map: warn })); sg.position.set(0, urban ? 1.5 : 0.8, urban ? 0.27 : 0.09); g.add(sg); const s2 = sg.clone(); s2.rotation.y = Math.PI; s2.position.z = -sg.position.z; g.add(s2); }

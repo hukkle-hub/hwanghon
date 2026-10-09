@@ -117,7 +117,7 @@ import { createCityLife } from './js/mmo/city-life.js';
 import { koreaMapSVG } from './js/mmo/korea-map.js';
 import { SKY_VERT, SKY_FRAG, ridgeOf } from './js/mmo/sky-shader.js';
 import { REGIONS } from './js/mmo/regions.js';
-import { FAR } from './js/mmo/env-lib.js';
+import { FAR, WIND } from './js/mmo/env-lib.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d } from './js/mmo/env-lib.js';
@@ -174,8 +174,8 @@ const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLig
 /* 땅 결 (문서 220) — 평평한 바닥 재질(땅·길·풀밭·보도)에 세계 좌표의 큰 얼룩을 섞는다: 타일 반복이 깨지고 흙빛이 드문드문. 젖은 거울 같던 길은 조금 거칠게 */
 if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE = q.get('macro') || 'all';
   scene.traverse(o => { if (!o.isMesh || o.isInstancedMesh || o.userData.noCam || Array.isArray(o.material)) return; const m = o.material; if (!m || !m.isMeshStandardMaterial || !m.map || done.has(m)) return;
-    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox); if (b.max.y - b.min.y > 0.3 || Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 6) return;
-    done.add(m); if (MODE !== 'shader' && m.roughness < 0.45) m.roughness = 0.58; if (MODE === 'rough') return;   /* 낮은 해가 젖은 길에 하얗게 번지던 것 (문서 217 §2) */
+    if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox); if (b.max.y - b.min.y > 0.02 || Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 6) return;   /* 진짜 평면만 — 30 cm 로 잡았더니 침목(10 cm 상자)까지 바닥 취급해 허옇게 됐다 */
+    done.add(m); if (MODE !== 'shader') { if (m.roughness < 0.45) m.roughness = 0.74; if (m.metalness > 0.1) { m.metalness = 0.06; m.color.multiplyScalar(0.72); } }   /* 금속성을 빼면 아스팔트가 밝아져 보도와 같은 색이 됐다 — 그만큼 어둡게 */ if (MODE === 'rough') return;   /* 바닥은 금속이 아니다 — 낮은 해에 비스듬히 하얗게 번졌다 */   /* 낮은 해가 젖은 길에 하얗게 번지던 것 (문서 217 §2) */
     m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWG;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWG = (modelMatrix * vec4(transformed, 1.0)).xz;');
       sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vWG; float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(gh(i), gh(i + vec2(1, 0)), f.x), mix(gh(i + vec2(0, 1)), gh(i + vec2(1, 1)), f.x), f.y); }')
         .replace('#include <map_fragment>', '#include <map_fragment>\n{ float mn = gn(vWG * 0.035) * 0.6 + gn(vWG * 0.12) * 0.4; diffuseColor.rgb *= mix(0.74, 1.14, mn); float dirt = smoothstep(0.55, 0.85, gn(vWG * 0.017 + 9.0)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.40, 0.34, 0.28) * (0.8 + mn * 0.4), dirt * 0.32); }'); };
@@ -593,6 +593,7 @@ function tick() { perf.begin();
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
   if (LIFE) LIFE.tick(dt, lampK);
+  WIND.value += dt;   /* 나무 바람 (문서 220) */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
