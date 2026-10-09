@@ -23,6 +23,7 @@
 | 파티 모집 (2인) | `node tools/recruit-scenario.mjs` — 서버까지 한 프로세스에서 띄운다 |
 | 휴대폰 (Pixel 7) | 같은 명령에 `MOBILE=port` / `MOBILE=land` |
 | 운영 도구 (3인) | `node tools/admin-scenario.mjs` — 운영자·신고자·대상 |
+| 필드 몬스터 (2D·3D 2인) | `node tools/field-mob-scenario.mjs` — 서버 안에서 띄움, 몬스터 공격·타격·쓰러짐 |
 | 장비 외형 | `viewer.html?equip=1&fit=1&char=…` + `window.__TW_VIEW.look()` 으로 확대 |
 
 ```
