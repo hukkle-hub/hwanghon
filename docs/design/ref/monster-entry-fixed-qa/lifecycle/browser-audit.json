@@ -1,0 +1,827 @@
+{
+  "kind": "real_two_browser_local_server_audit",
+  "profileStorage": "memory_only",
+  "simulation": "paused_and_stepped_for_screenshot_capture",
+  "mobileViewport": [
+    915,
+    412
+  ],
+  "actualAndroidFPSVerified": false,
+  "applicationFilesModified": false,
+  "errors": [],
+  "checks": {
+    "actualClientsJoined": true,
+    "sameGeneration": true,
+    "remotePlayerRendered": true,
+    "telegraphRendered": true,
+    "hurtSourceMatchesMob": true,
+    "hitHPShared": true,
+    "deathShared": true,
+    "newGenerationShared": true,
+    "profileRewardsPending": true,
+    "noPageErrors": true
+  },
+  "shots": [
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\2d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\3d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\2d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\3d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\2d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\3d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\2d-respawn.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-init-fixed-v2\\3d-respawn.png"
+  ],
+  "testedCommit": "c9ea8790084b4d72bbfe08a3ab3b7bf8c599abbd",
+  "applicationHashes": {
+    "world3d.html": "c7d7b7f76d9b938749c52dd56e21d48787b6d5ae8d041eadd609568a8fd3d92f",
+    "js/mmo/field-mobs.js": "1e9e6e7d17c0323caf07fa1edce63b4eea1320acd4429a916fe6019435b9c4a8"
+  },
+  "mob": {
+    "id": "daejeon:right:nest2:1",
+    "catalogId": "G5_BREAKER",
+    "x": 241.40906880137658,
+    "z": -211.52928966988424
+  },
+  "joined": [
+    {
+      "net": true,
+      "frames": 10,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.16130000001192096,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.026827825513397,
+            -211.57050780971193
+          ],
+          "mixamorigHead": [
+            241.40716042311348,
+            1.593423059161006,
+            -211.67662793545998
+          ],
+          "mixamorigLeftFoot": [
+            241.63753892874513,
+            0.12812199644046657,
+            -211.7421377070674
+          ],
+          "mixamorigRightFoot": [
+            241.17612360843935,
+            0.1267376756617773,
+            -211.76706639673608
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.16130000001192096,
+            "weight": 1
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    },
+    {
+      "net": true,
+      "frames": 13,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.27819999998807904,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.0274307616715348,
+            -211.5705078102119
+          ],
+          "mixamorigHead": [
+            241.40835140162042,
+            1.5957513485491996,
+            -211.67154004791973
+          ],
+          "mixamorigLeftFoot": [
+            241.63898523401633,
+            0.12715940453950658,
+            -211.73786975428257
+          ],
+          "mixamorigRightFoot": [
+            241.17843504110087,
+            0.1267429437661502,
+            -211.76318666444132
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.27819999998807904,
+            "weight": 1
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    }
+  ],
+  "attack": [
+    {
+      "net": true,
+      "frames": 16,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.17846666667858757,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.0030566753531507,
+            -211.5705026358235
+          ],
+          "mixamorigHead": [
+            241.40737298521228,
+            1.5895283447051725,
+            -211.64494730412264
+          ],
+          "mixamorigLeftFoot": [
+            241.9581333116717,
+            0.3861622489368817,
+            -211.91779193637444
+          ],
+          "mixamorigRightFoot": [
+            240.90122189676578,
+            0.3860478881495989,
+            -211.4485042846693
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.33976666669050853,
+            "weight": 0
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.17846666667858757,
+            "weight": 1
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    },
+    {
+      "net": true,
+      "frames": 16,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.0757666666607062,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.0309821142620723,
+            -211.57050519561957
+          ],
+          "mixamorigHead": [
+            241.40146089019876,
+            1.615776030348554,
+            -211.63090022472142
+          ],
+          "mixamorigLeftFoot": [
+            241.83581572563062,
+            0.22185974228260186,
+            -211.777486989965
+          ],
+          "mixamorigRightFoot": [
+            240.96812341120682,
+            0.23331954272579214,
+            -211.67418388245196
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.35396666664878523,
+            "weight": 0.49488890171051025
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.0757666666607062,
+            "weight": 0.5051110982894897
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    }
+  ],
+  "hitAttempt": {
+    "sent": {
+      "type": "fieldHit",
+      "mob": "daejeon:right:nest2:1",
+      "generation": 1
+    },
+    "serverNow": 1791529223174,
+    "ecologyLastTick": 1791529215421
+  },
+  "hit": {
+    "type": "mobHit",
+    "mob": "daejeon:right:nest2:1",
+    "catalogId": "G5_BREAKER",
+    "generation": 1,
+    "dmg": 4151,
+    "crit": false,
+    "down": false,
+    "hp": 41,
+    "reward": null
+  },
+  "hitViews": [
+    {
+      "net": true,
+      "frames": 44,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 41,
+        "alive": true,
+        "cur": "hit",
+        "seq": 2,
+        "warn": true,
+        "clipTime": 0.0407333333392938,
+        "clipDuration": 0.7083333134651184,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            0.9956735923621525,
+            -211.57050404411936
+          ],
+          "mixamorigHead": [
+            241.40237411555208,
+            1.576864284440783,
+            -211.67713940706378
+          ],
+          "mixamorigLeftFoot": [
+            241.9054036005256,
+            0.29717864956624324,
+            -211.94374999962318
+          ],
+          "mixamorigRightFoot": [
+            240.950774607898,
+            0.2904922523581263,
+            -211.43038050403698
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.33976666669050853,
+            "weight": 0
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.2525333333512147,
+            "weight": 0.728444516658783
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.0407333333392938,
+            "weight": 0.27155545353889465
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    },
+    {
+      "net": true,
+      "frames": 46,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 41,
+        "alive": true,
+        "cur": "hit",
+        "seq": 2,
+        "warn": true,
+        "clipTime": 0.13333333333333333,
+        "clipDuration": 0.7083333134651184,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.40999996833708,
+            1.0336087531864553,
+            -211.7621881657321
+          ],
+          "mixamorigHead": [
+            241.39281094388187,
+            1.6048368855678432,
+            -211.69545078307274
+          ],
+          "mixamorigLeftFoot": [
+            241.73109648390164,
+            0.14691710832470428,
+            -211.86318843723126
+          ],
+          "mixamorigRightFoot": [
+            241.15178237659822,
+            0.16165947595254748,
+            -211.74975528045977
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.4539666666487852,
+            "weight": 0
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.6090999999940394,
+            "weight": 0.111111119389534
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.13333333333333333,
+            "weight": 0.8888888955116272
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    }
+  ],
+  "death": [
+    {
+      "net": true,
+      "frames": 86,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 0,
+        "alive": false,
+        "cur": "die",
+        "seq": 3,
+        "warn": false,
+        "clipTime": 0.5666666666666667,
+        "clipDuration": 0.8333333134651184,
+        "deadT": 0.5666666666666667,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.4099998186675,
+            0.4577050654837213,
+            -212.6682580263275
+          ],
+          "mixamorigHead": [
+            241.38645835773428,
+            0.5434450451110465,
+            -213.25060745592194
+          ],
+          "mixamorigLeftFoot": [
+            241.54042128601208,
+            0.04713773535035787,
+            -211.94719290145807
+          ],
+          "mixamorigRightFoot": [
+            241.15460043495267,
+            0.032146120387997856,
+            -211.95113787966125
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.33976666669050853,
+            "weight": 0
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.385866666684548,
+            "weight": 0
+          },
+          "hit": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.20740000000596043,
+            "weight": 0
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.5666666666666667,
+            "weight": 1
+          }
+        }
+      }
+    },
+    {
+      "net": true,
+      "frames": 89,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 1,
+        "hp": 0,
+        "alive": false,
+        "cur": "die",
+        "seq": 3,
+        "warn": false,
+        "clipTime": 0.5666666666666667,
+        "clipDuration": 0.8333333134651184,
+        "deadT": 0.5666666666666667,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.4099998186675,
+            0.4577050654837213,
+            -212.6682580263275
+          ],
+          "mixamorigHead": [
+            241.38645835773428,
+            0.5434450451110465,
+            -213.25060745592194
+          ],
+          "mixamorigLeftFoot": [
+            241.54042128601208,
+            0.04713773535035787,
+            -211.94719290145807
+          ],
+          "mixamorigRightFoot": [
+            241.15460043495267,
+            0.032146120387997856,
+            -211.95113787966125
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.4539666666487852,
+            "weight": 0
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": false,
+            "paused": false,
+            "time": 0.6424333333273727,
+            "weight": 0
+          },
+          "hit": {
+            "enabled": false,
+            "paused": true,
+            "time": 0.7083333134651184,
+            "weight": 0
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.5666666666666667,
+            "weight": 1
+          }
+        }
+      }
+    }
+  ],
+  "visualPoseApproval": "manual_review_required_not_inferred_from_clip_time",
+  "respawn": [
+    {
+      "net": true,
+      "frames": 191,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 2,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.03333333333333333,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.0271468720611396,
+            -211.5705078102119
+          ],
+          "mixamorigHead": [
+            241.416828765753,
+            1.5948326878152606,
+            -211.67757477284223
+          ],
+          "mixamorigLeftFoot": [
+            241.64263254762835,
+            0.1270439896085575,
+            -211.73877749255874
+          ],
+          "mixamorigRightFoot": [
+            241.18374589685152,
+            0.12627500411112869,
+            -211.76806592499486
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.03333333333333333,
+            "weight": 1
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    },
+    {
+      "net": true,
+      "frames": 193,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest2:1",
+        "gen": 2,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.03333333333333333,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          241.41,
+          -211.53
+        ],
+        "landmarks": {
+          "mixamorigHips": [
+            241.41,
+            1.0271468720611396,
+            -211.5705078102119
+          ],
+          "mixamorigHead": [
+            241.416828765753,
+            1.5948326878152606,
+            -211.67757477284223
+          ],
+          "mixamorigLeftFoot": [
+            241.64263254762835,
+            0.1270439896085575,
+            -211.73877749255874
+          ],
+          "mixamorigRightFoot": [
+            241.18374589685152,
+            0.12627500411112869,
+            -211.76806592499486
+          ]
+        },
+        "actions": {
+          "idle": {
+            "enabled": true,
+            "paused": false,
+            "time": 0.03333333333333333,
+            "weight": 1
+          },
+          "walk": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "attack": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "hit": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          },
+          "die": {
+            "enabled": true,
+            "paused": false,
+            "time": 0,
+            "weight": 1
+          }
+        }
+      }
+    }
+  ],
+  "complete": true
+}

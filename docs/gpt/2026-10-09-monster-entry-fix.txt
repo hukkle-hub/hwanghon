@@ -1,0 +1,55 @@
+황혼 몬스터 서버 v10 · 3D 입장 오류 직접 수정 / 검수 인계
+2026-10-09
+
+결론
+디렉터의 직접 수정 승인 후 world3d.html 초기화 순서를 수정했다.
+이 문서는 이전 2026-10-09-monster-browser-audit.txt의 입장 오류 미수정 상태를 대체한다.
+이전 실패 보고서와 이미지는 재현 근거로 보존했다.
+공유 브랜치 gpt/monster-server-v10만 사용. main push / Render 배포 없음.
+
+수정 범위
+- tag3d, ECO/MOBS/netMobs/mobHp, mobBody, mobView를 connectField await 전에 준비.
+- first field / fieldJoined를 버리거나 지연시켜 오류를 숨기지 않았다.
+- js/mmo/field-net.js의 최초 상대 infos 전달 경로는 그대로 유지.
+- 서버의 확정 9칸 패킷과 판정, 지도, 모델 GLB, 리그, 스킨, 의상 변경 없음.
+- 원본 Claude 카메라 변경 origin/main c5fa302b5 포함.
+
+회귀 시험
+tests/world3d-mob-init.test.mjs:
+  실제 world3d 선언/메시지 처리 코드 조각을 원래 소스 순서로 실행.
+  first field(상대 infos 포함) + fieldJoined를 연속 처리하고 표시 객체 중복 생성 방지 확인.
+  수정 전에는 Cannot access 'netMobs' before initialization로 실패함을 확인.
+  부정 검증은 선언을 await 뒤로 옮기면 같은 오류가 나야 통과한다.
+  이 코드 조각 시험은 실제 브라우저 검수를 대체하지 않는다.
+npm test: 951개 / 949 통과 / 실패 0 / 건너뜀 2 / 종료 코드 0.
+
+실제 2인 브라우저 재검수
+docs/design/ref/monster-entry-fixed-qa/lifecycle/browser-audit.json 및 캡처 8장.
+- 실제 로컬 서버 Store(null), 독립 Chromium 컨텍스트 2개, 실제 2D 아인·3D 카인.
+- 입장 예외 0. 양쪽에서 상대 플레이어 1명, 같은 몬스터/세대 확인.
+- 공격 예고 고리, 실제 몬스터 피해 hurt[2], 실제 UI 타격과 공통 HP 확인.
+- 사망 HP 0, die, generation 1 확인. 실제 30초 기다린 뒤 generation 2 / HP 100 확인.
+- 기존 무료 임시 몸, 승인 전 보상 pending_policy 유지. 외부 계정·실서버 데이터 접촉 없음.
+- 촬영을 위해 서버 틱을 정지/단계 실행했다. 연속 Android 실기기 성능 시험이 아니다.
+- 검수 도구의 미래 단계 시각 이후 타격이 너무 빨리 오면 서버가 거절한다.
+  도구가 실제 시각을 기다리도록 고쳤고, 보스 우선 타겟에 걸리지 않는 실제 스폰을 골랐다.
+  게임의 시간·사거리·충돌 규칙을 풀어 통과시키지 않았다.
+
+사망 자세에 대한 정확한 구분
+기존 컷은 플레이어에 가려 죽은 몸을 판별하기 어려웠다.
+새 컷에서는 플레이어를 옆으로 이동시키고 3D 카메라를 가까이 두었다.
+death 0.5667/0.8333초, 두 화면의 실제 머리 높이 약 0.543m / 골반 0.458m,
+발 높이 약 0.032~0.047m, death 가중치 1 / 이전 동작 가중치 0 확인.
+따라서 클립이 재생되지 않고 직립한다는 결론은 확정하지 않는다.
+클립 재생·쓰러지는 진행은 확인했지만 자연스러운 최종 사망 자세/게임 아트 품질
+승인으로 격상하지 않는다. 임시 몸이며 캐논 몬스터 완성 GLB가 아니다.
+
+추가 입장 점검
+tools/monsters/render-field-mobs.cjs의 ENTRY_ONLY=1:
+3D 가로→세로→가로 3회 새로고침, 최초 몬스터 표시 준비, 혼자 연습 생태 준비 확인.
+자료: docs/design/ref/monster-entry-fixed-qa/entry/.
+
+남은 것
+- Render 실제 자동 배포 설정과 데이터 보존/초기화 승인 확인 전 배포 보류.
+- 갈고리손 승인→GLB, 종별 고유 기술, 드롭/XP 정책, 낮밤/침공 일정은 별도 미완료.
+- 자연스러운 최종 모션, 실제 Galaxy S25 Ultra FPS·연속 전투는 별도 검수.
