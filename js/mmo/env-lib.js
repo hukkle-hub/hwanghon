@@ -172,6 +172,7 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
     const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+    if (VIEW3D) addDeco(THREE, scene, buildingDeco(THREE, pts, h, b.id | 0, { roof: !nearSide && !ruined, shops: !tall }), b.id | 0);
     ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
   return out; }
 export const inBuilding = (built, p) => built.some(b => inPoly(p, b.pts));
@@ -216,6 +217,73 @@ export function ruinShell(THREE, scene, pts, h, id, wallM, floorM, rubbleM) {
     const g = mergeGeometries(list, false); list.forEach(x => x.dispose()); if (!g) continue;
     const mesh = new THREE.Mesh(g, m); mesh.castShadow = m !== floorM || slabs.length > 0; mesh.receiveShadow = true; mesh.userData.ruin = id; scene.add(mesh); out.push(mesh); }
   return out; }
+
+/* ---------- 멀쩡한 건물 꾸밈 (3D 필드만, 문서 218) — 옥상 난간·물탱크·실외기·안테나, 1층 상가 띠 · 간판 ----------
+   전부 건물 id 해시로 정한다(장면 난수 R 을 안 쓴다). 막이는 그대로 — 난간·옥상 물건은 윤곽 안, 상가 띠·간판은 벽에서 0.06~0.5 m.
+   카메라 막이(static-merge)에서는 뺀다(noCam) — 건물 상자가 이미 막는다. 그리기 호출은 합치기가 48 m 칸별로 묶는다. */
+const SIGNS = ['약국', '편의점', 'PC방', '치킨', '노래방', '부동산', '식당', '세탁소', '미용실', '휴대폰', '안경', '분식', '철물점', '정육점', '마트', '의원'];
+let DECO_TEX = null;
+export function decoTex(THREE) { if (DECO_TEX) return DECO_TEX; const r = rng(4242);
+  /* 상가 4종 (가로로 이어 붙인 한 장): 셔터 · 깨진 유리 · 뻥 뚫린 안 · 녹슨 셔터 반쯤 */
+  const shop = canvasTex(THREE, 1024, 128, (g, w, h) => { for (let k = 0; k < 4; k++) { const x0 = k * 256;
+    g.fillStyle = '#2a2628'; g.fillRect(x0, 0, 256, h); g.fillStyle = '#3c3836'; g.fillRect(x0, 0, 14, h); g.fillRect(x0 + 242, 0, 14, h); g.fillStyle = '#1c1a1c'; g.fillRect(x0, 0, 256, 14);   /* 기둥 · 윗 띠 */
+    if (k === 0 || k === 3) { const top = k === 3 ? 18 + r() * 40 : 16; g.fillStyle = k === 3 ? '#0e0c0e' : '#5a5e66'; g.fillRect(x0 + 14, 14, 228, h - 14); g.fillStyle = '#6a6e76'; g.fillRect(x0 + 14, 14, 228, top - 14 + (k === 3 ? 0 : h));
+      for (let y = 14; y < (k === 3 ? top : h); y += 5) { g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(x0 + 14, y, 228, 2); }
+      for (let i = 0; i < 9; i++) { g.fillStyle = `rgba(${120 + r() * 50 | 0},${60 + r() * 20 | 0},30,${0.25 + r() * 0.3})`; g.fillRect(x0 + 14 + r() * 220, 14 + r() * 40, 3 + r() * 6, 30 + r() * 70); }   /* 녹물 */
+      g.fillStyle = 'rgba(200,60,50,.55)'; g.font = 'bold 18px sans-serif'; if (r() < 0.6) g.fillText(['X', '출입금지', '생존자 있음', '→'][r() * 4 | 0], x0 + 40 + r() * 100, 60 + r() * 50); }
+    else { g.fillStyle = k === 1 ? '#141c24' : '#080608'; g.fillRect(x0 + 14, 14, 228, h - 14); g.fillStyle = '#3c3836'; g.fillRect(x0 + 126, 14, 6, h - 14);
+      if (k === 1) { g.strokeStyle = 'rgba(190,210,230,.45)'; g.lineWidth = 1.5; for (let i = 0; i < 4; i++) { const cx = x0 + 30 + r() * 200, cy = 30 + r() * 80; for (let j = 0; j < 6; j++) { g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + (r() - .5) * 90, cy + (r() - .5) * 90); g.stroke(); } } } } } });
+  /* 간판 16개 (4 × 4) — 바랜 바탕, 때, 떨어져 나간 귀퉁이 */
+  const sign = canvasTex(THREE, 1024, 256, (g, w, h) => { const bgs = ['#b8302c', '#2a4a8a', '#d8b030', '#2a7a4a', '#e8e4dc', '#6a2a6a', '#d86a2a', '#1a1a1e'];
+    for (let i = 0; i < 16; i++) { const x0 = (i % 4) * 256, y0 = (i / 4 | 0) * 64, bg = bgs[(i * 5) % bgs.length]; g.fillStyle = bg; g.fillRect(x0, y0, 256, 64);
+      g.fillStyle = bg === '#e8e4dc' || bg === '#d8b030' ? '#1a1a1e' : '#f4f0e8'; g.font = '900 40px "Noto Sans KR", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(SIGNS[i], x0 + 128, y0 + 34);
+      g.fillStyle = 'rgba(30,20,16,.35)'; for (let k = 0; k < 40; k++) g.fillRect(x0 + r() * 256, y0 + r() * 64, 2 + r() * 10, 2 + r() * 4);
+      const gr = g.createLinearGradient(0, y0, 0, y0 + 64); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(20,10,8,.45)'); g.fillStyle = gr; g.fillRect(x0, y0, 256, 64);
+      if (r() < 0.4) { g.fillStyle = '#141012'; g.beginPath(); const cx = x0 + (r() < .5 ? 0 : 256); g.moveTo(cx, y0); g.lineTo(cx + (cx > x0 ? -1 : 1) * (20 + r() * 50), y0); g.lineTo(cx, y0 + 20 + r() * 40); g.fill(); } } });
+  shop.repeat.set(1, 1); sign.repeat.set(1, 1); return (DECO_TEX = { shop, sign }); }
+/* 바깥 법선: 변 가운데에서 0.3 m 나가 본 점이 윤곽 밖이면 바깥 (오목한 윤곽도 맞다) */
+const outN = (pts, p, q) => { const dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz), nx = -dz / L, nz = dx / L, mx = (p[0] + q[0]) / 2, mz = (p[1] + q[1]) / 2; return inPoly([mx + nx * 0.3, mz + nz * 0.3], pts) ? [-nx, -nz] : [nx, nz]; };
+/* 판 하나(바깥을 보는 사각형) — u0~u1 · v0~v1 은 텍스처 자리 */
+function quad(THREE, ax, az, bx, bz, y0, y1, u0, u1, v0, v1, nx, nz) { const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute([ax, y0, az, bx, y0, bz, bx, y1, bz, ax, y1, az], 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute([nx, 0, nz, nx, 0, nz, nx, 0, nz, nx, 0, nz], 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute([u0, v0, u1, v0, u1, v1, u0, v1], 2));
+  /* 앞면이 바깥(n)을 보도록 감는 방향을 고른다 */
+  const ex = bx - ax, ez = bz - az, front = -ez * nx + ex * nz;   /* 0→1→2 의 면 법선 = (b-a) × 위 = (-ez, 0, ex) */
+  g.setIndex(front > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]); return g; }
+let DECO_M = null;
+export const isView3d = () => VIEW3D;
+/* 꾸밈 조각을 재질별로 합쳐 장면에 — 건물 하나에 재질당 메시 하나 (뒤에서 static-merge 가 칸별로 다시 묶는다) */
+export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
+    shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }) }; }
+  for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
+    const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
+export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [] };
+  const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+  let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
+  for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1) continue;
+    const [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx);
+    /* 옥상 난간 — 윤곽 안쪽으로 두께만큼 */
+    if (o.roof) { const T = 0.22, ph = 0.75 + 0.25 * hashU(id, e, 31), g = new THREE.BoxGeometry(L, ph, T); g.rotateY(yaw); g.translate((p[0] + q[0]) / 2 - nx * T / 2, h + ph / 2, (p[1] + q[1]) / 2 - nz * T / 2); P.parapet.push(g); }
+    /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
+    if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
+      for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;
+        P.shop.push(quad(THREE, p[0] + ux * a0 + ox, p[1] + uz * a0 + oz, p[0] + ux * a1 + ox, p[1] + uz * a1 + oz, 0, sh, kind / 4, (kind + 1) / 4, 0, 1, nx, nz));
+        if (o.signs === false || h < 4.6 || hashU(id, e, k + 51) > 0.62) continue;
+        const cell = (hashU(id, e, k + 61) * 16) | 0, sw = seg * (0.7 + 0.25 * hashU(id, e, k + 71)), sy = 3.55, shh = 0.8, mid = (a0 + a1) / 2, sx = p[0] + ux * mid + nx * 0.18, sz = p[1] + uz * mid + nz * 0.18;
+        const g = new THREE.BoxGeometry(sw, shh, 0.22), uv = g.attributes.uv, u0 = (cell % 4) / 4, v1 = 1 - (cell / 4 | 0) / 4, v0 = v1 - 0.25;
+        for (let i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * 0.25, v0 + uv.getY(i) * 0.25);
+        if (hashU(id, e, k + 81) < 0.18) { g.translate(sw / 2, 0, 0); g.rotateZ((hashU(id, e, k + 91) < 0.5 ? -1 : 1) * (0.12 + 0.12 * hashU(id, e, k + 92))); g.translate(-sw / 2, 0, 0); }   /* 한쪽이 떨어져 기운 간판 */
+        g.rotateY(yaw); if (Math.sin(yaw) * nx + Math.cos(yaw) * nz < 0) g.rotateY(Math.PI);   /* 앞면(+z)이 바깥을 보게 */
+        g.translate(sx, sy + shh / 2, sz); P.sign.push(g); } } }
+  if (o.roof) {
+    const spot = (salt, m) => { for (let t = 0; t < 8; t++) { const x = cx + (hashU(id, salt, t) - 0.5) * Math.sqrt(ar) * 0.7, z = cz + (hashU(id, salt, t + 50) - 0.5) * Math.sqrt(ar) * 0.7; if (inPoly([x, z], pts) && pts.every((p, i) => segDist([x, z], p, pts[(i + 1) % pts.length]) > m)) return [x, z]; } return null; };
+    if (ar > 60 && hashU(id, 1, 7) < 0.6) { const r = 0.85 + 0.45 * hashU(id, 2, 7), th = 1.5 + 0.7 * hashU(id, 3, 7), s0 = spot(11, r + 0.4); if (s0) { const g = new THREE.CylinderGeometry(r, r, th, 10); g.translate(s0[0], h + th / 2 + 0.25, s0[1]); P.tank.push(g);
+      const st = new THREE.BoxGeometry(r * 1.6, 0.25, r * 1.6); st.translate(s0[0], h + 0.125, s0[1]); P.ac.push(st); } }   /* 물탱크 + 받침 */
+    const nAc = ar > 40 ? 1 + ((hashU(id, 4, 7) * 4) | 0) : 0;
+    for (let i = 0; i < nAc; i++) { const s1 = spot(21 + i, 0.8); if (!s1) continue; const g = new THREE.BoxGeometry(0.9, 0.7, 0.55); g.rotateY(hashU(id, 5, i) * 3.14); g.translate(s1[0], h + 0.35, s1[1]); P.ac.push(g); }
+    if (h > 18 && hashU(id, 6, 7) < 0.3) { const s2 = spot(31, 0.6); if (s2) { const g = new THREE.BoxGeometry(0.12, 4 + 3 * hashU(id, 7, 7), 0.12); g.translate(s2[0], h + 2, s2[1]); P.ac.push(g); } } }
+  DECOS.push([+cx.toFixed(1), +cz.toFixed(1), +h.toFixed(1), P.sign.length, !!o.roof]); return P; }
 
 /* ---------- 나무: 인스턴스로. 걷는 띠 안은 드문드문(갓이 인물을 가리면 안 된다) ---------- */
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;

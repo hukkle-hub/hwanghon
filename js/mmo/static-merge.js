@@ -24,7 +24,7 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
     const key = [o.material.uuid, o.castShadow, o.receiveShadow, o.renderOrder, g.index ? 1 : 0, Object.keys(g.attributes).sort().join(','), Math.floor(c.x / cell), Math.floor(c.z / cell)].join('|');
     let list = groups.get(key); if (!list) groups.set(key, list = []); list.push(o);
   });
-  function camFrom(o) { const g = o.geometry; box.setFromObject(o);
+  function camFrom(o) { const g = o.geometry; box.setFromObject(o); if (o.userData.noCam) return;   /* noCam: 건물에 붙은 꾸밈(상가 띠·간판·옥상 물건) — 건물 상자가 이미 막는다. 상자는 먼저 잰다 — 합치기 칸(48 m)을 이 상자로 정한다 (문서 218) */
     /* 천장(camBlock): 두께 0.12 m 라 «키 1.2 m 넘는 것» 에서 빠져, 높은 카메라가 천장 위로 나가 천장 윗면만 찍었다 (2호선 선로 — 문서 206 §10) */
     if (!((box.max.y - box.min.y > camMinH && box.max.y > 1.4) || o.userData.camBlock)) return; if (!g.boundingBox) g.computeBoundingBox(); const ob = obb(box, g.boundingBox, o.matrixWorld);
     /* 오목한 건물(ㄷ·ㅁ자, 마당 낀 블록)은 상자 안에 걸을 수 있는 땅이 있다 — 머리가 상자 안이면 상자로는 못 재니 실제 면을 남겨 둔다 (문서 206 §16) */

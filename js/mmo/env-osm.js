@@ -159,6 +159,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])));
     const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+    if (L.isView3d()) L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, h, b.id | 0, { roof: !near, shops: true, signs: false }), b.id | 0);   /* 3D 만: 셔터 띠 · 옥상 (간판은 아래 POI 네온이 따로 — 문서 218) */
     blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); builtW.push({ pts, h, full, near, cst, id: b.id }); }
   if (CFG.dress && CFG.wide) {   /* 넓힌 블록 땅 꾸미기 — 길·건물 위는 피한다 */
     const inB = p => builtW.some(b => L.inPoly(p, b.pts)), onRoad = p => { const n = nearestRoad(p); return n && n.d < n.rw.width / 2 + 1.5; };
