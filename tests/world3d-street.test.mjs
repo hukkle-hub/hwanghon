@@ -23,14 +23,16 @@ test('거리 소품: 전봇대·전선·신호등·쓰레기·정류장이 서�
   ctx.scene.updateMatrixWorld(true); const v = new THREE.Vector3(); let n = 0;
   for (const o of ctx.scene.children) { if (!o.isInstancedMesh) continue; const m = new THREE.Matrix4(); assert.ok(o.count > 20, '잡초 ' + o.count); L.STREET.weeds = o.count;   /* 잡초: 하나하나의 자리로 */
     for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); v.setFromMatrixPosition(m); assert.ok(!onRoad(v.x, v.z), `잡초가 차도 위 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(!L.inPoly([v.x, v.z], built[0].pts), `잡초가 건물 안 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); } }
-  for (const o of ctx.scene.children) { if (o.isLineSegments || o.isInstancedMesh) continue; o.getWorldPosition(v); n++;   /* 신호등 머리(5.45 m)는 차도 위로 내미는 게 맞다 — 땅 위 것만 */
-    if (v.y < 3) assert.ok(!onRoad(v.x, v.z), `차도 위 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(!L.inPoly([v.x, v.z], built[0].pts), `건물 안 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); }
-  assert.ok(n > 10);
+  /* 소품은 재질 × 160 m 칸으로 합쳐져 있다 — 꼭짓점 하나하나로 잰다. 신호등 머리·팔(5 m 위)은 차도 위로 내미는 게 맞으니 땅 위 3 m 아래만 */
+  for (const o of ctx.scene.children) { if (!o.isMesh || o.isInstancedMesh) continue; const P = o.geometry.attributes.position; n++;
+    for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); if (y >= 3) continue;
+      assert.ok(!onRoad(x, z), `차도 위 (${x.toFixed(1)}, ${z.toFixed(1)})`); assert.ok(!L.inPoly([x, z], built[0].pts), `건물 안 (${x.toFixed(1)}, ${z.toFixed(1)})`); } }
+  assert.ok(n >= 5, '합친 소품 메시 ' + n); assert.ok(n < 40, '소품 메시가 칸·재질별로 안 합쳐졌다: ' + n);   /* 시험 구역은 160 m 칸 4 개 × 재질 ~8 — 하나하나 세우면 수백 개 */
   ctx.scene.traverse(o => { if (o.isMesh || o.isLineSegments) assert.ok(o.userData.noCam, '카메라 막이·문 자리 광선에 걸린다: ' + o.type); });
 });
 
 test('같은 길은 늘 같은 소품 — 장면 난수 R 을 안 쓴다', () => {
-  const pos = () => { const ctx = mkCtx(); L.street(ctx, roadsW, built); const v = new THREE.Vector3(); return ctx.scene.children.map(o => o.getWorldPosition(v).toArray().map(x => +x.toFixed(3)).join(',')); };
+  const pos = () => { const ctx = mkCtx(); L.street(ctx, roadsW, built); return ctx.scene.children.map(o => Array.from(o.geometry.attributes.position.array.slice(0, 60)).map(x => +x.toFixed(3)).join(',')); };
   assert.deepEqual(pos(), pos());
   const body = SRC.slice(SRC.indexOf('export function street('), SRC.indexOf('/* ---------- 나무'));
   assert.ok(!/\bR\(\)|Math\.random|ctx\.R\b/.test(body));
