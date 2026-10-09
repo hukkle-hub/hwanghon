@@ -35,5 +35,5 @@ test('화면 연결: 모듈이 없으면 맞기만(연습 체력), 있으면 반
   assert.match(w, /loadCjs\('server\/field-mob-combat\.cjs'\)\.catch\(\(\) => null\)/, '3D 가 모듈이 없을 때 멈춘다');
   assert.match(m, /strike:\(m,p,h,t\)=>offField\.bossStrike\(m,p,h,t\)/, '2D 반격이 bossStrike(회피·완벽 회피)를 안 거친다');
   assert.match(w, /strike: \(m, p, h, t\) => fieldLocal\.bossStrike\(m, p, h, t\)/, '3D 반격이 bossStrike 를 안 거친다');
-  assert.match(l, /if \(!res\.ok\) throw/, '없는 모듈(404)을 코드로 돌린다');
+  assert.match(l, /if \(res\.ok === false\) throw/, '없는 모듈(404)을 코드로 돌린다');
 });
