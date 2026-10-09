@@ -155,4 +155,16 @@ function tick(m,a,s,players,now,nav,context=null) {
   a.phase='windup';a.until=a.action.damageAt;m.anim='attack';return null;
 }
 function stagger(a,now){a.seq++;a.hitUntil=now+180;a.phase='idle';a.ready=Math.max(a.ready,now+180);}
-module.exports={statsFor,validateStats,reset,tick,stagger,actionFor,objectiveFor,roleGoal,npcScore,refreshResonance,damageScale,counter,tryCounter};
+/* Patrol stays on the Ecology's walking speed. Combat movement uses the
+   existing Runner speed (5.2 m/s), not a newly invented burst multiplier.
+   Share this metadata builder between host and offline practice. */
+function visualAction(m,a,now){
+ let action=a.action?{...a.action}:null;
+ if(m.catalogId==='G5_RUNNER'&&m.anim==='walk'){
+  const locomotion=m.engaged?'run':'walk';
+  action={...(action||{key:'locomotion',windupMs:600,seq:a.seq,startAt:a.lastTick}),locomotion};
+ }
+ if(action&&Number.isFinite(now)&&Number.isFinite(action.startAt))action.elapsedMs=Math.max(0,now-action.startAt);
+ return action;
+}
+module.exports={statsFor,validateStats,reset,tick,stagger,actionFor,objectiveFor,roleGoal,npcScore,refreshResonance,damageScale,counter,tryCounter,visualAction};

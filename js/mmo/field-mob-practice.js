@@ -22,6 +22,6 @@ export function createMobPractice({ MOB, ECO, planRoute = null, safe = () => fal
       const counter=MOB.tryCounter?.(m,s.ai,now);s.hp = Math.max(0, s.hp - dmg*(MOB.damageScale?.(m.catalogId,s.ai,now)??1));if(!counter&&m.catalogId!=='G5_ARMORED'){MOB.stagger(s.ai, now); m.anim = 'hit';} m.engaged = true; s.ai.target = who;
       const down = s.hp === 0 && !!ECO.defeat(id, now); if(down)MOB.refreshResonance?.(ECO.mobs,states,now,resonanceCache);return { hp: Math.ceil(100 * s.hp / s.max), down,...(counter?{counter}:{}) }; },
     /* 그리기 칸 = 생태 snapshot + 체력% + 동작 순번 (서버 mobs 8·9번째 칸과 같은 값) */
-    snapshot(x, z, now) { return ECO.snapshot(x, z, now).map(e => { const s = states.get(e.id), ok = !!s && s.generation === e.generation; return { ...e, hp: e.alive && ok ? Math.ceil(100 * s.hp / s.max) : 0, seq: ok ? s.ai.seq : null, action:ok&&s.ai.action?{...s.ai.action,elapsedMs:Math.max(0,now-s.ai.action.startAt)}:null }; }); },
+    snapshot(x, z, now) { return ECO.snapshot(x, z, now).map(e => { const s = states.get(e.id), ok = !!s && s.generation === e.generation; return { ...e, hp: e.alive && ok ? Math.ceil(100 * s.hp / s.max) : 0, seq: ok ? s.ai.seq : null, action:ok?MOB.visualAction(ECO.mobs.get(e.id)||e,s.ai,now):null }; }); },
   };
 }

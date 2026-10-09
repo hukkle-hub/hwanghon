@@ -124,13 +124,13 @@ class Field{
   for(const [id,s]of this.mobStates)if(s.zone===e.zone.id&&!e.mobs.has(id))this.mobStates.delete(id); }
  mobView(p,now=this.clock()){
   const e=this.ecologies.get(p.zone);if(!e)return [];
-  return e.snapshot(p.x,p.z,now,AOI).map(m=>{const s=this.mobStates.get(m.id);
+  return e.snapshot(p.x,p.z,now,AOI).map(m=>{const s=this.mobStates.get(m.id),action=s?.generation===m.generation?MOB.visualAction(e.mobs.get(m.id)||m,s.ai):null;
    /* Final document 210 / v2: exact seven Ecology.snapshot fields, followed by
       HP and optional action sequence. Keep alive boolean and HP in slot 8. */
    return [m.id,m.catalogId,m.x,m.z,m.alive,m.anim,m.generation,
     m.alive&&s?.generation===m.generation?Math.ceil(100*s.hp/s.max):0,
     s?.generation===m.generation?s.ai.seq:0,
-    ...(s?.generation===m.generation&&s.ai.action?[{...s.ai.action}]:[])];}); }
+    ...(action?[action]:[])];}); }
  tickEcologies(now){
   let retry=2;for(const [key,r]of this.pendingMobRewards){if(retry<=0)break;if(now<r.nextAt)continue;
    retry--;this.rewardMob(r.id,r.m,r.s,now);}
