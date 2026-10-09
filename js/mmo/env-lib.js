@@ -330,7 +330,7 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
 /* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
    한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
    메시는 하나하나 세우고(정적 합치기가 48 m 칸으로 묶는다), 전선(선)만 160 m 칸별로 직접 묶는다. */
-export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, at: {} };   /* at: 검수용 자리 몇 개씩 */
+export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, at: {} };   /* at: 검수용 자리 몇 개씩 */
 const seeAt = (k, p) => { const l = STREET.at[k] || (STREET.at[k] = []); if (l.length < 4) l.push([+p[0].toFixed(1), +p[1].toFixed(1)]); };
 export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, walk } = ctx, inBand = (p, pad) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
   const carRoads = roadsW.filter(rw => !/footway|path|pedestrian|steps|cycleway|track/.test(rw.r.kind));
@@ -392,6 +392,22 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
     for (const rw of carRoads) { const id = rw.r.id | 0; for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 1) continue;
       for (let d = 1; d < L; d += 2.6) for (const sd of [-1, 1]) { const h = hashU(id, i * 2 + (sd > 0 ? 1 : 0), d * 10 | 0); if (h < 0.3) tuft(a[0] + dx / L * d - dz / L * sd * (rw.width / 2 + 0.3 + h), a[1] + dz / L * d + dx / L * sd * (rw.width / 2 + 0.3 + h), h); } } }
     if (tufts.length) { scene.add(tuftMesh(THREE, tufts)); STREET.weeds = tufts.length; } }
+  /* 웅덩이 (문서 220 §8): 차도 가장자리(배수로 쪽)에 하늘을 비추는 얕은 물 + 젖은 테두리 — 비 온 뒤 폐허 거리. 자리는 해시, 막이 없음 */
+  if (o.puddles !== false) { const pm = waterMat(THREE, { calm: true }), wetM = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -27 });   /* 젖은 자국: 웅덩이 가장자리 0.4 → 바깥 0 (꼭짓점 알파) — 딱딱한 다각형이면 회색 판으로 보였다 */
+    const blob = (cx, cz, ang, rx, rz, seed, k) => { const sh = new THREE.Shape(); for (let j = 0; j < 12; j++) { const a = j / 12 * Math.PI * 2, w = 0.72 + hashU(seed, j, 5) * 0.5, x = Math.cos(a) * rx * w * k, z = Math.sin(a) * rz * w * k, X = cx + x * Math.cos(ang) - z * Math.sin(ang), Z = cz + x * Math.sin(ang) + z * Math.cos(ang); j ? sh.lineTo(X, -Z) : sh.moveTo(X, -Z); }
+      const g = new THREE.ShapeGeometry(sh); g.rotateX(-Math.PI / 2); return g; };
+    const wetFan = (cx, cz, ang, rx, rz, seed) => { const pos = [cx, 0, cz], col = [0, 0, 0, 0.4], idx = [];
+      for (let ring = 0; ring < 2; ring++) for (let j = 0; j < 12; j++) { const a = j / 12 * Math.PI * 2, w = (0.72 + hashU(seed, j, 5) * 0.5) * (ring ? 1.3 : 1), x = Math.cos(a) * rx * w, z = Math.sin(a) * rz * w; pos.push(cx + x * Math.cos(ang) - z * Math.sin(ang), 0, cz + x * Math.sin(ang) + z * Math.cos(ang)); col.push(0, 0, 0, ring ? 0 : 0.4); }
+      for (let j = 0; j < 12; j++) { const a = 1 + j, b2 = 1 + (j + 1) % 12; idx.push(0, b2, a, a, b2, a + 12, b2, b2 + 12, a + 12); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 4)); g.setIndex(idx); return g; };
+    let np = 0; for (const rw of carRoads) { const id = rw.r.id | 0; for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 3) continue;
+      for (let d = 2; d < L - 2; d += 11) { const h = hashU(id, i + 911, d * 10 | 0); if (h > 0.16) continue; const r = 0.6 + hashU(i, id, d | 0) * 1.0, sd = h < 0.08 ? -1 : 1, edge = rw.width / 2 - 0.25 - 1.2 * r;   /* 젖은 테두리 바깥(가로 1.2r · 세로 2.7r)까지 차도 안에 */
+        if (edge < 0 || d < 2.7 * r + 0.3 || d > L - 2.7 * r - 0.3) continue; const off = edge * (1 - 0.5 * hashU(id, i, d | 0));
+        const x = a[0] + dx / L * d - dz / L * sd * off, z = a[1] + dz / L * d + dx / L * sd * off; if (!inBand([x, z], 2)) continue;
+        const ang = Math.atan2(dz, dx), seed = (id * 31 + i * 7 + (d | 0)) | 0;
+        const wm = new THREE.Mesh(wetFan(x, z, ang, r * 1.7, r * 0.75, seed), wetM); wm.position.y = 0.078; wm.userData.noCam = true; wm.userData.puddle = true; scene.add(wm);
+        const pw = new THREE.Mesh(blob(x, z, ang, r * 1.7, r * 0.75, seed, 1), pm); pw.position.y = 0.08; pw.userData.noCam = true; pw.userData.puddle = true; pw.receiveShadow = true; scene.add(pw); np++; } } }
+    STREET.puddles = np; }
   for (const b of buckets.values()) { const g = mergeGeometries(b.list, false); b.list.forEach(x => x.dispose()); if (!g) continue; const m = new THREE.Mesh(g, b.mat); m.castShadow = b.shadow; m.receiveShadow = true; m.userData.noCam = true; m.userData.street = 1; scene.add(m); }
   for (const l of wires.values()) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(l, 3)); const m = new THREE.LineSegments(g, wireM); m.frustumCulled = true; m.userData.noCam = true; scene.add(m); }
   return STREET; }
@@ -431,23 +447,23 @@ function waterDefaults(THREE) { const d = { uTop: 0x3a2a48, uHor: 0xd06a50, uFog
 const WATER_PARS = 'uniform float uTime; uniform vec3 uTop, uHor, uFogc, uSun, uSunc; varying vec3 vWP;\n'
   + 'float wvN(vec2 p){ return sin(dot(p, vec2(0.204, 0.050)) + uTime * 0.7) * 0.55 + sin(dot(p, vec2(-0.212, 0.488)) + uTime * 1.0) * 0.5 + sin(dot(p, vec2(0.802, -0.791)) + uTime * 1.6) * 0.3'
   + ' + sin(dot(p, vec2(0.601, 2.241)) - uTime * 2.3) * 0.16 + sin(dot(p, vec2(-3.256, -1.739)) + uTime * 3.1) * 0.09; }\n';   /* 방향이 제각각인 다섯 물결 — 축 맞춘 물결은 반짝임이 격자로 줄 섰다 */
-export function waterMat(THREE) { waterDefaults(THREE); const m = new THREE.MeshStandardMaterial({ color: 0x0c161c, roughness: 0.42, metalness: 0, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -6 }); m.userData.water = true;   /* 바닥판(0 m)보다 1.2 cm 위인데 뒤로 밀면(+6) 멀리서 바닥에 덮였다(춘천 강) — 앞으로, 길(-24)보다는 약하게 */
+export function waterMat(THREE, { calm = false } = {}) { waterDefaults(THREE); const m = new THREE.MeshStandardMaterial({ color: calm ? 0x101418 : 0x0c161c, roughness: 0.42, metalness: 0, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: calm ? -30 : -6 }); m.userData.water = true; if (calm) m.userData.puddle = true;   /* calm: 길 웅덩이 — 길(-24)보다 앞 · 잔물결만 */   /* 바닥판(0 m)보다 1.2 cm 위인데 뒤로 밀면(+6) 멀리서 바닥에 덮였다(춘천 강) — 앞으로, 길(-24)보다는 약하게 */
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, WATER);
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + WATER_PARS + SKY_REFL)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 vec3 wV = normalize(cameraPosition - vWP); float wD = length(cameraPosition - vWP); vec2 wq = vWP.xz; float we = 0.18;
-float wgx = wvN(wq + vec2(we, 0.0)) - wvN(wq - vec2(we, 0.0)), wgz = wvN(wq + vec2(0.0, we)) - wvN(wq - vec2(0.0, we)), wA = 0.62 / (1.0 + wD * 0.025);
+float wgx = wvN(wq + vec2(we, 0.0)) - wvN(wq - vec2(we, 0.0)), wgz = wvN(wq + vec2(0.0, we)) - wvN(wq - vec2(0.0, we)), wA = ${calm ? '0.08' : '0.62'} / (1.0 + wD * 0.025);
 vec3 wN = normalize(vec3(-wgx * wA, 1.0, -wgz * wA)); normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 { vec3 wR = reflect(-wV, wN); float ry = wR.y, sd = max(dot(wR, normalize(uSun)), 0.0);
   vec3 sky = skyRefl(vec3(wR.x, max(ry, 0.0), wR.z));   /* 하늘 돔과 같은 능선이 거꾸로 비친다 */
   float F = 0.04 + 0.96 * pow(1.0 - max(dot(wN, wV), 0.0), 5.0);
-  float wh = smoothstep(-1.4, 1.4, wvN(wq)); totalEmissiveRadiance += sky * F * 0.8 * (0.72 + 0.4 * wh) +   /* 물결 마루·골 밝기 차 — 노을 쪽 밝은 하늘이 고르게 비치면 «판» 이었다 */
+  float wh = smoothstep(-1.4, 1.4, wvN(wq)); totalEmissiveRadiance += sky * F * ${calm ? '0.55' : '0.8'} * (0.72 + 0.4 * wh) +   /* 물결 마루·골 밝기 차 — 노을 쪽 밝은 하늘이 고르게 비치면 «판» 이었다 */
     uSunc * (pow(sd, 420.0) * 5.0 + pow(sd, 40.0) * 0.18) * smoothstep(-0.05, 0.08, uSun.y);
   diffuseColor.rgb *= 1.0 - F; }`)
       .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= 0.15;'); };   /* 거친 표준 반사가 해 쪽 수면을 통째로 주황으로 덮었다 — 반짝임은 물결 법선으로 따로 */
-  m.customProgramCacheKey = () => 'water'; return m; }
+  m.customProgramCacheKey = () => calm ? 'water-calm' : 'water'; return m; }
 /* 물가 거품 띠: 선을 오른쪽(+n = (-dz, dx))으로 o0 ~ o1 만큼 민 띠. uv = (따라간 거리, 띠 안쪽 0 → 바깥 1) */
 let FOAM_M = null;
 function foamMat(THREE) { if (FOAM_M) return FOAM_M; waterDefaults(THREE);
