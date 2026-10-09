@@ -2,6 +2,7 @@
    강남(env-osm.js)·남산(env-namsan.js)에서 쓰던 부품을 존 여럿이 같이 쓰게 모은 것.
    env-field.js 가 존 설정(js/mmo/zones.js)대로 이 부품을 골라 세운다.
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
+import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
@@ -154,7 +155,7 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
   return n; }
 
 /* ---------- 건물: 실측 윤곽 × 높이, 가까운 쪽(화면 아래)은 1층으로 잘라 길을 가리지 않게 ---------- */
-export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, ST, tc } = ctx, out = [];
+export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, ST, tc } = ctx, out = []; let ruinRubbleM = null, ruinWallM = null;
   const facadeMats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
   const curtainM = new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
   const roofM = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });
@@ -165,12 +166,56 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
     /* 넓은 필드: 걷는 구역 안 건물은 «무너진 저층» — 원작의 폐허 서울. 고층이 그대로면 그 뒤가 통째로 가려진다(55° 에서 높이 × 0.7 m) */
     const ruined = !nearSide && o.ruin && o.ruin(cst); if (ruined) h = Math.min(h, o.ruinH[0] + R() * (o.ruinH[1] - o.ruinH[0]));
     if (o.skip && o.skip(pts, b)) continue;
+    if (VIEW3D && ruined) { ruinWallM = ruinWallM || tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, color: 0xe0d6d0, roughness: 0.75, metalness: 0.2, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.3 }));   /* 폐허 벽 — 창에 불이 켜져 있으면 안 된다 */
+      ruinShell(THREE, scene, pts, h, b.id | 0, ruinWallM[(b.id >>> 3) % 4], cutM, ruinRubbleM || (ruinRubbleM = new THREE.MeshStandardMaterial({ color: 0x5a5652, roughness: 0.95, map: gritTex(THREE) })));
+      ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); continue; }
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
     const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
   return out; }
 export const inBuilding = (built, p) => built.some(b => inPoly(p, b.pts));
+/* 무너진 저층 (3D 필드만, 문서 216) — 납작한 상자 대신 «속 빈 벽체 + 들쭉날쭉 부서진 윗선 + 군데군데 빠진 벽 + 안쪽 잔해 더미».
+   자리·높이 한도·막이(윤곽 그대로)는 굽기와 같고, 모양의 흔들림은 건물 id 해시로만 정한다(장면 난수 R 을 안 쓴다 — 뒤 자리가 그대로). */
+const hashU = (a, b, c) => { let n = Math.imul((a | 0) ^ Math.imul(b + 1, 0x9E3779B1) ^ Math.imul(c + 7, 0x85EBCA77), 0xC2B2AE3D); n ^= n >>> 15; n = Math.imul(n, 0x27D4EB2F); n ^= n >>> 13; return (n >>> 0) / 4294967296; };
+function boxUV(THREE, w, h, d) { const g = new THREE.BoxGeometry(w, h, d), uv = g.attributes.uv, n = g.attributes.normal;   /* 면마다 1 m = 텍스처 1 단위 (뽑아 올린 건물과 같은 눈금) */
+  for (let i = 0; i < uv.count; i++) { const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)), U = ax > 0.5 ? d : w, V = ay > 0.5 ? d : h; uv.setXY(i, uv.getX(i) * U, uv.getY(i) * V); } return g; }
+export const RUINS = [];   /* 검수용 — 3D 무너진 건물 자리 [x, z, 높이, 반지름] */
+/* 벽 한 토막: 밑은 땅, 윗선은 왼끝 ha → 오른끝 hb 로 비스듬히 부서진 판. UV 는 벽을 따라 잰 거리(s0 부터) · 높이 — 토막이 바뀌어도 창 무늬가 이어진다 */
+function wallPiece(THREE, L, T, ha, hb, s0) { const g = new THREE.BoxGeometry(L, 1, T), P = g.attributes.position, N = g.attributes.normal, uv = g.attributes.uv;
+  for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i) > 0 ? (x < 0 ? ha : hb) : 0; P.setY(i, y);
+    const ax = Math.abs(N.getX(i)), ay = Math.abs(N.getY(i)); uv.setXY(i, ay > 0.5 ? s0 + x + L / 2 : ax > 0.5 ? P.getZ(i) : s0 + x + L / 2, ay > 0.5 ? P.getZ(i) : y); }
+  g.computeVertexNormals(); return g; }
+export function ruinShell(THREE, scene, pts, h, id, wallM, floorM, rubbleM) {
+  const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length, T = 0.4, walls = [], rubble = [], slabs = []; let s = 0, rad = 0;
+  for (const p of pts) rad = Math.max(rad, Math.hypot(p[0] - cx, p[1] - cz));
+  for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 0.5) { s += L; continue; }
+    let nx = -dz / L, nz = dx / L; if ((cx - p[0]) * nx + (cz - p[1]) * nz < 0) { nx = -nx; nz = -nz; }   /* 안쪽으로 벽 두께만큼 */
+    const n = Math.max(1, Math.round(L / 2.6)), yaw = -Math.atan2(dz, dx), seg = L / n;
+    /* 마디 높이: 이웃 토막과 대개 이어지고(윗선이 톱니처럼 오르내림), 가끔 뚝 끊긴다 */
+    const hj = []; for (let k = 0; k <= n; k++) hj.push(h * (0.3 + 0.7 * hashU(id, e, k + 101)));
+    for (let k = 0; k < n; k++) { const u = hashU(id, e, k); if (n > 2 && u < 0.14) continue;   /* 빠진 벽 — 안이 들여다보인다 */
+      const brk = hashU(id, e, k + 606) < 0.3, ha = brk ? hj[k] * (0.4 + 0.4 * hashU(id, e, k + 707)) : hj[k], hb = hj[k + 1], hk = Math.max(ha, hb);
+      const a = k / n, b = (k + 1) / n, mx = p[0] + dx * (a + b) / 2 + nx * T / 2, mz = p[1] + dz * (a + b) / 2 + nz * T / 2;
+      const g = wallPiece(THREE, seg + 0.02, T, ha, hb, s + seg * k); g.rotateY(yaw); g.translate(mx, 0, mz); walls.push(g);
+      /* 2층 바닥판 조각 — 벽이 3.6 m 넘게 남은 곳에만, 안쪽으로 1~2.5 m 삐져나와 살짝 처졌다 */
+      if (Math.min(ha, hb) > 3.6 && hashU(id, e, k + 808) < 0.55) { const w = 1 + hashU(id, e, k + 909) * 1.5, sl = new THREE.BoxGeometry(seg * (0.6 + 0.4 * hashU(id, e, k + 111)), 0.22, w);
+        sl.translate(0, 0, w / 2); sl.rotateX(0.05 + hashU(id, e, k + 222) * 0.18); sl.rotateY(yaw); const sx = nx * T, sz = nz * T;
+        /* rotateY(yaw) 뒤 +z 가 안쪽(nx,nz)이나 바깥이 될 수 있다 — 바깥이면 뒤집는다 */
+        if (Math.sin(yaw) * nx + Math.cos(yaw) * nz < 0) sl.rotateY(Math.PI) ;
+        sl.translate(mx + sx, 3.2, mz + sz); slabs.push(sl); }
+      if (hashU(id, e, k + 202) < 0.35) { const r = boxUV(THREE, 0.9 + hashU(id, e, k + 303), 0.5 + hashU(id, e, k + 404) * 0.7, 0.8); lumpy(r, 0.12, id + e + k, false);   /* 무너진 벽 밑 덩이 */
+        r.rotateY(hashU(id, e, k + 505) * 6); r.translate(mx + nx * 0.9, 0.3, mz + nz * 0.9); rubble.push(r); } }
+    s += L; }
+  /* 안쪽 바닥 · 가운데 잔해 더미 */
+  const fl = new THREE.ShapeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])))); fl.rotateX(-Math.PI / 2); fl.translate(0, 0.04, 0);
+  for (let i = 0; i < 5; i++) { const r = boxUV(THREE, 1.2 + hashU(id, i, 9) * 1.4, 0.6 + hashU(id, i, 10) * 0.9, 1 + hashU(id, i, 11)); lumpy(r, 0.16, id * 7 + i, false);
+    r.rotateY(hashU(id, i, 12) * 6); r.translate(cx + (hashU(id, i, 13) - 0.5) * 3, 0.35, cz + (hashU(id, i, 14) - 0.5) * 3); rubble.push(r); }
+  const out = []; RUINS.push([+cx.toFixed(1), +cz.toFixed(1), +h.toFixed(1), +rad.toFixed(1)]);
+  for (const [list, m] of [[walls, wallM], [rubble, rubbleM], [[fl, ...slabs], floorM]]) { if (!list.length) continue; for (const g of list) if (g.index) { const ng = g.toNonIndexed(); list[list.indexOf(g)] = ng; g.dispose(); }
+    const g = mergeGeometries(list, false); list.forEach(x => x.dispose()); if (!g) continue;
+    const mesh = new THREE.Mesh(g, m); mesh.castShadow = m !== floorM || slabs.length > 0; mesh.receiveShadow = true; mesh.userData.ruin = id; scene.add(mesh); out.push(mesh); }
+  return out; }
 
 /* ---------- 나무: 인스턴스로. 걷는 띠 안은 드문드문(갓이 인물을 가리면 안 된다) ---------- */
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;
