@@ -18,7 +18,7 @@ test('하늘 산 능선: 낮은 3인칭 카메라 앞 폐허(지평선 위 ~5°,
   assert.match(W3D, /ridge: \{ value: new THREE\.Vector3\(\.\.\.ridgeOf\(/); assert.match(W3D, /uniforms\.time\.value \+= dt/);
 });
 
-test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당김은 고정 몫만(낮은 물체를 덮지 않게)', () => {
+test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당김은 고정 몫만(낮은 물체를 덮지 않게) · 땅 다각형은 뒤로 밀지 않는다', () => {
   L.setView3d(true);
   try { const ctx = mkCtx(), osm = { roads: [{ id: 1, kind: 'secondary', lanes: 2, line: [[-50, 0], [50, 0]], layer: 0 }], areas: [{ kind: 'grass', poly: [[-60, -30], [60, -30], [60, 30], [-60, 30]] }] };
     L.areas(ctx, osm, tex); const out = L.roads(ctx, osm, tex); assert.equal(out.length, 1);
@@ -27,7 +27,7 @@ test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당�
       if (o.material.map === tex.asphalt) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass) { grassY = v.y; grassM = o.material; } }
     assert.ok(roadY - grassY >= 0.04, `길 ${roadY} · 풀밭 ${grassY}`);
     assert.ok(roadM.polygonOffset && roadM.polygonOffsetUnits < 0 && roadM.polygonOffsetFactor === 0, '길 앞당김');
-    assert.ok(grassM.polygonOffset && grassM.polygonOffsetUnits > 0 && grassM.polygonOffsetFactor === 0, '풀밭 뒤로');
+    assert.ok(!grassM.polygonOffset || grassM.polygonOffsetUnits <= 0, '풀밭을 뒤로 밀면 바닥판(0 m)에 덮인다 (제주 사냥터)');
   } finally { L.setView3d(false); }
 });
 
@@ -49,5 +49,76 @@ test('3D 경계: 방호벽·가림막·모래주머니·잔해가 섞인다 · �
 });
 
 test('땅 결: 진짜 평면만(침목 같은 낮은 상자는 빼고) · 바닥 금속성 빼며 색 보정', () => {
-  assert.match(W3D, /if \(b\.max\.y - b\.min\.y > 0\.02 \|\|/); assert.match(W3D, /m\.metalness = 0\.06; m\.color\.multiplyScalar\(0\.72\);/);
+  assert.match(W3D, /if \(b\.max\.y - b\.min\.y > 0\.02 \|\|/); assert.match(W3D, /diffuseColor\.rgb \*= 1\.0 - uCloudK \* cs;/); assert.match(W3D, /CLOUDK\.value = 0\.3 \* Math\.min\(1, Math\.max\(0, \(sy - 0\.08\)/);   /* 구름 그림자: 해가 낮으면 0 */ assert.match(W3D, /m\.metalness = 0\.06; m\.color\.multiplyScalar\(0\.72\);/);
+});
+
+test('3D 물: 하늘을 비추는 셰이더 · 바닥보다 앞으로 · 물가 거품 · 막이와 장면 난수는 2D 와 같다', () => {
+  const osm = { areas: [{ kind: 'water', poly: [[-40, -20], [40, -20], [40, 20], [-40, 20]] }], lines: [{ kind: 'water:river', width: 20, line: [[-60, 40], [60, 40]] }, { kind: 'coastline', line: [[-80, -60], [80, -60]] }] };
+  const run = v3 => { let n = 0; const s = L.rng(9); L.setView3d(v3); try { const ctx = mkCtx(() => { n++; return s(); }); L.areas(ctx, osm, tex); L.lines(ctx, osm); return { n, ctx }; } finally { L.setView3d(false); } };
+  const a = run(false), b = run(true);
+  assert.equal(b.n, a.n, '3D 물이 장면 난수를 더/덜 쓴다'); assert.deepEqual(b.ctx.blockers, a.ctx.blockers, '막이가 다르다');
+  const mats = c => c.scene.children.filter(o => o.isMesh).map(o => o.material);
+  const w3 = mats(b.ctx).filter(m => m.userData.water), w2 = mats(a.ctx).filter(m => m.userData.water);
+  assert.equal(w2.length, 0, '2D 굽기 물이 바뀌었다'); assert.ok(w3.length >= 3, '3D 물 ' + w3.length);
+  for (const m of w3) { assert.equal(m.customProgramCacheKey(), 'water'); assert.ok(m.polygonOffset && m.polygonOffsetUnits < 0 && m.polygonOffsetFactor === 0, '물은 바닥판보다 앞으로'); assert.equal(m.metalness, 0); }
+  const sh = { uniforms: {}, vertexShader: '#include <common>\n#include <begin_vertex>', fragmentShader: '#include <common>\n#include <normal_fragment_maps>\n#include <emissivemap_fragment>\n#include <lights_fragment_end>' }; w3[0].onBeforeCompile(sh);
+  assert.match(sh.fragmentShader, /skyRefl\(/); assert.match(sh.fragmentShader, /directSpecular \*= 0\.15/); assert.ok(sh.uniforms.uRidge && sh.uniforms.uTop.value, '하늘 uniform');
+  const foam = c => c.scene.children.filter(o => o.isMesh && o.material.userData.foam).length;
+  assert.equal(foam(a.ctx), 0, '2D 에 거품'); assert.equal(foam(b.ctx), 1 + 2 + 2, '거품 띠 (호수 1 · 강둑 2 · 바닷가 2)');
+  assert.match(W3D, /WATER\.uRidge\.value = U\.ridge\.value/);
+});
+
+test('3D 사냥터 꾸밈: 덤불 덩어리 · 바위 반쯤 묻기 · 풀포기(무릎 아래) — 막이와 장면 난수는 2D 와 같다', () => {
+  const region = { s0: -60, s1: 60, t0: -40, t1: 40 };
+  const run = v3 => { let n = 0; const s = L.rng(13); L.setView3d(v3); try { const ctx = mkCtx(() => { n++; return s(); }); const stat = L.dress(ctx, region, tex, { urban: true }); return { n, ctx, stat }; } finally { L.setView3d(false); } };
+  const a = run(false), b = run(true);
+  assert.equal(b.n, a.n, '3D 꾸밈이 장면 난수를 더/덜 쓴다'); assert.deepEqual(b.ctx.blockers, a.ctx.blockers, '막이가 다르다');
+  assert.equal(b.stat.rocks, a.stat.rocks); assert.equal(b.stat.bushes, a.stat.bushes); assert.ok(!a.stat.tufts && b.stat.tufts > 20, '풀포기 ' + b.stat.tufts);
+  const tuft = b.ctx.scene.children.find(o => o.isInstancedMesh && o.material.userData.tuft); assert.ok(tuft, '풀포기 메시');
+  const m = new THREE.Matrix4(), sc = new THREE.Vector3(); let hMax = 0; for (let i = 0; i < tuft.count; i++) { tuft.getMatrixAt(i, m); sc.setFromMatrixScale(m); hMax = Math.max(hMax, sc.y * 0.7); }
+  assert.ok(hMax < 0.75, '풀포기가 인물을 가린다 ' + hMax.toFixed(2)); assert.equal(tuft.material.customProgramCacheKey(), 'grass-wind');
+  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count >= 180 && o.geometry.attributes.position.count <= 240); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
+});
+
+test('지하철 출구: 3D 는 새까만 판 대신 내려가는 계단 착시 · 2D 굽기는 그대로', () => {
+  const src = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
+  assert.match(src, /if \(!L\.isView3d\(\)\) \{ const hole = new THREE\.Mesh\(new THREE\.PlaneGeometry\(5\.6, 2\.8\), new THREE\.MeshBasicMaterial\(\{ color: 0x020203 \}\)\)/, '2D 구멍이 바뀌었다');
+  assert.match(src, /else g\.add\(stairDown\(THREE\)\);/);
+  assert.match(src, /k = 0\.11 \* Math\.pow\(1 - i \/ 10, 2\.2\)/, '단마다 어두워진다');
+});
+
+test('별: 밤에만(윗하늘 선형 밝기로) — 잰 값 밤 0.0061 · 황혼 0.0194 · 낮 0.128', () => {
+  const m = SKY_FRAG.match(/float dark = 1\.0 - smoothstep\(([\d.]+), ([\d.]+), dot\(top, vec3\(0\.3, 0\.5, 0\.2\)\)\);/); assert.ok(m, '별 세기 식');
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }, dark = x => 1 - ss(+m[1], +m[2], x);
+  assert.ok(dark(0.0061) > 0.9, '밤에 별이 없다'); assert.ok(dark(0.0194) < 0.35, '황혼에 별이 너무 많다 ' + dark(0.0194).toFixed(2)); assert.equal(dark(0.1279), 0, '낮에 별'); assert.equal(dark(0.0606), 0, '새벽에 별');
+});
+
+test('강남(env-osm)을 3D 로 짓는다: 오류 없음 · 막이는 2D 와 같다 · 차선이 길 판 위 · 출구 계단', async () => {
+  const { build } = await import('../js/mmo/env-osm.js'); const osm = JSON.parse(fs.readFileSync(new URL('../maps/2d/gangnam/osm.json', import.meta.url), 'utf8'));
+  const log = console.log; console.log = () => {}; const run = v3 => { L.setView3d(v3); try { const scene = new THREE.Scene(); return { scene, env: build(THREE, scene, osm, { id: 'gangnam', view3d: v3 }) }; } finally { L.setView3d(false); } };
+  let a, b; try { a = run(false); b = run(true); } finally { console.log = log; }   /* 반복문 안 지역 변수 L(길이)이 모듈 L 을 가려 3D 강남이 통째로 안 떴던 적이 있다 (문서 220 §14) */
+  assert.deepEqual(b.env.blockers, a.env.blockers, '3D 가 막이를 바꿨다 — 서버 지도(map.json)와 어긋난다');
+  const dashY = [], roadY = []; b.scene.updateMatrixWorld(true);
+  b.scene.traverse(o => { if (!o.isMesh || o.isInstancedMesh) return; const m = o.material; if (m.transparent && m.opacity === 0.55 && m.polygonOffset) dashY.push(o.getWorldPosition(new THREE.Vector3()).y); });
+  assert.ok(dashY.length > 50 && dashY.every(y => y > 0.065), '차선이 길 판(0.06) 밑 ' + dashY.length);
+  let stairs = 0; b.scene.traverse(o => { if (o.name === 'stair') stairs++; }); assert.equal(stairs, 12, '출구 계단');
+});
+
+test('3D 땅 층 깊이 순서: 바닥판 < 얼룩 < 콘크리트·숲 < 풀·모래 < 물 < 길 < 웅덩이 < 차선 (그리는 순서에 기대지 않는다)', () => {
+  const U = L.LAYER, order = [U.ground, U.patch, U.low, U.grass, U.water, U.road, U.puddle, U.paint];
+  for (let i = 1; i < order.length; i++) assert.ok(order[i] < order[i - 1], '층 순서 ' + i);
+  L.setView3d(true);
+  try { const ctx = mkCtx(); const g = L.ground(ctx, tex.forest); assert.equal(g.material.polygonOffsetUnits, U.ground);
+    L.areas(ctx, { areas: [{ kind: 'grass', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }, { kind: 'industrial', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }] }, tex);
+    const by = mp => ctx.scene.children.find(o => o.isMesh && o.material.map === mp).material;
+    assert.ok(by(tex.grass).polygonOffsetUnits < (by(tex.concrete).polygonOffset ? by(tex.concrete).polygonOffsetUnits : 0), '풀밭이 콘크리트 앞 (제주)');
+    assert.equal(by(tex.grass).polygonOffsetFactor, 0);
+  } finally { L.setView3d(false); }
+  const c2 = mkCtx(); assert.equal(L.ground(c2, tex.forest).material.polygonOffset, false, '2D 굽기는 그대로');
+  assert.match(W3D, /MODE = q\.get\('macro'\) \|\| 'all';/, '결 셰이더 기본 켬');
+});
+
+test('땅 결 흙 얼룩 색은 선형 값(어둡게) — sRGB 감의 0.40 은 풀·아스팔트를 허옇게 띄웠다 (제주)', () => {
+  const m = W3D.match(/mix\(diffuseColor\.rgb, vec3\(([\d.]+), ([\d.]+), ([\d.]+)\) \* \(0\.8 \+ mn \* 0\.4\), dirt \* 0\.32\)/); assert.ok(m, '흙 얼룩 식');
+  assert.ok(Math.max(+m[1], +m[2], +m[3]) * 1.2 <= 0.2, '흙색이 선형 0.2 를 넘는다 — sRGB 로 0.48 이상, 짙은 바닥이 뜬다');
 });

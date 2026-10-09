@@ -15,6 +15,11 @@ void main(){
   vec2 uv = d.xz / (y + 0.16) * 1.4 + vec2(time * 0.006, time * 0.002);
   float n = fbm(uv) * 0.75 + fbm(uv * 2.7 + 5.0) * 0.25, dens = smoothstep(cover, cover + 0.22, n) * smoothstep(0.015, 0.16, y) * (1.0 - smoothstep(0.55, 0.9, y) * 0.6);
   vec3 cloud = mix(mix(top, fogc, 0.35) * 0.7, hor * 1.05, smoothstep(0.0, 0.5, y)) ; cloud = mix(cloud, sunc * 1.25 + hor * 0.3, pow(a, 3.0) * 0.85);
+  /* 별 (문서 220 §13): 하늘 윗색이 어두울수록(밤) — 방향 격자마다 해시 한 점, 구름에 가리고 반짝인다 */
+  float dark = 1.0 - smoothstep(0.005, 0.026, dot(top, vec3(0.3, 0.5, 0.2)));   /* 선형 색 윗하늘 밝기(잰 값): 밤 0.0061 → 별 0.99 · 황혼 0.0194 → 0.23 · 새벽 0.061 · 낮 0.128 → 0 */
+  if (dark > 0.0 && y > 0.04) { vec2 sp = vec2(atan(d.z, d.x) * 95.0, asin(clamp(y, -1.0, 1.0)) * 95.0); vec2 si = floor(sp), sf = fract(sp) - 0.5; float sh = h2(si), sb = step(0.965, sh);
+    vec2 so = vec2(h2(si + 3.1), h2(si + 7.7)) - 0.5; float st = sb * smoothstep(0.16, 0.0, length(sf - so * 0.6)) * (0.55 + 0.45 * sin(time * (1.5 + sh * 3.0) + sh * 40.0));
+    c += vec3(0.85, 0.9, 1.0) * st * dark * smoothstep(0.04, 0.25, y) * (1.0 - dens) * 1.3; }
   c = mix(c, cloud, dens * 0.85);
   c += sunc * glow * smoothstep(-0.05, 0.05, y) * (1.0 - dens * 0.7);
   /* 산 능선 두 겹 — 방위각 둘레를 따라 이어지는 잡음(원 위의 2D 잡음이라 360° 에서 이음매가 없다) */
@@ -31,3 +36,16 @@ export function ridgeOf(kind, seed = 1) {
   /* 3인칭 카메라는 낮아서 50~100 m 앞 폐허가 지평선 위 5° 쯤을 가린다 — 춘천의 산(3~5 km 밖 600 m)은 7~11° 로 그 위에 올라와야 보인다 */
   const H = { mountain: [0.19, 0.12], river: [0.17, 0.1], rural: [0.14, 0.085], historic: [0.13, 0.08], industrial: [0.11, 0.065], city: [0.11, 0.065], hub: [0.12, 0.07], coast: [0.09, 0.05], island: [0.13, 0.06] }[kind] || [0.12, 0.07];
   return [H[0], H[1], (seed % 97) * 0.37]; }
+/* 물에 비친 하늘 (문서 220 §6) — 같은 그라데이션 + 같은 능선을 반사 방향으로. 구름·해는 뺀다(물이 따로 반짝임을 그린다). 이름은 겹치지 않게 sk 접두 */
+export const SKY_REFL = `uniform vec3 uRidge;
+float skH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float skN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(skH(i), skH(i + vec2(1.0, 0.0)), f.x), mix(skH(i + vec2(0.0, 1.0)), skH(i + vec2(1.0, 1.0)), f.x), f.y); }
+float skF(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * skN(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+vec3 skyRefl(vec3 d){ float y = d.y; vec3 c = mix(uFogc, uHor, smoothstep(-0.02, 0.10, y)); c = mix(c, uTop, smoothstep(0.10, 0.55, y));
+  if (y > uRidge.x + 0.01) return c;   /* 능선보다 높이 비치면 fbm 8번을 건너뛴다 (물 픽셀마다 돈다) */
+  vec2 ring = normalize(d.xz + 1e-5); float far = uRidge.x * (0.35 + 0.65 * skF(ring * 2.2 + uRidge.z)), near = uRidge.y * (0.25 + 0.75 * skF(ring * 4.1 + uRidge.z * 1.7 + 3.0));
+  vec3 farC = mix(uFogc, mix(uHor, uTop, 0.4) * 0.82, 0.38), nearC = mix(uFogc, mix(uTop, uHor, 0.3) * 0.5, 0.62);
+  c = mix(c, mix(uFogc, farC, smoothstep(-0.01, far, y) * 0.8 + 0.2), 1.0 - smoothstep(far - 0.006, far + 0.004, y));
+  c = mix(c, mix(uFogc, nearC, smoothstep(-0.01, near, y) * 0.7 + 0.3), 1.0 - smoothstep(near - 0.005, near + 0.004, y));
+  return c; }
+`;

@@ -102,11 +102,11 @@ export function build(THREE, scene, osm, opt = {}) {
 
   /* ---------- 땅 ---------- */
   const groundTex = paver.clone(); groundTex.repeat.set(1400 / 1.6, 1400 / 1.6);   /* 판 UV 는 0~1 — 1.6 m 마다 한 장 */
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), L.layer(new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }), L.LAYER.ground));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   /* 공원·녹지 */
   for (const a of osm.areas) { if (!/park|pitch|grass/.test(a.kind)) continue; const sh = new THREE.Shape(a.poly.map(p => { const w = W(p); return new THREE.Vector2(w[0], -w[1]); }));
-    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), L.layer(new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 }), L.LAYER.grass)); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
 
   /* ---------- 도로: 중심선을 폭만큼 펼친 띠 ---------- */
   function ribbon(line, width, y) { const pos = [], idx = []; const pts = line.map(W);
@@ -131,22 +131,22 @@ export function build(THREE, scene, osm, opt = {}) {
     /* 차선: 간선은 점선 */
     if (WIDTH[r.kind] && (r.lanes || 2) > 1) for (let k = 1; k < (r.lanes || 2); k++) dashed(r.line.map(W), -width / 2 + k * width / (r.lanes || 2), 0xb8b8a8);
     if (WIDTH[r.kind]) { dashed(r.line.map(W), -width / 2 + 0.2, 0xd8d8c8, true); dashed(r.line.map(W), width / 2 - 0.2, 0xd8d8c8, true); } }
-  function dashed(pts, off, color, solid) { const mat = dashMats[color] || (dashMats[color] = new THREE.MeshStandardMaterial({ color, roughness: 0.7, transparent: true, opacity: 0.55 }));   /* 닳은 페인트 */
+  function dashed(pts, off, color, solid) { const V3 = L.isView3d(), mat = dashMats[color] || (dashMats[color] = new THREE.MeshStandardMaterial({ color, roughness: 0.7, transparent: true, opacity: 0.55, ...(V3 ? { polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -36 } : {}) }));   /* 닳은 페인트 */
     for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; let dx = b[0] - a[0], dz = b[1] - a[1]; const L = Math.hypot(dx, dz); if (L < 0.5) continue; dx /= L; dz /= L;
       const step = solid ? L : 6, len = solid ? L : 3;
       for (let d = 0; d + len <= L + 1e-3; d += step) { const cx = a[0] + dx * (d + len / 2) - dz * off, cz = a[1] + dz * (d + len / 2) + dx * off;
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), mat); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx); m.position.set(cx, 0.03, cz); scene.add(m); } } }
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), mat); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx); m.position.set(cx, V3 ? 0.075 : 0.03, cz);   /* 반복문 안의 L 은 길이(숫자) — 모듈 L 을 가린다 */ scene.add(m); } } }   /* 3D: 길 판이 4 cm 올라가(0.06) 0.03 차선이 묻혔다 (문서 220 §14) */
   /* 가장 가까운 간선 방향 (횡단보도·차 방향) */
   function nearestRoad(p, kinds) { let best = null; for (const rw of roadsW) { if (kinds && !kinds.includes(rw.r.kind)) continue;
       for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;
         const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)), qx = a[0] + vx * u, qz = a[1] + vz * u, d = Math.hypot(p[0] - qx, p[1] - qz);
         if (!best || d < best.d) best = { d, q: [qx, qz], dir: Math.atan2(vz, vx), rw, i, u }; } } return best; }
   /* 횡단보도 (흰 줄무늬) — OSM 횡단 지점은 차로마다 하나 */
-  const zebraMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e0, roughness: 0.55, emissive: 0x303030 });
+  const zebraMat = L.layer(new THREE.MeshStandardMaterial({ color: 0xe8e8e0, roughness: 0.55, emissive: 0x303030 }), L.LAYER.paint), zebraY = L.isView3d() ? 0.075 : 0.035;   /* 3D: 길 판(0.06) 위 — 0.035 는 묻혔다 */
   for (const c of osm.crossings) { const p = W(c), n = nearestRoad(p, ['primary', 'primary_link', 'secondary', 'tertiary', 'residential', 'busway']); if (!n || n.d > 6) continue;
     const across = n.dir + Math.PI / 2, w = n.rw.width;
     for (let k = -w / 2 + 0.5; k <= w / 2 - 0.5; k += 1.0) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 4), zebraMat); m.rotation.x = -Math.PI / 2; m.rotation.z = -across;
-      m.position.set(n.q[0] + Math.cos(across) * k, 0.035, n.q[1] + Math.sin(across) * k); scene.add(m); } }
+      m.position.set(n.q[0] + Math.cos(across) * k, zebraY, n.q[1] + Math.sin(across) * k); scene.add(m); } }
 
   /* ---------- 건물: 실측 윤곽 × 실측 높이. 가까운 쪽(화면 아래)은 1층만 남기고 잘라 길을 가리지 않게 ---------- */
   const footprintArea = poly => { let a = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
@@ -210,7 +210,8 @@ export function build(THREE, scene, osm, opt = {}) {
     for (const sx of [-2.9, 2.9]) for (const sz of [-1.5, 1.5]) { const pp = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.7, 0.12), frameM); pp.position.set(sx, 1.35, sz); g.add(pp); }
     const wall = new THREE.Mesh(new THREE.BoxGeometry(6, 1.1, 0.1), glassM); wall.position.set(0, 0.55, -1.55); g.add(wall);
     const wall2 = wall.clone(); wall2.position.z = 1.55; g.add(wall2);
-    const hole = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ color: 0x020203 })); hole.rotation.x = -Math.PI / 2; hole.position.y = 0.04; g.add(hole);
+    if (!L.isView3d()) { const hole = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ color: 0x020203 })); hole.rotation.x = -Math.PI / 2; hole.position.y = 0.04; g.add(hole); }
+    else g.add(stairDown(THREE));   /* 3D: 새까만 판 한 장은 «허공» 으로 보였다(문서 220 §12) — 단마다 어두워지는 계단 + 단 모서리 */
     const no = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), new THREE.MeshBasicMaterial({ map: numT(e.ref || '?'), toneMapped: false })); no.position.set(-2.6, 3.15, 1.62); g.add(no);
     const no2 = no.clone(); no2.rotation.y = Math.PI; no2.position.z = -1.62; g.add(no2);
     if (broken) { roof.rotation.z = 0.32; roof.position.set(0.6, 1.9, 0); g.children.filter(c => c !== roof && c.position.x > 0 && c.geometry && c.geometry.parameters.height === 2.7).forEach(c => { c.scale.y = 0.55; c.position.y = 0.75; c.rotation.z = 0.2; }); }
@@ -339,3 +340,10 @@ export function build(THREE, scene, osm, opt = {}) {
   return { lights, blockers, gates: gatesW.map(({ st, ...g }) => g), spawn: { x: spawnP[0], z: spawnP[1] }, road: { ang: SCREEN_ANG }, walk, extentPts, sun: { dir: [sunDir.x, sunDir.y, sunDir.z], color: '#ff8a50' }, sky,
     exits: exitsW.map(e => ({ ref: e.ref, x: +e.p[0].toFixed(2), z: +e.p[1].toFixed(2) })), license: osm.license, sunLight: sun };
 }
+
+/* 내려가는 계단 착시 (3D, 문서 220 §12): 땅은 못 파니 단 열 개를 입구(−x) 밝게 → 안쪽(+x) 새까맣게, 단 모서리는 조금 밝은 선. 꼭짓점 색 판 하나 = 그리기 1번 */
+let STAIR_G = null;
+function stairDown(THREE) { if (!STAIR_G) { const pos = [], col = [], c = new THREE.Color(), q = (x0, x1, z0, z1, k) => { c.setScalar(k); for (const [x, z] of [[x0, z0], [x1, z1], [x1, z0], [x0, z0], [x0, z1], [x1, z1]]) { pos.push(x, 0, z); col.push(c.r, c.g, c.b); } };
+    for (let i = 0; i < 10; i++) { const x0 = -2.8 + i * 0.56, k = 0.11 * Math.pow(1 - i / 10, 2.2); q(x0, x0 + 0.5, -1.4, 1.4, k); q(x0 + 0.5, x0 + 0.56, -1.4, 1.4, k * 1.7 + 0.008); }
+    STAIR_G = new THREE.BufferGeometry(); STAIR_G.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); STAIR_G.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); STAIR_G.computeVertexNormals(); }
+  const m = new THREE.Mesh(STAIR_G, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })); m.position.y = 0.04; m.name = "stair"; return m; }

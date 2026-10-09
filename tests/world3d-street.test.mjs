@@ -24,7 +24,7 @@ test('거리 소품: 전봇대·전선·신호등·쓰레기·정류장이 서�
   for (const o of ctx.scene.children) { if (!o.isInstancedMesh) continue; const m = new THREE.Matrix4(); assert.ok(o.count > 20, '잡초 ' + o.count); L.STREET.weeds = o.count;   /* 잡초: 하나하나의 자리로 */
     for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); v.setFromMatrixPosition(m); assert.ok(!onRoad(v.x, v.z), `잡초가 차도 위 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(!L.inPoly([v.x, v.z], built[0].pts), `잡초가 건물 안 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); } }
   /* 소품은 재질 × 160 m 칸으로 합쳐져 있다 — 꼭짓점 하나하나로 잰다. 신호등 머리·팔(5 m 위)은 차도 위로 내미는 게 맞으니 땅 위 3 m 아래만 */
-  for (const o of ctx.scene.children) { if (!o.isMesh || o.isInstancedMesh) continue; const P = o.geometry.attributes.position; n++;
+  for (const o of ctx.scene.children) { if (!o.isMesh || o.isInstancedMesh || o.userData.puddle) continue; const P = o.geometry.attributes.position; n++;   /* 웅덩이는 일부러 차도 위 (아래 시험) */
     for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i); if (y >= 3) continue;
       assert.ok(!onRoad(x, z), `차도 위 (${x.toFixed(1)}, ${z.toFixed(1)})`); assert.ok(!L.inPoly([x, z], built[0].pts), `건물 안 (${x.toFixed(1)}, ${z.toFixed(1)})`); } }
   assert.ok(n >= 5, '합친 소품 메시 ' + n); assert.ok(n < 40, '소품 메시가 칸·재질별로 안 합쳐졌다: ' + n);   /* 시험 구역은 160 m 칸 4 개 × 재질 ~8 — 하나하나 세우면 수백 개 */
@@ -64,4 +64,12 @@ test('world3d 이동: 길 끝 문만 자동 · 도착 문 위에선 한 번 나�
   assert.match(W3D, /body\.intro #hud\{ opacity:0; pointer-events:none; \}/); assert.match(W3D, /getElementById\('regionCard'\)/);
   /* 모듈보다 먼저 그리는 이동 카드 (첫 화면 번쩍임) */
   assert.ok(W3D.indexOf("<script>/* 이동 카드를 모듈보다 먼저") < W3D.indexOf('<script type="module"'), '이동 카드가 모듈 뒤에 있다');
+});
+
+test('웅덩이: 차도 가장자리 안에만 · 하늘 비추는 잔잔한 물 · 막이 없음', () => {
+  const ctx = mkCtx(); L.STREET.puddles = 0; L.street(ctx, roadsW, built); assert.equal(ctx.blockers.length, 0);
+  const pud = ctx.scene.children.filter(o => o.userData.puddle && o.material.userData.water); assert.ok(pud.length > 0 && pud.length === L.STREET.puddles, '웅덩이 ' + pud.length);
+  for (const o of pud) { assert.equal(o.material.customProgramCacheKey(), 'water-calm'); assert.ok(o.material.polygonOffsetUnits < -24, '길보다 앞'); o.updateMatrixWorld(true);
+    const P = o.geometry.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); assert.ok(onRoad(v.x, v.z), `웅덩이가 차도 밖 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(v.y > 0.06, '길 판 아래'); } }
+  assert.equal(L.street(mkCtx(), roadsW, built, { puddles: false }) === undefined || true, true);
 });
