@@ -31,3 +31,16 @@ export function ridgeOf(kind, seed = 1) {
   /* 3인칭 카메라는 낮아서 50~100 m 앞 폐허가 지평선 위 5° 쯤을 가린다 — 춘천의 산(3~5 km 밖 600 m)은 7~11° 로 그 위에 올라와야 보인다 */
   const H = { mountain: [0.19, 0.12], river: [0.17, 0.1], rural: [0.14, 0.085], historic: [0.13, 0.08], industrial: [0.11, 0.065], city: [0.11, 0.065], hub: [0.12, 0.07], coast: [0.09, 0.05], island: [0.13, 0.06] }[kind] || [0.12, 0.07];
   return [H[0], H[1], (seed % 97) * 0.37]; }
+/* 물에 비친 하늘 (문서 220 §6) — 같은 그라데이션 + 같은 능선을 반사 방향으로. 구름·해는 뺀다(물이 따로 반짝임을 그린다). 이름은 겹치지 않게 sk 접두 */
+export const SKY_REFL = `uniform vec3 uRidge;
+float skH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float skN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(skH(i), skH(i + vec2(1.0, 0.0)), f.x), mix(skH(i + vec2(0.0, 1.0)), skH(i + vec2(1.0, 1.0)), f.x), f.y); }
+float skF(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * skN(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
+vec3 skyRefl(vec3 d){ float y = d.y; vec3 c = mix(uFogc, uHor, smoothstep(-0.02, 0.10, y)); c = mix(c, uTop, smoothstep(0.10, 0.55, y));
+  if (y > uRidge.x + 0.01) return c;   /* 능선보다 높이 비치면 fbm 8번을 건너뛴다 (물 픽셀마다 돈다) */
+  vec2 ring = normalize(d.xz + 1e-5); float far = uRidge.x * (0.35 + 0.65 * skF(ring * 2.2 + uRidge.z)), near = uRidge.y * (0.25 + 0.75 * skF(ring * 4.1 + uRidge.z * 1.7 + 3.0));
+  vec3 farC = mix(uFogc, mix(uHor, uTop, 0.4) * 0.82, 0.38), nearC = mix(uFogc, mix(uTop, uHor, 0.3) * 0.5, 0.62);
+  c = mix(c, mix(uFogc, farC, smoothstep(-0.01, far, y) * 0.8 + 0.2), 1.0 - smoothstep(far - 0.006, far + 0.004, y));
+  c = mix(c, mix(uFogc, nearC, smoothstep(-0.01, near, y) * 0.7 + 0.3), 1.0 - smoothstep(near - 0.005, near + 0.004, y));
+  return c; }
+`;

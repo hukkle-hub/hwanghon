@@ -117,7 +117,7 @@ import { createCityLife } from './js/mmo/city-life.js';
 import { koreaMapSVG } from './js/mmo/korea-map.js';
 import { SKY_VERT, SKY_FRAG, ridgeOf } from './js/mmo/sky-shader.js';
 import { REGIONS } from './js/mmo/regions.js';
-import { FAR, WIND } from './js/mmo/env-lib.js';
+import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d } from './js/mmo/env-lib.js';
@@ -164,7 +164,7 @@ if (env.sky && env.sky.top && env.sky.horizon) { const sd = env.sun ? new THREE.
     uniforms: { top: { value: new THREE.Color(env.sky.top) }, hor: { value: new THREE.Color(env.sky.horizon) }, fogc: { value: skyCol.clone() }, sun: { value: sd }, sunc: { value: new THREE.Color(env.sun && env.sun.color || '#ff8a50') },
       ridge: { value: new THREE.Vector3(...ridgeOf((REGIONS.find(r => (r.zone || r.id) === ZONE) || {}).kind, [...ZONE].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0)) }, time: { value: 0 }, cover: { value: 0.5 } },   /* 구름·산 능선 (문서 220) */
     vertexShader: SKY_VERT, fragmentShader: SKY_FRAG }));
-  dome.frustumCulled = false; dome.renderOrder = -10; dome.name = 'sky'; scene.add(dome); window.__sky = dome; }   /* 굽기엔 없던 것 — 3인칭은 지평선까지 보인다. 먼 경계(잘린 블록·띠 끝)를 노을 안개로 덮는다 */
+  dome.frustumCulled = false; dome.renderOrder = -10; dome.name = 'sky'; scene.add(dome); window.__sky = dome; const U = dome.material.uniforms; WATER.uTop.value = U.top.value; WATER.uHor.value = U.hor.value; WATER.uFogc.value = U.fogc.value; WATER.uSun.value = U.sun.value; WATER.uSunc.value = U.sunc.value; WATER.uRidge.value = U.ridge.value; }   /* 물이 같은 하늘을 비춘다 (문서 220 §6) */   /* 굽기엔 없던 것 — 3인칭은 지평선까지 보인다. 먼 경계(잘린 블록·띠 끝)를 노을 안개로 덮는다 */
 /* 점광 정리: 장면의 점광을 빼고 데이터만 남긴다 → 가까운 8개만 */
 const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o); });
 for (const L of pointData) L.parent.remove(L);

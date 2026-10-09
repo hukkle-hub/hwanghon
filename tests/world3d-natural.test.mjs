@@ -51,3 +51,19 @@ test('3D 경계: 방호벽·가림막·모래주머니·잔해가 섞인다 · �
 test('땅 결: 진짜 평면만(침목 같은 낮은 상자는 빼고) · 바닥 금속성 빼며 색 보정', () => {
   assert.match(W3D, /if \(b\.max\.y - b\.min\.y > 0\.02 \|\|/); assert.match(W3D, /m\.metalness = 0\.06; m\.color\.multiplyScalar\(0\.72\);/);
 });
+
+test('3D 물: 하늘을 비추는 셰이더 · 바닥보다 앞으로 · 물가 거품 · 막이와 장면 난수는 2D 와 같다', () => {
+  const osm = { areas: [{ kind: 'water', poly: [[-40, -20], [40, -20], [40, 20], [-40, 20]] }], lines: [{ kind: 'water:river', width: 20, line: [[-60, 40], [60, 40]] }, { kind: 'coastline', line: [[-80, -60], [80, -60]] }] };
+  const run = v3 => { let n = 0; const s = L.rng(9); L.setView3d(v3); try { const ctx = mkCtx(() => { n++; return s(); }); L.areas(ctx, osm, tex); L.lines(ctx, osm); return { n, ctx }; } finally { L.setView3d(false); } };
+  const a = run(false), b = run(true);
+  assert.equal(b.n, a.n, '3D 물이 장면 난수를 더/덜 쓴다'); assert.deepEqual(b.ctx.blockers, a.ctx.blockers, '막이가 다르다');
+  const mats = c => c.scene.children.filter(o => o.isMesh).map(o => o.material);
+  const w3 = mats(b.ctx).filter(m => m.userData.water), w2 = mats(a.ctx).filter(m => m.userData.water);
+  assert.equal(w2.length, 0, '2D 굽기 물이 바뀌었다'); assert.ok(w3.length >= 3, '3D 물 ' + w3.length);
+  for (const m of w3) { assert.equal(m.customProgramCacheKey(), 'water'); assert.ok(m.polygonOffset && m.polygonOffsetUnits < 0 && m.polygonOffsetFactor === 0, '물은 바닥판보다 앞으로'); assert.equal(m.metalness, 0); }
+  const sh = { uniforms: {}, vertexShader: '#include <common>\n#include <begin_vertex>', fragmentShader: '#include <common>\n#include <normal_fragment_maps>\n#include <emissivemap_fragment>\n#include <lights_fragment_end>' }; w3[0].onBeforeCompile(sh);
+  assert.match(sh.fragmentShader, /skyRefl\(/); assert.match(sh.fragmentShader, /directSpecular \*= 0\.15/); assert.ok(sh.uniforms.uRidge && sh.uniforms.uTop.value, '하늘 uniform');
+  const foam = c => c.scene.children.filter(o => o.isMesh && o.material.userData.foam).length;
+  assert.equal(foam(a.ctx), 0, '2D 에 거품'); assert.equal(foam(b.ctx), 1 + 2 + 2, '거품 띠 (호수 1 · 강둑 2 · 바닷가 2)');
+  assert.match(W3D, /WATER\.uRidge\.value = U\.ridge\.value/);
+});

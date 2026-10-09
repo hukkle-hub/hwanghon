@@ -3,6 +3,7 @@
    env-field.js 가 존 설정(js/mmo/zones.js)대로 이 부품을 골라 세운다.
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
+import { SKY_REFL } from './sky-shader.js';
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
@@ -112,10 +113,10 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 /* ---------- 땅 쓰임: 풀밭·물·모래·주차장·공항 포장 ---------- */
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
-    water: new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
-  if (VIEW3D) for (const [k, f] of [['forest', 3], ['grass', 2], ['sand', 2], ['conc', 1.5], ['water', 1]]) { M[k].polygonOffset = true; M[k].polygonOffsetFactor = 0; M[k].polygonOffsetUnits = f * 6; }   /* 3D: 땅 다각형은 뒤로 — 길(앞으로)과 순서 싸움을 안 하게 (문서 220) */
+    water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
+  if (VIEW3D) for (const [k, f] of [['forest', 3], ['grass', 2], ['sand', 2], ['conc', 1.5]]) { M[k].polygonOffset = true; M[k].polygonOffsetFactor = 0; M[k].polygonOffsetUnits = f * 6; }   /* 3D: 땅 다각형은 뒤로 — 길(앞으로)과 순서 싸움을 안 하게 (문서 220) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
-    if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); }
+    if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const sg = signedArea(pts) > 0 ? 1 : -1; foamBand(ctx, [...pts, pts[0]], 0, sg * 2.2); } }   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);
     else if (/beach|sand|bare_rock|scree/.test(k)) flatPoly(ctx, pts, M.sand, 0.008);
     else if (/military/.test(k)) flatPoly(ctx, pts, M.forest, 0.006);   /* 실재 군 시설은 그리지 않는다 — 모양이 드러나지 않게 숲 바닥으로 (남태령 넓히기에서 콘크리트 판이 통째로 드러났다) */
@@ -137,7 +138,7 @@ function coastBlock(ctx, pts, closed) { if (!ctx.FROM || !ctx.walk) return close
 /* ---------- 선: 철길(자갈·침목·레일), 강(폭), 활주로, 방파제(테트라포드) ---------- */
 export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
   const ballastM = new THREE.MeshStandardMaterial({ color: 0x4a4440, roughness: 1 }), railM = new THREE.MeshStandardMaterial({ color: 0x8a8a90, roughness: 0.3, metalness: 0.9 }), sleeperM = new THREE.MeshStandardMaterial({ color: 0x3a2e26, roughness: 0.9 });
-  const waterM = new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), runM = new THREE.MeshStandardMaterial({ color: 0x3e3e42, roughness: 0.6 }), markM = new THREE.MeshStandardMaterial({ color: 0xd8d8d0, roughness: 0.6 });
+  const waterM = VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), runM = new THREE.MeshStandardMaterial({ color: 0x3e3e42, roughness: 0.6 }), markM = new THREE.MeshStandardMaterial({ color: 0xd8d8d0, roughness: 0.6 });
   const tetraM = new THREE.MeshStandardMaterial({ color: 0x8a8682, roughness: 0.85 }), tetraG = new THREE.TetrahedronGeometry(1.1, 0);
   let n = 0;
   for (const l of osm.lines || []) { if (l.tunnel || l.layer < 0) continue; const pts = l.line.map(W); if (!near(ctx, pts, 80)) continue; n++;
@@ -146,12 +147,14 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
         const m = new THREE.Mesh(ribbon(THREE, sh, 0.12, 0.2), railM); scene.add(m); }
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 0.3; d < L; d += 0.7) { const s = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 0.22), sleeperM); s.position.set(a[0] + dx / L * d, 0.1, a[1] + dz / L * d); s.rotation.y = -Math.atan2(dz, dx) + Math.PI / 2; scene.add(s); } } }
     else if (/^water:(river|canal|stream|ditch|drain)/.test(l.kind)) { const w = l.width || (/river|canal/.test(l.kind) ? 18 : 3); const m = new THREE.Mesh(ribbon(THREE, pts, w, 0.012), waterM); scene.add(m);
+      if (VIEW3D && w > 4) { foamBand(ctx, pts, w / 2, w / 2 - 1.6); foamBand(ctx, pts, -w / 2, -w / 2 + 1.6); }   /* 강둑 두 쪽 */
       if (w > 4) ctx.blockers.push({ line: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), w: w / 2, water: true }); }
     else if (/^aero:(runway|taxiway)/.test(l.kind)) { const w = l.width || (/runway/.test(l.kind) ? 45 : 18); scene.add(new THREE.Mesh(ribbon(THREE, pts, w, 0.02), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 10; d < L; d += 60) { const s = new THREE.Mesh(new THREE.PlaneGeometry(30, 0.9), markM); s.rotation.x = -Math.PI / 2; s.rotation.z = -Math.atan2(dz, dx); s.position.set(a[0] + dx / L * d, 0.03, a[1] + dz / L * d); scene.add(s); } } }
     else if (l.kind === 'coastline') { /* 해안선: OSM 은 길 방향의 왼쪽이 땅 — 오른쪽으로 2 km 밀어 바다 다각형을 닫는다 */
       const a0 = pts[0], a1 = pts.at(-1), dx = a1[0] - a0[0], dz = a1[1] - a0[1], L0 = Math.hypot(dx, dz) || 1, rx = -dz / L0 * 2000, rz = dx / L0 * 2000;
       const poly = [...pts, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]; flatPoly(ctx, poly, waterM, 0.012);
+      if (VIEW3D) { foamBand(ctx, pts, 0, 3.2); foamBand(ctx, pts, 6, 8.5, 0.028); }   /* 3D: 바다 쪽(오른쪽) 물가 거품 + 한 줄 더 바깥의 부서지는 물결 */
       ctx.blockers.push({ poly: coastBlock(ctx, pts, poly).map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true }); }
     else if (/^man:(pier|breakwater|groyne|dyke)/.test(l.kind)) { scene.add(new THREE.Mesh(ribbon(THREE, pts, 8, 0.6), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 0; d < L; d += 2.2) for (const side of [-1, 1]) { const t4 = new THREE.Mesh(tetraG, tetraM); t4.position.set(a[0] + dx / L * d - dz / L * 5.5 * side, 0.6, a[1] + dz / L * d + dx / L * 5.5 * side); t4.rotation.set(R() * 3, R() * 3, R() * 3); t4.castShadow = true; scene.add(t4); } } } }
@@ -422,6 +425,52 @@ function windify(m) { if (m.userData.wind) return; m.userData.wind = true;
   m.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
     .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float sw = sin(uWind * 1.3 + ip.x * 0.31 + ip.z * 0.23) + 0.5 * sin(uWind * 2.7 + ip.x * 0.7); float k = max(transformed.y + 2.0, 0.0) * 0.035; transformed.x += sw * k; transformed.z += cos(uWind * 1.1 + ip.z * 0.27) * k * 0.6; }\n#endif'); };
   m.customProgramCacheKey = () => 'wind'; }
+/* 물 (문서 220 §6) — 금속성 0.5 판은 비출 환경이 없어 «남색 판» 이었고(해운대), 강은 해 반사만 번져 «주황 맨땅» 이었다(춘천).
+   하늘을 비추는 수면: 움직이는 잔물결 법선 · 프레넬로 하늘(돔 색) 반사 · 해 반짝임. 하늘 색은 돔 uniform 을 그대로 가리킨다(world3d 가 이어 준다) → 시간대를 따라간다.
+   물가엔 밀려왔다 빠지는 거품 띠(foamBand). 모양만 — 막이·장면 난수와 무관 */
+export const WATER = { uTime: WIND, uTop: { value: null }, uHor: { value: null }, uFogc: { value: null }, uSun: { value: null }, uSunc: { value: null }, uRidge: { value: null } };
+function waterDefaults(THREE) { const d = { uTop: 0x3a2a48, uHor: 0xd06a50, uFogc: 0x2a1a24, uSunc: 0xff8a50 }; for (const k in d) if (!WATER[k].value) WATER[k].value = new THREE.Color(d[k]); if (!WATER.uSun.value) WATER.uSun.value = new THREE.Vector3(0, 0.2, 1); if (!WATER.uRidge.value) WATER.uRidge.value = new THREE.Vector3(0.12, 0.07, 1); }
+const WATER_PARS = 'uniform float uTime; uniform vec3 uTop, uHor, uFogc, uSun, uSunc; varying vec3 vWP;\n'
+  + 'float wvN(vec2 p){ return sin(dot(p, vec2(0.204, 0.050)) + uTime * 0.7) * 0.55 + sin(dot(p, vec2(-0.212, 0.488)) + uTime * 1.0) * 0.5 + sin(dot(p, vec2(0.802, -0.791)) + uTime * 1.6) * 0.3'
+  + ' + sin(dot(p, vec2(0.601, 2.241)) - uTime * 2.3) * 0.16 + sin(dot(p, vec2(-3.256, -1.739)) + uTime * 3.1) * 0.09; }\n';   /* 방향이 제각각인 다섯 물결 — 축 맞춘 물결은 반짝임이 격자로 줄 섰다 */
+export function waterMat(THREE) { waterDefaults(THREE); const m = new THREE.MeshStandardMaterial({ color: 0x0c161c, roughness: 0.42, metalness: 0, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -6 }); m.userData.water = true;   /* 바닥판(0 m)보다 1.2 cm 위인데 뒤로 밀면(+6) 멀리서 바닥에 덮였다(춘천 강) — 앞으로, 길(-24)보다는 약하게 */
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, WATER);
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + WATER_PARS + SKY_REFL)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+vec3 wV = normalize(cameraPosition - vWP); float wD = length(cameraPosition - vWP); vec2 wq = vWP.xz; float we = 0.18;
+float wgx = wvN(wq + vec2(we, 0.0)) - wvN(wq - vec2(we, 0.0)), wgz = wvN(wq + vec2(0.0, we)) - wvN(wq - vec2(0.0, we)), wA = 0.62 / (1.0 + wD * 0.025);
+vec3 wN = normalize(vec3(-wgx * wA, 1.0, -wgz * wA)); normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);`)
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
+{ vec3 wR = reflect(-wV, wN); float ry = wR.y, sd = max(dot(wR, normalize(uSun)), 0.0);
+  vec3 sky = skyRefl(vec3(wR.x, max(ry, 0.0), wR.z));   /* 하늘 돔과 같은 능선이 거꾸로 비친다 */
+  float F = 0.04 + 0.96 * pow(1.0 - max(dot(wN, wV), 0.0), 5.0);
+  float wh = smoothstep(-1.4, 1.4, wvN(wq)); totalEmissiveRadiance += sky * F * 0.8 * (0.72 + 0.4 * wh) +   /* 물결 마루·골 밝기 차 — 노을 쪽 밝은 하늘이 고르게 비치면 «판» 이었다 */
+    uSunc * (pow(sd, 420.0) * 5.0 + pow(sd, 40.0) * 0.18) * smoothstep(-0.05, 0.08, uSun.y);
+  diffuseColor.rgb *= 1.0 - F; }`)
+      .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= 0.15;'); };   /* 거친 표준 반사가 해 쪽 수면을 통째로 주황으로 덮었다 — 반짝임은 물결 법선으로 따로 */
+  m.customProgramCacheKey = () => 'water'; return m; }
+/* 물가 거품 띠: 선을 오른쪽(+n = (-dz, dx))으로 o0 ~ o1 만큼 민 띠. uv = (따라간 거리, 띠 안쪽 0 → 바깥 1) */
+let FOAM_M = null;
+function foamMat(THREE) { if (FOAM_M) return FOAM_M; waterDefaults(THREE);
+  FOAM_M = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: true, side: THREE.DoubleSide, uniforms: { ...THREE.UniformsLib.fog, uTime: WATER.uTime, uHor: WATER.uHor, uTop: WATER.uTop },
+    vertexShader: '#include <fog_pars_vertex>\nvarying vec2 vF; void main(){ vF = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}',
+    fragmentShader: '#include <fog_pars_fragment>\nuniform float uTime; uniform vec3 uHor, uTop; varying vec2 vF;\n'
+      + 'float h1(float x){ return fract(sin(x * 127.1) * 43758.5453); } float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h1(i), h1(i + 1.0), f); }\n'
+      + 'void main(){ float sw = sin(uTime * 0.5 + n1(vF.x * 0.03) * 6.28) * 0.5 + 0.5, reach = 0.3 + 0.65 * sw;   /* 밀려왔다 빠진다 — 자리마다 박자가 다르게 */\n'
+      + '  float edge = smoothstep(0.0, 0.1, vF.y) * (1.0 - smoothstep(reach * 0.55, reach, vF.y));\n'
+      + '  float br = smoothstep(0.42, 0.8, n1(vF.x * 0.09 + uTime * 0.05) * 0.4 + n1(vF.x * 0.37 - uTime * 0.23 + vF.y * 3.0) * 0.35 + n1(vF.x * 1.7 + vF.y * 9.0 - uTime * 0.6) * 0.25);   /* 잘게 끊긴 거품 — 고르면 시멘트 턱처럼 보였다 */\n'
+      + '  vec3 c = mix(uHor, vec3(1.0), 0.4) * (0.5 + 0.25 * dot(uTop, vec3(0.33)));\n'
+      + '  gl_FragColor = vec4(c, edge * br * 0.42);\n#include <fog_fragment>\n}' });
+  FOAM_M.userData.foam = true; return FOAM_M; }
+export function foamBand(ctx, pts, o0, o1, y = 0.03) { const { THREE, scene } = ctx; if (pts.length < 2) return null; const pos = [], uv = [], idx = []; let s = 0;
+  for (let i = 0; i < pts.length; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)]; let dx = b[0] - a[0], dz = b[1] - a[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+    if (i) s += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+    pos.push(pts[i][0] - dz * o0, y, pts[i][1] + dx * o0, pts[i][0] - dz * o1, y, pts[i][1] + dx * o1); uv.push(s, 0, s, 1);
+    if (i) { const k = i * 2; idx.push(k - 2, k, k - 1, k - 1, k, k + 1); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  const m = new THREE.Mesh(g, foamMat(THREE)); m.userData.noCam = true; m.renderOrder = 1; scene.add(m); return m; }
+const signedArea = P => { let a = 0; for (let i = 0, j = P.length - 1; i < P.length; j = i++) a += (P[j][0] * P[i][1] - P[i][0] * P[j][1]); return a / 2; };
 /* 나무 자리: 격자 + 흔들기. 길·건물·물·지정 원은 비운다 */
 export function treeSpots(ctx, region, o = {}) { const { R, FROM } = ctx, out = []; const step = o.step || 3.4;
   for (let s = region.s0; s < region.s1; s += step) for (let t = region.t0; t < region.t1; t += step) { const p = FROM(s + (R() - .5) * step * 0.8, t + (R() - .5) * step * 0.8);
