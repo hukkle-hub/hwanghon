@@ -4,7 +4,8 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const {Field}=require('../server/field.cjs'),{Store}=require('../server/store.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),{LINKS,linkGates}=require('../js/mmo/zone-links.js');
 const map=z=>require('../maps/2d/'+z+'/map.json');
 function joinAt(zone,gate){ const store=new Store(null),g=store.guest('길손');store.chooseName(g.profile.id,'길손'+Math.floor(Math.random()*1e6),'ain');const id=g.profile.id;
- const f=new Field({store,emit:()=>{},rng:()=>0.5});return f.join(id,store.public(id),zone,undefined,gate); }
+ const f=new Field({store,emit:()=>{},rng:()=>0.5}),R=Math.random;Math.random=()=>0.5;   /* 서버는 겹치지 않게 ±1 m 흔든다 — 시험은 가운데로 */
+ try{return f.join(id,store.public(id),zone,undefined,gate);}finally{Math.random=R;} }
 test('길 문으로 들어오면 그 길 끝 안쪽에 선다 — 전 구간 양쪽', () => {
  let n=0;
  for(const [a,,b] of LINKS) for(const [zone,from] of [[a,b],[b,a]]){ const m=map(zone),w=m.walk,ang=m.road.ang,p=joinAt(zone,from),end=linkGates(zone).find(g=>g.id===from).at.end;

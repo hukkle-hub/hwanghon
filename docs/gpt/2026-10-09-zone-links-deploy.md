@@ -15,7 +15,7 @@
 - **map.json·생태·2D 는 손대지 않았다.**
 
 ## 해 줄 것
-1. main 최신을 받아 `npm test` 를 돌린다(1012 통과).
+1. main 최신을 받아 `npm test` 를 돌린다(1014 통과).
 2. Render 를 재배포한다.
 3. 디렉터에게 반영 시각을 알린다.
 4. 확인: `world3d.html?zone=daejeon&online=1&gate=gyeryong` 로 들어가면 대전 출발점이 아니라 서쪽 띠 끝(계룡 방면 표지판 앞)에 선다.
