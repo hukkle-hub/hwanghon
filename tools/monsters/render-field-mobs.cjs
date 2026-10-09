@@ -2,6 +2,7 @@
    persistent profiles. Simulation can be paused for readable screenshot poses;
    packets still travel through the actual server and client WebSockets. */
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {execFileSync}=require('node:child_process');
 const {createPartyServer}=require('../../server/index.cjs'),{Store}=require('../../server/store.cjs');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const out=path.resolve(process.argv[2]||'.node-shots/monster-server-v10');fs.mkdirSync(out,{recursive:true});
@@ -9,6 +10,7 @@ const store=new Store(null),app=createPartyServer({store}),report={
  kind:'real_two_browser_local_server_audit',profileStorage:'memory_only',
  simulation:'paused_and_stepped_for_screenshot_capture',mobileViewport:[915,412],
  actualAndroidFPSVerified:false,applicationFilesModified:false,errors:[],checks:{},shots:[]};
+report.testedCommit=execFileSync('git',['rev-parse','HEAD'],{cwd:path.resolve(__dirname,'../..'),encoding:'utf8'}).trim();
 let browser;
 const progress=s=>console.log(s);
 async function main(){

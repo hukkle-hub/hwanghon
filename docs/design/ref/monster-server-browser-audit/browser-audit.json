@@ -12,7 +12,7 @@
     {
       "page": 1,
       "error": "Cannot access 'netMobs' before initialization",
-      "stack": "ReferenceError: Cannot access 'netMobs' before initialization\n    at netMsg (http://127.0.0.1:52289/world3d.html?zone=daejeon&online=1&lod=1&char=kain:297:175)\n    at ws.onmessage (http://127.0.0.1:52289/js/mmo/field-net.js:27:136)"
+      "stack": "ReferenceError: Cannot access 'netMobs' before initialization\n    at netMsg (http://127.0.0.1:52648/world3d.html?zone=daejeon&online=1&lod=1&char=kain:297:175)\n    at ws.onmessage (http://127.0.0.1:52648/js/mmo/field-net.js:27:136)"
     }
   ],
   "checks": {
@@ -28,15 +28,16 @@
     "noPageErrors": false
   },
   "shots": [
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-attack.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-attack.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-hit.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-hit.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-death.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-death.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-respawn.png",
-    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-respawn.png"
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\2d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\3d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\2d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\3d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\2d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\3d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\2d-respawn.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-latest-main\\3d-respawn.png"
   ],
+  "testedCommit": "d662ecdc555dc8f6a0b0281a9f5d0cedbc5791ab",
   "mob": {
     "id": "daejeon:right:nest1:1",
     "catalogId": "G5_BREAKER",
@@ -46,7 +47,7 @@
   "joined": [
     {
       "net": true,
-      "frames": 13,
+      "frames": 57,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -56,7 +57,7 @@
         "cur": "idle",
         "seq": 0,
         "warn": false,
-        "clipTime": 0.35860000002384185,
+        "clipTime": 0.9080999999940399,
         "clipDuration": 3.9583332538604736,
         "deadT": 0,
         "position": [
@@ -77,7 +78,7 @@
         "cur": "idle",
         "seq": 0,
         "warn": false,
-        "clipTime": 0.10959999999403955,
+        "clipTime": 0.11590000000596047,
         "clipDuration": 3.9583332538604736,
         "deadT": 0,
         "position": [
@@ -90,7 +91,7 @@
   "attack": [
     {
       "net": true,
-      "frames": 19,
+      "frames": 63,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -100,7 +101,7 @@
         "cur": "attack",
         "seq": 1,
         "warn": true,
-        "clipTime": 0.1632333333392938,
+        "clipTime": 0.17386666668454803,
         "clipDuration": 1.1665699481964111,
         "deadT": 0,
         "position": [
@@ -111,7 +112,7 @@
     },
     {
       "net": true,
-      "frames": 10,
+      "frames": 11,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -121,7 +122,7 @@
         "cur": "attack",
         "seq": 1,
         "warn": true,
-        "clipTime": 0.06666666666666667,
+        "clipTime": 0.0804666666785876,
         "clipDuration": 1.1665699481964111,
         "deadT": 0,
         "position": [
@@ -136,21 +137,21 @@
     "mob": "daejeon:right:nest1:1",
     "catalogId": "G5_BREAKER",
     "generation": 1,
-    "dmg": 4145,
+    "dmg": 3821,
     "crit": false,
     "down": false,
-    "hp": 41,
+    "hp": 46,
     "reward": null
   },
   "hitViews": [
     {
       "net": true,
-      "frames": 47,
+      "frames": 91,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
         "gen": 1,
-        "hp": 41,
+        "hp": 46,
         "alive": true,
         "cur": "hit",
         "seq": 2,
@@ -166,12 +167,12 @@
     },
     {
       "net": true,
-      "frames": 41,
+      "frames": 40,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
         "gen": 1,
-        "hp": 41,
+        "hp": 46,
         "alive": true,
         "cur": "hit",
         "seq": 2,
@@ -189,7 +190,7 @@
   "death": [
     {
       "net": true,
-      "frames": 89,
+      "frames": 130,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -210,7 +211,7 @@
     },
     {
       "net": true,
-      "frames": 83,
+      "frames": 79,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -220,9 +221,9 @@
         "cur": "die",
         "seq": 3,
         "warn": false,
-        "clipTime": 0.5666666666666667,
+        "clipTime": 0.5499333333273728,
         "clipDuration": 0.8333333134651184,
-        "deadT": 0.5666666666666667,
+        "deadT": 0.5499333333273728,
         "position": [
           226.65,
           -250.75
@@ -234,7 +235,7 @@
   "respawn": [
     {
       "net": true,
-      "frames": 208,
+      "frames": 246,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",
@@ -255,7 +256,7 @@
     },
     {
       "net": true,
-      "frames": 202,
+      "frames": 195,
       "remoteCount": 1,
       "mob": {
         "id": "daejeon:right:nest1:1",

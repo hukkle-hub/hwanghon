@@ -3,6 +3,7 @@
 
 결론: 서버 연결 상태 검증은 진행됐지만 브라우저 종합 검수는 미합격이다.
 공유 브랜치: gpt/monster-server-v10. 서버 구현 기준 b376c95cba6.
+Claude의 최신 카메라 변경 origin/main c5fa302b5도 보존·병합한 뒤 재검수했다.
 main 병합, Render 재배포, 외부 계정/프로필 변경은 하지 않았다.
 Claude 화면·지도·몸·의상 파일은 변경하지 않았다.
 
@@ -14,14 +15,14 @@ Claude 화면·지도·몸·의상 파일은 변경하지 않았다.
 - 서버 틱은 촬영을 위해 정지/단계 실행했다. 연속 실기기 플레이/FPS 시험이 아니다.
 - 상대 플레이어 각 1명, 같은 몬스터 id·generation, 공격 예고 고리 표시 확인.
 - 실제 몬스터 공격의 hurt[2]가 같은 mob id임을 확인.
-- 실제 클라이언트 타격 dmg 4145, HP 41%를 두 화면에서 확인.
+- 실제 클라이언트 타격 피해와 남은 HP를 두 화면에서 확인(각 실행 수치는 JSON).
 - 사망 HP 0 / alive false / die 상태 양쪽 공유.
 - 실제 30초 재생 시간을 기다린 뒤 generation 1→2, HP 100% 양쪽 공유.
 - 보상 정책 pending_policy 유지, 골드·XP 임의 지급 없음.
 
 2. 재현 오류: 3D 최초 입장 초기화 순서 (배포 전 필수 수정)
 ReferenceError: Cannot access 'netMobs' before initialization
-세 번의 실제 브라우저 실행에서 같은 오류를 재현했다.
+네 번의 실제 브라우저 실행에서 같은 오류를 재현했다. 최신 main 병합 후에도 재현.
 
 호출 순서 (현재 origin/main b077bc1f0 기준):
 js/mmo/field-net.js:27

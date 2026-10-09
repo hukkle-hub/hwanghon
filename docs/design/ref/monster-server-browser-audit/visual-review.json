@@ -1,0 +1,19 @@
+{
+  "review": "actual_screenshots_inspected_by_main_agent",
+  "onlineVisualAcceptance": false,
+  "temporaryHumanoidNotApprovedMonsterBody": true,
+  "attackWarningVisible": true,
+  "deathPoseAcceptance": false,
+  "deathObservations": {
+    "2d": "At approximately 0.5667s of 0.8333s death clip, the temporary humanoid still looks upright.",
+    "3d": "Dead monster is occluded by player characters; this view cannot prove a natural collapse."
+  },
+  "pageError": "Cannot access netMobs before initialization",
+  "requiredFollowup": [
+    "Claude-owned 3D initialization order fix",
+    "Unoccluded close-up death animation review",
+    "Continuous live gameplay after UI fix",
+    "Actual Android performance and portrait/landscape QA"
+  ],
+  "renderDeployment": false
+}
