@@ -1,0 +1,279 @@
+{
+  "kind": "real_two_browser_local_server_audit",
+  "profileStorage": "memory_only",
+  "simulation": "paused_and_stepped_for_screenshot_capture",
+  "mobileViewport": [
+    915,
+    412
+  ],
+  "actualAndroidFPSVerified": false,
+  "applicationFilesModified": false,
+  "errors": [
+    {
+      "page": 1,
+      "error": "Cannot access 'netMobs' before initialization",
+      "stack": "ReferenceError: Cannot access 'netMobs' before initialization\n    at netMsg (http://127.0.0.1:52289/world3d.html?zone=daejeon&online=1&lod=1&char=kain:297:175)\n    at ws.onmessage (http://127.0.0.1:52289/js/mmo/field-net.js:27:136)"
+    }
+  ],
+  "checks": {
+    "actualClientsJoined": true,
+    "sameGeneration": true,
+    "remotePlayerRendered": true,
+    "telegraphRendered": true,
+    "hurtSourceMatchesMob": true,
+    "hitHPShared": true,
+    "deathShared": true,
+    "newGenerationShared": true,
+    "profileRewardsPending": true,
+    "noPageErrors": false
+  },
+  "shots": [
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-attack.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-hit.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-death.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\2d-respawn.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-server-browser-audit-pose\\3d-respawn.png"
+  ],
+  "mob": {
+    "id": "daejeon:right:nest1:1",
+    "catalogId": "G5_BREAKER",
+    "x": 226.6490688013766,
+    "z": -250.74928966988423
+  },
+  "joined": [
+    {
+      "net": true,
+      "frames": 13,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.35860000002384185,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    },
+    {
+      "net": true,
+      "frames": 8,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "idle",
+        "seq": 0,
+        "warn": false,
+        "clipTime": 0.10959999999403955,
+        "clipDuration": 3.9583332538604736,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    }
+  ],
+  "attack": [
+    {
+      "net": true,
+      "frames": 19,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.1632333333392938,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    },
+    {
+      "net": true,
+      "frames": 10,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.06666666666666667,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    }
+  ],
+  "hit": {
+    "type": "mobHit",
+    "mob": "daejeon:right:nest1:1",
+    "catalogId": "G5_BREAKER",
+    "generation": 1,
+    "dmg": 4145,
+    "crit": false,
+    "down": false,
+    "hp": 41,
+    "reward": null
+  },
+  "hitViews": [
+    {
+      "net": true,
+      "frames": 47,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 41,
+        "alive": true,
+        "cur": "hit",
+        "seq": 2,
+        "warn": true,
+        "clipTime": 0.06666666666666667,
+        "clipDuration": 0.7083333134651184,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    },
+    {
+      "net": true,
+      "frames": 41,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 41,
+        "alive": true,
+        "cur": "hit",
+        "seq": 2,
+        "warn": true,
+        "clipTime": 0.16666666666666666,
+        "clipDuration": 0.7083333134651184,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    }
+  ],
+  "death": [
+    {
+      "net": true,
+      "frames": 89,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 0,
+        "alive": false,
+        "cur": "die",
+        "seq": 3,
+        "warn": false,
+        "clipTime": 0.5666666666666667,
+        "clipDuration": 0.8333333134651184,
+        "deadT": 0.5666666666666667,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    },
+    {
+      "net": true,
+      "frames": 83,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 1,
+        "hp": 0,
+        "alive": false,
+        "cur": "die",
+        "seq": 3,
+        "warn": false,
+        "clipTime": 0.5666666666666667,
+        "clipDuration": 0.8333333134651184,
+        "deadT": 0.5666666666666667,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    }
+  ],
+  "visualPoseApproval": "manual_review_required_not_inferred_from_clip_time",
+  "respawn": [
+    {
+      "net": true,
+      "frames": 208,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 2,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.03333333333333333,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    },
+    {
+      "net": true,
+      "frames": 202,
+      "remoteCount": 1,
+      "mob": {
+        "id": "daejeon:right:nest1:1",
+        "gen": 2,
+        "hp": 100,
+        "alive": true,
+        "cur": "attack",
+        "seq": 1,
+        "warn": true,
+        "clipTime": 0.03333333333333333,
+        "clipDuration": 1.1665699481964111,
+        "deadT": 0,
+        "position": [
+          226.65,
+          -250.75
+        ]
+      }
+    }
+  ],
+  "complete": false
+}
