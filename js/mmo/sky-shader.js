@@ -15,6 +15,11 @@ void main(){
   vec2 uv = d.xz / (y + 0.16) * 1.4 + vec2(time * 0.006, time * 0.002);
   float n = fbm(uv) * 0.75 + fbm(uv * 2.7 + 5.0) * 0.25, dens = smoothstep(cover, cover + 0.22, n) * smoothstep(0.015, 0.16, y) * (1.0 - smoothstep(0.55, 0.9, y) * 0.6);
   vec3 cloud = mix(mix(top, fogc, 0.35) * 0.7, hor * 1.05, smoothstep(0.0, 0.5, y)) ; cloud = mix(cloud, sunc * 1.25 + hor * 0.3, pow(a, 3.0) * 0.85);
+  /* 별 (문서 220 §13): 하늘 윗색이 어두울수록(밤) — 방향 격자마다 해시 한 점, 구름에 가리고 반짝인다 */
+  float dark = 1.0 - smoothstep(0.005, 0.026, dot(top, vec3(0.3, 0.5, 0.2)));   /* 선형 색 윗하늘 밝기(잰 값): 밤 0.0061 → 별 0.99 · 황혼 0.0194 → 0.23 · 새벽 0.061 · 낮 0.128 → 0 */
+  if (dark > 0.0 && y > 0.04) { vec2 sp = vec2(atan(d.z, d.x) * 95.0, asin(clamp(y, -1.0, 1.0)) * 95.0); vec2 si = floor(sp), sf = fract(sp) - 0.5; float sh = h2(si), sb = step(0.965, sh);
+    vec2 so = vec2(h2(si + 3.1), h2(si + 7.7)) - 0.5; float st = sb * smoothstep(0.16, 0.0, length(sf - so * 0.6)) * (0.55 + 0.45 * sin(time * (1.5 + sh * 3.0) + sh * 40.0));
+    c += vec3(0.85, 0.9, 1.0) * st * dark * smoothstep(0.04, 0.25, y) * (1.0 - dens) * 1.3; }
   c = mix(c, cloud, dens * 0.85);
   c += sunc * glow * smoothstep(-0.05, 0.05, y) * (1.0 - dens * 0.7);
   /* 산 능선 두 겹 — 방위각 둘레를 따라 이어지는 잡음(원 위의 2D 잡음이라 360° 에서 이음매가 없다) */

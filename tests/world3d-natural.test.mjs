@@ -86,3 +86,9 @@ test('지하철 출구: 3D 는 새까만 판 대신 내려가는 계단 착시 �
   assert.match(src, /else g\.add\(stairDown\(THREE\)\);/);
   assert.match(src, /k = 0\.11 \* Math\.pow\(1 - i \/ 10, 2\.2\)/, '단마다 어두워진다');
 });
+
+test('별: 밤에만(윗하늘 선형 밝기로) — 잰 값 밤 0.0061 · 황혼 0.0194 · 낮 0.128', () => {
+  const m = SKY_FRAG.match(/float dark = 1\.0 - smoothstep\(([\d.]+), ([\d.]+), dot\(top, vec3\(0\.3, 0\.5, 0\.2\)\)\);/); assert.ok(m, '별 세기 식');
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }, dark = x => 1 - ss(+m[1], +m[2], x);
+  assert.ok(dark(0.0061) > 0.9, '밤에 별이 없다'); assert.ok(dark(0.0194) < 0.35, '황혼에 별이 너무 많다 ' + dark(0.0194).toFixed(2)); assert.equal(dark(0.1279), 0, '낮에 별'); assert.equal(dark(0.0606), 0, '새벽에 별');
+});
