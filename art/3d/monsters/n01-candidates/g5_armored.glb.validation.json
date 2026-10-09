@@ -1,8 +1,8 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_armored.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\armored-idle-plant-v1\\g5_armored.glb",
   "species": "G5_ARMORED",
-  "sha256": "0279db77c41de582bd78af95e585ba913d9a8599096f5f7c1d068c77aff723cf",
-  "bytes": 5681516,
+  "sha256": "ebef2f05471ed6d12421c8801cc13c299fe83c8db370a9aed0cb2db40b840739",
+  "bytes": 5699172,
   "triangles": 46664,
   "vertices": 28058,
   "materials": 3,

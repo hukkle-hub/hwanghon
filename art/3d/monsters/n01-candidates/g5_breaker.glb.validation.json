@@ -1,8 +1,8 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_breaker.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\breaker-idle-plant-v1\\g5_breaker.glb",
   "species": "G5_BREAKER",
-  "sha256": "b80ea10980e7e546e739f72c5b2143dd0a5dbe7072ae8918288d3c7569e2c571",
-  "bytes": 5362180,
+  "sha256": "5a53c045688db7d91dfa507e66c1a66c7b5e3e542d982088d921b31963c4b961",
+  "bytes": 5379840,
   "triangles": 45077,
   "vertices": 24841,
   "materials": 2,

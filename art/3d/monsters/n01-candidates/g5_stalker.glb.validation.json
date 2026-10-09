@@ -1,12 +1,12 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_stalker.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\stalker-idle-plant-v1\\g5_stalker.glb",
   "species": "G5_STALKER",
-  "sha256": "f3416bd8d2d67266c43b05c53e4fcfd8ddb321da9cb8400fb8f2722b5b2a567b",
-  "bytes": 4752952,
+  "sha256": "cda0073d9f67b64c46adf9d689a68805380ddf589076a2026d591232762d1b6f",
+  "bytes": 5417344,
   "triangles": 45072,
   "vertices": 26928,
   "materials": 2,
-  "maxWeightError": 1.0663643479347229e-7,
+  "maxWeightError": 5.029141902923584e-8,
   "joints": 65,
   "clips": [
     {

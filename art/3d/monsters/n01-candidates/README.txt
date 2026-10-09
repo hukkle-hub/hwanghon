@@ -33,3 +33,15 @@ Server code is on a separate feature branch. No main push or Render redeploy.
 No new drop/XP/clock/invasion policy. Production N01 facility/NPC event
 producer is not included; role context and host strike adapter are supplied.
 S25 Ultra hardware FPS/heat/long-session memory are not measured here.
+
+2026-10-10 residual refinement (second delivery):
+All six idle clips: only eight lower-leg rotation tracks are corrected, using
+actual native skinned sole centroids. No root/body reshape, combat retiming,
+walk/hit/death freeze, or added draw calls. High and mobile share exact samples.
+Read-only regression measures every idle frame; <=1mm horizontal sole drift,
+<=2mm floor penetration. A deliberately injected3cm drift must be rejected.
+Stalker back/shoulder coat: local Gaussian skin-weight smoothing and upper-arm
+influence consolidation; native mesh/UV/PNG/rest rig and all combat samples
+remain unchanged. This reduces stretching, not a claim of simulated cloth or
+perfect retopology. Selected full rear motion and close views are supplied.
+The earlier delivery and twelve former models are preserved outside the repo.

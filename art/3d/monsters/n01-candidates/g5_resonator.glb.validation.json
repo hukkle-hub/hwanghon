@@ -1,8 +1,8 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_resonator.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\resonator-idle-plant-v1\\g5_resonator.glb",
   "species": "G5_RESONATOR",
-  "sha256": "0dac2b6970269267ab3e43701926f8ffbe69a90f1ade866054654d9dda29c87f",
-  "bytes": 4593328,
+  "sha256": "77c0f74b74776a00260509a569671a773695c3b2d1e609ce3ad1b01503eeb018",
+  "bytes": 4610960,
   "triangles": 45076,
   "vertices": 25335,
   "materials": 2,
