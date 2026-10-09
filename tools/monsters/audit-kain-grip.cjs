@@ -1,16 +1,23 @@
 // Actual field client and mobile LOD; deterministic pose sampling, not live FPS.
 const fs=require('node:fs'),path=require('node:path');
-const {createPartyServer}=require('../../server/index.cjs'),{Store}=require('../../server/store.cjs');
+const http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const out=path.resolve(process.argv[2]||'.node-shots/kain-grip');fs.mkdirSync(out,{recursive:true});
-const app=createPartyServer({store:new Store(null)});let browser;
+// Pages serves the pure CJS modules as static files too. The old online server
+// deliberately does not; this offline pose audit must use the Pages host path.
+const root=path.resolve(__dirname,'../..'),mime={'.html':'text/html','.js':'text/javascript','.cjs':'text/javascript','.json':'application/json','.glb':'model/gltf-binary','.png':'image/png','.webp':'image/webp','.css':'text/css','.svg':'image/svg+xml','.wasm':'application/wasm'};
+const app=http.createServer((req,res)=>{
+ let file;try{file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));}catch{res.writeHead(400);return res.end();}
+ if(!file.startsWith(root+path.sep)){res.writeHead(403);return res.end();}
+ fs.stat(file,(err,s)=>{if(err||!s.isFile()){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'});if(req.method==='HEAD')return res.end();fs.createReadStream(file).pipe(res);});
+});let browser;
 (async()=>{
- const addr=await app.listen(0,'127.0.0.1');
+ await new Promise(ok=>app.listen(0,'127.0.0.1',ok));const addr=app.address();
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||undefined,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const report={scope:'actual_world3d_Animated_deterministic_pose_sampling',realAndroidFPS:false,errors:[],poses:[]};
  for(const lod of [1,0]){
   const p=await browser.newPage({viewport:{width:1200,height:900}});
-  p.on('pageerror',e=>report.errors.push(e.stack));
+  p.on('pageerror',e=>{report.errors.push(e.stack);console.error(e.message);});
   await p.addInitScript(()=>{const raf=window.requestAnimationFrame;window.requestAnimationFrame=cb=>raf(t=>{if(!window.__qaPause)cb(t);});});
   await p.goto(`http://127.0.0.1:${addr.port}/world3d.html?offline=1&zone=daejeon&char=kain&lod=${lod}`,{waitUntil:'domcontentloaded'});
   await p.waitForFunction(()=>window.__W3D?.frames>=3,null,{timeout:180000});
@@ -56,4 +63,4 @@ const app=createPartyServer({store:new Store(null)});let browser;
  }
  fs.writeFileSync(path.join(out,'audit.json'),JSON.stringify(report,null,2)+'\n');
  if(report.errors.length)throw Error(report.errors.join('\n'));
-})().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{await browser?.close();await app.close();});
+})().catch(e=>{console.error(e);process.exitCode=1;}).finally(async()=>{await browser?.close();await new Promise(ok=>app.close(ok));});
