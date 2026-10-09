@@ -85,9 +85,11 @@ export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
   const pathM = new THREE.MeshStandardMaterial({ map: tex.paver, roughness: 0.75 }), stepM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
   const LANE = { motorway: 3.5, trunk: 3.4, primary: 3.3, primary_link: 3.3, secondary: 3.2, secondary_link: 3.2, tertiary: 3.1, motorway_link: 3.4, trunk_link: 3.4 };
   const dashM = new THREE.MeshStandardMaterial({ color: 0xc8c8b8, roughness: 0.7, transparent: true, opacity: 0.55 }), out = [];
+  /* 3D: 길이 풀밭·광장 다각형보다 늘 위에 (1 cm 높이 차는 멀리선 깊이 정밀도가 모자라 그리는 순서 싸움 — 셰이더가 바뀌면 길이 통째로 사라졌다, 문서 220) */
+  if (VIEW3D) for (const [m, k] of [[roadM, -4], [busM, -5], [pathM, -3], [stepM, -3], [dashM, -6]]) { m.polygonOffset = true; m.polygonOffsetFactor = 0; m.polygonOffsetUnits = k * 6; }   /* 기울기 비례(factor)는 비스듬한 바닥에서 너무 커져 침목·계단 같은 낮은 물체까지 덮었다 — 고정 몫(units)만: 깊이 공간에서 고정이라 멀수록 커진다 */
   const dashed = (pts, off, solid) => { for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; let dx = b[0] - a[0], dz = b[1] - a[1]; const L = Math.hypot(dx, dz); if (L < 0.5) continue; dx /= L; dz /= L;
       const step = solid ? L : 6, len = solid ? L : 3; for (let d = 0; d + len <= L + 1e-3; d += step) { const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), dashM); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx);
-        m.position.set(a[0] + dx * (d + len / 2) - dz * off, 0.03, a[1] + dz * (d + len / 2) + dx * off); scene.add(m); } } };
+        m.position.set(a[0] + dx * (d + len / 2) - dz * off, VIEW3D ? 0.075 : 0.03, a[1] + dz * (d + len / 2) + dx * off); scene.add(m); } } };
   for (const r of osm.roads) { if (r.tunnel || r.layer < 0 || r.kind === 'platform') continue; const pts = r.line.map(W); if (!near(ctx, pts, 80)) continue;
     let width, mat = roadM, y = 0.02, lanes = r.lanes || (/motorway|trunk/.test(r.kind) ? 4 : 2);
     if (LANE[r.kind]) width = lanes * LANE[r.kind];
@@ -96,7 +98,7 @@ export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
     else if (r.kind === 'service') width = r.width || 4.5;
     else if (/footway|path|pedestrian|steps|cycleway|track/.test(r.kind)) { width = r.width || (r.kind === 'pedestrian' ? 5 : r.kind === 'track' ? 3 : 2.4); mat = pathM; y = 0.025; }
     else continue;
-    const m = new THREE.Mesh(ribbon(THREE, pts, width, y), mat); m.receiveShadow = true; scene.add(m); out.push({ r, width, pts });
+    const m = new THREE.Mesh(ribbon(THREE, pts, width, VIEW3D ? y + 0.04 : y), mat); m.receiveShadow = true; scene.add(m); out.push({ r, width, pts });   /* 3D: 풀밭·광장 판보다 4 cm 위 — 1 cm 차는 순서 싸움에서 졌다 (문서 220) */
     ctx.clear.push({ pts, r: width / 2 + 1.2 });
     if (LANE[r.kind] && lanes > 1) { for (let k = 1; k < lanes; k++) dashed(pts, -width / 2 + k * width / lanes); dashed(pts, -width / 2 + 0.2, true); dashed(pts, width / 2 - 0.2, true); }
     if (r.kind === 'steps') for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.4) continue;
@@ -111,6 +113,7 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
     water: new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
+  if (VIEW3D) for (const [k, f] of [['forest', 3], ['grass', 2], ['sand', 2], ['conc', 1.5], ['water', 1]]) { M[k].polygonOffset = true; M[k].polygonOffsetFactor = 0; M[k].polygonOffsetUnits = f * 6; }   /* 3D: 땅 다각형은 뒤로 — 길(앞으로)과 순서 싸움을 안 하게 (문서 220) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
     if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); }
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);

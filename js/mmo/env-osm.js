@@ -116,6 +116,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const uv = []; for (let i = 0; i < pos.length; i += 3) uv.push(pos[i], pos[i + 2]); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); return g; }
   const roadMat = new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.34, metalness: 0.25 });
+  if (L.isView3d()) { roadMat.polygonOffset = true; roadMat.polygonOffsetFactor = 0; roadMat.polygonOffsetUnits = -24; }   /* 3D: 길이 광장·풀밭 위에 (문서 220) */
   const busMat = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 });   /* 중앙버스전용차로 — 붉은 포장 */
   const WIDTH = { primary: 3.3, primary_link: 3.3, secondary: 3.2, tertiary: 3.1 };
   const roadsW = [], dashMats = {};
@@ -126,7 +127,7 @@ export function build(THREE, scene, osm, opt = {}) {
     else if (r.kind === 'residential' || r.kind === 'unclassified') width = r.width || 7;
     else if (r.kind === 'service') width = r.width || 4.5;
     else continue;   /* 보행로·계단은 보도블록 그대로 */
-    const m = new THREE.Mesh(ribbon(r.line, width, y), mat); m.receiveShadow = true; scene.add(m); roadsW.push({ r, width, pts: r.line.map(W) });
+    const m = new THREE.Mesh(ribbon(r.line, width, L.isView3d() ? y + 0.04 : y), mat);   /* 3D: 광장·풀밭보다 4 cm 위 (문서 220) */ m.receiveShadow = true; scene.add(m); roadsW.push({ r, width, pts: r.line.map(W) });
     /* 차선: 간선은 점선 */
     if (WIDTH[r.kind] && (r.lanes || 2) > 1) for (let k = 1; k < (r.lanes || 2); k++) dashed(r.line.map(W), -width / 2 + k * width / (r.lanes || 2), 0xb8b8a8);
     if (WIDTH[r.kind]) { dashed(r.line.map(W), -width / 2 + 0.2, 0xd8d8c8, true); dashed(r.line.map(W), width / 2 - 0.2, 0xd8d8c8, true); } }
