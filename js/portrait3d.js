@@ -19,7 +19,7 @@ const KEY='tw:portrait';
 function stateKey(mode){
   const G=window.TW_GEAR; if(!G) return null;
   const s=G.state();
-  try{ return JSON.stringify([mode||'face', G.char(), s.equipped, s.enh||{}, s.dye||{}]); }catch(e){ return null; }
+  try{ return JSON.stringify(['kain-grip-190-v1',mode||'face', G.char(), s.equipped, s.enh||{}, s.dye||{}]); }catch(e){ return null; }
 }
 
 /* 저장은 모양(face/body)마다 한 장씩만 — 열쇠가 바뀌면 그 모양의 옛 그림은 버린다.
