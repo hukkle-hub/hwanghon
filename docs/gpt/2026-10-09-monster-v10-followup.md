@@ -19,7 +19,9 @@
 - 틱: 기존 20 Hz `tickBosses` 옆에서 `eco.tick(now, { night, invasion, owner })`.
 - 몬스터 체력·피해는 `field.cjs` 가 쥔다(ecology 는 자리·생사만). 쓰러뜨리면 `eco.defeat(id, now)` 한 번.
 - 몬스터 공격 = `bossStrike(o, p, hit, now)` 식 그대로 → 회피 무적·방어·버프·**hurt `h[6]`(맞은 서버 시각)** 이 몬스터에도 먹는다(웹 필드의 «완벽 회피» 연출이 그 값을 쓴다).
-- 메시지: 기존 `field` 패킷에 `mobs:[[id, catalogId, x, z, hp%, anim, generation]]` (관심 반경 28 m, 20개 — `snapshot()` 이 이미 그렇게 자른다). 타격 `fieldHit { mob }` (보스와 같은 `HIT_GAP`·스킬 배율·`critNext`).
+- 메시지: 기존 `field` 패킷에 `mobs:[[id, catalogId, x, z, alive, anim, generation, hp%]]` — 앞 일곱 칸은 **`snapshot()` 한 칸과 같은 순서**(관심 반경 28 m, 20개). 타격 `fieldHit { mob }` (보스와 같은 `HIT_GAP`·스킬 배율·`critNext`).
+- **클라 그리기는 이미 있다(Claude, 문서 209):** `js/mmo/field-mobs.js` 가 snapshot 칸 `{id, catalogId, x, z, alive, anim:'idle'|'walk'|'die', generation}` 을 그대로 그린다. 혼자 연습(2D·3D)에서 당신의 `Ecology` 를 브라우저로 돌려 이미 화면에 나온다 — 몸은 임시(«임시 몸» 표시), 공격은 아직 없다.
+  `anim` 에 `attack`·`hit` 을 더하면 그리기도 같이 늘린다 — 이름만 정해 알려 줄 것.
 - 보상: 재료·골드·회복약은 `store.addItems`, 경험치 `profile.xp` (필드 첫 경험치). `bossLoot` 은 보스 장비만.
 - **순수 모듈 유지:** 몬스터 AI(추적·공격 결정)를 새로 만들면 `field-ecology.cjs` 처럼 node 내장 없이 — 웹 필드 혼자 연습이 브라우저에서 그대로 돌린다(`js/mmo/cjs-browser.js`).
 - `server/` 바꾸면 Render 재배포(GPT) — 디렉터에게 언제 반영되는지 알린다.

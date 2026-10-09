@@ -192,7 +192,7 @@ test('3D 필드 혼자 연습 클레이브: 서버 전투 모듈 그대로 — �
 
 test('2D 필드 혼자 연습: 지배형·클레이브가 반격한다 — 서버 모듈 그대로, 결과는 온라인과 같은 통로(selfPacket · apply*Action)', () => {
   const m = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8');
-  assert.match(m, /Promise\.all\(\[loadCjs\('server\/field-dominator\.cjs'\),loadCjs\('server\/field-boss-combat\.cjs'\)\]\)/, '혼자 연습 보스 AI 를 서버 모듈로 안 돌린다');
+  assert.match(m, /Promise\.all\(\[loadCjs\('server\/field-dominator\.cjs'\),loadCjs\('server\/field-boss-combat\.cjs'\)/, '혼자 연습 보스 AI 를 서버 모듈로 안 돌린다');
   assert.match(m, /M\.tick\(offField,ai,now\); collide\(ai,0\.5\); const v=M\.view\(ai\);/, '혼자 연습에서 보스가 서 있기만 한다');
   assert.match(m, /function bossFrame\(dt\)\{\n  offTick\(\);/, '프레임마다 혼자 연습 틱을 안 돈다');
   assert.match(m, /offSelf\(\[seq,amount,o\.id,hit\.skill,kind,hit\.beat,now\]\)/, '내 피격이 온라인과 같은 hurt 묶음(selfPacket)으로 안 간다');
