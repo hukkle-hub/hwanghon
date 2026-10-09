@@ -432,7 +432,7 @@ function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 function pineGeo(THREE) { const parts = [[1.7, 2.2, -1.2], [1.3, 1.9, 0.1], [0.85, 1.6, 1.25]].map(([r, h, y], i) => { const g = new THREE.ConeGeometry(r, h, 7); lumpy(g, 0.08, 50 + i, false); g.translate(0, y, 0); return g.toNonIndexed(); });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
-function bushGeo(THREE) { const parts = [[0, 0.05, 0, 0.62], [0.55, -0.12, 0.2, 0.46], [-0.5, -0.1, -0.25, 0.5], [0.1, -0.15, -0.55, 0.42], [-0.15, 0.3, 0.3, 0.4]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 1), 0.14, 70 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
+function bushGeo(THREE) { const parts = [[0, 0.05, 0, 0.68], [0.58, -0.1, 0.18, 0.52], [-0.45, -0.08, -0.38, 0.55]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 70 + i);   /* 덩어리 셋 × 20 면 — 세분 1 × 다섯(400 면)은 덤불 수천 그루라 삼각형이 2.5 배가 됐다 */ g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 export const WIND = { value: 0 };   /* world3d 가 매 프레임 올린다 */
 function windify(m) { if (m.userData.wind) return; m.userData.wind = true;

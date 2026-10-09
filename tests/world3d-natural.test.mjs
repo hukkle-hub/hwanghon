@@ -77,5 +77,5 @@ test('3D 사냥터 꾸밈: 덤불 덩어리 · 바위 반쯤 묻기 · 풀포기
   const tuft = b.ctx.scene.children.find(o => o.isInstancedMesh && o.material.userData.tuft); assert.ok(tuft, '풀포기 메시');
   const m = new THREE.Matrix4(), sc = new THREE.Vector3(); let hMax = 0; for (let i = 0; i < tuft.count; i++) { tuft.getMatrixAt(i, m); sc.setFromMatrixScale(m); hMax = Math.max(hMax, sc.y * 0.7); }
   assert.ok(hMax < 0.75, '풀포기가 인물을 가린다 ' + hMax.toFixed(2)); assert.equal(tuft.material.customProgramCacheKey(), 'grass-wind');
-  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count > 300); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
+  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count >= 180 && o.geometry.attributes.position.count <= 240); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
 });
