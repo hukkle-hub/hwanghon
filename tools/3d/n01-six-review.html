@@ -9,6 +9,7 @@ import {createMobView} from '../../js/mmo/field-mobs.js';
 import {N01_BODIES} from '../../js/mmo/n01-body-catalog.js';
 import {CATALOG} from '../../js/mmo/monster-catalog.js';
 import {loadCjs} from '../../js/mmo/cjs-browser.js';
+const defaultNote=document.querySelector('#note').textContent;
 const detail=new URLSearchParams(location.search).get('detail')==='high'?'high':'mobile',quality=document.createElement('select');quality.setAttribute('aria-label','모델 품질');quality.innerHTML='<option value="mobile">모바일 경량본</option><option value="high">확대 검수 원본</option>';quality.value=detail;document.querySelector('header').insertBefore(quality,document.querySelector('#status'));quality.onchange=e=>{const u=new URL(location.href);u.searchParams.set('detail',e.target.value);location.href=u;};
 const MOB=await loadCjs('../../server/field-mob-combat.cjs'),ids=Object.keys(N01_BODIES),names=ids.map(id=>CATALOG.find(m=>m.id===id).name),loader=new GLTFLoader(),assets=new Map();
 const scene=new T.Scene();scene.background=new T.Color(0x10161c);const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.append(renderer.domElement);
@@ -21,7 +22,7 @@ fit();function tagAt(el,x,y,z){const p=new T.Vector3(x,y,z).project(camera);el.s
 await Promise.all(ids.map(async id=>{const a=N01_BODIES[id];assets.set(id,await loader.loadAsync('../../'+(detail==='high'?a.highUrl:a.url)));}));
 const view=createMobView({THREE:T,clone,scene,loadBody:async()=>assets.get(ids[0]),loadBodyFor:id=>({...N01_BODIES[id],load:async()=>assets.get(id)}),hud:document.querySelector('#hud'),tagAt,catalog:CATALOG});
 const stats=ids.map(id=>MOB.validateStats(MOB.statsFor(id))),mobs=[],states=[],hits=[];const nav={legal:()=>true,canTraverse:()=>true,safe:()=>false,route:(_a,_p,q)=>[q]};
-function restart(){generation++;time=0;nextBeat=0;beat=0;hits.length=0;mobs.length=0;states.length=0;for(const p of props)scene.remove(p);props.length=0;
+function restart(){generation++;time=0;nextBeat=0;beat=0;hits.length=0;mobs.length=0;states.length=0;document.querySelector('#note').textContent=defaultNote;for(const p of props)scene.remove(p);props.length=0;
  for(let i=0;i<ids.length;i++){const x=positions[i],m={id:'review:'+i+':0',catalogId:ids[i],x,z:0,alive:true,generation,anim:'idle',group:{area:'review'}};mobs.push(m);states.push(MOB.reset(m,0));
  if(mode==='ai'){const prop=new T.Mesh(new T.BoxGeometry(.45,ids[i]==='G5_ARMORED'?1.4:1,.35),new T.MeshStandardMaterial({color:ids[i]==='G5_BREAKER'?0x527a9d:0x7e6e52}));prop.position.set(x,.5,ids[i].includes('RUNNER')||ids[i].includes('STALKER')?3.5:2);scene.add(prop);props.push(prop);}}
 }
