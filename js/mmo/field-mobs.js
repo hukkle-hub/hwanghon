@@ -58,7 +58,7 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
   function labelY(v,extra=.25){return v.head?v.head.getWorldPosition(new THREE.Vector3()).y+extra:floor+v.h+extra;}
   function play(v, n, again = false) {const name=motionFor(n,v.action,Object.keys(v.named),v.cat.id),next=v.named[name]||v.act[n];if(!next)return;
     if(v.cur==='attack'&&n==='idle'&&v.current?.isRunning()&&v.current.time<v.current.getClip().duration)return;
-    if(v.cur===n&&v.current===next&&!again)return;const prev=v.current||v.act[v.cur];next.reset().play();const elapsed=['attack','support'].includes(n)?Math.max(0,v.action?.elapsedMs||0)/1000:0;if(elapsed)next.time=Math.min(elapsed,next.getClip().duration);if(prev&&prev!==next)next.crossFadeFrom(prev,.15,false);v.current=next;v.cur=n;
+    if(v.cur===n&&v.current===next&&!again)return;const prev=v.current||v.act[v.cur];next.reset().play();const elapsed=['attack','support'].includes(n)?Math.max(0,v.action?.elapsedMs||0)/1000:0;if(elapsed)next.time=Math.min(elapsed,next.getClip().duration);if(prev&&prev!==next)next.crossFadeFrom(prev,.15,false);v.current=next;v.cur=n;if(n==='support')v.supportPlaybackSeq=v.action?.seq;
     if (n === 'attack') { if (!v.warn) { v.warn = new THREE.Mesh(warnGeo || (warnGeo = new THREE.RingGeometry(.55, .75, 32)), new THREE.MeshBasicMaterial({ color: 0xff3020, transparent: true, opacity: .8, depthWrite: false, depthTest: false, side: THREE.DoubleSide, toneMapped: false })); v.warn.renderOrder = 5; v.warn.rotation.x = -Math.PI / 2; v.warn.position.y = .04; v.root.add(v.warn); } v.warnDuration=(v.action?.windupMs||WARN_MS)/1000;v.warnT = v.warnDuration-elapsed; v.warn.visible = v.warnT>-.25; } }
   let warnGeo = null;
   return {
@@ -72,7 +72,12 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         v.seen = true; v.tx = s.x; v.tz = s.z; if (Number.isFinite(s.hp)) v.hp = s.hp;
         if (v.alive && !s.alive) { v.alive = false; v.deadT = 0; play(v, 'die'); }
         v.action=s.action||null;
-        if (s.alive) { const n = s.anim==='idle'&&v.action?.support&&v.named.aura_cast?'support':CLIP[s.anim] && s.anim !== 'die' ? s.anim : 'idle', again = s.seq != null && v.seq != null && s.seq !== v.seq && (ONCE.has(n)||n==='support'); play(v, n, again);
+        if (s.alive) { const support=v.action?.support&&v.named.aura_cast,token=v.action?.seq;
+          // A one-shot aura gesture returns to breathing idle. Remember its
+          // sequence so an older packet cannot restart a completed gesture;
+          // a new support hold may still cast again. The passive ring/buff stay.
+          if(support&&((v.action.elapsedMs||0)>=support.getClip().duration*1000||(v.cur==='support'&&v.supportPlaybackSeq===token&&v.current.time>=support.getClip().duration)))v.supportFinishedSeq=token;
+          const n = s.anim==='idle'&&support&&v.supportFinishedSeq!==token?'support':CLIP[s.anim] && s.anim !== 'die' ? s.anim : 'idle', again = s.seq != null && v.seq != null && s.seq !== v.seq && (ONCE.has(n)||n==='support'); play(v, n, again);
           if(n==='attack'&&Number.isFinite(v.action?.targetX)&&Number.isFinite(v.action?.targetZ))v.root.rotation.y=Math.atan2(v.action.targetX-v.root.position.x,v.action.targetZ-v.root.position.z); }
         if (s.seq != null) v.seq = s.seq; }
       for (const v of [...views.values()]) {

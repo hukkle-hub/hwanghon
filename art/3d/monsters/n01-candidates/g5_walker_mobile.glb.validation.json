@@ -1,12 +1,12 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_walker_mobile.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\walker-shoe-candidate-v3\\g5_walker_mobile.glb",
   "species": "G5_WALKER",
-  "sha256": "e9e732d49111227de97d7a9b708d813aab04988591c79c4dd232adee4ee46e8c",
-  "bytes": 1858272,
-  "triangles": 16651,
-  "vertices": 10945,
+  "sha256": "bb63af73998cc1f460b088de955b5b78c96b68f996bb3a44f1527e9ddb6c2d16",
+  "bytes": 1874548,
+  "triangles": 17129,
+  "vertices": 11206,
   "materials": 3,
-  "maxWeightError": 1.1734664440155029e-7,
+  "maxWeightError": 1.17652234621346e-7,
   "joints": 65,
   "clips": [
     {
@@ -50,17 +50,17 @@
   ],
   "boundsYUp": [
     [
-      -0.38297656178474426,
-      -0.0006235858891159296,
-      -0.21796974539756775
+      -0.38297659158706665,
+      -0.001423226436600089,
+      -0.21796973049640656
     ],
     [
-      0.38175538182258606,
+      0.3817555606365204,
       1.850000262260437,
-      0.17324380576610565
+      0.1739233434200287
     ]
   ],
-  "height": 1.850623848149553,
+  "height": 1.851423488697037,
   "negativeTests": 10,
   "technical": "pass",
   "visualApproved": false,

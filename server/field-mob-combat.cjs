@@ -106,10 +106,10 @@ function roleGoal(m,a,players,context,nav) {
 function tick(m,a,s,players,now,nav,context=null) {
   if(!Number.isFinite(now)||now<a.lastTick)throw Error('Mob clock must be monotonic');
   const dt=Math.min(.1,(now-a.lastTick)/1000);a.lastTick=now;
-  if(!m.alive){m.engaged=false;m.anim='die';a.target=null;return null;}
+  if(!m.alive){m.engaged=false;m.anim='die';a.target=null;a.supportHolding=false;return null;}
   // A support hold or flank waypoint must not overwrite a real hit reaction.
   // Evaluate this before the context branches that can return early.
-  if(now<a.hitUntil){m.anim='hit';return null;}
+  if(now<a.hitUntil){m.anim='hit';a.supportHolding=false;return null;}
   const valid=p=>!p.dead&&!nav.safe(p)&&nav.legal(m.group.area,[p.x,p.z])&&dist(p,a.home)<=s.leash;
   let target=players.find(p=>p.id===a.target&&valid(p));
   if(!target&&a.phase!=='return') target=players.filter(p=>valid(p)&&dist(p,m)<=s.aggro)
@@ -119,8 +119,13 @@ function tick(m,a,s,players,now,nav,context=null) {
    if(target&&['hold','flank'].includes(target.kind)){
     a.target=null;a.phase='idle';m.engaged=true;
     m.anim=dist(m,target)>.35&&advance(m,a,target,s,dt,now,nav)?'walk':'idle';
-    if(target.kind==='hold'&&m.anim==='idle'&&a.action?.key!=='aura_cast'){a.seq++;a.action={key:'aura_cast',clip:'aura_cast',windupMs:600,startAt:now,seq:a.seq,support:true};}return null;
+    const holding=target.kind==='hold'&&m.anim==='idle';
+    // Cast once on entering a stationary support hold, not once forever and
+    // not every tick. This is visual state only; passive buff rules stay fixed.
+    if(holding&&!a.supportHolding){a.seq++;a.action={key:'aura_cast',clip:'aura_cast',windupMs:600,startAt:now,seq:a.seq,support:true};}
+    a.supportHolding=holding;return null;
    }}
+  a.supportHolding=false;
   if(!target){
     a.target=null;
     if(m.engaged||a.phase==='return'){

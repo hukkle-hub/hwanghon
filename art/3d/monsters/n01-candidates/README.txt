@@ -18,6 +18,10 @@ art/3d/src/mh/kain_base_mpfb.glb. See docs/design/81-character-pipeline-mpfb.md 
 art/3d/base/README.md for existing source provenance. Donor original unmodified.
 Replacement hand geometry is wrist-connected and forearm-weighted at cuff.
 Fingers are relaxed silhouettes; independent grasp animation is not supplied.
+Walker soles: closed caps made from the native lower-shoe vertices/weights,
+offset outward 0.8mm to avoid coplanar flicker and merged into the existing
+body primitive/material. This repairs the dark side/toe void without replacing
+the face, upper boot, body or animation samples. High/mobile remain <=3 materials.
 
 Actual integration, deliberately opt-in for director review:
 world3d.html?offline=1&n01Candidates=1
