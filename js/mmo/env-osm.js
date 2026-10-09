@@ -131,11 +131,11 @@ export function build(THREE, scene, osm, opt = {}) {
     /* 차선: 간선은 점선 */
     if (WIDTH[r.kind] && (r.lanes || 2) > 1) for (let k = 1; k < (r.lanes || 2); k++) dashed(r.line.map(W), -width / 2 + k * width / (r.lanes || 2), 0xb8b8a8);
     if (WIDTH[r.kind]) { dashed(r.line.map(W), -width / 2 + 0.2, 0xd8d8c8, true); dashed(r.line.map(W), width / 2 - 0.2, 0xd8d8c8, true); } }
-  function dashed(pts, off, color, solid) { const mat = dashMats[color] || (dashMats[color] = new THREE.MeshStandardMaterial({ color, roughness: 0.7, transparent: true, opacity: 0.55 }));   /* 닳은 페인트 */
+  function dashed(pts, off, color, solid) { const V3 = L.isView3d(), mat = dashMats[color] || (dashMats[color] = new THREE.MeshStandardMaterial({ color, roughness: 0.7, transparent: true, opacity: 0.55, ...(V3 ? { polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -36 } : {}) }));   /* 닳은 페인트 */
     for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i]; let dx = b[0] - a[0], dz = b[1] - a[1]; const L = Math.hypot(dx, dz); if (L < 0.5) continue; dx /= L; dz /= L;
       const step = solid ? L : 6, len = solid ? L : 3;
       for (let d = 0; d + len <= L + 1e-3; d += step) { const cx = a[0] + dx * (d + len / 2) - dz * off, cz = a[1] + dz * (d + len / 2) + dx * off;
-        const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), mat); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx); m.position.set(cx, 0.03, cz); scene.add(m); } } }
+        const m = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.12), mat); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(dz, dx); m.position.set(cx, V3 ? 0.075 : 0.03, cz);   /* 반복문 안의 L 은 길이(숫자) — 모듈 L 을 가린다 */ scene.add(m); } } }   /* 3D: 길 판이 4 cm 올라가(0.06) 0.03 차선이 묻혔다 (문서 220 §14) */
   /* 가장 가까운 간선 방향 (횡단보도·차 방향) */
   function nearestRoad(p, kinds) { let best = null; for (const rw of roadsW) { if (kinds && !kinds.includes(rw.r.kind)) continue;
       for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;

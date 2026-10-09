@@ -173,7 +173,7 @@ const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : m
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 /* 땅 결 (문서 220) — 평평한 바닥 재질(땅·길·풀밭·보도)에 세계 좌표의 큰 얼룩을 섞는다: 타일 반복이 깨지고 흙빛이 드문드문. 젖은 거울 같던 길은 조금 거칠게 */
 const CLOUDK = { value: 0 }, CLOUDT = WIND;   /* 구름 그림자 세기(해 높이·세기) · 시계는 바람과 같이 (문서 220 §10) */
-if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE = q.get('macro') || 'all';
+if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE = q.get('macro') || 'rough';   /* 기본은 거칠기·금속성만 — 결 셰이더(all)는 제주에서 풀밭·도로 앞쪽을 바닥 무늬로 바꿨다(원인 미상, 문서 220 §14). 구름 그림자도 이 셰이더라 같이 꺼진다 */
   scene.traverse(o => { if (!o.isMesh || o.isInstancedMesh || o.userData.noCam || Array.isArray(o.material)) return; const m = o.material; if (!m || !m.isMeshStandardMaterial || !m.map || done.has(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox); if (b.max.y - b.min.y > 0.02 || Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 6) return;   /* 진짜 평면만 — 30 cm 로 잡았더니 침목(10 cm 상자)까지 바닥 취급해 허옇게 됐다 */
     done.add(m); if (MODE !== 'shader') { if (m.roughness < 0.45) m.roughness = 0.74; if (m.metalness > 0.1) { m.metalness = 0.06; m.color.multiplyScalar(0.72); } }   /* 금속성을 빼면 아스팔트가 밝아져 보도와 같은 색이 됐다 — 그만큼 어둡게 */ if (MODE === 'rough') return;   /* 바닥은 금속이 아니다 — 낮은 해에 비스듬히 하얗게 번졌다 */   /* 낮은 해가 젖은 길에 하얗게 번지던 것 (문서 217 §2) */

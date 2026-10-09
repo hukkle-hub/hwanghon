@@ -18,7 +18,7 @@ test('하늘 산 능선: 낮은 3인칭 카메라 앞 폐허(지평선 위 ~5°,
   assert.match(W3D, /ridge: \{ value: new THREE\.Vector3\(\.\.\.ridgeOf\(/); assert.match(W3D, /uniforms\.time\.value \+= dt/);
 });
 
-test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당김은 고정 몫만(낮은 물체를 덮지 않게)', () => {
+test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당김은 고정 몫만(낮은 물체를 덮지 않게) · 땅 다각형은 뒤로 밀지 않는다', () => {
   L.setView3d(true);
   try { const ctx = mkCtx(), osm = { roads: [{ id: 1, kind: 'secondary', lanes: 2, line: [[-50, 0], [50, 0]], layer: 0 }], areas: [{ kind: 'grass', poly: [[-60, -30], [60, -30], [60, 30], [-60, 30]] }] };
     L.areas(ctx, osm, tex); const out = L.roads(ctx, osm, tex); assert.equal(out.length, 1);
@@ -27,7 +27,7 @@ test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당�
       if (o.material.map === tex.asphalt) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass) { grassY = v.y; grassM = o.material; } }
     assert.ok(roadY - grassY >= 0.04, `길 ${roadY} · 풀밭 ${grassY}`);
     assert.ok(roadM.polygonOffset && roadM.polygonOffsetUnits < 0 && roadM.polygonOffsetFactor === 0, '길 앞당김');
-    assert.ok(grassM.polygonOffset && grassM.polygonOffsetUnits > 0 && grassM.polygonOffsetFactor === 0, '풀밭 뒤로');
+    assert.ok(!grassM.polygonOffset || grassM.polygonOffsetUnits <= 0, '풀밭을 뒤로 밀면 바닥판(0 m)에 덮인다 (제주 사냥터)');
   } finally { L.setView3d(false); }
 });
 
@@ -91,4 +91,20 @@ test('별: 밤에만(윗하늘 선형 밝기로) — 잰 값 밤 0.0061 · 황�
   const m = SKY_FRAG.match(/float dark = 1\.0 - smoothstep\(([\d.]+), ([\d.]+), dot\(top, vec3\(0\.3, 0\.5, 0\.2\)\)\);/); assert.ok(m, '별 세기 식');
   const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }, dark = x => 1 - ss(+m[1], +m[2], x);
   assert.ok(dark(0.0061) > 0.9, '밤에 별이 없다'); assert.ok(dark(0.0194) < 0.35, '황혼에 별이 너무 많다 ' + dark(0.0194).toFixed(2)); assert.equal(dark(0.1279), 0, '낮에 별'); assert.equal(dark(0.0606), 0, '새벽에 별');
+});
+
+test('강남(env-osm)을 3D 로 짓는다: 오류 없음 · 막이는 2D 와 같다 · 차선이 길 판 위 · 출구 계단', async () => {
+  const { build } = await import('../js/mmo/env-osm.js'); const osm = JSON.parse(fs.readFileSync(new URL('../maps/2d/gangnam/osm.json', import.meta.url), 'utf8'));
+  const log = console.log; console.log = () => {}; const run = v3 => { L.setView3d(v3); try { const scene = new THREE.Scene(); return { scene, env: build(THREE, scene, osm, { id: 'gangnam', view3d: v3 }) }; } finally { L.setView3d(false); } };
+  let a, b; try { a = run(false); b = run(true); } finally { console.log = log; }   /* 반복문 안 지역 변수 L(길이)이 모듈 L 을 가려 3D 강남이 통째로 안 떴던 적이 있다 (문서 220 §14) */
+  assert.deepEqual(b.env.blockers, a.env.blockers, '3D 가 막이를 바꿨다 — 서버 지도(map.json)와 어긋난다');
+  const dashY = [], roadY = []; b.scene.updateMatrixWorld(true);
+  b.scene.traverse(o => { if (!o.isMesh || o.isInstancedMesh) return; const m = o.material; if (m.transparent && m.opacity === 0.55 && m.polygonOffset) dashY.push(o.getWorldPosition(new THREE.Vector3()).y); });
+  assert.ok(dashY.length > 50 && dashY.every(y => y > 0.065), '차선이 길 판(0.06) 밑 ' + dashY.length);
+  let stairs = 0; b.scene.traverse(o => { if (o.name === 'stair') stairs++; }); assert.equal(stairs, 12, '출구 계단');
+});
+
+test('땅 결 셰이더는 기본으로 꺼져 있다 (제주 풀밭·도로 회귀) — 거칠기·금속성 보정만', () => {
+  assert.match(W3D, /MODE = q\.get\('macro'\) \|\| 'rough';/, '기본이 rough 가 아니다');
+  assert.match(W3D, /if \(MODE === 'rough'\) return;/);
 });

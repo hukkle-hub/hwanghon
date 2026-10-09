@@ -114,7 +114,7 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
     water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
-  if (VIEW3D) for (const [k, f] of [['forest', 3], ['grass', 2], ['sand', 2], ['conc', 1.5]]) { M[k].polygonOffset = true; M[k].polygonOffsetFactor = 0; M[k].polygonOffsetUnits = f * 6; }   /* 3D: 땅 다각형은 뒤로 — 길(앞으로)과 순서 싸움을 안 하게 (문서 220) */
+  /* 3D: 땅 다각형은 깊이 밀기 없음 — 뒤로 밀면(+6~18) 바닥판(0 m)에 져서 제주 사냥터 풀밭이 사라졌다(16비트 깊이면 10 m 에서 수 cm). 길은 4 cm 올리고 앞으로 당겨(−24) 이미 이긴다 (문서 220 §14) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
     if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const sg = signedArea(pts) > 0 ? 1 : -1; foamBand(ctx, [...pts, pts[0]], 0, sg * 2.2); } }   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);
