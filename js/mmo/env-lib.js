@@ -391,11 +391,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
       for (let d = 0.5; d < L; d += 1.0) { const h = hashU(Math.round(p[0] * 7 + p[1] * 11), e, d * 10 | 0); if (h < 0.62) tuft(p[0] + dx / L * d + nx * sg * (0.35 + h * 0.5), p[1] + dz / L * d + nz * sg * (0.35 + h * 0.5), h); } } }
     for (const rw of carRoads) { const id = rw.r.id | 0; for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 1) continue;
       for (let d = 1; d < L; d += 2.6) for (const sd of [-1, 1]) { const h = hashU(id, i * 2 + (sd > 0 ? 1 : 0), d * 10 | 0); if (h < 0.3) tuft(a[0] + dx / L * d - dz / L * sd * (rw.width / 2 + 0.3 + h), a[1] + dz / L * d + dx / L * sd * (rw.width / 2 + 0.3 + h), h); } } }
-    if (tufts.length) { const tex = canvasTex(THREE, 64, 64, (g, w, h) => { g.clearRect(0, 0, w, h); for (let i = 0; i < 22; i++) { const x = 4 + (i * 37 % 56), bend = ((i * 13) % 11) - 5; g.strokeStyle = i % 3 ? '#8a9a4a' : '#b0a65a'; g.lineWidth = 4; g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + bend, h * 0.5, x + bend * 2, 6 + (i * 7 % 20)); g.stroke(); } });
-      const geo = mergeGeometries([0, 1, 2].map(k => { const p = new THREE.PlaneGeometry(0.9, 0.7); p.translate(0, 0.35, 0); p.rotateY(k * Math.PI / 3); return p; }), false);
-      const im = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 }), tufts.length), m4 = new THREE.Matrix4(), c = new THREE.Color();
-      tufts.forEach(([x, z, k], i) => { const sc = 0.8 + k * 1.2; m4.makeRotationY(k * 40).premultiply(new THREE.Matrix4().makeScale(sc, sc * (0.8 + k * 0.6), sc)).setPosition(x, 0, z); im.setMatrixAt(i, m4); im.setColorAt(i, c.setHSL(0.15 + k * 0.1, 0.45, 0.5 + k * 0.22));   /* 마른 풀 — 어두운 바닥과 섞여 안 보였다 */ });
-      im.userData.noCam = true; im.castShadow = false; im.receiveShadow = true; scene.add(im); STREET.weeds = tufts.length; } }
+    if (tufts.length) { scene.add(tuftMesh(THREE, tufts)); STREET.weeds = tufts.length; } }
   for (const b of buckets.values()) { const g = mergeGeometries(b.list, false); b.list.forEach(x => x.dispose()); if (!g) continue; const m = new THREE.Mesh(g, b.mat); m.castShadow = b.shadow; m.receiveShadow = true; m.userData.noCam = true; m.userData.street = 1; scene.add(m); }
   for (const l of wires.values()) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(l, 3)); const m = new THREE.LineSegments(g, wireM); m.frustumCulled = true; m.userData.noCam = true; scene.add(m); }
   return STREET; }
@@ -416,9 +412,11 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
     for (const m of [pines, ...canopy]) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.id, 3); m.setColorAt(i, c.setRGB(0.82 + u * 0.36, 0.86 + hashU(i, m.id, 4) * 0.28, 0.8 + hashU(i, m.id, 5) * 0.3)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; windify(m.material); } }
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); } return n; }
 /* 3D 나무 모양 (문서 220) — 장난감 같은 다면체 하나 대신: 활엽수는 울퉁불퉁한 덩어리 넷, 소나무는 3 층. 흔들림은 셰이더(바람) */
-function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.toNonIndexed(); });
+function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 function pineGeo(THREE) { const parts = [[1.7, 2.2, -1.2], [1.3, 1.9, 0.1], [0.85, 1.6, 1.25]].map(([r, h, y], i) => { const g = new THREE.ConeGeometry(r, h, 7); lumpy(g, 0.08, 50 + i, false); g.translate(0, y, 0); return g.toNonIndexed(); });
+  const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
+function bushGeo(THREE) { const parts = [[0, 0.05, 0, 0.62], [0.55, -0.12, 0.2, 0.46], [-0.5, -0.1, -0.25, 0.5], [0.1, -0.15, -0.55, 0.42], [-0.15, 0.3, 0.3, 0.4]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 1), 0.14, 70 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 export const WIND = { value: 0 };   /* world3d 가 매 프레임 올린다 */
 function windify(m) { if (m.userData.wind) return; m.userData.wind = true;
@@ -471,6 +469,20 @@ export function foamBand(ctx, pts, o0, o1, y = 0.03) { const { THREE, scene } = 
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
   const m = new THREE.Mesh(g, foamMat(THREE)); m.userData.noCam = true; m.renderOrder = 1; scene.add(m); return m; }
 const signedArea = P => { let a = 0; for (let i = 0, j = P.length - 1; i < P.length; j = i++) a += (P[j][0] * P[i][1] - P[i][0] * P[j][1]); return a / 2; };
+/* 풀포기 (문서 220 §7) — 엇갈린 판 셋(알파 잘라내기), 인스턴스 하나 = 그리기 1번. 길가 잡초와 사냥터 풀이 같이 쓴다.
+   처음 잡초는 채도 0.45 · 명도 0.5~0.72 + 노란 결이라 노을빛에 형광 노랑 종이판이었다 → 올리브·마른풀 사이 낮은 채도. 밑동은 고정, 끝만 바람에 */
+let TUFT = null;
+function tuftParts(THREE) { if (TUFT) return TUFT;
+  const tex = canvasTex(THREE, 64, 64, (g, w, h) => { g.clearRect(0, 0, w, h); for (let i = 0; i < 26; i++) { const x = 3 + (i * 37 % 58), bend = ((i * 13) % 11) - 5; g.strokeStyle = ['#6e7a3c', '#8a8448', '#5a6232', '#9a8a5a'][i % 4]; g.lineWidth = 3 + (i % 2); g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + bend, h * 0.5, x + bend * 2, 4 + (i * 7 % 24)); g.stroke(); } });
+  const geo = mergeGeometries([0, 1, 2].map(k => { const p = new THREE.PlaneGeometry(0.9, 0.7); p.translate(0, 0.35, 0); p.rotateY(k * Math.PI / 3); return p; }), false);
+  const mat = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 });
+  mat.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float k = transformed.y * transformed.y * 0.5; transformed.x += sin(uWind * 1.9 + ip.x * 0.5 + ip.z * 0.3) * k; transformed.z += cos(uWind * 1.5 + ip.z * 0.45) * k * 0.6; }\n#endif'); };
+  mat.customProgramCacheKey = () => 'grass-wind'; mat.userData.tuft = true;
+  return (TUFT = { geo, mat }); }
+export function tuftMesh(THREE, tufts, size = 1) { const { geo, mat } = tuftParts(THREE), im = new THREE.InstancedMesh(geo, mat, tufts.length), m4 = new THREE.Matrix4(), S = new THREE.Matrix4(), c = new THREE.Color();
+  tufts.forEach(([x, z, k], i) => { const sc = (0.8 + k * 1.2) * size; m4.makeRotationY(k * 40).premultiply(S.makeScale(sc, sc * (0.8 + k * 0.6), sc)).setPosition(x, 0, z); im.setMatrixAt(i, m4); im.setColorAt(i, c.setHSL(0.17 + k * 0.08, 0.2 + k * 0.08, 0.3 + k * 0.14)); });
+  im.userData.noCam = true; im.castShadow = false; im.receiveShadow = true; return im; }
 /* 나무 자리: 격자 + 흔들기. 길·건물·물·지정 원은 비운다 */
 export function treeSpots(ctx, region, o = {}) { const { R, FROM } = ctx, out = []; const step = o.step || 3.4;
   for (let s = region.s0; s < region.s1; s += step) for (let t = region.t0; t < region.t1; t += step) { const p = FROM(s + (R() - .5) * step * 0.8, t + (R() - .5) * step * 0.8);
@@ -584,18 +596,25 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }));
   let np = 0; for (const p of pick(Math.round(A / (o.patchEvery || 700)))) { const r = 3 + R() * 10, n = 9, pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (0.6 + R() * 0.6); pts.push([p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr]); }
     flatPoly(ctx, pts, patchM[(R() * patchM.length) | 0], 0.003 + R() * 0.002); np++; } stat.patches = np;
-  const inst = (geo, mats, spots, place) => { const per = mats.map(() => []); spots.forEach(p => per[(R() * mats.length) | 0].push(p));
-    per.forEach((ps, k) => { if (!ps.length) return; const m = new THREE.InstancedMesh(geo, mats[k], ps.length), mtx = new THREE.Matrix4(); ps.forEach((p, i) => { place(p, mtx); m.setMatrixAt(i, mtx); }); m.castShadow = true; m.receiveShadow = true; scene.add(m); }); return spots.length; };
+  const made = [], inst = (geo, mats, spots, place) => { const per = mats.map(() => []); spots.forEach(p => per[(R() * mats.length) | 0].push(p));
+    per.forEach((ps, k) => { if (!ps.length) return; const m = new THREE.InstancedMesh(geo, mats[k], ps.length), mtx = new THREE.Matrix4(); ps.forEach((p, i) => { place(p, mtx); m.setMatrixAt(i, mtx); }); m.castShadow = true; m.receiveShadow = true; scene.add(m); made.push(m); }); return spots.length; };
+  const tint = (from, lo, span) => { const c = new THREE.Color(); for (const m of made.slice(from)) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.count, 7); m.setColorAt(i, c.setScalar(lo + u * span)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; } };   /* 3D: 개체마다 밝기를 조금씩 (해시 — 장면 난수 안 씀) */
   const q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z);
   /* 2) 바위 — 뭉친 곳에 많이. 큰 것만 막는다 */
   const rockG = VIEW3D ? lumpy(new THREE.IcosahedronGeometry(1, 1), 0.22, 11) : new THREE.DodecahedronGeometry(1, 0), rockM = (o.rockColors || (o.urban ? [0x6a6662, 0x5a5856, 0x4c4a48] : [0x5a4a3e, 0x6a5a4a, 0x4a3e36])).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, flatShading: true, map: VIEW3D ? gritTex(THREE) : null }));
   const rocks = pick(Math.round(A / (o.rockEvery || 160))).filter(p => R() < 0.25 + N(p[0], p[1]) * 1.2);
-  stat.rocks = inst(rockG, rockM, rocks, (p, mtx) => { const k = 0.35 + Math.pow(R(), 2.2) * 1.5; mtx.compose(V(p[0], k * 0.25, p[1]), q4.setFromEuler(e.set(R() * 0.6, R() * 6, R() * 0.6)), V(k * (0.8 + R() * 0.6), k * (0.45 + R() * 0.35), k * (0.8 + R() * 0.6)));
+  const rock0 = made.length; stat.rocks = inst(rockG, rockM, rocks, (p, mtx) => { const k = 0.35 + Math.pow(R(), 2.2) * 1.5; mtx.compose(V(p[0], k * (VIEW3D ? 0.1 : 0.25), p[1]),   /* 3D: 땅에 반쯤 묻는다 — 얹힌 돌은 소품처럼 보였다 */ q4.setFromEuler(e.set(R() * 0.6, R() * 6, R() * 0.6)), V(k * (0.8 + R() * 0.6), k * (0.45 + R() * 0.35), k * (0.8 + R() * 0.6)));
     if (k > 0.9) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: k * 0.8, hd: k * 0.8, rot: 0 }); });
+  if (VIEW3D) tint(rock0, 0.78, 0.4);
   /* 3) 덤불 — 무릎 높이(인물을 가리지 않는다) */
-  const bushG = VIEW3D ? lumpy(new THREE.IcosahedronGeometry(0.7, 0), 0.18, 12) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const bushG = VIEW3D ? bushGeo(THREE) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => new THREE.MeshStandardMaterial({ color: VIEW3D ? new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35) : c, roughness: 0.9, flatShading: true }));   /* 3D: 덩어리 여럿(다면체 하나는 색칠한 돌로 읽혔다) · 붉은 기를 덜어 */
   const bushes = pick(Math.round(A / (o.bushEvery || 45))).filter(p => R() < 0.2 + N(p[0] + 500, p[1]) * 1.3);
-  stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
+  const bush0 = made.length; stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
+  if (VIEW3D) { tint(bush0, 0.75, 0.5); for (const m of made.slice(bush0)) windify(m.material);
+    /* 풀포기: 바위·덤불 둘레 (자리는 해시) — 맨바닥에 돌만 흩어진 «게임판» 을 덮는다 */
+    const tufts = [], ring = (p, n, r0, r1) => { for (let j = 0; j < n; j++) { const u = hashU(Math.round(p[0] * 10), Math.round(p[1] * 10), j), v = hashU(Math.round(p[1] * 10), j, Math.round(p[0] * 10)), a = u * 6.283, r = r0 + v * (r1 - r0); tufts.push([p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r, hashU(j, Math.round(p[0]), Math.round(p[1]))]); } };
+    for (const p of rocks) ring(p, 2, 0.6, 1.6); for (const p of bushes) ring(p, 1, 0.6, 1.2);
+    const keepT = tufts.filter(t => !isClear(ctx, [t[0], t[1]], 0.2)); if (keepT.length) scene.add(tuftMesh(THREE, keepT, 0.36));   /* 무릎 아래 — 처음엔 길가 잡초 크기(최대 2 m)라 몬스터를 가렸다 */ stat.tufts = keepT.length; }
   /* 4) 쓰러진 통나무 (숲) */
   if (o.logs !== false) { const logG = new THREE.CylinderGeometry(0.22, 0.3, 1, 7), logM = [new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1 })];
     stat.logs = inst(logG, logM, pick(Math.round(A / (o.logEvery || 600))), (p, mtx) => { const len = 2 + R() * 3, ry = R() * Math.PI; mtx.compose(V(p[0], 0.25, p[1]), q4.setFromEuler(e.set(0, ry, Math.PI / 2, 'YXZ')), V(1, len, 1));

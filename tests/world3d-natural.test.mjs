@@ -67,3 +67,15 @@ test('3D 물: 하늘을 비추는 셰이더 · 바닥보다 앞으로 · 물가 
   assert.equal(foam(a.ctx), 0, '2D 에 거품'); assert.equal(foam(b.ctx), 1 + 2 + 2, '거품 띠 (호수 1 · 강둑 2 · 바닷가 2)');
   assert.match(W3D, /WATER\.uRidge\.value = U\.ridge\.value/);
 });
+
+test('3D 사냥터 꾸밈: 덤불 덩어리 · 바위 반쯤 묻기 · 풀포기(무릎 아래) — 막이와 장면 난수는 2D 와 같다', () => {
+  const region = { s0: -60, s1: 60, t0: -40, t1: 40 };
+  const run = v3 => { let n = 0; const s = L.rng(13); L.setView3d(v3); try { const ctx = mkCtx(() => { n++; return s(); }); const stat = L.dress(ctx, region, tex, { urban: true }); return { n, ctx, stat }; } finally { L.setView3d(false); } };
+  const a = run(false), b = run(true);
+  assert.equal(b.n, a.n, '3D 꾸밈이 장면 난수를 더/덜 쓴다'); assert.deepEqual(b.ctx.blockers, a.ctx.blockers, '막이가 다르다');
+  assert.equal(b.stat.rocks, a.stat.rocks); assert.equal(b.stat.bushes, a.stat.bushes); assert.ok(!a.stat.tufts && b.stat.tufts > 20, '풀포기 ' + b.stat.tufts);
+  const tuft = b.ctx.scene.children.find(o => o.isInstancedMesh && o.material.userData.tuft); assert.ok(tuft, '풀포기 메시');
+  const m = new THREE.Matrix4(), sc = new THREE.Vector3(); let hMax = 0; for (let i = 0; i < tuft.count; i++) { tuft.getMatrixAt(i, m); sc.setFromMatrixScale(m); hMax = Math.max(hMax, sc.y * 0.7); }
+  assert.ok(hMax < 0.75, '풀포기가 인물을 가린다 ' + hMax.toFixed(2)); assert.equal(tuft.material.customProgramCacheKey(), 'grass-wind');
+  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count > 300); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
+});
