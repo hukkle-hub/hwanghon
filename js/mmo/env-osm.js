@@ -102,11 +102,11 @@ export function build(THREE, scene, osm, opt = {}) {
 
   /* ---------- 땅 ---------- */
   const groundTex = paver.clone(); groundTex.repeat.set(1400 / 1.6, 1400 / 1.6);   /* 판 UV 는 0~1 — 1.6 m 마다 한 장 */
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), L.layer(new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }), L.LAYER.ground));
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   /* 공원·녹지 */
   for (const a of osm.areas) { if (!/park|pitch|grass/.test(a.kind)) continue; const sh = new THREE.Shape(a.poly.map(p => { const w = W(p); return new THREE.Vector2(w[0], -w[1]); }));
-    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 })); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), L.layer(new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 }), L.LAYER.grass)); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
 
   /* ---------- 도로: 중심선을 폭만큼 펼친 띠 ---------- */
   function ribbon(line, width, y) { const pos = [], idx = []; const pts = line.map(W);
@@ -142,11 +142,11 @@ export function build(THREE, scene, osm, opt = {}) {
         const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)), qx = a[0] + vx * u, qz = a[1] + vz * u, d = Math.hypot(p[0] - qx, p[1] - qz);
         if (!best || d < best.d) best = { d, q: [qx, qz], dir: Math.atan2(vz, vx), rw, i, u }; } } return best; }
   /* 횡단보도 (흰 줄무늬) — OSM 횡단 지점은 차로마다 하나 */
-  const zebraMat = new THREE.MeshStandardMaterial({ color: 0xe8e8e0, roughness: 0.55, emissive: 0x303030 });
+  const zebraMat = L.layer(new THREE.MeshStandardMaterial({ color: 0xe8e8e0, roughness: 0.55, emissive: 0x303030 }), L.LAYER.paint), zebraY = L.isView3d() ? 0.075 : 0.035;   /* 3D: 길 판(0.06) 위 — 0.035 는 묻혔다 */
   for (const c of osm.crossings) { const p = W(c), n = nearestRoad(p, ['primary', 'primary_link', 'secondary', 'tertiary', 'residential', 'busway']); if (!n || n.d > 6) continue;
     const across = n.dir + Math.PI / 2, w = n.rw.width;
     for (let k = -w / 2 + 0.5; k <= w / 2 - 0.5; k += 1.0) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 4), zebraMat); m.rotation.x = -Math.PI / 2; m.rotation.z = -across;
-      m.position.set(n.q[0] + Math.cos(across) * k, 0.035, n.q[1] + Math.sin(across) * k); scene.add(m); } }
+      m.position.set(n.q[0] + Math.cos(across) * k, zebraY, n.q[1] + Math.sin(across) * k); scene.add(m); } }
 
   /* ---------- 건물: 실측 윤곽 × 실측 높이. 가까운 쪽(화면 아래)은 1층만 남기고 잘라 길을 가리지 않게 ---------- */
   const footprintArea = poly => { let a = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };

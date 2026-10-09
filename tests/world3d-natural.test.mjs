@@ -104,7 +104,21 @@ test('강남(env-osm)을 3D 로 짓는다: 오류 없음 · 막이는 2D 와 같
   let stairs = 0; b.scene.traverse(o => { if (o.name === 'stair') stairs++; }); assert.equal(stairs, 12, '출구 계단');
 });
 
-test('땅 결 셰이더는 기본으로 꺼져 있다 (제주 풀밭·도로 회귀) — 거칠기·금속성 보정만', () => {
-  assert.match(W3D, /MODE = q\.get\('macro'\) \|\| 'rough';/, '기본이 rough 가 아니다');
-  assert.match(W3D, /if \(MODE === 'rough'\) return;/);
+test('3D 땅 층 깊이 순서: 바닥판 < 얼룩 < 콘크리트·숲 < 풀·모래 < 물 < 길 < 웅덩이 < 차선 (그리는 순서에 기대지 않는다)', () => {
+  const U = L.LAYER, order = [U.ground, U.patch, U.low, U.grass, U.water, U.road, U.puddle, U.paint];
+  for (let i = 1; i < order.length; i++) assert.ok(order[i] < order[i - 1], '층 순서 ' + i);
+  L.setView3d(true);
+  try { const ctx = mkCtx(); const g = L.ground(ctx, tex.forest); assert.equal(g.material.polygonOffsetUnits, U.ground);
+    L.areas(ctx, { areas: [{ kind: 'grass', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }, { kind: 'industrial', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }] }, tex);
+    const by = mp => ctx.scene.children.find(o => o.isMesh && o.material.map === mp).material;
+    assert.ok(by(tex.grass).polygonOffsetUnits < (by(tex.concrete).polygonOffset ? by(tex.concrete).polygonOffsetUnits : 0), '풀밭이 콘크리트 앞 (제주)');
+    assert.equal(by(tex.grass).polygonOffsetFactor, 0);
+  } finally { L.setView3d(false); }
+  const c2 = mkCtx(); assert.equal(L.ground(c2, tex.forest).material.polygonOffset, false, '2D 굽기는 그대로');
+  assert.match(W3D, /MODE = q\.get\('macro'\) \|\| 'all';/, '결 셰이더 기본 켬');
+});
+
+test('땅 결 흙 얼룩 색은 선형 값(어둡게) — sRGB 감의 0.40 은 풀·아스팔트를 허옇게 띄웠다 (제주)', () => {
+  const m = W3D.match(/mix\(diffuseColor\.rgb, vec3\(([\d.]+), ([\d.]+), ([\d.]+)\) \* \(0\.8 \+ mn \* 0\.4\), dirt \* 0\.32\)/); assert.ok(m, '흙 얼룩 식');
+  assert.ok(Math.max(+m[1], +m[2], +m[3]) * 1.2 <= 0.2, '흙색이 선형 0.2 를 넘는다 — sRGB 로 0.48 이상, 짙은 바닥이 뜬다');
 });

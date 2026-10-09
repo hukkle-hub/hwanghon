@@ -8,6 +8,11 @@ export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
 let VIEW3D = false; export function setView3d(v) { VIEW3D = !!v; }
+/* 3D 땅 층 깊이 순서 (문서 220 §15): 땅 다각형끼리는 2 mm 차 — 16비트 깊이면 10 m 에서 15 mm 를 못 가려 «나중에 그린 것» 이 이긴다.
+   결 셰이더로 프로그램 순서가 바뀌자 콘크리트가 풀밭을 덮었다(제주). 깊이 밀기 단위는 깊이 버퍼 최소 단위의 배수라 비트 수와 무관하게 순서를 고정한다.
+   뒤 → 앞: 바닥판 +12 · 얼룩 +6 · 콘크리트·숲 0 · 풀·모래 −3 · 물 −6 · 길 −24 · 웅덩이 −30 · 차선·횡단보도 −36 */
+export const LAYER = { ground: 12, patch: 6, low: 0, grass: -3, water: -6, road: -24, puddle: -30, paint: -36 };
+export function layer(m, units) { if (!VIEW3D || !units) return m; m.polygonOffset = true; m.polygonOffsetFactor = 0; m.polygonOffsetUnits = units; return m; }
 /* 울퉁불퉁한 덩어리: 다면체를 한 번 쪼개고 꼭짓점을 «자리로 만든 해시» 로 흔든다. 장면 난수(R)를 안 써서 뒤따르는 모든 자리가 그대로이고,
    같은 자리의 꼭짓점은 같이 움직여 면 사이가 벌어지지 않는다. radial: 가운데서 바깥으로만(바위·덤불) · 아니면 세 축(콘크리트 덩이) */
 export function lumpy(geo, amp, seed, radial = true) { const P = geo.attributes.position, v = [0, 0, 0];
@@ -66,7 +71,7 @@ export function textures(ctx) { const { THREE, R } = ctx, T = (w, h, d, r) => ca
 
 /* ---------- 땅 ---------- */
 export function ground(ctx, tex, size = 2400) { const { THREE, scene } = ctx; const t = tex.clone(); t.needsUpdate = true; t.repeat.set(size * tex.repeat.x, size * tex.repeat.y);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), new THREE.MeshStandardMaterial({ map: t, roughness: 0.8, metalness: 0.05 })); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; scene.add(m); return m; }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), layer(new THREE.MeshStandardMaterial({ map: t, roughness: 0.8, metalness: 0.05 }), LAYER.ground)); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; scene.add(m); return m; }
 export function flatPoly(ctx, pts, mat, y = 0.01) { const { THREE, scene } = ctx; const g = new THREE.ShapeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))));
   const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, g.attributes.position.getX(i), g.attributes.position.getY(i));
   const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
@@ -114,7 +119,7 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
   const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
     water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
-  /* 3D: 땅 다각형은 깊이 밀기 없음 — 뒤로 밀면(+6~18) 바닥판(0 m)에 져서 제주 사냥터 풀밭이 사라졌다(16비트 깊이면 10 m 에서 수 cm). 길은 4 cm 올리고 앞으로 당겨(−24) 이미 이긴다 (문서 220 §14) */
+  layer(M.grass, LAYER.grass); layer(M.sand, LAYER.grass);   /* 3D 층 순서(LAYER): 풀·모래(0.008)는 콘크리트·숲(0.006, 0) 앞 — 높이 2 mm 차만으로는 16비트 깊이에서 그리는 순서가 이겼다 (문서 220 §15) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
     if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const sg = signedArea(pts) > 0 ? 1 : -1; foamBand(ctx, [...pts, pts[0]], 0, sg * 2.2); } }   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);
@@ -609,7 +614,7 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   const A = (region.s1 - region.s0) * (region.t1 - region.t0), pick = n => { const out = []; for (let i = 0; i < n * 4 && out.length < n; i++) { const p = FROM(region.s0 + R() * (region.s1 - region.s0), region.t0 + R() * (region.t1 - region.t0)); if (!keep(p) || isClear(ctx, p, 0.5)) continue; out.push(p); } return out; };
   const stat = {};
   /* 1) 얼룩 — 낙엽·흙·풀. 모양이 둥글면 티가 나서 꼭짓점마다 반지름을 흔든다 */
-  const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }));
+  const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => layer(new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }), LAYER.patch));
   let np = 0; for (const p of pick(Math.round(A / (o.patchEvery || 700)))) { const r = 3 + R() * 10, n = 9, pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (0.6 + R() * 0.6); pts.push([p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr]); }
     flatPoly(ctx, pts, patchM[(R() * patchM.length) | 0], 0.003 + R() * 0.002); np++; } stat.patches = np;
   const made = [], inst = (geo, mats, spots, place) => { const per = mats.map(() => []); spots.forEach(p => per[(R() * mats.length) | 0].push(p));
