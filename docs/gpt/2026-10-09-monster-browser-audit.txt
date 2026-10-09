@@ -59,6 +59,8 @@ tools/monsters/render-field-mobs.cjs
 docs/design/ref/monster-server-browser-audit/browser-audit.json
 동일 폴더: 2d/3d × attack, hit, death, respawn 캡처 8장.
 JSON의 noPageErrors=false / complete=false를 유지한다.
+최신 main 병합 뒤 npm test: 949개 중 947 통과, 실패 0, 건너뜀 2.
+자동 시험 통과와 실제 브라우저 미합격은 분리했다(regression-result.json).
 
 5. 다음 작업 / 소유권
 Claude: 3D 입장 초기화 순서 수정 후 같은 브라우저 검수 재실행.
