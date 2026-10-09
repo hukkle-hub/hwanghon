@@ -57,4 +57,9 @@ test('world3d 이동: 길 끝 문만 자동 · 도착 문 위에선 한 번 나�
   assert.match(W3D, /const GATES = \(meta\.gates && meta\.gates\.length/);
   assert.match(W3D, /if \(x\.to && d < 40\) prefetchZone\(x\.to\.zone\)/);
   assert.match(W3D, /'lod', 'tod'\]/);
+  /* 도착 도입 장면: 길로 왔을 때만 · 움직이면 끝 · 그동안 HUD 숨김 · 지역 이름 카드 */
+  assert.match(W3D, /let intro = TRAVEL && !INDOOR \?/); assert.match(W3D, /if \(intro && Math\.abs\(ix\) \+ Math\.abs\(iy\) > 0\.2\) \{ intro = null;/);
+  assert.match(W3D, /body\.intro #hud\{ opacity:0; pointer-events:none; \}/); assert.match(W3D, /getElementById\('regionCard'\)/);
+  /* 모듈보다 먼저 그리는 이동 카드 (첫 화면 번쩍임) */
+  assert.ok(W3D.indexOf("<script>/* 이동 카드를 모듈보다 먼저") < W3D.indexOf('<script type="module"'), '이동 카드가 모듈 뒤에 있다');
 });

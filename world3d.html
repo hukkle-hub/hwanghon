@@ -19,6 +19,8 @@ canvas{ display:block; width:100vw; height:100vh; }
 #load.tv,#travel{ flex-direction:column; gap:6px; text-align:center; background:#08060a; }   /* 지역 이동 카드 (문서 219) — 떠날 때 · 도착 로딩이 같은 모양이라 한 장면처럼 이어진다 */
 #load.tv b,#travel b{ font-size:30px; letter-spacing:.14em; color:#f0e2d0; } #load.tv small,#travel small{ font-size:13px; font-weight:500; color:#c9a45e; letter-spacing:.06em; } #load.tv i,#travel i{ font-style:normal; font-size:11px; font-weight:500; color:#8a7a70; margin-top:10px; }
 #load{ transition:opacity .6s; } #load.out{ opacity:0; pointer-events:none; }
+#regionCard{ position:absolute; left:50%; top:16%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; transition:opacity .9s; text-shadow:0 0 14px #000,0 2px 4px #000; white-space:nowrap; }   /* 도착 지역 이름 (스파이더맨 구역 이름처럼) */
+#regionCard.on{ opacity:1; } #hud{ transition:opacity .6s; } body.intro #hud{ opacity:0; pointer-events:none; }   /* 도입 장면 동안 조작 화면을 숨긴다 */ #regionCard b{ display:block; font-size:34px; font-weight:900; letter-spacing:.2em; color:#f0e2d0; } #regionCard small{ display:block; margin-top:4px; font-size:13px; letter-spacing:.12em; color:#c9a45e; }
 #travel{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; z-index:6; opacity:0; pointer-events:none; transition:opacity .45s; } #travel.on{ opacity:1; pointer-events:auto; }
 #ring{ position:absolute; width:110px; height:110px; margin:-55px 0 0 -55px; border-radius:50%; border:2px solid rgba(232,184,96,.45); display:none; }
 #ring i{ position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(232,184,96,.5); }
@@ -86,7 +88,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
 <div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
-<div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
+<div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
 try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
 </script>
 <script src="js/items.js"></script>
@@ -289,8 +291,17 @@ if (TRAVEL && !q.has('online') && Number.isFinite(TRAVEL.hp)) P.hp = Math.max(1,
 function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
 addEventListener('resize', resize);
 let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */
+/* 도착 도입 장면 (문서 219 §2) — 길로 넘어오면 카메라가 뒤쪽 하늘에서 앞쪽 지역 너머를 내려다보다가 등 뒤로 내려앉는다(3.2 초). 움직이면 바로 끝 */
+let intro = TRAVEL && !INDOOR ? { t: 0, dur: 3.2, fwd: null } : null;
+const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
 function placeCam(dt) {
   if (photo) { cam.position.set(...photo.pos); cam.lookAt(...photo.at); return; }
+  if (intro) { intro.t += dt; const h0 = root.position, f = intro.fwd || (intro.fwd = [Math.sin(me.yaw), Math.cos(me.yaw)]), k = ease(Math.min(1, intro.t / intro.dur));
+    const cp = Math.cos(camS.pitch), end = new THREE.Vector3(h0.x + Math.sin(camS.yaw) * cp * camS.dist, 1.45 + Math.sin(camS.pitch) * camS.dist, h0.z + Math.cos(camS.yaw) * cp * camS.dist);
+    const start = new THREE.Vector3(h0.x - f[0] * 22 + f[1] * 12, 36, h0.z - f[1] * 22 - f[0] * 12), mid = new THREE.Vector3().lerpVectors(start, end, 0.5); mid.y += 6;
+    const a = new THREE.Vector3().lerpVectors(start, mid, k), b2 = new THREE.Vector3().lerpVectors(mid, end, k); cam.position.lerpVectors(a, b2, k);   /* 곡선(2차 베지어) */
+    const lookFar = new THREE.Vector3(h0.x + f[0] * 120, 10, h0.z + f[1] * 120), lookMe = new THREE.Vector3(h0.x, 1.45, h0.z); cam.lookAt(lookFar.lerp(lookMe, ease(Math.min(1, intro.t / (intro.dur * 0.85)))));
+    if (intro.t >= intro.dur) { intro = null; document.body.classList.remove('intro'); } else document.body.classList.add('intro'); return; }
   const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * camS.dist, ty + Math.sin(camS.pitch) * camS.dist, tz + Math.cos(camS.yaw) * cp * camS.dist);
   want.y = Math.max(0.4, want.y);
   /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
@@ -538,6 +549,7 @@ function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const ix = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+  if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
   if (dodgeT > 0) { dodgeT -= dt; const sp = 3.4 * rate; root.position.x -= Math.sin(me.yaw) * sp * dt; root.position.z -= Math.cos(me.yaw) * sp * dt; collide(root.position); }   /* 뒤로 반 걸음 */
@@ -576,9 +588,10 @@ function tick() { perf.begin();
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   perf.end(); requestAnimationFrame(tick); }
-{ const L0 = document.getElementById('load'); if (TRAVEL) { L0.classList.add('out'); setTimeout(() => { L0.hidden = true; }, 700); } else L0.hidden = true; }   /* 이동해 왔으면 카드가 서서히 걷힌다 */
+{ const L0 = document.getElementById('load'); if (TRAVEL) { L0.classList.add('out'); setTimeout(() => { L0.hidden = true; }, 700); } else L0.hidden = true; }
+if (TRAVEL && !INDOOR) { const rc = document.getElementById('regionCard'); rc.innerHTML = '<b>' + esc(Z.title || ZONE) + '</b><small>' + esc(TRAVEL.fromTitle) + '에서 · ' + esc(String(TRAVEL.label || '').split('·').slice(1).join('·').trim() || '길을 따라') + '</small>'; requestAnimationFrame(() => rc.classList.add('on')); setTimeout(() => rc.classList.remove('on'), 3600); }   /* 이동해 왔으면 카드가 서서히 걷힌다 */
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
