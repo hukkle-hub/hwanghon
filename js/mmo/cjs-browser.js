@@ -5,7 +5,8 @@ export function loadCjs(url) {
   const abs = new URL(url, location.href).href;
   if (cache.has(abs)) return cache.get(abs);
   const task = (async () => {
-    const src = await (await fetch(abs)).text(), deps = {};
+    const res = await fetch(abs); if (res.ok === false) throw Error('모듈을 못 읽었다 ' + res.status + ' ' + abs);   /* 없는 모듈은 실패로 — HTML 404 를 코드로 돌리지 않는다. 3D 가 쓰는 server/ 모듈은 파티 서버도 내준다(GPT f0b0736) */
+    const src = await res.text(), deps = {};
     for (const [, rel] of src.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) deps[rel] = await loadCjs(new URL(rel, abs).href);
     const module = { exports: {} };
     new Function('module', 'exports', 'require', src + '\n//# sourceURL=' + abs)(module, module.exports, n => { if (!(n in deps)) throw Error('브라우저에서 읽을 수 없는 모듈: ' + n + ' (' + abs + ')'); return deps[n]; });
