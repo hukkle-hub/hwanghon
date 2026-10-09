@@ -621,7 +621,9 @@ function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
     if(o.b.ai==='dominator'){ if(o.dom) applyDominatorAction(o,v); else o.netAct=v; } else applyBossAction(o,v,now); }
   if(OFF.ECO){ OFF.ECO.tick(now); OFF.MOBS.update(OFF.ECO.snapshot(P.x,P.z,now)); } }
 /* 몬스터 그리기는 하나 — 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs(mobsFromPacket)를 넣는다 */
-function mobView(){ return OFF.MOBS||(OFF.MOBS=createMobView({ THREE, clone:SkeletonUtils.clone, scene, loadBody:()=>heroGltf('ryu'), hud:document.getElementById('hud'), tagAt, catalog:CATALOG, floor:FLOOR })); }
+/* 몬스터 임시 몸 — 류를 4천 삼각형·클립 다섯으로 줄인 것(tools/2d/make-mob-body.mjs). 20마리면 류 원본은 120만 삼각형이다 (문서 210 §6) */
+const mobBody=()=>gltfs.mob||(gltfs.mob=load('art/3d/lod/mob_temp.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; }));
+function mobView(){ return OFF.MOBS||(OFF.MOBS=createMobView({ THREE, clone:SkeletonUtils.clone, scene, loadBody:mobBody, hud:document.getElementById('hud'), tagAt, catalog:CATALOG, floor:FLOOR })); }
 const mobT=v=>({ root:v.root, b:{ x:v.root.position.x, z:v.root.position.z, h:v.h }, h:v.h });
 /* 혼자 연습 몬스터 치기 — 보스가 닿지 않을 때. 체력은 연습값(PRACTICE_HP), 쓰러뜨리면 생태에 한 번 defeat → 30초 뒤 새 세대로 다시 난다 */
 function hitMob(sk){ if(!OFF.MOBS||!me||(!net&&!OFF.ECO)) return false; const v=OFF.MOBS.nearest(me.root.position.x,me.root.position.z,2.8); if(!v) return false;
