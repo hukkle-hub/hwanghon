@@ -11,7 +11,7 @@ html,body{ margin:0; height:100%; background:#140c12; overflow:hidden; touch-act
 canvas{ display:block; width:100vw; height:100vh; }
 #hud{ position:fixed; inset:0; pointer-events:none; }
 #title{ position:absolute; top:max(12px,env(safe-area-inset-top)); left:16px; font-weight:900; font-size:20px; text-shadow:0 2px 6px #000; }
-#title small{ display:block; font-weight:500; font-size:12px; color:var(--dim); margin-top:2px; }
+#title small{ display:block; font-weight:500; font-size:12px; color:var(--dim); margin-top:2px; text-shadow:0 0 4px #000,0 1px 2px #000; }
 #hint.gone{ opacity:0; pointer-events:none; transition:opacity .6s; }
 #hint{ position:absolute; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); font-size:12px; color:var(--dim); background:var(--panel); padding:6px 12px; border-radius:14px; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; text-align:center; }
 #load{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px; background:#140c12; z-index:5; }
@@ -63,7 +63,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 #mini b.me{ position:absolute; width:0; height:0; margin:-7px 0 0 -5px; border:5px solid transparent; border-bottom:12px solid #5fe0ff; border-top:0; filter:drop-shadow(0 0 3px #5fe0ff); transform-origin:5px 7px; z-index:2; pointer-events:none; }
 #mini span{ position:absolute; transform:translate(-50%,-50%); font-size:11px; color:#f0e2d0; text-shadow:0 0 4px #000,0 1px 2px #000; white-space:nowrap; display:none; pointer-events:none; }
 #mini.big span{ display:block; } #mini span.d2{ color:#ffb070; } #mini span.d3{ color:#ff6a50; } #mini span.rest{ color:#9fe0b0; }
-#areaName{ position:absolute; left:50%; top:63%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; color:#f0e2d0; text-shadow:0 0 10px #000,0 1px 2px #000; white-space:nowrap; }
+#areaName{ position:absolute; left:50%; top:63%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; color:#f0e2d0; text-shadow:0 0 10px #000,0 0 4px #000,0 1px 2px #000; white-space:nowrap; }   /* 낮(밝은 길) 위에서도 읽히게 — 문서 217 */
 @media (orientation:portrait){ #areaName{ top:40%; } }   /* 세로: 아래쪽은 스킬 단추 자리 */
 #areaName b{ display:block; font-size:22px; letter-spacing:.12em; font-weight:800; } #areaName small{ display:block; font-size:11px; letter-spacing:.08em; opacity:.8; margin-top:2px; }
 #areaName.d2 b{ color:#ffb070; } #areaName.d3 b{ color:#ff6a50; } #areaName.rest b{ color:#9fe0b0; }
@@ -96,6 +96,7 @@ import * as THREE from './vendor/three/three.module.js';
 import { GLTFLoader } from './vendor/three/GLTFLoader.js';
 import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
 import { createBloom } from './js/bloom.js';
+import { createDayCycle, tOf } from './js/mmo/daycycle.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d } from './js/mmo/env-lib.js';
@@ -146,11 +147,25 @@ for (const L of pointData) L.parent.remove(L);
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
-  POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity; L.distance = l.distance; L.decay = l.decay; }); }
+  POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK; L.distance = l.distance; L.decay = l.decay; }); }
 const sun = env.sunLight || null, sunDir = env.sun ? new THREE.Vector3(...env.sun.dir) : new THREE.Vector3(0, 1, 0);
 if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -34; sc.right = sc.top = 34; sc.near = 1; sc.far = 400; sc.updateProjectionMatrix(); }
-scene.add(new THREE.DirectionalLight(0xffe8d8, 0.9).translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
+const fillL = new THREE.DirectionalLight(0xffe8d8, 0.9); scene.add(fillL.translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
 const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4 });
+/* ---------- 시간대 (문서 217) — 48분 한 바퀴, 서버 시각. 실내는 안 돌린다. ?tod=밤|night|0.45 로 고정 ---------- */
+let lampK = 1, todName = '';
+const hemiL = (() => { let h = null; scene.traverse(o => { if (o.isHemisphereLight && !h) h = o; }); return h; })();
+const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (() => { const sk = window.__sky && window.__sky.material.uniforms, w = new THREE.Vector3(sunDir.x, 0, sunDir.z).normalize();
+  const base = { top: sk ? sk.top.value.clone() : skyCol.clone(), hor: sk ? sk.hor.value.clone() : skyCol.clone(), fog: skyCol.clone(), sun: sun.color.clone(), sunc: sk ? sk.sunc.value.clone() : sun.color.clone(), hemi: hemiL.color.clone(), ground: hemiL.groundColor.clone(),
+    sunI: sun.intensity, hemiI: hemiL.intensity, fillI: fillL.intensity, exp: renderer.toneMappingExposure, alt: Math.asin(sunDir.clone().normalize().y) * 180 / Math.PI, westX: w.x, westZ: w.z };
+  const sub = document.querySelector('#title small'), sub0 = sub ? sub.textContent : '';
+  return createDayCycle(THREE, base, o => { skyCol.copy(o.fog); if (scene.fog) scene.fog.color.copy(o.fog);
+    if (sk) { sk.top.value.copy(o.top); sk.hor.value.copy(o.hor); sk.fogc.value.copy(o.fog); sk.sunc.value.copy(o.sunc).multiplyScalar(o.glow); sk.sun.value.copy(o.dir).normalize(); }
+    sun.color.copy(o.sun); sun.intensity = o.sunI; sunDir.copy(o.dir); hemiL.color.copy(o.hemi); hemiL.groundColor.copy(o.ground); hemiL.intensity = o.hemiI; fillL.intensity = o.fillI;
+    renderer.toneMappingExposure = o.exp; if (lampK !== o.lampK) { lampK = o.lampK; nearLights(root.position); }
+    if (o.name !== todName) { todName = o.name; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
+if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
+let todT = 0;
 /* ---------- 걷기: 같은 충돌 ---------- */
 const walkMeta = { road: env.road, walk: env.walk, blockers: env.blockers };
 const { collide } = createCollide(walkMeta);
@@ -485,6 +500,7 @@ function tick() { perf.begin();
   feel.tick(dt); floatTick(dt);
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
+  todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
@@ -492,7 +508,7 @@ function tick() { perf.begin();
   perf.end(); requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, bag: BAG, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
