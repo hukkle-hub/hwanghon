@@ -1,0 +1,1561 @@
+{
+  "Version": "v09",
+  "Count": 63,
+  "Monsters": [
+    {
+      "MonsterId": "G5_WALKER",
+      "Grade": 5,
+      "Name": "보행자",
+      "Archetype": "Frontline",
+      "CombatRole": "Frontline",
+      "Skills": [
+        "느린 연격",
+        "집단 압박"
+      ],
+      "Traits": [
+        "기본 군집형",
+        "플레이어 부재 시 주변 목표 압박"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "GuildMission",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_RUNNER",
+      "Grade": 5,
+      "Name": "질주자",
+      "Archetype": "Flanker",
+      "CombatRole": "Flanker",
+      "Skills": [
+        "순간질주",
+        "측면 베기"
+      ],
+      "Traits": [
+        "낮은 체력",
+        "높은 기동",
+        "측후방 선호"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "NightEvent",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Riverside"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_BREAKER",
+      "Grade": 5,
+      "Name": "파쇄자",
+      "Archetype": "ObjectBreaker",
+      "CombatRole": "ObjectBreaker",
+      "Skills": [
+        "구조물 강타",
+        "중량 내려찍기"
+      ],
+      "Traits": [
+        "구조물/환경 오브젝트 파괴 특화"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "GuildMission",
+        "NodeInvasion",
+        "NodeRecapture"
+      ],
+      "RegionAffinity": [
+        "Industrial",
+        "Urban"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_STALKER",
+      "Grade": 5,
+      "Name": "추적자",
+      "Archetype": "Hunter",
+      "CombatRole": "Hunter",
+      "Skills": [
+        "흔적 고정",
+        "집요한 추격"
+      ],
+      "Traits": [
+        "표적 변경 억제",
+        "NPC/약한 대상 추적 가능"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "OpenWorldRare",
+        "Dungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain",
+        "Underground"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_ARMORED",
+      "Grade": 5,
+      "Name": "철갑병",
+      "Archetype": "Tank",
+      "CombatRole": "Tank",
+      "Skills": [
+        "방패 전진",
+        "중량 밀치기"
+      ],
+      "Traits": [
+        "정면 피해 감소",
+        "퍼펙트 카운터에 자세 피해 증가"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "GuildMission",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_RESONATOR",
+      "Grade": 5,
+      "Name": "공진자",
+      "Archetype": "Support",
+      "CombatRole": "Support",
+      "Skills": [
+        "저주파 공명"
+      ],
+      "Traits": [
+        "주변 5급 이동/공격 보조",
+        "단독 전투력 낮음"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "DynamicEvent",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_CLIMBER",
+      "Grade": 5,
+      "Name": "등반자",
+      "Archetype": "Mobility",
+      "CombatRole": "Mobility",
+      "Skills": [
+        "벽면 도약",
+        "난간 침투"
+      ],
+      "Traits": [
+        "지정 지형을 이용한 우회"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "HiddenArea"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_LURKER",
+      "Grade": 5,
+      "Name": "잠복자",
+      "Archetype": "Ambusher",
+      "CombatRole": "Ambusher",
+      "Skills": [
+        "정적 위장",
+        "급습"
+      ],
+      "Traits": [
+        "비전투 상태에서 낮은 탐지성"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "NightEvent",
+        "HiddenArea"
+      ],
+      "RegionAffinity": [
+        "Mountain",
+        "Underground"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_HOOKHAND",
+      "Grade": 5,
+      "Name": "갈고리손",
+      "Archetype": "Displacer",
+      "CombatRole": "Displacer",
+      "Skills": [
+        "끌어당김",
+        "갈고리 휘두르기"
+      ],
+      "Traits": [
+        "플레이어 위치 붕괴"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_CAPTOR",
+      "Grade": 5,
+      "Name": "포획자",
+      "Archetype": "Controller",
+      "CombatRole": "Controller",
+      "Skills": [
+        "구속",
+        "끌고가기"
+      ],
+      "Traits": [
+        "동료가 끊어줘야 하는 협력 상황 유발"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_SHOVER",
+      "Grade": 5,
+      "Name": "밀침꾼",
+      "Archetype": "Displacer",
+      "CombatRole": "Displacer",
+      "Skills": [
+        "어깨박치기",
+        "충격 밀치기"
+      ],
+      "Traits": [
+        "절벽/장애물 주변 위험 증가"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon"
+      ],
+      "RegionAffinity": [
+        "Mountain",
+        "Urban"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_WATCHER",
+      "Grade": 5,
+      "Name": "감시자",
+      "Archetype": "Scout",
+      "CombatRole": "Scout",
+      "Skills": [
+        "시선 고정",
+        "경보"
+      ],
+      "Traits": [
+        "은폐/우회 탐지",
+        "인접 개체 경계 상승"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "HiddenArea",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Mountain",
+        "Urban"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_CALLER",
+      "Grade": 5,
+      "Name": "호각자",
+      "Archetype": "Summoner",
+      "CombatRole": "Summoner",
+      "Skills": [
+        "울림 신호"
+      ],
+      "Traits": [
+        "일정 시간 생존 시 주변 개체 호출"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "DynamicEvent",
+        "Dungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_CARRIER",
+      "Grade": 5,
+      "Name": "운반자",
+      "Archetype": "Courier",
+      "CombatRole": "Courier",
+      "Skills": [
+        "코어 운반",
+        "위험물 투하"
+      ],
+      "Traits": [
+        "목적지 도달 시 지역 위협 증가"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "DynamicEvent",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Industrial",
+        "Port"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_THROWER",
+      "Grade": 5,
+      "Name": "투척자",
+      "Archetype": "Ranged",
+      "CombatRole": "Ranged",
+      "Skills": [
+        "파편 투척",
+        "억제 투척"
+      ],
+      "Traits": [
+        "중거리 견제"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_SLASHER",
+      "Grade": 5,
+      "Name": "절단자",
+      "Archetype": "Bleeder",
+      "CombatRole": "Bleeder",
+      "Skills": [
+        "긁어 찢기",
+        "출혈 연속타"
+      ],
+      "Traits": [
+        "연속 피격 시 출혈 누적"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_JAMMER",
+      "Grade": 5,
+      "Name": "교란자",
+      "Archetype": "Disruptor",
+      "CombatRole": "Disruptor",
+      "Skills": [
+        "노이즈 방출"
+      ],
+      "Traits": [
+        "짧은 감지/UI 정보 교란"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_SHIELDER",
+      "Grade": 5,
+      "Name": "방패수",
+      "Archetype": "Protector",
+      "CombatRole": "Protector",
+      "Skills": [
+        "전열 결집",
+        "방패벽"
+      ],
+      "Traits": [
+        "뒤 개체의 정면 피해 감소"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_ECHO",
+      "Grade": 5,
+      "Name": "잔향자",
+      "Archetype": "Hazard",
+      "CombatRole": "Hazard",
+      "Skills": [
+        "잔향"
+      ],
+      "Traits": [
+        "사망 위치에 단기 위험 구역"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "HiddenArea"
+      ],
+      "RegionAffinity": [
+        "Underground",
+        "Urban"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G5_PARASITE",
+      "Grade": 5,
+      "Name": "기생자",
+      "Archetype": "Scavenger",
+      "CombatRole": "Scavenger",
+      "Skills": [
+        "동화",
+        "잔재 흡수"
+      ],
+      "Traits": [
+        "쓰러진 감염체 잔재에서 단기 강화"
+      ],
+      "SpawnContext": [
+        "OpenWorld",
+        "Dungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Underground",
+        "Port"
+      ],
+      "PartyRecommendation": "Solo"
+    },
+    {
+      "MonsterId": "G4_VANGUARD",
+      "Grade": 4,
+      "Name": "선봉관",
+      "Archetype": "Vanguard",
+      "CombatRole": "Vanguard",
+      "Skills": [
+        "전열 절개",
+        "강제 진입"
+      ],
+      "Traits": [
+        "하위 개체 앞에서 전선 개방"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_HARRIER",
+      "Grade": 4,
+      "Name": "교란객",
+      "Archetype": "Harrier",
+      "CombatRole": "Harrier",
+      "Skills": [
+        "가짜 돌진",
+        "급정지 후속타"
+      ],
+      "Traits": [
+        "회피 습관 유도",
+        "페인트"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Riverside"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_SAPPER",
+      "Grade": 4,
+      "Name": "침투공",
+      "Archetype": "Sapper",
+      "CombatRole": "Sapper",
+      "Skills": [
+        "압축 충격",
+        "코어 과부하"
+      ],
+      "Traits": [
+        "구조물/장치 고위력 공격"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Industrial",
+        "Urban"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_WARDEN",
+      "Grade": 4,
+      "Name": "호위관",
+      "Archetype": "Warden",
+      "CombatRole": "Warden",
+      "Skills": [
+        "경화막",
+        "대신 맞기"
+      ],
+      "Traits": [
+        "핵심 개체 보호",
+        "정면 피해 완화"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_CONDUCTOR",
+      "Grade": 4,
+      "Name": "지휘공진자",
+      "Archetype": "SupportCommander",
+      "CombatRole": "SupportCommander",
+      "Skills": [
+        "동조 명령",
+        "반응 가속"
+      ],
+      "Traits": [
+        "하위 개체 타겟 재평가/반응 강화"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "DynamicEvent",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_DUELIST",
+      "Grade": 4,
+      "Name": "결투자",
+      "Archetype": "Duelist",
+      "CombatRole": "Duelist",
+      "Skills": [
+        "반박자",
+        "페인트 연속기"
+      ],
+      "Traits": [
+        "숙련 플레이어 고정 압박"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_HEMOSTAT",
+      "Grade": 4,
+      "Name": "절맥자",
+      "Archetype": "Debuffer",
+      "CombatRole": "Debuffer",
+      "Skills": [
+        "혈류 봉쇄",
+        "회복 저해"
+      ],
+      "Traits": [
+        "회복 효율 감소"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_LEAPER",
+      "Grade": 4,
+      "Name": "도약자",
+      "Archetype": "VerticalMobility",
+      "CombatRole": "VerticalMobility",
+      "Skills": [
+        "연속 도약",
+        "상단 급습"
+      ],
+      "Traits": [
+        "고저차 활용"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "HiddenArea"
+      ],
+      "RegionAffinity": [
+        "Mountain",
+        "Urban"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_SILENCER",
+      "Grade": 4,
+      "Name": "침묵자",
+      "Archetype": "InfoDisruptor",
+      "CombatRole": "InfoDisruptor",
+      "Skills": [
+        "정적장",
+        "신호 먹통"
+      ],
+      "Traits": [
+        "감지/통신 정보 저하"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "GuildMission",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_BINDER",
+      "Grade": 4,
+      "Name": "속박자",
+      "Archetype": "Controller",
+      "CombatRole": "Controller",
+      "Skills": [
+        "검은 사슬",
+        "구역 속박"
+      ],
+      "Traits": [
+        "이동 범위 제한"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_STITCHER",
+      "Grade": 4,
+      "Name": "재봉자",
+      "Archetype": "Healer",
+      "CombatRole": "Healer",
+      "Skills": [
+        "봉합",
+        "응급 결합"
+      ],
+      "Traits": [
+        "인접 감염체 회복"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_BACKFLOW",
+      "Grade": 4,
+      "Name": "역류자",
+      "Archetype": "CounterPunisher",
+      "CombatRole": "CounterPunisher",
+      "Skills": [
+        "반동",
+        "역박자"
+      ],
+      "Traits": [
+        "반복 카운터 대응"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_GAMEKEEPER",
+      "Grade": 4,
+      "Name": "사냥지기",
+      "Archetype": "MarkedHunter",
+      "CombatRole": "MarkedHunter",
+      "Skills": [
+        "표식",
+        "사냥 고정"
+      ],
+      "Traits": [
+        "특정 표적 집요 추적"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "GuildMission",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Mountain",
+        "Urban"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_STANDARD_BEARER",
+      "Grade": 4,
+      "Name": "기수",
+      "Archetype": "GroupMover",
+      "CombatRole": "GroupMover",
+      "Skills": [
+        "이동 신호",
+        "군집 재배치"
+      ],
+      "Traits": [
+        "하위 개체를 자신 중심으로 이동"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "DynamicEvent",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G4_SPLITTER",
+      "Grade": 4,
+      "Name": "분열자",
+      "Archetype": "Decoy",
+      "CombatRole": "Decoy",
+      "Skills": [
+        "위협 복제",
+        "가짜 실루엣"
+      ],
+      "Traits": [
+        "시선/락온 교란"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "PartyDungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_BLACKBLADE",
+      "Grade": 3,
+      "Name": "흑검",
+      "Archetype": "EliteDuelist",
+      "CombatRole": "EliteDuelist",
+      "Skills": [
+        "적월 삼연",
+        "흑선"
+      ],
+      "Traits": [
+        "3연격 타이밍이 모두 다름",
+        "카운터 읽기 요구"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_REDFLOWER",
+      "Grade": 3,
+      "Name": "적화",
+      "Archetype": "AreaController",
+      "CombatRole": "AreaController",
+      "Skills": [
+        "핏꽃",
+        "결정 파종"
+      ],
+      "Traits": [
+        "지연형 위험구역 생성"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_SHADOWLESS",
+      "Grade": 3,
+      "Name": "무영",
+      "Archetype": "Assassin",
+      "CombatRole": "Assassin",
+      "Skills": [
+        "흔적 없는 걸음",
+        "후면 단절"
+      ],
+      "Traits": [
+        "시야 이탈 후 재진입"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "NightEvent",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_IRONFLOWER",
+      "Grade": 3,
+      "Name": "철화",
+      "Archetype": "AdaptiveTank",
+      "CombatRole": "AdaptiveTank",
+      "Skills": [
+        "결정갑",
+        "부위 경화"
+      ],
+      "Traits": [
+        "특정 부위 순간 방어"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Industrial",
+        "Urban"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_REQUIEM",
+      "Grade": 3,
+      "Name": "진혼사",
+      "Archetype": "EliteSupport",
+      "CombatRole": "EliteSupport",
+      "Skills": [
+        "진혼율",
+        "감염 고조"
+      ],
+      "Traits": [
+        "하위 등급 공격 빈도 상승"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "DynamicEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_BLOODMOON_SWORD",
+      "Grade": 3,
+      "Name": "혈월검사",
+      "Archetype": "CounterBaiter",
+      "CombatRole": "CounterBaiter",
+      "Skills": [
+        "거짓 빈틈",
+        "월식 베기"
+      ],
+      "Traits": [
+        "카운터 유도 후 후속타"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_CRIMSON_GUARD",
+      "Grade": 3,
+      "Name": "홍련수호",
+      "Archetype": "Bodyguard",
+      "CombatRole": "Bodyguard",
+      "Skills": [
+        "생명연결",
+        "붉은 장벽"
+      ],
+      "Traits": [
+        "지휘형 피해 일부 대리 수용"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_GOLDEN_CHAIN",
+      "Grade": 3,
+      "Name": "금쇄자",
+      "Archetype": "ArenaController",
+      "CombatRole": "ArenaController",
+      "Skills": [
+        "금쇄영역",
+        "사슬 폐쇄"
+      ],
+      "Traits": [
+        "전투영역 제한"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "PartyDungeon",
+        "Raid"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_WHITE_NIGHT",
+      "Grade": 3,
+      "Name": "백야",
+      "Archetype": "Skirmisher",
+      "CombatRole": "Skirmisher",
+      "Skills": [
+        "백야보",
+        "잔광"
+      ],
+      "Traits": [
+        "공격 후 위치 재배치"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Riverside"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G3_JUDICATOR",
+      "Grade": 3,
+      "Name": "단죄자",
+      "Archetype": "Executioner",
+      "CombatRole": "Executioner",
+      "Skills": [
+        "낙인",
+        "단죄"
+      ],
+      "Traits": [
+        "누적 표식 대상 마무리"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "PartyDungeon",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Party"
+    },
+    {
+      "MonsterId": "G2_GUIDE",
+      "Grade": 2,
+      "Name": "인도자",
+      "Archetype": "Commander",
+      "CombatRole": "Commander",
+      "Skills": [
+        "경로 재지정",
+        "합류 명령"
+      ],
+      "Traits": [
+        "주변 군집 이동로 변경"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "Raid",
+        "GuildMission",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_VEILMASTER",
+      "Grade": 2,
+      "Name": "장막사",
+      "Archetype": "ZoneCommander",
+      "CombatRole": "ZoneCommander",
+      "Skills": [
+        "검은 장막",
+        "시야 차단"
+      ],
+      "Traits": [
+        "넓은 지역 정보/시야 제어"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "Raid",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_CONTROLLER",
+      "Grade": 2,
+      "Name": "통제자",
+      "Archetype": "HiveCommander",
+      "CombatRole": "HiveCommander",
+      "Skills": [
+        "하나의 의지",
+        "집중 표적"
+      ],
+      "Traits": [
+        "주변 AI가 타겟 공유"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "Raid"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_EXECUTOR",
+      "Grade": 2,
+      "Name": "집행관",
+      "Archetype": "AssaultCommander",
+      "CombatRole": "AssaultCommander",
+      "Skills": [
+        "처형 명령",
+        "집중 공격"
+      ],
+      "Traits": [
+        "특정 플레이어 집중 압박"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "Raid",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_CHOIRMASTER",
+      "Grade": 2,
+      "Name": "성가대장",
+      "Archetype": "ResonanceCommander",
+      "CombatRole": "ResonanceCommander",
+      "Skills": [
+        "합창",
+        "고조"
+      ],
+      "Traits": [
+        "다수 공진 효과 통합"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "Raid",
+        "DynamicEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_GATEKEEPER",
+      "Grade": 2,
+      "Name": "문지기",
+      "Archetype": "RouteController",
+      "CombatRole": "RouteController",
+      "Skills": [
+        "폐문",
+        "봉쇄"
+      ],
+      "Traits": [
+        "이동로/전투공간 봉쇄"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "Raid",
+        "HiddenArea"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_RECLAIMER",
+      "Grade": 2,
+      "Name": "회수자",
+      "Archetype": "CorpseUtilizer",
+      "CombatRole": "CorpseUtilizer",
+      "Skills": [
+        "회수",
+        "핵 흡수"
+      ],
+      "Traits": [
+        "쓰러진 개체의 코어 흡수 강화"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "Raid"
+      ],
+      "RegionAffinity": [
+        "Port",
+        "Underground"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_APOSTLE",
+      "Grade": 2,
+      "Name": "사도",
+      "Archetype": "WideCommander",
+      "CombatRole": "WideCommander",
+      "Skills": [
+        "명령 전파",
+        "원격 공진"
+      ],
+      "Traits": [
+        "넓은 범위 개체 강화"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Raid",
+        "WorldBoss",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Riverside"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_WHITEFACE",
+      "Grade": 2,
+      "Name": "백면",
+      "Archetype": "Mimic",
+      "CombatRole": "Mimic",
+      "Skills": [
+        "모사",
+        "가짜 구조신호"
+      ],
+      "Traits": [
+        "NPC 음성/신호 모방"
+      ],
+      "SpawnContext": [
+        "OpenWorldRare",
+        "Dungeon",
+        "StoryInstance",
+        "NightEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G2_TAILOR",
+      "Grade": 2,
+      "Name": "재단관",
+      "Archetype": "AdaptiveAnalyst",
+      "CombatRole": "AdaptiveAnalyst",
+      "Skills": [
+        "전투 기록",
+        "대응 보정"
+      ],
+      "Traits": [
+        "같은 대응 반복 시 저항/행동 변경"
+      ],
+      "SpawnContext": [
+        "Dungeon",
+        "Raid",
+        "GuildMission"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G1_WALLBREAKER",
+      "Grade": 1,
+      "Name": "성벽파쇄자",
+      "Archetype": "DisasterBreaker",
+      "CombatRole": "DisasterBreaker",
+      "Skills": [
+        "진동강타",
+        "지반충격",
+        "고정점"
+      ],
+      "Traits": [
+        "부분파괴: 무릎→팔→코어",
+        "구조물/월드 오브젝트 위협"
+      ],
+      "SpawnContext": [
+        "WorldBoss",
+        "Raid",
+        "DynamicEvent",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G1_SIGNAL",
+      "Grade": 1,
+      "Name": "신호체",
+      "Archetype": "DisasterNetwork",
+      "CombatRole": "DisasterNetwork",
+      "Skills": [
+        "전역공명",
+        "동시행동",
+        "적색신호"
+      ],
+      "Traits": [
+        "존재 자체가 주변 몬스터 AI를 동기화"
+      ],
+      "SpawnContext": [
+        "WorldBoss",
+        "Raid",
+        "DynamicEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Riverside"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G1_RAMPAGE",
+      "Grade": 1,
+      "Name": "폭주자",
+      "Archetype": "DisasterDuelist",
+      "CombatRole": "DisasterDuelist",
+      "Skills": [
+        "반응학습",
+        "역카운터",
+        "순간가속",
+        "변칙잡기"
+      ],
+      "Traits": [
+        "고난도 인간형 1대1",
+        "플레이어 습관 적응"
+      ],
+      "SpawnContext": [
+        "WorldBoss",
+        "Raid",
+        "OpenWorldRare"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Mountain"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G1_BLACK_CHOIR",
+      "Grade": 1,
+      "Name": "검은 성가대",
+      "Archetype": "DisasterResonance",
+      "CombatRole": "DisasterResonance",
+      "Skills": [
+        "성가",
+        "침묵",
+        "재합창"
+      ],
+      "Traits": [
+        "광역 공진",
+        "죽은 공진형 효과 재현"
+      ],
+      "SpawnContext": [
+        "WorldBoss",
+        "Raid",
+        "DynamicEvent"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Underground"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "G1_THRONE",
+      "Grade": 1,
+      "Name": "왕좌",
+      "Archetype": "DisasterTerritory",
+      "CombatRole": "DisasterTerritory",
+      "Skills": [
+        "영역화",
+        "개체생성",
+        "후계"
+      ],
+      "Traits": [
+        "장기 존재 시 지역 생태계/스폰풀 변화"
+      ],
+      "SpawnContext": [
+        "WorldBoss",
+        "DynamicEvent",
+        "StoryInstance"
+      ],
+      "RegionAffinity": [
+        "Urban",
+        "Port",
+        "Industrial"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "SP_RELAY_LEEJUNHYEOK",
+      "Grade": "특급",
+      "Name": "중계자 이준혁",
+      "Archetype": "NamedHumanoid",
+      "CombatRole": "NamedBoss",
+      "Skills": [
+        "전술전환",
+        "신호유도",
+        "왼팔 폭주",
+        "고정사격"
+      ],
+      "Traits": [
+        "남산 관련",
+        "왼팔 코어",
+        "부분파괴 후 적출 가능",
+        "생존 분기"
+      ],
+      "SpawnContext": [
+        "StoryInstance",
+        "Raid",
+        "NodeInvasion"
+      ],
+      "RegionAffinity": [
+        "Namsan"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "SP_BLACKMOON_SEORIN",
+      "Grade": "특급",
+      "Name": "흑월 서린",
+      "Archetype": "NamedHumanoid",
+      "CombatRole": "NamedDuelBoss",
+      "Skills": [
+        "월식",
+        "반월",
+        "백보",
+        "흑월"
+      ],
+      "Traits": [
+        "순수 액션 실력 시험",
+        "불규칙 공격 간격"
+      ],
+      "SpawnContext": [
+        "StoryInstance",
+        "OpenWorldRare",
+        "Raid"
+      ],
+      "RegionAffinity": [
+        "EastSeoul"
+      ],
+      "PartyRecommendation": "Raid"
+    },
+    {
+      "MonsterId": "SP_DAWN_HANSEOHA",
+      "Grade": "특급",
+      "Name": "여명 한서하",
+      "Archetype": "NamedHumanoid",
+      "CombatRole": "NamedStoryEntity",
+      "Skills": [
+        "동조",
+        "기억",
+        "여명",
+        "선택"
+      ],
+      "Traits": [
+        "적/아군 이분법을 흔드는 스토리 핵심",
+        "전투 결과 분기"
+      ],
+      "SpawnContext": [
+        "StoryInstance",
+        "Raid"
+      ],
+      "RegionAffinity": [
+        "Korea"
+      ],
+      "PartyRecommendation": "Raid"
+    }
+  ]
+}

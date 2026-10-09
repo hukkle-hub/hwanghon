@@ -1,0 +1,44 @@
+{
+  "MonsterId": "string unique",
+  "Grade": "5|4|3|2|1|특급",
+  "Name": "localized display name",
+  "Archetype": "data-driven archetype",
+  "CombatRole": "role independent from grade",
+  "RegionAffinity": [
+    "region tags"
+  ],
+  "SpawnContext": [
+    "context tags"
+  ],
+  "Faction": "Infected default / extensible",
+  "AIProfile": "asset/reference id",
+  "Skills": [
+    {
+      "SkillId": "string",
+      "Counter": "Optional",
+      "Notes": "Optional"
+    }
+  ],
+  "CounterRules": [
+    "data"
+  ],
+  "PartBreak": [
+    "data"
+  ],
+  "MovementProfile": "asset/reference id",
+  "TargetPriority": "data",
+  "GroupBehavior": "data",
+  "AggroBehavior": "data",
+  "RespawnPolicy": "OpenWorld/Dungeon/Event specific",
+  "DropTable": "reference id",
+  "CraftMaterials": [
+    "reference ids"
+  ],
+  "ThreatCost": "number",
+  "PartyRecommendation": "Solo|Party|Raid",
+  "CodexData": "reference id",
+  "Lore": "reference id",
+  "VisualReference": "reference id",
+  "AudioProfile": "reference id",
+  "AnimationProfile": "reference id"
+}

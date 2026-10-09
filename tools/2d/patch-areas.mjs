@@ -5,7 +5,13 @@
 import fs from 'node:fs';
 import { ZONES } from '../../js/mmo/zones.js';
 import { huntAreas, HUNT_KINDS } from '../../js/mmo/hunt-areas.js';
+import { createCollide } from '../../js/mmo/field-collide.js';
+import { createRequire } from 'node:module';
+const SAFE = createRequire(import.meta.url)('../../js/mmo/safe-zones.js');
+/* 생태 자리 판정: 게임과 같은 충돌(막이·걷는 띠)로 밀리지 않고, 쉼터·문·보스 둘레(safe·combat) 밖 */
+const walkable = m => { const C = createCollide(m), keepOut = (m.areas || []).filter(a => a.kind === 'rest' || a.kind === 'safe' || a.kind === 'combat');
+  return (x, z) => { const p = { x, z }; C.collide(p, 0.6); return Math.hypot(p.x - x, p.z - z) < 0.05 && !keepOut.some(a => SAFE.inArea(a, x, z)); }; };
 for (const id of process.argv.slice(2)) { const F = `maps/2d/${id}/map.json`, m = JSON.parse(fs.readFileSync(F, 'utf8')), Z = ZONES[id]; if (!Z) throw Error('지역 표에 없다: ' + id);
-  const keep = (m.areas || []).filter(a => !HUNT_KINDS.includes(a.kind)), fresh = huntAreas(Z.hunts, m.road.ang), before = (m.areas || []).length;
+  const keep = (m.areas || []).filter(a => !HUNT_KINDS.includes(a.kind)), fresh = huntAreas(Z.hunts, m.road.ang, id, walkable(m)), before = (m.areas || []).length;
   m.areas = [...keep, ...fresh]; fs.writeFileSync(F, JSON.stringify(m, null, 1));
   console.log(id, '구역', before, '→', m.areas.length, '·', fresh.map(a => a.kind + ':' + a.name).join(' · ')); }

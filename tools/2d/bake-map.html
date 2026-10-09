@@ -69,7 +69,7 @@ function tile(n){ const k=LIST[n], i=k%cols, j=Math.floor(k/cols); const o=aimTi
   return { i, j, u0:o.u0, v0:o.v0, color, depth }; }
 /* 사냥터 하위 구역 (docs/design/190 §4 — 리니지 필드처럼 «숲 · 고요한 숲 · 황야 · 묘지»). 지역 표의 hunts(길 좌표) → 월드 다각형/원.
    길 좌표 틀은 게임(mmo.html toRoad)·서버(field.cjs clamp)와 같다 */
-function huntAreas(){ return huntAreasOf(Z.hunts, env.road.ang); }   /* js/mmo/hunt-areas.js 와 같다 — tools/2d/patch-areas.mjs 도 같은 함수 */
+function huntAreas(){ return huntAreasOf(Z.hunts, env.road.ang, ZONE); }   /* 생태 자리(둥지·순찰)는 막이가 있어야 고를 수 있다 — 굽고 나서 node tools/2d/patch-areas.mjs <지역> (문서 208) */   /* js/mmo/hunt-areas.js 와 같다 — tools/2d/patch-areas.mjs 도 같은 함수 */
 function plan(){ return { zone:ZONE, depthMode:'height', hmax:HMAX, pitch:PITCH, pxPerM:PX, tile:TILE, L, near:NEAR, far:FAR, cols, rows, u0:U0, v1:V1, lights:env.lights, blockers:env.blockers, spawn:env.spawn, road:env.road, walk:env.walk, sky:env.sky, sun:env.sun, exits:env.exits, gates:env.gates||[], bosses:env.bosses||[], flicker:env.flicker||null, water:env.water||null, kind:env.kind||Z.kind||'field', title:env.title||Z.title||'', license:env.license||'', areas:[...(env.areas||[]),...huntAreas()], rules:env.rules||Z.rules||{}, restart:env.restart||Z.restart||null, mist:env.mist||null }; }
 /* 미리보기: 굽기 전에 한 장면만 게임 카메라로 (길 좌표 s, t · 화면 높이 viewH m) */
 function preview(s, t, viewH, w, h){ const a=env.road.ang, x=s*Math.cos(a)-t*Math.sin(a), z=-s*Math.sin(a)-t*Math.cos(a), g=new THREE.Vector3(x,0,z);
