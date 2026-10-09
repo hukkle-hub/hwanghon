@@ -224,7 +224,7 @@
     return holder; }
   function hideUnder(THREE, m, b64){ var bits=Uint8Array.from(atob(b64), function(c){ return c.charCodeAt(0); }), g0=m.userData._origGeo||m.geometry, I=g0.index.array, keep=[];
     for(var t=0;t<I.length;t+=3){ var a=I[t],b=I[t+1],c=I[t+2]; if((bits[a>>3]>>(a&7))&1 && (bits[b>>3]>>(b&7))&1 && (bits[c>>3]>>(c&7))&1) continue; keep.push(a,b,c); }
-    var g=new THREE.BufferGeometry(); Object.keys(g0.attributes).forEach(function(k){ g.setAttribute(k, g0.attributes[k]); }); g.morphAttributes=g0.morphAttributes;
+    var g=new THREE.BufferGeometry(); Object.keys(g0.attributes).forEach(function(k){ g.setAttribute(k, g0.attributes[k]); }); g.morphAttributes=g0.morphAttributes; g.morphTargetsRelative=g0.morphTargetsRelative;   /* 쥔 손 모프(hand-grip)는 상대값 — 빠뜨리면 몸 정점이 원점(발밑)으로 끌려가 코트 밑 몸이 통째로 사라졌다 (문서 214) */
     g.setIndex(keep); g0.groups.forEach(function(gr){ g.addGroup(gr.start, gr.count, gr.materialIndex); }); g.boundingSphere=g0.boundingSphere; g.boundingBox=g0.boundingBox;
     m.userData._origGeo=g0; m.geometry=g; }
   function restoreBodies(model){ model.traverse(function(o){ if(o.isSkinnedMesh&&o.userData._origGeo){var cut=o.geometry,orig=o.userData._origGeo;o.geometry=orig;delete o.userData._origGeo;if(cut&&cut!==orig&&cut.dispose)cut.dispose();} }); }
@@ -254,7 +254,7 @@
     var rootChildren=model.children||[];for(var ri=rootChildren.length-1;ri>=0;ri--)if(rootChildren[ri].userData&&rootChildren[ri].userData.lookAura)dropLook(rootChildren[ri]);
     Object.keys(bones||{}).forEach(function(k){var b=bones[k];for(var i=b.children.length-1;i>=0;i--){var c=b.children[i];if(c.userData&&c.userData.look)dropLook(c);}});}
   function detach(model){if(!model)return;model.userData=model.userData||{};model.userData._lookRev=(model.userData._lookRev||0)+1;clearLooks(model,bonesOf(model));}
-  /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id), baseOf(id), enhOf(id,slot) } */
+  /* equipped: gear.js state().equipped ({main, sub, off, head, chest, legs, gloves, boots, acc, …}). opts: { onMain(wr), onMainFail(), tintOf(id), baseOf(id), enhOf(id,slot), noMain } */
   function attach(T, loader, model, equipped, opts){ THREE=T; LOADER=loader; MODEL=model; opts=opts||{};equipped=Object.assign({},equipped||{});
     var preview=false,previewEnh=0;
     if(typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)){var qp=new URLSearchParams(location.search);preview=qp.get('gearPreview')==='clave'&&opts.charId==='kain';previewEnh=Math.max(0,Math.min(10,Number(qp.get('enh'))||0));}
@@ -269,9 +269,10 @@
     var mainId=equipped.main,mainBase=baseOf(mainId),spec=WEAPON[mainBase]||WEAPON.w_marsh_scythe,slot=bones.RightHandSlot||bones.RightHand,mainEnh=enhOf(mainId,'main');
     if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension')spec=WEAPON.w_red_tension;
     if(opts.charId==='ain'&&typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('gearPreview')==='red_tension')spec=WEAPON.w_red_tension;
-    if(DUAL[mainBase]&&bones.LeftHandSlot){var osp=WEAPON[mainBase];loader.load(osp.glb,function(w){if(!alive()){disposeLook(w.scene);return;}var g2=new THREE.Group();g2.userData.look='offhand';prepScene(w.scene,osp,mainId,mainEnh);w.scene.position.set(0,-(osp.grip||0.1),0);g2.add(w.scene);bones.LeftHandSlot.add(g2);g2.scale.setScalar(fitScale(bones.LeftHandSlot));out.weapons.offhand=g2;});}
+    if(!opts.noMain&&DUAL[mainBase]&&bones.LeftHandSlot){var osp=WEAPON[mainBase];loader.load(osp.glb,function(w){if(!alive()){disposeLook(w.scene);return;}var g2=new THREE.Group();g2.userData.look='offhand';prepScene(w.scene,osp,mainId,mainEnh);w.scene.position.set(0,-(osp.grip||0.1),0);g2.add(w.scene);bones.LeftHandSlot.add(g2);g2.scale.setScalar(fitScale(bones.LeftHandSlot));out.weapons.offhand=g2;});}
     function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else wr.add(prepareWeapon(THREE,scene,spec));if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh,reduced);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=weaponHand2(spec);out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
-    if(slot){if(spec.build){var ms=spec.build(THREE,mainEnh);mountMain(ms,{scene:ms,animations:[]});}else loader.load(spec.glb,function(w){mountMain(w.scene,w);},undefined,function(){if(alive())opts.onMainFail&&opts.onMainFail();});}else opts.onMainFail&&opts.onMainFail();
+    if(opts.noMain){}   /* noMain: 무기는 부르는 쪽이 이미 쥐고 있다(3D 필드 아바타 — party-avatar Animated) — 갑옷·장신구만 */
+    else if(slot){if(spec.build){var ms=spec.build(THREE,mainEnh);mountMain(ms,{scene:ms,animations:[]});}else loader.load(spec.glb,function(w){mountMain(w.scene,w);},undefined,function(){if(alive())opts.onMainFail&&opts.onMainFail();});}else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){var id=equipped[sl];if(!id)return;var sp=WEAPON[baseOf(id)];if(!sp||!sp.bone||!bones[sp.bone])return;var bone=bones[sp.bone],enh=enhOf(id,sl);
       function mountOff(scene){if(!alive()){disposeLook(scene);return;}var g=new THREE.Group();g.userData.look=id;prepScene(scene,sp,id,enh);g.add(scene);var k=fitScale(bone);g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k);g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]);g.scale.setScalar(k*(sp.scale||1));var tint=opts.tintOf&&opts.tintOf(id);if(tint){var mx=mixOf(id);mx=mx==null?0.55:mx;scene.traverse(function(o){if(o.isMesh)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(tint),mx);});});}bone.add(g);out.weapons[sl]=g;}
       if(sp.build)mountOff(sp.build(THREE,enh));else loader.load(sp.glb,function(w){mountOff(w.scene);});});
