@@ -31,7 +31,8 @@
   /* hand2: 두 손 잡기 때 왼손 주먹 자리 = 오른손에서 칼날 쪽으로 [최소, 최대] m (docs/design/95).
      오른손(0.75)은 폼멜(0.56~0.68) 바로 위라 폼멜 쪽엔 7 cm 뿐 — 왼손은 칼날 쪽. 최소 = 주먹 폭 11 cm, 최대 = 코등이 − 5 cm.
      잰 값: 대검 손잡이 0.69~1.00 · 코등이 1.02 / 고철 ~1.10 · 1.12 / 분쇄 ~1.04 · 1.06 */
-  WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75, hand2:[0.11,0.20] };
+  /* EP01 original plan: 190cm. Source GLB is 160cm; preserve its handle width. */
+  WEAPON.w_kain_greatsword={ glb:'art/3d/gear/w_kain_greatsword.glb', grip:0.75, hand2:[0.11,0.20], lengthScale:1.9/1.6 };
   /* 카인 하위·상위 대검(docs/design/82): 모루의 대검과 같은 규약 — 1.6 m, 자루 끝 0.55, 손 0.75 */
   WEAPON.w_kain_scrap={ glb:'art/3d/gear/w_kain_scrap.glb', grip:0.75, hand2:[0.11,0.30] };
   WEAPON.w_kain_crusher={ glb:'art/3d/gear/w_kain_crusher.glb', grip:0.75, hand2:[0.11,0.24] };
@@ -269,7 +270,7 @@
     if(mainId&&opts.charId==='ain'&&window.TW_GEAR&&TW_GEAR.weaponSkin&&TW_GEAR.weaponSkin('ain')==='red_tension')spec=WEAPON.w_red_tension;
     if(opts.charId==='ain'&&typeof location!=='undefined'&&['localhost','127.0.0.1'].includes(location.hostname)&&new URLSearchParams(location.search).get('gearPreview')==='red_tension')spec=WEAPON.w_red_tension;
     if(DUAL[mainBase]&&bones.LeftHandSlot){var osp=WEAPON[mainBase];loader.load(osp.glb,function(w){if(!alive()){disposeLook(w.scene);return;}var g2=new THREE.Group();g2.userData.look='offhand';prepScene(w.scene,osp,mainId,mainEnh);w.scene.position.set(0,-(osp.grip||0.1),0);g2.add(w.scene);bones.LeftHandSlot.add(g2);g2.scale.setScalar(fitScale(bones.LeftHandSlot));out.weapons.offhand=g2;});}
-    function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else{scene.position.set(0,-(spec.grip||0.75),0);wr.add(scene);}if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh,reduced);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=spec.hand2||null;out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
+    function mountMain(scene,payload){if(!alive()){disposeLook(scene);return;}var wr=new THREE.Group();wr.userData.look=mainId||'main';prepScene(scene,spec,mainId,mainEnh);var prepared=opts.prepareMain&&opts.prepareMain(scene,spec);if(prepared)wr.add(prepared);else wr.add(prepareWeapon(THREE,scene,spec));if(spec.special==='claveBlade')addClaveBladeCore(THREE,wr,mainEnh,reduced);slot.add(wr);wr.scale.setScalar(fitScale(slot));slot.userData.hand2=weaponHand2(spec);out.weapons.main=wr;opts.onMain&&opts.onMain(wr,payload);}
     if(slot){if(spec.build){var ms=spec.build(THREE,mainEnh);mountMain(ms,{scene:ms,animations:[]});}else loader.load(spec.glb,function(w){mountMain(w.scene,w);},undefined,function(){if(alive())opts.onMainFail&&opts.onMainFail();});}else opts.onMainFail&&opts.onMainFail();
     ['sub','off'].forEach(function(sl){var id=equipped[sl];if(!id)return;var sp=WEAPON[baseOf(id)];if(!sp||!sp.bone||!bones[sp.bone])return;var bone=bones[sp.bone],enh=enhOf(id,sl);
       function mountOff(scene){if(!alive()){disposeLook(scene);return;}var g=new THREE.Group();g.userData.look=id;prepScene(scene,sp,id,enh);g.add(scene);var k=fitScale(bone);g.position.set(sp.pos[0]*k,sp.pos[1]*k,sp.pos[2]*k);g.rotation.set(sp.rot[0],sp.rot[1],sp.rot[2]);g.scale.setScalar(k*(sp.scale||1));var tint=opts.tintOf&&opts.tintOf(id);if(tint){var mx=mixOf(id);mx=mx==null?0.55:mx;scene.traverse(function(o){if(o.isMesh)cloneMats(o,function(m){m.color&&m.color.lerp(new THREE.Color(tint),mx);});});}bone.add(g);out.weapons[sl]=g;}
@@ -279,5 +280,10 @@
   /* 장비가 실제로 붙는 자리 — 양손 IK 가 무기 손잡이를 겨눌 때 같은 점을 써야 한다 */
   function anchor(T, bone){ THREE=THREE||T; return anchorOf(bone); }
   function palm(T, hand){ THREE=THREE||T; return palmOf(hand); }
-  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, PRESTIGE_SPARKS:PRESTIGE_SPARKS, prestigeSpec:prestigeSpec, prestigeBadge:prestigeBadge, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm };
+  // Shared by field avatars, dungeons and the equipment preview. Scale only the
+  // length: a uniform enlargement also fattens the handle beyond the closed fist.
+  // Translate the scaled grip, not the unscaled source Y, so the hand stays put.
+  function prepareWeapon(THREE,scene,spec){spec=spec||{};var length=spec.lengthScale||1,frame=new THREE.Group();frame.scale.y=length;frame.position.y=-(spec.grip==null?0.75:spec.grip)*length;frame.add(scene);return frame;}
+  function weaponHand2(spec){return spec&&spec.hand2?spec.hand2.map(function(v){return v*(spec.lengthScale||1);}):null;}
+  window.TW_LOOKS={ WEAPON:WEAPON, ARMOR:ARMOR, SLOT_OF:SLOT_OF, MAT:MAT, PRESTIGE_SPARKS:PRESTIGE_SPARKS, prestigeSpec:prestigeSpec, prestigeBadge:prestigeBadge, attach:attach, detach:detach, buildArmor:buildArmor, bonesOf:bonesOf, anchor:anchor, palm:palm, prepareWeapon:prepareWeapon, weaponHand2:weaponHand2 };
 })();
