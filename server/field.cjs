@@ -6,7 +6,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),DOM=require('./field-dominator.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
-const {Ecology}=require('./field-ecology.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),MOB=require('./field-mob-combat.cjs'),RULES=require('./rpg-rules.cjs');
+const {Ecology}=require('./field-ecology.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),{linkGates}=require('../js/mmo/zone-links.js'),MOB=require('./field-mob-combat.cjs'),RULES=require('./rpg-rules.cjs');
 const MOB_CATALOG=require('../docs/design/ref/monster-catalog-v10/MonsterRoster_v10.json').Monsters;
 const crypto=require('node:crypto'),{planRoute}=require('./field-ecology-route.cjs');
 const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
@@ -27,6 +27,13 @@ function prestigeTitle(rows=[]){
  for(const r of rows){ const tiers=BOSS_TITLES[r.boss],n=Number(r.n)||0;if(!tiers)continue;
   const i=tiers.findIndex(t=>n>=t[0]);if(i>=0)return {boss:r.boss,text:tiers[i][1],tier:tiers.length-i}; }
  return null; }
+/* 전국 길 문 도착 자리 — world3d.html 과 같은 공식: 띠 끝(s0+3 / s1−3) · t → 막이에서 6 번 밀기(2.4) → 길 안쪽으로 5 m(0.5).
+   map.json(생태 해시·구운 높이)은 그대로 두고 문만 계산한다 (docs/gpt/2026-10-09-zone-links-server.md) */
+function linkArrival(z,gate){ const g=linkGates(z.id).find(x=>x.id===gate),w=z.walk;if(!g||!w)return null;
+ const a=z.ang||0,col=z.collideFn||(z.collideFn=createCollide(z.map).collide),s=g.at.end==='s1'?w.s1-3:w.s0+3,t=g.at.t??(w.t0+w.t1)/2;
+ const q={x:s*Math.cos(a)-t*Math.sin(a),z:-s*Math.sin(a)-t*Math.cos(a)};for(let i=0;i<6;i++)col(q,2.4);
+ const qs=q.x*Math.cos(a)-q.z*Math.sin(a),sg=qs<(w.s0+w.s1)/2?1:-1,q2={x:q.x+Math.cos(a)*sg*5,z:q.z-Math.sin(a)*sg*5};col(q2,0.5);
+ return {x:+q2.x.toFixed(2),z:+q2.z.toFixed(2)}; }
 function loadZone(id){ try{ const bytes=fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json')),m=JSON.parse(bytes); return { id, map:{...m,id}, mapHash:digest(bytes), walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)),
   bosses:(m.bosses||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.x)&&Number.isFinite(b.z)),
   areas:(m.areas||[]).filter(a=>a&&(a.kind==='rest'||a.kind==='siege')&&(Array.isArray(a.circle)||Array.isArray(a.poly))) }; }catch{ return null; } }   /* 안전 지대(마을·쉼터)·거점 판정 — js/mmo/safe-zones.js */
@@ -61,7 +68,7 @@ class Field{
   return { name:profile.name, character:profile.character||'ain', eq, enh, look, ...(title?{title}:{}) }; }
  /* gate: 다른 지역의 문으로 넘어왔을 때 도착할 문 id (map.json gates) — 없거나 모르는 id 면 지역 출발점 */
  join(id, profile, zoneId, look, gate){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); const now=this.clock();this.ecology(z.id,now);this.leave(id,now);const prior=this.life.get(id);this.life.delete(id);
-  const at=(typeof gate==='string'&&z.gates.find(g=>g.id===gate))||z.spawn;
+  const at=(typeof gate==='string'&&(z.gates.find(g=>g.id===gate)||linkArrival(z,gate)))||z.spawn;   /* 전국 길 문(zone-links)은 map.json 에 없다 — 3D 클라와 같은 공식으로 띠 끝 자리 (문서 220 §16) */
   const maxHp=Math.max(1,Math.round(profile.stats?.hp||20000));
   const keep=prior&&prior.expires>now,hp=keep?(prior.dead?0:Math.max(1,Math.round(maxHp*prior.hp/Math.max(1,prior.maxHp)))):maxHp;
   const p={ id, zone:z.id, x:at.x+(Math.random()-.5)*2, z:at.z+(Math.random()-.5)*2, yaw:0, anim:'idle', at:now,

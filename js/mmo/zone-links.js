@@ -23,7 +23,7 @@ export const LINKS = [
 ];
 /* 한 지역의 길 문 — world3d 가 띠 끝 자리를 계산해 세운다. 지역 표·map.json 에는 넣지 않는다:
    map.json 에는 서버 생태(둥지·순찰 해시)·구운 높이·사냥터가 묶여 있어, 문을 넣어 다시 계획하면 서버 쪽 시험 32 개가 깨졌다 (문서 219 §1).
-   서버가 이 길을 알게 하는 일은 GPT 지시서 docs/gpt/2026-10-09-zone-links-server.md. */
+   서버 도착 자리는 server/field.cjs linkArrival (같은 공식, 문서 220 §16). */
 export function linkGates(zone) { const out = [];
   for (const [a, atA, b, atB, labA, labB, kind] of LINKS) for (const [z, at, to, label] of [[a, atA, b, labA], [b, atB, a, labB]])
     if (z === zone) out.push({ id: to, at, to: { zone: to, gate: z }, label, kind: 'zone', link: kind || 'road', r: 3.2 });

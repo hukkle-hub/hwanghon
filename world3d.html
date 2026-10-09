@@ -233,7 +233,7 @@ function dressMe(profile) { if (!window.TW_LOOKS) return; const eq = { ...(profi
 dressMe(null);
 /* 문 자리는 서버 지도(map.json) 것을 — 서버가 그 자리에 세운다 */
 const GATES = (meta.gates && meta.gates.length && env.gates && meta.gates.length === env.gates.length ? meta.gates.map(m => ({ ...(env.gates.find(e => e.id === m.id) || {}), ...m })) : env.gates || meta.gates) || [];
-/* 전국 길 문 (문서 219) — 띠 끝 큰길 위에 3D 만. 서버 지도엔 아직 없다(온라인 도착은 서버가 출발점에 세운다 — GPT 지시서) */
+/* 전국 길 문 (문서 219) — 띠 끝 큰길 위에 3D 만. map.json 엔 없고, 온라인 도착은 서버가 같은 공식으로 계산한다(server/field.cjs linkArrival, 문서 220 §16) */
 { const wk = env.walk || meta.walk, a = env.road ? env.road.ang : 0;
   if (wk && (env.kind || Z.kind || meta.kind) === 'field') for (const g of linkGates(ZONE)) { if (GATES.some(x => x.id === g.id)) continue;
     const s = g.at.end === 's1' ? wk.s1 - 3 : wk.s0 + 3, tt = g.at.t ?? (wk.t0 + wk.t1) / 2, q = { x: s * Math.cos(a) - tt * Math.sin(a), z: -s * Math.sin(a) - tt * Math.cos(a) };
