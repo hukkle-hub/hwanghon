@@ -79,3 +79,10 @@ test('3D 사냥터 꾸밈: 덤불 덩어리 · 바위 반쯤 묻기 · 풀포기
   assert.ok(hMax < 0.75, '풀포기가 인물을 가린다 ' + hMax.toFixed(2)); assert.equal(tuft.material.customProgramCacheKey(), 'grass-wind');
   const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count >= 180 && o.geometry.attributes.position.count <= 240); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
 });
+
+test('지하철 출구: 3D 는 새까만 판 대신 내려가는 계단 착시 · 2D 굽기는 그대로', () => {
+  const src = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
+  assert.match(src, /if \(!L\.isView3d\(\)\) \{ const hole = new THREE\.Mesh\(new THREE\.PlaneGeometry\(5\.6, 2\.8\), new THREE\.MeshBasicMaterial\(\{ color: 0x020203 \}\)\)/, '2D 구멍이 바뀌었다');
+  assert.match(src, /else g\.add\(stairDown\(THREE\)\);/);
+  assert.match(src, /k = 0\.11 \* Math\.pow\(1 - i \/ 10, 2\.2\)/, '단마다 어두워진다');
+});

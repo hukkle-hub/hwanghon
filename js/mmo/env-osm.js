@@ -210,7 +210,8 @@ export function build(THREE, scene, osm, opt = {}) {
     for (const sx of [-2.9, 2.9]) for (const sz of [-1.5, 1.5]) { const pp = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.7, 0.12), frameM); pp.position.set(sx, 1.35, sz); g.add(pp); }
     const wall = new THREE.Mesh(new THREE.BoxGeometry(6, 1.1, 0.1), glassM); wall.position.set(0, 0.55, -1.55); g.add(wall);
     const wall2 = wall.clone(); wall2.position.z = 1.55; g.add(wall2);
-    const hole = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ color: 0x020203 })); hole.rotation.x = -Math.PI / 2; hole.position.y = 0.04; g.add(hole);
+    if (!L.isView3d()) { const hole = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 2.8), new THREE.MeshBasicMaterial({ color: 0x020203 })); hole.rotation.x = -Math.PI / 2; hole.position.y = 0.04; g.add(hole); }
+    else g.add(stairDown(THREE));   /* 3D: 새까만 판 한 장은 «허공» 으로 보였다(문서 220 §12) — 단마다 어두워지는 계단 + 단 모서리 */
     const no = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.7), new THREE.MeshBasicMaterial({ map: numT(e.ref || '?'), toneMapped: false })); no.position.set(-2.6, 3.15, 1.62); g.add(no);
     const no2 = no.clone(); no2.rotation.y = Math.PI; no2.position.z = -1.62; g.add(no2);
     if (broken) { roof.rotation.z = 0.32; roof.position.set(0.6, 1.9, 0); g.children.filter(c => c !== roof && c.position.x > 0 && c.geometry && c.geometry.parameters.height === 2.7).forEach(c => { c.scale.y = 0.55; c.position.y = 0.75; c.rotation.z = 0.2; }); }
@@ -339,3 +340,10 @@ export function build(THREE, scene, osm, opt = {}) {
   return { lights, blockers, gates: gatesW.map(({ st, ...g }) => g), spawn: { x: spawnP[0], z: spawnP[1] }, road: { ang: SCREEN_ANG }, walk, extentPts, sun: { dir: [sunDir.x, sunDir.y, sunDir.z], color: '#ff8a50' }, sky,
     exits: exitsW.map(e => ({ ref: e.ref, x: +e.p[0].toFixed(2), z: +e.p[1].toFixed(2) })), license: osm.license, sunLight: sun };
 }
+
+/* 내려가는 계단 착시 (3D, 문서 220 §12): 땅은 못 파니 단 열 개를 입구(−x) 밝게 → 안쪽(+x) 새까맣게, 단 모서리는 조금 밝은 선. 꼭짓점 색 판 하나 = 그리기 1번 */
+let STAIR_G = null;
+function stairDown(THREE) { if (!STAIR_G) { const pos = [], col = [], c = new THREE.Color(), q = (x0, x1, z0, z1, k) => { c.setScalar(k); for (const [x, z] of [[x0, z0], [x1, z1], [x1, z0], [x0, z0], [x0, z1], [x1, z1]]) { pos.push(x, 0, z); col.push(c.r, c.g, c.b); } };
+    for (let i = 0; i < 10; i++) { const x0 = -2.8 + i * 0.56, k = 0.11 * Math.pow(1 - i / 10, 2.2); q(x0, x0 + 0.5, -1.4, 1.4, k); q(x0 + 0.5, x0 + 0.56, -1.4, 1.4, k * 1.7 + 0.008); }
+    STAIR_G = new THREE.BufferGeometry(); STAIR_G.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); STAIR_G.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); STAIR_G.computeVertexNormals(); }
+  const m = new THREE.Mesh(STAIR_G, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })); m.position.y = 0.04; m.name = "stair"; return m; }
