@@ -85,7 +85,7 @@ import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
-import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';
+import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -165,7 +165,7 @@ function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부�
    시계는 게임 시간(ms) — 헤드리스 검수(초당 1~2프레임)에서도 예고·타격 시각이 동작과 맞는다 */
 const DOM = await loadCjs('server/field-dominator.cjs');
 /* 클레이브(필드 보스) 전투도 서버 모듈 그대로 — 혼자 연습에서도 예고·연계·반격창·셔터 부위 파괴가 서버와 같다 (문서 206 §11) */
-const COMBAT = await loadCjs('server/field-boss-combat.cjs'), ECO_MOD = await loadCjs('server/field-ecology.cjs'), CLAVE_HP = 300000;   /* 연습 체력: 2D 필드 혼자 연습과 같은 30만 — 70%·35% 에서 2·3페이즈 */
+const COMBAT = await loadCjs('server/field-boss-combat.cjs'), ECO_MOD = await loadCjs('server/field-ecology.cjs'), MOB_MOD = await loadCjs('server/field-mob-combat.cjs').catch(() => null), ROUTE_MOD = MOB_MOD && await loadCjs('server/field-ecology-route.cjs').catch(() => null), SAFE_MOD = MOB_MOD && await loadCjs('js/mmo/safe-zones.js').catch(() => null), CLAVE_HP = 300000;   /* 연습 체력: 2D 필드 혼자 연습과 같은 30만 — 70%·35% 에서 2·3페이즈 */
 let gameNow = 1e6;
 const DODGE_TIME = 520, DODGE_GAP = 780, RESPAWN_TIME = 5000, RESPAWN_GUARD = 2000, DOM_RESPAWN = 30000;   /* server/field.cjs 와 같은 값 */
 const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: false, respawnAt: 0, invulnUntil: 0, dodgeUntil: 0, dodgeReady: 0, hurtSeq: 0 };
@@ -331,16 +331,18 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
     fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
 const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
-let ECO = null, MOBS = null; const mobHp = new Map();
+let ECO = null, MOBS = null, MP = null; const mobHp = new Map();
 const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
 const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
-  mobView(); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }
+  mobView();
+  if (MOB_MOD) MP = createMobPractice({ MOB: MOB_MOD, ECO, planRoute: ROUTE_MOD && ROUTE_MOD.planRoute, safe: p => !!(SAFE_MOD && SAFE_MOD.safeArea(meta.areas, p.x, p.z, SAFE_MOD.BOSS_OWNER)), strike: (m, p, h, t) => fieldLocal.bossStrike(m, p, h, t) }); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }   /* 몬스터 공격(GPT 모듈) — 서버 합치기 전엔 없다 */
 function hitMob() { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
   me.yaw = Math.atan2(v.root.position.x - root.position.x, v.root.position.z - root.position.z); root.rotation.y = me.yaw;
   if (net) { net.send({ type: 'fieldHit', mob: v.id, generation: v.gen }); return true; }   /* 온라인: 서버가 판정 — 답은 mobHit */
   const crit = Math.random() < 0.18, key = v.id + ':' + v.gen, t = { root: v.root, h: v.h };
   feel.atContact(fh, 0, () => { if (!v.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1)), left = (mobHp.has(key) ? mobHp.get(key) : (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])) - n;
+    if (MP) { const r = MP.hit(v.id, n, gameNow); if (r) { MOBS.hurt(v.id, r.hp); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (r.down) floatAt('처치', 'crit', v.root.position, 1.9); } return; }
     mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } }); return true; }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
@@ -403,7 +405,7 @@ function tick() {
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
     const ev = updateDominator(o, dt * feel.rate(o), gameNow); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
-  if (ECO && !net) { ECO.tick(gameNow); MOBS.update(ECO.snapshot(root.position.x, root.position.z, gameNow), dt); }
+  if (ECO && !net) { ECO.tick(gameNow); if (MP) { MP.tick(gameNow, [P]); MOBS.update(MP.snapshot(root.position.x, root.position.z, gameNow), dt); } else MOBS.update(ECO.snapshot(root.position.x, root.position.z, gameNow), dt); }
   else if (net && (MOBS || netMobs.length)) mobView().update(netMobs, dt);
   if (!net) for (const o of fbs) { const ai = o.ai; if (!ai) continue;   /* 혼자 연습 클레이브: 서버와 같은 틱 → 같은 view → 같은 안무 */
     if (!ai.alive) { if (gameNow >= o.respawnAt) { COMBAT.reset(ai, gameNow); ai.alive = true; ai.hp = ai.max; o.root.visible = true; } continue; }
@@ -422,7 +424,7 @@ function tick() {
   requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get eco() { return ECO; }, get mobs() { return MOBS; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };

@@ -213,7 +213,7 @@ import { createArmBlend } from './js/arm-blend.js';
 import { contactOf } from './js/mmo/field-feel.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
-import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';   /* 필드 몬스터 그리기 (문서 209) */
+import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js';   /* 필드 몬스터 그리기 (문서 209) */
 import { CATALOG } from './js/mmo/monster-catalog.js';   /* 완벽 회피 잔상 (문서 205 §4) */   /* 혼자 연습 보스 AI — 서버 모듈 그대로 (문서 206 §12) */   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
@@ -606,10 +606,11 @@ const offField={ players:new Map([['me',OFF.P]]), rng:Math.random,
     const partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1, amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul)); p.hp=Math.max(0,p.hp-amount);
     if(hit.knock){ let dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz); if(d<.01){dx=Math.sin(o.yaw||0);dz=Math.cos(o.yaw||0);d=1;} p.x+=dx/d*hit.knock; p.z+=dz/d*hit.knock; collide(p); if(me){ me.root.position.x=p.x; me.root.position.z=p.z; } }
     const kind=p.hp<=0?'dead':'hit'; if(p.hp<=0){ p.dead=true; p.respawnAt=now+5000; } offSelf([seq,amount,o.id,hit.skill,kind,hit.beat,now]); if(o.combat) OFF.COMBAT.notePlayerResult(o,p.id,false); return { amount, dead:p.dead }; } };
-if(!net) Promise.all([loadCjs('server/field-dominator.cjs'),loadCjs('server/field-boss-combat.cjs'),loadCjs('server/field-ecology.cjs')]).then(([D,C,E])=>{ OFF.DOM=D; OFF.COMBAT=C; const now=bossNow();
+if(!net) Promise.all([loadCjs('server/field-dominator.cjs'),loadCjs('server/field-boss-combat.cjs'),loadCjs('server/field-ecology.cjs'),loadCjs('server/field-mob-combat.cjs').catch(()=>null),loadCjs('server/field-ecology-route.cjs').catch(()=>null)]).then(([D,C,E,MC,R])=>{   /* 몬스터 공격 모듈(GPT)은 서버 합치기 전엔 없다 — 없으면 맞기만 */ OFF.DOM=D; OFF.COMBAT=C; const now=bossNow();
   /* 혼자 연습 몬스터 (문서 209): GPT 생태 모듈(server/field-ecology.cjs)을 그대로 — 둥지 셋·순찰 하나·드문 종·30초 부활. 지도 생태 자리(areas[].eco)를 쓴다. 공격은 서버 몬스터 AI 가 오면 */
   if((meta.areas||[]).some(a=>a.kind==='hunt'&&a.pool&&a.eco)) try{ OFF.ECO=new E.Ecology({ zone:{...meta,id:ZONE}, catalog:ecologyCatalog(CATALOG), now, rng:Math.random, collide:(p,r)=>collide(p,r) });
-    mobView(); OFF.mobHp=new Map(); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
+    mobView(); OFF.mobHp=new Map();
+    if(MC) OFF.MP=createMobPractice({ MOB:MC, ECO:OFF.ECO, planRoute:R&&R.planRoute, safe:p=>!!(window.TW_SAFE&&TW_SAFE.safeArea(meta.areas,p.x,p.z,hubOwner)), strike:(m,p,h,t)=>offField.bossStrike(m,p,h,t) }); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
   for(const o of bosses){ const b=o.b, ai={ id:b.id, zone:ZONE, x:b.x, z:b.z, yaw:0, h:b.h||3, alive:o.alive, hp:o.local, max:300000 };
     if(b.ai==='dominator'){ D.setup(ai,now); o.ai=ai; } else if(C.enabled(ai)){ C.setup(ai,now); o.ai=ai; } } }).catch(e=>console.warn('[혼자 연습 AI]',e));
 function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
@@ -619,7 +620,7 @@ function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
     if(o.alive&&!ai.alive) M.reset(ai,now); ai.alive=o.alive; if(!o.alive) continue; ai.hp=Math.max(1,o.local);
     M.tick(offField,ai,now); collide(ai,0.5); const v=M.view(ai); if(!v) continue;
     if(o.b.ai==='dominator'){ if(o.dom) applyDominatorAction(o,v); else o.netAct=v; } else applyBossAction(o,v,now); }
-  if(OFF.ECO){ OFF.ECO.tick(now); OFF.MOBS.update(OFF.ECO.snapshot(P.x,P.z,now)); } }
+  if(OFF.ECO){ OFF.ECO.tick(now); if(OFF.MP){ OFF.MP.tick(now,[P]); OFF.MOBS.update(OFF.MP.snapshot(P.x,P.z,now)); } else OFF.MOBS.update(OFF.ECO.snapshot(P.x,P.z,now)); } }   /* 서버 순서: 생태 → 몬스터 결정 → 그리기 */
 /* 몬스터 그리기는 하나 — 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs(mobsFromPacket)를 넣는다 */
 /* 몬스터 임시 몸 — 류를 4천 삼각형·클립 다섯으로 줄인 것(tools/2d/make-mob-body.mjs). 20마리면 류 원본은 120만 삼각형이다 (문서 210 §6) */
 const mobBody=()=>gltfs.mob||(gltfs.mob=load('art/3d/lod/mob_temp.glb').then(g=>{ if(window.TW_POSE) TW_POSE.repair(THREE,g); return g; }));
@@ -631,6 +632,7 @@ function hitMob(sk){ if(!OFF.MOBS||!me||(!net&&!OFF.ECO)) return false; const v=
   if(net){ net.send(sk?{type:'fieldSkill',skill:sk.i,mob:v.id,generation:v.gen}:{type:'fieldHit',mob:v.id,generation:v.gen}); return true; }   /* 온라인: 서버가 판정(GPT 인계 — generation 을 꼭 같이, 옛 세대를 치지 않게). 답은 mobHit */
   const crit=skCritNext||Math.random()<0.18; skCritNext=false; const mult=sk?sk.mult:1, key=v.id+':'+v.gen, t=mobT(v);
   feel.atContact(me,0,()=>{ if(!v.alive) return; const n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)*mult), left=(OFF.mobHp.has(key)?OFF.mobHp.get(key):(PRACTICE_HP[v.cat.grade]||PRACTICE_HP[5]))-n;
+    if(OFF.MP){ const r=OFF.MP.hit(v.id,n,bossNow()); if(r){ OFF.MOBS.hurt(v.id,r.hp); feel.impact(me,t,{crit}); dmgNum(t,n,crit); } return; }   /* 반격하는 몬스터: 체력은 서버와 같은 표(N01) */
     OFF.mobHp.set(key,left); OFF.MOBS.hurt(v.id,100*left/(PRACTICE_HP[v.cat.grade]||PRACTICE_HP[5])); feel.impact(me,t,{crit}); dmgNum(t,n,crit); if(left<=0){ OFF.mobHp.delete(key); OFF.ECO.defeat(v.id,bossNow()); } }); return true; }
 /* 피해 숫자 — 보스 머리 위로 떠오른다 */
 const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);

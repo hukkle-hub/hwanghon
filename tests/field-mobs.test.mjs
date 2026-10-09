@@ -21,9 +21,9 @@ test('웹 캐논 표 → 생태 모듈 꼴(ecologyCatalog)이 GPT v10 원본과 
 test('2D·3D 연결: 혼자 연습에서만 생태를 돌리고(서버 몬스터가 오면 서버가), 지도 충돌은 서버와 같은 map.json · 임시 몸 표시', () => {
   const m = fs.readFileSync(path.join(root, 'mmo.html'), 'utf8'), w = fs.readFileSync(path.join(root, 'world3d.html'), 'utf8'), v = fs.readFileSync(path.join(root, 'js/mmo/field-mobs.js'), 'utf8');
   assert.match(m, /loadCjs\('server\/field-ecology\.cjs'\)/, '2D 가 생태 모듈을 안 읽는다');
-  assert.match(m, /if\(OFF\.ECO\)\{ OFF\.ECO\.tick\(now\); OFF\.MOBS\.update\(OFF\.ECO\.snapshot\(P\.x,P\.z,now\)\); \}/, '2D 혼자 연습 생태 틱');
+  assert.match(m, /if\(OFF\.ECO\)\{ OFF\.ECO\.tick\(now\); if\(OFF\.MP\)\{ OFF\.MP\.tick\(now,\[P\]\); OFF\.MOBS\.update\(OFF\.MP\.snapshot\(P\.x,P\.z,now\)\); \} else OFF\.MOBS\.update\(OFF\.ECO\.snapshot\(P\.x,P\.z,now\)\); \}/, '2D 혼자 연습 생태 틱');
   assert.match(m, /function hitBoss\(sk\)\{ const o=nearBoss\(\); if\(!o\) return hitMob\(sk\);/, '2D 에서 몬스터를 못 친다');
-  assert.match(w, /if \(ECO && !net\) \{ ECO\.tick\(gameNow\); MOBS\.update\(ECO\.snapshot\(root\.position\.x, root\.position\.z, gameNow\), dt\); \}/, '3D 혼자 연습 생태 틱');
+  assert.match(w, /if \(ECO && !net\) \{ ECO\.tick\(gameNow\); if \(MP\) \{ MP\.tick\(gameNow, \[P\]\);/, '3D 혼자 연습 생태 틱');
   assert.match(w, /collide: createCollide\(meta\)\.collide \}\);/, '3D 생태가 장면 충돌(env.blockers)을 쓴다 — 서버와 같은 map.json 이어야 둥지가 막히지 않는다');
   assert.match(w, /if \(!t\) \{ hitMob\(\); return; \}/, '3D 에서 몬스터를 못 친다');
   assert.match(v, /임시 몸/, '승인 안 된 몸에 «임시 몸» 표시가 없다');
