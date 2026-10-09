@@ -10,6 +10,7 @@
    손가락을 호 길이 그대로 감는다. 엄지는 손가락 폭(q) 밖이라 감지 않는다 — 폭 경계에서 부드럽게 줄인다.
    엄지는 따로 통째로 돌린다(fitThumb, docs/design/95). */
 import * as T from '../vendor/three/three.module.js';
+import {kainGripReference} from './kain-grip-reference.js';
 
 /* web: 잰 값 — tools/3d/hand-curl.html 로 손 삼각형을 손바닥 평면에 그려, 손가락 사이 홈 바닥의 손 뼈 Y(엄지 홈 제외).
    r: 쥐는 무기 손잡이 반지름(손 뼈 로컬 = 월드 ÷ 1.14). 카인 대검 3.4~3.9 cm → 3.2 · 류 단검 1.2~2.6 → 1.8 · 세라 병 목 2.0 → 1.8 */
@@ -202,7 +203,8 @@ export function buildHandGrip(model,charId){
     for(const m of meshes){const bi=m.skeleton.bones.indexOf(hand);if(bi<0)continue;const M=handM(m,bi),G=m.geometry,Pp=G.attributes.position,SI=G.attributes.skinIndex,SW=G.attributes.skinWeight;if(!SI)continue;
       for(let i=0;i<Pp.count;i++)if(weightOf(SI,SW,i,bi)>=.6)verts.push(V().fromBufferAttribute(Pp,i).applyMatrix4(M));}
     if(verts.length<30)continue;
-    grips[side]=fitHandGrip(verts,slot.quaternion,side,P[side].web,P.r);
+    const reference=charId==='kain'?meshes.map(m=>{const bi=m.skeleton.bones.indexOf(hand);return bi<0?null:kainGripReference(side,handM(m,bi),slot.quaternion);}).find(Boolean):null;
+    grips[side]=reference||fitHandGrip(verts,slot.quaternion,side,P[side].web,P.r);
     hand.userData.gripPoint=V(...grips[side].c);   // looks.js 그립 노드·왼손 IK 가 이 점을 쓴다
     hand.userData.gripAxis=V(...grips[side].a);    // 주먹 구멍 방향(새끼→엄지) — 왼손 IK 가 무기 축에 맞춘다
     hand.userData.gripFinger=V(...grips[side].f);  // 손가락 방향 — 손잡이 둘레 돌림을 고를 때
