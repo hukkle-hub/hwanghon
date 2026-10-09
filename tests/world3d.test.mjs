@@ -234,3 +234,15 @@ test('3D 필드 휴대폰: 카메라 먼 면 = 안개 끝 + 10 m (다 묻힌 것
   const i = w.indexOf("if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }"), j = w.indexOf('cam.far = scene.fog.far + 10');
   assert.ok(i > 0 && j > i, '먼 면을 실내 안개(70 m)를 정하기 전에 잡았다');
 });
+
+test('3D 필드 미니맵: 2D 필드와 같은 개관 그림·같은 좌표식 · 방향 화살표 · 사냥터 이름 띠', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8'), m = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8');
+  assert.match(m, /const miniPos=\(x,z\)=>\{ const u=x, v=-z\*Math\.sin\(meta\.pitch\); return \[ \(u-OV\.u0\)\/\(OV\.u1-OV\.u0\)\*100, \(OV\.v1-v\)\/\(OV\.v1-OV\.v0\)\*100 \]; \};/, '2D 미니맵 좌표식이 바뀌었다 — 3D 도 같이 고쳐라');
+  assert.match(w, /const miniPos = \(x, z\) => \[\(x - OV\.u0\) \/ \(OV\.u1 - OV\.u0\) \* 100, \(OV\.v1 \+ z \* SINP\) \/ \(OV\.v1 - OV\.v0\) \* 100\];/, '3D 미니맵 좌표식이 2D 와 다르다');
+  /* 방향: 앞 (sin yaw, cos yaw) → 그림에서 x 오른쪽, z 아래(내려다보는 각만큼 눌림). CSS rotate 는 위에서 시계 방향 */
+  assert.match(w, /Math\.atan2\(Math\.sin\(me\.yaw\), -Math\.cos\(me\.yaw\) \* SINP\)/, '화살표 방향식');
+  const ang = yaw => Math.atan2(Math.sin(yaw), -Math.cos(yaw) * 0.82);
+  assert.ok(Math.abs(ang(Math.PI) - 0) < 1e-9, '−z(그림 위)를 보면 화살표가 위'); assert.ok(Math.abs(ang(Math.PI / 2) - Math.PI / 2) < 1e-9, '+x 를 보면 오른쪽');
+  assert.match(w, /if \(frames % 3 === 0\) miniTick\(\); areaTick\(dt\);/, '미니맵·사냥터 띠를 안 돌린다');
+  assert.match(w, /#mini\[hidden\]\{ display:none; \}/, '개관 그림 없는 지역(실내)에 빈 미니맵이 뜬다');
+});

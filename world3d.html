@@ -35,11 +35,24 @@ canvas{ display:block; width:100vw; height:100vh; }
 #toast{ position:absolute; top:22%; left:50%; transform:translateX(-50%); font-weight:900; font-size:17px; background:var(--panel); padding:8px 16px; border-radius:12px; text-align:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
 #toast[hidden]{ display:none; }
 .tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
+#mini{ position:absolute; right:calc(12px + env(safe-area-inset-right)); top:calc(max(12px,env(safe-area-inset-top))); width:132px; border:1px solid rgba(201,164,94,.55); background:#140c10 center/100% 100% no-repeat; box-shadow:0 0 8px rgba(0,0,0,.6); overflow:hidden; pointer-events:auto; cursor:pointer; }
+#mini[hidden]{ display:none; }
+#mini.big{ right:auto; left:50%; top:50%; transform:translate(-50%,-50%); width:min(86vw,calc(78vh * var(--ar))); z-index:6; }
+#mini i{ position:absolute; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:#ffb070; pointer-events:none; }
+#mini i.gt{ border-radius:1px; background:#40b8e8; } #mini i.gt.dg{ background:#ff6040; } #mini i.bs{ width:8px; height:8px; margin:-4px 0 0 -4px; background:#ff3a30; box-shadow:0 0 5px #ff3a30; } #mini i.pl{ background:#e8f4ff; }
+#mini b.me{ position:absolute; width:0; height:0; margin:-7px 0 0 -5px; border:5px solid transparent; border-bottom:12px solid #5fe0ff; border-top:0; filter:drop-shadow(0 0 3px #5fe0ff); transform-origin:5px 7px; z-index:2; pointer-events:none; }
+#mini span{ position:absolute; transform:translate(-50%,-50%); font-size:11px; color:#f0e2d0; text-shadow:0 0 4px #000,0 1px 2px #000; white-space:nowrap; display:none; pointer-events:none; }
+#mini.big span{ display:block; } #mini span.d2{ color:#ffb070; } #mini span.d3{ color:#ff6a50; } #mini span.rest{ color:#9fe0b0; }
+#areaName{ position:absolute; left:50%; top:63%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; color:#f0e2d0; text-shadow:0 0 10px #000,0 1px 2px #000; white-space:nowrap; }
+#areaName b{ display:block; font-size:22px; letter-spacing:.12em; font-weight:800; } #areaName small{ display:block; font-size:11px; letter-spacing:.08em; opacity:.8; margin-top:2px; }
+#areaName.d2 b{ color:#ffb070; } #areaName.d3 b{ color:#ff6a50; } #areaName.rest b{ color:#9fe0b0; }
+@media (max-height:500px){ #areaName b{ font-size:18px; } #mini{ width:112px; } }
 #osm{ position:absolute; right:12px; bottom:max(10px,env(safe-area-inset-bottom)); font-size:10px; color:var(--dim); opacity:.7; }
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="mini" hidden></div><div id="areaName"></div>
 <div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
 <script src="js/items.js"></script>
@@ -302,6 +315,31 @@ gateBtn.addEventListener('pointerdown', e => { e.stopPropagation(); goGate(gateN
 function gateTick() { const p = root.position; let g = null, gd = 1e9; for (const x of GATES) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < (x.r || 3) + 0.8 && d < gd) { g = x; gd = d; } }
   if (g === gateNear) return; gateNear = g; gateBtn.hidden = !g; if (g) { const dg = g.kind === 'dungeon'; gateBtn.className = dg ? 'dg' : ''; gateBtn.innerHTML = (dg ? '⚔ 들어가기' : '➜ 이동') + '<small>' + esc(g.label) + '</small>'; } }
 addEventListener('keydown', e => { if (e.code === 'KeyE' || e.code === 'Enter') goGate(gateNear); });
+/* ---------- 미니맵 · 사냥터 이름 띠 (2D 필드와 같은 그림·같은 좌표) — 문서 206 §14 ----------
+   개관 그림(map.json overview)에 나(방향 화살표)·문·보스·다른 사람. 누르면 크게(사냥터 이름까지). 사냥터에 들어서면 이름·레벨·몬스터 띠 */
+const OV = meta.overview, miniEl = document.getElementById('mini'), areaEl = document.getElementById('areaName'), SINP = Math.sin(meta.pitch || 0.96);
+const miniPos = (x, z) => [(x - OV.u0) / (OV.u1 - OV.u0) * 100, (OV.v1 + z * SINP) / (OV.v1 - OV.v0) * 100];
+const inArea = (a, x, z) => { if (a.circle) return (x - a.circle[0]) ** 2 + (z - a.circle[1]) ** 2 <= a.circle[2] ** 2; if (!a.poly) return false; let k = false;
+  for (let i = 0, j = a.poly.length - 1; i < a.poly.length; j = i++) { const [xi, zi] = a.poly[i], [xj, zj] = a.poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) k = !k; } return k; };
+const AREAS = (meta.areas || []).filter(a => a.kind === 'hunt' || a.kind === 'rest'); let miniMe = null; const miniDots = new Map();
+if (OV) { miniEl.hidden = false; miniEl.style.backgroundImage = 'url(maps/2d/' + ZONE + '/' + OV.file + (OV.h ? '?v=' + OV.w + 'x' + OV.h : '') + ')'; miniEl.style.aspectRatio = OV.w + '/' + OV.h; miniEl.style.setProperty('--ar', (OV.w / OV.h).toFixed(3));
+  const put = (el, x, z) => { const [l, t] = miniPos(x, z); el.style.left = l + '%'; el.style.top = t + '%'; return el; };
+  for (const g of GATES) { const d = document.createElement('i'); d.className = 'gt' + (g.kind === 'dungeon' ? ' dg' : ''); miniEl.appendChild(put(d, g.x, g.z)); }
+  for (const a of AREAS) { const [x, z] = a.circle ? a.circle : a.poly.reduce((q, p) => [q[0] + p[0] / a.poly.length, q[1] + p[1] / a.poly.length], [0, 0]);
+    const sp = document.createElement('span'); sp.className = a.kind === 'rest' ? 'rest' : 'd' + (a.danger || 1); sp.textContent = a.name; miniEl.appendChild(put(sp, x, z)); }
+  miniMe = document.createElement('b'); miniMe.className = 'me'; miniEl.appendChild(miniMe);
+  miniEl.addEventListener('pointerdown', e => { e.stopPropagation(); miniEl.classList.toggle('big'); }); }
+function miniTick() { if (!miniMe) return; const p = root.position, [l, t] = miniPos(p.x, p.z); miniMe.style.left = l + '%'; miniMe.style.top = t + '%';
+  miniMe.style.transform = 'rotate(' + Math.atan2(Math.sin(me.yaw), -Math.cos(me.yaw) * SINP).toFixed(3) + 'rad)';   /* 앞(sin yaw, cos yaw) → 그림 위 = −z */
+  const live = new Set(), dot = (key, cls, x, z) => { let d = miniDots.get(key); if (!d) { d = document.createElement('i'); d.className = cls; miniEl.appendChild(d); miniDots.set(key, d); } const [a, b] = miniPos(x, z); d.style.left = a + '%'; d.style.top = b + '%'; live.add(key); };
+  for (const o of [...doms, ...fbs]) if (o.root && o.root.visible) dot('b:' + o.b.id, 'bs', o.root.position.x, o.root.position.z);
+  for (const [id, r] of remotes) if (r.a && r.a.root) dot('p:' + id, 'pl', r.a.root.position.x, r.a.root.position.z);
+  for (const [k, d] of miniDots) if (!live.has(k)) { d.remove(); miniDots.delete(k); } }
+let curArea, areaT = 0;
+function areaTick(dt) { const p = root.position, a = AREAS.find(x => x.kind === 'rest' && inArea(x, p.x, p.z)) || AREAS.find(x => x.kind === 'hunt' && inArea(x, p.x, p.z)) || null;
+  if (a !== curArea) { curArea = a; if (a) { const esc2 = t => String(t == null ? '' : t).replace(/[<>&]/g, ''); areaEl.className = a.kind === 'rest' ? 'rest' : 'd' + (a.danger || 1);
+      areaEl.innerHTML = '<b>' + esc2(a.name) + '</b><small>' + (a.kind === 'rest' ? '쉬어 가는 곳' : (a.lv ? 'Lv ' + a.lv[0] + '~' + a.lv[1] : '') + (a.mobs ? ' · ' + esc2(a.mobs) : '')) + '</small>'; areaT = 3.6; } }
+  if (areaT > 0) { areaT -= dt; areaEl.style.opacity = Math.max(0, Math.min(1, areaT / 0.8, (3.6 - areaT) / 0.4)); } else areaEl.style.opacity = 0; }
 /* ---------- 돌리기 ---------- */
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
 function tick() {
@@ -322,7 +360,7 @@ function tick() {
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
-  if (frames % 6 === 0) gateTick();
+  if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
   if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
@@ -344,7 +382,7 @@ function tick() {
   requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.autoReset = false; renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; renderer.info.autoReset = true; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
