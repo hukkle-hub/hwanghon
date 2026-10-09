@@ -1,8 +1,8 @@
 {
-  "baseCommit": "eb30569589e0ad2cdf55fc2661f781419bac3ad1",
+  "baseCommit": "3db2aead323d9a43e42b89bff573ac29292205b0",
   "suiteExit": 0,
-  "tests": 946,
-  "pass": 944,
+  "tests": 947,
+  "pass": 945,
   "fail": 0,
   "skipped": 2,
   "focusedNewTests": 20,
@@ -15,9 +15,10 @@
     "catalogId",
     "x",
     "z",
-    "hpPercent",
+    "alive",
     "anim",
     "generation",
+    "hpPercent",
     "seq"
   ],
   "claudePracticeRendererPresent": true,

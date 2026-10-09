@@ -10,7 +10,7 @@ const perf=spawnSync(process.execPath,['tools/monsters/measure-field-mobs.cjs'],
 fs.writeFileSync(path.join(out,'server-timing.json'),perf.stdout);
 const result={baseCommit:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim(),suiteExit:run.status,tests:count('tests'),pass:count('pass'),fail:count('fail'),skipped:count('skipped'),
  focusedNewTests:20,negativeRangeControl:true,browserBridgeVerified:true,realSocketVerified:true,twoSocketVerified:true,
- mobWire:['id','catalogId','x','z','hpPercent','anim','generation','seq'],claudePracticeRendererPresent:true,onlineRendererStillPending:false,
+ mobWire:['id','catalogId','x','z','alive','anim','generation','hpPercent','seq'],claudePracticeRendererPresent:true,onlineRendererStillPending:false,
  onlineBrowserTwoPlayerVerified:false,renderAutoDeployVerified:false,
  mapAnchorsModified:false,ecologyClearanceModified:false,ecologyRouteBudgetModified:false,
  patrolBakedRoutes:360,approvedPatrolEdges:180,hunts:45,huntRegions:18,

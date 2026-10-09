@@ -1,12 +1,12 @@
 {
   "kind": "local_server_integration_not_live_game",
-  "createdUTC": "2026-10-09T06:03:18.949Z",
-  "baseCommit": "eb30569589e0ad2cdf55fc2661f781419bac3ad1",
+  "createdUTC": "2026-10-09T06:26:12.420Z",
+  "baseCommit": "3db2aead323d9a43e42b89bff573ac29292205b0",
   "tests": {
-    "baseCommit": "eb30569589e0ad2cdf55fc2661f781419bac3ad1",
+    "baseCommit": "3db2aead323d9a43e42b89bff573ac29292205b0",
     "suiteExit": 0,
-    "tests": 946,
-    "pass": 944,
+    "tests": 947,
+    "pass": 945,
     "fail": 0,
     "skipped": 2,
     "focusedNewTests": 20,
@@ -19,9 +19,10 @@
       "catalogId",
       "x",
       "z",
-      "hpPercent",
+      "alive",
       "anim",
       "generation",
+      "hpPercent",
       "seq"
     ],
     "claudePracticeRendererPresent": true,
@@ -47,8 +48,8 @@
   "files": [
     {
       "file": "server/field.cjs",
-      "bytes": 30933,
-      "sha256": "6aba171b839119ca3ca71c6499e3854203315c9c214ae8fb9bc8dfbc4940e9d3"
+      "bytes": 30942,
+      "sha256": "5919dbbf016d107573e68a94346a46579a73518d95b26e103e4c69d7df885c53"
     },
     {
       "file": "server/index.cjs",
@@ -67,13 +68,13 @@
     },
     {
       "file": "tests/field-mob-integration.test.cjs",
-      "bytes": 16371,
-      "sha256": "2f4171c59d3057618dd1cedca1a1527d5ba1e06f83c19cd17197b21bdbd4a3c5"
+      "bytes": 16678,
+      "sha256": "39734af9f44f4200e167f5bc966bba793b1855473474977653d3ba8e81510364"
     },
     {
       "file": "tests/field-mob-socket.test.cjs",
-      "bytes": 5898,
-      "sha256": "93c79dd5bf94d9c569f3381d0b5a9a98ee77667076132a9b969eb57be8e4ed21"
+      "bytes": 5950,
+      "sha256": "e71e55436797c6a3572478ac935194dab9a0124974b1690e9a48da67f9dffea9"
     },
     {
       "file": "tools/monsters/build-field-patrols.mjs",
@@ -87,8 +88,8 @@
     },
     {
       "file": "tools/monsters/verify-field-mobs.cjs",
-      "bytes": 2139,
-      "sha256": "1c284587ae9dd03016eb4e3d02a5c1fa7fa2163aa4d10d10e91a9d5c3fb42bf2"
+      "bytes": 2147,
+      "sha256": "df2c4def5b01572fd60da5d120a0760f41861a54cba637e1a025898d4c07bdc3"
     },
     {
       "file": "tools/monsters/package-field-mobs.cjs",
@@ -97,8 +98,8 @@
     },
     {
       "file": "docs/gpt/2026-10-09-monster-server-handoff.txt",
-      "bytes": 8908,
-      "sha256": "c24561c8b677efe25910e79f574e93ec63ad19d0fbabe44c320920895cf10da3"
+      "bytes": 9321,
+      "sha256": "60267c566446fe0c099201a7dbc8ccc32c6d5d760c4a24604763b206d802f66c"
     },
     {
       "file": "docs/design/ref/g5-hookhand-approval/g5_hookhand_approval_draft_v1.png",
@@ -112,18 +113,18 @@
     },
     {
       "file": "docs/design/ref/monster-server-v10-qa/full-tests.log",
-      "bytes": 142082,
-      "sha256": "501b22b886d355cd22d0c5bf2f64943ff200ad26c26c4d98e56f3321c8048b63"
+      "bytes": 142320,
+      "sha256": "820f549d34e03eccf5b305862b0e6c0ad81cf62be79bfa85f44e31a4e782e228"
     },
     {
       "file": "docs/design/ref/monster-server-v10-qa/verification.json",
-      "bytes": 1046,
-      "sha256": "44bb9e08115f0a79f803b668af03a37ff40661ccd292005bc2015a07128b3195"
+      "bytes": 1059,
+      "sha256": "c80ebebe91ca77464c237763ca116b69cb161308d6b47b0c8af5fdc6dff76336"
     },
     {
       "file": "docs/design/ref/monster-server-v10-qa/server-timing.json",
-      "bytes": 458,
-      "sha256": "5a3fa1247f053803b14f6d9118b9e1dbf42bfdd681a6d13dfb028d1f7788a5e0"
+      "bytes": 474,
+      "sha256": "7e730671aa118a73c4cd58e41ea9b49f77425867cc6e2004019c81655d302d8c"
     }
   ]
 }

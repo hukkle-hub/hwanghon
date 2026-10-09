@@ -122,11 +122,11 @@ class Field{
  mobView(p,now=this.clock()){
   const e=this.ecologies.get(p.zone);if(!e)return [];
   return e.snapshot(p.x,p.z,now,AOI).map(m=>{const s=this.mobStates.get(m.id);
-   /* Document 210 / current mobsFromPacket: HP in slot 5, action sequence in
-      slot 8. Ecology.snapshot itself stays unchanged for offline consumers. */
-   return [m.id,m.catalogId,m.x,m.z,
+   /* Final document 210 / v2: exact seven Ecology.snapshot fields, followed by
+      HP and optional action sequence. Keep alive boolean and HP in slot 8. */
+   return [m.id,m.catalogId,m.x,m.z,m.alive,m.anim,m.generation,
     m.alive&&s?.generation===m.generation?Math.ceil(100*s.hp/s.max):0,
-    m.anim,m.generation,s?.generation===m.generation?s.ai.seq:0];}); }
+    s?.generation===m.generation?s.ai.seq:0];}); }
  tickEcologies(now){
   let retry=2;for(const [key,r]of this.pendingMobRewards){if(retry<=0)break;if(now<r.nextAt)continue;
    retry--;this.rewardMob(r.id,r.m,r.s,now);}

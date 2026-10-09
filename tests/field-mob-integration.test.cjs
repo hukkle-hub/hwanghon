@@ -8,11 +8,11 @@ function setup(extra={}){
  const e=f.ecologies.get('namsan'),m=[...e.mobs.values()].find(m=>m.group.kind==='nest');
  p.x=m.x;p.z=m.z;p.invulnUntil=0;return {f,p,e,m,profile,setNow:t=>now=t};
 }
-test('actual map has one Ecology per visited zone; actual Claude decoder reads HP and seq at AOI28 max20',async()=>{
+test('v2 first seven fields match snapshot; current Claude decoder reads slot 8 HP and slot 9 seq at AOI28 max20',async()=>{
  const {f,p,e,m}=setup();assert.equal(f.ecology('namsan'),e);assert.equal(f.ecologies.size,1);
  const packet=f.view(p);assert.ok(packet.mobs.length>0);assert.ok(packet.mobs.length<=20);
- const row=packet.mobs.find(r=>r[0]===m.id);assert.deepEqual(row,[m.id,m.catalogId,+m.x.toFixed(2),+m.z.toFixed(2),100,'idle',1,0]);
- assert.ok(packet.mobs.every(r=>r.length===8&&Math.hypot(r[2]-p.x,r[3]-p.z)<=28.02));
+ const row=packet.mobs.find(r=>r[0]===m.id);assert.deepEqual(row,[m.id,m.catalogId,+m.x.toFixed(2),+m.z.toFixed(2),true,'idle',1,100,0]);
+ assert.ok(packet.mobs.every(r=>r.length===9&&typeof r[4]==='boolean'&&Math.hypot(r[2]-p.x,r[3]-p.z)<=28.02));
  const {mobsFromPacket}=await import('../js/mmo/field-mobs.js');
  const decoded=mobsFromPacket(packet.mobs);assert.equal(decoded.length,packet.mobs.length);
  assert.ok(decoded.every(m=>m.hp===100&&m.seq===0&&m.alive));
@@ -48,7 +48,7 @@ test('defeat is once, corpse expires and respawn resets HP, attack state and gen
  let defeats=0;const original=e.defeat.bind(e);e.defeat=(...a)=>{defeats++;return original(...a);};
  const r=f.hitMob('a',{mob:m.id},profile,10000);assert.equal(r.down,true);assert.equal(defeats,1);
  assert.equal(f.hitMob('a',{mob:m.id},profile,11000),null);assert.equal(defeats,1);
- const corpse=f.mobView(p,10001).find(r=>r[0]===m.id);assert.equal(corpse[5],'die');assert.equal(corpse[4],0);assert.equal(corpse[7],1);
+ const corpse=f.mobView(p,10001).find(r=>r[0]===m.id);assert.equal(corpse[5],'die');assert.equal(corpse[4],false);assert.equal(corpse[7],0);assert.equal(corpse[8],1);
  assert.ok(!f.mobView(p,12001).some(r=>r[0]===m.id));
  p.x+=100;setNow(40000);f.tickBosses(40000);const next=e.mobs.get(m.id),fresh=f.mobStates.get(m.id);
  assert.equal(next.generation,2);assert.equal(fresh.hp,fresh.max);assert.equal(fresh.ai.beat,0);assert.equal(fresh.ai.seq,0);
@@ -150,17 +150,18 @@ test('guild hub ownership reloads prepared paths; client messages cannot set nig
  f.setEcologyContext('busan',{night:true,invasion:true});f.tickEcologies(10150);assert.equal(e.night,true);assert.equal(e.invasion,true);
  f.setHub('busan',null);f.tickEcologies(10200);assert.equal(e.owner.kind,'boss');
 });
-test('negative wire control: swapping HP and sequence must fail the actual online decoder',async()=>{
+test('negative wire control: substituting HP for alive loses seq in current decoder and fails the v2 contract',async()=>{
  const source=fs.readFileSync(require.resolve('../server/field.cjs'),'utf8');
- const bad=source.replace('Math.ceil(100*s.hp/s.max):0,','s.ai.seq:0,');assert.notEqual(bad,source);
+ const bad=source.replace('m.z,m.alive,m.anim,m.generation,','m.z,m.alive?100:0,m.anim,m.generation,');assert.notEqual(bad,source);
  const module={exports:{}},local=require('node:module').createRequire(require.resolve('../server/field.cjs'));
  vm.runInNewContext(bad,{module,exports:module.exports,require:local,__dirname:require('node:path').resolve(__dirname,'../server'),process,Date,Math,Map,Set,structuredClone});
  const {f,p,m}=setup(),good=f.mobView(p,10000).find(r=>r[0]===m.id);
  const {mobsFromPacket}=await import('../js/mmo/field-mobs.js');
- assert.equal(good.length,8);assert.equal(good[4],100);assert.equal(good[7],0);
- assert.equal(mobsFromPacket([good])[0].alive,true);
+ assert.equal(good.length,9);assert.equal(good[4],true);assert.equal(good[7],100);assert.equal(good[8],0);
+ assert.equal(mobsFromPacket([good])[0].alive,true);assert.equal(mobsFromPacket([good])[0].seq,0);
  const wrong=module.exports.Field.prototype.mobView.call(f,p,10000).find(r=>r[0]===m.id);
- assert.throws(()=>assert.equal(mobsFromPacket([wrong])[0].alive,true),assert.AssertionError,'HP/action slot mutation must not pass');
+ assert.throws(()=>assert.equal(typeof wrong[4],'boolean'),assert.AssertionError,'alive/HP mutation must not pass');
+ assert.throws(()=>assert.equal(mobsFromPacket([wrong])[0].seq,0),assert.AssertionError,'mutated packet loses the action sequence');
 });
 test('online action sequence changes at telegraph start and repeated hit; each windup lasts exactly 600ms',async()=>{
  const {f,p,e,m,profile}=setup(),s=f.mobStates.get(m.id);

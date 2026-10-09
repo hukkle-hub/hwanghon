@@ -1,15 +1,15 @@
 황혼 몬스터 v10 서버 연결 인계 · 2026-10-09
 
-기준: origin/main eb3056958 (LF 작업본). 문서 210·Claude 온라인 화면 반영 후 재검증.
+기준: origin/main b077bc1f0 (LF 작업본). 확정 v2 해독기·Claude 몬스터 경량 몸 반영 후 재검증.
 공유 브랜치: gpt/monster-server-v10. main 병합·Render 재배포 없음.
-중요: 이전 v1/v2 압축본은 과거 규약이다. 이 브랜치의 코드와 인계서가 대체한다.
+중요: v2의 8칸 규약을 그대로 보존하고 seq만 9번째에 추가했다. 직전 v3의 HP/seq 8칸 규약은 폐기한다. 최신 브랜치와 이번 인계서를 사용한다. 기존 v2 8칸은 순번 없이 여전히 호환된다.
 별도 작업본: work/hwanghon-monster-server-v10.
 원본/Claude의 몸체·의상·지도·화면 파일은 변경하지 않았다.
 
 구현한 것 (로컬)
 - Field.ecologies: 방문 지역마다 Ecology 하나. 원본 map.json 전체와 동일 createCollide, 서버 RNG/시각, hubOwner 사용.
 - tickBosses의 기존 20 Hz 경로에서 tickEcologies 호출. HP/damage는 Field.mobStates, 생사/리스폰은 Ecology.defeat. 사망 처리는 한 번만.
-- field와 fieldJoined의 mobs 배열: [id,catalogId,x,z,hpPercent,anim,generation,seq]. 총 8칸. hpPercent는 다섯 번째(숫자 0~100), seq는 여덟 번째(정수). 반경 28m, 가까운 순 최대 20개. anim은 idle/walk/attack/hit/die 문자열이다. 원래 Ecology.snapshot 객체는 변경하지 않았다.
+- field와 fieldJoined의 mobs 배열: [id,catalogId,x,z,alive,anim,generation,hpPercent,seq]. v2의 앞 8칸 그대로 + 9번째 seq. alive는 참/거짓, hpPercent는 여덟 번째(숫자 0~100), seq는 아홉 번째(정수). 앞 일곱 칸은 Ecology.snapshot과 정확히 같음을 시험했다. 반경 28m, 가까운 순 최대 20개. anim은 idle/walk/attack/hit/die 문자열이다. 원래 Ecology.snapshot 객체는 변경하지 않았다.
 - seq는 세대마다 0에서 시작, 예고 시작 및 피격 때 증가한다. 같은 attack/hit 사이 패킷을 놓쳐도 순번 차이로 재생한다. attack은 피해 순간이 아니라 600ms 예고 시작에 바뀐다. 피해·회복 구간은 그 공격의 같은 seq를 유지한다.
 - fieldHit {mob,generation?}, fieldSkill {skill,mob,generation?}. generation은 새 클라이언트에서 꼭 보내는 것을 권장한다. boss와 mob을 동시에 보내면 타격하지 않는다.
 - mobHit 응답: mob/catalogId/generation/dmg/crit/down/hp/reward. hp는 0~100 백분율이다. skill 타격이면 skill/ok/ready/name도 포함한다. 재사용 대기 중 유효한 몬스터 대상에는 mobHit {mob,generation,skill,ok:false,ready,name}; 피해 없음. 비공격·버프/회피 스킬이나 타격 실패는 기존 skillUsed다.
@@ -27,7 +27,7 @@
 - G2 지배형 기존 강함/등장 주기/이름은 그대로다. 이 지시서에서 미정 수치를 정하지 않았다.
 - 갈고리손은 승인용 이미지 v1만 생성. 감독 승인, visualH, GLB, 리깅·5개 클립, 확대/포즈 시트, 휴대폰 LOD 검수는 아직 없다. Hi3D 생성/다운로드/크레딧 지출 없음.
 - Claude 문서 209·210의 2D·3D 혼자 연습 및 온라인 패킷 그리기는 최신 작업본에 반영했다. js/mmo/field-mobs.js, mmo.html, world3d.html을 별도로 수정하지 않았다. 실제 서버 패킷을 현재 mobsFromPacket으로 해독하고 두 실제 소켓의 체력/세대/타격/피격 id를 시험했다. 실제 브라우저 2인 플레이·혼자 연습 몬스터 반격·모바일 FPS는 Claude 후속 검수다. Pages에 문서 210 빌드가 반영됐는지 확인한 뒤 서버를 합친다.
-- 공개 version.json 조회 결과: build eb30569, at 2026-10-09T05:12:14Z. 문서 210 화면 커밋의 Pages 배포는 확인했다. GitHub Pages/Android 워크플로는 main만 대상으로 하므로 이번 별도 브랜치 push로 실행하지 않는다. 이 확인은 실제 Render 서비스의 자동 배포 여부 증명이 아니다.
+- 공개 version.json 조회 결과: build b077bc1, at 2026-10-09T06:19:18Z. 확정 v2 해독기·경량 몬스터 몸의 Pages 배포는 확인했다. GitHub Pages/Android 워크플로는 main만 대상으로 하므로 이번 별도 브랜치 push로 실행하지 않는다. 이 확인은 실제 Render 서비스의 자동 배포 여부 증명이 아니다.
 - 공유는 gpt/monster-server-v10 브랜치만. Render 재배포/main push 없음. render.yaml의 free /tmp/hwanghon / EPHEMERAL_STORAGE=1은 재배포 초기화 위험이 있다. 실제 자동 배포 설정은 Render 작업공간 확인 전 조회 불가; 켜졌다고 단정하지 않는다. 데이터 보존 확인/초기화 허용 전 main에 합치지 않는다.
 
 순찰 경로 성능
@@ -41,13 +41,13 @@
 - loadCjs('/server/field-ecology.cjs'), loadCjs('/server/field-mob-combat.cjs'). 실제 HTTP/실제 cjs-browser.js로 로드 검증.
 - 서버 공개 파일은 이 두 모듈, field-ecology-route.cjs, field-ecology-patrols.json만 명시 허용. field.cjs/store/index/rpg-store 등 서버 소스는 여전히 404.
 - 공유 CJS의 Ecology 생성자는 원본 캐논 형식 {MonsterId,Grade,...}을 받는다. Claude의 기존 ecologyCatalog(CATALOG)를 쓰면 된다. 해당 함수/원본 캐논 일치 시험은 유지한다. 감독 캐논을 별도로 재해석하지 않는다.
-- 온라인은 현재 mobsFromPacket(rows)를 그대로 사용한다. [id,catalogId,x,z,hpPercent,anim,generation,seq]를 실제 함수로 해독하여 HP/생사/순번을 검증했다. attack/hit이라는 동작 이름은 확정된 연결 규약이다. 아직 실제 갈고리손 클립이 생성됐다는 뜻은 아니다.
+- 온라인은 현재 mobsFromPacket(rows)를 그대로 사용한다. [id,catalogId,x,z,alive,anim,generation,hpPercent,seq]를 실제 함수로 해독하여 HP/생사/순번을 검증했다. 8번째 체력을 순번으로 오해하지 않고 9번째 순번으로 연속 attack/hit을 다시 재생한다. attack/hit이라는 동작 이름은 확정된 연결 규약이다. 아직 실제 갈고리손 클립이 생성됐다는 뜻은 아니다.
 - generation이 바뀌면 옛 엔티티의 HP/클립/락온을 버리고 새 개체로 취급한다. 매 패킷에 mobs=[]도 보내므로 AOI 밖/시체 만료 제거를 처리한다.
 
 검증
 - 최종 결과: docs/design/ref/monster-server-v10-qa/verification.json 및 full-tests.log.
 - 서버 시간 측정: server-timing.json. 100명·18지역·45사냥터·535마리·200틱의 로컬 CPU 측정이며 Android FPS 증명이 아니다. AI에 필요한 모델/피부/애니메이션은 검사한 것으로 치지 않는다.
-- 전용 시험: tests/field-mob-integration.test.cjs + field-mob-socket.test.cjs (20개). Claude field-mobs.test.mjs 4개와 함께 전용 24개 통과. 두 소켓 시험은 브라우저 렌더 영상 검수와 구별한다.
+- 전용 시험: tests/field-mob-integration.test.cjs + field-mob-socket.test.cjs (20개). Claude field-mobs.test.mjs 5개와 함께 전용 25개 통과. 두 소켓 시험은 브라우저 렌더 영상 검수와 구별한다.
 - 원래의 180 순찰 변/anchorAdjustments=0 시험도 유지·통과 확인. 거리 제한을 제거한 부정 검증에서 시험이 실제 실패함을 확인.
 
 동기화 주의
