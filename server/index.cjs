@@ -2,10 +2,15 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {WebSocketServer,WebSocket}=require('ws'),{Store}=require('./store.cjs'),{Raid}=require('./raid.cjs'),C=require('./content.cjs');
 const WIRE=require('../js/party-wire.js');
 const ROOT=path.resolve(__dirname,'..');
+/* Explicit public allowlist for offline AI; never serve arbitrary server source,
+   stores, account code or filesystem adapters. */
+const PUBLIC_MOB_MODULES=new Set(['/server/field-ecology.cjs','/server/field-ecology-route.cjs',
+ '/server/field-mob-combat.cjs','/server/field-ecology-patrols.json']);
 const os=require('node:os'),{createRpgCommands}=require('./rpg-server.cjs'),{Field}=require('./field.cjs'),BAG=require('./field-bag.cjs'),NODE=require('./node-store.cjs');
 function createPartyServer(options={}){
  const store=options.store||new Store(options.dataDir||process.env.DATA_DIR||path.join(ROOT,'.party-data'));
- const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field({store,emit:ev=>announce(ev)});   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) · 필드 보스 (188) */
+ const rooms=new Map(),sessions=new Map(),memberships=new Map(),connections=new Set(),histories=new Map(),authAttempts=new Map();let closing=false,pendingAuth=0,chatSerial=0;const field=new Field({store,emit:ev=>announce(ev),
+  mobRewards:options.mobRewards||null,onMobReward:p=>{profileUpdate(p);rpg.update(p.id);}});   /* 2D 맵 MMORPG 필드 (docs/design/185 §6.4) · 필드 보스 (188) */
  /* 서버 전체 알림 — 보스 출현·처치·전설 획득은 모든 지역의 모두에게 (188 §5). 재료를 받은 사람은 프로필을 다시 보낸다 */
  function announce(ev){const {changed,...msg}=ev;for(const ws of sessions.values())send(ws,msg);for(const pid of changed||[]){try{profileUpdate(store.public(pid));}catch{}}}const stats={bytesSent:0,messagesSent:0,droppedSteps:0,backpressure:0};
  const maxRooms=options.maxRooms||Number(process.env.MAX_ROOMS||32),maxPlayers=options.maxPlayers||Number(process.env.MAX_PLAYERS||100),maxConnections=options.maxConnections||maxPlayers+32;
@@ -16,7 +21,7 @@ function createPartyServer(options={}){
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);return res.end();}
   let name;try{name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}catch{res.writeHead(400);return res.end();}
   if(name==='/')name='/party.html';
-  const parts=name.split('/').filter(Boolean),allowed=parts.length===1&&(/^[\w-]+\.html$/.test(parts[0])||['manifest.json','sw.js'].includes(parts[0]))||['art','css','js','vendor','maps','design-sheets'].includes(parts[0]);
+  const parts=name.split('/').filter(Boolean),allowed=PUBLIC_MOB_MODULES.has(name)||parts.length===1&&(/^[\w-]+\.html$/.test(parts[0])||['manifest.json','sw.js'].includes(parts[0]))||['art','css','js','vendor','maps','design-sheets'].includes(parts[0]);
   if(!allowed||parts.some(p=>p.startsWith('.')||p.includes('\\'))){res.writeHead(404);return res.end();}
   const file=path.resolve(ROOT,'.'+name);if(!file.startsWith(ROOT+path.sep)){res.writeHead(404);return res.end();}
   fs.stat(file,(err,stat)=>{if(err||!stat.isFile()){res.writeHead(404);return res.end();}const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.json':'application/json','.glb':'model/gltf-binary','.svg':'image/svg+xml','.png':'image/png','.webp':'image/webp','.wasm':'application/wasm'};res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream','Content-Length':stat.size,'Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(file).on('error',()=>res.destroy()).pipe(res);});
