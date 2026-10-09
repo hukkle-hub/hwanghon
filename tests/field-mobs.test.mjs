@@ -52,7 +52,8 @@ test('온라인 연결: 2D·3D 가 서버 mobs 를 그리고, 칠 때 mob 과 ge
   assert.match(m, /type:'fieldSkill',skill:sk\.i,mob:v\.id,generation:v\.gen\}:\{type:'fieldHit',mob:v\.id,generation:v\.gen\}/, '2D 타격에 mob·generation');
   assert.match(m, /if\(net&&OFF\.MOBS\) OFF\.MOBS\.update\(netMobs,dt\)/, '2D 온라인 몬스터를 매 프레임 그리지 않는다');
   assert.match(w, /net\.send\(\{ type: 'fieldHit', mob: v\.id, generation: v\.gen \}\)/, '3D 타격에 mob·generation');
-  assert.match(w, /else if \(net && MOBS\) MOBS\.update\(netMobs, dt\);/, '3D 온라인 몬스터를 매 프레임 그리지 않는다');
+  assert.match(w, /else if \(net && \(MOBS \|\| netMobs\.length\)\) mobView\(\)\.update\(netMobs, dt\);/, '3D 온라인 몬스터를 매 프레임 그리지 않는다');
+  assert.ok(w.indexOf('let netMobs = []') < w.indexOf('net = await connectField'), '3D: 입장 답(fieldJoined)이 netMobs 선언보다 먼저 온다 — 실제 서버에서 ReferenceError');
   for (const [src, re] of [[m, /v\.gen!==m\.generation/], [w, /v\.gen !== m\.generation/]]) assert.match(src, re, '다시 난 개체에 옛 mobHit 을 그린다');
   assert.match(v, /if \(!v\) \{ if \(!s\.alive\) continue;/, '시체를 새로 만들면 지운 뒤 다시 살아나 또 죽는다');
   assert.match(v, /n === 'attack'/, '공격 예고 고리가 없다 — 보이지 않는 공격에 맞는다');
