@@ -46,6 +46,11 @@ GPT 서버 인계서(`monster-v10-server-handoff-2026-10-09.txt`)를 받았다. 
   `net-3d-bigmap.png` (펼친 지도 점).
 - 숫자: 옛 세대 mobHit → 체력 그대로(100 → 100). 순번 1 → 2 에서 `attack` 클립 시각 0.54 → 0.05, 고리 다시 차오름.
 
+## 5. 남은 것
+
+- GPT 서버 코드가 저장소에 들어오면: 실제 서버로 두 사람 접속해 보기(`recruit-scenario` 처럼 한 프로세스에서), 혼자 연습에 `server/field-mob-combat.cjs` 를 브라우저로 돌려 공격까지.
+- 지시서: `docs/gpt/2026-10-09-monster-server-merge.md`.
+
 ## 6. 휴대폰 무게 — 몬스터 전용 임시 몸
 
 서버는 한 사람에게 몬스터를 최대 20마리(28 m) 보낸다. 대전 중앙로 폐허 거리에서 20마리를 한 화면에 세우고 장면을 직접 한 번 그려 쟀다 (Pixel 7 가로, 3D 는 휴대폰 LOD 켜짐).
@@ -62,8 +67,3 @@ GPT 서버 인계서(`monster-v10-server-handoff-2026-10-09.txt`)를 받았다. 
 - 몸: `tools/2d/make-mob-body.mjs` — 류 원본 6만 → **4,198 삼각형**, 텍스처 256 webp, 클립은 그리기가 쓰는 다섯(idle·walk·attack1·hit·death)만, 0.75 MB. `art/3d/lod/mob_temp.glb`. 2D·3D 둘 다 이것을 쓴다(몬스터는 화면에서 작다).
 - 확대 비교 `.node-shots/mobs/mob-body-zoom.png` (왼쪽 둘 = 새 몸, 오른쪽 = 이전 휴대폰 LOD 1.5만) — 이 거리에서 구멍·찢김 없음.
 - 실기 FPS 는 아직 아니다(헤드리스 소프트웨어 렌더). 시험: 클립 다섯이 다 있는지 · 6천 삼각형 아래인지 · 두 화면이 이 몸을 쓰는지 (클립 이름을 틀어 실패 확인).
-
-## 5. 남은 것
-
-- GPT 서버 코드가 저장소에 들어오면: 실제 서버로 두 사람 접속해 보기(`recruit-scenario` 처럼 한 프로세스에서), 혼자 연습에 `server/field-mob-combat.cjs` 를 브라우저로 돌려 공격까지.
-- 지시서: `docs/gpt/2026-10-09-monster-server-merge.md`.
