@@ -1,0 +1,184 @@
+{
+  "Version": "v10",
+  "Status": "canon-only-local-not-deployed",
+  "Validation": {
+    "species": 68,
+    "preserved": 63,
+    "added": 5,
+    "gradeCounts": [
+      20,
+      15,
+      10,
+      15,
+      5,
+      3
+    ]
+  },
+  "PreservedSource": {
+    "Path": "docs/design/ref/monster-catalog-v09/MonsterRoster_v09.json",
+    "SHA256": "90bc998717eca268b2f727f85376a0b331daf7e5d2b5f61e02d533535f982ee3"
+  },
+  "GeneratedWebTableChanged": false,
+  "MapsChanged": false,
+  "RuntimeImplemented": false,
+  "GLBValidated": false,
+  "Consumer": "Claude regenerates js/mmo/monster-catalog.js and patch-areas from this source.",
+  "SchemaCompatibility": "Original PascalCase fields and string arrays preserved; NameDraft/CombatDraft flags only on new species.",
+  "Dominators": [
+    {
+      "MonsterId": "G2_DOM_THORNCROWN",
+      "FieldId": "t2_dominator_f",
+      "Grade": 2,
+      "NameStatus": "draft",
+      "CombatStatus": "provisional-from-existing-web-table",
+      "VisualReference": "docs/design/ref/field-monsters-grade12/grade1-reference.png",
+      "ReferenceSHA256": "4b0fe45b2baa16bf14534872484dd2645da1ca4b647db5d7f471b50b65f12ef6",
+      "ReinterpretationAllowed": false,
+      "ApprovedAppearanceDescription": "은발 장발 · 가시 왕관 · 찢긴 검은 드레스와 붉은 감염 혈관 · 금빛 사슬과 십자 · 가시 굽 부츠 · 붉은 손톱. 인간형·귀족적, 괴물화 금지",
+      "ExistingBody": {
+        "model": "art/3d/sera_anim.glb",
+        "visualH": 2.25,
+        "tint": 2755602,
+        "glow": 9043984,
+        "Status": "hero-placeholder-not-approved-monster"
+      },
+      "UnapprovedExistingBalance": {
+        "HP": 3000000,
+        "Cycle": {
+          "period": "10m",
+          "start": "1m",
+          "end": "3m"
+        }
+      },
+      "PendingDirectorDecisions": [
+        "final-name",
+        "strength-without-hp-sponge",
+        "encounter-frequency"
+      ]
+    },
+    {
+      "MonsterId": "G2_DOM_BLACKCOAT",
+      "FieldId": "t2_dominator_m",
+      "Grade": 2,
+      "NameStatus": "draft",
+      "CombatStatus": "provisional-from-existing-web-table",
+      "VisualReference": "docs/design/ref/field-monsters-grade12/grade2-reference.png",
+      "ReferenceSHA256": "4038f16072964555d730dcd439b87ea75c7f4a53652cb35ed9fbb4aea92e034a",
+      "ReinterpretationAllowed": false,
+      "ApprovedAppearanceDescription": "흑발 장발 · 가시 머리장식 · 검은 롱코트(붉은 안감)와 사슬·십자 · 붉은 감염 혈관이 감긴 손 · 전투화. 인간형·귀족적, 괴물화 금지",
+      "ExistingBody": {
+        "model": "art/3d/kain_anim.glb",
+        "visualH": 2.35,
+        "tint": 1706510,
+        "glow": 7995408,
+        "Status": "hero-placeholder-not-approved-monster"
+      },
+      "UnapprovedExistingBalance": {
+        "HP": 3000000,
+        "Cycle": {
+          "period": "10m",
+          "start": "1m",
+          "end": "3m"
+        }
+      },
+      "PendingDirectorDecisions": [
+        "final-name",
+        "strength-without-hp-sponge",
+        "encounter-frequency"
+      ]
+    },
+    {
+      "MonsterId": "G2_DOM_SILENCE",
+      "FieldId": "t2_dominator_silence",
+      "Grade": 2,
+      "NameStatus": "draft",
+      "CombatStatus": "provisional-from-existing-web-table",
+      "VisualReference": "docs/design/ref/field-monsters-grade12/grade2-silence-reference.png",
+      "ReferenceSHA256": "32894fe7f329fd726d20541f59d2cdde6f6083b403cfccb334af56db50428edf",
+      "ReinterpretationAllowed": false,
+      "ApprovedAppearanceDescription": "회색 짧은 머리 청년 · 높은 깃의 검은 재킷과 붉은 술·하네스 · 꽃무늬 검은 천 · 버클 전투화 · 목·손등의 붉은 감염 문양 · 붉은 술 단 검. «아름다움은 침묵 속에서 더 강해진다»",
+      "ExistingBody": {
+        "model": "art/3d/ryu_anim.glb",
+        "visualH": 2.2,
+        "tint": 1837838,
+        "glow": 7995408,
+        "Status": "hero-placeholder-not-approved-monster"
+      },
+      "UnapprovedExistingBalance": {
+        "HP": 3000000,
+        "Cycle": {
+          "period": "10m",
+          "start": "1m",
+          "end": "3m"
+        }
+      },
+      "PendingDirectorDecisions": [
+        "final-name",
+        "strength-without-hp-sponge",
+        "encounter-frequency"
+      ]
+    },
+    {
+      "MonsterId": "G2_DOM_CRIMSON",
+      "FieldId": "t2_dominator_crimson",
+      "Grade": 2,
+      "NameStatus": "draft",
+      "CombatStatus": "provisional-from-existing-web-table",
+      "VisualReference": "docs/design/ref/field-monsters-grade12/grade2-crimson-blade-reference.png",
+      "ReferenceSHA256": "30511352dcc93248f8dd1056151a13dedc382f3172dfa9285230d5e986ccb451",
+      "ReinterpretationAllowed": false,
+      "ApprovedAppearanceDescription": "검은 단발 여성 · 검붉은 재킷과 끈 하네스 · 붉은 결정이 돋은 팔 · 꽃무늬 천 · 굽 높은 버클 부츠 · 붉은 날의 검. «아름다움도 무기가 된다»",
+      "ExistingBody": {
+        "model": "art/3d/sera_anim.glb",
+        "visualH": 2.2,
+        "tint": 2492944,
+        "glow": 10092564,
+        "Status": "hero-placeholder-not-approved-monster"
+      },
+      "UnapprovedExistingBalance": {
+        "HP": 3000000,
+        "Cycle": {
+          "period": "10m",
+          "start": "1m",
+          "end": "3m"
+        }
+      },
+      "PendingDirectorDecisions": [
+        "final-name",
+        "strength-without-hp-sponge",
+        "encounter-frequency"
+      ]
+    },
+    {
+      "MonsterId": "G2_DOM_BLOODFLOWER",
+      "FieldId": "t2_dominator_bloodflower",
+      "Grade": 2,
+      "NameStatus": "draft",
+      "CombatStatus": "provisional-from-existing-web-table",
+      "VisualReference": "docs/design/ref/field-monsters-grade12/grade2-blood-flower-reference.png",
+      "ReferenceSHA256": "13d8e31ab095e82330a562ae9363b91aad583670dca819b99723591339322ec2",
+      "ReinterpretationAllowed": false,
+      "ApprovedAppearanceDescription": "긴 머리를 묶은 거친 남성 · 흉터 · 결정 가시가 돋은 검은 갑주 팔 · 붉은 술과 하네스 · 꽃무늬 천 · 전투화 · 검 «血華». «아름다운 붉음은 언제나 더 깊이 퍼진다»",
+      "ExistingBody": {
+        "model": "art/3d/kain_anim.glb",
+        "visualH": 2.35,
+        "tint": 1706252,
+        "glow": 9043986,
+        "Status": "hero-placeholder-not-approved-monster"
+      },
+      "UnapprovedExistingBalance": {
+        "HP": 3000000,
+        "Cycle": {
+          "period": "10m",
+          "start": "1m",
+          "end": "3m"
+        }
+      },
+      "PendingDirectorDecisions": [
+        "final-name",
+        "strength-without-hp-sponge",
+        "encounter-frequency"
+      ]
+    }
+  ]
+}

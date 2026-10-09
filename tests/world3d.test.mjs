@@ -246,3 +246,13 @@ test('3D 필드 미니맵: 2D 필드와 같은 개관 그림·같은 좌표식 �
   assert.match(w, /if \(frames % 3 === 0\) miniTick\(\); areaTick\(dt\);/, '미니맵·사냥터 띠를 안 돌린다');
   assert.match(w, /#mini\[hidden\]\{ display:none; \}/, '개관 그림 없는 지역(실내)에 빈 미니맵이 뜬다');
 });
+
+test('회복약: 3D 필드 단추·Q · 온라인은 서버 가방(fieldBag use) · 혼자 연습(2D·3D)은 서버와 같은 35%·1초 규칙', () => {
+  const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8'), m = fs.readFileSync(path.join(ROOT, 'mmo.html'), 'utf8'), s = fs.readFileSync(path.join(ROOT, 'server/field.cjs'), 'utf8');
+  const [, heal, gap] = /const POTION_HEAL=([\d.]+), POTION_GAP=(\d+);/.exec(s);
+  assert.match(w, new RegExp('const POTION_HEAL = ' + heal.replace('.', '\\.').replace(/^\\?\./, '0?\\.') + ', POTION_GAP = ' + gap), '3D 혼자 연습 회복약이 서버 값과 다르다');
+  assert.match(m, new RegExp('Math\\.round\\(P\\.maxHp\\*' + heal.replace('.', '\\.') + '\\); P\\.hp=Math\\.min\\(P\\.maxHp,P\\.hp\\+heal\\); P\\.potionReady=now\\+' + gap), '2D 혼자 연습 회복약이 서버 값과 다르다');
+  assert.match(w, /net\.send\(\{ type: 'fieldBag', op: 'use', item: 'c_potion' \}\)/, '3D 온라인 회복약이 서버 가방을 안 쓴다');
+  assert.match(m, /function drinkPotion\(\)\{ if\(!net\)\{ offPotion\(\); return; \}/, '2D 혼자 연습 회복약이 없다');
+  assert.match(w, /if \(e\.code === 'KeyQ'\) drink\(\);/, 'Q 키');
+});

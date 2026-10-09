@@ -1,0 +1,63 @@
+{
+  "Version": "v10",
+  "Status": "local-foundation-not-runtime-integrated",
+  "SourceCommit": "6c1a5d53a",
+  "Canon": { "Complete": true, "Species": 68, "OriginalSpeciesPreserved": 63, "NewGrade2Dominators": 5 },
+  "Component": "server/field-ecology.cjs",
+  "ImplementedLocally": [
+    "three nests of 2-4 members and one patrol group per assigned hunt",
+    "bounded A* detours using the shared terrain collision adapter",
+    "whole-segment sanctuary checks, including thin crossings",
+    "rare replacement of one unengaged nest, never a second simultaneous rare nest",
+    "night-context weighting on subsequent spawn without altering living species",
+    "NodeInvasion-context species for the first nest on subsequent spawn",
+    "idempotent defeat, corpse expiry, respawn and monotonically increasing spawn generation",
+    "nearest-first 28m occupancy snapshots capped at 20 records",
+    "same source loads through js/mmo/cjs-browser.js without node builtins"
+  ],
+  "Checks": {
+    "FocusedTestsPassed": 24,
+    "FocusedTestsFailed": 0,
+    "RealHuntsSpawnedAndChecked": 45,
+    "RealMovementSampleSeconds": 3,
+    "FixtureFullPatrolLoopChecked": true,
+    "AllRealFullPatrolLoopsChecked": false,
+    "RealPatrolSegmentsAudited": 180,
+    "SegmentsWithValidatedRoute": 174,
+    "SegmentsWithoutRouteWithinSearchBudget": 6,
+    "VisualQA": "not-performed-no-model-or-game-screen-changes",
+    "DeviceFPS": "not-measured",
+    "FullRegression": { "Tests": 919, "Passed": 917, "Failed": 0, "Skipped": 2, "DurationMs": 129217.4708, "Log": "output/monster208-full-tests-after-final-fixes.log", "Environment": "Windows fresh worktree text line endings temporarily normalized to LF; no gameplay/content modifications to tracked sources" }
+  },
+  "UnresolvedPatrolSegments": [
+    { "Zone": "jeonju", "Area": "right", "FromPoint": 0, "ToPoint": 1 },
+    { "Zone": "jeonju", "Area": "right", "FromPoint": 1, "ToPoint": 2 },
+    { "Zone": "pangyo", "Area": "ruins", "FromPoint": 0, "ToPoint": 1 },
+    { "Zone": "pangyo", "Area": "ruins", "FromPoint": 2, "ToPoint": 3 },
+    { "Zone": "suwon", "Area": "mid", "FromPoint": 2, "ToPoint": 3 },
+    { "Zone": "suwon", "Area": "mid", "FromPoint": 3, "ToPoint": 0 }
+  ],
+  "RuntimeOnlyClearanceAdjustment": {
+    "Zone": "southroad", "Area": "yard", "Kind": "nests", "Index": 2,
+    "Original": [-187.13, -135.82], "Adjusted": [-186.77644660940672, -136.17355339059327],
+    "DistanceMeters": 0.5, "OriginalMapOverwritten": false
+  },
+  "ProvisionalEcologyPolicy": {
+    "RareIntervalMs": [600000, 1200000], "RespawnMs": 30000, "CorpseMs": 2000,
+    "PatrolSpeedMetersPerSecond": 1.6,
+    "Meaning": "local test defaults only, not dominator encounter-frequency approval"
+  },
+  "RemainingGates": [
+    "resolve six real patrol segments and test full real patrol circuits",
+    "approved monster GLBs with idle/walk/attack/hit/die and enlarged visual QA",
+    "Field server population, authoritative HP, attacks via bossStrike and hurt[6] timestamps",
+    "Field hit/skill protocol, rewards via addItems and XP; no bossLoot for normal monsters",
+    "2D/3D client loaders and offline ecology integration",
+    "crowd spacing and measured 20-monster/10-player Android performance",
+    "UE catalog and mixed grade-4 N01 wave integration",
+    "authorized deployment and deployed-build verification"
+  ],
+  "Hi3D": { "CredentialEnvironmentNamesChecked": ["HI3D_CLIENT_ID", "HI3D_CLIENT_SECRET"], "PresentInProcess": false, "GenerationSubmitted": false, "CreditsSpent": 0 },
+  "DirectorDecisionsNotMade": ["dominator strength without HP sponge", "dominator cadence", "final five names"],
+  "Deployment": { "GitPush": false, "Render": false, "ServerDataReset": false }
+}

@@ -1,0 +1,2552 @@
+{
+  "Version": "v10",
+  "Meaning": "Current map/server placements only; not director-approved recommended levels.",
+  "Species": [
+    {
+      "MonsterId": "G5_WALKER",
+      "CurrentPlacementLevelBand": [
+        3,
+        56
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            15
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            32,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "ruins",
+          "Rarity": "common",
+          "LevelBand": [
+            37,
+            40
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            5,
+            8
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            3,
+            6
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            6,
+            8
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_RUNNER",
+      "CurrentPlacementLevelBand": [
+        12,
+        54
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            14,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            15
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            30,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            51,
+            54
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "park",
+          "Rarity": "common",
+          "LevelBand": [
+            20,
+            25
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_BREAKER",
+      "CurrentPlacementLevelBand": [
+        24,
+        40
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            24,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "ruins",
+          "Rarity": "common",
+          "LevelBand": [
+            37,
+            40
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_STALKER",
+      "CurrentPlacementLevelBand": [
+        12,
+        55
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            23,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeryong",
+          "Area": "ridge",
+          "Rarity": "common",
+          "LevelBand": [
+            45,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            32,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            33,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            52,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeN",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_ARMORED",
+      "CurrentPlacementLevelBand": [
+        18,
+        57
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "avenue",
+          "Rarity": "common",
+          "LevelBand": [
+            35,
+            37
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "ruins",
+          "Rarity": "common",
+          "LevelBand": [
+            37,
+            40
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "yard",
+          "Rarity": "common",
+          "LevelBand": [
+            43,
+            45
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "canyon",
+          "Rarity": "common",
+          "LevelBand": [
+            18,
+            21
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_RESONATOR",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_CLIMBER",
+      "CurrentPlacementLevelBand": [
+        12,
+        56
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            14,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            15,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            23,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            46,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeryong",
+          "Area": "ridge",
+          "Rarity": "common",
+          "LevelBand": [
+            45,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            52,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            50,
+            53
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeN",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeS",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            56
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_LURKER",
+      "CurrentPlacementLevelBand": [
+        28,
+        55
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            28,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "valley",
+          "Rarity": "common",
+          "LevelBand": [
+            41,
+            45
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_HOOKHAND",
+      "CurrentPlacementLevelBand": [
+        18,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            30,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            56,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            75,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            76,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            32,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            80,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            78,
+            81
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            81,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            51,
+            54
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "canyon",
+          "Rarity": "common",
+          "LevelBand": [
+            18,
+            21
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_CAPTOR",
+      "CurrentPlacementLevelBand": [
+        20,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            29,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            56,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            75,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            76,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            78,
+            81
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            81,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            25,
+            28
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            51,
+            54
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            54,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "park",
+          "Rarity": "common",
+          "LevelBand": [
+            20,
+            25
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_SHOVER",
+      "CurrentPlacementLevelBand": [
+        6,
+        53
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            15,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            44,
+            47
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            47,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            50,
+            53
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            28,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "road",
+          "Rarity": "common",
+          "LevelBand": [
+            40,
+            42
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            6,
+            8
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "park",
+          "Rarity": "common",
+          "LevelBand": [
+            20,
+            25
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_WATCHER",
+      "CurrentPlacementLevelBand": [
+        12,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            14,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "chuncheon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            15,
+            17
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            46,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            44,
+            47
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            47,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            50,
+            53
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeN",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeS",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            80,
+            83
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_CALLER",
+      "CurrentPlacementLevelBand": [
+        12,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            46,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeryong",
+          "Area": "ridge",
+          "Rarity": "common",
+          "LevelBand": [
+            45,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            52,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "namsan",
+          "Area": "slopeS",
+          "Rarity": "common",
+          "LevelBand": [
+            12,
+            16
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            81,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "valley",
+          "Rarity": "common",
+          "LevelBand": [
+            41,
+            45
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "canyon",
+          "Rarity": "common",
+          "LevelBand": [
+            18,
+            21
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_CARRIER",
+      "CurrentPlacementLevelBand": [
+        25,
+        58
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            29,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            30,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            56,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            25,
+            28
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "yard",
+          "Rarity": "common",
+          "LevelBand": [
+            43,
+            45
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_THROWER",
+      "CurrentPlacementLevelBand": [
+        5,
+        42
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            33,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "avenue",
+          "Rarity": "common",
+          "LevelBand": [
+            35,
+            37
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "road",
+          "Rarity": "common",
+          "LevelBand": [
+            40,
+            42
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            5,
+            8
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_SLASHER",
+      "CurrentPlacementLevelBand": [
+        28,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            44,
+            47
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            47,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            76,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            33,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            53,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            80,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            78,
+            81
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            28,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "valley",
+          "Rarity": "common",
+          "LevelBand": [
+            41,
+            45
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_JAMMER",
+      "CurrentPlacementLevelBand": [
+        24,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            24,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            75,
+            78
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_SHIELDER",
+      "CurrentPlacementLevelBand": [
+        3,
+        45
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "avenue",
+          "Rarity": "common",
+          "LevelBand": [
+            35,
+            37
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "road",
+          "Rarity": "common",
+          "LevelBand": [
+            40,
+            42
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "yard",
+          "Rarity": "common",
+          "LevelBand": [
+            43,
+            45
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "suwon",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            3,
+            6
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_ECHO",
+      "CurrentPlacementLevelBand": [
+        23,
+        26
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            23,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "right",
+          "Rarity": "common",
+          "LevelBand": [
+            24,
+            26
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G5_PARASITE",
+      "CurrentPlacementLevelBand": [
+        25,
+        58
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            29,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "left",
+          "Rarity": "common",
+          "LevelBand": [
+            55,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "mid",
+          "Rarity": "common",
+          "LevelBand": [
+            25,
+            28
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_VANGUARD",
+      "CurrentPlacementLevelBand": [
+        33,
+        45
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            33,
+            35
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "avenue",
+          "Rarity": "rare",
+          "LevelBand": [
+            35,
+            37
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "yard",
+          "Rarity": "rare",
+          "LevelBand": [
+            43,
+            45
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_HARRIER",
+      "CurrentPlacementLevelBand": [
+        20,
+        32
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            24,
+            26
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            30,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeouido",
+          "Area": "park",
+          "Rarity": "rare",
+          "LevelBand": [
+            20,
+            25
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_SAPPER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_WARDEN",
+      "CurrentPlacementLevelBand": [
+        37,
+        40
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "pangyo",
+          "Area": "ruins",
+          "Rarity": "rare",
+          "LevelBand": [
+            37,
+            40
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_CONDUCTOR",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_DUELIST",
+      "CurrentPlacementLevelBand": [
+        32,
+        49
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            47,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeonju",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            32,
+            35
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_HEMOSTAT",
+      "CurrentPlacementLevelBand": [
+        23,
+        26
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "daejeon",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            23,
+            26
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_LEAPER",
+      "CurrentPlacementLevelBand": [
+        44,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            44,
+            47
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            76,
+            78
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_SILENCER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_BINDER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_STITCHER",
+      "CurrentPlacementLevelBand": [
+        25,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            29,
+            32
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            75,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            81,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            25,
+            28
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            28,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            51,
+            54
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_BACKFLOW",
+      "CurrentPlacementLevelBand": [
+        45,
+        55
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeryong",
+          "Area": "ridge",
+          "Rarity": "rare",
+          "LevelBand": [
+            45,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            52,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            50,
+            53
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            55
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_GAMEKEEPER",
+      "CurrentPlacementLevelBand": [
+        40,
+        49
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            46,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "road",
+          "Rarity": "rare",
+          "LevelBand": [
+            40,
+            42
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "southroad",
+          "Area": "valley",
+          "Rarity": "rare",
+          "LevelBand": [
+            41,
+            45
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_STANDARD_BEARER",
+      "CurrentPlacementLevelBand": [
+        27,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            54,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            55,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongpo",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            55,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            56,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            80,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            78,
+            81
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "sokcho",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            27,
+            30
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            54,
+            56
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G4_SPLITTER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_BLACKBLADE",
+      "CurrentPlacementLevelBand": [
+        45,
+        58
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            47,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeryong",
+          "Area": "ridge",
+          "Rarity": "rare",
+          "LevelBand": [
+            45,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            56,
+            58
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_REDFLOWER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_SHADOWLESS",
+      "CurrentPlacementLevelBand": [
+        50,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            50,
+            53
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            80,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            78,
+            81
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_IRONFLOWER",
+      "CurrentPlacementLevelBand": [
+        76,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            76,
+            78
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_REQUIEM",
+      "CurrentPlacementLevelBand": [
+        51,
+        54
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            51,
+            54
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_BLOODMOON_SWORD",
+      "CurrentPlacementLevelBand": [
+        46,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            54,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "busan",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            55,
+            57
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "gyeongju",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            46,
+            49
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            55,
+            58
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "haeundae",
+          "Area": "mid",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            56
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "jeju",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            75,
+            78
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            54,
+            56
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_CRIMSON_GUARD",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_GOLDEN_CHAIN",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_WHITE_NIGHT",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G3_JUDICATOR",
+      "CurrentPlacementLevelBand": [
+        52,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            52,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "mokpo",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            55
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "Rarity": "rare",
+          "LevelBand": [
+            81,
+            83
+          ]
+        },
+        {
+          "Source": "map-pool",
+          "Zone": "yeosu",
+          "Area": "left",
+          "Rarity": "rare",
+          "LevelBand": [
+            53,
+            56
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_GUIDE",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_VEILMASTER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_CONTROLLER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_EXECUTOR",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_CHOIRMASTER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_GATEKEEPER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_RECLAIMER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_APOSTLE",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_WHITEFACE",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_TAILOR",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G1_WALLBREAKER",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G1_SIGNAL",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G1_RAMPAGE",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G1_BLACK_CHOIR",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G1_THRONE",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "SP_RELAY_LEEJUNHYEOK",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "SP_BLACKMOON_SEORIN",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "SP_DAWN_HANSEOHA",
+      "CurrentPlacementLevelBand": null,
+      "Placements": [],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_DOM_THORNCROWN",
+      "CurrentPlacementLevelBand": [
+        78,
+        81
+      ],
+      "Placements": [
+        {
+          "Source": "field-monsters",
+          "FieldId": "t2_dominator_f",
+          "Zone": "seogwipo",
+          "Area": "mid",
+          "LevelBand": [
+            78,
+            81
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_DOM_BLACKCOAT",
+      "CurrentPlacementLevelBand": [
+        75,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "field-monsters",
+          "FieldId": "t2_dominator_m",
+          "Zone": "jeju",
+          "Area": "left",
+          "LevelBand": [
+            75,
+            78
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_DOM_SILENCE",
+      "CurrentPlacementLevelBand": [
+        80,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "field-monsters",
+          "FieldId": "t2_dominator_silence",
+          "Zone": "seogwipo",
+          "Area": "left",
+          "LevelBand": [
+            80,
+            83
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_DOM_CRIMSON",
+      "CurrentPlacementLevelBand": [
+        76,
+        78
+      ],
+      "Placements": [
+        {
+          "Source": "field-monsters",
+          "FieldId": "t2_dominator_crimson",
+          "Zone": "jeju",
+          "Area": "right",
+          "LevelBand": [
+            76,
+            78
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    },
+    {
+      "MonsterId": "G2_DOM_BLOODFLOWER",
+      "CurrentPlacementLevelBand": [
+        81,
+        83
+      ],
+      "Placements": [
+        {
+          "Source": "field-monsters",
+          "FieldId": "t2_dominator_bloodflower",
+          "Zone": "seogwipo",
+          "Area": "right",
+          "LevelBand": [
+            81,
+            83
+          ]
+        }
+      ],
+      "RecommendedLevelBand": null,
+      "RecommendationStatus": "pending-balance-review"
+    }
+  ]
+}

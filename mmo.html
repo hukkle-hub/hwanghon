@@ -59,7 +59,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 @media (max-height:500px){ #ann{top:34px;gap:2px} #ann div{font-size:11px;padding:4px 12px} #ann div.big{font-size:13px;padding:5px 16px} }   /* 휴대폰 가로 — 세 줄이 이름표를 덮었다 */
 .dmg{position:absolute;transform:translate(-50%,-100%);font-weight:800;font-size:15px;color:#ffe2c8;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none;white-space:nowrap}
 .dmg.crit{font-size:21px;color:#ffcf40;text-shadow:0 0 8px #ff6010,0 1px 2px #000}
-.dmg.taken{font-size:18px;color:#ff6b52;text-shadow:0 0 8px #b01008,0 1px 2px #000}.dmg.evade{font-size:14px;color:#7ee8ff;text-shadow:0 0 8px #1680a0,0 1px 2px #000}
+.dmg.taken{font-size:18px;color:#ff6b52;text-shadow:0 0 8px #b01008,0 1px 2px #000}.dmg.evade{font-size:14px;color:#7ee8ff;text-shadow:0 0 8px #1680a0,0 1px 2px #000}.dmg.heal{font-size:15px;color:#8fe0a0;text-shadow:0 0 8px #187a30,0 1px 2px #000}
 .tag.loot{font-size:12px;letter-spacing:.04em}.tag.loot small{display:block;font-size:9px;opacity:.75;font-weight:500}
 .gatebtn.loot{border-color:rgba(240,176,64,.85);color:#ffe6b8;background:rgba(26,18,4,.86);box-shadow:0 0 18px rgba(240,170,60,.3);bottom:calc(90px + env(safe-area-inset-bottom))}
 @media (orientation:portrait){ .gatebtn.loot{bottom:calc(270px + env(safe-area-inset-bottom))} }
@@ -592,6 +592,9 @@ function bossDie(o){ o.alive=false; o.dieT=1.2; o.netAct=null;hideBossMotion(o);
    결과는 온라인과 같은 통로로 그린다 — 내 피격은 selfPacket, 보스 동작은 applyDominatorAction / applyBossAction. 판정 규칙은 server/field.cjs bossStrike 와 같다(방어력·버프 빼고) */
 let pdN=0;   /* 완벽 회피 횟수 — 검수용 */
 const OFF={ DOM:null, COMBAT:null, P:{ id:'me', zone:ZONE, x:0, z:0, hp:20000, maxHp:20000, dead:false, respawnAt:0, invulnUntil:0, dodgeUntil:0, hurtSeq:0 } };
+/* 혼자 연습 회복약 — 서버(server/field.cjs potion)와 같은 규칙: 최대 HP 35% · 1초에 한 번 · 쓰러졌거나 가득이면 안 씀. 수 제한은 없다(연습) — 문서 206 §15 */
+function offPotion(){ const P=OFF.P, now=bossNow(); if(P.dead) return; if(now<(P.potionReady||0)){ toast('회복약은 잠시 뒤에 다시 쓸 수 있습니다'); return; } if(P.hp>=P.maxHp){ toast('HP 가 가득 찼습니다'); return; }
+  const heal=Math.round(P.maxHp*.35); P.hp=Math.min(P.maxHp,P.hp+heal); P.potionReady=now+1000; offSelf(); selfFloat('+'+heal.toLocaleString('ko-KR'),'heal'); }
 const offSelf=hurt=>{ const P=OFF.P; selfPacket({ self:{ hp:P.hp, maxHp:P.maxHp, dead:P.dead, respawnAt:P.respawnAt }, hurt }); };
 const offField={ players:new Map([['me',OFF.P]]), rng:Math.random,
   bossStrike(o,p,hit,now){ if(p.dead) return null; const seq=++p.hurtSeq;
@@ -735,9 +738,9 @@ document.getElementById('bagTabs').addEventListener('pointerdown',e=>{ const b=e
 bagBody.addEventListener('pointerdown',e=>{ const t=e.target.closest('.it[data-id]'); if(!t) return; bagSel={ id:t.dataset.id, where:t.dataset.where }; for(const x of bagBody.querySelectorAll('.it.sel')) x.classList.remove('sel'); t.classList.add('sel'); bagDetail(); });
 bagDet.addEventListener('pointerdown',e=>{ const b=e.target.closest('button[data-op]'); if(!b||!bagSel) return; bagSend(b.dataset.op,bagSel.id,+b.dataset.q||undefined); });
 addEventListener('keydown',e=>{ if(e.code==='KeyI'||e.code==='KeyB') bagEl.hidden?openBag():closeBag(); if(e.code==='Escape'&&!bagEl.hidden) closeBag(); if(e.code==='KeyQ') drinkPotion(); });
-function drinkPotion(){ if(!net){ toast('혼자 하기에는 회복약이 없습니다'); return; } if(!((prof().items||{}).c_potion>0)){ toast('회복약이 없습니다 — 마을·쉼터 상점에서 산다'); return; } bagSend('use','c_potion'); }
+function drinkPotion(){ if(!net){ offPotion(); return; } if(!((prof().items||{}).c_potion>0)){ toast('회복약이 없습니다 — 마을·쉼터 상점에서 산다'); return; } bagSend('use','c_potion'); }
 potBtn.addEventListener('pointerdown',e=>{ e.stopPropagation(); drinkPotion(); });
-function bagProfile(){ const P=prof(), n=P&&(P.items||{}).c_potion||0; potBtn.querySelector('em').textContent=net?String(n):'—'; potBtn.classList.toggle('none',!n);
+function bagProfile(){ const P=prof(), n=net?(P&&(P.items||{}).c_potion||0):1; potBtn.querySelector('em').textContent=net?String(n):'연습'; potBtn.classList.toggle('none',!n);
   if(bagSel&&P&&bagSel.where!=='shop'){ const left=bagSel.where==='vault'?(P.vault||{})[bagSel.id]:bagSel.where==='eq'?Object.values(P.equipment||{}).includes(bagSel.id):(P.items||{})[bagSel.id]; if(!left) bagSel=null; }
   if(!bagEl.hidden) bagRender(); }
 function bagReply(m){ if(m.type==='fieldShop'){ shopList=Array.isArray(m.items)?m.items:[]; if(!bagEl.hidden) bagRender(); return; }

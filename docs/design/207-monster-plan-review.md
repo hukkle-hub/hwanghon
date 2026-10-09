@@ -48,3 +48,11 @@
 - 한 표 `js/mmo/monster-catalog.js`(68종) · 사냥터 배정 `js/mmo/hunt-pools.js` → `map.json areas[].pool` 45곳 · 생태 자리 `areas[].eco` 53곳(둥지 3 · 순찰 4).
 - 시험 `tests/monster-catalog.test.mjs` — 원본 JSON 과 한 종씩 · 서버 2급 표와 한 쌍씩 · 배정 규칙 · 지도와 동기 · 생태 자리가 충돌·쉼터와 안 겹침 (규칙·판정을 틀어 실패 확인).
 - 그림: `.node-shots/eco/eco-*.png` (빨강 둥지 · 하늘색 순찰 · 주황 사냥터 · 초록 쉼터) · 휴대폰 사냥터 띠 `.node-shots/w3d/area-port-band.png`.
+
+## 6. GPT v10 받기 (같은 날)
+
+GPT 가 문서 208 지시서로 보낸 v10 (`monster208-v10-local-delivery.zip`) 을 넣었다 — 캐논 v10(63 + 지배형 5 = 68, 원본 그대로 + `NameDraft`/`CombatDraft`), 배치 근거·제작 순서 표, 서버 생태 모듈 `server/field-ecology.cjs`(+경로 찾기 `field-ecology-route.cjs`, node 내장 없음 — 브라우저 `loadCjs` 로도 돈다), 시험 둘.
+- **고친 것 하나:** `MonsterDelivery_v10.json` 의 원본 해시가 GPT 윈도 작업본의 CRLF 로 잰 값이었다(740c…). 저장소의 원본은 LF(90bc…) — 우리 쪽에서 `build-canon-v10.mjs` 로 다시 만들었다(그 줄만 다르다).
+- **GPT 가 남긴 «순찰 여섯 변 막힘»(전주·판교·수원) — 맵 쪽(Claude) 일이라 풀었다.** `patch-areas` 가 생태 자리를 런타임과 **같은 규칙**(사냥터 안 · 쉼터·문·보스 둘레에서 0.6 m · 같은 충돌)으로 고르고, 순찰 고리는 **네 변이 `planRoute` 로 다 이어지는 첫 고리**를 쓴다.
+  둥지도 막이가 촘촘하면 간격을 줄여 가며 셋을 채운다(남행 물류창고). 결과: 런타임 `Ecology` 로 실제 지도 **180 변 전부 길 있음 · 자리 옮김 0** (`tests/field-ecology-anchors.test.mjs`, 옛 전주 지도로 실패 확인).
+- 아직 아무 화면에도 몬스터는 없다 — 서버 연결(`field.cjs`)·몸(GLB)·클라 그리기가 다음 (지시서 `docs/gpt/2026-10-09-monster-v10-followup.md`).

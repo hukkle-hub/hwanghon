@@ -49,21 +49,26 @@ export function huntMobs(zoneId, hunt, catalog = CATALOG) {
 /* 생태 자리 (문서 208 §3 · GPT v09 Nest/Patrol) — 사냥터마다 둥지 3곳(작은 군락)과 순찰 고리 4점.
    자리만 깐다: 리스폰·낮밤 교체·침공 전환 같은 «살아 움직이는 층» 은 서버(GPT) 몫. ok(x,z) = 걸을 수 있고 막이·쉼터 밖인가 (굽기·patch-areas 가 준다).
    길 좌표(s,t)에서 고르고 월드로 돌린다 — 사냥터 정의가 길 좌표라서. 같은 입력이면 같은 자리 */
-export function ecologyOf(zoneId, hunt, ang, ok = () => true) {
+export function ecologyOf(zoneId, hunt, ang, ok = () => true, link = null) {   /* link(a,b): 두 점 사이에 실제로 걸어갈 길이 있나 (서버 생태의 경로 찾기와 같은 것) — 주면 네 변이 다 이어지는 순찰만 고른다 */
   if ((hunt.kind || 'hunt') !== 'hunt') return null;
   if (hunt.r && hunt.st) {   /* 원형 사냥터(강남역 사거리 등): 둘레 네모에서 고르고 원 안만 */
     const [cs, ct] = hunt.st, r = hunt.r, ca = Math.cos(ang), sa = Math.sin(ang), cx = cs * ca - ct * sa, cz = -cs * sa - ct * ca;
-    return ecologyOf(zoneId, { ...hunt, r: 0, s: [cs - r * .8, cs + r * .8], t: [ct - r * .8, ct + r * .8] }, ang, (x, z) => Math.hypot(x - cx, z - cz) <= r * 0.95 && ok(x, z)); }
+    return ecologyOf(zoneId, { ...hunt, r: 0, s: [cs - r * .8, cs + r * .8], t: [ct - r * .8, ct + r * .8] }, ang, (x, z) => Math.hypot(x - cx, z - cz) <= r * 0.95 && ok(x, z), link); }
   if (!hunt.s || !hunt.t) return null;
   const FR = (s, t) => [+(s * Math.cos(ang) - t * Math.sin(ang)).toFixed(2), +(-s * Math.sin(ang) - t * Math.cos(ang)).toFixed(2)];
   let seed = hash(zoneId + ':' + hunt.id + ':eco'); const rnd = () => ((seed = Math.imul(seed ^ (seed >>> 15), 2246822507) ^ Math.imul(seed ^ (seed >>> 13), 3266489909)) >>> 0) / 4294967296;
   const [s0, s1] = [Math.min(...hunt.s), Math.max(...hunt.s)], [t0, t1] = [Math.min(...hunt.t), Math.max(...hunt.t)], at = (u, v) => FR(s0 + (s1 - s0) * u, t0 + (t1 - t0) * v);
   const nests = [], minGap = Math.max(8, Math.min(s1 - s0, t1 - t0) * 0.25);
-  for (let i = 0; i < 80 && nests.length < 3; i++) { const p = at(0.1 + rnd() * 0.8, 0.1 + rnd() * 0.8); if (ok(p[0], p[1]) && nests.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) >= minGap)) nests.push(p); }
-  /* 순찰: 사냥터 안쪽 고리(0.2~0.8 사각) 네 모서리에서 가장 가까운 걸을 수 있는 점 */
-  const patrol = [];
-  for (const [u, v] of [[0.2, 0.2], [0.8, 0.2], [0.8, 0.8], [0.2, 0.8]]) { let got = null;
-    for (let k = 0; k < 24 && !got; k++) { const r = k * 0.02, a = k * 2.4, p = at(Math.min(.95, Math.max(.05, u + Math.cos(a) * r)), Math.min(.95, Math.max(.05, v + Math.sin(a) * r))); if (ok(p[0], p[1])) got = p; }
-    if (got) patrol.push(got); }
-  return { nests, patrol: patrol.length >= 3 ? patrol : [] };
+  for (const gap of [minGap, minGap * 0.6, minGap * 0.35]) for (let i = 0; i < 160 && nests.length < 3; i++) { const p = at(0.1 + rnd() * 0.8, 0.1 + rnd() * 0.8); if (ok(p[0], p[1]) && nests.every(q => Math.hypot(q[0] - p[0], q[1] - p[1]) >= gap)) nests.push(p); }   /* 막이가 촘촘한 사냥터(남행 물류창고)는 간격을 줄여 가며 셋을 채운다 */
+  /* 순찰: 사냥터 안쪽 고리 네 모서리에서 가장 가까운 걸을 수 있는 점. 고리 크기를 바꿔 가며 «네 변이 다 길로 이어지는» 첫 고리를 쓴다
+     (전주·판교·수원 여섯 변이 막혀 서버 순찰이 멈췄다 — GPT v10 검증) */
+  const ring = m => { const out = [];
+    for (const [u, v] of [[m, m], [1 - m, m], [1 - m, 1 - m], [m, 1 - m]]) { let got = null;
+      for (let k = 0; k < 24 && !got; k++) { const r = k * 0.02, a = k * 2.4, p = at(Math.min(.95, Math.max(.05, u + Math.cos(a) * r)), Math.min(.95, Math.max(.05, v + Math.sin(a) * r))); if (ok(p[0], p[1])) got = p; }
+      if (got) out.push(got); }
+    return out; };
+  let patrol = [];
+  for (const m of [0.2, 0.25, 0.3, 0.15, 0.35, 0.1, 0.4, 0.45]) { const p = ring(m); if (p.length < 4) continue; if (!patrol.length) patrol = p;
+    if (!link || p.every((q, i) => link(q, p[(i + 1) % 4]))) { patrol = p; break; } }
+  return { nests, patrol: patrol.length >= 4 ? patrol : [] };
 }

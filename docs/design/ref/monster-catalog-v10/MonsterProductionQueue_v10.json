@@ -1,0 +1,146 @@
+{
+  "TotalCommonSlots": 131,
+  "Ranked": [
+    {
+      "MonsterId": "G5_HOOKHAND",
+      "CommonSlots": 18,
+      "CumulativeSlots": 18,
+      "CumulativeCoverage": 0.1374,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_CAPTOR",
+      "CommonSlots": 16,
+      "CumulativeSlots": 34,
+      "CumulativeCoverage": 0.2595,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_CLIMBER",
+      "CommonSlots": 10,
+      "CumulativeSlots": 44,
+      "CumulativeCoverage": 0.3359,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_CARRIER",
+      "CommonSlots": 9,
+      "CumulativeSlots": 53,
+      "CumulativeCoverage": 0.4046,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_SLASHER",
+      "CommonSlots": 9,
+      "CumulativeSlots": 62,
+      "CumulativeCoverage": 0.4733,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_WATCHER",
+      "CommonSlots": 9,
+      "CumulativeSlots": 71,
+      "CumulativeCoverage": 0.542,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_SHOVER",
+      "CommonSlots": 8,
+      "CumulativeSlots": 79,
+      "CumulativeCoverage": 0.6031,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_CALLER",
+      "CommonSlots": 7,
+      "CumulativeSlots": 86,
+      "CumulativeCoverage": 0.6565,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_WALKER",
+      "CommonSlots": 7,
+      "CumulativeSlots": 93,
+      "CumulativeCoverage": 0.7099,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_ARMORED",
+      "CommonSlots": 6,
+      "CumulativeSlots": 99,
+      "CumulativeCoverage": 0.7557,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_STALKER",
+      "CommonSlots": 6,
+      "CumulativeSlots": 105,
+      "CumulativeCoverage": 0.8015,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_RUNNER",
+      "CommonSlots": 5,
+      "CumulativeSlots": 110,
+      "CumulativeCoverage": 0.8397,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_PARASITE",
+      "CommonSlots": 4,
+      "CumulativeSlots": 114,
+      "CumulativeCoverage": 0.8702,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_SHIELDER",
+      "CommonSlots": 4,
+      "CumulativeSlots": 118,
+      "CumulativeCoverage": 0.9008,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_THROWER",
+      "CommonSlots": 4,
+      "CumulativeSlots": 122,
+      "CumulativeCoverage": 0.9313,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_LURKER",
+      "CommonSlots": 3,
+      "CumulativeSlots": 125,
+      "CumulativeCoverage": 0.9542,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_BREAKER",
+      "CommonSlots": 2,
+      "CumulativeSlots": 127,
+      "CumulativeCoverage": 0.9695,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_ECHO",
+      "CommonSlots": 2,
+      "CumulativeSlots": 129,
+      "CumulativeCoverage": 0.9847,
+      "AssetStatus": "not-validated"
+    },
+    {
+      "MonsterId": "G5_JAMMER",
+      "CommonSlots": 2,
+      "CumulativeSlots": 131,
+      "CumulativeCoverage": 1,
+      "AssetStatus": "not-validated"
+    }
+  ],
+  "RequiredClips": [
+    "idle",
+    "walk",
+    "attack",
+    "hit",
+    "die"
+  ],
+  "VisualApprovalRequired": true
+}

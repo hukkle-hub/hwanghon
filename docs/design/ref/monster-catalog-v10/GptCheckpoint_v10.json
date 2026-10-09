@@ -1,0 +1,25 @@
+{
+  "Task": "document-208-monster-handoff",
+  "Worktree": "C:/Users/MIN/Documents/Codex/2026-09-14/referenced-chatgpt-conversation-this-is-an/work/hwanghon-monsters-v10",
+  "BaseCommit": "6c1a5d53a",
+  "Status": "canon-complete-ecology-foundation-partial",
+  "CanonDirectory": "docs/design/ref/monster-catalog-v10",
+  "PreviousMotionWorktreePreserved": "work/hwanghon-motion-final",
+  "ClaudeAudioBodyWorktreePreserved": "work/hwanghon-audio",
+  "FocusedTests": { "Passed": 24, "Failed": 0 },
+  "FullTests": { "Status": "passed", "Tests": 919, "Passed": 917, "Failed": 0, "Skipped": 2, "DurationMs": 129217.4708, "Log": "output/monster208-full-tests-after-final-fixes.log" },
+  "DeliveryArchive": "output/monster208-v10-local-delivery.zip",
+  "DuplicateWorkAvoidance": {
+    "DoNotRegenerateCanonWithoutCheckingExistingFiles": true,
+    "CanonCheck": "node tools/monsters/build-canon-v10.mjs --check",
+    "NoModelGenerationPerformed": true,
+    "NoRenderOrDeploymentPerformed": true
+  },
+  "Next": [
+    "resolve six patrol routing failures listed in MonsterEcologyVerification_v10.json",
+    "reuse N01-approved reference for shared species and prepare first G5_HOOKHAND GLB",
+    "do not treat colored hero placeholders as approved dominator models",
+    "keep names/strength/cadence as director-pending",
+    "wire authority and client rendering only after local component integration tests"
+  ]
+}
