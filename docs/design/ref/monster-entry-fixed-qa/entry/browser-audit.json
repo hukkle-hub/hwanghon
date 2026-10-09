@@ -1,0 +1,73 @@
+{
+  "kind": "real_browser_entry_reload_and_offline_smoke",
+  "profileStorage": "memory_only",
+  "simulation": "paused_and_stepped_for_screenshot_capture",
+  "mobileViewport": [
+    915,
+    412
+  ],
+  "actualAndroidFPSVerified": false,
+  "applicationFilesModified": false,
+  "errors": [],
+  "checks": {
+    "actualClientsJoined": true,
+    "repeatedOnlineEntryReady": true,
+    "portraitAndLandscapeNoOverflow": true,
+    "offlineEcologyReady": true,
+    "noPageErrors": true
+  },
+  "shots": [
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-entry-reloads-fixed\\3d-online-landscape.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-entry-reloads-fixed\\3d-online-portrait.png",
+    "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-browser-entry-reloads-fixed\\3d-offline.png"
+  ],
+  "testedCommit": "c9ea8790084b4d72bbfe08a3ab3b7bf8c599abbd",
+  "applicationHashes": {
+    "world3d.html": "c7d7b7f76d9b938749c52dd56e21d48787b6d5ae8d041eadd609568a8fd3d92f",
+    "js/mmo/field-mobs.js": "1e9e6e7d17c0323caf07fa1edce63b4eea1320acd4429a916fe6019435b9c4a8"
+  },
+  "mob": {
+    "id": "daejeon:right:nest0:1",
+    "catalogId": "G5_BREAKER",
+    "x": 293.17906880137656,
+    "z": -233.31928966988423
+  },
+  "entryReloads": [
+    {
+      "viewport": [
+        915,
+        412
+      ],
+      "net": true,
+      "mobsReady": true,
+      "overflow": 0,
+      "frames": 4
+    },
+    {
+      "viewport": [
+        412,
+        915
+      ],
+      "net": true,
+      "mobsReady": true,
+      "overflow": 0,
+      "frames": 4
+    },
+    {
+      "viewport": [
+        915,
+        412
+      ],
+      "net": true,
+      "mobsReady": true,
+      "overflow": 0,
+      "frames": 4
+    }
+  ],
+  "offline": {
+    "net": false,
+    "ecologyCount": 25,
+    "mobsReady": true
+  },
+  "complete": true
+}

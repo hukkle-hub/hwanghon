@@ -27,8 +27,8 @@ const out = {};
 try {
   const A = await mk(one.token), B = await mk(two.token);
   await A.goto(`${BASE}/mmo.html?zone=${ZONE}&char=ain`); await B.goto(`${BASE}/world3d.html?zone=${ZONE}&online=1`);
-  await A.waitForFunction(() => window.__MMO && window.__MMO.net && window.__MMO.me, null, {timeout: 300000});
-  await B.waitForFunction(() => window.__W3D && window.__W3D.net && window.__W3D.frames > 2, null, {timeout: 300000});
+  const ready = await until(async () => { const a = await A.evaluate(() => !!(window.__MMO && window.__MMO.net && window.__MMO.me)), b = await B.evaluate(() => !!(window.__W3D && window.__W3D.net && window.__W3D.frames > 2)); out.ready = {a, b}; return a && b; }, 300000, 1000);
+  if (!ready) throw Error('접속 대기 시간 초과 ' + JSON.stringify(out.ready) + ' ' + JSON.stringify([A.errs.slice(0, 2), B.errs.slice(0, 2)]));
   const F = app.field, pa = F.players.get(one.id), pb = F.players.get(two.id); out.joined = !!(pa && pb);
   const eco = F.ecologies && F.ecologies.get(ZONE); out.serverMobs = eco ? eco.mobs.size : 0;
   if (!eco) throw Error('서버에 생태가 없다 — 몬스터 0');

@@ -1,0 +1,130 @@
+{
+  "kind": "local_server_integration_not_live_game",
+  "createdUTC": "2026-10-09T06:26:12.420Z",
+  "baseCommit": "3db2aead323d9a43e42b89bff573ac29292205b0",
+  "tests": {
+    "baseCommit": "3db2aead323d9a43e42b89bff573ac29292205b0",
+    "suiteExit": 0,
+    "tests": 947,
+    "pass": 945,
+    "fail": 0,
+    "skipped": 2,
+    "focusedNewTests": 20,
+    "negativeRangeControl": true,
+    "browserBridgeVerified": true,
+    "realSocketVerified": true,
+    "twoSocketVerified": true,
+    "mobWire": [
+      "id",
+      "catalogId",
+      "x",
+      "z",
+      "alive",
+      "anim",
+      "generation",
+      "hpPercent",
+      "seq"
+    ],
+    "claudePracticeRendererPresent": true,
+    "onlineRendererStillPending": false,
+    "onlineBrowserTwoPlayerVerified": false,
+    "renderAutoDeployVerified": false,
+    "mapAnchorsModified": false,
+    "ecologyClearanceModified": false,
+    "ecologyRouteBudgetModified": false,
+    "patrolBakedRoutes": 360,
+    "approvedPatrolEdges": 180,
+    "hunts": 45,
+    "huntRegions": 18,
+    "hookhandApproval": "pending_director",
+    "glbGenerated": false,
+    "hi3dCreditsSpent": 0,
+    "dropAndXpPolicy": "pending_director_no_live_awards",
+    "speciesSpecificSkills": "not_complete",
+    "mobileFPSVerified": false,
+    "renderDeployed": false,
+    "serverTimingExit": 0
+  },
+  "files": [
+    {
+      "file": "server/field.cjs",
+      "bytes": 30942,
+      "sha256": "5919dbbf016d107573e68a94346a46579a73518d95b26e103e4c69d7df885c53"
+    },
+    {
+      "file": "server/index.cjs",
+      "bytes": 27274,
+      "sha256": "e70fab023b50ed9c980b374351791f5b73d81152f65a357ec8689a66087246bf"
+    },
+    {
+      "file": "server/field-mob-combat.cjs",
+      "bytes": 4253,
+      "sha256": "669112a94340f7e63a0a930fd484353f5a2ed925b220eae1eff9d60e8d1a0af7"
+    },
+    {
+      "file": "server/field-ecology-patrols.json",
+      "bytes": 438667,
+      "sha256": "8dc83168f2b365b5434c0ee1ac3971df927f70f419c5adc8484a0908899d8dfb"
+    },
+    {
+      "file": "tests/field-mob-integration.test.cjs",
+      "bytes": 16678,
+      "sha256": "39734af9f44f4200e167f5bc966bba793b1855473474977653d3ba8e81510364"
+    },
+    {
+      "file": "tests/field-mob-socket.test.cjs",
+      "bytes": 5950,
+      "sha256": "e71e55436797c6a3572478ac935194dab9a0124974b1690e9a48da67f9dffea9"
+    },
+    {
+      "file": "tools/monsters/build-field-patrols.mjs",
+      "bytes": 2138,
+      "sha256": "32d51f5d5531e337e84df1cd573bc81971e97f3823ae41847ea2c96c6ee47a43"
+    },
+    {
+      "file": "tools/monsters/measure-field-mobs.cjs",
+      "bytes": 1906,
+      "sha256": "a0898d1fbf28ad00d8eab75c851d9f88c2eb8abbf7a4727fc109127d69e072be"
+    },
+    {
+      "file": "tools/monsters/verify-field-mobs.cjs",
+      "bytes": 2147,
+      "sha256": "df2c4def5b01572fd60da5d120a0760f41861a54cba637e1a025898d4c07bdc3"
+    },
+    {
+      "file": "tools/monsters/package-field-mobs.cjs",
+      "bytes": 1667,
+      "sha256": "63ed0f88335294a52301e9da7e0d508e962a82fa125078e9fcdacf341468ecf1"
+    },
+    {
+      "file": "docs/gpt/2026-10-09-monster-server-handoff.txt",
+      "bytes": 9321,
+      "sha256": "60267c566446fe0c099201a7dbc8ccc32c6d5d760c4a24604763b206d802f66c"
+    },
+    {
+      "file": "docs/design/ref/g5-hookhand-approval/g5_hookhand_approval_draft_v1.png",
+      "bytes": 2447095,
+      "sha256": "cedf64882c8d3fe5edb483284488efbbf66ca97db31531cf667a95ee65bbb4de"
+    },
+    {
+      "file": "docs/design/ref/g5-hookhand-approval/g5_hookhand_prompt_v1.txt",
+      "bytes": 3041,
+      "sha256": "879946ff0f774797f76848357f0f5a1aae4cea635128ab4cdb4df706e1a0f228"
+    },
+    {
+      "file": "docs/design/ref/monster-server-v10-qa/full-tests.log",
+      "bytes": 142320,
+      "sha256": "820f549d34e03eccf5b305862b0e6c0ad81cf62be79bfa85f44e31a4e782e228"
+    },
+    {
+      "file": "docs/design/ref/monster-server-v10-qa/verification.json",
+      "bytes": 1059,
+      "sha256": "c80ebebe91ca77464c237763ca116b69cb161308d6b47b0c8af5fdc6dff76336"
+    },
+    {
+      "file": "docs/design/ref/monster-server-v10-qa/server-timing.json",
+      "bytes": 474,
+      "sha256": "7e730671aa118a73c4cd58e41ea9b49f77425867cc6e2004019c81655d302d8c"
+    }
+  ]
+}

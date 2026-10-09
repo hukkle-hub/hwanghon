@@ -165,7 +165,7 @@ function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부�
    시계는 게임 시간(ms) — 헤드리스 검수(초당 1~2프레임)에서도 예고·타격 시각이 동작과 맞는다 */
 const DOM = await loadCjs('server/field-dominator.cjs');
 /* 클레이브(필드 보스) 전투도 서버 모듈 그대로 — 혼자 연습에서도 예고·연계·반격창·셔터 부위 파괴가 서버와 같다 (문서 206 §11) */
-const COMBAT = await loadCjs('server/field-boss-combat.cjs'), ECO_MOD = await loadCjs('server/field-ecology.cjs'), MOB_MOD = await loadCjs('server/field-mob-combat.cjs').catch(() => null), ROUTE_MOD = MOB_MOD && await loadCjs('server/field-ecology-route.cjs').catch(() => null), SAFE_MOD = MOB_MOD && await loadCjs('js/mmo/safe-zones.js').catch(() => null), CLAVE_HP = 300000;   /* 연습 체력: 2D 필드 혼자 연습과 같은 30만 — 70%·35% 에서 2·3페이즈 */
+const COMBAT = await loadCjs('server/field-boss-combat.cjs'), ECO_MOD = await loadCjs('server/field-ecology.cjs'), MOB_MOD = await loadCjs('server/field-mob-combat.cjs').catch(() => null), ROUTE_MOD = MOB_MOD?.tick && await loadCjs('server/field-ecology-route.cjs').catch(() => null), SAFE_MOD = MOB_MOD?.tick && await loadCjs('js/mmo/safe-zones.js').catch(() => null), CLAVE_HP = 300000;   /* 연습 체력: 2D 필드 혼자 연습과 같은 30만 — 70%·35% 에서 2·3페이즈 */
 let gameNow = 1e6;
 const DODGE_TIME = 520, DODGE_GAP = 780, RESPAWN_TIME = 5000, RESPAWN_GUARD = 2000, DOM_RESPAWN = 30000;   /* server/field.cjs 와 같은 값 */
 const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: false, respawnAt: 0, invulnUntil: 0, dodgeUntil: 0, dodgeReady: 0, hurtSeq: 0 };
@@ -264,7 +264,7 @@ const hpEl = document.getElementById('hp'), deadEl = document.getElementById('de
 /* ---------- 온라인: 2D 필드와 같은 방 (문서 206 §8) ----------
    Pages 에선 기본으로 붙는다 (?online=0 · ?offline=1 이면 혼자 연습). 붙으면 브라우저 AI 는 쉬고 서버가 보낸 지배형 동작을 서버 시계로 그린다 */
 const ONLINE = q.get('online') === '1' || (q.get('online') !== '0' && !q.has('offline') && /\.github\.io$/.test(location.hostname));
-const netEl = document.getElementById('net'), toastEl = document.getElementById('toast'); let netMobs = [], net = null, lastField = null, fieldN = 0, toastT = 0, lastHurt = 0, sendT = 0, moveAnim = 'idle', ANIMS = ['idle', 'run', 'walk', 'attack1', 'dodgeB'], infos = {};
+const netEl = document.getElementById('net'), toastEl = document.getElementById('toast'); let net = null, lastField = null, fieldN = 0, toastT = 0, lastHurt = 0, sendT = 0, moveAnim = 'idle', ANIMS = ['idle', 'run', 'walk', 'attack1', 'dodgeB'], infos = {};
 const sclock = serverClock(), remotes = new Map(), charAssets = {};
 function toast(html, life = 3) { toastEl.innerHTML = html; toastEl.hidden = false; toastT = life; }
 function sendMove(anim) { if (!net) return; const p = root.position; net.send({ type: 'fieldMove', x: +p.x.toFixed(2), z: +p.z.toFixed(2), yaw: +me.yaw.toFixed(2), anim: anim || moveAnim }); }
@@ -293,11 +293,17 @@ function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
     if (kind === 'evade') evadeFx(h[6], true);
     else if (kind === 'respawn') toast('출발점에서 다시 일어섰습니다', 2.5);
     else if (amount > 0) { floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, kind === 'dead' ? .55 : .28); } } }
+/* connectField는 await가 끝나기 전에도 field/fieldJoined를 넘긴다.
+   첫 상대 정보와 mobs를 버리지 않도록 상태·팩토리 모두 연결 전에 준비한다. */
+const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
+let ECO = null, MOBS = null, MP = null, netMobs = []; const mobHp = new Map();
+const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
+const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 function netMsg(m) {
-  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) netMobs = mobsFromPacket(m.mobs); return; }
+  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
   if (m.type === 'field') { lastField = m; fieldN++; Object.assign(infos, m.infos || {});
     if (m.you) { const dx = m.you[0] - root.position.x, dz = m.you[1] - root.position.z, d = Math.hypot(dx, dz); if (d > 3) { root.position.x = m.you[0]; root.position.z = m.you[1]; } else if (d > .25) { root.position.x += dx * .22; root.position.z += dz * .22; } }   /* 서버 자리와 크게 어긋나면 맞춘다 (2D 필드와 같은 규칙) */
-    remoteSet(m.players || []); bossPacket(m); if (Array.isArray(m.mobs)) netMobs = mobsFromPacket(m.mobs); return; }   /* 그리기는 매 프레임(아래) — 입장 답(fieldJoined)은 몬스터 코드가 읽히기 전에 온다 */
+    remoteSet(m.players || []); bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
   if (m.type === 'profile' || m.type === 'fieldJoined') potShow();
   if (m.type === 'fieldBagDone' && m.op === 'use') { floatAt('+' + Number((m.result || {}).heal || 0).toLocaleString('ko-KR'), 'heal', root.position, 2.0); potShow(); return; }
   if (m.type === 'error' && m.message) { toast(esc(m.message), 2); return; }
@@ -330,13 +336,9 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
     if (!o.ai) o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP };   /* 나머지 필드 보스: 서버에도 AI 가 없다 — 맞기만 한다 (2D 혼자 연습과 같은 30만) */
     fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
-const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
-let ECO = null, MOBS = null, MP = null; const mobHp = new Map();
-const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
-const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
   mobView();
-  if (MOB_MOD) MP = createMobPractice({ MOB: MOB_MOD, ECO, planRoute: ROUTE_MOD && ROUTE_MOD.planRoute, safe: p => !!(SAFE_MOD && SAFE_MOD.safeArea(meta.areas, p.x, p.z, SAFE_MOD.BOSS_OWNER)), strike: (m, p, h, t) => fieldLocal.bossStrike(m, p, h, t) }); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }   /* 몬스터 공격(GPT 모듈) — 서버 합치기 전엔 없다 */
+  if (MOB_MOD && typeof MOB_MOD.tick === 'function') MP = createMobPractice({ MOB: MOB_MOD, ECO, planRoute: ROUTE_MOD && ROUTE_MOD.planRoute, safe: p => !!(SAFE_MOD && SAFE_MOD.safeArea(meta.areas, p.x, p.z, SAFE_MOD.BOSS_OWNER)), strike: (m, p, h, t) => fieldLocal.bossStrike(m, p, h, t) }); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }   /* 몬스터 공격(GPT 모듈) — 서버 합치기 전엔 없다 */
 function hitMob() { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
   me.yaw = Math.atan2(v.root.position.x - root.position.x, v.root.position.z - root.position.z); root.rotation.y = me.yaw;
   if (net) { net.send({ type: 'fieldHit', mob: v.id, generation: v.gen }); return true; }   /* 온라인: 서버가 판정 — 답은 mobHit */

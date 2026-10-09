@@ -35,5 +35,7 @@ test('화면 연결: 모듈이 없으면 맞기만(연습 체력), 있으면 반
   assert.match(w, /loadCjs\('server\/field-mob-combat\.cjs'\)\.catch\(\(\) => null\)/, '3D 가 모듈이 없을 때 멈춘다');
   assert.match(m, /strike:\(m,p,h,t\)=>offField\.bossStrike\(m,p,h,t\)/, '2D 반격이 bossStrike(회피·완벽 회피)를 안 거친다');
   assert.match(w, /strike: \(m, p, h, t\) => fieldLocal\.bossStrike\(m, p, h, t\)/, '3D 반격이 bossStrike 를 안 거친다');
-  assert.match(l, /if \(res\.ok === false\) throw/, '없는 모듈(404)을 코드로 돌린다');
+  /* 없는 파일(404)은 빈 모듈로 온다 — 로더가 404 에 멈추면 파티 서버 정적 제공(server/ 일부만 공개)에서 3D 페이지가 통째로 멈췄다 → 모양으로 판정 */
+  assert.doesNotMatch(l, /res\.ok/, '로더가 404 에 멈춘다 — 파티 서버에서 3D 가 안 뜬다');
+  assert.match(m, /if\(MC&&typeof MC\.tick==='function'\)/); assert.match(w, /if \(MOB_MOD && typeof MOB_MOD\.tick === 'function'\)/);
 });

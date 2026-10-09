@@ -610,7 +610,7 @@ if(!net) Promise.all([loadCjs('server/field-dominator.cjs'),loadCjs('server/fiel
   /* 혼자 연습 몬스터 (문서 209): GPT 생태 모듈(server/field-ecology.cjs)을 그대로 — 둥지 셋·순찰 하나·드문 종·30초 부활. 지도 생태 자리(areas[].eco)를 쓴다. 공격은 서버 몬스터 AI 가 오면 */
   if((meta.areas||[]).some(a=>a.kind==='hunt'&&a.pool&&a.eco)) try{ OFF.ECO=new E.Ecology({ zone:{...meta,id:ZONE}, catalog:ecologyCatalog(CATALOG), now, rng:Math.random, collide:(p,r)=>collide(p,r) });
     mobView(); OFF.mobHp=new Map();
-    if(MC) OFF.MP=createMobPractice({ MOB:MC, ECO:OFF.ECO, planRoute:R&&R.planRoute, safe:p=>!!(window.TW_SAFE&&TW_SAFE.safeArea(meta.areas,p.x,p.z,hubOwner)), strike:(m,p,h,t)=>offField.bossStrike(m,p,h,t) }); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
+    if(MC&&typeof MC.tick==='function') OFF.MP=createMobPractice({ MOB:MC, ECO:OFF.ECO, planRoute:R&&R.planRoute, safe:p=>!!(window.TW_SAFE&&TW_SAFE.safeArea(meta.areas,p.x,p.z,hubOwner)), strike:(m,p,h,t)=>offField.bossStrike(m,p,h,t) }); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
   for(const o of bosses){ const b=o.b, ai={ id:b.id, zone:ZONE, x:b.x, z:b.z, yaw:0, h:b.h||3, alive:o.alive, hp:o.local, max:300000 };
     if(b.ai==='dominator'){ D.setup(ai,now); o.ai=ai; } else if(C.enabled(ai)){ C.setup(ai,now); o.ai=ai; } } }).catch(e=>console.warn('[혼자 연습 AI]',e));
 function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;

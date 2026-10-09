@@ -1,0 +1,15 @@
+{
+  "command": "npm test",
+  "applicationBaseCommit": "d662ecdc555dc8f6a0b0281a9f5d0cedbc5791ab",
+  "latestClaudeMainIncluded": "c5fa302b5407b5259b1d2efb387e64f293d1eb40",
+  "tests": 949,
+  "pass": 947,
+  "fail": 0,
+  "skipped": 2,
+  "exitCode": 0,
+  "durationMs": 162200.5313,
+  "browserAuditExitCode": 1,
+  "browserAuditComplete": false,
+  "visualAcceptance": false,
+  "note": "Automated regression pass does not override the reproduced 3D initialization exception or failed visual acceptance."
+}
