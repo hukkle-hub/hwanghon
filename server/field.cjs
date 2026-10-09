@@ -6,6 +6,13 @@
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),DOM=require('./field-dominator.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
+const {Ecology}=require('./field-ecology.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),MOB=require('./field-mob-combat.cjs'),RULES=require('./rpg-rules.cjs');
+const MOB_CATALOG=require('../docs/design/ref/monster-catalog-v10/MonsterRoster_v10.json').Monsters;
+const crypto=require('node:crypto'),{planRoute}=require('./field-ecology-route.cjs');
+const digest=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
+const PATROL_FILES=['server/field-ecology.cjs','server/field-ecology-route.cjs','js/mmo/field-collide.js','js/mmo/safe-zones.js'];
+let PATROLS=null;try{const p=require('./field-ecology-patrols.json');
+ if(p.schema===1&&PATROL_FILES.every(f=>p.rules[f]===digest(fs.readFileSync(path.join(ROOT,f)))))PATROLS=p;}catch{}
 const ANIMS=['idle','run','walk','attack1','dodgeB','skill1','skill2','skill3','skill4'];   /* 스킬 1~4 — 다른 사람에게도 동작이 보이게 */
 const MAX_SPEED=7.5;       /* m/s — 클라 달리기 4.8 + 회피 돌진·지연 여유 */
 const AOI=28;              /* m — 휴대폰 화면 대각선의 약 2배 */
@@ -20,7 +27,7 @@ function prestigeTitle(rows=[]){
  for(const r of rows){ const tiers=BOSS_TITLES[r.boss],n=Number(r.n)||0;if(!tiers)continue;
   const i=tiers.findIndex(t=>n>=t[0]);if(i>=0)return {boss:r.boss,text:tiers[i][1],tier:tiers.length-i}; }
  return null; }
-function loadZone(id){ try{ const m=JSON.parse(fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json'),'utf8')); return { id, walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)),
+function loadZone(id){ try{ const bytes=fs.readFileSync(path.join(ROOT,'maps','2d',id,'map.json')),m=JSON.parse(bytes); return { id, map:{...m,id}, mapHash:digest(bytes), walk:m.walk, ang:m.road.ang, spawn:m.spawn, gates:(m.gates||[]).filter(g=>g&&typeof g.id==='string'&&Number.isFinite(g.x)&&Number.isFinite(g.z)),
   bosses:(m.bosses||[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.x)&&Number.isFinite(b.z)),
   areas:(m.areas||[]).filter(a=>a&&(a.kind==='rest'||a.kind==='siege')&&(Array.isArray(a.circle)||Array.isArray(a.poly))) }; }catch{ return null; } }   /* 안전 지대(마을·쉼터)·거점 판정 — js/mmo/safe-zones.js */
 const ZONE_IDS=()=>{ try{ return fs.readdirSync(path.join(ROOT,'maps','2d')).filter(d=>/^[a-z0-9_]{1,24}$/.test(d)&&fs.existsSync(path.join(ROOT,'maps','2d',d,'map.json'))); }catch{ return []; } };
@@ -28,10 +35,13 @@ const itemOf=id=>C.equipment.find(i=>i.id===id);
 const num=(v,lo,hi)=>Number.isFinite(v)?Math.min(hi,Math.max(lo,v)):null;
 class Field{
  /* store: 보스 상태·처치 기록 저장 (없으면 메모리만) · emit: 서버 전체 알림 (출현·처치·전설 획득) */
- constructor({ store=null, emit=()=>{}, rng=Math.random, timeScale=Number(process.env.BOSS_TIME_SCALE)||1 }={}){
+ constructor({ store=null, emit=()=>{}, rng=Math.random, timeScale=Number(process.env.BOSS_TIME_SCALE)||1,
+  clock=Date.now, mobStats=MOB.statsFor, mobRewards=null, onMobReward=()=>{} }={}){
   this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.titleCache=new Map(); this.lootSerial=0;
   this.hubs=new Map();   /* 거점 주인 (zone → {kind:'guild',name}) — 없으면 보스가 차지 (문서 197·198). 점령전은 GPT 몫: setHub 로 바꾼다 */
-  this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale; }
+  this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale;
+  this.clock=clock;this.mobStats=mobStats;this.mobRewards=mobRewards;this.onMobReward=onMobReward;
+  this.ecologies=new Map();this.mobStates=new Map();this.ecologyContexts=new Map();this.pendingMobRewards=new Map(); }
  zone(id){ if(typeof id!=='string'||!/^[a-z0-9_]{1,24}$/.test(id)) return null; if(!this.zones.has(id)){ const z=loadZone(id); if(!z) return null; this.zones.set(id,z); } return this.zones.get(id); }
  hubOwner(zoneId){ const z=this.zone(zoneId); return z&&SAFE.isHub(z.areas)?(this.hubs.get(z.id)||SAFE.BOSS_OWNER):null; }
  setHub(zoneId, owner){ if(owner&&owner.kind==='guild')this.hubs.set(zoneId,{kind:'guild',name:String(owner.name||'').slice(0,24)});else this.hubs.delete(zoneId); return this.hubOwner(zoneId); }
@@ -50,7 +60,7 @@ class Field{
   const title=this.title(profile.id);
   return { name:profile.name, character:profile.character||'ain', eq, enh, look, ...(title?{title}:{}) }; }
  /* gate: 다른 지역의 문으로 넘어왔을 때 도착할 문 id (map.json gates) — 없거나 모르는 id 면 지역 출발점 */
- join(id, profile, zoneId, look, gate){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); const now=Date.now();this.leave(id,now);const prior=this.life.get(id);this.life.delete(id);
+ join(id, profile, zoneId, look, gate){ const z=this.zone(zoneId); if(!z) throw Error('지역을 찾을 수 없습니다.'); const now=this.clock();this.ecology(z.id,now);this.leave(id,now);const prior=this.life.get(id);this.life.delete(id);
   const at=(typeof gate==='string'&&z.gates.find(g=>g.id===gate))||z.spawn;
   const maxHp=Math.max(1,Math.round(profile.stats?.hp||20000));
   const keep=prior&&prior.expires>now,hp=keep?(prior.dead?0:Math.max(1,Math.round(maxHp*prior.hp/Math.max(1,prior.maxHp)))):maxHp;
@@ -74,14 +84,97 @@ class Field{
   if(next==='dodgeB'&&p.anim!=='dodgeB'&&now>=p.dodgeReady){ p.dodgeUntil=now+DODGE_TIME; p.dodgeReady=now+DODGE_GAP; }
   p.anim=next; return p; }
  /* 받는 사람 r 에게: 관심 반경 안 다른 사람들의 [id, x, z, yaw, 동작 번호] + 처음 보거나 바뀐 사람의 고정 정보 */
- view(r,commit=true){ const out=[], infos={};
+ view(r,commit=true){ const out=[], infos={},now=this.clock();
   for(const p of this.players.values()){ if(p===r||p.zone!==r.zone) continue; if((p.x-r.x)**2+(p.z-r.z)**2>AOI*AOI) continue;
    out.push([p.id, +p.x.toFixed(2), +p.z.toFixed(2), +p.yaw.toFixed(2), ANIMS.indexOf(p.anim)]);
    if(r.known.get(p.id)!==p.ver) infos[p.id]=p.info; }
   if(commit)this.commitView(r,out);
   const bv=this.bosses.size?this.bossView(r):null;
   return { type:'field', you:[+r.x.toFixed(2), +r.z.toFixed(2)], self:this.selfView(r), hurt:r.hurt,
-   players:out, infos, ...(bv&&(bv.bosses.length||bv.loot.length)?bv:{}) }; }
+   players:out, infos, mobs:this.mobView(r,now), mobNow:now, ...(bv&&(bv.bosses.length||bv.loot.length)?bv:{}) }; }
+ /* Population is lazy per visited region (boss startup loads every map). No
+    client-provided night/invasion/owner is accepted. Node event wiring can call
+    setEcologyContext; no undocumented day/night cycle is invented here. */
+ ecology(zoneId,now=this.clock()){
+  if(this.ecologies.has(zoneId))return this.ecologies.get(zoneId);
+  const z=this.zone(zoneId);if(!z)return null;
+  const e=new Ecology({zone:z.map,catalog:MOB_CATALOG,now,rng:this.rng,
+   collide:createCollide(z.map).collide,owner:this.hubOwner(zoneId)});
+  this.ecologies.set(zoneId,e);this.preparePatrols(e);this.syncMobs(e,now);return e; }
+ preparePatrols(e){
+  const row=PATROLS?.zones[e.zone.id],z=this.zones.get(e.zone.id),kind=e.owner?.kind==='guild'?'guild':'boss';
+  const hints=row?.hash===z.mapHash?row.owners[kind]:null;e.patrolCacheValid=!!hints;
+  for(const g of e.groups)if(g.kind==='patrol'){
+   g.routes.clear();for(let i=0;i<4;i++)g.routes.set(i,structuredClone(hints?.[g.area.id]?.[i]||null));
+   for(const id of g.mobIds){const m=e.mobs.get(id);if(m)m.routePoint=0;}
+  }
+  /* Missing/stale bake: holds patrol, never performs multi-second A* inside a
+     live tick. Rebuild with tools/monsters/build-field-patrols.mjs before deploy. */
+ }
+ setEcologyContext(zoneId,{night=false,invasion=false}={}){this.ecologyContexts.set(zoneId,{night:!!night,invasion:!!invasion});}
+ syncMobs(e,now){
+  for(const m of e.mobs.values()){
+   const old=this.mobStates.get(m.id);if(old?.generation===m.generation)continue;
+   const stats=MOB.validateStats(this.mobStats(m.catalogId,m.group.area));
+   this.mobStates.set(m.id,{id:m.id,zone:e.zone.id,catalogId:m.catalogId,generation:m.generation,
+    hp:stats.hp,max:stats.hp,stats,last:new Map(),ai:MOB.reset(m,now),rewarded:false}); }
+  for(const [id,s]of this.mobStates)if(s.zone===e.zone.id&&!e.mobs.has(id))this.mobStates.delete(id); }
+ mobView(p,now=this.clock()){
+  const e=this.ecologies.get(p.zone);if(!e)return [];
+  return e.snapshot(p.x,p.z,now,AOI).map(m=>{const s=this.mobStates.get(m.id);
+   /* Final document 210 / v2: exact seven Ecology.snapshot fields, followed by
+      HP and optional action sequence. Keep alive boolean and HP in slot 8. */
+   return [m.id,m.catalogId,m.x,m.z,m.alive,m.anim,m.generation,
+    m.alive&&s?.generation===m.generation?Math.ceil(100*s.hp/s.max):0,
+    s?.generation===m.generation?s.ai.seq:0];}); }
+ tickEcologies(now){
+  let retry=2;for(const [key,r]of this.pendingMobRewards){if(retry<=0)break;if(now<r.nextAt)continue;
+   retry--;this.rewardMob(r.id,r.m,r.s,now);}
+  const byZone=new Map();for(const p of this.players.values()){if(!byZone.has(p.zone))byZone.set(p.zone,[]);byZone.get(p.zone).push(p);}
+  for(const [zoneId,e]of this.ecologies){if(now<e.lastTick)continue;
+   const owner=this.hubOwner(zoneId);if(e.owner?.kind!==owner?.kind){e.owner=owner;this.preparePatrols(e);}
+   e.tick(now,{...(this.ecologyContexts.get(zoneId)||{}),owner});this.syncMobs(e,now);
+   let routes=2;const nav={legal:(a,q)=>e.legal(a,q),canTraverse:(a,p,q)=>e.canTraverse(a,p,q),
+    route:(a,p,q)=>routes-->0?planRoute(p,q,r=>e.legal(a,r),(r,t)=>e.canTraverse(a,r,t),{step:1,budget:64}):null,
+    safe:p=>!!SAFE.safeArea(e.zone.areas,p.x,p.z,e.owner)};
+   /* Short-range chase search has its own bounded budget; patrol's approved
+      8000/12000 search and map anchors are unchanged. Long blocked chase holds. */
+   for(const m of e.mobs.values()){const s=this.mobStates.get(m.id);
+    for(const [pid,at]of s.last)if(now-at>60000)s.last.delete(pid);
+    const hit=MOB.tick(m,s.ai,s.stats,byZone.get(zoneId)||[],now,nav);
+    if(hit){const p=this.players.get(hit.target);if(p&&p.zone===zoneId)
+      this.bossStrike(m,p,{...hit,damage:hit.damage/p.maxHp,knock:0},now);} }
+  } }
+ hitMob(id,msg,profile,now=this.clock(),opt={}){
+  const p=this.players.get(id);if(!p)throw Error('먼저 지역에 들어가세요.');
+  const e=this.ecologies.get(p.zone),m=e?.mobs.get(msg.mob),s=m&&this.mobStates.get(m.id);
+  if(!m||!s)throw Error('몬스터를 찾을 수 없습니다.');
+  if(!m.alive||p.dead||(msg.generation!==undefined&&msg.generation!==m.generation))return null;
+  if(now<e.lastTick||this.safeAt(id)||!e.legal(m.group.area,[m.x,m.z])||
+   Math.hypot(p.x-m.x,p.z-m.z)>3||!e.canTraverse(m.group.area,[m.x,m.z],[p.x,p.z]))return null;
+  /* Per-player as well as per-target: changing IDs cannot bypass HIT_GAP. */
+  if(!opt.skill&&(now-(s.last.get(id)??-Infinity)<HIT_GAP||now-(p.mobHitAt??-Infinity)<HIT_GAP))return null;
+  s.last.set(id,now);if(!opt.skill)p.mobHitAt=now;
+  const st=profile.stats||{},w=itemOf(profile.equipment?.main),crit=!!p.critNext||this.rng()<(st.critChance||0);p.critNext=false;
+  const dmg=Math.max(1,Math.round(((st.atk||1000)+(w?.stats?.atk||0)*.6)*(.9+this.rng()*.2)*(crit?(st.critDamage||1.5):1)*(opt.mult||1)));
+  s.hp=Math.max(0,s.hp-dmg);MOB.stagger(s.ai,now);m.anim='hit';m.engaged=true;s.ai.target=id;
+  let reward=null;if(s.hp===0&&e.defeat(m.id,now))reward=this.rewardMob(id,m,s,now);
+  return {type:'mobHit',mob:m.id,catalogId:m.catalogId,generation:m.generation,dmg,crit,down:!m.alive,hp:Math.ceil(100*s.hp/s.max),reward}; }
+ rewardMob(id,m,s,now=this.clock()){
+  if(s.rewarded)return null;
+  /* Director's drop table / XP curve are pending. No fabricated economy. */
+  if(!this.store||!this.mobRewards){s.rewarded=true;return {status:'pending_policy'};}
+  const award=s.award||this.mobRewards(m.catalogId,m.group.area);if(!award){s.rewarded=true;return {status:'pending_policy'};}
+  const {items=[],gold=0,xp=0}=award;
+  if(!Number.isSafeInteger(gold)||gold<0||gold>1e6||!Number.isSafeInteger(xp)||xp<0||xp>1e6||!Array.isArray(items)||items.length>20||
+   items.some(v=>!Array.isArray(v)||v.length!==2||!RULES.byId[v[0]]||RULES.byId[v[0]].stats||!Number.isSafeInteger(v[1])||v[1]<1||v[1]>999))throw Error('Invalid mob reward policy');
+  s.award=structuredClone(award);const key=m.id+':'+s.generation;
+  let r;try{r=this.store.mutate(id,'field:mobReward',p=>{
+   if(!Number.isSafeInteger(p.gold+gold)||!Number.isSafeInteger(p.xp+xp))throw Error('Reward overflow');
+   this.store.addItems(p,items);p.gold+=gold;p.xp+=xp;
+   return {mob:m.id,generation:s.generation,items,gold,xp};});}
+  catch{this.pendingMobRewards.set(key,{id,m,s,nextAt:now+1000});return {status:'pending_storage'};}
+  s.rewarded=true;this.pendingMobRewards.delete(key);this.onMobReward(r.profile);return {status:'granted',items:items.map(([id,n])=>({id,n})),gold,xp}; }
  /* 소켓 전송이 실제 성공한 뒤에만 고정 정보를 «전달함»으로 기록한다. backpressure로 버리면 다음 틱에 다시 싣는다. */
  commitView(r,out){const seen=new Set(out.map(x=>x[0]));for(const id of seen){const p=this.players.get(id);if(p)r.known.set(id,p.ver);}for(const id of [...r.known.keys()])if(!seen.has(id))r.known.delete(id);}
  /* ---------- 필드 보스 (docs/design/188) — 공유 세계: 지역마다 주기마다 한 마리, 모두가 노린다 ---------- */
@@ -101,6 +194,7 @@ class Field{
  tickBosses(now=Date.now()){
   for(const o of this.bosses.values()) if(!o.alive&&o.nextAt&&now>=o.nextAt) this.spawnBoss(o, now);
   for(const o of this.bosses.values()){ COMBAT.tick(this,o,now); DOM.tick(this,o,now); }
+  this.tickEcologies(now);
   for(const p of this.players.values()) if(p.dead&&now>=p.respawnAt) this.respawn(p,now);
   for(const [id,s] of this.life)if(now>=s.expires)this.life.delete(id);
   for(const [k,l] of this.loot) if(now>=l.expires) this.loot.delete(k); }
@@ -127,13 +221,18 @@ class Field{
  /* 캐릭터 스킬 1~4 (디렉터: «스킬을 누르고 공격을 누르면 그 스킬이 나간다» — 고르는 건 화면, 결과는 서버).
     수치는 솔로와 같은 표(js/dungeons.js SKILLS + 스킬 성장 rpg-skills.resolve). 재사용 대기는 서버가 센다.
     종류: mult>0 → 보스 타격(배율) · dodge → 회피 무적(+critNext: 다음 공격 치명타) · buff.reduce → 그 시간 동안 받는 피해 감소 */
- skill(id, msg, profile, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.'); if(p.dead) return null;
+ skill(id, msg, profile, now=this.clock()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.'); if(p.dead) return null;
   const i=msg.skill|0, def=(RS.resolve(profile).skills||[])[i]; if(!def||i<0||i>3) return null;
-  p.skillReady=p.skillReady||[0,0,0,0]; if(now<p.skillReady[i]) return { type:'skillUsed', skill:i, ok:false, ready:p.skillReady[i] };
+  p.skillReady=p.skillReady||[0,0,0,0]; if(now<p.skillReady[i]){
+   const used={skill:i,ok:false,ready:p.skillReady[i],name:def.name};
+   const m=typeof msg.mob==='string'&&typeof msg.boss!=='string'?this.ecologies.get(p.zone)?.mobs.get(msg.mob):null;
+   return m&&(msg.generation===undefined||msg.generation===m.generation)
+    ?{type:'mobHit',mob:m.id,generation:m.generation,...used}:{type:'skillUsed',...used}; }
   p.skillReady[i]=now+Math.round((def.cd||6)*1000); p.anim='skill'+(i+1);
   if(def.dodge){ p.dodgeUntil=now+DODGE_TIME; if(def.critNext) p.critNext=true; }
   if(def.buff&&def.buff.reduce){ p.buffUntil=now+Math.round((def.buff.dur||2)*1000); p.buffReduce=Math.max(0,Math.min(.8,def.buff.reduce)); }
-  let hit=null; if(def.mult>0&&typeof msg.boss==='string'){ try{ hit=this.hit(id,{boss:msg.boss},profile,now,{mult:def.mult,skill:true}); }catch{ hit=null; } }
+  let hit=null; if(def.mult>0){ try{ if(typeof msg.mob==='string'&&typeof msg.boss!=='string')hit=this.hitMob(id,msg,profile,now,{mult:def.mult,skill:true});
+    else if(typeof msg.boss==='string'&&typeof msg.mob!=='string')hit=this.hit(id,{boss:msg.boss},profile,now,{mult:def.mult,skill:true}); }catch{ hit=null; } }
   const used={ skill:i, ok:true, ready:p.skillReady[i], name:def.name };
   return hit?{ ...hit, ...used }:{ type:'skillUsed', ...used }; }
  /* 보스 타격 판정. 회피 무적·피해·넉백·사망을 한 서버 시각에서 결정한다. */
@@ -183,8 +282,9 @@ class Field{
   return { bossNow:now, bosses:bs, bossActs, bossImpacts, loot }; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
-  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), ...this.bossView(p) }; }
-  if(msg.type==='fieldHit'){ return typeof msg.boss==='string'?this.hit(id, msg, profile):null; }
+  if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), mobs:this.mobView(p), ...this.bossView(p) }; }
+  if(msg.type==='fieldHit'){ if(typeof msg.mob==='string'&&typeof msg.boss!=='string')return this.hitMob(id,msg,profile);
+    return typeof msg.boss==='string'&&typeof msg.mob!=='string'?this.hit(id, msg, profile):null; }
   if(msg.type==='fieldSkill'){ return this.skill(id, msg, profile); }
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
   /* 옛 데모 클라이언트 호환용 무응답. 온라인 외형은 장착 장비만 권위로 삼아 반복 재생성 공격을 막는다. */

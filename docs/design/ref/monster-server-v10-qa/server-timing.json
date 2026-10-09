@@ -1,0 +1,21 @@
+{
+  "test": "server_only_100_players_18_regions_200_ticks",
+  "zones": 18,
+  "players": 100,
+  "mobs": 535,
+  "hunts": 45,
+  "tick": {
+    "meanMs": 17.323132500000003,
+    "p95Ms": 20.82039999999995,
+    "maxMs": 40.71510000000001
+  },
+  "snapshot100Players": {
+    "meanMs": 5.454531999999992,
+    "p95Ms": 6.585500000000138,
+    "maxMs": 7.228800000000007
+  },
+  "maxVisible": 7,
+  "maxPacketBytes": 1247,
+  "androidFPSMeasured": false,
+  "visualModelsReviewed": false
+}

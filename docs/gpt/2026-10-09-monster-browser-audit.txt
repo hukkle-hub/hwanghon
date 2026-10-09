@@ -1,0 +1,70 @@
+황혼 몬스터 v10 · 실제 2인 브라우저 검수 결과 / Claude 인계
+2026-10-09
+
+결론: 서버 연결 상태 검증은 진행됐지만 브라우저 종합 검수는 미합격이다.
+공유 브랜치: gpt/monster-server-v10. 서버 구현 기준 b376c95cba6.
+Claude의 최신 카메라 변경 origin/main c5fa302b5도 보존·병합한 뒤 재검수했다.
+main 병합, Render 재배포, 외부 계정/프로필 변경은 하지 않았다.
+Claude 화면·지도·몸·의상 파일은 변경하지 않았다.
+
+1. 실제로 실행한 것
+- 로컬 createPartyServer + Store(null), 서로 독립된 Chromium 브라우저 컨텍스트 2개.
+- 실제 mmo.html의 아인, 실제 world3d.html의 카인. 대전 필드 / 915x412 가로 화면.
+- 실제 로그인·입장·타격 UI → 실제 WebSocket → 서버 판정 → 양쪽 화면 패킷.
+- 기존 G5_BREAKER 스폰 사용. 승인되지 않은 갈고리손 GLB를 만든 것이 아니다.
+- 서버 틱은 촬영을 위해 정지/단계 실행했다. 연속 실기기 플레이/FPS 시험이 아니다.
+- 상대 플레이어 각 1명, 같은 몬스터 id·generation, 공격 예고 고리 표시 확인.
+- 실제 몬스터 공격의 hurt[2]가 같은 mob id임을 확인.
+- 실제 클라이언트 타격 피해와 남은 HP를 두 화면에서 확인(각 실행 수치는 JSON).
+- 사망 HP 0 / alive false / die 상태 양쪽 공유.
+- 실제 30초 재생 시간을 기다린 뒤 generation 1→2, HP 100% 양쪽 공유.
+- 보상 정책 pending_policy 유지, 골드·XP 임의 지급 없음.
+
+2. 재현 오류: 3D 최초 입장 초기화 순서 (배포 전 필수 수정)
+ReferenceError: Cannot access 'netMobs' before initialization
+네 번의 실제 브라우저 실행에서 같은 오류를 재현했다. 최신 main 병합 후에도 재현.
+
+호출 순서 (현재 origin/main b077bc1f0 기준):
+js/mmo/field-net.js:27
+  fieldJoined 수신 → resolve(net) → onMessage(m) 동기 호출.
+world3d.html:315
+  net = await connectField(...)에서 모듈 초기화가 아직 대기 중.
+world3d.html:297
+  netMsg(fieldJoined) → netMobs = mobsFromPacket(m.mobs); mobView();
+world3d.html:333~336
+  tag3d, ECO/MOBS/netMobs/mobHp, mobBody, mobView는 await보다 뒤에서 초기화됨.
+
+netMobs 선언만 먼저 옮기면 mobView/tag3d 등 다음 초기화 오류가 생길 수 있다.
+제안: 몬스터 상태·팩토리를 모두 connectField await 앞에서 준비하거나,
+전체 런타임 준비 전 수신 메시지를 순서대로 큐에 넣고 준비 완료 후 처리한다.
+fieldJoined 이전 field/announce 및 첫 상대 정보도 버리지 않는다.
+서버에서 첫 mobs 패킷을 생략해 숨기지 않는다. v2 규약 변경 없음:
+[id,catalogId,x,z,alive,anim,generation,hpPercent,seq]
+
+3. 시각 검수에서 합격으로 치지 않은 것
+- 임시 사람형 몸만 있다. 캐논 몬스터/갈고리손 완성품이 아니다.
+- 사망 클립 0.8333초 중 0.5667초까지 실제 렌더를 진행한 후 정지 촬영했다.
+- 2D 사망 컷은 임시 몸이 여전히 직립처럼 보인다. 3D 컷은 플레이어에게 가린다.
+  자연스럽게 쓰러지는 모습은 합격하지 않았다. 상태/클립 시간만으로 통과 선언하지 않는다.
+- 피격 직후 기존 공격 고리가 잠시 남는 모습도 확인. 취소 예고 표시 정책을 Claude가 확인할 것.
+- 시점 확대·비가림 각도에서 임시 몸 death 클립/웨이트/교차 페이드 재검수 필요.
+- 휴대폰 가로 viewport는 실제 Galaxy S25 Ultra 성능 검증이 아니다.
+
+4. 재현 도구와 자료
+tools/monsters/render-field-mobs.cjs
+  PLAYWRIGHT_MODULE 환경변수로 Playwright 위치를 지정한다.
+  node tools/monsters/render-field-mobs.cjs <출력 폴더>
+  브라우저 오류가 있으면 complete=false / 종료 코드 1을 반환한다.
+  계정 토큰은 메모리와 로컬 임시 브라우저에만 있으며 보고서/저장소에 남기지 않는다.
+docs/design/ref/monster-server-browser-audit/browser-audit.json
+동일 폴더: 2d/3d × attack, hit, death, respawn 캡처 8장.
+JSON의 noPageErrors=false / complete=false를 유지한다.
+최신 main 병합 뒤 npm test: 949개 중 947 통과, 실패 0, 건너뜀 2.
+자동 시험 통과와 실제 브라우저 미합격은 분리했다(regression-result.json).
+
+5. 다음 작업 / 소유권
+Claude: 3D 입장 초기화 순서 수정 후 같은 브라우저 검수 재실행.
+Claude: 사망 자세 확대/비가림 컷과 실제 연속 플레이·휴대폰 가로/세로 성능 검수.
+GPT: 위 화면 수정이 들어오면 서버 브랜치에 반영·통합 시험 재실행.
+감독: 갈고리손 승인 시트, 드롭/XP 정책, 낮밤/침공 일정은 아직 미정.
+main/Render: 데이터 보존 또는 초기화 허용과 실제 자동 배포 설정 확인 전 보류.

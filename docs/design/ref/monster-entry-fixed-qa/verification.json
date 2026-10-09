@@ -1,0 +1,23 @@
+{
+  "scope": "3d_initial_entry_fix_and_local_two_browser_packet_lifecycle",
+  "fullGameOrArtComplete": false,
+  "regression": {"tests":951,"pass":949,"fail":0,"skipped":2,"exitCode":0,"durationMs":170646.2618},
+  "focusedInitAndMobTests": {"tests":7,"pass":7,"fail":0},
+  "negativeControl": "Original declaration order reproduced TDZ before fix; deliberate await-first order still rejected after fix.",
+  "twoBrowserLifecycleExitCode": 0,
+  "twoBrowserLifecyclePageErrors": 0,
+  "entryReloadSmokeExitCode": 0,
+  "online3DReloads": 3,
+  "viewports": [[915,412],[412,915]],
+  "horizontalOverflowPx": 0,
+  "offlineEcologyPopulation": 25,
+  "world3dSha256": "c7d7b7f76d9b938749c52dd56e21d48787b6d5ae8d041eadd609568a8fd3d92f",
+  "wireChanged": false,
+  "serverCodeChangedThisFix": false,
+  "modelOrSkinWeightsChanged": false,
+  "temporaryDeathClipPlaybackConfirmed": true,
+  "finalNaturalDeathAnimationApproved": false,
+  "androidDeviceFPSVerified": false,
+  "renderDeployed": false,
+  "mainPushed": false
+}
