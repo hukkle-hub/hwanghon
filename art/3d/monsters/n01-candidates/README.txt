@@ -45,3 +45,15 @@ influence consolidation; native mesh/UV/PNG/rest rig and all combat samples
 remain unchanged. This reduces stretching, not a claim of simulated cloth or
 perfect retopology. Selected full rear motion and close views are supplied.
 The earlier delivery and twelve former models are preserved outside the repo.
+
+2026-10-10 third-delivery Stalker skin refinement:
+Upper garment uses a continuous shoulder/spine weight field. Head/neck-dominant
+vertices, hands, lower body and the separate core retain their native weights
+(maximum floating-point normalization difference3e-8). Rest mesh/UV/PNG/rig and
+every animation sample are byte-exact vs second delivery; no retiming or cost.
+Full-body native front/rear clips and close images are reviewed separately.
+Regression checks actual deformed edges throughout all5 clips, including a
+deliberately injected one-meter vertex spike. This is a local cloth deformation
+repair, not full cloth simulation or final director approval. Existing wrinkles,
+hair clumps and finger silhouette limitations still apply. See
+docs/gpt/n01-stalker-coat-v8-2026-10-10.txt for measurements and integration limits.

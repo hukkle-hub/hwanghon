@@ -1,12 +1,12 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\stalker-idle-plant-v1\\g5_stalker_mobile.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\stalker-coat-field-v8\\g5_stalker_mobile.glb",
   "species": "G5_STALKER",
-  "sha256": "c9476c201e2356825d5ee70d7cffe7e06c5bccc68397b35db1d21d2ddc2426ca",
-  "bytes": 2053772,
+  "sha256": "25f6074c45a06ead051bd357c85632b614a567c15365cca23ff830df6483b0b0",
+  "bytes": 2293668,
   "triangles": 15823,
   "vertices": 10223,
   "materials": 2,
-  "maxWeightError": 4.470348358154297e-8,
+  "maxWeightError": 4.563480615615845e-8,
   "joints": 65,
   "clips": [
     {
