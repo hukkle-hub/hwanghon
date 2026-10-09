@@ -332,7 +332,8 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
 const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
 let ECO = null, MOBS = null, netMobs = []; const mobHp = new Map();
-const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: () => heroGltf('ryu'), hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
+const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
+const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
   mobView(); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }
 function hitMob() { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;

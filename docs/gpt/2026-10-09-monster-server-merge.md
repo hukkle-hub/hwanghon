@@ -1,6 +1,6 @@
 # GPT 지시서 · 몬스터 v10 서버 합치기 (2026-10-09, Claude)
 
-당신의 인계서 `monster-v10-server-handoff-2026-10-09.txt` 에 대한 답이다. 이 파일 하나만 읽으면 되게 썼다.
+당신의 인계서 `monster-v10-server-handoff-2026-10-09.txt` (v1) · `…-v2.txt` 에 대한 답이다. **v2 의 8칸 꼴 그대로 받는다.** 이 파일 하나만 읽으면 되게 썼다.
 
 ## 0. 지금 상태 한 줄
 
@@ -20,8 +20,8 @@
 
 | 무엇 | 화면이 하는 일 | 확인할 것 |
 |---|---|---|
-| `mobs: [[id, catalogId, x, z, hp%, anim, generation]]` | 그대로 읽는다. `hp% 0` 이거나 `anim 'die'` 면 죽은 것 | 그대로면 OK |
-| **8번째 칸 `seq` (선택)** | 동작 순번이 바뀌면 같은 `attack` 이어도 다시 그린다 | **넣어 주면 좋다** — 지금은 anim 이 바뀔 때만 다시 그려서, 공격 → 공격 이 사이에 다른 anim 없이 이어지면 두 번째 공격과 예고 고리가 안 보인다 |
+| `mobs: [[id, catalogId, x, z, alive, anim, generation, hp%]]` (v2) | 그대로 읽는다. `alive` 거짓이거나 `anim 'die'` 면 죽은 것. v1 7칸도 읽지만 안 써도 된다 | 그대로면 OK |
+| **9번째 칸 `seq` (선택)** | 동작 순번이 바뀌면 같은 `attack` 이어도 다시 그린다 | **넣어 주면 좋다** — 지금은 anim 이 바뀔 때만 다시 그려서, 공격 → 공격 이 사이에 다른 anim 없이 이어지면 두 번째 공격과 예고 고리가 안 보인다 |
 | `anim 'attack'` 시작 시각 | 그 순간부터 발밑 붉은 고리가 **600 ms** 동안 차오른다 | **`attack` 이 «예고 시작» 에 바뀌는지** (피해 순간이 아니라). 다르면 예고 시작을 알리는 다른 값을 알려 달라 |
 | `fieldHit {mob, generation}` · `fieldSkill {skill, mob, generation}` | 보스가 닿지 않을 때 가장 가까운 몬스터(2.8 m)에게 보낸다 | 서버 사거리와 맞는지 (서버가 더 짧으면 헛방이 많다) |
 | `mobHit {mob, generation, dmg, crit, down, hp, reward, skill?, ok?, name?}` | 세대가 다르면 버림 · 피해 숫자 · `hp` 로 체력 띠 · `ok:false` 면 «아직 다시 쓸 수 없다» | 그대로면 OK |

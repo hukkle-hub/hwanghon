@@ -7,14 +7,14 @@
 const GRADE_TINT = { 5: [0x2c3a30, 0x0c2a10], 4: [0x2e2440, 0x2a0c40], 3: [0x3e1418, 0x5a0010] };
 const GRADE_NAME = { 5: '5급', 4: '4급', 3: '3급', 2: '2급', 1: '1급' };
 const CLIP = { idle: 'idle', walk: 'walk', attack: 'attack1', hit: 'hit', die: 'death' }, ONCE = new Set(['attack', 'hit', 'die']), WARN_MS = 600;
-/* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버: [id, catalogId, x, z, hp%, anim, generation, (동작 순번)].
-   8번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
-   옛 지시서 꼴 [id, catalogId, x, z, alive, anim, generation, hp%] 도 받는다(5번째가 참/거짓이면). 숫자가 아니면 버린다 */
+/* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버 v2(확정): [id, catalogId, x, z, alive, anim, generation, hp%, (동작 순번)] — 앞 일곱 칸은 snapshot 과 같은 순서.
+   9번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
+   인계서 v1 의 7칸 꼴 [id, catalogId, x, z, hp%, anim, generation] 도 받는다(5번째가 숫자면 — v2 가 대체했다). 숫자가 아니면 버린다 */
 export function mobsFromPacket(rows) {
   const out = []; if (!Array.isArray(rows)) return out;
   for (const r of rows) { if (!Array.isArray(r) || typeof r[0] !== 'string') continue; const [id, catalogId, x, z] = r; if (!Number.isFinite(x) || !Number.isFinite(z)) continue;
     const old = typeof r[4] === 'boolean', hp = Math.max(0, Math.min(100, Number(old ? (r[7] ?? (r[4] ? 100 : 0)) : r[4]) || 0)), anim = typeof r[5] === 'string' ? r[5] : 'idle';
-    out.push({ id, catalogId: String(catalogId), x, z, hp, anim, generation: Number(r[6]) || 0, seq: old ? null : (Number.isFinite(r[7]) ? r[7] : null), alive: (old ? r[4] : hp > 0) && anim !== 'die' }); }
+    out.push({ id, catalogId: String(catalogId), x, z, hp, anim, generation: Number(r[6]) || 0, seq: old ? (Number.isFinite(r[8]) ? r[8] : null) : null, alive: (old ? r[4] : hp > 0) && anim !== 'die' }); }
   return out;
 }
 
