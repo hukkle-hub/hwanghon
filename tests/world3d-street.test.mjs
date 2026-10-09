@@ -21,7 +21,9 @@ test('거리 소품: 전봇대·전선·신호등·쓰레기·정류장이 서�
   assert.ok(S.poles >= 4 && S.wires >= 3, '전봇대 ' + S.poles + ' · 전선 ' + S.wires); assert.ok(S.signals >= 1, '교차로 신호등 ' + S.signals); assert.ok(S.bags > 0 && S.stops > 0, '쓰레기 ' + S.bags + ' · 정류장 ' + S.stops);
   assert.equal(ctx.blockers.length, 0, '소품이 막이를 넣었다 — 서버 지도(map.json)와 어긋난다'); assert.equal(ctx.clear.length, 0);
   ctx.scene.updateMatrixWorld(true); const v = new THREE.Vector3(); let n = 0;
-  for (const o of ctx.scene.children) { if (o.isLineSegments) continue; o.getWorldPosition(v); n++;   /* 신호등 머리(5.45 m)는 차도 위로 내미는 게 맞다 — 땅 위 것만 */
+  for (const o of ctx.scene.children) { if (!o.isInstancedMesh) continue; const m = new THREE.Matrix4(); assert.ok(o.count > 20, '잡초 ' + o.count); L.STREET.weeds = o.count;   /* 잡초: 하나하나의 자리로 */
+    for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, m); v.setFromMatrixPosition(m); assert.ok(!onRoad(v.x, v.z), `잡초가 차도 위 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(!L.inPoly([v.x, v.z], built[0].pts), `잡초가 건물 안 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); } }
+  for (const o of ctx.scene.children) { if (o.isLineSegments || o.isInstancedMesh) continue; o.getWorldPosition(v); n++;   /* 신호등 머리(5.45 m)는 차도 위로 내미는 게 맞다 — 땅 위 것만 */
     if (v.y < 3) assert.ok(!onRoad(v.x, v.z), `차도 위 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(!L.inPoly([v.x, v.z], built[0].pts), `건물 안 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); }
   assert.ok(n > 10);
   ctx.scene.traverse(o => { if (o.isMesh || o.isLineSegments) assert.ok(o.userData.noCam, '카메라 막이·문 자리 광선에 걸린다: ' + o.type); });

@@ -15,7 +15,7 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
   scene.traverse(o => {
     if (!o.isMesh) return; before++;
     if (o.isSkinnedMesh || !o.visible || (skip && skip(o))) return;
-    if (o.isInstancedMesh) { camFromInstanced(o); return; }
+    if (o.isInstancedMesh) { if (!o.userData.noCam) camFromInstanced(o); return; }   /* 잡초·까마귀(noCam) — 인스턴스마다 상자를 만들면 수천 개 (문서 219) */
     if (Array.isArray(o.material) || o.children.length) { camFrom(o); return; }   /* 합치지는 않아도 카메라는 막는다 — 재질 여럿인 건물이 막이에서 통째로 빠져 강남 시점 2% 가 지붕에 가렸다 */
     if (!o.material.onBeforeCompile || o.material.onBeforeCompile === THREE.Material.prototype.onBeforeCompile) { const k = sig(o.material), m0 = canon.get(k); if (!m0) canon.set(k, o.material); else if (m0 !== o.material) { o.material = m0; dedup++; } }
     const g = o.geometry; camFrom(o);
