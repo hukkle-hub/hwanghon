@@ -181,7 +181,10 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
    (3인칭은 늘 지평선이 보인다 — «도시가 끝난 판» 처럼 보였다). 높이는 OSM 층수 또는 건물 id 해시(장면 난수 R 안 씀) · 그림자·카메라 막이 없음 · 막이 없음(못 가는 곳) */
 const FAR_PAD = 300; export const FAR = { n: 0, tris: 0 };
 function farCity(THREE, scene, far, tex, area) {
-  const mats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.7, metalness: 0.2 })), roofM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.95 });
+  /* 창 불빛만 그린 발광 지도 (파사드와 같은 격자: 8 창 × 4 층 = 14.4 m) — 파사드 지도로 발광을 키우면 벽까지 밝아졌다. 밤엔 world3d 가 세기를 올린다 */
+  const r = rng(5150), win = canvasTex(THREE, 256, 256, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 8; fx++) { const u = r(); if (u > 0.2) continue; g.fillStyle = u < 0.13 ? '#ffc874' : u < 0.17 ? '#ffe2b0' : '#8ad0ff'; g.fillRect(fx * 32 + 3, fy * 64 + 10, 26, 44); } }, [1 / 14.4, 1 / 14.4]);
+  const mats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: win, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.7, metalness: 0.2 })), roofM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.95 });
+  for (const m of mats) m.userData.farGlow = 0.5;   /* 황혼 0.5 → 밤 ×2 · 낮 ×0.3 (city-life) */
   const cells = new Map(), put = (key, g) => { let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(g); };
   for (const [pts, b] of far) { const ar = area(pts), id = b.id | 0, u = hashU(id, 3, 9);
     const h = Math.min(120, b.height || (b.levels ? b.levels * 3.4 : ar > 900 ? 24 + u * 30 : ar > 300 ? 12 + u * 14 : 6 + u * 8));
@@ -190,6 +193,7 @@ function farCity(THREE, scene, far, tex, area) {
     /* 뽑아 올린 기하의 무리(0 = 지붕·바닥, 1 = 벽)를 따로 떼어 재질별로 — 재질 여럿인 메시는 static-merge 가 안 합친다 */
     for (const gr of g.groups) { const sub = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) sub.setAttribute(k, g.attributes[k]); sub.setIndex(Array.from(g.index ? g.index.array.slice(gr.start, gr.start + gr.count) : [...Array(gr.count)].map((_, i) => gr.start + i)));
       put(cell + '|' + (gr.materialIndex === 0 ? 'r' : 'w'), sub); FAR.tris += gr.count / 3; }
+    if (h > 13 && hashU(id, 4, 9) < 0.3) (FAR.tops || (FAR.tops = [])).push([+cx.toFixed(1), +h.toFixed(1), +cz.toFixed(1)]);   /* 연기 기둥 후보 (city-life) */
     FAR.n++; }
   for (const [key, list] of cells) { const k = key.split('|')[1], g = mergeGeometries(list.map(x => x.toNonIndexed()), false); if (!g) continue;
     const [cx, cz] = key.split('|')[0].split(',').map(Number), m = new THREE.Mesh(g, k === 'r' ? roofM : mats[(Math.floor(hashU(cx, cz, 5) * 4)) % 4]);   /* 칸마다 파사드 하나 — 칸당 메시 둘 */ m.userData.noCam = true; m.userData.far = 1; scene.add(m); FAR.meshes = (FAR.meshes || 0) + 1; } }
@@ -313,7 +317,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
   const onRoad = p => carRoads.some(rw => { for (let i = 1; i < rw.pts.length; i++) if (segDist(p, rw.pts[i - 1], rw.pts[i]) < rw.width / 2 + 0.4) return true; return false; });   /* 일방통행 대로는 OSM 에서 두 줄 — 한 길의 길가가 옆 길의 차로다 */
   const solid = p => built.some(b => inPoly(p, b.pts)) || (o.waters || []).some(w => inPoly(p, w)) || onRoad(p);
   const conc = new THREE.MeshStandardMaterial({ color: 0x8a8682, roughness: 0.85, map: gritTex(THREE) }), steel = new THREE.MeshStandardMaterial({ color: 0x4a4e54, roughness: 0.5, metalness: 0.6 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.6 });
-  const amber = new THREE.MeshStandardMaterial({ color: 0x3a2a10, emissive: 0xffa020, emissiveIntensity: 1.4 }), bagM = [0x1c1c22, 0x2a3a5a, 0x3a3a34].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.05 }));
+  const amber = new THREE.MeshStandardMaterial({ color: 0x3a2a10, emissive: 0xffa020, emissiveIntensity: 1.4 }); amber.userData.blink = 1.4; const bagM = [0x1c1c22, 0x2a3a5a, 0x3a3a34].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.05 }));
   const glass = new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 }), wireM = new THREE.LineBasicMaterial({ color: 0x0c0c10 });
   const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; m.userData.noCam = true; scene.add(m); return m; };
   const wires = new Map(), wire = (a, b) => { const key = Math.floor(a[0] / 160) + ',' + Math.floor(a[2] / 160); let l = wires.get(key); if (!l) wires.set(key, l = []);
