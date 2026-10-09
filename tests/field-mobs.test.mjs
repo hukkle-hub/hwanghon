@@ -25,7 +25,7 @@ test('2D·3D 연결: 혼자 연습에서만 생태를 돌리고(서버 몬스터
   assert.match(m, /function hitBoss\(sk\)\{ const o=nearBoss\(\); if\(!o\) return hitMob\(sk\);/, '2D 에서 몬스터를 못 친다');
   assert.match(w, /if \(ECO && !net\) \{ ECO\.tick\(gameNow\); if \(MP\) \{ MP\.tick\(gameNow, \[P\]\);/, '3D 혼자 연습 생태 틱');
   assert.match(w, /collide: createCollide\(meta\)\.collide \}\);/, '3D 생태가 장면 충돌(env.blockers)을 쓴다 — 서버와 같은 map.json 이어야 둥지가 막히지 않는다');
-  assert.match(w, /if \(!t\) \{ hitMob\(\); return; \}/, '3D 에서 몬스터를 못 친다');
+  assert.match(w, /if \(!t\) return hitMob\(sk\);/, '3D 에서 몬스터를 못 친다');
   assert.match(v, /임시 몸/, '승인 안 된 몸에 «임시 몸» 표시가 없다');
   assert.match(v, /const g = v\.id\.slice\(0, v\.id\.lastIndexOf\(':'\)\)/, '무리마다 이름표 하나 — 겹쳐 못 읽는다');
 });
@@ -51,7 +51,7 @@ test('온라인 연결: 2D·3D 가 서버 mobs 를 그리고, 칠 때 mob 과 ge
   assert.match(m, /m\.type==='mobHit'\|\|m\.type==='fieldLooted'\)\{ toBoss\(m\)/, '2D 가 mobHit 을 안 넘긴다');
   assert.match(m, /type:'fieldSkill',skill:sk\.i,mob:v\.id,generation:v\.gen\}:\{type:'fieldHit',mob:v\.id,generation:v\.gen\}/, '2D 타격에 mob·generation');
   assert.match(m, /if\(net&&OFF\.MOBS\) OFF\.MOBS\.update\(netMobs,dt\)/, '2D 온라인 몬스터를 매 프레임 그리지 않는다');
-  assert.match(w, /net\.send\(\{ type: 'fieldHit', mob: v\.id, generation: v\.gen \}\)/, '3D 타격에 mob·generation');
+  assert.match(w, /: \{ type: 'fieldHit', mob: v\.id, generation: v\.gen \}\); return true; \}/, '3D 타격에 mob·generation');
   assert.match(w, /else if \(net && \(MOBS \|\| netMobs\.length\)\) mobView\(\)\.update\(netMobs, dt\);/, '3D 온라인 몬스터를 매 프레임 그리지 않는다');
   assert.ok(w.indexOf('let ECO = null, MOBS = null, MP = null, netMobs = []') > 0 && w.indexOf('let ECO = null, MOBS = null, MP = null, netMobs = []') < w.indexOf('net = await connectField'), '3D: 입장 답(fieldJoined)이 몬스터 선언보다 먼저 온다 — 실제 서버에서 ReferenceError (GPT tests/world3d-mob-init 도 같은 것을 돌려 본다)');
   for (const [src, re] of [[m, /v\.gen!==m\.generation/], [w, /v\.gen !== m\.generation/]]) assert.match(src, re, '다시 난 개체에 옛 mobHit 을 그린다');

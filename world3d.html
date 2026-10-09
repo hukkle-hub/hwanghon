@@ -12,6 +12,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 #hud{ position:fixed; inset:0; pointer-events:none; }
 #title{ position:absolute; top:max(12px,env(safe-area-inset-top)); left:16px; font-weight:900; font-size:20px; text-shadow:0 2px 6px #000; }
 #title small{ display:block; font-weight:500; font-size:12px; color:var(--dim); margin-top:2px; }
+#hint.gone{ opacity:0; pointer-events:none; transition:opacity .6s; }
 #hint{ position:absolute; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); font-size:12px; color:var(--dim); background:var(--panel); padding:6px 12px; border-radius:14px; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; text-align:center; }
 #load{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px; background:#140c12; z-index:5; }
 #load[hidden]{ display:none; }
@@ -27,6 +28,16 @@ canvas{ display:block; width:100vw; height:100vh; }
 #pot{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 120px); border-color:rgba(255,110,110,.6); flex-direction:column; line-height:1; color:#ffd0d0; }
 #pot b{ font-size:12px; } #pot em{ font-style:normal; font-size:11px; font-weight:700; opacity:.85; margin-top:3px; } #pot.none{ opacity:.45; }
 .dmg.heal{ color:#8fe0a0; }
+/* 스킬 1~4 (문서 212) — 공격 위·왼쪽 호. 64 px · 재사용 대기는 가운데 숫자 + 어둡게 */
+.btn.skb{ width:64px; height:64px; flex-direction:column; line-height:1.05; border-color:rgba(120,190,255,.55); font-size:12px; }
+.btn.skb b{ font-size:15px; } .btn.skb em{ font-style:normal; font-size:10px; font-weight:700; opacity:.85; margin-top:2px; max-width:58px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.btn.skb i.skcd{ position:absolute; inset:0; border-radius:50%; background:rgba(8,6,12,.62); display:flex; align-items:center; justify-content:center; font:900 18px 'Noto Sans KR',sans-serif; font-style:normal; color:#e8f4ff; }
+.btn.skb i.skcd[hidden]{ display:none; }
+#sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 140px); }
+#sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 214px); }
+#sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 196px); }
+#sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 174px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 120px); }
+@media (orientation:portrait){ #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 288px); } }   /* 세로: 왼쪽 이동 자리와 안 겹치게 위로 쌓는다 */
 #dodge{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px); }
 .dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
 .dmg.crit{ color:#ffc060; font-size:22px; } .dmg.taken{ color:#ff6a5a; } .dmg.evade{ color:#9fd8e8; font-size:15px; }
@@ -59,7 +70,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
@@ -173,7 +184,7 @@ const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: fal
 const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
     if (now < p.invulnUntil || now < p.dodgeUntil) { evadeFx(now, false); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
-    const amount = Math.max(1, Math.round(p.maxHp * hit.damage)); p.hp = Math.max(0, p.hp - amount);
+    const amount = Math.max(1, Math.round(p.maxHp * hit.damage * (now < (p.buffUntil || 0) ? 1 - (p.buffReduce || 0) : 1))); p.hp = Math.max(0, p.hp - amount);   /* 결의류: 받는 피해 감소 (서버 bossStrike buffMul) */
     if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; }
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
     if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } if (o.combat) COMBAT.notePlayerResult(o, p.id, false); return { amount, dead: p.dead }; } };
@@ -226,19 +237,39 @@ feel.attachTrail(fh);
 const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서버와 같다 */
 let dodgeT = 0, shakeT = 0, hurtT = 0;
 function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
-  hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip);
+  hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip); strike(null); }
+/* 가장 가까운 보스(닿는 거리) → 없으면 몬스터. sk = { i, mult, hits } (스킬) · null (기본 공격). 맞을 대상이 없으면 false */
+function strike(sk) {
   let t = null, bd = 1e9; for (const o of net ? [...doms, ...fbs] : [...doms, ...fbs.filter(f => f.ai)]) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
-  if (!t) { hitMob(); return; } me.yaw = Math.atan2(t.root.position.x - root.position.x, t.root.position.z - root.position.z); root.rotation.y = me.yaw;
-  if (net) { net.send({ type: 'fieldHit', boss: t.b.id }); return; }   /* 온라인: 서버가 판정한다 — 답(bossHit)이 오면 접점 시각에 보인다 */
-  const crit = Math.random() < 0.18;
-  feel.atContact(fh, 0, () => { if (!t.ai.alive) return; const ai = t.ai, counter = ai.combat ? COMBAT.tryCounter(ai, gameNow) : false;   /* 반격: 서버 hit() 와 같은 순서 — 반격창 판정 → 피해(×1.65) → 셔터 */
-    const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * (counter ? 1.65 : 1)); ai.hp -= n; feel.impact(fh, t, { crit, counter, sound: !t.fx });
+  if (!t) return hitMob(sk); me.yaw = Math.atan2(t.root.position.x - root.position.x, t.root.position.z - root.position.z); root.rotation.y = me.yaw;
+  if (net) { net.send(sk ? { type: 'fieldSkill', skill: sk.i, boss: t.b.id } : { type: 'fieldHit', boss: t.b.id }); return true; }   /* 온라인: 서버가 판정한다 — 답(bossHit)이 오면 접점 시각에 보인다 */
+  const crit = critNext || Math.random() < 0.18, mult = sk ? sk.mult : 1, hits = sk && sk.hits && sk.hits.length > 1 ? sk.hits : [[0, 1]]; critNext = false;   /* 서버 hit(): 그림자 걸음 뒤 치명타 확정 · 스킬 배율 · 여러 접점은 숫자도 나눠서 */
+  hits.forEach(([, w], k) => feel.atContact(fh, k, () => { if (!t.ai.alive) return; const ai = t.ai, counter = ai.combat ? COMBAT.tryCounter(ai, gameNow) : false;   /* 반격: 서버 hit() 와 같은 순서 — 반격창 판정 → 피해(×1.65) → 셔터 */
+    const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * mult * w * (counter ? 1.65 : 1)); ai.hp -= n; feel.impact(fh, t, { crit, counter, sound: !t.fx });
     floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', t.root.position, Math.min(2.1, (t.h || 2.2) * .6));
     if (t.fx) { const part = ai.hp > 0 ? COMBAT.damageShutter(ai, P, { character: ME }, n, counter, gameNow) : null;
       let dx = P.x - ai.x, dz = P.z - ai.z, d = Math.hypot(dx, dz); if (d < .001) { dx = -Math.sin(ai.yaw || 0); dz = -Math.cos(ai.yaw || 0); d = 1; } const edge = Math.max(.8, Math.min(1.55, (t.b.h || 3) * .38));
       bossHitReact(t, { seq: (t.impSeq = (t.impSeq || 0) + 1), x: ai.x + dx / d * edge, z: ai.z + dz / d * edge, crit, counter, at: gameNow });
       if (counter) { bossCounterBurst(t); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); }
-    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }); }
+    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }));
+  return true; }
+/* ---------- 스킬 1~4 (문서 212) — 2D·서버와 같은 표(js/dungeons.js SKILLS). 3D 는 누르면 바로 나간다(카메라 쪽으로 싸우니 «고르고 → 공격» 이 필요 없다).
+   온라인: fieldSkill 하나로 서버가 재사용 대기·판정·회피 무적·치명 예약·피해 감소를 맡는다. 혼자 연습: 서버 skill() 과 같은 규칙 ---------- */
+const SKDEF = (window.TW_DUNGEONS && TW_DUNGEONS.SKILLS && (TW_DUNGEONS.SKILLS[ME] || TW_DUNGEONS.SKILLS.ain)) || [], skReady = [0, 0, 0, 0], skEls = [1, 2, 3, 4].map(n => document.getElementById('sk' + n)); let critNext = false;
+skEls.forEach((el, i) => { const d = SKDEF[i]; if (!d) return; el.hidden = false; el.innerHTML = '<b>' + (i + 1) + '</b><em>' + String(d.name).replace(/[<>&]/g, '') + '</em><i class="skcd" hidden></i>';   /* esc 는 아래에서 선언 — 여기선 직접 */ el.addEventListener('pointerdown', e => { e.stopPropagation(); castSkill(i); }); });
+addEventListener('keydown', e => { const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); if (n >= 0) castSkill(n); });
+/* 조작 안내는 첫 터치나 12초 뒤에 걷는다 — 세로 화면에서 공격·회피 단추를 덮었다 */
+{ const h = document.getElementById('hint'), go = () => h && h.classList.add('gone'); addEventListener('pointerdown', go, { once: true }); setTimeout(go, 12000); }
+function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || busy > 0 || P.dead || !hero.clips[clip]) return false;
+  if (gameNow < skReady[i]) { toast(esc(d.name) + ' — ' + Math.ceil((skReady[i] - gameNow) / 1000) + '초 뒤', 1.2); return false; }
+  skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.75; feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
+  window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
+  if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
+  if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
+  else if (net) net.send({ type: 'fieldSkill', skill: i });
+  else { if (d.critNext) critNext = true; if (d.buff && d.buff.reduce) { P.buffUntil = gameNow + (d.buff.dur || 2) * 1000; P.buffReduce = Math.min(.8, d.buff.reduce); } }
+  return true; }
+function skTick() { skEls.forEach((el, i) => { const d = SKDEF[i]; if (!d) return; const c = el.lastChild, left = (skReady[i] - gameNow) / 1000; if (left > 0) { c.hidden = false; c.textContent = Math.ceil(left); } else if (!c.hidden) c.hidden = true; }); }
 /* 회피 결과 — 누른 직후(0.14초 안)에 피했으면 완벽 회피: 솔로와 같은 잔상·푸른 비네트 (문서 205 §4) */
 let pdN = 0;
 function evadeFx(at, online) { if (isPerfect(P.dodgeAt, at, online)) { floatAt('완벽 회피', 'evade', root.position, 2.1); perfectDodgeFx(scene, hero.model, { reduced: REDUCED }); pdN++; } else floatAt('회피', 'evade', root.position, 1.9); }
@@ -311,6 +342,7 @@ function netMsg(m) {
   if (m.type === 'bossHit') { const o = doms.find(x => x.b.id === m.boss) || fbs.find(x => x.b.id === m.boss); if (!o) return; const im = m.impact || [];   /* 내 타격의 답 — 접점 시각에 한 덩어리로 (문서 205) */
     feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', o.root.position, Math.min(2.1, (o.h || 2.2) * .6)); feel.impact(fh, o, { crit: m.crit, counter: m.counter, sound: !o.fx });
       if (o.fx) { bossHitReact(o, { seq: im[0], x: im[1], z: im[2], crit: m.crit, counter: m.counter, at: im[3] }); if (m.counter) { bossCounterBurst(o); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } } }); return; }
+  if (m.type === 'skillUsed') { if (!m.ok) toast(esc(m.name || '스킬') + ' — 아직 다시 쓸 수 없다', 1.4); return; }   /* 스킬 재사용 대기는 서버가 센다 */
   if (m.type === 'mobHit') { if (m.skill != null && m.ok === false) { toast(esc(m.name || '스킬') + ' — 아직 다시 쓸 수 없다', 2); return; }
     const v = MOBS && MOBS.views.get(m.mob); if (!v || (m.generation != null && v.gen !== m.generation)) return; const t = { root: v.root, h: v.h }, r = m.reward || {};
     feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', v.root.position, 1.5); feel.impact(fh, t, { crit: m.crit }); if (Number.isFinite(m.hp)) MOBS.hurt(v.id, m.hp);
@@ -340,13 +372,13 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
   mobView();
   if (MOB_MOD && typeof MOB_MOD.tick === 'function') MP = createMobPractice({ MOB: MOB_MOD, ECO, planRoute: ROUTE_MOD && ROUTE_MOD.planRoute, safe: p => !!(SAFE_MOD && SAFE_MOD.safeArea(meta.areas, p.x, p.z, SAFE_MOD.BOSS_OWNER)), strike: (m, p, h, t) => fieldLocal.bossStrike(m, p, h, t) }); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }   /* 몬스터 공격(GPT 모듈) — 서버 합치기 전엔 없다 */
-function hitMob() { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
+function hitMob(sk = null) { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
   me.yaw = Math.atan2(v.root.position.x - root.position.x, v.root.position.z - root.position.z); root.rotation.y = me.yaw;
-  if (net) { net.send({ type: 'fieldHit', mob: v.id, generation: v.gen }); return true; }   /* 온라인: 서버가 판정 — 답은 mobHit */
-  const crit = Math.random() < 0.18, key = v.id + ':' + v.gen, t = { root: v.root, h: v.h };
-  feel.atContact(fh, 0, () => { if (!v.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1)), left = (mobHp.has(key) ? mobHp.get(key) : (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])) - n;
+  if (net) { net.send(sk ? { type: 'fieldSkill', skill: sk.i, mob: v.id, generation: v.gen } : { type: 'fieldHit', mob: v.id, generation: v.gen }); return true; }   /* 온라인: 서버가 판정 — 답은 mobHit */
+  const crit = critNext || Math.random() < 0.18, key = v.id + ':' + v.gen, t = { root: v.root, h: v.h }, mult = sk ? sk.mult : 1, hits = sk && sk.hits && sk.hits.length > 1 ? sk.hits : [[0, 1]]; critNext = false;
+  hits.forEach(([, w], k) => feel.atContact(fh, k, () => { if (!v.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * mult * w), left = (mobHp.has(key) ? mobHp.get(key) : (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])) - n;
     if (MP) { const r = MP.hit(v.id, n, gameNow); if (r) { MOBS.hurt(v.id, r.hp); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (r.down) floatAt('처치', 'crit', v.root.position, 1.9); } return; }
-    mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } }); return true; }
+    mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } })); return true; }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
 async function goGate(g) { if (!g || !g.to) return; const to = g.to;
@@ -406,7 +438,7 @@ function tick() { perf.begin();
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
-  if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
+  if (frames % 4 === 0) skTick(); if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
   if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
@@ -430,7 +462,7 @@ function tick() { perf.begin();
   perf.end(); requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get perf() { return perf.stats; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };

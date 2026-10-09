@@ -100,7 +100,7 @@ test('3D 필드 온라인: 2D 필드와 같은 접속 규약·저장소 열쇠 �
   try { c.sync(5000); const a = c.now(); c.sync(4000); t += 10; const b = c.now(); assert.ok(b >= a, '서버 시계가 거꾸로 갔다'); assert.equal(a, 5000, '가장 지연이 적은(큰) 표본을 고른다'); }
   finally { Date.now = real; }
   assert.deepEqual(partyServer(new URLSearchParams(''), { hostname: 'hukkle-hub.github.io', host: 'x', protocol: 'https:' }), { host: 'hwanghon-party.onrender.com', secure: true }, 'Pages 사본은 Render 파티 서버로');
-  assert.match(w, /if \(net\) \{ net\.send\(\{ type: 'fieldHit', boss: t\.b\.id \}\); return; \}/, '온라인 타격을 브라우저가 판정한다');
+  assert.match(w, /if \(net\) \{ net\.send\(sk \? \{ type: 'fieldSkill', skill: sk\.i, boss: t\.b\.id \} : \{ type: 'fieldHit', boss: t\.b\.id \}\); return true; \}/, '온라인 타격을 브라우저가 판정한다');
   assert.match(w, /if \(net\) sendMove\('dodgeB'\)/, '온라인 회피를 서버에 안 알린다 — 무적이 안 열린다');
   assert.match(w, /if \(!net\) for \(const o of doms\)/, '온라인인데 브라우저 AI 가 돈다 — 서버 지배형과 두 개가 된다');
 });
