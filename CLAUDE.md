@@ -113,6 +113,7 @@ curl -s https://hukkle-hub.github.io/hwanghon/version.json   # 빌드 해시 확
 
 GPT 에게 시킬 일은 **`docs/gpt/날짜-주제.md` 한 장으로 따로** 만들고, 채팅에도 그 파일을 첨부해 보낸다 (디렉터 지시).
 그 파일 하나만 넘기면 되게 쓴다 — 배경, 연결점(경로·함수), 지켜 줄 것, 디렉터에게 남은 질문까지. 설계 문서(`docs/design/`) 안에 섞지 않는다.
+채팅으로 보낼 때는 **`.txt` 사본(+ 여러 장이면 `.zip`)을 «첨부» 로** 보낸다 — `.md` 는 디렉터 쪽에서 내려받기가 안 됐다(2026-10-09). 공개 원본: `https://raw.githubusercontent.com/hukkle-hub/hwanghon/main/docs/gpt/<파일>`.
 
 ## 4. 테스트
 
