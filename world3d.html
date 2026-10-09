@@ -117,6 +117,7 @@ import { createCityLife } from './js/mmo/city-life.js';
 import { koreaMapSVG } from './js/mmo/korea-map.js';
 import { REGIONS } from './js/mmo/regions.js';
 import { FAR } from './js/mmo/env-lib.js';
+import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d } from './js/mmo/env-lib.js';
@@ -125,7 +126,7 @@ import { setupDominator, updateDominator, applyDominatorAction, hideDominator, f
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
 import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js'; import { createPerfMeter } from './js/mmo/perf-meter.js'; import { createBagUI } from './js/mmo/field-bag-ui.js';
-import {bodyFor as n01BodyFor} from './js/mmo/n01-body-catalog.js';
+import {bodyFor as n01BodyFor,N01_BODIES} from './js/mmo/n01-body-catalog.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -500,7 +501,7 @@ const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
 let leaving = false;
 async function goGate(g) { if (!g || !g.to || leaving) return; const to = g.to; leaving = true;
   try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); leaving = false; return; }
-  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'debug', 'lod', 'tod', 'n01Candidates', 'n01Detail']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
+  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'n01Candidates', 'n01Detail', 'debug', 'lod', 'tod']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
   /* 떠나는 카드: 화면이 어두워지며 다음 지역 이름 — 도착 쪽 로딩 화면이 같은 카드를 이어 받는다 (문서 219) */
   const ZT = ZONES[to.zone] || {}, tv = document.getElementById('travel'), dg = g.kind === 'dungeon';
   try { sessionStorage.setItem('tw:travel', JSON.stringify({ at: Date.now(), from: ZONE, fromTitle: Z.title || ZONE, to: to.zone, toTitle: ZT.title || to.zone, label: g.label, hp: P.hp / P.maxHp })); } catch {}
@@ -598,6 +599,9 @@ window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
+mountReviewControl({ enabled: DBG && q.get('n01Candidates') === '1', online: ONLINE, ecology: ECO,
+  bodyIds: new Set(Object.keys(N01_BODIES)), document, notify: toast,
+  move: (x, z, yaw) => { window.__W3D.teleport(x, z, yaw); camS.yaw = yaw + Math.PI; placeCam(0); } });
 nearLights(root.position); placeCam(0); tick();
 </script>
 </body>

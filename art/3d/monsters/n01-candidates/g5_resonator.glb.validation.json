@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_resonator.glb",
+  "species": "G5_RESONATOR",
+  "sha256": "0dac2b6970269267ab3e43701926f8ffbe69a90f1ade866054654d9dda29c87f",
+  "bytes": 4593328,
+  "triangles": 45076,
+  "vertices": 25335,
+  "materials": 2,
+  "maxWeightError": 1.0574876796454191e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.5
+    },
+    {
+      "name": "aura_cast",
+      "duration": 2.4
+    },
+    {
+      "name": "self_defence",
+      "duration": 1.5
+    },
+    {
+      "name": "attack1",
+      "duration": 1.5
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 2048,
+      "height": 2048
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.47805845737457275,
+      -1.524398385299719e-9,
+      -0.20044346153736115
+    ],
+    [
+      0.47805824875831604,
+      1.8499999046325684,
+      0.2004426121711731
+    ]
+  ],
+  "height": 1.8499999061569667,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

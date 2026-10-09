@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_breaker_mobile.glb",
+  "species": "G5_BREAKER",
+  "sha256": "f0b53a82ffe1d47a435147a1244cd0bebe8f4d6242461660fcd595d42cde9237",
+  "bytes": 2145256,
+  "triangles": 15824,
+  "vertices": 9256,
+  "materials": 2,
+  "maxWeightError": 1.1734664440155029e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.8
+    },
+    {
+      "name": "heavy_slam",
+      "duration": 1.8
+    },
+    {
+      "name": "structure_slam",
+      "duration": 1.8
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.8
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.5029603838920593,
+      -1.7689110620722204e-7,
+      -0.18512196838855743
+    ],
+    [
+      0.5030484199523926,
+      1.850045919418335,
+      0.18547725677490234
+    ]
+  ],
+  "height": 1.8500460963094412,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

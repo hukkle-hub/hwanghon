@@ -1,0 +1,69 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_walker_mobile.glb",
+  "species": "G5_WALKER",
+  "sha256": "e9e732d49111227de97d7a9b708d813aab04988591c79c4dd232adee4ee46e8c",
+  "bytes": 1858272,
+  "triangles": 16651,
+  "vertices": 10945,
+  "materials": 3,
+  "maxWeightError": 1.1734664440155029e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "slow_combo",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.38297656178474426,
+      -0.0006235858891159296,
+      -0.21796974539756775
+    ],
+    [
+      0.38175538182258606,
+      1.850000262260437,
+      0.17324380576610565
+    ]
+  ],
+  "height": 1.850623848149553,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

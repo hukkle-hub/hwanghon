@@ -107,6 +107,9 @@ function tick(m,a,s,players,now,nav,context=null) {
   if(!Number.isFinite(now)||now<a.lastTick)throw Error('Mob clock must be monotonic');
   const dt=Math.min(.1,(now-a.lastTick)/1000);a.lastTick=now;
   if(!m.alive){m.engaged=false;m.anim='die';a.target=null;return null;}
+  // A support hold or flank waypoint must not overwrite a real hit reaction.
+  // Evaluate this before the context branches that can return early.
+  if(now<a.hitUntil){m.anim='hit';return null;}
   const valid=p=>!p.dead&&!nav.safe(p)&&nav.legal(m.group.area,[p.x,p.z])&&dist(p,a.home)<=s.leash;
   let target=players.find(p=>p.id===a.target&&valid(p));
   if(!target&&a.phase!=='return') target=players.filter(p=>valid(p)&&dist(p,m)<=s.aggro)
@@ -129,7 +132,6 @@ function tick(m,a,s,players,now,nav,context=null) {
   }
   if(a.target!==target.id&&a.phase==='windup'){a.phase='idle';a.until=now;a.ready=Math.max(a.ready,now+150);}
   a.target=target.id;m.engaged=true;
-  if(now<a.hitUntil){m.anim='hit';return null;}
   if(a.phase==='windup'){
     m.anim='attack';if(a.action?.key==='heavy_charge'&&now>=a.until-300)advance(m,a,target,s,dt,now,nav);if(now<a.until)return null;
     a.phase='recovery';a.until=now+(a.action?.recoveryMs??s.recoveryMs);a.ready=now+s.cooldownMs;

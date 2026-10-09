@@ -25,3 +25,11 @@ test('host context never bypasses terrain or safety, and non-armored attacks can
  assert.equal(M.counter({action:M.actionFor('G5_WALKER'),seq:0},'perfect',0),false);
  const w=mob('G5_WALKER'),b=M.reset(w,0);M.tick(w,b,M.statsFor(w.catalogId),[{id:'far',x:15,z:0}],100,nav,{allies:[]});assert.equal(b.target,null);
 });
+
+test('support and flank movement cannot erase the actual hit reaction',()=>{
+ for(const id of ['G5_RESONATOR','G5_RUNNER','G5_STALKER']){
+  const m=mob(id),a=M.reset(m,0),s=M.statsFor(id),ctx=id==='G5_RESONATOR'?{allies:[{id:'w',catalogId:'G5_WALKER',alive:true,x:3.5,z:0}]}:{flankPoints:[{id:'f',x:2,z:0}],npcs:[{id:'n',x:4,z:0}]};
+  M.stagger(a,0);M.tick(m,a,s,[],50,nav,ctx);assert.equal(m.anim,'hit');assert.equal(m.x,0);
+  M.tick(m,a,s,[],180,nav,ctx);assert.notEqual(m.anim,'hit');
+ }
+});

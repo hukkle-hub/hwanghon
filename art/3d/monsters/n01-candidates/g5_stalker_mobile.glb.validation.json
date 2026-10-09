@@ -1,0 +1,69 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_stalker_mobile.glb",
+  "species": "G5_STALKER",
+  "sha256": "675745be0d5dcff7fc2e6d2ae7c77f7f6e987351dd4612c8f4bed0d2d134f5d4",
+  "bytes": 1995304,
+  "triangles": 15823,
+  "vertices": 10223,
+  "materials": 2,
+  "maxWeightError": 1.30385160446167e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.3
+    },
+    {
+      "name": "tracking_strike",
+      "duration": 1.3
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.3
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.45649459958076477,
+      -2.3753642608426162e-7,
+      -0.1910499930381775
+    ],
+    [
+      0.4560558795928955,
+      1.850006341934204,
+      0.19406326115131378
+    ]
+  ],
+  "height": 1.8500065794706302,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

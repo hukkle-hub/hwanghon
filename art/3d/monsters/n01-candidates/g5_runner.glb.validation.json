@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\work\\hwanghon-monster-server-v10\\art\\3d\\monsters\\n01-candidates\\g5_runner.glb",
+  "species": "G5_RUNNER",
+  "sha256": "5fcd0c727f1c8e3f6f9c40bfec4c66245a01d3afbbcd904c70e5308fd9b9610a",
+  "bytes": 5459336,
+  "triangles": 48243,
+  "vertices": 33226,
+  "materials": 3,
+  "maxWeightError": 1.1781230568885803e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "run",
+      "duration": 0.5
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.1
+    },
+    {
+      "name": "flank_swipe",
+      "duration": 1.1
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.1
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 2048,
+      "height": 2048
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.43455129861831665,
+      -5.911368248234794e-7,
+      -0.20791028439998627
+    ],
+    [
+      0.43046337366104126,
+      1.8499999046325684,
+      0.20791004598140717
+    ]
+  ],
+  "height": 1.8500004957693932,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}
