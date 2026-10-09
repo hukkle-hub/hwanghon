@@ -26,6 +26,9 @@ canvas{ display:block; width:100vw; height:100vh; }
 .btn{ position:absolute; pointer-events:auto; border-radius:50%; border:2px solid rgba(232,184,96,.55); background:rgba(30,14,20,.55); color:var(--ink); font:900 15px 'Noto Sans KR',sans-serif; display:flex; align-items:center; justify-content:center; touch-action:none; user-select:none; -webkit-user-select:none; }
 #atk{ width:84px; height:84px; right:max(18px,env(safe-area-inset-right)); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px); border-color:rgba(232,90,74,.8); }
 #pot{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 120px); border-color:rgba(255,110,110,.6); flex-direction:column; line-height:1; color:#ffd0d0; }
+#bagBtn{ width:64px; height:64px; border-radius:10px; right:calc(max(12px,env(safe-area-inset-right)) + 144px); top:calc(max(12px,env(safe-area-inset-top))); font-size:14px; }
+#bagBtn.safe{ border-color:rgba(120,230,190,.8); color:#bff5e2; box-shadow:0 0 12px rgba(80,220,170,.35); font-size:12px; text-align:center; line-height:1.2; }
+@media (max-height:500px){ #bagBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 124px); } }
 #pot b{ font-size:12px; } #pot em{ font-style:normal; font-size:11px; font-weight:700; opacity:.85; margin-top:3px; } #pot.none{ opacity:.45; }
 .dmg.heal{ color:#8fe0a0; }
 /* 스킬 1~4 (문서 212) — 공격 위·왼쪽 호. 64 px · 재사용 대기는 가운데 숫자 + 어둡게 */
@@ -61,6 +64,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 #mini span{ position:absolute; transform:translate(-50%,-50%); font-size:11px; color:#f0e2d0; text-shadow:0 0 4px #000,0 1px 2px #000; white-space:nowrap; display:none; pointer-events:none; }
 #mini.big span{ display:block; } #mini span.d2{ color:#ffb070; } #mini span.d3{ color:#ff6a50; } #mini span.rest{ color:#9fe0b0; }
 #areaName{ position:absolute; left:50%; top:63%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; color:#f0e2d0; text-shadow:0 0 10px #000,0 1px 2px #000; white-space:nowrap; }
+@media (orientation:portrait){ #areaName{ top:40%; } }   /* 세로: 아래쪽은 스킬 단추 자리 */
 #areaName b{ display:block; font-size:22px; letter-spacing:.12em; font-weight:800; } #areaName small{ display:block; font-size:11px; letter-spacing:.08em; opacity:.8; margin-top:2px; }
 #areaName.d2 b{ color:#ffb070; } #areaName.d3 b{ color:#ff6a50; } #areaName.rest b{ color:#9fe0b0; }
 @media (max-height:500px){ #areaName b{ font-size:18px; } #mini{ width:112px; } }
@@ -70,10 +74,11 @@ canvas{ display:block; width:100vw; height:100vh; }
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
+<script src="js/mmo/safe-zones.js"></script>
 <script src="js/save.js"></script>
 <script src="js/gear.js"></script>
 <script src="js/looks.js"></script>
@@ -97,7 +102,7 @@ import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
-import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js'; import { createPerfMeter } from './js/mmo/perf-meter.js';
+import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js'; import { createPerfMeter } from './js/mmo/perf-meter.js'; import { createBagUI } from './js/mmo/field-bag-ui.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -277,11 +282,18 @@ function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; con
   hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP; P.dodgeAt = net ? sclock.now() : gameNow;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
 /* 회복약 (문서 206 §15) — 온라인: 서버 가방(fieldBag use c_potion, 2D 필드와 같은 길). 혼자 연습: 같은 규칙(최대 HP 35% · 1초에 한 번 · 가득이면 안 씀, server/field.cjs POTION_*)으로 수 제한 없이 */
+/* 가방 · 상점 · 창고 (문서 213, js/mmo/field-bag-ui.js) — 2D 필드 가방을 옮겼다. 접속 답보다 먼저 만든다(입장 때 오는 profile·fieldShop 을 받게) */
+let safeNow = null, hubOwner = null; const bagBtn = document.getElementById('bagBtn');
+const BAG = createBagUI({ IT: window.TW_ITEMS, send: m => net && net.send(m), profile: () => net && net.profile || null, safe: () => safeNow, hubBoss: () => !!(window.TW_SAFE && TW_SAFE.isHub(meta.areas) && !(hubOwner && hubOwner.kind === 'guild')), toast: (h) => toast(h, 2) });
+bagBtn.addEventListener('pointerdown', e => { e.stopPropagation(); BAG.toggle(); }); addEventListener('keydown', e => { if (e.code === 'KeyI' || e.code === 'KeyB') BAG.toggle(); if (e.code === 'Escape' && BAG.isOpen) BAG.close(); });
+/* 안전 지대: 걸을 때마다 다시 본다 — 들어서면 «가방 · 상점» (서버 규칙과 같은 js/mmo/safe-zones.js) */
+function safeTick() { const a = window.TW_SAFE ? TW_SAFE.safeArea(meta.areas, root.position.x, root.position.z, hubOwner) : null; if (a === safeNow) return; const was = safeNow; safeNow = a;
+  bagBtn.classList.toggle('safe', !!a); bagBtn.innerHTML = a ? '가방<br>상점' : '가방'; if (a && !was && net) toast(a.name + ' — 가방에서 상점·창고를 쓸 수 있다', 2.2); BAG.safeChanged(); }
 const POTION_HEAL = 0.35, POTION_GAP = 1000, potEl = document.getElementById('pot');
 function potCount() { return net ? ((net.profile && net.profile.items) || {}).c_potion || 0 : Infinity; }
 function potShow() { const n = potCount(); potEl.querySelector('em').textContent = n === Infinity ? '연습' : String(n); potEl.classList.toggle('none', !n); }
 function drink() { if (P.dead) return;
-  if (net) { if (!potCount()) { toast('회복약이 없습니다 — 마을·쉼터 상점에서 산다 (2D 필드 가방)', 2.5); return; } net.send({ type: 'fieldBag', op: 'use', item: 'c_potion' }); return; }
+  if (net) { if (!potCount()) { toast('회복약이 없습니다 — 마을·쉼터에서 가방 → 상점', 2.5); return; } net.send({ type: 'fieldBag', op: 'use', item: 'c_potion' }); return; }
   if (gameNow < (P.potionReady || 0)) { toast('회복약은 잠시 뒤에', 1.2); return; } if (P.hp >= P.maxHp) { toast('HP 가 가득 찼습니다', 1.2); return; }
   const heal = Math.round(P.maxHp * POTION_HEAL); P.hp = Math.min(P.maxHp, P.hp + heal); P.potionReady = gameNow + POTION_GAP; floatAt('+' + heal.toLocaleString('ko-KR'), 'heal', root.position, 2.0); }
 potEl.addEventListener('pointerdown', e => { e.stopPropagation(); drink(); }); addEventListener('keydown', e => { if (e.code === 'KeyQ') drink(); });
@@ -332,6 +344,8 @@ let ECO = null, MOBS = null, MP = null, netMobs = []; const mobHp = new Map();
 const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
 const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 function netMsg(m) {
+  if (m.type === 'fieldJoined' || m.type === 'hubState') { const st = m.type === 'hubState' ? (m.zone === ZONE ? m : null) : (m.hub !== undefined ? { owner: m.hub } : null); if (st) hubOwner = st.owner || null; }   /* 거점 주인 — 길드가 빼앗기 전엔 마을도 상점이 닫힌다 */
+  if (m.type !== 'field' && typeof BAG !== 'undefined' && BAG.onMessage(m)) return;   /* 가방이 없는 판(시험 조각)에서도 돈다 */
   if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
   if (m.type === 'field') { lastField = m; fieldN++; Object.assign(infos, m.infos || {});
     if (m.you) { const dx = m.you[0] - root.position.x, dz = m.you[1] - root.position.z, d = Math.hypot(dx, dz); if (d > 3) { root.position.x = m.you[0]; root.position.z = m.you[1]; } else if (d > .25) { root.position.x += dx * .22; root.position.z += dz * .22; } }   /* 서버 자리와 크게 어긋나면 맞춘다 (2D 필드와 같은 규칙) */
@@ -438,7 +452,7 @@ function tick() { perf.begin();
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
-  if (frames % 4 === 0) skTick(); if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
+  if (frames % 4 === 0) skTick(); if (frames % 10 === 0) safeTick(); if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
   if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
@@ -462,7 +476,7 @@ function tick() { perf.begin();
   perf.end(); requestAnimationFrame(tick); }
 document.getElementById('load').hidden = true;
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, bag: BAG, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
