@@ -38,12 +38,13 @@ canvas{ display:block; width:100vw; height:100vh; }
 #toast{ position:absolute; top:22%; left:50%; transform:translateX(-50%); font-weight:900; font-size:17px; background:var(--panel); padding:8px 16px; border-radius:12px; text-align:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
 #toast[hidden]{ display:none; }
 .tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
+.mobhp{position:absolute;transform:translate(-50%,-100%);width:46px;height:5px;background:rgba(10,4,4,.72);box-shadow:0 0 0 1px rgba(0,0,0,.8);pointer-events:none}.mobhp i{display:block;height:100%;width:100%;background:linear-gradient(#ff6a50,#b8281c)}
 .tag.mob{ color:#d4dccb; } .tag.mob small{ display:block; font-size:9px; color:#a8b0a0; } .tag.mob.g4{ color:#c9a8ff; } .tag.mob.g3{ color:#ff9c90; }
 #mini{ position:absolute; right:calc(12px + env(safe-area-inset-right)); top:calc(max(12px,env(safe-area-inset-top))); width:132px; border:1px solid rgba(201,164,94,.55); background:#140c10 center/100% 100% no-repeat; box-shadow:0 0 8px rgba(0,0,0,.6); overflow:hidden; pointer-events:auto; cursor:pointer; }
 #mini[hidden]{ display:none; }
 #mini.big{ right:auto; left:50%; top:50%; transform:translate(-50%,-50%); width:min(86vw,calc(78vh * var(--ar))); z-index:6; }
 #mini i{ position:absolute; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:#ffb070; pointer-events:none; }
-#mini i.gt{ border-radius:1px; background:#40b8e8; } #mini i.gt.dg{ background:#ff6040; } #mini i.bs{ width:8px; height:8px; margin:-4px 0 0 -4px; background:#ff3a30; box-shadow:0 0 5px #ff3a30; } #mini i.pl{ background:#e8f4ff; }
+#mini i.gt{ border-radius:1px; background:#40b8e8; } #mini i.gt.dg{ background:#ff6040; } #mini i.bs{ width:8px; height:8px; margin:-4px 0 0 -4px; background:#ff3a30; box-shadow:0 0 5px #ff3a30; } #mini i.pl{ background:#e8f4ff; } #mini i.mb{ display:none; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; background:#9aa890; } #mini.big i.mb{ display:block; } #mini i.mb.g4{ background:#b48cff; } #mini i.mb.g3{ background:#ff6a5a; }
 #mini b.me{ position:absolute; width:0; height:0; margin:-7px 0 0 -5px; border:5px solid transparent; border-bottom:12px solid #5fe0ff; border-top:0; filter:drop-shadow(0 0 3px #5fe0ff); transform-origin:5px 7px; z-index:2; pointer-events:none; }
 #mini span{ position:absolute; transform:translate(-50%,-50%); font-size:11px; color:#f0e2d0; text-shadow:0 0 4px #000,0 1px 2px #000; white-space:nowrap; display:none; pointer-events:none; }
 #mini.big span{ display:block; } #mini span.d2{ color:#ffb070; } #mini span.d3{ color:#ff6a50; } #mini span.rest{ color:#9fe0b0; }
@@ -84,7 +85,7 @@ import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
-import { createMobView, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';
+import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -293,19 +294,23 @@ function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
     else if (kind === 'respawn') toast('출발점에서 다시 일어섰습니다', 2.5);
     else if (amount > 0) { floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, kind === 'dead' ? .55 : .28); } } }
 function netMsg(m) {
-  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); return; }
+  if (m.type === 'fieldJoined') { ANIMS = m.anims || ANIMS; if (Number.isFinite(m.x)) { root.position.set(m.x, 0, m.z); } bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
   if (m.type === 'field') { lastField = m; fieldN++; Object.assign(infos, m.infos || {});
     if (m.you) { const dx = m.you[0] - root.position.x, dz = m.you[1] - root.position.z, d = Math.hypot(dx, dz); if (d > 3) { root.position.x = m.you[0]; root.position.z = m.you[1]; } else if (d > .25) { root.position.x += dx * .22; root.position.z += dz * .22; } }   /* 서버 자리와 크게 어긋나면 맞춘다 (2D 필드와 같은 규칙) */
-    remoteSet(m.players || []); bossPacket(m); return; }
+    remoteSet(m.players || []); bossPacket(m); if (Array.isArray(m.mobs)) { netMobs = mobsFromPacket(m.mobs); mobView(); } return; }
   if (m.type === 'profile' || m.type === 'fieldJoined') potShow();
   if (m.type === 'fieldBagDone' && m.op === 'use') { floatAt('+' + Number((m.result || {}).heal || 0).toLocaleString('ko-KR'), 'heal', root.position, 2.0); potShow(); return; }
   if (m.type === 'error' && m.message) { toast(esc(m.message), 2); return; }
   if (m.type === 'bossHit') { const o = doms.find(x => x.b.id === m.boss) || fbs.find(x => x.b.id === m.boss); if (!o) return; const im = m.impact || [];   /* 내 타격의 답 — 접점 시각에 한 덩어리로 (문서 205) */
     feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', o.root.position, Math.min(2.1, (o.h || 2.2) * .6)); feel.impact(fh, o, { crit: m.crit, counter: m.counter, sound: !o.fx });
       if (o.fx) { bossHitReact(o, { seq: im[0], x: im[1], z: im[2], crit: m.crit, counter: m.counter, at: im[3] }); if (m.counter) { bossCounterBurst(o); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } } }); return; }
+  if (m.type === 'mobHit') { if (m.skill != null && m.ok === false) { toast(esc(m.name || '스킬') + ' — 아직 다시 쓸 수 없다', 2); return; }
+    const v = MOBS && MOBS.views.get(m.mob); if (!v || (m.generation != null && v.gen !== m.generation)) return; const t = { root: v.root, h: v.h }, r = m.reward || {};
+    feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', v.root.position, 1.5); feel.impact(fh, t, { crit: m.crit }); if (Number.isFinite(m.hp)) MOBS.hurt(v.id, m.hp);
+      if (m.down) { floatAt('처치', 'crit', v.root.position, 1.9); if (r.xp || r.gold) toast([r.xp ? '경험치 +' + r.xp : '', r.gold ? '골드 +' + r.gold : ''].filter(Boolean).join(' · '), 2); } }); return; }
   if (m.type === 'announce' && m.kind === 'bossSpawn' && m.zone === ZONE) { toast((/^t2_dominator/.test(m.boss) ? '⚠ 2급 지배형 출현 · ' + esc(m.title) : '⚠ 필드 보스 출현') + '<br><b>' + esc(m.name) + '</b> · ' + esc(m.place), 5); return; }
   if (m.type === 'announce' && m.kind === 'bossDown' && m.zone === ZONE) { toast(esc(m.name) + ' 처치 · ' + esc(m.top || ''), 4); return; }
-  if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } for (const o of fbs) o.root.visible = o.ai ? o.ai.alive : true; } }
+  if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; netMobs = []; MOBS?.update([], 0); for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } for (const o of fbs) o.root.visible = o.ai ? o.ai.alive : true; } }
 if (ONLINE) { const L = document.getElementById('load'); L.textContent = '필드 방에 들어가는 중…';
   try { net = await connectField({ q, zone: ZONE, gate: ARRIVE && ARRIVE.id, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); netEl.textContent = '온라인 · 근처 0명'; }
   catch (e) { netEl.textContent = '오프라인 — ' + e.message + ' · 혼자 연습'; } }
@@ -326,14 +331,16 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
     fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
 const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; el.style.display = on ? '' : 'none'; if (on) { el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } };
-let ECO = null, MOBS = null; const mobHp = new Map();
+let ECO = null, MOBS = null, netMobs = []; const mobHp = new Map();
+const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: () => heroGltf('ryu'), hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
-  MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: () => heroGltf('ryu'), hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }
-function hitMob() { if (net || !ECO) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
+  mobView(); } catch (e) { console.warn('[혼자 연습 몬스터]', e); }
+function hitMob() { if (!MOBS || (!net && !ECO)) return false; const v = MOBS.nearest(root.position.x, root.position.z, 2.8); if (!v) return false;
   me.yaw = Math.atan2(v.root.position.x - root.position.x, v.root.position.z - root.position.z); root.rotation.y = me.yaw;
+  if (net) { net.send({ type: 'fieldHit', mob: v.id, generation: v.gen }); return true; }   /* 온라인: 서버가 판정 — 답은 mobHit */
   const crit = Math.random() < 0.18, key = v.id + ':' + v.gen, t = { root: v.root, h: v.h };
   feel.atContact(fh, 0, () => { if (!v.alive) return; const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1)), left = (mobHp.has(key) ? mobHp.get(key) : (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])) - n;
-    mobHp.set(key, left); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } }); return true; }
+    mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } }); return true; }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
 async function goGate(g) { if (!g || !g.to) return; const to = g.to;
@@ -363,6 +370,7 @@ function miniTick() { if (!miniMe) return; const p = root.position, [l, t] = min
   const live = new Set(), dot = (key, cls, x, z) => { let d = miniDots.get(key); if (!d) { d = document.createElement('i'); d.className = cls; miniEl.appendChild(d); miniDots.set(key, d); } const [a, b] = miniPos(x, z); d.style.left = a + '%'; d.style.top = b + '%'; live.add(key); };
   for (const o of [...doms, ...fbs]) if (o.root && o.root.visible) dot('b:' + o.b.id, 'bs', o.root.position.x, o.root.position.z);
   for (const [id, r] of remotes) if (r.a && r.a.root) dot('p:' + id, 'pl', r.a.root.position.x, r.a.root.position.z);
+  if (MOBS) for (const v of MOBS.views.values()) if (v.alive) dot('m:' + v.id, 'mb g' + v.cat.grade, v.root.position.x, v.root.position.z);   /* 근처 몬스터(생태 반경 28 m) — 등급색 작은 점 */
   for (const [k, d] of miniDots) if (!live.has(k)) { d.remove(); miniDots.delete(k); } }
 let curArea, areaT = 0;
 function areaTick(dt) { const p = root.position, a = AREAS.find(x => x.kind === 'rest' && inArea(x, p.x, p.z)) || AREAS.find(x => x.kind === 'hunt' && inArea(x, p.x, p.z)) || null;
@@ -395,6 +403,7 @@ function tick() {
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);
     const ev = updateDominator(o, dt * feel.rate(o), gameNow); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
   if (ECO && !net) { ECO.tick(gameNow); MOBS.update(ECO.snapshot(root.position.x, root.position.z, gameNow), dt); }
+  else if (net && MOBS) MOBS.update(netMobs, dt);
   if (!net) for (const o of fbs) { const ai = o.ai; if (!ai) continue;   /* 혼자 연습 클레이브: 서버와 같은 틱 → 같은 view → 같은 안무 */
     if (!ai.alive) { if (gameNow >= o.respawnAt) { COMBAT.reset(ai, gameNow); ai.alive = true; ai.hp = ai.max; o.root.visible = true; } continue; }
     if (!ai.combat) continue;

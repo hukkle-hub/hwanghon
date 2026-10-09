@@ -73,7 +73,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 #mini.big{left:50%;top:50%;transform:translate(-50%,-50%);width:min(86vw,calc(78vh * var(--ar)));z-index:6}
 #mini i{position:absolute;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#ffb070;pointer-events:none}
 #mini i.me{width:8px;height:8px;margin:-4px 0 0 -4px;background:#5fe0ff;box-shadow:0 0 6px #5fe0ff;z-index:2}
-#mini i.gt{border-radius:1px;background:#40b8e8}#mini i.gt.dg{background:#ff6040}
+#mini i.gt{border-radius:1px;background:#40b8e8}#mini i.mb{display:none;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;background:#9aa890}#mini.big i.mb{display:block}#mini i.mb.g4{background:#b48cff}#mini i.mb.g3{background:#ff6a5a}#mini i.gt.dg{background:#ff6040}
 #mini span{position:absolute;transform:translate(-50%,-50%);font-size:11px;color:#f0e2d0;text-shadow:0 0 4px #000,0 1px 2px #000;white-space:nowrap;display:none;pointer-events:none}
 #mini.big span{display:block}#mini span.d2{color:#ffb070}#mini span.d3{color:#ff6a50}#mini span.rest{color:#9fe0b0}
 /* 전국 지도 (docs/design/192) — 실제 지형 음영 위의 지역. 만든 곳 금색 · 계획 흐림 · 지금 하늘색. 누르면 길잡이 빠른 이동 */
@@ -140,6 +140,7 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;font-family:'N
 @media (orientation:portrait){ #bag .bp{height:min(780px,calc(100dvh - 16px))} #bag .bdet{flex-direction:column;align-items:stretch} #bag .bdet .acts{justify-content:stretch} #bag .bdet button{flex:1} }
 #toast{position:absolute;left:50%;top:38%;transform:translateX(-50%);padding:8px 14px;background:rgba(0,0,0,.7);color:#e8dede;font-size:13px;border-radius:4px}
 .tag.gt{color:#bff2ff;font-size:12px;letter-spacing:.06em}.tag.gt.dg{color:#ffc0b0}
+.mobhp{position:absolute;transform:translate(-50%,-100%);width:46px;height:5px;background:rgba(10,4,4,.72);box-shadow:0 0 0 1px rgba(0,0,0,.8);pointer-events:none}.mobhp i{display:block;height:100%;width:100%;background:linear-gradient(#ff6a50,#b8281c)}
 .tag.mob{color:#d4dccb;font-size:11px;opacity:.95}.tag.mob small{display:block;font-size:9px;color:#a8b0a0;font-weight:500}.tag.mob.g4{color:#c9a8ff}.tag.mob.g3{color:#ff9c90}
 .tag.bs{color:#ff8a7a;font-size:13px}.tag.bs small{display:block;font-size:10px;color:#e8c0b8;font-weight:500}
 #load{position:fixed;inset:0;display:grid;place-items:center;background:#05060a;color:#c9a45e;letter-spacing:.3em;font-size:13px}
@@ -212,7 +213,7 @@ import { createArmBlend } from './js/arm-blend.js';
 import { contactOf } from './js/mmo/field-feel.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
-import { createMobView, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';   /* 필드 몬스터 그리기 (문서 209) */
+import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js';   /* 필드 몬스터 그리기 (문서 209) */
 import { CATALOG } from './js/mmo/monster-catalog.js';   /* 완벽 회피 잔상 (문서 205 §4) */   /* 혼자 연습 보스 AI — 서버 모듈 그대로 (문서 206 §12) */   /* 손맛 — 접점 시각·히트스톱·궤적·불꽃 (문서 205) */
 const q=new URLSearchParams(location.search), ME=['ain','kain','ryu','sera'].includes(q.get('char'))?q.get('char'):'ain', ZOOM=+(q.get('zoom')||1), DEBUG=q.get('debug')==='1';
 const PARTY_DEFAULT='hwanghon-party.onrender.com';
@@ -410,8 +411,8 @@ function connectNet(){ return new Promise((resolve,reject)=>{ const sv=partyServ
     if(m.type==='profile'&&net){net.profile=m.profile;applySelfProfile(m.profile);try{bagProfile();}catch{}return;}
     if(m.type==='fieldShop'||m.type==='fieldBagDone'){ try{ bagReply(m); }catch{} return; }   /* 가방 (문서 198) — 가방 코드가 아직 안 읽혔으면(접속 중) 버린다 */
     if(m.type==='fieldInfo'&&net){net.selfInfo=m.info;applySelfInfo(m.info);return;}
-    if(m.type==='field'){ onField(m); if(m.bosses||m.loot||m.self||m.hurt) toBoss(m); return; }
-    if(m.type==='announce'||m.type==='bossHit'||m.type==='fieldLooted'){ toBoss(m); return; }
+    if(m.type==='field'){ onField(m); if(m.bosses||m.loot||m.self||m.hurt||m.mobs) toBoss(m); return; }
+    if(m.type==='announce'||m.type==='bossHit'||m.type==='mobHit'||m.type==='fieldLooted'){ toBoss(m); return; }
     if(m.type==='skillUsed'){ if(!m.ok) toast((m.name||'스킬')+' — 아직 다시 쓸 수 없다'); return; }   /* 스킬 1~4 — 서버가 재사용 대기를 센다 */
     if(m.type==='hubState'){ try{ hubSet(m); }catch{} return; }   /* 거점 점령 (문서 192 §8) — 서버는 GPT 몫 */
     if(m.type==='hubStates'&&Array.isArray(m.list)){ try{ m.list.forEach(hubSet); }catch{} return; }
@@ -608,7 +609,7 @@ const offField={ players:new Map([['me',OFF.P]]), rng:Math.random,
 if(!net) Promise.all([loadCjs('server/field-dominator.cjs'),loadCjs('server/field-boss-combat.cjs'),loadCjs('server/field-ecology.cjs')]).then(([D,C,E])=>{ OFF.DOM=D; OFF.COMBAT=C; const now=bossNow();
   /* 혼자 연습 몬스터 (문서 209): GPT 생태 모듈(server/field-ecology.cjs)을 그대로 — 둥지 셋·순찰 하나·드문 종·30초 부활. 지도 생태 자리(areas[].eco)를 쓴다. 공격은 서버 몬스터 AI 가 오면 */
   if((meta.areas||[]).some(a=>a.kind==='hunt'&&a.pool&&a.eco)) try{ OFF.ECO=new E.Ecology({ zone:{...meta,id:ZONE}, catalog:ecologyCatalog(CATALOG), now, rng:Math.random, collide:(p,r)=>collide(p,r) });
-    OFF.MOBS=createMobView({ THREE, clone:SkeletonUtils.clone, scene, loadBody:()=>heroGltf('ryu'), hud:document.getElementById('hud'), tagAt, catalog:CATALOG, floor:FLOOR }); OFF.mobHp=new Map(); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
+    mobView(); OFF.mobHp=new Map(); }catch(e){ console.warn('[혼자 연습 몬스터]',e); }
   for(const o of bosses){ const b=o.b, ai={ id:b.id, zone:ZONE, x:b.x, z:b.z, yaw:0, h:b.h||3, alive:o.alive, hp:o.local, max:300000 };
     if(b.ai==='dominator'){ D.setup(ai,now); o.ai=ai; } else if(C.enabled(ai)){ C.setup(ai,now); o.ai=ai; } } }).catch(e=>console.warn('[혼자 연습 AI]',e));
 function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
@@ -619,12 +620,16 @@ function offTick(){ if(net||!OFF.DOM||!me) return; const now=bossNow(),P=OFF.P;
     M.tick(offField,ai,now); collide(ai,0.5); const v=M.view(ai); if(!v) continue;
     if(o.b.ai==='dominator'){ if(o.dom) applyDominatorAction(o,v); else o.netAct=v; } else applyBossAction(o,v,now); }
   if(OFF.ECO){ OFF.ECO.tick(now); OFF.MOBS.update(OFF.ECO.snapshot(P.x,P.z,now)); } }
+/* 몬스터 그리기는 하나 — 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs(mobsFromPacket)를 넣는다 */
+function mobView(){ return OFF.MOBS||(OFF.MOBS=createMobView({ THREE, clone:SkeletonUtils.clone, scene, loadBody:()=>heroGltf('ryu'), hud:document.getElementById('hud'), tagAt, catalog:CATALOG, floor:FLOOR })); }
+const mobT=v=>({ root:v.root, b:{ x:v.root.position.x, z:v.root.position.z, h:v.h }, h:v.h });
 /* 혼자 연습 몬스터 치기 — 보스가 닿지 않을 때. 체력은 연습값(PRACTICE_HP), 쓰러뜨리면 생태에 한 번 defeat → 30초 뒤 새 세대로 다시 난다 */
-function hitMob(sk){ if(net||!OFF.ECO||!me) return false; const v=OFF.MOBS.nearest(me.root.position.x,me.root.position.z,2.8); if(!v) return false;
+function hitMob(sk){ if(!OFF.MOBS||!me||(!net&&!OFF.ECO)) return false; const v=OFF.MOBS.nearest(me.root.position.x,me.root.position.z,2.8); if(!v) return false;
   const yaw=Math.atan2(v.root.position.x-me.root.position.x,v.root.position.z-me.root.position.z); me.yaw=yaw; me.root.rotation.y=yaw;
-  const crit=skCritNext||Math.random()<0.18; skCritNext=false; const mult=sk?sk.mult:1, key=v.id+':'+v.gen, t={ root:v.root, b:{ x:v.root.position.x, z:v.root.position.z, h:v.h }, h:v.h };
+  if(net){ net.send(sk?{type:'fieldSkill',skill:sk.i,mob:v.id,generation:v.gen}:{type:'fieldHit',mob:v.id,generation:v.gen}); return true; }   /* 온라인: 서버가 판정(GPT 인계 — generation 을 꼭 같이, 옛 세대를 치지 않게). 답은 mobHit */
+  const crit=skCritNext||Math.random()<0.18; skCritNext=false; const mult=sk?sk.mult:1, key=v.id+':'+v.gen, t=mobT(v);
   feel.atContact(me,0,()=>{ if(!v.alive) return; const n=Math.round(2980*(0.9+Math.random()*0.2)*(crit?1.43:1)*mult), left=(OFF.mobHp.has(key)?OFF.mobHp.get(key):(PRACTICE_HP[v.cat.grade]||PRACTICE_HP[5]))-n;
-    OFF.mobHp.set(key,left); feel.impact(me,t,{crit}); dmgNum(t,n,crit); if(left<=0){ OFF.mobHp.delete(key); OFF.ECO.defeat(v.id,bossNow()); } }); return true; }
+    OFF.mobHp.set(key,left); OFF.MOBS.hurt(v.id,100*left/(PRACTICE_HP[v.cat.grade]||PRACTICE_HP[5])); feel.impact(me,t,{crit}); dmgNum(t,n,crit); if(left<=0){ OFF.mobHp.delete(key); OFF.ECO.defeat(v.id,bossNow()); } }); return true; }
 /* 피해 숫자 — 보스 머리 위로 떠오른다 */
 const dmgs=[]; function dmgNum(o, n, crit){ const d=document.createElement('div'); d.className='dmg'+(crit?' crit':''); d.textContent=n.toLocaleString('ko-KR'); document.getElementById('hud').appendChild(d);
   const p=me.root.position,bx=o.root?.position.x??o.b.x,bz=o.root?.position.z??o.b.z,k=Math.min(0.45,1.2/Math.max(0.1,Math.hypot(p.x-bx,p.z-bz)));
@@ -640,7 +645,7 @@ function selfPacket(m){
  if(kind==='evade'){if(me&&isPerfect(me.dodgeAt,h[6],!!net)){selfFloat('완벽 회피','evade');perfectDodgeFx(scene,me.root,{reduced:REDUCED});window.TW_SFX?.play('counter');pdN++;}else selfFloat('회피','evade');return;}   /* h[6]: 맞을 뻔한 서버 시각 */
  if(kind==='respawn'){deathEl.hidden=true;selfDead=false;toast('출발점에서 다시 일어섰습니다');return;}
  if(amount>0){selfFloat('−'+amount.toLocaleString('ko-KR'),'taken');hurtT=.42;shakeT=Math.max(shakeT,kind==='dead'?.55:.28);}
- if(kind==='dead'){deathEl.hidden=false;const by=bosses.find(x=>x.b.id===h[2]);announce(esc(by?by.b.name+(by.b.ai==='dominator'?' · '+(by.b.title||''):''):'보스')+'에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}
+ if(kind==='dead'){deathEl.hidden=false;const by=bosses.find(x=>x.b.id===h[2]),mv=OFF.MOBS&&OFF.MOBS.views.get(h[2]);announce(esc(by?by.b.name+(by.b.ai==='dominator'?' · '+(by.b.title||''):''):mv?mv.cat.name:'보스')+'에게 쓰러졌습니다<b>출발점 복귀</b>','',4);}   /* h[2]: 때린 쪽 id — 보스 또는 몬스터 */
 }
 function nearBoss(){ const p=me.root.position; let best=null, bd=1e9; for(const o of bosses){ if(!o.alive) continue; const x=o.root?.position.x??o.b.x,z=o.root?.position.z??o.b.z,d=Math.hypot(x-p.x,z-p.z); if(d<=reachOf(o.b)&&d<bd){ best=o; bd=d; } } return best; }
 function hitBoss(sk){ const o=nearBoss(); if(!o) return hitMob(sk);
@@ -653,7 +658,7 @@ function hitBoss(sk){ const o=nearBoss(); if(!o) return hitMob(sk);
     const part=ai&&ai.combat&&o.local>0?OFF.COMBAT.damageShutter(ai,OFF.P,{character:MY},n,counter,now):null; if(counter) announce('맞대기<b>반격 성공</b>클레이브 경직','big',2.2); if(part&&part.broken){announce('⚙ '+esc(o.b.name)+'<b>셔터 파괴</b>공격 방식이 바뀝니다','big',5);window.TW_SFX?.play('brk');}
     if(o.local<=0)bossDie(o);else setHp(o,o.local/300000);dmgNum(o,n,crit);sharedBossImpact(o,{x:me.root.position.x,z:me.root.position.z,crit,counter});if(o.local<=0)o.local=300000; })); }   /* 효과는 날이 닿는 프레임에 (게임 시간) — 누르는 순간이 아니다 */
 /* 바닥 장비: 등급 색 빛기둥 + 돌아가는 결정 + 이름표 (디아블로식 «멀리서도 뭔가 떨어졌다») */
-const loots=new Map();
+const loots=new Map(); let netMobs=[];
 function lootAdd([id,item,x,z,mine]){ let L=loots.get(id);
   if(!L){ const d=IT.get(item)||{name:item,rarity:'hero'},col=new THREE.Color((RAR[d.rarity]||RAR.hero).color),grp=new THREE.Group(); grp.position.set(x,FLOOR,z);
     const beam=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.2,d.rarity==='myth'?7:d.rarity==='legend'?6:4,16,1,true),new THREE.MeshBasicMaterial({ map:glowTex, color:col, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending, depthWrite:false, toneMapped:false }));
@@ -673,7 +678,12 @@ function onBossMsg(m){
     for(const a of m.bossActs||[]){const o=bosses.find(x=>x.b.id===a.id);if(o){if(a.ai==='dominator')applyDominatorAction(o,a);else applyBossAction(o,a,bossNow());}}
     for(const h of m.bossImpacts||[]){const o=bosses.find(x=>x.b.id===h[0]);if(o)sharedBossImpact(o,{seq:h[1],x:h[2],z:h[3],crit:!!h[4],counter:!!h[5],at:h[6]});}
     if(m.loot){ loots.forEach(L=>L.seen=false); m.loot.forEach(lootAdd); loots.forEach(L=>{ if(!L.seen) lootDel(L); }); }
+    if(Array.isArray(m.mobs)){ netMobs=mobsFromPacket(m.mobs); mobView(); }   /* 서버는 매 패킷 mobs 를 보낸다(빈 배열 포함) — 반경 밖·시체 만료는 빠지면 지운다 */
     return; }
+  if(m.type==='mobHit'){ if(m.skill!=null&&m.ok===false){ toast((m.name||'스킬')+' — 아직 다시 쓸 수 없다'); return; }
+    const v=OFF.MOBS&&OFF.MOBS.views.get(m.mob); if(!v||(m.generation!=null&&v.gen!==m.generation)) return; const t=mobT(v);   /* 다시 난 개체에 옛 답을 그리지 않는다 */
+    feel.atContact(me,0,()=>{ dmgNum(t,m.dmg,m.crit); feel.impact(me,t,{crit:m.crit}); if(Number.isFinite(m.hp)) OFF.MOBS.hurt(v.id,m.hp); const r=m.reward||{};
+      if(m.down&&(r.xp||r.gold)) toast([r.xp?'경험치 +'+r.xp:'',r.gold?'골드 +'+r.gold:''].filter(Boolean).join(' · ')); }); return; }   /* 보상 표가 정해지기 전엔 reward.status=pending_policy — 아무것도 안 띄운다 */
   if(m.type==='bossHit'){ const o=bosses.find(x=>x.b.id===m.boss); if(o){ const h=m.impact||[];   /* 내 타격의 답 — 서버는 이미 판정했다. 화면은 남은 접점 시각까지 기다렸다 한 덩어리로 (응답이 접점보다 늦으면 바로) */
     feel.atContact(me,0,()=>{ if(m.down&&o.alive)bossDie(o);dmgNum(o,m.dmg,m.crit);feel.impact(me,o,{crit:m.crit,counter:m.counter,sound:!o.fx});sharedBossImpact(o,{seq:h[0],x:h[1],z:h[2],crit:m.crit,counter:m.counter,at:h[3]});if(m.counter)announce('맞대기<b>반격 성공</b>클레이브 경직','big',2.2); }); } return; }
   if(m.type==='fieldLooted'){ const d=IT.get(m.item)||{name:m.item}; toast(d.name+' 획득'); return; }
@@ -686,7 +696,7 @@ function onBossMsg(m){
     if(m.kind==='loot') announce('<b>'+esc(m.who)+'</b>님이 '+esc(m.name)+'('+esc((RAR[m.rarity]||{}).name||'')+') 획득 — '+esc(zoneTitle(m.zone)), m.rarity, 9);
     return; } }
 function bossFrame(dt){
-  offTick();
+  offTick(); if(net&&OFF.MOBS) OFF.MOBS.update(netMobs,dt);
   for(const o of bosses){ if(!o.root) continue;
     if(o.spawnT>0){ o.spawnT=Math.max(0,o.spawnT-dt); const k=1-o.spawnT/1.4, e=1-Math.pow(1-k,3); o.root.scale.setScalar(0.55+0.45*e); o.root.position.y=(o.b.fly||0)-(1-e)*1.2; }
     else if(o.dieT>0){ o.dieT=Math.max(0,o.dieT-dt); const k=o.dieT/1.2; o.root.scale.setScalar(0.4+0.6*k); o.root.position.y=(o.b.fly||0)-(1-k)*1.5; if(o.dieT===0){ o.root.scale.setScalar(1); bossVis(o); } }
@@ -800,7 +810,10 @@ if(OV){ miniEl.hidden=false; miniEl.style.backgroundImage='url(maps/2d/'+ZONE+'/
   miniMe=dot('me',0,0); miniEl.addEventListener('pointerdown',e=>{ e.stopPropagation(); miniEl.classList.toggle('big'); }); }
 function miniFrame(){ if(!miniMe) return; const p=me.root.position, [a,b]=miniPos(p.x,p.z); miniMe.style.left=a+'%'; miniMe.style.top=b+'%';
   let k=0; for(const h of heroes){ if(h===me) continue; if(!miniOthers[k]){ const d=document.createElement('i'); miniEl.appendChild(d); miniOthers[k]=d; } const [x,y]=miniPos(h.root.position.x,h.root.position.z); miniOthers[k].style.left=x+'%'; miniOthers[k].style.top=y+'%'; miniOthers[k].style.display=''; k++; }
-  for(;k<miniOthers.length;k++) miniOthers[k].style.display='none'; }
+  for(;k<miniOthers.length;k++) miniOthers[k].style.display='none';
+  let j=0; if(OFF.MOBS) for(const v of OFF.MOBS.views.values()){ if(!v.alive) continue; let d=miniMobs[j]; if(!d){ d=miniMobs[j]=document.createElement('i'); miniEl.appendChild(d); } d.className='mb g'+v.cat.grade; const [x,y]=miniPos(v.root.position.x,v.root.position.z); d.style.left=x+'%'; d.style.top=y+'%'; d.style.display=''; j++; }   /* 근처 몬스터 — 등급색 작은 점. 작은 지도에선 내 표시에 묻혀(300 m 를 132 px) 펼친 지도에서만 보인다 */
+  for(;j<miniMobs.length;j++) miniMobs[j].style.display='none'; }
+const miniMobs=[];
 function areaFrame(dt){ if(areaT>0){ areaT-=dt; areaEl.style.opacity=Math.max(0,Math.min(1,areaT/0.8,(3.6-areaT)/0.4)); } else areaEl.style.opacity=0; }
 function place(){ const p0=me.root.position; areaCheck(); safeCheck(); if(curArea){ placeEl.textContent=(meta.title||'')+' · '+curArea.name; return; }
   if(meta.bosses.length&&(!meta.exits||!meta.exits.length)){ const b=meta.bosses[0], d=Math.hypot(b.x-p0.x,b.z-p0.z); const pl=b.place||'보스 구역'; placeEl.textContent=(meta.title||'')+' · '+(d<b.r?pl:pl+'까지 '+Math.round(d)+' m'); return; }
