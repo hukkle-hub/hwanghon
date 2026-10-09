@@ -16,6 +16,12 @@ canvas{ display:block; width:100vw; height:100vh; }
 #hint{ position:absolute; bottom:max(14px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); font-size:12px; color:var(--dim); background:var(--panel); padding:6px 12px; border-radius:14px; width:max-content; max-width:calc(100vw - 32px); box-sizing:border-box; text-align:center; }
 #load{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:18px; background:#140c12; z-index:5; }
 #load[hidden]{ display:none; }
+#load.tv,#travel{ flex-direction:column; gap:6px; text-align:center; background:#08060a; }   /* 지역 이동 카드 (문서 219) — 떠날 때 · 도착 로딩이 같은 모양이라 한 장면처럼 이어진다 */
+#load.tv b,#travel b{ font-size:30px; letter-spacing:.14em; color:#f0e2d0; } #load.tv small,#travel small{ font-size:13px; font-weight:500; color:#c9a45e; letter-spacing:.06em; } #load.tv i,#travel i{ font-style:normal; font-size:11px; font-weight:500; color:#8a7a70; margin-top:10px; }
+#load{ transition:opacity .6s; } #load.out{ opacity:0; pointer-events:none; }
+#regionCard{ position:absolute; left:50%; top:16%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; transition:opacity .9s; text-shadow:0 0 14px #000,0 2px 4px #000; white-space:nowrap; }   /* 도착 지역 이름 (스파이더맨 구역 이름처럼) */
+#regionCard.on{ opacity:1; } #hud{ transition:opacity .6s; } body.intro #hud{ opacity:0; pointer-events:none; }   /* 도입 장면 동안 조작 화면을 숨긴다 */ #regionCard b{ display:block; font-size:34px; font-weight:900; letter-spacing:.2em; color:#f0e2d0; } #regionCard small{ display:block; margin-top:4px; font-size:13px; letter-spacing:.12em; color:#c9a45e; }
+#travel{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; font-weight:900; z-index:6; opacity:0; pointer-events:none; transition:opacity .45s; } #travel.on{ opacity:1; pointer-events:auto; }
 #ring{ position:absolute; width:110px; height:110px; margin:-55px 0 0 -55px; border-radius:50%; border:2px solid rgba(232,184,96,.45); display:none; }
 #ring i{ position:absolute; left:50%; top:50%; width:44px; height:44px; margin:-22px 0 0 -22px; border-radius:50%; background:rgba(232,184,96,.5); }
 #hpw{ position:absolute; top:calc(max(12px,env(safe-area-inset-top)) + 58px); left:16px; width:180px; height:8px; background:rgba(0,0,0,.5); border-radius:4px; overflow:hidden; }
@@ -29,6 +35,13 @@ canvas{ display:block; width:100vw; height:100vh; }
 #bagBtn{ width:64px; height:64px; border-radius:10px; right:calc(max(12px,env(safe-area-inset-right)) + 144px); top:calc(max(12px,env(safe-area-inset-top))); font-size:14px; }
 #bagBtn.safe{ border-color:rgba(120,230,190,.8); color:#bff5e2; box-shadow:0 0 12px rgba(80,220,170,.35); font-size:12px; text-align:center; line-height:1.2; }
 @media (max-height:500px){ #bagBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 124px); } }
+#mapBtn{ width:64px; height:64px; border-radius:10px; right:calc(max(12px,env(safe-area-inset-right)) + 216px); top:calc(max(12px,env(safe-area-inset-top))); font-size:14px; }   /* 전국 지도 (문서 219) — 가로: 가방 왼쪽 (아래는 스킬 단추) */
+@media (max-height:500px){ #mapBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 196px); } }
+@media (orientation:portrait){ #mapBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 144px); top:calc(max(12px,env(safe-area-inset-top)) + 72px); } }   /* 세로: 가방 아래 (제목과 안 겹치게) */
+#kmap:not([hidden]){ position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; background:rgba(8,6,10,.9); padding:12px; box-sizing:border-box; }
+#kmap .kwrap{ display:flex; gap:14px; width:100%; height:100%; align-items:center; justify-content:center; } #kmap svg{ flex:0 1 auto; height:100%; max-width:62%; }
+#kmap aside{ flex:0 1 260px; max-height:100%; overflow:auto; color:var(--ink); } #kmap aside h3{ margin:0 0 8px; font-size:16px; color:#c9a45e; } #kmap aside ul{ list-style:none; margin:0; padding:0; } #kmap aside li{ padding:8px 10px; margin-bottom:6px; border-radius:10px; background:rgba(255,255,255,.06); } #kmap aside li b{ display:block; font-size:15px; } #kmap aside li small{ color:var(--dim); font-size:12px; }
+@media (orientation:portrait){ #kmap .kwrap{ flex-direction:column; } #kmap svg{ height:auto; max-height:68%; max-width:100%; width:100%; } #kmap aside{ flex:0 1 auto; width:100%; max-height:28%; } } #kmapX{ position:absolute; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); min-width:64px; min-height:64px; border-radius:12px; border:2px solid rgba(232,184,96,.7); background:rgba(30,14,20,.85); color:var(--ink); font:900 16px 'Noto Sans KR',sans-serif; }
 #pot b{ font-size:12px; } #pot em{ font-style:normal; font-size:11px; font-weight:700; opacity:.85; margin-top:3px; } #pot.none{ opacity:.45; }
 .dmg.heal{ color:#8fe0a0; }
 /* 스킬 1~4 (문서 212) — 공격 위·왼쪽 호. 64 px · 재사용 대기는 가운데 숫자 + 어둡게 */
@@ -74,8 +87,10 @@ canvas{ display:block; width:100vw; height:100vh; }
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
-<div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div>
+<div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
+try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
+</script>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
 <script src="js/mmo/safe-zones.js"></script>
@@ -97,6 +112,11 @@ import { GLTFLoader } from './vendor/three/GLTFLoader.js';
 import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
 import { createBloom } from './js/bloom.js';
 import { createDayCycle, tOf } from './js/mmo/daycycle.js';
+import { linkGates } from './js/mmo/zone-links.js';
+import { createCityLife } from './js/mmo/city-life.js';
+import { koreaMapSVG } from './js/mmo/korea-map.js';
+import { REGIONS } from './js/mmo/regions.js';
+import { FAR } from './js/mmo/env-lib.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d } from './js/mmo/env-lib.js';
@@ -116,6 +136,10 @@ const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test
 const ME = ['ain', 'kain', 'ryu', 'sera'].includes(q.get('char')) ? q.get('char') : 'ain';
 const MOBILE = matchMedia('(pointer:coarse)').matches, REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const Z = ZONES[ZONE] || { env: 'osm', osm: ZONE };
+/* ---------- 지역 이동 카드 (문서 219) — 떠난 쪽이 sessionStorage 에 남긴 기록. 로딩 화면을 같은 카드로 이어 «길을 따라 온» 한 장면처럼 ---------- */
+const escT = t => String(t == null ? '' : t).replace(/[<>&"]/g, '');
+const TRAVEL = (() => { try { const t = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'); sessionStorage.removeItem('tw:travel'); return t && t.to === ZONE && Date.now() - t.at < 120000 ? t : null; } catch { return null; } })();
+if (TRAVEL) { const L0 = document.getElementById('load'); L0.className = 'tv'; L0.innerHTML = '<b>' + escT(Z.title || ZONE) + '</b><small>' + escT(TRAVEL.label) + '</small><i>' + escT(TRAVEL.fromTitle) + '에서 길을 따라 오는 중…</i>'; }
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: !MOBILE, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(MOBILE ? 1.5 : 2, devicePixelRatio)); renderer.setSize(innerWidth, innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.55;
@@ -147,6 +171,7 @@ for (const L of pointData) L.parent.remove(L);
 /* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
+const LIFE = (env.kind || Z.kind || meta.kind) === 'field' ? createCityLife(THREE, scene, { center: env.spawn || meta.spawn || { x: 0, z: 0 }, tops: FAR.tops || [], seed: [...ZONE].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) }) : null;   /* 까마귀·연기·점멸·밤 불빛 (문서 219) */
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
   POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK; L.distance = l.distance; L.decay = l.decay; }); }
 const sun = env.sunLight || null, sunDir = env.sun ? new THREE.Vector3(...env.sun.dir) : new THREE.Vector3(0, 1, 0);
@@ -194,7 +219,16 @@ function dressMe(profile) { if (!window.TW_LOOKS) return; const eq = { ...(profi
   const key = JSON.stringify([eq, enh]); if (key === dressKey) return; dressKey = key;   /* 같은 옷을 다시 만들지 않는다 (profile 은 자주 온다) */
   window.TW_HAIR?.sync(root, eq); TW_LOOKS.attach(THREE, loader, root, eq, { charId: ME, noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
 dressMe(null);
-const GATES = env.gates || meta.gates || [], ARRIVE = GATES.find(g => g.id === q.get('gate')) || null;   /* 다른 지역 문으로 넘어왔으면 그 문 앞에서 */
+/* 문 자리는 서버 지도(map.json) 것을 — 서버가 그 자리에 세운다 */
+const GATES = (meta.gates && meta.gates.length && env.gates && meta.gates.length === env.gates.length ? meta.gates.map(m => ({ ...(env.gates.find(e => e.id === m.id) || {}), ...m })) : env.gates || meta.gates) || [];
+/* 전국 길 문 (문서 219) — 띠 끝 큰길 위에 3D 만. 서버 지도엔 아직 없다(온라인 도착은 서버가 출발점에 세운다 — GPT 지시서) */
+{ const wk = env.walk || meta.walk, a = env.road ? env.road.ang : 0;
+  if (wk && (env.kind || Z.kind || meta.kind) === 'field') for (const g of linkGates(ZONE)) { if (GATES.some(x => x.id === g.id)) continue;
+    const s = g.at.end === 's1' ? wk.s1 - 3 : wk.s0 + 3, tt = g.at.t ?? (wk.t0 + wk.t1) / 2, q = { x: s * Math.cos(a) - tt * Math.sin(a), z: -s * Math.sin(a) - tt * Math.cos(a) };
+    for (let i = 0; i < 6; i++) collide(q, 2.4);   /* 막이(차·건물)에 걸리면 걸을 수 있는 곳으로 */
+    GATES.push({ ...g, x: +q.x.toFixed(2), z: +q.z.toFixed(2) });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(2.95, 3.2, 48), new THREE.MeshBasicMaterial({ color: 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); ring.rotation.x = -Math.PI / 2; ring.position.set(q.x, 0.05, q.z); scene.add(ring); } }
+const ARRIVE = GATES.find(g => g.id === q.get('gate')) || null;   /* 다른 지역 문으로 넘어왔으면 그 문 앞에서 */
 const sp = ARRIVE ? { x: ARRIVE.x, z: ARRIVE.z } : env.spawn || meta.spawn; root.position.set(sp.x, 0, sp.z);
 const me = { id: ME, root, yaw: 0, hero, get weapon() { return hero.weapon; } };
 let busy = 0, busyClip = null, atkSeq = 0;
@@ -237,11 +271,38 @@ if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }   /* 실내는 가까�
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
 const camS = { yaw: Math.PI + (env.road ? -env.road.ang : 0), pitch: INDOOR ? 0.2 : 0.32, dist: INDOOR ? 3.6 : MOBILE ? 6 : 5.2 };
+/* 문 → 띠 안쪽 방향 (띠 끝 문이면 길 따라 안으로, 아니면 출발점 쪽) — 도착하면 그쪽을 보고 선다 */
+const atEnd = g => { const a = env.road ? env.road.ang : 0, wk = env.walk || meta.walk; if (!wk || INDOOR || g.kind !== 'zone') return false; const s = g.x * Math.cos(a) - g.z * Math.sin(a); return Math.min(Math.abs(s - wk.s0), Math.abs(s - wk.s1)) < 12; };   /* 띠 끝 길 문 — 걸어 나가면 다음 지역 */
+function inwardYaw(g) { const a = env.road ? env.road.ang : 0, wk = env.walk || meta.walk, sp = env.spawn || meta.spawn; let dx = sp.x - g.x, dz = sp.z - g.z;
+  if (wk && atEnd(g)) { const s = g.x * Math.cos(a) - g.z * Math.sin(a), sg = s < (wk.s0 + wk.s1) / 2 ? 1 : -1; dx = Math.cos(a) * sg; dz = -Math.sin(a) * sg; }
+  return Math.atan2(dx, dz); }
+/* 길 끝 초록 도로 표지판 (3D 만) — «대전 ↑ 국도 1호선». 안쪽에서 걸어오는 사람을 본다 */
+for (const g of GATES) { if (!atEnd(g)) continue; const ZT = ZONES[g.to.zone] || {}, y = inwardYaw(g), title = (ZT.title || g.to.zone).replace(/ .*/, ''), sub = String(g.label || '').split('·').slice(1).join('·').trim();
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256; const c = cv.getContext('2d'); c.fillStyle = g.link === 'ferry' ? '#1c4a7a' : '#1f6a3c'; c.fillRect(0, 0, 512, 256); c.strokeStyle = '#f2f2ea'; c.lineWidth = 8; c.strokeRect(10, 10, 492, 236);
+  c.fillStyle = '#f2f2ea'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 92px "Noto Sans KR", sans-serif'; c.fillText((g.link === 'ferry' ? '⛴ ' : '↑ ') + title, 256, 104); c.font = '700 38px "Noto Sans KR", sans-serif'; c.fillText(sub || g.label || '', 256, 196);
+  c.fillStyle = 'rgba(30,20,10,.35)'; for (let i = 0; i < 60; i++) c.fillRect(Math.random() * 512, Math.random() * 256, 3 + Math.random() * 14, 2 + Math.random() * 5);   /* 녹·때 */
+  const tx = new THREE.CanvasTexture(cv); tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 4;
+  const grp = new THREE.Group(), board = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.3), new THREE.MeshStandardMaterial({ map: tx, emissiveMap: tx, emissive: 0xffffff, emissiveIntensity: 0.25, roughness: 0.6 })); board.position.y = 4.6;
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.3), new THREE.MeshStandardMaterial({ color: 0x4a4e54, roughness: 0.55, metalness: 0.5 })); back.rotation.y = Math.PI; back.position.set(0, 4.6, -0.03);   /* 뒷면은 철판 — 거울 글씨가 안 보이게 */
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.13, 5.8, 8), new THREE.MeshStandardMaterial({ color: 0x5a5e64, roughness: 0.5, metalness: 0.6 })); pole.position.set(-2.1, 2.9, -0.06); const pole2 = pole.clone(); pole2.position.x = 2.1; grp.add(board, back, pole, pole2);
+  const ix = Math.sin(y), iz = Math.cos(y); grp.position.set(g.x + ix * 7 + iz * 6, 0, g.z + iz * 7 - ix * 6); grp.rotation.y = y; grp.traverse(o => { if (o.isMesh) { o.castShadow = true; o.userData.noCam = true; } }); scene.add(grp); }
+if (ARRIVE) { const y = inwardYaw(ARRIVE); me.yaw = y; root.rotation.y = y; camS.yaw = y + Math.PI;
+  if (atEnd(ARRIVE)) { const q2 = { x: ARRIVE.x + Math.sin(y) * 5, z: ARRIVE.z + Math.cos(y) * 5 }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); } }   /* 길 문이면 5 m 안쪽에 — 카메라가 띠 끝 울타리 밖에서 비치지 않게 */
+if (TRAVEL && !q.has('online') && Number.isFinite(TRAVEL.hp)) P.hp = Math.max(1, Math.round(TRAVEL.hp * P.maxHp));   /* 혼자 연습: 체력 이어받기 (온라인은 서버가 안다) */
 function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
 addEventListener('resize', resize);
 let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */
+/* 도착 도입 장면 (문서 219 §2) — 길로 넘어오면 카메라가 뒤쪽 하늘에서 앞쪽 지역 너머를 내려다보다가 등 뒤로 내려앉는다(3.2 초). 움직이면 바로 끝 */
+let intro = TRAVEL && !INDOOR ? { t: 0, dur: 3.2, fwd: null } : null;
+const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
 function placeCam(dt) {
   if (photo) { cam.position.set(...photo.pos); cam.lookAt(...photo.at); return; }
+  if (intro) { intro.t += dt; const h0 = root.position, f = intro.fwd || (intro.fwd = [Math.sin(me.yaw), Math.cos(me.yaw)]), k = ease(Math.min(1, intro.t / intro.dur));
+    const cp = Math.cos(camS.pitch), end = new THREE.Vector3(h0.x + Math.sin(camS.yaw) * cp * camS.dist, 1.45 + Math.sin(camS.pitch) * camS.dist, h0.z + Math.cos(camS.yaw) * cp * camS.dist);
+    const start = new THREE.Vector3(h0.x - f[0] * 22 + f[1] * 12, 36, h0.z - f[1] * 22 - f[0] * 12), mid = new THREE.Vector3().lerpVectors(start, end, 0.5); mid.y += 6;
+    const a = new THREE.Vector3().lerpVectors(start, mid, k), b2 = new THREE.Vector3().lerpVectors(mid, end, k); cam.position.lerpVectors(a, b2, k);   /* 곡선(2차 베지어) */
+    const lookFar = new THREE.Vector3(h0.x + f[0] * 120, 10, h0.z + f[1] * 120), lookMe = new THREE.Vector3(h0.x, 1.45, h0.z); cam.lookAt(lookFar.lerp(lookMe, ease(Math.min(1, intro.t / (intro.dur * 0.85)))));
+    if (intro.t >= intro.dur) { intro = null; document.body.classList.remove('intro'); } else document.body.classList.add('intro'); return; }
   const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * camS.dist, ty + Math.sin(camS.pitch) * camS.dist, tz + Math.cos(camS.yaw) * cp * camS.dist);
   want.y = Math.max(0.4, want.y);
   /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
@@ -398,8 +459,8 @@ function netMsg(m) {
   if (m.type === 'announce' && m.kind === 'bossSpawn' && m.zone === ZONE) { toast((/^t2_dominator/.test(m.boss) ? '⚠ 2급 지배형 출현 · ' + esc(m.title) : '⚠ 필드 보스 출현') + '<br><b>' + esc(m.name) + '</b> · ' + esc(m.place), 5); return; }
   if (m.type === 'announce' && m.kind === 'bossDown' && m.zone === ZONE) { toast(esc(m.name) + ' 처치 · ' + esc(m.top || ''), 4); return; }
   if (m.type === 'closed') { net = null; netEl.textContent = '연결 끊김 — 혼자 연습'; netMobs = []; try { MOBS?.update([], 0); } catch {} for (const r of remotes.values()) { r.a?.dispose(scene); r.tag?.remove(); } remotes.clear(); for (const o of doms) { o.root.visible = o.ai.alive; } for (const o of fbs) o.root.visible = o.ai ? o.ai.alive : true; } }
-if (ONLINE) { const L = document.getElementById('load'); L.textContent = '필드 방에 들어가는 중…';
-  try { net = await connectField({ q, zone: ZONE, gate: ARRIVE && ARRIVE.id, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { L.textContent = t; } }); dressMe(net.profile); netEl.textContent = '온라인 · 근처 0명'; }
+if (ONLINE) { const L = document.getElementById('load'), Li = (L.querySelector && L.querySelector('i')) || L; Li.textContent = '필드 방에 들어가는 중…';   /* 이동 카드면 카드 아래 글줄만 바꾼다 */
+  try { net = await connectField({ q, zone: ZONE, gate: ARRIVE && ARRIVE.id, char: ME, look: undefined, onMessage: netMsg, onStatus: t => { Li.textContent = t; } }); dressMe(net.profile); netEl.textContent = '온라인 · 근처 0명'; }
   catch (e) { netEl.textContent = '오프라인 — ' + e.message + ' · 혼자 연습'; } }
 else netEl.textContent = '혼자 연습 (?online=1 이면 서버 방)';
 potShow();
@@ -428,13 +489,32 @@ function hitMob(sk = null) { if (!MOBS || (!net && !ECO)) return false; const v 
     if (MP) { const r = MP.hit(v.id, n, gameNow); if (r) { MOBS.hurt(v.id, r.hp); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (r.down) floatAt('처치', 'crit', v.root.position, 1.9); } return; }
     mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } })); return true; }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
+/* ---------- 전국 지도 (문서 219) — 지금 자리가 반짝이고, 길이 어디로 이어지는지 ---------- */
+{ const km = document.getElementById('kmap'), open = v => { if (v) { km.querySelector('.kwrap')?.remove();
+    const ways = GATES.filter(g => g.to && g.kind === 'zone').map(g => '<li><b>' + esc((ZONES[g.to.zone] || {}).title || g.to.zone) + '</b><small>' + esc(g.label || '') + '</small></li>').join('');   /* 여기서 가는 길 */
+    km.insertAdjacentHTML('afterbegin', '<div class="kwrap">' + koreaMapSVG({ ZONES, REGIONS, linkGates, current: ZONE }) + '<aside><h3>' + esc(Z.title || ZONE) + '에서 가는 길</h3><ul>' + (ways || '<li><small>문 없음</small></li>') + '</ul></aside></div>'); } km.hidden = !v; };
+  document.getElementById('mapBtn').addEventListener('pointerdown', e => { e.stopPropagation(); open(km.hidden); });
+  document.getElementById('kmapX').addEventListener('pointerdown', e => { e.stopPropagation(); open(false); }); km.addEventListener('pointerdown', e => { e.stopPropagation(); if (e.target === km) open(false); });
+  addEventListener('keydown', e => { if (e.code === 'KeyM') open(km.hidden); if (e.code === 'Escape') open(false); }); }
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
-async function goGate(g) { if (!g || !g.to) return; const to = g.to;
-  try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); return; }
-  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'n01Candidates', 'n01Detail']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
-  try { net && net.send({ type: 'fieldLeave' }); } catch {} location.search = nq.toString(); }
+let leaving = false;
+async function goGate(g) { if (!g || !g.to || leaving) return; const to = g.to; leaving = true;
+  try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); leaving = false; return; }
+  const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'debug', 'lod', 'tod', 'n01Candidates', 'n01Detail']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
+  /* 떠나는 카드: 화면이 어두워지며 다음 지역 이름 — 도착 쪽 로딩 화면이 같은 카드를 이어 받는다 (문서 219) */
+  const ZT = ZONES[to.zone] || {}, tv = document.getElementById('travel'), dg = g.kind === 'dungeon';
+  try { sessionStorage.setItem('tw:travel', JSON.stringify({ at: Date.now(), from: ZONE, fromTitle: Z.title || ZONE, to: to.zone, toTitle: ZT.title || to.zone, label: g.label, hp: P.hp / P.maxHp })); } catch {}
+  tv.innerHTML = '<b>' + esc(ZT.title || to.zone) + '</b><small>' + esc(g.label) + '</small><i>' + (dg ? '안으로 들어가는 중…' : '길을 따라 가는 중…') + '</i>'; tv.classList.add('on');
+  try { net && net.send({ type: 'fieldLeave' }); } catch {}
+  setTimeout(() => { location.search = nq.toString(); }, 480); }
 gateBtn.addEventListener('pointerdown', e => { e.stopPropagation(); goGate(gateNear); });
-function gateTick() { const p = root.position; let g = null, gd = 1e9; for (const x of GATES) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < (x.r || 3) + 0.8 && d < gd) { g = x; gd = d; } }
+/* 길 끝 문(kind zone)은 단추 없이 — 들어서서 0.7초면 떠난다. 도착한 문 위에서는 한 번 밖으로 나가야 켜진다(바로 되돌아가지 않게). 40 m 안이면 다음 지역을 미리 받는다 */
+let gateArmed = !ARRIVE, gateIn = 0; const prefetched = new Set();
+function prefetchZone(z) { if (prefetched.has(z)) return; prefetched.add(z); const ZT = ZONES[z]; try { fetch('maps/2d/' + z + '/map.json', { priority: 'low' }).catch(() => {}); if (ZT && ZT.osm) fetch('maps/2d/' + ZT.osm + '/osm.json', { priority: 'low' }).catch(() => {}); } catch {} }
+function gateTick() { const p = root.position; let g = null, gd = 1e9; for (const x of GATES) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < (x.r || 3) + 0.8 && d < gd) { g = x; gd = d; } if (x.to && d < 40) prefetchZone(x.to.zone); }
+  if (!g) gateArmed = true;
+  if (g && atEnd(g) && gateArmed && !P.dead && !leaving) { const now = performance.now(); if (!gateIn) gateIn = now; else if (now - gateIn > 700) goGate(g); } else gateIn = 0;
+  
   if (g === gateNear) return; gateNear = g; gateBtn.hidden = !g; if (g) { const dg = g.kind === 'dungeon'; gateBtn.className = dg ? 'dg' : ''; gateBtn.innerHTML = (dg ? '⚔ 들어가기' : '➜ 이동') + '<small>' + esc(g.label) + '</small>'; } }
 addEventListener('keydown', e => { if (e.code === 'KeyE' || e.code === 'Enter') goGate(gateNear); });
 /* ---------- 미니맵 · 사냥터 이름 띠 (2D 필드와 같은 그림·같은 좌표) — 문서 206 §14 ----------
@@ -472,6 +552,7 @@ function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const ix = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+  if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
   if (dodgeT > 0) { dodgeT -= dt; const sp = 3.4 * rate; root.position.x -= Math.sin(me.yaw) * sp * dt; root.position.z -= Math.cos(me.yaw) * sp * dt; collide(root.position); }   /* 뒤로 반 걸음 */
@@ -503,15 +584,17 @@ function tick() { perf.begin();
   feel.tick(dt); floatTick(dt);
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
+  if (LIFE) LIFE.tick(dt, lampK);
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   perf.end(); requestAnimationFrame(tick); }
-document.getElementById('load').hidden = true;
+{ const L0 = document.getElementById('load'); if (TRAVEL) { L0.classList.add('out'); setTimeout(() => { L0.hidden = true; }, 700); } else L0.hidden = true; }
+if (TRAVEL && !INDOOR) { const rc = document.getElementById('regionCard'); rc.innerHTML = '<b>' + esc(Z.title || ZONE) + '</b><small>' + esc(TRAVEL.fromTitle) + '에서 · ' + esc(String(TRAVEL.label || '').split('·').slice(1).join('·').trim() || '길을 따라') + '</small>'; requestAnimationFrame(() => rc.classList.add('on')); setTimeout(() => rc.classList.remove('on'), 3600); }   /* 이동해 왔으면 카드가 서서히 걷힌다 */
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { lod: LOD, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };

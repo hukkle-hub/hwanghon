@@ -166,6 +166,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const dctx = { THREE, scene, R, FROM, clear: [], blockers }, st = L.dress(dctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: tc - 32 }, L.textures(dctx), { ...CFG.dress, keep: p => !inB(p) && !onRoad(p) });
     console.log('[env-osm] 땅 꾸미기', JSON.stringify(st)); }
 
+  if (L.isView3d()) L.street({ THREE, scene, ST, walk }, roadsW, builtW);   /* 3D 만: 전봇대·전선·신호등·쓰레기·정류장 (문서 219) */
   /* ---------- 간판: 상가(POI) 업종 → 가까운 건물 길 쪽 벽. 전기가 들어오는 건 «몇몇» ---------- */
   const SIGN = { 'shop:convenience': ['편의점', '#4cff9a'], 'amenity:pharmacy': ['약국', '#4cff9a'], 'amenity:cafe': ['카페', '#ffd23a'], 'amenity:restaurant': ['식당', '#ff8a3a'], 'amenity:fast_food': ['분식', '#ff8a3a'],
     'amenity:bank': ['은행', '#39a0ff'], 'shop:hairdresser': ['미용실', '#ff4fd8'], 'shop:beauty': ['피부관리', '#ff4fd8'], 'shop:nail_salon': ['네일', '#ff4fd8'], 'amenity:dentist': ['치과', '#39e0ff'],
