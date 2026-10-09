@@ -49,7 +49,7 @@ test('3D 경계: 방호벽·가림막·모래주머니·잔해가 섞인다 · �
 });
 
 test('땅 결: 진짜 평면만(침목 같은 낮은 상자는 빼고) · 바닥 금속성 빼며 색 보정', () => {
-  assert.match(W3D, /if \(b\.max\.y - b\.min\.y > 0\.02 \|\|/); assert.match(W3D, /m\.metalness = 0\.06; m\.color\.multiplyScalar\(0\.72\);/);
+  assert.match(W3D, /if \(b\.max\.y - b\.min\.y > 0\.02 \|\|/); assert.match(W3D, /diffuseColor\.rgb \*= 1\.0 - uCloudK \* cs;/); assert.match(W3D, /CLOUDK\.value = 0\.3 \* Math\.min\(1, Math\.max\(0, \(sy - 0\.08\)/);   /* 구름 그림자: 해가 낮으면 0 */ assert.match(W3D, /m\.metalness = 0\.06; m\.color\.multiplyScalar\(0\.72\);/);
 });
 
 test('3D 물: 하늘을 비추는 셰이더 · 바닥보다 앞으로 · 물가 거품 · 막이와 장면 난수는 2D 와 같다', () => {
