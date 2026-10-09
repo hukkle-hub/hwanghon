@@ -25,3 +25,13 @@ test('낮은 가로 화면(디렉터 폰 750×298): 스킬을 공격 왼쪽 두 
   assert.equal(tops.length, 7, '7 단추'); for (const [id, top] of tops) assert.ok(top <= 182, `${id} 위 끝 ${top}px — 298 화면에서 미니맵(아래 끝 ~106)에 닿는다`);
   assert.match(W, /body #osm\{ right:auto; left:12px;/, '출처 규칙이 뒤의 #osm 에 덮이지 않게');
 });
+
+test('예열 (문서 220 §19): 로딩 끝에 장면 전체를 컬링 없이 한 번 그려 컴파일·업로드 · 뒤에 오는 몸(보스·몬스터·장비)은 병렬 컴파일 뒤에 보인다', () => {
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
+  assert.match(W, /function warmUp\(obj = scene\)/); assert.match(W, /warmUp\(\);\n/, '로딩 끝 예열 호출'); assert.ok(W.indexOf('warmUp();\n') < W.indexOf('nearLights(root.position); placeCam(0); tick();'), '첫 프레임 전에');
+  assert.match(W, /o\.frustumCulled = false; \} \}\);\n  const rt = new THREE\.WebGLRenderTarget\(4, 4\)/, '컬링 끄고 4×4 에 그린다');
+  assert.match(W, /renderer\.compileAsync\(r, cam, scene\)/); assert.match(W, /await preCompile\(r\);\n    const o = \{ b \}; setupDominator/); assert.match(W, /await preCompile\(r\);\n    const box = new THREE\.Box3/);
+  assert.match(W, /RingGeometry\(\.55, \.75, 8\), new THREE\.MeshBasicMaterial\(\{ color: 0xff3020, transparent: true, opacity: \.8, depthWrite: false, depthTest: false, side: THREE\.DoubleSide, toneMapped: false \}\)/, '예고 고리 재질과 같아야 한다 (field-mobs)');
+  assert.match(W, /watchLooks\(dt\)/);
+  const F = fs.readFileSync(new URL('../js/mmo/field-mobs.js', import.meta.url), 'utf8'); assert.match(F, /new THREE\.MeshBasicMaterial\(\{ color: 0xff3020, transparent: true, opacity: \.8, depthWrite: false, depthTest: false, side: THREE\.DoubleSide, toneMapped: false \}\)/, 'field-mobs 예고 고리 재질이 바뀌면 예열도 바꿔야 한다');
+});
