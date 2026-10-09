@@ -107,6 +107,7 @@ export function build(THREE, scene, osm, zone) {
   if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) });
     console.log('[env-field] 땅 꾸미기', JSON.stringify(st)); }
   if (F.crystals) { const spots = []; for (let i = 0; i < F.crystals * 3 && spots.length < F.crystals; i++) { const p = FROM(walk.s0 + R() * (walk.s1 - walk.s0), walk.t0 + R() * (walk.t1 - walk.t0)); if (L.isClear(ctx, p) || L.inBuilding(built, p) || blockers.some(b => b.poly && L.inPoly(p, b.poly))) continue; spots.push(p); } L.crystals(ctx, spots, { h: F.crystalH || 0.55 }); }
+  if (L.isView3d()) L.street(ctx, roadsW, built, { waters: ar.waters });   /* 3D 만: 전봇대·전선·신호등·쓰레기·정류장 (문서 219) */
   if (F.lamps !== false) { const spots = []; for (let s = walk.s0 + 8; s < walk.s1 - 8; s += F.lampStep || 26) { const p = FROM(s, (F.lampT ?? walk.t0 + 2)); if (!L.inBuilding(built, p)) spots.push(p); } L.lamps(ctx, spots); }
 
   /* ---------- 문 · 보스 · 경계 ---------- */

@@ -160,7 +160,8 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
   const curtainM = new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
   const roofM = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });
   const area = poly => { let a = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
-  for (const b of osm.buildings) { if (b.under) continue; const pts = unclose(b.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, o.pad ?? 50)) continue;
+  const far = [];
+  for (const b of osm.buildings) { if (b.under) continue; const pts = unclose(b.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, o.pad ?? 50)) { if (VIEW3D && pts.length >= 3 && near(ctx, pts, FAR_PAD)) far.push([pts, b]); continue; }
     const ar = area(pts); let h = b.height || (b.levels ? b.levels * 3.6 : (ar > 900 ? 22 + R() * 20 : ar > 300 ? 12 + R() * 12 : 7 + R() * 7)); h = Math.min(h, o.maxH || 260);
     const cst = pts.reduce((a, p) => { const st = ST(p); return [a[0] + st[0] / pts.length, a[1] + st[1] / pts.length]; }, [0, 0]), full = h, nearSide = cst[1] < (o.cutT ?? tc); if (nearSide) h = Math.min(h, 4.2);
     /* 넓은 필드: 걷는 구역 안 건물은 «무너진 저층» — 원작의 폐허 서울. 고층이 그대로면 그 뒤가 통째로 가려진다(55° 에서 높이 × 0.7 m) */
@@ -174,7 +175,24 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
     const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     if (VIEW3D) addDeco(THREE, scene, buildingDeco(THREE, pts, h, b.id | 0, { roof: !nearSide && !ruined, shops: !tall }), b.id | 0);
     ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
+  if (far.length) farCity(THREE, scene, far, tex, area);
   return out; }
+/* ---------- 먼 도시 (3D 필드만, 문서 219) — 걷는 띠 밖 실제 OSM 건물을 지평선까지. 굽기는 띠 둘레 50 m 까지만 세워서 그 너머가 빈 땅이었다
+   (3인칭은 늘 지평선이 보인다 — «도시가 끝난 판» 처럼 보였다). 높이는 OSM 층수 또는 건물 id 해시(장면 난수 R 안 씀) · 그림자·카메라 막이 없음 · 막이 없음(못 가는 곳) */
+const FAR_PAD = 300; export const FAR = { n: 0, tris: 0 };
+function farCity(THREE, scene, far, tex, area) {
+  const mats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.7, metalness: 0.2 })), roofM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.95 });
+  const cells = new Map(), put = (key, g) => { let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(g); };
+  for (const [pts, b] of far) { const ar = area(pts), id = b.id | 0, u = hashU(id, 3, 9);
+    const h = Math.min(120, b.height || (b.levels ? b.levels * 3.4 : ar > 900 ? 24 + u * 30 : ar > 300 ? 12 + u * 14 : 6 + u * 8));
+    const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); g.rotateX(-Math.PI / 2);
+    const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length, cell = Math.floor(cx / 160) + ',' + Math.floor(cz / 160);   /* 멀어서 160 m 칸이면 충분 — 64 m 는 메시가 300 개 늘었다 */
+    /* 뽑아 올린 기하의 무리(0 = 지붕·바닥, 1 = 벽)를 따로 떼어 재질별로 — 재질 여럿인 메시는 static-merge 가 안 합친다 */
+    for (const gr of g.groups) { const sub = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) sub.setAttribute(k, g.attributes[k]); sub.setIndex(Array.from(g.index ? g.index.array.slice(gr.start, gr.start + gr.count) : [...Array(gr.count)].map((_, i) => gr.start + i)));
+      put(cell + '|' + (gr.materialIndex === 0 ? 'r' : 'w'), sub); FAR.tris += gr.count / 3; }
+    FAR.n++; }
+  for (const [key, list] of cells) { const k = key.split('|')[1], g = mergeGeometries(list.map(x => x.toNonIndexed()), false); if (!g) continue;
+    const [cx, cz] = key.split('|')[0].split(',').map(Number), m = new THREE.Mesh(g, k === 'r' ? roofM : mats[(Math.floor(hashU(cx, cz, 5) * 4)) % 4]);   /* 칸마다 파사드 하나 — 칸당 메시 둘 */ m.userData.noCam = true; m.userData.far = 1; scene.add(m); FAR.meshes = (FAR.meshes || 0) + 1; } }
 export const inBuilding = (built, p) => built.some(b => inPoly(p, b.pts));
 /* 무너진 저층 (3D 필드만, 문서 216) — 납작한 상자 대신 «속 빈 벽체 + 들쭉날쭉 부서진 윗선 + 군데군데 빠진 벽 + 안쪽 잔해 더미».
    자리·높이 한도·막이(윤곽 그대로)는 굽기와 같고, 모양의 흔들림은 건물 id 해시로만 정한다(장면 난수 R 을 안 쓴다 — 뒤 자리가 그대로). */
@@ -285,6 +303,58 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
     if (h > 18 && hashU(id, 6, 7) < 0.3) { const s2 = spot(31, 0.6); if (s2) { const g = new THREE.BoxGeometry(0.12, 4 + 3 * hashU(id, 7, 7), 0.12); g.translate(s2[0], h + 2, s2[1]); P.ac.push(g); } } }
   DECOS.push([+cx.toFixed(1), +cz.toFixed(1), +h.toFixed(1), P.sign.length, !!o.roof]); return P; }
 
+/* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
+   한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
+   메시는 하나하나 세우고(정적 합치기가 48 m 칸으로 묶는다), 전선(선)만 160 m 칸별로 직접 묶는다. */
+export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, at: {} };   /* at: 검수용 자리 몇 개씩 */
+const seeAt = (k, p) => { const l = STREET.at[k] || (STREET.at[k] = []); if (l.length < 4) l.push([+p[0].toFixed(1), +p[1].toFixed(1)]); };
+export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, walk } = ctx, inBand = (p, pad) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
+  const carRoads = roadsW.filter(rw => !/footway|path|pedestrian|steps|cycleway|track/.test(rw.r.kind));
+  const onRoad = p => carRoads.some(rw => { for (let i = 1; i < rw.pts.length; i++) if (segDist(p, rw.pts[i - 1], rw.pts[i]) < rw.width / 2 + 0.4) return true; return false; });   /* 일방통행 대로는 OSM 에서 두 줄 — 한 길의 길가가 옆 길의 차로다 */
+  const solid = p => built.some(b => inPoly(p, b.pts)) || (o.waters || []).some(w => inPoly(p, w)) || onRoad(p);
+  const conc = new THREE.MeshStandardMaterial({ color: 0x8a8682, roughness: 0.85, map: gritTex(THREE) }), steel = new THREE.MeshStandardMaterial({ color: 0x4a4e54, roughness: 0.5, metalness: 0.6 }), dark = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.6 });
+  const amber = new THREE.MeshStandardMaterial({ color: 0x3a2a10, emissive: 0xffa020, emissiveIntensity: 1.4 }), bagM = [0x1c1c22, 0x2a3a5a, 0x3a3a34].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.35, metalness: 0.05 }));
+  const glass = new THREE.MeshStandardMaterial({ color: 0x8aa0b0, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.35 }), wireM = new THREE.LineBasicMaterial({ color: 0x0c0c10 });
+  const add = (geo, mat, x, y, z, ry = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.rotation.y = ry; m.castShadow = true; m.receiveShadow = true; m.userData.noCam = true; scene.add(m); return m; };
+  const wires = new Map(), wire = (a, b) => { const key = Math.floor(a[0] / 160) + ',' + Math.floor(a[2] / 160); let l = wires.get(key); if (!l) wires.set(key, l = []);
+    const L = Math.hypot(b[0] - a[0], b[2] - a[2]), sag = 0.35 + L * 0.018; for (let i = 0; i < 8; i++) { const u0 = i / 8, u1 = (i + 1) / 8, y = u => a[1] + (b[1] - a[1]) * u - sag * 4 * u * (1 - u);
+      l.push(a[0] + (b[0] - a[0]) * u0, y(u0), a[2] + (b[2] - a[2]) * u0, a[0] + (b[0] - a[0]) * u1, y(u1), a[2] + (b[2] - a[2]) * u1); } STREET.wires++; };
+  const poleG = new THREE.CylinderGeometry(0.13, 0.18, 10, 7); poleG.translate(0, 5, 0); const armG = new THREE.BoxGeometry(1.6, 0.12, 0.12), trafoG = new THREE.CylinderGeometry(0.32, 0.32, 0.9, 8);
+  const VEH = /primary|secondary|tertiary|residential|unclassified|living_street|service/, MAJOR = /primary|secondary|tertiary/;
+  for (const rw of roadsW) { const k = rw.r.kind; if (!VEH.test(k)) continue; const id = rw.r.id | 0, side = hashU(id, 1, 1) < 0.5 ? -1 : 1, off = rw.width / 2 + 1.1;
+    /* 전봇대: 골목·이면도로(대로는 지중화) — 28~34 m 간격, 한쪽 길가 */
+    if (!MAJOR.test(k) || k === 'tertiary') { let prev = null, acc = 8 + hashU(id, 2, 2) * 12;
+      for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L;
+        for (; acc < L; acc += 28 + hashU(id, i, acc | 0) * 6) { const p = [a[0] + ux * acc - uz * off * side, a[1] + uz * acc + ux * off * side]; if (!inBand(p, 40) || solid(p)) { prev = null; continue; }
+          const ry = -Math.atan2(dz, dx); add(poleG, conc, p[0], 0, p[1]); add(armG, steel, p[0], 9.3, p[1], ry + Math.PI / 2); if (hashU(id, i, 7 + (acc | 0)) < 0.25) add(trafoG, steel, p[0] + uz * side * 0.35, 7.6, p[1] - ux * side * 0.35);
+          STREET.poles++; seeAt('pole', p); if (prev) for (const [h, lat] of [[9.3, -0.7], [9.3, 0.7], [8.4, 0]]) wire([prev[0] - uz * lat, h, prev[1] + ux * lat], [p[0] - uz * lat, h, p[1] + ux * lat]); prev = p; }
+        acc -= L; } }
+    /* 버스 정류장: 큰길 160~220 m 마다, 길 쪽을 본다 */
+    if (MAJOR.test(k)) { let acc = 40 + hashU(id, 3, 3) * 80;
+      for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L;
+        for (; acc < L; acc += 160 + hashU(id, i, 9) * 60) { const o2 = rw.width / 2 + 2.4, p = [a[0] + ux * acc - uz * o2 * side, a[1] + uz * acc + ux * o2 * side]; if (!inBand(p, 6) || solid(p)) continue;
+          const ry = -Math.atan2(dz, dx) + (side > 0 ? Math.PI : 0), bk = [p[0] - uz * side * 0.6, p[1] + ux * side * 0.6], g = new THREE.Group(); g.position.set(p[0], 0, p[1]); g.rotation.y = ry;
+          const roof = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.12, 1.7), steel); roof.position.set(0, 2.6, 0); const back = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.9, 0.05), glass); back.position.set(0, 1.45, -0.75);
+          const bench = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 0.45), steel); bench.position.set(0, 0.48, -0.45); const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.6, 0.1), steel); p1.position.set(-2, 1.3, -0.75); const p2 = p1.clone(); p2.position.x = 2;
+          const sg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.06), new THREE.MeshStandardMaterial({ color: 0x2a5aa8, emissive: 0x2a5aa8, emissiveIntensity: 0.3 })); sg.position.set(2.3, 2.3, 0.4);
+          for (const m of [roof, back, bench, p1, p2, sg]) { m.castShadow = m !== back; m.receiveShadow = true; m.userData.noCam = true; g.add(m); } scene.add(g); STREET.stops++; seeAt('stop', p); void bk; } acc -= L; } }
+    /* 쓰레기 더미: 길가 건물 쪽, 18~40 m 마다 35% */
+    { let acc = 6 + hashU(id, 4, 4) * 20;
+      for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L;
+        for (; acc < L; acc += 18 + hashU(id, i, 11 + (acc | 0)) * 22) { if (hashU(id, i, 13 + (acc | 0)) > 0.35) continue; const sd = hashU(id, i, 17 + (acc | 0)) < 0.5 ? -1 : 1, o3 = rw.width / 2 + 1.7, p = [a[0] + ux * acc - uz * o3 * sd, a[1] + uz * acc + ux * o3 * sd];
+          if (!inBand(p, 10) || solid(p)) continue; seeAt('bags', p); const n = 3 + ((hashU(id, i, 19 + (acc | 0)) * 4) | 0), seed = id + i * 131 + (acc | 0);
+          for (let j = 0; j < n; j++) { const r = 0.32 + hashU(seed, j, 1) * 0.22, g = new THREE.IcosahedronGeometry(r, 1); lumpy(g, r * 0.25, seed + j, true); g.scale(1, 0.8, 1);
+            add(g, bagM[(hashU(seed, j, 2) * 3) | 0], p[0] + (hashU(seed, j, 3) - 0.5) * 1.4, r * 0.75 + (j > 3 ? 0.4 : 0), p[1] + (hashU(seed, j, 4) - 0.5) * 1.4, hashU(seed, j, 5) * 6); STREET.bags++; } } acc -= L; } } }
+  /* 신호등: 큰길이 만나는 교차로(길 꼭짓점을 함께 쓰는 곳) — 꺼졌거나 노란 점멸 */
+  const nodes = new Map(); for (const rw of roadsW) { if (!VEH.test(rw.r.kind) || /service/.test(rw.r.kind)) continue; for (const p of [rw.pts[0], rw.pts[rw.pts.length - 1], ...rw.pts]) { const key = p[0].toFixed(1) + ',' + p[1].toFixed(1); let n = nodes.get(key); if (!n) nodes.set(key, n = { p, roads: new Set(), major: false, w: 0 }); n.roads.add(rw); n.major ||= MAJOR.test(rw.r.kind); n.w = Math.max(n.w, rw.width); } }
+  const sigPole = new THREE.CylinderGeometry(0.1, 0.12, 6, 7); sigPole.translate(0, 3, 0); const sigArm = new THREE.BoxGeometry(4.5, 0.12, 0.12); sigArm.translate(2.25, 0, 0); const head = new THREE.BoxGeometry(1.1, 0.38, 0.32), lamp = new THREE.SphereGeometry(0.11, 8, 6);
+  for (const n of nodes.values()) { if (n.roads.size < 2 || !n.major || !inBand(n.p, 8)) continue; const id = Math.round(n.p[0] * 13 + n.p[1] * 7);
+    for (const q of [0, 2]) { const ang = q * Math.PI / 2 + Math.PI / 4 + hashU(id, q, 1) * 0.2, d = (n.w / 2 + 1.4) * 1.55, p = [n.p[0] + Math.cos(ang) * d, n.p[1] + Math.sin(ang) * d];   /* 대각선 모퉁이 — 두 길 모두에서 길가로 */ if (solid(p)) continue;
+      const ry = -ang + Math.PI; add(sigPole, steel, p[0], 0, p[1]); add(sigArm, steel, p[0], 5.7, p[1], ry); const hx = p[0] + Math.cos(ang + Math.PI) * 3.8, hz = p[1] + Math.sin(ang + Math.PI) * 3.8;
+      add(head, dark, hx, 5.45, hz, ry); if (hashU(id, q, 2) < 0.6) add(lamp, amber, hx + Math.cos(ry) * 0.3, 5.45, hz - Math.sin(ry) * 0.3).userData.blink = 1; STREET.signals++; seeAt('signal', p); } }
+  for (const l of wires.values()) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(l, 3)); const m = new THREE.LineSegments(g, wireM); m.frustumCulled = true; m.userData.noCam = true; scene.add(m); }
+  return STREET; }
+
 /* ---------- 나무: 인스턴스로. 걷는 띠 안은 드문드문(갓이 인물을 가리면 안 된다) ---------- */
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = VIEW3D ? lumpy(new THREE.IcosahedronGeometry(1.9, 0), 0.14, 14) : new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
@@ -362,7 +432,7 @@ export function boundary(ctx, o = {}) { const { THREE, scene, FROM, walk } = ctx
 /* ---------- 문: 맨바닥 자리 찾기(시선 레이캐스트) · 바닥 원 ---------- */
 export function bareSpot(ctx, st0, o = {}) { const { THREE, scene, FROM, walk } = ctx; const ray = new THREE.Raycaster(), Dv = new THREE.Vector3(0, -Math.sin(PITCH), -Math.cos(PITCH));
   scene.updateMatrixWorld(true); const objs = scene.children.filter(c => !c.isLight);
-  const bare = p => { ray.set(new THREE.Vector3(p[0], 0, p[1]).addScaledVector(Dv, -150), Dv); const hit = ray.intersectObjects(objs, true).find(h => h.object.visible && !h.object.isLight); return !hit || hit.point.y < 0.12; };
+  const bare = p => { ray.set(new THREE.Vector3(p[0], 0, p[1]).addScaledVector(Dv, -150), Dv); const hit = ray.intersectObjects(objs, true).find(h => h.object.visible && !h.object.isLight && !h.object.userData.noCam && !h.object.isLine);   /* 3D 만의 꾸밈·먼 도시·소품·전선(noCam)은 굽기에 없다 — 맞으면 문 자리가 서버 지도와 어긋난다(판교 → 수원 5 m) */ return !hit || hit.point.y < 0.12; };
   for (const r of [0, 2, 3, 4, 5, 6, 8, 10]) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, st = [st0[0] + Math.cos(a) * r, st0[1] + Math.sin(a) * r];
     if (st[1] < walk.t0 + 2 || st[1] > walk.t1 - 2 || st[0] < walk.s0 + 1 || st[0] > walk.s1 - 1) continue; if (o.ok && !o.ok(st)) continue;
     if ([[0, 0], [1.2, 0], [-1.2, 0], [0, 1.2], [0, -1.2]].every(([ds, dt]) => bare(FROM(st[0] + ds, st[1] + dt)))) return st; }

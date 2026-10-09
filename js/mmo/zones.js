@@ -7,7 +7,6 @@
    원작 줄 번호(L…)는 docs/story/source/제1부_통합본_EP01-28.md */
 
 import { AUTO } from './zones-auto.js';
-import { applyLinks } from './zone-links.js';
 
 const M = 'art/3d/part1/';
 export const ZONES = {
@@ -254,6 +253,5 @@ export const ZONES = {
 
 /* 전국 지역 — tools/2d/new-zone.mjs 가 찍어 낸 것 (docs/design/192 §7). 같은 id 가 위에 있으면 손으로 다듬은 위쪽이 이긴다 */
 for (const [id, z] of Object.entries(AUTO)) ZONES[id] ??= z;
-applyLinks(ZONES);   /* 전국 길 잇기 — 2단계 13곳까지 문으로 (문서 219) */
 
 export const zoneIds = Object.keys(ZONES);
