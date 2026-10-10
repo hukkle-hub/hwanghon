@@ -17,7 +17,7 @@ export function applyHeroSkillClips(model,clips,character){
   for(const [name,values]of Object.entries(src.tracks))if(bones[name])tracks.push(new T.QuaternionKeyframeTrack(bones[name].name+'.quaternion',src.times,values));
   tracks.push(new T.VectorKeyframeTrack(bones.Hips.name+'.position',src.times,src.hips));
   const clip=new T.AnimationClip(old.name,src.duration,tracks);
-  clip.userData={source:src.source||'mixamo:'+src.sourceLabel,fullBody:true,weaponLocal:src.weaponLocal,weaponBaked:!!src.weaponBaked,duration:src.duration,entry:src.entry,exit:src.exit,axisPath:src.axisPath,contactPhase:src.contactPhase,correctedMelee:!!src.correctedMelee};
+  clip.userData={source:src.source||'mixamo:'+src.sourceLabel,fullBody:true,weaponLocal:src.weaponLocal,weaponBaked:!!src.weaponBaked,coupledReady:!!src.readyConnected,duration:src.duration,entry:src.entry,exit:src.exit,axisPath:src.axisPath,contactPhase:src.contactPhase,correctedMelee:!!src.correctedMelee};
   motion[old.name]={...clip.userData,position:new T.VectorKeyframeTrack('weapon.position',src.times,src.weaponPositions).createInterpolant(),rotation:new T.QuaternionKeyframeTrack('weapon.quaternion',src.times,src.weaponRotations).createInterpolant()};
   return clip;
  });

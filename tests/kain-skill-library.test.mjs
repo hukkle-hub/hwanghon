@@ -2,6 +2,7 @@ import test from 'node:test';import assert from 'node:assert/strict';import fs f
 import * as T from '../vendor/three/three.module.js';import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {Animated} from '../js/party-avatar.js';import {fieldHeroAction} from '../js/mmo/hero-motion.js';import {HERO_SKILL_DATA} from '../js/hero-skill-data.js';import {sampleAction} from '../js/combat-motion.js';
 import {prepareArmSurface,armSurfaceNow} from '../tools/3d/arm-surface-audit.mjs';import {frameReviewCamera} from '../tools/3d/review-framing.js';
+import {makePoser} from '../tools/3d/pose-eval.mjs';
 globalThis.window=globalThis;vm.runInThisContext(fs.readFileSync('js/dungeons.js','utf8'));vm.runInThisContext(fs.readFileSync('js/looks.js','utf8'));vm.runInThisContext(fs.readFileSync('js/skill-events.js','utf8'));
 const D=globalThis.TW_DUNGEONS,M=D.RULES.motion;
 const load=async f=>{const b=fs.readFileSync(f),l=new GLTFLoader();for(const name of ['nr','EXT_texture_webp'])l.register(()=>({name,loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');};
@@ -10,17 +11,20 @@ test('Kain: five distinct full-body sources, canonical clocks never compress the
  for(const[name,c]of Object.entries(HERO_SKILL_DATA.kain)){assert.ok(c.sourceLabel);assert.equal(c.times[0],0);assert.ok(Math.abs(c.times.at(-1)-c.duration)<1e-4);for(const n of ['Hips','Spine','RightUpLeg','LeftUpLeg','RightArm','LeftArm'])assert.equal(c.tracks[n].length,c.times.length*4);if(name==='skill2')continue;const p=M.characterProfiles.kain[name];assert.equal(p.duration,c.duration);const ev=name==='ult'?D.SKILLS.kainUlt.ev:D.SKILLS.kain[Number(name.at(-1))-1].ev,a={clip:name,duration:p.duration,hitAt:p.hit,clipHit:M.clipContactsByChar.kain[name],fullBodyMocap:true};for(const[f]of ev.hits){const t=globalThis.TW_SKILL_EVENTS.timeOf(f,a);assert.ok(Math.abs(sampleAction({...a,elapsed:t},c.duration)-f*c.duration)<1e-4);}}
 });
 for(const lod of [false,true])test('Kain actual '+(lod?'mobile':'original')+' mesh: complete takes preserve wrists, exact palms and both blade contacts',async()=>{
- const scene=new T.Scene(),prefix=lod?'lod/':'',h=new Animated(await load('art/3d/'+prefix+'kain_anim.glb'),scene,true,false,await load('art/3d/'+prefix+'gear/w_kain_greatsword.glb'),'kain'),bones={};h.model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});const surfaces=prepareArmSurface(h.model),surfacePass=s=>s.collapsedFraction<.006&&s.stretchedFraction<(lod?.015:.018);assert.ok(surfaces.length);
- try{for(const[name,c]of Object.entries(HERO_SKILL_DATA.kain)){h.play(name,name);h.current.paused=true;const ev=name==='ult'?D.SKILLS.kainUlt.ev:D.SKILLS.kain[Number(name.at(-1))-1].ev,prev={};
-  for(let i=0;i<=240;i++){h.rig.restore();h.current.time=c.duration*i/240;h.mixer.update(c.duration/240);h.rig.apply(fieldHeroAction('kain',h.current.getClip(),h.current.time,name),false,false,c.duration/240,name);h.root.updateMatrixWorld(true);const d=h.rig.diagnostics;
+ const scene=new T.Scene(),prefix=lod?'lod/':'',h=new Animated(await load('art/3d/'+prefix+'kain_anim.glb'),scene,true,false,await load('art/3d/'+prefix+'gear/w_kain_greatsword.glb'),'kain'),bones={};h.model.traverse(o=>{if(o.isBone)bones[o.name.replace(/^mixamorig:?/,'')]=o;});const surfaces=prepareArmSurface(h.model),regions=Object.fromEntries(['Right','Left'].map(side=>[side,prepareArmSurface(h.model,{side,boundary:true})])),surfacePass=s=>s.collapsedFraction<.006&&s.stretchedFraction<(lod?.015:.018);assert.ok(surfaces.length);
+ try{for(const[name,c]of Object.entries(HERO_SKILL_DATA.kain)){const clip=h.clips[name],pose=makePoser(h.model,clip),ev=name==='ult'?D.SKILLS.kainUlt.ev:D.SKILLS.kain[Number(name.at(-1))-1].ev,prev={};
+  for(let i=0;i<=240;i++){h.rig.restore();const time=c.duration*i/240;pose(time);h.rig.apply(fieldHeroAction('kain',clip,time,name),false,false,c.duration/240,name);h.root.updateMatrixWorld(true);const d=h.rig.diagnostics;
    assert.ok(d.gripError<.001&&d.rightGripError<.001,name+' grip');
    // A rigid zero-bend constraint routed elbows through the torso. Allow a
    // conservative 30 degree wrist range while independently testing clearance.
    assert.ok(d.LeftWristBend<Math.PI/6&&d.RightWristBend<Math.PI/6,name+' wrist');
    assert.ok(d.LeftTorsoClearance>.18&&d.RightTorsoClearance>.18,name+' forearm through torso');
-   assert.ok(d.LeftUpperArmClearance>.18&&d.RightUpperArmClearance>.18,name+' upper arm buried in chest');
-   assert.ok(bones.LeftForeArm.getWorldPosition(new T.Vector3()).distanceTo(bones.RightForeArm.getWorldPosition(new T.Vector3()))>.40,name+' cramped/crossed elbows');
-   if(i%4===0)assert.ok(surfacePass(armSurfaceNow(surfaces)),name+' actual arm surface collapse/stretch at '+i/240);
+   assert.ok(d.LeftUpperArmClearance>.18&&d.RightUpperArmClearance>.18,name+' upper arm buried in chest phase '+i/240+' L '+d.LeftUpperArmClearance+' R '+d.RightUpperArmClearance);
+   // As in the six melee takes, a forced shoulder-width 40 cm gap creates
+   // raised "chicken wings". Check actual signed left/right crossing instead.
+   const leftElbow=bones.LeftForeArm.getWorldPosition(new T.Vector3()),rightElbow=bones.RightForeArm.getWorldPosition(new T.Vector3()),leftAxis=bones.LeftArm.getWorldPosition(new T.Vector3()).sub(bones.RightArm.getWorldPosition(new T.Vector3())).normalize();
+   assert.ok(leftElbow.distanceTo(rightElbow)>.22&&leftElbow.clone().sub(rightElbow).dot(leftAxis)>.16,name+' cramped/crossed elbows');
+   if(i%4===0){assert.ok(surfacePass(armSurfaceNow(surfaces)),name+' actual arm surface collapse/stretch at '+i/240);for(const[side,region]of Object.entries(regions)){const skin=armSurfaceNow(region);assert.ok(skin.collapsedFraction<.01&&skin.stretchedFraction<.025&&skin.collapsedAreaFraction<.015,name+' '+side+' shoulder/arm seam at '+i/240+' '+JSON.stringify(skin));}}
    for(const n of ['RightArm','RightForeArm','LeftArm','LeftForeArm']){const q=bones[n].quaternion.clone().normalize();if(prev[n]){const rate=prev[n].angleTo(q)/(c.duration/240);assert.ok(rate<20,name+' discontinuous '+n+' phase '+(i/240)+' rate '+rate);}prev[n]=q;}
    if(ev.hits?.some(([f])=>Math.round(f*240)===i))assert.ok(bladeDistance(h.weapon,new T.Vector3(0,1.65,1.4))<.39,name+' blade misses chest');
   }

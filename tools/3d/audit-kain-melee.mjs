@@ -52,7 +52,7 @@ for(const lod of [false,true]){
  report.models[lod?'mobile':'original']=result;
  // The rejected counter was the unmodified ultimate lift at phase .337.
  // Keep that real source geometry as a negative control, not fabricated stats.
- h.play('ult','rejected-source');h.current.paused=true;h.rig.restore();h.current.time=h.current.getClip().duration*.337;makePoser(h.model,h.current.getClip())(h.current.time);h.rig.apply(fieldHeroAction('kain',h.current.getClip(),h.current.time,'rejected-source'),false,false,1/120,'ult');h.root.updateMatrixWorld(true);report.rejectedCounterSourcePose[lod?'mobile':'original']=armPoseNow(bones);
+ const lifted=JSON.parse(fs.readFileSync('tests/fixtures/kain-rejected-ultimate-lift.json','utf8'));h.rig.restore();for(const[n,q]of Object.entries(lifted.tracks))bones[n].quaternion.fromArray(q);bones.Hips.position.fromArray(lifted.hips);h.root.updateMatrixWorld(true);report.rejectedCounterSourcePose[lod?'mobile':'original']=armPoseNow(bones);
  // Actual last deployed counter, rejected by the director for its right arm.
  const rejected=JSON.parse(fs.readFileSync('tests/fixtures/kain-rejected-counter-contact.json','utf8'));
  h.rig.restore();for(const[n,q]of Object.entries(rejected.tracks))bones[n].quaternion.fromArray(q);bones.Hips.position.fromArray(rejected.hips);h.root.updateMatrixWorld(true);report.rejectedRightArmPose[lod?'mobile':'original']=armPoseNow(bones);h.dispose(scene);

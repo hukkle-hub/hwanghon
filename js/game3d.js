@@ -9,6 +9,7 @@ import {makeAinRigAdapter} from './ain-two-hand.js';
 import {gripHands} from './hand-grip.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {makeKainRigAdapter} from './kain-two-hand.js';
+import {createCoupledPoseBridge} from './coupled-pose-bridge.js';
 import {applyHeroSkillClips} from './hero-skill-clips.js';
 import {smoothCharacterClips} from './clip-smooth.js';
 import {createArmBlend} from './arm-blend.js';
@@ -773,6 +774,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
     else if(layerOn('clips'))g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
     g.animations=applyHeroSkillClips(ain.model,g.animations,CID);
+    ain.poseBridge=createCoupledPoseBridge(ain.model);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
@@ -842,6 +844,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(ain.cinema) ain.cinema.restore();
     if(ain.armBlend) ain.armBlend.restore();   /* 팔 돌기 묶기는 두 손 보정 뒤에 씌우므로 먼저 되돌린다 */
     if(ain.rig) ain.rig.restore();
+    ain.poseBridge?.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
       if(combatAction && combatAction.id===ain.timed.id){
@@ -865,6 +868,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     }
     jumpClipScrub();
     ain.mixer.update(dt);
+    ain.poseBridge?.apply(dt,ain.oneshot?'action:'+(ain.timed?.id??ain.oneshotName)+':'+ain.oneshot.getClip().uuid:'base:'+ain.base);
     ain.root.position.copy(v3(P.x,P.y));
     /* 튕김 반동 — 보스 반대 방향으로 밀린다(연출 전용, 판정 좌표는 그대로) */
     var rk=recoilOffset();
@@ -877,12 +881,14 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     var motionAction=combatAction||(heldAction&&ain.oneshot&&ain.oneshot.getClip().name===heldAction.clip?heldAction:null);
     if(['ain','kain'].includes(CID)&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(motionAction&&ain.oneshot)motionAction=Object.assign({},motionAction,{clipTime:ain.oneshot.time});
+    // Apply banking/jump before the final sole and rigid two-hand solve.
+    if(CID==='kain'){tickJump(dt);if(layerOn('lean'))tickLean(dt);}
     if(ain.rig&&layerOn('rig')) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.armBlend&&layerOn('armBlend')&&(CID!=='kain'||ain.rig?.diagnostics.source==='legacy')) ain.armBlend.apply(dt);   /* Do not separate a freshly solved rigid two-hand grip. */
+    ain.poseBridge?.capture();
     if(ain.cinema&&layerOn('cinema')){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
-    tickJump(dt);
-    if(layerOn('lean'))tickLean(dt);
+    if(CID!=='kain'){tickJump(dt);if(layerOn('lean'))tickLean(dt);}
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x30120e:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.08 s 0x30120e — 옷 재질이 남게(전체 단색 빨강 금지). 스매시 뒤 맞는 프레임에서 0x4a1a12 도 큰 기술 흰 섬광과 겹쳐 분홍 실루엣이 됐다 */
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
@@ -1881,13 +1887,27 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
      production route·보상·판정·AI를 건드리지 않는다. */
   var AUDIT_LOCAL=['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('combatAudit');
   var combatAudit=null;
+  var auditFeet=null;
+  if(AUDIT_LOCAL&&CID==='kain')import('../tools/3d/foot-surface-audit.mjs').then(function(m){
+    var wait=setInterval(function(){if(!ain.ready)return;clearInterval(wait);auditFeet={sample:m.footSurfaceNow,data:m.prepareFootSurface(ain.model)};},100);
+  });
   function auditNow(){ return performance.now()/1000; }
   function auditSnapshot(){
     if(!AUDIT_LOCAL||!battle)return null;
     var s=battle.snapshot(), a=s.player.action, cd=ain.cinema&&ain.cinema.diagnostics||{}, fm=FRAME_METRICS.report(),
         gapM=world.dist(P.x,P.y,Bs.x,Bs.y)/SCALE,
         bodyRadiusM=(Math.max(0,P.r||0)+Math.max(0,Bs.r||0))/SCALE,
-        penetrationM=Math.max(0,bodyRadiusM-gapM);
+        penetrationM=Math.max(0,bodyRadiusM-gapM),actualGrip=null,actualSoles=null;
+    // Observe the final rendered pose, AFTER cinema/IK, not cached solver
+    // diagnostics. This local-only mode does not change combat or animation.
+    if(CID==='kain'&&ain.model&&ain.weapon){
+      ain.root.updateMatrixWorld(true);var hb={};ain.model.traverse(function(b){if(b.isBone&&/Hand$/.test(b.name))hb[b.name.replace(/^mixamorig:?/,'')]=b;});
+      var wo=ain.weapon.getWorldPosition(new THREE.Vector3()),wa=new THREE.Vector3(0,1,0).transformDirection(ain.weapon.matrixWorld);
+      if(hb.LeftHand?.userData.gripPoint&&hb.RightHand?.userData.gripPoint)actualGrip={
+        right:hb.RightHand.userData.gripPoint.clone().applyMatrix4(hb.RightHand.matrixWorld).distanceTo(wo),
+        left:hb.LeftHand.userData.gripPoint.clone().applyMatrix4(hb.LeftHand.matrixWorld).distanceTo(wo.clone().addScaledVector(wa,-.17))};
+      if(auditFeet){var soles=auditFeet.sample(auditFeet.data);actualSoles={left:soles.Left-ain.root.position.y,right:soles.Right-ain.root.position.y};}
+    }
     return {
       t:+(auditNow()-(combatAudit?combatAudit.t0:auditNow())).toFixed(3),
       fight:+fightT.toFixed(3),
@@ -1905,6 +1925,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       bossLunge:!!bossLunge,
       base:ain.base||'',
       oneShot:ain.oneshotName||'',
+      actualGrip:actualGrip,actualSoles:actualSoles,
+      rigResiduals:CID==='kain'?{left:ain.rig?.diagnostics.LeftResidual,right:ain.rig?.diagnostics.RightResidual,lift:ain.rig?.diagnostics.groundLift,source:ain.rig?.diagnostics.source}:null,
+      coupledConnection:!!ain.poseBridge,cinemaMode:cd.mode||'',
       plantSide:cd.plantSide||'',
       plantWeight:+(cd.plantWeight||0).toFixed(3),
       plantError:cd.plantError==null?null:+cd.plantError.toFixed(4),
@@ -1932,6 +1955,8 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       combatAudit.live.textContent='ACT '+a+' '+ae+'/'+ah+'  COMBO '+(row?row.combo:0)+'\n'
         +'GAP '+(row?row.gapM:'—')+'m / BODY '+(row?row.bodyRadiusM:'—')+'m  PEN '+(row?Math.round(row.penetrationM*100):0)+'cm'+(row&&row.bossLunge?' [LUNGE]':'')+'\n'
         +'BASE '+(row?row.base:'—')+'  ONE '+(row?row.oneShot:'—')+'\n'
+        +(row?.actualGrip?'HANDS '+(row.actualGrip.right*1000).toFixed(2)+' / '+(row.actualGrip.left*1000).toFixed(2)+'mm\n':'')
+        +(row?.actualSoles?'SOLES '+(row.actualSoles.left*1000).toFixed(1)+' / '+(row.actualSoles.right*1000).toFixed(1)+'mm\n':'')
         +'PLANT '+(row&&row.plantSide||'—')+' '+(row?Math.round(row.plantWeight*100):0)+'% err '+pe+'\n'
         +'BOSS '+(row&&row.bossState||'—')+' / '+(row&&row.bossReaction||'—')+'\n'
         +'FPS '+(row?row.fps:'—')+'  p95 '+(row?row.p95Ms:'—')+'ms  calls '+(row?row.drawCalls:'—');
