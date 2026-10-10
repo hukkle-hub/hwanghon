@@ -29,9 +29,27 @@ const KITS = {
     },
     weights: (d, phase) => d > 4.6 ? { thrust: 1 } : phase === 1 ? { flurry: 3, thrust: 2 } : { flurry: 4, thrust: 3 },
   },
+  /* 실험체 09호 — 문서 181 §2·§7 · UE boss_skills.json(subject_09) 박자 그대로. 고유 규칙 «리듬 깨기»: 폭주 연타의 멈춤이 매번 0/0.2/0.4 s 다르다 */
+  subject09: {
+    aggro: 16, leash: 24, walk: 2.6, ret: 3.6, engage: 3.4, recovery: [1000, 800], phases: [.5], open: 'storm',
+    skills: {
+      frenzy: { clip: 'atk_s09frenzy', duration: 4000, reach: 3.6,   /* 폭주 연타: 빠른 2타 → 거의 멈춤 → 무거운 3타(마지막 강타) */
+        jitter: { at: 1100, steps: [0, 200, 400] },   /* 멈춤 뒤 박자가 통째로 밀린다 — 외운 박자로는 못 피한다 */
+        hits: [{ at: 550, shape: 'cone', range: 3.4, angle: 2.2, damage: .06 }, { at: 850, shape: 'cone', range: 3.4, angle: 2.2, damage: .06 },
+          { at: 1950, shape: 'cone', range: 3.4, angle: 2.4, damage: .08, aim: true }, { at: 2200, shape: 'cone', range: 3.4, angle: 2.4, damage: .08 },
+          { at: 2500, shape: 'cone', range: 3.8, angle: 2.6, damage: .16, knock: 2.6 }], counter: [2250, 2500],
+        tells: [{ from: 0, at: 550, to: 850, shape: 'cone', range: 3.4, angle: 2.2 }, { from: 1100, at: 1950, to: 2200, shape: 'cone', range: 3.4, angle: 2.4 },
+          { from: 2200, at: 2500, to: 2600, shape: 'cone', range: 3.8, angle: 2.6 }] },
+      storm: { clip: 'atk_s09storm', duration: 5200, reach: 30, only: true,   /* 방전 폭우: 50 % 아래로 들어설 때 — 하늘이 어두워지고 대상 발밑에 낙뢰 6발 */
+        dim: [[0, 0], [1200, .62], [4700, .62], [5200, 0]],
+        hits: seq(2800, 6, 350).map(at => ({ at, shape: 'circle', radius: 1.4, damage: .16, atTarget: true, lead: 1200 })),
+        tells: [] },   /* 원은 marks 로 따로 그린다 (대상 자리에 찍힌 예고) */
+    },
+    weights: (d, phase) => d > 3.6 ? {} : { frenzy: 1 },
+  },
 };
 const round2 = n => +n.toFixed(2), angle = (x, z) => Math.atan2(x, z), dAng = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
-const kitOf = o => KITS[o && o.id] || null;
+const kitOf = o => KITS[o && o.id] || null, k = kitOf;
 function enabled(o) { return !!kitOf(o); }
 function phaseOf(o) { const k = kitOf(o), max = Math.max(1, Number(o?.max) || 1), r = Math.max(0, Math.min(max, Number.isFinite(o?.hp) ? o.hp : max)) / max; let p = 1; for (const t of (k && k.phases) || []) if (r <= t) p++; return p; }
 /* 시간표 곡선: [[t, v], …] 사이를 곧게 */
@@ -68,9 +86,10 @@ function choose(field, o, p) {
   const w = skillWeights(o, p), ids = Object.keys(w); let total = 0; for (const id of ids) total += Math.max(0, w[id]); if (total <= 0) return null;
   let r = Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * total; for (const id of ids) { r -= Math.max(0, w[id]); if (r < 0) return id; } return ids.find(id => w[id] > 0) || null;
 }
-function begin(o, p, now, skill) {
+function begin(field, o, p, now, skill) {
   const def = kitOf(o).skills[skill]; if (p) turn(o, p.x, p.z, Math.PI);
-  setState(o, 'skill', now, def.duration, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z });
+  const j = def.jitter, shift = j ? j.steps[Math.min(j.steps.length - 1, Math.floor(Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * j.steps.length))] : 0;
+  setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [] });
   const h = o.kit.history; h.push(skill); while (h.length > 4) h.shift();
 }
 function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recovery.length, phaseOf(o)) - 1]; setState(o, 'idle', now, rec, { target: null }); }
@@ -78,10 +97,13 @@ function skillTick(field, o, now) {
   const a = o.kit, def = kitOf(o).skills[a.skill]; if (!def) { finish(o, now); return; }
   const t = now - a.startedAt;
   if (def.move) { const dist = curve(def.move, t); o.x = a.fromX + Math.sin(o.yaw) * dist; o.z = a.fromZ + Math.cos(o.yaw) * dist; }   /* 돌진: 예고 때 잠근 방향으로만 */
-  while (a.hitIndex < def.hits.length && t >= def.hits[a.hitIndex].at) {
+  const at = h => h.at + (def.jitter && h.at >= def.jitter.at ? a.shift || 0 : 0);   /* 리듬 깨기: 멈춤 뒤 박자만 민다 */
+  /* 대상 발밑 표식: 판정 lead ms 전에 그 순간의 대상 자리를 찍어 둔다 (화면은 marks 를 보고 원을 그린다) */
+  for (let i = 0; i < def.hits.length; i++) { const h = def.hits[i]; if (!h.atTarget || a.marks[i] || t < at(h) - h.lead) continue; const p = target(field, o) || nearest(field, o, k(o).leash)?.p; a.marks[i] = p ? [round2(p.x), round2(p.z)] : [round2(o.x), round2(o.z)]; }
+  while (a.hitIndex < def.hits.length && t >= at(def.hits[a.hitIndex])) {
     const h = def.hits[a.hitIndex]; a.hitIndex++;
     if (h.aim) { const p = target(field, o); if (p) turn(o, p.x, p.z, Math.PI / 2); }   /* 난무: 세트마다 방향을 다시 잡는다 (숨 동안 틀어짐) */
-    const origin = def.move ? { x: a.fromX, z: a.fromZ, yaw: o.yaw } : o, hit = { ...h, skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
+    const mk = h.atTarget && a.marks[a.hitIndex - 1], origin = mk ? { x: mk[0], z: mk[1], yaw: 0 } : def.move ? { x: a.fromX, z: a.fromZ, yaw: o.yaw } : o, hit = { ...h, skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
     for (const p of live(field, o)) if (inShape(origin, p, hit)) { const r = field.bossStrike(o, p, hit, now);
       if (h.heal && r && r.amount > 0) o.hp = Math.min(o.max, (o.hp || 0) + Math.round(o.max * h.heal)); }   /* 흡혈: 맞힌 만큼 보스가 회복 (보스 고유 규칙, 문서 181 §1 ④) */
   }
@@ -94,11 +116,11 @@ function tick(field, o, now = Date.now()) {
   if (a.state === 'skill') { skillTick(field, o, now); return; }
   if (a.state === 'stagger') { if (now >= a.endsAt) finish(o, now); return; }
   /* 단계 문턱을 넘으면 «여는 기술» 을 한 번 (섀도우 팽: 그림자 개화) — 누가 근처에 있을 때만 */
-  if (k.open && !a.opened && a.phase > 1) { const n = nearest(field, o, k.leash); if (n) { a.opened = true; begin(o, n.p, now, k.open); return; } }
+  if (k.open && !a.opened && a.phase > 1) { const n = nearest(field, o, k.leash); if (n) { a.opened = true; begin(field, o, n.p, now, k.open); return; } }
   const t = target(field, o), homeD = Math.hypot(o.x - o.homeX, o.z - o.homeZ);
   if (t) { const d = Math.hypot(t.x - o.x, t.z - o.z);
     if (d > k.leash || homeD > k.leash) setState(o, 'return', now, 0, { target: null });
-    else if (now >= a.endsAt) { const s = choose(field, o, t); if (s) { begin(o, t, now, s); return; }
+    else if (now >= a.endsAt) { const s = choose(field, o, t); if (s) { begin(field, o, t, now, s); return; }
       if (a.state !== 'walk') setState(o, 'walk', now, 0, { target: t.id }); turn(o, t.x, t.z, dt * 3); move(o, t.x, t.z, k.walk, dt); return; }
     else return; }
   if (a.state === 'return' || homeD > 1) { if (a.state !== 'return') setState(o, 'return', now, 0, { target: null }); turn(o, o.homeX, o.homeZ, dt * 3.2);
@@ -108,12 +130,13 @@ function tick(field, o, now = Date.now()) {
 }
 function tryCounter(o, now = Date.now()) {
   const a = o && o.kit, def = a && kitOf(o).skills[a.skill]; if (!a || a.state !== 'skill' || !def?.counter || a.countered) return false;
-  const t = now - a.startedAt; if (t < def.counter[0] || t > def.counter[1]) return false;
+  const sh = def.jitter && def.counter[0] >= def.jitter.at ? a.shift || 0 : 0, t = now - a.startedAt - sh; if (t < def.counter[0] || t > def.counter[1]) return false;
   a.countered = true; setState(o, 'stagger', now, 1350, { skill: a.skill, target: null }); return true;
 }
 function view(o) {
   if (!enabled(o) || !o.alive || !o.kit) return null; const a = o.kit, def = kitOf(o).skills[a.skill], c = def?.counter, sk = a.state === 'skill';
   return { id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
-    fromX: sk ? round2(a.fromX) : 0, fromZ: sk ? round2(a.fromZ) : 0, counterOpen: c && sk ? a.startedAt + c[0] : 0, counterClose: c && sk ? a.startedAt + c[1] : 0 };
+    fromX: sk ? round2(a.fromX) : 0, fromZ: sk ? round2(a.fromZ) : 0, shift: sk ? a.shift || 0 : 0, marks: sk && a.marks && a.marks.length ? a.marks.map(m => m || null) : undefined,
+    counterOpen: c && sk ? a.startedAt + c[0] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0, counterClose: c && sk ? a.startedAt + c[1] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0 };
 }
-module.exports = { KITS, enabled, phaseOf, curve, setup, reset, tick, tryCounter, view, inShape, skillWeights };
+module.exports = { KITS, enabled, shiftAt: (def, a, at) => at + (def.jitter && at >= def.jitter.at ? (a && a.shift) || 0 : 0), phaseOf, curve, setup, reset, tick, tryCounter, view, inShape, skillWeights };

@@ -68,7 +68,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
   const mk = (id, html = '') => { const e = doc.createElement('div'); e.id = id; e.innerHTML = html; doc.body.appendChild(e); return e; };
   const bars = mk('bsBars', '<i></i><i></i>'), card = mk('bsCard'), flashEl = mk('bsFlash'), banner = mk('bsBanner');
   const plate = doc.createElement('div'); plate.id = 'bsPlate'; plate.hidden = true; (doc.getElementById('hud') || doc.body).appendChild(plate); void bars;
-  let flashT = 0, flashDur = 1, flashA = 0, bannerT = 0, cardT = 0;
+  let dim = 0, flashT = 0, flashDur = 1, flashA = 0, bannerT = 0, cardT = 0;
   const flash = (color, a = .55, dur = .35) => { if (reduced) a *= .4; flashEl.style.background = color; flashA = a; flashEl.style.opacity = a; flashT = flashDur = dur; };
   const showBanner = (t, life = 2.2) => { banner.textContent = t; banner.classList.add('on'); bannerT = life; };
   const showCard = (name, sub, life) => { card.innerHTML = `<b>${name}</b><small>${sub}</small><em></em>`; card.classList.add('on'); cardT = life; };
@@ -120,6 +120,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
   function event(o, kind, data = {}) { const st = o && o.stage; if (!st) return; const cfg = st.cfg, pp = player(), d = Math.hypot(pp.x - o.root.position.x, pp.z - o.root.position.z);
     if (kind === 'impact') { if (d < 22) { play('hit', { tier: 'smash', material: cfg.metal ? 'metal' : 'core' }); const k = Math.max(0, 1 - d / 22); kick = Math.max(kick, .22 + .38 * k); kickDir.set(pp.x - o.root.position.x, 0, pp.z - o.root.position.z).normalize(); kickDir.y = -.6; fovPunch = Math.max(fovPunch, 3.5 * k); } }
     else if (kind === 'counter') { play('counter', true); flash('radial-gradient(circle at 50% 50%, rgba(120,230,255,.75), transparent 65%)', .7, .45); kick = Math.max(kick, .3); kickDir.set(0, -1, 0); fovPunch = Math.max(fovPunch, -4); }
+    else if (kind === 'tele') { if (d < 30) play('tele'); }   /* 예고 원 대신 표식만 쓰는 기술(방전 폭우) */
     else if (kind === 'break') { play('brk'); flash('radial-gradient(circle at 50% 50%, rgba(255,210,140,.7), transparent 60%)', .6, .4); showBanner('셔터 파괴 — 무방비', 2); }
     else if (kind === 'phase') { play('phase'); flash(`radial-gradient(circle at 50% 50%, transparent 30%, ${hex(cfg.core)}cc 100%)`, .8, .9); kick = Math.max(kick, .45); kickDir.set(0, -1, 0); ring(o, (o.h || 3) * 2.4); if (data.text) showBanner(data.text, 2.6); st.rimK.value = cfg.rimK * 2.2; } }
 
@@ -143,6 +144,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
           o.model.position.y = y.y0 - dy; }
         if (y.t > 4.9) { st.dying = null; o.root.position.y = y.ry0; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
     }
+    { let d = 0; for (const o of list) { const f = FX(o); if (f && f.dim && o.root.visible) d = Math.max(d, f.dim); } dim = reduced ? d * .6 : d; }   /* 방전 폭우: 하늘이 어두워진다 — world3d 가 그릴 때 노출에 곱한다 (조작 화면은 그대로) */
     /* 배경음: 살아 있는 보스 근처면 보스 곡 */
     const want = plateFor ? 'boss' : 'off'; if (want !== tick.music) { tick.music = want; music(want); }
     if (plateFor) { const cfg = plateFor.stage.cfg, key = cfg.name + cfg.title; if (plate.dataset.k !== key) { plate.dataset.k = key; plate.innerHTML = `<b>${cfg.name}</b><small>${cfg.title}</small><em></em>`; } }
@@ -170,5 +172,5 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
   }
 
   return { attach, tick, event, death, skip, applyCamera, intro,
-    get locked() { return lockT > 0; }, get shot() { return shot && { kind: shot.kind, t: +shot.t.toFixed(2), id: shot.o.b.id }; }, get list() { return list; } };
+    get locked() { return lockT > 0; }, get dim() { return dim; }, get shot() { return shot && { kind: shot.kind, t: +shot.t.toFixed(2), id: shot.o.b.id }; }, get list() { return list; } };
 }
