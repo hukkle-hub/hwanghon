@@ -35,7 +35,8 @@ test('옥상 것은 윤곽 안 · 상가 띠와 간판은 벽에서 0.6 m 안 �
   for (const k of ['parapet', 'tank', 'ac']) for (const g of P[k]) { const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); assert.ok(inPoly([x, z], PTS) || dist(x, z, PTS) < 0.02, `${k} 가 윤곽 밖 (${x.toFixed(2)}, ${z.toFixed(2)})`); assert.ok(p.getY(i) >= h - 1e-6, `${k} 가 지붕 아래`); } }
   assert.ok(P.ledge.length > 0, '처마·층 띠가 없다 (문서 229 §4)');
-  for (const k of ['shop', 'sign', 'ledge']) for (const g of P[k]) { const p = g.attributes.position;
+  assert.ok(P.wallac.length > 0, '창 밑 실외기가 없다 (문서 229 §6)');
+  for (const k of ['shop', 'sign', 'ledge', 'wallac']) for (const g of P[k]) { const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); assert.ok(inPoly([x, z], PTS) || dist(x, z, PTS) < 0.6, `${k} 가 벽에서 너무 멀다 (${x.toFixed(2)}, ${z.toFixed(2)})`); } }
 });
 
@@ -64,4 +65,14 @@ test('빌더 연결: 3D 에서만 꾸밈, 강남은 간판 빼고', () => {
   assert.match(SRC, /if \(VIEW3D\) addDeco\(THREE, scene, buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !nearSide && !ruined, shops: !tall \}\)/);
   const osm = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
   assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
+});
+
+test('창 밑 실외기는 가짜 실내 창 칸 가운데·창 아래 — facade-shader 와 같은 격자 (1.8 m × 3.6 m, s = 위치·(nz, −nx))', () => {
+  for (const pts of [PTS, REV]) { const P = buildingDeco(THREE, pts, 20, 4242, { roof: true, shops: true }); assert.ok(P.wallac.length > 3, '실외기 ' + P.wallac.length);
+    for (const g of P.wallac) { g.computeBoundingBox(); const c = g.boundingBox.getCenter(new THREE.Vector3());
+      assert.ok(Math.abs(((c.y - 0.33) / 3.6) - Math.round((c.y - 0.33) / 3.6)) < 1e-3, `층 높이가 창 칸과 어긋남 (y ${c.y.toFixed(2)})`);
+      const ok = pts.some((p, i) => { const q = pts[(i + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dist(c.x, c.z, [p, q]) > 0.5) return false;
+        let nx = (q[1] - p[1]) / L, nz = -(q[0] - p[0]) / L; if (inPoly([(p[0] + q[0]) / 2 + nx * 0.3, (p[1] + q[1]) / 2 + nz * 0.3], pts)) { nx = -nx; nz = -nz; }   /* 바깥 법선 */
+        const sv = (c.x - nx * 0.19) * nz + (c.z - nz * 0.19) * -nx, f = sv / 1.8 - Math.floor(sv / 1.8); return Math.abs(f - 0.5) < 0.02; });
+      assert.ok(ok, `칸 가운데가 아님 (${c.x.toFixed(2)}, ${c.z.toFixed(2)})`); } }
 });

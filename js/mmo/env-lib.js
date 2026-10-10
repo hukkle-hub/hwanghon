@@ -298,10 +298,11 @@ export const isView3d = () => VIEW3D;
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
+  if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
   for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1) continue;
@@ -313,6 +314,11 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
       if (o.roof && h > 6) band(h - 0.2, 0.4, 0.32);
       if (o.shops && h > 6.5) band(3.62, 0.24, 0.22);
       if (o.roof && h > 30) for (let fy = 1; fy * 14.4 < h - 6; fy++) if (hashU(id, fy, 33) < 0.55) band(fy * 14.4 + 0.1, 0.18, 0.12); }   /* 높은 건물: 4 층마다 얇은 띠(건물마다 다르게) */
+    /* 창 밑 실외기 — 한국 건물. 가짜 실내 창(facade-shader)과 같은 칸: 벽 따라 s = 위치·(nz, −nx) 의 1.8 m 칸, 층 3.6 m. 칸 가운데 창 아래 (문서 229 §6) */
+    if (o.roof && o.wallAc !== false && h > 7 && h <= 45 && L >= 3) { const ux = dx / L, uz = dz / L, tx = nz, tz = -nx, s0 = p[0] * tx + p[1] * tz, ds = ux * tx + uz * tz;
+      if (Math.abs(ds) > 0.5) for (let k = Math.ceil(Math.min(s0, s0 + ds * L) / 1.8 - 0.5); (k + 0.5) * 1.8 <= Math.max(s0, s0 + ds * L); k++) { const t = ((k + 0.5) * 1.8 - s0) / ds; if (t < 0.7 || t > L - 0.7) continue;
+        for (let f = 1; (f + 1) * 3.6 <= h - 0.5 && f < 12; f++) { if (hashU(id * 31 + e, k, f + 101) > 0.11) continue;
+          const g = new THREE.BoxGeometry(0.82, 0.55, 0.32); g.rotateY(yaw); g.translate(p[0] + ux * t + nx * 0.19, f * 3.6 + 0.33, p[1] + uz * t + nz * 0.19); P.wallac.push(g); } } }
     /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
     if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
       for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;
