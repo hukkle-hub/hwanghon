@@ -84,3 +84,19 @@ test('09호 시간표: 판정마다 앞선 예고(또는 표식) · 판정은 �
  const S=KIT.KITS.subject09.skills; for(const [id,s] of Object.entries(S)) for(const h of s.hits){ assert.ok(h.at+(s.jitter?400:0)<s.duration+(s.jitter?400:0),id);
   assert.ok(h.atTarget?h.lead>=1000:s.tells.some(t=>t.from<=h.at-100&&t.to>=h.at),id+' '+h.at); }
 });
+
+test('기술표 보스: 기술 종료 후 목표를 다시 찾아도 1·2단계 회복 시간을 생략하지 않는다',()=>{
+ for(const id of ['subject09','shadowfang']) for(const phase of [1,2]) {
+  const {f,o,p}=id==='subject09'?setup09():setup();
+  if(phase===2){o.hp=Math.round(o.max*.49);o.kit.opened=true;}
+  p.hp=p.maxHp=1e9;p.x=o.x;p.z=o.z+2;o.kit.target=p.id;
+  o.kit.pattern=id==='subject09'?'frenzy':'flurry';f.tickBosses(1800);
+  assert.equal(o.kit.state,'skill');const end=o.kit.endsAt;p.dodgeUntil=end+1; // 흡혈로 단계가 바뀌지 않게 회복 시간만 고립 검증
+  f.tickBosses(end);assert.equal(o.kit.state,'idle');
+  const rec=KIT.KITS[id].recovery[phase-1];assert.equal(o.kit.endsAt,end+rec);
+  const seq=o.kit.seq;
+  for(let t=end+50;t<end+rec;t+=50){p.x=o.x;p.z=o.z+2;f.tickBosses(t);assert.equal(o.kit.state,'idle',id+' phase '+phase+' at '+(t-end));assert.equal(o.kit.seq,seq);}
+  f.tickBosses(end+rec);assert.equal(o.kit.state,'walk','정해진 회복이 끝나면 재탐색');
+  f.tickBosses(end+rec+50);assert.equal(o.kit.state,'skill','회복 뒤 다시 공격 가능');
+ }
+});

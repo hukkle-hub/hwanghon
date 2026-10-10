@@ -61,7 +61,7 @@ function setup(o, now = Date.now()) {
   o.yaw = o.kit.yaw; return o.kit;
 }
 function reset(o, now = Date.now()) { if (enabled(o)) { if (Number.isFinite(o.homeX)) { o.x = o.homeX; o.z = o.homeZ; } setup(o, now); } }
-function setState(o, state, now, duration = 0, extra = {}) { const a = o.kit; a.state = state; a.skill = extra.skill || ''; a.startedAt = now; a.endsAt = now + duration; a.seq++; a.hitIndex = 0; a.countered = false; Object.assign(a, extra); return a; }
+function setState(o, state, now, duration = 0, extra = {}) { const a = o.kit; a.state = state; a.skill = extra.skill || ''; a.startedAt = now; a.endsAt = now + duration; a.seq++; a.hitIndex = 0; a.countered = false; a.recovering = false; Object.assign(a, extra); return a; }
 const live = (field, o) => [...field.players.values()].filter(p => p.zone === o.zone && !p.dead && Number.isFinite(p.hp));
 function nearest(field, o, r) { let best = null, bd = Infinity; for (const p of live(field, o)) { const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < bd) { best = p; bd = d; } } return bd <= r ? { p: best, d: bd } : null; }
 function target(field, o) { const id = o.kit.target, p = id && field.players.get(id); return p && p.zone === o.zone && !p.dead ? p : null; }
@@ -92,7 +92,7 @@ function begin(field, o, p, now, skill) {
   setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [] });
   const h = o.kit.history; h.push(skill); while (h.length > 4) h.shift();
 }
-function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recovery.length, phaseOf(o)) - 1]; setState(o, 'idle', now, rec, { target: null }); }
+function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recovery.length, phaseOf(o)) - 1]; setState(o, 'idle', now, rec, { target: null, recovering: true }); }
 function skillTick(field, o, now) {
   const a = o.kit, def = kitOf(o).skills[a.skill]; if (!def) { finish(o, now); return; }
   const t = now - a.startedAt;
@@ -117,6 +117,9 @@ function tick(field, o, now = Date.now()) {
   if (a.state === 'stagger') { if (now >= a.endsAt) finish(o, now); return; }
   /* 단계 문턱을 넘으면 «여는 기술» 을 한 번 (섀도우 팽: 그림자 개화) — 누가 근처에 있을 때만 */
   if (k.open && !a.opened && a.phase > 1) { const n = nearest(field, o, k.leash); if (n) { a.opened = true; begin(field, o, n.p, now, k.open); return; } }
+  /* finish clears the target; nearest() must not replace this idle with walk
+     (and reset endsAt) before the configured recovery has elapsed. */
+  if (a.recovering && now < a.endsAt) return;
   const t = target(field, o), homeD = Math.hypot(o.x - o.homeX, o.z - o.homeZ);
   if (t) { const d = Math.hypot(t.x - o.x, t.z - o.z);
     if (d > k.leash || homeD > k.leash) setState(o, 'return', now, 0, { target: null });
