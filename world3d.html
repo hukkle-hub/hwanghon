@@ -112,6 +112,8 @@ canvas{ display:block; width:100vw; height:100vh; }
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
 try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
 </script>
+<script src="js/sfx.js"></script>
+<script src="js/studio-env.js"></script>
 <script src="js/items.js"></script>
 <script src="js/dungeons.js"></script>
 <script src="js/mmo/safe-zones.js"></script>
@@ -152,6 +154,7 @@ import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js
 import {bodyFor as n01BodyFor,N01_BODIES} from './js/mmo/n01-body-catalog.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
+import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
@@ -299,7 +302,8 @@ for (const b of meta.bosses || []) if (b.ai === 'dominator') {
   const hid = (/art\/3d\/(\w+)_anim\.glb$/.exec(b.model) || [])[1]; if (!hid) continue;
   heroGltf(hid).then(async g => { const r = SkeletonUtils.clone(g.scene); if (window.TW_MATFIX) TW_MATFIX.repair(THREE, r); r.traverse(o => { if (o.isMesh) o.castShadow = true; }); await preCompile(r);
     const o = { b }; setupDominator(o, { scene: r, animations: g.animations }, scene, 0);
-    o.ai = { id: b.id, x: b.x, z: b.z, zone: ZONE, alive: true, yaw: Math.random() * 6.28, hp: 3e6 }; DOM.setup(o.ai, gameNow); doms.push(o); });
+    { const sc = stageOf(b); if (sc) { r.userData.rimK = rimify(THREE, r, sc.rim, sc.rimK); o.root.visible = false; await preCompile(r); o.root.visible = true; } }   /* 윤곽광은 물들인(tint) 재질 위에 — 복제가 onBeforeCompile 을 안 옮긴다. 다시 예열한 뒤 보인다 (문서 221) */
+    o.ai = { id: b.id, x: b.x, z: b.z, zone: ZONE, alive: true, yaw: Math.random() * 6.28, hp: 3e6 }; DOM.setup(o.ai, gameNow); doms.push(o); STAGE.attach(o); });
 }
 /* ---------- 3인칭 카메라 ---------- */
 const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
@@ -369,7 +373,7 @@ const fh = { id: ME, root, get weapon() { return hero.weapon; }, act: new Proxy(
 feel.attachTrail(fh);
 const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서버와 같다 */
 let dodgeT = 0, shakeT = 0, hurtT = 0;
-function attack() { if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
+function attack() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
   hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip); strike(null); }
 /* 가장 가까운 보스(닿는 거리) → 없으면 몬스터. sk = { i, mult, hits } (스킬) · null (기본 공격). 맞을 대상이 없으면 false */
 function strike(sk) {
@@ -383,8 +387,8 @@ function strike(sk) {
     if (t.fx) { const part = ai.hp > 0 ? COMBAT.damageShutter(ai, P, { character: ME }, n, counter, gameNow) : null;
       let dx = P.x - ai.x, dz = P.z - ai.z, d = Math.hypot(dx, dz); if (d < .001) { dx = -Math.sin(ai.yaw || 0); dz = -Math.cos(ai.yaw || 0); d = 1; } const edge = Math.max(.8, Math.min(1.55, (t.b.h || 3) * .38));
       bossHitReact(t, { seq: (t.impSeq = (t.impSeq || 0) + 1), x: ai.x + dx / d * edge, z: ai.z + dz / d * edge, crit, counter, at: gameNow });
-      if (counter) { bossCounterBurst(t); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); }
-    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; floatAt('처치', 'crit', t.root.position, 1.6); } }));
+      if (counter) { bossCounterBurst(t); STAGE.event(t, 'counter'); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } else if (part && part.broken) { STAGE.event(t, 'break'); toast('셔터 파괴<br><b>클레이브 무방비</b>', 2.4); } }
+    if (ai.hp <= 0) { ai.alive = false; t.respawnAt = gameNow + DOM_RESPAWN; if (t.stage) STAGE.death(t, () => { if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); if (!t.ai || !t.ai.alive) t.root.visible = false; }); else { if (t.fx) hideBossMotion(t); else if (t.dom) hideDominator(t); t.root.visible = false; } floatAt('처치', 'crit', t.root.position, 1.6); } }));   /* 무대가 있는 보스는 쓰러지는 장면 뒤에 사라진다 (문서 221) */
   return true; }
 /* ---------- 스킬 1~4 (문서 212) — 2D·서버와 같은 표(js/dungeons.js SKILLS). 3D 는 누르면 바로 나간다(카메라 쪽으로 싸우니 «고르고 → 공격» 이 필요 없다).
    온라인: fieldSkill 하나로 서버가 재사용 대기·판정·회피 무적·치명 예약·피해 감소를 맡는다. 혼자 연습: 서버 skill() 과 같은 규칙 ---------- */
@@ -406,7 +410,7 @@ function skTick() { skEls.forEach((el, i) => { const d = SKDEF[i]; if (!d) retur
 /* 회피 결과 — 누른 직후(0.14초 안)에 피했으면 완벽 회피: 솔로와 같은 잔상·푸른 비네트 (문서 205 §4) */
 let pdN = 0;
 function evadeFx(at, online) { if (isPerfect(P.dodgeAt, at, online)) { floatAt('완벽 회피', 'evade', root.position, 2.1); perfectDodgeFx(scene, hero.model, { reduced: REDUCED }); pdN++; } else floatAt('회피', 'evade', root.position, 1.9); }
-function dodge() { if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
+function dodge() { if (STAGE && STAGE.locked) return; if (busy > 0 || P.dead || gameNow < P.dodgeReady) return; const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
   hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP; P.dodgeAt = net ? sclock.now() : gameNow;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
 /* 회복약 (문서 206 §15) — 온라인: 서버 가방(fieldBag use c_potion, 2D 필드와 같은 길). 혼자 연습: 같은 규칙(최대 HP 35% · 1초에 한 번 · 가득이면 안 씀, server/field.cjs POTION_*)으로 수 제한 없이 */
@@ -460,8 +464,8 @@ function remoteTick(dt) { for (const r of remotes.values()) { const a = r.a; if 
   if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
   if (r.tag) { v3.set(rp.x, 2.15, rp.z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; r.tag.style.display = on ? '' : 'none'; if (on) { r.tag.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; r.tag.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } } } }
 function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
-  for (const [id, alive] of m.bosses || []) { const o = doms.find(x => x.b.id === id); if (o) { if (o.netAlive && !alive) { hideDominator(o); floatAt('처치', 'crit', o.root.position, 1.6); } o.netAlive = !!alive; o.root.visible = !!alive; } }
-  for (const [id, alive] of m.bosses || []) { const o = fbs.find(x => x.b.id === id); if (o) { if (o.netAlive && !alive) { hideBossMotion(o); floatAt('처치', 'crit', o.root.position, 2.4); } o.netAlive = !!alive; o.root.visible = !!alive; } }
+  for (const [id, alive] of m.bosses || []) { const o = doms.find(x => x.b.id === id); if (o) { const died = o.netAlive && !alive; o.netAlive = !!alive; if (died) { floatAt('처치', 'crit', o.root.position, 1.6); if (o.stage) { STAGE.death(o, () => { hideDominator(o); if (!o.netAlive) o.root.visible = false; }); continue; } hideDominator(o); } if (!(o.stage && o.stage.dying)) o.root.visible = !!alive; } }
+  for (const [id, alive] of m.bosses || []) { const o = fbs.find(x => x.b.id === id); if (o) { const died = o.netAlive && !alive; o.netAlive = !!alive; if (died) { floatAt('처치', 'crit', o.root.position, 2.4); if (o.stage) { STAGE.death(o, () => { hideBossMotion(o); if (!o.netAlive) o.root.visible = false; }); continue; } hideBossMotion(o); } if (!(o.stage && o.stage.dying)) o.root.visible = !!alive; } }
   for (const a of m.bossActs || []) { const o = doms.find(x => x.b.id === a.id); if (o && a.ai === 'dominator') applyDominatorAction(o, a); else { const f = fbs.find(x => x.b.id === a.id); if (f && f.fx) applyBossAction(f, a, sclock.now()); } }
   if (m.self) { P.hp = m.self.hp; P.maxHp = Math.max(1, m.self.maxHp); if (!P.dead && m.self.dead) busy = 0; P.dead = !!m.self.dead; }
   const h = m.hurt; if (h && h[0] !== lastHurt) { lastHurt = h[0]; const amount = h[1], kind = h[4];
@@ -488,7 +492,7 @@ function netMsg(m) {
   if (m.type === 'error' && m.message) { toast(esc(m.message), 2); return; }
   if (m.type === 'bossHit') { const o = doms.find(x => x.b.id === m.boss) || fbs.find(x => x.b.id === m.boss); if (!o) return; const im = m.impact || [];   /* 내 타격의 답 — 접점 시각에 한 덩어리로 (문서 205) */
     feel.atContact(fh, 0, () => { floatAt(Number(m.dmg).toLocaleString('ko-KR'), m.crit ? 'crit' : '', o.root.position, Math.min(2.1, (o.h || 2.2) * .6)); feel.impact(fh, o, { crit: m.crit, counter: m.counter, sound: !o.fx });
-      if (o.fx) { bossHitReact(o, { seq: im[0], x: im[1], z: im[2], crit: m.crit, counter: m.counter, at: im[3] }); if (m.counter) { bossCounterBurst(o); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } } }); return; }
+      if (o.fx) { bossHitReact(o, { seq: im[0], x: im[1], z: im[2], crit: m.crit, counter: m.counter, at: im[3] }); if (m.counter) { bossCounterBurst(o); STAGE.event(o, 'counter'); toast('맞대기<br><b>반격 성공</b> · 클레이브 경직', 2.2); } } }); return; }
   if (m.type === 'skillUsed') { if (!m.ok) toast(esc(m.name || '스킬') + ' — 아직 다시 쓸 수 없다', 1.4); return; }   /* 스킬 재사용 대기는 서버가 센다 */
   if (m.type === 'mobHit') { if (m.skill != null && m.ok === false) { toast(esc(m.name || '스킬') + ' — 아직 다시 쓸 수 없다', 2); return; }
     const v = MOBS && MOBS.views.get(m.mob); if (!v || (m.generation != null && v.gen !== m.generation)) return; const t = { root: v.root, h: v.h }, r = m.reward || {};
@@ -505,16 +509,19 @@ potShow();
 /* ---------- 필드 보스 (클레이브 등, 문서 188·192) — 2D 필드와 같은 몸·같은 안무 ----------
    온라인: 서버가 살아 있는지·동작을 보낸다 (클레이브는 서버 시각 안무 boss-motion.js). 혼자 연습: 클레이브는 브라우저에서 서버 전투 모듈(COMBAT)을 돌리고, 나머지는 대기 동작 */
 const bossClock = () => net ? sclock.now() : gameNow;
+/* 보스 무대 (문서 221) — 윤곽광·발밑 기운·소리·등장·페이즈·반격·사망·이름표. 판정은 건드리지 않는다 */
+const bossEnv = () => { try { return window.TW_ENV ? window.TW_ENV.make(THREE, renderer, 'dungeon') : null; } catch { return null; } };   /* 보스 재질 전용 환경맵 — 한 번 굽고 재사용 (문서 221 §1) */
+const STAGE = createBossStage({ THREE, scene, cam, player: () => root.position, reduced: REDUCED, occlude: (at, want) => firstHit(MERGE.camBoxes, at, want) });
 for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
-  load(b.model).then(async gl => { const r = gl.scene; r.traverse(m => { if (m.isMesh) { m.frustumCulled = false; m.castShadow = true; } }); await preCompile(r);
+  load(b.model).then(async gl => { const r = gl.scene; r.traverse(m => { if (m.isMesh) { m.frustumCulled = false; m.castShadow = true; } }); { const sc = stageOf(b); if (sc) r.userData.rimK = rimify(THREE, r, sc.rim, sc.rimK, sc.env ? bossEnv() : null, sc.env); /* 윤곽광·반사는 예열 전에 — 첫 등장 때 컴파일하지 않게 */ } await preCompile(r);
     const box = new THREE.Box3().setFromObject(r), h = box.max.y - box.min.y || 1, dh = b.visualH || b.h, k = dh ? dh / h : (b.scale || 1); r.scale.setScalar(k); box.setFromObject(r);
     const grp = new THREE.Group(); grp.position.set(b.x, b.fly || 0, b.z); r.position.set(r.position.x - (box.min.x + box.max.x) / 2, r.position.y - box.min.y, r.position.z - (box.min.z + box.max.z) / 2); grp.add(r); scene.add(grp);
     const o = { b, root: grp, model: r, h: box.max.y - box.min.y, netAlive: false }; if (net) grp.visible = false;   /* 온라인: 서버가 «살아 있다» 고 할 때만 */
     if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now);
         if (COMBAT.enabled({ id: b.id })) { o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; COMBAT.setup(o.ai, gameNow); } }
-      else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); } }
+      else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); o.deathClip = gl.animations.find(a => /^death$/i.test(a.name)) || null; } }   /* 쓰러지는 장면용 (문서 221) */
     if (!o.ai) o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP };   /* 나머지 필드 보스: 서버에도 AI 가 없다 — 맞기만 한다 (2D 혼자 연습과 같은 30만) */
-    fbs.push(o); }).catch(e => console.warn('[boss]', b.id, e)); }
+    fbs.push(o); STAGE.attach(o); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
   mobView();
@@ -603,7 +610,7 @@ function benchCard() { const el = document.getElementById('benchCard'), gl = ren
 function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
-  const ix = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+  const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
@@ -632,7 +639,8 @@ function tick() { perf.begin();
     COMBAT.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = COMBAT.view(ai); if (v) applyBossAction(o, v, gameNow); }
   { const bn = bossClock(); for (const o of fbs) { if (!o.root.visible && !(o.fx && o.fx.tailT > 0)) continue;
       if (o.mixer) { if (o.fx) prepareBossMotion(o, bn); o.mixer.update(dt); }
-      if (o.fx) { const ev = updateBossMotion(o, dt, bn) || {}; if (ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .14); } } }
+      if (o.fx) { const ev = updateBossMotion(o, dt, bn) || {}; if (ev.impact) { if (o.stage) STAGE.event(o, 'impact'); else if (Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .14); } } }
+  STAGE.tick(dt, bn); }
   feel.tick(dt); floatTick(dt);
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
@@ -645,12 +653,13 @@ function tick() { perf.begin();
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
+  STAGE.applyCamera(dt);   /* 보스 연출 카메라 · 충격 킥 (문서 221) */
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   perf.end(); if (BENCH) { BENCH.tick(performance.now()); if (BENCH.done && !benchShown) { benchShown = true; benchCard(); } } requestAnimationFrame(tick); }
 { const L0 = document.getElementById('load'); if (TRAVEL) { L0.classList.add('out'); setTimeout(() => { L0.hidden = true; }, 700); } else L0.hidden = true; }
 if (TRAVEL && !INDOOR) { const rc = document.getElementById('regionCard'); rc.innerHTML = '<b>' + esc(Z.title || ZONE) + '</b><small>' + esc(TRAVEL.fromTitle) + '에서 · ' + esc(String(TRAVEL.label || '').split('·').slice(1).join('·').trim() || '길을 따라') + '</small>'; requestAnimationFrame(() => rc.classList.add('on')); setTimeout(() => rc.classList.remove('on'), 3600); }   /* 이동해 왔으면 카드가 서서히 걷힌다 */
 const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i = renderer.info.render; return { calls: i.calls, triangles: i.triangles, points: pointData.length, merged: [MERGE.before, MERGE.after], camBoxes: MERGE.camBoxes.length, meshes: (() => { let n = 0; scene.traverse(o => { if (o.isMesh) n++; }); return n; })() }; };
-window.__W3D = { lod: LOD, get bench() { return BENCH && { done: BENCH.done, index: BENCH.index, results: BENCH.results }; }, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
+window.__W3D = { stage: STAGE, lod: LOD, get bench() { return BENCH && { done: BENCH.done, index: BENCH.index, results: BENCH.results }; }, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
