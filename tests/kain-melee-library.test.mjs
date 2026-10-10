@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import * as T from '../vendor/three/three.module.js';
 import {createRequire} from 'node:module';
 import {HERO_MELEE_DATA} from '../js/hero-melee-data.js';
 import {sampleAction} from '../js/combat-motion.js';
@@ -12,13 +13,21 @@ test('Kain six melee takes: actual original/mobile skin, wrists and blade geomet
   assert.ok(r.leftGripGap<.001&&r.rightGap<.001,name+' detached sword');
   assert.ok(r.wristDegrees<30,name+' bent wrist');
   assert.ok(r.upperClearance>.18&&r.foreClearance>.18,name+' arm buried in torso');
-  assert.ok(r.elbowSeparation>.40,name+' crossed elbows');
+  // Tucked elbows may be closer than shoulder width. A forced 40 cm minimum
+  // encouraged chicken-wing poses; test actual left/right crossing instead.
+  assert.ok(r.elbowSeparation>.22&&r.minSignedElbowSpacing>.16,name+' crossed elbows');
   assert.ok(r.maxArmRate<20,name+' discontinuous arm');
   assert.ok(r.collapsedFraction<.006&&r.stretchedFraction<(lod==='mobile'?.015:.018),name+' collapsed/stretched arm surface');
   assert.ok(r.bladeContact<.39,name+' blade misses target');
   const bad={...r,leftGripGap:.2,collapsedFraction:.5,maxArmRate:90};
   assert.throws(()=>assert.ok(bad.leftGripGap<.001&&bad.collapsedFraction<.006&&bad.maxArmRate<20));
  }
+ for(const clips of Object.values(report.models)){const d=clips.counter.contactPose.elbowDrops;assert.ok(d.Right>0&&d.Left>.20,'counter support elbow must remain lowered, lead arm must not shrug');}
+});
+
+test('Kain natural counter shape rejects the actual old lifted-elbow source',()=>{
+ const accept=pose=>assert.ok(pose.elbowDrops.Right>0&&pose.elbowDrops.Left>.20,'raised support elbow');
+ for(const lod of ['original','mobile']){accept(report.models[lod].counter.contactPose);assert.throws(()=>accept(report.rejectedCounterSourcePose[lod]));}
 });
 
 test('Kain six clocks: solo and online share contacts; no legacy clip compression',()=>{
