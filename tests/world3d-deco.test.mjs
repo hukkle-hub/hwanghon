@@ -87,3 +87,11 @@ test('세로 간판: 건물 하나에 많아야 하나 · 벽에서 1 m 안 · 1
     for (let id = 1; id < 120; id++) for (const g of buildingDeco(THREE, PTS, 20, id, { front: f }).vsign) { m++; g.computeBoundingBox(); const c = (g.boundingBox.min.getComponent(axis) + g.boundingBox.max.getComponent(axis)) / 2; assert.ok(Math.abs(c - wall) < 1, `길 쪽 벽이 아님 ${c}`); } assert.ok(m > 20, '길 쪽 간판 ' + m); }
   assert.equal(buildingDeco(THREE, PTS, 20, 3, { vsign: false }).vsign.length + [...Array(50)].reduce((a, _, i) => a + buildingDeco(THREE, PTS, 20, i, { vsign: false }).vsign.length, 0), 0, 'vsign:false 면 없다');
 });
+
+test('세로 간판 글자는 지역마다 (문서 229 §13) — 바닷가·업무지구·옛 도심·서울 번화가', async () => {
+  const L = await import('../js/mmo/env-lib.js');
+  for (const [z, th, w] of [['haeundae', 'coast', '횟집'], ['jeju', 'coast', '민박'], ['yeouido', 'office', '은행'], ['jeonju', 'old', '다방'], ['gangnam', 'seoul', '노래방'], ['없는곳', 'seoul', 'PC방']]) {
+    assert.equal(L.setVsignTheme(z), th, z); assert.ok(L.vsignWords().includes(w), `${z}: ${w}`); }
+  for (const th of ['seoul', 'coast', 'office', 'old']) { const ws = L.vsignWords(th); assert.equal(ws.length, 8, th); for (const x of ws) assert.ok(x.length >= 2 && x.length <= 4, `${th}: ${x} — 칸(64 px)에 세로로 들어가야`); }
+  L.setVsignTheme('gangnam');
+});

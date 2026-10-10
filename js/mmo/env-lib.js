@@ -296,12 +296,22 @@ function quad(THREE, ax, az, bx, bz, y0, y1, u0, u1, v0, v1, nx, nz) { const g =
   g.setIndex(front > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]); return g; }
 let DECO_M = null;
 /* 세로 간판 (문서 229 §9) — 서울 밤거리의 세로 네온. 한 장에 8 칸(칸마다 글자 세로로), 세기는 world3d 시간대가 VSIGN.mat.emissiveIntensity 로 */
-export const VSIGN = { mat: null, at: [] };   /* at: 검수용 [x, 가운데 y, z, 법선 x, 법선 z] */ let VSIGN_TEX = null;
-const VSIGN_TXT = [['호', '프'], ['노', '래', '방'], ['P', 'C', '방'], ['치', '과'], ['약', '국'], ['모', '텔'], ['당', '구', '장'], ['학', '원']], VSIGN_COL = ['#ff3a6a', '#3ae0ff', '#ffd23a', '#4cff9a', '#4cff9a', '#ff4fd8', '#ffd23a', '#39a0ff'];
-function vsignTex(THREE) { if (VSIGN_TEX) return VSIGN_TEX; VSIGN_TEX = canvasTex(THREE, 512, 256, (g, w, h) => { for (let i = 0; i < 8; i++) { const x0 = i * 64, col = VSIGN_COL[i];
+export const VSIGN = { mat: null, mats: {}, at: [] };   /* mats: 지역 묶음별 재질 · at: 검수용 [x, 가운데 y, z, 법선 x, 법선 z] */ const VSIGN_TEX = {};
+/* 지역마다 거리 얼굴이 다르다 (디렉터: «멈춘 도시» — 사람·차는 안 움직이니 간판이 지역을 말한다). world3d 가 setVsignTheme(ZONE) */
+const VSIGN_SETS = {
+  seoul: [['호', '프'], ['노', '래', '방'], ['P', 'C', '방'], ['치', '과'], ['약', '국'], ['모', '텔'], ['당', '구', '장'], ['학', '원']],
+  coast: [['횟', '집'], ['모', '텔'], ['민', '박'], ['조', '개', '구', '이'], ['노', '래', '방'], ['약', '국'], ['횟', '센', '터'], ['호', '프']],
+  office: [['약', '국'], ['치', '과'], ['커', '피'], ['은', '행'], ['안', '과'], ['편', '의', '점'], ['호', '프'], ['P', 'C', '방']],
+  old: [['한', '식'], ['여', '관'], ['다', '방'], ['약', '국'], ['막', '걸', '리'], ['서', '점'], ['노', '래', '방'], ['국', '밥']] };
+const VSIGN_ZONE = { busan: 'coast', haeundae: 'coast', yeosu: 'coast', mokpo: 'coast', sokcho: 'coast', gyeongpo: 'coast', jeju: 'coast', seogwipo: 'coast', goheung: 'coast',
+  yeouido: 'office', pangyo: 'office', jeonju: 'old', gyeongju: 'old', suwon: 'old', chuncheon: 'old' };
+let VSIGN_THEME = 'seoul'; export function setVsignTheme(zone) { VSIGN_THEME = VSIGN_ZONE[zone] || 'seoul'; return VSIGN_THEME; }
+export const vsignTheme = () => VSIGN_THEME, vsignWords = (theme = VSIGN_THEME) => VSIGN_SETS[theme].map(t => t.join(''));
+const VSIGN_COL = ['#ff3a6a', '#3ae0ff', '#ffd23a', '#4cff9a', '#4cff9a', '#ff4fd8', '#ffd23a', '#39a0ff'];
+function vsignTex(THREE, theme = VSIGN_THEME) { if (VSIGN_TEX[theme]) return VSIGN_TEX[theme]; const TXT = VSIGN_SETS[theme]; return VSIGN_TEX[theme] = canvasTex(THREE, 512, 256, (g, w, h) => { for (let i = 0; i < 8; i++) { const x0 = i * 64, col = VSIGN_COL[i];
     g.fillStyle = '#121014'; g.fillRect(x0, 0, 64, h); g.strokeStyle = col; g.lineWidth = 4; g.strokeRect(x0 + 5, 5, 54, h - 10);
-    const t = VSIGN_TXT[i], step = (h - 30) / t.length; g.fillStyle = col; g.font = '900 44px "Noto Sans KR", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    t.forEach((c, k) => g.fillText(c, x0 + 32, 15 + step * (k + 0.5))); } }); return VSIGN_TEX; }
+    const t = TXT[i], step = (h - 30) / t.length, fs = t.length > 3 ? 40 : 44; g.fillStyle = col; g.font = '900 ' + fs + 'px "Noto Sans KR", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';   /* 네 글자(조개구이)는 조금 작게 */
+    t.forEach((c, k) => g.fillText(c, x0 + 32, 15 + step * (k + 0.5))); } }); }
 export const isView3d = () => VIEW3D;
 /* 길을 보는 벽: 바깥 법선이 front(가장 가까운 길 위 점) 쪽을 가장 곧게 보는 6 m 넘는 벽 — 없으면 가장 긴 벽 */
 const frontEdge = (pts, f) => { const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length; let best = -1, bs = -2;
@@ -315,7 +325,8 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
-  if (!DECO_M.vsign) { const vt = vsignTex(THREE); DECO_M.vsign = VSIGN.mat = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
+  if (!VSIGN.mats[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.mats[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
+  DECO_M.vsign = VSIGN.mat = VSIGN.mats[VSIGN_THEME];
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
