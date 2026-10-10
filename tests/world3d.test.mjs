@@ -118,7 +118,7 @@ test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(bos
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
   assert.match(w, /if \(\/\^clave2\?\$\/\.test\(b\.id\)\) \{ setupBossMotion\(o, gl, r, scene, 0\)/, '클레이브 안무가 없다');
   assert.match(w, /r\.position\.y - box\.min\.y/, '발을 바닥에 안 맞춘다 (보스가 묻혔던 일 — CLAUDE.md §1)');
-  assert.match(w, /if \(o\.fx\) prepareBossMotion\(o, bn\); o\.mixer\.update\(dt\);/, '서버 시각 자세 준비는 믹서 평가보다 먼저');
+  assert.match(w, /if \(o\.fx\) prepareBossMotion\(o, bn\); else if \(o\.kfx\) prepareKitMotion\(o, bn\); o\.mixer\.update\(dt\);/, '서버 시각 자세 준비는 믹서 평가보다 먼저 (클레이브·기술표형 보스 둘 다)');
   assert.match(w, /const f = fbs\.find\(x => x\.b\.id === a\.id\); if \(f && f\.fx\) applyBossAction\(f, a, sclock\.now\(\)\)/, '서버 보스 동작을 안 따른다');
   assert.match(w, /for \(const o of net \? \[\.\.\.doms, \.\.\.fbs\] : \[\.\.\.doms, \.\.\.fbs\.filter\(f => f\.ai\)\]\)/, '온라인에서 필드 보스를 못 때린다');
 });
@@ -180,13 +180,13 @@ test('3D 필드 혼자 연습 클레이브: 서버 전투 모듈 그대로 — �
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
   assert.match(w, /const COMBAT = await loadCjs\('server\/field-boss-combat\.cjs'\)/, '클레이브 AI 를 브라우저용으로 다시 쓰면 서버와 갈라진다');
   assert.match(w, /COMBAT\.tick\(fieldLocal, ai, gameNow\); collide\(ai, 0\.5\); const v = COMBAT\.view\(ai\); if \(v\) applyBossAction\(o, v, gameNow\);/, '혼자 연습 클레이브가 서 있기만 한다');
-  assert.match(w, /counter = ai\.combat \? COMBAT\.tryCounter\(ai, gameNow\) : false/, '반격창 판정이 없다');
+  assert.match(w, /counter = ai\.combat \? COMBAT\.tryCounter\(ai, gameNow\) : ai\.kit \? KIT\.tryCounter\(ai, gameNow\) : false/, '반격창 판정이 없다 (클레이브·기술표형 보스)');
   assert.match(w, /\* \(counter \? 1\.65 : 1\)/, '반격 배율이 서버(1.65)와 다르다');
   assert.match(w, /COMBAT\.damageShutter\(ai, P, \{ character: ME \}, n, counter, gameNow\)/, '셔터 부위 파괴가 없다');
   assert.match(w, /if \(o\.combat\) COMBAT\.notePlayerResult\(o, p\.id, false\)/, '맞은 결과를 보스가 못 읽는다 (서버 bossStrike 와 다름)');
   assert.match(w, /net \? \[\.\.\.doms, \.\.\.fbs\] : \[\.\.\.doms, \.\.\.fbs\.filter\(f => f\.ai\)\]/, '혼자 연습에서 클레이브를 칠 수 없다');
   assert.match(w, /if \(!o\.ai\) o\.ai = \{ id: b\.id, zone: ZONE, x: b\.x, z: b\.z, yaw: 0, h: b\.h \|\| 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP \};/, '나머지 필드 보스를 혼자 연습에서 칠 수 없다 (2D 필드는 된다)');
-  assert.match(w, /if \(t\.fx\) hideBossMotion\(t\); else if \(t\.dom\) hideDominator\(t\);/, 'AI 없는 필드 보스를 쓰러뜨리면 지배형 숨기기가 터진다');
+  assert.match(w, /if \(t\.fx\) hideBossMotion\(t\); else if \(t\.kfx\) hideKitMotion\(t\); else if \(t\.dom\) hideDominator\(t\);/, 'AI 없는 필드 보스를 쓰러뜨리면 지배형 숨기기가 터진다');
   assert.match(w, /if \(!ai\.combat\) continue;\n    COMBAT\.tick\(/, 'AI 없는 필드 보스까지 클레이브 틱을 돈다');
 });
 

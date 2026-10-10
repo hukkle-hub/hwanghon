@@ -116,3 +116,11 @@ test('연결: world3d 가 소리·환경맵을 싣고, 윤곽광은 예열 전�
   assert.match(w, /if \(STAGE && STAGE\.locked\) \{ STAGE\.skip\(\); return; \}/, '공격 단추 = 넘기기');
   assert.doesNotMatch(src, /setTimeout\s*\(/, '박자는 연출 시계로 — setTimeout 이면 느린 기기에서 카메라와 어긋난다');
 });
+
+test('사망: 떠 있던 보스는 땅으로 떨어지고(끝나면 제자리) · 긴 몸은 기울이지 않는다(꼬리가 하늘로 들린다)', () => {
+  const { me, S, run } = rig(); me.set(0, 0, 10);
+  const f = fakeBoss('celestial', { netAct: undefined }); f.root.position.y = 3.2; S.attach(f); S.death(f, () => {});
+  run(1.2); assert.ok(f.root.position.y < .05, '떨어짐 ' + f.root.position.y.toFixed(2)); run(4); assert.equal(f.root.position.y, 3.2, '다시 나올 때 제자리');
+  const L = fakeBoss('leviathan', { netAct: undefined }); L.model.children[0].geometry = new THREE.BoxGeometry(14, 3, 2); S.attach(L); assert.ok(L.stage.span > L.h, '길이 ' + L.stage.span);
+  S.death(L, () => {}); run(2); assert.equal(L.model.rotation.x, 0, '긴 몸은 기울이지 않는다'); assert.ok(L.model.position.y < .3, '주저앉기는 한다');
+});
