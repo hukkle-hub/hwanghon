@@ -8,7 +8,7 @@ const GRADE_TINT = { 5: [0x2c3a30, 0x0c2a10], 4: [0x2e2440, 0x2a0c40], 3: [0x3e1
 const GRADE_NAME = { 5: '5급', 4: '4급', 3: '3급', 2: '2급', 1: '1급' };
 const CLIP = { idle: 'idle', walk: 'walk', attack: 'attack1', hit: 'hit', die: 'death' }, ONCE = new Set(['attack', 'hit', 'die']), WARN_MS = 600;
 import { motionFor } from './n01-body-catalog.js';
-import { walkerCadence, runnerCadence } from './n01-motion-cadence.js';
+import { walkerCadence, runnerCadence, breakerCadence } from './n01-motion-cadence.js';
 import { comboTell } from './n01-combo-tell.js';
 /* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버 v2(확정): [id, catalogId, x, z, alive, anim, generation, hp%, (동작 순번)] — 앞 일곱 칸은 snapshot 과 같은 순서.
    9번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
@@ -93,10 +93,10 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         if (v.warn && v.warn.visible) { if(!tell)v.warnT -= dt; const k = 1 - Math.max(0, v.warnT) / (v.warnDuration||WARN_MS / 1000); v.warn.scale.setScalar(.6 + k * .9); v.warn.material.opacity = v.warnT > 0 ? .35 + k * .55 : Math.max(0, .9 + v.warnT * 4); if (v.warnT < -.25 || !v.alive) v.warn.visible = false; }
         if (v.alive && v.hp < 100) { v.bar.style.display = ''; v.bar.firstChild.style.width = v.hp.toFixed(0) + '%'; tagAt(v.bar, v.root.position.x, labelY(v,.22), v.root.position.z); } else v.bar.style.display = 'none';   /* 맞은 몸만 체력 띠 — 무리 이름표와 따로, 마리마다 */
         if(v.warn?.visible){const counterTell=v.cat.id==='G5_ARMORED'&&v.action?.counterAllowed!==false&&v.action?.key!=='overhead_crush'&&v.warnT>0&&v.warnT<=.25;v.warn.material.color.setHex(counterTell?(v.warnT<=.10?0x8affec:0xffc45b):0xff3020);}
-        if(v.cat.id==='G5_WALKER'&&v.named.jog||v.cat.id==='G5_RUNNER'&&v.authoredCadence){
+        if(v.cat.id==='G5_WALKER'&&v.named.jog||['G5_RUNNER','G5_BREAKER'].includes(v.cat.id)&&v.authoredCadence){
           const speed=dt>0?Math.hypot(v.root.position.x-priorX,v.root.position.z-priorZ)/dt:0;
           v.displaySpeed+=(Math.min(7.5,speed)-v.displaySpeed)*Math.min(1,dt*10);
-          if(v.cur==='walk')v.current?.setEffectiveTimeScale((v.cat.id==='G5_RUNNER'?runnerCadence:walkerCadence)(v.current.getClip().name,v.displaySpeed,v.motionScale));
+          if(v.cur==='walk')v.current?.setEffectiveTimeScale((v.cat.id==='G5_RUNNER'?runnerCadence:v.cat.id==='G5_BREAKER'?breakerCadence:walkerCadence)(v.current.getClip().name,v.displaySpeed,v.motionScale));
         }
         v.mixer.update(dt); }
       /* 이름표는 무리(같은 둥지·순찰)마다 하나 — 붙어 선 넷의 이름표가 겹쳐 못 읽었다. 대표는 살아 있는 첫 마리, 수가 둘 넘으면 «외 ×N» */

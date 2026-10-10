@@ -5,7 +5,7 @@ test('Walker jab-cross: two host impacts600/2300ms, total850, no duplicate or ea
  const hits=[];for(let now=0;now<3700;now+=50){const h=M.tick(m,a,s,[p],now,nav);if(h)hits.push({now,...h});assert.equal(a.seq,1);assert.equal(m.anim,'attack');}assert.equal(a.action.windupMs,600);assert.equal(a.action.recoveryMs,3100);assert.deepEqual(hits.map(h=>h.now),[600,2300]);assert.deepEqual(hits.map(h=>h.hitIndex),[1,2]);assert.equal(hits.reduce((n,h)=>n+h.damage,0),850);assert.notEqual(hits[0].beat,hits[1].beat);assert(hits.every(h=>h.skill==='slow_combo'));assert.equal(M.tick(m,a,s,[p],3700,nav),null);assert.equal(a.seq,2);assert.equal(a.phase,'windup');
 });
 test('Walker cannot hit a torso 2m away with a 0.6m fist; damage/speed other roles unchanged',()=>{
- assert.equal(M.statsFor('G5_WALKER').reach,.85);assert.equal(M.statsFor('G5_WALKER').speed,2.85);assert.equal(M.statsFor('G5_WALKER').damage,850);assert.equal(M.statsFor('G5_BREAKER').reach,2.2);
+ assert.equal(M.statsFor('G5_WALKER').reach,.85);assert.equal(M.statsFor('G5_WALKER').speed,2.85);assert.equal(M.statsFor('G5_WALKER').damage,850);assert.equal(M.statsFor('G5_STALKER').reach,2.2);
  const m={id:'w',catalogId:'G5_WALKER',x:0,z:0,alive:true,group:{area:{}}},a=M.reset(m,0);M.tick(m,a,M.statsFor(m.catalogId),[{id:'p',x:0,z:2}],0,nav);assert.equal(a.phase,'chase');assert.equal(a.action,null);
 });
 test('Walker patrol and chase pick authored walk/jog; metadata never mutates authoritative action',()=>{

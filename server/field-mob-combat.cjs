@@ -13,14 +13,14 @@ const ARMORED_ACTIONS = ['shield_bash','heavy_charge','shield_bash','overhead_cr
 const ACTIONS = Object.freeze({G5_WALKER:'slow_combo',G5_RUNNER:'flank_swipe',
  G5_BREAKER:'structure_slam',G5_STALKER:'tracking_strike',G5_RESONATOR:'self_defence'});
 const FACILITY_DAMAGE={G5_WALKER:300,G5_RUNNER:180,G5_BREAKER:900,G5_STALKER:200,G5_ARMORED:1400,G5_RESONATOR:220};
-const MOTION_MS={slow_combo:3700,flank_swipe:1800,structure_slam:1800,heavy_slam:1800,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
+const MOTION_MS={slow_combo:3700,flank_swipe:1800,structure_slam:2200,heavy_slam:2200,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
 // Authored jab -> cross. Keep the old850/300 total damage budget, not850 twice.
 // Offsets match actual deformed hand contact in the delivered30fps clip.
 const WALKER_STRIKES=[{offsetMs:600,scale:.5},{offsetMs:2300,scale:.5}];
 function actionFor(id,index=0) {
  const key=id==='G5_ARMORED'?ARMORED_ACTIONS[((index%4)+4)%4]:ACTIONS[id]||'mob_melee';
- const windupMs=key==='heavy_charge'?1000:key==='overhead_crush'?1200:key==='shield_bash'?800:600;
- return {key,clip:key,windupMs,recoveryMs:450,counterAllowed:key!=='overhead_crush',...(id==='G5_WALKER'?{strikes:WALKER_STRIKES.map(p=>({...p}))}:{})};
+ const windupMs=key==='heavy_charge'?1000:key==='overhead_crush'?1200:key==='shield_bash'?800:id==='G5_BREAKER'?900:600;
+ return {key,clip:key,windupMs,recoveryMs:id==='G5_BREAKER'?1300:450,counterAllowed:key!=='overhead_crush',...(id==='G5_WALKER'?{strikes:WALKER_STRIKES.map(p=>({...p}))}:{})};
 }
 /* Optional siege context uses existing target rules. Open-world maps without
    facility/NPC targets never manufacture destructible objectives. Distances m. */
@@ -59,12 +59,15 @@ function statsFor(catalogId) {
   const row = N01[catalogId] || N01.G5_WALKER;
   return { hp: row[0], damage: row[1], speed: row[2], cooldownMs: row[3],
     // Walker/Runner actual deformed hand contact +0.25m victim torso. The
-    // previous2.2m hit visibly struck air. The other four roles are unchanged.
-    reach: ['G5_WALKER','G5_RUNNER'].includes(catalogId)?.85:2.2, aggro: 10, leash: 18, windupMs: 600, recoveryMs: 450,
+    // previous2.2m hit visibly struck air. Breaker contact is frame27/30
+    // against the same0.25m victim torso. The remaining3 roles unchanged.
+    reach: ['G5_WALKER','G5_RUNNER'].includes(catalogId)?.85:catalogId==='G5_BREAKER'?.92:2.2, aggro: 10, leash: 18, windupMs: catalogId==='G5_BREAKER'?900:600, recoveryMs: catalogId==='G5_BREAKER'?1300:450,
     facilityDamage:FACILITY_DAMAGE[catalogId]||300,
+    ...(catalogId==='G5_BREAKER'?{facilityReach:.88}:{}),
     draft: !Object.hasOwn(N01, catalogId) };
 }
 function validateStats(s) {
+  if(s.facilityReach!==undefined&&(!Number.isFinite(s.facilityReach)||s.facilityReach<.5||s.facilityReach>8))throw Error('Invalid mob stat: facilityReach');
   for (const [k, lo, hi] of [['hp',1,1e9],['damage',1,1e6],['speed',.1,7.5],
     ['cooldownMs',350,30000],['reach',.5,8],['aggro',1,28],['leash',1,60],
     ['windupMs',150,5000],['recoveryMs',100,5000]])
@@ -155,16 +158,17 @@ function tick(m,a,s,players,now,nav,context=null) {
   }
   if(a.target!==target.id&&(a.phase==='windup'||a.action?.strikes&&a.phase==='recovery')){a.phase='idle';a.until=now;a.ready=Math.max(a.ready,now+150);if(a.action?.strikes){a.action=null;a.strikeIndex=0;}}
   a.target=target.id;m.engaged=true;
+  const reach=['gate','generator','comms'].includes(target.kind)?s.facilityReach??s.reach:s.reach;
   if(a.phase==='windup'){
     m.anim='attack';if(a.action?.key==='heavy_charge'&&now>=a.until-300)advance(m,a,target,s,dt,now,nav);if(now<a.until)return null;
     if(a.action?.strikes){a.phase='recovery';a.until=a.action.startAt+MOTION_MS[a.action.key];a.ready=a.until;return comboStrike(m,a,s,target,now,nav);}
     a.phase='recovery';a.until=now+(a.action?.recoveryMs??s.recoveryMs);a.ready=now+s.cooldownMs;
-    if(dist(m,target)<=s.reach&&nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z]))
+    if(dist(m,target)<=reach&&nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z]))
       return { target:target.id, ...(target.kind&&target.kind!=='player'?{targetKind:target.kind}:{}), damage:(['gate','generator','comms'].includes(target.kind)?s.facilityDamage:s.damage)*(a.resonanceAttack||1), skill:a.action?.key||'mob_melee', beat:a.beat };
     return null;
   }
   if(a.phase==='recovery'&&now<a.until){m.anim='attack';return a.action?.strikes?comboStrike(m,a,s,target,now,nav):null;}
-  if(dist(m,target)>s.reach){a.phase='chase';m.anim=advance(m,a,target,s,dt,now,nav)?'walk':'idle';return null;}
+  if(dist(m,target)>reach){a.phase='chase';m.anim=advance(m,a,target,s,dt,now,nav)?'walk':'idle';return null;}
   if(now<a.ready){a.phase='idle';m.anim='idle';return null;}
   if(!nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z])){m.anim='idle';return null;}
   const action=actionFor(m.catalogId,a.attackCount++);a.beat++;a.seq++;
@@ -186,7 +190,7 @@ function stagger(a,now){a.seq++;a.hitUntil=now+180;a.phase='idle';a.ready=Math.m
    Share this metadata builder between host and offline practice. */
 function visualAction(m,a,now){
  let action=a.action?{...a.action}:null;
- if(['G5_RUNNER','G5_WALKER'].includes(m.catalogId)&&m.anim==='walk'){
+ if(['G5_RUNNER','G5_WALKER','G5_BREAKER'].includes(m.catalogId)&&m.anim==='walk'){
   const locomotion=m.engaged?'run':'walk';
   action={...(action||{key:'locomotion',windupMs:600,seq:a.seq,startAt:a.lastTick}),locomotion};
  }
