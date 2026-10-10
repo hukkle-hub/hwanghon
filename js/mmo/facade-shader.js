@@ -71,11 +71,11 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
       float broken = step(0.9, fh1(rid + 11.0));
       room = mix(room, vec3(0.20, 0.19, 0.18) * (0.8 + 0.2 * fract(q.y * 18.0)), blind);
       float frame = 1.0 - step(0.025, q.x) * step(q.x, 0.975) * step(0.03, q.y) * step(q.y, 0.97);   /* 창틀 */
-      diffuseColor.rgb = mix(room * 0.22, vec3(0.02), broken);                                        /* 바깥빛을 받는 몫 — 방은 그늘 */
-      fEmit = room * tint * lamp * (0.45 + 0.55 * uLampK) * (1.0 - broken);   /* 처음엔 0.9 + 1.6k — 밤에 하얀 판으로 타서(블룸) 방 모양이 안 보였다 */
+      diffuseColor.rgb = mix(room * 0.15, vec3(0.02), broken);                                        /* 바깥빛을 받는 몫 — 방은 그늘 (0.22 는 낮에 회색으로 떠 대비가 없었다) */
+      fEmit = room * tint * lamp * (0.8 + 0.37 * uLampK) * (1.0 - broken);   /* 처음엔 0.9 + 1.6k — 밤에 하얀 판으로 타서(블룸) 방 모양이 안 보였다 */
       /* 유리 반사: 비스듬히 볼수록, 칸 위쪽일수록 하늘빛 */
       float fres = pow(1.0 - abs(dot(V, Nw)), 4.0);
-      fEmit += uSkyRefl * (0.05 + 0.45 * fres) * (0.55 + 0.6 * q.y) * (1.0 - broken) * (1.0 - blind * 0.5) * (1.0 - lit * 0.6);
+      fEmit += uSkyRefl * (0.08 + 0.5 * fres) * (0.35 + 0.9 * q.y * q.y) * (1.0 - broken) * (1.0 - blind * 0.5) * (1.0 - lit * 0.6);   /* 칸 위쪽일수록 하늘이 밝게 비친다 */
 #ifdef CURTAIN
       diffuseColor.rgb = mix(diffuseColor.rgb * 0.45, vec3(0.03, 0.05, 0.08), 0.35);                 /* 색유리 — 방이 덜 비친다 */
       fEmit += uSkyRefl * vec3(0.85, 0.95, 1.15) * (0.16 + 0.35 * fres) * (1.0 - lit * 0.7) * (1.0 - broken);   /* 하늘을 더 비춘다 */
@@ -84,7 +84,7 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     }
     /* 멀리서는 평균: 벽과 유리를 창 몫(cover)만큼 섞은 색 + 켜진 방 평균 — 창 무늬가 지글거리지 않게 (벽 조각도 같이) */
     float cover = (g1.x - g0.x) * (g1.y - g0.y) * step(3.4, y);
-    vec3 avgD = mix(wallD, vec3(0.05, 0.05, 0.06), cover), avgEmit = (uSkyRefl * 0.12 + vec3(1.0, 0.85, 0.6) * 0.035 * (0.45 + 0.55 * uLampK)) * cover;
+    vec3 avgD = mix(wallD, vec3(0.05, 0.05, 0.06), cover), avgEmit = (uSkyRefl * 0.12 + vec3(1.0, 0.85, 0.6) * 0.035 * (0.8 + 0.37 * uLampK)) * cover;
     diffuseColor.rgb = mix(avgD, diffuseColor.rgb, aa); fEmit = mix(avgEmit, fEmit, aa); fGlass = mix(cover, fGlass, aa);
   } }`;
 
