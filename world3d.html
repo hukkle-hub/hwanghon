@@ -590,6 +590,7 @@ const perf = createPerfMeter({ renderer, el: DBG ? dbgEl : null, extra: () => (L
 const BENCH = q.get('bench') === '1' ? (() => { const sp = env.spawn || meta.spawn, V = [0, 2.1, 4.2].map((y, k) => ({ name: '출발점' + (k + 1), x: sp.x, z: sp.z, yaw: y }));
   const nest = (meta.areas || []).find(a => a.kind === 'hunt' && a.eco && a.eco.nests && a.eco.nests[0]); if (nest) V.push({ name: '사냥터', x: nest.eco.nests[0][0], z: nest.eco.nests[0][1], yaw: 0.4 });
   const eg = GATES.find(g => atEnd(g)); if (eg) { const y = inwardYaw(eg); V.push({ name: '길 끝', x: eg.x + Math.sin(y) * 6, z: eg.z + Math.cos(y) * 6, yaw: y + Math.PI }); }
+  { const w = env.walk || meta.walk, a = env.road ? env.road.ang : 0; if (w) { const S = w.s0 + 12, T = Math.max(w.t0 + 2, Math.min(w.t1 - 2, 0)); V.push({ name: '걷기', x: S * Math.cos(a) - T * Math.sin(a), z: -S * Math.sin(a) - T * Math.cos(a), yaw: -a + Math.PI / 2, walk: { dx: Math.cos(a), dz: -Math.sin(a), s1: w.s1 - 12, a } }); } }   /* 길을 따라 4.8 m/s 로 걷는다 — 멈춤(120 ms 넘는 프레임)을 센다 */
   intro = null; document.body.classList.remove('intro'); if (DAYC && !q.get('tod')) DAYC.fixed = tOf('dusk');   /* 재는 조건을 늘 같게 — 황혼(구름·노을 · 가로등) */
   return createBench(V, { apply: v => { root.position.set(v.x, 0, v.z); me.yaw = v.yaw; root.rotation.y = v.yaw; camS.yaw = v.yaw + Math.PI; nearLights(root.position); } }); })() : null;
 let benchShown = false;
@@ -636,6 +637,7 @@ function tick() { perf.begin();
   hpEl.style.width = (100 * P.hp / P.maxHp).toFixed(1) + '%'; deadEl.hidden = !P.dead; hurtT = Math.max(0, hurtT - dt); hurtEl.style.opacity = (hurtT / .42).toFixed(2);
   lightT -= dt; if (lightT <= 0) { lightT = 0.4; nearLights(root.position); }
   if (LIFE) LIFE.tick(dt, lampK, cam.position); watchLooks(dt);
+  if (BENCH && BENCH.view && BENCH.view.walk) { const wk = BENCH.view.walk, s = root.position.x * Math.cos(wk.a) - root.position.z * Math.sin(wk.a); if (s < wk.s1) { const q2 = { x: root.position.x + wk.dx * 4.8 * dt, z: root.position.z + wk.dz * 4.8 * dt }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); me.yaw = BENCH.view.yaw; root.rotation.y = me.yaw; } }
   WIND.value += dt;   /* 나무 바람 (문서 220) */
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */

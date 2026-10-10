@@ -11,7 +11,10 @@ test('코스: 장면을 차례로 · 예열 시간은 세지 않는다 · 평균
   for (let k = 0; k < 400 && !B.done; k++) { t += 1000 / 15; B.tick(t); }   /* B: 초당 15 */
   assert.deepEqual(seen, ['A', 'B']); assert.ok(B.done);
   const [a, b] = B.results; assert.ok(Math.abs(a.fps - 30) < 1.5, 'A ' + a.fps); assert.ok(Math.abs(b.fps - 15) < 1.5, 'B ' + b.fps);
-  assert.match(B.summary('기기'), /^평균 2\d fps · 가장 낮은 1초 1\d\nA 30 \(최저 \d+\) · B 15 \(최저 \d+\)\n기기$/);
+  assert.match(B.summary('기기'), /^평균 2\d fps · 가장 낮은 1초 1\d · 멈춤 0회 \(가장 긴 프레임 \d+ ms\)\nA 30 \(최저 \d+\) · B 15 \(최저 \d+\)\n기기$/);
+  /* 멈춤: 120 ms 넘는 프레임을 센다 — 걷기 장면에서 끊김이 남았는지 폰에서 바로 보게 */
+  const H = createBench([{ name: 'W' }], { warm: 100, hold: 2000 }); let u = 0; H.tick(u); for (; u <= 100; u += 50) H.tick(u); for (let k = 0; k < 90; k++) { u += k === 20 || k === 40 ? 500 : 16; H.tick(u); }
+  assert.ok(H.done); assert.equal(H.results[0].hitch, 2, '멈춤 2회'); assert.equal(H.results[0].worst, 500); assert.match(H.summary(), /멈춤 2회 \(가장 긴 프레임 500 ms\)\nW \d+ \(최저 \d+ · 멈춤 2\)/);
 });
 test('world3d: ?bench=1 이면 코스 · 결과 카드(복사 · 다시) · 황혼 고정', () => {
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
