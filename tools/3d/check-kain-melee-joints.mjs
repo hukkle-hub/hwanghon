@@ -1,0 +1,11 @@
+// Separate audit copy only. The game's shared character/wardrobe GLBs are never rewritten.
+import fs from 'node:fs';import {resolve} from 'node:path';
+import {chunks,writeGlb} from './skin-rebind.mjs';import {motionAudit} from './motion-audit.mjs';import {HERO_MELEE_DATA} from '../../js/hero-melee-data.js';
+const out=resolve(process.argv[2]||'../../output/kain-melee-final-2026-10-10');fs.mkdirSync(out,{recursive:true});
+const file=resolve(out,'kain-melee-audit.glb'),{json,bin}=chunks(fs.readFileSync('art/3d/kain_anim.glb')),parts=[bin];let offset=bin.length;
+function accessor(values,type){const a=Float32Array.from(values),buf=Buffer.from(a.buffer),bv=json.bufferViews.length;json.bufferViews.push({buffer:0,byteOffset:offset,byteLength:buf.length});offset+=buf.length;parts.push(buf);const i=json.accessors.length,n=type==='VEC4'?4:type==='VEC3'?3:1;json.accessors.push({bufferView:bv,componentType:5126,count:values.length/n,type,...(type==='SCALAR'?{min:[values[0]],max:[values.at(-1)]}:{})});return i;}
+for(const[name,c]of Object.entries(HERO_MELEE_DATA.kain)){
+ const input=accessor(c.times,'SCALAR'),samplers=[],channels=[];for(const[bone,values]of [...Object.entries(c.tracks),['Hips.position',c.hips]]){const position=bone.endsWith('.position'),n=bone.replace('.position',''),node=json.nodes.findIndex(n=>n.name?.replace(/^mixamorig:?/,'')===bone.replace('.position',''));if(node<0)throw Error(n);const sampler=samplers.length;samplers.push({input,output:accessor(values,position?'VEC3':'VEC4'),interpolation:'LINEAR'});channels.push({sampler,target:{node,path:position?'translation':'rotation'}});}json.animations[json.animations.findIndex(a=>a.name===name)]={name,samplers,channels};
+}
+json.buffers[0].byteLength=offset;writeGlb(file,json,Buffer.concat(parts));
+const report={at:new Date().toISOString(),auditCopyOnly:true,runtimeHandMorphRequired:true,audit:await motionAudit(file,Object.keys(HERO_MELEE_DATA.kain))};report.passed=report.audit.clips.every(c=>['hyper','offHinge','twist','neck','spine','pop','sink'].every(k=>c[k][0]===0));fs.writeFileSync(resolve(out,'joint-audit.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report.audit.clips,null,2));if(!report.passed)throw Error('Kain melee joint audit failed');

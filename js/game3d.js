@@ -853,7 +853,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
            (49 번 문서에서 궁극기로 겪은 그 문제다). 테스트가 못박는다.
            docs/design/61-attack-weight.md */
         var oc=ain.oneshot.getClip(), spanBy=((R.motion.clipSpanByChar||{})[CID]||{})[oc.name],
-            span=spanBy!=null?spanBy:(R.motion.clipSpan||{})[oc.name],
+            span=oc.userData?.fullBody?1:spanBy!=null?spanBy:(R.motion.clipSpan||{})[oc.name],
             act=Object.assign({},combatAction,{clipHit:combatAction.clipHit/(span||1), cid:CID,fullBodyMocap:!!oc.userData?.fullBody});
         /* 접점 저항 — «보이는 시각» 만 뒤처지게 한다. 판정 시계(combatAction.elapsed)는
            건드리지 않는다. 날이 몸에 박힌 동안 그림이 느려지고, 빠져나오면 따라잡는다.
