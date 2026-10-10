@@ -61,7 +61,7 @@
      파쇄 기갑의 턱·팔(jaw/arm), 소생기의 펌프(pump). 눈에 쇠로 보이는 것은
      쇠로 판정해야 튕김(contact-feel.js)이 말이 된다. 식물·짐승은 straw. */
   function material(part,kind){return part==='core'?'core':/shl|shr|armor|chain|gear|plate|exhaust|contact|jaw|arm|pump/.test(part)||kind==='iron'?'metal':'straw';}
-  function trailActive(a){return !!a&&a.elapsed>=a.hitAt*.6&&a.elapsed<=Math.min(a.duration,a.hitAt+.22);}
+  function trailActive(a){if(!a)return false;const hits=a.events?.filter(e=>e.kind==='hit');return (hits?.length?hits:[{t:a.hitAt}]).some(e=>a.elapsed>=e.t*.6&&a.elapsed<=Math.min(a.duration,e.t+.22));}
   function exposed(parts){return parts.some(p=>p.weak&&p.guardedBy?.length&&p.guardedBy.every(id=>parts.some(q=>q.id===id&&q.broken)));}
   const api={roles,role,phase,partCenter,contact,feedback,material,exposed,trailActive};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;

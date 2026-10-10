@@ -33,16 +33,16 @@
    "cancel": 0.91
   },
   "counter": {
-   "hit": 0.18,
-   "active": 0.08,
-   "duration": 0.56,
-   "cancel": 0.4
+   "hit": 0.5998,
+   "active": 0.1,
+   "duration": 1.53,
+   "cancel": 1.15
   },
   "ult": {
-   "hit": 0.96,
+   "hit": 1.3717,
    "active": 0.18,
-   "duration": 1.95,
-   "cancel": 1.66
+   "duration": 2.8399,
+   "cancel": 2.42
   },
   "exec": {
    "hit": 0.72,
@@ -51,10 +51,10 @@
    "cancel": 1.45
   },
   "skill1": {
-   "hit": 0.58,
+   "hit": 1.1016,
    "active": 0.14,
-   "duration": 1.32,
-   "cancel": 1.02
+   "duration": 2.04,
+   "cancel": 1.68
   },
   "skill2": {
    "hit": 0.42,
@@ -63,10 +63,10 @@
    "cancel": 0.82
   },
   "skill3": {
-   "hit": 0.64,
+   "hit": 1.0998,
    "active": 0.14,
-   "duration": 1.42,
-   "cancel": 1.1
+   "duration": 2.5399,
+   "cancel": 2.1
   },
   "skill4": {
    "hit": 0.42,

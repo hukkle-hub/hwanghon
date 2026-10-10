@@ -56,6 +56,8 @@ test('회피가 빨라져도 «피해» 는 안 오른다 — 균형은 생존 �
   assert.equal(M.counter.cancel, 0.40);
   assert.equal(M.motion===undefined && M.exec.cancel, 1.45);
   assert.equal(M.characterProfiles.ain.smash.cancel, 0.91);
-  assert.equal(M.characterProfiles.ain.ult.cancel, 1.66);
+  // Director approved lengthening motion AND judgement for the new full-body
+  // take. This must not silently change basic combo cancellation/damage.
+  assert.equal(M.characterProfiles.ain.ult.cancel, 2.42);
   assert.ok(M.defCancel>0 && M.defCancel<=0.10, '회피 여유는 짧아야 «직후» 로 읽힌다');
 });
