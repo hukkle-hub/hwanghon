@@ -30,6 +30,13 @@ test('Kain natural counter shape rejects the actual old lifted-elbow source',()=
  for(const lod of ['original','mobile']){accept(report.models[lod].counter.contactPose);assert.throws(()=>accept(report.rejectedCounterSourcePose[lod]));}
 });
 
+test('Kain recovery returns the coupled sword to ready instead of drifting behind the body',()=>{
+ for(const c of Object.values(HERO_MELEE_DATA.kain)){
+  assert.ok(new T.Vector3().fromArray(c.weaponPositions).distanceTo(new T.Vector3().fromArray(c.weaponPositions,c.weaponPositions.length-3))<.001,'ready grip drift');
+  assert.ok(new T.Quaternion().fromArray(c.weaponRotations).normalize().angleTo(new T.Quaternion().fromArray(c.weaponRotations,c.weaponRotations.length-4).normalize())<.001,'ready blade roll');
+ }
+});
+
 test('Kain six clocks: solo and online share contacts; no legacy clip compression',()=>{
  for(const[name,c]of Object.entries(HERO_MELEE_DATA.kain)){
   const profile=C.rules.motion.characterProfiles.kain[name];

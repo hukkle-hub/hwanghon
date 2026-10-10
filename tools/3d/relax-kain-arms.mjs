@@ -73,7 +73,7 @@ for(const c of Object.values(out)){
 // roll at the endpoint: the runtime carry solver continues from this pose.
 HERO_MELEE_DATA.kain=out;
 for(const[name,c]of Object.entries(out)){
- const scene=new T.Scene(),h=new Animated(asset,scene,true,false,weapon,'kain'),b={};h.model.traverse(o=>{if(o.isBone)b[o.name.replace(/^mixamorig:?/,'')]=o;});h.play(name,name);h.current.paused=true;const data=h.model.userData.heroSkillMotion[name];data.explicitWeaponPath=true;data.naturalArms=true;data.naturalArmWeight=2;
+ const scene=new T.Scene(),h=new Animated(asset,scene,true,false,weapon,'kain'),b={};h.model.traverse(o=>{if(o.isBone)b[o.name.replace(/^mixamorig:?/,'')]=o;});h.play(name,name);h.current.paused=true;const data=h.model.userData.heroSkillMotion[name];data.explicitWeaponPath=true;data.naturalArms=true;data.naturalArmWeight=2;data.naturalCenterWeight=100000;
  for(let i=0;i<c.times.length;i++){
   const t=c.times[i],recovery=t>c.duration-.55;data.weaponBaked=!recovery;
   h.rig.restore();h.current.time=t;h.mixer.update(i?t-c.times[i-1]:1/120);h.rig.apply(fieldHeroAction('kain',h.current.getClip(),t,name),false,false,i?t-c.times[i-1]:1/120,name);h.root.updateMatrixWorld(true);
