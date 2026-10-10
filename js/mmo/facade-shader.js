@@ -5,7 +5,7 @@
    - 방마다(칸 번호 해시) 불 켜짐·벽 색·깊이·블라인드·깨진 창이 다르다. 황혼(폐허 도시)이라 불 켜진 방은 드물다
    - 유리는 보는 각에 따라 하늘빛을 조금 비춘다(프레넬) · 거칠기를 낮춰 해 반짝임
    FACADE_U.uLampK 를 시간대가 정한다(밤일수록 켜진 방이 밝다) */
-export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null } };
+export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null }, uEnvCube: { value: null }, uEnvK: { value: 0 } };   /* uEnvCube/uEnvK: 구운 주변 큐브맵(env-reflect, 문서 229 §12) — 0 이면 하늘빛 한 가지 */
 /* 항공 장애등 — 50 m 넘는 탑 꼭대기 모서리의 붉은 등. 재질 하나를 같이 써서 world3d 가 깜빡인다(aviBlink) */
 export const AVI = { mat: null, n: 0 };
 export function aviLight(THREE, scene, pts, h) { if (!AVI.mat) AVI.mat = new THREE.MeshBasicMaterial({ color: 0xff2a1a, fog: false, toneMapped: false });
@@ -16,7 +16,7 @@ export function aviBlink(t, lampK) { if (!AVI.mat) return; const on = (t % 1.6) 
 
 const PARS = `
 varying vec3 vFW; varying vec3 vFN;
-uniform float uLampK; uniform vec3 uSkyRefl, uWallTint;
+uniform float uLampK; uniform vec3 uSkyRefl, uWallTint; uniform samplerCube uEnvCube; uniform float uEnvK;
 float fh1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float fh2(vec2 p){ return fract(sin(dot(p, vec2(269.5, 183.3))) * 24634.6345); }`;
 
@@ -75,10 +75,14 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
       fEmit = room * tint * lamp * (0.8 + 0.37 * uLampK) * (1.0 - broken);   /* 처음엔 0.9 + 1.6k — 밤에 하얀 판으로 타서(블룸) 방 모양이 안 보였다 */
       /* 유리 반사: 비스듬히 볼수록, 칸 위쪽일수록 하늘빛 */
       float fres = pow(1.0 - abs(dot(V, Nw)), 4.0);
-      fEmit += uSkyRefl * (0.08 + 0.5 * fres) * (0.35 + 0.9 * q.y * q.y) * (1.0 - broken) * (1.0 - blind * 0.5) * (1.0 - lit * 0.6);   /* 칸 위쪽일수록 하늘이 밝게 비친다 */
+      vec3 sk = uSkyRefl; float skG = 0.35 + 0.9 * q.y * q.y;
+      if (uEnvK > 0.0) { sk = mix(uSkyRefl, textureCube(uEnvCube, reflect(V, Nw)).rgb, uEnvK); skG = mix(skG, 1.0, uEnvK); }   /* 구운 주변이 비친다 — 칸 위쪽 하늘 꾸밈은 거둔다 */
+      fEmit += sk * (0.08 + 0.5 * fres) * skG * (1.0 - broken) * (1.0 - blind * 0.5) * (1.0 - lit * 0.6);   /* 칸 위쪽일수록 하늘이 밝게 비친다 */
 #ifdef CURTAIN
       diffuseColor.rgb = mix(diffuseColor.rgb * 0.45, vec3(0.03, 0.05, 0.08), 0.35);                 /* 색유리 — 방이 덜 비친다 */
-      fEmit += uSkyRefl * vec3(0.85, 0.95, 1.15) * (0.16 + 0.35 * fres) * (1.0 - lit * 0.7) * (1.0 - broken);   /* 하늘을 더 비춘다 */
+      fEmit += sk * vec3(0.85, 0.95, 1.15) * (0.16 + 0.35 * fres) * (1.0 - lit * 0.7) * (1.0 - broken);   /* 하늘을 더 비춘다 */
+      if (uEnvK > 0.0) { float mirror = uEnvK * (0.5 + 0.4 * fres) * (1.0 - lit * 0.6) * (1.0 - broken);   /* 구운 주변이 있으면 거울 유리 — 하늘과 이웃 탑이 비친다 (문서 229 §12) */
+        fEmit = mix(fEmit, textureCube(uEnvCube, reflect(V, Nw)).rgb * vec3(0.8, 0.9, 1.0), mirror); diffuseColor.rgb *= 1.0 - mirror; }
 #endif
       diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.06, 0.07), frame); fEmit *= 1.0 - frame;
     }

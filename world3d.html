@@ -148,6 +148,7 @@ import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d, setInterior, VSIGN, STREETLAMP } from './js/mmo/env-lib.js';
 import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { addLightCones } from './js/mmo/light-cones.js';
+import { createEnvReflect } from './js/mmo/env-reflect.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
@@ -205,7 +206,8 @@ if (env.sky && env.sky.top && env.sky.horizon) { const sd = env.sun ? new THREE.
 /* 점광 정리: 장면의 점광을 빼고 데이터만 남긴다 → 가까운 8개만 */
 const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o); });
 for (const L of pointData) L.parent.remove(L);
-const CONES = q.get('lc') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? addLightCones(THREE, scene, pointData) : null; if (CONES) window.__CONES = { count: CONES.count, at: CONES.at };   /* 가로등 빛 기둥 (문서 229 §11) — 세기는 아래 시간대가 */
+const CONES = q.get('lc') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? addLightCones(THREE, scene, pointData) : null; if (CONES) window.__CONES = { count: CONES.count, at: CONES.at };
+const REFL = q.get('refl') !== '0' && q.get('im') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? createEnvReflect(THREE, renderer, scene, { at: env.spawn || meta.spawn || { x: 0, z: 0 }, size: MOBILE ? 128 : 256 }) : null;   /* 가로등 빛 기둥 (문서 229 §11) — 세기는 아래 시간대가 */
 /* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
@@ -247,7 +249,7 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
     if (CONES) CONES.set(o.lampK); if (STREETLAMP.mat) STREETLAMP.mat.emissiveIntensity = 0.15 + 0.9 * Math.min(1.9, o.lampK);   /* 가로등 머리·빛 기둥: 밤일수록 */
     if (VSIGN.mat) VSIGN.mat.emissiveIntensity = 0.3 + 0.9 * Math.min(1.9, o.lampK);   /* 세로 간판: 밤일수록 (문서 229 §9) */
     FACADE_U.uLampK.value = o.lampK; if (FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value.copy(o.hor).lerp(o.top, 0.35);   /* 창: 밤일수록 켜진 방이 밝고, 유리는 지금 하늘빛을 비춘다 */
-    if (o.name !== todName) { todName = o.name; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
+    if (o.name !== todName) { todName = o.name; if (REFL) REFL.dirty = true; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;
 /* ---------- 걷기: 같은 충돌 ---------- */
@@ -686,6 +688,7 @@ function tick() { perf.begin();
   /* 방전 폭우: 그릴 때만 조명을 낮춘다 — 시간대가 정한 세기는 그대로 두고, 예고 원·번개(조명 안 받는 재질)는 밝게 남는다.
      노출(toneMappingExposure)은 블룸 경로(렌더 타깃)에 안 먹어서 휘도가 78.6 → 79.2 로 그대로였다 (문서 222 §6) */
   const dimK = STAGE.dim > 0 ? 1 - STAGE.dim * .75 : 1; if (dimK < 1) { if (!dimLights) { dimLights = []; scene.traverse(l => { if (l.isLight && !l.userData.keepLit) dimLights.push(l); }); } for (const l of dimLights) { l.userData.i0 = l.intensity; l.intensity *= dimK; } if (scene.fog) { dimFog.copy(scene.fog.color); scene.fog.color.multiplyScalar(dimK); } if (scene.background && scene.background.isColor) { dimBg.copy(scene.background); scene.background.multiplyScalar(dimK); } }
+  if (REFL && REFL.dirty) { REFL.bake(); window.__REFL = { bakes: REFL.bakes, ms: REFL.ms }; }   /* 유리에 비치는 도시 — 처음·시간대 바뀔 때만 (문서 229 §12) */
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   if (dimK < 1) { for (const l of dimLights) l.intensity = l.userData.i0; if (scene.fog) scene.fog.color.copy(dimFog); if (scene.background && scene.background.isColor) scene.background.copy(dimBg); }
   perf.end(); if (BENCH) { BENCH.tick(performance.now()); if (BENCH.done && !benchShown) { benchShown = true; benchCard(); } } requestAnimationFrame(tick); }
