@@ -4,10 +4,12 @@
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
+import { interiorFacadeMats, interiorCurtainMat } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
 let VIEW3D = false; export function setView3d(v) { VIEW3D = !!v; }
+let INTERIOR = true; export function setInterior(v) { INTERIOR = !!v; }   /* 3D 가짜 실내 창 켬/끔 — world3d ?im=0 (문서 229) */
 /* 3D 땅 층 깊이 순서 (문서 220 §15): 땅 다각형끼리는 2 mm 차 — 16비트 깊이면 10 m 에서 15 mm 를 못 가려 «나중에 그린 것» 이 이긴다.
    결 셰이더로 프로그램 순서가 바뀌자 콘크리트가 풀밭을 덮었다(제주). 깊이 밀기 단위는 깊이 버퍼 최소 단위의 배수라 비트 수와 무관하게 순서를 고정한다.
    뒤 → 앞: 바닥판 +12 · 얼룩 +6 · 콘크리트·숲 0 · 풀·모래 −3 · 물 −6 · 길 −24 · 웅덩이 −30 · 차선·횡단보도 −36 */
@@ -167,8 +169,8 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
 
 /* ---------- 건물: 실측 윤곽 × 높이, 가까운 쪽(화면 아래)은 1층으로 잘라 길을 가리지 않게 ---------- */
 export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, ST, tc } = ctx, out = []; let ruinRubbleM = null, ruinWallM = null;
-  const facadeMats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
-  const curtainM = new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
+  const facadeMats = VIEW3D && INTERIOR && o.interior !== false ? interiorFacadeMats(THREE) : tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));   /* 3D: 가짜 실내 창 */
+  const curtainM = VIEW3D && INTERIOR && o.interior !== false ? interiorCurtainMat(THREE) : new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
   const roofM = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });
   const area = poly => { let a = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
   const far = [];

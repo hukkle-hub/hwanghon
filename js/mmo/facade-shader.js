@@ -32,8 +32,12 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     float band = smoothstep(0.0, 0.03, f.y) * (1.0 - smoothstep(0.93, 0.97, f.y));
     diffuseColor.rgb *= mix(0.72, 1.0, band); vec3 wallD = diffuseColor.rgb;
     float wallH = fh1(vec2(floor(dot(vFW.xz, Nw.xz) * 0.37), floor(Nw.x * 7.0 + Nw.z * 3.0)));   /* 벽 한 면의 해시 — 창 모양 고르기 */
+#ifdef CURTAIN
+    bool ribbon = true; vec2 g0 = vec2(0.0, 0.05), g1 = vec2(1.0, 0.96);                             /* 유리 커튼월: 층마다 얇은 슬래브만 */
+#else
     bool ribbon = wallH < 0.38;                                                                      /* 띠창(커튼월) 38 % · 나머지는 뚫린 창 */
     vec2 g0 = ribbon ? vec2(0.0, 0.22) : vec2(0.09 + 0.06 * fract(wallH * 7.0), 0.17), g1 = ribbon ? vec2(1.0, 0.92) : vec2(0.91 - 0.06 * fract(wallH * 7.0), 0.86);
+#endif
     float inG = step(g0.x, f.x) * step(f.x, g1.x) * step(g0.y, f.y) * step(f.y, g1.y) * step(3.4, y);
     float aa = clamp(1.0 - max(fwidth(cell.x), fwidth(cell.y)) * 2.5, 0.0, 1.0);                   /* 멀면 창 무늬가 지글거린다(모아레) — 평균 색으로 */
     vec2 rid = id + vec2(floor(dot(vFW.xz, Nw.xz) * 0.37) * 13.0, 0.0);   /* 맞은편 벽끼리 같은 방이 되지 않게 */
@@ -72,6 +76,10 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
       /* 유리 반사: 비스듬히 볼수록, 칸 위쪽일수록 하늘빛 */
       float fres = pow(1.0 - abs(dot(V, Nw)), 4.0);
       fEmit += uSkyRefl * (0.05 + 0.45 * fres) * (0.55 + 0.6 * q.y) * (1.0 - broken) * (1.0 - blind * 0.5) * (1.0 - lit * 0.6);
+#ifdef CURTAIN
+      diffuseColor.rgb = mix(diffuseColor.rgb * 0.45, vec3(0.03, 0.05, 0.08), 0.35);                 /* 색유리 — 방이 덜 비친다 */
+      fEmit += uSkyRefl * vec3(0.85, 0.95, 1.15) * (0.16 + 0.35 * fres) * (1.0 - lit * 0.7) * (1.0 - broken);   /* 하늘을 더 비춘다 */
+#endif
       diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.06, 0.07), frame); fEmit *= 1.0 - frame;
     }
     /* 멀리서는 평균: 벽과 유리를 창 몫(cover)만큼 섞은 색 + 켜진 방 평균 — 창 무늬가 지글거리지 않게 (벽 조각도 같이) */
@@ -80,7 +88,8 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     diffuseColor.rgb = mix(avgD, diffuseColor.rgb, aa); fEmit = mix(avgEmit, fEmit, aa); fGlass = mix(cover, fGlass, aa);
   } }`;
 
-export function patchFacadeMaterial(THREE, m) {
+export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
+  if (curtain) m.defines = { ...(m.defines || {}), CURTAIN: '' };
   if (!FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value = new THREE.Color(0x6a7088);
   const tint = { value: new THREE.Color(1, 1, 1) };
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, FACADE_U, { uWallTint: tint });
@@ -91,5 +100,22 @@ export function patchFacadeMaterial(THREE, m) {
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.18, fGlass);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, fGlass);')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += fEmit;'); };
-  m.customProgramCacheKey = () => 'facade-im'; m.needsUpdate = true; return m;
+  m.customProgramCacheKey = () => curtain ? 'facade-im-curtain' : 'facade-im'; m.needsUpdate = true; return m;
 }
+
+/* 벽 텍스처(창 없이 얼룩·빗물 자국만) + 가짜 실내 창 재질 넷 — env-osm(강남)·env-lib(다른 도시) 가 같이 쓴다.
+   따로 굴리는 난수 — 장면 난수 R 을 쓰면 뒤의 건물 높이·차 자리가 2D 굽기와 달라진다 */
+export function interiorFacadeMats(THREE) {
+  return [0, 1, 2, 3].map(k => { let sd = 977 + k * 131; const R = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), w = 128, h = 128;
+    g.fillStyle = ['#55535c', '#5f5a60', '#4a505c', '#625b54'][k]; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 260; i++) { const v = R(); g.fillStyle = v < .5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)'; g.fillRect(R() * w, R() * h, 2 + R() * 10, 2 + R() * 6); }
+    for (let i = 0; i < 9; i++) { const x = R() * w; g.fillStyle = 'rgba(10,8,12,.10)'; g.fillRect(x, 0, 1 + R() * 3, h); }   /* 빗물 자국 — 세로 줄 */
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(1 / 9.6, 1 / 9.6);
+    return patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.05, map: t })); });
+}
+
+/* 유리 커튼월 탑(여의도 등) — 짙은 청회색 판 + 층마다 사무실 */
+export function interiorCurtainMat(THREE) { const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.fillStyle = '#3c4656'; g.fillRect(0, 0, 32, 32);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ map: t, roughness: 0.4, metalness: 0.2 }), { curtain: true }); }
