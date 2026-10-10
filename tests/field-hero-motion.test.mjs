@@ -20,6 +20,7 @@ test('actual full/mobile Animated meshes: held weapon stays on palm throughout s
    h.play(name,name);h.current.paused=true;const c=h.current.getClip();
    for(let i=0;i<=60;i++){const time=c.duration*i/60;h.armBlend?.restore();h.rig.restore();h.current.time=time;h.mixer.update(1/60);h.rig.apply(fieldHeroAction(ch,c,time,name),name==='run',false,1/60,name);h.armBlend?.apply(1/60);h.root.updateMatrixWorld(true);
     const palm=(b.RightHand.userData.gripPoint?.clone()||b.RightHandSlot.position.clone()).applyMatrix4(b.RightHand.matrixWorld),gap=palm.distanceTo(h.weapon.getWorldPosition(new T.Vector3()));worst=Math.max(worst,gap);assert.ok(gap<.001,`${ch} ${lod} ${name}@${i}: dominant hand lost weapon ${gap}`);
+    if(ch==='ryu'){const left=b.LeftHand.userData.gripPoint.clone().applyMatrix4(b.LeftHand.matrixWorld);assert.ok(left.distanceTo(h.offhand.getWorldPosition(new T.Vector3()))<.001,`${lod} ${name}@${i}: offhand dagger detached`);}
     for(const n of ['RightArm','RightForeArm','RightHand','LeftArm','LeftForeArm','LeftHand'])assert.ok(b[n].matrixWorld.elements.every(Number.isFinite));frames++;
    }
   }t.diagnostic(`${ch} ${lod?'mobile':'full'}: ${frames} sampled frames, right palm gap ${worst}m`);h.dispose(scene);
