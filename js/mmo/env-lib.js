@@ -2,6 +2,7 @@
    강남(env-osm.js)·남산(env-namsan.js)에서 쓰던 부품을 존 여럿이 같이 쓰게 모은 것.
    env-field.js 가 존 설정(js/mmo/zones.js)대로 이 부품을 골라 세운다.
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
+import { patchPuddleMaterial } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
@@ -89,7 +90,7 @@ const near = (ctx, pts, pad) => pts.some(p => { const [s, t] = ctx.ST(p); return
 
 /* ---------- 도로: 간선은 차선·점선, 보행로·계단은 흙/블록 ---------- */
 export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
-  const roadM = new THREE.MeshStandardMaterial({ map: tex.asphalt, roughness: 0.34, metalness: 0.25 }), busM = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 });
+  const roadM = new THREE.MeshStandardMaterial({ map: tex.asphalt, roughness: 0.34, metalness: 0.25 }), busM = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 }); if (VIEW3D) patchPuddleMaterial(THREE, roadM);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
   const pathM = new THREE.MeshStandardMaterial({ map: tex.paver, roughness: 0.75 }), stepM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
   const LANE = { motorway: 3.5, trunk: 3.4, primary: 3.3, primary_link: 3.3, secondary: 3.2, secondary_link: 3.2, tertiary: 3.1, motorway_link: 3.4, trunk_link: 3.4 };
   const dashM = new THREE.MeshStandardMaterial({ color: 0xc8c8b8, roughness: 0.7, transparent: true, opacity: 0.55 }), out = [];

@@ -146,6 +146,7 @@ import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
 import { setView3d, setInterior, VSIGN } from './js/mmo/env-lib.js';
+import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
@@ -185,7 +186,7 @@ await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간�
 const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
-setView3d(true); setInterior(q.get('im') !== '0');   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
+setView3d(true); setInterior(q.get('im') !== '0'); PUDDLE.on = q.get('wet') !== '0';   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
 const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
 const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 발밑 그늘 — 차·소품이 바닥에 붙어 보이게 (문서 229 §2, ?cs=0 으로 끔) */ window.__CSH = CSH && CSH.count;
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
@@ -212,11 +213,12 @@ if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE
   scene.traverse(o => { if (!o.isMesh || o.isInstancedMesh || o.userData.noCam || Array.isArray(o.material)) return; const m = o.material; if (!m || !m.isMeshStandardMaterial || !m.map || done.has(m)) return;
     if (!o.geometry.boundingBox) o.geometry.computeBoundingBox(); b.copy(o.geometry.boundingBox); if (b.max.y - b.min.y > 0.02 || Math.max(b.max.x - b.min.x, b.max.z - b.min.z) < 6) return;   /* 진짜 평면만 — 30 cm 로 잡았더니 침목(10 cm 상자)까지 바닥 취급해 허옇게 됐다 */
     done.add(m); if (MODE !== 'shader') { if (m.roughness < 0.45) m.roughness = 0.74; if (m.metalness > 0.1) { m.metalness = 0.06; m.color.multiplyScalar(0.72); } }   /* 금속성을 빼면 아스팔트가 밝아져 보도와 같은 색이 됐다 — 그만큼 어둡게 */ if (MODE === 'rough') return;   /* 바닥은 금속이 아니다 — 낮은 해에 비스듬히 하얗게 번졌다 */   /* 낮은 해가 젖은 길에 하얗게 번지던 것 (문서 217 §2) */
-    m.onBeforeCompile = sh => { sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWG;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWG = (modelMatrix * vec4(transformed, 1.0)).xz;');
+    const prevBC = m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? m.onBeforeCompile : null, prevKey = prevBC && m.customProgramCacheKey ? m.customProgramCacheKey.bind(m)() : '';   /* 앞 패치(젖은 길 웅덩이, 문서 229 §10)를 이어 부른다 — 덮어써서 웅덩이가 사라졌었다 */
+    m.onBeforeCompile = (sh, r) => { if (prevBC) prevBC.call(m, sh, r); sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWG;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWG = (modelMatrix * vec4(transformed, 1.0)).xz;');
       sh.uniforms.uCloudK = CLOUDK; sh.uniforms.uCloudT = CLOUDT; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uCloudK, uCloudT; varying vec2 vWG; float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(gh(i), gh(i + vec2(1, 0)), f.x), mix(gh(i + vec2(0, 1)), gh(i + vec2(1, 1)), f.x), f.y); }')
         .replace('#include <map_fragment>', '#include <map_fragment>\n{ float mn = gn(vWG * 0.035) * 0.6 + gn(vWG * 0.12) * 0.4; diffuseColor.rgb *= mix(0.74, 1.14, mn); float dirt = smoothstep(0.55, 0.85, gn(vWG * 0.017 + 9.0)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.13, 0.10, 0.07) * (0.8 + mn * 0.4), dirt * 0.32);'   /* 흙색은 선형 값 — sRGB 감으로 0.40 을 넣었더니(= sRGB 0.66) 짙은 풀·아스팔트가 60 m 얼룩째 허옇게 떴다(제주, 문서 220 §15) */
           + ' vec2 cq = vWG * 0.011 + vec2(uCloudT * 0.05, uCloudT * 0.018); float cs = smoothstep(0.42, 0.68, gn(cq) * 0.65 + gn(cq * 2.3 + 4.0) * 0.35); diffuseColor.rgb *= 1.0 - uCloudK * cs; }'); };   /* 구름 그림자: 땅 위로 옅은 그늘이 천천히 지나간다 */
-    m.customProgramCacheKey = () => 'ground-macro'; m.needsUpdate = true; });
+    m.customProgramCacheKey = () => 'ground-macro' + prevKey; m.needsUpdate = true; });
   window.__groundMats = done.size; }
 /* 높이 AO (문서 228) — 영상 «게임 속 빛의 30년» 의 «간접광은 미리 굽고 게임 중엔 읽기만». 지역을 열 때 위에서 찍은 높이 지도로 한 번 굽고, 위를 향한 면이 간접광(반구광)만 줄인다.
    차·건물·소품이 바닥에 «붙어» 보이게. 바깥 필드만(실내는 천장이 높이 지도를 가린다). 아직 시제품 — ?hao=1 로 켠다(휴대폰 1024² 는 텍셀 0.88 m 라 붙음 그늘이 옅다, 문서 228) */

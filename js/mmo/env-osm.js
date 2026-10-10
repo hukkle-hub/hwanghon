@@ -17,6 +17,7 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    farSide: 화면 위(먼 쪽)에 둘 실측 지점 · exitPairs: 길 양쪽 인도에 마주 선 출구(중심선) · walk: 걷는 띠(없으면 계산)
    gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
+import { patchPuddleMaterial } from './puddle-shader.js';
 import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
 import { interiorFacadeMats, interiorBrickMats, pickFacade, aviLight } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */
 export const CONFIG = {
@@ -119,6 +120,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const uv = []; for (let i = 0; i < pos.length; i += 3) uv.push(pos[i], pos[i + 2]); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); return g; }
   const roadMat = new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.34, metalness: 0.25 });
+  if (L.isView3d()) patchPuddleMaterial(THREE, roadMat);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
   if (L.isView3d()) { roadMat.polygonOffset = true; roadMat.polygonOffsetFactor = 0; roadMat.polygonOffsetUnits = -24; }   /* 3D: 길이 광장·풀밭 위에 (문서 220) */
   const busMat = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 });   /* 중앙버스전용차로 — 붉은 포장 */
   const WIDTH = { primary: 3.3, primary_link: 3.3, secondary: 3.2, tertiary: 3.1 };
