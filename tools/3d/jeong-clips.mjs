@@ -40,6 +40,18 @@ function twistTo(b, child, axisLocal, slot, want) {   /* b 를 자기 축(b→ch
     const ax = child.getWorldPosition(V()).sub(b.getWorldPosition(V())).normalize(), cur = GRIP ? GRIP.blade(V()) : V(...axisLocal).applyQuaternion(worldQ(slot));
     const c = cur.clone().addScaledVector(ax, -ax.dot(cur)), w = want.clone().normalize().addScaledVector(ax, -ax.dot(want.clone().normalize())); if (c.lengthSq() < 1e-6 || w.lengthSq() < 1e-6) return;
     c.normalize(); w.normalize(); const ang = Math.atan2(ax.dot(c.clone().cross(w)), c.dot(w)); if (Math.abs(ang) < .01) return; rotWorld(b, new T.Quaternion().setFromAxisAngle(ax, ang)); } }
+/* 팔꿈치 경첩 맞추기 (문서 226): 위팔·아래팔을 따로 «최소 회전» 으로 겨누면 위팔 비틀림이 팔꿈치 경첩과 어긋나 팔꿈치가 옆으로 꺾인다(동작 감사 76~90°).
+   위팔을 자기 축 둘레로만 돌려 경첩(쉬는 자세의 «앞으로 굽힘» 축)이 굽힘 평면에 오게 하고, 아래팔은 다시 겨눈다 — 뼈 방향은 그대로, 비틀림만 바뀐다.
+   거의 편 팔(5~20°)은 덜 돌려 축이 정해지지 않는 곳에서 튀지 않게 */
+const HINGE_L = {}; { for (const [b, [pos, q]] of rest) { b.position.copy(pos); b.quaternion.copy(q); } root.updateMatrixWorld(true);
+  for (const s of ['Left', 'Right']) { const a = B[s + 'Arm'], f = B[s + 'ForeArm'], h = B[s + 'Hand'], u = f.getWorldPosition(V()).sub(a.getWorldPosition(V())).normalize(), fwd = V(0, 0, 1);
+    let hw = u.clone().cross(fwd).normalize(); const fd = h.getWorldPosition(V()).sub(f.getWorldPosition(V())).normalize(); if (fd.clone().applyAxisAngle(hw, .3).sub(fd).dot(fwd) < 0) hw.negate();
+    HINGE_L[s] = hw.applyQuaternion(worldQ(a).invert()); } }
+function elbowHinge(s, fDir) { const a = B[s + 'Arm'], f = B[s + 'ForeArm'], h = B[s + 'Hand']; root.updateMatrixWorld(true);
+  const u = f.getWorldPosition(V()).sub(a.getWorldPosition(V())).normalize(), fd = fDir.clone().normalize(), bend = Math.acos(Math.max(-1, Math.min(1, u.dot(fd))));
+  const wgt = Math.max(0, Math.min(1, (bend * 180 / Math.PI - 5) / 15)); if (!wgt) return;
+  const n = u.clone().cross(fd).normalize(), hw = HINGE_L[s].clone().applyQuaternion(worldQ(a)); hw.addScaledVector(u, -hw.dot(u)).normalize();
+  const phi = Math.atan2(u.dot(hw.clone().cross(n)), hw.dot(n)); rotWorld(a, new T.Quaternion().setFromAxisAngle(u, phi * wgt)); aim(f, h, fd); }
 /* 자세 하나를 몸에 얹는다. p: { yaw, hip:[dx,dy,dz], lean, twist, roll, head(가슴 기준 도), nod, rA, rF, rB, lA, lF, legs:{ r:[up, low], l:[up, low] } } */
 function apply(p) {
   for (const [b, [pos, q]] of rest) { b.position.copy(pos); b.quaternion.copy(q); }
@@ -61,6 +73,7 @@ function apply(p) {
   /* 위팔은 수평에서 37° 아래까지만 — 그보다 들면 코트 소매·몸판이 날개처럼 부푼다(재 봄: 25° 아래도 부풀었다) */
   const clampUp = A => { const n = Math.hypot(...A), y = A[1] / n; if (y <= -.6) return A; const h = Math.hypot(A[0], A[2]) || 1, k = Math.sqrt(1 - .36) / h; return [A[0] * k, -.6, A[2] * k]; };
   const arm = (s, A, F, Bl) => { if (A) A = clampUp(A); if (A) aim(B[s + 'Arm'], B[s + 'ForeArm'], bodyDir(A, chestYaw)); if (F) aim(B[s + 'ForeArm'], B[s + 'Hand'], bodyDir(F, chestYaw));
+    if (A && F) elbowHinge(s, bodyDir(F, chestYaw));
     if (Bl && s === 'Right') aimAxis(B.RightHandSlot, BLADE_AXIS, B.RightHandSlot, bodyDir(Bl, chestYaw)); };   /* 칼 방향은 슬롯 뼈로 — 슬롯엔 정점이 없어 메시가 안 일그러진다. 칼 자리는 보이는 주먹(js/mmo/jeong-saber.js) */
   arm('Right', p.rA, p.rF, p.rB); arm('Left', p.lA, p.lF, null);
   for (const [s, k] of [['Right', 'r'], ['Left', 'l']]) { const L = p.legs && p.legs[k]; if (!L) continue; aim(B[s + 'UpLeg'], B[s + 'Leg'], bodyDir(L[0], yaw)); aim(B[s + 'Leg'], B[s + 'Foot'], bodyDir(L[1], yaw)); }
@@ -68,10 +81,15 @@ function apply(p) {
 
 /* 키 사이 보간: 숫자는 직선, 방향은 정규화 직선. ease: 'io'(기본) · 'in'(느리게 시작 → 빠르게 끝 = 베기) · 'out' · 'lin' */
 const EASE = { lin: t => t, io: t => t * t * (3 - 2 * t), in: t => t * t * t, out: t => 1 - Math.pow(1 - t, 3) };
-function lerpPose(a, b, k) { const o = {};
+/* 칼날 방향(rB)이 키 사이에서 120° 넘게 바뀌면 직선 보간이 0 근처를 지나 한 프레임에 뒤집힌다(3합 0.73 s 178°, 원 1.37 s 170°).
+   그때는 아래팔(rF)이 도는 회전을 칼날에도 같이 얹고, 남는 차이만 따로 보간한다 — 칼이 손목과 함께 휘돈다 */
+function bladeLerp(a, b, k) { const A = V(...a).normalize(), Bv = V(...b).normalize(); if (A.dot(Bv) > -0.5) return lerpV(a, b, k);
+  const fa = V(...bladeLerp.fa).normalize(), fb = V(...bladeLerp.fb).normalize(), q = new T.Quaternion().setFromUnitVectors(fa, fb), w1 = A.clone().applyQuaternion(q), r = new T.Quaternion().setFromUnitVectors(w1, Bv);
+  const v = A.clone().applyQuaternion(new T.Quaternion().slerp(q, k)).applyQuaternion(new T.Quaternion().slerp(r, k)); return v.toArray(); }
+function lerpPose(a, b, k) { const o = {}; if (a.rF && b.rF) { bladeLerp.fa = a.rF; bladeLerp.fb = b.rF; } else { bladeLerp.fa = bladeLerp.fb = [0, 0, 1]; }
   for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) { const x = a[key], y = b[key] ?? x; if (x == null) { o[key] = y; continue; }
     if (key === 'legs') { o.legs = {}; for (const s of ['r', 'l']) { const u = x[s], w = (y || {})[s] ?? u; if (u) o.legs[s] = [lerpV(u[0], w[0], k), lerpV(u[1], w[1], k)]; } continue; }
-    o[key] = typeof x === 'number' ? x + (y - x) * k : lerpV(x, y, k, key === 'hip'); }
+    o[key] = typeof x === 'number' ? x + (y - x) * k : key === 'rB' ? bladeLerp(x, y, k) : lerpV(x, y, k, key === 'hip'); }
   return o; }
 function lerpV(a, b, k, raw) { const v = a.map((x, i) => x + (b[i] - x) * k); if (raw) return v; const n = Math.hypot(...v) || 1; return v.map(x => x / n); }
 function poseAt(keys, t) { let i = 0; while (i < keys.length - 1 && t > keys[i + 1].t) i++; const a = keys[i], b = keys[Math.min(i + 1, keys.length - 1)];
@@ -111,12 +129,12 @@ export const CLIPS = {
     { t: 1.55, ease: 'out', p: { rA: [.25, -.25, .55], rF: [.05, .95, .25], rB: [0, .2, -1], twist: 5, lean: -4 } },
     { t: 1.82, ease: 'in', p: { rA: [.15, -.55, .8], rF: [.05, -.35, .95], rB: [0, -.8, .5], lean: 22, hip: [0, -.14, 0] } },
     { t: 2.2, p: { ...GUARD, hip: [0, -.06, 0] } }, { t: 2.6, p: { ...CARRY, hip: [0, 0, 0] } }] },
-  /* 다 아는 검: 몸만 돌려 등 뒤를 쳐낸다 — 고개는 앞쪽으로 남긴다(가슴 기준 +35°, 얼굴이 안 늘어나는 한도) «보지도 않고» */
+  /* 다 아는 검: 몸만 돌려 등 뒤를 쳐낸다 — 가슴 방향(yaw+twist = −175°)은 그대로 두고 척추 비틀기는 70° 까지(사람 척추 한도), 나머지는 골반째 돈다 (문서 226) — 고개는 앞쪽으로 남긴다(가슴 기준 +35°, 얼굴이 안 늘어나는 한도) «보지도 않고» */
   atk_jeong_back: { dur: 1.5, keys: [
     { t: 0, p: { ...CARRY } },
     { t: .22, ease: 'out', p: { twist: 25, rA: [.45, -.6, .4], rF: [.2, -.2, 1], rB: [.6, .3, .3] } },
-    { t: .45, ease: 'in', p: { yaw: -70, twist: -85, head: 35, rA: [.55, -.45, .55], rF: [.4, -.15, .9], rB: [-.6, .1, .4], lean: 4 } },
-    { t: .62, ease: 'out', p: { yaw: -80, twist: -95, head: 35, rA: [.1, -.5, .8], rF: [-.4, -.25, .9], rB: [-.7, -.1, -.4] } },
+    { t: .45, ease: 'in', p: { yaw: -85, twist: -70, head: 35, rA: [.55, -.45, .55], rF: [.4, -.15, .9], rB: [-.6, .1, .4], lean: 4 } },
+    { t: .62, ease: 'out', p: { yaw: -105, twist: -70, head: 35, rA: [.1, -.5, .8], rF: [-.4, -.25, .9], rB: [-.7, -.1, -.4] } },
     { t: 1.1, p: { ...CARRY } }, { t: 1.5, p: { ...CARRY } }] },
   /* 지휘 — 각도: 왼손이 왼쪽 앞에서 대상 쪽으로 각도를 긋는다(칼은 칼 들어). 그 각도로 의장대의 그림자가 파고든다 */
   atk_jeong_command: { dur: 2.4, keys: [
@@ -175,5 +193,7 @@ if ((process.argv[1] || '').endsWith('jeong-clips.mjs')) {
   /* 다시 구울 때 덧붙이기만 하면 GLB 가 자꾸 커진다(옛 버퍼가 남는다) → 처음 원본(전용 클립 없는 판)을 받아 두고 늘 거기서 시작 */
   if (!process.argv.includes('--dry')) { const orig = OUT + 'orig.glb';
     if (!fs.existsSync(orig)) { const j = JSON.parse(raw.subarray(20, 20 + raw.readUInt32LE(12)).toString()); if (j.animations.some(a => /jeong/.test(a.name))) throw Error('원본이 없다: git show <전용 클립 전 커밋>:' + GLB + ' > ' + orig); fs.copyFileSync(GLB, orig); }
-    fs.copyFileSync(orig, GLB); execFileSync('node', ['tools/3d/glb-put-clips.mjs', GLB, ...files], { stdio: 'inherit' }); if (fs.existsSync(GLB + '.bak')) fs.unlinkSync(GLB + '.bak'); }
+    fs.copyFileSync(orig, GLB); execFileSync('node', ['tools/3d/glb-put-clips.mjs', GLB, ...files], { stdio: 'inherit' }); if (fs.existsSync(GLB + '.bak')) fs.unlinkSync(GLB + '.bak');
+    execFileSync('node', ['tools/3d/skin-rebind.mjs', GLB], { stdio: 'inherit' });   /* 원본엔 예전 가중치 — 다시 묶는다 (문서 225) */
+    execFileSync('node', ['tools/3d/clip-joint-fix.mjs', GLB], { stdio: 'inherit' }); }   /* 무릎·바닥 (문서 226) */
 }
