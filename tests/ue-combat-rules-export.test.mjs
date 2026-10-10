@@ -11,7 +11,7 @@ const R=require('../js/dungeons.js').RULES;
 test('UE 데이터 포팅: 기본 3 타 = 0.66 s / 접점 0.24 s (규칙값 그대로, 변경 금지)',()=>{
   for(const k of ['attack1','attack2','attack3']){ assert.equal(X.actions[k].duration,0.66); assert.equal(X.actions[k].hit,0.24); assert.equal(X.actions[k].cancel,0.48); }
   assert.equal(X.actions.smash.duration,1.15); assert.equal(X.actions.smash.hit,0.48);   /* 아인 전용 프로파일이 이긴다 */
-  assert.equal(X.actions.counter.duration,R.motion.counter.duration);
+  assert.equal(X.actions.counter.duration,R.motion.characterProfiles.ain.counter.duration);
 });
 test('UE 데이터 포팅: 연계·회피·점프·카운터·기력·히트스톱·자세는 RULES 객체 그대로',()=>{
   assert.deepEqual(X.combo,R.combo); assert.deepEqual(X.dodge,R.dodge); assert.deepEqual(X.jump,R.jump);

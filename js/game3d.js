@@ -8,6 +8,7 @@ import {createCharacterCinema,transitionFor} from './character-cinema.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {gripHands} from './hand-grip.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
+import {applyHeroSkillClips} from './hero-skill-clips.js';
 import {smoothCharacterClips} from './clip-smooth.js';
 import {createArmBlend} from './arm-blend.js';
 import {clone as cloneSkinned} from '../vendor/three/SkeletonUtils.js';
@@ -770,6 +771,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(CID==='ain'){ var ainBindFix=layerOn('bind')?repairAinBind(ain.model):null; if(layerOn('clips'))g.animations=repairAinClips(g.animations,ainBindFix); }
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
     else if(layerOn('clips'))g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
+    g.animations=applyHeroSkillClips(ain.model,g.animations,CID);
     ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
     /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
@@ -851,7 +853,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
            docs/design/61-attack-weight.md */
         var oc=ain.oneshot.getClip(), spanBy=((R.motion.clipSpanByChar||{})[CID]||{})[oc.name],
             span=spanBy!=null?spanBy:(R.motion.clipSpan||{})[oc.name],
-            act=Object.assign({},combatAction,{clipHit:combatAction.clipHit/(span||1), cid:CID});
+            act=Object.assign({},combatAction,{clipHit:combatAction.clipHit/(span||1), cid:CID,fullBodyMocap:!!oc.userData?.fullBody});
         /* 접점 저항 — «보이는 시각» 만 뒤처지게 한다. 판정 시계(combatAction.elapsed)는
            건드리지 않는다. 날이 몸에 박힌 동안 그림이 느려지고, 빠져나오면 따라잡는다.
            총 시간이 안 변하므로 DPS·균형은 그대로다. docs/design/65-contact-feel.md */
@@ -873,6 +875,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(combatAction) lastAction=combatAction;
     var motionAction=combatAction||(heldAction&&ain.oneshot&&ain.oneshot.getClip().name===heldAction.clip?heldAction:null);
     if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
+    if(motionAction&&ain.oneshot)motionAction=Object.assign({},motionAction,{clipTime:ain.oneshot.time});
     if(ain.rig&&layerOn('rig')) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.armBlend&&layerOn('armBlend')) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
     if(ain.cinema&&layerOn('cinema')){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
@@ -1610,7 +1613,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
         n=Math.abs(fwd)>=Math.abs(side)?(fwd>0?'roll':'dodgeB'):(side>0?'dodgeR':'dodgeL'); } }
     /* 클립 전체가 회피 시간 안에 들어가도록 «클립 길이 ÷ 회피 시간». 예전엔 0.38초를
        하드코딩해서, 더 긴 클립으로 갈아끼우면 뒷부분이 잘려나갔다. */
-    var rc=ain.clips[n]; playOnce(n,{ speed:(rc?rc.duration:0.38)/L.player.rollDur }); }
+    // Evasion immunity/movement remains rollDur. The visible recovery is not
+    // squeezed into that window; keep the complete authored backstep readable.
+    var rc=ain.clips[n]; playOnce(n,{ speed:rc?.userData?.fullBody?1:(rc?rc.duration:0.38)/L.player.rollDur }); }
   /* 회피 잔상: 지나온 자리에 늘어진 줄기 + 발밑 고리. 스킨 메시를 복제하지 않고
      실루엣만 남겨 저사양에서도 싸다. */
   /* ── 완벽 회피 (검은 신화: 오공 · docs/design/77) ─────────────────────────
@@ -1826,11 +1831,15 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     const panel=document.createElement('div');panel.style.cssText='position:fixed;z-index:99999;top:8px;left:20%;background:#14202eee;color:white;padding:12px;font:14px sans-serif';
     panel.innerHTML='<b>로컬 낫 접점 검수</b> <select aria-label="검수 공격"><option value="skill1">낫베기</option><option value="skill3">피의회전</option><option value="ult">궁극기</option><option value="attack">기본 공격</option></select> <button>타격 시점 검수</button> <button>검수 PNG 저장</button><div data-review-status>입장 후 사용 · 실제 전투 코드, 정지 표적</div>';
     panel.style.maxWidth='75vw';
+    panel.querySelector('select').insertAdjacentHTML('beforeend','<option value="skill2">그림자 걸음</option><option value="skill4">결의</option>');
+    panel.insertAdjacentHTML('beforeend','<button data-full>끝까지 실제 전투 재생</button><button data-record>스킬 전체 전투 녹화</button><a data-video hidden>전투 영상 저장</a>');
+    panel.insertAdjacentHTML('beforeend','<button data-save>로컬 전투 영상 저장</button>');
     panel.insertAdjacentHTML('beforeend','<label>거리(m) <input aria-label="검수 거리" type="number" min="0.8" max="3" step="0.1" value="1.2" style="width:60px"></label> <label>부위 <select aria-label="검수 부위">'+Object.keys(A.parts3d||{}).map(k=>'<option value="'+k+'">'+k+'</option>').join('')+'</select></label>');
     panel.querySelector('[aria-label="검수 부위"]').value='core';
-    document.body.append(panel);let watching=false,reviewPart='core';
+    document.body.append(panel);let watching=false,reviewPart='core',freezeReview=true,recording=null,recordParts=[],recordQueue=[],fullUntil=0;
     const reviewTarget=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),new THREE.MeshBasicMaterial({color:0x45ffaa,wireframe:true,transparent:true,opacity:.35,depthTest:false}));reviewTarget.visible=false;scene.add(reviewTarget);
-    panel.querySelectorAll('button')[0].onclick=function(){
+    panel.querySelectorAll('button')[0].onclick=function(event){
+      if(event)freezeReview=true;
       if(!ain.ready||!ain.mixer||!boss.model)return;
       el.ov.classList.remove('is-on');endFlyover();el.dlg.classList.remove('is-on');cine=false;cineCam=null;l2Invuln=false;cineHold=false;CINE.cancel();scheduled=[];paused=false;state='fight';
       reviewTarget.visible=false;boss.coreGlow.visible=true;
@@ -1838,13 +1847,23 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       P.x=Bs.x-distance*SCALE;P.y=Bs.y;P.aim=0;P.rollT=0;P.lockT=0;botStick={sx:0,sy:0};
       const validStage=A.stages.findIndex(s=>s.parts.some(p=>p.id===reviewPart));
       reviewAimPart=validStage<0?reviewPart:null;
-      PS.ult=100;startPhase(Math.max(0,validStage));const selected=panel.querySelector('select').value;
+      // Each local review segment starts a NEW training attempt, not a hidden
+      // invulnerability buff. Actual incoming attacks remain enabled.
+      PS.hp=CHAR.stats.hp;PS.st=R.stamina.max;PS.ult=100;ain.dead=false;ain.hitT=0;
+      startPhase(Math.max(0,validStage));const selected=panel.querySelector('select').value;
       battle.input('target',reviewPart);
-      battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',selected==='skill3'?2:0);
+      battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',/^skill/.test(selected)?Number(selected.slice(-1))-1:0);
       watching=true;
+      fullUntil=performance.now()+6500;
     };
+    const startReview=()=>panel.querySelectorAll('button')[0].onclick();
+    panel.querySelector('[data-save]').onclick=async()=>{try{const blob=await(await fetch(panel.querySelector('[data-video]').href)).blob(),r=await fetch('http://127.0.0.1:8797/capture/ain-dungeon-skills.webm',{method:'POST',body:blob});if(!r.ok)throw Error('저장 실패');panel.querySelector('[data-review-status]').textContent='로컬 전투 파일 저장 완료 · '+(await r.json()).saved;}catch(e){panel.querySelector('[data-review-status]').textContent=e.message;}};
+    panel.querySelector('[data-full]').onclick=()=>{freezeReview=false;startReview();};
+    panel.querySelector('[data-record]').onclick=()=>{freezeReview=false;recordParts=[];recordQueue=['skill1','skill2','skill3','skill4','ult'];recording=new MediaRecorder(renderer.domElement.captureStream(30),{mimeType:'video/webm;codecs=vp9'});recording.ondataavailable=e=>{if(e.data.size)recordParts.push(e.data);};recording.onstop=()=>{const a=panel.querySelector('[data-video]');a.href=URL.createObjectURL(new Blob(recordParts,{type:'video/webm'}));a.download='ain-actual-dungeon-skills.webm';a.hidden=false;panel.querySelector('[data-review-status]').textContent='실제 던전 스킬 4종·궁극기 전 구간 녹화 완료';};recording.start();panel.querySelector('select').value=recordQueue.shift();startReview();};
     panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download='ain-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
-    function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;if(!a)return;
+    function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;
+      if(!freezeReview){panel.querySelector('[data-review-status]').textContent=(a?.clip||ain.oneshotName||'회수')+' · 실제 전투 재생 / 피해·잔상·카메라 유지';if(performance.now()>fullUntil){if(recordQueue.length){panel.querySelector('select').value=recordQueue.shift();startReview();}else{watching=false;if(recording?.state==='recording')recording.stop();}}return;}
+      if(!a)return;
       if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
         panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';
         const contact=measureAinBladeContact(ain.weapon,target),radius=boss.PART[reviewPart].r;panel.querySelector('[data-review-status]').textContent+=' · 선택 부위 '+reviewPart+' · 실제 날 표면 '+contact.distance.toFixed(3)+'m / 표적 반경 '+radius.toFixed(3)+'m · '+(contact.distance<=radius?'접촉':'빗나감')+(reviewAimPart?' · 자세 실험 전용: 게임에서 조준 불가, 피해 판정 검수 아님':' · 실제 전투 조준 '+s.target);

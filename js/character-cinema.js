@@ -210,6 +210,7 @@ export function createCharacterCinema(model,root,cid='ain'){
     hipsMoved=false;model.updateWorldMatrix(true,true);
     if(bones.LeftFoot)bones.LeftFoot.getWorldPosition(feet0.L);if(bones.RightFoot)bones.RightFoot.getWorldPosition(feet0.R);
     const clip=ctx.clip||''; const moving=!!ctx.moving; const action=ctx.action||null;
+    if(model.userData.heroSkillMotion?.[clip]){diagnostics.mode='full-body-mocap';return;}
     const isDodge=/^dodge|roll|skill2$/.test(clip); const isHit=/^hit/.test(clip);
     diagnostics.mode=action?'attack':isDodge?'dodge':isHit?'hit':moving?'move':'idle';
 

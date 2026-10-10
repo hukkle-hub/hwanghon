@@ -19,7 +19,8 @@
  *   skill1   reap.glb    2.95 3.95 --fps 60 --chest .24,40,.5,-13,-13,.5
  *   skill2   dodge.glb   0    1.46 --fps 60
  */
-import {readFile} from 'node:fs/promises';
+import {readFile,writeFile} from 'node:fs/promises';
+import {repairAinBind} from '../../js/ain-bind-repair.js';
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 const args=process.argv.slice(2), file=args[0], name=args[1];
@@ -29,6 +30,7 @@ const load=async f=>{const b=await readFile(f),l=new GLTFLoader();l.register(()=
 /* --target 캐릭터 glb (기본 아인). 카인·류·세라도 같은 Mixamo 이름 뼈대다 (docs/design/76) */
 const TARGET=args.includes('--target')?args[args.indexOf('--target')+1]:new URL('../../art/3d/ain_anim.glb',import.meta.url).pathname;
 const src=await load(file), tgt=await load(TARGET);
+if(args.includes('--ain-repair'))repairAinBind(tgt.scene);
 /* 우리 뼈 → Meshy 뼈. 척추는 순서가 반대다. */
 /* --rig: 원본 뼈대 종류 (docs/design/85). meshy(기본) · ual(Quaternius UAL, UE 마네킹 이름) · kk(KayKit 1.1, 목·쇄골 없음).
    three 는 노드 이름에서 '.' 을 지운다(upperarm.l → upperarml). */
@@ -276,4 +278,5 @@ let pk=0,pi=0; sp.forEach((v,i)=>{if(v>pk){pk=v;pi=i;}});
 process.stderr.write(`${name}: 원본 ${clip.name} ${clip.duration.toFixed(2)}s, 구간 ${A.toFixed(2)}~${B.toFixed(2)}s, ${N+1} 표본, 키 비율 ${scale.toFixed(3)}\n`);
 process.stderr.write(`  오른손 최고속 ${pk.toFixed(2)} m/s @ ${((pi+1)/N).toFixed(3)} (구간 비율)\n`);
 process.stderr.write('  오른손 속도 20칸: '+Array.from({length:20},(_,b)=>{const a=Math.floor(b*sp.length/20),c=Math.floor((b+1)*sp.length/20);return (sp.slice(a,c).reduce((s,x)=>s+x,0)/Math.max(1,c-a)).toFixed(1);}).join(' ')+'\n');
-console.log(JSON.stringify(out));
+if(args.includes('--out'))await writeFile(args[args.indexOf('--out')+1],JSON.stringify(out));
+else console.log(JSON.stringify(out));

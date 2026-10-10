@@ -14,6 +14,7 @@ export function contactOf(char, clip) { const m = RULES().motion || {}; return m
 export function stopFor(kind, char) { const hs = RULES().hitstop || {}, rh = RULES().rhythm?.[char]; return (hs[kind] ?? hs.light ?? 0.09) * (rh?.stop ?? 1); }
 /* 궤적이 켜지는 구간(초) — js/combat-quality.js trailActive 와 같다: 접점 60% 지점부터 접점 + 0.22 s */
 export function trailWindow(hitAt) { return [hitAt * 0.6, hitAt + 0.22]; }
+export function swingTrailActive(s){return !!s&&s.at.some(t=>{const w=trailWindow(t);return s.t>=w[0]&&s.t<=w[1];});}
 
 let GLOW = null;
 function glow() { if (GLOW || typeof document === 'undefined') return GLOW;
@@ -68,7 +69,7 @@ export function createFieldFeel(scene, { reduced = false, sfx = () => globalThis
         if (q.h) { const sw = q.sw; due = !sw || q.h.swing !== sw || sw.t >= (sw.at[Math.min(q.k, sw.at.length - 1)] ?? sw.hitAt) - 1e-9; }
         else { q.t -= dt; due = q.t <= 0; }
         if (due) { queue.splice(i--, 1); try { q.fn(); } catch (e) { console.warn('[feel]', e); } } }
-      if (trail && trailOwner) { const s = trailOwner.swing, w = s && trailWindow(s.hitAt), on = !!(s && s.t >= w[0] && s.t <= w[1]); trail.tick(dt * api.rate(trailOwner), trailOwner.weapon || null, on); }
+      if (trail && trailOwner) { const on=swingTrailActive(trailOwner.swing); trail.tick(dt * api.rate(trailOwner), trailOwner.weapon || null, on); }
       for (let i = sparks.length - 1; i >= 0; i--) { const s = sparks[i]; s.t += dt; const k = s.t / s.life;
         if (s.v) { s.o.position.addScaledVector(s.v, dt); s.v.multiplyScalar(Math.max(0, 1 - dt * 6)); s.v.y -= 9 * dt; s.o.scale.set(s.s0 * (1 + k), s.s0 * (1 + k), 1); }
         else s.o.scale.setScalar(s.s0 * (1 + k * (s.grow || 0)));

@@ -1,0 +1,50 @@
+아인 전신 스킬 연결 교정 · 2026-10-10
+
+수정한 원인
+던전과 필드의 로더가 서로 달랐다. 전신 소스의 팔 움직임도 기존 절차형
+낫 경로와 몸통 보정이 덮어써서, 클립만 교체하면 화면은 달라지지 않았다.
+이제 몸·골반·다리와 독립적으로 베이크한 낫 궤적을 같은 클립 시계로 재생한다.
+두 손 IK는 그 한 개의 강체 낫을 잡는다. 팔/socket을 따로 섞지 않는다.
+회전 중 움직이는 목표를 다시 slerp해서 180도 반전하던 전이도 고정 오프셋
+감쇠로 바꿨다. 피격/사망 시에는 마지막으로 푼 팔 자세에서 해제한다.
+
+적용 범위
+아인 skill1 / skill2 / skill3 / skill4 / ult / counter.
+skill1은 Great Sword Slash의 한 번 베기만, skill2는 Standing Dodge Backward,
+skill3은 Great Sword High Spin Attack, skill4는 Great Sword Blocking,
+ult는 Great Sword Jump Attack, counter는 한 번 베기의 반격 구간이다.
+이미 저장소에 있던 Mixamo 원본을 사용했다. 별도 유료 생성/구매 없음.
+skill4는 원래 결의 버프이므로 공격 판정을 새로 추가하지 않는다.
+카인·류·세라 소스 후보를 생성했지만 무기별 검수 전 런타임에 켜지 않았다.
+원본 몸체/의상 GLB, 메시와 스킨 웨이트, Claude 작업은 교체하지 않았다.
+
+박자 (명목 초, 캐릭터 공격 속도와 실제 히트스톱은 전투 엔진이 적용)
+skill1: 2.04 / 타격 1.1016
+skill2: 1.98657 / 기존 회피 무적·이동 창 유지, 시각 회수 구간을 압축하지 않음
+skill3: 2.5399 / 두 타격 .275와 .54 구간
+skill4: 1.4599 / 버프, 타격 없음
+ult: 2.8399 / 타격 1.4966
+counter: 1.53 / 타격 .5049
+동작·판정 시간을 함께 늘리라는 디렉터 승인 적용. 피해/쿨다운/스태미나 유지.
+js/dungeons.js가 원본. UE combat_rules/game_content와 C++ 기본 counter 동기화.
+
+검수
+tools/3d/avatar-grip-review.html: 원본/모바일, 전신 및 두 손 확대, 6동작 전체 녹화.
+tools/3d/field-hero-review.html: 실제 world3d 버튼 경로와 일반 게임 카메라.
+game3d.html?d=d01&weaponReview=1: localhost 전용 실제 전투 녹화/날 표면 접촉 검사.
+영상은 프로젝트 상위 output/ain-fullbody-skills-2026-10-10에 저장.
+전신·손 확대, 모바일, 던전 실제 전투, 필드 실제 전투 영상을 각각 보존한다.
+tests/hero-skill-library.test.mjs: 두 번째 타격도 검사. 옛 단일 창은 실패하는
+부정 검증 포함. 클립 전신 트랙·무기 베이크·타격시각·로더 순서·회피 압축 검사.
+전체 시험 결과는 output의 test-result.json / tests.tap에 기록한다.
+S25 실기기 성능 검사 및 UE 바이너리 재빌드는 이 로컬 브라우저 검수와 다르다.
+파일 생성/손 접점 수치만으로 다른 캐릭터나 모든 관통까지 합격이라고 하지 않는다.
+
+재현
+tools/3d/export-hero-motion-sources.py: 기존 FBX를 XBot T포즈 스킨 기준으로 월드 베이크.
+tools/3d/meshy-retarget.mjs --ain-repair --target art/3d/ain_anim.glb --out <json>
+tools/3d/build-hero-skill-library.mjs <hero-motion-sources 폴더>
+tools/3d/audit-hero-skill-library.mjs: 실제 Animated 메시 리그 경로 샘플 검사.
+tools/3d/verify-hero-skills.mjs: 전체 시험, 결과/로그 저장.
+tools/3d/skill-review-receiver.cjs: 로컬 생성 영상만 받는 127.0.0.1:8797 수신기.
+이 수신기는 서버/Render 서비스에 연결하지 않는다.

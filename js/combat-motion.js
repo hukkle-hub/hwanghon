@@ -11,6 +11,12 @@ import './swing-body.js';
 export function sampleAction(a, duration) {
   const t=Math.max(0,Math.min(a.duration,a.elapsed));
   const contact=duration*a.clipHit;
+  // Professional full-body takes already contain anticipation and acceleration.
+  // A second procedural tempo warp desynchronises the second hit from its pose.
+  if(a.fullBodyMocap){
+    const hit=Math.max(.001,Math.min(a.duration-.001,a.hitAt));
+    return t<=hit?contact*t/hit:contact+(duration-contact)*(t-hit)/(a.duration-hit);
+  }
   const phase=globalThis.TW_COMBAT_QUALITY.phase({...a,elapsed:t});
   const SB=globalThis.TW_SWING_BODY;
   /* 세 박자 템포가 있는 기술은 몸도 같은 곡선으로 흘린다 (js/swing-body.js TEMPO) */

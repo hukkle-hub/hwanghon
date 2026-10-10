@@ -1,6 +1,7 @@
 import * as T from '../vendor/three/three.module.js';
 import {makeRigAdapter} from './combat-motion.js';
 import {gripReachShift,solveGripCircle} from './ain-grip-ik.js';
+import {planMocapGrip} from './mocap-grip.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const Q=()=>new T.Quaternion();
 function worldQ(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));b.updateWorldMatrix(false,true);}
@@ -138,7 +139,9 @@ function path(keys,t,pace){
  for(let j=0;j<keys[0][1].length;j++) out.push(hermite(keys,tt,j,tangents(keys,j)));
  return out;
 }
-/* 휘두름 크기. 무기의 «움직임» 은 클립이 아니라 여기 적힌 키 경로가 만든다
+/* 레거시 동작의 휘두름 크기. 새 heroSkillMotion 전신 클립은 아래 경로를
+   덮어쓰지 않고, 독립적으로 구운 소스 무기 궤적을 사용한다.
+   레거시 무기의 «움직임» 은 클립이 아니라 여기 적힌 키 경로가 만든다
    (아래 keys 선택부). 그래서 「스킬이 어깨 위에서 달랑달랑한다」의 원인은
    소스 클립이 아니라 이 경로가 작다는 것이다 — 클립을 갈아도 안 바뀐다.
 
@@ -407,6 +410,8 @@ export function makeAinTwoHand(model,root,slot){
  let lastGripSlot=Q().setFromUnitVectors(V(0,1,0),V(0,0,-1));
  const transitionBones=['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand','RightHandSlot'].map(n=>bones[n]).filter(Boolean);
  let previousPose=null,lastActive=null,transition=null;
+ let previousWeapon=null,weaponTransition=null,lastWeaponState=null;
+ const previousMocapHand={};
  function finishPose(active,dt){
   if(!(dt>0)){previousPose=null;lastActive=null;transition=null;return;}
   if(previousPose&&lastActive!==active)transition={from:previousPose,time:0};
@@ -434,6 +439,13 @@ export function makeAinTwoHand(model,root,slot){
   }
   const frame=torso.getWorldQuaternion(Q()).multiply(restTorso.clone().invert());
   const name=a?.clip||a?.id||'guard';
+  // Read mocap palms before the legacy solver resets the animated arms.
+  const sourceGrip=!!(a&&model.userData.heroSkillMotion?.[name]);
+  const sourceArms={};
+  if(sourceGrip)for(const side of ['Left','Right'])sourceArms[side]={
+   shoulder:bones[side+'Arm'].getWorldPosition(V()),elbow:bones[side+'ForeArm'].getWorldPosition(V()),wrist:bones[side+'Hand'].getWorldPosition(V()),
+   handQ:bones[side+'Hand'].getWorldQuaternion(Q()),
+   bodyTop:bones.Spine2.getWorldPosition(V()),bodyBottom:bones.Hips.getWorldPosition(V()),bodyRadius:.12*scale};
   let t=a?T.MathUtils.clamp(a.elapsed/a.duration,0,1):0;
   // Contact remains at the existing combat hit timestamp, not a new timer.
   if(a&&Number.isFinite(a.hitAt)&&a.hitAt>0&&a.hitAt<a.duration)t=globalThis.TW_COMBAT_QUALITY.phase(a);
@@ -519,6 +531,29 @@ export function makeAinTwoHand(model,root,slot){
        지금: center — 리그가 실제로 손을 데려갈 «목표 지점» 이다. 여기가 맞다.
      center 는 weaponQ 다음에 정해지므로, 여기서 자루를 한 번 더 눌러 올리고
      shaftQ 를 다시 만든다. 지연도 반복도 없다. */
+  if(sourceGrip){
+   const data=model.userData.heroSkillMotion[name],clock=Number.isFinite(a.clipTime)?a.clipTime:a.elapsed/a.duration*data.duration;
+   center.copy(model.localToWorld(V().fromArray(data.position.evaluate(clock))));
+   weaponQ=frame.clone().invert().multiply(model.getWorldQuaternion(Q())).multiply(Q().fromArray(data.rotation.evaluate(clock)));
+   diagnostics.source='full-body-mocap';
+  }else diagnostics.source='legacy';
+  // Blend the ONE rigid weapon pose, then solve both palms. Blending each arm
+  // and socket independently after IK breaks the very two-hand constraint.
+  const weaponState=sourceGrip?'mocap:'+name:carrying?'carry':guard?'guard':name;
+  if(weaponState!==lastWeaponState){delete previousMocapHand.Left;delete previousMocapHand.Right;}
+  if(dt>0&&previousWeapon&&weaponState!==lastWeaponState)weaponTransition={
+   offset:previousWeapon.center.clone().sub(center),
+   rotation:previousWeapon.rotation.clone().multiply(frame.clone().multiply(weaponQ).invert()),time:0};
+  if(dt>0&&weaponTransition){
+   weaponTransition.time+=Math.min(dt,.05);const w=T.MathUtils.smootherstep(weaponTransition.time,0,.16);
+   center.addScaledVector(weaponTransition.offset,1-w);
+   // Decay a fixed orientation offset (inertialisation). Re-slerping to a
+   // rotating target picks the opposite 180-degree arc halfway through a spin.
+   const world=weaponTransition.rotation.clone().slerp(Q(),w).multiply(frame.clone().multiply(weaponQ));
+   weaponQ=frame.clone().invert().multiply(world);
+   if(w===1)weaponTransition=null;
+  }else if(!(dt>0))weaponTransition=null;
+  lastWeaponState=weaponState;
   if(!AB().floor){ const s0=frame.clone().multiply(weaponQ), ax=V(0,1,0).applyQuaternion(s0);
     const lim=Math.max(-0.95,(FLOOR_MARGIN-center.y)/(BLADE_LEN*scale));
     if(ax.y<lim){
@@ -539,11 +574,26 @@ export function makeAinTwoHand(model,root,slot){
    arms[side]={shoulder:upper.getWorldPosition(V()),length:upper.getWorldPosition(V()).distanceTo(lower.getWorldPosition(V())),axis:axis.clone().multiplyScalar(side==='Left'?1:-1),reach:V(reach.z,reach.y,-reach.x)};
   }
   for(let pass=0;pass<16;pass++)for(const side of ['Right','Left']){
-   const a=arms[side],shift=gripReachShift(a.shoulder,palms[side],a.axis,a.reach,scale,a.length);
+   const a=arms[side];let shift;
+   if(sourceGrip){
+    const src=sourceArms[side],reach=src.shoulder.distanceTo(src.elbow)+src.elbow.distanceTo(src.wrist)-.035*scale;
+    const d=palms[side].clone().sub(src.shoulder);shift=d.length()>reach?d.multiplyScalar(-(d.length()-reach)/d.length()):V();
+   }else shift=gripReachShift(a.shoulder,palms[side],a.axis,a.reach,scale,a.length);
    palms.Right.add(shift);palms.Left.add(shift);
   }
+  previousWeapon={center:palms.Right.clone().add(palms.Left).multiplyScalar(.5),rotation:shaftQ.clone()};
   for(const side of ['Right','Left']){
    const upper=bones[side+'Arm'],lower=bones[side+'ForeArm'],hand=bones[side+'Hand'];
+   if(sourceGrip){
+    const plan=planMocapGrip(sourceArms[side],palms[side],axis.clone().multiplyScalar(side==='Left'?1:-1),offsets[side],scale,previousMocapHand[side],dt);
+    const localY=lower.position.clone().normalize(),localZ=localY.clone().cross(hand.position.clone().applyQuaternion(bind.get(side+'ForeArm'))).normalize(),localX=localY.clone().cross(localZ).normalize();
+    const worldY=plan.elbow.clone().sub(arms[side].shoulder).normalize(),worldZ=worldY.clone().cross(plan.wrist.clone().sub(plan.elbow)).normalize(),worldX=worldY.clone().cross(worldZ).normalize();
+    worldQ(upper,Q().setFromRotationMatrix(new T.Matrix4().makeBasis(worldX,worldY,worldZ)).multiply(Q().setFromRotationMatrix(new T.Matrix4().makeBasis(localX,localY,localZ)).invert()));
+    const ly=hand.position.clone().normalize(),lz=localZ.clone().applyQuaternion(bind.get(side+'ForeArm').clone().invert()),lx=ly.clone().cross(lz).normalize(),wy=plan.wrist.clone().sub(plan.elbow).normalize(),wz=worldZ,wx=wy.clone().cross(wz).normalize();
+    worldQ(lower,Q().setFromRotationMatrix(new T.Matrix4().makeBasis(wx,wy,wz)).multiply(Q().setFromRotationMatrix(new T.Matrix4().makeBasis(lx,ly,lz)).invert()));
+    worldQ(hand,plan.handQ);previousMocapHand[side]={handQ:plan.handQ.clone(),pole:plan.pole.clone()};
+    diagnostics[side+'WristBend']=plan.bend;continue;
+   }
    // The former right=-1 branch folded the elbow behind/inside the ribs.
    // Both outward branches preserve the neutral wrist and common shaft pose.
    const a=arms[side],solution=solveGripCircle(a.shoulder,palms[side],a.axis,a.reach,scale,a.length,1);
@@ -560,7 +610,10 @@ export function makeAinTwoHand(model,root,slot){
   keep(slot);slot.position.copy(offsets.Right);
   worldQ(slot,frame.clone().multiply(weaponQ));
   lastGripSlot.copy(slot.quaternion);
-  finishPose(true,dt);
+  // Active poses are blended as a rigid weapon ABOVE the solver. Still retain
+  // the solved arms so a hit/death can start its authored release from here.
+  if(dt>0){previousPose=new Map(transitionBones.map(b=>[b,b.quaternion.clone()]));lastActive=true;transition=null;}
+  else finishPose(true,0);
   model.updateWorldMatrix(true,true);
   const leftPalm=offsets.Left.clone().applyMatrix4(bones.LeftHand.matrixWorld),rightPalm=offsets.Right.clone().applyMatrix4(bones.RightHand.matrixWorld);
   diagnostics.gripError=leftPalm.distanceTo(slot.getWorldPosition(V()).addScaledVector(axis,-.32*scale));
@@ -573,6 +626,6 @@ export function makeAinRigAdapter(model,root,slot){
  const base=makeRigAdapter(model,root,null),arms=makeAinTwoHand(model,root,slot);
  return {bones:arms.bones,diagnostics:arms.diagnostics,
   restore(){arms.restore();base.restore();},
-  apply(a,moving,guard,dt,poseName,target){base.apply(a,moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName,target);arms.diagnostics.footError=base.diagnostics.footError;}
+  apply(a,moving,guard,dt,poseName,target){const source=!!model.userData.heroSkillMotion?.[a?.clip];base.apply(source?null:a,source||moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName,target);arms.diagnostics.footError=base.diagnostics.footError;}
  };
 }
