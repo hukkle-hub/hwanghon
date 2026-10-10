@@ -1,0 +1,6 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>N01 모바일 화면 크기 검수</title>
+<style>body{margin:12px;background:#131821;color:#e8edf5;font:16px system-ui}select{min-width:64px;min-height:64px;font:inherit;background:#28374b;color:white}iframe{display:block;border:1px solid #69819f;margin-top:12px}p{max-width:900px;color:#bed0e3}</style>
+<label>검수 화면 크기 <select id="size"><option value="412x915">세로412×915</option><option value="915x412">가로915×412</option><option value="750x298">낮은 가로750×298</option></select></label>
+<p>실제 게임 로더 검수 페이지를 해당 크기의 프레임 안에서 실행합니다. 프레임 내부의 실제 창 크기를 확인합니다. S25 울트라 GPU·성능·터치 실기기 검수가 아닙니다.</p>
+<iframe id="device" title="N01 기기 크기 검수" src="n01-six-review.html?detail=mobile" width="412" height="915"></iframe>
+<script>document.querySelector('#size').onchange=e=>{const [w,h]=e.target.value.split('x');const f=document.querySelector('#device');f.width=w;f.height=h;};</script></html>

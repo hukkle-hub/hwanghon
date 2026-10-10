@@ -76,6 +76,15 @@ test('pending drop/XP table grants nothing; configured test awards use addItems/
  store.close();const no=setup();no.f.mobStates.get(no.m.id).hp=1;
  assert.deepEqual(no.f.hitMob('a',{mob:no.m.id},no.profile,10000).reward,{status:'pending_policy'});
 });
+
+test('Walker combo actual Field: first dodge, second defended hit, both preserve hurt source/time',()=>{
+ const {f,p,e,m,setNow}=setup();for(const n of e.mobs.values())if(n!==m)e.defeat(n.id,10000);
+ m.catalogId='G5_WALKER';const state=f.mobStates.get(m.id);state.stats=MOB.validateStats(MOB.statsFor(m.catalogId));p.x=m.x;p.z=m.z+.8;
+ f.tickEcologies(10050);assert.deepEqual(state.ai.action.strikes.map(p=>p.offsetMs),[600,2300]);p.dodgeUntil=11000;
+ setNow(10650);f.tickEcologies(10650);assert.equal(p.hurt[4],'evade');assert.equal(p.hurt[2],m.id);assert.equal(p.hurt[6],10650);assert.equal(p.hp,p.maxHp);
+ p.defense=6000;p.buffUntil=13000;p.buffReduce=.5;setNow(12350);f.tickEcologies(12350);assert.equal(p.hurt[1],Math.round(425*.82*.5));assert.equal(p.hurt[2],m.id);assert.equal(p.hurt[3],'slow_combo');assert.equal(p.hurt[6],12350);assert.equal(state.ai.seq,1);const health=p.hp;
+ setNow(12400);f.tickEcologies(12400);assert.equal(p.hp,health,'same impact was replayed');
+});
 test('pure decision layer runs identically in browser CJS evaluator and rejects builtins',()=>{
  const source=fs.readFileSync(require.resolve('../server/field-mob-combat.cjs'),'utf8'),module={exports:{}};
  vm.runInNewContext(source,{module,exports:module.exports,require:()=>{throw Error('no browser builtin');}});

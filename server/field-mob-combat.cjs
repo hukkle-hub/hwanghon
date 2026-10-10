@@ -13,11 +13,14 @@ const ARMORED_ACTIONS = ['shield_bash','heavy_charge','shield_bash','overhead_cr
 const ACTIONS = Object.freeze({G5_WALKER:'slow_combo',G5_RUNNER:'flank_swipe',
  G5_BREAKER:'structure_slam',G5_STALKER:'tracking_strike',G5_RESONATOR:'self_defence'});
 const FACILITY_DAMAGE={G5_WALKER:300,G5_RUNNER:180,G5_BREAKER:900,G5_STALKER:200,G5_ARMORED:1400,G5_RESONATOR:220};
-const MOTION_MS={slow_combo:2000,flank_swipe:1800,structure_slam:1800,heavy_slam:1800,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
+const MOTION_MS={slow_combo:3700,flank_swipe:1800,structure_slam:1800,heavy_slam:1800,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
+// Authored jab -> cross. Keep the old850/300 total damage budget, not850 twice.
+// Offsets match actual deformed hand contact in the delivered30fps clip.
+const WALKER_STRIKES=[{offsetMs:600,scale:.5},{offsetMs:2300,scale:.5}];
 function actionFor(id,index=0) {
  const key=id==='G5_ARMORED'?ARMORED_ACTIONS[((index%4)+4)%4]:ACTIONS[id]||'mob_melee';
  const windupMs=key==='heavy_charge'?1000:key==='overhead_crush'?1200:key==='shield_bash'?800:600;
- return {key,clip:key,windupMs,recoveryMs:450,counterAllowed:key!=='overhead_crush'};
+ return {key,clip:key,windupMs,recoveryMs:450,counterAllowed:key!=='overhead_crush',...(id==='G5_WALKER'?{strikes:WALKER_STRIKES.map(p=>({...p}))}:{})};
 }
 /* Optional siege context uses existing target rules. Open-world maps without
    facility/NPC targets never manufacture destructible objectives. Distances m. */
@@ -105,6 +108,18 @@ function roleGoal(m,a,players,context,nav) {
  const k=objectiveFor(m.catalogId,v),t=targets[k];if(!t)return null;
  return {...t,kind:k==='ally'?'hold':k};
 }
+function comboStrike(m,a,s,target,now,nav){
+ const strikes=a.action.strikes;
+ while(a.strikeIndex<strikes.length&&now>=a.action.startAt+strikes[a.strikeIndex].offsetMs){
+  const index=a.strikeIndex++,point=strikes[index],due=a.action.startAt+point.offsetMs;
+  // Never replay stale impacts in a burst after a suspended server/browser.
+  if(now-due>150)continue;
+  if(index)a.beat++;
+  if(target.id!==a.action.target||dist(m,target)>s.reach||!nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z]))return null;
+  return {target:target.id,...(target.kind&&target.kind!=='player'?{targetKind:target.kind}:{}),damage:(['gate','generator','comms'].includes(target.kind)?s.facilityDamage:s.damage)*(a.resonanceAttack||1)*point.scale,skill:a.action.key,beat:a.beat,hitIndex:index+1};
+ }
+ return null;
+}
 function tick(m,a,s,players,now,nav,context=null) {
   if(!Number.isFinite(now)||now<a.lastTick)throw Error('Mob clock must be monotonic');
   const dt=Math.min(.1,(now-a.lastTick)/1000);a.lastTick=now;
@@ -129,6 +144,7 @@ function tick(m,a,s,players,now,nav,context=null) {
    }}
   a.supportHolding=false;
   if(!target){
+    if(a.action?.strikes){a.action=null;a.strikeIndex=0;}
     a.target=null;
     if(m.engaged||a.phase==='return'){
       a.phase='return';m.engaged=true;
@@ -137,16 +153,17 @@ function tick(m,a,s,players,now,nav,context=null) {
     }
     return null;
   }
-  if(a.target!==target.id&&a.phase==='windup'){a.phase='idle';a.until=now;a.ready=Math.max(a.ready,now+150);}
+  if(a.target!==target.id&&(a.phase==='windup'||a.action?.strikes&&a.phase==='recovery')){a.phase='idle';a.until=now;a.ready=Math.max(a.ready,now+150);if(a.action?.strikes){a.action=null;a.strikeIndex=0;}}
   a.target=target.id;m.engaged=true;
   if(a.phase==='windup'){
     m.anim='attack';if(a.action?.key==='heavy_charge'&&now>=a.until-300)advance(m,a,target,s,dt,now,nav);if(now<a.until)return null;
+    if(a.action?.strikes){a.phase='recovery';a.until=a.action.startAt+MOTION_MS[a.action.key];a.ready=a.until;return comboStrike(m,a,s,target,now,nav);}
     a.phase='recovery';a.until=now+(a.action?.recoveryMs??s.recoveryMs);a.ready=now+s.cooldownMs;
     if(dist(m,target)<=s.reach&&nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z]))
       return { target:target.id, ...(target.kind&&target.kind!=='player'?{targetKind:target.kind}:{}), damage:(['gate','generator','comms'].includes(target.kind)?s.facilityDamage:s.damage)*(a.resonanceAttack||1), skill:a.action?.key||'mob_melee', beat:a.beat };
     return null;
   }
-  if(a.phase==='recovery'&&now<a.until){m.anim='attack';return null;}
+  if(a.phase==='recovery'&&now<a.until){m.anim='attack';return a.action?.strikes?comboStrike(m,a,s,target,now,nav):null;}
   if(dist(m,target)>s.reach){a.phase='chase';m.anim=advance(m,a,target,s,dt,now,nav)?'walk':'idle';return null;}
   if(now<a.ready){a.phase='idle';m.anim='idle';return null;}
   if(!nav.canTraverse(m.group.area,[m.x,m.z],[target.x,target.z])){m.anim='idle';return null;}
@@ -158,10 +175,12 @@ function tick(m,a,s,players,now,nav,context=null) {
   // Recovery must finish the baked action; do not let AI walk away while the
   // visual is still striking. Custom host/test timings remain explicitly theirs.
   action.recoveryMs=s.windupMs===600&&s.recoveryMs===450&&Object.hasOwn(N01,m.catalogId)?Math.max(s.recoveryMs,MOTION_MS[action.key]-action.windupMs):s.recoveryMs;
+  if(!(m.catalogId==='G5_WALKER'&&s.windupMs===600&&s.recoveryMs===450))delete action.strikes;
+  a.strikeIndex=0;
   a.action={...action,startAt:now,damageAt:now+action.windupMs,seq:a.seq,target:target.id,targetKind:target.kind||'player',targetX:target.x,targetZ:target.z};
   a.phase='windup';a.until=a.action.damageAt;m.anim='attack';return null;
 }
-function stagger(a,now){a.seq++;a.hitUntil=now+180;a.phase='idle';a.ready=Math.max(a.ready,now+180);}
+function stagger(a,now){a.seq++;a.hitUntil=now+180;a.phase='idle';a.ready=Math.max(a.ready,now+180);if(a.action?.strikes){a.action=null;a.strikeIndex=0;}}
 /* Patrol stays on the Ecology's walking speed. Combat movement uses the
    existing Runner speed (5.2 m/s), not a newly invented burst multiplier.
    Share this metadata builder between host and offline practice. */

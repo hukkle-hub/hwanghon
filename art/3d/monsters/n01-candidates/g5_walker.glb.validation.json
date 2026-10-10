@@ -1,8 +1,8 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\n01-cc0-motion-v1\\walker-final-pilot-v2\\g5_walker.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\n01-cc0-motion-v1\\walker-combo-v2\\g5_walker.glb",
   "species": "G5_WALKER",
-  "sha256": "884162eebc501febd46d1f5f1c355d85949ee0e683dd95d14a7a0fc7a5bf2218",
-  "bytes": 4888196,
+  "sha256": "656acf2b781acd4c76ac482f302f5e8c9c22afe22c9b09597d971a5cae97808c",
+  "bytes": 5205280,
   "triangles": 39647,
   "vertices": 27099,
   "materials": 3,
@@ -38,20 +38,8 @@
       "duration": 0.6
     },
     {
-      "name": "slow_combo",
-      "duration": 2
-    },
-    {
       "name": "hit",
       "duration": 0.3333333333333333
-    },
-    {
-      "name": "attack",
-      "duration": 2
-    },
-    {
-      "name": "attack1",
-      "duration": 2
     },
     {
       "name": "die",
@@ -60,6 +48,18 @@
     {
       "name": "death",
       "duration": 2
+    },
+    {
+      "name": "slow_combo",
+      "duration": 3.7
+    },
+    {
+      "name": "attack",
+      "duration": 3.7
+    },
+    {
+      "name": "attack1",
+      "duration": 3.7
     }
   ],
   "textures": [

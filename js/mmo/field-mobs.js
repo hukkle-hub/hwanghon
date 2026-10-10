@@ -9,6 +9,7 @@ const GRADE_NAME = { 5: '5급', 4: '4급', 3: '3급', 2: '2급', 1: '1급' };
 const CLIP = { idle: 'idle', walk: 'walk', attack: 'attack1', hit: 'hit', die: 'death' }, ONCE = new Set(['attack', 'hit', 'die']), WARN_MS = 600;
 import { motionFor } from './n01-body-catalog.js';
 import { walkerCadence, runnerCadence } from './n01-motion-cadence.js';
+import { comboTell } from './n01-combo-tell.js';
 /* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버 v2(확정): [id, catalogId, x, z, alive, anim, generation, hp%, (동작 순번)] — 앞 일곱 칸은 snapshot 과 같은 순서.
    9번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
    인계서 v1 의 7칸 꼴 [id, catalogId, x, z, hp%, anim, generation] 도 받는다(5번째가 숫자면 — v2 가 대체했다). 숫자가 아니면 버린다 */
@@ -87,7 +88,9 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         const dx = v.tx - v.root.position.x, dz = v.tz - v.root.position.z, d = Math.hypot(dx, dz);
         if (d > 4) { v.root.position.x = v.tx; v.root.position.z = v.tz; } else if (d > 1e-3) { const k = Math.min(1, dt * 8); v.root.position.x += dx * k; v.root.position.z += dz * k; if (d > .02) v.root.rotation.y = Math.atan2(dx, dz); }
         if (!v.alive) { v.deadT += dt; const clip = !!v.act.die,settle=clip?v.act.die.getClip().duration:0;if(v.aura)v.aura.visible=false;v.root.position.y = floor - Math.min(1, Math.max(0, v.deadT - settle) / 1.2) * .9; if (!clip) v.root.rotation.z = Math.min(1, v.deadT / .4) * 1.2; if (v.deadT > Math.max(2.2,settle+1.2)) { drop(v); continue; } }   /* 쓰러지는 클립이 있으면 눕고 나서 가라앉는다 */
-        if (v.warn && v.warn.visible) { v.warnT -= dt; const k = 1 - Math.max(0, v.warnT) / (v.warnDuration||WARN_MS / 1000); v.warn.scale.setScalar(.6 + k * .9); v.warn.material.opacity = v.warnT > 0 ? .35 + k * .55 : Math.max(0, .9 + v.warnT * 4); if (v.warnT < -.25 || !v.alive) v.warn.visible = false; }
+        const tell=v.alive&&v.cur==='attack'?comboTell(v.action,(v.current?.time||0)*1000):null;
+        if(v.warn&&tell){v.warn.visible=tell.visible;if(tell.visible){v.warnT=tell.remainingSeconds;v.warnDuration=tell.durationSeconds;}}
+        if (v.warn && v.warn.visible) { if(!tell)v.warnT -= dt; const k = 1 - Math.max(0, v.warnT) / (v.warnDuration||WARN_MS / 1000); v.warn.scale.setScalar(.6 + k * .9); v.warn.material.opacity = v.warnT > 0 ? .35 + k * .55 : Math.max(0, .9 + v.warnT * 4); if (v.warnT < -.25 || !v.alive) v.warn.visible = false; }
         if (v.alive && v.hp < 100) { v.bar.style.display = ''; v.bar.firstChild.style.width = v.hp.toFixed(0) + '%'; tagAt(v.bar, v.root.position.x, labelY(v,.22), v.root.position.z); } else v.bar.style.display = 'none';   /* 맞은 몸만 체력 띠 — 무리 이름표와 따로, 마리마다 */
         if(v.warn?.visible){const counterTell=v.cat.id==='G5_ARMORED'&&v.action?.counterAllowed!==false&&v.action?.key!=='overhead_crush'&&v.warnT>0&&v.warnT<=.25;v.warn.material.color.setHex(counterTell?(v.warnT<=.10?0x8affec:0xffc45b):0xff3020);}
         if(v.cat.id==='G5_WALKER'&&v.named.jog||v.cat.id==='G5_RUNNER'&&v.authoredCadence){
