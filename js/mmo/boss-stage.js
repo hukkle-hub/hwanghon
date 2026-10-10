@@ -16,11 +16,11 @@ export const BOSS_STAGES = {
   clave: { env: 0.55, metal: true, down: '강남의 철문이 열렸다' },     /* 서버 AI 공격 반경 18 < 등장 26 */
   clave2: { env: 0.55, metal: true, down: '지하 2층의 철문이 열렸다' },
   jeong: { rim: 0xd8c8a8, aura: 0xc9a45e, core: 0xe0b060, introR: 20, plateR: 28, down: '의장대가 흩어졌다' },
-  nova: { rim: 0x9fe8ff, aura: 0x40d0ff, core: 0x60e0ff, rimK: 0.4, introD: [2.4, 1.9, .5, .6],   /* 둘레 결정에 가려 멀리·높게 */
+  nova: { rim: 0x9fe8ff, aura: 0x40d0ff, core: 0x60e0ff, rimK: 0.4, introD: [1.3, 1.0, .9, .7],   /* 둘레 결정: 10 m 안(clear3d)은 무릎 높이, 밖은 5 m 숲 — 안쪽에서 내려다본다 (2.4h 는 결정 숲 속이었다) */
     introR: 34, plateR: 44, down: '결정 산이 멈췄다' },
   arsenal: { rim: 0xffc890, rimK: 0.14, aura: 0xff8a3a, core: 0xff8a3a, env: 0.5, metal: true,   /* 가장자리가 많은 정지 모델 — 0.3 이면 통째로 빛났다 */
     introR: 44, plateR: 56, down: '포탑 열여덟이 꺼졌다' },
-  leviathan: { rim: 0x8fe0c8, aura: 0x2fbf9f, core: 0x40e0b0, introR: 28, plateR: 36, down: '터널이 조용해졌다' },
+  leviathan: { rim: 0x8fe0c8, rimK: 0.2, aura: 0x2fbf9f, core: 0x40e0b0, introR: 28, plateR: 36, down: '터널이 조용해졌다' },
   celestial: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, introR: 36, plateR: 46, down: '하늘이 비었다' },
   celestial2: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, introR: 38, plateR: 48, down: '날개 넷이 떨어졌다' },
   subject09: { rim: 0xd0ff9a, aura: 0x8fe040, core: 0xa0ff50, introR: 26, plateR: 34, down: '더는 나뉘지 않는다' },
@@ -48,6 +48,7 @@ export function rimify(THREE, model, color, k = 0.8, env = null, envK = 0.5) {
   return uK;
 }
 
+const FX = o => o.fx || o.kfx;   /* 클레이브(boss-motion) · 기술표형 보스(kit-motion) 둘 다 같은 이름표(warning·warnSeq·ringPool·floor·glow)를 단다 */
 const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
 export function createBossStage({ THREE, scene, cam, doc = document, sfx = () => window.TW_SFX, player, reduced = false, onLock = () => {}, occlude = null }) {
@@ -81,6 +82,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
     const st = { cfg, rimK: o.model ? (o.model.userData.rimK || rimify(THREE, o.model, cfg.rim, cfg.rimK)) : { value: 0 }, warnKey: '', counterOn: false, impactT: 0, aura: null };
     if (auraTex) { const m = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshBasicMaterial({ map: auraTex, color: cfg.aura, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
       m.rotation.x = -Math.PI / 2; m.renderOrder = 3; m.userData.noCam = true; const r = Math.max(2.6, (o.h || 3) * .9); m.scale.setScalar(r); scene.add(m); st.aura = m; }
+    if (o.model) { const bx = new THREE.Box3().setFromObject(o.model); st.span = Math.max(bx.max.x - bx.min.x, bx.max.z - bx.min.z) / 2; }   /* 긴 몸(레비아탄)은 키보다 길이로 잡는다 */
     o.stage = st; list.push(o); return st; }
 
   /* 카메라 연출: shot = { from, to, look, t, dur, back } — 게임 카메라 → 연출 → 게임 카메라로 부드럽게 */
@@ -90,16 +92,16 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
   const face = o => V1.set(o.root.position.x, o.root.position.y + (o.h || 3) * .62, o.root.position.z);   /* 가슴 — 얼굴(.78)을 보면 보스가 화면 아래로 내려앉았다 */
 
   function intro(o) { const st = o.stage, cfg = st.cfg, pp = player(), bx = o.root.position.x, bz = o.root.position.z; let dx = pp.x - bx, dz = pp.z - bz; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d;
-    const h = o.h || 3, D = cfg.introD || [1.6, 1.2, .16, .26], side = 0.35, sx = dx * Math.cos(side) - dz * Math.sin(side), sz = dx * Math.sin(side) + dz * Math.cos(side);
+    const h = o.h || 3, hs = Math.max(h, (st.span || 0) * .8), D = cfg.introD || [1.6, 1.2, .16, .26], side = 0.35, sx = dx * Math.cos(side) - dz * Math.sin(side), sz = dx * Math.sin(side) + dz * Math.cos(side);
     shot = { kind: 'intro', o, t: 0, dur: 3.3, blendIn: .45, blendOut: .6,
-      a: new THREE.Vector3(sx * h * D[0], h * D[2], sz * h * D[0]), b: new THREE.Vector3(sx * h * D[1], h * D[3], sz * h * D[1]) };   /* 보스 기준 상대 위치 — 보스가 움직여도 구도가 남는다 */   /* 낮게·가깝게 — 올려다본다 (2.6h 는 보스가 화면 1/4 이었다) */
+      a: new THREE.Vector3(sx * hs * D[0], h * D[2], sz * hs * D[0]), b: new THREE.Vector3(sx * hs * D[1], h * D[3], sz * hs * D[1]) };   /* 거리는 키·길이 중 큰 쪽, 높이는 키 */   /* 보스 기준 상대 위치 — 보스가 움직여도 구도가 남는다 */   /* 낮게·가깝게 — 올려다본다 (2.6h 는 보스가 화면 1/4 이었다) */
     shot.beats = [[.7, () => showCard(cfg.name, cfg.title, 2.2)],
-      [.9, () => { play('phase'); kick = Math.max(kick, .35); kickDir.set(0, -1, 0); flash(`radial-gradient(circle at 50% 45%, ${hex(cfg.core)}99, transparent 60%)`, .6, .5); st.rimK.value = cfg.rimK * 2.4; if (o.fx && o.fx.glow) { o.fx.glow.visible = true; o.fx.glow.intensity = 6; } ring(o, (o.h || 3) * 1.6); }]];
+      [.9, () => { play('phase'); kick = Math.max(kick, .35); kickDir.set(0, -1, 0); flash(`radial-gradient(circle at 50% 45%, ${hex(cfg.core)}99, transparent 60%)`, .6, .5); st.rimK.value = cfg.rimK * 2.4; if (FX(o) && FX(o).glow) { FX(o).glow.visible = true; FX(o).glow.intensity = 6; } ring(o, (o.h || 3) * 1.6); }]];
     markIntro(cfg.introKey || o.b.id); lockT = shot.dur; lock(true); music('boss'); }
 
   function death(o, done) { const st = o.stage; if (!st || st.dying) { done && done(); return; } const cfg = st.cfg, pp = player(), bx = o.root.position.x, bz = o.root.position.z, h = o.h || 3;
-    st.dying = { t: 0, done, sink: 0, y0: o.model ? o.model.position.y : 0, rx0: o.model ? o.model.rotation.x : 0, mix: null, clip: false };
-    if (o.fx) { o.fx.warning.visible = o.fx.warningOutline.visible = false; } if (o.dom && o.dom.warn) o.dom.warn.visible = false;
+    st.dying = { t: 0, done, sink: 0, y0: o.model ? o.model.position.y : 0, rx0: o.model ? o.model.rotation.x : 0, ry0: o.root.position.y, mix: null, clip: false };
+    if (FX(o)) { FX(o).warning.visible = FX(o).warningOutline.visible = false; } if (o.dom && o.dom.warn) o.dom.warn.visible = false;
     if (o.netAct) o.netAct = { ...o.netAct, motion: 'death', seq: (o.netAct.seq || 0) + 1e6 };
     /* 쓰러지는 클립: 클레이브(actions) · 지배형(dacts — 죽으면 월드 루프가 dmix 를 안 돌려서 여기서 돌린다) · 그 밖(deathClip) · 없으면(정지 모델) 앞으로 기울며 주저앉기 */
     const dk = o.dacts && Object.keys(o.dacts).find(k => /death|die/i.test(k)), mix = o.actions ? o.mixer : dk ? o.dmix : o.deathClip ? o.mixer : null;
@@ -112,7 +114,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
       lockT = shot.dur; lock(true); flash('#fff', .75, .6); play('ult'); }
     music('off'); st.rimK.value = cfg.rimK * 2; if (st.aura) st.aura.material.opacity = .9; }
 
-  function ring(o, r) { if (!o.fx || !o.fx.ringPool) return; const p = o.fx.ringPool.find(x => !x.active) || o.fx.ringPool[0]; p.active = true; p.t = 0; p.life = .7; p.r = r; p.m.visible = true; p.m.material.color.setHex(o.stage.cfg.core); p.m.position.set(o.root.position.x, (o.fx.floor || 0) + .06, o.root.position.z); o.fx.ringActive = (o.fx.ringActive || 0) + 1; }
+  function ring(o, r) { if (!FX(o) || !FX(o).ringPool) return; const p = FX(o).ringPool.find(x => !x.active) || FX(o).ringPool[0]; p.active = true; p.t = 0; p.life = .7; p.r = r; p.m.visible = true; p.m.material.color.setHex(o.stage.cfg.core); p.m.position.set(o.root.position.x, (FX(o).floor || 0) + .06, o.root.position.z); FX(o).ringActive = (FX(o).ringActive || 0) + 1; }
   const hex = c => '#' + c.toString(16).padStart(6, '0');
 
   function event(o, kind, data = {}) { const st = o && o.stage; if (!st) return; const cfg = st.cfg, pp = player(), d = Math.hypot(pp.x - o.root.position.x, pp.z - o.root.position.z);
@@ -125,20 +127,21 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
 
   function tick(dt, now = Date.now()) { const pp = player(); let plateFor = null, plateD = 1e9;
     for (const o of list) { const st = o.stage, cfg = st.cfg, alive = o.root.visible && !st.dying, bx = o.root.position.x, bz = o.root.position.z, d = Math.hypot(pp.x - bx, pp.z - bz);
-      if (st.aura) { st.aura.visible = o.root.visible; st.aura.position.set(bx, (o.fx?.floor || 0) + .03, bz); const warnOn = !!(o.fx && o.fx.warning && o.fx.warning.visible); st.aura.material.opacity += ((alive ? (warnOn ? .08 : .3) : 0) - st.aura.material.opacity) * Math.min(1, dt * 4); }   /* 예고가 뜨면 발밑 기운은 물러난다 — 바닥의 빨강은 «피하라» 한 뜻만 */
+      if (st.aura) { st.aura.visible = o.root.visible; st.aura.position.set(bx, (FX(o)?.floor || 0) + .03, bz); const warnOn = !!(FX(o) && FX(o).warning && FX(o).warning.visible); st.aura.material.opacity += ((alive ? (warnOn ? .08 : .3) : 0) - st.aura.material.opacity) * Math.min(1, dt * 4); }   /* 예고가 뜨면 발밑 기운은 물러난다 — 바닥의 빨강은 «피하라» 한 뜻만 */
       st.rimK.value += (cfg.rimK - st.rimK.value) * Math.min(1, dt * 1.6); st.impactT = Math.max(0, st.impactT - dt);
       const a = o.netAct;
       if (alive) {
         /* 예고 박자마다 경고음 — boss-motion warning() 이 고른 박자(warnSeq · warnBeat) */
-        const fx = o.fx; if (fx && fx.warning && fx.warning.visible) { const k = fx.warnSeq + ':' + fx.warnBeat; if (k !== st.warnKey) { st.warnKey = k; if (d < 30) play('tele'); st.impactT = .4; } }
+        const fx = FX(o); if (fx && fx.warning && fx.warning.visible) { const k = fx.warnSeq + ':' + fx.warnBeat; if (k !== st.warnKey) { st.warnKey = k; if (d < 30) play('tele'); st.impactT = .4; } }
         const counter = !!(a && a.motion === 'skill' && a.counterOpen && now >= a.counterOpen && now <= a.counterClose); if (counter && !st.counterOn && d < 30) play('guard'); st.counterOn = counter;
         if (!shot && !introDone(cfg.introKey || o.b.id) && (!a || a.motion === 'idle') && d < (cfg.introR || 26)) intro(o);   /* AI 없는 보스는 netAct 가 없다 = 늘 대기 */
         if (d < (cfg.plateR || 34) && d < plateD) { plateD = d; plateFor = o; } }
       if (st.dying) { const y = st.dying, h = o.h || 3; y.t += dt; if (y.mix) y.mix.update(dt);
-        if (o.model) { let dy = 0; if (!y.clip) { const k = smooth((y.t - .3) / 1.6); o.model.rotation.x = y.rx0 + k * .32; dy = k * h * .12; }   /* 정지 모델: 앞으로 기울며 주저앉는다 */
+        if (y.ry0 > .5) { const f = Math.min(1, y.t / 1.1); o.root.position.y = y.ry0 * (1 - f * f); }   /* 떠 있던 보스(셀레스티얼)는 땅으로 떨어진다 */
+        if (o.model) { let dy = 0; if (!y.clip) { const k = smooth((y.t - .3) / 1.6), tilt = (st.span || 0) < h * 1.1; if (tilt) o.model.rotation.x = y.rx0 + k * .32; dy = k * h * .12; }   /* 정지 모델: 앞으로 기울며 주저앉는다 — 긴 몸은 기울이면 꼬리가 하늘로 들려 가라앉기만 */
           if (y.t > 3.8) { y.sink = Math.min(1, (y.t - 3.8) / .9); dy += y.sink * h * .5; if (st.aura) st.aura.material.opacity *= .9; }
           o.model.position.y = y.y0 - dy; }
-        if (y.t > 4.9) { st.dying = null; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
+        if (y.t > 4.9) { st.dying = null; o.root.position.y = y.ry0; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
     }
     /* 배경음: 살아 있는 보스 근처면 보스 곡 */
     const want = plateFor ? 'boss' : 'off'; if (want !== tick.music) { tick.music = want; music(want); }
