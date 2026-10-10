@@ -1,5 +1,5 @@
 <!doctype html><meta charset="utf-8"><title>클립 시트</title>
-<!-- 아무 GLB 의 클립 시트 (문서 225 — jeong-sheet 에서 갈래): ?glb=../../art/3d/part1/clave.glb&clips=atk_claveshut&n=6&fix=2,3
+<!-- 아무 GLB 의 클립 시트 (문서 225 — jeong-sheet 에서 갈래): ?glb=../../art/3d/part1/clave.glb&clips=atk_claveshut&n=6&fix=2,3  (times 는 0~1, sec=1 이면 초)
      fix=hops,cut: js/mmo/skin-fix.js 를 먼저 건다(늘어남 비교). saber=1: 정 장관 군도. window.READY 가 1 이 되면 다 그린 것. -->
 <style>body{margin:0;background:#12161a;color:#cfd6dc;font:12px sans-serif}canvas{display:block}</style>
 <canvas id="c"></canvas>
@@ -8,6 +8,7 @@ import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {attachSaber} from '../../js/mmo/jeong-saber.js';
 import {fixSkin, rebindModel} from '../../js/mmo/skin-fix.js';
+import {makePoser} from './pose-eval.mjs';
 const Q=new URLSearchParams(location.search), CELL=+(Q.get('cell')||260), N=+(Q.get('n')||6), AZ=+(Q.get('az')||35)*Math.PI/180, EL=+(Q.get('el')||8)*Math.PI/180;
 const g=await new GLTFLoader().loadAsync(Q.get('glb')||'../../art/3d/part1/clave.glb'), model=g.scene; window.FIX=Q.get('fix')==='rebind'?rebindModel(T,model,{tube:+(Q.get('tube')||0)}):Q.get('fix')?fixSkin(model,...Q.get('fix').split(',').map(Number)):null; const SABER=Q.get('saber')?attachSaber(T, model):null;
 const names=(Q.get('clips')||g.animations.map(a=>a.name).join(',')).split(',');
@@ -20,16 +21,18 @@ const fl=new T.Mesh(new T.CircleGeometry(4,48).rotateX(-Math.PI/2),new T.MeshSta
 s.add(model); const mixer=new T.AnimationMixer(model), cam=new T.PerspectiveCamera(30,1,.05,50);
 if(Q.get('bones')){ model.traverse(o=>{ if(o.isMesh){ const m=(Array.isArray(o.material)?o.material:[o.material]).map(x=>{ const c=x.clone(); c.transparent=true; c.opacity=.28; c.depthWrite=false; return c; }); o.material=Array.isArray(o.material)?m:m[0]; } });   /* bones=1: 몸은 비치게, 뼈는 위에 — 왼쪽 빨강·오른쪽 파랑 */
   const sk=new T.SkeletonHelper(model); sk.material.depthTest=false; sk.material.linewidth=2; const col=sk.geometry.attributes.color; sk.bones.forEach((b,i)=>{ const c=/Left/.test(b.name)?[1,.25,.2]:/Right/.test(b.name)?[.25,.55,1]:[1,1,.4]; for(const k of [i*2,i*2+1]) if(k<col.count) col.setXYZ(k,...c); }); col.needsUpdate=true; sk.renderOrder=9; s.add(sk); }
+if(Q.get('clay')){ const clay=new T.MeshStandardMaterial({color:0xb9b2a8,roughness:.7,metalness:0}); model.traverse(o=>{ if(o.isMesh) o.material=clay; }); }   /* clay=1: 회색 찰흙 — 검은 몸에서 팔꿈치 주름이 안 보였다 */
 const rest=[]; model.traverse(o=>{ if(o.name!=='JeongSaber') rest.push([o,o.position.clone(),o.quaternion.clone()]); });
 window.INFO=[];
-names.forEach((n,row)=>{ const clip=g.animations.find(a=>a.name===n); if(!clip) return; const act=mixer.clipAction(clip); mixer.stopAllAction();
-  times.forEach((u,col)=>{ for(const [o,p,q] of rest){o.position.copy(p);o.quaternion.copy(q);} act.reset(); act.play(); act.paused=true; act.time=u*clip.duration; mixer.update(0); model.updateMatrixWorld(true); SABER&&SABER.update();
+names.forEach((n,row)=>{ const clip=g.animations.find(a=>a.name===n); if(!clip) return; const poser=makePoser(model,clip);   /* 믹서는 값이 같으면 뼈를 다시 안 써서 쉬는 자세가 남았다 (pose-eval.mjs) */
+  times.forEach((u,col)=>{ for(const [o,p,q] of rest){o.position.copy(p);o.quaternion.copy(q);} poser(Q.get('sec')?u:u*clip.duration); SABER&&SABER.update();
     const box=new T.Box3().setFromObject(model), c=box.getCenter(new T.Vector3()); c.y=+(Q.get('cy')||1.0); const d=+(Q.get('d')||5.6);
+    if(Q.get('focus')){ const fb=model.getObjectByName('mixamorig'+Q.get('focus'))||model.getObjectByName(Q.get('focus')); if(fb) fb.getWorldPosition(c); }   /* focus=RightForeArm: 그 뼈를 가운데로 (d 를 작게) */
     let az=AZ; if(Q.get('track')==='head'){ const h=model.getObjectByName('mixamorigHead'); h.getWorldPosition(c); c.y+=.08; const f=new T.Vector3(0,0,1).applyQuaternion(h.getWorldQuaternion(new T.Quaternion())); az+=Math.atan2(f.x,f.z); }   /* 얼굴 따라가기: 머리 정면 기준 */
     cam.position.set(c.x+d*Math.sin(az)*Math.cos(EL),c.y+d*Math.sin(EL),c.z+d*Math.cos(az)*Math.cos(EL)); cam.lookAt(c);
     const x=col*CELL,y=cv.height-(row+1)*CELL; r.setViewport(x,y,CELL,CELL); r.setScissor(x,y,CELL,CELL); r.clear(); r.render(s,cam);
     const W=o=>o?o.getWorldPosition(new T.Vector3()).toArray().map(v=>+v.toFixed(3)):null, slot=model.getObjectByName('mixamorigRightHandSlot'), hand=model.getObjectByName('mixamorigRightHand'), sab=model.getObjectByName('JeongSaber'), sb=sab?new T.Box3().setFromObject(sab):null;
-    window.INFO.push({clip:n,t:+(u*clip.duration).toFixed(2),minY:+box.min.y.toFixed(3),maxY:+box.max.y.toFixed(3),hand:W(hand),slot:W(slot),slotScale:slot&&slot.getWorldScale(new T.Vector3()).toArray().map(v=>+v.toFixed(3)),saber:sb&&[sb.min.toArray().map(v=>+v.toFixed(2)),sb.max.toArray().map(v=>+v.toFixed(2))]}); }); });
+    window.INFO.push({clip:n,t:+(Q.get('sec')?u:u*clip.duration).toFixed(2),minY:+box.min.y.toFixed(3),maxY:+box.max.y.toFixed(3),hand:W(hand),slot:W(slot),slotScale:slot&&slot.getWorldScale(new T.Vector3()).toArray().map(v=>+v.toFixed(3)),saber:sb&&[sb.min.toArray().map(v=>+v.toFixed(2)),sb.max.toArray().map(v=>+v.toFixed(2))]}); }); });
 { let sm=null; model.traverse(o=>{ if(o.isSkinnedMesh) sm=o; }); const bi=sm.skeleton.bones.findIndex(b=>/RightHand$/.test(b.name)), fi=sm.skeleton.bones.findIndex(b=>/RightForeArm$/.test(b.name)), sw=sm.geometry.attributes.skinWeight, si=sm.geometry.attributes.skinIndex, v=new T.Vector3();
   const cen=(idx)=>{ const c=new T.Vector3(); let n=0, wsum=0; for(let i=0;i<si.count;i++){ let w=0; for(let k=0;k<4;k++) if(si.getComponent(i,k)===idx) w+=sw.getComponent(i,k); if(w>.5){ sm.getVertexPosition(i,v); sm.localToWorld(v); c.add(v); n++; } } return n?c.divideScalar(n).toArray().map(x=>+x.toFixed(3)).concat([n]):null; };
   window.SKIN={ handVerts:cen(bi), foreVerts:cen(fi), bindMode:sm.bindMode, boneCount:sm.skeleton.bones.length, names:sm.skeleton.bones.map(b=>b.name).join(',') }; }

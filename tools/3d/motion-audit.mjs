@@ -51,11 +51,12 @@ export async function motionAudit(file, clipNames) {
     if (off.length() < 1e-4) return { bend: 0, dev: 0 }; const dev = off.normalize().angleTo(front.multiplyScalar(sgn)) * D; return { bend, dev }; };   /* dev: 0 = 바른 쪽, 180 = 정반대(역관절) */
   /* 2) 클립마다 위반 */
   const clips = g.animations.filter(c => !clipNames || clipNames.includes(c.name)), out = [];
-  for (const c of clips) { clipNow = c.name; const r = { clip: c.name, dur: +c.duration.toFixed(2), hyper: [0, 0, ''], offHinge: [0, 0, ''], twist: [0, 0, ''], neck: [0, 0, ''], spine: [0, 0], pop: [0, 0, ''], sink: [0, 0, ''] };
+  for (const c of clips) { clipNow = c.name; const r = { clip: c.name, dur: +c.duration.toFixed(2), hyper: [0, 0, ''], offHinge: [0, 0, ''], twist: [0, 0, ''], neck: [0, 0, ''], spine: [0, 0], pop: [0, 0, ''], sink: [0, 0, ''], joints: {} };
     const prev = new Map(); const keep = (k, v, t, who = '') => { if (v > r[k][0]) r[k] = [+v.toFixed(1), +t.toFixed(2), who]; };
     sample(c, t => {
       for (const n of HINGE) { if (!B[n]) continue; const { bend, dev } = apex(n); if (bend < 15) continue;
-        if (dev > 120) keep('hyper', bend, t, n); else if (dev > 50) keep('offHinge', dev, t, n); }   /* 역관절: 꼭짓점이 반대(120° 넘게) — 값 = 그때 꺾인 각 */
+        if (dev > 120) keep('hyper', bend, t, n); else if (dev > 50) keep('offHinge', dev, t, n);
+        if (dev > 50) { const k = n + (dev > 120 ? ' 역' : ' 옆'), v = dev > 120 ? bend : dev; if (!(r.joints[k]?.[0] >= v)) r.joints[k] = [+v.toFixed(1), +t.toFixed(2)]; } }   /* 마디마다 (가장 큰 것 하나에 가려 다른 팔이 안 보였다) */   /* 역관절: 꼭짓점이 반대(120° 넘게) — 값 = 그때 꺾인 각 */
       for (const [n, lim] of Object.entries(TWIST)) { if (!B[n]) continue; const tw = Math.abs(swingTwist(rel(n)).twist); if (tw > lim) keep('twist', tw - lim, t, n); }
       /* 목: 가슴(Spine2) 대비 머리 */
       if (neckRest) { const e = new T.Euler().setFromQuaternion(neckRest.clone().invert().multiply(WQ('Spine2').invert().multiply(WQ('Head'))), 'YXZ'), yaw = Math.abs(e.y * D), pitch = Math.abs(e.x * D);

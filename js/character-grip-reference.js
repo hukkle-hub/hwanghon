@@ -3,7 +3,7 @@
 // Source hash and bind/slot guards prevent reuse on a different character rig.
 export const CHARACTER_GRIP_REFERENCES={
   "ryu": {
-    "sha256": "7ed544eef5d6a5994ddfc51965db314501c92979b37c9ecf1a6215399a13bc0b",
+    "sha256": "76c175e7a5b93c48e89638161ac759f93d6f3e8cddb2ffa5e86f910ec9654737",
     "hands": {
       "Right": {
         "bind": [
@@ -188,7 +188,7 @@ export const CHARACTER_GRIP_REFERENCES={
     }
   },
   "sera": {
-    "sha256": "4d78f552da69a79870505bbf31b8788964578f5325e7ae23951f9b5966713fe3",
+    "sha256": "dff478e1b47c14df0eaf264af3b885a1effc8d4879c578377b8e2a0858f38656",
     "hands": {
       "Right": {
         "bind": [

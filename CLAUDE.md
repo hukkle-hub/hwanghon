@@ -25,7 +25,7 @@
 | 운영 도구 (3인) | `node tools/admin-scenario.mjs` — 운영자·신고자·대상 |
 | 필드 몬스터 (2D·3D 2인) | `node tools/field-mob-scenario.mjs` — 서버 안에서 띄움, 몬스터 공격·타격·쓰러짐 |
 | 장비 외형 | `viewer.html?equip=1&fit=1&char=…` + `window.__TW_VIEW.look()` 으로 확대 |
-| 동작이 사람 관절로 되나 (역무릎·바닥 속·튐) | `node tools/3d/motion-audit.mjs <glb>` · `tools/3d/clip-sheet.html?…&bones=1` 로 뼈를 그려 본다 — 고친 건 `tools/3d/clip-joint-fix.mjs` (docs/design/226). 클립 표본은 믹서 말고 `tools/3d/pose-eval.mjs` (멈춘 구간에서 믹서는 뼈를 다시 안 쓴다) |
+| 동작이 사람 관절로 되나 (역무릎·바닥 속·튐) | `node tools/3d/motion-audit.mjs <glb>` · `tools/3d/clip-sheet.html?…&bones=1` 로 뼈를 그려 본다 — 고친 건 `tools/3d/clip-joint-fix.mjs` (docs/design/226·227 — 영웅 몸은 무릎만: `--no-elbow --no-wrist --no-seams --no-ground`, 휴대폰 `art/3d/lod` 도 같이) · 찰흙으로 확대해 보기 `clip-sheet.html?…&clay=1&focus=RightForeArm&sec=1`. 클립 표본은 믹서 말고 `tools/3d/pose-eval.mjs` (멈춘 구간에서 믹서는 뼈를 다시 안 쓴다) |
 | 스킨 늘어남 (모션에 «늘어나 붙음») | `node tools/3d/stretch-audit.mjs <glb>` 로 재고 `tools/3d/stretch-heat.html?glb=…&color=label` 로 칠해 본다 — 고친 건 `tools/3d/skin-rebind.mjs` 로 굽는다 (docs/design/225) |
 
 ```
