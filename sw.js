@@ -16,7 +16,7 @@ ASSETS.push('js/ain-bind-repair.js','js/clip-smooth.js','js/ain-two-hand.js','js
 ASSETS.push('js/hand-grip.js','js/kain-grip-reference.js');   /* 손 모프 + 경량 모델에도 보존하는 카인 손잡이 기준 */
 ASSETS.push('js/character-grip-reference.js');   /* 류·세라: 경량화 전 손 기준 유지 */
 ASSETS.push('js/mmo/hero-motion.js','js/mmo/field-feel.js');
-ASSETS.push('js/hero-skill-clips.js','js/hero-skill-data.js','js/mocap-grip.js','js/kain-two-hand.js','js/kain-hand-ik.js');
+ASSETS.push('js/hero-skill-clips.js','js/hero-skill-data.js','js/hero-melee-data.js','js/mocap-grip.js','js/kain-two-hand.js','js/kain-hand-ik.js');
 ASSETS.push('js/marsh-motion.js','js/training-presentation.js','js/frame-metrics.js','js/boss-motion.js');
 ASSETS.push('js/graphics-profile.js','js/combat-quality.js','js/boss-contact-volumes.js');
 ASSETS=ASSETS.concat(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){return 'art/audio/'+name+'.wav';}));

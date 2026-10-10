@@ -14,7 +14,7 @@
       /* 류 궁극기: 공통 .22 면 준비 자세에서 판정이 뜬다 — 돌진·베기는 .27~.59, 최고속 .46.
          카인 스킬1(해머 스윙)은 내려치는 순간, 스킬3(도끼 회전)은 오른손 최고속, 류 스킬3(쌍날 회전)은 왼날 .62·오른날 .72 사이 (docs/design/76) */
       /* 85: 카인 skill4·류 attack1~3·세라 skill1·3 은 새 클립(UAL2·KayKit 1.1)의 오른손 최고속, 류 skill1(쌍날 연속)은 마무리 왼날 최고속 .65, 카인 skill2(철벽, 피해 없음)는 막기 올림 .18, 세라 1·2타(좌우 투척) .54 · 3타 .29 (87) */
-      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.433,ult:0.483,counter:0.392},kain:{attack2:0.22,smash:0.324,skill1:0.421,skill2:0.18,skill3:0.229,skill4:0.475,ult:0.337},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
+      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.433,ult:0.483,counter:0.392},kain:{attack1:.5269737758277387,attack2:.5130987177662598,attack3:.22256130794851756,smash:.5223242771790092,counter:.5590392954563935,exec:.45698633291711815,skill1:0.421,skill2:0.18,skill3:0.229,skill4:0.475,ult:0.337},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
@@ -74,6 +74,14 @@
         ult:{hit:1.3717,active:.18,duration:2.8399,cancel:2.42},
         counter:{hit:.5998,active:.10,duration:1.53,cancel:1.15}
       },kain:{
+        /* 검수한 양손 전신 몽타주: 동작과 판정을 같은 시계로 늘린다.
+           피해량·비용·재사용 대기시간은 유지. 옛 clipSpan으로 재압축 금지. */
+        attack1:{hit:1.1840037705000004,active:.09,duration:2.2467982750000006,cancel:1.6850987062500005},
+        attack2:{hit:1.397058775,active:.09,duration:2.7227875,cancel:2.042090625},
+        attack3:{hit:.7871588750000001,active:.09,duration:3.536818157009053,cancel:2.65261361775679},
+        smash:{hit:1.3155597450000003,active:.12,duration:2.5186647500000006,cancel:1.8889985625000003},
+        counter:{hit:1.4179437750000001,active:.08,duration:2.5363937500000002,cancel:1.9022953125000002},
+        exec:{hit:1.1757287250000001,active:.20,duration:2.5727875,cancel:1.929590625},
         skill1:{hit:1.0963,active:.16,duration:2.6040375000000004,cancel:2.34363},
         skill3:{hit:.78716,active:.16,duration:3.4373750000000003,cancel:3.09364},
         skill4:{hit:2.317924,active:.16,duration:4.879840000000001,cancel:4.391856},
