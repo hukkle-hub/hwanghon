@@ -145,7 +145,7 @@ import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
-import { setView3d } from './js/mmo/env-lib.js';
+import { setView3d, setInterior } from './js/mmo/env-lib.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
@@ -162,6 +162,8 @@ import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
+import { FACADE_U, aviBlink } from './js/mmo/facade-shader.js';
+import { addContactShadows } from './js/mmo/contact-shadow.js';
 import { Animated } from './js/party-avatar.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
@@ -183,8 +185,9 @@ await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간�
 const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
-setView3d(true);   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
-const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true });   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
+setView3d(true); setInterior(q.get('im') !== '0');   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
+const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
+const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 발밑 그늘 — 차·소품이 바닥에 붙어 보이게 (문서 229 §2, ?cs=0 으로 끔) */ window.__CSH = CSH && CSH.count;
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
@@ -237,6 +240,7 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
     if (sk) { sk.top.value.copy(o.top); sk.hor.value.copy(o.hor); sk.fogc.value.copy(o.fog); sk.sunc.value.copy(o.sunc).multiplyScalar(o.glow); sk.sun.value.copy(o.dir).normalize(); }
     sun.color.copy(o.sun); sun.intensity = o.sunI; sunDir.copy(o.dir); hemiL.color.copy(o.hemi); hemiL.groundColor.copy(o.ground); hemiL.intensity = o.hemiI; fillL.intensity = o.fillI;
     renderer.toneMappingExposure = o.exp; if (lampK !== o.lampK) { lampK = o.lampK; nearLights(root.position); }
+    FACADE_U.uLampK.value = o.lampK; if (FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value.copy(o.hor).lerp(o.top, 0.35);   /* 창: 밤일수록 켜진 방이 밝고, 유리는 지금 하늘빛을 비춘다 */
     if (o.name !== todName) { todName = o.name; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;
@@ -625,6 +629,7 @@ function benchCard() { const el = document.getElementById('benchCard'), gl = ren
   el.append(cp, again, close); el.hidden = false; window.__benchResult = text; }
 function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
+  aviBlink(gameNow / 1000, lampK);   /* 항공 장애등 깜빡임 (문서 229 §4) */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

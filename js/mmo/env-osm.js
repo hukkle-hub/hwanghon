@@ -18,6 +18,7 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
 import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
+import { interiorFacadeMats, aviLight } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
@@ -96,7 +97,9 @@ export function build(THREE, scene, osm, opt = {}) {
       const r = R(); if (r < 0.05) { g.fillStyle = R() < .6 ? '#ffcf7a' : '#7ad8ff'; g.fillRect(x + 3, y + 10, 26, 44); } else if (r < 0.35) { g.fillStyle = 'rgba(255,140,90,.18)'; g.fillRect(x + 3, y + 10, 26, 22); } }
     g.fillStyle = 'rgba(0,0,0,.25)'; for (let fy = 0; fy < 4; fy++) g.fillRect(0, fy * 64 + 58, w, 6); }));
   facades.forEach(t => t.repeat.set(1 / 14.4, 1 / 14.4));   /* 텍스처 한 장 = 8창 × 4층 = 14.4 m 정사각 */
-  const facadeMats = facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
+  let facadeMats = facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
+  /* 3D: 그린 창 대신 가짜 실내 창 (interior mapping, 문서 229) — 벽 텍스처는 창 없이 얼룩·빗물 자국만. 2D 굽기는 그대로 */
+  if (L.isView3d() && CFG.interior !== false) facadeMats = interiorFacadeMats(THREE);
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 });
   const cutMat = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });   /* 잘라 낸 건물 윗면 — 새까마면 구멍처럼 보인다 */
 
@@ -158,9 +161,17 @@ export function build(THREE, scene, osm, opt = {}) {
     const near = cst[1] < tc, full = h;   /* 도로 중심선보다 가까운 쪽 */ if (near) h = Math.min(h, 4.2);   /* 잘라 낸 건물: 1층 높이 */
     if (near && CFG.wide && cst[1] < tc - 34) h = Math.min(full, 2.6 + R() * 3.2);   /* 넓힌 블록 — 높이를 흔들어 무너진 동네처럼 (한 높이면 판자 같다) */
     const shape = new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1])));
-    const geo = new THREE.ExtrudeGeometry(shape, { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
+    /* 3D: 높은 탑(45 m 넘음)의 60 % 는 위 1/4 쯤에서 몸을 줄인다(셋백) — 뽑아 올린 기둥이 아니라 스카이라인 (문서 229 §4). 막이·발자국은 땅 윤곽 그대로 */
+    const setback = L.isView3d() && !near && h > 45 && ((b.id * 2654435761) >>> 0) / 4294967296 < 0.6, hb = setback ? Math.round(h * 0.72 / 3.6) * 3.6 : h;
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: hb, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
-    if (L.isView3d()) L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, h, b.id | 0, { roof: !near, shops: true, signs: false }), b.id | 0);   /* 3D 만: 셔터 띠 · 옥상 (간판은 아래 POI 네온이 따로 — 문서 218) */
+    let topPts = pts; if (setback) { const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length; topPts = pts.map(p => [cx + (p[0] - cx) * 0.78, cz + (p[1] - cz) * 0.78]);
+      const tg = new THREE.ExtrudeGeometry(new THREE.Shape(topPts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h - hb, bevelEnabled: false }); tg.rotateX(-Math.PI / 2); tg.translate(0, hb, 0);
+      const tm = new THREE.Mesh(tg, [roofMat, facadeMats[((b.id >>> 3) + 1) % 4]]); tm.castShadow = true; tm.receiveShadow = true; scene.add(tm);
+      L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, hb, (b.id | 0) + 7, { roof: true, shops: false, signs: false, ledge: true }), b.id | 0); }   /* 셋백 테라스 난간 */
+    if (L.isView3d()) L.addDeco(THREE, scene, L.buildingDeco(THREE, topPts, h, b.id | 0, { roof: !near, shops: !setback, signs: false }), b.id | 0);   /* 3D 만: 셔터 띠 · 옥상 (간판은 아래 POI 네온이 따로 — 문서 218) */
+    if (setback) L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, h, (b.id | 0) + 3, { roof: false, shops: true, signs: false, ledge: false }), b.id | 0);   /* 1층 가게 띠는 땅 윤곽에 */
+    if (L.isView3d() && !near && h > 50) aviLight(THREE, scene, topPts, h + 0.9);   /* 항공 장애등 — 밤 스카이라인의 붉은 점 */
     blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); builtW.push({ pts, h, full, near, cst, id: b.id }); }
   if (CFG.dress && CFG.wide) {   /* 넓힌 블록 땅 꾸미기 — 길·건물 위는 피한다 */
     const inB = p => builtW.some(b => L.inPoly(p, b.pts)), onRoad = p => { const n = nearestRoad(p); return n && n.d < n.rw.width / 2 + 1.5; };

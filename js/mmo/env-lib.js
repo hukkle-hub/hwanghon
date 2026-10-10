@@ -4,10 +4,12 @@
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
+import { interiorFacadeMats, interiorCurtainMat } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
 let VIEW3D = false; export function setView3d(v) { VIEW3D = !!v; }
+let INTERIOR = true; export function setInterior(v) { INTERIOR = !!v; }   /* 3D 가짜 실내 창 켬/끔 — world3d ?im=0 (문서 229) */
 /* 3D 땅 층 깊이 순서 (문서 220 §15): 땅 다각형끼리는 2 mm 차 — 16비트 깊이면 10 m 에서 15 mm 를 못 가려 «나중에 그린 것» 이 이긴다.
    결 셰이더로 프로그램 순서가 바뀌자 콘크리트가 풀밭을 덮었다(제주). 깊이 밀기 단위는 깊이 버퍼 최소 단위의 배수라 비트 수와 무관하게 순서를 고정한다.
    뒤 → 앞: 바닥판 +12 · 얼룩 +6 · 콘크리트·숲 0 · 풀·모래 −3 · 물 −6 · 길 −24 · 웅덩이 −30 · 차선·횡단보도 −36 */
@@ -167,8 +169,8 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
 
 /* ---------- 건물: 실측 윤곽 × 높이, 가까운 쪽(화면 아래)은 1층으로 잘라 길을 가리지 않게 ---------- */
 export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, ST, tc } = ctx, out = []; let ruinRubbleM = null, ruinWallM = null;
-  const facadeMats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
-  const curtainM = new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
+  const facadeMats = VIEW3D && INTERIOR && o.interior !== false ? interiorFacadeMats(THREE) : tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));   /* 3D: 가짜 실내 창 */
+  const curtainM = VIEW3D && INTERIOR && o.interior !== false ? interiorCurtainMat(THREE) : new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
   const roofM = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });
   const area = poly => { let a = 0; for (let i = 0; i < poly.length; i++) { const p = poly[i], q = poly[(i + 1) % poly.length]; a += p[0] * q[1] - q[0] * p[1]; } return Math.abs(a / 2); };
   const far = [];
@@ -295,16 +297,28 @@ export const isView3d = () => VIEW3D;
 /* 꾸밈 조각을 재질별로 합쳐 장면에 — 건물 하나에 재질당 메시 하나 (뒤에서 static-merge 가 칸별로 다시 묶는다) */
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
+  if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
+  if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
   for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1) continue;
     const [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx);
     /* 옥상 난간 — 윤곽 안쪽으로 두께만큼 */
     if (o.roof) { const T = 0.22, ph = 0.75 + 0.25 * hashU(id, e, 31), g = new THREE.BoxGeometry(L, ph, T); g.rotateY(yaw); g.translate((p[0] + q[0]) / 2 - nx * T / 2, h + ph / 2, (p[1] + q[1]) / 2 - nz * T / 2); P.parapet.push(g); }
+    /* 처마 띠(코니스)·1층 위 띠 — 벽에서 튀어나온 띠가 그늘 선을 만든다. 뽑아 올린 상자가 «건물» 로 읽히는 윤곽 (문서 229 §4) */
+    if (o.ledge !== false) { const band = (y, th, out) => { const g = new THREE.BoxGeometry(L + out * 2, th, out + 0.06); g.rotateY(yaw); g.translate((p[0] + q[0]) / 2 + nx * (out / 2 - 0.03), y, (p[1] + q[1]) / 2 + nz * (out / 2 - 0.03)); P.ledge.push(g); };
+      if (o.roof && h > 6) band(h - 0.2, 0.4, 0.32);
+      if (o.shops && h > 6.5) band(3.62, 0.24, 0.22);
+      if (o.roof && h > 30) for (let fy = 1; fy * 14.4 < h - 6; fy++) if (hashU(id, fy, 33) < 0.55) band(fy * 14.4 + 0.1, 0.18, 0.12); }   /* 높은 건물: 4 층마다 얇은 띠(건물마다 다르게) */
+    /* 창 밑 실외기 — 한국 건물. 가짜 실내 창(facade-shader)과 같은 칸: 벽 따라 s = 위치·(nz, −nx) 의 1.8 m 칸, 층 3.6 m. 칸 가운데 창 아래 (문서 229 §6) */
+    if (o.roof && o.wallAc !== false && h > 7 && h <= 45 && L >= 3) { const ux = dx / L, uz = dz / L, tx = nz, tz = -nx, s0 = p[0] * tx + p[1] * tz, ds = ux * tx + uz * tz;
+      if (Math.abs(ds) > 0.5) for (let k = Math.ceil(Math.min(s0, s0 + ds * L) / 1.8 - 0.5); (k + 0.5) * 1.8 <= Math.max(s0, s0 + ds * L); k++) { const t = ((k + 0.5) * 1.8 - s0) / ds; if (t < 0.7 || t > L - 0.7) continue;
+        for (let f = 1; (f + 1) * 3.6 <= h - 0.5 && f < 12; f++) { if (hashU(id * 31 + e, k, f + 101) > 0.11) continue;
+          const g = new THREE.BoxGeometry(0.82, 0.55, 0.32); g.rotateY(yaw); g.translate(p[0] + ux * t + nx * 0.19, f * 3.6 + 0.33, p[1] + uz * t + nz * 0.19); P.wallac.push(g); } } }
     /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
     if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
       for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;
