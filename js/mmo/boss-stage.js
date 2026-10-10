@@ -48,7 +48,7 @@ export function rimify(THREE, model, color, k = 0.8, env = null, envK = 0.5) {
   return uK;
 }
 
-const FX = o => o.fx || o.kfx;   /* 클레이브(boss-motion) · 기술표형 보스(kit-motion) 둘 다 같은 이름표(warning·warnSeq·ringPool·floor·glow)를 단다 */
+const FX = o => o.fx || o.kfx;   /* 클레이브(boss-motion) · 기술표형 보스(kit-motion) 둘 다 같은 이름표(telling·warnSeq·ringPool·floor·glow)를 단다 — 바닥 예고판(warning)은 클레이브에만 남았다(3D 필드에선 꺼 둠) */
 const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
 export function createBossStage({ THREE, scene, cam, doc = document, sfx = () => window.TW_SFX, player, reduced = false, onLock = () => {}, occlude = null }) {
@@ -101,7 +101,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
 
   function death(o, done) { const st = o.stage; if (!st || st.dying) { done && done(); return; } const cfg = st.cfg, pp = player(), bx = o.root.position.x, bz = o.root.position.z, h = o.h || 3;
     st.dying = { t: 0, done, sink: 0, y0: o.model ? o.model.position.y : 0, rx0: o.model ? o.model.rotation.x : 0, ry0: o.root.position.y, mix: null, clip: false };
-    if (FX(o)) { FX(o).warning.visible = FX(o).warningOutline.visible = false; } if (o.dom && o.dom.warn) o.dom.warn.visible = false;
+    if (FX(o) && FX(o).warning) { FX(o).warning.visible = FX(o).warningOutline.visible = false; } if (o.dom && o.dom.warn) o.dom.warn.visible = false;
     if (o.netAct) o.netAct = { ...o.netAct, motion: 'death', seq: (o.netAct.seq || 0) + 1e6 };
     /* 쓰러지는 클립: 클레이브(actions) · 지배형(dacts — 죽으면 월드 루프가 dmix 를 안 돌려서 여기서 돌린다) · 그 밖(deathClip) · 없으면(정지 모델) 앞으로 기울며 주저앉기 */
     const dk = o.dacts && Object.keys(o.dacts).find(k => /death|die/i.test(k)), mix = o.actions ? o.mixer : dk ? o.dmix : o.deathClip ? o.mixer : null;
@@ -128,16 +128,16 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
 
   function tick(dt, now = Date.now()) { const pp = player(); let plateFor = null, plateD = 1e9;
     for (const o of list) { const st = o.stage, cfg = st.cfg, alive = o.root.visible && !st.dying, bx = o.root.position.x, bz = o.root.position.z, d = Math.hypot(pp.x - bx, pp.z - bz);
-      if (st.aura) { st.aura.visible = o.root.visible; st.aura.position.set(bx, (FX(o)?.floor || 0) + .03, bz); const warnOn = !!(FX(o) && FX(o).warning && FX(o).warning.visible); st.aura.material.opacity += ((alive ? (warnOn ? .08 : .3) : 0) - st.aura.material.opacity) * Math.min(1, dt * 4); }   /* 예고가 뜨면 발밑 기운은 물러난다 — 바닥의 빨강은 «피하라» 한 뜻만 */
+      if (st.aura) { st.aura.visible = o.root.visible; st.aura.position.set(bx, (FX(o)?.floor || 0) + .03, bz); st.aura.material.opacity += ((alive ? .3 : 0) - st.aura.material.opacity) * Math.min(1, dt * 4); }   /* 바닥 예고는 없앴다(문서 224) — 발밑 기운은 늘 같은 세기 */
       st.rimK.value += (cfg.rimK - st.rimK.value) * Math.min(1, dt * 1.6); st.impactT = Math.max(0, st.impactT - dt);
       const a = o.netAct;
       if (alive) {
-        /* 예고 박자마다 경고음 — boss-motion warning() 이 고른 박자(warnSeq · warnBeat) */
-        const fx = FX(o); if (fx && fx.warning && fx.warning.visible) { const k = fx.warnSeq + ':' + fx.warnBeat; if (k !== st.warnKey) { st.warnKey = k; if (d < 30) play('tele'); st.impactT = .4; } }
+        /* 준비 동작 박자마다 기합음 — boss-motion warning() · kit-motion 이 고른 박자(warnSeq · warnBeat). 바닥 예고는 없고 몸이 알린다 (문서 224) */
+        const fx = FX(o); if (fx && fx.telling) { const k = fx.warnSeq + ':' + fx.warnBeat; if (k !== st.warnKey) { st.warnKey = k; if (d < 30) play('tele'); st.impactT = .4; } }
         const counter = !!(a && a.motion === 'skill' && a.counterOpen && now >= a.counterOpen && now <= a.counterClose); if (counter && !st.counterOn && d < 30) play('guard'); st.counterOn = counter;
         if (!shot && !introDone(cfg.introKey || o.b.id) && (!a || a.motion === 'idle') && d < (cfg.introR || 26)) intro(o);   /* AI 없는 보스는 netAct 가 없다 = 늘 대기 */
         if (d < (cfg.plateR || 34) && d < plateD) { plateD = d; plateFor = o; } }
-      if (st.dying) { const y = st.dying, h = o.h || 3; y.t += dt; if (y.mix) y.mix.update(dt);
+      if (st.dying) { const y = st.dying, h = o.h || 3; y.t += dt; if (o.wind) { o.wind.g.position.set(0, 0, 0); o.wind.g.rotation.set(0, 0, 0); }   /* 쓰러질 땐 준비 동작 없음 */ if (y.mix) y.mix.update(dt);
         if (y.ry0 > .5) { const f = Math.min(1, y.t / 1.1); o.root.position.y = y.ry0 * (1 - f * f); }   /* 떠 있던 보스(셀레스티얼)는 땅으로 떨어진다 */
         if (o.model) { let dy = 0; if (!y.clip) { const k = smooth((y.t - .3) / 1.6), tilt = (st.span || 0) < h * 1.1; if (tilt) o.model.rotation.x = y.rx0 + k * .32; dy = k * h * .12; }   /* 정지 모델: 앞으로 기울며 주저앉는다 — 긴 몸은 기울이면 꼬리가 하늘로 들려 가라앉기만 */
           if (y.t > 3.8) { y.sink = Math.min(1, (y.t - 3.8) / .9); dy += y.sink * h * .5; if (st.aura) st.aura.material.opacity *= .9; }

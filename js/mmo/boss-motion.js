@@ -1,6 +1,7 @@
 /* 필드 보스 화면 동작 — 서버 상태를 GLB 클립·지면 예고·검 궤적·불티로 번역한다.
    판정은 server/field-boss-combat.cjs 한 곳뿐이며, 여기서는 체력을 알거나 판정하지 않는다. */
 import * as THREE from '../../vendor/three/three.module.js';
+import { applyWind } from './windup.js';
 
 export const CLAVE_MOTIONS={
  shutter:{clip:'atk_claveshut',duration:3400,charge:[1350,1850],travel:4.8,hits:[{at:1720,shape:'line',range:7.2,width:2.2,back:.5}]},
@@ -13,6 +14,13 @@ export const CLAVE_CHOREOGRAPHY={
  shutter:{source:121/30,path:[[0,0],[650,.5],[1200,1.2],[1350,1.9],[1470,1.9],[1720,61/30],[1850,2.6],[3400,121/30]]},
  storm:{source:157/30,path:[[0,0],[900,1.45],[1150,1.45],[1315,1.6],[1510,1.78],[1830,2.45],[1980,2.45],[2135,77/30],[2400,2.8],[2600,3.45],[2800,3.45],[2955,3.6],[3150,3.82],[4300,157/30]]},
  slam:{source:83/30,path:[[0,0],[850,1.1],[1190,1.2],[1390,1.2],[1540,1.54],[1750,1.8],[3050,83/30]]}
+};
+/* 준비 동작 (문서 224) — 판정 시각(hits.at)까지 몸이 감기거나 웅크리거나 젖힌다. 3D 필드는 바닥 예고 대신 이것만 본다.
+   셔터 돌진 = 웅크림, 폭풍 1·2타 가로 베기 = 감기, 3타 원·내려찍기 = 젖힘. 창은 클립이 «멈춘» 구간(CLAVE_CHOREOGRAPHY)과 겹친다 */
+export const CLAVE_WINDS={
+ shutter:[{from:700,at:1720,style:'crouch'}],
+ storm:[{from:600,at:1315,style:'coil'},{from:1500,at:2135,style:'coil'},{from:2320,at:2955,style:'rear'}],
+ slam:[{from:700,at:1540,style:'rear'}]
 };
 export const CLAVE_SLAM_SHUTTER_PATH=[[0,0],[850,1.2],[1190,1.9],[1390,1.9],[1540,61/30],[1750,2.6],[3050,3.8]];
 export const CLAVE_IDLE_CYCLE=4800;
@@ -96,7 +104,7 @@ function findHeldPart(model){let out=model.getObjectByName('Boss_HeldPart');if(o
 function isolateHeldMaterial(mesh){if(!mesh)return[];if(Array.isArray(mesh.material))mesh.material=mesh.material.map(m=>m.clone());else if(mesh.material)mesh.material=mesh.material.clone();const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];return mats.filter(Boolean).map(m=>({m,color:m.color?.clone?.()||null,emissive:m.emissive?.clone?.()||null,intensity:Number(m.emissiveIntensity)||0}));}
 function tintHeldPart(fx,state){for(const b of fx.shutterBase||[]){const m=b.m;if(b.color&&m.color)m.color.copy(b.color);if(b.emissive&&m.emissive)m.emissive.copy(b.emissive);if('emissiveIntensity'in m)m.emissiveIntensity=b.intensity;if(state===1){if(m.emissive){m.emissive.setHex(0x6f1600);m.emissiveIntensity=Math.max(1.25,b.intensity);}else if(m.color)m.color.setHex(0x8b3924);}else if(state===2&&m.emissive){m.emissive.setHex(0x321008);m.emissiveIntensity=Math.max(.55,b.intensity);}}}
 
-export function setupBossMotion(o,gl,model,scene,floor=0){
+export function setupBossMotion(o,gl,model,scene,floor=0,opts={}){   /* opts.telegraph=false: 바닥 예고를 그리지 않는다(3D 필드 — 문서 224). 박자(telling·warnSeq·warnBeat)는 그대로 센다 */
  if(!CLAVE.has(o.b.id))return null;o.model=model;o.actions={};o.motionClip='';
  o.mixer=o.mixer||new THREE.AnimationMixer(model);
  for(const c of gl.animations){const a=o.mixer.clipAction(c);if(!/^(idle|walk)$/.test(c.name)){a.setLoop(THREE.LoopOnce,1);a.clampWhenFinished=true;}o.actions[c.name]=a;}
@@ -127,7 +135,7 @@ export function setupBossMotion(o,gl,model,scene,floor=0){
  const idleBones={head:rigNode(model,'Head'),spine:rigNode(model,'Spine2')||rigNode(model,'Spine1')||rigNode(model,'Spine'),arm:rigNode(model,'LeftArm'),forearm:rigNode(model,'LeftForeArm')};
  const overlayPose=Object.values(idleBones).filter(Boolean).map(bone=>({bone,base:bone.quaternion.clone(),dirty:false}));
  const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches,shutter=findHeldPart(model),shutterBase=isolateHeldMaterial(shutter),shutterIntact=shutter?.geometry||null,shutterBroken=shutter?brokenShutterGeometry(shutter):null;
- o.fx={scene,floor,warning,warningGeometries,warnMat,warningOutline,warningOutlines,warnLineMat,warnSeq:-1,warnBeat:-1,points,pos,vel,life,count,next:0,sparkLive:0,dust,dustPos,dustVel,dustLife,dustCount,dustNext:0,dustLive:0,
+ o.fx={noTell:opts.telegraph===false,telling:false,scene,floor,warning,warningGeometries,warnMat,warningOutline,warningOutlines,warnLineMat,warnSeq:-1,warnBeat:-1,points,pos,vel,life,count,next:0,sparkLive:0,dust,dustPos,dustVel,dustLife,dustCount,dustNext:0,dustLive:0,
   hitPoints,hitPos,hitVel,hitLife,hitCol,hitCount,hitNext:0,hitLive:0,hitCore,hitCoreT:0,hitCoreDur:.12,hitCoreScale:1,trail,trailPos,trailCount:0,hand,feet,glow,ringGeometry,ringPool,ringActive:0,firedMask:0,lastStep:-1,walkPhase:null,impact:0,impactEvent:false,lastImpactSeq:0,lastImpactAt:0,hitT:0,hitDur:.12,hitPower:0,hitSide:0,hitFront:1,tailT:0,
   hips,hipsBase:hips&&hips.position.clone(),overlay,overlayList,idleBones,overlayPose,idleCue:{breath:0,turn:0,brace:0,pulse:0,guard:0},idleBlend:0,reduced,counterLit:false,shutter,shutterBase,shutterIntact,shutterBroken,shutterState:0,breakChunk:null,frameResult:{step:false,impact:false}};
  o.baseModel={x:model.position.x,y:model.position.y,z:model.position.z,rx:model.rotation.x,rz:model.rotation.z};play(o,'idle');if(!o.netAct){const now=Date.now();o.netAct={id:o.b.id,x:o.root?.position.x??o.b.x,z:o.root?.position.z??o.b.z,yaw:o.root?.rotation.y||0,motion:'idle',skill:'',seq:-1,startedAt:now,endsAt:now+780,counterOpen:0,counterClose:0};}
@@ -163,19 +171,19 @@ export function prepareBossMotion(o,now=Date.now()){
 }
 
 function warning(o,elapsed,now){
- const fx=o.fx,a=o.netAct,def=CLAVE_MOTIONS[a?.skill];if(a?.motion!=='skill'||!def){fx.warning.visible=fx.warningOutline.visible=false;return;}
+ const fx=o.fx,a=o.netAct,def=CLAVE_MOTIONS[a?.skill];if(a?.motion!=='skill'||!def){fx.warning.visible=fx.warningOutline.visible=false;fx.telling=false;return;}
  let hi=-1;for(let i=0;i<def.hits.length;i++)if(elapsed<def.hits[i].at){hi=i;break;}
- if(hi<0){fx.warning.visible=fx.warningOutline.visible=false;return;}const h=def.hits[hi];
+ if(hi<0){fx.warning.visible=fx.warningOutline.visible=false;fx.telling=false;return;}const h=def.hits[hi];
  if(a.seq!==fx.warnSeq||hi!==fx.warnBeat){fx.warning.geometry=fx.warningGeometries[a.skill][hi];fx.warningOutline.geometry=fx.warningOutlines[a.skill][hi];fx.warnSeq=a.seq;fx.warnBeat=hi;}
  const prev=hi?def.hits[hi-1].at+120:0,span=Math.max(1,h.at-prev),p=Math.max(0,Math.min(1,(elapsed-prev)/span)),counter=now>=a.counterOpen&&now<=a.counterClose;
  const x=a.skill==='shutter'?(o.homeSkillX??a.x):a.x,z=a.skill==='shutter'?(o.homeSkillZ??a.z):a.z,scale=fx.reduced?1:.96+.04*Math.sin(now*.018);
- fx.warning.visible=fx.warningOutline.visible=true;fx.warning.position.set(x,fx.floor+.045,z);fx.warningOutline.position.set(x,fx.floor+.052,z);fx.warning.rotation.y=fx.warningOutline.rotation.y=a.yaw;
+ fx.telling=true;fx.warning.visible=fx.warningOutline.visible=!fx.noTell;fx.warning.position.set(x,fx.floor+.045,z);fx.warningOutline.position.set(x,fx.floor+.052,z);fx.warning.rotation.y=fx.warningOutline.rotation.y=a.yaw;
  fx.warnMat.color.setHex(counter?0x64ddff:0xff321d);fx.warnLineMat.color.setHex(counter?0x9decff:0xff6948);fx.warnMat.opacity=(counter?.06:.08)+p*p*(counter?.2:.3)+(fx.reduced?0:Math.sin(now*.024)*.02);fx.warnLineMat.opacity=(counter?.62:.55)+p*(counter?.38:.45);   /* 어두운 지하 바닥에서 채움 .03~.1 은 안 보였다 — 끝으로 갈수록 확 차오른다 (문서 221 §1) */
  fx.warning.scale.setScalar(scale);fx.warningOutline.scale.setScalar(scale);
 }
 function updateParticles(fx,dt,attacking,alive=true,counter=false){
  fx.hand.getWorldPosition(TMP);fx.glow.position.copy(TMP);fx.glow.intensity=alive?(attacking?4.8:1.4):0;fx.glow.visible=alive;
- if(counter!==fx.counterLit){fx.counterLit=counter;fx.glow.color.setHex(counter?0x64ddff:0xff3218);fx.trail.material.color.setHex(counter?0x64ddff:0xff542a);}
+ if(fx.noTell)counter=false;if(counter!==fx.counterLit){fx.counterLit=counter;fx.glow.color.setHex(counter?0x64ddff:0xff3218);fx.trail.material.color.setHex(counter?0x64ddff:0xff542a);}
  if(alive&&attacking&&!fx.reduced&&Math.random()<Math.min(1,dt*36))burst(fx,TMP,2,.45);
  if(fx.sparkLive){for(let i=0;i<fx.count;i++){if(fx.life[i]<=0)continue;fx.life[i]-=dt;const k=i*3;fx.vel[k+1]-=6*dt;fx.pos[k]+=fx.vel[k]*dt;fx.pos[k+1]+=fx.vel[k+1]*dt;fx.pos[k+2]+=fx.vel[k+2]*dt;if(fx.life[i]<=0){fx.life[i]=0;fx.sparkLive--;fx.pos[k]=fx.pos[k+1]=fx.pos[k+2]=-999;}}fx.points.geometry.attributes.position.needsUpdate=true;fx.points.visible=fx.sparkLive>0;}
  if(fx.dustLive){for(let i=0;i<fx.dustCount;i++){if(fx.dustLife[i]<=0)continue;fx.dustLife[i]-=dt;const k=i*3;fx.dustVel[k]*=Math.max(0,1-dt*4);fx.dustVel[k+2]*=Math.max(0,1-dt*4);fx.dustPos[k]+=fx.dustVel[k]*dt;fx.dustPos[k+1]+=fx.dustVel[k+1]*dt;fx.dustPos[k+2]+=fx.dustVel[k+2]*dt;if(fx.dustLife[i]<=0){fx.dustLife[i]=0;fx.dustLive--;fx.dustPos[k]=fx.dustPos[k+1]=fx.dustPos[k+2]=-999;}}fx.dust.geometry.attributes.position.needsUpdate=true;fx.dust.visible=fx.dustLive>0;}
@@ -216,7 +224,7 @@ export function updateBossMotion(o,dt,now=Date.now()){
  if(skill&&a.skill==='slam'){
   const st=claveSlamShutterTime(elapsed);for(let i=0;i<fx.overlayList.length;i++){const s=fx.overlayList[i];s.bone.quaternion.fromArray(s.interp.evaluate(st));}
  }
- warning(o,elapsed,now);
+ warning(o,elapsed,now);if(o.wind)applyWind(o,skill?CLAVE_WINDS[a.skill]:null,elapsed,fx.reduced);
  if(skill){const def=CLAVE_MOTIONS[a.skill];for(let i=0;i<(def?.hits.length||0);i++){const h=def.hits[i],bit=1<<i;if(elapsed>=h.at&&!(fx.firedMask&bit)){fx.firedMask|=bit;if(elapsed-h.at<420){fx.hand.getWorldPosition(TMP);if(!fx.reduced)burst(fx,TMP,20,1.15);addRing(fx,a.x,a.z,h.radius||h.range||4,0xffa052,.36);fx.impact=.28;fx.impactEvent=true;}}}}
  const impacted=fx.impactEvent;fx.impactEvent=false;fx.impact=Math.max(0,fx.impact-dt);updateParticles(fx,dt,striking,!!o.alive,counter);updateRings(fx,dt);
  if(fx.breakChunk){const b=fx.breakChunk;b.life-=dt;b.vel.y-=7.5*dt;b.m.position.addScaledVector(b.vel,dt);b.m.rotation.x+=dt*2.6;b.m.rotation.z+=dt*2;if(b.m.position.y<fx.floor+.15){b.m.position.y=fx.floor+.15;b.vel.y=Math.abs(b.vel.y)*.18;b.vel.x*=.72;b.vel.z*=.72;}if(b.life<=0){fx.scene.remove(b.m);b.m.geometry.dispose();b.m.material.dispose();fx.breakChunk=null;}}
@@ -229,5 +237,5 @@ export function bossHitReact(o,h={}){const fx=o?.fx;if(!fx)return false;const se
  TMP.set(bx+dx/dist*reach,y,bz+dz/dist*reach);hitBurst(fx,TMP,counter?30:crit?22:12,counter?1.4:crit?1.15:.82,counter?0x77e8ff:crit?0xffd36a:0xff7938);fx.hitCore.position.copy(TMP);fx.hitCore.material.color.setHex(counter?0xc8f7ff:crit?0xffe39a:0xffa35a);fx.hitCoreScale=counter?2.1:crit?1.65:1;fx.hitCore.scale.setScalar(fx.hitCoreScale);fx.hitCoreDur=counter?.18:crit?.15:.11;fx.hitCoreT=fx.hitCoreDur;fx.hitCore.material.opacity=.96;fx.hitCore.visible=true;fx.tailT=Math.max(fx.tailT,fx.hitCoreDur);
  const ang=Math.atan2(x-o.root.position.x,z-o.root.position.z)-o.root.rotation.y;fx.hitSide=Math.sin(ang);fx.hitFront=Math.cos(ang);fx.hitDur=counter?.2:crit?.18:.12;fx.hitT=fx.hitDur;fx.hitPower=counter?.09:crit?.065:.038;return true;}
 export function bossCounterBurst(o){if(!o.fx)return;o.fx.hand.getWorldPosition(TMP);if(!o.fx.reduced)burst(o.fx,TMP,34,1.45);addRing(o.fx,o.root.position.x,o.root.position.z,4.5,0x68e5ff,.65);}
-export function hideBossMotion(o){const fx=o.fx;if(!fx)return;if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();fx.breakChunk=null;}fx.warning.visible=fx.warningOutline.visible=false;fx.glow.intensity=0;fx.glow.visible=false;fx.trail.material.opacity=0;fx.trail.visible=false;fx.trailCount=0;fx.trail.geometry.setDrawRange(0,0);fx.pos.fill(-999);fx.life.fill(0);fx.sparkLive=0;fx.dustPos.fill(-999);fx.dustLife.fill(0);fx.dustLive=0;fx.hitPos.fill(-999);fx.hitLife.fill(0);fx.hitLive=0;fx.hitCoreT=0;fx.hitCore.visible=false;fx.points.visible=fx.dust.visible=fx.hitPoints.visible=false;fx.points.geometry.attributes.position.needsUpdate=true;fx.dust.geometry.attributes.position.needsUpdate=true;fx.hitPoints.geometry.attributes.position.needsUpdate=true;fx.hitT=0;fx.tailT=0;fx.idleBlend=0;fx.firedMask=0;fx.warnSeq=fx.warnBeat=-1;fx.counterLit=false;o.motionSeq=Number.NaN;o.motionState='';for(const name in o.actions)o.actions[name].stop();o.motionClip='';for(let i=0;i<fx.ringPool.length;i++){fx.ringPool[i].active=false;fx.ringPool[i].m.visible=false;}fx.ringActive=0;}
+export function hideBossMotion(o){const fx=o.fx;if(!fx)return;if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();fx.breakChunk=null;}fx.warning.visible=fx.warningOutline.visible=false;fx.glow.intensity=0;fx.glow.visible=false;fx.trail.material.opacity=0;fx.trail.visible=false;fx.trailCount=0;fx.trail.geometry.setDrawRange(0,0);fx.pos.fill(-999);fx.life.fill(0);fx.sparkLive=0;fx.dustPos.fill(-999);fx.dustLife.fill(0);fx.dustLive=0;fx.hitPos.fill(-999);fx.hitLife.fill(0);fx.hitLive=0;fx.hitCoreT=0;fx.hitCore.visible=false;fx.points.visible=fx.dust.visible=fx.hitPoints.visible=false;fx.points.geometry.attributes.position.needsUpdate=true;fx.dust.geometry.attributes.position.needsUpdate=true;fx.hitPoints.geometry.attributes.position.needsUpdate=true;fx.hitT=0;fx.tailT=0;fx.idleBlend=0;fx.firedMask=0;fx.warnSeq=fx.warnBeat=-1;fx.telling=false;if(o.wind)applyWind(o,null,0);fx.counterLit=false;o.motionSeq=Number.NaN;o.motionState='';for(const name in o.actions)o.actions[name].stop();o.motionClip='';for(let i=0;i<fx.ringPool.length;i++){fx.ringPool[i].active=false;fx.ringPool[i].m.visible=false;}fx.ringActive=0;}
 export function disposeBossMotion(o){const fx=o.fx;if(!fx)return;if(fx.breakChunk){fx.scene.remove(fx.breakChunk.m);fx.breakChunk.m.geometry.dispose();fx.breakChunk.m.material.dispose();}if(fx.shutterBroken)fx.shutterBroken.dispose();for(const b of fx.shutterBase||[])b.m.dispose();for(const x of [fx.warning,fx.warningOutline,fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail,fx.glow])fx.scene.remove(x);for(let i=0;i<fx.ringPool.length;i++){fx.scene.remove(fx.ringPool[i].m);fx.ringPool[i].m.material.dispose();}fx.ringGeometry.dispose();for(const skill in fx.warningGeometries)for(let i=0;i<fx.warningGeometries[skill].length;i++){fx.warningGeometries[skill][i].dispose();fx.warningOutlines[skill][i].dispose();}fx.warnMat.dispose();fx.warnLineMat.dispose();for(const x of [fx.points,fx.dust,fx.hitPoints,fx.hitCore,fx.trail]){x.geometry.dispose();x.material.dispose();}if(o.mixer){o.mixer.stopAllAction();if(o.model)o.mixer.uncacheRoot(o.model);}o.actions={};o.mixer=null;o.fx=null;}

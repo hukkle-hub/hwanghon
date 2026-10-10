@@ -155,6 +155,7 @@ import {bodyFor as n01BodyFor,N01_BODIES} from './js/mmo/n01-body-catalog.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from './js/mmo/kit-motion.js';
+import { addWindRig } from './js/mmo/windup.js';   /* 준비 동작 — 바닥 예고 대신 몸이 알린다 (문서 224) */
 import { attachSaber } from './js/mmo/jeong-saber.js';
 import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
@@ -306,7 +307,7 @@ const preCompile = r => window.__preCompile ? window.__preCompile(r) : Promise.r
 for (const b of meta.bosses || []) if (b.ai === 'dominator') {
   const hid = (/art\/3d\/(\w+)_anim\.glb$/.exec(b.model) || [])[1]; if (!hid) continue;
   heroGltf(hid).then(async g => { const r = SkeletonUtils.clone(g.scene); if (window.TW_MATFIX) TW_MATFIX.repair(THREE, r); r.traverse(o => { if (o.isMesh) o.castShadow = true; }); await preCompile(r);
-    const o = { b }; setupDominator(o, { scene: r, animations: g.animations }, scene, 0);
+    const o = { b }; setupDominator(o, { scene: r, animations: g.animations }, scene, 0, { telegraph: false }); addWindRig(THREE, o);
     { const sc = stageOf(b); if (sc) { r.userData.rimK = rimify(THREE, r, sc.rim, sc.rimK); o.root.visible = false; await preCompile(r); o.root.visible = true; } }   /* 윤곽광은 물들인(tint) 재질 위에 — 복제가 onBeforeCompile 을 안 옮긴다. 다시 예열한 뒤 보인다 (문서 221) */
     o.ai = { id: b.id, x: b.x, z: b.z, zone: ZONE, alive: true, yaw: Math.random() * 6.28, hp: 3e6 }; DOM.setup(o.ai, gameNow); doms.push(o); STAGE.attach(o); });
 }
@@ -487,7 +488,7 @@ let ECO = null, MOBS = null, MP = null, netMobs = []; const mobHp = new Map();
 const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
 const n01CandidateCache=new Map(),n01CandidateMode=new URLSearchParams(location.search).get('n01Candidates')==='1';
 const mobSpeciesBody=id=>{const a=n01BodyFor(id,{review:n01CandidateMode,detail:new URLSearchParams(location.search).get('n01Detail')==='high'?'high':'mobile'});if(!a)return null;return {...a,load:()=>{if(!n01CandidateCache.has(id))n01CandidateCache.set(id,load(a.url).then(g=>{window.__warmMob?.(g);return g;}));return n01CandidateCache.get(id);   /* 받자마자 예열 (문서 220 §19) */}};}; // 원본 색·얼굴·클립 보존, 영웅 포즈 보정 적용하지 않는다.
-const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, loadBodyFor:mobSpeciesBody,hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0 }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
+const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, loadBodyFor:mobSpeciesBody,hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0, telegraph: false }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 function netMsg(m) {
   if (m.type === 'fieldJoined' || m.type === 'hubState') { const st = m.type === 'hubState' ? (m.zone === ZONE ? m : null) : (m.hub !== undefined ? { owner: m.hub } : null); if (st) hubOwner = st.owner || null; }   /* 거점 주인 — 길드가 빼앗기 전엔 마을도 상점이 닫힌다 */
   if (m.type !== 'field' && typeof BAG !== 'undefined' && BAG.onMessage(m)) return;   /* 가방이 없는 판(시험 조각)에서도 돈다 */
@@ -525,9 +526,9 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
     const box = new THREE.Box3().setFromObject(r), h = box.max.y - box.min.y || 1, dh = b.visualH || b.h, k = dh ? dh / h : (b.scale || 1); r.scale.setScalar(k); box.setFromObject(r);
     const grp = new THREE.Group(); grp.position.set(b.x, b.fly || 0, b.z); r.position.set(r.position.x - (box.min.x + box.max.x) / 2, r.position.y - box.min.y, r.position.z - (box.min.z + box.max.z) / 2); grp.add(r); scene.add(grp);
     const o = { b, root: grp, model: r, h: box.max.y - box.min.y, netAlive: false }; if (net) grp.visible = false;   /* 온라인: 서버가 «살아 있다» 고 할 때만 */
-    if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now);
+    if (gl.animations.length) { if (/^clave2?$/.test(b.id)) { setupBossMotion(o, gl, r, scene, 0, { telegraph: false }); addWindRig(THREE, o); const now = bossClock(); applyBossAction(o, { id: b.id, x: b.x, z: b.z, yaw: 0, motion: 'idle', skill: '', seq: 1, startedAt: now, endsAt: now + 780, counterOpen: 0, counterClose: 0 }, now);
         if (COMBAT.enabled({ id: b.id })) { o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; COMBAT.setup(o.ai, gameNow); } }
-      else if (KIT.enabled({ id: b.id })) { setupKitMotion(o, gl, r, scene, KIT.KITS[b.id], 0, REDUCED); if (KIT.KITS[b.id].prop === 'saber') { o.saber = attachSaber(THREE, r); if (o.saber) preCompile(o.saber.mesh); }   /* 정 장관 군도 — 보이는 손에 (문서 223) */ o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; KIT.setup(o.ai, gameNow); applyKitAction(o, KIT.view(o.ai), gameNow); }   /* 기술표형 보스 — 섀도우 팽부터 (문서 222) */
+      else if (KIT.enabled({ id: b.id })) { setupKitMotion(o, gl, r, scene, KIT.KITS[b.id], 0, REDUCED); addWindRig(THREE, o); if (KIT.KITS[b.id].prop === 'saber') { o.saber = attachSaber(THREE, r); if (o.saber) preCompile(o.saber.mesh); }   /* 정 장관 군도 — 보이는 손에 (문서 223) */ o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; KIT.setup(o.ai, gameNow); applyKitAction(o, KIT.view(o.ai), gameNow); }   /* 기술표형 보스 — 섀도우 팽부터 (문서 222) */
       else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); o.deathClip = gl.animations.find(a => /^death$/i.test(a.name)) || null; } }   /* 쓰러지는 장면용 (문서 221) */
     if (!o.ai) o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP };   /* 나머지 필드 보스: 서버에도 AI 가 없다 — 맞기만 한다 (2D 혼자 연습과 같은 30만) */
     fbs.push(o); STAGE.attach(o); }).catch(e => console.warn('[boss]', b.id, e)); }

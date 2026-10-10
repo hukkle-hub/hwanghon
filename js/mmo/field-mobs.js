@@ -3,13 +3,15 @@
    **몸은 임시** — 승인된 몬스터 GLB 가 아직 없다(문서 208). 사람형 가벼운 몸을 등급색으로 물들여 쓰고 이름표에 «임시 몸» 을 단다.
    승인 몸이 오면 bodyFor(catalogId) 만 바꾸면 된다. 등급이 높다고 키우지 않는다(캐논: «무조건 거대화 금지»).
    온라인은 서버 field 패킷의 mobs 를 mobsFromPacket 으로 같은 꼴로 바꿔 넣는다(GPT 서버 인계 2026-10-09). anim 은 idle/walk/attack/hit/die —
-   attack 이 시작될 때 발밑에 붉은 고리(예고 600 ms 동안 차오름)를 그린다: 보이지 않는 몬스터에게 맞는 일이 없게. */
+   attack 이 시작될 때 발밑에 붉은 고리(예고 600 ms 동안 차오름)를 그린다: 보이지 않는 몬스터에게 맞는 일이 없게.
+   telegraph:false(3D 필드 — 문서 224): 고리 없이 몸이 준비 동작(windup.js)으로 알린다 — 예고 창(windupMs · 연타 strikes)까지 버텼다가 판정에 터진다. */
 const GRADE_TINT = { 5: [0x2c3a30, 0x0c2a10], 4: [0x2e2440, 0x2a0c40], 3: [0x3e1418, 0x5a0010] };
 const GRADE_NAME = { 5: '5급', 4: '4급', 3: '3급', 2: '2급', 1: '1급' };
 const CLIP = { idle: 'idle', walk: 'walk', attack: 'attack1', hit: 'hit', die: 'death' }, ONCE = new Set(['attack', 'hit', 'die']), WARN_MS = 600;
 import { motionFor } from './n01-body-catalog.js';
 import { walkerCadence, runnerCadence, breakerCadence } from './n01-motion-cadence.js';
 import { comboTell } from './n01-combo-tell.js';
+import { addWindRig, applyWind } from './windup.js';
 /* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버 v2(확정): [id, catalogId, x, z, alive, anim, generation, hp%, (동작 순번)] — 앞 일곱 칸은 snapshot 과 같은 순서.
    9번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
    인계서 v1 의 7칸 꼴 [id, catalogId, x, z, hp%, anim, generation] 도 받는다(5번째가 숫자면 — v2 가 대체했다). 숫자가 아니면 버린다 */
@@ -22,7 +24,7 @@ export function mobsFromPacket(rows,serverNow) {
   return out;
 }
 
-export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = null, hud, tagAt, catalog, floor = 0, height = 1.85 }) {
+export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = null, hud, tagAt, catalog, floor = 0, height = 1.85, telegraph = true }) {
   const views = new Map(), byId = new Map(catalog.map(m => [m.id, m])), matCache = new Map(); let body = null, last = performance.now();
   const bodies=new Map(),pending=new Set();
   function selected(id){if(!loadBodyFor)return body;const entry=loadBodyFor(id);if(!entry)return body;
@@ -44,7 +46,9 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
     const bodyLabel=asset.n01Asset?(asset.n01Asset.approved?'':' · 검수 후보'):' · 임시 몸';
     if(asset.n01Asset)tag.innerHTML=String(m.name).replace(/[<>&]/g,'')+'<small>'+GRADE_NAME[m.grade]+bodyLabel+'</small>';
     let aura=null;if(asset.n01Asset&&s.catalogId==='G5_RESONATOR'){aura=new THREE.Mesh(new THREE.RingGeometry(17.94,18,64),new THREE.MeshBasicMaterial({color:0xff293e,transparent:true,opacity:.08,depthWrite:false,side:THREE.DoubleSide}));aura.rotation.x=-Math.PI/2;aura.position.y=.025;root.add(aura);}
-    return { id: s.id, gen: s.generation, cat: m, root, model, authoredCadence:asset.asset?.extras?.cc0FullbodyPilot===true, motionScale:k, displaySpeed:0, head:asset.n01Asset?model.getObjectByName?.('mixamorig_Head'):null, mixer, act, named, bodyLabel, aura, cur: 'idle', tag, bar, hp: 100, tx: s.x, tz: s.z, alive: true, deadT: 0, seen: true, h: visualH, warn: null, warnT: 0 };
+    const v = { id: s.id, gen: s.generation, cat: m, root, model, authoredCadence:asset.asset?.extras?.cc0FullbodyPilot===true, motionScale:k, displaySpeed:0, head:asset.n01Asset?model.getObjectByName?.('mixamorig_Head'):null, mixer, act, named, bodyLabel, aura, cur: 'idle', tag, bar, hp: 100, tx: s.x, tz: s.z, alive: true, deadT: 0, seen: true, h: visualH, warn: null, warnT: 0 };
+    if (!telegraph) addWindRig(THREE, v);   /* 고리 대신 준비 동작 */
+    return v;
   }
   function drop(v) {
     scene.remove(v.root);v.mixer.stopAllAction?.();v.mixer.uncacheRoot?.(v.model);
@@ -61,8 +65,12 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
   function play(v, n, again = false) {const name=motionFor(n,v.action,Object.keys(v.named),v.cat.id),next=v.named[name]||v.act[n];if(!next)return;
     if(v.cur==='attack'&&n==='idle'&&v.current?.isRunning()&&v.current.time<v.current.getClip().duration)return;
     if(v.cur===n&&v.current===next&&!again)return;const prev=v.current||v.act[v.cur];next.reset().play();const elapsed=['attack','support'].includes(n)?Math.max(0,v.action?.elapsedMs||0)/1000:0;if(elapsed)next.time=Math.min(elapsed,next.getClip().duration);if(prev&&prev!==next)next.crossFadeFrom(prev,.15,false);v.current=next;v.cur=n;if(n==='support')v.supportPlaybackSeq=v.action?.seq;
+    if (n === 'attack' && !telegraph) return;
     if (n === 'attack') { if (!v.warn) { v.warn = new THREE.Mesh(warnGeo || (warnGeo = new THREE.RingGeometry(.55, .75, 32)), new THREE.MeshBasicMaterial({ color: 0xff3020, transparent: true, opacity: .8, depthWrite: false, depthTest: false, side: THREE.DoubleSide, toneMapped: false })); v.warn.renderOrder = 5; v.warn.rotation.x = -Math.PI / 2; v.warn.position.y = .04; v.root.add(v.warn); } v.warnDuration=(v.action?.windupMs||WARN_MS)/1000;v.warnT = v.warnDuration-elapsed; v.warn.visible = v.warnT>-.25; } }
   let warnGeo = null;
+  /* 준비 창: 연타는 타점마다, 아니면 시작~windupMs. 내려찍기 = 젖힘, 나머지 = 버팀 */
+  function mobWinds(a) { const w = Number.isFinite(a?.windupMs) ? a.windupMs : WARN_MS, style = a?.key === 'overhead_crush' ? 'rear' : 'brace';
+    return Array.isArray(a?.strikes) && a.strikes.length > 1 ? a.strikes.filter(p => Number.isFinite(p.offsetMs)).map(p => ({ from: Math.max(0, p.offsetMs - w), at: p.offsetMs, style })) : [{ from: 0, at: w, style }]; }
   return {
     views,
     update(list, dtIn) {
@@ -89,6 +97,7 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         if (d > 4) { v.root.position.x = v.tx; v.root.position.z = v.tz; } else if (d > 1e-3) { const k = Math.min(1, dt * 8); v.root.position.x += dx * k; v.root.position.z += dz * k; if (d > .02) v.root.rotation.y = Math.atan2(dx, dz); }
         if (!v.alive) { v.deadT += dt; const clip = !!v.act.die,settle=clip?v.act.die.getClip().duration:0;if(v.aura)v.aura.visible=false;v.root.position.y = floor - Math.min(1, Math.max(0, v.deadT - settle) / 1.2) * .9; if (!clip) v.root.rotation.z = Math.min(1, v.deadT / .4) * 1.2; if (v.deadT > Math.max(2.2,settle+1.2)) { drop(v); continue; } }   /* 쓰러지는 클립이 있으면 눕고 나서 가라앉는다 */
         const tell=v.alive&&v.cur==='attack'?comboTell(v.action,(v.current?.time||0)*1000):null;
+        if(v.wind)applyWind(v,v.alive&&v.cur==='attack'?mobWinds(v.action):null,(v.current?.time||0)*1000,true);   /* 클립 시각 = 행동 경과(play 가 맞춘다) */
         if(v.warn&&tell){v.warn.visible=tell.visible;if(tell.visible){v.warnT=tell.remainingSeconds;v.warnDuration=tell.durationSeconds;}}
         if (v.warn && v.warn.visible) { if(!tell)v.warnT -= dt; const k = 1 - Math.max(0, v.warnT) / (v.warnDuration||WARN_MS / 1000); v.warn.scale.setScalar(.6 + k * .9); v.warn.material.opacity = v.warnT > 0 ? .35 + k * .55 : Math.max(0, .9 + v.warnT * 4); if (v.warnT < -.25 || !v.alive) v.warn.visible = false; }
         if (v.alive && v.hp < 100) { v.bar.style.display = ''; v.bar.firstChild.style.width = v.hp.toFixed(0) + '%'; tagAt(v.bar, v.root.position.x, labelY(v,.22), v.root.position.z); } else v.bar.style.display = 'none';   /* 맞은 몸만 체력 띠 — 무리 이름표와 따로, 마리마다 */
