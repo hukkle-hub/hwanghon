@@ -13,6 +13,8 @@ export const STYLES = {
 };
 const REL = 180;   /* 터짐 길이(ms) */
 const ease = t => t * t * (3 - 2 * t);
+/* 웅크림 = 눌림: 틀의 원점이 발밑이라 키를 줄이면 발은 바닥에 남는다 (몸째 내리면 발이 바닥에 파묻힌다 — 클레이브 셔터에서 42 cm 를 재 봄). 음수 = 늘어남 */
+const squash = (g, c) => g.scale.set(1 + c * .5, 1 - c, 1 + c * .5);
 
 export function addWindRig(THREE, o) {
   if (!o.model || !o.model.parent || o.wind) return o.wind;
@@ -28,14 +30,14 @@ export function windAt(wins, t) {
 /* 틀에 얹는다. reduced: 떨림 없음 */
 export function applyWind(o, wins, t, reduced = false) {
   const W = o.wind; if (!W) return null; const g = W.g, s = wins && windAt(wins, t);
-  g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); if (!s) return null;
+  g.position.set(0, 0, 0); g.rotation.set(0, 0, 0); g.scale.set(1, 1, 1); if (!s) return null;
   const st = STYLES[s.w.style] || STYLES.brace, h = W.h, k = s.p;
-  if (s.r < 0) {   /* 준비: 웅크림·젖힘/숙임·비틀어 감기 + 끝무렵 떨림 */
-    g.position.y = -st.crouch * h * k; g.rotation.x = st.lean * k; g.rotation.y = st.twist * k;
+  if (s.r < 0) {   /* 준비: 눌림·젖힘/숙임·비틀어 감기 + 끝무렵 떨림 */
+    squash(g, st.crouch * k); g.rotation.x = st.lean * k; g.rotation.y = st.twist * k;
     if (!reduced && k > .8) { const j = (k - .8) * 5; g.position.x = Math.sin(t * .09 + W.seed) * .006 * h * j; g.rotation.z = Math.sin(t * .11 + W.seed) * .012 * j; }
-  } else {   /* 터짐: 앞으로 쏟아졌다 제자리로 */
+  } else {   /* 터짐: 늘어나며 앞으로 쏟아졌다 제자리로 */
     const e = 1 - s.r, f = Math.sin(Math.PI * Math.min(1, s.r * 1.4)) * e;
-    g.position.y = -st.crouch * h * e * e; g.rotation.x = st.lean * e * e + st.relLean * f; g.rotation.y = st.twist * e * e + st.relTwist * f; g.position.z = st.relPush * h * f;
+    squash(g, st.crouch * e * e - st.crouch * .4 * f); g.rotation.x = st.lean * e * e + st.relLean * f; g.rotation.y = st.twist * e * e + st.relTwist * f; g.position.z = st.relPush * h * f;
   }
   return s;
 }
