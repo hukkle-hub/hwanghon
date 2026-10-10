@@ -42,7 +42,7 @@ export function build(THREE, scene, osm, zone = {}) {
     const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
   const floorM = new THREE.MeshStandardMaterial({ map: terrazzo, roughness: 0.18, metalness: 0.15, color: 0x8a9a9c });   /* 젖은 바닥 */
   flat(mall, floorM, 0); flat(corridor, floorM, 0.001);
-  if (zone.view3d) { const ceilM = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: 0.95, side: THREE.DoubleSide }); for (const pts of [mall, corridor]) flat(pts, ceilM, WALL).userData.camBlock = true; }   /* 천장 — 3D 필드에서만 */
+  /* 천장 — 3D 필드에서만. 중앙 광장 위는 뚫린 2층(아트리움)이라 광장을 정한 뒤에 짓는다 (아래 «천장·아트리움») */
   /* 물(0.9 m)은 굽지 않는다 — 첫 판은 물면을 높이 그림에 구워 넣어 인물의 무릎 아래가 «땅에 박힌» 듯 잘렸다(디렉터 지적).
      부츠·각반도 장비라 보여야 한다. 게임(mmo.html)이 map.json water.y 높이에 반투명 물면을 따로 그린다 — 물 밑 다리가 비쳐 보인다 */
 
@@ -146,6 +146,17 @@ export function build(THREE, scene, osm, zone = {}) {
       const b = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ color: bulbCols[(k + Math.round(u * 15)) % 5], toneMapped: false })); b.position.set(x, y, z); scene.add(b); } }
   const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), new THREE.MeshBasicMaterial({ color: 0xffd860, toneMapped: false })); star.position.set(plazaC[0], 7.8, plazaC[1]); scene.add(star);
   { const L = new THREE.PointLight(0xffd8a0, 18, 26, 1.4); L.position.set(plazaC[0], 6.5, plazaC[1]); scene.add(L); lights.push({ x: plazaC[0], y: 6.5, z: plazaC[1], color: '#ffd8a0', intensity: 18, distance: 26 }); }
+  /* 천장·아트리움 — 3D 필드에서만. 3.4 m 판으로 상가 전체를 덮었더니 광장 위 2층(난간 5.2 m · 전구 줄 7 m · 별 7.8 m)과
+     클레이브 머리(4.2 m 시각 체급, 머리뼈 3.84 m)가 천장 위로 잘려 «목 없는 몸» 이 됐다 (문서 221 §9). 광장 위는 8.6 m 까지 튼다 */
+  if (zone.view3d) { const ceilM = new THREE.MeshStandardMaterial({ color: 0x24242a, roughness: 0.95, side: THREE.DoubleSide });
+    const AR = Math.min(PLAZA_R + 4.8, edgeDist(plazaC) - 0.6), TOP = 8.6, ATRIUM = { x: plazaC[0], z: plazaC[1], r: AR, top: TOP };
+    const holed = pts => { const sh = shapeOf(pts), far = pts.every((q, i) => { const r = pts[(i + 1) % pts.length], dx = r[0] - q[0], dz = r[1] - q[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((plazaC[0] - q[0]) * dx + (plazaC[1] - q[1]) * dz) / L2)); return Math.hypot(q[0] + dx * u - plazaC[0], q[1] + dz * u - plazaC[1]) > AR + 0.2; });
+      const hit = inPoly(plazaC, pts) || !far; if (hit && far) { const hole = new THREE.Path(); hole.absarc(plazaC[0], -plazaC[1], AR, 0, Math.PI * 2, true); sh.holes.push(hole); }   /* 구멍은 광장을 품은 판에만 — 테두리를 넘는 구멍은 삼각분할이 깨진다 */
+      const g = new THREE.ShapeGeometry(sh), m = new THREE.Mesh(g, ceilM); m.rotation.x = -Math.PI / 2; m.position.y = WALL; m.receiveShadow = true; m.userData.camBlock = true; scene.add(m); return hit && far; };
+    const cut = [mall, corridor].map(holed);
+    if (cut[0] || cut[1]) { const wall = new THREE.Mesh(new THREE.CylinderGeometry(AR, AR, TOP - WALL, 64, 1, true), ceilM); wall.position.set(plazaC[0], (WALL + TOP) / 2, plazaC[1]); scene.add(wall);
+      const lid = new THREE.Mesh(new THREE.CircleGeometry(AR, 64), ceilM); lid.rotation.x = Math.PI / 2; lid.position.set(plazaC[0], TOP, plazaC[1]); lid.userData.camBlock = true; scene.add(lid); }
+    scene.userData.atrium = ATRIUM; }
   /* 뒤집힌 진열대 (원작 «진열대가 통째로 날아갔다») */
   for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 5 + R() * (PLAZA_R - 7), x = plazaC[0] + Math.cos(a) * r, z = plazaC[1] + Math.sin(a) * r;
     const st2 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.9), shelfM); st2.position.set(x, 0.45, z); st2.rotation.set(R() * 0.6 - 0.3, R() * 3, Math.PI / 2 * (R() < 0.5 ? 1 : 0.4)); st2.castShadow = true; scene.add(st2); blockers.push({ x, z, hw: 1.2, hd: 0.6, rot: st2.rotation.y }); }
