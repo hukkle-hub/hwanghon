@@ -6,6 +6,7 @@ export function motionFor(state,action,available,catalogId){
  if(state==='support')return available.includes('aura_cast')?'aura_cast':'idle';
  if(state==='attack'){const name=action?.clip||action?.key;if(name&&available.includes(name))return name;return available.includes('attack1')?'attack1':'attack';}
  if(state==='walk'&&catalogId==='G5_RUNNER'&&available.includes('run'))return action?.locomotion==='walk'&&available.includes('walk')?'walk':'run';
+ if(state==='walk'&&catalogId==='G5_WALKER'&&action?.locomotion==='run'&&available.includes('jog'))return 'jog';
  if(state==='die')return available.includes('death')?'death':'die';
  return state;
 }

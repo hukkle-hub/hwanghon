@@ -1,0 +1,20 @@
+{
+  "dateKST":"2026-10-10",
+  "scope":"Walker only, local review pilot; other5 species unchanged",
+  "productionApproved":false,
+  "originalHighSha256":"a32976281f00e9ab467fcda6ca3274b8097283dcabfd77fb97ae76b4fea0958e",
+  "highSha256":"884162eebc501febd46d1f5f1c355d85949ee0e683dd95d14a7a0fc7a5bf2218",
+  "mobileSha256":"7ab50729049ea02757275fa8779c380821d84f470aba3a1b53589b5f1267bda8",
+  "bodyFaceClothesUVMaterialPNGPreserved":true,
+  "changedHands":2,
+  "changedFingerRestAndBindJoints":40,
+  "motionSources":{"idle":"UAL1 Idle_Loop; idle pelvis/legs locked to first frame after1.37mm skin drift failure","walk":"UAL1 Walk_Loop + actual-sole IK","jog":"UAL1 Jog_Fwd_Loop; forward stride0.5, pelvis bounce0.25 + sole IK","slow_combo":"UAL1 Punch_Cross2x time; one cross punch NOT a finished multi-hit combo","hit":"UAL1 Hit_Chest","death":"Existing project validated knockdown adapted to new hands/idle; not raw UAL Death01"},
+  "licenses":{"UAL1_2":"Already-owned Standard files, included CC0 license read","hands":"Existing VRoid Male VRM embedded CC0 metadata read","death":"Existing game project Mixamo-derived; NOT CC0 standalone motion library","unrealExclusive":"Not exported; external-engine rights were not confirmed"},
+  "combat":{"windupMs":600,"recoveryMs":1400,"durationMs":2000,"reachM":0.85,"damage":850,"speedMps":2.85,"unresolvedMultiHitCombo":true},
+  "tests":{"total":1058,"pass":1056,"skip":2,"fail":0,"durationMs":218489.2399,"targetedPass":8,"negativeIdleDriftControlM":0.03,"technicalNegativeControlsPerGLB":10},
+  "visualEvidence":{"fullMotionVideoSeconds":16.066667,"actualEveryFrame30fps":true,"frames":{"idle":76,"walk":41,"jog":29,"attack":61,"hit":11,"death":61},"browserPlayback":{"ended":true,"error":null,"rate":0.5},"actualGameLoaderAI":true,"mobileViewportSizes":[[412,915],[915,412]],"horizontalOverflowPx":0,"minimumControlSizePx":64},
+  "notVerified":["Director artistic approval","Actual S25 Ultra hardware","World3d online2player visual regression","Other5 new motion packages","Production deployment"],
+  "highTriangles":39647,
+  "mobileTriangles":13912,
+  "notes":"GLB validation reports remain visualApproved:false. Numeric hand coordinates alone are not visual approval. Raw fall takes that hover/get up were rejected. Render reuse only after exact geometry/skin/material and clip sample comparison. Final idle was rerendered after support-chain correction."
+}

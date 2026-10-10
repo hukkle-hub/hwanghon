@@ -1,41 +1,61 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\walker-idle-plant-v1\\g5_walker.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\n01-cc0-motion-v1\\walker-final-pilot-v2\\g5_walker.glb",
   "species": "G5_WALKER",
-  "sha256": "a32976281f00e9ab467fcda6ca3274b8097283dcabfd77fb97ae76b4fea0958e",
-  "bytes": 4257724,
-  "triangles": 43711,
-  "vertices": 29124,
+  "sha256": "884162eebc501febd46d1f5f1c355d85949ee0e683dd95d14a7a0fc7a5bf2218",
+  "bytes": 4888196,
+  "triangles": 39647,
+  "vertices": 27099,
   "materials": 3,
   "maxWeightError": 1.4062970876693726e-7,
   "joints": 65,
   "clips": [
     {
-      "name": "hit",
-      "duration": 0.9333333333333333
-    },
-    {
       "name": "idle",
-      "duration": 4
+      "duration": 2.5
     },
     {
       "name": "walk",
-      "duration": 0.7
+      "duration": 1.3333333333333333
     },
     {
-      "name": "attack",
-      "duration": 1.3333333333333333
+      "name": "jog",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "jab",
+      "duration": 0.8666666666666667
+    },
+    {
+      "name": "cross",
+      "duration": 1
+    },
+    {
+      "name": "hook",
+      "duration": 0.4666666666666667
+    },
+    {
+      "name": "hook_recovery",
+      "duration": 0.6
     },
     {
       "name": "slow_combo",
-      "duration": 1.3333333333333333
+      "duration": 2
     },
     {
-      "name": "die",
+      "name": "hit",
+      "duration": 0.3333333333333333
+    },
+    {
+      "name": "attack",
       "duration": 2
     },
     {
       "name": "attack1",
-      "duration": 1.3333333333333333
+      "duration": 2
+    },
+    {
+      "name": "die",
+      "duration": 2
     },
     {
       "name": "death",
@@ -50,12 +70,12 @@
   ],
   "boundsYUp": [
     [
-      -0.38297659158706665,
+      -0.37358251214027405,
       -0.00040988795808516443,
-      -0.21796979010105133
+      -0.17324496805667877
     ],
     [
-      0.38175544142723083,
+      0.3740716278553009,
       1.850000262260437,
       0.17392680048942566
     ]

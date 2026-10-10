@@ -8,6 +8,7 @@ const GRADE_TINT = { 5: [0x2c3a30, 0x0c2a10], 4: [0x2e2440, 0x2a0c40], 3: [0x3e1
 const GRADE_NAME = { 5: '5급', 4: '4급', 3: '3급', 2: '2급', 1: '1급' };
 const CLIP = { idle: 'idle', walk: 'walk', attack: 'attack1', hit: 'hit', die: 'death' }, ONCE = new Set(['attack', 'hit', 'die']), WARN_MS = 600;
 import { motionFor } from './n01-body-catalog.js';
+import { walkerCadence } from './n01-motion-cadence.js';
 /* 서버 mobs 한 줄 → snapshot 한 칸. GPT 서버 v2(확정): [id, catalogId, x, z, alive, anim, generation, hp%, (동작 순번)] — 앞 일곱 칸은 snapshot 과 같은 순서.
    9번째 칸(선택)은 동작 순번 — 같은 attack 이 연달아 와도 순번이 바뀌면 다시 그린다(없으면 anim 이 바뀔 때만).
    인계서 v1 의 7칸 꼴 [id, catalogId, x, z, hp%, anim, generation] 도 받는다(5번째가 숫자면 — v2 가 대체했다). 숫자가 아니면 버린다 */
@@ -34,7 +35,7 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
     model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; if(!asset.n01Asset){o.material = [].concat(o.material).map(x => tinted(x, m.grade)); if (o.material.length === 1) o.material = o.material[0];} } });
     const box = new THREE.Box3().setFromObject(model), k = visualH / Math.max(.1, box.max.y - box.min.y); model.scale.setScalar(k); model.position.y = -box.min.y * k;
     root.add(model); root.position.set(s.x, floor, s.z); scene.add(root);
-    const mixer = new THREE.AnimationMixer(model), act = {}, named={};for(const c of asset.animations){named[c.name]=mixer.clipAction(c);if(!['idle','walk','run'].includes(c.name)){named[c.name].setLoop(THREE.LoopOnce,1);named[c.name].clampWhenFinished=true;}}
+    const mixer = new THREE.AnimationMixer(model), act = {}, named={};for(const c of asset.animations){named[c.name]=mixer.clipAction(c);if(!['idle','walk','run','jog'].includes(c.name)){named[c.name].setLoop(THREE.LoopOnce,1);named[c.name].clampWhenFinished=true;}}
     for (const [n, clip] of Object.entries(CLIP)) {const c=named[clip]||named[n];if(c)act[n]=c;}
     if (act.idle) act.idle.play();
     const bar = document.createElement('div'); bar.className = 'mobhp'; bar.innerHTML = '<i></i>'; bar.style.display = 'none'; hud.appendChild(bar);
@@ -42,7 +43,7 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
     const bodyLabel=asset.n01Asset?(asset.n01Asset.approved?'':' · 검수 후보'):' · 임시 몸';
     if(asset.n01Asset)tag.innerHTML=String(m.name).replace(/[<>&]/g,'')+'<small>'+GRADE_NAME[m.grade]+bodyLabel+'</small>';
     let aura=null;if(asset.n01Asset&&s.catalogId==='G5_RESONATOR'){aura=new THREE.Mesh(new THREE.RingGeometry(17.94,18,64),new THREE.MeshBasicMaterial({color:0xff293e,transparent:true,opacity:.08,depthWrite:false,side:THREE.DoubleSide}));aura.rotation.x=-Math.PI/2;aura.position.y=.025;root.add(aura);}
-    return { id: s.id, gen: s.generation, cat: m, root, model, head:asset.n01Asset?model.getObjectByName?.('mixamorig_Head'):null, mixer, act, named, bodyLabel, aura, cur: 'idle', tag, bar, hp: 100, tx: s.x, tz: s.z, alive: true, deadT: 0, seen: true, h: visualH, warn: null, warnT: 0 };
+    return { id: s.id, gen: s.generation, cat: m, root, model, motionScale:k, displaySpeed:0, head:asset.n01Asset?model.getObjectByName?.('mixamorig_Head'):null, mixer, act, named, bodyLabel, aura, cur: 'idle', tag, bar, hp: 100, tx: s.x, tz: s.z, alive: true, deadT: 0, seen: true, h: visualH, warn: null, warnT: 0 };
   }
   function drop(v) {
     scene.remove(v.root);v.mixer.stopAllAction?.();v.mixer.uncacheRoot?.(v.model);
@@ -82,12 +83,18 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         if (s.seq != null) v.seq = s.seq; }
       for (const v of [...views.values()]) {
         if (!v.seen && v.alive) { drop(v); continue; }   /* 관심 반경 밖 */
+        const priorX=v.root.position.x,priorZ=v.root.position.z;
         const dx = v.tx - v.root.position.x, dz = v.tz - v.root.position.z, d = Math.hypot(dx, dz);
         if (d > 4) { v.root.position.x = v.tx; v.root.position.z = v.tz; } else if (d > 1e-3) { const k = Math.min(1, dt * 8); v.root.position.x += dx * k; v.root.position.z += dz * k; if (d > .02) v.root.rotation.y = Math.atan2(dx, dz); }
         if (!v.alive) { v.deadT += dt; const clip = !!v.act.die,settle=clip?v.act.die.getClip().duration:0;if(v.aura)v.aura.visible=false;v.root.position.y = floor - Math.min(1, Math.max(0, v.deadT - settle) / 1.2) * .9; if (!clip) v.root.rotation.z = Math.min(1, v.deadT / .4) * 1.2; if (v.deadT > Math.max(2.2,settle+1.2)) { drop(v); continue; } }   /* 쓰러지는 클립이 있으면 눕고 나서 가라앉는다 */
         if (v.warn && v.warn.visible) { v.warnT -= dt; const k = 1 - Math.max(0, v.warnT) / (v.warnDuration||WARN_MS / 1000); v.warn.scale.setScalar(.6 + k * .9); v.warn.material.opacity = v.warnT > 0 ? .35 + k * .55 : Math.max(0, .9 + v.warnT * 4); if (v.warnT < -.25 || !v.alive) v.warn.visible = false; }
         if (v.alive && v.hp < 100) { v.bar.style.display = ''; v.bar.firstChild.style.width = v.hp.toFixed(0) + '%'; tagAt(v.bar, v.root.position.x, labelY(v,.22), v.root.position.z); } else v.bar.style.display = 'none';   /* 맞은 몸만 체력 띠 — 무리 이름표와 따로, 마리마다 */
         if(v.warn?.visible){const counterTell=v.cat.id==='G5_ARMORED'&&v.action?.counterAllowed!==false&&v.action?.key!=='overhead_crush'&&v.warnT>0&&v.warnT<=.25;v.warn.material.color.setHex(counterTell?(v.warnT<=.10?0x8affec:0xffc45b):0xff3020);}
+        if(v.cat.id==='G5_WALKER'&&v.named.jog){
+          const speed=dt>0?Math.hypot(v.root.position.x-priorX,v.root.position.z-priorZ)/dt:0;
+          v.displaySpeed+=(Math.min(7.5,speed)-v.displaySpeed)*Math.min(1,dt*10);
+          if(v.cur==='walk')v.current?.setEffectiveTimeScale(walkerCadence(v.current.getClip().name,v.displaySpeed,v.motionScale));
+        }
         v.mixer.update(dt); }
       /* 이름표는 무리(같은 둥지·순찰)마다 하나 — 붙어 선 넷의 이름표가 겹쳐 못 읽었다. 대표는 살아 있는 첫 마리, 수가 둘 넘으면 «외 ×N» */
       const groups = new Map(); for (const v of views.values()) { const g = v.id.slice(0, v.id.lastIndexOf(':')); if (!groups.has(g)) groups.set(g, []); groups.get(g).push(v); }
