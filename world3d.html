@@ -163,6 +163,7 @@ import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
 import { FACADE_U } from './js/mmo/facade-shader.js';
+import { addContactShadows } from './js/mmo/contact-shadow.js';
 import { Animated } from './js/party-avatar.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
@@ -186,6 +187,7 @@ const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* �
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
 setView3d(true);   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
 const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
+const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 발밑 그늘 — 차·소품이 바닥에 붙어 보이게 (문서 229 §2, ?cs=0 으로 끔) */ window.__CSH = CSH && CSH.count;
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
