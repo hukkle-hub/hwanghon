@@ -25,6 +25,7 @@
 | 운영 도구 (3인) | `node tools/admin-scenario.mjs` — 운영자·신고자·대상 |
 | 필드 몬스터 (2D·3D 2인) | `node tools/field-mob-scenario.mjs` — 서버 안에서 띄움, 몬스터 공격·타격·쓰러짐 |
 | 장비 외형 | `viewer.html?equip=1&fit=1&char=…` + `window.__TW_VIEW.look()` 으로 확대 |
+| 스킨 늘어남 (모션에 «늘어나 붙음») | `node tools/3d/stretch-audit.mjs <glb>` 로 재고 `tools/3d/stretch-heat.html?glb=…&color=label` 로 칠해 본다 — 고친 건 `tools/3d/skin-rebind.mjs` 로 굽는다 (docs/design/225) |
 
 ```
 # 포즈 시트 — 게임을 안 띄우므로 빠르다. 바닥판이 있어 파고듦이 보인다.

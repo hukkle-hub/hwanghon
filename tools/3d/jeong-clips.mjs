@@ -175,5 +175,6 @@ if ((process.argv[1] || '').endsWith('jeong-clips.mjs')) {
   /* 다시 구울 때 덧붙이기만 하면 GLB 가 자꾸 커진다(옛 버퍼가 남는다) → 처음 원본(전용 클립 없는 판)을 받아 두고 늘 거기서 시작 */
   if (!process.argv.includes('--dry')) { const orig = OUT + 'orig.glb';
     if (!fs.existsSync(orig)) { const j = JSON.parse(raw.subarray(20, 20 + raw.readUInt32LE(12)).toString()); if (j.animations.some(a => /jeong/.test(a.name))) throw Error('원본이 없다: git show <전용 클립 전 커밋>:' + GLB + ' > ' + orig); fs.copyFileSync(GLB, orig); }
-    fs.copyFileSync(orig, GLB); execFileSync('node', ['tools/3d/glb-put-clips.mjs', GLB, ...files], { stdio: 'inherit' }); if (fs.existsSync(GLB + '.bak')) fs.unlinkSync(GLB + '.bak'); }
+    fs.copyFileSync(orig, GLB); execFileSync('node', ['tools/3d/glb-put-clips.mjs', GLB, ...files], { stdio: 'inherit' }); if (fs.existsSync(GLB + '.bak')) fs.unlinkSync(GLB + '.bak');
+    execFileSync('node', ['tools/3d/skin-rebind.mjs', GLB], { stdio: 'inherit' }); }   /* 원본엔 예전 가중치 — 다시 묶는다 (문서 225) */
 }
