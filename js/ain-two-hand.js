@@ -16,7 +16,9 @@ const ready=[0,-.12,.32,-.65,.75,.18];
 // scratch: scratchpad/carrysweep.mjs · docs/design/60-carry.md
 // 옛 아인 뼈대(Hi3D + ain-bind-repair)의 쉬는 자세 두 어깨(LeftArm·RightArm) 가운데 — 경로를 잰 기준.
 const AUTHORED_SHOULDERS=V(.004,1.345,.0285);
-export const AIN_CARRY=[.06,-.30,.10,-.34,-.34,-.88];
+// Both palms must remain in front of the abdomen. At z=.10 the rear (right)
+// palm was inside the hip: contact tests passed while the actual arm vanished.
+export const AIN_CARRY=[.00,-.30,.30,-.88,-.34,-.34];
 /* 기본 3 타 «연계 문법» (문서 120, 블소 레볼루션 연계 무공 참고 — 애니 복제 없이 pose-to-pose 원리만).
    예전엔 세 경로가 모두 ready 에서 시작해 ready 로 끝났다 → 1 타 날이 중립으로 돌아간 뒤 2 타가 다시 감았다
    («1 타 → 중립 → 2 타», 디렉터 금지 1 순위). 이제:
@@ -542,7 +544,9 @@ export function makeAinTwoHand(model,root,slot){
   }
   for(const side of ['Right','Left']){
    const upper=bones[side+'Arm'],lower=bones[side+'ForeArm'],hand=bones[side+'Hand'];
-   const a=arms[side],solution=solveGripCircle(a.shoulder,palms[side],a.axis,a.reach,scale,a.length,side==='Left'?1:-1);
+   // The former right=-1 branch folded the elbow behind/inside the ribs.
+   // Both outward branches preserve the neutral wrist and common shaft pose.
+   const a=arms[side],solution=solveGripCircle(a.shoulder,palms[side],a.axis,a.reach,scale,a.length,1);
    solution.rotation.multiply(Q().setFromAxisAngle(V(0,1,0),Math.PI/2));
    const wrist=palms[side].clone().sub(offsets[side].clone().multiplyScalar(scale).applyQuaternion(solution.rotation));
    const localY=lower.position.clone().normalize(),localZ=localY.clone().cross(hand.position.clone().applyQuaternion(bind.get(side+'ForeArm'))).normalize();

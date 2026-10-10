@@ -14,6 +14,7 @@ var ASSETS = ["js/party-avatar.js", "js/party-wire.js", "css/party-online.css", 
 /* 이 워커가 설치되는 시점에 이전 워커가 있었는가 → 있었다면 열린 화면들은 옛 버전이므로 활성화 직후 직접 다시 불러온다 */
 ASSETS.push('js/ain-bind-repair.js','js/clip-smooth.js','js/ain-two-hand.js','js/ain-grip-shape.js','js/ain-grip-ik.js','js/ain-scythe-mount.js');
 ASSETS.push('js/hand-grip.js','js/kain-grip-reference.js');   /* 손 모프 + 경량 모델에도 보존하는 카인 손잡이 기준 */
+ASSETS.push('js/mmo/hero-motion.js','js/mmo/field-feel.js');
 ASSETS.push('js/marsh-motion.js','js/training-presentation.js','js/frame-metrics.js','js/boss-motion.js');
 ASSETS.push('js/graphics-profile.js','js/combat-quality.js','js/boss-contact-volumes.js');
 ASSETS=ASSETS.concat(['swing','hit','hit_heavy','counter','counter_perfect','execute','brk','roll','tele','phase','explore','boss'].map(function(name){return 'art/audio/'+name+'.wav';}));

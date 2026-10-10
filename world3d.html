@@ -161,6 +161,7 @@ import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { Animated } from './js/party-avatar.js';
+import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
 const ME = ['ain', 'kain', 'ryu', 'sera'].includes(q.get('char')) ? q.get('char') : 'ain';
 const MOBILE = matchMedia('(pointer:coarse)').matches, REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -275,10 +276,12 @@ const me = { id: ME, root, yaw: 0, hero, get weapon() { return hero.weapon; } };
 let busy = 0, busyClip = null, atkSeq = 0;
 function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부분: 리그 되돌리기 → 믹서 → 양손 쥠. 공격 중엔 클립·경과·접점을 리그에 */
   hero.armBlend?.restore(); hero.rig?.restore(); let action = null;
-  if (busy > 0) { busy -= dt; const a = hero.current; if (a && busyClip === 'attack1') { const dur = a.getClip().duration; action = { id: 'atk' + atkSeq, clip: busyClip, kind: 'light', elapsed: a.time, duration: dur, hitAt: contactOf(ME, busyClip) * dur, combo: 0 }; } }
+  if (busy > 0) { busy -= dt; }
   else if (P.dead) hero.play('death', 'down');
   else { hero.play(moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
-  hero.mixer.update(dt); hero.rig?.apply(action, moving && busy <= 0, false, dt, hero.current?.getClip().name, null); hero.armBlend?.apply(dt);
+  hero.mixer.update(dt);
+  if (hero.current?.getClip().name === busyClip) action = fieldHeroAction(ME, hero.current.getClip(), hero.current.time, 'atk' + atkSeq);
+  hero.rig?.apply(action, moving && busy <= 0, false, dt, hero.current?.getClip().name, null); hero.armBlend?.apply(dt);
   if (hero.blob) hero.blob.position.set(root.position.x, .035, root.position.z); }
 /* ---------- 2급 지배형 (문서 204) — 같은 자리, 같은 몸, «서버와 같은 AI» ----------
    server/field-dominator.cjs 를 그대로 읽어 돌린다 (js/mmo/cjs-browser.js). 서버의 field 자리는 아래 작은 판(fieldLocal)이 맡는다:
@@ -376,7 +379,7 @@ feel.attachTrail(fh);
 const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서버와 같다 */
 let dodgeT = 0, shakeT = 0, hurtT = 0;
 function attack() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
-  hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.8; feel.swing(fh, clip); strike(null); }
+  hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip); strike(null); }
 /* 가장 가까운 보스(닿는 거리) → 없으면 몬스터. sk = { i, mult, hits } (스킬) · null (기본 공격). 맞을 대상이 없으면 false */
 function strike(sk) {
   let t = null, bd = 1e9; for (const o of net ? [...doms, ...fbs] : [...doms, ...fbs.filter(f => f.ai)]) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
@@ -402,7 +405,7 @@ addEventListener('keydown', e => { const n = ['Digit1', 'Digit2', 'Digit3', 'Dig
 { const h = document.getElementById('hint'), go = () => h && h.classList.add('gone'); addEventListener('pointerdown', go, { once: true }); setTimeout(go, 12000); }
 function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || busy > 0 || P.dead || !hero.clips[clip]) return false;
   if (gameNow < skReady[i]) { toast(esc(d.name) + ' — ' + Math.ceil((skReady[i] - gameNow) / 1000) + '초 뒤', 1.2); return false; }
-  skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.75; feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
+  skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
   window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
   if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
   if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
@@ -454,7 +457,7 @@ function dressRemote(r, info) { if (!info || !window.TW_LOOKS || !r.a) return; c
   window.TW_HAIR?.sync(r.a.root, eq); TW_LOOKS.attach(THREE, loader, r.a.root, eq, { charId: info.character || 'ain', noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
 function remoteSet(list) { const live = new Set();
   for (const [id, x, z, yaw, ai] of list) { live.add(id); let r = remotes.get(id); const info = infos[id];
-    if (!r) { if (!info) continue; r = { target: [x, z, yaw, ANIMS[ai] || 'idle'], loading: true }; remotes.set(id, r);
+    if (!r) { if (!info) continue; r = { character: info.character, target: [x, z, yaw, ANIMS[ai] || 'idle'], loading: true }; remotes.set(id, r);
       charAsset(info.character).then(([h, w]) => { if (remotes.get(id) !== r) return; r.a = new Animated(h, scene, true, false, w, info.character); r.a.root.position.set(x, 0, z); r.loading = false; dressRemote(r, infos[id]);
         r.tag = document.createElement('div'); r.tag.className = 'tag'; r.tag.textContent = info.name || ''; document.getElementById('hud').appendChild(r.tag); }); continue; }
     r.target = [x, z, yaw, ANIMS[ai] || 'idle']; if (r.a) dressRemote(r, infos[id]); }
@@ -463,7 +466,9 @@ function remoteSet(list) { const live = new Set();
 function remoteTick(dt) { for (const r of remotes.values()) { const a = r.a; if (!a) continue; const t = r.target, rp = a.root.position, dx = t[0] - rp.x, dz = t[1] - rp.z, d = Math.hypot(dx, dz);
   if (d > 6) rp.set(t[0], 0, t[1]); else { const k = Math.min(1, dt * 10); rp.x += dx * k; rp.z += dz * k; }
   let dy = t[2] - a.root.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.root.rotation.y += dy * Math.min(1, dt * 12);
-  a.armBlend?.restore(); a.rig?.restore(); a.play(t[3]); a.current.paused = false; a.mixer.update(dt); a.rig?.apply(null, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); a.armBlend?.apply(dt);
+  a.armBlend?.restore(); a.rig?.restore(); a.play(t[3]); a.current.paused = false; a.mixer.update(dt);
+  const remoteAction = fieldHeroAction(r.character, a.current?.getClip(), a.current?.time || 0, a.key);
+  a.rig?.apply(remoteAction, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); a.armBlend?.apply(dt);
   if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
   if (r.tag) { v3.set(rp.x, 2.15, rp.z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; r.tag.style.display = on ? '' : 'none'; if (on) { r.tag.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; r.tag.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } } } }
 function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
