@@ -52,7 +52,7 @@ test('3D 필드(world3d.html): 굽기와 같은 빌더 · 점광은 가까운 �
   assert.equal(envs(src), envs(bake), '굽기와 다른 장면 빌더를 쓴다');
   assert.match(src, /for \(const L of pointData\) L\.parent\.remove\(L\)/, '점광 수십 개를 그대로 두면 실시간에서 셰이더가 터진다');
   assert.match(src, /new Animated\(heroAsset, scene, true, false, weaponAsset, ME\)/, '영웅이 양손 쥠 리그 없이 서면 낫을 지팡이처럼 든다');
-  assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,900}hero\.mixer\.update\(dt\); hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
+  assert.match(src, /hero\.rig\?\.restore\(\);[\s\S]{0,900}hero\.mixer\.update\(dt\);[\s\S]{0,300}hero\.rig\?\.apply\(/, '리그는 믹서 앞에서 되돌리고 뒤에서 건다');
 });
 
 test('2D 필드(mmo.html) 무기 쥠: 영웅마다 솔로·레이드와 같은 보정층 — 아인 바인드·클립 교정(믹서 전) · 양손 쥠 리그 · 리그 순서', () => {

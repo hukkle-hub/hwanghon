@@ -50,7 +50,7 @@ export function repairAinBind(model){
   if(!swap)for(let i=0;i<p.count;i++){
    const v=V().fromBufferAttribute(p,i),sg=v.x>=0?1:-1,side=sg>0?'Left':'Right';
    // Sleeve/hand only. Do not reweight hanging coat tails near the hips.
-   if(v.y<.83||v.y>1.38||Math.abs(v.x)<.19||Math.abs(v.z)>.13)continue;
+   if(v.y<.83||v.y>1.38||Math.abs(v.x)<.12||Math.abs(v.z)>.13)continue;
    const start=V(sg*.1543,1.3843,.0215),elbow=V(sg*.245,1.16,.012),wrist=V(sg*.30,.98,.022),tip=V(sg*.327,.875,.035);
    const d=[distance(v,start,elbow),distance(v,elbow,wrist),distance(v,wrist,tip)];
    if(Math.min(...d)>.075)continue;
@@ -60,7 +60,14 @@ export function repairAinBind(model){
    const grip=T.MathUtils.smoothstep(.99-v.y,0,.055);
    if(v.y<.99){weights[0]*=1-grip;weights[1]*=1-grip;weights[2]=Math.max(weights[2],grip);}
    const total=weights.reduce((a,b)=>a+b,0);
-   for(let j=0;j<4;j++){si.setComponent(i,j,j<3?indices[j]:0);sw.setComponent(i,j,j<3?weights[j]/total:0);}
+   // A hard x=.19 cutoff reweighted one end of a 3 mm sleeve edge but
+   // left the other end on its old bones: it opened to 3–4 cm on bending.
+   // Fade the repair across the capsule boundary, retaining original weights.
+   const blend=1-T.MathUtils.smoothstep(Math.min(...d),.035,.075),mix=new Map();
+   for(let j=0;j<4;j++){const k=si.getComponent(i,j);mix.set(k,(mix.get(k)||0)+sw.getComponent(i,j)*(1-blend));}
+   for(let j=0;j<3;j++)mix.set(indices[j],(mix.get(indices[j])||0)+weights[j]/total*blend);
+   const ranked=[...mix].sort((a,b)=>b[1]-a[1]).slice(0,4),sum=ranked.reduce((s,x)=>s+x[1],0);
+   for(let j=0;j<4;j++){si.setComponent(i,j,ranked[j]?.[0]||0);sw.setComponent(i,j,(ranked[j]?.[1]||0)/sum);}
    report.vertices++;if(v.y<.96)report.handVertices++;
   }
   si.needsUpdate=true;sw.needsUpdate=true;
