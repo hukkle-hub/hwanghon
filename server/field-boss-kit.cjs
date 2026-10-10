@@ -5,7 +5,7 @@
 const seq = (from, n, gap) => Array.from({ length: n }, (_, i) => from + i * gap);
 
 /* 시간표는 2D 모션 스터디(tools/vfx/shadowfang-motion-study.html)·3D 애니매틱(문서 181 §6) 그대로.
-   hits: 판정 · tells: 화면 예고(at 에 가장 짙고 to 에 사라짐) · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
+   hits: 판정 · tells: 박자(예전 바닥 예고 — 지금은 준비 동작·소리만, style = 준비 모양) · winds: 준비 동작 창을 따로 줄 때 · wind: 기본 모양 · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
 const SF_SET = { shape: 'cone', range: 4.0, angle: 2.09, damage: .022, heal: .015 };
 const KITS = {
   shadowfang: {
@@ -15,13 +15,13 @@ const KITS = {
         lift: [[900, 0], [1250, 2.4], [4750, 2.4], [5000, 0]],
         hits: [...seq(1250, 5, 140).map((at, i) => ({ at, ...SF_SET, aim: i === 0 })), ...seq(2550, 5, 140).map((at, i) => ({ at, ...SF_SET, aim: i === 0 })),
           ...seq(3850, 7, 120).map((at, i) => ({ at, ...SF_SET, aim: i === 0 })), { at: 4750, shape: 'circle', radius: 4, damage: .12, knock: 2.4 }],
-        tells: [{ from: 0, at: 1250, to: 1810, shape: 'cone', range: 4.0, angle: 2.09 }, { from: 1950, at: 2550, to: 3110, shape: 'cone', range: 4.0, angle: 2.09 },
-          { from: 3250, at: 3850, to: 4570, shape: 'cone', range: 4.0, angle: 2.09 }, { from: 4300, at: 4750, to: 4900, shape: 'circle', radius: 4 }] },
-      thrust: { clip: 'atk_charge', duration: 2770, reach: 9.4,   /* 무음 찌르기: 1.25 s 완전히 멈췄다가 0.12 s 에 9 m */
+        tells: [{ from: 0, at: 1250, to: 1810, shape: 'cone', range: 4.0, angle: 2.09, style: 'crouch' }, { from: 1950, at: 2550, to: 3110, shape: 'cone', range: 4.0, angle: 2.09, style: 'coil' },
+          { from: 3250, at: 3850, to: 4570, shape: 'cone', range: 4.0, angle: 2.09, style: 'coil' }, { from: 4300, at: 4750, to: 4900, shape: 'circle', radius: 4, style: 'rear' }] },
+      thrust: { clip: 'atk_charge', duration: 2770, reach: 9.4, wind: 'crouch',   /* 무음 찌르기: 1.25 s 완전히 멈췄다가 0.12 s 에 9 m */
         cue: [[0, 0], [1250, .28], [1370, .62], [1770, 1]], move: [[1250, 0], [1370, 9], [1770, 10.5]],
         hits: [{ at: 1250, shape: 'line', range: 9.6, width: 1.6, back: .4, damage: .24, knock: 3, heal: .015 }], counter: [1050, 1250],
         tells: [{ from: 0, at: 1250, to: 1370, shape: 'line', range: 9.6, width: 1.6, back: .4 }] },
-      bloom: { clip: 'atk_sfbloom', duration: 6400, reach: 99, only: true,   /* 그림자 개화: 50 % 아래로 들어설 때 한 번 — 원 밖이 안전 */
+      bloom: { clip: 'atk_sfbloom', duration: 6400, reach: 99, only: true, winds: [{ from: 0, at: 1000, style: 'rear' }, { from: 1600, at: 3200, style: 'brace' }],   /* 그림자 개화: 50 % 아래로 들어설 때 한 번 — 원 밖이 안전 */
         lift: [[1000, 0], [1600, 6], [3200, 6], [3400, 0]],
         hits: [{ at: 3200, shape: 'circle', radius: 2.6, damage: .18 }, { at: 3400, shape: 'circle', radius: 8, damage: .30, knock: 2 },
           ...seq(3900, 5, 500).map(at => ({ at, shape: 'circle', radius: 8, damage: .025, pool: true }))],
@@ -38,9 +38,9 @@ const KITS = {
         hits: [{ at: 550, shape: 'cone', range: 3.4, angle: 2.2, damage: .06 }, { at: 850, shape: 'cone', range: 3.4, angle: 2.2, damage: .06 },
           { at: 1950, shape: 'cone', range: 3.4, angle: 2.4, damage: .08, aim: true }, { at: 2200, shape: 'cone', range: 3.4, angle: 2.4, damage: .08 },
           { at: 2500, shape: 'cone', range: 3.8, angle: 2.6, damage: .16, knock: 2.6 }], counter: [2250, 2500],
-        tells: [{ from: 0, at: 550, to: 850, shape: 'cone', range: 3.4, angle: 2.2 }, { from: 1100, at: 1950, to: 2200, shape: 'cone', range: 3.4, angle: 2.4 },
-          { from: 2200, at: 2500, to: 2600, shape: 'cone', range: 3.8, angle: 2.6 }] },
-      storm: { clip: 'atk_s09storm', duration: 5200, reach: 30, only: true,   /* 방전 폭우: 50 % 아래로 들어설 때 — 하늘이 어두워지고 대상 발밑에 낙뢰 6발 */
+        tells: [{ from: 0, at: 550, to: 850, shape: 'cone', range: 3.4, angle: 2.2, style: 'coil' }, { from: 1100, at: 1950, to: 2200, shape: 'cone', range: 3.4, angle: 2.4, style: 'coil' },
+          { from: 2200, at: 2500, to: 2600, shape: 'cone', range: 3.8, angle: 2.6, style: 'rear' }] },
+      storm: { clip: 'atk_s09storm', duration: 5200, reach: 30, only: true, winds: [{ from: 0, at: 1200, style: 'rear' }],   /* 방전 폭우: 50 % 아래로 들어설 때 — 하늘이 어두워지고 대상 발밑에 낙뢰 6발 */
         dim: [[0, 0], [1200, .62], [4700, .62], [5200, 0]],
         hits: seq(2800, 6, 350).map(at => ({ at, shape: 'circle', radius: 1.4, damage: .16, atTarget: true, lead: 1200 })),
         tells: [] },   /* 원은 marks 로 따로 그린다 (대상 자리에 찍힌 예고) */
@@ -52,19 +52,19 @@ const KITS = {
   jeong: {
     aggro: 14, leash: 22, walk: 2.2, ret: 3.2, engage: 3.2, recovery: [900, 750], phases: [], idleClip: 'idle_jeong', deathClip: 'death_jeong', prop: 'saber',
     skills: {
-      circle: { clip: 'atk_jeong_circle', duration: 2800, reach: 3.2, counterEvery: 4,   /* 완성된 원: 감기 → 한 바퀴 — 같은 박자·같은 반경 */
+      circle: { clip: 'atk_jeong_circle', duration: 2800, reach: 3.2, counterEvery: 4, wind: 'coil',   /* 완성된 원: 감기 → 한 바퀴 — 같은 박자·같은 반경 */
         hits: [{ at: 1500, shape: 'circle', radius: 3.0, damage: .16, knock: 2.2 }], counter: [1250, 1500],
         tells: [{ from: 550, at: 1500, to: 1650, shape: 'circle', radius: 3.0 }] },
       triple: { clip: 'atk_jeong_triple', duration: 2600, reach: 3.4,   /* 결계 가르기: 정면 3합, 한 걸음씩 */
         move: [[500, 0], [750, .3], [1280, .55], [1820, .85]],
         hits: [{ at: 750, shape: 'cone', range: 2.8, angle: 1.3, damage: .08 }, { at: 1280, shape: 'cone', range: 2.8, angle: 1.3, damage: .08 },
           { at: 1820, shape: 'cone', range: 3.2, angle: 1.0, damage: .15, knock: 2.4 }],
-        tells: [{ from: 350, at: 750, to: 800, shape: 'cone', range: 2.8, angle: 1.3 }, { from: 900, at: 1280, to: 1330, shape: 'cone', range: 2.8, angle: 1.3 },
-          { from: 1400, at: 1820, to: 1900, shape: 'cone', range: 3.2, angle: 1.0 }] },
-      back: { clip: 'atk_jeong_back', duration: 1500, reach: 3.4, behind: true,   /* 다 아는 검: 등 뒤의 대상을 고개도 안 돌리고 */
+        tells: [{ from: 350, at: 750, to: 800, shape: 'cone', range: 2.8, angle: 1.3, style: 'coil' }, { from: 900, at: 1280, to: 1330, shape: 'cone', range: 2.8, angle: 1.3, style: 'coil' },
+          { from: 1400, at: 1820, to: 1900, shape: 'cone', range: 3.2, angle: 1.0, style: 'rear' }] },
+      back: { clip: 'atk_jeong_back', duration: 1500, reach: 3.4, behind: true, wind: 'coil',   /* 다 아는 검: 등 뒤의 대상을 고개도 안 돌리고 */
         hits: [{ at: 450, shape: 'cone', range: 3.0, angle: 2.4, damage: .14, knock: 2.6, turn: Math.PI }],
         tells: [{ from: 120, at: 450, to: 520, shape: 'cone', range: 3.0, angle: 2.4, turn: Math.PI }] },
-      command: { clip: 'atk_jeong_command', duration: 2400, reach: 12,   /* 지휘 — 각도: 왼손이 그은 각도로 의장대의 그림자 셋이 파고든다 */
+      command: { clip: 'atk_jeong_command', duration: 2400, reach: 12, wind: 'rear',   /* 지휘 — 각도: 왼손이 그은 각도로 의장대의 그림자 셋이 파고든다 */
         hits: [-.32, 0, .32].map((yawOff, i) => ({ at: 1500 + i * 150, shape: 'line', range: 12, width: 1.4, back: 0, damage: .12, yawOff })),
         tells: [{ from: 600, at: 1500, to: 1850, shape: 'lines', range: 12, width: 1.4, offs: [-.32, 0, .32] }] },
     },
