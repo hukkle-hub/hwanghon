@@ -170,7 +170,7 @@ function warning(o,elapsed,now){
  const prev=hi?def.hits[hi-1].at+120:0,span=Math.max(1,h.at-prev),p=Math.max(0,Math.min(1,(elapsed-prev)/span)),counter=now>=a.counterOpen&&now<=a.counterClose;
  const x=a.skill==='shutter'?(o.homeSkillX??a.x):a.x,z=a.skill==='shutter'?(o.homeSkillZ??a.z):a.z,scale=fx.reduced?1:.96+.04*Math.sin(now*.018);
  fx.warning.visible=fx.warningOutline.visible=true;fx.warning.position.set(x,fx.floor+.045,z);fx.warningOutline.position.set(x,fx.floor+.052,z);fx.warning.rotation.y=fx.warningOutline.rotation.y=a.yaw;
- fx.warnMat.color.setHex(counter?0x64ddff:0xff321d);fx.warnLineMat.color.setHex(counter?0x9decff:0xff6948);fx.warnMat.opacity=(counter?.016:.026)+p*(counter?.045:.07)+(fx.reduced?0:Math.sin(now*.024)*.01);fx.warnLineMat.opacity=(counter?.42:.28)+p*(counter?.28:.36);
+ fx.warnMat.color.setHex(counter?0x64ddff:0xff321d);fx.warnLineMat.color.setHex(counter?0x9decff:0xff6948);fx.warnMat.opacity=(counter?.06:.08)+p*p*(counter?.2:.3)+(fx.reduced?0:Math.sin(now*.024)*.02);fx.warnLineMat.opacity=(counter?.62:.55)+p*(counter?.38:.45);   /* 어두운 지하 바닥에서 채움 .03~.1 은 안 보였다 — 끝으로 갈수록 확 차오른다 (문서 221 §1) */
  fx.warning.scale.setScalar(scale);fx.warningOutline.scale.setScalar(scale);
 }
 function updateParticles(fx,dt,attacking,alive=true,counter=false){
