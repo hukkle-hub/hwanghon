@@ -57,3 +57,30 @@ test('그림자 난무: 세트 사이 «숨» 에 옆으로 돌아가면 다음 
  run(f,s,s+1900,10); const y1=o.yaw; p.x=o.x+2.2; p.z=o.z; run(f,s+1910,s+2600,10);
  assert.ok(Math.abs(Math.atan2(Math.sin(o.yaw-y1),Math.cos(o.yaw-y1)))>1.2,'옆으로 돈다 '+y1.toFixed(2)+'→'+o.yaw.toFixed(2));
 });
+
+/* ---------- 실험체 09호 (판교 연구소) ---------- */
+function setup09(rng=.5){ const f=new Field({rng:()=>.5}),P=profile(); f.initBosses(0); const o=f.bosses.get('subject09'); f.spawnBoss(o,1000); f.rng=()=>rng;
+ const p=f.join('p',P,'pangyo_lab'); p.invulnUntil=0; p.at=1000; p.hp=p.maxHp=1e9; return {f,o,p,P}; }
+test('09호 폭주 연타: 빠른 2타 → 멈춤 → 무거운 3타 · «리듬 깨기» 로 멈춤 뒤 박자만 0/0.2/0.4 s 밀리고 반격창도 같이 민다',()=>{
+ for(const [rng,shift] of [[.1,0],[.5,200],[.9,400]]){ const {f,o,p}=setup09(rng); p.x=o.x; p.z=o.z+2.5; o.kit.target=p.id; f.tickBosses(1800);
+  assert.equal(o.kit.skill,'frenzy'); assert.equal(o.kit.shift,shift); const s=o.kit.startedAt, hits=[]; let last=p.hp;
+  for(let t=s;t<=s+4500;t+=10){ f.tickBosses(t); if(p.hp<last){ hits.push(t-s); last=p.hp; } }
+  assert.deepEqual(hits,[550,850,1950+shift,2200+shift,2500+shift],'shift '+shift);
+  }
+ const {f,o,p}=setup09(.9); p.x=o.x; p.z=o.z+2.5; o.kit.target=p.id; f.tickBosses(1800); const s=o.kit.startedAt;
+ const v=KIT.view(o); assert.equal(v.shift,400); assert.equal(v.counterOpen,s+2250+400);
+ assert.equal(KIT.tryCounter(o,s+2300),false,'밀리지 않은 박자로는 반격 못 한다'); assert.equal(KIT.tryCounter(o,s+2700),true);
+});
+test('09호 방전 폭우: 50 % 아래로 들어서면 한 번 · 낙뢰는 1.2 s 전 «대상 자리» 에 찍힌다 — 찍힌 뒤 비키면 안 맞고, 서 있으면 맞는다',()=>{
+ const {f,o,p}=setup09(); p.x=o.x; p.z=o.z+8; o.kit.target=p.id; f.tickBosses(1100); o.hp=Math.round(o.max*.49); o.kit.state='idle'; o.kit.endsAt=0;
+ f.tickBosses(1200); assert.equal(o.kit.skill,'storm'); const s=o.kit.startedAt, hp0=p.hp;
+ for(let t=s;t<=s+1650;t+=25) f.tickBosses(t); const v=KIT.view(o); assert.deepEqual(v.marks[0],[+p.x.toFixed(2),+p.z.toFixed(2)],'첫 표식은 그때의 내 자리');
+ p.x+=3; for(let t=s+1675;t<=s+2850;t+=25) f.tickBosses(t); assert.equal(p.hp,hp0,'비키면 첫 낙뢰를 피한다');
+ const q=setup09(); q.p.x=q.o.x; q.p.z=q.o.z+8; q.o.kit.target=q.p.id; q.f.tickBosses(1100); q.o.hp=Math.round(q.o.max*.49); q.o.kit.state='idle'; q.o.kit.endsAt=0; q.f.tickBosses(1200);
+ let n=0,last=q.p.hp; for(let t=q.o.kit.startedAt;t<=q.o.kit.startedAt+5200;t+=25){ q.f.tickBosses(t); if(q.p.hp<last){ if(q.p.hurt&&q.p.hurt[3]==='storm'&&q.p.hurt[2]==='subject09') n++; last=q.p.hp; } } assert.equal(n,6,'서 있으면 여섯 발');   /* 사냥터 몬스터 타격은 빼고 센다 */
+ for(let t=7000;t<40000;t+=50){ q.f.tickBosses(t); assert.ok(!(q.o.kit.state==='skill'&&q.o.kit.skill==='storm'),'두 번 열지 않는다'); }
+});
+test('09호 시간표: 판정마다 앞선 예고(또는 표식) · 판정은 기술 시간 안',()=>{
+ const S=KIT.KITS.subject09.skills; for(const [id,s] of Object.entries(S)) for(const h of s.hits){ assert.ok(h.at+(s.jitter?400:0)<s.duration+(s.jitter?400:0),id);
+  assert.ok(h.atTarget?h.lead>=1000:s.tells.some(t=>t.from<=h.at-100&&t.to>=h.at),id+' '+h.at); }
+});

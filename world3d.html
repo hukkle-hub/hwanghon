@@ -592,6 +592,7 @@ function areaTick(dt) { const p = root.position, a = AREAS.find(x => x.kind === 
       areaEl.innerHTML = '<b>' + esc2(a.name) + '</b><small>' + (a.kind === 'rest' ? '쉬어 가는 곳' : (a.lv ? 'Lv ' + a.lv[0] + '~' + a.lv[1] : '') + (a.mobs ? ' · ' + esc2(a.mobs) : '')) + '</small>'; areaT = 3.6; } }
   if (areaT > 0) { areaT -= dt; areaEl.style.opacity = Math.max(0, Math.min(1, areaT / 0.8, (3.6 - areaT) / 0.4)); } else areaEl.style.opacity = 0; }
 /* ---------- 돌리기 ---------- */
+let dimLights = null; const dimFog = new THREE.Color(), dimBg = new THREE.Color();   /* 방전 폭우 때 낮출 조명·안개·하늘 — 그릴 때만 */
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
 /* ?debug=1 — 휴대폰 무게 표시 (js/mmo/perf-meter.js, 문서 211) */
 const dbgEl = document.getElementById('dbg'), DBG = q.get('debug') === '1'; dbgEl.hidden = !DBG;
@@ -643,7 +644,7 @@ function tick() { perf.begin();
     COMBAT.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = COMBAT.view(ai); if (v) applyBossAction(o, v, gameNow); }
   { const bn = bossClock(); for (const o of fbs) { if (!o.root.visible && !(o.fx && o.fx.tailT > 0)) continue;
       if (o.mixer) { if (o.fx) prepareBossMotion(o, bn); else if (o.kfx) prepareKitMotion(o, bn); o.mixer.update(dt); }
-      if (o.kfx) { const ev = updateKitMotion(o, dt, bn) || {}; if (ev.impact) STAGE.event(o, 'impact'); }
+      if (o.kfx) { const ev = updateKitMotion(o, dt, bn) || {}; if (ev.impact) STAGE.event(o, 'impact'); if (ev.tele) STAGE.event(o, 'tele'); }
       if (o.fx) { const ev = updateBossMotion(o, dt, bn) || {}; if (ev.impact) { if (o.stage) STAGE.event(o, 'impact'); else if (Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .14); } } }
   STAGE.tick(dt, bn); }
   feel.tick(dt); floatTick(dt);
@@ -659,7 +660,11 @@ function tick() { perf.begin();
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
   STAGE.applyCamera(dt);   /* 보스 연출 카메라 · 충격 킥 (문서 221) */
+  /* 방전 폭우: 그릴 때만 조명을 낮춘다 — 시간대가 정한 세기는 그대로 두고, 예고 원·번개(조명 안 받는 재질)는 밝게 남는다.
+     노출(toneMappingExposure)은 블룸 경로(렌더 타깃)에 안 먹어서 휘도가 78.6 → 79.2 로 그대로였다 (문서 222 §6) */
+  const dimK = STAGE.dim > 0 ? 1 - STAGE.dim * .75 : 1; if (dimK < 1) { if (!dimLights) { dimLights = []; scene.traverse(l => { if (l.isLight && !l.userData.keepLit) dimLights.push(l); }); } for (const l of dimLights) { l.userData.i0 = l.intensity; l.intensity *= dimK; } if (scene.fog) { dimFog.copy(scene.fog.color); scene.fog.color.multiplyScalar(dimK); } if (scene.background && scene.background.isColor) { dimBg.copy(scene.background); scene.background.multiplyScalar(dimK); } }
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
+  if (dimK < 1) { for (const l of dimLights) l.intensity = l.userData.i0; if (scene.fog) scene.fog.color.copy(dimFog); if (scene.background && scene.background.isColor) scene.background.copy(dimBg); }
   perf.end(); if (BENCH) { BENCH.tick(performance.now()); if (BENCH.done && !benchShown) { benchShown = true; benchCard(); } } requestAnimationFrame(tick); }
 { const L0 = document.getElementById('load'); if (TRAVEL) { L0.classList.add('out'); setTimeout(() => { L0.hidden = true; }, 700); } else L0.hidden = true; }
 if (TRAVEL && !INDOOR) { const rc = document.getElementById('regionCard'); rc.innerHTML = '<b>' + esc(Z.title || ZONE) + '</b><small>' + esc(TRAVEL.fromTitle) + '에서 · ' + esc(String(TRAVEL.label || '').split('·').slice(1).join('·').trim() || '길을 따라') + '</small>'; requestAnimationFrame(() => rc.classList.add('on')); setTimeout(() => rc.classList.remove('on'), 3600); }   /* 이동해 왔으면 카드가 서서히 걷힌다 */
