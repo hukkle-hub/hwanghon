@@ -32,3 +32,13 @@ test('섀도우 팽: 표식·번개 풀을 만들지 않는다 (atTarget 판정�
   const o = boss('shadowfang'); assert.equal(o.kfx.marks.length, 0); applyKitAction(o, act(o, 'flurry'), 1000); updateKitMotion(o, .016, 1000 + 2600);
   assert.ok(Math.abs(o.model.position.y - 2.4) < 1e-6); assert.equal(o.root.position.y, 0, '판정 자리(root)는 땅에');
 });
+
+test('정 장관: 대기·처치는 전용 클립 · 등 뒤 예고는 뒤로(π) · 지휘는 세 줄 한 장(선분 쌍)', () => {
+  const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
+  const tr = n => new THREE.NumberKeyframeTrack('.position[x]', [0, n], [0, 1]), names = ['idle', 'walk', 'death', 'idle_jeong', 'death_jeong', ...Object.values(KIT.KITS.jeong.skills).map(s => s.clip)];
+  const o = { b: { id: 'jeong' }, root, model }; setupKitMotion(o, { animations: names.map(n => new THREE.AnimationClip(n, 1.5, [tr(1.5)])) }, model, scene, KIT.KITS.jeong);
+  assert.equal(o.kfx.clip.getClip().name, 'idle_jeong'); assert.equal(o.deathClip.name, 'death_jeong');
+  applyKitAction(o, act(o, 'back', { yaw: .4 }), 1000); updateKitMotion(o, .016, 1000 + 300); assert.ok(o.kfx.warning.visible); assert.ok(Math.abs(o.kfx.warning.rotation.y - (.4 + Math.PI)) < 1e-6, '등 뒤로');
+  const g = o.kfx.geos.command[0]; assert.ok(o.kfx.warningOutline.isLineSegments); const one = o.kfx.geos.triple[0].line.attributes.position.count;
+  assert.equal(g.line.attributes.position.count, 3 * 8, '사각형 셋 = 선분 12개'); assert.ok(one > 0);
+});

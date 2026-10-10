@@ -47,6 +47,29 @@ const KITS = {
     },
     weights: (d, phase) => d > 3.6 ? {} : { frenzy: 1 },
   },
+  /* 정 장관 — 원작 EP26(문서 149 §3): 의전용 군도 · 변주 없는 원 · 정면 결계 3합 · 보지 않고 쳐내는 등 뒤 · 왼손이 그리는 각도.
+     전용 동작은 tools/3d/jeong-clips.mjs 가 굽는다(문서 223). 고유 규칙 «외운 원»: 원은 매번 소수점까지 같고, 반격창은 네 번째 원에만 열린다 */
+  jeong: {
+    aggro: 14, leash: 22, walk: 2.2, ret: 3.2, engage: 3.2, recovery: [900, 750], phases: [], idleClip: 'idle_jeong', deathClip: 'death_jeong', prop: 'saber',
+    skills: {
+      circle: { clip: 'atk_jeong_circle', duration: 2800, reach: 3.2, counterEvery: 4,   /* 완성된 원: 감기 → 한 바퀴 — 같은 박자·같은 반경 */
+        hits: [{ at: 1500, shape: 'circle', radius: 3.0, damage: .16, knock: 2.2 }], counter: [1250, 1500],
+        tells: [{ from: 550, at: 1500, to: 1650, shape: 'circle', radius: 3.0 }] },
+      triple: { clip: 'atk_jeong_triple', duration: 2600, reach: 3.4,   /* 결계 가르기: 정면 3합, 한 걸음씩 */
+        move: [[500, 0], [750, .3], [1280, .55], [1820, .85]],
+        hits: [{ at: 750, shape: 'cone', range: 2.8, angle: 1.3, damage: .08 }, { at: 1280, shape: 'cone', range: 2.8, angle: 1.3, damage: .08 },
+          { at: 1820, shape: 'cone', range: 3.2, angle: 1.0, damage: .15, knock: 2.4 }],
+        tells: [{ from: 350, at: 750, to: 800, shape: 'cone', range: 2.8, angle: 1.3 }, { from: 900, at: 1280, to: 1330, shape: 'cone', range: 2.8, angle: 1.3 },
+          { from: 1400, at: 1820, to: 1900, shape: 'cone', range: 3.2, angle: 1.0 }] },
+      back: { clip: 'atk_jeong_back', duration: 1500, reach: 3.4, behind: true,   /* 다 아는 검: 등 뒤의 대상을 고개도 안 돌리고 */
+        hits: [{ at: 450, shape: 'cone', range: 3.0, angle: 2.4, damage: .14, knock: 2.6, turn: Math.PI }],
+        tells: [{ from: 120, at: 450, to: 520, shape: 'cone', range: 3.0, angle: 2.4, turn: Math.PI }] },
+      command: { clip: 'atk_jeong_command', duration: 2400, reach: 12,   /* 지휘 — 각도: 왼손이 그은 각도로 의장대의 그림자 셋이 파고든다 */
+        hits: [-.32, 0, .32].map((yawOff, i) => ({ at: 1500 + i * 150, shape: 'line', range: 12, width: 1.4, back: 0, damage: .12, yawOff })),
+        tells: [{ from: 600, at: 1500, to: 1850, shape: 'lines', range: 12, width: 1.4, offs: [-.32, 0, .32] }] },
+    },
+    weights: (d, phase, rel) => rel > 1.9 && d < 3.4 ? { back: 1 } : d > 4.2 ? { command: 1 } : { circle: 2, triple: 3 },
+  },
 };
 const round2 = n => +n.toFixed(2), angle = (x, z) => Math.atan2(x, z), dAng = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 const kitOf = o => KITS[o && o.id] || null, k = kitOf;
@@ -75,7 +98,7 @@ function inShape(o, p, h) {
   return false;
 }
 function skillWeights(o, p) {
-  const k = kitOf(o), a = o.kit, d = Math.hypot(p.x - o.x, p.z - o.z), w = { ...k.weights(d, phaseOf(o)) };
+  const k = kitOf(o), a = o.kit, d = Math.hypot(p.x - o.x, p.z - o.z), rel = Math.abs(dAng(angle(p.x - o.x, p.z - o.z), o.yaw || 0)), w = { ...k.weights(d, phaseOf(o), rel) };   /* rel: 대상이 정면에서 몇 rad — 등 뒤 기술용 */
   for (const id of Object.keys(w)) { const s = k.skills[id]; if (!s || s.only || d > s.reach + .15) w[id] = 0; }
   const last = a.history[a.history.length - 1]; if (last && w[last] > 0 && Object.keys(w).filter(id => w[id] > 0).length > 1) w[last] *= .3;   /* 같은 기술 연달아는 드물게 */
   return w;
@@ -87,9 +110,10 @@ function choose(field, o, p) {
   let r = Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * total; for (const id of ids) { r -= Math.max(0, w[id]); if (r < 0) return id; } return ids.find(id => w[id] > 0) || null;
 }
 function begin(field, o, p, now, skill) {
-  const def = kitOf(o).skills[skill]; if (p) turn(o, p.x, p.z, Math.PI);
+  const def = kitOf(o).skills[skill]; if (p && !def.behind) turn(o, p.x, p.z, Math.PI);   /* 등 뒤 기술은 돌아서지 않는다 — «보지도 않고» */
   const j = def.jitter, shift = j ? j.steps[Math.min(j.steps.length - 1, Math.floor(Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * j.steps.length))] : 0;
-  setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [] });
+  let live = true; if (def.counterEvery) { const c = o.kit.counts || (o.kit.counts = {}); c[skill] = (c[skill] || 0) + 1; live = c[skill] % def.counterEvery === 0; }   /* 외운 원: 네 번째마다 */
+  setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [], counterLive: live });
   const h = o.kit.history; h.push(skill); while (h.length > 4) h.shift();
 }
 function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recovery.length, phaseOf(o)) - 1]; setState(o, 'idle', now, rec, { target: null }); }
@@ -103,7 +127,7 @@ function skillTick(field, o, now) {
   while (a.hitIndex < def.hits.length && t >= at(def.hits[a.hitIndex])) {
     const h = def.hits[a.hitIndex]; a.hitIndex++;
     if (h.aim) { const p = target(field, o); if (p) turn(o, p.x, p.z, Math.PI / 2); }   /* 난무: 세트마다 방향을 다시 잡는다 (숨 동안 틀어짐) */
-    const mk = h.atTarget && a.marks[a.hitIndex - 1], origin = mk ? { x: mk[0], z: mk[1], yaw: 0 } : def.move ? { x: a.fromX, z: a.fromZ, yaw: o.yaw } : o, hit = { ...h, skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
+    const mk = h.atTarget && a.marks[a.hitIndex - 1], yh = (o.yaw || 0) + (h.turn || 0) + (h.yawOff || 0), origin = mk ? { x: mk[0], z: mk[1], yaw: 0 } : def.move && h.shape === 'line' ? { x: a.fromX, z: a.fromZ, yaw: yh } : { x: o.x, z: o.z, yaw: yh }, hit = { ...h, skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
     for (const p of live(field, o)) if (inShape(origin, p, hit)) { const r = field.bossStrike(o, p, hit, now);
       if (h.heal && r && r.amount > 0) o.hp = Math.min(o.max, (o.hp || 0) + Math.round(o.max * h.heal)); }   /* 흡혈: 맞힌 만큼 보스가 회복 (보스 고유 규칙, 문서 181 §1 ④) */
   }
@@ -129,12 +153,12 @@ function tick(field, o, now = Date.now()) {
   else if (a.state !== 'idle') setState(o, 'idle', now, 0, { target: null });
 }
 function tryCounter(o, now = Date.now()) {
-  const a = o && o.kit, def = a && kitOf(o).skills[a.skill]; if (!a || a.state !== 'skill' || !def?.counter || a.countered) return false;
+  const a = o && o.kit, def = a && kitOf(o).skills[a.skill]; if (!a || a.state !== 'skill' || !def?.counter || a.countered || a.counterLive === false) return false;
   const sh = def.jitter && def.counter[0] >= def.jitter.at ? a.shift || 0 : 0, t = now - a.startedAt - sh; if (t < def.counter[0] || t > def.counter[1]) return false;
   a.countered = true; setState(o, 'stagger', now, 1350, { skill: a.skill, target: null }); return true;
 }
 function view(o) {
-  if (!enabled(o) || !o.alive || !o.kit) return null; const a = o.kit, def = kitOf(o).skills[a.skill], c = def?.counter, sk = a.state === 'skill';
+  if (!enabled(o) || !o.alive || !o.kit) return null; const a = o.kit, def = kitOf(o).skills[a.skill], c = a.counterLive === false ? null : def?.counter, sk = a.state === 'skill';
   return { id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
     fromX: sk ? round2(a.fromX) : 0, fromZ: sk ? round2(a.fromZ) : 0, shift: sk ? a.shift || 0 : 0, marks: sk && a.marks && a.marks.length ? a.marks.map(m => m || null) : undefined,
     counterOpen: c && sk ? a.startedAt + c[0] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0, counterClose: c && sk ? a.startedAt + c[1] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0 };

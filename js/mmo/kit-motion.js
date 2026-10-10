@@ -10,23 +10,30 @@ const yawLerp = (a, b, k) => a + Math.atan2(Math.sin(b - a), Math.cos(b - a)) * 
 /* 예고 모양 — 보스 앞(+Z)을 기준으로 바닥(XZ)에 */
 function shapeGeo(t) {
   if (t.shape === 'circle') return { fill: new THREE.CircleGeometry(t.radius, 56).rotateX(-Math.PI / 2), line: ringLine(t.radius, 0, Math.PI * 2, true) };
+  if (t.shape === 'lines') { const fill = [], line = []; for (const off of t.offs) { const g = shapeGeo({ ...t, shape: 'line', back: t.back || 0 }); g.fill.rotateY(off); g.line.rotateY(off); fill.push(g.fill); line.push(g.line); }   /* 지휘 — 각도: 벌린 세 줄을 한 장에 */
+    return { fill: mergeGeo(fill, true), line: mergeGeo(line, false) }; }
   if (t.shape === 'line') { const w = t.width / 2, b = -(t.back || 0), r = t.range, pts = [[-w, b], [w, b], [w, r], [-w, r]];
     const g = new THREE.BufferGeometry().setFromPoints(pts.map(([x, z]) => new THREE.Vector3(x, 0, z))); g.setIndex([0, 2, 1, 0, 3, 2]);
-    return { fill: g, line: new THREE.BufferGeometry().setFromPoints([...pts, pts[0]].map(([x, z]) => new THREE.Vector3(x, 0, z))) }; }
+    return { fill: g, line: segs([...pts, pts[0]].map(([x, z]) => new THREE.Vector3(x, 0, z))) }; }
   const a = t.angle / 2, n = 28, v = [new THREE.Vector3()], idx = [];   /* cone: 부채꼴 */
   for (let i = 0; i <= n; i++) { const q = -a + 2 * a * i / n; v.push(new THREE.Vector3(Math.sin(q) * t.range, 0, Math.cos(q) * t.range)); if (i) idx.push(0, i + 1, i); }
   const g = new THREE.BufferGeometry().setFromPoints(v); g.setIndex(idx);
-  return { fill: g, line: new THREE.BufferGeometry().setFromPoints([v[0], ...v.slice(1), v[0]]) };
+  return { fill: g, line: segs([v[0], ...v.slice(1), v[0]]) };
 }
-function ringLine(r, a0, a1) { const p = []; for (let i = 0; i <= 64; i++) { const q = a0 + (a1 - a0) * i / 64; p.push(new THREE.Vector3(Math.sin(q) * r, 0, Math.cos(q) * r)); } return new THREE.BufferGeometry().setFromPoints(p); }
+function mergeGeo(list, indexed) { const pos = [], idx = []; let base = 0;
+  for (const g of list) { const p = g.attributes.position.array; if (indexed) { const ix = g.index ? g.index.array : [...Array(p.length / 3).keys()]; for (const i of ix) idx.push(i + base); pos.push(...p); }
+    else pos.push(...p); base += p.length / 3; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); if (indexed) g.setIndex(idx); g.userData.segments = !indexed; return g; }
+function ringLine(r, a0, a1) { const p = []; for (let i = 0; i <= 64; i++) { const q = a0 + (a1 - a0) * i / 64; p.push(new THREE.Vector3(Math.sin(q) * r, 0, Math.cos(q) * r)); } return segs(p); }
+function segs(pts) { const a = []; for (let i = 0; i + 1 < pts.length; i++) a.push(pts[i], pts[i + 1]); return new THREE.BufferGeometry().setFromPoints(a); }   /* 꺾은선 → 선분 쌍 */
 
 export function setupKitMotion(o, gl, model, scene, kit, floor = 0, reduced = false) {
   o.mixer = new THREE.AnimationMixer(model); o.kacts = {};
   for (const c of gl.animations) o.kacts[c.name] = o.mixer.clipAction(c);
-  o.deathClip = gl.animations.find(c => /^death$/i.test(c.name)) || null;   /* boss-stage 사망 장면 */
+  o.deathClip = gl.animations.find(c => c.name === (kit.deathClip || 'death')) || gl.animations.find(c => /^death$/i.test(c.name)) || null;   /* boss-stage 사망 장면 — 정 장관은 군도를 짚고 선 채 */
   const warnMat = new THREE.MeshBasicMaterial({ color: 0xff321d, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
   const warnLineMat = new THREE.LineBasicMaterial({ color: 0xff6948, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-  const warning = new THREE.Mesh(new THREE.BufferGeometry(), warnMat), warningOutline = new THREE.Line(new THREE.BufferGeometry(), warnLineMat);
+  const warning = new THREE.Mesh(new THREE.BufferGeometry(), warnMat), warningOutline = new THREE.LineSegments(new THREE.BufferGeometry(), warnLineMat);   /* 선분 쌍 — 세 줄 예고도 한 장에 */
   for (const m of [warning, warningOutline]) { m.visible = false; m.renderOrder = 4; m.userData.noCam = true; scene.add(m); }
   const geos = {}; for (const [id, s] of Object.entries(kit.skills)) geos[id] = (s.tells || []).map(shapeGeo);
   const ringPool = []; for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(new THREE.RingGeometry(.92, 1, 56).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x9b7bff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
@@ -34,14 +41,14 @@ export function setupKitMotion(o, gl, model, scene, kit, floor = 0, reduced = fa
   /* 대상 발밑 표식(낙뢰 원)과 번개 — atTarget 판정이 있는 보스만 */
   const marks = [], bolts = []; if (Object.values(kit.skills).some(s => s.hits.some(h => h.atTarget))) {
     const r = Math.max(...Object.values(kit.skills).flatMap(s => s.hits.filter(h => h.atTarget).map(h => h.radius)));
-    for (let i = 0; i < 8; i++) { const fm = new THREE.Mesh(new THREE.CircleGeometry(r, 40).rotateX(-Math.PI / 2), warnMat.clone()), lm = new THREE.Line(ringLine(r, 0, Math.PI * 2), warnLineMat.clone());
+    for (let i = 0; i < 8; i++) { const fm = new THREE.Mesh(new THREE.CircleGeometry(r, 40).rotateX(-Math.PI / 2), warnMat.clone()), lm = new THREE.LineSegments(ringLine(r, 0, Math.PI * 2), warnLineMat.clone());
       for (const m of [fm, lm]) { m.visible = false; m.renderOrder = 4; m.userData.noCam = true; scene.add(m); } marks.push({ fm, lm });
       const b = new THREE.Mesh(new THREE.CylinderGeometry(.09, .22, 16, 6, 1, true), new THREE.MeshBasicMaterial({ color: 0xd8e8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
       b.visible = false; b.userData.noCam = true; scene.add(b); bolts.push({ m: b, t: 9 }); } }
   let chest = null; model.traverse(b => { if (!chest && b.isBone && /Spine2$/.test(b.name)) chest = b; });
   const glow = new THREE.PointLight(0x9b7bff, 0, 7, 1.6); glow.userData.keepLit = true; (chest || model).add(glow);   /* 가슴 균열 — 유일한 예고 빛 (문서 181) */
   o.kfx = { kit, marks, bolts, dim: 0, warning, warningOutline, warnMat, warnLineMat, geos, warnSeq: -1, warnBeat: -1, ringPool, ringActive: 0, floor, glow, baseY: model.position.y, reduced, clip: null, seq: NaN, hitIdx: 0, from: null };
-  play(o, 'idle', true); return o.kfx;
+  play(o, kit.idleClip || 'idle', true); return o.kfx;
 }
 function play(o, name, loop, clamp = false) {
   const a = o.kacts[name] || o.kacts.idle; if (!a) return null; const fx = o.kfx; if (fx.clip === a) return a;
@@ -53,7 +60,7 @@ export function applyKitAction(o, a, now) {
   if (fx.seq !== a.seq) { fx.seq = a.seq; fx.hitIdx = 0;
     if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX || a.x, z: a.fromZ || a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = a.yaw; }
     else if (a.motion === 'stagger') play(o, 'stagger', false, true);
-    else play(o, a.motion === 'walk' || a.motion === 'return' ? 'walk' : 'idle', true); }
+    else play(o, a.motion === 'walk' || a.motion === 'return' ? 'walk' : (fx.kit.idleClip || 'idle'), true); }
 }
 /* mixer.update 전에 — 서버 시계로 클립 시각을 정한다 (헤드리스·느린 기기에서도 박자가 같다) */
 export function prepareKitMotion(o, now) {
@@ -73,10 +80,10 @@ export function updateKitMotion(o, dt, now) {
   let tell = -1; if (skill && skill.tells && !dying) for (let i = 0; i < skill.tells.length; i++) { const q = skill.tells[i]; if (t >= S(skill, a, q.from) && t <= S(skill, a, q.to)) tell = i; }
   if (tell >= 0) { const q = skill.tells[tell], g = fx.geos[a.skill][tell]; if (fx.warnSeq !== a.seq || fx.warnBeat !== tell) { fx.warning.geometry = g.fill; fx.warningOutline.geometry = g.line; fx.warnSeq = a.seq; fx.warnBeat = tell; }
     const qf = S(skill, a, q.from), qa = S(skill, a, q.at), p = qa > qf ? Math.max(0, Math.min(1, (t - qf) / (qa - qf))) : 1, counter = a.counterOpen && now >= a.counterOpen && now <= a.counterClose;
-    const ox = skill.move && fx.from ? fx.from.x : o.root.position.x, oz = skill.move && fx.from ? fx.from.z : o.root.position.z;
-    fx.warning.visible = fx.warningOutline.visible = true; fx.warning.position.set(ox, fx.floor + .045, oz); fx.warningOutline.position.set(ox, fx.floor + .052, oz); fx.warning.rotation.y = fx.warningOutline.rotation.y = a.yaw;
+    const fromStart = skill.move && fx.from && q.shape === 'line', ox = fromStart ? fx.from.x : o.root.position.x, oz = fromStart ? fx.from.z : o.root.position.z;   /* 돌진(직선)은 출발점에서, 걸어 나가며 베는 부채꼴은 지금 자리에서 */
+    fx.warning.visible = fx.warningOutline.visible = true; fx.warning.position.set(ox, fx.floor + .045, oz); fx.warningOutline.position.set(ox, fx.floor + .052, oz); fx.warning.rotation.y = fx.warningOutline.rotation.y = a.yaw + (q.turn || 0) + (q.yawOff || 0);   /* 등 뒤(turn) · 비튼 줄(yawOff) */
     fx.warnMat.color.setHex(counter ? 0x64ddff : q.post ? 0x7a3cff : 0xff321d); fx.warnLineMat.color.setHex(counter ? 0x9decff : q.post ? 0xa98bff : 0xff6948);
-    fx.warnMat.opacity = q.post ? .16 + (fx.reduced ? 0 : Math.sin(now * .01) * .04) : .08 + p * p * .3; fx.warnLineMat.opacity = q.post ? .5 : .55 + p * .45;
+    fx.warnMat.opacity = q.post ? .16 + (fx.reduced ? 0 : Math.sin(now * .01) * .04) : q.shape === 'lines' ? .14 + p * p * .44 : .08 + p * p * .3;   /* 멀리 뻗는 세 줄은 낮은 카메라에서 비스듬히 보여 얇다 — 더 진하게 */ fx.warnLineMat.opacity = q.post ? .5 : .55 + p * .45;
     fx.glow.intensity = (q.post ? 1 : 1 + p * 5) * (a.skill === 'thrust' && t > 1100 && t < 1250 ? 2.4 : 1); }   /* 찌르기: 1.1 s 에 번쩍 — 타이밍 신호 */
   else { fx.warning.visible = fx.warningOutline.visible = false; fx.glow.intensity += ((skill ? 2 : .6) - fx.glow.intensity) * Math.min(1, dt * 4); }
   /* 무거운 판정이 지나가면 충격(카메라 킥·고리) — 난무 잔타는 빼고 */

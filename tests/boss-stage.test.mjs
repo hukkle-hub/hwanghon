@@ -124,3 +124,8 @@ test('사망: 떠 있던 보스는 땅으로 떨어지고(끝나면 제자리) �
   const L = fakeBoss('leviathan', { netAct: undefined }); L.model.children[0].geometry = new THREE.BoxGeometry(14, 3, 2); S.attach(L); assert.ok(L.stage.span > L.h, '길이 ' + L.stage.span);
   S.death(L, () => {}); run(2); assert.equal(L.model.rotation.x, 0, '긴 몸은 기울이지 않는다'); assert.ok(L.model.position.y < .3, '주저앉기는 한다');
 });
+
+test('설정: 기술표형 보스도 등장 반경이 AI 공격 반경보다 크다 (섀도우 팽 · 09호 · 정 장관)', () => {
+  const KITS = require('../server/field-boss-kit.cjs').KITS;
+  for (const [id, k] of Object.entries(KITS)) assert.ok(stageOf({ id, name: 'x' }).introR > k.aggro + 3, id + ' ' + stageOf({ id, name: 'x' }).introR + ' vs ' + k.aggro);
+});
