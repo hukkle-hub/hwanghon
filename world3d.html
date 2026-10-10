@@ -162,7 +162,7 @@ import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
-import { FACADE_U } from './js/mmo/facade-shader.js';
+import { FACADE_U, aviBlink } from './js/mmo/facade-shader.js';
 import { addContactShadows } from './js/mmo/contact-shadow.js';
 import { Animated } from './js/party-avatar.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
@@ -629,6 +629,7 @@ function benchCard() { const el = document.getElementById('benchCard'), gl = ren
   el.append(cp, again, close); el.hidden = false; window.__benchResult = text; }
 function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
+  aviBlink(gameNow / 1000, lampK);   /* 항공 장애등 깜빡임 (문서 229 §4) */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

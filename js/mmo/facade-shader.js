@@ -6,6 +6,13 @@
    - 유리는 보는 각에 따라 하늘빛을 조금 비춘다(프레넬) · 거칠기를 낮춰 해 반짝임
    FACADE_U.uLampK 를 시간대가 정한다(밤일수록 켜진 방이 밝다) */
 export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null } };
+/* 항공 장애등 — 50 m 넘는 탑 꼭대기 모서리의 붉은 등. 재질 하나를 같이 써서 world3d 가 깜빡인다(aviBlink) */
+export const AVI = { mat: null, n: 0 };
+export function aviLight(THREE, scene, pts, h) { if (!AVI.mat) AVI.mat = new THREE.MeshBasicMaterial({ color: 0xff2a1a, fog: false, toneMapped: false });
+  let a = 0, b = 0, best = -1; for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) { const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]); if (d > best) { best = d; a = i; b = j; } }   /* 가장 먼 두 모서리 */
+  const g = AVI.geo || (AVI.geo = new THREE.SphereGeometry(0.55, 8, 6));
+  for (const k of [a, b]) { const m = new THREE.Mesh(g, AVI.mat); m.position.set(pts[k][0], h + 1.1, pts[k][1]); m.userData.noCam = true; scene.add(m); AVI.n++; } }
+export function aviBlink(t, lampK) { if (!AVI.mat) return; const on = (t % 1.6) < 0.55, k = 0.35 + 0.65 * Math.min(1, lampK); AVI.mat.color.setRGB(on ? 1.6 * k : 0.12, on ? 0.18 * k : 0.01, on ? 0.1 * k : 0.01); }
 
 const PARS = `
 varying vec3 vFW; varying vec3 vFN;

@@ -295,16 +295,22 @@ export const isView3d = () => VIEW3D;
 /* 꾸밈 조각을 재질별로 합쳐 장면에 — 건물 하나에 재질당 메시 하나 (뒤에서 static-merge 가 칸별로 다시 묶는다) */
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
+  if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
   for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1) continue;
     const [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx);
     /* 옥상 난간 — 윤곽 안쪽으로 두께만큼 */
     if (o.roof) { const T = 0.22, ph = 0.75 + 0.25 * hashU(id, e, 31), g = new THREE.BoxGeometry(L, ph, T); g.rotateY(yaw); g.translate((p[0] + q[0]) / 2 - nx * T / 2, h + ph / 2, (p[1] + q[1]) / 2 - nz * T / 2); P.parapet.push(g); }
+    /* 처마 띠(코니스)·1층 위 띠 — 벽에서 튀어나온 띠가 그늘 선을 만든다. 뽑아 올린 상자가 «건물» 로 읽히는 윤곽 (문서 229 §4) */
+    if (o.ledge !== false) { const band = (y, th, out) => { const g = new THREE.BoxGeometry(L + out * 2, th, out + 0.06); g.rotateY(yaw); g.translate((p[0] + q[0]) / 2 + nx * (out / 2 - 0.03), y, (p[1] + q[1]) / 2 + nz * (out / 2 - 0.03)); P.ledge.push(g); };
+      if (o.roof && h > 6) band(h - 0.2, 0.4, 0.32);
+      if (o.shops && h > 6.5) band(3.62, 0.24, 0.22);
+      if (o.roof && h > 30) for (let fy = 1; fy * 14.4 < h - 6; fy++) if (hashU(id, fy, 33) < 0.55) band(fy * 14.4 + 0.1, 0.18, 0.12); }   /* 높은 건물: 4 층마다 얇은 띠(건물마다 다르게) */
     /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
     if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
       for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;

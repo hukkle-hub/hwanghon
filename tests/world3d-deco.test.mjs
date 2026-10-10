@@ -34,7 +34,8 @@ test('옥상 것은 윤곽 안 · 상가 띠와 간판은 벽에서 0.6 m 안 �
   assert.ok(P.parapet.length === PTS.length && P.sign.length > 0 && P.ac.length > 0, '꾸밈이 비었다');
   for (const k of ['parapet', 'tank', 'ac']) for (const g of P[k]) { const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); assert.ok(inPoly([x, z], PTS) || dist(x, z, PTS) < 0.02, `${k} 가 윤곽 밖 (${x.toFixed(2)}, ${z.toFixed(2)})`); assert.ok(p.getY(i) >= h - 1e-6, `${k} 가 지붕 아래`); } }
-  for (const k of ['shop', 'sign']) for (const g of P[k]) { const p = g.attributes.position;
+  assert.ok(P.ledge.length > 0, '처마·층 띠가 없다 (문서 229 §4)');
+  for (const k of ['shop', 'sign', 'ledge']) for (const g of P[k]) { const p = g.attributes.position;
     for (let i = 0; i < p.count; i++) { const x = p.getX(i), z = p.getZ(i); assert.ok(inPoly([x, z], PTS) || dist(x, z, PTS) < 0.6, `${k} 가 벽에서 너무 멀다 (${x.toFixed(2)}, ${z.toFixed(2)})`); } }
 });
 
@@ -42,6 +43,7 @@ test('간판 끄기(강남은 POI 네온이 따로) · 낮은 건물엔 간판 �
   assert.equal(buildingDeco(THREE, PTS, 14, 9, { shops: true, signs: false }).sign.length, 0);
   assert.equal(buildingDeco(THREE, PTS, 4.2, 9, { shops: true }).sign.length, 0, '1층으로 잘린 건물(4.2 m)에 간판이 지붕 위로 솟는다');
   const P = buildingDeco(THREE, PTS, 14, 9, { shops: true }); assert.equal(P.parapet.length + P.tank.length + P.ac.length, 0);
+  assert.ok(P.ledge.every(g => { g.computeBoundingBox(); return g.boundingBox.max.y < 4; }), '지붕 안 꾸미는 건물엔 처마 없이 1층 위 띠만');
 });
 
 test('꾸밈(noCam)은 카메라 막이에서 빠진다 — 건물 상자가 이미 막는다', () => {
@@ -61,5 +63,5 @@ test('꾸밈도 제 자리 칸(48 m)으로 합쳐진다 — 막이에서 빠져�
 test('빌더 연결: 3D 에서만 꾸밈, 강남은 간판 빼고', () => {
   assert.match(SRC, /if \(VIEW3D\) addDeco\(THREE, scene, buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !nearSide && !ruined, shops: !tall \}\)/);
   const osm = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
-  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !near, shops: true, signs: false \}\)/);
+  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
 });
