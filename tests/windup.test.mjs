@@ -20,14 +20,15 @@ test('준비: 시작 전 0 · 창의 85 % 에 다 감김 · 판정 뒤 180 ms �
   applyWind(o, w, 1425, true); const half = g.rotation.y; assert.ok(half > .05 && half < STYLES.coil.twist - .05, '반쯤 ' + half);
   applyWind(o, w, 1900, true); assert.ok(Math.abs(g.rotation.y - STYLES.coil.twist) < 1e-9, '다 감김');
   applyWind(o, w, 2060, true); assert.ok(g.rotation.y < STYLES.coil.twist, '터지는 중'); assert.ok(g.rotation.x > 0, '앞으로 쏟아짐 ' + g.rotation.x);
-  applyWind(o, w, 2200, true); assert.equal(g.rotation.y, 0); assert.equal(g.rotation.x, 0); assert.equal(g.position.y, 0);
+  applyWind(o, w, 2200, true); assert.equal(g.rotation.y, 0); assert.equal(g.rotation.x, 0); assert.deepEqual(g.scale.toArray(), [1, 1, 1]);
 });
 
 test('모양마다 다르게 읽힌다: 웅크림 = 낮아지고 숙임 · 젖힘 = 뒤로 · 감기 = 비틂', () => {
-  const at = s => { const o = rig(); applyWind(o, [{ from: 0, at: 1000, style: s }], 950, true); return o.wind.g; };
+  const at = s => { const o = rig();   /* 웅크림 = 눌림(발밑 원점) */ applyWind(o, [{ from: 0, at: 1000, style: s }], 950, true); return o.wind.g; };
   const c = at('crouch'), r = at('rear'), k = at('coil');
-  assert.ok(c.position.y < -.25 && c.rotation.x > .15, '웅크림'); assert.ok(r.rotation.x < -.2, '젖힘'); assert.ok(k.rotation.y > .4, '감기');
-  assert.ok(Math.abs(c.position.y) > Math.abs(r.position.y) * 2, '웅크림이 젖힘보다 훨씬 낮다');
+  assert.ok(c.scale.y < .92 && c.rotation.x > .15, '웅크림'); assert.ok(r.rotation.x < -.2, '젖힘'); assert.ok(k.rotation.y > .4, '감기');
+  assert.ok(1 - c.scale.y > (1 - r.scale.y) * 2, '웅크림이 젖힘보다 훨씬 눌린다');
+  for (const g of [c, r, k]) assert.equal(g.position.y, 0, '틀을 내리지 않는다 — 발이 바닥에 파묻힌다');
 });
 
 test('떨림은 끝무렵에만, 움직임 줄이기면 없음', () => {

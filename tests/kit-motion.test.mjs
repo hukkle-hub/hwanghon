@@ -37,7 +37,7 @@ test('방전 폭우: 대상 자리 원은 없다 — 하늘이 어두워지고 �
 test('기술표형 보스 전부: 어떤 기술의 어떤 순간에도 바닥 예고 메시가 없다 · 판정 전에는 몸 틀이 움직인다', () => {
   for (const id of Object.keys(KIT.KITS)) for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) {
     const o = boss(id), scene = o.root.parent; applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000); let moved = 0;
-    for (let t = 0; t < sk.duration; t += 50) { updateKitMotion(o, .016, 1000 + t); const g = o.wind.g; if (t < sk.hits[0].at) moved = Math.max(moved, Math.abs(g.rotation.x) + Math.abs(g.rotation.y) + Math.abs(g.position.y));
+    for (let t = 0; t < sk.duration; t += 50) { updateKitMotion(o, .016, 1000 + t); const g = o.wind.g; if (t < sk.hits[0].at) moved = Math.max(moved, Math.abs(g.rotation.x) + Math.abs(g.rotation.y) + Math.abs(1 - g.scale.y)); assert.equal(g.position.y, 0, `${id}.${name}: 틀을 내리면 발이 묻힌다`);
       for (const b of [...o.kfx.bolts, ...o.kfx.ringPool]) b.m.visible = false;   /* 번개·충격파는 판정 «뒤» 의 공격 그 자체 */
       assert.equal(shown(scene), 0, `${id}.${name} ${t} ms 에 바닥 표시`); }
     assert.ok(moved > .05, `${id}.${name}: 첫 판정 전 준비 동작이 없다 ${moved}`); }
