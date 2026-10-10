@@ -3,7 +3,7 @@
 const http=require('node:http'),fs=require('node:fs/promises'),path=require('node:path');
 const root=path.resolve(process.argv[2]||'../../output/ain-fullbody-skills-2026-10-10');
 http.createServer(async(req,res)=>{
- res.setHeader('Access-Control-Allow-Origin','http://127.0.0.1:8796');res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');
+ if(['http://127.0.0.1:8796','http://127.0.0.1:8798'].includes(req.headers.origin))res.setHeader('Access-Control-Allow-Origin',req.headers.origin);res.setHeader('Access-Control-Allow-Methods','POST, OPTIONS');res.setHeader('Access-Control-Allow-Headers','Content-Type');
  if(req.method==='OPTIONS'){res.writeHead(204).end();return;}
  const match=/^\/capture\/((?:ain|kain)-(?:fullbody|details|mobile|dungeon|field)-skills\.webm)$/.exec(req.url);
  if(req.method!=='POST'||!match){res.writeHead(404).end();return;}

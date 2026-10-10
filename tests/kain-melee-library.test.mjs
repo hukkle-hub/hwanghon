@@ -18,16 +18,24 @@ test('Kain six melee takes: actual original/mobile skin, wrists and blade geomet
   assert.ok(r.elbowSeparation>.22&&r.minSignedElbowSpacing>.16,name+' crossed elbows');
   assert.ok(r.maxArmRate<20,name+' discontinuous arm');
   assert.ok(r.collapsedFraction<.006&&r.stretchedFraction<(lod==='mobile'?.015:.018),name+' collapsed/stretched arm surface');
+  // Inspect each shoulder seam, including triangles partly weighted to chest.
+  // A healthy left arm must not hide a bad right arm in a pooled percentage.
+  for(const [side,skin]of Object.entries(r.armBoundaries))assert.ok(skin.collapsedFraction<.01&&skin.stretchedFraction<.025&&skin.collapsedAreaFraction<.015,name+' '+side+' shoulder/arm seam');
   assert.ok(r.bladeContact<.39,name+' blade misses target');
   const bad={...r,leftGripGap:.2,collapsedFraction:.5,maxArmRate:90};
   assert.throws(()=>assert.ok(bad.leftGripGap<.001&&bad.collapsedFraction<.006&&bad.maxArmRate<20));
  }
- for(const clips of Object.values(report.models)){const d=clips.counter.contactPose.elbowDrops;assert.ok(d.Right>0&&d.Left>.20,'counter support elbow must remain lowered, lead arm must not shrug');}
+ for(const clips of Object.values(report.models)){const d=clips.counter.contactPose.elbowDrops;assert.ok(d.Right>.18&&d.Left>.20,'counter lead biceps must remain visible below shoulder, support elbow lowered');}
 });
 
 test('Kain natural counter shape rejects the actual old lifted-elbow source',()=>{
  const accept=pose=>assert.ok(pose.elbowDrops.Right>0&&pose.elbowDrops.Left>.20,'raised support elbow');
  for(const lod of ['original','mobile']){accept(report.models[lod].counter.contactPose);assert.throws(()=>accept(report.rejectedCounterSourcePose[lod]));}
+});
+
+test('Kain lead biceps criterion rejects the actual previously deployed right-arm pose',()=>{
+ const accept=pose=>assert.ok(pose.elbowDrops.Right>.18,'right upper arm hidden by raised elbow');
+ for(const lod of ['original','mobile']){accept(report.models[lod].counter.contactPose);assert.throws(()=>accept(report.rejectedRightArmPose[lod]));}
 });
 
 test('Kain recovery returns the coupled sword to ready instead of drifting behind the body',()=>{
