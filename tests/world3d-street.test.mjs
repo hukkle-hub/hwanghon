@@ -32,7 +32,7 @@ test('거리 소품: 전봇대·전선·신호등·쓰레기·정류장이 서�
 });
 
 test('같은 길은 늘 같은 소품 — 장면 난수 R 을 안 쓴다', () => {
-  const pos = () => { const ctx = mkCtx(); L.street(ctx, roadsW, built); return ctx.scene.children.map(o => Array.from(o.geometry.attributes.position.array.slice(0, 60)).map(x => +x.toFixed(3)).join(',')); };
+  const pos = () => { const ctx = mkCtx(); L.street(ctx, roadsW, built); return ctx.scene.children.filter(o => o.geometry).map(o => Array.from(o.geometry.attributes.position.array.slice(0, 60)).map(x => +x.toFixed(3)).join(',')); };
   assert.deepEqual(pos(), pos());
   const body = SRC.slice(SRC.indexOf('export function street('), SRC.indexOf('/* ---------- 나무'));
   assert.ok(!/\bR\(\)|Math\.random|ctx\.R\b/.test(body));
@@ -72,4 +72,15 @@ test('웅덩이: 차도 가장자리 안에만 · 하늘 비추는 잔잔한 물
   for (const o of pud) { assert.equal(o.material.customProgramCacheKey(), 'water-calm'); assert.ok(o.material.polygonOffsetUnits < -24, '길보다 앞'); o.updateMatrixWorld(true);
     const P = o.geometry.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); assert.ok(onRoad(v.x, v.z), `웅덩이가 차도 밖 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(v.y > 0.06, '길 판 아래'); } }
   assert.equal(L.street(mkCtx(), roadsW, built, { puddles: false }) === undefined || true, true);
+});
+
+test('가로등 (문서 229 §11): 큰길 양쪽에만 · 차도·건물 위 아님 · 셋 중 둘쯤 켜짐(점광원) · 골목엔 없음', () => {
+  const ctx = mkCtx(); L.STREET.lamps = 0; L.street(ctx, roadsW, built);
+  const lights = ctx.scene.children.filter(o => o.isPointLight && o.distance === 18);
+  assert.ok(L.STREET.lamps >= 8, '가로등 ' + L.STREET.lamps);
+  assert.ok(lights.length >= L.STREET.lamps * 0.45 && lights.length <= L.STREET.lamps * 0.9, `켜진 등 ${lights.length} / ${L.STREET.lamps}`);
+  for (const l of lights) { assert.ok(Math.abs(l.position.y - 8) < 0.01); assert.ok(Math.abs(l.position.x) > 6 || Math.abs(l.position.z) < 12, `골목(남북 길)에 가로등 (${l.position.x.toFixed(1)}, ${l.position.z.toFixed(1)})`);
+    assert.ok(Math.abs(l.position.z) < 12, `큰길에서 멀다 ${l.position.z.toFixed(1)}`); }
+  for (const [x, z] of L.STREET.at.lamp || []) { assert.ok(!onRoad(x, z), `기둥이 차도 위 (${x}, ${z})`); assert.ok(!L.inPoly([x, z], built[0].pts)); }
+  const ys = new Set(lights.map(l => Math.sign(l.position.z))); assert.equal(ys.size, 2, '큰길 양쪽');
 });

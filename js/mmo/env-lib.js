@@ -372,7 +372,8 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
 /* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
    한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
    메시는 하나하나 세우고(정적 합치기가 48 m 칸으로 묶는다), 전선(선)만 160 m 칸별로 직접 묶는다. */
-export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, at: {} };   /* at: 검수용 자리 몇 개씩 */
+export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, lamps: 0, at: {} };
+export const STREETLAMP = { mat: null };   /* 가로등 머리 발광 — world3d 시간대가 세기를 (문서 229 §11) */   /* at: 검수용 자리 몇 개씩 */
 const seeAt = (k, p) => { const l = STREET.at[k] || (STREET.at[k] = []); if (l.length < 4) l.push([+p[0].toFixed(1), +p[1].toFixed(1)]); };
 export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, walk } = ctx, inBand = (p, pad) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
   const carRoads = roadsW.filter(rw => !/footway|path|pedestrian|steps|cycleway|track/.test(rw.r.kind));
@@ -395,6 +396,8 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
       l.push(a[0] + (b[0] - a[0]) * u0, y(u0), a[2] + (b[2] - a[2]) * u0, a[0] + (b[0] - a[0]) * u1, y(u1), a[2] + (b[2] - a[2]) * u1); } STREET.wires++; };
   const poleG = new THREE.CylinderGeometry(0.13, 0.18, 10, 7); poleG.translate(0, 5, 0); const armG = new THREE.BoxGeometry(1.6, 0.12, 0.12), trafoG = new THREE.CylinderGeometry(0.32, 0.32, 0.9, 8);
   const VEH = /primary|secondary|tertiary|residential|unclassified|living_street|service/, MAJOR = /primary|secondary|tertiary/;
+  const lampPoleG = new THREE.CylinderGeometry(0.09, 0.14, 8.5, 7); lampPoleG.translate(0, 4.25, 0); const lampArmG = new THREE.BoxGeometry(2.5, 0.1, 0.1), lampHeadG = new THREE.BoxGeometry(0.75, 0.16, 0.32);
+  const lampOn = STREETLAMP.mat || (STREETLAMP.mat = new THREE.MeshStandardMaterial({ color: 0x3a3020, emissive: 0xffd8a0, emissiveIntensity: 1.6, roughness: 0.5 }));
   for (const rw of roadsW) { const k = rw.r.kind; if (!VEH.test(k)) continue; const id = rw.r.id | 0, side = hashU(id, 1, 1) < 0.5 ? -1 : 1, off = rw.width / 2 + 1.1;
     /* 전봇대: 골목·이면도로(대로는 지중화) — 28~34 m 간격, 한쪽 길가 */
     if (!MAJOR.test(k) || k === 'tertiary') { let prev = null, acc = 8 + hashU(id, 2, 2) * 12;
@@ -403,6 +406,14 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
           const ry = -Math.atan2(dz, dx); add(poleG, conc, p[0], 0, p[1]); add(armG, steel, p[0], 9.3, p[1], ry + Math.PI / 2); if (hashU(id, i, 7 + (acc | 0)) < 0.25) add(trafoG, steel, p[0] + uz * side * 0.35, 7.6, p[1] - ux * side * 0.35);
           STREET.poles++; seeAt('pole', p); if (prev) for (const [h, lat] of [[9.3, -0.7], [9.3, 0.7], [8.4, 0]]) wire([prev[0] - uz * lat, h, prev[1] + ux * lat], [p[0] - uz * lat, h, p[1] + ux * lat]); prev = p; }
         acc -= L; } }
+    /* 가로등 (문서 229 §11): 큰길 양쪽 34~40 m 마다 엇갈려, 길가 0.8 m · 8.5 m 기둥에 2.4 m 팔을 차도 쪽으로. 셋 중 둘만 켜짐(폐허). 켜진 등은 점광원 — world3d 가 가까운 몇 개만 비추고 빛 기둥은 다 그린다 */
+    if (MAJOR.test(k)) for (const sd of [-1, 1]) { let acc = (sd > 0 ? 6 : 24) + hashU(id, 21, sd + 2) * 10;
+      for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L, o4 = rw.width / 2 + 0.8;
+        for (; acc < L; acc += 34 + hashU(id, i, 23 + (acc | 0)) * 6) { const p = [a[0] + ux * acc - uz * o4 * sd, a[1] + uz * acc + ux * o4 * sd]; if (!inBand(p, 30) || solid(p)) continue;
+          const ry = -Math.atan2(dz, dx), inx = uz * sd, inz = -ux * sd, hx = p[0] + inx * 2.3, hz = p[1] + inz * 2.3, lit = hashU(id, i, 29 + (acc | 0)) < 0.67;   /* in = 차도 쪽 */
+          add(lampPoleG, steel, p[0], 0, p[1]); add(lampArmG, steel, p[0] + inx * 1.2, 8.35, p[1] + inz * 1.2, ry + Math.PI / 2); add(lampHeadG, lit ? lampOn : dark, hx, 8.25, hz, ry + Math.PI / 2, false);
+          if (lit) { const Lp = new THREE.PointLight(0xffd29a, 10, 18, 1.5); Lp.position.set(hx, 8.0, hz); scene.add(Lp); }
+          STREET.lamps++; seeAt('lamp', p); } acc -= L; } }
     /* 버스 정류장: 큰길 160~220 m 마다, 길 쪽을 본다 */
     if (MAJOR.test(k)) { let acc = 40 + hashU(id, 3, 3) * 80;
       for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L;
