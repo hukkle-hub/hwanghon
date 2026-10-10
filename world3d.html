@@ -162,6 +162,7 @@ import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
 import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
+import { FACADE_U } from './js/mmo/facade-shader.js';
 import { Animated } from './js/party-avatar.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
@@ -184,7 +185,7 @@ const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json()
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
 setView3d(true);   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
-const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true });   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
+const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
@@ -237,6 +238,7 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
     if (sk) { sk.top.value.copy(o.top); sk.hor.value.copy(o.hor); sk.fogc.value.copy(o.fog); sk.sunc.value.copy(o.sunc).multiplyScalar(o.glow); sk.sun.value.copy(o.dir).normalize(); }
     sun.color.copy(o.sun); sun.intensity = o.sunI; sunDir.copy(o.dir); hemiL.color.copy(o.hemi); hemiL.groundColor.copy(o.ground); hemiL.intensity = o.hemiI; fillL.intensity = o.fillI;
     renderer.toneMappingExposure = o.exp; if (lampK !== o.lampK) { lampK = o.lampK; nearLights(root.position); }
+    FACADE_U.uLampK.value = o.lampK; if (FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value.copy(o.hor).lerp(o.top, 0.35);   /* 창: 밤일수록 켜진 방이 밝고, 유리는 지금 하늘빛을 비춘다 */
     if (o.name !== todName) { todName = o.name; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;

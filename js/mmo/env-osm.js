@@ -17,7 +17,8 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    farSide: 화면 위(먼 쪽)에 둘 실측 지점 · exitPairs: 길 양쪽 인도에 마주 선 출구(중심선) · walk: 걷는 띠(없으면 계산)
    gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
-import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
+import * as L from './env-lib.js';
+import { patchFacadeMaterial } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
@@ -96,7 +97,13 @@ export function build(THREE, scene, osm, opt = {}) {
       const r = R(); if (r < 0.05) { g.fillStyle = R() < .6 ? '#ffcf7a' : '#7ad8ff'; g.fillRect(x + 3, y + 10, 26, 44); } else if (r < 0.35) { g.fillStyle = 'rgba(255,140,90,.18)'; g.fillRect(x + 3, y + 10, 26, 22); } }
     g.fillStyle = 'rgba(0,0,0,.25)'; for (let fy = 0; fy < 4; fy++) g.fillRect(0, fy * 64 + 58, w, 6); }));
   facades.forEach(t => t.repeat.set(1 / 14.4, 1 / 14.4));   /* 텍스처 한 장 = 8창 × 4층 = 14.4 m 정사각 */
-  const facadeMats = facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
+  let facadeMats = facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
+  /* 3D: 그린 창 대신 가짜 실내 창 (interior mapping, 문서 229) — 벽 텍스처는 창 없이 얼룩·빗물 자국만. 2D 굽기는 그대로 */
+  if (L.isView3d() && CFG.interior !== false) facadeMats = [0, 1, 2, 3].map(k => patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.05, map: canvasTex(128, 128, (g, w, h) => { let sd = 977 + k * 131; const R = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);   /* 따로 굴리는 난수 — 공용 R 을 쓰면 뒤의 건물 높이·차 자리가 2D 굽기와 달라진다 */
+    const wall = ['#55535c', '#5f5a60', '#4a505c', '#625b54'][k]; g.fillStyle = wall; g.fillRect(0, 0, w, h);
+    for (let i = 0; i < 260; i++) { const v = R(); g.fillStyle = v < .5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)'; g.fillRect(R() * w, R() * h, 2 + R() * 10, 2 + R() * 6); }
+    for (let i = 0; i < 9; i++) { const x = R() * w; g.fillStyle = 'rgba(10,8,12,.10)'; g.fillRect(x, 0, 1 + R() * 3, h); } }) })));   /* 빗물 자국 — 세로 줄 */
+  if (L.isView3d() && CFG.interior !== false) facadeMats.forEach(m => m.map.repeat.set(1 / 9.6, 1 / 9.6));
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 });
   const cutMat = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });   /* 잘라 낸 건물 윗면 — 새까마면 구멍처럼 보인다 */
 
