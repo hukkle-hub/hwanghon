@@ -161,6 +161,7 @@ import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js';
 import { createFieldFeel, contactOf } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
+import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
 import { Animated } from './js/party-avatar.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
@@ -214,6 +215,10 @@ if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE
           + ' vec2 cq = vWG * 0.011 + vec2(uCloudT * 0.05, uCloudT * 0.018); float cs = smoothstep(0.42, 0.68, gn(cq) * 0.65 + gn(cq * 2.3 + 4.0) * 0.35); diffuseColor.rgb *= 1.0 - uCloudK * cs; }'); };   /* 구름 그림자: 땅 위로 옅은 그늘이 천천히 지나간다 */
     m.customProgramCacheKey = () => 'ground-macro'; m.needsUpdate = true; });
   window.__groundMats = done.size; }
+/* 높이 AO (문서 228) — 영상 «게임 속 빛의 30년» 의 «간접광은 미리 굽고 게임 중엔 읽기만». 지역을 열 때 위에서 찍은 높이 지도로 한 번 굽고, 위를 향한 면이 간접광(반구광)만 줄인다.
+   차·건물·소품이 바닥에 «붙어» 보이게. 바깥 필드만(실내는 천장이 높이 지도를 가린다). 아직 시제품 — ?hao=1 로 켠다(휴대폰 1024² 는 텍셀 0.88 m 라 붙음 그늘이 옅다, 문서 228) */
+const HAO = (env.kind || Z.kind || meta.kind) === 'field' && q.get('hao') === '1' ? bakeHeightAO(THREE, renderer, scene, { res: MOBILE ? 1024 : 2048, k: +(q.get('haobk') || 1.15), rad: +(q.get('haor') || 3.2), skip: o => o.name === 'sky' || o.userData.noCam && !o.isInstancedMesh }) : null;
+if (HAO) { HAO.mats = attachHeightAO(THREE, scene, HAO, { skip: o => o.name === 'sky', strength: +(q.get('haok') || 1), direct: +(q.get('haod') || 0) }); if (q.get('haodbg')) window.__HAO = HAO; window.__AO = { res: HAO.res, meter: HAO.meter, ms: HAO.ms, mean: HAO.mean, mats: HAO.mats, rect: HAO.rect.map(v => +v.toFixed(1)) }; }
 const LIFE = (env.kind || Z.kind || meta.kind) === 'field' ? createCityLife(THREE, scene, { center: env.spawn || meta.spawn || { x: 0, z: 0 }, tops: FAR.tops || [], seed: [...ZONE].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) }) : null;   /* 까마귀·연기·점멸·밤 불빛 (문서 219) */
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
   POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK; L.distance = l.distance; L.decay = l.decay; }); }
