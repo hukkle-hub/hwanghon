@@ -1,0 +1,77 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\armored-idle-plant-v1\\g5_armored_mobile.glb",
+  "species": "G5_ARMORED",
+  "sha256": "94c5ef12433743e7bb4a7c2bc6cb78445bf55d16deff93fe17922d90716e6668",
+  "bytes": 2251580,
+  "triangles": 16373,
+  "vertices": 9532,
+  "materials": 3,
+  "maxWeightError": 1.2456439435482025e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "attack",
+      "duration": 1.4
+    },
+    {
+      "name": "heavy_charge",
+      "duration": 1.7
+    },
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "overhead_crush",
+      "duration": 2
+    },
+    {
+      "name": "shield_bash",
+      "duration": 1.4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.4
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.5969302654266357,
+      -7.759355753478303e-7,
+      -0.4554685056209564
+    ],
+    [
+      0.684684157371521,
+      1.8499844074249268,
+      0.3520859181880951
+    ]
+  ],
+  "height": 1.849985183360502,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

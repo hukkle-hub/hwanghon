@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\breaker-idle-plant-v1\\g5_breaker.glb",
+  "species": "G5_BREAKER",
+  "sha256": "5a53c045688db7d91dfa507e66c1a66c7b5e3e542d982088d921b31963c4b961",
+  "bytes": 5379840,
+  "triangles": 45077,
+  "vertices": 24841,
+  "materials": 2,
+  "maxWeightError": 1.0844087228178978e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.8
+    },
+    {
+      "name": "heavy_slam",
+      "duration": 1.8
+    },
+    {
+      "name": "structure_slam",
+      "duration": 1.8
+    },
+    {
+      "name": "attack1",
+      "duration": 1.8
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 2048,
+      "height": 2048
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.502711296081543,
+      -2.1937921701464802e-8,
+      -0.18547728657722473
+    ],
+    [
+      0.502711296081543,
+      1.850000023841858,
+      0.1854768991470337
+    ]
+  ],
+  "height": 1.8500000457797796,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

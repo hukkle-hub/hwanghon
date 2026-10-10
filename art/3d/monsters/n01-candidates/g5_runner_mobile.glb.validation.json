@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\runner-idle-plant-v1\\g5_runner_mobile.glb",
+  "species": "G5_RUNNER",
+  "sha256": "6a2b0eba8397cedb50a92454c40e9fba4e9cd694efaa02dc5d9910781143fbed",
+  "bytes": 2447404,
+  "triangles": 19064,
+  "vertices": 15277,
+  "materials": 3,
+  "maxWeightError": 1.334119588136673e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "run",
+      "duration": 0.5
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.1
+    },
+    {
+      "name": "flank_swipe",
+      "duration": 1.1
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.1
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.4345513880252838,
+      -6.047503120498732e-7,
+      -0.20647865533828735
+    ],
+    [
+      0.43046340346336365,
+      1.8497661352157593,
+      0.20790866017341614
+    ]
+  ],
+  "height": 1.8497667399660713,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

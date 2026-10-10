@@ -1,0 +1,69 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\walker-idle-plant-v1\\g5_walker_mobile.glb",
+  "species": "G5_WALKER",
+  "sha256": "ceb5493fc1850d96c55db8a2ec73b4b52a84f8de33c94c50726a8460bd45e5f9",
+  "bytes": 1892056,
+  "triangles": 17129,
+  "vertices": 11206,
+  "materials": 3,
+  "maxWeightError": 1.17652234621346e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "slow_combo",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.3333333333333333
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.38297659158706665,
+      -0.001423226436600089,
+      -0.21796973049640656
+    ],
+    [
+      0.3817555606365204,
+      1.850000262260437,
+      0.1739233434200287
+    ]
+  ],
+  "height": 1.851423488697037,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

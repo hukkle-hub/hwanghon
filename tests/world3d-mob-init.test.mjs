@@ -4,9 +4,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { mobsFromPacket } from '../js/mmo/field-mobs.js';
+import { bodyFor as n01BodyFor } from '../js/mmo/n01-body-catalog.js';
 
 const page = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
-const names = ['const tag3d =', 'let ECO =', 'const mobBody =', 'const mobView ='];
+const names = ['const tag3d =', 'let ECO =', 'const mobBody =', 'const n01CandidateCache=', 'const mobSpeciesBody=', 'const mobView ='];
 const declarations = names.map(name => {
   const at = page.indexOf(name); assert.ok(at >= 0, name);
   return { at, code: page.slice(at, page.indexOf('\n', at)) };
@@ -21,7 +22,7 @@ async function bootstrap(parts) {
   const row = ['daejeon:hunt:nest:0', 'G5_BREAKER', 1, 2, true, 'idle', 1, 100, 0];
   const run = new AsyncFunction('env', `
     const {connectField, createMobView, mobsFromPacket, document, root, bossPacket,
-      remoteSet, v3, cam, THREE, SkeletonUtils, scene, load, window, CATALOG} = env;
+      remoteSet, v3, cam, THREE, SkeletonUtils, scene, load, window, CATALOG,location,n01BodyFor} = env;
     const q = new URLSearchParams(), ZONE='daejeon', ARRIVE=null, ME='ain', ONLINE=true;
     const gltfs={}, infos={}, netEl={textContent:''}, innerWidth=915, innerHeight=412;
     let net=null, ANIMS=[], lastField=null, fieldN=0;
@@ -31,7 +32,7 @@ async function bootstrap(parts) {
     return {net, netMobs, MOBS, infos, fieldN, status:netEl.textContent};
   `);
   const result = await run({
-    mobsFromPacket, window: {}, THREE: {}, SkeletonUtils: {clone() {}}, scene: {}, CATALOG: [], cam: {},
+    mobsFromPacket, n01BodyFor,location:{search:''},window: {}, THREE: {}, SkeletonUtils: {clone() {}}, scene: {}, CATALOG: [], cam: {},
     v3: {x:0,y:0,z:0,set(){return this;},project(){observed.tags++;return this;}},
     document: {getElementById(){return {textContent:''};}}, root: {position:{set(){}}},
     bossPacket() {}, remoteSet(list) {observed.remote.push(list);},

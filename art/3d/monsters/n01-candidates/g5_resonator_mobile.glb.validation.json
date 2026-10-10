@@ -1,0 +1,73 @@
+{
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\resonator-idle-plant-v1\\g5_resonator_mobile.glb",
+  "species": "G5_RESONATOR",
+  "sha256": "8f4b2eb38e4b35cc61016c8478c0d22321e79b439fc0ed61446d9840c9330ab5",
+  "bytes": 1981088,
+  "triangles": 15827,
+  "vertices": 9663,
+  "materials": 2,
+  "maxWeightError": 1.2386590242385864e-7,
+  "joints": 65,
+  "clips": [
+    {
+      "name": "hit",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "idle",
+      "duration": 4
+    },
+    {
+      "name": "walk",
+      "duration": 0.7
+    },
+    {
+      "name": "attack",
+      "duration": 1.5
+    },
+    {
+      "name": "aura_cast",
+      "duration": 2.4
+    },
+    {
+      "name": "self_defence",
+      "duration": 1.5
+    },
+    {
+      "name": "die",
+      "duration": 2
+    },
+    {
+      "name": "attack1",
+      "duration": 1.5
+    },
+    {
+      "name": "death",
+      "duration": 2
+    }
+  ],
+  "textures": [
+    {
+      "width": 1024,
+      "height": 1024
+    }
+  ],
+  "boundsYUp": [
+    [
+      -0.47828054428100586,
+      0.00008628691284684464,
+      -0.19829154014587402
+    ],
+    [
+      0.4784843325614929,
+      1.850000262260437,
+      0.19936753809452057
+    ]
+  ],
+  "height": 1.8499139753475902,
+  "negativeTests": 10,
+  "technical": "pass",
+  "visualApproved": false,
+  "motionApproved": false,
+  "devicePerformanceTested": false
+}

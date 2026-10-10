@@ -17,7 +17,8 @@ test('real websocket: field.mobs → mobHit/skill → profile inventory/XP updat
  const e=app.field.ecologies.get('namsan'),m=[...e.mobs.values()].find(m=>m.group.kind==='nest'),p=app.field.players.get(c.id);
  p.x=m.x;p.z=m.z;p.invulnUntil=Date.now()+60000;const state=app.field.mobStates.get(m.id);state.hp=state.max=100000;
  const snap=await c.next(msg=>msg.type==='field'&&msg.mobs.some(r=>r[0]===m.id));const row=snap.mobs.find(r=>r[0]===m.id);
- assert.equal(row.length,9);assert.equal(row[4],true);assert.equal(row[7],100);assert.ok(Number.isSafeInteger(row[8]));
+ assert.ok(row.length===9||row.length===10,'v2 base + optional named-action metadata');assert.equal(row[4],true);assert.equal(row[7],100);assert.ok(Number.isSafeInteger(row[8]));
+ if(row.length===10){assert.equal(typeof row[9].key,'string');assert.ok(row[9].windupMs>=150&&row[9].windupMs<=5000);assert.equal(row[9].seq,row[8]);}
  c.send({type:'fieldHit',mob:m.id,generation:m.generation,damage:1e12});const hit=await c.next(msg=>msg.type==='mobHit');assert.ok(hit.dmg>0&&hit.dmg<100000);assert.equal(hit.down,false);
  c.send({type:'fieldSkill',skill:0,mob:m.id,generation:m.generation,mult:1e12});const sk=await c.next(msg=>msg.type==='mobHit'&&msg.skill===0);assert.equal(sk.ok,true);assert.ok(sk.dmg>hit.dmg&&sk.dmg<100000);
  state.hp=1;const before=app.store.get(c.id);await new Promise(r=>setTimeout(r,370));

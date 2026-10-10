@@ -1,0 +1,59 @@
+N01 tier-5 six-role review candidates — 2026-10-10
+
+Body ids: G5_WALKER, G5_RUNNER, G5_BREAKER, G5_STALKER, G5_ARMORED,
+G5_RESONATOR. Human anatomy/core-only infection; original approved references
+remain the design authority. These assets do not silently approve themselves.
+
+Each species: full GLB (2048 PNG) and mobile GLB (1024 PNG, <=20,000 triangles).
+65-joint skin, embedded PNG, no Draco/meshopt compression. All body-specific
+skills plus idle/walk/hit/die. Runner also run; Armored three attack clips.
+Validation JSON is technical evidence only, not a substitute for video QA.
+
+Body source: six existing Hi3D downloads, retained unchanged outside this
+repository in output/monster-bodies-v11/incoming. No further generation paid.
+Local editing: bind/deformation repair, separate core, retargeted animation,
+LOD/PNG compaction. Native face/clothing retained; no character regeneration.
+Walker and Runner hands: local MakeHuman/MPFB CC0 base mesh, cropped from
+art/3d/src/mh/kain_base_mpfb.glb. See docs/design/81-character-pipeline-mpfb.md and
+art/3d/base/README.md for existing source provenance. Donor original unmodified.
+Replacement hand geometry is wrist-connected and forearm-weighted at cuff.
+Fingers are relaxed silhouettes; independent grasp animation is not supplied.
+Walker soles: closed caps made from the native lower-shoe vertices/weights,
+offset outward 0.8mm to avoid coplanar flicker and merged into the existing
+body primitive/material. This repairs the dark side/toe void without replacing
+the face, upper boot, body or animation samples. High/mobile remain <=3 materials.
+
+Actual integration, deliberately opt-in for director review:
+world3d.html?offline=1&n01Candidates=1
+Add &n01Detail=high for full model instead of mobile.
+tools/3d/n01-six-review.html — actual runtime loader/role-AI review fixtures.
+tools/3d/n01-crowd-review.html — 20 monsters + 10 existing hero LODs.
+
+Server code is on a separate feature branch. No main push or Render redeploy.
+No new drop/XP/clock/invasion policy. Production N01 facility/NPC event
+producer is not included; role context and host strike adapter are supplied.
+S25 Ultra hardware FPS/heat/long-session memory are not measured here.
+
+2026-10-10 residual refinement (second delivery):
+All six idle clips: only eight lower-leg rotation tracks are corrected, using
+actual native skinned sole centroids. No root/body reshape, combat retiming,
+walk/hit/death freeze, or added draw calls. High and mobile share exact samples.
+Read-only regression measures every idle frame; <=1mm horizontal sole drift,
+<=2mm floor penetration. A deliberately injected3cm drift must be rejected.
+Stalker back/shoulder coat: local Gaussian skin-weight smoothing and upper-arm
+influence consolidation; native mesh/UV/PNG/rest rig and all combat samples
+remain unchanged. This reduces stretching, not a claim of simulated cloth or
+perfect retopology. Selected full rear motion and close views are supplied.
+The earlier delivery and twelve former models are preserved outside the repo.
+
+2026-10-10 third-delivery Stalker skin refinement:
+Upper garment uses a continuous shoulder/spine weight field. Head/neck-dominant
+vertices, hands, lower body and the separate core retain their native weights
+(maximum floating-point normalization difference3e-8). Rest mesh/UV/PNG/rig and
+every animation sample are byte-exact vs second delivery; no retiming or cost.
+Full-body native front/rear clips and close images are reviewed separately.
+Regression checks actual deformed edges throughout all5 clips, including a
+deliberately injected one-meter vertex spike. This is a local cloth deformation
+repair, not full cloth simulation or final director approval. Existing wrinkles,
+hair clumps and finger silhouette limitations still apply. See
+docs/gpt/n01-stalker-coat-v8-2026-10-10.txt for measurements and integration limits.
