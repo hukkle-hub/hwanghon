@@ -26,7 +26,8 @@ diffuseColor.rgb *= mix(1.0, 0.7, wet) * mix(1.0, 0.5, pw);
 `;
 const REFL = `
 { vec3 V = normalize(vPW - cameraPosition); float cosV = max(0.0, -V.y), fres = pow(1.0 - cosV, 4.0);
-  totalEmissiveRadiance += uSkyRefl * pw * (0.55 + 1.1 * fres) * (1.0 + 0.25 * uLampK); }
+  vec3 sky = mix(vec3(dot(uSkyRefl, vec3(0.299, 0.587, 0.114))), uSkyRefl, 0.6);   /* 채도 40 % 빼기 — 밤 자줏빛 하늘이 그대로 비치니 페인트 얼룩 같았다(여의도) */
+  totalEmissiveRadiance += sky * pw * (0.55 + 1.1 * fres) * (1.0 - 0.15 * min(uLampK, 1.6)); }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
 `;
 export function patchPuddleMaterial(THREE, m) {
   if (!PUDDLE.on) return m;

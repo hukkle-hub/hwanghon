@@ -10,7 +10,7 @@ const compile = m => { const L = THREE.ShaderLib.standard, sh = { uniforms: THRE
 test('웅덩이: 표준 재질 셰이더의 다섯 자리에 다 들어간다', () => {
   const m = patchPuddleMaterial(THREE, new THREE.MeshStandardMaterial()), sh = compile(m);
   assert.match(sh.vertexShader, /vPW = \(modelMatrix \* vec4\(transformed, 1\.0\)\)\.xyz/, '꼭짓점: 세계 좌표');
-  for (const [k, re] of [['웅덩이 자리', /float pw = 1\.0 - smoothstep/], ['젖은 색', /diffuseColor\.rgb \*= mix\(1\.0, 0\.7, wet\)/], ['거칠기', /roughnessFactor = mix\(roughnessFactor, 0\.05, pw\)/], ['금속', /metalnessFactor = mix\(metalnessFactor, 0\.0, pw\)/], ['하늘 반사', /totalEmissiveRadiance \+= uSkyRefl \* pw/]])
+  for (const [k, re] of [['웅덩이 자리', /float pw = 1\.0 - smoothstep/], ['젖은 색', /diffuseColor\.rgb \*= mix\(1\.0, 0\.7, wet\)/], ['거칠기', /roughnessFactor = mix\(roughnessFactor, 0\.05, pw\)/], ['금속', /metalnessFactor = mix\(metalnessFactor, 0\.0, pw\)/], ['하늘 반사', /totalEmissiveRadiance \+= sky \* pw/]])
     assert.match(sh.fragmentShader, re, k);
   assert.ok(sh.uniforms.uSkyRefl === FACADE_U.uSkyRefl, '하늘빛은 창과 같은 공용 유니폼');
   assert.equal(m.customProgramCacheKey(), 'puddle');
