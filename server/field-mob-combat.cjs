@@ -13,7 +13,7 @@ const ARMORED_ACTIONS = ['shield_bash','heavy_charge','shield_bash','overhead_cr
 const ACTIONS = Object.freeze({G5_WALKER:'slow_combo',G5_RUNNER:'flank_swipe',
  G5_BREAKER:'structure_slam',G5_STALKER:'tracking_strike',G5_RESONATOR:'self_defence'});
 const FACILITY_DAMAGE={G5_WALKER:300,G5_RUNNER:180,G5_BREAKER:900,G5_STALKER:200,G5_ARMORED:1400,G5_RESONATOR:220};
-const MOTION_MS={slow_combo:2000,flank_swipe:1100,structure_slam:1800,heavy_slam:1800,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
+const MOTION_MS={slow_combo:2000,flank_swipe:1800,structure_slam:1800,heavy_slam:1800,tracking_strike:1300,shield_bash:1400,heavy_charge:1700,overhead_crush:2000,self_defence:1500};
 function actionFor(id,index=0) {
  const key=id==='G5_ARMORED'?ARMORED_ACTIONS[((index%4)+4)%4]:ACTIONS[id]||'mob_melee';
  const windupMs=key==='heavy_charge'?1000:key==='overhead_crush'?1200:key==='shield_bash'?800:600;
@@ -55,9 +55,9 @@ function tryCounter(m,a,now){if(m.catalogId!=='G5_ARMORED'||a.phase!=='windup'||
 function statsFor(catalogId) {
   const row = N01[catalogId] || N01.G5_WALKER;
   return { hp: row[0], damage: row[1], speed: row[2], cooldownMs: row[3],
-    // ~0.6m measured punch reach + ~0.25m victim torso. The previous 2.2m
-    // center-distance hit visibly struck empty space. Other roles unchanged.
-    reach: catalogId==='G5_WALKER'?.85:2.2, aggro: 10, leash: 18, windupMs: 600, recoveryMs: 450,
+    // Walker/Runner actual deformed hand contact +0.25m victim torso. The
+    // previous2.2m hit visibly struck air. The other four roles are unchanged.
+    reach: ['G5_WALKER','G5_RUNNER'].includes(catalogId)?.85:2.2, aggro: 10, leash: 18, windupMs: 600, recoveryMs: 450,
     facilityDamage:FACILITY_DAMAGE[catalogId]||300,
     draft: !Object.hasOwn(N01, catalogId) };
 }
