@@ -2,10 +2,12 @@
 <style>body{margin:0;background:#171c24;color:white;font:15px system-ui}header{padding:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}button,select{font:inherit;padding:10px}iframe{border:0;width:100%;height:75vh}pre{white-space:pre-wrap;font-size:12px}</style>
 <header><label>캐릭터 <select id="char"><option>ain</option><option>kain</option><option>ryu</option><option>sera</option></select></label><label>시점 <select id="camera"><option value="game">실제 게임 카메라</option><option value="whole">전신</option><option value="upper">상체</option><option value="right">오른손</option><option value="left">왼손</option></select></label><button id="attack">기본 공격</button><button id="s1">스킬 1</button><button id="s2">스킬 2</button><button id="s3">스킬 3</button><button id="s4">스킬 4</button><label><input id="freeze" type="checkbox" checked>접점에서 정지</label><button id="resume">이어 재생</button><span id="status">실제 필드 읽는 중</span></header>
 <header><button id="clearGate">입구 표시에서 3m 이동</button><button id="record">실제 필드 5동작 녹화</button><button id="save">로컬 필드 영상 저장</button><a id="download" hidden>실제 필드 영상 저장</a><span id="progress"></span></header><iframe id="game" title="실제 3D 필드"></iframe><pre id="metrics"></pre>
+<script src="../../js/dungeons.js"></script>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import {contactOf} from '../../js/mmo/field-feel.js';
 const q=new URLSearchParams(location.search),ch=q.get('char')||'ain',frame=document.querySelector('#game'),status=document.querySelector('#status'),out=document.querySelector('#metrics');
+if(!['localhost','127.0.0.1'].includes(location.hostname))document.querySelector('#save').hidden=true;
 document.querySelector('#char').value=ch;
 document.querySelector('#char').onchange=()=>{q.set('char',document.querySelector('#char').value);location.search=q;};
 frame.src='../../world3d.html?zone=pangyo_lab&char='+ch+'&offline=1&debug=1&lod='+(q.get('lod')||'0');

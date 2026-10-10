@@ -36,7 +36,7 @@ async function bookendAin(clip){
  for(let k=1;k<=8;k++)add(entry+original+exit*k/8,k/8,clip.times.length-1);
  clip.times=times;clip.tracks=tracks;clip.hips=hips;clip.weaponPositions=weaponPositions;clip.weaponRotations=weaponRotations;clip.duration=entry+original+exit;clip.entry=entry;clip.exit=exit;
 }
-async function calibrateAinGrip(clip){
+async function calibrateAinGrip(clip,weaponLocal=null){
  const bytes=await readFile('art/3d/ain_anim.glb'),loader=new GLTFLoader();loader.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));
  const asset=await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');repairAinBind(asset.scene);
  const b={};asset.scene.traverse(o=>{if(o.isBone)b[o.name.replace(/^mixamorig:?/,'')]=o;});
@@ -44,7 +44,7 @@ async function calibrateAinGrip(clip){
  for(const [n,values]of Object.entries(clip.tracks))if(b[n])b[n].quaternion.fromArray(values,i*4);
  b.Hips.position.fromArray(clip.hips,i*3);asset.scene.updateMatrixWorld(true);
  const palm=side=>b[side+'HandSlot'].getWorldPosition(new T.Vector3()),axis=palm('Right').sub(palm('Left')).normalize();
- clip.weaponLocal=b.RightHand.getWorldQuaternion(new T.Quaternion()).invert().multiply(aimScytheBlade(axis)).toArray();
+ clip.weaponLocal=weaponLocal||b.RightHand.getWorldQuaternion(new T.Quaternion()).invert().multiply(aimScytheBlade(axis)).toArray();
  clip.weaponPositions=[];clip.weaponRotations=[];
  for(let k=0;k<clip.times.length;k++){
   for(const [name,values]of Object.entries(clip.tracks))if(b[name])b[name].quaternion.fromArray(values,k*4);
@@ -80,7 +80,9 @@ for(const [char,entries]of Object.entries(catalog)){
   const result=spawnSync(process.execPath,['tools/3d/meshy-retarget.mjs',resolve(sourceDir,'ain_1.glb'),'counter','0.43','1.4','--rig','mixamo','--fps','30','--target','art/3d/ain_anim.glb','--ain-repair','--out',out],{encoding:'utf8'});
   if(result.status!==0)throw Error(result.stderr);
   data.ain.counter=JSON.parse(await readFile(out,'utf8'));data.ain.counter.sourceLabel='Great Sword Slash · riposte';
-  await calibrateAinGrip(data.ain.counter);
+  // Same underlying slash and rigid grip: trimming time must not recalibrate
+  // the weapon at a different wrist pose and turn the riposte sideways.
+  await calibrateAinGrip(data.ain.counter,data.ain.skill1.weaponLocal);
   await bookendAin(data.ain.counter);
  }
 }

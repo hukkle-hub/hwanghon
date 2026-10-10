@@ -58,7 +58,7 @@ UHWCombatTuningAsset::UHWCombatTuningAsset()
 
     Dodge = {0.45f, -1.f, 0.f, 25.f, 0.f, EHWAttackTier::Light, "Dodge", 0.f};
     Jump = {0.45f, -1.f, 0.f, 15.f, 0.f, EHWAttackTier::Light, "Jump", 0.f};
-    Counter = {1.53f, 0.5049f, 1.15f, 0.f, 0.f, EHWAttackTier::Counter, "Counter", 0.f};
+    Counter = {1.53f, 0.5998f, 1.15f, 0.f, 0.f, EHWAttackTier::Counter, "Counter", 0.f};
 
     // Vertical Slice boss: values derive from the current d01 training-boss vocabulary.
     BossPatterns =

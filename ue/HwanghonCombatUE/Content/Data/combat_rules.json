@@ -33,13 +33,13 @@
    "cancel": 0.91
   },
   "counter": {
-   "hit": 0.5049,
+   "hit": 0.5998,
    "active": 0.1,
    "duration": 1.53,
    "cancel": 1.15
   },
   "ult": {
-   "hit": 1.4966,
+   "hit": 1.3717,
    "active": 0.18,
    "duration": 2.8399,
    "cancel": 2.42
@@ -63,7 +63,7 @@
    "cancel": 0.82
   },
   "skill3": {
-   "hit": 0.6985,
+   "hit": 1.0998,
    "active": 0.14,
    "duration": 2.5399,
    "cancel": 2.1

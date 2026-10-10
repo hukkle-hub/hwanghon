@@ -1854,7 +1854,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       battle.input('target',reviewPart);
       battle.input(selected==='ult'?'ult':selected==='attack'?'attack':'skill',/^skill/.test(selected)?Number(selected.slice(-1))-1:0);
       watching=true;
-      fullUntil=performance.now()+6500;
+      fullUntil=battle.snapshot().time+6.5;
     };
     const startReview=()=>panel.querySelectorAll('button')[0].onclick();
     panel.querySelector('[data-save]').onclick=async()=>{try{const blob=await(await fetch(panel.querySelector('[data-video]').href)).blob(),r=await fetch('http://127.0.0.1:8797/capture/ain-dungeon-skills.webm',{method:'POST',body:blob});if(!r.ok)throw Error('저장 실패');panel.querySelector('[data-review-status]').textContent='로컬 전투 파일 저장 완료 · '+(await r.json()).saved;}catch(e){panel.querySelector('[data-review-status]').textContent=e.message;}};
@@ -1862,7 +1862,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     panel.querySelector('[data-record]').onclick=()=>{freezeReview=false;recordParts=[];recordQueue=['skill1','skill2','skill3','skill4','ult'];recording=new MediaRecorder(renderer.domElement.captureStream(30),{mimeType:'video/webm;codecs=vp9'});recording.ondataavailable=e=>{if(e.data.size)recordParts.push(e.data);};recording.onstop=()=>{const a=panel.querySelector('[data-video]');a.href=URL.createObjectURL(new Blob(recordParts,{type:'video/webm'}));a.download='ain-actual-dungeon-skills.webm';a.hidden=false;panel.querySelector('[data-review-status]').textContent='실제 던전 스킬 4종·궁극기 전 구간 녹화 완료';};recording.start();panel.querySelector('select').value=recordQueue.shift();startReview();};
     panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download='ain-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
     function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;
-      if(!freezeReview){panel.querySelector('[data-review-status]').textContent=(a?.clip||ain.oneshotName||'회수')+' · 실제 전투 재생 / 피해·잔상·카메라 유지';if(performance.now()>fullUntil){if(recordQueue.length){panel.querySelector('select').value=recordQueue.shift();startReview();}else{watching=false;if(recording?.state==='recording')recording.stop();}}return;}
+      if(!freezeReview){panel.querySelector('[data-review-status]').textContent=(a?.clip||ain.oneshotName||'회수')+' · 실제 전투 재생 / 피해·잔상·카메라 유지';if(s.time>fullUntil||s.player.hp<=0){if(recordQueue.length){panel.querySelector('select').value=recordQueue.shift();startReview();}else{watching=false;if(recording?.state==='recording')recording.stop();}}return;}
       if(!a)return;
       if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
         panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';

@@ -14,7 +14,7 @@
       /* 류 궁극기: 공통 .22 면 준비 자세에서 판정이 뜬다 — 돌진·베기는 .27~.59, 최고속 .46.
          카인 스킬1(해머 스윙)은 내려치는 순간, 스킬3(도끼 회전)은 오른손 최고속, 류 스킬3(쌍날 회전)은 왼날 .62·오른날 .72 사이 (docs/design/76) */
       /* 85: 카인 skill4·류 attack1~3·세라 skill1·3 은 새 클립(UAL2·KayKit 1.1)의 오른손 최고속, 류 skill1(쌍날 연속)은 마무리 왼날 최고속 .65, 카인 skill2(철벽, 피해 없음)는 막기 올림 .18, 세라 1·2타(좌우 투척) .54 · 3타 .29 (87) */
-      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.275,ult:0.527,counter:0.33},kain:{attack2:0.22,smash:0.324,skill1:0.73,skill2:0.18,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
+      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.433,ult:0.483,counter:0.392},kain:{attack2:0.22,smash:0.324,skill1:0.73,skill2:0.18,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
@@ -64,14 +64,14 @@
          대신 아래 clipSpan 만 쓴다. 전투 시간을 1 초도 안 건드린다. */
       /* 아인(큰 낫) 전용 박자. 2026-10-10: 디렉터가 승인한 «동작·판정 시간을
          함께 늘리기»를 적용. skill1·skill3·ult·counter는 전신 소스의 실제
-         낫 최고속 구간에 판정·잔상을 맞춘다. clipSpan으로 새 스킬을 압축하지
+         날 표면 접촉에 판정·잔상을 맞춘다(최고속만으로 정하지 않는다). clipSpan으로 새 스킬을 압축하지
          않는다. 평타/스매시, 피해량·스태미나·재사용 대기시간은 유지한다. */
       characterProfiles:{ain:{
         skill1:{hit:1.1016,active:.14,duration:2.04,cancel:1.68},
-        skill3:{hit:.6985,active:.14,duration:2.5399,cancel:2.10},
+        skill3:{hit:1.0998,active:.14,duration:2.5399,cancel:2.10},
         smash:{hit:.48,active:.14,duration:1.15,cancel:.91},
-        ult:{hit:1.4966,active:.18,duration:2.8399,cancel:2.42},
-        counter:{hit:.5049,active:.10,duration:1.53,cancel:1.15}
+        ult:{hit:1.3717,active:.18,duration:2.8399,cancel:2.42},
+        counter:{hit:.5998,active:.10,duration:1.53,cancel:1.15}
       }},
       /* 클립의 «뒤끝» 을 얼마나 쓸지. 1 이면 클립 전체를 행동 시간에 편다.
          배속 = 쓰는 클립 길이 ÷ 행동 시간이므로, 꼬리를 자르면 «행동 시간을
@@ -174,10 +174,10 @@
     ain: [
       { key:'1', id:'slash',  icon:'scythe', name:'낫 베기',     mult:2.2, cd:6,  st:15, desc:'좁은 전방의 선택 부위를 정밀하게 걸어 벤다', ev:{type:'hit',hits:[[0.54,1]]} },
       { key:'2', id:'step',   icon:'bolt',   name:'그림자 걸음', mult:0,   cd:8,  st:20, desc:'즉시 회피 + 다음 공격 치명타 확정', dodge:true, critNext:true, ev:{type:'dodge'} },
-      { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'넓은 전방을 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.275,0.55],[0.54,0.45]]} },
+      { key:'3', id:'spin',   icon:'flame',  name:'피의 회전',   mult:1.2, cd:12, st:25, desc:'넓은 전방을 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.433,0.55],[0.558,0.45]]} },
       { key:'4', id:'resolve',icon:'shield', name:'결의',        mult:0,   cd:15, st:0,  desc:'2초간 받는 피해 50% 감소', buff:{dur:2, reduce:0.5}, ev:{type:'buff'} }
     ],
-    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩', ev:{type:'hit',hits:[[0.527,1]]} },
+    ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩', ev:{type:'hit',hits:[[0.483,1]]} },
     /* 카인 — 블레이드 마스터(탱커/브루저): 대검. 파괴·버티기 */
     kain: [
       { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 부위 파괴 피해 ×1.5', breakMult:1.5, ev:{type:'hit',hits:[[0.73,1]]} },

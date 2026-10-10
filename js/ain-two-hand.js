@@ -411,6 +411,7 @@ export function makeAinTwoHand(model,root,slot){
  const transitionBones=['LeftArm','LeftForeArm','LeftHand','RightArm','RightForeArm','RightHand','RightHandSlot'].map(n=>bones[n]).filter(Boolean);
  let previousPose=null,lastActive=null,transition=null;
  let previousWeapon=null,weaponTransition=null,lastWeaponState=null;
+ let mocapBladeVector=null;
  const previousMocapHand={};
  function finishPose(active,dt){
   if(!(dt>0)){previousPose=null;lastActive=null;transition=null;return;}
@@ -535,6 +536,24 @@ export function makeAinTwoHand(model,root,slot){
    const data=model.userData.heroSkillMotion[name],clock=Number.isFinite(a.clipTime)?a.clipTime:a.elapsed/a.duration*data.duration;
    center.copy(model.localToWorld(V().fromArray(data.position.evaluate(clock))));
    weaponQ=frame.clone().invert().multiply(model.getWorldQuaternion(Q())).multiply(Q().fromArray(data.rotation.evaluate(clock)));
+   // Spatial motion warp for a selected, moving boss part. Do not replace the
+   // whole take with a tiny procedural arc, or treat peak speed as contact.
+   // Both palms still follow ONE rigid weapon, and the reach solver below
+   // clamps the same pose. The measured blade marker is not a bounding box.
+   const marker=slot.getObjectByName('AinBladeTip');
+   if(marker&&!mocapBladeVector)mocapBladeVector=marker.getWorldPosition(V()).sub(slot.getWorldPosition(V())).applyQuaternion(slot.getWorldQuaternion(Q()).invert()).add(V(0,.16*scale,0));
+   if(target&&mocapBladeVector&&!AB().aim){
+    const phase=clock/data.duration,contacts=name==='skill3'?[.433,.558]:name==='skill1'?[.54]:name==='ult'?[.483]:name==='counter'?[.392]:[];
+    const weight=Math.max(0,...contacts.map(c=>T.MathUtils.smootherstep(phase,c-.16,c-.025)*(1-T.MathUtils.smootherstep(phase,c+.025,c+.18))));
+    if(weight>0){
+     const world=frame.clone().multiply(weaponQ),from=mocapBladeVector.clone().applyQuaternion(world),to=target.clone().sub(center);
+     const correction=Q().setFromUnitVectors(from.clone().normalize(),to.clone().normalize());
+     const angle=Q().angleTo(correction),amount=weight*Math.min(1,(Math.PI/3)/Math.max(1e-5,angle));
+     weaponQ=frame.clone().invert().multiply(Q().slerp(correction,amount).multiply(world));
+     const shift=T.MathUtils.clamp(to.length()-from.length(),-.25*scale,.25*scale);
+     center.addScaledVector(to.normalize(),shift*weight);
+    }
+   }
    diagnostics.source='full-body-mocap';
   }else diagnostics.source='legacy';
   // Blend the ONE rigid weapon pose, then solve both palms. Blending each arm
