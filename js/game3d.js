@@ -8,6 +8,7 @@ import {createCharacterCinema,transitionFor} from './character-cinema.js';
 import {makeAinRigAdapter} from './ain-two-hand.js';
 import {gripHands} from './hand-grip.js';
 import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
+import {makeKainRigAdapter} from './kain-two-hand.js';
 import {applyHeroSkillClips} from './hero-skill-clips.js';
 import {smoothCharacterClips} from './clip-smooth.js';
 import {createArmBlend} from './arm-blend.js';
@@ -34,7 +35,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   /* 검수 전용 층 끄기 (localhost 만, 문서 122): ?layersOff=clips,rig,armBlend,cinema,lean — 원본 클립과 게임 보정층을 층별로 견준다 */
   var LAYER_OFF=(['127.0.0.1','localhost'].includes(location.hostname)?String(new URLSearchParams(location.search).get('layersOff')||''):'').split(',').filter(Boolean);
   function layerOn(n){ return LAYER_OFF.indexOf(n)<0 && LAYER_OFF.indexOf('all')<0; }
-  var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var c=window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char; return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
+  var A=DG.ARENAS[L.arena], R=DG.RULES, CID=(function(){ var localReview=['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('weaponReview'),reviewChar=localReview?new URLSearchParams(location.search).get('reviewChar'):null;var c=reviewChar||(window.TW_SAVE&&TW_SAVE.char?TW_SAVE.char():A.char); return (W.CHARS[c]&&DG.SKILLS[c])?c:A.char; })(), CHAR=(function(c){ return window.TW_GEAR ? Object.assign({}, c, { stats:Object.assign({}, c.stats, TW_GEAR.stats(c)) }) : c; })(W.CHARS[CID]), SK=DG.SKILLS[CID], ULT=DG.SKILLS[CID+'Ult'], DEPTH=SIM.DEPTH;
   if(window.TW_SKILLS){ var _ap=TW_SKILLS.apply(CID, SK, ULT); SK=_ap.skills; ULT=_ap.ult||ULT; }
   var GB=window.TW_GRADE?TW_GRADE.buffs():null;   /* 파티 기술 등급 효과 */
   var RB=GB&&GB.counterWin?Object.assign({}, R, { counter:Object.assign({}, R.counter, { bonus:GB.counterWin }) }):R;
@@ -777,7 +778,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
     try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
     ['attack1','attack2','attack3','smash','ult','hit','hit2','death','roll','dodgeB','dodgeL','dodgeR','pickup','cheer'].forEach(function(n){ var c=ain.clips[n]; if(!c) return; });
-    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.handGrip=handGrip; ain.rig=(CID==='ain'?makeAinRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain',handGrip:handGrip});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID); if(CID!=='ain') ain.armBlend=createArmBlend(ain.model);   /* 팔 뼈 제자리 돌기 묶기 (docs/design/99) */
+    var slot=null; ain.model.traverse(function(o){ if(o.isBone && /RightHandSlot/.test(o.name)) slot=o; }); if(slot&&window.TW_LOOKS&&TW_LOOKS.anchor) slot=TW_LOOKS.anchor(THREE, slot); ain.slot=slot;   /* 다시 리깅한 캐릭터는 무기가 옛 관절 자리에 붙는다 (docs/design/77) */ ain.handGrip=handGrip; ain.rig=(CID==='ain'?makeAinRigAdapter:CID==='kain'?makeKainRigAdapter:makeRigAdapter)(ain.model,ain.root,slot,{twoHand:CID==='kain',handGrip:handGrip});   /* 양손 그립은 카인 대검만 — 류 쌍단검·세라 시약은 왼손이 따로 논다 (docs/design/93) */ ain.cinema=createCharacterCinema(ain.model,ain.root,CID); if(CID!=='ain') ain.armBlend=createArmBlend(ain.model);   /* 팔 뼈 제자리 돌기 묶기 (docs/design/99) */
     /* 장착 장비 외형: 주무기 모델·보조/부무기·방어구·장신구 (looks.js). 주무기 로드가 끝나야 입장 */
     (function(){ var G=window.TW_GEAR; if(G&&G.setChar) G.setChar(CID); var eq=G?G.state().equipped:{ main:'w_marsh_scythe' }; var done=false; function once(){ if(done) return; done=true; loaded(); }
       if(window.TW_LOOKS){ var baseOf=function(id){ var it=window.TW_ITEMS&&TW_ITEMS.get(id); return it&&it.custom?it.custom.base:id; }, tintOf=function(id){ return G&&G.tintOf?G.tintOf(id):null; }, mixOf=function(id){ return (G&&G.dyeOf&&G.dyeOf(id))?0.75:null; };
@@ -819,7 +820,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     DIAG.errors.push('run 보폭 '+stride.toFixed(2)+'m → 배속 '+RUN_RATE.toFixed(2));
   }
   function setBase(n){ if(ain.base===n && ain.act) return; var a=action(n); if(!a) return; var prev=ain.act, tr=transitionFor(CID,n); a.reset(); a.setLoop(THREE.LoopRepeat, Infinity); a.enabled=true; a.setEffectiveWeight(1); a.timeScale=n==='run'?RUN_RATE:n==='walk'?1.25:1; if(prev && prev!==a){ a.crossFadeFrom(prev, tr.base, true); } a.play(); ain.act=a; ain.base=n; }
-  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; var tr=transitionFor(CID,n); if(ain.oneshot){ ain.oneshot.clampWhenFinished=true; ain.oneshot.fadeOut(Math.min(.08,tr.out)); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); if(ain.act) ain.act.fadeOut(tr.in);
+  function playOnce(n, o){ o=o||{}; var a=action(n); if(!a) return; var tr=transitionFor(CID,n);if(a.getClip().userData?.weaponBaked)tr={...tr,in:0}; if(ain.oneshot){ ain.oneshot.clampWhenFinished=true; ain.oneshot.fadeOut(Math.min(.08,tr.out)); } ain.timed=null; a.paused=false; a.reset(); a.setLoop(THREE.LoopOnce, 1); a.clampWhenFinished=!!o.hold; a.timeScale=o.speed||1; a.enabled=true; a.setEffectiveWeight(1); a.fadeIn(tr.in); a.play(); if(ain.act) ain.act.fadeOut(tr.in);
     ain.oneshot=a; ain.oneshotName=n; ain.oneshotEnd=a.getClip().duration/(o.speed||1)-(o.hold?0:Math.min(.14,tr.out*.8)); ain.oneshotT=0; ain.hold=!!o.hold; ain.oneshotOut=tr.out; }
   function ainTick(dt){ if(!ain.mixer) return;
     if(wind) wind.update(dt, ain.model);
@@ -874,10 +875,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     var yaw=yawOf(P.aim==null?0:P.aim); var d=yaw-ain.root.rotation.y; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; ain.root.rotation.y+=d*Math.min(1,dt*(P.rollT>0?30:14));
     if(combatAction) lastAction=combatAction;
     var motionAction=combatAction||(heldAction&&ain.oneshot&&ain.oneshot.getClip().name===heldAction.clip?heldAction:null);
-    if(CID==='ain'&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
+    if(['ain','kain'].includes(CID)&&!motionAction&&ain.oneshot&&/attack|smash|ult|skill|counter|exec/.test(ain.oneshot.getClip().name))motionAction={id:ain.oneshot.getClip().uuid,clip:ain.oneshot.getClip().name,kind:'attack',duration:ain.oneshot.getClip().duration,elapsed:ain.oneshot.time};
     if(motionAction&&ain.oneshot)motionAction=Object.assign({},motionAction,{clipTime:ain.oneshot.time});
     if(ain.rig&&layerOn('rig')) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
-    if(ain.armBlend&&layerOn('armBlend')) ain.armBlend.apply(dt);   /* 위팔·아래팔이 제 축 둘레로 한 프레임 12° 넘게 돌지 않게 — 동작 바뀔 때·두 손 잡을 때 팔 돌던 것 (docs/design/99) */
+    if(ain.armBlend&&layerOn('armBlend')&&(CID!=='kain'||ain.rig?.diagnostics.source==='legacy')) ain.armBlend.apply(dt);   /* Do not separate a freshly solved rigid two-hand grip. */
     if(ain.cinema&&layerOn('cinema')){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
     tickJump(dt);
@@ -1836,6 +1837,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     panel.insertAdjacentHTML('beforeend','<button data-save>로컬 전투 영상 저장</button>');
     panel.insertAdjacentHTML('beforeend','<label>거리(m) <input aria-label="검수 거리" type="number" min="0.8" max="3" step="0.1" value="1.2" style="width:60px"></label> <label>부위 <select aria-label="검수 부위">'+Object.keys(A.parts3d||{}).map(k=>'<option value="'+k+'">'+k+'</option>').join('')+'</select></label>');
     panel.querySelector('[aria-label="검수 부위"]').value='core';
+    if(CID==='kain'){panel.querySelector('b').textContent='로컬 대검 실전 검수';const labels={skill1:'대검 내려치기',skill2:'철벽',skill3:'강철 회전',skill4:'지면 강타',ult:'모루의 심판',attack:'기본 공격'};for(const o of panel.querySelector('select').options)o.textContent=labels[o.value]||o.textContent;}
     document.body.append(panel);let watching=false,reviewPart='core',freezeReview=true,recording=null,recordParts=[],recordQueue=[],fullUntil=0;
     const reviewTarget=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),new THREE.MeshBasicMaterial({color:0x45ffaa,wireframe:true,transparent:true,opacity:.35,depthTest:false}));reviewTarget.visible=false;scene.add(reviewTarget);
     panel.querySelectorAll('button')[0].onclick=function(event){
@@ -1857,14 +1859,14 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
       fullUntil=battle.snapshot().time+6.5;
     };
     const startReview=()=>panel.querySelectorAll('button')[0].onclick();
-    panel.querySelector('[data-save]').onclick=async()=>{try{const blob=await(await fetch(panel.querySelector('[data-video]').href)).blob(),r=await fetch('http://127.0.0.1:8797/capture/ain-dungeon-skills.webm',{method:'POST',body:blob});if(!r.ok)throw Error('저장 실패');panel.querySelector('[data-review-status]').textContent='로컬 전투 파일 저장 완료 · '+(await r.json()).saved;}catch(e){panel.querySelector('[data-review-status]').textContent=e.message;}};
+    panel.querySelector('[data-save]').onclick=async()=>{try{const blob=await(await fetch(panel.querySelector('[data-video]').href)).blob(),r=await fetch('http://127.0.0.1:8797/capture/'+CID+'-dungeon-skills.webm',{method:'POST',body:blob});if(!r.ok)throw Error('저장 실패');panel.querySelector('[data-review-status]').textContent='로컬 전투 파일 저장 완료 · '+(await r.json()).saved;}catch(e){panel.querySelector('[data-review-status]').textContent=e.message;}};
     panel.querySelector('[data-full]').onclick=()=>{freezeReview=false;startReview();};
-    panel.querySelector('[data-record]').onclick=()=>{freezeReview=false;recordParts=[];recordQueue=['skill1','skill2','skill3','skill4','ult'];recording=new MediaRecorder(renderer.domElement.captureStream(30),{mimeType:'video/webm;codecs=vp9'});recording.ondataavailable=e=>{if(e.data.size)recordParts.push(e.data);};recording.onstop=()=>{const a=panel.querySelector('[data-video]');a.href=URL.createObjectURL(new Blob(recordParts,{type:'video/webm'}));a.download='ain-actual-dungeon-skills.webm';a.hidden=false;panel.querySelector('[data-review-status]').textContent='실제 던전 스킬 4종·궁극기 전 구간 녹화 완료';};recording.start();panel.querySelector('select').value=recordQueue.shift();startReview();};
-    panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download='ain-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
+    panel.querySelector('[data-record]').onclick=()=>{freezeReview=false;recordParts=[];recordQueue=['skill1','skill2','skill3','skill4','ult'];recording=new MediaRecorder(renderer.domElement.captureStream(30),{mimeType:'video/webm;codecs=vp9'});recording.ondataavailable=e=>{if(e.data.size)recordParts.push(e.data);};recording.onstop=()=>{const a=panel.querySelector('[data-video]');a.href=URL.createObjectURL(new Blob(recordParts,{type:'video/webm'}));a.download=CID+'-actual-dungeon-skills.webm';a.hidden=false;panel.querySelector('[data-review-status]').textContent='실제 던전 스킬 4종·궁극기 전 구간 녹화 완료';};recording.start();panel.querySelector('select').value=recordQueue.shift();startReview();};
+    panel.querySelectorAll('button')[1].onclick=function(){renderer.render(scene,cam);const a=document.createElement('a');a.download=CID+'-live-weapon-contact.png';a.href=renderer.domElement.toDataURL('image/png');a.click();};
     function reviewFrame(){requestAnimationFrame(reviewFrame);if(!watching||!battle)return;const s=battle.snapshot(),a=s.player.action;
       if(!freezeReview){panel.querySelector('[data-review-status]').textContent=(a?.clip||ain.oneshotName||'회수')+' · 실제 전투 재생 / 피해·잔상·카메라 유지';if(s.time>fullUntil||s.player.hp<=0){if(recordQueue.length){panel.querySelector('select').value=recordQueue.shift();startReview();}else{watching=false;if(recording?.state==='recording')recording.stop();}}return;}
       if(!a)return;
-      if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
+      if(a.elapsed+1e-6>=a.hitAt){paused=true;watching=false;if(CID==='kain'){panel.querySelector('[data-review-status]').textContent=a.clip+' · 실제 전투 타격 '+a.hitAt.toFixed(2)+'s · 양손 오차 '+(1000*Math.max(ain.rig.diagnostics.gripError,ain.rig.diagnostics.rightGripError)).toFixed(2)+'mm · 적 HP '+Math.round(s.enemy.hp);return;}const tip=ain.weapon?.getObjectByName('AinBladeTip'),p=tip?.getWorldPosition(new THREE.Vector3()),target=bossHitPos(reviewPart);
         panel.querySelector('[data-review-status]').textContent=a.clip+' · '+a.elapsed.toFixed(2)+'s / 타격 '+a.hitAt.toFixed(2)+'s · 날끝→가슴 '+(p?p.distanceTo(target).toFixed(2):'?')+'m · 상대좌표 '+(p?p.clone().sub(target).toArray().map(v=>v.toFixed(2)).join(','):'?')+' · 핵(아인 로컬) '+ain.root.worldToLocal(target.clone()).toArray().map(v=>v.toFixed(2)).join(',')+' · 적 중심 거리 '+(world.dist(P.x,P.y,Bs.x,Bs.y)/50).toFixed(2)+'m';
         const contact=measureAinBladeContact(ain.weapon,target),radius=boss.PART[reviewPart].r;panel.querySelector('[data-review-status]').textContent+=' · 선택 부위 '+reviewPart+' · 실제 날 표면 '+contact.distance.toFixed(3)+'m / 표적 반경 '+radius.toFixed(3)+'m · '+(contact.distance<=radius?'접촉':'빗나감')+(reviewAimPart?' · 자세 실험 전용: 게임에서 조준 불가, 피해 판정 검수 아님':' · 실제 전투 조준 '+s.target);
         // Hide only distracting presentation effects in this local frozen QA

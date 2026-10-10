@@ -1,0 +1,16 @@
+// Export a separate audit copy, then apply Claude's knee-only correction to
+// the NEW takes. Never overwrite the shared hero body/wardrobe GLBs.
+import fs from 'node:fs';import {resolve} from 'node:path';
+import * as T from '../../vendor/three/three.module.js';import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {chunks,writeGlb} from './skin-rebind.mjs';import {fixClips} from './clip-joint-fix.mjs';import {motionAudit} from './motion-audit.mjs';import {HERO_SKILL_DATA} from '../../js/hero-skill-data.js';
+const out=resolve(process.argv[2]||'../../output/kain-fullbody-skills-2026-10-10');fs.mkdirSync(out,{recursive:true});const file=resolve(out,'kain-motion-audit.glb'),{json,bin}=chunks(fs.readFileSync('art/3d/kain_anim.glb')),parts=[bin];let offset=bin.length;
+function accessor(values,type){const a=Float32Array.from(values),buf=Buffer.from(a.buffer);const bv=json.bufferViews.length;json.bufferViews.push({buffer:0,byteOffset:offset,byteLength:buf.length});offset+=buf.length;parts.push(buf);const i=json.accessors.length,n=type==='VEC4'?4:type==='VEC3'?3:1;json.accessors.push({bufferView:bv,componentType:5126,count:values.length/n,type,...(type==='SCALAR'?{min:[values[0]],max:[values.at(-1)]}:{})});return i;}
+for(const[name,c]of Object.entries(HERO_SKILL_DATA.kain)){
+ const input=accessor(c.times,'SCALAR'),samplers=[],channels=[];for(const[bone,values]of [...Object.entries(c.tracks),['Hips.position',c.hips]]){const position=bone.endsWith('.position'),name=bone.replace('.position',''),node=json.nodes.findIndex(n=>n.name?.replace(/^mixamorig:?/,'')===name);if(node<0)throw Error(name);const sampler=samplers.length;samplers.push({input,output:accessor(values,position?'VEC3':'VEC4'),interpolation:'LINEAR'});channels.push({sampler,target:{node,path:position?'translation':'rotation'}});}json.animations[json.animations.findIndex(a=>a.name===name)]={name,samplers,channels};
+}
+json.buffers[0].byteLength=offset;writeGlb(file,json,Buffer.concat(parts));
+const names=Object.keys(HERO_SKILL_DATA.kain),corrections=await fixClips(file,{clips:names,ground:true,seams:false,elbow:false,wrist:false});
+const loader=new GLTFLoader();loader.register(()=>({name:'skip',loadTexture:()=>Promise.resolve(new T.Texture())}));const bytes=fs.readFileSync(file),g=await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
+const kain=structuredClone(HERO_SKILL_DATA.kain);for(const c of g.animations)if(kain[c.name])for(const t of c.tracks){const n=t.name.replace(/^mixamorig:?/,'').replace('.quaternion','');if(/^(Left|Right)(UpLeg|Leg|Foot)$/.test(n))kain[c.name].tracks[n]=Array.from(t.values);if(n==='Hips.position'){const data=kain[c.name];for(let i=0;i<t.values.length;i+=3)data.weaponPositions[i+1]+=t.values[i+1]-data.hips[i+1];data.hips=Array.from(t.values);}}
+fs.writeFileSync('js/hero-skill-data.js','// Generated full-body takes; Kain grip baked at 120 Hz and knees corrected using Claude joint pass. Original GLBs untouched.\nexport const HERO_SKILL_DATA='+JSON.stringify({...HERO_SKILL_DATA,kain})+';\n');
+const report={at:new Date().toISOString(),auditCopyOnly:true,runtimeHandMorphRequired:true,corrections,audit:await motionAudit(file,names)};fs.writeFileSync(resolve(out,'kain-joint-audit.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));

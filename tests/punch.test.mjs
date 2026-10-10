@@ -80,7 +80,9 @@ for (const ch of ['ain', 'kain', 'ryu', 'sera']) {
     /* 아인의 Meshy 클립(docs/design/74)은 양손 리그가 팔을 통째로 다시 풀어서 «원본 손»
        이 화면에 안 나온다 — 화면의 날끝은 tools/3d/swing-measure.html 로 잰다
        (접점 감속·거칠기, 74번 표). 여기서는 원본 손을 쓰는 클립만 본다. */
-    const OWN = ch === 'ain' ? new Set(Object.keys(contactsByChar().ain || {})) : new Set();
+    // Kain's newly retargeted skills use actual blade-surface contact tests in
+    // kain-skill-library.test.mjs. Old GLB empty-hand speed is not their contact.
+    const OWN = ch === 'ain' ? new Set(Object.keys(contactsByChar().ain || {})) : ch==='kain'?new Set(['skill1','skill2','skill3','skill4','ult']):new Set();
     for (const name of PUNCHED) {
       if (OWN.has(name)) continue;
       const clip = g.animations.find(a => a.name === name);

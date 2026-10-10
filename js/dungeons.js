@@ -14,7 +14,7 @@
       /* 류 궁극기: 공통 .22 면 준비 자세에서 판정이 뜬다 — 돌진·베기는 .27~.59, 최고속 .46.
          카인 스킬1(해머 스윙)은 내려치는 순간, 스킬3(도끼 회전)은 오른손 최고속, 류 스킬3(쌍날 회전)은 왼날 .62·오른날 .72 사이 (docs/design/76) */
       /* 85: 카인 skill4·류 attack1~3·세라 skill1·3 은 새 클립(UAL2·KayKit 1.1)의 오른손 최고속, 류 skill1(쌍날 연속)은 마무리 왼날 최고속 .65, 카인 skill2(철벽, 피해 없음)는 막기 올림 .18, 세라 1·2타(좌우 투척) .54 · 3타 .29 (87) */
-      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.433,ult:0.483,counter:0.392},kain:{attack2:0.22,smash:0.324,skill1:0.73,skill2:0.18,skill3:0.38,skill4:0.33},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
+      clipContactsByChar:{ain:{attack2:0.22,attack3:0.48,skill1:0.54,skill2:0.23,skill3:0.433,ult:0.483,counter:0.392},kain:{attack2:0.22,smash:0.324,skill1:0.421,skill2:0.18,skill3:0.229,skill4:0.475,ult:0.337},ryu:{ult:0.46,skill3:0.65,attack1:0.50,attack2:0.43,attack3:0.24,skill1:0.65},sera:{attack1:0.54,attack2:0.54,attack3:0.29,skill1:0.29,skill3:0.20}}
    /* 판정은 클립에서 «날 끝이 제일 빠른» 시각이어야 한다. 안 그러면 휘두르는
       그림과 맞는 순간이 딴 사건이 된다 — 그게 「무게감이 없다」의 정체다.
       punch.py 는 손 위치로 쟀고 smash·exec·ult·attack3 은 손도 안 댔었다.
@@ -66,12 +66,18 @@
          함께 늘리기»를 적용. skill1·skill3·ult·counter는 전신 소스의 실제
          날 표면 접촉에 판정·잔상을 맞춘다(최고속만으로 정하지 않는다). clipSpan으로 새 스킬을 압축하지
          않는다. 평타/스매시, 피해량·스태미나·재사용 대기시간은 유지한다. */
+      gestureDurationByChar:{kain:{skill2:1.8499}},
       characterProfiles:{ain:{
         skill1:{hit:1.1016,active:.14,duration:2.04,cancel:1.68},
         skill3:{hit:1.0998,active:.14,duration:2.5399,cancel:2.10},
         smash:{hit:.48,active:.14,duration:1.15,cancel:.91},
         ult:{hit:1.3717,active:.18,duration:2.8399,cancel:2.42},
         counter:{hit:.5998,active:.10,duration:1.53,cancel:1.15}
+      },kain:{
+        skill1:{hit:1.0963,active:.16,duration:2.6040375000000004,cancel:2.34363},
+        skill3:{hit:.78716,active:.16,duration:3.4373750000000003,cancel:3.09364},
+        skill4:{hit:2.317924,active:.16,duration:4.879840000000001,cancel:4.391856},
+        ult:{hit:1.397059,active:.16,duration:4.145575,cancel:3.73102}
       }},
       /* 클립의 «뒤끝» 을 얼마나 쓸지. 1 이면 클립 전체를 행동 시간에 편다.
          배속 = 쓰는 클립 길이 ÷ 행동 시간이므로, 꼬리를 자르면 «행동 시간을
@@ -180,12 +186,12 @@
     ainUlt: { key:'R', id:'twilight', icon:'scythe', name:'낫의 황혼', mult:6.0, bleed:3, desc:'궁극기. 강타 + 출혈 3중첩', ev:{type:'hit',hits:[[0.483,1]]} },
     /* 카인 — 블레이드 마스터(탱커/브루저): 대검. 파괴·버티기 */
     kain: [
-      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 부위 파괴 피해 ×1.5', breakMult:1.5, ev:{type:'hit',hits:[[0.73,1]]} },
+      { key:'1', id:'cleave', icon:'sword',  name:'대검 내려치기', mult:2.6, cd:7,  st:18, desc:'선택 부위에 묵직한 일격 · 부위 파괴 피해 ×1.5', breakMult:1.5, ev:{type:'hit',hits:[[0.421,1]]} },
       { key:'2', id:'brace',  icon:'shield', name:'철벽',          mult:0,   cd:12, st:0,  desc:'3초간 받는 피해 60% 감소', buff:{dur:3, reduce:0.6}, ev:{type:'buff'} },
-      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위를 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.38,0.55],[0.60,0.45]]} },
-      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격 (자세 +30)', posture:30, ev:{type:'hit',hits:[[0.33,1]]} }
+      { key:'3', id:'whirl',  icon:'flame',  name:'강철 회전',     mult:1.4, cd:13, st:28, desc:'모든 부위를 두 번 벤다 (회전 2접점)', aoe:true, ev:{type:'hit',hits:[[0.229,0.55],[0.554,0.45]]} },
+      { key:'4', id:'stomp',  icon:'hammer', name:'지면 강타',     mult:1.8, cd:10, st:20, desc:'자세 피해 큰 일격 (자세 +30)', posture:30, ev:{type:'hit',hits:[[0.475,1]]} }
     ],
-    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 올려치고 내려찍는 2타 — 두 번째가 본타 + 출혈', ev:{type:'hit',hits:[[0.22,0.35],[0.89,0.65]]} },
+    kainUlt: { key:'R', id:'anvil', icon:'sword', name:'모루의 심판', mult:5.5, bleed:1, desc:'궁극기. 올려치고 내려찍는 2타 — 두 번째가 본타 + 출혈', ev:{type:'hit',hits:[[0.337,0.35],[0.663,0.65]]} },
     /* 류 — 레인저(딜러): 쌍단검. 기동·연속 처치 */
     ryu: [
       { key:'1', id:'fan',    icon:'crosshair', name:'쌍날 난무',   mult:2.0, cd:5,  st:14, desc:'선택 부위에 빠른 3연속 베기', ev:{type:'hit',hits:[[0.37,0.3],[0.47,0.3],[0.65,0.4]]} },

@@ -282,7 +282,7 @@ function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부�
   else { hero.play(moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
   hero.mixer.update(dt);
   if (hero.current?.getClip().name === busyClip) action = fieldHeroAction(ME, hero.current.getClip(), hero.current.time, 'atk' + atkSeq);
-  hero.rig?.apply(action, moving && busy <= 0, false, dt, hero.current?.getClip().name, null); hero.armBlend?.apply(dt);
+  hero.rig?.apply(action, moving && busy <= 0, false, dt, hero.current?.getClip().name, null); if(!hero.model.userData.heroSkillMotion||hero.rig?.diagnostics.source==='legacy')hero.armBlend?.apply(dt);
   if (hero.blob) hero.blob.position.set(root.position.x, .035, root.position.z); }
 /* ---------- 2급 지배형 (문서 204) — 같은 자리, 같은 몸, «서버와 같은 AI» ----------
    server/field-dominator.cjs 를 그대로 읽어 돌린다 (js/mmo/cjs-browser.js). 서버의 field 자리는 아래 작은 판(fieldLocal)이 맡는다:
@@ -469,7 +469,7 @@ function remoteTick(dt) { for (const r of remotes.values()) { const a = r.a; if 
   let dy = t[2] - a.root.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.root.rotation.y += dy * Math.min(1, dt * 12);
   a.armBlend?.restore(); a.rig?.restore(); a.play(t[3]); a.current.paused = false; a.mixer.update(dt);
   const remoteAction = fieldHeroAction(r.character, a.current?.getClip(), a.current?.time || 0, a.key);
-  a.rig?.apply(remoteAction, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); a.armBlend?.apply(dt);
+  a.rig?.apply(remoteAction, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); if(!a.model.userData.heroSkillMotion||a.rig?.diagnostics.source==='legacy')a.armBlend?.apply(dt);
   if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
   if (r.tag) { v3.set(rp.x, 2.15, rp.z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; r.tag.style.display = on ? '' : 'none'; if (on) { r.tag.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; r.tag.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } } } }
 function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);

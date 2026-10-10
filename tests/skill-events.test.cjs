@@ -29,7 +29,8 @@ test('다단 스킬은 총 배율을 나눠 맞는다 — 류 쌍날 난무 3타
   const expect={ryu:{0:3,2:3,ult:5},ain:{2:2},kain:{2:2,ult:2}};
   for(const [c,m] of Object.entries(expect))for(const [slot,hits] of Object.entries(m)){
     const b=solo(c,{player:{ult:100}});if(slot==='ult')b.input('ult');else b.input('skill',+slot);
-    const ev=b.drain().concat(run(b,3));
+    const duration=b.snapshot().player.action?.duration||3;
+    const ev=b.drain().concat(run(b,Math.max(3,duration+.2)));
     const imp=ev.filter(e=>e.t==='impact');
     assert.equal(imp.length,hits,`${c}/${slot}: 타격 ${imp.length}번`);
     assert.deepEqual(imp.map(e=>e.seq),Array.from({length:hits},(_,i)=>i+1));
