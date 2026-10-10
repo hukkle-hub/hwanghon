@@ -122,7 +122,7 @@
       return a.elapsed>=(def&&a.defCancelAt!=null?a.defCancelAt:a.cancelAt);}
     function action(kind,clip,mult,opt,profile){
       var overrides=(R.motion.characterProfiles||{})[C.id||'ain']||{};
-      var t=overrides[clip]||profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/rDur;   /* 무기 리듬: 느린 무기는 speed 가 내려간다 */
+      var t=overrides[clip]||profile||R.motion.light, speed=clamp(st.aspd/100,0.7,1.6)/(overrides[clip]?1:rDur);   /* Authored full-body profiles already include weapon weight; do not slow them twice versus Raid. */
       /* 연계 단계를 행동에 실어 둔다 — 연출(몸통 비틀기·궤적·흔들림)이 «몇 번째
          타인가» 를 알아야 뒤로 갈수록 커진다. 판정·피해에는 쓰지 않는다. */
       var a={id:++serial,kind:kind,clip:clip,part:target,mult:mult,opt:opt||{},elapsed:0,combo:P.combo||0,

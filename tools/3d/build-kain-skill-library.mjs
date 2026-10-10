@@ -1,0 +1,41 @@
+import {readFile,writeFile} from 'node:fs/promises';
+import {resolve} from 'node:path';
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {HERO_SKILL_DATA} from '../../js/hero-skill-data.js';
+import {gripHands} from '../../js/hand-grip.js';
+import {makeKainRigAdapter} from '../../js/kain-two-hand.js';
+const source=resolve(process.argv[2]),loader=new GLTFLoader();loader.register(()=>({name:'nr',loadTexture:()=>Promise.resolve(new T.Texture())}));
+const catalog=JSON.parse(await readFile('art/anim/mixamo_heroes/clips.json','utf8')).kain;
+const bytes=await readFile('art/3d/kain_anim.glb'),asset=await loader.parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),''),model=asset.scene,root=new T.Group();root.add(model);
+const b={};model.traverse(o=>{if(o.isBone)b[o.name.replace(/^mixamorig:?/,'')]=o;});const handGrip=gripHands(model,'kain');
+const slot=new T.Object3D();slot.position.copy(b.RightHand.userData.gripPoint);b.RightHand.add(slot);slot.quaternion.copy(b.RightHandSlot.quaternion);
+const rig=makeKainRigAdapter(model,root,slot,{handGrip}),mixer=new T.AnimationMixer(model);mixer.clipAction(asset.animations.find(c=>c.name==='idle')).play();
+for(let i=0;i<60;i++){rig.restore();mixer.update(1/60);rig.apply(null,false,false,1/60,'idle');}
+const ready={q:Object.fromEntries(Object.entries(b).map(([n,o])=>[n,o.quaternion.clone()])),hips:b.Hips.position.clone(),position:slot.getWorldPosition(new T.Vector3()).addScaledVector(new T.Vector3(0,1,0).applyQuaternion(slot.getWorldQuaternion(new T.Quaternion())),-.085),rotation:slot.getWorldQuaternion(new T.Quaternion())};
+mixer.stopAllAction();rig.restore();const kain={};
+for(const name of ['skill1','skill2','skill3','skill4','ult']){
+ const c=JSON.parse(await readFile(resolve(source,'retarget',`kain-${name==='ult'?'skill1':name}.json`),'utf8'));
+ c.sourceLabel=({skill2:'Great Sword Blocking',skill3:'Great Sword High Spin Attack',skill4:'Great Sword Jump Attack',ult:'Great Sword Attack · reversed lift / forward cleave'})[name]||catalog[name.slice(-1)];
+ if(name==='ult'){
+  const n=c.times.length,indices=[...Array.from({length:n},(_,i)=>n-1-i),...Array.from({length:n-1},(_,i)=>i+1)],oldTimes=c.times.slice(),d=c.duration;
+  c.times=indices.map((j,i)=>i<n?d-oldTimes[j]:d+oldTimes[j]);
+  for(const[key,stride]of [['hips',3],...Object.keys(c.tracks).map(k=>['tracks.'+k,4])]){const a=key.startsWith('tracks.')?c.tracks[key.slice(7)]:c[key],out=indices.flatMap(i=>a.slice(i*stride,i*stride+stride));if(key.startsWith('tracks.'))c.tracks[key.slice(7)]=out;else c[key]=out;}c.duration=d*2;
+ }
+ const sample=i=>{for(const[n,a]of Object.entries(c.tracks))if(b[n])b[n].quaternion.fromArray(a,i*4);b.Hips.position.fromArray(c.hips,i*3);model.updateMatrixWorld(true);};
+ sample(Math.round((c.times.length-1)*.12));
+ const palm=s=>b[s+'Hand'].localToWorld(b[s+'Hand'].userData.gripPoint.clone()),axis=palm('Left').sub(palm('Right')).normalize();
+ const local=b.RightHand.getWorldQuaternion(new T.Quaternion()).invert().multiply(new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),axis));
+ c.weaponLocal=local.toArray();c.weaponPositions=[];c.weaponRotations=[];
+ for(let i=0;i<c.times.length;i++){sample(i);const q=b.RightHand.getWorldQuaternion(new T.Quaternion()).multiply(local),p=palm('Right').add(palm('Left')).multiplyScalar(.5);p.toArray(c.weaponPositions,c.weaponPositions.length);q.toArray(c.weaponRotations,c.weaponRotations.length);}
+ const entry=.40,exit=.45,original=c.duration,times=[],tracks=Object.fromEntries(Object.keys(c.tracks).map(n=>[n,[]])),hips=[],positions=[],rotations=[];
+ const add=(time,index,weight)=>{times.push(+time.toFixed(5));const w=weight==null?null:T.MathUtils.smootherstep(weight,0,1);
+  for(const[n,a]of Object.entries(c.tracks)){const q=new T.Quaternion().fromArray(a,index*4);if(w!=null)q.slerp(ready.q[n],w);q.toArray(tracks[n],tracks[n].length);}
+  const hp=new T.Vector3().fromArray(c.hips,index*3),wp=new T.Vector3().fromArray(c.weaponPositions,index*3),wq=new T.Quaternion().fromArray(c.weaponRotations,index*4);if(w!=null){hp.lerp(ready.hips,w);wp.lerp(ready.position,w);wq.slerp(ready.rotation,w);}hp.toArray(hips,hips.length);wp.toArray(positions,positions.length);wq.toArray(rotations,rotations.length);
+ };
+ for(let k=0;k<12;k++)add(entry*k/12,0,1-k/12);for(let i=0;i<c.times.length;i++)add(entry+c.times[i],i,null);for(let k=1;k<=14;k++)add(entry+original+exit*k/14,c.times.length-1,k/14);
+ const pace=name==='skill2'?1:name==='skill4'?1.6:1.25;
+ Object.assign(c,{times:times.map(t=>+(t*pace).toFixed(5)),tracks,hips,weaponPositions:positions,weaponRotations:rotations,duration:(entry+original+exit)*pace,entry:entry*pace,exit:exit*pace});kain[name]=c;console.log(name,c.duration,c.sourceLabel);
+}
+// Keep the reviewed Ain data byte-for-byte equivalent. Only Kain is added.
+await writeFile('js/hero-skill-data.js','// Generated by build-hero-skill-library.mjs + build-kain-skill-library.mjs; original GLBs untouched.\nexport const HERO_SKILL_DATA='+JSON.stringify({...HERO_SKILL_DATA,kain})+';\n');

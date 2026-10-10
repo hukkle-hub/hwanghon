@@ -59,7 +59,7 @@ class Raid{
    else this.action(p,'smash',k.mult,this.policy().skill,{aoe:k.aoe,skill:true,posture:k.posture,bleed:k.bleed,breakMult:k.breakMult,ev:k.ev,clip:'skill'+(msg.index+1)});
    // Presentation only: no extra damage, lock or invulnerability. Include in
    // snapshots so reconnecting clients do not depend on receiving an event.
-   if(p.character==='ain'&&(k.dodge||k.buff))p.gesture={id:++this.serial,clip:'skill'+(msg.index+1),elapsed:0,duration:k.dodge?this.L.player.rollDur:.875};
+   if((p.character==='ain'||p.character==='kain')&&(k.dodge||k.buff)){const clip='skill'+(msg.index+1),authored=R.motion.gestureDurationByChar?.[p.character]?.[clip];p.gesture={id:++this.serial,clip,elapsed:0,duration:authored?authored/clamp(p.stats.aspd/100,.7,1.6):k.dodge?this.L.player.rollDur:.875};}
    this.event('skill',{player:id,index:msg.index,clip:'skill'+(msg.index+1),name:k.name});return;}
   if(msg.type==='ult'&&p.ult>=100){const k=p.ultSkill;p.ult=0;this.action(p,'ult',k.mult,1,{posture:k.posture,bleed:k.bleed,ev:k.ev});}
  }
