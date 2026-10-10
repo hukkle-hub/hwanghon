@@ -46,9 +46,13 @@ export async function motionAudit(file, clipNames) {
      무릎 꼭짓점(엉덩이-발목 선에서 무릎이 나온 쪽)은 다리 앞, 팔꿈치 꼭짓점은 팔 뒤를 향해야 사람 관절 */
   const LIMB3 = { LeftLeg: ['LeftUpLeg', 'LeftLeg', 'LeftFoot', 1], RightLeg: ['RightUpLeg', 'RightLeg', 'RightFoot', 1], LeftForeArm: ['LeftArm', 'LeftForeArm', 'LeftHand', -1], RightForeArm: ['RightArm', 'RightForeArm', 'RightHand', -1] };
   const frontLocal = {}; for (const [n, [up]] of Object.entries(LIMB3)) if (B[up]) frontLocal[n] = fwd.clone().applyQuaternion(WQ(up).invert());
+  /* 위 마디 경첩(쉬는 자세, 위 뼈 로컬) — 굽히면 손은 앞, 발은 뒤로 가는 축. 맞는 꼭짓점 = −(경첩 × 위-끝 선) (문서 227).
+     처음엔 «위 뼈의 앞» 을 위-끝 선 둘레로 투영했는데, 마디를 150° 넘게 접으면 위 뼈가 선과 75° 넘게 벌어져 그 투영이 짧아지고 흔들렸다 — 아인 걷기 무릎이 153° 접힌 순간 «옆 63°» 로 나왔지만 굽힘 평면은 경첩에서 7° 였다 */
+  const hingeUp = {}; for (const [n, [up, mid, end]] of Object.entries(LIMB3)) { if (!B[up] || !B[mid] || !B[end]) continue; const u = W(mid).sub(W(up)).normalize(), fd = W(end).sub(W(mid)).normalize(), want = /Leg$/.test(n) ? fwd.clone().negate() : fwd;
+    let hw = u.clone().cross(want).normalize(); if (fd.clone().applyAxisAngle(hw, .3).sub(fd).dot(want) < 0) hw.negate(); hingeUp[n] = hw.applyQuaternion(WQ(up).invert()); }
   const apex = n => { const [up, mid, end, sgn] = LIMB3[n], a = W(up), k = W(mid), e = W(end), ae = e.clone().sub(a), t = k.clone().sub(a).dot(ae) / ae.lengthSq(), off = k.clone().sub(a.clone().addScaledVector(ae, t));
-    const bend = 180 - k.clone().sub(a).angleTo(e.clone().sub(k).negate()) * D, front = frontLocal[n].clone().applyQuaternion(WQ(up)), axis = ae.clone().normalize(); front.addScaledVector(axis, -front.dot(axis)).normalize();
-    if (off.length() < 1e-4) return { bend: 0, dev: 0 }; const dev = off.normalize().angleTo(front.multiplyScalar(sgn)) * D; return { bend, dev }; };   /* dev: 0 = 바른 쪽, 180 = 정반대(역관절) */
+    const bend = 180 - k.clone().sub(a).angleTo(e.clone().sub(k).negate()) * D, axis = ae.clone().normalize(), pole = hingeUp[n].clone().applyQuaternion(WQ(up)).cross(axis).negate(); void sgn;
+    if (off.length() < 1e-4 || pole.lengthSq() < 1e-10) return { bend: 0, dev: 0 }; const dev = off.normalize().angleTo(pole.normalize()) * D; return { bend, dev }; };   /* dev: 0 = 바른 쪽, 180 = 정반대(역관절) */
   /* 2) 클립마다 위반 */
   const clips = g.animations.filter(c => !clipNames || clipNames.includes(c.name)), out = [];
   for (const c of clips) { clipNow = c.name; const r = { clip: c.name, dur: +c.duration.toFixed(2), hyper: [0, 0, ''], offHinge: [0, 0, ''], twist: [0, 0, ''], neck: [0, 0, ''], spine: [0, 0], pop: [0, 0, ''], sink: [0, 0, ''], joints: {} };

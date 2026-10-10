@@ -29,8 +29,8 @@ for (const [file, clips] of Object.entries(FIELD)) test(`사람 관절: ${file.s
 for (const h of ['kain', 'sera', 'ryu', 'ain']) test(`영웅 무릎: ${h}_anim.glb — 전 클립 역무릎 · 옆꺾임`, async () => {
   const file = `art/3d/${h}_anim.glb`, b = fs.readFileSync(file), j = JSON.parse(b.subarray(20, 20 + b.readUInt32LE(12)).toString());
   assert.ok(j.asset?.extras?.clipJointFix?.v >= 5, '무릎 고친 표가 없다');
-  const r = await motionAudit(file), bad = [], SIDE = { ain: 65 };   /* 아인 걷기 왼무릎 옆 63° — 허벅지 비틀기 한계(60°) 밖 */
+  const r = await motionAudit(file), bad = [];
   for (const c of r.clips) for (const [k, [v, t]] of Object.entries(c.joints)) { if (!/Leg/.test(k)) continue;
-    if (/ 역$/.test(k) && v > 10) bad.push(`${c.clip} ${k}관절 ${v}° @${t}s`); if (/ 옆$/.test(k) && v > (SIDE[h] || 60)) bad.push(`${c.clip} ${k}으로 ${v}° @${t}s`); }
+    if (/ 역$/.test(k) && v > 10) bad.push(`${c.clip} ${k}관절 ${v}° @${t}s`); if (/ 옆$/.test(k) && v > 60) bad.push(`${c.clip} ${k}으로 ${v}° @${t}s`); }
   assert.deepEqual(bad, []);
 });

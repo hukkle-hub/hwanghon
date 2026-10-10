@@ -117,7 +117,7 @@ export async function fixClips(file, { clips = null, knee = true, ground = true,
   /* 클립 하나의 비틀기 계획: 키 시각마다 (거울 뒤) raw 를 재고 → 경첩에서 keep° 안이면 0, 넘친 만큼만 → 최대 lim° → 앞뒤 키로 부드럽게.
      키마다 따로 정해 바로 쓰면 꼭짓점이 정반대(±180°)일 때 부호가 뒤집혀 손이 한 키 163° 튀었다(거울이 먼저 정반대를 없앤다) */
   const SMOOTH = +(process.env.TW_SMOOTH || .05);
-  const TWK = { Arm: [20, +(process.env.ARM_LIM ?? 90)], Leg: [20, 60] };
+  const TWK = { Arm: [20, +(process.env.ARM_LIM ?? 90)], Leg: [20, +(process.env.LEG_LIM ?? 60)] };
   function planTwist(clip, poser) {
     const tr = clip.tracks.find(t => /LeftForeArm\.quaternion$/.test(t.name)) || clip.tracks.find(t => /Hips\.quaternion$/.test(t.name)); if (!tr || tr.times.length < 3) return null; const times = Array.from(tr.times), out = {};
     const keys = Object.keys(LIMB).filter(k => HINGE[k] && (/Leg$/.test(k) ? knee && legTwist : elbow)); if (!keys.length) return null;
