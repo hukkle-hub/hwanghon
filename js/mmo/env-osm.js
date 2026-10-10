@@ -18,7 +18,7 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    gates: 다른 지역·던전으로 가는 문 — at: { exit:'5' } 출구 자리 | { end:'s0'|'s1', t } 띠 끝 · to: { zone, gate }
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
 import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
-import { interiorFacadeMats, aviLight } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */
+import { interiorFacadeMats, interiorBrickMats, pickFacade, aviLight } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
     gates: [ { id: 'exit5', at: { exit: '5' }, to: { zone: 'gangnam_b1', gate: 'up5' }, label: '강남역 지하상가 · 던전', kind: 'dungeon' },
@@ -99,7 +99,7 @@ export function build(THREE, scene, osm, opt = {}) {
   facades.forEach(t => t.repeat.set(1 / 14.4, 1 / 14.4));   /* 텍스처 한 장 = 8창 × 4층 = 14.4 m 정사각 */
   let facadeMats = facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));
   /* 3D: 그린 창 대신 가짜 실내 창 (interior mapping, 문서 229) — 벽 텍스처는 창 없이 얼룩·빗물 자국만. 2D 굽기는 그대로 */
-  if (L.isView3d() && CFG.interior !== false) facadeMats = interiorFacadeMats(THREE);
+  let brickMats = null; if (L.isView3d() && CFG.interior !== false) { facadeMats = interiorFacadeMats(THREE); brickMats = interiorBrickMats(THREE); }   /* 저층 반은 붉은 벽돌 빌라 */
   const roofMat = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 });
   const cutMat = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });   /* 잘라 낸 건물 윗면 — 새까마면 구멍처럼 보인다 */
 
@@ -164,7 +164,7 @@ export function build(THREE, scene, osm, opt = {}) {
     /* 3D: 높은 탑(45 m 넘음)의 60 % 는 위 1/4 쯤에서 몸을 줄인다(셋백) — 뽑아 올린 기둥이 아니라 스카이라인 (문서 229 §4). 막이·발자국은 땅 윤곽 그대로 */
     const setback = L.isView3d() && !near && h > 45 && ((b.id * 2654435761) >>> 0) / 4294967296 < 0.6, hb = setback ? Math.round(h * 0.72 / 3.6) * 3.6 : h;
     const geo = new THREE.ExtrudeGeometry(shape, { depth: hb, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
-    const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+    const mesh = new THREE.Mesh(geo, [near ? cutMat : roofMat, pickFacade(facadeMats, brickMats, b.id, full)]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     let topPts = pts; if (setback) { const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length; topPts = pts.map(p => [cx + (p[0] - cx) * 0.78, cz + (p[1] - cz) * 0.78]);
       const tg = new THREE.ExtrudeGeometry(new THREE.Shape(topPts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h - hb, bevelEnabled: false }); tg.rotateX(-Math.PI / 2); tg.translate(0, hb, 0);
       const tm = new THREE.Mesh(tg, [roofMat, facadeMats[((b.id >>> 3) + 1) % 4]]); tm.castShadow = true; tm.receiveShadow = true; scene.add(tm);

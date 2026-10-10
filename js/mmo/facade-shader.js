@@ -119,3 +119,17 @@ export function interiorFacadeMats(THREE) {
 export function interiorCurtainMat(THREE) { const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.fillStyle = '#3c4656'; g.fillRect(0, 0, 32, 32);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ map: t, roughness: 0.4, metalness: 0.2 }), { curtain: true }); }
+
+/* 붉은 벽돌 빌라 — 서울 저층(18 m 아래)의 반. 벽돌 0.24 × 0.075 m (한 장 2.4 m 에 10 × 32 줄), 줄눈 · 벽돌마다 색 흔들림 · 그을음 */
+export function interiorBrickMats(THREE) {
+  return [0, 1].map(k => { let sd = 4111 + k * 97; const R = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+    const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+    g.fillStyle = k ? '#6a5048' : '#5e3a32'; g.fillRect(0, 0, N, N);   /* 줄눈 */
+    const bw = N / 10, bh = N / 32; for (let r = 0; r < 32; r++) for (let i = -1; i < 11; i++) { const x = i * bw + (r % 2) * bw / 2, v = 0.82 + R() * 0.3;
+      const base = k ? [140, 96, 78] : [138, 62, 48]; g.fillStyle = `rgb(${base[0] * v | 0},${base[1] * v | 0},${base[2] * v | 0})`; g.fillRect(x + 1, r * bh + 1, bw - 2, bh - 1.5); }
+    for (let i = 0; i < 14; i++) { const x = R() * N; g.fillStyle = 'rgba(20,12,10,.12)'; g.fillRect(x, 0, 2 + R() * 6, N); }   /* 빗물 그을음 */
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(1 / 2.4, 1 / 2.4);
+    const m = patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.0, map: t })); m.name = 'facade-brick'; return m; });
+}
+/* 건물 하나의 벽 재질 고르기 — 18 m 아래의 반은 벽돌, 나머지는 콘크리트 넷 중 하나 (id 해시만 — 장면 난수 R 을 안 쓴다) */
+export function pickFacade(mats, bricks, id, h) { const u = (((id | 0) * 2246822519) >>> 0) / 4294967296; return bricks && h <= 18 && u < 0.5 ? bricks[(id >>> 5) & 1] : mats[(id >>> 3) % mats.length]; }

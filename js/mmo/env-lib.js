@@ -4,7 +4,7 @@
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
-import { interiorFacadeMats, interiorCurtainMat } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
+import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
@@ -169,6 +169,7 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
 
 /* ---------- 건물: 실측 윤곽 × 높이, 가까운 쪽(화면 아래)은 1층으로 잘라 길을 가리지 않게 ---------- */
 export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, ST, tc } = ctx, out = []; let ruinRubbleM = null, ruinWallM = null;
+  const brickMats = VIEW3D && INTERIOR && o.interior !== false ? interiorBrickMats(THREE) : null;   /* 저층 반은 붉은 벽돌 빌라 */
   const facadeMats = VIEW3D && INTERIOR && o.interior !== false ? interiorFacadeMats(THREE) : tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.25 }));   /* 3D: 가짜 실내 창 */
   const curtainM = VIEW3D && INTERIOR && o.interior !== false ? interiorCurtainMat(THREE) : new THREE.MeshStandardMaterial({ map: tex.curtain, emissiveMap: tex.curtain, emissive: 0xffffff, emissiveIntensity: 0.3, roughness: 0.15, metalness: 0.6 });
   const roofM = new THREE.MeshStandardMaterial({ color: 0x2a2830, roughness: 0.9 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2c2a32, roughness: 0.95 });
@@ -185,7 +186,7 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
       ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); continue; }
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
-    const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : facadeMats[(b.id >>> 3) % 4]]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
+    const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : pickFacade(facadeMats, brickMats, b.id, full)]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     if (VIEW3D) addDeco(THREE, scene, buildingDeco(THREE, pts, h, b.id | 0, { roof: !nearSide && !ruined, shops: !tall }), b.id | 0);
     ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
   if (far.length) farCity(THREE, scene, far, tex, area);
