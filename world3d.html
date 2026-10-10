@@ -150,6 +150,7 @@ import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { addLightCones } from './js/mmo/light-cones.js';
 import { createEnvReflect } from './js/mmo/env-reflect.js';
 import { createFogCull } from './js/mmo/fog-cull.js';
+import { fogFor } from './js/mmo/zone-fog.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
@@ -195,7 +196,7 @@ const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
 if (!/OpenStreetMap/.test(env.license || meta.license || '')) document.getElementById('osm').style.display = 'none';
 const skyCol = new THREE.Color(env.sky ? env.sky.fog : 0x140c12);
-scene.background = skyCol; scene.fog = new THREE.Fog(skyCol, 70, 230);
+const ZFOG = fogFor(ZONE); if (q.get('fogf')) { ZFOG.far = +q.get('fogf'); ZFOG.near = +(q.get('fogn') || ZFOG.far * 0.3); }   /* ?fogf=230 으로 견주기 */ scene.background = skyCol; scene.fog = new THREE.Fog(skyCol, ZFOG.near, ZFOG.far);   /* 장소마다 안개 — 도심 70~230 · 강변·바다·산 위는 멀리 · 산 밑·호숫가는 짙게 (문서 229 §15) */
 /* 하늘 돔 (바깥만) — 굽기는 내려다봐서 하늘이 필요 없었다. 3인칭은 늘 지평선이 보인다: 안개색(땅 끝) → 지평선 노을 → 위 보랏빛, 해 쪽으로 빛무리.
    색은 장면이 정한 env.sky (top · horizon · fog) 그대로 */
 if (env.sky && env.sky.top && env.sky.horizon) { const sd = env.sun ? new THREE.Vector3(...env.sun.dir).normalize() : new THREE.Vector3(0, 0.2, 1);
