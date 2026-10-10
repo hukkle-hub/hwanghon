@@ -149,6 +149,7 @@ import { setView3d, setInterior, setVsignTheme, VSIGN, STREETLAMP } from './js/m
 import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { addLightCones } from './js/mmo/light-cones.js';
 import { createEnvReflect } from './js/mmo/env-reflect.js';
+import { createFogCull } from './js/mmo/fog-cull.js';
 import { mountAinScythe } from './js/ain-scythe-mount.js';
 import { setupDominator, updateDominator, applyDominatorAction, hideDominator, flinchDominator } from './js/mmo/dominator-motion.js';
 import { loadCjs } from './js/mmo/cjs-browser.js';
@@ -208,6 +209,8 @@ const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o
 for (const L of pointData) L.parent.remove(L);
 const CONES = q.get('lc') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? addLightCones(THREE, scene, pointData) : null; if (CONES) window.__CONES = { count: CONES.count, at: CONES.at };
 const REFL = q.get('refl') !== '0' && q.get('im') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? createEnvReflect(THREE, renderer, scene, { at: env.spawn || meta.spawn || { x: 0, z: 0 }, size: MOBILE ? 128 : 256 }) : null;   /* 가로등 빛 기둥 (문서 229 §11) — 세기는 아래 시간대가 */
+const FOGC = q.get('fc') !== '0' && scene.fog && scene.fog.far < 1000 && (env.kind || Z.kind || meta.kind) === 'field' ? createFogCull(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 안개 너머는 안 그린다 — 지은 직후 정적인 것만 모은다 (문서 229 §14) */
+if (FOGC) window.__FOGC = FOGC;
 /* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
@@ -688,6 +691,7 @@ function tick() { perf.begin();
   /* 방전 폭우: 그릴 때만 조명을 낮춘다 — 시간대가 정한 세기는 그대로 두고, 예고 원·번개(조명 안 받는 재질)는 밝게 남는다.
      노출(toneMappingExposure)은 블룸 경로(렌더 타깃)에 안 먹어서 휘도가 78.6 → 79.2 로 그대로였다 (문서 222 §6) */
   const dimK = STAGE.dim > 0 ? 1 - STAGE.dim * .75 : 1; if (dimK < 1) { if (!dimLights) { dimLights = []; scene.traverse(l => { if (l.isLight && !l.userData.keepLit) dimLights.push(l); }); } for (const l of dimLights) { l.userData.i0 = l.intensity; l.intensity *= dimK; } if (scene.fog) { dimFog.copy(scene.fog.color); scene.fog.color.multiplyScalar(dimK); } if (scene.background && scene.background.isColor) { dimBg.copy(scene.background); scene.background.multiplyScalar(dimK); } }
+  if (FOGC && (frames % 10 === 0 || frames < 3)) FOGC.update(cam.position, scene.fog.far);
   if (REFL && REFL.dirty) { REFL.bake(); window.__REFL = { bakes: REFL.bakes, ms: REFL.ms }; }   /* 유리에 비치는 도시 — 처음·시간대 바뀔 때만 (문서 229 §12) */
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   if (dimK < 1) { for (const l of dimLights) l.intensity = l.userData.i0; if (scene.fog) scene.fog.color.copy(dimFog); if (scene.background && scene.background.isColor) scene.background.copy(dimBg); }
