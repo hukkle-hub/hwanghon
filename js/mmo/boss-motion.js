@@ -210,7 +210,7 @@ export function updateBossMotion(o,dt,now=Date.now()){
   if(fx.hitT>0){fx.hitT=Math.max(0,fx.hitT-dt);const u=fx.hitT/Math.max(.001,fx.hitDur),kick=Math.sin(Math.min(1,(1-u)*3)*Math.PI*.5)*u*fx.hitPower;rx+=fx.hitFront*kick;rz-=fx.hitSide*kick;}
   const follow=walk||fx.hitT>0?1:Math.min(1,dt*8);o.model.position.y+=(targetY-o.model.position.y)*(walk?1:Math.min(1,dt*7));o.model.rotation.x+=(rx-o.model.rotation.x)*follow;o.model.rotation.z+=(rz-o.model.rotation.z)*follow;}
  /* 클립의 큰 루트 이동은 서버 위치와 겹치므로 수평을 잠근다. idle/slam의 과한 부유만 감쇠한다. */
- if(fx.hips&&fx.hipsBase){fx.hips.position.x=fx.hipsBase.x;fx.hips.position.z=fx.hipsBase.z;const hipScale=idle?.35:skill&&a.skill==='slam'?.2:1;fx.hips.position.y=fx.hipsBase.y+(fx.hips.position.y-fx.hipsBase.y)*hipScale;}
+ if(fx.hips&&fx.hipsBase){fx.hips.position.x=fx.hipsBase.x;fx.hips.position.z=fx.hipsBase.z;const hipScale=1;   /* 예전엔 대기 .35 · 내려찍기 .2 로 골반 내림을 줄여 발 묻힘을 가렸다 — 클립 자체를 바닥에 맞췄다(tools/3d/clip-joint-fix.mjs, 문서 226) */fx.hips.position.y=fx.hipsBase.y+(fx.hips.position.y-fx.hipsBase.y)*hipScale;}
  /* 다음 mixer 평가 전에 되돌릴 원본 자세를 저장한다. */
  for(const p of fx.overlayPose||[]){p.base.copy(p.bone.quaternion);p.dirty=true;}
  if(fx.idleBlend&&!fx.reduced){const c=fx.idleCue,b=fx.idleBlend,arm=b,B=fx.idleBones;

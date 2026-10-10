@@ -10,15 +10,22 @@ import { GLTFLoader } from '../../vendor/three/GLTFLoader.js';
 import { rebindModel } from '../../js/mmo/skin-fix.js';
 
 const SIZE = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 }, COMPS = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
-function chunks(raw) { if (raw.readUInt32LE(0) !== 0x46546C67) throw Error('GLB 아님'); let off = 12, json = null, bin = null;
+export function chunks(raw) { if (raw.readUInt32LE(0) !== 0x46546C67) throw Error('GLB 아님'); let off = 12, json = null, bin = null;
   while (off < raw.length) { const len = raw.readUInt32LE(off), type = raw.readUInt32LE(off + 4), body = raw.subarray(off + 8, off + 8 + len);
     if (type === 0x4E4F534A) json = JSON.parse(body.toString('utf8')); else if (type === 0x004E4942) bin = Buffer.from(body); off += 8 + len; }
   return { json, bin }; }
 /* accessor 자리에 값 쓰기 (byteStride 가 있어도) */
-function writeAccessor(json, bin, ai, get) {
+export function writeAccessor(json, bin, ai, get) {
   const a = json.accessors[ai], bv = json.bufferViews[a.bufferView], es = SIZE[a.componentType], nc = COMPS[a.type], stride = bv.byteStride || es * nc, base = (bv.byteOffset || 0) + (a.byteOffset || 0);
   const put = { 5120: (o, v) => bin.writeInt8(v, o), 5121: (o, v) => bin.writeUInt8(v, o), 5122: (o, v) => bin.writeInt16LE(v, o), 5123: (o, v) => bin.writeUInt16LE(v, o), 5125: (o, v) => bin.writeUInt32LE(v, o), 5126: (o, v) => bin.writeFloatLE(v, o) }[a.componentType];
   for (let i = 0; i < a.count; i++) for (let k = 0; k < nc; k++) put(base + i * stride + k * es, get(i, k));
+}
+export function writeGlb(file, json, bin) {
+  let js = Buffer.from(JSON.stringify(json), 'utf8'); js = Buffer.concat([js, Buffer.alloc((4 - js.length % 4) % 4, 0x20)]);
+  const b = Buffer.concat([bin, Buffer.alloc((4 - bin.length % 4) % 4)]), head = Buffer.alloc(12), jh = Buffer.alloc(8), bh = Buffer.alloc(8);
+  head.writeUInt32LE(0x46546C67, 0); head.writeUInt32LE(2, 4); head.writeUInt32LE(12 + 8 + js.length + 8 + b.length, 8);
+  jh.writeUInt32LE(js.length, 0); jh.writeUInt32LE(0x4E4F534A, 4); bh.writeUInt32LE(b.length, 0); bh.writeUInt32LE(0x004E4942, 4);
+  fs.writeFileSync(file, Buffer.concat([head, jh, js, bh, b]));
 }
 export async function rebindGlb(file, { force = false, opts = {} } = {}) {
   const raw = fs.readFileSync(file), { json, bin } = chunks(raw);
@@ -35,11 +42,7 @@ export async function rebindGlb(file, { force = false, opts = {} } = {}) {
       writeAccessor(json, bin, prim.indices, i => i < ix.count ? ix.getX(i) : 0); }   /* 끊은 몫 = 넓이 0 삼각형 */
     done.push(o.name); });
   json.asset = json.asset || {}; json.asset.extras = { ...(json.asset.extras || {}), skinRebind: { v: 1, by: 'tools/3d/skin-rebind.mjs', meshes: res.map(r => ({ mesh: r.mesh, islands: r.islands, changed: r.changed, cut: r.cut })) } };
-  let js = Buffer.from(JSON.stringify(json), 'utf8'); js = Buffer.concat([js, Buffer.alloc((4 - js.length % 4) % 4, 0x20)]);
-  const b = Buffer.concat([bin, Buffer.alloc((4 - bin.length % 4) % 4)]), head = Buffer.alloc(12), jh = Buffer.alloc(8), bh = Buffer.alloc(8);
-  head.writeUInt32LE(0x46546C67, 0); head.writeUInt32LE(2, 4); head.writeUInt32LE(12 + 8 + js.length + 8 + b.length, 8);
-  jh.writeUInt32LE(js.length, 0); jh.writeUInt32LE(0x4E4F534A, 4); bh.writeUInt32LE(b.length, 0); bh.writeUInt32LE(0x004E4942, 4);
-  fs.writeFileSync(file, Buffer.concat([head, jh, js, bh, b]));
+  writeGlb(file, json, bin);
   return { file, meshes: done, res };
 }
 if ((process.argv[1] || '').endsWith('skin-rebind.mjs')) {

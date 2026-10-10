@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import * as T from '../../vendor/three/three.module.js';
 import { GLTFLoader } from '../../vendor/three/GLTFLoader.js';
 import { fixSkin, rebindModel } from '../../js/mmo/skin-fix.js';
+import { makePoser } from './pose-eval.mjs';
 
 export async function loadGlb(file) {
   const raw = fs.readFileSync(file), ld = new GLTFLoader(); ld.register(() => ({ name: 'skip', loadTexture: () => Promise.resolve(new T.Texture()) }));
@@ -36,10 +37,10 @@ export async function audit(file, clipNames, step = .05, limit = 2, hops = 0, cu
   const g = await loadGlb(file), root = g.scene, meshes = []; const fixed = hops === 'rebind' ? rebindModel(T, root, { sigma: cut || .08, wpow: +(process.env.WPOW || 1), skirt: process.env.SKIRT === '1', floor: +(process.env.FLOOR || 0), reach: +(process.env.REACH || 2), geo: process.env.GEO === '1', core: +(process.env.CORE || .25), tube: +(process.env.TUBE || 0), cut: process.env.CUT !== '0' }) : hops >= 0 ? fixSkin(root, hops, cut) : null; root.traverse(o => { if (o.isSkinnedMesh) meshes.push(prep(o)); });
   const mixer = new T.AnimationMixer(root), rest = []; root.traverse(o => rest.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]));
   const clips = g.animations.filter(c => !clipNames || clipNames.includes(c.name)), out = [];
-  for (const c of clips) { const act = mixer.clipAction(c); mixer.stopAllAction(); act.reset(); act.play(); act.paused = true;
+  for (const c of clips) { const poser = makePoser(root, c);   /* 믹서는 멈춘 구간에서 뼈를 다시 안 쓴다 (pose-eval.mjs) */
     const r = { clip: c.name, dur: +c.duration.toFixed(2), worst: 0, at: 0, frac: 0, fracAt: 0, pairs: new Map() };
     for (let t = 0; t <= c.duration + 1e-6; t += step) { for (const [o, p, q, s] of rest) { o.position.copy(p); o.quaternion.copy(q); o.scale.copy(s); }
-      act.time = Math.min(t, c.duration); mixer.update(0); root.updateMatrixWorld(true);
+      poser(t);
       for (const m of meshes) { m.mesh.skeleton.update(); const s = stretchNow(m, limit); if (s.worst > r.worst) { r.worst = s.worst; r.at = +t.toFixed(2); r.mesh = m.mesh.name; }
         if (s.frac > r.frac) { r.frac = s.frac; r.fracAt = +t.toFixed(2); } for (const [k, n] of s.pairs) r.pairs.set(k, Math.max(r.pairs.get(k) || 0, n)); } }
     r.top = [...r.pairs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6); delete r.pairs; out.push(r); }

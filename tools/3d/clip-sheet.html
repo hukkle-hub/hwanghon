@@ -15,9 +15,11 @@ const times=Q.get('times')?Q.get('times').split(',').map(Number):Array.from({len
 const cv=document.getElementById('c'); cv.width=CELL*times.length; cv.height=CELL*names.length;
 const r=new T.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true}); r.setPixelRatio(1); r.setSize(cv.width,cv.height,false);
 r.outputColorSpace=T.SRGBColorSpace; r.toneMapping=T.ACESFilmicToneMapping; r.toneMappingExposure=1.3; r.setScissorTest(true); r.autoClear=false; r.setClearColor(0x12161a,1); r.clear();
-const s=new T.Scene(); s.add(new T.HemisphereLight(0xdde6ff,0x303440,1.6)); const k=new T.DirectionalLight(0xffe8cc,2.6); k.position.set(2,4,3); s.add(k); const rim=new T.DirectionalLight(0x9fb8e8,1.2); rim.position.set(-3,2,-3); s.add(rim);
+const s=new T.Scene(); s.add(new T.HemisphereLight(0xdde6ff,0x303440,+(Q.get('light')||1.6))); const k=new T.DirectionalLight(0xffe8cc,2.6); k.position.set(2,4,3); s.add(k); const rim=new T.DirectionalLight(0x9fb8e8,1.2); rim.position.set(-3,2,-3); s.add(rim);
 const fl=new T.Mesh(new T.CircleGeometry(4,48).rotateX(-Math.PI/2),new T.MeshStandardMaterial({color:0x2c3338,roughness:.95})); s.add(fl); const grid=new T.GridHelper(8,16,0x6d7f8a,0x3c474e); grid.position.y=.003; s.add(grid);
 s.add(model); const mixer=new T.AnimationMixer(model), cam=new T.PerspectiveCamera(30,1,.05,50);
+if(Q.get('bones')){ model.traverse(o=>{ if(o.isMesh){ const m=(Array.isArray(o.material)?o.material:[o.material]).map(x=>{ const c=x.clone(); c.transparent=true; c.opacity=.28; c.depthWrite=false; return c; }); o.material=Array.isArray(o.material)?m:m[0]; } });   /* bones=1: 몸은 비치게, 뼈는 위에 — 왼쪽 빨강·오른쪽 파랑 */
+  const sk=new T.SkeletonHelper(model); sk.material.depthTest=false; sk.material.linewidth=2; const col=sk.geometry.attributes.color; sk.bones.forEach((b,i)=>{ const c=/Left/.test(b.name)?[1,.25,.2]:/Right/.test(b.name)?[.25,.55,1]:[1,1,.4]; for(const k of [i*2,i*2+1]) if(k<col.count) col.setXYZ(k,...c); }); col.needsUpdate=true; sk.renderOrder=9; s.add(sk); }
 const rest=[]; model.traverse(o=>{ if(o.name!=='JeongSaber') rest.push([o,o.position.clone(),o.quaternion.clone()]); });
 window.INFO=[];
 names.forEach((n,row)=>{ const clip=g.animations.find(a=>a.name===n); if(!clip) return; const act=mixer.clipAction(clip); mixer.stopAllAction();
