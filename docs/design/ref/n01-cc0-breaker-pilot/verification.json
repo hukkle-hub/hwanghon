@@ -1,0 +1,25 @@
+{
+  "species": "G5_BREAKER",
+  "stage": "local_review_candidate_not_production_approved",
+  "branch": "gpt/n01-cc0-motion-v1",
+  "baseMain": "8764df7c203a57116445f4ea98e31d021e31d5db",
+  "preservedClaudeMainByMerge": true,
+  "models": {
+    "high": {"file":"g5_breaker.glb","sha256":"04ea5de34b505ffa0aa45d77b34f3b15e2648778922ee923370ea936cddab98b","bytes":5909004,"triangles":37487,"joints":65,"materials":3,"textureSize":2048},
+    "mobile": {"file":"g5_breaker_mobile.glb","sha256":"74c5c7dbabb3f163d60ca5419b0d17147d30aee174ef6ce8734531f04ed5620a","bytes":2261188,"triangles":13236,"joints":65,"materials":3,"textureSize":1024}
+  },
+  "preservationReport":"preservation.json",
+  "preservationScope":"High body position/normal/UV and original2 materials/embeddedPNG byte-exact;23 non-Hand joint rest transforms unchanged. Hand faces,2 wrist binds,40 finger binds,localized forearm skin weights and2 seam bridges intentionally changed. Mobile is decimated.",
+  "clipsSeconds":{"idle":2.5,"walk":1.3333333333333333,"jog":0.9333333333333333,"structure_slam":2.2,"heavy_slam":2.2,"attack":2.2,"attack1":2.2,"hit":0.3333333333333333,"die":2,"death":2},
+  "attack":{"description":"One strong full-body punch, NOT an overhead slam despite legacy clip alias","source":"Existing local Mixamo Mutant Punch first33frames + authored idle entry/exit","durationMs":2200,"windupMs":900,"recoveryMs":1300,"contactFrame30fps":27,"reachM":0.92,"torsoCapsuleRadiusM":0.25,"facilityReachM":0.88,"qaFacilityBoxM":[0.45,1,0.35],"damage":700,"facilityDamage":900,"hp":7000,"speed":2.4,"cooldownMs":1800,"powerBudgetUnchanged":true},
+  "locomotion":{"walkNativeMps":1.03564255590721,"jogNativeMps":3.30864029673105,"jogFootLiftScale":0.35,"jogStrideScale":0.5,"jogPelvisBounceScale":0.25,"actualDisplayedSpeedCadence":true},
+  "renders":{"fps":30,"highAllFrames":{"idle":76,"walk":41,"jog":29,"structure_slam":67,"hit":11,"die":61},"highGeometryAndUnchangedClipReuseExact":true,"reuseReports":["render-reuse-geometry.json","render-reuse-motion.json"],"mobileAllFrames":{"structure_slam":67,"die":61},"mobileOtherClipsSeparatelyRendered":false,"highVideo":"videos/g5_breaker_full_motion.mp4","highVideoSeconds":16.466667,"mobileVideo":"mobile-videos/g5_breaker_mobile_full_motion.mp4","mobileVideoSeconds":8.533333},
+  "browser":{"highVideoFullPlayback":{"rate":0.5,"ended":true,"error":null},"mobileVideoFullPlayback":{"rate":0.5,"ended":true,"error":null},"actualLoaderFacilityHit":{"damage":900,"clip":"structure_slam","timeSeconds":0.933,"screenshot":"browser-facility-contact.png"},"reviewTabWarningOrErrorLogs":[],"viewportChecks":[{"width":412,"height":915,"horizontalOverflow":0,"minControlWidth":64,"minControlHeight":64},{"width":915,"height":412,"horizontalOverflow":0,"minControlWidth":64,"minControlHeight":64}],"hardwareTest":false},
+  "regression":{"total":1084,"pass":1082,"skip":2,"fail":0,"durationMs":168118.1873,"log":"regression-final.log"},
+  "negativeControls":["10 technical validator corruptions perGLB rejected","deliberate body UV corruption rejected","600ms early fist damage rejected against actual skinned geometry","1cm wrist seam gap rejected","3cm idle foot drift rejected"],
+  "visualScope":"Whole high-motion video and all-frame sheets inspected; front/side/rear contact plus left/right fist closeups; mobile attack/death video and sheets inspected. Not a claim that every joint and surface has final artistic approval.",
+  "sources":{"body":"Existing Claude/Hi3D N01 body preserved within documented exceptions","locomotion":"Existing local CC0 Quaternius UAL","hands":"Existing local CC0 VRoid donor","attackAndDeath":"Existing project Mixamo-derived motions; NOT CC0 standalone motion libraries","adobeLicenseReference":"https://helpx.adobe.com/creative-cloud/faq/mixamo-faq.html","ualReference":"https://quaternius.com/packs/universalanimationlibrary2.html","unrealRestrictedAssetsExported":false,"additionalPaidJobs":0},
+  "pending":["Hand material boundary and sleeve finish","Director artistic approval","Online world3d two-client visual regression","Galaxy S25 Ultra hardware GPU/touch/performance","Stalker,Armored,Resonator source-authored motion upgrades","Operations facility binding beyond QA scene"],
+  "productionApproved":false,
+  "deployed":false
+}

@@ -108,3 +108,18 @@ test('정 장관 «지휘 — 각도»: 4.2 m 밖이면 세 줄(−18°·0°·+1
  const {f,o,p}=setupJ(); p.x=o.x; p.z=o.z+2.5; o.kit.target=p.id; o.kit.pattern='triple'; o.kit.state='idle'; o.kit.endsAt=0; const s=runTo(f,o,'triple',20000), z0=o.kit.fromZ;
  for(let t=s;t<=s+2000;t+=10) f.tickBosses(t); assert.equal(o.kit.state,'skill'); assert.ok(Math.abs(Math.hypot(o.x-o.kit.fromX,o.z-z0)-.85)<.02,'3합 전진 '+Math.hypot(o.x-o.kit.fromX,o.z-z0).toFixed(2));
 });
+test('기술표 보스: 기술 종료 후 목표를 다시 찾아도 1·2단계 회복 시간을 생략하지 않는다',()=>{
+ for(const id of ['subject09','shadowfang']) for(const phase of [1,2]) {
+  const {f,o,p}=id==='subject09'?setup09():setup();
+  if(phase===2){o.hp=Math.round(o.max*.49);o.kit.opened=true;}
+  p.hp=p.maxHp=1e9;p.x=o.x;p.z=o.z+2;o.kit.target=p.id;
+  o.kit.pattern=id==='subject09'?'frenzy':'flurry';f.tickBosses(1800);
+  assert.equal(o.kit.state,'skill');const end=o.kit.endsAt;p.dodgeUntil=end+1; // 흡혈로 단계가 바뀌지 않게 회복 시간만 고립 검증
+  f.tickBosses(end);assert.equal(o.kit.state,'idle');
+  const rec=KIT.KITS[id].recovery[phase-1];assert.equal(o.kit.endsAt,end+rec);
+  const seq=o.kit.seq;
+  for(let t=end+50;t<end+rec;t+=50){p.x=o.x;p.z=o.z+2;f.tickBosses(t);assert.equal(o.kit.state,'idle',id+' phase '+phase+' at '+(t-end));assert.equal(o.kit.seq,seq);}
+  f.tickBosses(end+rec);assert.equal(o.kit.state,'walk','정해진 회복이 끝나면 재탐색');
+  f.tickBosses(end+rec+50);assert.equal(o.kit.state,'skill','회복 뒤 다시 공격 가능');
+ }
+});

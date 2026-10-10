@@ -1,37 +1,37 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\runner-idle-plant-v1\\g5_runner_mobile.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\n01-cc0-motion-v1\\runner-delivery-v2\\g5_runner_mobile.glb",
   "species": "G5_RUNNER",
-  "sha256": "6a2b0eba8397cedb50a92454c40e9fba4e9cd694efaa02dc5d9910781143fbed",
-  "bytes": 2447404,
-  "triangles": 19064,
-  "vertices": 15277,
+  "sha256": "2a0ddc163b8e22dc12ed5d6c508ab127228665cf95aa916d44e1b879a8cc34bf",
+  "bytes": 2665684,
+  "triangles": 15499,
+  "vertices": 12901,
   "materials": 3,
   "maxWeightError": 1.334119588136673e-7,
   "joints": 65,
   "clips": [
     {
-      "name": "hit",
-      "duration": 0.9333333333333333
-    },
-    {
       "name": "idle",
-      "duration": 4
-    },
-    {
-      "name": "run",
-      "duration": 0.5
+      "duration": 2.933333333333333
     },
     {
       "name": "walk",
-      "duration": 0.7
+      "duration": 1.3333333333333333
     },
     {
-      "name": "attack",
-      "duration": 1.1
+      "name": "hit",
+      "duration": 0.8333333333333334
     },
     {
       "name": "flank_swipe",
-      "duration": 1.1
+      "duration": 1.8
+    },
+    {
+      "name": "attack",
+      "duration": 1.8
+    },
+    {
+      "name": "run",
+      "duration": 0.6666666666666666
     },
     {
       "name": "die",
@@ -39,7 +39,7 @@
     },
     {
       "name": "attack1",
-      "duration": 1.1
+      "duration": 1.8
     },
     {
       "name": "death",
@@ -54,12 +54,12 @@
   ],
   "boundsYUp": [
     [
-      -0.4345513880252838,
+      -0.4415757954120636,
       -6.047503120498732e-7,
       -0.20647865533828735
     ],
     [
-      0.43046340346336365,
+      0.44248393177986145,
       1.8497661352157593,
       0.20790866017341614
     ]

@@ -1,45 +1,65 @@
 {
-  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\walker-idle-plant-v1\\g5_walker_mobile.glb",
+  "file": "C:\\Users\\MIN\\Documents\\Codex\\2026-09-14\\referenced-chatgpt-conversation-this-is-an\\output\\monster-bodies-v11\\n01-cc0-motion-v1\\walker-combo-v2\\g5_walker_mobile.glb",
   "species": "G5_WALKER",
-  "sha256": "ceb5493fc1850d96c55db8a2ec73b4b52a84f8de33c94c50726a8460bd45e5f9",
-  "bytes": 1892056,
-  "triangles": 17129,
-  "vertices": 11206,
+  "sha256": "68df12a6f712f7bd58e5b7eb560cd37c7ad911852352156b72a954e3778d5a61",
+  "bytes": 2637148,
+  "triangles": 13912,
+  "vertices": 9428,
   "materials": 3,
-  "maxWeightError": 1.17652234621346e-7,
+  "maxWeightError": 1.126900315284729e-7,
   "joints": 65,
   "clips": [
     {
-      "name": "hit",
-      "duration": 0.9333333333333333
-    },
-    {
       "name": "idle",
-      "duration": 4
+      "duration": 2.5
     },
     {
       "name": "walk",
-      "duration": 0.7
-    },
-    {
-      "name": "attack",
       "duration": 1.3333333333333333
     },
     {
-      "name": "slow_combo",
-      "duration": 1.3333333333333333
+      "name": "jog",
+      "duration": 0.9333333333333333
+    },
+    {
+      "name": "jab",
+      "duration": 0.8666666666666667
+    },
+    {
+      "name": "cross",
+      "duration": 1
+    },
+    {
+      "name": "hook",
+      "duration": 0.4666666666666667
+    },
+    {
+      "name": "hook_recovery",
+      "duration": 0.6
+    },
+    {
+      "name": "hit",
+      "duration": 0.3333333333333333
     },
     {
       "name": "die",
       "duration": 2
     },
     {
-      "name": "attack1",
-      "duration": 1.3333333333333333
-    },
-    {
       "name": "death",
       "duration": 2
+    },
+    {
+      "name": "slow_combo",
+      "duration": 3.7
+    },
+    {
+      "name": "attack",
+      "duration": 3.7
+    },
+    {
+      "name": "attack1",
+      "duration": 3.7
     }
   ],
   "textures": [
@@ -50,17 +70,17 @@
   ],
   "boundsYUp": [
     [
-      -0.38297659158706665,
-      -0.001423226436600089,
-      -0.21796973049640656
+      -0.37342169880867004,
+      -0.000623574189376086,
+      -0.1674598902463913
     ],
     [
-      0.3817555606365204,
+      0.37390950322151184,
       1.850000262260437,
-      0.1739233434200287
+      0.17392651736736298
     ]
   ],
-  "height": 1.851423488697037,
+  "height": 1.850623836449813,
   "negativeTests": 10,
   "technical": "pass",
   "visualApproved": false,

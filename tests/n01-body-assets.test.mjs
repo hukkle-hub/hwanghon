@@ -16,7 +16,7 @@ test('all six high/mobile GLBs retain exact motion samples, root core and aliase
 test('baked attack ends align with authoritative windup and recovery, including all four armored beats',()=>{
  const nav={safe:()=>false,legal:()=>true,canTraverse:()=>true,route:()=>null};
  for(const k of names){const id='G5_'+k.toUpperCase(),d=read(k,false);for(let beat=0;beat<(k==='armored'?4:1);beat++){
-  const m={id:'m',catalogId:id,x:0,z:0,alive:true,group:{area:{}}},a=M.reset(m,0);a.attackCount=beat;M.tick(m,a,M.statsFor(id),[{id:'p',x:0,z:1}],0,nav);
+  const m={id:'m',catalogId:id,x:0,z:0,alive:true,group:{area:{}}},a=M.reset(m,0);a.attackCount=beat;M.tick(m,a,M.statsFor(id),[{id:'p',x:0,z:.75}],0,nav);
   const c=d.g.animations.find(c=>c.name===a.action.clip);assert(c,id+' '+a.action.clip);const duration=Math.max(...c.samplers.map(s=>d.g.accessors[s.input].max[0]));assert(Math.abs(duration-(a.action.windupMs+a.action.recoveryMs)/1000)<.034,id+' authoritative action ends before/after baked animation');
  }}
 });

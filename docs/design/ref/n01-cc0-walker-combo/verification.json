@@ -1,0 +1,174 @@
+{
+  "dateKST": "2026-10-10",
+  "scope": "Walker source-authored jab->cross2-hit local candidate. Runner unchanged; remaining4 not upgraded this turn.",
+  "productionApproved": false,
+  "deployed": false,
+  "paidJobs": 0,
+  "baseMain": "b5eb42a69aad7f447860f03a0bd6f3dd55dc4891",
+  "branch": "gpt/n01-cc0-motion-v1",
+  "high": {
+    "sha256": "656acf2b781acd4c76ac482f302f5e8c9c22afe22c9b09597d971a5cae97808c",
+    "bytes": 5205280,
+    "triangles": 39647
+  },
+  "mobile": {
+    "sha256": "68df12a6f712f7bd58e5b7eb560cd37c7ad911852352156b72a954e3778d5a61",
+    "bytes": 2637148,
+    "triangles": 13912
+  },
+  "bodyFaceClothesUVMaterialPNGRestAndSkinPreservedFromPreviousPilot": true,
+  "motionSources": {
+    "attack": "Existing already-retargeted CC0 UAL1 jab + cross. Resampled30fps, timeScale2, smoothstep overlap1.7..1.9833s. No arm goal pose synthesis.",
+    "otherClips": "Sample-identical previous selected Walker; actual renders reused only after geometry/skin/material/clip equality.",
+    "hands": "Previous selected CC0 VRoid hand meshes/finger rig",
+    "death": "Existing game project Mixamo-derived death, NOT standalone CC0 library"
+  },
+  "combat": {
+    "durationMs": 3700,
+    "windupMs": 600,
+    "recoveryMs": 3100,
+    "strikes": [
+      {
+        "offsetMs": 600,
+        "hand": "Left",
+        "damage": 425
+      },
+      {
+        "offsetMs": 2300,
+        "hand": "Right",
+        "damage": 425
+      }
+    ],
+    "totalDamage": 850,
+    "facilityTotal": 300,
+    "reachM": 0.85,
+    "speedMps": 2.85,
+    "secondTell": [
+      1700,
+      2300
+    ],
+    "freshRangeWallAndDefensePerStrike": true,
+    "targetLossOrStaggerCancels": true,
+    "staleCatchupHitsSkipped": true,
+    "seqDoesNotRestartBetweenHits": true
+  },
+  "meshContact": {
+    "targetCapsuleRadiusM": 0.25,
+    "targetCentreM": 0.85,
+    "left": {
+      "frame": 18,
+      "seconds": 0.6,
+      "maxCentreReachM": 0.870282935,
+      "previousFrameReachM": 0.747176861
+    },
+    "right": {
+      "frame": 69,
+      "seconds": 2.3,
+      "maxCentreReachM": 0.850299545,
+      "previousFrameReachM": 0.846441549
+    },
+    "deliberatelyEarlyRightContactRejected": true
+  },
+  "tests": {
+    "full": {
+      "total": 1067,
+      "pass": 1065,
+      "skip": 2,
+      "fail": 0,
+      "log": "regression.log",
+      "durationMs": 164805.02
+    },
+    "targetedAfterFinalMetadataChange": {
+      "total": 32,
+      "pass": 32,
+      "fail": 0
+    },
+    "metadataContractAndMutationGuard": {
+      "total": 5,
+      "pass": 5,
+      "fail": 0
+    },
+    "negativeControls": [
+      "duplicate early impact",
+      "early right fist contact",
+      "missing second telegraph",
+      "10 structural checks per GLB"
+    ],
+    "actualField": "First strike dodge leaves HP; second425*.82*.5=174 defended HP loss; hurt source/time kept; no replay"
+  },
+  "render": {
+    "newAttackFrames": 112,
+    "fps": 30,
+    "noInterpolation": true,
+    "fullVideo": "full-videos/g5_walker_full_motion.mp4",
+    "seconds": 19.466667,
+    "browserFullPlayback": {
+      "rate": 0.5,
+      "ended": true,
+      "error": null
+    },
+    "attackPlayback": {
+      "ended": true,
+      "error": null
+    },
+    "viewsInspected": [
+      "all112frames",
+      "first contact left hand/front/side/rear",
+      "second contact right hand/front/side/rear",
+      "actual loader second tell2.0s/contact2.3s"
+    ]
+  },
+  "feet": {
+    "actualSkinnedSolesEvery112Frames": true,
+    "highMinY": -0.0017708724432811732,
+    "mobileMinY": -0.0017711837117324373,
+    "maxSupportLiftM": 0.000001,
+    "doesNotIndependentlyApproveFootSliding": true
+  },
+  "responsive": {
+    "method": "Real child iframe viewport; previous browser override did not reliably change innerWidth.",
+    "walkerSizes": [
+      [
+        412,
+        915
+      ],
+      [
+        915,
+        412
+      ],
+      [
+        750,
+        298
+      ]
+    ],
+    "runnerSizes": [
+      [
+        412,
+        915
+      ],
+      [
+        915,
+        412
+      ]
+    ],
+    "horizontalOverflow": false,
+    "minControlSize": 64,
+    "controlAndCanvasAreasSeparated": true,
+    "hardwareEmulation": false
+  },
+  "browserObservations": {
+    "actualLoaderRenderedAndReturned425Hit": true,
+    "secondTellVisible": true,
+    "unattributedErrors": "Outer responsive-wrapper log contained2 MutationObserver Node-type errors. No MutationObserver exists in local page/module sources. Source unconfirmed; not claimed console-clean. Rendering and UI remained functional."
+  },
+  "knownLimitations": [
+    "Sleeve dark opening and body/hand material seam remain",
+    "Director artistic approval pending",
+    "Online world3d2-client visual regression pending",
+    "Actual Galaxy S25 Ultra GPU/touch/performance unverified",
+    "Breaker/Stalker/Armored/Resonator source-authored upgrades pending",
+    "No production deployment"
+  ],
+  "rejectedComboV1": "Damage600ms but first contact~480ms; adjusted jab anticipation to250ms and rerendered v2.",
+  "next": "Breaker next. Preserve Claude main; review branch only."
+}

@@ -9,7 +9,7 @@ test('Runner patrol walks but existing combat movement runs, through the real pa
 test('Runner locomotion metadata retains the prior attack and the same offline clock',()=>{
  const action={key:'flank_swipe',clip:'flank_swipe',seq:4,startAt:100,windupMs:600},a={action,seq:4,lastTick:100},m={catalogId:'G5_RUNNER',anim:'walk',engaged:true};
  const v=M.visualAction(m,a,250);assert.equal(v.locomotion,'run');assert.equal(v.elapsedMs,150);assert.equal(v.key,action.key);assert.equal('locomotion' in action,false);
- assert.deepEqual(M.visualAction({...m,anim:'attack'},a),action);assert.equal(M.visualAction({catalogId:'G5_WALKER',anim:'walk'},{action:null}),null);
+ assert.deepEqual(M.visualAction({...m,anim:'attack'},a),action);assert.equal(M.visualAction({catalogId:'G5_STALKER',anim:'walk'},{action:null}),null);
 });
 test('negative control: turning a slow patrol into a run is visibly rejected',()=>{
  const meta=M.visualAction({catalogId:'G5_RUNNER',anim:'walk',engaged:false},{action:null,seq:0,lastTick:0});

@@ -2,9 +2,9 @@ const test=require('node:test'),assert=require('node:assert/strict'),M=require('
 const nav={legal:()=>true,safe:()=>false,canTraverse:()=>true,route:()=>null};
 const mob=(id)=>({id:'m',catalogId:id,x:0,z:0,alive:true,group:{area:{}}});
 test('actual goal: Breaker ignores nearer gate and strikes generator with facility damage',()=>{
- const m=mob('G5_BREAKER'),a=M.reset(m,0),s=M.statsFor(m.catalogId),ctx={facilities:[{id:'gate',kind:'gate',x:.5,z:0},{id:'gen',kind:'generator',x:1,z:0},{id:'comms',kind:'comms',x:1.5,z:0}]};
+ const m=mob('G5_BREAKER'),a=M.reset(m,0),s=M.statsFor(m.catalogId),ctx={facilities:[{id:'gate',kind:'gate',x:.5,z:0},{id:'gen',kind:'generator',x:.88,z:0},{id:'comms',kind:'comms',x:1.5,z:0}]};
  M.tick(m,a,s,[],0,nav,ctx);assert.equal(a.target,'gen');assert.equal(a.action.key,'structure_slam');
- const hit=M.tick(m,a,s,[],600,nav,ctx);assert.equal(hit.target,'gen');assert.equal(hit.targetKind,'generator');assert.equal(hit.damage,900);
+ const hit=M.tick(m,a,s,[],900,nav,ctx);assert.equal(hit.target,'gen');assert.equal(hit.targetKind,'generator');assert.equal(hit.damage,900);
  ctx.facilities[1].alive=false;M.tick(m,a,s,[],2500,nav,ctx);assert.equal(a.target,'comms');
 });
 test('Runner and Stalker physically visit legal flank point before choosing exposed NPC',()=>{
