@@ -64,7 +64,7 @@ test('꾸밈도 제 자리 칸(48 m)으로 합쳐진다 — 막이에서 빠져�
 test('빌더 연결: 3D 에서만 꾸밈, 강남은 간판 빼고', () => {
   assert.match(SRC, /if \(VIEW3D\) addDeco\(THREE, scene, buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !nearSide && !ruined, shops: !tall \}\)/);
   const osm = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
-  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
+  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false, vsign: !!rd && rd\.d < 40, front: rd\?\.q \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
 });
 
 test('창 밑 실외기는 가짜 실내 창 칸 가운데·창 아래 — facade-shader 와 같은 격자 (1.8 m × 3.6 m, s = 위치·(nz, −nx))', () => {
@@ -75,4 +75,15 @@ test('창 밑 실외기는 가짜 실내 창 칸 가운데·창 아래 — facad
         let nx = (q[1] - p[1]) / L, nz = -(q[0] - p[0]) / L; if (inPoly([(p[0] + q[0]) / 2 + nx * 0.3, (p[1] + q[1]) / 2 + nz * 0.3], pts)) { nx = -nx; nz = -nz; }   /* 바깥 법선 */
         const sv = (c.x - nx * 0.19) * nz + (c.z - nz * 0.19) * -nx, f = sv / 1.8 - Math.floor(sv / 1.8); return Math.abs(f - 0.5) < 0.02; });
       assert.ok(ok, `칸 가운데가 아님 (${c.x.toFixed(2)}, ${c.z.toFixed(2)})`); } }
+});
+
+test('세로 간판: 건물 하나에 많아야 하나 · 벽에서 1 m 안 · 1층 위부터 (문서 229 §9)', () => {
+  let n = 0; for (let id = 1; id < 300; id++) { const P = buildingDeco(THREE, PTS, 20, id, { roof: true, shops: true }); assert.ok(P.vsign.length <= 1, '간판 ' + P.vsign.length); n += P.vsign.length;
+    for (const g of P.vsign) { const p = g.attributes.position; for (let i = 0; i < p.count; i++) { assert.ok(inPoly([p.getX(i), p.getZ(i)], PTS) || dist(p.getX(i), p.getZ(i), PTS) < 1.0, '벽에서 너무 멀다'); assert.ok(p.getY(i) >= 4.2, '1층 가게 띠를 가린다'); } } }
+  assert.ok(n > 60 && n < 220, '세로 간판 수 ' + n);
+  assert.equal(buildingDeco(THREE, PTS, 8, 5, { roof: true }).vsign.length, 0, '9 m 아래엔 없다');
+  /* 길을 보는 벽: front 를 아래(z<0)에 두면 간판은 z=0 벽, 오른쪽(x>16)이면 x=16 벽 — 뒤쪽 벽엔 없다 */
+  for (const [f, axis, wall] of [[[8, -30], 2, 0], [[40, 4], 0, 16]]) { let m = 0;
+    for (let id = 1; id < 120; id++) for (const g of buildingDeco(THREE, PTS, 20, id, { front: f }).vsign) { m++; g.computeBoundingBox(); const c = (g.boundingBox.min.getComponent(axis) + g.boundingBox.max.getComponent(axis)) / 2; assert.ok(Math.abs(c - wall) < 1, `길 쪽 벽이 아님 ${c}`); } assert.ok(m > 20, '길 쪽 간판 ' + m); }
+  assert.equal(buildingDeco(THREE, PTS, 20, 3, { vsign: false }).vsign.length + [...Array(50)].reduce((a, _, i) => a + buildingDeco(THREE, PTS, 20, i, { vsign: false }).vsign.length, 0), 0, 'vsign:false 면 없다');
 });

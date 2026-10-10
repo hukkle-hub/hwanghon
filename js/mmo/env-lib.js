@@ -294,17 +294,33 @@ function quad(THREE, ax, az, bx, bz, y0, y1, u0, u1, v0, v1, nx, nz) { const g =
   const ex = bx - ax, ez = bz - az, front = -ez * nx + ex * nz;   /* 0→1→2 의 면 법선 = (b-a) × 위 = (-ez, 0, ex) */
   g.setIndex(front > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]); return g; }
 let DECO_M = null;
+/* 세로 간판 (문서 229 §9) — 서울 밤거리의 세로 네온. 한 장에 8 칸(칸마다 글자 세로로), 세기는 world3d 시간대가 VSIGN.mat.emissiveIntensity 로 */
+export const VSIGN = { mat: null, at: [] };   /* at: 검수용 [x, 가운데 y, z, 법선 x, 법선 z] */ let VSIGN_TEX = null;
+const VSIGN_TXT = [['호', '프'], ['노', '래', '방'], ['P', 'C', '방'], ['치', '과'], ['약', '국'], ['모', '텔'], ['당', '구', '장'], ['학', '원']], VSIGN_COL = ['#ff3a6a', '#3ae0ff', '#ffd23a', '#4cff9a', '#4cff9a', '#ff4fd8', '#ffd23a', '#39a0ff'];
+function vsignTex(THREE) { if (VSIGN_TEX) return VSIGN_TEX; VSIGN_TEX = canvasTex(THREE, 512, 256, (g, w, h) => { for (let i = 0; i < 8; i++) { const x0 = i * 64, col = VSIGN_COL[i];
+    g.fillStyle = '#121014'; g.fillRect(x0, 0, 64, h); g.strokeStyle = col; g.lineWidth = 4; g.strokeRect(x0 + 5, 5, 54, h - 10);
+    const t = VSIGN_TXT[i], step = (h - 30) / t.length; g.fillStyle = col; g.font = '900 44px "Noto Sans KR", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    t.forEach((c, k) => g.fillText(c, x0 + 32, 15 + step * (k + 0.5))); } }); return VSIGN_TEX; }
 export const isView3d = () => VIEW3D;
+/* 길을 보는 벽: 바깥 법선이 front(가장 가까운 길 위 점) 쪽을 가장 곧게 보는 6 m 넘는 벽 — 없으면 가장 긴 벽 */
+const frontEdge = (pts, f) => { const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length; let best = -1, bs = -2;
+  for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 6) continue;
+    const mx = (p[0] + q[0]) / 2, mz = (p[1] + q[1]) / 2; let nx = dz / L, nz = -dx / L; if (nx * (mx - cx) + nz * (mz - cz) < 0) { nx = -nx; nz = -nz; }
+    const fx = f[0] - mx, fz = f[1] - mz, fl = Math.hypot(fx, fz) || 1, sc = (nx * fx + nz * fz) / fl; if (sc > bs) { bs = sc; best = e; } }
+  return bs > 0.5 ? best : -1; };
+const longestEdge = pts => { let best = 0, bl = -1; for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L > bl) { bl = L; best = e; } } return best; };
 /* 꾸밈 조각을 재질별로 합쳐 장면에 — 건물 하나에 재질당 메시 하나 (뒤에서 static-merge 가 칸별로 다시 묶는다) */
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
+  if (!DECO_M.vsign) { const vt = vsignTex(THREE); DECO_M.vsign = VSIGN.mat = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+  const vEdge = o.vsign === false ? -1 : o.front ? frontEdge(pts, o.front) : longestEdge(pts);
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
   for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], L = Math.hypot(dx, dz); if (L < 1) continue;
     const [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx);
@@ -320,6 +336,11 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
       if (Math.abs(ds) > 0.5) for (let k = Math.ceil(Math.min(s0, s0 + ds * L) / 1.8 - 0.5); (k + 0.5) * 1.8 <= Math.max(s0, s0 + ds * L); k++) { const t = ((k + 0.5) * 1.8 - s0) / ds; if (t < 0.7 || t > L - 0.7) continue;
         for (let f = 1; (f + 1) * 3.6 <= h - 0.5 && f < 12; f++) { if (hashU(id * 31 + e, k, f + 101) > 0.11) continue;
           const g = new THREE.BoxGeometry(0.82, 0.55, 0.32); g.rotateY(yaw); g.translate(p[0] + ux * t + nx * 0.19, f * 3.6 + 0.33, p[1] + uz * t + nz * 0.19); P.wallac.push(g); } } }
+    /* 세로 간판: 9~40 m 건물 60 % · 길을 보는 벽(없으면 가장 긴 벽)의 한쪽 끝, 벽에 직각으로 0.85 m 내밀어 1층 위부터 (건물 하나에 하나) */
+    if (o.vsign !== false && h > 9 && h < 40 && e === vEdge && hashU(id, 12, 7) < 0.6 && L > 6) {
+      const ux = dx / L, uz = dz / L, end = hashU(id, 13, 7) < 0.5 ? 1.2 : L - 1.2, H = Math.min(7.5, h - 5.2), cell = (hashU(id, 14, 7) * 8) | 0;
+      const g = new THREE.BoxGeometry(0.16, H, 0.85), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) i < 8 ? uv.setXY(i, (cell + uv.getX(i)) / 8, uv.getY(i)) : uv.setXY(i, (cell + 0.11) / 8, 0.5);   /* 넓은 두 면(±x)만 글자 — 길 정면·위아래 좁은 면은 테두리 네온 색 한 줄 (글자가 찌그러져 찍혔다) */
+      g.rotateY(yaw); g.translate(p[0] + ux * end + nx * 0.47, 4.3 + H / 2, p[1] + uz * end + nz * 0.47); P.vsign.push(g); VSIGN.at.push([p[0] + ux * end, 4.3 + H / 2, p[1] + uz * end, nx, nz]); }
     /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
     if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
       for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;
