@@ -166,6 +166,7 @@ import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js'; impor
 import { createFieldFeel, contactOf, defCancelAt } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
+import { createShadowProxies } from './js/mmo/shadow-proxy.js';
 import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
 import { FACADE_U, aviBlink } from './js/mmo/facade-shader.js';
 import { addContactShadows } from './js/mmo/contact-shadow.js';
@@ -215,6 +216,7 @@ const REFL = q.get('refl') !== '0' && q.get('im') !== '0' && (env.kind || Z.kind
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky', cell: +(q.get('mcell') || 96) });
 const FOGC = q.get('fc') !== '0' && scene.fog && scene.fog.far < 1000 && (env.kind || Z.kind || meta.kind) === 'field' ? createFogCull(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 합친 뒤에 모은다(문서 229 §40) — 합치기 앞에서 모으면 합치며 사라진 메시만 붙들어 합친 덩어리는 안개 너머에서도 다 그렸다. 안개 너머는 안 그린다 — 지은 직후 정적인 것만 모은다 (문서 229 §14) */
 if (FOGC) window.__FOGC = FOGC;
+const SPROX = q.get('sp') !== '0' && env.sunLight && env.sunLight.castShadow ? createShadowProxies(THREE, scene, env.sunLight) : null; if (SPROX) window.__SPROX = SPROX;   /* 그림자 대리 — 인스턴스는 플레이어 64 m 안 것만 그림자 지도에 (문서 229 §42) */
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 /* 땅 결 (문서 220) — 평평한 바닥 재질(땅·길·풀밭·보도)에 세계 좌표의 큰 얼룩을 섞는다: 타일 반복이 깨지고 흙빛이 드문드문. 젖은 거울 같던 길은 조금 거칠게 */
 const CLOUDK = { value: 0 }, CLOUDT = WIND;   /* 구름 그림자 세기(해 높이·세기) · 시계는 바람과 같이 (문서 220 §10) */
@@ -725,6 +727,7 @@ function tick() { perf.begin();
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
+  if (SPROX) SPROX.update(root.position);
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
