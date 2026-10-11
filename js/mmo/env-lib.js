@@ -110,9 +110,25 @@ export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
     const m = new THREE.Mesh(ribbon(THREE, pts, width, VIEW3D ? y + 0.04 : y), mat); m.receiveShadow = true; scene.add(m); out.push({ r, width, pts });   /* 3D: 풀밭·광장 판보다 4 cm 위 — 1 cm 차는 순서 싸움에서 졌다 (문서 220) */
     ctx.clear.push({ pts, r: width / 2 + 1.2 });
     if (LANE[r.kind] && lanes > 1) { for (let k = 1; k < lanes; k++) dashed(pts, -width / 2 + k * width / lanes); dashed(pts, -width / 2 + 0.2, true); dashed(pts, width / 2 - 0.2, true); }
+    if (VIEW3D && (r.bridge || r.layer > 0) && r.kind !== 'steps') bridgeRails(THREE, scene, pts, width, /footway|path|pedestrian|cycleway|track/.test(r.kind));   /* 다리 난간 (문서 229 §22) */
     if (r.kind === 'steps') for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.4) continue;
       for (let d = 0.2; d < L; d += 0.42) { const st = new THREE.Mesh(new THREE.BoxGeometry(width, 0.05, 0.1), stepM); st.position.set(a[0] + dx / L * d, 0.05, a[1] + dz / L * d); st.rotation.y = -Math.atan2(dz, dx) + Math.PI / 2; scene.add(st); } } }
   return out; }
+/* 다리 난간 (문서 229 §22) — 세계가 평평해(바닥 높이 없음) 다리 판을 띄우면 걷는 사람이 경사를 뚫는다. 대신 다리 구간 양옆에
+   콘크리트 난간벽(차도 0.8 m · 보도 0.5 m) + 쇠 난간(위 1.05 m) + 기둥(2.4 m 마다) + 바깥쪽 거더 띠(0.6 m 아래로 처진 판 가장자리) — «다리» 로 읽히게.
+   막이는 넣지 않는다(서버 지도와 어긋나지 않게). 재질 셋, 다리마다 합친 메시 하나씩 */
+export const BRIDGE = { n: 0, at: [] }; let BR_M = null;
+export function bridgeRails(THREE, scene, pts, width, foot) { if (pts.length < 2) return;
+  if (!BR_M) BR_M = { conc: new THREE.MeshStandardMaterial({ color: 0x8c8780, roughness: 0.85, map: gritTex(THREE) }), rail: new THREE.MeshStandardMaterial({ color: 0x3c4046, roughness: 0.45, metalness: 0.7 }), girder: new THREE.MeshStandardMaterial({ color: 0x5c5852, roughness: 0.8 }) };
+  const P = { conc: [], rail: [], girder: [] }, wh = foot ? 0.5 : 0.8, YAX = new THREE.Vector3(0, 1, 0);
+  for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.3) continue; const ux = dx / L, uz = dz / L, yaw = -Math.atan2(dz, dx), mx = (a[0] + b[0]) / 2, mz = (a[1] + b[1]) / 2;
+    for (const sd of [-1, 1]) { const off = width / 2 + 0.15, ox = -uz * off * sd, oz = ux * off * sd;
+      const w = new THREE.BoxGeometry(L + 0.1, wh, 0.25); w.rotateY(yaw); w.translate(mx + ox, wh / 2 + 0.06, mz + oz); P.conc.push(w);
+      const t = new THREE.BoxGeometry(L + 0.1, 0.07, 0.07); t.rotateY(yaw); t.translate(mx + ox, 1.05, mz + oz); P.rail.push(t);
+      for (let d = 0; d <= L; d += 2.4) { const po = new THREE.BoxGeometry(0.06, 1.05 - wh, 0.06); po.translate(a[0] + ux * d + ox, wh + (1.05 - wh) / 2, a[1] + uz * d + oz); P.rail.push(po); }
+      const g = new THREE.BoxGeometry(L + 0.1, 0.6, 0.12); g.rotateY(yaw); g.translate(mx + ox * (off + 0.2) / off, 0.06 - 0.25, mz + oz * (off + 0.2) / off); P.girder.push(g); } }   /* 거더 띠: 바닥보다 아래로 — 물 위 다리에서 판 두께가 보인다 */
+  for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); if (!g) continue; const m = new THREE.Mesh(g, BR_M[k]); m.castShadow = k !== 'girder'; m.receiveShadow = true; m.userData.noCam = true; m.name = 'bridge'; scene.add(m); }
+  BRIDGE.n++; if (BRIDGE.at.length < 80) { const c = pts[pts.length >> 1]; BRIDGE.at.push([+c[0].toFixed(1), +c[1].toFixed(1), foot ? 1 : 0]); } }
 export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw of roadsW) { if (kinds && !kinds.includes(rw.r.kind)) continue;
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], vx = b[0] - a[0], vz = b[1] - a[1], L2 = vx * vx + vz * vz || 1;
       const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * vx + (p[1] - a[1]) * vz) / L2)), qx = a[0] + vx * u, qz = a[1] + vz * u, d = Math.hypot(p[0] - qx, p[1] - qz);

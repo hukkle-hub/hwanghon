@@ -100,3 +100,13 @@ test('멈춘 순간 (문서 229 §21): 차 30 % 옆에 버리고 간 짐 — 차
   assert.ok(near.size < a.cars.length * 0.6, '짐 있는 차가 너무 많다 ' + near.size);
   a.scene.traverse(o => { if (!o.isMesh) return; o.geometry.computeBoundingBox(); assert.ok(o.geometry.boundingBox.max.y < 0.8, '짐이 높다'); assert.ok(o.userData.noCam); });
 });
+
+test('다리 난간 (문서 229 §22): 다리 구간 양옆 길가 바깥 · 1.1 m 아래 · 막이 없음', () => {
+  const scene = new THREE.Scene(), pts = [[0, 0], [40, 0], [60, 10]]; L.BRIDGE.n = 0; L.bridgeRails(THREE, scene, pts, 8, false);
+  const ms = scene.children.filter(o => o.isMesh); assert.equal(ms.length, 3, '콘크리트·쇠·거더 셋'); assert.equal(L.BRIDGE.n, 1);
+  for (const o of ms) { assert.ok(o.userData.noCam); const P = o.geometry.attributes.position; for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i), z = P.getZ(i);
+    assert.ok(y <= 1.1, '높다'); const d = Math.min(L.segDist([x, z], pts[0], pts[1]), L.segDist([x, z], pts[1], pts[2])); assert.ok(d > 3.9 || Math.hypot(x - 40, z) < 4.6, `차도 위에 난간 (${x.toFixed(1)}, ${z.toFixed(1)}) ${d.toFixed(2)}`); } }
+  const SRC2 = fs.readFileSync(new URL('../js/mmo/env-lib.js', import.meta.url), 'utf8'), body = SRC2.slice(SRC2.indexOf('export function bridgeRails('), SRC2.indexOf('export function nearestRoad('));
+  assert.ok(!/blockers/.test(body), '다리 난간이 막이를 넣었다 — 서버 지도와 어긋난다');
+  assert.match(SRC2, /if \(VIEW3D && \(r\.bridge \|\| r\.layer > 0\) && r\.kind !== 'steps'\) bridgeRails\(/);
+});
