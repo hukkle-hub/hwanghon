@@ -16,5 +16,5 @@ test('world3d: 회피와 회피 기술은 날이 지나간 뒤 끊고 · 공격�
   assert.match(W, /function castSkill\(i\) \{[^\n]*\(busy > 0 && !\(d\.dodge && busyT >= busyDef\)\)/);
   assert.match(W, /function attack\(\) \{[^\n]*if \(busy > 0 \|\| P\.dead\) return;/, '공격 연계는 늦게(몬헌) — 끊지 않는다');
   assert.match(W, /busy = hero\.clips\[clip\]\.duration; busyT = 0; busyDef = defCancelAt\(busy, d\.ev && d\.ev\.hits && d\.ev\.hits\.map\(h => h\[0\]\)\);/);
-  assert.match(W, /if \(busy > 0\) \{ busy -= dt; busyT \+= dt; \}/);
+  assert.match(W, /if \(busy > 0\) \{ busy -= dt; busyT \+= dt; \}\n  else if \(P\.dead\)/);
 });

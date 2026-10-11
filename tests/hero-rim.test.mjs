@@ -25,8 +25,8 @@ test('세기: 낮 0 · 새벽 0 · 황혼 약하게 · 밤 0.32 (0.5 는 은빛 
 test('world3d: 영웅·새 장비에 붙이고(예열 컴파일 전) · 시간대가 세기를 · ?hr=0 으로 끔', () => {
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
   assert.match(W, /if \(q\.get\('hr'\) !== '0'\) heroRim\(THREE, root\);/);
-  const wl = W.slice(W.indexOf('function watchLooks'), W.indexOf('function watchLooks') + 600);
-  assert.ok(wl.indexOf('heroRim(THREE, o)') > 0 && wl.indexOf('heroRim(THREE, o)') < wl.indexOf('preCompile(o)'), '새 장비 — 예열 컴파일 전에');
+  const wl = W.slice(W.indexOf('function watchLooks'), W.indexOf('function watchLooks') + 1600);
+  assert.ok(wl.indexOf('heroRim(THREE, root)') > 0 && wl.indexOf('heroRim(THREE, root)') < wl.indexOf('preCompile(o)'), '영웅 전체를 훑는다(갈아 끼운 재질까지) — 예열 컴파일 전에');
   assert.match(W, /HERO_RIM\.uK\.value = heroRimK\(o\.lampK\);/);
   assert.match(wl, /for \(const r of remotes\.values\(\)\) if \(r\.a\) heroRim\(THREE, r\.a\.root\);/, '다른 사람도 밤에 검은 그림자가 되지 않게');
 });

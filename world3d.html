@@ -162,7 +162,7 @@ import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, 
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from './js/mmo/kit-motion.js';
 import { addWindRig } from './js/mmo/windup.js';   /* 준비 동작 — 바닥 예고 대신 몸이 알린다 (문서 224) */
 import { attachSaber } from './js/mmo/jeong-saber.js';
-import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js'; import { heroRim, heroRimK, HERO_RIM } from './js/mmo/hero-rim.js';
+import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js'; import { heroRim, heroRimK, HERO_RIM } from './js/mmo/hero-rim.js'; import { createBuffFx, BUFF_COLOR } from './js/mmo/buff-fx.js';
 import { createFieldFeel, contactOf, defCancelAt } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
@@ -273,7 +273,7 @@ const [heroAsset, weaponAsset] = await Promise.all(CHAR_ASSET[ME].map(load));
 window.TW_POSE?.repair(THREE, heroAsset); window.TW_MATFIX?.repair(THREE, heroAsset.scene);
 const hero = new Animated(heroAsset, scene, true, false, weaponAsset, ME), root = hero.root;
 root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-if (q.get('hr') !== '0') heroRim(THREE, root);   /* 밤 영웅 달빛 윤곽 (문서 229 §24, ?hr=0 으로 끔) — 장비는 watchLooks 가 */
+if (q.get('hr') !== '0') heroRim(THREE, root); const BUFF = createBuffFx(THREE, root, { reduced: REDUCED });   /* 버프 표시 (문서 229 §31) */   /* 밤 영웅 달빛 윤곽 (문서 229 §24, ?hr=0 으로 끔) — 장비는 watchLooks 가 */
 /* 장비 겉모습 (문서 214) — 2D 필드와 같은 TW_LOOKS(갑옷·장신구·머리카락 정리). 무기는 아바타가 이미 쥐고 있어(양손 쥠 리그) 갑옷만(noMain).
    온라인 = 서버 장착(profile.equipment) · 혼자 연습 = 2D 필드와 같은 시작 세트. 가방에서 장착·해제하면 다시 입는다 */
 const START_SETS = [{}, { chest: 'a_reed_cuirass', legs: 'a_black_greaves', gloves: 'a_steel_gauntlet', boots: 'a_ranger_boots' },
@@ -301,6 +301,7 @@ let busy = 0, busyClip = null, busyT = 0, busyDef = 0, atkSeq = 0, combatUntil =
 function animate(moving, walk, dt, speed=0) {   /* 같은 보행 위상 → 전신 전환 → 마지막에 양손 쥠 */
   hero.armBlend?.restore(); hero.rig?.restore();hero.poseBridge?.restore();hero.locomotion?.restore(); let action = null;
   const combat=gameNow<combatUntil||hurtT>0,playingAction=busy>0;
+  BUFF.tick(dt);   /* 버프 표시 (문서 229 §31) */
   if (busy > 0) { busy -= dt; busyT += dt; }
   else if (P.dead) hero.play('death', 'down');
   else { hero.play(hero.locomotion?hero.locomotion.select(speed,combat):moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
@@ -436,6 +437,7 @@ function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || 
   if (gameNow < skReady[i]) { toast(esc(d.name) + ' — ' + Math.ceil((skReady[i] - gameNow) / 1000) + '초 뒤', 1.2); return false; }
   combatUntil=gameNow+6000;skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; busyT = 0; busyDef = defCancelAt(busy, d.ev && d.ev.hits && d.ev.hits.map(h => h[0])); feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
   window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
+  if (d.buff && d.buff.reduce) BUFF.start(BUFF_COLOR[ME] || 0xffd28a, d.buff.dur || 2);   /* 몸빛 + 발밑 고리 — 온라인도 내 화면엔 (판정은 서버) */
   if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
   if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
   else if (net) net.send({ type: 'fieldSkill', skill: i });
@@ -750,7 +752,7 @@ mobBody().then(g => window.__warmMob(g)).catch(() => {});   /* N01 종별 몸(mo
 /* 장비(TW_LOOKS)는 뒤에 뼈에 붙는다 — 새 메시는 컴파일이 끝날 때까지 숨겼다가 보인다 (0.25 초마다 내 몸만 훑는다) */
 const seenMesh = new WeakSet(); root.traverse(o => { if (o.isMesh) seenMesh.add(o); }); let lookT = 0;
 function watchLooks(dt) { lookT -= dt; if (lookT > 0) return; lookT = 0.25; const fresh = []; root.traverse(o => { if (o.isMesh && !seenMesh.has(o)) { seenMesh.add(o); fresh.push(o); } });
-  if (fresh.length && q.get('hr') !== '0') for (const o of fresh) heroRim(THREE, o);   /* 새 장비에도 달빛 윤곽 — 예열 컴파일 전에 */
+  if (q.get('hr') !== '0') heroRim(THREE, root);   /* 달빛 윤곽·버프 몸빛 — 새 메시만이 아니라 영웅 전체를 훑는다: 장비·그립 교정이 있던 메시의 재질을 갈아 끼우면 13 개 중 3 개만 붙어 있었다(문서 229 §31). 붙인 재질은 건너뛴다 · 예열 컴파일 전에 */
   if (q.get('hr') !== '0') for (const r of remotes.values()) if (r.a) heroRim(THREE, r.a.root);   /* 다른 사람(장비가 늦게 붙는다)도 — 이미 붙인 재질은 건너뛴다 */
   for (const o of fresh) { if (!WARM.on) continue; const v = o.visible; o.visible = false; preCompile(o).then(() => { o.visible = v; }); } }
 window.__W3D.warm = WARM;
