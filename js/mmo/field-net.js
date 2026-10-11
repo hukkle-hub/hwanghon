@@ -31,7 +31,7 @@ export function connectField({ q, zone, gate, char, look, onMessage, onStatus = 
         return; }
       if (m.type === 'profile') net.profile = m.profile;
       onMessage(m); };
-    ws.onclose = () => { clearTimeout(timer); clearTimeout(wake); if (net) { net.closed = true; onMessage({ type: 'closed' }); } else reject(Error('접속 실패')); };
+    ws.onclose = e => { clearTimeout(timer); clearTimeout(wake); if (net) { net.closed = true; onMessage({ type: 'closed', code: e && e.code }); } else reject(Error('접속 실패')); };   /* code: 4001 다른 접속 · 4003 제한 · 1000 정상 · 1006 끊김(핑 무응답 — 무거운 로딩 중) */
   });
 }
 /* 서버 시계: 가장 지연이 적은 표본(가장 큰 serverAt − 받은 시각)을 고르고 거꾸로 가지 않는다 — mmo.html syncBossClock 과 같다 */
