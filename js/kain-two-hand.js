@@ -29,7 +29,7 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
  // Measured skinned boot soles in the actual idle were 26.8 mm below y=0
  // on original and 26.6 mm on mobile. Move the entire character + sword,
  // never a hand, foot or shared GLB. Both solo and online use this adapter.
- if(!model.userData.kainGroundOffset){model.position.y+=.027;model.userData.kainGroundOffset=.027;}
+ if(opts.groundOffset!==0&&!model.userData.kainGroundOffset){model.position.y+=.027;model.userData.kainGroundOffset=.027;}
  const groundBase=model.position.y,feet=prepareFootSurface(model);
  const legacy=makeRigAdapter(model,root,slot,opts),bones={},saved=new Map(),bind=new Map(),hands={},previous={},frontLocal={};
  model.traverse(b=>{if(b.isBone){bones[b.name.replace(/^mixamorig:?/,'')]=b;bind.set(b,b.quaternion.clone());}});model.updateMatrixWorld(true);
@@ -47,7 +47,7 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
  function apply(a,moving,guard,dt,clip,target){
   // Ground interpolated reactions/banking as ONE body before its rigid weapon
   // solve. Positive airborne heights remain unchanged; no limb is stretched.
-  model.position.y=groundBase;model.updateWorldMatrix(true,true);const soles=footSurfaceNow(feet),sink=Math.max(0,root.getWorldPosition(V()).y+.001-Math.min(soles.Left,soles.Right));
+  const correctedGait=model.userData.locomotionVersion&&!a&&!guard&&/^(travelIdle|combatIdle|walk|run)$/.test(clip||'');model.position.y=groundBase-(correctedGait?(model.userData.kainGroundOffset||0):0);model.updateWorldMatrix(true,true);const soles=footSurfaceNow(feet),sink=Math.max(0,root.getWorldPosition(V()).y+.001-Math.min(soles.Left,soles.Right));
   if(sink>0){model.position.y+=sink/model.parent.getWorldScale(V()).y;model.updateWorldMatrix(true,true);}diagnostics.groundLift=sink;
   const data=a&&model.userData.heroSkillMotion?.[a.clip],baked=!!data?.weaponBaked,carry=!a;
   if(!slot||(!data&&!carry)){legacy.apply(a,moving,guard,dt,clip,target);Object.assign(diagnostics,legacy.diagnostics,{source:'legacy'});state=null;return;}
@@ -55,6 +55,10 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
   let center,rotation;
   if(data){const clock=Number.isFinite(a.clipTime)?a.clipTime:a.elapsed/a.duration*data.duration,phase=clock/data.duration,localAxis=a.clip==='skill3'?V().set(Math.sin((.5-phase)*.7),.25,1).normalize():weaponAxis(a.clip,phase),forward=bones.LeftArm.getWorldPosition(V()).sub(bones.RightArm.getWorldPosition(V())).cross(bones.Spine2.getWorldPosition(V()).sub(bones.Hips.getWorldPosition(V()))).normalize(),up=bones.Spine2.getWorldPosition(V()).sub(bones.Hips.getWorldPosition(V())).normalize(),right=up.clone().cross(forward).normalize(),facing=Q().setFromRotationMatrix(new T.Matrix4().makeBasis(right,up,forward));rotation=facing.multiply(Q().setFromUnitVectors(V().set(0,1,0),localAxis));center=bones.RightArm.getWorldPosition(V()).add(bones.LeftArm.getWorldPosition(V())).multiplyScalar(.5).addScaledVector(forward,.45*scale).addScaledVector(up,(-.35+.25*Math.max(0,localAxis.y))*scale);}
   else{center=model.localToWorld(V().set(0,1.10,.36));rotation=model.getWorldQuaternion(Q()).multiply(Q().setFromUnitVectors(V().set(0,1,0),V().set(-.65,.55,.52).normalize()));}
+  if(!data&&model.userData.locomotionVersion&&/^(travelIdle|combatIdle|walk|run)$/.test(clip||'')){
+   const up=bones.Spine2.getWorldPosition(V()).sub(bones.Hips.getWorldPosition(V())).normalize(),forward=bones.LeftArm.getWorldPosition(V()).sub(bones.RightArm.getWorldPosition(V())).cross(up).normalize(),right=up.clone().cross(forward).normalize(),frame=Q().setFromRotationMatrix(new T.Matrix4().makeBasis(right,up,forward)),combat=model.userData.locomotionCombat||0;
+   center=bones.RightArm.getWorldPosition(V()).add(bones.LeftArm.getWorldPosition(V())).multiplyScalar(.5).addScaledVector(forward,(opts.carryForward??.34)*scale).addScaledVector(up,(-(opts.carryDrop??.40)+.08*combat)*scale);rotation=frame.multiply(opts.carryRotation?opts.carryRotation(combat):Q().setFromUnitVectors(V().set(0,1,0),V().set(-.65,.55+.15*combat,.52).normalize()));
+  }
   const reactionCarry=!data&&/^(hit2?|guardHit)$/.test(clip||'');
   if(!data&&/^(roll|dodge[BLR]|hit2?|guardHit)$/.test(clip||'')){
    // Carry the rigid sword with the tumbling torso. A fixed world-upright
@@ -71,10 +75,10 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
   }
   const next=data?a.clip+':'+(a.id??''):'carry:'+(clip||'idle');if(reactionCarry)transition=null;else if(baked&&!data.coupledReady)transition=null;else if(next!==state){if(last){transition={p:last.center.clone().sub(center),q:last.rotation.clone().multiply(rotation.clone().invert()),t:0};offset.set(0,0,0);}}
   if(transition&&dt>0){transition.t+=Math.min(.05,dt);const w=T.MathUtils.smootherstep(transition.t,0,.22);center.addScaledVector(transition.p,1-w);rotation.premultiply(transition.q.clone().slerp(Q(),w));if(w===1)transition=null;}
-  rotation.normalize();let axis=V().set(0,1,0).applyQuaternion(rotation).normalize();const palms={Right:center.clone().addScaledVector(axis,.085),Left:center.clone().addScaledVector(axis,-.085)},arms={};
+  rotation.normalize();let axis=V().set(0,1,0).applyQuaternion(rotation).normalize();const span=opts.gripSpan?opts.gripSpan*scale:.17,palms={Right:center.clone().addScaledVector(axis,span*.5),Left:center.clone().addScaledVector(axis,-span*.5)},arms={};
   const body={base:bones.Hips.getWorldPosition(V()),axis:bones.Spine2.getWorldPosition(V()).sub(bones.Hips.getWorldPosition(V())),forward:bones.LeftArm.getWorldPosition(V()).sub(bones.RightArm.getWorldPosition(V())).cross(bones.Spine2.getWorldPosition(V()).sub(bones.Hips.getWorldPosition(V()))).normalize()};
   for(const side of ['Right','Left']){const u=bones[side+'Arm'],l=bones[side+'ForeArm'],h=bones[side+'Hand'],shoulder=u.getWorldPosition(V()),elbow=l.getWorldPosition(V()),ly=l.position.clone().normalize(),lz=ly.clone().cross(frontLocal[side]).normalize(),lx=ly.clone().cross(lz).normalize();arms[side]={shoulder,upper:shoulder.distanceTo(elbow),lower:elbow.distanceTo(h.getWorldPosition(V())),foreLocal:h.position.clone().normalize(),outward:shoulder.clone().sub(bones[(side==='Right'?'Left':'Right')+'Arm'].getWorldPosition(V())).normalize(),hingeBasis:Q().setFromRotationMatrix(new T.Matrix4().makeBasis(lx,ly,lz)).invert(),bindLower:bind.get(l)};}
-  for(const [side,ar] of Object.entries(arms)){ar.baked=baked;ar.upperClearanceWeight=data?.upperClearanceWeight??1e6;const phase=data?(Number.isFinite(a.clipTime)?a.clipTime:a.elapsed/a.duration*data.duration)/data.duration:0;ar.searchFull=side==='Right'&&!!data?.naturalArms&&phase===0;ar.lowerElbow=side==='Right'?500:data?.naturalArms?(data.naturalArmWeight??8):carry?8:a?.clip==='skill4'?T.MathUtils.smootherstep(phase,.25,.4)*(1-T.MathUtils.smootherstep(phase,.6,.8)):0;ar.elbowDrop=side==='Right'?.22:data?.naturalArms||carry ? .13 : .08;}
+  for(const [side,ar] of Object.entries(arms)){ar.baked=baked;ar.upperClearanceWeight=data?.upperClearanceWeight??1e6;const phase=data?(Number.isFinite(a.clipTime)?a.clipTime:a.elapsed/a.duration*data.duration)/data.duration:0;ar.searchFull=side==='Right'&&!!data?.naturalArms&&phase===0;ar.lowerElbow=side==='Right'?500:data?.naturalArms?(data.naturalArmWeight??8):carry?8:a?.clip==='skill4'?T.MathUtils.smootherstep(phase,.25,.4)*(1-T.MathUtils.smootherstep(phase,.6,.8)):0;ar.elbowDrop=side==='Right'?.22:data?.naturalArms||carry ? .13 : .08;if(carry&&model.userData.locomotionVersion){ar.maxSolveAngularRate=6;ar.maxLowerAngularRate=6;}}
   const bodyUp=body.axis.clone().normalize(),bodyRight=bodyUp.clone().cross(body.forward).normalize(),bodyFacing=Q().setFromRotationMatrix(new T.Matrix4().makeBasis(bodyRight,bodyUp,body.forward));
   if(baked){for(const side of ['Right','Left'])previous[side]={handQ:bones[side+'Hand'].getWorldQuaternion(Q()),lowerQ:bones[side+'ForeArm'].getWorldQuaternion(Q()),elbow:bones[side+'ForeArm'].getWorldPosition(V()),shoulder:arms[side].shoulder.clone()};}
   else if(previousFacing){const dq=bodyFacing.clone().multiply(previousFacing.clone().invert());for(const side of ['Right','Left'])if(previous[side]){const s=previous[side];s.handQ.premultiply(dq);s.lowerQ.premultiply(dq);s.upperQ?.premultiply(dq);s.elbow.sub(s.shoulder).applyQuaternion(dq).add(arms[side].shoulder);}}
@@ -84,7 +88,7 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
   let chosen=evaluate(V());const step=Math.min(.04,Math.max(0,dt)*2.4);for(const direction of [body.forward,bodyUp,bodyRight])for(const sign of [-1,1]){const delta=direction.clone().multiplyScalar(step*sign);if(offset.clone().add(delta).length()>.45)continue;const e=evaluate(delta);if(e.cost<chosen.cost)chosen=e;}
   center.add(chosen.delta);palms.Right.add(chosen.delta);palms.Left.add(chosen.delta);offset.add(chosen.delta);
   // Keep the long blade above the floor without moving either hand separately.
-  const minY=(-center.y+.15)/1.7475;if(axis.y<minY){const safe=axis.clone();safe.y=minY;const horizontal=Math.hypot(safe.x,safe.z),radius=Math.sqrt(Math.max(0,1-safe.y*safe.y));safe.x*=radius/horizontal;safe.z*=radius/horizontal;rotation.premultiply(Q().setFromUnitVectors(axis,safe));axis.copy(safe);palms.Right.copy(center).addScaledVector(axis,.085);palms.Left.copy(center).addScaledVector(axis,-.085);}
+  const minY=(-center.y+.15)/1.7475;if(axis.y<minY){const safe=axis.clone();safe.y=minY;const horizontal=Math.hypot(safe.x,safe.z),radius=Math.sqrt(Math.max(0,1-safe.y*safe.y));safe.x*=radius/horizontal;safe.z*=radius/horizontal;rotation.premultiply(Q().setFromUnitVectors(axis,safe));axis.copy(safe);palms.Right.copy(center).addScaledVector(axis,span*.5);palms.Left.copy(center).addScaledVector(axis,-span*.5);}
   }
   let solutions={};
   for(let pass=0;pass<32;pass++){
@@ -108,9 +112,9 @@ export function makeKainRigAdapter(model,root,slot,opts={}){
    setWorld(u,rollBest.q);setWorld(l,s.lowerQ);setWorld(h,s.handQ);s.upperQ=rollBest.q.clone();previous[side]=s;diagnostics[side+'Residual']=s.residual;diagnostics[side+'WristBend']=h.quaternion.angleTo(bind.get(h).clone().normalize());diagnostics[side+'TorsoClearance']=s.clearance;diagnostics[side+'UpperArmClearance']=s.upperClearance;
   }
   saved.set(socket,socket.quaternion.clone());setWorld(socket,rotation);model.updateWorldMatrix(true,true);opts.handGrip?.set('Left',1);opts.handGrip?.set('Right',1);
-  const palm=s=>hands[s].offset.clone().applyMatrix4(bones[s+'Hand'].matrixWorld);diagnostics.gripError=palm('Left').distanceTo(slot.getWorldPosition(V()).addScaledVector(axis,-.17));diagnostics.rightGripError=palm('Right').distanceTo(palms.Right);diagnostics.twoHand=1;diagnostics.source=data?'full-body-mocap':'two-hand-carry';
+  const palm=s=>hands[s].offset.clone().applyMatrix4(bones[s+'Hand'].matrixWorld);diagnostics.gripError=palm('Left').distanceTo(slot.getWorldPosition(V()).addScaledVector(axis,-span));diagnostics.rightGripError=palm('Right').distanceTo(palms.Right);diagnostics.twoHand=1;diagnostics.source=data?'full-body-mocap':'two-hand-carry';
   for(const side of ['Right','Left'])previous[side].shoulder=arms[side].shoulder.clone();previousFacing=bodyFacing;offset.applyQuaternion(bodyFacing.clone().invert());
   last={center:palms.Right.clone().add(palms.Left).multiplyScalar(.5),rotation:rotation.clone(),bodyBase:body.base.clone(),bodyFacing:bodyFacing.clone()};state=next;
  }
- return{restore,apply,diagnostics};
+ return{restore,apply,diagnostics,seedWeapon(center,rotation){last={center:center.clone(),rotation:rotation.clone()};state=null;}};
 }

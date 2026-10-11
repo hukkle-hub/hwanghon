@@ -11,6 +11,7 @@ import {repairAinBind,repairAinClips} from './ain-bind-repair.js';
 import {makeKainRigAdapter} from './kain-two-hand.js';
 import {createCoupledPoseBridge} from './coupled-pose-bridge.js';
 import {applyHeroSkillClips} from './hero-skill-clips.js';
+import {applyHeroLocomotionClips,createHeroLocomotion} from './hero-locomotion.js';
 import {smoothCharacterClips} from './clip-smooth.js';
 import {createArmBlend} from './arm-blend.js';
 import {clone as cloneSkinned} from '../vendor/three/SkeletonUtils.js';
@@ -773,9 +774,9 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(CID==='ain'){ var ainBindFix=layerOn('bind')?repairAinBind(ain.model):null; if(layerOn('clips'))g.animations=repairAinClips(g.animations,ainBindFix); }
     /* 카인·류·세라 — 24fps 선형 클립을 곡선·펴기로, 맞는 순간 자세는 고정 (docs/design/75) */
     else if(layerOn('clips'))g.animations=smoothCharacterClips(CID,g.animations,Object.assign({},R.motion&&R.motion.clipContacts,((R.motion&&R.motion.clipContactsByChar)||{})[CID]));
-    g.animations=applyHeroSkillClips(ain.model,g.animations,CID);
+    g.animations=applyHeroLocomotionClips(ain.model,applyHeroSkillClips(ain.model,g.animations,CID),CID);
     ain.poseBridge=createCoupledPoseBridge(ain.model);
-    ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });
+    ain.mixer=new THREE.AnimationMixer(ain.model); g.animations.forEach(function(c){ ain.clips[c.name]=c; });ain.locomotion=createHeroLocomotion(ain.model,ain.clips);
     /* 클립을 보고 «안 미끄러지는» 배속을 정한다. 여기서 던지면 로더 콜백이 통째로
        죽어 boot() 가 안 돈다 (로드 2/4 에서 멈춘 채 검은 화면) — 그래서 감싼다. */
     try{ measureRunRate(); }catch(e){ DIAG.errors.push('runRate '+e.message); }
@@ -830,12 +831,12 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(ain.oneshot && !ain.timed){ ain.oneshotT+=dt; if(!ain.hold && ain.oneshotT>=ain.oneshotEnd){ var out=ain.oneshotOut||.15; /* 끝 자세를 잡은 채 흐려진다 — 안 잡으면 클립이 흐려지는 도중(남은 0.14초 < 흐림 0.20~0.26초) 끝나 남은 무게 30~46% 가 한 프레임에 빠져 대검이 튀었다(카인 궁극기 끝 62 cm, docs/design/97) */ ain.oneshot.clampWhenFinished=true; ain.oneshot.fadeOut(out); ain.oneshot=null; if(ain.act){ ain.act.reset(); ain.act.fadeIn(out); ain.act.play(); } } }
     /* 제동: 달리다 멈추면 브레이크 모션을 한 번 재생하고 대기로 넘긴다.
        없으면 달리기가 «톡» 끊긴다 (몬헌은 정지에 브레이크가 있다). */
-    if(!moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
+    if(!ain.locomotion && !moving && ain.base==='run' && !ain.oneshot && !ain.dead && P.rollT<=0 && ain.clips.brake){
       playOnce('brake'); ain.braked=1; }
     else if(moving) ain.braked=0;
     /* 감속 중에도 달리기 자세를 유지한다 — 스틱을 놓는 «그 프레임» 에 대기로 끊기면
        감속을 넣은 의미가 없다 (docs/design/56). */
-    var want=ain.dead?'idle':guard?'guard':P.rollT>0?'run':(moving||(P.spd||0)>0.12)?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
+    var gaitSpeed=(P.spd||0)*L.player.speed/SCALE,combatMode=!!(battle||skirm&&!skirm.over),want=ain.dead?'idle':guard?'guard':ain.locomotion?ain.locomotion.select(gaitSpeed,combatMode):P.rollT>0?'run':(moving||(P.spd||0)>0.12)?'run':'idle'; if(!ain.oneshot && want!==ain.base){ setBase(want); }
     if(ain.base==='run' && ain.act){                    /* 천천히 가면 다리도 천천히 돈다 */
       /* 스틱이 아니라 «실제 속도»(P.spd) 를 본다 — 가속·감속이 생긴 뒤로는 스틱을 끝까지
          밀어도 출발 직후엔 아직 느리다. 스틱을 보면 그 구간에서 다시 미끄러진다. */
@@ -844,7 +845,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(ain.cinema) ain.cinema.restore();
     if(ain.armBlend) ain.armBlend.restore();   /* 팔 돌기 묶기는 두 손 보정 뒤에 씌우므로 먼저 되돌린다 */
     if(ain.rig) ain.rig.restore();
-    ain.poseBridge?.restore();
+    ain.poseBridge?.restore();ain.locomotion?.restore();
     var combatAction=battle&&battle.snapshot().player.action;
     if(ain.timed && ain.oneshot){
       if(combatAction && combatAction.id===ain.timed.id){
@@ -868,6 +869,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     }
     jumpClipScrub();
     ain.mixer.update(dt);
+    ain.locomotion?.apply(dt,{speed:gaitSpeed,combat:combatMode,active:!ain.oneshot&&!ain.dead&&!guard&&P.rollT<=0});
     ain.poseBridge?.apply(dt,ain.oneshot?'action:'+(ain.timed?.id??ain.oneshotName)+':'+ain.oneshot.getClip().uuid:'base:'+ain.base);
     ain.root.position.copy(v3(P.x,P.y));
     /* 튕김 반동 — 보스 반대 방향으로 밀린다(연출 전용, 판정 좌표는 그대로) */
@@ -885,10 +887,10 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
     if(CID==='kain'){tickJump(dt);if(layerOn('lean'))tickLean(dt);}
     if(ain.rig&&layerOn('rig')) ain.rig.apply(motionAction, moving||P.rollT>0, guard, dt, ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base,battle&&A.id==='tutorial'?bossHitPos(reviewAimPart||combatAction?.part||battle.snapshot().target||'core'):null);
     if(ain.armBlend&&layerOn('armBlend')&&(CID!=='kain'||ain.rig?.diagnostics.source==='legacy')) ain.armBlend.apply(dt);   /* Do not separate a freshly solved rigid two-hand grip. */
-    ain.poseBridge?.capture();
-    if(ain.cinema&&layerOn('cinema')){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
+    if(ain.cinema&&layerOn('cinema')&&(!ain.locomotion||ain.oneshot||guard||ain.dead||P.rollT>0)){ var cn=ain.dead?'death':ain.oneshot?ain.oneshot.getClip().name:ain.base, ct=ain.oneshot?ain.oneshot.time/Math.max(.001,ain.oneshot.getClip().duration):(ain.act?ain.act.time/Math.max(.001,ain.act.getClip().duration):0); ain.cinema.apply({dt:dt,clip:cn,clipTime:ct,moving:moving||P.rollT>0,speed:P.spd||0,localX:0,localZ:moving?1:0,guard:guard,action:motionAction}); }
     /* 점프 회피 — 절차 도약: 발 IK·팔 보정 «뒤에» 얹는다(발 IK 가 바닥으로 다리를 늘리지 않게). 포물선 높이(R.jump.height) + 다리 접기·상체 숙임. 전용 클립이 오면 교체 */
     if(CID!=='kain'){tickJump(dt);if(layerOn('lean'))tickLean(dt);}
+    ain.locomotion?.finish();ain.poseBridge?.capture();
     if(ain.hitT>0){ ain.hitT-=dt; } ain.model.traverse(function(o){ if(o.isMesh && o.material){ if(!o.userData.em0) o.userData.em0=o.material.emissive?o.material.emissive.clone():null; if(o.material.emissive) o.material.emissive.setHex(ain.hitT>0?0x30120e:0x000000); } });   /* v12 보정: 0.18 s 0x802020 → 0.08 s 0x30120e — 옷 재질이 남게(전체 단색 빨강 금지). 스매시 뒤 맞는 프레임에서 0x4a1a12 도 큰 기술 흰 섬광과 겹쳐 분홍 실루엣이 됐다 */
     pLight.position.copy(ain.root.position).add(new THREE.Vector3(0.4,1.9,0.4)); }
   function ainAttack(kind, combo){ var n=kind==='smash'?'smash':kind==='ult'?'ult':kind==='skill'?'attack2':(combo%3===1?'attack1':combo%3===2?'attack2':'attack3'); playOnce(n, { speed:kind==='smash'?1.35:kind==='ult'?1.1:1.7 }); }
@@ -1984,6 +1986,7 @@ import { createCineDirector, BEATS as CINE_BEATS, chooseShot } from './cine-dire
   $('#target-cycle').addEventListener('click',cycleTarget);
   (function(){ var b=$('#lockon'); if(b) b.addEventListener('click', function(){ setLock(!lockOn); }); })();
   function curStick(){ if(botStick) return botStick; if(botMode) return Math.hypot(stick.sx,stick.sy)>0.15?{sx:stick.sx,sy:stick.sy}:null; var ks=keyStick(); if(ks) return ks; if(Math.hypot(stick.sx,stick.sy)>0.15) return stickWorld(); return null; }
+  if(['127.0.0.1','localhost'].includes(location.hostname)&&new URLSearchParams(location.search).has('locomotionReview'))import('../tools/3d/locomotion-live58.js').then(({mountLocomotionLive58})=>mountLocomotionLive58({character:CID,canvas:renderer.domElement,kind:'solo',input:mode=>{botStick={sx:mode==='walk'?.32:mode==='run'?1:0,sy:0};if(mode==='attack')attack();if(mode==='dodge')dodge();},read:()=>({clip:ain.oneshot?.getClip().name||ain.base,position:ain.root.position.toArray(),speed:P.spd,phase:ain.locomotion?.diagnostics.phase,grip:ain.rig?.diagnostics.gripError,rightGrip:ain.rig?.diagnostics.rightGripError})}));
   function nearestMob(){ var best=null, bd=1e9; skirm.mobs.forEach(function(m){ if(m.dead) return; var d=world.dist(P.x,P.y,m.x,m.y); if(d<bd){ bd=d; best=m; } }); return best; }
   function attack(){ if(paused||cine) return; if(battle){ if(!battle.snapshot().player.action && Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('attack'); } else if(skirm){ var m=nearestMob(); if(m && world.dist(P.x,P.y,m.x,m.y)<=L.player.reach*1.3) world.faceTo(P, m.x, m.y); skirm.input('attack'); } }
   function smashIn(){ if(paused||cine) return; if(battle){ if(!battle.snapshot().player.action && Bs.dist<=L.player.reach*1.2) world.faceTo(P, Bs.x, Bs.y); battle.input('smash'); } else if(skirm){ var m=nearestMob(); if(m && world.dist(P.x,P.y,m.x,m.y)<=L.player.reach*1.3) world.faceTo(P, m.x, m.y); skirm.input('smash'); } }

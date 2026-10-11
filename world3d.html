@@ -108,7 +108,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD 달리기 · Shift+WASD 걷기 · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
 try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
 </script>
@@ -170,6 +170,7 @@ import { bakeHeightAO, attachHeightAO } from './js/mmo/height-ao.js';
 import { FACADE_U, aviBlink } from './js/mmo/facade-shader.js';
 import { addContactShadows } from './js/mmo/contact-shadow.js';
 import { Animated } from './js/party-avatar.js';
+import {movementSpeed,approachSpeed} from './js/hero-locomotion.js';
 import { fieldHeroAction } from './js/mmo/hero-motion.js';
 const q = new URLSearchParams(location.search), ZONE = /^[a-z0-9_-]{1,24}$/.test(q.get('zone') || '') ? q.get('zone') : 'seogwipo';
 const ME = ['ain', 'kain', 'ryu', 'sera'].includes(q.get('char')) ? q.get('char') : 'ain';
@@ -295,16 +296,18 @@ const GATES = (meta.gates && meta.gates.length && env.gates && meta.gates.length
 const ARRIVE = GATES.find(g => g.id === q.get('gate')) || null;   /* 다른 지역 문으로 넘어왔으면 그 문 앞에서 */
 const sp = ARRIVE ? { x: ARRIVE.x, z: ARRIVE.z } : env.spawn || meta.spawn; root.position.set(sp.x, 0, sp.z);
 const me = { id: ME, root, yaw: 0, hero, get weapon() { return hero.weapon; } };
-let busy = 0, busyClip = null, atkSeq = 0;
-function animate(moving, walk, dt) {   /* Animated.update 의 레이드 밖 부분: 리그 되돌리기 → 믹서 → 양손 쥠. 공격 중엔 클립·경과·접점을 리그에 */
-  hero.armBlend?.restore(); hero.rig?.restore(); let action = null;
+let busy = 0, busyClip = null, atkSeq = 0, combatUntil = 0, moveSpeed = 0;
+function animate(moving, walk, dt, speed=0) {   /* 같은 보행 위상 → 전신 전환 → 마지막에 양손 쥠 */
+  hero.armBlend?.restore(); hero.rig?.restore();hero.poseBridge?.restore();hero.locomotion?.restore(); let action = null;
+  const combat=gameNow<combatUntil||hurtT>0,playingAction=busy>0;
   if (busy > 0) { busy -= dt; }
   else if (P.dead) hero.play('death', 'down');
-  else { hero.play(moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
+  else { hero.play(hero.locomotion?hero.locomotion.select(speed,combat):moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
   hero.mixer.update(dt);
+  hero.locomotion?.apply(dt,{speed,combat,active:!playingAction&&!P.dead&&dodgeT<=0});hero.poseBridge?.apply(dt,hero.key);
   if (hero.current?.getClip().name === busyClip) action = fieldHeroAction(ME, hero.current.getClip(), hero.current.time, 'atk' + atkSeq);
   hero.rig?.apply(action, moving && busy <= 0, false, dt, hero.current?.getClip().name, null); if(!hero.model.userData.heroSkillMotion||hero.rig?.diagnostics.source==='legacy')hero.armBlend?.apply(dt);
-  if (hero.blob) hero.blob.position.set(root.position.x, .035, root.position.z); }
+  hero.locomotion?.finish();hero.poseBridge?.capture();if (hero.blob) hero.blob.position.set(root.position.x, .035, root.position.z); }
 /* ---------- 2급 지배형 (문서 204) — 같은 자리, 같은 몸, «서버와 같은 AI» ----------
    server/field-dominator.cjs 를 그대로 읽어 돌린다 (js/mmo/cjs-browser.js). 서버의 field 자리는 아래 작은 판(fieldLocal)이 맡는다:
    bossStrike 는 server/field.cjs 와 같은 규칙(회피 무적이면 0 · 최대 HP × 비율 · 밀려남 · 쓰러지면 5초 뒤 출발점) — 방어력·버프는 시험판에 없다.
@@ -401,7 +404,7 @@ feel.attachTrail(fh);
 const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서버와 같다 */
 let dodgeT = 0, shakeT = 0, hurtT = 0;
 function attack() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
-  hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip); strike(null); }
+  combatUntil=gameNow+6000;hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip); strike(null); }
 /* 가장 가까운 보스(닿는 거리) → 없으면 몬스터. sk = { i, mult, hits } (스킬) · null (기본 공격). 맞을 대상이 없으면 false */
 function strike(sk) {
   let t = null, bd = 1e9; for (const o of net ? [...doms, ...fbs] : [...doms, ...fbs.filter(f => f.ai)]) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; t = o; } }
@@ -427,7 +430,7 @@ addEventListener('keydown', e => { const n = ['Digit1', 'Digit2', 'Digit3', 'Dig
 { const h = document.getElementById('hint'), go = () => h && h.classList.add('gone'); addEventListener('pointerdown', go, { once: true }); setTimeout(go, 12000); }
 function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || busy > 0 || P.dead || !hero.clips[clip]) return false;
   if (gameNow < skReady[i]) { toast(esc(d.name) + ' — ' + Math.ceil((skReady[i] - gameNow) / 1000) + '초 뒤', 1.2); return false; }
-  skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
+  combatUntil=gameNow+6000;skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
   window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
   if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
   if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
@@ -488,10 +491,14 @@ function remoteSet(list) { const live = new Set();
 function remoteTick(dt) { for (const r of remotes.values()) { const a = r.a; if (!a) continue; const t = r.target, rp = a.root.position, dx = t[0] - rp.x, dz = t[1] - rp.z, d = Math.hypot(dx, dz);
   if (d > 6) rp.set(t[0], 0, t[1]); else { const k = Math.min(1, dt * 10); rp.x += dx * k; rp.z += dz * k; }
   let dy = t[2] - a.root.rotation.y; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); a.root.rotation.y += dy * Math.min(1, dt * 12);
-  a.armBlend?.restore(); a.rig?.restore(); a.play(t[3]); a.current.paused = false; a.mixer.update(dt);
+  a.armBlend?.restore(); a.rig?.restore();a.poseBridge?.restore();a.locomotion?.restore();
+  const remoteMoving=t[3]==='run'||t[3]==='walk',remoteSpeed=remoteMoving?Math.min(6,Math.hypot(rp.x-(r.lastX??rp.x),rp.z-(r.lastZ??rp.z))/Math.max(.001,dt)):0;r.lastX=rp.x;r.lastZ=rp.z;
+  if(!remoteMoving&&t[3]!=='idle')r.combatUntil=performance.now()+6000;
+  const remoteCombat=performance.now()<(r.combatUntil||0);a.play(a.locomotion&&(remoteMoving||t[3]==='idle')?a.locomotion.select(remoteSpeed,remoteCombat):t[3]); a.current.paused = false; a.mixer.update(dt);
+  a.locomotion?.apply(dt,{speed:remoteSpeed,combat:remoteCombat,active:remoteMoving||t[3]==='idle'});a.poseBridge?.apply(dt,a.key);
   const remoteAction = fieldHeroAction(r.character, a.current?.getClip(), a.current?.time || 0, a.key);
   a.rig?.apply(remoteAction, t[3] === 'run' || t[3] === 'walk', false, dt, a.current?.getClip().name, null); if(!a.model.userData.heroSkillMotion||a.rig?.diagnostics.source==='legacy')a.armBlend?.apply(dt);
-  if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
+  a.locomotion?.finish();a.poseBridge?.capture();if (a.blob) a.blob.position.set(rp.x, .035, rp.z);
   if (r.tag) { v3.set(rp.x, 2.15, rp.z).project(cam); const on = v3.z < 1 && Math.abs(v3.x) < 1.1 && Math.abs(v3.y) < 1.1; r.tag.style.display = on ? '' : 'none'; if (on) { r.tag.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; r.tag.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; } } } }
 function bossPacket(m) { if (Number.isFinite(m.bossNow)) sclock.sync(m.bossNow);
   for (const [id, alive] of m.bosses || []) { const o = doms.find(x => x.b.id === id); if (o) { const died = o.netAlive && !alive; o.netAlive = !!alive; if (died) { floatAt('처치', 'crit', o.root.position, 1.6); if (o.stage) { STAGE.death(o, () => { hideDominator(o); if (!o.netAlive) o.root.visible = false; }); continue; } hideDominator(o); } if (!(o.stage && o.stage.dying)) o.root.visible = !!alive; } }
@@ -633,6 +640,7 @@ const BENCH = q.get('bench') === '1' ? (() => { const sp = env.spawn || meta.spa
   intro = null; document.body.classList.remove('intro'); if (DAYC && !q.get('tod')) DAYC.fixed = tOf('dusk');   /* 재는 조건을 늘 같게 — 황혼(구름·노을 · 가로등) */
   return createBench(V, { apply: v => { root.position.set(v.x, 0, v.z); me.yaw = v.yaw; root.rotation.y = v.yaw; camS.yaw = v.yaw + Math.PI; nearLights(root.position); } }); })() : null;
 let benchShown = false;
+if(['127.0.0.1','localhost'].includes(location.hostname)&&q.has('locomotionReview'))import('./tools/3d/locomotion-live58.js').then(({mountLocomotionLive58})=>mountLocomotionLive58({character:ME,canvas:renderer.domElement,kind:'field',input:mode=>{keys.KeyW=false;keys.ShiftLeft=false;if(mode==='walk'||mode==='run'){keys.KeyW=true;keys.ShiftLeft=mode==='walk';}else if(mode==='attack')attack();else if(mode==='dodge')dodge();},read:()=>({clip:hero.current?.getClip().name,position:root.position.toArray(),speed:moveSpeed,phase:hero.locomotion?.diagnostics.phase,grip:hero.rig?.diagnostics.gripError,rightGrip:hero.rig?.diagnostics.rightGripError})}));
 function benchCard() { const el = document.getElementById('benchCard'), gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '?';
   const info = `${ZONE} · ${innerWidth}×${innerHeight} · 픽셀비 ${renderer.getPixelRatio().toFixed(2)} · ${gpu}${LOD ? ' · LOD' : ''}\n${((navigator.userAgent.match(/\(([^)]*)\)/) || [])[1] || '').slice(0, 80)}`, text = BENCH.summary(info);
   el.innerHTML = '<b>무게 재기 결과</b>\n'; el.appendChild(document.createTextNode(text + '\n'));
@@ -648,13 +656,18 @@ function tick() { perf.begin();
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
   if (dodgeT > 0) { dodgeT -= dt; const sp = 3.4 * rate; root.position.x -= Math.sin(me.yaw) * sp * dt; root.position.z -= Math.cos(me.yaw) * sp * dt; collide(root.position); }   /* 뒤로 반 걸음 */
-  if (m > 0.05 && !photo && busy <= 0 && !P.dead) {   /* 카메라 기준: 위 = 카메라가 보는 쪽 */
-    const fx = -Math.sin(camS.yaw), fz = -Math.cos(camS.yaw), rx = -fz, rz = fx, dx = rx * ix + fx * iy, dz = rz * ix + fz * iy, n = Math.hypot(dx, dz) || 1, speed = (m < 0.55 ? 2.2 : 4.8) * m;
-    root.position.x += dx / n * speed * dt; root.position.z += dz / n * speed * dt; collide(root.position);
-    const yaw = Math.atan2(dx, dz); let d = yaw - me.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); me.yaw += d * Math.min(1, dt * 14); root.rotation.y = me.yaw;
-    animate(true, m < 0.55, adt); } else animate(false, false, adt);
+  const canMove=!photo&&busy<=0&&!P.dead&&dodgeT<=0,walkKey=keys.ShiftLeft||keys.ShiftRight;
+  moveSpeed=canMove?approachSpeed(moveSpeed,m>.05?movementSpeed(m,walkKey?1.5:4.8):0,dt):0;
+  const oldX=root.position.x,oldZ=root.position.z;
+  if(canMove&&moveSpeed>0){
+    if(m>.05){const fx=-Math.sin(camS.yaw),fz=-Math.cos(camS.yaw),rx=-fz,rz=fx,dx=rx*ix+fx*iy,dz=rz*ix+fz*iy,yaw=Math.atan2(dx,dz),d=Math.atan2(Math.sin(yaw-me.yaw),Math.cos(yaw-me.yaw));me.yaw+=d*(1-Math.exp(-dt*14));root.rotation.y=me.yaw;}
+    root.position.x+=Math.sin(me.yaw)*moveSpeed*dt;root.position.z+=Math.cos(me.yaw)*moveSpeed*dt;collide(root.position);
+  }
+  const actualMoveSpeed=Math.hypot(root.position.x-oldX,root.position.z-oldZ)/Math.max(.001,dt);
+  if(canMove&&(MOBS?.nearest(root.position.x,root.position.z,8)||[...doms,...fbs].some(o=>o.root.visible&&Math.hypot(o.root.position.x-root.position.x,o.root.position.z-root.position.z)<8)))combatUntil=Math.max(combatUntil,gameNow+2000);
+  animate(actualMoveSpeed>.04,actualMoveSpeed<2.6,adt,actualMoveSpeed/Math.max(.1,rate));
   P.x = root.position.x; P.z = root.position.z;
-  moveAnim = busy > 0 ? busyClip : P.dead ? 'idle' : m > 0.05 ? (m < 0.55 ? 'walk' : 'run') : 'idle';
+  moveAnim = busy > 0 ? busyClip : P.dead ? 'idle' : actualMoveSpeed > .04 ? (actualMoveSpeed < 2.6 ? 'walk' : 'run') : 'idle';
   if (net) { sendT += dt; if (sendT >= 0.1) { sendT = 0; sendMove(); }
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
