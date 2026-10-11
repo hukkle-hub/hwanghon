@@ -104,6 +104,7 @@ export function build(THREE, scene, osm, zone) {
       keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) && !shades(p) && (!inBand(p, 1) || (R() < (tf.inBand ?? 0.14) * (grove ? Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) : 1) && !wedged(p) && spaced(p))) && (!tf.only || tf.only(p, ctx)) });
     L.trees(ctx, spots, { leaves: tf.leaves, pine: tf.pine, dead: tf.dead, block: p => inBand(p, 1) }); }
   if (F.cars) L.cars(ctx, roadsW, { ...F.cars, avoid: p => reserve.some(([q, r]) => Math.hypot(p[0] - q[0], p[1] - q[1]) < r) });
+  if (F.cars && L.isView3d()) L.frozenMoment(THREE, scene);   /* 멈춘 순간 (문서 229 §21) */
   if (F.dress) { const st = L.dress(ctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: walk.t1 }, tex, { ...F.dress, keep: p => !L.inBuilding(built, p) && !ar.waters.some(w => L.inPoly(p, w)) && !wet(p) });
     console.log('[env-field] 땅 꾸미기', JSON.stringify(st)); }
   if (F.crystals) { const spots = []; for (let i = 0; i < F.crystals * 3 && spots.length < F.crystals; i++) { const p = FROM(walk.s0 + R() * (walk.s1 - walk.s0), walk.t0 + R() * (walk.t1 - walk.t0)); if (L.isClear(ctx, p) || L.inBuilding(built, p) || blockers.some(b => b.poly && L.inPoly(p, b.poly))) continue; spots.push(p); } L.crystals(ctx, spots, { h: F.crystalH || 0.55 }); }

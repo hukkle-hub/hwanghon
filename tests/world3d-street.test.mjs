@@ -90,3 +90,13 @@ test('셰이더 웅덩이(문서 229 §10)가 켜져 있으면 옛 물 판은 �
   const ctx = mkCtx(); L.street(ctx, roadsW, built);
   assert.equal(ctx.scene.children.filter(o => o.userData.puddle).length, 0);
 });
+
+test('멈춘 순간 (문서 229 §21): 차 30 % 옆에 버리고 간 짐 — 차에서 5 m 안 · 땅 위 낮게 · 같은 차는 늘 같은 짐', () => {
+  const run = () => { const scene = new THREE.Scene(); L.FROZEN.n = 0; L.FROZEN.at.length = 0; const cars = []; for (let i = 0; i < 200; i++) cars.push({ x: (i % 20) * 13.7, z: Math.floor(i / 20) * 9.1, dir: (i % 7) * 0.5, w: 1.8, len: 4.6 });
+    L.frozenMoment(THREE, scene, cars); return { scene, cars, n: L.FROZEN.n, at: L.FROZEN.at.map(a => a.join(',')) }; };
+  const a = run(), b = run(); assert.deepEqual(a.at, b.at, '장면 난수 안 씀'); assert.ok(a.n > 60 && a.n < 260, '짐 ' + a.n);
+  const near = new Set(); for (const [x, z] of a.at.map(s => s.split(',').map(Number))) { const d = Math.min(...a.cars.map(c => Math.hypot(c.x - x, c.z - z))); assert.ok(d < 5.2, `차에서 멀다 ${d.toFixed(1)}`); }
+  for (const c of a.cars) if (a.at.some(s => { const [x, z] = s.split(',').map(Number); return Math.hypot(c.x - x, c.z - z) < 5.2; })) near.add(c);
+  assert.ok(near.size < a.cars.length * 0.6, '짐 있는 차가 너무 많다 ' + near.size);
+  a.scene.traverse(o => { if (!o.isMesh) return; o.geometry.computeBoundingBox(); assert.ok(o.geometry.boundingBox.max.y < 0.8, '짐이 높다'); assert.ok(o.userData.noCam); });
+});

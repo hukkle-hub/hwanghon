@@ -259,7 +259,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const cabM = new THREE.MeshStandardMaterial({ color: 0x3a4658, roughness: 0.12, metalness: 0.4 });   /* 새까만 유리는 구멍처럼 보였다 — 노을을 받는 유리 */
   const xings = osm.crossings.map(W);
   const endGateP = (CFG.gates || []).filter(g => g.at.end).map(g => FROM(walk[g.at.end] + (g.at.end === 's1' ? -3 : 3), g.at.t === 'road' ? tc : g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t));
-  let cars = 0;
+  let cars = 0; const frozenCars = L.isView3d() ? L.FROZEN.cars : null;   /* 반복문 안의 L 은 길이(숫자)라 밖에서 잡는다 */
   for (const rw of roadsW) { const k = rw.r.kind; if (!['primary', 'primary_link', 'secondary', 'busway'].includes(k)) continue; const lanes = k === 'busway' ? 1 : (rw.r.lanes || 2);
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 6) continue; const ux = dx / L, uz = dz / L, dir = Math.atan2(dz, dx);
       for (let ln = 0; ln < lanes; ln++) { const off = -rw.width / 2 + (ln + 0.5) * rw.width / lanes;
@@ -282,7 +282,8 @@ export function build(THREE, scene, osm, opt = {}) {
             else if (r < 0.15) { /* 트렁크가 열린 차 — 짐이 반쯤 */ const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, cg.w - 0.2), bm); lid.position.set(-cg.len / 2 + 0.1, 1.3, 0); lid.rotation.z = 1.1; g.add(lid);
               const bag = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.7), new THREE.MeshStandardMaterial({ color: 0x3a2a5a, roughness: 0.6 })); bag.position.set(-cg.len / 2 + 0.6, 0.98, 0.3); g.add(bag); }
             blockers.push({ x: cx, z: cz, hw: 2.3, hd: 1.0, rot: -dir }); }
-          g.position.set(cx, 0.0, cz); g.rotation.y = -dir; g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); cars++; } } } }
+          g.position.set(cx, 0.0, cz); g.rotation.y = -dir; g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); cars++; if (frozenCars && k !== 'busway') frozenCars.push({ x: cx, z: cz, dir: -dir, w: 1.8, len: 4.6 }); } } } }
+  if (L.isView3d()) L.frozenMoment(THREE, scene);   /* 멈춘 순간 — 차 옆에 버리고 간 짐 (문서 229 §21) */
 
   /* ---------- 주황 결정 («외벽을 타고 … 인도 곳곳에 무릎 높이로») ---------- */
   const crysM = new THREE.MeshStandardMaterial({ color: 0xffa040, emissive: 0xff6a10, emissiveIntensity: 1.6, roughness: 0.15, metalness: 0.1, transparent: true, opacity: 0.88 });

@@ -356,7 +356,7 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
   DECO_M.vsign = VSIGN.mat = VSIGN.mats[VSIGN_THEME];
   if (!VSIGN.off[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.off[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, color: 0x6a6a70, roughness: 0.6, metalness: 0.1 }); }   /* 꺼진 네온: 발광 없이 바랜 색 */
   DECO_M.vsignOff = VSIGN.off[VSIGN_THEME];
-  for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
+  for (const k in P) { if (!P[k].length) continue; const list = P[k].some(x => !x.index) ? P[k].map(x => x.index ? x.toNonIndexed() : x) : P[k], g = mergeGeometries(list, false); P[k].forEach(x => x.dispose()); if (!g) continue;   /* 색인 있는 것·없는 것이 섞이면(이끼 다면체 + 텃밭 상자) 합치기가 통째로 실패했다 */
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign' && k !== 'aptno'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const ROOF = { shed: 0, mast: 0, dish: 0, moss: 0, camp: 0, at: [] };   /* at: [x, 옥상 높이, z, 종류] 검수용 */   /* 옥상 다양화 검수용 (문서 229 §19) */
 export const APT = { n: 0, at: [] };   /* 동 번호 단 아파트 수 · at: 검수용 [x, 글자 가운데 y, z, 법선 x, 법선 z, 번호] */
@@ -635,6 +635,26 @@ export function crystals(ctx, spots, o = {}) { const { THREE, scene, R } = ctx; 
     ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.4, hd: 0.4, rot: 0 }); } return n; }
 
 /* ---------- 멈춘 차 (원작 «차선을 지킨 채 멈춰 있었다») ---------- */
+/* 멈춘 순간 (문서 229 §21) — «서울은 무너진 게 아니라 멈춰 있었다». 사람들이 차를 버리고 떠난 자리: 차 옆에 캐리어·쇼핑백·넘어진 자전거·떨어진 우산·흩어진 종이.
+   차 30 % 의 한쪽(문 쪽)에 1~3 개. 자리·종류는 차 자리 해시(장면 난수 안 씀). 막이 없음(밟고 지나간다). 3D 만 */
+export const FROZEN = { cars: [], n: 0, at: [] };
+export function frozenMoment(THREE, scene, cars = FROZEN.cars) { if (!cars.length) return 0;
+  const M = k => FROZEN.mats[k] || (FROZEN.mats[k] = new THREE.MeshStandardMaterial(k === 'paper' ? { color: 0xe6e0d0, roughness: 0.95, side: THREE.DoubleSide } : k === 'bike' ? { color: 0x2a2c30, roughness: 0.5, metalness: 0.6 } : k === 'umb' ? { color: 0x8a1a22, roughness: 0.6, side: THREE.DoubleSide } :
+    k === 'bag' ? { color: 0xd8d6cc, roughness: 0.8 } : { color: [0x22304a, 0x7a2424, 0x5a5c62][+k.slice(-1)] || 0x22304a, roughness: 0.5, metalness: 0.1 }));
+  FROZEN.mats = FROZEN.mats || {}; const P = {}, put = (k, g) => (P[k] || (P[k] = [])).push(g);
+  const at = (g, x, z, y, ry) => { g.rotateY(ry); g.translate(x, y, z); return g; };
+  for (const c of cars) { const id = Math.round(c.x * 7.13 + c.z * 3.71) | 0; if (hashU(id, 1, 21) > 0.3) continue;
+    const side = hashU(id, 2, 21) < 0.5 ? -1 : 1, cs = Math.cos(c.dir), sn = Math.sin(c.dir), nx = -sn * side, nz = -cs * side, n = 1 + ((hashU(id, 3, 21) * 3) | 0);   /* 차 옆(법선) 방향 */
+    for (let k = 0; k < n; k++) { const along = (hashU(id, 10 + k, 21) - 0.5) * c.len * 0.9, out = c.w / 2 + 0.7 + 2.2 * hashU(id, 20 + k, 21), x = c.x + cs * along + nx * out, z = c.z - sn * along + nz * out, ry = hashU(id, 30 + k, 21) * 6.28, kind = (hashU(id, 40 + k, 21) * 5) | 0;
+      if (kind === 0) { const fallen = hashU(id, 50 + k, 21) < 0.5, g = new THREE.BoxGeometry(0.42, 0.6, 0.22); if (fallen) g.rotateZ(Math.PI / 2); put('case' + ((hashU(id, 60 + k, 21) * 3) | 0), at(g, x, z, fallen ? 0.13 : 0.32, ry)); }   /* 캐리어 */
+      else if (kind === 1) { for (let j = 0; j < 2; j++) put('bag', at(new THREE.BoxGeometry(0.3, 0.36, 0.14), x + j * 0.35, z + j * 0.2, 0.18, ry + j)); }   /* 쇼핑백 둘 */
+      else if (kind === 2) { const w1 = new THREE.TorusGeometry(0.32, 0.025, 6, 16), w2 = w1.clone(); w1.rotateX(Math.PI / 2); w2.rotateX(Math.PI / 2); w1.translate(-0.5, 0, 0); w2.translate(0.5, 0, 0);   /* 넘어진 자전거 */
+        const fr = new THREE.BoxGeometry(1.0, 0.04, 0.04), hb = new THREE.BoxGeometry(0.05, 0.04, 0.5); hb.translate(0.42, 0, 0); for (const g of [w1, w2, fr, hb]) put('bike', at(g, x, z, 0.1, ry)); }
+      else if (kind === 3) { const cn = new THREE.ConeGeometry(0.5, 0.22, 8, 1, true); cn.rotateZ(1.25); put('umb', at(cn, x, z, 0.3, ry)); const sh = new THREE.CylinderGeometry(0.012, 0.012, 0.8, 4); sh.rotateZ(Math.PI / 2); put('bike', at(sh, x, z, 0.08, ry)); }   /* 떨어진 우산 */
+      else { for (let j = 0; j < 4; j++) { const g = new THREE.PlaneGeometry(0.21, 0.3); g.rotateX(-Math.PI / 2); g.rotateY(hashU(id, 70 + j, 21) * 6.28); g.translate(x + (hashU(id, 80 + j, 21) - 0.5) * 1.6, 0.085 + j * 0.002, z + (hashU(id, 90 + j, 21) - 0.5) * 1.6); put('paper', g); } }   /* 흩어진 종이 */
+      FROZEN.n++; if (FROZEN.at.length < 120) FROZEN.at.push([+x.toFixed(1), +z.toFixed(1), kind]); } }
+  for (const k in P) { const g = mergeGeometries(P[k].map(x => x.index ? x.toNonIndexed() : x), false); if (!g) continue; const m = new THREE.Mesh(g, M(k)); m.castShadow = k !== 'paper'; m.receiveShadow = true; m.userData.noCam = true; m.name = 'frozen'; scene.add(m); }
+  return FROZEN.n; }
 export function cars(ctx, roadsW, o = {}) { const { THREE, scene, R, ST, walk } = ctx;
   const prof = (pts, w, bv) => { const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y))), { depth: w, bevelEnabled: true, bevelThickness: bv, bevelSize: bv, bevelSegments: 2, curveSegments: 4 }); g.translate(0, 0, -w / 2); return g; };
   const CAR = { sedan: { body: [[-2.3, 0.3], [2.3, 0.3], [2.35, 0.75], [1.4, 0.85], [-1.6, 0.85], [-2.3, 0.78]], glass: [[-1.25, 0.84], [0.95, 0.84], [0.45, 1.35], [-0.9, 1.35]], w: 1.78 },
@@ -654,6 +674,9 @@ export function cars(ctx, roadsW, o = {}) { const { THREE, scene, R, ST, walk } 
           const bm = new THREE.MeshStandardMaterial({ color: cols[(R() * cols.length) | 0], roughness: 0.25, metalness: 0.7 }); g.add(new THREE.Mesh(cg.body, bm), new THREE.Mesh(cg.glass, cabM));
           for (const x of [-cg.len * 0.32, cg.len * 0.32]) for (const z of [-cg.w / 2 + 0.1, cg.w / 2 - 0.1]) { const w = new THREE.Mesh(wheelG, wheelM); w.position.set(x, 0.33, z); g.add(w); }
           if (o.wreck && R() < o.wreck) { g.rotation.z = (R() - .5) * 0.3; bm.color.multiplyScalar(0.45); }   /* 폐차장 — 녹슬고 기운 차 */
+          if (VIEW3D && type !== 'truck') { const r2 = R(); if (r2 < 0.14) { const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.05), bm); door.position.set(0.3, 0.62, cg.w / 2 + 0.45); door.rotation.y = -0.9; g.add(door); }   /* 문이 열린 차 — 급히 내렸다 (문서 229 §21) */
+            else if (r2 < 0.18) { const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, cg.w - 0.2), bm); lid.position.set(-cg.len / 2 + 0.1, 1.3, 0); lid.rotation.z = 1.1; g.add(lid); } }   /* 트렁크가 열린 차 */
+          if (VIEW3D) FROZEN.cars.push({ x: cx, z: cz, dir: -dir, w: cg.w, len: cg.len });
           g.position.set(cx, 0, cz); g.rotation.y = -dir + (o.wreck ? (R() - .5) * 0.6 : 0); g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(g);
           ctx.blockers.push({ x: +cx.toFixed(2), z: +cz.toFixed(2), hw: cg.len / 2, hd: cg.w / 2, rot: -dir }); n++; } } } }
   return n; }
