@@ -36,3 +36,13 @@ test('field-mobs: N01 몸에만 · 믹서 앞에서 걷고 뒤에서 얹는다',
   assert.match(F, /if \(asset\.n01Asset\) \(motion \|\| \(motion = createMobMotion\(THREE\)\)\)\.attach\(v\);/);
   assert.match(F, /motion\?\.before\(v\); v\.mixer\.update\(dt\); motion\?\.after\(v, dt\);/);
 });
+test('역할별 덮치기 (문서 229 §36): 추적형은 두 손 · 파쇄형은 젖힐 때 팔을 머리 위로 · 역할이 없으면 기본', async () => {
+  const { styleOf, STYLE } = await import('../js/mmo/mob-motion.js'), { CATALOG } = await import('../js/mmo/monster-catalog.js'), cat = id => CATALOG.find(c => c.id === id);
+  assert.equal(styleOf(cat('G5_STALKER')), STYLE.pounce); assert.equal(styleOf(cat('G5_RUNNER')), STYLE.flank); assert.equal(styleOf(cat('G5_BREAKER')), STYLE.slam);
+  assert.equal(styleOf(cat('G5_ARMORED')), STYLE.charge); assert.equal(styleOf(cat('G5_RESONATOR')), STYLE.shove); assert.equal(styleOf(cat('G5_WALKER')), STYLE.swipe); assert.equal(styleOf(null), STYLE.swipe);
+  const hand = (v, side) => { const p = new THREE.Vector3(); v.model.getObjectByName('mixamorig_' + side + 'ForeArm').getWorldPosition(p); return p; };
+  const M = createMobMotion(THREE), a = rig(); a.cat = cat('G5_STALKER'); M.attach(a); a.cur = 'attack'; a.seq = 1; a.current.time = 1.3 * (.1 + .45 / 2); M.before(a); M.after(a, 1 / 30);
+  assert.ok(hand(a, 'Left').z > .05 && hand(a, 'Right').z > .05, '추적자는 두 손을 앞으로');
+  const b = rig(); b.cat = cat('G5_BREAKER'); M.attach(b); b.cur = 'attack'; b.seq = 1; b.current.time = 1.3 * (.35 / 2); M.before(b); M.after(b, 1 / 30);
+  const hb = hand(b, 'Right'), sh = new THREE.Vector3(); b.model.getObjectByName('mixamorig_RightArm').getWorldPosition(sh); assert.ok(hb.y > sh.y, '파쇄자는 젖힐 때 팔이 어깨 위로 ' + (hb.y - sh.y).toFixed(3));
+});
