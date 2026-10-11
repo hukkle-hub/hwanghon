@@ -162,7 +162,7 @@ import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, 
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from './js/mmo/kit-motion.js';
 import { addWindRig } from './js/mmo/windup.js';   /* 준비 동작 — 바닥 예고 대신 몸이 알린다 (문서 224) */
 import { attachSaber } from './js/mmo/jeong-saber.js';
-import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js'; import { heroRim, heroRimK, HERO_RIM } from './js/mmo/hero-rim.js'; import { createBuffFx, BUFF_COLOR } from './js/mmo/buff-fx.js';
+import { createBossStage, stageOf, rimify } from './js/mmo/boss-stage.js'; import { heroRim, heroRimK, HERO_RIM } from './js/mmo/hero-rim.js'; import { createBuffFx, BUFF_COLOR } from './js/mmo/buff-fx.js'; import { createThrowFx } from './js/mmo/throw-fx.js';
 import { createFieldFeel, contactOf, defCancelAt } from './js/mmo/field-feel.js';
 import { connectField, serverClock } from './js/mmo/field-net.js';
 import { mergeStatic, firstHit } from './js/mmo/static-merge.js';
@@ -273,7 +273,8 @@ const [heroAsset, weaponAsset] = await Promise.all(CHAR_ASSET[ME].map(load));
 window.TW_POSE?.repair(THREE, heroAsset); window.TW_MATFIX?.repair(THREE, heroAsset.scene);
 const hero = new Animated(heroAsset, scene, true, false, weaponAsset, ME), root = hero.root;
 root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-if (q.get('hr') !== '0') heroRim(THREE, root); const BUFF = createBuffFx(THREE, root, { reduced: REDUCED });   /* 버프 표시 (문서 229 §31) */   /* 밤 영웅 달빛 윤곽 (문서 229 §24, ?hr=0 으로 끔) — 장비는 watchLooks 가 */
+if (q.get('hr') !== '0') heroRim(THREE, root); const BUFF = createBuffFx(THREE, root, { reduced: REDUCED });   /* 버프 표시 (문서 229 §31) */
+const THROWFX = createThrowFx(THREE, scene), throwHand = hero.model.getObjectByName('mixamorigRightHand') || hero.model.getObjectByName('mixamorig:RightHand');   /* 세라 투척 (문서 229 §33) */   /* 밤 영웅 달빛 윤곽 (문서 229 §24, ?hr=0 으로 끔) — 장비는 watchLooks 가 */
 /* 장비 겉모습 (문서 214) — 2D 필드와 같은 TW_LOOKS(갑옷·장신구·머리카락 정리). 무기는 아바타가 이미 쥐고 있어(양손 쥠 리그) 갑옷만(noMain).
    온라인 = 서버 장착(profile.equipment) · 혼자 연습 = 2D 필드와 같은 시작 세트. 가방에서 장착·해제하면 다시 입는다 */
 const START_SETS = [{}, { chest: 'a_reed_cuirass', legs: 'a_black_greaves', gloves: 'a_steel_gauntlet', boots: 'a_ranger_boots' },
@@ -301,7 +302,7 @@ let busy = 0, busyClip = null, busyT = 0, busyDef = 0, atkSeq = 0, combatUntil =
 function animate(moving, walk, dt, speed=0) {   /* 같은 보행 위상 → 전신 전환 → 마지막에 양손 쥠 */
   hero.armBlend?.restore(); hero.rig?.restore();hero.poseBridge?.restore();hero.locomotion?.restore(); let action = null;
   const combat=gameNow<combatUntil||hurtT>0,playingAction=busy>0;
-  BUFF.tick(dt);   /* 버프 표시 (문서 229 §31) */
+  BUFF.tick(dt); THROWFX.tick(dt);   /* 버프 표시 (문서 229 §31) · 세라 투척 (§33) */
   if (busy > 0) { busy -= dt; busyT += dt; }
   else if (P.dead) hero.play('death', 'down');
   else { hero.play(hero.locomotion?hero.locomotion.select(speed,combat):moving ? (walk && hero.clips.walk ? 'walk' : 'run') : 'idle'); hero.current.paused = false; }
@@ -433,10 +434,18 @@ skEls.forEach((el, i) => { const d = SKDEF[i]; if (!d) return; el.hidden = false
 addEventListener('keydown', e => { const n = ['Digit1', 'Digit2', 'Digit3', 'Digit4'].indexOf(e.code); if (n >= 0) castSkill(n); });
 /* 조작 안내는 첫 터치나 12초 뒤에 걷는다 — 세로 화면에서 공격·회피 단추를 덮었다 */
 { const h = document.getElementById('hint'), go = () => h && h.classList.add('gone'); addEventListener('pointerdown', go, { once: true }); setTimeout(go, 12000); }
+/* 세라 투척의 표적: 판정과 같은 순서(보스·지배형 손 닿는 거리 → 몬스터 2.8 m) — 없으면 앞으로 4 m */
+function throwAt(clip, kind) { let to = null, bd = 1e9;
+  for (const o of net ? [...doms, ...fbs] : [...doms, ...fbs.filter(f => f.ai)]) { if (net ? !o.netAlive : !o.ai.alive) continue; const d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (d <= reachOf(o.b) && d < bd) { bd = d; to = [o.root.position.x, 0.6, o.root.position.z]; } }
+  if (!to) { const v = MOBS && MOBS.nearest(root.position.x, root.position.z, 2.8); if (v) to = [v.root.position.x, 0.9, v.root.position.z]; }
+  if (!to) to = [root.position.x + Math.sin(me.yaw) * 4, 0.05, root.position.z + Math.cos(me.yaw) * 4];
+  const hand = new THREE.Vector3(), tc = contactOf(ME, clip) * hero.clips[clip].duration;
+  THROWFX.throw(() => throwHand ? throwHand.getWorldPosition(hand).toArray() : [root.position.x, 1.4, root.position.z], to, tc, kind); }
 function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || (busy > 0 && !(d.dodge && busyT >= busyDef)) || P.dead || !hero.clips[clip]) return false;   /* 회피 기술은 날이 지나간 뒤 끊고 들어간다 (문서 229 §30) */
   if (gameNow < skReady[i]) { toast(esc(d.name) + ' — ' + Math.ceil((skReady[i] - gameNow) / 1000) + '초 뒤', 1.2); return false; }
   combatUntil=gameNow+6000;skReady[i] = gameNow + d.cd * 1000; hero.play(clip, 'sk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; busyT = 0; busyDef = defCancelAt(busy, d.ev && d.ev.hits && d.ev.hits.map(h => h[0])); feel.swing(fh, clip, { kind: 'skill', hits: d.ev && d.ev.hits });
   window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
+  if (ME === 'sera' && (i === 0 || i === 2)) throwAt(clip, i === 0 ? 'acid' : 'chain');   /* 판정은 그대로 — 병이 접점 시각에 닿게 (문서 229 §33) */
   if (d.buff && d.buff.reduce) BUFF.start(BUFF_COLOR[ME] || 0xffd28a, d.buff.dur || 2);   /* 몸빛 + 발밑 고리 — 온라인도 내 화면엔 (판정은 서버) */
   if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
   if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
