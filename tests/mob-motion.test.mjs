@@ -66,3 +66,10 @@ test('맞음 움찔 (문서 229 §37): 짧은 맞음 클립(0.33 s)에 0.08 s �
   const s = lean(.33), l = lean(.93);
   assert.ok(s.peak < -.05, '머리가 뒤로 ' + s.peak.toFixed(3)); assert.ok(s.minZ < -.1, '밀려남 ' + s.minZ.toFixed(3)); assert.ok(l.peak > s.peak * .5, '긴 클립엔 작게 ' + l.peak.toFixed(3));
 });
+test('가볍게 (문서 229 §39): 행렬을 다시 짜지 않고 쿼터니언만 — 몸이 돌고 커져도 팔은 몸 앞으로 든다', () => {
+  const S = fs.readFileSync('js/mmo/mob-motion.js', 'utf8'); assert.doesNotMatch(S, /getWorld(Quaternion|Position)\(|updateMatrixWorld\(/, '24 마리 × 매 프레임 조상 행렬 다시 짜기 — 1 ms');
+  const M = createMobMotion(THREE), v = rig(); v.root.rotation.y = Math.PI / 2; v.model.scale.setScalar(1.7); M.attach(v);
+  const fa = v.model.getObjectByName('mixamorig_RightForeArm'), sh = v.model.getObjectByName('mixamorig_RightArm'), p0 = new THREE.Vector3(), p1 = new THREE.Vector3(), o = new THREE.Vector3();
+  const rel = out => { v.root.updateMatrixWorld(true); fa.getWorldPosition(out); sh.getWorldPosition(o); return out.sub(o); };   /* 어깨 기준 — 몸째 디딤(앞으로 0.6 m)은 빼고 팔만 */
+  rel(p0); v.cur = 'attack'; v.seq = 1; for (let i = 0; i < 12; i++) { v.current.time = i / 30; M.before(v); M.after(v, 1 / 30); } rel(p1); assert.ok(p1.x - p0.x > .05, '몸 앞(세계 +X)으로 ' + (p1.x - p0.x).toFixed(3)); assert.ok(Math.abs(p1.z - p0.z) < Math.abs(p1.x - p0.x), '옆으로 새지 않는다');
+});

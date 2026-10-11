@@ -39,6 +39,17 @@ async function row(amp, r) {
   for (let c = 1; c <= 6; c++) { const tt = COLS[c][2] * clipLen; step('attack', 1, Math.max(1 / 30, tt - tPrev)); tPrev = tt; shoot(c); }
   step('attack', 1, .5); shoot(7); step('attack', 1, 1.0); shoot(8);   /* 공격 상태는 이어지고 클립은 끝 — 예전엔 여기서 선 채 멈췄다 */
 }
+/* ?mode=bench (문서 229 §39): 24 마리 · 렌더 없이 view.update 만 300 프레임 — 몸짓 얹기 켬/끔 CPU 시간(ms/프레임). 결과 window.BENCH */
+async function bench() { const out = {};
+  for (const amp of [0, 1, 0, 1]) { MOTION.amp = amp; const scene = new THREE.Scene();
+    const view = createMobView({THREE, clone, scene, loadBody: async () => gltf, loadBodyFor: id => id === ID ? {...entry, load: async () => gltf} : null, hud: document.getElementById('hud'), tagAt: () => {}, catalog: CATALOG, floor: 0, telegraph: false});
+    const list = f => Array.from({length: 24}, (_, i) => { const atk = (i + (f / 40 | 0)) % 3 === 0, seq = f / 40 | 0; return {id: 'z:a:n:' + i, catalogId: ID, x: (i % 6) * 2, z: (i / 6 | 0) * 2, alive: true, anim: atk ? 'attack' : 'idle', generation: 1, hp: 100, seq, action: atk ? {key: 'attack', targetX: 0, targetZ: 9, seq, windupMs: 600, elapsedMs: 0} : null}; });
+    for (let i = 0; i < 40 && view.views.size < 24; i++) { view.update(list(0), 1 / 30); await new Promise(r => setTimeout(r, 20)); }
+    for (let f = 0; f < 30; f++) view.update(list(f), 1 / 30);
+    const t0 = performance.now(); for (let f = 0; f < 300; f++) view.update(list(f), 1 / 30); const ms = (performance.now() - t0) / 300;
+    (out['amp' + amp] = out['amp' + amp] || []).push(+ms.toFixed(3)); }
+  return out; }
+if (Q.get('mode') === 'bench') { window.BENCH = await bench(); window.READY = 1; throw 'bench'; }
 await row(0, 0); await row(1, 1); MOTION.amp = 1;
 COLS.forEach(([t], c) => { const d = document.createElement('div'); d.style.left = (c * CELL + 6) + 'px'; d.style.top = '4px'; d.textContent = t; lab.appendChild(d); });
 for (const [t, r] of [['클립 그대로', 0], ['얹기 켬', 1]]) { const d = document.createElement('div'); d.style.left = '6px'; d.style.top = (r * CELL + 20) + 'px'; d.textContent = t; d.style.color = '#ffd28a'; lab.appendChild(d); }

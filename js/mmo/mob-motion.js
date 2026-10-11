@@ -29,7 +29,10 @@ export function createMobMotion(THREE) {
   const pa = new THREE.Vector3(), pf = new THREE.Vector3(), qa = new THREE.Quaternion(), qp = new THREE.Quaternion(), qpi = new THREE.Quaternion(), qm = new THREE.Quaternion(), ax = new THREE.Vector3();
   const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0);
   /* 몸 공간 축 a 로 각 r 만큼 — 뼈의 부모 세계 회전 P, 몸 세계 회전 M: 부모 공간 축 = P⁻¹·M·a */
-  function turn(b, a, r) { if (!b || !r) return; b.parent.getWorldQuaternion(qp); qpi.copy(qp).invert(); ax.copy(a).applyQuaternion(qm).applyQuaternion(qpi).normalize(); qa.setFromAxisAngle(ax, r); b.quaternion.premultiply(qa); }
+  /* 세계 회전 = 조상 회전 곱 — getWorldQuaternion 은 부를 때마다 조상 행렬을 다시 짜고(회전마다 ~9 단) 풀어서, 24 마리에 프레임당 1 ms 가 들었다(§39).
+     비율(scale)은 고르게만 쓰므로 방향에는 쿼터니언만 있으면 된다 */
+  function wq(o, out) { out.identity(); for (; o; o = o.parent) out.premultiply(o.quaternion); return out; }
+  function turn(b, a, r) { if (!b || !r) return; wq(b.parent, qp); qpi.copy(qp).invert(); ax.copy(a).applyQuaternion(qm).applyQuaternion(qpi).normalize(); qa.setFromAxisAngle(ax, r); b.quaternion.premultiply(qa); }
   return {
     attach(v) { const B = {}; for (const n of BONES) B[n] = v.model.getObjectByName('mixamorig_' + n) || v.model.getObjectByName('mixamorig' + n) || null;
       if (!B.Spine || !B.Head) return null;
@@ -42,7 +45,7 @@ export function createMobMotion(THREE) {
     after(v, dt) { const M = v.motion; if (!M || !v.alive) return; const B = M.B, amp = MOTION.amp; if (!amp) return; M.t += dt;
       for (const s of M.saved) s[1].copy(s[0].quaternion);   /* 믹서가 쓴 값 — 다음 before 가 여기로 되돌린다 */
       M.on = true;
-      v.model.updateMatrixWorld(true); v.model.getWorldQuaternion(qm);
+      wq(v.model, qm);
       const atk = v.cur === 'attack', clip = v.current && v.current.getClip ? v.current.getClip().duration : 1, u = atk ? Math.min(1, (v.current.time || 0) / Math.max(.1, clip)) : 1;
       if (atk && v.seq !== M.lastSeq) { M.lastSeq = v.seq; M.side = -M.side; }
       if (atk || v.cur === 'hit') M.lastAtk = M.t;
@@ -71,7 +74,7 @@ export function createMobMotion(THREE) {
       const sw = S.rear ? rear * 2.2 + lunge * .7 : lunge * S.arm, swingR = S.both || M.side > 0 ? sw : sw * .35, swingL = S.both || M.side < 0 ? sw : sw * .35;   /* 내려찍기: 젖힐 때 두 팔을 머리 위로 들었다가(2.2 rad) 덮치며 내리친다 */
       if (M.shield) return;   /* 방패 든 몸(철갑병 · 빌린 방패수): 팔을 돌리면 방패가 머리 위로 납작하게 돌아갔다 — 방패 공격 클립에 맡긴다 */
       /* 늘어진 팔만 든다 — 클립이 이미 앞으로 뻗은 팔(보행자 잽)을 더 돌리면 손이 하늘을 가리켰다. 위팔 → 아래팔 방향의 아래 성분 0~1 */
-      const hang = (a, f) => { if (!a || !f) return 0; a.getWorldPosition(pa); f.getWorldPosition(pf); pf.sub(pa); return Math.max(0, Math.min(1, -pf.y / Math.max(1e-4, pf.length()))); };
+      const hang = (a, f) => { if (!a || !f) return 0; pf.copy(f.position).applyQuaternion(wq(a, qa)); return Math.max(0, Math.min(1, -pf.y / Math.max(1e-4, pf.length()))); };   /* 위팔 → 아래팔 = 아래팔 자리(위팔 공간)를 위팔 세계 회전으로 */
       const hR = hang(B.RightArm, B.RightForeArm), hL = hang(B.LeftArm, B.LeftForeArm);
       turn(B.RightArm, X, -(.45 * e + 1.0 * swingR) * hR); turn(B.LeftArm, X, -(.45 * e + 1.0 * swingL) * hL);
       turn(B.RightForeArm, X, -.35 * e); turn(B.LeftForeArm, X, -.35 * e); }
