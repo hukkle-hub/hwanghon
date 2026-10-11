@@ -66,8 +66,9 @@ test('world3d 이동: 길 끝 문만 자동 · 도착 문 위에선 한 번 나�
   assert.ok(W3D.indexOf("<script>/* 이동 카드를 모듈보다 먼저") < W3D.indexOf('<script type="module"'), '이동 카드가 모듈 뒤에 있다');
 });
 
-test('웅덩이: 차도 가장자리 안에만 · 하늘 비추는 잔잔한 물 · 막이 없음', () => {
-  const ctx = mkCtx(); L.STREET.puddles = 0; L.street(ctx, roadsW, built); assert.equal(ctx.blockers.length, 0);
+test('웅덩이 판(?wet=0 일 때만): 차도 가장자리 안에만 · 하늘 비추는 잔잔한 물 · 막이 없음', async () => {
+  const { PUDDLE } = await import('../js/mmo/puddle-shader.js'); PUDDLE.on = false;
+  const ctx = mkCtx(); L.STREET.puddles = 0; L.street(ctx, roadsW, built); PUDDLE.on = true; assert.equal(ctx.blockers.length, 0);
   const pud = ctx.scene.children.filter(o => o.userData.puddle && o.material.userData.water); assert.ok(pud.length > 0 && pud.length === L.STREET.puddles, '웅덩이 ' + pud.length);
   for (const o of pud) { assert.equal(o.material.customProgramCacheKey(), 'water-calm'); assert.ok(o.material.polygonOffsetUnits < -24, '길보다 앞'); o.updateMatrixWorld(true);
     const P = o.geometry.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < P.count; i++) { v.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld); assert.ok(onRoad(v.x, v.z), `웅덩이가 차도 밖 (${v.x.toFixed(1)}, ${v.z.toFixed(1)})`); assert.ok(v.y > 0.06, '길 판 아래'); } }
@@ -83,4 +84,9 @@ test('가로등 (문서 229 §11): 큰길 양쪽에만 · 차도·건물 위 아
     assert.ok(Math.abs(l.position.z) < 12, `큰길에서 멀다 ${l.position.z.toFixed(1)}`); }
   for (const [x, z] of L.STREET.at.lamp || []) { assert.ok(!onRoad(x, z), `기둥이 차도 위 (${x}, ${z})`); assert.ok(!L.inPoly([x, z], built[0].pts)); }
   const ys = new Set(lights.map(l => Math.sign(l.position.z))); assert.equal(ys.size, 2, '큰길 양쪽');
+});
+
+test('셰이더 웅덩이(문서 229 §10)가 켜져 있으면 옛 물 판은 없다 — 두 겹·하얀 얼음판', () => {
+  const ctx = mkCtx(); L.street(ctx, roadsW, built);
+  assert.equal(ctx.scene.children.filter(o => o.userData.puddle).length, 0);
 });

@@ -8,7 +8,7 @@ import { FACADE_U } from './facade-shader.js';
 export const PUDDLE = { on: true };
 const PARS = `
 varying vec3 vPW;
-uniform vec3 uSkyRefl; uniform float uLampK;
+uniform vec3 uSkyRefl; uniform float uLampK; uniform samplerCube uEnvCube; uniform float uEnvK;
 float ph(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float pn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(ph(i), ph(i + vec2(1, 0)), f.x), mix(ph(i + vec2(0, 1)), ph(i + vec2(1, 1)), f.x), f.y); }
@@ -27,12 +27,15 @@ diffuseColor.rgb *= mix(1.0, 0.7, wet) * mix(1.0, 0.5, pw);
 const REFL = `
 { vec3 V = normalize(vPW - cameraPosition); float cosV = max(0.0, -V.y), fres = pow(1.0 - cosV, 4.0);
   vec3 sky = mix(vec3(dot(uSkyRefl, vec3(0.299, 0.587, 0.114))), uSkyRefl, 0.6);   /* 채도 40 % 빼기 — 밤 자줏빛 하늘이 그대로 비치니 페인트 얼룩 같았다(여의도) */
-  totalEmissiveRadiance += sky * pw * (0.55 + 1.1 * fres) * (1.0 - 0.15 * min(uLampK, 1.6)); }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
+  float k = (0.55 + 1.1 * fres) * (1.0 - 0.15 * min(uLampK, 1.6));
+  if (uEnvK > 0.0) { vec3 R = reflect(V, vec3(0.0, 1.0, 0.0)); vec3 env = textureCube(uEnvCube, R).rgb; sky = mix(vec3(dot(env, vec3(0.299, 0.587, 0.114))), env, 0.7); k = 0.12 + 0.75 * fres;
+    diffuseColor.rgb *= mix(1.0, 0.6, pw); }   /* 구운 주변(문서 229 §12)을 비춘다 — 둘레 건물은 어둡게, 트인 쪽만 하늘이 밝게. 하늘 한 가지 색은 낮에 하얀 얼음판이었다(해운대·여의도) */
+  totalEmissiveRadiance += sky * pw * k; }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
 `;
 export function patchPuddleMaterial(THREE, m) {
   if (!PUDDLE.on) return m;
   if (!FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value = new THREE.Color(0x6a7088);
-  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, { uSkyRefl: FACADE_U.uSkyRefl, uLampK: FACADE_U.uLampK });
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, { uSkyRefl: FACADE_U.uSkyRefl, uLampK: FACADE_U.uLampK, uEnvCube: FACADE_U.uEnvCube, uEnvK: FACADE_U.uEnvK });
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vPW;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + PARS)

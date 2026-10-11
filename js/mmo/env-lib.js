@@ -2,7 +2,7 @@
    강남(env-osm.js)·남산(env-namsan.js)에서 쓰던 부품을 존 여럿이 같이 쓰게 모은 것.
    env-field.js 가 존 설정(js/mmo/zones.js)대로 이 부품을 골라 세운다.
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
-import { patchPuddleMaterial } from './puddle-shader.js';
+import { patchPuddleMaterial, PUDDLE } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
@@ -457,7 +457,8 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
       for (let d = 1; d < L; d += 2.6) for (const sd of [-1, 1]) { const h = hashU(id, i * 2 + (sd > 0 ? 1 : 0), d * 10 | 0); if (h < 0.3) tuft(a[0] + dx / L * d - dz / L * sd * (rw.width / 2 + 0.3 + h), a[1] + dz / L * d + dx / L * sd * (rw.width / 2 + 0.3 + h), h); } } }
     if (tufts.length) { scene.add(tuftMesh(THREE, tufts)); STREET.weeds = tufts.length; } }
   /* 웅덩이 (문서 220 §8): 차도 가장자리(배수로 쪽)에 하늘을 비추는 얕은 물 + 젖은 테두리 — 비 온 뒤 폐허 거리. 자리는 해시, 막이 없음 */
-  if (o.puddles !== false) { const pm = waterMat(THREE, { calm: true }), wetM = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -27 });   /* 젖은 자국: 웅덩이 가장자리 0.4 → 바깥 0 (꼭짓점 알파) — 딱딱한 다각형이면 회색 판으로 보였다 */
+  /* 셰이더 웅덩이(문서 229 §10)가 켜져 있으면 이 판들은 만들지 않는다 — 같은 길에 웅덩이가 두 겹이었고, 판은 하늘을 그대로 더해 낮에 하얀 얼음판처럼 보였다(해운대·여의도). ?wet=0 이면 예전대로 */
+  if (o.puddles !== false && !PUDDLE.on) { const pm = waterMat(THREE, { calm: true }), wetM = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -27 });   /* 젖은 자국: 웅덩이 가장자리 0.4 → 바깥 0 (꼭짓점 알파) — 딱딱한 다각형이면 회색 판으로 보였다 */
     const blob = (cx, cz, ang, rx, rz, seed, k) => { const sh = new THREE.Shape(); for (let j = 0; j < 12; j++) { const a = j / 12 * Math.PI * 2, w = 0.72 + hashU(seed, j, 5) * 0.5, x = Math.cos(a) * rx * w * k, z = Math.sin(a) * rz * w * k, X = cx + x * Math.cos(ang) - z * Math.sin(ang), Z = cz + x * Math.sin(ang) + z * Math.cos(ang); j ? sh.lineTo(X, -Z) : sh.moveTo(X, -Z); }
       const g = new THREE.ShapeGeometry(sh); g.rotateX(-Math.PI / 2); return g; };
     const wetFan = (cx, cz, ang, rx, rz, seed) => { const pos = [cx, 0, cz], col = [0, 0, 0, 0.4], idx = [];

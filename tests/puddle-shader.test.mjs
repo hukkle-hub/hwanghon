@@ -13,6 +13,8 @@ test('웅덩이: 표준 재질 셰이더의 다섯 자리에 다 들어간다', 
   for (const [k, re] of [['웅덩이 자리', /float pw = 1\.0 - smoothstep/], ['젖은 색', /diffuseColor\.rgb \*= mix\(1\.0, 0\.7, wet\)/], ['거칠기', /roughnessFactor = mix\(roughnessFactor, 0\.05, pw\)/], ['금속', /metalnessFactor = mix\(metalnessFactor, 0\.0, pw\)/], ['하늘 반사', /totalEmissiveRadiance \+= sky \* pw/]])
     assert.match(sh.fragmentShader, re, k);
   assert.ok(sh.uniforms.uSkyRefl === FACADE_U.uSkyRefl, '하늘빛은 창과 같은 공용 유니폼');
+  assert.ok(sh.uniforms.uEnvCube === FACADE_U.uEnvCube && sh.uniforms.uEnvK === FACADE_U.uEnvK, '구운 주변(문서 229 §12)을 같이 읽는다');
+  assert.match(sh.fragmentShader, /textureCube\(uEnvCube, R\)/, '주변을 비춘다 — 하늘 한 가지 색은 낮에 하얀 얼음판');
   assert.equal(m.customProgramCacheKey(), 'puddle');
   PUDDLE.on = false; const m2 = new THREE.MeshStandardMaterial(); patchPuddleMaterial(THREE, m2); PUDDLE.on = true;
   assert.equal(m2.onBeforeCompile, THREE.Material.prototype.onBeforeCompile, '?wet=0 이면 손대지 않는다');
