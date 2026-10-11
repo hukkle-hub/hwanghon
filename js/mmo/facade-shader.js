@@ -32,6 +32,7 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     float band = smoothstep(0.0, 0.03, f.y) * (1.0 - smoothstep(0.93, 0.97, f.y));
     diffuseColor.rgb *= mix(0.72, 1.0, band); vec3 wallD = diffuseColor.rgb;
     float wallH = fh1(vec2(floor(dot(vFW.xz, Nw.xz) * 0.37), floor(Nw.x * 7.0 + Nw.z * 3.0)));   /* 벽 한 면의 해시 — 창 모양 고르기 */
+    float inh = step(fh1(floor(vFW.xz / 36.0) + 3.7), 0.18);                                        /* 사람이 사는 블록 */
 #ifdef CURTAIN
     bool ribbon = true; vec2 g0 = vec2(0.0, 0.05), g1 = vec2(1.0, 0.96);                             /* 유리 커튼월: 층마다 얇은 슬래브만 */
 #else
@@ -62,7 +63,7 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
       else if (t == tx) { col = wallC * 0.9; shade = 0.55 + 0.25 * h.z; }
       else if (r.y < 0.0) { col = vec3(0.16, 0.13, 0.11); shade = 0.6 + 0.3 * (1.0 - h.z); }      /* 바닥 */
       else { col = vec3(0.55, 0.53, 0.50); shade = 0.9; }                                           /* 천장 */
-      float lit = step(0.93 - 0.04 * uLampK, hC);                                                    /* 켜진 방 3~11 % */
+      float lit = inh > 0.5 ? step(0.92 - 0.03 * uLampK, hC) : step(0.994, hC);                     /* 폐허 도시 (문서 229 §18): 생존자가 사는 36 m 블록(18 %)에만 켜진 방이 모이고(낮 8 % · 밤 14 %) 나머지는 0.6 % — 전체 밤 약 4 %. 전엔 고르게 7~15 % 라 «불이 너무 많다» */
       float lamp = lit * (0.35 + 0.9 * smoothstep(0.15, 0.75, 1.0 - length(h.xz - vec2(0.5, 0.45)))) * (t == ty && r.y > 0.0 ? 1.25 : 1.0); /* 가운데 천장 등 — 둘레로 갈수록 어둡게 */
       vec3 tint = hB < 0.5 ? vec3(1.0, 0.78, 0.48) : vec3(0.70, 0.88, 1.0);
       vec3 room = col * shade;
@@ -88,7 +89,7 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     }
     /* 멀리서는 평균: 벽과 유리를 창 몫(cover)만큼 섞은 색 + 켜진 방 평균 — 창 무늬가 지글거리지 않게 (벽 조각도 같이) */
     float cover = (g1.x - g0.x) * (g1.y - g0.y) * step(3.4, y);
-    vec3 avgD = mix(wallD, vec3(0.05, 0.05, 0.06), cover), avgEmit = (uSkyRefl * 0.12 + vec3(1.0, 0.85, 0.6) * 0.035 * (0.8 + 0.37 * uLampK)) * cover;
+    vec3 avgD = mix(wallD, vec3(0.05, 0.05, 0.06), cover), avgEmit = (uSkyRefl * 0.12 + vec3(1.0, 0.85, 0.6) * (inh > 0.5 ? 0.04 : 0.002) * (0.8 + 0.37 * uLampK)) * cover;
     diffuseColor.rgb = mix(avgD, diffuseColor.rgb, aa); fEmit = mix(avgEmit, fEmit, aa); fGlass = mix(cover, fGlass, aa);
   } }`;
 

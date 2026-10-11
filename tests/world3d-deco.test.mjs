@@ -78,13 +78,14 @@ test('창 밑 실외기는 가짜 실내 창 칸 가운데·창 아래 — facad
 });
 
 test('세로 간판: 건물 하나에 많아야 하나 · 벽에서 1 m 안 · 1층 위부터 (문서 229 §9)', () => {
-  let n = 0; for (let id = 1; id < 300; id++) { const P = buildingDeco(THREE, PTS, 20, id, { roof: true, shops: true }); assert.ok(P.vsign.length <= 1, '간판 ' + P.vsign.length); n += P.vsign.length;
+  let n = 0, nOn = 0; for (let id = 1; id < 300; id++) { const P0 = buildingDeco(THREE, PTS, 20, id, { roof: true, shops: true }), P = { vsign: [...P0.vsign, ...P0.vsignOff] }; nOn += P0.vsign.length; assert.ok(P.vsign.length <= 1, '간판 ' + P.vsign.length); n += P.vsign.length;
     for (const g of P.vsign) { const p = g.attributes.position; for (let i = 0; i < p.count; i++) { assert.ok(inPoly([p.getX(i), p.getZ(i)], PTS) || dist(p.getX(i), p.getZ(i), PTS) < 1.0, '벽에서 너무 멀다'); assert.ok(p.getY(i) >= 4.2, '1층 가게 띠를 가린다'); } } }
   assert.ok(n > 60 && n < 220, '세로 간판 수 ' + n);
-  assert.equal(buildingDeco(THREE, PTS, 8, 5, { roof: true }).vsign.length, 0, '9 m 아래엔 없다');
+  assert.ok(nOn > n * 0.15 && nOn < n * 0.45, `켜진 네온 ${nOn} / ${n} — 폐허라 30 % 쯤 (문서 229 §18)`);
+  assert.equal(buildingDeco(THREE, PTS, 8, 5, { roof: true }).vsign.length + buildingDeco(THREE, PTS, 8, 5, { roof: true }).vsignOff.length, 0, '9 m 아래엔 없다');
   /* 길을 보는 벽: front 를 아래(z<0)에 두면 간판은 z=0 벽, 오른쪽(x>16)이면 x=16 벽 — 뒤쪽 벽엔 없다 */
   for (const [f, axis, wall] of [[[8, -30], 2, 0], [[40, 4], 0, 16]]) { let m = 0;
-    for (let id = 1; id < 120; id++) for (const g of buildingDeco(THREE, PTS, 20, id, { front: f }).vsign) { m++; g.computeBoundingBox(); const c = (g.boundingBox.min.getComponent(axis) + g.boundingBox.max.getComponent(axis)) / 2; assert.ok(Math.abs(c - wall) < 1, `길 쪽 벽이 아님 ${c}`); } assert.ok(m > 20, '길 쪽 간판 ' + m); }
+    for (let id = 1; id < 120; id++) for (const g of (Q => [...Q.vsign, ...Q.vsignOff])(buildingDeco(THREE, PTS, 20, id, { front: f }))) { m++; g.computeBoundingBox(); const c = (g.boundingBox.min.getComponent(axis) + g.boundingBox.max.getComponent(axis)) / 2; assert.ok(Math.abs(c - wall) < 1, `길 쪽 벽이 아님 ${c}`); } assert.ok(m > 20, '길 쪽 간판 ' + m); }
   assert.equal(buildingDeco(THREE, PTS, 20, 3, { vsign: false }).vsign.length + [...Array(50)].reduce((a, _, i) => a + buildingDeco(THREE, PTS, 20, i, { vsign: false }).vsign.length, 0), 0, 'vsign:false 면 없다');
 });
 

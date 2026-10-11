@@ -197,7 +197,7 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
 const FAR_PAD = 300; export const FAR = { n: 0, tris: 0 };
 function farCity(THREE, scene, far, tex, area) {
   /* 창 불빛만 그린 발광 지도 (파사드와 같은 격자: 8 창 × 4 층 = 14.4 m) — 파사드 지도로 발광을 키우면 벽까지 밝아졌다. 밤엔 world3d 가 세기를 올린다 */
-  const r = rng(5150), win = canvasTex(THREE, 256, 256, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 8; fx++) { const u = r(); if (u > 0.2) continue; g.fillStyle = u < 0.13 ? '#ffc874' : u < 0.17 ? '#ffe2b0' : '#8ad0ff'; g.fillRect(fx * 32 + 3, fy * 64 + 10, 26, 44); } }, [1 / 14.4, 1 / 14.4]);
+  const r = rng(5150), win = canvasTex(THREE, 256, 256, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 8; fx++) { const u = r(); if (u > 0.05) continue; g.fillStyle = u < 0.032 ? '#ffc874' : u < 0.042 ? '#ffe2b0' : '#8ad0ff';   /* 폐허 도시 — 창 20 % 가 켜져 있었다 → 5 % (문서 229 §18) */ g.fillRect(fx * 32 + 3, fy * 64 + 10, 26, 44); } }, [1 / 14.4, 1 / 14.4]);
   const mats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: win, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.7, metalness: 0.2 })), roofM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.95 });
   for (const m of mats) m.userData.farGlow = 0.5;   /* 황혼 0.5 → 밤 ×2 · 낮 ×0.3 (city-life) */
   const cells = new Map(), put = (key, g) => { let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(g); }, farApt = [];
@@ -298,7 +298,7 @@ function quad(THREE, ax, az, bx, bz, y0, y1, u0, u1, v0, v1, nx, nz) { const g =
   g.setIndex(front > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]); return g; }
 let DECO_M = null;
 /* 세로 간판 (문서 229 §9) — 서울 밤거리의 세로 네온. 한 장에 8 칸(칸마다 글자 세로로), 세기는 world3d 시간대가 VSIGN.mat.emissiveIntensity 로 */
-export const VSIGN = { mat: null, mats: {}, at: [] };   /* mats: 지역 묶음별 재질 · at: 검수용 [x, 가운데 y, z, 법선 x, 법선 z] */ const VSIGN_TEX = {};
+export const VSIGN = { mat: null, mats: {}, off: {}, at: [] };   /* mats: 지역 묶음별 재질 · at: 검수용 [x, 가운데 y, z, 법선 x, 법선 z] */ const VSIGN_TEX = {};
 /* 지역마다 거리 얼굴이 다르다 (디렉터: «멈춘 도시» — 사람·차는 안 움직이니 간판이 지역을 말한다). world3d 가 setVsignTheme(ZONE) */
 const VSIGN_SETS = {
   seoul: [['호', '프'], ['노', '래', '방'], ['P', 'C', '방'], ['치', '과'], ['약', '국'], ['모', '텔'], ['당', '구', '장'], ['학', '원']],
@@ -350,11 +350,13 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
   if (!VSIGN.mats[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.mats[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
   DECO_M.vsign = VSIGN.mat = VSIGN.mats[VSIGN_THEME];
+  if (!VSIGN.off[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.off[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, color: 0x6a6a70, roughness: 0.6, metalness: 0.1 }); }   /* 꺼진 네온: 발광 없이 바랜 색 */
+  DECO_M.vsignOff = VSIGN.off[VSIGN_THEME];
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign' && k !== 'aptno'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
 export const APT = { n: 0, at: [] };   /* 동 번호 단 아파트 수 · at: 검수용 [x, 글자 가운데 y, z, 법선 x, 법선 z, 번호] */
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], aptno: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], vsignOff: [], aptno: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   const vEdge = o.vsign === false ? -1 : o.front ? frontEdge(pts, o.front) : longestEdge(pts);
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
@@ -376,7 +378,7 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
     if (o.vsign !== false && h > 9 && h < 40 && e === vEdge && hashU(id, 12, 7) < 0.6 && L > 6) {
       const ux = dx / L, uz = dz / L, end = hashU(id, 13, 7) < 0.5 ? 1.2 : L - 1.2, H = Math.min(7.5, h - 5.2), cell = (hashU(id, 14, 7) * 8) | 0;
       const g = new THREE.BoxGeometry(0.16, H, 0.85), uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) i < 8 ? uv.setXY(i, (cell + uv.getX(i)) / 8, uv.getY(i)) : uv.setXY(i, (cell + 0.11) / 8, 0.5);   /* 넓은 두 면(±x)만 글자 — 길 정면·위아래 좁은 면은 테두리 네온 색 한 줄 (글자가 찌그러져 찍혔다) */
-      g.rotateY(yaw); g.translate(p[0] + ux * end + nx * 0.47, 4.3 + H / 2, p[1] + uz * end + nz * 0.47); P.vsign.push(g); VSIGN.at.push([p[0] + ux * end, 4.3 + H / 2, p[1] + uz * end, nx, nz]); }
+      g.rotateY(yaw); g.translate(p[0] + ux * end + nx * 0.47, 4.3 + H / 2, p[1] + uz * end + nz * 0.47); (hashU(id, 15, 7) < 0.3 ? P.vsign : P.vsignOff).push(g);   /* 켜진 네온 30 % · 나머지는 꺼진 관 (문서 229 §18) */ VSIGN.at.push([p[0] + ux * end, 4.3 + H / 2, p[1] + uz * end, nx, nz]); }
     /* 1층 상가 — 4 m 한 칸, 벽에서 6 cm 밖. 간판은 그 위 */
     if (o.shops && L >= 3) { const n = Math.max(1, Math.round(L / 4)), seg = L / n, ux = dx / L, uz = dz / L, sh = Math.min(3.3, h - 0.3);
       for (let k = 0; k < n; k++) { const a0 = k * seg, a1 = (k + 1) * seg, kind = (hashU(id, e, k + 41) * 4) | 0, ox = nx * 0.06, oz = nz * 0.06;
@@ -447,7 +449,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
     if (MAJOR.test(k)) for (const sd of [-1, 1]) { let acc = (sd > 0 ? 6 : 24) + hashU(id, 21, sd + 2) * 10;
       for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 0.5) continue; const ux = dx / L, uz = dz / L, o4 = rw.width / 2 + 0.8;
         for (; acc < L; acc += 34 + hashU(id, i, 23 + (acc | 0)) * 6) { const p = [a[0] + ux * acc - uz * o4 * sd, a[1] + uz * acc + ux * o4 * sd]; if (!inBand(p, 30) || solid(p)) continue;
-          const ry = -Math.atan2(dz, dx), inx = uz * sd, inz = -ux * sd, hx = p[0] + inx * 2.3, hz = p[1] + inz * 2.3, lit = hashU(id, i, 29 + (acc | 0)) < 0.67;   /* in = 차도 쪽 */
+          const ry = -Math.atan2(dz, dx), inx = uz * sd, inz = -ux * sd, hx = p[0] + inx * 2.3, hz = p[1] + inz * 2.3, lit = hashU(id, i, 29 + (acc | 0)) < 0.3;   /* in = 차도 쪽 · 켜진 등 30 % (폐허 — 셋 중 둘은 너무 밝았다, 문서 229 §18) */
           add(lampPoleG, steel, p[0], 0, p[1]); add(lampArmG, steel, p[0] + inx * 1.2, 8.35, p[1] + inz * 1.2, ry + Math.PI / 2); add(lampHeadG, lit ? lampOn : dark, hx, 8.25, hz, ry + Math.PI / 2, false);
           if (lit) { const Lp = new THREE.PointLight(0xffd29a, 10, 18, 1.5); Lp.position.set(hx, 8.0, hz); scene.add(Lp); }
           STREET.lamps++; seeAt('lamp', p); } acc -= L; } }
@@ -673,7 +675,7 @@ export function gateRing(ctx, p, r = 3.2, color = 0x40d8ff) { const { THREE, sce
 /* ---------- 가로등 (몇몇만 켜짐) ---------- */
 export function lamps(ctx, spots, o = {}) { const { THREE, scene } = ctx; const poleM = new THREE.MeshStandardMaterial({ color: 0x3a3c42, roughness: 0.5, metalness: 0.6 }); let n = 0;
   for (const p of spots) { const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 5.2, 6), poleM); pole.position.set(p[0], 2.6, p[1]); pole.castShadow = true; scene.add(pole); ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.2, hd: 0.2, rot: 0 });
-    const lit = n % 3 !== 1; const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshBasicMaterial({ color: lit ? (o.color || 0xffe0a0) : 0x3a3a3a, toneMapped: false })); head.position.set(p[0], 5.25, p[1]); scene.add(head);
+    const lit = VIEW3D ? n % 3 === 0 : n % 3 !== 1; const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), new THREE.MeshBasicMaterial({ color: lit ? (o.color || 0xffe0a0) : 0x3a3a3a, toneMapped: false })); head.position.set(p[0], 5.25, p[1]); scene.add(head);
     if (lit) { const L = new THREE.PointLight(o.color || 0xffd890, 9, 14, 1.5); L.position.set(p[0], 5, p[1]); scene.add(L); ctx.lights.push({ x: p[0], y: 5, z: p[1], color: '#ffd890', intensity: 7, distance: 12 }); } n++; }
   return n; }
 
