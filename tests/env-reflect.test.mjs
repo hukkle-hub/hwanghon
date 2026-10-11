@@ -24,5 +24,5 @@ test('유리 셰이더가 큐브를 읽고 · world3d 는 필드에서만 · 시
   const w = fs.readFileSync('world3d.html', 'utf8');
   assert.match(w, /const REFL = q\.get\('refl'\) !== '0' && q\.get\('im'\) !== '0' && \(env\.kind \|\| Z\.kind \|\| meta\.kind\) === 'field' \? createEnvReflect\(/);
   assert.match(w, /if \(o\.name !== todName\) \{ todName = o\.name; if \(REFL\) REFL\.dirty = true;/);
-  assert.match(w, /if \(REFL && REFL\.dirty\) \{ REFL\.bake\(\);/);
+  assert.match(w, /if \(REFL && REFL\.dirty\) \{ if \(FOGC\) \{ FOGC\.update\(cam\.position, scene\.fog\.far\); fcYaw = null; \}[^\n]*REFL\.bake\(\);/);
 });

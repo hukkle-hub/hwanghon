@@ -29,5 +29,21 @@ test('world3d: 지은 직후에 모으고(플레이어·까마귀 전) · 10 프
   const w = fs.readFileSync('world3d.html', 'utf8'), at = w.indexOf('createFogCull(THREE, scene');
   assert.ok(at > 0 && at < w.indexOf('createCityLife(THREE, scene') && at < w.indexOf('root.position.set(sp.x, 0, sp.z)'), '움직이는 것이 들어오기 전에');
   assert.ok(at > w.indexOf('const MERGE = '), '합친 뒤에 모은다 (문서 229 §40) — 앞에서 모으면 합치며 사라진 메시만 붙들어 합친 덩어리는 안개 너머도 다 그렸다');
-  assert.match(w, /const FOGC = q\.get\('fc'\) !== '0' && scene\.fog/); assert.match(w, /if \(FOGC && \(frames % 10 === 0 \|\| frames < 3\)\) FOGC\.update\(cam\.position, scene\.fog\.far\);/);
+  assert.match(w, /const FOGC = q\.get\('fc'\) !== '0' && scene\.fog/); assert.match(w, /if \(frames % 10 === 0 \|\| frames < 3 \|\| dy > 0\.14\) \{ fcYaw = yaw;[^\n]*FOGC\.update\(cam\.position, scene\.fog\.far, \{ yaw, half \}\); \}/);
+});
+
+test('시야 걸러내기 (문서 229 §44): 카메라 앞 ±half 와 25 m 안만 · half ≥ π 면 끔 · 걸친 것(반지름)은 남긴다', () => {
+  const s = new THREE.Scene(), im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial(), 36), M = new THREE.Matrix4();
+  for (let i = 0; i < 36; i++) { const a = i * Math.PI / 18; im.setMatrixAt(i, M.makeTranslation(Math.sin(a) * 100, 0, Math.cos(a) * 100)); }   /* 반지름 100 m 원 위 10° 마다 */
+  const near = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial(), 24); for (let i = 0; i < 24; i++) { const a = i * Math.PI / 12; near.setMatrixAt(i, M.makeTranslation(Math.sin(a) * 10, 0, Math.cos(a) * 10)); }
+  s.add(im, near); const F = createFogCull(THREE, s), o = new THREE.Vector3();
+  F.update(o, 230, { yaw: 0, half: Math.PI / 2 }); assert.equal(im.count, 19, '앞(+Z) ±90° — 0°,10°,…,90° 양쪽 = 19'); assert.equal(near.count, 24, '25 m 안은 뒤쪽도 남긴다(몸 둘레)');
+  for (let k = 0; k < im.count; k++) { im.getMatrixAt(k, M); const p = new THREE.Vector3().setFromMatrixPosition(M); assert.ok(p.z >= -1e-6, '뒤쪽 것이 남았다 ' + p.z.toFixed(1)); }
+  F.update(o, 230, { yaw: Math.PI, half: Math.PI / 2 }); im.getMatrixAt(0, M); assert.ok(new THREE.Vector3().setFromMatrixPosition(M).z <= 1e-6, '돌아서면 반대쪽');
+  F.update(o, 230, { yaw: 0, half: Math.PI }); assert.equal(im.count, 36, 'half π = 끔(내려다볼 때)'); F.update(o, 230); assert.equal(im.count, 36, 'view 없으면 예전 그대로');
+});
+test('world3d: 내려다볼 때 끄고 · 큐브맵은 걸러내기 없이 찍는다 · ?vc=0', () => {
+  const w = fs.readFileSync('world3d.html', 'utf8');
+  assert.match(w, /const half = VIEWC && FC_FWD\.y > -0\.5 \? /); assert.match(w, /VIEWC = q\.get\('vc'\) !== '0'/);
+  assert.match(w, /if \(REFL && REFL\.dirty\) \{ if \(FOGC\) \{ FOGC\.update\(cam\.position, scene\.fog\.far\); fcYaw = null; \}/);
 });

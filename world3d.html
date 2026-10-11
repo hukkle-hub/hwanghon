@@ -216,6 +216,7 @@ const REFL = q.get('refl') !== '0' && q.get('im') !== '0' && (env.kind || Z.kind
 const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky', cell: +(q.get('mcell') || 96) });
 const FOGC = q.get('fc') !== '0' && scene.fog && scene.fog.far < 1000 && (env.kind || Z.kind || meta.kind) === 'field' ? createFogCull(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 합친 뒤에 모은다(문서 229 §40) — 합치기 앞에서 모으면 합치며 사라진 메시만 붙들어 합친 덩어리는 안개 너머에서도 다 그렸다. 안개 너머는 안 그린다 — 지은 직후 정적인 것만 모은다 (문서 229 §14) */
 if (FOGC) window.__FOGC = FOGC;
+const VIEWC = q.get('vc') !== '0', VIEWC_MARGIN = Math.PI / 3, FC_FWD = new THREE.Vector3(); let fcYaw = null;   /* 시야 걸러내기 여유 60° · ?vc=0 으로 끔 (문서 229 §44) */
 const SPROX = q.get('sp') !== '0' && env.sunLight && env.sunLight.castShadow ? createShadowProxies(THREE, scene, env.sunLight) : null; if (SPROX) window.__SPROX = SPROX;   /* 그림자 대리 — 인스턴스는 플레이어 64 m 안 것만 그림자 지도에 (문서 229 §42) */
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 /* 땅 결 (문서 220) — 평평한 바닥 재질(땅·길·풀밭·보도)에 세계 좌표의 큰 얼룩을 섞는다: 타일 반복이 깨지고 흙빛이 드문드문. 젖은 거울 같던 길은 조금 거칠게 */
@@ -575,6 +576,21 @@ potShow();
 const bossClock = () => net ? sclock.now() : gameNow;
 /* 보스 무대 (문서 221) — 윤곽광·발밑 기운·소리·등장·페이즈·반격·사망·이름표. 판정은 건드리지 않는다 */
 const bossEnv = () => { try { return window.TW_ENV ? window.TW_ENV.make(THREE, renderer, 'dungeon') : null; } catch { return null; } };   /* 보스 재질 전용 환경맵 — 한 번 굽고 재사용 (문서 221 §1) */
+/* 보스 화면 밖 걸러내기 · 먼 거리 축소판 (문서 229 §45) — 애니메이션이 처음 상자를 벗어나 frustumCulled 를 꺼 두어 등 뒤 보스(6만 삼각형)도 늘 그렸다.
+   지금 자세로 잰 경계구를 3 배 + 6 m 로 넉넉히 잡고 다시 켠다 — 보스 4종·나노 노바의 모든 클립 21 시각을 재 보니 몸이 경계구 반지름의 최대 2.8 배까지 뻗었다(나노 노바 사망 끝 · 클레이브 2.0). 휴대폰은 28 m 넘게 멀면 같은 뼈대·같은 재질의 축소 기하(2.1만)를 보인다 —
+   원본 메시는 그대로 두고 옆에 붙이므로 군도 손잡이(원본 정점 번호로 손 위치를 읽는다)는 흔들리지 않는다. ?blod=0 으로 끔 */
+const BOSS_LOD = LOD && q.get('blod') !== '0' ? new Set(['minister_jeong_candidate', 'shadow_fang', 'subject_09', 'clave']) : null, BOSS_LOD_FAR = 28;
+function bossCull(r, k) { if (q.get('bcull') === '0') return; r.updateMatrixWorld(true); r.traverse(m => { if (!m.isMesh) return; const pad = 6 / Math.max(1e-3, k);
+    if (m.isSkinnedMesh) { m.computeBoundingSphere(); m.boundingSphere.radius = m.boundingSphere.radius * 3 + pad; } else { const g = m.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); g.boundingSphere = g.boundingSphere.clone(); g.boundingSphere.radius = g.boundingSphere.radius * 3 + pad; }
+    m.frustumCulled = true; }); }
+function bossLod(o, gl) { const name = (/([\w]+)\.glb$/.exec(o.b.model) || [])[1]; if (!BOSS_LOD || !BOSS_LOD.has(name)) return;
+  load('art/3d/lod/part1/' + name + '.glb').then(lg => { const full = [], low = []; o.model.traverse(m => { if (m.isSkinnedMesh) full.push(m); }); lg.scene.traverse(m => { if (m.isSkinnedMesh) low.push(m); });
+    if (!full.length || full.length !== low.length) return console.warn('[boss lod] 메시 수가 다르다', name, full.length, low.length);
+    const lods = full.map((f, i) => { const m = new THREE.SkinnedMesh(low[i].geometry, f.material); m.name = f.name + '_lod'; m.position.copy(f.position); m.quaternion.copy(f.quaternion); m.scale.copy(f.scale);
+      m.bind(f.skeleton, f.bindMatrix); m.castShadow = f.castShadow; m.receiveShadow = f.receiveShadow; m.frustumCulled = f.frustumCulled; if (f.boundingSphere) m.boundingSphere = f.boundingSphere.clone(); m.visible = false; f.parent.add(m); return m; });
+    o.lod = { full, lods, far: false }; window.__BOSSLOD = (window.__BOSSLOD || 0) + 1; }).catch(e => console.warn('[boss lod]', name, e)); }
+function bossLodTick() { for (const o of fbs) { const L = o.lod; if (!L) continue; const far = cam.position.distanceTo(o.root.position) > BOSS_LOD_FAR;
+    if (far !== L.far) { L.far = far; for (const m of L.full) m.visible = !far; for (const m of L.lods) m.visible = far; } } }
 for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
   load(b.model).then(async gl => { const r = gl.scene; r.traverse(m => { if (m.isMesh) { m.frustumCulled = false; m.castShadow = true; } }); { const sc = stageOf(b); if (sc) r.userData.rimK = rimify(THREE, r, sc.rim, sc.rimK, sc.env ? bossEnv() : null, sc.env); /* 윤곽광·반사는 예열 전에 — 첫 등장 때 컴파일하지 않게 */ } await preCompile(r);
     const box = new THREE.Box3().setFromObject(r), h = box.max.y - box.min.y || 1, dh = b.visualH || b.h, k = dh ? dh / h : (b.scale || 1); r.scale.setScalar(k); box.setFromObject(r);
@@ -585,7 +601,7 @@ for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
       else if (KIT.enabled({ id: b.id })) { setupKitMotion(o, gl, r, scene, KIT.KITS[b.id], 0, REDUCED); addWindRig(THREE, o); if (KIT.KITS[b.id].prop === 'saber') { o.saber = attachSaber(THREE, r); if (o.saber) preCompile(o.saber.mesh); }   /* 정 장관 군도 — 보이는 손에 (문서 223) */ o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP }; KIT.setup(o.ai, gameNow); applyKitAction(o, KIT.view(o.ai), gameNow); }   /* 기술표형 보스 — 섀도우 팽부터 (문서 222) */
       else { o.mixer = new THREE.AnimationMixer(r); const c = gl.animations.find(a => /idle/i.test(a.name)) || gl.animations[0]; o.mixer.clipAction(c).play(); o.deathClip = gl.animations.find(a => /^death$/i.test(a.name)) || null; } }   /* 쓰러지는 장면용 (문서 221) */
     if (!o.ai) o.ai = { id: b.id, zone: ZONE, x: b.x, z: b.z, yaw: 0, h: b.h || 3, alive: true, hp: CLAVE_HP, max: CLAVE_HP };   /* 나머지 필드 보스: 서버에도 AI 가 없다 — 맞기만 한다 (2D 혼자 연습과 같은 30만) */
-    fbs.push(o); STAGE.attach(o); }).catch(e => console.warn('[boss]', b.id, e)); }
+    bossCull(r, k); fbs.push(o); STAGE.attach(o); bossLod(o, gl); }).catch(e => console.warn('[boss]', b.id, e)); }
 /* ---------- 혼자 연습 몬스터 (문서 209) — 2D 필드와 같은 생태 모듈(GPT server/field-ecology.cjs)·같은 그리기(js/mmo/field-mobs.js) · 임시 몸 ---------- */
 if (!net && (meta.areas || []).some(a => a.kind === 'hunt' && a.pool && a.eco)) try { ECO = new ECO_MOD.Ecology({ zone: { ...meta, id: ZONE }, catalog: ecologyCatalog(CATALOG), now: gameNow, rng: Math.random, collide: createCollide(meta).collide });   /* 서버와 같은 지도 충돌(map.json) — 3D 의 걷기 충돌(env.blockers, 장면 빌더)과 다를 수 있다 */
   mobView();
@@ -728,6 +744,7 @@ function tick() { perf.begin();
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (SPROX) SPROX.update(root.position);
+  if (BOSS_LOD && frames % 10 === 0) bossLodTick();
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
   placeCam(dt); if (window.__sky) window.__sky.position.copy(cam.position);
   if (shakeT > 0 && !REDUCED) { shakeT = Math.max(0, shakeT - dt); const a = shakeT * .25; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }
@@ -735,8 +752,10 @@ function tick() { perf.begin();
   /* 방전 폭우: 그릴 때만 조명을 낮춘다 — 시간대가 정한 세기는 그대로 두고, 예고 원·번개(조명 안 받는 재질)는 밝게 남는다.
      노출(toneMappingExposure)은 블룸 경로(렌더 타깃)에 안 먹어서 휘도가 78.6 → 79.2 로 그대로였다 (문서 222 §6) */
   const dimK = STAGE.dim > 0 ? 1 - STAGE.dim * .75 : 1; if (dimK < 1) { if (!dimLights) { dimLights = []; scene.traverse(l => { if (l.isLight && !l.userData.keepLit) dimLights.push(l); }); } for (const l of dimLights) { l.userData.i0 = l.intensity; l.intensity *= dimK; } if (scene.fog) { dimFog.copy(scene.fog.color); scene.fog.color.multiplyScalar(dimK); } if (scene.background && scene.background.isColor) { dimBg.copy(scene.background); scene.background.multiplyScalar(dimK); } }
-  if (FOGC && (frames % 10 === 0 || frames < 3)) FOGC.update(cam.position, scene.fog.far);
-  if (REFL && REFL.dirty) { REFL.bake(); window.__REFL = { bakes: REFL.bakes, ms: REFL.ms }; }   /* 유리에 비치는 도시 — 처음·시간대 바뀔 때만 (문서 229 §12) */
+  if (FOGC) { cam.getWorldDirection(FC_FWD); const yaw = Math.atan2(FC_FWD.x, FC_FWD.z), dy = fcYaw == null ? 9 : Math.abs(Math.atan2(Math.sin(yaw - fcYaw), Math.cos(yaw - fcYaw)));
+    /* 시야 걸러내기 (문서 229 §44): 카메라 앞 ±(시야 반각 + 60°) 와 25 m 안의 인스턴스만. 8° 돌 때마다 다시 고른다. 내려다볼 때(도착 연출 · 아래 30° 넘게)는 끈다 */
+    if (frames % 10 === 0 || frames < 3 || dy > 0.14) { fcYaw = yaw; const half = VIEWC && FC_FWD.y > -0.5 ? Math.atan(Math.tan(cam.fov * Math.PI / 360) * cam.aspect) + VIEWC_MARGIN : Math.PI; FOGC.update(cam.position, scene.fog.far, { yaw, half }); } }
+  if (REFL && REFL.dirty) { if (FOGC) { FOGC.update(cam.position, scene.fog.far); fcYaw = null; }   /* 큐브맵은 사방을 찍는다 — 시야 걸러내기 없이 다 남기고 찍는다 (§44) */ REFL.bake(); window.__REFL = { bakes: REFL.bakes, ms: REFL.ms }; }   /* 유리에 비치는 도시 — 처음·시간대 바뀔 때만 (문서 229 §12) */
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   if (dimK < 1) { for (const l of dimLights) l.intensity = l.userData.i0; if (scene.fog) scene.fog.color.copy(dimFog); if (scene.background && scene.background.isColor) scene.background.copy(dimBg); }
   perf.end(); if (BENCH) { BENCH.tick(performance.now()); if (BENCH.done && !benchShown) { benchShown = true; benchCard(); } } requestAnimationFrame(tick); }

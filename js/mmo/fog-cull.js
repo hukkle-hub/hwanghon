@@ -15,12 +15,16 @@ export function createFogCull(THREE, scene, { skip = () => false, margin = 25, m
       inst.push({ o, n, mats, cols, pos, rad, ver: o.instanceMatrix.version, live: true, pick: null }); continue; }
     c.copy(bs.center).applyMatrix4(o.matrixWorld); sc.setFromMatrixScale(o.matrixWorld); meshes.push({ o, x: c.x, z: c.z, r: bs.radius * Math.max(sc.x, sc.y, sc.z) }); }
   const F = { meshes: meshes.length, inst: inst.length, instTotal: inst.reduce((a, e) => a + e.n, 0), hidden: 0, instHidden: 0, uploads: 0,
-    update(cam, far) { const lim = far + margin; let h = 0, ih = 0;
+    /* view = { yaw, half } (문서 229 §44): 인스턴스는 카메라 앞 ±half 와 가까운 것(near)만 — 뒤쪽 나무·바위까지 그렸다(고흥 화면 삼각형 절반이 인스턴스).
+       half = 시야 반각 + 여유. world3d 가 카메라가 일정 각도 돌 때마다 부르므로, 한 번에 여유보다 크게 돌지 않는 한 가장자리에서 튀어나오지 않는다 */
+    update(cam, far, view = null) { const lim = far + margin; let h = 0, ih = 0; const vy = view && view.half < Math.PI ? view.yaw : null, vh = view ? view.half : 0, near = view && view.near != null ? view.near : 25;
       for (const e of meshes) { const v = Math.hypot(e.x - cam.x, e.z - cam.z) - e.r < lim; if (!v) h++;
         if (!v && e.o.visible) { e.o.visible = false; e.hid = true; } else if (v && e.hid) { e.o.visible = true; e.hid = false; } }   /* 내가 숨긴 것만 내가 되살린다 — 남이 일부러 숨긴 것은 그대로 */
       for (const e of inst) { if (!e.live) continue; const o = e.o;
         if (o.instanceMatrix.version !== e.ver) { e.live = false; o.count = e.n; continue; }   /* 남이 행렬을 고쳤다 — 움직이는 무리. 손 뗀다 */
-        const pick = []; for (let i = 0; i < e.n; i++) if (Math.hypot(e.pos[i * 2] - cam.x, e.pos[i * 2 + 1] - cam.z) - e.rad[i] < lim) pick.push(i);
+        const pick = []; for (let i = 0; i < e.n; i++) { const dx = e.pos[i * 2] - cam.x, dz = e.pos[i * 2 + 1] - cam.z, d = Math.hypot(dx, dz) - e.rad[i]; if (d >= lim) continue;
+          if (vy != null && d > near) { const a = Math.atan2(dx, dz) - vy, da = Math.abs(Math.atan2(Math.sin(a), Math.cos(a))); if (da > vh + Math.asin(Math.min(1, e.rad[i] / (d + e.rad[i])))) continue; }
+          pick.push(i); }
         ih += e.n - pick.length;
         if (e.pick && pick.length === e.pick.length && pick.every((x, j) => x === e.pick[j])) continue;   /* 고른 것이 그대로면 올리지 않는다 */
         const A = o.instanceMatrix.array, C = e.cols && o.instanceColor ? o.instanceColor.array : null;
