@@ -156,7 +156,7 @@ import { setupDominator, updateDominator, applyDominatorAction, hideDominator, f
 import { loadCjs } from './js/mmo/cjs-browser.js';
 import { isPerfect, perfectDodgeFx } from './js/mmo/perfect-dodge.js';
 import { createMobView, mobsFromPacket, PRACTICE_HP, ecologyCatalog } from './js/mmo/field-mobs.js'; import { createMobPractice } from './js/mmo/field-mob-practice.js'; import { createPerfMeter } from './js/mmo/perf-meter.js'; import { createBagUI } from './js/mmo/field-bag-ui.js';
-import {bodyFor as n01BodyFor,N01_BODIES} from './js/mmo/n01-body-catalog.js';
+import {bodyFor as n01BodyFor,N01_BODIES} from './js/mmo/n01-body-catalog.js'; import {fixN01Skin} from './js/mmo/n01-skin-fix.js';
 import { CATALOG } from './js/mmo/monster-catalog.js';
 import { setupBossMotion, applyBossAction, prepareBossMotion, updateBossMotion, bossHitReact, bossCounterBurst, hideBossMotion } from './js/mmo/boss-motion.js';
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from './js/mmo/kit-motion.js';
@@ -519,7 +519,7 @@ const tag3d = (el, x, y, z) => { v3.set(x, y, z).project(cam); const on = v3.z <
 let ECO = null, MOBS = null, MP = null, netMobs = []; const mobHp = new Map();
 const mobBody = () => gltfs.mob || (gltfs.mob = load('art/3d/lod/mob_temp.glb').then(g => { window.TW_POSE?.repair(THREE, g); return g; }));   /* 몬스터 임시 몸 4천 삼각형 (tools/2d/make-mob-body.mjs, 문서 210 §6) */
 const n01CandidateCache=new Map(),n01CandidateMode=new URLSearchParams(location.search).get('n01Candidates')==='1';
-const mobSpeciesBody=id=>{const a=n01BodyFor(id,{review:n01CandidateMode,detail:new URLSearchParams(location.search).get('n01Detail')==='high'?'high':'mobile'});if(!a)return null;return {...a,load:()=>{if(!n01CandidateCache.has(a.url))n01CandidateCache.set(a.url,load(a.url).then(g=>{window.__warmMob?.(g);return g;}));return n01CandidateCache.get(a.url);   /* 빌린 몸은 여러 종이 한 파일 — 주소로 한 번만 받는다 */   /* 받자마자 예열 (문서 220 §19) */}};}; // 원본 색·얼굴·클립 보존, 영웅 포즈 보정 적용하지 않는다.
+const mobSpeciesBody=id=>{const a=n01BodyFor(id,{review:n01CandidateMode,detail:new URLSearchParams(location.search).get('n01Detail')==='high'?'high':'mobile'});if(!a)return null;return {...a,load:()=>{if(!n01CandidateCache.has(a.url))n01CandidateCache.set(a.url,load(a.url).then(g=>{fixN01Skin(THREE,g.scene);window.__warmMob?.(g);return g;}));return n01CandidateCache.get(a.url);   /* 빌린 몸은 여러 종이 한 파일 — 주소로 한 번만 받는다 */   /* 받자마자 예열 (문서 220 §19) */}};}; // 원본 색·얼굴·클립 보존, 영웅 포즈 보정 적용하지 않는다.
 const mobView = () => MOBS || (MOBS = createMobView({ THREE, clone: SkeletonUtils.clone, scene, loadBody: mobBody, loadBodyFor:mobSpeciesBody,hud: document.getElementById('hud'), tagAt: tag3d, catalog: CATALOG, floor: 0, telegraph: false }));   /* 혼자 연습은 생태 snapshot, 온라인은 서버 field.mobs */
 function netMsg(m) {
   if (m.type === 'fieldJoined' || m.type === 'hubState') { const st = m.type === 'hubState' ? (m.zone === ZONE ? m : null) : (m.hub !== undefined ? { owner: m.hub } : null); if (st) hubOwner = st.owner || null; }   /* 거점 주인 — 길드가 빼앗기 전엔 마을도 상점이 닫힌다 */

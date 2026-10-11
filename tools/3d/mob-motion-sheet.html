@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>몬스터 몸짓 시트</title>
+<!-- 몬스터 몸짓 얹기 검수 (문서 229 §28) — 실제 게임과 같은 createMobView 로 한 마리를 세우고 시간을 고정 간격으로 돌려 칸마다 찍는다.
+     윗줄 = 얹기 끔(클립 그대로) · 아랫줄 = 얹기 켬. 칸: 비교전 대기 · 공격 0/20/35/50/70/100 % · 공격 뒤 0.5/1.5 초.
+     ?id=G5_STALKER (카탈로그 id — 빌린 몸도 된다) &az=40 &cell=260. window.READY 가 1 이면 다 그린 것 -->
+<style>body{margin:0;background:#12161a;color:#cfd6dc;font:12px sans-serif}canvas{display:block}#lab{position:absolute;left:0;top:0;width:100%;pointer-events:none}#lab div{position:absolute;color:#cfd6dc;font:12px sans-serif;text-shadow:0 0 3px #000}</style>
+<canvas id="c"></canvas><div id="lab"></div><div id="hud" style="display:none"></div>
+<script type="module">
+import * as THREE from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {clone} from '../../vendor/three/SkeletonUtils.js';
+import {createMobView} from '../../js/mmo/field-mobs.js';
+import {bodyFor} from '../../js/mmo/n01-body-catalog.js';
+import {CATALOG} from '../../js/mmo/monster-catalog.js';
+import {MOTION} from '../../js/mmo/mob-motion.js';
+const Q = new URLSearchParams(location.search), ID = Q.get('id') || 'G5_STALKER', CELL = +(Q.get('cell') || 260), AZ = +(Q.get('az') || 40) * Math.PI / 180;
+const entry = bodyFor(ID, {review: true}); if (!entry) throw Error('몸 없음 ' + ID);
+const gltf = await new Promise((ok, no) => new GLTFLoader().load('../../' + entry.url, ok, undefined, no));
+const COLS = [['대기(비교전)', 'idle', 2.0], ['공격 0%', 'attack', 0], ['20%', 'attack', .2], ['35%', 'attack', .35], ['50%', 'attack', .5], ['70%', 'attack', .7], ['100%', 'attack', 1], ['공격 뒤 0.5초', 'after', .5], ['공격 뒤 1.5초', 'after', 1.5]];
+const W = CELL * COLS.length, H = CELL * 2, cv = document.getElementById('c'), R = new THREE.WebGLRenderer({canvas: cv, antialias: true, preserveDrawingBuffer: true}); R.setSize(W, H); R.setScissorTest(true); R.outputColorSpace = THREE.SRGBColorSpace;
+const lab = document.getElementById('lab');
+async function row(amp, r) {
+  MOTION.amp = amp; const scene = new THREE.Scene(); scene.background = new THREE.Color(0x1b2128); scene.add(new THREE.HemisphereLight(0xdde4ff, 0x30281e, 1.6)); const dl = new THREE.DirectionalLight(0xffffff, 1.8); dl.position.set(3, 6, 4); scene.add(dl);
+  const grid = new THREE.GridHelper(6, 12, 0x55606c, 0x333b44); scene.add(grid);
+  const view = createMobView({THREE, clone, scene, loadBody: async () => gltf, loadBodyFor: id => id === ID ? {...entry, load: async () => gltf} : null, hud: document.getElementById('hud'), tagAt: () => {}, catalog: CATALOG, floor: 0, telegraph: false});
+  const snap = (anim, seq) => [{id: 'z:a:n:1', catalogId: ID, x: 0, z: 0, alive: true, anim, generation: 1, hp: 100, seq, action: anim === 'attack' ? {key: 'attack', targetX: 0, targetZ: 3, seq, windupMs: 600, elapsedMs: 0} : null}];
+  for (let i = 0; i < 40 && !view.views.size; i++) { view.update(snap('idle', 0), 1 / 30); await new Promise(r => setTimeout(r, 30)); }
+  const v = [...view.views.values()][0]; v.root.rotation.y = 0;
+  const cam = new THREE.PerspectiveCamera(32, 1, .1, 50), tgt = new THREE.Vector3(0, .95, .35); cam.position.set(Math.sin(AZ) * 4.6, 1.5, Math.cos(AZ) * 4.6); cam.lookAt(tgt);
+  const shoot = c => { R.setViewport(c * CELL, (1 - r) * CELL, CELL, CELL); R.setScissor(c * CELL, (1 - r) * CELL, CELL, CELL); scene.updateMatrixWorld(true); R.render(scene, cam); };
+  const step = (anim, seq, sec) => { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) view.update(snap(anim, seq), 1 / 30); v.root.rotation.y = 0; };
+  step('idle', 0, 2.0); shoot(0);   /* 교전 안 한 대기 */
+  const clipLen = (v.named.attack1 || v.named.attack).getClip().duration; let tPrev = 0;
+  for (let c = 1; c <= 6; c++) { const tt = COLS[c][2] * clipLen; step('attack', 1, Math.max(1 / 30, tt - tPrev)); tPrev = tt; shoot(c); }
+  step('attack', 1, .5); shoot(7); step('attack', 1, 1.0); shoot(8);   /* 공격 상태는 이어지고 클립은 끝 — 예전엔 여기서 선 채 멈췄다 */
+}
+await row(0, 0); await row(1, 1); MOTION.amp = 1;
+COLS.forEach(([t], c) => { const d = document.createElement('div'); d.style.left = (c * CELL + 6) + 'px'; d.style.top = '4px'; d.textContent = t; lab.appendChild(d); });
+for (const [t, r] of [['클립 그대로', 0], ['얹기 켬', 1]]) { const d = document.createElement('div'); d.style.left = '6px'; d.style.top = (r * CELL + 20) + 'px'; d.textContent = t; d.style.color = '#ffd28a'; lab.appendChild(d); }
+window.READY = 1;
+</script>
