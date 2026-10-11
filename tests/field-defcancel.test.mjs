@@ -18,3 +18,7 @@ test('world3d: 회피와 회피 기술은 날이 지나간 뒤 끊고 · 공격�
   assert.match(W, /busy = hero\.clips\[clip\]\.duration; busyT = 0; busyDef = defCancelAt\(busy, d\.ev && d\.ev\.hits && d\.ev\.hits\.map\(h => h\[0\]\)\);/);
   assert.match(W, /if \(busy > 0\) \{ busy -= dt; busyT \+= dt; \}\n  else if \(P\.dead\)/);
 });
+test('회피 기술(그림자 걸음·도약·정제 안개)은 일반 회피처럼 반 걸음 빠지고 그만큼만 묶인다 (문서 229 §35)', () => {
+  const W = fs.readFileSync('world3d.html', 'utf8');
+  assert.match(W, /if \(d\.dodge\) \{[^\n]*\n    const dc = hero\.clips\.dodgeB \|\| hero\.clips\.roll; busy = Math\.min\(busy, dc \? dc\.duration \* 0\.7 : 0\.6\); busyDef = busy; dodgeT = 0\.35; \}/, '제자리에서 2 초 묶이면 «다음 공격 치명타» 를 바로 못 쓴다');
+});

@@ -447,7 +447,8 @@ function castSkill(i) { const d = SKDEF[i], clip = 'skill' + (i + 1); if (!d || 
   window.TW_SFX?.play(d.dodge ? 'dodge' : d.buff ? 'guard' : 'swing'); toast(esc(d.name), 1);
   if (ME === 'sera' && (i === 0 || i === 2)) throwAt(clip, i === 0 ? 'acid' : 'chain');   /* 판정은 그대로 — 병이 접점 시각에 닿게 (문서 229 §33) */
   if (d.buff && d.buff.reduce) BUFF.start(BUFF_COLOR[ME] || 0xffd28a, d.buff.dur || 2);   /* 몸빛 + 발밑 고리 — 온라인도 내 화면엔 (판정은 서버) */
-  if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME; }   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
+  if (d.dodge) { P.dodgeAt = net ? sclock.now() : gameNow; if (!net) P.dodgeUntil = gameNow + DODGE_TIME;
+    const dc = hero.clips.dodgeB || hero.clips.roll; busy = Math.min(busy, dc ? dc.duration * 0.7 : 0.6); busyDef = busy; dodgeT = 0.35; }   /* 회피 기술도 일반 회피처럼 반 걸음 빠지고 그만큼만 묶인다 — 그림자 걸음은 제자리에서 2 초를 묶어 «다음 공격 치명타» 를 바로 못 썼다 (문서 229 §35) */   /* 완벽 회피 판정은 누른 시각 기준 (온라인 무적은 서버가 연다) */
   if (d.mult > 0) { if (!strike({ i, mult: d.mult, hits: d.ev && d.ev.hits }) && net) net.send({ type: 'fieldSkill', skill: i }); }   /* 닿는 대상이 없으면 허공 — 재사용 대기는 그래도 돈다 */
   else if (net) net.send({ type: 'fieldSkill', skill: i });
   else { if (d.critNext) critNext = true; if (d.buff && d.buff.reduce) { P.buffUntil = gameNow + (d.buff.dur || 2) * 1000; P.buffReduce = Math.min(.8, d.buff.reduce); } }
