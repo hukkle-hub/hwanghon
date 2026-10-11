@@ -211,10 +211,10 @@ const pointData = []; scene.traverse(o => { if (o.isPointLight) pointData.push(o
 for (const L of pointData) L.parent.remove(L);
 const CONES = q.get('lc') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? addLightCones(THREE, scene, pointData) : null; if (CONES) window.__CONES = { count: CONES.count, at: CONES.at };
 const REFL = q.get('refl') !== '0' && q.get('im') !== '0' && (env.kind || Z.kind || meta.kind) === 'field' ? createEnvReflect(THREE, renderer, scene, { at: env.spawn || meta.spawn || { x: 0, z: 0 }, size: MOBILE ? 128 : 256 }) : null;   /* 가로등 빛 기둥 (문서 229 §11) — 세기는 아래 시간대가 */
-const FOGC = q.get('fc') !== '0' && scene.fog && scene.fog.far < 1000 && (env.kind || Z.kind || meta.kind) === 'field' ? createFogCull(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 안개 너머는 안 그린다 — 지은 직후 정적인 것만 모은다 (문서 229 §14) */
-if (FOGC) window.__FOGC = FOGC;
 /* 정적 메시 합치기 — 그리기 호출 수천 → 수백. 카메라 막이 상자도 여기서 모은다 */
-const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky' });
+const MERGE = q.get('merge') === '0' ? { before: 0, after: 0, camBoxes: [] } : mergeStatic(scene, { skip: o => o.name === 'sky', cell: +(q.get('mcell') || 96) });
+const FOGC = q.get('fc') !== '0' && scene.fog && scene.fog.far < 1000 && (env.kind || Z.kind || meta.kind) === 'field' ? createFogCull(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 합친 뒤에 모은다(문서 229 §40) — 합치기 앞에서 모으면 합치며 사라진 메시만 붙들어 합친 덩어리는 안개 너머에서도 다 그렸다. 안개 너머는 안 그린다 — 지은 직후 정적인 것만 모은다 (문서 229 §14) */
+if (FOGC) window.__FOGC = FOGC;
 const POOL = [...Array(MOBILE ? 4 : 8)].map(() => { const L = new THREE.PointLight(0xffffff, 0, 8, 1.6); scene.add(L); return L; });
 /* 땅 결 (문서 220) — 평평한 바닥 재질(땅·길·풀밭·보도)에 세계 좌표의 큰 얼룩을 섞는다: 타일 반복이 깨지고 흙빛이 드문드문. 젖은 거울 같던 길은 조금 거칠게 */
 const CLOUDK = { value: 0 }, CLOUDT = WIND;   /* 구름 그림자 세기(해 높이·세기) · 시계는 바람과 같이 (문서 220 §10) */

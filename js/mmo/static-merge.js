@@ -11,14 +11,19 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
   /* 같은 설정의 재질은 하나로 — 빌더가 물체마다 재질을 새로 만들어 강남은 재질이 1,610 개였다 (대부분 같은 값) */
   const canon = new Map(), sig = m => [m.type, m.color && m.color.getHex(), m.emissive && m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.emissiveMap && m.emissiveMap.uuid,
     m.transparent, m.opacity, m.side, m.depthWrite, m.depthTest, m.blending, m.toneMapped, m.vertexColors, m.alphaTest, m.fog, m.flatShading, m.wireframe, m.polygonOffset, m.polygonOffsetFactor, m.polygonOffsetUnits].join('|');
-  let dedup = 0;
+  let dedup = 0, split = 0;
+  /* 재질 여럿(지붕 + 벽) 메시를 재질별로 쪼갠다 (문서 229 §40) — 통째로 건너뛰어 건물마다 그리기 2 번이 그대로 남았다(제주 화면 744 중 ~200).
+     카메라 막이는 건물 통째로 한 번만(쪼갠 조각은 camDone). 외벽 셰이더는 세계 좌표만 써서 합쳐도 무늬가 그대로다 */
+  const multi = []; scene.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && !o.isInstancedMesh && o.visible && Array.isArray(o.material) && !o.children.length && !(skip && skip(o))) multi.push(o); });
+  for (const o of multi) { const parts = splitByMaterial(o); if (!parts) continue; camFrom(o); for (const m of parts) { m.userData.camDone = true; o.parent.add(m); } o.parent.remove(o); split++; }
+  scene.updateMatrixWorld(true);
   scene.traverse(o => {
     if (!o.isMesh) return; before++;
     if (o.isSkinnedMesh || !o.visible || (skip && skip(o))) return;
     if (o.isInstancedMesh) { if (!o.userData.noCam) camFromInstanced(o); return; }   /* 잡초·까마귀(noCam) — 인스턴스마다 상자를 만들면 수천 개 (문서 219) */
     if (Array.isArray(o.material) || o.children.length) { camFrom(o); return; }   /* 합치지는 않아도 카메라는 막는다 — 재질 여럿인 건물이 막이에서 통째로 빠져 강남 시점 2% 가 지붕에 가렸다 */
     if (!o.material.onBeforeCompile || o.material.onBeforeCompile === THREE.Material.prototype.onBeforeCompile) { const k = sig(o.material), m0 = canon.get(k); if (!m0) canon.set(k, o.material); else if (m0 !== o.material) { o.material = m0; dedup++; } }
-    const g = o.geometry; camFrom(o);
+    const g = o.geometry; if (!o.userData.camDone) camFrom(o); else { box.setFromObject(o); }   /* 쪼갠 조각: 상자는 칸 정하기에만 */
     if ((g.morphAttributes && Object.keys(g.morphAttributes).length) || Object.values(g.attributes).some(a => a.isInterleavedBufferAttribute)) return;
     box.getCenter(c);
     const key = [o.material.uuid, o.castShadow, o.receiveShadow, o.renderOrder, g.index ? 1 : 0, Object.keys(g.attributes).sort().join(','), Math.floor(c.x / cell), Math.floor(c.z / cell)].join('|');
@@ -45,7 +50,21 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
     for (const o of list) { o.parent && o.parent.remove(o); removed++; }
   }
   let after = 0; scene.traverse(o => { if (o.isMesh) after++; });
-  return { before, after, merged, removed, dedup, materials: canon.size, camBoxes };
+  return { before, after, merged, removed, dedup, split, materials: canon.size, camBoxes };
+}
+
+/* 그룹(재질 칸)마다 쓰는 꼭짓점만 모은 메시 — 속성을 통째로 공유하면 합칠 때 조각 수만큼 꼭짓점이 불어난다. 끼워진 속성·모프·그룹 없음이면 null(그대로 둔다) */
+export function splitByMaterial(o) {
+  const g = o.geometry, mats = o.material; if (!g.groups.length || (g.morphAttributes && Object.keys(g.morphAttributes).length) || Object.values(g.attributes).some(a => a.isInterleavedBufferAttribute)) return null;
+  const byMat = new Map(); for (const gr of g.groups) { if (!mats[gr.materialIndex] || gr.count <= 0) continue; let l = byMat.get(gr.materialIndex); if (!l) byMat.set(gr.materialIndex, l = []); l.push(gr); }
+  const out = [], idx = g.index ? g.index.array : null, n = g.attributes.position.count;
+  for (const [mi, grs] of byMat) { const map = new Int32Array(n).fill(-1), order = [], tri = [];
+    for (const gr of grs) for (let i = gr.start, e = Math.min(gr.start + gr.count, idx ? idx.length : n); i < e; i++) { const v = idx ? idx[i] : i; if (map[v] < 0) { map[v] = order.length; order.push(v); } tri.push(map[v]); }
+    if (!tri.length) continue; const sg = new THREE.BufferGeometry();
+    for (const [k, a] of Object.entries(g.attributes)) { const sz = a.itemSize, src = a.array, dst = new src.constructor(order.length * sz); for (let j = 0; j < order.length; j++) for (let c = 0; c < sz; c++) dst[j * sz + c] = src[order[j] * sz + c]; sg.setAttribute(k, new THREE.BufferAttribute(dst, sz, a.normalized)); }
+    sg.setIndex(tri); const m = new THREE.Mesh(sg, mats[mi]); m.name = o.name; m.position.copy(o.position); m.quaternion.copy(o.quaternion); m.scale.copy(o.scale);
+    m.castShadow = o.castShadow; m.receiveShadow = o.receiveShadow; m.renderOrder = o.renderOrder; m.frustumCulled = o.frustumCulled; Object.assign(m.userData, o.userData); out.push(m); }
+  return out.length ? out : null;
 }
 
 /* 카메라 막이 상자: 세계 축 상자(빨리 거르기) + 물체 자신의 방향 상자. 축 상자만 쓰면 28° 돌아간 긴 벽의 상자가 실제보다 훨씬 커서

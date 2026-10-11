@@ -28,5 +28,6 @@ test('정적 인스턴스: 가까운 것만 앞으로 모아 count 를 줄이고
 test('world3d: 지은 직후에 모으고(플레이어·까마귀 전) · 10 프레임마다 · ?fc=0', () => {
   const w = fs.readFileSync('world3d.html', 'utf8'), at = w.indexOf('createFogCull(THREE, scene');
   assert.ok(at > 0 && at < w.indexOf('createCityLife(THREE, scene') && at < w.indexOf('root.position.set(sp.x, 0, sp.z)'), '움직이는 것이 들어오기 전에');
+  assert.ok(at > w.indexOf('const MERGE = '), '합친 뒤에 모은다 (문서 229 §40) — 앞에서 모으면 합치며 사라진 메시만 붙들어 합친 덩어리는 안개 너머도 다 그렸다');
   assert.match(w, /const FOGC = q\.get\('fc'\) !== '0' && scene\.fog/); assert.match(w, /if \(FOGC && \(frames % 10 === 0 \|\| frames < 3\)\) FOGC\.update\(cam\.position, scene\.fog\.far\);/);
 });

@@ -27,6 +27,18 @@ test('정적 합치기: 같은 설정의 재질 · 같은 48 m 칸끼리 한 메
   assert.ok(r.dedup >= 1, '같은 값 재질을 하나로');
 });
 
+test('재질 여럿 건물도 합친다 (문서 229 §40): 지붕+벽 두 그룹 → 재질별로 쪼개 칸끼리 합치기 · 쓰는 꼭짓점만 · 카메라 막이는 건물마다 한 번', () => {
+  const s = new THREE.Scene(), roof = new THREE.MeshStandardMaterial({ color: 0x2a2830 }), wall = new THREE.MeshStandardMaterial({ color: 0xc0b0a0 });
+  const bld = (x, z) => { const g = new THREE.BoxGeometry(1, 6, 1); g.clearGroups(); g.addGroup(0, 24, 0); g.addGroup(24, 12, 1); const m = new THREE.Mesh(g, [roof, wall]); m.position.set(x, 3, z); s.add(m); return m; };   /* 앞 4 면 = 지붕 재질 · 뒤 2 면 = 벽 */
+  bld(2, 2); bld(6, 3); bld(9, 1);
+  const r = mergeStatic(s); const meshes = []; s.traverse(o => { if (o.isMesh) meshes.push(o); });
+  assert.equal(r.split, 3); assert.equal(meshes.length, 2, '세 채 × 두 재질 → 재질마다 하나'); assert.ok(meshes.every(m => !Array.isArray(m.material)));
+  const byMat = new Map(meshes.map(m => [m.material, m])); assert.equal(byMat.get(roof).geometry.index.count, 3 * 24); assert.equal(byMat.get(wall).geometry.index.count, 3 * 12);
+  assert.equal(byMat.get(wall).geometry.attributes.position.count, 3 * 8, '벽 두 면 = 꼭짓점 8 개씩만(통째 24 개를 들고 다니지 않는다)');
+  assert.equal(r.camBoxes.length, 3, '카메라 막이는 건물마다 한 번 — 조각마다 만들면 두 배');
+  byMat.get(wall).geometry.computeBoundingBox(); assert.ok(Math.abs(byMat.get(wall).geometry.boundingBox.max.y - 6) < 1e-6, '월드 자리로');
+});
+
 test('카메라 막이: 높이 1.2 m 넘는 것만 모으고, 머리→카메라 사이에 있으면 그 앞까지 당긴다', () => {
   const s = new THREE.Scene(), m = new THREE.MeshStandardMaterial();
   boxAt(s, m, 0, -3, 6); boxAt(s, m, 4, 0, 0.4);   /* 벽 · 낮은 턱 */
@@ -126,7 +138,7 @@ test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(bos
 test('3D 필드 하늘: 바깥만 장면 색(env.sky)으로 노을 돔 · 정적 합치기와 카메라 막이에서 뺀다', () => {
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
   assert.match(w, /if \(env\.sky && env\.sky\.top && env\.sky\.horizon\)/, '실내(하늘 정보 없음)에도 하늘을 그린다');
-  assert.match(w, /mergeStatic\(scene, \{ skip: o => o\.name === 'sky' \}\)/, '하늘 돔이 카메라 막이 상자가 된다');
+  assert.match(w, /mergeStatic\(scene, \{ skip: o => o\.name === 'sky',/, '하늘 돔이 카메라 막이 상자가 된다');
   assert.match(w, /window\.__sky\.position\.copy\(cam\.position\)/, '하늘이 카메라를 안 따라간다 — 멀리 가면 돔 밖으로 나간다');
 });
 
