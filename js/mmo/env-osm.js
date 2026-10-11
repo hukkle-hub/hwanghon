@@ -198,7 +198,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const usedWalls = new Map(); let signsLit = 0;
   for (const poi of osm.pois) { const s = SIGN[poi.kind]; if (!s) continue; const p = W(poi.p), wf = wallFacing(p); if (!wf || wf.d > 14 || wf.b.near) continue;
     const key = wf.b.id + ':' + Math.round(wf.q[0] / 4) + ':' + Math.round(wf.q[1] / 4); if (usedWalls.has(key)) continue; usedWalls.set(key, 1);
-    const lit = R() < 0.35, y = 3.2 + (usedWalls.size % 3) * 1.1;
+    const lit = R() < (L.isView3d() ? 0.15 : 0.35), y = 3.2 + (usedWalls.size % 3) * 1.1;   /* 3D 폐허: 켜진 상가 간판 15 % (문서 229 §18) */
     const m = new THREE.MeshBasicMaterial({ map: signT(s[0], s[1]), toneMapped: false }); m.color.setScalar(lit ? 1.5 : 0.28);
     const pl = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.95), m); pl.position.set(wf.q[0] + wf.n[0] * 0.08, y, wf.q[1] + wf.n[1] * 0.08); pl.rotation.y = Math.atan2(wf.n[0], wf.n[1]); scene.add(pl);
     if (lit && signsLit++ < 40) { const lp = [wf.q[0] + wf.n[0] * 1.2, wf.q[1] + wf.n[1] * 1.2]; const L = new THREE.PointLight(new THREE.Color(s[1]), 6, 7, 1.8); L.position.set(lp[0], y - 0.4, lp[1]); scene.add(L);

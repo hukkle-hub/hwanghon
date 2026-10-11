@@ -109,3 +109,13 @@ test('아파트 동 번호 (문서 229 §17): 이름의 번호 → 없으면 101
     assert.ok((cx < 0 && cx > -0.1) || (cx > 40 && cx < 40.1), `벽 끝(x=0·40) 바깥 0.1 m 안이 아님 ${cx.toFixed(2)}`); assert.ok(b.max.y <= 36 - 1.1 && b.min.y > 36 - 8, '위쪽'); }
   assert.equal(L.buildingDeco(THREE, SLAB, 12, 5, { aptNo: '101' }).aptno.length, 0, '15 m 아래엔 없다');
 });
+
+test('옥상 다양화 (문서 229 §19): 옥탑방(9~30 m)·격자 안테나(40 m 넘음)·이끼 — 옥상 윤곽 안, 옥상 위', async () => {
+  const L = await import('../js/mmo/env-lib.js'), BIG = [[0, 0], [30, 0], [30, 20], [0, 20]];
+  let shed = 0, mast = 0, moss = 0;
+  for (let id = 1; id < 200; id++) { const P = buildingDeco(THREE, BIG, 20, id, { roof: true }); shed += P.shed.length; moss += P.moss.length;
+    for (const g of [...P.shed, ...P.moss]) { g.computeBoundingBox(); const b = g.boundingBox; assert.ok(b.min.y >= 20 - 0.6, '옥상 아래로'); assert.ok(inPoly([(b.min.x + b.max.x) / 2, (b.min.z + b.max.z) / 2], BIG), '윤곽 밖'); } }
+  for (let id = 1; id < 200; id++) mast += buildingDeco(THREE, BIG, 60, id, { roof: true }).shed.length;
+  assert.ok(shed > 40 && shed < 110, '옥탑방 ' + shed); assert.ok(moss > 100, '이끼 ' + moss); assert.equal(mast, 0, '높은 탑엔 옥탑방 없음');
+  assert.equal(buildingDeco(THREE, BIG, 20, 5, { roof: false }).shed.length, 0, '옥상 안 꾸미는 건물');
+});

@@ -346,6 +346,8 @@ export function aptGlyphs(THREE, pts, h, aptNo, out) { const lab = String(aptNo)
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
   if (!DECO_M.aptno) { const at = aptTex(THREE); DECO_M.aptno = new THREE.MeshStandardMaterial({ map: at, transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.85, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }); }   /* 알파 섞기 — alphaTest 0.45 는 멀리서 작은 밉맵으로 내려가면 획이 배경과 평균돼 통째로 버려졌다(한 글자도 안 보였다) */
+  if (!DECO_M.shed) DECO_M.shed = new THREE.MeshStandardMaterial({ color: 0xb4ab98, roughness: 0.9, map: gritTex(THREE) });   /* 옥탑방 벽 — 바랜 베이지 페인트(옥상 바닥 콘크리트와 같으면 묻혔다) */
+  if (!DECO_M.moss) DECO_M.moss = new THREE.MeshStandardMaterial({ color: 0x3e4a2c, roughness: 0.95, flatShading: true });   /* 옥상 이끼 덤불 */
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
   if (!VSIGN.mats[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.mats[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
@@ -354,9 +356,10 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
   DECO_M.vsignOff = VSIGN.off[VSIGN_THEME];
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign' && k !== 'aptno'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
+export const ROOF = { shed: 0, mast: 0, dish: 0, moss: 0, at: [] };   /* at: [x, 옥상 높이, z, 종류] 검수용 */   /* 옥상 다양화 검수용 (문서 229 §19) */
 export const APT = { n: 0, at: [] };   /* 동 번호 단 아파트 수 · at: 검수용 [x, 글자 가운데 y, z, 법선 x, 법선 z, 번호] */
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], vsignOff: [], aptno: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], vsignOff: [], aptno: [], moss: [], shed: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   const vEdge = o.vsign === false ? -1 : o.front ? frontEdge(pts, o.front) : longestEdge(pts);
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
@@ -397,6 +400,17 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
     const nAc = ar > 40 ? 1 + ((hashU(id, 4, 7) * 4) | 0) : 0;
     for (let i = 0; i < nAc; i++) { const s1 = spot(21 + i, 0.8); if (!s1) continue; const g = new THREE.BoxGeometry(0.9, 0.7, 0.55); g.rotateY(hashU(id, 5, i) * 3.14); g.translate(s1[0], h + 0.35, s1[1]); P.ac.push(g); }
     if (h > 18 && hashU(id, 6, 7) < 0.3) { const s2 = spot(31, 0.6); if (s2) { const g = new THREE.BoxGeometry(0.12, 4 + 3 * hashU(id, 7, 7), 0.12); g.translate(s2[0], h + 2, s2[1]); P.ac.push(g); } }
+    /* 옥상 다양화 (문서 229 §19) — 옥탑방 · 격자 안테나 · 위성 접시 · 이끼 덤불 */
+    if (h > 9 && h < 30 && ar > 80 && hashU(id, 40, 7) < 0.35) { const s3 = spot(41, 2.4); if (s3) { const w = 3.2 + 1.4 * hashU(id, 42, 7), d = 2.6 + 1.0 * hashU(id, 43, 7), rh = 2.4, ry = hashU(id, 44, 7) * 3.14;   /* 옥탑방 — 한국 옥상 */
+      const body = new THREE.BoxGeometry(w, rh, d); body.rotateY(ry); body.translate(s3[0], h + rh / 2, s3[1]); P.shed.push(body);
+      const roof = new THREE.BoxGeometry(w + 0.5, 0.14, d + 0.5); roof.rotateY(ry); roof.translate(s3[0], h + rh + 0.07, s3[1]); P.tank.push(roof);   /* 파란 지붕 판 */
+      const door = new THREE.BoxGeometry(0.85, 1.9, 0.06); door.translate(w * 0.22, 0.95 - rh / 2, d / 2 + 0.03); door.rotateY(ry); door.translate(s3[0], h + rh / 2, s3[1]); P.ac.push(door); ROOF.shed++; if (ROOF.at.length < 300) ROOF.at.push([+s3[0].toFixed(1), +h.toFixed(1), +s3[1].toFixed(1), 'shed']); } }
+    if (h > 40 && hashU(id, 45, 7) < 0.4) { const s4 = spot(46, 1.2); if (s4) { const mh = 6 + 5 * hashU(id, 47, 7);   /* 격자 안테나 — 기둥 + 가로대 셋 */
+      const m = new THREE.BoxGeometry(0.18, mh, 0.18); m.translate(s4[0], h + mh / 2, s4[1]); P.ac.push(m);
+      for (let k = 1; k <= 3; k++) { const bw = 1.6 - k * 0.35, b = new THREE.BoxGeometry(bw, 0.07, 0.07); b.rotateY(hashU(id, 48, k) * 3.14); b.translate(s4[0], h + mh * (0.45 + k * 0.16), s4[1]); P.ac.push(b); } ROOF.mast++; if (ROOF.at.length < 300) ROOF.at.push([+s4[0].toFixed(1), +h.toFixed(1), +s4[1].toFixed(1), 'mast']); } }
+    if (h > 10 && h < 45 && hashU(id, 49, 7) < 0.25) { const s5 = spot(50, 0.8); if (s5) { const dsh = new THREE.SphereGeometry(0.55, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.32); dsh.rotateX(-Math.PI / 2 + 0.6); dsh.rotateY(hashU(id, 51, 7) * 6.28); dsh.translate(s5[0], h + 0.9, s5[1]); P.ac.push(dsh);   /* 위성 접시 */
+      const leg = new THREE.BoxGeometry(0.06, 0.8, 0.06); leg.translate(s5[0], h + 0.4, s5[1]); P.ac.push(leg); ROOF.dish++; } }
+    if (ar > 50 && hashU(id, 52, 7) < 0.4) { const n = 2 + ((hashU(id, 53, 7) * 4) | 0); for (let k = 0; k < n; k++) { const s6 = spot(60 + k, 0.5); if (!s6) continue; const r = 0.45 + 0.5 * hashU(id, 54, k), g = new THREE.IcosahedronGeometry(r, 0); g.scale(1.3, 0.55, 1.1); g.translate(s6[0], h + r * 0.3, s6[1]); P.moss.push(g); } ROOF.moss++; }   /* 이끼·풀 덤불 — 자연이 옥상을 되찾는다 */
     /* 옥상 광고판: 15 m 넘는 건물 22% — 가장 긴 바깥 벽 쪽으로, 다리 둘 */
     if (h > 15 && hashU(id, 8, 7) < 0.22) { let best = -1, bl = 0; for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L > bl) { bl = L; best = e; } }
       if (bl > 8) { const p = pts[best], q = pts[(best + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx), W = Math.min(9, bl * 0.7), H = W * 0.45, mx = (p[0] + q[0]) / 2 - nx * 1.2, mz = (p[1] + q[1]) / 2 - nz * 1.2;
