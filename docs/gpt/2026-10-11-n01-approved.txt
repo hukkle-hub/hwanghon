@@ -1,0 +1,19 @@
+# N01 5급 6종 몸 — 디렉터 승인 (2026-10-11)
+
+## 무엇이 바뀌었나
+디렉터가 «6종 다 켜기» 로 승인했다. `js/mmo/n01-body-catalog.js` 의 6종(G5_WALKER · G5_RUNNER · G5_BREAKER · G5_STALKER · G5_ARMORED · G5_RESONATOR)을
+`approved:true, reviewCandidate:false` 로 바꿨다. 이제 `?n01Candidates=1` 없이도 3D 필드(world3d.html) 실제 게임에서 이 몸을 쓴다.
+
+## 지켜 줄 것
+- 다음 합치기(merge)에서 `approved:false` 로 되돌리지 말 것. 시험 `tests/n01-tier5-visual-contract.test.mjs` 가 «6종이 실제 게임에 쓰인다» 를 확인한다(되돌리면 실패).
+- 몸이 없는 다른 5급 종(G5_HOOKHAND · G5_CAPTOR · G5_CLIMBER · G5_SHOVER · G5_SLASHER · G5_CALLER …)은 그대로 임시 몸. 새 몸을 더할 때는 지금처럼 검수 후보로 넣고 디렉터 승인 뒤 approved:true.
+- 휴대폰 기본은 `_mobile.glb`, `?n01Detail=high` 일 때만 원본.
+- 서버 변경 없음.
+
+## 함께 고친 것 (참고)
+- 3D 온라인이 로딩 중 서버 하트비트(5초 핑)에 답을 못 해 1006 으로 끊기던 것 → 클라이언트가 자동 재접속(4001·4003·1000 제외). `js/mmo/field-net.js` 가 `closed` 에 `code` 를 싣는다. 서버 무변경.
+  서버 쪽에서 «로딩 중 몇 초는 봐주는» 여유를 두는 것도 방법이지만 지금은 필요 없다.
+- `tools/field-mob-scenario.mjs` 2인 시나리오는 이제 3D 까지 준비된다. 다만 «몬스터가 와서 때림(hurtBy)» 항목이 null 로 나온다 — 3D 화면엔 맞은 숫자가 떠서, 시나리오의 hurt 기록 쪽을 봐 줄 것.
+
+## 디렉터에게 남은 질문
+- 몸이 없는 5급 15종쯤에 가까운 몸을 빌려 쓸지(이번엔 «6종만» 으로 정함).
