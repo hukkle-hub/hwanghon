@@ -266,7 +266,7 @@ const { collide } = createCollide(walkMeta);
 /* ---------- 영웅 ---------- */
 /* 휴대폰은 가벼운 모델(art/3d/lod — 삼각형 약 1/4, 2D 필드와 같은 규칙). ?lod=0|1 로 강제. 가벼운 모델은 정점 속성이 끼워져(interleaved) 있어 손 모프·아인 바인드 교정이 먼저 떼어 낸다 (hand-grip separateAttributes) */
 const LOD = q.has('lod') ? q.get('lod') === '1' : MOBILE;
-const lodUrl = u => LOD ? String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/, 'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/, 'art/3d/lod/$1_anim.glb') : u;
+const lodUrl = u => LOD ? String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/, 'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/, 'art/3d/lod/$1_anim.glb').replace(/^art\/3d\/ain_scythe_tex\.glb$/, 'art/3d/lod/ain_scythe_tex.glb') : u;   /* 아인 낫 2만 → 8천 — 자루 정점은 잠가 손잡이 교정이 그대로 (문서 229 §46) */
 const loader = new GLTFLoader(), load = u => new Promise((ok, no) => loader.load(lodUrl(u), ok, undefined, no)), gltfs = {};
 /* 장비(TW_LOOKS)도 휴대폰 경로로 (문서 229 §41) — 원래 loader 를 넘겨 몸은 2.4만 삼각형(LOD)인데 갑옷 3만 · 건틀릿 1.6만×2 · 정강이·장화 … 장비만 ~12만을 원본으로 그렸다. 2D 필드(mmo.html)는 이미 같은 LOD 장비를 쓴다 */
 const gearLoader = { load: (u, ...a) => loader.load(lodUrl(u), ...a) };
