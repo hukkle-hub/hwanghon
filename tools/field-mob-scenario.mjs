@@ -42,11 +42,15 @@ try {
   out.drawn = seen ? {a: seen.a.length, b: seen.b.length, shared: seen.a.filter(x => seen.b.includes(x)).length, serverMatch: seen.a.every(k => { const [id, gen] = k.split('#'); const m = eco.mobs.get(id); return m && String(m.generation) === gen; })} : null;
   await A.screenshot({path: `${OUT}/a-2d-near.png`}); await B.screenshot({path: `${OUT}/b-3d-near.png`});
   /* 2) 몬스터가 와서 공격 — 화면에 예고 고리, 사람이 맞음 */
-  const hp0 = pa.hp + pb.hp; let hurtBy = null;
-  const atk = await until(async () => { const w = await A.evaluate(() => [...(window.__MMO.mobs?.views.values() || [])].some(v => v.warn && v.warn.visible)) || await B.evaluate(() => [...(window.__W3D.mobs?.views.values() || [])].some(v => v.warn && v.warn.visible)); return w; }, 90000, 150);
+  const hp0 = pa.hp + pb.hp; let hurtBy = null; const hurts = [];
+  /* 바닥 예고 고리는 디렉터 지시로 없앴다(준비 동작으로, 문서 224) — 고리 대신 화면의 «공격» 상태를 본다.
+     맞은 기록(p.hurt)은 쓰러졌다 살아나면 «부활(피해 0)» 로 덮이므로, 처음부터 계속 모은다(문서 229 §34) */
+  const noteHurt = () => { for (const p of [pa, pb]) if (p.hurt && p.hurt[1] > 0 && !hurts.some(h => h[0] === p.hurt[0] && h[2] === p.hurt[2])) hurts.push(p.hurt.slice(0, 5)); };
+  const atk = await until(async () => { noteHurt(); const w = await A.evaluate(() => [...(window.__MMO.mobs?.views.values() || [])].some(v => (v.warn && v.warn.visible) || v.cur === 'attack')) || await B.evaluate(() => [...(window.__W3D.mobs?.views.values() || [])].some(v => (v.warn && v.warn.visible) || v.cur === 'attack')); return w; }, 90000, 150);
   if (atk) { await A.screenshot({path: `${OUT}/a-2d-attack.png`}); await B.screenshot({path: `${OUT}/b-3d-attack.png`}); }
-  await until(() => { for (const p of [pa, pb]) if (p.hurt && p.hurt[1] > 0) { hurtBy = p.hurt[2]; return true; } return pa.hp + pb.hp < hp0; }, 30000);
-  out.attack = {ring: !!atk, hpBefore: hp0, hpAfter: pa.hp + pb.hp, hurtBy, hurtByIsMob: !!(hurtBy && eco.mobs.has(hurtBy))};
+  await until(() => { noteHurt(); return hurts.length > 0; }, 30000, 150);
+  hurtBy = hurts.length ? hurts[0][2] : null;
+  out.attack = {seen: !!atk, hpBefore: hp0, hpAfter: pa.hp + pb.hp, hurts: hurts.length, hurtBy, hurtByIsMob: !!(hurtBy && eco.mobs.has(hurtBy))};
   /* 3) 2D 가 쳐서 쓰러뜨린다 — 서버 판정(mobHit) · 3D 화면에도 쓰러짐. 2D 사람이 앞서 쓰러졌을 수 있으니 살아날 때까지 기다리고 서버의 살아 있는 몬스터 옆으로 다시 옮긴다 */
   await until(() => !pa.dead, 20000);
   const pick = [...eco.mobs.values()].filter(m => m.alive).sort((m, n) => Math.hypot(m.x - gx, m.z - gz) - Math.hypot(n.x - gx, n.z - gz))[0];
