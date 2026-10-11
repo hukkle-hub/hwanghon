@@ -15,7 +15,8 @@ import {MOTION} from '../../js/mmo/mob-motion.js';
 const Q = new URLSearchParams(location.search), ID = Q.get('id') || 'G5_STALKER', CELL = +(Q.get('cell') || 260), AZ = +(Q.get('az') || 40) * Math.PI / 180;
 const entry = bodyFor(ID, {review: true}); if (!entry) throw Error('몸 없음 ' + ID);
 const gltf = await new Promise((ok, no) => new GLTFLoader().load('../../' + entry.url, ok, undefined, no));
-const COLS = [['대기(비교전)', 'idle', 2.0], ['공격 0%', 'attack', 0], ['20%', 'attack', .2], ['35%', 'attack', .35], ['50%', 'attack', .5], ['70%', 'attack', .7], ['100%', 'attack', 1], ['공격 뒤 0.5초', 'after', .5], ['공격 뒤 1.5초', 'after', 1.5]];
+const REACT = Q.get('mode') === 'react';   /* ?mode=react: 맞음 · 쓰러짐 (문서 229 §37) */
+const COLS = REACT ? [['대기', 'idle', 0], ['맞음 0.1초', 'hit', .1], ['0.3초', 'hit', .3], ['0.6초', 'hit', .6], ['쓰러짐 0.3초', 'die', .3], ['0.8초', 'die', .8], ['1.5초', 'die', 1.5], ['2.5초', 'die', 2.5], ['3.2초', 'die', 3.2]] : [['대기(비교전)', 'idle', 2.0], ['공격 0%', 'attack', 0], ['20%', 'attack', .2], ['35%', 'attack', .35], ['50%', 'attack', .5], ['70%', 'attack', .7], ['100%', 'attack', 1], ['공격 뒤 0.5초', 'after', .5], ['공격 뒤 1.5초', 'after', 1.5]];
 const W = CELL * COLS.length, H = CELL * 2, cv = document.getElementById('c'), R = new THREE.WebGLRenderer({canvas: cv, antialias: true, preserveDrawingBuffer: true}); R.setSize(W, H); R.setScissorTest(true); R.outputColorSpace = THREE.SRGBColorSpace;
 const lab = document.getElementById('lab');
 async function row(amp, r) {
@@ -27,7 +28,12 @@ async function row(amp, r) {
   const v = [...view.views.values()][0]; v.root.rotation.y = 0;
   const cam = new THREE.PerspectiveCamera(32, 1, .1, 50), tgt = new THREE.Vector3(0, .95, .35); cam.position.set(Math.sin(AZ) * 4.6, 1.5, Math.cos(AZ) * 4.6); cam.lookAt(tgt);
   const shoot = c => { R.setViewport(c * CELL, (1 - r) * CELL, CELL, CELL); R.setScissor(c * CELL, (1 - r) * CELL, CELL, CELL); scene.updateMatrixWorld(true); R.render(scene, cam); };
+  const snapHit = () => { const x = snap('hit', 2); x[0].hp = 70; return x; }, snapDie = () => { const x = snap('die', 3); x[0].alive = false; x[0].hp = 0; return x; };
+  const stepS = (fn, sec) => { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) view.update(fn(), 1 / 30); v.root.rotation.y = 0; };
   const step = (anim, seq, sec) => { const n = Math.round(sec * 30); for (let i = 0; i < n; i++) view.update(snap(anim, seq), 1 / 30); v.root.rotation.y = 0; };
+  if (REACT) { step('idle', 0, 1.0); shoot(0); let tp = 0;
+    for (let c = 1; c <= 3; c++) { const tt = COLS[c][2]; stepS(snapHit, Math.max(1 / 30, tt - tp)); tp = tt; shoot(c); }
+    tp = 0; for (let c = 4; c < COLS.length; c++) { const tt = COLS[c][2]; stepS(snapDie, Math.max(1 / 30, tt - tp)); tp = tt; shoot(c); } return; }
   step('idle', 0, 2.0); shoot(0);   /* 교전 안 한 대기 */
   const clipLen = (v.named.attack1 || v.named.attack).getClip().duration; let tPrev = 0;
   for (let c = 1; c <= 6; c++) { const tt = COLS[c][2] * clipLen; step('attack', 1, Math.max(1 / 30, tt - tPrev)); tPrev = tt; shoot(c); }

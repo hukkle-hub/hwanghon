@@ -22,6 +22,9 @@ export const STYLE = {
 export const ROLE_STYLE = { Hunter: 'pounce', Ambusher: 'pounce', Scout: 'pounce', Flanker: 'flank', Mobility: 'flank', ObjectBreaker: 'slam', Displacer: 'slam',
   Support: 'shove', Summoner: 'shove', Disruptor: 'shove', Hazard: 'shove', Scavenger: 'shove', Tank: 'charge', Protector: 'charge' };
 export const styleOf = cat => STYLE[ROLE_STYLE[cat && (cat.role || cat.archetype)]] || STYLE.swipe;
+/* 맞음 움찔 모양: 0.08 s 에 다 젖히고 0.4 s 에 걸쳐 돌아온다 · 세기는 맞음 클립 길이로(짧을수록 1) */
+export const flinch = h => h < 0 ? 0 : h < .08 ? h / .08 : h < .48 ? (1 + Math.cos(Math.PI * (h - .08) / .4)) / 2 : 0;
+export const HIT_K = dur => Math.max(.25, Math.min(1, (1.0 - dur) / .6));
 export function createMobMotion(THREE) {
   const pa = new THREE.Vector3(), pf = new THREE.Vector3(), qa = new THREE.Quaternion(), qp = new THREE.Quaternion(), qpi = new THREE.Quaternion(), qm = new THREE.Quaternion(), ax = new THREE.Vector3();
   const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0);
@@ -33,10 +36,12 @@ export function createMobMotion(THREE) {
       v.motion = { B, saved: BONES.filter(n => B[n]).map(n => [B[n], B[n].quaternion.clone()]), base: v.model.position.clone(), e: 0, t: Math.random() * 10, side: 1, lastSeq: null, lastAtk: -9, shield: !!(v.named && v.named.shield_bash), st: styleOf(v.cat), ph: Math.random() * 6.28 };
       return v.motion; },
     /* 믹서 앞: 지난 프레임에 얹은 것을 걷어 낸다 */
-    before(v) { const M = v.motion; if (!M) return; for (const [b, q] of M.saved) b.quaternion.copy(q); v.model.position.copy(M.base); },
+    /* 얹은 게 있을 때만 — 믹서는 값이 그대로면 뼈를 다시 안 쓴다. 죽은 뒤(얹지 않음)에도 되돌리면 사망 클립이 멈추는 순간 «살아 있던 마지막 자세» 로 시체가 일어섰다 (문서 229 §37) */
+    before(v) { const M = v.motion; if (!M || !M.on) return; M.on = false; for (const [b, q] of M.saved) b.quaternion.copy(q); v.model.position.copy(M.base); },
     /* 믹서 뒤: 얹는다. 시각 t 는 몸마다 따로(같은 박자로 흔들리면 군무 같다) */
     after(v, dt) { const M = v.motion; if (!M || !v.alive) return; const B = M.B, amp = MOTION.amp; if (!amp) return; M.t += dt;
       for (const s of M.saved) s[1].copy(s[0].quaternion);   /* 믹서가 쓴 값 — 다음 before 가 여기로 되돌린다 */
+      M.on = true;
       v.model.updateMatrixWorld(true); v.model.getWorldQuaternion(qm);
       const atk = v.cur === 'attack', clip = v.current && v.current.getClip ? v.current.getClip().duration : 1, u = atk ? Math.min(1, (v.current.time || 0) / Math.max(.1, clip)) : 1;
       if (atk && v.seq !== M.lastSeq) { M.lastSeq = v.seq; M.side = -M.side; }
@@ -44,13 +49,20 @@ export function createMobMotion(THREE) {
       const want = M.t - M.lastAtk < 4 ? 1 : 0; M.e += (want - M.e) * Math.min(1, dt * 3); const e = M.e * amp, t = M.t + M.ph;
       const S = M.st, lunge = atk ? Math.sin(Math.PI * Math.min(1, Math.max(0, (u - S.win[0]) / S.win[1]))) * amp : 0;   /* 덮치는 구간에 나갔다 돌아온다(역할마다 구간이 다르다) */
       const rear = atk && S.rear ? Math.sin(Math.PI * Math.min(1, Math.max(0, u / S.win[0]))) * amp : 0;   /* 내려찍기: 덮치기 전에 젖힌다 */
+      /* 맞음 움찔 (문서 229 §37) — 파쇄자·보행자 맞음 클립은 0.33 s 로 짧고 작아 맞아도 꼼짝 않는 것처럼 보였다. 맞는 순간 0.08 s 에 젖혔다 0.4 s 에 돌아온다.
+         클립이 짧을수록 크게(0.93 s 클립은 이미 크게 휘청인다 — 얹으면 과하다). 다시 맞으면(클립 시각이 되감기면) 처음부터 */
+      const hitNow = v.cur === 'hit', ht = hitNow && v.current ? v.current.time || 0 : 0;
+      if (hitNow && (M.prevCur !== 'hit' || ht < M.prevHt - 1e-3)) { M.hitT = 0; M.hitSide = Math.random() < .5 ? -1 : 1; M.hitK = HIT_K(v.current && v.current.getClip ? v.current.getClip().duration : 1); }
+      M.prevCur = v.cur; M.prevHt = ht; if (M.hitT != null) M.hitT += dt;
+      const fl = M.hitT != null ? flinch(M.hitT) * M.hitK * amp : 0;
+      if (fl) { turn(B.Spine, X, -.32 * fl); turn(B.Spine2, Y, .22 * fl * M.hitSide); turn(B.Head, X, -.3 * fl); turn(B.Neck, Y, .2 * fl * M.hitSide); }
       /* 숨 */
       turn(B.Spine1, X, .035 * Math.sin(t * 2.1) * amp);
       /* 몸통: 숙임 · 무게 옮김 · 비틀기 */
       turn(B.Spine, X, (.2 * e + S.lean * lunge - S.rear * rear)); turn(B.Spine2, X, .08 * e); turn(B.Spine2, Y, .09 * Math.sin(t * 1.3) * e + S.twist * lunge * M.side);
       turn(B.Hips, Y, -.06 * Math.sin(t * 1.3) * e - S.twist * .35 * lunge * M.side);
       v.model.position.x = M.base.x + .045 * Math.sin(t * 1.3) * e + S.side * lunge * M.side; /* 몸째 내리지 않는다 — 발이 바닥에 5~11 cm 파묻혔다. 낮아 보이는 건 숙임으로 */
-      v.model.position.z = M.base.z + S.push * lunge;
+      v.model.position.z = M.base.z + S.push * lunge - .14 * fl;   /* 맞으면 반 뼘 밀려난다 */
       /* 고개: 표적 쪽으로(몸이 이미 향했으면 흔들림만) */
       let look = .18 * Math.sin(t * .7) * e; const a = v.action;
       if (a && Number.isFinite(a.targetX) && Number.isFinite(a.targetZ)) { const yaw = Math.atan2(a.targetX - v.root.position.x, a.targetZ - v.root.position.z), d = Math.atan2(Math.sin(yaw - v.root.rotation.y), Math.cos(yaw - v.root.rotation.y)); look = Math.max(-.8, Math.min(.8, d)) * e; }

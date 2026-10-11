@@ -46,3 +46,23 @@ test('역할별 덮치기 (문서 229 §36): 추적형은 두 손 · 파쇄형�
   const b = rig(); b.cat = cat('G5_BREAKER'); M.attach(b); b.cur = 'attack'; b.seq = 1; b.current.time = 1.3 * (.35 / 2); M.before(b); M.after(b, 1 / 30);
   const hb = hand(b, 'Right'), sh = new THREE.Vector3(); b.model.getObjectByName('mixamorig_RightArm').getWorldPosition(sh); assert.ok(hb.y > sh.y, '파쇄자는 젖힐 때 팔이 어깨 위로 ' + (hb.y - sh.y).toFixed(3));
 });
+test('죽은 뒤엔 되돌리지 않는다 (문서 229 §37): 사망 클립이 멈춰 믹서가 뼈를 안 써도 시체가 «살아 있던 자세» 로 일어서지 않는다', () => {
+  const M = createMobMotion(THREE), v = rig(); M.attach(v); const sp = v.model.getObjectByName('mixamorig_Spine'), lying = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.4);
+  v.cur = 'attack'; v.seq = 1; for (let i = 0; i < 10; i++) { v.current.time = i / 30; M.before(v); M.after(v, 1 / 30); }
+  v.alive = false; v.cur = 'die';
+  for (let i = 0; i < 5; i++) { M.before(v); sp.quaternion.copy(lying); M.after(v, 1 / 30); }   /* 믹서가 눕는 자세를 쓰는 동안 */
+  for (let i = 0; i < 5; i++) { M.before(v); M.after(v, 1 / 30); }   /* 클립 끝 — 값이 그대로라 믹서는 안 쓴다 */
+  assert.ok(sp.quaternion.angleTo(lying) < 1e-6, '시체가 일어섰다 ' + sp.quaternion.angleTo(lying).toFixed(3));
+});
+test('맞음 움찔 (문서 229 §37): 짧은 맞음 클립(0.33 s)에 0.08 s 에 젖히고 밀려났다 0.5 s 에 돌아온다 · 긴 클립(0.93 s)엔 작게', async () => {
+  const { flinch, HIT_K } = await import('../js/mmo/mob-motion.js');
+  assert.equal(flinch(.08), 1); assert.equal(flinch(.5), 0); assert.equal(HIT_K(.33), 1); assert.ok(HIT_K(.93) < .3);
+  const lean = dur => { const M = createMobMotion(THREE), v = rig(); M.attach(v); const clip = { duration: dur }; v.current.getClip = () => clip;
+    for (let i = 0; i < 30; i++) { M.before(v); M.after(v, 1 / 30); } const rest = quats(v);
+    v.cur = 'hit'; v.current.time = 0; let peak = 0, minZ = 0; const sp = v.model.getObjectByName('mixamorig_Head'), w = new THREE.Vector3(), w0 = new THREE.Vector3();
+    M.before(v); v.model.updateMatrixWorld(true); sp.getWorldPosition(w0);
+    for (let i = 0; i < 18; i++) { v.current.time = Math.min(dur, i / 30); M.before(v); M.after(v, 1 / 30); v.model.updateMatrixWorld(true); sp.getWorldPosition(w); peak = Math.min(peak, w.z - w0.z); minZ = Math.min(minZ, v.model.position.z); }
+    return { peak, minZ, rest, v, M }; };
+  const s = lean(.33), l = lean(.93);
+  assert.ok(s.peak < -.05, '머리가 뒤로 ' + s.peak.toFixed(3)); assert.ok(s.minZ < -.1, '밀려남 ' + s.minZ.toFixed(3)); assert.ok(l.peak > s.peak * .5, '긴 클립엔 작게 ' + l.peak.toFixed(3));
+});

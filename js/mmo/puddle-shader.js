@@ -3,6 +3,8 @@
    - 자기 세계 좌표(xz)의 값 잡음 두 겹으로 웅덩이 자리(약 1/5)를 잡고, 둘레는 «젖은 띠»(어둡게·덜 거칠게)
    - 웅덩이 안은 거칠기 0.05 — 가로등(점광원)·해가 또렷이 맺힌다
    - 하늘빛 반사: 시선을 바닥에 꺾은 방향의 높이로 지금 하늘빛(FACADE_U.uSkyRefl, 시간대가 매 프레임)을 프레넬만큼 더한다
+   낮(§38): 젖은 띠가 거칠기 0.2 면 해빛이 넓게 번들거려 «밝은 후광 + 검은 테 + 회색 속» 기름 얼룩 등고선이 됐다 →
+   낮엔 젖은 띠 0.45(가로등 세기 uLampK 로 — 해 질 녘·밤은 0.2 그대로, 가로등 번들거림이 밤 젖은 길의 맛), 웅덩이·젖음 경계를 넓게(0.72~1.0 · 0.8~1.7).
    텍스처를 더 읽지 않는다. PUDDLE.on 을 world3d 가 ?wet=0 으로 끈다 */
 import { FACADE_U } from './facade-shader.js';
 export const PUDDLE = { on: true };
@@ -21,7 +23,7 @@ for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 c = pg + vec2
   if (h0 < 0.6) { vec2 o = vPW.xz - (c + vec2(0.2 + 0.6 * h1, 0.2 + 0.6 * h2)) * 4.5; float a = h3 * 6.2832, ca = cos(a), sa = sin(a);
     vec2 q = vec2(ca * o.x + sa * o.y, -sa * o.x + ca * o.y); float rx = 0.9 + 1.6 * h1; pd = min(pd, length(q / vec2(rx, rx * (0.45 + 0.5 * h2)))); } }
 pd += (pn(vPW.xz / 0.8) - 0.5) * 0.4;
-float pw = 1.0 - smoothstep(0.88, 1.0, pd), wet = 1.0 - smoothstep(1.0, 1.7, pd);
+float pw = 1.0 - smoothstep(0.72, 1.0, pd), wet = 1.0 - smoothstep(0.8, 1.7, pd);
 diffuseColor.rgb *= mix(1.0, 0.8, wet) * mix(1.0, 0.55, pw);
 `;
 const REFL = `
@@ -41,7 +43,7 @@ export function patchPuddleMaterial(THREE, m) {
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + PARS)
       .replace('#include <map_fragment>', '#include <map_fragment>' + BODY)
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.2, wet); roughnessFactor = mix(roughnessFactor, 0.05, pw);')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, mix(0.45, 0.2, clamp(uLampK, 0.0, 1.0)), wet); roughnessFactor = mix(roughnessFactor, 0.05, pw);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, pw);')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>' + REFL); };
   m.customProgramCacheKey = () => 'puddle'; m.needsUpdate = true; return m;

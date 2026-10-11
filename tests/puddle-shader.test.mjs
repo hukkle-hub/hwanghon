@@ -30,3 +30,9 @@ test('웅덩이: 3D 길에만 · 땅 결 패치는 앞 패치를 이어 부른�
   assert.match(w, /m\.onBeforeCompile = \(sh, r\) => \{ if \(prevBC\) prevBC\.call\(m, sh, r\);/, '땅 결이 웅덩이를 덮어쓴다');
   assert.match(w, /m\.customProgramCacheKey = \(\) => 'ground-macro' \+ prevKey;/, '셰이더 캐시 키가 웅덩이 유무를 구분해야');
 });
+test('낮 젖은 띠는 덜 번들거린다 (문서 229 §38): 거칠기 0.2 는 해빛 후광 + 검은 테 기름 얼룩 — 낮 0.45 · 해 질 녘·밤 0.2(가로등 세기로) · 경계는 넓게', () => {
+  const S = fs.readFileSync('js/mmo/puddle-shader.js', 'utf8');
+  assert.match(S, /roughnessFactor = mix\(roughnessFactor, mix\(0\.45, 0\.2, clamp\(uLampK, 0\.0, 1\.0\)\), wet\)/);
+  const m = S.match(/float pw = 1\.0 - smoothstep\(([\d.]+), 1\.0, pd\), wet = 1\.0 - smoothstep\(([\d.]+), 1\.7, pd\)/); assert.ok(m, '경계 식');
+  assert.ok(1.0 - +m[1] >= .25, '웅덩이 가장자리 폭 ' + (1 - m[1]).toFixed(2) + ' — 0.12 는 칼로 자른 테'); assert.ok(+m[2] < 1.0, '젖은 띠가 웅덩이 가장자리와 겹쳐 이어진다');
+});
