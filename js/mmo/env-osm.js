@@ -172,7 +172,7 @@ export function build(THREE, scene, osm, opt = {}) {
       const tm = new THREE.Mesh(tg, [roofMat, facadeMats[((b.id >>> 3) + 1) % 4]]); tm.castShadow = true; tm.receiveShadow = true; scene.add(tm);
       L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, hb, (b.id | 0) + 7, { roof: true, shops: false, signs: false, ledge: true, vsign: false }), b.id | 0); }   /* 셋백 테라스 난간 */
     const rd = L.isView3d() && !near ? nearestRoad(topPts.reduce((a, p) => [a[0] + p[0] / topPts.length, a[1] + p[1] / topPts.length], [0, 0])) : null;   /* 세로 간판은 가장 가까운 길(40 m 안)을 보는 벽에 (문서 229 §9) */
-    if (L.isView3d()) L.addDeco(THREE, scene, L.buildingDeco(THREE, topPts, h, b.id | 0, { roof: !near, shops: !setback, signs: false, vsign: !!rd && rd.d < 40, front: rd?.q }), b.id | 0);   /* 3D 만: 셔터 띠 · 옥상 (간판은 아래 POI 네온이 따로 — 문서 218) */
+    if (L.isView3d()) L.addDeco(THREE, scene, L.buildingDeco(THREE, topPts, h, b.id | 0, { roof: !near, shops: !setback, signs: false, vsign: !!rd && rd.d < 40, front: rd?.q, aptNo: L.aptLabel(b) }), b.id | 0);   /* 3D 만: 셔터 띠 · 옥상 (간판은 아래 POI 네온이 따로 — 문서 218) */
     if (setback) L.addDeco(THREE, scene, L.buildingDeco(THREE, pts, h, (b.id | 0) + 3, { roof: false, shops: true, signs: false, ledge: false, vsign: false }), b.id | 0);   /* 1층 가게 띠는 땅 윤곽에 */
     if (L.isView3d() && !near && h > 50) aviLight(THREE, scene, topPts, h + 0.9);   /* 항공 장애등 — 밤 스카이라인의 붉은 점 */
     blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); builtW.push({ pts, h, full, near, cst, id: b.id }); }

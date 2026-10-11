@@ -62,9 +62,9 @@ test('꾸밈도 제 자리 칸(48 m)으로 합쳐진다 — 막이에서 빠져�
 });
 
 test('빌더 연결: 3D 에서만 꾸밈, 강남은 간판 빼고', () => {
-  assert.match(SRC, /if \(VIEW3D\) addDeco\(THREE, scene, buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !nearSide && !ruined, shops: !tall \}\)/);
+  assert.match(SRC, /if \(VIEW3D\) addDeco\(THREE, scene, buildingDeco\(THREE, pts, h, b\.id \| 0, \{ roof: !nearSide && !ruined, shops: !tall, aptNo: aptLabel\(b\) \}\)/);
   const osm = fs.readFileSync(new URL('../js/mmo/env-osm.js', import.meta.url), 'utf8');
-  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false, vsign: !!rd && rd\.d < 40, front: rd\?\.q \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
+  assert.match(osm, /if \(L\.isView3d\(\)\) L\.addDeco\(THREE, scene, L\.buildingDeco\(THREE, topPts, h, b\.id \| 0, \{ roof: !near, shops: !setback, signs: false, vsign: !!rd && rd\.d < 40, front: rd\?\.q, aptNo: L\.aptLabel\(b\) \}\)/);   /* 셋백 탑은 옥상을 줄인 윤곽에, 가게 띠는 땅 윤곽에 따로 (문서 229 §4) */
 });
 
 test('창 밑 실외기는 가짜 실내 창 칸 가운데·창 아래 — facade-shader 와 같은 격자 (1.8 m × 3.6 m, s = 위치·(nz, −nx))', () => {
@@ -94,4 +94,17 @@ test('세로 간판 글자는 지역마다 (문서 229 §13) — 바닷가·업�
     assert.equal(L.setVsignTheme(z), th, z); assert.ok(L.vsignWords().includes(w), `${z}: ${w}`); }
   for (const th of ['seoul', 'coast', 'office', 'old']) { const ws = L.vsignWords(th); assert.equal(ws.length, 8, th); for (const x of ws) assert.ok(x.length >= 2 && x.length <= 4, `${th}: ${x} — 칸(64 px)에 세로로 들어가야`); }
   L.setVsignTheme('gangnam');
+});
+
+test('아파트 동 번호 (문서 229 §17): 이름의 번호 → 없으면 101~115 · 판상형 벽 끝 위쪽 · 벽에서 0.1 m 안', async () => {
+  const L = await import('../js/mmo/env-lib.js');
+  assert.equal(L.aptLabel({ kind: 'apartments', name: '11동', id: 1 }), '11'); assert.equal(L.aptLabel({ kind: 'apartments', name: '401동', id: 1 }), '401');
+  assert.equal(L.aptLabel({ kind: 'apartments', name: '102', id: 1 }), '102'); assert.equal(L.aptLabel({ kind: 'apartments', name: 'E동', id: 1 }), 'E');
+  const g = L.aptLabel({ kind: 'apartments', name: '서초파라곤', id: 77 }); assert.ok(+g >= 101 && +g <= 115, '단지 이름(상표)은 안 쓴다: ' + g);
+  assert.equal(L.aptLabel({ kind: 'office', name: '101동', id: 1 }), null, '아파트만');
+  const SLAB = [[0, 0], [40, 0], [40, 12], [0, 12]], P = L.buildingDeco(THREE, SLAB, 36, 5, { aptNo: '101' }), PR = L.buildingDeco(THREE, [...SLAB].reverse(), 36, 5, { aptNo: '101' });
+  assert.equal(P.aptno.length, 6, '벽 끝 둘 × 세 글자');
+  for (const q of [...P.aptno, ...PR.aptno]) {   /* 반대로 감긴 윤곽도 — 바깥 판정이 없으면 벽 안쪽에 칠한다 */ q.computeBoundingBox(); const b = q.boundingBox, cx = (b.min.x + b.max.x) / 2;
+    assert.ok((cx < 0 && cx > -0.1) || (cx > 40 && cx < 40.1), `벽 끝(x=0·40) 바깥 0.1 m 안이 아님 ${cx.toFixed(2)}`); assert.ok(b.max.y <= 36 - 1.1 && b.min.y > 36 - 8, '위쪽'); }
+  assert.equal(L.buildingDeco(THREE, SLAB, 12, 5, { aptNo: '101' }).aptno.length, 0, '15 m 아래엔 없다');
 });

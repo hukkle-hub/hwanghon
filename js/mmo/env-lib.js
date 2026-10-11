@@ -188,7 +188,7 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
     const mesh = new THREE.Mesh(geo, [nearSide || ruined ? cutM : roofM, tall && !ruined ? curtainM : pickFacade(facadeMats, brickMats, b.id, full)]); mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
-    if (VIEW3D) addDeco(THREE, scene, buildingDeco(THREE, pts, h, b.id | 0, { roof: !nearSide && !ruined, shops: !tall }), b.id | 0);
+    if (VIEW3D) addDeco(THREE, scene, buildingDeco(THREE, pts, h, b.id | 0, { roof: !nearSide && !ruined, shops: !tall, aptNo: aptLabel(b) }), b.id | 0);
     ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); }
   if (far.length) farCity(THREE, scene, far, tex, area);
   return out; }
@@ -200,7 +200,7 @@ function farCity(THREE, scene, far, tex, area) {
   const r = rng(5150), win = canvasTex(THREE, 256, 256, (g, w, h) => { g.fillStyle = '#000'; g.fillRect(0, 0, w, h); for (let fy = 0; fy < 4; fy++) for (let fx = 0; fx < 8; fx++) { const u = r(); if (u > 0.2) continue; g.fillStyle = u < 0.13 ? '#ffc874' : u < 0.17 ? '#ffe2b0' : '#8ad0ff'; g.fillRect(fx * 32 + 3, fy * 64 + 10, 26, 44); } }, [1 / 14.4, 1 / 14.4]);
   const mats = tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, emissiveMap: win, emissive: 0xffffff, emissiveIntensity: 0.5, roughness: 0.7, metalness: 0.2 })), roofM = new THREE.MeshStandardMaterial({ color: 0x24222a, roughness: 0.95 });
   for (const m of mats) m.userData.farGlow = 0.5;   /* 황혼 0.5 → 밤 ×2 · 낮 ×0.3 (city-life) */
-  const cells = new Map(), put = (key, g) => { let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(g); };
+  const cells = new Map(), put = (key, g) => { let l = cells.get(key); if (!l) cells.set(key, l = []); l.push(g); }, farApt = [];
   for (const [pts, b] of far) { const ar = area(pts), id = b.id | 0, u = hashU(id, 3, 9);
     const h = Math.min(120, b.height || (b.levels ? b.levels * 3.4 : ar > 900 ? 24 + u * 30 : ar > 300 ? 12 + u * 14 : 6 + u * 8));
     const g = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); g.rotateX(-Math.PI / 2);
@@ -208,10 +208,12 @@ function farCity(THREE, scene, far, tex, area) {
     /* 뽑아 올린 기하의 무리(0 = 지붕·바닥, 1 = 벽)를 따로 떼어 재질별로 — 재질 여럿인 메시는 static-merge 가 안 합친다 */
     for (const gr of g.groups) { const sub = new THREE.BufferGeometry(); for (const k of ['position', 'normal', 'uv']) sub.setAttribute(k, g.attributes[k]); sub.setIndex(Array.from(g.index ? g.index.array.slice(gr.start, gr.start + gr.count) : [...Array(gr.count)].map((_, i) => gr.start + i)));
       put(cell + '|' + (gr.materialIndex === 0 ? 'r' : 'w'), sub); FAR.tris += gr.count / 3; }
+    const lab = aptLabel(b); if (lab && h >= 15) aptGlyphs(THREE, pts, h, lab, farApt);   /* 먼 아파트에도 동 번호 — 멀리서 보이는 게 본래 몫 (문서 229 §17) */
     if (h > 13 && hashU(id, 4, 9) < 0.3) (FAR.tops || (FAR.tops = [])).push([+cx.toFixed(1), +h.toFixed(1), +cz.toFixed(1)]);   /* 연기 기둥 후보 (city-life) */
     FAR.n++; }
   for (const [key, list] of cells) { const k = key.split('|')[1], g = mergeGeometries(list.map(x => x.toNonIndexed()), false); if (!g) continue;
-    const [cx, cz] = key.split('|')[0].split(',').map(Number), m = new THREE.Mesh(g, k === 'r' ? roofM : mats[(Math.floor(hashU(cx, cz, 5) * 4)) % 4]);   /* 칸마다 파사드 하나 — 칸당 메시 둘 */ m.userData.noCam = true; m.userData.far = 1; scene.add(m); FAR.meshes = (FAR.meshes || 0) + 1; } }
+    const [cx, cz] = key.split('|')[0].split(',').map(Number), m = new THREE.Mesh(g, k === 'r' ? roofM : mats[(Math.floor(hashU(cx, cz, 5) * 4)) % 4]);   /* 칸마다 파사드 하나 — 칸당 메시 둘 */ m.userData.noCam = true; m.userData.far = 1; scene.add(m); FAR.meshes = (FAR.meshes || 0) + 1; }
+  if (farApt.length) { addDeco(THREE, scene, { aptno: farApt }, -1); } }
 export const inBuilding = (built, p) => built.some(b => inPoly(p, b.pts));
 /* 무너진 저층 (3D 필드만, 문서 216) — 납작한 상자 대신 «속 빈 벽체 + 들쭉날쭉 부서진 윗선 + 군데군데 빠진 벽 + 안쪽 잔해 더미».
    자리·높이 한도·막이(윤곽 그대로)는 굽기와 같고, 모양의 흔들림은 건물 id 해시로만 정한다(장면 난수 R 을 안 쓴다 — 뒤 자리가 그대로). */
@@ -320,17 +322,39 @@ const frontEdge = (pts, f) => { const cx = pts.reduce((a, p) => a + p[0], 0) / p
     const fx = f[0] - mx, fz = f[1] - mz, fl = Math.hypot(fx, fz) || 1, sc = (nx * fx + nz * fz) / fl; if (sc > bs) { bs = sc; best = e; } }
   return bs > 0.5 ? best : -1; };
 const longestEdge = pts => { let best = 0, bl = -1; for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L > bl) { bl = L; best = e; } } return best; };
+/* 아파트 동 번호 (문서 229 §17) — 한국 도시의 얼굴: 판상형 아파트 벽 끝 위쪽의 큰 «101». OSM 이름에 번호가 있으면 그 번호(여의도 «11동»·«101동», 해운대 «101»·«A»),
+   없으면 101~115 를 id 해시로. 단지 이름(상표)은 쓰지 않는다. 글자판 한 장(0~9 A~F) · 글자마다 사각형 하나 · 꾸밈 메시에 같이 합친다 */
+export function aptLabel(b) { if (!b || b.kind !== 'apartments') return null; const nm = String(b.name || '').trim();
+  const m = /(?:^|[^0-9])(\d{1,4})\s*동?$/.exec(nm) || /^(\d{1,4})/.exec(nm); if (m) return m[1];
+  const a = /^([A-Fa-f])\s*동?$/.exec(nm); if (a) return a[1].toUpperCase();
+  return String(101 + Math.floor(hashU(b.id | 0, 17, 5) * 15)); }
+const APT_CH = '0123456789ABCDEF'; let APT_TEX = null;
+function aptTex(THREE) { if (APT_TEX) return APT_TEX; APT_TEX = canvasTex(THREE, 1024, 128, (g, w, h) => { g.clearRect(0, 0, w, h); g.font = '900 104px "Noto Sans KR", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    for (let i = 0; i < 16; i++) { const x = i * 64 + 32; g.lineWidth = 12; g.strokeStyle = 'rgba(24,28,40,0.9)'; g.strokeText(APT_CH[i], x, 68, 60); g.fillStyle = '#ece6d6'; g.fillText(APT_CH[i], x, 68, 60); } }); return APT_TEX; }   /* 밝은 글자 + 짙은 테두리 — 벽이 어두워 남색 글자는 묻혔다 */
+/* 동 번호: 15 m 넘는 아파트, 6 m 넘는 벽 중 가장 짧은 둘(판상형의 벽 끝) — 위에서 1.2 m 아래, 글자 높이 = 벽 길이 × 0.32 (3.2~6 m — 0.2·2.4~4.2 는 멀리서 점이었다), 벽에서 8 cm 밖 */
+export function aptGlyphs(THREE, pts, h, aptNo, out) { const lab = String(aptNo).slice(0, 4), cx0 = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz0 = pts.reduce((a, p) => a + p[1], 0) / pts.length;
+    const edges = []; for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L >= 6) edges.push({ p, q, L }); }
+    edges.sort((a, b) => a.L - b.L);
+    for (const { p, q, L } of edges.slice(0, 2)) { const gh = Math.min(6, Math.max(3.2, L * 0.32)), gw = gh * 0.62, n = lab.length; if (h < gh + 8 || n * gw * 0.9 > L - 1) continue;
+      const mx = (p[0] + q[0]) / 2, mz = (p[1] + q[1]) / 2, ux = (q[0] - p[0]) / L, uz = (q[1] - p[1]) / L; let nx = uz, nz = -ux; if (nx * (mx - cx0) + nz * (mz - cz0) < 0) { nx = -nx; nz = -nz; }
+      const th = Math.atan2(nx, nz), rx = Math.cos(th), rz = -Math.sin(th), yc = h - 1.2 - gh / 2;   /* 바깥에서 볼 때 오른쪽 = 판의 +x */
+      if (APT.at.length < 200) APT.at.push([+mx.toFixed(1), +yc.toFixed(1), +mz.toFixed(1), +nx.toFixed(3), +nz.toFixed(3), lab]);
+      for (let k = 0; k < n; k++) { const ci = APT_CH.indexOf(lab[k]); if (ci < 0) continue; const g = new THREE.PlaneGeometry(gw, gh), uv = g.attributes.uv; for (let t = 0; t < uv.count; t++) uv.setX(t, (ci + uv.getX(t)) / 16);
+        const off = (k - (n - 1) / 2) * gw * 0.9; g.rotateY(th); g.translate(mx + nx * 0.08 + rx * off, yc, mz + nz * 0.08 + rz * off); out.push(g); } }
+    APT.n++; return out; }
 /* 꾸밈 조각을 재질별로 합쳐 장면에 — 건물 하나에 재질당 메시 하나 (뒤에서 static-merge 가 칸별로 다시 묶는다) */
 export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex(THREE); DECO_M = { parapet: new THREE.MeshStandardMaterial({ color: 0x55505a, roughness: 0.85, map: gritTex(THREE) }), tank: new THREE.MeshStandardMaterial({ color: 0x3a6a86, roughness: 0.6, metalness: 0.1 }), ac: new THREE.MeshStandardMaterial({ color: 0x7c7c84, roughness: 0.7, metalness: 0.2 }),
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
+  if (!DECO_M.aptno) { const at = aptTex(THREE); DECO_M.aptno = new THREE.MeshStandardMaterial({ map: at, transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.85, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }); }   /* 알파 섞기 — alphaTest 0.45 는 멀리서 작은 밉맵으로 내려가면 획이 배경과 평균돼 통째로 버려졌다(한 글자도 안 보였다) */
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
   if (!VSIGN.mats[VSIGN_THEME]) { const vt = vsignTex(THREE); VSIGN.mats[VSIGN_THEME] = new THREE.MeshStandardMaterial({ map: vt, emissiveMap: vt, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.5, metalness: 0.1 }); }
   DECO_M.vsign = VSIGN.mat = VSIGN.mats[VSIGN_THEME];
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
-    const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
+    const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign' && k !== 'aptno'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
+export const APT = { n: 0, at: [] };   /* 동 번호 단 아파트 수 · at: 검수용 [x, 글자 가운데 y, z, 법선 x, 법선 z, 번호] */
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], aptno: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   const vEdge = o.vsign === false ? -1 : o.front ? frontEdge(pts, o.front) : longestEdge(pts);
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
@@ -378,7 +402,9 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
         for (let i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * 0.5, v1 - 1 / 3 + uv.getY(i) / 3);
         g.rotateY(yaw); if (Math.sin(yaw) * nx + Math.cos(yaw) * nz < 0) g.rotateY(Math.PI); g.translate(mx, h + 1.6 + H / 2, mz); P.board.push(g);
         for (const k of [-0.35, 0.35]) { const leg = new THREE.BoxGeometry(0.18, 1.7, 0.18); leg.translate(mx + dx / bl * W * k, h + 0.85, mz + dz / bl * W * k); P.ac.push(leg); } } } }
-  DECOS.push([+cx.toFixed(1), +cz.toFixed(1), +h.toFixed(1), P.sign.length, !!o.roof, P.board.length]); return P; }
+  DECOS.push([+cx.toFixed(1), +cz.toFixed(1), +h.toFixed(1), P.sign.length, !!o.roof, P.board.length]);
+  if (o.aptNo && h >= 15) aptGlyphs(THREE, pts, h, o.aptNo, P.aptno);   /* 아파트 동 번호 (문서 229 §17) */
+  return P; }
 
 /* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
    한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
