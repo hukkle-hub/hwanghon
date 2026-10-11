@@ -16,7 +16,7 @@ const Q = new URLSearchParams(location.search), ID = Q.get('id') || 'G5_STALKER'
 const entry = bodyFor(ID, {review: true}); if (!entry) throw Error('몸 없음 ' + ID);
 const gltf = await new Promise((ok, no) => new GLTFLoader().load('../../' + entry.url, ok, undefined, no));
 const REACT = Q.get('mode') === 'react';   /* ?mode=react: 맞음 · 쓰러짐 (문서 229 §37) */
-const COLS = REACT ? [['대기', 'idle', 0], ['맞음 0.1초', 'hit', .1], ['0.3초', 'hit', .3], ['0.6초', 'hit', .6], ['쓰러짐 0.3초', 'die', .3], ['0.8초', 'die', .8], ['1.5초', 'die', 1.5], ['2.5초', 'die', 2.5], ['3.2초', 'die', 3.2]] : [['대기(비교전)', 'idle', 2.0], ['공격 0%', 'attack', 0], ['20%', 'attack', .2], ['35%', 'attack', .35], ['50%', 'attack', .5], ['70%', 'attack', .7], ['100%', 'attack', 1], ['공격 뒤 0.5초', 'after', .5], ['공격 뒤 1.5초', 'after', 1.5]];
+const COLS = REACT ? [['대기', 'idle', 0], ['맞음 0.05초', 'hit', .05], ['0.3초', 'hit', .3], ['0.6초', 'hit', .6], ['쓰러짐 0.3초', 'die', .3], ['0.8초', 'die', .8], ['1.5초', 'die', 1.5], ['2.5초', 'die', 2.5], ['3.2초', 'die', 3.2]] : [['대기(비교전)', 'idle', 2.0], ['공격 0%', 'attack', 0], ['20%', 'attack', .2], ['35%', 'attack', .35], ['50%', 'attack', .5], ['70%', 'attack', .7], ['100%', 'attack', 1], ['공격 뒤 0.5초', 'after', .5], ['공격 뒤 1.5초', 'after', 1.5]];
 const W = CELL * COLS.length, H = CELL * 2, cv = document.getElementById('c'), R = new THREE.WebGLRenderer({canvas: cv, antialias: true, preserveDrawingBuffer: true}); R.setSize(W, H); R.setScissorTest(true); R.outputColorSpace = THREE.SRGBColorSpace;
 const lab = document.getElementById('lab');
 async function row(amp, r) {

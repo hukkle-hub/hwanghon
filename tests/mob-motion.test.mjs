@@ -33,7 +33,7 @@ test('방패 든 몸(shield_bash 클립)은 팔을 안 돌린다 — 방패가 �
 });
 test('field-mobs: N01 몸에만 · 믹서 앞에서 걷고 뒤에서 얹는다', () => {
   const F = fs.readFileSync('js/mmo/field-mobs.js', 'utf8');
-  assert.match(F, /if \(asset\.n01Asset\) \(motion \|\| \(motion = createMobMotion\(THREE\)\)\)\.attach\(v\);/);
+  assert.match(F, /if \(asset\.n01Asset\) \{ \(motion \|\| \(motion = createMobMotion\(THREE\)\)\)\.attach\(v\);/);
   assert.match(F, /motion\?\.before\(v\); v\.mixer\.update\(dt\); motion\?\.after\(v, dt\);/);
 });
 test('역할별 덮치기 (문서 229 §36): 추적형은 두 손 · 파쇄형은 젖힐 때 팔을 머리 위로 · 역할이 없으면 기본', async () => {
