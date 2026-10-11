@@ -8,6 +8,10 @@
 export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null }, uEnvCube: { value: null }, uEnvK: { value: 0 } };   /* uEnvCube/uEnvK: 구운 주변 큐브맵(env-reflect, 문서 229 §12) — 0 이면 하늘빛 한 가지 */
 /* 항공 장애등 — 50 m 넘는 탑 꼭대기 모서리의 붉은 등. 재질 하나를 같이 써서 world3d 가 깜빡인다(aviBlink) */
 export const AVI = { mat: null, n: 0 };
+/* 사람이 사는 블록 (문서 229 §18·§20) — 셰이더 inhab() 와 같은 정수 해시. 36 m 칸의 18 % */
+export const INHAB = { cell: 36, p: 0.18 };
+export function inhabited(x, z) { const cx = Math.floor(x / INHAB.cell) + 4096, cz = Math.floor(z / INHAB.cell) + 4096; let h = (Math.imul(cx, 0x27d4eb2d) ^ Math.imul(cz, 0x165667b1)) >>> 0;
+  h ^= h >>> 15; h = Math.imul(h, 0x85ebca6b) >>> 0; h ^= h >>> 13; return (h & 0xffff) / 65536 <= INHAB.p; }
 export function aviLight(THREE, scene, pts, h) { if (!AVI.mat) AVI.mat = new THREE.MeshBasicMaterial({ color: 0xff2a1a, fog: false, toneMapped: false });
   let a = 0, b = 0, best = -1; for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) { const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]); if (d > best) { best = d; a = i; b = j; } }   /* 가장 먼 두 모서리 */
   const g = AVI.geo || (AVI.geo = new THREE.SphereGeometry(0.55, 8, 6));
@@ -18,7 +22,9 @@ const PARS = `
 varying vec3 vFW; varying vec3 vFN;
 uniform float uLampK; uniform vec3 uSkyRefl, uWallTint; uniform samplerCube uEnvCube; uniform float uEnvK;
 float fh1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-float fh2(vec2 p){ return fract(sin(dot(p, vec2(269.5, 183.3))) * 24634.6345); }`;
+float fh2(vec2 p){ return fract(sin(dot(p, vec2(269.5, 183.3))) * 24634.6345); }
+/* 사람이 사는 블록 — JS inhabited() 와 비트까지 같은 정수 해시(sin 해시는 GPU 32비트와 JS 64비트가 달라 옥상 생존자 흔적과 자리가 안 맞는다) */
+float inhab(vec2 xz){ ivec2 c = ivec2(floor(xz / 36.0)) + ivec2(4096); uint h = (uint(c.x) * 0x27d4eb2du) ^ (uint(c.y) * 0x165667b1u); h ^= h >> 15u; h *= 0x85ebca6bu; h ^= h >> 13u; return step(float(h & 0xffffu) / 65536.0, 0.18); }`;
 
 /* 창 하나 — glass(0/1), 알베도, 스스로 빛, 반사. diffuseColor 를 고치고 나중 단계가 쓸 값을 남긴다 */
 const BODY = `
@@ -32,7 +38,7 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     float band = smoothstep(0.0, 0.03, f.y) * (1.0 - smoothstep(0.93, 0.97, f.y));
     diffuseColor.rgb *= mix(0.72, 1.0, band); vec3 wallD = diffuseColor.rgb;
     float wallH = fh1(vec2(floor(dot(vFW.xz, Nw.xz) * 0.37), floor(Nw.x * 7.0 + Nw.z * 3.0)));   /* 벽 한 면의 해시 — 창 모양 고르기 */
-    float inh = step(fh1(floor(vFW.xz / 36.0) + 3.7), 0.18);                                        /* 사람이 사는 블록 */
+    float inh = inhab(vFW.xz);                                                                      /* 사람이 사는 블록 (36 m 칸 18 %) */
 #ifdef CURTAIN
     bool ribbon = true; vec2 g0 = vec2(0.0, 0.05), g1 = vec2(1.0, 0.96);                             /* 유리 커튼월: 층마다 얇은 슬래브만 */
 #else

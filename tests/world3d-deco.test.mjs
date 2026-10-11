@@ -119,3 +119,14 @@ test('옥상 다양화 (문서 229 §19): 옥탑방(9~30 m)·격자 안테나(40
   assert.ok(shed > 40 && shed < 110, '옥탑방 ' + shed); assert.ok(moss > 100, '이끼 ' + moss); assert.equal(mast, 0, '높은 탑엔 옥탑방 없음');
   assert.equal(buildingDeco(THREE, BIG, 20, 5, { roof: false }).shed.length, 0, '옥상 안 꾸미는 건물');
 });
+
+test('생존자 흔적 (문서 229 §20): 사람 사는 블록(셰이더와 같은 정수 해시)의 옥상에만 · 블록은 18 % 언저리', async () => {
+  const { inhabited, INHAB } = await import('../js/mmo/facade-shader.js'), src = fs.readFileSync(new URL('../js/mmo/facade-shader.js', import.meta.url), 'utf8');
+  for (const c of ['0x27d4eb2du', '0x165667b1u', '0x85ebca6bu', 'ivec2(4096)', 'xz / 36.0', '65536.0, 0.18)']) assert.ok(src.includes(c), '셰이더 inhab() 와 JS inhabited() 가 어긋났다: ' + c);
+  assert.equal(INHAB.cell, 36); assert.equal(INHAB.p, 0.18);
+  let n = 0, k = 0; for (let x = -1800; x < 1800; x += 36) for (let z = -1800; z < 1800; z += 36) { n++; if (inhabited(x + 1, z + 1)) k++; } assert.ok(k / n > 0.13 && k / n < 0.23, '사는 블록 비율 ' + (k / n).toFixed(3));
+  const box = (x, z) => [[x, z], [x + 20, z], [x + 20, z + 16], [x, z + 16]]; let inC = 0, outC = 0;
+  for (let i = 0; i < 400; i++) { const x = (i % 20) * 36 - 360 + 8, z = Math.floor(i / 20) * 36 - 360 + 10, P = buildingDeco(THREE, box(x, z), 20, i + 1, { roof: true }), camp = P.tarpB.length + P.tarpO.length + P.cloth.length + P.drum.length;
+    if (inhabited(x + 10, z + 8)) inC += camp > 0 ? 1 : 0; else outC += camp; }
+  assert.equal(outC, 0, '사람 없는 블록에 생존자 흔적'); assert.ok(inC > 30, '사는 블록 옥상 ' + inC);
+});

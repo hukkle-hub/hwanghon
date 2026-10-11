@@ -5,7 +5,7 @@
 import { patchPuddleMaterial, PUDDLE } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { SKY_REFL } from './sky-shader.js';
-import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
+import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
 export const SCREEN_ANG = 28 * Math.PI / 180;
 /* 3D 필드(world3d)에서만 모양을 다듬는다 — 굽기(위에서 본 2D 그림)·자리·막이는 그대로 (문서 215) */
@@ -347,6 +347,8 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
     shop: new THREE.MeshStandardMaterial({ map: dt.shop, roughness: 0.8, metalness: 0.15 }), sign: new THREE.MeshStandardMaterial({ map: dt.sign, emissiveMap: dt.sign, emissive: 0xffffff, emissiveIntensity: 0.12, roughness: 0.6, metalness: 0.1 }), board: new THREE.MeshStandardMaterial({ map: dt.board, emissiveMap: dt.board, emissive: 0xffffff, emissiveIntensity: 0.1, roughness: 0.7, metalness: 0.1 }) }; }
   if (!DECO_M.aptno) { const at = aptTex(THREE); DECO_M.aptno = new THREE.MeshStandardMaterial({ map: at, transparent: true, depthWrite: false, alphaTest: 0.02, roughness: 0.85, metalness: 0, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4 }); }   /* 알파 섞기 — alphaTest 0.45 는 멀리서 작은 밉맵으로 내려가면 획이 배경과 평균돼 통째로 버려졌다(한 글자도 안 보였다) */
   if (!DECO_M.shed) DECO_M.shed = new THREE.MeshStandardMaterial({ color: 0xb4ab98, roughness: 0.9, map: gritTex(THREE) });   /* 옥탑방 벽 — 바랜 베이지 페인트(옥상 바닥 콘크리트와 같으면 묻혔다) */
+  if (!DECO_M.tarpB) { DECO_M.tarpB = new THREE.MeshStandardMaterial({ color: 0x2c5f8e, roughness: 0.7, side: THREE.DoubleSide }); DECO_M.tarpO = new THREE.MeshStandardMaterial({ color: 0xb4622a, roughness: 0.7, side: THREE.DoubleSide });   /* 생존자 흔적 (문서 229 §20) */
+    DECO_M.wood = new THREE.MeshStandardMaterial({ color: 0x6a4a30, roughness: 0.9 }); DECO_M.cloth = new THREE.MeshStandardMaterial({ color: 0xd8d0c0, roughness: 0.9, side: THREE.DoubleSide }); DECO_M.drum = new THREE.MeshStandardMaterial({ color: 0x3e5a3a, roughness: 0.6, metalness: 0.4 }); }
   if (!DECO_M.moss) DECO_M.moss = new THREE.MeshStandardMaterial({ color: 0x3e4a2c, roughness: 0.95, flatShading: true });   /* 옥상 이끼 덤불 */
   if (!DECO_M.ledge) DECO_M.ledge = DECO_M.parapet;   /* 처마·층 띠는 난간과 같은 콘크리트 */
   if (!DECO_M.wallac) DECO_M.wallac = DECO_M.ac;   /* 창 밑 실외기는 옥상 실외기와 같은 재질 */
@@ -356,10 +358,10 @@ export function addDeco(THREE, scene, P, id) { if (!DECO_M) { const dt = decoTex
   DECO_M.vsignOff = VSIGN.off[VSIGN_THEME];
   for (const k in P) { if (!P[k].length) continue; const g = mergeGeometries(P[k], false); P[k].forEach(x => x.dispose()); if (!g) continue;
     const m = new THREE.Mesh(g, DECO_M[k]); m.castShadow = k !== 'shop' && k !== 'sign' && k !== 'aptno'; m.receiveShadow = true; m.userData.noCam = true; m.userData.deco = id; scene.add(m); } }
-export const ROOF = { shed: 0, mast: 0, dish: 0, moss: 0, at: [] };   /* at: [x, 옥상 높이, z, 종류] 검수용 */   /* 옥상 다양화 검수용 (문서 229 §19) */
+export const ROOF = { shed: 0, mast: 0, dish: 0, moss: 0, camp: 0, at: [] };   /* at: [x, 옥상 높이, z, 종류] 검수용 */   /* 옥상 다양화 검수용 (문서 229 §19) */
 export const APT = { n: 0, at: [] };   /* 동 번호 단 아파트 수 · at: 검수용 [x, 글자 가운데 y, z, 법선 x, 법선 z, 번호] */
 export const DECOS = [];   /* 검수용 — 꾸민 건물 [x, z, 높이, 간판 수, 옥상?] */
-export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], vsignOff: [], aptno: [], moss: [], shed: [] };
+export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [], tank: [], ac: [], shop: [], sign: [], board: [], ledge: [], wallac: [], vsign: [], vsignOff: [], aptno: [], moss: [], shed: [], tarpB: [], tarpO: [], wood: [], cloth: [], drum: [] };
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length;
   const vEdge = o.vsign === false ? -1 : o.front ? frontEdge(pts, o.front) : longestEdge(pts);
   let ar = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; ar += p[0] * q[1] - q[0] * p[1]; } ar = Math.abs(ar / 2);
@@ -411,6 +413,19 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
     if (h > 10 && h < 45 && hashU(id, 49, 7) < 0.25) { const s5 = spot(50, 0.8); if (s5) { const dsh = new THREE.SphereGeometry(0.55, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.32); dsh.rotateX(-Math.PI / 2 + 0.6); dsh.rotateY(hashU(id, 51, 7) * 6.28); dsh.translate(s5[0], h + 0.9, s5[1]); P.ac.push(dsh);   /* 위성 접시 */
       const leg = new THREE.BoxGeometry(0.06, 0.8, 0.06); leg.translate(s5[0], h + 0.4, s5[1]); P.ac.push(leg); ROOF.dish++; } }
     if (ar > 50 && hashU(id, 52, 7) < 0.4) { const n = 2 + ((hashU(id, 53, 7) * 4) | 0); for (let k = 0; k < n; k++) { const s6 = spot(60 + k, 0.5); if (!s6) continue; const r = 0.45 + 0.5 * hashU(id, 54, k), g = new THREE.IcosahedronGeometry(r, 0); g.scale(1.3, 0.55, 1.1); g.translate(s6[0], h + r * 0.3, s6[1]); P.moss.push(g); } ROOF.moss++; }   /* 이끼·풀 덤불 — 자연이 옥상을 되찾는다 */
+    /* 생존자 흔적 (문서 229 §20) — 불 켜진 창이 모인 «사람 사는 블록»(셰이더와 같은 해시)의 옥상: 천막 · 빨래줄 · 텃밭 상자 · 드럼통 */
+    if (o.camp !== false && ar > 40 && h > 6 && inhabited(cx, cz)) { let any = 0;
+      const sT = spot(70, 1.8); if (sT) { const tw = 2.6 + 1.2 * hashU(id, 71, 7), td = 2.0 + 0.8 * hashU(id, 72, 7), ry = hashU(id, 73, 7) * 3.14, blue = hashU(id, 74, 7) < 0.5;   /* 기울인 방수포 + 기둥 넷 */
+        const t = new THREE.PlaneGeometry(tw, td, 1, 1); t.rotateX(-Math.PI / 2 + 0.28); t.translate(0, 1.7, 0); t.rotateY(ry); t.translate(sT[0], h, sT[1]); (blue ? P.tarpB : P.tarpO).push(t);
+        for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { const lx = a * tw * 0.45, lz = b * td * 0.42, ph = 1.7 - Math.sin(0.28) * lz, pole = new THREE.BoxGeometry(0.06, ph, 0.06); pole.translate(lx, ph / 2, lz); pole.rotateY(ry); pole.translate(sT[0], h, sT[1]); P.wood.push(pole); } any++; }
+      const sL = spot(75, 2.2); if (sL) { const len = 3.2 + 1.5 * hashU(id, 76, 7), ry = hashU(id, 77, 7) * 3.14, cs = Math.cos(ry), sn = Math.sin(ry);   /* 빨래줄 + 빨래 */
+        for (const e of [-1, 1]) { const pl = new THREE.BoxGeometry(0.06, 1.8, 0.06); pl.translate(sL[0] + cs * e * len / 2, h + 0.9, sL[1] - sn * e * len / 2); P.wood.push(pl); }
+        const ln = new THREE.BoxGeometry(len, 0.02, 0.02); ln.rotateY(ry); ln.translate(sL[0], h + 1.75, sL[1]); P.wood.push(ln);
+        const nc = 3 + ((hashU(id, 78, 7) * 3) | 0); for (let k = 0; k < nc; k++) { const u = (k + 0.5) / nc - 0.5, cw = 0.45 + 0.3 * hashU(id, 79, k), ch = 0.5 + 0.35 * hashU(id, 80, k), c = new THREE.PlaneGeometry(cw, ch); c.translate(0, -ch / 2, 0); c.rotateY(ry); c.translate(sL[0] + cs * u * len * 0.85, h + 1.74, sL[1] - sn * u * len * 0.85); P.cloth.push(c); } any++; }
+      const nb = 2 + ((hashU(id, 81, 7) * 3) | 0); for (let k = 0; k < nb; k++) { const sB = spot(85 + k, 0.7); if (!sB) continue; const bw = 1.2 + 0.6 * hashU(id, 82, k), box = new THREE.BoxGeometry(bw, 0.4, 0.6); box.rotateY(hashU(id, 83, k) * 3.14); box.translate(sB[0], h + 0.2, sB[1]); P.wood.push(box);   /* 텃밭 상자 + 푸성귀 */
+        const gr = new THREE.BoxGeometry(bw * 0.9, 0.18, 0.5); gr.rotateY(hashU(id, 83, k) * 3.14); gr.translate(sB[0], h + 0.49, sB[1]); P.moss.push(gr); any++; }
+      const nd = 1 + ((hashU(id, 84, 7) * 3) | 0); for (let k = 0; k < nd; k++) { const sD = spot(95 + k, 0.5); if (!sD) continue; const d = new THREE.CylinderGeometry(0.3, 0.3, 0.9, 10); d.translate(sD[0], h + 0.45, sD[1]); P.drum.push(d); any++; }   /* 빗물 받는 드럼통 */
+      if (any) { ROOF.camp++; if (ROOF.at.length < 300) ROOF.at.push([+cx.toFixed(1), +h.toFixed(1), +cz.toFixed(1), 'camp']); } }
     /* 옥상 광고판: 15 m 넘는 건물 22% — 가장 긴 바깥 벽 쪽으로, 다리 둘 */
     if (h > 15 && hashU(id, 8, 7) < 0.22) { let best = -1, bl = 0; for (let e = 0; e < pts.length; e++) { const p = pts[e], q = pts[(e + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]); if (L > bl) { bl = L; best = e; } }
       if (bl > 8) { const p = pts[best], q = pts[(best + 1) % pts.length], dx = q[0] - p[0], dz = q[1] - p[1], [nx, nz] = outN(pts, p, q), yaw = -Math.atan2(dz, dx), W = Math.min(9, bl * 0.7), H = W * 0.45, mx = (p[0] + q[0]) / 2 - nx * 1.2, mz = (p[1] + q[1]) / 2 - nz * 1.2;
