@@ -1,4 +1,5 @@
 // 휴대폰용 가벼운 모델(LOD) 만들기 — 2D 맵 MMORPG 필드에서 인물은 화면 높이의 18% 남짓이라 14만 삼각형이 필요 없다 (docs/design/185 §6.2).
+// 위상 없는 장비(삼각형마다 꼭짓점 따로)는 이 도구의 «엉성한 축소» 대신 tools/2d/make-lod-soup.mjs 로 (문서 229 §41 — 두건 구멍·건틀릿 반점).
 // meshoptimizer 로 삼각형을 줄인다. 뼈·스킨 무게·UV·애니메이션은 그대로 둔다.
 //   텍스처도 줄인다: 화면에서 150px 남짓인 인물에 2K 텍스처는 낭비 — 긴 변 TEX(기본 512) px · webp.
 //   의존성(저장소에 넣지 않음): npm i --prefix <폴더> @gltf-transform/core @gltf-transform/functions @gltf-transform/extensions meshoptimizer draco3dgltf sharp

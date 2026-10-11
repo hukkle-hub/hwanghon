@@ -265,6 +265,8 @@ const { collide } = createCollide(walkMeta);
 const LOD = q.has('lod') ? q.get('lod') === '1' : MOBILE;
 const lodUrl = u => LOD ? String(u).replace(/^art\/3d\/gear\/(?!w_red_tension)/, 'art/3d/lod/gear/').replace(/^art\/3d\/(ain|kain|ryu|sera)_anim\.glb/, 'art/3d/lod/$1_anim.glb') : u;
 const loader = new GLTFLoader(), load = u => new Promise((ok, no) => loader.load(lodUrl(u), ok, undefined, no)), gltfs = {};
+/* 장비(TW_LOOKS)도 휴대폰 경로로 (문서 229 §41) — 원래 loader 를 넘겨 몸은 2.4만 삼각형(LOD)인데 갑옷 3만 · 건틀릿 1.6만×2 · 정강이·장화 … 장비만 ~12만을 원본으로 그렸다. 2D 필드(mmo.html)는 이미 같은 LOD 장비를 쓴다 */
+const gearLoader = { load: (u, ...a) => loader.load(lodUrl(u), ...a) };
 function heroGltf(id) { return gltfs[id] || (gltfs[id] = load('art/3d/' + id + '_anim.glb').then(g => { if (window.TW_POSE) TW_POSE.repair(THREE, g); return g; })); }
 /* 온라인 레이드와 같은 아바타(js/party-avatar.js Animated): 아인 바인드·클립 교정 + 양손 쥠 리그 + 솔로와 같은 낫 장착.
    처음엔 영웅 GLB 에 장비만 달았더니 낫을 지팡이처럼 끝을 잡고 왼손이 놀았다 (디렉터 지적 — 2D 필드 mmo.html 도 같은 문제) */
@@ -284,7 +286,7 @@ let dressKey = null;
 function dressMe(profile) { if (!window.TW_LOOKS) return; const eq = { ...(profile ? profile.equipment || {} : START_SETS[q.has('look') ? +q.get('look') : START_OF[ME]] || {}) }; delete eq.main;   /* ?look=0~3: 혼자 연습 세트 바꿔 보기 (검수) */
   const enh = {}; if (profile) for (const [sl, id] of Object.entries(profile.equipment || {})) { const n = profile.gear && profile.gear[id] && profile.gear[id].enh; if (Number.isInteger(n)) enh[sl] = Math.max(0, Math.min(10, n)); }
   const key = JSON.stringify([eq, enh]); if (key === dressKey) return; dressKey = key;   /* 같은 옷을 다시 만들지 않는다 (profile 은 자주 온다) */
-  window.TW_HAIR?.sync(root, eq); TW_LOOKS.attach(THREE, loader, root, eq, { charId: ME, noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
+  window.TW_HAIR?.sync(root, eq); TW_LOOKS.attach(THREE, gearLoader, root, eq, { charId: ME, noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
 dressMe(null);
 /* 문 자리는 서버 지도(map.json) 것을 — 서버가 그 자리에 세운다 */
 const GATES = (meta.gates && meta.gates.length && env.gates && meta.gates.length === env.gates.length ? meta.gates.map(m => ({ ...(env.gates.find(e => e.id === m.id) || {}), ...m })) : env.gates || meta.gates) || [];
@@ -495,7 +497,7 @@ function charAsset(c) { return charAssets[c] || (charAssets[c] = Promise.all((CH
 const esc = t => String(t == null ? '' : t).replace(/[<>&]/g, '');
 /* 다른 사람 장비 (문서 214) — 서버 infos 의 eq·enh(지금 걸친 슬롯만 공개). 내 영웅과 같은 길: 갑옷만, 같은 옷이면 다시 안 만든다 */
 function dressRemote(r, info) { if (!info || !window.TW_LOOKS || !r.a) return; const eq = { ...(info.eq || {}) }, enh = info.enh || {}; delete eq.main; const key = JSON.stringify([eq, enh]); if (key === r.dressKey) return; r.dressKey = key;
-  window.TW_HAIR?.sync(r.a.root, eq); TW_LOOKS.attach(THREE, loader, r.a.root, eq, { charId: info.character || 'ain', noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
+  window.TW_HAIR?.sync(r.a.root, eq); TW_LOOKS.attach(THREE, gearLoader, r.a.root, eq, { charId: info.character || 'ain', noMain: true, reduced: REDUCED, enhOf: (id, sl) => enh[sl] || 0 }); }
 function remoteSet(list) { const live = new Set();
   for (const [id, x, z, yaw, ai] of list) { live.add(id); let r = remotes.get(id); const info = infos[id];
     if (!r) { if (!info) continue; r = { character: info.character, target: [x, z, yaw, ANIMS[ai] || 'idle'], loading: true }; remotes.set(id, r);

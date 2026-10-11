@@ -10,7 +10,7 @@ test('코트 밑 몸 숨김(hideUnder)이 새 지오메트리에 morphTargetsRel
 });
 test('noMain: 무기를 이미 쥔 아바타엔 기본 낫을 또 달지 않는다', () => {
   assert.match(L, /if\(opts\.noMain\)\{\}/); assert.match(L, /if\(!opts\.noMain&&DUAL\[mainBase\]/);
-  assert.match(w, /TW_LOOKS\.attach\(THREE, loader, root, eq, \{ charId: ME, noMain: true/);
+  assert.match(w, /TW_LOOKS\.attach\(THREE, gearLoader, root, eq, \{ charId: ME, noMain: true/);   /* gearLoader = 휴대폰 LOD 경로 (문서 229 §41) */
 });
 test('3D 연결: 입장·profile 마다 다시 입되 같은 옷은 다시 만들지 않는다 · main 은 빼고', () => {
   assert.match(w, /dressMe\(net\.profile\);/); assert.match(w, /if \(m\.type === 'profile' && m\.profile\) dressMe\(m\.profile\);/);

@@ -1,0 +1,13 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#1a1e22;color:#ccd;font:12px sans-serif}</style><canvas id="c"></canvas><div id="lab" style="position:absolute;left:0;top:0"></div>
+<!-- 장비 원본 ↔ 휴대폰 LOD 나란히 (문서 229 §41): ?f=a_hood.glb,a_steel_gauntlet.glb &cell=270 &cand=.node-shots/lodnew/ (새로 만든 후보를 셋째 칸에). window.READY=1 이면 다 그린 것 -->
+<script type="module">
+import * as T from '../../vendor/three/three.module.js'; import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+const Q=new URLSearchParams(location.search), files=Q.get('f').split(','), C=+(Q.get('cell')||300);
+const cv=document.getElementById('c'), R=new T.WebGLRenderer({canvas:cv,antialias:true,preserveDrawingBuffer:true}); R.setSize(C*9, C*Math.ceil(files.length/3)); R.setScissorTest(true); R.outputColorSpace=T.SRGBColorSpace; R.toneMapping=T.ACESFilmicToneMapping;
+const L=new GLTFLoader(), lab=document.getElementById('lab');
+for(let i=0;i<files.length;i++){ for(const [k,dir] of [[0,'art/3d/gear/'],[1,'art/3d/lod/gear/'],...(Q.get('cand')?[[2,Q.get('cand')]]:[])]){ const g=await L.loadAsync('../../'+dir+files[i]); const s=new T.Scene(); s.background=new T.Color(0x23282e); s.add(new T.HemisphereLight(0xdde6ff,0x303440,1.4)); const d=new T.DirectionalLight(0xffeedd,2.4); d.position.set(2,3,3); s.add(d); s.add(g.scene);
+  const b=new T.Box3().setFromObject(g.scene), c=b.getCenter(new T.Vector3()), sz=b.getSize(new T.Vector3()).length(); const cam=new T.PerspectiveCamera(30,1,sz/100,sz*10); cam.position.set(c.x+sz*0.9,c.y+sz*0.35,c.z+sz*1.5); cam.lookAt(c);
+  const col=(i%3)*3+k, row=Math.floor(i/3), H=C*Math.ceil(files.length/3); R.setViewport(col*C,H-(row+1)*C,C,C); R.setScissor(col*C,H-(row+1)*C,C,C); R.render(s,cam);
+  const e=document.createElement('div'); e.style.cssText=`position:absolute;left:${col*C+4}px;top:${row*C+4}px`; e.textContent=(['','LOD ','후보 '][k])+files[i]; lab.appendChild(e); } }
+window.READY=1;
+</script>
