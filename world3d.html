@@ -624,7 +624,10 @@ let dimLights = null; const dimFog = new THREE.Color(), dimBg = new THREE.Color(
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
 /* ?debug=1 — 휴대폰 무게 표시 (js/mmo/perf-meter.js, 문서 211) */
 const dbgEl = document.getElementById('dbg'), DBG = q.get('debug') === '1'; dbgEl.hidden = !DBG;
-const perf = createPerfMeter({ renderer, el: DBG ? dbgEl : null, extra: () => (LOD ? ' · LOD' : '') + ' · 몬스터 ' + (MOBS ? MOBS.count : 0) + ' · 사람 ' + (remotes.size + 1) });
+/* 켠 기능 한 줄 (문서 229 §23) — 휴대폰에서 ?im=0 · ?wet=0 … 을 바꿔 가며 잰 결과 카드를 견줄 때 무엇이 켜져 있었는지 같이 남긴다 */
+const featTag = () => [['창', q.get('im') !== '0'], ['그늘', !!CSH], ['물', PUDDLE.on], ['빛', !!CONES], ['반사', !!REFL], ['컬', !!FOGC]].map(([k, v]) => k + (v ? '○' : '×')).join(' ') + ' · 안개 ' + (scene.fog ? Math.round(scene.fog.far) : '—') + (FOGC ? ' (숨김 ' + FOGC.hidden + '·' + FOGC.instHidden + ')' : '');
+window.__featTag = featTag;
+const perf = createPerfMeter({ renderer, el: DBG ? dbgEl : null, extra: () => (LOD ? ' · LOD' : '') + ' · 몬스터 ' + (MOBS ? MOBS.count : 0) + ' · 사람 ' + (remotes.size + 1) + '\n' + featTag() });
 /* 휴대폰 무게 재기 코스 (?bench=1, 문서 220 §17) — 출발점 세 방향 · 사냥터 · 길 끝 문 앞을 10초씩 보고 결과 카드 */
 const BENCH = q.get('bench') === '1' ? (() => { const sp = env.spawn || meta.spawn, V = [0, 2.1, 4.2].map((y, k) => ({ name: '출발점' + (k + 1), x: sp.x, z: sp.z, yaw: y }));
   const nest = (meta.areas || []).find(a => a.kind === 'hunt' && a.eco && a.eco.nests && a.eco.nests[0]); if (nest) V.push({ name: '사냥터', x: nest.eco.nests[0][0], z: nest.eco.nests[0][1], yaw: 0.4 });
@@ -634,7 +637,7 @@ const BENCH = q.get('bench') === '1' ? (() => { const sp = env.spawn || meta.spa
   return createBench(V, { apply: v => { root.position.set(v.x, 0, v.z); me.yaw = v.yaw; root.rotation.y = v.yaw; camS.yaw = v.yaw + Math.PI; nearLights(root.position); } }); })() : null;
 let benchShown = false;
 function benchCard() { const el = document.getElementById('benchCard'), gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'), gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '?';
-  const info = `${ZONE} · ${innerWidth}×${innerHeight} · 픽셀비 ${renderer.getPixelRatio().toFixed(2)} · ${gpu}${LOD ? ' · LOD' : ''}\n${((navigator.userAgent.match(/\(([^)]*)\)/) || [])[1] || '').slice(0, 80)}`, text = BENCH.summary(info);
+  const info = `${ZONE} · ${innerWidth}×${innerHeight} · 픽셀비 ${renderer.getPixelRatio().toFixed(2)} · ${gpu}${LOD ? ' · LOD' : ''}\n${featTag()}\n${((navigator.userAgent.match(/\(([^)]*)\)/) || [])[1] || '').slice(0, 80)}`, text = BENCH.summary(info);
   el.innerHTML = '<b>무게 재기 결과</b>\n'; el.appendChild(document.createTextNode(text + '\n'));
   const cp = document.createElement('button'); cp.textContent = '복사'; cp.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(text).then(() => { cp.textContent = '복사됨'; }, () => {}); };
   const again = document.createElement('button'); again.textContent = '다시'; again.onclick = () => location.reload(); const close = document.createElement('button'); close.textContent = '닫기'; close.onclick = () => { el.hidden = true; };

@@ -38,3 +38,12 @@ test('예열 (문서 220 §19): 로딩 끝에 장면 전체를 컬링 없이 한
   assert.match(W, /watchLooks\(dt\)/);
   const F = fs.readFileSync(new URL('../js/mmo/field-mobs.js', import.meta.url), 'utf8'); assert.match(F, /new THREE\.MeshBasicMaterial\(\{ color: 0xff3020, transparent: true, opacity: \.8, depthWrite: false, depthTest: false, side: THREE\.DoubleSide, toneMapped: false \}\)/, 'field-mobs 예고 고리 재질이 바뀌면 예열도 바꿔야 한다');
 });
+
+test('켠 기능 한 줄 (문서 229 §23): ?debug=1 표시와 결과 카드에 창·그늘·물·빛·반사·컬·안개 끝을 같이 남긴다', () => {
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), m = W.match(/const featTag = \(\) => \[(.*?)\]\.map/); assert.ok(m, 'featTag');
+  for (const [k, v] of [['창', "q.get('im') !== '0'"], ['그늘', '!!CSH'], ['물', 'PUDDLE.on'], ['빛', '!!CONES'], ['반사', '!!REFL'], ['컬', '!!FOGC']]) assert.ok(m[1].includes(`['${k}', ${v}]`), k + ' 기능이 빠졌다');
+  assert.match(W, /const featTag = [^\n]*scene\.fog\.far/, '안개 끝');
+  assert.match(W, /createPerfMeter\(\{[^\n]*extra: \(\) => [^\n]*featTag\(\) \}\)/, '?debug=1 표시');
+  assert.match(W, /const info = `[^`]*\$\{featTag\(\)\}/, '결과 카드');
+  assert.ok(W.indexOf('const featTag') > W.indexOf('const FOGC ='), 'FOGC 를 만든 뒤에');
+});

@@ -22,14 +22,15 @@ for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 c = pg + vec2
     vec2 q = vec2(ca * o.x + sa * o.y, -sa * o.x + ca * o.y); float rx = 0.9 + 1.6 * h1; pd = min(pd, length(q / vec2(rx, rx * (0.45 + 0.5 * h2)))); } }
 pd += (pn(vPW.xz / 0.8) - 0.5) * 0.4;
 float pw = 1.0 - smoothstep(0.88, 1.0, pd), wet = 1.0 - smoothstep(1.0, 1.7, pd);
-diffuseColor.rgb *= mix(1.0, 0.7, wet) * mix(1.0, 0.5, pw);
+diffuseColor.rgb *= mix(1.0, 0.8, wet) * mix(1.0, 0.55, pw);
 `;
 const REFL = `
 { vec3 V = normalize(vPW - cameraPosition); float cosV = max(0.0, -V.y), fres = pow(1.0 - cosV, 4.0);
   vec3 sky = mix(vec3(dot(uSkyRefl, vec3(0.299, 0.587, 0.114))), uSkyRefl, 0.6);   /* 채도 40 % 빼기 — 밤 자줏빛 하늘이 그대로 비치니 페인트 얼룩 같았다(여의도) */
   float k = (0.55 + 1.1 * fres) * (1.0 - 0.15 * min(uLampK, 1.6));
-  if (uEnvK > 0.0) { vec3 R = reflect(V, vec3(0.0, 1.0, 0.0)); vec3 env = textureCube(uEnvCube, R).rgb; sky = mix(vec3(dot(env, vec3(0.299, 0.587, 0.114))), env, 0.7); k = 0.12 + 0.75 * fres;
-    diffuseColor.rgb *= mix(1.0, 0.6, pw); }   /* 구운 주변(문서 229 §12)을 비춘다 — 둘레 건물은 어둡게, 트인 쪽만 하늘이 밝게. 하늘 한 가지 색은 낮에 하얀 얼음판이었다(해운대·여의도) */
+  if (uEnvK > 0.0) { vec2 rp = vPW.xz * 2.3; vec3 Nr = normalize(vec3(0.3 * (pn(rp) - pn(rp + vec2(0.37, 0.0))), 1.0, 0.3 * (pn(rp) - pn(rp + vec2(0.0, 0.37))))); vec3 R = reflect(V, Nr); vec3 env = textureCube(uEnvCube, R).rgb; sky = mix(vec3(dot(env, vec3(0.299, 0.587, 0.114))), env, 0.5); k = min(0.4, 0.03 + 0.9 * fres * (1.0 - cosV));
+    diffuseColor.rgb *= mix(1.0, 0.6, pw); }   /* 구운 주변(문서 229 §12)을 비춘다 — 둘레 건물은 어둡게, 트인 쪽만 하늘이 밝게. 하늘 한 가지 색은 낮에 하얀 얼음판이었다(해운대·여의도).
+       세기는 물의 반사율(슐릭: F0 0.02 + (1-cos)^5) — 0.12 + 0.75·fres 는 중간 각도에서 두 배라 먼 웅덩이가 분홍 페인트였다(서귀포·경주, §23). 잔물결 법선(×0.3)으로 비침을 흩는다 — 1 배는 건물 그림자가 얼룩무늬로 박혔다 */
   totalEmissiveRadiance += sky * pw * k; }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
 `;
 export function patchPuddleMaterial(THREE, m) {
