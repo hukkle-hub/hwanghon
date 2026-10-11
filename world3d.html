@@ -337,6 +337,9 @@ for (const b of meta.bosses || []) if (b.ai === 'dominator') {
 }
 /* ---------- 3인칭 카메라 ---------- */
 const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
+/* Asset promises may settle while connectField awaits the server. Establish
+   the stage before that await, not after it, so STAGE.attach never hits TDZ. */
+const STAGE = createBossStage({ THREE, scene, cam, player: () => root.position, reduced: REDUCED, occlude: (at, want) => firstHit(MERGE.camBoxes, at, want) });
 const INDOOR = (env.kind || Z.kind || meta.kind) !== 'field';   /* 던전·벙커: 천장이 있으니 가깝고 낮게 */
 if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }   /* 실내는 가까이서 어둡게 */
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
@@ -548,7 +551,6 @@ potShow();
 const bossClock = () => net ? sclock.now() : gameNow;
 /* 보스 무대 (문서 221) — 윤곽광·발밑 기운·소리·등장·페이즈·반격·사망·이름표. 판정은 건드리지 않는다 */
 const bossEnv = () => { try { return window.TW_ENV ? window.TW_ENV.make(THREE, renderer, 'dungeon') : null; } catch { return null; } };   /* 보스 재질 전용 환경맵 — 한 번 굽고 재사용 (문서 221 §1) */
-const STAGE = createBossStage({ THREE, scene, cam, player: () => root.position, reduced: REDUCED, occlude: (at, want) => firstHit(MERGE.camBoxes, at, want) });
 for (const b of meta.bosses || []) if (b.ai !== 'dominator' && b.model) {
   load(b.model).then(async gl => { const r = gl.scene; r.traverse(m => { if (m.isMesh) { m.frustumCulled = false; m.castShadow = true; } }); { const sc = stageOf(b); if (sc) r.userData.rimK = rimify(THREE, r, sc.rim, sc.rimK, sc.env ? bossEnv() : null, sc.env); /* 윤곽광·반사는 예열 전에 — 첫 등장 때 컴파일하지 않게 */ } await preCompile(r);
     const box = new THREE.Box3().setFromObject(r), h = box.max.y - box.min.y || 1, dh = b.visualH || b.h, k = dh ? dh / h : (b.scale || 1); r.scale.setScalar(k); box.setFromObject(r);
