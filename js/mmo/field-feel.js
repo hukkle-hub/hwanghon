@@ -10,6 +10,10 @@ import { WeaponTrail, trailStyle } from '../weapon-trail.js';
 const RULES = () => globalThis.TW_DUNGEONS?.RULES || {};
 /* 클립 안 접점 위치(0~1) — 솔로와 같은 표. 캐릭터별 값이 먼저 */
 export function contactOf(char, clip) { const m = RULES().motion || {}; return m.clipContactsByChar?.[char]?.[clip] ?? m.clipContacts?.[clip] ?? 0.4; }
+/* 회피가 열리는 때(초) — 던전 combat.js defCancelAt 과 같은 규칙(명조식): 날이 지나간 직후(마지막 접점 + 날 0.22 s + defCancel 0.06 s)부터 회피는 끊고 들어간다.
+   필드는 클립이 끝날 때까지 회피를 막아 카인 지면 강타(4.88 s)에서 4.9 초를 갇혔다(문서 229 §30). 접점 없는 기술(버프·회피)은 40 % 에서. 공격 연계는 그대로 클립 끝 */
+export function defCancelAt(dur, hitFracs) { const pad = (RULES().motion || {}).defCancel ?? 0.06, h = (hitFracs || []).filter(Number.isFinite);
+  return h.length ? Math.min(dur, Math.max(...h) * dur + 0.22 + pad) : Math.min(dur, Math.max(0.3, dur * 0.4)); }
 /* 히트스톱 길이(초) — 솔로 표 × 무기 리듬 (대검은 길게, 쌍단검은 짧게) */
 export function stopFor(kind, char) { const hs = RULES().hitstop || {}, rh = RULES().rhythm?.[char]; return (hs[kind] ?? hs.light ?? 0.09) * (rh?.stop ?? 1); }
 /* 궤적이 켜지는 구간(초) — js/combat-quality.js trailActive 와 같다: 접점 60% 지점부터 접점 + 0.22 s */
