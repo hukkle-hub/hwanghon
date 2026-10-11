@@ -74,7 +74,7 @@ canvas{ display:block; width:100vw; height:100vh; }
   #hint{ left:12px; transform:none; bottom:calc(max(10px,env(safe-area-inset-bottom)) + 16px); max-width:calc(100vw - 360px); font-size:11px; }
   body #osm{ right:auto; left:12px; bottom:max(4px,env(safe-area-inset-bottom)); }
 }
-.dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
+#dmgs{ position:absolute; inset:0; z-index:3; pointer-events:none; } .dmg{ position:absolute; transform:translate(-50%,-50%); font-weight:900; font-size:18px; color:#fff2d8; text-shadow:0 2px 4px #000; white-space:nowrap; }
 .dmg.crit{ color:#ffc060; font-size:22px; } .dmg.taken{ color:#ff6a5a; } .dmg.evade{ color:#9fd8e8; font-size:15px; }
 #benchCard:not([hidden]){ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:60; width:min(92vw,560px); background:rgba(20,12,18,.94); border:2px solid #c9a45e; border-radius:14px; padding:16px 18px; color:#f0e2d0; font:15px/1.55 'Noto Sans KR',sans-serif; white-space:pre-wrap; display:block }
 #benchCard b{ color:#c9a45e; font-size:18px } #benchCard button{ min-height:64px; min-width:120px; margin:10px 8px 0 0; font:700 16px 'Noto Sans KR',sans-serif; border-radius:10px; border:2px solid #c9a45e; background:#2a1c22; color:#f0e2d0 }
@@ -88,7 +88,7 @@ canvas{ display:block; width:100vw; height:100vh; }
 #toast[hidden]{ display:none; }
 .tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
 .mobhp{position:absolute;transform:translate(-50%,-100%);width:46px;height:5px;background:rgba(10,4,4,.72);box-shadow:0 0 0 1px rgba(0,0,0,.8);pointer-events:none}.mobhp i{display:block;height:100%;width:100%;background:linear-gradient(#ff6a50,#b8281c)}
-.tag.mob{ color:#d4dccb; } .tag.mob small{ display:block; font-size:9px; color:#a8b0a0; } .tag.mob.g4{ color:#c9a8ff; } .tag.mob.g3{ color:#ff9c90; }
+.tag.mob{ color:#d4dccb; transition:opacity .25s; } .tag.mob.fight{ opacity:.35; } .tag.mob small{ display:block; font-size:9px; color:#a8b0a0; } .tag.mob.g4{ color:#c9a8ff; } .tag.mob.g3{ color:#ff9c90; }
 #mini{ position:absolute; right:calc(12px + env(safe-area-inset-right)); top:calc(max(12px,env(safe-area-inset-top))); width:132px; border:1px solid rgba(201,164,94,.55); background:#140c10 center/100% 100% no-repeat; box-shadow:0 0 8px rgba(0,0,0,.6); overflow:hidden; pointer-events:auto; cursor:pointer; }
 #mini[hidden]{ display:none; }
 #mini.big{ right:auto; left:50%; top:50%; transform:translate(-50%,-50%); width:min(86vw,calc(78vh * var(--ar))); z-index:6; }
@@ -484,7 +484,8 @@ potEl.addEventListener('pointerdown', e => { e.stopPropagation(); drink(); }); a
 for (const [id, fn] of [['atk', attack], ['dodge', dodge]]) document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 /* 떠오르는 숫자 — 게임 시간으로 지운다 */
 const floats = [], dmgsEl = document.getElementById('dmgs'), v3 = new THREE.Vector3();
-function floatAt(text, cls, pos, y) { const el = document.createElement('div'); el.className = 'dmg ' + cls; el.textContent = text; dmgsEl.appendChild(el); floats.push({ el, x: pos.x + (Math.random() - .5) * .5, y, z: pos.z, t: 0 }); }
+function floatAt(text, cls, pos, y) { const el = document.createElement('div'); el.className = 'dmg ' + cls; el.textContent = text; dmgsEl.appendChild(el); let top = -Infinity; for (const f of floats) if (f.cls === cls && f.t < .6 && Math.hypot(f.x - pos.x, f.z - pos.z) < 1.2) top = Math.max(top, f.y + f.t * .9);   /* 막 뜬 같은 종류가 있으면 «지금 떠 있는 높이» 위로 한 칸 — 출발 높이로 쌓으면 먼저 것이 이미 떠올라 다시 겹쳤다 (문서 229 §48) */
+  floats.push({ el, cls, x: pos.x + (Math.random() - .5) * .5, y: top > -Infinity ? Math.max(y, top + .45) : y, z: pos.z, t: 0 }); }
 function floatTick(dt) { for (let i = floats.length - 1; i >= 0; i--) { const f = floats[i]; f.t += dt; v3.set(f.x, f.y + f.t * .9, f.z).project(cam);
   const on = v3.z < 1 && f.t < .95; f.el.style.display = on ? '' : 'none'; if (on) { f.el.style.left = (v3.x + 1) / 2 * innerWidth + 'px'; f.el.style.top = (1 - v3.y) / 2 * innerHeight + 'px'; f.el.style.opacity = Math.min(1, (0.95 - f.t) * 4); }
   if (f.t >= .95) { f.el.remove(); floats.splice(i, 1); } } }

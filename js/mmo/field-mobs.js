@@ -119,6 +119,7 @@ export function createMobView({ THREE, clone, scene, loadBody, loadBodyFor = nul
         for (const v of list) { if (v !== lead) { v.tag.style.display = 'none'; continue; }
           const names = [...new Set(live.map(x => x.cat.name))], head = names[0] + (live.length > 1 ? (names.length > 1 ? ' 외' : '') + ' ×' + live.length : '');
           if (v.tagHead !== head) { v.tagHead = head; v.tag.innerHTML = String(head).replace(/[<>&]/g, '') + '<small>' + (GRADE_NAME[v.cat.grade] || '') + v.bodyLabel+'</small>'; }
+          const fight = live.some(x => x.hp < 100 || x.cur === 'attack' || x.cur === 'hit'); if (v.tagFight !== fight) { v.tagFight = fight; v.tag.classList?.toggle('fight', fight); }   /* 싸우는 동안엔 흐리게 — 피해 숫자가 같은 높이에 떠 겹쳤다 (문서 229 §48) */
           tagAt(v.tag, v.root.position.x, labelY(v,.32), v.root.position.z); } }
     },
     nearest(x, z, r) { let best = null, bd = r; for (const v of views.values()) { if (!v.alive) continue; const d = Math.hypot(v.root.position.x - x, v.root.position.z - z); if (d <= bd) { bd = d; best = v; } } return best; },
