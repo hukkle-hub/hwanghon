@@ -69,7 +69,7 @@ test('actual Animated field mounting: full and mobile grips agree through idle/r
   }
   poses.push(metrics);h.dispose(scene);
  }
- for(let i=0;i<poses[0].length;i++)for(const side of ['right','left'])assert.ok(V().fromArray(poses[0][i][side]).distanceTo(V().fromArray(poses[1][i][side]))<.001,`${poses[0][i].clip} ${side}: LOD and source mounting/IK differ`);
+ for(let i=0;i<poses[0].length;i++)for(const side of ['right','left']){const gap=V().fromArray(poses[0][i][side]).distanceTo(V().fromArray(poses[1][i][side]));assert.ok(gap<.001,`${poses[0][i].clip} ${side}: LOD and source mounting/IK differ by ${gap} m`);}
 });
 test('Kain LOD calibrated fingers/thumb do not tear and stay finite',async(t)=>{
  const g=await load('art/3d/lod/kain_anim.glb'),api=gripHands(g.scene,'kain');

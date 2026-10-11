@@ -2,6 +2,7 @@ import * as T from '../vendor/three/three.module.js';
 import {makeRigAdapter} from './combat-motion.js';
 import {gripReachShift,solveGripCircle} from './ain-grip-ik.js';
 import {planMocapGrip} from './mocap-grip.js';
+import {makeKainRigAdapter} from './kain-two-hand.js';
 const V=(x=0,y=0,z=0)=>new T.Vector3(x,y,z);
 const Q=()=>new T.Quaternion();
 function worldQ(b,q){b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(q));b.updateWorldMatrix(false,true);}
@@ -459,7 +460,7 @@ export function makeAinTwoHand(model,root,slot){
  // (tests/ain-two-hand: 9.24°/프레임, 문턱 8°). 그래서 속도 자체를 제한한다.
  // 비대칭이다: 싸우러 들어갈 때는 빨리 세우고(0.18초), 끝나고 내릴 때는 천천히(0.45초).
  // 평타 접점이 0.30초라 올리는 쪽이 느리면 접점까지 반쯤 들린 채로 친다.
- { const span=carrying?.45:.18, want=carrying?1:0;
+ { const span=carrying?.45:.18, want=carrying?1-.25*(model.userData.locomotionCombat||0):0;
    if(dt>0){ const step=Math.min(dt,.05)/span, d=want-carryAmount;
              carryAmount+=Math.abs(d)<=step?d:(d>0?step:-step); }
    else carryAmount=want; }
@@ -638,13 +639,16 @@ export function makeAinTwoHand(model,root,slot){
   diagnostics.gripError=leftPalm.distanceTo(slot.getWorldPosition(V()).addScaledVector(axis,-.32*scale));
   diagnostics.rightGripError=rightPalm.distanceTo(slot.getWorldPosition(V()));
  }
- return {bones,restore,apply,diagnostics};
+ return {bones,restore,apply,diagnostics,seedWeapon(center,rotation){previousWeapon={center:center.clone(),rotation:rotation.clone()};lastWeaponState='locomotion58';}};
 }
 
 export function makeAinRigAdapter(model,root,slot){
  const base=makeRigAdapter(model,root,null),arms=makeAinTwoHand(model,root,slot);
+ let carry=null,wasCarry=false,lastWeapon=null,presented=false;
+ if(model.userData.locomotionVersion&&slot){for(const side of ['Left','Right']){const h=arms.bones[side+'Hand'];h.userData.gripAxis=V(0,0,side==='Right'?-1:1);h.userData.gripFinger=V(0,1,0);h.userData.gripPoint=arms.bones[side+'HandSlot'].position.clone();}carry=makeKainRigAdapter(model,root,slot,{groundOffset:0,gripSpan:.32,carryForward:.36,carryDrop:.32,carryRotation:combat=>aimScytheBlade(V(-.88,-.34+.20*combat,-.34).normalize())});}
+ const closeCarryHands=()=>{for(const mesh of model.userData.ainBindRepair?.grips||[]){mesh.morphTargetInfluences[0]=1;mesh.morphTargetInfluences[1]=1;}};
  return {bones:arms.bones,diagnostics:arms.diagnostics,
-  restore(){arms.restore();base.restore();},
-  apply(a,moving,guard,dt,poseName,target){const source=!!model.userData.heroSkillMotion?.[a?.clip];base.apply(source?null:a,source||moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName,target);arms.diagnostics.footError=base.diagnostics.footError;}
+  restore(){if(presented&&carry&&slot){const rotation=slot.getWorldQuaternion(Q());lastWeapon={center:slot.getWorldPosition(V()).addScaledVector(V(0,1,0).applyQuaternion(rotation),-.16*model.getWorldScale(V()).x),rotation};}carry?.restore();arms.restore();base.restore();},
+  apply(a,moving,guard,dt,poseName,target){const useCarry=carry&&!a&&!guard&&/^(travelIdle|combatIdle|walk|run)$/.test(poseName||'');if(useCarry){if(!wasCarry&&lastWeapon)carry.seedWeapon(lastWeapon.center,lastWeapon.rotation);carry.apply(null,moving,false,dt,poseName,target);closeCarryHands();Object.assign(arms.diagnostics,carry.diagnostics,{source:'locomotion58-two-hand'});wasCarry=true;presented=true;return;}if(wasCarry&&lastWeapon)arms.seedWeapon(lastWeapon.center,lastWeapon.rotation);wasCarry=false;const source=!!model.userData.heroSkillMotion?.[a?.clip];base.apply(source?null:a,source||moving||a?.clip==='skill3',guard,dt);arms.apply(a,moving,guard,dt,poseName,target);arms.diagnostics.footError=base.diagnostics.footError;presented=true;}
  };
 }
