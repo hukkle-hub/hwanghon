@@ -8,13 +8,20 @@
    텍스처를 더 읽지 않는다. PUDDLE.on 을 world3d 가 ?wet=0 으로 끈다 */
 import { FACADE_U } from './facade-shader.js';
 import { antiTile } from './ph-tex.js';
+import { WX } from './weather.js';
+import { WIND } from './wind.js';
 export const PUDDLE = { on: true };
 const PARS = `
 varying vec3 vPW;
-uniform vec3 uSkyRefl; uniform float uLampK; uniform samplerCube uEnvCube; uniform float uEnvK;
+uniform vec3 uSkyRefl; uniform float uLampK; uniform samplerCube uEnvCube; uniform float uEnvK; uniform float uRain, uWet, uWind;
 float ph(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float pn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return mix(mix(ph(i), ph(i + vec2(1, 0)), f.x), mix(ph(i + vec2(0, 1)), ph(i + vec2(1, 1)), f.x), f.y); }
+/* 빗방울 동심원 (문서 230 §14): 31 cm 칸 두 겹마다 한 방울 — 퍼져 나가며 옅어지는 고리의 기울기(xz). 비가 안 오면 0 */
+vec2 rainRip(vec2 p) { vec2 acc = vec2(0.0); if (uRain < 0.01) return acc;
+  for (int j = 0; j < 2; j++) { vec2 q = p * 3.2 + float(j) * 0.37, c = floor(q), f = fract(q) - 0.5; float t = fract(uWind * 1.1 + ph(c + float(j) * 13.1));
+    vec2 dv = f - (vec2(ph(c + 5.3), ph(c + 9.1)) - 0.5) * 0.5; float r = length(dv); acc += dv / max(r, 1e-3) * exp(-pow((r - t * 0.42) * 28.0, 2.0)) * (1.0 - t); }
+  return acc * uRain; }
 `;
 /* 웅덩이 세기 pw(0..1) · 젖음 wet(0..1). 4.5 m 칸마다 40 % 는 비우고 60 % 에 비스듬한 타원 웅덩이 하나(긴 반지름 0.9~2.5 m) — 이웃 9 칸 중 가장 가까운 것.
    가장자리는 0.8 m 잔 잡음으로 흔든다. 값 잡음 문턱(1·2판)은 등고선이 구불구불한 물줄기처럼 이어져 웅덩이가 아니라 기름 줄 같았다 */
@@ -23,7 +30,7 @@ float pd = 9.0; vec2 pg = floor(vPW.xz / 4.5);
 for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) { vec2 c = pg + vec2(float(i), float(j)); float h0 = ph(c), h1 = ph(c + 31.7), h2 = ph(c + 57.3), h3 = ph(c + 91.1);
   if (h0 < 0.6) { vec2 o = vPW.xz - (c + vec2(0.2 + 0.6 * h1, 0.2 + 0.6 * h2)) * 4.5; float a = h3 * 6.2832, ca = cos(a), sa = sin(a);
     vec2 q = vec2(ca * o.x + sa * o.y, -sa * o.x + ca * o.y); float rx = 0.9 + 1.6 * h1; pd = min(pd, length(q / vec2(rx, rx * (0.45 + 0.5 * h2)))); } }
-pd += (pn(vPW.xz / 0.8) - 0.5) * 0.4;
+pd += (pn(vPW.xz / 0.8) - 0.5) * 0.4; pd -= uWet * 0.3;   /* 비가 오면 웅덩이가 넓어진다 (문서 230 §14) */
 float pw = 1.0 - smoothstep(0.72, 1.0, pd), wet = 1.0 - smoothstep(0.8, 1.7, pd);
 diffuseColor.rgb *= mix(1.0, 0.8, wet) * mix(1.0, 0.55, pw);
 `;
@@ -31,7 +38,7 @@ const REFL = `
 { vec3 V = normalize(vPW - cameraPosition); float cosV = max(0.0, -V.y), fres = pow(1.0 - cosV, 4.0);
   vec3 sky = mix(vec3(dot(uSkyRefl, vec3(0.299, 0.587, 0.114))), uSkyRefl, 0.6);   /* 채도 40 % 빼기 — 밤 자줏빛 하늘이 그대로 비치니 페인트 얼룩 같았다(여의도) */
   float k = (0.55 + 1.1 * fres) * (1.0 - 0.15 * min(uLampK, 1.6));
-  if (uEnvK > 0.0) { vec2 rp = vPW.xz * 2.3; vec3 Nr = normalize(vec3(0.3 * (pn(rp) - pn(rp + vec2(0.37, 0.0))), 1.0, 0.3 * (pn(rp) - pn(rp + vec2(0.0, 0.37))))); vec3 R = reflect(V, Nr); vec3 env = textureCube(uEnvCube, R).rgb; sky = mix(vec3(dot(env, vec3(0.299, 0.587, 0.114))), env, 0.5); k = min(0.4, 0.03 + 0.9 * fres * (1.0 - cosV));
+  if (uEnvK > 0.0) { vec2 rp = vPW.xz * 2.3; vec2 rip = rainRip(vPW.xz) * 0.6; vec3 Nr = normalize(vec3(0.3 * (pn(rp) - pn(rp + vec2(0.37, 0.0))) + rip.x, 1.0, 0.3 * (pn(rp) - pn(rp + vec2(0.0, 0.37))) + rip.y)); vec3 R = reflect(V, Nr); vec3 env = textureCube(uEnvCube, R).rgb; sky = mix(vec3(dot(env, vec3(0.299, 0.587, 0.114))), env, 0.5); k = min(0.4, 0.03 + 0.9 * fres * (1.0 - cosV));
     diffuseColor.rgb *= mix(1.0, 0.6, pw); }   /* 구운 주변(문서 229 §12)을 비춘다 — 둘레 건물은 어둡게, 트인 쪽만 하늘이 밝게. 하늘 한 가지 색은 낮에 하얀 얼음판이었다(해운대·여의도).
        세기는 물의 반사율(슐릭: F0 0.02 + (1-cos)^5) — 0.12 + 0.75·fres 는 중간 각도에서 두 배라 먼 웅덩이가 분홍 페인트였다(서귀포·경주, §23). 잔물결 법선(×0.3)으로 비침을 흩는다 — 1 배는 건물 그림자가 얼룩무늬로 박혔다 */
   totalEmissiveRadiance += sky * pw * k; }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
@@ -40,14 +47,14 @@ export function patchPuddleMaterial(THREE, m) {
   const AT = !!(m.userData && m.userData.antiTile);   /* 사진 아스팔트 반복 깨기 (ph-tex antiTile, 문서 230 §11) — 웅덩이를 꺼도 */
   if (!PUDDLE.on) { if (AT) { m.onBeforeCompile = sh => antiTile(sh, THREE); m.customProgramCacheKey = () => 'anti-tile'; m.needsUpdate = true; } return m; }
   if (!FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value = new THREE.Color(0x6a7088);
-  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, { uSkyRefl: FACADE_U.uSkyRefl, uLampK: FACADE_U.uLampK, uEnvCube: FACADE_U.uEnvCube, uEnvK: FACADE_U.uEnvK });
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, { uSkyRefl: FACADE_U.uSkyRefl, uLampK: FACADE_U.uLampK, uEnvCube: FACADE_U.uEnvCube, uEnvK: FACADE_U.uEnvK, uRain: WX.uRain, uWet: WX.uWet, uWind: WIND });
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vPW;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvPW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + PARS)
       .replace('#include <map_fragment>', '#include <map_fragment>' + BODY)
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, mix(0.45, 0.2, clamp(uLampK, 0.0, 1.0)), wet); roughnessFactor = mix(roughnessFactor, 0.05, pw);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, pw);')
-      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = normalize(mix(normal, nonPerturbedNormal, pw));')   /* 웅덩이 물낯은 판판하다 — 사진 아스팔트의 금·자갈 노멀을 물속에서 지운다 (문서 230 §11) */
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = normalize(mix(normal, nonPerturbedNormal, pw)); { vec2 rr = rainRip(vPW.xz) * pw * 0.6; normal = normalize(normal + mat3(viewMatrix) * vec3(rr.x, 0.0, rr.y)); }')   /* 웅덩이 물낯은 판판하다 — 사진 아스팔트의 금·자갈 노멀을 물속에서 지운다 (문서 230 §11) */
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>' + REFL); if (AT) antiTile(sh, THREE); };
   m.customProgramCacheKey = () => AT ? 'puddle-at' : 'puddle'; m.needsUpdate = true; return m;
 }

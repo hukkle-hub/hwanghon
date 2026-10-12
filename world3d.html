@@ -144,6 +144,8 @@ import { createBench } from './js/mmo/bench.js';
 import { REGIONS } from './js/mmo/regions.js';
 import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
+import { WX, zoneSeed, weatherNow, applyRain } from './js/mmo/weather.js';
+import { rainStreaks } from './js/mmo/rain.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
@@ -229,9 +231,11 @@ if (q.get('macro') !== '0') { const done = new Set(), b = new THREE.Box3(), MODE
     done.add(m); if (MODE !== 'shader') { if (m.roughness < 0.45) m.roughness = 0.74; if (m.metalness > 0.1) { m.metalness = 0.06; m.color.multiplyScalar(0.72); } }   /* 금속성을 빼면 아스팔트가 밝아져 보도와 같은 색이 됐다 — 그만큼 어둡게 */ if (MODE === 'rough') return;   /* 바닥은 금속이 아니다 — 낮은 해에 비스듬히 하얗게 번졌다 */   /* 낮은 해가 젖은 길에 하얗게 번지던 것 (문서 217 §2) */
     const prevBC = m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? m.onBeforeCompile : null, prevKey = prevBC && m.customProgramCacheKey ? m.customProgramCacheKey.bind(m)() : '';   /* 앞 패치(젖은 길 웅덩이, 문서 229 §10)를 이어 부른다 — 덮어써서 웅덩이가 사라졌었다 */
     m.onBeforeCompile = (sh, r) => { if (prevBC) prevBC.call(m, sh, r); sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec2 vWG;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWG = (modelMatrix * vec4(transformed, 1.0)).xz;');
-      sh.uniforms.uCloudK = CLOUDK; sh.uniforms.uCloudT = CLOUDT; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uCloudK, uCloudT; varying vec2 vWG; float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(gh(i), gh(i + vec2(1, 0)), f.x), mix(gh(i + vec2(0, 1)), gh(i + vec2(1, 1)), f.x), f.y); }')
+      sh.uniforms.uCloudK = CLOUDK; sh.uniforms.uCloudT = CLOUDT; sh.uniforms.uGWet = WX.uWet; sh.uniforms.uGGloss = WX.uGloss; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uCloudK, uCloudT, uGWet, uGGloss; varying vec2 vWG; float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); } float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(gh(i), gh(i + vec2(1, 0)), f.x), mix(gh(i + vec2(0, 1)), gh(i + vec2(1, 1)), f.x), f.y); }')
         .replace(/#include <map_fragment>|\/\*@map_fragment\*\//, m0 => m0 + '\n{ float mn = gn(vWG * 0.035) * 0.6 + gn(vWG * 0.12) * 0.4; diffuseColor.rgb *= mix(0.74, 1.14, mn); float dirt = smoothstep(0.55, 0.85, gn(vWG * 0.017 + 9.0)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.13, 0.10, 0.07) * (0.8 + mn * 0.4), dirt * 0.32);'   /* 흙색은 선형 값 — sRGB 감으로 0.40 을 넣었더니(= sRGB 0.66) 짙은 풀·아스팔트가 60 m 얼룩째 허옇게 떴다(제주, 문서 220 §15) */
-          + ' vec2 cq = vWG * 0.011 + vec2(uCloudT * 0.05, uCloudT * 0.018); float cs = smoothstep(0.42, 0.68, gn(cq) * 0.65 + gn(cq * 2.3 + 4.0) * 0.35); diffuseColor.rgb *= 1.0 - uCloudK * cs; }'); };   /* 구름 그림자: 땅 위로 옅은 그늘이 천천히 지나간다 */
+          + ' vec2 cq = vWG * 0.011 + vec2(uCloudT * 0.05, uCloudT * 0.018); float cs = smoothstep(0.42, 0.68, gn(cq) * 0.65 + gn(cq * 2.3 + 4.0) * 0.35); diffuseColor.rgb *= 1.0 - uCloudK * cs; }'
+          + '\n{ float wm = 0.45 + 0.55 * smoothstep(0.3, 0.7, gn(vWG * 0.09 + 3.0)); diffuseColor.rgb *= 1.0 - 0.32 * uGWet * wm; }')   /* 젖은 땅 (문서 230 §14): 어둡게 — 고르게가 아니라 9 m 얼룩으로(낮은 곳이 더 젖은 듯) */
+        .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\n{ float wm = 0.45 + 0.55 * smoothstep(0.3, 0.7, gn(vWG * 0.09 + 3.0)); roughnessFactor = mix(roughnessFactor, max(uGGloss, roughnessFactor * 0.6), uGWet * wm); }'); };   /* 구름 그림자: 땅 위로 옅은 그늘이 천천히 지나간다 */
     m.customProgramCacheKey = () => 'ground-macro' + prevKey; m.needsUpdate = true; });
   window.__groundMats = done.size; }
 /* 높이 AO (문서 228) — 영상 «게임 속 빛의 30년» 의 «간접광은 미리 굽고 게임 중엔 읽기만». 지역을 열 때 위에서 찍은 높이 지도로 한 번 굽고, 위를 향한 면이 간접광(반구광)만 줄인다.
@@ -249,9 +253,10 @@ const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft
 /* 높이 안개 (문서 230 §6): 땅 · 골짜기에 깔리는 안개 — 재질이 컴파일되기 전(첫 그리기 전)에 공용 안개 조각을 고친다. 산 · 호수 지역은 짙게. ?hf=0 끔 · ?hfk= · ?hfh= 조정 */
 const HF_ZONE = { namsan: .018, gyeryong: .02, chuncheon: .02, jeju: .015, seogwipo: .015, sokcho: .015, gyeongpo: .015, goheung: .015 };
 const LEAF_F = new THREE.Vector3(), LEAVES = CINE && q.get('leaves') !== '0' ? windLeaves(THREE, { n: MOBILE ? 60 : 90 }) : null; if (LEAVES) scene.add(LEAVES.mesh);   /* 바람에 날리는 잎 (문서 230 §13) */
+const WXSEED = zoneSeed(ZONE), WXF = q.get('wx'), WXS = { rain: 0, wet: 0, fog0: null }, RAIN = CINE && q.get('rain') !== '0' ? rainStreaks(THREE, { n: MOBILE ? 350 : 700 }) : null; if (RAIN) scene.add(RAIN.mesh);   /* 날씨 — 비 (문서 230 §14) · ?wx=rain|clear|wet */
 if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .012), h: +(q.get('hfh') || 5) });
 const CS = { col: new THREE.Color() };
-function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
+function cineSunTick() { const r = cineSun(THREE, cam, sunDir, Math.max(STAGE.dim || 0, 0.85 * WX.uRain.value), CS);   /* 비 오면 빛줄기 · 해 둘레 번짐을 줄인다 (문서 230 §14) */   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);
   const U = bloom.cine, b0 = CS.b0 ||= { con: U.con.value, vig: U.vig.value }, nk = Math.min(1, Math.max(0, (lampK - 1.05) / 0.85));   /* 밤: S 곡선 · 가장자리를 줄인다 — 어두운 데가 뭉개져 영웅이 안 보였다 */
   U.con.value = b0.con * (1 - .7 * nk); U.vig.value = b0.vig * (1 - .6 * nk);
@@ -263,13 +268,15 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
   const base = { top: sk ? sk.top.value.clone() : skyCol.clone(), hor: sk ? sk.hor.value.clone() : skyCol.clone(), fog: skyCol.clone(), sun: sun.color.clone(), sunc: sk ? sk.sunc.value.clone() : sun.color.clone(), hemi: hemiL.color.clone(), ground: hemiL.groundColor.clone(),
     sunI: sun.intensity, hemiI: hemiL.intensity, fillI: fillL.intensity, exp: renderer.toneMappingExposure, alt: Math.asin(sunDir.clone().normalize().y) * 180 / Math.PI, westX: w.x, westZ: w.z };
   const sub = document.querySelector('#title small'), sub0 = sub ? sub.textContent : '';
-  return createDayCycle(THREE, base, o => { skyCol.copy(o.fog); if (scene.fog) scene.fog.color.copy(o.fog);
+  return createDayCycle(THREE, base, o => { if (CINE) applyRain(o, WXS.rain); skyCol.copy(o.fog); if (scene.fog) scene.fog.color.copy(o.fog);
     if (sk) { sk.top.value.copy(o.top); sk.hor.value.copy(o.hor); sk.fogc.value.copy(o.fog); sk.sunc.value.copy(o.sunc).multiplyScalar(o.glow); sk.sun.value.copy(o.dir).normalize(); }
     sun.color.copy(o.sun); sun.intensity = o.sunI; sunDir.copy(o.dir); hemiL.color.copy(o.hemi); hemiL.groundColor.copy(o.ground); hemiL.intensity = o.hemiI; fillL.intensity = o.fillI;
     renderer.toneMappingExposure = o.exp; if (lampK !== o.lampK) { lampK = o.lampK; nearLights(root.position); } HERO_RIM.uK.value = heroRimK(o.lampK); MOB_RIM.uK.value = mobRimK(o.lampK);   /* 밤 몬스터 윤곽 (문서 229 §32, ?mr=0 으로 끔) */
     if (CONES) CONES.set(o.lampK); if (STREETLAMP.mat) STREETLAMP.mat.emissiveIntensity = 0.15 + 0.9 * Math.min(1.9, o.lampK);   /* 가로등 머리·빛 기둥: 밤일수록 */
     for (const m of Object.values(VSIGN.mats)) m.emissiveIntensity = 0.3 + 0.9 * Math.min(1.9, o.lampK);   /* 세로 간판: 밤일수록 (문서 229 §9) */
     FACADE_U.uLampK.value = o.lampK; if (FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value.copy(o.hor).lerp(o.top, 0.35);   /* 창: 밤일수록 켜진 방이 밝고, 유리는 지금 하늘빛을 비춘다 */
+    if (CINE && scene.fog) { if (!WXS.fog0) WXS.fog0 = [scene.fog.near, scene.fog.far]; scene.fog.near = WXS.fog0[0] * (1 - 0.4 * WXS.rain); scene.fog.far = WXS.fog0[1] * (1 - 0.3 * WXS.rain); }   /* 비: 안개가 가까이 (먼 쪽은 걸러내기가 더 일찍 자른다) */
+    if (RAIN) RAIN.U.uCol.value.copy(o.fog).lerp(o.hemi, 0.5).multiplyScalar(0.9 + 0.25 * o.hemiI); WX.uGloss.value = 0.45 - 0.2 * Math.min(1, o.lampK);   /* 빗줄기는 하늘빛 · 젖은 땅 윤기는 밤에 더(가로등이 번진다) — 낮 0.45 아래는 낮은 해가 하얗게 번졌다(문서 217 §2) */
     if (o.name !== todName) { todName = o.name; if (REFL) REFL.dirty = true; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;
@@ -757,10 +764,10 @@ function tick() { perf.begin();
   if (LIFE) LIFE.tick(dt, lampK, cam.position); watchLooks(dt);
   if (BENCH && BENCH.view && BENCH.view.walk) { const wk = BENCH.view.walk, s = root.position.x * Math.cos(wk.a) - root.position.z * Math.sin(wk.a); if (s < wk.s1) { const q2 = { x: root.position.x + wk.dx * 4.8 * dt, z: root.position.z + wk.dz * 4.8 * dt }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); me.yaw = BENCH.view.yaw; root.rotation.y = me.yaw; } }
   WIND.value += dt;   /* 나무 바람 (문서 220) */
-  if (LEAVES) { cam.getWorldDirection(LEAF_F); LEAVES.follow(cam.position, LEAF_F); }
+  if (LEAVES || RAIN) { cam.getWorldDirection(LEAF_F); if (LEAVES) LEAVES.follow(cam.position, LEAF_F); if (RAIN) RAIN.follow(cam.position, LEAF_F); }
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
-  todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */
+  todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; const ms = net ? sclock.now() : Date.now(); if (CINE) { const w = weatherNow(WXSEED, ms, WXF); WXS.rain = w.rain; WXS.wet = w.wet; WX.uRain.value = w.rain; WX.uWet.value = w.wet; } DAYC.update(ms); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (SPROX) SPROX.update(root.position);
   if (BOSS_LOD && frames % 10 === 0) bossLodTick();
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }
