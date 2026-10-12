@@ -49,3 +49,8 @@ test('바다 (문서 230 §17): 너울 · 해 길 반짝임(점 — 칸 통째�
   assert.match(E, /float swellH\(vec2 p\)/); assert.match(E, /float dot0 = smoothstep\(0\.16, 0\.0, length\(f - /, '반짝임은 칸 안의 점'); assert.match(E, /vec2 seaRip\(vec2 p\)/);
   assert.match(E, /\$\{calm \? '' : 'vec2 sw = swellG\(wq\)/, '웅덩이(calm)엔 너울이 없다'); assert.match(E, /uRainW: WX\.uRain, uMistW: WX\.uMist/);
 });
+test('먼 산 세 겹 (문서 230 §18): 가장 먼 봉우리 · 날 선 능선 · 숲 가장자리 · 비탈 명암은 마루 가까이만 · 새털구름', async () => {
+  const { SKY_FRAG } = await import('../js/mmo/sky-shader.js');
+  assert.match(SKY_FRAG, /float far3 = ridge\.x \* 1\.32/); assert.match(SKY_FRAG, /pow\(1\.0 - abs\(fbm\(/, '날 선 능선(ridged)'); assert.match(SKY_FRAG, /near \+= 0\.0045 \* \(n2\(ring \* 380\.0/, '숲 가장자리');
+  assert.match(SKY_FRAG, /litF = mix\(0\.5, litF, smoothstep\(far \* 0\.45, far, y\)\)/, '세로 커튼 줄무늬 막기'); assert.match(SKY_FRAG, /if \(y < 0\.32\)/, '산은 지평선 근처에서만 셈(휴대폰)'); assert.match(SKY_FRAG, /새털구름/);
+});

@@ -36,13 +36,28 @@ void main(){
       c += vec3(0.9, 0.95, 1.0) * smoothstep(0.0015, 0.0, perp) * step(0.0, along) * (1.0 - smoothstep(0.0, 0.07, along)) * sin(tt * 3.14159) * dark * (1.0 - dens); } }
   c = mix(c, cloud, dens * 0.85);
   c += sunc * glow * smoothstep(-0.05, 0.05, y) * (1.0 - dens * 0.7) * (1.0 - 0.85 * dark);   /* 밤 «해 번짐» 은 달무리가 대신 */
-  /* 산 능선 두 겹 — 방위각 둘레를 따라 이어지는 잡음(원 위의 2D 잡음이라 360° 에서 이음매가 없다) */
-  vec2 ring = normalize(d.xz + 1e-5);
-  float far = ridge.x * (0.35 + 0.65 * fbm(ring * 2.2 + ridge.z)), near = ridge.y * (0.25 + 0.75 * fbm(ring * 4.1 + ridge.z * 1.7 + 3.0));
-  vec3 farC = mix(fogc, mix(hor, top, 0.4) * 0.82, 0.38), nearC = mix(fogc, mix(top, hor, 0.3) * 0.5, 0.62);
-  float inFar = 1.0 - smoothstep(far - 0.004, far + 0.002, y), inNear = 1.0 - smoothstep(near - 0.003, near + 0.002, y);
-  c = mix(c, mix(fogc, farC, smoothstep(-0.01, far, y) * 0.8 + 0.2) + sunc * glow * 0.25, inFar * step(0.0, y + 0.02));
-  c = mix(c, mix(fogc, nearC, smoothstep(-0.01, near, y) * 0.7 + 0.3), inNear * step(0.0, y + 0.02));
+  /* 산 능선 세 겹 (문서 230 §18) — 방위각 둘레를 따라 이어지는 잡음(원 위의 2D 잡음이라 360° 에서 이음매가 없다).
+     예전 두 겹은 둥근 fbm 만이라 «솜 언덕» 이었다 → 날 선 능선(ridged)을 섞고, 가장 먼 겹(높고 옅은 봉우리)을 더하고, 가까운 겹엔 나무 숲 가장자리.
+     해 쪽 비탈은 밝게(방위각 기울기 · 해 방위), 겹마다 밑동은 골짜기 안개로 — 겹이 서로 떨어져 보인다 */
+  if (y < 0.32) { vec2 ring = normalize(d.xz + 1e-5), rr = vec2(-ring.y, ring.x) * 0.04;
+    #define RIDGEH(R, F, S) (0.3 + 0.7 * (0.55 * fbm((R) * F + S) + 0.45 * pow(1.0 - abs(fbm((R) * F * 1.7 + S + 9.0) * 2.0 - 1.0), 2.0)))
+    float far3 = ridge.x * 1.32 * RIDGEH(ring, 1.4, ridge.z + 21.0);
+    float far = ridge.x * RIDGEH(ring, 2.2, ridge.z), farR = ridge.x * RIDGEH(ring + rr, 2.2, ridge.z);
+    float near = ridge.y * (0.25 + 0.75 * fbm(ring * 4.1 + ridge.z * 1.7 + 3.0)), nearR = ridge.y * (0.25 + 0.75 * fbm((ring + rr) * 4.1 + ridge.z * 1.7 + 3.0));
+    near += 0.0045 * (n2(ring * 380.0 + 7.0) * 0.7 + n2(ring * 900.0) * 0.3) * smoothstep(0.0, 0.02, near);   /* 나무 숲 가장자리 — 한국 산은 숲이다 */
+    vec2 sa = normalize(sun.xz + 1e-5); float sunSide = dot(vec2(-ring.y, ring.x), sa);   /* 해가 이 방위의 어느 쪽인가 */
+    float litF = clamp(0.5 + (farR - far) * sunSide * 45.0, 0.0, 1.0), litN = clamp(0.5 + (nearR - near) * sunSide * 45.0, 0.0, 1.0), toSun = pow(max(dot(ring, sa), 0.0), 3.0);
+    litF = mix(0.5, litF, smoothstep(far * 0.45, far, y)); litN = mix(0.5, litN, smoothstep(near * 0.45, near, y));   /* 비탈 명암은 마루 가까이만 — 위아래 통째로면 세로 «커튼» 줄무늬였다 */
+    vec3 f3C = mix(fogc, mix(hor, top, 0.25), 0.22), farC = mix(fogc, mix(hor, top, 0.4) * 0.82, 0.38), nearC = mix(fogc, mix(top, hor, 0.3) * 0.5, 0.62);
+    farC *= 0.92 + 0.16 * litF; nearC *= 0.88 + 0.24 * litN;
+    float in3 = 1.0 - smoothstep(far3 - 0.005, far3 + 0.002, y), inFar = 1.0 - smoothstep(far - 0.004, far + 0.002, y), inNear = 1.0 - smoothstep(near - 0.002, near + 0.0015, y), above = step(0.0, y + 0.02);
+    c = mix(c, mix(fogc, f3C, smoothstep(-0.01, far3, y) * 0.7 + 0.15) + sunc * glow * 0.35 + sunc * toSun * 0.06, in3 * above * (1.0 - dens * 0.5));
+    c = mix(c, mix(fogc * 1.05, farC, smoothstep(-0.01, far, y) * 0.85 + 0.1) + sunc * glow * 0.25 + sunc * toSun * 0.04 * litF, inFar * above);
+    c = mix(c, mix(fogc, nearC, smoothstep(-0.01, near, y) * 0.75 + 0.25), inNear * above);
+    c = mix(c, fogc * 1.08 + sunc * glow * 0.15, (1.0 - smoothstep(0.0, 0.03, y)) * 0.3 * above); }   /* 골짜기에 깔린 옅은 안개 띠 */
+  /* 새털구름 (문서 230 §18): 높은 하늘의 가는 줄 — 해 쪽은 달아오른다 */
+  if (y > 0.08) { vec2 cu = vec2(d.x * 0.8 + d.z * 0.6, -d.x * 0.6 + d.z * 0.8) / (y + 0.35) * vec2(0.7, 3.2) + vec2(time * 0.004, 0.0); float ci = smoothstep(0.55, 0.8, fbm(cu * 1.3 + 31.0)) * smoothstep(0.08, 0.3, y) * (1.0 - dens);
+    c = mix(c, mix(hor, top, 0.3) * 1.15 + sunc * pow(a, 4.0) * 0.6, ci * 0.25 * (1.0 - dark * 0.7)); }
   gl_FragColor = vec4(c, 1.0);
 }`;
 /* 지역 성격 → 능선 높이 (sin 단위). 한국은 어디서나 산이 보이지만 바다 쪽은 낮게 */
