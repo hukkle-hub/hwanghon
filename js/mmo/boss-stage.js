@@ -159,7 +159,7 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
   }
 
   /* placeCam 다음에 부른다 — 연출 중이면 카메라를 가져오고, 아니면 충격 킥·FOV 펀치만 더한다 */
-  const baseFov = cam.fov;
+  let baseFov = cam.fov;   /* 세로 화면이면 world3d 가 넓힌다 (setBaseFov, 문서 229 §50) */
   function applyCamera(dt) {
     if (shot) { const s = shot, o = s.o, u = s.t / s.dur; let w = s.t < s.blendIn ? smooth(s.t / s.blendIn) : s.t > s.dur - s.blendOut ? smooth((s.dur - s.t) / s.blendOut) : 1;
       if (s.kind === 'intro') { P.lerpVectors(s.a, s.b, smooth(u)); P.add(o.root.position); L.copy(face(o)); }
@@ -171,6 +171,6 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
     const fv = baseFov + fovPunch; if (Math.abs(cam.fov - fv) > .01) { cam.fov = fv; cam.updateProjectionMatrix(); } fovPunch *= Math.max(0, 1 - dt * 6); if (Math.abs(fovPunch) < .02) fovPunch = 0;
   }
 
-  return { attach, tick, event, death, skip, applyCamera, intro,
+  return { attach, tick, event, death, skip, applyCamera, intro, setBaseFov(v) { baseFov = v; },
     get locked() { return lockT > 0; }, get dim() { return dim; }, get shot() { return shot && { kind: shot.kind, t: +shot.t.toFixed(2), id: shot.o.b.id }; }, get list() { return list; } };
 }

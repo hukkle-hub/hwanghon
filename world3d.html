@@ -344,7 +344,9 @@ for (const b of meta.bosses || []) if (b.ai === 'dominator') {
     o.ai = { id: b.id, x: b.x, z: b.z, zone: ZONE, alive: true, yaw: Math.random() * 6.28, hp: 3e6 }; DOM.setup(o.ai, gameNow); doms.push(o); STAGE.attach(o); });
 }
 /* ---------- 3인칭 카메라 ---------- */
-const cam = new THREE.PerspectiveCamera(MOBILE ? 60 : 52, innerWidth / innerHeight, 0.1, 600);
+/* 세로 화면 (문서 229 §50): 세로 시야 60° 면 가로 시야가 32° 뿐(가로 화면 104°)이라 바로 옆 3 m 몬스터도 잘렸다 → 시야각 +18° · 카메라 거리 ×1.4 (손가락 줌 값은 그대로 둔다) */
+const PORTRAIT = a => a < 0.85, fovFor = a => (MOBILE ? 60 : 52) + (PORTRAIT(a) ? 18 : 0), camDistK = () => PORTRAIT(cam.aspect) ? 1.4 : 1;
+const cam = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerWidth / innerHeight, 0.1, 600);
 /* Asset promises may settle while connectField awaits the server. Establish
    the stage before that await, not after it, so STAGE.attach never hits TDZ. */
 const STAGE = createBossStage({ THREE, scene, cam, player: () => root.position, reduced: REDUCED, occlude: (at, want) => firstHit(MERGE.camBoxes, at, want) });
@@ -372,7 +374,7 @@ for (const g of GATES) { if (!atEnd(g)) continue; const ZT = ZONES[g.to.zone] ||
 if (ARRIVE) { const y = inwardYaw(ARRIVE); me.yaw = y; root.rotation.y = y; camS.yaw = y + Math.PI;
   if (atEnd(ARRIVE)) { const q2 = { x: ARRIVE.x + Math.sin(y) * 5, z: ARRIVE.z + Math.cos(y) * 5 }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); } }   /* 길 문이면 5 m 안쪽에 — 카메라가 띠 끝 울타리 밖에서 비치지 않게 */
 if (TRAVEL && !q.has('online') && Number.isFinite(TRAVEL.hp)) P.hp = Math.max(1, Math.round(TRAVEL.hp * P.maxHp));   /* 혼자 연습: 체력 이어받기 (온라인은 서버가 안다) */
-function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
+function resize() { renderer.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.fov = fovFor(cam.aspect); STAGE.setBaseFov(cam.fov); cam.updateProjectionMatrix(); bloom && bloom.setSize && bloom.setSize(innerWidth, innerHeight); }
 addEventListener('resize', resize);
 let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */
 /* 도착 도입 장면 (문서 219 §2) — 길로 넘어오면 카메라가 뒤쪽 하늘에서 앞쪽 지역 너머를 내려다보다가 등 뒤로 내려앉는다(3.2 초). 움직이면 바로 끝 */
@@ -381,12 +383,12 @@ const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
 function placeCam(dt) {
   if (photo) { cam.position.set(...photo.pos); cam.lookAt(...photo.at); return; }
   if (intro) { intro.t += dt; const h0 = root.position, f = intro.fwd || (intro.fwd = [Math.sin(me.yaw), Math.cos(me.yaw)]), k = ease(Math.min(1, intro.t / intro.dur));
-    const cp = Math.cos(camS.pitch), end = new THREE.Vector3(h0.x + Math.sin(camS.yaw) * cp * camS.dist, 1.45 + Math.sin(camS.pitch) * camS.dist, h0.z + Math.cos(camS.yaw) * cp * camS.dist);
+    const cp = Math.cos(camS.pitch), cd = camS.dist * camDistK(), end = new THREE.Vector3(h0.x + Math.sin(camS.yaw) * cp * cd, 1.45 + Math.sin(camS.pitch) * cd, h0.z + Math.cos(camS.yaw) * cp * cd);
     const start = new THREE.Vector3(h0.x - f[0] * 22 + f[1] * 12, 36, h0.z - f[1] * 22 - f[0] * 12), mid = new THREE.Vector3().lerpVectors(start, end, 0.5); mid.y += 6;
     const a = new THREE.Vector3().lerpVectors(start, mid, k), b2 = new THREE.Vector3().lerpVectors(mid, end, k); cam.position.lerpVectors(a, b2, k);   /* 곡선(2차 베지어) */
     const lookFar = new THREE.Vector3(h0.x + f[0] * 120, 10, h0.z + f[1] * 120), lookMe = new THREE.Vector3(h0.x, 1.45, h0.z); cam.lookAt(lookFar.lerp(lookMe, ease(Math.min(1, intro.t / (intro.dur * 0.85)))));
     if (intro.t >= intro.dur) { intro = null; document.body.classList.remove('intro'); } else document.body.classList.add('intro'); return; }
-  const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * camS.dist, ty + Math.sin(camS.pitch) * camS.dist, tz + Math.cos(camS.yaw) * cp * camS.dist);
+  const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), cd = camS.dist * camDistK(), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * cd, ty + Math.sin(camS.pitch) * cd, tz + Math.cos(camS.yaw) * cp * cd);
   want.y = Math.max(0.4, want.y);
   /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
   const at = new THREE.Vector3(tx, ty, tz), hit = firstHit(MERGE.camBoxes, at, want);
