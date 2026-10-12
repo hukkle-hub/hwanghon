@@ -18,5 +18,5 @@ test('손 재질(CC0…Hands)만 고치고 몸·코어·방패는 그대로 · �
 });
 test('world3d: 종별 몸을 받자마자(예열 전) 손 피부를 고친다', () => {
   const W = fs.readFileSync('world3d.html', 'utf8');
-  assert.match(W, /load\(a\.url\)\.then\(g=>\{fixN01Skin\(THREE,g\.scene\);if\(q\.get\('mr'\)!=='0'\)mobRim\(THREE,g\.scene\);window\.__warmMob\?\.\(g\);return g;\}\)/, '손 피부 · 밤 윤곽(§32) 둘 다 예열 전에');
+  assert.match(W, /load\(a\.url\)\.then\(g=>\{fixN01Skin\(THREE,g\.scene\);if\(q\.get\('holes'\)!=='0'\)fillSmallHoles\(THREE,g\.scene\);if\(q\.get\('mr'\)!=='0'\)mobRim\(THREE,g\.scene\);window\.__warmMob\?\.\(g\);return g;\}\)/, '손 피부 · 밤 윤곽(§32) 둘 다 예열 전에');
 });
