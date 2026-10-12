@@ -38,10 +38,11 @@ canvas{ display:block; width:100vw; height:100vh; }
 #mapBtn{ width:64px; height:64px; border-radius:10px; right:calc(max(12px,env(safe-area-inset-right)) + 216px); top:calc(max(12px,env(safe-area-inset-top))); font-size:14px; }   /* 전국 지도 (문서 219) — 가로: 가방 왼쪽 (아래는 스킬 단추) */
 @media (max-height:500px){ #mapBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 196px); } }
 @media (orientation:portrait){ #mapBtn{ right:calc(max(12px,env(safe-area-inset-right)) + 144px); top:calc(max(12px,env(safe-area-inset-top)) + 72px); } }   /* 세로: 가방 아래 (제목과 안 겹치게) */
-#kmap:not([hidden]){ position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; background:rgba(8,6,10,.9); padding:12px; box-sizing:border-box; }
+#kmap:not([hidden]){ position:fixed; inset:0; z-index:8; display:flex; align-items:center; justify-content:center; background:rgba(8,6,10,.97);   /* .9 는 뒤의 기술 단추가 길 목록 사이로 비쳤다 (문서 229 §51) */ padding:12px; box-sizing:border-box; }
+body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD 숨김 — 반투명 위로 기술 단추가 비쳤다 (문서 229 §51) */
 #kmap .kwrap{ display:flex; gap:14px; width:100%; height:100%; align-items:center; justify-content:center; } #kmap svg{ flex:0 1 auto; height:100%; max-width:62%; }
 #kmap aside{ flex:0 1 260px; max-height:100%; overflow:auto; color:var(--ink); } #kmap aside h3{ margin:0 0 8px; font-size:16px; color:#c9a45e; } #kmap aside ul{ list-style:none; margin:0; padding:0; } #kmap aside li{ padding:8px 10px; margin-bottom:6px; border-radius:10px; background:rgba(255,255,255,.06); } #kmap aside li b{ display:block; font-size:15px; } #kmap aside li small{ color:var(--dim); font-size:12px; }
-@media (orientation:portrait){ #kmap .kwrap{ flex-direction:column; } #kmap svg{ height:auto; max-height:68%; max-width:100%; width:100%; } #kmap aside{ flex:0 1 auto; width:100%; max-height:28%; } } #kmapX{ position:absolute; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); min-width:64px; min-height:64px; border-radius:12px; border:2px solid rgba(232,184,96,.7); background:rgba(30,14,20,.85); color:var(--ink); font:900 16px 'Noto Sans KR',sans-serif; }
+@media (orientation:portrait){ #kmap .kwrap{ flex-direction:column; } #kmap svg{ height:auto; max-height:64%; max-width:100%; width:100%; } #kmap aside{ flex:0 1 auto; width:100%; max-height:32%; } } #kmapX{ position:absolute; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); min-width:64px; min-height:64px; border-radius:12px; border:2px solid rgba(232,184,96,.7); background:rgba(30,14,20,.85); color:var(--ink); font:900 16px 'Noto Sans KR',sans-serif; }
 #pot b{ font-size:12px; } #pot em{ font-style:normal; font-size:11px; font-weight:700; opacity:.85; margin-top:3px; } #pot.none{ opacity:.45; }
 .dmg.heal{ color:#8fe0a0; }
 /* 스킬 1~4 (문서 212) — 공격 위·왼쪽 호. 64 px · 재사용 대기는 가운데 숫자 + 어둡게 */
@@ -618,7 +619,7 @@ function hitMob(sk = null) { if (!MOBS || (!net && !ECO)) return false; const v 
     mobHp.set(key, left); MOBS.hurt(v.id, 100 * left / (PRACTICE_HP[v.cat.grade] || PRACTICE_HP[5])); feel.impact(fh, t, { crit }); floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', v.root.position, 1.5); if (left <= 0) { mobHp.delete(key); ECO.defeat(v.id, gameNow); floatAt('처치', 'crit', v.root.position, 1.9); } })); return true; }
 /* ---------- 문: 가까이 가면 «이동» — 다음 지역의 3D 필드로 (2D 필드 goGate 와 같은 규칙) ---------- */
 /* ---------- 전국 지도 (문서 219) — 지금 자리가 반짝이고, 길이 어디로 이어지는지 ---------- */
-{ const km = document.getElementById('kmap'), open = v => { if (v) { km.querySelector('.kwrap')?.remove();
+{ const km = document.getElementById('kmap'), open = v => { document.body.classList.toggle('kmapOpen', !!v); if (v) { km.querySelector('.kwrap')?.remove();
     const ways = GATES.filter(g => g.to && g.kind === 'zone').map(g => '<li><b>' + esc((ZONES[g.to.zone] || {}).title || g.to.zone) + '</b><small>' + esc(g.label || '') + '</small></li>').join('');   /* 여기서 가는 길 */
     km.insertAdjacentHTML('afterbegin', '<div class="kwrap">' + koreaMapSVG({ ZONES, REGIONS, linkGates, current: ZONE }) + '<aside><h3>' + esc(Z.title || ZONE) + '에서 가는 길</h3><ul>' + (ways || '<li><small>문 없음</small></li>') + '</ul></aside></div>'); } km.hidden = !v; };
   document.getElementById('mapBtn').addEventListener('pointerdown', e => { e.stopPropagation(); open(km.hidden); });

@@ -18,3 +18,8 @@ test('보스 연출: 시야 펀치가 세로 기준 시야각을 덮어쓰지 �
   const cam = new THREE.PerspectiveCamera(60, .5, .1, 100), S = createBossStage({ THREE, scene: new THREE.Scene(), cam, doc: fakeDoc(), player: () => new THREE.Vector3(), reduced: false });
   S.setBaseFov(78); S.applyCamera(1 / 60); assert.equal(cam.fov, 78, '예전엔 만들 때 붙든 60 으로 매 프레임 되돌렸다');
 });
+test('전국 지도: 열린 동안 HUD 숨김(반투명 위로 기술 단추가 비쳤다) · 닫으면 되돌림 · 세로 길 목록 넘침 없게 (문서 229 §51)', () => {
+  const w = fs.readFileSync('world3d.html', 'utf8');
+  assert.match(w, /open = v => \{ document\.body\.classList\.toggle\('kmapOpen', !!v\);/); assert.match(w, /body\.kmapOpen #hud\{ visibility:hidden; \}/);
+  assert.match(w, /#kmap aside\{ flex:0 1 auto; width:100%; max-height:32%; \}/);
+});
