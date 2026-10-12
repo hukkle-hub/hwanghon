@@ -125,6 +125,8 @@ export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
   m.customProgramCacheKey = () => (curtain ? 'facade-im-curtain' : 'facade-im') + (m.defines && 'NO_WEATHER' in m.defines ? '-nw' : ''); m.needsUpdate = true; return m;
 }
 
+import { phTex } from './ph-tex.js';
+export const FACADE_PHOTO = { on: true };   /* world3d ?tc=0 → 옛 캔버스 벽 */
 /* 벽 텍스처(창 없이 얼룩·빗물 자국만) + 가짜 실내 창 재질 넷 — env-osm(강남)·env-lib(다른 도시) 가 같이 쓴다.
    따로 굴리는 난수 — 장면 난수 R 을 쓰면 뒤의 건물 높이·차 자리가 2D 굽기와 달라진다 */
 export function interiorFacadeMats(THREE) {
@@ -134,6 +136,8 @@ export function interiorFacadeMats(THREE) {
     for (let i = 0; i < 260; i++) { const v = R(); g.fillStyle = v < .5 ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.04)'; g.fillRect(R() * w, R() * h, 2 + R() * 10, 2 + R() * 6); }
     for (let i = 0; i < 9; i++) { const x = R() * w; g.fillStyle = 'rgba(10,8,12,.10)'; g.fillRect(x, 0, 1 + R() * 3, h); }   /* 빗물 자국 — 세로 줄 */
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(1 / 9.6, 1 / 9.6);
+    if (FACADE_PHOTO.on) { const base = ['#55535c', '#5f5a60', '#4a505c', '#625b54'][k], col = new THREE.Color(base).multiplyScalar(1 / 0.11);   /* 사진 콘크리트(평균 선형 0.11)에 옛 바탕색을 곱해 네 가지 그대로 */
+      return patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.03, color: col, map: phTex(THREE, 'concrete_wall_006', 'diff', { repeat: [1 / 3.2, 1 / 3.2] }), normalMap: phTex(THREE, 'concrete_wall_006', 'nor_gl', { repeat: [1 / 3.2, 1 / 3.2] }), normalScale: new THREE.Vector2(.6, .6) })); }   /* 3.2 m 에 한 장 — 사진 스캔 벽 (Poly Haven CC0, 문서 230 §10) */
     return patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.82, metalness: 0.05, map: t })); });
 }
 

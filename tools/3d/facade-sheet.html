@@ -13,5 +13,7 @@ const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.6 : 2.4); 
 const fl = new T.Mesh(new T.PlaneGeometry(300, 300).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a38, roughness: .95 })); s.add(fl);
 const mats = [...interiorFacadeMats(T), ...interiorBrickMats(T)]; if (Q.get('nw') === '1') for (const m of mats) { m.defines = { ...(m.defines || {}), NO_WEATHER: '' }; m.needsUpdate = true; }
 [[-26, 14, 16, 0], [-6, 30, 18, 1], [14, 46, 16, 2], [32, 12, 14, 4]].forEach(([x, h, w, mi]) => { const b = new T.Mesh(new T.BoxGeometry(w, h, 14), mats[mi]); b.position.set(x, h / 2, 0); s.add(b); });
-const cam = new T.PerspectiveCamera(50, W / H, .5, 500); cam.position.set(4, 6, 44); cam.lookAt(4, 14, 0); r.render(s, cam); window.READY = 1;
+const cam = new T.PerspectiveCamera(50, W / H, .5, 500); cam.position.set(4, 6, 44); cam.lookAt(4, 14, 0);
+await new Promise(ok => { T.DefaultLoadingManager.onLoad = ok; setTimeout(ok, 6000); });   /* 사진 텍스처가 다 오고 나서 */
+r.render(s, cam); window.READY = 1;
 </script>

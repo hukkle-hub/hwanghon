@@ -8,6 +8,7 @@ import { buildCar } from './car-kit.js';
 import { buildGasStation, GAS } from './gas-station.js';
 import { treeTex, leafCrownGeo, pineCardGeo } from './tree-kit.js';
 import { rockGeo, rockMat } from './rock-kit.js';
+import { phTex } from './ph-tex.js';
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
@@ -572,7 +573,8 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;
   const CARDS = VIEW3D && o.cards !== false && TREE_CARDS.on, TX = CARDS ? treeTex(THREE, canvasTex) : null;   /* 3D: 잎 카드 나무 (tree-kit, 문서 230 §7) */
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : VIEW3D ? crownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : VIEW3D ? pineGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
-  const trunkM = new THREE.MeshStandardMaterial({ color: CARDS ? 0x5a4a3e : 0x2a221c, roughness: 1, map: CARDS ? TX.bark : null });
+  const trunkM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd8c8b8).multiplyScalar(.75), roughness: 1, map: phTex(THREE, 'japanese_zelkova_bark', 'diff', { repeat: [1, 2] }), normalMap: phTex(THREE, 'japanese_zelkova_bark', 'nor_gl', { repeat: [1, 2] }), roughnessMap: phTex(THREE, 'japanese_zelkova_bark', 'rough', { repeat: [1, 2] }) })   /* 사진 느티나무 껍질 (Poly Haven CC0) */
+    : new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 });
   const leafCol = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]), leafMs = leafCol.map(c => CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: .85, map: TX.leaf, alphaTest: .45, side: THREE.DoubleSide })
     : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
   if (CARDS) leafMs.push(new THREE.MeshStandardMaterial({ color: new THREE.Color(leafCol[1]).multiplyScalar(1.9), roughness: .85, map: TX.needle, alphaTest: .45, side: THREE.DoubleSide }));   /* 솔잎 재질(맨 끝) */

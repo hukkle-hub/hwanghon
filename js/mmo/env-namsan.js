@@ -10,6 +10,7 @@
 import { frameOf } from './env-osm.js';
 import * as L from './env-lib.js';
 import { treeTex, leafCrownGeo, pineCardGeo } from './tree-kit.js';   /* 3D 잎 카드 나무 (문서 230 §7) */
+import { phTex } from './ph-tex.js';
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -150,7 +151,7 @@ export function build(THREE, scene, osm) {
   /* ---------- 숲: 걷는 띠 안·밖 모두. 길·건물·광장은 비운다 ---------- */
   const CARDS = L.isView3d() && L.TREE_CARDS.on, TX = CARDS ? treeTex(THREE, L.canvasTex) : null;   /* 3D: 잎 카드 갓 · 솔잎 · 나무껍질 — 장면 난수 R 쓰임은 그대로 */
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
-  const trunkM = new THREE.MeshStandardMaterial({ color: CARDS ? 0x5a4a3e : 0x2a221c, roughness: 1, map: CARDS ? TX.bark : null }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => CARDS
+  const trunkM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd8c8b8).multiplyScalar(.75), roughness: 1, map: phTex(THREE, 'japanese_zelkova_bark', 'diff', { repeat: [1, 2] }), normalMap: phTex(THREE, 'japanese_zelkova_bark', 'nor_gl', { repeat: [1, 2] }), roughnessMap: phTex(THREE, 'japanese_zelkova_bark', 'rough', { repeat: [1, 2] }) }) : new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => CARDS
     ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: 0.85, map: TX.leaf, alphaTest: 0.45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
   const needleM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2c3426).multiplyScalar(1.9), roughness: 0.85, map: TX.needle, alphaTest: 0.45, side: THREE.DoubleSide }) : leafMs[2];
   const grove = L.noise2(L.rng(20261018), 55);

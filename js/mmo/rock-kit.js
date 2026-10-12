@@ -5,6 +5,7 @@ import { mergeVertices } from '../../vendor/three/BufferGeometryUtils.js';
    - 음영: 부드러운 노멀 + 움푹 들어간 곳 어둡게(꼭짓점 색 = 들어간 정도)
    - 셰이더: 세 방향 투영(triplanar) 잡음으로 돌 결 · 윗면 이끼 · 아래 흙때 — 세계 좌표만 써서 인스턴스 · 합치기 그대로
    장면 난수 R 은 안 쓴다(고정 씨앗) */
+import { phTex } from './ph-tex.js';
 const h3 = (x, y, z, s) => { let n = Math.imul((Math.round(x * 997) * 73856093) ^ (Math.round(y * 997) * 19349663) ^ (Math.round(z * 997) * 83492791) ^ Math.imul(s, 2654435761), 2246822519); n ^= n >>> 15; return ((n >>> 0) % 10007) / 10007; };
 function vnoise(x, y, z, s) { const i = Math.floor(x), j = Math.floor(y), k = Math.floor(z), f = t => t * t * (3 - 2 * t), u = f(x - i), v = f(y - j), w = f(z - k), L = (a, b, t) => a + (b - a) * t;
   const c = (a, b, d) => h3(i + a, j + b, k + d, s); return L(L(L(c(0, 0, 0), c(1, 0, 0), u), L(c(0, 1, 0), c(1, 1, 0), u), v), L(L(c(0, 0, 1), c(1, 0, 1), u), L(c(0, 1, 1), c(1, 1, 1), u), v), w); }
@@ -28,10 +29,11 @@ float rkN(vec3 p){ vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
 float rkF(vec3 p){ return rkN(p) * .5 + rkN(p * 2.7) * .3 + rkN(p * 7.1) * .2; }`;
 let MAT = new Map();
 /* 바위 재질: 색 hex · moss 이끼 양(0 도시 콘크리트 덩이 ~ 1 숲) */
-export function rockMat(THREE, hex, moss = .6, grit = null) {
-  const key = hex + '|' + moss; if (MAT.has(key)) return MAT.get(key);
+export function rockMat(THREE, hex, moss = .6, grit = null, { photo = true } = {}) {
+  const key = hex + '|' + moss + '|' + photo; if (MAT.has(key)) return MAT.get(key);
+  const PD = photo ? phTex(THREE, 'rock_boulder_dry', 'diff') : null, PN = photo ? phTex(THREE, 'rock_boulder_dry', 'nor_gl') : null;   /* 사진 스캔 바위 (Poly Haven CC0) — 세 방향 투영 */
   const m = new THREE.MeshStandardMaterial({ color: new THREE.Color(hex).lerp(new THREE.Color(0x77736e), .4).multiplyScalar(.9), roughness: .92, metalness: 0, vertexColors: true, map: grit || null });   /* 회색 쪽으로 — 갈색 그대로는 분홍 조약돌 같았다 */
-  m.onBeforeCompile = sh => {
+  m.onBeforeCompile = sh => { if (PD) { sh.uniforms.tRkD = { value: PD }; sh.uniforms.tRkN = { value: PN }; }
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vRkW; varying vec3 vRkN;')
       .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
 { vec4 rw = vec4(transformed, 1.0);
@@ -43,18 +45,31 @@ export function rockMat(THREE, hex, moss = .6, grit = null) {
   rn = mat3(instanceMatrix) * rn;
 #endif
   vRkN = normalize(mat3(modelMatrix) * rn); }`);
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + ROCK_GLSL)
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + ROCK_GLSL + (PD ? '\n#define RK_PHOTO\nuniform sampler2D tRkD; uniform sampler2D tRkN;' : ''))
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
 { vec3 an = abs(vRkN); an /= (an.x + an.y + an.z);   /* 세 방향 투영 — 돌 결이 늘어지지 않게 */
   float t = rkF(vRkW.yzx * 2.2) * an.x + rkF(vRkW.xzy * 2.2) * an.y + rkF(vRkW * 2.2) * an.z;
   float vein = smoothstep(.62, .7, rkF(vRkW * vec3(.8, 3.5, .8)));   /* 가는 층 줄 */
   float t2 = rkF(vRkW.yzx * 4.3) * an.x + rkF(vRkW.xzy * 4.3) * an.y + rkF(vRkW * 4.3) * an.z;   /* 잔 결 */
   float crack = (1.0 - smoothstep(.008, .03, abs(rkN(vRkW * vec3(1.6, 4.5, 1.6)) - .5))) * smoothstep(.45, .7, rkN(vRkW * .9 + 3.0));   /* 갈라진 금 — 가늘게, 군데군데만(지도 등고선처럼 고르게 깔렸다) */
-  diffuseColor.rgb *= (.5 + t * .55) * (.75 + t2 * .5); diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.3, vein * .45); diffuseColor.rgb *= 1.0 - crack * .4;
+#ifdef RK_PHOTO
+  vec3 pc = texture2D(tRkD, vRkW.zy * .45).rgb * an.x + texture2D(tRkD, vRkW.xz * .45).rgb * an.y + texture2D(tRkD, vRkW.xy * .45).rgb * an.z;   /* 사진 바위 — 2.2 m 에 한 장 */
+  diffuseColor.rgb *= pc * 3.0 * (.85 + t * .3);   /* 사진 평균(선형 ~0.3)을 1 배 쪽으로 — 1.9 배로는 바위가 검었다 */
+#else
+  diffuseColor.rgb *= (.5 + t * .55) * (.75 + t2 * .5);
+#endif
+  diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * 1.3, vein * .45); diffuseColor.rgb *= 1.0 - crack * .4;
   float moss = smoothstep(.35, .8, vRkN.y) * smoothstep(.3, .62, rkF(vRkW * 2.3 + 11.0)) * ${moss.toFixed(2)};   /* 윗면 이끼 · 지의류 */
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.16, .2, .09) * (.8 + t * .5), moss);
   float dirt = 1.0 - smoothstep(.0, .35, vRkW.y); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.15, .12, .09), dirt * .45);   /* 밑동 흙 */
-  roughnessFactor = clamp(roughnessFactor - vein * .2 + moss * .05, .4, 1.0); }`);
+  roughnessFactor = clamp(roughnessFactor - vein * .2 + moss * .05, .4, 1.0); }`)
+      .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+#ifdef RK_PHOTO
+{ vec3 an2 = pow(abs(vRkN), vec3(4.0)); an2 /= (an2.x + an2.y + an2.z);   /* 세 방향 노멀맵(UDN 섞기) — 사진의 굴곡이 빛을 받는다 */
+  vec3 tx = texture2D(tRkN, vRkW.zy * .45).xyz * 2.0 - 1.0, ty = texture2D(tRkN, vRkW.xz * .45).xyz * 2.0 - 1.0, tz = texture2D(tRkN, vRkW.xy * .45).xyz * 2.0 - 1.0;
+  vec3 nw = normalize(vRkN + (vec3(0.0, tx.y, tx.x) * an2.x + vec3(ty.x, 0.0, ty.y) * an2.y + vec3(tz.x, tz.y, 0.0) * an2.z) * .9);
+  normal = normalize((viewMatrix * vec4(nw, 0.0)).xyz); }
+#endif`);
   };
-  m.customProgramCacheKey = () => 'rock-' + moss.toFixed(2); MAT.set(key, m); return m;
+  m.customProgramCacheKey = () => 'rock-' + moss.toFixed(2) + (PD ? '-ph' : ''); MAT.set(key, m); return m;
 }
