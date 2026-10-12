@@ -10,7 +10,7 @@ const h3 = (x, y, z, s) => { let n = Math.imul((Math.round(x * 997) * 73856093) 
 function vnoise(x, y, z, s) { const i = Math.floor(x), j = Math.floor(y), k = Math.floor(z), f = t => t * t * (3 - 2 * t), u = f(x - i), v = f(y - j), w = f(z - k), L = (a, b, t) => a + (b - a) * t;
   const c = (a, b, d) => h3(i + a, j + b, k + d, s); return L(L(L(c(0, 0, 0), c(1, 0, 0), u), L(c(0, 1, 0), c(1, 1, 0), u), v), L(L(c(0, 0, 1), c(1, 0, 1), u), L(c(0, 1, 1), c(1, 1, 1), u), v), w); }
 export function rockGeo(THREE, seed = 11, { cut = true } = {}) {
-  const g0 = new THREE.IcosahedronGeometry(1, 3); g0.deleteAttribute('normal'); g0.deleteAttribute('uv'); const g = mergeVertices(g0), P = g.attributes.position;   /* 면마다 따로인 꼭짓점을 합쳐야 부드러운 노멀이 나온다 */
+  const g0 = new THREE.IcosahedronGeometry(1, 2);   /* 180 면 — 320 면은 바위가 많은 곳(계룡)에서 삼각형 +100k 였다 */ g0.deleteAttribute('normal'); g0.deleteAttribute('uv'); const g = mergeVertices(g0), P = g.attributes.position;   /* 면마다 따로인 꼭짓점을 합쳐야 부드러운 노멀이 나온다 */
   const n = P.count, col = new Float32Array(n * 3), cuts = [];
   if (cut) for (let c = 0; c < 3; c++) { const a = h3(c, 1, 2, seed) * 6.283, el = (h3(c, 3, 4, seed) - .3) * 1.2, nx = Math.cos(a) * Math.cos(el), ny = Math.sin(el), nz = Math.sin(a) * Math.cos(el); cuts.push([nx, ny, nz, .55 + h3(c, 5, 6, seed) * .18]); }
   for (let i = 0; i < n; i++) { let x = P.getX(i), y = P.getY(i), z = P.getZ(i);

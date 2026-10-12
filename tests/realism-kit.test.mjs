@@ -17,7 +17,7 @@ test('바위: 꼭짓점을 나눠 써서 부드러운 노멀 · 바닥이 눌려
   const g = rockGeo(THREE, 11), P = g.attributes.position; assert.ok(g.index && P.count < g.index.count / 3, '면마다 따로인 꼭짓점이면 평평한 음영(보석)');
   let minY = 9; for (let i = 0; i < P.count; i++) minY = Math.min(minY, P.getY(i)); assert.ok(minY > -.4, '밑동이 바닥에 앉는다 ' + minY.toFixed(2));
   assert.deepEqual(Array.from(rockGeo(THREE, 11).attributes.position.array.slice(0, 30)), Array.from(P.array.slice(0, 30)));
-  assert.equal(g.index.count / 3, 320);
+  assert.equal(g.index.count / 3, 180, '휴대폰 예산 — 바위 한 개 180 삼각형');
 });
 test('바위 셰이더: 사진(세 방향 투영 + 노멀) · 이끼 · 흙 · 금 · 전처리 줄이 깨지지 않는다', () => {
   const src = fs.readFileSync('js/mmo/rock-kit.js', 'utf8');
