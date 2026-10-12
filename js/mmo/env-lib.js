@@ -458,7 +458,7 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
 /* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
    한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
    메시는 하나하나 세우고(정적 합치기가 48 m 칸으로 묶는다), 전선(선)만 160 m 칸별로 직접 묶는다. */
-export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, lamps: 0, gas: null, at: {} };
+export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, lamps: 0, gas: null, solids: [], at: {} };
 export const STREETLAMP = { mat: null };   /* 가로등 머리 발광 — world3d 시간대가 세기를 (문서 229 §11) */   /* at: 검수용 자리 몇 개씩 */
 const seeAt = (k, p) => { const l = STREET.at[k] || (STREET.at[k] = []); if (l.length < 4) l.push([+p[0].toFixed(1), +p[1].toFixed(1)]); };
 export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, walk } = ctx, inBand = (p, pad) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
@@ -549,6 +549,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
         const pw = new THREE.Mesh(blob(x, z, ang, r * 1.7, r * 0.75, seed, 1), pm); pw.position.y = 0.08; pw.userData.noCam = true; pw.userData.puddle = true; pw.receiveShadow = true; scene.add(pw); np++; } } }
     STREET.puddles = np; }
   /* 버려진 주유소 (문서 230 §5): 큰길 옆, 18×15 m 터가 통째로 걷는 띠 안 · 건물 · 물 · 차도 밖인 첫 자리에 하나. 자리 · 모양 난수는 해시(장면 난수 R 안 씀) */
+  STREET.solids = [];   /* 주유소 막이는 따로 — 공유 막이는 2D(서버)와 같아야 한다(시험 «막이는 2D 와 같다»). world3d 가 내 걷기 충돌에만 더한다 */
   if (o.gas !== false) { const blk = o.blockers || ctx.blockers || null, roadsS = roadsW.filter(rw => MAJOR.test(rw.r.kind)).sort((a, b) => (a.r.id | 0) - (b.r.id | 0)); let done = false;
     for (const rw of roadsS) { if (done) break; const id = rw.r.id | 0;
       for (let i = 1; i < rw.pts.length && !done; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < GAS.W + 4) continue; const ux = dx / L, uz = dz / L;
@@ -559,7 +560,7 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
           if (!ok) continue;
           const th = Math.atan2(nx, nz), cs = Math.cos(th), sn = Math.sin(th), st = buildGasStation(THREE, rng(id * 131 + i * 17 + (d | 0)), canvasTex);
           st.group.position.set(ox, 0, oz); st.group.rotation.y = th; scene.add(st.group);
-          if (blk) for (const q of st.blockers) blk.push({ x: +(ox + q.x * cs + q.z * sn).toFixed(2), z: +(oz - q.x * sn + q.z * cs).toFixed(2), hw: q.hw, hd: q.hd, rot: th });
+          for (const q of st.blockers) STREET.solids.push({ x: +(ox + q.x * cs + q.z * sn).toFixed(2), z: +(oz - q.x * sn + q.z * cs).toFixed(2), hw: q.hw, hd: q.hd, rot: th });
           STREET.gas = [+cx.toFixed(1), +cz.toFixed(1)]; done = true; } } } }
   for (const b of buckets.values()) { const g = mergeGeometries(b.list, false); b.list.forEach(x => x.dispose()); if (!g) continue; const m = new THREE.Mesh(g, b.mat); m.castShadow = b.shadow; m.receiveShadow = true; m.userData.noCam = true; m.userData.street = 1; scene.add(m); }
   for (const l of wires.values()) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(l, 3)); const m = new THREE.LineSegments(g, wireM); m.frustumCulled = true; m.userData.noCam = true; scene.add(m); }

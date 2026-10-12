@@ -6,8 +6,9 @@
 import { buildCar, grimeMat, grimeToVC } from './car-kit.js';
 export const GAS = { W: 18, D: 15 };   /* 터 크기 — 놓을 자리를 고를 때 이만큼 비어야 한다 */
 let M = null;
-function mats(THREE, canvasTex) {
+function mats(THREE, canvasTex0) {
   if (M) return M;
+  const canvasTex = (T, w, h, draw) => canvasTex0(T, w, h, (g, W, H) => { try { draw(g, W, H); } catch (e) { /* 꾸밈 텍스처 — 그리기 못 하는 캔버스(시험용 가짜)면 바탕만 */ } });
   const fascia = canvasTex(THREE, 512, 64, (g, w, h) => { g.fillStyle = '#e8e4da'; g.fillRect(0, 0, w, h); g.fillStyle = '#c0301c'; g.fillRect(0, h * .62, w, h * .2);
     g.fillStyle = '#2a2a2a'; g.font = '900 30px sans-serif'; g.textAlign = 'center'; g.fillText('셀 프   주 유 소', w / 2, h * .5);
     g.fillStyle = 'rgba(40,30,20,.55)'; for (let i = 0; i < 40; i++) g.fillRect(Math.random() * w, h * .8, 2 + Math.random() * 3, Math.random() * h * .2); });   /* 흘러내린 녹물 */
@@ -55,5 +56,6 @@ export function buildGasStation(THREE, R, canvasTex) {
   for (let i = 0; i < 3; i++) { const d = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .9, 10), i === 1 ? m.red : m.steel); d.position.set(sx - 4.9 + i * .65, .45, sz - .6); if (i === 2) { d.rotation.z = Math.PI / 2; d.position.y = .3; d.position.x += .3; } d.castShadow = true; g.add(d); }
   blockers.push({ x: sx + 4.8, z: sz - 1, hw: .5, hd: .5 }, { x: sx - 4.3, z: sz - .6, hw: 1.0, hd: .4 });
   grimeToVC(THREE, g);   /* 재질 여섯 → 하나 (차는 buildCar 가 이미 구웠다) */
+  g.traverse(o => { if (o.isMesh) o.userData.noCam = true; });   /* 거리 소품 규칙: 카메라 막이 · 문 자리 광선에 안 걸린다 (world3d-street 시험) */
   return { group: g, blockers };
 }

@@ -25,9 +25,11 @@ test('재질이 적다 — 낡음 재질은 꼭짓점 색 하나로', () => {
 test('거리 꾸미기에서 지역마다 하나 · 해시 난수 · 막이를 돌려 넣는다', () => {
   const E = fs.readFileSync('js/mmo/env-lib.js', 'utf8');
   assert.match(E, /if \(o\.gas !== false\) \{/); assert.match(E, /buildGasStation\(THREE, rng\(id \* 131 \+ i \* 17 \+ \(d \| 0\)\), canvasTex\)/, '장면 난수 R 이 아니라 자리 해시');
-  assert.match(E, /blk\.push\(\{ x: \+\(ox \+ q\.x \* cs \+ q\.z \* sn\)\.toFixed\(2\), z: \+\(oz - q\.x \* sn \+ q\.z \* cs\)\.toFixed\(2\), hw: q\.hw, hd: q\.hd, rot: th \}\)/);
+  assert.match(E, /STREET\.solids\.push\(\{ x: \+\(ox \+ q\.x \* cs \+ q\.z \* sn\)\.toFixed\(2\), z: \+\(oz - q\.x \* sn \+ q\.z \* cs\)\.toFixed\(2\), hw: q\.hw, hd: q\.hd, rot: th \}\)/);
   assert.match(E, /if \(solid\(p\) \|\| !inBand\(p, -2\)\) ok = false;/, '터 전체가 건물 · 물 · 차도 밖, 걷는 띠 안');
-  assert.match(fs.readFileSync('js/mmo/env-osm.js', 'utf8'), /L\.street\(\{ THREE, scene, ST, walk, blockers \}/, '강남 같은 OSM 지역도 막이를 넘긴다');
+  assert.match(fs.readFileSync('js/mmo/env-osm.js', 'utf8'), /L\.street\(\{ THREE, scene, ST, walk, blockers \}/, '강남 같은 OSM 지역도 막이를 넘긴다(읽기만)');
+  assert.doesNotMatch(E.slice(E.indexOf('if (o.gas !== false)'), E.indexOf('for (const b of buckets.values())')), /blk\.push/, '공유 막이에는 넣지 않는다 — 2D(서버)와 같게');
+  assert.match(fs.readFileSync('world3d.html', 'utf8'), /blockers: STREET\.solids && STREET\.solids\.length \? \[\.\.\.env\.blockers, \.\.\.STREET\.solids\] : env\.blockers/, '내 걷기 충돌에만 더한다');
 });
 test('막이 좌표 돌리기가 메시 돌리기와 같다', () => {
   const { group, blockers } = buildGasStation(THREE, rng(7), fakeTex), th = 1.1, ox = 10, oz = -4, cs = Math.cos(th), sn = Math.sin(th);

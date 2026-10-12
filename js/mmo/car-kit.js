@@ -64,12 +64,12 @@ export const grimeMat = (THREE, hex, rust = .3, rough = .7, metal = .2) => kitMa
 export function grimeToVC(THREE, root, worn = false) { const M = kitMats(THREE); root.traverse(m => { if (!m.isMesh || !m.material.onBeforeCompile || !m.material.customProgramCacheKey || !/car-grime/.test(m.material.customProgramCacheKey())) return;
   const c = m.material.color, geo = m.geometry, n = geo.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = c.r; a[i * 3 + 1] = c.g; a[i * 3 + 2] = c.b; }
   geo.setAttribute('color', new THREE.BufferAttribute(a, 3)); m.material = worn ? M.vcPaint.wreck : M.vcPaint.ok; }); }
-function side(THREE, pts, w, arches = [], y0 = null) {
+function side(THREE, pts, w, arches = [], y0 = null, bevel = true) {
   const s = new THREE.Shape(); const [x0, yb] = pts[0]; s.moveTo(x0, yb);
   for (let i = 1; i < pts.length; i++) s.lineTo(pts[i][0], pts[i][1]);
   if (arches.length) { const yB = y0 ?? yb; for (const [ax, r] of [...arches].sort((a, b) => b[0] - a[0])) { s.lineTo(ax + r, yB); s.absarc(ax, yB, r, 0, Math.PI, false); s.lineTo(ax - r, yB); } }
   s.closePath();
-  const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: true, bevelThickness: .04, bevelSize: .035, bevelSegments: 1, curveSegments: 6 }); g.translate(0, 0, -w / 2); return g;
+  const g = new THREE.ExtrudeGeometry(s, { depth: w, bevelEnabled: bevel, bevelThickness: .04, bevelSize: .035, bevelSegments: 1, curveSegments: 4 }); g.translate(0, 0, -w / 2); return g;
 }
 const box = (THREE, w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y, z); return g; };
 /* 한 대 — THREE.Group (자식 메시 여럿, 재질 공유). R: 0~1 난수 함수 */
@@ -99,9 +99,9 @@ export function buildCar(THREE, type, R, { wreck = false } = {}) {
   } else {
     const arches = [[T.wx, T.wr + .07], [-T.wx, T.wr + .07]];
     add(side(THREE, T.belt, T.w - .1, arches, T.belt[0][1]), paint);
-    if (burned) add(side(THREE, T.cab, T.w - .34), M.inner);   /* 유리가 깨져 나간 안 — 검은 속 */
-    else add(side(THREE, T.cab, T.w - .3), M.glass);
-    const [r0, r1] = [T.cab[1], T.cab[2]]; add(side(THREE, [[r0[0] + .02, r0[1] - .03], [r1[0] - .02, r1[1] - .03], [r1[0] - .02, r1[1] + .03], [r0[0] + .02, r0[1] + .03]], T.w - .26), paint);   /* 칠한 지붕 판 */
+    if (burned) add(side(THREE, T.cab, T.w - .34, [], null, false), M.inner);   /* 유리가 깨져 나간 안 — 검은 속 */
+    else add(side(THREE, T.cab, T.w - .3, [], null, false), M.glass);   /* 유리는 모서리 깎기 없이 — 삼각형 아낌 */
+    const [r0, r1] = [T.cab[1], T.cab[2]]; add(side(THREE, [[r0[0] + .02, r0[1] - .03], [r1[0] - .02, r1[1] - .03], [r1[0] - .02, r1[1] + .03], [r0[0] + .02, r0[1] + .03]], T.w - .26, [], null, false), paint);   /* 칠한 지붕 판 */
     const fx = T.belt.reduce((m, p) => Math.max(m, p[0]), -9), bx = T.belt.reduce((m, p) => Math.min(m, p[0]), 9), by = T.belt[0][1];
     add(box(THREE, .16, .2, T.w - .02, fx + .02, by + .08, 0), M.trim); add(box(THREE, .16, .2, T.w - .02, bx - .02, by + .1, 0), M.trim);   /* 범퍼 */
     add(box(THREE, .05, .14, T.w * .42, fx + .02, by + .3, 0), M.trim);   /* 그릴 */
@@ -125,6 +125,6 @@ function bakeVC(THREE, g, M, state) {
     m.material = painted ? (mat === M.charred || state === 'wreck' ? M.vcPaint.wreck : M.vcPaint.ok) : M.vcParts; }
 }
 function wheel(THREE, g, M, x, r, z, burned, w) {
-  if (!burned) { const t = new THREE.CylinderGeometry(r, r, w, 12); t.rotateX(Math.PI / 2); t.translate(x, r, z); g.add(new THREE.Mesh(t, M.tire)); }
+  if (!burned) { const t = new THREE.CylinderGeometry(r, r, w, 10, 1, false); t.rotateX(Math.PI / 2); t.translate(x, r, z); g.add(new THREE.Mesh(t, M.tire)); }
   const rr = r * .58, h = new THREE.CylinderGeometry(rr, rr, w + .02, 8); h.rotateX(Math.PI / 2); h.translate(x, burned ? rr + .05 : r, z); g.add(new THREE.Mesh(h, burned ? M.charred : M.rim));
 }

@@ -269,7 +269,7 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;
 /* ---------- 걷기: 같은 충돌 ---------- */
-const walkMeta = { road: env.road, walk: env.walk, blockers: env.blockers };
+const walkMeta = { road: env.road, walk: env.walk, blockers: STREET.solids && STREET.solids.length ? [...env.blockers, ...STREET.solids] : env.blockers };   /* 주유소 막이(문서 230 §5)는 내 걷기에만 — 공유 막이는 2D 와 같게 */
 const { collide } = createCollide(walkMeta);
 /* ---------- 영웅 ---------- */
 /* 휴대폰은 가벼운 모델(art/3d/lod — 삼각형 약 1/4, 2D 필드와 같은 규칙). ?lod=0|1 로 강제. 가벼운 모델은 정점 속성이 끼워져(interleaved) 있어 손 모프·아인 바인드 교정이 먼저 떼어 낸다 (hand-grip separateAttributes) */
