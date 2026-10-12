@@ -134,7 +134,7 @@ try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = n
 import * as THREE from './vendor/three/three.module.js';
 import { GLTFLoader } from './vendor/three/GLTFLoader.js';
 import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
-import { createBloom } from './js/bloom.js';
+import { createBloom } from './js/bloom.js'; import { cineSun } from './js/mmo/cine-sun.js';
 import { createDayCycle, tOf } from './js/mmo/daycycle.js';
 import { linkGates } from './js/mmo/zone-links.js';
 import { createCityLife } from './js/mmo/city-life.js';
@@ -245,13 +245,10 @@ if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); c
 const fillL = new THREE.DirectionalLight(0xffe8d8, 0.9); scene.add(fillL.translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
 const CINE = (env.kind || Z.kind || meta.kind) === 'field' && q.get('cine') !== '0';   /* 영화 같은 대기 — 빛줄기 · 해 둘레 번짐 · 색보정 (문서 230, 엘든 링 림그레이브 참고) */
 const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4, cine: CINE ? {} : null });
-const CS = { v: new THREE.Vector3(), f: new THREE.Vector3(), d: new THREE.Vector3(), col: new THREE.Color() };
-/* 해의 화면 자리 · 세기. 해가 지평선 아래면 0, 화면 밖으로 멀어질수록 0 으로. 폭우(STAGE.dim)엔 끈다 */
-function cineSun() { CS.d.copy(sunDir).normalize(); cam.getWorldDirection(CS.f); const front = CS.f.dot(CS.d);
-  CS.v.copy(cam.position).addScaledVector(CS.d, 400).project(cam); const edge = Math.max(Math.abs(CS.v.x), Math.abs(CS.v.y));
-  const up = THREE.MathUtils.smoothstep(CS.d.y, -0.06, 0.06), k = front > 0 && Number.isFinite(CS.v.x + CS.v.y) ? up * (1 - THREE.MathUtils.smoothstep(edge, 0.9, 1.6)) * (1 - (STAGE.dim || 0)) : 0;
+const CS = { col: new THREE.Color() };
+function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);
-  bloom.sun(CS.v.x * .5 + .5, CS.v.y * .5 + .5, k, CS.col); window.__CINE = { x: +CS.v.x.toFixed(3), y: +CS.v.y.toFixed(3), k: +k.toFixed(3) }; }
+  bloom.sun(r.x, r.y, r.k, CS.col); window.__CINE = { x: +r.x.toFixed(3), y: +r.y.toFixed(3), k: +r.k.toFixed(3) }; }
 /* ---------- 시간대 (문서 217) — 48분 한 바퀴, 서버 시각. 실내는 안 돌린다. ?tod=밤|night|0.45 로 고정 ---------- */
 let lampK = 1, todName = '';
 const hemiL = (() => { let h = null; scene.traverse(o => { if (o.isHemisphereLight && !h) h = o; }); return h; })();
@@ -769,7 +766,7 @@ function tick() { perf.begin();
     /* 시야 걸러내기 (문서 229 §44): 카메라 앞 ±(시야 반각 + 60°) 와 25 m 안의 인스턴스만. 8° 돌 때마다 다시 고른다. 내려다볼 때(도착 연출 · 아래 30° 넘게)는 끈다 */
     if (frames % 10 === 0 || frames < 3 || dy > 0.14) { fcYaw = yaw; const half = VIEWC && FC_FWD.y > -0.5 ? Math.atan(Math.tan(cam.fov * Math.PI / 360) * cam.aspect) + VIEWC_MARGIN : Math.PI; FOGC.update(cam.position, scene.fog.far, { yaw, half }); } }
   if (REFL && REFL.dirty) { if (FOGC) { FOGC.update(cam.position, scene.fog.far); fcYaw = null; }   /* 큐브맵은 사방을 찍는다 — 시야 걸러내기 없이 다 남기고 찍는다 (§44) */ REFL.bake(); window.__REFL = { bakes: REFL.bakes, ms: REFL.ms }; }   /* 유리에 비치는 도시 — 처음·시간대 바뀔 때만 (문서 229 §12) */
-  if (bloom && bloom.cine) cineSun();
+  if (bloom && bloom.cine) cineSunTick();
   if (bloom) bloom.render(scene, cam); else renderer.render(scene, cam);
   if (dimK < 1) { for (const l of dimLights) l.intensity = l.userData.i0; if (scene.fog) scene.fog.color.copy(dimFog); if (scene.background && scene.background.isColor) scene.background.copy(dimBg); }
   perf.end(); if (BENCH) { BENCH.tick(performance.now()); if (BENCH.done && !benchShown) { benchShown = true; benchCard(); } } requestAnimationFrame(tick); }

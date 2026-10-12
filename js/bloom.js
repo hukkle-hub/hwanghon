@@ -57,7 +57,7 @@ void main(){ vec3 c=texture2D(tSrc,vUv).rgb; float l=dot(c,vec3(.2126,.7152,.072
 const SHAFT_BLUR = `varying vec2 vUv; uniform sampler2D tSrc; uniform vec2 sunUv; uniform float len;
 float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
 void main(){ vec2 d=(vUv-sunUv)*len/28.0; vec2 uv=vUv-d*h(vUv*311.0); float w=1.0; vec3 s=vec3(0.0); float tot=0.0;
- for(int i=0;i<28;i++){ s+=texture2D(tSrc,uv).rgb*w; tot+=w; w*=.94; uv-=d; }
+ for(int i=0;i<28;i++){ s+=texture2D(tSrc,uv).rgb*w; tot+=w; w*=.965; uv-=d; }
  gl_FragColor=vec4(s/tot*1.6,1.0); }`;
 
 function pass(frag, uniforms, defines){
@@ -78,7 +78,7 @@ export function createBloom(renderer, opt){
     const rtB = new THREE.WebGLRenderTarget(2, 2, blurOpt);
     const bright = pass(BRIGHT, { tSrc:{value:null}, thr:{value:o.threshold}, soft:{value:o.soft} });
     const blur   = pass(BLUR,   { tSrc:{value:null}, dir:{value:new THREE.Vector2()} });
-    const C = o.cine ? Object.assign({ shaft:.55, haze:.16, thr:.42, rad:.55, len:.85, shadowTint:[.93,.99,1.05], lightTint:[1.06,1.0,.9], sat:.9, con:.22, vig:.32 }, o.cine) : null;
+    const C = o.cine ? Object.assign({ shaft:2.2, haze:.26, thr:.42, rad:.6, len:.95, shadowTint:[.91,1.0,1.03], lightTint:[1.07,1.01,.88], sat:.88, con:.24, vig:.22 }, o.cine) : null;
     const cu = C ? { tShaft:{value:null}, sunCol:{value:new THREE.Color(1,.8,.6)}, sunUv:{value:new THREE.Vector2(.5,.5)}, sunK:{value:0}, aspect:{value:1},
       shaftAmt:{value:C.shaft}, haze:{value:C.haze}, shadowTint:{value:new THREE.Vector3(...C.shadowTint)}, lightTint:{value:new THREE.Vector3(...C.lightTint)}, sat:{value:C.sat}, con:{value:C.con}, vig:{value:C.vig} } : {};
     const comp   = pass(COMP,   Object.assign({ tScene:{value:null}, tBloom:{value:null}, amount:{value:o.amount} }, cu), C ? { CINE:1 } : null);
