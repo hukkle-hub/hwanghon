@@ -134,7 +134,7 @@ try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = n
 import * as THREE from './vendor/three/three.module.js';
 import { GLTFLoader } from './vendor/three/GLTFLoader.js';
 import * as SkeletonUtils from './vendor/three/SkeletonUtils.js';
-import { createBloom } from './js/bloom.js'; import { cineSun } from './js/mmo/cine-sun.js';
+import { createBloom } from './js/bloom.js'; import { cineSun } from './js/mmo/cine-sun.js'; import { installHeightFog, HFOG } from './js/mmo/height-fog.js';
 import { createDayCycle, tOf } from './js/mmo/daycycle.js';
 import { linkGates } from './js/mmo/zone-links.js';
 import { createCityLife } from './js/mmo/city-life.js';
@@ -245,6 +245,9 @@ if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); c
 const fillL = new THREE.DirectionalLight(0xffe8d8, 0.9); scene.add(fillL.translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
 const CINE = (env.kind || Z.kind || meta.kind) === 'field' && q.get('cine') !== '0';   /* 영화 같은 대기 — 빛줄기 · 해 둘레 번짐 · 색보정 (문서 230, 엘든 링 림그레이브 참고) */
 const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4, cine: CINE ? {} : null });
+/* 높이 안개 (문서 230 §6): 땅 · 골짜기에 깔리는 안개 — 재질이 컴파일되기 전(첫 그리기 전)에 공용 안개 조각을 고친다. 산 · 호수 지역은 짙게. ?hf=0 끔 · ?hfk= · ?hfh= 조정 */
+const HF_ZONE = { namsan: .014, gyeryong: .016, chuncheon: .016, jeju: .012, seogwipo: .012, sokcho: .012, gyeongpo: .012, goheung: .012 };
+if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .009), h: +(q.get('hfh') || 5) });
 const CS = { col: new THREE.Color() };
 function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);
@@ -778,7 +781,7 @@ const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i
 window.__W3D = { bridges: BRIDGE.at, vsigns: VSIGN.at, apts: APT.at, roofs: ROOF.at, frozen: FROZEN.at, stage: STAGE, lod: LOD, get bench() { return BENCH && { done: BENCH.done, index: BENCH.index, results: BENCH.results }; }, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
-  get sunDir() { return sunDir; }, get gas() { return STREET.gas; }, get cine() { return window.__CINE; }, get cineU() { return bloom && bloom.cine; },
+  get sunDir() { return sunDir; }, get gas() { return STREET.gas; }, get hfog() { return HFOG; }, get cine() { return window.__CINE; }, get cineU() { return bloom && bloom.cine; },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
 /* 예열 (문서 220 §19) — 걷다가 처음 보이는 재질은 그 자리에서 셰이더를 컴파일하고(제주·춘천: 걷는 중 2개, 헤드리스 2.7초 · 폰 수백 ms), 처음 보이는 칸은 그때 GPU 에 올린다(강남: 걷는 동안 기하 521개).
    디렉터가 본 «초 단위 멈춤». 로딩 끝에 전부 미리: 장면의 모든 재질을 컴파일(renderer.compile) + 절두체 컬링을 끄고 4×4 화면에 한 번 그려 기하·텍스처·그림자 깊이 재질까지 올린다. ?warm=0 으로 끈다(비교용) */
