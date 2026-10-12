@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><title>차 시트</title>
+<!-- 버려진 차 검수 (문서 230 §4): 종류(가로) × 상태(세로). ?az=35&el=14&cell=360&seed=3&light=day|dusk&old=1(옛 차와 견주기)
+     window.READY 가 1 이 되면 다 그린 것. window.INFO = [{type, tris, meshes, burned, flat}] -->
+<style>body{margin:0;background:#12161a;color:#cfd6dc;font:12px sans-serif}canvas{display:block}</style>
+<canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { buildCar, CAR_TYPES } from '../../js/mmo/car-kit.js';
+const Q = new URLSearchParams(location.search), CELL = +(Q.get('cell') || 360), AZ = +(Q.get('az') || 35) * Math.PI / 180, EL = +(Q.get('el') || 14) * Math.PI / 180;
+const TYPES = Object.keys(CAR_TYPES), ROWS = [['멀쩡', {}, 0], ['펑크', {}, 1], ['탄 차', {}, 2], ['폐차장', { wreck: true }, 3]];
+/* 상태를 고정해서 보려고 난수를 고른다: 0 멀쩡 · 1 펑크 · 2 탄 차 */
+const seeded = (s) => { let x = s * 9301 + 49297; const r = () => (x = (x * 16807) % 2147483647) / 2147483647; for (let i = 0; i < 5; i++) r(); return r; };   /* 처음 몇 개는 씨앗끼리 비슷 — 버린다 */
+function pick(type, want, opt) { for (let s = 1; s < 4000; s++) { const g = buildCar(T, type, seeded(s + +(Q.get('seed') || 0) * 1000), opt), c = g.userData.car; const st = c.burned ? 2 : c.flat ? 1 : 0; if (want === 3 || st === want) return g; } }
+const cv = document.getElementById('c'); cv.width = CELL * TYPES.length; cv.height = CELL * ROWS.length;
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(cv.width, cv.height, false);
+r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2; r.setScissorTest(true); r.autoClear = false; r.setClearColor(0x12161a, 1); r.clear(); r.shadowMap.enabled = true;
+const dusk = Q.get('light') === 'dusk', s = new T.Scene(); s.add(new T.HemisphereLight(dusk ? 0xd8a0a0 : 0xdde6ff, 0x302820, dusk ? 1.0 : 1.5));
+const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.6 : 2.4); k.position.set(dusk ? -6 : 3, dusk ? 2.2 : 6, 3); k.castShadow = true; k.shadow.mapSize.set(1024, 1024); Object.assign(k.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6 }); s.add(k);
+const fl = new T.Mesh(new T.CircleGeometry(9, 48).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3b3e, roughness: .95 })); fl.receiveShadow = true; s.add(fl);
+const cam = new T.PerspectiveCamera(30, 1, .1, 80); window.INFO = [];
+ROWS.forEach(([label, opt, want], row) => TYPES.forEach((type, col) => {
+  const g = pick(type, want, opt); s.add(g); const L = CAR_TYPES[type].len, d = L * 1.55 + 2.2;
+  cam.position.set(Math.cos(AZ) * Math.cos(EL) * d, .7 + Math.sin(EL) * d, Math.sin(AZ) * Math.cos(EL) * d); cam.lookAt(0, type === 'truck' ? 1.2 : .65, 0);
+  r.setViewport(col * CELL, (ROWS.length - 1 - row) * CELL, CELL, CELL); r.setScissor(col * CELL, (ROWS.length - 1 - row) * CELL, CELL, CELL); r.clear(); r.render(s, cam);
+  let tris = 0, meshes = 0; g.traverse(m => { if (m.isMesh) { meshes++; const gg = m.geometry; tris += (gg.index ? gg.index.count : gg.attributes.position.count) / 3; } });
+  window.INFO.push({ type, row: label, tris: Math.round(tris), meshes, ...g.userData.car }); s.remove(g); }));
+const ctx2 = document.createElement('canvas'); document.body.append(ctx2); window.READY = 1;
+</script>

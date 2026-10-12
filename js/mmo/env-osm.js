@@ -19,6 +19,7 @@ const SCREEN_ANG = 28 * Math.PI / 180;   /* 강남대로를 화면 대각선에 
    closed: 띠 끝에 세우는 통제선 문구 (가안 — 원문에 없는 «군 통제선 잔해») */
 import { patchPuddleMaterial } from './puddle-shader.js';
 import * as L from './env-lib.js';   /* 넓은 필드 땅 꾸미기 (env-lib 은 아무것도 import 하지 않는다 — 순환 없음) */
+import { buildCar } from './car-kit.js';   /* 3D 버려진 차 (문서 230 §4) */
 import { interiorFacadeMats, interiorBrickMats, pickFacade, aviLight } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) */
 export const CONFIG = {
   gangnam: { farSide: { exit: '5' }, exitPairs: [['2', '7'], ['3', '6'], ['4', '5'], ['10', '11']],
@@ -181,7 +182,7 @@ export function build(THREE, scene, osm, opt = {}) {
     const dctx = { THREE, scene, R, FROM, clear: [], blockers }, st = L.dress(dctx, { s0: walk.s0, s1: walk.s1, t0: walk.t0, t1: tc - 32 }, L.textures(dctx), { ...CFG.dress, keep: p => !inB(p) && !onRoad(p) });
     console.log('[env-osm] 땅 꾸미기', JSON.stringify(st)); }
 
-  if (L.isView3d()) L.street({ THREE, scene, ST, walk }, roadsW, builtW);   /* 3D 만: 전봇대·전선·신호등·쓰레기·정류장 (문서 219) */
+  if (L.isView3d()) L.street({ THREE, scene, ST, walk, blockers }, roadsW, builtW);   /* 3D 만: 전봇대·전선·신호등·쓰레기·정류장 (문서 219) */
   /* ---------- 간판: 상가(POI) 업종 → 가까운 건물 길 쪽 벽. 전기가 들어오는 건 «몇몇» ---------- */
   const SIGN = { 'shop:convenience': ['편의점', '#4cff9a'], 'amenity:pharmacy': ['약국', '#4cff9a'], 'amenity:cafe': ['카페', '#ffd23a'], 'amenity:restaurant': ['식당', '#ff8a3a'], 'amenity:fast_food': ['분식', '#ff8a3a'],
     'amenity:bank': ['은행', '#39a0ff'], 'shop:hairdresser': ['미용실', '#ff4fd8'], 'shop:beauty': ['피부관리', '#ff4fd8'], 'shop:nail_salon': ['네일', '#ff4fd8'], 'amenity:dentist': ['치과', '#39e0ff'],
@@ -259,7 +260,7 @@ export function build(THREE, scene, osm, opt = {}) {
   const cabM = new THREE.MeshStandardMaterial({ color: 0x3a4658, roughness: 0.12, metalness: 0.4 });   /* 새까만 유리는 구멍처럼 보였다 — 노을을 받는 유리 */
   const xings = osm.crossings.map(W);
   const endGateP = (CFG.gates || []).filter(g => g.at.end).map(g => FROM(walk[g.at.end] + (g.at.end === 's1' ? -3 : 3), g.at.t === 'road' ? tc : g.at.t === 'center' ? (walk.t0 + walk.t1) / 2 : g.at.t));
-  let cars = 0; const frozenCars = L.isView3d() ? L.FROZEN.cars : null;   /* 반복문 안의 L 은 길이(숫자)라 밖에서 잡는다 */
+  let cars = 0; const CAR3D = L.isView3d(), frozenCars = CAR3D ? L.FROZEN.cars : null;   /* 반복문 안의 L 은 길이(숫자)라 밖에서 잡는다 */
   for (const rw of roadsW) { const k = rw.r.kind; if (!['primary', 'primary_link', 'secondary', 'busway'].includes(k)) continue; const lanes = k === 'busway' ? 1 : (rw.r.lanes || 2);
     for (let i = 1; i < rw.pts.length; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < 6) continue; const ux = dx / L, uz = dz / L, dir = Math.atan2(dz, dx);
       for (let ln = 0; ln < lanes; ln++) { const off = -rw.width / 2 + (ln + 0.5) * rw.width / lanes;
@@ -270,19 +271,24 @@ export function build(THREE, scene, osm, opt = {}) {
           /* «사람들은 마지막까지 신호를 지켰다» — 횡단보도 위에는 서지 않는다 */
           if (xings.some(x => Math.hypot(x[0] - cx, x[1] - cz) < 7)) continue;
           const g = new THREE.Group();
-          if (k === 'busway') { const bm = new THREE.MeshStandardMaterial({ color: R() < 0.5 ? 0x2a6ab0 : 0x3a9a5a, roughness: 0.4, metalness: 0.3 });
+          let sd = (Math.round(cx * 13.7) * 73856093 ^ Math.round(cz * 13.7) * 19349663) >>> 0; const LR = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296);   /* 3D 차 모양 난수 — 자리에서 (장면 난수 R 은 그대로) */
+          const kit = (type) => { const car = buildCar(THREE, type, LR); for (const c of [...car.children]) g.add(c); g.position.y = car.position.y; g.rotation.order = 'YXZ'; g.rotation.x = car.rotation.x; g.userData.car = car.userData.car; return car.userData.car.burned ? null : g.children[0].material; };
+          if (k === 'busway' && CAR3D) { R(); kit('bus'); blockers.push({ x: cx, z: cz, hw: 5.5, hd: 1.3, rot: -dir }); }   /* 3D: car-kit 버스 (문서 230 §4) */
+          else if (k === 'busway') { const bm = new THREE.MeshStandardMaterial({ color: R() < 0.5 ? 0x2a6ab0 : 0x3a9a5a, roughness: 0.4, metalness: 0.3 });
             g.add(new THREE.Mesh(busBody, bm), new THREE.Mesh(busGlass, cabM)); for (const x of [-3.6, 3.6]) for (const z of [-1.1, 1.1]) { const w = new THREE.Mesh(wheelGeo, wheelM); w.scale.setScalar(1.5); w.position.set(x, 0.48, z); g.add(w); }
             blockers.push({ x: cx, z: cz, hw: 5.5, hd: 1.3, rot: -dir }); }
           else { const type = R() < 0.55 ? 'sedan' : R() < 0.7 ? 'suv' : 'mini', cg = carGeos[type];
-            const bm = new THREE.MeshStandardMaterial({ color: carCols[(R() * carCols.length) | 0], roughness: 0.25, metalness: 0.7 });
-            const body = new THREE.Mesh(cg.body, bm); g.add(body); g.add(new THREE.Mesh(cg.glass, cabM));
-            for (const x of [-cg.len * 0.32, cg.len * 0.32]) for (const z of [-cg.w / 2 + 0.1, cg.w / 2 - 0.1]) { const w = new THREE.Mesh(wheelGeo, wheelM); w.position.set(x, 0.33, z); g.add(w); }
-            for (const [x, c] of [[cg.len / 2 + 0.04, 0xffe8c0], [-cg.len / 2 - 0.04, 0x8a1010]]) for (const z of [-cg.w / 2 + 0.3, cg.w / 2 - 0.3]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.3), new THREE.MeshBasicMaterial({ color: c })); l.position.set(x, 0.66, z); g.add(l); }
-            const r = R(); if (r < 0.12) { /* 문이 열린 차 */ const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.05), bm); door.position.set(0.3, 0.62, cg.w / 2 + 0.45); door.rotation.y = -0.9; g.add(door); }
+            const col = carCols[(R() * carCols.length) | 0]; let bm;
+            if (CAR3D) bm = kit(type);   /* 3D: 바퀴집 · 창 · 불빛 · 낡음 (car-kit) */
+            else { bm = new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, metalness: 0.7 });
+              const body = new THREE.Mesh(cg.body, bm); g.add(body); g.add(new THREE.Mesh(cg.glass, cabM));
+              for (const x of [-cg.len * 0.32, cg.len * 0.32]) for (const z of [-cg.w / 2 + 0.1, cg.w / 2 - 0.1]) { const w = new THREE.Mesh(wheelGeo, wheelM); w.position.set(x, 0.33, z); g.add(w); }
+              for (const [x, c] of [[cg.len / 2 + 0.04, 0xffe8c0], [-cg.len / 2 - 0.04, 0x8a1010]]) for (const z of [-cg.w / 2 + 0.3, cg.w / 2 - 0.3]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.3), new THREE.MeshBasicMaterial({ color: c })); l.position.set(x, 0.66, z); g.add(l); } }
+            const r = R(); if (!bm) {} else if (r < 0.12) { /* 문이 열린 차 */ const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.05), bm); door.position.set(0.3, 0.62, cg.w / 2 + 0.45); door.rotation.y = -0.9; g.add(door); }
             else if (r < 0.15) { /* 트렁크가 열린 차 — 짐이 반쯤 */ const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, cg.w - 0.2), bm); lid.position.set(-cg.len / 2 + 0.1, 1.3, 0); lid.rotation.z = 1.1; g.add(lid);
               const bag = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.35, 0.7), new THREE.MeshStandardMaterial({ color: 0x3a2a5a, roughness: 0.6 })); bag.position.set(-cg.len / 2 + 0.6, 0.98, 0.3); g.add(bag); }
             blockers.push({ x: cx, z: cz, hw: 2.3, hd: 1.0, rot: -dir }); }
-          g.position.set(cx, 0.0, cz); g.rotation.y = -dir; g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); cars++; if (frozenCars && k !== 'busway') frozenCars.push({ x: cx, z: cz, dir: -dir, w: 1.8, len: 4.6 }); } } } }
+          g.position.set(cx, g.position.y, cz); g.rotation.y = -dir; g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g); cars++; if (frozenCars && k !== 'busway') frozenCars.push({ x: cx, z: cz, dir: -dir, w: 1.8, len: 4.6 }); } } } }
   if (L.isView3d()) L.frozenMoment(THREE, scene);   /* 멈춘 순간 — 차 옆에 버리고 간 짐 (문서 229 §21) */
 
   /* ---------- 주황 결정 («외벽을 타고 … 인도 곳곳에 무릎 높이로») ---------- */

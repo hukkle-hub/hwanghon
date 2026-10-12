@@ -146,7 +146,7 @@ import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
-import { setView3d, setInterior, setVsignTheme, VSIGN, STREETLAMP, APT, ROOF, FROZEN, BRIDGE } from './js/mmo/env-lib.js';
+import { setView3d, setInterior, setVsignTheme, VSIGN, STREETLAMP, STREET, APT, ROOF, FROZEN, BRIDGE } from './js/mmo/env-lib.js';
 import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { addLightCones } from './js/mmo/light-cones.js';
 import { createEnvReflect } from './js/mmo/env-reflect.js';
@@ -778,7 +778,7 @@ const info = () => { renderer.info.reset(); renderer.render(scene, cam); const i
 window.__W3D = { bridges: BRIDGE.at, vsigns: VSIGN.at, apts: APT.at, roofs: ROOF.at, frozen: FROZEN.at, stage: STAGE, lod: LOD, get bench() { return BENCH && { done: BENCH.done, index: BENCH.index, results: BENCH.results }; }, bag: BAG, tod(v) { if (!DAYC) return null; DAYC.fixed = v == null ? null : tOf(v); todT = 0; return DAYC.fixed; }, get todState() { return DAYC ? { ...DAYC.state, lampK } : null; }, get life() { return LIFE && LIFE.counts; }, introAt(k) { photo = null; intro = { t: k * 3.2, dur: 3.2, fwd: null }; }, get intro() { return intro && intro.t; }, dress(eq) { dressKey = null; dressMe({ equipment: eq || {} }); }, get safe() { return safeNow; }, get perf() { return perf.stats; }, castSkill, get skReady() { return skReady; }, get critNext() { return critNext; }, get eco() { return ECO; }, get mobs() { return MOBS; }, get mp() { return MP; }, drink, get curArea() { return curArea; }, get pdN() { return pdN; }, get camBoxes() { return MERGE.camBoxes; }, get frames() { return frames; }, get hold() { return hold; }, set hold(v) { hold = !!v; }, set dtCap(v) { dtCap = Math.max(0.001, Math.min(0.05, +v || 0.05)); },
   me, cam, camS, scene, renderer, env, meta, doms, fbs, GATES, bossAct(id, motion = 'idle', skill = '', elapsed = 0) { const o = fbs.find(x => x.b.id === id); if (!o || !o.fx) return false; const now = bossClock(), at = now - elapsed; applyBossAction(o, { id, x: o.root.position.x, z: o.root.position.z, yaw: o.root.rotation.y, motion, skill, seq: (o.motionSeq || 0) + 1, startedAt: at, endsAt: at + 3400, counterOpen: 0, counterClose: 0 }, now); return true; }, goGate, get gateNear() { return gateNear; }, info, nearLights, attack, dodge, P, feel, get gameNow() { return gameNow; }, get net() { return net; }, get lastField() { return lastField; }, get fieldN() { return fieldN; }, netMsg, remotes,
   teleport(x, z, yaw) { root.position.set(x, 0, z); if (yaw != null) { me.yaw = yaw; root.rotation.y = yaw; } nearLights(root.position); },
-  get sunDir() { return sunDir; }, get cine() { return window.__CINE; }, get cineU() { return bloom && bloom.cine; },
+  get sunDir() { return sunDir; }, get gas() { return STREET.gas; }, get cine() { return window.__CINE; }, get cineU() { return bloom && bloom.cine; },
   view(pos, at) { photo = pos ? { pos, at } : null; }, orbit(yaw, pitch, dist) { if (yaw != null) camS.yaw = yaw; if (pitch != null) camS.pitch = pitch; if (dist != null) camS.dist = dist; } };
 /* 예열 (문서 220 §19) — 걷다가 처음 보이는 재질은 그 자리에서 셰이더를 컴파일하고(제주·춘천: 걷는 중 2개, 헤드리스 2.7초 · 폰 수백 ms), 처음 보이는 칸은 그때 GPU 에 올린다(강남: 걷는 동안 기하 521개).
    디렉터가 본 «초 단위 멈춤». 로딩 끝에 전부 미리: 장면의 모든 재질을 컴파일(renderer.compile) + 절두체 컬링을 끄고 4×4 화면에 한 번 그려 기하·텍스처·그림자 깊이 재질까지 올린다. ?warm=0 으로 끈다(비교용) */

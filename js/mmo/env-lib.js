@@ -4,6 +4,8 @@
    모든 함수는 ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear } 를 받는다. */
 import { patchPuddleMaterial, PUDDLE } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
+import { buildCar } from './car-kit.js';
+import { buildGasStation, GAS } from './gas-station.js';
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
@@ -456,7 +458,7 @@ export function buildingDeco(THREE, pts, h, id, o = {}) { const P = { parapet: [
 /* ---------- 거리 풍경 (3D 필드만, 문서 219) — 전봇대와 늘어진 전선 · 교차로 신호등 · 쓰레기 더미 · 버스 정류장 ----------
    한국 골목의 얼굴은 전봇대와 엉킨 전선이다. 전부 길·건물 자리에서 해시로 정한다(장면 난수 R 안 씀) · 막이 없음(서버 지도와 같게) · 카메라 막이 없음.
    메시는 하나하나 세우고(정적 합치기가 48 m 칸으로 묶는다), 전선(선)만 160 m 칸별로 직접 묶는다. */
-export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, lamps: 0, at: {} };
+export const STREET = { poles: 0, wires: 0, signals: 0, bags: 0, stops: 0, weeds: 0, puddles: 0, lamps: 0, gas: null, at: {} };
 export const STREETLAMP = { mat: null };   /* 가로등 머리 발광 — world3d 시간대가 세기를 (문서 229 §11) */   /* at: 검수용 자리 몇 개씩 */
 const seeAt = (k, p) => { const l = STREET.at[k] || (STREET.at[k] = []); if (l.length < 4) l.push([+p[0].toFixed(1), +p[1].toFixed(1)]); };
 export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, walk } = ctx, inBand = (p, pad) => { const [s, t] = ST(p); return s > walk.s0 - pad && s < walk.s1 + pad && t > walk.t0 - pad && t < walk.t1 + pad; };
@@ -546,6 +548,19 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
         const wm = new THREE.Mesh(wetFan(x, z, ang, r * 1.7, r * 0.75, seed), wetM); wm.position.y = 0.078; wm.userData.noCam = true; wm.userData.puddle = true; scene.add(wm);
         const pw = new THREE.Mesh(blob(x, z, ang, r * 1.7, r * 0.75, seed, 1), pm); pw.position.y = 0.08; pw.userData.noCam = true; pw.userData.puddle = true; pw.receiveShadow = true; scene.add(pw); np++; } } }
     STREET.puddles = np; }
+  /* 버려진 주유소 (문서 230 §5): 큰길 옆, 18×15 m 터가 통째로 걷는 띠 안 · 건물 · 물 · 차도 밖인 첫 자리에 하나. 자리 · 모양 난수는 해시(장면 난수 R 안 씀) */
+  if (o.gas !== false) { const blk = o.blockers || ctx.blockers || null, roadsS = roadsW.filter(rw => MAJOR.test(rw.r.kind)).sort((a, b) => (a.r.id | 0) - (b.r.id | 0)); let done = false;
+    for (const rw of roadsS) { if (done) break; const id = rw.r.id | 0;
+      for (let i = 1; i < rw.pts.length && !done; i++) { const a = rw.pts[i - 1], b = rw.pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); if (L < GAS.W + 4) continue; const ux = dx / L, uz = dz / L;
+        for (let d = GAS.W / 2 + 2; d < L - GAS.W / 2 - 2 && !done; d += 9) for (const sd of hashU(id, i, 41) < .5 ? [1, -1] : [-1, 1]) { if (done) break;
+          const nx = -uz * sd, nz = ux * sd, e = rw.width / 2 + 1.5, ox = a[0] + ux * d + nx * e, oz = a[1] + uz * d + nz * e, cx = ox + nx * GAS.D / 2, cz = oz + nz * GAS.D / 2;
+          let ok = !(o.avoid && o.avoid([cx, cz])) && !(blk && blk.some(q => Math.hypot(q.x - cx, q.z - cz) < 12));
+          for (let u = -1; u <= 1 && ok; u += .5) for (let v = 0; v <= 1 && ok; v += .25) { const p = [ox + ux * u * GAS.W / 2 + nx * v * GAS.D, oz + uz * u * GAS.W / 2 + nz * v * GAS.D]; if (solid(p) || !inBand(p, -2)) ok = false; }
+          if (!ok) continue;
+          const th = Math.atan2(nx, nz), cs = Math.cos(th), sn = Math.sin(th), st = buildGasStation(THREE, rng(id * 131 + i * 17 + (d | 0)), canvasTex);
+          st.group.position.set(ox, 0, oz); st.group.rotation.y = th; scene.add(st.group);
+          if (blk) for (const q of st.blockers) blk.push({ x: +(ox + q.x * cs + q.z * sn).toFixed(2), z: +(oz - q.x * sn + q.z * cs).toFixed(2), hw: q.hw, hd: q.hd, rot: th });
+          STREET.gas = [+cx.toFixed(1), +cz.toFixed(1)]; done = true; } } } }
   for (const b of buckets.values()) { const g = mergeGeometries(b.list, false); b.list.forEach(x => x.dispose()); if (!g) continue; const m = new THREE.Mesh(g, b.mat); m.castShadow = b.shadow; m.receiveShadow = true; m.userData.noCam = true; m.userData.street = 1; scene.add(m); }
   for (const l of wires.values()) { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(l, 3)); const m = new THREE.LineSegments(g, wireM); m.frustumCulled = true; m.userData.noCam = true; scene.add(m); }
   return STREET; }
@@ -687,13 +702,18 @@ export function cars(ctx, roadsW, o = {}) { const { THREE, scene, R, ST, walk } 
           const cx = a[0] + ux * d - uz * off, cz = a[1] + uz * d + ux * off, [cs, ct] = ST([cx, cz]); if (cs < walk.s0 - 30 || cs > walk.s1 + 30 || ct < walk.t0 - 30 || ct > walk.t1 + 30) continue;
           if (o.avoid && o.avoid([cx, cz])) continue;
           const type = R() < (o.trucks ?? 0.08) ? 'truck' : R() < 0.6 ? 'sedan' : 'suv', cg = geos[type], g = new THREE.Group();
-          const bm = new THREE.MeshStandardMaterial({ color: cols[(R() * cols.length) | 0], roughness: 0.25, metalness: 0.7 }); g.add(new THREE.Mesh(cg.body, bm), new THREE.Mesh(cg.glass, cabM));
-          for (const x of [-cg.len * 0.32, cg.len * 0.32]) for (const z of [-cg.w / 2 + 0.1, cg.w / 2 - 0.1]) { const w = new THREE.Mesh(wheelG, wheelM); w.position.set(x, 0.33, z); g.add(w); }
-          if (o.wreck && R() < o.wreck) { g.rotation.z = (R() - .5) * 0.3; bm.color.multiplyScalar(0.45); }   /* 폐차장 — 녹슬고 기운 차 */
-          if (VIEW3D && type !== 'truck') { const r2 = R(); if (r2 < 0.14) { const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.05), bm); door.position.set(0.3, 0.62, cg.w / 2 + 0.45); door.rotation.y = -0.9; g.add(door); }   /* 문이 열린 차 — 급히 내렸다 (문서 229 §21) */
+          const col = cols[(R() * cols.length) | 0]; let bm;
+          if (VIEW3D) {   /* 3D: 바퀴집 · 창 · 불빛 · 낡음이 있는 차 (car-kit, 문서 230 §4). 모양 난수는 자리에서 — 장면 난수 R 을 더 쓰지 않는다(뒤에 놓이는 것들 자리가 그대로) */
+            let sd = (Math.round(cx * 13.7) * 73856093 ^ Math.round(cz * 13.7) * 19349663) >>> 0; const LR = () => ((sd = (sd * 1664525 + 1013904223) >>> 0) / 4294967296);
+            const wr = !!(o.wreck && R() < o.wreck), car = buildCar(THREE, type, LR, { wreck: wr }); if (wr) g.rotation.z = (R() - .5) * 0.3;
+            for (const c of [...car.children]) g.add(c); g.position.y = car.position.y; g.rotation.order = "YXZ"; g.rotation.x = car.rotation.x;   /* 펑크 기울기는 차 길이 축으로 — 돌린 뒤에 */ bm = car.userData.car.burned ? null : g.children[0].material; g.userData.car = car.userData.car; }
+          else { bm = new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, metalness: 0.7 }); g.add(new THREE.Mesh(cg.body, bm), new THREE.Mesh(cg.glass, cabM));
+            for (const x of [-cg.len * 0.32, cg.len * 0.32]) for (const z of [-cg.w / 2 + 0.1, cg.w / 2 - 0.1]) { const w = new THREE.Mesh(wheelG, wheelM); w.position.set(x, 0.33, z); g.add(w); }
+            if (o.wreck && R() < o.wreck) { g.rotation.z = (R() - .5) * 0.3; bm.color.multiplyScalar(0.45); } }   /* 폐차장 — 녹슬고 기운 차 */
+          if (VIEW3D && type !== 'truck') { const r2 = R(); if (!bm) {} else if (r2 < 0.14) { const door = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.55, 0.05), bm); door.position.set(0.3, 0.62, cg.w / 2 + 0.45); door.rotation.y = -0.9; g.add(door); }   /* 문이 열린 차 — 급히 내렸다 (문서 229 §21) */
             else if (r2 < 0.18) { const lid = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, cg.w - 0.2), bm); lid.position.set(-cg.len / 2 + 0.1, 1.3, 0); lid.rotation.z = 1.1; g.add(lid); } }   /* 트렁크가 열린 차 */
           if (VIEW3D) FROZEN.cars.push({ x: cx, z: cz, dir: -dir, w: cg.w, len: cg.len });
-          g.position.set(cx, 0, cz); g.rotation.y = -dir + (o.wreck ? (R() - .5) * 0.6 : 0); g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(g);
+          g.position.set(cx, g.position.y, cz); g.rotation.y = -dir + (o.wreck ? (R() - .5) * 0.6 : 0); g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(g);
           ctx.blockers.push({ x: +cx.toFixed(2), z: +cz.toFixed(2), hw: cg.len / 2, hd: cg.w / 2, rot: -dir }); n++; } } } }
   return n; }
 

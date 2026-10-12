@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><title>주유소 시트</title>
+<!-- 버려진 주유소 검수 (문서 230 §5): 네 방향 · ?light=day|dusk&seed=1&cell=520. window.READY · window.INFO={tris, meshes, blockers} -->
+<style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { buildGasStation, GAS } from '../../js/mmo/gas-station.js';
+import { canvasTex } from '../../js/mmo/env-lib.js';
+const Q = new URLSearchParams(location.search), CELL = +(Q.get('cell') || 520), dusk = Q.get('light') === 'dusk';
+let x = (+(Q.get('seed') || 1)) * 9301 + 49297; const R = () => (x = (x * 16807) % 2147483647) / 2147483647; for (let i = 0; i < 5; i++) R();
+const cv = document.getElementById('c'); cv.width = CELL * 2; cv.height = CELL * 2;
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(cv.width, cv.height, false); r.shadowMap.enabled = true;
+r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2; r.setScissorTest(true); r.autoClear = false;
+const s = new T.Scene(); s.background = new T.Color(dusk ? 0x5a3040 : 0x9aa6b4); s.add(new T.HemisphereLight(dusk ? 0xd8a0a0 : 0xdde6ff, 0x302820, dusk ? .9 : 1.4));
+const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.8 : 2.4); k.position.set(dusk ? -14 : 8, dusk ? 5 : 16, dusk ? 4 : 10); k.castShadow = true; k.shadow.mapSize.set(2048, 2048); Object.assign(k.shadow.camera, { left: -16, right: 16, top: 16, bottom: -16, far: 60 }); s.add(k);
+const fl = new T.Mesh(new T.PlaneGeometry(80, 80).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a38, roughness: .95 })); fl.receiveShadow = true; s.add(fl);
+const road = new T.Mesh(new T.PlaneGeometry(80, 12).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x232426, roughness: .9 })); road.position.set(0, .01, -6.5); s.add(road);
+const { group, blockers } = buildGasStation(T, R, canvasTex); s.add(group);
+const cam = new T.PerspectiveCamera(40, 1, .1, 200);
+[[-.6, 2.0, 24], [.9, 1.7, 22], [2.6, 6, 26], [-2.4, 1.6, 16]].forEach(([a, h, d], i) => { cam.position.set(Math.sin(a) * d, h, GAS.D / 2 - Math.cos(a) * d); cam.lookAt(0, 2.2, GAS.D / 2);
+  const vx = (i % 2) * CELL, vy = (1 - (i >> 1)) * CELL; r.setViewport(vx, vy, CELL, CELL); r.setScissor(vx, vy, CELL, CELL); r.clear(); r.render(s, cam); });
+let tris = 0, meshes = 0; group.traverse(m => { if (m.isMesh) { meshes++; const g = m.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+window.INFO = { tris: Math.round(tris), meshes, blockers: blockers.length }; window.READY = 1;
+</script>
