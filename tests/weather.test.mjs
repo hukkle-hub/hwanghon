@@ -44,3 +44,8 @@ test('밤하늘 (문서 230 §16): 달 · 은하수 · 별똥별은 밤(dark)에
   assert.match(SKY_FRAG, /band = exp\(-gb \* gb \* 26\.0\)/, '은하수 띠'); assert.match(SKY_FRAG, /floor\(time \/ 20\.0\)/, '별똥별'); assert.match(SKY_FRAG, /\(1\.0 - 0\.85 \* dark\)/, '밤 해 번짐은 달무리로');
   const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /sk\.cover\.value = 0\.5 - 0\.38 \* WXS\.rain - 0\.15 \* WXS\.mist/);
 });
+test('바다 (문서 230 §17): 너울 · 해 길 반짝임(점 — 칸 통째는 네모 타일) · 마루 청록 · 비 동심원 — 웅덩이엔 안 붙는다', () => {
+  const E = fs.readFileSync('js/mmo/env-lib.js', 'utf8');
+  assert.match(E, /float swellH\(vec2 p\)/); assert.match(E, /float dot0 = smoothstep\(0\.16, 0\.0, length\(f - /, '반짝임은 칸 안의 점'); assert.match(E, /vec2 seaRip\(vec2 p\)/);
+  assert.match(E, /\$\{calm \? '' : 'vec2 sw = swellG\(wq\)/, '웅덩이(calm)엔 너울이 없다'); assert.match(E, /uRainW: WX\.uRain, uMistW: WX\.uMist/);
+});

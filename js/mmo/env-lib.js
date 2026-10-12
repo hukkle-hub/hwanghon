@@ -635,20 +635,35 @@ function waterDefaults(THREE) { const d = { uTop: 0x3a2a48, uHor: 0xd06a50, uFog
 const WATER_PARS = 'uniform float uTime; uniform vec3 uTop, uHor, uFogc, uSun, uSunc; varying vec3 vWP;\n'
   + 'float wvN(vec2 p){ return sin(dot(p, vec2(0.204, 0.050)) + uTime * 0.7) * 0.55 + sin(dot(p, vec2(-0.212, 0.488)) + uTime * 1.0) * 0.5 + sin(dot(p, vec2(0.802, -0.791)) + uTime * 1.6) * 0.3'
   + ' + sin(dot(p, vec2(0.601, 2.241)) - uTime * 2.3) * 0.16 + sin(dot(p, vec2(-3.256, -1.739)) + uTime * 3.1) * 0.09; }\n';   /* 방향이 제각각인 다섯 물결 — 축 맞춘 물결은 반짝임이 격자로 줄 섰다 */
+/* 바다 (문서 230 §17): 큰 너울(25 m) 기울기 · 해 길 반짝임(칸마다 깜빡이는 점이 해 쪽으로 넓게) · 빗방울 동심원. 웅덩이(calm)엔 안 붙는다 */
+const WATER_SEA = `
+uniform float uRainW, uMistW;
+float swellH(vec2 p) { return sin(dot(p, vec2(0.21, 0.13)) * 1.0 - uTime * 0.9) * 0.6 + sin(dot(p, vec2(-0.09, 0.24)) - uTime * 0.7) * 0.4; }
+vec2 swellG(vec2 p) { float a = cos(dot(p, vec2(0.21, 0.13)) - uTime * 0.9) * 0.6, b = cos(dot(p, vec2(-0.09, 0.24)) - uTime * 0.7) * 0.4; return vec2(0.21, 0.13) * a + vec2(-0.09, 0.24) * b; }
+float gh(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+float glitter(vec2 p, float sd, float dist) { vec2 q = p * 5.0, c = floor(q), f = fract(q) - 0.5; float h = gh(c), tw = step(0.8, fract(h * 7.3 + uTime * (0.6 + h)));
+  float dot0 = smoothstep(0.16, 0.0, length(f - (vec2(gh(c + 1.7), gh(c + 4.3)) - 0.5) * 0.6));   /* 칸 안 작은 점 — 칸 통째로 켜면 네모 타일이었다 */
+  return pow(sd, 18.0) * tw * dot0 * 2.6 / (1.0 + dist * 0.004); }
+vec2 seaRip(vec2 p) { vec2 acc = vec2(0.0); if (uRainW < 0.01) return acc; vec2 q = p * 2.6, c = floor(q), f = fract(q) - 0.5; float t = fract(uTime * 1.2 + gh(c)); vec2 dv = f - (vec2(gh(c + 3.1), gh(c + 5.7)) - 0.5) * 0.5; float r = length(dv);
+  return dv / max(r, 1e-3) * exp(-pow((r - t * 0.45) * 20.0, 2.0)) * (1.0 - t) * uRainW * 6.0; }
+`;
 export function waterMat(THREE, { calm = false } = {}) { waterDefaults(THREE); const m = new THREE.MeshStandardMaterial({ color: calm ? 0x101418 : 0x0c161c, roughness: 0.42, metalness: 0, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: calm ? -30 : -6 }); m.userData.water = true; if (calm) m.userData.puddle = true;   /* calm: 길 웅덩이 — 길(-24)보다 앞 · 잔물결만 */   /* 바닥판(0 m)보다 1.2 cm 위인데 뒤로 밀면(+6) 멀리서 바닥에 덮였다(춘천 강) — 앞으로, 길(-24)보다는 약하게 */
-  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, WATER);
+  m.onBeforeCompile = sh => { Object.assign(sh.uniforms, WATER, { uRainW: WX.uRain, uMistW: WX.uMist });
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + WATER_PARS + SKY_REFL)
+    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\n' + WATER_PARS + SKY_REFL + WATER_SEA)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
 vec3 wV = normalize(cameraPosition - vWP); float wD = length(cameraPosition - vWP); vec2 wq = vWP.xz; float we = 0.18;
 float wgx = wvN(wq + vec2(we, 0.0)) - wvN(wq - vec2(we, 0.0)), wgz = wvN(wq + vec2(0.0, we)) - wvN(wq - vec2(0.0, we)), wA = ${calm ? '0.08' : '0.62'} / (1.0 + wD * 0.025);
+${calm ? '' : 'vec2 sw = swellG(wq) * 0.9 / (1.0 + wD * 0.01) + seaRip(wq) * 0.5; wgx += sw.x * we * 2.0; wgz += sw.y * we * 2.0;'}
 vec3 wN = normalize(vec3(-wgx * wA, 1.0, -wgz * wA)); normal = normalize((viewMatrix * vec4(wN, 0.0)).xyz);`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
 { vec3 wR = reflect(-wV, wN); float ry = wR.y, sd = max(dot(wR, normalize(uSun)), 0.0);
   vec3 sky = skyRefl(vec3(wR.x, max(ry, 0.0), wR.z));   /* 하늘 돔과 같은 능선이 거꾸로 비친다 */
   float F = 0.04 + 0.96 * pow(1.0 - max(dot(wN, wV), 0.0), 5.0);
   float wh = smoothstep(-1.4, 1.4, wvN(wq)); totalEmissiveRadiance += sky * F * ${calm ? '0.55' : '0.8'} * (0.72 + 0.4 * wh) +   /* 물결 마루·골 밝기 차 — 노을 쪽 밝은 하늘이 고르게 비치면 «판» 이었다 */
-    uSunc * (pow(sd, 420.0) * 5.0 + pow(sd, 40.0) * 0.18) * smoothstep(-0.05, 0.08, uSun.y);
+    uSunc * (pow(sd, 420.0) * 5.0 + pow(sd, 40.0) * 0.18) * smoothstep(-0.05, 0.08, uSun.y)${calm ? '' : ` +
+    uSunc * glitter(wq, sd, wD) * smoothstep(-0.05, 0.08, uSun.y) * (1.0 - 0.8 * uMistW) * (1.0 - 0.7 * uRainW) +   /* 해 길 반짝임 (문서 230 §17) */
+    vec3(0.06, 0.22, 0.2) * pow(max(dot(-wV, normalize(uSun)), 0.0), 3.0) * smoothstep(0.2, 1.2, wvN(wq) + swellH(wq)) * length(uSunc) * 0.35`};   /* 해를 마주 보면 물결 마루로 청록 빛이 비친다 */
   diffuseColor.rgb *= 1.0 - F; }`)
       .replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\nreflectedLight.directSpecular *= 0.15;'); };   /* 거친 표준 반사가 해 쪽 수면을 통째로 주황으로 덮었다 — 반짝임은 물결 법선으로 따로 */
   m.customProgramCacheKey = () => calm ? 'water-calm' : 'water'; return m; }
