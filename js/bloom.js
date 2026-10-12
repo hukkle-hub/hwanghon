@@ -24,14 +24,44 @@ void main(){ vec4 s=texture2D(tSrc,vUv)*0.227027;
  s+=texture2D(tSrc,vUv+dir*3.2308)*0.070270; s+=texture2D(tSrc,vUv-dir*3.2308)*0.070270;
  gl_FragColor=s; }`;
 
-/* 합성 + sRGB 인코딩. 렌더 타깃에서 캔버스로 직접 그리므로 three 가 인코딩해 주지 않는다. */
+/* 합성 + sRGB 인코딩. 렌더 타깃에서 캔버스로 직접 그리므로 three 가 인코딩해 주지 않는다.
+   CINE (3D 필드만, 문서 230): 빛줄기 더하기 · 해 쪽 대기 번짐 · 색보정(그림자 차게 · 밝은 데 따뜻하게 · 채도 조금 빼기 · S 곡선) · 가장자리 어둡게 */
 const COMP = `varying vec2 vUv; uniform sampler2D tScene; uniform sampler2D tBloom; uniform float amount;
+#ifdef CINE
+uniform sampler2D tShaft; uniform vec3 sunCol; uniform vec2 sunUv; uniform float sunK; uniform float aspect;
+uniform float shaftAmt; uniform float haze; uniform vec3 shadowTint; uniform vec3 lightTint; uniform float sat; uniform float con; uniform float vig;
+#endif
 vec3 srgb(vec3 c){ return mix(c*12.92, 1.055*pow(max(c,vec3(0.0)),vec3(1.0/2.4))-0.055, step(vec3(0.0031308),c)); }
 void main(){ vec3 c=texture2D(tScene,vUv).rgb + texture2D(tBloom,vUv).rgb*amount;
- gl_FragColor=vec4(srgb(min(c,vec3(1.6))),1.0); }`;
+#ifdef CINE
+ vec2 dv=(vUv-sunUv)*vec2(aspect,1.0); float d=length(dv);
+ c+=sunCol*(texture2D(tShaft,vUv).rgb*shaftAmt + haze*exp(-d*3.2))*sunK;   /* 빛줄기 + 해 둘레 넓은 번짐(대기 산란 흉내) */
+ float l=dot(c,vec3(.2126,.7152,.0722));
+ c*=mix(shadowTint, lightTint, smoothstep(.02,.45,l));   /* 갈라 물들이기 */
+ c=mix(vec3(l), c, sat);
+#endif
+ vec3 g=srgb(min(c,vec3(1.6)));
+#ifdef CINE
+ vec3 q=clamp(g,0.0,1.0); g=mix(g, q*q*(3.0-2.0*q), con);   /* S 곡선 — 중간은 그대로, 양끝을 민다 */
+ vec2 e=(vUv-.5)*vec2(aspect*.62,1.0); g*=1.0-vig*smoothstep(.25,.9,dot(e,e)*1.6);
+#endif
+ gl_FragColor=vec4(g,1.0); }`;
 
-function pass(frag, uniforms){
-  const m = new THREE.ShaderMaterial({ vertexShader:VERT, fragmentShader:frag, uniforms,
+/* 빛줄기 원천: 해 둘레의 밝은 것만(나무·건물 그림자는 어두워 빠진다) */
+const SHAFT_SRC = `varying vec2 vUv; uniform sampler2D tSrc; uniform vec2 sunUv; uniform float aspect; uniform float thr; uniform float rad;
+void main(){ vec3 c=texture2D(tSrc,vUv).rgb; float l=dot(c,vec3(.2126,.7152,.0722));
+ float m=smoothstep(thr, thr+.22, l)*(1.0-smoothstep(0.0, rad, length((vUv-sunUv)*vec2(aspect,1.0))));
+ gl_FragColor=vec4(vec3(m)*(.35+.65*l),1.0); }`;
+
+/* 해 쪽으로 번지는 방사 흐림 (GPU Gems 3 13 장). 28 탭, 픽셀마다 시작점을 흔들어 띠를 없앤다 */
+const SHAFT_BLUR = `varying vec2 vUv; uniform sampler2D tSrc; uniform vec2 sunUv; uniform float len;
+float h(vec2 p){ return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453); }
+void main(){ vec2 d=(vUv-sunUv)*len/28.0; vec2 uv=vUv-d*h(vUv*311.0); float w=1.0; vec3 s=vec3(0.0); float tot=0.0;
+ for(int i=0;i<28;i++){ s+=texture2D(tSrc,uv).rgb*w; tot+=w; w*=.94; uv-=d; }
+ gl_FragColor=vec4(s/tot*1.6,1.0); }`;
+
+function pass(frag, uniforms, defines){
+  const m = new THREE.ShaderMaterial({ vertexShader:VERT, fragmentShader:frag, uniforms, defines:defines||{},
     depthTest:false, depthWrite:false });
   const s = new THREE.Scene(); s.add(new THREE.Mesh(QUAD, m)); return { scene:s, mat:m };
 }
@@ -48,7 +78,13 @@ export function createBloom(renderer, opt){
     const rtB = new THREE.WebGLRenderTarget(2, 2, blurOpt);
     const bright = pass(BRIGHT, { tSrc:{value:null}, thr:{value:o.threshold}, soft:{value:o.soft} });
     const blur   = pass(BLUR,   { tSrc:{value:null}, dir:{value:new THREE.Vector2()} });
-    const comp   = pass(COMP,   { tScene:{value:null}, tBloom:{value:null}, amount:{value:o.amount} });
+    const C = o.cine ? Object.assign({ shaft:.55, haze:.16, thr:.42, rad:.55, len:.85, shadowTint:[.93,.99,1.05], lightTint:[1.06,1.0,.9], sat:.9, con:.22, vig:.32 }, o.cine) : null;
+    const cu = C ? { tShaft:{value:null}, sunCol:{value:new THREE.Color(1,.8,.6)}, sunUv:{value:new THREE.Vector2(.5,.5)}, sunK:{value:0}, aspect:{value:1},
+      shaftAmt:{value:C.shaft}, haze:{value:C.haze}, shadowTint:{value:new THREE.Vector3(...C.shadowTint)}, lightTint:{value:new THREE.Vector3(...C.lightTint)}, sat:{value:C.sat}, con:{value:C.con}, vig:{value:C.vig} } : {};
+    const comp   = pass(COMP,   Object.assign({ tScene:{value:null}, tBloom:{value:null}, amount:{value:o.amount} }, cu), C ? { CINE:1 } : null);
+    const rtC = C ? new THREE.WebGLRenderTarget(2, 2, blurOpt) : null;
+    const sSrc = C && pass(SHAFT_SRC, { tSrc:{value:null}, sunUv:cu.sunUv, aspect:cu.aspect, thr:{value:C.thr}, rad:{value:C.rad} });
+    const sBlur = C && pass(SHAFT_BLUR, { tSrc:{value:null}, sunUv:cu.sunUv, len:{value:C.len} });
     let w = 0, h = 0;
 
     function size(){
@@ -57,7 +93,7 @@ export function createBloom(renderer, opt){
       w = Math.max(2, v.x); h = Math.max(2, v.y);
       rtScene.setSize(w, h);
       const bw = Math.max(2, Math.floor(w / o.div)), bh = Math.max(2, Math.floor(h / o.div));
-      rtA.setSize(bw, bh); rtB.setSize(bw, bh);
+      rtA.setSize(bw, bh); rtB.setSize(bw, bh); if(rtC) rtC.setSize(bw, bh); if(C) cu.aspect.value = w / h;
     }
     function draw(pass_, target){
       renderer.setRenderTarget(target);
@@ -65,7 +101,10 @@ export function createBloom(renderer, opt){
     }
     return {
       amount(v){ comp.mat.uniforms.amount.value = v; },
-      dispose(){ rtScene.dispose(); rtA.dispose(); rtB.dispose(); },
+      dispose(){ rtScene.dispose(); rtA.dispose(); rtB.dispose(); if(rtC) rtC.dispose(); },
+      cine: C ? cu : null,
+      /* 해 위치(화면 0~1) · 세기(0 이면 빛줄기 패스를 건너뛴다) · 색 */
+      sun(x, y, k, col){ if(!C) return; cu.sunUv.value.set(x, y); cu.sunK.value = k; if(col) cu.sunCol.value.copy(col); },
       render(scene, cam){
         size();
         renderer.setRenderTarget(rtScene); renderer.clear(); renderer.render(scene, cam);
@@ -73,6 +112,10 @@ export function createBloom(renderer, opt){
         const bw = rtA.width, bh = rtA.height;
         blur.mat.uniforms.tSrc.value = rtA.texture; blur.mat.uniforms.dir.value.set(1/bw, 0); draw(blur, rtB);
         blur.mat.uniforms.tSrc.value = rtB.texture; blur.mat.uniforms.dir.value.set(0, 1/bh); draw(blur, rtA);
+        if(C && cu.sunK.value > 0.001){   /* 빛줄기: 해 둘레 밝은 것 → 방사 흐림 (1/4·1/2 해상도) */
+          sSrc.mat.uniforms.tSrc.value = rtScene.texture; draw(sSrc, rtB);
+          sBlur.mat.uniforms.tSrc.value = rtB.texture; draw(sBlur, rtC); cu.tShaft.value = rtC.texture; }
+        else if(C){ cu.tShaft.value = rtA.texture; }
         comp.mat.uniforms.tScene.value = rtScene.texture;
         comp.mat.uniforms.tBloom.value = rtA.texture;
         renderer.setRenderTarget(null); draw(comp, null);
