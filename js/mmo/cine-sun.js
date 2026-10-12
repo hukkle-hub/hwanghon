@@ -7,5 +7,5 @@ export function cineSun(THREE, cam, sunDir, dim = 0, out = {}) {
   v.copy(cam.position).addScaledVector(d, 400).project(cam); const edge = Math.max(Math.abs(v.x), Math.abs(v.y));
   const up = THREE.MathUtils.smoothstep(d.y, -0.06, 0.06);
   out.k = front > 0 && Number.isFinite(v.x + v.y) ? up * (1 - THREE.MathUtils.smoothstep(edge, 0.9, 1.6)) * (1 - (dim || 0)) : 0;
-  out.x = v.x * .5 + .5; out.y = v.y * .5 + .5; return out;
+  const ok = Number.isFinite(v.x + v.y); out.x = ok ? v.x * .5 + .5 : -9; out.y = ok ? v.y * .5 + .5 : -9; return out;   /* NaN 이면 자리도 화면 밖으로 — 세기 0 이어도 NaN × 0 = NaN 이라 번짐이 화면을 하얗게 태웠다 */
 }

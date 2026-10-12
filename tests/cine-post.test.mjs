@@ -23,7 +23,7 @@ test('해가 지면 0 · 폭우(dim) 면 꺼진다', () => {
   assert.ok(Math.abs(cineSun(THREE, camAt(0), SUN, 1).k) < 1e-9, '폭우');
 });
 test('카메라가 망가진 프레임(NaN)은 0 — 화면이 하얗게 타지 않게', () => {
-  const c = camAt(0); c.position.set(NaN, 1, 0); c.updateMatrixWorld(); const r = cineSun(THREE, c, SUN); assert.equal(r.k, 0);
+  const c = camAt(0); c.position.set(NaN, 1, 0); c.updateMatrixWorld(); const r = cineSun(THREE, c, SUN); assert.equal(r.k, 0); assert.ok(Number.isFinite(r.x) && Number.isFinite(r.y), '자리도 NaN 이 아니어야 — 셰이더에서 NaN × 0 = NaN');
 });
 test('3D 필드만 켜고 ?cine=0 으로 끈다 · 던전/2D 블룸은 그대로', () => {
   const W = fs.readFileSync('world3d.html', 'utf8'), B = fs.readFileSync('js/bloom.js', 'utf8');
