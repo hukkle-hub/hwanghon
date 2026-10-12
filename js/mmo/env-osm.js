@@ -120,7 +120,7 @@ export function build(THREE, scene, osm, opt = {}) {
       if (i) { const k = i * 2; idx.push(k - 2, k, k - 1, k - 1, k, k + 1); } }   /* 위를 보게 감는다 — 첫 판은 아래를 봐서 아스팔트가 통째로 안 보였다 */
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const uv = []; for (let i = 0; i < pos.length; i += 3) uv.push(pos[i], pos[i + 2]); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); return g; }
-  const roadMat = new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.34, metalness: 0.25 });
+  const roadMat = new THREE.MeshStandardMaterial(L.isView3d() && L.FACADE_PHOTO.on ? L.asphaltPhoto(THREE) : { map: asphalt, roughness: 0.34, metalness: 0.25 });   /* 3D: 사진 스캔 아스팔트 (문서 230 §11) */
   if (L.isView3d()) patchPuddleMaterial(THREE, roadMat);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
   if (L.isView3d()) { roadMat.polygonOffset = true; roadMat.polygonOffsetFactor = 0; roadMat.polygonOffsetUnits = -24; }   /* 3D: 길이 광장·풀밭 위에 (문서 220) */
   const busMat = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 });   /* 중앙버스전용차로 — 붉은 포장 */

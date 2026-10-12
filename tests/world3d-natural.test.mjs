@@ -24,7 +24,7 @@ test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당�
     L.areas(ctx, osm, tex); const out = L.roads(ctx, osm, tex); assert.equal(out.length, 1);
     let roadY = null, grassY = null, roadM = null, grassM = null; ctx.scene.updateMatrixWorld(true);
     for (const o of ctx.scene.children) { if (!o.isMesh) continue; const v = new THREE.Vector3().fromBufferAttribute(o.geometry.attributes.position, 0).applyMatrix4(o.matrixWorld);
-      if (o.material.map === tex.asphalt) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass) { grassY = v.y; grassM = o.material; } }
+      if (o.material.map === tex.asphalt || o.material.userData.antiTile) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass) { grassY = v.y; grassM = o.material; } }
     assert.ok(roadY - grassY >= 0.04, `길 ${roadY} · 풀밭 ${grassY}`);
     assert.ok(roadM.polygonOffset && roadM.polygonOffsetUnits < 0 && roadM.polygonOffsetFactor === 0, '길 앞당김');
     assert.ok(!grassM.polygonOffset || grassM.polygonOffsetUnits <= 0, '풀밭을 뒤로 밀면 바닥판(0 m)에 덮인다 (제주 사냥터)');
@@ -80,7 +80,7 @@ test('3D 사냥터 꾸밈: 덤불 덩어리 · 바위 반쯤 묻기 · 풀포기
   const tuft = b.ctx.scene.children.find(o => o.isInstancedMesh && o.material.userData.tuft); assert.ok(tuft, '풀포기 메시');
   const m = new THREE.Matrix4(), sc = new THREE.Vector3(); let hMax = 0; for (let i = 0; i < tuft.count; i++) { tuft.getMatrixAt(i, m); sc.setFromMatrixScale(m); hMax = Math.max(hMax, sc.y * 0.7); }
   assert.ok(hMax < 0.75, '풀포기가 인물을 가린다 ' + hMax.toFixed(2)); assert.equal(tuft.material.customProgramCacheKey(), 'grass-wind');
-  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && o.geometry.attributes.position.count >= 180 && o.geometry.attributes.position.count <= 240); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');
+  const bush = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.userData.wind && (o.geometry.userData.bush && o.material.alphaTest > 0 && o.material.map || o.geometry.attributes.position.count >= 180 && o.geometry.attributes.position.count <= 240)); assert.ok(bush.length > 0 && bush.every(o => o.instanceColor), '덤불 덩어리·색');   /* 잎 카드 덤불(문서 230 §11) 또는 ?tc=0 의 다면체 덩어리 */
 });
 
 test('지하철 출구: 3D 는 새까만 판 대신 내려가는 계단 착시 · 2D 굽기는 그대로', () => {

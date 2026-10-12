@@ -6,9 +6,11 @@ import { patchPuddleMaterial, PUDDLE } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { buildCar } from './car-kit.js';
 import { buildGasStation, GAS } from './gas-station.js';
-import { treeTex, leafCrownGeo, pineCardGeo } from './tree-kit.js';
+import { treeTex, leafCrownGeo, pineCardGeo, leafBushGeo } from './tree-kit.js';
 import { rockGeo, rockMat } from './rock-kit.js';
-import { phTex } from './ph-tex.js';
+import { phTex, phPair } from './ph-tex.js';
+import { FACADE_PHOTO } from './facade-shader.js';
+export { FACADE_PHOTO };
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
@@ -95,7 +97,7 @@ const near = (ctx, pts, pad) => pts.some(p => { const [s, t] = ctx.ST(p); return
 
 /* ---------- 도로: 간선은 차선·점선, 보행로·계단은 흙/블록 ---------- */
 export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
-  const roadM = new THREE.MeshStandardMaterial({ map: tex.asphalt, roughness: 0.34, metalness: 0.25 }), busM = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 }); if (VIEW3D) patchPuddleMaterial(THREE, roadM);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
+  const roadM = new THREE.MeshStandardMaterial(VIEW3D && FACADE_PHOTO.on ? asphaltPhoto(THREE) : { map: tex.asphalt, roughness: 0.34, metalness: 0.25 }), busM = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 }); if (VIEW3D) patchPuddleMaterial(THREE, roadM);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
   const pathM = new THREE.MeshStandardMaterial({ map: tex.paver, roughness: 0.75 }), stepM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
   const LANE = { motorway: 3.5, trunk: 3.4, primary: 3.3, primary_link: 3.3, secondary: 3.2, secondary_link: 3.2, tertiary: 3.1, motorway_link: 3.4, trunk_link: 3.4 };
   const dashM = new THREE.MeshStandardMaterial({ color: 0xc8c8b8, roughness: 0.7, transparent: true, opacity: 0.55 }), out = [];
@@ -203,8 +205,8 @@ export function buildings(ctx, osm, tex, o = {}) { const { THREE, scene, R, W, S
     /* 넓은 필드: 걷는 구역 안 건물은 «무너진 저층» — 원작의 폐허 서울. 고층이 그대로면 그 뒤가 통째로 가려진다(55° 에서 높이 × 0.7 m) */
     const ruined = !nearSide && o.ruin && o.ruin(cst); if (ruined) h = Math.min(h, o.ruinH[0] + R() * (o.ruinH[1] - o.ruinH[0]));
     if (o.skip && o.skip(pts, b)) continue;
-    if (VIEW3D && ruined) { ruinWallM = ruinWallM || tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, color: 0xe0d6d0, roughness: 0.75, metalness: 0.2, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.3 }));   /* 폐허 벽 — 창에 불이 켜져 있으면 안 된다 */
-      ruinShell(THREE, scene, pts, h, b.id | 0, ruinWallM[(b.id >>> 3) % 4], cutM, ruinRubbleM || (ruinRubbleM = new THREE.MeshStandardMaterial({ color: 0x5a5652, roughness: 0.95, map: gritTex(THREE) })));
+    if (VIEW3D && ruined) { ruinWallM = ruinWallM || (FACADE_PHOTO.on ? ruinPhotoMats(THREE) : tex.facades.map(t => new THREE.MeshStandardMaterial({ map: t, color: 0xe0d6d0, roughness: 0.75, metalness: 0.2, emissiveMap: t, emissive: 0xffffff, emissiveIntensity: 0.3 })));   /* 폐허 벽 — 창에 불이 켜져 있으면 안 된다 */
+      ruinShell(THREE, scene, pts, h, b.id | 0, ruinWallM[(b.id >>> 3) % 4], cutM, ruinRubbleM || (ruinRubbleM = FACADE_PHOTO.on ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0.3, 0.3, 0.3), roughness: 0.95, ...phPair(THREE, 'concrete_debris', { repeat: [1 / 2, 1 / 2] }) }) : new THREE.MeshStandardMaterial({ color: 0x5a5652, roughness: 0.95, map: gritTex(THREE) })));
       ctx.blockers.push({ poly: pts.map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]) }); out.push({ pts, h, full, near: nearSide, ruined, cst, id: b.id }); ctx.clear.push({ pts: [...pts, pts[0]], r: 1.5 }); continue; }
     const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))), { depth: h, bevelEnabled: false }); geo.rotateX(-Math.PI / 2);
     const tall = full > 45 && o.curtain;
@@ -247,6 +249,22 @@ function wallPiece(THREE, L, T, ha, hb, s0) { const g = new THREE.BoxGeometry(L,
   for (let i = 0; i < P.count; i++) { const x = P.getX(i), y = P.getY(i) > 0 ? (x < 0 ? ha : hb) : 0; P.setY(i, y);
     const ax = Math.abs(N.getX(i)), ay = Math.abs(N.getY(i)); uv.setXY(i, ay > 0.5 ? s0 + x + L / 2 : ax > 0.5 ? P.getZ(i) : s0 + x + L / 2, ay > 0.5 ? P.getZ(i) : y); }
   g.computeVertexNormals(); return g; }
+/* 무너진 건물 벽 — 사진 스캔 거푸집 콘크리트(Poly Haven CC0, 문서 230 §11). 옛 캔버스는 «유리창이 그려진» 벽이라 부서진 토막에도 멀쩡한 유리가 붙어 있었다.
+   이제 창은 «뚫린 구멍»: 벽을 따라 잰 거리 · 높이(wallPiece UV, m) 로 3.3 m 층마다 3 m 칸에 검은 구멍, 밑동 1.5 m 는 흙때. 윗면(두께 0.4 m)·끝면은 칸 밖이라 구멍이 안 생긴다 */
+const RUIN_RS = 3.1;   /* 사진 한 장 1.55 m 를 두 배로 — 1.55 m 마다 같은 거푸집 띠가 줄지어 판자벽 같았다 */
+/* 사진 스캔 아스팔트 (금 간 asphalt_02, 3 m 한 장 — 문서 230 §11). 띠 UV 가 세계 m 라 3.5 m 에 한 장. 옛 캔버스 평균(선형 ~0.04)보다 조금 밝게 — 새까마면 노을빛을 못 받는다 */
+export function asphaltPhoto(THREE) { return { userData: { antiTile: true }, roughness: 0.4, metalness: 0.2, color: new THREE.Color(0.55, 0.55, 0.58), ...phPair(THREE, 'asphalt_02', { repeat: [1 / 3.5, 1 / 3.5], normalScale: 0.7 }) }; }
+export function ruinPhotoMats(THREE) {
+  return [[1, 1, 1], [1.06, 1.0, 0.93], [0.92, 0.95, 1.0], [1.0, 0.95, 0.88]].map(c => { const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.0, color: new THREE.Color(...c).multiplyScalar(0.075 / 0.135), ...phPair(THREE, 'concrete_layers', { repeat: [1 / RUIN_RS, 1 / RUIN_RS], normalScale: 0.9 }) });   /* 회색 콘크리트(선형 0.075) — 옛 캔버스 바탕색(청·자색)을 곱하니 보랏빛 벽이었다 */
+    m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+  { vec2 wm = vMapUv * ${RUIN_RS.toFixed(2)}; float fl = fract(wm.y / 3.3), cl = fract(wm.x / 3.0);
+    float win = step(0.32, fl) * step(fl, 0.8) * step(0.22, cl) * step(cl, 0.78) * step(1.0, wm.y);
+    float rim = smoothstep(0.12, 0.0, min(min(abs(fl - 0.32), abs(fl - 0.8)) * 3.3, min(abs(cl - 0.22), abs(cl - 0.78)) * 3.0)) * (1.0 - win) * step(1.0, wm.y);   /* 구멍 둘레 0.12 m 깨진 테 — 밝게 */
+    float soot = (1.0 - win) * step(0.8, fl) * smoothstep(1.0, 0.8, fl) * step(0.22, cl) * step(cl, 0.78) * step(0.55, fract(sin(dot(floor(wm / vec2(3.0, 3.3)), vec2(12.9, 78.2))) * 437.5));   /* 구멍 바로 위 그을음 — 반쯤 */
+    diffuseColor.rgb *= (0.62 + 0.38 * smoothstep(0.0, 1.5, wm.y)) * (1.0 + 0.35 * rim) * (1.0 - 0.6 * soot);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02, 0.018, 0.017), win); }`); };
+    m.customProgramCacheKey = () => 'ruin-wall-photo'; m.name = 'ruin-wall'; return m; });
+}
 export function ruinShell(THREE, scene, pts, h, id, wallM, floorM, rubbleM) {
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cz = pts.reduce((a, p) => a + p[1], 0) / pts.length, T = 0.4, walls = [], rubble = [], slabs = []; let s = 0, rad = 0;
   for (const p of pts) rad = Math.max(rad, Math.hypot(p[0] - cx, p[1] - cz));
@@ -814,7 +832,8 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
     if (k > 0.9) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: k * 0.8, hd: k * 0.8, rot: 0 }); });
   if (VIEW3D) tint(rock0, 0.78, 0.4);
   /* 3) 덤불 — 무릎 높이(인물을 가리지 않는다) */
-  const bushG = VIEW3D ? bushGeo(THREE) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => new THREE.MeshStandardMaterial({ color: VIEW3D ? new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35) : c, roughness: 0.9, flatShading: true }));   /* 3D: 덩어리 여럿(다면체 하나는 색칠한 돌로 읽혔다) · 붉은 기를 덜어 */
+  const BC = RK, BTX = BC ? treeTex(THREE, canvasTex) : null;   /* 3D: 잎 카드 덤불 (tree-kit, 문서 230 §11) — 장면 난수는 그대로 */
+  const bushG = BC ? leafBushGeo(THREE) : VIEW3D ? bushGeo(THREE) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => BC ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35).multiplyScalar(1.9), roughness: .85, map: BTX.bush, alphaTest: .45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: VIEW3D ? new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35) : c, roughness: 0.9, flatShading: true }));   /* 3D: 덩어리 여럿(다면체 하나는 색칠한 돌로 읽혔다) · 붉은 기를 덜어 */
   const bushes = pick(Math.round(A / (o.bushEvery || 45))).filter(p => R() < 0.2 + N(p[0] + 500, p[1]) * 1.3);
   const bush0 = made.length; stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
   if (VIEW3D) { tint(bush0, 0.75, 0.5); for (const m of made.slice(bush0)) windify(m.material);

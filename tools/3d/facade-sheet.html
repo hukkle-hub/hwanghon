@@ -1,10 +1,12 @@
 <!doctype html><meta charset="utf-8"><title>건물 벽 시트</title>
-<!-- 건물 낡음 검수 (문서 230 §9): 실제 가짜 실내 창 재질(facade-shader)로 건물 넷 — ?nw=1 낡음 끔 · ?light=day|dusk. window.READY -->
+<!-- 건물 낡음 검수 (문서 230 §9·§11): 실제 가짜 실내 창 재질(facade-shader)로 콘크리트 둘 · 붉은/갈색 벽돌 빌라 · 무너진 건물(ruinShell) · 사진 아스팔트 길 — ?nw=1 낡음 끔 · ?light=day|dusk · ?tc=0 옛 캔버스. window.READY -->
 <style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
-import { interiorFacadeMats, interiorBrickMats } from '../../js/mmo/facade-shader.js';
-const Q = new URLSearchParams(location.search), dusk = Q.get('light') === 'dusk', W = 1200, H = 600;
+import { interiorFacadeMats, interiorBrickMats, FACADE_PHOTO } from '../../js/mmo/facade-shader.js';
+import { ruinShell, ruinPhotoMats, asphaltPhoto, gritTex } from '../../js/mmo/env-lib.js';
+import { patchPuddleMaterial, PUDDLE } from '../../js/mmo/puddle-shader.js';
+const Q = new URLSearchParams(location.search); FACADE_PHOTO.on = Q.get('tc') !== '0'; const dusk = Q.get('light') === 'dusk', W = 1400, H = 640;
 const cv = document.getElementById('c'); cv.width = W; cv.height = H;
 const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H, false); r.shadowMap.enabled = true;
 r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
@@ -12,8 +14,14 @@ const s = new T.Scene(); s.background = new T.Color(dusk ? 0x5a3040 : 0x9aa6b4);
 const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.6 : 2.4); k.position.set(dusk ? -30 : 20, dusk ? 12 : 40, 30); s.add(k);
 const fl = new T.Mesh(new T.PlaneGeometry(300, 300).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a38, roughness: .95 })); s.add(fl);
 const mats = [...interiorFacadeMats(T), ...interiorBrickMats(T)]; if (Q.get('nw') === '1') for (const m of mats) { m.defines = { ...(m.defines || {}), NO_WEATHER: '' }; m.needsUpdate = true; }
-[[-26, 14, 16, 0], [-6, 30, 18, 1], [14, 46, 16, 2], [32, 12, 14, 4]].forEach(([x, h, w, mi]) => { const b = new T.Mesh(new T.BoxGeometry(w, h, 14), mats[mi]); b.position.set(x, h / 2, 0); s.add(b); });
-const cam = new T.PerspectiveCamera(50, W / H, .5, 500); cam.position.set(4, 6, 44); cam.lookAt(4, 14, 0);
+const meterUV = g => { const uv = g.attributes.uv, n = g.attributes.normal, p = g.parameters; for (let i = 0; i < uv.count; i++) { const ax = Math.abs(n.getX(i)), ay = Math.abs(n.getY(i)); uv.setXY(i, uv.getX(i) * (ax > .5 ? p.depth : p.width), uv.getY(i) * (ay > .5 ? p.depth : p.height)); } return g; };   /* 게임 건물(뽑아 올림)처럼 1 m = UV 1 */
+[[-34, 14, 14, 0], [-17, 28, 14, 1], [0, 12, 14, 4], [16, 10, 13, 5]].forEach(([x, h, w, mi]) => { const b = new T.Mesh(meterUV(new T.BoxGeometry(w, h, 14)), mats[mi]); b.position.set(x, h / 2, 0); s.add(b); });
+const rw = FACADE_PHOTO.on ? ruinPhotoMats(T)[1] : new T.MeshStandardMaterial({ color: 0x55525a, roughness: .8 });
+ruinShell(T, s, [[26, -7], [42, -7], [42, 7], [26, 7]], 9, 77, rw, new T.MeshStandardMaterial({ color: 0x2c2a32, roughness: .95 }), FACADE_PHOTO.on ? new T.MeshStandardMaterial({ color: new T.Color(.3, .3, .3), roughness: .95, ...(await import('../../js/mmo/ph-tex.js')).phPair(T, 'concrete_debris', { repeat: [.5, .5] }) }) : new T.MeshStandardMaterial({ color: 0x5a5652, roughness: .95, map: gritTex(T) }));
+const road = new T.PlaneGeometry(110, 12).rotateX(-Math.PI / 2); { const uv = road.attributes.uv, P = road.attributes.position; for (let i = 0; i < uv.count; i++) uv.setXY(i, P.getX(i), P.getZ(i)); }
+const roadM = new T.MeshStandardMaterial(FACADE_PHOTO.on ? { ...asphaltPhoto(T), ...(Q.get('at') === '0' ? { userData: {} } : {}) } : { color: 0x34353c, roughness: .34, metalness: .25 }); PUDDLE.on = Q.get('wet') !== '0'; patchPuddleMaterial(T, roadM);
+const rd = new T.Mesh(road, roadM); rd.position.set(0, .02, 17); s.add(rd);
+const cam = new T.PerspectiveCamera(50, W / H, .5, 500); cam.position.set(4, 7, 46); cam.lookAt(4, 10, 0); if (Q.get('cam')) { const c = Q.get('cam').split(',').map(Number); cam.position.set(c[0], c[1], c[2]); cam.lookAt(c[3], c[4], c[5]); }   /* ?cam=x,y,z,보는x,y,z — 확대해 보기 */
 await new Promise(ok => { T.DefaultLoadingManager.onLoad = ok; setTimeout(ok, 6000); });   /* 사진 텍스처가 다 오고 나서 */
 r.render(s, cam); window.READY = 1;
 </script>

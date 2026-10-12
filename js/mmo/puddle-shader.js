@@ -7,6 +7,7 @@
    낮엔 젖은 띠 0.45(가로등 세기 uLampK 로 — 해 질 녘·밤은 0.2 그대로, 가로등 번들거림이 밤 젖은 길의 맛), 웅덩이·젖음 경계를 넓게(0.72~1.0 · 0.8~1.7).
    텍스처를 더 읽지 않는다. PUDDLE.on 을 world3d 가 ?wet=0 으로 끈다 */
 import { FACADE_U } from './facade-shader.js';
+import { antiTile } from './ph-tex.js';
 export const PUDDLE = { on: true };
 const PARS = `
 varying vec3 vPW;
@@ -36,7 +37,8 @@ const REFL = `
   totalEmissiveRadiance += sky * pw * k; }   /* 밤엔 하늘 반사를 줄인다(밤 0.76 배 — 0.52 는 거의 안 보였다) — 밤 웅덩이에 밝은 건 하늘이 아니라 불빛(점광원 반짝임) */
 `;
 export function patchPuddleMaterial(THREE, m) {
-  if (!PUDDLE.on) return m;
+  const AT = !!(m.userData && m.userData.antiTile);   /* 사진 아스팔트 반복 깨기 (ph-tex antiTile, 문서 230 §11) — 웅덩이를 꺼도 */
+  if (!PUDDLE.on) { if (AT) { m.onBeforeCompile = sh => antiTile(sh, THREE); m.customProgramCacheKey = () => 'anti-tile'; m.needsUpdate = true; } return m; }
   if (!FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value = new THREE.Color(0x6a7088);
   m.onBeforeCompile = sh => { Object.assign(sh.uniforms, { uSkyRefl: FACADE_U.uSkyRefl, uLampK: FACADE_U.uLampK, uEnvCube: FACADE_U.uEnvCube, uEnvK: FACADE_U.uEnvK });
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vPW;')
@@ -45,6 +47,7 @@ export function patchPuddleMaterial(THREE, m) {
       .replace('#include <map_fragment>', '#include <map_fragment>' + BODY)
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, mix(0.45, 0.2, clamp(uLampK, 0.0, 1.0)), wet); roughnessFactor = mix(roughnessFactor, 0.05, pw);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, pw);')
-      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>' + REFL); };
-  m.customProgramCacheKey = () => 'puddle'; m.needsUpdate = true; return m;
+      .replace('#include <normal_fragment_maps>', '#include <normal_fragment_maps>\nnormal = normalize(mix(normal, nonPerturbedNormal, pw));')   /* 웅덩이 물낯은 판판하다 — 사진 아스팔트의 금·자갈 노멀을 물속에서 지운다 (문서 230 §11) */
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>' + REFL); if (AT) antiTile(sh, THREE); };
+  m.customProgramCacheKey = () => AT ? 'puddle-at' : 'puddle'; m.needsUpdate = true; return m;
 }

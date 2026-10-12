@@ -12,6 +12,10 @@ export function treeTex(THREE, canvasTex) {
     for (let i = 0; i < 420; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * .46, x = w / 2 + Math.cos(a) * d * w, y = h * .48 + Math.sin(a) * d * h * .92, s = 5 + r() * 9, l = 150 + r() * 95 | 0;
       g.save(); g.translate(x, y); g.rotate(r() * 6.283); g.fillStyle = `rgb(${l - 10},${l},${l - 25})`; g.beginPath(); g.ellipse(0, 0, s, s * .45, 0, 0, 6.283); g.fill();
       g.fillStyle = `rgba(255,255,240,${.15 + r() * .2})`; g.beginPath(); g.ellipse(-s * .2, -s * .1, s * .5, s * .18, 0, 0, 6.283); g.fill(); g.restore(); } });   /* 잎마다 윗면 하이라이트 */
+  /* 덤불 잎: 잔가지 없이 잎만 빽빽이(600 장, 판 가장자리까지) — 나무 잎 판의 잔가지가 덤불에선 코앞 검은 빗금이었다 (문서 230 §11) */
+  const bush = canvasTex(THREE, 256, 256, (g, w, h) => { g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 600; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * .47, x = w / 2 + Math.cos(a) * d * w, y = h / 2 + Math.sin(a) * d * h, s = 4 + r() * 8, l = 120 + r() * 120 | 0;
+      g.save(); g.translate(x, y); g.rotate(r() * 6.283); g.fillStyle = `rgb(${l - 12},${l},${l - 28})`; g.beginPath(); g.ellipse(0, 0, s, s * .5, 0, 0, 6.283); g.fill(); g.restore(); } });
   /* 솔잎 가지: 가운데 줄기에서 비스듬히 뻗는 바늘 수백 개 */
   const needle = canvasTex(THREE, 128, 256, (g, w, h) => { g.clearRect(0, 0, w, h); g.strokeStyle = 'rgb(90,80,64)'; g.lineWidth = 3; g.beginPath(); g.moveTo(w / 2, h); g.lineTo(w / 2, 0); g.stroke();
     for (let i = 0; i < 520; i++) { const y = r() * h, sd = r() < .5 ? -1 : 1, len = (w * .48) * (1 - y / h * .25) * (.5 + r() * .5), l = 140 + r() * 80 | 0; g.strokeStyle = `rgb(${l - 20},${l},${l - 30})`; g.lineWidth = 1 + r();
@@ -20,8 +24,8 @@ export function treeTex(THREE, canvasTex) {
   const bark = canvasTex(THREE, 128, 256, (g, w, h) => { g.fillStyle = '#6a5a4c'; g.fillRect(0, 0, w, h);
     for (let i = 0; i < 90; i++) { const x = r() * w, l = 40 + r() * 70 | 0; g.strokeStyle = `rgba(${l},${l - 8},${l - 16},.8)`; g.lineWidth = 1 + r() * 3; g.beginPath(); g.moveTo(x, 0); for (let y = 0; y <= h; y += 16) g.lineTo(x + (r() - .5) * 6, y); g.stroke(); }
     for (let i = 0; i < 8; i++) { const x = r() * w, y = r() * h; g.fillStyle = 'rgba(30,24,20,.7)'; g.beginPath(); g.ellipse(x, y, 4 + r() * 4, 3 + r() * 3, 0, 0, 6.283); g.fill(); } }, [1, 2]);
-  for (const t of [leaf, needle]) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.generateMipmaps = true; }
-  return TEX = { leaf, needle, bark };
+  for (const t of [leaf, needle, bush]) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.generateMipmaps = true; }
+  return TEX = { leaf, needle, bark, bush };
 }
 /* 판 하나를 기하에 넣는다: 가운데 c, 가로 u · 세로 v (반 길이 벡터), 노멀은 갓 중심 o 에서 바깥으로 휜 것(n0 쪽으로 bend 만큼) */
 function card(P, N, U, I, c, u, v, o, bend) { const b = P.length / 3, n = new Float32Array(3);
@@ -37,6 +41,16 @@ export function leafCrownGeo(THREE) {
     card(P, N, U, I, c, u, v, O, .85); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
   g.computeBoundingSphere(); g.computeBoundingBox(); return g;
+}
+/* 덤불: 옛 다면체 덩어리 셋 자리에 카드 8 장씩 = 24 장 (48 삼각형 — 옛 60 과 비슷). 강남 길가 덤불이 짙은 다면체라 «각진 바위» 로 읽혔다(문서 230 §11) */
+export function leafBushGeo(THREE) {
+  const r = rnd(5309), P = [], N = [], U = [], I = [], O = [0, -.2, 0];
+  for (const [bx, by, bz, br] of [[0, .05, 0, .68], [.58, -.1, .18, .52], [-.45, -.08, -.38, .55]]) for (let k = 0; k < 8; k++) {
+    const th = r() * 6.283, ph = Math.acos(1 - 2 * (.05 + r() * .75)), rr = br * (.3 + r() * .5), c = [bx + Math.sin(ph) * Math.cos(th) * rr, by + Math.cos(ph) * rr * .7, bz + Math.sin(ph) * Math.sin(th) * rr];
+    const sz = br * (.8 + r() * .3), a = r() * 6.283, tilt = (r() - .5) * 1.2, u = [Math.cos(a) * sz, 0, Math.sin(a) * sz], v = [-Math.sin(a) * Math.sin(tilt) * sz, Math.cos(tilt) * sz, Math.cos(a) * Math.sin(tilt) * sz];
+    card(P, N, U, I, c, u, v, O, .8); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
+  g.computeBoundingSphere(); g.computeBoundingBox(); g.userData.bush = true; return g;
 }
 /* 소나무: 층 여섯 × 가지 카드 4~8 장(38 장) — 줄기에서 바깥 · 아래로 처진 판. 원점 = 옛 소나무 중심 */
 export function pineCardGeo(THREE) {

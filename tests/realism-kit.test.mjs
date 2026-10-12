@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import * as THREE from '../vendor/three/three.module.js';
 import { leafCrownGeo, pineCardGeo } from '../js/mmo/tree-kit.js';
 import { rockGeo } from '../js/mmo/rock-kit.js';
-import { PH_NAMES } from '../js/mmo/ph-tex.js';
+import { PH_NAMES, PH_ROUGH } from '../js/mmo/ph-tex.js';
 
 test('잎 카드 갓 36 장 · 소나무 38 장 — 옛 다면체와 삼각형이 비슷하다', () => {
   const a = leafCrownGeo(THREE), b = pineCardGeo(THREE);
@@ -26,8 +26,8 @@ test('바위 셰이더: 사진(세 방향 투영 + 노멀) · 이끼 · 흙 · �
 });
 test('사진 텍스처: CC0 출처 · 512 px · 휴대폰에 가볍게', () => {
   const R = fs.readFileSync('art/tex/ph/README.txt', 'utf8'); assert.match(R, /CC0/);
-  let total = 0; for (const n of PH_NAMES) { assert.match(R, new RegExp(n)); for (const m of ['diff', 'nor_gl', 'rough']) { const f = `art/tex/ph/${n}_${m}.jpg`; assert.ok(fs.existsSync(f), f); const sz = fs.statSync(f).size; total += sz; assert.ok(sz < 160000, f + ' ' + sz); } }
-  assert.ok(total < 700000, '합 ' + total);
+  let total = 0; for (const n of PH_NAMES) { assert.match(R, new RegExp(n)); for (const m of PH_ROUGH.has(n) ? ['diff', 'nor_gl', 'rough'] : ['diff', 'nor_gl']) { const f = `art/tex/ph/${n}_${m}.jpg`; assert.ok(fs.existsSync(f), f); const sz = fs.statSync(f).size; total += sz; assert.ok(sz < 160000, f + ' ' + sz); } }
+  assert.ok(total < 1200000, '합 ' + total);   /* 여덟 장 — 휴대폰 첫 받기 1.2 MB 아래 */
 });
 test('건물 낡음: 빗물 자국 · 밑동 흙 · 이끼 · 깨진 창 위 그을음 — NO_WEATHER 로 끄면 다른 프로그램', () => {
   const F = fs.readFileSync('js/mmo/facade-shader.js', 'utf8');

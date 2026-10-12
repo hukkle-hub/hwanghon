@@ -125,7 +125,7 @@ export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
   m.customProgramCacheKey = () => (curtain ? 'facade-im-curtain' : 'facade-im') + (m.defines && 'NO_WEATHER' in m.defines ? '-nw' : ''); m.needsUpdate = true; return m;
 }
 
-import { phTex } from './ph-tex.js';
+import { phTex, phPair } from './ph-tex.js';
 export const FACADE_PHOTO = { on: true };   /* world3d ?tc=0 → 옛 캔버스 벽 */
 /* 벽 텍스처(창 없이 얼룩·빗물 자국만) + 가짜 실내 창 재질 넷 — env-osm(강남)·env-lib(다른 도시) 가 같이 쓴다.
    따로 굴리는 난수 — 장면 난수 R 을 쓰면 뒤의 건물 높이·차 자리가 2D 굽기와 달라진다 */
@@ -155,6 +155,10 @@ export function interiorBrickMats(THREE) {
       const base = k ? [140, 96, 78] : [138, 62, 48]; g.fillStyle = `rgb(${base[0] * v | 0},${base[1] * v | 0},${base[2] * v | 0})`; g.fillRect(x + 1, r * bh + 1, bw - 2, bh - 1.5); }
     for (let i = 0; i < 14; i++) { const x = R() * N; g.fillStyle = 'rgba(20,12,10,.12)'; g.fillRect(x, 0, 2 + R() * 6, N); }   /* 빗물 그을음 */
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.repeat.set(1 / 2.4, 1 / 2.4);
+    if (FACADE_PHOTO.on) {   /* 사진 스캔 벽돌 (Poly Haven CC0, 문서 230 §11): 붉은 1.4 m 한 장 · 갈색 1.9 m 한 장. 평균 선형색을 옛 캔버스(붉은 0.24·0.05·0.03 / 갈색 0.26·0.12·0.08)에 맞춘다 */
+      const P = k ? phPair(THREE, 'brick_wall_10', { repeat: [1 / 1.9, 1 / 1.9], normalScale: 0.8 }) : phPair(THREE, 'red_brick', { repeat: [1 / 1.4, 1 / 1.4], normalScale: 1.0 });
+      const col = k ? new THREE.Color(3.4, 2.9, 2.5) : new THREE.Color(0.92, 0.7, 0.68);   /* 붉은 쪽을 (0.95, 0.55, 0.5) 로 누르니 회색 줄눈까지 빨개져 벽돌 무늬가 사라졌다 */
+      const m = patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.88, metalness: 0.0, color: col, ...P })); m.name = 'facade-brick'; return m; }
     const m = patchFacadeMaterial(THREE, new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.0, map: t })); m.name = 'facade-brick'; return m; });
 }
 /* 건물 하나의 벽 재질 고르기 — 18 m 아래의 반은 벽돌, 나머지는 콘크리트 넷 중 하나 (id 해시만 — 장면 난수 R 을 안 쓴다) */
