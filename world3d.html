@@ -668,6 +668,7 @@ let curArea, areaT = 0;
 function areaTick(dt) { const p = root.position, a = AREAS.find(x => x.kind === 'rest' && inArea(x, p.x, p.z)) || AREAS.find(x => x.kind === 'hunt' && inArea(x, p.x, p.z)) || null;
   if (a !== curArea) { curArea = a; if (a) { const esc2 = t => String(t == null ? '' : t).replace(/[<>&]/g, ''); areaEl.className = a.kind === 'rest' ? 'rest' : 'd' + (a.danger || 1);
       areaEl.innerHTML = '<b>' + esc2(a.name) + '</b><small>' + (a.kind === 'rest' ? '쉬어 가는 곳' : (a.lv ? 'Lv ' + a.lv[0] + '~' + a.lv[1] : '') + (a.mobs ? ' · ' + esc2(a.mobs) : '')) + '</small>'; areaT = 3.6; } }
+  if (areaT > .8 && (busy > 0 || hurtT > 0)) areaT = .8;   /* 싸우기 시작하면(공격·맞음) 0.8 s 에 걷는다 — 들어서자마자 싸우면 3.6 s 동안 화면 한가운데에서 싸움을 가렸다 (문서 229 §49) */
   if (areaT > 0) { areaT -= dt; areaEl.style.opacity = Math.max(0, Math.min(1, areaT / 0.8, (3.6 - areaT) / 0.4)); } else areaEl.style.opacity = 0; }
 /* ---------- 돌리기 ---------- */
 let dimLights = null; const dimFog = new THREE.Color(), dimBg = new THREE.Color();   /* 방전 폭우 때 낮출 조명·안개·하늘 — 그릴 때만 */
