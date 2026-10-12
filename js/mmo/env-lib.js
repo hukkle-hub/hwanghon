@@ -8,7 +8,7 @@ import { buildCar } from './car-kit.js';
 import { buildGasStation, GAS } from './gas-station.js';
 import { treeTex, leafCrownGeo, pineCardGeo, leafBushGeo } from './tree-kit.js';
 import { rockGeo, rockMat } from './rock-kit.js';
-import { phTex, phPair } from './ph-tex.js';
+import { phTex, phPair, antiTileMat } from './ph-tex.js';
 import { FACADE_PHOTO } from './facade-shader.js';
 export { FACADE_PHOTO };
 import { SKY_REFL } from './sky-shader.js';
@@ -77,11 +77,12 @@ export function textures(ctx) { const { THREE, R } = ctx, T = (w, h, d, r) => ca
   const curtain = T(256, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#2a3a50'); gr.addColorStop(1, '#1a2230'); g.fillStyle = gr; g.fillRect(0, 0, w, h);
     g.strokeStyle = 'rgba(160,180,200,.35)'; g.lineWidth = 2; for (let x = 0; x <= w; x += 21) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y <= h; y += 64) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
     for (let i = 0; i < 6; i++) { g.fillStyle = R() < 0.5 ? 'rgba(255,200,120,.5)' : 'rgba(120,200,255,.35)'; g.fillRect((R() * 12 | 0) * 21 + 1, (R() * 4 | 0) * 64 + 1, 19, 62); } }, [1 / 14.4, 1 / 14.4]);
+  for (const [k, t] of Object.entries({ paver, forest, concrete, grass, sand })) t.userData.ph = k;   /* 3D 땅 사진 고르기 (groundPhoto) */
   return { asphalt, paver, forest, concrete, grass, sand, facades, curtain }; }
 
 /* ---------- 땅 ---------- */
 export function ground(ctx, tex, size = 2400) { const { THREE, scene } = ctx; const t = tex.clone(); t.needsUpdate = true; t.repeat.set(size * tex.repeat.x, size * tex.repeat.y);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), layer(new THREE.MeshStandardMaterial({ map: t, roughness: 0.8, metalness: 0.05 }), LAYER.ground)); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; scene.add(m); return m; }
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(size, size), layer(groundPhoto(THREE, tex.userData.ph, { roughness: 0.85 }, size) || new THREE.MeshStandardMaterial({ map: t, roughness: 0.8, metalness: 0.05 }), LAYER.ground)); m.rotation.x = -Math.PI / 2; m.receiveShadow = true; scene.add(m); return m; }
 export function flatPoly(ctx, pts, mat, y = 0.01) { const { THREE, scene } = ctx; const g = new THREE.ShapeGeometry(new THREE.Shape(pts.map(p => new THREE.Vector2(p[0], -p[1]))));
   const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, g.attributes.position.getX(i), g.attributes.position.getY(i));
   const m = new THREE.Mesh(g, mat); m.rotation.x = -Math.PI / 2; m.position.y = y; m.receiveShadow = true; scene.add(m); return m; }
@@ -98,7 +99,7 @@ const near = (ctx, pts, pad) => pts.some(p => { const [s, t] = ctx.ST(p); return
 /* ---------- 도로: 간선은 차선·점선, 보행로·계단은 흙/블록 ---------- */
 export function roads(ctx, osm, tex) { const { THREE, scene, W } = ctx;
   const roadM = new THREE.MeshStandardMaterial(VIEW3D && FACADE_PHOTO.on ? asphaltPhoto(THREE) : { map: tex.asphalt, roughness: 0.34, metalness: 0.25 }), busM = new THREE.MeshStandardMaterial({ color: 0x6a2a2a, roughness: 0.6 }); if (VIEW3D) patchPuddleMaterial(THREE, roadM);   /* 3D: 젖은 길 웅덩이 (문서 229 §10) */
-  const pathM = new THREE.MeshStandardMaterial({ map: tex.paver, roughness: 0.75 }), stepM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
+  const pathM = groundPhoto(THREE, 'paver', { roughness: 0.75 }) || new THREE.MeshStandardMaterial({ map: tex.paver, roughness: 0.75 }), stepM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
   const LANE = { motorway: 3.5, trunk: 3.4, primary: 3.3, primary_link: 3.3, secondary: 3.2, secondary_link: 3.2, tertiary: 3.1, motorway_link: 3.4, trunk_link: 3.4 };
   const dashM = new THREE.MeshStandardMaterial({ color: 0xc8c8b8, roughness: 0.7, transparent: true, opacity: 0.55 }), out = [];
   /* 3D: 길이 풀밭·광장 다각형보다 늘 위에 (1 cm 높이 차는 멀리선 깊이 정밀도가 모자라 그리는 순서 싸움 — 셰이더가 바뀌면 길이 통째로 사라졌다, 문서 220) */
@@ -143,8 +144,8 @@ export function nearestRoad(roadsW, p, kinds) { let best = null; for (const rw o
 
 /* ---------- 땅 쓰임: 풀밭·물·모래·주차장·공항 포장 ---------- */
 export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
-  const M = { grass: new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
-    water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
+  const M = { grass: groundPhoto(THREE, 'grass', { roughness: 1 }) || new THREE.MeshStandardMaterial({ map: tex.grass, roughness: 1 }), sand: groundPhoto(THREE, 'sand', { roughness: 1 }) || new THREE.MeshStandardMaterial({ map: tex.sand, roughness: 1 }), conc: groundPhoto(THREE, 'concrete', { roughness: 0.85 }) || new THREE.MeshStandardMaterial({ map: tex.concrete, roughness: 0.85 }),
+    water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: groundPhoto(THREE, 'forest', { roughness: 1 }) || new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
   layer(M.grass, LAYER.grass); layer(M.sand, LAYER.grass);   /* 3D 층 순서(LAYER): 풀·모래(0.008)는 콘크리트·숲(0.006, 0) 앞 — 높이 2 mm 차만으로는 16비트 깊이에서 그리는 순서가 이겼다 (문서 220 §15) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
     if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const sg = signedArea(pts) > 0 ? 1 : -1; foamBand(ctx, [...pts, pts[0]], 0, sg * 2.2); } }   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
@@ -254,6 +255,13 @@ function wallPiece(THREE, L, T, ha, hb, s0) { const g = new THREE.BoxGeometry(L,
 const RUIN_RS = 3.1;   /* 사진 한 장 1.55 m 를 두 배로 — 1.55 m 마다 같은 거푸집 띠가 줄지어 판자벽 같았다 */
 /* 사진 스캔 아스팔트 (금 간 asphalt_02, 3 m 한 장 — 문서 230 §11). 띠 UV 가 세계 m 라 3.5 m 에 한 장. 옛 캔버스 평균(선형 ~0.04)보다 조금 밝게 — 새까마면 노을빛을 못 받는다 */
 export function asphaltPhoto(THREE) { return { userData: { antiTile: true }, roughness: 0.4, metalness: 0.2, color: new THREE.Color(0.55, 0.55, 0.58), ...phPair(THREE, 'asphalt_02', { repeat: [1 / 3.5, 1 / 3.5], normalScale: 0.7 }) }; }
+/* 땅 사진 스캔 (문서 230 §12) — [사진, 한 장 m, 색]. 색은 옛 캔버스 평균(선형)에 맞춘다: 보도 0.07 · 풀 0.03 · 숲 0.02~0.04 · 모래 0.13 · 흙길 0.15.
+   넓은 판이라 전부 반복 깨기(antiTile). 주차장 · 공업지(콘크리트)는 한국 주차장답게 아스팔트 사진을 밝게 */
+export const GROUND_PH = { paver: ['concrete_pavers', 1.92, [0.55, 0.6, 0.72]], grass: ['sparse_grass', 2, [0.4, 0.75, 2.0]], forest: ['forest_leaves_02', 3, [0.15, 0.15, 0.3]],
+  sand: ['dense_sand', 1.8, [0.5, 0.5, 0.5]], dirt: ['forest_ground_04', 3.15, [1.3, 1.35, 1.5]], concrete: ['asphalt_02', 3.5, [0.75, 0.75, 0.78]] };
+/* kind 의 사진 재질 — 3D · 사진 켬일 때만, 아니면 null(옛 캔버스). size > 0 이면 UV 0~1 인 판(땅 한 장)용 반복 */
+export function groundPhoto(THREE, kind, extra = {}, size = 0) { const g = GROUND_PH[kind]; if (!g || !VIEW3D || !FACADE_PHOTO.on) return null; const rep = size ? size / g[1] : 1 / g[1];
+  return antiTileMat(THREE, new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0, ...extra, color: new THREE.Color(...g[2]).multiply(new THREE.Color(extra.color ?? 0xffffff)), userData: { antiTile: true, ph: kind }, ...phPair(THREE, g[0], { repeat: [rep, rep], normalScale: 0.8 }) })); }
 export function ruinPhotoMats(THREE) {
   return [[1, 1, 1], [1.06, 1.0, 0.93], [0.92, 0.95, 1.0], [1.0, 0.95, 0.88]].map(c => { const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.0, color: new THREE.Color(...c).multiplyScalar(0.075 / 0.135), ...phPair(THREE, 'concrete_layers', { repeat: [1 / RUIN_RS, 1 / RUIN_RS], normalScale: 0.9 }) });   /* 회색 콘크리트(선형 0.075) — 옛 캔버스 바탕색(청·자색)을 곱하니 보랏빛 벽이었다 */
     m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
@@ -818,7 +826,7 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   const A = (region.s1 - region.s0) * (region.t1 - region.t0), pick = n => { const out = []; for (let i = 0; i < n * 4 && out.length < n; i++) { const p = FROM(region.s0 + R() * (region.s1 - region.s0), region.t0 + R() * (region.t1 - region.t0)); if (!keep(p) || isClear(ctx, p, 0.5)) continue; out.push(p); } return out; };
   const stat = {};
   /* 1) 얼룩 — 낙엽·흙·풀. 모양이 둥글면 티가 나서 꼭짓점마다 반지름을 흔든다 */
-  const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => layer(new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }), LAYER.patch));
+  const patchM = (o.patches || ['forest', 'sand', 'grass']).map(k => layer(groundPhoto(THREE, k === 'asphalt' ? 'concrete' : k, { roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }) || new THREE.MeshStandardMaterial({ map: tex[k], roughness: 1, color: k === 'sand' ? 0x8a7a6a : 0xffffff, transparent: true, opacity: 0.85 }), LAYER.patch));
   let np = 0; for (const p of pick(Math.round(A / (o.patchEvery || 700)))) { const r = 3 + R() * 10, n = 9, pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, rr = r * (0.6 + R() * 0.6); pts.push([p[0] + Math.cos(a) * rr, p[1] + Math.sin(a) * rr]); }
     flatPoly(ctx, pts, patchM[(R() * patchM.length) | 0], 0.003 + R() * 0.002); np++; } stat.patches = np;
   const made = [], inst = (geo, mats, spots, place) => { const per = mats.map(() => []); spots.forEach(p => per[(R() * mats.length) | 0].push(p));

@@ -1,7 +1,7 @@
 /* Poly Haven 사진 텍스처 (CC0, art/tex/ph/README.txt) — 문서 230 §10. Megascans 영상(문서 133)의 «사실감의 절반은 사진 스캔 질감».
    주소는 이 모듈 자리에서 만든다 — world3d · tools/3d 시트 어디서 불러도 같은 파일. 한 번만 받는다(캐시) */
 const BASE = new URL('../../art/tex/ph/', import.meta.url).href, CACHE = new Map();
-export const PH_NAMES = ['rock_boulder_dry', 'japanese_zelkova_bark', 'concrete_wall_006', 'red_brick', 'brick_wall_10', 'concrete_layers', 'concrete_debris', 'asphalt_02'];
+export const PH_NAMES = ['rock_boulder_dry', 'japanese_zelkova_bark', 'concrete_wall_006', 'red_brick', 'brick_wall_10', 'concrete_layers', 'concrete_debris', 'asphalt_02', 'concrete_pavers', 'sparse_grass', 'forest_leaves_02', 'dense_sand', 'forest_ground_04'];
 export const PH_ROUGH = new Set(['rock_boulder_dry', 'japanese_zelkova_bark', 'concrete_wall_006']);   /* 거칠기 사진까지 있는 것 — 뒤 다섯은 색·노멀만 */
 export function phTex(THREE, name, map, { repeat = null, color = map === 'diff' } = {}) {
   const key = name + '_' + map; let t = CACHE.get(key);
@@ -28,8 +28,10 @@ float atN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   { float l = atN(vMapUv * 1.3) * 8.0, ia = floor(l); atOa = sin(vec2(3.0, 7.0) * ia); atOb = sin(vec2(3.0, 7.0) * (ia + 1.0));
     vec2 dx = dFdx(vMapUv), dy = dFdy(vMapUv); vec4 ca = textureGrad(map, vMapUv + atOa, dx, dy), cb = textureGrad(map, vMapUv + atOb, dx, dy);
     atW = smoothstep(0.2, 0.8, fract(l) - 0.1 * dot(ca.rgb - cb.rgb, vec3(1.0))); diffuseColor *= mix(ca, cb, atW); }
-#endif`)
+#endif
+/*@map_fragment*/`)   /* 표지: 뒤에 붙는 패치(world3d 땅 결 · 구름 그림자)가 #include <map_fragment> 대신 여기에 잇는다 — 없으면 사진 땅만 결이 사라진다 */
     .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', `vec2 ndx = dFdx(vNormalMapUv), ndy = dFdy(vNormalMapUv);
   vec3 mapN = mix(textureGrad( normalMap, vNormalMapUv + atOa, ndx, ndy ).xyz, textureGrad( normalMap, vNormalMapUv + atOb, ndx, ndy ).xyz, atW) * 2.0 - 1.0;`));   /* #include 는 onBeforeCompile 뒤에 풀린다 — 덩어리를 직접 펼쳐서 바꾼다 */
   return sh;
 }
+export function antiTileMat(THREE, m) { m.onBeforeCompile = sh => antiTile(sh, THREE); m.customProgramCacheKey = () => 'anti-tile'; m.needsUpdate = true; return m; }

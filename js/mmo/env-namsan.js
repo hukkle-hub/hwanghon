@@ -57,7 +57,7 @@ export function build(THREE, scene, osm) {
 
   /* ---------- 땅: 숲 바닥 ---------- */
   const groundTex = forestTex.clone(); groundTex.repeat.set(2000 / 4, 2000 / 4);
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.95 }));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(2000, 2000), L.groundPhoto(THREE, 'forest', { roughness: 0.95 }, 2000) || new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.95 }));   /* 3D: 사진 숲 바닥 (문서 230 §12) */
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
 
   /* ---------- 길: 실측 도로·산책로·계단 ---------- */
@@ -67,7 +67,7 @@ export function build(THREE, scene, osm) {
       if (i) { const k = i * 2; idx.push(k - 2, k, k - 1, k - 1, k, k + 1); } }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx);
     const uv = []; for (let i = 0; i < pos.length; i += 3) uv.push(pos[i], pos[i + 2]); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.computeVertexNormals(); return g; }
-  const roadM = new THREE.MeshStandardMaterial(L.isView3d() && L.FACADE_PHOTO.on ? L.asphaltPhoto(THREE) : { map: asphalt, roughness: 0.4, metalness: 0.2 }), pathM = new THREE.MeshStandardMaterial({ map: pathTex, roughness: 0.85 }), paverM = new THREE.MeshStandardMaterial({ map: paver, roughness: 0.75 });
+  const roadM = new THREE.MeshStandardMaterial(L.isView3d() && L.FACADE_PHOTO.on ? L.asphaltPhoto(THREE) : { map: asphalt, roughness: 0.4, metalness: 0.2 }), pathM = L.groundPhoto(THREE, 'dirt', { roughness: 0.9 }) || new THREE.MeshStandardMaterial({ map: pathTex, roughness: 0.85 }), paverM = L.groundPhoto(THREE, 'paver', { roughness: 0.75 }) || new THREE.MeshStandardMaterial({ map: paver, roughness: 0.75 });
   const stepM = new THREE.MeshStandardMaterial({ color: 0x8a8278, roughness: 0.8 }), stepEdgeM = new THREE.MeshStandardMaterial({ color: 0x3a3430, roughness: 0.9 });
   const ROADW = { primary: 7, secondary: 7, tertiary: 6.5, residential: 6, unclassified: 5.5, service: 4.5, living_street: 4.5 };
   const PATHW = { footway: 2.6, path: 2.2, pedestrian: 5, steps: 2.8, cycleway: 2.4, track: 3 };

@@ -27,7 +27,7 @@ test('바위 셰이더: 사진(세 방향 투영 + 노멀) · 이끼 · 흙 · �
 test('사진 텍스처: CC0 출처 · 512 px · 휴대폰에 가볍게', () => {
   const R = fs.readFileSync('art/tex/ph/README.txt', 'utf8'); assert.match(R, /CC0/);
   let total = 0; for (const n of PH_NAMES) { assert.match(R, new RegExp(n)); for (const m of PH_ROUGH.has(n) ? ['diff', 'nor_gl', 'rough'] : ['diff', 'nor_gl']) { const f = `art/tex/ph/${n}_${m}.jpg`; assert.ok(fs.existsSync(f), f); const sz = fs.statSync(f).size; total += sz; assert.ok(sz < 160000, f + ' ' + sz); } }
-  assert.ok(total < 1200000, '합 ' + total);   /* 여덟 장 — 휴대폰 첫 받기 1.2 MB 아래 */
+  assert.ok(total < 1800000, '합 ' + total);   /* 열세 장 — 휴대폰 첫 받기 1.8 MB 아래 (한 지역은 이 중 일부만 받는다) */
 });
 test('건물 낡음: 빗물 자국 · 밑동 흙 · 이끼 · 깨진 창 위 그을음 — NO_WEATHER 로 끄면 다른 프로그램', () => {
   const F = fs.readFileSync('js/mmo/facade-shader.js', 'utf8');
@@ -39,4 +39,12 @@ test('3D 만 · ?tc=0 이면 옛 나무 · 바위 · 벽', () => {
   const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /TREE_CARDS\.on = FACADE_PHOTO\.on = q\.get\('tc'\) !== '0';/);
   const E = fs.readFileSync('js/mmo/env-lib.js', 'utf8'); assert.match(E, /const CARDS = VIEW3D && o\.cards !== false && TREE_CARDS\.on/); assert.match(E, /const RK = VIEW3D && TREE_CARDS\.on/);
   assert.match(fs.readFileSync('js/mmo/env-namsan.js', 'utf8'), /const CARDS = L\.isView3d\(\) && L\.TREE_CARDS\.on/, '남산은 나무를 따로 만든다 — 같이 바꿔야(처음엔 빠져 남산이 그대로였다)');
+});
+test('반복 깨기(antiTile) 뒤에도 땅 결 · 구름 그림자가 이어 붙는다 — 표지 /*@map_fragment*/ (문서 230 §12)', async () => {
+  const THREE = await import('../vendor/three/three.module.js'); const { antiTile } = await import('../js/mmo/ph-tex.js');
+  const sh = antiTile({ fragmentShader: '#include <common>\nvoid main(){\n#include <map_fragment>\n#include <normal_fragment_maps>\n}' }, THREE);
+  assert.ok(!sh.fragmentShader.includes('#include <map_fragment>'), '색 읽기를 직접 펼친다'); assert.match(sh.fragmentShader, /textureGrad\(map, vMapUv \+ atOa/); assert.match(sh.fragmentShader, /textureGrad\( normalMap, vNormalMapUv \+ atOb/);
+  const W3D = fs.readFileSync('world3d.html', 'utf8'), re = /\.replace\(\/#include <map_fragment>\|\\\/\\\*@map_fragment\\\*\\\/\/, m0 => m0 \+ '\\n\{ float mn = gn/;
+  assert.match(W3D, re, '땅 결 패치가 표지에도 붙어야 한다');
+  const out = sh.fragmentShader.replace(/#include <map_fragment>|\/\*@map_fragment\*\//, m0 => m0 + '\nMACRO;'); assert.match(out, /MACRO;/, '사진 땅에서 땅 결이 사라진다');
 });

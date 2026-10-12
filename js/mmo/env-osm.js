@@ -107,11 +107,12 @@ export function build(THREE, scene, osm, opt = {}) {
 
   /* ---------- 땅 ---------- */
   const groundTex = paver.clone(); groundTex.repeat.set(1400 / 1.6, 1400 / 1.6);   /* 판 UV 는 0~1 — 1.6 m 마다 한 장 */
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), L.layer(new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }), L.LAYER.ground));
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), L.layer(L.groundPhoto(THREE, 'paver', { roughness: 0.8 }, 1400) || new THREE.MeshStandardMaterial({ map: groundTex, roughness: 0.75, metalness: 0.05 }), L.LAYER.ground));   /* 3D: 사진 보도블록 (문서 230 §12) */
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
   /* 공원·녹지 */
+  let parkM = null;
   for (const a of osm.areas) { if (!/park|pitch|grass/.test(a.kind)) continue; const sh = new THREE.Shape(a.poly.map(p => { const w = W(p); return new THREE.Vector2(w[0], -w[1]); }));
-    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), L.layer(new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 }), L.LAYER.grass)); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
+    const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), L.layer(parkM || (parkM = L.groundPhoto(THREE, 'grass', { roughness: 1 }) || new THREE.MeshStandardMaterial({ color: 0x2a3424, roughness: 1 })), L.LAYER.grass)); m.rotation.x = -Math.PI / 2; m.position.y = 0.01; m.receiveShadow = true; scene.add(m); }
 
   /* ---------- 도로: 중심선을 폭만큼 펼친 띠 ---------- */
   function ribbon(line, width, y) { const pos = [], idx = []; const pts = line.map(W);

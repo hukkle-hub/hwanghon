@@ -24,7 +24,7 @@ test('3D 에서 길은 풀밭 다각형보다 4 cm 넘게 위 · 깊이 앞당�
     L.areas(ctx, osm, tex); const out = L.roads(ctx, osm, tex); assert.equal(out.length, 1);
     let roadY = null, grassY = null, roadM = null, grassM = null; ctx.scene.updateMatrixWorld(true);
     for (const o of ctx.scene.children) { if (!o.isMesh) continue; const v = new THREE.Vector3().fromBufferAttribute(o.geometry.attributes.position, 0).applyMatrix4(o.matrixWorld);
-      if (o.material.map === tex.asphalt || o.material.userData.antiTile) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass) { grassY = v.y; grassM = o.material; } }
+      if (o.material.map === tex.asphalt || o.material.userData.antiTile) { roadY = v.y; roadM = o.material; } if (o.material.map === tex.grass || o.material.userData.ph === 'grass') { grassY = v.y; grassM = o.material; } }
     assert.ok(roadY - grassY >= 0.04, `길 ${roadY} · 풀밭 ${grassY}`);
     assert.ok(roadM.polygonOffset && roadM.polygonOffsetUnits < 0 && roadM.polygonOffsetFactor === 0, '길 앞당김');
     assert.ok(!grassM.polygonOffset || grassM.polygonOffsetUnits <= 0, '풀밭을 뒤로 밀면 바닥판(0 m)에 덮인다 (제주 사냥터)');
@@ -113,9 +113,9 @@ test('3D 땅 층 깊이 순서: 바닥판 < 얼룩 < 콘크리트·숲 < 풀·�
   L.setView3d(true);
   try { const ctx = mkCtx(); const g = L.ground(ctx, tex.forest); assert.equal(g.material.polygonOffsetUnits, U.ground);
     L.areas(ctx, { areas: [{ kind: 'grass', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }, { kind: 'industrial', poly: [[0, 0], [20, 0], [20, 20], [0, 20]] }] }, tex);
-    const by = mp => ctx.scene.children.find(o => o.isMesh && o.material.map === mp).material;
-    assert.ok(by(tex.grass).polygonOffsetUnits < (by(tex.concrete).polygonOffset ? by(tex.concrete).polygonOffsetUnits : 0), '풀밭이 콘크리트 앞 (제주)');
-    assert.equal(by(tex.grass).polygonOffsetFactor, 0);
+    const by = k => ctx.scene.children.find(o => o.isMesh && (o.material.map === tex[k] || o.material.userData.ph === k)).material;   /* 3D 는 사진 땅(문서 230 §12) — 같은 종류 */
+    assert.ok(by('grass').polygonOffsetUnits < (by('concrete').polygonOffset ? by('concrete').polygonOffsetUnits : 0), '풀밭이 콘크리트 앞 (제주)');
+    assert.equal(by('grass').polygonOffsetFactor, 0);
   } finally { L.setView3d(false); }
   const c2 = mkCtx(); assert.equal(L.ground(c2, tex.forest).material.polygonOffset, false, '2D 굽기는 그대로');
   assert.match(W3D, /MODE = q\.get\('macro'\) \|\| 'all';/, '결 셰이더 기본 켬');

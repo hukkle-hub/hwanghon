@@ -9,3 +9,8 @@ Poly Haven 텍스처 (CC0 1.0 — 공개 도메인, 출처 표기 의무 없음,
 - concrete_debris        https://polyhaven.com/a/concrete_debris        잔해 더미 (2 m)
 - asphalt_02             https://polyhaven.com/a/asphalt_02             금 간 아스팔트 (3 m)
 (새 다섯 장은 거칠기 사진을 안 넣었다 — 재질 값 하나로)
+- concrete_pavers        https://polyhaven.com/a/concrete_pavers        보도블록(맞물림) (1.92 m)
+- sparse_grass           https://polyhaven.com/a/sparse_grass           웃자란 풀밭 (2 m)
+- forest_leaves_02       https://polyhaven.com/a/forest_leaves_02       숲 바닥 낙엽·이끼 (3 m)
+- dense_sand             https://polyhaven.com/a/dense_sand             모래 (1.8 m)
+- forest_ground_04       https://polyhaven.com/a/forest_ground_04       흙길 (3.15 m)
