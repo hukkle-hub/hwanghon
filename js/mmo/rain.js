@@ -24,3 +24,23 @@ void main() { float a = vA * (1.0 - abs(vUv.x * 2.0 - 1.0)) * smoothstep(0.0, 0.
   const I = new THREE.Matrix4(); for (let i = 0; i < n; i++) mesh.setMatrixAt(i, I);
   return { mesh, U, follow(p, f) { U.uCam.value.set(p.x + f.x * 9, p.y, p.z + f.z * 9); mesh.visible = WX.uRain.value > 0.01; } };
 }
+/* 땅에 튀는 빗방울 (문서 230 §15) — 카메라 앞 땅(14 × 14 m)에 작은 왕관 n 개(기본 220 — 160 · 얇은 고리는 게임 화면에서 안 보였다). 방울마다 0.3 초 한 살이: 퍼지며 옅어지고, 살이마다 자리를 해시로 새로.
+   땅은 평평하다고 본다(필드 땅 높이 0) — 옥상 · 차 위엔 안 튄다. 더하기 섞기 · 그리기 1 번 · 비 세기만큼만 */
+export function rainSplashes(THREE, { n = 220, box = 14 } = {}) {
+  const g = new THREE.PlaneGeometry(1, 1); g.rotateX(-Math.PI / 2);
+  const U = { uCam: { value: new THREE.Vector3() }, uBox: { value: box }, uCol: { value: new THREE.Color(0.6, 0.62, 0.66) }, uRain: WX.uRain, uWind: WIND };
+  const m = new THREE.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, polygonOffset: true, polygonOffsetUnits: -40,
+    vertexShader: `uniform vec3 uCam; uniform float uBox, uWind, uRain; varying vec2 vUv; varying float vA, vT;
+float sh(vec2 x){ return fract(sin(dot(x, vec2(12.9898, 78.233))) * 43758.5453); }
+void main() { float id = float(gl_InstanceID), life = 0.3 + 0.1 * sh(vec2(id, 1.0)), tt = uWind / life + sh(vec2(id, 2.0)), cyc = floor(tt); vT = fract(tt);
+  vec2 xz = uCam.xz + (vec2(sh(vec2(id, cyc)), sh(vec2(cyc, id + 7.0))) - 0.5) * uBox;
+  float keep = step(sh(vec2(id, 3.0)), uRain), sz = (0.12 + 0.26 * vT) * keep;
+  vec3 wp = vec3(xz.x, 0.1, xz.y) + position * sz;   /* 길 윗면이 0.06 m — 0.03 에선 길 밑에 묻혀 안 보였다 */ vUv = uv; vA = keep * (1.0 - vT) * smoothstep(1.5, 3.0, distance(wp, cameraPosition));
+  gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0); }`,
+    fragmentShader: `uniform vec3 uCol; varying vec2 vUv; varying float vA, vT;
+void main() { float r = length(vUv * 2.0 - 1.0), ring = exp(-pow((r - 0.72) * 7.0, 2.0)) + 0.8 * exp(-r * r * 12.0) * (1.0 - vT); float a = vA * ring * 0.5;   /* 0.85 · 굵은 고리는 길에 칠한 흰 도넛이었다 */ if (a < 0.004) discard;
+  gl_FragColor = vec4(max(uCol, vec3(0.22, 0.23, 0.26)) * a, a); }` });   /* 고리 + 가운데 튐(처음에만) */
+  const mesh = new THREE.InstancedMesh(g, m, n); mesh.frustumCulled = false; mesh.userData.noCam = true; mesh.name = 'rain-splash';
+  const I = new THREE.Matrix4(); for (let i = 0; i < n; i++) mesh.setMatrixAt(i, I);
+  return { mesh, U, follow(p, f) { U.uCam.value.set(p.x + f.x * 7, 0, p.z + f.z * 7); mesh.visible = WX.uRain.value > 0.01; } };
+}

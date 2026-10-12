@@ -6,7 +6,7 @@
    크레딧이 있으면 이 PNG 를 힉스필드 image-to-image / image-to-video 시작 프레임으로 넣는다(같은 구도로 실사 키아트 · 예고편 컷). */
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import fs from 'node:fs';
-const A = Object.fromEntries(process.argv.slice(2).map(a => a.split('=')));
+const A = Object.fromEntries(process.argv.slice(2).map(a => { const i = a.indexOf('='); return [a.slice(0, i), a.slice(i + 1)]; }));   /* 첫 = 에서만 — q=wx=mist 가 q=wx 로 잘려 날씨가 안 붙었다 */
 const OUT = A.out || 'docs/gpt/cine', ZONES = (A.zones || 'namsan,gangnam').split(','), TOD = A.tod || 'dusk', PORT = A.port || 8777, QX = A.q ? '&' + A.q : '', ONLY = A.shots ? A.shots.split(',') : null;   /* q=hf=0 처럼 주소 덧붙이기 · shots=establishing 만 */
 /* 해를 등지고(역광) 낮게 · 옆으로 비껴 · 내려다보며 — 영화에서 흔한 세 구도 */
 export const SHOTS = [
@@ -28,7 +28,7 @@ for (const z of ZONES) {
       W.scene.traverse(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.visible = false; });   /* 지역 문 고리 · 예고 고리 — 실사화에 남으면 이상한 물체가 된다 */
       W.view([h.x - Math.sin(a) * s.back, h.y + s.up, h.z - Math.cos(a) * s.back], [h.x + Math.sin(a) * 40, h.y + s.look, h.z + Math.cos(a) * 40]); return W.frames; }, s);
     await p.waitForFunction(f => window.__W3D.frames > f + 12, f0, { timeout: 1200000 });   /* 헤드리스는 초당 1~2 프레임 — 벽시계 말고 프레임을 센다 */
-    const file = `${z}-${s.id}.png`; await p.screenshot({ path: `${OUT}/${file}` });
+    const file = `${z}-${s.id}.png`; await p.screenshot({ path: `${OUT}/${file}`, timeout: 600000 });   /* 헤드리스 swiftshader 는 1080p 한 장에 30 초를 넘긴다 */
     list.push({ file, zone: z, tod: TOD, shot: s.id, prompt: `${STYLE}; ${s.note}` }); console.log(file); }
   await p.close(); }
 fs.writeFileSync(`${OUT}/cine-shots.json`, JSON.stringify(list, null, 1)); await b.close();

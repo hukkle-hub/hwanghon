@@ -144,8 +144,8 @@ import { createBench } from './js/mmo/bench.js';
 import { REGIONS } from './js/mmo/regions.js';
 import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
-import { WX, zoneSeed, weatherNow, applyRain } from './js/mmo/weather.js';
-import { rainStreaks } from './js/mmo/rain.js';
+import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
+import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
@@ -253,13 +253,14 @@ const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft
 /* 높이 안개 (문서 230 §6): 땅 · 골짜기에 깔리는 안개 — 재질이 컴파일되기 전(첫 그리기 전)에 공용 안개 조각을 고친다. 산 · 호수 지역은 짙게. ?hf=0 끔 · ?hfk= · ?hfh= 조정 */
 const HF_ZONE = { namsan: .018, gyeryong: .02, chuncheon: .02, jeju: .015, seogwipo: .015, sokcho: .015, gyeongpo: .015, goheung: .015 };
 const LEAF_F = new THREE.Vector3(), LEAVES = CINE && q.get('leaves') !== '0' ? windLeaves(THREE, { n: MOBILE ? 60 : 90 }) : null; if (LEAVES) scene.add(LEAVES.mesh);   /* 바람에 날리는 잎 (문서 230 §13) */
-const WXSEED = zoneSeed(ZONE), WXF = q.get('wx'), WXS = { rain: 0, wet: 0, fog0: null }, RAIN = CINE && q.get('rain') !== '0' ? rainStreaks(THREE, { n: MOBILE ? 350 : 700 }) : null; if (RAIN) scene.add(RAIN.mesh);   /* 날씨 — 비 (문서 230 §14) · ?wx=rain|clear|wet */
-if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .012), h: +(q.get('hfh') || 5) });
+const WXSEED = zoneSeed(ZONE), WXF = q.get('wx'), WXS = { rain: 0, wet: 0, mist: 0, fog0: null }, RAIN = CINE && q.get('rain') !== '0' ? rainStreaks(THREE, { n: MOBILE ? 350 : 700 }) : null, SPLASH = RAIN ? rainSplashes(THREE, { n: MOBILE ? 120 : 220 }) : null; if (RAIN) scene.add(RAIN.mesh, SPLASH.mesh);   /* 날씨 — 비 (문서 230 §14) · ?wx=rain|clear|wet */
+if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .012), h: +(q.get('hfh') || 5), n0: scene.fog ? scene.fog.near : 0 });
 const CS = { col: new THREE.Color() };
 function cineSunTick() { const r = cineSun(THREE, cam, sunDir, Math.max(STAGE.dim || 0, 0.85 * WX.uRain.value), CS);   /* 비 오면 빛줄기 · 해 둘레 번짐을 줄인다 (문서 230 §14) */   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);
   const U = bloom.cine, b0 = CS.b0 ||= { con: U.con.value, vig: U.vig.value }, nk = Math.min(1, Math.max(0, (lampK - 1.05) / 0.85));   /* 밤: S 곡선 · 가장자리를 줄인다 — 어두운 데가 뭉개져 영웅이 안 보였다 */
-  U.con.value = b0.con * (1 - .7 * nk); U.vig.value = b0.vig * (1 - .6 * nk);
+  U.con.value = b0.con * (1 - .7 * nk) * (1 - .45 * WXS.mist); U.vig.value = b0.vig * (1 - .6 * nk);
+  b0.shaft ??= U.shaftAmt.value; b0.haze ??= U.haze.value; U.shaftAmt.value = b0.shaft * (1 + 1.3 * WXS.mist); U.haze.value = b0.haze * (1 + 0.9 * WXS.mist);   /* 안개 속 빛줄기 — 엘든 아침 숲 (문서 230 §15) */
   bloom.sun(r.x, r.y, r.k, CS.col); window.__CINE = { x: +r.x.toFixed(3), y: +r.y.toFixed(3), k: +r.k.toFixed(3) }; }
 /* ---------- 시간대 (문서 217) — 48분 한 바퀴, 서버 시각. 실내는 안 돌린다. ?tod=밤|night|0.45 로 고정 ---------- */
 let lampK = 1, todName = '';
@@ -268,15 +269,15 @@ const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (()
   const base = { top: sk ? sk.top.value.clone() : skyCol.clone(), hor: sk ? sk.hor.value.clone() : skyCol.clone(), fog: skyCol.clone(), sun: sun.color.clone(), sunc: sk ? sk.sunc.value.clone() : sun.color.clone(), hemi: hemiL.color.clone(), ground: hemiL.groundColor.clone(),
     sunI: sun.intensity, hemiI: hemiL.intensity, fillI: fillL.intensity, exp: renderer.toneMappingExposure, alt: Math.asin(sunDir.clone().normalize().y) * 180 / Math.PI, westX: w.x, westZ: w.z };
   const sub = document.querySelector('#title small'), sub0 = sub ? sub.textContent : '';
-  return createDayCycle(THREE, base, o => { if (CINE) applyRain(o, WXS.rain); skyCol.copy(o.fog); if (scene.fog) scene.fog.color.copy(o.fog);
+  return createDayCycle(THREE, base, o => { if (CINE) { applyRain(o, WXS.rain); applyMist(o, WXS.mist); } skyCol.copy(o.fog); if (scene.fog) scene.fog.color.copy(o.fog);
     if (sk) { sk.top.value.copy(o.top); sk.hor.value.copy(o.hor); sk.fogc.value.copy(o.fog); sk.sunc.value.copy(o.sunc).multiplyScalar(o.glow); sk.sun.value.copy(o.dir).normalize(); }
     sun.color.copy(o.sun); sun.intensity = o.sunI; sunDir.copy(o.dir); hemiL.color.copy(o.hemi); hemiL.groundColor.copy(o.ground); hemiL.intensity = o.hemiI; fillL.intensity = o.fillI;
     renderer.toneMappingExposure = o.exp; if (lampK !== o.lampK) { lampK = o.lampK; nearLights(root.position); } HERO_RIM.uK.value = heroRimK(o.lampK); MOB_RIM.uK.value = mobRimK(o.lampK);   /* 밤 몬스터 윤곽 (문서 229 §32, ?mr=0 으로 끔) */
     if (CONES) CONES.set(o.lampK); if (STREETLAMP.mat) STREETLAMP.mat.emissiveIntensity = 0.15 + 0.9 * Math.min(1.9, o.lampK);   /* 가로등 머리·빛 기둥: 밤일수록 */
     for (const m of Object.values(VSIGN.mats)) m.emissiveIntensity = 0.3 + 0.9 * Math.min(1.9, o.lampK);   /* 세로 간판: 밤일수록 (문서 229 §9) */
     FACADE_U.uLampK.value = o.lampK; if (FACADE_U.uSkyRefl.value) FACADE_U.uSkyRefl.value.copy(o.hor).lerp(o.top, 0.35);   /* 창: 밤일수록 켜진 방이 밝고, 유리는 지금 하늘빛을 비춘다 */
-    if (CINE && scene.fog) { if (!WXS.fog0) WXS.fog0 = [scene.fog.near, scene.fog.far]; scene.fog.near = WXS.fog0[0] * (1 - 0.4 * WXS.rain); scene.fog.far = WXS.fog0[1] * (1 - 0.3 * WXS.rain); }   /* 비: 안개가 가까이 (먼 쪽은 걸러내기가 더 일찍 자른다) */
-    if (RAIN) RAIN.U.uCol.value.copy(o.fog).lerp(o.hemi, 0.5).multiplyScalar(0.9 + 0.25 * o.hemiI); WX.uGloss.value = 0.45 - 0.2 * Math.min(1, o.lampK);   /* 빗줄기는 하늘빛 · 젖은 땅 윤기는 밤에 더(가로등이 번진다) — 낮 0.45 아래는 낮은 해가 하얗게 번졌다(문서 217 §2) */
+    if (CINE && scene.fog) { if (!WXS.fog0) WXS.fog0 = [scene.fog.near, scene.fog.far]; scene.fog.near = WXS.fog0[0] * (1 - 0.4 * WXS.rain) * (1 - 0.72 * WXS.mist); scene.fog.far = WXS.fog0[1] * (1 - 0.3 * WXS.rain) * (1 - 0.5 * WXS.mist); }   /* 안개: 앞이 0.28 배로 당겨지고 깔린 안개가 그만큼 짙어진다(height-fog n0) */   /* 비: 안개가 가까이 (먼 쪽은 걸러내기가 더 일찍 자른다) */
+    if (RAIN) { RAIN.U.uCol.value.copy(o.fog).lerp(o.hemi, 0.5).multiplyScalar(0.9 + 0.25 * o.hemiI); SPLASH.U.uCol.value.copy(RAIN.U.uCol.value); } WX.uGloss.value = 0.45 - 0.2 * Math.min(1, o.lampK);   /* 빗줄기는 하늘빛 · 젖은 땅 윤기는 밤에 더(가로등이 번진다) — 낮 0.45 아래는 낮은 해가 하얗게 번졌다(문서 217 §2) */
     if (o.name !== todName) { todName = o.name; if (REFL) REFL.dirty = true; if (sub) sub.textContent = sub0 + ' · ' + o.name; } }); })() : null;
 if (DAYC) { DAYC.fixed = tOf(q.get('tod')); }
 let todT = 0;
@@ -764,10 +765,10 @@ function tick() { perf.begin();
   if (LIFE) LIFE.tick(dt, lampK, cam.position); watchLooks(dt);
   if (BENCH && BENCH.view && BENCH.view.walk) { const wk = BENCH.view.walk, s = root.position.x * Math.cos(wk.a) - root.position.z * Math.sin(wk.a); if (s < wk.s1) { const q2 = { x: root.position.x + wk.dx * 4.8 * dt, z: root.position.z + wk.dz * 4.8 * dt }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); me.yaw = BENCH.view.yaw; root.rotation.y = me.yaw; } }
   WIND.value += dt;   /* 나무 바람 (문서 220) */
-  if (LEAVES || RAIN) { cam.getWorldDirection(LEAF_F); if (LEAVES) LEAVES.follow(cam.position, LEAF_F); if (RAIN) RAIN.follow(cam.position, LEAF_F); }
+  if (LEAVES || RAIN) { cam.getWorldDirection(LEAF_F); if (LEAVES) LEAVES.follow(cam.position, LEAF_F); if (RAIN) { RAIN.follow(cam.position, LEAF_F); SPLASH.follow(cam.position, LEAF_F); } }
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
-  todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; const ms = net ? sclock.now() : Date.now(); if (CINE) { const w = weatherNow(WXSEED, ms, WXF); WXS.rain = w.rain; WXS.wet = w.wet; WX.uRain.value = w.rain; WX.uWet.value = w.wet; } DAYC.update(ms); }   /* 시간대 — 0.5초마다 (문서 217) */
+  todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; const ms = net ? sclock.now() : Date.now(); if (CINE) { const w = weatherNow(WXSEED, ms, WXF); WXS.rain = w.rain; WXS.wet = w.wet; WXS.mist = w.mist; WX.uMist.value = w.mist; WX.uRain.value = w.rain; WX.uWet.value = w.wet; } DAYC.update(ms); }   /* 시간대 — 0.5초마다 (문서 217) */
   if (SPROX) SPROX.update(root.position);
   if (BOSS_LOD && frames % 10 === 0) bossLodTick();
   if (sun) { const g = root.position; sun.target.position.set(g.x, 0, g.z); sun.position.copy(sun.target.position).addScaledVector(sunDir, 160); sun.target.updateMatrixWorld(); }

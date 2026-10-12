@@ -1,12 +1,13 @@
 <!doctype html><meta charset="utf-8"><title>건물 벽 시트</title>
-<!-- 건물 낡음 검수 (문서 230 §9·§11): 실제 가짜 실내 창 재질(facade-shader)로 콘크리트 둘 · 붉은/갈색 벽돌 빌라 · 무너진 건물(ruinShell) · 사진 아스팔트 길 — ?nw=1 낡음 끔 · ?light=day|dusk · ?tc=0 옛 캔버스. window.READY -->
+<!-- 건물 낡음 검수 (문서 230 §9·§11): 실제 가짜 실내 창 재질(facade-shader)로 콘크리트 둘 · 붉은/갈색 벽돌 빌라 · 무너진 건물(ruinShell) · 사진 아스팔트 길 — ?nw=1 낡음 끔 · ?light=day|dusk · ?tc=0 옛 캔버스 · ?wetv=1 젖은 벽 · ?rainv=1 빗방울 동심원(문서 230 §15). window.READY -->
 <style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import { interiorFacadeMats, interiorBrickMats, FACADE_PHOTO } from '../../js/mmo/facade-shader.js';
 import { ruinShell, ruinPhotoMats, asphaltPhoto, gritTex } from '../../js/mmo/env-lib.js';
 import { patchPuddleMaterial, PUDDLE } from '../../js/mmo/puddle-shader.js';
-const Q = new URLSearchParams(location.search); FACADE_PHOTO.on = Q.get('tc') !== '0'; const dusk = Q.get('light') === 'dusk', W = 1400, H = 640;
+import { WX } from '../../js/mmo/weather.js';
+const Q = new URLSearchParams(location.search); WX.uWet.value = +(Q.get('wetv') || 0); WX.uRain.value = +(Q.get('rainv') || 0); FACADE_PHOTO.on = Q.get('tc') !== '0'; const dusk = Q.get('light') === 'dusk', W = 1400, H = 640;
 const cv = document.getElementById('c'); cv.width = W; cv.height = H;
 const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H, false); r.shadowMap.enabled = true;
 r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;

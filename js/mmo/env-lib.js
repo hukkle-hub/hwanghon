@@ -10,6 +10,7 @@ import { treeTex, leafCrownGeo, pineCardGeo, leafBushGeo } from './tree-kit.js';
 import { rockGeo, rockMat } from './rock-kit.js';
 import { phTex, phPair, antiTileMat } from './ph-tex.js';
 import { FACADE_PHOTO } from './facade-shader.js';
+import { WX } from './weather.js';
 export { FACADE_PHOTO };
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
@@ -264,12 +265,13 @@ export function groundPhoto(THREE, kind, extra = {}, size = 0) { const g = GROUN
   return antiTileMat(THREE, new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0, ...extra, color: new THREE.Color(...g[2]).multiply(new THREE.Color(extra.color ?? 0xffffff)), userData: { antiTile: true, ph: kind }, ...phPair(THREE, g[0], { repeat: [rep, rep], normalScale: 0.8 }) })); }
 export function ruinPhotoMats(THREE) {
   return [[1, 1, 1], [1.06, 1.0, 0.93], [0.92, 0.95, 1.0], [1.0, 0.95, 0.88]].map(c => { const m = new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0.0, color: new THREE.Color(...c).multiplyScalar(0.075 / 0.135), ...phPair(THREE, 'concrete_layers', { repeat: [1 / RUIN_RS, 1 / RUIN_RS], normalScale: 0.9 }) });   /* 회색 콘크리트(선형 0.075) — 옛 캔버스 바탕색(청·자색)을 곱하니 보랏빛 벽이었다 */
-    m.onBeforeCompile = sh => { sh.fragmentShader = sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    m.onBeforeCompile = sh => { sh.uniforms.uWet = WX.uWet; sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform float uWet;').replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.45, uWet);').replace('#include <map_fragment>', `#include <map_fragment>
   { vec2 wm = vMapUv * ${RUIN_RS.toFixed(2)}; float fl = fract(wm.y / 3.3), cl = fract(wm.x / 3.0);
     float win = step(0.32, fl) * step(fl, 0.8) * step(0.22, cl) * step(cl, 0.78) * step(1.0, wm.y);
     float rim = smoothstep(0.12, 0.0, min(min(abs(fl - 0.32), abs(fl - 0.8)) * 3.3, min(abs(cl - 0.22), abs(cl - 0.78)) * 3.0)) * (1.0 - win) * step(1.0, wm.y);   /* 구멍 둘레 0.12 m 깨진 테 — 밝게 */
     float soot = (1.0 - win) * step(0.8, fl) * smoothstep(1.0, 0.8, fl) * step(0.22, cl) * step(cl, 0.78) * step(0.55, fract(sin(dot(floor(wm / vec2(3.0, 3.3)), vec2(12.9, 78.2))) * 437.5));   /* 구멍 바로 위 그을음 — 반쯤 */
     diffuseColor.rgb *= (0.62 + 0.38 * smoothstep(0.0, 1.5, wm.y)) * (1.0 + 0.35 * rim) * (1.0 - 0.6 * soot);
+    diffuseColor.rgb *= 1.0 - 0.26 * uWet;   /* 젖은 콘크리트 (문서 230 §15) */
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02, 0.018, 0.017), win); }`); };
     m.customProgramCacheKey = () => 'ruin-wall-photo'; m.name = 'ruin-wall'; return m; });
 }

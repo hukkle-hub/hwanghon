@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>비 시트</title>
+<!-- 비 검수 (문서 230 §14·§15): 빗줄기 · 땅에 튀는 빗방울 — ?t=1&rain=1. window.READY · window.DRAW(t) · window.ERR(셰이더 오류) -->
+<style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { rainStreaks, rainSplashes } from '../../js/mmo/rain.js';
+import { WIND } from '../../js/mmo/wind.js';
+import { WX } from '../../js/mmo/weather.js';
+const Q = new URLSearchParams(location.search), W = 1040, H = 520, cv = document.getElementById('c'); cv.width = W; cv.height = H; window.ERR = [];
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H, false); r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping;
+r.debug.onShaderError = (gl, prog, vs, fs) => window.ERR.push(gl.getShaderInfoLog(vs) + gl.getShaderInfoLog(fs));
+const s = new T.Scene(); s.background = new T.Color(0x4a4e56); s.add(new T.HemisphereLight(0xc0c4cc, 0x302820, 1.2));
+s.add(new T.Mesh(new T.PlaneGeometry(200, 200).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x1c1c1e, roughness: .5 })));
+WX.uRain.value = +(Q.get('rain') || 1); const R = rainStreaks(T, { n: 700 }), S = rainSplashes(T, { n: 160 }); s.add(R.mesh, S.mesh);
+const cam = new T.PerspectiveCamera(60, W / H, .1, 300); cam.position.set(0, 2.2, 6); cam.lookAt(0, 0.5, -4); const f = new T.Vector3(); cam.getWorldDirection(f);
+const DRAW = t => { WIND.value = t; R.follow(cam.position, f); S.follow(cam.position, f); r.render(s, cam); }; window.DRAW = DRAW; DRAW(+(Q.get('t') || 1)); window.READY = 1;
+</script>

@@ -29,7 +29,7 @@ test('3D 필드만 켜고 ?cine=0 으로 끈다 · 던전/2D 블룸은 그대로
   const W = fs.readFileSync('world3d.html', 'utf8'), B = fs.readFileSync('js/bloom.js', 'utf8');
   assert.match(W, /const CINE = \(env\.kind \|\| Z\.kind \|\| meta\.kind\) === 'field' && q\.get\('cine'\) !== '0';/);
   assert.match(W, /cine: CINE \? \{\} : null/); assert.match(W, /if \(bloom && bloom\.cine\) cineSunTick\(\);\n  if \(bloom\) bloom\.render/, '그리기 직전에 해 자리');
-  assert.match(W, /U\.con\.value = b0\.con \* \(1 - \.7 \* nk\); U\.vig\.value = b0\.vig \* \(1 - \.6 \* nk\);/, '밤엔 S 곡선 · 가장자리를 줄인다');
+  assert.match(W, /U\.con\.value = b0\.con \* \(1 - \.7 \* nk\)[^;]*; U\.vig\.value = b0\.vig \* \(1 - \.6 \* nk\);/, '밤엔 S 곡선 · 가장자리를 줄인다(안개 날씨는 대비를 더 줄인다, 문서 230 §15)');
   assert.match(B, /C \? \{ CINE:1 \} : null/, 'cine 를 안 넘기면 셰이더에 CINE 가 없다(던전 · 2D 맵 결과 그대로)');
   assert.match(B, /if\(C && cu\.sunK\.value > 0\.001\)/, '해가 안 보이면 빛줄기 패스를 건너뛴다');
   for (const f of ['js/game3d.js', 'mmo.html']) { const calls = fs.readFileSync(f, 'utf8').match(/createBloom\([^)]*\)/g) || []; assert.ok(calls.length, f); for (const c of calls) assert.doesNotMatch(c, /cine/, f + ' 블룸은 켜지 않는다'); }

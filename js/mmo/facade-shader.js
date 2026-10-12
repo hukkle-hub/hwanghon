@@ -5,7 +5,7 @@
    - 방마다(칸 번호 해시) 불 켜짐·벽 색·깊이·블라인드·깨진 창이 다르다. 황혼(폐허 도시)이라 불 켜진 방은 드물다
    - 유리는 보는 각에 따라 하늘빛을 조금 비춘다(프레넬) · 거칠기를 낮춰 해 반짝임
    FACADE_U.uLampK 를 시간대가 정한다(밤일수록 켜진 방이 밝다) */
-export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null }, uEnvCube: { value: null }, uEnvK: { value: 0 } };   /* uEnvCube/uEnvK: 구운 주변 큐브맵(env-reflect, 문서 229 §12) — 0 이면 하늘빛 한 가지 */
+export const FACADE_U = { uLampK: { value: 1 }, uSkyRefl: { value: null }, uEnvCube: { value: null }, uEnvK: { value: 0 }, uWet: WX.uWet };   /* uWet: 비에 젖은 벽 (문서 230 §15) */   /* uEnvCube/uEnvK: 구운 주변 큐브맵(env-reflect, 문서 229 §12) — 0 이면 하늘빛 한 가지 */
 /* 항공 장애등 — 50 m 넘는 탑 꼭대기 모서리의 붉은 등. 재질 하나를 같이 써서 world3d 가 깜빡인다(aviBlink) */
 export const AVI = { mat: null, n: 0 };
 /* 사람이 사는 블록 (문서 229 §18·§20) — 셰이더 inhab() 와 같은 정수 해시. 36 m 칸의 18 % */
@@ -20,7 +20,7 @@ export function aviBlink(t, lampK) { if (!AVI.mat) return; const on = (t % 1.6) 
 
 const PARS = `
 varying vec3 vFW; varying vec3 vFN;
-uniform float uLampK; uniform vec3 uSkyRefl, uWallTint; uniform samplerCube uEnvCube; uniform float uEnvK;
+uniform float uLampK; uniform vec3 uSkyRefl, uWallTint; uniform samplerCube uEnvCube; uniform float uEnvK; uniform float uWet;
 float fh1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float fh2(vec2 p){ return fract(sin(dot(p, vec2(269.5, 183.3))) * 24634.6345); }
 /* 사람이 사는 블록 — JS inhabited() 와 비트까지 같은 정수 해시(sin 해시는 GPU 32비트와 JS 64비트가 달라 옥상 생존자 흔적과 자리가 안 맞는다) */
@@ -102,12 +102,13 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     { float sx = s * 1.1, cx = fract(sx), col = fh1(vec2(floor(sx), 3.0));
       float prof = sin(cx * 3.14159) * (0.7 + 0.3 * sin(cx * 9.4 + col * 6.0));                                  /* 줄 하나의 가로 단면 — 가운데 짙고 가장자리로 번진다 */
       float drip = smoothstep(0.35, 0.9, col) * prof * (1.0 - smoothstep(0.0, 0.9, fract(1.0 - f.y + 0.17)));     /* 창턱 아래로 흘러내려 옅어진다 (폭 ~0.9 m) */
-      float wash = (1.0 - fGlass) * drip * 0.38;
+      float wash = (1.0 - fGlass) * drip * (0.38 + 0.3 * uWet);   /* 비 오면 빗물 자국이 짙어진다 */
       float base = 1.0 - smoothstep(0.0, 1.6, y), moss = (1.0 - smoothstep(0.0, 0.55, y)) * smoothstep(0.4, 0.75, fh1(floor(vec2(s * 1.7, 1.0))));
       vec2 bid = rid - vec2(0.0, 1.0); float soot = step(0.9, fh1(bid + 11.0)) * step(g0.x, f.x) * step(f.x, g1.x) * (1.0 - smoothstep(0.0, 0.55, f.y)) * (1.0 - fGlass) * step(7.0, y);   /* 바로 아래 창이 깨졌으면 그 위 벽이 그을린다 */
       diffuseColor.rgb *= (1.0 - wash) * (1.0 - base * 0.38) * (1.0 - soot * 0.7);
       diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.14, 0.17, 0.08), moss * 0.55 * (1.0 - fGlass)); }
 #endif
+    diffuseColor.rgb *= 1.0 - 0.26 * uWet * (1.0 - fGlass);   /* 젖은 벽은 어둡다 (문서 230 §15) */
   } }`;
 
 export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
@@ -119,13 +120,14 @@ export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvFW = (modelMatrix * vec4(transformed, 1.0)).xyz; vFN = normalize(mat3(modelMatrix) * objectNormal);');
     sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>' + PARS)
       .replace('#include <map_fragment>', '#include <map_fragment>' + BODY)
-      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.18, fGlass);')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.18, fGlass); roughnessFactor = mix(roughnessFactor, max(0.42, roughnessFactor * 0.6), uWet * (1.0 - fGlass));')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, fGlass);')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += fEmit;'); };
   m.customProgramCacheKey = () => (curtain ? 'facade-im-curtain' : 'facade-im') + (m.defines && 'NO_WEATHER' in m.defines ? '-nw' : ''); m.needsUpdate = true; return m;
 }
 
 import { phTex, phPair } from './ph-tex.js';
+import { WX } from './weather.js';
 export const FACADE_PHOTO = { on: true };   /* world3d ?tc=0 → 옛 캔버스 벽 */
 /* 벽 텍스처(창 없이 얼룩·빗물 자국만) + 가짜 실내 창 재질 넷 — env-osm(강남)·env-lib(다른 도시) 가 같이 쓴다.
    따로 굴리는 난수 — 장면 난수 R 을 쓰면 뒤의 건물 높이·차 자리가 2D 굽기와 달라진다 */

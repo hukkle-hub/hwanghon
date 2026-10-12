@@ -23,7 +23,8 @@ test('three 안개 조각에 꽂힌다 · 한 번만 · 사용자 셰이더도 �
   assert.match(C.fog_vertex, /vFogWY = dot\( viewMatrix\[ 1 \]\.xyz, mvPosition\.xyz \) \+ cameraPosition\.y;/); assert.doesNotMatch(C.fog_vertex, /transformed/, '연기 · 먼지 셰이더엔 transformed 가 없다');
   assert.equal((C.fog_fragment.match(/hfOd/g) || []).length, 2); assert.match(C.fog_pars_fragment, /#define HF_K 0\.01000/); assert.notEqual(C.fog_vertex, v0);
   /* 셰이더 식 = JS 식: 같은 글자가 들어 있다 */
-  assert.match(C.fog_fragment, /HF_K \* vFogDepth \* \( abs\( hfDy \) > 0\.01 \? HF_H \* \( hfEc - hfEp \) \/ hfDy : hfEc \)/);
+  assert.match(C.fog_fragment, /hfKk \* vFogDepth \* \( abs\( hfDy \) > 0\.01 \? HF_H \* \( hfEc - hfEp \) \/ hfDy : hfEc \)/);
+  assert.match(C.fog_fragment, /hfKk \*= clamp\( HF_N0 \/ max\( fogNear, 0\.5 \), 1\.0, 4\.0 \)/, '날씨 안개가 fogNear 로 깔린 안개를 짙게 (문서 230 §15)'); assert.match(C.fog_fragment, /#ifndef FOG_EXP2/, '지수 안개엔 fogNear 가 없다');
 });
 test('3D 필드만 · 지역별 짙기 · ?hf=0 으로 끈다 · 첫 그리기 전에', () => {
   const W = fs.readFileSync('world3d.html', 'utf8'), i = W.indexOf('installHeightFog(THREE, {'), r = W.indexOf('requestAnimationFrame(tick)');
