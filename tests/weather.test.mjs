@@ -38,3 +38,9 @@ test('짙은 안개 (문서 230 §15): 약 14 % · 비와 겹치지 않는다 ·
   const F = fs.readFileSync('js/mmo/facade-shader.js', 'utf8'); assert.match(F, /diffuseColor\.rgb \*= 1\.0 - 0\.26 \* uWet \* \(1\.0 - fGlass\)/, '젖은 벽'); assert.match(F, /uWet: WX\.uWet/);
   const S = rainSplashes(THREE, { n: 40 }); assert.ok(S.mesh.isInstancedMesh && S.mesh.count === 40); assert.match(S.mesh.material.vertexShader, /floor\(tt\)/, '살이마다 새 자리'); assert.equal(S.mesh.material.blending, THREE.AdditiveBlending);
 });
+test('밤하늘 (문서 230 §16): 달 · 은하수 · 별똥별은 밤(dark)에만 · 비/안개는 구름이 덮는다', async () => {
+  const { SKY_FRAG } = await import('../js/mmo/sky-shader.js');
+  assert.match(SKY_FRAG, /float moonA = 0\.0; if \(dark > 0\.0\)/, '달은 밤에만'); assert.match(SKY_FRAG, /0\.03 \+ 0\.42 \* lit \* mare/, '달 밝기 — 1.35 는 하얀 덩어리');
+  assert.match(SKY_FRAG, /band = exp\(-gb \* gb \* 26\.0\)/, '은하수 띠'); assert.match(SKY_FRAG, /floor\(time \/ 20\.0\)/, '별똥별'); assert.match(SKY_FRAG, /\(1\.0 - 0\.85 \* dark\)/, '밤 해 번짐은 달무리로');
+  const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /sk\.cover\.value = 0\.5 - 0\.38 \* WXS\.rain - 0\.15 \* WXS\.mist/);
+});

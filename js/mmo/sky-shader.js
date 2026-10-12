@@ -20,8 +20,22 @@ void main(){
   if (dark > 0.0 && y > 0.04) { vec2 sp = vec2(atan(d.z, d.x) * 95.0, asin(clamp(y, -1.0, 1.0)) * 95.0); vec2 si = floor(sp), sf = fract(sp) - 0.5; float sh = h2(si), sb = step(0.965, sh);
     vec2 so = vec2(h2(si + 3.1), h2(si + 7.7)) - 0.5; float st = sb * smoothstep(0.16, 0.0, length(sf - so * 0.6)) * (0.55 + 0.45 * sin(time * (1.5 + sh * 3.0) + sh * 40.0));
     c += vec3(0.85, 0.9, 1.0) * st * dark * smoothstep(0.04, 0.25, y) * (1.0 - dens) * 1.3; }
+  /* 은하수 (문서 230 §16): 하늘을 비스듬히 가로지르는 띠 — 띠 축에서의 거리로 옅은 빛 + 먼지 갈래(fbm). 밤에만, 구름에 가린다 */
+  if (dark > 0.0) { vec3 gp = normalize(vec3(0.42, 0.55, -0.72)); float gb = dot(d, gp), band = exp(-gb * gb * 26.0);
+    vec2 gq = vec2(atan(d.z, d.x), gb) * vec2(5.0, 9.0); float dust = fbm(gq * 2.3 + 11.0), mw = band * (0.55 + 0.6 * fbm(gq + 3.0)) * (1.0 - 0.75 * smoothstep(0.45, 0.7, dust) * band);
+    c += vec3(0.42, 0.44, 0.56) * 0.11 * mw * dark * smoothstep(0.05, 0.3, y) * (1.0 - dens); }
+  /* 달 (문서 230 §16): 밤의 «해» 자리(시간대가 밤엔 달빛 방향을 넘긴다)에 원반 — 위상 그늘 · 얼룩(바다) · 둘레 달무리. 낮엔 dark = 0 이라 없다 */
+  float moonA = 0.0; if (dark > 0.0) { float md = acos(clamp(dot(d, sun), -1.0, 1.0)), R = 0.028;
+    if (md < R * 1.02) { vec3 ax = normalize(cross(sun, vec3(0.0, 1.0, 0.0)) + 1e-4), ay = cross(ax, sun); vec2 q = vec2(dot(d - sun, ax), dot(d - sun, ay)) / R;
+      float disc = 1.0 - smoothstep(0.96, 1.02, length(q)), lit = smoothstep(-0.25, 0.35, q.x * 0.8 + sqrt(max(0.0, 1.0 - dot(q, q))) * 0.6), mare = 0.78 + 0.22 * smoothstep(0.35, 0.65, fbm(q * 2.2 + 4.0));
+      moonA = disc * dark; c = mix(c, vec3(1.0, 0.97, 0.9) * (0.03 + 0.42 * lit * mare), moonA * (1.0 - dens * 0.85)); }   /* 1.35 는 밤 노출(1.75) · 번짐에 하얀 덩어리였다 — 위상 · 바다가 보이게 */
+    c += vec3(0.55, 0.62, 0.8) * (exp(-md * 18.0) * 0.08 + exp(-md * 60.0) * 0.12) * dark * (1.0 - dens * 0.6); }
+  /* 별똥별: 약 20 초에 한 번, 0.6 초 동안 짧은 빛줄 */
+  if (dark > 0.3 && y > 0.15) { float k = floor(time / 20.0), tt = fract(time / 20.0) * 20.0 / 0.6; if (tt < 1.0) { float a0 = h2(vec2(k, 1.0)) * 6.283; vec3 p0 = normalize(vec3(cos(a0), 0.45 + 0.4 * h2(vec2(k, 2.0)), sin(a0))), dir = normalize(cross(p0, vec3(h2(vec2(k, 3.0)) - 0.5, 1.0, 0.2)));
+      vec3 head = normalize(p0 + dir * tt * 0.25); vec3 rel = d - head; float along = dot(rel, -dir), perp = length(rel + dir * along);
+      c += vec3(0.9, 0.95, 1.0) * smoothstep(0.0015, 0.0, perp) * step(0.0, along) * (1.0 - smoothstep(0.0, 0.07, along)) * sin(tt * 3.14159) * dark * (1.0 - dens); } }
   c = mix(c, cloud, dens * 0.85);
-  c += sunc * glow * smoothstep(-0.05, 0.05, y) * (1.0 - dens * 0.7);
+  c += sunc * glow * smoothstep(-0.05, 0.05, y) * (1.0 - dens * 0.7) * (1.0 - 0.85 * dark);   /* 밤 «해 번짐» 은 달무리가 대신 */
   /* 산 능선 두 겹 — 방위각 둘레를 따라 이어지는 잡음(원 위의 2D 잡음이라 360° 에서 이음매가 없다) */
   vec2 ring = normalize(d.xz + 1e-5);
   float far = ridge.x * (0.35 + 0.65 * fbm(ring * 2.2 + ridge.z)), near = ridge.y * (0.25 + 0.75 * fbm(ring * 4.1 + ridge.z * 1.7 + 3.0));
