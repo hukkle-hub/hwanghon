@@ -24,7 +24,8 @@ for (const z of ZONES) {
   for (const s of SHOTS) {
     const f0 = await p.evaluate(s => { const W = window.__W3D, f = new W.cam.position.constructor(); W.cam.getWorldDirection(f);
       window.__H = window.__H || W.cam.position.clone().addScaledVector(f, 6); const h = window.__H, a = Math.atan2(W.sunDir.x, W.sunDir.z) + s.off;
-      document.getElementById('hud').style.visibility = 'hidden'; document.querySelectorAll('.tag,#regionCard,#areaBan').forEach(t => t.style.visibility = 'hidden');
+      document.getElementById('hud').style.visibility = 'hidden'; document.querySelectorAll('.tag,#regionCard,#areaName,#mini,#toast,#hint').forEach(t => t.style.visibility = 'hidden');
+      W.scene.traverse(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.visible = false; });   /* 지역 문 고리 · 예고 고리 — 실사화에 남으면 이상한 물체가 된다 */
       W.view([h.x - Math.sin(a) * s.back, h.y + s.up, h.z - Math.cos(a) * s.back], [h.x + Math.sin(a) * 40, h.y + s.look, h.z + Math.cos(a) * 40]); return W.frames; }, s);
     await p.waitForFunction(f => window.__W3D.frames > f + 12, f0, { timeout: 300000 });   /* 헤드리스는 초당 1~2 프레임 — 벽시계 말고 프레임을 센다 */
     const file = `${z}-${s.id}.png`; await p.screenshot({ path: `${OUT}/${file}` });
