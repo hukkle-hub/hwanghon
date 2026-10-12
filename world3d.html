@@ -248,6 +248,8 @@ const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft
 const CS = { col: new THREE.Color() };
 function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);
+  const U = bloom.cine, b0 = CS.b0 ||= { con: U.con.value, vig: U.vig.value }, nk = Math.min(1, Math.max(0, (lampK - 1.05) / 0.85));   /* 밤: S 곡선 · 가장자리를 줄인다 — 어두운 데가 뭉개져 영웅이 안 보였다 */
+  U.con.value = b0.con * (1 - .7 * nk); U.vig.value = b0.vig * (1 - .6 * nk);
   bloom.sun(r.x, r.y, r.k, CS.col); window.__CINE = { x: +r.x.toFixed(3), y: +r.y.toFixed(3), k: +r.k.toFixed(3) }; }
 /* ---------- 시간대 (문서 217) — 48분 한 바퀴, 서버 시각. 실내는 안 돌린다. ?tod=밤|night|0.45 로 고정 ---------- */
 let lampK = 1, todName = '';
