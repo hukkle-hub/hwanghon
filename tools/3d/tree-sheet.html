@@ -1,9 +1,9 @@
 <!doctype html><meta charset="utf-8"><title>나무 시트</title>
-<!-- 나무 검수 (문서 230 §7): 실제 env-lib trees() 로 숲 한 줌 — ?light=day|dusk&tc=0(옛 다면체)&cell=520. window.READY · window.INFO={tris, calls} -->
+<!-- 나무 검수 (문서 230 §7): 실제 env-lib trees() 로 숲 한 줌 — ?light=day|dusk&tc=0(옛 다면체)&cell=520. window.READY · window.INFO={tris, calls} · window.DRAW(t) 바람 시각 t 로 다시 그림(문서 230 §13) -->
 <style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
-import { setView3d, trees, TREE_CARDS, rng, lumpy, gritTex } from '../../js/mmo/env-lib.js';
+import { setView3d, trees, TREE_CARDS, rng, lumpy, gritTex, WIND } from '../../js/mmo/env-lib.js';
 import { rockGeo, rockMat } from '../../js/mmo/rock-kit.js';
 const Q = new URLSearchParams(location.search), CELL = +(Q.get('cell') || 520), dusk = Q.get('light') === 'dusk';
 setView3d(true); TREE_CARDS.on = Q.get('tc') !== '0';
@@ -21,7 +21,8 @@ trees({ THREE: T, scene: s, R, blockers: [] }, pts, { pine: .35 });
     m.position.set(x, k * .1, z); m.scale.set(k * 1.1, k * .8, k); m.rotation.y = i * 1.3; m.castShadow = m.receiveShadow = true; s.add(m); }); }
 const cam = new T.PerspectiveCamera(42, 1, .1, 300);
 await new Promise(ok => { T.DefaultLoadingManager.onLoad = ok; setTimeout(ok, 6000); });   /* 사진 텍스처(ph-tex)가 다 오고 나서 그린다 */
-[[[0, 2, 26], [0, 4, 0]], [[-1, 2.4, 21], [0, .6, 14]]].forEach(([p, at], i) => { cam.position.set(...p); cam.lookAt(...at); r.setViewport(i * CELL, 0, CELL, CELL); r.setScissor(i * CELL, 0, CELL, CELL); r.clear(); r.render(s, cam); });
+const DRAW = t => { WIND.value = t; [[[0, 2, 26], [0, 4, 0]], [[-1, 2.4, 21], [0, .6, 14]]].forEach(([p, at], i) => { cam.position.set(...p); cam.lookAt(...at); r.setViewport(i * CELL, 0, CELL, CELL); r.setScissor(i * CELL, 0, CELL, CELL); r.clear(); r.render(s, cam); }); };
+window.DRAW = DRAW; DRAW(+(Q.get('t') || 0));
 let tris = 0; s.traverse(m => { if (m.isInstancedMesh) { const g = m.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3 * m.count; } });
 window.INFO = { tris: Math.round(tris), calls: r.info.render.calls }; window.READY = 1;
 </script>

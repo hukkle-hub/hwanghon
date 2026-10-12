@@ -613,7 +613,7 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
     if (o.block && o.block(p)) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.3, hd: 0.3, rot: 0 }); });
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
   if (VIEW3D) { const c = new THREE.Color();   /* 그루마다 색을 조금씩 (해시 — 장면 난수 R 은 그대로) · 바람 */
-    for (const m of [pines, ...canopy]) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.id, 3); m.setColorAt(i, c.setRGB(0.82 + u * 0.36, 0.86 + hashU(i, m.id, 4) * 0.28, 0.8 + hashU(i, m.id, 5) * 0.3)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; windify(m.material); } }
+    for (const m of [pines, ...canopy]) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.id, 3); m.setColorAt(i, c.setRGB(0.82 + u * 0.36, 0.86 + hashU(i, m.id, 4) * 0.28, 0.8 + hashU(i, m.id, 5) * 0.3)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; windify(m.material, { flut: CARDS ? 1 : 0.3 }); } windify(trunks.material, { flut: 0 }); }   /* 줄기도 같은 휨 — 갓이 줄기에서 미끄러지지 않게 */
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); } return n; }
 /* 3D 나무 모양 (문서 220) — 장난감 같은 다면체 하나 대신: 활엽수는 울퉁불퉁한 덩어리 넷, 소나무는 3 층. 흔들림은 셰이더(바람) */
 function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
@@ -623,11 +623,8 @@ function pineGeo(THREE) { const parts = [[1.7, 2.2, -1.2], [1.3, 1.9, 0.1], [0.8
 function bushGeo(THREE) { const parts = [[0, 0.05, 0, 0.68], [0.58, -0.1, 0.18, 0.52], [-0.45, -0.08, -0.38, 0.55]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 70 + i);   /* 덩어리 셋 × 20 면 — 세분 1 × 다섯(400 면)은 덤불 수천 그루라 삼각형이 2.5 배가 됐다 */ g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 export const TREE_CARDS = { on: true };   /* world3d ?tc=0 → 옛 다면체 나무 · 바위 (문서 230 §7·§8) */
-export const WIND = { value: 0 };   /* world3d 가 매 프레임 올린다 */
-function windify(m) { if (m.userData.wind) return; m.userData.wind = true;
-  m.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
-    .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float sw = sin(uWind * 1.3 + ip.x * 0.31 + ip.z * 0.23) + 0.5 * sin(uWind * 2.7 + ip.x * 0.7); float k = max(transformed.y + 2.0, 0.0) * 0.035; transformed.x += sw * k; transformed.z += cos(uWind * 1.1 + ip.z * 0.27) * k * 0.6; }\n#endif'); };
-  m.customProgramCacheKey = () => 'wind'; }
+import { WIND, WIND_PARS, windify } from './wind.js';   /* 바람 (문서 230 §13) */
+export { WIND, windify };
 /* 물 (문서 220 §6) — 금속성 0.5 판은 비출 환경이 없어 «남색 판» 이었고(해운대), 강은 해 반사만 번져 «주황 맨땅» 이었다(춘천).
    하늘을 비추는 수면: 움직이는 잔물결 법선 · 프레넬로 하늘(돔 색) 반사 · 해 반짝임. 하늘 색은 돔 uniform 을 그대로 가리킨다(world3d 가 이어 준다) → 시간대를 따라간다.
    물가엔 밀려왔다 빠지는 거품 띠(foamBand). 모양만 — 막이·장면 난수와 무관 */
@@ -681,8 +678,8 @@ function tuftParts(THREE) { if (TUFT) return TUFT;
   const tex = canvasTex(THREE, 64, 64, (g, w, h) => { g.clearRect(0, 0, w, h); for (let i = 0; i < 26; i++) { const x = 3 + (i * 37 % 58), bend = ((i * 13) % 11) - 5; g.strokeStyle = ['#6e7a3c', '#8a8448', '#5a6232', '#9a8a5a'][i % 4]; g.lineWidth = 3 + (i % 2); g.beginPath(); g.moveTo(x, h); g.quadraticCurveTo(x + bend, h * 0.5, x + bend * 2, 4 + (i * 7 % 24)); g.stroke(); } });
   const geo = mergeGeometries([0, 1, 2].map(k => { const p = new THREE.PlaneGeometry(0.9, 0.7); p.translate(0, 0.35, 0); p.rotateY(k * Math.PI / 3); return p; }), false);
   const mat = new THREE.MeshStandardMaterial({ map: tex, alphaTest: 0.4, side: THREE.DoubleSide, roughness: 0.9 });
-  mat.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
-    .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float k = transformed.y * transformed.y * 0.5; transformed.x += sin(uWind * 1.9 + ip.x * 0.5 + ip.z * 0.3) * k; transformed.z += cos(uWind * 1.5 + ip.z * 0.45) * k * 0.6; }\n#endif'); };
+  mat.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>' + WIND_PARS)
+    .replace('#include <begin_vertex>', '#include <begin_vertex>\n#ifdef USE_INSTANCING\n{ vec3 ip = instanceMatrix[3].xyz; float k = transformed.y * transformed.y * 0.5 * (0.4 + windGust(ip.xz)); transformed.x += sin(uWind * 1.9 + ip.x * 0.5 + ip.z * 0.3) * k; transformed.z += cos(uWind * 1.5 + ip.z * 0.45) * k * 0.6; }\n#endif'); };
   mat.customProgramCacheKey = () => 'grass-wind'; mat.userData.tuft = true;
   return (TUFT = { geo, mat }); }
 export function tuftMesh(THREE, tufts, size = 1) { const { geo, mat } = tuftParts(THREE), im = new THREE.InstancedMesh(geo, mat, tufts.length), m4 = new THREE.Matrix4(), S = new THREE.Matrix4(), c = new THREE.Color();

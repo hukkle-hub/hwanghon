@@ -176,6 +176,7 @@ export function build(THREE, scene, osm) {
     else { const c = (R() * 4) | 0; mtx.compose(new THREE.Vector3(p[0], 4.7 * k, p[1]), q4.setFromEuler(e.set(R(), R() * 6, R())), new THREE.Vector3(k * (1 + R() * 0.4), k * (0.8 + R() * 0.3), k * (1 + R() * 0.4))); canopy[c].setMatrixAt(cnt[c]++, mtx); }
     if (inBand(p, 1)) blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: 0.3, hd: 0.3, rot: 0 }); });
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
+  if (L.isView3d()) { L.windify(trunkM, { flut: 0 }); for (const m of [pines, ...canopy]) L.windify(m.material, { flut: CARDS ? 1 : 0.3 }); }   /* 3D: 바람 (문서 230 §13) — 남산 숲은 바람이 아예 없었다 */
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
   { const dctx = { THREE, scene, R, FROM, clear, blockers }, st = L.dress(dctx, walk, L.textures(dctx), { logs: true, keep: p => !inBuilding(p) && !nearClear(p) && Math.hypot(p[0] - tower[0], p[1] - tower[1]) > 25 });
     console.log('[env-namsan] 땅 꾸미기', JSON.stringify(st)); }

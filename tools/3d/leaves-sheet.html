@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><title>날리는 잎 시트</title>
+<!-- 바람에 날리는 잎 검수 (문서 230 §13): wind-leaves 를 카메라 앞 상자에 — ?n=70&t=0. window.READY · window.DRAW(t) -->
+<style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { windLeaves } from '../../js/mmo/wind-leaves.js';
+import { WIND } from '../../js/mmo/wind.js';
+const Q = new URLSearchParams(location.search), W = 1040, H = 520, cv = document.getElementById('c'); cv.width = W; cv.height = H;
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H, false); r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping;
+const s = new T.Scene(); s.background = new T.Color(0x9aa6b4); s.add(new T.HemisphereLight(0xdde6ff, 0x302820, 1.4)); const k = new T.DirectionalLight(0xfff0dc, 2.4); k.position.set(10, 22, 14); s.add(k);
+s.add(new T.Mesh(new T.PlaneGeometry(200, 200).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a30, roughness: .95 })));
+const L = windLeaves(T, { n: +(Q.get('n') || 70) }); s.add(L.mesh);
+const cam = new T.PerspectiveCamera(60, W / H, .1, 300); cam.position.set(0, 3.5, 6); cam.lookAt(0, 1.5, -4); const f = new T.Vector3(); cam.getWorldDirection(f);
+const DRAW = t => { WIND.value = t; L.follow(cam.position, f); r.render(s, cam); }; window.DRAW = DRAW; DRAW(+(Q.get('t') || 0)); window.READY = 1;
+</script>

@@ -48,3 +48,13 @@ test('반복 깨기(antiTile) 뒤에도 땅 결 · 구름 그림자가 이어 �
   assert.match(W3D, re, '땅 결 패치가 표지에도 붙어야 한다');
   const out = sh.fragmentShader.replace(/#include <map_fragment>|\/\*@map_fragment\*\//, m0 => m0 + '\nMACRO;'); assert.match(out, /MACRO;/, '사진 땅에서 땅 결이 사라진다');
 });
+test('바람 (문서 230 §13): 돌풍이 들판을 건너간다 · 높이² 휨 · 날리는 잎은 그리기 1 번 · 상자 감싸기', async () => {
+  const { WIND_PARS, windify } = await import('../js/mmo/wind.js'); const { windLeaves } = await import('../js/mmo/wind-leaves.js');
+  assert.match(WIND_PARS, /float windGust\(vec2 p\)/); assert.match(WIND_PARS, /- uWind \* 0\.55/, '돌풍이 움직인다'); assert.match(WIND_PARS, /bend = h \* h/, '높이² 휨 — 줄기와 갓이 같은 식');
+  const m = windify(new THREE.MeshStandardMaterial(), { flut: 0 }); assert.equal(m.customProgramCacheKey(), 'wind2-0.00'); assert.equal(windify(m), m, '두 번 붙지 않는다');
+  const L = windLeaves(THREE, { n: 50 }); assert.ok(L.mesh.isInstancedMesh && L.mesh.count === 50 && L.mesh.frustumCulled === false && L.mesh.userData.noCam);
+  const sh = { uniforms: {}, vertexShader: THREE.ShaderLib.lambert.vertexShader, fragmentShader: THREE.ShaderLib.lambert.fragmentShader }; L.mesh.material.onBeforeCompile(sh);
+  assert.ok(!sh.vertexShader.includes('#include <project_vertex>'), '자리를 셰이더가 정한다'); assert.match(sh.vertexShader, /mod\(base \+ drift - lo, uBox\)/, '상자 감싸기'); assert.match(sh.vertexShader, /gl_InstanceID/);
+  assert.match(sh.fragmentShader, /discard/, '잎 꼴'); assert.ok(sh.uniforms.uWind && sh.uniforms.uCam);
+  const W3D = fs.readFileSync('world3d.html', 'utf8'); assert.match(W3D, /LEAVES\.follow\(cam\.position, LEAF_F\)/); assert.match(W3D, /q\.get\('leaves'\) !== '0'/);
+});

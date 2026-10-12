@@ -143,6 +143,7 @@ import { SKY_VERT, SKY_FRAG, ridgeOf } from './js/mmo/sky-shader.js';
 import { createBench } from './js/mmo/bench.js';
 import { REGIONS } from './js/mmo/regions.js';
 import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
+import { windLeaves } from './js/mmo/wind-leaves.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
@@ -247,6 +248,7 @@ const CINE = (env.kind || Z.kind || meta.kind) === 'field' && q.get('cine') !== 
 const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4, cine: CINE ? {} : null });
 /* 높이 안개 (문서 230 §6): 땅 · 골짜기에 깔리는 안개 — 재질이 컴파일되기 전(첫 그리기 전)에 공용 안개 조각을 고친다. 산 · 호수 지역은 짙게. ?hf=0 끔 · ?hfk= · ?hfh= 조정 */
 const HF_ZONE = { namsan: .018, gyeryong: .02, chuncheon: .02, jeju: .015, seogwipo: .015, sokcho: .015, gyeongpo: .015, goheung: .015 };
+const LEAF_F = new THREE.Vector3(), LEAVES = CINE && q.get('leaves') !== '0' ? windLeaves(THREE, { n: MOBILE ? 60 : 90 }) : null; if (LEAVES) scene.add(LEAVES.mesh);   /* 바람에 날리는 잎 (문서 230 §13) */
 if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .012), h: +(q.get('hfh') || 5) });
 const CS = { col: new THREE.Color() };
 function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
@@ -755,6 +757,7 @@ function tick() { perf.begin();
   if (LIFE) LIFE.tick(dt, lampK, cam.position); watchLooks(dt);
   if (BENCH && BENCH.view && BENCH.view.walk) { const wk = BENCH.view.walk, s = root.position.x * Math.cos(wk.a) - root.position.z * Math.sin(wk.a); if (s < wk.s1) { const q2 = { x: root.position.x + wk.dx * 4.8 * dt, z: root.position.z + wk.dz * 4.8 * dt }; collide(q2, 0.5); root.position.set(q2.x, 0, q2.z); me.yaw = BENCH.view.yaw; root.rotation.y = me.yaw; } }
   WIND.value += dt;   /* 나무 바람 (문서 220) */
+  if (LEAVES) { cam.getWorldDirection(LEAF_F); LEAVES.follow(cam.position, LEAF_F); }
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; DAYC.update(net ? sclock.now() : Date.now()); }   /* 시간대 — 0.5초마다 (문서 217) */

@@ -40,7 +40,11 @@ test('3D 나무: 장면 난수를 2D 와 똑같이 쓴다(뒤 자리·막이가 
   assert.ok(canopy.length >= 2, '잎 카드 갓이 없다'); assert.ok(canopy.every(o => o.geometry.index.count / 6 >= 30), '카드가 30 장 안 된다');
   for (const o of canopy) { const N = o.geometry.attributes.normal; let diff = 0; for (let i = 0; i < N.count; i += 4) if (Math.abs(N.getX(i) - N.getX(i + 2)) + Math.abs(N.getZ(i) - N.getZ(i + 2)) > .05) diff++; assert.ok(diff > N.count / 8, '노멀이 판마다 평평하다 — 덩어리 음영이 안 난다'); }
   assert.ok(b.ctx.scene.children.some(o => o.isInstancedMesh && o.material.map && !o.material.alphaTest), '나무껍질 무늬');
-  assert.ok(canopy.every(o => o.material.customProgramCacheKey() === 'wind'), '바람이 안 붙었다'); assert.ok(canopy.some(o => o.instanceColor), '그루마다 색');
+  assert.ok(canopy.every(o => o.material.customProgramCacheKey() === 'wind2-1.00'), '바람(잎 떨림)이 안 붙었다');
+  /* 바람 (문서 230 §13): 줄기도 같은 휨(떨림 0) — 갓만 밀리면 줄기에서 미끄러진다 · 세계 공간에서 project_vertex 를 바꾼다 */
+  const trunk = b.ctx.scene.children.find(o => o.isInstancedMesh && o.material.map && !o.material.alphaTest); assert.equal(trunk.material.customProgramCacheKey(), 'wind2-0.00', '줄기 바람');
+  const sh = { uniforms: {}, vertexShader: THREE.ShaderLib.standard.vertexShader }; canopy[0].material.onBeforeCompile(sh);
+  assert.ok(!sh.vertexShader.includes('#include <project_vertex>') && /mvPosition\.xyz \+= windDisp\(\(modelMatrix \* mvPosition\)\.xyz, WIND_FLUT\)/.test(sh.vertexShader), '세계 공간 바람'); assert.ok(sh.uniforms.uWind, 'uWind'); assert.ok(canopy.some(o => o.instanceColor), '그루마다 색');
 });
 
 test('3D 경계: 방호벽·가림막·모래주머니·잔해가 섞인다 · 막이를 안 넣는다 · 빨간 줄 테이프 없음', () => {
