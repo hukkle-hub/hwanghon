@@ -35,8 +35,11 @@ test('3D 나무: 장면 난수를 2D 와 똑같이 쓴다(뒤 자리·막이가 
   const pts = [...Array(40)].map((_, i) => [i * 3, (i % 5) * 4]);
   const count = v3 => { let n = 0; const s = L.rng(5); L.setView3d(v3); try { const ctx = mkCtx(() => { n++; return s(); }); L.trees(ctx, pts, { pine: 0.3, dead: 0.1 }); return { n, ctx }; } finally { L.setView3d(false); } };
   const a = count(false), b = count(true); assert.equal(b.n, a.n, '3D 나무가 장면 난수를 더/덜 쓴다');
-  const canopy = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.flatShading && o.count > 0);
-  assert.ok(canopy.some(o => o.geometry.attributes.position.count > 200), '수관이 다면체 하나');
+  /* 잎 카드 나무 (문서 230 §7): 알파 잘라내기 판 30 장 넘게 · 노멀이 갓 바깥으로 휘어(판마다 같은 값이 아님) · 나무껍질 무늬 */
+  const canopy = b.ctx.scene.children.filter(o => o.isInstancedMesh && o.material.alphaTest > 0 && o.material.map && o.count > 0);
+  assert.ok(canopy.length >= 2, '잎 카드 갓이 없다'); assert.ok(canopy.every(o => o.geometry.index.count / 6 >= 30), '카드가 30 장 안 된다');
+  for (const o of canopy) { const N = o.geometry.attributes.normal; let diff = 0; for (let i = 0; i < N.count; i += 4) if (Math.abs(N.getX(i) - N.getX(i + 2)) + Math.abs(N.getZ(i) - N.getZ(i + 2)) > .05) diff++; assert.ok(diff > N.count / 8, '노멀이 판마다 평평하다 — 덩어리 음영이 안 난다'); }
+  assert.ok(b.ctx.scene.children.some(o => o.isInstancedMesh && o.material.map && !o.material.alphaTest), '나무껍질 무늬');
   assert.ok(canopy.every(o => o.material.customProgramCacheKey() === 'wind'), '바람이 안 붙었다'); assert.ok(canopy.some(o => o.instanceColor), '그루마다 색');
 });
 

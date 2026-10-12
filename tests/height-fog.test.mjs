@@ -27,7 +27,7 @@ test('three 안개 조각에 꽂힌다 · 한 번만 · 사용자 셰이더도 �
 });
 test('3D 필드만 · 지역별 짙기 · ?hf=0 으로 끈다 · 첫 그리기 전에', () => {
   const W = fs.readFileSync('world3d.html', 'utf8'), i = W.indexOf('installHeightFog(THREE, {'), r = W.indexOf('requestAnimationFrame(tick)');
-  assert.match(W, /if \(CINE && q\.get\('hf'\) !== '0'\) installHeightFog\(THREE, \{ k: \+\(q\.get\('hfk'\) \|\| HF_ZONE\[ZONE\] \|\| \.009\)/);
+  assert.match(W, /if \(CINE && q\.get\('hf'\) !== '0'\) installHeightFog\(THREE, \{ k: \+\(q\.get\('hfk'\) \|\| HF_ZONE\[ZONE\] \|\| \.012\)/);
   assert.ok(i > 0 && i < r, '재질이 컴파일되기 전');
   for (const f of ['js/game3d.js', 'mmo.html']) assert.doesNotMatch(fs.readFileSync(f, 'utf8'), /installHeightFog/, f + ' 은 그대로');
 });

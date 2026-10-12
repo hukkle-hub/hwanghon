@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>나무 시트</title>
+<!-- 나무 검수 (문서 230 §7): 실제 env-lib trees() 로 숲 한 줌 — ?light=day|dusk&tc=0(옛 다면체)&cell=520. window.READY · window.INFO={tris, calls} -->
+<style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { setView3d, trees, TREE_CARDS, rng, lumpy, gritTex } from '../../js/mmo/env-lib.js';
+import { rockGeo, rockMat } from '../../js/mmo/rock-kit.js';
+const Q = new URLSearchParams(location.search), CELL = +(Q.get('cell') || 520), dusk = Q.get('light') === 'dusk';
+setView3d(true); TREE_CARDS.on = Q.get('tc') !== '0';
+const cv = document.getElementById('c'); cv.width = CELL * 2; cv.height = CELL;
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(cv.width, cv.height, false); r.shadowMap.enabled = true;
+r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2; r.setScissorTest(true); r.autoClear = false;
+const s = new T.Scene(); s.background = new T.Color(dusk ? 0x5a3040 : 0x9aa6b4); s.fog = new T.Fog(s.background, 40, 140); s.add(new T.HemisphereLight(dusk ? 0xd8a0a0 : 0xdde6ff, 0x302820, dusk ? .9 : 1.4));
+const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.8 : 2.4); k.position.set(dusk ? -20 : 10, dusk ? 8 : 22, dusk ? 6 : 14); k.castShadow = true; k.shadow.mapSize.set(2048, 2048); Object.assign(k.shadow.camera, { left: -25, right: 25, top: 25, bottom: -25, far: 90 }); s.add(k);
+const fl = new T.Mesh(new T.PlaneGeometry(200, 200).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a30, roughness: .95 })); fl.receiveShadow = true; s.add(fl);
+const R = rng(77), pts = []; for (let i = 0; i < 28; i++) pts.push([(R() - .5) * 36, (R() - .5) * 30 - 6]);
+trees({ THREE: T, scene: s, R, blockers: [] }, pts, { pine: .35 });
+/* 바위 (문서 230 §8): 앞줄에 크기 섞어 — tc=0 이면 옛 다면체 */
+{ const g = TREE_CARDS.on ? rockGeo(T, 11) : lumpy(new T.IcosahedronGeometry(1, 1), 0.22, 11), cols = [0x5a4a3e, 0x6a5a4a, 0x4a3e36];
+  [[-5, 14, 1.4], [-2, 16, .7], [1.5, 15, 1.1], [4, 17, .5], [6.5, 13, 1.8], [-8, 11, 1.0]].forEach(([x, z, k], i) => { const m = new T.Mesh(g, TREE_CARDS.on ? rockMat(T, cols[i % 3], .6) : new T.MeshStandardMaterial({ color: cols[i % 3], roughness: .95, flatShading: true, map: gritTex(T) }));
+    m.position.set(x, k * .1, z); m.scale.set(k * 1.1, k * .8, k); m.rotation.y = i * 1.3; m.castShadow = m.receiveShadow = true; s.add(m); }); }
+const cam = new T.PerspectiveCamera(42, 1, .1, 300);
+[[[0, 2, 26], [0, 4, 0]], [[-1, 2.4, 21], [0, .6, 14]]].forEach(([p, at], i) => { cam.position.set(...p); cam.lookAt(...at); r.setViewport(i * CELL, 0, CELL, CELL); r.setScissor(i * CELL, 0, CELL, CELL); r.clear(); r.render(s, cam); });
+let tris = 0; s.traverse(m => { if (m.isInstancedMesh) { const g = m.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3 * m.count; } });
+window.INFO = { tris: Math.round(tris), calls: r.info.render.calls }; window.READY = 1;
+</script>

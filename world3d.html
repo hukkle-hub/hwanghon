@@ -146,7 +146,7 @@ import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
 import { createCollide } from './js/mmo/field-collide.js';
-import { setView3d, setInterior, setVsignTheme, VSIGN, STREETLAMP, STREET, APT, ROOF, FROZEN, BRIDGE } from './js/mmo/env-lib.js';
+import { setView3d, setInterior, setVsignTheme, VSIGN, STREETLAMP, STREET, APT, ROOF, FROZEN, BRIDGE, TREE_CARDS } from './js/mmo/env-lib.js';
 import { PUDDLE } from './js/mmo/puddle-shader.js';
 import { addLightCones } from './js/mmo/light-cones.js';
 import { createEnvReflect } from './js/mmo/env-reflect.js';
@@ -193,7 +193,7 @@ await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간�
 const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
-setView3d(true); setInterior(q.get('im') !== '0'); setVsignTheme(ZONE); PUDDLE.on = q.get('wet') !== '0';   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
+setView3d(true); TREE_CARDS.on = q.get('tc') !== '0'; setInterior(q.get('im') !== '0'); setVsignTheme(ZONE); PUDDLE.on = q.get('wet') !== '0';   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
 const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
 const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 발밑 그늘 — 차·소품이 바닥에 붙어 보이게 (문서 229 §2, ?cs=0 으로 끔) */ window.__CSH = CSH && CSH.count;
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
@@ -246,8 +246,8 @@ const fillL = new THREE.DirectionalLight(0xffe8d8, 0.9); scene.add(fillL.transla
 const CINE = (env.kind || Z.kind || meta.kind) === 'field' && q.get('cine') !== '0';   /* 영화 같은 대기 — 빛줄기 · 해 둘레 번짐 · 색보정 (문서 230, 엘든 링 림그레이브 참고) */
 const bloom = createBloom(renderer, { div: MOBILE ? 4 : 2, threshold: 0.72, soft: 0.28, amount: MOBILE ? 0.7 : 0.8, samples: 4, cine: CINE ? {} : null });
 /* 높이 안개 (문서 230 §6): 땅 · 골짜기에 깔리는 안개 — 재질이 컴파일되기 전(첫 그리기 전)에 공용 안개 조각을 고친다. 산 · 호수 지역은 짙게. ?hf=0 끔 · ?hfk= · ?hfh= 조정 */
-const HF_ZONE = { namsan: .014, gyeryong: .016, chuncheon: .016, jeju: .012, seogwipo: .012, sokcho: .012, gyeongpo: .012, goheung: .012 };
-if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .009), h: +(q.get('hfh') || 5) });
+const HF_ZONE = { namsan: .018, gyeryong: .02, chuncheon: .02, jeju: .015, seogwipo: .015, sokcho: .015, gyeongpo: .015, goheung: .015 };
+if (CINE && q.get('hf') !== '0') installHeightFog(THREE, { k: +(q.get('hfk') || HF_ZONE[ZONE] || .012), h: +(q.get('hfh') || 5) });
 const CS = { col: new THREE.Color() };
 function cineSunTick() { const r = cineSun(THREE, cam, sunDir, STAGE.dim, CS);   /* 해 자리 · 세기 (js/mmo/cine-sun.js) */
   CS.col.copy(sun ? sun.color : CS.col.setRGB(1, .8, .6)).lerp(scene.fog ? scene.fog.color : CS.col, .25);

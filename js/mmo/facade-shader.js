@@ -97,6 +97,17 @@ float fGlass = 0.0; vec3 fEmit = vec3(0.0);
     float cover = (g1.x - g0.x) * (g1.y - g0.y) * step(3.4, y);
     vec3 avgD = mix(wallD, vec3(0.05, 0.05, 0.06), cover), avgEmit = (uSkyRefl * 0.12 + vec3(1.0, 0.85, 0.6) * (inh > 0.5 ? 0.04 : 0.002) * (0.8 + 0.37 * uLampK)) * cover;
     diffuseColor.rgb = mix(avgD, diffuseColor.rgb, aa); fEmit = mix(avgEmit, fEmit, aa); fGlass = mix(cover, fGlass, aa);
+#ifndef NO_WEATHER
+    /* 낡음 (문서 230 §9): 빗물 자국(창턱 · 층 띠에서 아래로 흐른 검은 줄) · 밑동 흙때와 이끼 · 깨진 창 위 그을음. 세계 좌표만 — 합쳐도 그대로 */
+    { float sx = s * 1.1, cx = fract(sx), col = fh1(vec2(floor(sx), 3.0));
+      float prof = sin(cx * 3.14159) * (0.7 + 0.3 * sin(cx * 9.4 + col * 6.0));                                  /* 줄 하나의 가로 단면 — 가운데 짙고 가장자리로 번진다 */
+      float drip = smoothstep(0.35, 0.9, col) * prof * (1.0 - smoothstep(0.0, 0.9, fract(1.0 - f.y + 0.17)));     /* 창턱 아래로 흘러내려 옅어진다 (폭 ~0.9 m) */
+      float wash = (1.0 - fGlass) * drip * 0.38;
+      float base = 1.0 - smoothstep(0.0, 1.6, y), moss = (1.0 - smoothstep(0.0, 0.55, y)) * smoothstep(0.4, 0.75, fh1(floor(vec2(s * 1.7, 1.0))));
+      vec2 bid = rid - vec2(0.0, 1.0); float soot = step(0.9, fh1(bid + 11.0)) * step(g0.x, f.x) * step(f.x, g1.x) * (1.0 - smoothstep(0.0, 0.55, f.y)) * (1.0 - fGlass) * step(7.0, y);   /* 바로 아래 창이 깨졌으면 그 위 벽이 그을린다 */
+      diffuseColor.rgb *= (1.0 - wash) * (1.0 - base * 0.38) * (1.0 - soot * 0.7);
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.14, 0.17, 0.08), moss * 0.55 * (1.0 - fGlass)); }
+#endif
   } }`;
 
 export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
@@ -111,7 +122,7 @@ export function patchFacadeMaterial(THREE, m, { curtain = false } = {}) {
       .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.18, fGlass);')
       .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, fGlass);')
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += fEmit;'); };
-  m.customProgramCacheKey = () => curtain ? 'facade-im-curtain' : 'facade-im'; m.needsUpdate = true; return m;
+  m.customProgramCacheKey = () => (curtain ? 'facade-im-curtain' : 'facade-im') + (m.defines && 'NO_WEATHER' in m.defines ? '-nw' : ''); m.needsUpdate = true; return m;
 }
 
 /* 벽 텍스처(창 없이 얼룩·빗물 자국만) + 가짜 실내 창 재질 넷 — env-osm(강남)·env-lib(다른 도시) 가 같이 쓴다.

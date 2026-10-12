@@ -6,6 +6,8 @@ import { patchPuddleMaterial, PUDDLE } from './puddle-shader.js';
 import { mergeGeometries } from '../../vendor/three/BufferGeometryUtils.js';
 import { buildCar } from './car-kit.js';
 import { buildGasStation, GAS } from './gas-station.js';
+import { treeTex, leafCrownGeo, pineCardGeo } from './tree-kit.js';
+import { rockGeo, rockMat } from './rock-kit.js';
 import { SKY_REFL } from './sky-shader.js';
 import { interiorFacadeMats, interiorCurtainMat, interiorBrickMats, pickFacade, inhabited } from './facade-shader.js';   /* 3D 가짜 실내 창 (문서 229) — facade-shader 는 아무것도 import 하지 않는다 */
 export const PITCH = 55 * Math.PI / 180;
@@ -568,9 +570,13 @@ export function street(ctx, roadsW, built, o = {}) { const { THREE, scene, ST, w
 
 /* ---------- 나무: 인스턴스로. 걷는 띠 안은 드문드문(갓이 인물을 가리면 안 된다) ---------- */
 export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = pts.length; if (!n) return 0;
-  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = VIEW3D ? crownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = VIEW3D ? pineGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
-  const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
-  const trunks = new THREE.InstancedMesh(trunkG, trunkM, n), canopy = leafMs.map(m => new THREE.InstancedMesh(canopyG, m, n)), pines = new THREE.InstancedMesh(pineG, leafMs[1], n);
+  const CARDS = VIEW3D && o.cards !== false && TREE_CARDS.on, TX = CARDS ? treeTex(THREE, canvasTex) : null;   /* 3D: 잎 카드 나무 (tree-kit, 문서 230 §7) */
+  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : VIEW3D ? crownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : VIEW3D ? pineGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
+  const trunkM = new THREE.MeshStandardMaterial({ color: CARDS ? 0x5a4a3e : 0x2a221c, roughness: 1, map: CARDS ? TX.bark : null });
+  const leafCol = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]), leafMs = leafCol.map(c => CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: .85, map: TX.leaf, alphaTest: .45, side: THREE.DoubleSide })
+    : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  if (CARDS) leafMs.push(new THREE.MeshStandardMaterial({ color: new THREE.Color(leafCol[1]).multiplyScalar(1.9), roughness: .85, map: TX.needle, alphaTest: .45, side: THREE.DoubleSide }));   /* 솔잎 재질(맨 끝) */
+  const pineM = CARDS ? leafMs.pop() : leafMs[1], trunks = new THREE.InstancedMesh(trunkG, trunkM, n), canopy = leafMs.map(m => new THREE.InstancedMesh(canopyG, m, n)), pines = new THREE.InstancedMesh(pineG, pineM, n);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z), cnt = leafMs.map(() => 0); let np = 0, nd = 0;
   pts.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(V(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), V(k, k, k)); trunks.setMatrixAt(i, mtx);
     if (o.dead && R() < o.dead) { nd++; }   /* 죽은 나무 — 갓 없이 줄기만 */
@@ -588,6 +594,7 @@ function pineGeo(THREE) { const parts = [[1.7, 2.2, -1.2], [1.3, 1.9, 0.1], [0.8
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
 function bushGeo(THREE) { const parts = [[0, 0.05, 0, 0.68], [0.58, -0.1, 0.18, 0.52], [-0.45, -0.08, -0.38, 0.55]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 70 + i);   /* 덩어리 셋 × 20 면 — 세분 1 × 다섯(400 면)은 덤불 수천 그루라 삼각형이 2.5 배가 됐다 */ g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
+export const TREE_CARDS = { on: true };   /* world3d ?tc=0 → 옛 다면체 나무 · 바위 (문서 230 §7·§8) */
 export const WIND = { value: 0 };   /* world3d 가 매 프레임 올린다 */
 function windify(m) { if (m.userData.wind) return; m.userData.wind = true;
   m.onBeforeCompile = sh => { sh.uniforms.uWind = WIND; sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform float uWind;')
@@ -799,7 +806,7 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   const tint = (from, lo, span) => { const c = new THREE.Color(); for (const m of made.slice(from)) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.count, 7); m.setColorAt(i, c.setScalar(lo + u * span)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; } };   /* 3D: 개체마다 밝기를 조금씩 (해시 — 장면 난수 안 씀) */
   const q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z);
   /* 2) 바위 — 뭉친 곳에 많이. 큰 것만 막는다 */
-  const rockG = VIEW3D ? lumpy(new THREE.IcosahedronGeometry(1, 1), 0.22, 11) : new THREE.DodecahedronGeometry(1, 0), rockM = (o.rockColors || (o.urban ? [0x6a6662, 0x5a5856, 0x4c4a48] : [0x5a4a3e, 0x6a5a4a, 0x4a3e36])).map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, flatShading: true, map: VIEW3D ? gritTex(THREE) : null }));
+  const RK = VIEW3D && TREE_CARDS.on, rockG = RK ? rockGeo(THREE, 11) : VIEW3D ? lumpy(new THREE.IcosahedronGeometry(1, 1), 0.22, 11) : new THREE.DodecahedronGeometry(1, 0), rockM = (o.rockColors || (o.urban ? [0x6a6662, 0x5a5856, 0x4c4a48] : [0x5a4a3e, 0x6a5a4a, 0x4a3e36])).map(c => RK ? rockMat(THREE, c, o.urban ? .15 : .6) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.95, flatShading: true, map: VIEW3D ? gritTex(THREE) : null }));
   const rocks = pick(Math.round(A / (o.rockEvery || 160))).filter(p => R() < 0.25 + N(p[0], p[1]) * 1.2);
   const rock0 = made.length; stat.rocks = inst(rockG, rockM, rocks, (p, mtx) => { const k = 0.35 + Math.pow(R(), 2.2) * 1.5; mtx.compose(V(p[0], k * (VIEW3D ? 0.1 : 0.25), p[1]),   /* 3D: 땅에 반쯤 묻는다 — 얹힌 돌은 소품처럼 보였다 */ q4.setFromEuler(e.set(R() * 0.6, R() * 6, R() * 0.6)), V(k * (0.8 + R() * 0.6), k * (0.45 + R() * 0.35), k * (0.8 + R() * 0.6)));
     if (k > 0.9) ctx.blockers.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), hw: k * 0.8, hd: k * 0.8, rot: 0 }); });

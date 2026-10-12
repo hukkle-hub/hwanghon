@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>건물 벽 시트</title>
+<!-- 건물 낡음 검수 (문서 230 §9): 실제 가짜 실내 창 재질(facade-shader)로 건물 넷 — ?nw=1 낡음 끔 · ?light=day|dusk. window.READY -->
+<style>body{margin:0;background:#12161a}canvas{display:block}</style><canvas id="c"></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import { interiorFacadeMats, interiorBrickMats } from '../../js/mmo/facade-shader.js';
+const Q = new URLSearchParams(location.search), dusk = Q.get('light') === 'dusk', W = 1200, H = 600;
+const cv = document.getElementById('c'); cv.width = W; cv.height = H;
+const r = new T.WebGLRenderer({ canvas: cv, antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W, H, false); r.shadowMap.enabled = true;
+r.outputColorSpace = T.SRGBColorSpace; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.2;
+const s = new T.Scene(); s.background = new T.Color(dusk ? 0x5a3040 : 0x9aa6b4); s.add(new T.HemisphereLight(dusk ? 0xd8a0a0 : 0xdde6ff, 0x302820, dusk ? 1.0 : 1.5));
+const k = new T.DirectionalLight(dusk ? 0xffa060 : 0xfff0dc, dusk ? 2.6 : 2.4); k.position.set(dusk ? -30 : 20, dusk ? 12 : 40, 30); s.add(k);
+const fl = new T.Mesh(new T.PlaneGeometry(300, 300).rotateX(-Math.PI / 2), new T.MeshStandardMaterial({ color: 0x3a3a38, roughness: .95 })); s.add(fl);
+const mats = [...interiorFacadeMats(T), ...interiorBrickMats(T)]; if (Q.get('nw') === '1') for (const m of mats) { m.defines = { ...(m.defines || {}), NO_WEATHER: '' }; m.needsUpdate = true; }
+[[-26, 14, 16, 0], [-6, 30, 18, 1], [14, 46, 16, 2], [32, 12, 14, 4]].forEach(([x, h, w, mi]) => { const b = new T.Mesh(new T.BoxGeometry(w, h, 14), mats[mi]); b.position.set(x, h / 2, 0); s.add(b); });
+const cam = new T.PerspectiveCamera(50, W / H, .5, 500); cam.position.set(4, 6, 44); cam.lookAt(4, 14, 0); r.render(s, cam); window.READY = 1;
+</script>

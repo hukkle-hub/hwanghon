@@ -9,6 +9,7 @@
    build(THREE, scene, osm) → map.json 재료 (bake-map.html) */
 import { frameOf } from './env-osm.js';
 import * as L from './env-lib.js';
+import { treeTex, leafCrownGeo, pineCardGeo } from './tree-kit.js';   /* 3D 잎 카드 나무 (문서 230 §7) */
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -147,8 +148,11 @@ export function build(THREE, scene, osm) {
   const tL = new THREE.PointLight(0xff7a5a, 14, 30, 1.3); tL.position.set(tower[0], 10, tower[1] + 6); scene.add(tL); lights.push({ x: tower[0], y: 10, z: tower[1] + 6, color: '#ff7a5a', intensity: 10, distance: 26 });
 
   /* ---------- 숲: 걷는 띠 안·밖 모두. 길·건물·광장은 비운다 ---------- */
-  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, 6), canopyG = new THREE.IcosahedronGeometry(1.9, 0), pineG = new THREE.ConeGeometry(1.6, 4.6, 7);
-  const trunkM = new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const CARDS = L.isView3d() && L.TREE_CARDS.on, TX = CARDS ? treeTex(THREE, L.canvasTex) : null;   /* 3D: 잎 카드 갓 · 솔잎 · 나무껍질 — 장면 난수 R 쓰임은 그대로 */
+  const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
+  const trunkM = new THREE.MeshStandardMaterial({ color: CARDS ? 0x5a4a3e : 0x2a221c, roughness: 1, map: CARDS ? TX.bark : null }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => CARDS
+    ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: 0.85, map: TX.leaf, alphaTest: 0.45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const needleM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2c3426).multiplyScalar(1.9), roughness: 0.85, map: TX.needle, alphaTest: 0.45, side: THREE.DoubleSide }) : leafMs[2];
   const grove = L.noise2(L.rng(20261018), 55);
   /* 문·출발점·보스 자리 (아래에서 쓴다 — 나무가 피하도록 먼저 정한다) */
   const gateS0 = FROM(walk.s0 + 3, 0), spawnP = FROM(walk.s0 + 9, -3);
@@ -164,7 +168,7 @@ export function build(THREE, scene, osm) {
     /* 걷는 띠 안은 드문드문 — 나무 갓(4.7 m)이 인물을 가리면 안 된다. 띠 밖은 빽빽한 숲 벽이 곧 «못 가는 곳» 이다 */
     if (shades(p)) continue;
     if (inBand(p, 1) && (R() > 0.24 * Math.min(2.4, Math.max(0, (grove(p[0], p[1]) - 0.45) * 7)) || !spaced(p))) continue; trees.push(p); }   /* 띠 안은 숲과 빈터로 뭉친다 */
-  const nT = trees.length, trunks = new THREE.InstancedMesh(trunkG, trunkM, nT), canopy = leafMs.map(m => new THREE.InstancedMesh(R() < 2 ? canopyG : pineG, m, nT)), pines = new THREE.InstancedMesh(pineG, leafMs[2], nT);
+  const nT = trees.length, trunks = new THREE.InstancedMesh(trunkG, trunkM, nT), canopy = leafMs.map(m => new THREE.InstancedMesh(R() < 2 ? canopyG : pineG, m, nT)), pines = new THREE.InstancedMesh(pineG, needleM, nT);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), cnt = [0, 0, 0, 0]; let np = 0;
   trees.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(new THREE.Vector3(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), new THREE.Vector3(k, k, k)); trunks.setMatrixAt(i, mtx);
     if (R() < 0.3) { mtx.compose(new THREE.Vector3(p[0], 4.6 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), new THREE.Vector3(k, k, k)); pines.setMatrixAt(np++, mtx); }

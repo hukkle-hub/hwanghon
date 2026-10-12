@@ -7,7 +7,7 @@
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import fs from 'node:fs';
 const A = Object.fromEntries(process.argv.slice(2).map(a => a.split('=')));
-const OUT = A.out || 'docs/gpt/cine', ZONES = (A.zones || 'namsan,gangnam').split(','), TOD = A.tod || 'dusk', PORT = A.port || 8777;
+const OUT = A.out || 'docs/gpt/cine', ZONES = (A.zones || 'namsan,gangnam').split(','), TOD = A.tod || 'dusk', PORT = A.port || 8777, QX = A.q ? '&' + A.q : '', ONLY = A.shots ? A.shots.split(',') : null;   /* q=hf=0 처럼 주소 덧붙이기 · shots=establishing 만 */
 /* 해를 등지고(역광) 낮게 · 옆으로 비껴 · 내려다보며 — 영화에서 흔한 세 구도 */
 export const SHOTS = [
   { id: 'backlit-low', off: 0, back: 4.2, up: 1.1, look: 6, note: 'low angle, hero silhouetted against the setting sun, light shafts through debris' },
@@ -19,15 +19,15 @@ fs.mkdirSync(OUT, { recursive: true });
 const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }), list = [];
 for (const z of ZONES) {
   const p = await b.newPage({ viewport: { width: 1920, height: 1080 } }); p.on('pageerror', e => console.log('ERR', z, e.message));
-  await p.goto(`http://127.0.0.1:${PORT}/world3d.html?zone=${z}&offline=1&tod=${TOD}`);
-  await p.waitForFunction(() => window.__W3D && window.__W3D.frames > 20, null, { timeout: 300000 });
-  for (const s of SHOTS) {
+  await p.goto(`http://127.0.0.1:${PORT}/world3d.html?zone=${z}&offline=1&tod=${TOD}${QX}`);
+  await p.waitForFunction(() => window.__W3D && window.__W3D.frames > 20, null, { timeout: 1200000 });
+  for (const s of SHOTS.filter(s => !ONLY || ONLY.includes(s.id))) {
     const f0 = await p.evaluate(s => { const W = window.__W3D, f = new W.cam.position.constructor(); W.cam.getWorldDirection(f);
       window.__H = window.__H || W.cam.position.clone().addScaledVector(f, 6); const h = window.__H, a = Math.atan2(W.sunDir.x, W.sunDir.z) + s.off;
       document.getElementById('hud').style.visibility = 'hidden'; document.querySelectorAll('.tag,#regionCard,#areaName,#mini,#toast,#hint').forEach(t => t.style.visibility = 'hidden');
       W.scene.traverse(o => { if (o.geometry && o.geometry.type === 'RingGeometry') o.visible = false; });   /* 지역 문 고리 · 예고 고리 — 실사화에 남으면 이상한 물체가 된다 */
       W.view([h.x - Math.sin(a) * s.back, h.y + s.up, h.z - Math.cos(a) * s.back], [h.x + Math.sin(a) * 40, h.y + s.look, h.z + Math.cos(a) * 40]); return W.frames; }, s);
-    await p.waitForFunction(f => window.__W3D.frames > f + 12, f0, { timeout: 300000 });   /* 헤드리스는 초당 1~2 프레임 — 벽시계 말고 프레임을 센다 */
+    await p.waitForFunction(f => window.__W3D.frames > f + 12, f0, { timeout: 1200000 });   /* 헤드리스는 초당 1~2 프레임 — 벽시계 말고 프레임을 센다 */
     const file = `${z}-${s.id}.png`; await p.screenshot({ path: `${OUT}/${file}` });
     list.push({ file, zone: z, tod: TOD, shot: s.id, prompt: `${STYLE}; ${s.note}` }); console.log(file); }
   await p.close(); }
