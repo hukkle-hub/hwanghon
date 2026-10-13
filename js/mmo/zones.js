@@ -114,9 +114,9 @@ export const ZONES = {
     bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
     indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 2.1, fogDist: [9, 46], waterGrade: [[24, 0.15], [120, 0.5], [200, 0.9], [260, 1.15], [330, 1.45]] },   /* 3D: 입구 발목 → 허리 → 가슴 → 차수문 앞 어깨 (L7428~) · 2D 는 water 1.2 한 높이 */   /* 3D 에서 1.4 는 헤드램프를 켜도 검었다 */
       rooms: [
-        { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },
+        { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75, cable: 80 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },   /* 3D: 케이블 80 m 생명줄 */
         { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 12, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 }, { k: 'wrecks', n: 12, wreck: 0.7 } ] },   /* 3D: 물에 잠긴 차들 */
-        { id: 'flood', s: [260, 360], t: [-8, 8], lightStep: 14, props: [ { k: 'gate', u: 0.9 }, { k: 'debris', n: 8 } ] },
+        { id: 'flood', s: [260, 360], t: [-8, 8], lightStep: 14, props: [ { k: 'floodgates', gates: [ { id: 'inner', name: '내측', u: 0.48, pins: 'mechIn' }, { id: 'outer', name: '외측', u: 0.9, pins: 'mechOut' } ] }, { k: 'debris', n: 8 } ] },   /* 3D: 내측(s 308)·외측(s 350) 차수문 — 기계실 고정핀 둘을 자르면 떨어진다 (문서 233 #4) */
         { id: 'mechIn', s: [300, 316], t: [8, 20], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 }, { k: 'sign', text: '내측 기계실', u: 0.5, color: '#d83a2a', w: 3 } ] },
         { id: 'mechOut', s: [340, 356], t: [-20, -8], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 } ] } ] } },
 

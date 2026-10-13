@@ -51,3 +51,9 @@ export function knockK(band, slip, braced) { return (slip && band.id !== 'dry' ?
 
 export function envSummary(band, wetT = 0, braced = false) { if (braced) return (band.id === 'dry' ? '' : band.name + '까지 물 · ') + '매대 다리에 발 — 버틴다 (밀려남 ⅓)'; if (band.id === 'dry') return wetT > 0 ? '젖은 옷 — 이동 ' + Math.round(wetK(wetT) * 100) + '% (' + Math.ceil(wetT) + '초)' : ''; if (band.id === 'dry') return ''; const parts = [band.name + '까지 물', '이동 ' + Math.round(band.move * 100) + '%'];
   if (band.dodge < 1) parts.push('회피 ' + Math.round(band.dodge * 100) + '%'); if (band.atk) parts.push('공격 +' + band.atk + 'ms'); if (band.hear >= 0.35) parts.push('소리 먹먹'); if (band.float >= 0.5) parts.push('뛰면 뜬다 — 살살 밀어라'); return parts.join(' · '); }
+
+/* 한강 터널 장치 (문서 233 #4)
+   윈치 케이블 — «터널 입구에서 오정길이 기둥에 윈치를 고정» L7410 · «케이블을 허리에 묶었다» L7430 · «윈치! 당겨!» L7512: 입구 윈치에서 내 허리까지 줄. reach 안에서 «당겨» 를 누르면 dur 초 동안 speed 로 입구 쪽으로 끌려간다(공격 못 함)
+   차수문 — «고정핀 두 개 … 핀 두 개가 동시에 잘려 나갔고, 평형추가 낙하했다 … 내측 차수문이 떨어졌다» L8019~L8031 · 외측 L8101~L8103: 기계실마다 핀 둘, 둘 다 자르면 그 문이 drop 초에 떨어져 길을 막는다. 둘 다 떨어지고 놈이 그 사이면 «가둠» */
+export const WINCH = { reach: 80, speed: 7, dur: 3 };
+export const FLOODGATE = { pins: 2, drop: 1.2, sealCard: '가둠 — 차수문 3-B 폐쇄' };
