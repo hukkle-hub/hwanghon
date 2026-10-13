@@ -152,8 +152,8 @@ export function build(THREE, scene, osm) {
   const CARDS = L.isView3d() && L.TREE_CARDS.on, TX = CARDS ? treeTex(THREE, L.canvasTex) : null;   /* 3D: 잎 카드 갓 · 솔잎 · 나무껍질 — 장면 난수 R 쓰임은 그대로 */
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
   const trunkM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd8c8b8).multiplyScalar(.75), roughness: 1, map: phTex(THREE, 'japanese_zelkova_bark', 'diff', { repeat: [1, 2] }), normalMap: phTex(THREE, 'japanese_zelkova_bark', 'nor_gl', { repeat: [1, 2] }), roughnessMap: phTex(THREE, 'japanese_zelkova_bark', 'rough', { repeat: [1, 2] }) }) : new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 }), leafMs = [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424].map(c => CARDS
-    ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: 0.85, map: TX.leaf, alphaTest: 0.45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
-  const needleM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0x2c3426).multiplyScalar(1.9), roughness: 0.85, map: TX.needle, alphaTest: 0.45, side: THREE.DoubleSide }) : leafMs[2];
+    ? new THREE.MeshLambertMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), map: TX.leaf, alphaTest: 0.45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
+  const needleM = CARDS ? new THREE.MeshLambertMaterial({ color: new THREE.Color(0x2c3426).multiplyScalar(1.9), map: TX.needle, alphaTest: 0.45, side: THREE.DoubleSide }) : leafMs[2];
   const grove = L.noise2(L.rng(20261018), 55);
   /* 문·출발점·보스 자리 (아래에서 쓴다 — 나무가 피하도록 먼저 정한다) */
   const gateS0 = FROM(walk.s0 + 3, 0), spawnP = FROM(walk.s0 + 9, -3);
@@ -178,6 +178,7 @@ export function build(THREE, scene, osm) {
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
   if (L.isView3d()) { L.windify(trunkM, { flut: 0 }); for (const m of [pines, ...canopy]) L.windify(m.material, { flut: CARDS ? 1 : 0.3 }); }   /* 3D: 바람 (문서 230 §13) — 남산 숲은 바람이 아예 없었다 */
   for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
+  if (CARDS) L.shadowProxies(THREE, scene, canopy, [pines]);   /* 잎 그림자는 불투명 대역 (문서 230 §23) */
   { const dctx = { THREE, scene, R, FROM, clear, blockers }, st = L.dress(dctx, walk, L.textures(dctx), { logs: true, keep: p => !inBuilding(p) && !nearClear(p) && Math.hypot(p[0] - tower[0], p[1] - tower[1]) > 25 });
     console.log('[env-namsan] 땅 꾸미기', JSON.stringify(st)); }
 

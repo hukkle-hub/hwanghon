@@ -604,9 +604,9 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
   const trunkG = new THREE.CylinderGeometry(0.16, 0.26, 4.2, CARDS ? 7 : 6), canopyG = CARDS ? leafCrownGeo(THREE) : VIEW3D ? crownGeo(THREE) : new THREE.IcosahedronGeometry(1.9, 0), pineG = CARDS ? pineCardGeo(THREE) : VIEW3D ? pineGeo(THREE) : new THREE.ConeGeometry(1.6, 4.6, 7);
   const trunkM = CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(0xd8c8b8).multiplyScalar(.75), roughness: 1, map: phTex(THREE, 'japanese_zelkova_bark', 'diff', { repeat: [1, 2] }), normalMap: phTex(THREE, 'japanese_zelkova_bark', 'nor_gl', { repeat: [1, 2] }), roughnessMap: phTex(THREE, 'japanese_zelkova_bark', 'rough', { repeat: [1, 2] }) })   /* 사진 느티나무 껍질 (Poly Haven CC0) */
     : new THREE.MeshStandardMaterial({ color: 0x2a221c, roughness: 1 });
-  const leafCol = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]), leafMs = leafCol.map(c => CARDS ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), roughness: .85, map: TX.leaf, alphaTest: .45, side: THREE.DoubleSide })
+  const leafCol = (o.leaves || [0x3a3e2a, 0x2c3426, 0x4a3e2c, 0x5a3424]), leafMs = leafCol.map(c => CARDS ? new THREE.MeshLambertMaterial({ color: new THREE.Color(c).multiplyScalar(1.9), map: TX.leaf, alphaTest: .45, side: THREE.DoubleSide })
     : new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, flatShading: true }));
-  if (CARDS) leafMs.push(new THREE.MeshStandardMaterial({ color: new THREE.Color(leafCol[1]).multiplyScalar(1.9), roughness: .85, map: TX.needle, alphaTest: .45, side: THREE.DoubleSide }));   /* 솔잎 재질(맨 끝) */
+  if (CARDS) leafMs.push(new THREE.MeshLambertMaterial({ color: new THREE.Color(leafCol[1]).multiplyScalar(1.9), map: TX.needle, alphaTest: .45, side: THREE.DoubleSide }));   /* 솔잎 재질(맨 끝) */
   const pineM = CARDS ? leafMs.pop() : leafMs[1], trunks = new THREE.InstancedMesh(trunkG, trunkM, n), canopy = leafMs.map(m => new THREE.InstancedMesh(canopyG, m, n)), pines = new THREE.InstancedMesh(pineG, pineM, n);
   const mtx = new THREE.Matrix4(), q4 = new THREE.Quaternion(), e = new THREE.Euler(), V = (x, y, z) => new THREE.Vector3(x, y, z), cnt = leafMs.map(() => 0); let np = 0, nd = 0;
   pts.forEach((p, i) => { const k = 0.8 + R() * 0.6; mtx.compose(V(p[0], 2.1 * k, p[1]), q4.setFromEuler(e.set((R() - .5) * 0.15, R() * 6, (R() - .5) * 0.15)), V(k, k, k)); trunks.setMatrixAt(i, mtx);
@@ -617,7 +617,19 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
   canopy.forEach((m, c) => { m.count = cnt[c]; }); pines.count = np;
   if (VIEW3D) { const c = new THREE.Color();   /* 그루마다 색을 조금씩 (해시 — 장면 난수 R 은 그대로) · 바람 */
     for (const m of [pines, ...canopy]) { for (let i = 0; i < m.count; i++) { const u = hashU(i, m.id, 3); m.setColorAt(i, c.setRGB(0.82 + u * 0.36, 0.86 + hashU(i, m.id, 4) * 0.28, 0.8 + hashU(i, m.id, 5) * 0.3)); } if (m.instanceColor) m.instanceColor.needsUpdate = true; windify(m.material, { flut: CARDS ? 1 : 0.3 }); } windify(trunks.material, { flut: 0 }); }   /* 줄기도 같은 휨 — 갓이 줄기에서 미끄러지지 않게 */
-  for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); } return n; }
+  for (const m of [trunks, pines, ...canopy]) { m.castShadow = true; m.receiveShadow = true; scene.add(m); }
+  if (CARDS) shadowProxies(THREE, scene, canopy, pines);
+  return n; }
+/* 거리 LOD(45 · 22 m 밖은 덩어리 갓)는 해 봤지만 더 무거웠다 — 빽빽한 숲에서 불투명 덩어리끼리 겹쳐 칠하는 값이 알파 카드보다 컸다(계룡 1060 → 1850 ms). 문서 230 §23 */
+/* 잎 카드 그림자 대역 (문서 230 §23): 카드 갓을 그림자 지도에 그대로 그리면 카드마다 알파 잘라내기 — 계룡 숲에서 한 프레임의 1/3 이었다(휴대폰 그림자 1024²).
+   그림자는 옛 덩어리 갓(80 면 · 불투명)으로 그리고, 화면엔 안 그린다(colorWrite · depthWrite 끔). 인스턴스 행렬 · 개수는 카드 갓과 같은 것을 나눠 쓴다 */
+let SHADOW_GEO = null, SHADOW_GEO_BUSH = null;
+const SHADOW_ONLY = { mat: null };
+export function shadowProxies(THREE, scene, canopy, pines) {
+  SHADOW_GEO = SHADOW_GEO || { crown: crownGeo(THREE), pine: pineGeo(THREE) };
+  const mat = SHADOW_ONLY.mat || (SHADOW_ONLY.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  for (const [list, g] of [[canopy, SHADOW_GEO.crown], [Array.isArray(pines) ? pines : [pines], SHADOW_GEO.pine]]) for (const m of list) { if (!m.count) continue; m.castShadow = false;
+    const p = new THREE.InstancedMesh(g, mat, m.count); p.instanceMatrix.array.set(m.instanceMatrix.array.subarray(0, m.count * 16)); p.count = m.count;   /* 제 사본 — 거리 LOD 가 카드 갓 행렬을 갈아 끼워도 그림자는 전부 */ p.castShadow = true; p.receiveShadow = false; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.name = 'leaf-shadow'; scene.add(p); } }
 /* 3D 나무 모양 (문서 220) — 장난감 같은 다면체 하나 대신: 활엽수는 울퉁불퉁한 덩어리 넷, 소나무는 3 층. 흔들림은 셰이더(바람) */
 function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
@@ -876,10 +888,11 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   if (VIEW3D) tint(rock0, 0.78, 0.4);
   /* 3) 덤불 — 무릎 높이(인물을 가리지 않는다) */
   const BC = RK, BTX = BC ? treeTex(THREE, canvasTex) : null;   /* 3D: 잎 카드 덤불 (tree-kit, 문서 230 §11) — 장면 난수는 그대로 */
-  const bushG = BC ? leafBushGeo(THREE) : VIEW3D ? bushGeo(THREE) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => BC ? new THREE.MeshStandardMaterial({ color: new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35).multiplyScalar(1.9), roughness: .85, map: BTX.bush, alphaTest: .45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: VIEW3D ? new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35) : c, roughness: 0.9, flatShading: true }));   /* 3D: 덩어리 여럿(다면체 하나는 색칠한 돌로 읽혔다) · 붉은 기를 덜어 */
+  const bushG = BC ? leafBushGeo(THREE) : VIEW3D ? bushGeo(THREE) : new THREE.IcosahedronGeometry(0.7, 0), bushM = (o.bushColors || [0x2e3a26, 0x3a3424, 0x4a2e22]).map(c => BC ? new THREE.MeshLambertMaterial({ color: new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35).multiplyScalar(1.9), map: BTX.bush, alphaTest: .45, side: THREE.DoubleSide }) : new THREE.MeshStandardMaterial({ color: VIEW3D ? new THREE.Color(c).lerp(new THREE.Color(0x2e3426), 0.35) : c, roughness: 0.9, flatShading: true }));   /* 3D: 덩어리 여럿(다면체 하나는 색칠한 돌로 읽혔다) · 붉은 기를 덜어 */
   const bushes = pick(Math.round(A / (o.bushEvery || 45))).filter(p => R() < 0.2 + N(p[0] + 500, p[1]) * 1.3);
   const bush0 = made.length; stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
   if (VIEW3D) { tint(bush0, 0.75, 0.5); for (const m of made.slice(bush0)) windify(m.material);
+    if (BC) for (const m of made.slice(bush0)) { m.castShadow = false; const p = new THREE.InstancedMesh(SHADOW_GEO_BUSH || (SHADOW_GEO_BUSH = bushGeo(THREE)), SHADOW_ONLY.mat || (SHADOW_ONLY.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false })), m.count); p.instanceMatrix = m.instanceMatrix; p.castShadow = true; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.name = 'bush-shadow'; scene.add(p); }   /* 덤불 그림자도 불투명 대역 (문서 230 §23) */
     /* 풀포기: 바위·덤불 둘레 (자리는 해시) — 맨바닥에 돌만 흩어진 «게임판» 을 덮는다 */
     const tufts = [], ring = (p, n, r0, r1) => { for (let j = 0; j < n; j++) { const u = hashU(Math.round(p[0] * 10), Math.round(p[1] * 10), j), v = hashU(Math.round(p[1] * 10), j, Math.round(p[0] * 10)), a = u * 6.283, r = r0 + v * (r1 - r0); tufts.push([p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r, hashU(j, Math.round(p[0]), Math.round(p[1]))]); } };
     for (const p of rocks) ring(p, 2, 0.6, 1.6); for (const p of bushes) ring(p, 1, 0.6, 1.2);

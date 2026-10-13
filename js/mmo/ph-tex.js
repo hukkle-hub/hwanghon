@@ -15,10 +15,12 @@ export function phPair(THREE, name, { repeat = [1, 1], normalScale = 1 } = {}) {
   return { map: phTex(THREE, name, 'diff', { repeat }), normalMap: phTex(THREE, name, 'nor_gl', { repeat }), normalScale: new THREE.Vector2(normalScale, normalScale) };
 }
 /* 반복 깨기 (문서 230 §11): 3 m 사진을 길 수백 m 에 깔면 같은 금이 3.5 m 마다 줄지어 «마룻바닥» 이 된다(멀리서).
-   이니고 킬레스(IQ) «texture repetition» 3번 방식: 값 잡음 한 번으로 칸마다 다른 «밀어 읽기» 두 개를 골라 섞는다(밉맵 끊김 없게 textureGrad).
+   이니고 킬레스(IQ) «texture repetition» 3번 방식: 값 잡음 한 번으로 칸마다 다른 «밀어 읽기» 두 개를 골라 섞는다(처음엔 밉맵 끊김 없게 기울기 지정 읽기였지만 휴대폰 무게로 보통 읽기로 — 문서 230 §23).
    37° 돌려 한 번 더 읽는 방식은 섞인 곳만 깨지고 금줄 격자는 그대로였다(시트에서 재 봄). 노멀도 같은 밀기·같은 섞음이라 금과 그늘이 맞는다.
    셰이더 문자열만 바꾼다(onBeforeCompile 안에서 부른다). 텍스처를 더 받지 않고 읽기만 색 1 번 · 노멀 1 번 늘어난다 */
+export const ANTI_TILE = { on: true };   /* world3d ?at=0 — 휴대폰 무게 가르기 */
 export function antiTile(sh, THREE) {
+  if (!ANTI_TILE.on) return sh;
   sh.fragmentShader = sh.fragmentShader
     .replace('#include <common>', `#include <common>
 float atH(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 15731.743); }
@@ -26,12 +28,11 @@ float atN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
     .replace('#include <map_fragment>', `vec2 atOa = vec2(0.0), atOb = vec2(0.0); float atW = 0.0;
 #ifdef USE_MAP
   { float l = atN(vMapUv * 1.3) * 8.0, ia = floor(l); atOa = sin(vec2(3.0, 7.0) * ia); atOb = sin(vec2(3.0, 7.0) * (ia + 1.0));
-    vec2 dx = dFdx(vMapUv), dy = dFdy(vMapUv); vec4 ca = textureGrad(map, vMapUv + atOa, dx, dy), cb = textureGrad(map, vMapUv + atOb, dx, dy);
+    vec4 ca = texture2D(map, vMapUv + atOa), cb = texture2D(map, vMapUv + atOb);   /* 기울기 지정 읽기(Grad)는 휴대폰 · 소프트 렌더에서 비싸다 — 칸 경계 2×2 화소에서만 밉맵이 한 단계 튄다(거의 안 보인다) */
     atW = smoothstep(0.2, 0.8, fract(l) - 0.1 * dot(ca.rgb - cb.rgb, vec3(1.0))); diffuseColor *= mix(ca, cb, atW); }
 #endif
 /*@map_fragment*/`)   /* 표지: 뒤에 붙는 패치(world3d 땅 결 · 구름 그림자)가 #include <map_fragment> 대신 여기에 잇는다 — 없으면 사진 땅만 결이 사라진다 */
-    .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', `vec2 ndx = dFdx(vNormalMapUv), ndy = dFdy(vNormalMapUv);
-  vec3 mapN = mix(textureGrad( normalMap, vNormalMapUv + atOa, ndx, ndy ).xyz, textureGrad( normalMap, vNormalMapUv + atOb, ndx, ndy ).xyz, atW) * 2.0 - 1.0;`));   /* #include 는 onBeforeCompile 뒤에 풀린다 — 덩어리를 직접 펼쳐서 바꾼다 */
+    .replace('#include <normal_fragment_maps>', THREE.ShaderChunk.normal_fragment_maps.replace('vec3 mapN = texture2D( normalMap, vNormalMapUv ).xyz * 2.0 - 1.0;', `vec3 mapN = texture2D( normalMap, vNormalMapUv + (atW > 0.5 ? atOb : atOa) ).xyz * 2.0 - 1.0;`));   /* 노멀은 한 번만 — 가까운 쪽 밀기를 고른다. 둘을 섞어 두 번 읽던 것이 땅 전체에서 프레임 1/5 이었다(문서 230 §23). #include 는 onBeforeCompile 뒤에 풀린다 — 덩어리를 직접 펼쳐서 바꾼다 */
   return sh;
 }
 export function antiTileMat(THREE, m) { m.onBeforeCompile = sh => antiTile(sh, THREE); m.customProgramCacheKey = () => 'anti-tile'; m.needsUpdate = true; return m; }

@@ -35,9 +35,9 @@ function card(P, N, U, I, c, u, v, o, bend) { const b = P.length / 3, n = new Fl
 /* 활엽수 갓: 옛 덩어리 넷 자리에 카드 9 장씩 = 36 장 (72 삼각형). 원점 = 옛 갓 중심(인스턴스 행렬 그대로) */
 export function leafCrownGeo(THREE) {
   const r = rnd(902), P = [], N = [], U = [], I = [], O = [0, .25, 0];
-  for (const [bx, by, bz, br] of [[0, .2, 0, 1.35], [.85, -.25, .3, 1.05], [-.7, -.15, -.45, 1.1], [.1, .95, -.2, .95]]) for (let k = 0; k < 9; k++) {
+  for (const [bx, by, bz, br] of [[0, .2, 0, 1.35], [.85, -.25, .3, 1.05], [-.7, -.15, -.45, 1.1], [.1, .95, -.2, .95]]) for (let k = 0; k < 7; k++) {   /* 9 → 7 장(28 장) — 겹쳐 칠하기 줄이기 (문서 230 §23) */
     const th = r() * 6.283, ph = Math.acos(1 - 2 * (.12 + r() * .8)), rr = br * (.45 + r() * .5), c = [bx + Math.sin(ph) * Math.cos(th) * rr, by + Math.cos(ph) * rr * .8, bz + Math.sin(ph) * Math.sin(th) * rr];
-    const s = br * (.85 + r() * .35), a = r() * 6.283, tilt = (r() - .5) * 1.4, u = [Math.cos(a) * s, 0, Math.sin(a) * s], v = [-Math.sin(a) * Math.sin(tilt) * s, Math.cos(tilt) * s, Math.cos(a) * Math.sin(tilt) * s];
+    const s = br * (.95 + r() * .35), a = r() * 6.283, tilt = (r() - .5) * 1.4, u = [Math.cos(a) * s, 0, Math.sin(a) * s], v = [-Math.sin(a) * Math.sin(tilt) * s, Math.cos(tilt) * s, Math.cos(a) * Math.sin(tilt) * s];
     card(P, N, U, I, c, u, v, O, .85); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
   g.computeBoundingSphere(); g.computeBoundingBox(); return g;

@@ -7,9 +7,9 @@ import { leafCrownGeo, pineCardGeo } from '../js/mmo/tree-kit.js';
 import { rockGeo } from '../js/mmo/rock-kit.js';
 import { PH_NAMES, PH_ROUGH } from '../js/mmo/ph-tex.js';
 
-test('잎 카드 갓 36 장 · 소나무 38 장 — 옛 다면체와 삼각형이 비슷하다', () => {
+test('잎 카드 갓 28 장(문서 230 §23, 36 → 28) · 소나무 38 장 — 옛 다면체와 삼각형이 비슷하다', () => {
   const a = leafCrownGeo(THREE), b = pineCardGeo(THREE);
-  assert.equal(a.index.count / 6, 36); assert.equal(b.index.count / 6, 38);
+  assert.equal(a.index.count / 6, 28); assert.equal(b.index.count / 6, 38);
   assert.ok(a.index.count / 3 <= 80 && b.index.count / 3 <= 80, '옛 갓 80 삼각형 안');
   const b0 = b.boundingBox; assert.ok(b0.max.y - b0.min.y > 3.5 && b0.max.x - b0.min.x < 4.2, '소나무는 키가 크고 폭이 좁은 원뿔 — 접시가 아니다');
 });
@@ -36,14 +36,14 @@ test('건물 낡음: 빗물 자국 · 밑동 흙 · 이끼 · 깨진 창 위 그
   assert.match(F, /phTex\(THREE, 'concrete_wall_006', 'diff'/);
 });
 test('3D 만 · ?tc=0 이면 옛 나무 · 바위 · 벽', () => {
-  const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /TREE_CARDS\.on = FACADE_PHOTO\.on = q\.get\('tc'\) !== '0';/);
+  const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /TREE_CARDS\.on = q\.get\('tc'\) !== '0' && q\.get\('tcc'\) !== '0'; FACADE_PHOTO\.on = q\.get\('tc'\) !== '0' && q\.get\('tcp'\) !== '0';/, '?tc=0 은 둘 다 · ?tcc · ?tcp 로 가르기 (문서 230 §23)');
   const E = fs.readFileSync('js/mmo/env-lib.js', 'utf8'); assert.match(E, /const CARDS = VIEW3D && o\.cards !== false && TREE_CARDS\.on/); assert.match(E, /const RK = VIEW3D && TREE_CARDS\.on/);
   assert.match(fs.readFileSync('js/mmo/env-namsan.js', 'utf8'), /const CARDS = L\.isView3d\(\) && L\.TREE_CARDS\.on/, '남산은 나무를 따로 만든다 — 같이 바꿔야(처음엔 빠져 남산이 그대로였다)');
 });
 test('반복 깨기(antiTile) 뒤에도 땅 결 · 구름 그림자가 이어 붙는다 — 표지 /*@map_fragment*/ (문서 230 §12)', async () => {
   const THREE = await import('../vendor/three/three.module.js'); const { antiTile } = await import('../js/mmo/ph-tex.js');
   const sh = antiTile({ fragmentShader: '#include <common>\nvoid main(){\n#include <map_fragment>\n#include <normal_fragment_maps>\n}' }, THREE);
-  assert.ok(!sh.fragmentShader.includes('#include <map_fragment>'), '색 읽기를 직접 펼친다'); assert.match(sh.fragmentShader, /textureGrad\(map, vMapUv \+ atOa/); assert.match(sh.fragmentShader, /textureGrad\( normalMap, vNormalMapUv \+ atOb/);
+  assert.ok(!sh.fragmentShader.includes('#include <map_fragment>'), '색 읽기를 직접 펼친다'); assert.match(sh.fragmentShader, /texture2D\(map, vMapUv \+ atOa\)/); assert.match(sh.fragmentShader, /texture2D\( normalMap, vNormalMapUv \+ \(atW > 0\.5 \? atOb : atOa\) \)/, '노멀은 한 번만 읽는다 (문서 230 §23)'); assert.doesNotMatch(sh.fragmentShader, /textureGrad/, 'textureGrad 는 휴대폰에서 비싸다');
   const W3D = fs.readFileSync('world3d.html', 'utf8'), re = /\.replace\(\/#include <map_fragment>\|\\\/\\\*@map_fragment\\\*\\\/\/, m0 => m0 \+ '\\n\{ float mn = gn/;
   assert.match(W3D, re, '땅 결 패치가 표지에도 붙어야 한다');
   const out = sh.fragmentShader.replace(/#include <map_fragment>|\/\*@map_fragment\*\//, m0 => m0 + '\nMACRO;'); assert.match(out, /MACRO;/, '사진 땅에서 땅 결이 사라진다');
