@@ -3,6 +3,7 @@
    build(THREE, scene, osm, zone) → map.json 재료 (bake-map.html) */
 import * as L from './env-lib.js';
 import { frameOf } from './env-osm.js';
+import { buildCar } from './car-kit.js';   /* 점거 차량 열 (문서 233 #11) */
 export const PITCH = L.PITCH;
 
 const segDist = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
@@ -34,6 +35,18 @@ export function build(THREE, scene, osm, zone) {
   const box = (w, h, d, m, x, y, z, ry = 0, block = true) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.rotation.y = ry; b.castShadow = true; b.receiveShadow = true; scene.add(b); if (block) blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: w / 2, hd: d / 2, rot: ry }); return b; };
   const A = L.SCREEN_ANG;
   const PROPS = {
+    /* 고흥 발사장 도로 (정 장관 EP26 «의장대 도열 · 점거 차량 열 · 활주로», 문서 233 #11) — 전용 난수(R3), 막이 */
+    convoy(p, o) { const R3 = L.rng((F.seed || 1) * 71 + 11), n = o.n || 7, gapD = o.gap || 7, ang = L.SCREEN_ANG, ca = Math.cos(ang), sa = Math.sin(ang);   /* 길 축(s) 을 따라 n 대 — 머리를 같은 쪽으로 */
+      for (let i = 0; i < n; i++) { const d = (i - (n - 1) / 2) * gapD, x = p[0] + ca * d, z = p[1] - sa * d, type = i % 3 === 0 ? 'truck' : i % 3 === 1 ? 'bus' : 'suv';   /* car-kit 종류: suv·mini·truck·bus */ let g; try { g = buildCar(THREE, type, R3, { wreck: false }); } catch { g = null; }
+        if (!g) { g = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.6, 2.1), new THREE.MeshStandardMaterial({ color: 0x3a4030, roughness: 0.8 })); b.position.y = 1.0; g.add(b); }
+        g.position.set(x, 0, z); g.rotation.y = ang + Math.PI / 2; g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(g); blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: 1.2, hd: 2.6, rot: ang }); } },
+    runway(p, o) { const len = o.len || 300, w = o.w || 40, ang = L.SCREEN_ANG, ca = Math.cos(ang), sa = Math.sin(ang), slabM = new THREE.MeshStandardMaterial({ color: 0x8a8c8a, roughness: 0.95 }), lineM = new THREE.MeshBasicMaterial({ color: 0xe8e8e0 });
+      const slab = new THREE.Mesh(new THREE.PlaneGeometry(len, w), slabM); slab.rotation.x = -Math.PI / 2; slab.rotation.z = -ang; slab.position.set(p[0], 0.015, p[1]); slab.receiveShadow = true; scene.add(slab);   /* 활주로 판 */
+      for (let d = -len / 2 + 10; d < len / 2 - 10; d += 30) { const m = new THREE.Mesh(new THREE.PlaneGeometry(15, 0.9), lineM); m.rotation.x = -Math.PI / 2; m.rotation.z = -ang; m.position.set(p[0] + ca * d, 0.02, p[1] - sa * d); scene.add(m); }   /* 중심선 점선 */
+      for (const e of [-1, 1]) for (let k = -3; k <= 3; k++) { if (k === 0) continue; const m = new THREE.Mesh(new THREE.PlaneGeometry(18, 1.6), lineM); m.rotation.x = -Math.PI / 2; m.rotation.z = -ang; const d = e * (len / 2 - 20), t = k * (w / 8); m.position.set(p[0] + ca * d - sa * t, 0.02, p[1] - sa * d - ca * t); scene.add(m); } },   /* 양 끝 문턱 줄 */
+    parade(p, o) { const rows = o.rows || 2, per = o.per || 12, gapS = o.gapS || 2.2, gapT = o.gapT || 14, ang = L.SCREEN_ANG, ca = Math.cos(ang), sa = Math.sin(ang), markM = new THREE.MeshBasicMaterial({ color: 0xd8c070, transparent: true, opacity: 0.6, depthWrite: false }), at = [];
+      for (let r = 0; r < rows; r++) for (let i = 0; i < per; i++) { const d = (i - (per - 1) / 2) * gapS, t = (r - (rows - 1) / 2) * gapT, x = p[0] + ca * d - sa * t, z = p[1] - sa * d - ca * t; const m = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), markM); m.rotation.x = -Math.PI / 2; m.rotation.z = -ang; m.position.set(x, 0.02, z); scene.add(m); at.push({ x: +x.toFixed(2), z: +z.toFixed(2) }); }
+      scene.userData.parade = at; },   /* 의장대 도열 자리 — AI(GPT) 가 여기서 세운다 */
     /* 골짜기 (셀레스티얼 EP17 «골짜기 바닥과 벽», 문서 233 #7): 자리 둘레에 바위 벽 둘(길이 len, 높이 h, 사이 gap) — 안쪽 면 step 마다 버팀 자리(등을 벽에). 바위는 전용 난수 */
     valley(p, o) { const R3 = L.rng((F.seed || 1) * 53 + 7), len = o.len || 48, gap = o.gap || 26, h = o.h || 16, rockM = new THREE.MeshStandardMaterial({ color: 0x4a443c, roughness: 1, flatShading: true }), ang = L.SCREEN_ANG, ca = Math.cos(ang), sa = Math.sin(ang);
       for (const sg of [-1, 1]) { const wx = p[0] - sa * sg * gap / 2, wz = p[1] - ca * sg * gap / 2;   /* +t 방향 = (−sa, −ca): 벽 중심은 자리에서 t 로 ±gap/2 */

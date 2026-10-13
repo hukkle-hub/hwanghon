@@ -156,3 +156,10 @@ test('골짜기 (문서 233 #7 셀레스티얼) · 빌딩 협곡 (문서 233 #13
   assert.match(Z, /\{ k: 'valley', at: \{ st: \[200, 190\] \}, len: 48, gap: 26, h: 16, r: 32 \}/); assert.match(Z, /\{ k: 'echo', at: \{ st: \[40, -150\] \}, r: 120, hear: 0\.5 \}/);
   assert.match(W, /window\.__QUIET = !!qz && qz\.mute !== false; window\.TW_SFX\?\.muffle\?\.\(qz \? \(qz\.hear \?\? QUIET\.hear\) : ENV\.band\.hear \|\| 0\);/, '반향 지대는 예고음을 안 막는다'); assert.match(W, /if \(ENV\.brace && ENV\.brace\.label\) t = t\.replace\('매대 다리에 발 — 버틴다 \(밀려남 ⅓\)', ENV\.brace\.label\);/);
 });
+
+test('고흥 발사장 도로 (문서 233 #11 정 장관): «의장대 도열 · 점거 차량 열 · 활주로» EP26 — 차량 열 7 대(막이, car-kit, 전용 난수) · 활주로 판·중심선·문턱 줄 · 의장대 도열 자리 2 × 12 (scene.userData.parade — AI 가 세울 자리)', () => {
+  const F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(F, /import \{ buildCar \} from '\.\/car-kit\.js';/); assert.match(F, /convoy\(p, o\) \{ const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 71 \+ 11\), n = o\.n \|\| 7, gapD = o\.gap \|\| 7,/); assert.match(F, /blockers\.push\(\{ x: \+x\.toFixed\(2\), z: \+z\.toFixed\(2\), hw: 1\.2, hd: 2\.6, rot: ang \}\); \} \},/, '차마다 막이');
+  assert.match(F, /runway\(p, o\) \{ const len = o\.len \|\| 300, w = o\.w \|\| 40,/); assert.match(F, /parade\(p, o\) \{ const rows = o\.rows \|\| 2, per = o\.per \|\| 12,/); assert.match(F, /scene\.userData\.parade = at; \},/);
+  assert.match(Z, /\{ k: 'convoy', at: \{ st: \[40, 52\] \}, n: 7, gap: 7 \}, \{ k: 'runway', at: \{ st: \[-40, -120\] \}, len: 300, w: 40 \}, \{ k: 'parade', at: \{ st: \[40, 30\] \}, rows: 2, per: 12 \}/);
+});
