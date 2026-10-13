@@ -25,18 +25,18 @@ test('world3d: ?bench=1 이면 코스 · 결과 카드(복사 · 다시) · 황�
 test('낮은 가로 화면(디렉터 폰 750×298): 큰 둘(카운터·공격) 76 px 위 · 스킬 줄 44 px 아래 — 위 끝이 바닥에서 182 px 아래 (미니맵과 안 겹침)', () => {
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), m = W.match(/@media \(orientation:landscape\) and \(max-height:360px\)\{([\s\S]*?)\n\}/); assert.ok(m, '낮은 가로 규칙');
   const size = id => /^(atk|ctr)$/.test(id) ? 76 : 44;
-  const tops = [...m[1].matchAll(/#(sk\d|pot|ctr|atk)\{[^}]*bottom:calc\(max\(14px,env\(safe-area-inset-bottom\)\) \+ (\d+)px\)/g)].map(x => [x[1], +x[2] + size(x[1]) + 14]);
-  assert.equal(tops.length, 7, '7 단추'); for (const [id, top] of tops) assert.ok(top <= 182, `${id} 위 끝 ${top}px — 298 화면에서 미니맵(아래 끝 ~106)에 닿는다`);
-  assert.match(m[1], /#atk\{ width:76px; height:76px;/); assert.match(m[1], /\.btn\.skb,#pot\{ width:44px; height:44px; \}/);
+  const tops = [...m[1].matchAll(/#(sk\d|ctr|atk)\{[^}]*bottom:calc\(max\(14px,env\(safe-area-inset-bottom\)\) \+ (\d+)px\)/g)].map(x => [x[1], +x[2] + size(x[1]) + 14]);
+  assert.equal(tops.length, 6, '6 단추 (회복약 단추는 뺐다)'); for (const [id, top] of tops) assert.ok(top <= 182, `${id} 위 끝 ${top}px — 298 화면에서 미니맵(아래 끝 ~106)에 닿는다`);
+  assert.match(m[1], /#atk\{ width:76px; height:76px;/); assert.match(m[1], /\.btn\.skb\{ width:44px; height:44px; \}/); assert.doesNotMatch(W, /id="pot"/, '회복약 단추 없음 (디렉터 2026-10-13)');
   assert.match(W, /body #osm\{ right:auto; left:12px;/, '출처 규칙이 뒤의 #osm 에 덮이지 않게');
 });
 
-test('조작 배치 (디렉터 손그림 2026-10-13): 이동키 · 카운터 · 공격 · 스킬 — 큰 둘은 같은 줄, 스킬 1~4·회복약은 50 px 한 줄 아래 · 카운터 = 옆·뒤 이동이면 회피, 아니면 맞대기(counter 클립 → strike)', () => {
+test('조작 배치 (디렉터 손그림 2026-10-13): 이동키 · 카운터 · 공격 · 스킬 — 큰 둘은 같은 줄, 스킬 1~4 는 50 px 한 줄 아래(회복약 단추 없음) · 카운터 = 옆·뒤 이동이면 회피, 아니면 맞대기(counter 클립 → strike)', () => {
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
   assert.match(W, /<div class="btn" id="ctr">카운터<small>옆·뒤 = 회피<\/small><\/div>/); assert.doesNotMatch(W, /id="dodge"/, '회피 단추는 카운터 단추로 합쳤다');
   assert.match(W, /#ctr\{ width:84px; height:84px; right:calc\(max\(18px,env\(safe-area-inset-right\)\) \+ 96px\); bottom:calc\(max\(14px,env\(safe-area-inset-bottom\)\) \+ 78px\)/);
   assert.match(W, /#atk\{ bottom:calc\(max\(14px,env\(safe-area-inset-bottom\)\) \+ 78px\); \}/, '공격도 같은 줄');
-  for (const [id, r] of [['sk1', 0], ['sk2', 58], ['sk3', 116], ['sk4', 174], ['pot', 232]]) assert.match(W, new RegExp('#' + id + '\\{[^}]*right:calc\\(max\\(18px,env\\(safe-area-inset-right\\)\\) \\+ ' + r + 'px\\); bottom:max\\(14px,env\\(safe-area-inset-bottom\\)\\);'), id + ' 아랫줄');
+  for (const [id, r] of [['sk1', 0], ['sk2', 58], ['sk3', 116], ['sk4', 174]]) assert.match(W, new RegExp('#' + id + '\\{[^}]*right:calc\\(max\\(18px,env\\(safe-area-inset-right\\)\\) \\+ ' + r + 'px\\); bottom:max\\(14px,env\\(safe-area-inset-bottom\\)\\);'), id + ' 아랫줄');
   assert.match(W, /\.btn\.skb\{ width:50px; height:50px;/);
   assert.match(W, /\[\['atk', attack\], \['ctr', counter\]\]/); assert.match(W, /if \(e\.code === 'KeyL'\) counter\(\);/);
   assert.match(W, /function counter\(\) \{[\s\S]*?if \(Math\.hypot\(sx, sy\) > 0\.3 && sy < 0\.6\) return dodge\(\);[\s\S]*?const clip = hero\.clips\.counter \? 'counter' : 'attack1';[\s\S]*?feel\.swing\(fh, clip\); strike\(null\); \}/);
