@@ -59,3 +59,11 @@ test('물에 비친 산 = 하늘 산 세 겹 · 구름 빛(해 쪽 밝음 · 은
   assert.match(SKY_REFL, /float far3 = uRidge\.x \* 1\.32/); assert.match(SKY_REFL, /if \(y > uRidge\.x \* 1\.32 \+ 0\.01\) return c;/, '가장 먼 봉우리 위는 건너뛴다');
   assert.match(SKY_REFL, /skF\(ring \* 3\.74 \+ uRidge\.z \+ 9\.0\)/, '하늘과 같은 주파수(2.2 × 1.7)'); assert.match(SKY_FRAG, /lit = clamp\(0\.55 \+ \(n - ns\) \* 3\.2/); assert.match(SKY_FRAG, /if \(dens > 0\.002\)/, '구름 없는 곳은 셈 안 함');
 });
+test('밤 연출 (문서 230 §22): 먼 불길(능선 뒤) · 탐조등(역전치 법선) · 반딧불 — 밤에만', async () => {
+  const { SKY_FRAG } = await import('../js/mmo/sky-shader.js'); const { searchlights, fireflies } = await import('../js/mmo/night-fx.js');
+  assert.match(SKY_FRAG, /uniform float time, cover, burn;/); assert.ok(SKY_FRAG.indexOf('먼 불길') > SKY_FRAG.indexOf('inNear'), '불길은 능선 뒤에 — 먼저 그리면 산에 가린다');
+  const S = searchlights(THREE, { seed: 5, n: 2 }); assert.equal(S.group.children.length, 2); assert.match(S.group.children[0].material.vertexShader, /normalMatrix \* normal/, '늘린 기둥은 역전치 법선');
+  S.update(new THREE.Vector3(), 0, 0); assert.equal(S.group.visible, false, '낮엔 숨는다'); S.update(new THREE.Vector3(), 0, 1); assert.equal(S.group.visible, true);
+  const F = fireflies(THREE, { n: 20 }); F.follow(new THREE.Vector3(), new THREE.Vector3(0, 0, -1), 0); assert.equal(F.mesh.visible, false);
+  const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /\(lampK - 0\.9\) \/ 0\.8/); assert.match(W, /q\.get\('nfx'\) !== '0'/);
+});

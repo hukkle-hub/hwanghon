@@ -3,7 +3,7 @@
    색은 모두 돔 색(top · hor · fogc · sunc)에서 나온다 → 시간대(문서 217)를 그대로 따라간다. 먼 능선은 안개에 가깝게(공기 원근), 가까운 능선은 짙게.
    ridge = (먼 능선 높이, 가까운 능선 높이, 씨앗) — 높이는 올려다본 각의 sin. 지역 성격(산·강·바다)으로 고른다 (ridgeOf). */
 export const SKY_VERT = 'varying vec3 vd; void main(){ vd = normalize(position); vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w; }';
-export const SKY_FRAG = `uniform vec3 top, hor, fogc, sun, sunc, ridge; uniform float time, cover; varying vec3 vd;
+export const SKY_FRAG = `uniform vec3 top, hor, fogc, sun, sunc, ridge; uniform float time, cover, burn; varying vec3 vd;
 float h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y); }
 float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * n2(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
@@ -61,6 +61,9 @@ void main(){
   /* 새털구름 (문서 230 §18): 높은 하늘의 가는 줄 — 해 쪽은 달아오른다 */
   if (y > 0.08) { vec2 cu = vec2(d.x * 0.8 + d.z * 0.6, -d.x * 0.6 + d.z * 0.8) / (y + 0.35) * vec2(0.7, 3.2) + vec2(time * 0.004, 0.0); float ci = smoothstep(0.55, 0.8, fbm(cu * 1.3 + 31.0)) * smoothstep(0.08, 0.3, y) * (1.0 - dens);
     c = mix(c, mix(hor, top, 0.3) * 1.15 + sunc * pow(a, 4.0) * 0.6, ci * 0.25 * (1.0 - dark * 0.7)); }
+  /* 먼 불길 — 능선 뒤에서 위로 번진다(능선보다 먼저 그리면 산에 가렸다). (문서 230 §22): 밤 지평선 몇 방위에 주황 빛무리 — 폐허 도시 저편이 아직 탄다. 낮게 깔려 위로 옅어지고 천천히 일렁인다. burn = 지역 성격(도시 1 · 숲 0.25) */
+  if (dark > 0.0 && burn > 0.0 && y < 0.22) { vec2 rg = normalize(d.xz + 1e-5); float az = fbm(rg * 3.1 + 40.0), patchK = smoothstep(0.56, 0.72, az), fl = 0.8 + 0.2 * sin(time * 1.3 + az * 30.0) * sin(time * 0.7 + az * 11.0);
+    c += vec3(1.0, 0.36, 0.1) * 0.13 * burn * dark * patchK * fl * exp(-max(y - 0.03, 0.0) * 14.0) * (1.0 - dens * 0.5); }
   gl_FragColor = vec4(c, 1.0);
 }`;
 /* 지역 성격 → 능선 높이 (sin 단위). 한국은 어디서나 산이 보이지만 바다 쪽은 낮게 */
