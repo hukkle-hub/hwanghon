@@ -50,3 +50,30 @@ test('천장에서 떨어지는 물 (침수 던전만): 비 줄기 재질을 드
   assert.match(W, /sp\.U\.uY\.value = DWATER\.y \+ 0\.02;/); assert.match(W, /if \(DRIP\) \{ cam\.getWorldDirection\(LEAF_F\); DRIP\.r\.follow\(cam\.position, LEAF_F\); DRIP\.sp\.follow\(cam\.position, LEAF_F\); \}/);
   assert.match(Rn, /uY: \{ value: 0\.1 \}/); assert.match(Rn, /vec3 wp = vec3\(xz\.x, uY, xz\.y\) \+ position \* sz;/, '튀는 높이는 uniform — 바깥 비는 그대로 0.1');
 });
+
+test('3D 꾸밈 키트 (문서 231 §5): 3D 전용 난수 R3 · 천장 덕트·배관·전선 · 죽은 형광등 22 % · 벽 얼룩 · 물때 띠 · 문틀(1.5~7.5 m 열림, 가운데 점으로 중복 제거) · 잔해 더미(막이) · 비상등 맥동 · 사진 천장', () => {
+  const I = R('js/mmo/env-indoor.js'), W = R('world3d.html');
+  assert.match(I, /const R3 = rng\(\(spec\.seed \|\| 1\) \* 7919 \+ 3\), OPENINGS = \[\]/, '공용 R 을 안 쓴다 — 2D 굽기·막이 자리가 어긋난다');
+  assert.match(I, /if \(zone\.view3d && kind === 'fluo' && R3\(\) < 0\.22\) \{ const tb = box\(1\.4, 0\.06, 0\.14, darkM,[^\n]*tb\.rotation\.z = 0\.42; tb\.position\.y -= 0\.3; continue; \}/);
+  assert.match(I, /if \(kind === 'red'\) L\.userData\.pulse = true;/); assert.match(W, /if \(INDOOR\) for \(const L of POOL\) \{ const src = L\.userData\.src; if \(src && src\.userData\.pulse\) L\.intensity = L\.userData\.base \* \(0\.55 \+ 0\.45 \* Math\.sin\(gameNow \/ 640 \+ L\.position\.x \* 0\.7\)\); \}/);
+  assert.match(I, /if \(zone\.view3d && spec\.water\) \{ const q = FROM\(\(sA \+ sB\) \/ 2 - e\.n\[0\] \* 0\.01, \(tA \+ tB\) \/ 2 - e\.n\[1\] \* 0\.01\); box\(len, 0\.42, 0\.03, stainM, q\[0\], spec\.water \+ 0\.12, q\[1\], rot, false\); \}/, '물때 띠');
+  assert.match(I, /if \(open\) \{ flush\(\); if \(zone\.view3d\) \{ const o = OPENINGS\.at\(-1\);/, '열린 변을 모은다');
+  assert.match(I, /if \(w < 1\.5 \|\| w > 7\.5\) continue;[\s\S]*?if \(seen\.has\(key\)\) continue; seen\.add\(key\);/, '문틀 폭 · 중복');
+  assert.match(I, /if \(H >= 3 && len >= 6 && r\.floor !== 'tile'\) \{/, '타일 바닥(사무실·연구소)엔 덕트 없음'); assert.match(I, /new THREE\.TubeGeometry\(cv, 10, 0\.014, 4, false\), wireM\)/);
+  assert.match(I, /block\(q\[0\], q\[1\], sx \* 0\.45, sz \* 0\.45, 0\); rubble\+\+;/, '잔해 더미는 걷기를 막는다');
+  assert.match(I, /ceilM = zone\.view3d && PHOTO \? Object\.assign\(new THREE\.MeshStandardMaterial\(\{ \.\.\.phPair\(THREE, 'concrete_layers'/);
+  assert.match(I, /console\.info\('\[env-indoor 3D\]'/);
+});
+
+test('던전 입장 카드: 다른 지역에서 들어오면 실내도 카드 — 원작 회차 · 보스 이름 · 칭호 (도입 비행 장면은 여전히 바깥만)', () => {
+  const W = R('world3d.html');
+  assert.match(W, /let intro = TRAVEL && !INDOOR \?/); assert.match(W, /if \(TRAVEL\) \{ const rc = document\.getElementById\('regionCard'\), b0 = INDOOR && \(Z\.bosses \|\| \(Z\.field \|\| \{\}\)\.bosses \|\| \[\]\)\[0\];/);
+  assert.match(W, /\(b0\.canon \|\| ''\) \+ ' · ' \+ b0\.name \+ ' — ' \+ b0\.title/);
+});
+
+test('헤드램프 (원작 «헤드램프의 좁은 시야»): 어두운 던전(반구광 ≤ 1.6 · 물 찬 곳)만 · 영웅 머리 자리에서 앞 9 m · ?lamp=0', () => {
+  const W = R('world3d.html');
+  assert.match(W, /const LAMP = INDOOR && q\.get\('lamp'\) !== '0' && \(\(hemiL && hemiL\.intensity <= 1\.6\) \|\| \(env\.water && env\.water\.y > 0\)\) \?/);
+  assert.match(W, /new THREE\.SpotLight\(0xfff1dc, 95, 28, 0\.42, 0\.6, 1\.15\); L\.castShadow = false;/);
+  assert.match(W, /if \(LAMP\) \{ const fx = Math\.sin\(me\.yaw\), fz = Math\.cos\(me\.yaw\); LAMP\.position\.set\(root\.position\.x - fx \* 0\.1, 1\.62, root\.position\.z - fz \* 0\.1\); LAMP\.target\.position\.set\(root\.position\.x \+ fx \* 9, 0\.9, root\.position\.z \+ fz \* 9\); \}/);
+});
