@@ -72,9 +72,9 @@ export const ZONES = {
     indoor: { seed: 5, theme: { wall: '#4a4440', stripe: 'rgba(140,110,80,.3)', floor: 'tile', h: 4.5, light: 'warm' },
       rooms: [
         { id: 'entry', s: [-8, 8], t: [-26, -14], props: [ { k: 'debris', n: 5 } ] },
-        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 }, { k: 'glass', n: 60 }, { k: 'wallpaper', n: 8 } ] },   /* 3D: 깨진 유리 · 부푼 벽지 (L4995~L5025) */
+        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 }, { k: 'glass', n: 60 }, { k: 'wallpaper', n: 8 }, { k: 'hooks', gap: 4.5, step: 3 } ] },   /* 3D: 깨진 유리 · 부푼 벽지 (L4995~L5025) · 천장 케이블카 거더·고리 — 떨어지는 자리 넷 (문서 233 #3) */
         { id: 'shop', s: [16, 30], t: [-6, 10], light: 'red', props: [ { k: 'shelves', n: 4 }, { k: 'debris', n: 4 }, { k: 'glass', n: 30 } ] },
-        { id: 'down', s: [-24, -16], t: [-2, 4], light: 'red', props: [ { k: 'sign', text: '국방부', u: 0.5, color: '#d83a2a', w: 3 } ] },
+        { id: 'down', s: [-24, -16], t: [-2, 4], light: 'red', props: [ { k: 'sign', text: '국방부', u: 0.5, color: '#d83a2a', w: 3 }, { k: 'steeldoor', id: 'mod', boss: 'dropper', name: '국방부 철문', u: 0.5 } ] },   /* 3D: 드로퍼가 살아 있으면 닫힌 철문 (문서 233 #3) */
         { id: 'comms', s: [-44, -24], t: [-8, 10], floor: 'metal', light: 'green', props: [ { k: 'consoles', rows: [0.3, 0.7] }, { k: 'lockers' } ] } ] } },
 
   /* ================= 4. 여의도 — 공동구 · 지하주차장 (던전) → 금융가 협곡 (필드) ================= */

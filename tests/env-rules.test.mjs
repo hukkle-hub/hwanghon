@@ -125,3 +125,14 @@ test('고흥 발사대 지하 (문서 233 #10 나노-노바): «거대한 원 �
   assert.match(W, /\* \(now < \(p\.buffUntil \|\| 0\) \? 1 - \(p\.buffReduce \|\| 0\) : 1\) \* \(ENV\.safe \? SAFE\.k : 1\)\)\);/, '원 안쪽은 피해 ½'); assert.match(W, /if \(ENV\.safe\) t = \(t \? t \+ ' · ' : ''\) \+ \(ENV\.safe\.label \|\| SAFE\.label\);/);
 });
 
+
+test('남산타워 하부 (문서 233 #3 드로퍼): 천장 케이블카 거더·고리 «천장에서 떨어지는 넷» · 국방부 철문 — 문지기가 살아 있으면 닫힘(막이), 쓰러지거나 가두면 1.6 초에 올라간다, 몸이 아직 없으면 열려 있다', async () => {
+  const { DOOR, doorLocked } = await import('../js/mmo/env-rules.js');
+  assert.equal(DOOR.open, 1.6); const d = { id: 'mod', boss: 'dropper' };
+  assert.equal(doorLocked(d, []), false, '보스 없음 → 열림'); assert.equal(doorLocked(d, [{ id: 'dropper', ai: { alive: true } }]), true); assert.equal(doorLocked(d, [{ id: 'dropper', ai: { alive: false } }]), false); assert.equal(doorLocked(d, [{ id: 'dropper' }]), true, '정지 모델(AI 없음)도 살아 있는 것'); assert.equal(doorLocked(d, [{ id: 'dropper', sealed: true }]), false); assert.equal(doorLocked(d, [{ id: 'clave', ai: { alive: true } }]), false);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(I, /hooks\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /for \(const \[u, v\] of \(o\.at \|\| \[\[0\.3, 0\.3\], \[0\.7, 0\.3\], \[0\.3, 0\.7\], \[0\.7, 0\.7\]\]\)\)/, '떨어지는 자리 넷');
+  assert.match(I, /steeldoor\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /doors\.push\(\{ id: o\.id \|\| 'door', boss: o\.boss \|\| null, name: o\.name \|\| '철문', x: \+c\[0\]\.toFixed\(2\), z: \+c\[1\]\.toFixed\(2\), hw: 0\.3, hd: Wd \/ 2, rot: SCREEN_ANG, h: H \}\); scene\.userData\.doors = /); assert.match(I, /braces: \[\], interacts, floodgates, narrows, covers, safe, doors,/);
+  assert.match(Z, /\{ k: 'hooks', gap: 4\.5, step: 3 \}/); assert.match(Z, /\{ k: 'steeldoor', id: 'mod', boss: 'dropper', name: '국방부 철문', u: 0\.5 \}/);
+  assert.match(W, /const locked = doorLocked\(d, fbs\.map\(o => \(\{ id: o\.b\.id, ai: o\.ai, sealed: o\.sealed \}\)\)\);/); assert.match(W, /if \(!locked\) \{ d\.open = true; d\.t = 0; const i = walkMeta\.blockers\.indexOf\(d\.ref && d\.ref\.blocker\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '열리면 막이가 풀린다'); assert.match(W, /devTick\(dt\); turretTick\(dt\); doorTick\(dt\);/);
+});

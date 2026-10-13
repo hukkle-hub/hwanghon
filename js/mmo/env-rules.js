@@ -83,3 +83,8 @@ export function swingK(narrow) { return narrow && narrow.w != null && narrow.w <
 export const SAFE = { r: 4.5, k: 0.5, label: '원 궤적 안쪽 — 참격이 느리다 (피해 ½)' };
 export function safeAt(list, x, z) { if (!list) return null; for (const z0 of list) if (Math.hypot(z0.x - x, z0.z - z) <= (z0.r || SAFE.r)) return z0; return null; }
 
+/* 남산타워 하부 (문서 233 #3 케이블카 드로퍼)
+   «천장에서 떨어지는 넷» EP05: 옛 식당 천장의 케이블카 거더·고리 — 드로퍼가 매달릴 자리 넷 · «지하 3층 국방부 철문» → 통신실: 문지기(드로퍼)가 살아 있는 동안 닫혀 있고, 쓰러지면 open 초에 올라간다 */
+export const DOOR = { open: 1.6, nag: 8, lockedLabel: '잠김 — 문지기를 쓰러뜨리면 열린다' };
+export function doorLocked(door, bosses) { const o = (bosses || []).find(b => b.id === door.boss); return !!o && (o.ai ? !!o.ai.alive : true) && !o.sealed; }   /* 보스가 없으면(몸이 아직 없으면) 열려 있다 */
+
