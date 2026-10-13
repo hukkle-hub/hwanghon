@@ -149,7 +149,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
-import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH } from './js/mmo/env-rules.js'; import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -363,7 +363,7 @@ const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
     if (now < p.invulnUntil || now < p.dodgeUntil) { evadeFx(now, false); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
     const amount = Math.max(1, Math.round(p.maxHp * hit.damage * (now < (p.buffUntil || 0) ? 1 - (p.buffReduce || 0) : 1))); p.hp = Math.max(0, p.hp - amount);   /* 결의류: 받는 피해 감소 (서버 bossStrike buffMul) */
-    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; if (ENV.band.spin) { ENV.spinT = KNOCK_SPIN.dur; ENV.splashT = SPLASH.dur; } }
+    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; if (ENV.band.spin) { ENV.spinT = KNOCK_SPIN.dur; ENV.splashT = SPLASH_RULE.dur; } }
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
     if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } if (o.combat) COMBAT.notePlayerResult(o, p.id, false); return { amount, dead: p.dead }; } };
 const doms = [], fbs = [];   /* fbs: 필드 보스(클레이브 등) — 아래 «필드 보스» 에서 채운다 */
@@ -779,7 +779,7 @@ function tick() { perf.begin();
   aviBlink(gameNow / 1000, lampK);   /* 항공 장애등 깜빡임 (문서 229 §4) */
   if (FLICK) { const T = FLICK.on + FLICK.off, ph = (gameNow / 1000) % T, off = ph > FLICK.on, stut = ph > 0.08 && ph < 0.18, st = off ? 0 : stut ? 2 : 1;
     if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
-  if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH.scale - 1) * (1 - ENV.splashT / SPLASH.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
+  if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH_RULE.scale - 1) * (1 - ENV.splashT / SPLASH_RULE.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH_RULE.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

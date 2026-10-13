@@ -26,7 +26,7 @@ test('world3d 연결: 이동 배율·흔들림·회피 배율·공격/맞대기 
   assert.match(W, /function attack\(\) \{ if \(STAGE && STAGE\.locked\) \{ STAGE\.skip\(\); return; \} if \(ENV\.band\.atk && !ENV\.fromQueue\) \{ if \(!ENV\.pend\) ENV\.pend = \{ fn: attack, at: gameNow \+ ENV\.band\.atk \}; return; \}/);
   assert.match(W, /function counter\(\) \{[^\n]*if \(ENV\.band\.atk && !ENV\.fromQueue\) \{ if \(!ENV\.pend\) ENV\.pend = \{ fn: counter, at: gameNow \+ ENV\.band\.atk \}; return; \}/);
   assert.match(W, /if \(ENV\.pend && gameNow >= ENV\.pend\.at\) \{ const f = ENV\.pend\.fn; ENV\.pend = null; ENV\.fromQueue = true; try \{ f\(\); \} finally \{ ENV\.fromQueue = false; \} \}/);
-  assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH\.dur; \}/); assert.match(W, /me\.yaw \+= Math\.PI \* 2 \* KNOCK_SPIN\.turns \* k \/ KNOCK_SPIN\.dur;/);
+  assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/); assert.match(W, /me\.yaw \+= Math\.PI \* 2 \* KNOCK_SPIN\.turns \* k \/ KNOCK_SPIN\.dur;/);
   assert.match(W, /if \(sf && sf\.muffle\) sf\.muffle\(b\.hear\);/); assert.match(W, /scene\.fog\.near = ENV\.fog0\[0\] \* b\.vis;/); assert.match(W, /const reach = b\.id === 'shoulder' \? LAMP_RULE\.deepReach : LAMP_RULE\.reach;/);
   assert.match(W, /flow = FLOW_V\.set\(dx \/ dd, dz \/ dd\)\.multiplyScalar\(FLOATERS\.push\)/, '보스에서 멀어지는 쪽으로'); assert.match(W, /ENV\.chip\.hidden = !t; ENV\.chip\.textContent = t;/);
   assert.match(W, /const yAt = G \? \(x, z\) => \{ const sv = sOf\(x, z\);/, '경사 수면 깊이'); assert.match(W, /bg\.setIndex\(idx\); bg\.computeVertexNormals\(\); w = new THREE\.Mesh\(bg, m\);/, '꺾인 수면 판');
@@ -40,5 +40,5 @@ test('젖은 옷 «젖은 테크웨어의 무게» L4110: 허리 위 물에서 �
   assert.match(envSummary(waterBand(0), 6), /^젖은 옷 — 이동 92% \(6초\)$/); assert.equal(envSummary(waterBand(0), 0), '');
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
   assert.match(W, /if \(b\.id === 'dry' && ENV\.band\.min >= WATER_BANDS\.find\(x => x\.id === WET\.minBand\)\.min\) ENV\.wetT = WET\.dur;/); assert.match(W, /\*wetK\(ENV\.wetT\)/); assert.match(W, /\* \(ENV\.wetT > 0 \? WET\.dodge : 1\);/);
-  assert.ok(SPLASH.scale > 2); assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH\.dur; \}/);
+  assert.ok(SPLASH.scale > 2); assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/);
 });
