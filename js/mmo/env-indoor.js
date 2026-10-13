@@ -21,6 +21,8 @@ export function build(THREE, scene, osm, zone) {
   const inRoom = (s, t, pad = 0) => rooms.some(r => s > r.s0 - pad && s < r.s1 + pad && t > r.t0 - pad && t < r.t1 + pad);
   const at = (id, u = 0.5, v = 0.5) => { const r = roomById(id); return FROM(r.s0 + (r.s1 - r.s0) * u, r.t0 + (r.t1 - r.t0) * v); };
   const PHOTO = isView3d() && FACADE_PHOTO.on;
+  /* 물 깊이 경사 (문서 232 §1): theme.waterGrade = [[s, y], …] — 한강 터널 «삼백 미터 지점부터 물… 허리, 가슴, 그리고 어깨» (L7428~L7430). 없으면 spec.water 한 높이 */
+  const wyAt = sv => { const g = th.waterGrade; if (!g || !g.length) return spec.water || 0; if (sv <= g[0][0]) return g[0][1]; for (let i = 1; i < g.length; i++) if (sv <= g[i][0]) { const [s0, y0] = g[i - 1], [s1, y1] = g[i]; return y0 + (y1 - y0) * (sv - s0) / Math.max(1e-6, s1 - s0); } return g[g.length - 1][1]; };
   const R3 = rng((spec.seed || 1) * 7919 + 3), OPENINGS = [], ceilM = zone.view3d && PHOTO ? Object.assign(new THREE.MeshStandardMaterial({ ...phPair(THREE, 'concrete_layers', { normalScale: 0.7 }), roughness: 0.95, color: 0x5a5c60 }), { userData: { rep: 2.6 } }) : null;   /* R3: 3D 꾸밈 전용 난수 — 공용 R 을 쓰면 2D 굽기·막이 자리가 어긋난다 (문서 231 §5) */
   const box = (w, h, d, mat, x, y, z, rotY = 0, cast = true) => { const m = new THREE.Mesh(mat.userData && mat.userData.rep ? boxWorldUv(new THREE.BoxGeometry(w, h, d), w, h, d, mat.userData.rep) : new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = rotY; m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m; };
   const block = (x, z, hw, hd, rot = 0) => blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: +hw.toFixed(2), hd: +hd.toFixed(2), rot: +rot.toFixed(4) });
@@ -64,7 +66,7 @@ export function build(THREE, scene, osm, zone) {
       const flush = () => { if (!run) return; const [u0, u1] = run, sA = e.a[0] + (e.b[0] - e.a[0]) * u0, tA = e.a[1] + (e.b[1] - e.a[1]) * u0, sB = e.a[0] + (e.b[0] - e.a[0]) * u1, tB = e.a[1] + (e.b[1] - e.a[1]) * u1;
         const mid = FROM((sA + sB) / 2 + e.n[0] * 0.18, (tA + tB) / 2 + e.n[1] * 0.18), len = Math.hypot(sB - sA, tB - tA), along = e.n[0] === 0, rot = along ? SCREEN_ANG : SCREEN_ANG + Math.PI / 2;
         box(len + 0.05, h, 0.36, cut ? cutM : wallM, mid[0], h / 2, mid[1], rot); block(mid[0], mid[1], len / 2 + 0.03, 0.26, rot); wallN++; run = null;
-        if (zone.view3d && spec.water) { const q = FROM((sA + sB) / 2 - e.n[0] * 0.01, (tA + tB) / 2 - e.n[1] * 0.01); box(len, 0.42, 0.03, stainM, q[0], spec.water + 0.12, q[1], rot, false); } };   /* 물때 — 벽 안쪽 수면 높이에 어두운 띠 (문서 231 §5) */
+        if (zone.view3d && spec.water) { const q = FROM((sA + sB) / 2 - e.n[0] * 0.01, (tA + tB) / 2 - e.n[1] * 0.01), wy = wyAt((sA + sB) / 2); if (wy > 0.05) box(len, 0.42, 0.03, stainM, q[0], wy + 0.12, q[1], rot, false); } };   /* 물때 — 벽 안쪽 수면 높이에 어두운 띠 (문서 231 §5) */
       for (let j = 0; j < k; j++) { const u0 = j / k, u1 = (j + 1) / k, um = (u0 + u1) / 2, s = e.a[0] + (e.b[0] - e.a[0]) * um, t = e.a[1] + (e.b[1] - e.a[1]) * um;
         const open = rooms.some(o => o !== r && s + e.n[0] * 0.6 > o.s0 && s + e.n[0] * 0.6 < o.s1 && t + e.n[1] * 0.6 > o.t0 && t + e.n[1] * 0.6 < o.t1);
         if (open) { flush(); if (zone.view3d) { const o = OPENINGS.at(-1); if (o && o.e === e && o.r === r && Math.abs(o.u1 - u0) < 1e-6) o.u1 = u1; else OPENINGS.push({ e, r, u0, u1 }); } } else run = run ? [run[0], u1] : [u0, u1]; }
@@ -245,6 +247,6 @@ export function build(THREE, scene, osm, zone) {
   console.info('[env-indoor]', zone.id, '방', rooms.length, '벽', wallN, '빛', lights.length, '막힘', blockers.length);
   return { kind: zone.kind || 'dungeon', title: zone.title, lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 }, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
     fogDist: th.fogDist || null,   /* 3D 안개 [가까이, 멀리] — 침수 선로·터널은 짙게 (기본 16·70) */
-    sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water } : null, flicker: th.flicker || null,
+    sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water, grade: th.waterGrade ? th.waterGrade.map(([sv, y]) => { const p = FROM(sv, 0); return { s: sv, y, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; }) : null, ang: SCREEN_ANG } : null, flicker: th.flicker || null,
     gates, bosses, areas, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: '' };
 }
