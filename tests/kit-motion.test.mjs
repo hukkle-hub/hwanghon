@@ -58,9 +58,13 @@ test('기계형 5종: 몸을 눌러 늘리지 않고 포구/코어만 예열 · 
 });
 
 test('셀레스티얼: 원래 비행 높이 3.4m를 빼고 착지한 뒤 원 높이로 복귀', () => {
-  const o = boss('celestial2'); o.root.position.y = 3.4;
+  const o = boss('celestial2'); o.root.position.y = o.b.fly = 3.4;
   applyKitAction(o, act(o, 'dive'), 1000); updateKitMotion(o, .05, 2500);
   assert.ok(Math.abs(o.root.position.y + o.model.position.y) < 1e-6);
+  const beam = o.kfx.attackFX.pool[0].beam;
+  assert.equal(beam.geometry.parameters.openEnded, true, 'closed beam cap must not fill the target camera');
+  assert.ok(beam.material.opacity <= .22, 'impact preserves target visibility');
+  assert.ok(Math.abs(beam.position.y - (o.h * .55 + .65) / 2) < 1e-6, 'attack origin follows grounded body, not original flight height');
   updateKitMotion(o, .05, 4800); assert.equal(o.model.position.y, 0);
 });
 
@@ -69,6 +73,8 @@ test('고정 사출: 서버가 잠근 표적에 예열 결정 → 타격 · 현�
   updateKitMotion(o, .05, 2000); const shard = o.kfx.attackFX.pool[0].shard;
   assert.ok(shard.visible); assert.equal(shard.position.x, 8); assert.equal(shard.position.z, 6); assert.ok(shard.position.y > 1);
   updateKitMotion(o, .05, 3300); assert.ok(o.kfx.attackFX.pool[0].wave.visible);
+  assert.ok(o.kfx.bolts.every(b => !b.m.visible), 'dedicated artillery must not also draw lightning');
+  assert.ok(o.kfx.ringPool.every(b => !b.m.visible), 'dedicated volumes must not draw an unrelated circular hit');
   o.stage = { dying: true }; updateKitMotion(o, .05, 3320); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
 });
 

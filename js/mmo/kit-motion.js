@@ -68,7 +68,8 @@ export function updateKitMotion(o, dt, now) {
     fx.glow.intensity += ((q ? 1 + p * 4 : skill ? 1.6 : .6) - fx.glow.intensity) * Math.min(1, dt * 6); }
   /* 무거운 판정이 지나가면 충격(카메라 킥·고리) — 난무 잔타는 빼고 */
   if (skill && !dying) while (fx.hitIdx < skill.hits.length && t >= S(skill, a, skill.hits[fx.hitIdx].at)) { const i = fx.hitIdx++, h = skill.hits[i], mk = h.atTarget && a.marks && a.marks[i];
-    if (mk) { const b = fx.bolts.find(q => q.t > .3) || fx.bolts[0]; if (b) { b.t = 0; b.m.position.set(mk[0], fx.floor + 8, mk[1]); b.m.visible = true; } ring(fx, mk[0], mk[1], h.radius * 1.6); ev.impact = true; ev.bolt = mk; }   /* 낙뢰 */
+    if (fx.attackFX) { ev.impact = h.damage >= .1; } // Dedicated volumes already draw this hit; no unrelated lightning or filled safe core.
+    else if (mk) { const b = fx.bolts.find(q => q.t > .3) || fx.bolts[0]; if (b) { b.t = 0; b.m.position.set(mk[0], fx.floor + 8, mk[1]); b.m.visible = true; } ring(fx, mk[0], mk[1], h.radius * 1.6); ev.impact = true; ev.bolt = mk; }   /* 낙뢰 */
     else if (!h.pool && h.damage >= .1) { ev.impact = true; ring(fx, o.root.position.x, o.root.position.z, h.radius || 3); } }
   /* 대상 발밑 표식은 그리지 않는다 — 찍히는 순간 경고음만 (낙뢰 자체는 공격이라 그린다) */
   if (skill && !dying && a.marks) skill.hits.forEach((h, i) => { const mk = a.marks[i]; if (!h.atTarget || !mk) return; const hit = S(skill, a, h.at);
