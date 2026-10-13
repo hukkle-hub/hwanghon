@@ -89,6 +89,7 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 #gatebtn small{ display:block; font-weight:500; font-size:12px; color:var(--dim); }
 #gatebtn.dg{ border-color:rgba(232,90,74,.85); }
 #gatebtn[hidden]{ display:none; }
+@media (orientation:portrait){ #gatebtn{ left:max(12px,env(safe-area-inset-left)); transform:none; max-width:46vw; padding:10px 14px; } }   /* 세로: 가운데 두면 카운터 원과 겹쳤다 (Pixel 7 세로 — 던전 장치 단추) → 왼쪽 아래, 이동키 위 */
 #toast{ position:absolute; top:22%; left:50%; transform:translateX(-50%); font-weight:900; font-size:17px; background:var(--panel); padding:8px 16px; border-radius:12px; text-align:center; max-width:calc(100vw - 32px); box-sizing:border-box; }
 #toast[hidden]{ display:none; }
 .tag{ position:absolute; transform:translate(-50%,-100%); font-size:11px; color:#e8f4ff; text-shadow:0 1px 3px #000; white-space:nowrap; }
@@ -150,7 +151,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
-import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval, CIRCLE, swingK, SAFE, safeAt, DOOR, doorLocked, QUIET, quietAt, ECHO, VALLEY } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval, CIRCLE, swingK, SAFE, safeAt, DOOR, doorLocked, QUIET, quietAt, ECHO, VALLEY, TOWER, towerFalls } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -410,7 +411,7 @@ const DRIP = DWATER && q.get('drip') !== '0' ? (() => { WX.uRain.value = 0.14; c
   sp.U.uY.value = DWATER.y + 0.02; r.U.uCol.value.setRGB(0.5, 0.56, 0.6); sp.U.uCol.value.setRGB(0.5, 0.56, 0.6); scene.add(r.mesh, sp.mesh); return { r, sp }; })() : null;
 /* 전투 환경 (문서 232): 물 깊이 띠 → 이동·회피·공격 지연·소리·시야·뜸 · 밀려나면 반 바퀴 · 부유물이 보스 예고를 알린다. 숫자는 js/mmo/env-rules.js 한 장 */
 const ENV = { depth: 0, band: WATER_BANDS[0], spinT: 0, pend: null, fromQueue: false, fog0: null, wetT: 0, splashT: 0, brace: null, narrow: null, safe: null, quiet: null, slip: !!env.slip, chip: document.getElementById('envChip') }; window.__ENV = ENV;
-function refreshChip() { let t = envSummary(ENV.band, ENV.wetT, !!ENV.brace); if (ENV.brace && ENV.brace.label) t = t.replace('매대 다리에 발 — 버틴다 (밀려남 ⅓)', ENV.brace.label);   /* 골짜기 벽 등 (문서 233 #7) */ if (ENV.narrow) t = (t ? t + ' · ' : '') + (ENV.narrow.label || NARROW.label) + (swingK(ENV.narrow) < 1 ? ' · 공격 ' + Math.round(swingK(ENV.narrow) * 100) + '%' : ''); if (DEV.fixT > 0) t = (t ? t + ' · ' : '') + '이음매 굳음 ' + Math.ceil(DEV.fixT) + '초'; if (ENV.safe) t = (t ? t + ' · ' : '') + (ENV.safe.label || SAFE.label); if (ENV.quiet) t = (t ? t + ' · ' : '') + (ENV.quiet.label || (ENV.quiet.mute === false ? ECHO.label : QUIET.label)); ENV.chip.hidden = !t; ENV.chip.textContent = t; }   /* 환경 띠: 물 · 젖음 · 버팀 · 좁은 계단 · 굳힌 이음매 */
+function refreshChip() { let t = envSummary(ENV.band, ENV.wetT, !!ENV.brace); if (ENV.brace && ENV.brace.label) t = t.replace('매대 다리에 발 — 버틴다 (밀려남 ⅓)', ENV.brace.label);   /* 골짜기 벽 등 (문서 233 #7) */ if (ENV.narrow) t = (t ? t + ' · ' : '') + (ENV.narrow.label || NARROW.label) + (swingK(ENV.narrow) < 1 ? ' · 공격 ' + Math.round(swingK(ENV.narrow) * 100) + '%' : ''); if (DEV.fixT > 0) t = (t ? t + ' · ' : '') + '이음매 굳음 ' + Math.ceil(DEV.fixT) + '초'; if (ENV.safe) t = (t ? t + ' · ' : '') + (ENV.safe.label || SAFE.label); if (ENV.quiet) t = (t ? t + ' · ' : '') + (ENV.quiet.label || (ENV.quiet.mute === false ? ECHO.label : QUIET.label)); if (TW.ref && !TW.fallen && TW.song > 0) t = (t ? t + ' · ' : '') + '노래 ' + TW.song + '/' + TOWER.songMax + ' 눈금'; ENV.chip.hidden = !t; ENV.chip.textContent = t; }   /* 환경 띠: 물 · 젖음 · 버팀 · 좁은 계단 · 굳힌 이음매 */
 const FLOAT = DWATER && q.get('floaters') !== '0' ? floaters(THREE, { n: MOBILE ? 90 : 160 }) : null; if (FLOAT) scene.add(FLOAT.mesh);
 const FLOW_V = new THREE.Vector2(), FLOW_IDLE = new THREE.Vector2(FLOATERS.idle, FLOATERS.idle * 0.4);
 function envTick(dt) { const br = braceAt(env.braces, root.position.x, root.position.z); if (br !== ENV.brace) { ENV.brace = br; refreshChip(); }   /* 매대 버팀 (문서 233 #1) */
@@ -431,16 +432,22 @@ function envTick(dt) { const br = braceAt(env.braces, root.position.x, root.posi
   if (DRIP) DRIP.sp.U.uY.value = d + 0.02; }
 /* 던전 장치 (문서 233 #4 레비아탄): 윈치 케이블 — 입구 윈치에서 내 허리까지 줄, 줄 끝(80 m) 밖으로는 못 가고 «윈치! 당겨!» 로 끌려 돌아온다, 풀면 생명줄 없이 간다 ·
    차수문 고정핀 — 기계실 핀 둘을 자르면 문이 떨어져 길을 막는다 · 둘 다 내려오고 보스가 사이에 있으면 «가둠» (차수문 3-B). 숫자는 env-rules WINCH · FLOODGATE */
-const DEV = { list: INDOOR ? (env.interacts || []) : [], cut: new Set(), gates: new Map(), drops: [], cable: null, attached: false, pull: 0, taut: false, sealed: false, fixT: 0, fixBlock: null, fixMesh: null }; window.__DEV = DEV;
+const DEV = { list: env.interacts || [], cut: new Set(), gates: new Map(), drops: [], cable: null, attached: false, pull: 0, taut: false, sealed: false, fixT: 0, fixBlock: null, fixMesh: null }; window.__DEV = DEV;
 for (const fg of (env.floodgates || [])) DEV.gates.set(fg.id, { ...fg, door: ((scene.userData.floodgates || []).find(d => d.id === fg.id) || null), down: false, cut: 0 });
 const PIN_MESHES = []; scene.traverse(o => { if (o.userData && (o.userData.pin || o.userData.pinWeight)) PIN_MESHES.push(o); });
 const WINCH_AT = DEV.list.find(i => i.kind === 'winch') || null; const roadS = (x, z) => { const a = env.road ? env.road.ang : 0; return x * Math.cos(a) - z * Math.sin(a); };
 if (WINCH_AT) { DEV.cable = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshStandardMaterial({ color: 0x9a9ca0, roughness: 0.45, metalness: 0.8 })); DEV.cable.frustumCulled = false; DEV.cable.name = 'cable'; scene.add(DEV.cable); DEV.attached = true; DEV.pts = Array.from({ length: 16 }, () => new THREE.Vector3()); }   /* 굵기 3 cm 강선 — 1px 선은 안 보였다 */
-function devNear() { const p = root.position; let g = null, gd = 1e9; for (const x of DEV.list) { if (x.kind === 'pin') { if (DEV.cut.has(x.id)) continue; const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < x.r + 0.8 && d < gd) { g = x; gd = d; } }
+function devNear() { const p = root.position; let g = null, gd = 1e9; for (const x of DEV.list) { if (x.minY != null && p.y < x.minY) continue; if (x.maxY != null && p.y > x.maxY) continue;   /* 탑 위/아래 장치 (문서 233 #12) */
+    if (x.kind === 'climb' || x.kind === 'descend' || x.kind === 'socket') { if (x.kind === 'socket' && TW.sockets.find(sk => sk.id === x.id)?.cut) continue; if (TW.phase !== 'ground' && TW.phase !== 'top') continue; if (TW.fallen) continue; const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < x.r + 0.8 && d < gd) { g = x; gd = d; } }
+    else if (x.kind === 'pin') { if (DEV.cut.has(x.id)) continue; const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < x.r + 0.8 && d < gd) { g = x; gd = d; } }
     else if (x.kind === 'seam') { if (x.bottles <= 0 || DEV.fixT > 0) continue; const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < x.r + 0.8 && d < gd) { g = x; gd = d; } }
     else if (x.kind === 'winch' && DEV.attached) { const d = Math.hypot(x.x - p.x, x.z - p.z); if (d < 2.6) continue; if (DEV.taut) { if (!g) g = { ...x, id: 'winch-release', label: '줄을 푼다 — 생명줄 없이 간다', release: true }; } else if (DEV.pull <= 0 && d > 8 && !g) g = x; } }   /* 줄 끝이면 풀기, 아니면 당겨 올리기 */
   return g; }
 function useDevice(g) { if (!g || P.dead) return; const sf = window.TW_SFX;
+  if (g.kind === 'climb') { TW.phase = 'up'; TW.t = 0; root.position.x = g.x; root.position.z = g.z; toast('케이블에 낫을 걸었다 — 오른다', 2.5); sf?.play('roll'); return; }
+  if (g.kind === 'descend') { TW.phase = 'down'; TW.t = 0; root.position.x = g.x; root.position.z = g.z; toast('케이블을 타고 내려간다', 2); return; }
+  if (g.kind === 'socket') { const sk = TW.sockets.find(sk => sk.id === g.id); if (!sk || sk.cut) return; sk.cut = true; sk.mesh.material = new THREE.MeshStandardMaterial({ color: 0x6a6e74, roughness: 0.5, metalness: 0.7 }); floatAt('절단', 'crit', { x: g.x, z: g.z }, root.position.y + 2.4); sf?.play('brk'); const n = TW.sockets.filter(x => x.cut).length; toast('소켓 ' + n + '/' + TW.sockets.length + ' — 결정이 빛을 잃고 쇠만 남았다' + (sk.sea ? ' (바다 쪽)' : ''), 3);   /* «류의 소켓 절단 → 주각 결정이 빛을 잃고 순수한 쇠로» */
+    if (towerFalls(TW.sockets)) { TW.phase = 'jump'; TW.t = 0; toast('주각이 운다 — 뛰어내린다!', 3); shakeT = Math.max(shakeT, .5); } return; }
   if (g.kind === 'pin') { DEV.cut.add(g.id); for (const m of PIN_MESHES) if (m.userData.pin === g.id || m.userData.pinWeight === g.id) m.visible = false; sf?.play('brk'); floatAt('절단', 'crit', { x: g.x, z: g.z }, 1.5); shakeT = Math.max(shakeT, .2);
     const fg = DEV.gates.get(g.gate); if (!fg) return; fg.cut++; const left = (fg.pins || FLOODGATE.pins) - fg.cut; if (left > 0) toast(esc(fg.name) + ' 차수문 고정핀 — ' + left + '개 남았다', 2.5); else dropGate(fg); return; }
   if (g.kind === 'seam') { g.bottles--; DEV.fixT = FIX.hold; DEV.fixBlock = { x: g.x, z: g.z, hw: g.hw, hd: g.hd, rot: g.rot }; walkMeta.blockers.push(DEV.fixBlock);   /* 굳은 이음매 — 나도 못 지난다 (EP14 «임시 봉쇄 후 철수») */
@@ -487,6 +494,15 @@ function doorTick(dt) { for (const d of DOORS) { if (d.open) { if (d.t < DOOR.op
     const locked = doorLocked(d, fbs.map(o => ({ id: o.b.id, ai: o.ai, sealed: o.sealed })));
     if (!locked) { d.open = true; d.t = 0; const i = walkMeta.blockers.indexOf(d.ref && d.ref.blocker); if (i >= 0) walkMeta.blockers.splice(i, 1); shakeT = Math.max(shakeT, .25); window.TW_SFX?.play('gate'); toast(esc(d.name) + '이 열린다', 3); continue; }
     const dd = Math.hypot(d.x - root.position.x, d.z - root.position.z); if (dd < 3.2 && gameNow >= d.nagAt) { d.nagAt = gameNow + DOOR.nag * 1000; toast(esc(d.name) + ' — ' + DOOR.lockedLabel, 3); } } }
+/* 발사대 탑 (문서 233 #12): 케이블 등반 → 꼭대기 발판 → 소켓 넷 → 바다 쪽 둘을 끊으면 뛰어내리고 탑이 넘어간다. 탑 가까이에선 «노래» 눈금이 songStep 초마다 하나씩 (압박) */
+const TW = { ref: scene.userData.tower || null, phase: 'ground', t: 0, fallT: -1, fallen: false, song: 0, songT: 0, sockets: (scene.userData.tower && scene.userData.tower.sockets) || [] }; window.__TOWER = TW;
+function towerTick(dt) { const T = TW.ref; if (!T) return; const p = root.position;
+  if (TW.phase === 'up') { TW.t += dt; const u = Math.min(1, TW.t / TOWER.climb); p.x = T.cable.x; p.z = T.cable.z; p.y = T.h * u; if (u >= 1) { TW.phase = 'top'; p.x = T.x - T.half + 1.2; p.z = T.z - T.half + 1.2; toast('꼭대기 발판 — 케이블 다발 소켓 넷', 3); } }
+  else if (TW.phase === 'down') { TW.t += dt; const u = Math.min(1, TW.t / TOWER.climb); p.x = T.cable.x; p.z = T.cable.z; p.y = T.h * (1 - u); if (u >= 1) { TW.phase = 'ground'; p.y = 0; } }
+  else if (TW.phase === 'jump') { TW.t += dt; const u = Math.min(1, TW.t / 1.0); p.y = T.h * (1 - u * u); p.x += (T.x - p.x < 0 ? -1 : 1) * 0 ; if (u >= 1) { p.y = 0; TW.phase = 'ground'; TW.fallT = 0; p.x = T.x - T.half - 6; p.z = T.z - T.half - 6; window.TW_SFX?.play('brk'); toast('탑이 기운다 — 바다 쪽으로', 3); } }   /* 뛰어내려 밑동 밖으로 */
+  else if (TW.phase === 'top') { p.y = T.h; const dx = p.x - T.x, dz = p.z - T.z, m = T.half - 0.6; if (Math.abs(dx) > m) p.x = T.x + Math.sign(dx) * m; if (Math.abs(dz) > m) p.z = T.z + Math.sign(dz) * m; }   /* 발판 밖으로는 못 나간다 */
+  if (TW.fallT >= 0 && !TW.fallen) { TW.fallT += dt; const u = Math.min(1, TW.fallT / TOWER.fall); T.group.rotation.x = T.lean + (1.35 - T.lean) * u * u; shakeT = Math.max(shakeT, .3); if (u >= 1) { TW.fallen = true; const rc = document.getElementById('regionCard'); rc.innerHTML = '<b>' + esc(TOWER.card) + '</b><small>증폭기 — 그래프는 느려졌을 뿐</small>'; rc.classList.add('on'); setTimeout(() => rc.classList.remove('on'), 4200); window.TW_SFX?.play('gate'); toast(TOWER.card, 4); for (const b of walkMeta.blockers.slice()) if (Math.hypot(b.x - T.x, b.z - T.z) < 8) walkMeta.blockers.splice(walkMeta.blockers.indexOf(b), 1); refreshChip(); } }   /* 자중으로 바다 쪽 전도 — 밑동 막이도 풀린다 */
+  if (!TW.fallen && Math.hypot(p.x - T.x, p.z - T.z) < 40) { TW.songT += dt; if (TW.songT >= TOWER.songStep && TW.song < TOWER.songMax) { TW.songT = 0; TW.song++; refreshChip(); } } }
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -523,7 +539,7 @@ function placeCam(dt) {
     const a = new THREE.Vector3().lerpVectors(start, mid, k), b2 = new THREE.Vector3().lerpVectors(mid, end, k); cam.position.lerpVectors(a, b2, k);   /* 곡선(2차 베지어) */
     const lookFar = new THREE.Vector3(h0.x + f[0] * 120, 10, h0.z + f[1] * 120), lookMe = new THREE.Vector3(h0.x, 1.45, h0.z); cam.lookAt(lookFar.lerp(lookMe, ease(Math.min(1, intro.t / (intro.dur * 0.85)))));
     if (intro.t >= intro.dur) { intro = null; document.body.classList.remove('intro'); } else document.body.classList.add('intro'); return; }
-  const h = root.position, tx = h.x, ty = 1.45, tz = h.z, cp = Math.cos(camS.pitch), cd = camS.dist * camDistK(), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * cd, ty + Math.sin(camS.pitch) * cd, tz + Math.cos(camS.yaw) * cp * cd);
+  const h = root.position, tx = h.x, ty = 1.45 + h.y, tz = h.z, cp = Math.cos(camS.pitch),   /* 탑 위에서도 따라간다 (문서 233 #12) */ cd = camS.dist * camDistK(), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * cd, ty + Math.sin(camS.pitch) * cd, tz + Math.cos(camS.yaw) * cp * cd);
   want.y = Math.max(0.4, want.y);
   /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
   const at = new THREE.Vector3(tx, ty, tz), hit = firstHit(MERGE.camBoxes, at, want);
@@ -768,7 +784,7 @@ function hitMob(sk = null) { if (!MOBS || (!net && !ECO)) return false; const v 
   addEventListener('keydown', e => { if (e.code === 'KeyM') open(km.hidden); if (e.code === 'Escape') open(false); }); }
 const gateBtn = document.getElementById('gatebtn'); let gateNear = null;
 let leaving = false;
-async function goGate(g) { if (g && (g.kind === 'pin' || g.kind === 'winch' || g.kind === 'seam')) return useDevice(g); if (!g || !g.to || leaving) return; const to = g.to; leaving = true;
+async function goGate(g) { if (g && ['pin', 'winch', 'seam', 'climb', 'descend', 'socket'].includes(g.kind)) return useDevice(g); if (!g || !g.to || leaving) return; const to = g.to; leaving = true;
   try { const r = await fetch('maps/2d/' + to.zone + '/map.json', { method: 'HEAD' }); if (!r.ok) throw 0; } catch { toast('아직 열리지 않은 지역입니다 — ' + esc(g.label), 2.5); leaving = false; return; }
   const nq = new URLSearchParams(); for (const k of ['char', 'online', 'offline', 'server', 'n01Candidates', 'n01Detail', 'debug', 'lod', 'tod']) if (q.has(k)) nq.set(k, q.get(k)); nq.set('zone', to.zone); if (to.gate) nq.set('gate', to.gate);
   /* 떠나는 카드: 화면이 어두워지며 다음 지역 이름 — 도착 쪽 로딩 화면이 같은 카드를 이어 받는다 (문서 219) */
@@ -786,7 +802,7 @@ function gateTick() { const p = root.position; let g = null, gd = 1e9; for (cons
   if (!g) gateArmed = true;
   if (g && atEnd(g) && gateArmed && !P.dead && !leaving) { const now = performance.now(); if (!gateIn) gateIn = now; else if (now - gateIn > 700) goGate(g); } else gateIn = 0;
   
-  if (g === gateNear || (g && gateNear && g.id === gateNear.id && !g.to)) return; gateNear = g; gateBtn.hidden = !g; if (g) { const dg = g.kind === 'dungeon', dev = g.kind === 'pin' || g.kind === 'winch' || g.kind === 'seam'; gateBtn.className = dg ? 'dg' : dev ? 'dev' : ''; gateBtn.innerHTML = (dg ? '⚔ 들어가기' : dev ? (g.kind === 'pin' ? '✂ 자르기' : g.kind === 'seam' ? '⚗ 고정액' : '⚙ 윈치') : '➜ 이동') + '<small>' + esc(g.label) + (g.kind === 'seam' ? ' (' + g.bottles + '병)' : '') + '</small>'; } }
+  if (g === gateNear || (g && gateNear && g.id === gateNear.id && !g.to)) return; gateNear = g; gateBtn.hidden = !g; if (g) { const dg = g.kind === 'dungeon', dev = ['pin', 'winch', 'seam', 'climb', 'descend', 'socket'].includes(g.kind); gateBtn.className = dg ? 'dg' : dev ? 'dev' : ''; gateBtn.innerHTML = (dg ? '⚔ 들어가기' : dev ? (g.kind === 'pin' ? '✂ 자르기' : g.kind === 'seam' ? '⚗ 고정액' : g.kind === 'climb' ? '⇧ 오르기' : g.kind === 'descend' ? '⇩ 내려가기' : g.kind === 'socket' ? '✂ 소켓' : '⚙ 윈치') : '➜ 이동') + '<small>' + esc(g.label) + (g.kind === 'seam' ? ' (' + g.bottles + '병)' : '') + '</small>'; } }
 addEventListener('keydown', e => { if (e.code === 'KeyE' || e.code === 'Enter') goGate(gateNear); });
 /* ---------- 미니맵 · 사냥터 이름 띠 (2D 필드와 같은 그림·같은 좌표) — 문서 206 §14 ----------
    개관 그림(map.json overview)에 나(방향 화살표)·문·보스·다른 사람. 누르면 크게(사냥터 이름까지). 사냥터에 들어서면 이름·레벨·몬스터 띠 */
@@ -846,9 +862,9 @@ function tick() { perf.begin();
     if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
   if (!DWATER) envTick(dt);
   if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH_RULE.scale - 1) * (1 - ENV.splashT / SPLASH_RULE.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH_RULE.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
-  devTick(dt); turretTick(dt); doorTick(dt);   /* 차수문 낙하 · 윈치 케이블 · 격납고 포탑·엄폐물 · 문지기 철문 */
+  devTick(dt); turretTick(dt); doorTick(dt); towerTick(dt);   /* 차수문 낙하 · 윈치 케이블 · 격납고 포탑·엄폐물 · 문지기 철문 · 발사대 탑 */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
-  const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
+  const lockMove = (STAGE && STAGE.locked) || TW.phase === 'up' || TW.phase === 'down' || TW.phase === 'jump', ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;

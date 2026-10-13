@@ -99,3 +99,9 @@ export function quietAt(list, x, z) { if (!list) return null; for (const q of li
 export const VALLEY = { braceLabel: '골짜기 벽에 등 — 버틴다 (밀려남 ⅓) · 셀레스티얼 고도 상한 15 m', step: 3 };
 export const ECHO = { hear: 0.5, label: '반향 지대 — 소리 방향을 못 잡는다 · 예고음 믿지 말고 바닥을' };
 
+/* 발사대 탑 — 증폭기 (문서 233 #12, 디렉터 «일단 전부 진행해»)
+   «트러스·케이블(낫을 걸어 수직 등반)» · «바다 쪽으로 기우는 구조» · «주각 넷(같은 쪽 둘을 끊으면 자중으로 바다 쪽 전도)» · «결정이 신경처럼 오른 케이블 다발의 소켓» · «목덜미로 듣는 노래 — 박자마다 그래프가 한 눈금씩»:
+   밑동 케이블에서 «오르기» → climb 초 동안 h 까지 오른다 · 꼭대기 발판의 소켓 넷 중 바다 쪽 둘을 끊으면 탑이 fall 초에 바다 쪽으로 넘어간다 (나는 먼저 뛰어내린다) · 탑 가까이에선 songStep 초마다 노래 눈금이 하나씩 (압박, 최대 songMax) */
+export const TOWER = { h: 24, climb: 6, fall: 4, sockets: 4, lean: 0.035, songStep: 20, songMax: 12, label: '탑 오르기 — 케이블에 낫을 건다', card: '탑이 바다 쪽으로 넘어갔다 — 노래가 끊겼다' };
+export function towerFalls(sockets) { const sea = (sockets || []).filter(s => s.sea); return sea.length >= 2 && sea.every(s => s.cut); }   /* 같은 쪽(바다 쪽) 둘이 끊기면 자중으로 전도 */
+
