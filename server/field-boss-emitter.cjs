@@ -32,4 +32,12 @@ function contactLine(profile, skill, h, x, z, yaw) {
   // a new muzzle to an old root-based endpoint would miss the locked target.
   return { origin: { x: start.x, z: start.z, yaw }, range: h.range };
 }
-module.exports = { LEVIATHAN, recoilAt, emitterPosition, contactLine };
+function canAimEmitter(profile, skill, x, z, target) {
+  if (!profile || !skill.hits.every(h => h.shape === 'line' && !h.atTarget)) return true;
+  if (!target || !Number.isFinite(target.x) || !Number.isFinite(target.z)) return false;
+  // The current fixed mesh faces +Z and has no animated neck. Do not fire
+  // through it to chase a rear target. Check every recoil contact, not root yaw.
+  // This is a geometric half-space guard, not a new attack/balance parameter.
+  return skill.hits.every(h => target.z > emitterPosition(profile, skill, h.at, x, z).z);
+}
+module.exports = { LEVIATHAN, recoilAt, emitterPosition, contactLine, canAimEmitter };

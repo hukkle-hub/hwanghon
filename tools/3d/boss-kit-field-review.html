@@ -7,14 +7,26 @@ import {loadCjs} from '../../js/mmo/cjs-browser.js';
 const KIT=await loadCjs('../../server/field-boss-kit.cjs'), zones={leviathan:'hangang_tunnel',aegis:'yeouido',celestial2:'southroad',arsenal:'gyeryong_base',nova:'goheung_pad'};
 const frame=document.querySelector('#world'), select=document.querySelector('#boss'), status=document.querySelector('#status');
 const w=()=>frame.contentWindow.__W3D, boss=()=>w()?.fbs.find(o=>o.b.id===select.value);
+// QA teleport releases the new 80m cable. No production device code changes;
+// this isolated combat page is not evidence of dungeon progression working.
+function releaseQaCable(){const d=frame.contentWindow.__DEV;if(d){d.attached=false;d.taut=false;d.pull=0;if(d.cable)d.cable.visible=false;}}
+document.querySelector('#near').addEventListener('click',releaseQaCable);
 let sequence=null;
+for(const [label,width,height] of [['폰 가로',915,412],['폰 세로',412,915],['화면 복원',0,0]]){
+ const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
+ b.onclick=()=>{frame.style.width=width?width+'px':'100%';frame.style.height=height?height+'px':'100%';frame.style.top=height?'170px':'0';document.body.style.minHeight=height?(height+170)+'px':'0';};
+}
 const allButton=document.createElement('button');allButton.textContent='3기술 연속 검수';document.querySelector('aside').append(allButton);
 const whole=document.createElement('button');whole.textContent='보스 전체 보기';document.querySelector('aside').append(whole);
+for(const [label,d] of [['입 정면 검사',18],['입 후방 검사',-12]]){
+ const button=document.createElement('button');button.textContent=label;document.querySelector('aside').append(button);
+ button.onclick=()=>{const a=w(),o=boss();if(!o||select.value!=='leviathan')return;releaseQaCable();sequence=null;a.hold=false;a.stage.skip();o.stage.seen=true;a.P.hp=1000000;a.P.dead=false;KIT.reset(o.ai,a.gameNow);a.teleport(o.ai.x,o.ai.z+d,d>0?Math.PI:0);a.orbit(d>0?0:Math.PI,.22,10);};
+}
 whole.onclick=()=>{const a=w(),o=boss();if(!o)return;const dx=a.P.x-o.ai.x,dz=a.P.z-o.ai.z,n=Math.hypot(dx,dz)||1,h=o.h||6,dist=Math.max(12,h*2.2),y=o.root.position.y;a.view([o.ai.x+dx/n*dist,y+h*.8,o.ai.z+dz/n*dist],[o.ai.x,y+h*.45,o.ai.z]);};
 allButton.onclick=()=>{const a=w(),o=boss();if(!o)return;a.hold=false;document.querySelector('#near').click();KIT.reset(o.ai,a.gameNow);sequence={id:select.value,names:Object.keys(KIT.KITS[select.value].skills),index:0,started:false};o.ai.kit.pattern=sequence.names[0];};
 setInterval(()=>{if(!sequence||sequence.id!==select.value)return;const a=w(),o=boss(),k=o?.ai.kit;if(!k)return;if(k.state==='skill')sequence.started=true;if(sequence.started&&k.state!=='skill'){sequence.index++;sequence.started=false;if(sequence.index>=sequence.names.length){sequence=null;return;}document.querySelector('#near').click();k.pattern=sequence.names[sequence.index];}},50);
 select.onchange=()=>{frame.src='../../world3d.html?zone='+zones[select.value]+'&offline=1&debug=1&lod=1';}; select.onchange();
-document.querySelector('#near').onclick=()=>{const a=w(),o=boss();if(!o)return; a.stage.skip(); a.P.hp=1000000; a.P.dead=false;const sp=a.meta.spawn,dx=(sp?.x??0)-o.ai.x,dz=(sp?.z??0)-o.ai.z,n=Math.hypot(dx,dz)||1,d=Math.min(10,KIT.KITS[select.value].aggro-2); a.teleport(o.ai.x+dx/n*d,o.ai.z+dz/n*d,Math.atan2(-dx,-dz));a.orbit(Math.atan2(dx,dz),.22,10);o.stage.seen=true;}; // QA endurance only, maxHp/damage unchanged; never loaded by production
+document.querySelector('#near').onclick=()=>{const a=w(),o=boss();if(!o)return; a.stage.skip(); a.P.hp=1000000; a.P.dead=false;const sp=a.meta.spawn,isMouth=select.value==='leviathan',dx=isMouth?0:(sp?.x??0)-o.ai.x,dz=isMouth?1:(sp?.z??0)-o.ai.z,n=Math.hypot(dx,dz)||1,d=isMouth?18:Math.min(10,KIT.KITS[select.value].aggro-2); a.teleport(o.ai.x+dx/n*d,o.ai.z+dz/n*d,Math.atan2(-dx,-dz));a.orbit(Math.atan2(dx,dz),.22,10);o.stage.seen=true;}; // QA endurance only, maxHp/damage unchanged; never loaded by production
 document.querySelector('#phase').onclick=()=>{const o=boss();if(o)o.ai.hp=o.ai.max*.49;};
 document.querySelector('#pause').onclick=()=>{const a=w();if(a)a.hold=!a.hold;};
 document.querySelector('#record').textContent='30초 녹화';

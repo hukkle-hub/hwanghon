@@ -9,7 +9,7 @@ import fs from 'node:fs';
 import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {makePoser} from '../tools/3d/pose-eval.mjs';
 const KIT=createRequire(import.meta.url)('../server/field-boss-kit.cjs');
-const {emitterPosition,contactLine}=createRequire(import.meta.url)('../server/field-boss-emitter.cjs');
+const {emitterPosition,contactLine,canAimEmitter}=createRequire(import.meta.url)('../server/field-boss-emitter.cjs');
 
 function fixture(){
  const scene=new T.Scene(),root=new T.Group(),model=new T.Group(),pivot=new T.Group(),mesh=new T.Mesh(new T.BoxGeometry());
@@ -20,6 +20,19 @@ function fixture(){
  return {scene,root,model,pivot,mesh,skill,o};
 }
 const close=(a,b)=>assert.ok(a.distanceTo(b)<1e-8,`${a.toArray()} != ${b.toArray()}`);
+
+test('fixed mouth rejects rear, plane and invalid targets for every line contact, without altering other emitters',()=>{
+ for(const name of ['pressure','tidal']){
+  const s=KIT.KITS.leviathan.skills[name],z=Math.max(...s.hits.map(h=>emitterPosition(LEVIATHAN,s,h.at,13,27).z));
+  for(const x of [-100,13,100]){
+   for(const dz of [-100,-.001,0])assert.equal(canAimEmitter(LEVIATHAN,s,13,27,{x,z:z+dz}),false);
+   assert.equal(canAimEmitter(LEVIATHAN,s,13,27,{x,z:z+.001}),true);
+  }
+  for(const p of [null,{x:NaN,z:50},{x:0,z:Infinity}])assert.equal(canAimEmitter(LEVIATHAN,s,13,27,p),false);
+ }
+ assert.equal(canAimEmitter(null,KIT.KITS.aegis.skills.cannon,0,0,{x:0,z:-10}),true);
+ assert.equal(canAimEmitter(LEVIATHAN,KIT.KITS.leviathan.skills.gill,0,0,{x:0,z:-2}),true);
+});
 test('measured mouth follows normalization, parent yaw, lift and same-frame recoil',()=>{
  const f=fixture(),em=bindBossEmitter(f.model,LEVIATHAN),point=new T.Vector3(...LEVIATHAN.point);
  for(const t of [0,.1,.7,1.5]){

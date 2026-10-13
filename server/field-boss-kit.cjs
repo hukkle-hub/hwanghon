@@ -3,7 +3,7 @@
    상태는 o.kit 에 둔다(클레이브 o.combat · 지배형 o.dom 과 섞이지 않게). 보스 체력·단계는 여기서도 내보내지 않는다.
    혼자 연습(world3d)은 이 파일을 그대로 불러 쓴다 — 서버와 같은 박자 · 같은 판정 · 같은 예고. */
 const seq = (from, n, gap) => Array.from({ length: n }, (_, i) => from + i * gap);
-const { LEVIATHAN, contactLine, emitterPosition } = require('./field-boss-emitter.cjs');
+const { LEVIATHAN, contactLine, emitterPosition, canAimEmitter } = require('./field-boss-emitter.cjs');
 
 /* 시간표는 2D 모션 스터디(tools/vfx/shadowfang-motion-study.html)·3D 애니매틱(문서 181 §6) 그대로.
    hits: 판정 · tells: 박자(예전 바닥 예고 — 지금은 준비 동작·소리만, style = 준비 모양) · winds: 준비 동작 창을 따로 줄 때 · wind: 기본 모양 · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
@@ -162,7 +162,7 @@ function setup(o, now = Date.now()) {
 function reset(o, now = Date.now()) { if (enabled(o)) { if (Number.isFinite(o.homeX)) { o.x = o.homeX; o.z = o.homeZ; } setup(o, now); } }
 function setState(o, state, now, duration = 0, extra = {}) { const a = o.kit; a.state = state; a.skill = extra.skill || ''; a.startedAt = now; a.endsAt = now + duration; a.seq++; a.hitIndex = 0; a.countered = false; a.recovering = false; Object.assign(a, extra); return a; }
 const live = (field, o) => [...field.players.values()].filter(p => p.zone === o.zone && !p.dead && Number.isFinite(p.hp));
-function nearest(field, o, r) { let best = null, bd = Infinity; for (const p of live(field, o)) { const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < bd) { best = p; bd = d; } } return bd <= r ? { p: best, d: bd } : null; }
+function nearest(field, o, r, accepts = () => true) { let best = null, bd = Infinity; for (const p of live(field, o)) { if (!accepts(p)) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < bd) { best = p; bd = d; } } return bd <= r ? { p: best, d: bd } : null; }
 function target(field, o) { const id = o.kit.target, p = id && field.players.get(id); return p && p.zone === o.zone && !p.dead ? p : null; }
 function turn(o, x, z, max) { const d = dAng(angle(x - o.x, z - o.z), o.yaw || 0); o.yaw = (o.yaw || 0) + Math.max(-max, Math.min(max, d)); o.kit.yaw = o.yaw; }
 function move(o, x, z, speed, dt) { const dx = x - o.x, dz = z - o.z, d = Math.hypot(dx, dz); if (d < 1e-5) return d; const n = Math.min(d, speed * dt); o.x += dx / d * n; o.z += dz / d * n; return d - n; }
@@ -176,7 +176,7 @@ function inShape(o, p, h) {
 }
 function skillWeights(o, p) {
   const k = kitOf(o), a = o.kit, d = Math.hypot(p.x - o.x, p.z - o.z), rel = Math.abs(dAng(angle(p.x - o.x, p.z - o.z), o.yaw || 0)), w = { ...k.weights(d, phaseOf(o), rel) };   /* rel: 대상이 정면에서 몇 rad — 등 뒤 기술용 */
-  for (const id of Object.keys(w)) { const s = k.skills[id]; if (!s || s.only || d > s.reach + .15) w[id] = 0; }
+  for (const id of Object.keys(w)) { const s = k.skills[id]; if (!s || s.only || d > s.reach + .15 || !canAimEmitter(k.emitter, s, o.x, o.z, p)) w[id] = 0; }
   const last = a.history[a.history.length - 1]; if (last && w[last] > 0 && Object.keys(w).filter(id => w[id] > 0).length > 1) w[last] *= .3;   /* 같은 기술 연달아는 드물게 */
   return w;
 }
@@ -187,7 +187,9 @@ function choose(field, o, p) {
   let r = Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * total; for (const id of ids) { r -= Math.max(0, w[id]); if (r < 0) return id; } return ids.find(id => w[id] > 0) || null;
 }
 function begin(field, o, p, now, skill) {
-  const def = kitOf(o).skills[skill]; if (p && !def.behind) turn(o, p.x, p.z, Math.PI);   /* 등 뒤 기술은 돌아서지 않는다 — «보지도 않고» */
+  const def = kitOf(o).skills[skill];
+  if (!canAimEmitter(kitOf(o).emitter, def, o.x, o.z, p)) return false;
+  if (p && !def.behind) turn(o, p.x, p.z, Math.PI);   /* 등 뒤 기술은 돌아서지 않는다 — «보지도 않고» */
   if (p && kitOf(o).emitter && def.hits.every(h => h.shape === 'line' && !h.atTarget)) {
     const mouth = emitterPosition(kitOf(o).emitter, def, def.hits[0].at, o.x, o.z);
     o.yaw = Math.atan2(p.x - mouth.x, p.z - mouth.z); // authoritative target, locked once before the windup
@@ -196,6 +198,7 @@ function begin(field, o, p, now, skill) {
   let live = true; if (def.counterEvery) { const c = o.kit.counts || (o.kit.counts = {}); c[skill] = (c[skill] || 0) + 1; live = c[skill] % def.counterEvery === 0; }   /* 외운 원: 네 번째마다 */
   setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [], counterLive: live });
   const h = o.kit.history; h.push(skill); while (h.length > 4) h.shift();
+  return true;
 }
 function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recovery.length, phaseOf(o)) - 1]; setState(o, 'idle', now, rec, { target: null, recovering: true }); }
 function skillTick(field, o, now) {
@@ -223,14 +226,20 @@ function tick(field, o, now = Date.now()) {
   if (a.state === 'skill') { skillTick(field, o, now); return; }
   if (a.state === 'stagger') { if (now >= a.endsAt) finish(o, now); return; }
   /* 단계 문턱을 넘으면 «여는 기술» 을 한 번 (섀도우 팽: 그림자 개화) — 누가 근처에 있을 때만 */
-  if (k.open && !a.opened && a.phase > 1) { const n = nearest(field, o, k.leash); if (n) { a.opened = true; begin(field, o, n.p, now, k.open); return; } }
+  if (k.open && !a.opened && a.phase > 1) { const n = nearest(field, o, k.leash, p => canAimEmitter(k.emitter, k.skills[k.open], o.x, o.z, p)); if (n && begin(field, o, n.p, now, k.open)) { a.opened = true; return; } }
   /* finish clears the target; nearest() must not replace this idle with walk
      (and reset endsAt) before the configured recovery has elapsed. */
   if (a.recovering && now < a.endsAt) return;
-  const t = target(field, o), homeD = Math.hypot(o.x - o.homeX, o.z - o.homeZ);
+  let t = target(field, o);
+  const homeD = Math.hypot(o.x - o.homeX, o.z - o.homeZ);
+  // A nearer rear player must not starve a legal front player forever.
+  if (k.emitter && (!t || !Object.values(skillWeights(o, t)).some(w => w > 0))) {
+    const alternative = nearest(field, o, k.aggro, p => Object.values(skillWeights(o, p)).some(w => w > 0));
+    if (alternative) { t = alternative.p; a.target = t.id; }
+  }
   if (t) { const d = Math.hypot(t.x - o.x, t.z - o.z);
     if (d > k.leash || homeD > k.leash) setState(o, 'return', now, 0, { target: null });
-    else if (now >= a.endsAt) { const s = choose(field, o, t); if (s) { begin(field, o, t, now, s); return; }
+    else if (now >= a.endsAt) { const s = choose(field, o, t); if (s && begin(field, o, t, now, s)) return;
       if (a.state !== 'walk') setState(o, 'walk', now, 0, { target: t.id }); turn(o, t.x, t.z, dt * 3); move(o, t.x, t.z, k.walk, dt); return; }
     else return; }
   if (a.state === 'return' || homeD > 1) { if (a.state !== 'return') setState(o, 'return', now, 0, { target: null }); turn(o, o.homeX, o.homeZ, dt * 3.2);
@@ -245,7 +254,7 @@ function tryCounter(o, now = Date.now()) {
 }
 function view(o) {
   if (!enabled(o) || !o.alive || !o.kit) return null; const a = o.kit, def = kitOf(o).skills[a.skill], c = a.counterLive === false ? null : def?.counter, sk = a.state === 'skill';
-  return { id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
+  return { id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: kitOf(o).emitter ? +(o.yaw || 0).toFixed(6) : round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
     fromX: sk ? round2(a.fromX) : 0, fromZ: sk ? round2(a.fromZ) : 0, shift: sk ? a.shift || 0 : 0, marks: sk && a.marks && a.marks.length ? a.marks.map(m => m || null) : undefined,
     counterOpen: c && sk ? a.startedAt + c[0] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0, counterClose: c && sk ? a.startedAt + c[1] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0 };
 }
