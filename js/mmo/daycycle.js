@@ -9,7 +9,7 @@ export const KEYS = [[0, 'dusk'], [0.26, 'dusk'], [0.34, 'night'], [0.56, 'night
 /* az: 해 방위(0 = 서쪽, π = 동쪽) · alt: 높이(도) · sunK/hemiK/fillK: 존 기본 세기에 곱 · lampK: 가로등 · exp: 노출 */
 export const PAL = {
   night: { top: '#0c0c22', hor: '#24204a', fog: '#1a1830', sun: '#8ea4ff', sunc: '#9aaeff', hemi: '#7078c0', ground: '#1e1a30', az: Math.PI * 0.75, alt: 38, sunK: 0.22, hemiK: 0.5, fillK: 0.75, lampK: 1.9, exp: 1.75, glow: 0.35 },
-  dawn: { top: '#3c3c62', hor: '#d0706a', fog: '#5e4a5c', sun: '#ffb494', sunc: '#ffa070', hemi: '#b4a4d4', ground: '#4a3a42', az: Math.PI, alt: 26, sunK: 0.35, hemiK: 0.85, fillK: 0.9, lampK: 0.6, exp: 1.5, glow: 0.45 },
+  dawn: { top: '#343c66', hor: '#e2866a', fog: '#5e4a5c', sun: '#ffbc94', sunc: '#f09060', hemi: '#a8a8d8', ground: '#4a3a42', az: Math.PI, alt: 11, sunK: 0.45, hemiK: 0.85, fillK: 0.9, lampK: 0.6, exp: 1.35, glow: 0.4 },   /* 새벽 (문서 230 §20): 해를 지평선 가까이(26° → 11°) · 위는 찬 남색 · 지평선은 더운 살구빛 — 26° 에선 «분홍 황혼» 과 구별이 안 됐다 */
   day: { top: '#56627a', hor: '#a4948e', fog: '#766c76', sun: '#fff0dc', sunc: '#fff4e0', hemi: '#c8c8da', ground: '#5c4c44', az: Math.PI * 0.5, alt: 52, sunK: 0.72, hemiK: 0.85, fillK: 0.6, lampK: 0, exp: 1.0, glow: 0.4 },
 };
 export const phaseAt = (ms, len = DAY_LEN) => (((ms % len) + len) % len) / len;
