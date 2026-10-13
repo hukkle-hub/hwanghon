@@ -45,6 +45,12 @@ test('real HTTP and real browser CJS bridge load pure modules, but account/store
  await assert.rejects(blocked('/server/field-dominator.cjs'),/404/);
  const noEmitter=new Function('location','fetch',source+'\nreturn loadCjs;')({href:base+'/world3d.html'},url=>String(url).endsWith('/field-boss-emitter.cjs')?Promise.resolve({ok:false,status:404}):fetch(url));
  await assert.rejects(noEmitter('/server/field-boss-kit.cjs'),/404/);
+ for(const name of ['field-gill-review.cjs','field-surface-contact.cjs','field-surface-wave.cjs']){
+  assert.equal((await fetch(base+'/server/'+name)).status,200);
+  const missing=new Function('location','fetch',source+'\nreturn loadCjs;')({href:base+'/world3d.html'},url=>String(url).endsWith('/'+name)?Promise.resolve({ok:false,status:404}):fetch(url));
+  await assert.rejects(missing('/server/field-boss-kit.cjs'),/404/);
+ }
+ assert.equal(typeof kit.configureGillReview,'function');
 });
 test('two actual sockets share generation/HP; observer sees a hit and the victim hurt identifies the same mob',async t=>{
  const app=createPartyServer({store:new Store(null)});t.after(()=>app.close());

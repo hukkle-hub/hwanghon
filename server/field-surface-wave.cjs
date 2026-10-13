@@ -1,4 +1,5 @@
-/* Review-only propagation candidate. No live KIT imports this module yet.
+/* Review-only propagation candidate. KIT can explicitly opt in for local tests;
+ * no production caller enables it by default.
  * A visible front and contact query share one clock. Existing damage/range/
  * counter values are not changed here. 220ms is the water author's travel time;
  * promoting this window requires gameplay/visual review, not just unit tests. */

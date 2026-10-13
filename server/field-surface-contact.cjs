@@ -1,5 +1,5 @@
-/* Pure surface-contact evaluator, shared by Node and loadCjs. No live boss uses
- * this yet. A baked review profile is NOT authority to enable its damage.
+/* Pure surface-contact evaluator, shared by Node and loadCjs. Only the explicit
+ * KIT review path uses this; a baked profile is NOT authority to enable damage.
  * Supports one identity-rest mesh, relative morphs and one quaternion parent.
  * Range/angle are supplied by the existing skill, never invented here. */
 const finite = Number.isFinite;

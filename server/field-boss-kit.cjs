@@ -4,6 +4,7 @@
    혼자 연습(world3d)은 이 파일을 그대로 불러 쓴다 — 서버와 같은 박자 · 같은 판정 · 같은 예고. */
 const seq = (from, n, gap) => Array.from({ length: n }, (_, i) => from + i * gap);
 const { LEVIATHAN, contactLine, emitterPosition, canAimEmitter } = require('./field-boss-emitter.cjs');
+const GILL_REVIEW = require('./field-gill-review.cjs');
 
 /* 시간표는 2D 모션 스터디(tools/vfx/shadowfang-motion-study.html)·3D 애니매틱(문서 181 §6) 그대로.
    hits: 판정 · tells: 박자(예전 바닥 예고 — 지금은 준비 동작·소리만, style = 준비 모양) · winds: 준비 동작 창을 따로 줄 때 · wind: 기본 모양 · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
@@ -155,12 +156,13 @@ function phaseOf(o) { const k = kitOf(o), max = Math.max(1, Number(o?.max) || 1)
 function curve(pts, t) { if (!pts || !pts.length) return 0; if (t <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++) if (t <= pts[i][0]) { const [t0, v0] = pts[i - 1], [t1, v1] = pts[i]; return v0 + (v1 - v0) * (t - t0) / Math.max(1, t1 - t0); } return pts[pts.length - 1][1]; }
 
 function setup(o, now = Date.now()) {
+  GILL_REVIEW.clear(o);
   if (!enabled(o)) return null; o.homeX = o.homeX ?? o.x; o.homeZ = o.homeZ ?? o.z;
   o.kit = { state: 'idle', skill: '', seq: 0, startedAt: now, endsAt: now + 700, lastAt: now, yaw: o.yaw || 0, target: null, hitIndex: 0, fromX: o.x, fromZ: o.z, countered: false, phase: phaseOf(o), opened: false, history: [], pattern: null };
   o.yaw = o.kit.yaw; return o.kit;
 }
 function reset(o, now = Date.now()) { if (enabled(o)) { if (Number.isFinite(o.homeX)) { o.x = o.homeX; o.z = o.homeZ; } setup(o, now); } }
-function setState(o, state, now, duration = 0, extra = {}) { const a = o.kit; a.state = state; a.skill = extra.skill || ''; a.startedAt = now; a.endsAt = now + duration; a.seq++; a.hitIndex = 0; a.countered = false; a.recovering = false; Object.assign(a, extra); return a; }
+function setState(o, state, now, duration = 0, extra = {}) { GILL_REVIEW.clear(o); const a = o.kit; a.state = state; a.skill = extra.skill || ''; a.startedAt = now; a.endsAt = now + duration; a.seq++; a.hitIndex = 0; a.countered = false; a.recovering = false; Object.assign(a, extra); return a; }
 const live = (field, o) => [...field.players.values()].filter(p => p.zone === o.zone && !p.dead && Number.isFinite(p.hp));
 function nearest(field, o, r, accepts = () => true) { let best = null, bd = Infinity; for (const p of live(field, o)) { if (!accepts(p)) continue; const d = Math.hypot(p.x - o.x, p.z - o.z); if (d < bd) { best = p; bd = d; } } return bd <= r ? { p: best, d: bd } : null; }
 function target(field, o) { const id = o.kit.target, p = id && field.players.get(id); return p && p.zone === o.zone && !p.dead ? p : null; }
@@ -177,6 +179,7 @@ function inShape(o, p, h) {
 function skillWeights(o, p) {
   const k = kitOf(o), a = o.kit, d = Math.hypot(p.x - o.x, p.z - o.z), rel = Math.abs(dAng(angle(p.x - o.x, p.z - o.z), o.yaw || 0)), w = { ...k.weights(d, phaseOf(o), rel) };   /* rel: 대상이 정면에서 몇 rad — 등 뒤 기술용 */
   for (const id of Object.keys(w)) { const s = k.skills[id]; if (!s || s.only || d > s.reach + .15 || !canAimEmitter(k.emitter, s, o.x, o.z, p)) w[id] = 0; }
+  if (GILL_REVIEW.enabled(o)) w.gill = GILL_REVIEW.canReach(o, k.skills.gill, p) ? (k.weights(0, phaseOf(o), rel).gill || 0) : 0;
   const last = a.history[a.history.length - 1]; if (last && w[last] > 0 && Object.keys(w).filter(id => w[id] > 0).length > 1) w[last] *= .3;   /* 같은 기술 연달아는 드물게 */
   return w;
 }
@@ -197,6 +200,7 @@ function begin(field, o, p, now, skill) {
   const j = def.jitter, shift = j ? j.steps[Math.min(j.steps.length - 1, Math.floor(Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * j.steps.length))] : 0;
   let live = true; if (def.counterEvery) { const c = o.kit.counts || (o.kit.counts = {}); c[skill] = (c[skill] || 0) + 1; live = c[skill] % def.counterEvery === 0; }   /* 외운 원: 네 번째마다 */
   setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [], counterLive: live });
+  GILL_REVIEW.begin(o, def);
   const h = o.kit.history; h.push(skill); while (h.length > 4) h.shift();
   return true;
 }
@@ -204,6 +208,11 @@ function finish(o, now) { const k = kitOf(o), rec = k.recovery[Math.min(k.recove
 function skillTick(field, o, now) {
   const a = o.kit, def = kitOf(o).skills[a.skill]; if (!def) { finish(o, now); return; }
   const t = now - a.startedAt;
+  if (GILL_REVIEW.enabled(o) && a.skill === 'gill') {
+    if (now >= a.endsAt) { finish(o, now); return; }
+    GILL_REVIEW.step(field, o, now, live(field, o));
+    return; // Never also execute the old instantaneous root cone.
+  }
   if (def.move) { const dist = curve(def.move, t); o.x = a.fromX + Math.sin(o.yaw) * dist; o.z = a.fromZ + Math.cos(o.yaw) * dist; }   /* 돌진: 예고 때 잠근 방향으로만 */
   const at = h => h.at + (def.jitter && h.at >= def.jitter.at ? a.shift || 0 : 0);   /* 리듬 깨기: 멈춤 뒤 박자만 민다 */
   /* 대상 발밑 표식: 판정 lead ms 전에 그 순간의 대상 자리를 찍어 둔다 (화면은 marks 를 보고 원을 그린다) */
@@ -220,7 +229,8 @@ function skillTick(field, o, now) {
   if (now >= a.endsAt) finish(o, now);
 }
 function tick(field, o, now = Date.now()) {
-  if (!enabled(o) || !o.alive) return; if (!o.kit) setup(o, now);
+  if (!enabled(o) || !o.alive) { GILL_REVIEW.clear(o); return; } if (!o.kit) setup(o, now);
+  if (GILL_REVIEW.enabled(o) && (!Number.isFinite(now) || now < o.kit.lastAt)) return;
   const k = kitOf(o), a = o.kit, dt = Math.min(.1, Math.max(0, (now - a.lastAt) / 1000)); a.lastAt = now;
   const ph = phaseOf(o); if (ph !== a.phase) { a.phase = ph; }
   if (a.state === 'skill') { skillTick(field, o, now); return; }
@@ -254,8 +264,8 @@ function tryCounter(o, now = Date.now()) {
 }
 function view(o) {
   if (!enabled(o) || !o.alive || !o.kit) return null; const a = o.kit, def = kitOf(o).skills[a.skill], c = a.counterLive === false ? null : def?.counter, sk = a.state === 'skill';
-  return { id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: kitOf(o).emitter ? +(o.yaw || 0).toFixed(6) : round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
+  return { ...(GILL_REVIEW.enabled(o) ? { contactMode: 'gill-surface-review-v1' } : {}), id: o.id, ai: 'kit', x: round2(o.x), z: round2(o.z), yaw: kitOf(o).emitter ? +(o.yaw || 0).toFixed(6) : round2(o.yaw || 0), motion: a.state, skill: a.skill, seq: a.seq, startedAt: a.startedAt, endsAt: a.endsAt,
     fromX: sk ? round2(a.fromX) : 0, fromZ: sk ? round2(a.fromZ) : 0, shift: sk ? a.shift || 0 : 0, marks: sk && a.marks && a.marks.length ? a.marks.map(m => m || null) : undefined,
     counterOpen: c && sk ? a.startedAt + c[0] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0, counterClose: c && sk ? a.startedAt + c[1] + (def.jitter && c[0] >= def.jitter.at ? a.shift || 0 : 0) : 0 };
 }
-module.exports = { KITS, enabled, shiftAt: (def, a, at) => at + (def.jitter && at >= def.jitter.at ? (a && a.shift) || 0 : 0), phaseOf, curve, setup, reset, tick, tryCounter, view, inShape, skillWeights };
+module.exports = { configureGillReview: (o, profile) => GILL_REVIEW.configure(o, profile, KITS.leviathan.skills.gill), KITS, enabled, shiftAt: (def, a, at) => at + (def.jitter && at >= def.jitter.at ? (a && a.shift) || 0 : 0), phaseOf, curve, setup, reset, tick, tryCounter, view, inShape, skillWeights };
