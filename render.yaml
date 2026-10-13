@@ -10,6 +10,35 @@ services:
     startCommand: node server/index.cjs
     healthCheckPath: /healthz
     autoDeployTrigger: "commit"
+    # 서버가 실제로 읽는 파일이 바뀔 때만 다시 짓는다 (2026-10-13). main 커밋 404 개 중 서버 쪽은 48 개뿐 —
+    # 모든 커밋마다 npm ci + 재시작이라 무료 빌드 한도를 다 썼고, 재시작마다 임시 저장(프로필)도 지워졌다.
+    # 서버가 새 파일을 require/readFile 하면 여기에 더한다 — tests/render-build-filter.test.cjs 가 빠진 것을 잡는다.
+    buildFilter:
+      paths:
+        - server/**
+        - package.json
+        - package-lock.json
+        - render.yaml
+        - js/boss-contact-volumes.js
+        - js/boss-director.js
+        - js/combat-quality.js
+        - js/dungeon-run.js
+        - js/mmo/field-collide.js
+        - js/mmo/safe-zones.js
+        - js/mmo/zone-links.js
+        - js/party-wire.js
+        - js/skill-events.js
+        - js/skill-math.js
+        - js/swing-point.js
+        - js/world-sim.js
+        - js/world.js
+        - js/items.js
+        - js/dungeons.js
+        - js/dungeon.js
+        - js/dungeon-content.js
+        - maps/2d/**
+        - ue/HwanghonCombatUE/Content/Data/**
+        - docs/design/ref/monster-catalog-v10/MonsterRoster_v10.json
     envVars:
       - key: NODE_VERSION
         value: "24"
