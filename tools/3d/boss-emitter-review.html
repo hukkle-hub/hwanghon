@@ -10,7 +10,7 @@
 <button id="contacts">후보 판정선 켜기/끄기</button><button id="overhead">판정 위에서 보기</button>
 <label><input id="sharedWave" type="checkbox">공유 범위 물살</label><label><input id="cancelWave" type="checkbox">기술 취소</label>
 <label><input id="targets" type="checkbox">이동·회피 표적</label><label>취소 시각 ms <input id="cancelAt" type="number" value="-1" step="50"></label>
-<label><input id="bodyCollision" type="checkbox" checked>몸체 진입 막기</label><label><input id="bodyOutline" type="checkbox">몸체 경계 보기</label>
+<label><input id="bodyCollision" type="checkbox" checked>몸체 진입 막기</label><label><input id="bodySlide" type="checkbox" checked>경계 따라 이동</label><label><input id="bodyOutline" type="checkbox">몸체 경계 보기</label>
 <output id="targetInfo"></output>
 <output id="motionInfo"></output>
 <output id="info">불러오는 중</output></header><canvas></canvas>
@@ -60,7 +60,7 @@ function updateEffects(){
  if(showWater&&(!shared||t*1000<skill.hits[0].at))water?.update(skill,t*1000,state);else water?.clear();
  if(showWater&&shared)waveStudy?.update(skill,t*1000,state);else waveStudy?.clear();
  if(contactStudy)contactStudy.group.visible=showContacts&&skill.clip==='atk_gill';
- if(targetStudy&&document.querySelector('#targets').checked&&skill.clip==='atk_gill')document.querySelector('#targetInfo').textContent=targetStudy.update(t*1000,{cancelAt,bodyCollision:document.querySelector('#bodyCollision').checked,showBody:document.querySelector('#bodyOutline').checked});
+ if(targetStudy&&document.querySelector('#targets').checked&&skill.clip==='atk_gill')document.querySelector('#targetInfo').textContent=targetStudy.update(t*1000,{cancelAt,bodyCollision:document.querySelector('#bodyCollision').checked,bodySlide:document.querySelector('#bodySlide').checked,showBody:document.querySelector('#bodyOutline').checked});
  else {targetStudy?.clear();document.querySelector('#targetInfo').textContent=''}
 }
 let showSockets=false;

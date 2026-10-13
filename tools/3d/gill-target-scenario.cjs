@@ -12,8 +12,12 @@ function runGillTargetScenario(cones,skill,until,{cancelAt=Infinity,strike=()=>n
  const targets=specs.map(([id,d,side])=>({id,...point(cones[0],d,side),alive:true,hp:1000,maxHp:1000,dead:false,defense:0,invulnUntil:0,dodgeUntil:id==='dodge'?at+190:0,hurtSeq:0}));
  if(bodyProbe)targets.push({...targets[0],id:'body_probe',...bodyProbe.start});
  const constrainAll=t=>{if(constrain)for(const p of targets)constrain(p,t)};
+ let previousProbeU=0;
  const update=t=>{Object.assign(targets[3],point(cones[0],t<=end?7.8:Math.max(5,7.8-(t-end)*.015)));
-  if(bodyProbe){const u=Math.max(0,Math.min(1,t/1400));targets[5].x=bodyProbe.start.x+(bodyProbe.end.x-bodyProbe.start.x)*u;targets[5].z=bodyProbe.start.z+(bodyProbe.end.z-bodyProbe.start.z)*u}
+  if(bodyProbe){const u=Math.max(0,Math.min(1,t/1400)),delta=u-previousProbeU;
+   for(const axis of ['x','z'])targets[5][axis]=(bodyProbe.incremental?targets[5][axis]:bodyProbe.start[axis])+(bodyProbe.end[axis]-bodyProbe.start[axis])*(bodyProbe.incremental?delta:u);
+   previousProbeU=u;
+  }
   constrainAll(t)};
  const times=[];for(let t=0;t<=Math.min(until,skill.duration);t+=50)times.push(t);
  if(until>=end)times.push(end);

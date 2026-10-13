@@ -51,6 +51,34 @@ function bindBodyFootprint(profile){
   const u=Math.max(0,enter-1e-7),x=start.x+dx*u,z=start.z+dz*u;
   return{x,z,moved:Math.hypot(to.x-x,to.z-z)};
  }
- return{query,resolve,move,hull:h.map(v=>({...v}))};
+ function slide(from,to,radius=.22,margin=.03){
+  let p=resolve(from,radius,margin);query(to);
+  const clearance=radius+margin,skin=1e-8;
+  const planes=h.map((a,i)=>{const b=h[(i+1)%h.length],len=Math.hypot(b.x-a.x,b.z-a.z);return{a,nx:(b.z-a.z)/len,nz:-(b.x-a.x)/len}});
+  const distance=(v,q)=>v.nx*(q.x-v.a.x)+v.nz*(q.z-v.a.z)-clearance;
+  // resolve() uses rounded corners; the sweep uses conservative mitred corners.
+  // Reconcile an initial position inside that extra corner region before sweeping.
+  let closest=planes[0];for(const v of planes)if(distance(v,p)>distance(closest,p))closest=v;
+  const initial=distance(closest,p);
+  if(initial<=0)p={x:p.x+closest.nx*(skin-initial),z:p.z+closest.nz*(skin-initial)};
+  let dx=to.x-p.x,dz=to.z-p.z,contacts=0;
+  for(let pass=0;pass<4&&Math.hypot(dx,dz)>1e-10;pass++){
+   let enter=0,exit=1,normal=null,miss=false;
+   for(const v of planes){
+    const d=distance(v,p),velocity=v.nx*dx+v.nz*dz;
+    if(Math.abs(velocity)<1e-12){if(d>0){miss=true;break}continue}
+    const at=-d/velocity;
+    if(velocity<0&&at>=enter){enter=at;normal=v}else if(velocity>0)exit=Math.min(exit,at);
+    if(enter>exit){miss=true;break}
+   }
+   if(miss||exit<0||enter>1||!normal){p={x:p.x+dx,z:p.z+dz};break}
+   p={x:p.x+dx*enter+normal.nx*skin,z:p.z+dz*enter+normal.nz*skin};
+   dx*=1-enter;dz*=1-enter;
+   const inward=Math.min(0,dx*normal.nx+dz*normal.nz);
+   dx-=normal.nx*inward;dz-=normal.nz*inward;contacts++;
+  }
+  return{x:p.x,z:p.z,moved:Math.hypot(to.x-p.x,to.z-p.z),contacts};
+ }
+ return{query,resolve,move,slide,hull:h.map(v=>({...v}))};
 }
 module.exports={convexHull,bindBodyFootprint};
