@@ -1,5 +1,35 @@
 레비아탄 아가미 물살 스터디 · 2026-10-14 · 검수 전용
 
+최신 v81 — 공유 범위/전파 후보 (게임 피해는 여전히 미연결)
+- server/field-surface-wave.cjs: 준비→1700ms 분출→220ms 동안7m까지 전파→630ms 잔물.
+  물살과 후보 판정이 같은 smoothstep 반경을 사용. skill.hits[0].at를 읽으며 수치 복사 없음.
+  전파 시간220ms는 v79 물살의 시간에서 가져온 제작 후보이며 기존 순간 타격의 규칙 변경이다.
+  range/angle/damage/counter 표는 수정하지 않았으나, 이 변경을 검수 없이 운영에 켜면 안 된다.
+- createSurfaceWaveHitWindow는 시전마다 별도 ledger: 양쪽/중복 cone에서도 대상 id당 한 번,
+  20Hz 마지막 표본(1900→1950)에서1920ms 끝 범위 한 번 처리, 취소/사망 후 영구 종료.
+  실제 bossStrike/회피무적·서버·KIT/AI 선택에는 아직 연결하지 않았다. 순수 후보 수집기이다.
+- tools/3d/leviathan-gill-wave-study.mjs: 같은 미터 좌표/범위/각도/전파 시계를 쓰는 넓은 물막.
+  기존 v79 파일은 보존. 검수 페이지에서 '공유 범위 물살' 체크로 선택, 준비 거품은 기존 물살 사용.
+  파면 가로 좌표는 정확한 cone 안, 높이만 흔들림. 기본1536/저부하768삼각형, 양쪽2draw calls.
+  prepare 단계 구형 거품4draw calls와 동시 출력하지 않음. 실제 장치 성능 측정 완료 아님.
+- 8개 집중 시험: Float32 표면·loadCjs·불량 입력·단위 변환은 v80 유지,
+  조기 타격 금지, 변경 hit시각 추종, 중복/취소/사망/다음 시전, 20Hz 끝 표본,
+  원본/저부하 메시의 실제 파면 반경·되감기·전환·resource disposal 추가.
+- 전체 시험1429개:1427통과/0실패/2skip (192755.633ms), npm-test-wave-v81.log.
+- 실제 브라우저(computer-use) 전신/확대/취소/915x412/412x915 확인.
+  전신 위 화면에서 범위 끝 일치, 확대에서는 여전히 얇은 부채형 물막 느낌이 강하다.
+  준비 거품은 작고 약하다. 넓은 파면과 턱 근처 겹침/환경 충돌, 잔물과 피해 종료 가독성,
+  실제 던전/연속 체감/폰 기기 성능은 남은 검수이다. 최종 전투/연출 합격 아님.
+- 영상 전체를 EOF까지 디코드하고 시트10장 전부 육안 확인:
+  videos/leviathan-1791916651519.webm 전신 위96프레임(판정선 포함)
+  videos/leviathan-1791916695702.webm 머리 확대99프레임(판정선 없음, 끝 물막은 화면 밖)
+  각 -all-frames 폴더. 프레임 번호는 정확한 게임 시각이 아님. 초반 색/배경 블록 현상 여전히 남음.
+- 이미지: leviathan-wave-overhead-v81.png / leviathan-wave-head-half-v81.png /
+  leviathan-wave-cancel-v81.png / leviathan-wave-915x412-v81.png / leviathan-wave-412x915-v81.png.
+- 다음: 검수 전용 실제 표적/회피/취소 시나리오를 붙여 도달 시점 타격과 피해 종료를 확인하고,
+  준비 예고·얇은 물막·몸/던전 가림을 다듬은 뒤 라이브 KIT 선택/피해에 연결.
+  박준장·드로퍼·다른 보스와 장치 서버 동기화는 그대로 남음. main/Render 배포 없음.
+
 최신 v80 (v79 물살/모션은 수정하지 않음)
 - origin/main f6cbc5035를 merge 4c08a30c4로 보존. Claude 고흥/보스 장치 §6도 읽음.
 - server/field-surface-contact.cjs: 엔진/Node 내장 없는 상대 모프+쿼터니언 표면 평가와

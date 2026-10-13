@@ -8,6 +8,7 @@
 <button id="sockets">아가미 표면 접점 켜기/끄기</button>
 <button id="water">아가미 물살 켜기/끄기</button><label><input id="reduced" type="checkbox">저부하 효과</label>
 <button id="contacts">후보 판정선 켜기/끄기</button><button id="overhead">판정 위에서 보기</button>
+<label><input id="sharedWave" type="checkbox">공유 범위 물살</label><label><input id="cancelWave" type="checkbox">기술 취소</label>
 <output id="info">불러오는 중</output></header><canvas></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
@@ -19,6 +20,7 @@ import {bindBossSurfaceEmitter} from '../../js/mmo/boss-emitter.js';
 import {GILL_SOCKETS} from './leviathan-gill-sockets.mjs';
 import {createGillWaterStudy} from './leviathan-gill-water.mjs';
 import {createGillContactStudy} from './leviathan-gill-contact-study.mjs';
+import {createGillWaveStudy} from './leviathan-gill-wave-study.mjs';
 const cv=document.querySelector('canvas'),r=new T.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(1);r.outputColorSpace=T.SRGBColorSpace;
 const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
 const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(8,9,8);s.add(key);const rim=new T.DirectionalLight(0xb9dfff,2);rim.position.set(-8,4,-5);s.add(rim);
@@ -36,9 +38,17 @@ const holder=new T.Group();s.remove(root);holder.add(root);s.add(holder);
 const o={b:{id:'leviathan'},root:holder,model:root,h:2.2,kfx:{baseY:0,kit}};
 const fx=createStaticBossFX(o,s,0,false);let skill=kit.skills.pressure,effect=false,recording=null;
 let water=createGillWaterStudy(root,s),showWater=false;
+let waveStudy=candidate?await createGillWaveStudy(s):null,waveRevision=0;
+document.querySelector('#sharedWave').disabled=!candidate;
 document.querySelector('#water').onclick=()=>{showWater=!showWater;document.querySelector('#info').textContent='아가미 물살 스터디 · 실제 표면 출발 · 서버 피해 판정 미연결';};
-document.querySelector('#reduced').onchange=e=>{water?.dispose();water=createGillWaterStudy(root,s,{reduced:e.target.checked});};
-function updateEffects(){if(effect&&skill.clip!=='atk_gill')fx.update({yaw:0},skill,t*1000);else fx.clear();if(showWater)water?.update(skill,t*1000);else water?.clear();if(contactStudy)contactStudy.group.visible=showContacts&&skill.clip==='atk_gill';}
+document.querySelector('#reduced').onchange=async e=>{const revision=++waveRevision,reduced=e.target.checked;water?.dispose();water=createGillWaterStudy(root,s,{reduced});if(candidate){const next=await createGillWaveStudy(s,{reduced});if(revision!==waveRevision)next.dispose();else{waveStudy?.dispose();waveStudy=next}}};
+function updateEffects(){
+ const shared=document.querySelector('#sharedWave').checked,state={cancelled:document.querySelector('#cancelWave').checked};
+ if(effect&&skill.clip!=='atk_gill'&&!state.cancelled)fx.update({yaw:0},skill,t*1000);else fx.clear();
+ if(showWater&&(!shared||t*1000<skill.hits[0].at))water?.update(skill,t*1000,state);else water?.clear();
+ if(showWater&&shared)waveStudy?.update(skill,t*1000,state);else waveStudy?.clear();
+ if(contactStudy)contactStudy.group.visible=showContacts&&skill.clip==='atk_gill';
+}
 let showSockets=false;
 const gillMarkers=GILL_SOCKETS.map((spec,i)=>{
  const emitter=bindBossSurfaceEmitter(root,spec),dot=new T.Mesh(new T.SphereGeometry(.035,12,8),new T.MeshBasicMaterial({color:i?0xffb449:0x56eaff}));
