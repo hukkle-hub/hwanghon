@@ -8,7 +8,8 @@ const covered = (f, globs) => globs.some(g => g.endsWith('/**') ? f.startsWith(g
 function serverDeps() { const seen = new Set(), q = fs.readdirSync(path.join(ROOT, 'server')).map(f => path.join(ROOT, 'server', f)), out = new Set();
   while (q.length) { const f = q.pop(); if (seen.has(f) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) continue; seen.add(f); out.add(path.relative(ROOT, f).split(path.sep).join('/'));
     if (!/\.(c?js|mjs)$/.test(f)) continue; const s = fs.readFileSync(f, 'utf8');
-    for (const m of s.matchAll(/require\(\s*['"](\.[^'"]+)['"]\s*\)/g)) { let p = path.resolve(path.dirname(f), m[1]); if (!fs.existsSync(p) && fs.existsSync(p + '.js')) p += '.js'; q.push(p); } }
+    const deps=[...s.matchAll(/require\(\s*['"](\.[^'"]+)['"]\s*\)/g),...s.matchAll(/(?:import|export)\s+[^;\n]*?\s+from\s*['"](\.[^'"]+)['"]/g)];
+    for (const m of deps) { let p = path.resolve(path.dirname(f), m[1]); if (!fs.existsSync(p) && fs.existsSync(p + '.js')) p += '.js'; q.push(p); } }
   return [...out]; }
 test('서버가 require 하는 파일은 전부 Render buildFilter 안', () => { const g = filterPaths(), miss = serverDeps().filter(f => !covered(f, g)); assert.deepEqual(miss, [], '빠졌다: ' + miss.join(', ')); });
 test('서버가 readFileSync 로 읽는 js · 지도 · UE 데이터도 안', () => { const g = filterPaths();

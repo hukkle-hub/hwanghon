@@ -6,9 +6,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import * as T from '../../vendor/three/three.module.js';
 import {createRequire} from 'node:module';
+import {diffuseWeights} from './skin-weight-diffusion.mjs';
 const {PARK}=createRequire(import.meta.url)('../../server/field-boss-canon.cjs');
 const source='art/review/part1/park-recovered.glb';
-const out=process.argv[2] || 'art/review/part1/park-combat-candidate.glb';
+const out=process.argv[2] || 'art/review/part1/park-combat-shoulder-study.glb';
 if(path.resolve(source)===path.resolve(out))throw Error('Immutable source');
 const raw=fs.readFileSync(source),jl=raw.readUInt32LE(12),j=JSON.parse(raw.toString('utf8',20,20+jl));
 const bin=raw.subarray(28+jl,28+jl+raw.readUInt32LE(20+jl));
@@ -37,15 +38,18 @@ j.skins=[{skeleton:nodeIndex.Root,joints:spec.map(([n])=>nodeIndex[n]),inverseBi
 const primitive=j.meshes[0].primitives[0],pa=j.accessors[primitive.attributes.POSITION],pv=j.bufferViews[pa.bufferView];
 const vert=i=>new T.Vector3(...[0,1,2].map(k=>bin.readFloatLE((pv.byteOffset||0)+(pa.byteOffset||0)+i*(pv.byteStride||12)+k*4)));
 const smooth=(a,b,x)=>{let t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t);};
-function weights(v){
+function armFactor(v){
+ const x=Math.abs(v.x),y=v.y,boundary=Math.min(.22,.15+Math.max(0,1.43-y)*.20)+.06*(1-smooth(.88,1.06,y));
+ return smooth(boundary,boundary+.05,x)*smooth(.64,.70,y)*(1-smooth(1.48,1.55,y));
+}
+function weights(v,armOverride){
  const s=v.x<0?'R':'L',x=Math.abs(v.x),y=v.y;
  const w={};const put=(n,a)=>{if(a>0)w[n]=(w[n]||0)+a;};
  // Torso, coat skirt and legs remain independent of the arm solver.
  if(y>1.55){put('Head',1);}
  else if(y>1.48 && x<.15){let a=smooth(1.48,1.55,y);put('Neck',1-a);put('Head',a);}
  else {
-  const boundary=Math.min(.22,.15+Math.max(0,1.43-y)*.20)+.06*(1-smooth(.88,1.06,y));
-  const arm=smooth(boundary,boundary+.05,x)*smooth(.64,.70,y)* (1-smooth(1.48,1.55,y));
+  const arm=armOverride??armFactor(v);
   if(arm){
    if(y>=1.10){let a=smooth(1.10,1.21,y);put(s+'Arm',arm*a);put(s+'Forearm',arm*(1-a));}
    else if(y>=.93){let a=smooth(.93,1.00,y);put(s+'Forearm',arm*a);put(s+'Hand',arm*(1-a));}
@@ -65,7 +69,14 @@ function weights(v){
  const entries=Object.entries(w).sort((a,b)=>b[1]-a[1]).slice(0,4),sum=entries.reduce((a,e)=>a+e[1],0);
  while(entries.length<4)entries.push(['Root',0]);return entries.map(([n,w])=>[spec.findIndex(b=>b[0]===n),w/sum]);
 }
-let indices=[],values=[];for(let i=0;i<pa.count;i++){let w=weights(vert(i));indices.push(...w.map(a=>a[0]));values.push(...w.map(a=>a[1]));}
+const skinPoints=Array.from({length:pa.count},(_,i)=>vert(i).toArray());
+const ia=j.accessors[primitive.indices],iv=j.bufferViews[ia.bufferView],isz=ia.componentType===5125?4:2;
+const triangles=Array.from({length:ia.count},(_,i)=>bin[isz===4?'readUInt32LE':'readUInt16LE']((iv.byteOffset||0)+(ia.byteOffset||0)+i*isz));
+// Diffuse the arm/body partition, not dozens of bone channels: truncating a
+// diffused multi-bone field to four influences reintroduces weight discontinuity.
+const armField=diffuseWeights(skinPoints,triangles,skinPoints.map(p=>{const a=armFactor(new T.Vector3(...p));return [[0,a],[1,1-a]];}),skinPoints.map(([x,y])=>smooth(.12,.20,Math.abs(x))*smooth(1.01,1.12,y)*(1-smooth(1.43,1.52,y))),48);
+const skinWeights=skinPoints.map((p,i)=>weights(new T.Vector3(...p),armField[i].find(([j])=>j===0)?.[1]||0));
+let indices=[],values=[];for(const w of skinWeights){while(w.length<4)w.push([0,0]);indices.push(...w.map(a=>a[0]));values.push(...w.map(a=>a[1]));}
 primitive.attributes.JOINTS_0=acc(indices,'VEC4',5123);primitive.attributes.WEIGHTS_0=acc(values,'VEC4');
 // Danjoe: narrow curved black steel blade, bronze guard and wrapped hilt.
 // A single rigid assembly parented to the corrected visible-hand bone.
@@ -105,7 +116,10 @@ const poses={guard,
  recoil:{...guard,lean:-.12,yaw:.1,hip:-.035},
  kneel:{...guard,hip:-.45,lean:.22,nod:.22,ra:[-.25,-.92,.3],rf:[-.1,-.8,.58]},
  salute:{...guard,hip:-.50,lean:.22,nod:.20,ra:[-.50,-.48,.72],rf:[.25,.93,-.12]},
- fall:{...guard,hip:-.50,lean:.35,collapse:1,nod:.22,ra:[-.2,-.7,.65],rf:[-.15,-.92,.35],la:[.3,-.75,.59],lf:[.2,-.94,.26]}
+ // Kneeling is a transient support, not the final corpse shape. As he rolls
+ // onto his side the knees unload/extend, so the coat must not remain bunched
+ // around a permanently deep-squatted pelvis.
+ fall:{...guard,hip:-.18,lean:.18,collapse:1,nod:.22,ra:[-.2,-.7,.65],rf:[-.15,-.92,.35],la:[.3,-.75,.59],lf:[.2,-.94,.26]}
 };
 function pose(p,t=0,walk=false){
  for(const[n]of spec){bones[n].position.copy(rest[n]);bones[n].quaternion.identity();}
@@ -151,7 +165,9 @@ function settleCorpse(){
  const p=new T.Vector3(),tmp=new T.Vector3();
  for(let i=0;i<sourcePoints.length;i++){p.set(0,0,0);for(let k=0;k<4;k++){const w=values[i*4+k];if(w)p.addScaledVector(tmp.copy(sourcePoints[i]).applyMatrix4(matrices[indices[i*4+k]]),w);}min=Math.min(min,p.y);}
  // During collapse feet may unload, but no visible body/cloth may cross the floor.
- bones.Root.position.y+=Math.max(0,-min);bones.Root.updateMatrixWorld(true);
+ // Correct both penetration and positive clearance. A minimum-over-all-frames
+ // audit alone misses a corpse hovering after the knees unload.
+ bones.Root.position.y-=min;bones.Root.updateMatrixWorld(true);
 }
 const clips=[];
 function bake(name,duration,keys,walk=false){

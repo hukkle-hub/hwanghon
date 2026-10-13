@@ -75,7 +75,9 @@ const KITS = {
     stationary: true, aggro: 28, leash: 38, walk: 0, ret: 0, engage: 28, recovery: [1300, 1300], phases: [.5], open: 'heart',
     skills: {
       orbit: { clip: 'atk_spin', cue: [[0, 0], [1500, .25], [2000, .55], [3400, 1]], duration: 3700, reach: 39,
-        hits: [{ at: 2000, shape: 'annulus', inner: 4, radius: 39, damage: .22, knock: 2 }], counter: [1750, 2000],
+        // env-rules SAFE.r: the pure browser-loadCjs table cannot require ESM;
+        // field-environment.test enforces equality with the authored safe area.
+        hits: [{ at: 2000, shape: 'annulus', inner: 4.5, radius: 39, damage: .22, knock: 2 }], counter: [1750, 2000],
         tells: [{ from: 0, at: 2000, to: 2250, style: 'coil' }] },
       eject: { clip: 'atk_bolt', cue: [[0, 0], [1200, .4], [2200, .65], [3500, 1]], duration: 3800, reach: 39,
         hits: [1200, 2200].map(at => ({ at, shape: 'circle', radius: 1.6, atTarget: true, lead: 1000, damage: .14, knock: 1.4 })),
@@ -83,7 +85,7 @@ const KITS = {
       heart: { clip: 'atk_slam', cue: [[0, 0], [2050, .3], [2400, .55], [3900, 1]], duration: 4300, reach: 39, only: true,
         hits: [{ at: 2400, shape: 'circle', radius: 7, damage: .25, knock: 3 }], counter: [2050, 2400],
         tells: [{ from: 0, at: 2400, to: 2650, style: 'brace' }] },
-    }, weights: d => d < 4 ? { eject: 1 } : { orbit: 2, eject: 1 },
+    }, weights: d => d < 4.5 ? { eject: 1 } : { orbit: 2, eject: 1 },
   },
   shadowfang: {
     aggro: 16, leash: 24, walk: 3.1, ret: 3.8, engage: 4.0, recovery: [900, 700], phases: [.5], open: 'bloom',

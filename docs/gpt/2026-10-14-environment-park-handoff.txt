@@ -1,0 +1,72 @@
+황혼 보스 작업 v87 — 환경 판정 일치 / 박 준장 소매·사망 접지 교정
+2026-10-14 · gpt/bosses-kit · 전체 보스 완료 아님 · main/Render 미반영
+origin/main e53d1e1345a8d9604f14241551a2384009d8679e의 발사대 탑/세로 UI 작업을 병합해 보존했다.
+merge commit 13c92441d6ab6f78f0c8bedef29f2bc49cf6261e. 일반 fetch는 보스 브랜치만 받는 설정이라 main을 명시적으로 fetch했다.
+
+1. 실제 변경
+- server/field-environment.cjs: 기존 zones.js 방의 safezone/corridor를 서버 좌표로 투영한다.
+  env-indoor와 같은 28도 좌표 변환과 2자리 반올림, 기존 SAFE/swingK/safeAt/narrowAt를 사용.
+  클라이언트가 보낸 safe/swingK 영역 정보는 사용하지 않는다.
+- 실제 Field.bossStrike: 노바 안전지대 안에서 피해·밀려남 1/2. 판정 전 위치를 사용하며 다음 타격 때 재검사.
+  기존 방어·버프·회피·무적·사망 처리 유지.
+- 실제 Field.hit: 박 준장 복도 기존 폭 2.6의 공격 배율 0.85 적용. 기본 공격과 서버 스킬 배율 모두 결합.
+- 노바 orbit 원 참격 안쪽 반경과 AI 선택 기준을 4 → 4.5m로 기존 SAFE.r에 맞춤.
+  KIT는 브라우저 loadCjs 순수 모듈이라 ESM 직접 require를 넣지 않았다. 반경 일치는 시험으로 강제한다.
+- render.yaml: 서버가 새로 읽는 env-rules.js / zones.js / zones-auto.js만 buildFilter에 추가.
+  의존 검사에 ESM import/export-from도 포함. 실제 Render 설정 동기화/배포는 하지 않음.
+
+2. 실제 화면 판정 검수
+tools/3d/boss-kit-field-review.html에 검수 전용 노바 안쪽/바깥 직접 타격 버튼 추가.
+원본 world3d의 실제 fieldLocal.bossStrike를 호출하고 결과를 DOM에 표시한다.
+자연스럽게 선택된 AI 공격 영상이나 온라인 2인 판정이 아니라, 동일 입력의 결정론적 검수 타격이다.
+  최대 HP 20,000 / 기본 피해 0.2 / 밀려남 2m
+  안쪽: (121.2,-63.38) → (122.2,-63.38), HP 20,000 → 18,000
+  바깥: (125.2,-63.38) → (127.2,-63.38), HP 20,000 → 16,000
+실제 3D safezone 중심 (119.2,-63.38), 반경 4.5가 서버 투영과 일치했다.
+915×412 / 412×915 게임 iframe 화면 확인. 실제 휴대전화 성능 검수는 아님.
+근접 카메라에서 노바 몸체가 시야를 크게 막는다. 전체보기 검수 카메라는 이를 확인하기 위한 것이며 게임 카메라 수정으로 셈하지 않는다.
+가로/세로 검수 이미지: 대화 루트 output/bosses-kit-2026-10-13/nova-environment-915x412-v87.png 및 nova-environment-412x915-v87.png.
+
+3. 박 준장 새 후보 — 기존 원본/후보를 덮지 않음
+새 파일 art/review/part1/park-combat-shoulder-study.glb (12클립).
+복구 원본 park-recovered.glb와 과거 park-combat-candidate.glb는 그대로.
+tools/3d/park-combat-candidate.mjs 기본 출력만 새 study로 변경. 게임 표에는 켜지 않음.
+검수 URL: http://127.0.0.1:8794/tools/3d/park-recovery-review.html?candidate=shoulder
+
+실패 및 교정 과정:
+- 쇄골 회전 분산만 적용한 시도: 일부 팔 동작 개선, 베기·경례 늘어짐 악화 → 채택하지 않음.
+- 모든 뼈 가중치를 이웃 정점으로 퍼뜨린 시도: 4개 영향으로 자르는 경계와 불균일 삼각형에서 새 찌그러짐 → 채택하지 않음.
+- 최종: UV 경계의 동일 위치를 해석용으로 묶고, 짧은 변에 더 큰 가중치를 둔 확산으로 팔/몸통 비율만 완화.
+  원본 위치·UV·법선·인덱스는 변경하지 않는다. 손/머리 및 하체는 이 확산 대상이 아니다.
+- 모든 12클립의 최대 변 늘어짐 측정이 과거 후보보다 감소. 의수 충격 maxEdgeChange 4.75→2.45, 경례 사망 4.51→3.21.
+  이는 시각 합격 기준이 아니며 절대 늘어짐은 여전히 크다. 소매·코트의 자연스러움과 전신 무게 이동은 더 교정해야 한다.
+- 사망 마지막 깊은 무릎 굽힘을 계속 유지하지 않고 옆으로 쓰러질 때 다리를 풀게 했다.
+  이 과정에서 기존 바닥 검사가 양의 공중 뜸을 놓친 것을 발견: 관통 최소값뿐 아니라 프레임별 최소면의 최대 높이도 검사.
+  모델 전체가 최대 0.376m 뜨던 중간 후보를 버리고 양방향 접지 보정. 최종 60Hz 실제 피부 표본은 ±6mm 이내.
+- 단순 회전 후 정지에 가까운 연출, 손·코트·다리의 자연스러운 힘 풀림 및 실제 전투 전환은 아직 완료 아님.
+
+4. 시험 / 증거
+- 환경 집중 시험 최종 36개 통과: 실제 Field, 경계 안팎, 넉백 이탈, 버프·회피·무적·사망, 복도 안팎, 범위 밖 거부, 구 반경 부정 검증.
+- 피부/가중치 집중 시험 4개 통과: 원본 위치/UV/법선/인덱스 보존, 12클립, 게임 표 미활성, 실제 makePoser 60Hz 사망 접지, 공중 부양 부정 검증.
+- 고정 보스 집중 시험 23개 통과. 노바의 과거 4m 경계 기대값도 현재 4.5m 설계에 맞춰 갱신했다.
+- 최신 main 병합 뒤 최종 npm test: 총 1,456 / 통과 1,454 / 실패 0 / skip 2, 227340.7919ms.
+  로그 output/bosses-kit-2026-10-13/npm-test-v87-merged-final.log. 최종 커밋 정보는 대화 루트 production-checkpoint-v87.json에 기록.
+- Render CLI는 설치되어 있지 않음. output/render-schema-validation-v87에만 yaml/ajv/ajv-formats 임시 검증 의존성을 설치.
+  공식 https://render.com/schema/render.yaml.json (2020-12)로 render.yaml 검증 valid:true / errors:null.
+  CLI/Render 서비스 의미 검증 또는 실제 배포 승인이 아님. 저장소 package/lockfile 변경 없음.
+- 정면 최종 12동작 영상: output/bosses-kit-2026-10-13/videos/park-1791928420388.webm.
+  측면 최종 영상: output/bosses-kit-2026-10-13/videos/park-1791928526141.webm.
+  각각 전체 길이 33초대, 2Hz 67프레임 contact sheet 3장씩 확인. 샘플링과 확대 정지 화면은 전체 실시간 움직임 합격을 뜻하지 않는다.
+  park-1791928182851.webm은 사망 접지 교정 전 중간 후보이므로 사용하지 말 것.
+- 이미지: park-shoulder-before-v87.png / park-shoulder-after-v87.png / park-death-ground-front-v87.png / park-death-ground-side-v87.png.
+- 최종 makePoser 메시 감사: output/bosses-kit-2026-10-13/park-final-audit-v87.json.
+- main 병합 후 실제 게임 안/밖 판정도 다시 일치 확인: nova-merged-inside-915x412-v87.png / nova-merged-outside-412x915-v87.png.
+
+5. 보존 / 다음
+world3d.html·env-indoor/env-dungeon/env-lib/ph-tex·zones.js indoor·CSS·지도·원본 모델 불변.
+server/field.cjs는 §6 환경 배율에 필요한 최소 hook만 변경. 던전 지형 편집 없음.
+기존 보스 회귀와 기존 4급 작업 유지. 신규 결제·충전·생성 없음.
+아직 미완: 박 준장 실전 활성·자연스러운 7기술/사망 전환, 드로퍼 몸체/게임 연결, 나머지 보스 장치 동기화·무게감·카메라 가림·실제 2인 검수, 기존 4급 전체 검수.
+박 준장 12클립은 대기·걷기·피격·취소·기술7·사망이다. 별도 회피·넘어짐·기상 클립은 아직 없다. 이것을 전체 반응 모션 완료로 셈하지 말 것.
+레비아탄 opt-in 수면 후보는 v86 그대로 꺼져 있다.
+브랜치 검수용 변경만 push한다. Claude 2인 검수 뒤 main 병합/배포 순서를 유지한다.

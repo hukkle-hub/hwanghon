@@ -12,6 +12,19 @@ const w=()=>frame.contentWindow.__W3D, boss=()=>w()?.fbs.find(o=>o.b.id===select
 function releaseQaCable(){const d=frame.contentWindow.__DEV;if(d){d.attached=false;d.taut=false;d.pull=0;if(d.cable)d.cable.visible=false;}}
 document.querySelector('#near').addEventListener('click',releaseQaCable);
 let sequence=null;
+// Actual offline bossStrike / environment sampling, not a reimplemented damage formula.
+const envProof=document.createElement('output');envProof.id='environment-proof';document.querySelector('aside').append(envProof);
+for(const [label,d] of [['노바 안쪽 판정',2],['노바 바깥 판정',6]]){
+ const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
+ b.onclick=async()=>{const a=w(),o=boss();if(!a||!o||select.value!=='nova')return;sequence=null;a.stage.skip();o.stage.seen=true;
+  KIT.reset(o.ai,a.gameNow);o.ai.kit.endsAt=a.gameNow+60000;a.hold=false;a.teleport(o.ai.x+d,o.ai.z,Math.PI/2);
+  Object.assign(a.P,{hp:20000,maxHp:20000,dead:false,buffUntil:0,invulnUntil:0,dodgeUntil:0});
+  const start=a.frames;while(a.frames<start+3)await new Promise(resolve=>requestAnimationFrame(resolve));a.hold=true;
+  const before={x:a.P.x,z:a.P.z,hp:a.P.hp},areas=a.env.safe;
+  a.fieldLocal.bossStrike(o.ai,a.P,{damage:.2,knock:2,skill:'environment-review',beat:1},a.gameNow);
+  envProof.textContent=JSON.stringify({mode:label,safe:areas,before,after:{x:a.P.x,z:a.P.z,hp:a.P.hp},damage:before.hp-a.P.hp,knock:Math.hypot(a.P.x-before.x,a.P.z-before.z)});
+ };
+}
 for(const [label,width,height] of [['폰 가로',915,412],['폰 세로',412,915],['화면 복원',0,0]]){
  const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
  b.onclick=()=>{frame.style.width=width?width+'px':'100%';frame.style.height=height?height+'px':'100%';frame.style.top=height?'170px':'0';document.body.style.minHeight=height?(height+170)+'px':'0';};

@@ -5,6 +5,7 @@
    걷는 띠·출발점은 맵 굽기 결과(maps/2d/<zone>/map.json)를 그대로 읽는다 — 한 곳에서만 정한다. */
 const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
+const ENVIRONMENT=require('./field-environment.cjs');
 const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),DOM=require('./field-dominator.cjs'),KIT=require('./field-boss-kit.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
 const {Ecology}=require('./field-ecology.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),{linkGates}=require('../js/mmo/zone-links.js'),MOB=require('./field-mob-combat.cjs'),RULES=require('./rpg-rules.cjs');
 const MOB_CATALOG=require('../docs/design/ref/monster-catalog-v10/MonsterRoster_v10.json').Monsters;
@@ -223,7 +224,7 @@ class Field{
   if(!opt.skill&&now-(o.last.get(id)||0)<HIT_GAP) return null; o.last.set(id,now);   /* 스킬 타격은 재사용 대기가 따로 막는다 */
   /* 피해는 서버가 굴린다 (클라가 보낸 숫자는 믿지 않는다) — 기본 공격력 + 무기 공격력 × 0.6, ±10%, 치명타 */
   const counter=COMBAT.tryCounter(o,now)||KIT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=!!p.critNext||this.rng()<(st.critChance||0); p.critNext=false;   /* critNext: 그림자 걸음류 스킬 — 다음 공격 치명타 확정 */
-  const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)*(opt.mult||1)));
+  const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)*(opt.mult||1)*ENVIRONMENT.modifiers(this.zones.get(p.zone),p).swing));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
   const part=o.hp>0?COMBAT.damageShutter(o,p,profile,dmg,counter,now):null;
   /* 공동 전투에는 접촉만 공유한다. 피해량·공격력·보스 체력은 공격자 밖으로 내보내지 않는다 (문서 191). */
@@ -254,10 +255,11 @@ class Field{
  bossStrike(o,p,hit,now=Date.now()){
   if(p.dead)return null; const seq=++p.hurtSeq;
   if(now<p.invulnUntil||now<p.dodgeUntil){ p.hurt=[seq,0,o.id,hit.skill,'evade',hit.beat,now];if(now>=p.invulnUntil&&now<p.dodgeUntil)COMBAT.notePlayerResult(o,p.id,true); return {evade:true}; }
-  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1,buffMul=now<(p.buffUntil||0)?1-(p.buffReduce||0):1,amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul*buffMul*(1-reduce)));   /* buffMul: 결의·철벽류 스킬 */
+  const env=ENVIRONMENT.modifiers(this.zones.get(p.zone),p);
+  const reduce=Math.min(.28,(p.defense/(p.defense+6000))*.36),partMul=o.shutterState===2?(hit.skill==='storm'?.84:hit.skill==='slam'?.88:1):1,buffMul=now<(p.buffUntil||0)?1-(p.buffReduce||0):1,amount=Math.max(1,Math.round(p.maxHp*hit.damage*partMul*buffMul*(1-reduce)*env.damage));   /* buffMul: 결의·철벽류 스킬 */
   p.hp=Math.max(0,p.hp-amount);
   if(hit.knock){ let dx=p.x-o.x,dz=p.z-o.z,d=Math.hypot(dx,dz); if(d<.01){dx=Math.sin(o.yaw||0);dz=Math.cos(o.yaw||0);d=1;}
-   p.x+=dx/d*hit.knock;p.z+=dz/d*hit.knock;this.clamp(this.zones.get(p.zone),p); }
+   p.x+=dx/d*hit.knock*env.knock;p.z+=dz/d*hit.knock*env.knock;this.clamp(this.zones.get(p.zone),p); }
   const kind=p.hp<=0?'dead':'hit'; if(p.hp<=0){p.dead=true;p.respawnAt=now+RESPAWN_TIME;p.anim='idle';}
   p.hurt=[seq,amount,o.id,hit.skill,kind,hit.beat,now];COMBAT.notePlayerResult(o,p.id,false); return {amount,dead:p.dead}; }
  respawn(p,now=Date.now()){ const z=this.zones.get(p.zone),at=z&&z.spawn;if(!z||!at)return;

@@ -53,7 +53,7 @@ for (const id of IDS) {
 }
 test('nova: giant circle has an actual inner safe area, both boundaries and outside tested', () => {
   const h = KIT.KITS.nova.skills.orbit.hits[0], o = { x: 0, z: 0, yaw: 0 };
-  for (const [x, hit] of [[0, false], [3.99, false], [4, true], [20, true], [39, true], [39.01, false]]) assert.equal(KIT.inShape(o, { x, z: 0 }, h), hit);
+  for (const [x, hit] of [[0, false], [4.25, false], [4.49, false], [4.5, true], [20, true], [39, true], [39.01, false]]) assert.equal(KIT.inShape(o, { x, z: 0 }, h), hit);
   // Mutation guard: replacing the ring with a disk must violate the inner-safe invariant.
   assert.throws(() => assert.equal(KIT.inShape(o, { x: 0, z: 0 }, { ...h, shape: 'circle' }), false));
 });
