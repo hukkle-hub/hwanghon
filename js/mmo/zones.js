@@ -234,7 +234,7 @@ export const ZONES = {
       gates: [ { id: 'north', at: { end: 's1', t: 40 }, to: { zone: 'gyeryong', gate: 'south' }, label: '계룡 방면 · 국도', kind: 'zone' },
                { id: 'pad', at: { st: [-96, -34] }, to: { zone: 'goheung_pad', gate: 'out' }, label: '발사 통제동 · 정비 갱도', kind: 'dungeon' } ],
       bosses: [ { id: 'jeong', name: '정 장관', title: '의장대의 주인', at: { st: [40, 30] }, r: 22, model: M + 'minister_jeong_candidate.glb', h: 1.9, place: '발사장 도로', canon: 'EP26 발사장 도로·활주로' } ],
-      props: [ { k: 'launch', at: { st: [-126, 0] }, h: 60 }, { k: 'milfence', at: { st: [-50, 112] }, len: 380 },
+      props: [ { k: 'launch', at: { st: [-126, 0] }, h: 60, climb: true, platform: 24 }, { k: 'milfence', at: { st: [-50, 112] }, len: 380 },   /* 3D: 등반 탑 — 발판 24 m · 소켓 넷 (문서 233 #12) */
                { k: 'convoy', at: { st: [40, 52] }, n: 7, gap: 7 }, { k: 'runway', at: { st: [-40, -120] }, len: 300, w: 40 }, { k: 'parade', at: { st: [40, 30] }, rows: 2, per: 12 },   /* 정 장관: 점거 차량 열 · 반대편 활주로 · 의장대 도열 자리 (문서 233 #11) */
                { k: 'warehouse', at: { st: [-10, 96] }, w: 70, d: 34, h: 32, color: 0xe8e8ea, label: '조립동' }, { k: 'warehouse', at: { st: [90, 60] }, w: 30, d: 20, h: 12, color: 0xd8d8dc, label: '발사 통제동' },
                { k: 'scrap', at: { st: [120, 0] }, r: 26, n: 12 }, { k: 'crystals', at: { st: [-150, 40] }, n: 10, r: 14, h: 0.9 },

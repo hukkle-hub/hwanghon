@@ -67,7 +67,7 @@ test('레비아탄 던전 장치 (문서 233 #4): 윈치 케이블 80 m 생명�
   assert.match(I, /if \(zone\.view3d && o\.cable\) interacts\.push\(\{ id: 'winch', kind: 'winch', x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.cable,/); assert.match(I, /braces: \[\], interacts, floodgates,/);
   assert.match(Z, /hangang_tunnel:[\s\S]*?\{ k: 'winch', u: 0\.7, v: 0\.75, cable: 80 \}/); assert.match(Z, /\{ k: 'floodgates', gates: \[ \{ id: 'inner', name: '내측', u: 0\.48, pins: 'mechIn' \}, \{ id: 'outer', name: '외측', u: 0\.9, pins: 'mechOut' \} \] \}/);
   /* world3d: 같은 단추(gatebtn) 로 핀·윈치 · 줄 끝 당김 · 끌려감 · 낙하 끝에 막이 · 가둠 판정은 떨어질 때와 그 뒤에도 (사이에 갇혀 있다가 나오면) */
-  assert.match(W, /if \(!g\) g = devNear\(\);/); assert.match(W, /if \(g && \(g\.kind === 'pin' \|\| g\.kind === 'winch' \|\| g\.kind === 'seam'\)\) return useDevice\(g\);/); assert.match(W, /\n  devTick\(dt\);/);
+  assert.match(W, /if \(!g\) g = devNear\(\);/); assert.match(W, /if \(g && \['pin', 'winch', 'seam', 'climb', 'descend', 'socket'\]\.includes\(g\.kind\)\) return useDevice\(g\);/); assert.match(W, /\n  devTick\(dt\);/);
   assert.match(W, /if \(d > w\.r && d > 0\.01\) \{ p\.x = w\.x \+ dx \/ d \* w\.r; p\.z = w\.z \+ dz \/ d \* w\.r; collide\(p\);/, '줄 끝 밖으로 못 간다'); assert.match(W, /if \(DEV\.pull > 0\) \{ DEV\.pull -= dt; const st = Math\.min\(Math\.max\(0, d - 2\.5\), WINCH\.speed \* dt\);/, '끌려 돌아간다');
   assert.match(W, /if \(g\.release\) \{ DEV\.attached = false; DEV\.taut = false; if \(DEV\.cable\) DEV\.cable\.visible = false;/, '줄을 푼다');
   assert.match(W, /const left = \(fg\.pins \|\| FLOODGATE\.pins\) - fg\.cut; if \(left > 0\) toast\(.*?\); else dropGate\(fg\); return; \}/);
@@ -141,7 +141,7 @@ test('남행 물류창고 앞마당 (문서 233 #6 섀도우 팽): «무음 지�
   const { QUIET, quietAt } = await import('../js/mmo/env-rules.js');
   assert.equal(QUIET.r, 30); assert.ok(QUIET.hear > 0.85); const q = [{ x: 0, z: 0, r: 30 }]; assert.ok(quietAt(q, 20, 20)); assert.equal(quietAt(q, 25, 25), null); assert.equal(quietAt(null, 0, 0), null);
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8'), S = fs.readFileSync(new URL('../js/mmo/boss-stage.js', import.meta.url), 'utf8');
-  assert.match(F, /yard\(p, o\) \{ const yardAt = \[\]; const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 31 \+ 6\),/, '전용 난수 — 다른 소품 자리를 안 흔든다'); assert.match(F, /quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: rr, label: o\.label \|\| '' \}\);/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces \};/);
+  assert.match(F, /yard\(p, o\) \{ const yardAt = \[\]; const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 31 \+ 6\),/, '전용 난수 — 다른 소품 자리를 안 흔든다'); assert.match(F, /quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: rr, label: o\.label \|\| '' \}\);/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces, interacts \};/);
   assert.match(Z, /\{ k: 'yard', at: \{ st: \[-120, 205\] \}, r: 30, carts: 4, suits: 3, bodies: 3 \}/);
   assert.match(S, /const play = \(n, a\) => \{ if \(n === 'tele' && globalThis\.__QUIET\) return;/, '무음 지대에선 예고음이 안 난다');
   assert.match(W, /const qz = quietAt\(env\.quiet, root\.position\.x, root\.position\.z\); if \(qz !== ENV\.quiet\) \{ ENV\.quiet = qz; window\.__QUIET = !!qz && qz\.mute !== false; window\.TW_SFX\?\.muffle\?\.\(qz \? \(qz\.hear \?\? QUIET\.hear\) : ENV\.band\.hear \|\| 0\); refreshChip\(\); \}/);
@@ -152,7 +152,7 @@ test('골짜기 (문서 233 #7 셀레스티얼) · 빌딩 협곡 (문서 233 #13
   assert.equal(ECHO.hear, 0.5); assert.match(VALLEY.braceLabel, /^골짜기 벽에 등/); assert.equal(quietAt([{ x: 0, z: 0, r: 120, hear: 0.5, mute: false }], 100, 0).mute, false);
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
   assert.match(F, /valley\(p, o\) \{ const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 53 \+ 7\),/, '바위는 전용 난수'); assert.match(F, /const wx = p\[0\] - sa \* sg \* gap \/ 2, wz = p\[1\] - ca \* sg \* gap \/ 2;/); assert.match(F, /const bx = wx \+ ca \* d \+ sa \* sg \* 3\.2, bz = wz - sa \* d \+ ca \* sg \* 3\.2; braces\.push\(\{ x: \+bx\.toFixed\(2\), z: \+bz\.toFixed\(2\), r: 1\.7, label: o\.label \|\| '골짜기 벽에 등 — 버틴다 \(밀려남 ⅓\) · 셀레스티얼 고도 상한 15 m' \}\);/, '벽 안쪽 면 버팀 자리'); assert.ok(F.includes("label: o.label || '" + VALLEY.braceLabel + "'"), '띠 글은 VALLEY.braceLabel 과 같다');
-  assert.match(F, /echo\(p, o\) \{ quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.r \|\| 120, hear: o\.hear \?\? 0\.5, mute: false, label: o\.label \|\| '' \}\); \},/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces \};/);
+  assert.match(F, /echo\(p, o\) \{ quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.r \|\| 120, hear: o\.hear \?\? 0\.5, mute: false, label: o\.label \|\| '' \}\); \},/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces, interacts \};/);
   assert.match(Z, /\{ k: 'valley', at: \{ st: \[200, 190\] \}, len: 48, gap: 26, h: 16, r: 32 \}/); assert.match(Z, /\{ k: 'echo', at: \{ st: \[40, -150\] \}, r: 120, hear: 0\.5 \}/);
   assert.match(W, /window\.__QUIET = !!qz && qz\.mute !== false; window\.TW_SFX\?\.muffle\?\.\(qz \? \(qz\.hear \?\? QUIET\.hear\) : ENV\.band\.hear \|\| 0\);/, '반향 지대는 예고음을 안 막는다'); assert.match(W, /if \(ENV\.brace && ENV\.brace\.label\) t = t\.replace\('매대 다리에 발 — 버틴다 \(밀려남 ⅓\)', ENV\.brace\.label\);/);
 });
@@ -162,4 +162,17 @@ test('고흥 발사장 도로 (문서 233 #11 정 장관): «의장대 도열 ·
   assert.match(F, /import \{ buildCar \} from '\.\/car-kit\.js';/); assert.match(F, /convoy\(p, o\) \{ const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 71 \+ 11\), n = o\.n \|\| 7, gapD = o\.gap \|\| 7,/); assert.match(F, /blockers\.push\(\{ x: \+x\.toFixed\(2\), z: \+z\.toFixed\(2\), hw: 1\.2, hd: 2\.6, rot: ang \}\); \} \},/, '차마다 막이');
   assert.match(F, /runway\(p, o\) \{ const len = o\.len \|\| 300, w = o\.w \|\| 40,/); assert.match(F, /parade\(p, o\) \{ const rows = o\.rows \|\| 2, per = o\.per \|\| 12,/); assert.match(F, /scene\.userData\.parade = at; \},/);
   assert.match(Z, /\{ k: 'convoy', at: \{ st: \[40, 52\] \}, n: 7, gap: 7 \}, \{ k: 'runway', at: \{ st: \[-40, -120\] \}, len: 300, w: 40 \}, \{ k: 'parade', at: \{ st: \[40, 30\] \}, rows: 2, per: 12 \}/);
+});
+
+test('발사대 탑 (문서 233 #12 증폭기): «트러스·케이블 수직 등반» · «주각 넷 — 같은 쪽 둘을 끊으면 바다 쪽 전도» · «노래 눈금» — 케이블 오르기 6 초 → 발판 24 m → 소켓 넷 중 바다 쪽 둘 절단 → 뛰어내리고 4 초 전도', async () => {
+  const { TOWER, towerFalls } = await import('../js/mmo/env-rules.js');
+  assert.equal(TOWER.h, 24); assert.equal(TOWER.climb, 6); assert.equal(TOWER.fall, 4); assert.match(TOWER.card, /^탑이 바다 쪽으로 넘어갔다/);
+  const S = [{ sea: true, cut: false }, { sea: true, cut: false }, { sea: false, cut: true }, { sea: false, cut: true }]; assert.equal(towerFalls(S), false, '육지 쪽 둘로는 안 넘어간다'); S[0].cut = true; assert.equal(towerFalls(S), false); S[1].cut = true; assert.equal(towerFalls(S), true); assert.equal(towerFalls([]), false);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(F, /if \(o\.climb\) return PROPS\.tower\(p, o\);/); assert.match(F, /keep = m => \{ m\.userData\.keep = true;/, '탑은 합치지 않는다 — 넘어뜨려야'); assert.match(F, /sockets\.push\(\{ id, x: \+wx\.toFixed\(2\), z: \+wz\.toFixed\(2\), sea: b > 0, mesh: bundle, cut: false \}\);/, '바다 쪽 = +z 둘');
+  assert.match(F, /interacts\.push\(\{ id: 'climb', kind: 'climb',[^\n]*maxY: 0\.5,/); assert.match(F, /\{ id: 'descend', kind: 'descend',[^\n]*minY: H - 1,/); assert.match(F, /quiet, braces, interacts \};/);
+  assert.match(Z, /\{ k: 'launch', at: \{ st: \[-126, 0\] \}, h: 60, climb: true, platform: 24 \}/);
+  assert.match(W, /const DEV = \{ list: env\.interacts \|\| \[\],/, '필드 장치도 같은 단추'); assert.match(W, /if \(x\.minY != null && p\.y < x\.minY\) continue; if \(x\.maxY != null && p\.y > x\.maxY\) continue;/, '탑 위·아래 장치 구분');
+  assert.match(W, /if \(towerFalls\(TW\.sockets\)\) \{ TW\.phase = 'jump'; TW\.t = 0;/); assert.match(W, /T\.group\.rotation\.x = T\.lean \+ \(1\.35 - T\.lean\) \* u \* u;/, '자중으로 점점 빨리'); assert.match(W, /const lockMove = \(STAGE && STAGE\.locked\) \|\| TW\.phase === 'up' \|\| TW\.phase === 'down' \|\| TW\.phase === 'jump',/); assert.match(W, /ty = 1\.45 \+ h\.y,/, '카메라가 탑 위를 따라간다');
+  assert.match(W, /@media \(orientation:portrait\)\{ #gatebtn\{ left:max\(12px,env\(safe-area-inset-left\)\); transform:none;/, '세로: 장치 단추가 카운터 원과 겹쳤다');
 });
