@@ -73,3 +73,18 @@ export function coverStage(hits) { return hits <= 0 ? '' : COVER.stages[Math.min
 export const TURRET = { n: 18, main: 6, intervals: [4, 5, 6], speed: 26, damage: 0.05, knock: 0.8, reach: 30, ring: 6, lift: [3, 9], flash: 0.4, life: 3.2, aimArc: Math.PI / 3 };   /* aimArc: 내 방위 ±30° 안의 포탑(18 중 셋)만 쏜다 — «어느 각도에서도 최소 3개가 조준». 18 개가 다 쏘면 엄폐물이 1 초에 소멸해 놀 수 없었다 */
 export function turretInterval(k) { return TURRET.intervals[k % TURRET.intervals.length]; }   /* 안내인 종이: 포탑마다 4·5·6 중 하나, 종류는 불변 */
 
+/* 계룡 소독약 복도 (문서 233 #9 박 준장)
+   «좁은 복도 — 원을 그릴 반경이 늘 반 뼘 모자람» L13334 · «병원 냄새, 관측창» EP22: 벽을 안으로 세워 폭 width 만 남긴다. 폭이 CIRCLE.need 보다 좁으면 낫의 원이 벽에 걸려 내 공격이 k 배 */
+export const CIRCLE = { need: 3.0, k: 0.85 };
+export function swingK(narrow) { return narrow && narrow.w != null && narrow.w < CIRCLE.need ? CIRCLE.k : 1; }
+
+/* 고흥 발사대 지하 (문서 233 #10 나노-노바 코어)
+   «거대한 원 참격 (바깥이 빠르고 중심이 느림)» · «원 궤적 안쪽 안전지대» EP27: 코어 둘레 r 안이면 원의 안쪽 — 보스 타격 피해·밀려남이 k 배. 바깥은 그대로(빠르다) */
+export const SAFE = { r: 4.5, k: 0.5, label: '원 궤적 안쪽 — 참격이 느리다 (피해 ½)' };
+export function safeAt(list, x, z) { if (!list) return null; for (const z0 of list) if (Math.hypot(z0.x - x, z0.z - z) <= (z0.r || SAFE.r)) return z0; return null; }
+
+/* 남산타워 하부 (문서 233 #3 케이블카 드로퍼)
+   «천장에서 떨어지는 넷» EP05: 옛 식당 천장의 케이블카 거더·고리 — 드로퍼가 매달릴 자리 넷 · «지하 3층 국방부 철문» → 통신실: 문지기(드로퍼)가 살아 있는 동안 닫혀 있고, 쓰러지면 open 초에 올라간다 */
+export const DOOR = { open: 1.6, nag: 8, lockedLabel: '잠김 — 문지기를 쓰러뜨리면 열린다' };
+export function doorLocked(door, bosses) { const o = (bosses || []).find(b => b.id === door.boss); return !!o && (o.ai ? !!o.ai.alive : true) && !o.sealed; }   /* 보스가 없으면(몸이 아직 없으면) 열려 있다 */
+

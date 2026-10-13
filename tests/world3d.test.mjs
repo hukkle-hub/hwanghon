@@ -175,7 +175,7 @@ test('3D 필드 노바 방: 보스 둘레(반경 10 m) 결정은 무릎 높이 �
   const src = fs.readFileSync(path.join(ROOT, 'js/mmo/env-indoor.js'), 'utf8');
   assert.match(src, /if \(zone\.view3d && o\.center && Math\.hypot\(s - \(r\.s0 \+ r\.s1\) \/ 2, t - \(r\.t0 \+ r\.t1\) \/ 2\) < \(o\.clear3d \|\| 10\)\) h = Math\.min\(h, 0\.9\);/, '보스 둘레 결정이 그대로 — 노바가 안 보인다');
   /* 굽기(view3d 아님)는 그대로여야 한다: 난수 순서가 바뀌면 굽기 그림과 막이(map.json)가 어긋난다 */
-  assert.match(src, /spot\(r, o\), p = FROM\(s, t\); let h = \(o\.h \|\| 1\.2\) \* \(0\.5 \+ R\(\)\);/, '결정 높이 난수 순서가 바뀌었다');
+  assert.match(src, /spot\(r, o\), p = FROM\(s, t\); let h = \(o\.h \|\| 1\.2\) \* \(0\.5 \+ \(o\.wall \? R3\(\) : R\(\)\)\);/, '결정 높이 난수 순서가 바뀌었다 (벽 결정만 3D 난수 R3)');
 });
 
 test('실내 천장은 카메라 막이 — 두께 0.12 m 라 «키 1.2 m 넘는 것» 에서 빠져 멀리 당긴 카메라가 천장 위로 나가 윗면만 찍었다', () => {

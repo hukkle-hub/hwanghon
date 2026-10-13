@@ -150,7 +150,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
-import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval, CIRCLE, swingK, SAFE, safeAt, DOOR, doorLocked } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -363,8 +363,8 @@ const P = { id: 'me', zone: ZONE, x: 0, z: 0, hp: 20000, maxHp: 20000, dead: fal
 const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
     if (now < p.invulnUntil || now < p.dodgeUntil) { evadeFx(now, false); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
-    const amount = Math.max(1, Math.round(p.maxHp * hit.damage * (now < (p.buffUntil || 0) ? 1 - (p.buffReduce || 0) : 1))); p.hp = Math.max(0, p.hp - amount);   /* 결의류: 받는 피해 감소 (서버 bossStrike buffMul) */
-    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } if (ENV.narrow) { const ax = Math.cos(ENV.narrow.rot), az = -Math.sin(ENV.narrow.rot), k = dx * ax + dz * az, sg = k < 0 ? -1 : 1; dx = ax * sg; dz = az * sg; d = 1; }   /* 좁은 계단에서는 계단 축으로만 밀린다 (문서 233 #5) */ const kn = hit.knock * knockK(ENV.band, ENV.slip, !!ENV.brace); p.x += dx / d * kn; p.z += dz / d * kn; collide(p); root.position.x = p.x; root.position.z = p.z; if (ENV.band.spin && !ENV.brace) { ENV.spinT = KNOCK_SPIN.dur; ENV.splashT = SPLASH_RULE.dur; } }   /* 미끄러운 타일 ×1.4 · 매대 버팀 ×0.35 (문서 233 #1) */
+    const amount = Math.max(1, Math.round(p.maxHp * hit.damage * (now < (p.buffUntil || 0) ? 1 - (p.buffReduce || 0) : 1) * (ENV.safe ? SAFE.k : 1)));   /* 원 안쪽 — 참격이 느리다 (문서 233 #10) */ p.hp = Math.max(0, p.hp - amount);   /* 결의류: 받는 피해 감소 (서버 bossStrike buffMul) */
+    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } if (ENV.narrow) { const ax = Math.cos(ENV.narrow.rot), az = -Math.sin(ENV.narrow.rot), k = dx * ax + dz * az, sg = k < 0 ? -1 : 1; dx = ax * sg; dz = az * sg; d = 1; }   /* 좁은 계단에서는 계단 축으로만 밀린다 (문서 233 #5) */ const kn = hit.knock * knockK(ENV.band, ENV.slip, !!ENV.brace) * (ENV.safe ? SAFE.k : 1); p.x += dx / d * kn; p.z += dz / d * kn; collide(p); root.position.x = p.x; root.position.z = p.z; if (ENV.band.spin && !ENV.brace) { ENV.spinT = KNOCK_SPIN.dur; ENV.splashT = SPLASH_RULE.dur; } }   /* 미끄러운 타일 ×1.4 · 매대 버팀 ×0.35 (문서 233 #1) */
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
     if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } if (o.combat) COMBAT.notePlayerResult(o, p.id, false); return { amount, dead: p.dead }; } };
 const doms = [], fbs = [];   /* fbs: 필드 보스(클레이브 등) — 아래 «필드 보스» 에서 채운다 */
@@ -409,12 +409,13 @@ if (FLICK) scene.traverse(o => { if (o.isMesh && o.material && o.material.isMesh
 const DRIP = DWATER && q.get('drip') !== '0' ? (() => { WX.uRain.value = 0.14; const r = rainStreaks(THREE, { n: MOBILE ? 90 : 140, box: [18, 5.5, 18] }), sp = rainSplashes(THREE, { n: MOBILE ? 40 : 70, box: 12 });
   sp.U.uY.value = DWATER.y + 0.02; r.U.uCol.value.setRGB(0.5, 0.56, 0.6); sp.U.uCol.value.setRGB(0.5, 0.56, 0.6); scene.add(r.mesh, sp.mesh); return { r, sp }; })() : null;
 /* 전투 환경 (문서 232): 물 깊이 띠 → 이동·회피·공격 지연·소리·시야·뜸 · 밀려나면 반 바퀴 · 부유물이 보스 예고를 알린다. 숫자는 js/mmo/env-rules.js 한 장 */
-const ENV = { depth: 0, band: WATER_BANDS[0], spinT: 0, pend: null, fromQueue: false, fog0: null, wetT: 0, splashT: 0, brace: null, narrow: null, slip: !!env.slip, chip: document.getElementById('envChip') }; window.__ENV = ENV;
-function refreshChip() { let t = envSummary(ENV.band, ENV.wetT, !!ENV.brace); if (ENV.narrow) t = (t ? t + ' · ' : '') + NARROW.label; if (DEV.fixT > 0) t = (t ? t + ' · ' : '') + '이음매 굳음 ' + Math.ceil(DEV.fixT) + '초'; ENV.chip.hidden = !t; ENV.chip.textContent = t; }   /* 환경 띠: 물 · 젖음 · 버팀 · 좁은 계단 · 굳힌 이음매 */
+const ENV = { depth: 0, band: WATER_BANDS[0], spinT: 0, pend: null, fromQueue: false, fog0: null, wetT: 0, splashT: 0, brace: null, narrow: null, safe: null, slip: !!env.slip, chip: document.getElementById('envChip') }; window.__ENV = ENV;
+function refreshChip() { let t = envSummary(ENV.band, ENV.wetT, !!ENV.brace); if (ENV.narrow) t = (t ? t + ' · ' : '') + (ENV.narrow.label || NARROW.label) + (swingK(ENV.narrow) < 1 ? ' · 공격 ' + Math.round(swingK(ENV.narrow) * 100) + '%' : ''); if (DEV.fixT > 0) t = (t ? t + ' · ' : '') + '이음매 굳음 ' + Math.ceil(DEV.fixT) + '초'; if (ENV.safe) t = (t ? t + ' · ' : '') + (ENV.safe.label || SAFE.label); ENV.chip.hidden = !t; ENV.chip.textContent = t; }   /* 환경 띠: 물 · 젖음 · 버팀 · 좁은 계단 · 굳힌 이음매 */
 const FLOAT = DWATER && q.get('floaters') !== '0' ? floaters(THREE, { n: MOBILE ? 90 : 160 }) : null; if (FLOAT) scene.add(FLOAT.mesh);
 const FLOW_V = new THREE.Vector2(), FLOW_IDLE = new THREE.Vector2(FLOATERS.idle, FLOATERS.idle * 0.4);
 function envTick(dt) { const br = braceAt(env.braces, root.position.x, root.position.z); if (br !== ENV.brace) { ENV.brace = br; refreshChip(); }   /* 매대 버팀 (문서 233 #1) */
   const nr = narrowAt(env.narrows, root.position.x, root.position.z); if (nr !== ENV.narrow) { ENV.narrow = nr; refreshChip(); }   /* 좁은 계단 (문서 233 #5) */
+  const sz = safeAt(env.safe, root.position.x, root.position.z); if (sz !== ENV.safe) { ENV.safe = sz; refreshChip(); }   /* 원 안쪽 안전지대 (문서 233 #10) */
   if (!DWATER) return; const d = DWATER.yAt(root.position.x, root.position.z), b = waterBand(d); ENV.depth = d;
   if (ENV.wetT > 0) { ENV.wetT -= dt; if (ENV.wetT <= 0 && b.id === 'dry') { ENV.wetT = 0; ENV.chip.hidden = true; } else if (b.id === 'dry' && (frames & 7) === 0) ENV.chip.textContent = envSummary(b, ENV.wetT); }   /* 젖은 옷은 서서히 마른다 */
   if (b !== ENV.band) { if (b.id === 'dry' && ENV.band.min >= WATER_BANDS.find(x => x.id === WET.minBand).min) ENV.wetT = WET.dur;   /* 허리 위 물에서 나왔다 — «젖은 테크웨어의 무게» */ ENV.band = b; const sf = window.TW_SFX; if (sf && sf.muffle) sf.muffle(b.hear);   /* 소리 먹먹함 — 마스터 저역 통과 */
@@ -479,6 +480,12 @@ function turretTick(dt) { if (net || !INDOOR) return; const o = fbs.find(x => x.
     if (!done) { const c = narrowAt(COVERS.filter(c => c.hits < COVER.hits), q.x, q.z); if (c && q.y < c.h) { coverHit(c, q); ARS.stats.coverHits++; done = true; } }   /* 엄폐물이 대신 맞는다 */
     if (!done && q.y < 2.2 && Math.hypot(q.x - p.x, q.z - p.z) < 0.9) { fieldLocal.bossStrike({ x: sh.from.x, z: sh.from.z, yaw: 0 }, P, { damage: TURRET.damage, knock: TURRET.knock }, gameNow); ARS.stats.heroHits++; done = true; }
     if (done) { if (q.y < 0.05) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 6), ARS.decalM); d.scale.y = 0.12; d.position.set(q.x, 0.03, q.z); scene.add(d); if (ARS.craters = (ARS.craters || []).concat([d]), ARS.craters.length > 40) scene.remove(ARS.craters.shift()); }   /* «콘크리트를 그릇처럼 파냄» */ scene.remove(sh.m); ARS.shots.splice(i, 1); } } }
+/* 문지기 철문 (문서 233 #3 남산타워 «국방부»): 보스가 살아 있는 동안 닫힘 — 가까이 가면 «잠김» 한 번씩, 쓰러지면 DOOR.open 초에 올라가고 막이가 풀린다 */
+const DOORS = INDOOR ? (env.doors || []).map(d => ({ ...d, ref: (scene.userData.doors || []).find(x => x.id === d.id) || null, open: false, t: 0, nagAt: 0 })) : []; window.__DOORS = DOORS;
+function doorTick(dt) { for (const d of DOORS) { if (d.open) { if (d.t < DOOR.open && d.ref) { d.t += dt; const u = Math.min(1, d.t / DOOR.open), y = d.ref.hDown + (d.ref.hUp - d.ref.hDown) * u * u; d.ref.door.position.y = y; if (d.ref.door.userData.stripe) d.ref.door.userData.stripe.position.y = 1.0 + (y - d.ref.hDown); } continue; }
+    const locked = doorLocked(d, fbs.map(o => ({ id: o.b.id, ai: o.ai, sealed: o.sealed })));
+    if (!locked) { d.open = true; d.t = 0; const i = walkMeta.blockers.indexOf(d.ref && d.ref.blocker); if (i >= 0) walkMeta.blockers.splice(i, 1); shakeT = Math.max(shakeT, .25); window.TW_SFX?.play('gate'); toast(esc(d.name) + '이 열린다', 3); continue; }
+    const dd = Math.hypot(d.x - root.position.x, d.z - root.position.z); if (dd < 3.2 && gameNow >= d.nagAt) { d.nagAt = gameNow + DOOR.nag * 1000; toast(esc(d.name) + ' — ' + DOOR.lockedLabel, 3); } } }
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -552,7 +559,7 @@ function strike(sk) {
   if (net) { net.send(sk ? { type: 'fieldSkill', skill: sk.i, boss: t.b.id } : { type: 'fieldHit', boss: t.b.id }); return true; }   /* 온라인: 서버가 판정한다 — 답(bossHit)이 오면 접점 시각에 보인다 */
   const crit = critNext || Math.random() < 0.18, mult = sk ? sk.mult : 1, hits = sk && sk.hits && sk.hits.length > 1 ? sk.hits : [[0, 1]]; critNext = false;   /* 서버 hit(): 그림자 걸음 뒤 치명타 확정 · 스킬 배율 · 여러 접점은 숫자도 나눠서 */
   hits.forEach(([, w], k) => feel.atContact(fh, k, () => { if (!t.ai.alive) return; const ai = t.ai, counter = ai.combat ? COMBAT.tryCounter(ai, gameNow) : ai.kit ? KIT.tryCounter(ai, gameNow) : false;   /* 반격: 서버 hit() 와 같은 순서 — 반격창 판정 → 피해(×1.65) → 셔터 */
-    const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * mult * w * (counter ? 1.65 : 1)); ai.hp -= n; feel.impact(fh, t, { crit, counter, sound: !t.fx });
+    const n = Math.round(2980 * (0.9 + Math.random() * 0.2) * (crit ? 1.43 : 1) * mult * w * (counter ? 1.65 : 1) * swingK(ENV.narrow)); ai.hp -= n;   /* 좁은 복도 — 낫의 원이 벽에 걸린다 (문서 233 #9) */ feel.impact(fh, t, { crit, counter, sound: !t.fx });
     floatAt(n.toLocaleString('ko-KR'), crit ? 'crit' : '', t.root.position, Math.min(2.1, (t.h || 2.2) * .6));
     if (t.fx) { const part = ai.hp > 0 ? COMBAT.damageShutter(ai, P, { character: ME }, n, counter, gameNow) : null;
       let dx = P.x - ai.x, dz = P.z - ai.z, d = Math.hypot(dx, dz); if (d < .001) { dx = -Math.sin(ai.yaw || 0); dz = -Math.cos(ai.yaw || 0); d = 1; } const edge = Math.max(.8, Math.min(1.55, (t.b.h || 3) * .38));
@@ -838,7 +845,7 @@ function tick() { perf.begin();
     if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
   if (!DWATER) envTick(dt);
   if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH_RULE.scale - 1) * (1 - ENV.splashT / SPLASH_RULE.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH_RULE.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
-  devTick(dt); turretTick(dt);   /* 차수문 낙하 · 윈치 케이블 · 격납고 포탑·엄폐물 */
+  devTick(dt); turretTick(dt); doorTick(dt);   /* 차수문 낙하 · 윈치 케이블 · 격납고 포탑·엄폐물 · 문지기 철문 */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

@@ -72,9 +72,9 @@ export const ZONES = {
     indoor: { seed: 5, theme: { wall: '#4a4440', stripe: 'rgba(140,110,80,.3)', floor: 'tile', h: 4.5, light: 'warm' },
       rooms: [
         { id: 'entry', s: [-8, 8], t: [-26, -14], props: [ { k: 'debris', n: 5 } ] },
-        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 }, { k: 'glass', n: 60 }, { k: 'wallpaper', n: 8 } ] },   /* 3D: 깨진 유리 · 부푼 벽지 (L4995~L5025) */
+        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 }, { k: 'glass', n: 60 }, { k: 'wallpaper', n: 8 }, { k: 'hooks', gap: 4.5, step: 3 } ] },   /* 3D: 깨진 유리 · 부푼 벽지 (L4995~L5025) · 천장 케이블카 거더·고리 — 떨어지는 자리 넷 (문서 233 #3) */
         { id: 'shop', s: [16, 30], t: [-6, 10], light: 'red', props: [ { k: 'shelves', n: 4 }, { k: 'debris', n: 4 }, { k: 'glass', n: 30 } ] },
-        { id: 'down', s: [-24, -16], t: [-2, 4], light: 'red', props: [ { k: 'sign', text: '국방부', u: 0.5, color: '#d83a2a', w: 3 } ] },
+        { id: 'down', s: [-24, -16], t: [-2, 4], light: 'red', props: [ { k: 'sign', text: '국방부', u: 0.5, color: '#d83a2a', w: 3 }, { k: 'steeldoor', id: 'mod', boss: 'dropper', name: '국방부 철문', u: 0.5 } ] },   /* 3D: 드로퍼가 살아 있으면 닫힌 철문 (문서 233 #3) */
         { id: 'comms', s: [-44, -24], t: [-8, 10], floor: 'metal', light: 'green', props: [ { k: 'consoles', rows: [0.3, 0.7] }, { k: 'lockers' } ] } ] } },
 
   /* ================= 4. 여의도 — 공동구 · 지하주차장 (던전) → 금융가 협곡 (필드) ================= */
@@ -216,7 +216,7 @@ export const ZONES = {
         { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [ { k: 'guides' } ] },   /* 3D: 유도등 초록 점선 «절반쯤 살아서» (L12516) */
         { id: 'shop', s: [140, 176], t: [4, 30], h: 8, floor: 'metal', light: 'fluo', props: [ { k: 'machines', n: 8 }, { k: 'shelves', n: 3 } ] },
         { id: 'hangar', s: [176, 300], t: [-30, 40], h: 30, light: 'fluo', lightStep: 18, props: [ { k: 'vehicles', n: 30 }, { k: 'pillars', step: 30, mat: 'steel' }, { k: 'crates', n: 14 }, { k: 'gantry', at: [0.3, 0.75] } ] },   /* 3D: 천장 크레인 */
-        { id: 'corridor', s: [300, 350], t: [2, 6], h: 3.4, floor: 'tile', light: 'fluo', props: [] },
+        { id: 'corridor', s: [300, 350], t: [2, 6], h: 3.4, floor: 'tile', light: 'fluo', props: [ { k: 'corridor', width: 2.6 } ] },   /* 3D: 소독약 복도 — 폭 2.6 m · 관측창 · 비상등 (문서 233 #9) */
         { id: 'specimen', s: [350, 380], t: [-11, 19], h: 9, floor: 'tile', light: 'green', props: [ { k: 'capsules', n: 14 }, { k: 'table', u: 0.5, v: 0.5 } ] } ] } },
 
   /* ================= 10. 고흥 발사장 (필드) · 발사대 갱도 (던전) ================= */
@@ -247,7 +247,7 @@ export const ZONES = {
       rooms: [
         { id: 'control', s: [0, 28], t: [-10, 10], floor: 'tile', props: [ { k: 'consoles', rows: [0.3, 0.55, 0.8] } ] },
         { id: 'shaft', s: [28, 120], t: [-2.5, 2.5], lightStep: 10, props: [ { k: 'pipes', n: 2 }, { k: 'rails', t: [0] } ] },
-        { id: 'core', s: [120, 150], t: [-15, 15], h: 9, light: 'none', props: [ { k: 'crystal', n: 48, center: true, spread: 18, h: 3.6 }, { k: 'debris', n: 5 } ] },
+        { id: 'core', s: [120, 150], t: [-15, 15], h: 9, light: 'none', props: [ { k: 'crystal', n: 48, center: true, spread: 18, h: 3.6 }, { k: 'debris', n: 5 }, { k: 'crystal', n: 36, wall: true, h: 3.2 }, { k: 'capsule', u: 0.22, v: 0.28 }, { k: 'safezone', u: 0.5, v: 0.5, r: 4.5 } ] },   /* 3D: 결정 벽 · 노바 1호 캡슐 잔해 · 원 안쪽 안전지대 (문서 233 #10) */
         { id: 'base', s: [150, 180], t: [-12, 18], h: 16, light: 'red', props: [ { k: 'tower', d: 7 } ] } ] } },
 };
 
