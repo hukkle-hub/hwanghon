@@ -6,10 +6,12 @@ import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
 import {makePoser} from './pose-eval.mjs';
 import {readBVH} from './read-bvh.mjs';
+import {clearWeaponFloor} from './weapon-floor-solve.mjs';
 const source='art/review/part1/park-combat-shoulder-study.glb';
 const out=process.argv[2]||'art/review/part1/park-mocap-study.glb';
 const coherentCoat=process.argv.includes('--coherent-coat');
 const legWeights=process.argv.includes('--leg-weights');
+const armedSupport=process.argv.includes('--armed-support');
 if([source,'art/review/part1/park-recovered.glb','art/review/part1/park-combat-candidate.glb'].some(p=>path.resolve(p)===path.resolve(out)))throw Error('Immutable source');
 const raw=fs.readFileSync(source),jl=raw.readUInt32LE(12),json=JSON.parse(raw.toString('utf8',20,20+jl)),bin=raw.subarray(28+jl,28+jl+raw.readUInt32LE(20+jl));
 const loader=new GLTFLoader();loader.register(()=>({name:'skip',loadTexture:()=>Promise.resolve(new T.Texture())}));
@@ -53,6 +55,10 @@ if(legWeights){
  mesh.geometry.setAttribute('skinIndex',new T.Uint16BufferAttribute(indices,4));mesh.geometry.setAttribute('skinWeight',new T.Float32BufferAttribute(weights,4));
 }
 const configs=[['getup_back_park_mocap','mo_getup_back',0,.65],['getup_face_park_mocap','mo_getup_face',0,.65],['dodge_park_mocap','mo_duck',.2,.45]];
+// Fully weighted descendants transform rigidly with the forearm. Include their
+// skin points, not only the weapon: the old weapon-only solve buried fingers.
+const attachedVertices=[];
+if(armedSupport){const si=mesh.geometry.attributes.skinIndex,sw=mesh.geometry.attributes.skinWeight;for(let i=0;i<si.count;i++){let sum=0;for(let k=0;k<4;k++)if(['RForearm','RHand','RFingers'].includes(names[si.getComponent(i,k)]))sum+=sw.getComponent(i,k);if(sum>.9999)attachedVertices.push(i);}}
 const reports=[];
 for(const[name,file,intro,recovery]of configs){
  const src=readBVH(fs.readFileSync('art/3d/mocap/'+file+'.bvh','utf8'));
@@ -62,7 +68,7 @@ for(const[name,file,intro,recovery]of configs){
  const targetLeg=rest.RCalf.p.length()+rest.RFoot.p.length();
  const sourceLeg=src.byName.rtibia.position.length()+src.byName.rfoot.position.length();
  const scale=targetLeg/sourceLeg,duration=intro+src.duration+recovery;
- const values=Object.fromEntries(names.map(n=>[n,{p:[],q:[]}])),times=[];let maxSettlement=0;
+ const values=Object.fromEntries(names.map(n=>[n,{p:[],q:[]}])),times=[];let maxSettlement=0,maxArmCorrection=0,unclearedSamples=0;
  function retarget(t){
   src.pose(t);reset();nodes.Hips.position.copy(sw('root').multiplyScalar(scale));
   const x=dir('rfemur','lfemur').normalize(),y=dir('root','thorax');y.addScaledVector(x,-y.dot(x)).normalize();const z=new T.Vector3().crossVectors(x,y).normalize();y.crossVectors(z,x).normalize();
@@ -102,6 +108,10 @@ for(const[name,file,intro,recovery]of configs){
   toGuard=Math.max(0,Math.min(1,toGuard));toGuard=toGuard*toGuard*(3-2*toGuard);
   if(toGuard){for(const n of names){nodes[n].position.lerp(guard[n].p,toGuard);nodes[n].quaternion.slerp(guard[n].q,toGuard);}update();}
   maxSettlement=Math.max(maxSettlement,Math.abs(settle()));times.push(t);
+  if(armedSupport){
+   const inverse=nodes.RForearm.matrixWorld.clone().invert(),extraLocalPoints=attachedVertices.map(i=>mesh.getVertexPosition(i,new T.Vector3()).applyMatrix4(mesh.matrixWorld).applyMatrix4(inverse));
+   const result=clearWeaponFloor({joint:nodes.RForearm,weapon:nodes.ParkDanjoe,extraLocalPoints});maxArmCorrection=Math.max(maxArmCorrection,result.angle);if(!result.cleared)unclearedSamples++;
+  }
   for(const n of names){values[n].p.push(...nodes[n].position.toArray());values[n].q.push(...nodes[n].quaternion.toArray());}
  }
  const input=acc(times,'SCALAR'),samplers=[],channels=[];
@@ -111,6 +121,6 @@ for(const[name,file,intro,recovery]of configs){
  // Explicit grip tracks prevent a preceding death-release clip from leaking
  // its detached-sword transform into getup/recovery.
  for(const[prop,v,type]of [['translation',[0,-.068,.055],'VEC3'],['rotation',[0,0,0,1],'VEC4']]){samplers.push({input,output:acc(times.flatMap(()=>v),type),interpolation:'LINEAR'});channels.push({sampler:samplers.length-1,target:{node:json.nodes.findIndex(n=>n.name==='ParkDanjoe'),path:prop}});}
- json.animations.push({name,samplers,channels});reports.push({clip:name,source:file,duration,sourceDuration:src.duration,sourceScale:scale,maxSettlement,visualApproved:false});
+ json.animations.push({name,samplers,channels});reports.push({clip:name,source:file,duration,sourceDuration:src.duration,sourceScale:scale,maxSettlement,maxArmCorrection,unclearedSamples,visualApproved:false});
 }
 json.buffers[0].byteLength=length;const jbuf=Buffer.from(JSON.stringify(json)),jp=Buffer.alloc(Math.ceil(jbuf.length/4)*4,32);jbuf.copy(jp);const bp=Buffer.concat(chunks),pad=Buffer.alloc(Math.ceil(bp.length/4)*4);bp.copy(pad);const h=Buffer.alloc(20);h.writeUInt32LE(0x46546c67);h.writeUInt32LE(2,4);h.writeUInt32LE(28+jp.length+pad.length,8);h.writeUInt32LE(jp.length,12);h.writeUInt32LE(0x4e4f534a,16);const bh=Buffer.alloc(8);bh.writeUInt32LE(pad.length);bh.writeUInt32LE(0x004e4942,4);fs.mkdirSync(path.dirname(out),{recursive:true});fs.writeFileSync(out,Buffer.concat([h,jp,bh,pad]));console.log(JSON.stringify({out,originalBinPreserved:bp.subarray(0,bin.length).equals(bin),reports},null,2));
