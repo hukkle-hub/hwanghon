@@ -2,6 +2,7 @@
    No floor timer or combat authority. All geometry follows the shared skill clock.
    Bounded pools; death/reset clears even a paused effect. */
 import * as T from '../../vendor/three/three.module.js';
+import { bindBossEmitter } from './boss-emitter.js';
 const COLORS = { leviathan: 0x54dabf, aegis: 0x7fbaff, celestial2: 0xffedb9, arsenal: 0xff9e5c, nova: 0x80eaff };
 const Y = new T.Vector3(0, 1, 0);
 export function createStaticBossFX(o, scene, floor, reduced) {
@@ -16,14 +17,16 @@ export function createStaticBossFX(o, scene, floor, reduced) {
     const geometry = new T.CylinderGeometry(1, 1, .4, 32, 1, true, -h.angle * .5, h.angle);
     const m = mesh(geometry); m.material.side = T.DoubleSide; arcs.set(h.angle, m);
   }
-  const start = new T.Vector3(), end = new T.Vector3(), axis = new T.Vector3();
+  const emitter = bindBossEmitter(o.model, o.kfx.kit.emitter);
+  const origin = new T.Vector3(), start = new T.Vector3(), end = new T.Vector3(), axis = new T.Vector3();
   const clear = () => group.children.forEach(m => { m.visible = false; });
   function update(a, skill, t) {
     clear(); if (!skill || !a || o.stage?.dying) return;
     const height = Math.max(1, o.h || 3), x = o.root.position.x, z = o.root.position.z;
     const originY = floor + height * .55 + (o.b.fly || 0) + (o.model.position.y - o.kfx.baseY);
+    if (emitter) emitter.worldPosition(origin); else origin.set(x, originY, z);
     const next = skill.hits.find(h => t < h.at);
-    if (next) { core.visible = true; core.position.set(x, originY, z); core.scale.setScalar(Math.min(height * .14, .7) * (1 + .16 * Math.sin(t * .004))); core.material.opacity = reduced ? .22 : .4; }
+    if (next) { core.visible = true; core.position.copy(origin); core.scale.setScalar(Math.min(height * .14, .7) * (1 + .16 * Math.sin(t * .004))); core.material.opacity = reduced ? .22 : .4; }
     skill.hits.forEach((h, i) => {
       const p = pool[i % pool.length], age = t - h.at, tell = skill.tells?.find(q => q.at === h.at), lead = h.lead || (tell ? h.at - tell.from : 700);
       if (age < -lead || age > 320) return;
@@ -34,7 +37,7 @@ export function createStaticBossFX(o, scene, floor, reduced) {
         p.shard.scale.set(.20 + power * .2, .65, .20 + power * .2); p.shard.rotation.y = t * .002; p.shard.material.opacity = .65;
         if (age >= 0) { p.wave.visible = true; p.wave.position.set(mk[0], floor + .4, mk[1]); p.wave.rotation.x = Math.PI / 2; p.wave.scale.setScalar(h.radius); p.wave.material.opacity = power * .65; }
       } else if (h.shape === 'line') {
-        start.set(x, originY, z); end.set(x + Math.sin(yaw) * h.range, floor + .65, z + Math.cos(yaw) * h.range); axis.subVectors(end, start);
+        start.copy(origin); end.set((emitter ? origin.x : x) + Math.sin(yaw) * h.range, floor + .65, (emitter ? origin.z : z) + Math.cos(yaw) * h.range); axis.subVectors(end, start);
         const length = axis.length(); p.beam.visible = true; p.beam.position.copy(start).add(end).multiplyScalar(.5); p.beam.quaternion.setFromUnitVectors(Y, axis.normalize());
         // Narrow energy alignment is on the weapon axis, never a floor rectangle.
         const r = age < 0 ? .012 + .025 * power : h.width * .5;
@@ -48,5 +51,5 @@ export function createStaticBossFX(o, scene, floor, reduced) {
       }
     });
   }
-  return { group, pool, clear, update, dispose() { clear(); for (const m of group.children) { m.geometry.dispose(); m.material.dispose(); } group.removeFromParent(); } };
+  return { group, pool, core, emitter, clear, update, dispose() { clear(); for (const m of group.children) { m.geometry.dispose(); m.material.dispose(); } group.removeFromParent(); } };
 }

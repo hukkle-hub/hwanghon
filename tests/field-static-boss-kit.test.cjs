@@ -63,3 +63,16 @@ test('locked line: side and rear are safe; another zone/dead player is not hit',
   g.p.x = g.o.x; g.p.z = g.o.z - 2; g.f.tickBosses(at + 1750); assert.equal(g.hits.length, 0);
   const q = fixture('aegis'), t = start(q, 'cannon'); q.p.zone = 'southroad'; q.f.tickBosses(t + 1000); assert.equal(q.hits.length, 0);
 });
+test('leviathan actual Field: beam starts at mouth, not inside body; future beat cancellation remains authoritative',()=>{
+ const g=fixture('leviathan');g.p.z=g.o.z+18;const at=start(g,'pressure');
+ g.p.z=g.o.z+5;g.f.tickBosses(at+1000);assert.equal(g.hits.length,0,'behind mouth');
+ g.p.z=g.o.z+18;g.f.tickBosses(at+1850);assert.equal(g.hits.length,1,'visible beam lane');
+ const q=fixture('leviathan');q.p.z=q.o.z+18;const t=start(q,'pressure');
+ assert.equal(KIT.tryCounter(q.o,t+1600),true);q.f.tickBosses(t+1850);assert.equal(q.hits.length,0);
+});
+test('leviathan lateral target is aimed from mouth once, then moving clear avoids the next shot',()=>{
+ const g=fixture('leviathan');g.p.x=g.o.x+12;g.p.z=g.o.z+13;const at=start(g,'pressure'),yaw=g.o.yaw;
+ g.f.tickBosses(at+1000);assert.equal(g.hits.length,1,'stationary selected target is on the actual muzzle line');
+ g.p.x+=Math.cos(yaw)*5;g.p.z-=Math.sin(yaw)*5;g.f.tickBosses(at+1850);
+ assert.equal(g.hits.length,1,'no last-moment target chase');assert.equal(g.o.yaw,yaw);
+});

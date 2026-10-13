@@ -3,6 +3,7 @@
    상태는 o.kit 에 둔다(클레이브 o.combat · 지배형 o.dom 과 섞이지 않게). 보스 체력·단계는 여기서도 내보내지 않는다.
    혼자 연습(world3d)은 이 파일을 그대로 불러 쓴다 — 서버와 같은 박자 · 같은 판정 · 같은 예고. */
 const seq = (from, n, gap) => Array.from({ length: n }, (_, i) => from + i * gap);
+const { LEVIATHAN, contactLine, emitterPosition } = require('./field-boss-emitter.cjs');
 
 /* 시간표는 2D 모션 스터디(tools/vfx/shadowfang-motion-study.html)·3D 애니매틱(문서 181 §6) 그대로.
    hits: 판정 · tells: 박자(예전 바닥 예고 — 지금은 준비 동작·소리만, style = 준비 모양) · winds: 준비 동작 창을 따로 줄 때 · wind: 기본 모양 · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
@@ -11,6 +12,7 @@ const KITS = {
   /* 고정형 5종: 원작 동작의 전투용 시간표. 지형 파괴/차수문/부위 퍼즐은 던전 몫.
      stationary 는 판정 방향만 돌리고 몸의 자리·방향은 고정한다. 수치는 검수용 전투 튜닝. */
   leviathan: {
+    emitter: LEVIATHAN,
     stationary: true, aggro: 22, leash: 32, walk: 0, ret: 0, engage: 22, recovery: [1100, 1100], phases: [.5], open: 'tidal',
     skills: {
       pressure: { clip: 'atk_pressure', duration: 3500, reach: 33, wind: 'brace',
@@ -186,6 +188,10 @@ function choose(field, o, p) {
 }
 function begin(field, o, p, now, skill) {
   const def = kitOf(o).skills[skill]; if (p && !def.behind) turn(o, p.x, p.z, Math.PI);   /* 등 뒤 기술은 돌아서지 않는다 — «보지도 않고» */
+  if (p && kitOf(o).emitter && def.hits.every(h => h.shape === 'line' && !h.atTarget)) {
+    const mouth = emitterPosition(kitOf(o).emitter, def, def.hits[0].at, o.x, o.z);
+    o.yaw = Math.atan2(p.x - mouth.x, p.z - mouth.z); // authoritative target, locked once before the windup
+  }
   const j = def.jitter, shift = j ? j.steps[Math.min(j.steps.length - 1, Math.floor(Math.max(0, Math.min(.999999, Number(field?.rng?.()) || 0)) * j.steps.length))] : 0;
   let live = true; if (def.counterEvery) { const c = o.kit.counts || (o.kit.counts = {}); c[skill] = (c[skill] || 0) + 1; live = c[skill] % def.counterEvery === 0; }   /* 외운 원: 네 번째마다 */
   setState(o, 'skill', now, def.duration + shift, { skill, target: p ? p.id : null, fromX: o.x, fromZ: o.z, shift, marks: [], counterLive: live });
@@ -202,7 +208,9 @@ function skillTick(field, o, now) {
   while (a.hitIndex < def.hits.length && t >= at(def.hits[a.hitIndex])) {
     const h = def.hits[a.hitIndex]; a.hitIndex++;
     if (h.aim) { const p = target(field, o); if (p) turn(o, p.x, p.z, Math.PI / 2); }   /* 난무: 세트마다 방향을 다시 잡는다 (숨 동안 틀어짐) */
-    const mk = h.atTarget && a.marks[a.hitIndex - 1], yh = (o.yaw || 0) + (h.turn || 0) + (h.yawOff || 0), origin = mk ? { x: mk[0], z: mk[1], yaw: 0 } : def.move && h.shape === 'line' ? { x: a.fromX, z: a.fromZ, yaw: yh } : { x: o.x, z: o.z, yaw: yh }, hit = { ...h, skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
+    const mk = h.atTarget && a.marks[a.hitIndex - 1], yh = (o.yaw || 0) + (h.turn || 0) + (h.yawOff || 0);
+    const beam = !mk && h.shape === 'line' && kitOf(o).emitter ? contactLine(kitOf(o).emitter, def, h, o.x, o.z, yh) : null;
+    const origin = beam ? beam.origin : mk ? { x: mk[0], z: mk[1], yaw: 0 } : def.move && h.shape === 'line' ? { x: a.fromX, z: a.fromZ, yaw: yh } : { x: o.x, z: o.z, yaw: yh }, hit = { ...h, ...(beam ? { range: beam.range } : {}), skill: a.skill, beat: a.hitIndex, beats: def.hits.length };
     for (const p of live(field, o)) if (inShape(origin, p, hit)) { const r = field.bossStrike(o, p, hit, now);
       if (h.heal && r && r.amount > 0) o.hp = Math.min(o.max, (o.hp || 0) + Math.round(o.max * h.heal)); }   /* 흡혈: 맞힌 만큼 보스가 회복 (보스 고유 규칙, 문서 181 §1 ④) */
   }
