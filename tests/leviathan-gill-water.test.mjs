@@ -21,14 +21,23 @@ test('pooled water follows actual surface each frame, bounds resources, resets a
  const gl=await load(),scene=new T.Scene();scene.add(gl.scene);const pose=makePoser(gl.scene,gl.animations.find(c=>c.name==='atk_gill'));
  for(const reduced of [false,true]){
   const fx=createGillWaterStudy(gl.scene,scene,{reduced}),objects=fx.group.children.slice(),attrs=objects.map(o=>o.geometry.attributes.position);
-  assert.deepEqual(fx.budget,reduced?{drawCalls:4,sheetTriangles:48,droplets:40}:{drawCalls:4,sheetTriangles:96,droplets:96});
+  assert.deepEqual(fx.budget,reduced?{drawCalls:4,sheetTriangles:96,droplets:40}:{drawCalls:4,sheetTriangles:192,droplets:96});
+  const foam=fx.streams[0].drops.material.map;assert.equal(fx.streams[1].drops.material.map,foam);
+  assert.equal(foam.image.data[3],0);assert.ok(foam.image.data[(16*32+16)*4+3]>250);
   for(let t=0;t<=3300;t+=25){
    pose(t/1000);gl.scene.position.set(t*.0001,0,-t*.0002);fx.update(s,t);
    assert.deepEqual(fx.group.children,objects);objects.forEach((o,i)=>assert.equal(o.geometry.attributes.position,attrs[i]));
    for(const a of fx.streams){
     if(a.sheet.visible){
-     const p=a.sheet.geometry.attributes.position,left=new T.Vector3().fromBufferAttribute(p,0),right=new T.Vector3().fromBufferAttribute(p,1),start=left.add(right).multiplyScalar(.5);
-     assert.ok(start.distanceTo(a.emitter.worldPosition(new T.Vector3()))<1e-5);
+     const p=a.sheet.geometry.attributes.position;
+     assert.equal(a.sheet.geometry.index.count/3,fx.budget.sheetTriangles/2);
+     for(const offset of [0,p.count/2]){
+      const left=new T.Vector3().fromBufferAttribute(p,offset),right=new T.Vector3().fromBufferAttribute(p,offset+1),start=left.add(right).multiplyScalar(.5);
+      assert.ok(start.distanceTo(a.emitter.worldPosition(new T.Vector3()))<1e-5);
+     }
+     const axis0=new T.Vector3().fromBufferAttribute(p,1).sub(new T.Vector3().fromBufferAttribute(p,0)).normalize();
+     const axis1=new T.Vector3().fromBufferAttribute(p,p.count/2+1).sub(new T.Vector3().fromBufferAttribute(p,p.count/2)).normalize();
+     assert.ok(Math.abs(axis0.dot(axis1))<1e-4,'crossed sheets must not collapse to parallel planes');
     }
     for(const obj of [a.sheet,a.drops])assert.ok(Array.from(obj.geometry.attributes.position.array).every(Number.isFinite));
    }
@@ -36,7 +45,7 @@ test('pooled water follows actual surface each frame, bounds resources, resets a
   for(const options of [{cancelled:true},{dying:true}]){pose(1.8);fx.update(s,1800);assert.equal(fx.group.visible,true);fx.update(s,1800,options);assert.equal(fx.group.visible,false);}
   fx.update(s,1800);fx.update(kit.skills.pressure,1800);assert.equal(fx.group.visible,false);
   fx.update(s,1800);const before=Array.from(fx.streams[0].drops.geometry.attributes.position.array);fx.update(s,0);fx.update(s,1800);assert.deepEqual(Array.from(fx.streams[0].drops.geometry.attributes.position.array),before);
-  let disposed=0;objects.forEach(o=>o.geometry.addEventListener('dispose',()=>disposed++));fx.dispose();fx.dispose();fx.update(s,1800);assert.equal(disposed,4);assert.equal(fx.group.parent,null);assert.equal(fx.group.visible,false);
+  let disposed=0,textureDisposed=0;foam.addEventListener('dispose',()=>textureDisposed++);objects.forEach(o=>o.geometry.addEventListener('dispose',()=>disposed++));fx.dispose();fx.dispose();fx.update(s,1800);assert.equal(disposed,4);assert.equal(textureDisposed,1);assert.equal(fx.group.parent,null);assert.equal(fx.group.visible,false);
  }
  assert.equal(createGillWaterStudy(new T.Group(),scene),null);
 });
