@@ -165,9 +165,9 @@ export const ZONES = {
     indoor: { seed: 14, theme: { wall: '#c8ccd0', stripe: 'rgba(60,140,200,.4)', floor: 'tile', h: 4, light: 'fluo', hemiI: 2.0 },
       rooms: [
         { id: 'lobby', s: [0, 30], t: [-12, 12], h: 6, props: [ { k: 'partitions', n: 7 }, { k: 'trees', n: 4 }, { k: 'glass', n: 40 }, { k: 'sign', text: '내부 인원 전원 대피 완료. 지하 3층 봉인.', u: 0.5, color: '#2a2a2a', bg: '#e8e4d8', font: 30, w: 6 } ] },
-        { id: 'stair', s: [30, 38], t: [-1.6, 1.6], light: 'red', props: [] },
+        { id: 'stair', s: [30, 38], t: [-1.6, 1.6], light: 'red', props: [ { k: 'railing' } ] },   /* 3D: 난간 안쪽 한 사람 너비 (문서 233 #5) */
         { id: 'b2', s: [38, 62], t: [-10, 10], props: [ { k: 'shelves', n: 8 }, { k: 'drums', n: 4 } ] },
-        { id: 'neck', s: [62, 70], t: [-1.6, 1.6], light: 'red', props: [ { k: 'debris', n: 2 } ] },
+        { id: 'neck', s: [62, 70], t: [-1.6, 1.6], light: 'red', props: [ { k: 'debris', n: 2 }, { k: 'railing' }, { k: 'seam', u: 0.5, fix: 2 }, { k: 'sign', text: 'B3 봉인 — 이음매 고정액 처리', u: 0.5, color: '#d83a2a', font: 26, w: 2.4 } ] },   /* 3D: 계단 중턱 이음매 — 고정액 병 둘 (EP14) */
         { id: 'b3', s: [70, 100], t: [-13, 13], h: 5, light: 'green', props: [ { k: 'consoles', rows: [0.85] }, { k: 'debris', n: 8 }, { k: 'scratches', n: 2 } ] } ] } },
 
   /* ================= 8. 남행 국도 · 골짜기 (필드) ================= */

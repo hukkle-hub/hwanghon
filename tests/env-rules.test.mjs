@@ -67,10 +67,26 @@ test('레비아탄 던전 장치 (문서 233 #4): 윈치 케이블 80 m 생명�
   assert.match(I, /if \(zone\.view3d && o\.cable\) interacts\.push\(\{ id: 'winch', kind: 'winch', x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.cable,/); assert.match(I, /braces: \[\], interacts, floodgates,/);
   assert.match(Z, /hangang_tunnel:[\s\S]*?\{ k: 'winch', u: 0\.7, v: 0\.75, cable: 80 \}/); assert.match(Z, /\{ k: 'floodgates', gates: \[ \{ id: 'inner', name: '내측', u: 0\.48, pins: 'mechIn' \}, \{ id: 'outer', name: '외측', u: 0\.9, pins: 'mechOut' \} \] \}/);
   /* world3d: 같은 단추(gatebtn) 로 핀·윈치 · 줄 끝 당김 · 끌려감 · 낙하 끝에 막이 · 가둠 판정은 떨어질 때와 그 뒤에도 (사이에 갇혀 있다가 나오면) */
-  assert.match(W, /if \(!g\) g = devNear\(\);/); assert.match(W, /if \(g && \(g\.kind === 'pin' \|\| g\.kind === 'winch'\)\) return useDevice\(g\);/); assert.match(W, /\n  devTick\(dt\);/);
+  assert.match(W, /if \(!g\) g = devNear\(\);/); assert.match(W, /if \(g && \(g\.kind === 'pin' \|\| g\.kind === 'winch' \|\| g\.kind === 'seam'\)\) return useDevice\(g\);/); assert.match(W, /\n  devTick\(dt\);/);
   assert.match(W, /if \(d > w\.r && d > 0\.01\) \{ p\.x = w\.x \+ dx \/ d \* w\.r; p\.z = w\.z \+ dz \/ d \* w\.r; collide\(p\);/, '줄 끝 밖으로 못 간다'); assert.match(W, /if \(DEV\.pull > 0\) \{ DEV\.pull -= dt; const st = Math\.min\(Math\.max\(0, d - 2\.5\), WINCH\.speed \* dt\);/, '끌려 돌아간다');
   assert.match(W, /if \(g\.release\) \{ DEV\.attached = false; DEV\.taut = false; if \(DEV\.cable\) DEV\.cable\.visible = false;/, '줄을 푼다');
   assert.match(W, /const left = \(fg\.pins \|\| FLOODGATE\.pins\) - fg\.cut; if \(left > 0\) toast\(.*?\); else dropGate\(fg\); return; \}/);
   assert.match(W, /door\.door\.position\.y = door\.hTop \+ \(door\.hDown - door\.hTop\) \* u \* u;/, '자유 낙하'); assert.match(W, /walkMeta\.blockers\.push\(\{ x: d\.fg\.x, z: d\.fg\.z, hw: d\.fg\.hw, hd: d\.fg\.hd, rot: d\.fg\.rot \}\); shakeT = Math\.max\(shakeT, \.55\); window\.TW_SFX\?\.play\('brk'\); checkSeal\(true\); \}/);
   assert.match(W, /if \(!DEV\.sealed && DEV\.gates\.size && frames % 15 === 0\) checkSeal\(false\);/); assert.match(W, /if \(boss && !inside\(hs\)\) \{ DEV\.sealed = true; if \(boss\.ai\) boss\.ai\.alive = false; boss\.sealed = true;/);
+});
+
+test('판교 연구소 장치 (문서 233 #5): 좁은 계단 «폭이 사람 둘 너비 … 하나씩만» — 난간 안쪽 1.6 m, 안에서는 계단 축으로만 밀린다 · 이음매 고정액 «마지막 고정액을 부어 임시 봉쇄» — 병 둘, 40 초 막이, 지나면 «아래에서 부딪쳐 돌파»', async () => {
+  const { NARROW, narrowAt, FIX } = await import('../js/mmo/env-rules.js');
+  assert.equal(NARROW.width, 1.6); assert.equal(FIX.bottles, 2); assert.equal(FIX.hold, 40);
+  const a = 28 * Math.PI / 180, n = [{ x: 0, z: 0, hw: 4, hd: 0.8, rot: a }], S = (s, t) => [s * Math.cos(a) - t * Math.sin(a), -s * Math.sin(a) - t * Math.cos(a)];
+  assert.ok(narrowAt(n, ...S(3.9, 0.7)), '계단 축 끝·너비 안'); assert.equal(narrowAt(n, ...S(4.2, 0)), null, '축 밖'); assert.equal(narrowAt(n, ...S(0, 0.9)), null, '난간 밖'); assert.equal(narrowAt(null, 0, 0), null);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(I, /railing\(r, o\) \{/); assert.match(I, /narrows\.push\(\{ x: \+c\[0\]\.toFixed\(2\), z: \+c\[1\]\.toFixed\(2\), hw: \+\(L \/ 2\)\.toFixed\(2\), hd: \+\(W \/ 2 - inset\)\.toFixed\(2\), rot: SCREEN_ANG,/); assert.match(I, /block\(bc\[0\], bc\[1\], L \/ 2, inset \/ 2, SCREEN_ANG\);/, '난간은 막이');
+  assert.match(I, /seam\(r, o\) \{/); assert.match(I, /interacts\.push\(\{ id: 'seam', kind: 'seam',[^\n]*bottles: o\.fix \?\? 2,/); assert.match(I, /braces: \[\], interacts, floodgates, narrows,/);
+  assert.match(Z, /\{ id: 'stair', s: \[30, 38\], t: \[-1\.6, 1\.6\], light: 'red', props: \[ \{ k: 'railing' \} \] \}/); assert.match(Z, /\{ id: 'neck', s: \[62, 70\],[^\n]*\{ k: 'railing' \}, \{ k: 'seam', u: 0\.5, fix: 2 \}/);
+  assert.match(W, /const nr = narrowAt\(env\.narrows, root\.position\.x, root\.position\.z\); if \(nr !== ENV\.narrow\) \{ ENV\.narrow = nr; refreshChip\(\); \}/);
+  assert.match(W, /if \(ENV\.narrow\) \{ const ax = Math\.cos\(ENV\.narrow\.rot\), az = -Math\.sin\(ENV\.narrow\.rot\), k = dx \* ax \+ dz \* az, sg = k < 0 \? -1 : 1; dx = ax \* sg; dz = az \* sg; d = 1; \}/, '좁은 계단 — 축으로만 밀린다');
+  assert.match(W, /if \(g\.kind === 'seam'\) \{ g\.bottles--; DEV\.fixT = FIX\.hold; DEV\.fixBlock = \{ x: g\.x, z: g\.z, hw: g\.hw, hd: g\.hd, rot: g\.rot \}; walkMeta\.blockers\.push\(DEV\.fixBlock\);/);
+  assert.match(W, /if \(DEV\.fixT <= 0\) \{ DEV\.fixT = 0; const i = walkMeta\.blockers\.indexOf\(DEV\.fixBlock\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '시간이 지나면 막이가 풀린다');
+  assert.match(W, /if \(x\.kind === 'seam'\) \{ if \(x\.bottles <= 0 \|\| DEV\.fixT > 0\) continue;/, '병이 없거나 이미 굳어 있으면 단추 없음');
 });

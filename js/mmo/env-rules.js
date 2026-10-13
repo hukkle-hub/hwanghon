@@ -57,3 +57,11 @@ export function envSummary(band, wetT = 0, braced = false) { if (braced) return 
    차수문 — «고정핀 두 개 … 핀 두 개가 동시에 잘려 나갔고, 평형추가 낙하했다 … 내측 차수문이 떨어졌다» L8019~L8031 · 외측 L8101~L8103: 기계실마다 핀 둘, 둘 다 자르면 그 문이 drop 초에 떨어져 길을 막는다. 둘 다 떨어지고 놈이 그 사이면 «가둠» */
 export const WINCH = { reach: 80, speed: 7, dur: 3 };
 export const FLOODGATE = { pins: 2, drop: 1.2, sealCard: '가둠 — 차수문 3-B 폐쇄' };
+
+/* 판교 연구소 장치 (문서 233 #5)
+   좁은 계단 — «폭이 사람 둘 너비인 좁은 계단 — 하나씩만 오르내림(이점이자 함정)» · «계단 난간» EP14: 난간 안쪽 한 사람 너비만 걷는다. 안에서는 밀려나도 계단 축으로만 밀린다 (옆으로 못 튄다)
+   고정액 봉쇄 — «계단 중턱 콘크리트 이음매에 마지막 고정액을 부어 임시 봉쇄» · «굳힌 이음매를 아래에서 부딪쳐 돌파» EP14~15: 병 bottles 개, 부으면 hold 초 동안 이음매가 막이가 된다 (나도 못 지난다), 지나면 아래에서 깨진다 */
+export const NARROW = { width: 1.6, label: '좁은 계단 — 한 사람씩 · 옆으로 못 밀린다' };
+export function narrowAt(list, x, z) { if (!list) return null; for (const n of list) { const c = Math.cos(n.rot || 0), si = Math.sin(n.rot || 0), dx = x - n.x, dz = z - n.z, u = dx * c - dz * si, v = dx * si + dz * c; if (Math.abs(u) <= n.hw && Math.abs(v) <= n.hd) return n; } return null; }   /* 회전한 직사각형 안인가 (hw: 계단 축 반, hd: 너비 반) */
+export const FIX = { bottles: 2, hold: 40, label: '이음매 — 고정액을 붓는다' };
+
