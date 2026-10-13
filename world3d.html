@@ -150,7 +150,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
-import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -460,6 +460,25 @@ function devTick(dt) { for (let i = DEV.drops.length - 1; i >= 0; i--) { const d
   if (taut !== DEV.taut) { DEV.taut = taut; if (taut) toast('케이블 끝 — ' + w.r + ' m. 더 가려면 줄을 푼다', 3); }
   if (frames & 1) return; const slack = Math.min(3, Math.max(0, w.r - d) * 0.06), wy = DWATER ? DWATER.yAt(p.x, p.z) : 0; for (let i = 0; i < 16; i++) { const u = i / 15, y = 1.2 + (0.95 - 1.2) * u - Math.sin(u * Math.PI) * slack; DEV.pts[i].set(w.x + dx * u, Math.max(wy + 0.03, y), w.z + dz * u); }
   const old = DEV.cable.geometry; DEV.cable.geometry = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(DEV.pts), 24, 0.03, 5, false); old.dispose(); }   /* 늘어진 줄은 물 위에 눕는다 · 두 프레임에 한 번 다시 짠다 */
+/* 계룡 주 격납고 (문서 233 #8): 소모성 엄폐물 — 나노 덩어리가 장갑차에 맞으면 1발 파임(움푹) · 2발 관통(구멍) · 3발 소멸(사라지고 막이도 풀림) L12717.
+   포탑 — 혼자 연습에서만 클라가 쏜다: 정지 모델 둘레 18 자리, 포탑마다 4·5·6 초, 쏘기 0.4 초 전에 빨갛게 달아오른다. 엄폐물 뒤에 있으면 엄폐물이 맞는다. 온라인·AI 는 GPT 몫 (문서 233 §8) */
+const COVERS = INDOOR ? (env.covers || []).map(c => ({ ...c, hits: 0, ref: (scene.userData.covers || []).find(d => d.id === c.id) || null, decals: [] })) : [];
+const ARS = { tur: null, shots: [], stats: { fired: 0, coverHits: 0, heroHits: 0, gone: 0 }, decalM: new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 1 }), shotM: new THREE.MeshStandardMaterial({ color: 0x1c1c22, roughness: 0.6, metalness: 0.3, emissive: 0x3a0c14, emissiveIntensity: 0.8 }) }; window.__ARS = { ARS, COVERS, hit: (c, at) => coverHit(c, at) };
+function coverHit(c, at) { if (c.hits >= COVER.hits) return; c.hits++; const st = coverStage(c.hits); floatAt(st, 'crit', c, c.h + 0.4); const g = c.ref && c.ref.group;
+  if (c.hits === 1) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), ARS.decalM); d.scale.set(1, 0.6, 0.35); d.position.set(at.x, Math.min(c.h - 0.4, Math.max(0.6, at.y)), at.z); d.lookAt(c.x, d.position.y, c.z); scene.add(d); c.decals.push(d); }   /* 파임 — 그릇처럼 파인 자국 */
+  else if (c.hits === 2) { const d = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, c.hd * 2 + 0.6, 10), ARS.decalM); d.position.set(c.x, 1.3, c.z); d.rotation.z = Math.PI / 2; d.rotation.y = c.rot + Math.PI / 2; scene.add(d); c.decals.push(d); }   /* 관통 — 가로지른 구멍 */
+  else { if (g) g.visible = false; for (const d of c.decals) d.visible = false; const i = walkMeta.blockers.indexOf(c.ref && c.ref.blocker); if (i >= 0) walkMeta.blockers.splice(i, 1); for (let k = 0; k < 4; k++) { const r = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, 0.5), ARS.decalM); r.position.set(c.x + (Math.random() - 0.5) * c.hw, 0.15, c.z + (Math.random() - 0.5) * c.hd * 2); r.rotation.y = Math.random() * 3; scene.add(r); } shakeT = Math.max(shakeT, .3); window.TW_SFX?.play('brk'); ARS.stats.gone++; toast('엄폐물 소멸 — 다른 장갑차 뒤로', 2.5); } }   /* 소멸 — 막이도 풀린다 */
+function turretTick(dt) { if (net || !INDOOR) return; const o = fbs.find(x => x.b.id === 'arsenal' && x.root.visible && !x.sealed); if (!o) return;
+  if (!ARS.tur) { ARS.tur = []; for (let k = 0; k < TURRET.n; k++) { const a = k / TURRET.n * Math.PI * 2, main = k % 3 === 0, m = new THREE.Mesh(new THREE.SphereGeometry(main ? 0.42 : 0.28, 10, 8), new THREE.MeshStandardMaterial({ color: 0x2a2c30, emissive: 0xff2a20, emissiveIntensity: 0, roughness: 0.5 }));
+      m.position.set(o.root.position.x + Math.cos(a) * TURRET.ring, TURRET.lift[0] + (TURRET.lift[1] - TURRET.lift[0]) * ((k * 7) % TURRET.n) / TURRET.n, o.root.position.z + Math.sin(a) * TURRET.ring); scene.add(m); const iv = turretInterval(k); ARS.tur.push({ m, iv, t: Math.random() * iv, main, a }); } }   /* 18 자리 · 주포탑 6 */
+  const p = root.position, near = !P.dead && !(STAGE && STAGE.locked) && Math.hypot(p.x - o.root.position.x, p.z - o.root.position.z) < TURRET.reach;
+  const bear = Math.atan2(p.z - o.root.position.z, p.x - o.root.position.x);
+  for (const t of ARS.tur) { const da = Math.abs(Math.atan2(Math.sin(t.a - bear), Math.cos(t.a - bear))), aims = da <= TURRET.aimArc / 2; if (!near || !aims) { t.m.material.emissiveIntensity = 0; if (t.t < TURRET.flash) t.t = t.iv; continue; }   /* 내 방위 ±30° 포탑만 — 나머지는 다른 방향을 본다 */ t.t -= dt; t.m.material.emissiveIntensity = t.t < TURRET.flash ? 1.6 * (1 - t.t / TURRET.flash) : 0;   /* 쏘기 전 달아오름 */
+    if (t.t <= 0) { t.t = t.iv; const from = t.m.position, aim = new THREE.Vector3(p.x, 1.0, p.z), dir = aim.clone().sub(from).normalize(), sm = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), ARS.shotM); sm.position.copy(from); scene.add(sm); ARS.shots.push({ m: sm, v: dir.multiplyScalar(TURRET.speed), life: TURRET.life, from: { x: from.x, z: from.z } }); ARS.stats.fired++; } }
+  for (let i = ARS.shots.length - 1; i >= 0; i--) { const sh = ARS.shots[i], q = sh.m.position; q.addScaledVector(sh.v, dt); sh.life -= dt; let done = sh.life <= 0 || q.y < 0;
+    if (!done) { const c = narrowAt(COVERS.filter(c => c.hits < COVER.hits), q.x, q.z); if (c && q.y < c.h) { coverHit(c, q); ARS.stats.coverHits++; done = true; } }   /* 엄폐물이 대신 맞는다 */
+    if (!done && q.y < 2.2 && Math.hypot(q.x - p.x, q.z - p.z) < 0.9) { fieldLocal.bossStrike({ x: sh.from.x, z: sh.from.z, yaw: 0 }, P, { damage: TURRET.damage, knock: TURRET.knock }, gameNow); ARS.stats.heroHits++; done = true; }
+    if (done) { if (q.y < 0.05) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 6), ARS.decalM); d.scale.y = 0.12; d.position.set(q.x, 0.03, q.z); scene.add(d); if (ARS.craters = (ARS.craters || []).concat([d]), ARS.craters.length > 40) scene.remove(ARS.craters.shift()); }   /* «콘크리트를 그릇처럼 파냄» */ scene.remove(sh.m); ARS.shots.splice(i, 1); } } }
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -819,7 +838,7 @@ function tick() { perf.begin();
     if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
   if (!DWATER) envTick(dt);
   if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH_RULE.scale - 1) * (1 - ENV.splashT / SPLASH_RULE.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH_RULE.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
-  devTick(dt);   /* 차수문 낙하 · 윈치 케이블 */
+  devTick(dt); turretTick(dt);   /* 차수문 낙하 · 윈치 케이블 · 격납고 포탑·엄폐물 */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

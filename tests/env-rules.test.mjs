@@ -90,3 +90,16 @@ test('판교 연구소 장치 (문서 233 #5): 좁은 계단 «폭이 사람 둘
   assert.match(W, /if \(DEV\.fixT <= 0\) \{ DEV\.fixT = 0; const i = walkMeta\.blockers\.indexOf\(DEV\.fixBlock\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '시간이 지나면 막이가 풀린다');
   assert.match(W, /if \(x\.kind === 'seam'\) \{ if \(x\.bottles <= 0 \|\| DEV\.fixT > 0\) continue;/, '병이 없거나 이미 굳어 있으면 단추 없음');
 });
+
+test('계룡 격납고 장치 (문서 233 #8): 소모성 엄폐물 «1발 파임, 2발 관통, 3발 소멸» L12717 — 세 단계, 소멸하면 막이도 풀린다 · 포탑 18 «4·5·6초 세 종류» L12805 — 혼자 연습은 클라가 쏘고 엄폐물 뒤면 엄폐물이 맞는다', async () => {
+  const { COVER, coverStage, TURRET, turretInterval } = await import('../js/mmo/env-rules.js');
+  assert.deepEqual(COVER.stages, ['파임', '관통', '소멸']); assert.equal(COVER.hits, 3); assert.equal(coverStage(0), ''); assert.equal(coverStage(1), '파임'); assert.equal(coverStage(2), '관통'); assert.equal(coverStage(3), '소멸'); assert.equal(coverStage(9), '소멸');
+  assert.equal(TURRET.n, 18); assert.equal(TURRET.main, 6); assert.deepEqual(TURRET.intervals, [4, 5, 6]); assert.deepEqual([0, 1, 2, 3, 17].map(turretInterval), [4, 5, 6, 4, 6]);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8');
+  assert.match(I, /covers\.push\(\{ id, x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), hw: \(big \? 7 : 6\) \/ 2, hd: 1\.5, rot: \+rot\.toFixed\(4\), h: big \? 3 : 2\.9, big \}\); scene\.userData\.covers = \(scene\.userData\.covers \|\| \[\]\)\.concat\(\[\{ id, group: g, blocker: blockers\[blockers\.length - 1\] \}\]\);/);
+  assert.match(I, /if \(zone\.view3d\) m\.userData\.keep = true;/, '장갑차는 합치지 않는다 — 소멸하면 숨겨야'); assert.match(I, /braces: \[\], interacts, floodgates, narrows, covers,/);
+  assert.match(W, /function coverHit\(c, at\) \{ if \(c\.hits >= COVER\.hits\) return; c\.hits\+\+; const st = coverStage\(c\.hits\);/); assert.match(W, /else \{ if \(g\) g\.visible = false; for \(const d of c\.decals\) d\.visible = false; const i = walkMeta\.blockers\.indexOf\(c\.ref && c\.ref\.blocker\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '소멸 — 막이도 풀린다');
+  assert.match(W, /function turretTick\(dt\) \{ if \(net \|\| !INDOOR\) return; const o = fbs\.find\(x => x\.b\.id === 'arsenal' && x\.root\.visible && !x\.sealed\);/, '혼자 연습만 · 온라인은 서버(GPT)'); assert.match(W, /const iv = turretInterval\(k\); ARS\.tur\.push\(\{ m, iv, t: Math\.random\(\) \* iv, main, a \}\);/); assert.equal(TURRET.aimArc, Math.PI / 3); assert.match(W, /aims = da <= TURRET\.aimArc \/ 2; if \(!near \|\| !aims\) \{/, '내 방위 ±30° 포탑만 쏜다 (18 개가 다 쏘면 엄폐물이 1 초에 소멸)');
+  assert.match(W, /const c = narrowAt\(COVERS\.filter\(c => c\.hits < COVER\.hits\), q\.x, q\.z\); if \(c && q\.y < c\.h\) \{ coverHit\(c, q\); ARS\.stats\.coverHits\+\+; done = true; \}/, '엄폐물이 대신 맞는다 — 소멸한 것은 안 막는다');
+  assert.match(W, /devTick\(dt\); turretTick\(dt\);/);
+});

@@ -65,3 +65,11 @@ export const NARROW = { width: 1.6, label: '좁은 계단 — 한 사람씩 · �
 export function narrowAt(list, x, z) { if (!list) return null; for (const n of list) { const c = Math.cos(n.rot || 0), si = Math.sin(n.rot || 0), dx = x - n.x, dz = z - n.z, u = dx * c - dz * si, v = dx * si + dz * c; if (Math.abs(u) <= n.hw && Math.abs(v) <= n.hd) return n; } return null; }   /* 회전한 직사각형 안인가 (hw: 계단 축 반, hd: 너비 반) */
 export const FIX = { bottles: 2, hold: 40, label: '이음매 — 고정액을 붓는다' };
 
+/* 계룡 주 격납고 장치 (문서 233 #8)
+   엄폐물 — «죽은 장갑차 엄폐물 파괴: 1발 파임, 2발 관통, 3발 소멸» L12717: 장갑차·자주포는 소모성 엄폐물. 나노 덩어리가 맞을 때마다 한 단계
+   포탑 — «18포탑이 서로 다른 방향, 어느 각도에서도 최소 3개가 조준» L12689 · «포탑별 사격 간격 4·5·6초 세 종류» L12805: 혼자 연습에서는 클라가 정지 모델 둘레 18 자리에서 쏜다 (서버·AI 는 GPT 몫). «탑은 이동하지 않고 추격하지 않음» L12781 */
+export const COVER = { stages: ['파임', '관통', '소멸'], hits: 3 };
+export function coverStage(hits) { return hits <= 0 ? '' : COVER.stages[Math.min(COVER.hits, hits) - 1]; }
+export const TURRET = { n: 18, main: 6, intervals: [4, 5, 6], speed: 26, damage: 0.05, knock: 0.8, reach: 30, ring: 6, lift: [3, 9], flash: 0.4, life: 3.2, aimArc: Math.PI / 3 };   /* aimArc: 내 방위 ±30° 안의 포탑(18 중 셋)만 쏜다 — «어느 각도에서도 최소 3개가 조준». 18 개가 다 쏘면 엄폐물이 1 초에 소멸해 놀 수 없었다 */
+export function turretInterval(k) { return TURRET.intervals[k % TURRET.intervals.length]; }   /* 안내인 종이: 포탑마다 4·5·6 중 하나, 종류는 불변 */
+
