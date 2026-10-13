@@ -56,3 +56,21 @@ test('클레이브 던전 장치 (문서 233 #1): 매대 버팀 «발뒤꿈치�
   assert.match(D, /\{ id: 'drain', x: \+drainP\[0\]\.toFixed\(2\), z: \+drainP\[1\]\.toFixed\(2\), r: 1\.9, to: \{ zone: 'gangnam', gate: 'exit5' \}, label: '배수로 격자 · 물길로 빠져나간다', kind: 'zone', local: true \}/);
   assert.match(fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8'), /gangnam_b2:[\s\S]*?fogDist: \[9, 46\], slip: true \}/); assert.match(fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), /slip: !!th\.slip, braces: \[\],/);
 });
+
+test('레비아탄 던전 장치 (문서 233 #4): 윈치 케이블 80 m 생명줄 «윈치! 당겨!» — 줄 끝 밖으로 못 가고·끌려 돌아오고·풀 수 있다 · 기계실 고정핀 둘 → 차수문 낙하(1.2 초 자유 낙하) → 막이 · 둘 다 내려오고 보스가 사이면 «가둠 — 차수문 3-B 폐쇄»', async () => {
+  const { WINCH, FLOODGATE } = await import('../js/mmo/env-rules.js');
+  assert.equal(WINCH.reach, 80); assert.ok(WINCH.speed > 0 && WINCH.dur > 0); assert.equal(FLOODGATE.pins, 2); assert.ok(FLOODGATE.drop > 0.5 && FLOODGATE.drop < 3); assert.match(FLOODGATE.sealCard, /^가둠 — 차수문 3-B/);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  /* 장면: 핀·평형추에 표를 달고 interacts 로 내놓는다 · 문은 천장 속에 숨어 scene.userData.floodgates 로 넘어온다 · 윈치는 cable 이 있을 때만 장치 */
+  assert.match(I, /interacts\.push\(\{ id: gd\.id \+ '-pin' \+ k, kind: 'pin', gate: gd\.id,/); assert.match(I, /pin\.userData\.pin = gd\.id \+ '-pin' \+ k;/); assert.match(I, /wt\.userData\.pinWeight = gd\.id \+ '-pin' \+ k; wt\.userData\.keep = true;/); assert.match(I, /pin\.userData\.keep = true;/); assert.match(W, /skip: o => o\.name === 'sky' \|\| !!o\.userData\.keep,/, '핀·평형추는 정적 합치기에서 뺀다 — 합쳐지면 잘라도 안 숨는다');
+  assert.match(I, /door\.visible = false; scene\.add\(door\);/); assert.match(I, /scene\.userData\.floodgates = \(scene\.userData\.floodgates \|\| \[\]\)\.concat\(\[\{ id: gd\.id, door, hTop: H \+ H \/ 2 \+ 0\.2, hDown: H \/ 2 \}\]\)/);
+  assert.match(I, /if \(zone\.view3d && o\.cable\) interacts\.push\(\{ id: 'winch', kind: 'winch', x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.cable,/); assert.match(I, /braces: \[\], interacts, floodgates,/);
+  assert.match(Z, /hangang_tunnel:[\s\S]*?\{ k: 'winch', u: 0\.7, v: 0\.75, cable: 80 \}/); assert.match(Z, /\{ k: 'floodgates', gates: \[ \{ id: 'inner', name: '내측', u: 0\.48, pins: 'mechIn' \}, \{ id: 'outer', name: '외측', u: 0\.9, pins: 'mechOut' \} \] \}/);
+  /* world3d: 같은 단추(gatebtn) 로 핀·윈치 · 줄 끝 당김 · 끌려감 · 낙하 끝에 막이 · 가둠 판정은 떨어질 때와 그 뒤에도 (사이에 갇혀 있다가 나오면) */
+  assert.match(W, /if \(!g\) g = devNear\(\);/); assert.match(W, /if \(g && \(g\.kind === 'pin' \|\| g\.kind === 'winch'\)\) return useDevice\(g\);/); assert.match(W, /\n  devTick\(dt\);/);
+  assert.match(W, /if \(d > w\.r && d > 0\.01\) \{ p\.x = w\.x \+ dx \/ d \* w\.r; p\.z = w\.z \+ dz \/ d \* w\.r; collide\(p\);/, '줄 끝 밖으로 못 간다'); assert.match(W, /if \(DEV\.pull > 0\) \{ DEV\.pull -= dt; const st = Math\.min\(Math\.max\(0, d - 2\.5\), WINCH\.speed \* dt\);/, '끌려 돌아간다');
+  assert.match(W, /if \(g\.release\) \{ DEV\.attached = false; DEV\.taut = false; if \(DEV\.cable\) DEV\.cable\.visible = false;/, '줄을 푼다');
+  assert.match(W, /const left = \(fg\.pins \|\| FLOODGATE\.pins\) - fg\.cut; if \(left > 0\) toast\(.*?\); else dropGate\(fg\); return; \}/);
+  assert.match(W, /door\.door\.position\.y = door\.hTop \+ \(door\.hDown - door\.hTop\) \* u \* u;/, '자유 낙하'); assert.match(W, /walkMeta\.blockers\.push\(\{ x: d\.fg\.x, z: d\.fg\.z, hw: d\.fg\.hw, hd: d\.fg\.hd, rot: d\.fg\.rot \}\); shakeT = Math\.max\(shakeT, \.55\); window\.TW_SFX\?\.play\('brk'\); checkSeal\(true\); \}/);
+  assert.match(W, /if \(!DEV\.sealed && DEV\.gates\.size && frames % 15 === 0\) checkSeal\(false\);/); assert.match(W, /if \(boss && !inside\(hs\)\) \{ DEV\.sealed = true; if \(boss\.ai\) boss\.ai\.alive = false; boss\.sealed = true;/);
+});

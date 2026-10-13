@@ -138,7 +138,7 @@ test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(bos
 test('3D 필드 하늘: 바깥만 장면 색(env.sky)으로 노을 돔 · 정적 합치기와 카메라 막이에서 뺀다', () => {
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
   assert.match(w, /if \(env\.sky && env\.sky\.top && env\.sky\.horizon\)/, '실내(하늘 정보 없음)에도 하늘을 그린다');
-  assert.match(w, /mergeStatic\(scene, \{ skip: o => o\.name === 'sky',/, '하늘 돔이 카메라 막이 상자가 된다');
+  assert.match(w, /mergeStatic\(scene, \{ skip: o => o\.name === 'sky' \|\| !!o\.userData\.keep,/, '하늘 돔이 카메라 막이 상자가 된다 · keep 표(던전 핀·평형추)도 뺀다');
   assert.match(w, /window\.__sky\.position\.copy\(cam\.position\)/, '하늘이 카메라를 안 따라간다 — 멀리 가면 돔 밖으로 나간다');
 });
 
