@@ -50,7 +50,7 @@ export const ZONES = {
     spawn: { room: 'stairs', u: 0.5, v: 0.5 },
     gates: [ { id: 'up', room: 'stairs', u: 0.4, v: 0.5, to: { zone: 'gangnam_b1', gate: 'b2' }, label: '지하상가 B1 · 계단', kind: 'zone' } ],
     bosses: [ { id: 'clave2', name: '클레이브', title: '셔터 끄는 놈 · 마무리', room: 'track', u: 0.62, v: 0.5, r: 14, model: M + 'clave.glb', h: 3.2, place: '선로 한가운데', canon: 'EP03 2호선 침수 선로' } ],
-    indoor: { seed: 3, water: 1.15, theme: { wall: '#2e3438', stripe: 'rgba(60,160,90,.4)', floor: 'terrazzo', h: 5, light: 'fluo', flicker: { on: 3, off: 1 }, hemiI: 1.8, fogDist: [9, 46] },
+    indoor: { seed: 3, water: 1.15, theme: { wall: '#2e3438', stripe: 'rgba(60,160,90,.4)', floor: 'terrazzo', h: 5, light: 'fluo', flicker: { on: 3, off: 1 }, hemiI: 1.8, fogDist: [9, 46], slip: true },
       rooms: [
         { id: 'stairs', s: [-70, -56], t: [8, 16], props: [ { k: 'stairs', side: 's0' }, { k: 'sign', text: '2호선 · 강남', u: 0.6, color: '#40d880' } ] },
         { id: 'platform', s: [-56, 56], t: [5, 13], floor: 'tile', props: [ { k: 'platform', t: 5.4 }, { k: 'pillars', step: 10 }, { k: 'sign', text: '잠시 후 열차가 도착합니다', u: 0.5, color: '#ff8a30', w: 6 } ] },

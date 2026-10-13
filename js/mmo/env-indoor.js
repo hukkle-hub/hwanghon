@@ -251,7 +251,7 @@ export function build(THREE, scene, osm, zone) {
   const extentPts = []; for (let s = s0 - 2; s <= s1 + 2; s += 2) for (let t = t0 - 2; t <= t1 + 3; t += 2) { if (!inRoom(s, t, 2.5)) continue; const p = FROM(s, t); extentPts.push([p[0], 0, p[1]], [p[0], 6, p[1]]); }
   console.info('[env-indoor]', zone.id, '방', rooms.length, '벽', wallN, '빛', lights.length, '막힘', blockers.length);
   return { kind: zone.kind || 'dungeon', title: zone.title, lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 }, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
-    fogDist: th.fogDist || null,   /* 3D 안개 [가까이, 멀리] — 침수 선로·터널은 짙게 (기본 16·70) */
+    fogDist: th.fogDist || null, slip: !!th.slip, braces: [],   /* slip: 물때 앉은 타일 (2호선 승강장) */   /* 3D 안개 [가까이, 멀리] — 침수 선로·터널은 짙게 (기본 16·70) */
     sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water, grade: th.waterGrade ? th.waterGrade.map(([sv, y]) => { const p = FROM(sv, 0); return { s: sv, y, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; }) : null, ang: SCREEN_ANG } : null, flicker: th.flicker || null,
     gates, bosses, areas, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: '' };
 }

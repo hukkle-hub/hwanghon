@@ -160,8 +160,12 @@ export function build(THREE, scene, osm, zone = {}) {
       const lid = new THREE.Mesh(new THREE.CircleGeometry(AR, 64), ceilM); lid.rotation.x = Math.PI / 2; lid.position.set(plazaC[0], TOP, plazaC[1]); lid.userData.camBlock = true; scene.add(lid); }
     scene.userData.atrium = ATRIUM; }
   /* 뒤집힌 진열대 (원작 «진열대가 통째로 날아갔다») */
+  const braces = [];   /* 매대 버팀 자리 (문서 233 #1 · env-rules BRACE): 매대 옆이면 밀려남 ⅓ */
   for (let k = 0; k < 9; k++) { const a = R() * Math.PI * 2, r = 5 + R() * (PLAZA_R - 7), x = plazaC[0] + Math.cos(a) * r, z = plazaC[1] + Math.sin(a) * r;
-    const st2 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.9), shelfM); st2.position.set(x, 0.45, z); st2.rotation.set(R() * 0.6 - 0.3, R() * 3, Math.PI / 2 * (R() < 0.5 ? 1 : 0.4)); st2.castShadow = true; scene.add(st2); blockers.push({ x, z, hw: 1.2, hd: 0.6, rot: st2.rotation.y }); }
+    const st2 = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 0.9), shelfM); st2.position.set(x, 0.45, z); st2.rotation.set(R() * 0.6 - 0.3, R() * 3, Math.PI / 2 * (R() < 0.5 ? 1 : 0.4)); st2.castShadow = true; scene.add(st2); blockers.push({ x, z, hw: 1.2, hd: 0.6, rot: st2.rotation.y }); braces.push({ x: +x.toFixed(2), z: +z.toFixed(2), r: 2.0 }); }
+  /* 배수로 격자 — 퇴로 (원작 «아인이 배수로 격자를 낫으로 뜯어냈다» L1912): 광장 남쪽, 바리케이드 안쪽. 3D 문(kind zone) 으로 5번 출구 쪽 물길 */
+  const drainP = FROM(-(PLAZA_R - 6), tc + 4), grateM = new THREE.MeshStandardMaterial({ color: 0x3a3c40, roughness: 0.6, metalness: 0.7 });
+  { const g = new THREE.Group(); g.position.set(drainP[0], 0.02, drainP[1]); g.rotation.y = SCREEN_ANG; for (let i = -4; i <= 4; i++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 1.6), grateM); bar.position.x = i * 0.19; g.add(bar); } const fr = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.05, 1.75), new THREE.MeshStandardMaterial({ color: 0x202226, roughness: 0.8 })); fr.position.y = -0.02; g.add(fr); scene.add(g); }
   /* 생존자 바리케이드 — 광장 남쪽 가장자리(통로에서 들어오는 쪽) */
   for (let k = -3; k <= 3; k++) { const p = FROM(-(PLAZA_R - 3) * Math.sign(s5 || -1) * -1 + 0, tc + k * 2.2); const bar = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.3, 0.6), shelfM); bar.position.set(p[0], 0.65, p[1]); bar.rotation.y = SCREEN_ANG + Math.PI / 2 + (R() - .5) * 0.3; bar.castShadow = true; scene.add(bar); }
   /* 스크린도어 + 시 액자 + 전광판 «잠시 후 열차가 도착합니다» — 광장 북쪽(2호선 승강장 쪽) */
@@ -199,7 +203,9 @@ export function build(THREE, scene, osm, zone = {}) {
   return { kind: 'dungeon', title: '강남역 지하상가 B1', lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 },
     spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, fogDist: [12, 56], sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
     flicker: { on: 3, off: 1 },   /* 원작 «3초 켜짐. 1초 꺼짐» */
+    braces, slip: true,   /* 물때 앉은 타일 — 밀리면 미끄러짐 (env-rules SLIP) */
     gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' },
+             { id: 'drain', x: +drainP[0].toFixed(2), z: +drainP[1].toFixed(2), r: 1.9, to: { zone: 'gangnam', gate: 'exit5' }, label: '배수로 격자 · 물길로 빠져나간다', kind: 'zone', local: true },   /* 퇴로 — 서버 지도엔 없다(혼자 연습·클라 이동만) */
              /* 2호선 승강장으로 — 스크린도어 너머 셔터 앞 (원작 «광장 바로 밑» L3344). 보스 구역(19 m) 밖이 되게 승강장 쪽으로 */
              (() => { const g = FROM(PLAZA_R + 5.5, tc + 10.5); return { id: 'b2', x: +g[0].toFixed(2), z: +g[1].toFixed(2), r: 2.6, to: { zone: 'gangnam_b2', gate: 'up' }, label: '2호선 침수 선로 · B2', kind: 'zone' }; })() ],
     bosses: [ { id: 'clave', name: '클레이브', title: '셔터 끄는 놈', x: +plazaC[0].toFixed(2), z: +plazaC[1].toFixed(2), r: PLAZA_R, place: '중앙 광장', model: 'art/3d/part1/clave.glb', h: 3.2, canon: 'EP02 §10 중앙 광장' } ],
