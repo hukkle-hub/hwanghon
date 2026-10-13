@@ -19,11 +19,15 @@ function resize(){const h=innerHeight-document.querySelector('header').offsetHei
 const ground=new T.Mesh(new T.PlaneGeometry(10,10),new T.MeshStandardMaterial({color:0x303841,roughness:1}));ground.rotation.x=-Math.PI/2;s.add(ground);
 const candidate=new URLSearchParams(location.search).has('candidate');
 const shoulder=new URLSearchParams(location.search).get('candidate')==='shoulder';
-const gl=await new GLTFLoader().loadAsync('../../art/review/part1/'+(shoulder?'park-combat-shoulder-study.glb':candidate?'park-combat-candidate.glb':'park-recovered.glb'));
+const mocapLeg=new URLSearchParams(location.search).get('candidate')==='mocap-leg';
+const mocap=new URLSearchParams(location.search).get('candidate')==='mocap'||mocapLeg;
+const gl=await new GLTFLoader().loadAsync('../../art/review/part1/'+(mocapLeg?'park-mocap-leg-study.glb':mocap?'park-mocap-study.glb':shoulder?'park-combat-shoulder-study.glb':candidate?'park-combat-candidate.glb':'park-recovered.glb'));
 const root=gl.scene;root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(root,true),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
 const scale=1.89/size.y;const holder=new T.Group();holder.add(root);root.scale.multiplyScalar(scale);root.position.add(new T.Vector3(-center.x*scale,-box.min.y*scale,-center.z*scale));s.add(holder);
 let bones=0;root.traverse(o=>{if(o.isBone)bones++});
-document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · ${shoulder?'소매 가중치 교정 후보 — 미승인':candidate?'작업 후보 — 미승인':'원본 외형만 확인'}`;
+document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · ${mocapLeg?'하체 가중치 교정 후보 — 미승인':mocap?'모캡 교정 후보 — 미승인':shoulder?'소매 가중치 교정 후보 — 미승인':candidate?'작업 후보 — 미승인':'원본 외형만 확인'}`;
+document.querySelector('#record').textContent=`${gl.animations.length}동작 연속 녹화`;
+if(mocap){const b=document.createElement('button');b.textContent='모캡 3동작 녹화';b.onclick=()=>recordTransitions(false,true);document.querySelector('header').append(b);resize();}
 const sel=document.querySelector('#clip'),time=document.querySelector('#time');
 for(const a of gl.animations)sel.add(new Option(a.name,a.name));
 let poser=gl.animations.length?makePoser(root,gl.animations[0]):null,running=false,t=0,last=performance.now(),recording=null,recordIndex=0,transitionMode=false,transitionActor=null,transitionIndex=0,transitionTime=0;
@@ -49,9 +53,9 @@ function advanceTransition(until){
 sel.onchange=()=>{transitionMode=false;transitionActor?.mixer.stopAllAction();poser=makePoser(root,gl.animations.find(a=>a.name===sel.value));t=0;time.value=0;poser(0);};
 time.oninput=()=>{running=false;t=+time.value;poser?.(t);};
 document.querySelector('#play').onclick=()=>{running=!running;last=performance.now();};
-function recordTransitions(transitions=false){
+function recordTransitions(transitions=false,mocapOnly=false){
  if(recording||!gl.animations.length)return;
- const stream=r.domElement.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;recordIndex=0;sel.selectedIndex=0;sel.onchange();if(transitions)startTransition();running=true;last=performance.now();
+ const stream=r.domElement.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;recordIndex=mocapOnly?gl.animations.findIndex(a=>a.name==='getup_back_park_mocap'):0;sel.selectedIndex=recordIndex;sel.onchange();if(transitions)startTransition();running=true;last=performance.now();
  document.querySelector('#recordStatus').textContent='녹화 중';rec.ondataavailable=e=>chunks.push(e.data);
  rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const response=await fetch('http://127.0.0.1:8795/park',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#recordStatus').textContent=response.ok?await response.text():'저장 실패';recording=null;};rec.start();
 }
