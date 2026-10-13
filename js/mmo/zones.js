@@ -105,7 +105,7 @@ export const ZONES = {
       gates: [ { id: 'parking', at: { end: 's0', t: -150 }, to: { zone: 'yeouido_ug', gate: 'up' }, label: '지하주차장 · 공동구', kind: 'dungeon' } ],
       bosses: [ { id: 'aegis', name: '에이지스-07', title: '보이지 않는 벽', at: { st: [40, -150] }, r: 22, model: M + 'aegis_07_static.glb', h: 4, place: '빌딩 협곡', canon: 'EP06~07 여의도 빌딩 협곡' } ],
       mist: { y: 0.7, opacity: 0.24 },   /* 넓힌 뒤 밝은 공원 바닥 위에서 0.38 은 화면이 통째로 바랬다. 안개는 굽지 않는다(그림이 통째로 뿌옇고 판 이음매가 보였다) — 게임이 무릎 높이에 그린다 (EP07 «안개가 무릎 위로 트이고» L6732) */
-      props: [ { k: 'led', at: { st: [-150, -112] }, text: '여의도' }, { k: 'led', at: { st: [190, -112] }, text: 'IFC' } ] } },
+      props: [ { k: 'led', at: { st: [-150, -112] }, text: '여의도' }, { k: 'led', at: { st: [190, -112] }, text: 'IFC' }, { k: 'echo', at: { st: [40, -150] }, r: 120, hear: 0.5 } ] } },   /* 빌딩 협곡 반향 지대 (문서 233 #13) */
 
   /* ================= 5. 한강 침수 터널 (던전) — 입구 300 m부터 수몰, 600 m 차수문 3-B (L7376~L8109) ================= */
   hangang_tunnel: { title: '한강 침수 터널', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
@@ -186,7 +186,7 @@ export const ZONES = {
                { id: 'south', at: { end: 's1', t: 178 }, to: { zone: 'gyeryong', gate: 'north' }, label: '계룡 방면', kind: 'zone' } ],
       bosses: [ { id: 'shadowfang', name: '섀도우 팽', title: '소리가 오다가 죽는다', at: { st: [-120, 200] }, r: 20, model: M + 'shadow_fang.glb', h: 1.6, place: '물류창고 앞마당', canon: 'EP16 물류창고 앞마당' },
                 { id: 'celestial2', name: '셀레스티얼', title: '날개 넷 · 격파', at: { st: [200, 190] }, r: 20, model: M + 'celestial_static.glb', h: 5.4, fly: 3.4, place: '골짜기', canon: 'EP17 골짜기' } ],
-      props: [ { k: 'warehouse', at: { st: [-120, 240] }, w: 70, d: 30, h: 13, label: '물류센터 · 인계 지점 1호' } ] } },
+      props: [ { k: 'warehouse', at: { st: [-120, 240] }, w: 70, d: 30, h: 13, label: '물류센터 · 인계 지점 1호' }, { k: 'yard', at: { st: [-120, 205] }, r: 30, carts: 4, suits: 3, bodies: 3 }, { k: 'valley', at: { st: [200, 190] }, len: 48, gap: 26, h: 16, r: 32 } ] } },   /* 골짜기: 바위 벽 둘 사이 26 m, 벽에 등을 대면 버팀 (문서 233 #7) */   /* 앞마당: 무음 지대 r 30 · 수레·방호복·사체 (문서 233 #6) */
 
   /* ================= 9. 계룡 (필드: 외곽 능선) · 산 속 격납고 (던전) — 실재 시설은 그리지 않는다 ================= */
   /* «능선 아래로 분지… 군의 심장이던 땅» · 질서 있는 불빛, 초소, 철책선 (L12416~L12420) · «산 밑동을 파고든 거대한 아가리», 남태령과 같은 스텐실 (L12462~L12468)

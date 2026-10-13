@@ -55,7 +55,7 @@ const smooth = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t
 
 export function createBossStage({ THREE, scene, cam, doc = document, sfx = () => window.TW_SFX, player, reduced = false, onLock = () => {}, occlude = null }) {
   /* occlude(at, want) → at 에서 want 로 가다 처음 부딪는 거리(없으면 Infinity) — 연출 카메라가 소품·벽 속으로 들어가지 않게 */
-  const play = (n, a) => { const s = sfx(); if (s && s.play) try { s.play(n, a); } catch {} }, music = n => { const s = sfx(); if (s && s.scene) try { s.scene(n); } catch {} };
+  const play = (n, a) => { if (n === 'tele' && globalThis.__QUIET) return;   /* 무음 지대 — 예고음이 오다가 죽는다 (문서 233 #6) */ const s = sfx(); if (s && s.play) try { s.play(n, a); } catch {} }, music = n => { const s = sfx(); if (s && s.scene) try { s.scene(n); } catch {} };
   /* 화면 겹 — 레터박스 · 이름 카드 · 이름표 · 섬광 */
   const css = doc.createElement('style'); css.textContent = `
 #bsBars i{ position:fixed; left:0; right:0; height:0; background:#000; z-index:20; pointer-events:none; transition:height .35s ease; } #bsBars i:first-child{ top:0 } #bsBars i:last-child{ bottom:0 }

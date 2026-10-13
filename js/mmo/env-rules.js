@@ -88,3 +88,14 @@ export function safeAt(list, x, z) { if (!list) return null; for (const z0 of li
 export const DOOR = { open: 1.6, nag: 8, lockedLabel: '잠김 — 문지기를 쓰러뜨리면 열린다' };
 export function doorLocked(door, bosses) { const o = (bosses || []).find(b => b.id === door.boss); return !!o && (o.ai ? !!o.ai.alive : true) && !o.sealed; }   /* 보스가 없으면(몸이 아직 없으면) 열려 있다 */
 
+/* 남행 물류창고 앞마당 (문서 233 #6 섀도우 팽)
+   «무음 지대 — 경고가 소리가 아니라 몸으로 전달됨, 수신호로 소통» · «주변 소리를 삼킴 — 소리가 오다가 죽음» EP16: 앞마당 반지름 안이면 소리가 거의 다 먹히고(hear) 보스 예고음이 안 난다 — 예고는 눈(바닥 예고·몸짓)으로만 */
+export const QUIET = { r: 30, hear: 0.92, label: '무음 지대 — 소리가 오다가 죽는다 · 예고음 없음, 눈으로' };
+export function quietAt(list, x, z) { if (!list) return null; for (const q of list) if (Math.hypot(q.x - x, q.z - z) <= (q.r || QUIET.r)) return q; return null; }
+
+/* 골짜기 (문서 233 #7 셀레스티얼) · 빌딩 협곡 (문서 233 #13 에이지스)
+   «골짜기 바닥과 벽 — 다섯이 벽을 등지고 몰림» · «고도 상한 15 m(날개 손상)» EP17: 골짜기 벽 안쪽 1.7 m 는 버팀 자리(매대와 같은 규칙, 밀려남 ⅓) — 등을 벽에 대면 셀레스티얼 돌풍·발톱에 덜 밀린다
+   «빌딩 협곡 유리벽 반향 — 소리 방향 판별 불가» · «짙은 안개(시야 약 20걸음)» EP06: 협곡 안은 소리가 반쯤 먹히고(hear) 예고음은 나되 어디서 오는지 모른다 — 예고음을 믿지 말고 바닥 원을 본다 */
+export const VALLEY = { braceLabel: '골짜기 벽에 등 — 버틴다 (밀려남 ⅓) · 셀레스티얼 고도 상한 15 m', step: 3 };
+export const ECHO = { hear: 0.5, label: '반향 지대 — 소리 방향을 못 잡는다 · 예고음 믿지 말고 바닥을' };
+

@@ -136,3 +136,23 @@ test('남산타워 하부 (문서 233 #3 드로퍼): 천장 케이블카 거더�
   assert.match(Z, /\{ k: 'hooks', gap: 4\.5, step: 3 \}/); assert.match(Z, /\{ k: 'steeldoor', id: 'mod', boss: 'dropper', name: '국방부 철문', u: 0\.5 \}/);
   assert.match(W, /const locked = doorLocked\(d, fbs\.map\(o => \(\{ id: o\.b\.id, ai: o\.ai, sealed: o\.sealed \}\)\)\);/); assert.match(W, /if \(!locked\) \{ d\.open = true; d\.t = 0; const i = walkMeta\.blockers\.indexOf\(d\.ref && d\.ref\.blocker\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '열리면 막이가 풀린다'); assert.match(W, /devTick\(dt\); turretTick\(dt\); doorTick\(dt\);/);
 });
+
+test('남행 물류창고 앞마당 (문서 233 #6 섀도우 팽): «무음 지대 — 경고가 소리가 아니라 몸으로» — 반지름 30 안이면 소리 92 % 먹힘·예고음 없음 · 뒤집힌 수레·빈 방호복·코어 도려내진 사체 (전용 난수)', async () => {
+  const { QUIET, quietAt } = await import('../js/mmo/env-rules.js');
+  assert.equal(QUIET.r, 30); assert.ok(QUIET.hear > 0.85); const q = [{ x: 0, z: 0, r: 30 }]; assert.ok(quietAt(q, 20, 20)); assert.equal(quietAt(q, 25, 25), null); assert.equal(quietAt(null, 0, 0), null);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8'), S = fs.readFileSync(new URL('../js/mmo/boss-stage.js', import.meta.url), 'utf8');
+  assert.match(F, /yard\(p, o\) \{ const yardAt = \[\]; const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 31 \+ 6\),/, '전용 난수 — 다른 소품 자리를 안 흔든다'); assert.match(F, /quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: rr, label: o\.label \|\| '' \}\);/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces \};/);
+  assert.match(Z, /\{ k: 'yard', at: \{ st: \[-120, 205\] \}, r: 30, carts: 4, suits: 3, bodies: 3 \}/);
+  assert.match(S, /const play = \(n, a\) => \{ if \(n === 'tele' && globalThis\.__QUIET\) return;/, '무음 지대에선 예고음이 안 난다');
+  assert.match(W, /const qz = quietAt\(env\.quiet, root\.position\.x, root\.position\.z\); if \(qz !== ENV\.quiet\) \{ ENV\.quiet = qz; window\.__QUIET = !!qz && qz\.mute !== false; window\.TW_SFX\?\.muffle\?\.\(qz \? \(qz\.hear \?\? QUIET\.hear\) : ENV\.band\.hear \|\| 0\); refreshChip\(\); \}/);
+});
+
+test('골짜기 (문서 233 #7 셀레스티얼) · 빌딩 협곡 (문서 233 #13 에이지스): «벽을 등지고» — 바위 벽 안쪽 1.7 m 는 버팀(밀려남 ⅓, 골짜기 띠) · «유리벽 반향 — 소리 방향 판별 불가» — 반향 지대는 먹먹 0.5 인데 예고음은 난다', async () => {
+  const { VALLEY, ECHO, quietAt } = await import('../js/mmo/env-rules.js');
+  assert.equal(ECHO.hear, 0.5); assert.match(VALLEY.braceLabel, /^골짜기 벽에 등/); assert.equal(quietAt([{ x: 0, z: 0, r: 120, hear: 0.5, mute: false }], 100, 0).mute, false);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(F, /valley\(p, o\) \{ const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 53 \+ 7\),/, '바위는 전용 난수'); assert.match(F, /const wx = p\[0\] - sa \* sg \* gap \/ 2, wz = p\[1\] - ca \* sg \* gap \/ 2;/); assert.match(F, /const bx = wx \+ ca \* d \+ sa \* sg \* 3\.2, bz = wz - sa \* d \+ ca \* sg \* 3\.2; braces\.push\(\{ x: \+bx\.toFixed\(2\), z: \+bz\.toFixed\(2\), r: 1\.7, label: o\.label \|\| '골짜기 벽에 등 — 버틴다 \(밀려남 ⅓\) · 셀레스티얼 고도 상한 15 m' \}\);/, '벽 안쪽 면 버팀 자리'); assert.ok(F.includes("label: o.label || '" + VALLEY.braceLabel + "'"), '띠 글은 VALLEY.braceLabel 과 같다');
+  assert.match(F, /echo\(p, o\) \{ quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: o\.r \|\| 120, hear: o\.hear \?\? 0\.5, mute: false, label: o\.label \|\| '' \}\); \},/); assert.match(F, /mist: F\.mist \|\| null, quiet, braces \};/);
+  assert.match(Z, /\{ k: 'valley', at: \{ st: \[200, 190\] \}, len: 48, gap: 26, h: 16, r: 32 \}/); assert.match(Z, /\{ k: 'echo', at: \{ st: \[40, -150\] \}, r: 120, hear: 0\.5 \}/);
+  assert.match(W, /window\.__QUIET = !!qz && qz\.mute !== false; window\.TW_SFX\?\.muffle\?\.\(qz \? \(qz\.hear \?\? QUIET\.hear\) : ENV\.band\.hear \|\| 0\);/, '반향 지대는 예고음을 안 막는다'); assert.match(W, /if \(ENV\.brace && ENV\.brace\.label\) t = t\.replace\('매대 다리에 발 — 버틴다 \(밀려남 ⅓\)', ENV\.brace\.label\);/);
+});
