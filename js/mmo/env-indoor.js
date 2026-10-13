@@ -8,7 +8,7 @@
      gates · bosses · spawn: 방 id 와 그 안 (u, v) 비율(0~1) 로 찍는다 */
 import { PITCH, SCREEN_ANG, rng, canvasTex, inPoly, bareSpot, lumpy } from './env-lib.js';
 const lumpyGeo = (THREE, r, seed) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 1), 0.22, seed); g.computeVertexNormals(); return g; };   /* 잔해 더미 (3D 꾸밈) */
-import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js';   /* 3D 필드: 사진 재질 벽·바닥 (문서 231 §2) */
+import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js'; import { CARD_TIER } from './tree-kit.js';   /* 휴대폰 등급(lite): 얼룩·전선 반 (문서 231 §5) */   /* 3D 필드: 사진 재질 벽·바닥 (문서 231 §2) */
 export { PITCH };
 
 export function build(THREE, scene, osm, zone) {
@@ -47,6 +47,7 @@ export function build(THREE, scene, osm, zone) {
   if (PHOTO) { const c = wallM.color; c.setRGB(Math.min(1, c.r), Math.min(1, c.g), Math.min(1, c.b)); }
   const stainM = new THREE.MeshStandardMaterial({ color: 0x1c1a18, roughness: 1, transparent: true, opacity: 0.55, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });   /* 물때·얼룩 (3D) */
   const darkM = new THREE.MeshStandardMaterial({ color: 0x2a2826, roughness: 0.9 }), steelM = new THREE.MeshStandardMaterial({ color: 0x6a6e74, roughness: 0.4, metalness: 0.7 }), rustM = new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 0.8, metalness: 0.4 });
+  const ductM = new THREE.MeshStandardMaterial({ color: 0x55595e, roughness: 0.55, metalness: 0.5 });   /* 덕트·크레인 (3D 꾸밈) */
   const woodM = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.9 }), clothM = new THREE.MeshStandardMaterial({ color: 0x4a4a5a, roughness: 1 }), glassM = new THREE.MeshStandardMaterial({ color: 0x5a7a88, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.4 });
 
   /* ---------- 바닥 ---------- */
@@ -132,6 +133,19 @@ export function build(THREE, scene, osm, zone) {
       const t = o.side === 'near' ? r.t0 + 0.3 : r.t1 - 0.3, s = r.s0 + (r.s1 - r.s0) * (o.u ?? 0.5), p = FROM(s, t); box(o.w || 4, 2.8, 0.1, sm, p[0], 1.4, p[1], SCREEN_ANG); },
     sign(r, o) { const [s, t] = [r.s0 + (r.s1 - r.s0) * (o.u ?? 0.5), r.t1 - 0.25], p = FROM(s, t); const tex = T(512, 128, (g, w, h) => { g.fillStyle = o.bg || '#0a0a0e'; g.fillRect(0, 0, w, h); g.strokeStyle = o.color || '#d8b030'; g.lineWidth = 6; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = o.color || '#ffe8b0'; g.shadowColor = o.color || '#ffe8b0'; g.shadowBlur = 10; let f = o.font || 48; const font = () => { g.font = '900 ' + f + 'px "Noto Sans KR",sans-serif'; }; font(); while (g.measureText(o.text).width > w - 34 && f > 14) { f -= 2; font(); } g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(o.text, w / 2, h / 2 + 3); });
       const m = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }); m.color.setScalar(o.bright ?? 1.3); const pl = new THREE.Mesh(new THREE.PlaneGeometry(o.w || 4, (o.w || 4) / 4), m); pl.position.set(p[0], o.y ?? 2.8, p[1]); pl.rotation.y = Math.atan2(-SIDE[0], -SIDE[1]); scene.add(pl); },
+    glass(r, o) { /* 깨진 유리 — 바닥에 흩어진 조각 (남산타워 «깨진 유리», 판교 로비 유리). 3D 만 */ if (!zone.view3d) return; const shard = new THREE.MeshStandardMaterial({ color: 0xbfd8e0, roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.55, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -3 });
+      for (let i = 0; i < (o.n || 40); i++) { const [s, t] = spot(r, o), p = FROM(s, t), g = new THREE.BufferGeometry(), a = R3() * 0.25 + 0.08, b = R3() * 0.2 + 0.06; g.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, a, 0, b * 0.3, a * 0.4, 0, b], 3)); g.computeVertexNormals();
+        const m = new THREE.Mesh(g, shard); m.position.set(p[0], 0.012, p[1]); m.rotation.y = R3() * 6.28; scene.add(m); } },
+    wallpaper(r, o) { /* 습기로 부푼 벽지 — 벽에서 떨어져 말린 조각 (남산타워 L4995~) */ if (!zone.view3d) return; const wpM = new THREE.MeshStandardMaterial({ color: 0x8a7a62, roughness: 0.95, side: THREE.DoubleSide });
+      const edges = [ { a: [r.s0, r.t0], b: [r.s1, r.t0], n: [0, -1] }, { a: [r.s1, r.t0], b: [r.s1, r.t1], n: [1, 0] }, { a: [r.s1, r.t1], b: [r.s0, r.t1], n: [0, 1] }, { a: [r.s0, r.t1], b: [r.s0, r.t0], n: [-1, 0] } ];
+      for (let i = 0; i < (o.n || 6); i++) { const e = edges[(R3() * 4) | 0], u = 0.1 + R3() * 0.8, s = e.a[0] + (e.b[0] - e.a[0]) * u, t = e.a[1] + (e.b[1] - e.a[1]) * u; if (rooms.some(x => x !== r && s + e.n[0] * 0.6 > x.s0 && s + e.n[0] * 0.6 < x.s1 && t + e.n[1] * 0.6 > x.t0 && t + e.n[1] * 0.6 < x.t1)) continue;
+        const q = FROM(s - e.n[0] * 0.06, t - e.n[1] * 0.06), hh = 0.8 + R3() * 1.2, pl = new THREE.Mesh(new THREE.PlaneGeometry(0.5 + R3() * 0.6, hh), wpM); pl.position.set(q[0], 1.2 + R3() * 1.2, q[1]);
+        const nW = [e.n[0] * DIR[0] + e.n[1] * SIDE[0], e.n[0] * DIR[1] + e.n[1] * SIDE[1]]; pl.rotation.y = Math.atan2(-nW[0], -nW[1]); pl.rotation.x = -0.25 - R3() * 0.4; scene.add(pl); } },
+    gantry(r, o) { /* 격납고 천장 크레인 — 방을 가로지르는 거더 둘 + 트롤리 (계룡 주 격납고 «축구장 몇 개, 십수 층») */ if (!zone.view3d) return; const H = r.h || th.h || 6, L = r.s1 - r.s0, Wd = r.t1 - r.t0, along = L >= Wd;
+      for (const u of o.at || [0.35, 0.7]) { const c = along ? FROM(r.s0 + L * u, (r.t0 + r.t1) / 2) : FROM((r.s0 + r.s1) / 2, r.t0 + Wd * u), rot = along ? SCREEN_ANG + Math.PI / 2 : SCREEN_ANG, span = (along ? Wd : L) - 1;
+        box(span, 0.9, 0.5, steelM, c[0], H - 1.6, c[1], rot, false); box(span, 0.12, 1.4, rustM, c[0], H - 2.1, c[1], rot, false);
+        const tr = along ? FROM(r.s0 + L * u, r.t0 + Wd * (0.3 + R3() * 0.4)) : FROM(r.s0 + L * (0.3 + R3() * 0.4), r.t0 + Wd * u); box(1.6, 1.2, 1.6, ductM, tr[0], H - 2.8, tr[1], rot, false);
+        const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, H * 0.35, 6), steelM); hook.position.set(tr[0], H - 3.4 - H * 0.175, tr[1]); scene.add(hook); } },
     scratches(r, o) { const scT = T(256, 128, (g, w, h) => { g.strokeStyle = 'rgba(20,10,8,.9)'; g.lineWidth = 7; g.lineCap = 'round'; for (let k = 0; k < (o.lines || 3); k++) { g.beginPath(); g.moveTo(20, 30 + k * 26); g.lineTo(236, 42 + k * 26); g.stroke(); } });
       for (let i = 0; i < (o.n || 3); i++) { const s = r.s0 + 1 + R() * (r.s1 - r.s0 - 2), q = FROM(s, r.t1 - 0.2); const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshBasicMaterial({ map: scT, transparent: true, depthWrite: false })); pl.position.set(q[0], 1.7, q[1]); pl.rotation.y = Math.atan2(-SIDE[0], -SIDE[1]); scene.add(pl); } },
     stairs(r, o) { /* 계단 (위층으로 — 문 자리) */ const s0 = o.side === 's0' ? r.s0 : r.s1 - 4; for (let k = 0; k < 8; k++) { const s = s0 + (o.side === 's0' ? k * 0.5 : (7 - k) * 0.5), c = FROM(s, (r.t0 + r.t1) / 2), h = 0.18 + k * 0.2; box(0.5, h, Math.min(5, r.t1 - r.t0 - 1), new THREE.MeshStandardMaterial({ color: 0x6a6660, roughness: 0.7 }), c[0], h / 2, c[1], SCREEN_ANG); } },
@@ -146,7 +160,7 @@ export function build(THREE, scene, osm, zone) {
         /* view3d(3D 필드): 가운데(보스 자리) 반경 안 결정은 무릎 높이로 — 위에서 보는 굽기에선 보스 그림이 위에 덮이지만, 3D 에선 5 m 결정 숲이 보스를 통째로 가렸다 (문서 206 §9). 자리·막이·난수 순서는 그대로 */
         if (zone.view3d && o.center && Math.hypot(s - (r.s0 + r.s1) / 2, t - (r.t0 + r.t1) / 2) < (o.clear3d || 10)) h = Math.min(h, 0.9);
         const m = new THREE.Mesh(g, crysM); m.scale.set(1 + R(), h, 1 + R()); m.position.set(p[0], h * 0.7, p[1]); m.rotation.set((R() - .5) * 0.6, R() * 3, (R() - .5) * 0.6); m.castShadow = true; scene.add(m); block(p[0], p[1], 0.5, 0.5); }
-      const c = at(r.id); const L = new THREE.PointLight(0xff7a20, 16, 18, 1.3); L.position.set(c[0], 3, c[1]); scene.add(L); lights.push({ x: c[0], y: 3, z: c[1], color: '#ff7a20', intensity: 12, distance: 16 }); },
+      const c = at(r.id); const L = new THREE.PointLight(0xff7a20, 16, 18, 1.3); L.position.set(c[0], 3, c[1]); L.userData.pulse = true; scene.add(L); lights.push({ x: c[0], y: 3, z: c[1], color: '#ff7a20', intensity: 12, distance: 16 }); },
     lockers(r, o) { const t = r.t1 - 0.5; for (let s = r.s0 + 0.8; s < r.s1 - 0.8; s += 0.7) { const p = FROM(s, t); box(0.6, 1.9, 0.5, steelM, p[0], 0.95, p[1], SCREEN_ANG); } block(...FROM((r.s0 + r.s1) / 2, t), (r.s1 - r.s0) / 2, 0.3, SCREEN_ANG); },
     dummy(r, o) { /* 짚단 허수아비 (사슬) */ const [s, t] = spot(r, o), p = FROM(s, t); const straw = new THREE.MeshStandardMaterial({ color: 0xb89a5a, roughness: 1 }); const b = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 1.3, 10), straw); b.position.set(p[0], 0.95, p[1]); b.castShadow = true; scene.add(b); const hd = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), straw); hd.position.set(p[0], 1.8, p[1]); scene.add(hd); const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 6), woodM); pole.position.set(p[0], 1.1, p[1]); scene.add(pole); block(p[0], p[1], 0.35, 0.35); },
     partitions(r, o) { for (let i = 0; i < (o.n || 6); i++) { const [s, t] = spot(r, o), p = FROM(s, t), rot = SCREEN_ANG + (R() < 0.5 ? 0 : Math.PI / 2); box(2.4, 1.5, 0.08, new THREE.MeshStandardMaterial({ color: 0x8a8c90, roughness: 0.7 }), p[0], 0.75, p[1], rot); block(p[0], p[1], 1.2, 0.08, rot); } },
@@ -156,7 +170,7 @@ export function build(THREE, scene, osm, zone) {
 
   /* ---------- 3D 꾸밈 (문서 231 §5) — 방마다 자동: 천장 덕트·배관·늘어진 전선 · 벽 얼룩 · 문틀 · 잔해 더미. 2D 굽기엔 없다(위에서 보면 천장이 가린다) · 난수는 R3 ---------- */
   if (zone.view3d) {
-    const ductM = new THREE.MeshStandardMaterial({ color: 0x55595e, roughness: 0.55, metalness: 0.5 }), wireM = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.9 });
+    const wireM = new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.9 });
     const rubbleM = PHOTO ? new THREE.MeshStandardMaterial({ ...phPair(THREE, 'concrete_debris', { repeat: [0.5, 0.5], normalScale: 0.9 }), roughness: 0.95, color: 0x9a9690 }) : darkM;
     const stainT = T(128, 256, (g, w, h) => { g.clearRect(0, 0, w, h); for (let i = 0; i < 9; i++) { const x = R3() * w, ww = 6 + R3() * 22, len = h * (0.3 + R3() * 0.7); const gr = g.createLinearGradient(0, 0, 0, len); gr.addColorStop(0, 'rgba(10,8,6,.55)'); gr.addColorStop(1, 'rgba(10,8,6,0)'); g.fillStyle = gr; g.fillRect(x, 0, ww, len); } });
     const stainPM = new THREE.MeshStandardMaterial({ map: stainT, transparent: true, roughness: 1, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2, depthWrite: false });
@@ -170,13 +184,13 @@ export function build(THREE, scene, osm, zone) {
         if (wide >= 5) { const [x, y, z] = at(-side + 0.6, H - 0.42); box(along ? len - 0.5 : 0.6, 0.36, along ? 0.6 : len - 0.5, ductM, x, y, z, SCREEN_ANG, false); ducts++; }
         pipe(side, H - 0.22, 0.09, steelM); pipe(side - 0.32, H - 0.24, 0.06, rustM); }
       /* 늘어진 전선: 9 m 마다 하나 — 천장 두 점 사이로 처진 곡선 */
-      if (H >= 2.8 && len >= 10) for (let d = 4.5; d < len - 3; d += 9) { if (R3() < 0.35) continue; const u = d / len, o1 = wide * (0.1 + R3() * 0.3), o2 = -wide * (0.1 + R3() * 0.3);
+      if (H >= 2.8 && len >= 10) for (let d = 4.5; d < len - 3; d += CARD_TIER.lite ? 18 : 9) { if (R3() < 0.35) continue; const u = d / len, o1 = wide * (0.1 + R3() * 0.3), o2 = -wide * (0.1 + R3() * 0.3);
         const p0 = along ? FROM(r.s0 + u * len, (r.t0 + r.t1) / 2 + o1) : FROM((r.s0 + r.s1) / 2 + o1, r.t0 + u * len), p1 = along ? FROM(r.s0 + u * len + 1.2, (r.t0 + r.t1) / 2 + o2) : FROM((r.s0 + r.s1) / 2 + o2, r.t0 + u * len + 1.2);
         const sag = 0.5 + R3() * 0.9, cv = new THREE.CatmullRomCurve3([new THREE.Vector3(p0[0], H - 0.1, p0[1]), new THREE.Vector3((p0[0] + p1[0]) / 2, H - 0.1 - sag, (p0[1] + p1[1]) / 2), new THREE.Vector3(p1[0], H - 0.1, p1[1])]);
         const w = new THREE.Mesh(new THREE.TubeGeometry(cv, 10, 0.014, 4, false), wireM); scene.add(w); wires++; }
       /* 벽 얼룩: 둘레 9 m 마다 한 장 — 열린 변(통로) 은 건너뛴다 */
       const edges = [ { a: [r.s0, r.t0], b: [r.s1, r.t0], n: [0, -1] }, { a: [r.s1, r.t0], b: [r.s1, r.t1], n: [1, 0] }, { a: [r.s1, r.t1], b: [r.s0, r.t1], n: [0, 1] }, { a: [r.s0, r.t1], b: [r.s0, r.t0], n: [-1, 0] } ];
-      for (const e of edges) { const eL = Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]); for (let d = 2 + R3() * 5; d < eL - 1.5; d += 7 + R3() * 6) { const u = d / eL, s = e.a[0] + (e.b[0] - e.a[0]) * u, t = e.a[1] + (e.b[1] - e.a[1]) * u; if (nearOpen(r, s, t, e.n)) continue;
+      for (const e of edges) { const eL = Math.hypot(e.b[0] - e.a[0], e.b[1] - e.a[1]); for (let d = 2 + R3() * 5; d < eL - 1.5; d += (CARD_TIER.lite ? 14 : 7) + R3() * 6) { const u = d / eL, s = e.a[0] + (e.b[0] - e.a[0]) * u, t = e.a[1] + (e.b[1] - e.a[1]) * u; if (nearOpen(r, s, t, e.n)) continue;
           const q = FROM(s - e.n[0] * 0.02, t - e.n[1] * 0.02), hh = Math.min(H - 0.4, 1.6 + R3() * 1.6), pl = new THREE.Mesh(new THREE.PlaneGeometry(1.2 + R3() * 1.4, hh), stainPM); pl.position.set(q[0], H - hh / 2 - 0.1, q[1]);
           const nW = [e.n[0] * DIR[0] + e.n[1] * SIDE[0], e.n[0] * DIR[1] + e.n[1] * SIDE[1]]; pl.rotation.y = Math.atan2(-nW[0], -nW[1]); scene.add(pl); stains++; } }
       /* 잔해 더미: 콘크리트·자갈·아스팔트 방 — 벽 가까이 1~3 개 */

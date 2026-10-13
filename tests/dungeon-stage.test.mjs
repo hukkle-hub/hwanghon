@@ -74,6 +74,14 @@ test('던전 입장 카드: 다른 지역에서 들어오면 실내도 카드 �
 test('헤드램프 (원작 «헤드램프의 좁은 시야»): 어두운 던전(반구광 ≤ 1.6 · 물 찬 곳)만 · 영웅 머리 자리에서 앞 9 m · ?lamp=0', () => {
   const W = R('world3d.html');
   assert.match(W, /const LAMP = INDOOR && q\.get\('lamp'\) !== '0' && \(\(hemiL && hemiL\.intensity <= 1\.6\) \|\| \(env\.water && env\.water\.y > 0\)\) \?/);
-  assert.match(W, /new THREE\.SpotLight\(0xfff1dc, 95, 28, 0\.42, 0\.6, 1\.15\); L\.castShadow = false;/);
+  assert.match(W, /new THREE\.SpotLight\(0xfff1dc, 70, 24, 0\.42, 0\.6, 1\.5\); L\.castShadow = false;/);
   assert.match(W, /if \(LAMP\) \{ const fx = Math\.sin\(me\.yaw\), fz = Math\.cos\(me\.yaw\); LAMP\.position\.set\(root\.position\.x - fx \* 0\.1, 1\.62, root\.position\.z - fz \* 0\.1\); LAMP\.target\.position\.set\(root\.position\.x \+ fx \* 9, 0\.9, root\.position\.z \+ fz \* 9\); \}/);
+});
+
+test('방별 소품 (3D 만): 깨진 유리 조각 · 부푼 벽지 · 격납고 천장 크레인 · 결정 빛 맥동 · lite 는 얼룩·전선 반', () => {
+  const I = R('js/mmo/env-indoor.js'), Z = R('js/mmo/zones.js');
+  assert.match(I, /glass\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /wallpaper\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /gantry\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/);
+  assert.match(I, /L\.position\.set\(c\[0\], 3, c\[1\]\); L\.userData\.pulse = true; scene\.add\(L\);/, '결정 산 빛이 뛴다');
+  assert.match(I, /d \+= CARD_TIER\.lite \? 18 : 9\)/); assert.match(I, /d \+= \(CARD_TIER\.lite \? 14 : 7\) \+ R3\(\) \* 6\)/);
+  assert.match(Z, /namsan_tower:[\s\S]*?\{ k: 'glass', n: 60 \}, \{ k: 'wallpaper', n: 8 \}/); assert.match(Z, /gyeryong_base:[\s\S]*?\{ k: 'gantry', at: \[0\.3, 0\.75\] \}/); assert.match(Z, /pangyo_lab:[\s\S]*?\{ k: 'glass', n: 40 \}/);
 });

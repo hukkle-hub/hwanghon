@@ -72,8 +72,8 @@ export const ZONES = {
     indoor: { seed: 5, theme: { wall: '#4a4440', stripe: 'rgba(140,110,80,.3)', floor: 'tile', h: 4.5, light: 'warm' },
       rooms: [
         { id: 'entry', s: [-8, 8], t: [-26, -14], props: [ { k: 'debris', n: 5 } ] },
-        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 } ] },
-        { id: 'shop', s: [16, 30], t: [-6, 10], light: 'red', props: [ { k: 'shelves', n: 4 }, { k: 'debris', n: 4 } ] },
+        { id: 'hall', s: [-16, 16], t: [-14, 14], h: 6, props: [ { k: 'table', u: 0.25, v: 0.3 }, { k: 'table', u: 0.7, v: 0.65 }, { k: 'table', u: 0.3, v: 0.75 }, { k: 'crates', n: 4 }, { k: 'scratches', n: 3, lines: 4 }, { k: 'pillars', step: 14 }, { k: 'glass', n: 60 }, { k: 'wallpaper', n: 8 } ] },   /* 3D: 깨진 유리 · 부푼 벽지 (L4995~L5025) */
+        { id: 'shop', s: [16, 30], t: [-6, 10], light: 'red', props: [ { k: 'shelves', n: 4 }, { k: 'debris', n: 4 }, { k: 'glass', n: 30 } ] },
         { id: 'down', s: [-24, -16], t: [-2, 4], light: 'red', props: [ { k: 'sign', text: '국방부', u: 0.5, color: '#d83a2a', w: 3 } ] },
         { id: 'comms', s: [-44, -24], t: [-8, 10], floor: 'metal', light: 'green', props: [ { k: 'consoles', rows: [0.3, 0.7] }, { k: 'lockers' } ] } ] } },
 
@@ -164,7 +164,7 @@ export const ZONES = {
     bosses: [ { id: 'subject09', name: '실험체 09호', title: '나뉘는 것', room: 'b3', u: 0.55, v: 0.5, r: 13, model: M + 'subject_09.glb', h: 3.4, place: '지하 3층 봉인실', canon: 'EP14~15 판교 연구소' } ],
     indoor: { seed: 14, theme: { wall: '#c8ccd0', stripe: 'rgba(60,140,200,.4)', floor: 'tile', h: 4, light: 'fluo', hemiI: 2.0 },
       rooms: [
-        { id: 'lobby', s: [0, 30], t: [-12, 12], h: 6, props: [ { k: 'partitions', n: 7 }, { k: 'trees', n: 4 }, { k: 'sign', text: '내부 인원 전원 대피 완료. 지하 3층 봉인.', u: 0.5, color: '#2a2a2a', bg: '#e8e4d8', font: 30, w: 6 } ] },
+        { id: 'lobby', s: [0, 30], t: [-12, 12], h: 6, props: [ { k: 'partitions', n: 7 }, { k: 'trees', n: 4 }, { k: 'glass', n: 40 }, { k: 'sign', text: '내부 인원 전원 대피 완료. 지하 3층 봉인.', u: 0.5, color: '#2a2a2a', bg: '#e8e4d8', font: 30, w: 6 } ] },
         { id: 'stair', s: [30, 38], t: [-1.6, 1.6], light: 'red', props: [] },
         { id: 'b2', s: [38, 62], t: [-10, 10], props: [ { k: 'shelves', n: 8 }, { k: 'drums', n: 4 } ] },
         { id: 'neck', s: [62, 70], t: [-1.6, 1.6], light: 'red', props: [ { k: 'debris', n: 2 } ] },
@@ -215,7 +215,7 @@ export const ZONES = {
         { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [] },
         { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [] },
         { id: 'shop', s: [140, 176], t: [4, 30], h: 8, floor: 'metal', light: 'fluo', props: [ { k: 'machines', n: 8 }, { k: 'shelves', n: 3 } ] },
-        { id: 'hangar', s: [176, 300], t: [-30, 40], h: 30, light: 'fluo', lightStep: 18, props: [ { k: 'vehicles', n: 30 }, { k: 'pillars', step: 30, mat: 'steel' }, { k: 'crates', n: 14 } ] },
+        { id: 'hangar', s: [176, 300], t: [-30, 40], h: 30, light: 'fluo', lightStep: 18, props: [ { k: 'vehicles', n: 30 }, { k: 'pillars', step: 30, mat: 'steel' }, { k: 'crates', n: 14 }, { k: 'gantry', at: [0.3, 0.75] } ] },   /* 3D: 천장 크레인 */
         { id: 'corridor', s: [300, 350], t: [2, 6], h: 3.4, floor: 'tile', light: 'fluo', props: [] },
         { id: 'specimen', s: [350, 380], t: [-11, 19], h: 9, floor: 'tile', light: 'green', props: [ { k: 'capsules', n: 14 }, { k: 'table', u: 0.5, v: 0.5 } ] } ] } },
 

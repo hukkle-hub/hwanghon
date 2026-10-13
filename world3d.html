@@ -393,7 +393,7 @@ const DWATER = INDOOR && env.water && env.water.y > 0 ? (() => { if (!window.__s
 /* 형광등 깜빡임 (원작 «3초 켜짐. 1초 꺼짐» — map.json flicker, 2D 와 같은 박자): 꺼지면 반구광 0.35 · 가까운 점광 0.12 · 형광등 막대는 어둡게. 켜지는 순간 0.08~0.18 초는 더듬는다 */
 const FLICK = INDOOR && env.flicker ? { on: env.flicker.on || 3, off: env.flicker.off || 1, state: -1, tubes: [], hemi0: hemiL ? hemiL.intensity : 0 } : null;
 /* 헤드램프 (문서 231 §5, 원작 «헤드램프의 좁은 시야») — 어두운 던전(반구광 1.6 아래 · 물 찬 곳)에서 영웅 머리에서 앞을 비추는 좁은 빛. 카메라 뒤가 아니라 영웅 자리에서 — 벽에 그림자가 생긴다. ?lamp=0 끔 */
-const LAMP = INDOOR && q.get('lamp') !== '0' && ((hemiL && hemiL.intensity <= 1.6) || (env.water && env.water.y > 0)) ? (() => { const L = new THREE.SpotLight(0xfff1dc, 95, 28, 0.42, 0.6, 1.15); L.castShadow = false; L.position.set(0, 1.6, 0); scene.add(L, L.target); return L; })() : null;
+const LAMP = INDOOR && q.get('lamp') !== '0' && ((hemiL && hemiL.intensity <= 1.6) || (env.water && env.water.y > 0)) ? (() => { const L = new THREE.SpotLight(0xfff1dc, 70, 24, 0.42, 0.6, 1.5); L.castShadow = false; L.position.set(0, 1.6, 0); scene.add(L, L.target); return L; })() : null;
 if (FLICK) scene.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial && !Array.isArray(o.material) && o.material.color && o.material.color.getHex() === 0xeaf8ff) FLICK.tubes.push(o); }); if (FLICK) window.__FLICK = FLICK;
 /* 천장에서 떨어지는 물 (문서 231 §4) — 침수 던전만: 비 줄기 재질을 드물게(비 세기 0.14 — 줄 14 %만 남는다) · 물면 위에 튀는 고리. 실내는 날씨를 안 돌리니 uRain 을 여기서 고정한다 (?drip=0 끔) */
 const DRIP = DWATER && q.get('drip') !== '0' ? (() => { WX.uRain.value = 0.14; const r = rainStreaks(THREE, { n: MOBILE ? 90 : 140, box: [18, 5.5, 18] }), sp = rainSplashes(THREE, { n: MOBILE ? 40 : 70, box: 12 });
