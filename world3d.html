@@ -399,6 +399,9 @@ const DWATER = INDOOR && env.water && env.water.y > 0 ? (() => { if (!window.__s
 /* 형광등 깜빡임 (원작 «3초 켜짐. 1초 꺼짐» — map.json flicker, 2D 와 같은 박자): 꺼지면 반구광 0.35 · 가까운 점광 0.12 · 형광등 막대는 어둡게. 켜지는 순간 0.08~0.18 초는 더듬는다 */
 const FLICK = INDOOR && env.flicker ? { on: env.flicker.on || 3, off: env.flicker.off || 1, state: -1, tubes: [], hemi0: hemiL ? hemiL.intensity : 0 } : null;
 if (FLICK) scene.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial && !Array.isArray(o.material) && o.material.color && o.material.color.getHex() === 0xeaf8ff) FLICK.tubes.push(o); }); if (FLICK) window.__FLICK = FLICK;
+/* 천장에서 떨어지는 물 (문서 231 §4) — 침수 던전만: 비 줄기 재질을 드물게(비 세기 0.14 — 줄 14 %만 남는다) · 물면 위에 튀는 고리. 실내는 날씨를 안 돌리니 uRain 을 여기서 고정한다 (?drip=0 끔) */
+const DRIP = DWATER && q.get('drip') !== '0' ? (() => { WX.uRain.value = 0.14; const r = rainStreaks(THREE, { n: MOBILE ? 90 : 140, box: [18, 5.5, 18] }), sp = rainSplashes(THREE, { n: MOBILE ? 40 : 70, box: 12 });
+  sp.U.uY.value = DWATER.y + 0.02; r.U.uCol.value.setRGB(0.5, 0.56, 0.6); sp.U.uCol.value.setRGB(0.5, 0.56, 0.6); scene.add(r.mesh, sp.mesh); return { r, sp }; })() : null;
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -804,6 +807,7 @@ function tick() { perf.begin();
   if (SEARCH || FLIES) { const nk = Math.min(1, Math.max(0, (lampK - 0.9) / 0.8)) * (1 - WX.uRain.value * 0.6) * (1 - WX.uMist.value * 0.5); cam.getWorldDirection(LEAF_F);   /* 밤에만 — 가로등 세기(lampK)로 · 비 · 안개엔 줄인다 */
     if (SEARCH) SEARCH.update(cam.position, WIND.value, nk); if (FLIES) FLIES.follow(cam.position, LEAF_F, nk * (1 - WX.uRain.value)); }
   if (LEAVES || RAIN) { cam.getWorldDirection(LEAF_F); if (LEAVES) LEAVES.follow(cam.position, LEAF_F); if (RAIN) { RAIN.follow(cam.position, LEAF_F); SPLASH.follow(cam.position, LEAF_F); } }
+  if (DRIP) { cam.getWorldDirection(LEAF_F); DRIP.r.follow(cam.position, LEAF_F); DRIP.sp.follow(cam.position, LEAF_F); }
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */
   todT -= dt; if (DAYC && todT <= 0) { todT = 0.5; const ms = net ? sclock.now() : Date.now(); if (CINE) { const w = weatherNow(WXSEED, ms, WXF); WXS.rain = w.rain; WXS.wet = w.wet; WXS.mist = w.mist; WX.uMist.value = w.mist; WX.uRain.value = w.rain; WX.uWet.value = w.wet; } DAYC.update(ms); }   /* 시간대 — 0.5초마다 (문서 217) */

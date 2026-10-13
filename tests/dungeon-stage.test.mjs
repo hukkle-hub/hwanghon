@@ -43,3 +43,10 @@ test('보스 방 빛 · 짙은 안개: 보스 자리 위 천장 스포트(3D 만
   assert.match(W, /if \(INDOOR\) \{ scene\.fog\.near = env\.fogDist \? env\.fogDist\[0\] : 16; scene\.fog\.far = env\.fogDist \? env\.fogDist\[1\] : 70; \}/);
   const Z = R('js/mmo/zones.js'); assert.match(Z, /gangnam_b2:[\s\S]*?fogDist: \[9, 46\]/); assert.match(Z, /hangang_tunnel:[\s\S]*?fogDist: \[8, 42\]/); assert.match(R('js/mmo/env-dungeon.js'), /fogDist: \[12, 56\]/);
 });
+
+test('천장에서 떨어지는 물 (침수 던전만): 비 줄기 재질을 드물게(uRain 0.14) · 물면 높이(uY)에 튀는 고리 · 카메라를 따라간다 · ?drip=0', () => {
+  const W = R('world3d.html'), Rn = R('js/mmo/rain.js');
+  assert.match(W, /const DRIP = DWATER && q\.get\('drip'\) !== '0' \? \(\(\) => \{ WX\.uRain\.value = 0\.14; const r = rainStreaks\(THREE, \{ n: MOBILE \? 90 : 140, box: \[18, 5\.5, 18\] \}\), sp = rainSplashes\(THREE, \{ n: MOBILE \? 40 : 70, box: 12 \}\);/);
+  assert.match(W, /sp\.U\.uY\.value = DWATER\.y \+ 0\.02;/); assert.match(W, /if \(DRIP\) \{ cam\.getWorldDirection\(LEAF_F\); DRIP\.r\.follow\(cam\.position, LEAF_F\); DRIP\.sp\.follow\(cam\.position, LEAF_F\); \}/);
+  assert.match(Rn, /uY: \{ value: 0\.1 \}/); assert.match(Rn, /vec3 wp = vec3\(xz\.x, uY, xz\.y\) \+ position \* sz;/, '튀는 높이는 uniform — 바깥 비는 그대로 0.1');
+});
