@@ -33,21 +33,25 @@ function card(P, N, U, I, c, u, v, o, bend) { const b = P.length / 3, n = new Fl
     n[0] = x - o[0]; n[1] = (y - o[1]) * .8 + .35; n[2] = z - o[2]; const L = Math.hypot(n[0], n[1], n[2]) || 1; N.push(n[0] / L * bend + (1 - bend) * 0, n[1] / L * bend + (1 - bend), n[2] / L * bend); }
   I.push(b, b + 1, b + 2, b, b + 2, b + 3); }
 /* 활엽수 갓: 옛 덩어리 넷 자리에 카드 9 장씩 = 36 장 (72 삼각형). 원점 = 옛 갓 중심(인스턴스 행렬 그대로) */
+/* 휴대폰 등급 (문서 230 §24): lite 면 카드를 줄이고 조금 키운다 — 숲(계룡)은 화면의 잎 카드 겹침이 남은 무게였다. world3d 가 휴대폰(또는 ?lite=1)에서 켠다 */
+export const CARD_TIER = { lite: false };
 export function leafCrownGeo(THREE) {
+  const NK = CARD_TIER.lite ? 5 : 7, SK = CARD_TIER.lite ? 1.1 : 1;
   const r = rnd(902), P = [], N = [], U = [], I = [], O = [0, .25, 0];
-  for (const [bx, by, bz, br] of [[0, .2, 0, 1.35], [.85, -.25, .3, 1.05], [-.7, -.15, -.45, 1.1], [.1, .95, -.2, .95]]) for (let k = 0; k < 7; k++) {   /* 9 → 7 장(28 장) — 겹쳐 칠하기 줄이기 (문서 230 §23) */
+  for (const [bx, by, bz, br] of [[0, .2, 0, 1.35], [.85, -.25, .3, 1.05], [-.7, -.15, -.45, 1.1], [.1, .95, -.2, .95]]) for (let k = 0; k < NK; k++) {   /* 9 → 7 장(28 장) — 겹쳐 칠하기 줄이기 (문서 230 §23) */
     const th = r() * 6.283, ph = Math.acos(1 - 2 * (.12 + r() * .8)), rr = br * (.45 + r() * .5), c = [bx + Math.sin(ph) * Math.cos(th) * rr, by + Math.cos(ph) * rr * .8, bz + Math.sin(ph) * Math.sin(th) * rr];
-    const s = br * (.95 + r() * .35), a = r() * 6.283, tilt = (r() - .5) * 1.4, u = [Math.cos(a) * s, 0, Math.sin(a) * s], v = [-Math.sin(a) * Math.sin(tilt) * s, Math.cos(tilt) * s, Math.cos(a) * Math.sin(tilt) * s];
+    const s = br * (.95 + r() * .35) * SK, a = r() * 6.283, tilt = (r() - .5) * 1.4, u = [Math.cos(a) * s, 0, Math.sin(a) * s], v = [-Math.sin(a) * Math.sin(tilt) * s, Math.cos(tilt) * s, Math.cos(a) * Math.sin(tilt) * s];
     card(P, N, U, I, c, u, v, O, .85); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
   g.computeBoundingSphere(); g.computeBoundingBox(); return g;
 }
 /* 덤불: 옛 다면체 덩어리 셋 자리에 카드 8 장씩 = 24 장 (48 삼각형 — 옛 60 과 비슷). 강남 길가 덤불이 짙은 다면체라 «각진 바위» 로 읽혔다(문서 230 §11) */
 export function leafBushGeo(THREE) {
+  const NK = CARD_TIER.lite ? 5 : 8, SK = CARD_TIER.lite ? 1.12 : 1;
   const r = rnd(5309), P = [], N = [], U = [], I = [], O = [0, -.2, 0];
-  for (const [bx, by, bz, br] of [[0, .05, 0, .68], [.58, -.1, .18, .52], [-.45, -.08, -.38, .55]]) for (let k = 0; k < 8; k++) {
+  for (const [bx, by, bz, br] of [[0, .05, 0, .68], [.58, -.1, .18, .52], [-.45, -.08, -.38, .55]]) for (let k = 0; k < NK; k++) {
     const th = r() * 6.283, ph = Math.acos(1 - 2 * (.05 + r() * .75)), rr = br * (.3 + r() * .5), c = [bx + Math.sin(ph) * Math.cos(th) * rr, by + Math.cos(ph) * rr * .7, bz + Math.sin(ph) * Math.sin(th) * rr];
-    const sz = br * (.8 + r() * .3), a = r() * 6.283, tilt = (r() - .5) * 1.2, u = [Math.cos(a) * sz, 0, Math.sin(a) * sz], v = [-Math.sin(a) * Math.sin(tilt) * sz, Math.cos(tilt) * sz, Math.cos(a) * Math.sin(tilt) * sz];
+    const sz = br * (.8 + r() * .3) * SK, a = r() * 6.283, tilt = (r() - .5) * 1.2, u = [Math.cos(a) * sz, 0, Math.sin(a) * sz], v = [-Math.sin(a) * Math.sin(tilt) * sz, Math.cos(tilt) * sz, Math.cos(a) * Math.sin(tilt) * sz];
     card(P, N, U, I, c, u, v, O, .8); }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(I);
   g.computeBoundingSphere(); g.computeBoundingBox(); g.userData.bush = true; return g;
@@ -55,7 +59,7 @@ export function leafBushGeo(THREE) {
 /* 소나무: 층 여섯 × 가지 카드 4~8 장(38 장) — 줄기에서 바깥 · 아래로 처진 판. 원점 = 옛 소나무 중심 */
 export function pineCardGeo(THREE) {
   const r = rnd(1907), P = [], N = [], U = [], I = [];
-  for (const [y, R, n] of [[-1.7, 1.9, 8], [-.9, 1.6, 8], [-.1, 1.3, 7], [.7, 1.0, 6], [1.45, .7, 5], [2.1, .42, 4]]) for (let k = 0; k < n; k++) {   /* 층 여섯 — 아래가 넓고 위로 갈수록 좁아 원뿔 꼴 */
+  for (const [y, R, n] of [[-1.7, 1.9, 8], [-.9, 1.6, 8], [-.1, 1.3, 7], [.7, 1.0, 6], [1.45, .7, 5], [2.1, .42, 4]].map(([y, R, n]) => [y, R, CARD_TIER.lite ? Math.ceil(n * 0.65) : n])) for (let k = 0; k < n; k++) {   /* 층 여섯 — 아래가 넓고 위로 갈수록 좁아 원뿔 꼴 */
     const a = k / n * 6.283 + (y * 1.7) + r() * .4, ca = Math.cos(a), sa = Math.sin(a), droop = .75 + r() * .25,   /* 가지가 충분히 처져야 «접시» 가 아니라 소나무 */ len = R * (.9 + r() * .2) / 2, wdt = R * .32;
     const c = [ca * len, y - Math.sin(droop) * len * .5, sa * len], u = [-sa * wdt, 0, ca * wdt], v = [ca * len, -Math.sin(droop) * len, sa * len];   /* v: 줄기→끝 */
     card(P, N, U, I, c, u, v, [0, y + .6, 0], .8); }

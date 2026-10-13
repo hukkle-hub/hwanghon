@@ -58,3 +58,9 @@ test('바람 (문서 230 §13): 돌풍이 들판을 건너간다 · 높이² 휨
   assert.match(sh.fragmentShader, /discard/, '잎 꼴'); assert.ok(sh.uniforms.uWind && sh.uniforms.uCam);
   const W3D = fs.readFileSync('world3d.html', 'utf8'); assert.match(W3D, /LEAVES\.follow\(cam\.position, LEAF_F\)/); assert.match(W3D, /q\.get\('leaves'\) !== '0'/);
 });
+test('휴대폰 잎 카드 등급 (문서 230 §24): lite 면 갓 20 · 덤불 15 · 소나무 줄인다 · world3d 는 휴대폰에서 켜고 해 그림자 카메라가 대역 층을 본다', async () => {
+  const K = await import('../js/mmo/tree-kit.js'); K.CARD_TIER.lite = true;
+  try { assert.equal(K.leafCrownGeo(THREE).index.count / 6, 20); assert.equal(K.leafBushGeo(THREE).index.count / 6, 15); assert.ok(K.pineCardGeo(THREE).index.count / 6 < 30); } finally { K.CARD_TIER.lite = false; }
+  assert.equal(K.leafCrownGeo(THREE).index.count / 6, 28, '데스크톱은 그대로');
+  const W = fs.readFileSync('world3d.html', 'utf8'); assert.match(W, /CARD_TIER\.lite = q\.has\('lite'\) \? q\.get\('lite'\) === '1' : matchMedia\('\(pointer:coarse\)'\)\.matches/); assert.match(W, /sun\.shadow\.camera\.layers\.enable\(SHADOW_LAYER\)/, '그림자 카메라가 대역 층을 봐야 그림자가 생긴다');
+});

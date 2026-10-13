@@ -142,11 +142,12 @@ import { koreaMapSVG } from './js/mmo/korea-map.js';
 import { SKY_VERT, SKY_FRAG, ridgeOf } from './js/mmo/sky-shader.js';
 import { createBench } from './js/mmo/bench.js';
 import { REGIONS } from './js/mmo/regions.js';
-import { FAR, WIND, WATER } from './js/mmo/env-lib.js';
+import { FAR, WIND, WATER, SHADOW_LAYER } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
+import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
 import { mountReviewControl } from './js/mmo/n01-review-control.js';
 import { ZONES } from './js/mmo/zones.js';
@@ -198,7 +199,7 @@ await document.fonts.load('900 96px "Noto Sans KR"').catch(() => {});   /* 간�
 const osm = Z.osm ? await (await fetch('maps/2d/' + Z.osm + '/osm.json')).json() : null;
 const meta = await (await fetch('maps/2d/' + ZONE + '/map.json')).json();   /* 보스·사냥터 자리 (서버와 같은 표) */
 const { build } = await import(ENV_FILE[Z.env] || ENV_FILE.osm);
-ANTI_TILE.on = q.get('at') !== '0'; setView3d(true); TREE_CARDS.on = q.get('tc') !== '0' && q.get('tcc') !== '0'; FACADE_PHOTO.on = q.get('tc') !== '0' && q.get('tcp') !== '0';   /* ?tcc=0 잎 카드 · 사진 바위만 끔 · ?tcp=0 사진 텍스처(벽 · 땅 · 길)만 끔 — 휴대폰 무게 가르기 (문서 230 §23) */  setInterior(q.get('im') !== '0'); setVsignTheme(ZONE); PUDDLE.on = q.get('wet') !== '0';   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
+ANTI_TILE.on = q.get('at') !== '0'; CARD_TIER.lite = q.has('lite') ? q.get('lite') === '1' : matchMedia('(pointer:coarse)').matches; setView3d(true);   /* 휴대폰은 잎 카드 등급을 낮춘다 (문서 230 §24) */ TREE_CARDS.on = q.get('tc') !== '0' && q.get('tcc') !== '0'; FACADE_PHOTO.on = q.get('tc') !== '0' && q.get('tcp') !== '0';   /* ?tcc=0 잎 카드 · 사진 바위만 끔 · ?tcp=0 사진 텍스처(벽 · 땅 · 길)만 끔 — 휴대폰 무게 가르기 (문서 230 §23) */  setInterior(q.get('im') !== '0'); setVsignTheme(ZONE); PUDDLE.on = q.get('wet') !== '0';   /* 장면 빌더(공용)에 3D 라고 알린다 — 바위·덤불·잎·잔해를 울퉁불퉁하게 (문서 215) */
 const env = build(THREE, scene, osm, { id: ZONE, ...Z, view3d: true, interior: q.get('im') !== '0' });   /* interior: 가짜 실내 창 (문서 229, ?im=0 으로 끔) */   /* view3d: 카메라 쪽 벽을 자르지 않고 실내엔 천장 (굽기 그림은 그대로) */
 const CSH = q.get('cs') !== '0' ? addContactShadows(THREE, scene, { skip: o => o.name === 'sky' }) : null;   /* 발밑 그늘 — 차·소품이 바닥에 붙어 보이게 (문서 229 §2, ?cs=0 으로 끔) */ window.__CSH = CSH && CSH.count;
 document.getElementById('title').firstChild.textContent = env.title || Z.title || meta.title || ZONE;
@@ -248,6 +249,7 @@ const LIFE = (env.kind || Z.kind || meta.kind) === 'field' ? createCityLife(THRE
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
   POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK; L.distance = l.distance; L.decay = l.decay; }); }
 const sun = env.sunLight || null, sunI0 = sun ? sun.intensity : 1, sunDir = env.sun ? new THREE.Vector3(...env.sun.dir) : new THREE.Vector3(0, 1, 0);
+if (sun) sun.shadow.camera.layers.enable(SHADOW_LAYER);   /* 잎 · 덤불 그림자 대역 (문서 230 §24) */
 if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -34; sc.right = sc.top = 34; sc.near = 1; sc.far = 400; sc.updateProjectionMatrix(); }
 const fillL = new THREE.DirectionalLight(0xffe8d8, 0.9); scene.add(fillL.translateX(-3).translateY(9).translateZ(8));   /* 노을이 등 뒤여도 얼굴이 보이게 (mmo.html 의 front 와 같은 몫) */
 const CINE = (env.kind || Z.kind || meta.kind) === 'field' && q.get('cine') !== '0';   /* 영화 같은 대기 — 빛줄기 · 해 둘레 번짐 · 색보정 (문서 230, 엘든 링 림그레이브 참고) */

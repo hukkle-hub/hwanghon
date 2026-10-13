@@ -625,11 +625,13 @@ export function trees(ctx, pts, o = {}) { const { THREE, scene, R } = ctx, n = p
    그림자는 옛 덩어리 갓(80 면 · 불투명)으로 그리고, 화면엔 안 그린다(colorWrite · depthWrite 끔). 인스턴스 행렬 · 개수는 카드 갓과 같은 것을 나눠 쓴다 */
 let SHADOW_GEO = null, SHADOW_GEO_BUSH = null;
 const SHADOW_ONLY = { mat: null };
+/* 그림자 대역은 1 번 층에만 — 화면 카메라(0 번 층)는 아예 안 그리고 해 그림자 카메라만 1 번 층을 본다(world3d). 처음엔 colorWrite 만 꺼서 화면 패스에서도 3,100 그루를 래스터했다 */
+export const SHADOW_LAYER = 1;
 export function shadowProxies(THREE, scene, canopy, pines) {
   SHADOW_GEO = SHADOW_GEO || { crown: crownGeo(THREE), pine: pineGeo(THREE) };
   const mat = SHADOW_ONLY.mat || (SHADOW_ONLY.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
   for (const [list, g] of [[canopy, SHADOW_GEO.crown], [Array.isArray(pines) ? pines : [pines], SHADOW_GEO.pine]]) for (const m of list) { if (!m.count) continue; m.castShadow = false;
-    const p = new THREE.InstancedMesh(g, mat, m.count); p.instanceMatrix.array.set(m.instanceMatrix.array.subarray(0, m.count * 16)); p.count = m.count;   /* 제 사본 — 거리 LOD 가 카드 갓 행렬을 갈아 끼워도 그림자는 전부 */ p.castShadow = true; p.receiveShadow = false; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.name = 'leaf-shadow'; scene.add(p); } }
+    const p = new THREE.InstancedMesh(g, mat, m.count); p.instanceMatrix.array.set(m.instanceMatrix.array.subarray(0, m.count * 16)); p.count = m.count;   /* 제 사본 — 거리 LOD 가 카드 갓 행렬을 갈아 끼워도 그림자는 전부 */ p.castShadow = true; p.receiveShadow = false; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.layers.set(SHADOW_LAYER); p.name = 'leaf-shadow'; scene.add(p); } }
 /* 3D 나무 모양 (문서 220) — 장난감 같은 다면체 하나 대신: 활엽수는 울퉁불퉁한 덩어리 넷, 소나무는 3 층. 흔들림은 셰이더(바람) */
 function crownGeo(THREE) { const parts = [[0, 0.2, 0, 1.35], [0.85, -0.25, 0.3, 1.05], [-0.7, -0.15, -0.45, 1.1], [0.1, 0.95, -0.2, 0.95]].map(([x, y, z, r], i) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 0), 0.16, 30 + i); g.translate(x, y, z); return g.index ? g.toNonIndexed() : g; });
   const g = mergeGeometries(parts, false); g.computeVertexNormals(); return g; }
@@ -892,7 +894,7 @@ export function dress(ctx, region, tex, o = {}) { const { THREE, scene, R, FROM 
   const bushes = pick(Math.round(A / (o.bushEvery || 45))).filter(p => R() < 0.2 + N(p[0] + 500, p[1]) * 1.3);
   const bush0 = made.length; stat.bushes = inst(bushG, bushM, bushes, (p, mtx) => { const k = 0.6 + R() * 0.7; mtx.compose(V(p[0], 0.3 * k, p[1]), q4.setFromEuler(e.set(0, R() * 6, 0)), V(k * (1 + R() * 0.5), k * (0.55 + R() * 0.25), k * (1 + R() * 0.5))); });
   if (VIEW3D) { tint(bush0, 0.75, 0.5); for (const m of made.slice(bush0)) windify(m.material);
-    if (BC) for (const m of made.slice(bush0)) { m.castShadow = false; const p = new THREE.InstancedMesh(SHADOW_GEO_BUSH || (SHADOW_GEO_BUSH = bushGeo(THREE)), SHADOW_ONLY.mat || (SHADOW_ONLY.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false })), m.count); p.instanceMatrix = m.instanceMatrix; p.castShadow = true; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.name = 'bush-shadow'; scene.add(p); }   /* 덤불 그림자도 불투명 대역 (문서 230 §23) */
+    if (BC) for (const m of made.slice(bush0)) { m.castShadow = false; const p = new THREE.InstancedMesh(SHADOW_GEO_BUSH || (SHADOW_GEO_BUSH = bushGeo(THREE)), SHADOW_ONLY.mat || (SHADOW_ONLY.mat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false })), m.count); p.instanceMatrix = m.instanceMatrix; p.castShadow = true; p.frustumCulled = false; p.userData.noCam = true; p.userData.shadowProxy = true; p.layers.set(SHADOW_LAYER); p.name = 'bush-shadow'; scene.add(p); }   /* 덤불 그림자도 불투명 대역 (문서 230 §23) */
     /* 풀포기: 바위·덤불 둘레 (자리는 해시) — 맨바닥에 돌만 흩어진 «게임판» 을 덮는다 */
     const tufts = [], ring = (p, n, r0, r1) => { for (let j = 0; j < n; j++) { const u = hashU(Math.round(p[0] * 10), Math.round(p[1] * 10), j), v = hashU(Math.round(p[1] * 10), j, Math.round(p[0] * 10)), a = u * 6.283, r = r0 + v * (r1 - r0); tufts.push([p[0] + Math.cos(a) * r, p[1] + Math.sin(a) * r, hashU(j, Math.round(p[0]), Math.round(p[1]))]); } };
     for (const p of rocks) ring(p, 2, 0.6, 1.6); for (const p of bushes) ring(p, 1, 0.6, 1.2);
