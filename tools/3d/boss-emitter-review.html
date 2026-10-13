@@ -1,5 +1,5 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><title>레비아탄 발사 부위 검수</title>
-<style>body{margin:0;background:#172029;color:#eee;font:14px sans-serif}header{padding:8px}button,input{padding:6px;margin:3px}button,select{min-width:64px}label{display:inline-block;white-space:nowrap}canvas{display:block}output{display:block}</style>
+<style>body{margin:0;overflow:hidden;background:#172029;color:#eee;font:14px sans-serif}header{padding:8px}button,input{padding:6px;margin:3px}button,select{min-width:64px}label{display:inline-block;white-space:nowrap}canvas{display:block}output{display:block}</style>
 <header>레비아탄 · 실제 원본 표면 좌표 검수 (게임 판정 승인 아님)<br>
 <button id="side">측면 전체</button><button id="front">정면</button><button id="rear">후면</button><button id="head">머리 확대</button>
 <button id="otherHead">반대 아가미 확대</button><label>기술 <select id="skill"><option value="pressure">압력</option><option value="gill">아가미</option><option value="tidal">조수</option></select></label>
@@ -9,6 +9,8 @@
 <button id="water">아가미 물살 켜기/끄기</button><label><input id="reduced" type="checkbox">저부하 효과</label>
 <button id="contacts">후보 판정선 켜기/끄기</button><button id="overhead">판정 위에서 보기</button>
 <label><input id="sharedWave" type="checkbox">공유 범위 물살</label><label><input id="cancelWave" type="checkbox">기술 취소</label>
+<label><input id="targets" type="checkbox">이동·회피 표적</label><label>취소 시각 ms <input id="cancelAt" type="number" value="-1" step="50"></label>
+<output id="targetInfo"></output>
 <output id="info">불러오는 중</output></header><canvas></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
@@ -21,15 +23,19 @@ import {GILL_SOCKETS} from './leviathan-gill-sockets.mjs';
 import {createGillWaterStudy} from './leviathan-gill-water.mjs';
 import {createGillContactStudy} from './leviathan-gill-contact-study.mjs';
 import {createGillWaveStudy} from './leviathan-gill-wave-study.mjs';
+import {createGillTargetStudy} from './leviathan-gill-target-study.mjs';
 const cv=document.querySelector('canvas'),r=new T.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(1);r.outputColorSpace=T.SRGBColorSpace;
 const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
 const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(8,9,8);s.add(key);const rim=new T.DirectionalLight(0xb9dfff,2);rim.position.set(-8,4,-5);s.add(rim);
 const c=new T.PerspectiveCamera(35,1,.01,150);function resize(){const h=Math.max(100,innerHeight-document.querySelector('header').offsetHeight);r.setSize(innerWidth,h);c.aspect=innerWidth/h;c.zoom=Math.min(1,c.aspect/1.45);c.updateProjectionMatrix()}addEventListener('resize',resize);resize();
+new ResizeObserver(resize).observe(document.querySelector('header'));
 const candidate=new URLSearchParams(location.search).get('candidate')==='gill';
 const gl=await new GLTFLoader().loadAsync(candidate?'../../art/review/part1/leviathan-gill-candidate.glb':'../../art/3d/part1/leviathan_static.glb');const root=gl.scene;s.add(root);
 const mesh=root.getObjectByName('Boss_Mesh');let pos=makePoser(root,gl.animations.find(a=>a.name==='atk_pressure'));
 const kit=(await loadCjs('../../server/field-boss-kit.cjs')).KITS.leviathan;
 const contactStudy=candidate?await createGillContactStudy(s,kit.skills.gill):null;
+const targetStudy=candidate?await createGillTargetStudy(s,kit.skills.gill):null;
+document.querySelector('#targets').disabled=!targetStudy;
 let showContacts=false;
 document.querySelector('#contacts').disabled=!contactStudy;
 document.querySelector('#contacts').onclick=()=>{showContacts=!showContacts;document.querySelector('#info').textContent='후보 판정선: 타격 순간 표면 → 양쪽 7m · 기존 각도 유지 · 물살과 불일치 검수용 · 게임 미연결';};
@@ -43,11 +49,14 @@ document.querySelector('#sharedWave').disabled=!candidate;
 document.querySelector('#water').onclick=()=>{showWater=!showWater;document.querySelector('#info').textContent='아가미 물살 스터디 · 실제 표면 출발 · 서버 피해 판정 미연결';};
 document.querySelector('#reduced').onchange=async e=>{const revision=++waveRevision,reduced=e.target.checked;water?.dispose();water=createGillWaterStudy(root,s,{reduced});if(candidate){const next=await createGillWaveStudy(s,{reduced});if(revision!==waveRevision)next.dispose();else{waveStudy?.dispose();waveStudy=next}}};
 function updateEffects(){
- const shared=document.querySelector('#sharedWave').checked,state={cancelled:document.querySelector('#cancelWave').checked};
+ const shared=document.querySelector('#sharedWave').checked,ct=+document.querySelector('#cancelAt').value;
+ const cancelAt=document.querySelector('#cancelWave').checked?0:ct>=0?ct:Infinity,state={cancelled:t*1000>=cancelAt};
  if(effect&&skill.clip!=='atk_gill'&&!state.cancelled)fx.update({yaw:0},skill,t*1000);else fx.clear();
  if(showWater&&(!shared||t*1000<skill.hits[0].at))water?.update(skill,t*1000,state);else water?.clear();
  if(showWater&&shared)waveStudy?.update(skill,t*1000,state);else waveStudy?.clear();
  if(contactStudy)contactStudy.group.visible=showContacts&&skill.clip==='atk_gill';
+ if(targetStudy&&document.querySelector('#targets').checked&&skill.clip==='atk_gill')document.querySelector('#targetInfo').textContent=targetStudy.update(t*1000,{cancelAt});
+ else {targetStudy?.clear();document.querySelector('#targetInfo').textContent=''}
 }
 let showSockets=false;
 const gillMarkers=GILL_SOCKETS.map((spec,i)=>{

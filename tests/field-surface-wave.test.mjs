@@ -5,6 +5,8 @@ import * as T from '../vendor/three/three.module.js';
 import kit from '../server/field-boss-kit.cjs';
 import contact from '../server/field-surface-contact.cjs';
 import wave from '../server/field-surface-wave.cjs';
+import {Field} from '../server/field.cjs';
+import scenario from '../tools/3d/gill-target-scenario.cjs';
 import {createGillWaveStudy} from '../tools/3d/leviathan-gill-wave-study.mjs';
 const profile=JSON.parse(fs.readFileSync(new URL('../art/review/part1/leviathan-gill-contact.json',import.meta.url)));
 const skill=kit.KITS.leviathan.skills.gill,cones=contact.bindSurfaceContactProfile(profile).contacts(skill,skill.hits[0]);
@@ -65,4 +67,32 @@ test('rendered fan vertices have exactly the same metre footprint as contact clo
    fx.dispose();fx.dispose();assert.equal(disposals,4);assert.equal(scene.children.length,0);
   }
  }finally{if(oldLocation===undefined)delete globalThis.location;else globalThis.location=oldLocation;globalThis.fetch=oldFetch;}
+});
+
+test('expired first observation and walking into fade cannot resurrect damage; endpoint uses prior snapshot',()=>{
+ const late=wave.createSurfaceWaveHitWindow(cones,skill);
+ assert.deepEqual(late.step(2200,[point(1)]),[]);
+ const w=wave.createSurfaceWaveHitWindow(cones,skill),p=point(7.8);
+ w.step(1900,[p]);Object.assign(p,point(6));
+ // At1920 the linearly moving target is7.08m out, even though at1950 it is6m.
+ assert.deepEqual(w.step(1950,[p,point(1,'newcomer')]),[]);
+ const stationary=wave.createSurfaceWaveHitWindow(cones,skill);
+ stationary.step(1900,[point(6.99)]);assert.equal(stationary.step(1950,[point(6.99)]).length,1);
+});
+
+test('review scenario calls real Field bossStrike: damage, dodge, once-only, no fade hit and cancellation',()=>{
+ const boss={id:'leviathan',x:0,z:0},field={zones:new Map(),clamp(){}};
+ const strike=(p,h,t)=>Field.prototype.bossStrike.call(field,boss,p,h,t);
+ const result=scenario.runGillTargetScenario(cones,skill,2600,{strike});
+ assert.deepEqual(result.events.map(e=>[e.id,e.at,e.result.evade||false]),[['near',1800,false],['far',1850,false],['dodge',1850,true]]);
+ const byId=Object.fromEntries(result.targets.map(p=>[p.id,p]));
+ assert.equal(byId.near.hp,800);assert.equal(byId.far.hp,800);assert.equal(byId.dodge.hp,1000);
+ assert.equal(byId.dodge.hurt[4],'evade');assert.equal(byId.dodge.hurtSeq,1);
+ assert.equal(byId.late.hp,1000);assert.equal(byId.outside.hp,1000);
+ assert.equal(byId.near.hurt[2],'leviathan');assert.equal(byId.near.hurt[3],'gill');
+ assert.ok(Math.hypot(byId.near.x-point(1).x,byId.near.z-point(1).z)>2.99,'real knockback ran');
+ for(const cancelAt of [1700,1750])assert.equal(scenario.runGillTargetScenario(cones,skill,2600,{strike,cancelAt}).events.length,0);
+ const partial=scenario.runGillTargetScenario(cones,skill,2600,{strike,cancelAt:1820});
+ assert.deepEqual(partial.events.map(e=>e.id),['near']);
+ assert.equal(scenario.runGillTargetScenario(cones,skill,1700,{strike}).events.length,0);
 });

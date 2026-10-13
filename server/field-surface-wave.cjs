@@ -24,19 +24,30 @@ function createSurfaceWaveHitWindow(contacts,skill) {
   // One instance per cast. Never use the same ledger for the next cast.
   if(!Array.isArray(contacts)||!skill?.hits?.length||surfaceWaveFrame(skill,skill.hits[0].at+1).phase!=='travel')return null;
   const cones=JSON.parse(JSON.stringify(contacts)),cast=JSON.parse(JSON.stringify(skill));
-  const end=cast.hits[0].at+TRAVEL_MS,seen=new Set();let last=-Infinity,closed=false;
+  const end=cast.hits[0].at+TRAVEL_MS,seen=new Set();let last=-Infinity,closed=false,previous=new Map();
   return {step(t,targets,{cancelled=false,dying=false}={}) {
     if(cancelled||dying){closed=true;return []}
     if(closed||!Number.isFinite(t)||t<0||t<=last||!Array.isArray(targets))return [];
-    last=t;
+    const prior=last;last=t;
+    // Never resurrect an expired cast on its first observation. At an endpoint
+    // crossing use only targets already observed, interpolated to the endpoint;
+    // walking into decorative water AFTER the window must not cause damage.
+    if(t>end&&(!Number.isFinite(prior)||prior<cast.hits[0].at)){closed=true;return []}
     // Crossing the last sample at 20Hz must still process the final front once.
-    // Positions are sampled by the caller at this tick, as in the existing KIT.
+    // This is linear snapshot interpolation, NOT swept collision/lag compensation.
     const frame=surfaceWaveFrame(cast,Math.min(t,end)),active=waveContacts(cones,frame);
     const hits=[];
     for(const p of targets){
       if(!p||!(typeof p.id==='string'||Number.isFinite(p.id))||seen.has(p.id)||p.alive===false)continue;
-      if(containsSurfaceContact(active,p)){seen.add(p.id);hits.push(p)}
+      let sample=p;
+      if(t>end){
+        const old=previous.get(p.id);if(!old)continue;
+        const a=(end-prior)/(t-prior);
+        sample={x:old.x+(p.x-old.x)*a,z:old.z+(p.z-old.z)*a};
+      }
+      if(containsSurfaceContact(active,sample)){seen.add(p.id);hits.push(p)}
     }
+    previous=new Map(targets.filter(p=>p&&p.alive!==false&&Number.isFinite(p.x)&&Number.isFinite(p.z)).map(p=>[p.id,{x:p.x,z:p.z}]));
     if(t>=end)closed=true;
     return hits;
   }};
