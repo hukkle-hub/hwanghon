@@ -8,7 +8,7 @@ export const PITCH = L.PITCH;
 const segDist = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
 
 export function build(THREE, scene, osm, zone) {
-  const F = zone.field || {}, R = L.rng(F.seed || 20261010), lights = [], blockers = [], clear = [], quiet = [];   /* quiet: 무음 지대 (섀도우 팽 앞마당 — 문서 233 #6) */
+  const F = zone.field || {}, R = L.rng(F.seed || 20261010), lights = [], blockers = [], clear = [], quiet = [], braces = [];   /* quiet: 무음 지대 (섀도우 팽 앞마당 — 문서 233 #6) */
   const fr = frameOf(THREE, osm, { farSide: F.farSide || {} }), { ST, FROM, W } = fr, tc = F.tc ?? 0;
   const walk = { ...F.walk };
   const ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear };
@@ -34,6 +34,15 @@ export function build(THREE, scene, osm, zone) {
   const box = (w, h, d, m, x, y, z, ry = 0, block = true) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.rotation.y = ry; b.castShadow = true; b.receiveShadow = true; scene.add(b); if (block) blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: w / 2, hd: d / 2, rot: ry }); return b; };
   const A = L.SCREEN_ANG;
   const PROPS = {
+    /* 골짜기 (셀레스티얼 EP17 «골짜기 바닥과 벽», 문서 233 #7): 자리 둘레에 바위 벽 둘(길이 len, 높이 h, 사이 gap) — 안쪽 면 step 마다 버팀 자리(등을 벽에). 바위는 전용 난수 */
+    valley(p, o) { const R3 = L.rng((F.seed || 1) * 53 + 7), len = o.len || 48, gap = o.gap || 26, h = o.h || 16, rockM = new THREE.MeshStandardMaterial({ color: 0x4a443c, roughness: 1, flatShading: true }), ang = L.SCREEN_ANG, ca = Math.cos(ang), sa = Math.sin(ang);
+      for (const sg of [-1, 1]) { const wx = p[0] - sa * sg * gap / 2, wz = p[1] - ca * sg * gap / 2;   /* +t 방향 = (−sa, −ca): 벽 중심은 자리에서 t 로 ±gap/2 */
+        for (let i = 0; i < Math.round(len / 4); i++) { const u = (i + 0.5) / Math.round(len / 4) - 0.5, bx = wx + ca * u * len, bz = wz - sa * u * len, r = 2.6 + R3() * 1.4, hh = h * (0.7 + R3() * 0.5); const m = new THREE.Mesh(new THREE.DodecahedronGeometry(r, 0), rockM); m.scale.set(1, hh / r / 1.6, 1.1); m.position.set(bx, hh * 0.35, bz); m.rotation.y = R3() * 6.28; m.castShadow = true; m.receiveShadow = true; scene.add(m); }
+        blockers.push({ x: +wx.toFixed(2), z: +wz.toFixed(2), hw: len / 2, hd: 2.2, rot: ang });
+        for (let d = -len / 2 + 2; d <= len / 2 - 2; d += (o.step || 3)) { const bx = wx + ca * d + sa * sg * 3.2, bz = wz - sa * d + ca * sg * 3.2; braces.push({ x: +bx.toFixed(2), z: +bz.toFixed(2), r: 1.7, label: o.label || '골짜기 벽에 등 — 버틴다 (밀려남 ⅓) · 셀레스티얼 고도 상한 15 m' }); } }   /* 벽 안쪽 면에서 1.7 m — 등을 벽에 (글은 env-rules VALLEY.braceLabel 과 같다) */
+      quiet.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: o.r || 32, hear: 0, mute: false, label: o.zoneLabel || '골짜기 — 벽을 등진다' }); },   /* 고도 상한은 벽 버팀 띠에 있다 — 겹치지 않게 */
+    /* 빌딩 협곡 반향 (에이지스 EP06 «유리벽 반향 — 소리 방향 판별 불가», 문서 233 #13): 반지름 r 안은 소리 반쯤 먹힘, 예고음은 난다 */
+    echo(p, o) { quiet.push({ x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: o.r || 120, hear: o.hear ?? 0.5, mute: false, label: o.label || '' }); },
     /* 물류창고 앞마당 (섀도우 팽 EP16 «뒤집힌 수레·빈 방호복·코어 도려내진 집행관 사체», 문서 233 #6): 소품은 전용 난수(R3) 라 다른 소품 자리를 안 흔든다 · 반지름 r 무음 지대 */
     yard(p, o) { const yardAt = []; const R3 = L.rng((F.seed || 1) * 31 + 6), rr = o.r || 30, metalM = new THREE.MeshStandardMaterial({ color: 0x5a5852, roughness: 0.7, metalness: 0.5 }), suitM = new THREE.MeshStandardMaterial({ color: 0xd8d4c4, roughness: 0.9 }), bodyM = new THREE.MeshStandardMaterial({ color: 0x1e1a1c, roughness: 0.95 }), holeM = new THREE.MeshStandardMaterial({ color: 0x08060a, roughness: 1 });
       for (let i = 0; i < (o.carts || 4); i++) { const a = R3() * 6.28, d = 6 + R3() * (rr * 0.6), x = p[0] + Math.cos(a) * d, z = p[1] + Math.sin(a) * d, ry = R3() * 6.28; const g = new THREE.Group(); const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.9, 1.0), metalM); body.position.y = 0.5; g.add(body); for (const [dx, dz] of [[-0.6, 0.55], [0.6, 0.55], [-0.6, -0.55], [0.6, -0.55]]) { const w = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 10), metalM); w.rotation.x = Math.PI / 2; w.position.set(dx, 0.85, dz); g.add(w); } g.position.set(x, 0, z); g.rotation.set(Math.PI, ry, 0.25); g.position.y = 1.05; yardAt.push({ k: 'cart', x, z }); g.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(g); blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: 0.9, hd: 0.6, rot: ry }); }   /* 뒤집힌 수레 — 바퀴가 위로 */
@@ -133,5 +142,5 @@ export function build(THREE, scene, osm, zone) {
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
   console.info('[env-field]', zone.id, '건물', built.length, '도로', roadsW.length, '선', nLines, '경계', nb, '문', gates.map(g => g.id).join(','), '막힘', blockers.length);
   return { kind: 'field', title: zone.title, lights, blockers, extentPts, road: { ang: L.SCREEN_ANG }, walk, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
-    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null, mist: F.mist || null, quiet };
+    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null, mist: F.mist || null, quiet, braces };
 }
