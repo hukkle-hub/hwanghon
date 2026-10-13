@@ -42,5 +42,12 @@ export function wetK(wetT) { return wetT > 0 ? 1 - (1 - WET.move) * Math.min(1, 
 /* 물보라 — «되돌아온 반동에 아인이 물속으로 나가떨어졌다» L1896: 허리 위 물에서 밀려나면 발 둘레 고리가 터진다 */
 export const SPLASH = { scale: 3.2, dur: 0.45 };
 
-export function envSummary(band, wetT = 0) { if (band.id === 'dry') return wetT > 0 ? '젖은 옷 — 이동 ' + Math.round(wetK(wetT) * 100) + '% (' + Math.ceil(wetT) + '초)' : ''; if (band.id === 'dry') return ''; const parts = [band.name + '까지 물', '이동 ' + Math.round(band.move * 100) + '%'];
+/* 매대 버팀 — «발뒤꿈치가 매대 다리에 닿았다» L2768 · «카인의 발이 매대 다리에 걸린 채 버텼다» L2976: 뒤집힌 매대 옆(r 안)이면 밀려남이 ⅓, 반 바퀴도 안 돈다 */
+export const BRACE = { r: 1.7, knock: 0.35 };
+export function braceAt(braces, x, z) { if (!braces) return null; for (const b of braces) if (Math.hypot(b.x - x, b.z - z) <= (b.r || BRACE.r)) return b; return null; }
+/* 미끄러운 타일 — «물때 앉은 매끄러운 지하상가 타일 — 밀리면 미끄러짐» (boss_clave_DUNGEON_SPEC EnvironmentInBattle): 물 찬 타일 바닥에서 밀려나면 1.4 배 */
+export const SLIP = { knock: 1.4 };
+export function knockK(band, slip, braced) { return (slip && band.id !== 'dry' ? SLIP.knock : 1) * (braced ? BRACE.knock : 1); }
+
+export function envSummary(band, wetT = 0, braced = false) { if (braced) return (band.id === 'dry' ? '' : band.name + '까지 물 · ') + '매대 다리에 발 — 버틴다 (밀려남 ⅓)'; if (band.id === 'dry') return wetT > 0 ? '젖은 옷 — 이동 ' + Math.round(wetK(wetT) * 100) + '% (' + Math.ceil(wetT) + '초)' : ''; if (band.id === 'dry') return ''; const parts = [band.name + '까지 물', '이동 ' + Math.round(band.move * 100) + '%'];
   if (band.dodge < 1) parts.push('회피 ' + Math.round(band.dodge * 100) + '%'); if (band.atk) parts.push('공격 +' + band.atk + 'ms'); if (band.hear >= 0.35) parts.push('소리 먹먹'); if (band.float >= 0.5) parts.push('뛰면 뜬다 — 살살 밀어라'); return parts.join(' · '); }

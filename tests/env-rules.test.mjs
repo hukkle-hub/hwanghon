@@ -26,7 +26,7 @@ test('world3d 연결: 이동 배율·흔들림·회피 배율·공격/맞대기 
   assert.match(W, /function attack\(\) \{ if \(STAGE && STAGE\.locked\) \{ STAGE\.skip\(\); return; \} if \(ENV\.band\.atk && !ENV\.fromQueue\) \{ if \(!ENV\.pend\) ENV\.pend = \{ fn: attack, at: gameNow \+ ENV\.band\.atk \}; return; \}/);
   assert.match(W, /function counter\(\) \{[^\n]*if \(ENV\.band\.atk && !ENV\.fromQueue\) \{ if \(!ENV\.pend\) ENV\.pend = \{ fn: counter, at: gameNow \+ ENV\.band\.atk \}; return; \}/);
   assert.match(W, /if \(ENV\.pend && gameNow >= ENV\.pend\.at\) \{ const f = ENV\.pend\.fn; ENV\.pend = null; ENV\.fromQueue = true; try \{ f\(\); \} finally \{ ENV\.fromQueue = false; \} \}/);
-  assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/); assert.match(W, /me\.yaw \+= Math\.PI \* 2 \* KNOCK_SPIN\.turns \* k \/ KNOCK_SPIN\.dur;/);
+  assert.match(W, /if \(ENV\.band\.spin && !ENV\.brace\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/); assert.match(W, /me\.yaw \+= Math\.PI \* 2 \* KNOCK_SPIN\.turns \* k \/ KNOCK_SPIN\.dur;/);
   assert.match(W, /if \(sf && sf\.muffle\) sf\.muffle\(b\.hear\);/); assert.match(W, /scene\.fog\.near = ENV\.fog0\[0\] \* b\.vis;/); assert.match(W, /const reach = b\.id === 'shoulder' \? LAMP_RULE\.deepReach : LAMP_RULE\.reach;/);
   assert.match(W, /flow = FLOW_V\.set\(dx \/ dd, dz \/ dd\)\.multiplyScalar\(FLOATERS\.push\)/, '보스에서 멀어지는 쪽으로'); assert.match(W, /ENV\.chip\.hidden = !t; ENV\.chip\.textContent = t;/);
   assert.match(W, /const yAt = G \? \(x, z\) => \{ const sv = sOf\(x, z\);/, '경사 수면 깊이'); assert.match(W, /bg\.setIndex\(idx\); bg\.computeVertexNormals\(\); w = new THREE\.Mesh\(bg, m\);/, '꺾인 수면 판');
@@ -40,5 +40,19 @@ test('젖은 옷 «젖은 테크웨어의 무게» L4110: 허리 위 물에서 �
   assert.match(envSummary(waterBand(0), 6), /^젖은 옷 — 이동 92% \(6초\)$/); assert.equal(envSummary(waterBand(0), 0), '');
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
   assert.match(W, /if \(b\.id === 'dry' && ENV\.band\.min >= WATER_BANDS\.find\(x => x\.id === WET\.minBand\)\.min\) ENV\.wetT = WET\.dur;/); assert.match(W, /\*wetK\(ENV\.wetT\)/); assert.match(W, /\* \(ENV\.wetT > 0 \? WET\.dodge : 1\);/);
-  assert.ok(SPLASH.scale > 2); assert.match(W, /if \(ENV\.band\.spin\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/);
+  assert.ok(SPLASH.scale > 2); assert.match(W, /if \(ENV\.band\.spin && !ENV\.brace\) \{ ENV\.spinT = KNOCK_SPIN\.dur; ENV\.splashT = SPLASH_RULE\.dur; \}/);
+});
+
+test('클레이브 던전 장치 (문서 233 #1): 매대 버팀 «발뒤꿈치가 매대 다리에 닿았다» L2768 — 밀려남 ⅓·반 바퀴 없음 · 미끄러운 타일 ×1.4 · 배수로 격자 퇴로 «배수로 격자를 낫으로 뜯어냈다» L1912', async () => {
+  const { BRACE, SLIP, braceAt, knockK, envSummary, waterBand } = await import('../js/mmo/env-rules.js');
+  const braces = [{ x: 10, z: 5, r: 2 }]; assert.ok(braceAt(braces, 11, 5)); assert.equal(braceAt(braces, 13, 5), null); assert.equal(braceAt(null, 0, 0), null);
+  const waist = waterBand(0.9), dry = waterBand(0);
+  assert.equal(knockK(waist, true, false), SLIP.knock, '물 찬 타일'); assert.equal(knockK(dry, true, false), 1, '마른 타일은 안 미끄럽다'); assert.equal(+knockK(waist, true, true).toFixed(3), +(SLIP.knock * BRACE.knock).toFixed(3)); assert.equal(knockK(waist, false, false), 1);
+  assert.match(envSummary(waist, 0, true), /허리까지 물 · 매대 다리에 발 — 버틴다 \(밀려남 ⅓\)/); assert.match(envSummary(dry, 0, true), /^매대 다리에 발/);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), D = fs.readFileSync(new URL('../js/mmo/env-dungeon.js', import.meta.url), 'utf8');
+  assert.match(W, /const kn = hit\.knock \* knockK\(ENV\.band, ENV\.slip, !!ENV\.brace\); p\.x \+= dx \/ d \* kn;/); assert.match(W, /if \(ENV\.band\.spin && !ENV\.brace\) \{ ENV\.spinT = KNOCK_SPIN\.dur;/, '버티면 안 돈다');
+  assert.match(W, /const br = braceAt\(env\.braces, root\.position\.x, root\.position\.z\); if \(br !== ENV\.brace\)/); assert.match(W, /if \(!DWATER\) envTick\(dt\);/, '물 없는 던전도 버팀은 본다');
+  assert.match(D, /braces\.push\(\{ x: \+x\.toFixed\(2\), z: \+z\.toFixed\(2\), r: 2\.0 \}\); \}/, '뒤집힌 진열대마다 버팀 자리'); assert.match(D, /braces, slip: true,/);
+  assert.match(D, /\{ id: 'drain', x: \+drainP\[0\]\.toFixed\(2\), z: \+drainP\[1\]\.toFixed\(2\), r: 1\.9, to: \{ zone: 'gangnam', gate: 'exit5' \}, label: '배수로 격자 · 물길로 빠져나간다', kind: 'zone', local: true \}/);
+  assert.match(fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8'), /gangnam_b2:[\s\S]*?fogDist: \[9, 46\], slip: true \}/); assert.match(fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), /slip: !!th\.slip, braces: \[\],/);
 });
