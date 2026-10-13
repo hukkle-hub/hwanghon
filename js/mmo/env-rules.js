@@ -78,3 +78,8 @@ export function turretInterval(k) { return TURRET.intervals[k % TURRET.intervals
 export const CIRCLE = { need: 3.0, k: 0.85 };
 export function swingK(narrow) { return narrow && narrow.w != null && narrow.w < CIRCLE.need ? CIRCLE.k : 1; }
 
+/* 고흥 발사대 지하 (문서 233 #10 나노-노바 코어)
+   «거대한 원 참격 (바깥이 빠르고 중심이 느림)» · «원 궤적 안쪽 안전지대» EP27: 코어 둘레 r 안이면 원의 안쪽 — 보스 타격 피해·밀려남이 k 배. 바깥은 그대로(빠르다) */
+export const SAFE = { r: 4.5, k: 0.5, label: '원 궤적 안쪽 — 참격이 느리다 (피해 ½)' };
+export function safeAt(list, x, z) { if (!list) return null; for (const z0 of list) if (Math.hypot(z0.x - x, z0.z - z) <= (z0.r || SAFE.r)) return z0; return null; }
+

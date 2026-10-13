@@ -50,7 +50,7 @@ test('클레이브 던전 장치 (문서 233 #1): 매대 버팀 «발뒤꿈치�
   assert.equal(knockK(waist, true, false), SLIP.knock, '물 찬 타일'); assert.equal(knockK(dry, true, false), 1, '마른 타일은 안 미끄럽다'); assert.equal(+knockK(waist, true, true).toFixed(3), +(SLIP.knock * BRACE.knock).toFixed(3)); assert.equal(knockK(waist, false, false), 1);
   assert.match(envSummary(waist, 0, true), /허리까지 물 · 매대 다리에 발 — 버틴다 \(밀려남 ⅓\)/); assert.match(envSummary(dry, 0, true), /^매대 다리에 발/);
   const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), D = fs.readFileSync(new URL('../js/mmo/env-dungeon.js', import.meta.url), 'utf8');
-  assert.match(W, /const kn = hit\.knock \* knockK\(ENV\.band, ENV\.slip, !!ENV\.brace\); p\.x \+= dx \/ d \* kn;/); assert.match(W, /if \(ENV\.band\.spin && !ENV\.brace\) \{ ENV\.spinT = KNOCK_SPIN\.dur;/, '버티면 안 돈다');
+  assert.match(W, /const kn = hit\.knock \* knockK\(ENV\.band, ENV\.slip, !!ENV\.brace\) \* \(ENV\.safe \? SAFE\.k : 1\); p\.x \+= dx \/ d \* kn;/); assert.match(W, /if \(ENV\.band\.spin && !ENV\.brace\) \{ ENV\.spinT = KNOCK_SPIN\.dur;/, '버티면 안 돈다');
   assert.match(W, /const br = braceAt\(env\.braces, root\.position\.x, root\.position\.z\); if \(br !== ENV\.brace\)/); assert.match(W, /if \(!DWATER\) envTick\(dt\);/, '물 없는 던전도 버팀은 본다');
   assert.match(D, /braces\.push\(\{ x: \+x\.toFixed\(2\), z: \+z\.toFixed\(2\), r: 2\.0 \}\); \}/, '뒤집힌 진열대마다 버팀 자리'); assert.match(D, /braces, slip: true,/);
   assert.match(D, /\{ id: 'drain', x: \+drainP\[0\]\.toFixed\(2\), z: \+drainP\[1\]\.toFixed\(2\), r: 1\.9, to: \{ zone: 'gangnam', gate: 'exit5' \}, label: '배수로 격자 · 물길로 빠져나간다', kind: 'zone', local: true \}/);
@@ -113,3 +113,15 @@ test('소독약 복도 (문서 233 #9 박 준장): «원을 그릴 반경이 늘
   assert.match(Z, /\{ id: 'corridor', s: \[300, 350\], t: \[2, 6\], h: 3\.4, floor: 'tile', light: 'fluo', props: \[ \{ k: 'corridor', width: 2\.6 \} \] \}/);
   assert.match(W, /\* \(counter \? 1\.65 : 1\) \* swingK\(ENV\.narrow\)\); ai\.hp -= n;/, '좁은 복도에서 낫의 원이 걸린다'); assert.match(W, /\(ENV\.narrow\.label \|\| NARROW\.label\) \+ \(swingK\(ENV\.narrow\) < 1 \? ' · 공격 ' \+ Math\.round\(swingK\(ENV\.narrow\) \* 100\) \+ '%' : ''\)/);
 });
+
+test('고흥 발사대 지하 (문서 233 #10 나노-노바): «거대한 원 참격 (바깥이 빠르고 중심이 느림)» · «원 궤적 안쪽 안전지대» — 코어 둘레 4.5 m 안이면 보스 피해·밀려남 ½ · 노바 1호 캡슐 잔해 · 결정 벽', async () => {
+  const { SAFE, safeAt } = await import('../js/mmo/env-rules.js');
+  assert.equal(SAFE.r, 4.5); assert.equal(SAFE.k, 0.5); const z = [{ x: 10, z: 0, r: 4.5 }]; assert.ok(safeAt(z, 13, 2)); assert.equal(safeAt(z, 15, 0), null); assert.equal(safeAt(null, 0, 0), null); assert.ok(safeAt([{ x: 0, z: 0 }], 4, 0), 'r 없으면 SAFE.r');
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(I, /capsule\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /safezone\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /safe\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: rr, label: o\.label \|\| '' \}\);/);
+  assert.match(I, /if \(o\.wall && !zone\.view3d\) return;/, '결정 벽은 3D 만 — 2D 굽기 난수를 안 건드린다'); assert.match(I, /braces: \[\], interacts, floodgates, narrows, covers, safe,/);
+  assert.match(Z, /\{ k: 'crystal', n: 36, wall: true, h: 3\.2 \}, \{ k: 'capsule', u: 0\.22, v: 0\.28 \}, \{ k: 'safezone', u: 0\.5, v: 0\.5, r: 4\.5 \}/);
+  assert.match(W, /const sz = safeAt\(env\.safe, root\.position\.x, root\.position\.z\); if \(sz !== ENV\.safe\) \{ ENV\.safe = sz; refreshChip\(\); \}/);
+  assert.match(W, /\* \(now < \(p\.buffUntil \|\| 0\) \? 1 - \(p\.buffReduce \|\| 0\) : 1\) \* \(ENV\.safe \? SAFE\.k : 1\)\)\);/, '원 안쪽은 피해 ½'); assert.match(W, /if \(ENV\.safe\) t = \(t \? t \+ ' · ' : ''\) \+ \(ENV\.safe\.label \|\| SAFE\.label\);/);
+});
+

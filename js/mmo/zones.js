@@ -247,7 +247,7 @@ export const ZONES = {
       rooms: [
         { id: 'control', s: [0, 28], t: [-10, 10], floor: 'tile', props: [ { k: 'consoles', rows: [0.3, 0.55, 0.8] } ] },
         { id: 'shaft', s: [28, 120], t: [-2.5, 2.5], lightStep: 10, props: [ { k: 'pipes', n: 2 }, { k: 'rails', t: [0] } ] },
-        { id: 'core', s: [120, 150], t: [-15, 15], h: 9, light: 'none', props: [ { k: 'crystal', n: 48, center: true, spread: 18, h: 3.6 }, { k: 'debris', n: 5 } ] },
+        { id: 'core', s: [120, 150], t: [-15, 15], h: 9, light: 'none', props: [ { k: 'crystal', n: 48, center: true, spread: 18, h: 3.6 }, { k: 'debris', n: 5 }, { k: 'crystal', n: 36, wall: true, h: 3.2 }, { k: 'capsule', u: 0.22, v: 0.28 }, { k: 'safezone', u: 0.5, v: 0.5, r: 4.5 } ] },   /* 3D: 결정 벽 · 노바 1호 캡슐 잔해 · 원 안쪽 안전지대 (문서 233 #10) */
         { id: 'base', s: [150, 180], t: [-12, 18], h: 16, light: 'red', props: [ { k: 'tower', d: 7 } ] } ] } },
 };
 
