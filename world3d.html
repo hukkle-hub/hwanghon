@@ -45,27 +45,35 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 @media (orientation:portrait){ #kmap .kwrap{ flex-direction:column; } #kmap svg{ height:auto; max-height:64%; max-width:100%; width:100%; } #kmap aside{ flex:0 1 auto; width:100%; max-height:32%; } } #kmapX{ position:absolute; top:max(12px,env(safe-area-inset-top)); right:max(12px,env(safe-area-inset-right)); min-width:64px; min-height:64px; border-radius:12px; border:2px solid rgba(232,184,96,.7); background:rgba(30,14,20,.85); color:var(--ink); font:900 16px 'Noto Sans KR',sans-serif; }
 #pot b{ font-size:12px; } #pot em{ font-style:normal; font-size:11px; font-weight:700; opacity:.85; margin-top:3px; } #pot.none{ opacity:.45; }
 .dmg.heal{ color:#8fe0a0; }
-/* 스킬 1~4 (문서 212) — 공격 위·왼쪽 호. 64 px · 재사용 대기는 가운데 숫자 + 어둡게 */
-.btn.skb{ width:64px; height:64px; flex-direction:column; line-height:1.05; border-color:rgba(120,190,255,.55); font-size:12px; }
-.btn.skb b{ font-size:15px; } .btn.skb em{ font-style:normal; font-size:10px; font-weight:700; opacity:.85; margin-top:2px; max-width:58px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.btn.skb i.skcd{ position:absolute; inset:0; border-radius:50%; background:rgba(8,6,12,.62); display:flex; align-items:center; justify-content:center; font:900 18px 'Noto Sans KR',sans-serif; font-style:normal; color:#e8f4ff; }
+/* 조작 배치 — 디렉터 손그림(2026-10-13): 왼쪽 이동키 · 오른쪽 «카운터 · 공격» 큰 단추 둘 · 그 아래 «스킬» 작은 원 한 줄.
+   큰 둘은 같은 줄(공격 오른쪽, 카운터 왼쪽) · 스킬 1~4 + 회복약은 50 px 원으로 맨 아랫줄(오른쪽부터 1 2 3 4 약) */
+.btn.skb{ width:50px; height:50px; flex-direction:column; line-height:1.05; border-color:rgba(120,190,255,.55); font-size:11px; }
+.btn.skb b{ font-size:14px; } .btn.skb em{ font-style:normal; font-size:9px; font-weight:700; opacity:.85; margin-top:1px; max-width:46px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.btn.skb i.skcd{ position:absolute; inset:0; border-radius:50%; background:rgba(8,6,12,.62); display:flex; align-items:center; justify-content:center; font:900 16px 'Noto Sans KR',sans-serif; font-style:normal; color:#e8f4ff; }
 .btn.skb i.skcd[hidden]{ display:none; }
-#sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 140px); }
-#sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 214px); }
-#sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 196px); }
-#sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 174px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 120px); }
-@media (orientation:portrait){ #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 10px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 288px); } }   /* 세로: 왼쪽 이동 자리와 안 겹치게 위로 쌓는다 */
-#dodge{ width:64px; height:64px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 44px); }
-/* 낮은 가로 화면 (문서 220 §18) — 디렉터 폰 브라우저 가로는 750×298(주소창). 스킬을 공격 «위로» 쌓으면 2 가 미니맵, 3 이 가방을 덮었다 →
-   공격 왼쪽으로 두 줄 묶음: [회피·1] [2·3] [4·회복약] — 위 끝이 바닥에서 182 px (298 화면에서 미니맵 아래 10 px) */
+#atk{ bottom:calc(max(14px,env(safe-area-inset-bottom)) + 78px); }
+#ctr{ width:84px; height:84px; right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 78px); flex-direction:column; line-height:1; border-color:rgba(232,184,96,.8); }
+#ctr small{ font-size:9px; font-weight:700; opacity:.8; margin-top:3px; letter-spacing:0; }
+#sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 0px); bottom:max(14px,env(safe-area-inset-bottom)); }
+#sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 58px); bottom:max(14px,env(safe-area-inset-bottom)); }
+#sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 116px); bottom:max(14px,env(safe-area-inset-bottom)); }
+#sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 174px); bottom:max(14px,env(safe-area-inset-bottom)); }
+#pot{ width:50px; height:50px; right:calc(max(18px,env(safe-area-inset-right)) + 232px); bottom:max(14px,env(safe-area-inset-bottom)); }
+#pot b{ font-size:11px; } #pot em{ font-size:9px; margin-top:1px; }
+/* 낮은 가로 화면 (문서 220 §18) — 디렉터 폰 브라우저 가로는 750×298(주소창). 큰 둘 76 px · 작은 줄 44 px — 위 끝이 바닥에서 182 px (298 화면에서 미니맵 아래 10 px) */
 @media (orientation:landscape) and (max-height:360px){
-  #atk{ bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
-  #dodge{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
-  #sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 96px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
-  #sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 170px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
-  #sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 170px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
-  #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 244px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 30px); }
-  #pot{ right:calc(max(18px,env(safe-area-inset-right)) + 244px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 104px); }
+  #atk{ width:76px; height:76px; bottom:calc(max(14px,env(safe-area-inset-bottom)) + 66px); }
+  #ctr{ width:76px; height:76px; right:calc(max(18px,env(safe-area-inset-right)) + 86px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 66px); }
+  .btn.skb,#pot{ width:44px; height:44px; }
+  #sk1{ right:calc(max(18px,env(safe-area-inset-right)) + 0px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 10px); }
+  #sk2{ right:calc(max(18px,env(safe-area-inset-right)) + 52px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 10px); }
+  #sk3{ right:calc(max(18px,env(safe-area-inset-right)) + 104px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 10px); }
+  #sk4{ right:calc(max(18px,env(safe-area-inset-right)) + 156px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 10px); }
+  #pot{ right:calc(max(18px,env(safe-area-inset-right)) + 208px); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 10px); }
+}
+@media (orientation:portrait){   /* 세로: 스킬 줄이 왼쪽 이동 자리(화면 45%)까지 닿지 않게 — 회복약은 공격 위로 */
+  #pot{ right:max(18px,env(safe-area-inset-right)); bottom:calc(max(14px,env(safe-area-inset-bottom)) + 172px); }
+  #hint{ bottom:calc(max(14px,env(safe-area-inset-bottom)) + 236px); max-width:calc(100vw - 32px); }   /* 안내 띠가 스킬 줄을 덮었다 — 단추들 위로 */
 }
 @media (orientation:portrait){   /* 세로: 체력 막대가 가방 단추를 8 px 덮었다 · 지도 출처는 아래 안내 띠와 겹쳐 미니맵 밑으로 */
   #hpw{ width:min(180px, calc(100vw - 240px)); }
@@ -109,7 +117,7 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="dodge">회피</div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD 달리기 · Shift+WASD 걷기 · J/Space 공격 · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="ctr">카운터<small>옆·뒤 = 회피</small></div><div class="btn none" id="pot"><b>회복약</b><em>—</em></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD 달리기 · Shift+WASD 걷기 · J/Space 공격 · L 카운터(옆·뒤 = 회피) · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
 try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
 </script>
@@ -426,7 +434,7 @@ function placeCam(dt) {
   cam.position.lerp(want, k); cam.lookAt(tx, ty, tz); }
 /* ---------- 입력: 왼쪽 반 = 이동 스틱 · 오른쪽 반 = 카메라 · 휠/핀치 = 거리 · WASD ---------- */
 const keys = {}, stick = { id: null, x: 0, y: 0, sx: 0, sy: 0 }, look = new Map(), ring = document.getElementById('ring');
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyJ' || e.code === 'Space') attack(); if (e.code === 'KeyK') dodge(); }); addEventListener('keyup', e => { keys[e.code] = false; });
+addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyJ' || e.code === 'Space') attack(); if (e.code === 'KeyK') dodge(); if (e.code === 'KeyL') counter(); }); addEventListener('keyup', e => { keys[e.code] = false; });
 const cv = renderer.domElement;
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId);
   if (e.clientX < innerWidth * 0.45 && stick.id === null && e.pointerType !== 'mouse') { stick.id = e.pointerId; stick.sx = e.clientX; stick.sy = e.clientY; ring.style.display = 'block'; ring.style.left = e.clientX + 'px'; ring.style.top = e.clientY + 'px'; }
@@ -493,6 +501,13 @@ function skTick() { skEls.forEach((el, i) => { const d = SKDEF[i]; if (!d) retur
 /* 회피 결과 — 누른 직후(0.14초 안)에 피했으면 완벽 회피: 솔로와 같은 잔상·푸른 비네트 (문서 205 §4) */
 let pdN = 0;
 function evadeFx(at, online) { if (isPerfect(P.dodgeAt, at, online)) { floatAt('완벽 회피', 'evade', root.position, 2.1); perfectDodgeFx(scene, hero.model, { reduced: REDUCED }); pdN++; } else floatAt('회피', 'evade', root.position, 1.9); }
+/* 카운터 단추 (디렉터 손그림 2026-10-13: «이동키 · 카운터 · 공격 · 스킬») — 던전 L 단추와 같은 뜻: 이동키를 옆·뒤로 밀고 있으면 회피, 아니면 «맞대기».
+   맞대기 = 짧은 counter 클립 한 타 — 판정은 공격과 같은 길(strike → 서버 hit · 혼자 연습 tryCounter): 예고의 반격 창 안에 닿으면 반격(×1.65 · 보스 경직), 밖이면 보통 한 타. 서버는 손대지 않는다 */
+function counter() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (P.dead) return;
+  const sx = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), sy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
+  if (Math.hypot(sx, sy) > 0.3 && sy < 0.6) return dodge();   /* 옆·뒤 = 회피 (앞으로 밀며 누르면 맞대기) */
+  if (busy > 0 && busyT < busyDef) return; const clip = hero.clips.counter ? 'counter' : 'attack1'; if (!hero.clips[clip]) return;
+  combatUntil = gameNow + 6000; hero.play(clip, 'ctr' + (++atkSeq)); busyClip = clip; busy = Math.min(hero.clips[clip].duration, 0.9); busyT = 0; busyDef = defCancelAt(busy, [contactOf(ME, clip)]); feel.swing(fh, clip); strike(null); }
 function dodge() { if (STAGE && STAGE.locked) return; if ((busy > 0 && busyT < busyDef) || P.dead || gameNow < P.dodgeReady) return;   /* 날이 지나간 뒤엔 회피로 끊는다 — 던전과 같은 규칙 (문서 229 §30) */ const clip = hero.clips.dodgeB ? 'dodgeB' : 'roll'; if (!hero.clips[clip]) return;
   hero.play(clip, 'dg' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration * 0.7; busyT = 0; busyDef = busy; dodgeT = 0.35; P.dodgeUntil = gameNow + DODGE_TIME; P.dodgeReady = gameNow + DODGE_GAP; P.dodgeAt = net ? sclock.now() : gameNow;
   if (net) sendMove('dodgeB'); }   /* 서버는 동작이 dodgeB 로 바뀌는 순간 회피 무적을 연다 (server/field.cjs) */
@@ -512,7 +527,7 @@ function drink() { if (P.dead) return;
   if (gameNow < (P.potionReady || 0)) { toast('회복약은 잠시 뒤에', 1.2); return; } if (P.hp >= P.maxHp) { toast('HP 가 가득 찼습니다', 1.2); return; }
   const heal = Math.round(P.maxHp * POTION_HEAL); P.hp = Math.min(P.maxHp, P.hp + heal); P.potionReady = gameNow + POTION_GAP; floatAt('+' + heal.toLocaleString('ko-KR'), 'heal', root.position, 2.0); }
 potEl.addEventListener('pointerdown', e => { e.stopPropagation(); drink(); }); addEventListener('keydown', e => { if (e.code === 'KeyQ') drink(); });
-for (const [id, fn] of [['atk', attack], ['dodge', dodge]]) document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
+for (const [id, fn] of [['atk', attack], ['ctr', counter]]) document.getElementById(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 /* 떠오르는 숫자 — 게임 시간으로 지운다 */
 const floats = [], dmgsEl = document.getElementById('dmgs'), v3 = new THREE.Vector3();
 function floatAt(text, cls, pos, y) { const el = document.createElement('div'); el.className = 'dmg ' + cls; el.textContent = text; dmgsEl.appendChild(el); let top = -Infinity; for (const f of floats) if (f.cls === cls && f.t < .6 && Math.hypot(f.x - pos.x, f.z - pos.z) < 1.2) top = Math.max(top, f.y + f.t * .9);   /* 막 뜬 같은 종류가 있으면 «지금 떠 있는 높이» 위로 한 칸 — 출발 높이로 쌓으면 먼저 것이 이미 떠올라 다시 겹쳤다 (문서 229 §48) */
