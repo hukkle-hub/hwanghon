@@ -41,7 +41,7 @@ test('보스 방 빛 · 짙은 안개: 보스 자리 위 천장 스포트(3D 만
   assert.match(I, /if \(zone\.view3d\) for \(const b of bosses\) \{[\s\S]*?new THREE\.SpotLight\(0xcfe0ff, 90, H \* 2\.4, 0\.42, 0\.65, 1\.3\); sp\.position\.set\(b\.x, H - 0\.2, b\.z\); sp\.target\.position\.set\(b\.x, 0, b\.z\);/);
   assert.match(I, /fogDist: th\.fogDist \|\| null,/);
   assert.match(W, /if \(INDOOR\) \{ scene\.fog\.near = env\.fogDist \? env\.fogDist\[0\] : 16; scene\.fog\.far = env\.fogDist \? env\.fogDist\[1\] : 70; \}/);
-  const Z = R('js/mmo/zones.js'); assert.match(Z, /gangnam_b2:[\s\S]*?fogDist: \[9, 46\]/); assert.match(Z, /hangang_tunnel:[\s\S]*?fogDist: \[8, 42\]/); assert.match(R('js/mmo/env-dungeon.js'), /fogDist: \[12, 56\]/);
+  const Z = R('js/mmo/zones.js'); assert.match(Z, /gangnam_b2:[\s\S]*?fogDist: \[9, 46\]/); assert.match(Z, /hangang_tunnel:[\s\S]*?fogDist: \[9, 46\]/); assert.match(R('js/mmo/env-dungeon.js'), /fogDist: \[12, 56\]/);
 });
 
 test('천장에서 떨어지는 물 (침수 던전만): 비 줄기 재질을 드물게(uRain 0.14) · 물면 높이(uY)에 튀는 고리 · 카메라를 따라간다 · ?drip=0', () => {

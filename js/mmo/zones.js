@@ -112,10 +112,10 @@ export const ZONES = {
     spawn: { room: 'mouth', u: 0.3, v: 0.5 },
     gates: [ { id: 'out', room: 'mouth', u: 0.2, v: 0.5, to: { zone: 'namtae', gate: 'tunnel' }, label: '터널 입구 · 남태령', kind: 'zone' } ],
     bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
-    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 1.4, fogDist: [8, 42] },
+    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 2.1, fogDist: [9, 46] },   /* 3D 에서 1.4 는 헤드램프를 켜도 검었다 */
       rooms: [
         { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },
-        { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 16, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 }, { k: 'wrecks', n: 12, wreck: 0.7 } ] },   /* 3D: 물에 잠긴 차들 */
+        { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 12, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 }, { k: 'wrecks', n: 12, wreck: 0.7 } ] },   /* 3D: 물에 잠긴 차들 */
         { id: 'flood', s: [260, 360], t: [-8, 8], lightStep: 14, props: [ { k: 'gate', u: 0.9 }, { k: 'debris', n: 8 } ] },
         { id: 'mechIn', s: [300, 316], t: [8, 20], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 }, { k: 'sign', text: '내측 기계실', u: 0.5, color: '#d83a2a', w: 3 } ] },
         { id: 'mechOut', s: [340, 356], t: [-20, -8], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 } ] } ] } },
