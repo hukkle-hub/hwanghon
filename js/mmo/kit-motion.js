@@ -3,6 +3,7 @@
    boss-stage.js 가 읽는 이름표(telling · warnSeq · warnBeat · ringPool · floor · glow)는 클레이브(boss-motion)와 같게 단다. */
 import * as THREE from '../../vendor/three/three.module.js';
 import { applyWind } from './windup.js';
+import { createStaticBossFX } from './static-boss-fx.js';
 
 const curve = (pts, t) => { if (!pts || !pts.length) return 0; if (t <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++) if (t <= pts[i][0]) { const [t0, v0] = pts[i - 1], [t1, v1] = pts[i]; return v0 + (v1 - v0) * (t - t0) / Math.max(1, t1 - t0); } return pts[pts.length - 1][1]; };
 const S = (def, a, at) => at + (def && def.jitter && at >= def.jitter.at ? (a && a.shift) || 0 : 0);   /* 리듬 깨기: 멈춤 뒤 박자만 민다 (서버와 같은 식) */
@@ -26,6 +27,8 @@ export function setupKitMotion(o, gl, model, scene, kit, floor = 0, reduced = fa
   let chest = null; model.traverse(b => { if (!chest && b.isBone && /Spine2$/.test(b.name)) chest = b; });
   const glow = new THREE.PointLight(0x9b7bff, 0, 7, 1.6); glow.userData.keepLit = true; (chest || model).add(glow);   /* 가슴 균열 — 유일한 예고 빛 (문서 181) */
   o.kfx = { kit, bolts, dim: 0, telling: false, warnSeq: -1, warnBeat: -1, ringPool, ringActive: 0, floor, glow, baseY: model.position.y, reduced, clip: null, seq: NaN, hitIdx: 0, from: null };
+  o.kfx.attackFX = createStaticBossFX(o, scene, floor, reduced);
+  o.kfx.baseYaw = o.root.rotation.y;
   play(o, kit.idleClip || 'idle', true); return o.kfx;
 }
 function play(o, name, loop, clamp = false) {
@@ -36,7 +39,7 @@ function play(o, name, loop, clamp = false) {
 export function applyKitAction(o, a, now) {
   if (!o.kfx || !a) return; const fx = o.kfx; o.netAct = a;
   if (fx.seq !== a.seq) { fx.seq = a.seq; fx.hitIdx = 0;
-    if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX || a.x, z: a.fromZ || a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = a.yaw; }
+    if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX ?? a.x, z: a.fromZ ?? a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = fx.kit.stationary ? fx.baseYaw : a.yaw; }
     else if (a.motion === 'stagger') play(o, 'stagger', false, true);
     else play(o, a.motion === 'walk' || a.motion === 'return' ? 'walk' : (fx.kit.idleClip || 'idle'), true); }
 }
@@ -53,11 +56,14 @@ export function updateKitMotion(o, dt, now) {
     if (skill && skill.move && fx.from) { const d = curve(skill.move, t); o.root.position.x = fx.from.x + Math.sin(a.yaw) * d; o.root.position.z = fx.from.z + Math.cos(a.yaw) * d; o.root.rotation.y = a.yaw; }
     else { const k = Math.min(1, dt * (skill ? 14 : 9)); o.root.position.x += (a.x - o.root.position.x) * k; o.root.position.z += (a.z - o.root.position.z) * k; o.root.rotation.y = yawLerp(o.root.rotation.y, a.yaw, Math.min(1, dt * (skill ? 12 : 4))); }
     if (o.model) o.model.position.y = fx.baseY + (skill && skill.lift ? curve(skill.lift, t) : 0);   /* 떠오름: 몸만 올린다 — 판정 자리(x,z)는 그대로 */
+    if (fx.kit.stationary) o.root.rotation.y = fx.baseYaw;
   }
   /* 바닥 예고는 없다 (디렉터 «의미 없어» — 문서 224). 같은 박자로 몸이 준비 동작을 한다(windup.js). 지금 박자는 소리(boss-stage)용으로만 셈 */
   let tell = -1; if (skill && skill.tells && !dying) for (let i = 0; i < skill.tells.length; i++) { const q = skill.tells[i]; if (!q.post && t >= S(skill, a, q.from) && t <= S(skill, a, q.at)) tell = i; }
   fx.telling = tell >= 0; if (fx.telling) { fx.warnSeq = a.seq; fx.warnBeat = tell; }
-  if (o.wind) applyWind(o, dying ? null : winds(skill, a), t, fx.reduced);
+  // Mechanical bodies use their baked recoil; do not squash a tower like a humanoid.
+  if (o.wind) applyWind(o, dying || fx.attackFX ? null : winds(skill, a), t, fx.reduced);
+  if (fx.attackFX) fx.attackFX.update(a, dying ? null : skill, t);
   { const q = tell >= 0 && skill.tells[tell], p = q ? Math.max(0, Math.min(1, (t - S(skill, a, q.from)) / Math.max(1, S(skill, a, q.at) - S(skill, a, q.from)))) : 0;   /* 가슴 균열 — 몸의 일부(바닥 표시 아님) */
     fx.glow.intensity += ((q ? 1 + p * 4 : skill ? 1.6 : .6) - fx.glow.intensity) * Math.min(1, dt * 6); }
   /* 무거운 판정이 지나가면 충격(카메라 킥·고리) — 난무 잔타는 빼고 */
@@ -73,4 +79,4 @@ export function updateKitMotion(o, dt, now) {
   return ev;
 }
 function ring(fx, x, z, r) { const p = fx.ringPool.find(q => !q.active) || fx.ringPool[0]; p.active = true; p.t = 0; p.life = .7; p.r = r; p.m.visible = true; p.m.position.set(x, fx.floor + .06, z); fx.ringActive++; }
-export function hideKitMotion(o) { const fx = o.kfx; if (!fx) return; fx.telling = false; fx.dim = 0; if (o.wind) applyWind(o, null, 0); fx.glow.intensity = 0; o.netAct = null; fx.seq = NaN; if (o.model) o.model.position.y = fx.baseY; }
+export function hideKitMotion(o) { const fx = o.kfx; if (!fx) return; fx.telling = false; fx.dim = 0; if (o.wind) applyWind(o, null, 0); fx.attackFX?.clear(); for (const b of fx.bolts) { b.m.visible = false; b.t = 9; } for (const r of fx.ringPool) { r.active = false; r.m.visible = false; } fx.ringActive = 0; fx.glow.intensity = 0; o.netAct = null; fx.seq = NaN; if (o.model) o.model.position.y = fx.baseY; }

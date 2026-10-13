@@ -8,6 +8,80 @@ const seq = (from, n, gap) => Array.from({ length: n }, (_, i) => from + i * gap
    hits: 판정 · tells: 박자(예전 바닥 예고 — 지금은 준비 동작·소리만, style = 준비 모양) · winds: 준비 동작 창을 따로 줄 때 · wind: 기본 모양 · lift: 몸 높이(m) · move: 정면 이동(m) · cue: 클립 진행(0~1, 없으면 1:1) */
 const SF_SET = { shape: 'cone', range: 4.0, angle: 2.09, damage: .022, heal: .015 };
 const KITS = {
+  /* 고정형 5종: 원작 동작의 전투용 시간표. 지형 파괴/차수문/부위 퍼즐은 던전 몫.
+     stationary 는 판정 방향만 돌리고 몸의 자리·방향은 고정한다. 수치는 검수용 전투 튜닝. */
+  leviathan: {
+    stationary: true, aggro: 22, leash: 32, walk: 0, ret: 0, engage: 22, recovery: [1100, 1100], phases: [.5], open: 'tidal',
+    skills: {
+      pressure: { clip: 'atk_pressure', duration: 3500, reach: 33, wind: 'brace',
+        hits: [1000, 1850].map(at => ({ at, shape: 'line', range: 33, width: 3.2, damage: .12, knock: 2 })), counter: [1600, 1850],
+        tells: [0, 1200].map((from, i) => ({ from, at: [1000, 1850][i], to: [1150, 2000][i], style: 'brace' })) },
+      gill: { clip: 'atk_gill', duration: 3300, reach: 7, wind: 'coil',
+        hits: [{ at: 1700, shape: 'cone', range: 7, angle: 2.5, damage: .20, knock: 3 }], counter: [1450, 1700],
+        tells: [{ from: 0, at: 1700, to: 1900, style: 'coil' }] },
+      tidal: { clip: 'atk_tidal', duration: 4800, reach: 33, only: true,
+        hits: [{ at: 2300, shape: 'line', range: 33, width: 6, damage: .24, knock: 4 }, { at: 3100, shape: 'line', range: 33, width: 6, damage: .14, knock: 2 }],
+        tells: [{ from: 0, at: 2300, to: 2500, style: 'brace' }, { from: 2500, at: 3100, to: 3300, style: 'brace' }] },
+    }, weights: d => d < 7 ? { gill: 2, pressure: 1 } : { pressure: 1 },
+  },
+  aegis: {
+    stationary: true, aggro: 24, leash: 34, walk: 0, ret: 0, engage: 24, recovery: [1100, 1100], phases: [.5], open: 'barrier',
+    skills: {
+      cannon: { clip: 'atk_cannon', duration: 3400, reach: 35,
+        hits: [1000, 1750].map(at => ({ at, shape: 'line', range: 35, width: 2.2, damage: .12, knock: 1.5 })), counter: [1500, 1750],
+        tells: [{ from: 0, at: 1000, to: 1150, style: 'brace' }, { from: 1150, at: 1750, to: 1900, style: 'brace' }] },
+      sweep: { clip: 'atk_sweep', duration: 3400, reach: 7,
+        hits: [{ at: 1800, shape: 'cone', range: 7, angle: 2.8, damage: .18, knock: 3 }], counter: [1550, 1800],
+        tells: [{ from: 0, at: 1800, to: 2000, style: 'coil' }] },
+      barrier: { clip: 'atk_barrier', duration: 3700, reach: 35, only: true,
+        hits: [{ at: 1900, shape: 'cone', range: 18, angle: 2.2, damage: .16, knock: 5 }], counter: [1650, 1900],
+        tells: [{ from: 0, at: 1900, to: 2150, style: 'brace' }] },
+    }, weights: d => d < 7 ? { sweep: 2, cannon: 1 } : { cannon: 1 },
+  },
+  celestial2: {
+    aggro: 30, leash: 40, walk: 2.8, ret: 3.5, engage: 8, recovery: [1200, 1200], phases: [.5], open: 'fold',
+    skills: {
+      dive: { clip: 'atk_dive', duration: 3800, reach: 41,
+        lift: [[0, 0], [700, 1.2], [1250, 1.2], [1500, -3.4], [2300, -3.4], [3500, 0]],
+        hits: [{ at: 1500, shape: 'line', range: 41, width: 2.4, damage: .22, knock: 3 }], counter: [1250, 1500],
+        tells: [{ from: 0, at: 1500, to: 1750, style: 'rear' }] },
+      gust: { clip: 'atk_gust', duration: 3400, reach: 18,
+        hits: [1000, 1800].map((at, i) => ({ at, shape: 'cone', range: 18, angle: 1.8, damage: i ? .15 : .08, knock: i ? 4 : 1 })), counter: [1550, 1800],
+        tells: [{ from: 0, at: 1000, to: 1150, style: 'rear' }, { from: 1200, at: 1800, to: 2000, style: 'rear' }] },
+      fold: { clip: 'atk_fold', duration: 4600, reach: 41, only: true,
+        lift: [[0, 0], [600, 1.8], [1400, 1.8], [1600, -3.4], [2000, 0], [2700, -3.4], [3700, -3.4], [4500, 0]],
+        hits: [-.42, .42, 0].map((yawOff, i) => ({ at: 1600 + i * 550, shape: 'line', range: 41, width: 2.4, yawOff, damage: .13, knock: 2 })), counter: [2450, 2700],
+        tells: [0, 1750, 2300].map((from, i) => ({ from, at: 1600 + i * 550, to: 1750 + i * 550, style: 'rear' })) },
+    }, weights: d => d < 18 ? { dive: 2, gust: 2 } : { dive: 1 },
+  },
+  arsenal: {
+    stationary: true, aggro: 36, leash: 48, walk: 0, ret: 0, engage: 36, recovery: [1200, 1200], phases: [.5], open: 'suppression',
+    skills: {
+      battery: { clip: 'atk_battery', duration: 7600, reach: 49,
+        hits: [4000, 5000, 6000].map((at, i) => ({ at, shape: 'line', range: 49, width: 2.4, yawOff: [-.28, .28, 0][i], damage: .13, knock: 1.6 })), counter: [5750, 6000],
+        tells: [0, 4200, 5200].map((from, i) => ({ from, at: 4000 + i * 1000, to: 4180 + i * 1000, style: 'brace' })) },
+      depression: { clip: 'atk_depression', duration: 3500, reach: 8,
+        hits: [{ at: 1800, shape: 'circle', radius: 8, damage: .22, knock: 3 }], counter: [1550, 1800],
+        tells: [{ from: 0, at: 1800, to: 2050, style: 'brace' }] },
+      suppression: { clip: 'atk_suppression', duration: 4200, reach: 49, only: true,
+        hits: [{ at: 2300, shape: 'circle', radius: 3.2, atTarget: true, lead: 1600, damage: .28, knock: 3 }],
+        tells: [{ from: 0, at: 2300, to: 2550, style: 'brace' }] },
+    }, weights: d => d < 8 ? { depression: 2, battery: 1 } : { battery: 1 },
+  },
+  nova: {
+    stationary: true, aggro: 28, leash: 38, walk: 0, ret: 0, engage: 28, recovery: [1300, 1300], phases: [.5], open: 'heart',
+    skills: {
+      orbit: { clip: 'atk_spin', cue: [[0, 0], [1500, .25], [2000, .55], [3400, 1]], duration: 3700, reach: 39,
+        hits: [{ at: 2000, shape: 'annulus', inner: 4, radius: 39, damage: .22, knock: 2 }], counter: [1750, 2000],
+        tells: [{ from: 0, at: 2000, to: 2250, style: 'coil' }] },
+      eject: { clip: 'atk_bolt', cue: [[0, 0], [1200, .4], [2200, .65], [3500, 1]], duration: 3800, reach: 39,
+        hits: [1200, 2200].map(at => ({ at, shape: 'circle', radius: 1.6, atTarget: true, lead: 1000, damage: .14, knock: 1.4 })),
+        tells: [{ from: 0, at: 1200, to: 1450, style: 'brace' }, { from: 1450, at: 2200, to: 2450, style: 'brace' }] },
+      heart: { clip: 'atk_slam', cue: [[0, 0], [2050, .3], [2400, .55], [3900, 1]], duration: 4300, reach: 39, only: true,
+        hits: [{ at: 2400, shape: 'circle', radius: 7, damage: .25, knock: 3 }], counter: [2050, 2400],
+        tells: [{ from: 0, at: 2400, to: 2650, style: 'brace' }] },
+    }, weights: d => d < 4 ? { eject: 1 } : { orbit: 2, eject: 1 },
+  },
   shadowfang: {
     aggro: 16, leash: 24, walk: 3.1, ret: 3.8, engage: 4.0, recovery: [900, 700], phases: [.5], open: 'bloom',
     skills: {
@@ -93,6 +167,7 @@ function move(o, x, z, speed, dt) { const dx = x - o.x, dz = z - o.z, d = Math.h
 function inShape(o, p, h) {
   const dx = p.x - o.x, dz = p.z - o.z, fx = Math.sin(o.yaw || 0), fz = Math.cos(o.yaw || 0), f = dx * fx + dz * fz, s = dx * fz - dz * fx;
   if (h.shape === 'circle') return dx * dx + dz * dz <= h.radius * h.radius;
+  if (h.shape === 'annulus') { const d = dx * dx + dz * dz; return d >= h.inner * h.inner && d <= h.radius * h.radius; }
   if (h.shape === 'line') return f >= -(h.back || 0) && f <= h.range && Math.abs(s) <= h.width * .5;
   if (h.shape === 'cone') return f >= 0 && Math.hypot(dx, dz) <= h.range && Math.abs(Math.atan2(s, f)) <= h.angle * .5;
   return false;

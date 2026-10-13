@@ -36,11 +36,40 @@ test('방전 폭우: 대상 자리 원은 없다 — 하늘이 어두워지고 �
 
 test('기술표형 보스 전부: 어떤 기술의 어떤 순간에도 바닥 예고 메시가 없다 · 판정 전에는 몸 틀이 움직인다', () => {
   for (const id of Object.keys(KIT.KITS)) for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) {
+    if (['leviathan', 'aegis', 'celestial2', 'arsenal', 'nova'].includes(id)) continue; // mechanical clips/volumes are tested below, not humanoid squash
     const o = boss(id), scene = o.root.parent; applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000); let moved = 0;
     for (let t = 0; t < sk.duration; t += 50) { updateKitMotion(o, .016, 1000 + t); const g = o.wind.g; if (t < sk.hits[0].at) moved = Math.max(moved, Math.abs(g.rotation.x) + Math.abs(g.rotation.y) + Math.abs(1 - g.scale.y)); assert.equal(g.position.y, 0, `${id}.${name}: 틀을 내리면 발이 묻힌다`);
       for (const b of [...o.kfx.bolts, ...o.kfx.ringPool]) b.m.visible = false;   /* 번개·충격파는 판정 «뒤» 의 공격 그 자체 */
       assert.equal(shown(scene), 0, `${id}.${name} ${t} ms 에 바닥 표시`); }
     assert.ok(moved > .05, `${id}.${name}: 첫 판정 전 준비 동작이 없다 ${moved}`); }
+});
+
+test('기계형 5종: 몸을 눌러 늘리지 않고 포구/코어만 예열 · 고정 몸 방향 유지 · 숨김 즉시 효과 제거', () => {
+  for (const id of ['leviathan', 'aegis', 'celestial2', 'arsenal', 'nova']) {
+    const o = boss(id), name = Object.keys(KIT.KITS[id].skills)[0];
+    applyKitAction(o, act(o, name, { yaw: 1.2 }), 1000); updateKitMotion(o, .05, 1500);
+    assert.deepEqual(o.wind.g.scale.toArray(), [1, 1, 1]);
+    assert.deepEqual(o.wind.g.rotation.toArray().slice(0, 3), [0, 0, 0]);
+    if (KIT.KITS[id].stationary) assert.equal(o.root.rotation.y, 0);
+    assert.ok(o.kfx.attackFX.group.children.some(m => m.visible), id + ' has no charge');
+    for (const m of o.kfx.attackFX.group.children.filter(m => m.visible)) assert.ok(m.position.y > .3, id + ' floor warning');
+    hideKitMotion(o); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
+  }
+});
+
+test('셀레스티얼: 원래 비행 높이 3.4m를 빼고 착지한 뒤 원 높이로 복귀', () => {
+  const o = boss('celestial2'); o.root.position.y = 3.4;
+  applyKitAction(o, act(o, 'dive'), 1000); updateKitMotion(o, .05, 2500);
+  assert.ok(Math.abs(o.root.position.y + o.model.position.y) < 1e-6);
+  updateKitMotion(o, .05, 4800); assert.equal(o.model.position.y, 0);
+});
+
+test('고정 사출: 서버가 잠근 표적에 예열 결정 → 타격 · 현재 플레이어 위치로 이동하지 않는다', () => {
+  const o = boss('arsenal'); applyKitAction(o, act(o, 'suppression', { marks: [[8, 6]] }), 1000);
+  updateKitMotion(o, .05, 2000); const shard = o.kfx.attackFX.pool[0].shard;
+  assert.ok(shard.visible); assert.equal(shard.position.x, 8); assert.equal(shard.position.z, 6); assert.ok(shard.position.y > 1);
+  updateKitMotion(o, .05, 3300); assert.ok(o.kfx.attackFX.pool[0].wave.visible);
+  o.stage = { dying: true }; updateKitMotion(o, .05, 3320); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
 });
 
 test('섀도우 팽: 번개 풀을 만들지 않는다 (atTarget 판정이 없는 보스) · 떠오름은 몸만 올린다', () => {
