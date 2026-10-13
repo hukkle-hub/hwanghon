@@ -295,6 +295,10 @@ class Field{
   for(const l of this.loot.values()){ if(l.zone!==r.zone||(l.x-r.x)**2+(l.z-r.z)**2>AOI*AOI) continue;
    loot.push([l.id, l.item, +l.x.toFixed(2), +l.z.toFixed(2), (!l.owner||l.owner===r.id||now>=l.ownerUntil)?1:0]); }
   return { bossNow:now, bosses:bs, bossActs, bossImpacts, loot }; }
+ /* 던전 장치 (문서 233 §4~§13): 핀 절단·고정액·소켓 절단을 같은 지역 전원에게 — 서버는 판정하지 않고 지역만 붙여 되돌린다(클라가 같은 규칙으로 문을 떨어뜨리고 탑을 넘어뜨린다). 멱등: 이미 된 장치는 받는 쪽이 무시 */
+ device(id, msg){ const p=this.players.get(id); if(!p) throw Error('필드에 없습니다.');
+  if(!DEVICE_KINDS.includes(msg.kind)||typeof msg.id!=='string'||!/^[a-z0-9_-]{1,40}$/i.test(msg.id)) throw Error('알 수 없는 장치입니다.');
+  const ev={ type:'fieldDevice', zone:p.zone, kind:msg.kind, id:msg.id, from:id }; if(Number.isFinite(msg.hits)) ev.hits=Math.max(0,Math.min(9,msg.hits|0)); this.emit(ev); return null; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
   if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), mobs:this.mobView(p), mobNow:this.clock(), ...this.bossView(p) }; }
@@ -304,7 +308,9 @@ class Field{
   if(msg.type==='fieldMove'){ this.move(id, msg); return null; }
   /* 옛 데모 클라이언트 호환용 무응답. 온라인 외형은 장착 장비만 권위로 삼아 반복 재생성 공격을 막는다. */
   if(msg.type==='fieldLook')return null;
+  if(msg.type==='fieldDevice'){ return this.device(id, msg); }
   if(msg.type==='fieldLeave'){ this.leave(id); return { type:'fieldLeft' }; }
   throw Error('알 수 없는 필드 요청입니다.'); }
 }
-module.exports={ Field, POTION_HEAL, POTION_GAP, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, BOSS_IMPACT_LIFE, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };
+const DEVICE_KINDS=['pin','seam','socket','cover','gate','seal','tower','door'];
+module.exports={ Field, DEVICE_KINDS, POTION_HEAL, POTION_GAP, ANIMS, MAX_SPEED, AOI, HIT_GAP, LOOT_PRIORITY, BOSS_IMPACT_LIFE, DODGE_TIME, RESPAWN_TIME, RESPAWN_GUARD, reachOf, prestigeTitle };

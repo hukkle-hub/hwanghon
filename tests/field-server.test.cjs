@@ -71,3 +71,14 @@ test('필드 고정 외형은 소켓 전송 성공 뒤에만 전달 완료로 �
  const retry=f.view(a,false);assert.ok(retry.infos.b,'다음 틱에 다시 싣는다');f.commitView(a,retry.players);
  assert.equal(f.view(a,false).infos.b,undefined,'성공 뒤에는 중복 전송하지 않는다');
 });
+
+test('던전 장치 중계 (문서 233): fieldDevice 는 같은 지역 전원에게 되돌린다 — 종류·id 검사, 판정은 클라(멱등), 필드에 없으면 거절',()=>{
+ const {Field,DEVICE_KINDS}=require('../server/field.cjs');const evs=[];const f=new Field({emit:ev=>evs.push(ev)}),prof={name:'x',character:'ain'};
+ f.join('a',prof,'hangang_tunnel',0,'out');f.join('b',prof,'hangang_tunnel',0,'out');
+ assert.equal(f.command('a',{type:'fieldDevice',kind:'pin',id:'inner-pin0'},prof,false),null);
+ const ev=evs.find(e=>e.type==='fieldDevice');assert.ok(ev,'중계됨');assert.equal(ev.zone,'hangang_tunnel');assert.equal(ev.kind,'pin');assert.equal(ev.id,'inner-pin0');assert.equal(ev.from,'a');assert.equal(ev.hits,undefined);
+ f.command('a',{type:'fieldDevice',kind:'cover',id:'cover3',hits:2.7},prof,false);assert.equal(evs.at(-1).hits,2,'hits 는 정수 0~9');
+ assert.throws(()=>f.command('a',{type:'fieldDevice',kind:'bomb',id:'x'},prof,false),/알 수 없는 장치/);assert.throws(()=>f.command('a',{type:'fieldDevice',kind:'pin',id:'../x'},prof,false),/알 수 없는 장치/);
+ assert.throws(()=>f.command('zzz',{type:'fieldDevice',kind:'pin',id:'inner-pin0'},prof,false),/필드에 없습니다/);
+ assert.deepEqual(DEVICE_KINDS.slice(0,3),['pin','seam','socket']);
+});
