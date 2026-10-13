@@ -3,7 +3,7 @@
 body{margin:0;background:#26313d;color:#eee;font:14px sans-serif}header{padding:8px;background:#14202c}button,select,input{font:inherit;min-height:34px;margin:2px;max-width:95vw}input{width:85px}output{display:block;overflow-wrap:anywhere}canvas{display:block;touch-action:none}#beats{max-height:82px;overflow:auto}#state{color:#ffd191}
 </style>
 <header>전체 보스 확대 검수 · 원본 메시/클립 검사 전용 · 게임·AI·이펙트·장비 조립/모바일 합격 증거 아님<br>
-<label>보스 <select id="boss"></select></label><label>몸체 <select id="asset"><option value="live">현재 게임 몸체</option><option value="park">박 준장 최신 무장 후보</option><option value="gill">레비아탄 아가미 후보</option><option value="wing">셀레스티얼 날개 후보</option></select></label>
+<label>보스 <select id="boss"></select></label><label>몸체 <select id="asset"><option value="live">현재 게임 몸체</option><option value="park">박 준장 최신 무장 후보</option><option value="gill">레비아탄 아가미 후보</option><option value="wing">셀레스티얼 날개 후보</option><option value="response">셀레스티얼 비대칭 반응 후보</option></select></label>
 <label>동작 <select id="clip"></select></label><label>시간 <input id="time" type="number" min="0" step="0.033333" value="0"></label>
 <button id="prev">−1 프레임</button><button id="next">+1 프레임</button><button id="play">재생/정지</button><button id="record">현재 동작 녹화</button><button id="recordAll">전체 동작 녹화</button>
 <br><button id="whole">현재 자세 전체</button><button id="left">왼쪽 45°</button><button id="right">오른쪽 45°</button>
@@ -43,7 +43,7 @@ function beats(){const kit=$('#boss').value==='park'?canon.PARK:kits[$('#boss').
 function dispose(object){const textures=new Set(),materials=new Set(),geometries=new Set();object.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[])materials.add(m);});for(const m of materials){for(const v of Object.values(m))if(v?.isTexture)textures.add(v);m.dispose();}for(const v of textures)v.dispose();for(const g of geometries)g.dispose();}
 async function load(){if(recording)return;const token=++revision;run=false;pose=null;clips=[];$('#clip').replaceChildren();$('#beats').replaceChildren();$('#saved').replaceChildren();$('#info').textContent='';if(root){scene.remove(root);dispose(root);root=null;}$('#state').textContent='불러오는 중';
  const b=bosses.find(b=>b.id===$('#boss').value),candidate=$('#asset').value;
- const path=candidate==='park'&&b.id==='park'?'art/review/part1/park-armed-recovery-study.glb':candidate==='gill'&&b.id==='leviathan'?'art/review/part1/leviathan-gill-candidate.glb':candidate==='wing'&&b.id==='celestial2'?'art/review/part1/celestial-wing-study.glb':b.model;
+ const path=candidate==='park'&&b.id==='park'?'art/review/part1/park-armed-recovery-study.glb':candidate==='gill'&&b.id==='leviathan'?'art/review/part1/leviathan-gill-candidate.glb':candidate==='response'&&b.id==='celestial2'?'art/review/part1/celestial-response-study.glb':candidate==='wing'&&b.id==='celestial2'?'art/review/part1/celestial-wing-study.glb':b.model;
  if(!path){$('#state').textContent='몸체 없음 — 검수 차단. 다른 보스 몸으로 합격 처리하지 않습니다.';seek(0);return;}
  try{const gl=await new GLTFLoader().loadAsync('../../'+path);if(token!==revision){dispose(gl.scene);return;}root=gl.scene;clips=gl.animations;scene.add(root);pose=createReviewPoser(root,clips);for(const c of clips)$('#clip').add(new Option(c.name,c.name));seek(0);fit();beats();$('#state').textContent=path+' · '+clips.length+'클립 · 확대 검수 미승인'+(candidate!=='live'?' · 후보/게임 미연결':'');resize();}
  catch(e){if(token===revision)$('#state').textContent='로드 실패: '+e.message;}
