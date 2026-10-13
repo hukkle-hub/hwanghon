@@ -1,5 +1,36 @@
 레비아탄 아가미 물살 스터디 · 2026-10-14 · 검수 전용
 
+최신 v80 (v79 물살/모션은 수정하지 않음)
+- origin/main f6cbc5035를 merge 4c08a30c4로 보존. Claude 고흥/보스 장치 §6도 읽음.
+- server/field-surface-contact.cjs: 엔진/Node 내장 없는 상대 모프+쿼터니언 표면 평가와
+  양쪽 cone의 boolean union. 아직 field-boss-kit/tick/damage가 import하지 않는다.
+  같은 대상은 한 번만 검사할 수 있는 contains 함수일 뿐, 실제 2인 피해 연결 완료가 아니다.
+- tools/3d/bake-gill-contact-profile.mjs: 후보 GLB의 실제 Float32 트랙과 6정점을 추출.
+  art/review/part1/leviathan-gill-contact.json: reviewOnly, 후보 SHA256, 시간(ms), 미터 정규화 포함.
+  이상적 envelope를 다시 계산하지 않고 구워진 LINEAR 모프/SLERP 회전을 그대로 읽는다.
+- makePoser+실제 표면 바인더 2644표본: 위치 오차 최대1.0552e-8m, 법선6.8197e-9.
+  정지 접점으로 바꾸면 최대0.239881m 어긋나도록 부정 검증. 이 표면 profile의
+  불량 입력·범위 밖·반대 방향·중복 cone·외부 hit 객체를 거절하는 시험 포함.
+  실제 loadCjs로도 결과 동일. 원본좌표 검수 선 ↔ 미터7m 변환·dispose까지 5시험 통과.
+  전체 회귀1426개:1424통과/0실패/2skip (190256ms), npm-test-contact-v80.log.
+  이후 추가한 overlay 단위 변환/dispose 검사 포함 targeted5도 다시 통과.
+- 후보 cone은 기존 range7/angle2.5를 각 아가미 법선에 적용한 비교용이다.
+  기존 root cone과 공격 영역/대상 선택이 달라진다. 밸런스 확정·게임 승인이 아니다.
+- tools/3d/boss-emitter-review.html?candidate=gill에서 아가미/물살/후보 판정선을 켜고
+  '판정 위에서 보기'로 비교 가능. 새 overlay는 타격1700ms의 고정 후보 범위이며
+  현재 시각의 충돌이나 실제 서버 피해 표시가 아니다.
+- 실제 WebGL 전신 위/머리 확대/915x412/412x915 확인: 물살은 선보다 짧고 좁다.
+  더구나 물살은1700ms부터 자라므로 그 순간 전체7m 타격과도 불일치.
+  이 불일치를 검출했으며 고쳤다고 하지 않는다. GLB/물살/기존 서버 피해 모두 보존.
+- 증거 루트 output/bosses-kit-2026-10-13:
+  leviathan-contact-overhead-final-v80.png / leviathan-contact-head-v80.png /
+  leviathan-contact-915x412-v80.png / leviathan-contact-412x915-v80.png.
+  초기 overhead-v80은 아래 선 끝 잘림으로 불합격, final에서 전신/선 모두 들어오게 교정.
+  휴대폰 전체 비교는 작게 보이므로 확대 메시 검수 대체 아님. 새 영상/연속 체감 승인은 없음.
+- 다음: 같은 contract로 보이는 범위와 타격 전파 시각을 일치시키고 취소·회피를 검증.
+  그다음 실제 dungeon/AI 타겟 선택/피해 연결. 미검수 후보 활성화/main/Render 배포 금지.
+  박준장/드로퍼/다른 보스 및 4급 작업은 이전 체크포인트 상태 보존.
+
 최신 v79 (아래 v78 기록을 보존하며 갱신)
 - origin/main 006f00a01 병합: Claude 섀도우 팽 앞마당·셀레스티얼 골짜기·에이지스 협곡 보존.
 - 물막을 직교하는 두 면으로 만들어 측면에서 선처럼 사라지는 문제를 보완.

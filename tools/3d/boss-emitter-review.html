@@ -7,6 +7,7 @@
 <button id="effect">광선 효과 켜기/끄기</button><button id="record">전체 압력 기술 녹화</button>
 <button id="sockets">아가미 표면 접점 켜기/끄기</button>
 <button id="water">아가미 물살 켜기/끄기</button><label><input id="reduced" type="checkbox">저부하 효과</label>
+<button id="contacts">후보 판정선 켜기/끄기</button><button id="overhead">판정 위에서 보기</button>
 <output id="info">불러오는 중</output></header><canvas></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
@@ -17,6 +18,7 @@ import {loadCjs} from '../../js/mmo/cjs-browser.js';
 import {bindBossSurfaceEmitter} from '../../js/mmo/boss-emitter.js';
 import {GILL_SOCKETS} from './leviathan-gill-sockets.mjs';
 import {createGillWaterStudy} from './leviathan-gill-water.mjs';
+import {createGillContactStudy} from './leviathan-gill-contact-study.mjs';
 const cv=document.querySelector('canvas'),r=new T.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(1);r.outputColorSpace=T.SRGBColorSpace;
 const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
 const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(8,9,8);s.add(key);const rim=new T.DirectionalLight(0xb9dfff,2);rim.position.set(-8,4,-5);s.add(rim);
@@ -25,6 +27,10 @@ const candidate=new URLSearchParams(location.search).get('candidate')==='gill';
 const gl=await new GLTFLoader().loadAsync(candidate?'../../art/review/part1/leviathan-gill-candidate.glb':'../../art/3d/part1/leviathan_static.glb');const root=gl.scene;s.add(root);
 const mesh=root.getObjectByName('Boss_Mesh');let pos=makePoser(root,gl.animations.find(a=>a.name==='atk_pressure'));
 const kit=(await loadCjs('../../server/field-boss-kit.cjs')).KITS.leviathan;
+const contactStudy=candidate?await createGillContactStudy(s,kit.skills.gill):null;
+let showContacts=false;
+document.querySelector('#contacts').disabled=!contactStudy;
+document.querySelector('#contacts').onclick=()=>{showContacts=!showContacts;document.querySelector('#info').textContent='후보 판정선: 타격 순간 표면 → 양쪽 7m · 기존 각도 유지 · 물살과 불일치 검수용 · 게임 미연결';};
 const holder=new T.Group();s.remove(root);holder.add(root);s.add(holder);
 // Raw asset coordinates in this editor: range/height adapted for display only.
 const o={b:{id:'leviathan'},root:holder,model:root,h:2.2,kfx:{baseY:0,kit}};
@@ -32,7 +38,7 @@ const fx=createStaticBossFX(o,s,0,false);let skill=kit.skills.pressure,effect=fa
 let water=createGillWaterStudy(root,s),showWater=false;
 document.querySelector('#water').onclick=()=>{showWater=!showWater;document.querySelector('#info').textContent='아가미 물살 스터디 · 실제 표면 출발 · 서버 피해 판정 미연결';};
 document.querySelector('#reduced').onchange=e=>{water?.dispose();water=createGillWaterStudy(root,s,{reduced:e.target.checked});};
-function updateEffects(){if(effect&&skill.clip!=='atk_gill')fx.update({yaw:0},skill,t*1000);else fx.clear();if(showWater)water?.update(skill,t*1000);else water?.clear();}
+function updateEffects(){if(effect&&skill.clip!=='atk_gill')fx.update({yaw:0},skill,t*1000);else fx.clear();if(showWater)water?.update(skill,t*1000);else water?.clear();if(contactStudy)contactStudy.group.visible=showContacts&&skill.clip==='atk_gill';}
 let showSockets=false;
 const gillMarkers=GILL_SOCKETS.map((spec,i)=>{
  const emitter=bindBossSurfaceEmitter(root,spec),dot=new T.Mesh(new T.SphereGeometry(.035,12,8),new T.MeshBasicMaterial({color:i?0xffb449:0x56eaff}));
@@ -51,6 +57,7 @@ document.querySelector('#front').onclick=()=>view([0,2,14],[0,1,5]);
 document.querySelector('#rear').onclick=()=>view([0,2,-14],[0,1,-5]);
 document.querySelector('#head').onclick=()=>view([4,2.5,10],[0,1.1,5.3]);
 document.querySelector('#otherHead').onclick=()=>view([-4,2.5,10],[0,1.1,5.3]);
+document.querySelector('#overhead').onclick=()=>view([0,32,3.5],[0,0,1.5]);
 let t=0,run=false,last=performance.now();document.querySelector('#play').onclick=()=>{run=!run;last=performance.now()};
 document.querySelector('#record').onclick=()=>{if(recording)return;t=0;pos(0);updateEffects();updateSockets();r.render(s,c);last=performance.now();run=true;const stream=cv.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const res=await fetch('http://127.0.0.1:8795/leviathan',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#info').textContent=res.ok?await res.text():'저장 실패';recording=null;};rec.start();};
 document.querySelector('#time').oninput=e=>{run=false;t=+e.target.value;pos(t)};
