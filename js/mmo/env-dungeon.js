@@ -11,6 +11,7 @@
      «중앙 광장 — 지하 1층과 2층을 튼 2층 높이 … 크리스마스 장식 … 뒤집힌 진열대» → 보스 클레이브
    build(THREE, scene, osm, gangnamOsm) → map.json 재료 */
 import { frameOf, CONFIG as FIELD } from './env-osm.js';
+import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js';   /* 3D 필드: 사진 콘크리트 벽 (문서 231 §2) */
 export const PITCH = 55 * Math.PI / 180;
 const SCREEN_ANG = 28 * Math.PI / 180;
 function rng(seed) { let s = seed >>> 0 || 1; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
@@ -48,7 +49,8 @@ export function build(THREE, scene, osm, zone = {}) {
 
   /* ---------- 벽: 윤곽을 따라 2 m 조각. 카메라 쪽을 보는 벽은 1 m 로 잘라 안이 보이게 ---------- */
   const wallTex = canvasTex(256, 128, (g, w, h) => { g.fillStyle = '#3e3c40'; g.fillRect(0, 0, w, h); g.fillStyle = '#2a2a2e'; g.fillRect(0, h - 20, w, 20); g.fillStyle = 'rgba(90,120,110,.35)'; g.fillRect(0, h * 0.62, w, 6); });
-  const wallM = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.8 }), wallCutM = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.9 });
+  const PHOTO = isView3d() && FACADE_PHOTO.on;
+  const wallM = PHOTO ? new THREE.MeshStandardMaterial({ ...phPair(THREE, 'concrete_wall_006', { normalScale: 0.9 }), roughness: 0.9, color: 0x8a8690 }) : new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.8 }), wallCutM = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.9 });
   const walls = [];
   function wallRun(poly, other) { const n = poly.length; let cx = 0, cz = 0; poly.forEach(p => { cx += p[0] / n; cz += p[1] / n; });
     for (let i = 0; i < n; i++) { const a = poly[i], b = poly[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.3) continue; const k = Math.max(1, Math.round(L / 2));
@@ -56,7 +58,7 @@ export function build(THREE, scene, osm, zone = {}) {
       for (let j = 0; j < k; j++) { const u0 = j / k, u1 = (j + 1) / k, p0 = [a[0] + (b[0] - a[0]) * u0, a[1] + (b[1] - a[1]) * u0], p1 = [a[0] + (b[0] - a[0]) * u1, a[1] + (b[1] - a[1]) * u1];
         const m = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2]; if (other && inPoly([m[0] - nx * 0.3, m[1] - nz * 0.3], other) && inPoly([m[0] + nx * 0.6, m[1] + nz * 0.6], other)) continue;   /* 두 윤곽이 이어지는 곳은 벽 없음 */
         const cut = !zone.view3d && nz > 0.35, h = cut ? 1.0 : WALL,   /* view3d(3D 필드, 문서 206): 자르지 않는다 */ seg = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-        const w = new THREE.Mesh(new THREE.BoxGeometry(seg + 0.05, h, 0.35), cut ? wallCutM : wallM); w.position.set(m[0] + nx * 0.17, h / 2, m[1] + nz * 0.17); w.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+        const w = new THREE.Mesh(PHOTO && !cut ? boxWorldUv(new THREE.BoxGeometry(seg + 0.05, h, 0.35), seg + 0.05, h, 0.35) : new THREE.BoxGeometry(seg + 0.05, h, 0.35), cut ? wallCutM : wallM); w.position.set(m[0] + nx * 0.17, h / 2, m[1] + nz * 0.17); w.rotation.y = -Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
         w.castShadow = true; w.receiveShadow = true; scene.add(w); walls.push({ m, n: [nx, nz], dir: [(p1[0] - p0[0]) / seg, (p1[1] - p0[1]) / seg], cut, seg });
         blockers.push({ x: m[0] + nx * 0.17, z: m[1] + nz * 0.17, hw: seg / 2 + 0.03, hd: 0.25, rot: w.rotation.y }); } } }
   wallRun(mall, corridor); wallRun(corridor, mall);
@@ -195,7 +197,7 @@ export function build(THREE, scene, osm, zone = {}) {
   const extentPts = []; for (let s = s0; s <= s1; s += 3) for (let t = t0; t <= t1; t += 3) { const p = FROM(s, t); if (!inside(p) && !inside(FROM(s + 3, t)) && !inside(FROM(s, t + 3))) continue; extentPts.push([p[0], 0, p[1]], [p[0], 8, p[1]]); }
   console.info('[env-dungeon] 가게', shops, '섬', islands.length, '쇼윈도 리퍼', lurkers.length, '벽', walls.length, '형광등', fluo, '빛', lights.length);
   return { kind: 'dungeon', title: '강남역 지하상가 B1', lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 },
-    spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
+    spawn: { x: upP[0], z: upP[1] }, sky: { fog: '#040406' }, fogDist: [12, 56], sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: { y: WATER },
     flicker: { on: 3, off: 1 },   /* 원작 «3초 켜짐. 1초 꺼짐» */
     gates: [ { id: 'up5', x: +upP[0].toFixed(2), z: +upP[1].toFixed(2), r: 3.2, to: { zone: 'gangnam', gate: 'exit5' }, label: '강남역 5번 출구 · 지상', kind: 'zone' },
              /* 2호선 승강장으로 — 스크린도어 너머 셔터 앞 (원작 «광장 바로 밑» L3344). 보스 구역(19 m) 밖이 되게 승강장 쪽으로 */

@@ -243,7 +243,7 @@ test('완벽 회피 잔상: 영웅 userData 에 순환 참조(2D 필드 sil)가 
 test('3D 필드 휴대폰: 카메라 먼 면 = 안개 끝 + 10 m (다 묻힌 것은 안 그린다) · 하늘 돔은 그 안으로', () => {
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
   assert.match(w, /if \(MOBILE && q\.get\('far'\) !== '0'\) \{ cam\.far = scene\.fog\.far \+ 10; cam\.updateProjectionMatrix\(\); if \(window\.__sky\) window\.__sky\.scale\.setScalar\(\(cam\.far - 5\) \/ 480\); \}/, '휴대폰이 안개 밖 600 m 까지 그린다 (남태령 823 그리기)');
-  const i = w.indexOf("if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }"), j = w.indexOf('cam.far = scene.fog.far + 10');
+  const i = w.indexOf("if (INDOOR) { scene.fog.near = env.fogDist ? env.fogDist[0] : 16; scene.fog.far = env.fogDist ? env.fogDist[1] : 70; }"), j = w.indexOf('cam.far = scene.fog.far + 10');
   assert.ok(i > 0 && j > i, '먼 면을 실내 안개(70 m)를 정하기 전에 잡았다');
 });
 

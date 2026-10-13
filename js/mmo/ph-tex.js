@@ -36,3 +36,7 @@ float atN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
   return sh;
 }
 export function antiTileMat(THREE, m) { m.onBeforeCompile = sh => antiTile(sh, THREE); m.customProgramCacheKey = () => 'anti-tile'; m.needsUpdate = true; return m; }
+
+/* 상자 벽의 UV 를 미터 단위로 — 벽 조각은 길이가 1~60 m 로 제각각이라 재질 하나의 repeat 로는 늘어난다. BoxGeometry 면 순서 px nx py ny pz nz · 면마다 정점 4 */
+export function boxWorldUv(geo, w, h, d, rep = 3.2) { const uv = geo.attributes.uv; if (!uv || uv.count !== 24) return geo; const sz = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+  for (let f = 0; f < 6; f++) for (let i = 0; i < 4; i++) { const k = f * 4 + i; uv.setXY(k, uv.getX(k) * sz[f][0] / rep, uv.getY(k) * sz[f][1] / rep); } uv.needsUpdate = true; return geo; }

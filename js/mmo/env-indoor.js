@@ -7,6 +7,7 @@
      theme: { wall, floor, fog, hemi, flicker }
      gates · bosses · spawn: 방 id 와 그 안 (u, v) 비율(0~1) 로 찍는다 */
 import { PITCH, SCREEN_ANG, rng, canvasTex, inPoly, bareSpot } from './env-lib.js';
+import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js';   /* 3D 필드: 사진 재질 벽·바닥 (문서 231 §2) */
 export { PITCH };
 
 export function build(THREE, scene, osm, zone) {
@@ -18,7 +19,8 @@ export function build(THREE, scene, osm, zone) {
   const roomById = id => rooms.find(r => r.id === id);
   const inRoom = (s, t, pad = 0) => rooms.some(r => s > r.s0 - pad && s < r.s1 + pad && t > r.t0 - pad && t < r.t1 + pad);
   const at = (id, u = 0.5, v = 0.5) => { const r = roomById(id); return FROM(r.s0 + (r.s1 - r.s0) * u, r.t0 + (r.t1 - r.t0) * v); };
-  const box = (w, h, d, mat, x, y, z, rotY = 0, cast = true) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = rotY; m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m; };
+  const PHOTO = isView3d() && FACADE_PHOTO.on;
+  const box = (w, h, d, mat, x, y, z, rotY = 0, cast = true) => { const m = new THREE.Mesh(mat.userData && mat.userData.rep ? boxWorldUv(new THREE.BoxGeometry(w, h, d), w, h, d, mat.userData.rep) : new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = rotY; m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m; };
   const block = (x, z, hw, hd, rot = 0) => blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: +hw.toFixed(2), hd: +hd.toFixed(2), rot: +rot.toFixed(4) });
 
   /* ---------- 재질 ---------- */
@@ -31,9 +33,16 @@ export function build(THREE, scene, osm, zone) {
     asphalt: T(256, 256, (g, w, h) => { noise(g, w, h, '#34353a', 40, 30, 3000); }, [1 / 4, 1 / 4]),
     mat: T(256, 256, (g, w, h) => { g.fillStyle = '#2a3a34'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(0,0,0,.4)'; for (let x = 0; x <= w; x += 64) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } }, [1 / 2, 1 / 2]),
     gravel: T(256, 256, (g, w, h) => { noise(g, w, h, '#3e3a36', 50, 50, 5000); }, [1 / 2, 1 / 2]) };
-  const floorMats = {}; const floorM = k => floorMats[k] || (floorMats[k] = new THREE.MeshStandardMaterial({ map: FLOORS[k] || FLOORS.concrete, roughness: k === 'metal' ? 0.4 : 0.22, metalness: k === 'metal' ? 0.6 : 0.12, color: th.floorTint || 0xa8b0b0 }));   /* 젖은 바닥 — 반사가 조금 */
+  /* 사진 바닥 (3D): 콘크리트 → 층진 콘크리트 · 아스팔트 → 아스팔트 · 자갈(선로) → 콘크리트 잔해. 타일·테라조·철판은 그린 것이 더 낫다. 바닥 ShapeGeometry 의 UV 는 미터라 repeat 가 곧 타일 크기 */
+  const FLOOR_PH = { concrete: ['concrete_layers', 3.4], asphalt: ['asphalt_02', 4], gravel: ['concrete_debris', 2.6] };
+  const floorMats = {}; const floorM = k => floorMats[k] || (floorMats[k] = PHOTO && FLOOR_PH[k]
+    ? new THREE.MeshStandardMaterial({ ...phPair(THREE, FLOOR_PH[k][0], { repeat: [1 / FLOOR_PH[k][1], 1 / FLOOR_PH[k][1]], normalScale: 0.8 }), roughness: 0.62, metalness: 0.04, color: th.floorTint || 0xa8b0b0 })
+    : new THREE.MeshStandardMaterial({ map: FLOORS[k] || FLOORS.concrete, roughness: k === 'metal' ? 0.4 : 0.22, metalness: k === 'metal' ? 0.6 : 0.12, color: th.floorTint || 0xa8b0b0 }));   /* 젖은 바닥 — 반사가 조금 */
   const wallTex = T(256, 128, (g, w, h) => { g.fillStyle = th.wall || '#3e3c40'; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(0, h - 18, w, 18); g.fillStyle = th.stripe || 'rgba(90,120,110,.35)'; g.fillRect(0, h * 0.6, w, 6); for (let i = 0; i < 30; i++) { g.fillStyle = 'rgba(20,16,14,.18)'; g.fillRect(R() * w, R() * h, 4 + R() * 20, 2 + R() * 30); } });
-  const wallM = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.9 });
+  /* 사진 벽 (3D): 콘크리트 사진 × 테마 벽색. 사진 평균 밝기가 0.5 쯤이라 테마색을 2 배로 — 어두운 테마(#2e3438)는 그 색으로, 밝은 연구소(#c8ccd0)는 흰 콘크리트. 벽 조각마다 UV 를 미터로(boxWorldUv) */
+  const wallM = PHOTO ? Object.assign(new THREE.MeshStandardMaterial({ ...phPair(THREE, 'concrete_wall_006', { normalScale: 0.9 }), roughness: 0.92, color: new THREE.Color(th.wall || '#3e3c40').multiplyScalar(2.1) }), { userData: { rep: 3.2 } })
+    : new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.85 }), cutM = new THREE.MeshStandardMaterial({ color: 0x2a2a30, roughness: 0.9 });
+  if (PHOTO) { const c = wallM.color; c.setRGB(Math.min(1, c.r), Math.min(1, c.g), Math.min(1, c.b)); }
   const darkM = new THREE.MeshStandardMaterial({ color: 0x2a2826, roughness: 0.9 }), steelM = new THREE.MeshStandardMaterial({ color: 0x6a6e74, roughness: 0.4, metalness: 0.7 }), rustM = new THREE.MeshStandardMaterial({ color: 0x5a3a2a, roughness: 0.8, metalness: 0.4 });
   const woodM = new THREE.MeshStandardMaterial({ color: 0x5a4632, roughness: 0.9 }), clothM = new THREE.MeshStandardMaterial({ color: 0x4a4a5a, roughness: 1 }), glassM = new THREE.MeshStandardMaterial({ color: 0x5a7a88, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.4 });
 
@@ -147,6 +156,9 @@ export function build(THREE, scene, osm, zone) {
   const gates = (zone.gates || []).map(g => { const p = bare(g.room, g.u ?? 0.5, g.v ?? 0.5); return { id: g.id, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: g.r || 2.6, to: g.to, label: g.label, kind: g.kind || 'zone' }; });
   for (const g of gates) { const m = new THREE.Mesh(new THREE.RingGeometry(g.r - 0.22, g.r, 48), new THREE.MeshBasicMaterial({ color: g.kind === 'dungeon' ? 0xff5a3a : 0x40d8ff, toneMapped: false, transparent: true, opacity: 0.8 })); m.rotation.x = -Math.PI / 2; m.position.set(g.x, 0.03, g.z); scene.add(m); }
   const bosses = (zone.bosses || []).map(b => { const p = at(b.room, b.u ?? 0.5, b.v ?? 0.5), r = roomById(b.room); return { ...b, room: undefined, u: undefined, v: undefined, x: +p[0].toFixed(2), z: +p[1].toFixed(2), r: b.r || Math.min(r.s1 - r.s0, r.t1 - r.t0) / 2 }; });
+  /* 보스 방 빛 (3D, 문서 231 §2): 천장에서 보스 자리로 떨어지는 찬 빛 한 줄기 — 어두운 방에서 보스가 «자리» 를 갖는다. 점광은 world3d 가 가까운 8개만 켜지만 스포트는 그대로 남는다 */
+  if (zone.view3d) for (const b of bosses) { const r = rooms.find(x => x.id === (zone.bosses || []).find(z => z.id === b.id)?.room) || rooms[0], H = Math.min((r.h || th.h || 3.6), 14);
+    const sp = new THREE.SpotLight(0xcfe0ff, 90, H * 2.4, 0.42, 0.65, 1.3); sp.position.set(b.x, H - 0.2, b.z); sp.target.position.set(b.x, 0, b.z); sp.castShadow = false; scene.add(sp, sp.target); }
   const sp = zone.spawn ? bare(zone.spawn.room, zone.spawn.u ?? 0.5, zone.spawn.v ?? 0.5) : [gates[0].x, gates[0].z + 3];
   /* 안전 구역: 허브(rules.safe) 는 전부, 아니면 문 둘레 */
   const areas = zone.rules?.safe ? [{ kind: 'safe', all: true }] : gates.map(g => ({ kind: 'safe', circle: [g.x, g.z, 6] }));
@@ -156,6 +168,7 @@ export function build(THREE, scene, osm, zone) {
   const extentPts = []; for (let s = s0 - 2; s <= s1 + 2; s += 2) for (let t = t0 - 2; t <= t1 + 3; t += 2) { if (!inRoom(s, t, 2.5)) continue; const p = FROM(s, t); extentPts.push([p[0], 0, p[1]], [p[0], 6, p[1]]); }
   console.info('[env-indoor]', zone.id, '방', rooms.length, '벽', wallN, '빛', lights.length, '막힘', blockers.length);
   return { kind: zone.kind || 'dungeon', title: zone.title, lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 }, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
+    fogDist: th.fogDist || null,   /* 3D 안개 [가까이, 멀리] — 침수 선로·터널은 짙게 (기본 16·70) */
     sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water } : null, flicker: th.flicker || null,
     gates, bosses, areas, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: '' };
 }

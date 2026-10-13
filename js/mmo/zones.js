@@ -50,7 +50,7 @@ export const ZONES = {
     spawn: { room: 'stairs', u: 0.5, v: 0.5 },
     gates: [ { id: 'up', room: 'stairs', u: 0.4, v: 0.5, to: { zone: 'gangnam_b1', gate: 'b2' }, label: '지하상가 B1 · 계단', kind: 'zone' } ],
     bosses: [ { id: 'clave2', name: '클레이브', title: '셔터 끄는 놈 · 마무리', room: 'track', u: 0.62, v: 0.5, r: 14, model: M + 'clave.glb', h: 3.2, place: '선로 한가운데', canon: 'EP03 2호선 침수 선로' } ],
-    indoor: { seed: 3, water: 1.15, theme: { wall: '#2e3438', stripe: 'rgba(60,160,90,.4)', floor: 'terrazzo', h: 5, light: 'fluo', flicker: { on: 3, off: 1 }, hemiI: 1.8 },
+    indoor: { seed: 3, water: 1.15, theme: { wall: '#2e3438', stripe: 'rgba(60,160,90,.4)', floor: 'terrazzo', h: 5, light: 'fluo', flicker: { on: 3, off: 1 }, hemiI: 1.8, fogDist: [9, 46] },
       rooms: [
         { id: 'stairs', s: [-70, -56], t: [8, 16], props: [ { k: 'stairs', side: 's0' }, { k: 'sign', text: '2호선 · 강남', u: 0.6, color: '#40d880' } ] },
         { id: 'platform', s: [-56, 56], t: [5, 13], floor: 'tile', props: [ { k: 'platform', t: 5.4 }, { k: 'pillars', step: 10 }, { k: 'sign', text: '잠시 후 열차가 도착합니다', u: 0.5, color: '#ff8a30', w: 6 } ] },
@@ -112,7 +112,7 @@ export const ZONES = {
     spawn: { room: 'mouth', u: 0.3, v: 0.5 },
     gates: [ { id: 'out', room: 'mouth', u: 0.2, v: 0.5, to: { zone: 'namtae', gate: 'tunnel' }, label: '터널 입구 · 남태령', kind: 'zone' } ],
     bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
-    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 1.4 },
+    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 1.4, fogDist: [8, 42] },
       rooms: [
         { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },
         { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 16, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 } ] },

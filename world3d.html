@@ -150,7 +150,7 @@ import { koreaMapSVG } from './js/mmo/korea-map.js';
 import { SKY_VERT, SKY_FRAG, ridgeOf } from './js/mmo/sky-shader.js';
 import { createBench } from './js/mmo/bench.js';
 import { REGIONS } from './js/mmo/regions.js';
-import { FAR, WIND, WATER, SHADOW_LAYER } from './js/mmo/env-lib.js';
+import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
@@ -255,7 +255,7 @@ const HAO = (env.kind || Z.kind || meta.kind) === 'field' && q.get('hao') === '1
 if (HAO) { HAO.mats = attachHeightAO(THREE, scene, HAO, { skip: o => o.name === 'sky', strength: +(q.get('haok') || 1), direct: +(q.get('haod') || 0) }); if (q.get('haodbg')) window.__HAO = HAO; window.__AO = { res: HAO.res, meter: HAO.meter, ms: HAO.ms, mean: HAO.mean, mats: HAO.mats, rect: HAO.rect.map(v => +v.toFixed(1)) }; }
 const LIFE = (env.kind || Z.kind || meta.kind) === 'field' ? createCityLife(THREE, scene, { center: env.spawn || meta.spawn || { x: 0, z: 0 }, tops: FAR.tops || [], seed: [...ZONE].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) }) : null;   /* 까마귀·연기·점멸·밤 불빛 (문서 219) */
 function nearLights(p) { const s = pointData.map(l => [l, (l.position.x - p.x) ** 2 + (l.position.z - p.z) ** 2]).sort((a, b) => a[1] - b[1]);
-  POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK; L.distance = l.distance; L.decay = l.decay; }); }
+  POOL.forEach((L, i) => { const l = s[i] && s[i][0]; if (!l) { L.intensity = 0; return; } L.position.copy(l.position); L.color.copy(l.color); L.intensity = l.intensity * lampK * flickK; L.distance = l.distance; L.decay = l.decay; }); }
 const sun = env.sunLight || null, sunI0 = sun ? sun.intensity : 1, sunDir = env.sun ? new THREE.Vector3(...env.sun.dir) : new THREE.Vector3(0, 1, 0);
 if (sun) sun.shadow.camera.layers.enable(SHADOW_LAYER);   /* 잎 · 덤불 그림자 대역 (문서 230 §24) */
 if (sun) { sun.shadow.mapSize.set(MOBILE ? 1024 : 2048, MOBILE ? 1024 : 2048); const sc = sun.shadow.camera; sc.left = sc.bottom = -34; sc.right = sc.top = 34; sc.near = 1; sc.far = 400; sc.updateProjectionMatrix(); }
@@ -278,7 +278,7 @@ function cineSunTick() { const r = cineSun(THREE, cam, sunDir, Math.max(STAGE.di
   b0.shaft ??= U.shaftAmt.value; b0.haze ??= U.haze.value; U.shaftAmt.value = b0.shaft * (1 + 1.3 * WXS.mist); U.haze.value = b0.haze * (1 + 0.9 * WXS.mist);   /* 안개 속 빛줄기 — 엘든 아침 숲 (문서 230 §15) */
   bloom.sun(r.x, r.y, r.k, CS.col); window.__CINE = { x: +r.x.toFixed(3), y: +r.y.toFixed(3), k: +r.k.toFixed(3) }; }
 /* ---------- 시간대 (문서 217) — 48분 한 바퀴, 서버 시각. 실내는 안 돌린다. ?tod=밤|night|0.45 로 고정 ---------- */
-let lampK = 1, todName = '';
+let lampK = 1, todName = '', flickK = 1;   /* flickK: 형광등 깜빡임(문서 231) — 꺼진 박자엔 가까운 점광도 죽는다 */
 const hemiL = (() => { let h = null; scene.traverse(o => { if (o.isHemisphereLight && !h) h = o; }); return h; })();
 const DAYC = sun && hemiL && (env.kind || Z.kind || meta.kind) === 'field' ? (() => { const sk = window.__sky && window.__sky.material.uniforms, w = new THREE.Vector3(sunDir.x, 0, sunDir.z).normalize();
   const base = { top: sk ? sk.top.value.clone() : skyCol.clone(), hor: sk ? sk.hor.value.clone() : skyCol.clone(), fog: skyCol.clone(), sun: sun.color.clone(), sunc: sk ? sk.sunc.value.clone() : sun.color.clone(), hemi: hemiL.color.clone(), ground: hemiL.groundColor.clone(),
@@ -388,7 +388,17 @@ const cam = new THREE.PerspectiveCamera(fovFor(innerWidth / innerHeight), innerW
    the stage before that await, not after it, so STAGE.attach never hits TDZ. */
 const STAGE = createBossStage({ THREE, scene, cam, player: () => root.position, reduced: REDUCED, occlude: (at, want) => firstHit(MERGE.camBoxes, at, want) });
 const INDOOR = (env.kind || Z.kind || meta.kind) !== 'field';   /* 던전·벙커: 천장이 있으니 가깝고 낮게 */
-if (INDOOR) { scene.fog.near = 16; scene.fog.far = 70; }   /* 실내는 가까이서 어둡게 */
+if (INDOOR) { scene.fog.near = env.fogDist ? env.fogDist[0] : 16; scene.fog.far = env.fogDist ? env.fogDist[1] : 70; }   /* 실내는 가까이서 어둡게 — 침수 선로·터널은 더 짙게 (env.fogDist, 문서 231) */
+/* 던전 물면 (문서 231 §2) — 2D 가 map.json water.y 에 그리던 물을 3D 도 그린다: 지하상가 0.9 m(«허리까지») · 2호선 선로 1.15 m · 한강 터널 1.2 m. 반투명 — 물 밑 다리가 비쳐 보인다(디렉터: 부츠도 장비다).
+   잔물결 웅덩이 재질(calm)을 쓰되 하늘 돔이 없으니 비칠 «하늘» 은 어두운 천장색으로, 해는 없음 */
+const DWATER = INDOOR && env.water && env.water.y > 0 ? (() => { if (!window.__sky) { WATER.uTop.value = new THREE.Color(0x161c20); WATER.uHor.value = new THREE.Color(0x3a4a50); WATER.uFogc.value = skyCol.clone(); WATER.uSun.value = new THREE.Vector3(0, -1, 0); WATER.uSunc.value = new THREE.Color(0x000000); }   /* 비칠 «하늘» = 어두운 천장 — 비스듬히 보면 수면이 희끗하게 선다(프레넬). 첫 판 0x06080a 는 유리판처럼 안 읽혔다 */
+  const m = waterMat(THREE, { calm: true }); m.transparent = true; m.opacity = 0.84; m.depthWrite = false; m.color.setHex(0x263431);   /* 탁한 녹회색 — 다리는 비치되 물이라고 읽힐 만큼 */
+  const c = env.spawn || meta.spawn || { x: 0, z: 0 }, w = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), m); w.rotation.x = -Math.PI / 2; w.position.set(c.x, env.water.y, c.z); w.renderOrder = 2; w.userData.noCam = true; w.name = 'dwater'; w.frustumCulled = false; scene.add(w);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 32), new THREE.MeshBasicMaterial({ color: 0xbfe6ee, transparent: true, opacity: 0.3, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.renderOrder = 3; scene.add(ring);   /* 발 둘레 물결 — 물이 허리까지라 발밑 그늘 대신 */
+  return { mesh: w, ring, y: env.water.y }; })() : null; if (DWATER) window.__DWATER = DWATER;
+/* 형광등 깜빡임 (원작 «3초 켜짐. 1초 꺼짐» — map.json flicker, 2D 와 같은 박자): 꺼지면 반구광 0.35 · 가까운 점광 0.12 · 형광등 막대는 어둡게. 켜지는 순간 0.08~0.18 초는 더듬는다 */
+const FLICK = INDOOR && env.flicker ? { on: env.flicker.on || 3, off: env.flicker.off || 1, state: -1, tubes: [], hemi0: hemiL ? hemiL.intensity : 0 } : null;
+if (FLICK) scene.traverse(o => { if (o.isMesh && o.material && o.material.isMeshBasicMaterial && !Array.isArray(o.material) && o.material.color && o.material.color.getHex() === 0xeaf8ff) FLICK.tubes.push(o); }); if (FLICK) window.__FLICK = FLICK;
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -743,6 +753,9 @@ function benchCard() { const el = document.getElementById('benchCard'), gl = ren
 function tick() { perf.begin();
   const dt = hold ? (clock.getDelta(), 0) : Math.min(clock.getDelta(), dtCap); frames++; gameNow += dt * 1000;
   aviBlink(gameNow / 1000, lampK);   /* 항공 장애등 깜빡임 (문서 229 §4) */
+  if (FLICK) { const T = FLICK.on + FLICK.off, ph = (gameNow / 1000) % T, off = ph > FLICK.on, stut = ph > 0.08 && ph < 0.18, st = off ? 0 : stut ? 2 : 1;
+    if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
+  if (DWATER) { DWATER.ring.position.set(root.position.x, DWATER.y + 0.02, root.position.z); const k = 1 + 0.1 * Math.sin(gameNow / 170); DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = moveSpeed > 0.5 ? 0.5 : 0.28; }
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */

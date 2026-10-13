@@ -48,7 +48,7 @@ test('world3d 연결: 실내는 안 돌림 · 서버 시각 · 가로등 세기 
   const s = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
   assert.match(s, /const DAYC = sun && hemiL && \(env\.kind \|\| Z\.kind \|\| meta\.kind\) === 'field' \?/, '실내(던전·벙커)는 시간대를 돌리지 않는다');
   assert.match(s, /const ms = net \? sclock\.now\(\) : Date\.now\(\);[^\n]*DAYC\.update\(ms\)/, '온라인은 서버 시각 — 같은 필드는 같은 하늘(날씨도 같은 시각, 문서 230 §14)');
-  assert.match(s, /L\.intensity = l\.intensity \* lampK;/, '가로등이 시간대 세기를 따른다');
+  assert.match(s, /L\.intensity = l\.intensity \* lampK \* flickK;/, '가로등이 시간대 세기를 따른다 (던전 형광등 깜빡임도, 문서 231)');
   assert.match(s, /DAYC\.fixed = tOf\(q\.get\('tod'\)\)/);
   assert.ok(!/daycycle/.test(fs.readFileSync(new URL('../mmo.html', import.meta.url), 'utf8')), '2D 필드는 손대지 않는다');
 });
