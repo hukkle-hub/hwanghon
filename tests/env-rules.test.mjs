@@ -136,3 +136,13 @@ test('남산타워 하부 (문서 233 #3 드로퍼): 천장 케이블카 거더�
   assert.match(Z, /\{ k: 'hooks', gap: 4\.5, step: 3 \}/); assert.match(Z, /\{ k: 'steeldoor', id: 'mod', boss: 'dropper', name: '국방부 철문', u: 0\.5 \}/);
   assert.match(W, /const locked = doorLocked\(d, fbs\.map\(o => \(\{ id: o\.b\.id, ai: o\.ai, sealed: o\.sealed \}\)\)\);/); assert.match(W, /if \(!locked\) \{ d\.open = true; d\.t = 0; const i = walkMeta\.blockers\.indexOf\(d\.ref && d\.ref\.blocker\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '열리면 막이가 풀린다'); assert.match(W, /devTick\(dt\); turretTick\(dt\); doorTick\(dt\);/);
 });
+
+test('남행 물류창고 앞마당 (문서 233 #6 섀도우 팽): «무음 지대 — 경고가 소리가 아니라 몸으로» — 반지름 30 안이면 소리 92 % 먹힘·예고음 없음 · 뒤집힌 수레·빈 방호복·코어 도려내진 사체 (전용 난수)', async () => {
+  const { QUIET, quietAt } = await import('../js/mmo/env-rules.js');
+  assert.equal(QUIET.r, 30); assert.ok(QUIET.hear > 0.85); const q = [{ x: 0, z: 0, r: 30 }]; assert.ok(quietAt(q, 20, 20)); assert.equal(quietAt(q, 25, 25), null); assert.equal(quietAt(null, 0, 0), null);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), F = fs.readFileSync(new URL('../js/mmo/env-field.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8'), S = fs.readFileSync(new URL('../js/mmo/boss-stage.js', import.meta.url), 'utf8');
+  assert.match(F, /yard\(p, o\) \{ const yardAt = \[\]; const R3 = L\.rng\(\(F\.seed \|\| 1\) \* 31 \+ 6\),/, '전용 난수 — 다른 소품 자리를 안 흔든다'); assert.match(F, /quiet\.push\(\{ x: \+p\[0\]\.toFixed\(2\), z: \+p\[1\]\.toFixed\(2\), r: rr, label: o\.label \|\| '' \}\);/); assert.match(F, /mist: F\.mist \|\| null, quiet \};/);
+  assert.match(Z, /\{ k: 'yard', at: \{ st: \[-120, 205\] \}, r: 30, carts: 4, suits: 3, bodies: 3 \}/);
+  assert.match(S, /const play = \(n, a\) => \{ if \(n === 'tele' && globalThis\.__QUIET\) return;/, '무음 지대에선 예고음이 안 난다');
+  assert.match(W, /const qz = quietAt\(env\.quiet, root\.position\.x, root\.position\.z\); if \(qz !== ENV\.quiet\) \{ ENV\.quiet = qz; window\.__QUIET = !!qz; window\.TW_SFX\?\.muffle\?\.\(qz \? QUIET\.hear : ENV\.band\.hear \|\| 0\); refreshChip\(\); \}/);
+});

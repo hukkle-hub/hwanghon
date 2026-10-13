@@ -186,7 +186,7 @@ export const ZONES = {
                { id: 'south', at: { end: 's1', t: 178 }, to: { zone: 'gyeryong', gate: 'north' }, label: '계룡 방면', kind: 'zone' } ],
       bosses: [ { id: 'shadowfang', name: '섀도우 팽', title: '소리가 오다가 죽는다', at: { st: [-120, 200] }, r: 20, model: M + 'shadow_fang.glb', h: 1.6, place: '물류창고 앞마당', canon: 'EP16 물류창고 앞마당' },
                 { id: 'celestial2', name: '셀레스티얼', title: '날개 넷 · 격파', at: { st: [200, 190] }, r: 20, model: M + 'celestial_static.glb', h: 5.4, fly: 3.4, place: '골짜기', canon: 'EP17 골짜기' } ],
-      props: [ { k: 'warehouse', at: { st: [-120, 240] }, w: 70, d: 30, h: 13, label: '물류센터 · 인계 지점 1호' } ] } },
+      props: [ { k: 'warehouse', at: { st: [-120, 240] }, w: 70, d: 30, h: 13, label: '물류센터 · 인계 지점 1호' }, { k: 'yard', at: { st: [-120, 205] }, r: 30, carts: 4, suits: 3, bodies: 3 } ] } },   /* 앞마당: 무음 지대 r 30 · 수레·방호복·사체 (문서 233 #6) */
 
   /* ================= 9. 계룡 (필드: 외곽 능선) · 산 속 격납고 (던전) — 실재 시설은 그리지 않는다 ================= */
   /* «능선 아래로 분지… 군의 심장이던 땅» · 질서 있는 불빛, 초소, 철책선 (L12416~L12420) · «산 밑동을 파고든 거대한 아가리», 남태령과 같은 스텐실 (L12462~L12468)

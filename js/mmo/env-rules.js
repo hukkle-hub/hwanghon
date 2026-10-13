@@ -88,3 +88,8 @@ export function safeAt(list, x, z) { if (!list) return null; for (const z0 of li
 export const DOOR = { open: 1.6, nag: 8, lockedLabel: '잠김 — 문지기를 쓰러뜨리면 열린다' };
 export function doorLocked(door, bosses) { const o = (bosses || []).find(b => b.id === door.boss); return !!o && (o.ai ? !!o.ai.alive : true) && !o.sealed; }   /* 보스가 없으면(몸이 아직 없으면) 열려 있다 */
 
+/* 남행 물류창고 앞마당 (문서 233 #6 섀도우 팽)
+   «무음 지대 — 경고가 소리가 아니라 몸으로 전달됨, 수신호로 소통» · «주변 소리를 삼킴 — 소리가 오다가 죽음» EP16: 앞마당 반지름 안이면 소리가 거의 다 먹히고(hear) 보스 예고음이 안 난다 — 예고는 눈(바닥 예고·몸짓)으로만 */
+export const QUIET = { r: 30, hear: 0.92, label: '무음 지대 — 소리가 오다가 죽는다 · 예고음 없음, 눈으로' };
+export function quietAt(list, x, z) { if (!list) return null; for (const q of list) if (Math.hypot(q.x - x, q.z - z) <= (q.r || QUIET.r)) return q; return null; }
+
