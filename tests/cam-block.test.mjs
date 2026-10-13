@@ -23,3 +23,10 @@ test('재질이 여럿인 건물도 막이에 들어간다 (합치기에서 빠�
   assert.ok(camBoxes.length >= 1, '재질 여럿인 건물이 막이에서 빠졌다');
   assert.ok(firstHit(camBoxes, new THREE.Vector3(0, 1.45, 4), new THREE.Vector3(5.2, 3.2, 4)) < Infinity);
 });
+test('합치기: 셰이더 재질은 서명이 같아 보여도 서로 바꿔 끼우지 않는다 (해안 젖은 모래 · 물마루가 거품으로 그려졌다, 문서 230 §21)', () => {
+  const scene = new THREE.Scene(), g = new THREE.PlaneGeometry(10, 10).rotateX(-Math.PI / 2);
+  const a = new THREE.ShaderMaterial({ transparent: true }), b = new THREE.ShaderMaterial({ transparent: true });
+  const ma = new THREE.Mesh(g, a), mb = new THREE.Mesh(g.clone(), b); ma.userData.noCam = mb.userData.noCam = true; scene.add(ma, mb);
+  mergeStatic(scene); const mats = new Set(); scene.traverse(o => { if (o.isMesh) mats.add(o.material); });
+  assert.ok(mats.has(a) && mats.has(b), '셰이더 재질 하나가 다른 것으로 바뀌었다');
+});

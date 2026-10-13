@@ -9,7 +9,7 @@ export function mergeStatic(scene, { cell = 48, skip = null, camMinH = 1.2 } = {
   scene.updateMatrixWorld(true);
   const groups = new Map(), camBoxes = [], box = new THREE.Box3(), c = new THREE.Vector3(); let before = 0;
   /* 같은 설정의 재질은 하나로 — 빌더가 물체마다 재질을 새로 만들어 강남은 재질이 1,610 개였다 (대부분 같은 값) */
-  const canon = new Map(), sig = m => [m.type, m.color && m.color.getHex(), m.emissive && m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.emissiveMap && m.emissiveMap.uuid,
+  const canon = new Map(), sig = m => m.isShaderMaterial ? 'shader:' + m.uuid : [   /* 셰이더 재질은 색 · 거칠기로 같아 보여도 다르다 — 같은 서명이면 첫 것으로 바꿔 끼워, 해안 젖은 모래 · 물마루가 거품 재질로 그려졌다 (문서 230 §21) */ m.type, m.color && m.color.getHex(), m.emissive && m.emissive.getHex(), m.emissiveIntensity, m.roughness, m.metalness, m.map && m.map.uuid, m.emissiveMap && m.emissiveMap.uuid,
     m.transparent, m.opacity, m.side, m.depthWrite, m.depthTest, m.blending, m.toneMapped, m.vertexColors, m.alphaTest, m.fog, m.flatShading, m.wireframe, m.polygonOffset, m.polygonOffsetFactor, m.polygonOffsetUnits].join('|');
   let dedup = 0, split = 0;
   /* 재질 여럿(지붕 + 벽) 메시를 재질별로 쪼갠다 (문서 229 §40) — 통째로 건너뛰어 건물마다 그리기 2 번이 그대로 남았다(제주 화면 744 중 ~200).

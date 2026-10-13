@@ -149,7 +149,8 @@ export function areas(ctx, osm, tex) { const { THREE, W } = ctx, waters = [];
     water: VIEW3D ? waterMat(THREE) : new THREE.MeshStandardMaterial({ color: 0x1a2c38, roughness: 0.06, metalness: 0.5 }), forest: groundPhoto(THREE, 'forest', { roughness: 1 }) || new THREE.MeshStandardMaterial({ map: tex.forest, roughness: 1 }) };
   layer(M.grass, LAYER.grass); layer(M.sand, LAYER.grass);   /* 3D 층 순서(LAYER): 풀·모래(0.008)는 콘크리트·숲(0.006, 0) 앞 — 높이 2 mm 차만으로는 16비트 깊이에서 그리는 순서가 이겼다 (문서 220 §15) */
   for (const a of osm.areas) { const pts = unclose(a.poly.map(W)); if (pts.length < 3 || !near(ctx, pts, 120)) continue; const k = a.kind || '';
-    if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const sg = signedArea(pts) > 0 ? 1 : -1; foamBand(ctx, [...pts, pts[0]], 0, sg * 2.2); } }   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
+    if (/^water$|reservoir|basin|riverbank/.test(k)) { flatPoly(ctx, pts, M.water, 0.012); waters.push(pts); if (VIEW3D) { const ar = signedArea(pts), sg = ar > 0 ? 1 : -1, ring = [...pts, pts[0]]; foamBand(ctx, ring, 0, sg * 2.2);
+      if (Math.abs(ar) > 20000) { shoreBand(ctx, ring, 0, -sg * 5, wetSandMat(THREE), 0.026); shoreBand(ctx, ring, sg * 3, sg * 18, surfMat(THREE), 0.029); } } }   /* 큰 물(바다 · 큰 호수 2 ha 넘게)은 젖은 모래 · 밀려오는 물마루 (문서 230 §21) — 경포 · 해운대 바다는 해안선이 아니라 물 다각형이었다 */   /* 3D: 물가 안쪽으로 거품 (돌아가는 방향에 따라 안쪽이 다르다) */
     else if (/park|grass|meadow|garden|pitch|village_green|recreation|golf/.test(k)) flatPoly(ctx, pts, M.grass, 0.008);
     else if (/beach|sand|bare_rock|scree/.test(k)) flatPoly(ctx, pts, M.sand, 0.008);
     else if (/military/.test(k)) flatPoly(ctx, pts, M.forest, 0.006);   /* 실재 군 시설은 그리지 않는다 — 모양이 드러나지 않게 숲 바닥으로 (남태령 넓히기에서 콘크리트 판이 통째로 드러났다) */
@@ -187,7 +188,7 @@ export function lines(ctx, osm) { const { THREE, scene, W, R } = ctx;
     else if (l.kind === 'coastline') { /* 해안선: OSM 은 길 방향의 왼쪽이 땅 — 오른쪽으로 2 km 밀어 바다 다각형을 닫는다 */
       const a0 = pts[0], a1 = pts.at(-1), dx = a1[0] - a0[0], dz = a1[1] - a0[1], L0 = Math.hypot(dx, dz) || 1, rx = -dz / L0 * 2000, rz = dx / L0 * 2000;
       const poly = [...pts, [a1[0] + rx, a1[1] + rz], [a0[0] + rx, a0[1] + rz]]; flatPoly(ctx, poly, waterM, 0.012);
-      if (VIEW3D) { foamBand(ctx, pts, 0, 3.2); foamBand(ctx, pts, 6, 8.5, 0.028); }   /* 3D: 바다 쪽(오른쪽) 물가 거품 + 한 줄 더 바깥의 부서지는 물결 */
+      if (VIEW3D) { foamBand(ctx, pts, 0, 3.2); foamBand(ctx, pts, 6, 8.5, 0.028); shoreBand(ctx, pts, 0, -5, wetSandMat(THREE), 0.026); shoreBand(ctx, pts, 3, 18, surfMat(THREE), 0.029); }   /* 3D: 바다 쪽(오른쪽) 물가 거품 + 한 줄 더 바깥의 부서지는 물결 · 땅 쪽 젖은 모래 · 밀려오는 물마루 줄 (문서 230 §21) */
       ctx.blockers.push({ poly: coastBlock(ctx, pts, poly).map(p => [+p[0].toFixed(2), +p[1].toFixed(2)]), water: true }); }
     else if (/^man:(pier|breakwater|groyne|dyke)/.test(l.kind)) { scene.add(new THREE.Mesh(ribbon(THREE, pts, 8, 0.6), runM));
       for (let i = 1; i < pts.length; i++) { const a = pts[i - 1], b = pts[i], dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz); for (let d = 0; d < L; d += 2.2) for (const side of [-1, 1]) { const t4 = new THREE.Mesh(tetraG, tetraM); t4.position.set(a[0] + dx / L * d - dz / L * 5.5 * side, 0.6, a[1] + dz / L * d + dx / L * 5.5 * side); t4.rotation.set(R() * 3, R() * 3, R() * 3); t4.castShadow = true; scene.add(t4); } } } }
@@ -670,7 +671,7 @@ vec3 wN = normalize(vec3(-wgx * wA, 1.0, -wgz * wA)); normal = normalize((viewMa
 /* 물가 거품 띠: 선을 오른쪽(+n = (-dz, dx))으로 o0 ~ o1 만큼 민 띠. uv = (따라간 거리, 띠 안쪽 0 → 바깥 1) */
 let FOAM_M = null;
 function foamMat(THREE) { if (FOAM_M) return FOAM_M; waterDefaults(THREE);
-  FOAM_M = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: true, side: THREE.DoubleSide, uniforms: { ...THREE.UniformsLib.fog, uTime: WATER.uTime, uHor: WATER.uHor, uTop: WATER.uTop },
+  FOAM_M = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -14,   /* 물(앞당김 −6 · 웅덩이 −30)보다 앞 — 없으면 물에 반쯤 묻혀 줄무늬로 깜빡였다(문서 230 §21) */ uniforms: { ...THREE.UniformsLib.fog, uTime: WATER.uTime, uHor: WATER.uHor, uTop: WATER.uTop },
     vertexShader: '#include <fog_pars_vertex>\nvarying vec2 vF; void main(){ vF = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}',
     fragmentShader: '#include <fog_pars_fragment>\nuniform float uTime; uniform vec3 uHor, uTop; varying vec2 vF;\n'
       + 'float h1(float x){ return fract(sin(x * 127.1) * 43758.5453); } float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h1(i), h1(i + 1.0), f); }\n'
@@ -680,6 +681,26 @@ function foamMat(THREE) { if (FOAM_M) return FOAM_M; waterDefaults(THREE);
       + '  vec3 c = mix(uHor, vec3(1.0), 0.4) * (0.5 + 0.25 * dot(uTop, vec3(0.33)));\n'
       + '  gl_FragColor = vec4(c, edge * br * 0.42);\n#include <fog_fragment>\n}' });
   FOAM_M.userData.foam = true; return FOAM_M; }
+/* 해안 (문서 230 §21): 젖은 모래 — 물가에서 땅 쪽 5 m, 곱하기 섞기로 모래를 어둡게(물가 0.55 → 끝 1). 끝선은 파도 박자(거품과 같은 식)에 맞춰 들고 난다.
+   밀려오는 물마루 — 물 쪽 3~18 m 에 해변으로 다가오는 흰 줄(잡음으로 끊김), 바깥일수록 옅다. 둘 다 그리기 1 번씩 · 해안선(coastline)에만 */
+let WETS_M = null, SURF_M = null;
+function wetSandMat(THREE) { if (WETS_M) return WETS_M; waterDefaults(THREE);
+  WETS_M = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.CustomBlending, blendSrc: THREE.DstColorFactor, blendDst: THREE.ZeroFactor, uniforms: { uTime: WATER.uTime, uWet: WX.uWet },
+    vertexShader: 'varying vec2 vF; void main(){ vF = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'uniform float uTime, uWet; varying vec2 vF;\nfloat h1(float x){ return fract(sin(x * 127.1) * 43758.5453); } float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h1(i), h1(i + 1.0), f); }\n'
+      + 'void main(){ float sw = sin(uTime * 0.5 + n1(vF.x * 0.03) * 6.28) * 0.5 + 0.5, reach = mix(0.55, 1.0, max(sw, uWet)) * (0.85 + 0.15 * n1(vF.x * 0.6));\n'
+      + '  float w = 1.0 - smoothstep(reach * 0.6, reach, vF.y); gl_FragColor = vec4(vec3(mix(1.0, 0.58, w)), 1.0); }' });
+  return WETS_M; }
+function surfMat(THREE) { if (SURF_M) return SURF_M; waterDefaults(THREE);
+  SURF_M = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 0, polygonOffsetUnits: -14, uniforms: { ...THREE.UniformsLib.fog, uTime: WATER.uTime, uHor: WATER.uHor, uTop: WATER.uTop },
+    vertexShader: '#include <fog_pars_vertex>\nvarying vec2 vF; void main(){ vF = uv; vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}',
+    fragmentShader: '#include <fog_pars_fragment>\nuniform float uTime; uniform vec3 uHor, uTop; varying vec2 vF;\nfloat h1(float x){ return fract(sin(x * 127.1) * 43758.5453); } float n1(float x){ float i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f); return mix(h1(i), h1(i + 1.0), f); }\n'
+      + 'void main(){ float ph = fract(vF.y * 2.6 + uTime * 0.16 + n1(vF.x * 0.02) * 0.6 + n1(vF.x * 0.09) * 0.35), crest = smoothstep(0.88, 0.95, ph) * (1.0 - smoothstep(0.95, 1.0, ph));   /* 얇게 · 줄마다 휘게 — 굵고 곧은 줄은 «횡단보도» 였다 */\n'
+      + '  float brk = smoothstep(0.45, 0.8, n1(vF.x * 0.35 - uTime * 0.12) * 0.5 + n1(vF.x * 1.3 + vF.y * 6.0) * 0.3 + n1(vF.x * 4.0 - uTime * 0.5) * 0.2), fade = (1.0 - smoothstep(0.15, 0.9, vF.y)) * smoothstep(0.0, 0.06, vF.y);\n'
+      + '  vec3 c = mix(uHor, vec3(1.0), 0.45) * (0.55 + 0.25 * dot(uTop, vec3(0.33))); gl_FragColor = vec4(c, crest * brk * fade * 0.32);\n#include <fog_fragment>\n}' });
+  return SURF_M; }
+/* 선을 o0 ~ o1 로 민 띠에 재질 m — foamBand 와 같은 UV(따라간 거리 · 띠 안 0→1) */
+function shoreBand(ctx, pts, o0, o1, m, y) { const g = foamBand(ctx, pts, o0, o1, y); if (g) { g.material = m; g.renderOrder = 2; } return g; }
 export function foamBand(ctx, pts, o0, o1, y = 0.03) { const { THREE, scene } = ctx; if (pts.length < 2) return null; const pos = [], uv = [], idx = []; let s = 0;
   for (let i = 0; i < pts.length; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)]; let dx = b[0] - a[0], dz = b[1] - a[1]; const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
     if (i) s += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
