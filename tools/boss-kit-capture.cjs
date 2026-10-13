@@ -7,7 +7,7 @@ http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1:8794');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.writeHead(204).end(); return; }
-  const match = /^\/(leviathan|aegis|celestial2|arsenal|nova)$/.exec(req.url);
+  const match = /^\/(leviathan|aegis|celestial2|arsenal|nova|park)$/.exec(req.url);
   if (!match || req.method !== 'POST') { res.writeHead(404).end(); return; }
   let n = 0; const chunks = [];
   req.on('data', b => { n += b.length; if (n > 32 * 1024 * 1024) req.destroy(); else chunks.push(b); });

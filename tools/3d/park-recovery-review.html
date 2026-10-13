@@ -1,22 +1,38 @@
 <!doctype html><html lang="ko"><meta charset="utf-8"><title>박 준장 원본 복구 검수</title>
 <style>body{margin:0;background:#172029;color:#eee;font:15px sans-serif}header{padding:12px}button{padding:8px;margin:4px}canvas{display:block}#info{white-space:pre-wrap}</style>
-<header>박 준장 · 원본 복구 검수 (모션 미적용)<br>
+<header>박 준장 · 원본/전투 후보 비교 검수<br>
 <button id="front">정면</button><button id="side">측면</button><button id="back">후면</button><button id="head">머리·가슴 확대</button><button id="hands">손·무기 확대</button>
-<span id="info">불러오는 중</span></header><canvas></canvas>
+<span id="info">불러오는 중</span><br><label>동작 <select id="clip"></select></label><label>시간 <input id="time" type="number" min="0" step="0.05" value="0"></label><button id="play">재생/정지</button><button id="record">12동작 연속 녹화</button><output id="recordStatus"></output></header><canvas></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
-const r=new T.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});r.setPixelRatio(1);r.setSize(innerWidth,innerHeight-105);r.outputColorSpace=T.SRGBColorSpace;
+import {makePoser} from './pose-eval.mjs';
+const r=new T.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});r.setPixelRatio(1);r.setSize(innerWidth,innerHeight-document.querySelector('header').offsetHeight);r.outputColorSpace=T.SRGBColorSpace;
 const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
 const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(-3,6,5);s.add(key);
 const fill=new T.DirectionalLight(0xd4e1ff,1.6);fill.position.set(3,3,-3);s.add(fill);
 const c=new T.PerspectiveCamera(35,innerWidth/(innerHeight-105),.01,100);
+function resize(){const h=innerHeight-document.querySelector('header').offsetHeight;r.setSize(innerWidth,h);c.aspect=innerWidth/h;c.updateProjectionMatrix();}addEventListener('resize',resize);resize();
 const ground=new T.Mesh(new T.PlaneGeometry(10,10),new T.MeshStandardMaterial({color:0x303841,roughness:1}));ground.rotation.x=-Math.PI/2;s.add(ground);
-const gl=await new GLTFLoader().loadAsync('../../art/review/part1/park-recovered.glb');
+const candidate=new URLSearchParams(location.search).has('candidate');
+const gl=await new GLTFLoader().loadAsync('../../art/review/part1/'+(candidate?'park-combat-candidate.glb':'park-recovered.glb'));
 const root=gl.scene;root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(root,true),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
 const scale=1.89/size.y;const holder=new T.Group();holder.add(root);root.scale.multiplyScalar(scale);root.position.add(new T.Vector3(-center.x*scale,-box.min.y*scale,-center.z*scale));s.add(holder);
 let bones=0;root.traverse(o=>{if(o.isBone)bones++});
-document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · 원본 외형만 확인`;
+document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · ${candidate?'작업 후보 — 미승인':'원본 외형만 확인'}`;
+const sel=document.querySelector('#clip'),time=document.querySelector('#time');
+for(const a of gl.animations)sel.add(new Option(a.name,a.name));
+let poser=gl.animations.length?makePoser(root,gl.animations[0]):null,running=false,t=0,last=performance.now(),recording=null,recordIndex=0;
+sel.onchange=()=>{poser=makePoser(root,gl.animations.find(a=>a.name===sel.value));t=0;time.value=0;poser(0);};
+time.oninput=()=>{running=false;t=+time.value;poser?.(t);};
+document.querySelector('#play').onclick=()=>{running=!running;last=performance.now();};
+document.querySelector('#record').onclick=()=>{
+ if(recording||!gl.animations.length)return;
+ const stream=r.domElement.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;recordIndex=0;sel.selectedIndex=0;sel.onchange();running=true;
+ document.querySelector('#recordStatus').textContent='녹화 중';rec.ondataavailable=e=>chunks.push(e.data);
+ rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const response=await fetch('http://127.0.0.1:8795/park',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#recordStatus').textContent=response.ok?await response.text():'저장 실패';recording=null;};rec.start();
+};
+poser?.(0);
 function view(x,y,z,ty){c.position.set(x,y,z);c.lookAt(0,ty,0);r.render(s,c)}
 document.querySelector('#front').onclick=()=>view(0,1.05,3.7,.95);
 document.querySelector('#side').onclick=()=>view(3.7,1.05,0,.95);
@@ -24,4 +40,5 @@ document.querySelector('#back').onclick=()=>view(0,1.05,-3.7,.95);
 document.querySelector('#head').onclick=()=>view(0,1.65,1.25,1.55);
 document.querySelector('#hands').onclick=()=>view(.9,.95,1.6,.9);
 view(0,1.05,3.7,.95);
+function frame(now){if(running){const d=gl.animations.find(a=>a.name===sel.value)?.duration||1;t=Math.min(d,t+(now-last)/1000);time.value=t.toFixed(2);poser?.(t);if(t>=d){running=false;if(recording){recordIndex++;if(recordIndex<gl.animations.length){sel.selectedIndex=recordIndex;sel.onchange();running=true;}else recording.stop();}}}last=now;r.render(s,c);requestAnimationFrame(frame);}requestAnimationFrame(frame);
 </script></html>

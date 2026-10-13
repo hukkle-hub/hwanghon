@@ -37,7 +37,12 @@ function play(o, name, loop, clamp = false) {
   if (fx.clip) fx.clip.fadeOut(.15); fx.clip = a; return a;
 }
 export function applyKitAction(o, a, now) {
-  if (!o.kfx || !a) return; const fx = o.kfx; o.netAct = a;
+  if (!o.kfx || !a || o.stage?.dying) return; const fx = o.kfx;
+  // Late snapshots must not restart an older skill after a counter/death.
+  // hideKitMotion resets seq to NaN for a genuine respawn/new lifecycle.
+  if (Number.isFinite(fx.seq) && Number.isFinite(a.seq) && a.seq < fx.seq) return;
+  if (fx.seq !== a.seq && o.netAct?.motion === 'skill' && a.motion !== 'skill' && o.model) fx.liftReturn = { from: o.model.position.y, start: now };
+  o.netAct = a;
   if (fx.seq !== a.seq) { fx.seq = a.seq; fx.hitIdx = 0;
     if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX ?? a.x, z: a.fromZ ?? a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = fx.kit.stationary ? fx.baseYaw : a.yaw; }
     else if (a.motion === 'stagger') play(o, 'stagger', false, true);
@@ -55,7 +60,15 @@ export function updateKitMotion(o, dt, now) {
   if (a && !dying) {
     if (skill && skill.move && fx.from) { const d = curve(skill.move, t); o.root.position.x = fx.from.x + Math.sin(a.yaw) * d; o.root.position.z = fx.from.z + Math.cos(a.yaw) * d; o.root.rotation.y = a.yaw; }
     else { const k = Math.min(1, dt * (skill ? 14 : 9)); o.root.position.x += (a.x - o.root.position.x) * k; o.root.position.z += (a.z - o.root.position.z) * k; o.root.rotation.y = yawLerp(o.root.rotation.y, a.yaw, Math.min(1, dt * (skill ? 12 : 4))); }
-    if (o.model) o.model.position.y = fx.baseY + (skill && skill.lift ? curve(skill.lift, t) : 0);   /* 떠오름: 몸만 올린다 — 판정 자리(x,z)는 그대로 */
+    if (o.model) {
+      if (skill) { fx.liftReturn = null; o.model.position.y = fx.baseY + (skill.lift ? curve(skill.lift, t) : 0); }
+      else if (fx.liftReturn) {
+        // A counter can stop a dive at any height. Preserve the evaluated pose.
+        const u = Math.min(1, Math.max(0, (now - fx.liftReturn.start) / 280)), k = u * u * (3 - 2 * u);
+        o.model.position.y = fx.liftReturn.from + (fx.baseY - fx.liftReturn.from) * k;
+        if (u === 1) fx.liftReturn = null;
+      } else o.model.position.y = fx.baseY;
+    }   /* 떠오름: 몸만 올린다 — 판정 자리(x,z)는 그대로 */
     if (fx.kit.stationary) o.root.rotation.y = fx.baseYaw;
   }
   /* 바닥 예고는 없다 (디렉터 «의미 없어» — 문서 224). 같은 박자로 몸이 준비 동작을 한다(windup.js). 지금 박자는 소리(boss-stage)용으로만 셈 */
@@ -68,6 +81,7 @@ export function updateKitMotion(o, dt, now) {
     fx.glow.intensity += ((q ? 1 + p * 4 : skill ? 1.6 : .6) - fx.glow.intensity) * Math.min(1, dt * 6); }
   /* 무거운 판정이 지나가면 충격(카메라 킥·고리) — 난무 잔타는 빼고 */
   if (skill && !dying) while (fx.hitIdx < skill.hits.length && t >= S(skill, a, skill.hits[fx.hitIdx].at)) { const i = fx.hitIdx++, h = skill.hits[i], mk = h.atTarget && a.marks && a.marks[i];
+    if (t - S(skill, a, h.at) > 250) continue; // join/resume: do not replay expired impacts, sound or camera kicks
     if (fx.attackFX) { ev.impact = h.damage >= .1; } // Dedicated volumes already draw this hit; no unrelated lightning or filled safe core.
     else if (mk) { const b = fx.bolts.find(q => q.t > .3) || fx.bolts[0]; if (b) { b.t = 0; b.m.position.set(mk[0], fx.floor + 8, mk[1]); b.m.visible = true; } ring(fx, mk[0], mk[1], h.radius * 1.6); ev.impact = true; ev.bolt = mk; }   /* 낙뢰 */
     else if (!h.pool && h.damage >= .1) { ev.impact = true; ring(fx, o.root.position.x, o.root.position.z, h.radius || 3); } }
@@ -80,4 +94,4 @@ export function updateKitMotion(o, dt, now) {
   return ev;
 }
 function ring(fx, x, z, r) { const p = fx.ringPool.find(q => !q.active) || fx.ringPool[0]; p.active = true; p.t = 0; p.life = .7; p.r = r; p.m.visible = true; p.m.position.set(x, fx.floor + .06, z); fx.ringActive++; }
-export function hideKitMotion(o) { const fx = o.kfx; if (!fx) return; fx.telling = false; fx.dim = 0; if (o.wind) applyWind(o, null, 0); fx.attackFX?.clear(); for (const b of fx.bolts) { b.m.visible = false; b.t = 9; } for (const r of fx.ringPool) { r.active = false; r.m.visible = false; } fx.ringActive = 0; fx.glow.intensity = 0; o.netAct = null; fx.seq = NaN; if (o.model) o.model.position.y = fx.baseY; }
+export function hideKitMotion(o) { const fx = o.kfx; if (!fx) return; fx.liftReturn = null; fx.telling = false; fx.dim = 0; if (o.wind) applyWind(o, null, 0); fx.attackFX?.clear(); for (const b of fx.bolts) { b.m.visible = false; b.t = 9; } for (const r of fx.ringPool) { r.active = false; r.m.visible = false; } fx.ringActive = 0; fx.glow.intensity = 0; o.netAct = null; fx.seq = NaN; if (o.model) o.model.position.y = fx.baseY; }

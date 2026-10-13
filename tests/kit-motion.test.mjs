@@ -13,6 +13,30 @@ function boss(id) { const scene = new THREE.Scene(), root = new THREE.Group(), m
   const o = { b: { id }, root, model }; setupKitMotion(o, { animations: clips }, model, scene, KIT.KITS[id]); o.h = 2; addWindRig(THREE, o); return o; }
 const act = (o, skill, extra = {}) => ({ id: o.b.id, ai: 'kit', x: 0, z: 0, yaw: 0, motion: 'skill', skill, seq: 7, startedAt: 1000, endsAt: 9000, fromX: 0, fromZ: 0, shift: 0, counterOpen: 0, counterClose: 0, ...extra });
 
+test('countered dive recovers from its current height without a one-frame teleport',()=>{
+ const o=boss('celestial2'),a=act(o,'dive');applyKitAction(o,a,1000);updateKitMotion(o,.016,2500);
+ const y=o.model.position.y;assert.ok(Math.abs(y+3.4)<1e-9);
+ applyKitAction(o,{...a,seq:8,motion:'stagger',startedAt:2500},2500);updateKitMotion(o,.016,2500);assert.equal(o.model.position.y,y);
+ updateKitMotion(o,.016,2640);assert.ok(Math.abs(o.model.position.y-y/2)<1e-6);
+ updateKitMotion(o,.016,2780);assert.equal(o.model.position.y,0);assert.equal(o.kfx.liftReturn,null);
+ hideKitMotion(o);assert.equal(o.kfx.liftReturn,null);
+});
+
+test('stale snapshots cannot undo stagger or death; explicit hide permits the new lifecycle',()=>{
+ const o=boss('shadowfang');const s=act(o,'thrust');applyKitAction(o,s,1000);
+ applyKitAction(o,{...s,motion:'stagger',seq:8},2200);applyKitAction(o,s,2300);assert.equal(o.netAct.motion,'stagger');
+ o.stage={dying:{t:0}};applyKitAction(o,{...s,seq:9},2400);assert.equal(o.netAct.motion,'stagger');
+ o.stage.dying=null;hideKitMotion(o);applyKitAction(o,{...s,seq:1},4000);assert.equal(o.netAct.seq,1);
+});
+test('mid-skill join does not replay past impact effects; the next current beat still fires once',()=>{
+ const o=boss('subject09');applyKitAction(o,act(o,'frenzy'),3000);
+ let e=updateKitMotion(o,.016,3400);assert.equal(e.impact,undefined,'old 550/850/1950/2200 impacts are expired or light');
+ assert.ok(o.kfx.ringPool.every(r=>!r.active));
+ e=updateKitMotion(o,.016,3500);assert.equal(e.impact,true,'current final hit');
+ e=updateKitMotion(o,.016,3516);assert.equal(e.impact,undefined,'no duplicate');
+ const old=boss('arsenal');applyKitAction(old,act(old,'battery'),9000);e=updateKitMotion(old,.016,9000);assert.equal(e.impact,undefined);
+});
+
 /* 바닥 예고가 없다 = 기술 도중 장면에 보이는 메시가 하나도 없다 (몸은 Group 뿐인 가짜) */
 const shown = scene => { let n = 0; scene.traverse(m => { if (m.isMesh && m.visible && m.material && m.material.opacity > 0) n++; }); return n; };
 
