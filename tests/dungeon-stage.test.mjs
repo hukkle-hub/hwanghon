@@ -94,3 +94,9 @@ test('던전 안 차 (3D 만): 주차장은 car-kit 진짜 차(R 소비는 2D �
   assert.match(I, /mk\(len, 2\.4, 2\.9, body, 0, 1\.45, 0\); mk\(len, 0\.5, 2\.6, band, 0, 0\.95, 0\);/); assert.match(I, /scene\.add\(g\); block\(c\[0\], c\[1\], len \/ 2, 1\.6, rot\); \},/);
   assert.match(Z, /tunnelE[^\n]*\{ k: 'subway', u: 0\.55, t: -2\.5, len: 17, yaw: 0\.06 \}/); assert.match(Z, /id: 'bore'[^\n]*\{ k: 'wrecks', n: 12, wreck: 0\.7 \}/); assert.match(Z, /id: 'ramp1'[^\n]*\{ k: 'wrecks', n: 3, wreck: 0\.4, yaw: 0\.3, type: 'truck' \}/);
 });
+
+test('유도등 «절반쯤 살아서 초록의 점선» (계룡 경사로 L12516): 벽 무릎 높이 2.2 m 간격 · 살아 있는 것만 빛 · 3D 만', () => {
+  const I = R('js/mmo/env-indoor.js'), Z = R('js/mmo/zones.js');
+  assert.match(I, /guides\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /const alive = R3\(\) < \(o\.alive \?\? 0\.5\);/); assert.match(I, /box\(0\.28, 0\.06, 0\.06, alive \? onM : offM, q\[0\], 0\.55, q\[1\]/);
+  for (const id of ['ramp1', 'bend1', 'ramp2']) assert.match(Z, new RegExp("id: '" + id + "'[^\\n]*\\{ k: 'guides' \\}"), id);
+});

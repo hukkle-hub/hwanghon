@@ -36,5 +36,11 @@ export const FLICKER = { on: 3, off: 1, hemi: 0.35, point: 0.12 };
 
 /* 유도등 «절반쯤 살아서 초록의 점선» (계룡 경사로 L12516) · 소독약 복도 «비상등이 살아 있었고, 바닥이 닦여» (L13229) — 방 테마로 (zones.js) */
 
-export function envSummary(band) { if (band.id === 'dry') return ''; const parts = [band.name + '까지 물', '이동 ' + Math.round(band.move * 100) + '%'];
+/* 젖음 — «젖은 테크웨어의 무게도 덜 느껴졌다» L4110: 허리 위 물에서 나오면 옷이 무겁다. dur 초 동안 이동·회피가 줄고 서서히 마른다 */
+export const WET = { minBand: 'waist', dur: 10, move: 0.92, dodge: 0.95 };
+export function wetK(wetT) { return wetT > 0 ? 1 - (1 - WET.move) * Math.min(1, wetT / (WET.dur * 0.5)) : 1; }   /* 처음 절반은 다 젖음, 뒤 절반은 마른다 */
+/* 물보라 — «되돌아온 반동에 아인이 물속으로 나가떨어졌다» L1896: 허리 위 물에서 밀려나면 발 둘레 고리가 터진다 */
+export const SPLASH = { scale: 3.2, dur: 0.45 };
+
+export function envSummary(band, wetT = 0) { if (band.id === 'dry') return wetT > 0 ? '젖은 옷 — 이동 ' + Math.round(wetK(wetT) * 100) + '% (' + Math.ceil(wetT) + '초)' : ''; if (band.id === 'dry') return ''; const parts = [band.name + '까지 물', '이동 ' + Math.round(band.move * 100) + '%'];
   if (band.dodge < 1) parts.push('회피 ' + Math.round(band.dodge * 100) + '%'); if (band.atk) parts.push('공격 +' + band.atk + 'ms'); if (band.hear >= 0.35) parts.push('소리 먹먹'); if (band.float >= 0.5) parts.push('뛰면 뜬다 — 살살 밀어라'); return parts.join(' · '); }

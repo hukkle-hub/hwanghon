@@ -211,9 +211,9 @@ export const ZONES = {
     indoor: { seed: 21, theme: { wall: '#3a3c38', stripe: 'rgba(80,200,120,.35)', floor: 'concrete', h: 6, light: 'green', hemiI: 1.6 },
       rooms: [
         { id: 'mouth', s: [0, 20], t: [-10, 10], h: 9, light: 'warm', props: [ { k: 'debris', n: 4 } ] },
-        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [ { k: 'wrecks', n: 3, wreck: 0.4, yaw: 0.3, type: 'truck' } ] },   /* 3D: 버려진 군용 트럭 */
-        { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [] },
-        { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [] },
+        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [ { k: 'wrecks', n: 3, wreck: 0.4, yaw: 0.3, type: 'truck' }, { k: 'guides' } ] },   /* 3D: 버려진 군용 트럭 */
+        { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [ { k: 'guides' } ] },
+        { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [ { k: 'guides' } ] },   /* 3D: 유도등 초록 점선 «절반쯤 살아서» (L12516) */
         { id: 'shop', s: [140, 176], t: [4, 30], h: 8, floor: 'metal', light: 'fluo', props: [ { k: 'machines', n: 8 }, { k: 'shelves', n: 3 } ] },
         { id: 'hangar', s: [176, 300], t: [-30, 40], h: 30, light: 'fluo', lightStep: 18, props: [ { k: 'vehicles', n: 30 }, { k: 'pillars', step: 30, mat: 'steel' }, { k: 'crates', n: 14 }, { k: 'gantry', at: [0.3, 0.75] } ] },   /* 3D: 천장 크레인 */
         { id: 'corridor', s: [300, 350], t: [2, 6], h: 3.4, floor: 'tile', light: 'fluo', props: [] },
