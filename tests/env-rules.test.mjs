@@ -103,3 +103,13 @@ test('계룡 격납고 장치 (문서 233 #8): 소모성 엄폐물 «1발 파임
   assert.match(W, /const c = narrowAt\(COVERS\.filter\(c => c\.hits < COVER\.hits\), q\.x, q\.z\); if \(c && q\.y < c\.h\) \{ coverHit\(c, q\); ARS\.stats\.coverHits\+\+; done = true; \}/, '엄폐물이 대신 맞는다 — 소멸한 것은 안 막는다');
   assert.match(W, /devTick\(dt\); turretTick\(dt\);/);
 });
+
+test('소독약 복도 (문서 233 #9 박 준장): «원을 그릴 반경이 늘 반 뼘 모자람» L13334 — 벽을 안으로 세워 폭 2.6 m, 3.0 m 보다 좁으면 내 공격 85% · 흰 타일 · 관측창 · 비상등 맥동', async () => {
+  const { CIRCLE, swingK } = await import('../js/mmo/env-rules.js');
+  assert.equal(CIRCLE.need, 3.0); assert.equal(swingK({ w: 2.6 }), CIRCLE.k); assert.equal(swingK({ w: 3.2 }), 1); assert.equal(swingK({ hw: 4, hd: 0.8 }), 1, '폭 없는 좁은 구간(계단)은 그대로'); assert.equal(swingK(null), 1);
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8'), I = fs.readFileSync(new URL('../js/mmo/env-indoor.js', import.meta.url), 'utf8'), Z = fs.readFileSync(new URL('../js/mmo/zones.js', import.meta.url), 'utf8');
+  assert.match(I, /corridor\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /const W = r\.t1 - r\.t0, width = o\.width \?\? 2\.6, inset = \(W - width\) \/ 2,/); assert.match(I, /box\(L, H, inset, tileM, c\[0\], H \/ 2, c\[1\], SCREEN_ANG\); block\(c\[0\], c\[1\], L \/ 2, inset \/ 2, SCREEN_ANG\); \}/, '벽은 막이');
+  assert.match(I, /Lt\.userData\.pulse = true;/, '비상등 맥동'); assert.match(I, /narrows\.push\(\{ x: \+cc\[0\]\.toFixed\(2\), z: \+cc\[1\]\.toFixed\(2\), hw: \+\(L \/ 2\)\.toFixed\(2\), hd: \+\(width \/ 2\)\.toFixed\(2\), rot: SCREEN_ANG, w: width,/);
+  assert.match(Z, /\{ id: 'corridor', s: \[300, 350\], t: \[2, 6\], h: 3\.4, floor: 'tile', light: 'fluo', props: \[ \{ k: 'corridor', width: 2\.6 \} \] \}/);
+  assert.match(W, /\* \(counter \? 1\.65 : 1\) \* swingK\(ENV\.narrow\)\); ai\.hp -= n;/, '좁은 복도에서 낫의 원이 걸린다'); assert.match(W, /\(ENV\.narrow\.label \|\| NARROW\.label\) \+ \(swingK\(ENV\.narrow\) < 1 \? ' · 공격 ' \+ Math\.round\(swingK\(ENV\.narrow\) \* 100\) \+ '%' : ''\)/);
+});

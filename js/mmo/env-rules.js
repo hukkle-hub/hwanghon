@@ -73,3 +73,8 @@ export function coverStage(hits) { return hits <= 0 ? '' : COVER.stages[Math.min
 export const TURRET = { n: 18, main: 6, intervals: [4, 5, 6], speed: 26, damage: 0.05, knock: 0.8, reach: 30, ring: 6, lift: [3, 9], flash: 0.4, life: 3.2, aimArc: Math.PI / 3 };   /* aimArc: 내 방위 ±30° 안의 포탑(18 중 셋)만 쏜다 — «어느 각도에서도 최소 3개가 조준». 18 개가 다 쏘면 엄폐물이 1 초에 소멸해 놀 수 없었다 */
 export function turretInterval(k) { return TURRET.intervals[k % TURRET.intervals.length]; }   /* 안내인 종이: 포탑마다 4·5·6 중 하나, 종류는 불변 */
 
+/* 계룡 소독약 복도 (문서 233 #9 박 준장)
+   «좁은 복도 — 원을 그릴 반경이 늘 반 뼘 모자람» L13334 · «병원 냄새, 관측창» EP22: 벽을 안으로 세워 폭 width 만 남긴다. 폭이 CIRCLE.need 보다 좁으면 낫의 원이 벽에 걸려 내 공격이 k 배 */
+export const CIRCLE = { need: 3.0, k: 0.85 };
+export function swingK(narrow) { return narrow && narrow.w != null && narrow.w < CIRCLE.need ? CIRCLE.k : 1; }
+
