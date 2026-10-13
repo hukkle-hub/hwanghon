@@ -54,3 +54,8 @@ test('먼 산 세 겹 (문서 230 §18): 가장 먼 봉우리 · 날 선 능선 
   assert.match(SKY_FRAG, /float far3 = ridge\.x \* 1\.32/); assert.match(SKY_FRAG, /pow\(1\.0 - abs\(fbm\(/, '날 선 능선(ridged)'); assert.match(SKY_FRAG, /near \+= 0\.0045 \* \(n2\(ring \* 380\.0/, '숲 가장자리');
   assert.match(SKY_FRAG, /litF = mix\(0\.5, litF, smoothstep\(far \* 0\.45, far, y\)\)/, '세로 커튼 줄무늬 막기'); assert.match(SKY_FRAG, /if \(y < 0\.32\)/, '산은 지평선 근처에서만 셈(휴대폰)'); assert.match(SKY_FRAG, /새털구름/);
 });
+test('물에 비친 산 = 하늘 산 세 겹 · 구름 빛(해 쪽 밝음 · 은빛 테) (문서 230 §19)', async () => {
+  const { SKY_FRAG, SKY_REFL } = await import('../js/mmo/sky-shader.js');
+  assert.match(SKY_REFL, /float far3 = uRidge\.x \* 1\.32/); assert.match(SKY_REFL, /if \(y > uRidge\.x \* 1\.32 \+ 0\.01\) return c;/, '가장 먼 봉우리 위는 건너뛴다');
+  assert.match(SKY_REFL, /skF\(ring \* 3\.74 \+ uRidge\.z \+ 9\.0\)/, '하늘과 같은 주파수(2.2 × 1.7)'); assert.match(SKY_FRAG, /lit = clamp\(0\.55 \+ \(n - ns\) \* 3\.2/); assert.match(SKY_FRAG, /if \(dens > 0\.002\)/, '구름 없는 곳은 셈 안 함');
+});

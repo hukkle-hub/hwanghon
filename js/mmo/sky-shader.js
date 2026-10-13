@@ -15,6 +15,9 @@ void main(){
   vec2 uv = d.xz / (y + 0.16) * 1.4 + vec2(time * 0.006, time * 0.002);
   float n = fbm(uv) * 0.75 + fbm(uv * 2.7 + 5.0) * 0.25, dens = smoothstep(cover, cover + 0.22, n) * smoothstep(0.015, 0.16, y) * (1.0 - smoothstep(0.55, 0.9, y) * 0.6);
   vec3 cloud = mix(mix(top, fogc, 0.35) * 0.7, hor * 1.05, smoothstep(0.0, 0.5, y)) ; cloud = mix(cloud, sunc * 1.25 + hor * 0.3, pow(a, 3.0) * 0.85);
+  /* 구름 빛 (문서 230 §19): 해 쪽으로 조금 밀어 다시 읽은 밀도와의 차 — 해를 향한 쪽은 밝고 반대쪽 배는 어둡다(한 덩어리 회색 판이었다). 해 가까운 가장자리는 은빛 테 */
+  if (dens > 0.002) { float ns = fbm(uv + normalize(sun.xz + 1e-5) * 0.22) * 0.75 + fbm(uv * 2.7 + 5.0) * 0.25, lit = clamp(0.55 + (n - ns) * 3.2, 0.0, 1.0);
+    cloud *= mix(0.7, 1.22, lit); cloud += sunc * pow(a, 8.0) * (1.0 - smoothstep(0.0, 0.6, dens)) * 1.1 * smoothstep(-0.02, 0.06, sun.y); }
   /* 별 (문서 220 §13): 하늘 윗색이 어두울수록(밤) — 방향 격자마다 해시 한 점, 구름에 가리고 반짝인다 */
   float dark = 1.0 - smoothstep(0.005, 0.026, dot(top, vec3(0.3, 0.5, 0.2)));   /* 선형 색 윗하늘 밝기(잰 값): 밤 0.0061 → 별 0.99 · 황혼 0.0194 → 0.23 · 새벽 0.061 · 낮 0.128 → 0 */
   if (dark > 0.0 && y > 0.04) { vec2 sp = vec2(atan(d.z, d.x) * 95.0, asin(clamp(y, -1.0, 1.0)) * 95.0); vec2 si = floor(sp), sf = fract(sp) - 0.5; float sh = h2(si), sb = step(0.965, sh);
@@ -71,10 +74,15 @@ float skH(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float skN(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(skH(i), skH(i + vec2(1.0, 0.0)), f.x), mix(skH(i + vec2(0.0, 1.0)), skH(i + vec2(1.0, 1.0)), f.x), f.y); }
 float skF(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { s += a * skN(p); p = p * 2.03 + 17.1; a *= 0.5; } return s; }
 vec3 skyRefl(vec3 d){ float y = d.y; vec3 c = mix(uFogc, uHor, smoothstep(-0.02, 0.10, y)); c = mix(c, uTop, smoothstep(0.10, 0.55, y));
-  if (y > uRidge.x + 0.01) return c;   /* 능선보다 높이 비치면 fbm 8번을 건너뛴다 (물 픽셀마다 돈다) */
-  vec2 ring = normalize(d.xz + 1e-5); float far = uRidge.x * (0.35 + 0.65 * skF(ring * 2.2 + uRidge.z)), near = uRidge.y * (0.25 + 0.75 * skF(ring * 4.1 + uRidge.z * 1.7 + 3.0));
-  vec3 farC = mix(uFogc, mix(uHor, uTop, 0.4) * 0.82, 0.38), nearC = mix(uFogc, mix(uTop, uHor, 0.3) * 0.5, 0.62);
-  c = mix(c, mix(uFogc, farC, smoothstep(-0.01, far, y) * 0.8 + 0.2), 1.0 - smoothstep(far - 0.006, far + 0.004, y));
-  c = mix(c, mix(uFogc, nearC, smoothstep(-0.01, near, y) * 0.7 + 0.3), 1.0 - smoothstep(near - 0.005, near + 0.004, y));
+  if (y > uRidge.x * 1.32 + 0.01) return c;   /* 가장 먼 봉우리보다 높이 비치면 잡음을 건너뛴다 (물 픽셀마다 돈다) */
+  /* 하늘 돔과 같은 세 겹 · 같은 날 선 능선 (문서 230 §18·§19) — 물에 비친 산이 하늘 산과 같은 모양. 비탈 명암 · 숲 가장자리는 뺀다(물결에 어차피 흩어진다) */
+  vec2 ring = normalize(d.xz + 1e-5);
+  float far3 = uRidge.x * 1.32 * (0.3 + 0.7 * (0.55 * skF(ring * 1.4 + uRidge.z + 21.0) + 0.45 * pow(1.0 - abs(skF(ring * 2.38 + uRidge.z + 30.0) * 2.0 - 1.0), 2.0)));
+  float far = uRidge.x * (0.3 + 0.7 * (0.55 * skF(ring * 2.2 + uRidge.z) + 0.45 * pow(1.0 - abs(skF(ring * 3.74 + uRidge.z + 9.0) * 2.0 - 1.0), 2.0)));
+  float near = uRidge.y * (0.25 + 0.75 * skF(ring * 4.1 + uRidge.z * 1.7 + 3.0));
+  vec3 f3C = mix(uFogc, mix(uHor, uTop, 0.25), 0.22), farC = mix(uFogc, mix(uHor, uTop, 0.4) * 0.82, 0.38), nearC = mix(uFogc, mix(uTop, uHor, 0.3) * 0.5, 0.62);
+  c = mix(c, mix(uFogc, f3C, smoothstep(-0.01, far3, y) * 0.7 + 0.15), 1.0 - smoothstep(far3 - 0.006, far3 + 0.004, y));
+  c = mix(c, mix(uFogc * 1.05, farC, smoothstep(-0.01, far, y) * 0.85 + 0.1), 1.0 - smoothstep(far - 0.006, far + 0.004, y));
+  c = mix(c, mix(uFogc, nearC, smoothstep(-0.01, near, y) * 0.75 + 0.25), 1.0 - smoothstep(near - 0.005, near + 0.004, y));
   return c; }
 `;
