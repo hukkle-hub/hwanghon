@@ -11,11 +11,12 @@
 <label><input id="sharedWave" type="checkbox">공유 범위 물살</label><label><input id="cancelWave" type="checkbox">기술 취소</label>
 <label><input id="targets" type="checkbox">이동·회피 표적</label><label>취소 시각 ms <input id="cancelAt" type="number" value="-1" step="50"></label>
 <output id="targetInfo"></output>
+<output id="motionInfo"></output>
 <output id="info">불러오는 중</output></header><canvas></canvas>
 <script type="module">
 import * as T from '../../vendor/three/three.module.js';
 import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
-import {makePoser} from './pose-eval.mjs';
+import {createInterruptPoseStudy} from './interrupt-pose-study.mjs';
 import {createStaticBossFX} from '../../js/mmo/static-boss-fx.js';
 import {loadCjs} from '../../js/mmo/cjs-browser.js';
 import {bindBossSurfaceEmitter} from '../../js/mmo/boss-emitter.js';
@@ -31,7 +32,10 @@ const c=new T.PerspectiveCamera(35,1,.01,150);function resize(){const h=Math.max
 new ResizeObserver(resize).observe(document.querySelector('header'));
 const candidate=new URLSearchParams(location.search).get('candidate')==='gill';
 const gl=await new GLTFLoader().loadAsync(candidate?'../../art/review/part1/leviathan-gill-candidate.glb':'../../art/3d/part1/leviathan_static.glb');const root=gl.scene;s.add(root);
-const mesh=root.getObjectByName('Boss_Mesh');let pos=makePoser(root,gl.animations.find(a=>a.name==='atk_pressure'));
+const mesh=root.getObjectByName('Boss_Mesh');
+const interruptedPose=createInterruptPoseStudy(root,gl.animations);
+function cancellationAt(){const ct=+document.querySelector('#cancelAt').value;return document.querySelector('#cancelWave').checked?0:ct>=0?ct:Infinity}
+function applyPose(){const phase=interruptedPose.pose(skill.clip,t,cancellationAt()/1000);document.querySelector('#motionInfo').textContent='몸체: '+({attack:'공격',interrupt:'끊긴 자세에서 연결',stagger:'경직',recover:'대기 복귀',idle:'대기'}[phase])+' · 검수용 연결';}
 const kit=(await loadCjs('../../server/field-boss-kit.cjs')).KITS.leviathan;
 const contactStudy=candidate?await createGillContactStudy(s,kit.skills.gill):null;
 const targetStudy=candidate?await createGillTargetStudy(s,kit.skills.gill):null;
@@ -49,8 +53,8 @@ document.querySelector('#sharedWave').disabled=!candidate;
 document.querySelector('#water').onclick=()=>{showWater=!showWater;document.querySelector('#info').textContent='아가미 물살 스터디 · 실제 표면 출발 · 서버 피해 판정 미연결';};
 document.querySelector('#reduced').onchange=async e=>{const revision=++waveRevision,reduced=e.target.checked;water?.dispose();water=createGillWaterStudy(root,s,{reduced});if(candidate){const next=await createGillWaveStudy(s,{reduced});if(revision!==waveRevision)next.dispose();else{waveStudy?.dispose();waveStudy=next}}};
 function updateEffects(){
- const shared=document.querySelector('#sharedWave').checked,ct=+document.querySelector('#cancelAt').value;
- const cancelAt=document.querySelector('#cancelWave').checked?0:ct>=0?ct:Infinity,state={cancelled:t*1000>=cancelAt};
+ const shared=document.querySelector('#sharedWave').checked;
+ const cancelAt=cancellationAt(),state={cancelled:t*1000>=cancelAt};
  if(effect&&skill.clip!=='atk_gill'&&!state.cancelled)fx.update({yaw:0},skill,t*1000);else fx.clear();
  if(showWater&&(!shared||t*1000<skill.hits[0].at))water?.update(skill,t*1000,state);else water?.clear();
  if(showWater&&shared)waveStudy?.update(skill,t*1000,state);else waveStudy?.clear();
@@ -67,7 +71,7 @@ const gillMarkers=GILL_SOCKETS.map((spec,i)=>{
 const socketPosition=new T.Vector3(),socketNormal=new T.Vector3();
 function updateSockets(){for(const a of gillMarkers){a.dot.visible=a.arrow.visible=showSockets&&!!a.emitter;if(!a.dot.visible)continue;a.emitter.worldPosition(socketPosition);a.emitter.worldNormal(socketNormal);a.dot.position.copy(socketPosition);a.arrow.position.copy(socketPosition);a.arrow.setDirection(socketNormal);}}
 document.querySelector('#sockets').onclick=()=>{showSockets=!showSockets;document.querySelector('#info').textContent='청록=왼쪽 · 주황=오른쪽 · 화살표=현재 삼각형 법선 (물살/피해 판정 아님)';};
-document.querySelector('#skill').onchange=e=>{if(recording)return;skill=kit.skills[e.target.value];pos=makePoser(root,gl.animations.find(a=>a.name===skill.clip));t=0;run=false;document.querySelector('#time').value='0';document.querySelector('#record').textContent='선택 기술 전체 녹화';};
+document.querySelector('#skill').onchange=e=>{if(recording)return;skill=kit.skills[e.target.value];t=0;run=false;document.querySelector('#time').value='0';document.querySelector('#record').textContent='선택 기술 전체 녹화';};
 document.querySelector('#effect').onclick=()=>{effect=!effect};
 const marker=new T.Mesh(new T.SphereGeometry(.045,12,8),new T.MeshBasicMaterial({color:0xff44ff,depthTest:false}));marker.visible=false;s.add(marker);
 function view(p,look){c.position.set(...p);c.lookAt(...look)}
@@ -78,9 +82,9 @@ document.querySelector('#head').onclick=()=>view([4,2.5,10],[0,1.1,5.3]);
 document.querySelector('#otherHead').onclick=()=>view([-4,2.5,10],[0,1.1,5.3]);
 document.querySelector('#overhead').onclick=()=>view([0,32,3.5],[0,0,1.5]);
 let t=0,run=false,last=performance.now();document.querySelector('#play').onclick=()=>{run=!run;last=performance.now()};
-document.querySelector('#record').onclick=()=>{if(recording)return;t=0;pos(0);updateEffects();updateSockets();r.render(s,c);last=performance.now();run=true;const stream=cv.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const res=await fetch('http://127.0.0.1:8795/leviathan',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#info').textContent=res.ok?await res.text():'저장 실패';recording=null;};rec.start();};
-document.querySelector('#time').oninput=e=>{run=false;t=+e.target.value;pos(t)};
+document.querySelector('#record').onclick=()=>{if(recording)return;t=0;applyPose();updateEffects();updateSockets();r.render(s,c);last=performance.now();run=true;const stream=cv.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const res=await fetch('http://127.0.0.1:8795/leviathan',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#info').textContent=res.ok?await res.text():'저장 실패';recording=null;};rec.start();};
+document.querySelector('#time').oninput=e=>{run=false;t=Math.max(0,+e.target.value||0);applyPose()};
 const ray=new T.Raycaster();cv.onclick=e=>{const b=cv.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-b.left)/b.width*2-1,1-(e.clientY-b.top)/b.height*2),c);const hit=ray.intersectObject(mesh,true)[0];if(!hit)return;marker.position.copy(hit.point);marker.visible=true;const p=hit.object.worldToLocal(hit.point.clone());document.querySelector('#info').textContent=`${hit.object.name} 표면 좌표 ${p.toArray().map(x=>x.toFixed(5)).join(', ')} · 삼각형 ${hit.faceIndex}`;};
 document.querySelector('#info').textContent=(candidate?'아가미 후보 v2 · 미승인 · ':'')+'표면을 누르면 메시 로컬 좌표가 표시됩니다';view([16,4,3],[0,1,0]);
-function frame(now){let stop=false;if(run){t+=Math.min(.1,(now-last)/1000);if(t>=skill.duration/1000){if(recording){t=skill.duration/1000;run=false;stop=true}else t%=skill.duration/1000}document.querySelector('#time').value=t.toFixed(2)}last=now;pos(t);updateEffects();updateSockets();r.render(s,c);if(stop)recording.stop();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(now){let stop=false;const duration=interruptedPose.duration(skill.clip,cancellationAt()/1000);if(run){t+=Math.max(0,Math.min(.1,(now-last)/1000));if(t>=duration){if(recording){t=duration;run=false;stop=true}else t%=duration}document.querySelector('#time').value=t.toFixed(2)}last=now;applyPose();updateEffects();updateSockets();r.render(s,c);if(stop)recording.stop();requestAnimationFrame(frame)}requestAnimationFrame(frame);
 </script></html>
