@@ -4,6 +4,6 @@
    그래서 트랙마다 보간기를 직접 불러 값을 넣는다. */
 export function makePoser(root, clip) {
   const byName = {}; root.traverse(o => { if (o.name) byName[o.name] = o; });
-  const tracks = clip.tracks.map(tr => { const dot = tr.name.lastIndexOf('.'), node = byName[tr.name.slice(0, dot)], prop = tr.name.slice(dot + 1); return node && ['quaternion', 'position', 'scale'].includes(prop) ? { node, prop, it: tr.createInterpolant() } : null; }).filter(Boolean);
-  return t => { for (const { node, prop, it } of tracks) { const v = it.evaluate(Math.max(0, Math.min(clip.duration, t))); node[prop].fromArray(v); } root.updateMatrixWorld(true); };
+  const tracks = clip.tracks.map(tr => { const dot = tr.name.lastIndexOf('.'), node = byName[tr.name.slice(0, dot)], prop = tr.name.slice(dot + 1); return node && (['quaternion', 'position', 'scale'].includes(prop) || (prop === 'morphTargetInfluences' && node.morphTargetInfluences)) ? { node, prop, it: tr.createInterpolant() } : null; }).filter(Boolean);
+  return t => { for (const { node, prop, it } of tracks) { const v = it.evaluate(Math.max(0, Math.min(clip.duration, t))); if (prop === 'morphTargetInfluences') { for (let i = 0; i < node[prop].length; i++) node[prop][i] = v[i]; } else node[prop].fromArray(v); } root.updateMatrixWorld(true); };
 }

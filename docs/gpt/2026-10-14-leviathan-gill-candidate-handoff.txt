@@ -1,0 +1,40 @@
+레비아탄 아가미 후보 v2 · 2026-10-14 · 보스 검수 브랜치
+
+원작 확인: docs/story/source/제1부_통합본_EP01-28.md §11 아가미
+좌우 부채가 펼쳐져 물을 밀고 방향을 튼다. 입 광선을 아가미 효과로 바꿔 부르지 않는다.
+
+이번 변경
+- 최신 origin/main b2e10237f를 merge. Claude 판교 던전/화면 수정 보존.
+- tools/3d/leviathan-gill-candidate.mjs: 기존 GLB에서 좌우 fan morph와 시간표 생성.
+- art/review/part1/leviathan-gill-candidate.glb (5,312,244 bytes): 검수 전용, 게임 등록 없음.
+- 원본 GLB의 binary prefix, POSITION/NORMAL/UV/index, 재질/텍스처 그대로. 새 morph accessor/channel만 추가.
+- atk_gill: 0.65초 준비 → 1.42초 펼침 → 1.7초까지 유지 → 1.9초 접기 → 2.55초 회수 완료, 3.3초 종료.
+- 기존 idle/stagger/pressure/tidal에는 0 morph 트랙을 넣어 이전 펼침이 남지 않게 했다.
+- makePoser가 morphTargetInfluences도 직접 평가한다. 반복된 정지 시각에도 복원하며 믹서 상태에 기대지 않는다.
+
+실패와 교정
+- 첫 후보 펼침0.48rad: 실제 edge1088/1144가 1.15초에 2.814857배 늘어나 테스트 실패. 게임 사용 금지.
+  대화 루트 output/bosses-kit-2026-10-13/leviathan-gill-rejected-v1.glb 에 보존.
+- v2는0.20rad. 11시각 / 1,980,000 edge 검사, 최대2.096205배, 최대변위0.265026m(원본좌표).
+  이 숫자는 시각 합격 판정이 아니다. 한 장으로 이어진 원본이므로 판 연결부의 늘어남 검수는 계속 필요.
+- 입/얼굴 앞부분(z>=5.57), 꼬리(z<=3.55), 중심축(|x|<=0.34)은 morph로 이동하지 않음.
+- UV seam 동일 위치 정점 사이 틈 없음 검사, 실제 makePoser 반복 hold/clip 전환 검사 통과.
+
+시험과 증거
+- 전체 npm test 1409개: 통과1407 / 실패0 / skip2 (190600ms).
+- 새 candidate 시험3개 포함. source 보존/게임 미등록/비정상 늘어남/반복 pose 평가를 검사.
+- 검수 URL: tools/3d/boss-emitter-review.html?candidate=gill
+  아가미 선택 후 좌우 머리 확대/시간 입력/전체 녹화. 기존 원본 URL도 유지.
+- 대화 루트 output/bosses-kit-2026-10-13:
+  leviathan-gill-right-v2.png / leviathan-gill-left-v2.png
+  videos/leviathan-1791907799933.webm (오른쪽 전체3.3초)
+  videos/leviathan-1791907833603.webm (왼쪽 전체3.3초)
+  videos/leviathan-1791907860990.webm (전신 전체3.3초)
+  세 영상 EOF 디코드 및 각8프레임 샘플 시트 확인. 초반 캡처 색이 이후와 달라 보임 — 녹화 경로 색/초기 프레임 추가 확인 필요.
+  정지 확대와 샘플 영상 확인이지 연속 영상 최종 합격/모바일 성능 합격 아님.
+
+아직 안 한 것
+- gill 실제 발사점/물살 효과/권위 판정 연결: 이번에는 변경 안 함. 기존 gill은 여전히 root-origin.
+- 후보 게임 적용·모바일 LOD·반격/사망 전체 연결 검수. 원본 모델/게임 파일은 보존.
+- 목 조준/후방 사각 대응/차수문 소리 유인, 다른4보스 발사부위와 동작, 박 준장 어깨/코트, 드로퍼 몸.
+- Claude 실제 온라인2인 검수 이후만 main/Render. 이번 브랜치 후보는 자동 배포하지 말 것.
