@@ -56,7 +56,7 @@ export const ZONES = {
         { id: 'platform', s: [-56, 56], t: [5, 13], floor: 'tile', props: [ { k: 'platform', t: 5.4 }, { k: 'pillars', step: 10 }, { k: 'sign', text: '잠시 후 열차가 도착합니다', u: 0.5, color: '#ff8a30', w: 6 } ] },
         { id: 'track', s: [-60, 60], t: [-7, 5], floor: 'gravel', light: 'red', lightStep: 14, props: [ { k: 'rails', t: [-3.5, 1.5] }, { k: 'debris', n: 10 }, { k: 'scratches', n: 2 } ] },
         { id: 'tunnelW', s: [-76, -60], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] }, { k: 'shutters', side: 'far', u: 0.3 } ] },
-        { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] } ] } ] } },
+        { id: 'tunnelE', s: [60, 76], t: [-7, 5], floor: 'gravel', light: 'none', props: [ { k: 'rails', t: [-3.5, 1.5] }, { k: 'subway', u: 0.55, t: -2.5, len: 17, yaw: 0.06 } ] } ] } },   /* 3D: 탈선한 전동차가 동쪽 터널에서 머리를 내민다 */
 
   /* ================= 3. 남산 (필드) · 남산타워 하부 ================= */
   namsan: { title: '남산 · 케이블카 길', kind: 'field', env: 'namsan', osm: 'namsan', px: 90, rules: { mark: true, escape: true }, restart: { zone: 'bunker', gate: 'out' },
@@ -115,7 +115,7 @@ export const ZONES = {
     indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 1.4, fogDist: [8, 42] },
       rooms: [
         { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },
-        { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 16, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 } ] },
+        { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 16, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 }, { k: 'wrecks', n: 12, wreck: 0.7 } ] },   /* 3D: 물에 잠긴 차들 */
         { id: 'flood', s: [260, 360], t: [-8, 8], lightStep: 14, props: [ { k: 'gate', u: 0.9 }, { k: 'debris', n: 8 } ] },
         { id: 'mechIn', s: [300, 316], t: [8, 20], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 }, { k: 'sign', text: '내측 기계실', u: 0.5, color: '#d83a2a', w: 3 } ] },
         { id: 'mechOut', s: [340, 356], t: [-20, -8], h: 4, floor: 'metal', light: 'red', props: [ { k: 'machines', n: 3 } ] } ] } },
@@ -211,7 +211,7 @@ export const ZONES = {
     indoor: { seed: 21, theme: { wall: '#3a3c38', stripe: 'rgba(80,200,120,.35)', floor: 'concrete', h: 6, light: 'green', hemiI: 1.6 },
       rooms: [
         { id: 'mouth', s: [0, 20], t: [-10, 10], h: 9, light: 'warm', props: [ { k: 'debris', n: 4 } ] },
-        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [] },
+        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [ { k: 'wrecks', n: 3, wreck: 0.4, yaw: 0.3, type: 'truck' } ] },   /* 3D: 버려진 군용 트럭 */
         { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [] },
         { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [] },
         { id: 'shop', s: [140, 176], t: [4, 30], h: 8, floor: 'metal', light: 'fluo', props: [ { k: 'machines', n: 8 }, { k: 'shelves', n: 3 } ] },

@@ -8,7 +8,7 @@
      gates · bosses · spawn: 방 id 와 그 안 (u, v) 비율(0~1) 로 찍는다 */
 import { PITCH, SCREEN_ANG, rng, canvasTex, inPoly, bareSpot, lumpy } from './env-lib.js';
 const lumpyGeo = (THREE, r, seed) => { const g = lumpy(new THREE.IcosahedronGeometry(r, 1), 0.22, seed); g.computeVertexNormals(); return g; };   /* 잔해 더미 (3D 꾸밈) */
-import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js'; import { CARD_TIER } from './tree-kit.js';   /* 휴대폰 등급(lite): 얼룩·전선 반 (문서 231 §5) */   /* 3D 필드: 사진 재질 벽·바닥 (문서 231 §2) */
+import { isView3d } from './env-lib.js'; import { FACADE_PHOTO } from './facade-shader.js'; import { phPair, boxWorldUv } from './ph-tex.js'; import { CARD_TIER } from './tree-kit.js'; import { buildCar, grimeMat } from './car-kit.js';   /* 던전 안 차 · 전동차 (문서 231 §5) */   /* 휴대폰 등급(lite): 얼룩·전선 반 (문서 231 §5) */   /* 3D 필드: 사진 재질 벽·바닥 (문서 231 §2) */
 export { PITCH };
 
 export function build(THREE, scene, osm, zone) {
@@ -84,6 +84,9 @@ export function build(THREE, scene, osm, zone) {
 
   /* ---------- 소품 ---------- 방마다 props: [{ k, ... }] — 방 안 무작위 자리(벽에서 1.2 m 띄움) 또는 u,v 지정 */
   const spot = (r, o = {}) => { const u = o.u ?? (0.12 + R() * 0.76), v = o.v ?? (0.12 + R() * 0.76); return [r.s0 + (r.s1 - r.s0) * u, r.t0 + (r.t1 - r.t0) * v]; };
+  /* 차 한 대 (3D: car-kit — 바퀴집·창·불빛·낡음). 모양 난수는 R3 — 자리는 부르는 쪽이 정한다. 돌아오는 값은 길이·폭(막이용) */
+  const carAt = (x, z, rot, { wreck = false, type = null } = {}) => { const ty = type || (R3() < 0.12 ? 'truck' : R3() < 0.6 ? 'sedan' : 'suv'), car = buildCar(THREE, ty, R3, { wreck }); car.position.x = x; car.position.z = z; car.rotation.order = 'YXZ'; car.rotation.y = rot;
+    if (wreck) car.rotation.z = (R3() - .5) * 0.25; car.traverse(m => { if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } }); scene.add(car); const L = (car.userData.car && { sedan: 4.6, suv: 4.7, truck: 7.5 }[ty]) || 4.6; block(x, z, L / 2, 1.0, rot); return car; };
   const PROPS = {
     pillars(r, o) { const st = o.step || 8; for (let s = r.s0 + st / 2; s < r.s1 - 1; s += st) for (let t = r.t0 + st / 2; t < r.t1 - 1; t += st) { const p = FROM(s, t), H = r.h || th.h || 3.6; box(0.8, H, 0.8, o.mat === 'steel' ? steelM : darkM, p[0], H / 2, p[1], SCREEN_ANG); block(p[0], p[1], 0.4, 0.4, SCREEN_ANG); } },
     crates(r, o) { for (let i = 0; i < (o.n || 6); i++) { const [s, t] = spot(r, o), p = FROM(s, t), w = 0.9 + R() * 0.6; box(w, w * 0.8, w, woodM, p[0], w * 0.4, p[1], R() * 3); block(p[0], p[1], w / 2, w / 2, 0); } },
@@ -117,7 +120,24 @@ export function build(THREE, scene, osm, zone) {
       const y = FROM((r.s0 + r.s1) / 2, t - 0.5); box(r.s1 - r.s0, 0.01, 0.3, new THREE.MeshBasicMaterial({ color: 0xd8b030 }), y[0], 0.01, y[1], SCREEN_ANG, false); },
     pipes(r, o) { /* 벽을 따라 배관·케이블 다발 (공동구) */ for (const side of [r.t0 + 0.4, r.t1 - 0.4]) for (let k = 0; k < (o.n || 3); k++) { const c = FROM((r.s0 + r.s1) / 2, side), y = 0.6 + k * 0.45; const p = new THREE.Mesh(new THREE.CylinderGeometry(0.12 + R() * 0.08, 0.12, r.s1 - r.s0, 10), k % 2 ? steelM : rustM); p.position.set(c[0], y, c[1]); p.rotation.z = Math.PI / 2; p.rotation.y = SCREEN_ANG; p.castShadow = true; scene.add(p); } },
     parking(r, o) { /* 주차장 — 칸 선, 기둥, 서 있는 차 */ const lineM = new THREE.MeshBasicMaterial({ color: 0xd8d8c8 }); for (let s = r.s0 + 1; s < r.s1 - 1; s += 2.6) for (const t of [r.t0 + 2.6, r.t1 - 2.6]) { const q = FROM(s, t); box(0.1, 0.01, 5, lineM, q[0], 0.012, q[1], SCREEN_ANG, false);
-        if (R() < (o.cars ?? 0.4)) { const c = FROM(s + 1.3, t); box(1.8, 1.2, 4.4, new THREE.MeshStandardMaterial({ color: [0xd8d8dc, 0x1a1a1e, 0x8a8c94, 0x5a1418][(R() * 4) | 0], roughness: 0.3, metalness: 0.6 }), c[0], 0.6, c[1], SCREEN_ANG); block(c[0], c[1], 0.9, 2.2, SCREEN_ANG); } } },
+        if (R() < (o.cars ?? 0.4)) { const c = FROM(s + 1.3, t), ci = (R() * 4) | 0;   /* R 소비는 2D 와 같게 */
+          if (zone.view3d) carAt(c[0], c[1], SCREEN_ANG + Math.PI / 2, { wreck: R3() < 0.3, type: R3() < 0.5 ? 'sedan' : 'suv' });
+          else { box(1.8, 1.2, 4.4, new THREE.MeshStandardMaterial({ color: [0xd8d8dc, 0x1a1a1e, 0x8a8c94, 0x5a1418][ci], roughness: 0.3, metalness: 0.6 }), c[0], 0.6, c[1], SCREEN_ANG); block(c[0], c[1], 0.9, 2.2, SCREEN_ANG); } } } },
+    wrecks(r, o) { /* 버려진 차들 — 긴 축을 따라 (한강 터널 «부유물·차», 격납고 경사로). 3D 만 */ if (!zone.view3d) return; const L = r.s1 - r.s0, Wd = r.t1 - r.t0, along = L >= Wd, len = along ? L : Wd, wide = along ? Wd : L;
+      for (let i = 0; i < (o.n || 6); i++) { const d = (i + 0.5 + (R3() - .5) * 0.6) / (o.n || 6) * len, off = (R3() - .5) * (wide - 3.2), q = along ? FROM(r.s0 + d, (r.t0 + r.t1) / 2 + off) : FROM((r.s0 + r.s1) / 2 + off, r.t0 + d);
+        carAt(q[0], q[1], (along ? SCREEN_ANG : SCREEN_ANG + Math.PI / 2) + (R3() - .5) * (o.yaw ?? 0.9), { wreck: R3() < (o.wreck ?? 0.6), type: o.type || null }); } },
+    subway(r, o) { /* 전동차 한 량 — 탈선해 기울었다 (2호선 침수 선로, 원작 «잠시 후 열차가 도착합니다»). 3D 만. u: 방 안 자리(0~1, 긴 축) · t: 선로 자리(방 t 기준 오프셋) · len */ if (!zone.view3d) return;
+      const len = o.len || 17, u = o.u ?? 0.5, tt = (r.t0 + r.t1) / 2 + (o.t ?? 0), c = FROM(r.s0 + (r.s1 - r.s0) * u, tt), rot = SCREEN_ANG + (o.yaw || 0), body = grimeMat(THREE, 0x9aa4ac, .45, .6, .35), band = grimeMat(THREE, 0x2a8a5a, .3, .6, .3), glassM2 = new THREE.MeshStandardMaterial({ color: 0x1a2a30, roughness: 0.1, metalness: 0.2, transparent: true, opacity: 0.7 });
+      const g = new THREE.Group(); g.position.set(c[0], 0, c[1]); g.rotation.order = 'YXZ'; g.rotation.y = rot; g.rotation.z = o.tilt ?? 0.11;
+      const mk = (w, h, d, m, x, y, z) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); b.position.set(x, y, z); b.castShadow = true; b.receiveShadow = true; g.add(b); return b; };
+      mk(len, 2.4, 2.9, body, 0, 1.45, 0); mk(len, 0.5, 2.6, band, 0, 0.95, 0); mk(len - 0.6, 0.25, 2.5, body, 0, 2.78, 0);   /* 몸통 · 초록 띠 · 지붕 */
+      for (const sz of [-1, 1]) { mk(len - 1.2, 0.9, 0.06, glassM2, 0, 2.05, sz * 1.46); for (let k = -1; k <= 1; k++) mk(1.3, 1.9, 0.08, grimeMat(THREE, 0x6a7078, .5, .6, .4), k * (len / 3.2), 1.15, sz * 1.47); }   /* 옆 창 띠 · 문 셋 */
+      mk(0.1, 1.0, 2.4, glassM2, len / 2 + 0.03, 2.0, 0); mk(0.3, 0.6, 2.9, body, len / 2, 0.55, 0);   /* 앞 유리 · 앞치마 */
+      for (const x of [-len * 0.34, len * 0.34]) mk(2.4, 0.6, 2.6, grimeMat(THREE, 0x2a2c30, .5, .8, .5), x, 0.32, 0);   /* 대차 */
+      const hl = new THREE.Mesh(new THREE.CircleGeometry(0.16, 10), new THREE.MeshBasicMaterial({ color: 0xffe9b0, toneMapped: false })); hl.position.set(len / 2 + 0.06, 1.1, 0.8); hl.rotation.y = Math.PI / 2; g.add(hl);   /* 한쪽만 살아 있는 전조등 */
+      const L = new THREE.PointLight(0xffe0a0, 9, 12, 1.4); L.position.set(len / 2 + 0.4, 1.1, 0.8); L.userData.pulse = true; g.add(L); lights.push({ x: c[0], y: 1.1, z: c[1], color: '#ffe0a0', intensity: 6, distance: 10 });
+      scene.add(g); block(c[0], c[1], len / 2, 1.6, rot); },
+
     capsules(r, o) { /* 표본 캡슐 — 원형 홀 둘레 */ const c = [(r.s0 + r.s1) / 2, (r.t0 + r.t1) / 2], rad = Math.min(r.s1 - r.s0, r.t1 - r.t0) / 2 - 2; for (let k = 0; k < (o.n || 16); k++) { const a = k / (o.n || 16) * Math.PI * 2, s = c[0] + Math.cos(a) * rad, t = c[1] + Math.sin(a) * rad, p = FROM(s, t);
         const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 2.4, 16), glassM); cap.position.set(p[0], 1.2, p[1]); scene.add(cap); const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.3, 0.9, 4, 8), new THREE.MeshStandardMaterial({ color: 0x8a9a8a, roughness: 0.6, emissive: 0x0a2a1a })); body.position.set(p[0], 1.2, p[1]); scene.add(body);
         const L = new THREE.PointLight(0x60ffb0, 4, 4, 1.8); L.position.set(p[0], 0.3, p[1]); scene.add(L); block(p[0], p[1], 0.6, 0.6); } },

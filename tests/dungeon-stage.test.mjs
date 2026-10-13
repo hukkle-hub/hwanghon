@@ -85,3 +85,12 @@ test('방별 소품 (3D 만): 깨진 유리 조각 · 부푼 벽지 · 격납고
   assert.match(I, /d \+= CARD_TIER\.lite \? 18 : 9\)/); assert.match(I, /d \+= \(CARD_TIER\.lite \? 14 : 7\) \+ R3\(\) \* 6\)/);
   assert.match(Z, /namsan_tower:[\s\S]*?\{ k: 'glass', n: 60 \}, \{ k: 'wallpaper', n: 8 \}/); assert.match(Z, /gyeryong_base:[\s\S]*?\{ k: 'gantry', at: \[0\.3, 0\.75\] \}/); assert.match(Z, /pangyo_lab:[\s\S]*?\{ k: 'glass', n: 40 \}/);
 });
+
+test('던전 안 차 (3D 만): 주차장은 car-kit 진짜 차(R 소비는 2D 와 같게) · 터널·경사로 폐차(wrecks) · 2호선 탈선 전동차(subway: 몸통·초록 띠·창 띠·문 셋·한쪽 전조등·막이)', () => {
+  const I = R('js/mmo/env-indoor.js'), Z = R('js/mmo/zones.js');
+  assert.match(I, /const carAt = \(x, z, rot, \{ wreck = false, type = null \} = \{\}\) => \{[^\n]*buildCar\(THREE, ty, R3, \{ wreck \}\)/);
+  assert.match(I, /const c = FROM\(s \+ 1\.3, t\), ci = \(R\(\) \* 4\) \| 0;[^\n]*\n\s*if \(zone\.view3d\) carAt\(c\[0\], c\[1\], SCREEN_ANG \+ Math\.PI \/ 2,/, '2D 는 상자 그대로 · R 두 번 소비 유지');
+  assert.match(I, /wrecks\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /subway\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/);
+  assert.match(I, /mk\(len, 2\.4, 2\.9, body, 0, 1\.45, 0\); mk\(len, 0\.5, 2\.6, band, 0, 0\.95, 0\);/); assert.match(I, /scene\.add\(g\); block\(c\[0\], c\[1\], len \/ 2, 1\.6, rot\); \},/);
+  assert.match(Z, /tunnelE[^\n]*\{ k: 'subway', u: 0\.55, t: -2\.5, len: 17, yaw: 0\.06 \}/); assert.match(Z, /id: 'bore'[^\n]*\{ k: 'wrecks', n: 12, wreck: 0\.7 \}/); assert.match(Z, /id: 'ramp1'[^\n]*\{ k: 'wrecks', n: 3, wreck: 0\.4, yaw: 0\.3, type: 'truck' \}/);
+});
