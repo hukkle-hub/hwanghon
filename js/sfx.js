@@ -2,8 +2,8 @@
    TW_SFX.unlock() 은 첫 터치/키 입력에서 자동. TW_SFX.play(name) · TW_SFX.ambient(on) · TW_SFX.enabled */
 (function(){
   var combatPack=!!(document.currentScript&&document.currentScript.dataset&&document.currentScript.dataset.pack==='combat');
-  var ctx=null, master=null, amb=null, enabled=true, volume=0.7;
-  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; var compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-8;compressor.knee.value=8;compressor.ratio.value=12;compressor.attack.value=.003;compressor.release.value=.2;master.connect(compressor);compressor.connect(ctx.destination); return ctx; }
+  var ctx=null, master=null, muff=null, amb=null, enabled=true, volume=0.7;   /* muff: 물속 먹먹함 — 마스터 저역 통과 (문서 232) */
+  function ac(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); master=ctx.createGain(); master.gain.value=enabled?volume:0; var compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-8;compressor.knee.value=8;compressor.ratio.value=12;compressor.attack.value=.003;compressor.release.value=.2; muff=ctx.createBiquadFilter(); muff.type='lowpass'; muff.frequency.value=20000; master.connect(muff); muff.connect(compressor); compressor.connect(ctx.destination); return ctx; }
   function unlock(){ var c=ac(); if(!c) return; if(c.state==='suspended') c.resume(); }
   function env(g, t0, a, d, s, r, peak){ g.gain.cancelScheduledValues(t0); g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(peak||1, t0+a); g.gain.exponentialRampToValueAtTime(Math.max(0.0001,(peak||1)*s), t0+a+d); g.gain.exponentialRampToValueAtTime(0.0001, t0+a+d+r); }
   function noise(dur){ var c=ac(), b=c.createBuffer(1, Math.ceil(c.sampleRate*dur), c.sampleRate), d=b.getChannelData(0); for(var i=0;i<d.length;i++) d[i]=Math.random()*2-1; var s=c.createBufferSource(); s.buffer=b; return s; }
@@ -63,6 +63,7 @@
   api.scene=function(name){desired=['explore','boss'].indexOf(name)>=0?name:'off';syncBed();};
   api.diagnostics=function(){return {loaded:Object.keys(buffers).length,context:ctx?ctx.state:'locked',scene:bed?bed.name:'off',voices:active.length,queued:pending.length};};
   api.ambient=function(on){api.scene(on?'explore':'off');};
+  api.muffle=function(k){ if(!ctx||!muff) return; k=Math.max(0,Math.min(1,k||0)); var f=20000*Math.pow(700/20000,k); if(Math.abs(muff.frequency.value-f)>1) muff.frequency.setTargetAtTime(f,ctx.currentTime,0.12); };   /* 0 = 그대로 · 1 = 700 Hz 아래만 (물속) */
   function sampleKey(name,a){
     var detail=a&&typeof a==='object'?a:null,heavy=detail?!!detail.heavy:!!a;
     var key=name==='hit'&&heavy?'hit_heavy':name==='counter'&&a?'counter_perfect':name;

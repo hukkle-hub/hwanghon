@@ -112,7 +112,7 @@ export const ZONES = {
     spawn: { room: 'mouth', u: 0.3, v: 0.5 },
     gates: [ { id: 'out', room: 'mouth', u: 0.2, v: 0.5, to: { zone: 'namtae', gate: 'tunnel' }, label: '터널 입구 · 남태령', kind: 'zone' } ],
     bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
-    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 2.1, fogDist: [9, 46] },   /* 3D 에서 1.4 는 헤드램프를 켜도 검었다 */
+    indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 2.1, fogDist: [9, 46], waterGrade: [[24, 0.15], [120, 0.5], [200, 0.9], [260, 1.15], [330, 1.45]] },   /* 3D: 입구 발목 → 허리 → 가슴 → 차수문 앞 어깨 (L7428~) · 2D 는 water 1.2 한 높이 */   /* 3D 에서 1.4 는 헤드램프를 켜도 검었다 */
       rooms: [
         { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },
         { id: 'bore', s: [24, 260], t: [-6, 6], lightStep: 12, props: [ { k: 'pipes', n: 2 }, { k: 'debris', n: 12 }, { k: 'wrecks', n: 12, wreck: 0.7 } ] },   /* 3D: 물에 잠긴 차들 */
@@ -211,9 +211,9 @@ export const ZONES = {
     indoor: { seed: 21, theme: { wall: '#3a3c38', stripe: 'rgba(80,200,120,.35)', floor: 'concrete', h: 6, light: 'green', hemiI: 1.6 },
       rooms: [
         { id: 'mouth', s: [0, 20], t: [-10, 10], h: 9, light: 'warm', props: [ { k: 'debris', n: 4 } ] },
-        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [ { k: 'wrecks', n: 3, wreck: 0.4, yaw: 0.3, type: 'truck' } ] },   /* 3D: 버려진 군용 트럭 */
-        { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [] },
-        { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [] },
+        { id: 'ramp1', s: [20, 80], t: [-3.5, 3.5], floor: 'asphalt', lightStep: 6, props: [ { k: 'wrecks', n: 3, wreck: 0.4, yaw: 0.3, type: 'truck' }, { k: 'guides' } ] },   /* 3D: 버려진 군용 트럭 */
+        { id: 'bend1', s: [80, 88], t: [-3.5, 20], floor: 'asphalt', lightStep: 6, props: [ { k: 'guides' } ] },
+        { id: 'ramp2', s: [88, 140], t: [13, 20], floor: 'asphalt', lightStep: 6, props: [ { k: 'guides' } ] },   /* 3D: 유도등 초록 점선 «절반쯤 살아서» (L12516) */
         { id: 'shop', s: [140, 176], t: [4, 30], h: 8, floor: 'metal', light: 'fluo', props: [ { k: 'machines', n: 8 }, { k: 'shelves', n: 3 } ] },
         { id: 'hangar', s: [176, 300], t: [-30, 40], h: 30, light: 'fluo', lightStep: 18, props: [ { k: 'vehicles', n: 30 }, { k: 'pillars', step: 30, mat: 'steel' }, { k: 'crates', n: 14 }, { k: 'gantry', at: [0.3, 0.75] } ] },   /* 3D: 천장 크레인 */
         { id: 'corridor', s: [300, 350], t: [2, 6], h: 3.4, floor: 'tile', light: 'fluo', props: [] },

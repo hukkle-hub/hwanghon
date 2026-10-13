@@ -7,8 +7,8 @@ test('던전 물면: map.json water.y 높이에 반투명 잔물결 판 — 2D �
   assert.match(W, /const DWATER = INDOOR && env\.water && env\.water\.y > 0 \?/);
   assert.match(W, /if \(!window\.__sky\) \{ WATER\.uTop\.value = new THREE\.Color\(0x161c20\);[^\n]*WATER\.uSun\.value = new THREE\.Vector3\(0, -1, 0\);/, '실내엔 해가 없다 — 해 반짝임 끔');
   assert.match(W, /waterMat\(THREE, \{ calm: true \}\); m\.transparent = true; m\.opacity = 0\.84; m\.depthWrite = false;/, '반투명 — 물 밑 다리가 비친다');
-  assert.match(W, /w\.position\.set\(c\.x, env\.water\.y, c\.z\); w\.renderOrder = 2; w\.userData\.noCam = true;/);
-  assert.match(W, /DWATER\.ring\.position\.set\(root\.position\.x, DWATER\.y \+ 0\.02, root\.position\.z\)/, '고리는 매 프레임 내 발을 따라간다');
+  assert.match(W, /else \{ w = new THREE\.Mesh\(new THREE\.PlaneGeometry\(900, 900\), m\); w\.rotation\.x = -Math\.PI \/ 2; w\.position\.set\(c\.x, env\.water\.y, c\.z\); \}/); assert.match(W, /w\.renderOrder = 2; w\.userData\.noCam = true;/);
+  assert.match(W, /DWATER\.ring\.position\.set\(root\.position\.x, ENV\.depth \+ 0\.02, root\.position\.z\)/, '고리는 매 프레임 내 발을 따라간다 — 높이는 그 자리 수면');
   const Z = R('js/mmo/zones.js'); assert.match(Z, /gangnam_b2:[\s\S]*?indoor: \{ seed: 3, water: 1\.15/); assert.match(Z, /hangang_tunnel:[\s\S]*?indoor: \{ seed: 8, water: 1\.2/);
   assert.match(R('js/mmo/env-dungeon.js'), /water: \{ y: WATER \}/);
 });
@@ -56,7 +56,7 @@ test('3D 꾸밈 키트 (문서 231 §5): 3D 전용 난수 R3 · 천장 덕트·�
   assert.match(I, /const R3 = rng\(\(spec\.seed \|\| 1\) \* 7919 \+ 3\), OPENINGS = \[\]/, '공용 R 을 안 쓴다 — 2D 굽기·막이 자리가 어긋난다');
   assert.match(I, /if \(zone\.view3d && kind === 'fluo' && R3\(\) < 0\.22\) \{ const tb = box\(1\.4, 0\.06, 0\.14, darkM,[^\n]*tb\.rotation\.z = 0\.42; tb\.position\.y -= 0\.3; continue; \}/);
   assert.match(I, /if \(kind === 'red'\) L\.userData\.pulse = true;/); assert.match(W, /if \(INDOOR\) for \(const L of POOL\) \{ const src = L\.userData\.src; if \(src && src\.userData\.pulse\) L\.intensity = L\.userData\.base \* \(0\.55 \+ 0\.45 \* Math\.sin\(gameNow \/ 640 \+ L\.position\.x \* 0\.7\)\); \}/);
-  assert.match(I, /if \(zone\.view3d && spec\.water\) \{ const q = FROM\(\(sA \+ sB\) \/ 2 - e\.n\[0\] \* 0\.01, \(tA \+ tB\) \/ 2 - e\.n\[1\] \* 0\.01\); box\(len, 0\.42, 0\.03, stainM, q\[0\], spec\.water \+ 0\.12, q\[1\], rot, false\); \}/, '물때 띠');
+  assert.match(I, /if \(zone\.view3d && spec\.water\) \{ const q = FROM\(\(sA \+ sB\) \/ 2 - e\.n\[0\] \* 0\.01, \(tA \+ tB\) \/ 2 - e\.n\[1\] \* 0\.01\), wy = wyAt\(\(sA \+ sB\) \/ 2\); if \(wy > 0\.05\) box\(len, 0\.42, 0\.03, stainM, q\[0\], wy \+ 0\.12, q\[1\], rot, false\); \}/, '물때 띠 — 경사 수면이면 그 자리 높이');
   assert.match(I, /if \(open\) \{ flush\(\); if \(zone\.view3d\) \{ const o = OPENINGS\.at\(-1\);/, '열린 변을 모은다');
   assert.match(I, /if \(w < 1\.5 \|\| w > 7\.5\) continue;[\s\S]*?if \(seen\.has\(key\)\) continue; seen\.add\(key\);/, '문틀 폭 · 중복');
   assert.match(I, /if \(H >= 3 && len >= 6 && r\.floor !== 'tile'\) \{/, '타일 바닥(사무실·연구소)엔 덕트 없음'); assert.match(I, /new THREE\.TubeGeometry\(cv, 10, 0\.014, 4, false\), wireM\)/);
@@ -75,7 +75,7 @@ test('헤드램프 (원작 «헤드램프의 좁은 시야»): 어두운 던전(
   const W = R('world3d.html');
   assert.match(W, /const LAMP = INDOOR && q\.get\('lamp'\) !== '0' && \(\(hemiL && hemiL\.intensity <= 1\.6\) \|\| \(env\.water && env\.water\.y > 0\)\) \?/);
   assert.match(W, /new THREE\.SpotLight\(0xfff1dc, 70, 24, 0\.42, 0\.6, 1\.5\); L\.castShadow = false;/);
-  assert.match(W, /if \(LAMP\) \{ const fx = Math\.sin\(me\.yaw\), fz = Math\.cos\(me\.yaw\); LAMP\.position\.set\(root\.position\.x - fx \* 0\.1, 1\.62, root\.position\.z - fz \* 0\.1\); LAMP\.target\.position\.set\(root\.position\.x \+ fx \* 9, 0\.9, root\.position\.z \+ fz \* 9\); \}/);
+  assert.match(W, /if \(LAMP\) \{ const fx = Math\.sin\(me\.yaw\), fz = Math\.cos\(me\.yaw\); LAMP\.position\.set\(root\.position\.x \+ fx \* 0\.55, 1\.58, root\.position\.z \+ fz \* 0\.55\);[^\n]*LAMP\.target\.position\.set\(root\.position\.x \+ fx \* \(LAMP\.userData\.reach \|\| LAMP_RULE\.reach\), 0\.9, root\.position\.z \+ fz \* \(LAMP\.userData\.reach \|\| LAMP_RULE\.reach\)\); \}/);
 });
 
 test('방별 소품 (3D 만): 깨진 유리 조각 · 부푼 벽지 · 격납고 천장 크레인 · 결정 빛 맥동 · lite 는 얼룩·전선 반', () => {
@@ -93,4 +93,10 @@ test('던전 안 차 (3D 만): 주차장은 car-kit 진짜 차(R 소비는 2D �
   assert.match(I, /wrecks\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /subway\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/);
   assert.match(I, /mk\(len, 2\.4, 2\.9, body, 0, 1\.45, 0\); mk\(len, 0\.5, 2\.6, band, 0, 0\.95, 0\);/); assert.match(I, /scene\.add\(g\); block\(c\[0\], c\[1\], len \/ 2, 1\.6, rot\); \},/);
   assert.match(Z, /tunnelE[^\n]*\{ k: 'subway', u: 0\.55, t: -2\.5, len: 17, yaw: 0\.06 \}/); assert.match(Z, /id: 'bore'[^\n]*\{ k: 'wrecks', n: 12, wreck: 0\.7 \}/); assert.match(Z, /id: 'ramp1'[^\n]*\{ k: 'wrecks', n: 3, wreck: 0\.4, yaw: 0\.3, type: 'truck' \}/);
+});
+
+test('유도등 «절반쯤 살아서 초록의 점선» (계룡 경사로 L12516): 벽 무릎 높이 2.2 m 간격 · 살아 있는 것만 빛 · 3D 만', () => {
+  const I = R('js/mmo/env-indoor.js'), Z = R('js/mmo/zones.js');
+  assert.match(I, /guides\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /const alive = R3\(\) < \(o\.alive \?\? 0\.5\);/); assert.match(I, /box\(0\.28, 0\.06, 0\.06, alive \? onM : offM, q\[0\], 0\.55, q\[1\]/);
+  for (const id of ['ramp1', 'bend1', 'ramp2']) assert.match(Z, new RegExp("id: '" + id + "'[^\\n]*\\{ k: 'guides' \\}"), id);
 });

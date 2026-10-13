@@ -83,6 +83,7 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 #benchCard b{ color:#c9a45e; font-size:18px } #benchCard button{ min-height:64px; min-width:120px; margin:10px 8px 0 0; font:700 16px 'Noto Sans KR',sans-serif; border-radius:10px; border:2px solid #c9a45e; background:#2a1c22; color:#f0e2d0 }
 #dbg{ position:absolute; left:16px; top:calc(max(12px,env(safe-area-inset-top)) + 96px); font:11px/1.5 monospace; color:#9fd8e8; background:rgba(0,0,0,.5); padding:4px 6px; white-space:pre; z-index:9; pointer-events:none; } #dbg[hidden]{ display:none; }
 #net{ position:absolute; top:calc(max(12px,env(safe-area-inset-top)) + 72px); left:16px; font-size:11px; color:var(--dim); }
+#envChip:not([hidden]){ position:absolute; top:calc(max(12px,env(safe-area-inset-top)) + 90px); left:16px; font-size:11px; font-weight:700; color:#bfe0e8; background:rgba(10,20,26,.55); padding:3px 8px; border-radius:6px; border:1px solid rgba(120,190,210,.35); max-width:min(60vw,360px); }   /* 전투 환경 띠 (문서 232) — 물 깊이·이동·회피·소리 */
 #gatebtn{ position:absolute; left:50%; bottom:calc(max(14px,env(safe-area-inset-bottom)) + 150px); transform:translateX(-50%); pointer-events:auto; min-height:64px; padding:10px 22px; border-radius:14px; border:2px solid rgba(232,184,96,.8); background:rgba(30,14,20,.75); color:var(--ink); font:900 17px 'Noto Sans KR',sans-serif; text-align:center; touch-action:none; }
 #gatebtn small{ display:block; font-weight:500; font-size:12px; color:var(--dim); }
 #gatebtn.dg{ border-color:rgba(232,90,74,.85); }
@@ -111,7 +112,7 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 <body>
 <canvas id="c"></canvas>
 <div id="mini" hidden></div><div id="areaName"></div>
-<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="ctr">카운터<small>옆·뒤 = 회피</small></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD 달리기 · Shift+WASD 걷기 · J/Space 공격 · L 카운터(옆·뒤 = 회피) · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
+<div id="benchCard" hidden></div><div id="hud"><div id="title">—<small>3D 필드 시험판</small></div><div id="ring"><i></i></div><div id="hpw"><i id="hp"></i></div><div id="dead" hidden>쓰러졌다<br><small>5초 뒤 출발점</small></div><div id="dmgs"></div><div id="net"></div><div id="envChip" hidden></div><div id="dbg" hidden></div><div id="toast" hidden></div><div id="gatebtn" hidden></div><div class="btn" id="ctr">카운터<small>옆·뒤 = 회피</small></div><div class="btn" id="atk">공격</div><div class="btn" id="bagBtn">가방</div><div class="btn" id="mapBtn">지도</div><div class="btn skb" id="sk1" hidden></div><div class="btn skb" id="sk2" hidden></div><div class="btn skb" id="sk3" hidden></div><div class="btn skb" id="sk4" hidden></div><div id="hint">왼쪽: 이동 · 오른쪽 끌기: 카메라 · 두 손가락/휠: 거리 — PC: WASD 달리기 · Shift+WASD 걷기 · J/Space 공격 · L 카운터(옆·뒤 = 회피) · K 회피 · E 이동</div><div id="osm">지도 데이터 © OpenStreetMap contributors</div></div>
 <div id="hurt"></div><div id="load">3D 필드를 세우는 중…</div><div id="travel"></div><div id="regionCard"></div><div id="kmap" hidden><button id="kmapX">닫기</button></div><script>/* 이동 카드를 모듈보다 먼저 — 모듈을 받는 동안 «3D 필드를 세우는 중…» 맨 글자가 번쩍였다 (문서 219) */
 try { var tv = JSON.parse(sessionStorage.getItem('tw:travel') || 'null'), zq = new URLSearchParams(location.search).get('zone'); if (tv && tv.to === zq && Date.now() - tv.at < 120000) { var L0 = document.getElementById('load'), e = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, ''); }; L0.className = 'tv'; L0.innerHTML = '<b>' + e(tv.toTitle || zq) + '</b><small>' + e(tv.label) + '</small><i>' + e(tv.fromTitle) + '에서 길을 따라 오는 중…</i>'; } } catch (err) {}
 </script>
@@ -148,6 +149,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH } from './js/mmo/env-rules.js'; import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -361,7 +363,7 @@ const fieldLocal = { players: new Map([['me', P]]), rng: Math.random,
   bossStrike(o, p, hit, now) { if (p.dead) return null;
     if (now < p.invulnUntil || now < p.dodgeUntil) { evadeFx(now, false); if (o.combat && now >= p.invulnUntil) COMBAT.notePlayerResult(o, p.id, true); return { evade: true }; }
     const amount = Math.max(1, Math.round(p.maxHp * hit.damage * (now < (p.buffUntil || 0) ? 1 - (p.buffReduce || 0) : 1))); p.hp = Math.max(0, p.hp - amount);   /* 결의류: 받는 피해 감소 (서버 bossStrike buffMul) */
-    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; }
+    if (hit.knock) { let dx = p.x - o.x, dz = p.z - o.z, d = Math.hypot(dx, dz); if (d < .01) { dx = Math.sin(o.yaw || 0); dz = Math.cos(o.yaw || 0); d = 1; } p.x += dx / d * hit.knock; p.z += dz / d * hit.knock; collide(p); root.position.x = p.x; root.position.z = p.z; if (ENV.band.spin) { ENV.spinT = KNOCK_SPIN.dur; ENV.splashT = SPLASH.dur; } }
     floatAt('−' + amount.toLocaleString('ko-KR'), 'taken', root.position, 1.8); hurtT = .42; shakeT = Math.max(shakeT, p.hp <= 0 ? .55 : .28);
     if (p.hp <= 0) { p.dead = true; p.respawnAt = now + RESPAWN_TIME; busy = 0; } if (o.combat) COMBAT.notePlayerResult(o, p.id, false); return { amount, dead: p.dead }; } };
 const doms = [], fbs = [];   /* fbs: 필드 보스(클레이브 등) — 아래 «필드 보스» 에서 채운다 */
@@ -387,9 +389,16 @@ if (INDOOR) { scene.fog.near = env.fogDist ? env.fogDist[0] : 16; scene.fog.far 
    잔물결 웅덩이 재질(calm)을 쓰되 하늘 돔이 없으니 비칠 «하늘» 은 어두운 천장색으로, 해는 없음 */
 const DWATER = INDOOR && env.water && env.water.y > 0 ? (() => { if (!window.__sky) { WATER.uTop.value = new THREE.Color(0x161c20); WATER.uHor.value = new THREE.Color(0x3a4a50); WATER.uFogc.value = skyCol.clone(); WATER.uSun.value = new THREE.Vector3(0, -1, 0); WATER.uSunc.value = new THREE.Color(0x000000); }   /* 비칠 «하늘» = 어두운 천장 — 비스듬히 보면 수면이 희끗하게 선다(프레넬). 첫 판 0x06080a 는 유리판처럼 안 읽혔다 */
   const m = waterMat(THREE, { calm: true }); m.transparent = true; m.opacity = 0.84; m.depthWrite = false; m.color.setHex(0x263431);   /* 탁한 녹회색 — 다리는 비치되 물이라고 읽힐 만큼 */
-  const c = env.spawn || meta.spawn || { x: 0, z: 0 }, w = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), m); w.rotation.x = -Math.PI / 2; w.position.set(c.x, env.water.y, c.z); w.renderOrder = 2; w.userData.noCam = true; w.name = 'dwater'; w.frustumCulled = false; scene.add(w);
+  const c = env.spawn || meta.spawn || { x: 0, z: 0 }, G = env.water.grade, A = env.water.ang || 0, sOf = (x, z) => x * Math.cos(A) - z * Math.sin(A);
+  /* 깊이 경사 (문서 232 §1, 한강 터널): 길 좌표 s 를 따라 [s, y] 표를 보간 — 수면은 s 방향 띠(꺾인 판), 깊이는 yAt(x, z) */
+  const yAt = G ? (x, z) => { const sv = sOf(x, z); if (sv <= G[0].s) return G[0].y; for (let i = 1; i < G.length; i++) if (sv <= G[i].s) { const a = G[i - 1], b = G[i]; return a.y + (b.y - a.y) * (sv - a.s) / Math.max(1e-6, b.s - a.s); } return G[G.length - 1].y; } : () => env.water.y;
+  let w; if (G) { const pts = [{ s: G[0].s - 400, y: G[0].y }, ...G, { s: G[G.length - 1].s + 400, y: G[G.length - 1].y }], pos = [], idx = [], ca = Math.cos(A), sa = Math.sin(A);
+    for (const p of pts) for (const t of [-450, 450]) pos.push(p.s * ca - t * sa, p.y, -p.s * sa - t * ca); for (let i = 0; i < pts.length - 1; i++) { const k = i * 2; idx.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); }
+    const bg = new THREE.BufferGeometry(); bg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); bg.setIndex(idx); bg.computeVertexNormals(); w = new THREE.Mesh(bg, m); }
+  else { w = new THREE.Mesh(new THREE.PlaneGeometry(900, 900), m); w.rotation.x = -Math.PI / 2; w.position.set(c.x, env.water.y, c.z); }
+  w.renderOrder = 2; w.userData.noCam = true; w.name = 'dwater'; w.frustumCulled = false; scene.add(w);
   const ring = new THREE.Mesh(new THREE.RingGeometry(0.3, 0.42, 32), new THREE.MeshBasicMaterial({ color: 0xbfe6ee, transparent: true, opacity: 0.3, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.renderOrder = 3; scene.add(ring);   /* 발 둘레 물결 — 물이 허리까지라 발밑 그늘 대신 */
-  return { mesh: w, ring, y: env.water.y }; })() : null; if (DWATER) window.__DWATER = DWATER;
+  return { mesh: w, ring, y: env.water.y, yAt, graded: !!G }; })() : null; if (DWATER) window.__DWATER = DWATER;
 /* 형광등 깜빡임 (원작 «3초 켜짐. 1초 꺼짐» — map.json flicker, 2D 와 같은 박자): 꺼지면 반구광 0.35 · 가까운 점광 0.12 · 형광등 막대는 어둡게. 켜지는 순간 0.08~0.18 초는 더듬는다 */
 const FLICK = INDOOR && env.flicker ? { on: env.flicker.on || 3, off: env.flicker.off || 1, state: -1, tubes: [], hemi0: hemiL ? hemiL.intensity : 0 } : null;
 /* 헤드램프 (문서 231 §5, 원작 «헤드램프의 좁은 시야») — 어두운 던전(반구광 1.6 아래 · 물 찬 곳)에서 영웅 머리에서 앞을 비추는 좁은 빛. 카메라 뒤가 아니라 영웅 자리에서 — 벽에 그림자가 생긴다. ?lamp=0 끔 */
@@ -398,6 +407,22 @@ if (FLICK) scene.traverse(o => { if (o.isMesh && o.material && o.material.isMesh
 /* 천장에서 떨어지는 물 (문서 231 §4) — 침수 던전만: 비 줄기 재질을 드물게(비 세기 0.14 — 줄 14 %만 남는다) · 물면 위에 튀는 고리. 실내는 날씨를 안 돌리니 uRain 을 여기서 고정한다 (?drip=0 끔) */
 const DRIP = DWATER && q.get('drip') !== '0' ? (() => { WX.uRain.value = 0.14; const r = rainStreaks(THREE, { n: MOBILE ? 90 : 140, box: [18, 5.5, 18] }), sp = rainSplashes(THREE, { n: MOBILE ? 40 : 70, box: 12 });
   sp.U.uY.value = DWATER.y + 0.02; r.U.uCol.value.setRGB(0.5, 0.56, 0.6); sp.U.uCol.value.setRGB(0.5, 0.56, 0.6); scene.add(r.mesh, sp.mesh); return { r, sp }; })() : null;
+/* 전투 환경 (문서 232): 물 깊이 띠 → 이동·회피·공격 지연·소리·시야·뜸 · 밀려나면 반 바퀴 · 부유물이 보스 예고를 알린다. 숫자는 js/mmo/env-rules.js 한 장 */
+const ENV = { depth: 0, band: WATER_BANDS[0], spinT: 0, pend: null, fromQueue: false, fog0: null, wetT: 0, splashT: 0, chip: document.getElementById('envChip') }; window.__ENV = ENV;
+const FLOAT = DWATER && q.get('floaters') !== '0' ? floaters(THREE, { n: MOBILE ? 90 : 160 }) : null; if (FLOAT) scene.add(FLOAT.mesh);
+const FLOW_V = new THREE.Vector2(), FLOW_IDLE = new THREE.Vector2(FLOATERS.idle, FLOATERS.idle * 0.4);
+function envTick(dt) { if (!DWATER) return; const d = DWATER.yAt(root.position.x, root.position.z), b = waterBand(d); ENV.depth = d;
+  if (ENV.wetT > 0) { ENV.wetT -= dt; if (ENV.wetT <= 0 && b.id === 'dry') { ENV.wetT = 0; ENV.chip.hidden = true; } else if (b.id === 'dry' && (frames & 7) === 0) ENV.chip.textContent = envSummary(b, ENV.wetT); }   /* 젖은 옷은 서서히 마른다 */
+  if (b !== ENV.band) { if (b.id === 'dry' && ENV.band.min >= WATER_BANDS.find(x => x.id === WET.minBand).min) ENV.wetT = WET.dur;   /* 허리 위 물에서 나왔다 — «젖은 테크웨어의 무게» */ ENV.band = b; const sf = window.TW_SFX; if (sf && sf.muffle) sf.muffle(b.hear);   /* 소리 먹먹함 — 마스터 저역 통과 */
+    if (scene.fog) { ENV.fog0 ||= [scene.fog.near, scene.fog.far]; scene.fog.near = ENV.fog0[0] * b.vis; scene.fog.far = ENV.fog0[1] * (0.7 + 0.3 * b.vis); }   /* «물속에서 눈은 느리고 좁았지만» */
+    if (LAMP) { const reach = b.id === 'shoulder' ? LAMP_RULE.deepReach : LAMP_RULE.reach; LAMP.distance = reach * 2.6; LAMP.userData.reach = reach; }
+    const t = envSummary(b, ENV.wetT); ENV.chip.hidden = !t; ENV.chip.textContent = t; }
+  if (ENV.splashT > 0) ENV.splashT -= dt;
+  if (ENV.pend && gameNow >= ENV.pend.at) { const f = ENV.pend.fn; ENV.pend = null; ENV.fromQueue = true; try { f(); } finally { ENV.fromQueue = false; } }   /* 물의 저항 — 반 박자 늦게 나가는 공격 */
+  if (ENV.spinT > 0) { const k = Math.min(dt, ENV.spinT); me.yaw += Math.PI * 2 * KNOCK_SPIN.turns * k / KNOCK_SPIN.dur; root.rotation.y = me.yaw; ENV.spinT -= dt; }   /* «몸이 물속에서 반 바퀴 돌았다» */
+  if (FLOAT) { let flow = null; for (const o of fbs) { const tell = (o.fx && o.fx.telling) || (o.kfx && o.kfx.telling); if (!tell || !o.root.visible) continue; const dx = root.position.x - o.root.position.x, dz = root.position.z - o.root.position.z, dd = Math.hypot(dx, dz); if (dd > FLOATERS.reach || dd < 0.01) continue; flow = FLOW_V.set(dx / dd, dz / dd).multiplyScalar(FLOATERS.push); break; }
+    cam.getWorldDirection(LEAF_F); FLOAT.tick(dt, root.position, LEAF_F, d, flow || FLOW_IDLE); }   /* 부유물: 예고 중인 보스에서 멀어지는 쪽으로 밀린다 */
+  if (DRIP) DRIP.sp.U.uY.value = d + 0.02; }
 /* 휴대폰: 카메라 먼 면을 안개 끝(+10 m)까지만 — 안개에 다 묻힌 것까지 그리던 걸 뺀다. 남태령 823 → 547 · 강남 646 → 544 그리기 (Pixel 7, 문서 206 §13).
    달라지는 건 지평선의 다 묻힌 실루엣 몇 줄뿐이라 데스크톱은 그대로 둔다. 하늘 돔도 먼 면 안으로 줄인다 */
 if (MOBILE && q.get('far') !== '0') { cam.far = scene.fog.far + 10; cam.updateProjectionMatrix(); if (window.__sky) window.__sky.scale.setScalar((cam.far - 5) / 480); }
@@ -462,7 +487,7 @@ const fh = { id: ME, root, get weapon() { return hero.weapon; }, act: new Proxy(
 feel.attachTrail(fh);
 const reachOf = b => 2.5 + Math.min(4, (b.h || 3) * 0.4);   /* mmo.html · 서버와 같다 */
 let dodgeT = 0, shakeT = 0, hurtT = 0;
-function attack() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
+function attack() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (ENV.band.atk && !ENV.fromQueue) { if (!ENV.pend) ENV.pend = { fn: attack, at: gameNow + ENV.band.atk }; return; }   /* «물의 저항 때문에 반 박자 느렸지만» — 통째로 늦게 나간다(접점 시각은 그대로) */ if (busy > 0 || P.dead) return; const clip = 'attack1'; if (!hero.clips[clip]) return;
   combatUntil=gameNow+6000;hero.play(clip, 'atk' + (++atkSeq)); busyClip = clip; busy = hero.clips[clip].duration; busyT = 0; busyDef = defCancelAt(busy, [contactOf(ME, clip)]); feel.swing(fh, clip); strike(null); }
 /* 가장 가까운 보스(닿는 거리) → 없으면 몬스터. sk = { i, mult, hits } (스킬) · null (기본 공격). 맞을 대상이 없으면 false */
 function strike(sk) {
@@ -512,7 +537,7 @@ let pdN = 0;
 function evadeFx(at, online) { if (isPerfect(P.dodgeAt, at, online)) { floatAt('완벽 회피', 'evade', root.position, 2.1); perfectDodgeFx(scene, hero.model, { reduced: REDUCED }); pdN++; } else floatAt('회피', 'evade', root.position, 1.9); }
 /* 카운터 단추 (디렉터 손그림 2026-10-13: «이동키 · 카운터 · 공격 · 스킬») — 던전 L 단추와 같은 뜻: 이동키를 옆·뒤로 밀고 있으면 회피, 아니면 «맞대기».
    맞대기 = 짧은 counter 클립 한 타 — 판정은 공격과 같은 길(strike → 서버 hit · 혼자 연습 tryCounter): 예고의 반격 창 안에 닿으면 반격(×1.65 · 보스 경직), 밖이면 보통 한 타. 서버는 손대지 않는다 */
-function counter() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (P.dead) return;
+function counter() { if (STAGE && STAGE.locked) { STAGE.skip(); return; } if (ENV.band.atk && !ENV.fromQueue) { if (!ENV.pend) ENV.pend = { fn: counter, at: gameNow + ENV.band.atk }; return; } if (P.dead) return;
   const sx = stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), sy = stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
   if (Math.hypot(sx, sy) > 0.3 && sy < 0.6) return dodge();   /* 옆·뒤 = 회피 (앞으로 밀며 누르면 맞대기) */
   if (busy > 0 && busyT < busyDef) return; const clip = hero.clips.counter ? 'counter' : 'attack1'; if (!hero.clips[clip]) return;
@@ -754,18 +779,18 @@ function tick() { perf.begin();
   aviBlink(gameNow / 1000, lampK);   /* 항공 장애등 깜빡임 (문서 229 §4) */
   if (FLICK) { const T = FLICK.on + FLICK.off, ph = (gameNow / 1000) % T, off = ph > FLICK.on, stut = ph > 0.08 && ph < 0.18, st = off ? 0 : stut ? 2 : 1;
     if (st !== FLICK.state) { FLICK.state = st; flickK = off ? 0.12 : stut ? 0.45 : 1; if (hemiL) hemiL.intensity = FLICK.hemi0 * (off ? 0.35 : stut ? 0.7 : 1); for (const t of FLICK.tubes) t.material.color.setHex(off ? 0x161a1e : stut ? 0x7a8a90 : 0xeaf8ff); nearLights(root.position); } }
-  if (DWATER) { DWATER.ring.position.set(root.position.x, DWATER.y + 0.02, root.position.z); const k = 1 + 0.1 * Math.sin(gameNow / 170); DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = moveSpeed > 0.5 ? 0.5 : 0.28; }
+  if (DWATER) { envTick(dt); DWATER.ring.position.set(root.position.x, ENV.depth + 0.02, root.position.z); const sk = ENV.splashT > 0 ? 1 + (SPLASH.scale - 1) * (1 - ENV.splashT / SPLASH.dur) : 1, k = (1 + 0.1 * Math.sin(gameNow / 170)) * sk; DWATER.ring.scale.set(k, k, 1); DWATER.ring.material.opacity = (ENV.splashT > 0 ? 0.7 * ENV.splashT / SPLASH.dur : moveSpeed > 0.5 ? 0.5 : 0.28); DWATER.ring.visible = ENV.depth > 0.05; }   /* 물보라: 밀려나면 고리가 터진다 */
   if (!net && P.dead && gameNow >= P.respawnAt) { const s0 = env.spawn || meta.spawn; root.position.set(s0.x, 0, s0.z); P.hp = P.maxHp; P.dead = false; P.invulnUntil = gameNow + RESPAWN_GUARD; P.dodgeUntil = 0; }
   const lockMove = STAGE && STAGE.locked, ix = lockMove ? 0 : stick.x + (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = lockMove ? 0 : stick.y + (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);   /* 보스 등장·사망 장면 동안 내 몸은 멈춘다 (문서 221) */
   if (intro && Math.abs(ix) + Math.abs(iy) > 0.2) { intro = null; document.body.classList.remove('intro'); }   /* 움직이면 도입 장면을 끊고 평소 카메라로 (부드럽게 따라온다) */
   const m = Math.min(1, Math.hypot(ix, iy));
   const rate = feel.rate(fh), adt = dt * rate;
-  if (dodgeT > 0) { dodgeT -= dt; const sp = 3.4 * rate; root.position.x -= Math.sin(me.yaw) * sp * dt; root.position.z -= Math.cos(me.yaw) * sp * dt; collide(root.position); }   /* 뒤로 반 걸음 */
+  if (dodgeT > 0) { dodgeT -= dt; const sp = 3.4 * rate * ENV.band.dodge * (ENV.wetT > 0 ? WET.dodge : 1); root.position.x -= Math.sin(me.yaw) * sp * dt; root.position.z -= Math.cos(me.yaw) * sp * dt; collide(root.position); }   /* 뒤로 반 걸음 */
   const canMove=!photo&&busy<=0&&!P.dead&&dodgeT<=0,walkKey=keys.ShiftLeft||keys.ShiftRight;
-  moveSpeed=canMove?approachSpeed(moveSpeed,m>.05?movementSpeed(m,walkKey?1.5:4.8):0,dt):0;
+  moveSpeed=canMove?approachSpeed(moveSpeed,m>.05?movementSpeed(m,walkKey?1.5:4.8)*moveK(ENV.band,walkKey?0.3:m)*wetK(ENV.wetT):0,dt):0;   /* 물의 저항 (문서 232): 띠마다 이동 배율 · 달리면(스틱 끝) 뜨며 더 느리다 */
   const oldX=root.position.x,oldZ=root.position.z;
   if(canMove&&moveSpeed>0){
-    if(m>.05){const fx=-Math.sin(camS.yaw),fz=-Math.cos(camS.yaw),rx=-fz,rz=fx,dx=rx*ix+fx*iy,dz=rz*ix+fz*iy,yaw=Math.atan2(dx,dz),d=Math.atan2(Math.sin(yaw-me.yaw),Math.cos(yaw-me.yaw));me.yaw+=d*(1-Math.exp(-dt*14));root.rotation.y=me.yaw;}
+    if(m>.05){const fx=-Math.sin(camS.yaw),fz=-Math.cos(camS.yaw),rx=-fz,rz=fx,dx=rx*ix+fx*iy,dz=rz*ix+fz*iy,yaw=Math.atan2(dx,dz),d=Math.atan2(Math.sin(yaw-me.yaw),Math.cos(yaw-me.yaw));me.yaw+=d*(1-Math.exp(-dt*14));me.yaw+=wobble(ENV.band,walkKey?0.3:m,gameNow/1000)*dt;root.rotation.y=me.yaw;}   /* «발 들면 몸이 뜹니다. 뜨면 방향을 잃어요» */
     root.position.x+=Math.sin(me.yaw)*moveSpeed*dt;root.position.z+=Math.cos(me.yaw)*moveSpeed*dt;collide(root.position);
   }
   const actualMoveSpeed=Math.hypot(root.position.x-oldX,root.position.z-oldZ)/Math.max(.001,dt);
@@ -804,7 +829,7 @@ function tick() { perf.begin();
     if (SEARCH) SEARCH.update(cam.position, WIND.value, nk); if (FLIES) FLIES.follow(cam.position, LEAF_F, nk * (1 - WX.uRain.value)); }
   if (LEAVES || RAIN) { cam.getWorldDirection(LEAF_F); if (LEAVES) LEAVES.follow(cam.position, LEAF_F); if (RAIN) { RAIN.follow(cam.position, LEAF_F); SPLASH.follow(cam.position, LEAF_F); } }
   if (DRIP) { cam.getWorldDirection(LEAF_F); DRIP.r.follow(cam.position, LEAF_F); DRIP.sp.follow(cam.position, LEAF_F); }
-  if (LAMP) { const fx = Math.sin(me.yaw), fz = Math.cos(me.yaw); LAMP.position.set(root.position.x - fx * 0.1, 1.62, root.position.z - fz * 0.1); LAMP.target.position.set(root.position.x + fx * 9, 0.9, root.position.z + fz * 9); }
+  if (LAMP) { const fx = Math.sin(me.yaw), fz = Math.cos(me.yaw); LAMP.position.set(root.position.x + fx * 0.55, 1.58, root.position.z + fz * 0.55);   /* 머리 앞 0.55 m — 머리 자리에 두면 내 얼굴이 원뿔 안에 들어가 하얗게 탔다 */ LAMP.target.position.set(root.position.x + fx * (LAMP.userData.reach || LAMP_RULE.reach), 0.9, root.position.z + fz * (LAMP.userData.reach || LAMP_RULE.reach)); }
   if (INDOOR) for (const L of POOL) { const src = L.userData.src; if (src && src.userData.pulse) L.intensity = L.userData.base * (0.55 + 0.45 * Math.sin(gameNow / 640 + L.position.x * 0.7)); }   /* 비상등 맥동 (문서 231 §5) */
   if (sun && q.get('cloud') !== '0') { const sy = sunDir.y / (sunDir.length() || 1); CLOUDK.value = 0.3 * Math.min(1, Math.max(0, (sy - 0.08) / 0.45)) * Math.min(1, sun.intensity / (sunI0 || 1)); }   /* 낮에 가장 진하고 밤(달빛)엔 거의 없다 */
   if (window.__sky && window.__sky.material.uniforms.time) window.__sky.material.uniforms.time.value += dt;   /* 구름이 천천히 흐른다 */

@@ -21,6 +21,8 @@ export function build(THREE, scene, osm, zone) {
   const inRoom = (s, t, pad = 0) => rooms.some(r => s > r.s0 - pad && s < r.s1 + pad && t > r.t0 - pad && t < r.t1 + pad);
   const at = (id, u = 0.5, v = 0.5) => { const r = roomById(id); return FROM(r.s0 + (r.s1 - r.s0) * u, r.t0 + (r.t1 - r.t0) * v); };
   const PHOTO = isView3d() && FACADE_PHOTO.on;
+  /* 물 깊이 경사 (문서 232 §1): theme.waterGrade = [[s, y], …] — 한강 터널 «삼백 미터 지점부터 물… 허리, 가슴, 그리고 어깨» (L7428~L7430). 없으면 spec.water 한 높이 */
+  const wyAt = sv => { const g = th.waterGrade; if (!g || !g.length) return spec.water || 0; if (sv <= g[0][0]) return g[0][1]; for (let i = 1; i < g.length; i++) if (sv <= g[i][0]) { const [s0, y0] = g[i - 1], [s1, y1] = g[i]; return y0 + (y1 - y0) * (sv - s0) / Math.max(1e-6, s1 - s0); } return g[g.length - 1][1]; };
   const R3 = rng((spec.seed || 1) * 7919 + 3), OPENINGS = [], ceilM = zone.view3d && PHOTO ? Object.assign(new THREE.MeshStandardMaterial({ ...phPair(THREE, 'concrete_layers', { normalScale: 0.7 }), roughness: 0.95, color: 0x5a5c60 }), { userData: { rep: 2.6 } }) : null;   /* R3: 3D 꾸밈 전용 난수 — 공용 R 을 쓰면 2D 굽기·막이 자리가 어긋난다 (문서 231 §5) */
   const box = (w, h, d, mat, x, y, z, rotY = 0, cast = true) => { const m = new THREE.Mesh(mat.userData && mat.userData.rep ? boxWorldUv(new THREE.BoxGeometry(w, h, d), w, h, d, mat.userData.rep) : new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.rotation.y = rotY; m.castShadow = cast; m.receiveShadow = true; scene.add(m); return m; };
   const block = (x, z, hw, hd, rot = 0) => blockers.push({ x: +x.toFixed(2), z: +z.toFixed(2), hw: +hw.toFixed(2), hd: +hd.toFixed(2), rot: +rot.toFixed(4) });
@@ -64,7 +66,7 @@ export function build(THREE, scene, osm, zone) {
       const flush = () => { if (!run) return; const [u0, u1] = run, sA = e.a[0] + (e.b[0] - e.a[0]) * u0, tA = e.a[1] + (e.b[1] - e.a[1]) * u0, sB = e.a[0] + (e.b[0] - e.a[0]) * u1, tB = e.a[1] + (e.b[1] - e.a[1]) * u1;
         const mid = FROM((sA + sB) / 2 + e.n[0] * 0.18, (tA + tB) / 2 + e.n[1] * 0.18), len = Math.hypot(sB - sA, tB - tA), along = e.n[0] === 0, rot = along ? SCREEN_ANG : SCREEN_ANG + Math.PI / 2;
         box(len + 0.05, h, 0.36, cut ? cutM : wallM, mid[0], h / 2, mid[1], rot); block(mid[0], mid[1], len / 2 + 0.03, 0.26, rot); wallN++; run = null;
-        if (zone.view3d && spec.water) { const q = FROM((sA + sB) / 2 - e.n[0] * 0.01, (tA + tB) / 2 - e.n[1] * 0.01); box(len, 0.42, 0.03, stainM, q[0], spec.water + 0.12, q[1], rot, false); } };   /* 물때 — 벽 안쪽 수면 높이에 어두운 띠 (문서 231 §5) */
+        if (zone.view3d && spec.water) { const q = FROM((sA + sB) / 2 - e.n[0] * 0.01, (tA + tB) / 2 - e.n[1] * 0.01), wy = wyAt((sA + sB) / 2); if (wy > 0.05) box(len, 0.42, 0.03, stainM, q[0], wy + 0.12, q[1], rot, false); } };   /* 물때 — 벽 안쪽 수면 높이에 어두운 띠 (문서 231 §5) */
       for (let j = 0; j < k; j++) { const u0 = j / k, u1 = (j + 1) / k, um = (u0 + u1) / 2, s = e.a[0] + (e.b[0] - e.a[0]) * um, t = e.a[1] + (e.b[1] - e.a[1]) * um;
         const open = rooms.some(o => o !== r && s + e.n[0] * 0.6 > o.s0 && s + e.n[0] * 0.6 < o.s1 && t + e.n[1] * 0.6 > o.t0 && t + e.n[1] * 0.6 < o.t1);
         if (open) { flush(); if (zone.view3d) { const o = OPENINGS.at(-1); if (o && o.e === e && o.r === r && Math.abs(o.u1 - u0) < 1e-6) o.u1 = u1; else OPENINGS.push({ e, r, u0, u1 }); } } else run = run ? [run[0], u1] : [u0, u1]; }
@@ -166,6 +168,11 @@ export function build(THREE, scene, osm, zone) {
         box(span, 0.9, 0.5, steelM, c[0], H - 1.6, c[1], rot, false); box(span, 0.12, 1.4, rustM, c[0], H - 2.1, c[1], rot, false);
         const tr = along ? FROM(r.s0 + L * u, r.t0 + Wd * (0.3 + R3() * 0.4)) : FROM(r.s0 + L * (0.3 + R3() * 0.4), r.t0 + Wd * u); box(1.6, 1.2, 1.6, ductM, tr[0], H - 2.8, tr[1], rot, false);
         const hook = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, H * 0.35, 6), steelM); hook.position.set(tr[0], H - 3.4 - H * 0.175, tr[1]); scene.add(hook); } },
+    guides(r, o) { /* 유도등 — 경사로 벽 무릎 높이의 초록 점선, «절반쯤 살아서» (계룡 L12516). 3D 만 · 살아 있는 것만 희미한 빛 */ if (!zone.view3d) return; const L = r.s1 - r.s0, Wd = r.t1 - r.t0, along = L >= Wd, len = along ? L : Wd, step = o.step || 2.2;
+      const onM = new THREE.MeshBasicMaterial({ color: 0x40ff90, toneMapped: false }), offM = new THREE.MeshStandardMaterial({ color: 0x1c2a22, roughness: 0.8 }); let n = 0, lit = 0;
+      for (const side of [-1, 1]) for (let d = 1; d < len - 0.5; d += step) { const alive = R3() < (o.alive ?? 0.5); const q = along ? FROM(r.s0 + d, (r.t0 + r.t1) / 2 + side * (Wd / 2 - 0.22)) : FROM((r.s0 + r.s1) / 2 + side * (L / 2 - 0.22), r.t0 + d);
+        box(0.28, 0.06, 0.06, alive ? onM : offM, q[0], 0.55, q[1], along ? SCREEN_ANG : SCREEN_ANG + Math.PI / 2, false); n++; if (alive) lit++;
+        if (alive && (n % 3 === 0)) { const Lp = new THREE.PointLight(0x40ff90, 2.2, 3.5, 1.6); Lp.position.set(q[0], 0.6, q[1]); scene.add(Lp); lights.push({ x: q[0], y: 0.6, z: q[1], color: '#40ff90', intensity: 1.5, distance: 3 }); } } },
     scratches(r, o) { const scT = T(256, 128, (g, w, h) => { g.strokeStyle = 'rgba(20,10,8,.9)'; g.lineWidth = 7; g.lineCap = 'round'; for (let k = 0; k < (o.lines || 3); k++) { g.beginPath(); g.moveTo(20, 30 + k * 26); g.lineTo(236, 42 + k * 26); g.stroke(); } });
       for (let i = 0; i < (o.n || 3); i++) { const s = r.s0 + 1 + R() * (r.s1 - r.s0 - 2), q = FROM(s, r.t1 - 0.2); const pl = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 0.9), new THREE.MeshBasicMaterial({ map: scT, transparent: true, depthWrite: false })); pl.position.set(q[0], 1.7, q[1]); pl.rotation.y = Math.atan2(-SIDE[0], -SIDE[1]); scene.add(pl); } },
     stairs(r, o) { /* 계단 (위층으로 — 문 자리) */ const s0 = o.side === 's0' ? r.s0 : r.s1 - 4; for (let k = 0; k < 8; k++) { const s = s0 + (o.side === 's0' ? k * 0.5 : (7 - k) * 0.5), c = FROM(s, (r.t0 + r.t1) / 2), h = 0.18 + k * 0.2; box(0.5, h, Math.min(5, r.t1 - r.t0 - 1), new THREE.MeshStandardMaterial({ color: 0x6a6660, roughness: 0.7 }), c[0], h / 2, c[1], SCREEN_ANG); } },
@@ -245,6 +252,6 @@ export function build(THREE, scene, osm, zone) {
   console.info('[env-indoor]', zone.id, '방', rooms.length, '벽', wallN, '빛', lights.length, '막힘', blockers.length);
   return { kind: zone.kind || 'dungeon', title: zone.title, lights, blockers, extentPts, road: { ang: SCREEN_ANG }, walk: { s0, s1, t0, t1 }, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
     fogDist: th.fogDist || null,   /* 3D 안개 [가까이, 멀리] — 침수 선로·터널은 짙게 (기본 16·70) */
-    sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water } : null, flicker: th.flicker || null,
+    sky: { fog: '#' + new THREE.Color(th.fog || 0x040406).getHexString() }, sun: { dir: [-0.3, 0.9, 0.3], color: '#bfd8e8' }, water: spec.water ? { y: spec.water, grade: th.waterGrade ? th.waterGrade.map(([sv, y]) => { const p = FROM(sv, 0); return { s: sv, y, x: +p[0].toFixed(2), z: +p[1].toFixed(2) }; }) : null, ang: SCREEN_ANG } : null, flicker: th.flicker || null,
     gates, bosses, areas, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: '' };
 }
