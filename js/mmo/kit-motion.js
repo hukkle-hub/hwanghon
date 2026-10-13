@@ -31,11 +31,23 @@ export function setupKitMotion(o, gl, model, scene, kit, floor = 0, reduced = fa
   o.kfx.baseYaw = o.root.rotation.y;
   play(o, kit.idleClip || 'idle', true); return o.kfx;
 }
-function play(o, name, loop, clamp = false) {
-  const a = o.kacts[name] || o.kacts.idle; if (!a) return null; const fx = o.kfx; if (fx.clip === a) return a;
+function play(o, name, loop, clamp = false, restart = false) {
+  const fx = o.kfx, a = o.kacts[name] || o.kacts[fx.kit.idleClip || 'idle'] || o.kacts.idle;
+  if (!a) return null;
+  if (fx.clip === a && !restart) {
+    if (loop) { a.paused = false; a.setLoop(THREE.LoopRepeat); a.clampWhenFinished = false; }
+    return a;
+  }
+  const previous = fx.clip;
   a.reset(); a.setLoop(loop ? THREE.LoopRepeat : THREE.LoopOnce); a.clampWhenFinished = clamp || !loop; a.paused = false; a.timeScale = 1; a.fadeIn(.15).play();
-  if (fx.clip) fx.clip.fadeOut(.15); fx.clip = a; return a;
+  // A new hit can reuse the same action. Fading it out after reset would also
+  // fade out the new hit, leaving the model in its bind pose.
+  if (previous && previous !== a) previous.fadeOut(.15);
+  if (previous === a) a.stopFading().setEffectiveWeight(1);
+  fx.clip = a; return a;
 }
+const REACTIONS = new Set(['stagger', 'hit', 'cancel', 'dodge', 'down', 'getup']);
+function reactionClip(fx, motion) { return fx.kit.reactionClips?.[motion] || motion; }
 export function applyKitAction(o, a, now) {
   if (!o.kfx || !a || o.stage?.dying) return; const fx = o.kfx;
   // Late snapshots must not restart an older skill after a counter/death.
@@ -45,12 +57,23 @@ export function applyKitAction(o, a, now) {
   o.netAct = a;
   if (fx.seq !== a.seq) { fx.seq = a.seq; fx.hitIdx = 0;
     if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX ?? a.x, z: a.fromZ ?? a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = fx.kit.stationary ? fx.baseYaw : a.yaw; }
-    else if (a.motion === 'stagger') play(o, 'stagger', false, true);
+    else if (REACTIONS.has(a.motion)) {
+      const name = reactionClip(fx, a.motion), available = !!o.kacts[name];
+      const reaction = play(o, name, !available, available, available);
+      if (available && reaction) reaction.paused = true;
+    }
     else play(o, a.motion === 'walk' || a.motion === 'return' ? 'walk' : (fx.kit.idleClip || 'idle'), true); }
 }
 /* mixer.update 전에 — 서버 시계로 클립 시각을 정한다 (헤드리스·느린 기기에서도 박자가 같다) */
 export function prepareKitMotion(o, now) {
-  const fx = o.kfx, a = o.netAct; if (!fx || !a || a.motion !== 'skill') return; const def = fx.kit.skills[a.skill], act = def && o.kacts[def.clip]; if (!act) return;
+  const fx = o.kfx, a = o.netAct; if (!fx || !a || o.stage?.dying) return;
+  if (REACTIONS.has(a.motion)) {
+    const act = o.kacts[reactionClip(fx, a.motion)];
+    if (act) { act.paused = true; act.time = Math.min(act.getClip().duration, Math.max(0, now - a.startedAt) / 1000); }
+    return;
+  }
+  if (a.motion !== 'skill') return;
+  const def = fx.kit.skills[a.skill], act = def && o.kacts[def.clip]; if (!act) return;
   const t0 = Math.max(0, now - a.startedAt), j = def.jitter, t = j && t0 > j.at ? Math.max(j.at, t0 - (a.shift || 0)) : t0;   /* 리듬 깨기: 멈춤 자세를 그만큼 더 붙든다 */
   const dur = act.getClip().duration; act.paused = true; act.time = def.cue ? curve(def.cue, t) * dur : Math.min(dur - 1e-3, t / 1000);
 }

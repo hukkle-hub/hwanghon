@@ -9,6 +9,7 @@ const PARK = {
   source: 'UEIntroProject/HwanghonBossData.cpp:399-417',
   design: 'docs/story/source/design/bosses/ueintro_sheets/T_BossArt_GeneralPark.jpg',
   height: 1.89, idleClip: 'idle_park', deathClip: 'death_park_salute',
+  reactionClips: { cancel: 'cancel_park', stagger: 'stagger' },
   skills: {
     atk_cqc: { name: '군용 도검 CQC 2단 베기', clip: 'atk_cqc', duration: 2850, reach: 3.4,
       hits: [cone(650, .08), cone(1200, .14, 3.4)], tells: [tell(0, 650), tell(800, 1200)], counter: [1000, 1200] },

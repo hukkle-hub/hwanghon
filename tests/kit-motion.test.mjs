@@ -13,6 +13,39 @@ function boss(id) { const scene = new THREE.Scene(), root = new THREE.Group(), m
   const o = { b: { id }, root, model }; setupKitMotion(o, { animations: clips }, model, scene, KIT.KITS[id]); o.h = 2; addWindRig(THREE, o); return o; }
 const act = (o, skill, extra = {}) => ({ id: o.b.id, ai: 'kit', x: 0, z: 0, yaw: 0, motion: 'skill', skill, seq: 7, startedAt: 1000, endsAt: 9000, fromX: 0, fromZ: 0, shift: 0, counterOpen: 0, counterClose: 0, ...extra });
 
+test('reaction clips use server time, replay repeated hits and hold down until getup', () => {
+ const scene=new THREE.Scene(),root=new THREE.Group(),model=new THREE.Group(),bone=new THREE.Bone();bone.name='ReactionBone';model.add(bone);root.add(model);scene.add(root);
+ const clip=(name,to)=>new THREE.AnimationClip(name,1,[new THREE.VectorKeyframeTrack('ReactionBone.position',[0,1],[0,0,0,to,0,0])]);
+ const names=['stagger','hit','cancel','dodge','down','getup'];
+ const kit={skills:{},idleClip:'custom_idle',reactionClips:{cancel:'custom_cancel'}};
+ const gl={animations:[clip('custom_idle',0),...names.map((n,i)=>clip(n==='cancel'?'custom_cancel':n,i+1))]};
+ const o={b:{id:'reaction-test'},root,model};setupKitMotion(o,gl,model,scene,kit);
+ let seq=0;
+ for(const motion of names){
+  const a={motion,seq:++seq,startedAt:1000,x:0,z:0,yaw:0};applyKitAction(o,a,1500);
+  prepareKitMotion(o,1500);o.mixer.update(.2);
+  assert.equal(o.kfx.clip.getClip().name,motion==='cancel'?'custom_cancel':motion);
+  assert.ok(Math.abs(bone.position.x-(names.indexOf(motion)+1)*.5)<1e-6,'evaluated mesh rig must match late snapshot');
+  prepareKitMotion(o,9000);o.mixer.update(.2);
+  assert.ok(Math.abs(bone.position.x-(names.indexOf(motion)+1))<1e-6,'reaction end holds, no loop to idle');
+ }
+ applyKitAction(o,{motion:'stagger',seq:++seq,startedAt:10000,x:0,z:0,yaw:0},10000);prepareKitMotion(o,10500);o.mixer.update(.2);
+ applyKitAction(o,{motion:'stagger',seq:++seq,startedAt:10500,x:0,z:0,yaw:0},10500);prepareKitMotion(o,10600);o.mixer.update(.2);
+ assert.ok(Math.abs(bone.position.x-.1)<1e-6,'second hit restarts instead of staying clamped or fading itself out');
+ const current=o.netAct;applyKitAction(o,{...current,seq:seq-1,motion:'down'},10650);assert.equal(o.netAct,current);
+ o.stage={dying:true};const time=o.kfx.clip.time;prepareKitMotion(o,12000);assert.equal(o.kfx.clip.time,time,'death owns the pose');
+});
+
+test('missing reaction falls back to configured idle without inventing a clip',()=>{
+ const scene=new THREE.Scene(),root=new THREE.Group(),model=new THREE.Group();root.add(model);scene.add(root);
+ const idle=new THREE.AnimationClip('custom_idle',1,[]),o={b:{id:'reaction-test'},root,model};
+ setupKitMotion(o,{animations:[idle]},model,scene,{skills:{missing:{clip:'absent',hits:[]}},idleClip:'custom_idle'});
+ applyKitAction(o,{motion:'skill',skill:'missing',seq:1,startedAt:0},0);assert.equal(o.kfx.clip.paused,true);
+ applyKitAction(o,{motion:'down',seq:2,startedAt:0},0);prepareKitMotion(o,500);
+ assert.equal(o.kfx.clip.getClip().name,'custom_idle');assert.equal(o.kfx.clip.paused,false);
+ assert.equal(o.kacts.down,undefined,'fallback is not an implemented knockdown');
+});
+
 test('countered dive recovers from its current height without a one-frame teleport',()=>{
  const o=boss('celestial2'),a=act(o,'dive');applyKitAction(o,a,1000);updateKitMotion(o,.016,2500);
  const y=o.model.position.y;assert.ok(Math.abs(y+3.4)<1e-9);
