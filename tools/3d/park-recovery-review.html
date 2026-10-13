@@ -1,0 +1,27 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>박 준장 원본 복구 검수</title>
+<style>body{margin:0;background:#172029;color:#eee;font:15px sans-serif}header{padding:12px}button{padding:8px;margin:4px}canvas{display:block}#info{white-space:pre-wrap}</style>
+<header>박 준장 · 원본 복구 검수 (모션 미적용)<br>
+<button id="front">정면</button><button id="side">측면</button><button id="back">후면</button><button id="head">머리·가슴 확대</button><button id="hands">손·무기 확대</button>
+<span id="info">불러오는 중</span></header><canvas></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+const r=new T.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});r.setPixelRatio(1);r.setSize(innerWidth,innerHeight-105);r.outputColorSpace=T.SRGBColorSpace;
+const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
+const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(-3,6,5);s.add(key);
+const fill=new T.DirectionalLight(0xd4e1ff,1.6);fill.position.set(3,3,-3);s.add(fill);
+const c=new T.PerspectiveCamera(35,innerWidth/(innerHeight-105),.01,100);
+const ground=new T.Mesh(new T.PlaneGeometry(10,10),new T.MeshStandardMaterial({color:0x303841,roughness:1}));ground.rotation.x=-Math.PI/2;s.add(ground);
+const gl=await new GLTFLoader().loadAsync('../../art/review/part1/park-recovered.glb');
+const root=gl.scene;root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(root,true),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
+const scale=1.89/size.y;const holder=new T.Group();holder.add(root);root.scale.multiplyScalar(scale);root.position.add(new T.Vector3(-center.x*scale,-box.min.y*scale,-center.z*scale));s.add(holder);
+let bones=0;root.traverse(o=>{if(o.isBone)bones++});
+document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · 원본 외형만 확인`;
+function view(x,y,z,ty){c.position.set(x,y,z);c.lookAt(0,ty,0);r.render(s,c)}
+document.querySelector('#front').onclick=()=>view(0,1.05,3.7,.95);
+document.querySelector('#side').onclick=()=>view(3.7,1.05,0,.95);
+document.querySelector('#back').onclick=()=>view(0,1.05,-3.7,.95);
+document.querySelector('#head').onclick=()=>view(0,1.65,1.25,1.55);
+document.querySelector('#hands').onclick=()=>view(.9,.95,1.6,.9);
+view(0,1.05,3.7,.95);
+</script></html>

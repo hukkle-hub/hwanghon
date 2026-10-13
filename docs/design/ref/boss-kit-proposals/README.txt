@@ -1,7 +1,10 @@
 드로퍼·박 준장 승인용 이미지 v1 — 2026-10-13
 
 방식: 내장 이미지 생성 도구. Hi3D 생성·업로드·크레딧 사용 없음.
-상태: 디렉터 승인 대기. 게임 몸체나 최종 원화로 확정하지 않음.
+상태: 드로퍼는 승인용 제안. 박 준장 v1은 기존 원본 발견으로 제작 기준에서 제외(파일 보존).
+2026-10-13 추가 조사: docs/story/source/design/bosses/ueintro_sheets/T_BossArt_GeneralPark.jpg
+및 UEIntroProject 5.8의 SM_Boss_GeneralPark / SKM_Boss_GeneralPark를 발견했다.
+박 준장은 이 기존 디자인·몸체를 우선 복구한다. 아래 군복 시안으로 재생성하지 않는다.
 
 dropper-concept-v1.png
 원작 EP05: 천장 배관 매달림, 중장갑, 긴 두 팔, 역관절 무릎, 네 발톱, 낙하.

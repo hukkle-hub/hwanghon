@@ -1,0 +1,73 @@
+박 준장·드로퍼 원본 회수 및 전투 규칙 — 2026-10-13
+
+디렉터: 기록에서 찾아 쓰고, 없으면 디자인 시트대로 만든다. 없는 스킬만 특징을 살려 기획한다.
+
+1. 박 준장은 원본 몸체와 기술이 있었다
+디자인: docs/story/source/design/bosses/ueintro_sheets/T_BossArt_GeneralPark.jpg
+검은 가면 / 검은 롱코트 / 주황색 코어 / 사령도 단죄 / 189cm.
+과거 군복 시안 park-concept-v1.png는 제작 기준에서 제외하고 보존만 한다.
+시트의 '제국' 설정과 원문 현대 계룡 문지기 서사는 차이가 있다. 외형은 기존 시트를
+복구하되 새 제국 서사·관계를 게임에 추가하지 않는다. 팔 비대도 새로 더하지 않는다.
+
+기존 로컬 UEIntroProject 5.8:
+ /Game/Twilight/Bosses/SM_Boss_GeneralPark/GeneralPark/StaticMeshes/GeneralPark
+ /Game/Twilight/Bosses/SM_Boss_GeneralPark/SkeletalMeshes/SKM_Boss_GeneralPark
+원래 GLB의 import metadata는 Temp/claude/.../scratchpad/glb/GeneralPark.glb를 가리키나
+현재 그 파일은 없다. uasset은 남아 있어 원본 패키지를 저장/수정하지 않는 exporter로 회수한다.
+도구: tools/3d/export-park-existing-ue.py (HW_PARK_EXPORT_DIR=별도 증거 폴더)
+회수 성공: skeletal 2,420,092 bytes / static 718,856 bytes / 원본 색상 PNG 7,412,913 bytes.
+스켈레탈 뼈 161, 삼각형 30,996, 애니메이션 0. 스태틱은 삼각형 8,740.
+Headless UE GLTF exporter가 재질을 내보내지 못해 원본 Texture2D를 PNG로 따로 회수했다.
+tools/3d/restore-park-material.mjs로 색상만 다시 묶음. 메시·UV·스킨·바인드 행렬 원본 이진 보존.
+art/review/part1/park-recovered.glb는 검수 자산이고 zones.js가 읽는 배포 몸체가 아니다.
+확인 화면: tools/3d/park-recovery-review.html (정면 / 측면 / 얼굴 / 손 확대).
+확인 결과: 가면·코트·장갑 외형 회수. 옆구리/소매 접합의 거친 면을 보완해야 한다.
+무기와 전용 클립은 없다. 뼈가 있다는 사실을 모션 합격으로 취급하지 않는다.
+원본 PNG를 그대로 담은 검수 GLB는 약 9.8MB이며 휴대폰용 최적화·LOD는 아직 안 했다.
+
+기술 원본: 로컬 UEIntroProject 5.8/Source/UEIntroProject/HwanghonBossData.cpp 399~417
+ atk_cqc — 군용 도검 CQC 2단 베기
+ atk_arm_strike — 좌측 나노 의수 강타
+ sk_parry_riposte — 패링 후 반격
+ sk_arm_shock — 의수 충격 파쇄
+ sk_shield_panel — 전술 방패 패널
+ aoe_ten_slash — 10연속 전술 사선 베기
+ aoe_arm_quake — 의수 전장 파쇄
+새 이름으로 대체하지 않는다. server/field-boss-canon.cjs PARK.skills에 기존 ID로
+예비·접촉·회수 시간표, 반격창, 형상 판정을 작성했다. 시간/비율/거리는 신규 로컬 튜닝이다.
+원본 기술 설명만 확인한 것이며 원본 7개 애니메이션을 찾았다는 의미는 아니다.
+
+2. 박 준장의 스토리 공략 (기존 기록 재사용)
+근거: docs/design/148-canon-ep18-23.md §4, docs/dungeons/boss_general_park_DUNGEON_SPEC.md.
+발화 읽기 → 밝은 미끼에 자세 고정 → 어두운 아인의 목덜미 얕은 베기 → 재점등 두 번째 원.
+createPark/readFlare/napeHit/stepPark가 이를 구현한다. readFlare는 서버가 확정한
+코어 상태·공격 시각만 받으며, 클라이언트가 제출한 power/part/at를 직접 넘기면 안 된다.
+같은 이벤트 중복, 미래/오래된 시각, 다른 지역, 사망, 범위 밖, 정면, 다른 캐릭터 후속타 거절.
+사망 모션 요구: 무릎이 먼저 무너지고 상체가 따라 내려감 → 오른손 반경례 → 손이 떨어짐.
+즉시 대자로 눕는 공용 모션 사용 금지. 단죄는 손에서 분리되는 시점·바닥 정착 별도 검수.
+
+3. 드로퍼
+현재 검색 범위: 저장소·작업본·출력·첨부 파일명 및 텍스트, 로컬 Unreal Projects/GitHub,
+관련 별칭 dropper/char_cablecar_dropper. 원문과 장면 목록은 발견, 일치하는 원본 GLB/uasset은 미발견.
+근거: docs/design/145-canon-ep04-05-16-17.md §2, docs/story/_scenes/EP05.json.
+중장갑 / 긴 팔 / 역관절 무릎 / 네 발톱 / 천장 매달림. 4체 중 3체 처치·1체 도주.
+dropper-concept-v1.png는 이 원문에 근거한 기존 제안으로, 확정된 과거 시트라고 부르지 않는다.
+기술은 기존 drop_ambush를 사용한다. 지상 3연타 등 원문에 없는 일반 인간 공격으로 채우지 않는다.
+낙하 시작에 숨/웅크림 예고가 없고, 배관 이동 소리는 낙하 전 상황 연출로 둔다.
+releaseDrop은 낙하 시작 위치를 잠근다. tickDrops는 접촉 때 한 번만 strike를 부른다.
+strike는 기존 bossStrike 어댑터를 써서 회피·방어·hurt 서버 시각을 유지해야 한다.
+k3Sweep는 서버 장비/접촉 결과로 실제 사거리·높이 안 3체만 맞고 남은 1체가 도주할 때 성공.
+4체가 모두 범위에 있는데 임의로 한 체를 살리는 가짜 연출은 거절한다.
+
+4. 연결 상태와 경계
+field-boss-canon.cjs는 순수 모듈이며 현행 KITS에 두 보스를 등록하지 않았다.
+검수되지 않은 몸으로 보이지 않는 공격을 켜지 않기 위한 제작 단계다.
+실제 field/world3d 코어 발화·약점 접촉 어댑터, 메시 모션, 연출, 모바일 검수는 아직 남았다.
+Claude 소유 field.cjs/world3d.html/던전 지형/실내 블록은 수정하지 않았다.
+캐릭터 HP·단계·결과 권위는 서버에 둔다. 보상/드롭/일주기 정책 변경 없음.
+Hi3D 새 생성·크레딧 사용 없음. main 합치기·Render 배포 없음.
+
+검증: 기존 보스 및 신규 규칙 표적 시험 59 통과. 전체 npm test 1375 중 1373 통과,
+실패 0, 건너뜀 2. 신규 규칙만 8개(반례 포함). 전용 모션/전투 현장 시각 검수는 별도다.
+다음: 원본 몸체의 접합·스킨 확대 확인 → 단죄 그립과 7기술·경례 사망 클립 →
+드로퍼 원문 기반 몸 제작 → 실제 던전 어댑터 연결/동기화 검수. Claude 소유 파일은 협의한다.
