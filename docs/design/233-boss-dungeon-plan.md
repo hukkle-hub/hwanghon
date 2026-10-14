@@ -159,3 +159,11 @@
 
 **폰 무게** (헤드리스 SwiftShader ms/frame, `&lite=1&lod=1`, 640×360 — 실기가 아니라 서로 견주는 용도): 한강 터널 277 · 판교 167 · 계룡 192 · 고흥 지하 177 · 남산타워 130 · 남행 616 · 여의도 792 · 고흥 694. 문서 231 §5 의 지하상가 465 · 판교 282 와 같은 수준 — 장치가 무게를 더 올리지 않았다. 필드 셋이 무거운 건 전부터 그렇다(OSM 건물·나무).
 
+## 14. 장치 온라인 동기화 (2026-10-13 밤, 디렉터 «진행해»)
+
+서버 `server/field.cjs` `device()`: `{type:'fieldDevice', kind, id, hits?}` 를 받아 **판정 없이** 같은 지역 전원에게 `{type:'fieldDevice', zone, kind, id, hits?, from}` 으로 되돌린다 (종류·id 만 검사). 클라 `world3d` 는 핀·고정액·소켓을 쓰면 `devSend` 로 보내고, 받으면 `applyRemoteDevice` 가 같은 규칙(`useDevice`)을 그대로 돌린다 — 이미 된 것은 무시(멱등), 받는 동안은 되보내지 않는다. 엄폐물은 `hits` 로 단계를 맞춘다.
+
+2인 시나리오 `tools/device-scenario.mjs`(서버를 한 프로세스에서): A 가 내측 핀 둘을 자르자 B 가 `pin:inner-pin0`·`pin1` 을 받아 `DEV.cut` 둘, 양쪽 모두 내측 차수문 `down` — 오류 0. 사진 `docs/gpt/img/2026-10-13-dg-online.jpg`.
+
+**온라인 반영은 Render 재배포 뒤** — `server/` 가 바뀌었으니 GPT 몫(CLAUDE.md §3). 그 전에는 서버가 «알 수 없는 필드 요청» 으로 거절해 혼자 연습과 같게 각자 화면에서만 움직인다.
+

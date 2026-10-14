@@ -86,7 +86,7 @@ test('판교 연구소 장치 (문서 233 #5): 좁은 계단 «폭이 사람 둘
   assert.match(Z, /\{ id: 'stair', s: \[30, 38\], t: \[-1\.6, 1\.6\], light: 'red', props: \[ \{ k: 'railing' \} \] \}/); assert.match(Z, /\{ id: 'neck', s: \[62, 70\],[^\n]*\{ k: 'railing' \}, \{ k: 'seam', u: 0\.5, fix: 2 \}/);
   assert.match(W, /const nr = narrowAt\(env\.narrows, root\.position\.x, root\.position\.z\); if \(nr !== ENV\.narrow\) \{ ENV\.narrow = nr; refreshChip\(\); \}/);
   assert.match(W, /if \(ENV\.narrow\) \{ const ax = Math\.cos\(ENV\.narrow\.rot\), az = -Math\.sin\(ENV\.narrow\.rot\), k = dx \* ax \+ dz \* az, sg = k < 0 \? -1 : 1; dx = ax \* sg; dz = az \* sg; d = 1; \}/, '좁은 계단 — 축으로만 밀린다');
-  assert.match(W, /if \(g\.kind === 'seam'\) \{ g\.bottles--; DEV\.fixT = FIX\.hold; DEV\.fixBlock = \{ x: g\.x, z: g\.z, hw: g\.hw, hd: g\.hd, rot: g\.rot \}; walkMeta\.blockers\.push\(DEV\.fixBlock\);/);
+  assert.match(W, /if \(g\.kind === 'seam'\) \{ g\.bottles--; DEV\.fixT = FIX\.hold; devSend\('seam', g\.id\); DEV\.fixBlock = \{ x: g\.x, z: g\.z, hw: g\.hw, hd: g\.hd, rot: g\.rot \}; walkMeta\.blockers\.push\(DEV\.fixBlock\);/);
   assert.match(W, /if \(DEV\.fixT <= 0\) \{ DEV\.fixT = 0; const i = walkMeta\.blockers\.indexOf\(DEV\.fixBlock\); if \(i >= 0\) walkMeta\.blockers\.splice\(i, 1\);/, '시간이 지나면 막이가 풀린다');
   assert.match(W, /if \(x\.kind === 'seam'\) \{ if \(x\.bottles <= 0 \|\| DEV\.fixT > 0\) continue;/, '병이 없거나 이미 굳어 있으면 단추 없음');
 });
@@ -175,4 +175,12 @@ test('발사대 탑 (문서 233 #12 증폭기): «트러스·케이블 수직 �
   assert.match(W, /const DEV = \{ list: env\.interacts \|\| \[\],/, '필드 장치도 같은 단추'); assert.match(W, /if \(x\.minY != null && p\.y < x\.minY\) continue; if \(x\.maxY != null && p\.y > x\.maxY\) continue;/, '탑 위·아래 장치 구분');
   assert.match(W, /if \(towerFalls\(TW\.sockets\)\) \{ TW\.phase = 'jump'; TW\.t = 0;/); assert.match(W, /T\.group\.rotation\.x = T\.lean \+ \(1\.35 - T\.lean\) \* u \* u;/, '자중으로 점점 빨리'); assert.match(W, /const lockMove = \(STAGE && STAGE\.locked\) \|\| TW\.phase === 'up' \|\| TW\.phase === 'down' \|\| TW\.phase === 'jump',/); assert.match(W, /ty = 1\.45 \+ h\.y,/, '카메라가 탑 위를 따라간다');
   assert.match(W, /@media \(orientation:portrait\)\{ #gatebtn\{ left:max\(12px,env\(safe-area-inset-left\)\); transform:none;/, '세로: 장치 단추가 카운터 원과 겹쳤다');
+});
+
+test('던전 장치 온라인 동기화 (문서 233): 핀·고정액·소켓을 쓰면 fieldDevice 를 보내고, 받은 쪽은 같은 규칙을 돌린다 — 이미 된 것은 무시(멱등), 받는 동안은 되보내지 않는다', () => {
+  const W = fs.readFileSync(new URL('../world3d.html', import.meta.url), 'utf8');
+  assert.match(W, /function devSend\(kind, id, extra\) \{ if \(!net \|\| devRemote\) return; try \{ net\.send\(\{ type: 'fieldDevice', kind, id, \.\.\.\(extra \|\| \{\}\) \}\); \} catch \{\} \}/);
+  assert.match(W, /if \(g\.kind === 'pin'\) \{ DEV\.cut\.add\(g\.id\); devSend\('pin', g\.id\);/); assert.match(W, /if \(g\.kind === 'seam'\) \{ g\.bottles--; DEV\.fixT = FIX\.hold; devSend\('seam', g\.id\);/); assert.match(W, /sk\.cut = true; devSend\('socket', g\.id\);/);
+  assert.match(W, /if \(m\.type === 'fieldDevice'\) \{ applyRemoteDevice\(m\); return; \}/); assert.match(W, /function applyRemoteDevice\(m\) \{ if \(m\.zone !== ZONE\) return; devRemote = true; try \{/);
+  assert.match(W, /if \(m\.kind === 'pin' && DEV\.cut\.has\(x\.id\)\) return; if \(m\.kind === 'seam' && \(DEV\.fixT > 0 \|\| x\.bottles <= 0\)\) return;/, '멱등');
 });

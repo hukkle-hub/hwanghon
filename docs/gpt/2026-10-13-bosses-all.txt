@@ -87,3 +87,7 @@
 | 셀레스티얼 | 골짜기 벽(버팀) · 고도 상한 15 m 는 띠 글뿐 | 비행 높이 한계 15 m · 돌풍·공간 접기 |
 | 에이지스 | 반향 지대 (`ECHO` hear 0.5 — 예고음은 남) | 없음 |
 | 정 장관 | 점거 차량 열 7 · 의장대 도열 자리 `scene.userData.parade` 24 · 활주로 | 의장대(클레이브 셋 + 집행관)를 parade 자리에 세우기 · «고개를 반쯤 돌림 → 차량이 도로 차단» |
+
+## 7. 장치 중계는 서버에 넣었다 — Render 재배포만 (2026-10-13 밤)
+
+`server/field.cjs` 에 `fieldDevice` 중계(`device()`, `DEVICE_KINDS`)를 넣었고 시험(`tests/field-server.test.cjs`)·2인 시나리오(`tools/device-scenario.mjs`)까지 통과했다. **Render 재배포** 를 부탁한다 — 그 전에는 온라인에서 핀·고정액·소켓이 각자 화면에서만 움직인다. KIT 가 엄폐물 단계를 정하면 `this.emit({type:'fieldDevice', zone, kind:'cover', id, hits})` 로 같은 길을 쓰면 된다. §5·§6 의 «fieldDevice 제안» 은 이걸로 갈음.
