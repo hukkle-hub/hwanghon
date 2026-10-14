@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import * as THREE from '../vendor/three/three.module.js';
 import { addWindRig } from '../js/mmo/windup.js';
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from '../js/mmo/kit-motion.js';
+import { SAFE } from '../js/mmo/env-rules.js';
 const KIT = createRequire(import.meta.url)('../server/field-boss-kit.cjs');
 
 function boss(id) { const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
@@ -55,4 +56,15 @@ test('정 장관: 대기·처치는 전용 클립 · 등 뒤 베기는 감았다
   assert.equal(o.kfx.clip.getClip().name, 'idle_jeong'); assert.equal(o.deathClip.name, 'death_jeong'); assert.equal(o.kfx.warning, undefined, '예고판 자체가 없다');
   applyKitAction(o, act(o, 'back', { yaw: .4 }), 1000); updateKitMotion(o, .016, 1000 + 400); assert.ok(o.wind.g.rotation.y > .3, '감는다 ' + o.wind.g.rotation.y);
   updateKitMotion(o, .016, 1000 + 900); assert.equal(o.wind.g.rotation.y, 0, '터진 뒤 제자리');
+});
+
+test('정지 모델 다섯: 클립이 하나도 없어도 기술표가 붙고(준비 동작·가슴 빛·낙뢰) 오류 없이 돈다 · 노바 고리 안쪽은 env-rules SAFE.r 과 같다', () => {
+  for (const id of ['leviathan', 'aegis', 'celestial2', 'arsenal', 'nova']) {
+    const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
+    const o = { b: { id }, root, model, h: 4 }; setupKitMotion(o, { animations: [] }, model, scene, KIT.KITS[id]); addWindRig(THREE, o);
+    assert.equal(o.kfx.clip, null, id + ': 클립 없음'); assert.equal(o.deathClip, null);
+    for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) { applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000); let moved = 0;
+      for (let t = 0; t < sk.duration; t += 100) { prepareKitMotion(o, 1000 + t); updateKitMotion(o, .016, 1000 + t); if (t < sk.hits[0].at) moved = Math.max(moved, Math.abs(o.wind.g.rotation.x) + Math.abs(o.wind.g.rotation.y) + Math.abs(1 - o.wind.g.scale.y)); }
+      assert.ok(moved > .05, id + '.' + name + ' 준비 동작'); hideKitMotion(o); } }
+  for (const h of [...KIT.KITS.nova.skills.ring.hits, ...KIT.KITS.nova.skills.mute.hits]) assert.equal(h.inner, SAFE.r, '노바 고리 안쪽 = 안전지대 반지름');
 });

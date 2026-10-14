@@ -111,7 +111,7 @@ test('소독약 복도 (문서 233 #9 박 준장): «원을 그릴 반경이 늘
   assert.match(I, /corridor\(r, o\) \{[^\n]*if \(!zone\.view3d\) return;/); assert.match(I, /const W = r\.t1 - r\.t0, width = o\.width \?\? 2\.6, inset = \(W - width\) \/ 2,/); assert.match(I, /box\(L, H, inset, tileM, c\[0\], H \/ 2, c\[1\], SCREEN_ANG\); block\(c\[0\], c\[1\], L \/ 2, inset \/ 2, SCREEN_ANG\); \}/, '벽은 막이');
   assert.match(I, /Lt\.userData\.pulse = true;/, '비상등 맥동'); assert.match(I, /narrows\.push\(\{ x: \+cc\[0\]\.toFixed\(2\), z: \+cc\[1\]\.toFixed\(2\), hw: \+\(L \/ 2\)\.toFixed\(2\), hd: \+\(width \/ 2\)\.toFixed\(2\), rot: SCREEN_ANG, w: width,/);
   assert.match(Z, /\{ id: 'corridor', s: \[300, 350\], t: \[2, 6\], h: 3\.4, floor: 'tile', light: 'fluo', props: \[ \{ k: 'corridor', width: 2\.6 \} \] \}/);
-  assert.match(W, /\* \(counter \? 1\.65 : 1\) \* swingK\(ENV\.narrow\)\); ai\.hp -= n;/, '좁은 복도에서 낫의 원이 걸린다'); assert.match(W, /\(ENV\.narrow\.label \|\| NARROW\.label\) \+ \(swingK\(ENV\.narrow\) < 1 \? ' · 공격 ' \+ Math\.round\(swingK\(ENV\.narrow\) \* 100\) \+ '%' : ''\)/);
+  assert.match(W, /\* \(counter \? 1\.65 : 1\) \* swingK\(ENV\.narrow\) \* gm\.mul\); ai\.hp -= n;/, '좁은 복도에서 낫의 원이 걸린다 (× 보이지 않는 벽 배율)'); assert.match(W, /\(ENV\.narrow\.label \|\| NARROW\.label\) \+ \(swingK\(ENV\.narrow\) < 1 \? ' · 공격 ' \+ Math\.round\(swingK\(ENV\.narrow\) \* 100\) \+ '%' : ''\)/);
 });
 
 test('고흥 발사대 지하 (문서 233 #10 나노-노바): «거대한 원 참격 (바깥이 빠르고 중심이 느림)» · «원 궤적 안쪽 안전지대» — 코어 둘레 4.5 m 안이면 보스 피해·밀려남 ½ · 노바 1호 캡슐 잔해 · 결정 벽', async () => {

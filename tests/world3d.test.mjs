@@ -128,7 +128,7 @@ test('3D 필드 문: 가까이 가면 이동 단추 · 다음 지역 3D 로 · �
 
 test('3D 필드 필드 보스: 2D 필드와 같은 몸 맞춤·같은 안무(boss-motion) · 온라인이면 서버 생사·동작 · 타격 대상', () => {
   const w = fs.readFileSync(path.join(ROOT, 'world3d.html'), 'utf8');
-  assert.match(w, /if \(\/\^clave2\?\$\/\.test\(b\.id\)\) \{ setupBossMotion\(o, gl, r, scene, 0, \{ telegraph: false \}\)/, '클레이브 안무가 없다');
+  assert.match(w, /if \(\/\^clave2\?\$\/\.test\(b\.id\) && gl\.animations\.length\) \{ setupBossMotion\(o, gl, r, scene, 0, \{ telegraph: false \}\)/, '클레이브 안무가 없다'); assert.match(w, /if \(gl\.animations\.length \|\| KIT\.enabled\(\{ id: b\.id \}\)\)/, '클립 없는 정지 모델도 KITS 에 있으면 기술표가 붙는다 (문서 233 §16)');
   assert.match(w, /r\.position\.y - box\.min\.y/, '발을 바닥에 안 맞춘다 (보스가 묻혔던 일 — CLAUDE.md §1)');
   assert.match(w, /if \(o\.fx\) prepareBossMotion\(o, bn\); else if \(o\.kfx\) prepareKitMotion\(o, bn\); o\.mixer\.update\(dt\);/, '서버 시각 자세 준비는 믹서 평가보다 먼저 (클레이브·기술표형 보스 둘 다)');
   assert.match(w, /const f = fbs\.find\(x => x\.b\.id === a\.id\); if \(f && f\.fx\) applyBossAction\(f, a, sclock\.now\(\)\)/, '서버 보스 동작을 안 따른다');

@@ -223,7 +223,8 @@ class Field{
   if(!opt.skill&&now-(o.last.get(id)||0)<HIT_GAP) return null; o.last.set(id,now);   /* 스킬 타격은 재사용 대기가 따로 막는다 */
   /* 피해는 서버가 굴린다 (클라가 보낸 숫자는 믿지 않는다) — 기본 공격력 + 무기 공격력 × 0.6, ±10%, 치명타 */
   const counter=COMBAT.tryCounter(o,now)||KIT.tryCounter(o,now),st=profile.stats||{}, w=itemOf((profile.equipment||{}).main), crit=!!p.critNext||this.rng()<(st.critChance||0); p.critNext=false;   /* critNext: 그림자 걸음류 스킬 — 다음 공격 치명타 확정 */
-  const dmg=Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)*(opt.mult||1)));
+  const gm=KIT.hitMul(o,p,now);   /* 보이지 않는 벽(에이지스): 정면 0 «틱—» · 옆 ½ · 등 뒤 그대로, 셋이면 내려간다 (field-boss-kit hitMul) */
+  const dmg=gm.mul<=0?0:Math.max(1,Math.round(((st.atk||1000)+((w&&w.stats&&w.stats.atk)||0)*0.6)*(0.9+this.rng()*0.2)*(crit?(st.critDamage||1.5):1)*(counter?1.65:1)*(opt.mult||1)*gm.mul));
   o.hp=Math.max(0,o.hp-dmg); o.dmg.set(id,(o.dmg.get(id)||0)+dmg); o.names.set(id,profile.name||'?'); o.ver++;
   const part=o.hp>0?COMBAT.damageShutter(o,p,profile,dmg,counter,now):null;
   /* 공동 전투에는 접촉만 공유한다. 피해량·공격력·보스 체력은 공격자 밖으로 내보내지 않는다 (문서 191). */
@@ -232,7 +233,7 @@ class Field{
   o.impacts.push(impact);if(o.impacts.length>3)o.impacts.shift();   /* 한 10 Hz 틱 사이 사건도 최대 셋까지 보존 — 폭주 없이 반격/치명을 덮지 않는다. */
   if(part?.broken)this.emit({type:'announce',kind:'bossPartBreak',zone:o.zone,boss:o.id,name:o.name,part:'shutter'});
   if(o.hp<=0) this.killBoss(o, now);
-  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, part:part&&part.changed?[part.state,part.broken?1:0]:null, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at] }; }   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
+  return { type:'bossHit', boss:o.id, dmg, crit, counter, down:!o.alive, part:part&&part.changed?[part.state,part.broken?1:0]:null, impact:[impact.seq,+impact.x.toFixed(2),+impact.z.toFixed(2),impact.at], ...(gm.blocked||gm.broke?{ guard:gm.blocked?'tick':'off' }:{}) }; }   /* guard: 'tick' 튕김 · 'off' 벽이 내려감 (에이지스만, 그때만) */   /* 체력은 보내지 않는다 — 얼마나 남았는지 모르고 때린다 (디렉터 2026-10-06) */
  /* 캐릭터 스킬 1~4 (디렉터: «스킬을 누르고 공격을 누르면 그 스킬이 나간다» — 고르는 건 화면, 결과는 서버).
     수치는 솔로와 같은 표(js/dungeons.js SKILLS + 스킬 성장 rpg-skills.resolve). 재사용 대기는 서버가 센다.
     종류: mult>0 → 보스 타격(배율) · dodge → 회피 무적(+critNext: 다음 공격 치명타) · buff.reduce → 그 시간 동안 받는 피해 감소 */
@@ -290,7 +291,7 @@ class Field{
  /* 지역 안 보스 상태 [id, 살아 있나] + 서버 권위 동작 + 반경 안 바닥 장비 [id, 아이템, x, z, 내가 먼저인가]
     보스 체력은 보내지 않는다 — 디렉터 2026-10-06 «보스의 체력바는 안 나왔으면 좋겠어. 나오면 재미없지» (리니지처럼) */
  bossView(r, now=Date.now()){ const bs=[], bossActs=[], bossImpacts=[], loot=[];
-  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o)||DOM.view(o)||KIT.view(o);if(a)bossActs.push(a);
+  for(const o of this.bosses.values()) if(o.zone===r.zone){ bs.push([o.id, o.alive?1:0]); const a=COMBAT.view(o)||DOM.view(o)||KIT.view(o,now);if(a)bossActs.push(a);
    if((o.x-r.x)**2+(o.z-r.z)**2<=AOI*AOI)for(const h of o.impacts)if(now-h.at<=BOSS_IMPACT_LIFE)bossImpacts.push([o.id,h.seq,+h.x.toFixed(2),+h.z.toFixed(2),h.crit?1:0,h.counter?1:0,h.at]); }
   for(const l of this.loot.values()){ if(l.zone!==r.zone||(l.x-r.x)**2+(l.z-r.z)**2>AOI*AOI) continue;
    loot.push([l.id, l.item, +l.x.toFixed(2), +l.z.toFixed(2), (!l.owner||l.owner===r.id||now>=l.ownerUntil)?1:0]); }

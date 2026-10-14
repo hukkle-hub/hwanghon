@@ -21,8 +21,8 @@ export const BOSS_STAGES = {
   arsenal: { rim: 0xffc890, rimK: 0.14, aura: 0xff8a3a, core: 0xff8a3a, env: 0.5, metal: true,   /* 가장자리가 많은 정지 모델 — 0.3 이면 통째로 빛났다 */
     introR: 44, plateR: 56, down: '포탑 열여덟이 꺼졌다' },
   leviathan: { rim: 0x8fe0c8, rimK: 0.2, aura: 0x2fbf9f, core: 0x40e0b0, introR: 28, plateR: 36, down: '터널이 조용해졌다' },
-  celestial: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, introR: 36, plateR: 46, down: '하늘이 비었다' },
-  celestial2: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, introR: 38, plateR: 48, down: '날개 넷이 떨어졌다' },
+  celestial: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, mat: { metalness: 0.3, roughness: 0.6 }, introR: 36, plateR: 46, down: '하늘이 비었다' },   /* mat: 구운 재질이 metalness 1 · roughness 1 이라 하늘을 등지면 검게만 그려져 안 보였다 — 쇠를 덜어 낸다 (2026-10-14 검수, 문서 33 §4 와 같은 병) */
+  celestial2: { rim: 0xfff0c8, aura: 0xffe0a0, core: 0xffe8b0, rimK: 0.4, mat: { metalness: 0.3, roughness: 0.6 }, introR: 38, plateR: 48, down: '날개 넷이 떨어졌다' },
   subject09: { rim: 0xd0ff9a, aura: 0x8fe040, core: 0xa0ff50, introR: 26, plateR: 34, down: '더는 나뉘지 않는다' },
   shadowfang: { rim: 0xb090ff, aura: 0x7a4cff, core: 0x9a6cff, introR: 20, plateR: 28, down: '소리가 끊겼다' },
   aegis: { rim: 0xa0c8ff, aura: 0x5aa0ff, core: 0x7ab8ff, env: 0.5, metal: true, introR: 30, plateR: 40, down: '보이지 않던 벽이 무너졌다' },

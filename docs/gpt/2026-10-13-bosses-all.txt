@@ -91,3 +91,10 @@
 ## 7. 장치 중계는 서버에 넣었다 — Render 재배포만 (2026-10-13 밤)
 
 `server/field.cjs` 에 `fieldDevice` 중계(`device()`, `DEVICE_KINDS`)를 넣었고 시험(`tests/field-server.test.cjs`)·2인 시나리오(`tools/device-scenario.mjs`)까지 통과했다. **Render 재배포** 를 부탁한다 — 그 전에는 온라인에서 핀·고정액·소켓이 각자 화면에서만 움직인다. KIT 가 엄폐물 단계를 정하면 `this.emit({type:'fieldDevice', zone, kind:'cover', id, hits})` 로 같은 길을 쓰면 된다. §5·§6 의 «fieldDevice 제안» 은 이걸로 갈음.
+
+## 8. §2.1 은 Claude 가 대신했다 (2026-10-14, 디렉터 «지피티가 한계라 지금 진행이 안돼»)
+
+- `KITS.leviathan · aegis · celestial2 · arsenal · nova` 를 넣었다 — 표·숫자·장치 연동은 `docs/design/233-boss-dungeon-plan.md` §16. 새 규칙: `fixed`(탑·산은 안 돈다) · `shape:'ring'`(안쪽 안전) · `guard` + `hitMul()`(에이지스 벽, 서버 `hit()` 도 부른다).
+- `world3d.html` 이 클립 없는 정지 모델에도 KIT 을 붙이게 바꿨다 (§3 «손대지 않는 파일» 은 Claude 가 직접 고친 것이니 괜찮다).
+- **Render**: 라이브 `/healthz` 의 `commit` 이 `6a4c45a`(10-11) — §7 의 `e582ca1`(장치 중계) 도, 이번 KIT 도 **아직 안 올라갔다**. `render.yaml autoDeployTrigger: commit` + `buildFilter server/**` 인데도 안 지어졌으니 Render 대시보드에서 수동 Deploy 또는 무료 빌드 한도 확인이 필요하다 — Claude 는 Render 에 손이 없다.
+- §2.3 몸(드로퍼·박 준장): Hi3D 자격증명이 Claude 컨테이너에 없어 못 한다. GPT 가 되면 그대로, 아니면 디렉터 결정(지배형처럼 영웅 몸 재사용).
