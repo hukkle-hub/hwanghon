@@ -106,7 +106,7 @@ body.kmapOpen #hud{ visibility:hidden; }   /* 지도가 열려 있는 동안 HUD
 #areaName{ position:absolute; left:50%; top:63%; transform:translateX(-50%); text-align:center; pointer-events:none; opacity:0; color:#f0e2d0; text-shadow:0 0 10px #000,0 0 4px #000,0 1px 2px #000; white-space:nowrap; }   /* 낮(밝은 길) 위에서도 읽히게 — 문서 217 */
 @media (orientation:portrait){ #areaName{ top:40%; } }   /* 세로: 아래쪽은 스킬 단추 자리 */
 #areaName b{ display:block; font-size:22px; letter-spacing:.12em; font-weight:800; } #areaName small{ display:block; font-size:11px; letter-spacing:.08em; opacity:.8; margin-top:2px; }
-#areaName.d2 b{ color:#ffb070; } #areaName.d3 b{ color:#ff6a50; } #areaName.rest b{ color:#9fe0b0; }
+#areaName.d2 b{ color:#ffb070; } #areaName.d3 b{ color:#ff6a50; } #areaName.rest b{ color:#9fe0b0; } #areaName.dev b{ color:#8ad8f0; } #areaName.dev small{ white-space:normal; max-width:72vw; margin:2px auto 0; font-size:12px; opacity:.95; }   /* 장치 길잡이 (문서 233 §15) */
 @media (max-height:500px){ #areaName b{ font-size:18px; } #mini{ width:112px; } }
 #osm{ position:absolute; right:12px; bottom:max(10px,env(safe-area-inset-bottom)); font-size:10px; color:var(--dim); opacity:.7; }
 </style>
@@ -151,7 +151,7 @@ import { FAR, WIND, WATER, SHADOW_LAYER, waterMat } from './js/mmo/env-lib.js';
 import { windLeaves } from './js/mmo/wind-leaves.js';
 import { WX, zoneSeed, weatherNow, applyRain, applyMist } from './js/mmo/weather.js';
 import { rainStreaks, rainSplashes } from './js/mmo/rain.js';
-import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval, CIRCLE, swingK, SAFE, safeAt, DOOR, doorLocked, QUIET, quietAt, ECHO, VALLEY, TOWER, towerFalls } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
+import { WATER_BANDS, waterBand, moveK, wobble, KNOCK_SPIN, FLOATERS, LAMP as LAMP_RULE, envSummary, WET, wetK, SPLASH as SPLASH_RULE, braceAt, knockK, WINCH, FLOODGATE, NARROW, narrowAt, FIX, COVER, coverStage, TURRET, turretInterval, CIRCLE, swingK, SAFE, safeAt, DOOR, doorLocked, QUIET, quietAt, ECHO, VALLEY, TOWER, towerFalls, HINT, hintAt } from './js/mmo/env-rules.js';   /* SPLASH 는 빗방울 튐이 이미 쓴다 */ import { floaters } from './js/mmo/water-fx.js';   /* 전투 환경 변수 (문서 232) */
 import { ANTI_TILE } from './js/mmo/ph-tex.js';
 import { CARD_TIER } from './js/mmo/tree-kit.js';
 import { searchlights, fireflies } from './js/mmo/night-fx.js';
@@ -830,12 +830,14 @@ function miniTick() { if (!miniMe) return; const p = root.position, [l, t] = min
   for (const [id, r] of remotes) if (r.a && r.a.root) dot('p:' + id, 'pl', r.a.root.position.x, r.a.root.position.z);
   if (MOBS) for (const v of MOBS.views.values()) if (v.alive) dot('m:' + v.id, 'mb g' + v.cat.grade, v.root.position.x, v.root.position.z);   /* 근처 몬스터(생태 반경 28 m) — 등급색 작은 점 */
   for (const [k, d] of miniDots) if (!live.has(k)) { d.remove(); miniDots.delete(k); } }
-let curArea, areaT = 0;
+let curArea, areaT = 0, areaDur = 3.6;   /* areaDur: 띄운 길이 — 페이드인은 이걸 기준으로 (길잡이는 4.6 s, 구역 이름은 3.6 s) */
+const HINTS = (env.hints || []).map(h => ({ ...h, seen: false })); window.__HINTS = HINTS;
+function hintTick() { const h = hintAt(HINTS, root.position.x, root.position.z); if (!h) return; h.seen = true; const esc2 = t => String(t == null ? '' : t).replace(/[<>&]/g, ''); areaEl.className = 'dev'; areaEl.innerHTML = '<b>' + esc2(h.title) + '</b><small>' + esc2(h.text) + '</small>'; areaT = areaDur = HINT.dur; }   /* 장치 길잡이 — 방에 들어서면 한 번 */
 function areaTick(dt) { const p = root.position, a = AREAS.find(x => x.kind === 'rest' && inArea(x, p.x, p.z)) || AREAS.find(x => x.kind === 'hunt' && inArea(x, p.x, p.z)) || null;
   if (a !== curArea) { curArea = a; if (a) { const esc2 = t => String(t == null ? '' : t).replace(/[<>&]/g, ''); areaEl.className = a.kind === 'rest' ? 'rest' : 'd' + (a.danger || 1);
-      areaEl.innerHTML = '<b>' + esc2(a.name) + '</b><small>' + (a.kind === 'rest' ? '쉬어 가는 곳' : (a.lv ? 'Lv ' + a.lv[0] + '~' + a.lv[1] : '') + (a.mobs ? ' · ' + esc2(a.mobs) : '')) + '</small>'; areaT = 3.6; } }
+      areaEl.innerHTML = '<b>' + esc2(a.name) + '</b><small>' + (a.kind === 'rest' ? '쉬어 가는 곳' : (a.lv ? 'Lv ' + a.lv[0] + '~' + a.lv[1] : '') + (a.mobs ? ' · ' + esc2(a.mobs) : '')) + '</small>'; areaT = areaDur = 3.6; } }
   if (areaT > .8 && (busy > 0 || hurtT > 0)) areaT = .8;   /* 싸우기 시작하면(공격·맞음) 0.8 s 에 걷는다 — 들어서자마자 싸우면 3.6 s 동안 화면 한가운데에서 싸움을 가렸다 (문서 229 §49) */
-  if (areaT > 0) { areaT -= dt; areaEl.style.opacity = Math.max(0, Math.min(1, areaT / 0.8, (3.6 - areaT) / 0.4)); } else areaEl.style.opacity = 0; }
+  if (areaT > 0) { areaT -= dt; areaEl.style.opacity = Math.max(0, Math.min(1, areaT / 0.8, (areaDur - areaT) / 0.4)); } else areaEl.style.opacity = 0; }
 /* ---------- 돌리기 ---------- */
 let dimLights = null; const dimFog = new THREE.Color(), dimBg = new THREE.Color();   /* 방전 폭우 때 낮출 조명·안개·하늘 — 그릴 때만 */
 const clock = new THREE.Clock(); let frames = 0, hold = false, dtCap = 0.05, lightT = 0;
@@ -890,7 +892,7 @@ function tick() { perf.begin();
     for (const o of doms) if (o.netAlive) { const ev = updateDominator(o, dt * feel.rate(o), sclock.now()); if (ev && ev.impact && Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z) < 14) shakeT = Math.max(shakeT, .16); }
     remoteTick(dt); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.hidden = true; }
-  if (frames % 4 === 0) skTick(); if (frames % 10 === 0) safeTick(); if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt);
+  if (frames % 4 === 0) skTick(); if (frames % 10 === 0) safeTick(); if (frames % 6 === 0) gateTick(); if (frames % 3 === 0) miniTick(); areaTick(dt); if (frames % 15 === 0) hintTick();
   if (!net) for (const o of doms) { const ai = o.ai;
     if (!ai.alive) { if (gameNow >= o.respawnAt) { DOM.reset(ai, gameNow); ai.alive = true; ai.hp = 3e6; o.root.visible = true; } continue; }
     DOM.tick(fieldLocal, ai, gameNow); collide(ai, 0.5); const v = DOM.view(ai); if (v) applyDominatorAction(o, v);

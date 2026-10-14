@@ -105,3 +105,7 @@ export const ECHO = { hear: 0.5, label: '반향 지대 — 소리 방향을 못 
 export const TOWER = { h: 24, climb: 6, fall: 4, sockets: 4, lean: 0.035, songStep: 20, songMax: 12, label: '탑 오르기 — 케이블에 낫을 건다', card: '탑이 바다 쪽으로 넘어갔다 — 노래가 끊겼다' };
 export function towerFalls(sockets) { const sea = (sockets || []).filter(s => s.sea); return sea.length >= 2 && sea.every(s => s.cut); }   /* 같은 쪽(바다 쪽) 둘이 끊기면 자중으로 전도 */
 
+/* 장치 길잡이 (문서 233 §15): 장치가 있는 방에 처음 들어서면 지역 이름 띠 자리에 한 번만 — 폰에서 장치를 찾게. 숫자만 여기 */
+export const HINT = { r: 14, dur: 4.6 };
+export function hintAt(list, x, z) { if (!list) return null; for (const h of list) if (!h.seen && Math.hypot(h.x - x, h.z - z) <= (h.r || HINT.r)) return h; return null; }
+

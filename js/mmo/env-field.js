@@ -9,7 +9,7 @@ export const PITCH = L.PITCH;
 const segDist = (p, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1, u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2)); return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); };
 
 export function build(THREE, scene, osm, zone) {
-  const F = zone.field || {}, R = L.rng(F.seed || 20261010), lights = [], blockers = [], clear = [], quiet = [], braces = [], interacts = [];   /* quiet: 무음 지대 (섀도우 팽 앞마당 — 문서 233 #6) */
+  const F = zone.field || {}, R = L.rng(F.seed || 20261010), lights = [], blockers = [], clear = [], quiet = [], braces = [], interacts = [], hints = [];   /* quiet: 무음 지대 (섀도우 팽 앞마당 — 문서 233 #6) */
   const fr = frameOf(THREE, osm, { farSide: F.farSide || {} }), { ST, FROM, W } = fr, tc = F.tc ?? 0;
   const walk = { ...F.walk };
   const ctx = { THREE, scene, R, ST, FROM, W, walk, tc, lights, blockers, clear };
@@ -111,7 +111,7 @@ export function build(THREE, scene, osm, zone) {
       g.position.set(p[0], 0, p[1]); g.rotation.x = o.lean ?? 0.035; scene.add(g);   /* 바다(+z) 쪽으로 살짝 기운다 */
       box(16, 1, 16, conc, p[0], 0.5, p[1], 0, false);
       interacts.push({ id: 'climb', kind: 'climb', x: +(p[0] + cx).toFixed(2), z: +(p[1] + cz).toFixed(2), r: 3, maxY: 0.5, label: '탑 오르기 — 케이블에 낫을 건다' }); interacts.push({ id: 'descend', kind: 'descend', x: +(p[0] + cx).toFixed(2), z: +(p[1] + cz).toFixed(2), r: 3.5, minY: H - 1, label: '내려가기 — 케이블' });
-      scene.userData.tower = { group: g, x: +p[0].toFixed(2), z: +p[1].toFixed(2), h: H, half: 5.6, cable: { x: +(p[0] + cx).toFixed(2), z: +(p[1] + cz).toFixed(2) }, sockets, lean: o.lean ?? 0.035 }; },
+      hints.push({ x: +(p[0] + cx).toFixed(2), z: +(p[1] + cz).toFixed(2), r: 16, title: '발사대 탑 — 증폭기', text: '케이블로 오른다 · 꼭대기 바다 쪽 소켓 둘을 끊으면 탑이 넘어간다' }); scene.userData.tower = { group: g, x: +p[0].toFixed(2), z: +p[1].toFixed(2), h: H, half: 5.6, cable: { x: +(p[0] + cx).toFixed(2), z: +(p[1] + cz).toFixed(2) }, sockets, lean: o.lean ?? 0.035 }; },
     /* 3층 높이 LED 광고판 (여의도 L6012 — 배경, 부서지지 않음) */
     led(p, o) { const t2 = L.canvasTex(THREE, 512, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#3a0a5a'); gr.addColorStop(1, '#0a4a6a'); g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = '#ff6ad0'; g.shadowColor = '#ff6ad0'; g.shadowBlur = 20; g.font = '900 72px "Noto Sans KR",sans-serif'; g.textAlign = 'center'; g.fillText(o.text || '여의도', w / 2, h / 2 + 24); });
       const m = new THREE.MeshBasicMaterial({ map: t2, toneMapped: false }); m.color.setScalar(1.4); const pl = new THREE.Mesh(new THREE.PlaneGeometry(14, 7), m); pl.position.set(p[0], 9, p[1]); scene.add(pl); },
@@ -168,5 +168,5 @@ export function build(THREE, scene, osm, zone) {
   const extentPts = L.extent(ctx, { h: F.extentH ?? 18 }); for (const pr of F.props || []) if (pr.k === 'launch' || pr.k === 'relay') { const p = pos(pr.at); extentPts.push([p[0], Math.min(pr.h || 40, 50), p[1]]); }
   console.info('[env-field]', zone.id, '건물', built.length, '도로', roadsW.length, '선', nLines, '경계', nb, '문', gates.map(g => g.id).join(','), '막힘', blockers.length);
   return { kind: 'field', title: zone.title, lights, blockers, extentPts, road: { ang: L.SCREEN_ANG }, walk, spawn: { x: +sp[0].toFixed(2), z: +sp[1].toFixed(2) },
-    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null, mist: F.mist || null, quiet, braces, interacts };
+    sky: S.sky, sun: S.sun, sunLight: S.sunLight, gates: gates.map(({ st, ...g }) => g), bosses, areas: areasOut, rules: zone.rules || {}, restart: zone.restart || null, exits: [], license: osm.license, water: null, mist: F.mist || null, quiet, braces, interacts, hints };
 }
