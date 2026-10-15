@@ -14,6 +14,15 @@ document.querySelector('#near').addEventListener('click',releaseQaCable);
 let sequence=null;
 // Actual offline bossStrike / environment sampling, not a reimplemented damage formula.
 const envProof=document.createElement('output');envProof.id='environment-proof';document.querySelector('aside').append(envProof);
+// Reproduce the production stage with the current live body; never registers a candidate.
+for(const [label,lift] of [['비행 사망 재현',0],['급강하 사망 재현',-3.4]]){
+ const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
+ b.onclick=()=>{const a=w(),o=boss();if(!a||!o||select.value!=='celestial2'||o.stage.dying)return;sequence=null;a.hold=false;a.stage.skip();o.stage.seen=true;
+  KIT.reset(o.ai,a.gameNow);o.ai.alive=false;o.model.position.y=o.kfx.baseY+lift;
+  a.stage.death(o,()=>{o.root.visible=false;});
+  const start=a.frames;const sample=()=>{const d=o.stage.dying;if(!d)return;envProof.textContent=JSON.stringify({mode:label,elapsed:d.t,rootY:o.root.position.y,modelY:o.model.position.y,baseY:o.kfx.baseY,combinedLift:o.root.position.y+o.model.position.y-o.kfx.baseY,frames:a.frames-start});requestAnimationFrame(sample);};requestAnimationFrame(sample);
+ };
+}
 for(const [label,d] of [['노바 안쪽 판정',2],['노바 바깥 판정',6]]){
  const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
  b.onclick=async()=>{const a=w(),o=boss();if(!a||!o||select.value!=='nova')return;sequence=null;a.stage.skip();o.stage.seen=true;

@@ -9,6 +9,7 @@
    온라인에서도 화면만 바꾼다 — 서버 시계·판정·위치는 건드리지 않는다. 등장·사망 장면 동안 내 몸만 멈춘다(공격 단추로 넘긴다). */
 
 import { bossDeathTiming } from './boss-death-timing.js';
+import { bossDeathFlight } from './boss-death-flight.js';
 
 /* 이름·칭호는 지도 데이터(maps/2d/<zone>/map.json bosses[].name/title)가 정본 — 여기서는 «색과 크기» 만 보스마다 다르게 쓴다.
    rim 윤곽광 색 · rimK 세기 · env 금속 반사(0 이면 없음) · aura 발밑 기운 · core 포효·고리 색 · introR 등장 반경(공격 반경보다 커야 등장 중에 안 맞는다)
@@ -146,10 +147,11 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
         if (!shot && !introDone(cfg.introKey || o.b.id) && (!a || a.motion === 'idle') && d < (cfg.introR || 26)) intro(o);   /* AI 없는 보스는 netAct 가 없다 = 늘 대기 */
         if (d < (cfg.plateR || 34) && d < plateD) { plateD = d; plateFor = o; } }
       if (st.dying) { const y = st.dying, h = o.h || 3; y.t += dt; if (o.wind) { o.wind.g.position.set(0, 0, 0); o.wind.g.rotation.set(0, 0, 0); o.wind.g.scale.set(1, 1, 1); }   /* 쓰러질 땐 준비 동작 없음 */ if (y.mix) y.mix.update(dt);
-        if (y.ry0 > .5) { const f = Math.min(1, y.t / 1.1); o.root.position.y = y.ry0 * (1 - f * f); }   /* 떠 있던 보스(셀레스티얼)는 땅으로 떨어진다 */
+        const flight = bossDeathFlight({fly:o.b.fly,rootY:y.ry0,modelY:y.y0,baseModelY:o.kfx?.baseY ?? y.y0,elapsed:y.t});
+        o.root.position.y = flight.rootY;   /* 급강하 도중의 몸 높이도 함께 회수한다 */
         if (o.model) { let dy = 0; if (!y.clip) { const k = smooth((y.t - .3) / 1.6), tilt = (st.span || 0) < h * 1.1; if (tilt) o.model.rotation.x = y.rx0 + k * .32; dy = k * h * .12; }   /* 정지 모델: 앞으로 기울며 주저앉는다 — 긴 몸은 기울이면 꼬리가 하늘로 들려 가라앉기만 */
           if (y.t > y.timing.sinkAt) { y.sink = Math.min(1, (y.t - y.timing.sinkAt) / .9); dy += y.sink * h * .5; if (st.aura) st.aura.material.opacity *= .9; }
-          o.model.position.y = y.y0 - dy; }
+          o.model.position.y = flight.modelY - dy; }
         if (y.t > y.timing.finishAt) { st.dying = null; o.root.position.y = y.ry0; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
     }
     { let d = 0; for (const o of list) { const f = FX(o); if (f && f.dim && o.root.visible) d = Math.max(d, f.dim); } dim = reduced ? d * .6 : d; }   /* 방전 폭우: 하늘이 어두워진다 — world3d 가 그릴 때 노출에 곱한다 (조작 화면은 그대로) */

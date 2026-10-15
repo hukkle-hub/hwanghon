@@ -40,6 +40,14 @@ test('long authored death is not removed at the old 4.9 second cutoff; interrupt
  r.run(1.7);assert.equal(removed,1);r.run(1);assert.equal(removed,1);
 });
 
+test('flying death recovers an interrupted dive without double descent in the actual stage',()=>{
+ for(const lift of [-3.4,0,1.8]){const {S,run}=rig(),o=fakeBoss('celestial2');o.b.fly=3.4;o.root.position.y=3.4;o.model.position.y=.3+lift;o.kfx={baseY:.3};
+  o.mixer=new THREE.AnimationMixer(o.model);o.deathClip=new THREE.AnimationClip('death',2.6,[]);S.attach(o);S.death(o);let last=Infinity;
+  for(let i=0;i<120;i++){run(1/120,1/120);const height=o.root.position.y+o.model.position.y-.3;assert.ok(height>=-1e-10&&height<=last+1e-10);last=height;}
+  run(.2);assert.ok(Math.abs(o.root.position.y+o.model.position.y-.3)<1e-10);
+ }
+});
+
 test('설정: 지도에 있는 필드 보스 전부(모델 · 지배형)가 무대를 갖는다 — 이름·칭호는 지도 데이터가 정본', () => {
   const miss = [];
   for (const z of fs.readdirSync('maps/2d')) { let m; try { m = JSON.parse(fs.readFileSync(`maps/2d/${z}/map.json`, 'utf8')); } catch { continue; }
@@ -136,7 +144,7 @@ test('연결: world3d 가 소리·환경맵을 싣고, 윤곽광은 예열 전�
 
 test('사망: 떠 있던 보스는 땅으로 떨어지고(끝나면 제자리) · 긴 몸은 기울이지 않는다(꼬리가 하늘로 들린다)', () => {
   const { me, S, run } = rig(); me.set(0, 0, 10);
-  const f = fakeBoss('celestial', { netAct: undefined }); f.root.position.y = 3.2; S.attach(f); S.death(f, () => {});
+  const f = fakeBoss('celestial', { netAct: undefined }); f.b.fly = 3.2; f.root.position.y = 3.2; S.attach(f); S.death(f, () => {});
   run(1.2); assert.ok(f.root.position.y < .05, '떨어짐 ' + f.root.position.y.toFixed(2)); run(4); assert.equal(f.root.position.y, 3.2, '다시 나올 때 제자리');
   const L = fakeBoss('leviathan', { netAct: undefined }); L.model.children[0].geometry = new THREE.BoxGeometry(14, 3, 2); S.attach(L); assert.ok(L.stage.span > L.h, '길이 ' + L.stage.span);
   S.death(L, () => {}); run(2); assert.equal(L.model.rotation.x, 0, '긴 몸은 기울이지 않는다'); assert.ok(L.model.position.y < .3, '주저앉기는 한다');
