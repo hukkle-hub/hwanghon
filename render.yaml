@@ -24,6 +24,9 @@ services:
         - js/combat-quality.js
         - js/dungeon-run.js
         - js/mmo/field-collide.js
+        - js/mmo/env-rules.js
+        - js/mmo/zones.js
+        - js/mmo/zones-auto.js
         - js/mmo/safe-zones.js
         - js/mmo/zone-links.js
         - js/party-wire.js

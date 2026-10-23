@@ -1,0 +1,48 @@
+<!doctype html><meta charset="utf-8"><title>보스 5종 실제 필드 검수</title>
+<style>body{margin:0;background:#111;color:white;font:12px sans-serif}iframe{position:absolute;inset:0;width:100%;height:100%;border:0}aside{position:absolute;z-index:5;left:4px;top:4px;background:#10151dea;padding:6px;max-width:95vw}button,select{min-height:32px;margin:2px}output{display:block;max-width:550px}a{color:#bdf}</style>
+<iframe id="world" title="실제 3D 필드"></iframe>
+<aside><select id="boss" aria-label="보스"><option value="leviathan">레비아탄</option><option value="aegis">에이지스</option><option value="celestial2">셀레스티얼</option><option value="arsenal">아스널</option><option value="nova">노바</option></select><button id="near">보스 앞으로</button><button id="phase">단계 기술</button><button id="pause">일시정지</button><button id="record">15초 녹화</button><output id="status">로딩</output><a id="download" hidden download="boss-kit.webm">영상 저장</a></aside>
+<script type="module">
+import {loadCjs} from '../../js/mmo/cjs-browser.js';
+const KIT=await loadCjs('../../server/field-boss-kit.cjs'), zones={leviathan:'hangang_tunnel',aegis:'yeouido',celestial2:'southroad',arsenal:'gyeryong_base',nova:'goheung_pad'};
+const frame=document.querySelector('#world'), select=document.querySelector('#boss'), status=document.querySelector('#status');
+const w=()=>frame.contentWindow.__W3D, boss=()=>w()?.fbs.find(o=>o.b.id===select.value);
+// QA teleport releases the new 80m cable. No production device code changes;
+// this isolated combat page is not evidence of dungeon progression working.
+function releaseQaCable(){const d=frame.contentWindow.__DEV;if(d){d.attached=false;d.taut=false;d.pull=0;if(d.cable)d.cable.visible=false;}}
+document.querySelector('#near').addEventListener('click',releaseQaCable);
+let sequence=null;
+// Actual offline bossStrike / environment sampling, not a reimplemented damage formula.
+const envProof=document.createElement('output');envProof.id='environment-proof';document.querySelector('aside').append(envProof);
+for(const [label,d] of [['노바 안쪽 판정',2],['노바 바깥 판정',6]]){
+ const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
+ b.onclick=async()=>{const a=w(),o=boss();if(!a||!o||select.value!=='nova')return;sequence=null;a.stage.skip();o.stage.seen=true;
+  KIT.reset(o.ai,a.gameNow);o.ai.kit.endsAt=a.gameNow+60000;a.hold=false;a.teleport(o.ai.x+d,o.ai.z,Math.PI/2);
+  Object.assign(a.P,{hp:20000,maxHp:20000,dead:false,buffUntil:0,invulnUntil:0,dodgeUntil:0});
+  const start=a.frames;while(a.frames<start+3)await new Promise(resolve=>requestAnimationFrame(resolve));a.hold=true;
+  const before={x:a.P.x,z:a.P.z,hp:a.P.hp},areas=a.env.safe;
+  a.fieldLocal.bossStrike(o.ai,a.P,{damage:.2,knock:2,skill:'environment-review',beat:1},a.gameNow);
+  envProof.textContent=JSON.stringify({mode:label,safe:areas,before,after:{x:a.P.x,z:a.P.z,hp:a.P.hp},damage:before.hp-a.P.hp,knock:Math.hypot(a.P.x-before.x,a.P.z-before.z)});
+ };
+}
+for(const [label,width,height] of [['폰 가로',915,412],['폰 세로',412,915],['화면 복원',0,0]]){
+ const b=document.createElement('button');b.textContent=label;document.querySelector('aside').append(b);
+ b.onclick=()=>{frame.style.width=width?width+'px':'100%';frame.style.height=height?height+'px':'100%';frame.style.top=height?'170px':'0';document.body.style.minHeight=height?(height+170)+'px':'0';};
+}
+const allButton=document.createElement('button');allButton.textContent='3기술 연속 검수';document.querySelector('aside').append(allButton);
+const whole=document.createElement('button');whole.textContent='보스 전체 보기';document.querySelector('aside').append(whole);
+for(const [label,d] of [['입 정면 검사',18],['입 후방 검사',-12]]){
+ const button=document.createElement('button');button.textContent=label;document.querySelector('aside').append(button);
+ button.onclick=()=>{const a=w(),o=boss();if(!o||select.value!=='leviathan')return;releaseQaCable();sequence=null;a.hold=false;a.stage.skip();o.stage.seen=true;a.P.hp=1000000;a.P.dead=false;KIT.reset(o.ai,a.gameNow);a.teleport(o.ai.x,o.ai.z+d,d>0?Math.PI:0);a.orbit(d>0?0:Math.PI,.22,10);};
+}
+whole.onclick=()=>{const a=w(),o=boss();if(!o)return;const dx=a.P.x-o.ai.x,dz=a.P.z-o.ai.z,n=Math.hypot(dx,dz)||1,h=o.h||6,dist=Math.max(12,h*2.2),y=o.root.position.y;a.view([o.ai.x+dx/n*dist,y+h*.8,o.ai.z+dz/n*dist],[o.ai.x,y+h*.45,o.ai.z]);};
+allButton.onclick=()=>{const a=w(),o=boss();if(!o)return;a.hold=false;document.querySelector('#near').click();KIT.reset(o.ai,a.gameNow);sequence={id:select.value,names:Object.keys(KIT.KITS[select.value].skills),index:0,started:false};o.ai.kit.pattern=sequence.names[0];};
+setInterval(()=>{if(!sequence||sequence.id!==select.value)return;const a=w(),o=boss(),k=o?.ai.kit;if(!k)return;if(k.state==='skill')sequence.started=true;if(sequence.started&&k.state!=='skill'){sequence.index++;sequence.started=false;if(sequence.index>=sequence.names.length){sequence=null;return;}document.querySelector('#near').click();k.pattern=sequence.names[sequence.index];}},50);
+select.onchange=()=>{frame.src='../../world3d.html?zone='+zones[select.value]+'&offline=1&debug=1&lod=1';}; select.onchange();
+document.querySelector('#near').onclick=()=>{const a=w(),o=boss();if(!o)return; a.stage.skip(); a.P.hp=1000000; a.P.dead=false;const sp=a.meta.spawn,isMouth=select.value==='leviathan',dx=isMouth?0:(sp?.x??0)-o.ai.x,dz=isMouth?1:(sp?.z??0)-o.ai.z,n=Math.hypot(dx,dz)||1,d=isMouth?18:Math.min(10,KIT.KITS[select.value].aggro-2); a.teleport(o.ai.x+dx/n*d,o.ai.z+dz/n*d,Math.atan2(-dx,-dz));a.orbit(Math.atan2(dx,dz),.22,10);o.stage.seen=true;}; // QA endurance only, maxHp/damage unchanged; never loaded by production
+document.querySelector('#phase').onclick=()=>{const o=boss();if(o)o.ai.hp=o.ai.max*.49;};
+document.querySelector('#pause').onclick=()=>{const a=w();if(a)a.hold=!a.hold;};
+document.querySelector('#record').textContent='30초 녹화';
+document.querySelector('#record').onclick=()=>{const cv=frame.contentDocument.querySelector('canvas'),out=document.querySelector('#download'),id=select.value;if(!cv)return;out.hidden=true;const stream=cv.captureStream(24),r=new MediaRecorder(stream,{mimeType:'video/webm'}),chunks=[];r.ondataavailable=e=>chunks.push(e.data);r.onstop=async()=>{const blob=new Blob(chunks,{type:'video/webm'});out.href=URL.createObjectURL(blob);out.download=id+'-actual-field.webm';out.hidden=false;stream.getTracks().forEach(t=>t.stop());try{const saved=await fetch('http://127.0.0.1:8795/'+id,{method:'POST',headers:{'Content-Type':'video/webm'},body:blob});out.textContent=saved.ok?await saved.text():'로컬 저장 실패';}catch{out.textContent='영상 저장';}};r.start();setTimeout(()=>r.stop(),30000);};
+setInterval(()=>{const a=w(),o=boss();status.textContent=a&&o?`${select.value} · KIT ${!!o.ai.kit} · ${o.ai.kit?.state}/${o.ai.kit?.skill||'-'} · ${Math.round(a.gameNow)}ms · clips ${Object.keys(o.kacts||{}).length} · HP ${Math.round(a.P.hp)} · frame ${a.frames} · ${frame.clientWidth}×${frame.clientHeight} · boss ${o.ai.x.toFixed(1)},${o.ai.z.toFixed(1)} player ${a.P.x.toFixed(1)},${a.P.z.toFixed(1)} root ${o.root.position.x.toFixed(1)},${o.root.position.z.toFixed(1)} model ${o.model.position.x.toFixed(1)},${o.model.position.z.toFixed(1)}`:'필드·몸체 로딩 중';},300);
+</script>

@@ -30,6 +30,16 @@ function rig(extra = {}) {
   return { doc, played, cam, scene, me, S, run };
 }
 
+test('long authored death is not removed at the old 4.9 second cutoff; interrupted pose is retained',()=>{
+ const r=rig(),o=fakeBoss('jeong');o.mixer=new THREE.AnimationMixer(o.model);
+ const attack=new THREE.AnimationClip('attack',3,[new THREE.NumberKeyframeTrack('.rotation[y]',[0,3],[0,1])]);
+ o.deathClip=new THREE.AnimationClip('death',5.2,[new THREE.NumberKeyframeTrack('.rotation[y]',[0,5.2],[.5,.1])]);
+ const previous=o.mixer.clipAction(attack);previous.play();previous.time=1.7;previous.paused=true;o.kfx={clip:previous};r.S.attach(o);let removed=0;r.S.death(o,()=>removed++);
+ assert.equal(previous.time,1.7);assert.equal(previous.paused,true);
+ r.run(5);assert.equal(removed,0);assert.equal(o.stage.dying.sink,0);
+ r.run(1.7);assert.equal(removed,1);r.run(1);assert.equal(removed,1);
+});
+
 test('설정: 지도에 있는 필드 보스 전부(모델 · 지배형)가 무대를 갖는다 — 이름·칭호는 지도 데이터가 정본', () => {
   const miss = [];
   for (const z of fs.readdirSync('maps/2d')) { let m; try { m = JSON.parse(fs.readFileSync(`maps/2d/${z}/map.json`, 'utf8')); } catch { continue; }
@@ -79,6 +89,13 @@ test('이름표: 이름·칭호만 — 체력·페이즈는 보이지 않는다 
   const plate = doc.getElementById('bsPlate'); assert.ok(!plate.hidden); assert.match(plate.innerHTML, /보스clave/); assert.match(plate.innerHTML, /칭호clave/);
   assert.doesNotMatch(plate.innerHTML, /<i|phase|hp|%|\d/, plate.innerHTML);
   me.set(0, 0, 80); run(.1); assert.ok(plate.hidden, '멀어지면 숨는다');
+});
+
+test('duplicate death event cannot remove a boss before its original death finishes',()=>{
+ const {S,run}=rig(),o=fakeBoss('arsenal');S.attach(o);let original=0,duplicate=0;
+ S.death(o,()=>original++);run(.4);S.death(o,()=>duplicate++);
+ assert.equal(original,0);assert.equal(duplicate,0);assert.ok(o.stage.dying);
+ run(5);assert.equal(original,1);assert.equal(duplicate,0);
 });
 
 test('사망: 쓰러지는 장면 → 4.9초 뒤 done · 모델 자리·기울기는 되돌린다 · 정지 모델은 기울며 주저앉는다', () => {

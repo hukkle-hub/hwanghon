@@ -1,0 +1,65 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>전체 보스 확대 검수</title>
+<style>
+body{margin:0;background:#26313d;color:#eee;font:14px sans-serif}header{padding:8px;background:#14202c}button,select,input{font:inherit;min-height:34px;margin:2px;max-width:95vw}input{width:85px}output{display:block;overflow-wrap:anywhere}canvas{display:block;touch-action:none}#beats{max-height:82px;overflow:auto}#state{color:#ffd191}
+</style>
+<header>전체 보스 확대 검수 · 원본 메시/클립 검사 전용 · 게임·AI·이펙트·장비 조립/모바일 합격 증거 아님<br>
+<label>보스 <select id="boss"></select></label><label>몸체 <select id="asset"><option value="live">현재 게임 몸체</option><option value="park">박 준장 최신 무장 후보</option><option value="gill">레비아탄 아가미 후보</option><option value="wing">셀레스티얼 날개 후보</option><option value="response">셀레스티얼 비대칭 반응 후보</option></select></label>
+<label>동작 <select id="clip"></select></label><label>시간 <input id="time" type="number" min="0" step="0.033333" value="0"></label>
+<button id="prev">−1 프레임</button><button id="next">+1 프레임</button><button id="play">재생/정지</button><button id="record">현재 동작 녹화</button><button id="recordAll">전체 동작 녹화</button>
+<br><button id="whole">현재 자세 전체</button><button id="left">왼쪽 45°</button><button id="right">오른쪽 45°</button>
+<label>확대 <select id="zoom"><option value="1">1배</option><option value="3">3배</option><option value="6">6배</option><option value="10">10배</option></select></label>
+<label>속도 <select id="speed"><option value="1">정속</option><option value="0.25">¼속</option></select></label>
+<button id="top">얼굴·상부</button><button id="middle">팔·손·중앙</button><button id="bottom">무릎·발·접지</button>
+<output>정지한 메시 표면을 누르면 해당 접점을 중심으로 확대합니다. 부위 이름은 구도 안내이며 해부학적 자동 판정이 아닙니다.</output>
+<div id="beats"></div><output id="state">로딩</output><output id="info"></output><output id="saved"></output></header><canvas></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {ZONES} from '../../js/mmo/zones.js';
+import {loadCjs} from '../../js/mmo/cjs-browser.js';
+import {collectBosses,createReviewPoser,surfaceBounds,fitDistance,hitFrames} from './boss-close-review.mjs';
+const $=s=>document.querySelector(s), cv=$('canvas'),r=new T.WebGLRenderer({canvas:cv,antialias:true});r.setPixelRatio(1);r.outputColorSpace=T.SRGBColorSpace;
+const scene=new T.Scene();scene.background=new T.Color('#26313d');scene.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
+for(const [x,y,z,color,intensity]of [[-3,6,5,0xffe0c0,2.5],[3,3,-3,0xd4e1ff,1.6]]){const light=new T.DirectionalLight(color,intensity);light.position.set(x,y,z);scene.add(light);}
+const ground=new T.GridHelper(200,200,0x78838c,0x43505b);scene.add(ground);
+const camera=new T.PerspectiveCamera(35,1,.001,10000),target=new T.Vector3();
+let root=null,clips=[],pose=null,t=0,run=false,revision=0,baseRadius=1,yaw=0,recording=null,recordAll=false,last=performance.now();
+const kits=(await loadCjs('../../server/field-boss-kit.cjs')).KITS,canon=await loadCjs('../../server/field-boss-canon.cjs'),clave=(await loadCjs('../../server/field-boss-combat.cjs')).SKILLS;
+const monsters=(await loadCjs('../../server/field-monsters.cjs')).FIELD_MONSTERS;
+const bosses=collectBosses(ZONES,monsters);for(const b of bosses)$('#boss').add(new Option(b.name+' · '+b.id,b.id));
+function cameraView(){const d=fitDistance(baseRadius,camera.fov,camera.aspect)/+$('#zoom').value;camera.position.copy(target).add(new T.Vector3(Math.sin(yaw)*d,d*.08,Math.cos(yaw)*d));camera.lookAt(target);camera.updateProjectionMatrix();}
+// Keep a stable backing buffer for the encoder even when the header wraps.
+function resize(){if(recording)return;const h=Math.max(180,innerHeight-$('header').offsetHeight);r.setSize(innerWidth,h);camera.aspect=innerWidth/h;cameraView();}
+new ResizeObserver(resize).observe($('header'));addEventListener('resize',resize);
+function duration(){return clips.find(c=>c.name===$('#clip').value)?.duration||0;}
+function info(){ $('#info').textContent=`${$('#boss').value} · ${$('#clip').value||'동작 없음'} · ${t.toFixed(3)}/${duration().toFixed(3)}초 · 캔버스 ${cv.width}×${cv.height} · ${$('#zoom').value}배 · 자동 합격 없음`; }
+function seek(time){t=Math.max(0,Math.min(duration(),time));pose?.($('#clip').value,t);$('#time').value=t.toFixed(6);info();}
+function fit(){if(!root)return;const b=surfaceBounds(root);if(b.isEmpty())return;b.getCenter(target);baseRadius=b.getSize(new T.Vector3()).length()/2;yaw=0;$('#zoom').value='1';cameraView();info();}
+function beats(){const kit=$('#boss').value==='park'?canon.PARK:kits[$('#boss').value],defs=kit?.skills||(/^clave/.test($('#boss').value)?clave:{}),def=Object.values(defs).find(s=>s.clip===$('#clip').value);$('#beats').replaceChildren();
+ for(const p of [{label:'예비 시작',time:0},...hitFrames(def,duration()),{label:'마무리 끝',time:duration()}]){const b=document.createElement('button');b.textContent=p.label;b.onclick=()=>{run=false;seek(p.time);};$('#beats').append(b);}
+ if(!def)$('#beats').append(' 기술 판정시각 연결 없음 — 클립 단독 검수');
+ else if(def.cue||def.jitter)$('#beats').append(' 타격 버튼: cue 반영 · 지연량 0 기준. 입력 시간은 클립 시각.');
+}
+function dispose(object){const textures=new Set(),materials=new Set(),geometries=new Set();object.traverse(o=>{if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[])materials.add(m);});for(const m of materials){for(const v of Object.values(m))if(v?.isTexture)textures.add(v);m.dispose();}for(const v of textures)v.dispose();for(const g of geometries)g.dispose();}
+async function load(){if(recording)return;const token=++revision;run=false;pose=null;clips=[];$('#clip').replaceChildren();$('#beats').replaceChildren();$('#saved').replaceChildren();$('#info').textContent='';if(root){scene.remove(root);dispose(root);root=null;}$('#state').textContent='불러오는 중';
+ const b=bosses.find(b=>b.id===$('#boss').value),candidate=$('#asset').value;
+ const path=candidate==='park'&&b.id==='park'?'art/review/part1/park-armed-recovery-study.glb':candidate==='gill'&&b.id==='leviathan'?'art/review/part1/leviathan-gill-candidate.glb':candidate==='response'&&b.id==='celestial2'?'art/review/part1/celestial-response-study.glb':candidate==='wing'&&b.id==='celestial2'?'art/review/part1/celestial-wing-study.glb':b.model;
+ if(!path){$('#state').textContent='몸체 없음 — 검수 차단. 다른 보스 몸으로 합격 처리하지 않습니다.';seek(0);return;}
+ try{const gl=await new GLTFLoader().loadAsync('../../'+path);if(token!==revision){dispose(gl.scene);return;}root=gl.scene;clips=gl.animations;scene.add(root);pose=createReviewPoser(root,clips);for(const c of clips)$('#clip').add(new Option(c.name,c.name));seek(0);fit();beats();$('#state').textContent=path+' · '+clips.length+'클립 · 확대 검수 미승인'+(candidate!=='live'?' · 후보/게임 미연결':'');resize();}
+ catch(e){if(token===revision)$('#state').textContent='로드 실패: '+e.message;}
+}
+$('#boss').onchange=()=>{$('#asset').value='live';load();};$('#asset').onchange=load;
+$('#clip').onchange=()=>{run=false;seek(0);beats();};$('#time').oninput=()=>{run=false;seek(+$('#time').value||0);};
+$('#prev').onclick=()=>{run=false;seek(t-1/30);};$('#next').onclick=()=>{run=false;seek(t+1/30);};$('#play').onclick=()=>{run=!run;if(t>=duration())seek(0);last=performance.now();};
+$('#whole').onclick=fit;$('#zoom').onchange=()=>{cameraView();info();};$('#left').onclick=()=>{yaw-=Math.PI/4;cameraView();};$('#right').onclick=()=>{yaw+=Math.PI/4;cameraView();};
+for(const [id,y]of [['top',.85],['middle',.55],['bottom',.15]])$('#'+id).onclick=()=>{if(!root)return;const b=surfaceBounds(root);b.getCenter(target);target.y=T.MathUtils.lerp(b.min.y,b.max.y,y);$('#zoom').value='3';cameraView();info();};
+const ray=new T.Raycaster();cv.onclick=e=>{if(!root||run||recording)return;surfaceBounds(root);const b=cv.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-b.left)/b.width*2-1,1-(e.clientY-b.top)/b.height*2),camera);const hit=ray.intersectObject(root,true)[0];if(hit){target.copy(hit.point);$('#zoom').value='6';cameraView();info();}};
+function record(all=false){if(!root||recording||!duration())return;recordAll=all;if(all)$('#clip').selectedIndex=0;seek(0);r.render(scene,camera);run=true;const stream=cv.captureStream(30),mimeType=MediaRecorder.isTypeSupported('video/webm;codecs=vp8')?'video/webm;codecs=vp8':'video/webm',rec=new MediaRecorder(stream,{mimeType}),chunks=[],name=$('#boss').value,clip=all?'all-clips':$('#clip').value;
+ recording=rec;for(const el of $('header').querySelectorAll('button,input,select'))el.disabled=true;
+ rec.ondataavailable=e=>chunks.push(e.data);rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const blob=new Blob(chunks,{type:'video/webm'});if(/^(leviathan|aegis|celestial2|arsenal|nova|park)$/.test(name)){try{const res=await fetch('http://127.0.0.1:8795/'+name,{method:'POST',headers:{'Content-Type':'video/webm'},body:blob});$('#saved').textContent=res.ok?`${clip}: ${await res.text()}`:'저장 실패';}catch(e){$('#saved').textContent='저장 실패: '+e.message;}}
+ else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name+'-'+clip+'-close.webm';a.textContent='녹화 다운로드';$('#saved').replaceChildren(a);}
+ for(const el of $('header').querySelectorAll('button,input,select'))el.disabled=false;recording=null;recordAll=false;resize();};rec.start();last=performance.now();}
+$('#record').onclick=()=>record();$('#recordAll').onclick=()=>record(true);
+function frame(now){let next=false,stop=false;if(run&&duration()){seek(Math.min(duration(),t+Math.min(.1,(now-last)/1000)*+$('#speed').value));if(t>=duration()){next=!!(recording&&recordAll&&$('#clip').selectedIndex<clips.length-1);stop=!next;run=next;}}last=now;r.render(scene,camera);if(next){$('#clip').selectedIndex++;seek(0);beats();for(const b of $('#beats').querySelectorAll('button'))b.disabled=true;}else if(stop)recording?.stop();requestAnimationFrame(frame);}
+resize();await load();requestAnimationFrame(frame);
+</script></html>

@@ -8,6 +8,8 @@
    · 이름표: 위 가운데 이름 · 칭호뿐 — 체력·페이즈는 보이지 않는다(«얼마나 남았는지 모르고 때린다», tests/field-clave-combat 의 설계 규칙)
    온라인에서도 화면만 바꾼다 — 서버 시계·판정·위치는 건드리지 않는다. 등장·사망 장면 동안 내 몸만 멈춘다(공격 단추로 넘긴다). */
 
+import { bossDeathTiming } from './boss-death-timing.js';
+
 /* 이름·칭호는 지도 데이터(maps/2d/<zone>/map.json bosses[].name/title)가 정본 — 여기서는 «색과 크기» 만 보스마다 다르게 쓴다.
    rim 윤곽광 색 · rimK 세기 · env 금속 반사(0 이면 없음) · aura 발밑 기운 · core 포효·고리 색 · introR 등장 반경(공격 반경보다 커야 등장 중에 안 맞는다)
    introD 등장 카메라 [처음 거리, 끝 거리, 처음 높이, 끝 높이] (보스 키 h 배) · plateR 이름표·보스 곡 반경 · introKey 같은 키끼리는 등장 장면을 한 번만(지배형 다섯) · down 처치 카드 아랫줄 */
@@ -99,18 +101,24 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
       [.9, () => { play('phase'); kick = Math.max(kick, .35); kickDir.set(0, -1, 0); flash(`radial-gradient(circle at 50% 45%, ${hex(cfg.core)}99, transparent 60%)`, .6, .5); st.rimK.value = cfg.rimK * 2.4; if (FX(o) && FX(o).glow) { FX(o).glow.visible = true; FX(o).glow.intensity = 6; } ring(o, (o.h || 3) * 1.6); }]];
     markIntro(cfg.introKey || o.b.id); lockT = shot.dur; lock(true); music('boss'); }
 
-  function death(o, done) { const st = o.stage; if (!st || st.dying) { done && done(); return; } const cfg = st.cfg, pp = player(), bx = o.root.position.x, bz = o.root.position.z, h = o.h || 3;
+  function death(o, done) { const st = o.stage; if (!st) { done && done(); return; } if (st.dying) return; const cfg = st.cfg, pp = player(), bx = o.root.position.x, bz = o.root.position.z, h = o.h || 3;
     st.dying = { t: 0, done, sink: 0, y0: o.model ? o.model.position.y : 0, rx0: o.model ? o.model.rotation.x : 0, ry0: o.root.position.y, mix: null, clip: false };
     if (FX(o) && FX(o).warning) { FX(o).warning.visible = FX(o).warningOutline.visible = false; } if (o.dom && o.dom.warn) o.dom.warn.visible = false;
     if (o.netAct) o.netAct = { ...o.netAct, motion: 'death', seq: (o.netAct.seq || 0) + 1e6 };
     /* 쓰러지는 클립: 클레이브(actions) · 지배형(dacts — 죽으면 월드 루프가 dmix 를 안 돌려서 여기서 돌린다) · 그 밖(deathClip) · 없으면(정지 모델) 앞으로 기울며 주저앉기 */
     const dk = o.dacts && Object.keys(o.dacts).find(k => /death|die/i.test(k)), mix = o.actions ? o.mixer : dk ? o.dmix : o.deathClip ? o.mixer : null;
     const act = o.actions ? (o.actions.death || o.actions.down) : dk ? o.dacts[dk] : o.deathClip && o.mixer ? o.mixer.clipAction(o.deathClip) : null;
-    if (mix && act) { mix.stopAllAction(); act.reset(); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; act.timeScale = .7;   /* death 2.1s → 3.0s: 무너지는 게 보이게 */ act.play(); st.dying.clip = true; if (dk) st.dying.mix = mix; }
+    const timing = bossDeathTiming(act?.getClip().duration); st.dying.timing = timing;
+    if (mix && act) { const previous = o.kfx?.clip, previousTime = previous?.time;
+      mix.stopAllAction(); act.reset(); act.setLoop(THREE.LoopOnce, 1); act.clampWhenFinished = true; act.timeScale = timing.speed; act.play();
+      // Preserve the interrupted skill's evaluated pose for a short transition.
+      // Restarting it from frame zero here would reintroduce a visible snap.
+      if (previous && previous !== act) { previous.enabled = true; previous.time = previousTime; previous.paused = true; previous.setEffectiveWeight(1); previous.play(); previous.fadeOut(.18); act.fadeIn(.18); }
+      st.dying.clip = true; if (dk) st.dying.mix = mix; }
     const near = Math.hypot(pp.x - bx, pp.z - bz) < (cfg.plateR || 34);
     if (near) { let dx = pp.x - bx, dz = pp.z - bz; const d = Math.hypot(dx, dz) || 1; dx /= d; dz /= d; const r = h * 2.0, by = o.root.position.y;
-      shot = { kind: 'death', o, t: 0, dur: 4.6, blendIn: .5, blendOut: .7, orbit: { cx: bx, cz: bz, r, a0: Math.atan2(dx, dz) - .5, a1: Math.atan2(dx, dz) + .35, y0: by + h * .5, y1: by + h * .8 } };
-      shot.beats = [[.9, () => play('clear')], [2.3, () => showCard(cfg.name + ' 처치', cfg.down || '', 2.4)]   /* 무릎이 꺾인 뒤에 (2.3s ≈ 클립 77%) */];
+      shot = { kind: 'death', o, t: 0, dur: timing.shotDuration, blendIn: .5, blendOut: .7, orbit: { cx: bx, cz: bz, r, a0: Math.atan2(dx, dz) - .5, a1: Math.atan2(dx, dz) + .35, y0: by + h * .5, y1: by + h * .8 } };
+      shot.beats = [[.9, () => play('clear')], [timing.cardAt, () => showCard(cfg.name + ' 처치', cfg.down || '', 2.4)]];
       lockT = shot.dur; lock(true); flash('#fff', .75, .6); play('ult'); }
     music('off'); st.rimK.value = cfg.rimK * 2; if (st.aura) st.aura.material.opacity = .9; }
 
@@ -140,9 +148,9 @@ body.bossCine #bsBars i{ height:11vh } body.bossCine #hud{ opacity:0; pointer-ev
       if (st.dying) { const y = st.dying, h = o.h || 3; y.t += dt; if (o.wind) { o.wind.g.position.set(0, 0, 0); o.wind.g.rotation.set(0, 0, 0); o.wind.g.scale.set(1, 1, 1); }   /* 쓰러질 땐 준비 동작 없음 */ if (y.mix) y.mix.update(dt);
         if (y.ry0 > .5) { const f = Math.min(1, y.t / 1.1); o.root.position.y = y.ry0 * (1 - f * f); }   /* 떠 있던 보스(셀레스티얼)는 땅으로 떨어진다 */
         if (o.model) { let dy = 0; if (!y.clip) { const k = smooth((y.t - .3) / 1.6), tilt = (st.span || 0) < h * 1.1; if (tilt) o.model.rotation.x = y.rx0 + k * .32; dy = k * h * .12; }   /* 정지 모델: 앞으로 기울며 주저앉는다 — 긴 몸은 기울이면 꼬리가 하늘로 들려 가라앉기만 */
-          if (y.t > 3.8) { y.sink = Math.min(1, (y.t - 3.8) / .9); dy += y.sink * h * .5; if (st.aura) st.aura.material.opacity *= .9; }
+          if (y.t > y.timing.sinkAt) { y.sink = Math.min(1, (y.t - y.timing.sinkAt) / .9); dy += y.sink * h * .5; if (st.aura) st.aura.material.opacity *= .9; }
           o.model.position.y = y.y0 - dy; }
-        if (y.t > 4.9) { st.dying = null; o.root.position.y = y.ry0; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
+        if (y.t > y.timing.finishAt) { st.dying = null; o.root.position.y = y.ry0; if (o.model) { o.model.position.y = y.y0; o.model.rotation.x = y.rx0; } st.warnKey = ''; y.done && y.done(); } }
     }
     { let d = 0; for (const o of list) { const f = FX(o); if (f && f.dim && o.root.visible) d = Math.max(d, f.dim); } dim = reduced ? d * .6 : d; }   /* 방전 폭우: 하늘이 어두워진다 — world3d 가 그릴 때 노출에 곱한다 (조작 화면은 그대로) */
     /* 배경음: 살아 있는 보스 근처면 보스 곡 */

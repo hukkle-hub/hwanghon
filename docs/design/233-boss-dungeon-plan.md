@@ -204,3 +204,11 @@
 남은 것 (서버·GPT 몫이었던 것 중 아직 없는 것): 온라인 «가둠»(서버는 차수문을 모른다 — `fieldDevice` 를 중계만 한다) · 아스널 온라인 물리 포탑 · 09호 «부딪치기» · 정 장관 의장대. 드로퍼·박 준장 **몸** 은 Hi3D 자격증명이 이 컨테이너에 없어 못 뽑는다.
 
 검수(혼자 연습, 가로 폰 915×412, `docs/gpt/img/2026-10-14-static-boss-kits.jpg`): 다섯 모두 기술이 나가고 오류 0 — 레비아탄 돌진·에이지스 포문·셀레스티얼 급강하(lift −2.8~8)·아스널 사출·제압·노바 접힘. 덤으로 고친 것 둘: ① 레비아탄은 몸이 21 m 라 뿌리가 가운데면 가까이 선 영웅이 몸속에 들어갔다 → `zones.js front: 0.88`(머리 쪽) + world3d 배치. ② 셀레스티얼 구운 재질이 metalness 1 · roughness 1 이라 하늘을 등지면 검게만 보였다 → `BOSS_STAGES.mat { metalness .3, roughness .6 }` 을 불러올 때 입힌다. 비행 보스는 3.4~8.8 m 에 떠 있어 3인칭 카메라로는 가까이서 화면 위로 벗어난다 — 사진은 등장 장면 카메라.
+
+### 16.1 GPT 가지와 합침 (2026-10-22, 디렉터 «지피티가 진행한 사안 확인하고 계속 진행해»)
+
+GPT 는 10-13 밤 `gpt/bosses-kit` 에 같은 다섯 보스를 자기 식으로 먼저 만들어 두었다(32 커밋, `docs/gpt/2026-10-13-bosses-kit-handoff.txt`): 네 정지 GLB 에 idle·stagger·기술 3 클립(작은 강체 예열·반동)을 부모 노드로 더했고(원본 정점·재질 보존, `tests/static-boss-assets`), 노바는 이미 있던 15 클립을 썼다. 기술표는 고정형 4 종 + 셀레스티얼, 레비아탄 입 발사점(`server/field-boss-emitter.cjs`, 몸 중심 기준 +Z)·아가미 물살 검수(`field-gill-review`)·환경 배율(`field-environment.cjs` — env-rules 를 서버가 읽는다, render.yaml 에 추가)·기계형 공격 효과(`js/mmo/static-boss-fx.js`)·반응 클립 동기(`kit-motion`)·박 준장 몸 후보(`art/review/part1`)·드로퍼/박 준장 원화 제안(`docs/design/ref/boss-kit-proposals`)까지. 전용 시험 31 개.
+
+합친 규칙: **기술표는 GPT 것**(클립과 맞물린다) — §16 표의 내 기술 이름(rush·suck·gill… / sweep·cannon·stomp·vent / dive·gust·fold·devour / volley·suppress·collapse / shutter·fold·mute·ring)은 GPT 의 pressure·gill·tidal / cannon·sweep·barrier / dive·gust·fold / battery·depression·suppression / orbit·eject·heart 로 바뀌었다. 내 것 중 남긴 것: 에이지스 **보이지 않는 벽** `guard`+`hitMul`(GPT 의 aegis 표에 얹었고 `barrier` 가 10 s 내려간다) · world3d 클립 없는 정지 모델 KIT 붙이기 · `BOSS_STAGES.mat`(셀레스티얼 쇠 덜기) · `front` 배치 규칙은 남기되 레비아탄 값은 **되돌렸다**(GPT 입 발사점이 몸 중심 기준이라 머리로 옮기면 입이 10 m 앞에 생긴다). 둘레 고리는 GPT 이름 `annulus` 하나로(내 `ring` 삭제), inner 4.5 = SAFE.r 은 `tests/kit-motion` 이 계속 본다. 충돌은 `server/field.cjs hit()`(벽 배율 × 환경 swing 둘 다) 와 `field-boss-kit.cjs` 넷.
+
+GPT 가 남긴 검수 과제(인계서): 레비아탄 입·효과 앵커 정합 · 아스널 격납고 상자가 카메라를 가림 · 노바 세로 화면 가림 · 셀레스티얼 카메라 위 이탈 · 2 인 온라인 검수. Render 는 여전히 `6a4c45a` — 서버 파일이 많이 바뀌었으니 재배포가 필요하다.

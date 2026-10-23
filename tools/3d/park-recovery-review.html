@@ -1,0 +1,80 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>박 준장 원본 복구 검수</title>
+<style>body{margin:0;background:#172029;color:#eee;font:15px sans-serif}header{padding:12px}button{padding:8px;margin:4px}canvas{display:block}#info{white-space:pre-wrap}</style>
+<header>박 준장 · 원본/전투 후보 비교 검수<br>
+<button id="front">정면</button><button id="side">측면</button><button id="back">후면</button><button id="head">머리·가슴 확대</button><button id="hands">손·무기 확대</button>
+<span id="info">불러오는 중</span><br><label>동작 <select id="clip"></select></label><label>시간 <input id="time" type="number" min="0" step="0.05" value="0"></label><button id="play">재생/정지</button><button id="record">12동작 연속 녹화</button><button id="transition">전투 연결 녹화</button><button id="cancelPose">취소 연결 확대</button><output id="recordStatus"></output></header><canvas></canvas>
+<script type="module">
+import * as T from '../../vendor/three/three.module.js';
+import {GLTFLoader} from '../../vendor/three/GLTFLoader.js';
+import {makePoser} from './pose-eval.mjs';
+import {setupKitMotion,applyKitAction,prepareKitMotion,updateKitMotion} from '../../js/mmo/kit-motion.js';
+import {loadCjs} from '../../js/mmo/cjs-browser.js';
+const {PARK}=await loadCjs('../../server/field-boss-canon.cjs');
+const r=new T.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});r.setPixelRatio(1);r.setSize(innerWidth,innerHeight-document.querySelector('header').offsetHeight);r.outputColorSpace=T.SRGBColorSpace;
+r.shadowMap.enabled=true;r.shadowMap.type=T.PCFSoftShadowMap;
+const s=new T.Scene();s.background=new T.Color('#26313d');s.add(new T.HemisphereLight(0xdbeaff,0x63524a,2.3));
+const key=new T.DirectionalLight(0xffe0c0,2.5);key.position.set(-3,6,5);s.add(key);
+key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-3,right:3,top:3,bottom:-3,near:.1,far:15});key.shadow.bias=-.0002;
+const fill=new T.DirectionalLight(0xd4e1ff,1.6);fill.position.set(3,3,-3);s.add(fill);
+const c=new T.PerspectiveCamera(35,innerWidth/(innerHeight-105),.01,100);
+function resize(){const h=innerHeight-document.querySelector('header').offsetHeight;r.setSize(innerWidth,h);c.aspect=innerWidth/h;c.updateProjectionMatrix();}addEventListener('resize',resize);resize();
+const ground=new T.Mesh(new T.PlaneGeometry(10,10),new T.MeshStandardMaterial({color:0x303841,roughness:1}));ground.rotation.x=-Math.PI/2;s.add(ground);
+ground.receiveShadow=true;const grid=new T.GridHelper(10,20,0x54606a,0x3b4651);grid.position.y=.001;s.add(grid);
+const candidate=new URLSearchParams(location.search).has('candidate');
+const shoulder=new URLSearchParams(location.search).get('candidate')==='shoulder';
+const mocapLeg=new URLSearchParams(location.search).get('candidate')==='mocap-leg';
+const armed=new URLSearchParams(location.search).get('candidate')==='armed';
+const mocap=new URLSearchParams(location.search).get('candidate')==='mocap'||mocapLeg||armed;
+const gl=await new GLTFLoader().loadAsync('../../art/review/part1/'+(armed?'park-armed-recovery-study.glb':mocapLeg?'park-mocap-leg-study.glb':mocap?'park-mocap-study.glb':shoulder?'park-combat-shoulder-study.glb':candidate?'park-combat-candidate.glb':'park-recovered.glb'));
+const root=gl.scene;root.updateMatrixWorld(true);const box=new T.Box3().setFromObject(root,true),size=box.getSize(new T.Vector3()),center=box.getCenter(new T.Vector3());
+root.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
+const scale=1.89/size.y;const holder=new T.Group();holder.add(root);root.scale.multiplyScalar(scale);root.position.add(new T.Vector3(-center.x*scale,-box.min.y*scale,-center.z*scale));s.add(holder);
+let bones=0;root.traverse(o=>{if(o.isBone)bones++});
+document.querySelector('#info').textContent=`뼈 ${bones} · 클립 ${gl.animations.length} · ${armed?'무장 기상 교정 후보 — 미승인':mocapLeg?'하체 가중치 교정 후보 — 미승인':mocap?'모캡 교정 후보 — 미승인':shoulder?'소매 가중치 교정 후보 — 미승인':candidate?'작업 후보 — 미승인':'원본 외형만 확인'}`;
+document.querySelector('#record').textContent=`${gl.animations.length}동작 연속 녹화`;
+if(mocap){const b=document.createElement('button');b.textContent='모캡 3동작 녹화';b.onclick=()=>recordTransitions(false,true);document.querySelector('header').append(b);resize();}
+const sel=document.querySelector('#clip'),time=document.querySelector('#time');
+for(const a of gl.animations)sel.add(new Option(a.name,a.name));
+let poser=gl.animations.length?makePoser(root,gl.animations[0]):null,running=false,t=0,last=performance.now(),recording=null,recordIndex=0,transitionMode=false,transitionActor=null,transitionIndex=0,transitionTime=0;
+const sequence=[[0,'skill'],[.5,'cancel'],[1.1,'idle'],[1.4,'stagger'],[1.7,'stagger'],[3.05,'idle']];
+function startTransition(){
+ running=false;transitionMode=true;transitionIndex=0;transitionTime=0;t=0;
+ transitionActor?.mixer.stopAllAction();
+ if(!transitionActor){transitionActor={b:{id:'park'},root:holder,model:root};setupKitMotion(transitionActor,gl,root,s,PARK);}
+ transitionActor.kfx.seq=NaN;transitionActor.kfx.clip=null;transitionActor.netAct=null;
+ for(const action of Object.values(transitionActor.kacts))action.stop();
+ advanceTransition(0);
+}
+function advanceTransition(until){
+ while(transitionTime<=until+1e-8){
+  while(transitionIndex<sequence.length&&transitionTime+1e-8>=sequence[transitionIndex][0]){
+   const [at,motion]=sequence[transitionIndex++];applyKitAction(transitionActor,{seq:transitionIndex,motion,skill:motion==='skill'?'atk_cqc':null,startedAt:at*1000,x:0,z:0,fromX:0,fromZ:0,yaw:0},transitionTime*1000);
+  }
+  prepareKitMotion(transitionActor,transitionTime*1000);transitionActor.mixer.update(1/60);updateKitMotion(transitionActor,1/60,transitionTime*1000);transitionTime+=1/60;
+ }
+ root.updateMatrixWorld(true);
+ document.querySelector('#recordStatus').textContent=`전투 재생 코드 · ${transitionActor.netAct.motion} · ${until.toFixed(2)}초 · 시퀀스 ${transitionActor.netAct.seq}`;
+}
+sel.onchange=()=>{transitionMode=false;transitionActor?.mixer.stopAllAction();poser=makePoser(root,gl.animations.find(a=>a.name===sel.value));t=0;time.value=0;poser(0);};
+time.oninput=()=>{running=false;t=+time.value;poser?.(t);};
+document.querySelector('#play').onclick=()=>{running=!running;last=performance.now();};
+function recordTransitions(transitions=false,mocapOnly=false){
+ if(recording||!gl.animations.length)return;
+ const stream=r.domElement.captureStream(30),chunks=[],rec=new MediaRecorder(stream,{mimeType:'video/webm'});recording=rec;recordIndex=mocapOnly?gl.animations.findIndex(a=>a.name==='getup_back_park_mocap'):0;sel.selectedIndex=recordIndex;sel.onchange();if(transitions)startTransition();running=true;last=performance.now();
+ document.querySelector('#recordStatus').textContent='녹화 중';rec.ondataavailable=e=>chunks.push(e.data);
+ rec.onstop=async()=>{stream.getTracks().forEach(t=>t.stop());const response=await fetch('http://127.0.0.1:8795/park',{method:'POST',headers:{'Content-Type':'video/webm'},body:new Blob(chunks,{type:'video/webm'})});document.querySelector('#recordStatus').textContent=response.ok?await response.text():'저장 실패';recording=null;};rec.start();
+}
+document.querySelector('#record').onclick=()=>recordTransitions();
+document.querySelector('#transition').onclick=()=>recordTransitions(true);
+document.querySelector('#cancelPose').onclick=()=>{if(recording)return;startTransition();advanceTransition(.7);time.value=.7;document.querySelector('#hands').click();r.render(s,c);};
+poser?.(0);
+function view(x,y,z,ty){c.position.set(x,y,z);c.lookAt(0,ty,0);r.render(s,c)}
+document.querySelector('#front').onclick=()=>view(0,1.05,3.7,.95);
+document.querySelector('#side').onclick=()=>view(3.7,1.05,0,.95);
+document.querySelector('#back').onclick=()=>view(0,1.05,-3.7,.95);
+document.querySelector('#head').onclick=()=>view(0,1.65,1.25,1.55);
+document.querySelector('#hands').onclick=()=>view(.9,.95,1.6,.9);
+const supportView=document.createElement('button');supportView.textContent='기상 손·무릎 확대';supportView.onclick=()=>view(1,.65,1.65,.45);document.querySelector('header').append(supportView);resize();
+view(0,1.05,3.7,.95);
+function frame(now){if(running){const d=transitionMode?3.5:gl.animations.find(a=>a.name===sel.value)?.duration||1;t=Math.min(d,t+(now-last)/1000);time.value=t.toFixed(2);if(transitionMode)advanceTransition(t);else poser?.(t);if(t>=d){running=false;if(recording){recordIndex++;if(!transitionMode&&recordIndex<gl.animations.length){sel.selectedIndex=recordIndex;sel.onchange();running=true;}else recording.stop();}}}last=now;r.render(s,c);requestAnimationFrame(frame);}requestAnimationFrame(frame);
+</script></html>

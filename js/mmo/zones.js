@@ -111,7 +111,7 @@ export const ZONES = {
   hangang_tunnel: { title: '한강 침수 터널', kind: 'dungeon', env: 'indoor', px: 90, rules: { escape: false }, restart: { zone: 'bunker', gate: 'out' },
     spawn: { room: 'mouth', u: 0.3, v: 0.5 },
     gates: [ { id: 'out', room: 'mouth', u: 0.2, v: 0.5, to: { zone: 'namtae', gate: 'tunnel' }, label: '터널 입구 · 남태령', kind: 'zone' } ],
-    bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, front: 0.88, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
+    bosses: [ { id: 'leviathan', name: '레비아탄', title: '가두어야 하는 놈', room: 'flood', u: 0.82, v: 0.5, r: 16, model: M + 'leviathan_static.glb', h: 3.5, place: '차수문 3-B', canon: 'EP08~09 차수문 3-B' } ],
     indoor: { seed: 8, water: 1.2, theme: { wall: '#2a3034', stripe: 'rgba(40,140,160,.35)', floor: 'concrete', h: 7, light: 'red', hemiI: 2.1, fogDist: [9, 46], waterGrade: [[24, 0.15], [120, 0.5], [200, 0.9], [260, 1.15], [330, 1.45]] },   /* 3D: 입구 발목 → 허리 → 가슴 → 차수문 앞 어깨 (L7428~) · 2D 는 water 1.2 한 높이 */   /* 3D 에서 1.4 는 헤드램프를 켜도 검었다 */
       rooms: [
         { id: 'mouth', s: [0, 24], t: [-9, 9], light: 'warm', props: [ { k: 'winch', u: 0.7, v: 0.75, cable: 80 }, { k: 'pillars', step: 12 }, { k: 'debris', n: 5 } ] },   /* 3D: 케이블 80 m 생명줄 */

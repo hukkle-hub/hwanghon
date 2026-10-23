@@ -1,0 +1,11 @@
+// REVIEW ONLY. Right point ray-picked on triangle 42225; left is the closest
+// actual surface to its mirrored position (12.254 mm away, not assumed symmetry).
+// Neither descriptor is a production attack origin or damage policy.
+export const GILL_SOCKETS = [
+  {name:'left',node:'Boss_Mesh',surface:{vertexCount:49966,triangle:3123,
+    vertices:[2069,2136,2080],weights:[.31780752954387254,.31868418179914143,.3635082886569861],
+    rest:[[-.7093254327774048,1.2871012687683105,4.94660758972168],[-.6452794075012207,1.3356053829193115,5.026209354400635],[-.7170493006706238,1.3773794174194336,4.894259452819824]]}},
+  {name:'right',node:'Boss_Mesh',surface:{vertexCount:49966,triangle:42225,
+    vertices:[31573,31601,31524],weights:[.3588158046059575,.40069989631830505,.24048429907573746],
+    rest:[[.7061394453048706,1.2777860164642334,4.928231239318848],[.6888203024864197,1.373348355293274,4.916966438293457],[.633172333240509,1.3462425470352173,5.023263931274414]]}},
+];
