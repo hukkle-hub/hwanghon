@@ -26,8 +26,9 @@ try {
   const ready = await until(async () => { const a = await A.evaluate(() => !!(window.__W3D && window.__W3D.net && window.__W3D.frames > 2)), b = await B.evaluate(() => !!(window.__W3D && window.__W3D.net && window.__W3D.frames > 2)); out.ready = {a, b}; return a && b; }, 600000, 1000);
   if (!ready) throw Error('접속 대기 시간 초과 ' + JSON.stringify(out.ready) + ' ' + JSON.stringify([A.errs.slice(0, 2), B.errs.slice(0, 2)]));
   const F = app.field, pa = F.players.get(one.id), pb = F.players.get(two.id); out.joined = !!(pa && pb);
+  const LV = F.bosses.get('leviathan'); if (LV && !LV.alive) F.spawnBoss(LV, Date.now()); out.bossAlive0 = !!(LV && LV.alive);   /* 온라인 «가둠»: 핀 넷이면 서버가 봉쇄로 끝낸다 (문서 233 §4) */
   /* 둘 다 내측 기계실 핀 1 옆으로 (s 305.6, t 14) — 서버 자리도 같이 */
-  const [x, z] = XZ(305.6, 14); const put = (p, x, z) => { p.x = x; p.z = z; p.at = Date.now(); }; put(pa, x, z); put(pb, x + 1.5, z + 1.0);
+  const [x, z] = XZ(305.6, 14); const put = (p, x, z) => { p.x = x; p.z = z; p.at = Date.now(); p.invulnUntil = 1e15; };   /* 서버 무적 — 장치 시나리오는 보스 판정을 보지 않는다 (레비아탄 기술표가 오고부터 외측 기계실에서 맞아 죽었다) */ put(pa, x, z); put(pb, x + 1.5, z + 1.0);
   await A.evaluate(([x, z]) => { const W = window.__W3D; W.dtCap = 0.05; W.P.invulnUntil = 1e12; W.teleport(x, z, 0); window.__DEV.attached = false; }, [x, z]); await B.evaluate(([x, z]) => { const W = window.__W3D; W.dtCap = 0.05; W.P.invulnUntil = 1e12; W.teleport(x + 1.5, z + 1.0, 0); window.__DEV.attached = false; }, [x, z]);
   const btn = await until(async () => { const t = await A.evaluate(() => document.getElementById('gatebtn').hidden ? '' : document.getElementById('gatebtn').textContent); return /고정핀 1/.test(t) ? t : null; }, 120000, 1000); out.btnA = btn;
   if (!btn) throw Error('A 에 핀 단추가 안 떴다');
@@ -39,9 +40,16 @@ try {
   if (btn2) await A.evaluate(() => document.getElementById('gatebtn').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true})));
   out.bDoorDown = !!(await until(async () => B.evaluate(() => { const g = window.__DEV.gates.get('inner'); return g && g.down; }), 90000, 500));
   out.aDoorDown = await A.evaluate(() => { const g = window.__DEV.gates.get('inner'); return !!(g && g.down); });
+  /* 외측 기계실 핀 둘 (s 345.6 · 350.4, t −14) — 넷째 핀에 서버가 레비아탄을 가두고(bossDown sealed) B 화면에 «가둠» 카드가 뜬다 */
+  for (const [sv, label] of [[345.6, /고정핀 1/], [350.4, /고정핀 2/]]) { const [ox, oz] = XZ(sv, -14); put(pa, ox, oz); await A.evaluate(([x, z]) => window.__W3D.teleport(x, z, 0), [ox, oz]);
+    let bo = null; for (let k = 0; k < 3 && !bo; k++) { if (k) await A.evaluate(([x, z]) => { window.__DEV.attached = false; window.__W3D.teleport(x, z, 0); }, [ox, oz]); bo = await until(async () => { const t = await A.evaluate(() => document.getElementById('gatebtn').hidden ? '' : document.getElementById('gatebtn').textContent); return label.test(t) && /외측/.test(t) ? t : null; }, 90000, 1000); } out['btnOuter' + (label.source.slice(-1))] = bo || ('없음: ' + await A.evaluate(() => document.getElementById('gatebtn').textContent.slice(0, 40)));
+    if (bo) await A.evaluate(() => document.getElementById('gatebtn').dispatchEvent(new PointerEvent('pointerdown', {bubbles: true}))); }
+  out.sealedServer = !!(await until(async () => LV && !LV.alive && LV.sealed, 60000, 500)); out.serverPins = [...(F.pins.get(ZONE) || [])];
+  out.bSealCard = !!(await until(async () => B.evaluate(() => { const rc = document.getElementById('regionCard'); return rc.classList.contains('on') && /가둠/.test(rc.textContent); }), 60000, 500));
   out.bCut = await B.evaluate(() => [...window.__DEV.cut]); out.aCut = await A.evaluate(() => [...window.__DEV.cut]);
   out.bSent = await B.evaluate(() => window.__dev.length); out.errs = [A.errs.slice(0, 2), B.errs.slice(0, 2)];
   /* 사진: B 가 보스 방에서 떨어진 내측 문을 본다 */ const [vx, vz] = XZ(290, 0); await B.evaluate(([x, z, ax, az]) => { window.__W3D.teleport(x, z, 0); window.__W3D.view([x - 6, 2.6, z + 4], [ax, 2.2, az]); }, [vx, vz, ...XZ(308, 0)]); const f0 = await B.evaluate(() => window.__W3D.frames); await until(async () => (await B.evaluate(() => window.__W3D.frames)) > f0 + 14, 120000, 1000);
   await B.screenshot({path: `${OUT}/b-inner-door.png`, timeout: 600000}); await A.screenshot({path: `${OUT}/a-pin.png`, timeout: 600000});
+  out.ok = out.bDoorDown && out.sealedServer && out.bSealCard && !out.errs[0].length && !out.errs[1].length;
 } catch (e) { out.error = String(e).slice(0, 400); }
-console.log(JSON.stringify(out)); await browser.close(); await app.close?.(); process.exit(out.error ? 1 : 0);
+console.log(JSON.stringify(out)); await browser.close(); await app.close?.(); process.exit(out.error || out.ok === false ? 1 : 0);

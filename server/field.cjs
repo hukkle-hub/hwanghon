@@ -7,6 +7,7 @@ const fs=require('node:fs'),path=require('node:path');
 const ROOT=path.resolve(__dirname,'..');
 const ENVIRONMENT=require('./field-environment.cjs');
 const CY=require('./boss-cycle.cjs'),T=require('./boss-table.cjs'),C=require('./content.cjs'),COMBAT=require('./field-boss-combat.cjs'),DOM=require('./field-dominator.cjs'),KIT=require('./field-boss-kit.cjs'),RS=require('./rpg-skills.cjs'),SAFE=require('../js/mmo/safe-zones.js');
+const {FLOODGATE}=require('../js/mmo/env-rules.js');   /* 차수문 핀 수 — 클라와 같은 숫자 한 곳 */
 const {Ecology}=require('./field-ecology.cjs'),{createCollide}=require('../js/mmo/field-collide.js'),{linkGates}=require('../js/mmo/zone-links.js'),MOB=require('./field-mob-combat.cjs'),RULES=require('./rpg-rules.cjs');
 const MOB_CATALOG=require('../docs/design/ref/monster-catalog-v10/MonsterRoster_v10.json').Monsters;
 const crypto=require('node:crypto'),{planRoute}=require('./field-ecology-route.cjs');
@@ -21,7 +22,8 @@ const HIT_GAP=350;         /* ms — 한 사람이 보스를 때릴 수 있는 �
 const POTION_HEAL=.35, POTION_GAP=1000;   /* 회복약 «HP 35% 회복» (js/items.js c_potion) */
 const DODGE_TIME=520, DODGE_GAP=780, RESPAWN_TIME=5000, RESPAWN_GUARD=2000;
 const LOOT_REACH=3.5, LOOT_PRIORITY=10e3, LOOT_LIFE=180e3, BOSS_IMPACT_LIFE=650;   /* 줍는 거리 · 기여도 1위 먼저(10초) · 바닥에 남는 시간 · 공동 접촉 사건 수명 */
-const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);               /* 보스 몸 반지름 + 무기 길이 (대략) */
+const reachOf=b=>2.5+Math.min(4,(b.h||3)*0.4);
+const SEALS={ hangang_tunnel:{ boss:'leviathan', gates:['inner','outer'] } };   /* 가두는 보스: 지역 → 보스·차수문 id (env-indoor floodgates 와 같은 id, 핀 id 는 `${gate}-pin${k}`) */               /* 보스 몸 반지름 + 무기 길이 (대략) */
 /* 공개 칭호는 «그냥 참가»가 아니라 해당 보스 기여도 1위 처치 기록이다. 희귀한 증표가 되도록 단계가 듬성듬성 열린다. */
 const BOSS_TITLES={ clave:[[50,'강남의 철문'],[10,'셔터를 멈춘 자'],[1,'클레이브 토벌자']] };
 function prestigeTitle(rows=[]){
@@ -45,7 +47,7 @@ class Field{
  /* store: 보스 상태·처치 기록 저장 (없으면 메모리만) · emit: 서버 전체 알림 (출현·처치·전설 획득) */
  constructor({ store=null, emit=()=>{}, rng=Math.random, timeScale=Number(process.env.BOSS_TIME_SCALE)||1,
   clock=Date.now, mobStats=MOB.statsFor, mobRewards=null, onMobReward=()=>{} }={}){
-  this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.titleCache=new Map(); this.lootSerial=0;
+  this.zones=new Map(); this.players=new Map(); this.life=new Map(); this.bosses=new Map(); this.loot=new Map(); this.titleCache=new Map(); this.lootSerial=0; this.pins=new Map()   /* pins: 지역 → 잘린 고정핀 id — 온라인 «가둠» (문서 233 §4) */;
   this.hubs=new Map();   /* 거점 주인 (zone → {kind:'guild',name}) — 없으면 보스가 차지 (문서 197·198). 점령전은 GPT 몫: setHub 로 바꾼다 */
   this.store=store; this.emit=emit; this.rng=rng; this.timeScale=timeScale;
   this.clock=clock;this.mobStats=mobStats;this.mobRewards=mobRewards;this.onMobReward=onMobReward;
@@ -214,7 +216,7 @@ class Field{
   for(const p of this.players.values()) if(p.dead&&now>=p.respawnAt) this.respawn(p,now);
   for(const [id,s] of this.life)if(now>=s.expires)this.life.delete(id);
   for(const [k,l] of this.loot) if(now>=l.expires) this.loot.delete(k); }
- spawnBoss(o, now=Date.now()){ o.alive=true; o.hp=o.max; o.nextAt=0; o.dmg.clear(); o.names.clear(); o.last.clear(); o.impacts.length=0;o.ver++;
+ spawnBoss(o, now=Date.now()){ o.alive=true; o.hp=o.max; o.nextAt=0; o.sealed=false; this.pins.delete(o.zone); o.dmg.clear(); o.names.clear(); o.last.clear(); o.impacts.length=0;o.ver++;
   COMBAT.reset(o,now); DOM.reset(o,now); KIT.reset(o,now);
   this.store?.bossSave(o.id,o.zone,'alive',0,now);
   this.emit({ type:'announce', kind:'bossSpawn', zone:o.zone, boss:o.id, name:o.name, title:o.title, place:o.place }); return o; }
@@ -267,7 +269,7 @@ class Field{
   p.x=at.x;p.z=at.z;p.yaw=0;p.anim='idle';p.hp=p.maxHp;p.dead=false;p.respawnAt=0;p.invulnUntil=now+RESPAWN_GUARD;p.dodgeUntil=0;
   p.hurt=[++p.hurtSeq,0,'','','respawn',0,now]; }
  selfView(p){ return {hp:p.hp,maxHp:p.maxHp,dead:p.dead?1:0,respawnAt:p.respawnAt||0,invulnUntil:p.invulnUntil||0}; }
- killBoss(o, now=Date.now()){ o.alive=false; o.hp=0; o.ver++;
+ killBoss(o, now=Date.now(), opt={}){ o.alive=false; o.hp=0; o.ver++;
   const total=[...o.dmg.values()].reduce((a,b)=>a+b,0)||1;
   const ranking=[...o.dmg].sort((a,b)=>b[1]-a[1]).map(([pid,d])=>({ id:pid, name:o.names.get(pid), dmg:d, share:d/total }));
   /* 드롭: 묶음마다 확률 → 맞으면 그 묶음에서 하나. 바닥(보스 자리 둘레)에 떨어지고 1위가 10초 먼저 */
@@ -278,7 +280,7 @@ class Field{
    this.loot.set(k,{ id:k, item, zone:o.zone, x:o.x+Math.cos(a)*r, z:o.z+Math.sin(a)*r, owner:top&&top.id, ownerUntil:now+LOOT_PRIORITY, expires:now+LOOT_LIFE, boss:o.id }); }
   o.nextAt=CY.nextSpawn(o.cycle, now, { rng:this.rng, dead:true });
   let changed=[]; if(this.store){ this.store.bossSave(o.id,o.zone,'wait',o.nextAt,now); changed=this.store.bossKill(o.id,o.zone,now,ranking,drops,T.MATERIAL);if(top){this.titleCache.delete(top.id);if(!changed.includes(top.id))changed.push(top.id);} }
-  this.emit({ type:'announce', kind:'bossDown', zone:o.zone, boss:o.id, name:o.name, top:top&&top.name, players:ranking.length,
+  this.emit({ type:'announce', kind:'bossDown', zone:o.zone, boss:o.id, name:o.name, top:top&&top.name, players:ranking.length, ...(opt.sealed?{ sealed:1 }:{}),
    drops:drops.map(i=>{ const d=itemOf(i); return { item:i, name:d&&d.name, rarity:d&&d.rarity }; }), changed });
   return { ranking, drops }; }
  pickup(id, lootId, store=this.store, now=Date.now()){ const p=this.players.get(id); if(!p) throw Error('먼저 지역에 들어가세요.');
@@ -301,7 +303,14 @@ class Field{
  /* 던전 장치 (문서 233 §4~§13): 핀 절단·고정액·소켓 절단을 같은 지역 전원에게 — 서버는 판정하지 않고 지역만 붙여 되돌린다(클라가 같은 규칙으로 문을 떨어뜨리고 탑을 넘어뜨린다). 멱등: 이미 된 장치는 받는 쪽이 무시 */
  device(id, msg){ const p=this.players.get(id); if(!p) throw Error('필드에 없습니다.');
   if(!DEVICE_KINDS.includes(msg.kind)||typeof msg.id!=='string'||!/^[a-z0-9_-]{1,40}$/i.test(msg.id)) throw Error('알 수 없는 장치입니다.');
-  const ev={ type:'fieldDevice', zone:p.zone, kind:msg.kind, id:msg.id, from:id }; if(Number.isFinite(msg.hits)) ev.hits=Math.max(0,Math.min(9,msg.hits|0)); this.emit(ev); return null; }
+  const ev={ type:'fieldDevice', zone:p.zone, kind:msg.kind, id:msg.id, from:id }; if(Number.isFinite(msg.hits)) ev.hits=Math.max(0,Math.min(9,msg.hits|0)); this.emit(ev);
+  if(msg.kind==='pin') this.sealCheck(p.zone, msg.id, this.clock?this.clock():Date.now()); return null; }
+ /* 온라인 «가둠» (문서 233 §4 · 원작 EP09): 차수문마다 고정핀 둘, 두 문의 핀이 다 잘리면 그 지역의 «가두는» 보스는 처치가 아니라 봉쇄로 끝난다 — 기록·드롭은 처치와 같고 알림에 sealed 가 붙는다.
+    보스는 두 문 사이(레비아탄 u 0.82 = s 342, 문 308·350)에 서 있으므로 서버는 자리를 다시 재지 않는다. 핀은 보스가 다시 설 때 지운다 */
+ sealCheck(zone, pinId, now=Date.now()){ const seal=SEALS[zone]; if(!seal) return false; const o=this.bosses.get(seal.boss); if(!o||!o.alive) return false;
+  const set=this.pins.get(zone)||new Set(); set.add(pinId); this.pins.set(zone,set);
+  for(const g of seal.gates){ let n=0; for(const id of set) if(id.startsWith(g+'-pin')) n++; if(n<FLOODGATE.pins) return false; }
+  o.sealed=true; this.killBoss(o, now, { sealed:true }); return true; }
  command(id, msg, profile, inRaid){
   if(inRaid) throw Error('출격 중에는 필드에 들어갈 수 없습니다.');
   if(msg.type==='fieldJoin'){ const p=this.join(id, profile, msg.zone, msg.look, msg.gate); return { type:'fieldJoined', zone:p.zone, x:p.x, z:p.z, anims:ANIMS, info:p.info, self:this.selfView(p), hub:this.hubOwner(p.zone), mobs:this.mobView(p), mobNow:this.clock(), ...this.bossView(p) }; }

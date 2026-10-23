@@ -218,3 +218,7 @@ GPT 가 남긴 검수 과제(인계서): 레비아탄 입·효과 앵커 정합 
 **아스널 둘레 (2026-10-23)** — GPT 인계 «주 격납고 상자와 몸체가 플레이 카메라를 가린다»: 장갑차 30 대가 아무 데나 놓여 7 대가 탑 다리에 겹쳐 있었다(보스 14 m 안). `env-indoor vehicles()` 가 보스 둘레 14 m 와 입구→보스 길(폭 8 m) 을 비우고 다시 뽑는다(스물네 번까지) → 14 m 안 0 대, 엄폐물은 둘레 고리에 남는다: `docs/gpt/img/2026-10-23-hangar-ring.jpg`.
 
 **2인 온라인 (2026-10-23)** — `tools/boss-online-scenario.mjs <boss>`: 서버를 한 프로세스에 띄우고 둘을 보스 앞 8 m 에 세운다. 노바: 서버 KIT 이 orbit·eject 를 고르고, 두 화면이 같은 bossActs(orbit#2 · orbit#17, ai 'kit')를 받아 같은 기술을 그리며, 서버 bossStrike 가 서 있는 둘의 체력을 깎았다(A 24,450→0 · B 38,200→15,985, hurt 'nova/orbit'). 오류 0: `docs/gpt/img/2026-10-23-boss-online-nova.jpg`. Render 가 올라가면 실제 파티도 같은 길이다.
+
+### 4.1 온라인 «가둠» (2026-10-23, 디렉터 «계속 진행해»)
+
+서버가 핀 절단을 중계만 해서 가둠 결말이 혼자 연습에서만 났다. `server/field.cjs sealCheck()`: `SEALS = { hangang_tunnel: { boss:'leviathan', gates:['inner','outer'] } }` — 지역마다 잘린 핀 id(`${gate}-pin${k}`)를 모아 두 문 모두 `FLOODGATE.pins`(env-rules, 2) 개가 잘리면 레비아탄을 `killBoss(o, now, { sealed:true })` 로 끝낸다(기록·드롭은 처치와 같고 알림 `bossDown` 에 `sealed:1`). 보스는 두 문 사이(s 342)에 고정이라 자리를 다시 재지 않고, 같은 핀을 두 번 보내도 세지 않으며, 보스가 다시 서면 핀을 지운다. 클라는 `bossDown.sealed` 에 «가둠 — 차수문 3-B 폐쇄» 카드. 시험 `tests/field-server`(핀 셋까지 살아 있고 넷째에 봉쇄 · 가두는 보스가 없는 지역은 그대로 — 핀 하나로 바꾸면 실패하는 것을 봤다). 2인 시나리오 `tools/device-scenario.mjs` 가 외측 핀까지 잘라 서버 봉쇄와 B 화면 카드를 본다. **Render 재배포 전엔 온라인에 없다.**
