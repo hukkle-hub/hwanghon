@@ -536,6 +536,7 @@ let photo = null;   /* 검수: 고정 시점 { pos:[x,y,z], at:[x,y,z] } */
 /* 도착 도입 장면 (문서 219 §2) — 길로 넘어오면 카메라가 뒤쪽 하늘에서 앞쪽 지역 너머를 내려다보다가 등 뒤로 내려앉는다(3.2 초). 움직이면 바로 끝 */
 let intro = TRAVEL && !INDOOR ? { t: 0, dur: 3.2, fwd: null } : null;
 const ease = k => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+let camLookUp = 0;
 function placeCam(dt) {
   if (photo) { cam.position.set(...photo.pos); cam.lookAt(...photo.at); return; }
   if (intro) { intro.t += dt; const h0 = root.position, f = intro.fwd || (intro.fwd = [Math.sin(me.yaw), Math.cos(me.yaw)]), k = ease(Math.min(1, intro.t / intro.dur));
@@ -544,13 +545,16 @@ function placeCam(dt) {
     const a = new THREE.Vector3().lerpVectors(start, mid, k), b2 = new THREE.Vector3().lerpVectors(mid, end, k); cam.position.lerpVectors(a, b2, k);   /* 곡선(2차 베지어) */
     const lookFar = new THREE.Vector3(h0.x + f[0] * 120, 10, h0.z + f[1] * 120), lookMe = new THREE.Vector3(h0.x, 1.45, h0.z); cam.lookAt(lookFar.lerp(lookMe, ease(Math.min(1, intro.t / (intro.dur * 0.85)))));
     if (intro.t >= intro.dur) { intro = null; document.body.classList.remove('intro'); } else document.body.classList.add('intro'); return; }
-  const h = root.position, tx = h.x, ty = 1.45 + h.y, tz = h.z, cp = Math.cos(camS.pitch),   /* 탑 위에서도 따라간다 (문서 233 #12) */ cd = camS.dist * camDistK(), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * cd, ty + Math.sin(camS.pitch) * cd, tz + Math.cos(camS.yaw) * cp * cd);
+  /* 떠 있는 보스(셀레스티얼 3.4~8.8 m)가 가까우면 3인칭 카메라가 위를 보게 — 보는 점을 보스 높이 쪽으로 올린다 (GPT 인계 «카메라 위로 몸이 벗어나는 구간», 문서 233 §16.1) */
+  let up = 0; for (const o of fbs) { if (!o.root.visible || !o.ai || !o.ai.alive) continue; const by = o.root.position.y + (o.model ? o.model.position.y : 0) + (o.h || 3) * .5, d = Math.hypot(o.root.position.x - root.position.x, o.root.position.z - root.position.z); if (by < 2.6 || d > 22) continue; up = Math.max(up, Math.min(5.5, (by - 1.45) * Math.max(0, 1 - d / 26) * 1.4)); }
+  camLookUp += (up - camLookUp) * (dt > 0 ? 1 - Math.exp(-dt * 4) : 1);
+  const h = root.position, tx = h.x, ty = 1.45 + h.y, tz = h.z, cp = Math.cos(camS.pitch),   /* 탑 위에서도 따라간다 (문서 233 #12) */ cd = camS.dist * camDistK() * (1 + camLookUp * 0.08), want = new THREE.Vector3(tx + Math.sin(camS.yaw) * cp * cd, ty + Math.sin(camS.pitch) * cd, tz + Math.cos(camS.yaw) * cp * cd);   /* 위를 볼 땐 조금 물러난다 — 영웅과 보스가 같이 든다 */
   want.y = Math.max(0.4, want.y);
   /* 건물·바위가 사이에 있으면 그 앞까지 당긴다 — 당길 땐 바로, 물러날 땐 천천히 (벽을 스칠 때 덜컹거리지 않게) */
-  const at = new THREE.Vector3(tx, ty, tz), hit = firstHit(MERGE.camBoxes, at, want);
+  const at = new THREE.Vector3(tx, ty, tz), hit = firstHit(MERGE.camBoxes, at, want);   /* 카메라 자리는 영웅 기준 — 보는 점만 올린다 (camLookUp) */
   if (hit < Infinity) want.sub(at).setLength(hit).add(at);
   const k = dt > 0 ? 1 - Math.exp(-dt * (cam.position.distanceTo(at) > want.distanceTo(at) ? 30 : 8)) : 1;
-  cam.position.lerp(want, k); cam.lookAt(tx, ty, tz); }
+  cam.position.lerp(want, k); cam.lookAt(tx, ty + camLookUp, tz); }
 /* ---------- 입력: 왼쪽 반 = 이동 스틱 · 오른쪽 반 = 카메라 · 휠/핀치 = 거리 · WASD ---------- */
 const keys = {}, stick = { id: null, x: 0, y: 0, sx: 0, sy: 0 }, look = new Map(), ring = document.getElementById('ring');
 addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'KeyJ' || e.code === 'Space') attack(); if (e.code === 'KeyK') dodge(); if (e.code === 'KeyL') counter(); }); addEventListener('keyup', e => { keys[e.code] = false; });
