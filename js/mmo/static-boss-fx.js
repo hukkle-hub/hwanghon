@@ -47,7 +47,7 @@ export function createStaticBossFX(o, scene, floor, reduced) {
       } else if (age >= 0) {
         p.wave.visible = true; p.wave.position.set(x, floor + .6, z); p.wave.rotation.x = Math.PI / 2;
         p.wave.scale.setScalar(h.radius || h.range); p.wave.material.opacity = power * (reduced ? .3 : .6);
-        if (h.shape === 'annulus') { p.inner.visible = true; p.inner.position.copy(p.wave.position); p.inner.rotation.copy(p.wave.rotation); p.inner.scale.setScalar(h.inner); p.inner.material.opacity = p.wave.material.opacity; }
+        if (h.shape === 'annulus' || h.shape === 'ring') { p.inner.visible = true; p.inner.position.copy(p.wave.position); p.inner.rotation.copy(p.wave.rotation); p.inner.scale.setScalar(h.inner); p.inner.material.opacity = p.wave.material.opacity; }
       }
     });
   }

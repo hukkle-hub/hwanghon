@@ -6,7 +6,7 @@ import {GLTFLoader} from '../vendor/three/GLTFLoader.js';
 import {makePoser} from '../tools/3d/pose-eval.mjs';
 import {createGillWaterStudy,gillWaterPhase} from '../tools/3d/leviathan-gill-water.mjs';
 import {createRequire} from 'node:module';
-const kit=createRequire(import.meta.url)('../server/field-boss-kit.cjs').KITS.leviathan,s=kit.skills.gill;
+const kit=createRequire(import.meta.url)('../server/field-boss-kit.cjs').MOTION_STUDY_KITS.leviathan,s=kit.skills.gill;
 async function load(){const b=fs.readFileSync(new URL('../art/review/part1/leviathan-gill-candidate.glb',import.meta.url)),l=new GLTFLoader();l.register(()=>({name:'skip',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')}
 test('gill water uses hit clock with distinct preparation, discharge and cleanup; no early damaging-looking jet',()=>{
  for(const t of [-1,0,649,2550,3300,Infinity,NaN]){const p=gillWaterPhase(s,t);assert.equal(p.release,0);assert.equal(p.gather,0);}

@@ -6,7 +6,7 @@ import contact from '../server/field-surface-contact.cjs';
 import {Field} from '../server/field.cjs';
 import {loadCjs} from '../js/mmo/cjs-browser.js';
 const profile=JSON.parse(fs.readFileSync(new URL('../art/review/part1/leviathan-gill-contact.json',import.meta.url)));
-const skill=KIT.KITS.leviathan.skills.gill;
+const skill=KIT.MOTION_STUDY_KITS.leviathan.skills.gill;
 function setup({kit=KIT,opt=true,x=17,z=-11,yaw=1.7}={}){
  const f=new Field({rng:()=>.5}),events=[],o={id:'leviathan',zone:'review',x,z,yaw,hp:10000,max:10000,alive:true};
  f.bosses=new Map([[o.id,o]]);f.clamp=()=>{};

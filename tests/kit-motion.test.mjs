@@ -5,6 +5,7 @@ import { createRequire } from 'node:module';
 import * as THREE from '../vendor/three/three.module.js';
 import { addWindRig } from '../js/mmo/windup.js';
 import { setupKitMotion, applyKitAction, prepareKitMotion, updateKitMotion, hideKitMotion } from '../js/mmo/kit-motion.js';
+import { SAFE } from '../js/mmo/env-rules.js';
 const KIT = createRequire(import.meta.url)('../server/field-boss-kit.cjs');
 
 function boss(id) { const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
@@ -48,7 +49,7 @@ test('missing reaction falls back to configured idle without inventing a clip',(
 
 test('countered dive recovers from its current height without a one-frame teleport',()=>{
  const o=boss('celestial2'),a=act(o,'dive');applyKitAction(o,a,1000);updateKitMotion(o,.016,2500);
- const y=o.model.position.y;assert.ok(Math.abs(y+3.4)<1e-9);
+ const y=o.model.position.y;assert.ok(Math.abs(y+2.8)<1e-9);
  applyKitAction(o,{...a,seq:8,motion:'stagger',startedAt:2500},2500);updateKitMotion(o,.016,2500);assert.equal(o.model.position.y,y);
  updateKitMotion(o,.016,2640);assert.ok(Math.abs(o.model.position.y-y/2)<1e-6);
  updateKitMotion(o,.016,2780);assert.equal(o.model.position.y,0);assert.equal(o.kfx.liftReturn,null);
@@ -67,7 +68,7 @@ test('mid-skill join does not replay past impact effects; the next current beat 
  assert.ok(o.kfx.ringPool.every(r=>!r.active));
  e=updateKitMotion(o,.016,3500);assert.equal(e.impact,true,'current final hit');
  e=updateKitMotion(o,.016,3516);assert.equal(e.impact,undefined,'no duplicate');
- const old=boss('arsenal');applyKitAction(old,act(old,'battery'),9000);e=updateKitMotion(old,.016,9000);assert.equal(e.impact,undefined);
+ const old=boss('arsenal');applyKitAction(old,act(old,'volley'),9000);e=updateKitMotion(old,.016,9000);assert.equal(e.impact,undefined);
 });
 
 /* 바닥 예고가 없다 = 기술 도중 장면에 보이는 메시가 하나도 없다 (몸은 Group 뿐인 가짜) */
@@ -107,37 +108,46 @@ test('기계형 5종: 몸을 눌러 늘리지 않고 포구/코어만 예열 · 
     applyKitAction(o, act(o, name, { yaw: 1.2 }), 1000); updateKitMotion(o, .05, 1500);
     assert.deepEqual(o.wind.g.scale.toArray(), [1, 1, 1]);
     assert.deepEqual(o.wind.g.rotation.toArray().slice(0, 3), [0, 0, 0]);
-    if (KIT.KITS[id].stationary) assert.equal(o.root.rotation.y, 0);
+    if (KIT.KITS[id].stationary || KIT.KITS[id].fixed) assert.equal(o.root.rotation.y, 0);
     assert.ok(o.kfx.attackFX.group.children.some(m => m.visible), id + ' has no charge');
     for (const m of o.kfx.attackFX.group.children.filter(m => m.visible)) assert.ok(m.position.y > .3, id + ' floor warning');
     hideKitMotion(o); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
   }
 });
 
-test('셀레스티얼: 원래 비행 높이 3.4m를 빼고 착지한 뒤 원 높이로 복귀', () => {
+test('셀레스티얼: 급강하 최저 높이 0.6m와 효과 발사 높이가 일치하고 원 높이로 복귀', () => {
   const o = boss('celestial2'); o.root.position.y = o.b.fly = 3.4;
   applyKitAction(o, act(o, 'dive'), 1000); updateKitMotion(o, .05, 2500);
-  assert.ok(Math.abs(o.root.position.y + o.model.position.y) < 1e-6);
+  assert.ok(Math.abs(o.root.position.y + o.model.position.y - .6) < 1e-6);
   const beam = o.kfx.attackFX.pool[0].beam;
   assert.equal(beam.geometry.parameters.openEnded, true, 'closed beam cap must not fill the target camera');
   assert.ok(beam.material.opacity <= .22, 'impact preserves target visibility');
-  assert.ok(Math.abs(beam.position.y - (o.h * .55 + .65) / 2) < 1e-6, 'attack origin follows grounded body, not original flight height');
+  assert.ok(Math.abs(beam.position.y - (o.h * .55 + .6 + .65) / 2) < 1e-6, 'attack origin follows the evaluated dive height');
   updateKitMotion(o, .05, 4800); assert.equal(o.model.position.y, 0);
 });
 
 test('고정 사출: 서버가 잠근 표적에 예열 결정 → 타격 · 현재 플레이어 위치로 이동하지 않는다', () => {
-  const o = boss('arsenal'); applyKitAction(o, act(o, 'suppression', { marks: [[8, 6]] }), 1000);
+  const o = boss('arsenal'); applyKitAction(o, act(o, 'suppress', { marks: [[8, 6]] }), 1000);
   updateKitMotion(o, .05, 2000); const shard = o.kfx.attackFX.pool[0].shard;
   assert.ok(shard.visible); assert.equal(shard.position.x, 8); assert.equal(shard.position.z, 6); assert.ok(shard.position.y > 1);
-  updateKitMotion(o, .05, 3300); assert.ok(o.kfx.attackFX.pool[0].wave.visible);
+  updateKitMotion(o, .05, 3800); assert.ok(o.kfx.attackFX.pool[0].wave.visible);
   assert.ok(o.kfx.bolts.every(b => !b.m.visible), 'dedicated artillery must not also draw lightning');
   assert.ok(o.kfx.ringPool.every(b => !b.m.visible), 'dedicated volumes must not draw an unrelated circular hit');
-  o.stage = { dying: true }; updateKitMotion(o, .05, 3320); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
+  o.stage = { dying: true }; updateKitMotion(o, .05, 3820); assert.ok(o.kfx.attackFX.group.children.every(m => !m.visible));
 });
 
 test('섀도우 팽: 번개 풀을 만들지 않는다 (atTarget 판정이 없는 보스) · 떠오름은 몸만 올린다', () => {
   const o = boss('shadowfang'); assert.equal(o.kfx.bolts.length, 0); applyKitAction(o, act(o, 'flurry'), 1000); updateKitMotion(o, .016, 1000 + 2600);
   assert.ok(Math.abs(o.model.position.y - 2.4) < 1e-6); assert.equal(o.root.position.y, 0, '판정 자리(root)는 땅에');
+});
+
+test('canonical ring effects preserve the inner safe boundary and fixed towers never yaw',()=>{
+ const o=boss('nova');o.root.rotation.y=.65;o.kfx.baseYaw=.65;
+ applyKitAction(o,act(o,'ring',{yaw:2}),1000);updateKitMotion(o,.05,3200);
+ assert.equal(o.root.rotation.y,.65);
+ const p=o.kfx.attackFX.pool[0];assert.ok(p.wave.visible&&p.inner.visible);
+ assert.equal(p.inner.scale.x,SAFE.r);assert.equal(p.wave.scale.x,18);
+ assert.equal(p.inner.geometry.type,'TorusGeometry','safe center remains hollow');
 });
 
 test('정 장관: 대기·처치는 전용 클립 · 등 뒤 베기는 감았다가(0.12~0.45 s) 판정 뒤 제자리', () => {
@@ -147,4 +157,15 @@ test('정 장관: 대기·처치는 전용 클립 · 등 뒤 베기는 감았다
   assert.equal(o.kfx.clip.getClip().name, 'idle_jeong'); assert.equal(o.deathClip.name, 'death_jeong'); assert.equal(o.kfx.warning, undefined, '예고판 자체가 없다');
   applyKitAction(o, act(o, 'back', { yaw: .4 }), 1000); updateKitMotion(o, .016, 1000 + 400); assert.ok(o.wind.g.rotation.y > .3, '감는다 ' + o.wind.g.rotation.y);
   updateKitMotion(o, .016, 1000 + 900); assert.equal(o.wind.g.rotation.y, 0, '터진 뒤 제자리');
+});
+
+test('정지 모델 다섯: 클립이 하나도 없어도 기술표가 붙고(준비 동작·가슴 빛·낙뢰) 오류 없이 돈다 · 노바 고리 안쪽은 env-rules SAFE.r 과 같다', () => {
+  for (const id of ['leviathan', 'aegis', 'celestial2', 'arsenal', 'nova']) {
+    const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
+    const o = { b: { id }, root, model, h: 4 }; setupKitMotion(o, { animations: [] }, model, scene, KIT.KITS[id]); addWindRig(THREE, o);
+    assert.equal(o.kfx.clip, null, id + ': 클립 없음'); assert.equal(o.deathClip, null);
+    for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) { applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000); let moved = 0;
+      for (let t = 0; t < sk.duration; t += 100) { prepareKitMotion(o, 1000 + t); updateKitMotion(o, .016, 1000 + t); if (t < sk.hits[0].at) moved = Math.max(moved, Math.abs(o.wind.g.rotation.x) + Math.abs(o.wind.g.rotation.y) + Math.abs(1 - o.wind.g.scale.y)); }
+      assert.ok(moved > .05, id + '.' + name + ' 준비 동작'); hideKitMotion(o); } }
+  for (const h of [...KIT.KITS.nova.skills.ring.hits, ...KIT.KITS.nova.skills.mute.hits]) assert.equal(h.inner, SAFE.r, '노바 고리 안쪽 = 안전지대 반지름');
 });

@@ -8,9 +8,9 @@ function setup(zone='goheung_pad',id='nova'){
  return {f,z,o,p};
 }
 const hit={damage:.2,knock:2,skill:'burst',beat:1};
-test('Nova orbit hole and AI choice use the existing SAFE radius, not the old 4m hole',()=>{
- const k=KIT.KITS.nova,h=k.skills.orbit.hits[0];assert.equal(h.inner,RULE.SAFE.r);
- assert.equal(k.weights(4.25).orbit,undefined);assert.ok(k.weights(4.51).orbit>0);
+test('Nova canonical ring uses SAFE radius and opens in the second phase',()=>{
+ const k=KIT.KITS.nova,h=k.skills.ring.hits[0];assert.equal(h.inner,RULE.SAFE.r);
+ assert.equal(k.weights(4.25,1).ring,undefined);assert.ok(k.weights(4.51,2).ring>0);
  const o={x:10,z:-20,yaw:0};
  assert.equal(KIT.inShape(o,{x:14.25,z:-20},h),false);
  assert.equal(KIT.inShape(o,{x:14.51,z:-20},h),true);

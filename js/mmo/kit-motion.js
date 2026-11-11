@@ -56,7 +56,7 @@ export function applyKitAction(o, a, now) {
   if (fx.seq !== a.seq && o.netAct?.motion === 'skill' && a.motion !== 'skill' && o.model) fx.liftReturn = { from: o.model.position.y, start: now };
   o.netAct = a;
   if (fx.seq !== a.seq) { fx.seq = a.seq; fx.hitIdx = 0;
-    if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX ?? a.x, z: a.fromZ ?? a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = fx.kit.stationary ? fx.baseYaw : a.yaw; }
+    if (a.motion === 'skill') { const def = fx.kit.skills[a.skill]; const act = play(o, def && def.clip, false, true); if (act) act.paused = true; fx.from = { x: a.fromX ?? a.x, z: a.fromZ ?? a.z }; o.root.position.x = fx.from.x; o.root.position.z = fx.from.z; o.root.rotation.y = fx.kit.stationary || fx.kit.fixed ? fx.baseYaw : a.yaw; }
     else if (REACTIONS.has(a.motion)) {
       const name = reactionClip(fx, a.motion), available = !!o.kacts[name];
       const reaction = play(o, name, !available, available, available);
@@ -92,13 +92,18 @@ export function updateKitMotion(o, dt, now) {
         if (u === 1) fx.liftReturn = null;
       } else o.model.position.y = fx.baseY;
     }   /* 떠오름: 몸만 올린다 — 판정 자리(x,z)는 그대로 */
-    if (fx.kit.stationary) o.root.rotation.y = fx.baseYaw;
+    if (fx.kit.stationary || fx.kit.fixed) o.root.rotation.y = fx.baseYaw;
   }
   /* 바닥 예고는 없다 (디렉터 «의미 없어» — 문서 224). 같은 박자로 몸이 준비 동작을 한다(windup.js). 지금 박자는 소리(boss-stage)용으로만 셈 */
   let tell = -1; if (skill && skill.tells && !dying) for (let i = 0; i < skill.tells.length; i++) { const q = skill.tells[i]; if (!q.post && t >= S(skill, a, q.from) && t <= S(skill, a, q.at)) tell = i; }
   fx.telling = tell >= 0; if (fx.telling) { fx.warnSeq = a.seq; fx.warnBeat = tell; }
   // Mechanical bodies use their baked recoil; do not squash a tower like a humanoid.
-  if (o.wind) applyWind(o, dying || fx.attackFX ? null : winds(skill, a), t, fx.reduced);
+  if (o.wind) {
+    const baked = skill && o.kacts[skill.clip];
+    applyWind(o, dying || (fx.attackFX && baked) ? null : winds(skill, a), t, fx.reduced);
+    // Missing canonical takes still get their windup rotation, never rubber scaling.
+    if (fx.attackFX) { o.wind.g.scale.set(1, 1, 1); o.wind.g.position.set(0, 0, 0); }
+  }
   if (fx.attackFX) fx.attackFX.update(a, dying ? null : skill, t);
   { const q = tell >= 0 && skill.tells[tell], p = q ? Math.max(0, Math.min(1, (t - S(skill, a, q.from)) / Math.max(1, S(skill, a, q.at) - S(skill, a, q.from)))) : 0;   /* 가슴 균열 — 몸의 일부(바닥 표시 아님) */
     fx.glow.intensity += ((q ? 1 + p * 4 : skill ? 1.6 : .6) - fx.glow.intensity) * Math.min(1, dt * 6); }

@@ -1,6 +1,6 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
-const { KITS } = require('../server/field-boss-kit.cjs');
+const { MOTION_STUDY_KITS: KITS } = require('../server/field-boss-kit.cjs');
 const sources = [
   ['leviathan', 'leviathan_static', 2900988, 'bc77dcd04130e38cf2474d5feadead0ffb6e36eae0c08df58d0f308250edce6d'],
   ['aegis', 'aegis_07_static', 2392584, 'f6c187c847aff82ce0744eb3625cd8b9f3d43b33b3adace3edcacea4fc2a4948'],
@@ -13,7 +13,7 @@ function glb(name) {
   const n = b.readUInt32LE(12);
   return { j: JSON.parse(b.subarray(20, 20 + n)), bin: b.subarray(28 + n) };
 }
-for (const [id, name, size, hash] of sources) test(id + ': original geometry binary preserved and every skill has a motion clip', () => {
+for (const [id, name, size, hash] of sources) test(id + ': motion-study source geometry and authored study clips are preserved', () => {
   const { j, bin } = glb(name);
   assert.equal(crypto.createHash('sha256').update(bin.subarray(0, size)).digest('hex'), hash);
   const pivot = j.nodes.findIndex(n => n.name === 'KitMechanicalMotion'); assert.ok(pivot >= 0);
