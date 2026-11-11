@@ -155,7 +155,7 @@ test('정지 모델 다섯: 클립이 하나도 없어도 기술표가 붙고(�
     const scene = new THREE.Scene(), root = new THREE.Group(), model = new THREE.Group(); root.add(model); scene.add(root);
     const o = { b: { id }, root, model, h: 4 }; setupKitMotion(o, { animations: [] }, model, scene, KIT.KITS[id]); addWindRig(THREE, o);
     assert.equal(o.kfx.clip, null, id + ': 클립 없음'); assert.equal(o.deathClip, null);
-    for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) { applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000); 
+    for (const [name, sk] of Object.entries(KIT.KITS[id].skills)) { applyKitAction(o, act(o, name, { marks: [[3, 3]] }), 1000);
       for (let t = 0; t < sk.duration; t += 100) { prepareKitMotion(o, 1000 + t); updateKitMotion(o, .016, 1000 + t); }
       hideKitMotion(o); } }   /* 준비 동작·효과 모양은 GPT 가지 시험(static-boss 쪽)이 본다 — 여기는 클립 없이도 안 터지는가만 */
   for (const h of KIT.KITS.nova.skills.orbit.hits) { assert.equal(h.shape, 'annulus'); assert.equal(h.inner, SAFE.r, '노바 고리 안쪽 = 안전지대 반지름'); }
