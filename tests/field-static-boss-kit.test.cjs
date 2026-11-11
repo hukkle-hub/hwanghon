@@ -2,7 +2,7 @@ const test = require('node:test'), assert = require('node:assert/strict');
 const { Field } = require('../server/field.cjs'), KIT = require('../server/field-boss-kit.cjs');
 const IDS = ['leviathan', 'aegis', 'celestial2', 'arsenal', 'nova'];
 function fixture(id) {
-  const f = new Field({ rng: () => .5 }); f.initBosses(0); const o = f.bosses.get(id); f.spawnBoss(o, 1000); KIT.configureMotionStudy(o); KIT.setup(o, 1000);
+  const f = new Field({ rng: () => .5 }); f.initBosses(0); const o = f.bosses.get(id); f.spawnBoss(o, 1000);
   const p = f.join('p', { character: 'kain', stats: { hp: 20000, atk: 3000, defense: 1600 } }, o.zone);
   p.invulnUntil = 0; p.at = 1000; p.hp = p.maxHp = 1e9; p.x = o.x; p.z = o.z + (id === 'leviathan' ? 18 : 2);
   o.kit.target = p.id; const hits = [], strike = f.bossStrike.bind(f);
@@ -12,7 +12,7 @@ function fixture(id) {
 function start(g, name) { g.o.kit.pattern = name; g.f.tickBosses(1800); assert.equal(g.o.kit.skill, name); return g.o.kit.startedAt; }
 for (const id of IDS) {
   test(id + ': motion study in real Field selects skills at aggro edge, no HP/phase in packet, root never travels', () => {
-    const g = fixture(id), k = KIT.MOTION_STUDY_KITS[id], x = g.o.x, z = g.o.z;
+    const g = fixture(id), k = KIT.KITS[id], x = g.o.x, z = g.o.z;
     g.p.z = z + k.aggro - .1; g.f.tickBosses(1800); assert.equal(g.o.kit.state, 'skill');
     const a = g.f.bossView(g.p, 1800).bossActs.find(b => b.id === id); assert.ok(a);
     for (const key of ['hp', 'max', 'phase']) assert.equal(key in a, false);
@@ -26,7 +26,7 @@ for (const id of IDS) {
     }
   });
   test(id + ': each skill is telegraphed, last counter, recovery; later hits canceled after counter', () => {
-    for (const [name, s] of Object.entries(KIT.MOTION_STUDY_KITS[id].skills)) {
+    for (const [name, s] of Object.entries(KIT.KITS[id].skills)) {
       assert.ok(s.hits.length <= 3); let last = -1;
       for (const h of s.hits) { assert.ok(h.at > last && h.at < s.duration); last = h.at; assert.ok(s.tells.some(q => q.from <= h.at - 300 && q.at === h.at) || h.lead >= 1000); }
       assert.ok(s.duration - last >= 1500, name + ' recovery too short');
@@ -43,7 +43,7 @@ for (const id of IDS) {
     }
   });
   test(id + ': phase opener exactly once, not selected normally, reset restores it; outside aggro safe', () => {
-    const g = fixture(id), k = KIT.MOTION_STUDY_KITS[id]; g.o.kit.target = null; g.p.z = g.o.z + k.aggro + 1;
+    const g = fixture(id), k = KIT.KITS[id]; g.o.kit.target = null; g.p.z = g.o.z + k.aggro + 1;
     g.f.tickBosses(1800); assert.notEqual(g.o.kit.state, 'skill');
     g.p.z = g.o.z + (id === 'leviathan' ? 18 : 2); g.o.hp = g.o.max * .49; g.f.tickBosses(1850); assert.equal(g.o.kit.skill, k.open);
     const seq = g.o.kit.seq; g.f.tickBosses(1900); assert.equal(g.o.kit.seq, seq);
@@ -52,7 +52,7 @@ for (const id of IDS) {
   });
 }
 test('nova: giant circle has an actual inner safe area, both boundaries and outside tested', () => {
-  const h = KIT.MOTION_STUDY_KITS.nova.skills.orbit.hits[0], o = { x: 0, z: 0, yaw: 0 };
+  const h = KIT.KITS.nova.skills.orbit.hits[0], o = { x: 0, z: 0, yaw: 0 };
   for (const [x, hit] of [[0, false], [4.25, false], [4.49, false], [4.5, true], [20, true], [39, true], [39.01, false]]) assert.equal(KIT.inShape(o, { x, z: 0 }, h), hit);
   // Mutation guard: replacing the ring with a disk must violate the inner-safe invariant.
   assert.throws(() => assert.equal(KIT.inShape(o, { x: 0, z: 0 }, { ...h, shape: 'circle' }), false));

@@ -82,3 +82,15 @@ test('던전 장치 중계 (문서 233): fieldDevice 는 같은 지역 전원에
  assert.throws(()=>f.command('zzz',{type:'fieldDevice',kind:'pin',id:'inner-pin0'},prof,false),/필드에 없습니다/);
  assert.deepEqual(DEVICE_KINDS.slice(0,3),['pin','seam','socket']);
 });
+
+test('온라인 «가둠» (문서 233 §4): 한강 터널에서 내측·외측 차수문 핀 넷이 다 잘리면 서버가 레비아탄을 봉쇄로 끝낸다 — 셋까지는 살아 있고, 알림 bossDown 에 sealed, 다시 서면 핀이 지워진다',()=>{
+ const {Field}=require('../server/field.cjs');const evs=[];const f=new Field({emit:ev=>evs.push(ev),rng:()=>.5}),prof={name:'x',character:'ain'};
+ f.initBosses(0); const o=f.bosses.get('leviathan'); f.spawnBoss(o,1000); f.join('a',prof,'hangang_tunnel',0,'out'); f.join('b',prof,'hangang_tunnel',0,'out');
+ for(const id of ['inner-pin0','inner-pin1','outer-pin0']){ f.command('a',{type:'fieldDevice',kind:'pin',id},prof,false); assert.equal(o.alive,true,id+' 까지는 산다'); }
+ f.command('a',{type:'fieldDevice',kind:'pin',id:'inner-pin1'},prof,false); assert.equal(o.alive,true,'같은 핀을 두 번 보내도 세지 않는다');
+ f.command('b',{type:'fieldDevice',kind:'pin',id:'outer-pin1'},prof,false); assert.equal(o.alive,false,'넷째 핀에 봉쇄'); assert.equal(o.sealed,true);
+ const d=evs.find(e=>e.type==='announce'&&e.kind==='bossDown'); assert.ok(d,'알림'); assert.equal(d.sealed,1); assert.equal(d.boss,'leviathan'); assert.ok(f.loot.size>=0);
+ assert.equal(f.command('b',{type:'fieldDevice',kind:'pin',id:'outer-pin0'},prof,false),null,'죽은 뒤 핀은 중계만');
+ f.spawnBoss(o,5000); assert.equal(o.sealed,false); assert.equal(f.pins.has('hangang_tunnel'),false,'다시 서면 핀이 지워진다');
+ const g=new Field({emit:()=>{},rng:()=>.5}); g.initBosses(0); const q=g.bosses.get('clave'); g.spawnBoss(q,1000); g.join('c',prof,'gangnam_b1',0,'out'); for(const id of ['inner-pin0','inner-pin1','outer-pin0','outer-pin1']) g.command('c',{type:'fieldDevice',kind:'pin',id},prof,false); assert.equal(q.alive,true,'가두는 보스가 없는 지역은 그대로');
+});

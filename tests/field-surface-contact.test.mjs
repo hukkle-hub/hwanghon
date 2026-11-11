@@ -12,7 +12,7 @@ import {createGillContactStudy} from '../tools/3d/leviathan-gill-contact-study.m
 import contact from '../server/field-surface-contact.cjs';
 import kit from '../server/field-boss-kit.cjs';
 const profile=JSON.parse(fs.readFileSync(new URL('../art/review/part1/leviathan-gill-contact.json',import.meta.url)));
-const skill=kit.MOTION_STUDY_KITS.leviathan.skills.gill,hit=skill.hits[0];
+const skill=kit.KITS.leviathan.skills.gill,hit=skill.hits[0];
 const {bindSurfaceContactProfile,containsSurfaceContact}=contact;
 const distance=(a,b)=>Math.hypot(...a.map((v,i)=>v-b[i]));
 async function load(){const b=fs.readFileSync(new URL('../'+profile.source,import.meta.url)),l=new GLTFLoader();l.register(()=>({name:'skip',loadTexture:()=>Promise.resolve(new T.Texture())}));return l.parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')}

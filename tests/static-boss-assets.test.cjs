@@ -1,6 +1,6 @@
 const test = require('node:test'), assert = require('node:assert/strict');
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto');
-const { MOTION_STUDY_KITS: KITS } = require('../server/field-boss-kit.cjs');
+const { KITS } = require('../server/field-boss-kit.cjs');
 const sources = [
   ['leviathan', 'leviathan_static', 2900988, 'bc77dcd04130e38cf2474d5feadead0ffb6e36eae0c08df58d0f308250edce6d'],
   ['aegis', 'aegis_07_static', 2392584, 'f6c187c847aff82ce0744eb3625cd8b9f3d43b33b3adace3edcacea4fc2a4948'],

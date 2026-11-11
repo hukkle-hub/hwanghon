@@ -53,7 +53,7 @@ test('candidate expanded bounds do not move normalized mouth relative to authori
  assert.ok(box.min.x<LEVIATHAN.min[0] && box.max.x>LEVIATHAN.max[0]); // real morph bound expansion is exercised
  model.scale.setScalar(k);box.setFromObject(model);model.position.set(-(box.min.x+box.max.x)/2,-box.min.y,-(box.min.z+box.max.z)/2);
  const root=new T.Group();root.add(model);root.position.set(17,0,-11);const mouth=bindBossEmitter(model,LEVIATHAN);let maxError=0,samples=0;
- for(const skill of Object.values(KIT.MOTION_STUDY_KITS.leviathan.skills)){
+ for(const skill of Object.values(KIT.KITS.leviathan.skills)){
   const pose=makePoser(model,gl.animations.find(c=>c.name===skill.clip));
   for(const time of [...Array.from({length:Math.ceil(skill.duration/25)},(_,i)=>i*25),...skill.hits.map(h=>h.at),skill.duration]){
    pose(time/1000);const expected=emitterPosition(LEVIATHAN,skill,time,17,-11),actual=mouth.worldPosition(new T.Vector3());

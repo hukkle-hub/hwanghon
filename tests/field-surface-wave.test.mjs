@@ -9,7 +9,7 @@ import {Field} from '../server/field.cjs';
 import scenario from '../tools/3d/gill-target-scenario.cjs';
 import {createGillWaveStudy} from '../tools/3d/leviathan-gill-wave-study.mjs';
 const profile=JSON.parse(fs.readFileSync(new URL('../art/review/part1/leviathan-gill-contact.json',import.meta.url)));
-const skill=kit.MOTION_STUDY_KITS.leviathan.skills.gill,cones=contact.bindSurfaceContactProfile(profile).contacts(skill,skill.hits[0]);
+const skill=kit.KITS.leviathan.skills.gill,cones=contact.bindSurfaceContactProfile(profile).contacts(skill,skill.hits[0]);
 const point=(d,id='p')=>({id,x:cones[0].origin.x+Math.sin(cones[0].yaw)*d,z:cones[0].origin.z+Math.cos(cones[0].yaw)*d});
 
 test('water clock reaches7m only after220ms; no early, lingering, cancelled or dead damage',()=>{

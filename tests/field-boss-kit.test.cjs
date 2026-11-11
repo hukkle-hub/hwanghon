@@ -124,31 +124,16 @@ test('기술표 보스: 기술 종료 후 목표를 다시 찾아도 1·2단계 
  }
 });
 
-/* ---------- 정지 모델 다섯 (2026-10-14, GPT 몫 대신 — docs/gpt/2026-10-13-bosses-all.md §2.1 · 문서 233 §16) ---------- */
+/* ---------- 정지 모델 다섯 (2026-10-14) — 기술표는 GPT 가지(gpt/bosses-kit, tests/field-static-boss-kit) · 여기는 합친 뒤 남긴 규칙: 패킷에 체력 없음 · 에이지스 보이지 않는 벽(hitMul) ---------- */
 const ZONE_OF={ leviathan:'hangang_tunnel', aegis:'yeouido', celestial2:'southroad', arsenal:'gyeryong_base', nova:'goheung_pad' };
 function setupS(id,rng=.5){ const f=new Field({rng:()=>rng}),P=profile(); f.initBosses(0); const o=f.bosses.get(id); f.spawnBoss(o,1000);
  const p=f.join('p',P,ZONE_OF[id]); p.invulnUntil=0; p.at=1000; p.hp=p.maxHp=1e9; p.x=o.x; p.z=o.z+3; return {f,o,p,P}; }
-const fire=(f,o,p,skill)=>{ o.kit.target=p.id; o.kit.pattern=skill; o.kit.state='idle'; o.kit.endsAt=0; o.kit.recovering=false; return runTo(f,o,skill,o.kit.lastAt+20000); };
-const hitsIn=(f,p,from,to,step=10)=>{ const t0=[]; let last=p.hp; for(let t=from;t<=to;t+=step){ f.tickBosses(t); if(p.hp<last){ t0.push(t-from); last=p.hp; } } return t0; };
 
-test('정지 다섯이 전부 기술표를 갖고, 체력·단계는 화면 패킷에 없다 · 탑·산(fixed)은 돌아서지도 움직이지도 않는다',()=>{
+test('정지 다섯이 전부 기술표를 갖고, 체력·단계는 화면 패킷에 없다',()=>{
  for(const id of Object.keys(ZONE_OF)){ const {f,o,p}=setupS(id); assert.ok(o.kit,id); const v=f.bossView(p,1050).bossActs.find(x=>x.id===id); assert.equal(v.ai,'kit',id); for(const k of ['hp','max','phase']) assert.equal(k in v,false,id+' '+k); }
- for(const id of ['arsenal','nova']){ const {f,o,p}=setupS(id); const x0=o.x,z0=o.z; p.x=o.x+6; p.z=o.z-5; for(let t=1050;t<30000;t+=50){ f.tickBosses(t); p.x=o.x+6*Math.cos(t/900); p.z=o.z+6*Math.sin(t/900); }
-  assert.equal(o.yaw||0,0,id+' 돌아섰다'); assert.equal(o.x,x0); assert.equal(o.z,z0); assert.ok(o.kit.history.length>0,id+' 기술을 쓴다'); }
 });
 
-test('레비아탄: 돌진은 0.8 s 뒤 0.4 s 에 10 m · 흡입은 앞 9 m 를 끌어당긴다(가까워진다) · 아가미 반격창 1.15~1.4 s · 소용돌이는 50 % 에 한 번, 14 m 밖은 안전',()=>{
- const A=setupS('leviathan'); A.p.z=A.o.z+8; const s=fire(A.f,A.o,A.p,'rush'); assert.ok(s>0); const z0=A.o.z; A.f.tickBosses(s+790); assert.ok(Math.abs(A.o.z-z0)<1e-6,'0.8 s 까지 제자리');
- const hpA=A.p.hp; A.f.tickBosses(s+1200); assert.ok(A.o.z-z0>9.9,'10 m 돌진 '+(A.o.z-z0).toFixed(2)); assert.ok(A.p.hp<hpA,'줄 위면 맞는다');
- const B=setupS('leviathan'); B.p.z=B.o.z+7; const s2=fire(B.f,B.o,B.p,'suck'); const d0=Math.hypot(B.p.x-B.o.x,B.p.z-B.o.z); for(let t=s2;t<=s2+2200;t+=10) B.f.tickBosses(t); const d1=Math.hypot(B.p.x-B.o.x,B.p.z-B.o.z);
- assert.ok(d1<d0-3,'끌려온다 '+d0.toFixed(1)+'→'+d1.toFixed(1));
- const C=setupS('leviathan'); C.p.z=C.o.z+3; const s3=fire(C.f,C.o,C.p,'gill'); assert.equal(KIT.tryCounter(C.o,s3+1000),false); assert.equal(KIT.tryCounter(C.o,s3+1200),true); assert.equal(C.o.kit.state,'stagger');
- const D=setupS('leviathan'); D.p.z=D.o.z+16; D.o.kit.target=D.p.id; D.f.tickBosses(1100); D.o.hp=Math.round(D.o.max*.49); D.o.kit.state='idle'; D.o.kit.endsAt=0; D.f.tickBosses(1200); assert.equal(D.o.kit.skill,'vortex');
- assert.equal(hitsIn(D.f,D.p,D.o.kit.startedAt,D.o.kit.startedAt+6000,25).length,0,'16 m 는 안전'); for(let t=8000;t<40000;t+=50){ D.f.tickBosses(t); assert.ok(!(D.o.kit.state==='skill'&&D.o.kit.skill==='vortex'),'두 번 열지 않는다'); }
- const E=setupS('leviathan'); E.p.z=E.o.z+10; E.o.kit.target=E.p.id; E.f.tickBosses(1100); E.o.hp=Math.round(E.o.max*.49); E.o.kit.state='idle'; E.o.kit.endsAt=0; E.f.tickBosses(1200); assert.equal(E.o.kit.skill,'vortex'); assert.ok(hitsIn(E.f,E.p,E.o.kit.startedAt,E.o.kit.startedAt+3500,25).length>=1,'10 m 는 맞는다');
-});
-
-test('에이지스 보이지 않는 벽: 정면은 «틱—» 0 · 옆은 ½ · 등 뒤는 그대로, 등 뒤 셋이면 «꺼졌어요!» 8 s 동안 ×1.5 · 서버 hit() 응답에 guard 가 그때만 실린다',()=>{
+test('에이지스 보이지 않는 벽: 정면은 «틱—» 0 · 옆은 ½ · 등 뒤는 그대로, 등 뒤 셋이면 «꺼졌어요!» 8 s 동안 ×1.5 · 서버 hit() 응답에 guard 가 그때만 실린다 · 50 % 장벽 기술 동안은 정면도 열린다',()=>{
  const {f,o,p,P}=setupS('aegis'); o.yaw=0; o.kit.yaw=0; const front={x:o.x,z:o.z+2}, side={x:o.x+2,z:o.z}, back={x:o.x,z:o.z-2};
  assert.deepEqual(KIT.hitMul(o,front,5000),{mul:0,blocked:true}); assert.equal(KIT.hitMul(o,side,5000).mul,.5);
  assert.equal(KIT.hitMul(o,back,5000).mul,1); assert.equal(KIT.hitMul(o,back,5000).mul,1); const r3=KIT.hitMul(o,back,5000); assert.equal(r3.broke,true);
@@ -156,29 +141,5 @@ test('에이지스 보이지 않는 벽: 정면은 «틱—» 0 · 옆은 ½ · 
  assert.equal(KIT.view(o,5000+100).guard,0); assert.equal(KIT.view(o,5000+9000).guard,1); const sf=f.bosses.get('shadowfang'); f.spawnBoss(sf,1000); assert.equal(KIT.view(sf,5000).guard,undefined,'다른 보스엔 guard 가 없다');
  const q=setupS('aegis'); q.o.yaw=0; q.o.kit.yaw=0; q.p.x=q.o.x; q.p.z=q.o.z+2; const hp0=q.o.hp; const r=q.f.hit('p',{boss:'aegis'},q.P,2000); assert.equal(r.dmg,0); assert.equal(r.guard,'tick'); assert.equal(q.o.hp,hp0,'정면은 체력이 안 준다');
  q.p.z=q.o.z-2; let last=null; for(let i=0;i<3;i++) last=q.f.hit('p',{boss:'aegis'},q.P,3000+i*400); assert.equal(last.guard,'off'); assert.ok(q.o.hp<hp0); const r2=q.f.hit('p',{boss:'aegis'},q.P,5000); assert.equal('guard' in r2,false,'평소엔 guard 키가 없다');
- const v=setupS('aegis'); v.p.z=v.o.z+5; v.o.kit.target=v.p.id; v.f.tickBosses(1100); v.o.hp=Math.round(v.o.max*.49); v.o.kit.state='idle'; v.o.kit.endsAt=0; v.f.tickBosses(1200); assert.equal(v.o.kit.skill,'vent'); assert.equal(KIT.hitMul(v.o,{x:v.o.x+Math.sin(v.o.yaw)*2,z:v.o.z+Math.cos(v.o.yaw)*2},1300).open,true,'과부하 동안 정면도 열린다');
-});
-
-test('셀레스티얼: 급강하는 0.7 s 솟았다 1.5 s 에 바닥을 긁으며 12 m · 고도 상한 15 m 를 넘지 않는다(lift+3.4) · 공간 접기는 2 단계에만 · 돌풍은 네 번 민다',()=>{
- const K=KIT.KITS.celestial2; for(const s of Object.values(K.skills)) for(const [,v] of (s.lift||[])) assert.ok(v+3.4<=15,'고도 '+(v+3.4));
- assert.ok(Math.abs(KIT.curve(K.skills.dive.lift,1500)+2.8)<1e-9,'바닥 0.6 m'); assert.ok(!('fold' in K.weights(10,1,0)),'1 단계엔 접기 없음'); assert.ok(K.weights(10,2,0).fold>0,'2 단계 접기');
- const {f,o,p}=setupS('celestial2'); p.z=o.z+9; const s=fire(f,o,p,'dive'); const z0=o.z; f.tickBosses(s+690); assert.ok(Math.abs(o.z-z0)<1e-6); f.tickBosses(s+2000); assert.ok(o.z-z0>11.9,'12 m '+(o.z-z0).toFixed(2)); assert.equal(KIT.tryCounter(o,s+1400),true,'거는 손');
- const g=setupS('celestial2'); g.p.z=g.o.z+6; const s2=fire(g.f,g.o,g.p,'gust'); const z1=g.p.z; const n=hitsIn(g.f,g.p,s2,s2+3000).length; assert.ok(n>=3,'세 번은 민다 '+n); assert.ok(g.p.z>z1+6,'밀려난다 '+(g.p.z-z1).toFixed(1)+' — 밀려 사거리 밖으로 나가면 넷째는 빗나간다');
- const h=setupS('celestial2'); h.o.hp=Math.round(h.o.max*.49); h.o.kit.opened=true; h.p.z=h.o.z+12; const s3=fire(h.f,h.o,h.p,'fold'); h.f.tickBosses(s3+960); assert.ok(Math.hypot(h.o.x-h.o.kit.fromX,h.o.z-h.o.kit.fromZ)>14.9,'15 m 를 접는다'); assert.equal(hitsIn(h.f,h.p,s3+960,s3+1100).length,1,'머리 위에서 내려찍는다');
-});
-
-test('아스널: 사출은 0.5 s 전 «내 자리» 에 찍힌다 — 서 있으면 셋 다, 계속 움직이면 하나도 · 전탄 제압은 1.8 s 정적 뒤 · 과부하는 50 % 한 번',()=>{
- const {f,o,p}=setupS('arsenal'); p.x=o.x+12; p.z=o.z; const s=fire(f,o,p,'volley'); assert.deepEqual(hitsIn(f,p,s,s+2400),[900,1400,1900]);
- const q=setupS('arsenal'); q.p.x=q.o.x+12; q.p.z=q.o.z; const s2=fire(q.f,q.o,q.p,'volley'); let n=0,last=q.p.hp; for(let t=s2;t<=s2+2400;t+=10){ q.p.z=q.o.z+((t-s2)/1000)*4; q.f.tickBosses(t); if(q.p.hp<last){n++;last=q.p.hp;} } assert.equal(n,0,'4 m/s 로 걸으면 안 맞는다');
- const S=KIT.KITS.arsenal.skills.suppress; assert.equal(S.winds[0].from,1800,'정적 1.8 s'); assert.equal(S.hits[0].lead,1800);
- const r=setupS('arsenal'); r.p.x=r.o.x+10; r.o.kit.target=r.p.id; r.f.tickBosses(1100); r.o.hp=Math.round(r.o.max*.49); r.o.kit.state='idle'; r.o.kit.endsAt=0; r.f.tickBosses(1200); assert.equal(r.o.kit.skill,'collapse'); for(let t=7000;t<40000;t+=50){ r.f.tickBosses(t); assert.ok(!(r.o.kit.state==='skill'&&r.o.kit.skill==='collapse')); }
-});
-
-test('나노-노바: 원의 팔·무음 팔은 둘레 고리 — 가운데 4.5 m(안전지대) 는 안 맞고 8 m 는 맞는다 · 원의 팔은 50 % 에 열리고 2 단계부터 보통 기술',()=>{
- for(const [skill,inR,outR] of [['ring',3,8],['mute',3,8]]){ const a=setupS('nova'); a.p.x=a.o.x+inR; a.p.z=a.o.z; const s=fire(a.f,a.o,a.p,skill); assert.equal(hitsIn(a.f,a.p,s,s+4400).length,0,skill+' 안쪽 '+inR);
-  const b=setupS('nova'); b.p.x=b.o.x+outR; b.p.z=b.o.z; const s2=fire(b.f,b.o,b.p,skill); assert.ok(hitsIn(b.f,b.p,s2,s2+4400).length>=1,skill+' 바깥 '+outR); }
- assert.ok(KIT.inShape({x:0,z:0,yaw:0},{x:4.4,z:0},{shape:'ring',inner:4.5,radius:18})===false); assert.ok(KIT.inShape({x:0,z:0,yaw:0},{x:0,z:4.6},{shape:'ring',inner:4.5,radius:18})===true);
- const K=KIT.KITS.nova; assert.ok(!('ring' in K.weights(3,1,0)),'1 단계 보통 기술엔 원이 없다'); assert.ok(K.weights(3,2,0).ring>0); assert.equal(K.open,'ring');
- const c=setupS('nova'); c.p.x=c.o.x+10; c.o.kit.target=c.p.id; c.f.tickBosses(1100); c.o.hp=Math.round(c.o.max*.49); c.o.kit.state='idle'; c.o.kit.endsAt=0; c.f.tickBosses(1200); assert.equal(c.o.kit.skill,'ring');
- const d=setupS('nova'); d.p.x=d.o.x+8; d.p.z=d.o.z; const s3=fire(d.f,d.o,d.p,'shutter'); assert.equal(KIT.tryCounter(d.o,s3+1100),true,'셔터 팔 반격창');
+ const v=setupS('aegis'); v.p.z=v.o.z+5; v.o.kit.target=v.p.id; v.f.tickBosses(1100); v.o.hp=Math.round(v.o.max*.49); v.o.kit.state='idle'; v.o.kit.endsAt=0; v.f.tickBosses(1200); assert.equal(v.o.kit.skill,'barrier'); assert.equal(KIT.hitMul(v.o,{x:v.o.x+Math.sin(v.o.yaw)*2,z:v.o.z+Math.cos(v.o.yaw)*2},1300).open,true,'과부하 동안 정면도 열린다');
 });

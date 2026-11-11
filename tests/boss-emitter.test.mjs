@@ -23,7 +23,7 @@ const close=(a,b)=>assert.ok(a.distanceTo(b)<1e-8,`${a.toArray()} != ${b.toArray
 
 test('fixed mouth rejects rear, plane and invalid targets for every line contact, without altering other emitters',()=>{
  for(const name of ['pressure','tidal']){
-  const s=KIT.MOTION_STUDY_KITS.leviathan.skills[name],z=Math.max(...s.hits.map(h=>emitterPosition(LEVIATHAN,s,h.at,13,27).z));
+  const s=KIT.KITS.leviathan.skills[name],z=Math.max(...s.hits.map(h=>emitterPosition(LEVIATHAN,s,h.at,13,27).z));
   for(const x of [-100,13,100]){
    for(const dz of [-100,-.001,0])assert.equal(canAimEmitter(LEVIATHAN,s,13,27,{x,z:z+dz}),false);
    assert.equal(canAimEmitter(LEVIATHAN,s,13,27,{x,z:z+.001}),true);
@@ -31,7 +31,7 @@ test('fixed mouth rejects rear, plane and invalid targets for every line contact
   for(const p of [null,{x:NaN,z:50},{x:0,z:Infinity}])assert.equal(canAimEmitter(LEVIATHAN,s,13,27,p),false);
  }
  assert.equal(canAimEmitter(null,KIT.KITS.aegis.skills.cannon,0,0,{x:0,z:-10}),true);
- assert.equal(canAimEmitter(LEVIATHAN,KIT.MOTION_STUDY_KITS.leviathan.skills.gill,0,0,{x:0,z:-2}),true);
+ assert.equal(canAimEmitter(LEVIATHAN,KIT.KITS.leviathan.skills.gill,0,0,{x:0,z:-2}),true);
 });
 test('measured mouth follows normalization, parent yaw, lift and same-frame recoil',()=>{
  const f=fixture(),em=bindBossEmitter(f.model,LEVIATHAN),point=new T.Vector3(...LEVIATHAN.point);
@@ -67,7 +67,7 @@ test('actual asset: every recoil sample and hit-frame emitter agrees with the pu
  model.scale.setScalar(k);box.setFromObject(model);model.position.set(-(box.min.x+box.max.x)/2,-box.min.y,-(box.min.z+box.max.z)/2);
  const root=new T.Group();root.position.set(17,0,-11);root.add(model);const emitter=bindBossEmitter(model,LEVIATHAN);
  let samples=0,maxError=0;
- for(const skill of Object.values(KIT.MOTION_STUDY_KITS.leviathan.skills)){
+ for(const skill of Object.values(KIT.KITS.leviathan.skills)){
   const pose=makePoser(model,gl.animations.find(c=>c.name===skill.clip));
   for(const t of [...Array.from({length:Math.ceil(skill.duration/25)},(_,i)=>i*25),...skill.hits.map(h=>h.at),skill.duration]){
    pose(t/1000);const actual=emitter.worldPosition(new T.Vector3()),expected=emitterPosition(LEVIATHAN,skill,t,17,-11);
@@ -80,7 +80,7 @@ test('actual asset: every recoil sample and hit-frame emitter agrees with the pu
  assert.throws(()=>close(emitter.worldPosition(new T.Vector3()),root.position));
 });
 test('new line footprint follows mouth to locked endpoint; centre/rear and side are no longer invisible hits',()=>{
- const skill=KIT.MOTION_STUDY_KITS.leviathan.skills.pressure,h=skill.hits[0];
+ const skill=KIT.KITS.leviathan.skills.pressure,h=skill.hits[0];
  for(const yaw of [0,.4,1.2,-.8,Math.PI]){
   const path=contactLine(LEVIATHAN,skill,h,10,20,yaw),hit={...h,range:path.range},a=path.origin;
   const dx=Math.sin(a.yaw),dz=Math.cos(a.yaw),p={x:a.x+dx*path.range*.5,z:a.z+dz*path.range*.5};
